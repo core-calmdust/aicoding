@@ -70,14 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const cellValue = board[row][col] || initialBoard[row][col];
         const isGiven = initialBoard[row][col] !== 0;
 
+        // ハイライトロジックを「行」と「列」のみに修正
         if (focusedNumberInfo) {
             const { focusRow, focusCol, focusNum } = focusedNumberInfo;
-            const currentBox = Math.floor(row / 3) * 3 + Math.floor(col / 3);
-            const focusBox = Math.floor(focusRow / 3) * 3 + Math.floor(focusCol / 3);
-            
-            if (row === focusRow || col === focusCol || currentBox === focusBox) {
+
+            // 行・列のハイライト
+            if (row === focusRow || col === focusCol) {
                 cell.classList.add('highlight-area');
             }
+            // 同じ数字のハイライト
             if (cellValue !== 0 && cellValue === focusNum) {
                 cell.classList.add('highlight-num');
             }
@@ -94,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cell.classList.add('error-cell');
                 }
             } else {
-                cell.innerHTML = ' ';
+                cell.innerHTML = ' ';
                 const memoGrid = document.createElement('div');
                 memoGrid.classList.add('memo-grid');
                 for (let i = 1; i <= 9; i++) {
