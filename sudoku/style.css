@@ -61,7 +61,7 @@ h1 {
 
 /* フォーカスされたエリア（行・列）のハイライト */
 .cell.highlight-area {
-    background-color: #aacaf2
+    background-color: #b5d8ff
 }
 
 /* フォーカスされた数字と同じ数字のハイライト */
