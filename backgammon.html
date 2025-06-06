@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript バックギャモン (最終版)</title>
+    <style>
+        :root { --checker-size: 36px; --point-width: 45px; --point-height: 190px; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #263238; color: white; margin: 0; padding: 20px; }
+        h1 { margin-bottom: 20px; font-weight: 300; font-size: 2.5em; color: #eceff1; text-align: center; }
+        .container { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; justify-content: center; width: 100%; }
+        .board-container { display: flex; padding: 15px; background-color: #37474F; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .board-layout { display: flex; flex-direction: column; background-color: #dec9a7; position: relative; }
+        .board-half { display: flex; }
+        .bar { width: 40px; background-color: #37474F; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px 0; }
+        .bar h4 { margin: 5px 0; font-size: 14px; }
+        .quadrant { display: flex; }
+        .point { width: var(--point-width); height: var(--point-height); position: relative; display: flex; flex-direction: column; align-items: center; }
+        .point::before { content: ''; position: absolute; width: 0; height: 0; z-index: 0; }
+        .point.top-row { justify-content: flex-start; }
+        .point.bottom-row { justify-content: flex-end; }
+        .point.top-row::before { border-left: calc(var(--point-width) / 2) solid transparent; border-right: calc(var(--point-width) / 2) solid transparent; border-top-style: solid; border-top-width: var(--point-height); top: 0; }
+        .point.bottom-row::before { border-left: calc(var(--point-width) / 2) solid transparent; border-right: calc(var(--point-width) / 2) solid transparent; border-bottom-style: solid; border-bottom-width: var(--point-height); bottom: 0; }
+        .point.p-light::before { border-color: transparent transparent #e3d4b5 transparent; }
+        .point.p-dark::before { border-color: transparent transparent #b08968 transparent; }
+        .point.top-row.p-light::before { border-color: #e3d4b5 transparent transparent transparent; }
+        .point.top-row.p-dark::before { border-color: #b08968 transparent transparent transparent; }
+        .checker { width: var(--checker-size); height: var(--checker-size); border-radius: 50%; box-sizing: border-box; position: absolute; cursor: pointer; transition: transform 0.2s, outline 0.2s; box-shadow: 0 3px 5px rgba(0,0,0,0.4); z-index: 1; }
+        .checker.red { background: radial-gradient(circle at 65% 35%, #e57373, #c62828); border: 2px solid #b71c1c; }
+        .checker.black { background: radial-gradient(circle at 65% 35%, #616161, #212121); border: 2px solid #1a1a1a; }
+        .point.top-row .checker { top: calc(var(--checker-size) * var(--i) * 0.75); }
+        .point.bottom-row .checker { bottom: calc(var(--checker-size) * var(--i) * 0.75); }
+        .bar .checker, .home-area .checker { position: relative; margin: 2px 0; }
+        .home-area { width: 50px; background-color: #455A64; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding-top: 10px; }
+        .home-area h4 { margin: 5px 0; writing-mode: vertical-rl; }
+        .point-number-row { position: absolute; left: 0; right: 0; display: flex; pointer-events: none; }
+        .point-number-row.top { top: -20px; }
+        .point-number-row.bottom { bottom: -20px; }
+        .point-number-quadrant { display: flex; flex-basis: 50%; justify-content: space-around; }
+        .point-number { font-size: 12px; color: #eee; width: var(--point-width); text-align: center; }
+        .selected { transform: scale(1.1); outline: 3px solid #03a9f4; outline-offset: 2px; }
+        .point.valid-move::after, .home-area.valid-move::after { content:''; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(76, 175, 80, 0.5); cursor: pointer; z-index: 2;}
+        .sidebar { display: flex; flex-direction: column; }
+        .game-setup, .turn-controls, .game-info { background-color: #455A64; color: white; padding: 15px; border-radius: 8px; width: 220px; box-sizing: border-box; margin-bottom: 20px; }
+        .turn-controls { margin-bottom: 0; }
+        .game-setup button { width: 100%; padding: 8px; border-radius: 4px; border: none; background-color: #607D8B; color: white; cursor: pointer; }
+        .game-setup select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 10px; }
+        .game-info p, .turn-controls p { margin: 0 0 10px 0; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .turn-controls p { justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .turn-controls button { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 4px; border: none; font-size: 16px; cursor: pointer; }
+        #roll-button { background-color: #f44336; color: white; }
+        #undo-button { background-color: #FFC107; color: black; margin-top: 0; }
+        .turn-controls button:disabled { background-color: #555; cursor: not-allowed; color: #999; }
+        .dice-area { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; height: 50px; }
+        .die { width: 40px; height: 40px; background-color: white; color: black; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; }
+        #message-area { margin-top: 15px; font-size: 18px; font-weight: bold; color: #ffeb3b; height: 25px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript バックギャモン</h1>
+    <div class="container">
+        <div class="sidebar">
+            <div class="game-setup">
+                <label for="cpu-level">CPUレベル:</label>
+                <select id="cpu-level">
+                    <option value="1">入門</option><option value="2">初級</option><option value="3">中級</option><option value="4" selected>上級</option>
+                    <option value="5">熟練</option><option value="6">達人</option><option value="7">師範</option>
+                </select>
+                <button id="start-button">ゲーム開始 / リセット</button>
+            </div>
+            <div class="game-info">
+                <p>ターン: <span id="current-turn"></span></p>
+                <p>赤(あなた) バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
+                <p>黒(CPU) バー:<span id="bar-black-score">0</span> / ゴール:<span id="borne-off-black-score">0</span></p>
+            </div>
+            <div class="turn-controls">
+                <div class="dice-area"><div class="die" id="die1">?</div><div class="die" id="die2">?</div></div>
+                <p>残りの手: <span id="moves-left-display">-</span></p>
+                <button id="roll-button">サイコロを振る</button>
+                <button id="undo-button">一手戻す</button>
+                <div id="message-area">ゲームを開始してください</div>
+            </div>
+        </div>
+        <div class="board-container">
+            <div class="board-layout" id="main-board"></div>
+            <div class="home-area" id="home-area"><h4>ゴール</h4></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 定数とグローバル変数 ---
+        const BOARD_POINTS = 24;
+        const CHECKERS_PER_PLAYER = 15;
+        const PLAYER = 'red', CPU = 'black';
+        const START_POS = [ {p:23, c:2, pl:PLAYER}, {p:18, c:5, pl:PLAYER}, {p:16, c:3, pl:PLAYER}, {p:11, c:5, pl:CPU}, {p:5, c:5, pl:PLAYER}, {p:7, c:3, pl:CPU}, {p:12, c:5, pl:CPU}, {p:0, c:2, pl:CPU} ];
+        
+        const dom = {
+            board: document.getElementById('main-board'), home: document.getElementById('home-area'),
+            die1: document.getElementById('die1'), die2: document.getElementById('die2'),
+            rollBtn: document.getElementById('roll-button'), startBtn: document.getElementById('start-button'),
+            undoBtn: document.getElementById('undo-button'), msg: document.getElementById('message-area'),
+            turn: document.getElementById('current-turn'), movesLeft: document.getElementById('moves-left-display'),
+            barP: document.getElementById('bar-red-score'), borneP: document.getElementById('borne-off-red-score'),
+            barC: document.getElementById('bar-black-score'), borneC: document.getElementById('borne-off-black-score'),
+            level: document.getElementById('cpu-level')
+        };
+        
+        let state; // ゲームの全状態を保持するオブジェクト
+
+        // --- ゲーム進行の管理 ---
+        function initGame() {
+            state = {
+                board: Array(BOARD_POINTS).fill(null).map(() => ({ player: null, count: 0 })),
+                bar: { [PLAYER]: 0, [CPU]: 0 },
+                borneOff: { [PLAYER]: 0, [CPU]: 0 },
+                dice: [],
+                movesLeft: [],
+                currentPlayer: PLAYER,
+                turnState: 'ROLLING', // ROLLING, ANIMATING, MOVING
+                selectedPoint: null,
+                gameOver: false,
+                cpuLevel: parseInt(dom.level.value, 10),
+                turnStartState: null // Undo機能用のスナップショット
+            };
+            START_POS.forEach(pos => state.board[pos.p] = { player: pos.pl, count: pos.c });
+            
+            dom.rollBtn.disabled = false;
+            dom.undoBtn.disabled = true;
+            dom.msg.textContent = 'あなたの番です。サイコロを振ってください。';
+            renderAll();
+        }
+
+        function switchTurn() {
+            if (state.gameOver) return;
+            state.currentPlayer = state.currentPlayer === PLAYER ? CPU : PLAYER;
+            state.turnState = 'ROLLING';
+            state.dice = [];
+            state.movesLeft = [];
+            state.selectedPoint = null;
+            state.turnStartState = null;
+            dom.undoBtn.disabled = true;
+
+            if (state.currentPlayer === PLAYER) {
+                dom.rollBtn.disabled = false;
+                dom.msg.textContent = 'あなたの番です。サイコロを振ってください。';
+            } else {
+                dom.rollBtn.disabled = true;
+                dom.msg.textContent = 'CPUのターンです。';
+                setTimeout(cpuTurn, 1000);
+            }
+            renderAll();
+        }
+
+        function endGame() {
+            state.gameOver = true;
+            dom.msg.textContent = `${state.currentPlayer === PLAYER ? "あなた" : "CPU"} の勝ちです！`;
+            dom.rollBtn.disabled = true;
+            dom.undoBtn.disabled = true;
+        }
+
+        // --- 描画ロジック ---
+        function renderAll() {
+            dom.board.innerHTML = '';
+            dom.home.innerHTML = '<h4>ゴール</h4>';
+            
+            const topHalf = document.createElement('div'); topHalf.className = 'board-half';
+            const bottomHalf = document.createElement('div'); bottomHalf.className = 'board-half';
+            const barEl = document.createElement('div'); barEl.className = 'bar'; barEl.id = 'bar'; barEl.innerHTML = '<h4>バー</h4>';
+            barEl.addEventListener('click', () => handlePlayerAction('bar'));
+            
+            const quadrants = [document.createElement('div'), document.createElement('div'), document.createElement('div'), document.createElement('div')];
+            quadrants.forEach(q => q.className = 'quadrant');
+            
+            for (let i = 12; i <= 17; i++) quadrants[0].appendChild(createPointEl(i));
+            for (let i = 18; i <= 23; i++) quadrants[1].appendChild(createPointEl(i));
+            for (let i = 11; i >= 6; i--) quadrants[2].appendChild(createPointEl(i));
+            for (let i = 5; i >= 0; i--) quadrants[3].appendChild(createPointEl(i));
+            
+            topHalf.append(quadrants[0], quadrants[1]);
+            bottomHalf.append(quadrants[2], quadrants[3]);
+            dom.board.append(createPointNumberRow('top'), topHalf, barEl, bottomHalf, createPointNumberRow('bottom'));
+            
+            for (const player of [PLAYER, CPU]) {
+                for(let i=0; i<state.bar[player]; i++) barEl.appendChild(createChecker(player, 'bar'));
+                for(let i=0; i<state.borneOff[player]; i++) dom.home.appendChild(createChecker(player, 'home'));
+            }
+            
+            updateInfo();
+            highlightValidMoves();
+        }
+
+        function createPointEl(index) {
+            const point = document.createElement('div');
+            point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== 0) ? 'p-dark' : 'p-light'}`;
+            point.dataset.index = index;
+            point.addEventListener('click', () => handlePlayerAction(index));
+            if (state.board[index].count > 0) {
+                for (let j = 0; j < state.board[index].count; j++) {
+                    const checker = createChecker(state.board[index].player, index);
+                    if (j === state.board[index].count - 1 && state.selectedPoint === index) {
+                        checker.classList.add('selected');
+                    }
+                    checker.style.setProperty('--i', j);
+                    point.appendChild(checker);
+                }
+            }
+            return point;
+        }
+
+        function createChecker(player, from) {
+            const checker = document.createElement('div');
+            checker.className = `checker ${player}`;
+            checker.dataset.from = from;
+            checker.addEventListener('click', (e) => { e.stopPropagation(); handlePlayerAction(from); });
+            return checker;
+        }
+
+        function createPointNumberRow(pos) {
+            const row = document.createElement('div'); row.className = `point-number-row ${pos}`;
+            const leftQuad = document.createElement('div'); leftQuad.className = 'point-number-quadrant';
+            const rightQuad = document.createElement('div'); rightQuad.className = 'point-number-quadrant';
+            const start = pos === 'top' ? 12 : 11, end = pos === 'top' ? 23 : 0, dir = pos === 'top' ? 1 : -1;
+            let numbers = []; for (let i = start; (pos === 'top' ? i <= end : i >= end); i += dir) { numbers.push(i + 1); }
+            numbers.forEach(num => { const numEl = document.createElement('div'); numEl.className = 'point-number'; numEl.textContent = num; if ((pos === 'top' && num >= 19) || (pos === 'bottom' && num <= 6)) { rightQuad.appendChild(numEl); } else { leftQuad.appendChild(numEl); } });
+            row.append(leftQuad, document.createElement('div'), rightQuad);
+            return row;
+        }
+
+        function updateInfo() {
+            dom.turn.textContent = `${state.currentPlayer === PLAYER ? "あなた(赤)" : "CPU(黒)"}のターン`;
+            dom.barP.textContent = state.bar[PLAYER]; dom.borneP.textContent = state.borneOff[PLAYER];
+            dom.barC.textContent = state.bar[CPU]; dom.borneC.textContent = state.borneOff[CPU];
+            dom.die1.textContent = state.dice[0] || '?'; dom.die2.textContent = state.dice[1] || '?';
+            if (state.currentPlayer === PLAYER && state.turnState === 'MOVING') { dom.movesLeft.textContent = state.movesLeft.length > 0 ? state.movesLeft.join(', ') : 'なし'; } else { dom.movesLeft.textContent = '-'; }
+        }
+
+        function highlightValidMoves() {
+            document.querySelectorAll('.point.valid-move, .home-area.valid-move').forEach(p => p.classList.remove('valid-move'));
+            if (state.currentPlayer !== PLAYER || state.turnState !== 'MOVING') return;
+
+            const sequences = generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft);
+            const allPossibleFirstMoves = [...new Map(sequences.flatMap(s => s.moves[0] ? [s.moves[0]] : []).map(m => [`${m.from}-${m.to}`, m])).values()];
+            
+            if (state.selectedPoint !== null) {
+                allPossibleFirstMoves.filter(m => m.from === state.selectedPoint).forEach(m => {
+                    if (m.to === 'home') dom.home.classList.add('valid-move');
+                    else document.querySelector(`.point[data-index='${m.to}']`)?.classList.add('valid-move');
+                });
+            }
+        }
+        
+        // --- プレイヤー操作 ---
+        async function onRollClick() {
+            if (state.turnState !== 'ROLLING' || state.currentPlayer !== PLAYER) return;
+            dom.rollBtn.disabled = true; state.turnState = 'ANIMATING';
+            const animationTime = 800;
+            const interval = setInterval(() => { dom.die1.textContent = Math.ceil(Math.random() * 6); dom.die2.textContent = Math.ceil(Math.random() * 6); }, 80);
+            await new Promise(resolve => setTimeout(resolve, animationTime));
+            clearInterval(interval);
+            state.dice = [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
+            state.movesLeft = (state.dice[0] === state.dice[1]) ? Array(4).fill(state.dice[0]) : state.dice.slice();
+            state.turnState = 'MOVING';
+            dom.msg.textContent = '駒を動かしてください。';
+            state.turnStartState = { board: JSON.parse(JSON.stringify(state.board)), bar: { ...state.bar }, movesLeft: [...state.movesLeft] };
+            if (generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft).length === 0) { dom.msg.textContent = '動かせる手がありません。'; setTimeout(switchTurn, 1500); }
+            renderAll();
+        }
+
+        function onUndoClick() {
+            if (!state.turnStartState || state.currentPlayer !== PLAYER || state.turnState !== 'MOVING') return;
+            state.board = JSON.parse(JSON.stringify(state.turnStartState.board));
+            state.bar = { ...state.bar };
+            state.movesLeft = [...state.turnStartState.movesLeft];
+            state.selectedPoint = null;
+            dom.undoBtn.disabled = true;
+            dom.msg.textContent = '手を元に戻しました。';
+            renderAll();
+        }
+
+        function handlePlayerAction(target) {
+            if (state.turnState !== 'MOVING' || state.currentPlayer !== PLAYER) return;
+            const sequences = generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft);
+            if (state.selectedPoint !== null) {
+                const firstMove = sequences.flatMap(s => s.moves).find(m => m.from === state.selectedPoint && m.to === target);
+                if (firstMove) {
+                    executeMove(state, firstMove);
+                    dom.undoBtn.disabled = false;
+                    const isTurnOver = state.movesLeft.length === 0 || generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft).length === 0;
+                    if (!state.gameOver && isTurnOver) setTimeout(switchTurn, 500);
+                }
+                state.selectedPoint = null;
+            } else {
+                if (sequences.flatMap(s => s.moves).some(m => m.from === target)) {
+                    state.selectedPoint = target;
+                }
+            }
+            renderAll();
+        }
+        
+        // --- AIロジック ---
+        async function cpuTurn() {
+            dom.rollBtn.disabled = true; state.turnState = 'ANIMATING';
+            const animationTime = 800;
+            const interval = setInterval(() => { dom.die1.textContent = Math.ceil(Math.random() * 6); dom.die2.textContent = Math.ceil(Math.random() * 6); }, 80);
+            await new Promise(r => setTimeout(r, animationTime));
+            clearInterval(interval);
+            state.dice = [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
+            state.movesLeft = (state.dice[0] === state.dice[1]) ? Array(4).fill(state.dice[0]) : state.dice.slice();
+            renderAll();
+            await new Promise(r => setTimeout(r, 600));
+            const bestSequence = findBestCpuMoveSequence();
+            if (bestSequence && bestSequence.moves.length > 0) {
+                for (const move of bestSequence.moves) {
+                    executeMove(state, move); renderAll();
+                    await new Promise(r => setTimeout(r, 800));
+                }
+            } else {
+                dom.msg.textContent = 'CPUは動けません。';
+                await new Promise(r => setTimeout(r, 1500));
+            }
+            if (!state.gameOver) switchTurn();
+        }
+
+        function findBestCpuMoveSequence() {
+            const sequences = generateAllMoveSequences(state.board, state.bar, CPU, state.movesLeft);
+            if (sequences.length === 0) return null;
+            let bestSeq = sequences[0];
+            let bestScore = -Infinity;
+            for (const seq of sequences) {
+                const score = evaluateBoard(seq.finalBoard, seq.finalBar) * (state.cpuLevel / 2) + seq.hits * 5 * state.cpuLevel + seq.borneOff * 2 * state.cpuLevel;
+                if (score > bestScore) { bestScore = score; bestSeq = seq; }
+            }
+            return bestSeq;
+        }
+        
+        function evaluateBoard(board, bar) {
+            let score = 0;
+            for(let i=0; i<BOARD_POINTS; i++) {
+                if(board[i].player === CPU) score += (i+1) * board[i].count;
+                if(board[i].player === PLAYER) score -= (24-i) * board[i].count;
+            }
+            score -= bar[CPU] * 30;
+            score += bar[PLAYER] * 30;
+            return score;
+        }
+
+        // --- ルール判定とユーティリティ ---
+        function executeMove(gameState, move) {
+            const { from, to, die, isHit } = move;
+            const player = gameState.currentPlayer;
+            if (from === 'bar') { gameState.bar[player]--; } else { gameState.board[from].count--; if (gameState.board[from].count === 0) gameState.board[from].player = null; }
+            if (to === 'home') { gameState.borneOff[player]++; } else { const opponent = player === PLAYER ? CPU : PLAYER; if (isHit) { gameState.board[to] = { player, count: 1 }; gameState.bar[opponent]++; } else { gameState.board[to].player = player; gameState.board[to].count++; } }
+            const dieIndex = gameState.movesLeft.findIndex(d => d === die);
+            if (dieIndex > -1) gameState.movesLeft.splice(dieIndex, 1);
+            if (gameState.borneOff[player] === CHECKERS_PER_PLAYER) endGame();
+        }
+
+        function generateAllMoveSequences(initialBoard, initialBar, player, dice) {
+            const sequences = [];
+            function find(currentBoard, currentBar, diceLeft, movesSoFar) {
+                const possibleMoves = generateSingleMoves(currentBoard, currentBar, player, [...new Set(diceLeft)]);
+                if (diceLeft.length === 0 || possibleMoves.length === 0) {
+                    if (movesSoFar.length > 0 || dice.length === 0) {
+                        sequences.push({ moves: movesSoFar, finalBoard: currentBoard, finalBar: currentBar, hits: movesSoFar.filter(m => m.isHit).length, borneOff: movesSoFar.filter(m => m.to === 'home').length });
+                    }
+                    return;
+                }
+                for (const move of possibleMoves) {
+                    const nextBoard = JSON.parse(JSON.stringify(currentBoard)); const nextBar = { ...currentBar };
+                    const opponent = player === PLAYER ? CPU : PLAYER;
+                    if (move.from === 'bar') nextBar[player]--; else { nextBoard[move.from].count--; if (nextBoard[move.from].count === 0) nextBoard[move.from].player = null; }
+                    if (move.to === 'home') {} else { if (move.isHit) { nextBoard[move.to] = { player, count: 1 }; nextBar[opponent]++; } else { nextBoard[move.to].player = player; nextBoard[move.to].count++; } }
+                    const nextDice = [...diceLeft]; nextDice.splice(nextDice.findIndex(d => d === move.die), 1);
+                    find(nextBoard, nextBar, nextDice, [...movesSoFar, move]);
+                }
+            }
+            find(JSON.parse(JSON.stringify(initialBoard)), { ...initialBar }, dice, []);
+            if (sequences.length === 0 && generateSingleMoves(initialBoard, initialBar, player, [...new Set(dice)]).length === 0) return [];
+            return sequences.sort((a, b) => b.moves.length - a.moves.length).filter((s, i, arr) => s.moves.length === arr[0].moves.length);
+        }
+
+        function generateSingleMoves(board, bar, player, uniqueDice) {
+            let moves = [];
+            const opponent = player === PLAYER ? CPU : PLAYER;
+            if (bar[player] > 0) {
+                for (const die of uniqueDice) {
+                    const entryPoint = player === PLAYER ? 24 - die : die - 1;
+                    const target = board[entryPoint];
+                    if (target.player === player || target.count <= 1) {
+                        moves.push({ from: 'bar', to: entryPoint, die, isHit: target.player === opponent });
+                    }
+                }
+                return moves;
+            }
+            const canBearOff = canPlayerBearOff(board, player, bar);
+            for (let i = 0; i < BOARD_POINTS; i++) {
+                if (board[i].player === player) {
+                    for (const die of uniqueDice) {
+                        const toIndex = player === PLAYER ? i - die : i + die;
+                        if (canBearOff) {
+                            const homePos = player === PLAYER ? i + 1 : 24 - i;
+                            if (homePos <= die && (homePos === die || findHighestCheckerInHome(board, player) === i)) {
+                                moves.push({ from: i, to: 'home', die, isHit: false });
+                                continue;
+                            }
+                        }
+                        if (toIndex >= 0 && toIndex < BOARD_POINTS) {
+                            const target = board[toIndex];
+                            if (target.player === player || target.count <= 1) {
+                                moves.push({ from: i, to: toIndex, die, isHit: target.player === opponent });
+                            }
+                        }
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function canPlayerBearOff(board, player, bar) {
+            if (bar[player] > 0) return false;
+            let totalOnBoard = 0;
+            for (let i = 0; i < BOARD_POINTS; i++) {
+                if (board[i].player === player) totalOnBoard += board[i].count;
+            }
+            if (totalOnBoard + state.borneOff[player] !== CHECKERS_PER_PLAYER) return false;
+            const homeRange = player === PLAYER ? { start: 0, end: 5 } : { start: 18, end: 23 };
+            for (let i = 0; i < BOARD_POINTS; i++) {
+                if (board[i].player === player && (i < homeRange.start || i > homeRange.end)) return false;
+            }
+            return true;
+        }
+        
+        function findHighestCheckerInHome(board, player) {
+            if(player === PLAYER) { for(let i = 5; i >= 0; i--) if(board[i].player === player) return i; }
+            else { for(let i = 18; i <= 23; i++) if(board[i].player === player) return i; }
+            return -1;
+        }
+
+        // --- 初期化 & イベントリスナー ---
+        dom.startBtn.addEventListener('click', initGame);
+        dom.rollBtn.addEventListener('click', onRollClick);
+        dom.undoBtn.addEventListener('click', onUndoClick);
+        dom.home.addEventListener('click', () => handlePlayerAction('home'));
+        initGame();
+    </script>
+</body>
+</html>
