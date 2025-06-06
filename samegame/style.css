@@ -1,6 +1,6 @@
 :root {
-    --block-size: 40px; /* ブロックの基本サイズ */
-    --transition-speed: 0.3s;
+    --block-size: 40px;
+    --transition-speed: 0.2s; /* 少し速度を上げてキビキビと */
 }
 
 body {
@@ -49,7 +49,9 @@ button.active {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* --- レイアウト修正 --- */
 #game-container {
+    display: inline-block; /* 中身のサイズにフィットするように変更 */
     background-color: #bdc3c7;
     padding: 10px;
     border-radius: 10px;
@@ -57,7 +59,8 @@ button.active {
 }
 
 #game-board {
-    position: relative; /* ブロックの位置の基準 */
+    position: relative;
+    /* JSでサイズが設定される */
 }
 
 .block {
@@ -67,34 +70,41 @@ button.active {
     box-sizing: border-box;
     border-radius: 5px;
     cursor: pointer;
-    /* 立体感を出すためのスタイル */
     border-top: 1px solid rgba(255, 255, 255, 0.5);
     border-left: 1px solid rgba(255, 255, 255, 0.5);
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
     border-right: 1px solid rgba(0, 0, 0, 0.2);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 
-    /* アニメーションの設定 */
+    /* --- アニメーション修正 --- */
+    /* CSS変数で transform の各要素を管理 */
+    --scale: 1;
+    --x: 0;
+    --y: 0;
+    transform: translate(var(--x), var(--y)) scale(var(--scale));
+    
+    /* transition の対象を明記 */
     transition: transform var(--transition-speed) ease-out,
-                opacity var(--transition-speed) ease-out;
+                opacity var(--transition-speed) ease-out,
+                box-shadow var(--transition-speed) ease-out;
 }
 
 /* マウスオーバー時のプレビュースタイル */
 .block.preview {
-    transform: scale(1.1) !important;
+    --scale: 1.1; /* scale変数だけを変更 */
     z-index: 10;
-    box-shadow: 0 0 15px yellow;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
 
 /* 消えるときのアニメーション */
 .block.disappearing {
-    transform: scale(0);
+    --scale: 0; /* 自分の位置で縮んで消える */
     opacity: 0;
 }
 
 /* ブロックの色 */
-.color-0 { background-image: linear-gradient(135deg, #ff7e5f, #feb47b); } /* オレンジ */
-.color-1 { background-image: linear-gradient(135deg, #6a82fb, #fc5c7d); } /* ピンク */
-.color-2 { background-image: linear-gradient(135deg, #56ab2f, #a8e063); } /* 緑 */
-.color-3 { background-image: linear-gradient(135deg, #4e54c8, #8f94fb); } /* 青紫 */
-.color-4 { background-image: linear-gradient(135deg, #ffedbc, #ed4264); } /* 赤黄 */
+.color-0 { background-image: linear-gradient(135deg, #ff7e5f, #feb47b); }
+.color-1 { background-image: linear-gradient(135deg, #6a82fb, #fc5c7d); }
+.color-2 { background-image: linear-gradient(135deg, #56ab2f, #a8e063); }
+.color-3 { background-image: linear-gradient(135deg, #4e54c8, #8f94fb); }
+.color-4 { background-image: linear-gradient(135deg, #ffedbc, #ed4264); }
