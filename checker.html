@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript チェッカー (AI強化版)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 55px);
+            grid-template-rows: repeat(8, 55px);
+            border: 3px solid #8B4513; /* SaddleBrown */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell {
+            width: 55px;
+            height: 55px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: #FFD700; /* Gold */
+        }
+
+        .light { background-color: #F5DEB3; /* Wheat */ }
+        .dark { background-color: #A0522D; /* Sienna */ }
+
+        .disc {
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.4), 0 2px 3px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+
+        .white-man { background-color: #f8f8f8; }
+        .black-man { background-color: #333333; }
+        
+        .king::after {
+            content: '👑'; /* 王冠の絵文字 */
+            position: absolute;
+            transform: translateY(-5px);
+            text-shadow: 0 0 3px black;
+        }
+
+        /* ハイライト表示 */
+        .selected {
+            background-color: #64b5f6 !important; /* 明るい青 */
+        }
+        .valid-move {
+            background-color: rgba(144, 238, 144, 0.7) !important; /* LightGreen */
+            cursor: pointer;
+        }
+
+        /* --- UI & Controls --- */
+        .controls, .game-info {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 220px;
+            box-sizing: border-box;
+        }
+        .controls { margin-bottom: 20px; }
+        .controls label, .controls select, .controls button { display: block; width: 100%; margin-bottom: 10px; }
+        .controls select, .controls button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .controls button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        .controls button:hover { background-color: #45a049; }
+        .game-info p { margin: 0 0 10px 0; font-size: 16px; display: flex; justify-content: space-between; }
+        #message-area { margin-top: 15px; font-size: 18px; font-weight: bold; color: #d32f2f; height: 25px; text-align: center; }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>JavaScript チェッカー</h1>
+            <div class="controls">
+                <label for="cpu-level">CPUレベル:</label>
+                <select id="cpu-level">
+                    <option value="1">レベル1 (ランダム)</option>
+                    <option value="2">レベル2 (基本評価)</option>
+                    <option value="3">レベル3 (α-β法 弱)</option>
+                    <option value="4" selected>レベル4 (α-β法 強)</option>
+                </select>
+                <button id="start-button">ゲーム開始 / リセット</button>
+            </div>
+            <div class="game-info">
+                <p>手数: <span id="turn-count">0</span></p>
+                <p>白 (あなた): <span id="white-score">12</span></p>
+                <p>黒 (CPU): <span id="black-score">12</span></p>
+                <p>ターン: <span id="current-turn"></span></p>
+            </div>
+        </div>
+        <div class="game-area">
+            <div id="board"></div>
+            <div id="message-area"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Constants ---
+        const BOARD_SIZE = 8;
+        const EMPTY = 0, WHITE_MAN = 1, BLACK_MAN = 2, WHITE_KING = 3, BLACK_KING = 4;
+        const PLAYER = 'white', CPU = 'black';
+
+        // --- DOM Elements ---
+        const boardEl = document.getElementById('board');
+        const turnCountEl = document.getElementById('turn-count');
+        const whiteScoreEl = document.getElementById('white-score');
+        const blackScoreEl = document.getElementById('black-score');
+        const currentTurnEl = document.getElementById('current-turn');
+        const messageAreaEl = document.getElementById('message-area');
+        const cpuLevelSelect = document.getElementById('cpu-level');
+        const startButton = document.getElementById('start-button');
+
+        // --- Game State ---
+        let board = [];
+        let currentPlayer;
+        let turnCount;
+        let cpuLevel;
+        let gameOver;
+        let selectedPiece = null;
+        let validMoves = [];
+        let isContinuousJump = false;
+
+        function initGame() {
+            // ... (変更なし) ...
+            board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
+            for (let r = 0; r < 3; r++) { for (let c = 0; c < BOARD_SIZE; c++) { if ((r + c) % 2 !== 0) board[r][c] = BLACK_MAN; } }
+            for (let r = 5; r < BOARD_SIZE; r++) { for (let c = 0; c < BOARD_SIZE; c++) { if ((r + c) % 2 !== 0) board[r][c] = WHITE_MAN; } }
+            currentPlayer = PLAYER;
+            turnCount = 0;
+            cpuLevel = parseInt(cpuLevelSelect.value, 10);
+            gameOver = false;
+            selectedPiece = null;
+            isContinuousJump = false;
+            messageAreaEl.textContent = 'あなたの番です';
+            updateAllValidMoves(board, currentPlayer);
+            renderBoard();
+            updateInfo();
+        }
+
+        // --- Helper Functions (getPieceColor, isKing) ---
+        function getPieceColor(piece) {
+            if (piece === WHITE_MAN || piece === WHITE_KING) return 'white';
+            if (piece === BLACK_MAN || piece === BLACK_KING) return 'black';
+            return null;
+        }
+        function isKing(piece) { return piece === WHITE_KING || piece === BLACK_KING; }
+
+        function renderBoard() {
+            // ... (変更なし) ...
+            boardEl.innerHTML = '';
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
+                    const piece = board[r][c];
+                    if (piece !== EMPTY) {
+                        const disc = document.createElement('div');
+                        disc.className = 'disc';
+                        if (piece === WHITE_MAN) disc.classList.add('white-man');
+                        else if (piece === BLACK_MAN) disc.classList.add('black-man');
+                        else if (piece === WHITE_KING) disc.classList.add('white-man', 'king');
+                        else if (piece === BLACK_KING) disc.classList.add('black-man', 'king');
+                        cell.appendChild(disc);
+                    }
+                    if (selectedPiece && selectedPiece.r === r && selectedPiece.c === c) cell.classList.add('selected');
+                    if (validMoves.some(m => m.to.r === r && m.to.c === c && (!selectedPiece || (selectedPiece.r === m.from.r && selectedPiece.c === m.from.c)))) cell.classList.add('valid-move');
+                    cell.addEventListener('click', () => onCellClick(r, c));
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function updateInfo() { /* ... (変更なし) ... */ }
+
+        function onCellClick(r, c) {
+            if (gameOver || currentPlayer !== PLAYER) return;
+            if (selectedPiece) {
+                const move = validMoves.find(m => m.from.r === selectedPiece.r && m.from.c === selectedPiece.c && m.to.r === r && m.to.c === c);
+                if (move) {
+                    performMove(board, move);
+                    // 連続ジャンプのチェック
+                    if (move.isJump && getJumpsFrom(board, move.to.r, move.to.c).length > 0) {
+                        isContinuousJump = true;
+                        currentPlayer = PLAYER;
+                        selectedPiece = { r: move.to.r, c: move.to.c };
+                        messageAreaEl.textContent = '続けてジャンプしてください！';
+                        updateAllValidMoves(board, currentPlayer);
+                        renderBoard();
+                    } else {
+                        isContinuousJump = false;
+                        switchTurn();
+                    }
+                } else {
+                    selectedPiece = null;
+                    if (getPieceColor(board[r][c]) === PLAYER) selectedPiece = { r, c };
+                    renderBoard();
+                }
+            } else {
+                if (getPieceColor(board[r][c]) === PLAYER) {
+                    selectedPiece = { r, c };
+                    renderBoard();
+                }
+            }
+        }
+        
+        // 駒を動かすロジックを独立した関数に
+        function performMove(currentBoard, move) {
+            const { from, to, isJump, jumpedPiece } = move;
+            const piece = currentBoard[from.r][from.c];
+            currentBoard[to.r][to.c] = piece;
+            currentBoard[from.r][from.c] = EMPTY;
+            if (isJump) currentBoard[jumpedPiece.r][jumpedPiece.c] = EMPTY;
+            // キングへの昇格
+            if ((piece === WHITE_MAN && to.r === 0) || (piece === BLACK_MAN && to.r === 7)) {
+                currentBoard[to.r][to.c] = (getPieceColor(piece) === 'white') ? WHITE_KING : BLACK_KING;
+            }
+            if(currentBoard === board) turnCount++;
+        }
+
+        async function switchTurn() {
+            selectedPiece = null;
+            currentPlayer = (currentPlayer === PLAYER) ? CPU : PLAYER;
+            updateAllValidMoves(board, currentPlayer);
+
+            if (validMoves.length === 0) { endGame(true); return; }
+
+            renderBoard();
+            updateInfo();
+            
+            if (!gameOver && currentPlayer === CPU) {
+                messageAreaEl.textContent = 'CPUが思考中...';
+                await new Promise(r => setTimeout(r, 100)); // UI更新用
+                cpuTurn();
+            } else {
+                 messageAreaEl.textContent = 'あなたの番です';
+            }
+        }
+        
+        async function cpuTurn() {
+            if (gameOver) return;
+
+            const bestMove = findBestMoveForCPU();
+            
+            if (bestMove) {
+                 performMove(board, bestMove);
+                 
+                 // CPUの連続ジャンプ
+                 let currentPos = bestMove.to;
+                 let wasJump = bestMove.isJump;
+                 while(wasJump) {
+                     updateAllValidMoves(board, CPU, currentPos); // ジャンプ元を限定
+                     if (validMoves.length > 0 && validMoves[0].isJump) {
+                         const nextJump = validMoves[0]; // 連続ジャンプは1択のはず
+                         await new Promise(r => setTimeout(r, 400)); // 連続ジャンプを視覚的に見せる
+                         performMove(board, nextJump);
+                         currentPos = nextJump.to;
+                         renderBoard();
+                     } else {
+                         wasJump = false;
+                     }
+                 }
+            }
+            
+            switchTurn();
+        }
+
+        function findBestMoveForCPU() {
+            if (validMoves.length === 0) return null;
+            if (validMoves.length === 1) return validMoves[0]; // 選択肢が1つなら即決
+
+            if (cpuLevel === 1) return validMoves[Math.floor(Math.random() * validMoves.length)];
+            
+            if (cpuLevel === 2) {
+                let bestMove = null;
+                let bestScore = -Infinity;
+                for (const move of validMoves) {
+                    const tempBoard = JSON.parse(JSON.stringify(board));
+                    performMove(tempBoard, move);
+                    const score = evaluateBoard(tempBoard, CPU);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = move;
+                    }
+                }
+                return bestMove;
+            }
+            
+            // --- ★ レベル3, 4はα-β法を使用 ---
+            const depth = (cpuLevel === 3) ? 3 : 5;
+            return alphaBeta(board, depth, -Infinity, Infinity, true).move;
+        }
+
+        // --- ★ 改良された評価関数 ---
+        function evaluateBoard(currentBoard, player) {
+            let playerScore = 0, opponentScore = 0;
+            const opponent = (player === CPU) ? PLAYER : CPU;
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const p = currentBoard[r][c];
+                    const color = getPieceColor(p);
+                    const pieceValue = isKing(p) ? 200 : 100; // キングの価値を高く
+
+                    if (color === player) {
+                        playerScore += pieceValue;
+                        // 前進ボーナス
+                        playerScore += (player === CPU) ? r * 5 : (7-r) * 5;
+                        // サイドにいる駒は少し安全
+                        if (c === 0 || c === 7) playerScore += 10;
+                    } else if (color === opponent) {
+                        opponentScore += pieceValue;
+                        opponentScore += (opponent === CPU) ? r * 5 : (7-r) * 5;
+                        if (c === 0 || c === 7) opponentScore += 10;
+                    }
+                }
+            }
+             // 駒が少ない場合は、総数での評価をより重視
+            const totalPieces = (playerScore + opponentScore) / 100;
+            if (totalPieces < 8) {
+                return (playerScore - opponentScore) * 2;
+            }
+            return playerScore - opponentScore;
+        }
+        
+        // --- ★ α-β法の実装 ---
+        function alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer) {
+            const player = maximizingPlayer ? CPU : PLAYER;
+            const possibleMoves = updateAllValidMoves(currentBoard, player);
+
+            if (depth === 0 || possibleMoves.length === 0) {
+                return { score: evaluateBoard(currentBoard, CPU), move: null };
+            }
+
+            let bestMove = null;
+            let bestValue = maximizingPlayer ? -Infinity : Infinity;
+
+            for (const move of possibleMoves) {
+                const tempBoard = JSON.parse(JSON.stringify(currentBoard));
+                performMove(tempBoard, move);
+
+                // 連続ジャンプのシミュレーション
+                let wasJump = move.isJump;
+                let lastPos = move.to;
+                while(wasJump) {
+                    const nextJumps = getJumpsFrom(tempBoard, lastPos.r, lastPos.c);
+                    if (nextJumps.length > 0) {
+                        const nextJump = nextJumps[0];
+                        performMove(tempBoard, nextJump);
+                        lastPos = nextJump.to;
+                    } else {
+                        wasJump = false;
+                    }
+                }
+
+                const result = alphaBeta(tempBoard, depth - 1, alpha, beta, !maximizingPlayer);
+
+                if (maximizingPlayer) {
+                    if (result.score > bestValue) {
+                        bestValue = result.score;
+                        bestMove = move;
+                    }
+                    alpha = Math.max(alpha, bestValue);
+                } else {
+                    if (result.score < bestValue) {
+                        bestValue = result.score;
+                        bestMove = move;
+                    }
+                    beta = Math.min(beta, bestValue);
+                }
+
+                if (beta <= alpha) {
+                    break; // 枝刈り
+                }
+            }
+            return { score: bestValue, move: bestMove };
+        }
+
+
+        // --- 合法手判定ロジック (引数にboardを追加) ---
+        function updateAllValidMoves(currentBoard, player, fromPos = null) {
+            // 連続ジャンプ中は、その駒からのジャンプのみ
+            if(isContinuousJump && selectedPiece) {
+                validMoves = getJumpsFrom(currentBoard, selectedPiece.r, selectedPiece.c);
+                return validMoves;
+            }
+            // CPUの連続ジャンプシミュレーション用
+            if (fromPos) {
+                 validMoves = getJumpsFrom(currentBoard, fromPos.r, fromPos.c);
+                 return validMoves;
+            }
+
+            let allJumps = [], allSteps = [];
+            for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) {
+                if (getPieceColor(currentBoard[r][c]) === player) {
+                    allJumps.push(...getJumpsFrom(currentBoard, r, c));
+                    allSteps.push(...getStepsFrom(currentBoard, r, c));
+                }
+            }}
+            
+            const result = allJumps.length > 0 ? allJumps : allSteps;
+            if(currentBoard === board) validMoves = result;
+            return result;
+        }
+
+        function getJumpsFrom(currentBoard, r, c) {
+            const jumps = [];
+            const piece = currentBoard[r][c];
+            const pieceColor = getPieceColor(piece);
+            const moveDirs = isKing(piece) ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (pieceColor === PLAYER ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+            for (const [dr, dc] of moveDirs) {
+                const opponentR = r + dr, opponentC = c + dc;
+                const landingR = r + dr * 2, landingC = c + dc * 2;
+                if (landingR >= 0 && landingR < 8 && landingC >= 0 && landingC < 8 && currentBoard[landingR][landingC] === EMPTY) {
+                    const opponentPiece = currentBoard[opponentR][opponentC];
+                    if (opponentPiece !== EMPTY && getPieceColor(opponentPiece) !== pieceColor) {
+                        jumps.push({ from: {r,c}, to: {r:landingR, c:landingC}, isJump: true, jumpedPiece: {r:opponentR, c:opponentC} });
+                    }
+                }
+            }
+            return jumps;
+        }
+        
+        function getStepsFrom(currentBoard, r, c) {
+            const steps = [];
+            const piece = currentBoard[r][c];
+            const pieceColor = getPieceColor(piece);
+            const moveDirs = isKing(piece) ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (pieceColor === PLAYER ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+            for (const [dr, dc] of moveDirs) {
+                const newR = r + dr, newC = c + dc;
+                if (newR >= 0 && newR < 8 && newC >= 0 && newC < 8 && currentBoard[newR][newC] === EMPTY) {
+                    steps.push({ from: {r,c}, to: {r:newR, c:newC}, isJump: false });
+                }
+            }
+            return steps;
+        }
+        
+        function endGame(isStalemate = false) { /* ... (変更なし) ... */ }
+
+        // --- Event Listeners & Init ---
+        startButton.addEventListener('click', initGame);
+        cpuLevelSelect.addEventListener('change', () => { cpuLevel = parseInt(cpuLevelSelect.value, 10); });
+        
+        // initGame内の関数をグローバルに展開
+        updateInfo = function() {
+             let whiteCount = 0, blackCount = 0;
+            board.flat().forEach(p => {
+                if (getPieceColor(p) === 'white') whiteCount++;
+                if (getPieceColor(p) === 'black') blackCount++;
+            });
+            turnCountEl.textContent = turnCount;
+            whiteScoreEl.textContent = whiteCount;
+            blackScoreEl.textContent = blackCount;
+            currentTurnEl.textContent = gameOver ? '終了' : (currentPlayer === PLAYER ? '白 (あなた)' : '黒 (CPU)');
+        }
+        endGame = function(isStalemate = false) {
+            gameOver = true;
+            let message;
+            if (isStalemate) {
+                const winner = (currentPlayer === PLAYER) ? "CPUの" : "あなたの";
+                message = `${currentPlayer === PLAYER ? 'あなた' : 'CPU'}は動けません。${winner}勝ちです！`;
+            } else {
+                 const whiteCount = board.flat().filter(p => getPieceColor(p) === 'white').length;
+                 const blackCount = board.flat().filter(p => getPieceColor(p) === 'black').length;
+                 if(whiteCount === 0) message = "CPUの勝ちです！";
+                 else if(blackCount === 0) message = "あなたの勝ちです！";
+            }
+            messageAreaEl.textContent = `ゲーム終了！ ${message}`;
+            updateInfo();
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
