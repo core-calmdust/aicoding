@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript バックギャモン (最終版)</title>
+    <title>JavaScript バックギャモン (最終修正版)</title>
     <style>
         :root { --checker-size: 36px; --point-width: 45px; --point-height: 190px; }
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #263238; color: white; margin: 0; padding: 20px; }
@@ -61,7 +61,7 @@
     </style>
 </head>
 <body>
-    <h1>JavaScript バックギャモン　ver2.0</h1>
+    <h1>JavaScript バックギャモン ver2.0</h1>
     <div class="container">
         <div class="sidebar">
             <div class="game-setup">
@@ -106,10 +106,12 @@
             constructor() {
                 this.BOARD_POINTS = 24;
                 this.CHECKERS_PER_PLAYER = 15;
-                this.START_POS = [ {p:23,c:2,pl:'red'},{p:12,c:5,pl:'red'},{p:7,c:3,pl:'red'},{p:5,c:5,pl:'red'},{p:0,c:2,pl:'black'},{p:11,c:5,pl:'black'},{p:16,c:3,pl:'black'},{p:18,c:5,pl:'black'} ];
+                this.START_POS = [ {p:23, c:2, pl:'red'},{p:12, c:5, pl:'red'},{p:7, c:3, pl:'red'},{p:5, c:5, pl:'red'},{p:0, c:2, pl:'black'},{p:11, c:5, pl:'black'},{p:16, c:3, pl:'black'},{p:18, c:5, pl:'black'} ];
+                
                 this.dom = {
-                    board: document.getElementById('main-board'), home: document.getElementById('home-area'), die1: document.getElementById('die1'), die2: document.getElementById('die2'), rollBtn: document.getElementById('roll-button'), startBtn: document.getElementById('start-button'), undoBtn: document.getElementById('undo-button'), msg: document.getElementById('message-area'), turn: document.getElementById('current-turn'), movesLeft: document.getElementById('moves-left-display'), barRed: document.getElementById('bar-red-score'), borneRed: document.getElementById('borne-off-red-score'), barBlack: document.getElementById('bar-black-score'), borneBlack: document.getElementById('borne-off-black-score'), level: document.getElementById('cpu-level'), redLabel: document.getElementById('red-label'), blackLabel: document.getElementById('black-label')
+                    board: document.getElementById('main-board'), home: document.getElementById('home-area'), die1: document.getElementById('die1'), die2: document.getElementById('die2'), rollBtn: document.getElementById('roll-button'), startBtn: document.getElementById('start-button'), undoBtn: document.getElementById('undo-button'), msg: document.getElementById('message-area'), turn: document.getElementById('current-turn'), movesLeft: document.getElementById('moves-left-display'), barRed: document.getElementById('bar-red-score'), borneRed: document.getElementById('borne-off-red-score'), barBlack: document.getElementById('bar-black-score'), borneBlack: document.getElementById('borne-off-black-score'), level: document.getElementById('cpu-level'), redLabel: document.getElementById('red-label'), blackLabel: document.getElementById('black-label'), playerColorRadios: document.querySelectorAll('input[name="player_color"]')
                 };
+                
                 this.state = {};
                 this.attachEventListeners();
                 this.initGame();
@@ -132,11 +134,10 @@
                 this.START_POS.forEach(pos => this.state.board[pos.p] = { player: pos.pl, count: pos.c });
                 
                 this.dom.rollBtn.disabled = true; this.dom.undoBtn.disabled = true;
-                this.renderAll(); // 先に描画
+                this.renderAll();
                 
                 if (this.state.currentPlayer === this.state.cpuColor) {
                     this.dom.msg.textContent = 'CPUのターンです。';
-                    this.dom.rollBtn.disabled = true;
                     setTimeout(() => this.cpuTurn(), 1000);
                 } else {
                     this.dom.msg.textContent = 'あなたの番です。サイコロを振ってください。';
@@ -192,8 +193,7 @@
             }
 
             createPointEl(index) {
-                const point = document.createElement('div');
-                point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== (index < 12 ? 1 : 0)) ? 'p-dark' : 'p-light'}`;
+                const point = document.createElement('div'); point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== (index < 12 ? 1 : 0)) ? 'p-dark' : 'p-light'}`;
                 point.dataset.index = index; point.addEventListener('click', () => this.handlePlayerAction(index));
                 const pointData = this.state.board[index];
                 if (pointData.count > 0) {
@@ -213,8 +213,8 @@
                 this.dom.turn.textContent = this.state.currentPlayer === this.state.playerColor ? "あなたのターン" : "CPUのターン";
                 this.dom.redLabel.textContent = this.state.playerColor === 'red' ? '赤 (YOU)' : '赤 (CPU)';
                 this.dom.blackLabel.textContent = this.state.playerColor === 'black' ? '黒 (YOU)' : '黒 (CPU)';
-                this.dom.barP.textContent = this.state.bar[this.state.playerColor]; this.dom.borneP.textContent = this.state.borneOff[this.state.playerColor];
-                this.dom.barC.textContent = this.state.bar[this.state.cpuColor]; this.dom.borneC.textContent = this.state.borneOff[this.state.cpuColor];
+                this.dom.barRed.textContent = this.state.bar.red; this.dom.borneRed.textContent = this.state.borneOff.red;
+                this.dom.barBlack.textContent = this.state.bar.black; this.dom.borneBlack.textContent = this.state.borneOff.black;
                 this.dom.die1.textContent = this.state.dice[0] || '?'; this.dom.die2.textContent = this.state.dice[1] || '?';
                 if (this.state.currentPlayer === this.state.playerColor && this.state.turnState === 'MOVING') { this.dom.movesLeft.textContent = this.state.movesLeft.length > 0 ? this.state.movesLeft.join(', ') : 'なし'; } else { this.dom.movesLeft.textContent = '-'; }
             }
@@ -280,7 +280,7 @@
             }
             
             // --- AIロジック ---
-            
+
             async cpuTurn() {
                 this.dom.rollBtn.disabled = true; this.state.turnState = 'ANIMATING';
                 await this.showDiceAnimation();
@@ -290,14 +290,8 @@
                 await new Promise(r => setTimeout(r, 600));
                 const bestSequence = this.findBestCpuMoveSequence();
                 if (bestSequence && bestSequence.moves.length > 0) {
-                    for (const move of bestSequence.moves) {
-                        this.executeMove(this.state, move); this.renderAll();
-                        await new Promise(r => setTimeout(r, 800));
-                    }
-                } else {
-                    this.dom.msg.textContent = 'CPUは動けません。';
-                    await new Promise(r => setTimeout(r, 1500));
-                }
+                    for (const move of bestSequence.moves) { this.executeMove(this.state, move); this.renderAll(); await new Promise(r => setTimeout(r, 800)); }
+                } else { this.dom.msg.textContent = 'CPUは動けません。'; await new Promise(r => setTimeout(r, 1500)); }
                 if (!this.state.gameOver) this.switchTurn();
             }
 
@@ -416,19 +410,6 @@
                 if(player === 'red') { for(let i = 5; i >= 0; i--) if(board[i].player === player) return i; }
                 else { for(let i = 18; i <= 23; i++) if(board[i].player === player) return i; }
                 return -1;
-            }
-
-            highlightValidMoves() {
-                document.querySelectorAll('.point.valid-move, .home-area.valid-move').forEach(p => p.classList.remove('valid-move'));
-                if (this.state.currentPlayer !== this.state.playerColor || this.state.turnState !== 'MOVING') return;
-                const sequences = this.generateAllMoveSequences(this.state.board, this.state.bar, this.state.playerColor, this.state.movesLeft);
-                const allPossibleFirstMoves = [...new Map(sequences.flatMap(s => s.moves[0] ? [s.moves[0]] : []).map(m => [`${m.from}-${m.to}`, m])).values()];
-                if (this.state.selectedPoint !== null) {
-                    allPossibleFirstMoves.filter(m => m.from === this.state.selectedPoint).forEach(m => {
-                        if (m.to === 'home') this.dom.home.classList.add('valid-move');
-                        else document.querySelector(`.point[data-index='${m.to}']`)?.classList.add('valid-move');
-                    });
-                }
             }
             
             attachEventListeners() {
