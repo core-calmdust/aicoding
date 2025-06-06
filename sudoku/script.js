@@ -74,11 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.classList.add('highlight-area');
             }
 
-            // 2. 3x3ボックスのハイライト
-            const focusBoxStartRow = Math.floor(focusRow / 3) * 3;
-            const focusBoxStartCol = Math.floor(focusCol / 3) * 3;
-            if (row >= focusBoxStartRow && row < focusBoxStartRow + 3 &&
-                col >= focusBoxStartCol && col < focusBoxStartCol + 3) {
+            // 2. 「同じ数字が属するボックス」のハイライト
+            const boxesToHighlight = new Set();
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const value = board[r][c] || initialBoard[r][c];
+                    if (value === focusNum) {
+                        const boxId = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                        boxesToHighlight.add(boxId);
+                    }
+                }
+            }
+            
+            const currentBoxId = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+            if (boxesToHighlight.has(currentBoxId)) {
                 cell.classList.add('highlight-box');
             }
 
