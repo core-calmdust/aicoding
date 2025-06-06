@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 定数とDOM要素 ---
     const SIZE = 9;
     const gridElement = document.getElementById('sudoku-grid');
     const newGameBtn = document.getElementById('new-game-btn');
@@ -9,14 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const difficultySelect = document.getElementById('difficulty-select');
     const memoToggleBtn = document.getElementById('memo-toggle-btn');
 
-    // --- ゲームの状態変数 ---
     let board = [], initialBoard = [], solution = [], memos = [];
     let selectedCell = null;
     let isMemoMode = false;
     let errorCells = new Set();
     let focusedNumberInfo = null;
 
-    // --- 初期化とゲーム開始 ---
     function initializeGame() {
         const difficulty = parseInt(difficultySelect.value, 10);
         
@@ -47,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         memos = Array(SIZE).fill(0).map(() => Array(SIZE).fill(0).map(() => new Set()));
     }
     
-    // --- 描画ロジック ---
     function renderBoard() {
         gridElement.innerHTML = '';
         for (let row = 0; row < SIZE; row++) {
@@ -70,15 +66,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const cellValue = board[row][col] || initialBoard[row][col];
         const isGiven = initialBoard[row][col] !== 0;
 
-        // ハイライトロジックを「行」と「列」のみに修正
         if (focusedNumberInfo) {
             const { focusRow, focusCol, focusNum } = focusedNumberInfo;
-
-            // 行・列のハイライト
+            
+            // 1. 行・列のハイライト
             if (row === focusRow || col === focusCol) {
                 cell.classList.add('highlight-area');
             }
-            // 同じ数字のハイライト
+
+            // 2. 3x3ボックスのハイライト
+            const focusBoxStartRow = Math.floor(focusRow / 3) * 3;
+            const focusBoxStartCol = Math.floor(focusCol / 3) * 3;
+            if (row >= focusBoxStartRow && row < focusBoxStartRow + 3 &&
+                col >= focusBoxStartCol && col < focusBoxStartCol + 3) {
+                cell.classList.add('highlight-box');
+            }
+
+            // 3. 同じ数字のハイライト
             if (cellValue !== 0 && cellValue === focusNum) {
                 cell.classList.add('highlight-num');
             }
@@ -95,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cell.classList.add('error-cell');
                 }
             } else {
-                cell.innerHTML = ' ';
+                cell.innerHTML = ' ';
                 const memoGrid = document.createElement('div');
                 memoGrid.classList.add('memo-grid');
                 for (let i = 1; i <= 9; i++) {
@@ -117,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return cell;
     }
 
-    // --- イベントハンドラ ---
     function handleCellClick(e) {
         const cell = e.target.closest('.cell');
         if (!cell) return;
@@ -225,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.className = '';
     }
 
-    // --- 数独生成アルゴリズム (バックトラッキング) ---
     function solveSudoku(grid) {
         const emptySpot = findEmpty(grid);
         if (!emptySpot) return true;
@@ -270,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return array;
     }
 
-    // --- イベントリスナー設定 ---
     newGameBtn.addEventListener('click', initializeGame);
     gridElement.addEventListener('click', handleCellClick);
     document.addEventListener('keydown', handleKeyDown);
@@ -278,6 +279,5 @@ document.addEventListener('DOMContentLoaded', () => {
     checkSolutionBtn.addEventListener('click', checkSolutionHandler);
     showSolutionBtn.addEventListener('click', showSolutionHandler);
 
-    // --- 初期ゲーム開始 ---
     initializeGame();
 });
