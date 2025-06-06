@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript オセロ (最終版)</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #f0f0f0; margin: 0; padding: 20px; }
+        h1 { color: #333; text-align: center; margin-bottom: 20px; }
+        .container { display: flex; gap: 30px; align-items: flex-start; }
+        .game-area { display: flex; flex-direction: column; align-items: center; }
+        #board { display: grid; grid-template-columns: repeat(8, 50px); grid-template-rows: repeat(8, 50px); border: 2px solid #333; background-color: #008000; padding: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        .cell { width: 50px; height: 50px; border: 1px solid #006400; box-sizing: border-box; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background-color 0.3s; }
+        .disc { width: 85%; height: 85%; border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+        .black { background-color: black; }
+        .white { background-color: white; }
+        .last-move { background-color: #64b5f6 !important; }
+        .valid-move-hint { background-color: rgba(255, 255, 0, 0.4); }
+        .controls, .game-info { background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 220px; box-sizing: border-box; }
+        .controls { margin-bottom: 20px; }
+        .controls label, .controls select, .controls button { display: block; width: 100%; margin-bottom: 10px; }
+        .controls select, .controls button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .controls button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        .controls button:hover { background-color: #45a049; }
+        .player-color-selector { margin-top: 15px; margin-bottom: 15px; border-top: 1px solid #eee; padding-top: 15px; }
+        .radio-group { display: flex; justify-content: space-around; }
+        .radio-group label { display: flex; align-items: center; cursor: pointer; margin: 0; }
+        .radio-group input { margin-right: 5px; }
+        .game-info p { margin: 0 0 10px 0; font-size: 16px; display: flex; justify-content: space-between; }
+        #message-area { margin-top: 15px; font-size: 18px; font-weight: bold; color: #d32f2f; height: 25px; text-align: center; }
+        @media (max-width: 768px) { .container { flex-direction: column; align-items: center; } }
+    </style>
+</head>
+<body>
+    <h1>JavaScript オセロ</h1>
+    <div class="container">
+        <div class="sidebar">
+            <div class="controls">
+                <label for="cpu-level">CPUレベル:</label>
+                <select id="cpu-level">
+                    <option value="1">レベル1 (ランダム)</option>
+                    <option value="2">レベル2 (最大反転)</option>
+                    <option value="3">レベル3 (場所評価)</option>
+                    <option value="4">レベル4 (α-β法 弱)</option>
+                    <option value="5">レベル5 (α-β法 強)</option>
+                    <option value="6">レベル6 (思考強化)</option>
+                    <option value="7" selected>レベル7 (定石+動的探索)</option>
+                </select>
+                <div class="player-color-selector">
+                    <label>あなたの色:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="player_color" value="1" checked> 先攻(黒)</label>
+                        <label><input type="radio" name="player_color" value="2"> 後攻(白)</label>
+                    </div>
+                </div>
+                <button id="start-button">ゲーム開始 / リセット</button>
+            </div>
+            <div class="game-info">
+                <p>手数: <span id="turn-count">0</span></p>
+                <p><span id="black-label">黒 (あなた)</span>: <span id="black-score">2</span></p>
+                <p><span id="white-label">白 (CPU)</span>: <span id="white-score">2</span></p>
+                <p>ターン: <span id="current-turn"></span></p>
+            </div>
+        </div>
+        <div class="game-area">
+            <div id="board"></div>
+            <div id="message-area"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 定数とグローバル変数 ---
+        const BOARD_SIZE = 8;
+        const EMPTY = 0, BLACK = 1, WHITE = 2;
+
+        const directions = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
+        const scoreMatrix = [ [120,-20,20,5,5,20,-20,120],[-20,-40,-5,-5,-5,-5,-40,-20],[20,-5,15,3,3,15,-5,20],[5,-5,3,3,3,3,-5,5],[5,-5,3,3,3,3,-5,5],[20,-5,15,3,3,15,-5,20],[-20,-40,-5,-5,-5,-5,-40,-20],[120,-20,20,5,5,20,-20,120] ];
+        const openingBook = { "0000000000000000000000000002100000011100000000000000000000000000": { r: 5, c: 3 }, "0000000000000000000000000011200000012000000000000000000000000000": { r: 5, c: 2 }, "0000000000000000000000000002100000011000000001000000000000000000": { r: 5, c: 5 }, "0000000000000000000010000012100000012000000000000000000000000000": { r: 2, c: 2 } };
+
+        // DOM Elements
+        const boardEl = document.getElementById('board'), turnCountEl = document.getElementById('turn-count'), blackScoreEl = document.getElementById('black-score'), whiteScoreEl = document.getElementById('white-score'), blackLabelEl = document.getElementById('black-label'), whiteLabelEl = document.getElementById('white-label'), currentTurnEl = document.getElementById('current-turn'), messageAreaEl = document.getElementById('message-area'), cpuLevelSelect = document.getElementById('cpu-level'), startButton = document.getElementById('start-button');
+        
+        // Game State
+        let board, currentPlayer, turnCount, cpuLevel, gameOver, lastMove, playerColor, cpuColor;
+
+        // --- ゲーム進行の管理 ---
+
+        /**
+         * ゲームを初期化またはリセットする
+         */
+        async function initGame() {
+            board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
+            board[3][3] = WHITE; board[3][4] = BLACK;
+            board[4][3] = BLACK; board[4][4] = WHITE;
+
+            playerColor = parseInt(document.querySelector('input[name="player_color"]:checked').value, 10);
+            cpuColor = (playerColor === BLACK) ? WHITE : BLACK;
+            
+            currentPlayer = BLACK; // ゲームは常に黒から開始
+            turnCount = 0;
+            cpuLevel = parseInt(cpuLevelSelect.value, 10);
+            gameOver = false;
+            lastMove = null;
+            messageAreaEl.textContent = '';
+            
+            updateInfo();
+            renderBoard();
+
+            // プレイヤーが後攻(白)の場合、CPUのターンを先行させる
+            if (currentPlayer === cpuColor) {
+                messageAreaEl.textContent = 'CPUが思考中...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+                cpuTurn();
+            }
+        }
+        
+        /**
+         * 駒を盤面に配置し、ターンを切り替える
+         */
+        async function switchTurn() {
+            // 次のプレイヤーに交代
+            currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
+
+            // パス判定
+            let playerValidMoves = getValidMoves(board, currentPlayer);
+            if (playerValidMoves.length === 0) {
+                messageAreaEl.textContent = `${(currentPlayer === BLACK ? '黒' : '白')}はパスします。`;
+                currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK; // 相手にターンを戻す
+                
+                // 両者とも打てない場合はゲーム終了
+                let opponentValidMoves = getValidMoves(board, currentPlayer);
+                if (opponentValidMoves.length === 0) {
+                    endGame();
+                    return;
+                }
+            } else {
+                 messageAreaEl.textContent = '';
+            }
+            
+            updateInfo();
+            renderBoard();
+            
+            // CPUのターンなら思考を開始
+            if (!gameOver && currentPlayer === cpuColor) {
+                messageAreaEl.textContent = 'CPUが思考中...';
+                await new Promise(resolve => setTimeout(resolve, 100)); // UI更新のための待機
+                cpuTurn();
+            }
+        }
+        
+        /**
+         * ゲームを終了させ、勝敗メッセージを表示する
+         */
+        function endGame() {
+            gameOver = true;
+            updateInfo();
+            const blackScore = board.flat().filter(c => c === BLACK).length;
+            const whiteScore = board.flat().filter(c => c === WHITE).length;
+            const winner = (blackScore > whiteScore) ? BLACK : ((whiteScore > blackScore) ? WHITE : EMPTY);
+            
+            let message = "引き分けです！";
+            if (winner !== EMPTY) {
+                message = (winner === playerColor) ? "あなたの勝ちです！" : "CPUの勝ちです。";
+            }
+            messageAreaEl.textContent = `ゲーム終了！ ${message}`;
+        }
+
+        // --- 描画とUI更新 ---
+
+        /**
+         * 現在の盤面状態をHTMLに描画する
+         */
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            const validMoves = getValidMoves(board, currentPlayer);
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (board[r][c] !== EMPTY) {
+                        const disc = document.createElement('div');
+                        disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
+                        cell.appendChild(disc);
+                    } else if (currentPlayer === playerColor && validMoves.some(move => move.r === r && move.c === c)) {
+                         cell.classList.add('valid-move-hint');
+                    }
+                    if(lastMove && lastMove.r === r && lastMove.c === c) {
+                        cell.classList.add('last-move');
+                    }
+                    cell.addEventListener('click', () => handleCellClick(r, c));
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+        
+        /**
+         * スコアやターン表示などの情報を更新する
+         */
+        function updateInfo() {
+            let blackScore = 0, whiteScore = 0;
+            board.flat().forEach(cell => { if (cell === BLACK) blackScore++; if (cell === WHITE) whiteScore++; });
+            
+            turnCountEl.textContent = turnCount;
+            blackScoreEl.textContent = blackScore;
+            whiteScoreEl.textContent = whiteScore;
+            
+            blackLabelEl.textContent = (playerColor === BLACK) ? '黒 (あなた)' : '黒 (CPU)';
+            whiteLabelEl.textContent = (playerColor === WHITE) ? '白 (あなた)' : '白 (CPU)';
+            currentTurnEl.textContent = gameOver ? '終了' : (currentPlayer === playerColor ? 'あなたのターン' : 'CPUのターン');
+        }
+
+        // --- プレイヤー操作の処理 ---
+
+        /**
+         * プレイヤーがセルをクリックしたときの処理
+         * @param {number} r - クリックされた行
+         * @param {number} c - クリックされた列
+         */
+        function handleCellClick(r, c) {
+            if (gameOver || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
+            const flippable = getFlippableDiscs(board, r, c, playerColor);
+            if (flippable.length === 0) return;
+            
+            placeDisc(r, c, playerColor, flippable);
+            switchTurn();
+        }
+
+        // --- AIの思考ロジック ---
+
+        /**
+         * CPUのターンを実行する
+         */
+        function cpuTurn() {
+            if(gameOver) return;
+            const move = findBestMove();
+            messageAreaEl.textContent = '';
+            if (move) {
+                const flippable = getFlippableDiscs(board, move.r, move.c, cpuColor);
+                placeDisc(move.r, move.c, cpuColor, flippable);
+            }
+            switchTurn();
+        }
+
+        /**
+         * 現在のCPUレベルに応じて最善手を探す
+         * @returns { {r: number, c: number} | null } 最善手またはnull
+         */
+        function findBestMove() {
+            const validMoves = getValidMoves(board, cpuColor);
+            if (validMoves.length === 0) return null;
+
+            switch (cpuLevel) {
+                case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
+                case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, cpuColor).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
+                case 3: return validMoves.reduce((best, move) => { const score = scoreMatrix[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
+                case 4: return alphaBeta(board, 3, -Infinity, Infinity, true).move;
+                case 5: return alphaBeta(board, 4, -Infinity, Infinity, true).move;
+                case 6: return alphaBeta(board, 5, -Infinity, Infinity, true).move;
+                case 7: {
+                    // CPUが後攻(白)の場合のみ定石を適用
+                    if (cpuColor === WHITE) {
+                        const bookMove = openingBook[boardToString(board)];
+                        if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
+                            return bookMove;
+                        }
+                    }
+                    // 動的探索
+                    const emptyCells = board.flat().filter(c => c === EMPTY).length;
+                    let depth = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8);
+                    return alphaBeta(board, depth, -Infinity, Infinity, true).move;
+                }
+                default: return validMoves[0];
+            }
+        }
+
+        /**
+         * α-β法による探索
+         * @param {number[][]} currentBoard - 評価する盤面
+         * @param {number} depth - 探索の深さ
+         * @param {number} alpha - α値
+         * @param {number} beta - β値
+         * @param {boolean} maximizingPlayer - 手番が最大化プレイヤー(CPU)かどうか
+         * @returns {{score: number, move: {r: number, c: number}|null}} 評価値と最善手
+         */
+        function alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer) {
+            const player = maximizingPlayer ? cpuColor : playerColor;
+            const validMoves = getValidMoves(currentBoard, player);
+
+            if (depth === 0 || validMoves.length === 0) {
+                const evaluator = (cpuLevel >= 6) ? advancedEvaluateBoard : (b) => evaluateBoard(b);
+                return { score: evaluator(currentBoard) };
+            }
+
+            let bestMove = { move: null, score: maximizingPlayer ? -Infinity : Infinity };
+
+            for (const move of validMoves) {
+                const newBoard = JSON.parse(JSON.stringify(currentBoard));
+                const flippable = getFlippableDiscs(newBoard, move.r, move.c, player);
+                newBoard[move.r][move.c] = player;
+                flippable.forEach(p => { newBoard[p.r][p.c] = player; });
+                
+                const result = alphaBeta(newBoard, depth - 1, alpha, beta, !maximizingPlayer);
+
+                if (maximizingPlayer) {
+                    if (result.score > bestMove.score) { bestMove.score = result.score; bestMove.move = move; }
+                    alpha = Math.max(alpha, bestMove.score);
+                } else {
+                    if (result.score < bestMove.score) { bestMove.score = result.score; bestMove.move = move; }
+                    beta = Math.min(beta, bestMove.score);
+                }
+                if (beta <= alpha) break; // 枝刈り
+            }
+            if (bestMove.move === null && validMoves.length > 0) bestMove.move = validMoves[0];
+            return bestMove;
+        }
+
+        // --- AI評価関数 ---
+        
+        function evaluateBoard(currentBoard) {
+            let score = 0;
+            const opponent = cpuColor === WHITE ? BLACK : WHITE;
+            for (let r = 0; r < BOARD_SIZE; r++) for (let c = 0; c < BOARD_SIZE; c++) {
+                if (currentBoard[r][c] === cpuColor) score += scoreMatrix[r][c];
+                else if (currentBoard[r][c] === opponent) score -= scoreMatrix[r][c];
+            }
+            return score;
+        };
+
+        function advancedEvaluateBoard(currentBoard) {
+            const player = cpuColor;
+            const opponent = playerColor;
+            const emptyCells = currentBoard.flat().filter(c => c === EMPTY).length;
+            const isLateGame = emptyCells <= 18;
+            
+            let positionalScore = 0, pieceScore = 0;
+            for (let r = 0; r < BOARD_SIZE; r++) for (let c = 0; c < BOARD_SIZE; c++) {
+                if (currentBoard[r][c] === player) { positionalScore += scoreMatrix[r][c]; pieceScore++; }
+                else if (currentBoard[r][c] === opponent) { positionalScore -= scoreMatrix[r][c]; pieceScore--; }
+            }
+            
+            const mobilityScore = getValidMoves(currentBoard, player).length - getValidMoves(currentBoard, opponent).length;
+            const fixedDiscScore = countFixedDiscs(currentBoard, player) - countFixedDiscs(currentBoard, opponent);
+            
+            if (isLateGame) return pieceScore * 20 + fixedDiscScore * 150;
+            return (positionalScore) + (mobilityScore * 50) + (fixedDiscScore * 150);
+        };
+        
+        // --- ルール判定とユーティリティ ---
+
+        function placeDisc(r, c, player, flippable) {
+            board[r][c] = player;
+            flippable.forEach(pos => { board[pos.r][pos.c] = player; });
+            lastMove = { r, c };
+            turnCount++;
+        }
+
+        function getFlippableDiscs(currentBoard, r, c, player) {
+            const flippable = [];
+            const opponent = player === BLACK ? WHITE : BLACK;
+            for (const dir of directions) {
+                const line = []; let currR = r + dir.r, currC = c + dir.c;
+                while (currR >= 0 && currR < BOARD_SIZE && currC >= 0 && currC < BOARD_SIZE) {
+                    if (currentBoard[currR][currC] === opponent) { line.push({ r: currR, c: currC }); }
+                    else if (currentBoard[currR][currC] === player) { flippable.push(...line); break; }
+                    else { break; }
+                    currR += dir.r; currC += dir.c;
+                }
+            }
+            return flippable;
+        };
+
+        function getValidMoves(currentBoard, player) {
+            const moves = [];
+            for (let r = 0; r < BOARD_SIZE; r++) for (let c = 0; c < BOARD_SIZE; c++) {
+                if (currentBoard[r][c] === EMPTY && getFlippableDiscs(currentBoard, r, c, player).length > 0) {
+                    moves.push({ r, c });
+                }
+            }
+            return moves;
+        };
+        
+        function countFixedDiscs(board, player) {
+            let count = 0;
+            const corners = [{ r: 0, c: 0 }, { r: 0, c: 7 }, { r: 7, c: 0 }, { r: 7, c: 7 }];
+            for (const {r, c} of corners) {
+                if(board[r][c] === player) count++;
+            }
+            return count;
+        };
+
+        function boardToString(b) {
+            return b.flat().join('');
+        }
+
+        // --- 初期化 & イベントリスナー ---
+        startButton.addEventListener('click', initGame);
+        initGame();
+    </script>
+</body>
+</html>
