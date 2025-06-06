@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナンプレ無限</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>ナンプレ無限</h1>
+    <div id="sudoku-container">
+        <div id="sudoku-grid"></div>
+    </div>
+    <div id="controls">
+        <div class="control-group">
+            <label for="difficulty-select">難易度:</label>
+            <select id="difficulty-select">
+                <option value="35">易しい</option>
+                <option value="45" selected>普通</option>
+                <option value="50">難しい</option>
+                <option value="55">エキスパート</option>
+                <option value="60">神</option>
+            </select>
+            <button id="new-game-btn">新しい問題</button>
+        </div>
+        <div class="control-group">
+            <button id="memo-toggle-btn">メモ入力 OFF</button>
+            <button id="check-solution-btn">解答をチェック</button>
+            <button id="show-solution-btn">答えを表示</button>
+        </div>
+    </div>
+    <div id="message"></div>
+    <p class="instructions">
+        セルをクリックで選択し、キーボードの数字キーで入力してください。<br>
+        BackspaceキーまたはDeleteキーで入力を消去できます。
+    </p>
+
+    <script src="script.js"></script>
+</body>
+</html>
