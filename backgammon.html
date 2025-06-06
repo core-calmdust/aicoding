@@ -70,7 +70,7 @@
             </div>
             <div class="game-info">
                 <p>ターン: <span id="current-turn"></span></p>
-                <p>赤(YOU) バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
+                <p>赤(あなた) バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
                 <p>黒(CPU) バー:<span id="bar-black-score">0</span> / ゴール:<span id="borne-off-black-score">0</span></p>
             </div>
             <div class="turn-controls">
@@ -108,6 +108,10 @@
         let state; // ゲームの全状態を保持するオブジェクト
 
         // --- ゲーム進行の管理 ---
+
+        /**
+         * ゲームを初期化またはリセットする
+         */
         function initGame() {
             state = {
                 board: Array(BOARD_POINTS).fill(null).map(() => ({ player: null, count: 0 })),
@@ -130,6 +134,9 @@
             renderAll();
         }
 
+        /**
+         * プレイヤーとCPUのターンを切り替える
+         */
         function switchTurn() {
             if (state.gameOver) return;
             state.currentPlayer = state.currentPlayer === PLAYER ? CPU : PLAYER;
@@ -137,8 +144,8 @@
             state.dice = [];
             state.movesLeft = [];
             state.selectedPoint = null;
-            state.turnStartState = null;
-            dom.undoBtn.disabled = true;
+            state.turnStartState = null; // ターンが切り替わるのでスナップショットをリセット
+            dom.undoBtn.disabled = true; // Undoボタンも無効化
 
             if (state.currentPlayer === PLAYER) {
                 dom.rollBtn.disabled = false;
@@ -151,6 +158,9 @@
             renderAll();
         }
 
+        /**
+         * ゲームを終了させ、勝敗メッセージを表示する
+         */
         function endGame() {
             state.gameOver = true;
             dom.msg.textContent = `${state.currentPlayer === PLAYER ? "あなた" : "CPU"} の勝ちです！`;
@@ -158,7 +168,11 @@
             dom.undoBtn.disabled = true;
         }
 
-        // --- 描画ロジック ---
+        // --- 描画とUI更新 ---
+
+        /**
+         * ゲームの全要素を現在の状態に基づいて再描画する
+         */
         function renderAll() {
             dom.board.innerHTML = '';
             dom.home.innerHTML = '<h4>ゴール</h4>';
@@ -189,9 +203,14 @@
             highlightValidMoves();
         }
 
+        /**
+         * 単一のポイント(三角形マス)のHTML要素を生成する
+         * @param {number} index - ポイントのインデックス (0-23)
+         * @returns {HTMLElement} 生成されたポイントのdiv要素
+         */
         function createPointEl(index) {
             const point = document.createElement('div');
-            point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== 0) ? 'p-dark' : 'p-light'}`;
+            point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== (index < 12 ? 1 : 0)) ? 'p-dark' : 'p-light'}`;
             point.dataset.index = index;
             point.addEventListener('click', () => handlePlayerAction(index));
             if (state.board[index].count > 0) {
@@ -207,6 +226,12 @@
             return point;
         }
 
+        /**
+         * 単一の駒(チェッカー)のHTML要素を生成する
+         * @param {string} player - PLAYERまたはCPU
+         * @param {number|string} from - 駒の現在地 (ポイントのインデックス、'bar'、または'home')
+         * @returns {HTMLElement} 生成された駒のdiv要素
+         */
         function createChecker(player, from) {
             const checker = document.createElement('div');
             checker.className = `checker ${player}`;
@@ -215,6 +240,11 @@
             return checker;
         }
 
+        /**
+         * 盤面の上下に表示するポイント番号の行を生成する
+         * @param {'top'|'bottom'} pos - 上段か下段か
+         * @returns {HTMLElement} 生成された行のdiv要素
+         */
         function createPointNumberRow(pos) {
             const row = document.createElement('div'); row.className = `point-number-row ${pos}`;
             const leftQuad = document.createElement('div'); leftQuad.className = 'point-number-quadrant';
@@ -226,6 +256,9 @@
             return row;
         }
 
+        /**
+         * ターン、スコア、ダイスの目などの情報をUIに反映させる
+         */
         function updateInfo() {
             dom.turn.textContent = `${state.currentPlayer === PLAYER ? "あなた(赤)" : "CPU(黒)"}のターン`;
             dom.barP.textContent = state.bar[PLAYER]; dom.borneP.textContent = state.borneOff[PLAYER];
@@ -234,6 +267,9 @@
             if (state.currentPlayer === PLAYER && state.turnState === 'MOVING') { dom.movesLeft.textContent = state.movesLeft.length > 0 ? state.movesLeft.join(', ') : 'なし'; } else { dom.movesLeft.textContent = '-'; }
         }
 
+        /**
+         * プレイヤーが動かせる駒と移動先をハイライトする
+         */
         function highlightValidMoves() {
             document.querySelectorAll('.point.valid-move, .home-area.valid-move').forEach(p => p.classList.remove('valid-move'));
             if (state.currentPlayer !== PLAYER || state.turnState !== 'MOVING') return;
@@ -250,17 +286,21 @@
         }
         
         // --- プレイヤー操作 ---
+        
         async function onRollClick() {
             if (state.turnState !== 'ROLLING' || state.currentPlayer !== PLAYER) return;
             dom.rollBtn.disabled = true; state.turnState = 'ANIMATING';
+            
             const animationTime = 800;
             const interval = setInterval(() => { dom.die1.textContent = Math.ceil(Math.random() * 6); dom.die2.textContent = Math.ceil(Math.random() * 6); }, 80);
             await new Promise(resolve => setTimeout(resolve, animationTime));
             clearInterval(interval);
+            
             state.dice = [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
             state.movesLeft = (state.dice[0] === state.dice[1]) ? Array(4).fill(state.dice[0]) : state.dice.slice();
             state.turnState = 'MOVING';
             dom.msg.textContent = '駒を動かしてください。';
+            
             state.turnStartState = { board: JSON.parse(JSON.stringify(state.board)), bar: { ...state.bar }, movesLeft: [...state.movesLeft] };
             if (generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft).length === 0) { dom.msg.textContent = '動かせる手がありません。'; setTimeout(switchTurn, 1500); }
             renderAll();
@@ -298,16 +338,19 @@
         }
         
         // --- AIロジック ---
+
         async function cpuTurn() {
             dom.rollBtn.disabled = true; state.turnState = 'ANIMATING';
             const animationTime = 800;
             const interval = setInterval(() => { dom.die1.textContent = Math.ceil(Math.random() * 6); dom.die2.textContent = Math.ceil(Math.random() * 6); }, 80);
             await new Promise(r => setTimeout(r, animationTime));
             clearInterval(interval);
+            
             state.dice = [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
             state.movesLeft = (state.dice[0] === state.dice[1]) ? Array(4).fill(state.dice[0]) : state.dice.slice();
             renderAll();
             await new Promise(r => setTimeout(r, 600));
+            
             const bestSequence = findBestCpuMoveSequence();
             if (bestSequence && bestSequence.moves.length > 0) {
                 for (const move of bestSequence.moves) {
@@ -339,12 +382,13 @@
                 if(board[i].player === CPU) score += (i+1) * board[i].count;
                 if(board[i].player === PLAYER) score -= (24-i) * board[i].count;
             }
-            score -= bar[CPU] * 30;
+            score -= bar[CPU] * 30; // バーの駒は大きなペナルティ
             score += bar[PLAYER] * 30;
             return score;
         }
 
         // --- ルール判定とユーティリティ ---
+
         function executeMove(gameState, move) {
             const { from, to, die, isHit } = move;
             const player = gameState.currentPlayer;
@@ -368,7 +412,7 @@
                 for (const move of possibleMoves) {
                     const nextBoard = JSON.parse(JSON.stringify(currentBoard)); const nextBar = { ...currentBar };
                     const opponent = player === PLAYER ? CPU : PLAYER;
-                    if (move.from === 'bar') nextBar[player]--; else { nextBoard[move.from].count--; if (nextBoard[move.from].count === 0) nextBoard[move.from].player = null; }
+                    if (move.from === 'bar') { nextBar[player]--; } else { nextBoard[move.from].count--; if (nextBoard[move.from].count === 0) nextBoard[move.from].player = null; }
                     if (move.to === 'home') {} else { if (move.isHit) { nextBoard[move.to] = { player, count: 1 }; nextBar[opponent]++; } else { nextBoard[move.to].player = player; nextBoard[move.to].count++; } }
                     const nextDice = [...diceLeft]; nextDice.splice(nextDice.findIndex(d => d === move.die), 1);
                     find(nextBoard, nextBar, nextDice, [...movesSoFar, move]);
@@ -400,7 +444,7 @@
                         if (canBearOff) {
                             const homePos = player === PLAYER ? i + 1 : 24 - i;
                             if (homePos <= die && (homePos === die || findHighestCheckerInHome(board, player) === i)) {
-                                moves.push({ from: i, to: 'home', die, isHit: false });
+                                moves.push({ from: i, to: 'home', die, isHit: false});
                                 continue;
                             }
                         }
@@ -418,14 +462,17 @@
 
         function canPlayerBearOff(board, player, bar) {
             if (bar[player] > 0) return false;
-            let totalOnBoard = 0;
+            let onBoardCount = 0;
             for (let i = 0; i < BOARD_POINTS; i++) {
-                if (board[i].player === player) totalOnBoard += board[i].count;
+                if (board[i].player === player) onBoardCount += board[i].count;
             }
-            if (totalOnBoard + state.borneOff[player] !== CHECKERS_PER_PLAYER) return false;
-            const homeRange = player === PLAYER ? { start: 0, end: 5 } : { start: 18, end: 23 };
+            if (onBoardCount + state.borneOff[player] !== CHECKERS_PER_PLAYER) return false;
+            
+            const homeRange = player === PLAYER ? {start: 0, end: 5} : {start: 18, end: 23};
             for (let i = 0; i < BOARD_POINTS; i++) {
-                if (board[i].player === player && (i < homeRange.start || i > homeRange.end)) return false;
+                if (board[i].player === player && (i < homeRange.start || i > homeRange.end)) {
+                    return false;
+                }
             }
             return true;
         }
@@ -436,11 +483,27 @@
             return -1;
         }
 
+        function highlightValidMoves() {
+            document.querySelectorAll('.point.valid-move, .home-area.valid-move').forEach(p => p.classList.remove('valid-move'));
+            if (state.currentPlayer !== PLAYER || state.turnState !== 'MOVING') return;
+
+            const sequences = generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft);
+            const allPossibleFirstMoves = [...new Map(sequences.flatMap(s => s.moves[0] ? [s.moves[0]] : []).map(m => [`${m.from}-${m.to}`, m])).values()];
+            
+            if (state.selectedPoint !== null) {
+                allPossibleFirstMoves.filter(m => m.from === state.selectedPoint).forEach(m => {
+                    if (m.to === 'home') dom.home.classList.add('valid-move');
+                    else document.querySelector(`.point[data-index='${m.to}']`)?.classList.add('valid-move');
+                });
+            }
+        }
+        
         // --- 初期化 & イベントリスナー ---
         dom.startBtn.addEventListener('click', initGame);
         dom.rollBtn.addEventListener('click', onRollClick);
         dom.undoBtn.addEventListener('click', onUndoClick);
         dom.home.addEventListener('click', () => handlePlayerAction('home'));
+        
         initGame();
     </script>
 </body>
