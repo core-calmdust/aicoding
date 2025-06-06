@@ -69,12 +69,12 @@ h1 {
     background-color: #e7ecf2;
 }
 
-/* フォーカスされた3x3ボックスのハイライト */
-.cell.highlight-box {
+/* フォーカスされた数字と同じ数字の「セル」のハイライト */
+.cell.highlight-same-cell {
     background-color: #cce4ff;
 }
 
-/* フォーカスされた数字と同じ数字のハイライト */
+/* フォーカスされた数字と同じ数字の「文字」のハイライト */
 .cell.highlight-num {
     font-weight: 900;
 }
