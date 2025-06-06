@@ -9,9 +9,16 @@
     <h1>さめがめ Deluxe</h1>
     
     <div class="controls">
-        <div id="size-selector">
-            <!-- サイズ選択ボタンがここに挿入されます -->
+        <div class="control-group">
+            <span>サイズ:</span>
+            <div id="size-selector"></div>
         </div>
+        <!-- ▼▼▼ ここから追加 ▼▼▼ -->
+        <div class="control-group">
+            <span>色数:</span>
+            <div id="color-selector"></div>
+        </div>
+        <!-- ▲▲▲ ここまで追加 ▲▲▲ -->
         <button id="reset-button">リセット</button>
     </div>
 
@@ -25,9 +32,7 @@
     </div>
 
     <div id="game-container">
-        <div id="game-board">
-            <!-- ブロックがここに挿入されます -->
-        </div>
+        <div id="game-board"></div>
     </div>
 
     <script src="script.js"></script>
