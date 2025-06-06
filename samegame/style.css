@@ -132,7 +132,7 @@ button.active {
 .color-4 { background-image: linear-gradient(135deg, #ab67f8, #c67df7); } /* 紫 */
 .color-5 { background-image: linear-gradient(135deg, #f99a4e, #fd746c); } /* オレンジ */
 
-/* ▼▼▼ ここから追加 ▼▼▼ */
+/* --- 花火用のCanvasスタイル --- */
 #fireworks-canvas {
     position: fixed; /* 画面全体に固定 */
     top: 0;
@@ -142,4 +142,3 @@ button.active {
     z-index: 9999; /* 最前面に表示 */
     pointer-events: none; /* マウス操作を透過させる */
 }
-/* ▲▲▲ ここまで追加 ▲▲▲ */
