@@ -1,0 +1,161 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #444;
+}
+
+#sudoku-container {
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+#sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    border: 3px solid #333;
+    width: 90vw;
+    height: 90vw;
+    max-width: 500px;
+    max-height: 500px;
+    background-color: #fff;
+    position: relative;
+    user-select: none;
+}
+
+.cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1em, 5vw, 2em);
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cell.given-cell {
+    font-weight: bold;
+    color: #333;
+    background-color: #e9ecef;
+    cursor: default;
+}
+
+.cell.user-input {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.cell.selected {
+    background-color: #d0eaff;
+}
+
+/* 間違っているセルをハイライトするスタイル */
+.user-input.error-cell {
+    color: #dc3545;
+    background-color: #f8d7da;
+}
+
+/* 3x3の太い枠線 */
+.cell:nth-child(3n):not(:nth-child(9n)) {
+    border-right: 2px solid #333;
+}
+.cell:nth-child(n+19):nth-child(-n+27),
+.cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 2px solid #333;
+}
+
+/* メモ機能のスタイル */
+.memo-grid {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    pointer-events: none;
+}
+
+.memo-cell {
+    font-size: clamp(0.4em, 1.5vw, 0.6em);
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+}
+
+.memo-cell.active {
+    visibility: visible;
+}
+
+#controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.control-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    align-items: center;
+}
+
+button, select {
+    padding: 10px 15px;
+    font-size: 1em;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+button:hover, select:hover {
+    background-color: #e9e9e9;
+}
+
+#memo-toggle-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+#message {
+    font-size: 1.2em;
+    font-weight: bold;
+    min-height: 25px;
+    text-align: center;
+    transition: color 0.3s;
+}
+
+.instructions {
+    font-size: 0.9em;
+    color: #666;
+    text-align: center;
+    max-width: 500px;
+}
+
+.success { color: #28a745; }
+.error { color: #dc3545; }
+
+@media (max-width: 480px) {
+    button, select {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+}
