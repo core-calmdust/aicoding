@@ -39,11 +39,11 @@
         
         // ★★★ 最終調整: ゲームバランスを大幅に緩和 ★★★
         const difficultyLevels = { 
-            1: { name: "EASY",      speed: 5,  error: 0.6  }, // 非常にミスしやすく、動きも遅い。初心者に最適。
-            2: { name: "NORMAL",    speed: 6,  error: 0.5  }, // 時々ミスをする。ラリーを楽しめるレベル。
-            3: { name: "HARD",      speed: 10,  error: 0.3 }, // ほとんどミスしないが、まだ隙はある。
-            4: { name: "VERY HARD", speed: 11, error: 0.15 }, // 非常に正確。スマッシュが攻略の鍵。
-            5: { name: "IMPOSSIBLE",speed: 13, error: 0.05 }  // 理不尽に近いが、完全無敵ではない。
+            1: { name: "EASY",      speed: 8,  error: 0.6  }, // 非常にミスしやすく、動きも遅い。初心者に最適。
+            2: { name: "NORMAL",    speed: 13,  error: 0.3  }, // 時々ミスをする。ラリーを楽しめるレベル。
+            3: { name: "HARD",      speed: 16,  error: 0.1 }, // ほとんどミスしないが、まだ隙はある。
+            4: { name: "VERY HARD", speed: 18, error: 0.07 }, // 非常に正確。スマッシュが攻略の鍵。
+            5: { name: "IMPOSSIBLE",speed: 18, error: 0.03 }  // 理不尽に近いが、完全無敵ではない。
         };
 
         const gameModes = { 1: { name: 'CLASSIC' }, 2: { name: 'ADVANCED' }, 3: { name: 'TURBO' } };
@@ -77,10 +77,10 @@
         // ================================================================= //
         function initializeObjects() {
             const isTurbo = selectedMode.name === 'TURBO';
-            const baseSpeed = isTurbo ? 11 : 8;
+            const baseSpeed = isTurbo ? 9 : 8;
             const speedIncrement = isTurbo ? 0.7 : 0.5;
-            const paddleSpeed = isTurbo ? 11 : 9;
-            const paddleBoostSpeed = isTurbo ? 18 : 15;
+            const paddleSpeed = isTurbo ? 9 : 8;
+            const paddleBoostSpeed = isTurbo ? 15 : 14;
 
             ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 12, speed: baseSpeed, velocityX: baseSpeed, velocityY: baseSpeed, speedIncrement: speedIncrement, isSmashed: false };
             player = { x: 15, y: (canvas.height - 100) / 2, width: 15, height: 100, score: 0, speed: paddleSpeed, boostSpeed: paddleBoostSpeed };
@@ -94,19 +94,21 @@
                 else if (selectedMode.name === 'TURBO') {
                     monsterSpeed = 3;
                     switch (selectedDifficulty.name) {
-                        case 'EASY': case 'NORMAL': monsterCount = 3; break;
-                        case 'HARD': monsterCount = 4; break;
-                        case 'VERY HARD': case 'IMPOSSIBLE': monsterCount = 5; break;
+                        case 'EASY': monsterCount = 1; monsterSpeed = 1; break;
+			case 'NORMAL': monsterCount = 2; monsterSpeed = 1; break;
+                        case 'HARD': monsterCount = 2; break;
+                        case 'VERY HARD': monsterCount = 3; break;
+			case 'IMPOSSIBLE': monsterCount = 4; break;
                     }
                 }
                 for (let i = 0; i < monsterCount; i++) { monsters.push({ x: canvas.width / 4 + Math.random() * canvas.width / 2, y: 50 + Math.random() * (canvas.height - 100), width: 40, height: 40, vx: (Math.random() > 0.5 ? 1 : -1) * monsterSpeed, vy: (Math.random() > 0.5 ? 1 : -1) * monsterSpeed }); }
             }
         }
         function movePlayer() { const currentSpeed = keys.Shift ? player.boostSpeed : player.speed; if ((keys.w || keys.W || keys.ArrowUp) && player.y > 0) player.y -= currentSpeed; if ((keys.s || keys.S || keys.ArrowDown) && player.y < canvas.height - player.height) player.y += currentSpeed; }
-        function moveCpu() { let cpuSpeed = selectedDifficulty.speed; if (selectedMode.name === 'TURBO') cpuSpeed *= 1.2; let targetY = ball.y; targetY += (Math.random() - 0.5) * player.height * selectedDifficulty.error; if (cpu.y + cpu.height / 2 < targetY) cpu.y = Math.min(cpu.y + cpuSpeed, canvas.height - cpu.height); else if (cpu.y + cpu.height / 2 > targetY) cpu.y = Math.max(cpu.y - cpuSpeed, 0); }
+        function moveCpu() { let cpuSpeed = selectedDifficulty.speed; if (selectedMode.name === 'TURBO') cpuSpeed *= 1.1; let targetY = ball.y; targetY += (Math.random() - 0.5) * player.height * selectedDifficulty.error; if (cpu.y + cpu.height / 2 < targetY) cpu.y = Math.min(cpu.y + cpuSpeed, canvas.height - cpu.height); else if (cpu.y + cpu.height / 2 > targetY) cpu.y = Math.max(cpu.y - cpuSpeed, 0); }
         function moveMonsters() { monsters.forEach(m => { m.x += m.vx; m.y += m.vy; if (m.x <= 0 || m.x + m.width >= canvas.width) m.vx *= -1; if (m.y <= 0 || m.y + m.height >= canvas.height) m.vy *= -1; }); }
         function collision(obj1, obj2) { return obj1.x < obj2.x + obj2.width && obj1.x + obj1.width > obj2.x && obj1.y < obj2.y + obj2.height && obj1.y + obj1.height > obj2.y; }
-        function resetBall() { playSound("goal"); createParticles(ball.x, ball.y); ball.x = canvas.width / 2; ball.y = 100 + Math.random() * (canvas.height - 200); ball.speed = selectedMode.name === 'TURBO' ? 12 : 8; ball.isSmashed = false; ball.velocityX = ball.velocityX > 0 ? -ball.speed : ball.speed; ball.velocityY = ball.speed * (Math.random() > 0.5 ? 1 : -1); }
+        function resetBall() { playSound("goal"); createParticles(ball.x, ball.y); ball.x = canvas.width / 2; ball.y = 100 + Math.random() * (canvas.height - 200); ball.speed = selectedMode.name === 'TURBO' ? 10 : 8; ball.isSmashed = false; ball.velocityX = ball.velocityX > 0 ? -ball.speed : ball.speed; ball.velocityY = ball.speed * (Math.random() > 0.5 ? 1 : -1); }
         
         // ================================================================= //
         // メインループ (変更なし)
@@ -128,7 +130,7 @@
                 const normalizedCollidePoint = collidePoint / (currentPaddle.height / 2);
                 let angleRad = (Math.PI / 4) * normalizedCollidePoint;
                 if (Math.abs(normalizedCollidePoint) > 0.8) { ball.speed = 25; ball.isSmashed = true; createParticles(ball.x, ball.y, 40, [colors.smash, '#ffffff']); angleRad = Math.sign(angleRad) * (Math.PI / 3); playSound('smash'); } 
-                else { if (ball.isSmashed) { ball.speed = selectedMode.name === 'TURBO' ? 14 : 10; ball.isSmashed = false; } ball.speed += ball.speedIncrement; createParticles(ball.x, ball.y); playSound('hit'); }
+                else { if (ball.isSmashed) { ball.speed = selectedMode.name === 'TURBO' ? 12 : 10; ball.isSmashed = false; } ball.speed += ball.speedIncrement; createParticles(ball.x, ball.y); playSound('hit'); }
                 const direction = (ball.x < canvas.width / 2) ? 1 : -1;
                 ball.velocityX = direction * ball.speed * Math.cos(angleRad);
                 ball.velocityY = direction * ball.speed * Math.sin(angleRad);
@@ -199,7 +201,7 @@
                     selectedMode = gameModes[modeSelector]; selectedDifficulty = difficultyLevels[difficultySelector];
                     initializeObjects();
                     gameState = 'playing';
-                    const bpm = selectedMode.name === 'TURBO' ? 160 : 130;
+                    const bpm = selectedMode.name === 'TURBO' ? 180 : 130;
                     if (bgm) bgm.stop();
                     bgm = new BGM(bpm);
                     bgm.start();
