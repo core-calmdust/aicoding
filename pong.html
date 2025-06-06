@@ -40,9 +40,9 @@
         // ★★★ 最終調整: ゲームバランスを大幅に緩和 ★★★
         const difficultyLevels = { 
             1: { name: "EASY",      speed: 5,  error: 0.6  }, // 非常にミスしやすく、動きも遅い。初心者に最適。
-            2: { name: "NORMAL",    speed: 7,  error: 0.5  }, // 時々ミスをする。ラリーを楽しめるレベル。
-            3: { name: "HARD",      speed: 9,  error: 0.4 }, // ほとんどミスしないが、まだ隙はある。
-            4: { name: "VERY HARD", speed: 10, error: 0.3 }, // 非常に正確。スマッシュが攻略の鍵。
+            2: { name: "NORMAL",    speed: 6,  error: 0.5  }, // 時々ミスをする。ラリーを楽しめるレベル。
+            3: { name: "HARD",      speed: 8,  error: 0.4 }, // ほとんどミスしないが、まだ隙はある。
+            4: { name: "VERY HARD", speed: 9, error: 0.3 }, // 非常に正確。スマッシュが攻略の鍵。
             5: { name: "IMPOSSIBLE",speed: 11, error: 0.2 }  // 理不尽に近いが、完全無敵ではない。
         };
 
@@ -77,10 +77,10 @@
         // ================================================================= //
         function initializeObjects() {
             const isTurbo = selectedMode.name === 'TURBO';
-            const baseSpeed = isTurbo ? 12 : 8;
+            const baseSpeed = isTurbo ? 11 : 8;
             const speedIncrement = isTurbo ? 0.7 : 0.5;
-            const paddleSpeed = isTurbo ? 10 : 8;
-            const paddleBoostSpeed = isTurbo ? 17 : 14;
+            const paddleSpeed = isTurbo ? 11 : 9;
+            const paddleBoostSpeed = isTurbo ? 18 : 15;
 
             ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 12, speed: baseSpeed, velocityX: baseSpeed, velocityY: baseSpeed, speedIncrement: speedIncrement, isSmashed: false };
             player = { x: 15, y: (canvas.height - 100) / 2, width: 15, height: 100, score: 0, speed: paddleSpeed, boostSpeed: paddleBoostSpeed };
