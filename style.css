@@ -97,3 +97,24 @@ h1 {
         height: 180px;
     }
 }
+
+/* --- フッター --- */
+footer {
+    text-align: center;
+    margin-top: 60px; /* mainコンテンツとの間隔 */
+    padding: 20px 0;
+    border-top: 1px solid #e0e0e0; /* 上に区切り線 */
+    font-size: 1rem;
+}
+
+footer p a {
+    color: #34495e;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+footer p a:hover {
+    color: #2c3e50;
+    text-decoration: underline;
+}
