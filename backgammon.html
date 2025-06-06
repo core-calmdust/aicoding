@@ -81,7 +81,7 @@
             </div>
             <div class="game-info">
                 <p>ターン: <span id="current-turn"></span></p>
-                <p><span id="red-label">赤 (YOU)</span> バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
+                <p><span id="red-label">赤 (あなた)</span> バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
                 <p><span id="black-label">黒 (CPU)</span> バー:<span id="bar-black-score">0</span> / ゴール:<span id="borne-off-black-score">0</span></p>
             </div>
             <div class="turn-controls">
@@ -211,8 +211,8 @@
             
             updateInfo() {
                 this.dom.turn.textContent = this.state.currentPlayer === this.state.playerColor ? "あなたのターン" : "CPUのターン";
-                this.dom.redLabel.textContent = this.state.playerColor === 'red' ? '赤 (あなた)' : '赤 (CPU)';
-                this.dom.blackLabel.textContent = this.state.playerColor === 'black' ? '黒 (あなた)' : '黒 (CPU)';
+                this.dom.redLabel.textContent = this.state.playerColor === 'red' ? '赤 (YOU)' : '赤 (CPU)';
+                this.dom.blackLabel.textContent = this.state.playerColor === 'black' ? '黒 (YOU)' : '黒 (CPU)';
                 this.dom.barP.textContent = this.state.bar[this.state.playerColor]; this.dom.borneP.textContent = this.state.borneOff[this.state.playerColor];
                 this.dom.barC.textContent = this.state.bar[this.state.cpuColor]; this.dom.borneC.textContent = this.state.borneOff[this.state.cpuColor];
                 this.dom.die1.textContent = this.state.dice[0] || '?'; this.dom.die2.textContent = this.state.dice[1] || '?';
