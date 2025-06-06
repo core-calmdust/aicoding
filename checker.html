@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript チェッカー ver2.0</title>
+    <title>JavaScript チェッカー (AI超強化版)</title>
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #f0f0f0; margin: 0; padding: 20px; }
         h1 { color: #333; text-align: center; margin-bottom: 20px;}
@@ -13,7 +13,6 @@
         .light { background-color: #F5DEB3; } .dark { background-color: #A0522D; }
         .disc { width: 85%; height: 85%; border-radius: 50%; box-shadow: inset 0 -3px 5px rgba(0,0,0,0.4), 0 2px 3px rgba(0,0,0,0.3); cursor: pointer; }
         .white-man { background-color: #f8f8f8; }
-        /* ★★★ 黒い駒を赤い駒に変更 ★★★ */
         .red-man { background: radial-gradient(circle at 65% 35%, #e57373, #c62828); border: 2px solid #b71c1c; }
         .king::after { content: '👑'; position: absolute; transform: translateY(-5px); text-shadow: 0 0 3px black; pointer-events: none; }
         .selected { background-color: #64b5f6 !important; }
@@ -33,20 +32,21 @@
     </style>
 </head>
 <body>
-    <h1>JavaScript チェッカー ver2.0</h1>
+    <h1>JavaScript チェッカー</h1>
     <div class="container">
         <div class="sidebar">
             <div class="controls">
                 <label for="cpu-level">CPUレベル:</label>
+                <!-- ★★★ AIレベルを8段階に ★★★ -->
                 <select id="cpu-level">
                     <option value="1">レベル1 (入門)</option><option value="2">レベル2 (初級)</option><option value="3">レベル3 (中級)</option>
-                    <option value="4">レベル4 (上級)</option><option value="5" selected>レベル5 (熟練)</option><option value="6">レベル6 (達人)</option>
+                    <option value="4">レベル4 (上級)</option><option value="5">レベル5 (熟練)</option><option value="6">レベル6 (達人)</option>
+                    <option value="7" selected>レベル7 (師範)</option><option value="8">レベル8 (鬼神)</option>
                 </select>
                 <div class="player-color-selector">
                     <label>あなたの色:</label>
                     <div class="radio-group">
                         <label><input type="radio" name="player_color" value="white" checked> 先攻(白)</label>
-                        <!-- ★★★ ラベルと値を 'red' に変更 ★★★ -->
                         <label><input type="radio" name="player_color" value="red"> 後攻(赤)</label>
                     </div>
                 </div>
@@ -55,7 +55,6 @@
             <div class="game-info">
                 <p>手数: <span id="turn-count">0</span></p>
                 <p><span id="white-label">白 (あなた)</span>: <span id="white-score">12</span></p>
-                <!-- ★★★ IDとラベルを 'red' に変更 ★★★ -->
                 <p><span id="red-label">赤 (CPU)</span>: <span id="red-score">12</span></p>
                 <p>ターン: <span id="current-turn"></span></p>
             </div>
@@ -81,168 +80,174 @@
                 this.initGame();
             }
 
-            // --- ゲーム進行 ---
-            
-            initGame() {
-                const playerColor = document.querySelector('input[name="player_color"]:checked').value;
-                this.state = {
-                    board: Array.from({ length: this.BOARD_SIZE }, () => Array(this.BOARD_SIZE).fill(this.PIECES.EMPTY)),
-                    currentPlayer: 'white', turnCount: 0, cpuLevel: parseInt(this.dom.level.value, 10),
-                    gameOver: false, selectedPiece: null, validMoves: [],
-                    isContinuousJump: false,
-                    playerColor: playerColor,
-                    cpuColor: playerColor === 'white' ? 'red' : 'white',
-                };
-                
-                for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) if ((r + c) % 2 !== 0) this.state.board[r][c] = this.PIECES.BLACK_MAN;
-                for (let r = 5; r < 8; r++) for (let c = 0; c < 8; c++) if ((r + c) % 2 !== 0) this.state.board[r][c] = this.PIECES.WHITE_MAN;
-                
-                this.updateAllValidMoves(this.state.board, this.state.currentPlayer);
-                this.renderAll();
+            // --- ゲーム進行 (変更なし) ---
+            initGame() { /* ... */ }
+            async switchTurn() { /* ... */ }
+            endGame(isStalemate = false) { /* ... */ }
 
-                if (this.state.currentPlayer === this.state.cpuColor) {
-                    this.dom.message.textContent = 'CPUが思考中...';
-                    setTimeout(() => this.cpuTurn(), 1000);
-                }
-            }
-            
-            async switchTurn() {
-                this.state.currentPlayer = this.state.currentPlayer === 'white' ? 'red' : 'white';
-                this.updateAllValidMoves(this.state.board, this.state.currentPlayer);
-                if (this.state.validMoves.length === 0) { this.endGame(true); return; }
-                this.renderAll();
-                if (!this.state.gameOver && this.state.currentPlayer === this.state.cpuColor) {
-                    this.dom.message.textContent = 'CPUが思考中...';
-                    await new Promise(r => setTimeout(r, 500));
-                    this.cpuTurn();
-                }
-            }
+            // --- 描画とUI更新 (変更なし) ---
+            renderAll() { /* ... */ }
+            renderBoard() { /* ... */ }
+            updateInfo() { /* ... */ }
 
-            endGame(isStalemate = false) {
-                this.state.gameOver = true;
-                let message;
-                if (isStalemate) {
-                    const winner = this.state.currentPlayer === this.state.playerColor ? "CPUの" : "あなたの";
-                    message = `${this.state.currentPlayer === this.state.playerColor ? 'あなた' : 'CPU'}は動けません。${winner}勝ちです！`;
-                } else {
-                    const whiteCount = this.state.board.flat().filter(p => this.getPieceColor(p) === 'white').length;
-                    message = (whiteCount === 0) ? "CPUの勝ちです！" : "あなたの勝ちです！";
-                }
-                this.dom.message.textContent = `ゲーム終了！ ${message}`;
-                this.updateInfo();
-            }
-
-            // --- 描画とUI更新 ---
-
-            renderAll() { this.renderBoard(); this.updateInfo(); }
-            renderBoard() {
-                this.dom.board.innerHTML = '';
-                for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = `cell ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    const piece = this.state.board[r][c];
-                    if (piece !== this.PIECES.EMPTY) {
-                        const disc = document.createElement('div');
-                        disc.className = 'disc';
-                        const color = this.getPieceColor(piece);
-                        disc.classList.add(`${color}-man`);
-                        if(this.isKing(piece)) disc.classList.add('king');
-                        cell.appendChild(disc);
-                    }
-                    if (this.state.selectedPiece && this.state.selectedPiece.r === r && this.state.selectedPiece.c === c) cell.classList.add('selected');
-                    if (this.state.validMoves.some(m => m.to.r === r && m.to.c === c && (!this.state.selectedPiece || (this.state.selectedPiece.r === m.from.r && this.state.selectedPiece.c === m.from.c)))) cell.classList.add('valid-move');
-                    cell.addEventListener('click', () => this.onCellClick(r, c));
-                    this.dom.board.appendChild(cell);
-                }
-            }
-
-            updateInfo() {
-                let whiteCount = 0, redCount = 0;
-                this.state.board.flat().forEach(p => { if (this.getPieceColor(p) === 'white') whiteCount++; if (this.getPieceColor(p) === 'red') redCount++; });
-                this.dom.turnCount.textContent = this.state.turnCount;
-                this.dom.whiteScore.textContent = whiteCount; this.dom.redScore.textContent = redCount;
-                this.dom.whiteLabel.textContent = this.state.playerColor === 'white' ? '白 (あなた)' : '白 (CPU)';
-                this.dom.redLabel.textContent = this.state.playerColor === 'red' ? '赤 (あなた)' : '赤 (CPU)';
-                this.dom.currentTurn.textContent = this.state.gameOver ? '終了' : (this.state.currentPlayer === this.state.playerColor ? 'あなたのターン' : 'CPUのターン');
-                if(!this.state.gameOver && this.state.currentPlayer === this.state.playerColor && !this.state.isContinuousJump) this.dom.message.textContent = 'あなたの番です';
-            }
-
-            // --- プレイヤー操作 ---
-            
-            onCellClick(r, c) {
-                if (this.state.gameOver || this.state.currentPlayer !== this.state.playerColor) return;
-                if (this.state.selectedPiece) {
-                    const move = this.state.validMoves.find(m => m.from.r === this.state.selectedPiece.r && m.from.c === this.state.selectedPiece.c && m.to.r === r && m.to.c === c);
-                    if (move) {
-                        this.performMove(this.state.board, move);
-                        const nextJumps = this.getJumpsFrom(this.state.board, move.to.r, move.to.c);
-                        if (move.isJump && nextJumps.length > 0) {
-                            this.state.isContinuousJump = true; this.state.selectedPiece = { r: move.to.r, c: move.to.c };
-                            this.dom.message.textContent = '続けてジャンプしてください！';
-                            this.updateAllValidMoves(this.state.board, this.state.currentPlayer, this.state.selectedPiece);
-                            this.renderAll();
-                        } else {
-                            this.state.isContinuousJump = false; this.state.selectedPiece = null; this.switchTurn();
-                        }
-                    } else {
-                        this.state.selectedPiece = null; if (this.getPieceColor(this.state.board[r][c]) === this.state.playerColor) this.state.selectedPiece = { r, c };
-                        this.renderBoard();
-                    }
-                } else {
-                    if (this.getPieceColor(this.state.board[r][c]) === this.state.playerColor) { this.state.selectedPiece = { r, c }; this.renderBoard(); }
-                }
-            }
+            // --- プレイヤー操作 (変更なし) ---
+            onCellClick(r, c) { /* ... */ }
 
             // --- AIロジック ---
             
-            async cpuTurn() { /* (変更なし) */ }
-            findBestCpuMove() { /* (変更なし) */ }
-            alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer) { /* (変更なし) */ }
+            async cpuTurn() {
+                if (this.state.gameOver) return;
+                let move = this.findBestCpuMove();
+                if (move) {
+                    this.performMove(this.state.board, move);
+                    this.renderAll();
+                    let wasJump = move.isJump;
+                    let lastPos = move.to;
+                    while (wasJump) {
+                        const nextJumps = this.getJumpsFrom(this.state.board, lastPos.r, lastPos.c);
+                        if(nextJumps.length > 0) {
+                            await new Promise(r => setTimeout(r, 800));
+                            this.performMove(this.state.board, nextJumps[0]);
+                            this.renderAll();
+                            lastPos = nextJumps[0].to;
+                        } else {
+                            wasJump = false;
+                        }
+                    }
+                }
+                this.switchTurn();
+            }
 
+            findBestCpuMove() {
+                const moves = this.state.validMoves;
+                if(moves.length === 0) return null;
+                if(moves.length === 1) return moves[0];
+                if(this.state.cpuLevel === 1) return moves[Math.floor(Math.random() * moves.length)];
+                
+                // ★★★ 探索深度をレベルに応じて設定 ★★★
+                const depthMap = { 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 };
+                const depth = depthMap[this.state.cpuLevel] || 2;
+                return this.alphaBeta(this.state.board, depth, -Infinity, Infinity, true).move;
+            }
+
+            alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer) {
+                const player = maximizingPlayer ? this.state.cpuColor : this.state.playerColor;
+                const possibleMoves = this.updateAllValidMoves(currentBoard, player, null, true); // 評価モードで呼び出し
+                
+                if (depth === 0 || possibleMoves.length === 0) {
+                    return { score: this.evaluateBoard(currentBoard), move: null };
+                }
+                
+                let bestMove = null;
+                let bestValue = maximizingPlayer ? -Infinity : Infinity;
+                for (const move of possibleMoves) {
+                    const tempBoard = JSON.parse(JSON.stringify(currentBoard));
+                    this.performMove(tempBoard, move);
+                    const result = this.alphaBeta(tempBoard, depth - 1, alpha, beta, !maximizingPlayer);
+
+                    if (maximizingPlayer) {
+                        if (result.score > bestValue) { bestValue = result.score; bestMove = move; }
+                        alpha = Math.max(alpha, bestValue);
+                    } else {
+                        if (result.score < bestValue) { bestValue = result.score; bestMove = move; }
+                        beta = Math.min(beta, bestValue);
+                    }
+                    if (beta <= alpha) break; // 枝刈り
+                }
+                return { score: bestValue, move: bestMove || possibleMoves[0] };
+            }
+            
+            // ★★★ 超強化された評価関数 ★★★
             evaluateBoard(currentBoard) {
                 let score = 0;
-                for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-                    const piece = currentBoard[r][c];
-                    const color = this.getPieceColor(piece);
-                    if (!color) continue;
-                    let pieceScore = 0;
-                    if (this.isKing(piece)) pieceScore += (this.state.cpuLevel >= 5 ? 200 : 150); else pieceScore += 100;
-                    if (this.state.cpuLevel >= 6) {
-                        if (color === 'red') pieceScore += r * 5; else pieceScore -= (7 - r) * 5;
-                        if ((color === 'red' && r === 7) || (color === 'white' && r === 0)) pieceScore += 20;
+                const cpu = this.state.cpuColor;
+                const player = this.state.playerColor;
+
+                // --- レベル7以上: 機動力評価 ---
+                if (this.state.cpuLevel >= 7) {
+                    const cpuMoves = this.updateAllValidMoves(currentBoard, cpu, null, true).length;
+                    const playerMoves = this.updateAllValidMoves(currentBoard, player, null, true).length;
+                    score += (cpuMoves - playerMoves) * 10;
+                }
+
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const piece = currentBoard[r][c];
+                        const color = this.getPieceColor(piece);
+                        if (!color) continue;
+                        
+                        let pieceScore = 0;
+                        // 駒の価値
+                        pieceScore += this.isKing(piece) ? 200 : 100;
+                        
+                        // 前進度
+                        if (color === 'red') pieceScore += r * 5;
+                        else pieceScore += (7 - r) * 5;
+
+                        // --- レベル8以上: 配置評価 ---
+                        if (this.state.cpuLevel >= 8) {
+                            // バックロウ(一番奥の列)にいる駒は安全なので高評価
+                            if ((color === 'white' && r === 0) || (color === 'red' && r === 7)) {
+                                pieceScore += 25;
+                            }
+                            // 中央の列(c=2~5)を支配していると有利
+                            if (c >= 2 && c <= 5) {
+                                pieceScore += 10;
+                            }
+                        }
+                        
+                        score += (color === cpu) ? pieceScore : -pieceScore;
                     }
-                    score += (color === this.state.cpuColor) ? pieceScore : -pieceScore;
                 }
                 return score;
             }
             
-            // --- ルール判定とユーティリティ ---
+            // --- ルール判定とユーティリティ (isEvaluationフラグの追加) ---
             
-            performMove(board, move) { /* (変更なし) */ }
-            updateAllValidMoves(currentBoard, player, fromPos = null) { /* (変更なし) */ }
-            getJumpsFrom(board, r, c) { /* (変更なし) */ }
-            getStepsFrom(board, r, c) { /* (変更なし) */ }
-
-            getPieceColor(piece) {
-                const { WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING } = this.PIECES;
-                if (piece === WHITE_MAN || piece === WHITE_KING) return 'white';
-                if (piece === BLACK_MAN || piece === BLACK_KING) return 'red'; // ★★★ 'black' を 'red' に変更 ★★★
-                return null;
+            updateAllValidMoves(currentBoard, player, fromPos = null, isEvaluation = false) {
+                if (fromPos && !isEvaluation) {
+                    const moves = this.getJumpsFrom(currentBoard, fromPos.r, fromPos.c);
+                    if (currentBoard === this.state.board) this.state.validMoves = moves;
+                    return moves;
+                }
+                let allJumps = [], allSteps = [];
+                for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+                    if (this.getPieceColor(currentBoard[r][c]) === player) {
+                        allJumps.push(...this.getJumpsFrom(currentBoard, r, c));
+                        allSteps.push(...this.getStepsFrom(currentBoard, r, c));
+                    }
+                }
+                const result = allJumps.length > 0 ? allJumps : allSteps;
+                if (!isEvaluation && currentBoard === this.state.board) {
+                    this.state.validMoves = result;
+                }
+                return result;
             }
-            isKing(piece) { return piece === this.PIECES.WHITE_KING || piece === this.PIECES.BLACK_KING; }
-            
-            attachEventListeners() { this.dom.startBtn.addEventListener('click', () => this.initGame()); }
+
+            // --- 残りの関数 (変更なし) ---
+            performMove(board, move) { /* ... */ }
+            getJumpsFrom(board, r, c) { /* ... */ }
+            getStepsFrom(board, r, c) { /* ... */ }
+            getPieceColor(piece) { /* ... */ }
+            isKing(piece) { /* ... */ }
+            attachEventListeners() { /* ... */ }
         }
         
         // --- 省略した関数の展開と実行 ---
-        CheckerGame.prototype.cpuTurn = async function() { if (this.state.gameOver) return; let move = this.findBestCpuMove(); if (move) { this.performMove(this.state.board, move); this.renderAll(); let wasJump = move.isJump; let lastPos = move.to; while (wasJump) { const nextJumps = this.getJumpsFrom(this.state.board, lastPos.r, lastPos.c); if(nextJumps.length > 0) { await new Promise(r => setTimeout(r, 800)); this.performMove(this.state.board, nextJumps[0]); this.renderAll(); lastPos = nextJumps[0].to; } else { wasJump = false; } } } this.switchTurn(); };
-        CheckerGame.prototype.findBestCpuMove = function() { const moves = this.state.validMoves; if(moves.length === 0) return null; if(moves.length === 1) return moves[0]; if(this.state.cpuLevel === 1) return moves[Math.floor(Math.random() * moves.length)]; const depthMap = { 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 }; const depth = depthMap[this.state.cpuLevel] || 2; return this.alphaBeta(this.state.board, depth, -Infinity, Infinity, true).move; };
-        CheckerGame.prototype.alphaBeta = function(currentBoard, depth, alpha, beta, maximizingPlayer) { const player = maximizingPlayer ? this.state.cpuColor : this.state.playerColor; const possibleMoves = this.updateAllValidMoves(currentBoard, player); if (depth === 0 || possibleMoves.length === 0) return { score: this.evaluateBoard(currentBoard), move: null }; let bestMove = null; let bestValue = maximizingPlayer ? -Infinity : Infinity; for (const move of possibleMoves) { const tempBoard = JSON.parse(JSON.stringify(currentBoard)); this.performMove(tempBoard, move); const result = this.alphaBeta(tempBoard, depth - 1, alpha, beta, !maximizingPlayer); if (maximizingPlayer) { if (result.score > bestValue) { bestValue = result.score; bestMove = move; } alpha = Math.max(alpha, bestValue); } else { if (result.score < bestValue) { bestValue = result.score; bestMove = move; } beta = Math.min(beta, bestValue); } if (beta <= alpha) break; } return { score: bestValue, move: bestMove || possibleMoves[0] }; };
+        CheckerGame.prototype.initGame = function() { const playerColor = document.querySelector('input[name="player_color"]:checked').value; this.state = { board: Array.from({ length: this.BOARD_SIZE }, () => Array(this.BOARD_SIZE).fill(this.PIECES.EMPTY)), currentPlayer: 'white', turnCount: 0, cpuLevel: parseInt(this.dom.level.value, 10), gameOver: false, selectedPiece: null, validMoves: [], isContinuousJump: false, playerColor: playerColor, cpuColor: playerColor === 'white' ? 'red' : 'white', }; for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) if ((r + c) % 2 !== 0) this.state.board[r][c] = this.PIECES.BLACK_MAN; for (let r = 5; r < 8; r++) for (let c = 0; c < 8; c++) if ((r + c) % 2 !== 0) this.state.board[r][c] = this.PIECES.WHITE_MAN; this.updateAllValidMoves(this.state.board, this.state.currentPlayer); this.renderAll(); if (this.state.currentPlayer === this.state.cpuColor) { this.dom.message.textContent = 'CPUが思考中...'; setTimeout(() => this.cpuTurn(), 1000); }};
+        CheckerGame.prototype.switchTurn = async function() { this.state.currentPlayer = this.state.currentPlayer === 'white' ? 'red' : 'white'; this.updateAllValidMoves(this.state.board, this.state.currentPlayer); if (this.state.validMoves.length === 0) { this.endGame(true); return; } this.renderAll(); if (!this.state.gameOver && this.state.currentPlayer === this.state.cpuColor) { this.dom.message.textContent = 'CPUが思考中...'; await new Promise(r => setTimeout(r, 500)); this.cpuTurn(); } };
+        CheckerGame.prototype.endGame = function(isStalemate = false) { this.state.gameOver = true; let message; if (isStalemate) { const winner = this.state.currentPlayer === this.state.playerColor ? "CPUの" : "あなたの"; message = `${this.state.currentPlayer === this.state.playerColor ? 'あなた' : 'CPU'}は動けません。${winner}勝ちです！`; } else { const whiteCount = this.state.board.flat().filter(p => this.getPieceColor(p) === 'white').length; message = (whiteCount === 0) ? "CPUの勝ちです！" : "あなたの勝ちです！"; } this.dom.message.textContent = `ゲーム終了！ ${message}`; this.updateInfo(); };
+        CheckerGame.prototype.renderAll = function() { this.renderBoard(); this.updateInfo(); };
+        CheckerGame.prototype.renderBoard = function() { this.dom.board.innerHTML = ''; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const cell = document.createElement('div'); cell.className = `cell ${(r + c) % 2 === 0 ? 'light' : 'dark'}`; const piece = this.state.board[r][c]; if (piece !== this.PIECES.EMPTY) { const disc = document.createElement('div'); disc.className = 'disc'; const color = this.getPieceColor(piece); disc.classList.add(`${color}-man`); if(this.isKing(piece)) disc.classList.add('king'); cell.appendChild(disc); } if (this.state.selectedPiece && this.state.selectedPiece.r === r && this.state.selectedPiece.c === c) cell.classList.add('selected'); if (this.state.validMoves.some(m => m.to.r === r && m.to.c === c && (!this.state.selectedPiece || (this.state.selectedPiece.r === m.from.r && this.state.selectedPiece.c === m.from.c)))) cell.classList.add('valid-move'); cell.addEventListener('click', () => this.onCellClick(r, c)); this.dom.board.appendChild(cell); } };
+        CheckerGame.prototype.updateInfo = function() { let whiteCount = 0, redCount = 0; this.state.board.flat().forEach(p => { if (this.getPieceColor(p) === 'white') whiteCount++; if (this.getPieceColor(p) === 'red') redCount++; }); this.dom.turnCount.textContent = this.state.turnCount; this.dom.whiteScore.textContent = whiteCount; this.dom.redScore.textContent = redCount; this.dom.whiteLabel.textContent = this.state.playerColor === 'white' ? '白 (あなた)' : '白 (CPU)'; this.dom.redLabel.textContent = this.state.playerColor === 'red' ? '赤 (あなた)' : '赤 (CPU)'; this.dom.currentTurn.textContent = this.state.gameOver ? '終了' : (this.state.currentPlayer === this.state.playerColor ? 'あなたのターン' : 'CPUのターン'); if(!this.state.gameOver && this.state.currentPlayer === this.state.playerColor && !this.state.isContinuousJump) this.dom.message.textContent = 'あなたの番です'; };
+        CheckerGame.prototype.onCellClick = function(r, c) { if (this.state.gameOver || this.state.currentPlayer !== this.state.playerColor) return; if (this.state.selectedPiece) { const move = this.state.validMoves.find(m => m.from.r === this.state.selectedPiece.r && m.from.c === this.state.selectedPiece.c && m.to.r === r && m.to.c === c); if (move) { this.performMove(this.state.board, move); const nextJumps = this.getJumpsFrom(this.state.board, move.to.r, move.to.c); if (move.isJump && nextJumps.length > 0) { this.state.isContinuousJump = true; this.state.selectedPiece = { r: move.to.r, c: move.to.c }; this.dom.message.textContent = '続けてジャンプしてください！'; this.updateAllValidMoves(this.state.board, this.state.currentPlayer, this.state.selectedPiece); this.renderAll(); } else { this.state.isContinuousJump = false; this.state.selectedPiece = null; this.switchTurn(); } } else { this.state.selectedPiece = null; if (this.getPieceColor(this.state.board[r][c]) === this.state.playerColor) this.state.selectedPiece = { r, c }; this.renderBoard(); } } else { if (this.getPieceColor(this.state.board[r][c]) === this.state.playerColor) { this.state.selectedPiece = { r, c }; this.renderBoard(); } } };
         CheckerGame.prototype.performMove = function(board, move) { const { from, to, isJump, jumpedPiece } = move; const piece = board[from.r][from.c]; board[to.r][to.c] = piece; board[from.r][from.c] = this.PIECES.EMPTY; if (isJump) board[jumpedPiece.r][jumpedPiece.c] = this.PIECES.EMPTY; const color = this.getPieceColor(piece); if ((color === 'white' && to.r === 0) || (color === 'red' && to.r === 7)) { board[to.r][to.c] = color === 'white' ? this.PIECES.WHITE_KING : this.PIECES.BLACK_KING; } if(board === this.state.board) this.state.turnCount++; };
-        CheckerGame.prototype.updateAllValidMoves = function(currentBoard, player, fromPos = null) { if (fromPos) { const moves = this.getJumpsFrom(currentBoard, fromPos.r, fromPos.c); if(currentBoard === this.state.board) this.state.validMoves = moves; return moves; } let allJumps = [], allSteps = []; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (this.getPieceColor(currentBoard[r][c]) === player) { allJumps.push(...this.getJumpsFrom(currentBoard, r, c)); allSteps.push(...this.getStepsFrom(currentBoard, r, c)); } const result = allJumps.length > 0 ? allJumps : allSteps; if(currentBoard === this.state.board) this.state.validMoves = result; return result; };
         CheckerGame.prototype.getJumpsFrom = function(board, r, c) { const jumps = [], piece = board[r][c], color = this.getPieceColor(piece); if(!color) return []; const dirs = this.isKing(piece) ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (color === 'white' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]); for (const [dr, dc] of dirs) { const opponentR = r + dr, opponentC = c + dc, landingR = r + dr * 2, landingC = c + dc * 2; if (landingR >= 0 && landingR < 8 && landingC >= 0 && landingC < 8 && board[landingR][landingC] === 0) { const opponentPiece = board[opponentR][opponentC]; if (opponentPiece !== 0 && this.getPieceColor(opponentPiece) !== color) jumps.push({ from: {r,c}, to: {r:landingR,c:landingC}, isJump: true, jumpedPiece: {r:opponentR,c:opponentC}}); } } return jumps; };
         CheckerGame.prototype.getStepsFrom = function(board, r, c) { const steps = [], piece = board[r][c], color = this.getPieceColor(piece); if(!color) return []; const dirs = this.isKing(piece) ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (color === 'white' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]); for (const [dr, dc] of dirs) { const newR = r + dr, newC = c + dc; if (newR >= 0 && newR < 8 && newC >= 0 && newC < 8 && board[newR][newC] === 0) steps.push({ from: {r,c}, to: {r:newR,c:newC}, isJump: false }); } return steps; };
-
+        CheckerGame.prototype.getPieceColor = function(piece) { const { WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING } = this.PIECES; if (piece === WHITE_MAN || piece === WHITE_KING) return 'white'; if (piece === BLACK_MAN || piece === BLACK_KING) return 'red'; return null; };
+        CheckerGame.prototype.isKing = function(piece) { return piece === this.PIECES.WHITE_KING || piece === this.PIECES.BLACK_KING; };
+        CheckerGame.prototype.attachEventListeners = function() { this.dom.startBtn.addEventListener('click', () => this.initGame()); };
+        
         document.addEventListener('DOMContentLoaded', () => { new CheckerGame(); });
     </script>
 </body>
