@@ -59,6 +59,16 @@ h1 {
     background-color: #d0eaff;
 }
 
+/* フォーカスされたエリア（行・列・ボックス）のハイライト */
+.cell.highlight-area {
+    background-color: #f1f3f5;
+}
+
+/* フォーカスされた数字と同じ数字のハイライト */
+.cell.highlight-num {
+    font-weight: 900;
+}
+
 /* 間違っているセルをハイライトするスタイル */
 .user-input.error-cell {
     color: #dc3545;
