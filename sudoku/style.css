@@ -59,9 +59,19 @@ h1 {
     background-color: #d0eaff;
 }
 
+.user-input.error-cell {
+    color: #dc3545;
+    background-color: #f8d7da;
+}
+
 /* フォーカスされたエリア（行・列）のハイライト */
 .cell.highlight-area {
-    background-color: #cce4ff
+    background-color: #e7ecf2;
+}
+
+/* フォーカスされた3x3ボックスのハイライト */
+.cell.highlight-box {
+    background-color: #cce4ff;
 }
 
 /* フォーカスされた数字と同じ数字のハイライト */
@@ -69,11 +79,6 @@ h1 {
     font-weight: 900;
 }
 
-/* 間違っているセルをハイライトするスタイル */
-.user-input.error-cell {
-    color: #dc3545;
-    background-color: #f8d7da;
-}
 
 /* 3x3の太い枠線 */
 .cell:nth-child(3n):not(:nth-child(9n)) {
@@ -84,7 +89,6 @@ h1 {
     border-bottom: 2px solid #333;
 }
 
-/* メモ機能のスタイル */
 .memo-grid {
     position: absolute;
     top: 0; left: 0;
