@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'wide': { rows: 8, cols: 15, name: '8x15' },
         'large': { rows: 15, cols: 15, name: '15x15' }
     };
-    let currentSize = 'small';
+    let currentSize = 'wide';
     let currentColors = 4; // デフォルトの色数
 
     // --- DOM要素 ---
