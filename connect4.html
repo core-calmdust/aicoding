@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript コネクトフォー (カスタマイズ最終版)</title>
+    <title>コネクテッド4</title>
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #f0f0f0; margin: 0; padding: 20px; }
         h1 { color: #333; text-align: center; margin-bottom: 20px;}
         .container { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
         .game-area { display: flex; flex-direction: column; align-items: center; }
         #board-container { padding: 15px; background-color: #1976D2; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
-        #board { display: grid; gap: 5px; } /* grid-templateはJSで設定 */
+        #board { display: grid; gap: 5px; }
         .cell { width: 60px; height: 60px; background-color: #BBDEFB; border-radius: 50%; box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); position: relative; }
-        .disc { width: 100%; height: 100%; border-radius: 50%; transition: transform 0.3s ease-out; } /* 初期位置はJSで設定 */
+        .disc { width: 100%; height: 100%; border-radius: 50%; transition: transform 0.4s cubic-bezier(0.5, 1, 0.5, 1); /* 落下アニメーション */ }
         .disc.red { background: radial-gradient(circle at 65% 35%, #ef5350, #c62828); }
         .disc.yellow { background: radial-gradient(circle at 65% 35%, #FFEE58, #F9A825); }
         .ghost { position: absolute; width: 100%; height: 100%; border-radius: 50%; z-index: 5; opacity: 0.5; pointer-events: none; }
@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-    <h1>JavaScript コネクトフォー</h1>
+    <h1>コネクテッド4（四目並べ）</h1>
     <div class="container">
         <div class="sidebar">
             <div class="controls">
@@ -47,7 +47,6 @@
                     <option value="1">入門</option><option value="2" selected>初級</option><option value="3">中級</option>
                     <option value="4">上級</option><option value="5">達人</option>
                 </select>
-                <!-- ★★★ 盤面サイズと先攻・後攻選択UIを追加 ★★★ -->
                 <div class="board-size-selector">
                     <label>盤面のサイズ:</label>
                     <div class="size-inputs">
@@ -81,12 +80,7 @@
         class Connect4Game {
             constructor() {
                 this.EMPTY = 0;
-                this.dom = {
-                    board: document.getElementById('board'), selector: document.getElementById('column-selector'),
-                    turn: document.getElementById('current-turn'), message: document.getElementById('message-area'),
-                    level: document.getElementById('cpu-level'), startBtn: document.getElementById('start-button'),
-                    colsInput: document.getElementById('cols'), rowsInput: document.getElementById('rows')
-                };
+                this.dom = { board: document.getElementById('board'), selector: document.getElementById('column-selector'), turn: document.getElementById('current-turn'), message: document.getElementById('message-area'), level: document.getElementById('cpu-level'), startBtn: document.getElementById('start-button'), colsInput: document.getElementById('cols'), rowsInput: document.getElementById('rows') };
                 this.state = {};
                 this.attachEventListeners();
                 this.initGame();
@@ -99,25 +93,9 @@
                 const cols = parseInt(this.dom.colsInput.value, 10) || 7;
                 const playerColor = parseInt(document.querySelector('input[name="player_color"]:checked').value, 10);
                 
-                this.state = {
-                    rows, cols,
-                    board: Array(rows).fill(null).map(() => Array(cols).fill(this.EMPTY)),
-                    playerColor: playerColor,
-                    cpuColor: playerColor === 1 ? 2 : 1,
-                    currentPlayer: 1, // 常に先攻(赤)から
-                    gameOver: false,
-                    cpuLevel: parseInt(this.dom.level.value, 10),
-                };
+                this.state = { rows, cols, board: Array(rows).fill(null).map(() => Array(cols).fill(this.EMPTY)), playerColor: playerColor, cpuColor: playerColor === 1 ? 2 : 1, currentPlayer: 1, gameOver: false, cpuLevel: parseInt(this.dom.level.value, 10) };
                 
-                // 動的に盤面のCSSを更新
-                const cellAndGap = 65; // 60px + 5px
-                this.dom.board.style.width = `${this.state.cols * cellAndGap - 5}px`;
-                this.dom.board.style.height = `${this.state.rows * cellAndGap - 5}px`;
-                this.dom.selector.style.width = `${this.state.cols * cellAndGap - 5}px`;
-                this.dom.board.style.gridTemplateColumns = `repeat(${this.state.cols}, 60px)`;
-                this.dom.board.style.gridTemplateRows = `repeat(${this.state.rows}, 60px)`;
-                this.dom.selector.style.gridTemplateColumns = `repeat(${this.state.cols}, 60px)`;
-
+                this.setupBoardDOM(); // ★★★ 最初に一度だけボードの枠を生成
                 this.renderAll();
 
                 if (this.state.currentPlayer === this.state.cpuColor) {
@@ -142,6 +120,7 @@
 
             endGame(winner) {
                 this.state.gameOver = true;
+                this.removeGhostDisc(); // ゴーストコマを消す
                 if (winner) { const winnerText = winner === this.state.playerColor ? 'あなた' : 'CPU'; this.dom.message.textContent = `${winnerText}の勝ちです！`; }
                 else { this.dom.message.textContent = '引き分けです。'; }
                 this.dom.turn.textContent = 'ゲーム終了';
@@ -150,22 +129,24 @@
 
             // --- 描画とUI更新 ---
 
-            renderAll() { this.renderBoard(); this.renderSelector(); this.updateInfo(); }
-            renderBoard() {
+            renderAll() { this.renderSelector(); this.updateInfo(); } // renderBoardは不要に
+            
+            // ★★★ ボードの枠を初回のみ生成するメソッド ★★★
+            setupBoardDOM() {
+                const { rows, cols } = this.state;
                 this.dom.board.innerHTML = '';
-                for (let r = 0; r < this.state.rows; r++) {
-                    for (let c = 0; c < this.state.cols; c++) {
+                this.dom.board.style.width = `${cols * 65 - 5}px`;
+                this.dom.board.style.height = `${rows * 65 - 5}px`;
+                this.dom.selector.style.width = `${cols * 65 - 5}px`;
+                this.dom.board.style.gridTemplateColumns = `repeat(${cols}, 60px)`;
+                this.dom.board.style.gridTemplateRows = `repeat(${rows}, 60px)`;
+                this.dom.selector.style.gridTemplateColumns = `repeat(${cols}, 60px)`;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
                         const cell = document.createElement('div');
                         cell.className = 'cell';
                         cell.dataset.r = r; cell.dataset.c = c;
-                        if (this.state.board[r][c] !== this.EMPTY) {
-                            const disc = document.createElement('div');
-                            disc.className = `disc ${this.state.board[r][c] === 1 ? 'red' : 'yellow'}`;
-                            // ★★★ アニメーション距離を動的に計算 ★★★
-                            disc.style.transform = `translateY(-${this.state.rows * 65}px)`;
-                            requestAnimationFrame(() => { disc.style.transform = `translateY(0)`; });
-                            cell.appendChild(disc);
-                        }
                         this.dom.board.appendChild(cell);
                     }
                 }
@@ -210,35 +191,37 @@
                 this.dropDisc(col, this.state.playerColor);
             }
 
-            // --- AIロジック ---
+            // --- AIロジック (変更なし) ---
             cpuTurn() { if (this.state.gameOver) return; const col = this.findBestMove(); this.dropDisc(col, this.state.cpuColor); }
-
-            findBestMove() {
-                const { board, cpuColor, playerColor } = this.state;
-                const validCols = this.getValidColumns(board);
-                if (validCols.length === 0) return -1;
-                const depthMap = { 1: 2, 2: 3, 3: 4, 4: 5, 5: 7 };
-                const depth = depthMap[this.state.cpuLevel] || 4;
-                for (const col of validCols) { const tempBoard = JSON.parse(JSON.stringify(board)); const row = this.findNextOpenRow(tempBoard, col); if (row !== -1) { tempBoard[row][col] = cpuColor; if (this.checkWin(tempBoard, cpuColor)) return col; } }
-                for (const col of validCols) { const tempBoard = JSON.parse(JSON.stringify(board)); const row = this.findNextOpenRow(tempBoard, col); if (row !== -1) { tempBoard[row][col] = playerColor; if (this.checkWin(tempBoard, playerColor)) return col; } }
-                return this.alphaBeta(board, depth, -Infinity, Infinity, true).col;
-            }
-
-            alphaBeta(board, depth, alpha, beta, maximizingPlayer) {
-                const validCols = this.getValidColumns(board);
-                if (depth === 0 || this.checkWin(board, this.state.playerColor) || this.checkWin(board, this.state.cpuColor) || validCols.length === 0) {
-                    return { score: this.evaluateBoard(board) };
-                }
-                if (maximizingPlayer) { let bestValue = -Infinity; let bestCol = validCols[Math.floor(Math.random() * validCols.length)]; for (const col of validCols) { const row = this.findNextOpenRow(board, col); board[row][col] = this.state.cpuColor; const { score } = this.alphaBeta(board, depth - 1, alpha, beta, false); board[row][col] = this.EMPTY; if (score > bestValue) { bestValue = score; bestCol = col; } alpha = Math.max(alpha, bestValue); if (beta <= alpha) break; } return { score: bestValue, col: bestCol }; }
-                else { let bestValue = Infinity; let bestCol = validCols[Math.floor(Math.random() * validCols.length)]; for (const col of validCols) { const row = this.findNextOpenRow(board, col); board[row][col] = this.state.playerColor; const { score } = this.alphaBeta(board, depth - 1, alpha, beta, true); board[row][col] = this.EMPTY; if (score < bestValue) { bestValue = score; bestCol = col; } beta = Math.min(beta, bestValue); if (beta <= alpha) break; } return { score: bestValue, col: bestCol }; }
-            }
-
+            findBestMove() { const { board, cpuColor, playerColor } = this.state; const validCols = this.getValidColumns(board); if (validCols.length === 0) return -1; const depthMap = { 1: 2, 2: 3, 3: 4, 4: 5, 5: 7 }; const depth = depthMap[this.state.cpuLevel] || 4; for (const col of validCols) { const tempBoard = JSON.parse(JSON.stringify(board)); const row = this.findNextOpenRow(tempBoard, col); if (row !== -1) { tempBoard[row][col] = cpuColor; if (this.checkWin(tempBoard, cpuColor)) return col; } } for (const col of validCols) { const tempBoard = JSON.parse(JSON.stringify(board)); const row = this.findNextOpenRow(tempBoard, col); if (row !== -1) { tempBoard[row][col] = playerColor; if (this.checkWin(tempBoard, playerColor)) return col; } } return this.alphaBeta(board, depth, -Infinity, Infinity, true).col; }
+            alphaBeta(board, depth, alpha, beta, maximizingPlayer) { const validCols = this.getValidColumns(board); if (depth === 0 || this.checkWin(board, this.state.playerColor) || this.checkWin(board, this.state.cpuColor) || validCols.length === 0) { return { score: this.evaluateBoard(board) }; } if (maximizingPlayer) { let bestValue = -Infinity; let bestCol = validCols[Math.floor(Math.random() * validCols.length)]; for (const col of validCols) { const row = this.findNextOpenRow(board, col); board[row][col] = this.state.cpuColor; const { score } = this.alphaBeta(board, depth - 1, alpha, beta, false); board[row][col] = this.EMPTY; if (score > bestValue) { bestValue = score; bestCol = col; } alpha = Math.max(alpha, bestValue); if (beta <= alpha) break; } return { score: bestValue, col: bestCol }; } else { let bestValue = Infinity; let bestCol = validCols[Math.floor(Math.random() * validCols.length)]; for (const col of validCols) { const row = this.findNextOpenRow(board, col); board[row][col] = this.state.playerColor; const { score } = this.alphaBeta(board, depth - 1, alpha, beta, true); board[row][col] = this.EMPTY; if (score < bestValue) { bestValue = score; bestCol = col; } beta = Math.min(beta, bestValue); if (beta <= alpha) break; } return { score: bestValue, col: bestCol }; } }
             evaluateBoard(board) { let score = 0; const centerArray = board.map(row => row[Math.floor(this.state.cols / 2)]); score += centerArray.filter(cell => cell === this.state.cpuColor).length * 3; score -= centerArray.filter(cell => cell === this.state.playerColor).length * 3; score += this.evaluateLines(board, this.state.cpuColor) - this.evaluateLines(board, this.state.playerColor); return score; }
             evaluateLines(board, player) { let score = 0; const opponent = player === this.state.playerColor ? this.state.cpuColor : this.state.playerColor; const { rows, cols } = this.state; for (let r = 0; r < rows; r++) for (let c = 0; c <= cols - 4; c++) { score += this.evaluateWindow(board[r].slice(c, c + 4), player, opponent); } for (let c = 0; c < cols; c++) for (let r = 0; r <= rows - 4; r++) { score += this.evaluateWindow([board[r][c], board[r+1][c], board[r+2][c], board[r+3][c]], player, opponent); } for (let r = 0; r <= rows - 4; r++) for (let c = 0; c <= cols - 4; c++) { score += this.evaluateWindow([board[r][c], board[r+1][c+1], board[r+2][c+2], board[r+3][c+3]], player, opponent); } for (let r = 0; r <= rows - 4; r++) for (let c = 3; c < cols; c++) { score += this.evaluateWindow([board[r][c], board[r+1][c-1], board[r+2][c-2], board[r+3][c-3]], player, opponent); } return score; }
             evaluateWindow(window, player, opponent) { let score = 0; const playerCount = window.filter(cell => cell === player).length; const emptyCount = window.filter(cell => cell === this.EMPTY).length; const opponentCount = window.filter(cell => cell === opponent).length; if (playerCount === 4) score += 10000; else if (playerCount === 3 && emptyCount === 1) score += 10; else if (playerCount === 2 && emptyCount === 2) score += 5; if (opponentCount === 3 && emptyCount === 1) score -= 80; return score; }
             
             // --- ルール判定とユーティリティ ---
-            dropDisc(col, player) { const row = this.findNextOpenRow(this.state.board, col); if (row === -1) return; this.state.board[row][col] = player; this.renderAll(); if (this.checkWin(this.state.board, player)) { this.endGame(player); } else if (this.getValidColumns(this.state.board).length === 0) { this.endGame(null); } else { this.switchTurn(); } }
+            dropDisc(col, player) {
+                const row = this.findNextOpenRow(this.state.board, col);
+                if (row === -1) return;
+                this.state.board[row][col] = player;
+                
+                // ★★★ 差分描画: 1つのコマだけを追加してアニメーションさせる ★★★
+                const targetCell = document.querySelector(`.cell[data-r='${row}'][data-c='${col}']`);
+                const disc = document.createElement('div');
+                disc.className = `disc ${player === 1 ? 'red' : 'yellow'}`;
+                disc.style.transform = `translateY(-${(row + 1) * 65}px)`;
+                targetCell.appendChild(disc);
+                requestAnimationFrame(() => { disc.style.transform = 'translateY(0)'; });
+
+                if (this.checkWin(this.state.board, player)) {
+                    this.endGame(player);
+                } else if (this.getValidColumns(this.state.board).length === 0) {
+                    this.endGame(null);
+                } else {
+                    this.switchTurn();
+                }
+            }
+
             findNextOpenRow(board, col) { for (let r = this.state.rows - 1; r >= 0; r--) { if (board[r][col] === this.EMPTY) return r; } return -1; }
             getValidColumns(board) { const validCols = []; for (let c = 0; c < this.state.cols; c++) { if (board[0][c] === this.EMPTY) validCols.push(c); } return validCols; }
             checkWin(board, player) { const { rows, cols } = this.state; for (let r = 0; r < rows; r++) for (let c = 0; c <= cols - 4; c++) if (board[r][c] === player && board[r][c+1] === player && board[r][c+2] === player && board[r][c+3] === player) return true; for (let c = 0; c < cols; c++) for (let r = 0; r <= rows - 4; r++) if (board[r][c] === player && board[r+1][c] === player && board[r+2][c] === player && board[r+3][c] === player) return true; for (let r = 0; r <= rows - 4; r++) for (let c = 0; c <= cols - 4; c++) if (board[r][c] === player && board[r+1][c+1] === player && board[r+2][c+2] === player && board[r+3][c+3] === player) return true; for (let r = 0; r <= rows - 4; r++) for (let c = 3; c < cols; c++) if (board[r][c] === player && board[r+1][c-1] === player && board[r+2][c-2] === player && board[r+3][c-3] === player) return true; return false; }
