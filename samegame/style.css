@@ -1,6 +1,6 @@
 :root {
     --block-size: 40px;
-    --transition-speed: 0.2s; /* 少し速度を上げてキビキビと */
+    --transition-speed: 0.2s;
 }
 
 body {
@@ -49,9 +49,8 @@ button.active {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* --- レイアウト修正 --- */
 #game-container {
-    display: inline-block; /* 中身のサイズにフィットするように変更 */
+    display: inline-block;
     background-color: #bdc3c7;
     padding: 10px;
     border-radius: 10px;
@@ -60,7 +59,6 @@ button.active {
 
 #game-board {
     position: relative;
-    /* JSでサイズが設定される */
 }
 
 .block {
@@ -76,35 +74,35 @@ button.active {
     border-right: 1px solid rgba(0, 0, 0, 0.2);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 
-    /* --- アニメーション修正 --- */
-    /* CSS変数で transform の各要素を管理 */
     --scale: 1;
     --x: 0;
     --y: 0;
     transform: translate(var(--x), var(--y)) scale(var(--scale));
     
-    /* transition の対象を明記 */
     transition: transform var(--transition-speed) ease-out,
                 opacity var(--transition-speed) ease-out,
                 box-shadow var(--transition-speed) ease-out;
 }
 
-/* マウスオーバー時のプレビュースタイル */
 .block.preview {
-    --scale: 1.1; /* scale変数だけを変更 */
+    --scale: 1.1;
     z-index: 10;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
 
-/* 消えるときのアニメーション */
 .block.disappearing {
-    --scale: 0; /* 自分の位置で縮んで消える */
+    --scale: 0;
     opacity: 0;
 }
 
-/* ブロックの色 */
-.color-0 { background-image: linear-gradient(135deg, #ff7e5f, #feb47b); }
-.color-1 { background-image: linear-gradient(135deg, #6a82fb, #fc5c7d); }
-.color-2 { background-image: linear-gradient(135deg, #56ab2f, #a8e063); }
-.color-3 { background-image: linear-gradient(135deg, #4e54c8, #8f94fb); }
-.color-4 { background-image: linear-gradient(135deg, #ffedbc, #ed4264); }
+/* --- ブロックの色（修正後） --- */
+/* 青系 */
+.color-0 { background-image: linear-gradient(135deg, #4facfe, #00f2fe); } 
+/* 赤系 */
+.color-1 { background-image: linear-gradient(135deg, #ff758c, #ff7eb3); }
+/* 緑系 */
+.color-2 { background-image: linear-gradient(135deg, #43e97b, #38f9d7); }
+/* 黄色系 */
+.color-3 { background-image: linear-gradient(135deg, #f8e567, #f7d14a); }
+/* 紫系 (5色目の予備として) */
+.color-4 { background-image: linear-gradient(135deg, #ab67f8, #c67df7); }
