@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript バックギャモン (最終修正版)</title>
+    <title>JavaScript バックギャモン v2</title>
     <style>
         :root { --checker-size: 36px; --point-width: 45px; --point-height: 190px; }
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #263238; color: white; margin: 0; padding: 20px; }
@@ -57,7 +57,7 @@
     </style>
 </head>
 <body>
-    <h1>JavaScript バックギャモン</h1>
+    <h1>JavaScript バックギャモン v2</h1>
     <div class="container">
         <div class="sidebar">
             <div class="game-setup">
@@ -70,7 +70,7 @@
             </div>
             <div class="game-info">
                 <p>ターン: <span id="current-turn"></span></p>
-                <p>赤(YOU) バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
+                <p>赤(あなた) バー:<span id="bar-red-score">0</span> / ゴール:<span id="borne-off-red-score">0</span></p>
                 <p>黒(CPU) バー:<span id="bar-black-score">0</span> / ゴール:<span id="borne-off-black-score">0</span></p>
             </div>
             <div class="turn-controls">
@@ -92,18 +92,26 @@
         const BOARD_POINTS = 24;
         const CHECKERS_PER_PLAYER = 15;
         const PLAYER = 'red', CPU = 'black';
-        const START_POS = [ {p:23,c:2,pl:PLAYER},{p:12,c:5,pl:PLAYER},{p:7,c:3,pl:PLAYER},{p:5,c:5,pl:PLAYER},{p:0,c:2,pl:CPU},{p:11,c:5,pl:CPU},{p:16,c:3,pl:CPU},{p:18,c:5,pl:CPU} ];
+        const START_POS = [ {p:23, c:2, pl:PLAYER}, {p:12, c:5, pl:PLAYER}, {p:7, c:3, pl:PLAYER}, {p:5, c:5, pl:PLAYER}, {p:0, c:2, pl:CPU}, {p:11, c:5, pl:CPU}, {p:16, c:3, pl:CPU}, {p:18, c:5, pl:CPU} ];
 
         /**
          * バックギャモンゲームのメインクラス
-         * ゲームの状態(state)とロジック(メソッド)を管理する
          */
         class BackgammonGame {
-            constructor(domElements) {
-                this.dom = domElements;
+            constructor() {
+                this.dom = {
+                    board: document.getElementById('main-board'), home: document.getElementById('home-area'),
+                    die1: document.getElementById('die1'), die2: document.getElementById('die2'),
+                    rollBtn: document.getElementById('roll-button'), startBtn: document.getElementById('start-button'),
+                    undoBtn: document.getElementById('undo-button'), msg: document.getElementById('message-area'),
+                    turn: document.getElementById('current-turn'), movesLeft: document.getElementById('moves-left-display'),
+                    barP: document.getElementById('bar-red-score'), borneP: document.getElementById('borne-off-red-score'),
+                    barC: document.getElementById('bar-black-score'), borneC: document.getElementById('borne-off-black-score'),
+                    level: document.getElementById('cpu-level')
+                };
                 this.state = {};
-                this.initGame();
                 this.attachEventListeners();
+                this.initGame();
             }
 
             // --- ゲーム進行 ---
@@ -111,21 +119,13 @@
             initGame() {
                 this.state = {
                     board: Array(BOARD_POINTS).fill(null).map(() => ({ player: null, count: 0 })),
-                    bar: { [PLAYER]: 0, [CPU]: 0 },
-                    borneOff: { [PLAYER]: 0, [CPU]: 0 },
-                    dice: [],
-                    movesLeft: [],
-                    currentPlayer: PLAYER,
-                    turnState: 'ROLLING',
-                    selectedPoint: null,
-                    gameOver: false,
-                    cpuLevel: parseInt(this.dom.level.value, 10),
+                    bar: { [PLAYER]: 0, [CPU]: 0 }, borneOff: { [PLAYER]: 0, [CPU]: 0 },
+                    dice: [], movesLeft: [], currentPlayer: PLAYER, turnState: 'ROLLING',
+                    selectedPoint: null, gameOver: false, cpuLevel: parseInt(this.dom.level.value, 10),
                     turnStartState: null
                 };
                 START_POS.forEach(pos => this.state.board[pos.p] = { player: pos.pl, count: pos.c });
-                
-                this.dom.rollBtn.disabled = false;
-                this.dom.undoBtn.disabled = true;
+                this.dom.rollBtn.disabled = false; this.dom.undoBtn.disabled = true;
                 this.dom.msg.textContent = 'あなたの番です。サイコロを振ってください。';
                 this.renderAll();
             }
@@ -134,10 +134,8 @@
                 if (this.state.gameOver) return;
                 this.state.currentPlayer = this.state.currentPlayer === PLAYER ? CPU : PLAYER;
                 this.state.turnState = 'ROLLING';
-                this.state.dice = [];
-                this.state.movesLeft = [];
-                this.state.selectedPoint = null;
-                this.state.turnStartState = null;
+                this.state.dice = []; this.state.movesLeft = [];
+                this.state.selectedPoint = null; this.state.turnStartState = null;
                 this.dom.undoBtn.disabled = true;
 
                 if (this.state.currentPlayer === PLAYER) {
@@ -154,16 +152,109 @@
             endGame() {
                 this.state.gameOver = true;
                 this.dom.msg.textContent = `${this.state.currentPlayer === PLAYER ? "あなた" : "CPU"} の勝ちです！`;
-                this.dom.rollBtn.disabled = true;
-                this.dom.undoBtn.disabled = true;
+                this.dom.rollBtn.disabled = true; this.dom.undoBtn.disabled = true;
+            }
+
+            // --- 描画とUI更新 ---
+
+            renderAll() {
+                this.dom.board.innerHTML = ''; this.dom.home.innerHTML = '<h4>ゴール</h4>';
+                const topHalf = document.createElement('div'); topHalf.className = 'board-half';
+                const bottomHalf = document.createElement('div'); bottomHalf.className = 'board-half';
+                const barEl = document.createElement('div'); barEl.className = 'bar'; barEl.id = 'bar'; barEl.innerHTML = '<h4>バー</h4>';
+                barEl.addEventListener('click', () => this.handlePlayerAction('bar'));
+                
+                const quadrants = Array(4).fill(null).map(() => document.createElement('div'));
+                quadrants.forEach(q => q.className = 'quadrant');
+                
+                for (let i = 12; i <= 17; i++) quadrants[0].appendChild(this.createPointEl(i));
+                for (let i = 18; i <= 23; i++) quadrants[1].appendChild(this.createPointEl(i));
+                for (let i = 11; i >= 6; i--) quadrants[2].appendChild(this.createPointEl(i));
+                for (let i = 5; i >= 0; i--) quadrants[3].appendChild(this.createPointEl(i));
+                
+                topHalf.append(quadrants[0], quadrants[1]); bottomHalf.append(quadrants[2], quadrants[3]);
+                this.dom.board.append(this.createPointNumberRow('top'), topHalf, barEl, bottomHalf, this.createPointNumberRow('bottom'));
+                
+                for (const player of [PLAYER, CPU]) {
+                    for(let i=0; i<this.state.bar[player]; i++) barEl.appendChild(this.createChecker(player, 'bar'));
+                    for(let i=0; i<this.state.borneOff[player]; i++) this.dom.home.appendChild(this.createChecker(player, 'home'));
+                }
+                this.updateInfo();
+                this.highlightValidMoves();
+            }
+
+            createPointEl(index) {
+                const point = document.createElement('div');
+                point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== (index < 12 ? 1 : 0)) ? 'p-dark' : 'p-light'}`;
+                point.dataset.index = index;
+                point.addEventListener('click', () => this.handlePlayerAction(index));
+                
+                const pointData = this.state.board[index];
+                if (pointData.count > 0) {
+                    for (let j = 0; j < pointData.count; j++) {
+                        const checker = this.createChecker(pointData.player, index);
+                        if (j === pointData.count - 1 && this.state.selectedPoint === index) checker.classList.add('selected');
+                        checker.style.setProperty('--i', j);
+                        point.appendChild(checker);
+                    }
+                }
+                return point;
+            }
+
+            createChecker(player, from) {
+                const checker = document.createElement('div');
+                checker.className = `checker ${player}`;
+                checker.dataset.from = from;
+                checker.addEventListener('click', (e) => { e.stopPropagation(); this.handlePlayerAction(from); });
+                return checker;
+            }
+
+            createPointNumberRow(pos) {
+                const row = document.createElement('div'); row.className = `point-number-row ${pos}`;
+                const leftQuad = document.createElement('div'); leftQuad.className = 'point-number-quadrant';
+                const rightQuad = document.createElement('div'); rightQuad.className = 'point-number-quadrant';
+                const start = pos === 'top' ? 12 : 11, end = pos === 'top' ? 23 : 0, dir = pos === 'top' ? 1 : -1;
+                let numbers = []; for (let i = start; (pos === 'top' ? i <= end : i >= end); i += dir) { numbers.push(i + 1); }
+                numbers.forEach(num => { const numEl = document.createElement('div'); numEl.className = 'point-number'; numEl.textContent = num; if ((pos === 'top' && num >= 19) || (pos === 'bottom' && num <= 6)) { rightQuad.appendChild(numEl); } else { leftQuad.appendChild(numEl); } });
+                row.append(leftQuad, document.createElement('div'), rightQuad);
+                return row;
+            }
+
+            updateInfo() {
+                this.dom.turn.textContent = `${this.state.currentPlayer === PLAYER ? "あなた(赤)" : "CPU(黒)"}のターン`;
+                this.dom.barP.textContent = this.state.bar[PLAYER]; this.dom.borneP.textContent = this.state.borneOff[PLAYER];
+                this.dom.barC.textContent = this.state.bar[CPU]; this.dom.borneC.textContent = this.state.borneOff[CPU];
+                this.dom.die1.textContent = this.state.dice[0] || '?'; this.dom.die2.textContent = this.state.dice[1] || '?';
+                if (this.state.currentPlayer === PLAYER && this.state.turnState === 'MOVING') { this.dom.movesLeft.textContent = this.state.movesLeft.length > 0 ? this.state.movesLeft.join(', ') : 'なし'; } else { this.dom.movesLeft.textContent = '-'; }
+            }
+            
+            async showDiceAnimation() {
+                const animationTime = 800;
+                const interval = setInterval(() => { this.dom.die1.textContent = Math.ceil(Math.random() * 6); this.dom.die2.textContent = Math.ceil(Math.random() * 6); }, 80);
+                await new Promise(resolve => setTimeout(resolve, animationTime));
+                clearInterval(interval);
+            }
+
+            highlightValidMoves() {
+                document.querySelectorAll('.point.valid-move, .home-area.valid-move').forEach(p => p.classList.remove('valid-move'));
+                if (this.state.currentPlayer !== PLAYER || this.state.turnState !== 'MOVING') return;
+
+                const sequences = this.generateAllMoveSequences(this.state.board, this.state.bar, PLAYER, this.state.movesLeft);
+                const allPossibleFirstMoves = [...new Map(sequences.flatMap(s => s.moves[0] ? [s.moves[0]] : []).map(m => [`${m.from}-${m.to}`, m])).values()];
+                
+                if (this.state.selectedPoint !== null) {
+                    allPossibleFirstMoves.filter(m => m.from === this.state.selectedPoint).forEach(m => {
+                        if (m.to === 'home') this.dom.home.classList.add('valid-move');
+                        else document.querySelector(`.point[data-index='${m.to}']`)?.classList.add('valid-move');
+                    });
+                }
             }
 
             // --- プレイヤー操作 ---
             
             async handleRoll() {
                 if (this.state.turnState !== 'ROLLING' || this.state.currentPlayer !== PLAYER) return;
-                this.dom.rollBtn.disabled = true;
-                this.state.turnState = 'ANIMATING';
+                this.dom.rollBtn.disabled = true; this.state.turnState = 'ANIMATING';
                 
                 await this.showDiceAnimation();
 
@@ -179,22 +270,21 @@
                 }
                 this.renderAll();
             }
-            
+
             handleUndo() {
                 if (!this.state.turnStartState || this.state.currentPlayer !== PLAYER || this.state.turnState !== 'MOVING') return;
                 this.state.board = JSON.parse(JSON.stringify(this.state.turnStartState.board));
-                this.state.bar = { ...this.state.turnStartState.bar };
+                this.state.bar = { ...this.state.bar };
                 this.state.movesLeft = [...this.state.turnStartState.movesLeft];
                 this.state.selectedPoint = null;
                 this.dom.undoBtn.disabled = true;
                 this.dom.msg.textContent = '手を元に戻しました。';
                 this.renderAll();
             }
-            
+
             handlePlayerAction(target) {
                 if (this.state.turnState !== 'MOVING' || this.state.currentPlayer !== PLAYER) return;
                 const sequences = this.generateAllMoveSequences(this.state.board, this.state.bar, PLAYER, this.state.movesLeft);
-                
                 if (this.state.selectedPoint !== null) {
                     const firstMove = sequences.flatMap(s => s.moves).find(m => m.from === this.state.selectedPoint && m.to === target);
                     if (firstMove) {
@@ -217,7 +307,6 @@
             async cpuTurn() {
                 this.dom.rollBtn.disabled = true; this.state.turnState = 'ANIMATING';
                 await this.showDiceAnimation();
-                
                 this.state.dice = [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
                 this.state.movesLeft = (this.state.dice[0] === this.state.dice[1]) ? Array(4).fill(this.state.dice[0]) : this.state.dice.slice();
                 this.renderAll();
@@ -337,6 +426,7 @@
                     if (board[i].player === player) onBoardCount += board[i].count;
                 }
                 if (onBoardCount + this.state.borneOff[player] !== CHECKERS_PER_PLAYER) return false;
+                
                 const homeRange = player === PLAYER ? {start: 0, end: 5} : {start: 18, end: 23};
                 for (let i = 0; i < BOARD_POINTS; i++) {
                     if (board[i].player === player && (i < homeRange.start || i > homeRange.end)) {
@@ -347,16 +437,12 @@
             }
             
             findHighestCheckerInHome(board, player) {
-                const homeRange = player === PLAYER ? {start: 5, end: 0, dir: -1} : {start: 18, end: 23, dir: 1};
-                for(let i = homeRange.end; (player === PLAYER ? i >= homeRange.start : i <= homeRange.end); i += homeRange.dir) {
-                    if(board[i].player === player) return i;
-                }
+                if(player === PLAYER) { for(let i = 5; i >= 0; i--) if(board[i].player === player) return i; }
+                else { for(let i = 18; i <= 23; i++) if(board[i].player === player) return i; }
                 return -1;
             }
-            
-            // --- 描画とUI更新 (メソッドとしてクラス内に移動) ---
-            renderAll = () => renderAll(this);
-            showDiceAnimation = () => showDiceAnimation(this.dom);
+
+            // --- イベントリスナー設定 ---
             attachEventListeners() {
                 this.dom.startBtn.addEventListener('click', () => this.initGame());
                 this.dom.rollBtn.addEventListener('click', () => this.handleRoll());
@@ -365,39 +451,9 @@
             }
         }
         
-        // --- 描画ロジック (クラス外の純粋な関数として定義) ---
-        function renderAll(gameInstance) {
-            const { state, dom, handlePlayerAction } = gameInstance;
-            dom.board.innerHTML = ''; dom.home.innerHTML = '<h4>ゴール</h4>';
-            const topHalf = document.createElement('div'); topHalf.className = 'board-half';
-            const bottomHalf = document.createElement('div'); bottomHalf.className = 'board-half';
-            const barEl = document.createElement('div'); barEl.className = 'bar'; barEl.id = 'bar'; barEl.innerHTML = '<h4>バー</h4>';
-            barEl.addEventListener('click', () => handlePlayerAction('bar'));
-            const quadrants = Array(4).fill(null).map(() => document.createElement('div'));
-            quadrants.forEach(q => q.className = 'quadrant');
-            for (let i = 12; i <= 17; i++) quadrants[0].appendChild(createPointEl(i, gameInstance));
-            for (let i = 18; i <= 23; i++) quadrants[1].appendChild(createPointEl(i, gameInstance));
-            for (let i = 11; i >= 6; i--) quadrants[2].appendChild(createPointEl(i, gameInstance));
-            for (let i = 5; i >= 0; i--) quadrants[3].appendChild(createPointEl(i, gameInstance));
-            topHalf.append(quadrants[0], quadrants[1]); bottomHalf.append(quadrants[2], quadrants[3]);
-            dom.board.append(createPointNumberRow('top'), topHalf, barEl, bottomHalf, createPointNumberRow('bottom'));
-            for (const player of [PLAYER, CPU]) {
-                for(let i=0; i<state.bar[player]; i++) barEl.appendChild(createChecker(player, 'bar', handlePlayerAction));
-                for(let i=0; i<state.borneOff[player]; i++) dom.home.appendChild(createChecker(player, 'home', handlePlayerAction));
-            }
-            updateInfo(state, dom);
-            highlightValidMoves(gameInstance);
-        }
-        function createPointEl(index, { state, handlePlayerAction }) { const point = document.createElement('div'); point.className = `point ${(index < 12) ? 'bottom-row' : 'top-row'} ${(index % 2 !== (index < 12 ? 1 : 0)) ? 'p-dark' : 'p-light'}`; point.dataset.index = index; point.addEventListener('click', () => handlePlayerAction(index)); if (state.board[index].count > 0) { for (let j = 0; j < state.board[index].count; j++) { const checker = createChecker(state.board[index].player, index, handlePlayerAction); if (j === state.board[index].count - 1 && state.selectedPoint === index) checker.classList.add('selected'); checker.style.setProperty('--i', j); point.appendChild(checker); } } return point; }
-        function createChecker(player, from, handlePlayerAction) { const checker = document.createElement('div'); checker.className = `checker ${player}`; checker.dataset.from = from; checker.addEventListener('click', (e) => { e.stopPropagation(); handlePlayerAction(from); }); return checker; }
-        function createPointNumberRow(pos) { const row = document.createElement('div'); row.className = `point-number-row ${pos}`; const leftQuad = document.createElement('div'); leftQuad.className = 'point-number-quadrant'; const rightQuad = document.createElement('div'); rightQuad.className = 'point-number-quadrant'; const start = pos === 'top' ? 12 : 11, end = pos === 'top' ? 23 : 0, dir = pos === 'top' ? 1 : -1; let numbers = []; for (let i = start; (pos === 'top' ? i <= end : i >= end); i += dir) { numbers.push(i + 1); } numbers.forEach(num => { const numEl = document.createElement('div'); numEl.className = 'point-number'; numEl.textContent = num; if ((pos === 'top' && num >= 19) || (pos === 'bottom' && num <= 6)) { rightQuad.appendChild(numEl); } else { leftQuad.appendChild(numEl); } }); row.append(leftQuad, document.createElement('div'), rightQuad); return row; }
-        function updateInfo(state, dom) { dom.turn.textContent = `${state.currentPlayer === PLAYER ? "あなた(赤)" : "CPU(黒)"}のターン`; dom.barP.textContent = state.bar[PLAYER]; dom.borneP.textContent = state.borneOff[PLAYER]; dom.barC.textContent = state.bar[CPU]; dom.borneC.textContent = state.borneOff[CPU]; dom.die1.textContent = state.dice[0] || '?'; dom.die2.textContent = state.dice[1] || '?'; if (state.currentPlayer === PLAYER && state.turnState === 'MOVING') { dom.movesLeft.textContent = state.movesLeft.length > 0 ? state.movesLeft.join(', ') : 'なし'; } else { dom.movesLeft.textContent = '-'; } }
-        function highlightValidMoves({ state, dom, generateAllMoveSequences }) { document.querySelectorAll('.point.valid-move, .home-area.valid-move').forEach(p => p.classList.remove('valid-move')); if (state.currentPlayer !== PLAYER || state.turnState !== 'MOVING') return; const sequences = generateAllMoveSequences(state.board, state.bar, PLAYER, state.movesLeft); const allPossibleFirstMoves = [...new Map(sequences.flatMap(s => s.moves[0] ? [s.moves[0]] : []).map(m => [`${m.from}-${m.to}`, m])).values()]; if (state.selectedPoint !== null) { allPossibleFirstMoves.filter(m => m.from === state.selectedPoint).forEach(m => { if (m.to === 'home') dom.home.classList.add('valid-move'); else document.querySelector(`.point[data-index='${m.to}']`)?.classList.add('valid-move'); }); } }
-        async function showDiceAnimation(dom) { const animationTime = 800; const interval = setInterval(() => { dom.die1.textContent = Math.ceil(Math.random() * 6); dom.die2.textContent = Math.ceil(Math.random() * 6); }, 80); await new Promise(resolve => setTimeout(resolve, animationTime)); clearInterval(interval); }
-        
         // --- ゲームの初期化 ---
         document.addEventListener('DOMContentLoaded', () => {
-            const game = new BackgammonGame(dom);
+            new BackgammonGame();
         });
     </script>
 </body>
