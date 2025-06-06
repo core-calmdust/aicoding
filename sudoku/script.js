@@ -3,29 +3,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const SIZE = 9;
     const gridElement = document.getElementById('sudoku-grid');
     const newGameBtn = document.getElementById('new-game-btn');
-    // ... 他のDOM要素 ...
+    const checkSolutionBtn = document.getElementById('check-solution-btn');
+    const showSolutionBtn = document.getElementById('show-solution-btn');
+    const messageElement = document.getElementById('message');
+    const difficultySelect = document.getElementById('difficulty-select');
+    const memoToggleBtn = document.getElementById('memo-toggle-btn');
 
     // --- ゲームの状態変数 ---
     let board = [], initialBoard = [], solution = [], memos = [];
     let selectedCell = null;
     let isMemoMode = false;
     let errorCells = new Set();
-    let focusedNumberInfo = null; // 変更点: フォーカス状態を管理
+    let focusedNumberInfo = null;
 
     // --- 初期化とゲーム開始 ---
     function initializeGame() {
-        // ... (既存のコード) ...
+        const difficulty = parseInt(difficultySelect.value, 10);
+        
+        board = Array(SIZE).fill(0).map(() => Array(SIZE).fill(0));
+        solveSudoku(board);
+        solution = JSON.parse(JSON.stringify(board));
+
+        let empties = difficulty;
+        while (empties > 0) {
+            const row = Math.floor(Math.random() * SIZE);
+            const col = Math.floor(Math.random() * SIZE);
+            if (board[row][col] !== 0) {
+                board[row][col] = 0;
+                empties--;
+            }
+        }
         
         initialBoard = JSON.parse(JSON.stringify(board));
         initializeMemos();
         selectedCell = null;
         errorCells.clear();
-        focusedNumberInfo = null; // 変更点: フォーカスをリセット
+        focusedNumberInfo = null;
         renderBoard();
         clearMessage();
     }
 
-    // ... (initializeMemos は変更なし) ...
+    function initializeMemos() {
+        memos = Array(SIZE).fill(0).map(() => Array(SIZE).fill(0).map(() => new Set()));
+    }
     
     // --- 描画ロジック ---
     function renderBoard() {
@@ -44,22 +64,20 @@ document.addEventListener('DOMContentLoaded', () => {
         cell.dataset.row = row;
         cell.dataset.col = col;
 
-        // ... (枠線のスタイル設定は変更なし) ...
+        if ((row + 1) % 3 === 0 && row < SIZE - 1) cell.style.borderBottom = '2px solid #333';
+        if ((col + 1) % 3 === 0 && col < SIZE - 1) cell.style.borderRight = '2px solid #333';
 
         const cellValue = board[row][col] || initialBoard[row][col];
         const isGiven = initialBoard[row][col] !== 0;
 
-        // 変更点: ハイライトロジックを追加
         if (focusedNumberInfo) {
             const { focusRow, focusCol, focusNum } = focusedNumberInfo;
             const currentBox = Math.floor(row / 3) * 3 + Math.floor(col / 3);
             const focusBox = Math.floor(focusRow / 3) * 3 + Math.floor(focusCol / 3);
-
-            // 行・列・ボックスのハイライト
+            
             if (row === focusRow || col === focusCol || currentBox === focusBox) {
                 cell.classList.add('highlight-area');
             }
-            // 同じ数字のハイライト
             if (cellValue !== 0 && cellValue === focusNum) {
                 cell.classList.add('highlight-num');
             }
@@ -106,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = parseInt(cell.dataset.row);
         const col = parseInt(cell.dataset.col);
 
-        // 変更点: フォーカス状態の更新
         const cellValue = board[row][col] || initialBoard[row][col];
         if (cellValue !== 0) {
             focusedNumberInfo = { focusRow: row, focusCol: col, focusNum: cellValue };
@@ -123,22 +140,80 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBoard();
     }
 
-    // ... (handleKeyDown, toggleMemoMode, checkSolutionHandler は変更なし) ...
+    function handleKeyDown(e) {
+        if (!selectedCell) return;
+        const { row, col } = selectedCell;
+        const key = parseInt(e.key);
+        
+        errorCells.delete(`${row},${col}`);
+
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            board[row][col] = 0;
+            memos[row][col].clear();
+        } else if (key >= 1 && key <= 9) {
+            if (isMemoMode) {
+                if (memos[row][col].has(key)) {
+                    memos[row][col].delete(key);
+                } else {
+                    memos[row][col].add(key);
+                }
+                board[row][col] = 0;
+            } else {
+                board[row][col] = key;
+                memos[row][col].clear();
+            }
+        } else {
+            return;
+        }
+        
+        e.preventDefault();
+        renderBoard();
+    }
+
+    function toggleMemoMode() {
+        isMemoMode = !isMemoMode;
+        memoToggleBtn.classList.toggle('active', isMemoMode);
+        memoToggleBtn.textContent = isMemoMode ? 'メモ入力 ON' : 'メモ入力 OFF';
+    }
+    
+    function checkSolutionHandler() {
+        errorCells.clear();
+        let isComplete = true;
+        
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                const isGiven = initialBoard[r][c] !== 0;
+                if (!isGiven) {
+                    if (board[r][c] === 0) {
+                        isComplete = false;
+                    } else if (board[r][c] !== solution[r][c]) {
+                        errorCells.add(`${r},${c}`);
+                    }
+                }
+            }
+        }
+
+        if (errorCells.size > 0) {
+            setMessage("間違いがあります。赤色のマスを確認してください。", 'error');
+        } else if (!isComplete) {
+            setMessage("まだ空のマスがあります。", 'error');
+        } else {
+            setMessage("正解です！おめでとうございます！", 'success');
+        }
+        
+        renderBoard();
+    }
 
     function showSolutionHandler() {
         board = JSON.parse(JSON.stringify(solution));
         initializeMemos();
         selectedCell = null;
         errorCells.clear();
-        focusedNumberInfo = null; // 変更点: フォーカスをリセット
+        focusedNumberInfo = null;
         renderBoard();
         setMessage('答えを表示しました。');
     }
 
-    // ... (以降のコードは変更なし) ...
-
-    // --- ここから下は完全版の script.js コードです ---
-    // (上記の変更を反映した完全なコードを以下に記載します)
     function setMessage(text, type = '') {
         messageElement.textContent = text;
         messageElement.className = type;
@@ -149,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.className = '';
     }
 
+    // --- 数独生成アルゴリズム (バックトラッキング) ---
     function solveSudoku(grid) {
         const emptySpot = findEmpty(grid);
         if (!emptySpot) return true;
@@ -192,65 +268,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return array;
     }
-    
-    function handleKeyDown(e) {
-        if (!selectedCell) return;
-        const { row, col } = selectedCell;
-        const key = parseInt(e.key);
-        errorCells.delete(`${row},${col}`);
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-            board[row][col] = 0;
-            memos[row][col].clear();
-        } else if (key >= 1 && key <= 9) {
-            if (isMemoMode) {
-                if (memos[row][col].has(key)) {
-                    memos[row][col].delete(key);
-                } else {
-                    memos[row][col].add(key);
-                }
-                board[row][col] = 0;
-            } else {
-                board[row][col] = key;
-                memos[row][col].clear();
-            }
-        } else {
-            return;
-        }
-        e.preventDefault();
-        renderBoard();
-    }
-    
-    function toggleMemoMode() {
-        isMemoMode = !isMemoMode;
-        memoToggleBtn.classList.toggle('active', isMemoMode);
-        memoToggleBtn.textContent = isMemoMode ? 'メモ入力 ON' : 'メモ入力 OFF';
-    }
-    
-    function checkSolutionHandler() {
-        errorCells.clear();
-        let isComplete = true;
-        for (let r = 0; r < SIZE; r++) {
-            for (let c = 0; c < SIZE; c++) {
-                const isGiven = initialBoard[r][c] !== 0;
-                if (!isGiven) {
-                    if (board[r][c] === 0) {
-                        isComplete = false;
-                    } else if (board[r][c] !== solution[r][c]) {
-                        errorCells.add(`${r},${c}`);
-                    }
-                }
-            }
-        }
-        if (errorCells.size > 0) {
-            setMessage("間違いがあります。赤色のマスを確認してください。", 'error');
-        } else if (!isComplete) {
-            setMessage("まだ空のマスがあります。", 'error');
-        } else {
-            setMessage("正解です！おめでとうございます！", 'success');
-        }
-        renderBoard();
-    }
-    
+
+    // --- イベントリスナー設定 ---
     newGameBtn.addEventListener('click', initializeGame);
     gridElement.addEventListener('click', handleCellClick);
     document.addEventListener('keydown', handleKeyDown);
@@ -258,5 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
     checkSolutionBtn.addEventListener('click', checkSolutionHandler);
     showSolutionBtn.addEventListener('click', showSolutionHandler);
 
+    // --- 初期ゲーム開始 ---
     initializeGame();
 });
