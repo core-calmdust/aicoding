@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetButton = document.getElementById('reset-button');
     const sizeSelectorElement = document.getElementById('size-selector');
     const colorSelectorElement = document.getElementById('color-selector');
+    const fireworksCanvas = document.getElementById('fireworks-canvas');
+    const myConfetti = confetti.create(fireworksCanvas, { resize: true });
     
     // --- ゲームの状態 ---
     let board = [], score = 0, blockElements = [], isProcessing = false;
@@ -132,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isProcessing = true;
         clearPreview();
 
-        // 1. スコアを計算し、ブロックを消すアニメーション
         score += (connected.length - 2) ** 2;
         updateScore();
         connected.forEach(({ r, c }) => {
@@ -140,28 +141,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         await new Promise(resolve => setTimeout(resolve, ANIMATION_DELAY));
 
-        // 2. データからブロックを削除
         connected.forEach(({ r, c }) => {
             board[r][c] = null;
         });
 
-        // 3. ブロックを落下させ、列を詰める
         dropAndShiftBlocks();
         renderBoard();
         await new Promise(resolve => setTimeout(resolve, ANIMATION_DELAY));
 
-        // 4. 全消しかどうか、またはゲームオーバーかを判定する
         if (isAllBlocksCleared()) {
-            // 全消しボーナス！
+            launchFireworks(); // 花火を打ち上げ！
             const bonus = 1000;
             score += bonus;
             updateScore();
-            setTimeout(() => alert(`パーフェクト！\nボーナス ${bonus} 点獲得！\n最終スコア: ${score}`), 100);
+            setTimeout(() => alert(`パーフェクト！\nボーナス ${bonus} 点獲得！\n最終スコア: ${score}`), 2000);
         } else if (isGameOver()) {
             setTimeout(() => alert(`ゲームオーバー！\n最終スコア: ${score}`), 100);
         }
         
         isProcessing = false;
+    }
+
+    function launchFireworks() {
+        const fire = (particleRatio, opts) => {
+            myConfetti(Object.assign({}, {
+                origin: { y: 0.7 }
+            }, opts, {
+                particleCount: Math.floor(200 * particleRatio)
+            }));
+        };
+
+        fire(0.25, { spread: 26, startVelocity: 55 });
+        fire(0.2, { spread: 60 });
+        fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+        fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+        fire(0.1, { spread: 120, startVelocity: 45 });
+
+        setTimeout(() => {
+            fire(0.3, { spread: 80, startVelocity: 60, decay: 0.9, scalar: 0.9 });
+        }, 500);
     }
 
     function findConnectedBlocks(r, c, color, visited = {}) {
@@ -244,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function clearPreview() {
+        if (blockElements.length === 0) return;
         blockElements.flat().forEach(block => block.classList.remove('preview'));
         previewScoreElement.textContent = 0;
     }
