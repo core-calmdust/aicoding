@@ -90,7 +90,14 @@
             if (selectedMode.name === 'ADVANCED' || selectedMode.name === 'TURBO') {
                 let monsterCount = 0;
                 let monsterSpeed = 2;
-                if (selectedMode.name === 'ADVANCED') { monsterCount = 3; } 
+                if (selectedMode.name === 'ADVANCED') {
+		    switch (selectedDifficulty.name) {
+                        case 'EASY': monsterCount = 1; monsterSpeed = 1; break;
+			case 'NORMAL': monsterCount = 2; monsterSpeed = 1; break;
+                        case 'HARD': monsterCount = 2; break;
+                        case 'VERY HARD': monsterCount = 3; break;
+			case 'IMPOSSIBLE': monsterCount = 3; monsterSpeed = 3; break;
+		    } 
                 else if (selectedMode.name === 'TURBO') {
                     monsterSpeed = 3;
                     switch (selectedDifficulty.name) {
@@ -98,7 +105,7 @@
 			case 'NORMAL': monsterCount = 2; monsterSpeed = 1; break;
                         case 'HARD': monsterCount = 2; break;
                         case 'VERY HARD': monsterCount = 3; break;
-			case 'IMPOSSIBLE': monsterCount = 4; break;
+			case 'IMPOSSIBLE': monsterCount = 4; monsterSpeed = 4; break;
                     }
                 }
                 for (let i = 0; i < monsterCount; i++) { monsters.push({ x: canvas.width / 4 + Math.random() * canvas.width / 2, y: 50 + Math.random() * (canvas.height - 100), width: 40, height: 40, vx: (Math.random() > 0.5 ? 1 : -1) * monsterSpeed, vy: (Math.random() > 0.5 ? 1 : -1) * monsterSpeed }); }
