@@ -92,8 +92,8 @@
                 let monsterSpeed = 2;
                 if (selectedMode.name === 'ADVANCED') {
 		    switch (selectedDifficulty.name) {
-                        case 'EASY': monsterCount = 1; monsterSpeed = 1; break;
-			case 'NORMAL': monsterCount = 2; monsterSpeed = 1; break;
+                        case 'EASY': monsterCount = 1; break;
+			case 'NORMAL': monsterCount = 2; break;
                         case 'HARD': monsterCount = 2; break;
                         case 'VERY HARD': monsterCount = 3; break;
 			case 'IMPOSSIBLE': monsterCount = 3; monsterSpeed = 3; break;
@@ -102,8 +102,8 @@
                 else if (selectedMode.name === 'TURBO') {
                     monsterSpeed = 3;
                     switch (selectedDifficulty.name) {
-                        case 'EASY': monsterCount = 1; monsterSpeed = 1; break;
-			case 'NORMAL': monsterCount = 2; monsterSpeed = 1; break;
+                        case 'EASY': monsterCount = 1; monsterSpeed = 2; break;
+			case 'NORMAL': monsterCount = 2; break;
                         case 'HARD': monsterCount = 2; break;
                         case 'VERY HARD': monsterCount = 3; break;
 			case 'IMPOSSIBLE': monsterCount = 4; monsterSpeed = 4; break;
