@@ -77,9 +77,9 @@
         // ================================================================= //
         function initializeObjects() {
             const isTurbo = selectedMode.name === 'TURBO';
-            const baseSpeed = isTurbo ? 10 : 8;
+            const baseSpeed = isTurbo ? 11 : 9;
             const speedIncrement = isTurbo ? 0.8 : 0.6;
-            const paddleSpeed = isTurbo ? 10 : 8;
+            const paddleSpeed = isTurbo ? 11 : 8;
             const paddleBoostSpeed = isTurbo ? 17 : 14;
 
             ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 12, speed: baseSpeed, velocityX: baseSpeed, velocityY: baseSpeed, speedIncrement: speedIncrement, isSmashed: false };
