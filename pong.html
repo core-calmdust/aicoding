@@ -42,8 +42,8 @@
             1: { name: "EASY",      speed: 7,  error: 0.3  }, // 非常にミスしやすく、動きも遅い。初心者に最適。
             2: { name: "NORMAL",    speed: 10,  error: 0.15  }, // 時々ミスをする。ラリーを楽しめるレベル。
             3: { name: "HARD",      speed: 12,  error: 0.1 }, // ほとんどミスしないが、まだ隙はある。
-            4: { name: "VERY HARD", speed: 13, error: 0.03 }, // 非常に正確。スマッシュが攻略の鍵。
-            5: { name: "IMPOSSIBLE",speed: 17, error: 0.01 }  // 理不尽に近いが、完全無敵ではない。
+            4: { name: "VERY HARD", speed: 15, error: 0.04 }, // 非常に正確。スマッシュが攻略の鍵。
+            5: { name: "IMPOSSIBLE",speed: 18, error: 0.02 }  // 理不尽に近いが、完全無敵ではない。
         };
 
         const gameModes = { 1: { name: 'CLASSIC' }, 2: { name: 'ADVANCED' }, 3: { name: 'TURBO' } };
@@ -77,10 +77,10 @@
         // ================================================================= //
         function initializeObjects() {
             const isTurbo = selectedMode.name === 'TURBO';
-            const baseSpeed = isTurbo ? 9 : 8;
-            const speedIncrement = isTurbo ? 0.7 : 0.5;
-            const paddleSpeed = isTurbo ? 9 : 8;
-            const paddleBoostSpeed = isTurbo ? 15 : 14;
+            const baseSpeed = isTurbo ? 10 : 8;
+            const speedIncrement = isTurbo ? 0.8 : 0.6;
+            const paddleSpeed = isTurbo ? 10 : 8;
+            const paddleBoostSpeed = isTurbo ? 17 : 14;
 
             ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 12, speed: baseSpeed, velocityX: baseSpeed, velocityY: baseSpeed, speedIncrement: speedIncrement, isSmashed: false };
             player = { x: 15, y: (canvas.height - 100) / 2, width: 15, height: 100, score: 0, speed: paddleSpeed, boostSpeed: paddleBoostSpeed };
@@ -108,7 +108,7 @@
         function moveCpu() { let cpuSpeed = selectedDifficulty.speed; if (selectedMode.name === 'TURBO') cpuSpeed *= 1.1; let targetY = ball.y; targetY += (Math.random() - 0.5) * player.height * selectedDifficulty.error; if (cpu.y + cpu.height / 2 < targetY) cpu.y = Math.min(cpu.y + cpuSpeed, canvas.height - cpu.height); else if (cpu.y + cpu.height / 2 > targetY) cpu.y = Math.max(cpu.y - cpuSpeed, 0); }
         function moveMonsters() { monsters.forEach(m => { m.x += m.vx; m.y += m.vy; if (m.x <= 0 || m.x + m.width >= canvas.width) m.vx *= -1; if (m.y <= 0 || m.y + m.height >= canvas.height) m.vy *= -1; }); }
         function collision(obj1, obj2) { return obj1.x < obj2.x + obj2.width && obj1.x + obj1.width > obj2.x && obj1.y < obj2.y + obj2.height && obj1.y + obj1.height > obj2.y; }
-        function resetBall() { playSound("goal"); createParticles(ball.x, ball.y); ball.x = canvas.width / 2; ball.y = 100 + Math.random() * (canvas.height - 200); ball.speed = selectedMode.name === 'TURBO' ? 10 : 8; ball.isSmashed = false; ball.velocityX = ball.velocityX > 0 ? -ball.speed : ball.speed; ball.velocityY = ball.speed * (Math.random() > 0.5 ? 1 : -1); }
+        function resetBall() { playSound("goal"); createParticles(ball.x, ball.y); ball.x = canvas.width / 2; ball.y = 100 + Math.random() * (canvas.height - 200); ball.speed = selectedMode.name === 'TURBO' ? 11 : 9; ball.isSmashed = false; ball.velocityX = ball.velocityX > 0 ? -ball.speed : ball.speed; ball.velocityY = ball.speed * (Math.random() > 0.5 ? 1 : -1); }
         
         // ================================================================= //
         // メインループ (変更なし)
