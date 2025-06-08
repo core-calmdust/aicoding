@@ -46,7 +46,7 @@
         #info-container {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center; /* 中央揃えに変更 */
             width: 100%;
             padding-top: 10px;
             font-size: 12px;
@@ -69,9 +69,13 @@
         .pulsing { border-color: #ffffff !important; box-shadow: 0 0 30px #ffffff, 0 0 40px #00f6ff, 0 0 50px #ff00ff !important; }
         .info-text { color: #00f6ff; text-shadow: 0 0 5px #00f6ff; line-height: 1.4; }
         #controls-info { text-align: right; }
+        .hidden { display: none !important; }
 
-        .mobile-ui-btn {
+        /* ★ 変更点: PC用アイコンボタンのスタイルを再定義 */
+        #pc-mute-btn {
             position: absolute;
+            bottom: 10px;
+            right: 10px;
             width: 40px;
             height: 40px;
             background-color: rgba(255, 255, 255, 0.2);
@@ -84,22 +88,53 @@
             user-select: none;
             z-index: 10;
         }
-        #mute-btn { bottom: 10px; right: 10px; }
-        #pause-btn { top: 10px; right: 10px; }
-        .hidden { display: none !important; }
+
+        .mobile-ui-button {
+            cursor: pointer;
+            padding: 0 5px;
+        }
         
-        @media (max-width: 768px) { #info-container { flex-direction: column; align-items: center; gap: 8px; } .info-text, #controls-info { text-align: center; font-size: 10px; } }
+        @media (max-width: 768px) { 
+            #info-container { 
+                flex-direction: row;
+                align-items: center;
+                gap: 8px; 
+            }
+            .info-text, #controls-info { 
+                text-align: left; 
+                font-size: 10px; 
+            } 
+            #controls-info {
+                text-align: right;
+            }
+        }
+        @media (orientation: landscape) and (max-height: 500px) {
+            body {
+                padding: 0;
+            }
+            #game-wrapper {
+                width: auto;
+                height: 100vh;
+                max-width: 100vw;
+                max-height: 100vh;
+                padding: 1vh;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="game-wrapper">
         <div id="game-container">
             <canvas id="pongCanvas" width="900" height="600"></canvas>
-            <div id="mute-btn" class="mobile-ui-btn">🔇</div>
-            <div id="pause-btn" class="mobile-ui-btn hidden">||</div>
+            <!-- ★ 変更点: PC用のミュートボタンを復活 -->
+            <div id="pc-mute-btn">🔇</div>
         </div>
         <div id="info-container">
             <div class="info-text" id="rule-info"></div>
+            <div class="info-text" id="mobile-ui-container">
+                <span id="pause-btn" class="mobile-ui-button">PAUSE</span>
+                <span id="mobile-mute-btn" class="mobile-ui-button">SOUND</span>
+            </div>
             <div class="info-text" id="controls-info"></div>
         </div>
     </div>
@@ -111,11 +146,13 @@
         
         const canvas = document.getElementById('pongCanvas'), ctx = canvas.getContext('2d');
         const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info');
-        const muteBtn = document.getElementById('mute-btn'), pauseBtn = document.getElementById('pause-btn');
+        const mobileUiContainer = document.getElementById('mobile-ui-container');
+        const pcMuteBtn = document.getElementById('pc-mute-btn');
+        const mobileMuteBtn = document.getElementById('mobile-mute-btn'), pauseBtn = document.getElementById('pause-btn');
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const WINNING_SCORE = 10;
         
-        const difficultyLevels = { 1: { name: "EASY",      speed: 9,  error: 0.3,  smashChance: 0.05 }, 2: { name: "NORMAL",    speed: 12, error: 0.15, smashChance: 0.25 }, 3: { name: "HARD",      speed: 14, error: 0.1,  smashChance: 0.50 }, 4: { name: "VERY HARD", speed: 16, error: 0.04, smashChance: 0.60 }, 5: { name: "IMPOSSIBLE",speed: 18, error: 0.02, smashChance: 0.80 } };
+        const difficultyLevels = { 1: { name: "EASY",      speed: 9,  error: 0.35,  smashChance: 0.05 }, 2: { name: "NORMAL",    speed: 11, error: 0.2, smashChance: 0.25 }, 3: { name: "HARD",      speed: 13, error: 0.15,  smashChance: 0.50 }, 4: { name: "VERY HARD", speed: 15, error: 0.07, smashChance: 0.60 }, 5: { name: "IMPOSSIBLE",speed: 17, error: 0.04, smashChance: 0.80 } };
         const gameModes = { 1: { name: 'CLASSIC' }, 2: { name: 'ADVANCED' }, 3: { name: 'TURBO' } };
         const colors = { bg: '#0d0221', paddle: '#00f6ff', ball: '#ff00ff', net: 'rgba(0, 246, 255, 0.3)', text: '#f0f', particle: ['#ff00ff', '#f9c80e', '#00f6ff'], monster: '#f9c80e', smash: '#f9c80e' };
         
@@ -155,7 +192,8 @@
         
         function initAudio() { if (audioCtx) return; audioCtx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = audioCtx.createGain(); masterGain.gain.value = isMuted ? 0 : 1; masterGain.connect(audioCtx.destination); sounds.hit = () => { const e = audioCtx.createOscillator(); e.type = "sine"; e.frequency.setValueAtTime(300, audioCtx.currentTime); const t = audioCtx.createOscillator(); t.type = "square"; t.frequency.setValueAtTime(450, audioCtx.currentTime); const o = audioCtx.createGain(); o.gain.setValueAtTime(400, audioCtx.currentTime); const n = audioCtx.createGain(); t.connect(o); o.connect(e.frequency); e.connect(n); n.connect(masterGain); n.gain.setValueAtTime(0, audioCtx.currentTime); n.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 0.01); n.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.15); e.start(); t.start(); e.stop(audioCtx.currentTime + 0.2); t.stop(audioCtx.currentTime + 0.2) }; sounds.smash = () => { const e = audioCtx.createOscillator(), t = audioCtx.createGain(); e.type = "sawtooth"; e.frequency.value = 880; e.connect(t); t.connect(masterGain); t.gain.setValueAtTime(0, audioCtx.currentTime); t.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01); t.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2); e.start(); e.stop(audioCtx.currentTime + 0.2) }; sounds.wall = () => { const e = audioCtx.createOscillator(), t = audioCtx.createGain(); e.type = "square"; e.frequency.value = 220; e.connect(t); t.connect(masterGain); t.gain.setValueAtTime(0, audioCtx.currentTime); t.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01); t.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1); e.start(); e.stop(audioCtx.currentTime + 0.1) }; sounds.goal = () => { const e = audioCtx.createOscillator(), t = audioCtx.createGain(); e.type = "sine"; e.frequency.value = 130; e.connect(t); t.connect(masterGain); t.gain.setValueAtTime(0, audioCtx.currentTime); t.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.01); t.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5); e.start(); e.stop(audioCtx.currentTime + 0.5); const o = audioCtx.createOscillator(), n = audioCtx.createGain(); o.type = "sine"; o.frequency.value = 261; o.connect(n); n.connect(masterGain); n.gain.setValueAtTime(0, audioCtx.currentTime + 0.1); n.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.11); n.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6); o.start(audioCtx.currentTime + 0.1); o.stop(audioCtx.currentTime + 0.6) }; sounds.win = () => { [60, 64, 67, 72].forEach(((e, t) => { const o = 440 * Math.pow(2, (e - 69) / 12); const n = audioCtx.createOscillator(), a = audioCtx.createGain(); n.type = "triangle"; n.frequency.value = o; n.connect(a); a.connect(masterGain); const s = audioCtx.currentTime + 0.1 * t; a.gain.setValueAtTime(0, s); a.gain.linearRampToValueAtTime(0.5, s + 0.01); a.gain.exponentialRampToValueAtTime(1e-4, s + 0.3); n.start(s); n.stop(s + 0.3) })) }; sounds.lose = () => { [60, 58, 55, 53].forEach(((e, t) => { const o = 440 * Math.pow(2, (e - 69) / 12); const n = audioCtx.createOscillator(), a = audioCtx.createGain(); n.type = "sawtooth"; n.frequency.value = o; n.connect(a); a.connect(masterGain); const s = audioCtx.currentTime + 0.15 * t; a.gain.setValueAtTime(0, s); a.gain.linearRampToValueAtTime(0.3, s + 0.01); a.gain.exponentialRampToValueAtTime(1e-4, s + 0.5); n.start(s); n.stop(s + 0.5) })) } }
         function playSound(soundName) { if (audioCtx && sounds[soundName]) sounds[soundName](); }
-        function toggleMute(forceState) { isMuted = forceState !== undefined ? forceState : !isMuted; if (audioCtx) masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime + 0.1); muteBtn.textContent = isMuted ? "🔇" : "🔊"; }
+        // ★ 変更点: 両方のボタン表示を更新するように修正
+        function toggleMute(forceState) { isMuted = forceState !== undefined ? forceState : !isMuted; if (audioCtx) masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime + 0.1); pcMuteBtn.textContent = isMuted ? "🔇" : "🔊"; mobileMuteBtn.textContent = isMuted ? "SOUND: OFF" : "SOUND: ON"; }
         class BGM { constructor(bpm = 130) { this.pattern = [50, 53, 57, 53, 60, 57, 53, 57]; this.kickPattern = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0]; this.hatPattern = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1]; this.interval = null; this.step = 0; this.bpm = bpm; } start() { if (this.interval) return; this.interval = setInterval(() => this.playStep(), (60 / this.bpm) * 1000 / 4); } stop() { clearInterval(this.interval); this.interval = null; } playStep() { if (isMuted) return; const time = audioCtx.currentTime; if (this.step % 4 === 0) { const note = this.pattern[Math.floor(this.step / 4) % this.pattern.length]; const freq = 440 * Math.pow(2, (note - 69) / 12); const o = audioCtx.createOscillator(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = freq / 2; o.connect(f); f.type = 'lowpass'; f.frequency.value = 800; f.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.4, time + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.2); o.start(time); o.stop(time + 0.2); } if (this.kickPattern[this.step % this.kickPattern.length]) { this.playKick(time); requestAnimationFrame(this.pulseEffect); } if (this.hatPattern[this.step % this.hatPattern.length]) { this.playHat(time); } this.step = (this.step + 1) % 64; } playKick(time) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(120, time); o.frequency.exponentialRampToValueAtTime(40, time + 0.2); o.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.8, time + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.2); o.start(time); o.stop(time + 0.2); } playHat(time) { const bufferSize = audioCtx.sampleRate * 0.1, buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate), data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; const o = audioCtx.createBufferSource(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter(); o.buffer = buffer; o.connect(f); f.type = 'highpass'; f.frequency.value = 7000; f.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.2, time + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.05); o.start(time); } pulseEffect() { canvas.classList.add('pulsing'); setTimeout(() => canvas.classList.remove('pulsing'), 50); } }
         class TitleBGM {
             constructor(bpm = 120) {
@@ -453,12 +491,14 @@
         // 描画・UI更新
         // ================================================================= //
         function updateUIVisibility() {
+            // ★ 変更点: PCとスマホで表示するボタンを切り替える
             if (isTouchDevice) {
-                pauseBtn.classList.toggle('hidden', gameState !== 'playing');
-                muteBtn.classList.toggle('hidden', gameState === 'title');
+                pcMuteBtn.classList.add('hidden');
+                mobileUiContainer.style.display = 'flex';
+                pauseBtn.textContent = (gameState === 'paused') ? 'RESUME' : 'PAUSE';
             } else {
-                pauseBtn.classList.add('hidden');
-                muteBtn.classList.remove('hidden');
+                pcMuteBtn.classList.remove('hidden');
+                mobileUiContainer.style.display = 'none';
             }
         }
 
@@ -512,7 +552,6 @@
                 draw.text('Difficulty', canvas.width / 2, 440, colors.text, "30px", "center");
                 draw.rainbowText(`< ${difficultyLevels[difficultySelector].name} >`, canvas.width / 2, 490, "24px", "center", 30);
                 
-                // ★ 修正: テキストを完全な文章に戻す
                 let startText = '';
                 if (isTouchDevice) { startText = "Tap to Start"; } 
                 else if (useGamepadControls) { startText = "Press A-Button to Start"; }
@@ -523,7 +562,6 @@
                 const message = player.score >= WINNING_SCORE ? 'YOU WIN' : 'CPU WINS';
                 draw.rainbowText(message, canvas.width / 2, canvas.height / 2 - 40, "60px", "center", 25);
 
-                // ★ 修正: テキストを完全な文章に戻す
                 let continueText = '';
                 if (isTouchDevice) { continueText = "Tap to Continue"; }
                 else if (useGamepadControls) { continueText = "Press A-Button to Return"; }
@@ -665,11 +703,11 @@
             canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
             canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
             canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
-            pauseBtn.addEventListener('touchstart', pauseGame, { passive: false });
-            muteBtn.addEventListener('touchstart', () => toggleMute(), { passive: false });
+            pauseBtn.addEventListener('touchstart', () => { if (gameState === 'playing') pauseGame(); else if(gameState === 'paused') resumeGame(); }, { passive: false });
+            mobileMuteBtn.addEventListener('touchstart', () => toggleMute(), { passive: false });
         } else {
             canvas.addEventListener('mousemove', handlePointerMove);
-            muteBtn.addEventListener('click', () => toggleMute());
+            pcMuteBtn.addEventListener('click', () => toggleMute());
         }
         
         // ================================================================= //
