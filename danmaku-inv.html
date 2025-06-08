@@ -61,11 +61,11 @@
             
             const enemyScores = [200, 150, 100, 50, 10];
             const difficultySettings = [
-                { name: 'EASY',      speedMod: 2,   fireMod: 2,   specialShotChance: 0.1,  scoreMultiplier: 0.7, powerupMultiplier: 1.2 },
-                { name: 'NORMAL',    speedMod: 3,   fireMod: 3.5, specialShotChance: 0.25, scoreMultiplier: 1,   powerupMultiplier: 1 },
-                { name: 'HARD',      speedMod: 5,   fireMod: 5,   specialShotChance: 0.4,  scoreMultiplier: 1.7,   powerupMultiplier: 1.2 },
-                { name: 'VERY HARD', speedMod: 7,   fireMod: 6.5, specialShotChance: 0.6,  scoreMultiplier: 2.4,   powerupMultiplier: 1.35 },
-                { name: 'INSANE',    speedMod: 9,   fireMod: 8,   specialShotChance: 0.8,  scoreMultiplier: 3,   powerupMultiplier: 1.5 }
+                { name: 'EASY',      speedMod: 2,   fireMod: 2,   specialShotChance: 0.1,  scoreMultiplier: 0.7, powerupMultiplier: 1.2,  powerupSpeedMultiplier: 1.0 },
+                { name: 'NORMAL',    speedMod: 3,   fireMod: 3.5, specialShotChance: 0.25, scoreMultiplier: 1,   powerupMultiplier: 1,    powerupSpeedMultiplier: 1.0 },
+                { name: 'HARD',      speedMod: 5,   fireMod: 5,   specialShotChance: 0.4,  scoreMultiplier: 1.7, powerupMultiplier: 1.2,  powerupSpeedMultiplier: 1.3 },
+                { name: 'VERY HARD', speedMod: 7,   fireMod: 6.5, specialShotChance: 0.6,  scoreMultiplier: 2.4, powerupMultiplier: 1.35, powerupSpeedMultiplier: 1.6 },
+                { name: 'INSANE',    speedMod: 9,   fireMod: 8,   specialShotChance: 0.8,  scoreMultiplier: 3,   powerupMultiplier: 1.5,  powerupSpeedMultiplier: 2.0 }
             ];
 
             // ==================================================================
@@ -103,6 +103,7 @@
             
             function createSound(freq, dur, type, decay, pan, vol) {
                 if (!audioContext) return;
+
                 const osc = audioContext.createOscillator();
                 const gain = audioContext.createGain();
                 const panner = audioContext.createStereoPanner();
@@ -462,7 +463,7 @@
                     for (let j = enemies.length - 1; j >= 0; j--) {
                         if (isColliding(bullets[i], enemies[j])) {
                             if (enemies[j].isSpecial) {
-                                powerups.push({ x: enemies[j].x + enemies[j].w / 2, y: enemies[j].y + enemies[j].h / 2, size: 15, vy: 2 });
+                                powerups.push({ x: enemies[j].x + enemies[j].w / 2, y: enemies[j].y + enemies[j].h / 2, size: 15, vy: 2 * currentDifficulty.powerupSpeedMultiplier });
                             }
                             playSound('explode');
                             createExplosion(enemies[j].x + enemies[j].w / 2, enemies[j].y + enemies[j].h / 2, [`hsl(${baseHue+300},100%,50%)`, `hsl(${baseHue+180},100%,50%)`, '#fff'], 50);
@@ -869,6 +870,7 @@
 
                 gamepadState.left = gp.axes[0] < -0.5 || (gp.buttons[GP_BUTTON.DPAD_LEFT] && gp.buttons[GP_BUTTON.DPAD_LEFT].pressed);
                 gamepadState.right = gp.axes[0] > 0.5 || (gp.buttons[GP_BUTTON.DPAD_RIGHT] && gp.buttons[GP_BUTTON.DPAD_RIGHT].pressed);
+                
                 gamepadState.shoot = (gp.buttons[GP_BUTTON.A] && gp.buttons[GP_BUTTON.A].pressed) || 
                                      (gp.buttons[GP_BUTTON.B] && gp.buttons[GP_BUTTON.B].pressed) ||
                                      (gp.buttons[GP_BUTTON.X] && gp.buttons[GP_BUTTON.X].pressed) ||
