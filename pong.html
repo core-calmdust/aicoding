@@ -7,7 +7,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
-        /* ★ 変更点: フルスクリーンに対応するための基本レイアウト */
         html, body {
             height: 100%;
             margin: 0;
@@ -25,12 +24,10 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            /* 900pxのコンテンツ + 左右30pxずつのパディング = 960px */
             max-width: 960px; 
-            /* (900+60) / (600+60+約50) の比率を計算 */
             aspect-ratio: 960 / 710; 
-            padding: 30px; /* グローエフェクト用の余白 */
-            box-sizing: border-box; /* パディングを幅と高さに含める */
+            padding: 30px;
+            box-sizing: border-box;
         }
         #game-container {
             position: relative;
@@ -56,7 +53,6 @@
             flex-shrink: 0;
         }
         
-        /* ★ 変更点: フルスクリーン時にアスペクト比を維持するCSS */
         html:fullscreen {
             background-color: #000;
         }
@@ -70,11 +66,28 @@
             max-height: 100%;
         }
         
-        /* その他 */
         .pulsing { border-color: #ffffff !important; box-shadow: 0 0 30px #ffffff, 0 0 40px #00f6ff, 0 0 50px #ff00ff !important; }
         .info-text { color: #00f6ff; text-shadow: 0 0 5px #00f6ff; line-height: 1.4; }
         #controls-info { text-align: right; }
-        #mute-btn { position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.2); border: 2px solid #00f6ff; color: #00f6ff; font-size: 20px; cursor: pointer; text-align: center; line-height: 36px; user-select: none; z-index: 10; }
+
+        .mobile-ui-btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #00f6ff;
+            color: #00f6ff;
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+            line-height: 36px;
+            user-select: none;
+            z-index: 10;
+        }
+        #mute-btn { bottom: 10px; right: 10px; }
+        #pause-btn { top: 10px; right: 10px; }
+        .hidden { display: none !important; }
+        
         @media (max-width: 768px) { #info-container { flex-direction: column; align-items: center; gap: 8px; } .info-text, #controls-info { text-align: center; font-size: 10px; } }
     </style>
 </head>
@@ -82,7 +95,8 @@
     <div id="game-wrapper">
         <div id="game-container">
             <canvas id="pongCanvas" width="900" height="600"></canvas>
-            <div id="mute-btn">🔇</div>
+            <div id="mute-btn" class="mobile-ui-btn">🔇</div>
+            <div id="pause-btn" class="mobile-ui-btn hidden">||</div>
         </div>
         <div id="info-container">
             <div class="info-text" id="rule-info"></div>
@@ -96,16 +110,12 @@
         // ================================================================= //
         
         const canvas = document.getElementById('pongCanvas'), ctx = canvas.getContext('2d');
-        const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info'), muteBtn = document.getElementById('mute-btn');
+        const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info');
+        const muteBtn = document.getElementById('mute-btn'), pauseBtn = document.getElementById('pause-btn');
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const WINNING_SCORE = 10;
         
-        const difficultyLevels = { 
-            1: { name: "EASY",      speed: 9,  error: 0.35,  smashChance: 0.05 },
-            2: { name: "NORMAL",    speed: 11, error: 0.2, smashChance: 0.25 },
-            3: { name: "HARD",      speed: 13, error: 0.15,  smashChance: 0.50 },
-            4: { name: "VERY HARD", speed: 15, error: 0.07, smashChance: 0.60 },
-            5: { name: "IMPOSSIBLE",speed: 17, error: 0.04, smashChance: 0.80 }
-        };
+        const difficultyLevels = { 1: { name: "EASY",      speed: 9,  error: 0.3,  smashChance: 0.05 }, 2: { name: "NORMAL",    speed: 12, error: 0.15, smashChance: 0.25 }, 3: { name: "HARD",      speed: 14, error: 0.1,  smashChance: 0.50 }, 4: { name: "VERY HARD", speed: 16, error: 0.04, smashChance: 0.60 }, 5: { name: "IMPOSSIBLE",speed: 18, error: 0.02, smashChance: 0.80 } };
         const gameModes = { 1: { name: 'CLASSIC' }, 2: { name: 'ADVANCED' }, 3: { name: 'TURBO' } };
         const colors = { bg: '#0d0221', paddle: '#00f6ff', ball: '#ff00ff', net: 'rgba(0, 246, 255, 0.3)', text: '#f0f', particle: ['#ff00ff', '#f9c80e', '#00f6ff'], monster: '#f9c80e', smash: '#f9c80e' };
         
@@ -115,11 +125,11 @@
         let audioCtx, masterGain, bgm, titleBgm;
         const sounds = {}, keys = {};
         
-        let gamepad = null;
-        let lastGamepadState = null;
-        let menuInputCooldown = false;
-        let inputCooldown = false;
+        let gamepad = null, lastGamepadState = null;
+        let menuInputCooldown = false, inputCooldown = false;
         let lastInputDevice = 'keyboard';
+        
+        let touchStartX = 0, touchStartY = 0;
 
         const GAMEPAD_BUTTONS = { A: 0, B: 1, SELECT: 8, START: 9, DPAD_UP: 12, DPAD_DOWN: 13, DPAD_LEFT: 14, DPAD_RIGHT: 15, };
         const GAMEPAD_AXES = { LEFT_X: 0, LEFT_Y: 1, RIGHT_X: 2, RIGHT_Y: 3, };
@@ -296,6 +306,15 @@
             setTimeout(() => { inputCooldown = false; }, duration);
         }
 
+        function unlockAudio() {
+            if (audioCtx) return;
+            initAudio();
+            toggleMute(false);
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
         function startGame() {
             if (inputCooldown) return;
 
@@ -431,9 +450,21 @@
         }
 
         // ================================================================= //
-        // 描画 (render)
+        // 描画・UI更新
         // ================================================================= //
+        function updateUIVisibility() {
+            if (isTouchDevice) {
+                pauseBtn.classList.toggle('hidden', gameState !== 'playing');
+                muteBtn.classList.toggle('hidden', gameState === 'title');
+            } else {
+                pauseBtn.classList.add('hidden');
+                muteBtn.classList.remove('hidden');
+            }
+        }
+
         function render() {
+            updateUIVisibility();
+
             const frameColor = `hsl(${hue}, 100%, 70%)`;
             canvas.style.borderColor = frameColor;
             canvas.style.boxShadow = `0 0 20px ${frameColor}, 0 0 30px #ff00ff`;
@@ -442,16 +473,14 @@
             draw.grid();
             
             const useGamepadControls = lastInputDevice === 'gamepad';
-            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-            // ★ 変更点: 説明文の表示ロジックを修正
+            
             if (gameState === 'title') {
-                ruleInfo.innerHTML = `F: Fullscreen`;
+                ruleInfo.innerHTML = isTouchDevice ? '' : 'F: Fullscreen';
                 controlsInfo.innerHTML = useGamepadControls ? `PAD: Select | A: Start` : `KEYS: Select | ENTER: Start`;
             } else if (gameState === 'playing' || gameState === 'gameOver' || gameState === 'paused') {
                 if (isTouchDevice) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins.`;
-                    controlsInfo.innerHTML = `Touch/Drag: Move <br> Edge Hit: Smash`;
+                    controlsInfo.innerHTML = `Drag to Move | Edge: Smash`;
                 } else if (useGamepadControls) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> START: Pause | F: Fullscreen`;
                     controlsInfo.innerHTML = `Pad/Keys: Move | Pad BTN: Boost <br> Edge Hit: Smash`;
@@ -482,20 +511,37 @@
                 Object.keys(gameModes).forEach((key, index) => { const mode = gameModes[key]; if (key == modeSelector) { draw.rainbowText(mode.name, canvas.width / 2, 290 + (index * 50), "24px", "center", 30); } else { draw.text(mode.name, canvas.width / 2, 290 + (index * 50), colors.paddle, "24px", "center"); } });
                 draw.text('Difficulty', canvas.width / 2, 440, colors.text, "30px", "center");
                 draw.rainbowText(`< ${difficultyLevels[difficultySelector].name} >`, canvas.width / 2, 490, "24px", "center", 30);
-                const startKey = useGamepadControls ? "A-Button" : "Enter";
-                draw.text(`Press ${startKey} to Start`, canvas.width / 2, 560, colors.text, "20px", "center");
+                
+                // ★ 修正: テキストを完全な文章に戻す
+                let startText = '';
+                if (isTouchDevice) { startText = "Tap to Start"; } 
+                else if (useGamepadControls) { startText = "Press A-Button to Start"; }
+                else { startText = "Press Enter to Start"; }
+                draw.text(startText, canvas.width / 2, 560, colors.text, "20px", "center");
+
             } else if (gameState === 'gameOver') {
                 const message = player.score >= WINNING_SCORE ? 'YOU WIN' : 'CPU WINS';
                 draw.rainbowText(message, canvas.width / 2, canvas.height / 2 - 40, "60px", "center", 25);
-                const continueKey = useGamepadControls ? "A-Button" : "Enter";
-                draw.text(`Press ${continueKey} to Return to Title`, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+
+                // ★ 修正: テキストを完全な文章に戻す
+                let continueText = '';
+                if (isTouchDevice) { continueText = "Tap to Continue"; }
+                else if (useGamepadControls) { continueText = "Press A-Button to Return"; }
+                else { continueText = "Press Enter to Return"; }
+                draw.text(continueText, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+
             } else if (gameState === 'paused') {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 draw.rainbowText('PAUSED', canvas.width / 2, canvas.height / 2 - 60, "60px", "center");
-                const resumeKey = useGamepadControls ? 'START' : 'ESC';
-                const quitKey = useGamepadControls ? 'SELECT' : 'Q';
-                draw.text(`Press ${resumeKey} to Resume`, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
-                draw.text(`Press ${quitKey} to Return to Title`, canvas.width / 2, canvas.height / 2 + 80, colors.text, "20px", "center");
+                if (isTouchDevice) {
+                    draw.text('Tap to Resume', canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+                    draw.text('Return to Title', canvas.width / 2, canvas.height / 2 + 80, colors.text, "20px", "center");
+                } else {
+                    const resumeKey = useGamepadControls ? 'START' : 'ESC';
+                    const quitKey = useGamepadControls ? 'SELECT' : 'Q';
+                    draw.text(`Press ${resumeKey} to Resume`, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+                    draw.text(`Press ${quitKey} to Return to Title`, canvas.width / 2, canvas.height / 2 + 80, colors.text, "20px", "center");
+                }
             }
         }
 
@@ -516,35 +562,25 @@
             setTimeout(() => { menuInputCooldown = false; }, 150);
 
             switch(direction) {
-                case 'up':
-                    modeSelector = Math.max(1, modeSelector - 1);
-                    break;
-                case 'down':
-                    modeSelector = Math.min(Object.keys(gameModes).length, modeSelector + 1);
-                    break;
-                case 'left':
-                    difficultySelector = Math.max(1, difficultySelector - 1);
-                    break;
-                case 'right':
-                    difficultySelector = Math.min(Object.keys(difficultyLevels).length, difficultySelector + 1);
-                    break;
+                case 'up': modeSelector = Math.max(1, modeSelector - 1); break;
+                case 'down': modeSelector = Math.min(Object.keys(gameModes).length, modeSelector + 1); break;
+                case 'left': difficultySelector = Math.max(1, difficultySelector - 1); break;
+                case 'right': difficultySelector = Math.min(Object.keys(difficultyLevels).length, difficultySelector + 1); break;
             }
         }
 
         function handleGamepadInput() {
+            if (isTouchDevice) return;
             updateGamepadState();
             if (!gamepad) return;
-
             if (gamepad.buttons.some(b => b.pressed) || gamepad.axes.some(a => Math.abs(a) > 0.1)) {
+                unlockAudio();
                 lastInputDevice = 'gamepad';
             }
-
             const isButtonPressed = (btn) => gamepad.buttons[btn]?.pressed && !lastGamepadState.buttons[btn]?.pressed;
-            
             if (isButtonPressed(GAMEPAD_BUTTONS.START)) { if (gameState === 'playing') pauseGame(); else if (gameState === 'paused') resumeGame(); }
-            if (gameState === 'paused' && isButtonPressed(GAMEPAD_BUTTONS.SELECT)) { goToTitle(); }
-            if (gameState === 'gameOver' && (isButtonPressed(GAMEPAD_BUTTONS.A) || isButtonPressed(GAMEPAD_BUTTONS.START))) { goToTitle(); }
-
+            if (gameState === 'paused' && isButtonPressed(GAMEPAD_BUTTONS.SELECT)) goToTitle();
+            if (gameState === 'gameOver' && (isButtonPressed(GAMEPAD_BUTTONS.A) || isButtonPressed(GAMEPAD_BUTTONS.START))) goToTitle();
             if (gameState === 'title') {
                 const stickX = gamepad.axes[GAMEPAD_AXES.LEFT_X] ?? gamepad.axes[GAMEPAD_AXES.RIGHT_X];
                 const stickY = gamepad.axes[GAMEPAD_AXES.LEFT_Y] ?? gamepad.axes[GAMEPAD_AXES.RIGHT_Y];
@@ -553,41 +589,98 @@
                 if (stickY > deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_DOWN)) handleMenuInput('down');
                 if (stickX < -deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_LEFT)) handleMenuInput('left');
                 if (stickX > deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_RIGHT)) handleMenuInput('right');
-                if (isButtonPressed(GAMEPAD_BUTTONS.A)) { startGame(); }
+                if (isButtonPressed(GAMEPAD_BUTTONS.A)) startGame();
             }
             lastGamepadState = { buttons: gamepad.buttons.map(b => ({ pressed: b.pressed, value: b.value })), axes: [...gamepad.axes] };
         }
+        
+        function getTouchPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0] || e.changedTouches[0];
+            return {
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function handleCanvasTouchStart(e) {
+            e.preventDefault();
+            unlockAudio();
+
+            if (gameState === 'playing') {
+                handlePointerMove(e);
+                return;
+            }
+            const pos = getTouchPos(e);
+            touchStartX = pos.x;
+            touchStartY = pos.y;
+            
+            if (gameState === 'title') {
+                if (pos.x > 300 && pos.x < 600) {
+                    if (pos.y > 270 && pos.y < 310) { modeSelector = 1; }
+                    else if (pos.y > 320 && pos.y < 360) { modeSelector = 2; }
+                    else if (pos.y > 370 && pos.y < 410) { modeSelector = 3; }
+                }
+                if (pos.y > 540) { startGame(); }
+            } else if (gameState === 'paused') {
+                if (pos.y > 320 && pos.y < 360) { resumeGame(); }
+                if (pos.y > 370 && pos.y < 410) { goToTitle(); }
+            } else if (gameState === 'gameOver') {
+                if (pos.y > 320 && pos.y < 380) { goToTitle(); }
+            }
+        }
+        
+        function handleCanvasTouchEnd(e) {
+            e.preventDefault();
+            if (gameState !== 'title') return;
+            const pos = getTouchPos(e);
+            const deltaX = pos.x - touchStartX;
+            const deltaY = pos.y - touchStartY;
+            if (touchStartY > 470 && touchStartY < 510 && Math.abs(deltaX) > 50 && Math.abs(deltaY) < 50) {
+                if (deltaX > 0) { handleMenuInput('right'); }
+                else { handleMenuInput('left'); }
+            }
+        }
 
         window.addEventListener('keydown', e => {
+            if(isTouchDevice) return;
+            unlockAudio();
             lastInputDevice = 'keyboard';
             keys[e.key] = true;
-
-            if (e.key.toLowerCase() === 'f') {
-                toggleFullScreen();
-            }
-
+            if (e.key.toLowerCase() === 'f') toggleFullScreen();
             if (e.key === 'Escape') { e.preventDefault(); if (gameState === 'playing') pauseGame(); else if (gameState === 'paused') resumeGame(); } 
-            if (gameState === 'paused' && e.key.toLowerCase() === 'q') { goToTitle(); }
+            if (gameState === 'paused' && e.key.toLowerCase() === 'q') goToTitle();
             if (e.key === 'Enter') { if (gameState === 'title') startGame(); else if (gameState === 'gameOver') goToTitle(); }
-            
             if (gameState === 'title') { if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') handleMenuInput('up'); if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') handleMenuInput('down'); if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleMenuInput('left'); if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') handleMenuInput('right'); }
         });
         
-        window.addEventListener('keyup', e => { keys[e.key] = false; });
+        window.addEventListener('keyup', e => { if(!isTouchDevice) keys[e.key] = false; });
         function handlePointerMove(e) {
-            lastInputDevice = 'keyboard';
+            unlockAudio();
+            lastInputDevice = isTouchDevice ? 'touch' : 'keyboard';
             if (gameState !== 'playing') return; const rect = canvas.getBoundingClientRect(); const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY; const canvasY = (clientY - rect.top) * (canvas.height / rect.height); let newY = canvasY - player.height / 2; newY = Math.max(0, Math.min(newY, canvas.height - player.height)); player.y = newY;
         }
-        canvas.addEventListener('mousemove', handlePointerMove);
-        canvas.addEventListener('touchmove', e => { e.preventDefault(); handlePointerMove(e); }, { passive: false });
-        canvas.addEventListener('touchstart', e => { e.preventDefault(); handlePointerMove(e); }, { passive: false });
-        canvas.addEventListener('click', () => { if (!audioCtx) { initAudio(); toggleMute(false); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } }, { once: true });
-        muteBtn.addEventListener('click', () => { if (!audioCtx) initAudio(); toggleMute(); });
 
+        if (isTouchDevice) {
+            canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
+            canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
+            pauseBtn.addEventListener('touchstart', pauseGame, { passive: false });
+            muteBtn.addEventListener('touchstart', () => toggleMute(), { passive: false });
+        } else {
+            canvas.addEventListener('mousemove', handlePointerMove);
+            muteBtn.addEventListener('click', () => toggleMute());
+        }
+        
         // ================================================================= //
         // メインループ実行
         // ================================================================= //
-        function gameLoop() { handleGamepadInput(); update(); render(); requestAnimationFrame(gameLoop); }
+        function gameLoop() { 
+            if(!isTouchDevice) handleGamepadInput(); 
+            update(); 
+            render(); 
+            requestAnimationFrame(gameLoop); 
+        }
 
         initializeObjects();
         toggleMute(true);
