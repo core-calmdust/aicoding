@@ -26,19 +26,16 @@
             padding: 30px;
             box-sizing: border-box;
         }
-        /* ★ 変更点: PCとスマホ縦向きの基本レイアウト */
         #game-wrapper.pc-layout, #game-wrapper.mobile-portrait {
             flex-direction: column;
             max-width: 960px; 
             aspect-ratio: 960 / 710;
         }
-        /* ★ 追加: スマホ横向きのレイアウト */
         #game-wrapper.mobile-landscape {
             flex-direction: row;
             height: 100%;
             padding: 1vh;
         }
-
         #game-area {
             flex-grow: 1;
             position: relative;
@@ -63,12 +60,13 @@
             width: 100%;
             padding-top: 10px;
         }
+        /* ★ 変更点: スマホ横向きのレイアウトを微調整 */
         #info-area.mobile-landscape {
             flex-direction: column;
             justify-content: center;
             align-items: stretch;
-            width: 100px; /* 横幅を少し狭く調整 */
-            padding-left: 10px;
+            width: 110px; 
+            padding-left: 15px;
             gap: 15px;
         }
         
@@ -107,6 +105,16 @@
             z-index: 10;
         }
 
+        #mobile-ui-container {
+            display: flex;
+            flex-direction: column; /* 縦並びにする */
+            gap: 10px;
+            align-items: stretch;
+        }
+        #info-area.mobile-portrait #mobile-ui-container {
+             flex-direction: row; /* 縦画面のときは横並び */
+        }
+
         .mobile-ui-button {
             cursor: pointer;
             padding: 8px 5px;
@@ -117,7 +125,6 @@
             text-align: center;
             font-size: 10px;
         }
-
     </style>
 </head>
 <body>
@@ -142,8 +149,8 @@
         // ================================================================= //
         
         const canvas = document.getElementById('pongCanvas'), ctx = canvas.getContext('2d');
-        const gameWrapper = document.getElementById('game-wrapper'); // ★ 追加
-        const infoArea = document.getElementById('info-area'); // ★ 追加
+        const gameWrapper = document.getElementById('game-wrapper');
+        const infoArea = document.getElementById('info-area');
         const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info');
         const mobileUiContainer = document.getElementById('mobile-ui-container');
         const pcMuteBtn = document.getElementById('pc-mute-btn');
@@ -152,11 +159,11 @@
         const WINNING_SCORE = 10;
         
         const difficultyLevels = { 
-            1: { name: "EASY",      speed: 9,  error: 0.4,  smashChance: 0.05 },
-            2: { name: "NORMAL",    speed: 11, error: 0.2, smashChance: 0.25 },
-            3: { name: "HARD",      speed: 13, error: 0.15,  smashChance: 0.50 },
-            4: { name: "VERY HARD", speed: 15, error: 0.07, smashChance: 0.60 },
-            5: { name: "IMPOSSIBLE",speed: 17, error: 0.04, smashChance: 0.80 }
+            1: { name: "EASY",      speed: 9,  error: 0.3,  smashChance: 0.05 },
+            2: { name: "NORMAL",    speed: 12, error: 0.15, smashChance: 0.25 },
+            3: { name: "HARD",      speed: 14, error: 0.1,  smashChance: 0.50 },
+            4: { name: "VERY HARD", speed: 16, error: 0.04, smashChance: 0.60 },
+            5: { name: "IMPOSSIBLE",speed: 18, error: 0.02, smashChance: 0.80 }
         };
         const gameModes = { 
             1: { name: 'CLASSIC' },
@@ -502,21 +509,13 @@
             if (isTouchDevice) {
                 pcMuteBtn.classList.add('hidden');
                 mobileUiContainer.style.display = 'flex';
-                // ★ 変更点: ポーズ画面のボタンテキストも更新
-                if (gameState === 'paused') {
-                    pauseBtn.textContent = 'RESUME';
-                    mobileMuteBtn.textContent = 'QUIT'; // ポーズ中は終了ボタンに
-                } else {
-                    pauseBtn.textContent = 'PAUSE';
-                    mobileMuteBtn.textContent = isMuted ? "SOUND: OFF" : "SOUND: ON";
-                }
+                pauseBtn.textContent = (gameState === 'paused') ? 'RESUME' : 'PAUSE';
             } else {
                 pcMuteBtn.classList.remove('hidden');
                 mobileUiContainer.style.display = 'none';
             }
         }
         
-        // ★ 追加: スマホの向きを判定してレイアウトを変更する関数
         function checkOrientation() {
             if (!isTouchDevice) {
                 gameWrapper.className = 'pc-layout';
@@ -602,7 +601,6 @@
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 draw.rainbowText('PAUSED', canvas.width / 2, canvas.height / 2 - 60, "60px", "center");
                 if (isTouchDevice) {
-                    // ★ 変更点: ポーズ画面のテキストをボタン化
                     ctx.fillStyle = 'rgba(0, 246, 255, 0.3)';
                     ctx.fillRect(300, 320, 300, 50); // Resume button
                     ctx.fillRect(300, 380, 300, 50); // Quit button
@@ -695,7 +693,6 @@
                 }
                 if (pos.y > 540) { startGame(); }
             } else if (gameState === 'paused') {
-                // ★ 変更点: ポーズ画面のボタンタップ判定
                 if (pos.x > 300 && pos.x < 600) {
                     if (pos.y > 320 && pos.y < 370) { resumeGame(); }
                     else if (pos.y > 380 && pos.y < 430) { goToTitle(); }
@@ -757,7 +754,6 @@
             requestAnimationFrame(gameLoop); 
         }
 
-        // ★ 追加: 起動時にレイアウトを設定
         checkOrientation();
         window.addEventListener('orientationchange', checkOrientation);
 
