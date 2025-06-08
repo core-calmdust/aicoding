@@ -7,11 +7,71 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
-        body { background-color: #0d0221; color: #ff00ff; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; overflow: hidden; }
-        #game-container { position: relative; width: 100%; max-width: 900px; }
-        canvas { display: block; width: 100%; height: auto; background-color: #0d0221; cursor: pointer; transition: box-shadow 0.05s linear, border-color 0.05s linear; }
+        /* ★ 変更点: フルスクリーンに対応するための基本レイアウト */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d0221;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Press Start 2P', cursive;
+            color: #ff00ff;
+        }
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            /* 900pxのコンテンツ + 左右30pxずつのパディング = 960px */
+            max-width: 960px; 
+            /* (900+60) / (600+60+約50) の比率を計算 */
+            aspect-ratio: 960 / 710; 
+            padding: 30px; /* グローエフェクト用の余白 */
+            box-sizing: border-box; /* パディングを幅と高さに含める */
+        }
+        #game-container {
+            position: relative;
+            flex-grow: 1;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0d0221;
+            cursor: pointer;
+            transition: box-shadow 0.05s linear, border-color 0.05s linear;
+        }
+        #info-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            padding-top: 10px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        /* ★ 変更点: フルスクリーン時にアスペクト比を維持するCSS */
+        html:fullscreen {
+            background-color: #000;
+        }
+        html:fullscreen body {
+            padding: 0;
+        }
+        html:fullscreen #game-wrapper {
+            width: auto;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* その他 */
         .pulsing { border-color: #ffffff !important; box-shadow: 0 0 30px #ffffff, 0 0 40px #00f6ff, 0 0 50px #ff00ff !important; }
-        #info-container { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; max-width: 900px; margin-top: 10px; font-size: 12px; }
         .info-text { color: #00f6ff; text-shadow: 0 0 5px #00f6ff; line-height: 1.4; }
         #controls-info { text-align: right; }
         #mute-btn { position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.2); border: 2px solid #00f6ff; color: #00f6ff; font-size: 20px; cursor: pointer; text-align: center; line-height: 36px; user-select: none; z-index: 10; }
@@ -19,13 +79,15 @@
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="pongCanvas" width="900" height="600"></canvas>
-        <div id="mute-btn">🔇</div>
-    </div>
-    <div id="info-container">
-        <div class="info-text" id="rule-info"></div>
-        <div class="info-text" id="controls-info"></div>
+    <div id="game-wrapper">
+        <div id="game-container">
+            <canvas id="pongCanvas" width="900" height="600"></canvas>
+            <div id="mute-btn">🔇</div>
+        </div>
+        <div id="info-container">
+            <div class="info-text" id="rule-info"></div>
+            <div class="info-text" id="controls-info"></div>
+        </div>
     </div>
 
     <script>
@@ -37,43 +99,96 @@
         const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info'), muteBtn = document.getElementById('mute-btn');
         const WINNING_SCORE = 10;
         
-        // ★★★ 最終調整: ゲームバランスを大幅に緩和 ★★★
         const difficultyLevels = { 
-            1: { name: "EASY",      speed: 9,  error: 0.3  }, // 非常にミスしやすく、動きも遅い。初心者に最適。
-            2: { name: "NORMAL",    speed: 12,  error: 0.15  }, // 時々ミスをする。ラリーを楽しめるレベル。
-            3: { name: "HARD",      speed: 14,  error: 0.1 }, // ほとんどミスしないが、まだ隙はある。
-            4: { name: "VERY HARD", speed: 16, error: 0.04 }, // 非常に正確。スマッシュが攻略の鍵。
-            5: { name: "IMPOSSIBLE",speed: 18, error: 0.02 }  // 理不尽に近いが、完全無敵ではない。
+            1: { name: "EASY",      speed: 9,  error: 0.35,  smashChance: 0.05 },
+            2: { name: "NORMAL",    speed: 11, error: 0.2, smashChance: 0.25 },
+            3: { name: "HARD",      speed: 13, error: 0.15,  smashChance: 0.50 },
+            4: { name: "VERY HARD", speed: 15, error: 0.07, smashChance: 0.60 },
+            5: { name: "IMPOSSIBLE",speed: 17, error: 0.04, smashChance: 0.80 }
         };
-
         const gameModes = { 1: { name: 'CLASSIC' }, 2: { name: 'ADVANCED' }, 3: { name: 'TURBO' } };
         const colors = { bg: '#0d0221', paddle: '#00f6ff', ball: '#ff00ff', net: 'rgba(0, 246, 255, 0.3)', text: '#f0f', particle: ['#ff00ff', '#f9c80e', '#00f6ff'], monster: '#f9c80e', smash: '#f9c80e' };
         
         let gameState = 'title', isMuted = true, hue = 0;
         let selectedDifficulty = difficultyLevels[2], selectedMode = gameModes[1], difficultySelector = 2, modeSelector = 1;
         let ball, player, cpu, particles, monsters;
-        let audioCtx, masterGain, bgm;
+        let audioCtx, masterGain, bgm, titleBgm;
         const sounds = {}, keys = {};
-        let canChangeDifficulty = true;
+        
+        let gamepad = null;
+        let lastGamepadState = null;
+        let menuInputCooldown = false;
+        let inputCooldown = false;
+        let lastInputDevice = 'keyboard';
+
+        const GAMEPAD_BUTTONS = { A: 0, B: 1, SELECT: 8, START: 9, DPAD_UP: 12, DPAD_DOWN: 13, DPAD_LEFT: 14, DPAD_RIGHT: 15, };
+        const GAMEPAD_AXES = { LEFT_X: 0, LEFT_Y: 1, RIGHT_X: 2, RIGHT_Y: 3, };
 
         // ================================================================= //
-        // サウンドエンジン (変更なし)
+        // フルスクリーン機能
+        // ================================================================= //
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // ================================================================= //
+        // サウンドエンジン
         // ================================================================= //
         
         function initAudio() { if (audioCtx) return; audioCtx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = audioCtx.createGain(); masterGain.gain.value = isMuted ? 0 : 1; masterGain.connect(audioCtx.destination); sounds.hit = () => { const e = audioCtx.createOscillator(); e.type = "sine"; e.frequency.setValueAtTime(300, audioCtx.currentTime); const t = audioCtx.createOscillator(); t.type = "square"; t.frequency.setValueAtTime(450, audioCtx.currentTime); const o = audioCtx.createGain(); o.gain.setValueAtTime(400, audioCtx.currentTime); const n = audioCtx.createGain(); t.connect(o); o.connect(e.frequency); e.connect(n); n.connect(masterGain); n.gain.setValueAtTime(0, audioCtx.currentTime); n.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 0.01); n.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.15); e.start(); t.start(); e.stop(audioCtx.currentTime + 0.2); t.stop(audioCtx.currentTime + 0.2) }; sounds.smash = () => { const e = audioCtx.createOscillator(), t = audioCtx.createGain(); e.type = "sawtooth"; e.frequency.value = 880; e.connect(t); t.connect(masterGain); t.gain.setValueAtTime(0, audioCtx.currentTime); t.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01); t.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2); e.start(); e.stop(audioCtx.currentTime + 0.2) }; sounds.wall = () => { const e = audioCtx.createOscillator(), t = audioCtx.createGain(); e.type = "square"; e.frequency.value = 220; e.connect(t); t.connect(masterGain); t.gain.setValueAtTime(0, audioCtx.currentTime); t.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01); t.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1); e.start(); e.stop(audioCtx.currentTime + 0.1) }; sounds.goal = () => { const e = audioCtx.createOscillator(), t = audioCtx.createGain(); e.type = "sine"; e.frequency.value = 130; e.connect(t); t.connect(masterGain); t.gain.setValueAtTime(0, audioCtx.currentTime); t.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.01); t.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5); e.start(); e.stop(audioCtx.currentTime + 0.5); const o = audioCtx.createOscillator(), n = audioCtx.createGain(); o.type = "sine"; o.frequency.value = 261; o.connect(n); n.connect(masterGain); n.gain.setValueAtTime(0, audioCtx.currentTime + 0.1); n.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.11); n.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6); o.start(audioCtx.currentTime + 0.1); o.stop(audioCtx.currentTime + 0.6) }; sounds.win = () => { [60, 64, 67, 72].forEach(((e, t) => { const o = 440 * Math.pow(2, (e - 69) / 12); const n = audioCtx.createOscillator(), a = audioCtx.createGain(); n.type = "triangle"; n.frequency.value = o; n.connect(a); a.connect(masterGain); const s = audioCtx.currentTime + 0.1 * t; a.gain.setValueAtTime(0, s); a.gain.linearRampToValueAtTime(0.5, s + 0.01); a.gain.exponentialRampToValueAtTime(1e-4, s + 0.3); n.start(s); n.stop(s + 0.3) })) }; sounds.lose = () => { [60, 58, 55, 53].forEach(((e, t) => { const o = 440 * Math.pow(2, (e - 69) / 12); const n = audioCtx.createOscillator(), a = audioCtx.createGain(); n.type = "sawtooth"; n.frequency.value = o; n.connect(a); a.connect(masterGain); const s = audioCtx.currentTime + 0.15 * t; a.gain.setValueAtTime(0, s); a.gain.linearRampToValueAtTime(0.3, s + 0.01); a.gain.exponentialRampToValueAtTime(1e-4, s + 0.5); n.start(s); n.stop(s + 0.5) })) } }
         function playSound(soundName) { if (audioCtx && sounds[soundName]) sounds[soundName](); }
         function toggleMute(forceState) { isMuted = forceState !== undefined ? forceState : !isMuted; if (audioCtx) masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime + 0.1); muteBtn.textContent = isMuted ? "🔇" : "🔊"; }
         class BGM { constructor(bpm = 130) { this.pattern = [50, 53, 57, 53, 60, 57, 53, 57]; this.kickPattern = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0]; this.hatPattern = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1]; this.interval = null; this.step = 0; this.bpm = bpm; } start() { if (this.interval) return; this.interval = setInterval(() => this.playStep(), (60 / this.bpm) * 1000 / 4); } stop() { clearInterval(this.interval); this.interval = null; } playStep() { if (isMuted) return; const time = audioCtx.currentTime; if (this.step % 4 === 0) { const note = this.pattern[Math.floor(this.step / 4) % this.pattern.length]; const freq = 440 * Math.pow(2, (note - 69) / 12); const o = audioCtx.createOscillator(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = freq / 2; o.connect(f); f.type = 'lowpass'; f.frequency.value = 800; f.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.4, time + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.2); o.start(time); o.stop(time + 0.2); } if (this.kickPattern[this.step % this.kickPattern.length]) { this.playKick(time); requestAnimationFrame(this.pulseEffect); } if (this.hatPattern[this.step % this.hatPattern.length]) { this.playHat(time); } this.step = (this.step + 1) % 64; } playKick(time) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(120, time); o.frequency.exponentialRampToValueAtTime(40, time + 0.2); o.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.8, time + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.2); o.start(time); o.stop(time + 0.2); } playHat(time) { const bufferSize = audioCtx.sampleRate * 0.1, buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate), data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; const o = audioCtx.createBufferSource(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter(); o.buffer = buffer; o.connect(f); f.type = 'highpass'; f.frequency.value = 7000; f.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.2, time + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.05); o.start(time); } pulseEffect() { canvas.classList.add('pulsing'); setTimeout(() => canvas.classList.remove('pulsing'), 50); } }
+        class TitleBGM {
+            constructor(bpm = 120) {
+                this.bpm = bpm;
+                this.step = 0;
+                this.interval = null;
+                this.kickPattern =  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0];
+                this.snarePattern = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0];
+                this.hatPattern =   [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
+                const C2=28, D2=30, E2=32, F2=33, G2=35, A2=37;
+                this.bassPattern = [A2, 0, A2, 0, A2, 0, A2, 0, G2, 0, G2, 0, G2, 0, G2, 0, F2, 0, F2, 0, F2, 0, F2, 0, G2, 0, G2, 0, G2, 0, G2, 0];
+            }
+            start() { if (this.interval) return; this.interval = setInterval(() => this.playStep(), (60 / this.bpm) * 1000 / 4); }
+            stop() { clearInterval(this.interval); this.interval = null; }
+            playStep() {
+                if (isMuted || !audioCtx) return;
+                const time = audioCtx.currentTime;
+                const current16thStep = this.step % 16;
+                const current32thStep = this.step % 32;
 
+                if (this.kickPattern[current16thStep]) this.playKick(time);
+                if (this.snarePattern[current16thStep]) this.playSnare(time);
+                if (this.hatPattern[current16thStep]) this.playHat(time);
+                const bassNote = this.bassPattern[current32thStep];
+                if(bassNote > 0 && current32thStep % 2 === 0) this.playBass(time, bassNote);
+                
+                this.step++;
+            }
+            playKick(time) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(120, time); o.frequency.exponentialRampToValueAtTime(60, time + 0.1); g.gain.setValueAtTime(1, time); g.gain.exponentialRampToValueAtTime(0.001, time + 0.3); o.connect(g); g.connect(masterGain); o.start(time); o.stop(time + 0.3); }
+            playSnare(time) { const noise = audioCtx.createBufferSource(); const bufferSize = audioCtx.sampleRate * 0.2; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate); const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; noise.buffer = buffer; const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1500; const g = audioCtx.createGain(); g.gain.setValueAtTime(1, time); g.gain.exponentialRampToValueAtTime(0.01, time + 0.15); noise.connect(f); f.connect(g); g.connect(masterGain); noise.start(time); noise.stop(time + 0.15); }
+            playHat(time) { const noise = audioCtx.createBufferSource(); const bufferSize = audioCtx.sampleRate * 0.1; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate); const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; noise.buffer = buffer; const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 8000; const g = audioCtx.createGain(); g.gain.setValueAtTime(0.2, time); g.gain.exponentialRampToValueAtTime(0.001, time + 0.05); noise.connect(f); f.connect(g); g.connect(masterGain); noise.start(time); noise.stop(time + 0.05); }
+            playBass(time, note) { const freq = 440 * Math.pow(2, (note - 69) / 12); const o = audioCtx.createOscillator(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = freq; f.type = 'lowpass'; f.frequency.value = 800; g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.3, time + 0.01); g.gain.linearRampToValueAtTime(0, time + 0.1); o.connect(f); f.connect(g); g.connect(masterGain); o.start(time); o.stop(time + 0.1); }
+        }
+        
         // ================================================================= //
-        // 描画エンジン (変更なし)
+        // 描画エンジン
         // ================================================================= //
         const draw = { rect: (x, y, w, h, color, shadowColor = color) => { ctx.fillStyle = color; ctx.shadowColor = shadowColor; ctx.shadowBlur = 15; ctx.fillRect(x, y, w, h); ctx.shadowBlur = 0; }, arc: (x, y, r, color, shadowColor = color) => { ctx.fillStyle = color; ctx.shadowColor = shadowColor; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2, false); ctx.fill(); ctx.shadowBlur = 0; }, text: (text, x, y, color, size = "50px", align = "center") => { ctx.fillStyle = color; ctx.font = `${size} 'Press Start 2P'`; ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.textAlign = align; ctx.fillText(text, x, y); ctx.shadowBlur = 0; ctx.textAlign = "left"; }, net: () => { for (let i = 0; i <= canvas.height; i += 20) draw.rect((canvas.width - 4) / 2, i, 4, 10, colors.net, colors.net); }, grid: () => { ctx.strokeStyle = "rgba(0, 246, 255, 0.1)"; ctx.lineWidth = 1; for (let i = 0; i < canvas.width; i += 20) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); } for (let j = 0; j < canvas.height; j += 20) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke(); } }, monster: m => { ctx.fillStyle = colors.monster; ctx.shadowColor = colors.monster; ctx.shadowBlur = 15; ctx.fillRect(m.x, m.y, m.width, m.height); ctx.fillStyle = colors.bg; ctx.fillRect(m.x + 8, m.y + 8, 8, 8); ctx.fillRect(m.x + 24, m.y + 8, 8, 8); ctx.fillRect(m.x + 8, m.y + 24, 24, 8); ctx.shadowBlur = 0; }, rainbowText: (text, x, y, size, align, offsetMultiplier = 20) => { ctx.font = `${size} 'Press Start 2P'`; const totalWidth = ctx.measureText(text).width; let currentX; if (align === 'center') { currentX = x - totalWidth / 2; } else if (align === 'right') { currentX = x - totalWidth; } else { currentX = x; } text.split('').forEach((char, index) => { const charColor = `hsl(${(hue + index * offsetMultiplier) % 360}, 100%, 70%)`; ctx.fillStyle = charColor; ctx.shadowColor = charColor; ctx.shadowBlur = 15; ctx.fillText(char, currentX, y); currentX += ctx.measureText(char).width; }); ctx.shadowBlur = 0; } };
         function createParticles(x, y, count = 20, colorSet = colors.particle) { for (let i = 0; i < count; i++) particles.push({ x, y, radius: 1 + Math.random() * 3, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, life: 60, color: colorSet[Math.floor(Math.random() * colorSet.length)] }); }
         function updateAndDrawParticles() { for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) particles.splice(i, 1); else { ctx.globalAlpha = p.life / 60; draw.arc(p.x, p.y, p.radius, p.color); ctx.globalAlpha = 1; } } }
         
         // ================================================================= //
-        // ゲームオブジェクト & ロジック (変更なし)
+        // ゲームオブジェクト & ロジック
         // ================================================================= //
         function initializeObjects() {
             const isTurbo = selectedMode.name === 'TURBO';
@@ -84,71 +199,240 @@
 
             ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 12, speed: baseSpeed, velocityX: baseSpeed, velocityY: baseSpeed, speedIncrement: speedIncrement, isSmashed: false };
             player = { x: 15, y: (canvas.height - 100) / 2, width: 15, height: 100, score: 0, speed: paddleSpeed, boostSpeed: paddleBoostSpeed };
-            cpu = { x: canvas.width - 30, y: (canvas.height - 100) / 2, width: 15, height: 100, score: 0 };
+            cpu = { x: canvas.width - 30, y: (canvas.height - 100) / 2, width: 15, height: 100, score: 0, isTryingSmash: null };
             particles = []; monsters = [];
             
             if (selectedMode.name === 'ADVANCED' || selectedMode.name === 'TURBO') {
                 let monsterCount = 0;
                 let monsterSpeed = 2;
                 if (selectedMode.name === 'ADVANCED') {
-		    switch (selectedDifficulty.name) {
+                    switch (selectedDifficulty.name) {
                         case 'EASY': monsterCount = 1; break;
-			case 'NORMAL': monsterCount = 2; break;
+                        case 'NORMAL': monsterCount = 2; break;
                         case 'HARD': monsterCount = 2; break;
                         case 'VERY HARD': monsterCount = 3; break;
-			case 'IMPOSSIBLE': monsterCount = 3; monsterSpeed = 3; break;
-		    } 
-		}
-                else if (selectedMode.name === 'TURBO') {
+                        case 'IMPOSSIBLE': monsterCount = 3; monsterSpeed = 3; break;
+                    } 
+                } else if (selectedMode.name === 'TURBO') {
                     monsterSpeed = 3;
                     switch (selectedDifficulty.name) {
                         case 'EASY': monsterCount = 1; monsterSpeed = 2; break;
-			case 'NORMAL': monsterCount = 2; break;
+                        case 'NORMAL': monsterCount = 2; break;
                         case 'HARD': monsterCount = 2; break;
                         case 'VERY HARD': monsterCount = 3; break;
-			case 'IMPOSSIBLE': monsterCount = 4; monsterSpeed = 4; break;
+                        case 'IMPOSSIBLE': monsterCount = 4; monsterSpeed = 4; break;
                     }
                 }
                 for (let i = 0; i < monsterCount; i++) { monsters.push({ x: canvas.width / 4 + Math.random() * canvas.width / 2, y: 50 + Math.random() * (canvas.height - 100), width: 40, height: 40, vx: (Math.random() > 0.5 ? 1 : -1) * monsterSpeed, vy: (Math.random() > 0.5 ? 1 : -1) * monsterSpeed }); }
             }
         }
-        function movePlayer() { const currentSpeed = keys.Shift ? player.boostSpeed : player.speed; if ((keys.w || keys.W || keys.ArrowUp) && player.y > 0) player.y -= currentSpeed; if ((keys.s || keys.S || keys.ArrowDown) && player.y < canvas.height - player.height) player.y += currentSpeed; }
-        function moveCpu() { let cpuSpeed = selectedDifficulty.speed; if (selectedMode.name === 'TURBO') cpuSpeed *= 1.1; let targetY = ball.y; targetY += (Math.random() - 0.5) * player.height * selectedDifficulty.error; if (cpu.y + cpu.height / 2 < targetY) cpu.y = Math.min(cpu.y + cpuSpeed, canvas.height - cpu.height); else if (cpu.y + cpu.height / 2 > targetY) cpu.y = Math.max(cpu.y - cpuSpeed, 0); }
+
+        function movePlayer() {
+            let isBoosting = keys.Shift;
+            if (gamepad && gamepad.buttons && gamepad.buttons.some(b => b.pressed)) {
+                isBoosting = true;
+            }
+            const currentSpeed = isBoosting ? player.boostSpeed : player.speed;
+
+            let moveUp = keys.w || keys.W || keys.ArrowUp;
+            let moveDown = keys.s || keys.S || keys.ArrowDown;
+            let stickY = 0;
+
+            if (gamepad) {
+                if (gamepad.buttons[GAMEPAD_BUTTONS.DPAD_UP]?.pressed) moveUp = true;
+                if (gamepad.buttons[GAMEPAD_BUTTONS.DPAD_DOWN]?.pressed) moveDown = true;
+                if (gamepad.axes[GAMEPAD_AXES.LEFT_Y]) stickY = gamepad.axes[GAMEPAD_AXES.LEFT_Y];
+            }
+
+            const deadzone = 0.2;
+            if (stickY < -deadzone) moveUp = true;
+            if (stickY > deadzone) moveDown = true;
+            
+            if (moveUp && player.y > 0) player.y -= currentSpeed;
+            if (moveDown && player.y < canvas.height - player.height) player.y += currentSpeed;
+        }
+
+        function moveCpu() {
+            let cpuSpeed = selectedDifficulty.speed;
+            if (selectedMode.name === 'TURBO') cpuSpeed *= 1.1;
+            let targetY = ball.y;
+
+            if (ball.velocityX > 0 && ball.x > canvas.width / 2) {
+                if (cpu.isTryingSmash === null) {
+                    if (Math.random() < selectedDifficulty.smashChance) {
+                        cpu.isTryingSmash = true;
+                        cpu.smashTargetSide = (Math.random() > 0.5) ? 1 : -1;
+                    } else {
+                        cpu.isTryingSmash = false;
+                    }
+                }
+            }
+
+            if (cpu.isTryingSmash === true) {
+                const smashOffset = (cpu.height / 2) * 0.85 * cpu.smashTargetSide;
+                targetY = ball.y - smashOffset;
+                cpuSpeed *= 1.2;
+            } else {
+                targetY += (Math.random() - 0.5) * player.height * selectedDifficulty.error;
+            }
+
+            const paddleCenter = cpu.y + cpu.height / 2;
+            if (paddleCenter < targetY && cpu.y < canvas.height - cpu.height) {
+                cpu.y += cpuSpeed;
+            } else if (paddleCenter > targetY && cpu.y > 0) {
+                cpu.y -= cpuSpeed;
+            }
+        }
+        
         function moveMonsters() { monsters.forEach(m => { m.x += m.vx; m.y += m.vy; if (m.x <= 0 || m.x + m.width >= canvas.width) m.vx *= -1; if (m.y <= 0 || m.y + m.height >= canvas.height) m.vy *= -1; }); }
         function collision(obj1, obj2) { return obj1.x < obj2.x + obj2.width && obj1.x + obj1.width > obj2.x && obj1.y < obj2.y + obj2.height && obj1.y + obj1.height > obj2.y; }
-        function resetBall() { playSound("goal"); createParticles(ball.x, ball.y); ball.x = canvas.width / 2; ball.y = 100 + Math.random() * (canvas.height - 200); ball.speed = selectedMode.name === 'TURBO' ? 11 : 9; ball.isSmashed = false; ball.velocityX = ball.velocityX > 0 ? -ball.speed : ball.speed; ball.velocityY = ball.speed * (Math.random() > 0.5 ? 1 : -1); }
+        function resetBall() { playSound("goal"); createParticles(ball.x, ball.y); ball.x = canvas.width / 2; ball.y = 100 + Math.random() * (canvas.height - 200); ball.speed = selectedMode.name === 'TURBO' ? 11 : 9; ball.isSmashed = false; ball.velocityX = ball.velocityX > 0 ? -ball.speed : ball.speed; ball.velocityY = ball.speed * (Math.random() > 0.5 ? 1 : -1); cpu.isTryingSmash = null; }
+
+        // ================================================================= //
+        // ゲーム状態管理関数 & 入力クールダウン
+        // ================================================================= //
+        function setInputCooldown(duration) {
+            inputCooldown = true;
+            setTimeout(() => { inputCooldown = false; }, duration);
+        }
+
+        function startGame() {
+            if (inputCooldown) return;
+
+            if (titleBgm) titleBgm.stop();
+            selectedMode = gameModes[modeSelector];
+            selectedDifficulty = difficultyLevels[difficultySelector];
+            initializeObjects();
+            gameState = 'playing';
+            const bpm = selectedMode.name === 'TURBO' ? 160 : 130;
+            if (bgm) bgm.stop();
+            bgm = new BGM(bpm);
+            bgm.start();
+            
+            setInputCooldown(200);
+        }
+
+        function pauseGame() {
+            if (gameState !== 'playing') return;
+            gameState = 'paused';
+            if (bgm) bgm.stop();
+        }
+
+        function resumeGame() {
+            if (gameState !== 'paused') return;
+            gameState = 'playing';
+            if (bgm) bgm.start();
+        }
+
+        function goToTitle() {
+            if (inputCooldown) return;
+
+            gameState = 'title';
+            if (bgm) bgm.stop();
+            if (!titleBgm) titleBgm = new TitleBGM();
+            titleBgm.start();
+            
+            setInputCooldown(200);
+        }
         
         // ================================================================= //
-        // メインループ (変更なし)
+        // メインループ (update)
         // ================================================================= //
         function update() {
-            hue = (hue + 2) % 360;
+            hue = (hue + 1) % 360;
             if (gameState !== 'playing') return;
 
-            ball.x += ball.velocityX; ball.y += ball.velocityY;
-            movePlayer(); moveCpu();
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+            
+            movePlayer();
+            moveCpu();
             if (monsters.length > 0) moveMonsters();
             
-            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) { ball.velocityY *= -1; createParticles(ball.x, ball.y); playSound('wall'); }
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.velocityY *= -1;
+                if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
+                if (ball.y - ball.radius < 0) ball.y = ball.radius;
+                createParticles(ball.x, ball.y);
+                playSound('wall');
+            }
             
             const currentPaddle = (ball.x < canvas.width / 2) ? player : cpu;
             const ballRect = { x: ball.x - ball.radius, y: ball.y - ball.radius, width: ball.radius * 2, height: ball.radius * 2 };
+            
             if (collision(ballRect, currentPaddle)) {
+                if (currentPaddle === cpu) {
+                    cpu.isTryingSmash = null;
+                }
                 const collidePoint = (ball.y - (currentPaddle.y + currentPaddle.height / 2));
                 const normalizedCollidePoint = collidePoint / (currentPaddle.height / 2);
                 let angleRad = (Math.PI / 4) * normalizedCollidePoint;
-                if (Math.abs(normalizedCollidePoint) > 0.8) { ball.speed = 25; ball.isSmashed = true; createParticles(ball.x, ball.y, 40, [colors.smash, '#ffffff']); angleRad = Math.sign(angleRad) * (Math.PI / 3); playSound('smash'); } 
-                else { if (ball.isSmashed) { ball.speed = selectedMode.name === 'TURBO' ? 12 : 10; ball.isSmashed = false; } ball.speed += ball.speedIncrement; createParticles(ball.x, ball.y); playSound('hit'); }
+                
+                if (Math.abs(normalizedCollidePoint) > 0.8) {
+                    ball.speed = 25;
+                    ball.isSmashed = true;
+                    createParticles(ball.x, ball.y, 40, [colors.smash, '#ffffff']);
+                    angleRad = Math.sign(angleRad) * (Math.PI / 3);
+                    playSound('smash');
+                } else {
+                    if (ball.isSmashed) {
+                        ball.speed = selectedMode.name === 'TURBO' ? 12 : 10;
+                        ball.isSmashed = false;
+                    }
+                    ball.speed += ball.speedIncrement;
+                    createParticles(ball.x, ball.y);
+                    playSound('hit');
+                }
+                
                 const direction = (ball.x < canvas.width / 2) ? 1 : -1;
                 ball.velocityX = direction * ball.speed * Math.cos(angleRad);
-                ball.velocityY = direction * ball.speed * Math.sin(angleRad);
+                ball.velocityY = ball.speed * Math.sin(angleRad);
+
+                if (direction === 1) {
+                    ball.x = player.x + player.width + ball.radius;
+                } else {
+                    ball.x = cpu.x - ball.radius;
+                }
             }
-            if (monsters.length > 0) { monsters.forEach(m => { if (collision(ballRect, m)) { playSound('hit'); createParticles(ball.x, ball.y); const oX = (m.x + m.width / 2) - ball.x, oY = (m.y + m.height / 2) - ball.y; Math.abs(oX) > Math.abs(oY) ? ball.velocityX *= -1 : ball.velocityY *= -1; } }); }
             
-            if (ball.x - ball.radius < 0) { cpu.score++; resetBall(); } else if (ball.x + ball.radius > canvas.width) { player.score++; resetBall(); }
-            if (player.score >= WINNING_SCORE || cpu.score >= WINNING_SCORE) { gameState = 'gameOver'; bgm && bgm.stop(); playSound(player.score >= WINNING_SCORE ? 'win' : 'lose'); }
+            if (monsters.length > 0) {
+                monsters.forEach(m => {
+                    if (collision(ballRect, m)) {
+                        playSound('hit');
+                        createParticles(ball.x, ball.y);
+                        
+                        const oX = (m.x + m.width / 2) - ball.x;
+                        const oY = (m.y + m.height / 2) - ball.y;
+
+                        if (Math.abs(oX) > Math.abs(oY)) {
+                            ball.velocityX *= -1;
+                            ball.x = (oX > 0) ? m.x - ball.radius : m.x + m.width + ball.radius;
+                        } else {
+                            ball.velocityY *= -1;
+                            ball.y = (oY > 0) ? m.y - ball.radius : m.y + m.height + ball.radius;
+                        }
+                    }
+                });
+            }
+            
+            if (ball.x - ball.radius < 0) {
+                cpu.score++;
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                player.score++;
+                resetBall();
+            }
+            
+            if (player.score >= WINNING_SCORE || cpu.score >= WINNING_SCORE) {
+                gameState = 'gameOver';
+                bgm && bgm.stop();
+                playSound(player.score >= WINNING_SCORE ? 'win' : 'lose');
+            }
         }
 
+        // ================================================================= //
+        // 描画 (render)
+        // ================================================================= //
         function render() {
             const frameColor = `hsl(${hue}, 100%, 70%)`;
             canvas.style.borderColor = frameColor;
@@ -157,13 +441,22 @@
             ctx.fillStyle = 'rgba(13, 2, 33, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             draw.grid();
             
-            if (gameState === 'playing' || gameState === 'gameOver') {
-                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const useGamepadControls = lastInputDevice === 'gamepad';
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+            // ★ 変更点: 説明文の表示ロジックを修正
+            if (gameState === 'title') {
+                ruleInfo.innerHTML = `F: Fullscreen`;
+                controlsInfo.innerHTML = useGamepadControls ? `PAD: Select | A: Start` : `KEYS: Select | ENTER: Start`;
+            } else if (gameState === 'playing' || gameState === 'gameOver' || gameState === 'paused') {
                 if (isTouchDevice) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins.`;
                     controlsInfo.innerHTML = `Touch/Drag: Move <br> Edge Hit: Smash`;
+                } else if (useGamepadControls) {
+                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> START: Pause | F: Fullscreen`;
+                    controlsInfo.innerHTML = `Pad/Keys: Move | Pad BTN: Boost <br> Edge Hit: Smash`;
                 } else {
-                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> ESC: Title`;
+                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> ESC: Pause | F: Fullscreen`;
                     controlsInfo.innerHTML = `W/S or ↑↓/Mouse: Move <br> SHIFT: Boost | Edge: Smash`;
                 }
             } else {
@@ -171,7 +464,7 @@
                 controlsInfo.innerHTML = ``;
             }
 
-            if (gameState === 'playing' || gameState === 'gameOver') {
+            if (gameState === 'playing' || gameState === 'gameOver' || gameState === 'paused') {
                 draw.net(); draw.text(player.score, canvas.width / 4, 80, colors.text);
                 draw.text(cpu.score, 3 * canvas.width / 4, 80, colors.text);
                 draw.rect(player.x, player.y, player.width, player.height, colors.paddle);
@@ -181,6 +474,7 @@
                 if (monsters.length > 0) monsters.forEach(m => draw.monster(m));
                 updateAndDrawParticles();
             }
+
             if (gameState === 'title') {
                 draw.rainbowText('CYBER PONG', canvas.width / 2, 120, "70px", "center", 25);
                 draw.rainbowText('XTREME+', canvas.width / 2, 170, "30px", "center", 40);
@@ -188,50 +482,116 @@
                 Object.keys(gameModes).forEach((key, index) => { const mode = gameModes[key]; if (key == modeSelector) { draw.rainbowText(mode.name, canvas.width / 2, 290 + (index * 50), "24px", "center", 30); } else { draw.text(mode.name, canvas.width / 2, 290 + (index * 50), colors.paddle, "24px", "center"); } });
                 draw.text('Difficulty', canvas.width / 2, 440, colors.text, "30px", "center");
                 draw.rainbowText(`< ${difficultyLevels[difficultySelector].name} >`, canvas.width / 2, 490, "24px", "center", 30);
-                draw.text('Press Enter to Start', canvas.width / 2, 560, colors.text, "20px", "center");
+                const startKey = useGamepadControls ? "A-Button" : "Enter";
+                draw.text(`Press ${startKey} to Start`, canvas.width / 2, 560, colors.text, "20px", "center");
             } else if (gameState === 'gameOver') {
                 const message = player.score >= WINNING_SCORE ? 'YOU WIN' : 'CPU WINS';
                 draw.rainbowText(message, canvas.width / 2, canvas.height / 2 - 40, "60px", "center", 25);
-                draw.text('Press Enter to Return to Title', canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+                const continueKey = useGamepadControls ? "A-Button" : "Enter";
+                draw.text(`Press ${continueKey} to Return to Title`, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+            } else if (gameState === 'paused') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                draw.rainbowText('PAUSED', canvas.width / 2, canvas.height / 2 - 60, "60px", "center");
+                const resumeKey = useGamepadControls ? 'START' : 'ESC';
+                const quitKey = useGamepadControls ? 'SELECT' : 'Q';
+                draw.text(`Press ${resumeKey} to Resume`, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
+                draw.text(`Press ${quitKey} to Return to Title`, canvas.width / 2, canvas.height / 2 + 80, colors.text, "20px", "center");
             }
         }
 
         // ================================================================= //
-        // イベントリスナー & メインループ (変更なし)
+        // 入力処理
         // ================================================================= //
-        function gameLoop() { update(); render(); requestAnimationFrame(gameLoop); }
-        window.addEventListener('keydown', e => {
-            keys[e.key] = true;
-            if (e.key === 'Escape' && gameState === 'playing') { gameState = 'title'; bgm && bgm.stop(); }
-            if (e.key === 'Enter') {
-                if (gameState === 'gameOver') { gameState = 'title'; bgm && bgm.stop(); } 
-                else if (gameState === 'title') {
-                    selectedMode = gameModes[modeSelector]; selectedDifficulty = difficultyLevels[difficultySelector];
-                    initializeObjects();
-                    gameState = 'playing';
-                    const bpm = selectedMode.name === 'TURBO' ? 160 : 130;
-                    if (bgm) bgm.stop();
-                    bgm = new BGM(bpm);
-                    bgm.start();
-                }
+        function updateGamepadState() {
+            const gp = navigator.getGamepads()[0];
+            if (!gp) { gamepad = null; return; }
+            const currentState = { buttons: gp.buttons.map(b => ({ pressed: b.pressed, value: b.value })), axes: [...gp.axes] };
+            if (!lastGamepadState) { lastGamepadState = { buttons: gp.buttons.map(b => ({ pressed: false, value: 0 })), axes: Array(gp.axes.length).fill(0) }; }
+            gamepad = currentState;
+        }
+
+        function handleMenuInput(direction) {
+            if (menuInputCooldown) return;
+            menuInputCooldown = true;
+            setTimeout(() => { menuInputCooldown = false; }, 150);
+
+            switch(direction) {
+                case 'up':
+                    modeSelector = Math.max(1, modeSelector - 1);
+                    break;
+                case 'down':
+                    modeSelector = Math.min(Object.keys(gameModes).length, modeSelector + 1);
+                    break;
+                case 'left':
+                    difficultySelector = Math.max(1, difficultySelector - 1);
+                    break;
+                case 'right':
+                    difficultySelector = Math.min(Object.keys(difficultyLevels).length, difficultySelector + 1);
+                    break;
             }
+        }
+
+        function handleGamepadInput() {
+            updateGamepadState();
+            if (!gamepad) return;
+
+            if (gamepad.buttons.some(b => b.pressed) || gamepad.axes.some(a => Math.abs(a) > 0.1)) {
+                lastInputDevice = 'gamepad';
+            }
+
+            const isButtonPressed = (btn) => gamepad.buttons[btn]?.pressed && !lastGamepadState.buttons[btn]?.pressed;
+            
+            if (isButtonPressed(GAMEPAD_BUTTONS.START)) { if (gameState === 'playing') pauseGame(); else if (gameState === 'paused') resumeGame(); }
+            if (gameState === 'paused' && isButtonPressed(GAMEPAD_BUTTONS.SELECT)) { goToTitle(); }
+            if (gameState === 'gameOver' && (isButtonPressed(GAMEPAD_BUTTONS.A) || isButtonPressed(GAMEPAD_BUTTONS.START))) { goToTitle(); }
+
             if (gameState === 'title') {
-                if (e.key === 'ArrowUp' || e.key === 'w') modeSelector = Math.max(1, modeSelector - 1);
-                if (e.key === 'ArrowDown' || e.key === 's') modeSelector = Math.min(Object.keys(gameModes).length, modeSelector + 1);
-                if ((e.key === 'ArrowLeft' || e.key === 'a') && canChangeDifficulty) { difficultySelector = Math.max(1, difficultySelector - 1); canChangeDifficulty = false; setTimeout(() => { canChangeDifficulty = true; }, 150); }
-                if ((e.key === 'ArrowRight' || e.key === 'd') && canChangeDifficulty) { difficultySelector = Math.min(Object.keys(difficultyLevels).length, difficultySelector + 1); canChangeDifficulty = false; setTimeout(() => { canChangeDifficulty = true; }, 150); }
+                const stickX = gamepad.axes[GAMEPAD_AXES.LEFT_X] ?? gamepad.axes[GAMEPAD_AXES.RIGHT_X];
+                const stickY = gamepad.axes[GAMEPAD_AXES.LEFT_Y] ?? gamepad.axes[GAMEPAD_AXES.RIGHT_Y];
+                const deadzone = 0.5;
+                if (stickY < -deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_UP)) handleMenuInput('up');
+                if (stickY > deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_DOWN)) handleMenuInput('down');
+                if (stickX < -deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_LEFT)) handleMenuInput('left');
+                if (stickX > deadzone || isButtonPressed(GAMEPAD_BUTTONS.DPAD_RIGHT)) handleMenuInput('right');
+                if (isButtonPressed(GAMEPAD_BUTTONS.A)) { startGame(); }
             }
+            lastGamepadState = { buttons: gamepad.buttons.map(b => ({ pressed: b.pressed, value: b.value })), axes: [...gamepad.axes] };
+        }
+
+        window.addEventListener('keydown', e => {
+            lastInputDevice = 'keyboard';
+            keys[e.key] = true;
+
+            if (e.key.toLowerCase() === 'f') {
+                toggleFullScreen();
+            }
+
+            if (e.key === 'Escape') { e.preventDefault(); if (gameState === 'playing') pauseGame(); else if (gameState === 'paused') resumeGame(); } 
+            if (gameState === 'paused' && e.key.toLowerCase() === 'q') { goToTitle(); }
+            if (e.key === 'Enter') { if (gameState === 'title') startGame(); else if (gameState === 'gameOver') goToTitle(); }
+            
+            if (gameState === 'title') { if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') handleMenuInput('up'); if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') handleMenuInput('down'); if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleMenuInput('left'); if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') handleMenuInput('right'); }
         });
+        
         window.addEventListener('keyup', e => { keys[e.key] = false; });
-        function handlePointerMove(e) { if (gameState !== 'playing') return; const rect = canvas.getBoundingClientRect(); const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY; const canvasY = (clientY - rect.top) * (canvas.height / rect.height); let newY = canvasY - player.height / 2; newY = Math.max(0, Math.min(newY, canvas.height - player.height)); player.y = newY; }
+        function handlePointerMove(e) {
+            lastInputDevice = 'keyboard';
+            if (gameState !== 'playing') return; const rect = canvas.getBoundingClientRect(); const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY; const canvasY = (clientY - rect.top) * (canvas.height / rect.height); let newY = canvasY - player.height / 2; newY = Math.max(0, Math.min(newY, canvas.height - player.height)); player.y = newY;
+        }
         canvas.addEventListener('mousemove', handlePointerMove);
         canvas.addEventListener('touchmove', e => { e.preventDefault(); handlePointerMove(e); }, { passive: false });
         canvas.addEventListener('touchstart', e => { e.preventDefault(); handlePointerMove(e); }, { passive: false });
         canvas.addEventListener('click', () => { if (!audioCtx) { initAudio(); toggleMute(false); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } }, { once: true });
         muteBtn.addEventListener('click', () => { if (!audioCtx) initAudio(); toggleMute(); });
 
+        // ================================================================= //
+        // メインループ実行
+        // ================================================================= //
+        function gameLoop() { handleGamepadInput(); update(); render(); requestAnimationFrame(gameLoop); }
+
         initializeObjects();
         toggleMute(true);
+        goToTitle();
         gameLoop();
     </script>
 </body>
