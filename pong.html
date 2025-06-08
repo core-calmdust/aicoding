@@ -22,16 +22,26 @@
         }
         #game-wrapper {
             display: flex;
-            flex-direction: column;
             width: 100%;
-            max-width: 960px; 
-            aspect-ratio: 960 / 710; 
             padding: 30px;
             box-sizing: border-box;
         }
-        #game-container {
-            position: relative;
+        /* ★ 変更点: PCとスマホ縦向きの基本レイアウト */
+        #game-wrapper.pc-layout, #game-wrapper.mobile-portrait {
+            flex-direction: column;
+            max-width: 960px; 
+            aspect-ratio: 960 / 710;
+        }
+        /* ★ 追加: スマホ横向きのレイアウト */
+        #game-wrapper.mobile-landscape {
+            flex-direction: row;
+            height: 100%;
+            padding: 1vh;
+        }
+
+        #game-area {
             flex-grow: 1;
+            position: relative;
         }
         canvas {
             position: absolute;
@@ -43,14 +53,23 @@
             cursor: pointer;
             transition: box-shadow 0.05s linear, border-color 0.05s linear;
         }
-        #info-container {
+        #info-area {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
+        }
+        #info-area.pc-layout, #info-area.mobile-portrait {
             width: 100%;
             padding-top: 10px;
-            font-size: 12px;
-            flex-shrink: 0;
+        }
+        #info-area.mobile-landscape {
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            width: 100px; /* 横幅を少し狭く調整 */
+            padding-left: 10px;
+            gap: 15px;
         }
         
         html:fullscreen {
@@ -67,7 +86,7 @@
         }
         
         .pulsing { border-color: #ffffff !important; box-shadow: 0 0 30px #ffffff, 0 0 40px #00f6ff, 0 0 50px #ff00ff !important; }
-        .info-text { color: #00f6ff; text-shadow: 0 0 5px #00f6ff; line-height: 1.4; }
+        .info-text { color: #00f6ff; text-shadow: 0 0 5px #00f6ff; line-height: 1.4; font-size: 12px; }
         #controls-info { text-align: right; }
         .hidden { display: none !important; }
 
@@ -88,59 +107,30 @@
             z-index: 10;
         }
 
-        /* ★ 変更点: スマホ用ボタンのスタイルを改善 */
-        #mobile-ui-container {
-            display: flex;
-            gap: 10px;
-        }
         .mobile-ui-button {
             cursor: pointer;
-            padding: 5px 10px;
+            padding: 8px 5px;
             background-color: rgba(255, 255, 255, 0.2);
             border: 1px solid #00f6ff;
             border-radius: 4px;
             user-select: none;
+            text-align: center;
+            font-size: 10px;
         }
-        
-        @media (max-width: 768px) { 
-            #info-container { 
-                flex-direction: row;
-                align-items: center;
-                gap: 8px; 
-            }
-            .info-text, #controls-info { 
-                text-align: left; 
-                font-size: 10px; 
-            } 
-            #controls-info {
-                text-align: right;
-            }
-        }
-        @media (orientation: landscape) and (max-height: 500px) {
-            body {
-                padding: 0;
-            }
-            #game-wrapper {
-                width: auto;
-                height: 100vh;
-                max-width: 100vw;
-                max-height: 100vh;
-                padding: 1vh;
-            }
-        }
+
     </style>
 </head>
 <body>
     <div id="game-wrapper">
-        <div id="game-container">
+        <div id="game-area">
             <canvas id="pongCanvas" width="900" height="600"></canvas>
             <div id="pc-mute-btn">🔇</div>
         </div>
-        <div id="info-container">
+        <div id="info-area">
             <div class="info-text" id="rule-info"></div>
-            <div class="info-text" id="mobile-ui-container">
-                <span id="pause-btn" class="mobile-ui-button">PAUSE</span>
-                <span id="mobile-mute-btn" class="mobile-ui-button">SOUND</span>
+            <div id="mobile-ui-container">
+                <div id="pause-btn" class="mobile-ui-button">PAUSE</div>
+                <div id="mobile-mute-btn" class="mobile-ui-button">SOUND</div>
             </div>
             <div class="info-text" id="controls-info"></div>
         </div>
@@ -152,6 +142,8 @@
         // ================================================================= //
         
         const canvas = document.getElementById('pongCanvas'), ctx = canvas.getContext('2d');
+        const gameWrapper = document.getElementById('game-wrapper'); // ★ 追加
+        const infoArea = document.getElementById('info-area'); // ★ 追加
         const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info');
         const mobileUiContainer = document.getElementById('mobile-ui-container');
         const pcMuteBtn = document.getElementById('pc-mute-btn');
@@ -159,13 +151,12 @@
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const WINNING_SCORE = 10;
         
-        // ★ 変更点: 可読性向上のため改行
         const difficultyLevels = { 
-            1: { name: "EASY",      speed: 9,  error: 0.35,  smashChance: 0.05 },
-            2: { name: "NORMAL",    speed: 11, error: 0.2, smashChance: 0.25 },
-            3: { name: "HARD",      speed: 13, error: 0.15,  smashChance: 0.50 },
-            4: { name: "VERY HARD", speed: 15, error: 0.07, smashChance: 0.60 },
-            5: { name: "IMPOSSIBLE",speed: 17, error: 0.04, smashChance: 0.80 }
+            1: { name: "EASY",      speed: 9,  error: 0.3,  smashChance: 0.05 },
+            2: { name: "NORMAL",    speed: 12, error: 0.15, smashChance: 0.25 },
+            3: { name: "HARD",      speed: 14, error: 0.1,  smashChance: 0.50 },
+            4: { name: "VERY HARD", speed: 16, error: 0.04, smashChance: 0.60 },
+            5: { name: "IMPOSSIBLE",speed: 18, error: 0.02, smashChance: 0.80 }
         };
         const gameModes = { 
             1: { name: 'CLASSIC' },
@@ -511,10 +502,33 @@
             if (isTouchDevice) {
                 pcMuteBtn.classList.add('hidden');
                 mobileUiContainer.style.display = 'flex';
-                pauseBtn.textContent = (gameState === 'paused') ? 'RESUME' : 'PAUSE';
+                // ★ 変更点: ポーズ画面のボタンテキストも更新
+                if (gameState === 'paused') {
+                    pauseBtn.textContent = 'RESUME';
+                    mobileMuteBtn.textContent = 'QUIT'; // ポーズ中は終了ボタンに
+                } else {
+                    pauseBtn.textContent = 'PAUSE';
+                    mobileMuteBtn.textContent = isMuted ? "SOUND: OFF" : "SOUND: ON";
+                }
             } else {
                 pcMuteBtn.classList.remove('hidden');
                 mobileUiContainer.style.display = 'none';
+            }
+        }
+        
+        // ★ 追加: スマホの向きを判定してレイアウトを変更する関数
+        function checkOrientation() {
+            if (!isTouchDevice) {
+                gameWrapper.className = 'pc-layout';
+                infoArea.className = 'pc-layout';
+                return;
+            };
+            if (window.innerHeight > window.innerWidth) {
+                gameWrapper.className = 'mobile-portrait';
+                infoArea.className = 'mobile-portrait';
+            } else {
+                gameWrapper.className = 'mobile-landscape';
+                infoArea.className = 'mobile-landscape';
             }
         }
 
@@ -532,7 +546,7 @@
             
             if (gameState === 'title') {
                 ruleInfo.innerHTML = isTouchDevice ? '' : 'F: Fullscreen';
-                controlsInfo.innerHTML = useGamepadControls ? `PAD: Select | A: Start` : `KEYS: Select | ENTER: Start`;
+                controlsInfo.innerHTML = isTouchDevice ? '' : (useGamepadControls ? `PAD: Select | A: Start` : `KEYS: Select | ENTER: Start`);
             } else if (gameState === 'playing' || gameState === 'gameOver' || gameState === 'paused') {
                 if (isTouchDevice) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins.`;
@@ -588,8 +602,12 @@
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 draw.rainbowText('PAUSED', canvas.width / 2, canvas.height / 2 - 60, "60px", "center");
                 if (isTouchDevice) {
-                    draw.text('Tap to Resume', canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
-                    draw.text('Return to Title', canvas.width / 2, canvas.height / 2 + 80, colors.text, "20px", "center");
+                    // ★ 変更点: ポーズ画面のテキストをボタン化
+                    ctx.fillStyle = 'rgba(0, 246, 255, 0.3)';
+                    ctx.fillRect(300, 320, 300, 50); // Resume button
+                    ctx.fillRect(300, 380, 300, 50); // Quit button
+                    draw.text('Resume', canvas.width / 2, 355, colors.text, "20px", "center");
+                    draw.text('Return to Title', canvas.width / 2, 415, colors.text, "20px", "center");
                 } else {
                     const resumeKey = useGamepadControls ? 'START' : 'ESC';
                     const quitKey = useGamepadControls ? 'SELECT' : 'Q';
@@ -677,8 +695,11 @@
                 }
                 if (pos.y > 540) { startGame(); }
             } else if (gameState === 'paused') {
-                if (pos.y > 320 && pos.y < 360) { resumeGame(); }
-                if (pos.y > 370 && pos.y < 410) { goToTitle(); }
+                // ★ 変更点: ポーズ画面のボタンタップ判定
+                if (pos.x > 300 && pos.x < 600) {
+                    if (pos.y > 320 && pos.y < 370) { resumeGame(); }
+                    else if (pos.y > 380 && pos.y < 430) { goToTitle(); }
+                }
             } else if (gameState === 'gameOver') {
                 if (pos.y > 320 && pos.y < 380) { goToTitle(); }
             }
@@ -719,8 +740,8 @@
             canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
             canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
             canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
-            pauseBtn.addEventListener('touchstart', () => { if (gameState === 'playing') pauseGame(); else if(gameState === 'paused') resumeGame(); }, { passive: false });
-            mobileMuteBtn.addEventListener('touchstart', () => toggleMute(), { passive: false });
+            pauseBtn.addEventListener('touchstart', () => { if (gameState === 'playing') pauseGame(); }, { passive: false });
+            mobileMuteBtn.addEventListener('touchstart', () => { if(gameState === 'paused') { goToTitle(); } else { toggleMute(); }}, { passive: false });
         } else {
             canvas.addEventListener('mousemove', handlePointerMove);
             pcMuteBtn.addEventListener('click', () => toggleMute());
@@ -735,6 +756,10 @@
             render(); 
             requestAnimationFrame(gameLoop); 
         }
+
+        // ★ 追加: 起動時にレイアウトを設定
+        checkOrientation();
+        window.addEventListener('orientationchange', checkOrientation);
 
         initializeObjects();
         toggleMute(true);
