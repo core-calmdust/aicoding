@@ -9,209 +9,943 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background-color: #00001a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Press Start 2P', cursive; overflow: hidden; }
+        #fullscreen-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        #scalable-content { display: flex; flex-direction: column; align-items: center; transition: transform 0.2s ease-out; }
         #game-container { position: relative; }
-        canvas { background-color: #000000; border-width: 3px; border-style: solid; transition: box-shadow 0.1s ease-in-out, border-color 0.5s ease; }
+        canvas { background-color: #000000; border-width: 3px; border-style: solid; transition: box-shadow 0.1s ease-in-out, border-color 0.5s ease; display: block; }
         canvas.pulse { transition: box-shadow 0.05s ease-in-out; }
         #sound-toggle { position: absolute; bottom: 10px; right: 10px; background-color: rgba(0, 255, 255, 0.5); color: #ffffff; border: 2px solid #ffffff; padding: 5px 10px; font-family: 'Press Start 2P', cursive; font-size: 12px; cursor: pointer; box-shadow: 0 0 10px #00ffff; }
         #sound-toggle:hover { background-color: rgba(255, 0, 255, 0.7); }
         #controls-info { color: rgba(255, 255, 255, 0.7); font-size: 14px; margin-top: 20px; text-shadow: 0 0 5px #00ffff; text-align: center; }
+        #controls-info > div { line-height: 1.5; }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <button id="sound-toggle" tabindex="-1">SOUND ON</button>
-    </div>
-    <div id="controls-info">
-        MOVE: ARROWS/AD/PAD | SHOT: SPACE/A | PAUSE: ESC/START
+    <div id="fullscreen-wrapper">
+        <div id="scalable-content">
+            <div id="game-container">
+                <canvas id="gameCanvas"></canvas>
+                <button id="sound-toggle" tabindex="-1">SOUND ON</button>
+            </div>
+            <div id="controls-info">
+                <div>MOVE: ARROWS/AD/PAD | SHOT: SPACE/A</div>
+                <div>PAUSE: ESC/START | FULLSCREEN: F</div>
+            </div>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d'), soundToggleButton = document.getElementById('sound-toggle');
-            canvas.width = 800; canvas.height = 600;
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const soundToggleButton = document.getElementById('sound-toggle');
+            canvas.width = 800;
+            canvas.height = 600;
 
             // ==================================================================
             // 1. 定数と設定
             // ==================================================================
-            const PLAYER = { W: 40, H: 20, S: 8, FIRE_COOLDOWN: 5 }, MAX_BULLETS = 4, POWERUP_DURATION = 300;
-            const ENEMY = { R: 5, C: 10, SP: 50, SZ: 30, SX: 0.5, SY: 20, FC: 0.0013 };
+            const PLAYER = { W: 40, H: 20, S: 8, FIRE_COOLDOWN: 5 };
+            const MAX_BULLETS = 4;
+            const POWERUP_DURATION = 300;
+            const ENEMY = { R: 5, C: 10, SP: 50, SZ: 30, SX: 0.5, SY: 20, FC: 0.0010 };
+            const GP_BUTTON = { A: 0, B: 1, X: 2, Y: 3, SELECT: 8, START: 9, DPAD_UP: 12, DPAD_DOWN: 13, DPAD_LEFT: 14, DPAD_RIGHT: 15 };
             const enemyGraphics = [ [[0,1,1,1,1,1,1,1,1,0],[1,1,0,1,1,1,1,0,1,1],[1,0,0,1,1,1,1,0,0,1],[1,0,1,0,0,0,0,1,0,1],[0,0,0,1,1,1,1,0,0,0],[0,0,1,0,0,0,0,1,0,0],[0,1,0,0,0,0,0,0,1,0],[1,0,0,0,0,0,0,0,0,1]], [[0,0,1,0,0,0,0,1,0,0],[0,1,1,1,0,0,1,1,1,0],[1,1,1,1,1,1,1,1,1,1],[1,0,1,1,1,1,1,1,0,1],[1,0,1,0,0,0,0,1,0,1],[0,0,0,1,1,1,1,0,0,0],[0,0,1,1,0,0,1,1,0,0],[0,1,1,0,0,0,0,1,1,0]], [[1,1,0,0,1,1,0,0,1,1],[0,1,1,0,1,1,0,1,1,0],[0,0,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1],[1,0,1,1,1,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,1]], [[0,0,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,0],[1,1,0,1,1,1,1,0,1,1],[1,1,1,1,1,1,1,1,1,1],[0,1,0,1,0,1,0,1,0,1],[0,0,1,0,1,0,1,0,1,0],[0,0,0,1,0,1,0,1,0,0],[0,0,0,0,1,0,1,0,0,0]], [[0,0,0,0,0,0,0,0,0,0],[0,0,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,0],[1,1,1,0,1,1,0,1,1,1],[1,1,1,1,1,1,1,1,1,1],[0,1,0,1,0,1,0,1,0,1],[0,0,1,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0]] ];
             const enemyScores = [200, 150, 100, 50, 10];
-            const difficultySettings = [{name:'EASY',speedMod:2,fireMod:2,specialShotChance:0.1,scoreMultiplier:0.7,powerupMultiplier:1.2},{name:'NORMAL',speedMod:3,fireMod:3.5,specialShotChance:0.25,scoreMultiplier:1,powerupMultiplier:1},{name:'HARD',speedMod:5,fireMod:5,specialShotChance:0.4,scoreMultiplier:1.3,powerupMultiplier:1.2},{name:'VERY HARD',speedMod:7,fireMod:6.5,specialShotChance:0.6,scoreMultiplier:1.7,powerupMultiplier:1.35},{name:'INSANE',speedMod:9,fireMod:8,specialShotChance:0.8,scoreMultiplier:2,powerupMultiplier:1.5 }];
+            const difficultySettings = [ { name: 'EASY', speedMod: 2, fireMod: 2, specialShotChance: 0.1, scoreMultiplier: 0.7, powerupMultiplier: 1.2 }, { name: 'NORMAL', speedMod: 3, fireMod: 3.5, specialShotChance: 0.25, scoreMultiplier: 1, powerupMultiplier: 1 }, { name: 'HARD', speedMod: 5, fireMod: 5, specialShotChance: 0.4, scoreMultiplier: 1.3, powerupMultiplier: 1.2 }, { name: 'VERY HARD', speedMod: 7, fireMod: 6.5, specialShotChance: 0.6, scoreMultiplier: 1.7, powerupMultiplier: 1.35 }, { name: 'INSANE', speedMod: 9, fireMod: 8, specialShotChance: 0.8, scoreMultiplier: 2, powerupMultiplier: 1.5 } ];
 
             // ==================================================================
             // 2. ゲームの状態変数
             // ==================================================================
-            let gameState = 'TITLE', player, keys = {}, bullets, enemies, enemyBullets, particles, stars, powerups;
+            let gameState = 'TITLE';
+            let player, keys = {}, bullets, enemies, enemyBullets, particles, stars, powerups;
             let score, enemyDirection, wave, totalEnemies, highScore, newHighScore;
             let currentDifficulty, selectedDifficultyIndex = 1;
             let gamepadState = { left: false, right: false, shoot: false, prevButtons: [], prevAxisY: 0 };
+            let elapsedTime, lastFrameTime;
+            let lastInputDevice = 'keyboard';
 
             // ==================================================================
             // 3. サウンド関連
             // ==================================================================
-            let audioContext, titleBgmInterval, gameBgmInterval, soundEnabled = true, gridAlpha = 0.08, baseHue = 0;
-            const gameBpm = 135, gameSixteenthNoteDuration = (60 / gameBpm) / 4, titleBpm = 80, titleEighthNoteDuration = (60 / titleBpm) / 2;
+            let audioContext;
+            let titleBgmInterval, gameBgmInterval;
+            let soundEnabled = true;
+            let gridAlpha = 0.08;
+            let baseHue = 0;
+            const gameBpm = 135, gameSixteenthNoteDuration = (60 / gameBpm) / 4;
+            const titleBpm = 80, titleEighthNoteDuration = (60 / titleBpm) / 2;
             let gameBeatCount = 0, titleBeatCount = 0;
-            const gameBassLine = [110, 110, 87.31, 87.31, 130.81, 130.81, 98.00, 98.00], gameArpeggio = [440, 523.25, 659.25, 523.25, 440, 523.25, 783.99, 523.25];
+            const gameBassLine = [110, 110, 87.31, 87.31, 130.81, 130.81, 98.00, 98.00];
+            const gameArpeggio = [440, 523.25, 659.25, 523.25, 440, 523.25, 783.99, 523.25];
             const titlePadNotes = [55, 65.41, 41.20, 48.99];
             
-            function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
-            function createSound(freq, dur, type, decay, pan, vol) { if (!audioContext) return; const osc = audioContext.createOscillator(), gain = audioContext.createGain(), panner = audioContext.createStereoPanner(); osc.connect(gain); gain.connect(panner); panner.connect(audioContext.destination); const now = audioContext.currentTime; panner.pan.setValueAtTime(pan, now); osc.type = type; osc.frequency.setValueAtTime(freq, now); gain.gain.setValueAtTime(vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur * decay); osc.start(now); osc.stop(now + dur); }
-            function playSound(type) { if (!soundEnabled) return; switch (type) {
-                case 'shot': createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3); break;
-                case 'explode': createSound(110, 0.4, 'sawtooth', 0.8, 0, 0.5); setTimeout(() => createSound(55, 0.5, 'square', 0.8, 0, 0.5), 50); break;
-                case 'playerDie': createSound(220, 0.8, 'sawtooth', 0.2,0,1); setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4,0,1), 100); setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6,0,1), 200); break;
-                case 'select': createSound(600, 0.05, 'sine', 0.9, 0, 0.4); break;
-                case 'confirm': createSound(800, 0.1, 'sine', 0.8, 0, 0.5); break;
-                case 'pause': createSound(400, 0.08, 'square', 0.9, 0, 0.3); break;
-                case 'waveClear': setTimeout(()=>createSound(523,0.1,'sine',0.9,-0.5,0.4),0); setTimeout(()=>createSound(659,0.1,'sine',0.9,0.5,0.4),100); setTimeout(()=>createSound(783,0.1,'sine',0.9,-0.5,0.4),200); setTimeout(()=>createSound(1046,0.2,'sine',0.8,0,0.5),300); break;
-                case 'powerup': createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.5); setTimeout(()=>createSound(1567.98, 0.1, 'triangle', 0.7, 0, 0.5), 80); setTimeout(()=>createSound(2093, 0.15, 'triangle', 0.6, 0, 0.5), 160); break;
-                case 'highScore': setTimeout(()=>createSound(659,0.1,'sine',0.9,-0.6,0.5),0);setTimeout(()=>createSound(783,0.1,'sine',0.9,-0.2,0.5),120);setTimeout(()=>createSound(1046,0.1,'sine',0.9,0.2,0.5),240);setTimeout(()=>createSound(1318,0.3,'sine',0.8,0.6,0.6),360);break;
-            } }
-            function playTitleBGM() { if (!soundEnabled) return; const step = titleBeatCount % 16; if(step % 4 === 0) createSound(titlePadNotes[Math.floor(step/4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.2); createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.1); titleBeatCount++; }
-            function playGameBGM() { if (!soundEnabled) return; const sixteenth = gameBeatCount % 32, measure = Math.floor(sixteenth / 16), step = sixteenth % 16; if (step % 8 === 0) createSound(gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length], gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.3); createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.2); if (step === 0) { createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 1); canvas.classList.add('pulse'); gridAlpha = 0.25; setTimeout(() => canvas.classList.remove('pulse'), 100); } if (step === 8) createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.8); if (step === 4 || step === 12) createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.5); if (step % 4 === 2) createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.08); gameBeatCount++; }
-            function stopAllBGM() { clearInterval(titleBgmInterval); clearInterval(gameBgmInterval); }
-            function startTitleBGM() { stopAllBGM(); if (soundEnabled) { titleBeatCount = 0; titleBgmInterval = setInterval(playTitleBGM, titleEighthNoteDuration * 1000); } }
-            function startGameBGM() { stopAllBGM(); if (soundEnabled) { gameBeatCount = 0; gameBgmInterval = setInterval(playGameBGM, gameSixteenthNoteDuration * 1000); } }
-            function toggleSound() { initAudio(); soundEnabled = !soundEnabled; if (soundEnabled) { soundToggleButton.textContent = "SOUND ON"; if (gameState === 'PLAYING') startGameBGM(); else startTitleBGM(); } else { stopAllBGM(); soundToggleButton.textContent = "SOUND OFF"; } }
+            function initAudio() {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            
+            function createSound(freq, dur, type, decay, pan, vol) {
+                if (!audioContext) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const panner = audioContext.createStereoPanner();
+                osc.connect(gain);
+                gain.connect(panner);
+                panner.connect(audioContext.destination);
+                const now = audioContext.currentTime;
+                panner.pan.setValueAtTime(pan, now);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur * decay);
+                osc.start(now);
+                osc.stop(now + dur);
+            }
+
+            function playSound(type) {
+                if (!soundEnabled) return;
+                switch (type) {
+                    case 'shot':
+                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3);
+                        break;
+                    case 'explode':
+                        createSound(110, 0.4, 'sawtooth', 0.8, 0, 0.5);
+                        setTimeout(() => createSound(55, 0.5, 'square', 0.8, 0, 0.5), 50);
+                        break;
+                    case 'playerDie':
+                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 1);
+                        setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4, 0, 1), 100);
+                        setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6, 0, 1), 200);
+                        break;
+                    case 'select':
+                        createSound(600, 0.05, 'sine', 0.9, 0, 0.4);
+                        break;
+                    case 'confirm':
+                        createSound(800, 0.1, 'sine', 0.8, 0, 0.5);
+                        break;
+                    case 'pause':
+                        createSound(400, 0.08, 'square', 0.9, 0, 0.3);
+                        break;
+                    case 'waveClear':
+                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.4), 0);
+                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, 0.5, 0.4), 100);
+                        setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.5, 0.4), 200);
+                        setTimeout(() => createSound(1046, 0.2, 'sine', 0.8, 0, 0.5), 300);
+                        break;
+                    case 'powerup':
+                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.5);
+                        setTimeout(() => createSound(1567.98, 0.1, 'triangle', 0.7, 0, 0.5), 80);
+                        setTimeout(() => createSound(2093, 0.15, 'triangle', 0.6, 0, 0.5), 160);
+                        break;
+                    case 'highScore':
+                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.5), 0);
+                        setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.2, 0.5), 120);
+                        setTimeout(() => createSound(1046, 0.1, 'sine', 0.9, 0.2, 0.5), 240);
+                        setTimeout(() => createSound(1318, 0.3, 'sine', 0.8, 0.6, 0.6), 360);
+                        break;
+                }
+            }
+
+            function playTitleBGM() {
+                if (!soundEnabled) return;
+                const step = titleBeatCount % 16;
+                if (step % 4 === 0) {
+                    createSound(titlePadNotes[Math.floor(step / 4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.2);
+                }
+                createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.1);
+                titleBeatCount++;
+            }
+
+            function playGameBGM() {
+                if (!soundEnabled) return;
+                const sixteenth = gameBeatCount % 32;
+                const measure = Math.floor(sixteenth / 16);
+                const step = sixteenth % 16;
+
+                // Bass
+                if (step % 8 === 0) {
+                    const bassNote = gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length];
+                    createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.3);
+                }
+                // Arpeggio
+                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.2);
+                // Kick
+                if (step === 0) {
+                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 1);
+                    canvas.classList.add('pulse');
+                    gridAlpha = 0.25;
+                    setTimeout(() => canvas.classList.remove('pulse'), 100);
+                }
+                if (step === 8) {
+                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.8);
+                }
+                // Snare
+                if (step === 4 || step === 12) {
+                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.5);
+                }
+                // Hi-hat
+                if (step % 4 === 2) {
+                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.08);
+                }
+                gameBeatCount++;
+            }
+
+            function stopAllBGM() {
+                clearInterval(titleBgmInterval);
+                clearInterval(gameBgmInterval);
+            }
+
+            function startTitleBGM() {
+                stopAllBGM();
+                if (soundEnabled) {
+                    titleBeatCount = 0;
+                    titleBgmInterval = setInterval(playTitleBGM, titleEighthNoteDuration * 1000);
+                }
+            }
+
+            function startGameBGM() {
+                stopAllBGM();
+                if (soundEnabled) {
+                    gameBeatCount = 0;
+                    gameBgmInterval = setInterval(playGameBGM, gameSixteenthNoteDuration * 1000);
+                }
+            }
+
+            function toggleSound() {
+                initAudio();
+                soundEnabled = !soundEnabled;
+                if (soundEnabled) {
+                    soundToggleButton.textContent = "SOUND ON";
+                    if (gameState === 'PLAYING') {
+                        startGameBGM();
+                    } else {
+                        startTitleBGM();
+                    }
+                } else {
+                    stopAllBGM();
+                    soundToggleButton.textContent = "SOUND OFF";
+                }
+            }
             
             // ==================================================================
             // 4. 初期化関数
             // ==================================================================
-            function initGame() { player = { x: canvas.width / 2 - PLAYER.W / 2, y: canvas.height - 60, w: PLAYER.W, h: PLAYER.H, powerupTimer: 0, fireCooldown: 0 }; bullets = []; enemies = []; enemyBullets = []; particles = []; powerups = []; score = 0; newHighScore = false; enemyDirection = 1; wave = 1; createEnemies(); totalEnemies = enemies.length; updateColors(); }
-            function createEnemies() { const startX = (canvas.width - (ENEMY.C * ENEMY.SP - (ENEMY.SP - ENEMY.SZ))) / 2; for (let r = 0; r < ENEMY.R; r++) for (let c = 0; c < ENEMY.C; c++) enemies.push({ x: startX + c * ENEMY.SP, y: 60 + r * ENEMY.SP, w: ENEMY.SZ, h: ENEMY.SZ, graphicIndex: r, isSpecial: false }); const specialIndex = Math.floor(Math.random() * enemies.length); enemies[specialIndex].isSpecial = true; }
-            function createStars() { stars = []; for (let i = 0; i < 150; i++) stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 + 1, speed: Math.random() * 0.5 + 0.2 }); }
-            function updateColors() { baseHue = ((wave - 1) * 50) % 360; const pc = `hsl(${baseHue + 180}, 100%, 50%)`, uc = `hsl(${baseHue + 300}, 100%, 50%)`; canvas.style.borderColor = pc; canvas.style.boxShadow = `0 0 20px ${uc}, 0 0 30px ${pc}`; }
+            function initGame() {
+                player = { x: canvas.width / 2 - PLAYER.W / 2, y: canvas.height - 60, w: PLAYER.W, h: PLAYER.H, powerupTimer: 0, fireCooldown: 0 };
+                bullets = [];
+                enemies = [];
+                enemyBullets = [];
+                particles = [];
+                powerups = [];
+                score = 0;
+                newHighScore = false;
+                enemyDirection = 1;
+                wave = 1;
+                elapsedTime = 0;
+                lastFrameTime = 0;
+                createEnemies();
+                totalEnemies = enemies.length;
+                updateColors();
+            }
+
+            function createEnemies() {
+                const startX = (canvas.width - (ENEMY.C * ENEMY.SP - (ENEMY.SP - ENEMY.SZ))) / 2;
+                for (let r = 0; r < ENEMY.R; r++) {
+                    for (let c = 0; c < ENEMY.C; c++) {
+                        enemies.push({
+                            x: startX + c * ENEMY.SP,
+                            y: 60 + r * ENEMY.SP,
+                            w: ENEMY.SZ,
+                            h: ENEMY.SZ,
+                            graphicIndex: r,
+                            isSpecial: false
+                        });
+                    }
+                }
+                const specialIndex = Math.floor(Math.random() * enemies.length);
+                enemies[specialIndex].isSpecial = true;
+            }
+
+            function createStars() {
+                stars = [];
+                for (let i = 0; i < 150; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 2 + 1,
+                        speed: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+
+            function updateColors() {
+                baseHue = ((wave - 1) * 50) % 360;
+                const pc = `hsl(${baseHue + 180}, 100%, 50%)`;
+                const uc = `hsl(${baseHue + 300}, 100%, 50%)`;
+                canvas.style.borderColor = pc;
+                canvas.style.boxShadow = `0 0 20px ${uc}, 0 0 30px ${pc}`;
+            }
 
             // ==================================================================
             // 5. 更新処理 (Update)
             // ==================================================================
-            function update() { handleGamepadInput(); updateBackground(); if (gameState === 'PLAYING') updatePlaying(); }
-            function updateBackground() { stars.forEach(s => { s.y += s.speed; if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; } }); gridAlpha = Math.max(0.08, gridAlpha * 0.95); }
-            function updatePlaying() { if (player.powerupTimer > 0) player.powerupTimer--; if (player.fireCooldown > 0) player.fireCooldown--; movePlayer(); updateBullets(); updateEnemies(); updatePowerups(); checkCollisions(); }
-            function movePlayer() { if ((keys['ArrowLeft'] || keys['KeyA'] || gamepadState.left) && player.x > 0) player.x -= PLAYER.S; if ((keys['ArrowRight'] || keys['KeyD'] || gamepadState.right) && player.x < canvas.width - player.w) player.x += PLAYER.S; }
-            function updateBullets() { bullets.forEach((b, i) => { b.x += b.vx; b.y += b.vy; if (b.y < 0 || b.x < 0 || b.x > canvas.width) bullets.splice(i, 1); }); enemyBullets.forEach((b, i) => { if (b.vx) { b.x += b.vx; b.y += b.vy; } else { b.y += b.speed; } if (b.y > canvas.height || b.y < 0 || b.x < 0 || b.x > canvas.width) enemyBullets.splice(i, 1); }); }
+            function update() {
+                handleGamepadInput();
+                updateBackground();
+                if (gameState === 'PLAYING') {
+                    updatePlaying();
+                }
+            }
+
+            function updateBackground() {
+                stars.forEach(s => {
+                    s.y += s.speed;
+                    if (s.y > canvas.height) {
+                        s.y = 0;
+                        s.x = Math.random() * canvas.width;
+                    }
+                });
+                gridAlpha = Math.max(0.08, gridAlpha * 0.95);
+            }
+
+            function updatePlaying() {
+                const now = performance.now();
+                if (lastFrameTime) {
+                    elapsedTime += (now - lastFrameTime);
+                }
+                lastFrameTime = now;
+
+                if (player.powerupTimer > 0) {
+                    player.powerupTimer--;
+                }
+                if (player.fireCooldown > 0) {
+                    player.fireCooldown--;
+                }
+
+                movePlayer();
+                updateBullets();
+                updateEnemies();
+                updatePowerups();
+                checkCollisions();
+            }
+
+            function movePlayer() {
+                if ((keys['ArrowLeft'] || keys['KeyA'] || gamepadState.left) && player.x > 0) {
+                    player.x -= PLAYER.S;
+                }
+                if ((keys['ArrowRight'] || keys['KeyD'] || gamepadState.right) && player.x < canvas.width - player.w) {
+                    player.x += PLAYER.S;
+                }
+            }
+
+            function updateBullets() {
+                bullets.forEach((b, i) => {
+                    b.x += b.vx;
+                    b.y += b.vy;
+                    if (b.y < 0 || b.x < 0 || b.x > canvas.width) {
+                        bullets.splice(i, 1);
+                    }
+                });
+
+                enemyBullets.forEach((b, i) => {
+                    if (b.vx) {
+                        b.x += b.vx;
+                        b.y += b.vy;
+                    } else {
+                        b.y += b.speed;
+                    }
+                    if (b.y > canvas.height || b.y < 0 || b.x < 0 || b.x > canvas.width) {
+                        enemyBullets.splice(i, 1);
+                    }
+                });
+            }
+
             function updateEnemies() {
-                const remainingRatio = enemies.length / totalEnemies, speedMultiplier = 1 + (1 - remainingRatio) * currentDifficulty.speedMod, fireMultiplier = 1 + (1 - remainingRatio) * currentDifficulty.fireMod, waveFireMod = 1 + (wave - 1) * 0.1;
+                const remainingRatio = enemies.length / totalEnemies;
+                const speedMultiplier = 1 + (1 - remainingRatio) * currentDifficulty.speedMod;
+                const fireMultiplier = 1 + (1 - remainingRatio) * currentDifficulty.fireMod;
+                const waveFireMod = 1 + (wave - 1) * 0.1;
                 let wallHit = false;
+
                 enemies.forEach(enemy => {
                     enemy.x += ENEMY.SX * enemyDirection * wave * speedMultiplier;
-                    if (enemy.x <= 10 || enemy.x + enemy.w >= canvas.width - 10) wallHit = true;
-                    if (Math.random() < ENEMY.FC * waveFireMod * fireMultiplier) shootFrom(enemy);
-                    if (enemy.y + enemy.h > player.y) setGameOver();
+                    if (enemy.x <= 10 || enemy.x + enemy.w >= canvas.width - 10) {
+                        wallHit = true;
+                    }
+                    if (Math.random() < ENEMY.FC * waveFireMod * fireMultiplier) {
+                        shootFrom(enemy);
+                    }
+                    if (enemy.y + enemy.h > player.y) {
+                        setGameOver();
+                    }
                 });
-                if (wallHit) { enemyDirection *= -1; enemies.forEach(e => e.y += ENEMY.SY); }
+
+                if (wallHit) {
+                    enemyDirection *= -1;
+                    enemies.forEach(e => {
+                        e.y += ENEMY.SY;
+                    });
+                }
             }
-            function shootFrom(enemy) { const shotType = Math.random(), px = player.x + player.w / 2, py = player.y, ex = enemy.x + enemy.w / 2, ey = enemy.y + enemy.h; if (enemies.length / totalEnemies < 0.25 && shotType < 0.1 * currentDifficulty.specialShotChance) { const angle = Math.atan2(py - ey, px - ex); for (let i = -2; i <= 2; i++) enemyBullets.push({ x: ex, y: ey, w: 8, h: 8, color: `hsl(${baseHue + 330}, 100%, 70%)`, vx: Math.cos(angle + i*0.2) * 3, vy: Math.sin(angle+i*0.2) * 3 }); } else if (enemies.length / totalEnemies < 0.6 && shotType < 0.2 * currentDifficulty.specialShotChance) { const angle = Math.atan2(py - ey, px - ex); enemyBullets.push({ x: ex, y: ey, w: 8, h: 8, color: `hsl(${baseHue + 60}, 100%, 50%)`, vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4 }); } else { enemyBullets.push({ x: ex, y: ey, w: 5, h: 10, speed: 5, color: `hsl(${baseHue + 30}, 100%, 50%)` }); } }
-            function updatePowerups() { powerups.forEach((p, i) => { p.y += p.vy; if (p.y > canvas.height) powerups.splice(i, 1); }); }
+            
+            function shootFrom(enemy) {
+                const shotType = Math.random();
+                const px = player.x + player.w / 2;
+                const py = player.y;
+                const ex = enemy.x + enemy.w / 2;
+                const ey = enemy.y + enemy.h;
+                
+                if (enemies.length / totalEnemies < 0.25 && shotType < 0.1 * currentDifficulty.specialShotChance) {
+                    const angle = Math.atan2(py - ey, px - ex);
+                    for (let i = -2; i <= 2; i++) {
+                        enemyBullets.push({ x: ex, y: ey, w: 8, h: 8, color: `hsl(${baseHue + 330}, 100%, 70%)`, vx: Math.cos(angle + i * 0.2) * 3, vy: Math.sin(angle + i * 0.2) * 3 });
+                    }
+                } else if (enemies.length / totalEnemies < 0.6 && shotType < 0.2 * currentDifficulty.specialShotChance) {
+                    const angle = Math.atan2(py - ey, px - ex);
+                    enemyBullets.push({ x: ex, y: ey, w: 8, h: 8, color: `hsl(${baseHue + 60}, 100%, 50%)`, vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4 });
+                } else {
+                    enemyBullets.push({ x: ex, y: ey, w: 5, h: 10, speed: 5, color: `hsl(${baseHue + 30}, 100%, 50%)` });
+                }
+            }
+
+            function updatePowerups() {
+                powerups.forEach((p, i) => {
+                    p.y += p.vy;
+                    if (p.y > canvas.height) {
+                        powerups.splice(i, 1);
+                    }
+                });
+            }
+
             function checkCollisions() {
-                enemyBullets.forEach((bullet) => { if (isColliding(bullet, player)) setGameOver(); });
-                powerups.forEach((item, i) => { const itemRect = { x: item.x - item.size, y: item.y - item.size, w: item.size*2, h: item.size*2 }; if (isColliding(itemRect, player)) { player.powerupTimer = POWERUP_DURATION * currentDifficulty.powerupMultiplier; playSound('powerup'); powerups.splice(i, 1); } });
+                enemyBullets.forEach((bullet) => {
+                    if (isColliding(bullet, player)) {
+                        setGameOver();
+                    }
+                });
+
+                powerups.forEach((item, i) => {
+                    const itemRect = { x: item.x - item.size, y: item.y - item.size, w: item.size * 2, h: item.size * 2 };
+                    if (isColliding(itemRect, player)) {
+                        player.powerupTimer = POWERUP_DURATION * currentDifficulty.powerupMultiplier;
+                        playSound('powerup');
+                        powerups.splice(i, 1);
+                    }
+                });
+
                 for (let i = bullets.length - 1; i >= 0; i--) {
                     for (let j = enemies.length - 1; j >= 0; j--) {
                         if (isColliding(bullets[i], enemies[j])) {
-                            if (enemies[j].isSpecial) powerups.push({ x: enemies[j].x + enemies[j].w / 2, y: enemies[j].y + enemies[j].h / 2, size: 15, vy: 2 });
-                            playSound('explode'); createExplosion(enemies[j].x + enemies[j].w / 2, enemies[j].y + enemies[j].h / 2, [`hsl(${baseHue+300},100%,50%)`, `hsl(${baseHue+180},100%,50%)`, '#fff'], 50);
+                            if (enemies[j].isSpecial) {
+                                powerups.push({ x: enemies[j].x + enemies[j].w / 2, y: enemies[j].y + enemies[j].h / 2, size: 15, vy: 2 });
+                            }
+                            playSound('explode');
+                            createExplosion(enemies[j].x + enemies[j].w / 2, enemies[j].y + enemies[j].h / 2, [`hsl(${baseHue+300},100%,50%)`, `hsl(${baseHue+180},100%,50%)`, '#fff'], 50);
                             score += Math.floor((enemyScores[enemies[j].graphicIndex] || 10) * wave * currentDifficulty.scoreMultiplier);
-                            bullets.splice(i, 1); enemies.splice(j, 1); break;
+                            bullets.splice(i, 1);
+                            enemies.splice(j, 1);
+                            break;
                         }
                     }
                 }
-                if (enemies.length === 0) { playSound('waveClear'); wave++; createEnemies(); totalEnemies = enemies.length; bullets = []; powerups = []; updateColors(); }
-                particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.04; if (p.alpha <= 0) particles.splice(i, 1); });
+
+                if (enemies.length === 0) {
+                    playSound('waveClear');
+                    wave++;
+                    createEnemies();
+                    totalEnemies = enemies.length;
+                    bullets = [];
+                    powerups = [];
+                    updateColors();
+                }
+
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= 0.04;
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                });
             }
+
             function setGameOver() {
-                gameState = 'GAME_OVER'; stopAllBGM(); playSound('playerDie');
-                if (score > highScore) { newHighScore = true; highScore = score; localStorage.setItem('danmakuInvaderHighScore', highScore); setTimeout(() => playSound('highScore'), 500); }
+                gameState = 'GAME_OVER';
+                lastFrameTime = 0;
+                stopAllBGM();
+                playSound('playerDie');
+                if (score > highScore) {
+                    newHighScore = true;
+                    highScore = score;
+                    localStorage.setItem('danmakuInvaderHighScore', highScore);
+                    setTimeout(() => playSound('highScore'), 500);
+                }
             }
 
             // ==================================================================
-            // 6. 描画処理 (Draw)
+            // 6. 描画処理
             // ==================================================================
-            function draw() { drawBackground(); switch (gameState) { case 'TITLE': drawTitleScreen(); break; case 'DIFFICULTY': drawDifficultySelect(); break; case 'PLAYING': drawPlaying(); break; case 'PAUSED': drawPlaying(); drawPausedScreen(); break; case 'GAME_OVER': drawGameOver(); break; } }
-            function drawBackground() { ctx.fillStyle = 'rgba(0, 0, 10, 0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = `hsl(${baseHue + 300}, 100%, 50%, ${gridAlpha})`; ctx.lineWidth = 1; for (let i = 0; i < canvas.height; i += 20) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); } for (let i = 0; i < canvas.width; i += 20) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); } ctx.fillStyle = '#fff'; stars.forEach(s => ctx.fillRect(s.x, s.y, s.size, s.size)); }
-            function drawTitleScreen() { drawLogo(); drawText(`HI-SCORE: ${highScore}`, canvas.width / 2, 430, 20, '#fff'); drawText("Press Enter to Start", canvas.width / 2, 480, 20, `hsl(180, 100%, 50%)`); }
-            function drawLogo() { const grad = ctx.createLinearGradient(0, 0, canvas.width, 0); grad.addColorStop(0, "hsl(320, 100%, 50%)"); grad.addColorStop(0.5, "hsl(220, 100%, 70%)"); grad.addColorStop(1, "hsl(180, 100%, 50%)"); ctx.font = `80px 'Press Start 2P'`; ctx.fillStyle = grad; ctx.textAlign = "center"; ctx.shadowColor = "hsl(300, 100%, 80%)"; ctx.shadowBlur = 30; ctx.fillText("DANMAKU", canvas.width / 2, 200); ctx.shadowBlur = 20; ctx.fillText("INVADER", canvas.width / 2, 290); ctx.font = `40px 'Press Start 2P'`; ctx.fillStyle = `hsl(50, 100%, 60%)`; ctx.shadowColor = `hsl(50, 100%, 60%)`; ctx.shadowBlur = 15; ctx.fillText("XTREME+", canvas.width / 2, 360); ctx.textAlign = "left"; ctx.shadowBlur = 0; }
-            function drawDifficultySelect() { drawText("SELECT DIFFICULTY", canvas.width/2, 150, 40, '#fff'); difficultySettings.forEach((d, i) => drawText(d.name, canvas.width / 2, 250 + i * 50, 30, i === selectedDifficultyIndex ? `hsl(50, 100%, 50%)` : '#fff')); }
-            function drawPlaying() { drawPlayer(); bullets.forEach(drawBullet); enemyBullets.forEach(drawEnemyBullet); enemies.forEach(drawEnemy); powerups.forEach(drawPowerup); particles.forEach(p => { ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); ctx.globalAlpha = 1.0; }); drawUI(); }
-            function drawPlayer() { ctx.fillStyle = player.powerupTimer > 0 ? `hsl(${(Date.now()/10)%360}, 100%, 70%)` : `hsl(${baseHue + 180}, 100%, 50%)`; drawGlow(()=>{ctx.beginPath();ctx.moveTo(player.x,player.y+player.h);ctx.lineTo(player.x+player.w/2,player.y);ctx.lineTo(player.x+player.w,player.y+player.h);ctx.closePath();ctx.fill();}); }
-            function drawBullet(b) { ctx.fillStyle = '#fff'; drawGlow(() => { if (b.vx === 0) ctx.fillRect(b.x - b.w/2, b.y, b.w, b.h); else { ctx.beginPath(); ctx.arc(b.x, b.y, b.w / 2, 0, 2 * Math.PI); ctx.fill(); } }); }
-            function drawEnemyBullet(b) { ctx.fillStyle = b.color; drawGlow(() => { if (b.vx) { ctx.beginPath(); ctx.arc(b.x, b.y, b.w / 2, 0, 2 * Math.PI); ctx.fill(); } else { ctx.fillRect(b.x - b.w / 2, b.y, b.w, b.h); } }); }
-            function drawEnemy(e) { ctx.fillStyle = `hsl(${(baseHue + 240 + e.graphicIndex * 15) % 360}, 100%, 60%)`; drawGlow(() => { if (e.isSpecial) { ctx.shadowColor = `hsl(${(Date.now() / 5) % 360}, 100%, 80%)`; ctx.shadowBlur = 25; } drawPixelArt(ctx, e.x, e.y, enemyGraphics[e.graphicIndex], e.w); }); }
-            function drawPowerup(p){ctx.fillStyle=`hsl(60,100%,50%)`;drawGlow(()=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Date.now()/200);ctx.beginPath();for(let i=0;i<5;i++){ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*p.size,-Math.sin((18+i*72)*Math.PI/180)*p.size);ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*(p.size/2),-Math.sin((54+i*72)*Math.PI/180)*(p.size/2));} ctx.closePath();ctx.fill();ctx.restore();});}
-            function drawUI() { if(player.powerupTimer > 0){ctx.fillStyle=`hsl(60,100%,50%)`;ctx.fillRect(player.x,player.y+player.h+5,player.w*(player.powerupTimer/(POWERUP_DURATION * currentDifficulty.powerupMultiplier)),4);} drawText(`SCORE: ${score}`, 10, 30, 20, '#fff', "left"); drawText(`WAVE: ${wave}`, canvas.width - 10, 30, 20, '#fff', "right"); }
-            function drawPausedScreen() { ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height); drawText("PAUSED", canvas.width / 2, canvas.height / 2 - 20, 60, '#fff'); drawText("Press Q or B(PAD) to Quit", canvas.width / 2, canvas.height / 2 + 40, 20, '#fff'); }
-            function drawGameOver() { drawPlaying(); drawText("GAME OVER", canvas.width / 2, canvas.height / 2 - 80, 60, `hsl(${baseHue}, 100%, 50%)`); if (newHighScore) { drawText("NEW RECORD!!", canvas.width/2, canvas.height/2 - 20, 30, 'hsl(50, 100%, 60%)'); } drawText(`SCORE: ${score}`, canvas.width / 2, canvas.height / 2 + 40, 30, '#fff'); drawText(`HI-SCORE: ${highScore}`, canvas.width / 2, canvas.height / 2 + 80, 20, '#fff'); drawText("Press Enter for Title", canvas.width / 2, canvas.height / 2 + 140, 20, `hsl(${baseHue+180}, 100%, 70%)`); }
+            function draw() {
+                drawBackground();
+                switch (gameState) {
+                    case 'TITLE':       drawTitleScreen(); break;
+                    case 'DIFFICULTY':  drawDifficultySelect(); break;
+                    case 'PLAYING':     drawPlaying(); break;
+                    case 'PAUSED':      drawPlaying(); drawPausedScreen(); break;
+                    case 'GAME_OVER':   drawPlaying(); drawGameOver(); break;
+                }
+            }
+
+            function drawBackground() {
+                ctx.fillStyle = 'rgba(0, 0, 10, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = `hsl(${baseHue + 300}, 100%, 50%, ${gridAlpha})`;
+                ctx.lineWidth = 1;
+                for (let i = 0; i < canvas.height; i += 20) {
+                    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+                }
+                for (let i = 0; i < canvas.width; i += 20) {
+                    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+                }
+
+                ctx.fillStyle = '#fff';
+                stars.forEach(s => {
+                    ctx.fillRect(s.x, s.y, s.size, s.size);
+                });
+            }
+
+            function drawTitleScreen() {
+                drawLogo();
+                drawText(`HI-SCORE: ${highScore}`, canvas.width / 2, 430, 20, '#fff');
+                const startText = (lastInputDevice === 'gamepad') ? "Press Start or A-button to Start" : "Press Enter to Start";
+                drawText(startText, canvas.width / 2, 480, 20, `hsl(180, 100%, 50%)`);
+            }
+
+            function drawLogo() {
+                const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                grad.addColorStop(0, "hsl(320, 100%, 50%)");
+                grad.addColorStop(0.5, "hsl(220, 100%, 70%)");
+                grad.addColorStop(1, "hsl(180, 100%, 50%)");
+
+                ctx.font = `80px 'Press Start 2P'`;
+                ctx.fillStyle = grad;
+                ctx.textAlign = "center";
+                ctx.shadowColor = "hsl(300, 100%, 80%)";
+                ctx.shadowBlur = 30;
+                ctx.fillText("DANMAKU", canvas.width / 2, 200);
+
+                ctx.shadowBlur = 20;
+                ctx.fillText("INVADER", canvas.width / 2, 290);
+
+                ctx.font = `40px 'Press Start 2P'`;
+                ctx.fillStyle = `hsl(50, 100%, 60%)`;
+                ctx.shadowColor = `hsl(50, 100%, 60%)`;
+                ctx.shadowBlur = 15;
+                ctx.fillText("XTREME+", canvas.width / 2, 360);
+
+                ctx.textAlign = "left";
+                ctx.shadowBlur = 0;
+            }
+
+            function drawDifficultySelect() {
+                drawText("SELECT DIFFICULTY", canvas.width / 2, 150, 40, '#fff');
+                difficultySettings.forEach((d, i) => {
+                    const color = i === selectedDifficultyIndex ? `hsl(50, 100%, 50%)` : '#fff';
+                    drawText(d.name, canvas.width / 2, 250 + i * 50, 30, color);
+                });
+            }
+
+            function drawPlaying() {
+                drawPlayer();
+                bullets.forEach(drawBullet);
+                enemyBullets.forEach(drawEnemyBullet);
+                enemies.forEach(drawEnemy);
+                powerups.forEach(drawPowerup);
+                particles.forEach(p => {
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    ctx.globalAlpha = 1.0;
+                });
+                drawUI();
+            }
+
+            function drawPlayer() {
+                ctx.fillStyle = player.powerupTimer > 0 ? `hsl(${(Date.now()/10)%360}, 100%, 70%)` : `hsl(${baseHue + 180}, 100%, 50%)`;
+                drawGlow(() => {
+                    ctx.beginPath();
+                    ctx.moveTo(player.x, player.y + player.h);
+                    ctx.lineTo(player.x + player.w / 2, player.y);
+                    ctx.lineTo(player.x + player.w, player.y + player.h);
+                    ctx.closePath();
+                    ctx.fill();
+                });
+            }
+
+            function drawBullet(b) {
+                ctx.fillStyle = '#fff';
+                drawGlow(() => {
+                    if (b.vx === 0) {
+                        ctx.fillRect(b.x - b.w / 2, b.y, b.w, b.h);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(b.x, b.y, b.w / 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            function drawEnemyBullet(b) {
+                ctx.fillStyle = b.color;
+                drawGlow(() => {
+                    if (b.vx) {
+                        ctx.beginPath();
+                        ctx.arc(b.x, b.y, b.w / 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(b.x - b.w / 2, b.y, b.w, b.h);
+                    }
+                });
+            }
+            
+            function drawEnemy(e) {
+                const isPulsing = e.isSpecial;
+                ctx.fillStyle = isPulsing ? `hsl(${(Date.now() / 10) % 360}, 100%, 85%)` : `hsl(${(baseHue + 240 + e.graphicIndex * 15) % 360}, 100%, 60%)`;
+                drawGlow(() => {
+                    let size = e.w, x = e.x, y = e.y;
+                    if (isPulsing) {
+                        const pulse = Math.sin(Date.now() / 150);
+                        ctx.shadowColor = `hsl(${(Date.now() / 5) % 360}, 100%, 80%)`;
+                        ctx.shadowBlur = 20 + pulse * 10;
+                        size = e.w * (1 + pulse * 0.1);
+                        x = e.x - (size - e.w) / 2;
+                        y = e.y - (size - e.w) / 2;
+                    }
+                    drawPixelArt(ctx, x, y, enemyGraphics[e.graphicIndex], size);
+                });
+            }
+
+            function drawPowerup(p) {
+                const hue = (Date.now() / 15) % 360;
+                ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
+                drawGlow(() => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                const textColor = `hsl(${(hue + 180) % 360}, 100%, 95%)`;
+                drawText('P', p.x, p.y, Math.floor(p.size * 1.2), textColor, 'center', 'middle');
+            }
+
+            function drawUI() {
+                if (player.powerupTimer > 0) {
+                    ctx.fillStyle = `hsl(60,100%,50%)`;
+                    ctx.fillRect(player.x, player.y + player.h + 5, player.w * (player.powerupTimer / (POWERUP_DURATION * currentDifficulty.powerupMultiplier)), 4);
+                }
+                drawText(`SCORE: ${score}`, 10, 30, 20, '#fff', "left");
+                drawText(`WAVE: ${wave}`, canvas.width - 10, 30, 20, '#fff', "right");
+                drawText(formatTime(elapsedTime), canvas.width / 2, 30, 20, '#fff', "center");
+            }
+
+            function drawPausedScreen() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                drawText("PAUSED", canvas.width / 2, canvas.height / 2 - 20, 60, '#fff');
+                drawText("Press Q or Select(PAD) to Quit", canvas.width / 2, canvas.height / 2 + 40, 20, '#fff');
+            }
+
+            function drawGameOver() {
+                drawText("GAME OVER", canvas.width / 2, canvas.height / 2 - 80, 60, `hsl(${baseHue}, 100%, 50%)`);
+                if (newHighScore) {
+                    drawText("NEW RECORD!!", canvas.width / 2, canvas.height / 2 - 20, 30, 'hsl(50, 100%, 60%)');
+                }
+                drawText(`SCORE: ${score}`, canvas.width / 2, canvas.height / 2 + 40, 30, '#fff');
+                drawText(`HI-SCORE: ${highScore}`, canvas.width / 2, canvas.height / 2 + 80, 20, '#fff');
+                drawText("Press Enter or START(PAD) for Title", canvas.width / 2, canvas.height / 2 + 140, 20, `hsl(${baseHue+180}, 100%, 70%)`);
+            }
             
             // ==================================================================
             // 7. ヘルパー関数
             // ==================================================================
-            function isColliding(r1, r2) { return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y; }
-            function createExplosion(x,y,colors,count){for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,size:Math.random()*3+2,color:colors[Math.floor(Math.random()*colors.length)],alpha:1.0});}
-            function drawText(text,x,y,size,color,align="center"){ctx.font=`${size}px 'Press Start 2P'`;ctx.fillStyle=color;ctx.textAlign=align;ctx.shadowColor=color;ctx.shadowBlur=10;ctx.fillText(text,x,y);ctx.shadowBlur=0;ctx.textAlign="left";}
-            function drawPixelArt(ctx,x,y,p,s){const ps=s/p[0].length;for(let r=0;r<p.length;r++)for(let c=0;c<p[r].length;c++)if(p[r][c])ctx.fillRect(x+c*ps,y+r*ps,ps,ps);}
-            function drawGlow(drawFunc){ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=15;drawFunc();ctx.shadowBlur=0;}
+            function formatTime(ms) {
+                if (!ms || ms < 0) {
+                    ms = 0;
+                }
+                const minutes = Math.floor(ms / 60000);
+                const seconds = Math.floor((ms % 60000) / 1000);
+                const milliseconds = Math.floor(ms % 1000);
+                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(3, '0')}`;
+            }
+
+            function resizeAndScaleContent() {
+                const scalableContent = document.getElementById('scalable-content');
+                const wrapper = document.getElementById('fullscreen-wrapper');
+                if (!document.fullscreenElement) {
+                    scalableContent.style.transform = '';
+                    return;
+                }
+                const contentWidth = 806; // canvas(800) + border(6)
+                const contentHeight = 600 + 6 + 20 + 45; // canvas(600) + border(6) + margin-top(20) + controls-info(approx 45)
+                const scale = Math.min(wrapper.clientWidth / contentWidth, wrapper.clientHeight / contentHeight);
+                scalableContent.style.transform = `scale(${scale})`;
+            }
+
+            function toggleFullScreen() {
+                const wrapper = document.getElementById('fullscreen-wrapper');
+                if (!document.fullscreenElement) {
+                    wrapper.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            function isColliding(r1, r2) {
+                return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
+            }
+
+            function createExplosion(x, y, colors, count) {
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x, y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        size: Math.random() * 3 + 2,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1.0
+                    });
+                }
+            }
+            
+            function drawText(text, x, y, size, color, align = "center", baseline = "alphabetic") {
+                ctx.font = `${size}px 'Press Start 2P'`;
+                ctx.fillStyle = color;
+                ctx.textAlign = align;
+                ctx.textBaseline = baseline;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+                ctx.fillText(text, x, y);
+                ctx.shadowBlur = 0;
+                ctx.textAlign = "left"; // Reset to default
+                ctx.textBaseline = "alphabetic"; // Reset to default
+            }
+
+            function drawPixelArt(ctx, x, y, pixelData, size) {
+                const pixelSize = size / pixelData[0].length;
+                for (let r = 0; r < pixelData.length; r++) {
+                    for (let c = 0; c < pixelData[r].length; c++) {
+                        if (pixelData[r][c]) {
+                            ctx.fillRect(x + c * pixelSize, y + r * pixelSize, pixelSize, pixelSize);
+                        }
+                    }
+                }
+            }
+
+            function drawGlow(drawFunc) {
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = 15;
+                drawFunc();
+                ctx.shadowBlur = 0;
+            }
             
             // ==================================================================
             // 8. メインループとイベントリスナー
             // ==================================================================
             const actions = {};
+
             function doShoot() {
                 if (player.fireCooldown > 0) return;
+
                 const currentMaxBullets = player.powerupTimer > 0 ? MAX_BULLETS * 3 : MAX_BULLETS;
                 if (bullets.length < currentMaxBullets) {
                     playSound('shot');
                     player.fireCooldown = PLAYER.FIRE_COOLDOWN;
                     const shotX = player.x + player.w / 2;
+
                     if (player.powerupTimer > 0) {
                         const angle = Math.PI / 6;
-                        bullets.push({ x:shotX, y:player.y, w:5, h:15, vx:0, vy:-12 });
-                        bullets.push({ x:shotX, y:player.y, w:8, h:8, vx:-12*Math.sin(angle), vy:-12*Math.cos(angle) });
-                        bullets.push({ x:shotX, y:player.y, w:8, h:8, vx:12*Math.sin(angle), vy:-12*Math.cos(angle) });
+                        bullets.push({ x: shotX, y: player.y, w: 5, h: 15, vx: 0, vy: -12 });
+                        bullets.push({ x: shotX, y: player.y, w: 8, h: 8, vx: -12 * Math.sin(angle), vy: -12 * Math.cos(angle) });
+                        bullets.push({ x: shotX, y: player.y, w: 8, h: 8, vx: 12 * Math.sin(angle), vy: -12 * Math.cos(angle) });
                     } else {
-                        bullets.push({ x:shotX, y:player.y, w:5, h:15, vx:0, vy:-12 });
+                        bullets.push({ x: shotX, y: player.y, w: 5, h: 15, vx: 0, vy: -12 });
                     }
                 }
             }
-            function doPause() { if(gameState === 'PLAYING') { gameState = 'PAUSED'; playSound('pause'); } else if (gameState === 'PAUSED') { gameState = 'PLAYING'; playSound('pause'); } }
-            function doQuit() { if(gameState === 'PAUSED') { gameState = 'TITLE'; startTitleBGM(); } }
-            function doSelectDown() { selectedDifficultyIndex = (selectedDifficultyIndex + 1) % difficultySettings.length; playSound('select'); }
-            function doSelectUp() { selectedDifficultyIndex = (selectedDifficultyIndex - 1 + difficultySettings.length) % difficultySettings.length; playSound('select'); }
-            function doConfirm() { switch(gameState) { case 'DIFFICULTY': currentDifficulty = difficultySettings[selectedDifficultyIndex]; initGame(); startGameBGM(); gameState = 'PLAYING'; playSound('confirm'); break; case 'TITLE': initAudio(); startTitleBGM(); gameState = 'DIFFICULTY'; playSound('confirm'); break; case 'GAME_OVER': startTitleBGM(); gameState = 'TITLE'; break; } }
 
-            function handleGamepadInput() {
-                const gamepads = navigator.getGamepads(); if (!gamepads[0]) return; const gp = gamepads[0];
-                gamepadState.left = gp.axes[0] < -0.5 || gp.buttons[14].pressed;
-                gamepadState.right = gp.axes[0] > 0.5 || gp.buttons[15].pressed;
-                gamepadState.shoot = gp.buttons[0].pressed || gp.buttons[2].pressed;
-                const wasPressed = (i) => gamepadState.prevButtons[i]; const isPressed = (i) => gp.buttons[i].pressed;
-                const currentAxisY = gp.axes[1];
-                if ((isPressed(13) && !wasPressed(13)) || (currentAxisY > 0.5 && gamepadState.prevAxisY <= 0.5)) doSelectDown();
-                if ((isPressed(12) && !wasPressed(12)) || (currentAxisY < -0.5 && gamepadState.prevAxisY >= -0.5)) doSelectUp();
-                if (isPressed(0) && !wasPressed(0)) doConfirm();
-                if (isPressed(9) && !wasPressed(9)) doPause();
-                if (isPressed(1) && !wasPressed(1)) doQuit();
-                gamepadState.prevButtons = gp.buttons.map(b => b.pressed); gamepadState.prevAxisY = currentAxisY;
-            }
-            function handleKeydown(e) {
-                const code = e.code; keys[code] = true;
-                switch (gameState) {
-                    case 'PLAYING': if (code === 'Space' || code === 'ArrowUp') actions.shoot = true; else if (code === 'Escape') doPause(); break;
-                    case 'PAUSED': if (code === 'Escape') doPause(); else if (code === 'KeyQ') doQuit(); break;
-                    case 'DIFFICULTY': if (code === 'ArrowDown') doSelectDown(); else if (code === 'ArrowUp') doSelectUp(); else if (code === 'Enter') doConfirm(); break;
-                    default: if (code === 'Enter') doConfirm(); break;
+            function doPause() {
+                if (gameState === 'PLAYING') {
+                    gameState = 'PAUSED';
+                    stopAllBGM();
+                    playSound('pause');
+                } else if (gameState === 'PAUSED') {
+                    gameState = 'PLAYING';
+                    startGameBGM();
+                    playSound('pause');
                 }
             }
-            function handleKeyup(e) { keys[e.code] = false; if (e.code === 'Space' || e.code === 'ArrowUp') actions.shoot = false; }
-            function processActions() { if (gameState === 'PLAYING' && (actions.shoot || gamepadState.shoot)) doShoot(); }
-            function gameLoop() { requestAnimationFrame(gameLoop); processActions(); update(); draw(); }
+
+            function doQuit() {
+                if (gameState === 'PAUSED') {
+                    gameState = 'TITLE';
+                    startTitleBGM();
+                }
+            }
+
+            function doSelectDown() {
+                selectedDifficultyIndex = (selectedDifficultyIndex + 1) % difficultySettings.length;
+                playSound('select');
+            }
+
+            function doSelectUp() {
+                selectedDifficultyIndex = (selectedDifficultyIndex - 1 + difficultySettings.length) % difficultySettings.length;
+                playSound('select');
+            }
+
+            function doConfirm() {
+                switch (gameState) {
+                    case 'DIFFICULTY':
+                        currentDifficulty = difficultySettings[selectedDifficultyIndex];
+                        initGame();
+                        lastFrameTime = performance.now();
+                        startGameBGM();
+                        gameState = 'PLAYING';
+                        playSound('confirm');
+                        break;
+                    case 'TITLE':
+                        initAudio();
+                        startTitleBGM();
+                        gameState = 'DIFFICULTY';
+                        playSound('confirm');
+                        break;
+                    case 'GAME_OVER':
+                        startTitleBGM();
+                        gameState = 'TITLE';
+                        break;
+                }
+            }
+
+            function handleGamepadInput() {
+                const gamepads = navigator.getGamepads();
+                if (!gamepads[0]) return;
+
+                const gp = gamepads[0];
+                const axisMoved = gp.axes.some(axis => Math.abs(axis) > 0.2);
+                const newButtonPressed = gp.buttons.some((button, i) => button.pressed && !(gamepadState.prevButtons[i] || false));
+                if (axisMoved || newButtonPressed) {
+                    lastInputDevice = 'gamepad';
+                }
+
+                gamepadState.left = gp.axes[0] < -0.5 || (gp.buttons[GP_BUTTON.DPAD_LEFT] && gp.buttons[GP_BUTTON.DPAD_LEFT].pressed);
+                gamepadState.right = gp.axes[0] > 0.5 || (gp.buttons[GP_BUTTON.DPAD_RIGHT] && gp.buttons[GP_BUTTON.DPAD_RIGHT].pressed);
+                gamepadState.shoot = (gp.buttons[GP_BUTTON.A] && gp.buttons[GP_BUTTON.A].pressed) || (gp.buttons[GP_BUTTON.X] && gp.buttons[GP_BUTTON.X].pressed);
+
+                const wasPressed = (i) => gamepadState.prevButtons[i] || false;
+                const isPressed = (i) => gp.buttons[i] && gp.buttons[i].pressed;
+                const currentAxisY = gp.axes[1];
+
+                if (gameState === 'DIFFICULTY') {
+                    if ((isPressed(GP_BUTTON.DPAD_DOWN) && !wasPressed(GP_BUTTON.DPAD_DOWN)) || (currentAxisY > 0.5 && gamepadState.prevAxisY <= 0.5)) {
+                        doSelectDown();
+                    }
+                    if ((isPressed(GP_BUTTON.DPAD_UP) && !wasPressed(GP_BUTTON.DPAD_UP)) || (currentAxisY < -0.5 && gamepadState.prevAxisY >= -0.5)) {
+                        doSelectUp();
+                    }
+                }
+
+                const aPressed = isPressed(GP_BUTTON.A) && !wasPressed(GP_BUTTON.A);
+                if (aPressed && (gameState === 'TITLE' || gameState === 'DIFFICULTY')) {
+                    doConfirm();
+                }
+
+                const startPressed = isPressed(GP_BUTTON.START) && !wasPressed(GP_BUTTON.START);
+                if (startPressed) {
+                    if (gameState === 'TITLE' || gameState === 'DIFFICULTY' || gameState === 'GAME_OVER') {
+                        doConfirm();
+                    } else {
+                        doPause();
+                    }
+                }
+
+                const selectPressed = isPressed(GP_BUTTON.SELECT) && !wasPressed(GP_BUTTON.SELECT);
+                if (selectPressed && gameState === 'PAUSED') {
+                    doQuit();
+                }
+                
+                gamepadState.prevButtons = gp.buttons.map(b => b.pressed);
+                gamepadState.prevAxisY = currentAxisY;
+            }
             
-            soundToggleButton.addEventListener('click', () => { toggleSound(); soundToggleButton.blur(); });
-            soundToggleButton.addEventListener('keydown', (e) => { e.preventDefault(); });
+            function handleKeydown(e) {
+                lastInputDevice = 'keyboard';
+                const code = e.code;
+                if (code === 'KeyF') {
+                    e.preventDefault();
+                    toggleFullScreen();
+                    return;
+                }
+                
+                keys[code] = true;
+                switch (gameState) {
+                    case 'PLAYING':
+                        if (code === 'Space' || code === 'ArrowUp') actions.shoot = true;
+                        else if (code === 'Escape') doPause();
+                        break;
+                    case 'PAUSED':
+                        if (code === 'Escape') doPause();
+                        else if (code === 'KeyQ') doQuit();
+                        break;
+                    case 'DIFFICULTY':
+                        if (code === 'ArrowDown') doSelectDown();
+                        else if (code === 'ArrowUp') doSelectUp();
+                        else if (code === 'Enter') doConfirm();
+                        break;
+                    default: // TITLE, GAME_OVER
+                        if (code === 'Enter') doConfirm();
+                        break;
+                }
+            }
+
+            function handleKeyup(e) {
+                keys[e.code] = false;
+                if (e.code === 'Space' || e.code === 'ArrowUp') {
+                    actions.shoot = false;
+                }
+            }
+
+            function processActions() {
+                if (gameState === 'PLAYING' && (actions.shoot || gamepadState.shoot)) {
+                    doShoot();
+                }
+            }
+
+            function gameLoop() {
+                requestAnimationFrame(gameLoop);
+                processActions();
+                update();
+                draw();
+            }
+            
+            // --- 初期化とイベントリスナー設定 ---
+            soundToggleButton.addEventListener('click', () => {
+                toggleSound();
+                soundToggleButton.blur();
+            });
+            soundToggleButton.addEventListener('keydown', (e) => {
+                e.preventDefault();
+            });
+
             window.addEventListener('keydown', handleKeydown);
             window.addEventListener('keyup', handleKeyup);
+            document.addEventListener('fullscreenchange', resizeAndScaleContent);
+            window.addEventListener('resize', resizeAndScaleContent);
+
             highScore = parseInt(localStorage.getItem('danmakuInvaderHighScore') || '0', 10);
             createStars();
             gameLoop();
