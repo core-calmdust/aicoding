@@ -579,7 +579,6 @@
                     ctx.stroke();
                 }
             },
-            // ★ 変更点: ヒット時のモンスターの口の形を四角に変更
             monster: m => {
                 ctx.fillStyle = colors.monster;
                 ctx.shadowColor = colors.monster;
@@ -611,7 +610,6 @@
                     ctx.lineTo(eye2X - eyeSize / 2, eye2Y + eyeSize / 2);
                     ctx.stroke();
                     
-                    // 口 (四角形)
                     ctx.fillStyle = colors.bg;
                     const mouthSize = 10;
                     const mouthX = m.x + m.width / 2 - mouthSize / 2;
@@ -934,7 +932,7 @@
                         
                         if (!m.isHit) {
                             m.isHit = true;
-                            // ★ 変更点: ヒット表示時間を 1秒 から 0.7秒 (700ms) に変更
+                            // ★ 変更点: ヒット表示時間を0.7秒 (700ms) に変更
                             setTimeout(() => { m.isHit = false; }, 700);
                         }
                         
@@ -1069,7 +1067,8 @@
 
                 let continueText = '';
                 if (isTouchDevice) { continueText = "Tap to Continue"; }
-                else if (useGamepadControls) { continueText = "Press A-Button to Return"; }
+                // ★ 変更点: ゲームオーバー時のテキストを修正
+                else if (useGamepadControls) { continueText = "Press Start or Button to Return"; }
                 else { continueText = "Press Enter to Return"; }
                 draw.text(continueText, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
 
@@ -1144,7 +1143,17 @@
                 else if (gameState === 'paused') resumeGame();
             }
             if (gameState === 'paused' && isButtonPressed(GAMEPAD_BUTTONS.SELECT)) goToTitle();
-            if (gameState === 'gameOver' && (isButtonPressed(GAMEPAD_BUTTONS.A) || isButtonPressed(GAMEPAD_BUTTONS.START))) goToTitle();
+            
+            // ★ 変更点: ゲームオーバー時の入力判定を修正
+            if (gameState === 'gameOver' && (
+                isButtonPressed(GAMEPAD_BUTTONS.A) ||
+                isButtonPressed(GAMEPAD_BUTTONS.B) ||
+                isButtonPressed(GAMEPAD_BUTTONS.X) ||
+                isButtonPressed(GAMEPAD_BUTTONS.Y) ||
+                isButtonPressed(GAMEPAD_BUTTONS.START)
+            )) {
+                goToTitle();
+            }
 
             if (gameState === 'title') {
                 const stickX = gamepad.axes[GAMEPAD_AXES.LEFT_X] ?? gamepad.axes[GAMEPAD_AXES.RIGHT_X];
