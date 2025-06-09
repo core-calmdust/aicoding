@@ -103,7 +103,6 @@
             
             function createSound(freq, dur, type, decay, pan, vol) {
                 if (!audioContext) return;
-
                 const osc = audioContext.createOscillator();
                 const gain = audioContext.createGain();
                 const panner = audioContext.createStereoPanner();
@@ -125,14 +124,14 @@
 
             function playSound(type) {
                 if (!soundEnabled) return;
-
                 switch (type) {
                     case 'shot':
                         createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3);
                         break;
                     case 'explode':
-                        createSound(110, 0.4, 'sawtooth', 0.8, 0, 0.5);
-                        setTimeout(() => createSound(55, 0.5, 'square', 0.8, 0, 0.5), 50);
+                        // 音量を0.5から0.2に下げる
+                        createSound(110, 0.4, 'sawtooth', 0.8, 0, 0.2);
+                        setTimeout(() => createSound(55, 0.5, 'square', 0.8, 0, 0.2), 50);
                         break;
                     case 'playerDie':
                         createSound(220, 0.8, 'sawtooth', 0.2, 0, 1);
@@ -170,29 +169,24 @@
 
             function playTitleBGM() {
                 if (!soundEnabled) return;
-                
                 const step = titleBeatCount % 16;
                 if (step % 4 === 0) {
                     createSound(titlePadNotes[Math.floor(step / 4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.2);
                 }
                 createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.1);
-                
                 titleBeatCount++;
             }
 
             function playGameBGM() {
                 if (!soundEnabled) return;
-                
                 const sixteenth = gameBeatCount % 32;
                 const measure = Math.floor(sixteenth / 16);
                 const step = sixteenth % 16;
-
                 if (step % 8 === 0) {
                     const bassNote = gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length];
                     createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.3);
                 }
                 createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.2);
-                
                 if (step === 0) {
                     createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 1);
                     canvas.classList.add('pulse');
@@ -208,7 +202,6 @@
                 if (step % 4 === 2) {
                     createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.08);
                 }
-                
                 gameBeatCount++;
             }
 
@@ -236,7 +229,6 @@
             function toggleSound() {
                 initAudio();
                 soundEnabled = !soundEnabled;
-                
                 if (soundEnabled) {
                     soundToggleButton.textContent = "SOUND ON";
                     if (gameState === 'PLAYING') {
@@ -266,7 +258,6 @@
                 wave = 1;
                 elapsedTime = 0;
                 lastFrameTime = 0;
-                
                 createEnemies();
                 totalEnemies = enemies.length;
                 updateColors();
@@ -338,10 +329,8 @@
                     elapsedTime += (now - lastFrameTime);
                 }
                 lastFrameTime = now;
-
                 if (player.powerupTimer > 0) player.powerupTimer--;
                 if (player.fireCooldown > 0) player.fireCooldown--;
-
                 movePlayer();
                 updateBullets();
                 updateEnemies();
@@ -385,7 +374,6 @@
                 const fireMultiplier = 1 + (1 - remainingRatio) * currentDifficulty.fireMod;
                 const waveFireMod = 1 + (wave - 1) * 0.1;
                 let wallHit = false;
-
                 enemies.forEach(enemy => {
                     enemy.x += ENEMY.SX * enemyDirection * wave * speedMultiplier;
                     if (enemy.x <= 10 || enemy.x + enemy.w >= canvas.width - 10) {
@@ -398,7 +386,6 @@
                         setGameOver();
                     }
                 });
-
                 if (wallHit) {
                     enemyDirection *= -1;
                     enemies.forEach(e => {
