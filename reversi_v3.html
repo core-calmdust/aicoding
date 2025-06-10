@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リバーシ v3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1e2a38;
+            --surface-color: #2c3e50;
+            --board-bg: #008080;
+            --border-color: #1a2531;
+            --text-color: #ecf0f1;
+            --text-muted-color: #bdc3c7;
+            --accent-color: #3498db;
+            --accent-hover-color: #2980b9;
+            --danger-color: #e74c3c;
+            --highlight-color: rgba(255, 255, 0, 0.7);
+            --board-size-pc: 600px;
+            --board-size-sp: 90vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            background-color: var(--board-bg);
+            border: 5px solid var(--surface-color);
+            border-radius: 8px;
+            padding: 5px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.2);
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .disc {
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .disc.black {
+            background: radial-gradient(circle at 30% 30%, #444, #111);
+        }
+
+        .disc.white {
+            background: radial-gradient(circle at 70% 70%, #fff, #ccc);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .last-move {
+            outline: 3px solid var(--highlight-color);
+            outline-offset: -3px;
+            border-radius: 2px;
+        }
+
+        .valid-move-hint::after {
+            content: '';
+            display: block;
+            width: 35%;
+            height: 35%;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: background-color 0.2s;
+        }
+
+        .valid-move-hint:hover::after {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .controls,
+        .game-info,
+        .kifu-controls,
+        .test-controls {
+            background-color: var(--surface-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+        
+        .controls label,
+        .player-color-selector > label,
+        .kifu-controls h3,
+        .test-controls label,
+        .test-controls h3 {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted-color);
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .kifu-controls h3,
+        .test-controls h3 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .controls select,
+        .test-controls select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 16px;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23bdc3c7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.3-5.5-12.8z%22/%3E%3C/svg%3E');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            cursor: pointer;
+        }
+
+        .controls button,
+        .kifu-controls button,
+        .test-controls button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        
+        .kifu-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .kifu-buttons button {
+            margin-top: 0;
+        }
+
+        .controls button:hover,
+        .kifu-controls button:hover,
+        .test-controls button:hover {
+            background-color: var(--accent-hover-color);
+        }
+
+        .controls button:disabled,
+        .kifu-controls button:disabled,
+        .test-controls button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .player-color-selector {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            width: 48%;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .radio-group input {
+            display: none;
+        }
+
+        .radio-group input:checked+span {
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .radio-group label:has(input:checked) {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .game-info p {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .game-info p:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .game-info span {
+            font-weight: bold;
+        }
+
+        #current-turn {
+            color: var(--accent-color);
+        }
+
+        #message-area {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--danger-color);
+            height: 25px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .test-cpu-selectors {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .test-cpu-selector {
+            flex: 1;
+        }
+
+        @media (max-width: 900px) {
+            .game-wrapper {
+                max-width: none;
+            }
+            .container { 
+                flex-direction: column; 
+                align-items: center; 
+                gap: 20px;
+                max-width: none;
+            }
+            .sidebar { 
+                flex-direction: row; 
+                width: 100%; 
+                max-width: var(--board-size-pc); 
+                align-items: stretch; 
+            }
+            .controls, .game-info { 
+                flex: 1; 
+            }
+            #board, .game-area { 
+                width: var(--board-size-sp); 
+                height: auto; 
+                max-width: 500px; 
+            }
+            .test-cpu-selectors { 
+                flex-direction: column; 
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .sidebar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="container">
+            <div class="sidebar">
+                <div class="controls">
+                    <label for="cpu-level">あなたの対戦相手:</label>
+                    <select id="cpu-level">
+                        <option value="1">レベル1 (ランダム)</option>
+                        <option value="2">レベル2 (最大反転)</option>
+                        <option value="3">レベル3 (場所評価)</option>
+                        <option value="4">レベル4 (α-β法 弱)</option>
+                        <option value="5">レベル5 (α-β法 強)</option>
+                        <option value="6">レベル6 (思考強化)</option>
+                        <option value="7" selected>レベル7 (定石+探索)</option>
+                    </select>
+                    <div class="player-color-selector">
+                        <label>あなたの色:</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="player_color" value="1" checked><span>先攻 (黒)</span></label>
+                            <label><input type="radio" name="player_color" value="2"><span>後攻 (白)</span></label>
+                        </div>
+                    </div>
+                    <button id="start-button">ゲーム開始 / リセット</button>
+                </div>
+                <div class="game-info">
+                    <p>手数: <span id="turn-count">0</span></p>
+                    <p><span id="black-label">黒 (あなた)</span>: <span id="black-score">2</span></p>
+                    <p><span id="white-label">白 (CPU)</span>: <span id="white-score">2</span></p>
+                    <p>ターン: <span id="current-turn"></span></p>
+                </div>
+            </div>
+            <div class="game-area">
+                <div id="board"></div>
+                <div id="message-area"></div>
+            </div>
+        </div>
+
+        <div class="kifu-controls">
+            <h3>棋譜再生</h3>
+            <div class="kifu-buttons">
+                <button id="kifu-start" disabled>« 最初へ</button>
+                <button id="kifu-prev" disabled>‹ 前へ</button>
+                <button id="kifu-next" disabled>次へ ›</button>
+                <button id="kifu-end" disabled>最後へ »</button>
+            </div>
+        </div>
+
+        <div class="test-controls">
+            <h3>CPU対戦テスト</h3>
+            <div class="test-cpu-selectors">
+                <div class="test-cpu-selector">
+                    <label for="cpu1-level">CPU 1 (先攻/黒)</label>
+                    <select id="cpu1-level">
+                        <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
+                        <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
+                        <option value="7" selected>レベル7</option>
+                    </select>
+                </div>
+                <div class="test-cpu-selector">
+                    <label for="cpu2-level">CPU 2 (後攻/白)</label>
+                    <select id="cpu2-level">
+                        <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
+                        <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
+                        <option value="7" selected>レベル7</option>
+                    </select>
+                </div>
+            </div>
+            <button id="cpu-vs-cpu-button">CPU VS CPU 開始</button>
+        </div>
+    </div>
+
+    <script>
+    // ================================================================= //
+    //                             定数と変数定義                         //
+    // ================================================================= //
+
+    // --- ゲームの基本定数 ---
+    const BOARD_SIZE = 8, EMPTY = 0, BLACK = 1, WHITE = 2;
+    const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
+    const MAX_TURNS = 60;
+
+    // --- AI関連の定数・データ ---
+    const POSITIONAL_SCORE_TABLE = [
+        [120, -20,  20,   5,   5,  20, -20, 120], [-20, -40,  -5,  -5,  -5,  -5, -40, -20], [ 20,  -5,  15,   3,   3,  15,  -5,  20],
+        [  5,  -5,   3,   3,   3,   3,  -5,   5], [  5,  -5,   3,   3,   3,   3,  -5,   5], [ 20,  -5,  15,   3,   3,  15,  -5,  20],
+        [-20, -40,  -5,  -5,  -5,  -5, -40, -20], [120, -20,  20,   5,   5,  20, -20, 120]
+    ];
+    const OPENING_BOOK = {
+        "0000000000000000000000000002100000012100000000000000000000000000":{r:2,c:3},"0000000000000000000001000001210000021100000000000000000000000000":{r:2,c:2},
+        "0000000000000000000000000011200000012000000000000000000000000000":{r:5,c:2},"0000000000000000000000000002100000011100000000000000000000000000":{r:5,c:3}
+    };
+    
+    // --- DOM要素 ---
+    const boardEl = document.getElementById('board'), turnCountEl = document.getElementById('turn-count'), blackScoreEl = document.getElementById('black-score'), whiteScoreEl = document.getElementById('white-score');
+    const blackLabelEl = document.getElementById('black-label'), whiteLabelEl = document.getElementById('white-label'), currentTurnEl = document.getElementById('current-turn'), messageAreaEl = document.getElementById('message-area');
+    const cpuLevelSelect = document.getElementById('cpu-level'), startButton = document.getElementById('start-button'), playerColorRadios = document.querySelectorAll('input[name="player_color"]');
+    const cpu1LevelSelect = document.getElementById('cpu1-level'), cpu2LevelSelect = document.getElementById('cpu2-level'), cpuVsCpuButton = document.getElementById('cpu-vs-cpu-button');
+    const kifuStartBtn = document.getElementById('kifu-start'), kifuPrevBtn = document.getElementById('kifu-prev'), kifuNextBtn = document.getElementById('kifu-next'), kifuEndBtn = document.getElementById('kifu-end');
+
+    // --- ゲーム状態変数 ---
+    let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor, isCpuVsCpuMode = false, isGameOver = false, initialDepth = 0;
+    let gameHistory = [], playbackIndex = 0, isPlaybackMode = false;
+
+    // ================================================================= //
+    //                      メインロジック (ゲーム進行管理)                 //
+    // ================================================================= //
+
+    /**
+     * ゲームを初期化またはリセットする
+     * @param {boolean} isTestMode - CPU対戦モードか否か
+     */
+    function initGame(isTestMode = false) {
+        isCpuVsCpuMode = isTestMode;
+        isPlaybackMode = false;
+        isGameOver = false;
+
+        board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
+        board[3][3] = WHITE; board[3][4] = BLACK;
+        board[4][3] = BLACK; board[4][4] = WHITE;
+        
+        currentPlayer = BLACK;
+        turnCount = 0;
+        lastMove = null;
+        gameHistory = [{ move: null, boardState: JSON.parse(JSON.stringify(board)) }];
+        playbackIndex = 0;
+        
+        updateUiState();
+        gameController();
+    }
+    
+    /**
+     * ゲームの進行を管理するメインコントローラー
+     */
+    async function gameController() {
+        if (isGameOver) return;
+
+        updateInfoLabels();
+        renderBoard();
+
+        const canCurrentPlayerMove = getValidMoves(board, currentPlayer).length > 0;
+        
+        if (!canCurrentPlayerMove) {
+            const opponent = (currentPlayer === BLACK) ? WHITE : BLACK;
+            const canOpponentMove = getValidMoves(board, opponent).length > 0;
+            
+            if (!canOpponentMove) {
+                endGame();
+                return;
+            }
+            
+            messageAreaEl.textContent = `${currentPlayer === BLACK ? '黒' : '白'}はパスします。`;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            currentPlayer = opponent;
+            gameController();
+            return;
+        }
+
+        const isCpuTurnNow = isCpuVsCpuMode || (currentPlayer === cpuColor);
+
+        if (isCpuTurnNow) {
+            await executeCpuTurn();
+        }
+    }
+
+    /**
+     * ゲームを終了させる
+     */
+    function endGame() {
+        isGameOver = true;
+        updateInfoLabels();
+        
+        const blackScore = board.flat().filter(c => c === BLACK).length;
+        const whiteScore = board.flat().filter(c => c === WHITE).length;
+        const winner = (blackScore > whiteScore) ? BLACK : ((whiteScore > blackScore) ? WHITE : EMPTY);
+        
+        let message = "引き分けです！";
+        if (winner !== EMPTY) {
+            if (isCpuVsCpuMode) { message = `CPU ${(winner === BLACK ? '1' : '2')} の勝ちです。`; } 
+            else { message = (winner === playerColor) ? "🎉 あなたの勝ちです！ 🎉" : "CPUの勝ちです。"; }
+        }
+        messageAreaEl.textContent = `ゲーム終了！ ${message}`;
+        updateUiState();
+    }
+
+
+    // ================================================================= //
+    //                         UI・描画関連                             //
+    // ================================================================= //
+    
+    /**
+     * 現在の盤面状態をHTMLに描画する
+     */
+    function renderBoard() {
+        boardEl.innerHTML = '';
+        const validMoves = (!isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
+            ? getValidMoves(board, currentPlayer) 
+            : [];
+        
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                if (board[r][c] !== EMPTY) {
+                    const disc = document.createElement('div');
+                    disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
+                    cell.appendChild(disc);
+                } else if (validMoves.some(move => move.r === r && move.c === c)) {
+                    cell.classList.add('valid-move-hint');
+                }
+                
+                if(lastMove && lastMove.r === r && lastMove.c === c) {
+                    cell.classList.add('last-move');
+                }
+                
+                cell.addEventListener('click', () => handleCellClick(r, c));
+                boardEl.appendChild(cell);
+            }
+        }
+    }
+    
+    /**
+     * スコアやターン表示などの情報を更新する
+     */
+    function updateInfoLabels() {
+        let blackScore = 0, whiteScore = 0;
+        board.flat().forEach(cell => { if (cell === BLACK) blackScore++; if (cell === WHITE) whiteScore++; });
+        
+        const currentTurnNumber = isPlaybackMode ? playbackIndex : turnCount;
+        turnCountEl.textContent = currentTurnNumber;
+        blackScoreEl.textContent = blackScore;
+        whiteScoreEl.textContent = whiteScore;
+        
+        if (isCpuVsCpuMode) {
+            blackLabelEl.textContent = `黒 (CPU 1)`;
+            whiteLabelEl.textContent = `白 (CPU 2)`;
+            currentTurnEl.textContent = isGameOver ? '終了' : `CPU ${(currentPlayer === BLACK ? '1' : '2')} のターン`;
+        } else {
+            blackLabelEl.textContent = (playerColor === BLACK) ? '黒 (あなた)' : '黒 (CPU)';
+            whiteLabelEl.textContent = (playerColor === WHITE) ? '白 (あなた)' : '白 (CPU)';
+            currentTurnEl.textContent = isGameOver ? '終了' : (currentPlayer === playerColor ? 'あなたのターン' : 'CPUのターン');
+        }
+    }
+
+    /**
+     * ゲームモードに応じてUIの有効/無効を切り替える
+     */
+    function updateUiState() {
+        if (isGameOver) {
+            startButton.disabled = false;
+            cpuVsCpuButton.disabled = false;
+        } else if (isCpuVsCpuMode) {
+            startButton.disabled = true;
+            cpuVsCpuButton.disabled = true;
+        } else {
+            startButton.disabled = false;
+            cpuVsCpuButton.disabled = false;
+        }
+
+        if (!isCpuVsCpuMode) {
+            playerColor = parseInt(document.querySelector('input[name="player_color"]:checked').value, 10);
+            cpuColor = (playerColor === BLACK) ? WHITE : BLACK;
+        }
+
+        const kifuActive = isGameOver || isPlaybackMode;
+        kifuStartBtn.disabled = !kifuActive || playbackIndex === 0;
+        kifuPrevBtn.disabled = !kifuActive || playbackIndex === 0;
+        kifuNextBtn.disabled = !kifuActive || playbackIndex === gameHistory.length - 1;
+        kifuEndBtn.disabled = !kifuActive || playbackIndex === gameHistory.length - 1;
+    }
+
+    // ================================================================= //
+    //                        イベントハンドラ・リスナー                   //
+    // ================================================================= //
+
+    /**
+     * プレイヤーがセルをクリックしたときの処理
+     * @param {number} r - クリックされた行
+     * @param {number} c - クリックされた列
+     */
+    function handleCellClick(r, c) {
+        if (isGameOver || isCpuVsCpuMode || isPlaybackMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) {
+            return;
+        }
+        
+        const flippable = getFlippableDiscs(board, r, c, playerColor);
+        if (flippable.length === 0) return;
+        
+        placeDisc(r, c, playerColor, flippable);
+        
+        currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
+        gameController();
+    }
+
+    /**
+     * 棋譜再生用の盤面をレンダリングする
+     * @param {number} index - 表示する棋譜のインデックス
+     */
+    function renderPlayback(index) {
+        isPlaybackMode = true;
+        const record = gameHistory[index];
+        board = JSON.parse(JSON.stringify(record.boardState));
+        lastMove = record.move;
+        
+        updateUiState();
+        updateInfoLabels();
+        renderBoard();
+    }
+
+    // --- 各種イベントリスナーの登録 ---
+    startButton.addEventListener('click', () => initGame(false));
+    playerColorRadios.forEach(radio => radio.addEventListener('change', () => initGame(false)));
+    cpuVsCpuButton.addEventListener('click', () => initGame(true));
+    kifuStartBtn.addEventListener('click', () => { playbackIndex = 0; renderPlayback(playbackIndex); });
+    kifuPrevBtn.addEventListener('click', () => { if (playbackIndex > 0) { playbackIndex--; renderPlayback(playbackIndex); } });
+    kifuNextBtn.addEventListener('click', () => { if (playbackIndex < gameHistory.length - 1) { playbackIndex++; renderPlayback(playbackIndex); } });
+    kifuEndBtn.addEventListener('click', () => { playbackIndex = gameHistory.length - 1; renderPlayback(playbackIndex); });
+
+
+    // ================================================================= //
+    //                         AI思考ロジック (コア)                      //
+    // ================================================================= //
+
+    /**
+     * CPUのターンを実行する
+     */
+    async function executeCpuTurn() {
+        const currentAiPlayer = isCpuVsCpuMode ? currentPlayer : cpuColor;
+        const currentAiLevel = isCpuVsCpuMode 
+            ? (currentAiPlayer === BLACK ? parseInt(cpu1LevelSelect.value, 10) : parseInt(cpu2LevelSelect.value, 10))
+            : parseInt(cpuLevelSelect.value, 10);
+
+        messageAreaEl.textContent = 'CPUが思考中です...';
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        const move = findBestMove(currentAiPlayer, currentAiLevel);
+        
+        messageAreaEl.textContent = '';
+        if (move) {
+            const flippable = getFlippableDiscs(board, move.r, move.c, currentAiPlayer);
+            placeDisc(move.r, move.c, currentAiPlayer, flippable);
+        }
+        
+        currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
+        gameController();
+    }
+    
+    /**
+     * 現在のCPUレベルに応じて最善手を探す
+     */
+    function findBestMove(aiPlayer, aiLevel) {
+        const validMoves = getValidMoves(board, aiPlayer);
+        if (validMoves.length === 0) return null;
+        
+        if (aiPlayer === WHITE && aiLevel >= 7) {
+            const bookMove = OPENING_BOOK[boardToString(board)];
+            if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) return bookMove;
+        }
+        
+        const emptyCells = MAX_TURNS - turnCount;
+        switch (aiLevel) {
+            case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
+            case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
+            case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
+            case 4: initialDepth = 3; return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+            case 5: initialDepth = 4; return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+            case 6: initialDepth = 5; return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+            case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); initialDepth = d; return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel).move; }
+            default: return validMoves[0];
+        }
+    }
+
+    /**
+     * α-β法による探索
+     */
+    function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel) {
+        if (depth === 0) {
+            return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel) };
+        }
+        
+        const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
+        const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
+        const validMoves = getValidMoves(currentBoard, playerForThisNode);
+        
+        if (validMoves.length === 0) {
+            const opponentValidMoves = getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer);
+            if (opponentValidMoves.length === 0) {
+                return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
+            }
+            return alphaBetaSearch(currentBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
+        }
+        
+        let bestMove = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
+        
+        for (const move of validMoves) {
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+            
+            const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
+            
+            if (isMaximizingNode) {
+                if (result.score > bestMove.score) { bestMove.score = result.score; bestMove.move = move; }
+                alpha = Math.max(alpha, bestMove.score);
+            } else {
+                if (result.score < bestMove.score) { bestMove.score = result.score; bestMove.move = move; }
+                beta = Math.min(beta, bestMove.score);
+            }
+            if (beta <= alpha) break;
+        }
+        
+        return bestMove;
+    }
+
+    // ================================================================= //
+    //                           AI評価関数                             //
+    // ================================================================= //
+
+    function evaluateBoard(board, player, level) {
+        if (level >= 6) return advancedPositionalEvaluation(board, player);
+        return simplePositionalEvaluation(board, player);
+    }
+    
+    function simplePositionalEvaluation(board, player) {
+        let score = 0;
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        for (let r=0; r<8; r++) for(let c=0; c<8; c++) {
+            if(board[r][c]===player) score+=POSITIONAL_SCORE_TABLE[r][c];
+            else if(board[r][c]===opponent) score-=POSITIONAL_SCORE_TABLE[r][c];
+        }
+        return score;
+    }
+
+    function advancedPositionalEvaluation(board, player) {
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        const positionalScore = simplePositionalEvaluation(board, player);
+        const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
+        const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
+        return positionalScore + (mobilityScore * 50) + (fixedDiscScore * 150);
+    }
+
+    function evaluateByStoneCount(board, player) {
+        let score = 0;
+        board.flat().forEach(c => { if (c === player) score++; else if (c !== EMPTY) score--; });
+        return score * 1000;
+    }
+
+    // ================================================================= //
+    //                       ルール・ユーティリティ関数                      //
+    // ================================================================= //
+    
+    function placeDisc(r, c, player, flippable) {
+        board[r][c] = player;
+        flippable.forEach(pos => { board[pos.r][pos.c] = player; });
+        lastMove = { r, c };
+        turnCount++;
+        gameHistory.push({ move: { r, c }, boardState: JSON.parse(JSON.stringify(board)) });
+        playbackIndex = gameHistory.length - 1;
+    }
+    
+    function placeDiscInBoard(b, r, c, player, flippable) { b[r][c] = player; flippable.forEach(p => { b[p.r][p.c] = player; }); }
+
+    function getFlippableDiscs(currentBoard, r, c, player) {
+        const flippable = [];
+        if (currentBoard[r][c] !== EMPTY) return flippable;
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        for (const dir of DIRECTIONS) {
+            const line = [];
+            let currR = r + dir.r, currC = c + dir.c;
+            while (currR >= 0 && currR < BOARD_SIZE && currC >= 0 && currC < BOARD_SIZE) {
+                if (currentBoard[currR][currC] === opponent) { line.push({r:currR, c:currC}); } 
+                else if (currentBoard[currR][currC] === player) { flippable.push(...line); break; } 
+                else break;
+                currR += dir.r; currC += dir.c;
+            }
+        }
+        return flippable;
+    }
+    
+    function getValidMoves(currentBoard, player) {
+        const moves = [];
+        for (let r = 0; r < BOARD_SIZE; r++) for (let c = 0; c < BOARD_SIZE; c++) {
+            if (currentBoard[r][c] === EMPTY && getFlippableDiscs(currentBoard, r, c, player).length > 0) {
+                moves.push({r, c});
+            }
+        }
+        return moves;
+    }
+    
+    function getStableDiscs(board, player) {
+        const stable = Array.from({length: 8}, () => Array(8).fill(false));
+        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1]];
+        let changed = true;
+        while(changed) {
+            changed = false;
+            for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
+                if(board[r][c] === player && !stable[r][c]) {
+                    let isStable = true;
+                    for(let i=0; i<4; i++) {
+                        let stableInAxis = true;
+                        for(let j=0; j<2; j++) {
+                            const [dr, dc] = directions[i*2+j];
+                            let nr=r+dr, nc=c+dc;
+                            let hasEmpty = false;
+                            while(nr>=0 && nr<8 && nc>=0 && nc<8) {
+                                if(board[nr][nc] === EMPTY) { hasEmpty=true; break; }
+                                nr+=dr; nc+=dc;
+                            }
+                            if(hasEmpty) { stableInAxis = false; break; }
+                        }
+                        if(!stableInAxis) { isStable=false; break; }
+                    }
+                    if(isStable) { stable[r][c]=true; changed=true; }
+                }
+            }
+        }
+        const stableDiscs = [];
+        for (let r=0; r<8; r++) for(let c=0; c<8; c++) if(stable[r][c]) stableDiscs.push({r,c});
+        return stableDiscs;
+    }
+
+    function boardToString(b) { return b.flat().join(''); }
+
+    // --- ゲームの初回起動 ---
+    initGame(false);
+    </script>
+</body>
+</html>
