@@ -44,7 +44,7 @@
         .game-wrapper {
             display: flex;
             flex-direction: column;
-            align-items: center; /* ★子要素を中央揃えにする */
+            align-items: center;
             width: 100%;
             max-width: 850px;
         }
@@ -144,7 +144,6 @@
             width: 100%;
         }
         
-        /* ★修正点: 個別のマージンで隙間を制御 */
         #message-area {
             margin-top: 20px;
         }
@@ -213,6 +212,7 @@
 
         .kifu-buttons button {
             margin-top: 0;
+            font-size: 14px;
         }
 
         .controls button:hover,
@@ -339,6 +339,13 @@
             .sidebar {
                 flex-direction: column;
             }
+            .kifu-buttons {
+                flex-wrap: wrap;
+            }
+            .kifu-buttons button {
+                width: calc(50% - 5px);
+                font-size: 12px;
+            }
         }
     </style>
 </head>
@@ -381,12 +388,12 @@
         <div id="message-area"></div>
 
         <div class="kifu-controls">
-            <h3>棋譜再生（左右キーで棋譜を前後出来ます）</h3>
+            <h3>棋譜再生</h3>
             <div class="kifu-buttons">
-                <button id="kifu-start" disabled>« 最初へ</button>
-                <button id="kifu-prev" disabled>‹ 前へ</button>
-                <button id="kifu-next" disabled>次へ ›</button>
-                <button id="kifu-end" disabled>最後へ »</button>
+                <button id="kifu-start" disabled>« 最初へ (↓)</button>
+                <button id="kifu-prev" disabled>‹ 前へ (←)</button>
+                <button id="kifu-next" disabled>次へ › (→)</button>
+                <button id="kifu-end" disabled>最後へ » (↑)</button>
             </div>
         </div>
 
@@ -443,17 +450,13 @@
     const kifuStartBtn = document.getElementById('kifu-start'), kifuPrevBtn = document.getElementById('kifu-prev'), kifuNextBtn = document.getElementById('kifu-next'), kifuEndBtn = document.getElementById('kifu-end');
 
     // --- ゲーム状態変数 ---
-    let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor, isCpuVsCpuMode = false, isGameOver = false, initialDepth = 0;
+    let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor, isCpuVsCpuMode = false, isGameOver = false;
     let gameHistory = [], playbackIndex = 0, isPlaybackMode = false;
 
     // ================================================================= //
     //                      メインロジック (ゲーム進行管理)                 //
     // ================================================================= //
 
-    /**
-     * ゲームを初期化またはリセットする
-     * @param {boolean} isTestMode - CPU対戦モードか否か
-     */
     function initGame(isTestMode = false) {
         isCpuVsCpuMode = isTestMode;
         isPlaybackMode = false;
@@ -473,9 +476,6 @@
         gameController();
     }
     
-    /**
-     * ゲームの進行を管理するメインコントローラー
-     */
     async function gameController() {
         if (isGameOver) return;
 
@@ -508,9 +508,6 @@
         }
     }
 
-    /**
-     * ゲームを終了させる
-     */
     function endGame() {
         isGameOver = true;
         updateInfoLabels();
@@ -533,9 +530,6 @@
     //                         UI・描画関連                             //
     // ================================================================= //
     
-    /**
-     * 現在の盤面状態をHTMLに描画する
-     */
     function renderBoard() {
         boardEl.innerHTML = '';
         const validMoves = (!isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
@@ -565,9 +559,6 @@
         }
     }
     
-    /**
-     * スコアやターン表示などの情報を更新する
-     */
     function updateInfoLabels() {
         let blackScore = 0, whiteScore = 0;
         board.flat().forEach(cell => { if (cell === BLACK) blackScore++; if (cell === WHITE) whiteScore++; });
@@ -588,9 +579,6 @@
         }
     }
 
-    /**
-     * ゲームモードに応じてUIの有効/無効を切り替える
-     */
     function updateUiState() {
         if (isGameOver) {
             startButton.disabled = false;
@@ -619,9 +607,6 @@
     //                        イベントハンドラ・リスナー                   //
     // ================================================================= //
 
-    /**
-     * プレイヤーがセルをクリックしたときの処理
-     */
     function handleCellClick(r, c) {
         if (isGameOver || isCpuVsCpuMode || isPlaybackMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) {
             return;
@@ -636,12 +621,10 @@
         gameController();
     }
 
-    /**
-     * 棋譜再生用の盤面をレンダリングする
-     */
     function renderPlayback(index) {
         isPlaybackMode = true;
-        const record = gameHistory[index];
+        playbackIndex = index;
+        const record = gameHistory[playbackIndex];
         board = JSON.parse(JSON.stringify(record.boardState));
         lastMove = record.move;
         
@@ -654,35 +637,23 @@
     startButton.addEventListener('click', () => initGame(false));
     playerColorRadios.forEach(radio => radio.addEventListener('change', () => initGame(false)));
     cpuVsCpuButton.addEventListener('click', () => initGame(true));
-    kifuStartBtn.addEventListener('click', () => { playbackIndex = 0; renderPlayback(playbackIndex); });
-    kifuPrevBtn.addEventListener('click', () => { if (playbackIndex > 0) { playbackIndex--; renderPlayback(playbackIndex); } });
-    kifuNextBtn.addEventListener('click', () => { if (playbackIndex < gameHistory.length - 1) { playbackIndex++; renderPlayback(playbackIndex); } });
-    kifuEndBtn.addEventListener('click', () => { playbackIndex = gameHistory.length - 1; renderPlayback(playbackIndex); });
+    kifuStartBtn.addEventListener('click', () => { if (kifuStartBtn.disabled === false) renderPlayback(0); });
+    kifuPrevBtn.addEventListener('click', () => { if (kifuPrevBtn.disabled === false) renderPlayback(playbackIndex - 1); });
+    kifuNextBtn.addEventListener('click', () => { if (kifuNextBtn.disabled === false) renderPlayback(playbackIndex + 1); });
+    kifuEndBtn.addEventListener('click', () => { if (kifuEndBtn.disabled === false) renderPlayback(gameHistory.length - 1); });
     
     document.addEventListener('keydown', (event) => {
-        const kifuActive = isGameOver || isPlaybackMode;
-        if (!kifuActive) return;
-
-        if (event.key === 'ArrowLeft') {
-            if (playbackIndex > 0) {
-                playbackIndex--;
-                renderPlayback(playbackIndex);
-            }
-        } else if (event.key === 'ArrowRight') {
-            if (playbackIndex < gameHistory.length - 1) {
-                playbackIndex++;
-                renderPlayback(playbackIndex);
-            }
-        }
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) event.preventDefault();
+        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) kifuPrevBtn.click();
+        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) kifuNextBtn.click();
+        else if (event.key === 'ArrowDown' && !kifuStartBtn.disabled) kifuStartBtn.click();
+        else if (event.key === 'ArrowUp' && !kifuEndBtn.disabled) kifuEndBtn.click();
     });
 
     // ================================================================= //
     //                         AI思考ロジック (コア)                      //
     // ================================================================= //
 
-    /**
-     * CPUのターンを実行する
-     */
     async function executeCpuTurn() {
         const currentAiPlayer = isCpuVsCpuMode ? currentPlayer : cpuColor;
         const currentAiLevel = isCpuVsCpuMode 
@@ -704,9 +675,6 @@
         gameController();
     }
     
-    /**
-     * 現在のCPUレベルに応じて最善手を探す
-     */
     function findBestMove(aiPlayer, aiLevel) {
         const validMoves = getValidMoves(board, aiPlayer);
         if (validMoves.length === 0) return null;
@@ -721,17 +689,14 @@
             case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
             case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
             case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
-            case 4: initialDepth = 3; return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            case 5: initialDepth = 4; return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            case 6: initialDepth = 5; return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); initialDepth = d; return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel).move; }
+            case 4: return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+            case 5: return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+            case 6: return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+            case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel).move; }
             default: return validMoves[0];
         }
     }
 
-    /**
-     * α-β法による探索
-     */
     function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel) {
         if (depth === 0) {
             return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel) };
@@ -749,7 +714,7 @@
             return alphaBetaSearch(currentBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
         }
         
-        let bestMove = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
+        let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
         
         for (const move of validMoves) {
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
@@ -758,16 +723,16 @@
             const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
             
             if (isMaximizingNode) {
-                if (result.score > bestMove.score) { bestMove.score = result.score; bestMove.move = move; }
-                alpha = Math.max(alpha, bestMove.score);
+                if (result.score > bestResult.score) { bestResult = { move, score: result.score }; }
+                alpha = Math.max(alpha, bestResult.score);
             } else {
-                if (result.score < bestMove.score) { bestMove.score = result.score; bestMove.move = move; }
-                beta = Math.min(beta, bestMove.score);
+                if (result.score < bestResult.score) { bestResult = { move, score: result.score }; }
+                beta = Math.min(beta, bestResult.score);
             }
             if (beta <= alpha) break;
         }
         
-        return bestMove;
+        return bestResult;
     }
 
     // ================================================================= //
