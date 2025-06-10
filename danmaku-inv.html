@@ -29,7 +29,8 @@
             </div>
             <div id="controls-info">
                 <div>MOVE: ARROWS/AD/PAD | SHOT: SPACE/BUTTON</div>
-                <div>PAUSE: ESC/START | FULLSCREEN: F</div>
+                <!-- 修正点1: 操作説明の「ESC」を「P」に変更 -->
+                <div>PAUSE: P/START | FULLSCREEN: F</div>
             </div>
         </div>
     </div>
@@ -916,10 +917,12 @@
                 switch (gameState) {
                     case 'PLAYING':
                         if (code === 'Space' || code === 'ArrowUp') actions.shoot = true;
-                        else if (code === 'Escape') doPause();
+                        // 修正点2: ポーズキーを 'Escape' から 'KeyP' に変更
+                        else if (code === 'KeyP') doPause();
                         break;
                     case 'PAUSED':
-                        if (code === 'Escape') doPause();
+                        // 修正点3: ポーズ解除キーを 'Escape' から 'KeyP' に変更
+                        if (code === 'KeyP') doPause();
                         else if (code === 'KeyQ') doQuit();
                         break;
                     case 'DIFFICULTY':
