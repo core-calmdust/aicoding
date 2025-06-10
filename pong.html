@@ -161,6 +161,7 @@
         const mobileMuteBtn = document.getElementById('mobile-mute-btn'), pauseBtn = document.getElementById('pause-btn');
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const WINNING_SCORE = 10;
+        const MASTER_VOLUME = 0.7; // ★ 変更点1: 全体の音量を設定する定数を追加
         
         const difficultyLevels = { 
             1: { name: "EASY",      speed: 8,  error: 0.4,  smashChance: 0.05 },
@@ -214,7 +215,8 @@
             if (audioCtx) return;
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = audioCtx.createGain();
-            masterGain.gain.value = isMuted ? 0 : 1;
+            // ★ 変更点2: マスターボリュームの初期値を定数に変更
+            masterGain.gain.value = isMuted ? 0 : MASTER_VOLUME;
             masterGain.connect(audioCtx.destination);
 
             sounds.hit = () => {
@@ -337,7 +339,8 @@
         function toggleMute(forceState) {
             isMuted = forceState !== undefined ? forceState : !isMuted;
             if (audioCtx) {
-                masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime + 0.1);
+                // ★ 変更点3: ミュート解除時の音量を定数に変更
+                masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : MASTER_VOLUME, audioCtx.currentTime + 0.1);
             }
             pcMuteBtn.textContent = isMuted ? "🔇" : "🔊";
             mobileMuteBtn.textContent = isMuted ? "SOUND: OFF" : "SOUND: ON";
