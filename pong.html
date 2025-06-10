@@ -94,19 +94,25 @@
 
         #pc-mute-btn {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
-            width: 40px;
-            height: 40px;
+            bottom: 15px;
+            right: 15px;
+            padding: 8px 12px;
             background-color: rgba(255, 255, 255, 0.2);
-            border: 2px solid #00f6ff;
+            border: 1px solid #00f6ff;
             color: #00f6ff;
-            font-size: 20px;
+            font-size: 12px;
+            font-family: 'Press Start 2P', cursive;
             cursor: pointer;
             text-align: center;
-            line-height: 36px;
             user-select: none;
             z-index: 10;
+            border-radius: 4px;
+            white-space: nowrap;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        #pc-mute-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 10px #00f6ff;
         }
 
         #mobile-ui-container {
@@ -135,7 +141,7 @@
     <div id="game-wrapper">
         <div id="game-area">
             <canvas id="pongCanvas" width="900" height="600"></canvas>
-            <div id="pc-mute-btn">🔇</div>
+            <div id="pc-mute-btn">SOUND OFF</div>
         </div>
         <div id="info-area">
             <div class="info-text" id="rule-info"></div>
@@ -177,7 +183,7 @@
         };
         const colors = { bg: '#0d0221', paddle: '#00f6ff', ball: '#ff00ff', net: 'rgba(0, 246, 255, 0.3)', text: '#f0f', particle: ['#ff00ff', '#f9c80e', '#00f6ff'], monster: '#f9c80e', smash: '#f9c80e' };
         
-        let gameState = 'title', isMuted = true, hue = 0;
+        let gameState = 'title', isMuted = true, hue = 0, isPulsing = false;
         let selectedDifficulty = difficultyLevels[2], selectedMode = gameModes[1], difficultySelector = 2, modeSelector = 1;
         let ball, player, cpu, particles, monsters;
         let audioCtx, masterGain, bgm, titleBgm;
@@ -340,7 +346,7 @@
             if (audioCtx) {
                 masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : MASTER_VOLUME, audioCtx.currentTime + 0.1);
             }
-            pcMuteBtn.textContent = isMuted ? "🔇" : "🔊";
+            pcMuteBtn.textContent = isMuted ? "SOUND OFF" : "SOUND ON";
             mobileMuteBtn.textContent = isMuted ? "SOUND: OFF" : "SOUND: ON";
         }
         class BGM { 
@@ -424,7 +430,11 @@
             }
             pulseEffect() {
                 canvas.classList.add('pulsing');
-                setTimeout(() => canvas.classList.remove('pulsing'), 50);
+                isPulsing = true;
+                setTimeout(() => {
+                    canvas.classList.remove('pulsing');
+                    isPulsing = false;
+                }, 50);
             }
         }
         class TitleBGM {
@@ -484,7 +494,6 @@
                 f.type = 'highpass';
                 f.frequency.value = 1500;
                 const g = audioCtx.createGain();
-                // ★ 変更点: スネアの音量を1から0.5に下げました
                 g.gain.setValueAtTime(0.5, time);
                 g.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
                 noise.connect(f);
@@ -561,8 +570,9 @@
                 ctx.textAlign = "left";
             },
             net: () => {
+                const netColor = isPulsing ? '#ffffff' : colors.net;
                 for (let i = 0; i <= canvas.height; i += 20) {
-                    draw.rect((canvas.width - 4) / 2, i, 4, 10, colors.net, colors.net);
+                    draw.rect((canvas.width - 4) / 2, i, 4, 10, netColor, netColor);
                 }
             },
             grid: () => {
@@ -649,15 +659,22 @@
             }
         };
 
-        function createParticles(x, y, count = 20, colorSet = colors.particle) {
+        function createParticles(x, y, options = {}) {
+            const {
+                count = 20,
+                colorSet = colors.particle,
+                speed = 8,
+                life = 60
+            } = options;
+
             for (let i = 0; i < count; i++) {
                 particles.push({
                     x,
                     y,
                     radius: 1 + Math.random() * 3,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    life: 60,
+                    vx: (Math.random() - 0.5) * speed,
+                    vy: (Math.random() - 0.5) * speed,
+                    life: Math.random() * life,
                     color: colorSet[Math.floor(Math.random() * colorSet.length)]
                 });
             }
@@ -800,7 +817,6 @@
         }
         function resetBall() {
             playSound("goal");
-            createParticles(ball.x, ball.y);
             ball.x = canvas.width / 2;
             ball.y = 100 + Math.random() * (canvas.height - 200);
             ball.speed = selectedMode.name === 'TURBO' ? 11 : 9;
@@ -884,7 +900,7 @@
                 ball.velocityY *= -1;
                 if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
                 if (ball.y - ball.radius < 0) ball.y = ball.radius;
-                createParticles(ball.x, ball.y);
+                createParticles(ball.x, ball.y, { count: 30, speed: 6 });
                 playSound('wall');
             }
             
@@ -902,7 +918,7 @@
                 if (Math.abs(normalizedCollidePoint) > 0.8) {
                     ball.speed = 25;
                     ball.isSmashed = true;
-                    createParticles(ball.x, ball.y, 40, [colors.smash, '#ffffff']);
+                    createParticles(ball.x, ball.y, { count: 120, speed: 18, life: 80, colorSet: [colors.smash, colors.smash, colors.smash, '#ffffff', colors.ball] });
                     angleRad = Math.sign(angleRad) * (Math.PI / 3);
                     playSound('smash');
                 } else {
@@ -911,7 +927,7 @@
                         ball.isSmashed = false;
                     }
                     ball.speed += ball.speedIncrement;
-                    createParticles(ball.x, ball.y);
+                    createParticles(ball.x, ball.y, { count: 60, speed: 10, colorSet: [...colors.particle, '#ffffff'] });
                     playSound('hit');
                 }
                 
@@ -930,11 +946,10 @@
                 monsters.forEach(m => {
                     if (collision(ballRect, m)) {
                         playSound('hit');
-                        createParticles(ball.x, ball.y);
+                        createParticles(ball.x, ball.y, { count: 60, speed: 10, colorSet: [...colors.particle, '#ffffff'] });
                         
                         if (!m.isHit) {
                             m.isHit = true;
-                            // ★ 変更点: ヒット表示時間を0.7秒 (700ms) に変更
                             setTimeout(() => { m.isHit = false; }, 700);
                         }
                         
@@ -954,9 +969,18 @@
             
             if (ball.x - ball.radius < 0) {
                 cpu.score++;
+                // ★ 変更点: CPUが得点した時のエフェクトをピンクと白に変更
+                createParticles(ball.x, ball.y, { 
+                    count: 200, speed: 15, life: 100, 
+                    colorSet: [colors.ball, '#ffffff'] 
+                });
                 resetBall();
             } else if (ball.x + ball.radius > canvas.width) {
                 player.score++;
+                createParticles(ball.x, ball.y, { 
+                    count: 200, speed: 15, life: 100, 
+                    colorSet: [colors.smash, colors.paddle, '#ffffff'] 
+                });
                 resetBall();
             }
             
@@ -1015,13 +1039,13 @@
             } else if (gameState === 'playing' || gameState === 'gameOver' || gameState === 'paused') {
                 if (isTouchDevice) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins.`;
-                    controlsInfo.innerHTML = `Drag to Move | Edge: Smash`;
+                    controlsInfo.innerHTML = `Drag to Move | Edge Hit: Smash`;
                 } else if (useGamepadControls) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> START: Pause | F: Fullscreen`;
                     controlsInfo.innerHTML = `Pad/Keys: Move | Pad BTN: Boost <br> Edge Hit: Smash`;
                 } else {
-                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> ESC: Pause | F: Fullscreen`;
-                    controlsInfo.innerHTML = `W/S or ↑↓/Mouse: Move <br> SHIFT: Boost | Edge: Smash`;
+                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> P: Pause | F: Fullscreen`;
+                    controlsInfo.innerHTML = `W/S or ↑↓/Mouse: Move <br> SHIFT: Boost | Edge Hit: Smash`;
                 }
             } else {
                 ruleInfo.innerHTML = ``;
@@ -1069,7 +1093,6 @@
 
                 let continueText = '';
                 if (isTouchDevice) { continueText = "Tap to Continue"; }
-                // ★ 変更点: ゲームオーバー時のテキストを修正
                 else if (useGamepadControls) { continueText = "Press Start or Button to Return"; }
                 else { continueText = "Press Enter to Return"; }
                 draw.text(continueText, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
@@ -1085,7 +1108,7 @@
                     draw.text('Resume', canvas.width / 2, 355, colors.text, "20px", "center");
                     draw.text('Return to Title', canvas.width / 2, 415, colors.text, "20px", "center");
                 } else {
-                    const resumeKey = useGamepadControls ? 'START' : 'ESC';
+                    const resumeKey = useGamepadControls ? 'START' : 'P';
                     const quitKey = useGamepadControls ? 'SELECT' : 'Q';
                     draw.text(`Press ${resumeKey} to Resume`, canvas.width / 2, canvas.height / 2 + 40, colors.text, "20px", "center");
                     draw.text(`Press ${quitKey} to Return to Title`, canvas.width / 2, canvas.height / 2 + 80, colors.text, "20px", "center");
@@ -1146,7 +1169,6 @@
             }
             if (gameState === 'paused' && isButtonPressed(GAMEPAD_BUTTONS.SELECT)) goToTitle();
             
-            // ★ 変更点: ゲームオーバー時の入力判定を修正
             if (gameState === 'gameOver' && (
                 isButtonPressed(GAMEPAD_BUTTONS.A) ||
                 isButtonPressed(GAMEPAD_BUTTONS.B) ||
@@ -1244,25 +1266,38 @@
             lastInputDevice = 'keyboard';
             keys[e.key] = true;
             
-            if (e.key.toLowerCase() === 'f') toggleFullScreen();
+            const key = e.key.toLowerCase();
+
+            if (key === 'f') {
+                toggleFullScreen();
+            }
             
-            if (e.key === 'Escape') {
-                e.preventDefault();
+            if (key === 'escape') {
+                if (gameState === 'playing') {
+                    // ESCはフルスクリーン解除が優先されるため、
+                    // fullscreenchangeイベントでゲームの一時停止を処理する
+                }
+            }
+
+            if (key === 'p') {
                 if (gameState === 'playing') pauseGame();
                 else if (gameState === 'paused') resumeGame();
-            } 
-            if (gameState === 'paused' && e.key.toLowerCase() === 'q') goToTitle();
+            }
             
-            if (e.key === 'Enter') {
+            if (gameState === 'paused' && key === 'q') {
+                goToTitle();
+            }
+            
+            if (key === 'enter') {
                 if (gameState === 'title') startGame();
                 else if (gameState === 'gameOver') goToTitle();
             }
             
             if (gameState === 'title') {
-                if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') handleMenuInput('up');
-                if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') handleMenuInput('down');
-                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleMenuInput('left');
-                if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') handleMenuInput('right');
+                if (key === 'arrowup' || key === 'w') handleMenuInput('up');
+                if (key === 'arrowdown' || key === 's') handleMenuInput('down');
+                if (key === 'arrowleft' || key === 'a') handleMenuInput('left');
+                if (key === 'arrowright' || key === 'd') handleMenuInput('right');
             }
         });
         
@@ -1302,6 +1337,12 @@
             pcMuteBtn.addEventListener('click', () => toggleMute());
         }
         
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && gameState === 'playing') {
+                pauseGame();
+            }
+        });
+
         // ================================================================= //
         // メインループ実行
         // ================================================================= //
@@ -1314,7 +1355,7 @@
 
         checkOrientation();
         window.addEventListener('orientationchange', checkOrientation);
-
+        
         initializeObjects();
         toggleMute(true);
         goToTitle();
