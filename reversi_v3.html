@@ -368,7 +368,7 @@
                 </div>
                 <div class="game-info">
                     <p>手数: <span id="turn-count">0</span></p>
-                    <p><span id="black-label">黒 (あなた)</span>: <span id="black-score">2</span></p>
+                    <p><span id="black-label">黒 (YOU)</span>: <span id="black-score">2</span></p>
                     <p><span id="white-label">白 (CPU)</span>: <span id="white-score">2</span></p>
                     <p>ターン: <span id="current-turn"></span></p>
                 </div>
@@ -582,8 +582,8 @@
             whiteLabelEl.textContent = `白 (CPU 2)`;
             currentTurnEl.textContent = isGameOver ? '終了' : `CPU ${(currentPlayer === BLACK ? '1' : '2')} のターン`;
         } else {
-            blackLabelEl.textContent = (playerColor === BLACK) ? '黒 (あなた)' : '黒 (CPU)';
-            whiteLabelEl.textContent = (playerColor === WHITE) ? '白 (あなた)' : '白 (CPU)';
+            blackLabelEl.textContent = (playerColor === BLACK) ? '黒 (YOU)' : '黒 (CPU)';
+            whiteLabelEl.textContent = (playerColor === WHITE) ? '白 (YOU)' : '白 (CPU)';
             currentTurnEl.textContent = isGameOver ? '終了' : (currentPlayer === playerColor ? 'あなたのターン' : 'CPUのターン');
         }
     }
