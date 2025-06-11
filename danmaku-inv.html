@@ -2,8 +2,33 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+
+    <!-- ▼▼▼ SEO/OGP関連のメタデータをここから追加 ▼▼▼ -->
+    
+    <!-- 1. 基本的なメタデータ -->
+    <title>【鬼畜弾幕インベーダー】DANMAKU INVADER XTREME+ - 無料ブラウザシューティングゲーム</title>
+    <meta name="description" content="レトロなグラフィックとBGMが特徴の弾幕シューティングゲーム（STG）。5段階の難易度で初心者から上級者まで楽しめます。登録不要・インストールなしで今すぐプレイ！">
+    <meta name="keywords" content="弾幕, STG, シューティングゲーム, インベーダー, レトロ, ドット絵, 無料, ゲーム, ブラウザゲーム, Danmaku">
+    <link rel="canonical" href="https://core-calmdust.github.io/aicoding/danmaku-inv.html">
+    <link rel="icon" href="https://core-calmdust.github.io/aicoding/images/dix_favicon.ico" type="image/x-icon"> 
+
+    <!-- 2. OGP (Open Graph Protocol) タグ -->
+    <meta property="og:title" content="【弾幕STG】DANMAKU INVADER XTREME+">
+    <meta property="og:description" content="5段階の難易度で楽しめる、レトロ風の弾幕シューティングゲーム。ブラウザで今すぐ無料プレイ！">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://core-calmdust.github.io/aicoding/danmaku-inv.html">
+    <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/dix_ogp.png">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- 3. Twitterカード タグ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="【弾幕STG】DANMAKU INVADER XTREME+">
+    <meta name="twitter:description" content="5段階の難易度で楽しめる、レトロ風の弾幕シューティングゲーム。ブラウザで今すぐ無料プレイ！">
+    <meta name="twitter:image" content="https://core-calmdust.github.io/aicoding/images/dix_ogp.png">
+
+    <!-- ▲▲▲ SEO/OGP関連のメタデータここまで ▲▲▲ -->
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DANMAKU INVADER XTREME+</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -18,23 +43,46 @@
         #sound-toggle:hover { background-color: rgba(255, 0, 255, 0.7); }
         #controls-info { color: rgba(255, 255, 255, 0.7); font-size: 14px; margin-top: 20px; text-shadow: 0 0 5px #00ffff; text-align: center; }
         #controls-info > div { line-height: 1.5; }
+        /* ▼▼▼ SEO: スクリーンリーダー用の非表示スタイルを追加 ▼▼▼ */
+        .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
     </style>
+     <!-- ▼▼▼ SEO: 構造化データの追加 ▼▼▼ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "DANMAKU INVADER XTREME+",
+      "description": "5段階の難易度で楽しめる、レトロなグラフィックとBGMが特徴の弾幕シューティングゲーム（STG）。",
+      "gamePlatform": "Web-based game",
+      "applicationCategory": "Game",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      }
+    }
+    </script>
 </head>
 <body>
-    <div id="fullscreen-wrapper">
+    <!-- ▼▼▼ SEO: h1とセマンティックタグ(main, footer)を追加 ▼▼▼ -->
+    <h1 class="visually-hidden">DANMAKU INVADER XTREME+ - ブラウザ弾幕シューティングゲーム</h1>
+    <main id="fullscreen-wrapper" aria-label="ゲームメインエリア">
         <div id="scalable-content">
             <div id="game-container">
-                <canvas id="gameCanvas"></canvas>
-                <button id="sound-toggle" tabindex="-1">SOUND ON</button>
+                <canvas id="gameCanvas" aria-label="ゲーム画面"></canvas>
+                <button id="sound-toggle" tabindex="-1" aria-label="サウンドのオン・オフを切り替える">SOUND ON</button>
             </div>
-            <div id="controls-info">
+            <footer id="controls-info" aria-label="操作方法">
                 <div>MOVE: ARROWS/AD/PAD | SHOT: SPACE/BUTTON</div>
                 <div>PAUSE: P/START | FULLSCREEN: F</div>
-            </div>
+            </footer>
         </div>
-    </div>
+    </main>
+    <!-- ▲▲▲ SEO: 変更ここまで ▲▲▲ -->
 
     <script>
+        // JavaScript部分は変更なし
         document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
