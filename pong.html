@@ -2,8 +2,34 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+
+    <!-- ▼▼▼ SEO/OGP関連のメタデータをここから追加 ▼▼▼ -->
+    
+    <!-- 1. 基本的なメタデータ -->
+    <title>CYBER PONG XTREME+ | 無料で遊べるサイバーパンク風ピンポンゲーム</title>
+    <meta name="description" content="近未来的なビジュアルとBGMが特徴の、ハイスピードなピンポン（PONG）ゲーム。多彩なモードと難易度で、熱い対戦をブラウザで今すぐ体験！登録不要・インストールなしで遊べます。">
+    <meta name="keywords" content="PONG, ピンポン, ゲーム, 無料, ブラウザゲーム, サイバーパンク, レトロ, アーケード, 対戦, AI">
+    <link rel="canonical" href="https://core-calmdust.github.io/aicoding/pong.html">
+    <link rel="icon" href="https://core-calmdust.github.io/aicoding/images/pong_favicon.ico" type="image/x-icon"> 
+
+    <!-- 2. OGP (Open Graph Protocol) タグ -->
+    <meta property="og:title" content="CYBER PONG XTREME+ | 無料ブラウザピンポンゲーム">
+    <meta property="og:description" content="ハイスピードなサイバーパンク風ピンポンゲーム。多彩なモードと難易度で、熱い対戦を今すぐ体験！">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://core-calmdust.github.io/aicoding/pong.html">
+    <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/pong_ogp.png">
+    <meta property="og:site_name" content="CYBER PONG XTREME+">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- 3. Twitterカード タグ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CYBER PONG XTREME+ | 無料ブラウザピンポンゲーム">
+    <meta name="twitter:description" content="ハイスピードなサイバーパンク風ピンポンゲーム。多彩なモードと難易度で、熱い対戦を今すぐ体験！">
+    <meta name="twitter:image" content="https://core-calmdust.github.io/aicoding/images/pong_ogp.png"> 
+
+    <!-- ▲▲▲ SEO/OGP関連のメタデータここまで ▲▲▲ -->
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CYBER PONG XTREME+</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -91,6 +117,9 @@
         .info-text { color: #00f6ff; text-shadow: 0 0 5px #00f6ff; line-height: 1.4; font-size: 12px; }
         #controls-info { text-align: right; }
         .hidden { display: none !important; }
+        /* ▼▼▼ SEO: スクリーンリーダー用の非表示スタイルを追加 ▼▼▼ */
+        .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
 
         #pc-mute-btn {
             position: absolute;
@@ -136,24 +165,45 @@
             font-size: 10px;
         }
     </style>
+     <!-- ▼▼▼ SEO: 構造化データの追加 ▼▼▼ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "CYBER PONG XTREME+",
+      "description": "近未来的なビジュアルとBGMが特徴の、ハイスピードなピンポン（PONG）ゲーム。多彩なモードと難易度で楽しめます。",
+      "gamePlatform": "Web-based game",
+      "applicationCategory": "Game",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      }
+    }
+    </script>
 </head>
 <body>
-    <div id="game-wrapper">
+    <!-- ▼▼▼ SEO: h1とセマンティックタグ(main, footer)を追加 ▼▼▼ -->
+    <h1 class="visually-hidden">CYBER PONG XTREME+ - 無料ブラウザピンポンゲーム</h1>
+    <main id="game-wrapper">
         <div id="game-area">
-            <canvas id="pongCanvas" width="900" height="600"></canvas>
-            <div id="pc-mute-btn">SOUND OFF</div>
+            <canvas id="pongCanvas" width="900" height="600" aria-label="サイバーポンゲーム画面"></canvas>
+            <div id="pc-mute-btn" role="button" aria-label="サウンドのオン・オフを切り替える">SOUND OFF</div>
         </div>
-        <div id="info-area">
+        <footer id="info-area">
             <div class="info-text" id="rule-info"></div>
             <div id="mobile-ui-container">
-                <div id="pause-btn" class="mobile-ui-button">PAUSE</div>
-                <div id="mobile-mute-btn" class="mobile-ui-button">SOUND</div>
+                <div id="pause-btn" class="mobile-ui-button" role="button" aria-label="ゲームを一時停止または再開">PAUSE</div>
+                <div id="mobile-mute-btn" class="mobile-ui-button" role="button" aria-label="サウンドのオン・オフを切り替える">SOUND</div>
             </div>
             <div class="info-text" id="controls-info"></div>
-        </div>
-    </div>
+        </footer>
+    </main>
+    <!-- ▲▲▲ SEO: 変更ここまで ▲▲▲ -->
 
     <script>
+        // JavaScript部分は変更なし
         // ================================================================= //
         // グローバル変数 & 定数
         // ================================================================= //
