@@ -126,7 +126,7 @@
                 if (!soundEnabled) return;
                 switch (type) {
                     case 'shot':
-                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.25); // 音量調整 0.3 -> 0.25
+                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3); // 音量調整
                         break;
                     case 'explode':
                         if (!audioContext) break;
@@ -136,7 +136,7 @@
                         panner.pan.setValueAtTime(randomPan, now);
                         panner.connect(audioContext.destination);
                         const baseFreq = 1244.51;
-                        const baseVolume = 0.22;
+                        const baseVolume = 0.28; // 音量調整
                         const noteDuration = 0.15;
                         const noteDelay = 0.04;
                         const arpeggio = [
@@ -161,35 +161,35 @@
                         });
                         break;
                     case 'playerDie':
-                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 0.7); // 音量調整 1 -> 0.7
-                        setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4, 0, 0.7), 100);
-                        setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6, 0, 0.7), 200);
+                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 0.8); // 音量調整
+                        setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4, 0, 0.8), 100);
+                        setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6, 0, 0.8), 200);
                         break;
                     case 'select':
-                        createSound(600, 0.05, 'sine', 0.9, 0, 0.3); // 音量調整 0.4 -> 0.3
+                        createSound(600, 0.05, 'sine', 0.9, 0, 0.35); // 音量調整
                         break;
                     case 'confirm':
-                        createSound(800, 0.1, 'sine', 0.8, 0, 0.4); // 音量調整 0.5 -> 0.4
+                        createSound(800, 0.1, 'sine', 0.8, 0, 0.5); // 音量調整
                         break;
                     case 'pause':
-                        createSound(400, 0.08, 'square', 0.9, 0, 0.3); // 変更なし
+                        createSound(400, 0.08, 'square', 0.9, 0, 0.35); // 音量調整
                         break;
                     case 'waveClear':
-                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.4), 0); // 変更なし
-                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, 0.5, 0.4), 100);
-                        setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.5, 0.4), 200);
-                        setTimeout(() => createSound(1046, 0.2, 'sine', 0.8, 0, 0.5), 300);
+                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.5), 0); // 音量調整
+                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, 0.5, 0.5), 100);
+                        setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.5, 0.5), 200);
+                        setTimeout(() => createSound(1046, 0.2, 'sine', 0.8, 0, 0.6), 300);
                         break;
                     case 'powerup':
-                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.5); // 変更なし
-                        setTimeout(() => createSound(1567.98, 0.1, 'triangle', 0.7, 0, 0.5), 80);
-                        setTimeout(() => createSound(2093, 0.15, 'triangle', 0.6, 0, 0.5), 160);
+                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.6); // 音量調整
+                        setTimeout(() => createSound(1567.98, 0.1, 'triangle', 0.7, 0, 0.6), 80);
+                        setTimeout(() => createSound(2093, 0.15, 'triangle', 0.6, 0, 0.6), 160);
                         break;
                     case 'highScore':
-                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.5), 0); // 変更なし
-                        setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.2, 0.5), 120);
-                        setTimeout(() => createSound(1046, 0.1, 'sine', 0.9, 0.2, 0.5), 240);
-                        setTimeout(() => createSound(1318, 0.3, 'sine', 0.8, 0.6, 0.6), 360);
+                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.6), 0); // 音量調整
+                        setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.2, 0.6), 120);
+                        setTimeout(() => createSound(1046, 0.1, 'sine', 0.9, 0.2, 0.6), 240);
+                        setTimeout(() => createSound(1318, 0.3, 'sine', 0.8, 0.7), 360);
                         break;
                 }
             }
@@ -198,9 +198,9 @@
                 if (!soundEnabled) return;
                 const step = titleBeatCount % 16;
                 if (step % 4 === 0) {
-                    createSound(titlePadNotes[Math.floor(step / 4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.2);
+                    createSound(titlePadNotes[Math.floor(step / 4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.25); // 音量調整
                 }
-                createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.1);
+                createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.15); // 音量調整
                 titleBeatCount++;
             }
 
@@ -211,23 +211,23 @@
                 const step = sixteenth % 16;
                 if (step % 8 === 0) {
                     const bassNote = gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length];
-                    createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.2); // 音量調整 0.3 -> 0.2
+                    createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.28); // 音量調整
                 }
-                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.15); // 音量調整 0.2 -> 0.15
+                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.22); // 音量調整
                 if (step === 0) {
-                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.45); // 音量調整 1 -> 0.45
+                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.6); // 音量調整
                     canvas.classList.add('pulse');
                     gridAlpha = 0.25;
                     setTimeout(() => canvas.classList.remove('pulse'), 100);
                 }
                 if (step === 8) {
-                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.35); // 音量調整 0.8 -> 0.35
+                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.5); // 音量調整
                 }
                 if (step === 4 || step === 12) {
-                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.3); // 音量調整 0.5 -> 0.3
+                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.4); // 音量調整
                 }
                 if (step % 4 === 2) {
-                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.07); // 音量調整 0.08 -> 0.07
+                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.1); // 音量調整
                 }
                 gameBeatCount++;
             }
@@ -898,7 +898,7 @@
                     if ((isPressed(GP_BUTTON.DPAD_DOWN) && !wasPressed(GP_BUTTON.DPAD_DOWN)) || (currentAxisY > 0.5 && gamepadState.prevAxisY <= 0.5)) {
                         doSelectDown();
                     }
-                    if ((isPressed(GP_BUTTON.DPAD_UP) && !wasPressed(GP_BUTTON.DPAD_UP)) || (currentAxisY < -0.5 && gamepadState.prevAxisY >= -0.5)) {
+                    if ((isPressed(GP_BUTTON.DPAD_UP) && !wasPressed(GP_BUTTON.UP)) || (currentAxisY < -0.5 && gamepadState.prevAxisY >= -0.5)) {
                         doSelectUp();
                     }
                 }
