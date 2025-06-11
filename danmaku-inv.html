@@ -29,7 +29,6 @@
             </div>
             <div id="controls-info">
                 <div>MOVE: ARROWS/AD/PAD | SHOT: SPACE/BUTTON</div>
-                <!-- 修正点1: 操作説明の「ESC」を「P」に変更 -->
                 <div>PAUSE: P/START | FULLSCREEN: F</div>
             </div>
         </div>
@@ -127,40 +126,67 @@
                 if (!soundEnabled) return;
                 switch (type) {
                     case 'shot':
-                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3);
+                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.25); // 音量調整 0.3 -> 0.25
                         break;
                     case 'explode':
-                        // 音量を0.5から0.2に下げる
-                        createSound(110, 0.4, 'sawtooth', 0.8, 0, 0.2);
-                        setTimeout(() => createSound(55, 0.5, 'square', 0.8, 0, 0.2), 50);
+                        if (!audioContext) break;
+                        const now = audioContext.currentTime;
+                        const randomPan = (Math.random() - 0.5) * 0.7;
+                        const panner = audioContext.createStereoPanner();
+                        panner.pan.setValueAtTime(randomPan, now);
+                        panner.connect(audioContext.destination);
+                        const baseFreq = 1244.51;
+                        const baseVolume = 0.22;
+                        const noteDuration = 0.15;
+                        const noteDelay = 0.04;
+                        const arpeggio = [
+                            { freqMul: 1,      volMul: 1.0 },
+                            { freqMul: 1.2599, volMul: 0.8 },
+                            { freqMul: 1.4983, volMul: 0.9 },
+                            { freqMul: 2,      volMul: 0.7 }
+                        ];
+                        arpeggio.forEach((tone, index) => {
+                            const startTime = now + (index * noteDelay);
+                            const osc = audioContext.createOscillator();
+                            osc.type = 'triangle';
+                            osc.frequency.value = baseFreq * tone.freqMul;
+                            osc.detune.value = (Math.random() - 0.5) * 10;
+                            const gain = audioContext.createGain();
+                            gain.gain.setValueAtTime(baseVolume * tone.volMul, startTime);
+                            gain.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
+                            osc.connect(gain);
+                            gain.connect(panner);
+                            osc.start(startTime);
+                            osc.stop(startTime + noteDuration + 0.1);
+                        });
                         break;
                     case 'playerDie':
-                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 1);
-                        setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4, 0, 1), 100);
-                        setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6, 0, 1), 200);
+                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 0.7); // 音量調整 1 -> 0.7
+                        setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4, 0, 0.7), 100);
+                        setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6, 0, 0.7), 200);
                         break;
                     case 'select':
-                        createSound(600, 0.05, 'sine', 0.9, 0, 0.4);
+                        createSound(600, 0.05, 'sine', 0.9, 0, 0.3); // 音量調整 0.4 -> 0.3
                         break;
                     case 'confirm':
-                        createSound(800, 0.1, 'sine', 0.8, 0, 0.5);
+                        createSound(800, 0.1, 'sine', 0.8, 0, 0.4); // 音量調整 0.5 -> 0.4
                         break;
                     case 'pause':
-                        createSound(400, 0.08, 'square', 0.9, 0, 0.3);
+                        createSound(400, 0.08, 'square', 0.9, 0, 0.3); // 変更なし
                         break;
                     case 'waveClear':
-                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.4), 0);
+                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.4), 0); // 変更なし
                         setTimeout(() => createSound(659, 0.1, 'sine', 0.9, 0.5, 0.4), 100);
                         setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.5, 0.4), 200);
                         setTimeout(() => createSound(1046, 0.2, 'sine', 0.8, 0, 0.5), 300);
                         break;
                     case 'powerup':
-                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.5);
+                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.5); // 変更なし
                         setTimeout(() => createSound(1567.98, 0.1, 'triangle', 0.7, 0, 0.5), 80);
                         setTimeout(() => createSound(2093, 0.15, 'triangle', 0.6, 0, 0.5), 160);
                         break;
                     case 'highScore':
-                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.5), 0);
+                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.5), 0); // 変更なし
                         setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.2, 0.5), 120);
                         setTimeout(() => createSound(1046, 0.1, 'sine', 0.9, 0.2, 0.5), 240);
                         setTimeout(() => createSound(1318, 0.3, 'sine', 0.8, 0.6, 0.6), 360);
@@ -185,23 +211,23 @@
                 const step = sixteenth % 16;
                 if (step % 8 === 0) {
                     const bassNote = gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length];
-                    createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.3);
+                    createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.2); // 音量調整 0.3 -> 0.2
                 }
-                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.2);
+                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.15); // 音量調整 0.2 -> 0.15
                 if (step === 0) {
-                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 1);
+                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.45); // 音量調整 1 -> 0.45
                     canvas.classList.add('pulse');
                     gridAlpha = 0.25;
                     setTimeout(() => canvas.classList.remove('pulse'), 100);
                 }
                 if (step === 8) {
-                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.8);
+                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.35); // 音量調整 0.8 -> 0.35
                 }
                 if (step === 4 || step === 12) {
-                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.5);
+                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.3); // 音量調整 0.5 -> 0.3
                 }
                 if (step % 4 === 2) {
-                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.08);
+                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.07); // 音量調整 0.08 -> 0.07
                 }
                 gameBeatCount++;
             }
@@ -917,11 +943,9 @@
                 switch (gameState) {
                     case 'PLAYING':
                         if (code === 'Space' || code === 'ArrowUp') actions.shoot = true;
-                        // 修正点2: ポーズキーを 'Escape' から 'KeyP' に変更
                         else if (code === 'KeyP') doPause();
                         break;
                     case 'PAUSED':
-                        // 修正点3: ポーズ解除キーを 'Escape' から 'KeyP' に変更
                         if (code === 'KeyP') doPause();
                         else if (code === 'KeyQ') doQuit();
                         break;
