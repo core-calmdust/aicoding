@@ -424,43 +424,89 @@
             }
         }
 
+        /* =============== ここからがスマートフォン版レイアウトの修正箇所 =============== */
         @media (max-width: 900px) {
             .top-container {
                 flex-direction: column;
             }
+            
+            /* --- sidebar: 2つのボックスを囲む親コンテナ --- */
             .sidebar {
-                flex-direction: row;
+                flex-direction: row;     /* ボックスを横並びに */
+                flex-wrap: nowrap;       /* ★重要: 折り返しを禁止して常に一行に */
                 width: 100%;
                 gap: 10px;
-                align-items: stretch;
+                align-items: stretch;    /* ボックスの高さを揃えて見た目を綺麗に */
             }
-            .controls, .game-info {
-                flex: 1;
+            
+            /* --- .controls: 左側の設定ボックス --- */
+            .controls {
+                flex: 4; /* 横幅の比率を調整 */
                 display: flex;
                 flex-direction: column;
-                padding: 15px;
-                justify-content: space-between;
+                justify-content: center; /* 中身を上下中央に */
+                padding: 10px;
+                gap: 5px;
             }
+            
+            /* --- .game-info: 右側の情報ボックス --- */
             .game-info {
-                gap: 10px;
-            }
-            #turn-info, #score-info, .action-buttons {
-                flex-grow: 1;
-                display:flex;
+                flex: 5; /* 横幅の比率を調整 */
+                display: flex;
+                flex-direction: row; /* ★重要: 中身を横並びに変更 */
+                flex-wrap: wrap;     /* 画面が非常に狭い場合は折り返す */
+                justify-content: space-around; /* 中身を均等に配置 */
                 align-items: center;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            /* --- 各ボックス内の要素をコンパクト化 --- */
+            .controls label {
+                font-size: 11px;
+                text-align: center;
+                margin-bottom: 0;
+            }
+            .controls select {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+            .start-controls-wrapper {
+                padding-top: 6px;
+                margin-top: 6px;
                 justify-content: center;
             }
-            .controls label { font-size: 12px; }
-            .controls select { font-size: 14px; padding: 10px; }
-            .start-controls-wrapper { padding-top: 10px; margin-top: 10px; }
+            .radio-group label, #start-button {
+                width: 36px;
+                height: 36px;
+            }
+
+            #turn-info, #score-info, .action-buttons {
+                flex-grow: 0; /* 自動で高さが伸びるのを無効化 */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 0;
+            }
+
+            #turn-info { font-size: 0.9em; gap: 0.3em; }
+            #turn-count-number { font-size: 1.5em; }
+            #score-info { font-size: 1.1em; gap: 5px; }
+            #score-info .disc { width: 20px; height: 20px; }
+            #black-score, #white-score { font-size: 1.3em; }
+            
+            .action-buttons { gap: 6px; }
+            .action-buttons button { padding: 6px; font-size: 11px; }
+
+            /* --- 以下の部分は変更なし --- */
             .game-area {
                 width: 100%;
             }
-             #board {
+            #board {
                 width: var(--board-size-sp);
                 margin: 0 auto;
             }
-             #message-area {
+            #message-area {
                 width: 100%;
                 margin: 0; /* PCレイアウト用のマージンをリセット */
             }
@@ -471,10 +517,11 @@
         
         @media (max-width: 600px) {
              .sidebar {
-                /* flex-direction: column; を削除し、常に横並びにする */
-                flex-wrap: wrap; /* 画面が狭い場合に折り返すように */
+                /* 元々ここにあった flex-wrap: wrap; を削除しました。 */
+                /* これにより、狭い画面でもコントロールバーが一行に保たれます。 */
             }
         }
+        /* =============== スマートフォン版レイアウトの修正はここまで =============== */
     </style>
     <script type="application/ld+json">
     {
