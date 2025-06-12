@@ -501,9 +501,9 @@
                             <option value="5">レベル5 (α-β法 強)</option>
                             <option value="6">レベル6 (思考強化)</option>
                             <option value="7">レベル7 (定石+探索)</option>
-                            <option value="8">レベル8 (複合型AI)</option>
-                            <option value="9">レベル8+ (多様性)</option>
-                            <option value="10" selected>レベル9 (思考深化)</option>
+                            <option value="8" selected>レベル8 (複合型AI)</option>
+                            <option value="9">レベル8+ (レベル8＋多様性)</option>
+                            <option value="10">レベル9 (未完成)</option>
                         </select>
                         
                         <div class="start-controls-wrapper">
@@ -1046,14 +1046,17 @@ function updateUiState() {
         startButton.setAttribute('aria-label', 'ゲームを開始します');
     }
     
-    const controlsLocked = isGameInProgress || isPlaybackMode;
+    // ★★★ 修正点1: UIロックの条件を変更 ★★★
+    // ゲームが進行中でない限り、コントロールを有効化する
+    const controlsLocked = isGameInProgress && !isGameOver;
     cpuLevelSelect.disabled = controlsLocked;
     playerColorRadios.forEach(radio => { radio.disabled = controlsLocked; });
     cpuVsCpuButton.disabled = controlsLocked;
     
     const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
     undoButton.disabled = !isPlayerTurn || turnCount < 2;
-    researchButton.disabled = isCpuVsCpuMode || !isGameInProgress;
+    // researchButtonはゲーム中でないと押せないようにする
+    researchButton.disabled = isCpuVsCpuMode || !(isGameInProgress && !isGameOver);
     
     const kifuActive = isGameOver || isPlaybackMode;
     kifuStartBtn.disabled = !kifuActive || playbackIndex === 0;
@@ -1173,11 +1176,12 @@ function renderPlayback(index) {
 }
 
 function handleGraphScrub(event) {
-    event.preventDefault(); // ★★★ 修正点: スクロールをキャンセルするために必須
+    event.preventDefault();
     if (!isGameOver || !isDraggingGraph) return;
 
-    const graphWrapper = document.getElementById('evaluation-graph-wrapper');
-    const graphRect = graphWrapper.getBoundingClientRect();
+    // ★★★ 修正点2: 座標計算の基準をグラフ本体に変更 ★★★
+    const graphEl = document.getElementById('evaluation-graph');
+    const graphRect = graphEl.getBoundingClientRect();
     
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const relativeX = clientX - graphRect.left;
@@ -1195,8 +1199,8 @@ function handleGraphScrub(event) {
     }
 }
 
-// ★★★ 修正点: グラフのスライド操作関連のイベントリスナーを修正・集約
-const graphWrapper = document.getElementById('evaluation-graph-wrapper');
+// ★★★ 修正点2: グラフのスライド操作関連のイベントリスナーを修正・集約 ★★★
+const graphEl = document.getElementById('evaluation-graph'); // 対象をグラフ本体に変更
 
 const onGraphMove = (event) => {
     if (isDraggingGraph) {
@@ -1217,7 +1221,8 @@ const stopGraphScrub = () => {
     window.removeEventListener('touchend', stopGraphScrub);
 };
 
-graphWrapper.addEventListener('mousedown', (event) => {
+// マウス操作用のイベントリスナー
+graphEl.addEventListener('mousedown', (event) => {
     if (!isGameOver) return;
     isDraggingGraph = true;
     document.body.classList.add('graph-dragging');
@@ -1226,12 +1231,13 @@ graphWrapper.addEventListener('mousedown', (event) => {
     window.addEventListener('mouseup', stopGraphScrub);
 });
 
-graphWrapper.addEventListener('touchstart', (event) => {
+// タッチ操作用のイベントリスナー
+graphEl.addEventListener('touchstart', (event) => {
     if (!isGameOver) return;
     isDraggingGraph = true;
     document.body.classList.add('graph-dragging');
     handleGraphScrub(event);
-    // passive: false でブラウザのデフォルトスクロールを抑制
+    // passive: false でブラウザのデフォルトスクロールを抑制し、スワイプ操作を優先
     window.addEventListener('touchmove', onGraphMove, { passive: false });
     window.addEventListener('touchend', stopGraphScrub);
 }, { passive: false });
