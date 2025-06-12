@@ -232,8 +232,8 @@
             height: 100%; font-size: 10px; color: var(--text-muted-color);
             margin-right: 8px; width: 25px; flex-shrink: 0; font-family: 'Roboto', sans-serif;
         }
-        #evaluation-graph-wrapper { flex-grow: 1; position: relative; overflow: hidden; cursor: default; }
-        body.game-over #evaluation-graph-wrapper { cursor: grab; }
+        #evaluation-graph-wrapper { flex-grow: 1; position: relative; overflow: hidden; cursor: default; touch-action: pan-y; }
+        body.game-over #evaluation-graph-wrapper, body.game-interrupted #evaluation-graph-wrapper { cursor: grab; }
         body.graph-dragging #evaluation-graph-wrapper { cursor: grabbing; }
 
         #evaluation-graph {
@@ -641,7 +641,6 @@
         </div>
     </div>
 
-    <!-- ★★★ 変更点: Web Worker内のロジックを同期処理に変更し、確実性を向上 ★★★ -->
     <script id="research-worker-script" type="javascript/worker">
         // --- 定数定義 ---
         const EMPTY = 0, BLACK = 1, WHITE = 2;
@@ -863,20 +862,20 @@
 
         // --- メインロジック ---
         self.onmessage = async (e) => {
-            const { type, board, playerColor, turnCount, currentEval, maxAiLevel } = e.data;
+            const { type, board, playerColor, turnCount, currentEval, maxAiLevel, validMoves } = e.data;
             if (type === 'stop') {
                 continueThinking = false;
                 return;
             }
             
             continueThinking = true;
-            const validMoves = getValidMoves(board, playerColor);
-            
+            let cumulativeEvals = {};
+
             for (let level = 4; level <= maxAiLevel; level++) {
                 if (!continueThinking) break;
                 
-                const moveEvals = {};
                 const depth = getDepthForLevel(level, turnCount);
+                const currentLevelEvals = {};
 
                 for (const move of validMoves) {
                     if (!continueThinking) break;
@@ -891,13 +890,13 @@
                         diff = -diff;
                     }
                     
-                    moveEvals[`${move.r},${move.c}`] = diff;
+                    currentLevelEvals[`${move.r},${move.c}`] = diff;
                 }
                 
                 if (continueThinking) {
-                    self.postMessage({ type: 'evalUpdate', evaluations: moveEvals, level });
-                    // UIの応答性を保つための待機
-                    await new Promise(r => setTimeout(r, 0));
+                    cumulativeEvals = {...cumulativeEvals, ...currentLevelEvals };
+                    self.postMessage({ type: 'evalUpdate', evaluations: cumulativeEvals, level });
+                    await new Promise(r => setTimeout(r, 10)); // UIの応答性を保つためのわずかな待機
                 }
             }
         };
@@ -960,24 +959,20 @@ const workerScript = document.getElementById('research-worker-script').textConte
 const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
 const researchWorker = new Worker(URL.createObjectURL(workerBlob));
 
-// ★★★ 変更点: RESEARCH中のパフォーマンス改善のため、評価値の差分更新を行う ★★★
 function updateResearchValues(evaluations) {
     Object.keys(evaluations).forEach(key => {
         const [r, c] = key.split(',').map(Number);
         const cellIndex = r * BOARD_SIZE + c;
         const cell = boardEl.children[cellIndex];
-        if (!cell) return;
+        if (!cell || cell.querySelector('.disc')) return;
 
+        cell.classList.remove('valid-move-hint');
+        
         let valueSpan = cell.querySelector('.research-value');
         if (!valueSpan) {
             valueSpan = document.createElement('span');
             valueSpan.className = 'research-value';
-            // 他の要素を消さないように、先頭に挿入
-            if (cell.firstChild) {
-                cell.insertBefore(valueSpan, cell.firstChild);
-            } else {
-                cell.appendChild(valueSpan);
-            }
+            cell.appendChild(valueSpan);
         }
         
         const roundedEval = Math.round(evaluations[key]);
@@ -1007,21 +1002,17 @@ function resetGame() {
     isPlaybackMode = false;
     isGameOver = false;
     if(isResearchMode) researchButton.click();
-
     undoCount = 0;
-    document.body.classList.remove('game-over', 'graph-dragging');
-
+    document.body.classList.remove('game-over', 'game-interrupted', 'graph-dragging');
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
     board[3][3] = WHITE; board[3][4] = BLACK;
     board[4][3] = BLACK; board[4][4] = WHITE;
-    
     currentPlayer = BLACK;
     turnCount = 0;
     lastMove = null;
     gameHistory = [{ move: null, boardState: JSON.parse(JSON.stringify(board)) }];
     evaluationHistory = [];
     playbackIndex = 0;
-    
     renderBoard();
     renderEvaluationGraph();
     updateEvaluationDisplay(null);
@@ -1029,36 +1020,37 @@ function resetGame() {
     updateGameInfo();
 }
 
-function startGame(isTestMode) {
-    isPlaybackMode = false; // ★★★ 変更点: ゲーム開始時に再生モードを解除 ★★★
-    isGameInProgress = true;
+function setupAndStartGame(isTestMode, fromCurrentState) {
+    if (fromCurrentState) {
+        const blackCount = board.flat().filter(c => c === BLACK).length;
+        const whiteCount = board.flat().filter(c => c === WHITE).length;
+        turnCount = blackCount + whiteCount - 4;
+        currentPlayer = (turnCount % 2 === 0) ? BLACK : WHITE;
+        gameHistory.splice(turnCount + 1);
+        evaluationHistory.splice(turnCount);
+    } else {
+        resetGame();
+    }
     isCpuVsCpuMode = isTestMode;
+    startGame();
+}
+
+function startGame() {
+    isPlaybackMode = false;
+    isGameInProgress = true;
     isGameOver = false;
-    
+    document.body.classList.remove('game-interrupted', 'game-over');
     gameController();
 }
 
 function interruptGame() {
     isGameInProgress = false;
-    isCpuVsCpuMode = false;
-    if(isResearchMode) researchButton.click();
-    messageAreaEl.textContent = 'ゲームを中断しました';
+    if (isResearchMode) researchButton.click();
+    document.body.classList.add('game-interrupted');
     updateUiState();
+    updateGameInfo();
 }
 
-function resumeGame() {
-    isPlaybackMode = false; // ★★★ 変更点: ゲーム再開時に再生モードを解除 ★★★
-    isGameInProgress = true;
-    gameController();
-}
-
-function startCpuVsCpuFromCurrentState() {
-    isPlaybackMode = false; // ★★★ 変更点: ゲーム開始時に再生モードを解除 ★★★
-    isGameInProgress = true;
-    isCpuVsCpuMode = true;
-    isGameOver = false;
-    gameController();
-}
 
 async function gameController() {
     if (!isGameInProgress || isGameOver) return;
@@ -1068,11 +1060,12 @@ async function gameController() {
     
     const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
     if (isResearchMode && isPlayerTurn) {
-        researchEvaluations = {}; // 新しいターンで評価をリセット
-        renderBoard(); // まず盤面をクリア
+        researchEvaluations = {};
+        renderBoard();
         const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
+        const validMoves = getValidMoves(board, playerColor);
         researchWorker.postMessage({
-            type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel
+            type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel, validMoves
         });
     } else {
         renderBoard();
@@ -1082,14 +1075,15 @@ async function gameController() {
     if (!canCurrentPlayerMove) {
         const opponent = (currentPlayer === BLACK) ? WHITE : BLACK;
         const canOpponentMove = getValidMoves(board, opponent).length > 0;
-        
         if (!canOpponentMove) {
             endGame();
             return;
         }
-        
         messageAreaEl.textContent = `${currentPlayer === BLACK ? '黒' : '白'}はパスします。`;
         await new Promise(resolve => setTimeout(resolve, 1000));
+        turnCount++;
+        gameHistory.push({ move: {r: -1, c: -1}, boardState: JSON.parse(JSON.stringify(board)) });
+        evaluationHistory.push(evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length-1] : 0);
         currentPlayer = opponent;
         gameController();
         return;
@@ -1106,6 +1100,7 @@ function endGame() {
     isGameInProgress = false;
     if(isResearchMode) researchButton.click();
     document.body.classList.add('game-over');
+    document.body.classList.remove('game-interrupted');
     
     const blackScore = board.flat().filter(c => c === BLACK).length;
     const whiteScore = board.flat().filter(c => c === WHITE).length;
@@ -1116,9 +1111,7 @@ function endGame() {
         if (isCpuVsCpuMode) message = `CPU ${(winner === BLACK ? '1' : '2')} の勝ちです。`;
         else message = (winner === playerColor) ? "🎉 あなたの勝ちです！ 🎉" : "CPUの勝ちです。";
     }
-    if (!isCpuVsCpuMode && undoCount > 0) {
-        message += ` (待ったの使用回数: ${undoCount}回)`;
-    }
+    if (!isCpuVsCpuMode && undoCount > 0) message += ` (待ったの使用回数: ${undoCount}回)`;
     messageAreaEl.textContent = `ゲーム終了！ ${message}`;
     updateUiState();
     updateGameInfo();
@@ -1138,14 +1131,12 @@ function renderBoard() {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-
             if (board[r][c] !== EMPTY) {
                 const disc = document.createElement('div');
                 disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
                 cell.appendChild(disc);
             } else {
-                const validMove = validMoves.find(m => m.r === r && m.c === c);
-                if (validMove) {
+                if (validMoves.find(m => m.r === r && m.c === c)) {
                     cell.classList.add('valid-move-hint');
                 }
             }
@@ -1160,22 +1151,26 @@ function renderBoard() {
 
 function updateGameInfo() {
     let blackScore = 0, whiteScore = 0;
-    const currentBoard = isPlaybackMode ? JSON.parse(JSON.stringify(gameHistory[playbackIndex].boardState)) : board;
+    const currentBoard = board; 
     currentBoard.flat().forEach(cell => {
         if (cell === BLACK) blackScore++;
         if (cell === WHITE) whiteScore++;
     });
     blackScoreEl.textContent = blackScore;
     whiteScoreEl.textContent = whiteScore;
+    turnCountNumberEl.textContent = isPlaybackMode ? playbackIndex : turnCount;
     
-    const displayTurn = isPlaybackMode ? playbackIndex : turnCount;
-    turnCountNumberEl.textContent = displayTurn;
+    if (isGameOver) {
+        const blackFinal = board.flat().filter(c => c === BLACK).length;
+        const whiteFinal = board.flat().filter(c => c === WHITE).length;
+        const winner = (blackFinal > whiteFinal) ? '黒' : (whiteFinal > blackFinal ? '白' : '引き分け');
+        messageAreaEl.textContent = `ゲーム終了！ ${winner === '引き分け' ? '引き分けです！' : winner + 'の勝ちです。'}`;
+        return;
+    }
     
-    if (isGameOver) return;
-
     let message = '';
     if (isPlaybackMode) {
-         message = `棋譜再生中 (${displayTurn}手目)`;
+         message = `棋譜再生中 (${playbackIndex}手目)`;
     } else if (isGameInProgress) {
         if (isCpuVsCpuMode) {
              message = `${turnCount + 1}手目: CPU ${currentPlayer === BLACK ? '1' : '2'}のターンです`;
@@ -1184,7 +1179,7 @@ function updateGameInfo() {
              const researchLvlText = currentResearchLevel >= 9 ? (currentResearchLevel === 9 ? '8+' : '9') : currentResearchLevel.toString();
              message = isResearchMode && currentPlayer === playerColor ? `RESEARCHモード (レベル${researchLvlText} 思考中...)` : `${turnCount + 1}手目: ${playerTurnMsg}`;
         }
-    } else if (turnCount > 0 || gameHistory.length > 1) { // ★★★ 変更点: 棋譜再生後も中断中と表示
+    } else if (gameHistory.length > 1) {
         message = '中断中...';
     } else {
          message = '対戦設定を選んで開始してください';
@@ -1203,7 +1198,6 @@ function updateUiState() {
     cpuColor = (playerColor === BLACK) ? WHITE : BLACK;
     
     const startButtonImg = startButton.querySelector('img');
-
     if (isGameInProgress && !isGameOver) {
         startButtonImg.src = 'https://core-calmdust.github.io/aicoding/images/reversi/stop.png';
         startButtonImg.alt = '中断';
@@ -1223,11 +1217,12 @@ function updateUiState() {
     undoButton.disabled = !isPlayerTurn || turnCount < 2;
     researchButton.disabled = !isPlayerTurn;
     
-    const kifuActive = isGameOver || isPlaybackMode;
-    kifuStartBtn.disabled = !kifuActive || playbackIndex === 0;
-    kifuPrevBtn.disabled = !kifuActive || playbackIndex === 0;
-    kifuNextBtn.disabled = !kifuActive || playbackIndex >= gameHistory.length - 1;
-    kifuEndBtn.disabled = !kifuActive || playbackIndex >= gameHistory.length - 1;
+    const kifuActive = isGameOver || isPlaybackMode || (!isGameInProgress && gameHistory.length > 1);
+    const currentKifuIndex = isPlaybackMode ? playbackIndex : turnCount;
+    kifuStartBtn.disabled = !kifuActive || currentKifuIndex === 0;
+    kifuPrevBtn.disabled = !kifuActive || currentKifuIndex === 0;
+    kifuNextBtn.disabled = !kifuActive || currentKifuIndex >= gameHistory.length - 1;
+    kifuEndBtn.disabled = !kifuActive || currentKifuIndex >= gameHistory.length - 1;
 }
 
 function updateEvaluationDisplay(score) {
@@ -1244,20 +1239,16 @@ function renderEvaluationGraph() {
     const yAxisEl = document.getElementById('evaluation-y-axis');
     const tooltipEl = document.getElementById('evaluation-tooltip');
     if (!graphEl || !yAxisEl || !tooltipEl) return;
-
     graphEl.innerHTML = '';
     const maxAbsValue = evaluationHistory.length > 0 ? Math.max(...evaluationHistory.map(v => Math.abs(v))) : 0;
     const scale = Math.max(EVAL_GRAPH_INITIAL_SCALE, Math.ceil(maxAbsValue / 100) * 100);
     yAxisEl.innerHTML = `<span>+${scale}</span><span>-${scale}</span>`;
-
     for (let i = 0; i < MAX_TURNS; i++) {
         const barContainer = document.createElement('div');
         barContainer.className = 'bar-container';
-
-        if (isPlaybackMode && i === playbackIndex - 1) {
+        if (isPlaybackMode && i === playbackIndex) {
             barContainer.classList.add('current-turn-highlight');
         }
-
         if (i < evaluationHistory.length) {
             const value = evaluationHistory[i];
             const bar = document.createElement('div');
@@ -1267,7 +1258,6 @@ function renderEvaluationGraph() {
             if (value > 0) bar.classList.add('black');
             else if (value < 0) bar.classList.add('white');
             barContainer.appendChild(bar);
-
             barContainer.addEventListener('mouseover', () => {
                 tooltipEl.style.display = 'block';
                 tooltipEl.textContent = `Turn ${i + 1}: ${value > 0 ? '+' : ''}${value.toFixed(0)}`;
@@ -1276,9 +1266,7 @@ function renderEvaluationGraph() {
                 tooltipEl.style.left = `${barRect.left - wrapperRect.left + barRect.width / 2}px`;
                 tooltipEl.style.top = `${barRect.top - wrapperRect.top}px`;
             });
-            barContainer.addEventListener('mouseleave', () => {
-                tooltipEl.style.display = 'none';
-            });
+            barContainer.addEventListener('mouseleave', () => { tooltipEl.style.display = 'none'; });
         }
         graphEl.appendChild(barContainer);
     }
@@ -1289,33 +1277,28 @@ function renderEvaluationGraph() {
 // ================================================================= //
 
 function handleCellClick(r, c) {
-    if (!isGameInProgress || isCpuVsCpuMode || isPlaybackMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
-    
+    if (isPlaybackMode) return;
+    if (!isGameInProgress || isCpuVsCpuMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
     const flippable = getFlippableDiscs(board, r, c, playerColor);
     if (flippable.length === 0) return;
-    
-    if (isResearchMode) {
-        researchWorker.postMessage({ type: 'stop' });
-    }
-
+    if (isResearchMode) researchWorker.postMessage({ type: 'stop' });
     placeDisc(r, c, playerColor, flippable);
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
     gameController();
 }
 
 function renderPlayback(index) {
-    if (isResearchMode) researchButton.click();
+    if (isGameInProgress) interruptGame();
     isPlaybackMode = true;
-    isGameInProgress = false;
     
     playbackIndex = Math.max(0, Math.min(index, gameHistory.length - 1));
     const record = gameHistory[playbackIndex];
-    board = JSON.parse(JSON.stringify(record.boardState));
-    lastMove = record.move;
-    
+    if (record) {
+        board = JSON.parse(JSON.stringify(record.boardState));
+        lastMove = record.move;
+    }
     const score = playbackIndex > 0 ? evaluationHistory[playbackIndex - 1] : null;
     updateEvaluationDisplay(score);
-    
     updateUiState();
     updateGameInfo();
     renderBoard();
@@ -1325,7 +1308,7 @@ function renderPlayback(index) {
 const graphWrapperEl = document.getElementById('evaluation-graph-wrapper');
 
 function handleGraphScrub(event) {
-    if (!isGameOver || !isDraggingGraph) return;
+    if ((!isGameOver && !document.body.classList.contains('game-interrupted')) || !isDraggingGraph) return;
     const graphRect = graphWrapperEl.getBoundingClientRect();
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const relativeX = clientX - graphRect.left;
@@ -1349,7 +1332,7 @@ const onMouseUp = () => {
     window.removeEventListener('mouseup', onMouseUp);
 };
 graphWrapperEl.addEventListener('mousedown', (event) => {
-    if (!isGameOver || event.button !== 0) return;
+    if ((!isGameOver && !document.body.classList.contains('game-interrupted')) || event.button !== 0) return;
     isDraggingGraph = true;
     document.body.classList.add('graph-dragging');
     handleGraphScrub(event);
@@ -1357,8 +1340,10 @@ graphWrapperEl.addEventListener('mousedown', (event) => {
     window.addEventListener('mouseup', onMouseUp);
 });
 const onTouchMove = (e) => {
-    e.preventDefault();
-    handleGraphScrub(e);
+    if (isDraggingGraph) {
+        e.preventDefault();
+        handleGraphScrub(e);
+    }
 };
 const onTouchEnd = () => {
     if (!isDraggingGraph) return;
@@ -1369,14 +1354,13 @@ const onTouchEnd = () => {
     window.removeEventListener('touchend', onTouchEnd);
 };
 graphWrapperEl.addEventListener('touchstart', (event) => {
-    if (!isGameOver) return;
-    event.preventDefault();
+    if (!isGameOver && !document.body.classList.contains('game-interrupted')) return;
     isDraggingGraph = true;
     document.body.classList.add('graph-dragging');
     handleGraphScrub(event);
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd);
-}, { passive: false });
+}, { passive: true });
 
 
 function showModal(message, confirmText, cancelText, onConfirm, onCancel) {
@@ -1396,36 +1380,34 @@ startButton.addEventListener('click', () => {
     if (isGameInProgress) {
         interruptGame();
     } else {
-        // ★★★ 変更点: 棋譜再生後でもオプションを表示するように条件を変更 ★★★
-        if ((turnCount > 0 && !isGameOver) || isPlaybackMode) {
-            showModal('ゲームを再開しますか？<br>それとも最初から始めますか？', '再開', '最初から', 
-                () => resumeGame(), 
-                () => { resetGame(); startGame(false); }
+        // ★★★ 変更点: isGameOverのチェックを外す ★★★
+        if (gameHistory.length > 1) {
+            showModal('最初から始めますか？<br>それとも現在の局面から再開しますか？', '最初から', 'この局面から再開',
+                () => setupAndStartGame(false, false),
+                () => setupAndStartGame(false, true)
             );
         } else {
-            resetGame();
-            startGame(false);
+            setupAndStartGame(false, false);
         }
     }
 });
 
 cpuVsCpuButton.addEventListener('click', () => {
     if (isGameInProgress) return;
-    // ★★★ 変更点: 棋譜再生後でもオプションを表示するように条件を変更 ★★★
-    if ((turnCount > 0 && !isGameOver) || isPlaybackMode) {
-         showModal('CPU戦を最初から始めますか？<br>それとも今の局面から行いますか？', '最初から', 'この局面から',
-            () => { resetGame(); startGame(true); },
-            () => startCpuVsCpuFromCurrentState()
+    // ★★★ 変更点: isGameOverのチェックを外す ★★★
+    if (gameHistory.length > 1) {
+         showModal('CPU戦を最初から始めますか？<br>それとも現在の局面から開始しますか？', '最初から', 'この局面から',
+            () => setupAndStartGame(true, false),
+            () => setupAndStartGame(true, true)
         );
     } else {
-        resetGame();
-        startGame(true);
+        setupAndStartGame(true, false);
     }
 });
 
 kifuStartBtn.addEventListener('click', () => { if (!kifuStartBtn.disabled) renderPlayback(0); });
-kifuPrevBtn.addEventListener('click', () => { if (!kifuPrevBtn.disabled) renderPlayback(playbackIndex - 1); });
-kifuNextBtn.addEventListener('click', () => { if (!kifuNextBtn.disabled) renderPlayback(playbackIndex + 1); });
+kifuPrevBtn.addEventListener('click', () => { if (!kifuPrevBtn.disabled) renderPlayback(isPlaybackMode ? playbackIndex - 1 : turnCount - 1); });
+kifuNextBtn.addEventListener('click', () => { if (!kifuNextBtn.disabled) renderPlayback(isPlaybackMode ? playbackIndex + 1 : turnCount + 1); });
 kifuEndBtn.addEventListener('click', () => { if (!kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1); });
 
 undoButton.addEventListener('click', () => {
@@ -1453,13 +1435,14 @@ researchButton.addEventListener('click', () => {
     if (isResearchMode) {
         researchEvaluations = {};
         currentResearchLevel = 4;
-        updateGameInfo();
-        renderBoard(); // 先に盤面をクリアしてヒントなどを消す
+        renderBoard();
         const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
         if (isPlayerTurn) {
+            updateGameInfo();
             const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
+            const validMoves = getValidMoves(board, playerColor);
             researchWorker.postMessage({
-                type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel
+                type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel, validMoves
             });
         }
     } else {
@@ -1471,19 +1454,17 @@ researchButton.addEventListener('click', () => {
     }
 });
 
-playerColorRadios.forEach(radio => {
-    radio.addEventListener('change', () => {
-        if (!isGameInProgress) updateUiState();
-    });
-});
+playerColorRadios.forEach(radio => { radio.addEventListener('change', () => { if (!isGameInProgress) updateUiState(); }); });
 
 document.addEventListener('keydown', (event) => {
-    if (isPlaybackMode || isGameOver) {
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) event.preventDefault();
-        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) kifuPrevBtn.click();
-        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) kifuNextBtn.click();
-        else if (event.key === 'ArrowDown' && !kifuStartBtn.disabled) kifuStartBtn.click();
-        else if (event.key === 'ArrowUp' && !kifuEndBtn.disabled) kifuEndBtn.click();
+    const kifuActive = isGameOver || isPlaybackMode || (!isGameInProgress && gameHistory.length > 1);
+    if (kifuActive) {
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) event.preventDefault();
+        const currentKifuIndex = isPlaybackMode ? playbackIndex : turnCount;
+        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) renderPlayback(currentKifuIndex - 1);
+        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) renderPlayback(currentKifuIndex + 1);
+        else if (event.key === 'Home' && !kifuStartBtn.disabled) renderPlayback(0);
+        else if (event.key === 'End' && !kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1);
     }
 });
 
@@ -1737,7 +1718,7 @@ function placeDisc(r, c, player, flippable) {
         updateEvaluationDisplay(score);
         renderEvaluationGraph();
     }
-    playbackIndex = gameHistory.length - 1;
+    playbackIndex = turnCount;
 }
 
 function placeDiscInBoard(b, r, c, player, flippable) {
