@@ -640,12 +640,8 @@
             </div>
         </div>
     </div>
-    
+
     <script id="research-worker-script" type="javascript/worker">
-        // ================================================================= //
-        //                             Worker Script                         //
-        // ================================================================= //
-        
         // --- 定数定義 ---
         const EMPTY = 0, BLACK = 1, WHITE = 2;
         const BOARD_SIZE = 8;
@@ -1463,12 +1459,25 @@ playerColorRadios.forEach(radio => { radio.addEventListener('change', () => { if
 document.addEventListener('keydown', (event) => {
     const kifuActive = isGameOver || isPlaybackMode || (!isGameInProgress && gameHistory.length > 1);
     if (kifuActive) {
-        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) event.preventDefault();
+        // ↓キーと↑キーをブラウザのデフォルト動作（スクロール）防止対象に追加
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
+            event.preventDefault();
+        }
+
         const currentKifuIndex = isPlaybackMode ? playbackIndex : turnCount;
-        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) renderPlayback(currentKifuIndex - 1);
-        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) renderPlayback(currentKifuIndex + 1);
-        else if (event.key === 'Home' && !kifuStartBtn.disabled) renderPlayback(0);
-        else if (event.key === 'End' && !kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1);
+        
+        // キーに応じた処理を実行
+        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) {
+            renderPlayback(currentKifuIndex - 1);
+        } else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) {
+            renderPlayback(currentKifuIndex + 1);
+        // ↓キーまたはHomeキーで棋譜の最初へ移動
+        } else if ((event.key === 'ArrowDown' || event.key === 'Home') && !kifuStartBtn.disabled) {
+            renderPlayback(0);
+        // ↑キーまたはEndキーで棋譜の最後へ移動
+        } else if ((event.key === 'ArrowUp' || event.key === 'End') && !kifuEndBtn.disabled) {
+            renderPlayback(gameHistory.length - 1);
+        }
     }
 });
 
