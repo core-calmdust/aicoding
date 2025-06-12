@@ -43,10 +43,8 @@
         #sound-toggle:hover { background-color: rgba(255, 0, 255, 0.7); }
         #controls-info { color: rgba(255, 255, 255, 0.7); font-size: 14px; margin-top: 20px; text-shadow: 0 0 5px #00ffff; text-align: center; }
         #controls-info > div { line-height: 1.5; }
-        /* ▼▼▼ SEO: スクリーンリーダー用の非表示スタイルを追加 ▼▼▼ */
         .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
     </style>
-     <!-- ▼▼▼ SEO: 構造化データの追加 ▼▼▼ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -65,7 +63,6 @@
     </script>
 </head>
 <body>
-    <!-- ▼▼▼ SEO: h1とセマンティックタグ(main, footer)を追加 ▼▼▼ -->
     <h1 class="visually-hidden">DANMAKU INVADER XTREME+ - ブラウザ弾幕シューティングゲーム</h1>
     <main id="fullscreen-wrapper" aria-label="ゲームメインエリア">
         <div id="scalable-content">
@@ -79,10 +76,8 @@
             </footer>
         </div>
     </main>
-    <!-- ▲▲▲ SEO: 変更ここまで ▲▲▲ -->
 
     <script>
-        // JavaScript部分は変更なし
         document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
@@ -131,8 +126,9 @@
             // ==================================================================
             // 3. サウンド関連
             // ==================================================================
-            let audioContext;
-            let titleBgmInterval, gameBgmInterval;
+            // ▼▼▼【変更点 1/7】サウンド関連の変数を再整理 ▼▼▼
+            let audioContext, masterGain, compressor;
+            let gameBgmTimer = 0, titleBgmTimer = 0, gameLoopLastTime = 0;
             let soundEnabled = true;
             let gridAlpha = 0.08;
             let baseHue = 0;
@@ -143,12 +139,28 @@
             const gameArpeggio = [440, 523.25, 659.25, 523.25, 440, 523.25, 783.99, 523.25];
             const titlePadNotes = [55, 65.41, 41.20, 48.99];
             
+            // ▼▼▼【変更点 2/7】マスターボリュームとコンプレッサーを初期化する関数 ▼▼▼
             function initAudio() {
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    masterGain = audioContext.createGain();
+                    compressor = audioContext.createDynamicsCompressor();
+                    
+                    compressor.threshold.setValueAtTime(-24, audioContext.currentTime);
+                    compressor.knee.setValueAtTime(30, audioContext.currentTime);
+                    compressor.ratio.setValueAtTime(12, audioContext.currentTime);
+                    compressor.attack.setValueAtTime(0.003, audioContext.currentTime);
+                    compressor.release.setValueAtTime(0.25, audioContext.currentTime);
+                    
+                    masterGain.connect(compressor);
+                    compressor.connect(audioContext.destination);
+
+                    masterGain.gain.setValueAtTime(0.7, audioContext.currentTime);
                 }
             }
             
+            // ▼▼▼【変更点 3/7】個々のサウンドの出力先をマスターボリュームに変更 ▼▼▼
             function createSound(freq, dur, type, decay, pan, vol) {
                 if (!audioContext) return;
                 const osc = audioContext.createOscillator();
@@ -158,7 +170,7 @@
 
                 osc.connect(gain);
                 gain.connect(panner);
-                panner.connect(audioContext.destination);
+                panner.connect(masterGain); // 出力先をマスターボリュームに
                 
                 panner.pan.setValueAtTime(pan, now);
                 osc.type = type;
@@ -174,17 +186,18 @@
                 if (!soundEnabled) return;
                 switch (type) {
                     case 'shot':
-                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3); // 音量調整
+                        createSound(987.77, 0.1, 'triangle', 0.8, 0, 0.3);
                         break;
                     case 'explode':
                         if (!audioContext) break;
                         const now = audioContext.currentTime;
                         const randomPan = (Math.random() - 0.5) * 0.7;
+                        // このSE専用のpannerを作るのは、複数の爆発音が同時に鳴った時に定位が混ざらないようにするため
                         const panner = audioContext.createStereoPanner();
                         panner.pan.setValueAtTime(randomPan, now);
-                        panner.connect(audioContext.destination);
+                        panner.connect(masterGain); // このpannerもマスターに接続
                         const baseFreq = 1244.51;
-                        const baseVolume = 0.28; // 音量調整
+                        const baseVolume = 0.28;
                         const noteDuration = 0.15;
                         const noteDelay = 0.04;
                         const arpeggio = [
@@ -203,38 +216,38 @@
                             gain.gain.setValueAtTime(baseVolume * tone.volMul, startTime);
                             gain.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
                             osc.connect(gain);
-                            gain.connect(panner);
+                            gain.connect(panner); // このSE専用pannerに接続
                             osc.start(startTime);
                             osc.stop(startTime + noteDuration + 0.1);
                         });
                         break;
                     case 'playerDie':
-                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 0.8); // 音量調整
+                        createSound(220, 0.8, 'sawtooth', 0.2, 0, 0.8);
                         setTimeout(() => createSound(110, 0.8, 'sawtooth', 0.4, 0, 0.8), 100);
                         setTimeout(() => createSound(55, 0.8, 'sawtooth', 0.6, 0, 0.8), 200);
                         break;
                     case 'select':
-                        createSound(600, 0.05, 'sine', 0.9, 0, 0.35); // 音量調整
+                        createSound(600, 0.05, 'sine', 0.9, 0, 0.35);
                         break;
                     case 'confirm':
-                        createSound(800, 0.1, 'sine', 0.8, 0, 0.5); // 音量調整
+                        createSound(800, 0.1, 'sine', 0.8, 0, 0.5);
                         break;
                     case 'pause':
-                        createSound(400, 0.08, 'square', 0.9, 0, 0.35); // 音量調整
+                        createSound(400, 0.08, 'square', 0.9, 0, 0.35);
                         break;
                     case 'waveClear':
-                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.5), 0); // 音量調整
+                        setTimeout(() => createSound(523, 0.1, 'sine', 0.9, -0.5, 0.5), 0);
                         setTimeout(() => createSound(659, 0.1, 'sine', 0.9, 0.5, 0.5), 100);
                         setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.5, 0.5), 200);
                         setTimeout(() => createSound(1046, 0.2, 'sine', 0.8, 0, 0.6), 300);
                         break;
                     case 'powerup':
-                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.6); // 音量調整
+                        createSound(1318.51, 0.05, 'triangle', 0.8, 0, 0.6);
                         setTimeout(() => createSound(1567.98, 0.1, 'triangle', 0.7, 0, 0.6), 80);
                         setTimeout(() => createSound(2093, 0.15, 'triangle', 0.6, 0, 0.6), 160);
                         break;
                     case 'highScore':
-                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.6), 0); // 音量調整
+                        setTimeout(() => createSound(659, 0.1, 'sine', 0.9, -0.6, 0.6), 0);
                         setTimeout(() => createSound(783, 0.1, 'sine', 0.9, -0.2, 0.6), 120);
                         setTimeout(() => createSound(1046, 0.1, 'sine', 0.9, 0.2, 0.6), 240);
                         setTimeout(() => createSound(1318, 0.3, 'sine', 0.8, 0.7), 360);
@@ -246,58 +259,69 @@
                 if (!soundEnabled) return;
                 const step = titleBeatCount % 16;
                 if (step % 4 === 0) {
-                    createSound(titlePadNotes[Math.floor(step / 4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.25); // 音量調整
+                    createSound(titlePadNotes[Math.floor(step / 4)], titleEighthNoteDuration * 4, 'sawtooth', 0.95, 0, 0.25);
                 }
-                createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.15); // 音量調整
+                createSound(titlePadNotes[step % 4] * 4, titleEighthNoteDuration, 'sine', 0.9, (step % 2 - 0.5) * 1.5, 0.15);
                 titleBeatCount++;
             }
 
+            // ▼▼▼【変更点 4/7】BGM各パートの音量を最終調整 ▼▼▼
             function playGameBGM() {
                 if (!soundEnabled) return;
+
                 const sixteenth = gameBeatCount % 32;
                 const measure = Math.floor(sixteenth / 16);
                 const step = sixteenth % 16;
+
+                // ベースライン
                 if (step % 8 === 0) {
                     const bassNote = gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length];
-                    createSound(bassNote, gameSixteenthNoteDuration * 7, 'sawtooth', 0.8, 0, 0.28); // 音量調整
+                    createSound(bassNote, gameSixteenthNoteDuration * 6, 'sawtooth', 0.85, 0, 0.30);
+                    createSound(bassNote / 2, gameSixteenthNoteDuration * 7, 'sine', 0.8, 0, 0.40);
                 }
-                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.22); // 音量調整
+
+                // リズム隊
                 if (step === 0) {
-                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.6); // 音量調整
+                    createSound(150, gameSixteenthNoteDuration * 0.5, 'triangle', 0.9, 0, 0.18);
+                    createSound(55, gameSixteenthNoteDuration * 4, 'sine', 0.6, 0, 0.75);
+                    
                     canvas.classList.add('pulse');
                     gridAlpha = 0.25;
                     setTimeout(() => canvas.classList.remove('pulse'), 100);
                 }
                 if (step === 8) {
-                    createSound(90, gameSixteenthNoteDuration * 2, 'sine', 0.9, 0, 0.5); // 音量調整
+                    createSound(150, gameSixteenthNoteDuration * 0.5, 'triangle', 0.9, 0, 0.13);
+                    createSound(55, gameSixteenthNoteDuration * 4, 'sine', 0.6, 0, 0.65);
                 }
                 if (step === 4 || step === 12) {
-                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.4); // 音量調整
+                    createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.35);
                 }
                 if (step % 4 === 2) {
-                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.1); // 音量調整
+                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.1);
                 }
+                
+                // アルペジオ
+                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.18);
+                
                 gameBeatCount++;
             }
 
+            // ▼▼▼【変更点 5/7】setIntervalを使わないBGM制御関数に更新 ▼▼▼
             function stopAllBGM() {
-                clearInterval(titleBgmInterval);
-                clearInterval(gameBgmInterval);
+                // BGMはgameLoopで制御するため、この関数は実質何もしない
             }
 
             function startTitleBGM() {
-                stopAllBGM();
                 if (soundEnabled) {
                     titleBeatCount = 0;
-                    titleBgmInterval = setInterval(playTitleBGM, titleEighthNoteDuration * 1000);
+                    titleBgmTimer = 0; // タイマーリセット
                 }
             }
 
             function startGameBGM() {
-                stopAllBGM();
                 if (soundEnabled) {
                     gameBeatCount = 0;
-                    gameBgmInterval = setInterval(playGameBGM, gameSixteenthNoteDuration * 1000);
+                    gameBgmTimer = 0; // タイマーリセット
                 }
             }
 
@@ -874,6 +898,8 @@
                     playSound('pause');
                 } else if (gameState === 'PAUSED') {
                     gameState = 'PLAYING';
+                    // lastFrameTimeをリセットして、ポーズ中の時間をelapsedTimeに加算しないようにする
+                    lastFrameTime = performance.now(); 
                     startGameBGM();
                     playSound('pause');
                 }
@@ -907,7 +933,7 @@
                         playSound('confirm');
                         break;
                     case 'TITLE':
-                        initAudio();
+                        initAudio(); // TITLE画面から進むときに一度だけAudioContextを初期化
                         startTitleBGM();
                         gameState = 'DIFFICULTY';
                         playSound('confirm');
@@ -1021,11 +1047,38 @@
                 }
             }
 
-            function gameLoop() {
-                requestAnimationFrame(gameLoop);
+            // ▼▼▼【変更点 6/7】BGM再生とハングアップ対策を統合した、新しいgameLoop ▼▼▼
+            function gameLoop(timestamp) {
+                if (!gameLoopLastTime) {
+                    gameLoopLastTime = timestamp;
+                }
+                let deltaTime = (timestamp - gameLoopLastTime) / 1000.0;
+                gameLoopLastTime = timestamp;
+
+                // BGM再生スケジューラ
+                if (soundEnabled && audioContext) {
+                    if (gameState === 'PLAYING') {
+                        gameBgmTimer += deltaTime;
+                        if (gameBgmTimer >= gameSixteenthNoteDuration) {
+                            playGameBGM();
+                            // 溜まった時間分を再生するのではなく、再生した分だけタイマーを進める
+                            // これでタブ非アクティブからの復帰時にBGMが一気に再生されるのを防ぐ
+                            gameBgmTimer %= gameSixteenthNoteDuration;
+                        }
+                    } else if (gameState === 'TITLE' || gameState === 'DIFFICULTY') {
+                        titleBgmTimer += deltaTime;
+                        if (titleBgmTimer >= titleEighthNoteDuration) {
+                            playTitleBGM();
+                            titleBgmTimer %= titleEighthNoteDuration;
+                        }
+                    }
+                }
+                
                 processActions();
                 update();
                 draw();
+
+                requestAnimationFrame(gameLoop);
             }
             
             soundToggleButton.addEventListener('click', () => {
@@ -1043,7 +1096,8 @@
 
             highScore = parseInt(localStorage.getItem('danmakuInvaderHighScore') || '0', 10);
             createStars();
-            gameLoop();
+            // ▼▼▼【変更点 7/7】gameLoopの初回呼び出しをrequestAnimationFrameに変更 ▼▼▼
+            requestAnimationFrame(gameLoop);
         });
     </script>
 </body>
