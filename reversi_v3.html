@@ -582,7 +582,7 @@
             
             <section id="evaluation-graph-container">
                 <div id="current-evaluation-display">
-                    <span>対戦相手のAI評価値: </span>
+                    <span>評価値: </span>
                     <span id="evaluation-value-text">N/A</span>
                 </div>
                  <div id="evaluation-graph-wrapper-outer">
@@ -960,20 +960,33 @@ const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
 const researchWorker = new Worker(URL.createObjectURL(workerBlob));
 
 function updateResearchValues(evaluations) {
+    // 現在の有効手リストを取得し、高速に検索できるようSetに変換します。
+    const validMoves = getValidMoves(board, currentPlayer);
+    const validMovesSet = new Set(validMoves.map(m => `${m.r},${m.c}`));
+
+    // 表示を更新する前に、盤面上に残っている古い評価値を一度すべてクリアします。
+    document.querySelectorAll('.research-value').forEach(el => el.remove());
+
     Object.keys(evaluations).forEach(key => {
+        // この座標が、現在の盤面で石を置ける場所（有効手）かを確認します。
+        if (!validMovesSet.has(key)) {
+            return; // 有効手でなければ、この後の処理は行いません。
+        }
+
         const [r, c] = key.split(',').map(Number);
         const cellIndex = r * BOARD_SIZE + c;
         const cell = boardEl.children[cellIndex];
+
+        // 念のため、セルが存在し、石が置かれていないことも確認します。
         if (!cell || cell.querySelector('.disc')) return;
 
+        // 有効手ヒント用の緑色の点を消します。
         cell.classList.remove('valid-move-hint');
         
-        let valueSpan = cell.querySelector('.research-value');
-        if (!valueSpan) {
-            valueSpan = document.createElement('span');
-            valueSpan.className = 'research-value';
-            cell.appendChild(valueSpan);
-        }
+        // 評価値を表示するためのspan要素を常に新しく作成して追加します。
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'research-value';
+        cell.appendChild(valueSpan);
         
         const roundedEval = Math.round(evaluations[key]);
         valueSpan.textContent = (roundedEval > 0 ? '+' : '') + roundedEval;
