@@ -894,7 +894,8 @@
 
         // --- メインロジック ---
         self.onmessage = async (e) => {
-            const { type, board, playerColor, turnCount, currentEval, maxAiLevel, validMoves } = e.data;
+            // ★★★ currentEvalを削除 ★★★
+            const { type, board, playerColor, turnCount, maxAiLevel, validMoves } = e.data;
             if (type === 'stop') {
                 continueThinking = false;
                 return;
@@ -905,6 +906,9 @@
 
             for (let level = 4; level <= maxAiLevel; level++) {
                 if (!continueThinking) break;
+
+                // ★★★ このレベルでの基準評価値を計算 ★★★
+                const currentEvalForThisLevel = evaluateBoard(board, BLACK, level, turnCount);
                 
                 const depth = getDepthForLevel(level, turnCount);
                 const currentLevelEvals = {};
@@ -917,7 +921,8 @@
                     
                     const result = alphaBetaSearch(tempBoard, depth, -Infinity, Infinity, false, BLACK, level, turnCount + 1);
                     
-                    let diff = result.score - currentEval;
+                    // ★★★ 計算した基準評価値と比較 ★★★
+                    let diff = result.score - currentEvalForThisLevel;
                     if (playerColor === WHITE) {
                         diff = -diff;
                     }
@@ -928,7 +933,7 @@
                 if (continueThinking) {
                     cumulativeEvals = {...cumulativeEvals, ...currentLevelEvals };
                     self.postMessage({ type: 'evalUpdate', evaluations: cumulativeEvals, level });
-                    await new Promise(r => setTimeout(r, 10)); // UIの応答性を保つためのわずかな待機
+                    await new Promise(r => setTimeout(r, 10));
                 }
             }
         };
@@ -1099,10 +1104,10 @@ async function gameController() {
         isResearchComplete = false;
         researchEvaluations = {};
         renderBoard();
-        const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
         const validMoves = getValidMoves(board, playerColor);
+        // ★★★ currentEvalを削除 ★★★
         researchWorker.postMessage({
-            type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel, validMoves
+            type: 'start', board, playerColor, turnCount, maxAiLevel, validMoves
         });
     } else {
         renderBoard();
@@ -1352,19 +1357,11 @@ function handleGraphScrub(event) {
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const relativeX = clientX - graphRect.left;
 
-    // グラフ全体の幅とバーの総数から、1つのバーの幅を計算
     const barWidth = graphRect.width / MAX_TURNS;
-    
-    // クリックされたX座標が何番目のバーに該当するかを計算
     const clickedBarIndex = Math.floor(Math.max(0, relativeX) / barWidth);
-    
-    // 現在の最大手数
     const maxTurn = gameHistory.length - 1;
-    
-    // 表示する手番を計算。クリック位置がゲームの進行状況を超えていたら、最後の手に留める
     const turn = Math.min(clickedBarIndex, maxTurn);
 
-    // 同じ手番を連続で処理しないようにチェック
     if (turn !== lastHoveredTurn) {
         lastHoveredTurn = turn;
         renderPlayback(turn);
@@ -1487,10 +1484,10 @@ researchButton.addEventListener('click', () => {
         const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
         if (isPlayerTurn) {
             updateGameInfo();
-            const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
             const validMoves = getValidMoves(board, playerColor);
+            // ★★★ currentEvalを削除 ★★★
             researchWorker.postMessage({
-                type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel, validMoves
+                type: 'start', board, playerColor, turnCount, maxAiLevel, validMoves
             });
         }
     } else {
@@ -1508,22 +1505,16 @@ playerColorRadios.forEach(radio => { radio.addEventListener('change', () => { if
 document.addEventListener('keydown', (event) => {
     const kifuActive = isGameOver || isPlaybackMode || (!isGameInProgress && gameHistory.length > 1);
     if (kifuActive) {
-        // ↓キーと↑キーをブラウザのデフォルト動作（スクロール）防止対象に追加
         if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
             event.preventDefault();
         }
-
         const currentKifuIndex = isPlaybackMode ? playbackIndex : turnCount;
-        
-        // キーに応じた処理を実行
         if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) {
             renderPlayback(currentKifuIndex - 1);
         } else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) {
             renderPlayback(currentKifuIndex + 1);
-        // ↓キーまたはHomeキーで棋譜の最初へ移動
         } else if ((event.key === 'ArrowDown' || event.key === 'Home') && !kifuStartBtn.disabled) {
             renderPlayback(0);
-        // ↑キーまたはEndキーで棋譜の最後へ移動
         } else if ((event.key === 'ArrowUp' || event.key === 'End') && !kifuEndBtn.disabled) {
             renderPlayback(gameHistory.length - 1);
         }
