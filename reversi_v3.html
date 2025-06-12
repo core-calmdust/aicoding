@@ -154,18 +154,14 @@
         
         .controls button:hover, .test-controls button:hover { background-color: var(--accent-hover-color); }
         
-        /* ★★★ ここから修正 ★★★ */
         .start-controls-wrapper {
             display: flex;
-            justify-content: space-evenly; /* アイテムを等間隔に配置 */
+            justify-content: space-evenly;
             align-items: center;
             margin-top: 20px;
-            /* border-top と padding-top を削除 */
         }
         
-        /* radio-groupクラスは不要になったので削除 */
-        
-        .start-controls-wrapper > label { /* セレクタを変更 */
+        .start-controls-wrapper > label {
             position: relative; width: 48px; height: 48px;
             display: flex; justify-content: center; align-items: center;
             padding: 0; border: 3px solid var(--border-color);
@@ -178,20 +174,18 @@
             border-color: var(--accent-color);
             box-shadow: 0 0 8px var(--accent-color);
         }
-        
         .start-controls-wrapper > label:has(input:disabled) { cursor: not-allowed; opacity: 0.5; }
-        /* 1. 石のサイズを調整 */
+        
         .start-controls-wrapper .disc {
-            width: 80%; /* 85%から変更 */
-            height: 80%; /* 85%から変更 */
+            width: 80%;
+            height: 80%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
         }
-        
         .start-controls-wrapper .disc.white { box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.2); }
         
         #start-button {
             background: #cccccc;
-            border: 3px solid transparent; /* 「border: none;」から変更 */
+            border: 3px solid transparent;
             padding: 0;
             border-radius: 8px;
             width: 48px;
@@ -204,12 +198,11 @@
             flex-shrink: 0;
             margin: 0;
         }
-        
         #start-button:hover:not(:disabled) { background-color: #b0b0b0; }
         #start-button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #6a6a6a; }
         #start-button img {
-            width: 80%; /* 70%から変更 */
-            height: 80%; /* 70%から変更 */
+            width: 80%;
+            height: 80%;
             opacity: 0.9;
         }
 
@@ -481,17 +474,14 @@
                 font-size: 13px;
                 padding: 6px 10px;
             }
-            /* ★★★ ここから修正 ★★★ */
             .start-controls-wrapper {
                 margin-top: 6px;
-                justify-content: space-evenly; /* 等間隔に配置 */
-                /* padding-top は削除 */
+                justify-content: space-evenly;
             }
-            .start-controls-wrapper > label, #start-button { /* セレクタを変更 */
+            .start-controls-wrapper > label, #start-button {
                 width: 36px;
                 height: 36px;
             }
-            /* ★★★ ここまで修正 ★★★ */
 
             #turn-info, #score-info, .action-buttons {
                 flex-grow: 0;
@@ -576,7 +566,6 @@
                             <option value="10">レベル9 (戦略的評価型AI)</option>
                         </select>
                         
-                        <!-- ★★★ ここから修正 ★★★ -->
                         <div class="start-controls-wrapper" role="radiogroup" aria-label="手番選択">
                             <label title="先攻 (黒)">
                                 <input type="radio" name="player_color" value="1" checked>
@@ -590,7 +579,6 @@
                                 <img src="https://core-calmdust.github.io/aicoding/images/reversi/play.png" alt="開始">
                             </button>
                         </div>
-                        <!-- ★★★ ここまで修正 ★★★ -->
                     </section>
     
                     <section class="game-info" aria-labelledby="game-status-heading">
@@ -997,6 +985,7 @@ let undoCount = 0;
 let isResearchMode = false;
 let researchEvaluations = {};
 let currentResearchLevel = 0;
+let isResearchComplete = false;
 const maxAiLevel = 10;
 
 const workerScript = document.getElementById('research-worker-script').textContent;
@@ -1045,6 +1034,11 @@ researchWorker.onmessage = (e) => {
         currentResearchLevel = level;
         researchEvaluations = { ...researchEvaluations, ...evaluations };
         updateResearchValues(evaluations);
+
+        if (level === maxAiLevel) {
+            isResearchComplete = true;
+        }
+
         updateGameInfo();
     }
 };
@@ -1117,6 +1111,7 @@ async function gameController() {
     
     const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
     if (isResearchMode && isPlayerTurn) {
+        isResearchComplete = false;
         researchEvaluations = {};
         renderBoard();
         const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
@@ -1218,8 +1213,6 @@ function updateGameInfo() {
     turnCountNumberEl.textContent = isPlaybackMode ? playbackIndex : turnCount;
     
     if (isGameOver) {
-        // ゲーム終了時は endGame() でメッセージが設定されるため、
-        // ここではメッセージを上書きせずに関数を抜ける。
         return;
     }
     
@@ -1231,8 +1224,13 @@ function updateGameInfo() {
              message = `${turnCount + 1}手目: CPU ${currentPlayer === BLACK ? '1' : '2'}のターンです`;
         } else {
              const playerTurnMsg = currentPlayer === playerColor ? 'あなたのターンです' : 'CPUのターンです';
-             const researchLvlText = currentResearchLevel >= 9 ? (currentResearchLevel === 9 ? '8+' : '9') : currentResearchLevel.toString();
-             message = isResearchMode && currentPlayer === playerColor ? `RESEARCHモード (レベル${researchLvlText} 思考中...)` : `${turnCount + 1}手目: ${playerTurnMsg}`;
+             if (isResearchMode && currentPlayer === playerColor) {
+                 const researchLvlText = currentResearchLevel >= 9 ? (currentResearchLevel === 9 ? '8+' : '9') : currentResearchLevel.toString();
+                 const statusText = isResearchComplete ? '思考完了' : '思考中...';
+                 message = `RESEARCHモード (レベル${researchLvlText} ${statusText})`;
+             } else {
+                 message = `${turnCount + 1}手目: ${playerTurnMsg}`;
+             }
         }
     } else if (gameHistory.length > 1) {
         message = '中断中...';
@@ -1488,6 +1486,7 @@ researchButton.addEventListener('click', () => {
     if (isResearchMode) {
         researchEvaluations = {};
         currentResearchLevel = 4;
+        isResearchComplete = false;
         renderBoard();
         const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
         if (isPlayerTurn) {
@@ -1502,6 +1501,7 @@ researchButton.addEventListener('click', () => {
         researchWorker.postMessage({ type: 'stop' });
         researchEvaluations = {};
         currentResearchLevel = 0;
+        isResearchComplete = false;
         renderBoard();
         updateGameInfo();
     }
