@@ -398,13 +398,14 @@
                 gap: 20px;
                 align-items: stretch;
             }
-            .controls, .game-info, #evaluation-graph-container {
+            .controls, .game-info {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                padding: 15px;
             }
-             #evaluation-graph-container {
-                display: none;
+            #evaluation-graph-container {
+                display: block;
             }
             .game-area {
                 width: 100%;
@@ -413,6 +414,15 @@
                 width: var(--board-size-sp);
                 margin: 0 auto;
             }
+            #message-area {
+                width: 100%;
+                margin-top: 0;
+            }
+             .game-info { gap: 10px; padding: 15px; }
+            #score-info { font-size: 1.4em; }
+            .controls select { font-size: 14px; padding: 10px; }
+            .start-controls-wrapper { padding-top: 15px; margin-top: 15px; }
+
         }
         
         @media (max-width: 600px) {
@@ -446,9 +456,9 @@
                             <option value="5">レベル5 (α-β法 強)</option>
                             <option value="6">レベル6 (思考強化)</option>
                             <option value="7">レベル7 (定石+探索)</option>
-                            <option value="8" selected>レベル8 (複合型AI)</option>
-                            <option value="9">レベル8+ (レベル8＋多様性)</option>
-                            <option value="10">レベル9 (深層思考型多様性AI)</option>
+                            <option value="8">レベル8 (複合型AI)</option>
+                            <option value="9">レベル8+ (多様性＋レベル8)</option>
+                            <option value="10" selected>レベル9 (ハイブリッド思考深化)</option>
                         </select>
                         
                         <div class="start-controls-wrapper">
@@ -629,8 +639,8 @@
             if (level === 5) return 4;
             if (level === 6) return 5;
             if (level === 7) return 6;
-            if (level === 8 || level === 9) return 7; // level 8/8+
-            return 8; // level 9 (new)
+            if (level === 8 || level === 9) return 7;
+            return 8;
         }
 
         function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, level, turnCount) {
@@ -1320,11 +1330,11 @@
                 if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
                 let depth = (emptyCells > 22) ? 6 : 7; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
             }
-            case 9: { // Level 8+
+            case 9: {
                 if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
                 let depth = (emptyCells > 22) ? 6 : 7; return findBestMoveWithVariety(board, depth, aiPlayer, 8);
             }
-            case 10: { // Level 9
+            case 10: {
                 if (emptyCells <= 14) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
                 let depth = (emptyCells > 24) ? 8 : 9; return findBestMoveWithVariety(board, depth, aiPlayer, 10);
             }
