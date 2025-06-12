@@ -535,7 +535,7 @@
                             <option value="6">レベル6 (思考強化)</option>
                             <option value="7">レベル7 (定石+探索)</option>
                             <option value="8" selected>レベル8 (複合型AI)</option>
-                            <option value="9">レベル8+ (多様性導入型レベル8)</option>
+                            <option value="9">レベル8+ (多様性)</option>
                             <option value="10">レベル9 (戦略的評価型AI)</option>
                         </select>
                         
@@ -641,6 +641,7 @@
         </div>
     </div>
 
+    <!-- ★★★ 変更点: Web Worker内のロジックを同期処理に変更し、確実性を向上 ★★★ -->
     <script id="research-worker-script" type="javascript/worker">
         // --- 定数定義 ---
         const EMPTY = 0, BLACK = 1, WHITE = 2;
@@ -861,7 +862,7 @@
         }
 
         // --- メインロジック ---
-        self.onmessage = (e) => {
+        self.onmessage = async (e) => {
             const { type, board, playerColor, turnCount, currentEval, maxAiLevel } = e.data;
             if (type === 'stop') {
                 continueThinking = false;
@@ -871,34 +872,34 @@
             continueThinking = true;
             const validMoves = getValidMoves(board, playerColor);
             
-            (async () => {
-                for (let level = 4; level <= maxAiLevel; level++) {
-                    if (!continueThinking) break;
-                    
-                    const moveEvals = {};
-                    const depth = getDepthForLevel(level, turnCount);
+            for (let level = 4; level <= maxAiLevel; level++) {
+                if (!continueThinking) break;
+                
+                const moveEvals = {};
+                const depth = getDepthForLevel(level, turnCount);
 
-                    for (const move of validMoves) {
-                        if (!continueThinking) break;
-                        const tempBoard = JSON.parse(JSON.stringify(board));
-                        const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
-                        placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
-                        
-                        const result = alphaBetaSearch(tempBoard, depth, -Infinity, Infinity, false, BLACK, level, turnCount + 1);
-                        
-                        let diff = result.score - currentEval;
-                        if (playerColor === WHITE) {
-                            diff = -diff;
-                        }
-                        
-                        moveEvals[`${move.r},${move.c}`] = diff;
+                for (const move of validMoves) {
+                    if (!continueThinking) break;
+                    const tempBoard = JSON.parse(JSON.stringify(board));
+                    const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
+                    placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
+                    
+                    const result = alphaBetaSearch(tempBoard, depth, -Infinity, Infinity, false, BLACK, level, turnCount + 1);
+                    
+                    let diff = result.score - currentEval;
+                    if (playerColor === WHITE) {
+                        diff = -diff;
                     }
                     
-                    if (continueThinking) {
-                        self.postMessage({ type: 'evalUpdate', evaluations: moveEvals, level });
-                    }
+                    moveEvals[`${move.r},${move.c}`] = diff;
                 }
-            })();
+                
+                if (continueThinking) {
+                    self.postMessage({ type: 'evalUpdate', evaluations: moveEvals, level });
+                    // UIの応答性を保つための待機
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
         };
     </script>
     <script>
@@ -952,20 +953,46 @@ let isDraggingGraph = false, lastHoveredTurn = -1;
 let undoCount = 0;
 let isResearchMode = false;
 let researchEvaluations = {};
-let currentResearchLevel = 0; // ★★★ 変更点: RESEARCH中のAIレベルを保持する変数 ★★★
+let currentResearchLevel = 0;
 const maxAiLevel = 10;
 
 const workerScript = document.getElementById('research-worker-script').textContent;
 const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
 const researchWorker = new Worker(URL.createObjectURL(workerBlob));
 
-// ★★★ 変更点: RESEARCHメッセージを更新するためにupdateGameInfo()を呼ぶ ★★★
+// ★★★ 変更点: RESEARCH中のパフォーマンス改善のため、評価値の差分更新を行う ★★★
+function updateResearchValues(evaluations) {
+    Object.keys(evaluations).forEach(key => {
+        const [r, c] = key.split(',').map(Number);
+        const cellIndex = r * BOARD_SIZE + c;
+        const cell = boardEl.children[cellIndex];
+        if (!cell) return;
+
+        let valueSpan = cell.querySelector('.research-value');
+        if (!valueSpan) {
+            valueSpan = document.createElement('span');
+            valueSpan.className = 'research-value';
+            // 他の要素を消さないように、先頭に挿入
+            if (cell.firstChild) {
+                cell.insertBefore(valueSpan, cell.firstChild);
+            } else {
+                cell.appendChild(valueSpan);
+            }
+        }
+        
+        const roundedEval = Math.round(evaluations[key]);
+        valueSpan.textContent = (roundedEval > 0 ? '+' : '') + roundedEval;
+        valueSpan.classList.toggle('plus', roundedEval >= 0);
+        valueSpan.classList.toggle('minus', roundedEval < 0);
+    });
+}
+
 researchWorker.onmessage = (e) => {
     if (isResearchMode && e.data.type === 'evalUpdate') {
         const { evaluations, level } = e.data;
         currentResearchLevel = level;
         researchEvaluations = { ...researchEvaluations, ...evaluations };
-        renderBoard();
+        updateResearchValues(evaluations);
         updateGameInfo();
     }
 };
@@ -979,7 +1006,7 @@ function resetGame() {
     isCpuVsCpuMode = false;
     isPlaybackMode = false;
     isGameOver = false;
-    if(isResearchMode) researchButton.click(); // RESEARCHモードを解除
+    if(isResearchMode) researchButton.click();
 
     undoCount = 0;
     document.body.classList.remove('game-over', 'graph-dragging');
@@ -1003,6 +1030,7 @@ function resetGame() {
 }
 
 function startGame(isTestMode) {
+    isPlaybackMode = false; // ★★★ 変更点: ゲーム開始時に再生モードを解除 ★★★
     isGameInProgress = true;
     isCpuVsCpuMode = isTestMode;
     isGameOver = false;
@@ -1019,11 +1047,13 @@ function interruptGame() {
 }
 
 function resumeGame() {
+    isPlaybackMode = false; // ★★★ 変更点: ゲーム再開時に再生モードを解除 ★★★
     isGameInProgress = true;
     gameController();
 }
 
 function startCpuVsCpuFromCurrentState() {
+    isPlaybackMode = false; // ★★★ 変更点: ゲーム開始時に再生モードを解除 ★★★
     isGameInProgress = true;
     isCpuVsCpuMode = true;
     isGameOver = false;
@@ -1038,12 +1068,12 @@ async function gameController() {
     
     const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
     if (isResearchMode && isPlayerTurn) {
-        // プレイヤーのターンになったら、自動的にRESEARCHを再開
+        researchEvaluations = {}; // 新しいターンで評価をリセット
+        renderBoard(); // まず盤面をクリア
         const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
         researchWorker.postMessage({
             type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel
         });
-        renderBoard();
     } else {
         renderBoard();
     }
@@ -1116,17 +1146,7 @@ function renderBoard() {
             } else {
                 const validMove = validMoves.find(m => m.r === r && m.c === c);
                 if (validMove) {
-                    const evalForMove = researchEvaluations[`${r},${c}`];
-                    if (isResearchMode && evalForMove !== undefined) {
-                        const valueSpan = document.createElement('span');
-                        valueSpan.className = 'research-value';
-                        const roundedEval = Math.round(evalForMove);
-                        valueSpan.textContent = (roundedEval > 0 ? '+' : '') + roundedEval;
-                        valueSpan.classList.add(roundedEval >= 0 ? 'plus' : 'minus');
-                        cell.appendChild(valueSpan);
-                    } else {
-                        cell.classList.add('valid-move-hint');
-                    }
+                    cell.classList.add('valid-move-hint');
                 }
             }
             if (lastMove && lastMove.r === r && lastMove.c === c) {
@@ -1138,7 +1158,6 @@ function renderBoard() {
     }
 }
 
-// ★★★ 変更点: RESEARCHモードのメッセージを更新 ★★★
 function updateGameInfo() {
     let blackScore = 0, whiteScore = 0;
     const currentBoard = isPlaybackMode ? JSON.parse(JSON.stringify(gameHistory[playbackIndex].boardState)) : board;
@@ -1165,7 +1184,7 @@ function updateGameInfo() {
              const researchLvlText = currentResearchLevel >= 9 ? (currentResearchLevel === 9 ? '8+' : '9') : currentResearchLevel.toString();
              message = isResearchMode && currentPlayer === playerColor ? `RESEARCHモード (レベル${researchLvlText} 思考中...)` : `${turnCount + 1}手目: ${playerTurnMsg}`;
         }
-    } else if (turnCount > 0) {
+    } else if (turnCount > 0 || gameHistory.length > 1) { // ★★★ 変更点: 棋譜再生後も中断中と表示
         message = '中断中...';
     } else {
          message = '対戦設定を選んで開始してください';
@@ -1269,7 +1288,6 @@ function renderEvaluationGraph() {
 //                        イベントハンドラ・リスナー                   //
 // ================================================================= //
 
-// ★★★ 変更点: RESEARCHモードが自動解除されないように修正 ★★★
 function handleCellClick(r, c) {
     if (!isGameInProgress || isCpuVsCpuMode || isPlaybackMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
     
@@ -1277,7 +1295,7 @@ function handleCellClick(r, c) {
     if (flippable.length === 0) return;
     
     if (isResearchMode) {
-        researchWorker.postMessage({ type: 'stop' }); // 思考は一旦停止
+        researchWorker.postMessage({ type: 'stop' });
     }
 
     placeDisc(r, c, playerColor, flippable);
@@ -1285,7 +1303,6 @@ function handleCellClick(r, c) {
     gameController();
 }
 
-// ★★★ 変更点: 棋譜再生時にRESEARCHモードを解除 ★★★
 function renderPlayback(index) {
     if (isResearchMode) researchButton.click();
     isPlaybackMode = true;
@@ -1322,8 +1339,6 @@ function handleGraphScrub(event) {
     }
 }
 
-// ★★★ 変更点: グラフスライド操作のイベントリスナーを分離・改善 ★★★
-// --- PC用 (マウス操作) ---
 const onMouseMove = (e) => handleGraphScrub(e);
 const onMouseUp = () => {
     if (!isDraggingGraph) return;
@@ -1341,7 +1356,6 @@ graphWrapperEl.addEventListener('mousedown', (event) => {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 });
-// --- スマートフォン用 (タッチ操作) ---
 const onTouchMove = (e) => {
     e.preventDefault();
     handleGraphScrub(e);
@@ -1382,7 +1396,8 @@ startButton.addEventListener('click', () => {
     if (isGameInProgress) {
         interruptGame();
     } else {
-        if(turnCount > 0 && !isGameOver) {
+        // ★★★ 変更点: 棋譜再生後でもオプションを表示するように条件を変更 ★★★
+        if ((turnCount > 0 && !isGameOver) || isPlaybackMode) {
             showModal('ゲームを再開しますか？<br>それとも最初から始めますか？', '再開', '最初から', 
                 () => resumeGame(), 
                 () => { resetGame(); startGame(false); }
@@ -1395,8 +1410,9 @@ startButton.addEventListener('click', () => {
 });
 
 cpuVsCpuButton.addEventListener('click', () => {
-    if (isGameInProgress || isPlaybackMode) return;
-    if(turnCount > 0 && !isGameOver) {
+    if (isGameInProgress) return;
+    // ★★★ 変更点: 棋譜再生後でもオプションを表示するように条件を変更 ★★★
+    if ((turnCount > 0 && !isGameOver) || isPlaybackMode) {
          showModal('CPU戦を最初から始めますか？<br>それとも今の局面から行いますか？', '最初から', 'この局面から',
             () => { resetGame(); startGame(true); },
             () => startCpuVsCpuFromCurrentState()
@@ -1412,7 +1428,6 @@ kifuPrevBtn.addEventListener('click', () => { if (!kifuPrevBtn.disabled) renderP
 kifuNextBtn.addEventListener('click', () => { if (!kifuNextBtn.disabled) renderPlayback(playbackIndex + 1); });
 kifuEndBtn.addEventListener('click', () => { if (!kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1); });
 
-// ★★★ 変更点: UNDO時にRESEARCHモードを解除 ★★★
 undoButton.addEventListener('click', () => {
     if (undoButton.disabled) return;
     if (isResearchMode) researchButton.click();
@@ -1430,16 +1445,16 @@ undoButton.addEventListener('click', () => {
     gameController();
 });
 
-// ★★★ 変更点: RESEARCHモードON/OFF時の処理を修正 ★★★
 researchButton.addEventListener('click', () => {
     if (researchButton.disabled) return;
     isResearchMode = !isResearchMode;
     researchButton.classList.toggle('active', isResearchMode);
-    researchEvaluations = {};
 
     if (isResearchMode) {
-        currentResearchLevel = 4; // 初期レベルを設定
+        researchEvaluations = {};
+        currentResearchLevel = 4;
         updateGameInfo();
+        renderBoard(); // 先に盤面をクリアしてヒントなどを消す
         const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
         if (isPlayerTurn) {
             const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
@@ -1449,10 +1464,11 @@ researchButton.addEventListener('click', () => {
         }
     } else {
         researchWorker.postMessage({ type: 'stop' });
+        researchEvaluations = {};
         currentResearchLevel = 0;
+        renderBoard();
         updateGameInfo();
     }
-    renderBoard();
 });
 
 playerColorRadios.forEach(radio => {
