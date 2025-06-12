@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -1177,10 +1178,6 @@ function updateGameInfo() {
     turnCountNumberEl.textContent = isPlaybackMode ? playbackIndex : turnCount;
     
     if (isGameOver) {
-        const blackFinal = board.flat().filter(c => c === BLACK).length;
-        const whiteFinal = board.flat().filter(c => c === WHITE).length;
-        const winner = (blackFinal > whiteFinal) ? '黒' : (whiteFinal > blackFinal ? '白' : '引き分け');
-        messageAreaEl.textContent = `ゲーム終了！ ${winner === '引き分け' ? '引き分けです！' : winner + 'の勝ちです。'}`;
         return;
     }
     
