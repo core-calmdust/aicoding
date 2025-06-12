@@ -388,6 +388,42 @@
             color: var(--text-color);
         }
 
+        /* PC版レイアウトをGridで再構築 */
+        @media (min-width: 901px) {
+            .game-wrapper {
+                display: grid;
+                grid-template-columns: 240px 1fr;
+                grid-template-areas:
+                    "sidebar game"
+                    "eval    game"
+                    "message message"
+                    "test    test";
+                align-items: start;
+            }
+            .top-container {
+                display: contents;
+            }
+            .sidebar {
+                grid-area: sidebar;
+                width: 100%;
+            }
+            .game-area {
+                grid-area: game;
+                grid-row: game-start / span 2;
+            }
+            #evaluation-graph-container {
+                grid-area: eval;
+                width: 100%;
+            }
+            #message-area {
+                grid-area: message;
+                margin-top: 0;
+            }
+            .test-controls {
+                grid-area: test;
+            }
+        }
+
         @media (max-width: 900px) {
             .top-container {
                 flex-direction: column;
@@ -426,16 +462,17 @@
             }
              #message-area {
                 width: 100%;
-                margin: 0;
+                margin: 0; /* PCレイアウト用のマージンをリセット */
             }
             #evaluation-graph-container {
-                display: block;
+                display: block; /* SP版で表示 */
             }
         }
         
         @media (max-width: 600px) {
              .sidebar {
-                flex-direction: column;
+                /* flex-direction: column; を削除し、常に横並びにする */
+                flex-wrap: wrap; /* 画面が狭い場合に折り返すように */
             }
         }
     </style>
@@ -463,10 +500,10 @@
                             <option value="4">レベル4 (α-β法 弱)</option>
                             <option value="5">レベル5 (α-β法 強)</option>
                             <option value="6">レベル6 (思考強化)</option>
-                            <option value="7" selected>レベル7 (定石+探索)</option>
+                            <option value="7">レベル7 (定石+探索)</option>
                             <option value="8">レベル8 (複合型AI)</option>
                             <option value="9">レベル8+ (多様性)</option>
-                            <option value="10">レベル9 (未完成)</option>
+                            <option value="10" selected>レベル9 (思考深化)</option>
                         </select>
                         
                         <div class="start-controls-wrapper">
@@ -504,31 +541,35 @@
                         </div>
                     </section>
     
-                    <section id="evaluation-graph-container">
-                        <div id="current-evaluation-display">
-                            <span>評価値: </span>
-                            <span id="evaluation-value-text">N/A</span>
-                        </div>
-                         <div id="evaluation-graph-wrapper-outer">
-                            <div id="evaluation-y-axis"></div>
-                            <div id="evaluation-graph-wrapper">
-                                <div id="evaluation-graph"></div>
-                                <div id="evaluation-tooltip"></div>
-                            </div>
-                        </div>
-                        <div class="kifu-buttons">
-                            <button id="kifu-start" disabled aria-label="最初へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<<.png" alt="最初へ"></button>
-                            <button id="kifu-prev" disabled aria-label="前へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<.png" alt="前へ"></button>
-                            <button id="kifu-next" disabled aria-label="次へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>.png" alt="次へ"></button>
-                            <button id="kifu-end" disabled aria-label="最後へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>>.png" alt="最後へ"></button>
-                        </div>
-                    </section>
+                    <!-- ★★★ 評価値グラフコンテナはここから移動しました ★★★ -->
                 </div>
                 <div class="game-area">
                     <div id="board"></div>
                 </div>
             </div>
             <div id="message-area" role="status" aria-live="polite"></div>
+
+            <!-- ★★★ 評価値グラフコンテナをここに移動しました ★★★ -->
+            <section id="evaluation-graph-container">
+                <div id="current-evaluation-display">
+                    <span>評価値: </span>
+                    <span id="evaluation-value-text">N/A</span>
+                </div>
+                 <div id="evaluation-graph-wrapper-outer">
+                    <div id="evaluation-y-axis"></div>
+                    <div id="evaluation-graph-wrapper">
+                        <div id="evaluation-graph"></div>
+                        <div id="evaluation-tooltip"></div>
+                    </div>
+                </div>
+                <div class="kifu-buttons">
+                    <button id="kifu-start" disabled aria-label="最初へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<<.png" alt="最初へ"></button>
+                    <button id="kifu-prev" disabled aria-label="前へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<.png" alt="前へ"></button>
+                    <button id="kifu-next" disabled aria-label="次へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>.png" alt="次へ"></button>
+                    <button id="kifu-end" disabled aria-label="最後へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>>.png" alt="最後へ"></button>
+                </div>
+            </section>
+
             <section class="test-controls" aria-labelledby="test-heading">
                 <h2 id="test-heading">CPU対戦テスト</h2>
                 <div class="test-cpu-selectors">
