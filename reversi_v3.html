@@ -761,875 +761,884 @@
         };
     </script>
     <script>
-    // ================================================================= //
-    //                             定数と変数定義                         //
-    // ================================================================= //
+// ================================================================= //
+//                             定数と変数定義                         //
+// ================================================================= //
 
-    const BOARD_SIZE = 8, EMPTY = 0, BLACK = 1, WHITE = 2;
-    const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
-    const MAX_TURNS = 60;
-    const EVAL_GRAPH_INITIAL_SCALE = 500;
-    const POSITIONAL_SCORE_TABLE = [
-        [120, -20,  20,   5,   5,  20, -20, 120],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[  5,  -5,   3,   3,   3,   3,  -5,   5],
-        [  5,  -5,   3,   3,   3,   3,  -5,   5],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[120, -20,  20,   5,   5,  20, -20, 120]
-    ];
-    const OPENING_BOOK = {
-        "0000000000000000000000000001200000021000000000000000000000000000": {r:4, c:5},"0000000000000000000000000012100000012000000000000000000000000000": {r:5, c:5},
-        "0000000000000000000000000002100000012100000000000000000000000000": {r:2, c:3},"0000000000000000000001000001210000021100000000000000000000000000": {r:2, c:2},
-        "0000000000000000000000000011200000012000000000000000000000000000": {r:5, c:2},"000000000000000000000000000210000001110000000000000000000000000": {r:5, c:3},
-    };
-    
-    const boardEl = document.getElementById('board');
-    const blackScoreEl = document.getElementById('black-score');
-    const whiteScoreEl = document.getElementById('white-score');
-    const turnCountNumberEl = document.getElementById('turn-count-number');
-    const messageAreaEl = document.getElementById('message-area');
-    const cpuLevelSelect = document.getElementById('cpu-level');
-    const startButton = document.getElementById('start-button');
-    const playerColorRadios = document.querySelectorAll('input[name="player_color"]');
-    const cpu1LevelSelect = document.getElementById('cpu1-level');
-    const cpu2LevelSelect = document.getElementById('cpu2-level');
-    const cpuVsCpuButton = document.getElementById('cpu-vs-cpu-button');
-    const kifuStartBtn = document.getElementById('kifu-start');
-    const kifuPrevBtn = document.getElementById('kifu-prev');
-    const kifuNextBtn = document.getElementById('kifu-next');
-    const kifuEndBtn = document.getElementById('kifu-end');
-    const evaluationValueTextEl = document.getElementById('evaluation-value-text');
-    const undoButton = document.getElementById('undo-button');
-    const researchButton = document.getElementById('research-button');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const modalMessage = document.getElementById('modal-message');
-    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
-    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+const BOARD_SIZE = 8, EMPTY = 0, BLACK = 1, WHITE = 2;
+const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
+const MAX_TURNS = 60;
+const EVAL_GRAPH_INITIAL_SCALE = 500;
+const POSITIONAL_SCORE_TABLE = [
+    [120, -20,  20,   5,   5,  20, -20, 120],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[  5,  -5,   3,   3,   3,   3,  -5,   5],
+    [  5,  -5,   3,   3,   3,   3,  -5,   5],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[120, -20,  20,   5,   5,  20, -20, 120]
+];
+const OPENING_BOOK = {
+    "0000000000000000000000000001200000021000000000000000000000000000": {r:4, c:5},"0000000000000000000000000012100000012000000000000000000000000000": {r:5, c:5},
+    "0000000000000000000000000002100000012100000000000000000000000000": {r:2, c:3},"0000000000000000000001000001210000021100000000000000000000000000": {r:2, c:2},
+    "0000000000000000000000000011200000012000000000000000000000000000": {r:5, c:2},"000000000000000000000000000210000001110000000000000000000000000": {r:5, c:3},
+};
 
-    let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor;
-    let isCpuVsCpuMode = false, isGameOver = false, isPlaybackMode = false;
-    let isGameInProgress = false;
-    let wasUndo = false;
-    let gameHistory = [], playbackIndex = 0, evaluationHistory = [];
-    let isDraggingGraph = false, lastHoveredTurn = -1;
-    let undoCount = 0;
-    let isResearchMode = false;
-    let researchEvaluations = {};
-    const maxAiLevel = 10;
-    
-    const workerScript = document.getElementById('research-worker-script').textContent;
-    const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
-    const researchWorker = new Worker(URL.createObjectURL(workerBlob));
-    
-    researchWorker.onmessage = (e) => {
-        if (isResearchMode && e.data.type === 'evalUpdate') {
-            researchEvaluations = { ...researchEvaluations, ...e.data.evaluations };
-            renderBoard();
-        }
-    };
-    
-    // ================================================================= //
-    //                      メインロジック (ゲーム進行管理)                 //
-    // ================================================================= //
+const boardEl = document.getElementById('board');
+const blackScoreEl = document.getElementById('black-score');
+const whiteScoreEl = document.getElementById('white-score');
+const turnCountNumberEl = document.getElementById('turn-count-number');
+const messageAreaEl = document.getElementById('message-area');
+const cpuLevelSelect = document.getElementById('cpu-level');
+const startButton = document.getElementById('start-button');
+const playerColorRadios = document.querySelectorAll('input[name="player_color"]');
+const cpu1LevelSelect = document.getElementById('cpu1-level');
+const cpu2LevelSelect = document.getElementById('cpu2-level');
+const cpuVsCpuButton = document.getElementById('cpu-vs-cpu-button');
+const kifuStartBtn = document.getElementById('kifu-start');
+const kifuPrevBtn = document.getElementById('kifu-prev');
+const kifuNextBtn = document.getElementById('kifu-next');
+const kifuEndBtn = document.getElementById('kifu-end');
+const evaluationValueTextEl = document.getElementById('evaluation-value-text');
+const undoButton = document.getElementById('undo-button');
+const researchButton = document.getElementById('research-button');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalMessage = document.getElementById('modal-message');
+const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-    function resetGame() {
-        isGameInProgress = false;
-        isCpuVsCpuMode = false;
-        isPlaybackMode = false;
-        isGameOver = false;
-        researchWorker.postMessage({ type: 'stop' });
-        if(isResearchMode) researchButton.click();
+let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor;
+let isCpuVsCpuMode = false, isGameOver = false, isPlaybackMode = false;
+let isGameInProgress = false;
+let wasUndo = false;
+let gameHistory = [], playbackIndex = 0, evaluationHistory = [];
+let isDraggingGraph = false, lastHoveredTurn = -1;
+let undoCount = 0;
+let isResearchMode = false;
+let researchEvaluations = {};
+const maxAiLevel = 10;
 
-        undoCount = 0;
-        document.body.classList.remove('game-over', 'graph-dragging');
+const workerScript = document.getElementById('research-worker-script').textContent;
+const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
+const researchWorker = new Worker(URL.createObjectURL(workerBlob));
 
-        board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
-        board[3][3] = WHITE; board[3][4] = BLACK;
-        board[4][3] = BLACK; board[4][4] = WHITE;
-        
-        currentPlayer = BLACK;
-        turnCount = 0;
-        lastMove = null;
-        gameHistory = [{ move: null, boardState: JSON.parse(JSON.stringify(board)) }];
-        evaluationHistory = [];
-        playbackIndex = 0;
-        
+researchWorker.onmessage = (e) => {
+    if (isResearchMode && e.data.type === 'evalUpdate') {
+        researchEvaluations = { ...researchEvaluations, ...e.data.evaluations };
         renderBoard();
-        renderEvaluationGraph();
-        updateEvaluationDisplay(null);
-        updateUiState();
-        updateGameInfo();
     }
+};
+
+// ================================================================= //
+//                      メインロジック (ゲーム進行管理)                 //
+// ================================================================= //
+
+function resetGame() {
+    isGameInProgress = false;
+    isCpuVsCpuMode = false;
+    isPlaybackMode = false;
+    isGameOver = false;
+    researchWorker.postMessage({ type: 'stop' });
+    if(isResearchMode) researchButton.click();
+
+    undoCount = 0;
+    document.body.classList.remove('game-over', 'graph-dragging');
+
+    board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
+    board[3][3] = WHITE; board[3][4] = BLACK;
+    board[4][3] = BLACK; board[4][4] = WHITE;
     
-    function startGame(isTestMode) {
-        isGameInProgress = true;
-        isCpuVsCpuMode = isTestMode;
-        isGameOver = false;
-        
-        gameController();
-    }
+    currentPlayer = BLACK;
+    turnCount = 0;
+    lastMove = null;
+    gameHistory = [{ move: null, boardState: JSON.parse(JSON.stringify(board)) }];
+    evaluationHistory = [];
+    playbackIndex = 0;
     
-    function interruptGame() {
-        isGameInProgress = false;
-        isCpuVsCpuMode = false;
-        researchWorker.postMessage({ type: 'stop' });
-        messageAreaEl.textContent = 'ゲームを中断しました';
-        updateUiState();
+    renderBoard();
+    renderEvaluationGraph();
+    updateEvaluationDisplay(null);
+    updateUiState();
+    updateGameInfo();
+}
+
+function startGame(isTestMode) {
+    isGameInProgress = true;
+    isCpuVsCpuMode = isTestMode;
+    isGameOver = false;
+    
+    gameController();
+}
+
+function interruptGame() {
+    isGameInProgress = false;
+    isCpuVsCpuMode = false;
+    researchWorker.postMessage({ type: 'stop' });
+    messageAreaEl.textContent = 'ゲームを中断しました';
+    updateUiState();
+}
+
+function resumeGame() {
+    isGameInProgress = true;
+    gameController();
+}
+
+function startCpuVsCpuFromCurrentState() {
+    isGameInProgress = true;
+    isCpuVsCpuMode = true;
+    isGameOver = false;
+    gameController();
+}
+
+async function gameController() {
+    if (!isGameInProgress || isGameOver) return;
+    
+    updateUiState();
+    updateGameInfo();
+    
+    const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
+    if (isResearchMode && isPlayerTurn) {
+        runShallowResearch();
+        renderBoard();
+        const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
+        researchWorker.postMessage({
+            type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel
+        });
+    } else {
+        renderBoard();
     }
 
-    function resumeGame() {
-        isGameInProgress = true;
+    const canCurrentPlayerMove = getValidMoves(board, currentPlayer).length > 0;
+    if (!canCurrentPlayerMove) {
+        const opponent = (currentPlayer === BLACK) ? WHITE : BLACK;
+        const canOpponentMove = getValidMoves(board, opponent).length > 0;
+        
+        if (!canOpponentMove) {
+            endGame();
+            return;
+        }
+        
+        messageAreaEl.textContent = `${currentPlayer === BLACK ? '黒' : '白'}はパスします。`;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        currentPlayer = opponent;
         gameController();
+        return;
+    }
+
+    const isCpuTurnNow = isCpuVsCpuMode || (currentPlayer === cpuColor);
+    if (isCpuTurnNow) {
+        await executeCpuTurn();
+    }
+}
+
+function endGame() {
+    isGameOver = true;
+    isGameInProgress = false;
+    researchWorker.postMessage({ type: 'stop' });
+    document.body.classList.add('game-over');
+    
+    const blackScore = board.flat().filter(c => c === BLACK).length;
+    const whiteScore = board.flat().filter(c => c === WHITE).length;
+    const winner = (blackScore > whiteScore) ? BLACK : ((whiteScore > blackScore) ? WHITE : EMPTY);
+    
+    let message = "引き分けです！";
+    if (winner !== EMPTY) {
+        if (isCpuVsCpuMode) message = `CPU ${(winner === BLACK ? '1' : '2')} の勝ちです。`;
+        else message = (winner === playerColor) ? "🎉 あなたの勝ちです！ 🎉" : "CPUの勝ちです。";
+    }
+    if (!isCpuVsCpuMode && undoCount > 0) {
+        message += ` (待ったの使用回数: ${undoCount}回)`;
+    }
+    messageAreaEl.textContent = `ゲーム終了！ ${message}`;
+    updateUiState();
+    updateGameInfo();
+    renderEvaluationGraph();
+}
+
+// ================================================================= //
+//                         UI・描画関連                             //
+// ================================================================= //
+
+function renderBoard() {
+    boardEl.innerHTML = '';
+    const validMoves = (isGameInProgress && !isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
+        ? getValidMoves(board, currentPlayer) : [];
+    
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+
+            if (board[r][c] !== EMPTY) {
+                const disc = document.createElement('div');
+                disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
+                cell.appendChild(disc);
+            } else {
+                const validMove = validMoves.find(m => m.r === r && m.c === c);
+                if (validMove) {
+                    const evalForMove = researchEvaluations[`${r},${c}`];
+                    if (isResearchMode && evalForMove !== undefined) {
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'research-value';
+                        valueSpan.textContent = (evalForMove > 0 ? '+' : '') + Math.round(evalForMove);
+                        valueSpan.classList.add(evalForMove >= 0 ? 'plus' : 'minus');
+                        cell.appendChild(valueSpan);
+                    } else {
+                        cell.classList.add('valid-move-hint');
+                    }
+                }
+            }
+            if (lastMove && lastMove.r === r && lastMove.c === c) {
+                cell.classList.add('last-move');
+            }
+            cell.addEventListener('click', () => handleCellClick(r, c));
+            boardEl.appendChild(cell);
+        }
+    }
+}
+
+function updateGameInfo() {
+    let blackScore = 0, whiteScore = 0;
+    const currentBoard = isPlaybackMode ? JSON.parse(JSON.stringify(gameHistory[playbackIndex].boardState)) : board;
+    currentBoard.flat().forEach(cell => {
+        if (cell === BLACK) blackScore++;
+        if (cell === WHITE) whiteScore++;
+    });
+    blackScoreEl.textContent = blackScore;
+    whiteScoreEl.textContent = whiteScore;
+    
+    const displayTurn = isPlaybackMode ? playbackIndex : turnCount;
+    turnCountNumberEl.textContent = displayTurn;
+    
+    if (isGameOver) return;
+
+    let message = '';
+    if (isPlaybackMode) {
+         message = `棋譜再生中 (${displayTurn}手目)`;
+    } else if (isGameInProgress) {
+        if (isCpuVsCpuMode) {
+             message = `${turnCount + 1}手目: CPU ${currentPlayer === BLACK ? '1' : '2'}のターンです`;
+        } else {
+             message = `${turnCount + 1}手目: ${currentPlayer === playerColor ? 'あなたのターンです' : 'CPUのターンです'}`;
+        }
+    } else if (turnCount > 0) {
+        message = '中断中...';
+    } else {
+         message = '対戦設定を選んで開始してください';
+    }
+
+    if (wasUndo) {
+        messageAreaEl.textContent = '待った！ ' + message;
+        wasUndo = false;
+    } else {
+        messageAreaEl.textContent = message;
+    }
+}
+
+function updateUiState() {
+    playerColor = parseInt(document.querySelector('input[name="player_color"]:checked').value, 10);
+    cpuColor = (playerColor === BLACK) ? WHITE : BLACK;
+    
+    const startButtonImg = startButton.querySelector('img');
+
+    if (isGameInProgress && !isGameOver) {
+        startButtonImg.src = 'https://core-calmdust.github.io/aicoding/images/reversi/stop.png';
+        startButtonImg.alt = '中断';
+        startButton.setAttribute('aria-label', 'ゲームを中断します');
+    } else {
+        startButtonImg.src = 'https://core-calmdust.github.io/aicoding/images/reversi/play.png';
+        startButtonImg.alt = '開始';
+        startButton.setAttribute('aria-label', 'ゲームを開始します');
     }
     
-    function startCpuVsCpuFromCurrentState() {
-        isGameInProgress = true;
-        isCpuVsCpuMode = true;
-        isGameOver = false;
-        gameController();
-    }
+    const controlsLocked = isGameInProgress || isPlaybackMode;
+    cpuLevelSelect.disabled = controlsLocked;
+    playerColorRadios.forEach(radio => { radio.disabled = controlsLocked; });
+    cpuVsCpuButton.disabled = controlsLocked;
     
-    async function gameController() {
-        if (!isGameInProgress || isGameOver) return;
+    const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
+    undoButton.disabled = !isPlayerTurn || turnCount < 2;
+    researchButton.disabled = isCpuVsCpuMode || !isGameInProgress;
+    
+    const kifuActive = isGameOver || isPlaybackMode;
+    kifuStartBtn.disabled = !kifuActive || playbackIndex === 0;
+    kifuPrevBtn.disabled = !kifuActive || playbackIndex === 0;
+    kifuNextBtn.disabled = !kifuActive || playbackIndex >= gameHistory.length - 1;
+    kifuEndBtn.disabled = !kifuActive || playbackIndex >= gameHistory.length - 1;
+}
+
+function updateEvaluationDisplay(score) {
+    if (score === null || score === undefined) {
+        evaluationValueTextEl.textContent = "N/A";
+    } else {
+        const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
+        evaluationValueTextEl.textContent = scoreText;
+    }
+}
+
+function renderEvaluationGraph() {
+    const graphEl = document.getElementById('evaluation-graph');
+    const yAxisEl = document.getElementById('evaluation-y-axis');
+    const tooltipEl = document.getElementById('evaluation-tooltip');
+    if (!graphEl || !yAxisEl || !tooltipEl) return;
+
+    graphEl.innerHTML = '';
+    const maxAbsValue = evaluationHistory.length > 0 ? Math.max(...evaluationHistory.map(v => Math.abs(v))) : 0;
+    const scale = Math.max(EVAL_GRAPH_INITIAL_SCALE, Math.ceil(maxAbsValue / 100) * 100);
+    yAxisEl.innerHTML = `<span>+${scale}</span><span>-${scale}</span>`;
+
+    for (let i = 0; i < MAX_TURNS; i++) {
+        const barContainer = document.createElement('div');
+        barContainer.className = 'bar-container';
+
+        if (isPlaybackMode && i === playbackIndex - 1) {
+            barContainer.classList.add('current-turn-highlight');
+        }
+
+        if (i < evaluationHistory.length) {
+            const value = evaluationHistory[i];
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            const heightPercentage = Math.min((Math.abs(value) / scale) * 100, 100);
+            bar.style.height = `${heightPercentage / 2}%`;
+            if (value > 0) bar.classList.add('black');
+            else if (value < 0) bar.classList.add('white');
+            barContainer.appendChild(bar);
+
+            barContainer.addEventListener('mouseover', () => {
+                tooltipEl.style.display = 'block';
+                tooltipEl.textContent = `Turn ${i + 1}: ${value > 0 ? '+' : ''}${value.toFixed(0)}`;
+                const wrapperRect = graphEl.parentElement.getBoundingClientRect();
+                const barRect = barContainer.getBoundingClientRect();
+                tooltipEl.style.left = `${barRect.left - wrapperRect.left + barRect.width / 2}px`;
+                tooltipEl.style.top = `${barRect.top - wrapperRect.top}px`;
+            });
+            barContainer.addEventListener('mouseleave', () => {
+                tooltipEl.style.display = 'none';
+            });
+        }
+        graphEl.appendChild(barContainer);
+    }
+}
+
+function runShallowResearch() {
+    researchEvaluations = {};
+    const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
+    if (!isPlayerTurn) return;
+
+    const validMoves = getValidMoves(board, playerColor);
+    const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
+    
+    for (const move of validMoves) {
+        const tempBoard = JSON.parse(JSON.stringify(board));
+        const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
+        placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
         
-        updateUiState();
-        updateGameInfo();
-        
-        const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
-        if (isResearchMode && isPlayerTurn) {
+        const result = alphaBetaSearch(tempBoard, 3, -Infinity, Infinity, false, BLACK, 4, turnCount + 1);
+        let diff = result.score - currentEval;
+        if (playerColor === WHITE) diff = -diff;
+        researchEvaluations[`${move.r},${c}`] = diff;
+    }
+}
+
+// ================================================================= //
+//                        イベントハンドラ・リスナー                   //
+// ================================================================= //
+
+function handleCellClick(r, c) {
+    if (!isGameInProgress || isCpuVsCpuMode || isPlaybackMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
+    
+    const flippable = getFlippableDiscs(board, r, c, playerColor);
+    if (flippable.length === 0) return;
+    
+    researchWorker.postMessage({ type: 'stop' });
+    researchEvaluations = {};
+
+    placeDisc(r, c, playerColor, flippable);
+    currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
+    gameController();
+}
+
+function renderPlayback(index) {
+    isPlaybackMode = true;
+    isGameInProgress = false;
+    researchWorker.postMessage({ type: 'stop' });
+    playbackIndex = Math.max(0, Math.min(index, gameHistory.length - 1));
+    const record = gameHistory[playbackIndex];
+    board = JSON.parse(JSON.stringify(record.boardState));
+    lastMove = record.move;
+    
+    const score = playbackIndex > 0 ? evaluationHistory[playbackIndex - 1] : null;
+    updateEvaluationDisplay(score);
+    
+    updateUiState();
+    updateGameInfo();
+    renderBoard();
+    renderEvaluationGraph();
+}
+
+function handleGraphScrub(event) {
+    event.preventDefault(); // ★★★ 修正点: スクロールをキャンセルするために必須
+    if (!isGameOver || !isDraggingGraph) return;
+
+    const graphWrapper = document.getElementById('evaluation-graph-wrapper');
+    const graphRect = graphWrapper.getBoundingClientRect();
+    
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const relativeX = clientX - graphRect.left;
+    
+    let progress = relativeX / graphRect.width;
+    progress = Math.max(0, Math.min(1, progress));
+
+    const maxTurn = gameHistory.length - 1;
+    let turn = Math.round(progress * maxTurn);
+    turn = Math.max(0, Math.min(turn, maxTurn));
+
+    if (turn !== lastHoveredTurn) {
+        lastHoveredTurn = turn;
+        renderPlayback(turn);
+    }
+}
+
+// ★★★ 修正点: グラフのスライド操作関連のイベントリスナーを修正・集約
+const graphWrapper = document.getElementById('evaluation-graph-wrapper');
+
+const onGraphMove = (event) => {
+    if (isDraggingGraph) {
+        handleGraphScrub(event);
+    }
+};
+
+const stopGraphScrub = () => {
+    if (!isDraggingGraph) return;
+    isDraggingGraph = false;
+    document.body.classList.remove('graph-dragging');
+    lastHoveredTurn = -1;
+    
+    window.removeEventListener('mousemove', onGraphMove);
+    window.removeEventListener('mouseup', stopGraphScrub);
+    
+    window.removeEventListener('touchmove', onGraphMove);
+    window.removeEventListener('touchend', stopGraphScrub);
+};
+
+graphWrapper.addEventListener('mousedown', (event) => {
+    if (!isGameOver) return;
+    isDraggingGraph = true;
+    document.body.classList.add('graph-dragging');
+    handleGraphScrub(event);
+    window.addEventListener('mousemove', onGraphMove);
+    window.addEventListener('mouseup', stopGraphScrub);
+});
+
+graphWrapper.addEventListener('touchstart', (event) => {
+    if (!isGameOver) return;
+    isDraggingGraph = true;
+    document.body.classList.add('graph-dragging');
+    handleGraphScrub(event);
+    // passive: false でブラウザのデフォルトスクロールを抑制
+    window.addEventListener('touchmove', onGraphMove, { passive: false });
+    window.addEventListener('touchend', stopGraphScrub);
+}, { passive: false });
+
+
+function showModal(message, confirmText, cancelText, onConfirm, onCancel) {
+    modalMessage.innerHTML = message;
+    modalConfirmBtn.textContent = confirmText;
+    modalCancelBtn.textContent = cancelText;
+
+    modalConfirmBtn.onclick = () => {
+        hideModal();
+        onConfirm();
+    };
+    modalCancelBtn.onclick = () => {
+        hideModal();
+        onCancel();
+    };
+
+    modalOverlay.classList.add('visible');
+}
+
+function hideModal() {
+    modalOverlay.classList.remove('visible');
+}
+
+startButton.addEventListener('click', () => {
+    if (isGameInProgress) {
+        interruptGame();
+    } else {
+        if(turnCount > 0 && !isGameOver) {
+            showModal('ゲームを再開しますか？<br>それとも最初から始めますか？', '再開', '最初から', 
+                () => resumeGame(), 
+                () => { resetGame(); startGame(false); }
+            );
+        } else {
+            resetGame();
+            startGame(false);
+        }
+    }
+});
+
+cpuVsCpuButton.addEventListener('click', () => {
+    if (isGameInProgress || isPlaybackMode) return;
+    if(turnCount > 0 && !isGameOver) {
+         showModal('CPU戦を最初から始めますか？<br>それとも今の局面から行いますか？', '最初から', 'この局面から',
+            () => { resetGame(); startGame(true); },
+            () => startCpuVsCpuFromCurrentState()
+        );
+    } else {
+        resetGame();
+        startGame(true);
+    }
+});
+
+kifuStartBtn.addEventListener('click', () => { if (!kifuStartBtn.disabled) renderPlayback(0); });
+kifuPrevBtn.addEventListener('click', () => { if (!kifuPrevBtn.disabled) renderPlayback(playbackIndex - 1); });
+kifuNextBtn.addEventListener('click', () => { if (!kifuNextBtn.disabled) renderPlayback(playbackIndex + 1); });
+kifuEndBtn.addEventListener('click', () => { if (!kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1); });
+
+undoButton.addEventListener('click', () => {
+    if (undoButton.disabled) return;
+    gameHistory.splice(-2, 2);
+    evaluationHistory.splice(-2, 2);
+    turnCount -= 2;
+    undoCount++;
+    wasUndo = true;
+
+    const lastState = gameHistory[gameHistory.length - 1];
+    board = JSON.parse(JSON.stringify(lastState.boardState));
+    lastMove = lastState.move;
+    currentPlayer = playerColor;
+    
+    const lastEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : null;
+    updateEvaluationDisplay(lastEval);
+
+    gameController();
+});
+
+researchButton.addEventListener('click', () => {
+    if (researchButton.disabled) return;
+    isResearchMode = !isResearchMode;
+    researchButton.classList.toggle('active', isResearchMode);
+    researchEvaluations = {};
+
+    if (isResearchMode) {
+        const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
+        if (isPlayerTurn) {
             runShallowResearch();
-            renderBoard();
             const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
             researchWorker.postMessage({
                 type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel
             });
-        } else {
-            renderBoard();
         }
-
-        const canCurrentPlayerMove = getValidMoves(board, currentPlayer).length > 0;
-        if (!canCurrentPlayerMove) {
-            const opponent = (currentPlayer === BLACK) ? WHITE : BLACK;
-            const canOpponentMove = getValidMoves(board, opponent).length > 0;
-            
-            if (!canOpponentMove) {
-                endGame();
-                return;
-            }
-            
-            messageAreaEl.textContent = `${currentPlayer === BLACK ? '黒' : '白'}はパスします。`;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            currentPlayer = opponent;
-            gameController();
-            return;
-        }
-
-        const isCpuTurnNow = isCpuVsCpuMode || (currentPlayer === cpuColor);
-        if (isCpuTurnNow) {
-            await executeCpuTurn();
-        }
-    }
-
-    function endGame() {
-        isGameOver = true;
-        isGameInProgress = false;
+    } else {
         researchWorker.postMessage({ type: 'stop' });
-        document.body.classList.add('game-over');
-        
-        const blackScore = board.flat().filter(c => c === BLACK).length;
-        const whiteScore = board.flat().filter(c => c === WHITE).length;
-        const winner = (blackScore > whiteScore) ? BLACK : ((whiteScore > blackScore) ? WHITE : EMPTY);
-        
-        let message = "引き分けです！";
-        if (winner !== EMPTY) {
-            if (isCpuVsCpuMode) message = `CPU ${(winner === BLACK ? '1' : '2')} の勝ちです。`;
-            else message = (winner === playerColor) ? "🎉 あなたの勝ちです！ 🎉" : "CPUの勝ちです。";
-        }
-        if (!isCpuVsCpuMode && undoCount > 0) {
-            message += ` (待ったの使用回数: ${undoCount}回)`;
-        }
-        messageAreaEl.textContent = `ゲーム終了！ ${message}`;
-        updateUiState();
-        updateGameInfo();
-        renderEvaluationGraph();
     }
+    renderBoard();
+});
 
-    // ================================================================= //
-    //                         UI・描画関連                             //
-    // ================================================================= //
+playerColorRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+        if (!isGameInProgress) updateUiState();
+    });
+});
+
+document.addEventListener('keydown', (event) => {
+    if (isPlaybackMode || isGameOver) {
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault();
+        }
+        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) kifuPrevBtn.click();
+        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) kifuNextBtn.click();
+        else if (event.key === 'ArrowDown' && !kifuStartBtn.disabled) kifuStartBtn.click();
+        else if (event.key === 'ArrowUp' && !kifuEndBtn.disabled) kifuEndBtn.click();
+    }
+});
+
+// ================================================================= //
+//                         AI思考ロジック (コア)                      //
+// ================================================================= //
+
+async function executeCpuTurn() {
+    if (!isGameInProgress) return;
+
+    const currentAiPlayer = isCpuVsCpuMode ? currentPlayer : cpuColor;
+    const currentAiLevel = isCpuVsCpuMode 
+        ? (currentAiPlayer === BLACK ? parseInt(cpu1LevelSelect.value, 10) : parseInt(cpu2LevelSelect.value, 10))
+        : parseInt(cpuLevelSelect.value, 10);
+
+    messageAreaEl.textContent = 'CPUが思考中です...';
+    await new Promise(resolve => setTimeout(resolve, 50));
     
-    function renderBoard() {
-        boardEl.innerHTML = '';
-        const validMoves = (isGameInProgress && !isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
-            ? getValidMoves(board, currentPlayer) : [];
-        
-        for (let r = 0; r < BOARD_SIZE; r++) {
-            for (let c = 0; c < BOARD_SIZE; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
+    const move = findBestMove(currentAiPlayer, currentAiLevel);
+    
+    if (!isGameInProgress) return;
 
-                if (board[r][c] !== EMPTY) {
-                    const disc = document.createElement('div');
-                    disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
-                    cell.appendChild(disc);
-                } else {
-                    const validMove = validMoves.find(m => m.r === r && m.c === c);
-                    if (validMove) {
-                        const evalForMove = researchEvaluations[`${r},${c}`];
-                        if (isResearchMode && evalForMove !== undefined) {
-                            const valueSpan = document.createElement('span');
-                            valueSpan.className = 'research-value';
-                            valueSpan.textContent = (evalForMove > 0 ? '+' : '') + Math.round(evalForMove);
-                            valueSpan.classList.add(evalForMove >= 0 ? 'plus' : 'minus');
-                            cell.appendChild(valueSpan);
-                        } else {
-                            cell.classList.add('valid-move-hint');
-                        }
-                    }
-                }
-                if (lastMove && lastMove.r === r && lastMove.c === c) {
-                    cell.classList.add('last-move');
-                }
-                cell.addEventListener('click', () => handleCellClick(r, c));
-                boardEl.appendChild(cell);
-            }
+    if (move) {
+        const flippable = getFlippableDiscs(board, move.r, move.c, currentAiPlayer);
+        placeDisc(move.r, move.c, currentAiPlayer, flippable);
+    }
+    currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
+    
+    gameController();
+}
+
+function findBestMove(aiPlayer, aiLevel) {
+    const validMoves = getValidMoves(board, aiPlayer);
+    if (validMoves.length === 0) return null;
+    if (aiLevel >= 7) {
+        const bookMove = OPENING_BOOK[boardToString(board)];
+        if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
+            if ((aiLevel === 9 || aiLevel === 10) && Math.random() < 0.5) {} else { return bookMove; }
         }
     }
+    const emptyCells = MAX_TURNS - turnCount;
+    switch (aiLevel) {
+        case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
+        case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
+        case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
+        case 4: return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+        case 5: return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+        case 6: return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+        case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel).move; }
+        case 8: {
+            if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
+            let depth = (emptyCells > 22) ? 6 : 7; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
+        }
+        case 9: {
+            if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
+            let depth = (emptyCells > 22) ? 6 : 7; return findBestMoveWithVariety(board, depth, aiPlayer, 8);
+        }
+        case 10: {
+            if (emptyCells <= 14) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
+            let depth = (emptyCells > 24) ? 8 : 9; return findBestMoveWithVariety(board, depth, aiPlayer, 10);
+        }
+        default: return validMoves[0];
+    }
+}
+
+function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level) {
+    const validMoves = getValidMoves(currentBoard, aiPlayer);
+    const moveEvals = [];
+    for (const move of validMoves) {
+        const newBoard = JSON.parse(JSON.stringify(currentBoard));
+        placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
+        const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level);
+        moveEvals.push({ move, score: result.score });
+    }
+    if (moveEvals.length === 0) return null;
+    const bestScore = Math.max(...moveEvals.map(e => e.score));
+    const threshold = 50; 
+    const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
+    if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
+    return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
+}
+
+function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel) {
+    const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
+    if (depth === 0 || emptyCells === 0) return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel, 60 - emptyCells) };
+    const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
+    const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
+    let validMoves = getValidMoves(currentBoard, playerForThisNode);
     
-    function updateGameInfo() {
-        let blackScore = 0, whiteScore = 0;
-        const currentBoard = isPlaybackMode ? JSON.parse(JSON.stringify(gameHistory[playbackIndex].boardState)) : board;
-        currentBoard.flat().forEach(cell => {
-            if (cell === BLACK) blackScore++;
-            if (cell === WHITE) whiteScore++;
+    if (validMoves.length === 0) {
+        if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, true) };
+        return alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
+    }
+    
+    let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
+    if (depth >= 4 && currentLevel >= 8) {
+        const moveScores = validMoves.map(move => {
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+            return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, 60 - emptyCells + 1) };
         });
-        blackScoreEl.textContent = blackScore;
-        whiteScoreEl.textContent = whiteScore;
-        
-        const displayTurn = isPlaybackMode ? playbackIndex : turnCount;
-        turnCountNumberEl.textContent = displayTurn;
-        
-        if (isGameOver) return;
+        if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
+        else moveScores.sort((a, b) => a.score - b.score);
+        validMoves = moveScores.map(ms => ms.move);
+    }
+    bestResult.move = validMoves[0]; 
 
-        let message = '';
-        if (isPlaybackMode) {
-             message = `棋譜再生中 (${displayTurn}手目)`;
-        } else if (isGameInProgress) {
-            if (isCpuVsCpuMode) {
-                 message = `${turnCount + 1}手目: CPU ${currentPlayer === BLACK ? '1' : '2'}のターンです`;
-            } else {
-                 message = `${turnCount + 1}手目: ${currentPlayer === playerColor ? 'あなたのターンです' : 'CPUのターンです'}`;
-            }
-        } else if (turnCount > 0) {
-            message = '中断中...';
+    for (const move of validMoves) {
+        const newBoard = JSON.parse(JSON.stringify(currentBoard));
+        placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+        const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
+        if (isMaximizingNode) {
+            if (result.score > bestResult.score) bestResult = { move, score: result.score };
+            alpha = Math.max(alpha, bestResult.score);
         } else {
-             message = '対戦設定を選んで開始してください';
+            if (result.score < bestResult.score) bestResult = { move, score: result.score };
+            beta = Math.min(beta, bestResult.score);
         }
+        if (beta <= alpha) break; 
+    }
+    return bestResult;
+}
 
-        if (wasUndo) {
-            messageAreaEl.textContent = '待った！ ' + message;
-            wasUndo = false;
+function perfectSearch(currentBoard, alpha, beta, isMaximizingNode, maximizingPlayer) {
+    const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
+    if (emptyCells === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, false) };
+    const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
+    const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
+    const validMoves = getValidMoves(currentBoard, playerForThisNode);
+    if (validMoves.length === 0) {
+        if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, false) };
+        return perfectSearch(currentBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+    }
+    let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
+    for (const move of validMoves) {
+        const newBoard = JSON.parse(JSON.stringify(currentBoard));
+        placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+        const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+        if (isMaximizingNode) {
+            if (result.score > bestResult.score) bestResult = { move, score: result.score };
+            alpha = Math.max(alpha, bestResult.score);
         } else {
-            messageAreaEl.textContent = message;
+            if (result.score < bestResult.score) bestResult = { move, score: result.score };
+            beta = Math.min(beta, bestResult.score);
+        }
+        if (beta <= alpha) break;
+    }
+    return bestResult;
+}
+
+// ================================================================= //
+//                           AI評価関数                             //
+// ================================================================= //
+
+function evaluateBoard(board, player, level, currentTurn) {
+    if (level >= 8) return evaluateBoardForLevel8(board, player, currentTurn);
+    if (level >= 6) return advancedPositionalEvaluation(board, player);
+    return simplePositionalEvaluation(board, player);
+}
+
+function simplePositionalEvaluation(board, player) {
+    let score = 0;
+    const opponent = (player === BLACK) ? WHITE : BLACK;
+    for (let r=0; r<BOARD_SIZE; r++) for(let c=0; c<BOARD_SIZE; c++) {
+        if(board[r][c]===player) score+=POSITIONAL_SCORE_TABLE[r][c];
+        else if(board[r][c]===opponent) score-=POSITIONAL_SCORE_TABLE[r][c];
+    }
+    return score;
+}
+
+function advancedPositionalEvaluation(board, player) {
+    const opponent = (player === BLACK) ? WHITE : BLACK;
+    const positionalScore = simplePositionalEvaluation(board, player);
+    const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
+    const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
+    return positionalScore + (mobilityScore * 50) + (fixedDiscScore * 150);
+}
+
+function evaluateBoardForLevel8(board, player, currentTurn) {
+    const opponent = (player === BLACK) ? WHITE : BLACK;
+    const positionalScore = simplePositionalEvaluation(board, player);
+    const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
+    const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
+    let cornerPenalty = 0;
+    const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
+    const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
+    for (let i = 0; i < 4; i++) {
+        if (board[corners[i].r][corners[i].c] === EMPTY) {
+            if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 250;
+            if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 250;
         }
     }
+    let positionalWeight, mobilityWeight, fixedDiscWeight;
+    if (currentTurn < 20) { positionalWeight=1; mobilityWeight=80; fixedDiscWeight=120; } 
+    else if (currentTurn < 48) { positionalWeight=1; mobilityWeight=60; fixedDiscWeight=180; } 
+    else { positionalWeight=0.5; mobilityWeight=40; fixedDiscWeight=250; }
+    return (positionalScore*positionalWeight) + (mobilityScore*mobilityWeight) + (fixedDiscScore*fixedDiscWeight) + cornerPenalty;
+}
+
+function evaluateByStoneCount(board, player, isFromAlphaBeta) {
+    let score = 0;
+    board.flat().forEach(c => { if (c === player) score++; else if (c !== EMPTY) score--; });
+    return isFromAlphaBeta ? score * 1000 : score;
+}
+
+// ================================================================= //
+//                       ルール・ユーティリティ関数                      //
+// ================================================================= //
+
+function placeDisc(r, c, player, flippable) {
+    board[r][c] = player;
+    flippable.forEach(pos => { board[pos.r][pos.c] = player; });
+    lastMove = { r, c };
+    turnCount++;
+    gameHistory.push({ move: { r, c }, boardState: JSON.parse(JSON.stringify(board)) });
     
-    function updateUiState() {
-        playerColor = parseInt(document.querySelector('input[name="player_color"]:checked').value, 10);
-        cpuColor = (playerColor === BLACK) ? WHITE : BLACK;
-        
-        const startButtonImg = startButton.querySelector('img');
-
-        if (isGameInProgress && !isGameOver) {
-            startButtonImg.src = 'https://core-calmdust.github.io/aicoding/images/reversi/stop.png';
-            startButtonImg.alt = '中断';
-            startButton.setAttribute('aria-label', 'ゲームを中断します');
-        } else {
-            startButtonImg.src = 'https://core-calmdust.github.io/aicoding/images/reversi/play.png';
-            startButtonImg.alt = '開始';
-            startButton.setAttribute('aria-label', 'ゲームを開始します');
-        }
-        
-        const controlsLocked = isGameInProgress || isPlaybackMode;
-        cpuLevelSelect.disabled = controlsLocked;
-        playerColorRadios.forEach(radio => { radio.disabled = controlsLocked; });
-        cpuVsCpuButton.disabled = controlsLocked;
-        
-        const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
-        undoButton.disabled = !isPlayerTurn || turnCount < 2;
-        researchButton.disabled = isCpuVsCpuMode || !isGameInProgress;
-        
-        const kifuActive = isGameOver || isPlaybackMode;
-        kifuStartBtn.disabled = !kifuActive || playbackIndex === 0;
-        kifuPrevBtn.disabled = !kifuActive || playbackIndex === 0;
-        kifuNextBtn.disabled = !kifuActive || playbackIndex >= gameHistory.length - 1;
-        kifuEndBtn.disabled = !kifuActive || playbackIndex >= gameHistory.length - 1;
-    }
-
-    function updateEvaluationDisplay(score) {
-        if (score === null || score === undefined) {
-            evaluationValueTextEl.textContent = "N/A";
-        } else {
-            const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
-            evaluationValueTextEl.textContent = scoreText;
-        }
-    }
-    
-    function renderEvaluationGraph() {
-        const graphEl = document.getElementById('evaluation-graph');
-        const yAxisEl = document.getElementById('evaluation-y-axis');
-        const tooltipEl = document.getElementById('evaluation-tooltip');
-        if (!graphEl || !yAxisEl || !tooltipEl) return;
-
-        graphEl.innerHTML = '';
-        const maxAbsValue = evaluationHistory.length > 0 ? Math.max(...evaluationHistory.map(v => Math.abs(v))) : 0;
-        const scale = Math.max(EVAL_GRAPH_INITIAL_SCALE, Math.ceil(maxAbsValue / 100) * 100);
-        yAxisEl.innerHTML = `<span>+${scale}</span><span>-${scale}</span>`;
-
-        for (let i = 0; i < MAX_TURNS; i++) {
-            const barContainer = document.createElement('div');
-            barContainer.className = 'bar-container';
-
-            if (isPlaybackMode && i === playbackIndex - 1) {
-                barContainer.classList.add('current-turn-highlight');
-            }
-
-            if (i < evaluationHistory.length) {
-                const value = evaluationHistory[i];
-                const bar = document.createElement('div');
-                bar.className = 'bar';
-                const heightPercentage = Math.min((Math.abs(value) / scale) * 100, 100);
-                bar.style.height = `${heightPercentage / 2}%`;
-                if (value > 0) bar.classList.add('black');
-                else if (value < 0) bar.classList.add('white');
-                barContainer.appendChild(bar);
-
-                barContainer.addEventListener('mouseover', () => {
-                    tooltipEl.style.display = 'block';
-                    tooltipEl.textContent = `Turn ${i + 1}: ${value > 0 ? '+' : ''}${value.toFixed(0)}`;
-                    const wrapperRect = graphEl.parentElement.getBoundingClientRect();
-                    const barRect = barContainer.getBoundingClientRect();
-                    tooltipEl.style.left = `${barRect.left - wrapperRect.left + barRect.width / 2}px`;
-                    tooltipEl.style.top = `${barRect.top - wrapperRect.top}px`;
-                });
-                barContainer.addEventListener('mouseleave', () => {
-                    tooltipEl.style.display = 'none';
-                });
-            }
-            graphEl.appendChild(barContainer);
-        }
-    }
-    
-    function runShallowResearch() {
-        researchEvaluations = {};
-        const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
-        if (!isPlayerTurn) return;
-
-        const validMoves = getValidMoves(board, playerColor);
-        const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
-        
-        for (const move of validMoves) {
-            const tempBoard = JSON.parse(JSON.stringify(board));
-            const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
-            placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
-            
-            const result = alphaBetaSearch(tempBoard, 3, -Infinity, Infinity, false, BLACK, 4, turnCount + 1);
-            let diff = result.score - currentEval;
-            if (playerColor === WHITE) diff = -diff;
-            researchEvaluations[`${move.r},${move.c}`] = diff;
-        }
-    }
-
-    // ================================================================= //
-    //                        イベントハンドラ・リスナー                   //
-    // ================================================================= //
-
-    function handleCellClick(r, c) {
-        if (!isGameInProgress || isCpuVsCpuMode || isPlaybackMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
-        
-        const flippable = getFlippableDiscs(board, r, c, playerColor);
-        if (flippable.length === 0) return;
-        
-        researchWorker.postMessage({ type: 'stop' });
-        researchEvaluations = {};
-
-        placeDisc(r, c, playerColor, flippable);
-        currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
-        gameController();
-    }
-
-    function renderPlayback(index) {
-        isPlaybackMode = true;
-        isGameInProgress = false;
-        researchWorker.postMessage({ type: 'stop' });
-        playbackIndex = Math.max(0, Math.min(index, gameHistory.length - 1));
-        const record = gameHistory[playbackIndex];
-        board = JSON.parse(JSON.stringify(record.boardState));
-        lastMove = record.move;
-        
-        const score = playbackIndex > 0 ? evaluationHistory[playbackIndex - 1] : null;
+    if (!isPlaybackMode) {
+        const score = evaluateBoard(board, BLACK, parseInt(cpuLevelSelect.value, 10), turnCount);
+        evaluationHistory.push(score);
         updateEvaluationDisplay(score);
-        
-        updateUiState();
-        updateGameInfo();
-        renderBoard();
         renderEvaluationGraph();
     }
-    
-    function handleGraphScrub(event) {
-        event.preventDefault();
-        if (!isGameOver) return;
+    playbackIndex = gameHistory.length - 1;
+}
 
-        const graphWrapper = document.getElementById('evaluation-graph-wrapper');
-        const graphRect = graphWrapper.getBoundingClientRect();
-        
-        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-        const relativeX = clientX - graphRect.left;
-        
-        let progress = relativeX / graphRect.width;
-        progress = Math.max(0, Math.min(1, progress));
+function placeDiscInBoard(b, r, c, player, flippable) {
+    b[r][c] = player;
+    flippable.forEach(p => { b[p.r][p.c] = player; });
+}
 
-        const maxTurn = gameHistory.length - 1;
-        let turn = Math.round(progress * (maxTurn - 1)) + 1;
-        turn = Math.max(1, Math.min(turn, maxTurn));
-
-        if (turn !== lastHoveredTurn) {
-            lastHoveredTurn = turn;
-            renderPlayback(turn);
+function getFlippableDiscs(currentBoard, r, c, player) {
+    const flippable = [];
+    if (currentBoard[r][c] !== EMPTY) return flippable;
+    const opponent = (player === BLACK) ? WHITE : BLACK;
+    for (const dir of DIRECTIONS) {
+        const line = [];
+        let currR = r + dir.r, currC = c + dir.c;
+        while (currR >= 0 && currR < BOARD_SIZE && currC >= 0 && currC < BOARD_SIZE) {
+            if (currentBoard[currR][currC] === opponent) line.push({r: currR, c: currC});
+            else if (currentBoard[currR][currC] === player) { flippable.push(...line); break; } 
+            else break;
+            currR += dir.r; currC += dir.c;
         }
     }
+    return flippable;
+}
 
-    function stopGraphScrub() {
-        isDraggingGraph = false;
-        document.body.classList.remove('graph-dragging');
-        lastHoveredTurn = -1;
-        window.removeEventListener('mousemove', onGraphMouseMove);
-        window.removeEventListener('touchmove', onGraphTouchMove);
-        window.removeEventListener('mouseup', onGraphMouseUp);
-        window.removeEventListener('touchend', onGraphTouchEnd);
-    }
-    
-    function onGraphMouseMove(event) { if (isDraggingGraph) handleGraphScrub(event); }
-    function onGraphTouchMove(event) { if (isDraggingGraph) handleGraphScrub(event); }
-    function onGraphMouseUp() { stopGraphScrub(); }
-    function onGraphTouchEnd() { stopGraphScrub(); }
-    
-    const graphWrapper = document.getElementById('evaluation-graph-wrapper');
-    graphWrapper.addEventListener('mousedown', (event) => {
-        if (!isGameOver) return;
-        isDraggingGraph = true;
-        document.body.classList.add('graph-dragging');
-        handleGraphScrub(event);
-        window.addEventListener('mousemove', onGraphMouseMove);
-        window.addEventListener('mouseup', onGraphMouseUp, { once: true });
-    });
-    graphWrapper.addEventListener('touchstart', (event) => {
-        if (!isGameOver) return;
-        isDraggingGraph = true;
-        document.body.classList.add('graph-dragging');
-        handleGraphScrub(event);
-        window.addEventListener('touchmove', onGraphTouchMove);
-        window.addEventListener('touchend', onGraphTouchEnd, { once: true });
-    }, { passive: false });
-
-    function showModal(message, confirmText, cancelText, onConfirm, onCancel) {
-        modalMessage.innerHTML = message;
-        modalConfirmBtn.textContent = confirmText;
-        modalCancelBtn.textContent = cancelText;
-
-        modalConfirmBtn.onclick = () => {
-            hideModal();
-            onConfirm();
-        };
-        modalCancelBtn.onclick = () => {
-            hideModal();
-            onCancel();
-        };
-
-        modalOverlay.classList.add('visible');
-    }
-
-    function hideModal() {
-        modalOverlay.classList.remove('visible');
-    }
-
-    startButton.addEventListener('click', () => {
-        if (isGameInProgress) {
-            interruptGame();
-        } else {
-            if(turnCount > 0 && !isGameOver) {
-                showModal('ゲームを再開しますか？<br>それとも最初から始めますか？', '再開', '最初から', 
-                    () => resumeGame(), 
-                    () => { resetGame(); startGame(false); }
-                );
-            } else {
-                resetGame();
-                startGame(false);
-            }
-        }
-    });
-
-    cpuVsCpuButton.addEventListener('click', () => {
-        if (isGameInProgress || isPlaybackMode) return;
-        if(turnCount > 0 && !isGameOver) {
-             showModal('CPU戦を最初から始めますか？<br>それとも今の局面から行いますか？', '最初から', 'この局面から',
-                () => { resetGame(); startGame(true); },
-                () => startCpuVsCpuFromCurrentState()
-            );
-        } else {
-            resetGame();
-            startGame(true);
-        }
-    });
-    
-    kifuStartBtn.addEventListener('click', () => { if (!kifuStartBtn.disabled) renderPlayback(0); });
-    kifuPrevBtn.addEventListener('click', () => { if (!kifuPrevBtn.disabled) renderPlayback(playbackIndex - 1); });
-    kifuNextBtn.addEventListener('click', () => { if (!kifuNextBtn.disabled) renderPlayback(playbackIndex + 1); });
-    kifuEndBtn.addEventListener('click', () => { if (!kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1); });
-    
-    undoButton.addEventListener('click', () => {
-        if (undoButton.disabled) return;
-        gameHistory.splice(-2, 2);
-        evaluationHistory.splice(-2, 2);
-        turnCount -= 2;
-        undoCount++;
-        wasUndo = true;
-
-        const lastState = gameHistory[gameHistory.length - 1];
-        board = JSON.parse(JSON.stringify(lastState.boardState));
-        lastMove = lastState.move;
-        currentPlayer = playerColor;
-        
-        const lastEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : null;
-        updateEvaluationDisplay(lastEval);
-
-        gameController();
-    });
-
-    researchButton.addEventListener('click', () => {
-        if (researchButton.disabled) return;
-        isResearchMode = !isResearchMode;
-        researchButton.classList.toggle('active', isResearchMode);
-        researchEvaluations = {};
-
-        if (isResearchMode) {
-            const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
-            if (isPlayerTurn) {
-                runShallowResearch();
-                const currentEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : 0;
-                researchWorker.postMessage({
-                    type: 'start', board, playerColor, turnCount, currentEval, maxAiLevel
-                });
-            }
-        } else {
-            researchWorker.postMessage({ type: 'stop' });
-        }
-        renderBoard();
-    });
-    
-    playerColorRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (!isGameInProgress) updateUiState();
-        });
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (isPlaybackMode || isGameOver) {
-            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-                event.preventDefault();
-            }
-            if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) kifuPrevBtn.click();
-            else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) kifuNextBtn.click();
-            else if (event.key === 'ArrowDown' && !kifuStartBtn.disabled) kifuStartBtn.click();
-            else if (event.key === 'ArrowUp' && !kifuEndBtn.disabled) kifuEndBtn.click();
-        }
-    });
-
-    // ================================================================= //
-    //                         AI思考ロジック (コア)                      //
-    // ================================================================= //
-
-    async function executeCpuTurn() {
-        if (!isGameInProgress) return;
-
-        const currentAiPlayer = isCpuVsCpuMode ? currentPlayer : cpuColor;
-        const currentAiLevel = isCpuVsCpuMode 
-            ? (currentAiPlayer === BLACK ? parseInt(cpu1LevelSelect.value, 10) : parseInt(cpu2LevelSelect.value, 10))
-            : parseInt(cpuLevelSelect.value, 10);
-
-        messageAreaEl.textContent = 'CPUが思考中です...';
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        const move = findBestMove(currentAiPlayer, currentAiLevel);
-        
-        if (!isGameInProgress) return;
-
-        if (move) {
-            const flippable = getFlippableDiscs(board, move.r, move.c, currentAiPlayer);
-            placeDisc(move.r, move.c, currentAiPlayer, flippable);
-        }
-        currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
-        
-        gameController();
-    }
-    
-    function findBestMove(aiPlayer, aiLevel) {
-        const validMoves = getValidMoves(board, aiPlayer);
-        if (validMoves.length === 0) return null;
-        if (aiLevel >= 7) {
-            const bookMove = OPENING_BOOK[boardToString(board)];
-            if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
-                if ((aiLevel === 9 || aiLevel === 10) && Math.random() < 0.5) {} else { return bookMove; }
-            }
-        }
-        const emptyCells = MAX_TURNS - turnCount;
-        switch (aiLevel) {
-            case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
-            case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
-            case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
-            case 4: return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            case 5: return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            case 6: return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel).move; }
-            case 8: {
-                if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
-                let depth = (emptyCells > 22) ? 6 : 7; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel).move;
-            }
-            case 9: {
-                if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
-                let depth = (emptyCells > 22) ? 6 : 7; return findBestMoveWithVariety(board, depth, aiPlayer, 8);
-            }
-            case 10: {
-                if (emptyCells <= 14) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
-                let depth = (emptyCells > 24) ? 8 : 9; return findBestMoveWithVariety(board, depth, aiPlayer, 10);
-            }
-            default: return validMoves[0];
+function getValidMoves(currentBoard, player) {
+    const moves = [];
+    for (let r=0; r<BOARD_SIZE; r++) for (let c=0; c<BOARD_SIZE; c++) {
+        if (currentBoard[r][c] === EMPTY && getFlippableDiscs(currentBoard, r, c, player).length > 0) {
+            moves.push({r, c});
         }
     }
+    return moves;
+}
 
-    function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level) {
-        const validMoves = getValidMoves(currentBoard, aiPlayer);
-        const moveEvals = [];
-        for (const move of validMoves) {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
-            placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
-            const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level);
-            moveEvals.push({ move, score: result.score });
-        }
-        if (moveEvals.length === 0) return null;
-        const bestScore = Math.max(...moveEvals.map(e => e.score));
-        const threshold = 50; 
-        const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
-        if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
-        return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
-    }
-
-    function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel) {
-        const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
-        if (depth === 0 || emptyCells === 0) return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel, 60 - emptyCells) };
-        const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
-        const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
-        let validMoves = getValidMoves(currentBoard, playerForThisNode);
-        
-        if (validMoves.length === 0) {
-            if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, true) };
-            return alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
-        }
-        
-        let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
-        if (depth >= 4 && currentLevel >= 8) {
-            const moveScores = validMoves.map(move => {
-                const newBoard = JSON.parse(JSON.stringify(currentBoard));
-                placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-                return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, 60 - emptyCells + 1) };
-            });
-            if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
-            else moveScores.sort((a, b) => a.score - b.score);
-            validMoves = moveScores.map(ms => ms.move);
-        }
-        bestResult.move = validMoves[0]; 
-
-        for (const move of validMoves) {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
-            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-            const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel);
-            if (isMaximizingNode) {
-                if (result.score > bestResult.score) bestResult = { move, score: result.score };
-                alpha = Math.max(alpha, bestResult.score);
-            } else {
-                if (result.score < bestResult.score) bestResult = { move, score: result.score };
-                beta = Math.min(beta, bestResult.score);
-            }
-            if (beta <= alpha) break; 
-        }
-        return bestResult;
-    }
-
-    function perfectSearch(currentBoard, alpha, beta, isMaximizingNode, maximizingPlayer) {
-        const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
-        if (emptyCells === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, false) };
-        const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
-        const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
-        const validMoves = getValidMoves(currentBoard, playerForThisNode);
-        if (validMoves.length === 0) {
-            if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, false) };
-            return perfectSearch(currentBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
-        }
-        let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
-        for (const move of validMoves) {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
-            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-            const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
-            if (isMaximizingNode) {
-                if (result.score > bestResult.score) bestResult = { move, score: result.score };
-                alpha = Math.max(alpha, bestResult.score);
-            } else {
-                if (result.score < bestResult.score) bestResult = { move, score: result.score };
-                beta = Math.min(beta, bestResult.score);
-            }
-            if (beta <= alpha) break;
-        }
-        return bestResult;
-    }
-
-    // ================================================================= //
-    //                           AI評価関数                             //
-    // ================================================================= //
-
-    function evaluateBoard(board, player, level, currentTurn) {
-        if (level >= 8) return evaluateBoardForLevel8(board, player, currentTurn);
-        if (level >= 6) return advancedPositionalEvaluation(board, player);
-        return simplePositionalEvaluation(board, player);
-    }
-    
-    function simplePositionalEvaluation(board, player) {
-        let score = 0;
-        const opponent = (player === BLACK) ? WHITE : BLACK;
-        for (let r=0; r<BOARD_SIZE; r++) for(let c=0; c<BOARD_SIZE; c++) {
-            if(board[r][c]===player) score+=POSITIONAL_SCORE_TABLE[r][c];
-            else if(board[r][c]===opponent) score-=POSITIONAL_SCORE_TABLE[r][c];
-        }
-        return score;
-    }
-
-    function advancedPositionalEvaluation(board, player) {
-        const opponent = (player === BLACK) ? WHITE : BLACK;
-        const positionalScore = simplePositionalEvaluation(board, player);
-        const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-        const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-        return positionalScore + (mobilityScore * 50) + (fixedDiscScore * 150);
-    }
-
-    function evaluateBoardForLevel8(board, player, currentTurn) {
-        const opponent = (player === BLACK) ? WHITE : BLACK;
-        const positionalScore = simplePositionalEvaluation(board, player);
-        const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-        const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-        let cornerPenalty = 0;
-        const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
-        const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
-        for (let i = 0; i < 4; i++) {
-            if (board[corners[i].r][corners[i].c] === EMPTY) {
-                if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 250;
-                if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 250;
-            }
-        }
-        let positionalWeight, mobilityWeight, fixedDiscWeight;
-        if (currentTurn < 20) { positionalWeight=1; mobilityWeight=80; fixedDiscWeight=120; } 
-        else if (currentTurn < 48) { positionalWeight=1; mobilityWeight=60; fixedDiscWeight=180; } 
-        else { positionalWeight=0.5; mobilityWeight=40; fixedDiscWeight=250; }
-        return (positionalScore*positionalWeight) + (mobilityScore*mobilityWeight) + (fixedDiscScore*fixedDiscWeight) + cornerPenalty;
-    }
-
-    function evaluateByStoneCount(board, player, isFromAlphaBeta) {
-        let score = 0;
-        board.flat().forEach(c => { if (c === player) score++; else if (c !== EMPTY) score--; });
-        return isFromAlphaBeta ? score * 1000 : score;
-    }
-
-    // ================================================================= //
-    //                       ルール・ユーティリティ関数                      //
-    // ================================================================= //
-    
-    function placeDisc(r, c, player, flippable) {
-        board[r][c] = player;
-        flippable.forEach(pos => { board[pos.r][pos.c] = player; });
-        lastMove = { r, c };
-        turnCount++;
-        gameHistory.push({ move: { r, c }, boardState: JSON.parse(JSON.stringify(board)) });
-        
-        if (!isPlaybackMode) {
-            const score = evaluateBoard(board, BLACK, parseInt(cpuLevelSelect.value, 10), turnCount);
-            evaluationHistory.push(score);
-            updateEvaluationDisplay(score);
-            renderEvaluationGraph();
-        }
-        playbackIndex = gameHistory.length - 1;
-    }
-    
-    function placeDiscInBoard(b, r, c, player, flippable) {
-        b[r][c] = player;
-        flippable.forEach(p => { b[p.r][p.c] = player; });
-    }
-
-    function getFlippableDiscs(currentBoard, r, c, player) {
-        const flippable = [];
-        if (currentBoard[r][c] !== EMPTY) return flippable;
-        const opponent = (player === BLACK) ? WHITE : BLACK;
-        for (const dir of DIRECTIONS) {
-            const line = [];
-            let currR = r + dir.r, currC = c + dir.c;
-            while (currR >= 0 && currR < BOARD_SIZE && currC >= 0 && currC < BOARD_SIZE) {
-                if (currentBoard[currR][currC] === opponent) line.push({r: currR, c: currC});
-                else if (currentBoard[currR][currC] === player) { flippable.push(...line); break; } 
-                else break;
-                currR += dir.r; currC += dir.c;
-            }
-        }
-        return flippable;
-    }
-    
-    function getValidMoves(currentBoard, player) {
-        const moves = [];
-        for (let r=0; r<BOARD_SIZE; r++) for (let c=0; c<BOARD_SIZE; c++) {
-            if (currentBoard[r][c] === EMPTY && getFlippableDiscs(currentBoard, r, c, player).length > 0) {
-                moves.push({r, c});
-            }
-        }
-        return moves;
-    }
-    
-    function getStableDiscs(board, player) {
-        const stable = Array.from({length: 8}, () => Array(8).fill(false));
-        const directions = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[-1,1],[1,-1]];
-        if (board[0][0] === player) stable[0][0] = true; if (board[0][7] === player) stable[0][7] = true;
-        if (board[7][0] === player) stable[7][0] = true; if (board[7][7] === player) stable[7][7] = true;
-        let changed = true;
-        while(changed) {
-            changed = false;
-            for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
-                if(board[r][c] === player && !stable[r][c]) {
-                    let isStable = true;
-                    for(let i=0; i<4; i++) {
-                        const [d1r,d1c]=directions[i*2], [d2r,d2c]=directions[i*2+1];
-                        let line1_filled = true, line2_filled = true;
-                        let nr = r + d1r, nc = c + d1c;
-                        while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line1_filled=false;break;} nr+=d1r; nc+=d1c; }
-                        nr = r + d2r, nc = c + d2c;
-                        while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line2_filled=false;break;} nr+=d2r; nc+=d2c; }
-                        if (!line1_filled && !line2_filled) { isStable=false; break; }
-                    }
-                    if(isStable) { stable[r][c] = true; changed = true; }
+function getStableDiscs(board, player) {
+    const stable = Array.from({length: 8}, () => Array(8).fill(false));
+    const directions = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[-1,1],[1,-1]];
+    if (board[0][0] === player) stable[0][0] = true; if (board[0][7] === player) stable[0][7] = true;
+    if (board[7][0] === player) stable[7][0] = true; if (board[7][7] === player) stable[7][7] = true;
+    let changed = true;
+    while(changed) {
+        changed = false;
+        for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
+            if(board[r][c] === player && !stable[r][c]) {
+                let isStable = true;
+                for(let i=0; i<4; i++) {
+                    const [d1r,d1c]=directions[i*2], [d2r,d2c]=directions[i*2+1];
+                    let line1_filled = true, line2_filled = true;
+                    let nr = r + d1r, nc = c + d1c;
+                    while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line1_filled=false;break;} nr+=d1r; nc+=d1c; }
+                    nr = r + d2r, nc = c + d2c;
+                    while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line2_filled=false;break;} nr+=d2r; nc+=d2c; }
+                    if (!line1_filled && !line2_filled) { isStable=false; break; }
                 }
+                if(isStable) { stable[r][c] = true; changed = true; }
             }
         }
-        const stableDiscs = [];
-        for (let r=0; r<8; r++) for(let c=0; c<8; c++) if(stable[r][c]) stableDiscs.push({r,c});
-        return stableDiscs;
     }
+    const stableDiscs = [];
+    for (let r=0; r<8; r++) for(let c=0; c<8; c++) if(stable[r][c]) stableDiscs.push({r,c});
+    return stableDiscs;
+}
 
-    function boardToString(b) {
-        return b.flat().join('');
-    }
+function boardToString(b) {
+    return b.flat().join('');
+}
 
-    // --- ゲームの初回起動 ---
-    resetGame();
+// --- ゲームの初回起動 ---
+resetGame();
     </script>
 </body>
 </html>
