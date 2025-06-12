@@ -47,7 +47,7 @@
 
         body {
             font-family: 'Noto Sans JP', sans-serif; background-color: var(--bg-color); color: var(--text-color);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 10px;
         }
 
         .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
@@ -120,7 +120,7 @@
             border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%;
         }
         
-        #message-area { font-size: 18px; font-weight: bold; color: var(--danger-color); height: 25px; text-align: center; margin-top: 20px; }
+        #message-area { font-size: 18px; font-weight: bold; color: var(--danger-color); height: 25px; text-align: center; }
         
         .controls label,
         .test-controls label {
@@ -395,7 +395,7 @@
             .sidebar {
                 flex-direction: row;
                 width: 100%;
-                gap: 20px;
+                gap: 10px;
                 align-items: stretch;
             }
             .controls, .game-info {
@@ -403,10 +403,20 @@
                 display: flex;
                 flex-direction: column;
                 padding: 15px;
+                justify-content: space-between;
             }
-            #evaluation-graph-container {
-                display: block;
+            .game-info {
+                gap: 10px;
             }
+            #turn-info, #score-info, .action-buttons {
+                flex-grow: 1;
+                display:flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .controls label { font-size: 12px; }
+            .controls select { font-size: 14px; padding: 10px; }
+            .start-controls-wrapper { padding-top: 10px; margin-top: 10px; }
             .game-area {
                 width: 100%;
             }
@@ -414,15 +424,13 @@
                 width: var(--board-size-sp);
                 margin: 0 auto;
             }
-            #message-area {
+             #message-area {
                 width: 100%;
-                margin-top: 0;
+                margin: 0 0 10px 0;
             }
-             .game-info { gap: 10px; padding: 15px; }
-            #score-info { font-size: 1.4em; }
-            .controls select { font-size: 14px; padding: 10px; }
-            .start-controls-wrapper { padding-top: 15px; margin-top: 15px; }
-
+            #evaluation-graph-container {
+                display: block;
+            }
         }
         
         @media (max-width: 600px) {
@@ -457,8 +465,8 @@
                             <option value="6">レベル6 (思考強化)</option>
                             <option value="7">レベル7 (定石+探索)</option>
                             <option value="8">レベル8 (複合型AI)</option>
-                            <option value="9">レベル8+ (多様性＋レベル8)</option>
-                            <option value="10" selected>レベル9 (ハイブリッド思考深化)</option>
+                            <option value="9">レベル8+ (レベル8＋多様性)</option>
+                            <option value="10" selected>レベル9 (思考深化)</option>
                         </select>
                         
                         <div class="start-controls-wrapper">
@@ -1278,6 +1286,18 @@
         radio.addEventListener('change', () => {
             if (!isGameInProgress) updateUiState();
         });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (isPlaybackMode || isGameOver) {
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+                event.preventDefault();
+            }
+            if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) kifuPrevBtn.click();
+            else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) kifuNextBtn.click();
+            else if (event.key === 'ArrowDown' && !kifuStartBtn.disabled) kifuStartBtn.click();
+            else if (event.key === 'ArrowUp' && !kifuEndBtn.disabled) kifuEndBtn.click();
+        }
     });
 
     // ================================================================= //
