@@ -1766,24 +1766,27 @@ function evaluateByStoneCount(board, player, isFromAlphaBeta) {
 function adjustMessageFontSize(element) {
     if (!element || !element.textContent) return;
 
-    // 1. スタイルをリセットして、CSSで定義された基本サイズに戻す
-    element.style.fontSize = ''; 
+    // 1. スタイルをリセット
+    element.style.fontSize = '';
+    const originalWhiteSpace = element.style.whiteSpace; // 元のwhite-space設定を保存
+    element.style.whiteSpace = 'nowrap'; // 一時的に改行を禁止
 
-    // 2. はみ出している場合のみ、フォントサイズを調整する
+    // 2. はみ出している場合のみ、フォントサイズを調整
     if (element.scrollWidth > element.clientWidth) {
-        // わずかなパディングや誤差を考慮
-        const padding = 2; 
-        const maxIterations = 20; // 無限ループ防止
+        const padding = 2;
+        const maxIterations = 20;
         let iterations = 0;
 
-        // テキストの描画幅(scrollWidth)が表示領域(clientWidth)を超える限りループ
         while (element.scrollWidth > element.clientWidth - padding && iterations < maxIterations) {
             const currentSize = parseFloat(window.getComputedStyle(element).fontSize);
-            if (currentSize <= 10) break; // フォントサイズの下限
+            if (currentSize <= 10) break;
             element.style.fontSize = (currentSize - 0.5) + 'px';
             iterations++;
         }
     }
+    
+    // 3. 一時的に設定したスタイルを元に戻す
+    element.style.whiteSpace = originalWhiteSpace;
 }
         
 function placeDisc(r, c, player, flippable) {
