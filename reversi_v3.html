@@ -1155,6 +1155,8 @@ function endGame() {
     }
     if (!isCpuVsCpuMode && undoCount > 0) message += ` (待ったの使用回数: ${undoCount}回)`;
     messageAreaEl.textContent = `ゲーム終了！ ${message}`;
+    adjustMessageFontSize(messageAreaEl); // ★この行を追加
+    
     updateUiState();
     updateGameInfo();
     renderEvaluationGraph();
@@ -1234,6 +1236,7 @@ function updateGameInfo() {
     } else {
         messageAreaEl.textContent = message;
     }
+    adjustMessageFontSize(messageAreaEl); // ★この行を追加
 }
 
 function updateUiState() {
@@ -1756,6 +1759,30 @@ function evaluateByStoneCount(board, player, isFromAlphaBeta) {
 //                       ルール・ユーティリティ関数                      //
 // ================================================================= //
 
+/**
+ * 要素内のテキストがはみ出さないようにフォントサイズを動的に調整します。
+ * @param {HTMLElement} element - 対象のHTML要素。
+ */
+function adjustMessageFontSize(element) {
+    if (!element || !element.textContent) return;
+
+    // インラインスタイルをリセットし、CSSで定義された基本サイズから調整を開始
+    element.style.fontSize = '';
+
+    // わずかなパディングや誤差を考慮し、無限ループを防ぐ
+    const padding = 2; 
+    const maxIterations = 20;
+    let iterations = 0;
+
+    // テキストの描画幅(scrollWidth)が表示領域(clientWidth)を超える限りループ
+    while (element.scrollWidth > element.clientWidth - padding && iterations < maxIterations) {
+        const currentSize = parseFloat(window.getComputedStyle(element).fontSize);
+        if (currentSize <= 10) break; // フォントサイズの下限
+        element.style.fontSize = (currentSize - 0.5) + 'px';
+        iterations++;
+    }
+}
+        
 function placeDisc(r, c, player, flippable) {
     board[r][c] = player;
     flippable.forEach(pos => { board[pos.r][pos.c] = player; });
