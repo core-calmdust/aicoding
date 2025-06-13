@@ -1766,20 +1766,23 @@ function evaluateByStoneCount(board, player, isFromAlphaBeta) {
 function adjustMessageFontSize(element) {
     if (!element || !element.textContent) return;
 
-    // インラインスタイルをリセットし、CSSで定義された基本サイズから調整を開始
-    element.style.fontSize = '';
+    // 1. スタイルをリセットして、CSSで定義された基本サイズに戻す
+    element.style.fontSize = ''; 
 
-    // わずかなパディングや誤差を考慮し、無限ループを防ぐ
-    const padding = 2; 
-    const maxIterations = 20;
-    let iterations = 0;
+    // 2. はみ出している場合のみ、フォントサイズを調整する
+    if (element.scrollWidth > element.clientWidth) {
+        // わずかなパディングや誤差を考慮
+        const padding = 2; 
+        const maxIterations = 20; // 無限ループ防止
+        let iterations = 0;
 
-    // テキストの描画幅(scrollWidth)が表示領域(clientWidth)を超える限りループ
-    while (element.scrollWidth > element.clientWidth - padding && iterations < maxIterations) {
-        const currentSize = parseFloat(window.getComputedStyle(element).fontSize);
-        if (currentSize <= 10) break; // フォントサイズの下限
-        element.style.fontSize = (currentSize - 0.5) + 'px';
-        iterations++;
+        // テキストの描画幅(scrollWidth)が表示領域(clientWidth)を超える限りループ
+        while (element.scrollWidth > element.clientWidth - padding && iterations < maxIterations) {
+            const currentSize = parseFloat(window.getComputedStyle(element).fontSize);
+            if (currentSize <= 10) break; // フォントサイズの下限
+            element.style.fontSize = (currentSize - 0.5) + 'px';
+            iterations++;
+        }
     }
 }
         
