@@ -182,6 +182,95 @@
                 osc.stop(now + dur);
             }
 
+            function playHiHat(decay, pan, volume) {
+                if (!audioContext) return;
+                const now = audioContext.currentTime;
+
+                // ホワイトノイズのバッファを生成（シンセドラムの基本）
+                const bufferSize = audioContext.sampleRate * 0.2; // 0.2秒分のノイズがあれば十分
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1; // -1から1のランダムな値
+                }
+
+                const noiseSource = audioContext.createBufferSource();
+                noiseSource.buffer = buffer;
+                noiseSource.loop = true; // 短いノイズをループさせて切れ間なく再生
+
+                // ハイパスフィルターで高音域だけを抽出し、「シュッ」という音を作る
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 7000; // 7000Hz以下の音をカット
+                filter.Q.value = 1.2; // 少しだけ周波数を強調してキャラクターを付ける
+
+                // エンベロープ（音量の時間変化）で音の長さを制御
+                const gain = audioContext.createGain();
+                gain.gain.setValueAtTime(volume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + decay);
+
+                // パンニングで左右の定位を決める
+                const panner = audioContext.createStereoPanner();
+                panner.pan.setValueAtTime(pan, now);
+
+                // ノードを接続: Noise -> Filter -> Gain -> Panner -> Master
+                noiseSource.connect(filter);
+                filter.connect(gain);
+                gain.connect(panner);
+                panner.connect(masterGain);
+
+                // 再生と自動停止
+                noiseSource.start(now);
+                noiseSource.stop(now + decay + 0.1); // 音が消えた少し後に停止
+            }
+
+            function playArpeggio(freq, duration, pan, volume) {
+                if (!audioContext) return;
+                const now = audioContext.currentTime;
+
+                const osc1 = audioContext.createOscillator();
+                const osc2 = audioContext.createOscillator();
+                osc1.type = 'sawtooth';
+                osc2.type = 'sawtooth';
+
+                osc1.frequency.setValueAtTime(freq, now);
+                osc2.frequency.setValueAtTime(freq, now);
+                osc1.detune.setValueAtTime(-7, now); // デチューンを少し抑えて音像をシャープに
+                osc2.detune.setValueAtTime(7, now);
+
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.Q.value = 3.0; // Q値を上げてフィルターの変化をより「らしい」音に
+
+                // ▼▼▼【ここが最重要ポイント：フィルターエンベロープ】▼▼▼
+                // 音の開始時にフィルターを大きく開き、すぐに閉じることでアタックを生成
+                filter.frequency.setValueAtTime(7000, now); // 開始時：高い周波数まで通す
+                // 非常に短い時間でフィルターを閉じ、音をこもらせる
+                filter.frequency.exponentialRampToValueAtTime(300, now + duration * 0.5);
+                // ▲▲▲【ここまで】▲▲▲
+
+                const gain = audioContext.createGain();
+                // 音量もフィルターに合わせて急激に減衰させる
+                gain.gain.setValueAtTime(volume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.8);
+
+                const panner = audioContext.createStereoPanner();
+                panner.pan.setValueAtTime(pan, now);
+
+                osc1.connect(filter); // オシレーターを直接ゲインではなく、フィルターに接続
+                osc2.connect(filter);
+                filter.connect(gain); // フィルターを通った音をゲインに
+                gain.connect(panner);
+                panner.connect(masterGain);
+
+                osc1.start(now);
+                osc2.start(now);
+                // 音はエンベロープで先に消えるが、念のためオシレーターも停止
+                osc1.stop(now + duration);
+                osc2.stop(now + duration);
+            }
+
+
             function playSound(type) {
                 if (!soundEnabled) return;
                 switch (type) {
@@ -265,7 +354,7 @@
                 titleBeatCount++;
             }
 
-            // ▼▼▼【変更点 4/7】BGM各パートの音量を最終調整 ▼▼▼
+
             function playGameBGM() {
                 if (!soundEnabled) return;
 
@@ -277,11 +366,11 @@
                 if (step % 8 === 0) {
                     const bassNote = gameBassLine[(measure * 2 + Math.floor(step / 8)) % gameBassLine.length];
                     createSound(bassNote, gameSixteenthNoteDuration * 6, 'sawtooth', 0.85, 0, 0.30);
-                    createSound(bassNote / 2, gameSixteenthNoteDuration * 7, 'sine', 0.8, 0, 0.40);
+                    createSound(bassNote / 2, gameSixteenthNoteDuration * 7, 'sine', 0.8, 0, 0.55);
                 }
 
                 // リズム隊
-                if (step === 0) {
+                if (step === 0) { // キック
                     createSound(150, gameSixteenthNoteDuration * 0.5, 'triangle', 0.9, 0, 0.18);
                     createSound(55, gameSixteenthNoteDuration * 4, 'sine', 0.6, 0, 0.75);
                     
@@ -289,19 +378,31 @@
                     gridAlpha = 0.25;
                     setTimeout(() => canvas.classList.remove('pulse'), 100);
                 }
-                if (step === 8) {
+                if (step === 8) { // キック
                     createSound(150, gameSixteenthNoteDuration * 0.5, 'triangle', 0.9, 0, 0.13);
                     createSound(55, gameSixteenthNoteDuration * 4, 'sine', 0.6, 0, 0.65);
                 }
-                if (step === 4 || step === 12) {
+                if (step === 4 || step === 12) { // スネア
                     createSound(250, gameSixteenthNoteDuration, 'triangle', 0.5, 0, 0.35);
                 }
-                if (step % 4 === 2) {
-                    createSound(8000, gameSixteenthNoteDuration, 'square', 0.9, -0.5, 0.1);
+                
+                // 新しいハイハットのリズムパターン
+                if (step % 2 === 1) { // 16分裏クローズ
+                    playHiHat(0.05, -0.6, 0.12);
+                }
+                if (step % 4 === 2) { // 8分裏オープン
+                    playHiHat(0.15, 0.6, 0.15);
                 }
                 
-                // アルペジオ
-                createSound(gameArpeggio[step % gameArpeggio.length] / 2, gameSixteenthNoteDuration * 1.5, 'sine', 0.9, (step % 4 - 1.5) * 0.4, 0.18);
+                // ▼▼▼【ここを変更】▼▼▼
+                const arpNote = gameArpeggio[step % gameArpeggio.length] / 2;
+                const arpPan = (step % 4 - 1.5) * 0.6;
+                // durationはエンベロープの時間計算の基準になる
+                const arpDuration = gameSixteenthNoteDuration * 0.8;
+                // 音が非常に短くなるため、聴感上の音量を補うためにボリュームを上げる
+                const arpVolume = 0.10;
+                playArpeggio(arpNote, arpDuration, arpPan, arpVolume);
+                // ▲▲▲【ここまで変更】▲▲▲
                 
                 gameBeatCount++;
             }
