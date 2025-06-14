@@ -979,7 +979,7 @@
         return bestResult;
     }
     
-    function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level, turnCount) {
+    function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level, turnCount, threshold) {
         const validMoves = getValidMoves(currentBoard, aiPlayer);
         if (validMoves.length === 0) return null;
 
@@ -989,66 +989,139 @@
         for (const move of validMoves) {
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
+            // 評価関数には、渡されたAIレベルを使用します
             const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
             const score = result.score;
-            
+        
             moveEvals.push({ move, score });
             if (score > bestScore) {
                 bestScore = score;
             }
         }
-        
+    
         if (moveEvals.length === 0) return null;
-        
-        const threshold = 50; 
+    
+        // 引数で受け取った閾値を使い、最善手に近い手を候補としてフィルタリングします
         const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
         if (bestMoves.length > 0) {
+            // 候補の中からランダムに1手を選びます
             return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
         }
+        // 念のためのフォールバック
         return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
     }
 
-    // --- CPUの最善手探索 (Workerのメイン機能) ---
+/**
+ * 単純な評価関数に基づいて最善手（複数ある場合はランダム）を選択する
+ * @param {Array} validMoves - 合法手のリスト
+ * @param {Function} evaluator - 各手を評価する関数 (例: (move) => move.count)
+ * @returns {Object} 選択された手
+ */
+
+    function findBestMoveBySimpleEval(validMoves, evaluator) {
+        if (validMoves.length === 0) return null;
+
+        const moveEvals = validMoves.map(move => ({
+            move,
+            score: evaluator(move)
+        }));
+
+        const maxScore = Math.max(...moveEvals.map(me => me.score));
+        const bestMoves = moveEvals.filter(me => me.score === maxScore);
+    
+        return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
+    }
+
     function findBestMove(board, aiPlayer, aiLevel, turnCount) {
         const validMoves = getValidMoves(board, aiPlayer);
         if (validMoves.length === 0) return null;
+
+        // 定石チェック
         if (aiLevel >= 7) {
             const bookMove = OPENING_BOOK[boardToString(board)];
             if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
-                if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {} else { return bookMove; }
+                // 定石を意図的に外す確率
+                if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {
+                // 定石を外す場合は、以降のロジックで手を決定する
+                } else {
+                    return bookMove;
+                }
             }
         }
         const emptyCells = MAX_TURNS - turnCount;
+
+        // 序盤に多様性を持たせるための設定
+        const varietyTurnLimit = 18;
+        const varietyThreshold = 50;
+        const useVariety = turnCount < varietyTurnLimit;
+
         switch (aiLevel) {
-            case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
-            case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
-            case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
-            case 4: return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-            case 5: return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-            case 6: return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-            case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move; }
-            case 8: {
-                if (emptyCells <= 10) { 
-                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' }); 
-                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; 
+            case 1: // ランダム
+                return validMoves[Math.floor(Math.random() * validMoves.length)];
+
+            case 2: // 最大反転 + 多様性
+                return findBestMoveBySimpleEval(
+                    validMoves,
+                    move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length
+                );
+
+            case 3: // 場所評価 + 多様性
+                return findBestMoveBySimpleEval(
+                    validMoves,
+                    move => POSITIONAL_SCORE_TABLE[move.r][move.c]
+                );
+
+            // --- レベル4, 5, 6を統合 ---
+            case 4:
+            case 5:
+            case 6: {
+                const depth = getDepthForLevel(aiLevel, turnCount); // 既存のヘルパー関数を利用
+                if (useVariety) {
+                    return findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
-                let depth = (emptyCells > 22) ? 6 : 7; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+                return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-            case 9: { 
-                if (emptyCells <= 11) { 
-                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' }); 
-                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; 
+
+            case 7: {
+                let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8);
+                if (useVariety && emptyCells > 14) {
+                    return findBestMoveWithVariety(board, d, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
-                let depth = (emptyCells > 22) ? 6 : 7; return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount);
+                return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
+
+            case 8: { // 変更なし
+                if (emptyCells <= 10) {
+                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
+                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
+                }
+                let depth = (emptyCells > 22) ? 6 : 7;
+                return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+            }
+
+            case 9: { // 変更なし
+                if (emptyCells <= 11) {
+                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
+                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
+                }
+                let depth = (emptyCells > 22) ? 6 : 7;
+                return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount, 50);
+            }
+
             case 10: {
-                if (emptyCells <= 12) { 
-                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' }); 
-                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; 
+                if (emptyCells <= 12) {
+                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
+                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
                 }
-                let depth = (emptyCells > 24) ? 7 : 8; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+                let depth = (emptyCells > 24) ? 7 : 8;
+                if (useVariety && emptyCells > 12) {
+                    return findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
+                }
+                return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-            default: return validMoves[0];
+
+            default:
+                return validMoves[0];
         }
     }
 
