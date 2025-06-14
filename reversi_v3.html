@@ -240,7 +240,8 @@
             height: 100%; font-size: 10px; color: var(--text-muted-color);
             margin-right: 8px; width: 25px; flex-shrink: 0; font-family: 'Roboto', sans-serif;
         }
-        #evaluation-graph-wrapper { flex-grow: 1; position: relative; overflow: hidden; cursor: default; touch-action: pan-y; }
+        /* 【修正】touch-actionを削除 */
+        #evaluation-graph-wrapper { flex-grow: 1; position: relative; overflow: hidden; cursor: default; }
         body.game-over #evaluation-graph-wrapper, body.game-interrupted #evaluation-graph-wrapper { cursor: grab; }
         body.graph-dragging #evaluation-graph-wrapper { cursor: grabbing; }
 
@@ -264,7 +265,6 @@
         .bar-container:hover .bar.black { background-color: #666; }
         .bar-container:hover .bar.white { background-color: #fff; }
 
-        /* 【修正】勝ち確時のバーの色を修正 */
         .bar.capped.black { background-color: #777; }
         .bar.capped.white { background-color: #aaa; }
 
@@ -1151,7 +1151,7 @@
 const BOARD_SIZE = 8, EMPTY = 0, BLACK = 1, WHITE = 2;
 const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
 const MAX_TURNS = 60;
-const EVAL_GRAPH_VISUAL_CAP = 1000; // 【修正】グラフの最小スケールを1000に設定
+const EVAL_GRAPH_VISUAL_CAP = 1000;
 
 const boardEl = document.getElementById('board');
 const blackScoreEl = document.getElementById('black-score');
@@ -1260,7 +1260,6 @@ function resetGame() {
     isPlaybackMode = false;
     isGameOver = false;
     
-    // 進行中の非同期処理を停止
     aiWorker.postMessage({ type: 'stop' });
     if (resolveFindBestMove) resolveFindBestMove(null);
     if (resolveEvaluateBoard) resolveEvaluateBoard(null);
@@ -1523,12 +1522,11 @@ function updateEvaluationDisplay(score) {
     if (score === null || score === undefined) {
         evaluationValueTextEl.textContent = "N/A";
     } else {
-        // 完全読みモードの評価値を分かりやすく表示する処理
-        if (Math.abs(score) >= 10000 && score % 1000 === 0) { // 完全読みの可能性が高い評価値
+        if (Math.abs(score) >= 10000 && score % 1000 === 0) {
             const stoneDiff = score / 1000;
             const resultText = stoneDiff > 0 
                 ? `黒 +${stoneDiff}確`
-                : `白 ${stoneDiff}確`; // 白の場合はマイナス記号が既にあるので"+"は不要
+                : `白 ${stoneDiff}確`;
             evaluationValueTextEl.textContent = resultText;
         } else {
             const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
@@ -1670,6 +1668,7 @@ graphWrapperEl.addEventListener('mousedown', (event) => {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 });
+
 const onTouchMove = (e) => {
     if (isDraggingGraph) {
         e.preventDefault();
@@ -1684,14 +1683,16 @@ const onTouchEnd = () => {
     window.removeEventListener('touchmove', onTouchMove);
     window.removeEventListener('touchend', onTouchEnd);
 };
+// 【修正】touchstartイベントリスナーの修正
 graphWrapperEl.addEventListener('touchstart', (event) => {
     if (!isGameOver && !document.body.classList.contains('game-interrupted')) return;
+    event.preventDefault(); // ブラウザのデフォルト動作（スクロールなど）をキャンセル
     isDraggingGraph = true;
     document.body.classList.add('graph-dragging');
     handleGraphScrub(event);
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd);
-}, { passive: true });
+});
 
 
 function showModal(message, confirmText, cancelText, onConfirm, onCancel) {
@@ -1814,7 +1815,7 @@ function findBestMoveAsync(board, playerColor, aiLevel, turnCount) {
         resolveFindBestMove = resolve;
         aiWorker.postMessage({
             type: 'findBestMove',
-            board: JSON.parse(JSON.stringify(board)), // Workerに渡すデータはコピーする
+            board: JSON.parse(JSON.stringify(board)),
             playerColor,
             aiLevel,
             turnCount
