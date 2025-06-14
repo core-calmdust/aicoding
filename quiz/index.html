@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N E O N   Q U I Z</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- タイトル画面 -->
+        <div id="title-screen" class="screen active">
+            <h1 class="game-title">N E O N <br> Q U I Z</h1>
+            <div class="menu-section">
+                <h2>DIFFICULTY</h2>
+                <div id="difficulty-selection" class="button-group">
+                    <button class="menu-button" data-difficulty="easy">EASY</button>
+                    <button class="menu-button selected" data-difficulty="normal">NORMAL</button>
+                    <button class="menu-button" data-difficulty="hard">HARD</button>
+                </div>
+            </div>
+            <div class="menu-section">
+                <h2>CATEGORY</h2>
+                <select id="category-selection" class="menu-select">
+                    <option value="all">ALL CATEGORIES</option>
+                </select>
+            </div>
+            <button id="start-button" class="menu-button large">S T A R T</button>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="game-screen" class="screen">
+            <div id="timer-bar-container">
+                <div id="timer-bar"></div>
+            </div>
+            <div id="hud">
+                <p>LIVES: <span id="lives-display"></span></p>
+                <p>STAGE: <span id="stage-display"></span>/<span id="total-stages-display"></span></p>
+                <p>PROGRESS: <span id="progress-display"></span>/<span id="per-stage-display"></span></p>
+            </div>
+            <div id="question-area">
+                <p id="question-text"></p>
+            </div>
+            <div id="answer-options"></div>
+        </div>
+
+        <!-- 各種フィードバック画面 -->
+        <div id="stage-clear-screen" class="screen">
+             <h2 class="feedback-title">STAGE CLEAR</h2>
+             <p>素晴らしい！次のステージへ進もう。</p>
+             <button id="next-stage-button" class="menu-button large">NEXT STAGE</button>
+        </div>
+        <div id="game-over-screen" class="screen">
+             <h2 class="feedback-title">GAME OVER</h2>
+             <p>残念！次の挑戦を待っている。</p>
+             <button id="retry-button" class="menu-button large">RETRY</button>
+        </div>
+        <div id="ending-screen" class="screen">
+             <h2 class="feedback-title">CONGRATULATIONS!</h2>
+             <p>全てのステージをクリアした！<br>君は真のクイズマスターだ！</p>
+             <button id="back-to-title-button" class="menu-button large">BACK TO TITLE</button>
+        </div>
+    </div>
+    
+    <!-- ここが最重要ポイントです！ -->
+    <!-- 最初に変数を定義する questions.js を読み込む -->
+    <script src="questions.js"></script>
+    <!-- 次に、その変数を使用する script.js を読み込む -->
+    <script src="script.js"></script>
+</body>
+</html>

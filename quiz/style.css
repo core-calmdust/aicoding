@@ -1,0 +1,212 @@
+/* ==========================================================
+   基本設定と変数定義 (Root & Basic Settings)
+   ========================================================== */
+
+:root {
+    --primary-color: #ff69b4;  /* Hot Pink */
+    --secondary-color: #00ffff; /* Cyan/Aqua */
+    --bg-color: #0d0221;       /* Dark Purple/Blue */
+    --text-color: #ffffff;
+
+    --glow-primary: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+    --glow-secondary: 0 0 5px var(--secondary-color), 0 0 10px var(--secondary-color), 0 0 20px var(--secondary-color);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Press Start 2P', sans-serif;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+
+/* ==========================================================
+   ゲームコンテナ (Game Container)
+   ========================================================== */
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    padding: 5vh 5vw;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 200%;
+    z-index: 0;
+    background-image:
+        linear-gradient(to right, rgba(0, 255, 255, 0.2) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 255, 255, 0.2) 1px, transparent 1px);
+    background-size: 50px 50px;
+    transform: perspective(300px) rotateX(60deg) translateY(-100px);
+    animation: grid-scroll 20s linear infinite;
+}
+
+@keyframes grid-scroll {
+    from { transform: perspective(300px) rotateX(60deg) translateY(-100px) translateY(0px); }
+    to   { transform: perspective(300px) rotateX(60deg) translateY(-100px) translateY(-50px); }
+}
+
+
+/* ==========================================================
+   スクリーン共通設定 (Screen Common)
+   ========================================================== */
+
+.screen {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.screen.active {
+    display: flex;
+}
+
+
+/* ==========================================================
+   レスポンシブなフォントと余白 (Responsive Fonts & Spacing)
+   ========================================================== */
+
+.game-title {
+    font-size: clamp(2rem, 8vmin, 6rem);
+    line-height: 1.2;
+    margin-bottom: 5vh;
+    animation: flicker 3s infinite alternate;
+    color: var(--primary-color);
+    text-shadow: var(--glow-primary);
+}
+
+.menu-section {
+    margin-bottom: 4vh;
+}
+
+.menu-section h2 {
+    font-size: clamp(1rem, 3vmin, 1.5rem);
+    margin-bottom: 2vh;
+    color: var(--secondary-color);
+    text-shadow: var(--glow-secondary);
+}
+
+.menu-button, .menu-select {
+    padding: 1.5vh 3vw;
+    font-size: clamp(0.8rem, 2.5vmin, 1.2rem);
+}
+
+.menu-button.large {
+    padding: 2vh 4vw;
+    font-size: clamp(1rem, 3vmin, 1.5rem);
+    margin-top: 2vh;
+}
+
+#question-text {
+    font-size: clamp(1.2rem, 4vmin, 2.5rem);
+    line-height: 1.5;
+    margin-bottom: 5vh;
+    min-height: 15vh;
+}
+
+.answer-button {
+    font-size: clamp(1rem, 2.8vmin, 1.8rem);
+    padding: 3vh 1vw;
+}
+
+.feedback-title {
+    font-size: clamp(2rem, 7vmin, 5rem);
+    margin-bottom: 2vh;
+}
+
+.feedback-title + p {
+    font-size: clamp(1rem, 3vmin, 1.5rem);
+    line-height: 1.6;
+    margin-bottom: 4vh;
+}
+
+
+/* ==========================================================
+   静的なスタイル (Static Styles)
+   ========================================================== */
+
+@keyframes flicker {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: var(--glow-primary), 0 0 40px var(--primary-color); opacity: 1; }
+    20%, 24%, 55% { text-shadow: none; opacity: 0.8; }
+}
+
+.button-group { display: flex; gap: 1rem; justify-content: center; }
+
+.menu-button, .menu-select {
+    font-family: 'Press Start 2P', sans-serif;
+    background-color: transparent; border: 2px solid var(--text-color);
+    color: var(--text-color); cursor: pointer;
+    transition: all 0.2s ease-in-out; text-shadow: 0 0 2px var(--text-color);
+}
+.menu-button:focus, .menu-select:focus { outline: none; }
+.menu-button:hover, .menu-button.selected, .menu-button:focus {
+    background-color: var(--primary-color); color: var(--bg-color);
+    border-color: var(--primary-color); box-shadow: var(--glow-primary); transform: scale(1.1);
+}
+.menu-select { width: 80%; max-width: 400px; text-align: center; }
+.menu-select:hover, .menu-select:focus { box-shadow: var(--glow-secondary); border-color: var(--secondary-color); }
+
+#timer-bar-container {
+    width: 100%; height: 10px; background-color: rgba(0, 255, 255, 0.2);
+    border: 1px solid var(--secondary-color); margin-bottom: 2vh;
+}
+#timer-bar { height: 100%; width: 100%; background-color: var(--primary-color); transition: width 0.1s linear; }
+#hud {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; font-size: clamp(0.8rem, 2.5vmin, 1.2rem);
+    color: var(--secondary-color); text-shadow: 0 0 5px var(--secondary-color); margin-bottom: 3vh;
+}
+#lives-display { font-size: clamp(1.2rem, 3.5vmin, 1.8rem); }
+#answer-options { display: grid; grid-template-columns: 1fr 1fr; gap: 2vmin; width: 100%; }
+.answer-button:hover, .answer-button.selected, .answer-button:focus {
+    background-color: var(--secondary-color); color: var(--bg-color);
+    transform: translateY(-5px); box-shadow: var(--glow-secondary);
+    text-shadow: none; outline: none;
+}
+.answer-button.correct { background-color: #2eff7b; border-color: #2eff7b; color: var(--bg-color); text-shadow: none; animation: pulse-correct 0.5s; }
+.answer-button.wrong { background-color: #ff2e7b; border-color: #ff2e7b; color: var(--bg-color); text-shadow: none; animation: shake-wrong 0.5s; }
+@keyframes pulse-correct { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+@keyframes shake-wrong { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+#stage-clear-screen .feedback-title { color: var(--secondary-color); text-shadow: var(--glow-secondary); }
+#game-over-screen .feedback-title { color: #ff3c3c; text-shadow: 0 0 10px #ff3c3c; }
+#ending-screen .feedback-title { color: var(--primary-color); text-shadow: var(--glow-primary); }
