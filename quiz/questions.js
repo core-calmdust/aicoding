@@ -643,8 +643,7 @@ const allQuestions = [
   { category: "音楽", difficulty: 3, question: "日本のロックバンド「LUNA SEA」のギタリストで、「LUNATIC FEST.」を主宰しているのは誰？", answers: ["SUGIZO", "INORAN", "J", "真矢"], correctIndex: 0 },
   { category: "音楽", difficulty: 3, question: "ハ長調やイ短調のように、♯や♭が一つもつかない調を何という？", answers: ["基本の調", "幹音の調", "自然な調", "調号なし"], correctIndex: 0 }, // 難易度調整: 簡単な言い方だが、概念としては3。
   { category: "音楽", difficulty: 3, question: "ラヴェルの管弦楽曲『ボレロ』で、最後まで同じリズムを刻み続ける楽器は何？", answers: ["小太鼓（スネアドラム）", "ティンパニ", "大太鼓", "トライアングル"], correctIndex: 0 },
-  { category: "音楽", difficulty: 3, question: "BUMP OF CHICKENの楽曲『天体観測』が挿入歌として使用された、2002年のテレビドラマは何？", answers: ["天体観測", "ロング・ラブレター〜漂流教室〜", "ランチの女王", "木更津キャッツアイ"], correctIndex: 
-  0 },
+  { category: "音楽", difficulty: 3, question: "BUMP OF CHICKENの楽曲『天体観測』が挿入歌として使用された、2002年のテレビドラマは何？", answers: ["天体観測", "ロング・ラブレター〜漂流教室〜", "ランチの女王", "木更津キャッツアイ"], correctIndex: 0 },
   { category: "音楽", difficulty: 3, question: "「ゴッドファーザー・オブ・ソウル」と呼ばれたアメリカの歌手は誰？", answers: ["ジェームス・ブラウン", "レイ・チャールズ", "サム・クック", "マーヴィン・ゲイ"], correctIndex: 0 },
   { category: "音楽", difficulty: 3, question: "『新世紀エヴァンゲリオン』の主題歌『残酷な天使のテーゼ』を歌った歌手は誰？", answers: ["高橋洋子", "林原めぐみ", "奥井雅美", "米倉千尋"], correctIndex: 0 },
   { category: "音楽", difficulty: 3, question: "音楽の構成要素で、メロディに伴奏をつける作業を何という？", answers: ["編曲（アレンジ）", "作曲（コンポーズ）", "作詞（リリック）", "採譜（スコアリング）"], correctIndex: 0 },
