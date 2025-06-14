@@ -908,5 +908,5 @@ const allQuestions = [
   { category: "神話・伝承", difficulty: 3, question: "日本の妖怪で、頭に皿を乗せているのは？", answers: ["河童", "天狗", "鬼", "座敷童子"], correctIndex: 0 },
   { category: "神話・伝承", difficulty: 4, question: "メソポタミア神話の「ギルガメシュ叙事詩」で、大洪水を生き延びた賢者の名前は？", answers: ["ウトナピシュティム", "エンキドゥ", "フンババ", "イシュタル"], correctIndex: 0 },
   { category: "神話・伝承", difficulty: 4, question: "日本の神話で、天照大神が隠れたとされる場所は？", answers: ["天岩戸", "高天原", "黄泉の国", "葦原の中つ国"], correctIndex: 0 },
-  { category: "神話・伝承", difficulty: 5, question: "北欧神話における世界の終わり、神々の最終戦争を何という？", answers: ["ラグナロク", "ゲッターデメルング", "アルマゲドン", "ヴァルハラ"], correctIndex: 0 },
+  { category: "神話・伝承", difficulty: 5, question: "北欧神話における世界の終わり、神々の最終戦争を何という？", answers: ["ラグナロク", "ゲッターデメルング", "アルマゲドン", "ヴァルハラ"], correctIndex: 0 }
 ];
