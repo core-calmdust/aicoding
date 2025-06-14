@@ -120,7 +120,7 @@
             border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%;
         }
         
-        #message-area { font-size: 18px; font-weight: bold; color: var(--danger-color); height: 25px; text-align: center; margin-top: 20px; }
+        #message-area { font-size: 18px; font-weight: bold; color: var(--text-color); height: 25px; text-align: center; margin-top: 20px; }
         
         .controls label,
         .test-controls label {
@@ -263,6 +263,11 @@
         .bar.white { background-color: #eee; top: 50%; }
         .bar-container:hover .bar.black { background-color: #666; }
         .bar-container:hover .bar.white { background-color: #fff; }
+
+        /* 【修正】勝ち確時のバーの色を修正 */
+        .bar.capped.black { background-color: #777; }
+        .bar.capped.white { background-color: #fff; }
+
         #evaluation-tooltip {
             position: absolute; display: none; background-color: var(--accent-color); color: white;
             padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
@@ -561,9 +566,9 @@
                             <option value="5">レベル5 (α-β法 強)</option>
                             <option value="6">レベル6 (思考強化)</option>
                             <option value="7">レベル7 (定石+探索)</option>
-                            <option value="8" selected>レベル8 (複合型AI)</option>
+                            <option value="8">レベル8 (複合型AI)</option>
                             <option value="9">レベル8+ (多様性)</option>
-                            <option value="10">レベル9 (戦略的評価型AI)</option>
+                            <option value="10" selected>レベル9 (戦略的評価型AI)</option>
                         </select>
                         
                         <div class="start-controls-wrapper" role="radiogroup" aria-label="手番選択">
@@ -634,9 +639,9 @@
                             <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
                             <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
                             <option value="7">レベル7</option>
-                            <option value="8" selected>レベル8</option>
+                            <option value="8">レベル8</option>
                             <option value="9">レベル8+</option>
-                            <option value="10">レベル9</option>
+                            <option value="10" selected>レベル9</option>
                         </select>
                     </div>
                     <div class="test-cpu-selector">
@@ -646,8 +651,8 @@
                             <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
                             <option value="7">レベル7</option>
                             <option value="8">レベル8</option>
-                            <option value="9" selected>レベル8+</option>
-                            <option value="10">レベル9</option>
+                            <option value="9">レベル8+</option>
+                            <option value="10" selected>レベル9</option>
                         </select>
                     </div>
                 </div>
@@ -670,244 +675,427 @@
         </div>
     </div>
 
-    <script id="research-worker-script" type="javascript/worker">
-        // ================================================================= //
-        //                           Worker Script　                         //
-        // ================================================================= //
-        // --- 定数定義 ---
-        const EMPTY = 0, BLACK = 1, WHITE = 2;
-        const BOARD_SIZE = 8;
-        const MAX_TURNS = 60;
-        const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
-        const POSITIONAL_SCORE_TABLE = [
-            [120, -20,  20,   5,   5,  20, -20, 120],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[  5,  -5,   3,   3,   3,   3,  -5,   5],
-            [  5,  -5,   3,   3,   3,   3,  -5,   5],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[120, -20,  20,   5,   5,  20, -20, 120]
-        ];
-        let continueThinking = false;
 
-        // --- ユーティリティ関数 ---
-        function getFlippableDiscs(currentBoard, r, c, player) {
-            const flippable = [];
-            if (currentBoard[r][c] !== EMPTY) return flippable;
-            const opponent = (player === BLACK) ? WHITE : BLACK;
-            for (const dir of DIRECTIONS) {
-                const line = []; let currR = r + dir.r, currC = c + dir.c;
-                while (currR >= 0 && currR < 8 && currC >= 0 && currC < 8) {
-                    if (currentBoard[currR][currC] === opponent) line.push({r: currR, c: currC});
-                    else if (currentBoard[currR][currC] === player) { flippable.push(...line); break; } 
-                    else break;
-                    currR += dir.r; currC += dir.c;
+<script id="ai-worker-script" type="javascript/worker">
+    // ================================================================= //
+    //                           AI Worker Script                        //
+    //       (CPU思考 & RESEARCHモードの計算をバックグラウンドで実行)      //
+    // ================================================================= //
+
+    // --- 定数定義 ---
+    const EMPTY = 0, BLACK = 1, WHITE = 2;
+    const BOARD_SIZE = 8;
+    const MAX_TURNS = 60;
+    const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
+    const POSITIONAL_SCORE_TABLE = [
+        [120, -20,  20,   5,   5,  20, -20, 120],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[  5,  -5,   3,   3,   3,   3,  -5,   5],
+        [  5,  -5,   3,   3,   3,   3,  -5,   5],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[120, -20,  20,   5,   5,  20, -20, 120]
+    ];
+    const OPENING_BOOK = {
+        "0000000000000000000000000001200000021000000000000000000000000000": {r:4, c:5},"0000000000000000000000000012100000012000000000000000000000000000": {r:5, c:5},
+        "0000000000000000000000000002100000012100000000000000000000000000": {r:2, c:3},"0000000000000000000001000001210000021100000000000000000000000000": {r:2, c:2},
+        "0000000000000000000000000011200000012000000000000000000000000000": {r:5, c:2},"000000000000000000000000000210000001110000000000000000000000000": {r:5, c:3},
+    };
+    
+    let continueThinking = false;
+
+    // --- ユーティリティ関数 ---
+    function getFlippableDiscs(currentBoard, r, c, player) {
+        const flippable = [];
+        if (currentBoard[r][c] !== EMPTY) return flippable;
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        for (const dir of DIRECTIONS) {
+            const line = []; let currR = r + dir.r, currC = c + dir.c;
+            while (currR >= 0 && currR < 8 && currC >= 0 && currC < 8) {
+                if (currentBoard[currR][currC] === opponent) line.push({r: currR, c: currC});
+                else if (currentBoard[currR][currC] === player) { flippable.push(...line); break; } 
+                else break;
+                currR += dir.r; currC += dir.c;
+            }
+        }
+        return flippable;
+    }
+
+    function getValidMoves(currentBoard, player) {
+        const moves = [];
+        for (let r=0; r<8; r++) for (let c=0; c<8; c++) {
+            if (currentBoard[r][c] === EMPTY && getFlippableDiscs(currentBoard, r, c, player).length > 0) {
+                moves.push({r, c});
+            }
+        }
+        return moves;
+    }
+    
+    function placeDiscInBoard(b, r, c, player, flippable) {
+        b[r][c] = player;
+        flippable.forEach(p => { b[p.r][p.c] = player; });
+    }
+    
+    function boardToString(b) {
+        return b.flat().join('');
+    }
+
+    function getStableDiscs(board, player) {
+        const stable = Array.from({length: 8}, () => Array(8).fill(false));
+        const directions = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[-1,1],[1,-1]];
+        if (board[0][0] === player) stable[0][0] = true; if (board[0][7] === player) stable[0][7] = true;
+        if (board[7][0] === player) stable[7][0] = true; if (board[7][7] === player) stable[7][7] = true;
+        let changed = true;
+        while(changed) {
+            changed = false;
+            for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
+                if(board[r][c] === player && !stable[r][c]) {
+                    let isStable = true;
+                    for(let i=0; i<4; i++) {
+                        const [d1r,d1c]=directions[i*2], [d2r,d2c]=directions[i*2+1];
+                        let line1_filled = true, line2_filled = true;
+                        let nr = r + d1r, nc = c + d1c;
+                        while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line1_filled=false;break;} nr+=d1r; nc+=d1c; }
+                        nr = r + d2r, nc = c + d2c;
+                        while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line2_filled=false;break;} nr+=d2r; nc+=d2c; }
+                        if (!line1_filled && !line2_filled) { isStable=false; break; }
+                    }
+                    if(isStable) { stable[r][c] = true; changed = true; }
                 }
             }
-            return flippable;
         }
+        const stableDiscs = [];
+        for (let r=0; r<8; r++) for(let c=0; c<8; c++) if(stable[r][c]) stableDiscs.push({r,c});
+        return stableDiscs;
+    }
+    
+    // --- 評価関数群 ---
+    function simplePositionalEvaluation(board, player) {
+        let score = 0;
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        for (let r=0; r<BOARD_SIZE; r++) for(let c=0; c<BOARD_SIZE; c++) {
+            if(board[r][c]===player) score+=POSITIONAL_SCORE_TABLE[r][c];
+            else if(board[r][c]===opponent) score-=POSITIONAL_SCORE_TABLE[r][c];
+        }
+        return score;
+    }
 
-        function getValidMoves(currentBoard, player) {
-            const moves = [];
-            for (let r=0; r<8; r++) for (let c=0; c<8; c++) {
-                if (currentBoard[r][c] === EMPTY && getFlippableDiscs(currentBoard, r, c, player).length > 0) {
-                    moves.push({r, c});
-                }
+    function advancedPositionalEvaluation(board, player) {
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        const positionalScore = simplePositionalEvaluation(board, player);
+        const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
+        const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
+        return positionalScore + (mobilityScore * 50) + (fixedDiscScore * 150);
+    }
+
+    function evaluateBoardForLevel8(board, player, currentTurn) {
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        const positionalScore = simplePositionalEvaluation(board, player);
+        const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
+        const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
+        let cornerPenalty = 0;
+        const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
+        const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
+        for (let i = 0; i < 4; i++) {
+            if (board[corners[i].r][corners[i].c] === EMPTY) {
+                if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 250;
+                if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 250;
             }
-            return moves;
         }
-        
-        function placeDiscInBoard(b, r, c, player, flippable) {
-            b[r][c] = player;
-            flippable.forEach(p => { b[p.r][p.c] = player; });
-        }
+        let positionalWeight, mobilityWeight, fixedDiscWeight;
+        if (currentTurn < 20) { positionalWeight=1; mobilityWeight=80; fixedDiscWeight=120; } 
+        else if (currentTurn < 48) { positionalWeight=1; mobilityWeight=60; fixedDiscWeight=180; } 
+        else { positionalWeight=0.5; mobilityWeight=40; fixedDiscWeight=250; }
+        return (positionalScore*positionalWeight) + (mobilityScore*mobilityWeight) + (fixedDiscScore*fixedDiscWeight) + cornerPenalty;
+    }
 
-        function getStableDiscs(board, player) {
-            const stable = Array.from({length: 8}, () => Array(8).fill(false));
-            const directions = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[-1,1],[1,-1]];
-            if (board[0][0] === player) stable[0][0] = true; if (board[0][7] === player) stable[0][7] = true;
-            if (board[7][0] === player) stable[7][0] = true; if (board[7][7] === player) stable[7][7] = true;
-            let changed = true;
-            while(changed) {
-                changed = false;
-                for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
-                    if(board[r][c] === player && !stable[r][c]) {
-                        let isStable = true;
-                        for(let i=0; i<4; i++) {
-                            const [d1r,d1c]=directions[i*2], [d2r,d2c]=directions[i*2+1];
-                            let line1_filled = true, line2_filled = true;
-                            let nr = r + d1r, nc = c + d1c;
-                            while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line1_filled=false;break;} nr+=d1r; nc+=d1c; }
-                            nr = r + d2r, nc = c + d2c;
-                            while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line2_filled=false;break;} nr+=d2r; nc+=d2c; }
-                            if (!line1_filled && !line2_filled) { isStable=false; break; }
+    function getFrontierScore(board, player) {
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        let myFrontier = 0;
+        let oppFrontier = 0;
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (board[r][c] !== EMPTY) {
+                    let isFrontierFlag = false;
+                    for (const dir of DIRECTIONS) {
+                        const nr = r + dir.r;
+                        const nc = c + dir.c;
+                        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === EMPTY) {
+                            isFrontierFlag = true;
+                            break;
                         }
-                        if(isStable) { stable[r][c] = true; changed = true; }
+                    }
+                    if (isFrontierFlag) {
+                        if (board[r][c] === player) myFrontier++;
+                        else oppFrontier++;
                     }
                 }
             }
-            const stableDiscs = [];
-            for (let r=0; r<8; r++) for(let c=0; c<8; c++) if(stable[r][c]) stableDiscs.push({r,c});
-            return stableDiscs;
+        }
+        return oppFrontier - myFrontier;
+    }
+
+    function evaluateBoardForLevel9(board, player, currentTurn) { // For Level 10 AI
+        const opponent = (player === BLACK) ? WHITE : BLACK;
+        const positionalScore = simplePositionalEvaluation(board, player);
+        const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
+        const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
+        
+        let cornerPenalty = 0;
+        const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
+        const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
+        for (let i = 0; i < 4; i++) {
+            if (board[corners[i].r][corners[i].c] === EMPTY) {
+                if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 320;
+                if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 320;
+            }
+        }
+
+        let edgeControlScore = 0;
+        const edges = [
+            {line: board[0], corners: [board[0][0], board[0][7]]}, {line: board[7], corners: [board[7][0], board[7][7]]},
+            {line: board.map(row => row[0]), corners: [board[0][0], board[7][0]]}, {line: board.map(row => row[7]), corners: [board[0][7], board[7][7]]},
+        ];
+        for (const edge of edges) {
+            if (edge.corners[0] === EMPTY || edge.corners[1] === EMPTY) {
+                let myStones = 0, oppStones = 0;
+                for(let i = 1; i < 7; i++) {
+                    if (edge.line[i] === player) myStones++;
+                    else if (edge.line[i] === opponent) oppStones++;
+                }
+                edgeControlScore += (oppStones - myStones);
+            }
         }
         
-        // --- 評価関数群 ---
-        function simplePositionalEvaluation(board, player) {
-            let score = 0;
-            const opponent = (player === BLACK) ? WHITE : BLACK;
-            for (let r=0; r<BOARD_SIZE; r++) for(let c=0; c<BOARD_SIZE; c++) {
-                if(board[r][c]===player) score+=POSITIONAL_SCORE_TABLE[r][c];
-                else if(board[r][c]===opponent) score-=POSITIONAL_SCORE_TABLE[r][c];
-            }
-            return score;
-        }
+        const frontierScore = getFrontierScore(board, player);
+        let positionalWeight, mobilityWeight, fixedDiscWeight, edgeControlWeight, frontierWeight;
 
-        function advancedPositionalEvaluation(board, player) {
-            const opponent = (player === BLACK) ? WHITE : BLACK;
-            const positionalScore = simplePositionalEvaluation(board, player);
-            const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-            const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-            return positionalScore + (mobilityScore * 50) + (fixedDiscScore * 150);
-        }
-
-        function evaluateBoardForLevel8(board, player, currentTurn) {
-            const opponent = (player === BLACK) ? WHITE : BLACK;
-            const positionalScore = simplePositionalEvaluation(board, player);
-            const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-            const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-            let cornerPenalty = 0;
-            const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
-            const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
-            for (let i = 0; i < 4; i++) {
-                if (board[corners[i].r][corners[i].c] === EMPTY) {
-                    if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 250;
-                    if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 250;
-                }
-            }
-            let positionalWeight, mobilityWeight, fixedDiscWeight;
-            if (currentTurn < 20) { positionalWeight=1; mobilityWeight=80; fixedDiscWeight=120; } 
-            else if (currentTurn < 48) { positionalWeight=1; mobilityWeight=60; fixedDiscWeight=180; } 
-            else { positionalWeight=0.5; mobilityWeight=40; fixedDiscWeight=250; }
-            return (positionalScore*positionalWeight) + (mobilityScore*mobilityWeight) + (fixedDiscScore*fixedDiscWeight) + cornerPenalty;
-        }
-
-        function evaluateBoardForLevel9(board, player, currentTurn) {
-            const opponent = (player === BLACK) ? WHITE : BLACK;
-            const positionalScore = simplePositionalEvaluation(board, player);
-            const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-            const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-            let cornerPenalty = 0;
-            const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
-            const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
-            for (let i = 0; i < 4; i++) {
-                if (board[corners[i].r][corners[i].c] === EMPTY) {
-                    if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 300;
-                    if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 300;
-                }
-            }
-            let positionalWeight, mobilityWeight, fixedDiscWeight;
-            if (currentTurn < 20) { positionalWeight = 1.0; mobilityWeight = 90; fixedDiscWeight = 130; } 
-            else if (currentTurn < 45) { positionalWeight = 1.0; mobilityWeight = 65; fixedDiscWeight = 220; } 
-            else { positionalWeight = 0.5; mobilityWeight = 45; fixedDiscWeight = 350; }
-
-            let edgeControlScore = 0;
-            const edges = [
-                {line: board[0], corners: [board[0][0], board[0][7]]}, {line: board[7], corners: [board[7][0], board[7][7]]},
-                {line: board.map(row => row[0]), corners: [board[0][0], board[7][0]]}, {line: board.map(row => row[7]), corners: [board[0][7], board[7][7]]},
-            ];
-            for (const edge of edges) {
-                if (edge.corners[0] === EMPTY || edge.corners[1] === EMPTY) {
-                    let myStones = 0, oppStones = 0;
-                    for(let i = 1; i < 7; i++) {
-                        if (edge.line[i] === player) myStones++;
-                        else if (edge.line[i] === opponent) oppStones++;
-                    }
-                    edgeControlScore += (oppStones - myStones);
-                }
-            }
-            const edgeControlWeight = 35;
-            return (positionalScore * positionalWeight) + (mobilityScore * mobilityWeight) + (fixedDiscScore * fixedDiscWeight) + cornerPenalty + (edgeControlScore * edgeControlWeight);
+        if (currentTurn < 22) {
+            positionalWeight = 1.0; mobilityWeight = 110; fixedDiscWeight = 140;
+            edgeControlWeight = 35; frontierWeight = 70;
+        } else if (currentTurn < 48) {
+            positionalWeight = 0.9; mobilityWeight = 75; fixedDiscWeight = 260;
+            edgeControlWeight = 40; frontierWeight = 85;
+        } else {
+            positionalWeight = 0.5; mobilityWeight = 40; fixedDiscWeight = 450;
+            edgeControlWeight = 20; frontierWeight = 25;
         }
         
-        function evaluateBoard(board, player, level, currentTurn) {
-            if (level >= 10) return evaluateBoardForLevel9(board, player, currentTurn);
-            if (level >= 8) return evaluateBoardForLevel8(board, player, currentTurn);
-            if (level >= 6) return advancedPositionalEvaluation(board, player);
-            return simplePositionalEvaluation(board, player);
-        }
+        const baseScore = (positionalScore * positionalWeight) + (mobilityScore * mobilityWeight) + 
+                          (fixedDiscScore * fixedDiscWeight) + cornerPenalty + (edgeControlScore * edgeControlWeight);
 
-        function evaluateByStoneCount(board, player, isFromAlphaBeta) {
-            let score = 0;
-            board.flat().forEach(c => { if (c === player) score++; else if (c !== EMPTY) score--; });
-            return isFromAlphaBeta ? score * 1000 : score;
+        return baseScore + (frontierScore * frontierWeight);
+    }
+    
+    function evaluateBoard(board, player, level, currentTurn) {
+        if (level >= 10) return evaluateBoardForLevel9(board, player, currentTurn);
+        if (level >= 8) return evaluateBoardForLevel8(board, player, currentTurn);
+        if (level >= 6) return advancedPositionalEvaluation(board, player);
+        return simplePositionalEvaluation(board, player);
+    }
+
+    function evaluateByStoneCount(board, player) {
+        let score = 0;
+        board.flat().forEach(c => { if (c === player) score++; else if (c !== EMPTY) score--; });
+        return score * 1000;
+    }
+    
+    // --- 探索関連 ---
+    function getDepthForLevel(level, turnCount) {
+        const emptyCells = MAX_TURNS - turnCount;
+        if (level <= 4) return 3;
+        if (level === 5) return 4;
+        if (level === 6) return 5;
+        if (level === 7) return (emptyCells > 24) ? 5 : 6;
+        if (level === 8) return (emptyCells > 22) ? 6 : 7;
+        if (level === 9) return (emptyCells > 22) ? 6 : 7;
+        if (level === 10) return (emptyCells > 24) ? 7 : 8;
+        return 3;
+    }
+
+    function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel, turnCount) {
+        const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
+        if (depth === 0 || emptyCells === 0) return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel, turnCount) };
+        
+        const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
+        const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
+        let validMoves = getValidMoves(currentBoard, playerForThisNode);
+        
+        if (validMoves.length === 0) {
+            if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
+            return alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount);
         }
         
-        // --- 探索関連 ---
-        function getDepthForLevel(level, turnCount) {
-            const emptyCells = MAX_TURNS - turnCount;
-            if (level <= 4) return 3;
-            if (level === 5) return 4;
-            if (level === 6) return 5;
-            if (level === 7) return (emptyCells > 24) ? 5 : 6;
-            if (level === 8) return (emptyCells > 22) ? 6 : 7;
-            if (level === 9) return (emptyCells > 22) ? 6 : 7;
-            if (level === 10) return (emptyCells > 24) ? 7 : 8;
-            return 3;
-        }
-
-        function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel, turnCount) {
-            const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
-            if (depth === 0 || emptyCells === 0) return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel, turnCount) };
-            
-            const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
-            const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
-            let validMoves = getValidMoves(currentBoard, playerForThisNode);
-            
-            if (validMoves.length === 0) {
-                if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, true) };
-                return alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount);
-            }
-            
-            let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
-            if (depth >= 4 && currentLevel >= 8) {
-                const moveScores = validMoves.map(move => {
-                    const newBoard = JSON.parse(JSON.stringify(currentBoard));
-                    placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-                    return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) };
-                });
-                if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
-                else moveScores.sort((a, b) => a.score - b.score);
-                validMoves = moveScores.map(ms => ms.move);
-            }
-            bestResult.move = validMoves[0];
-
-            for (const move of validMoves) {
+        let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
+        if (depth >= 4 && currentLevel >= 8) {
+            const moveScores = validMoves.map(move => {
                 const newBoard = JSON.parse(JSON.stringify(currentBoard));
                 placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-                const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
-                if (isMaximizingNode) {
-                    if (result.score > bestResult.score) bestResult = { move, score: result.score };
-                    alpha = Math.max(alpha, bestResult.score);
-                } else {
-                    if (result.score < bestResult.score) bestResult = { move, score: result.score };
-                    beta = Math.min(beta, bestResult.score);
-                }
-                if (beta <= alpha) break; 
+                return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) };
+            });
+            if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
+            else moveScores.sort((a, b) => a.score - b.score);
+            validMoves = moveScores.map(ms => ms.move);
+        }
+        bestResult.move = validMoves[0];
+
+        for (const move of validMoves) {
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+            const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
+            if (isMaximizingNode) {
+                if (result.score > bestResult.score) bestResult = { move, score: result.score };
+                alpha = Math.max(alpha, bestResult.score);
+            } else {
+                if (result.score < bestResult.score) bestResult = { move, score: result.score };
+                beta = Math.min(beta, bestResult.score);
             }
-            return bestResult;
+            if (beta <= alpha) break; 
+        }
+        return bestResult;
+    }
+
+    function perfectSearch(currentBoard, alpha, beta, isMaximizingNode, maximizingPlayer) {
+        const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
+        if (emptyCells === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
+        const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
+        const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
+        const validMoves = getValidMoves(currentBoard, playerForThisNode);
+        if (validMoves.length === 0) {
+            if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
+            return perfectSearch(currentBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+        }
+        let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
+        for (const move of validMoves) {
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+            const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+            if (isMaximizingNode) {
+                if (result.score > bestResult.score) bestResult = { move, score: result.score };
+                alpha = Math.max(alpha, bestResult.score);
+            } else {
+                if (result.score < bestResult.score) bestResult = { move, score: result.score };
+                beta = Math.min(beta, bestResult.score);
+            }
+            if (beta <= alpha) break;
+        }
+        return bestResult;
+    }
+    
+    function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level, turnCount) {
+        const validMoves = getValidMoves(currentBoard, aiPlayer);
+        if (validMoves.length === 0) return null;
+
+        const moveEvals = [];
+        let bestScore = -Infinity;
+
+        for (const move of validMoves) {
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
+            const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
+            const score = result.score;
+            
+            moveEvals.push({ move, score });
+            if (score > bestScore) {
+                bestScore = score;
+            }
+        }
+        
+        if (moveEvals.length === 0) return null;
+        
+        const threshold = 50; 
+        const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
+        if (bestMoves.length > 0) {
+            return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
+        }
+        return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
+    }
+
+    // --- CPUの最善手探索 (Workerのメイン機能) ---
+    function findBestMove(board, aiPlayer, aiLevel, turnCount) {
+        const validMoves = getValidMoves(board, aiPlayer);
+        if (validMoves.length === 0) return null;
+        if (aiLevel >= 7) {
+            const bookMove = OPENING_BOOK[boardToString(board)];
+            if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
+                if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {} else { return bookMove; }
+            }
+        }
+        const emptyCells = MAX_TURNS - turnCount;
+        switch (aiLevel) {
+            case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
+            case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
+            case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
+            case 4: return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+            case 5: return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+            case 6: return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+            case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move; }
+            case 8: {
+                if (emptyCells <= 10) { 
+                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' }); 
+                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; 
+                }
+                let depth = (emptyCells > 22) ? 6 : 7; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+            }
+            case 9: { 
+                if (emptyCells <= 11) { 
+                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' }); 
+                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; 
+                }
+                let depth = (emptyCells > 22) ? 6 : 7; return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount);
+            }
+            case 10: {
+                if (emptyCells <= 12) { 
+                    self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' }); 
+                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; 
+                }
+                let depth = (emptyCells > 24) ? 7 : 8; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+            }
+            default: return validMoves[0];
+        }
+    }
+
+
+    // --- Worker メインハンドラ ---
+    self.onmessage = async (e) => {
+        const { type } = e.data;
+
+        if (type === 'stop') {
+            continueThinking = false;
+            return;
         }
 
-        // --- メインロジック ---
-        self.onmessage = async (e) => {
-            // ★★★ currentEvalを削除 ★★★
-            const { type, board, playerColor, turnCount, maxAiLevel, validMoves } = e.data;
-            if (type === 'stop') {
-                continueThinking = false;
-                return;
-            }
+        if (type === 'findBestMove') {
+            const { board, playerColor, aiLevel, turnCount } = e.data;
+            const move = findBestMove(board, playerColor, aiLevel, turnCount);
+            self.postMessage({ type: 'bestMoveFound', move: move });
+            return;
+        }
+        
+        if (type === 'evaluateBoard') {
+            const { board, player, level, turnCount } = e.data;
+            const emptyCells = MAX_TURNS - (board.flat().filter(c => c !== EMPTY).length - 4);
+            let score;
             
+            const isPerfectSearchCase =
+                (level == 8 && emptyCells <= 10) ||
+                (level == 9 && emptyCells <= 11) ||
+                (level == 10 && emptyCells <= 12);
+
+            if (isPerfectSearchCase) {
+                 const maximizingPlayer = BLACK;
+                 const isMaximizingNode = (turnCount % 2 === 0);
+                 score = perfectSearch(board, -Infinity, Infinity, isMaximizingNode, maximizingPlayer).score;
+            } else {
+                 score = evaluateBoard(board, player, level, turnCount);
+            }
+            self.postMessage({ type: 'boardEvaluated', score: score });
+            return;
+        }
+
+        if (type === 'research') {
+            const { board, playerColor, turnCount, maxAiLevel, validMoves } = e.data;
             continueThinking = true;
             let cumulativeEvals = {};
 
             for (let level = 4; level <= maxAiLevel; level++) {
                 if (!continueThinking) break;
 
-                // ★★★ このレベルでの基準評価値を計算 ★★★
                 const currentEvalForThisLevel = evaluateBoard(board, BLACK, level, turnCount);
                 
                 const depth = getDepthForLevel(level, turnCount);
@@ -921,7 +1109,6 @@
                     
                     const result = alphaBetaSearch(tempBoard, depth, -Infinity, Infinity, false, BLACK, level, turnCount + 1);
                     
-                    // ★★★ 計算した基準評価値と比較 ★★★
                     let diff = result.score - currentEvalForThisLevel;
                     if (playerColor === WHITE) {
                         diff = -diff;
@@ -932,13 +1119,31 @@
                 
                 if (continueThinking) {
                     cumulativeEvals = {...cumulativeEvals, ...currentLevelEvals };
-                    self.postMessage({ type: 'evalUpdate', evaluations: cumulativeEvals, level });
+                    
+                    let correctedEvals = {};
+                    const evalValues = Object.values(cumulativeEvals);
+                    if (evalValues.length > 0) {
+                        const sortedEvals = [...evalValues].sort((a, b) => a - b);
+                        const midIndex = Math.floor(sortedEvals.length / 2);
+                        const median = sortedEvals.length % 2 === 0
+                            ? (sortedEvals[midIndex - 1] + sortedEvals[midIndex]) / 2
+                            : sortedEvals[midIndex];
+                        
+                        Object.keys(cumulativeEvals).forEach(key => {
+                            correctedEvals[key] = cumulativeEvals[key] - median;
+                        });
+                    } else {
+                        correctedEvals = cumulativeEvals;
+                    }
+                    
+                    self.postMessage({ type: 'evalUpdate', evaluations: correctedEvals, level });
                     await new Promise(r => setTimeout(r, 10));
                 }
             }
-        };
-    </script>
-    <script>
+        }
+    };
+</script>
+<script>
 // ================================================================= //
 //                             定数と変数定義                         //
 // ================================================================= //
@@ -946,16 +1151,7 @@
 const BOARD_SIZE = 8, EMPTY = 0, BLACK = 1, WHITE = 2;
 const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0, c: -1 }, { r: 0, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 0 }, { r: 1, c: 1 } ];
 const MAX_TURNS = 60;
-const EVAL_GRAPH_INITIAL_SCALE = 500;
-const POSITIONAL_SCORE_TABLE = [
-    [120, -20,  20,   5,   5,  20, -20, 120],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[  5,  -5,   3,   3,   3,   3,  -5,   5],
-    [  5,  -5,   3,   3,   3,   3,  -5,   5],[ 20,  -5,  15,   3,   3,  15,  -5,  20],[-20, -40,  -5,  -5,  -5,  -5, -40, -20],[120, -20,  20,   5,   5,  20, -20, 120]
-];
-const OPENING_BOOK = {
-    "0000000000000000000000000001200000021000000000000000000000000000": {r:4, c:5},"0000000000000000000000000012100000012000000000000000000000000000": {r:5, c:5},
-    "0000000000000000000000000002100000012100000000000000000000000000": {r:2, c:3},"0000000000000000000001000001210000021100000000000000000000000000": {r:2, c:2},
-    "0000000000000000000000000011200000012000000000000000000000000000": {r:5, c:2},"000000000000000000000000000210000001110000000000000000000000000": {r:5, c:3},
-};
+const EVAL_GRAPH_VISUAL_CAP = 1000; // 【修正】グラフの最小スケールを1000に設定
 
 const boardEl = document.getElementById('board');
 const blackScoreEl = document.getElementById('black-score');
@@ -993,9 +1189,43 @@ let currentResearchLevel = 0;
 let isResearchComplete = false;
 const maxAiLevel = 10;
 
-const workerScript = document.getElementById('research-worker-script').textContent;
-const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
-const researchWorker = new Worker(URL.createObjectURL(workerBlob));
+// --- AI Workerのセットアップ ---
+const workerScriptEl = document.getElementById('ai-worker-script');
+if (!workerScriptEl) {
+    console.error("AI Worker script not found!");
+}
+const workerBlob = new Blob([workerScriptEl.textContent], { type: 'application/javascript' });
+const aiWorker = new Worker(URL.createObjectURL(workerBlob));
+
+// --- Workerからのメッセージを処理 ---
+let resolveFindBestMove = null;
+let resolveEvaluateBoard = null;
+
+aiWorker.onmessage = (e) => {
+    const { type, evaluations, level, message, move, score } = e.data;
+
+    if (type === 'evalUpdate' && isResearchMode) {
+        currentResearchLevel = level;
+        researchEvaluations = { ...researchEvaluations, ...evaluations };
+        updateResearchValues(evaluations);
+        if (level === maxAiLevel) {
+            isResearchComplete = true;
+        }
+        updateGameInfo();
+    } else if (type === 'boardEvaluated') {
+        if (resolveEvaluateBoard) {
+            resolveEvaluateBoard(score);
+            resolveEvaluateBoard = null;
+        }
+    } else if (type === 'updateMessage') {
+        messageAreaEl.textContent = message;
+    } else if (type === 'bestMoveFound') {
+        if (resolveFindBestMove) {
+            resolveFindBestMove(move);
+            resolveFindBestMove = null;
+        }
+    }
+};
 
 function updateResearchValues(evaluations) {
     const validMoves = getValidMoves(board, currentPlayer);
@@ -1020,19 +1250,6 @@ function updateResearchValues(evaluations) {
     });
 }
 
-researchWorker.onmessage = (e) => {
-    if (isResearchMode && e.data.type === 'evalUpdate') {
-        const { evaluations, level } = e.data;
-        currentResearchLevel = level;
-        researchEvaluations = { ...researchEvaluations, ...evaluations };
-        updateResearchValues(evaluations);
-        if (level === maxAiLevel) {
-            isResearchComplete = true;
-        }
-        updateGameInfo();
-    }
-};
-
 // ================================================================= //
 //                      メインロジック (ゲーム進行管理)                 //
 // ================================================================= //
@@ -1042,7 +1259,15 @@ function resetGame() {
     isCpuVsCpuMode = false;
     isPlaybackMode = false;
     isGameOver = false;
+    
+    // 進行中の非同期処理を停止
+    aiWorker.postMessage({ type: 'stop' });
+    if (resolveFindBestMove) resolveFindBestMove(null);
+    if (resolveEvaluateBoard) resolveEvaluateBoard(null);
+    resolveFindBestMove = null;
+    resolveEvaluateBoard = null;
     if(isResearchMode) researchButton.click();
+    
     undoCount = 0;
     document.body.classList.remove('game-over', 'game-interrupted', 'graph-dragging');
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
@@ -1086,6 +1311,13 @@ function startGame() {
 
 function interruptGame() {
     isGameInProgress = false;
+    aiWorker.postMessage({ type: 'stop' });
+    if (resolveFindBestMove) {
+        resolveFindBestMove(null); 
+    }
+    if (resolveEvaluateBoard) {
+        resolveEvaluateBoard(null);
+    }
     if (isResearchMode) researchButton.click();
     document.body.classList.add('game-interrupted');
     updateUiState();
@@ -1105,9 +1337,8 @@ async function gameController() {
         researchEvaluations = {};
         renderBoard();
         const validMoves = getValidMoves(board, playerColor);
-        // ★★★ currentEvalを削除 ★★★
-        researchWorker.postMessage({
-            type: 'start', board, playerColor, turnCount, maxAiLevel, validMoves
+        aiWorker.postMessage({
+            type: 'research', board, playerColor, turnCount, maxAiLevel, validMoves
         });
     } else {
         renderBoard();
@@ -1123,9 +1354,17 @@ async function gameController() {
         }
         messageAreaEl.textContent = `${currentPlayer === BLACK ? '黒' : '白'}はパスします。`;
         await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const currentAiLevel = isCpuVsCpuMode ? Math.max(parseInt(cpu1LevelSelect.value, 10), parseInt(cpu2LevelSelect.value, 10)) : parseInt(cpuLevelSelect.value, 10);
+        const score = await evaluateBoardAsync(board, BLACK, currentAiLevel, turnCount);
+        if (score !== null) {
+            evaluationHistory.push(score);
+        }
+
         turnCount++;
         gameHistory.push({ move: {r: -1, c: -1}, boardState: JSON.parse(JSON.stringify(board)) });
-        evaluationHistory.push(evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length-1] : 0);
+        playbackIndex = turnCount;
+
         currentPlayer = opponent;
         gameController();
         return;
@@ -1155,7 +1394,7 @@ function endGame() {
     }
     if (!isCpuVsCpuMode && undoCount > 0) message += ` (待ったの使用回数: ${undoCount}回)`;
     messageAreaEl.textContent = `ゲーム終了！ ${message}`;
-    adjustMessageFontSize(messageAreaEl); // ★この行を追加
+    adjustMessageFontSize(messageAreaEl);
     
     updateUiState();
     updateGameInfo();
@@ -1204,13 +1443,22 @@ function updateGameInfo() {
     whiteScoreEl.textContent = whiteScore;
     turnCountNumberEl.textContent = isPlaybackMode ? playbackIndex : turnCount;
     
-    if (isGameOver) {
+    if (isGameOver && !isPlaybackMode) {
         return;
     }
     
     let message = '';
     if (isPlaybackMode) {
-         message = `棋譜再生中 (${playbackIndex}手目)`;
+         let passInfo = '';
+         if (playbackIndex > 0 && playbackIndex < gameHistory.length) {
+             const record = gameHistory[playbackIndex];
+             if (record && record.move && record.move.r === -1) {
+                 const passedPlayer = ((playbackIndex - 1) % 2 === 0) ? BLACK : WHITE;
+                 const playerName = passedPlayer === BLACK ? '黒' : '白';
+                 passInfo = ` - ${playerName}のパス`;
+             }
+         }
+         message = `棋譜再生中 (${playbackIndex}手目${passInfo})`;
     } else if (isGameInProgress) {
         if (isCpuVsCpuMode) {
              message = `${turnCount + 1}手目: CPU ${currentPlayer === BLACK ? '1' : '2'}のターンです`;
@@ -1236,7 +1484,7 @@ function updateGameInfo() {
     } else {
         messageAreaEl.textContent = message;
     }
-    adjustMessageFontSize(messageAreaEl); // ★この行を追加
+    adjustMessageFontSize(messageAreaEl);
 }
 
 function updateUiState() {
@@ -1275,8 +1523,17 @@ function updateEvaluationDisplay(score) {
     if (score === null || score === undefined) {
         evaluationValueTextEl.textContent = "N/A";
     } else {
-        const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
-        evaluationValueTextEl.textContent = scoreText;
+        // 完全読みモードの評価値を分かりやすく表示する処理
+        if (Math.abs(score) >= 10000 && score % 1000 === 0) { // 完全読みの可能性が高い評価値
+            const stoneDiff = score / 1000;
+            const resultText = stoneDiff > 0 
+                ? `黒 +${stoneDiff}確`
+                : `白 ${stoneDiff}確`; // 白の場合はマイナス記号が既にあるので"+"は不要
+            evaluationValueTextEl.textContent = resultText;
+        } else {
+            const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
+            evaluationValueTextEl.textContent = scoreText;
+        }
     }
 }
 
@@ -1286,23 +1543,42 @@ function renderEvaluationGraph() {
     const tooltipEl = document.getElementById('evaluation-tooltip');
     if (!graphEl || !yAxisEl || !tooltipEl) return;
     graphEl.innerHTML = '';
-    const maxAbsValue = evaluationHistory.length > 0 ? Math.max(...evaluationHistory.map(v => Math.abs(v))) : 0;
-    const scale = Math.max(EVAL_GRAPH_INITIAL_SCALE, Math.ceil(maxAbsValue / 100) * 100);
+
+    const totalBars = Math.max(MAX_TURNS, gameHistory.length - 1);
+
+    const normalEvals = evaluationHistory.filter(v => Math.abs(v) < 10000);
+    const maxNormalAbsValue = normalEvals.length > 0 ? Math.max(0, ...normalEvals.map(v => Math.abs(v))) : 0;
+
+    const dynamicScale = Math.ceil(maxNormalAbsValue / 1000) * 1000;
+    
+    const scale = Math.max(EVAL_GRAPH_VISUAL_CAP, dynamicScale);
+    
     yAxisEl.innerHTML = `<span>+${scale}</span><span>-${scale}</span>`;
-    for (let i = 0; i < MAX_TURNS; i++) {
+
+    for (let i = 0; i < totalBars; i++) {
         const barContainer = document.createElement('div');
         barContainer.className = 'bar-container';
-        if (isPlaybackMode && i === playbackIndex) {
-            barContainer.classList.add('current-turn-highlight');
+
+        const highlightIndex = (isPlaybackMode ? playbackIndex : turnCount) -1;
+        if(i === highlightIndex) {
+             barContainer.classList.add('current-turn-highlight');
         }
+
         if (i < evaluationHistory.length) {
             const value = evaluationHistory[i];
             const bar = document.createElement('div');
             bar.className = 'bar';
+            
             const heightPercentage = Math.min((Math.abs(value) / scale) * 100, 100);
             bar.style.height = `${heightPercentage / 2}%`;
+
             if (value > 0) bar.classList.add('black');
             else if (value < 0) bar.classList.add('white');
+
+            if (Math.abs(value) > scale) {
+                bar.classList.add('capped');
+            }
+
             barContainer.appendChild(bar);
             barContainer.addEventListener('mouseover', () => {
                 tooltipEl.style.display = 'block';
@@ -1322,13 +1598,13 @@ function renderEvaluationGraph() {
 //                        イベントハンドラ・リスナー                   //
 // ================================================================= //
 
-function handleCellClick(r, c) {
+async function handleCellClick(r, c) {
     if (isPlaybackMode) return;
     if (!isGameInProgress || isCpuVsCpuMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
     const flippable = getFlippableDiscs(board, r, c, playerColor);
     if (flippable.length === 0) return;
-    if (isResearchMode) researchWorker.postMessage({ type: 'stop' });
-    placeDisc(r, c, playerColor, flippable);
+    if (isResearchMode) aiWorker.postMessage({ type: 'stop' });
+    await placeDisc(r, c, playerColor, flippable);
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
     gameController();
 }
@@ -1360,14 +1636,20 @@ function handleGraphScrub(event) {
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const relativeX = clientX - graphRect.left;
 
-    const barWidth = graphRect.width / MAX_TURNS;
+    const totalBars = Math.max(MAX_TURNS, gameHistory.length - 1);
+    const barWidth = graphRect.width / totalBars;
+    
     const clickedBarIndex = Math.floor(Math.max(0, relativeX) / barWidth);
-    const maxTurn = gameHistory.length - 1;
-    const turn = Math.min(clickedBarIndex, maxTurn);
+    
+    const maxHistoryIndex = gameHistory.length - 1;
+    
+    const targetHistoryIndex = clickedBarIndex + 1;
 
-    if (turn !== lastHoveredTurn) {
-        lastHoveredTurn = turn;
-        renderPlayback(turn);
+    const historyIndexToPlay = Math.min(targetHistoryIndex, maxHistoryIndex);
+
+    if (historyIndexToPlay !== lastHoveredTurn) {
+        lastHoveredTurn = historyIndexToPlay;
+        renderPlayback(historyIndexToPlay);
     }
 }
 
@@ -1488,13 +1770,12 @@ researchButton.addEventListener('click', () => {
         if (isPlayerTurn) {
             updateGameInfo();
             const validMoves = getValidMoves(board, playerColor);
-            // ★★★ currentEvalを削除 ★★★
-            researchWorker.postMessage({
-                type: 'start', board, playerColor, turnCount, maxAiLevel, validMoves
+            aiWorker.postMessage({
+                type: 'research', board, playerColor, turnCount, maxAiLevel, validMoves
             });
         }
     } else {
-        researchWorker.postMessage({ type: 'stop' });
+        aiWorker.postMessage({ type: 'stop' });
         researchEvaluations = {};
         currentResearchLevel = 0;
         isResearchComplete = false;
@@ -1528,288 +1809,100 @@ document.addEventListener('keydown', (event) => {
 //                         AI思考ロジック (コア)                      //
 // ================================================================= //
 
+function findBestMoveAsync(board, playerColor, aiLevel, turnCount) {
+    return new Promise(resolve => {
+        resolveFindBestMove = resolve;
+        aiWorker.postMessage({
+            type: 'findBestMove',
+            board: JSON.parse(JSON.stringify(board)), // Workerに渡すデータはコピーする
+            playerColor,
+            aiLevel,
+            turnCount
+        });
+    });
+}
+
+function evaluateBoardAsync(board, player, level, turnCount) {
+    return new Promise(resolve => {
+        if (!isGameInProgress && !isGameOver && !document.body.classList.contains('game-interrupted')) {
+            resolve(null);
+            return;
+        }
+        resolveEvaluateBoard = resolve;
+        aiWorker.postMessage({
+            type: 'evaluateBoard',
+            board: JSON.parse(JSON.stringify(board)),
+            player, level, turnCount
+        });
+    });
+}
+
 async function executeCpuTurn() {
     if (!isGameInProgress) return;
     const currentAiPlayer = isCpuVsCpuMode ? currentPlayer : cpuColor;
     const currentAiLevel = isCpuVsCpuMode 
         ? (currentAiPlayer === BLACK ? parseInt(cpu1LevelSelect.value, 10) : parseInt(cpu2LevelSelect.value, 10))
         : parseInt(cpuLevelSelect.value, 10);
+
     messageAreaEl.textContent = 'CPUが思考中です...';
     await new Promise(resolve => setTimeout(resolve, 50));
-    const move = findBestMove(currentAiPlayer, currentAiLevel);
+
+    const move = await findBestMoveAsync(board, currentAiPlayer, currentAiLevel, turnCount);
+
     if (!isGameInProgress) return;
+
     if (move) {
         const flippable = getFlippableDiscs(board, move.r, move.c, currentAiPlayer);
-        placeDisc(move.r, move.c, currentAiPlayer, flippable);
+        await placeDisc(move.r, move.c, currentAiPlayer, flippable);
     }
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
     gameController();
 }
 
-function findBestMove(aiPlayer, aiLevel) {
-    const validMoves = getValidMoves(board, aiPlayer);
-    if (validMoves.length === 0) return null;
-    if (aiLevel >= 7) {
-        const bookMove = OPENING_BOOK[boardToString(board)];
-        if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
-            if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {} else { return bookMove; }
-        }
-    }
-    const emptyCells = MAX_TURNS - turnCount;
-    switch (aiLevel) {
-        case 1: return validMoves[Math.floor(Math.random() * validMoves.length)];
-        case 2: return validMoves.reduce((best, move) => { const count = getFlippableDiscs(board, move.r, move.c, aiPlayer).length; return count > best.count ? { move, count } : best; }, { move: validMoves[0], count: 0 }).move;
-        case 3: return validMoves.reduce((best, move) => { const score = POSITIONAL_SCORE_TABLE[move.r][move.c]; return score > best.score ? { move, score } : best; }, { move: null, score: -Infinity }).move;
-        case 4: return alphaBetaSearch(board, 3, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-        case 5: return alphaBetaSearch(board, 4, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-        case 6: return alphaBetaSearch(board, 5, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-        case 7: { let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8); return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move; }
-        case 8: {
-            if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
-            let depth = (emptyCells > 22) ? 6 : 7; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-        }
-        case 9: {
-            if (emptyCells <= 12) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
-            let depth = (emptyCells > 22) ? 6 : 7; return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount);
-        }
-        case 10: {
-            if (emptyCells <= 14) { messageAreaEl.textContent = 'CPUが完全読みに移行...'; return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move; }
-            let depth = (emptyCells > 24) ? 7 : 8; return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
-        }
-        default: return validMoves[0];
-    }
-}
-
-function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level, turnCount) {
-    const validMoves = getValidMoves(currentBoard, aiPlayer);
-    const moveEvals = [];
-    for (const move of validMoves) {
-        const newBoard = JSON.parse(JSON.stringify(currentBoard));
-        placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
-        const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
-        moveEvals.push({ move, score: result.score });
-    }
-    if (moveEvals.length === 0) return null;
-    const bestScore = Math.max(...moveEvals.map(e => e.score));
-    const threshold = 50; 
-    const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
-    if (bestMoves.length > 0) return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
-    return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
-}
-
-function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel, turnCount) {
-    const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
-    if (depth === 0 || emptyCells === 0) return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel, turnCount) };
-    const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
-    const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
-    let validMoves = getValidMoves(currentBoard, playerForThisNode);
-    if (validMoves.length === 0) {
-        if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, true) };
-        return alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount);
-    }
-    let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
-    if (depth >= 4 && currentLevel >= 8) {
-        const moveScores = validMoves.map(move => {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
-            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-            return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) };
-        });
-        if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
-        else moveScores.sort((a, b) => a.score - b.score);
-        validMoves = moveScores.map(ms => ms.move);
-    }
-    bestResult.move = validMoves[0]; 
-    for (const move of validMoves) {
-        const newBoard = JSON.parse(JSON.stringify(currentBoard));
-        placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-        const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
-        if (isMaximizingNode) {
-            if (result.score > bestResult.score) bestResult = { move, score: result.score };
-            alpha = Math.max(alpha, bestResult.score);
-        } else {
-            if (result.score < bestResult.score) bestResult = { move, score: result.score };
-            beta = Math.min(beta, bestResult.score);
-        }
-        if (beta <= alpha) break; 
-    }
-    return bestResult;
-}
-
-function perfectSearch(currentBoard, alpha, beta, isMaximizingNode, maximizingPlayer) {
-    const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
-    if (emptyCells === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, false) };
-    const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
-    const playerForThisNode = isMaximizingNode ? maximizingPlayer : opponentPlayer;
-    const validMoves = getValidMoves(currentBoard, playerForThisNode);
-    if (validMoves.length === 0) {
-        if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer, false) };
-        return perfectSearch(currentBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
-    }
-    let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
-    for (const move of validMoves) {
-        const newBoard = JSON.parse(JSON.stringify(currentBoard));
-        placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-        const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
-        if (isMaximizingNode) {
-            if (result.score > bestResult.score) bestResult = { move, score: result.score };
-            alpha = Math.max(alpha, bestResult.score);
-        } else {
-            if (result.score < bestResult.score) bestResult = { move, score: result.score };
-            beta = Math.min(beta, bestResult.score);
-        }
-        if (beta <= alpha) break;
-    }
-    return bestResult;
-}
-
-// ================================================================= //
-//                           AI評価関数                             //
-// ================================================================= //
-
-function evaluateBoardForLevel9(board, player, currentTurn) {
-    const opponent = (player === BLACK) ? WHITE : BLACK;
-    const positionalScore = simplePositionalEvaluation(board, player);
-    const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-    const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-    let cornerPenalty = 0;
-    const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
-    const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
-    for (let i = 0; i < 4; i++) {
-        if (board[corners[i].r][corners[i].c] === EMPTY) {
-            if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 300;
-            if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 300;
-        }
-    }
-    let positionalWeight, mobilityWeight, fixedDiscWeight;
-    if (currentTurn < 20) { positionalWeight = 1.0; mobilityWeight = 90; fixedDiscWeight = 130; } 
-    else if (currentTurn < 45) { positionalWeight = 1.0; mobilityWeight = 65; fixedDiscWeight = 220; } 
-    else { positionalWeight = 0.5; mobilityWeight = 45; fixedDiscWeight = 350; }
-    let edgeControlScore = 0;
-    const edges = [
-        {line: board[0], corners: [board[0][0], board[0][7]]}, {line: board[7], corners: [board[7][0], board[7][7]]},
-        {line: board.map(row => row[0]), corners: [board[0][0], board[7][0]]}, {line: board.map(row => row[7]), corners: [board[0][7], board[7][7]]},
-    ];
-    for (const edge of edges) {
-        if (edge.corners[0] === EMPTY || edge.corners[1] === EMPTY) {
-            let myStones = 0, oppStones = 0;
-            for(let i = 1; i < 7; i++) {
-                if (edge.line[i] === player) myStones++;
-                else if (edge.line[i] === opponent) oppStones++;
-            }
-            edgeControlScore += (oppStones - myStones);
-        }
-    }
-    const edgeControlWeight = 35;
-    return (positionalScore * positionalWeight) + (mobilityScore * mobilityWeight) + (fixedDiscScore * fixedDiscWeight) + cornerPenalty + (edgeControlScore * edgeControlWeight);
-}
-
-function evaluateBoard(board, player, level, currentTurn) {
-    if (level >= 10) return evaluateBoardForLevel9(board, player, currentTurn);
-    if (level >= 8) return evaluateBoardForLevel8(board, player, currentTurn);
-    if (level >= 6) return advancedPositionalEvaluation(board, player);
-    return simplePositionalEvaluation(board, player);
-}
-
-function simplePositionalEvaluation(board, player) {
-    let score = 0;
-    const opponent = (player === BLACK) ? WHITE : BLACK;
-    for (let r=0; r<BOARD_SIZE; r++) for(let c=0; c<BOARD_SIZE; c++) {
-        if(board[r][c]===player) score+=POSITIONAL_SCORE_TABLE[r][c];
-        else if(board[r][c]===opponent) score-=POSITIONAL_SCORE_TABLE[r][c];
-    }
-    return score;
-}
-
-function advancedPositionalEvaluation(board, player) {
-    const opponent = (player === BLACK) ? WHITE : BLACK;
-    const positionalScore = simplePositionalEvaluation(board, player);
-    const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-    const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-    return positionalScore + (mobilityScore * 50) + (fixedDiscScore * 150);
-}
-
-function evaluateBoardForLevel8(board, player, currentTurn) {
-    const opponent = (player === BLACK) ? WHITE : BLACK;
-    const positionalScore = simplePositionalEvaluation(board, player);
-    const mobilityScore = getValidMoves(board, player).length - getValidMoves(board, opponent).length;
-    const fixedDiscScore = getStableDiscs(board, player).length - getStableDiscs(board, opponent).length;
-    let cornerPenalty = 0;
-    const corners = [{r:0,c:0},{r:0,c:7},{r:7,c:0},{r:7,c:7}];
-    const xSquares = [{r:1,c:1},{r:1,c:6},{r:6,c:1},{r:6,c:6}];
-    for (let i = 0; i < 4; i++) {
-        if (board[corners[i].r][corners[i].c] === EMPTY) {
-            if (board[xSquares[i].r][xSquares[i].c] === player) cornerPenalty -= 250;
-            if (board[xSquares[i].r][xSquares[i].c] === opponent) cornerPenalty += 250;
-        }
-    }
-    let positionalWeight, mobilityWeight, fixedDiscWeight;
-    if (currentTurn < 20) { positionalWeight=1; mobilityWeight=80; fixedDiscWeight=120; } 
-    else if (currentTurn < 48) { positionalWeight=1; mobilityWeight=60; fixedDiscWeight=180; } 
-    else { positionalWeight=0.5; mobilityWeight=40; fixedDiscWeight=250; }
-    return (positionalScore*positionalWeight) + (mobilityScore*mobilityWeight) + (fixedDiscScore*fixedDiscWeight) + cornerPenalty;
-}
-
-function evaluateByStoneCount(board, player, isFromAlphaBeta) {
-    let score = 0;
-    board.flat().forEach(c => { if (c === player) score++; else if (c !== EMPTY) score--; });
-    return isFromAlphaBeta ? score * 1000 : score;
-}
-
 // ================================================================= //
 //                       ルール・ユーティリティ関数                      //
 // ================================================================= //
-
-/**
- * 要素内のテキストがはみ出さないようにフォントサイズを動的に調整します。
- * @param {HTMLElement} element - 対象のHTML要素。
- */
 function adjustMessageFontSize(element) {
     if (!element || !element.textContent) return;
-
-    // 1. スタイルをリセット
     element.style.fontSize = '';
-    const originalWhiteSpace = element.style.whiteSpace; // 元のwhite-space設定を保存
-    element.style.whiteSpace = 'nowrap'; // 一時的に改行を禁止
-
-    // 2. はみ出している場合のみ、フォントサイズを調整
+    const originalWhiteSpace = element.style.whiteSpace;
+    element.style.whiteSpace = 'nowrap';
     if (element.scrollWidth > element.clientWidth) {
         const padding = 2;
-        const maxIterations = 20;
-        let iterations = 0;
-
-        while (element.scrollWidth > element.clientWidth - padding && iterations < maxIterations) {
-            const currentSize = parseFloat(window.getComputedStyle(element).fontSize);
-            if (currentSize <= 10) break;
-            element.style.fontSize = (currentSize - 0.5) + 'px';
-            iterations++;
+        let currentSize = parseFloat(window.getComputedStyle(element).fontSize);
+        while (element.scrollWidth > element.clientWidth - padding && currentSize > 10) {
+            currentSize -= 0.5;
+            element.style.fontSize = currentSize + 'px';
         }
     }
-    
-    // 3. 一時的に設定したスタイルを元に戻す
     element.style.whiteSpace = originalWhiteSpace;
 }
         
-function placeDisc(r, c, player, flippable) {
+async function placeDisc(r, c, player, flippable) {
     board[r][c] = player;
     flippable.forEach(pos => { board[pos.r][pos.c] = player; });
     lastMove = { r, c };
     turnCount++;
     gameHistory.push({ move: { r, c }, boardState: JSON.parse(JSON.stringify(board)) });
+    
     if (!isPlaybackMode) {
-        const currentAiLevel = isCpuVsCpuMode 
-            ? (currentPlayer === BLACK ? parseInt(cpu1LevelSelect.value, 10) : parseInt(cpu2LevelSelect.value, 10))
-            : parseInt(cpuLevelSelect.value, 10);
-        const score = evaluateBoard(board, BLACK, currentAiLevel, turnCount);
-        evaluationHistory.push(score);
-        updateEvaluationDisplay(score);
-        renderEvaluationGraph();
+        let evaluationAiLevel;
+        if (isCpuVsCpuMode) {
+            const cpu1Level = parseInt(cpu1LevelSelect.value, 10);
+            const cpu2Level = parseInt(cpu2LevelSelect.value, 10);
+            evaluationAiLevel = Math.max(cpu1Level, cpu2Level);
+        } else {
+            evaluationAiLevel = parseInt(cpuLevelSelect.value, 10);
+        }
+        
+        const score = await evaluateBoardAsync(board, BLACK, evaluationAiLevel, turnCount);
+        if (score !== null) {
+            evaluationHistory.push(score);
+            updateEvaluationDisplay(score);
+            renderEvaluationGraph();
+        }
     }
     playbackIndex = turnCount;
-}
-
-function placeDiscInBoard(b, r, c, player, flippable) {
-    b[r][c] = player;
-    flippable.forEach(p => { b[p.r][p.c] = player; });
 }
 
 function getFlippableDiscs(currentBoard, r, c, player) {
@@ -1837,39 +1930,6 @@ function getValidMoves(currentBoard, player) {
         }
     }
     return moves;
-}
-
-function getStableDiscs(board, player) {
-    const stable = Array.from({length: 8}, () => Array(8).fill(false));
-    const directions = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[-1,1],[1,-1]];
-    if (board[0][0] === player) stable[0][0] = true; if (board[0][7] === player) stable[0][7] = true;
-    if (board[7][0] === player) stable[7][0] = true; if (board[7][7] === player) stable[7][7] = true;
-    let changed = true;
-    while(changed) {
-        changed = false;
-        for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
-            if(board[r][c] === player && !stable[r][c]) {
-                let isStable = true;
-                for(let i=0; i<4; i++) {
-                    const [d1r,d1c]=directions[i*2], [d2r,d2c]=directions[i*2+1];
-                    let line1_filled = true, line2_filled = true;
-                    let nr = r + d1r, nc = c + d1c;
-                    while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line1_filled=false;break;} nr+=d1r; nc+=d1c; }
-                    nr = r + d2r, nc = c + d2c;
-                    while(nr>=0&&nr<8&&nc>=0&&nc<8) { if(board[nr][nc]!==player&&!stable[nr][nc]){line2_filled=false;break;} nr+=d2r; nc+=d2c; }
-                    if (!line1_filled && !line2_filled) { isStable=false; break; }
-                }
-                if(isStable) { stable[r][c] = true; changed = true; }
-            }
-        }
-    }
-    const stableDiscs = [];
-    for (let r=0; r<8; r++) for(let c=0; c<8; c++) if(stable[r][c]) stableDiscs.push({r,c});
-    return stableDiscs;
-}
-
-function boardToString(b) {
-    return b.flat().join('');
 }
 
 // --- ゲームの初回起動 ---
