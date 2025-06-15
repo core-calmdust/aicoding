@@ -101,7 +101,7 @@
         .disc {
             width: 85%; height: 85%; border-radius: 50%;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s ease;
         }
 
         .disc.black { background: radial-gradient(circle at 30% 30%, #444, #111); }
@@ -924,21 +924,34 @@
         }
         
         let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
-        if (depth >= 4 && currentLevel >= 8) {
-            const moveScores = validMoves.map(move => {
-                const newBoard = JSON.parse(JSON.stringify(currentBoard));
-                placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-                return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) };
-            });
-            if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
-            else moveScores.sort((a, b) => a.score - b.score);
+        
+        // --- PERFORMANCE OPTIMIZATION: Move Ordering ---
+        // 探索効率を上げるため、有望な手から探索する。
+        // 重い評価関数ではなく、非常に軽量な位置評価テーブルでソートする。
+        if (depth >= 3 && validMoves.length > 1) {
+            const moveScores = validMoves.map(move => ({
+                move,
+                score: POSITIONAL_SCORE_TABLE[move.r][move.c]
+            }));
+            // isMaximizingNode: 自分(AI)の手番。スコアが高い手(角など)から探索。
+            // !isMaximizingNode: 相手の手番。相手にとってスコアが高い手から探索するほうが、
+            //                   より早く枝刈り(βカット)が発生する可能性が高まる。
+            if (isMaximizingNode) {
+                moveScores.sort((a, b) => b.score - a.score);
+            } else {
+                moveScores.sort((a, b) => b.score - a.score); // 相手にとっても有利な手から探索
+            }
             validMoves = moveScores.map(ms => ms.move);
         }
         bestResult.move = validMoves[0];
 
         for (const move of validMoves) {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
-            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+            // --- PERFORMANCE OPTIMIZATION: Fast Board Copy ---
+            // JSON.parse(JSON.stringify(...)) は非常に遅いため、高速な配列コピーに置き換える。
+            const newBoard = currentBoard.map(row => [...row]);
+            const flippable = getFlippableDiscs(currentBoard, move.r, move.c, playerForThisNode);
+            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, flippable);
+
             const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
             if (isMaximizingNode) {
                 if (result.score > bestResult.score) bestResult = { move, score: result.score };
@@ -964,7 +977,7 @@
         }
         let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
         for (const move of validMoves) {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            const newBoard = currentBoard.map(row => [...row]);
             placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
             const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
             if (isMaximizingNode) {
@@ -987,9 +1000,8 @@
         let bestScore = -Infinity;
 
         for (const move of validMoves) {
-            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            const newBoard = currentBoard.map(row => [...row]);
             placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
-            // 評価関数には、渡されたAIレベルを使用します
             const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
             const score = result.score;
         
@@ -1001,22 +1013,12 @@
     
         if (moveEvals.length === 0) return null;
     
-        // 引数で受け取った閾値を使い、最善手に近い手を候補としてフィルタリングします
         const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
         if (bestMoves.length > 0) {
-            // 候補の中からランダムに1手を選びます
             return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
         }
-        // 念のためのフォールバック
         return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
     }
-
-/**
- * 単純な評価関数に基づいて最善手（複数ある場合はランダム）を選択する
- * @param {Array} validMoves - 合法手のリスト
- * @param {Function} evaluator - 各手を評価する関数 (例: (move) => move.count)
- * @returns {Object} 選択された手
- */
 
     function findBestMoveBySimpleEval(validMoves, evaluator) {
         if (validMoves.length === 0) return null;
@@ -1036,52 +1038,34 @@
         const validMoves = getValidMoves(board, aiPlayer);
         if (validMoves.length === 0) return null;
 
-        // 定石チェック
         if (aiLevel >= 7) {
             const bookMove = OPENING_BOOK[boardToString(board)];
             if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
-                // 定石を意図的に外す確率
                 if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {
-                // 定石を外す場合は、以降のロジックで手を決定する
                 } else {
                     return bookMove;
                 }
             }
         }
         const emptyCells = MAX_TURNS - turnCount;
-
-        // 序盤に多様性を持たせるための設定
         const varietyTurnLimit = 18;
         const varietyThreshold = 50;
         const useVariety = turnCount < varietyTurnLimit;
 
         switch (aiLevel) {
-            case 1: // ランダム
+            case 1:
                 return validMoves[Math.floor(Math.random() * validMoves.length)];
-
-            case 2: // 最大反転 + 多様性
-                return findBestMoveBySimpleEval(
-                    validMoves,
-                    move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length
-                );
-
-            case 3: // 場所評価 + 多様性
-                return findBestMoveBySimpleEval(
-                    validMoves,
-                    move => POSITIONAL_SCORE_TABLE[move.r][move.c]
-                );
-
-            // --- レベル4, 5, 6を統合 ---
-            case 4:
-            case 5:
-            case 6: {
-                const depth = getDepthForLevel(aiLevel, turnCount); // 既存のヘルパー関数を利用
+            case 2:
+                return findBestMoveBySimpleEval( validMoves, move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length );
+            case 3:
+                return findBestMoveBySimpleEval( validMoves, move => POSITIONAL_SCORE_TABLE[move.r][move.c] );
+            case 4: case 5: case 6: {
+                const depth = getDepthForLevel(aiLevel, turnCount);
                 if (useVariety) {
                     return findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
                 return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-
             case 7: {
                 let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8);
                 if (useVariety && emptyCells > 14) {
@@ -1089,8 +1073,7 @@
                 }
                 return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-
-            case 8: { // 変更なし
+            case 8: {
                 if (emptyCells <= 10) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
                     return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
@@ -1098,8 +1081,7 @@
                 let depth = (emptyCells > 22) ? 6 : 7;
                 return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-
-            case 9: { // 変更なし
+            case 9: {
                 if (emptyCells <= 11) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
                     return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
@@ -1107,7 +1089,6 @@
                 let depth = (emptyCells > 22) ? 6 : 7;
                 return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount, 50);
             }
-
             case 10: {
                 if (emptyCells <= 12) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
@@ -1119,7 +1100,6 @@
                 }
                 return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-
             default:
                 return validMoves[0];
         }
@@ -1178,7 +1158,7 @@
 
                 for (const move of validMoves) {
                     if (!continueThinking) break;
-                    const tempBoard = JSON.parse(JSON.stringify(board));
+                    const tempBoard = board.map(row => [...row]);
                     const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
                     placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
                     
@@ -1228,6 +1208,7 @@ const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0,
 const MAX_TURNS = 60;
 const EVAL_GRAPH_VISUAL_CAP = 1000;
 
+// DOM要素
 const boardEl = document.getElementById('board');
 const blackScoreEl = document.getElementById('black-score');
 const whiteScoreEl = document.getElementById('white-score');
@@ -1251,6 +1232,7 @@ const modalMessage = document.getElementById('modal-message');
 const modalConfirmBtn = document.getElementById('modal-confirm-btn');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
+// ゲーム状態変数
 let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor;
 let isCpuVsCpuMode = false, isGameOver = false, isPlaybackMode = false;
 let isGameInProgress = false;
@@ -1263,6 +1245,7 @@ let researchEvaluations = {};
 let currentResearchLevel = 0;
 let isResearchComplete = false;
 const maxAiLevel = 10;
+let cellElements = []; // PERFORMANCE OPTIMIZATION: DOM要素をキャッシュ
 
 // --- AI Workerのセットアップ ---
 const workerScriptEl = document.getElementById('ai-worker-script');
@@ -1303,27 +1286,32 @@ aiWorker.onmessage = (e) => {
 };
 
 function updateResearchValues(evaluations) {
+    // 既存の評価値を一度すべてクリア
+    boardEl.querySelectorAll('.research-value').forEach(el => el.remove());
+
     const validMoves = getValidMoves(board, currentPlayer);
     const validMovesSet = new Set(validMoves.map(m => `${m.r},${m.c}`));
-    document.querySelectorAll('.research-value').forEach(el => el.remove());
+
     Object.keys(evaluations).forEach(key => {
-        if (!validMovesSet.has(key)) {
-            return;
-        }
+        if (!validMovesSet.has(key)) return;
+        
         const [r, c] = key.split(',').map(Number);
-        const cellIndex = r * BOARD_SIZE + c;
-        const cell = boardEl.children[cellIndex];
+        const cell = cellElements[r * BOARD_SIZE + c];
         if (!cell || cell.querySelector('.disc')) return;
+        
         cell.classList.remove('valid-move-hint');
         const valueSpan = document.createElement('span');
         valueSpan.className = 'research-value';
-        cell.appendChild(valueSpan);
+        
         const roundedEval = Math.round(evaluations[key]);
         valueSpan.textContent = (roundedEval > 0 ? '+' : '') + roundedEval;
         valueSpan.classList.toggle('plus', roundedEval >= 0);
         valueSpan.classList.toggle('minus', roundedEval < 0);
+        
+        cell.appendChild(valueSpan);
     });
 }
+
 
 // ================================================================= //
 //                      メインロジック (ゲーム進行管理)                 //
@@ -1350,10 +1338,11 @@ function resetGame() {
     currentPlayer = BLACK;
     turnCount = 0;
     lastMove = null;
-    gameHistory = [{ move: null, boardState: JSON.parse(JSON.stringify(board)) }];
+    gameHistory = [{ move: null, boardState: board.map(row => [...row]) }];
     evaluationHistory = [];
     playbackIndex = 0;
-    renderBoard();
+
+    updateBoard(board);
     renderEvaluationGraph();
     updateEvaluationDisplay(null);
     updateUiState();
@@ -1386,12 +1375,8 @@ function startGame() {
 function interruptGame() {
     isGameInProgress = false;
     aiWorker.postMessage({ type: 'stop' });
-    if (resolveFindBestMove) {
-        resolveFindBestMove(null); 
-    }
-    if (resolveEvaluateBoard) {
-        resolveEvaluateBoard(null);
-    }
+    if (resolveFindBestMove) resolveFindBestMove(null); 
+    if (resolveEvaluateBoard) resolveEvaluateBoard(null);
     if (isResearchMode) researchButton.click();
     document.body.classList.add('game-interrupted');
     updateUiState();
@@ -1404,18 +1389,15 @@ async function gameController() {
     
     updateUiState();
     updateGameInfo();
-    
-    const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
-    if (isResearchMode && isPlayerTurn) {
+    updateBoard(board);
+
+    if (isResearchMode && !isCpuVsCpuMode && currentPlayer === playerColor) {
         isResearchComplete = false;
         researchEvaluations = {};
-        renderBoard();
         const validMoves = getValidMoves(board, playerColor);
         aiWorker.postMessage({
             type: 'research', board, playerColor, turnCount, maxAiLevel, validMoves
         });
-    } else {
-        renderBoard();
     }
 
     const canCurrentPlayerMove = getValidMoves(board, currentPlayer).length > 0;
@@ -1431,12 +1413,10 @@ async function gameController() {
         
         const currentAiLevel = isCpuVsCpuMode ? Math.max(parseInt(cpu1LevelSelect.value, 10), parseInt(cpu2LevelSelect.value, 10)) : parseInt(cpuLevelSelect.value, 10);
         const score = await evaluateBoardAsync(board, BLACK, currentAiLevel, turnCount);
-        if (score !== null) {
-            evaluationHistory.push(score);
-        }
+        if (score !== null) evaluationHistory.push(score);
 
         turnCount++;
-        gameHistory.push({ move: {r: -1, c: -1}, boardState: JSON.parse(JSON.stringify(board)) });
+        gameHistory.push({ move: {r: -1, c: -1}, boardState: board.map(row => [...row]) });
         playbackIndex = turnCount;
 
         currentPlayer = opponent;
@@ -1444,8 +1424,7 @@ async function gameController() {
         return;
     }
 
-    const isCpuTurnNow = isCpuVsCpuMode || (currentPlayer === cpuColor);
-    if (isCpuTurnNow) {
+    if (isCpuVsCpuMode || (currentPlayer === cpuColor)) {
         await executeCpuTurn();
     }
 }
@@ -1479,37 +1458,60 @@ function endGame() {
 //                         UI・描画関連                             //
 // ================================================================= //
 
-function renderBoard() {
+function initBoard() {
     boardEl.innerHTML = '';
-    const validMoves = (isGameInProgress && !isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
-        ? getValidMoves(board, currentPlayer) : [];
-    
+    cellElements = [];
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            if (board[r][c] !== EMPTY) {
-                const disc = document.createElement('div');
-                disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
-                cell.appendChild(disc);
-            } else {
-                if (validMoves.find(m => m.r === r && m.c === c)) {
-                    cell.classList.add('valid-move-hint');
-                }
-            }
-            if (lastMove && lastMove.r === r && lastMove.c === c) {
-                cell.classList.add('last-move');
-            }
-            cell.addEventListener('click', () => handleCellClick(r, c));
+            cell.dataset.r = r;
+            cell.dataset.c = c;
             boardEl.appendChild(cell);
+            cellElements.push(cell);
+        }
+    }
+    boardEl.addEventListener('click', handleBoardClick);
+}
+
+function updateBoard(boardState) {
+    const validMoves = (isGameInProgress && !isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
+        ? getValidMoves(boardState, currentPlayer) : [];
+    const validMovesSet = new Set(validMoves.map(m => `${m.r},${m.c}`));
+
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const cell = cellElements[r * BOARD_SIZE + c];
+            const currentDiscEl = cell.querySelector('.disc');
+            const cellState = boardState[r][c];
+
+            // 石の更新
+            if (cellState !== EMPTY) {
+                const requiredColorClass = cellState === BLACK ? 'black' : 'white';
+                if (!currentDiscEl) {
+                    const newDisc = document.createElement('div');
+                    newDisc.className = `disc ${requiredColorClass}`;
+                    cell.appendChild(newDisc);
+                } else if (!currentDiscEl.classList.contains(requiredColorClass)) {
+                    currentDiscEl.className = `disc ${requiredColorClass}`;
+                }
+            } else if (currentDiscEl) {
+                cell.removeChild(currentDiscEl);
+            }
+
+            // 合法手ヒントの更新
+            const showHint = !isResearchMode && cellState === EMPTY && validMovesSet.has(`${r},${c}`);
+            cell.classList.toggle('valid-move-hint', showHint);
+
+            // 最終手のハイライト
+            cell.classList.toggle('last-move', lastMove && lastMove.r === r && lastMove.c === c);
         }
     }
 }
 
 function updateGameInfo() {
     let blackScore = 0, whiteScore = 0;
-    const currentBoard = board; 
-    currentBoard.flat().forEach(cell => {
+    board.flat().forEach(cell => {
         if (cell === BLACK) blackScore++;
         if (cell === WHITE) whiteScore++;
     });
@@ -1517,9 +1519,7 @@ function updateGameInfo() {
     whiteScoreEl.textContent = whiteScore;
     turnCountNumberEl.textContent = isPlaybackMode ? playbackIndex : turnCount;
     
-    if (isGameOver && !isPlaybackMode) {
-        return;
-    }
+    if (isGameOver && !isPlaybackMode) return;
     
     let message = '';
     if (isPlaybackMode) {
@@ -1599,13 +1599,9 @@ function updateEvaluationDisplay(score) {
     } else {
         if (Math.abs(score) >= 10000 && score % 1000 === 0) {
             const stoneDiff = score / 1000;
-            const resultText = stoneDiff > 0 
-                ? `黒 +${stoneDiff}確`
-                : `白 ${stoneDiff}確`;
-            evaluationValueTextEl.textContent = resultText;
+            evaluationValueTextEl.textContent = stoneDiff > 0 ? `黒 +${stoneDiff}確` : `白 ${stoneDiff}確`;
         } else {
-            const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
-            evaluationValueTextEl.textContent = scoreText;
+            evaluationValueTextEl.textContent = (score > 0 ? '+' : '') + score.toFixed(0);
         }
     }
 }
@@ -1618,12 +1614,9 @@ function renderEvaluationGraph() {
     graphEl.innerHTML = '';
 
     const totalBars = Math.max(MAX_TURNS, gameHistory.length - 1);
-
     const normalEvals = evaluationHistory.filter(v => Math.abs(v) < 10000);
     const maxNormalAbsValue = normalEvals.length > 0 ? Math.max(0, ...normalEvals.map(v => Math.abs(v))) : 0;
-
     const dynamicScale = Math.ceil(maxNormalAbsValue / 1000) * 1000;
-    
     const scale = Math.max(EVAL_GRAPH_VISUAL_CAP, dynamicScale);
     
     yAxisEl.innerHTML = `<span>+${scale}</span><span>-${scale}</span>`;
@@ -1633,9 +1626,7 @@ function renderEvaluationGraph() {
         barContainer.className = 'bar-container';
 
         const highlightIndex = (isPlaybackMode ? playbackIndex : turnCount) -1;
-        if(i === highlightIndex) {
-             barContainer.classList.add('current-turn-highlight');
-        }
+        if(i === highlightIndex) barContainer.classList.add('current-turn-highlight');
 
         if (i < evaluationHistory.length) {
             const value = evaluationHistory[i];
@@ -1648,9 +1639,7 @@ function renderEvaluationGraph() {
             if (value > 0) bar.classList.add('black');
             else if (value < 0) bar.classList.add('white');
 
-            if (Math.abs(value) > scale) {
-                bar.classList.add('capped');
-            }
+            if (Math.abs(value) > scale) bar.classList.add('capped');
 
             barContainer.appendChild(bar);
             barContainer.addEventListener('mouseover', () => {
@@ -1671,12 +1660,19 @@ function renderEvaluationGraph() {
 //                        イベントハンドラ・リスナー                   //
 // ================================================================= //
 
-async function handleCellClick(r, c) {
+async function handleBoardClick(event) {
+    const cell = event.target.closest('.cell');
+    if (!cell) return;
+    const r = parseInt(cell.dataset.r, 10);
+    const c = parseInt(cell.dataset.c, 10);
+    
     if (isPlaybackMode) return;
     if (!isGameInProgress || isCpuVsCpuMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
     const flippable = getFlippableDiscs(board, r, c, playerColor);
     if (flippable.length === 0) return;
-    if (isResearchMode) aiWorker.postMessage({ type: 'stop' });
+    
+    if (isResearchMode) researchButton.click(); // RESEARCHモードを終了
+
     await placeDisc(r, c, playerColor, flippable);
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
     gameController();
@@ -1689,14 +1685,14 @@ function renderPlayback(index) {
     playbackIndex = Math.max(0, Math.min(index, gameHistory.length - 1));
     const record = gameHistory[playbackIndex];
     if (record) {
-        board = JSON.parse(JSON.stringify(record.boardState));
+        board = record.boardState.map(row => [...row]);
         lastMove = record.move;
     }
     const score = playbackIndex > 0 ? evaluationHistory[playbackIndex - 1] : null;
     updateEvaluationDisplay(score);
     updateUiState();
     updateGameInfo();
-    renderBoard();
+    updateBoard(board);
     renderEvaluationGraph();
 }
 
@@ -1711,13 +1707,9 @@ function handleGraphScrub(event) {
 
     const totalBars = Math.max(MAX_TURNS, gameHistory.length - 1);
     const barWidth = graphRect.width / totalBars;
-    
     const clickedBarIndex = Math.floor(Math.max(0, relativeX) / barWidth);
-    
     const maxHistoryIndex = gameHistory.length - 1;
-    
     const targetHistoryIndex = clickedBarIndex + 1;
-
     const historyIndexToPlay = Math.min(targetHistoryIndex, maxHistoryIndex);
 
     if (historyIndexToPlay !== lastHoveredTurn) {
@@ -1744,11 +1736,7 @@ graphWrapperEl.addEventListener('mousedown', (event) => {
     window.addEventListener('mouseup', onMouseUp);
 });
 
-const onTouchMove = (e) => {
-    if (isDraggingGraph) {
-        handleGraphScrub(e);
-    }
-};
+const onTouchMove = (e) => { if (isDraggingGraph) handleGraphScrub(e); };
 const onTouchEnd = () => {
     if (!isDraggingGraph) return;
     isDraggingGraph = false;
@@ -1821,7 +1809,7 @@ undoButton.addEventListener('click', () => {
     undoCount++;
     wasUndo = true;
     const lastState = gameHistory[gameHistory.length - 1];
-    board = JSON.parse(JSON.stringify(lastState.boardState));
+    board = lastState.boardState.map(row => [...row]);
     lastMove = lastState.move;
     currentPlayer = playerColor;
     const lastEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : null;
@@ -1838,21 +1826,15 @@ researchButton.addEventListener('click', () => {
         researchEvaluations = {};
         currentResearchLevel = 4;
         isResearchComplete = false;
-        renderBoard();
-        const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
-        if (isPlayerTurn) {
-            updateGameInfo();
-            const validMoves = getValidMoves(board, playerColor);
-            aiWorker.postMessage({
-                type: 'research', board, playerColor, turnCount, maxAiLevel, validMoves
-            });
+        if (isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor) {
+            gameController(); // UIとRESEARCHの開始をトリガー
         }
     } else {
         aiWorker.postMessage({ type: 'stop' });
         researchEvaluations = {};
         currentResearchLevel = 0;
         isResearchComplete = false;
-        renderBoard();
+        updateBoard(board); // ヒントなどを再表示
         updateGameInfo();
     }
 });
@@ -1862,19 +1844,12 @@ playerColorRadios.forEach(radio => { radio.addEventListener('change', () => { if
 document.addEventListener('keydown', (event) => {
     const kifuActive = isGameOver || isPlaybackMode || (!isGameInProgress && gameHistory.length > 1);
     if (kifuActive) {
-        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
-            event.preventDefault();
-        }
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'ArrowDown', 'ArrowUp'].includes(event.key)) event.preventDefault();
         const currentKifuIndex = isPlaybackMode ? playbackIndex : turnCount;
-        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) {
-            renderPlayback(currentKifuIndex - 1);
-        } else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) {
-            renderPlayback(currentKifuIndex + 1);
-        } else if ((event.key === 'ArrowDown' || event.key === 'Home') && !kifuStartBtn.disabled) {
-            renderPlayback(0);
-        } else if ((event.key === 'ArrowUp' || event.key === 'End') && !kifuEndBtn.disabled) {
-            renderPlayback(gameHistory.length - 1);
-        }
+        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) renderPlayback(currentKifuIndex - 1);
+        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) renderPlayback(currentKifuIndex + 1);
+        else if ((event.key === 'ArrowDown' || event.key === 'Home') && !kifuStartBtn.disabled) renderPlayback(0);
+        else if ((event.key === 'ArrowUp' || event.key === 'End') && !kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1);
     }
 });
 
@@ -1885,13 +1860,7 @@ document.addEventListener('keydown', (event) => {
 function findBestMoveAsync(board, playerColor, aiLevel, turnCount) {
     return new Promise(resolve => {
         resolveFindBestMove = resolve;
-        aiWorker.postMessage({
-            type: 'findBestMove',
-            board: JSON.parse(JSON.stringify(board)),
-            playerColor,
-            aiLevel,
-            turnCount
-        });
+        aiWorker.postMessage({ type: 'findBestMove', board, playerColor, aiLevel, turnCount });
     });
 }
 
@@ -1902,11 +1871,7 @@ function evaluateBoardAsync(board, player, level, turnCount) {
             return;
         }
         resolveEvaluateBoard = resolve;
-        aiWorker.postMessage({
-            type: 'evaluateBoard',
-            board: JSON.parse(JSON.stringify(board)),
-            player, level, turnCount
-        });
+        aiWorker.postMessage({ type: 'evaluateBoard', board, player, level, turnCount });
     });
 }
 
@@ -1956,7 +1921,7 @@ async function placeDisc(r, c, player, flippable) {
     flippable.forEach(pos => { board[pos.r][pos.c] = player; });
     lastMove = { r, c };
     turnCount++;
-    gameHistory.push({ move: { r, c }, boardState: JSON.parse(JSON.stringify(board)) });
+    gameHistory.push({ move: { r, c }, boardState: board.map(row => [...row]) });
     
     if (!isPlaybackMode) {
         let evaluationAiLevel;
@@ -2006,7 +1971,11 @@ function getValidMoves(currentBoard, player) {
 }
 
 // --- ゲームの初回起動 ---
-resetGame();
+document.addEventListener('DOMContentLoaded', () => {
+    initBoard();
+    resetGame();
+});
+
 </script>
 </body>
 </html>
