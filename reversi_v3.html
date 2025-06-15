@@ -696,7 +696,16 @@
         "0000000000000000000000000011200000012000000000000000000000000000": {r:5, c:2},"000000000000000000000000000210000001110000000000000000000000000": {r:5, c:3},
     };
     
+    // --- 思考中断のための仕組み ---
+    class SearchCancelledError extends Error {
+        constructor(message) {
+            super(message);
+            this.name = 'SearchCancelledError';
+        }
+    }
     let continueThinking = false;
+    let searchCounter = 0;
+    const SEARCH_CHECK_INTERVAL = 5000; // このノード数ごとに中断チェック
 
     // --- ユーティリティ関数 ---
     function getFlippableDiscs(currentBoard, r, c, player) {
@@ -894,7 +903,7 @@
         return score * 1000;
     }
     
-    // --- 探索関連 ---
+    // --- 探索関連 (async/await化) ---
     function getDepthForLevel(level, turnCount) {
         const emptyCells = MAX_TURNS - turnCount;
         if (level <= 4) return 3;
@@ -907,7 +916,15 @@
         return 3;
     }
 
-    function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel, turnCount) {
+    async function alphaBetaSearch(currentBoard, depth, alpha, beta, isMaximizingNode, maximizingPlayer, currentLevel, turnCount) {
+        searchCounter++;
+        if (searchCounter % SEARCH_CHECK_INTERVAL === 0) {
+            await new Promise(r => setTimeout(r, 0));
+        }
+        if (!continueThinking) {
+            throw new SearchCancelledError('Search cancelled by user.');
+        }
+
         const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
         if (depth === 0 || emptyCells === 0) return { score: evaluateBoard(currentBoard, maximizingPlayer, currentLevel, turnCount) };
         
@@ -917,7 +934,7 @@
         
         if (validMoves.length === 0) {
             if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
-            return alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount);
+            return await alphaBetaSearch(currentBoard, depth, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount);
         }
         
         let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
@@ -936,7 +953,7 @@
         for (const move of validMoves) {
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-            const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
+            const result = await alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
             if (isMaximizingNode) {
                 if (result.score > bestResult.score) bestResult = { move, score: result.score };
                 alpha = Math.max(alpha, bestResult.score);
@@ -949,7 +966,15 @@
         return bestResult;
     }
 
-    function perfectSearch(currentBoard, alpha, beta, isMaximizingNode, maximizingPlayer) {
+    async function perfectSearch(currentBoard, alpha, beta, isMaximizingNode, maximizingPlayer) {
+        searchCounter++;
+        if (searchCounter % SEARCH_CHECK_INTERVAL === 0) {
+            await new Promise(r => setTimeout(r, 0));
+        }
+        if (!continueThinking) {
+            throw new SearchCancelledError('Search cancelled by user.');
+        }
+
         const emptyCells = MAX_TURNS - (currentBoard.flat().filter(c => c !== EMPTY).length - 4);
         if (emptyCells === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
         const opponentPlayer = (maximizingPlayer === BLACK) ? WHITE : BLACK;
@@ -957,13 +982,13 @@
         const validMoves = getValidMoves(currentBoard, playerForThisNode);
         if (validMoves.length === 0) {
             if (getValidMoves(currentBoard, isMaximizingNode ? opponentPlayer : maximizingPlayer).length === 0) return { score: evaluateByStoneCount(currentBoard, maximizingPlayer) };
-            return perfectSearch(currentBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+            return await perfectSearch(currentBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
         }
         let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
         for (const move of validMoves) {
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-            const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+            const result = await perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
             if (isMaximizingNode) {
                 if (result.score > bestResult.score) bestResult = { move, score: result.score };
                 alpha = Math.max(alpha, bestResult.score);
@@ -976,7 +1001,7 @@
         return bestResult;
     }
     
-    function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level, turnCount, threshold) {
+    async function findBestMoveWithVariety(currentBoard, depth, aiPlayer, level, turnCount, threshold) {
         const validMoves = getValidMoves(currentBoard, aiPlayer);
         if (validMoves.length === 0) return null;
 
@@ -986,8 +1011,7 @@
         for (const move of validMoves) {
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
-            // 評価関数には、渡されたAIレベルを使用します
-            const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
+            const result = await alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
             const score = result.score;
         
             moveEvals.push({ move, score });
@@ -998,22 +1022,12 @@
     
         if (moveEvals.length === 0) return null;
     
-        // 引数で受け取った閾値を使い、最善手に近い手を候補としてフィルタリングします
         const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
         if (bestMoves.length > 0) {
-            // 候補の中からランダムに1手を選びます
             return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
         }
-        // 念のためのフォールバック
         return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
     }
-
-/**
- * 単純な評価関数に基づいて最善手（複数ある場合はランダム）を選択する
- * @param {Array} validMoves - 合法手のリスト
- * @param {Function} evaluator - 各手を評価する関数 (例: (move) => move.count)
- * @returns {Object} 選択された手
- */
 
     function findBestMoveBySimpleEval(validMoves, evaluator) {
         if (validMoves.length === 0) return null;
@@ -1029,94 +1043,74 @@
         return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
     }
 
-    function findBestMove(board, aiPlayer, aiLevel, turnCount) {
+    async function findBestMove(board, aiPlayer, aiLevel, turnCount) {
         const validMoves = getValidMoves(board, aiPlayer);
         if (validMoves.length === 0) return null;
 
-        // 定石チェック
         if (aiLevel >= 7) {
             const bookMove = OPENING_BOOK[boardToString(board)];
             if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
-                // 定石を意図的に外す確率
-                if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {
-                // 定石を外す場合は、以降のロジックで手を決定する
-                } else {
+                if (!((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1))) {
                     return bookMove;
                 }
             }
         }
         const emptyCells = MAX_TURNS - turnCount;
 
-        // 序盤に多様性を持たせるための設定
         const varietyTurnLimit = 18;
         const varietyThreshold = 50;
         const useVariety = turnCount < varietyTurnLimit;
 
         switch (aiLevel) {
-            case 1: // ランダム
+            case 1:
                 return validMoves[Math.floor(Math.random() * validMoves.length)];
-
-            case 2: // 最大反転 + 多様性
-                return findBestMoveBySimpleEval(
-                    validMoves,
-                    move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length
-                );
-
-            case 3: // 場所評価 + 多様性
-                return findBestMoveBySimpleEval(
-                    validMoves,
-                    move => POSITIONAL_SCORE_TABLE[move.r][move.c]
-                );
-
-            // --- レベル4, 5, 6を統合 ---
+            case 2:
+                return findBestMoveBySimpleEval(validMoves, move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length);
+            case 3:
+                return findBestMoveBySimpleEval(validMoves, move => POSITIONAL_SCORE_TABLE[move.r][move.c]);
             case 4:
             case 5:
             case 6: {
-                const depth = getDepthForLevel(aiLevel, turnCount); // 既存のヘルパー関数を利用
+                const depth = getDepthForLevel(aiLevel, turnCount);
                 if (useVariety) {
-                    return findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
+                    return await findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
-                return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+                return (await alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount)).move;
             }
-
             case 7: {
                 let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8);
                 if (useVariety && emptyCells > 14) {
-                    return findBestMoveWithVariety(board, d, aiPlayer, aiLevel, turnCount, varietyThreshold);
+                    return await findBestMoveWithVariety(board, d, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
-                return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+                return (await alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount)).move;
             }
-
-            case 8: { // 変更なし
+            case 8: {
                 if (emptyCells <= 10) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
-                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
+                    return (await perfectSearch(board, -Infinity, Infinity, true, aiPlayer)).move;
                 }
                 let depth = (emptyCells > 22) ? 6 : 7;
-                return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+                return (await alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount)).move;
             }
-
-            case 9: { // 変更なし
+            case 9: {
                 if (emptyCells <= 11) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
-                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
+                    return (await perfectSearch(board, -Infinity, Infinity, true, aiPlayer)).move;
                 }
                 let depth = (emptyCells > 22) ? 6 : 7;
-                return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount, 50);
+                return await findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount, 50);
             }
-
             case 10: {
                 if (emptyCells <= 12) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
-                    return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
+                    return (await perfectSearch(board, -Infinity, Infinity, true, aiPlayer)).move;
                 }
                 let depth = (emptyCells > 24) ? 7 : 8;
                 if (useVariety && emptyCells > 12) {
-                    return findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
+                    return await findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
-                return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
+                return (await alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount)).move;
             }
-
             default:
                 return validMoves[0];
         }
@@ -1134,8 +1128,21 @@
 
         if (type === 'findBestMove') {
             const { board, playerColor, aiLevel, turnCount } = e.data;
-            const move = findBestMove(board, playerColor, aiLevel, turnCount);
-            self.postMessage({ type: 'bestMoveFound', move: move });
+            let move = null;
+            continueThinking = true;
+            searchCounter = 0;
+            try {
+                move = await findBestMove(board, playerColor, aiLevel, turnCount);
+            } catch (error) {
+                if (error instanceof SearchCancelledError) {
+                    console.log('CPU move calculation was cancelled.');
+                } else {
+                    console.error('An unexpected error occurred during findBestMove:', error);
+                }
+            } finally {
+                continueThinking = false;
+                self.postMessage({ type: 'bestMoveFound', move: move });
+            }
             return;
         }
         
@@ -1149,14 +1156,28 @@
                 (level == 9 && emptyCells <= 11) ||
                 (level == 10 && emptyCells <= 12);
 
-            if (isPerfectSearchCase) {
-                 const maximizingPlayer = BLACK;
-                 const isMaximizingNode = (turnCount % 2 === 0);
-                 score = perfectSearch(board, -Infinity, Infinity, isMaximizingNode, maximizingPlayer).score;
-            } else {
-                 score = evaluateBoard(board, player, level, turnCount);
+            continueThinking = true;
+            searchCounter = 0;
+            try {
+                 if (isPerfectSearchCase) {
+                     const maximizingPlayer = BLACK;
+                     const isMaximizingNode = (turnCount % 2 === 0);
+                     score = (await perfectSearch(board, -Infinity, Infinity, isMaximizingNode, maximizingPlayer)).score;
+                } else {
+                     score = evaluateBoard(board, player, level, turnCount);
+                }
+            } catch (error) {
+                if (error instanceof SearchCancelledError) {
+                    console.log('Evaluation was cancelled.');
+                    score = null;
+                } else {
+                    console.error('An unexpected error during evaluation:', error);
+                    score = null;
+                }
+            } finally {
+                continueThinking = false;
+                self.postMessage({ type: 'boardEvaluated', score: score });
             }
-            self.postMessage({ type: 'boardEvaluated', score: score });
             return;
         }
 
@@ -1165,52 +1186,63 @@
             continueThinking = true;
             let cumulativeEvals = {};
 
-            for (let level = 4; level <= maxAiLevel; level++) {
-                if (!continueThinking) break;
-
-                const currentEvalForThisLevel = evaluateBoard(board, BLACK, level, turnCount);
-                
-                const depth = getDepthForLevel(level, turnCount);
-                const currentLevelEvals = {};
-
-                for (const move of validMoves) {
+            try {
+                for (let level = 4; level <= maxAiLevel; level++) {
                     if (!continueThinking) break;
-                    const tempBoard = JSON.parse(JSON.stringify(board));
-                    const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
-                    placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
+
+                    const currentEvalForThisLevel = evaluateBoard(board, BLACK, level, turnCount);
                     
-                    const result = alphaBetaSearch(tempBoard, depth, -Infinity, Infinity, false, BLACK, level, turnCount + 1);
-                    
-                    let diff = result.score - currentEvalForThisLevel;
-                    if (playerColor === WHITE) {
-                        diff = -diff;
-                    }
-                    
-                    currentLevelEvals[`${move.r},${move.c}`] = diff;
-                }
-                
-                if (continueThinking) {
-                    cumulativeEvals = {...cumulativeEvals, ...currentLevelEvals };
-                    
-                    let correctedEvals = {};
-                    const evalValues = Object.values(cumulativeEvals);
-                    if (evalValues.length > 0) {
-                        const sortedEvals = [...evalValues].sort((a, b) => a - b);
-                        const midIndex = Math.floor(sortedEvals.length / 2);
-                        const median = sortedEvals.length % 2 === 0
-                            ? (sortedEvals[midIndex - 1] + sortedEvals[midIndex]) / 2
-                            : sortedEvals[midIndex];
+                    const depth = getDepthForLevel(level, turnCount);
+                    const currentLevelEvals = {};
+
+                    for (const move of validMoves) {
+                        if (!continueThinking) break;
+                        const tempBoard = JSON.parse(JSON.stringify(board));
+                        const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
+                        placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
                         
-                        Object.keys(cumulativeEvals).forEach(key => {
-                            correctedEvals[key] = cumulativeEvals[key] - median;
-                        });
-                    } else {
-                        correctedEvals = cumulativeEvals;
+                        searchCounter = 0;
+                        const result = await alphaBetaSearch(tempBoard, depth, -Infinity, Infinity, false, BLACK, level, turnCount + 1);
+                        
+                        let diff = result.score - currentEvalForThisLevel;
+                        if (playerColor === WHITE) {
+                            diff = -diff;
+                        }
+                        
+                        currentLevelEvals[`${move.r},${move.c}`] = diff;
                     }
                     
-                    self.postMessage({ type: 'evalUpdate', evaluations: correctedEvals, level });
-                    await new Promise(r => setTimeout(r, 10));
+                    if (continueThinking) {
+                        cumulativeEvals = {...cumulativeEvals, ...currentLevelEvals };
+                        
+                        let correctedEvals = {};
+                        const evalValues = Object.values(cumulativeEvals);
+                        if (evalValues.length > 0) {
+                            const sortedEvals = [...evalValues].sort((a, b) => a - b);
+                            const midIndex = Math.floor(sortedEvals.length / 2);
+                            const median = sortedEvals.length % 2 === 0
+                                ? (sortedEvals[midIndex - 1] + sortedEvals[midIndex]) / 2
+                                : sortedEvals[midIndex];
+                            
+                            Object.keys(cumulativeEvals).forEach(key => {
+                                correctedEvals[key] = cumulativeEvals[key] - median;
+                            });
+                        } else {
+                            correctedEvals = cumulativeEvals;
+                        }
+                        
+                        self.postMessage({ type: 'evalUpdate', evaluations: correctedEvals, level });
+                        await new Promise(r => setTimeout(r, 10));
+                    }
                 }
+            } catch(error) {
+                 if (error instanceof SearchCancelledError) {
+                    console.log('Research task cancelled.');
+                } else {
+                    console.error('An unexpected error occurred during research:', error);
+                }
+            } finally {
+                continueThinking = false;
             }
         }
     };
@@ -1671,9 +1703,18 @@ function renderEvaluationGraph() {
 async function handleCellClick(r, c) {
     if (isPlaybackMode) return;
     if (!isGameInProgress || isCpuVsCpuMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
+
     const flippable = getFlippableDiscs(board, r, c, playerColor);
     if (flippable.length === 0) return;
-    if (isResearchMode) aiWorker.postMessage({ type: 'stop' });
+
+    // RESEARCHモード中なら、思考を停止させ、盤面上の評価値表示をクリアする
+    if (isResearchMode) {
+        aiWorker.postMessage({ type: 'stop' });
+        document.querySelectorAll('.research-value').forEach(el => el.remove());
+    }
+
+    // isResearchModeフラグは変更しない
+
     await placeDisc(r, c, playerColor, flippable);
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
     gameController();
