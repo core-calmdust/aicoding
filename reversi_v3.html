@@ -2,555 +2,554 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+<title>【強力AI搭載】無料で遊べるリバーシ（オセロ）ゲーム - ブラウザで今すぐ対戦！</title>
+<meta name="description" content="8段階の強さから選べる強力なAIを搭載した無料のリバーシ（オセロ）ゲームです。登録不要、インストール不要でブラウザですぐにプレイ可能。CPUとの対戦や棋譜再生機能も充実。あなたの挑戦をお待ちしています！">
+<meta name="keywords" content="リバーシ, オセロ, ゲーム, 無料, AI, CPU, 対戦, ブラウザゲーム, オンライン, 思考エンジン, 定石, 棋譜">
+<link rel="canonical" href="https://core-calmdust.github.io/aicoding/reversi_v3.html">
+<link rel="icon" href="https://core-calmdust.github.io/aicoding/images/reversi_favicon.ico" type="image/x-icon">
+
+<meta property="og:title" content="【強力AI搭載】無料で遊べるリバーシ（オセロ）ゲーム">
+<meta property="og:description" content="8段階の強さから選べる強力AI搭載！ブラウザで今すぐプレイできる無料リバーシゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://core-calmdust.github.io/aicoding/reversi_v3.html">
+<meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/reversi-ogp.png">
+<meta property="og:site_name" content="無料リバーシゲーム">
+<meta property="og:locale" content="ja_JP">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="【強力AI搭載】無料で遊べるリバーシ（オセロ）ゲーム">
+<meta name="twitter:description" content="8段階の強さから選べる強力AI搭載！ブラウザで今すぐプレイできる無料リバーシゲーム。">
+<meta name="twitter:image" content="https://core-calmdust.github.io/aicoding/images/reversi-ogp.png"> 
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #1e2a38;
+        --surface-color: #2c3e50;
+        --board-bg: #008080;
+        --border-color: #1a2531;
+        --text-color: #ecf0f1;
+        --text-muted-color: #bdc3c7;
+        --accent-color: #3498db;
+        --accent-hover-color: #2980b9;
+        --danger-color: #e74c3c;
+        --highlight-color: rgba(255, 255, 0, 0.7);
+        --board-size-pc: 600px;
+        --board-size-sp: 90vw;
+        --graph-inner-bg-color: #3b526a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Noto Sans JP', sans-serif; background-color: var(--bg-color); color: var(--text-color);
+        display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 10px;
+    }
+
+    .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
     
-    <title>【強力AI搭載】無料で遊べるリバーシ（オセロ）ゲーム - ブラウザで今すぐ対戦！</title>
-    <meta name="description" content="8段階の強さから選べる強力なAIを搭載した無料のリバーシ（オセロ）ゲームです。登録不要、インストール不要でブラウザですぐにプレイ可能。CPUとの対戦や棋譜再生機能も充実。あなたの挑戦をお待ちしています！">
-    <meta name="keywords" content="リバーシ, オセロ, ゲーム, 無料, AI, CPU, 対戦, ブラウザゲーム, オンライン, 思考エンジン, 定石, 棋譜">
-    <link rel="canonical" href="https://core-calmdust.github.io/aicoding/reversi_v3.html">
-    <link rel="icon" href="https://core-calmdust.github.io/aicoding/images/reversi_favicon.ico" type="image/x-icon">
+    main {
+        width: 100%;
+        max-width: 850px;
+    }
 
-    <meta property="og:title" content="【強力AI搭載】無料で遊べるリバーシ（オセロ）ゲーム">
-    <meta property="og:description" content="8段階の強さから選べる強力AI搭載！ブラウザで今すぐプレイできる無料リバーシゲーム。">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://core-calmdust.github.io/aicoding/reversi_v3.html">
-    <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/reversi-ogp.png">
-    <meta property="og:site_name" content="無料リバーシゲーム">
-    <meta property="og:locale" content="ja_JP">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="【強力AI搭載】無料で遊べるリバーシ（オセロ）ゲーム">
-    <meta name="twitter:description" content="8段階の強さから選べる強力AI搭載！ブラウザで今すぐプレイできる無料リバーシゲーム。">
-    <meta name="twitter:image" content="https://core-calmdust.github.io/aicoding/images/reversi-ogp.png"> 
+    .game-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        gap: 20px;
+    }
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #1e2a38;
-            --surface-color: #2c3e50;
-            --board-bg: #008080;
-            --border-color: #1a2531;
-            --text-color: #ecf0f1;
-            --text-muted-color: #bdc3c7;
-            --accent-color: #3498db;
-            --accent-hover-color: #2980b9;
-            --danger-color: #e74c3c;
-            --highlight-color: rgba(255, 255, 0, 0.7);
-            --board-size-pc: 600px;
-            --board-size-sp: 90vw;
-            --graph-inner-bg-color: #3b526a;
-        }
+    .top-container {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        align-items: flex-start;
+    }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    .sidebar {
+        width: 240px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex-shrink: 0;
+    }
 
-        body {
-            font-family: 'Noto Sans JP', sans-serif; background-color: var(--bg-color); color: var(--text-color);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 10px;
-        }
+    .game-area {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-        .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
-        
-        main {
-            width: 100%;
-            max-width: 850px;
-        }
+    #board {
+        display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%;
+        background-color: var(--board-bg); border: 5px solid var(--surface-color); border-radius: 8px; padding: 5px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.2); aspect-ratio: 1 / 1;
+    }
 
+    .cell {
+        width: 100%; height: 100%; border: 1px solid rgba(0, 0, 0, 0.2);
+        display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative;
+    }
+
+    .disc {
+        width: 85%; height: 85%; border-radius: 50%;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .disc.black { background: radial-gradient(circle at 30% 30%, #444, #111); }
+    .disc.white { background: radial-gradient(circle at 70% 70%, #fff, #ccc); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.2); }
+    .last-move { outline: 3px solid var(--highlight-color); outline-offset: -3px; border-radius: 2px; }
+
+    .valid-move-hint::after {
+        content: ''; display: block; width: 35%; height: 35%;
+        background-color: rgba(255, 255, 255, 0.3); border-radius: 50%;
+        pointer-events: none; transition: background-color 0.2s;
+    }
+    .valid-move-hint:hover::after { background-color: rgba(255, 255, 255, 0.5); }
+
+    .controls, .game-info, #evaluation-graph-container, .test-controls {
+        background-color: var(--surface-color); padding: 20px;
+        border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%;
+    }
+    
+    #message-area { font-size: 18px; font-weight: bold; color: var(--text-color); height: 25px; text-align: center; margin-top: 20px; }
+    
+    .controls label,
+    .test-controls label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-muted-color);
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .test-controls h2 {
+        text-align: center;
+        margin-bottom: 15px;
+        color: var(--text-color);
+        font-size: 1.1em;
+    }
+    
+    .controls select, .test-controls select {
+        width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);
+        background-color: var(--bg-color); color: var(--text-color); font-size: 16px;
+        appearance: none;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23bdc3c7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.3-5.5-12.8z%22/%3E%3C/svg%3E');
+        background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; cursor: pointer;
+    }
+
+    .controls button, .test-controls button {
+        width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none;
+        background-color: var(--accent-color); color: white; font-size: 16px; font-weight: bold;
+        cursor: pointer; transition: background-color 0.2s ease-in-out;
+    }
+    
+    .controls button:hover, .test-controls button:hover { background-color: var(--accent-hover-color); }
+    
+    .start-controls-wrapper {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        margin-top: 20px;
+    }
+    
+    .start-controls-wrapper > label {
+        position: relative; width: 48px; height: 48px;
+        display: flex; justify-content: center; align-items: center;
+        padding: 0; border: 3px solid var(--border-color);
+        border-radius: 50%; cursor: pointer; transition: all 0.2s;
+        background-color: transparent;
+    }
+    .start-controls-wrapper > label:hover { border-color: var(--text-muted-color); }
+    .start-controls-wrapper input { display: none; }
+    .start-controls-wrapper > label:has(input:checked) {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 8px var(--accent-color);
+    }
+    .start-controls-wrapper > label:has(input:disabled) { cursor: not-allowed; opacity: 0.5; }
+    
+    .start-controls-wrapper .disc {
+        width: 80%;
+        height: 80%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+    }
+    .start-controls-wrapper .disc.white { box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.2); }
+    
+    #start-button {
+        background: #cccccc;
+        border: 3px solid transparent;
+        padding: 0;
+        border-radius: 8px;
+        width: 48px;
+        height: 48px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        margin: 0;
+    }
+    #start-button:hover:not(:disabled) { background-color: #b0b0b0; }
+    #start-button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #6a6a6a; }
+    #start-button img {
+        width: 80%;
+        height: 80%;
+        opacity: 0.9;
+    }
+
+    .controls button:disabled, .test-controls button:disabled { background-color: #555; cursor: not-allowed; }
+    
+    .game-info {
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        padding: 15px 20px; flex-grow: 1; gap: 15px;
+    }
+    #turn-info { display: flex; align-items: baseline; gap: 0.5em; font-family: 'Roboto', sans-serif; }
+    #turn-count-label { font-size: 1em; font-weight: 700; color: var(--text-muted-color); }
+    #turn-count-number { font-size: 1.8em; font-weight: 700; min-width: 2ch; text-align: left; }
+    #score-info {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        font-size: 1.6em; font-weight: 700; font-family: 'Roboto', sans-serif;
+    }
+    #score-info .disc { width: 28px; height: 28px; }
+    #black-score, #white-score { min-width: 2.5ch; text-align: center; display: inline-block; }
+    
+    #evaluation-graph-container { padding: 10px 15px; height: auto; }
+
+    #current-evaluation-display {
+        text-align: center;
+        font-family: 'Roboto', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-muted-color);
+        margin-bottom: 10px;
+        height: 20px;
+    }
+
+    #evaluation-graph-wrapper-outer { display: flex; width: 100%; height: 80px; }
+    #evaluation-y-axis {
+        display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
+        height: 100%; font-size: 10px; color: var(--text-muted-color);
+        margin-right: 8px; width: 25px; flex-shrink: 0; font-family: 'Roboto', sans-serif;
+    }
+    #evaluation-graph-wrapper {
+        flex-grow: 1; position: relative; overflow: hidden; cursor: default;
+        touch-action: none;
+    }
+    body.game-over #evaluation-graph-wrapper, body.game-interrupted #evaluation-graph-wrapper { cursor: grab; }
+    body.graph-dragging #evaluation-graph-wrapper { cursor: grabbing; }
+
+    #evaluation-graph {
+        display: flex; height: 100%; position: relative; background-color: var(--graph-inner-bg-color);
+        border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);
+    }
+    #evaluation-graph::before {
+        content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+        background-color: var(--border-color); transform: translateY(-50%); z-index: 1;
+    }
+    .bar-container { flex: 1; height: 100%; position: relative; transition: background-color 0.2s; }
+    .bar-container:hover { background-color: rgba(52, 152, 219, 0.1); }
+    .bar-container.current-turn-highlight { background-color: rgba(255, 255, 0, 0.2); }
+    
+    .bar {
+        width: 70%; position: absolute; left: 15%; transition: height 0.3s ease, background-color 0.2s; z-index: 2;
+    }
+    .bar.black { background-color: #444; bottom: 50%; }
+    .bar.white { background-color: #eee; top: 50%; }
+    .bar-container:hover .bar.black { background-color: #666; }
+    .bar-container:hover .bar.white { background-color: #fff; }
+
+    .bar.capped.black { background-color: #777; }
+    .bar.capped.white { background-color: #aaa; }
+
+    #evaluation-tooltip {
+        position: absolute; display: none; background-color: var(--accent-color); color: white;
+        padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
+        pointer-events: none; transform: translate(-50%, -130%); white-space: nowrap; z-index: 10;
+    }
+
+    .kifu-buttons { display: flex; gap: 10px; margin-top: 10px; }
+    .kifu-buttons button {
+        flex: 1; margin-top: 0; padding: 6px; font-size: 16px;
+        background-color: #cccccc; border-radius: 8px;
+    }
+    .kifu-buttons button:hover { background-color: #b0b0b0; }
+    .kifu-buttons button:disabled { background-color: #6a6a6a; cursor: not-allowed; }
+    .kifu-buttons button img {
+        height: 1.2em; vertical-align: middle; opacity: 0.8; transition: opacity 0.2s;
+    }
+    .kifu-buttons button:hover img { opacity: 1; }
+    .kifu-buttons button:disabled img { opacity: 0.4; }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .action-buttons button {
+        flex: 1;
+        padding: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: 'Roboto', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-muted-color);
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+    }
+    .action-buttons button:not(:disabled):hover {
+        border-color: var(--accent-color);
+        color: var(--text-color);
+    }
+    .action-buttons button:disabled {
+        opacity: 0.5;
+        background-color: var(--bg-color);
+        cursor: not-allowed;
+    }
+    .action-buttons button.active {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: white;
+    }
+
+    .research-value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: clamp(12px, 3.5vw, 24px);
+        font-weight: bold;
+        color: white;
+        text-shadow: 1px 1px 3px black, -1px -1px 3px black;
+        pointer-events: none;
+    }
+    .research-value.plus { color: #87CEEB; }
+    .research-value.minus { color: #F08080; }
+    
+    .test-cpu-selectors { display: flex; gap: 20px; justify-content: center; }
+    .test-cpu-selector { flex: 1; }
+
+    #modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    #modal-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #custom-modal {
+        background: var(--surface-color);
+        padding: 25px 35px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        text-align: center;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+    }
+    #modal-overlay.visible #custom-modal {
+        transform: scale(1);
+    }
+    #modal-message {
+        margin: 0;
+        font-size: 1.1em;
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+    .modal-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+        justify-content: center;
+    }
+    .modal-buttons button {
+        padding: 10px 24px;
+        font-size: 1em;
+        font-weight: bold;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    #modal-confirm-btn {
+        background: var(--accent-color);
+        color: white;
+    }
+    #modal-confirm-btn:hover {
+        background: var(--accent-hover-color);
+    }
+    #modal-cancel-btn {
+        background: var(--bg-color);
+        color: var(--text-muted-color);
+        border: 2px solid var(--border-color);
+    }
+    #modal-cancel-btn:hover {
+        border-color: var(--text-muted-color);
+        color: var(--text-color);
+    }
+
+    /* PC版レイアウトをGridで再構築 */
+    @media (min-width: 901px) {
         .game-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            gap: 20px;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            grid-template-areas:
+                "sidebar game"
+                "eval    game"
+                "message message"
+                "test    test";
+            align-items: start;
         }
-        
         .top-container {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            align-items: flex-start;
+            display: contents;
         }
-
         .sidebar {
-            width: 240px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            flex-shrink: 0;
+            grid-area: sidebar;
+            width: 100%;
         }
-
         .game-area {
-            flex-grow: 1;
+            grid-area: game;
+            grid-row: game-start / span 2;
+        }
+        #evaluation-graph-container {
+            grid-area: eval;
+            width: 100%;
+        }
+        #message-area {
+            grid-area: message;
+            margin-top: 0;
+        }
+        .test-controls {
+            grid-area: test;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .top-container {
+            flex-direction: column;
+        }
+        
+        .sidebar {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+            gap: 10px;
+            align-items: stretch;
+        }
+        
+        .controls {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-        }
-
-        #board {
-            display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%;
-            background-color: var(--board-bg); border: 5px solid var(--surface-color); border-radius: 8px; padding: 5px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.2); aspect-ratio: 1 / 1;
-        }
-
-        .cell {
-            width: 100%; height: 100%; border: 1px solid rgba(0, 0, 0, 0.2);
-            display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative;
-        }
-
-        .disc {
-            width: 85%; height: 85%; border-radius: 50%;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, background 0.3s ease;
-        }
-
-        .disc.black { background: radial-gradient(circle at 30% 30%, #444, #111); }
-        .disc.white { background: radial-gradient(circle at 70% 70%, #fff, #ccc); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.2); }
-        .last-move { outline: 3px solid var(--highlight-color); outline-offset: -3px; border-radius: 2px; }
-
-        .valid-move-hint::after {
-            content: ''; display: block; width: 35%; height: 35%;
-            background-color: rgba(255, 255, 255, 0.3); border-radius: 50%;
-            pointer-events: none; transition: background-color 0.2s;
-        }
-        .valid-move-hint:hover::after { background-color: rgba(255, 255, 255, 0.5); }
-
-        .controls, .game-info, #evaluation-graph-container, .test-controls {
-            background-color: var(--surface-color); padding: 20px;
-            border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%;
-        }
-        
-        #message-area { font-size: 18px; font-weight: bold; color: var(--text-color); height: 25px; text-align: center; margin-top: 20px; }
-        
-        .controls label,
-        .test-controls label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-muted-color);
-            font-size: 14px;
-            font-weight: bold;
-        }
-        
-        .test-controls h2 {
-            text-align: center;
-            margin-bottom: 15px;
-            color: var(--text-color);
-            font-size: 1.1em;
-        }
-        
-        .controls select, .test-controls select {
-            width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);
-            background-color: var(--bg-color); color: var(--text-color); font-size: 16px;
-            appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23bdc3c7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.3-5.5-12.8z%22/%3E%3C/svg%3E');
-            background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; cursor: pointer;
-        }
-
-        .controls button, .test-controls button {
-            width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none;
-            background-color: var(--accent-color); color: white; font-size: 16px; font-weight: bold;
-            cursor: pointer; transition: background-color 0.2s ease-in-out;
-        }
-        
-        .controls button:hover, .test-controls button:hover { background-color: var(--accent-hover-color); }
-        
-        .start-controls-wrapper {
-            display: flex;
-            justify-content: space-evenly;
-            align-items: center;
-            margin-top: 20px;
-        }
-        
-        .start-controls-wrapper > label {
-            position: relative; width: 48px; height: 48px;
-            display: flex; justify-content: center; align-items: center;
-            padding: 0; border: 3px solid var(--border-color);
-            border-radius: 50%; cursor: pointer; transition: all 0.2s;
-            background-color: transparent;
-        }
-        .start-controls-wrapper > label:hover { border-color: var(--text-muted-color); }
-        .start-controls-wrapper input { display: none; }
-        .start-controls-wrapper > label:has(input:checked) {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 8px var(--accent-color);
-        }
-        .start-controls-wrapper > label:has(input:disabled) { cursor: not-allowed; opacity: 0.5; }
-        
-        .start-controls-wrapper .disc {
-            width: 80%;
-            height: 80%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
-        }
-        .start-controls-wrapper .disc.white { box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.2); }
-        
-        #start-button {
-            background: #cccccc;
-            border: 3px solid transparent;
-            padding: 0;
-            border-radius: 8px;
-            width: 48px;
-            height: 48px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
             justify-content: center;
-            align-items: center;
-            flex-shrink: 0;
-            margin: 0;
+            padding: 10px;
+            gap: 5px;
         }
-        #start-button:hover:not(:disabled) { background-color: #b0b0b0; }
-        #start-button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #6a6a6a; }
-        #start-button img {
-            width: 80%;
-            height: 80%;
-            opacity: 0.9;
-        }
-
-        .controls button:disabled, .test-controls button:disabled { background-color: #555; cursor: not-allowed; }
         
         .game-info {
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 15px 20px; flex-grow: 1; gap: 15px;
-        }
-        #turn-info { display: flex; align-items: baseline; gap: 0.5em; font-family: 'Roboto', sans-serif; }
-        #turn-count-label { font-size: 1em; font-weight: 700; color: var(--text-muted-color); }
-        #turn-count-number { font-size: 1.8em; font-weight: 700; min-width: 2ch; text-align: left; }
-        #score-info {
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-size: 1.6em; font-weight: 700; font-family: 'Roboto', sans-serif;
-        }
-        #score-info .disc { width: 28px; height: 28px; }
-        #black-score, #white-score { min-width: 2.5ch; text-align: center; display: inline-block; }
-        
-        #evaluation-graph-container { padding: 10px 15px; height: auto; }
-
-        #current-evaluation-display {
-            text-align: center;
-            font-family: 'Roboto', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-muted-color);
-            margin-bottom: 10px;
-            height: 20px;
-        }
-
-        #evaluation-graph-wrapper-outer { display: flex; width: 100%; height: 80px; }
-        #evaluation-y-axis {
-            display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
-            height: 100%; font-size: 10px; color: var(--text-muted-color);
-            margin-right: 8px; width: 25px; flex-shrink: 0; font-family: 'Roboto', sans-serif;
-        }
-        #evaluation-graph-wrapper {
-            flex-grow: 1; position: relative; overflow: hidden; cursor: default;
-            touch-action: none;
-        }
-        body.game-over #evaluation-graph-wrapper, body.game-interrupted #evaluation-graph-wrapper { cursor: grab; }
-        body.graph-dragging #evaluation-graph-wrapper { cursor: grabbing; }
-
-        #evaluation-graph {
-            display: flex; height: 100%; position: relative; background-color: var(--graph-inner-bg-color);
-            border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);
-        }
-        #evaluation-graph::before {
-            content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
-            background-color: var(--border-color); transform: translateY(-50%); z-index: 1;
-        }
-        .bar-container { flex: 1; height: 100%; position: relative; transition: background-color 0.2s; }
-        .bar-container:hover { background-color: rgba(52, 152, 219, 0.1); }
-        .bar-container.current-turn-highlight { background-color: rgba(255, 255, 0, 0.2); }
-        
-        .bar {
-            width: 70%; position: absolute; left: 15%; transition: height 0.3s ease, background-color 0.2s; z-index: 2;
-        }
-        .bar.black { background-color: #444; bottom: 50%; }
-        .bar.white { background-color: #eee; top: 50%; }
-        .bar-container:hover .bar.black { background-color: #666; }
-        .bar-container:hover .bar.white { background-color: #fff; }
-
-        .bar.capped.black { background-color: #777; }
-        .bar.capped.white { background-color: #aaa; }
-
-        #evaluation-tooltip {
-            position: absolute; display: none; background-color: var(--accent-color); color: white;
-            padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
-            pointer-events: none; transform: translate(-50%, -130%); white-space: nowrap; z-index: 10;
-        }
-
-        .kifu-buttons { display: flex; gap: 10px; margin-top: 10px; }
-        .kifu-buttons button {
-            flex: 1; margin-top: 0; padding: 6px; font-size: 16px;
-            background-color: #cccccc; border-radius: 8px;
-        }
-        .kifu-buttons button:hover { background-color: #b0b0b0; }
-        .kifu-buttons button:disabled { background-color: #6a6a6a; cursor: not-allowed; }
-        .kifu-buttons button img {
-            height: 1.2em; vertical-align: middle; opacity: 0.8; transition: opacity 0.2s;
-        }
-        .kifu-buttons button:hover img { opacity: 1; }
-        .kifu-buttons button:disabled img { opacity: 0.4; }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .action-buttons button {
             flex: 1;
-            padding: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-muted-color);
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-        }
-        .action-buttons button:not(:disabled):hover {
-            border-color: var(--accent-color);
-            color: var(--text-color);
-        }
-        .action-buttons button:disabled {
-            opacity: 0.5;
-            background-color: var(--bg-color);
-            cursor: not-allowed;
-        }
-        .action-buttons button.active {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            color: white;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
         }
 
-        .research-value {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: clamp(12px, 3.5vw, 24px);
-            font-weight: bold;
-            color: white;
-            text-shadow: 1px 1px 3px black, -1px -1px 3px black;
-            pointer-events: none;
+        .controls label {
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 0;
         }
-        .research-value.plus { color: #87CEEB; }
-        .research-value.minus { color: #F08080; }
-        
-        .test-cpu-selectors { display: flex; gap: 20px; justify-content: center; }
-        .test-cpu-selector { flex: 1; }
+        .controls select {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+        .start-controls-wrapper {
+            margin-top: 6px;
+            justify-content: space-evenly;
+        }
+        .start-controls-wrapper > label, #start-button {
+            width: 36px;
+            height: 36px;
+        }
 
-        #modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+        #turn-info, #score-info, .action-buttons {
+            flex-grow: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #modal-overlay.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #custom-modal {
-            background: var(--surface-color);
-            padding: 25px 35px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-        #modal-overlay.visible #custom-modal {
-            transform: scale(1);
-        }
-        #modal-message {
-            margin: 0;
-            font-size: 1.1em;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-            justify-content: center;
-        }
-        .modal-buttons button {
-            padding: 10px 24px;
-            font-size: 1em;
-            font-weight: bold;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        #modal-confirm-btn {
-            background: var(--accent-color);
-            color: white;
-        }
-        #modal-confirm-btn:hover {
-            background: var(--accent-hover-color);
-        }
-        #modal-cancel-btn {
-            background: var(--bg-color);
-            color: var(--text-muted-color);
-            border: 2px solid var(--border-color);
-        }
-        #modal-cancel-btn:hover {
-            border-color: var(--text-muted-color);
-            color: var(--text-color);
+            margin-top: 0;
         }
 
-        /* PC版レイアウトをGridで再構築 */
-        @media (min-width: 901px) {
-            .game-wrapper {
-                display: grid;
-                grid-template-columns: 240px 1fr;
-                grid-template-areas:
-                    "sidebar game"
-                    "eval    game"
-                    "message message"
-                    "test    test";
-                align-items: start;
-            }
-            .top-container {
-                display: contents;
-            }
-            .sidebar {
-                grid-area: sidebar;
-                width: 100%;
-            }
-            .game-area {
-                grid-area: game;
-                grid-row: game-start / span 2;
-            }
-            #evaluation-graph-container {
-                grid-area: eval;
-                width: 100%;
-            }
-            #message-area {
-                grid-area: message;
-                margin-top: 0;
-            }
-            .test-controls {
-                grid-area: test;
-            }
-        }
-
-        @media (max-width: 900px) {
-            .top-container {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                flex-direction: row;
-                flex-wrap: nowrap;
-                width: 100%;
-                gap: 10px;
-                align-items: stretch;
-            }
-            
-            .controls {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                padding: 10px;
-                gap: 5px;
-            }
-            
-            .game-info {
-                flex: 1;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-around;
-                align-items: center;
-                gap: 8px;
-                padding: 10px;
-            }
-
-            .controls label {
-                font-size: 11px;
-                text-align: center;
-                margin-bottom: 0;
-            }
-            .controls select {
-                font-size: 13px;
-                padding: 6px 10px;
-            }
-            .start-controls-wrapper {
-                margin-top: 6px;
-                justify-content: space-evenly;
-            }
-            .start-controls-wrapper > label, #start-button {
-                width: 36px;
-                height: 36px;
-            }
-
-            #turn-info, #score-info, .action-buttons {
-                flex-grow: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-top: 0;
-            }
-
-            #turn-info { font-size: 0.9em; gap: 0.3em; }
-            #turn-count-number { font-size: 1.5em; }
-            #score-info { font-size: 1.1em; gap: 5px; }
-            #score-info .disc { width: 20px; height: 20px; }
-            #black-score, #white-score { font-size: 1.3em; }
-            
-            .action-buttons { gap: 6px; }
-            .action-buttons button { padding: 6px; font-size: 11px; }
-
-            .game-area {
-                width: 100%;
-            }
-            #board {
-                width: var(--board-size-sp);
-                margin: 0 auto;
-            }
-            #message-area {
-                width: 100%;
-                margin: 0;
-            }
-            #evaluation-graph-container {
-                display: block;
-            }
-        }
+        #turn-info { font-size: 0.9em; gap: 0.3em; }
+        #turn-count-number { font-size: 1.5em; }
+        #score-info { font-size: 1.1em; gap: 5px; }
+        #score-info .disc { width: 20px; height: 20px; }
+        #black-score, #white-score { font-size: 1.3em; }
         
-        .site-footer {
-            text-align: center;
-            padding: 20px 10px;
-            margin-top: 20px;
+        .action-buttons { gap: 6px; }
+        .action-buttons button { padding: 6px; font-size: 11px; }
+
+        .game-area {
             width: 100%;
         }
-
-        .site-footer a {
-            color: var(--text-muted-color);
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.2s;
+        #board {
+            width: var(--board-size-sp);
+            margin: 0 auto;
         }
-
-        .site-footer a:hover {
-            color: var(--accent-color);
-            text-decoration: underline;
+        #message-area {
+            width: 100%;
+            margin: 0;
         }
-
-    </style>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org", "@type": "VideoGame", "name": "強力AI搭載リバーシゲーム",
-      "description": "8段階の強さから選べる強力なAIを搭載した無料のブラウザリバーシ（オセロ）ゲームです。登録不要ですぐにプレイできます。",
-      "gamePlatform": "Web-based game", "applicationCategory": "Game", "operatingSystem": "All",
-      "author": { "@type": "Person", "name": "Your Name or Company" }, "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+        #evaluation-graph-container {
+            display: block;
+        }
     }
-    </script>
+    
+    .site-footer {
+        text-align: center;
+        padding: 20px 10px;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .site-footer a {
+        color: var(--text-muted-color);
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.2s;
+    }
+
+    .site-footer a:hover {
+        color: var(--accent-color);
+        text-decoration: underline;
+    }
+
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org", "@type": "VideoGame", "name": "強力AI搭載リバーシゲーム",
+  "description": "8段階の強さから選べる強力なAIを搭載した無料のブラウザリバーシ（オセロ）ゲームです。登録不要ですぐにプレイできます。",
+  "gamePlatform": "Web-based game", "applicationCategory": "Game", "operatingSystem": "All",
+  "author": { "@type": "Person", "name": "Your Name or Company" }, "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+}
+</script>
 </head>
 <body>
     <main>
@@ -572,112 +571,110 @@
                             <option value="9">レベル8+ (多様性)</option>
                             <option value="10" selected>レベル9 (戦略的評価型AI)</option>
                         </select>
-                        
-                        <div class="start-controls-wrapper" role="radiogroup" aria-label="手番選択">
-                            <label title="先攻 (黒)">
-                                <input type="radio" name="player_color" value="1" checked>
-                                <span class="disc black"></span>
-                            </label>
-                            <label title="後攻 (白)">
-                                <input type="radio" name="player_color" value="2">
-                                <span class="disc white"></span>
-                            </label>
-                            <button id="start-button" aria-label="ゲームを開始します">
-                                <img src="https://core-calmdust.github.io/aicoding/images/reversi/play.png" alt="開始">
-                            </button>
-                        </div>
-                    </section>
-    
-                    <section class="game-info" aria-labelledby="game-status-heading">
-                        <h2 id="game-status-heading" class="visually-hidden">ゲーム状況</h2>
-                        <div id="turn-info">
-                            <span id="turn-count-label">TURN</span>
-                            <span id="turn-count-number">0</span>
-                        </div>
-                        <div id="score-info">
+<div class="start-controls-wrapper" role="radiogroup" aria-label="手番選択">
+                        <label title="先攻 (黒)">
+                            <input type="radio" name="player_color" value="1" checked>
                             <span class="disc black"></span>
-                            <span id="black-score">2</span>
+                        </label>
+                        <label title="後攻 (白)">
+                            <input type="radio" name="player_color" value="2">
                             <span class="disc white"></span>
-                            <span id="white-score">2</span>
-                        </div>
-                        <div class="action-buttons">
-                            <button id="undo-button" disabled>UNDO</button>
-                            <button id="research-button" disabled>RESEARCH</button>
-                        </div>
-                    </section>
-                </div>
-                <div class="game-area">
-                    <div id="board"></div>
-                </div>
-            </div>
-            <div id="message-area" role="status" aria-live="polite"></div>
-            
-            <section id="evaluation-graph-container">
-                <div id="current-evaluation-display">
-                    <span>対戦相手による評価値: </span>
-                    <span id="evaluation-value-text">N/A</span>
-                </div>
-                 <div id="evaluation-graph-wrapper-outer">
-                    <div id="evaluation-y-axis"></div>
-                    <div id="evaluation-graph-wrapper">
-                        <div id="evaluation-graph"></div>
-                        <div id="evaluation-tooltip"></div>
+                        </label>
+                        <button id="start-button" aria-label="ゲームを開始します">
+                            <img src="https://core-calmdust.github.io/aicoding/images/reversi/play.png" alt="開始">
+                        </button>
                     </div>
-                </div>
-                <div class="kifu-buttons">
-                    <button id="kifu-start" disabled aria-label="最初へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<<.png" alt="最初へ"></button>
-                    <button id="kifu-prev" disabled aria-label="前へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<.png" alt="前へ"></button>
-                    <button id="kifu-next" disabled aria-label="次へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>.png" alt="次へ"></button>
-                    <button id="kifu-end" disabled aria-label="最後へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>>.png" alt="最後へ"></button>
-                </div>
-            </section>
+                </section>
 
-            <section class="test-controls" aria-labelledby="test-heading">
-                <h2 id="test-heading">CPU対戦テスト</h2>
-                <div class="test-cpu-selectors">
-                    <div class="test-cpu-selector">
-                        <label for="cpu1-level">CPU 1 (先攻/黒)</label>
-                        <select id="cpu1-level">
-                            <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
-                            <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
-                            <option value="7">レベル7</option>
-                            <option value="8">レベル8</option>
-                            <option value="9">レベル8+</option>
-                            <option value="10" selected>レベル9</option>
-                        </select>
+                <section class="game-info" aria-labelledby="game-status-heading">
+                    <h2 id="game-status-heading" class="visually-hidden">ゲーム状況</h2>
+                    <div id="turn-info">
+                        <span id="turn-count-label">TURN</span>
+                        <span id="turn-count-number">0</span>
                     </div>
-                    <div class="test-cpu-selector">
-                        <label for="cpu2-level">CPU 2 (後攻/白)</label>
-                        <select id="cpu2-level">
-                            <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
-                            <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
-                            <option value="7">レベル7</option>
-                            <option value="8">レベル8</option>
-                            <option value="9">レベル8+</option>
-                            <option value="10" selected>レベル9</option>
-                        </select>
+                    <div id="score-info">
+                        <span class="disc black"></span>
+                        <span id="black-score">2</span>
+                        <span class="disc white"></span>
+                        <span id="white-score">2</span>
                     </div>
-                </div>
-                <button id="cpu-vs-cpu-button" aria-label="選択したレベルのCPU同士を対戦させます">CPU VS CPU 開始</button>
-            </section>
+                    <div class="action-buttons">
+                        <button id="undo-button" disabled>UNDO</button>
+                        <button id="research-button" disabled>RESEARCH</button>
+                    </div>
+                </section>
+            </div>
+            <div class="game-area">
+                <div id="board"></div>
+            </div>
         </div>
-    </main>
-
-    <footer class="site-footer">
-        <a href="https://core-calmdust.github.io/aicoding/">ホームへ戻る</a>
-    </footer>
-
-    <div id="modal-overlay">
-        <div id="custom-modal">
-            <p id="modal-message"></p>
-            <div class="modal-buttons">
-                <button id="modal-confirm-btn"></button>
-                <button id="modal-cancel-btn"></button>
+        <div id="message-area" role="status" aria-live="polite"></div>
+        
+        <section id="evaluation-graph-container">
+            <div id="current-evaluation-display">
+                <span>対戦相手による評価値: </span>
+                <span id="evaluation-value-text">N/A</span>
             </div>
+             <div id="evaluation-graph-wrapper-outer">
+                <div id="evaluation-y-axis"></div>
+                <div id="evaluation-graph-wrapper">
+                    <div id="evaluation-graph"></div>
+                    <div id="evaluation-tooltip"></div>
+                </div>
+            </div>
+            <div class="kifu-buttons">
+                <button id="kifu-start" disabled aria-label="最初へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<<.png" alt="最初へ"></button>
+                <button id="kifu-prev" disabled aria-label="前へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/<.png" alt="前へ"></button>
+                <button id="kifu-next" disabled aria-label="次へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>.png" alt="次へ"></button>
+                <button id="kifu-end" disabled aria-label="最後へ"><img src="https://core-calmdust.github.io/aicoding/images/reversi/>>.png" alt="最後へ"></button>
+            </div>
+        </section>
+
+        <section class="test-controls" aria-labelledby="test-heading">
+            <h2 id="test-heading">CPU対戦テスト</h2>
+            <div class="test-cpu-selectors">
+                <div class="test-cpu-selector">
+                    <label for="cpu1-level">CPU 1 (先攻/黒)</label>
+                    <select id="cpu1-level">
+                        <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
+                        <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
+                        <option value="7">レベル7</option>
+                        <option value="8">レベル8</option>
+                        <option value="9">レベル8+</option>
+                        <option value="10" selected>レベル9</option>
+                    </select>
+                </div>
+                <div class="test-cpu-selector">
+                    <label for="cpu2-level">CPU 2 (後攻/白)</label>
+                    <select id="cpu2-level">
+                        <option value="1">レベル1</option> <option value="2">レベル2</option> <option value="3">レベル3</option>
+                        <option value="4">レベル4</option> <option value="5">レベル5</option> <option value="6">レベル6</option>
+                        <option value="7">レベル7</option>
+                        <option value="8">レベル8</option>
+                        <option value="9">レベル8+</option>
+                        <option value="10" selected>レベル9</option>
+                    </select>
+                </div>
+            </div>
+            <button id="cpu-vs-cpu-button" aria-label="選択したレベルのCPU同士を対戦させます">CPU VS CPU 開始</button>
+        </section>
+    </div>
+</main>
+
+<footer class="site-footer">
+    <a href="https://core-calmdust.github.io/aicoding/">ホームへ戻る</a>
+</footer>
+
+<div id="modal-overlay">
+    <div id="custom-modal">
+        <p id="modal-message"></p>
+        <div class="modal-buttons">
+            <button id="modal-confirm-btn"></button>
+            <button id="modal-cancel-btn"></button>
         </div>
     </div>
-
-
+</div>
+Use code with caution.
 <script id="ai-worker-script" type="javascript/worker">
     // ================================================================= //
     //                           AI Worker Script                        //
@@ -924,34 +921,21 @@
         }
         
         let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
-        
-        // --- PERFORMANCE OPTIMIZATION: Move Ordering ---
-        // 探索効率を上げるため、有望な手から探索する。
-        // 重い評価関数ではなく、非常に軽量な位置評価テーブルでソートする。
-        if (depth >= 3 && validMoves.length > 1) {
-            const moveScores = validMoves.map(move => ({
-                move,
-                score: POSITIONAL_SCORE_TABLE[move.r][move.c]
-            }));
-            // isMaximizingNode: 自分(AI)の手番。スコアが高い手(角など)から探索。
-            // !isMaximizingNode: 相手の手番。相手にとってスコアが高い手から探索するほうが、
-            //                   より早く枝刈り(βカット)が発生する可能性が高まる。
-            if (isMaximizingNode) {
-                moveScores.sort((a, b) => b.score - a.score);
-            } else {
-                moveScores.sort((a, b) => b.score - a.score); // 相手にとっても有利な手から探索
-            }
+        if (depth >= 4 && currentLevel >= 8) {
+            const moveScores = validMoves.map(move => {
+                const newBoard = JSON.parse(JSON.stringify(currentBoard));
+                placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
+                return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) };
+            });
+            if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
+            else moveScores.sort((a, b) => a.score - b.score);
             validMoves = moveScores.map(ms => ms.move);
         }
         bestResult.move = validMoves[0];
 
         for (const move of validMoves) {
-            // --- PERFORMANCE OPTIMIZATION: Fast Board Copy ---
-            // JSON.parse(JSON.stringify(...)) は非常に遅いため、高速な配列コピーに置き換える。
-            const newBoard = currentBoard.map(row => [...row]);
-            const flippable = getFlippableDiscs(currentBoard, move.r, move.c, playerForThisNode);
-            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, flippable);
-
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
             const result = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
             if (isMaximizingNode) {
                 if (result.score > bestResult.score) bestResult = { move, score: result.score };
@@ -977,7 +961,7 @@
         }
         let bestResult = { move: validMoves[0], score: isMaximizingNode ? -Infinity : Infinity };
         for (const move of validMoves) {
-            const newBoard = currentBoard.map(row => [...row]);
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
             const result = perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
             if (isMaximizingNode) {
@@ -1000,8 +984,9 @@
         let bestScore = -Infinity;
 
         for (const move of validMoves) {
-            const newBoard = currentBoard.map(row => [...row]);
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
+            // 評価関数には、渡されたAIレベルを使用します
             const result = alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
             const score = result.score;
         
@@ -1013,12 +998,22 @@
     
         if (moveEvals.length === 0) return null;
     
+        // 引数で受け取った閾値を使い、最善手に近い手を候補としてフィルタリングします
         const bestMoves = moveEvals.filter(e => e.score >= bestScore - threshold);
         if (bestMoves.length > 0) {
+            // 候補の中からランダムに1手を選びます
             return bestMoves[Math.floor(Math.random() * bestMoves.length)].move;
         }
+        // 念のためのフォールバック
         return moveEvals.reduce((best, current) => current.score > best.score ? current : best).move;
     }
+
+/**
+ * 単純な評価関数に基づいて最善手（複数ある場合はランダム）を選択する
+ * @param {Array} validMoves - 合法手のリスト
+ * @param {Function} evaluator - 各手を評価する関数 (例: (move) => move.count)
+ * @returns {Object} 選択された手
+ */
 
     function findBestMoveBySimpleEval(validMoves, evaluator) {
         if (validMoves.length === 0) return null;
@@ -1038,34 +1033,52 @@
         const validMoves = getValidMoves(board, aiPlayer);
         if (validMoves.length === 0) return null;
 
+        // 定石チェック
         if (aiLevel >= 7) {
             const bookMove = OPENING_BOOK[boardToString(board)];
             if (bookMove && validMoves.some(m => m.r === bookMove.r && m.c === bookMove.c)) {
+                // 定石を意図的に外す確率
                 if ((aiLevel === 9 && Math.random() < 0.2) || (aiLevel === 10 && Math.random() < 0.1)) {
+                // 定石を外す場合は、以降のロジックで手を決定する
                 } else {
                     return bookMove;
                 }
             }
         }
         const emptyCells = MAX_TURNS - turnCount;
+
+        // 序盤に多様性を持たせるための設定
         const varietyTurnLimit = 18;
         const varietyThreshold = 50;
         const useVariety = turnCount < varietyTurnLimit;
 
         switch (aiLevel) {
-            case 1:
+            case 1: // ランダム
                 return validMoves[Math.floor(Math.random() * validMoves.length)];
-            case 2:
-                return findBestMoveBySimpleEval( validMoves, move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length );
-            case 3:
-                return findBestMoveBySimpleEval( validMoves, move => POSITIONAL_SCORE_TABLE[move.r][move.c] );
-            case 4: case 5: case 6: {
-                const depth = getDepthForLevel(aiLevel, turnCount);
+
+            case 2: // 最大反転 + 多様性
+                return findBestMoveBySimpleEval(
+                    validMoves,
+                    move => getFlippableDiscs(board, move.r, move.c, aiPlayer).length
+                );
+
+            case 3: // 場所評価 + 多様性
+                return findBestMoveBySimpleEval(
+                    validMoves,
+                    move => POSITIONAL_SCORE_TABLE[move.r][move.c]
+                );
+
+            // --- レベル4, 5, 6を統合 ---
+            case 4:
+            case 5:
+            case 6: {
+                const depth = getDepthForLevel(aiLevel, turnCount); // 既存のヘルパー関数を利用
                 if (useVariety) {
                     return findBestMoveWithVariety(board, depth, aiPlayer, aiLevel, turnCount, varietyThreshold);
                 }
                 return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
+
             case 7: {
                 let d = (emptyCells > 24) ? 5 : ((emptyCells > 14) ? 6 : 8);
                 if (useVariety && emptyCells > 14) {
@@ -1073,7 +1086,8 @@
                 }
                 return alphaBetaSearch(board, d, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-            case 8: {
+
+            case 8: { // 変更なし
                 if (emptyCells <= 10) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
                     return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
@@ -1081,7 +1095,8 @@
                 let depth = (emptyCells > 22) ? 6 : 7;
                 return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
-            case 9: {
+
+            case 9: { // 変更なし
                 if (emptyCells <= 11) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
                     return perfectSearch(board, -Infinity, Infinity, true, aiPlayer).move;
@@ -1089,6 +1104,7 @@
                 let depth = (emptyCells > 22) ? 6 : 7;
                 return findBestMoveWithVariety(board, depth, aiPlayer, 8, turnCount, 50);
             }
+
             case 10: {
                 if (emptyCells <= 12) {
                     self.postMessage({ type: 'updateMessage', message: 'CPUが完全読みに移行...' });
@@ -1100,6 +1116,7 @@
                 }
                 return alphaBetaSearch(board, depth, -Infinity, Infinity, true, aiPlayer, aiLevel, turnCount).move;
             }
+
             default:
                 return validMoves[0];
         }
@@ -1158,7 +1175,7 @@
 
                 for (const move of validMoves) {
                     if (!continueThinking) break;
-                    const tempBoard = board.map(row => [...row]);
+                    const tempBoard = JSON.parse(JSON.stringify(board));
                     const flippable = getFlippableDiscs(tempBoard, move.r, move.c, playerColor);
                     placeDiscInBoard(tempBoard, move.r, move.c, playerColor, flippable);
                     
@@ -1208,7 +1225,6 @@ const DIRECTIONS = [ { r: -1, c: -1 }, { r: -1, c: 0 }, { r: -1, c: 1 }, { r: 0,
 const MAX_TURNS = 60;
 const EVAL_GRAPH_VISUAL_CAP = 1000;
 
-// DOM要素
 const boardEl = document.getElementById('board');
 const blackScoreEl = document.getElementById('black-score');
 const whiteScoreEl = document.getElementById('white-score');
@@ -1232,7 +1248,6 @@ const modalMessage = document.getElementById('modal-message');
 const modalConfirmBtn = document.getElementById('modal-confirm-btn');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-// ゲーム状態変数
 let board, currentPlayer, turnCount, lastMove, playerColor, cpuColor;
 let isCpuVsCpuMode = false, isGameOver = false, isPlaybackMode = false;
 let isGameInProgress = false;
@@ -1245,7 +1260,6 @@ let researchEvaluations = {};
 let currentResearchLevel = 0;
 let isResearchComplete = false;
 const maxAiLevel = 10;
-let cellElements = []; // PERFORMANCE OPTIMIZATION: DOM要素をキャッシュ
 
 // --- AI Workerのセットアップ ---
 const workerScriptEl = document.getElementById('ai-worker-script');
@@ -1286,32 +1300,27 @@ aiWorker.onmessage = (e) => {
 };
 
 function updateResearchValues(evaluations) {
-    // 既存の評価値を一度すべてクリア
-    boardEl.querySelectorAll('.research-value').forEach(el => el.remove());
-
     const validMoves = getValidMoves(board, currentPlayer);
     const validMovesSet = new Set(validMoves.map(m => `${m.r},${m.c}`));
-
+    document.querySelectorAll('.research-value').forEach(el => el.remove());
     Object.keys(evaluations).forEach(key => {
-        if (!validMovesSet.has(key)) return;
-        
+        if (!validMovesSet.has(key)) {
+            return;
+        }
         const [r, c] = key.split(',').map(Number);
-        const cell = cellElements[r * BOARD_SIZE + c];
+        const cellIndex = r * BOARD_SIZE + c;
+        const cell = boardEl.children[cellIndex];
         if (!cell || cell.querySelector('.disc')) return;
-        
         cell.classList.remove('valid-move-hint');
         const valueSpan = document.createElement('span');
         valueSpan.className = 'research-value';
-        
+        cell.appendChild(valueSpan);
         const roundedEval = Math.round(evaluations[key]);
         valueSpan.textContent = (roundedEval > 0 ? '+' : '') + roundedEval;
         valueSpan.classList.toggle('plus', roundedEval >= 0);
         valueSpan.classList.toggle('minus', roundedEval < 0);
-        
-        cell.appendChild(valueSpan);
     });
 }
-
 
 // ================================================================= //
 //                      メインロジック (ゲーム進行管理)                 //
@@ -1338,11 +1347,10 @@ function resetGame() {
     currentPlayer = BLACK;
     turnCount = 0;
     lastMove = null;
-    gameHistory = [{ move: null, boardState: board.map(row => [...row]) }];
+    gameHistory = [{ move: null, boardState: JSON.parse(JSON.stringify(board)) }];
     evaluationHistory = [];
     playbackIndex = 0;
-
-    updateBoard(board);
+    renderBoard();
     renderEvaluationGraph();
     updateEvaluationDisplay(null);
     updateUiState();
@@ -1375,8 +1383,12 @@ function startGame() {
 function interruptGame() {
     isGameInProgress = false;
     aiWorker.postMessage({ type: 'stop' });
-    if (resolveFindBestMove) resolveFindBestMove(null); 
-    if (resolveEvaluateBoard) resolveEvaluateBoard(null);
+    if (resolveFindBestMove) {
+        resolveFindBestMove(null); 
+    }
+    if (resolveEvaluateBoard) {
+        resolveEvaluateBoard(null);
+    }
     if (isResearchMode) researchButton.click();
     document.body.classList.add('game-interrupted');
     updateUiState();
@@ -1389,15 +1401,18 @@ async function gameController() {
     
     updateUiState();
     updateGameInfo();
-    updateBoard(board);
-
-    if (isResearchMode && !isCpuVsCpuMode && currentPlayer === playerColor) {
+    
+    const isPlayerTurn = !isCpuVsCpuMode && currentPlayer === playerColor;
+    if (isResearchMode && isPlayerTurn) {
         isResearchComplete = false;
         researchEvaluations = {};
+        renderBoard();
         const validMoves = getValidMoves(board, playerColor);
         aiWorker.postMessage({
             type: 'research', board, playerColor, turnCount, maxAiLevel, validMoves
         });
+    } else {
+        renderBoard();
     }
 
     const canCurrentPlayerMove = getValidMoves(board, currentPlayer).length > 0;
@@ -1413,10 +1428,12 @@ async function gameController() {
         
         const currentAiLevel = isCpuVsCpuMode ? Math.max(parseInt(cpu1LevelSelect.value, 10), parseInt(cpu2LevelSelect.value, 10)) : parseInt(cpuLevelSelect.value, 10);
         const score = await evaluateBoardAsync(board, BLACK, currentAiLevel, turnCount);
-        if (score !== null) evaluationHistory.push(score);
+        if (score !== null) {
+            evaluationHistory.push(score);
+        }
 
         turnCount++;
-        gameHistory.push({ move: {r: -1, c: -1}, boardState: board.map(row => [...row]) });
+        gameHistory.push({ move: {r: -1, c: -1}, boardState: JSON.parse(JSON.stringify(board)) });
         playbackIndex = turnCount;
 
         currentPlayer = opponent;
@@ -1424,7 +1441,8 @@ async function gameController() {
         return;
     }
 
-    if (isCpuVsCpuMode || (currentPlayer === cpuColor)) {
+    const isCpuTurnNow = isCpuVsCpuMode || (currentPlayer === cpuColor);
+    if (isCpuTurnNow) {
         await executeCpuTurn();
     }
 }
@@ -1458,60 +1476,37 @@ function endGame() {
 //                         UI・描画関連                             //
 // ================================================================= //
 
-function initBoard() {
+function renderBoard() {
     boardEl.innerHTML = '';
-    cellElements = [];
+    const validMoves = (isGameInProgress && !isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
+        ? getValidMoves(board, currentPlayer) : [];
+    
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-            boardEl.appendChild(cell);
-            cellElements.push(cell);
-        }
-    }
-    boardEl.addEventListener('click', handleBoardClick);
-}
-
-function updateBoard(boardState) {
-    const validMoves = (isGameInProgress && !isCpuVsCpuMode && !isPlaybackMode && currentPlayer === playerColor && !isGameOver) 
-        ? getValidMoves(boardState, currentPlayer) : [];
-    const validMovesSet = new Set(validMoves.map(m => `${m.r},${m.c}`));
-
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            const cell = cellElements[r * BOARD_SIZE + c];
-            const currentDiscEl = cell.querySelector('.disc');
-            const cellState = boardState[r][c];
-
-            // 石の更新
-            if (cellState !== EMPTY) {
-                const requiredColorClass = cellState === BLACK ? 'black' : 'white';
-                if (!currentDiscEl) {
-                    const newDisc = document.createElement('div');
-                    newDisc.className = `disc ${requiredColorClass}`;
-                    cell.appendChild(newDisc);
-                } else if (!currentDiscEl.classList.contains(requiredColorClass)) {
-                    currentDiscEl.className = `disc ${requiredColorClass}`;
+            if (board[r][c] !== EMPTY) {
+                const disc = document.createElement('div');
+                disc.className = `disc ${board[r][c] === BLACK ? 'black' : 'white'}`;
+                cell.appendChild(disc);
+            } else {
+                if (validMoves.find(m => m.r === r && m.c === c)) {
+                    cell.classList.add('valid-move-hint');
                 }
-            } else if (currentDiscEl) {
-                cell.removeChild(currentDiscEl);
             }
-
-            // 合法手ヒントの更新
-            const showHint = !isResearchMode && cellState === EMPTY && validMovesSet.has(`${r},${c}`);
-            cell.classList.toggle('valid-move-hint', showHint);
-
-            // 最終手のハイライト
-            cell.classList.toggle('last-move', lastMove && lastMove.r === r && lastMove.c === c);
+            if (lastMove && lastMove.r === r && lastMove.c === c) {
+                cell.classList.add('last-move');
+            }
+            cell.addEventListener('click', () => handleCellClick(r, c));
+            boardEl.appendChild(cell);
         }
     }
 }
 
 function updateGameInfo() {
     let blackScore = 0, whiteScore = 0;
-    board.flat().forEach(cell => {
+    const currentBoard = board; 
+    currentBoard.flat().forEach(cell => {
         if (cell === BLACK) blackScore++;
         if (cell === WHITE) whiteScore++;
     });
@@ -1519,7 +1514,9 @@ function updateGameInfo() {
     whiteScoreEl.textContent = whiteScore;
     turnCountNumberEl.textContent = isPlaybackMode ? playbackIndex : turnCount;
     
-    if (isGameOver && !isPlaybackMode) return;
+    if (isGameOver && !isPlaybackMode) {
+        return;
+    }
     
     let message = '';
     if (isPlaybackMode) {
@@ -1599,9 +1596,13 @@ function updateEvaluationDisplay(score) {
     } else {
         if (Math.abs(score) >= 10000 && score % 1000 === 0) {
             const stoneDiff = score / 1000;
-            evaluationValueTextEl.textContent = stoneDiff > 0 ? `黒 +${stoneDiff}確` : `白 ${stoneDiff}確`;
+            const resultText = stoneDiff > 0 
+                ? `黒 +${stoneDiff}確`
+                : `白 ${stoneDiff}確`;
+            evaluationValueTextEl.textContent = resultText;
         } else {
-            evaluationValueTextEl.textContent = (score > 0 ? '+' : '') + score.toFixed(0);
+            const scoreText = (score > 0 ? '+' : '') + score.toFixed(0);
+            evaluationValueTextEl.textContent = scoreText;
         }
     }
 }
@@ -1614,9 +1615,12 @@ function renderEvaluationGraph() {
     graphEl.innerHTML = '';
 
     const totalBars = Math.max(MAX_TURNS, gameHistory.length - 1);
+
     const normalEvals = evaluationHistory.filter(v => Math.abs(v) < 10000);
     const maxNormalAbsValue = normalEvals.length > 0 ? Math.max(0, ...normalEvals.map(v => Math.abs(v))) : 0;
+
     const dynamicScale = Math.ceil(maxNormalAbsValue / 1000) * 1000;
+    
     const scale = Math.max(EVAL_GRAPH_VISUAL_CAP, dynamicScale);
     
     yAxisEl.innerHTML = `<span>+${scale}</span><span>-${scale}</span>`;
@@ -1626,7 +1630,9 @@ function renderEvaluationGraph() {
         barContainer.className = 'bar-container';
 
         const highlightIndex = (isPlaybackMode ? playbackIndex : turnCount) -1;
-        if(i === highlightIndex) barContainer.classList.add('current-turn-highlight');
+        if(i === highlightIndex) {
+             barContainer.classList.add('current-turn-highlight');
+        }
 
         if (i < evaluationHistory.length) {
             const value = evaluationHistory[i];
@@ -1639,7 +1645,9 @@ function renderEvaluationGraph() {
             if (value > 0) bar.classList.add('black');
             else if (value < 0) bar.classList.add('white');
 
-            if (Math.abs(value) > scale) bar.classList.add('capped');
+            if (Math.abs(value) > scale) {
+                bar.classList.add('capped');
+            }
 
             barContainer.appendChild(bar);
             barContainer.addEventListener('mouseover', () => {
@@ -1660,19 +1668,12 @@ function renderEvaluationGraph() {
 //                        イベントハンドラ・リスナー                   //
 // ================================================================= //
 
-async function handleBoardClick(event) {
-    const cell = event.target.closest('.cell');
-    if (!cell) return;
-    const r = parseInt(cell.dataset.r, 10);
-    const c = parseInt(cell.dataset.c, 10);
-    
+async function handleCellClick(r, c) {
     if (isPlaybackMode) return;
     if (!isGameInProgress || isCpuVsCpuMode || currentPlayer !== playerColor || board[r][c] !== EMPTY) return;
     const flippable = getFlippableDiscs(board, r, c, playerColor);
     if (flippable.length === 0) return;
-    
-    if (isResearchMode) researchButton.click(); // RESEARCHモードを終了
-
+    if (isResearchMode) aiWorker.postMessage({ type: 'stop' });
     await placeDisc(r, c, playerColor, flippable);
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
     gameController();
@@ -1685,14 +1686,14 @@ function renderPlayback(index) {
     playbackIndex = Math.max(0, Math.min(index, gameHistory.length - 1));
     const record = gameHistory[playbackIndex];
     if (record) {
-        board = record.boardState.map(row => [...row]);
+        board = JSON.parse(JSON.stringify(record.boardState));
         lastMove = record.move;
     }
     const score = playbackIndex > 0 ? evaluationHistory[playbackIndex - 1] : null;
     updateEvaluationDisplay(score);
     updateUiState();
     updateGameInfo();
-    updateBoard(board);
+    renderBoard();
     renderEvaluationGraph();
 }
 
@@ -1707,9 +1708,13 @@ function handleGraphScrub(event) {
 
     const totalBars = Math.max(MAX_TURNS, gameHistory.length - 1);
     const barWidth = graphRect.width / totalBars;
+    
     const clickedBarIndex = Math.floor(Math.max(0, relativeX) / barWidth);
+    
     const maxHistoryIndex = gameHistory.length - 1;
+    
     const targetHistoryIndex = clickedBarIndex + 1;
+
     const historyIndexToPlay = Math.min(targetHistoryIndex, maxHistoryIndex);
 
     if (historyIndexToPlay !== lastHoveredTurn) {
@@ -1736,7 +1741,11 @@ graphWrapperEl.addEventListener('mousedown', (event) => {
     window.addEventListener('mouseup', onMouseUp);
 });
 
-const onTouchMove = (e) => { if (isDraggingGraph) handleGraphScrub(e); };
+const onTouchMove = (e) => {
+    if (isDraggingGraph) {
+        handleGraphScrub(e);
+    }
+};
 const onTouchEnd = () => {
     if (!isDraggingGraph) return;
     isDraggingGraph = false;
@@ -1809,7 +1818,7 @@ undoButton.addEventListener('click', () => {
     undoCount++;
     wasUndo = true;
     const lastState = gameHistory[gameHistory.length - 1];
-    board = lastState.boardState.map(row => [...row]);
+    board = JSON.parse(JSON.stringify(lastState.boardState));
     lastMove = lastState.move;
     currentPlayer = playerColor;
     const lastEval = evaluationHistory.length > 0 ? evaluationHistory[evaluationHistory.length - 1] : null;
@@ -1826,15 +1835,21 @@ researchButton.addEventListener('click', () => {
         researchEvaluations = {};
         currentResearchLevel = 4;
         isResearchComplete = false;
-        if (isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor) {
-            gameController(); // UIとRESEARCHの開始をトリガー
+        renderBoard();
+        const isPlayerTurn = isGameInProgress && !isCpuVsCpuMode && currentPlayer === playerColor;
+        if (isPlayerTurn) {
+            updateGameInfo();
+            const validMoves = getValidMoves(board, playerColor);
+            aiWorker.postMessage({
+                type: 'research', board, playerColor, turnCount, maxAiLevel, validMoves
+            });
         }
     } else {
         aiWorker.postMessage({ type: 'stop' });
         researchEvaluations = {};
         currentResearchLevel = 0;
         isResearchComplete = false;
-        updateBoard(board); // ヒントなどを再表示
+        renderBoard();
         updateGameInfo();
     }
 });
@@ -1844,12 +1859,19 @@ playerColorRadios.forEach(radio => { radio.addEventListener('change', () => { if
 document.addEventListener('keydown', (event) => {
     const kifuActive = isGameOver || isPlaybackMode || (!isGameInProgress && gameHistory.length > 1);
     if (kifuActive) {
-        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'ArrowDown', 'ArrowUp'].includes(event.key)) event.preventDefault();
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
+            event.preventDefault();
+        }
         const currentKifuIndex = isPlaybackMode ? playbackIndex : turnCount;
-        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) renderPlayback(currentKifuIndex - 1);
-        else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) renderPlayback(currentKifuIndex + 1);
-        else if ((event.key === 'ArrowDown' || event.key === 'Home') && !kifuStartBtn.disabled) renderPlayback(0);
-        else if ((event.key === 'ArrowUp' || event.key === 'End') && !kifuEndBtn.disabled) renderPlayback(gameHistory.length - 1);
+        if (event.key === 'ArrowLeft' && !kifuPrevBtn.disabled) {
+            renderPlayback(currentKifuIndex - 1);
+        } else if (event.key === 'ArrowRight' && !kifuNextBtn.disabled) {
+            renderPlayback(currentKifuIndex + 1);
+        } else if ((event.key === 'ArrowDown' || event.key === 'Home') && !kifuStartBtn.disabled) {
+            renderPlayback(0);
+        } else if ((event.key === 'ArrowUp' || event.key === 'End') && !kifuEndBtn.disabled) {
+            renderPlayback(gameHistory.length - 1);
+        }
     }
 });
 
@@ -1860,7 +1882,13 @@ document.addEventListener('keydown', (event) => {
 function findBestMoveAsync(board, playerColor, aiLevel, turnCount) {
     return new Promise(resolve => {
         resolveFindBestMove = resolve;
-        aiWorker.postMessage({ type: 'findBestMove', board, playerColor, aiLevel, turnCount });
+        aiWorker.postMessage({
+            type: 'findBestMove',
+            board: JSON.parse(JSON.stringify(board)),
+            playerColor,
+            aiLevel,
+            turnCount
+        });
     });
 }
 
@@ -1871,7 +1899,11 @@ function evaluateBoardAsync(board, player, level, turnCount) {
             return;
         }
         resolveEvaluateBoard = resolve;
-        aiWorker.postMessage({ type: 'evaluateBoard', board, player, level, turnCount });
+        aiWorker.postMessage({
+            type: 'evaluateBoard',
+            board: JSON.parse(JSON.stringify(board)),
+            player, level, turnCount
+        });
     });
 }
 
@@ -1921,7 +1953,7 @@ async function placeDisc(r, c, player, flippable) {
     flippable.forEach(pos => { board[pos.r][pos.c] = player; });
     lastMove = { r, c };
     turnCount++;
-    gameHistory.push({ move: { r, c }, boardState: board.map(row => [...row]) });
+    gameHistory.push({ move: { r, c }, boardState: JSON.parse(JSON.stringify(board)) });
     
     if (!isPlaybackMode) {
         let evaluationAiLevel;
@@ -1971,11 +2003,7 @@ function getValidMoves(currentBoard, player) {
 }
 
 // --- ゲームの初回起動 ---
-document.addEventListener('DOMContentLoaded', () => {
-    initBoard();
-    resetGame();
-});
-
+resetGame();
 </script>
 </body>
 </html>
