@@ -2042,6 +2042,50 @@ function getValidMoves(currentBoard, player) {
     return moves;
 }
 
+// --- UI改善：ホバーメッセージ表示機能 ---
+
+/**
+ * 要素にマウスホバーした際に情報メッセージを表示する機能を追加します。
+ * @param {HTMLElement} element - 対象のDOM要素
+ * @param {string|Function} messageOrFunction - 表示するメッセージ文字列、またはメッセージを返す関数
+ */
+function addHoverMessage(element, messageOrFunction) {
+    if (!element) return;
+    element.addEventListener('mouseenter', () => {
+        // disabled状態の要素ではメッセージを表示しない
+        if (element.disabled) return;
+        const message = typeof messageOrFunction === 'function' ? messageOrFunction() : messageOrFunction;
+        messageAreaEl.textContent = message;
+    });
+    element.addEventListener('mouseleave', () => {
+        // マウスが離れたら、現在のゲーム状態に基づいたメッセージに戻す
+        updateGameInfo(); 
+    });
+}
+
+// 各UI要素にホバーメッセージを適用
+// 1. 先手・後手選択
+const playerColorLabels = document.querySelectorAll('.start-controls-wrapper > label');
+if (playerColorLabels.length >= 2) {
+    addHoverMessage(playerColorLabels[0], '黒（先手）を選択します');
+    addHoverMessage(playerColorLabels[1], '白（後手）を選択します');
+}
+
+// 2. スタート・ストップボタン
+addHoverMessage(startButton, () => isGameInProgress ? 'ゲームを中断します' : 'ゲームを開始/再開します');
+
+// 3. UNDOボタン
+addHoverMessage(undoButton, '待った！を行います');
+
+// 4. RESEARCHボタン
+addHoverMessage(researchButton, () => isResearchMode ? 'RESEARCHモードを終了します' : 'RESEARCHモードを開始します');
+
+// 5. 棋譜再生ボタン
+addHoverMessage(kifuStartBtn, '棋譜を先頭へ戻します（↓）');
+addHoverMessage(kifuPrevBtn, '棋譜を一手前へ戻します（←）');
+addHoverMessage(kifuNextBtn, '棋譜を一手先へ進めます（→）');
+addHoverMessage(kifuEndBtn, '棋譜を最後まで進めます（↑）');
+
 // --- ゲームの初回起動 ---
 resetGame();
 </script>
