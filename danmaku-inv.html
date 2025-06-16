@@ -827,21 +827,35 @@
                 });
             }
 
-            function drawPlaying() {
-                enemies.forEach(drawEnemy);
-                powerups.forEach(drawPowerup);
-                drawPlayer();
-                bullets.forEach(drawBullet);
-                enemyBullets.forEach(drawEnemyBullet);
-                
-                particles.forEach(p => {
-                    ctx.globalAlpha = p.alpha;
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
-                    ctx.globalAlpha = 1.0;
-                });
-                drawUI();
-            }
+	    function drawPlaying() {
+    		// 奥に描画されるものから順番に呼び出すことで、描画の前後関係を制御します。
+
+    		// 1. 敵
+    		enemies.forEach(drawEnemy);
+    
+   		// 2. 自機の弾
+    		bullets.forEach(drawBullet);
+
+    		// 3. 爆発エフェクト (パーティクル)
+    		particles.forEach(p => {
+        	    ctx.globalAlpha = p.alpha;
+        	    ctx.fillStyle = p.color;
+        	    ctx.fillRect(p.x, p.y, p.size, p.size);
+        	    ctx.globalAlpha = 1.0;
+    		});
+
+    		// 4. パワーアップアイテム
+    		powerups.forEach(drawPowerup);
+    
+    		// 5. 敵の弾 (重要：アイテムやエフェクトより手前に描画)
+    		enemyBullets.forEach(drawEnemyBullet);
+    
+    		// 6. 自機 (弾など全てのオブジェクトより手前に描画)
+    		drawPlayer();
+    
+    		// 7. UI (スコアなど、常に最前面に表示)
+    		drawUI();
+	    }
 
             function drawPlayer() {
                 ctx.fillStyle = player.powerupTimer > 0 ? `hsl(${(Date.now()/10)%360}, 100%, 70%)` : `hsl(${baseHue + 180}, 100%, 50%)`;
