@@ -705,7 +705,7 @@
     }
     let continueThinking = false;
     let searchCounter = 0;
-    const SEARCH_CHECK_INTERVAL = 5000; // このノード数ごとに中断チェック
+    const SEARCH_CHECK_INTERVAL = 1000;
 
     // --- ユーティリティ関数 ---
     function getFlippableDiscs(currentBoard, r, c, player) {
@@ -939,11 +939,13 @@
         
         let bestResult = { move: null, score: isMaximizingNode ? -Infinity : Infinity };
         if (depth >= 4 && currentLevel >= 8) {
-            const moveScores = validMoves.map(move => {
+            const moveScores = [];
+            for(const move of validMoves) {
+                if (!continueThinking) throw new SearchCancelledError('Search cancelled during move ordering.');
                 const newBoard = JSON.parse(JSON.stringify(currentBoard));
                 placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
-                return { move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) };
-            });
+                moveScores.push({ move, score: evaluateBoard(newBoard, maximizingPlayer, currentLevel, turnCount + 1) });
+            }
             if (isMaximizingNode) moveScores.sort((a, b) => b.score - a.score);
             else moveScores.sort((a, b) => a.score - b.score);
             validMoves = moveScores.map(ms => ms.move);
@@ -954,6 +956,7 @@
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
             const result = await alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isMaximizingNode, maximizingPlayer, currentLevel, turnCount + 1);
+            if (!continueThinking) throw new SearchCancelledError('Search cancelled during recursion.');
             if (isMaximizingNode) {
                 if (result.score > bestResult.score) bestResult = { move, score: result.score };
                 alpha = Math.max(alpha, bestResult.score);
@@ -989,6 +992,7 @@
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, playerForThisNode, getFlippableDiscs(newBoard, move.r, move.c, playerForThisNode));
             const result = await perfectSearch(newBoard, alpha, beta, !isMaximizingNode, maximizingPlayer);
+            if (!continueThinking) throw new SearchCancelledError('Search cancelled during recursion.');
             if (isMaximizingNode) {
                 if (result.score > bestResult.score) bestResult = { move, score: result.score };
                 alpha = Math.max(alpha, bestResult.score);
@@ -1009,6 +1013,7 @@
         let bestScore = -Infinity;
 
         for (const move of validMoves) {
+            if (!continueThinking) throw new SearchCancelledError('Search cancelled during move evaluation.');
             const newBoard = JSON.parse(JSON.stringify(currentBoard));
             placeDiscInBoard(newBoard, move.r, move.c, aiPlayer, getFlippableDiscs(newBoard, move.r, move.c, aiPlayer));
             const result = await alphaBetaSearch(newBoard, depth - 1, -Infinity, Infinity, false, aiPlayer, level, turnCount + 1);
@@ -1148,17 +1153,16 @@
         
         if (type === 'evaluateBoard') {
             const { board, player, level, turnCount } = e.data;
-            const emptyCells = MAX_TURNS - (board.flat().filter(c => c !== EMPTY).length - 4);
-            let score;
-            
-            const isPerfectSearchCase =
-                (level == 8 && emptyCells <= 10) ||
-                (level == 9 && emptyCells <= 11) ||
-                (level == 10 && emptyCells <= 12);
-
+            let score = null;
             continueThinking = true;
             searchCounter = 0;
             try {
+                const emptyCells = MAX_TURNS - (board.flat().filter(c => c !== EMPTY).length - 4);
+                const isPerfectSearchCase =
+                    (level == 8 && emptyCells <= 10) ||
+                    (level == 9 && emptyCells <= 11) ||
+                    (level == 10 && emptyCells <= 12);
+
                  if (isPerfectSearchCase) {
                      const maximizingPlayer = BLACK;
                      const isMaximizingNode = (turnCount % 2 === 0);
@@ -1169,10 +1173,8 @@
             } catch (error) {
                 if (error instanceof SearchCancelledError) {
                     console.log('Evaluation was cancelled.');
-                    score = null;
                 } else {
                     console.error('An unexpected error during evaluation:', error);
-                    score = null;
                 }
             } finally {
                 continueThinking = false;
@@ -1188,6 +1190,7 @@
 
             try {
                 for (let level = 4; level <= maxAiLevel; level++) {
+                    if (level === 9) continue; // レベル9 (8+)はレベル8の評価と同じなので、RESEARCHでは計算をスキップ
                     if (!continueThinking) break;
 
                     const currentEvalForThisLevel = evaluateBoard(board, BLACK, level, turnCount);
@@ -1232,7 +1235,6 @@
                         }
                         
                         self.postMessage({ type: 'evalUpdate', evaluations: correctedEvals, level });
-                        await new Promise(r => setTimeout(r, 10));
                     }
                 }
             } catch(error) {
@@ -1707,13 +1709,10 @@ async function handleCellClick(r, c) {
     const flippable = getFlippableDiscs(board, r, c, playerColor);
     if (flippable.length === 0) return;
 
-    // RESEARCHモード中なら、思考を停止させ、盤面上の評価値表示をクリアする
     if (isResearchMode) {
         aiWorker.postMessage({ type: 'stop' });
         document.querySelectorAll('.research-value').forEach(el => el.remove());
     }
-
-    // isResearchModeフラグは変更しない
 
     await placeDisc(r, c, playerColor, flippable);
     currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
