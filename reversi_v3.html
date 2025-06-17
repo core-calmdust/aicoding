@@ -24,7 +24,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@500;700&display=swap" as="style" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@500;700&display=swap"></noscript>
 <style>
     :root {
         --bg-color: #1e2a38;
@@ -33,7 +34,7 @@
         --border-color: #1a2531;
         --text-color: #ecf0f1;
         --text-muted-color: #bdc3c7;
-        --accent-color: #3498db;
+        --accent-color: #2c8ac9;
         --accent-hover-color: #2980b9;
         --danger-color: #e74c3c;
         --highlight-color: rgba(255, 255, 0, 0.7);
@@ -608,7 +609,7 @@
                 <div id="board"></div>
             </div>
         </div>
-        <div id="message-area" role="status" aria-live="polite"></div>
+        <div id="message-area" role="status" aria-live="polite">対戦設定を選んで開始してください</div>
         
         <section id="evaluation-graph-container">
             <div id="current-evaluation-display">
