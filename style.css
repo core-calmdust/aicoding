@@ -1,22 +1,16 @@
-/* 変数定義: 色やスタイルを一元管理 */
+/* 変数定義 */
 :root {
-    --bg-color: #121828; /* 背景色 */
-    --card-bg-color: rgba(255, 255, 255, 0.07); /* カードの背景色 */
-    --text-color: #E0E0E0; /* 基本テキスト色 */
-    --title-color: #FFFFFF; /* タイトル色 */
-    --accent-color: #4D5BCE; /* アクセントカラー */
+    --bg-color: #121828;
+    --card-bg-color: rgba(255, 255, 255, 0.07);
+    --text-color: #E0E0E0;
+    --title-color: #FFFFFF;
+    --accent-color: #4D5BCE;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* ブラウザ間の表示差異を吸収 */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
 /* 基本設定 */
+*, *::before, *::after { box-sizing: border-box; }
 body {
     font-family: 'Noto Sans JP', sans-serif;
     background-color: var(--bg-color);
@@ -24,26 +18,22 @@ body {
     margin: 0;
     padding: 30px;
     color: var(--text-color);
-    overflow-x: hidden; /* 横スクロールを防止 */
+    overflow-x: hidden;
 }
 
 /* ヘッダー */
 header {
     text-align: center;
     margin-bottom: 60px;
-    padding: 0 10px; /* 左右に少し余白を追加して、文字の回り込みを防止 */
+    padding: 0 10px;
 }
-
 h1 {
-    font-size: clamp(2rem, 8vw, 3rem); /* vw値を少し調整 */
+    font-size: clamp(2rem, 8vw, 3rem);
     color: var(--title-color);
-    font-weight: 700;
     margin-bottom: 0.5rem;
     line-height: 1.4;
-    /* 日本語の不自然な改行を防ぐ */
     word-break: keep-all;
 }
-
 .subtitle {
     font-size: clamp(1rem, 4vw, 1.2rem);
     color: var(--text-color);
@@ -52,40 +42,34 @@ h1 {
     word-break: keep-all;
 }
 
-/* ゲームカードのグリッド設定 */
+/* グリッド設定 */
 .game-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 30px;
     max-width: 1400px;
     margin: 0 auto;
-    /* この要素をコンテナクエリの基準（コンテナ）として定義 */
-    container-type: inline-size;
-    container-name: game-grid;
 }
 
-/* 各ゲームカードのスタイル */
+/* カードスタイル */
 .game-card {
     background-color: var(--card-bg-color);
     border-radius: 16px;
     border: 1px solid var(--border-color);
     box-shadow: 0 8px 32px 0 var(--shadow-color);
     backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px); /* Safari対応 */
+    -webkit-backdrop-filter: blur(4px);
     overflow: hidden;
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .game-card:hover {
     transform: translateY(-10px) scale(1.03);
     box-shadow: 0 16px 40px 0 var(--shadow-color);
-    border-color: var(--accent-color);
 }
-
 .game-card img {
     width: 100%;
     aspect-ratio: 16 / 10;
@@ -94,63 +78,52 @@ h1 {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* ▼▼▼ ここが右寄り問題の最終修正箇所です ▼▼▼ */
 .card-content {
-    padding: 15px 10px;
-    text-align: center;
     flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 70px; /* 高さを確保してレイアウトを安定させる */
+    min-height: 80px; /* タイトルの高さを確保 */
+    position: relative; /* 子要素を絶対配置するための基準点 */
 }
-
 .card-content h2 {
-    /* ▼▼▼ この一行を追加して、中央揃えをより強固にします ▼▼▼ */
-    width: 100%;
-    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+    position: absolute; /* 親要素を基準に絶対配置 */
+    top: 50%;           /* 上から50%の位置へ */
+    left: 50%;          /* 左から50%の位置へ */
+    transform: translate(-50%, -50%); /* 要素自体の大きさの半分だけ移動し、完全な中央揃えを実現 */
+    
+    width: 100%; /* 幅を100%に */
+    padding: 0 10px; /* 左右の余白 */
     margin: 0;
-    font-size: clamp(0.8rem, 4.5cqi, 1.1rem);
     color: var(--title-color);
-    font-weight: 700;
+    font-size: clamp(0.8rem, 2.2vw, 1.1rem); /* vwで動的に調整 */
     line-height: 1.4;
+    text-align: center; /* テキスト自体の中央揃え */
 }
+/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
-/* --- レスポンシブ対応 --- */
+/* レスポンシブ対応 */
 @media (max-width: 900px) {
-    .game-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .game-grid { grid-template-columns: repeat(3, 1fr); }
+    .card-content h2 { font-size: clamp(0.9rem, 2.8vw, 1.2rem); }
 }
-
 @media (max-width: 600px) {
-    body {
-        padding: 20px 15px;
-    }
-    header {
-        margin-bottom: 40px;
-    }
-    .game-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
+    body { padding: 20px 15px; }
+    header { margin-bottom: 40px; }
+    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .card-content h2 { font-size: clamp(0.9rem, 4vw, 1rem); }
 }
 
-/* --- フッター --- */
+/* フッター */
 footer {
     text-align: center;
     margin-top: 80px;
     padding: 25px 0;
     border-top: 1px solid var(--border-color);
-    font-size: 1rem;
 }
-
 footer p a {
     color: var(--text-color);
     text-decoration: none;
-    font-weight: 500;
     transition: color 0.3s ease;
 }
-
 footer p a:hover {
     color: var(--accent-color);
     text-decoration: underline;
