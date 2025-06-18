@@ -22,7 +22,7 @@ body {
 }
 
 /* JSによるフォント読み込み完了後、Noto Sans JPを適用 */
-.wf-active body, .wf-active p, .wf-active a, .wf-active h2, .wf-active h1 svg text {
+.wf-active body, .wf-active p, .wf-active a, .wf-active h1, .wf-active h2 {
     font-family: 'Noto Sans JP', sans-serif;
 }
 
@@ -33,28 +33,18 @@ header {
     margin: 0 auto 50px auto;
 }
 
-/* ▼▼▼ SVGタイトル用の新しいスタイル ▼▼▼ */
+/* ▼▼▼ タイトルスタイルの最終修正 ▼▼▼ */
+/* デフォルト（PC版）のスタイル */
 h1 {
-    width: 100%;
-    max-width: 500px; /* PCで大きくなりすぎないように制限 */
-    margin: 0 auto 0.75rem; /* 上下左右のマージン */
-    line-height: 1; /* SVGと他の要素との余分な隙間をなくす */
-}
-h1 svg {
-    width: 100%;
-    height: auto;
-    display: block; /* 余分な隙間をなくす */
-}
-h1 svg text {
-    fill: var(--title-color); /* 文字色 */
+    font-size: 2.8rem;
+    color: var(--title-color);
+    line-height: 1.4;
     font-weight: 700;
-    /* このフォントサイズはSVGのviewBox基準なので固定値でOK */
-    font-size: 100px;
+    margin: 0 0 0.5rem 0;
+    white-space: nowrap; /* PCでは不要ですが、念のため維持します */
 }
-/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
-
 .subtitle {
-    font-size: clamp(1rem, 4.5vw, 1.2rem);
+    font-size: 1.2rem;
     margin: 0;
     opacity: 0.8;
 }
@@ -91,8 +81,6 @@ h1 svg text {
     display: block;
     border-bottom: 1px solid var(--border-color);
 }
-
-/* カードタイトル */
 .card-content { flex-grow: 1; min-height: 85px; position: relative; }
 .card-content h2 {
     position: absolute;
@@ -103,17 +91,27 @@ h1 svg text {
     padding: 0 10px;
     margin: 0;
     color: var(--title-color);
-    font-size: clamp(1rem, 5cqi, 1.2rem);
+    font-size: 1.1rem;
     line-height: 1.4;
     font-weight: 700;
     text-align: center;
 }
 
-/* スマートフォン向けの微調整 */
+/* ▼▼▼ スマホ向けのフォントサイズ調整 ▼▼▼ */
 @media (max-width: 600px) {
     body { padding: 25px 15px; }
+    h1 { font-size: 2.2rem; } /* 少し小さくする */
+    .subtitle { font-size: 1rem; }
     .game-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    .card-content h2 { font-size: clamp(0.9rem, 4vw, 1rem); }
+    .card-content h2 { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+    h1 { font-size: 1.9rem; } /* さらに小さくする */
+}
+
+@media (max-width: 400px) {
+    h1 { font-size: 1.7rem; } /* 最も狭い画面でも一行に収まるようにする */
 }
 
 /* フッター */
