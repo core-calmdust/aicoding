@@ -21,25 +21,30 @@ body {
     overflow-x: hidden;
 }
 
-/* ヘッダー */
+/* ▼▼▼ ここが右寄り問題の最終修正箇所です ▼▼▼ */
 header {
-    text-align: center;
+    /* Flexboxを使って、中の要素を確実かつ柔軟に中央揃えする */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center; /* テキストが複数行になった場合も中央揃えを維持 */
     margin-bottom: 60px;
     padding: 0 10px;
 }
+/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
 h1 {
     font-size: clamp(2rem, 8vw, 3rem);
     color: var(--title-color);
     margin-bottom: 0.5rem;
     line-height: 1.4;
-    word-break: keep-all;
 }
 .subtitle {
     font-size: clamp(1rem, 4vw, 1.2rem);
     color: var(--text-color);
     opacity: 0.8;
     line-height: 1.5;
-    word-break: keep-all;
 }
 
 /* グリッド設定 */
@@ -78,27 +83,24 @@ h1 {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* ▼▼▼ ここが右寄り問題の最終修正箇所です ▼▼▼ */
 .card-content {
     flex-grow: 1;
-    min-height: 80px; /* タイトルの高さを確保 */
-    position: relative; /* 子要素を絶対配置するための基準点 */
+    min-height: 80px;
+    position: relative;
 }
 .card-content h2 {
-    position: absolute; /* 親要素を基準に絶対配置 */
-    top: 50%;           /* 上から50%の位置へ */
-    left: 50%;          /* 左から50%の位置へ */
-    transform: translate(-50%, -50%); /* 要素自体の大きさの半分だけ移動し、完全な中央揃えを実現 */
-    
-    width: 100%; /* 幅を100%に */
-    padding: 0 10px; /* 左右の余白 */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    padding: 0 10px;
     margin: 0;
     color: var(--title-color);
-    font-size: clamp(0.8rem, 2.2vw, 1.1rem); /* vwで動的に調整 */
+    font-size: clamp(0.8rem, 2.2vw, 1.1rem);
     line-height: 1.4;
-    text-align: center; /* テキスト自体の中央揃え */
+    text-align: center;
 }
-/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
 /* レスポンシブ対応 */
 @media (max-width: 900px) {
