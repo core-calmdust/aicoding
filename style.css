@@ -14,7 +14,7 @@
     box-sizing: border-box;
 }
 body {
-    font-family: sans-serif; /* OS標準フォントを一時的に使用 */
+    font-family: sans-serif;
     background-color: var(--bg-color);
     background-image: linear-gradient(180deg, var(--bg-color) 0%, #1a223a 100%);
     margin: 0;
@@ -32,35 +32,33 @@ body {
     font-family: 'Noto Sans JP', sans-serif;
 }
 
-/* ▼▼▼ レイアウト問題の最終修正箇所 ▼▼▼ */
+
+/* ヘッダー */
 header {
     width: 100%;
-    /* このtext-align:centerが、子要素のinline-blockを中央に配置する力になります */
     text-align: center;
     margin: 0 auto 50px auto;
 }
+
+/* ▼▼▼ ここが改行問題の最終修正箇所です ▼▼▼ */
 h1 {
-    /* 自分自身をインラインブロック要素に変更 */
-    display: inline-block;
-    max-width: 100%; /* 画面幅を超えないようにする */
+    /* これでテキストの改行を強制的に禁止します */
+    white-space: nowrap;
     
-    font-size: clamp(2rem, 8vw, 2.8rem);
+    /* 画面幅に応じて文字サイズを調整し、はみ出しを防ぎます */
+    font-size: clamp(1.8rem, 6.5vw, 2.8rem); /* vwの値を小さくして、より縮小しやすくしました */
+    
     color: var(--title-color);
     line-height: 1.4;
     font-weight: 700;
     margin: 0 0 0.5rem 0;
-    /* テキストが改行された場合、その中でも中央揃えを維持 */
-    text-align: center;
 }
 .subtitle {
-    /* 自分自身をインラインブロック要素に変更 */
-    display: inline-block;
-    max-width: 100%;
-
-    font-size: clamp(1rem, 4.5vw, 1.2rem);
+    /* サブタイトルも念のため文字サイズを調整 */
+    font-size: clamp(0.9rem, 4vw, 1.2rem);
+    
     margin: 0;
     opacity: 0.8;
-    text-align: center;
 }
 /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
@@ -101,7 +99,7 @@ h1 {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* カードタイトル: 絶対配置による確実な中央揃え */
+/* カードタイトル */
 .card-content {
     flex-grow: 1;
     min-height: 85px;
