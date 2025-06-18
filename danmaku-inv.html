@@ -37,7 +37,6 @@
         #game-container { position: relative; }
         canvas { background-color: #000000; border-width: 3px; border-style: solid; transition: box-shadow 0.1s ease-in-out, border-color 0.5s ease; display: block; }
         canvas.pulse { transition: box-shadow 0.05s ease-in-out; }
-        /* ▼▼▼【修正】▼▼▼ ボタンのスタイルを共通化し、位置を調整 */
         #sound-toggle, #effect-toggle {
             position: absolute;
             bottom: 10px;
@@ -49,7 +48,7 @@
             font-size: 12px;
             cursor: pointer;
             box-shadow: 0 0 10px #00ffff;
-            white-space: nowrap; /* ボタンテキストが改行しないように */
+            white-space: nowrap;
         }
         #sound-toggle:hover, #effect-toggle:hover {
             background-color: rgba(255, 0, 255, 0.7);
@@ -58,9 +57,8 @@
             right: 10px;
         }
         #effect-toggle {
-            right: 145px; /* SOUNDボタンの幅と間隔を考慮した値 */
+            right: 145px;
         }
-        /* ▲▲▲【修正はここまで】▲▲▲ */
         #controls-info { color: rgba(255, 255, 255, 0.7); font-size: 14px; margin-top: 20px; text-shadow: 0 0 5px #00ffff; text-align: center; }
         #controls-info > div { line-height: 1.5; }
         .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
@@ -88,14 +86,7 @@
         <div id="scalable-content">
             <div id="game-container">
                 <canvas id="gameCanvas" aria-label="ゲーム画面"></canvas>
-                <!-- ▼▼▼【追加】▼▼▼ エフェクト切り替えボタン -->
-            	<button id="effect-toggle" 
-                    tabindex="-1" 
-                    aria-label="エフェクトのオン・オフを切り替える"
-                    title="ブラウザの処理が重たい場合はOFFにしてください">
-		    EFX ON
-            	</button>
-                <!-- ▲▲▲【追加はここまで】▲▲▲ -->
+                <button id="effect-toggle" tabindex="-1" aria-label="エフェクトのオン・オフを切り替える" title="処理が重たい場合はOFFにしてください">EFX ON</button>
                 <button id="sound-toggle" tabindex="-1" aria-label="サウンドのオン・オフを切り替える">SOUND ON</button>
             </div>
             <footer id="controls-info" aria-label="操作方法">
@@ -110,9 +101,7 @@
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
             const soundToggleButton = document.getElementById('sound-toggle');
-            // ▼▼▼【追加】▼▼▼ エフェクトボタンの要素を取得
             const effectToggleButton = document.getElementById('effect-toggle');
-            // ▲▲▲【追加はここまで】▲▲▲
             canvas.width = 800;
             canvas.height = 600;
 
@@ -238,8 +227,9 @@
             let elapsedTime, lastFrameTime;
             let lastInputDevice = 'keyboard';
             let animationFrame = 0;
-            // ▼▼▼【追加】▼▼▼ エフェクトの状態を管理する変数
             let effectsEnabled = true;
+            // ▼▼▼【追加】▼▼▼ Canvasに描画する情報テキストを保持する変数
+            let infoLineText = "Recommended to play in Chrome";
             // ▲▲▲【追加はここまで】▲▲▲
 
             // ==================================================================
@@ -535,12 +525,10 @@
                 }
             }
 
-            // ▼▼▼【追加】▼▼▼ エフェクト切り替え関数
             function toggleEffects() {
                 effectsEnabled = !effectsEnabled;
                 effectToggleButton.textContent = effectsEnabled ? "EFX ON" : "EFX OFF";
             }
-            // ▲▲▲【追加はここまで】▲▲▲
             
             // ==================================================================
             // 4. 初期化関数
@@ -829,13 +817,16 @@
                 });
             }
 
+            // ▼▼▼【修正】▼▼▼ 情報テキストの描画処理を復活させる
             function drawTitleScreen() {
                 drawLogo();
                 drawText(`HI-SCORE: ${highScore}`, canvas.width / 2, 430, 20, '#fff');
                 const startText = (lastInputDevice === 'gamepad') ? "Press Start or any Button to Start" : "Press Enter to Start";
                 drawText(startText, canvas.width / 2, 480, 20, `hsl(180, 100%, 50%)`);
-		        drawText("Recommended to play in Chrome", canvas.width / 2, 525, 12, 'rgba(255, 255, 255, 0.7)');
+                // infoLineText変数の内容を描画
+                drawText(infoLineText, canvas.width / 2, 525, 12, 'rgba(255, 255, 255, 0.7)');
             }
+            // ▲▲▲【修正はここまで】▲▲▲
 
             function drawLogo() {
                 const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
@@ -871,37 +862,20 @@
                 });
             }
 
-            // ▼▼▼【修正】▼▼▼ 描画順序を最適化
 	        function drawPlaying() {
-    		    // 奥に描画されるものから順番に呼び出すことで、描画の前後関係を制御します。
-
-    		    // 1. 敵
     		    enemies.forEach(drawEnemy);
-    
-   		        // 2. 自機の弾
     		    bullets.forEach(drawBullet);
-
-		        // 3. 自機
     		    drawPlayer();
-
-    		    // 4. 爆発エフェクト (パーティクル)
     		    particles.forEach(p => {
         	        ctx.globalAlpha = p.alpha;
         	        ctx.fillStyle = p.color;
         	        ctx.fillRect(p.x, p.y, p.size, p.size);
         	        ctx.globalAlpha = 1.0;
     		    });
-
-    		    // 5. パワーアップアイテム
     		    powerups.forEach(drawPowerup);
-    
-    		    // 6. 敵の弾 (プレイヤーやアイテムより手前に描画し、視認性を確保)
     		    enemyBullets.forEach(drawEnemyBullet);
-		
-    		    // 7. UI (スコアなど、常に最前面に表示)
     		    drawUI();
 	        }
-            // ▲▲▲【修正はここまで】▲▲▲
 
             function drawPlayer() {
                 ctx.fillStyle = player.powerupTimer > 0 ? `hsl(${(Date.now()/10)%360}, 100%, 70%)` : `hsl(${baseHue + 180}, 100%, 50%)`;
@@ -949,7 +923,7 @@
 
                 drawGlow(() => {
                     let size = e.w, x = e.x, y = e.y;
-                    if (isPulsing && effectsEnabled) { // エフェクトが有効な場合のみパルス効果
+                    if (isPulsing && effectsEnabled) {
                         const pulse = Math.sin(Date.now() / 150);
                         ctx.shadowColor = `hsl(${(Date.now() / 5) % 360}, 100%, 80%)`;
                         ctx.shadowBlur = 20 + pulse * 10;
@@ -1083,17 +1057,14 @@
                 }
             }
 
-            // ▼▼▼【修正】▼▼▼ エフェクトON/OFFを反映し、必ずshadowBlurをリセットする
             function drawGlow(drawFunc) {
                 if (effectsEnabled) {
                     ctx.shadowColor = ctx.fillStyle;
                     ctx.shadowBlur = 15;
                 }
                 drawFunc();
-                // どの分岐を通過しても、最後には必ずシャドウをリセットする
                 ctx.shadowBlur = 0;
             }
-            // ▲▲▲【修正はここまで】▲▲▲
             
             // ==================================================================
             // 8. メインループとイベントリスナー
@@ -1305,6 +1276,19 @@
                 requestAnimationFrame(gameLoop);
             }
             
+            // ▼▼▼【修正】▼▼▼ マウスイベントでinfoLineText変数を更新する
+            const originalInfoText = "Recommended to play in Chrome";
+            const hoverInfoText = "If Drawing is Slow, Turn Off the Effects";
+
+            effectToggleButton.addEventListener('mouseover', () => {
+                infoLineText = hoverInfoText;
+            });
+
+            effectToggleButton.addEventListener('mouseout', () => {
+                infoLineText = originalInfoText;
+            });
+            // ▲▲▲【修正はここまで】▲▲▲
+
             soundToggleButton.addEventListener('click', () => {
                 toggleSound();
                 soundToggleButton.blur();
@@ -1313,7 +1297,6 @@
                 e.preventDefault();
             });
 
-            // ▼▼▼【追加】▼▼▼ エフェクトボタンのイベントリスナー
             effectToggleButton.addEventListener('click', () => {
                 toggleEffects();
                 effectToggleButton.blur();
@@ -1321,7 +1304,6 @@
             effectToggleButton.addEventListener('keydown', (e) => {
                 e.preventDefault();
             });
-            // ▲▲▲【追加はここまで】▲▲▲
 
             window.addEventListener('keydown', handleKeydown);
             window.addEventListener('keyup', handleKeyup);
@@ -1330,6 +1312,9 @@
 
             highScore = parseInt(localStorage.getItem('danmakuInvaderHighScore') || '0', 10);
             createStars();
+            // ▼▼▼【修正】▼▼▼ 初期テキストを設定
+            infoLineText = originalInfoText;
+            // ▲▲▲【修正はここまで】▲▲▲
             requestAnimationFrame(gameLoop);
         });
     </script>
