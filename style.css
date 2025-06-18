@@ -10,48 +10,54 @@
 }
 
 /* 基本設定 */
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 body {
-    font-family: 'Noto Sans JP', sans-serif;
+    /* フォント読み込み完了まではOS標準フォントで表示し、ちらつきを防ぐ */
+    font-family: sans-serif;
     background-color: var(--bg-color);
     background-image: linear-gradient(180deg, var(--bg-color) 0%, #1a223a 100%);
     margin: 0;
-    padding: 30px;
+    padding: 30px 20px;
     color: var(--text-color);
     overflow-x: hidden;
 }
 
-/* ▼▼▼ ここが右寄り問題の最終修正箇所です ▼▼▼ */
-header {
-    /* Flexboxを使って、中の要素を確実かつ柔軟に中央揃えする */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    text-align: center; /* テキストが複数行になった場合も中央揃えを維持 */
-    margin-bottom: 60px;
-    padding: 0 10px;
+/* JSによるフォント読み込み完了後、Noto Sans JPを適用 */
+.wf-active body,
+.wf-active h1,
+.wf-active h2,
+.wf-active p {
+    font-family: 'Noto Sans JP', sans-serif;
 }
-/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
+
+/* ヘッダー: text-alignで確実な中央揃え */
+header {
+    width: 100%;
+    text-align: center;
+    margin: 0 auto 50px auto;
+}
 h1 {
-    font-size: clamp(2rem, 8vw, 3rem);
+    font-size: clamp(2rem, 8vw, 2.8rem);
     color: var(--title-color);
-    margin-bottom: 0.5rem;
     line-height: 1.4;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
 }
 .subtitle {
-    font-size: clamp(1rem, 4vw, 1.2rem);
-    color: var(--text-color);
+    font-size: clamp(1rem, 4.5vw, 1.2rem);
+    margin: 0;
     opacity: 0.8;
-    line-height: 1.5;
 }
 
-/* グリッド設定 */
+/* グリッド設定: より柔軟なレスポンシブ対応 */
 .game-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
+    /* 1列の最小幅280pxを確保しつつ、自動で列数を調整 */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -72,7 +78,7 @@ h1 {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .game-card:hover {
-    transform: translateY(-10px) scale(1.03);
+    transform: translateY(-10px);
     box-shadow: 0 16px 40px 0 var(--shadow-color);
 }
 .game-card img {
@@ -83,36 +89,44 @@ h1 {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* カードタイトル: 絶対配置による確実な中央揃え */
 .card-content {
     flex-grow: 1;
-    min-height: 80px;
-    position: relative;
+    min-height: 85px; /* 複数行になってもレイアウトが崩れない高さを確保 */
+    position: relative; /* 子要素(h2)の基準点 */
 }
 .card-content h2 {
     position: absolute;
+    width: 100%;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    padding: 0 10px;
+    transform: translate(-50%, -50%); /* 要素自身の大きさの半分を移動し、完全中央揃え */
+    
+    padding: 0 10px; /* 左右の余白 */
     margin: 0;
     color: var(--title-color);
-    font-size: clamp(0.8rem, 2.2vw, 1.1rem);
+    font-size: clamp(1rem, 5cqi, 1.2rem); /* コンテナの幅に応じた文字サイズ */
     line-height: 1.4;
+    font-weight: 700;
     text-align: center;
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 900px) {
-    .game-grid { grid-template-columns: repeat(3, 1fr); }
-    .card-content h2 { font-size: clamp(0.9rem, 2.8vw, 1.2rem); }
-}
+/* スマートフォン向けの微調整 */
 @media (max-width: 600px) {
-    body { padding: 20px 15px; }
-    header { margin-bottom: 40px; }
-    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    .card-content h2 { font-size: clamp(0.9rem, 4vw, 1rem); }
+    body {
+        padding: 25px 15px;
+    }
+    .game-grid {
+        /* スマホでは2列に固定 */
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    .card-content h2 {
+        /* スマホでの文字サイズ調整 */
+        font-size: clamp(0.9rem, 4vw, 1rem);
+    }
 }
+
 
 /* フッター */
 footer {
@@ -120,6 +134,7 @@ footer {
     margin-top: 80px;
     padding: 25px 0;
     border-top: 1px solid var(--border-color);
+    font-size: 1rem;
 }
 footer p a {
     color: var(--text-color);
