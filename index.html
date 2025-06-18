@@ -7,29 +7,35 @@
     <title>ゲーム制作＠バイブコーディング</title>
     <link rel="stylesheet" href="style.css">
 
+    <!-- パフォーマンス改善：Google Fontsの読み込みを非同期化 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script>
       (function(d) {
         var config = {
-          // Adobe Fontsの場合はここにキットIDを入力 (今回は不要)
           scriptTimeout: 3000,
           async: true
         },
         h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{WebFont.load({google:{families:['Noto Sans JP:wght@400;700']}})}catch(e){}};s.parentNode.insertBefore(tk,s)
       })(document);
     </script>
-
 </head>
 <body>
 
     <header>
-        <h1>ゲームを選んで遊ぼう！</h1>
+        <!-- ▼▼▼ ここからが今回の修正の核心です ▼▼▼ -->
+        <h1>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 120" aria-labelledby="site-title" role="img">
+                <title id="site-title">ゲームを選んで遊ぼう！</title>
+                <text x="50%" y="50%" dy=".35em" text-anchor="middle">ゲームを選んで遊ぼう！</text>
+            </svg>
+        </h1>
+        <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
         <p class="subtitle">AIコーディングで制作したゲームを公開中</p>
     </header>
 
     <main class="game-grid">
-        <!-- LCP改善: 最初の画像に fetchpriority="high" を追加し、lazyを削除 -->
+        <!-- LCP改善: 最初の画像に fetchpriority="high" を追加 -->
         <a href="https://core-calmdust.github.io/aicoding/danmaku-inv.html" class="game-card">
             <img src="./images/danmaku-inv.webp" alt="DANMAKU INVADER XTREME+" fetchpriority="high" decoding="async">
             <div class="card-content">
@@ -37,7 +43,7 @@
             </div>
         </a>
         
-        <!-- 2-4番目の画像: lazyは不要 -->
+        <!-- 2-4番目の画像 -->
         <a href="https://core-calmdust.github.io/aicoding/pong.html" class="game-card">
             <img src="./images/pong.webp" alt="CYBER PONG XTREME+" decoding="async">
             <div class="card-content">
@@ -59,7 +65,7 @@
             </div>
         </a>
 
-        <!-- 5番目以降: 遅延読み込み (loading="lazy") を適用 -->
+        <!-- 5番目以降: 遅延読み込み -->
         <a href="https://core-calmdust.github.io/aicoding/connect4.html" class="game-card">
             <img src="./images/connect4.webp" alt="コネクテッド4の画像" loading="lazy" decoding="async">
             <div class="card-content">
@@ -87,7 +93,6 @@
                 <h2>チェッカー</h2>
             </div>
         </a>
-        
     </main>
 
     <footer>
@@ -95,6 +100,6 @@
             <a href="https://github.com/core-calmdust/aicoding" target="_blank" rel="noopener noreferrer">開発者ページ</a>
         </p>
     </footer>
-    
+
 </body>
 </html>
