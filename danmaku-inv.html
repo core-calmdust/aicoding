@@ -89,7 +89,7 @@
             <div id="game-container">
                 <canvas id="gameCanvas" aria-label="ゲーム画面"></canvas>
                 <!-- ▼▼▼【追加】▼▼▼ エフェクト切り替えボタン -->
-                <button id="effect-toggle" tabindex="-1" aria-label="エフェクトのオン・オフを切り替える">EFFECT ON</button>
+                <button id="effect-toggle" tabindex="-1" aria-label="エフェクトのオン・オフを切り替える">EFX ON</button>
                 <!-- ▲▲▲【追加はここまで】▲▲▲ -->
                 <button id="sound-toggle" tabindex="-1" aria-label="サウンドのオン・オフを切り替える">SOUND ON</button>
             </div>
@@ -533,7 +533,7 @@
             // ▼▼▼【追加】▼▼▼ エフェクト切り替え関数
             function toggleEffects() {
                 effectsEnabled = !effectsEnabled;
-                effectToggleButton.textContent = effectsEnabled ? "EFFECT ON" : "EFFECT OFF";
+                effectToggleButton.textContent = effectsEnabled ? "EFX ON" : "EFX OFF";
             }
             // ▲▲▲【追加はここまで】▲▲▲
             
