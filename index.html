@@ -6,8 +6,22 @@
     <meta name="description" content="AIコーディングで制作した様々なブラウザゲームを遊べるサイトです。リバーシ、バックギャモン、弾幕シューティングなど、多様なゲームをPCでもスマホでも楽しめます。">
     <title>ゲーム制作＠バイブコーディング</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- パフォーマンス改善：Google Fontsの読み込みを非同期化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script>
+      (function(d) {
+        var config = {
+          // Adobe Fontsの場合はここにキットIDを入力 (今回は不要)
+          scriptTimeout: 3000,
+          async: true
+        },
+        h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{WebFont.load({google:{families:['Noto Sans JP:wght@400;700']}})}catch(e){}};s.parentNode.insertBefore(tk,s)
+      })(document);
+    </script>
+    <!-- フォント読み込みここまで -->
+
 </head>
 <body>
 
@@ -17,37 +31,37 @@
     </header>
 
     <main class="game-grid">
-        <!-- ▼▼▼ 最初の4つの画像から loading="lazy" を削除し、拡張子を .webp に変更 ▼▼▼ -->
+        <!-- LCP改善: 最初の画像に fetchpriority="high" を追加し、lazyを削除 -->
         <a href="https://core-calmdust.github.io/aicoding/danmaku-inv.html" class="game-card">
-            <img src="./images/danmaku-inv.webp" alt="DANMAKU INVADER XTREME+">
+            <img src="./images/danmaku-inv.webp" alt="DANMAKU INVADER XTREME+" fetchpriority="high" decoding="async">
             <div class="card-content">
                 <h2>DANMAKU INVADER XTREME+</h2>
             </div>
         </a>
         
+        <!-- 2-4番目の画像: lazyは不要 -->
         <a href="https://core-calmdust.github.io/aicoding/pong.html" class="game-card">
-            <img src="./images/pong.webp" alt="CYBER PONG XTREME+">
+            <img src="./images/pong.webp" alt="CYBER PONG XTREME+" decoding="async">
             <div class="card-content">
                 <h2>CYBER PONG XTREME+</h2>
             </div>
         </a>
         
         <a href="https://core-calmdust.github.io/aicoding/reversi_v3.html" class="game-card">
-            <img src="./images/reversi_v3.webp" alt="リバーシ">
+            <img src="./images/reversi_v3.webp" alt="リバーシ" decoding="async">
             <div class="card-content">
                 <h2>リバーシ</h2>
             </div>
         </a>
 
         <a href="https://core-calmdust.github.io/aicoding/backgammon.html" class="game-card">
-            <img src="./images/backgammon.webp" alt="バックギャモン">
+            <img src="./images/backgammon.webp" alt="バックギャモン" decoding="async">
             <div class="card-content">
                 <h2>バックギャモン</h2>
             </div>
         </a>
-        <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
 
-        <!-- 5つ目以降の画像には loading="lazy" を残し、拡張子を .webp に変更 -->
+        <!-- 5番目以降: 遅延読み込み (loading="lazy") を適用 -->
         <a href="https://core-calmdust.github.io/aicoding/connect4.html" class="game-card">
             <img src="./images/connect4.webp" alt="コネクテッド4の画像" loading="lazy" decoding="async">
             <div class="card-content">
