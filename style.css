@@ -9,15 +9,12 @@
     --border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* === ▼ここから追加▼ === */
 /* ブラウザ間の表示差異を吸収 */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
-/* === ▲ここまで追加▲ === */
-
 
 /* 基本設定 */
 body {
@@ -34,21 +31,28 @@ body {
 header {
     text-align: center;
     margin-bottom: 60px;
+    padding: 0 10px; /* 左右に少し余白を追加して、文字の回り込みを防止 */
 }
 
 h1 {
-    font-size: 3rem;
+    font-size: clamp(2rem, 8vw, 3rem); /* vw値を少し調整 */
     color: var(--title-color);
     font-weight: 700;
     margin-bottom: 0.5rem;
+    line-height: 1.4;
+    /* 日本語の不自然な改行を防ぐ */
+    word-break: keep-all;
 }
 
 .subtitle {
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 4vw, 1.2rem);
     color: var(--text-color);
     opacity: 0.8;
+    line-height: 1.5;
+    word-break: keep-all;
 }
 
+/* ▼▼▼ この部分が重要な変更点です ▼▼▼ */
 /* ゲームカードのグリッド設定 */
 .game-grid {
     display: grid;
@@ -56,7 +60,12 @@ h1 {
     gap: 30px;
     max-width: 1400px;
     margin: 0 auto;
+
+    /* この要素をコンテナクエリの基準（コンテナ）として定義 */
+    container-type: inline-size;
+    container-name: game-grid;
 }
+/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
 /* 各ゲームカードのスタイル */
 .game-card {
@@ -89,28 +98,31 @@ h1 {
 }
 
 .card-content {
-    padding: 20px 15px;
+    padding: 15px 10px;
     text-align: center;
     flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 70px; /* 高さを確保してレイアウトを安定させる */
 }
 
+/* ▼▼▼ この部分が重要な変更点です ▼▼▼ */
 .card-content h2 {
     margin: 0;
-    font-size: 1.2rem;
+    /* コンテナ（.game-grid）の幅に応じて文字サイズを自動調整 */
+    /* 1cqi = コンテナの幅の1% */
+    font-size: clamp(0.8rem, 4.5cqi, 1.1rem);
     color: var(--title-color);
     font-weight: 700;
+    line-height: 1.4;
 }
+/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
 /* --- レスポンシブ対応 --- */
 @media (max-width: 900px) {
     .game-grid {
         grid-template-columns: repeat(3, 1fr);
-    }
-    h1 {
-        font-size: 2.5rem;
     }
 }
 
@@ -125,31 +137,6 @@ h1 {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
     }
-
-    /* === ▼ここから修正▼ === */
-    h1 {
-        /* clampの値を微調整し、Chromeでも改行されにくくする */
-        font-size: clamp(1.6rem, 7.2vw, 2rem);
-        line-height: 1.3;
-    }
-
-    .subtitle {
-        font-size: clamp(0.85rem, 3.8vw, 1rem);
-    }
-
-    .card-content {
-        padding: 15px 10px;
-        min-height: 65px;
-    }
-
-    .card-content h2 {
-        /* clampの値を微調整 */
-        font-size: clamp(0.75rem, 3.6vw, 0.9rem);
-        line-height: 1.4;
-        /* 長い英単語などがはみ出す場合、単語の途中でも折り返す */
-        overflow-wrap: break-word;
-    }
-    /* === ▲ここまで修正▲ === */
 }
 
 /* --- フッター --- */
