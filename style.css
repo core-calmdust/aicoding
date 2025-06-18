@@ -102,7 +102,7 @@ h1 {
     left: 50%;
     transform: translate(-50%, -50%); /* 要素自身の大きさの半分を移動し、完全中央揃え */
     
-    padding: 0 10px; /* 左右の余白 */
+    padding: 0 10px;
     margin: 0;
     color: var(--title-color);
     font-size: clamp(1rem, 5cqi, 1.2rem); /* コンテナの幅に応じた文字サイズ */
