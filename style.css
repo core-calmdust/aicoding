@@ -10,9 +10,7 @@
 }
 
 /* 基本設定 */
-*, *::before, *::after {
-    box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 body {
     font-family: sans-serif;
     background-color: var(--bg-color);
@@ -24,14 +22,9 @@ body {
 }
 
 /* JSによるフォント読み込み完了後、Noto Sans JPを適用 */
-.wf-active body,
-.wf-active h1,
-.wf-active h2,
-.wf-active p,
-.wf-active a {
+.wf-active body, .wf-active p, .wf-active a, .wf-active h2, .wf-active h1 svg text {
     font-family: 'Noto Sans JP', sans-serif;
 }
-
 
 /* ヘッダー */
 header {
@@ -40,28 +33,31 @@ header {
     margin: 0 auto 50px auto;
 }
 
-/* ▼▼▼ ここが改行問題の最終修正箇所です ▼▼▼ */
+/* ▼▼▼ SVGタイトル用の新しいスタイル ▼▼▼ */
 h1 {
-    /* これでテキストの改行を強制的に禁止します */
-    white-space: nowrap;
-    
-    /* 画面幅に応じて文字サイズを調整し、はみ出しを防ぎます */
-    font-size: clamp(1.8rem, 6.5vw, 2.8rem); /* vwの値を小さくして、より縮小しやすくしました */
-    
-    color: var(--title-color);
-    line-height: 1.4;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
+    width: 100%;
+    max-width: 500px; /* PCで大きくなりすぎないように制限 */
+    margin: 0 auto 0.75rem; /* 上下左右のマージン */
+    line-height: 1; /* SVGと他の要素との余分な隙間をなくす */
 }
+h1 svg {
+    width: 100%;
+    height: auto;
+    display: block; /* 余分な隙間をなくす */
+}
+h1 svg text {
+    fill: var(--title-color); /* 文字色 */
+    font-weight: 700;
+    /* このフォントサイズはSVGのviewBox基準なので固定値でOK */
+    font-size: 100px;
+}
+/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
 .subtitle {
-    /* サブタイトルも念のため文字サイズを調整 */
-    font-size: clamp(0.9rem, 4vw, 1.2rem);
-    
+    font-size: clamp(1rem, 4.5vw, 1.2rem);
     margin: 0;
     opacity: 0.8;
 }
-/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
-
 
 /* グリッド設定 */
 .game-grid {
@@ -87,10 +83,7 @@ h1 {
     flex-direction: column;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.game-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 16px 40px 0 var(--shadow-color);
-}
+.game-card:hover { transform: translateY(-10px); box-shadow: 0 16px 40px 0 var(--shadow-color); }
 .game-card img {
     width: 100%;
     aspect-ratio: 16 / 10;
@@ -100,11 +93,7 @@ h1 {
 }
 
 /* カードタイトル */
-.card-content {
-    flex-grow: 1;
-    min-height: 85px;
-    position: relative;
-}
+.card-content { flex-grow: 1; min-height: 85px; position: relative; }
 .card-content h2 {
     position: absolute;
     width: 100%;
@@ -122,32 +111,12 @@ h1 {
 
 /* スマートフォン向けの微調整 */
 @media (max-width: 600px) {
-    body {
-        padding: 25px 15px;
-    }
-    .game-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-    .card-content h2 {
-        font-size: clamp(0.9rem, 4vw, 1rem);
-    }
+    body { padding: 25px 15px; }
+    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .card-content h2 { font-size: clamp(0.9rem, 4vw, 1rem); }
 }
 
 /* フッター */
-footer {
-    text-align: center;
-    margin-top: 80px;
-    padding: 25px 0;
-    border-top: 1px solid var(--border-color);
-    font-size: 1rem;
-}
-footer p a {
-    color: var(--text-color);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-footer p a:hover {
-    color: var(--accent-color);
-    text-decoration: underline;
-}
+footer { text-align: center; margin-top: 80px; padding: 25px 0; border-top: 1px solid var(--border-color); font-size: 1rem; }
+footer p a { color: var(--text-color); text-decoration: none; transition: color 0.3s ease; }
+footer p a:hover { color: var(--accent-color); text-decoration: underline; }
