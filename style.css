@@ -52,7 +52,6 @@ h1 {
     word-break: keep-all;
 }
 
-/* ▼▼▼ この部分が重要な変更点です ▼▼▼ */
 /* ゲームカードのグリッド設定 */
 .game-grid {
     display: grid;
@@ -60,12 +59,10 @@ h1 {
     gap: 30px;
     max-width: 1400px;
     margin: 0 auto;
-
     /* この要素をコンテナクエリの基準（コンテナ）として定義 */
     container-type: inline-size;
     container-name: game-grid;
 }
-/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
 /* 各ゲームカードのスタイル */
 .game-card {
@@ -107,17 +104,16 @@ h1 {
     min-height: 70px; /* 高さを確保してレイアウトを安定させる */
 }
 
-/* ▼▼▼ この部分が重要な変更点です ▼▼▼ */
 .card-content h2 {
+    /* ▼▼▼ この一行を追加して、中央揃えをより強固にします ▼▼▼ */
+    width: 100%;
+    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
     margin: 0;
-    /* コンテナ（.game-grid）の幅に応じて文字サイズを自動調整 */
-    /* 1cqi = コンテナの幅の1% */
     font-size: clamp(0.8rem, 4.5cqi, 1.1rem);
     color: var(--title-color);
     font-weight: 700;
     line-height: 1.4;
 }
-/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
 /* --- レスポンシブ対応 --- */
 @media (max-width: 900px) {
