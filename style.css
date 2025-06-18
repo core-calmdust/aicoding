@@ -1,65 +1,91 @@
+/* 変数定義: 色やスタイルを一元管理 */
+:root {
+    --bg-color: #121828; /* 背景色 */
+    --card-bg-color: rgba(255, 255, 255, 0.07); /* カードの背景色 */
+    --text-color: #E0E0E0; /* 基本テキスト色 */
+    --title-color: #FFFFFF; /* タイトル色 */
+    --accent-color: #4D5BCE; /* アクセントカラー */
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* 基本設定 */
 body {
     font-family: 'Noto Sans JP', sans-serif;
-    background-color: #f4f7f6;
+    background-color: var(--bg-color);
+    background-image: linear-gradient(180deg, var(--bg-color) 0%, #1a223a 100%);
     margin: 0;
-    padding: 20px;
-    color: #333;
+    padding: 30px;
+    color: var(--text-color);
+    overflow-x: hidden; /* 横スクロールを防止 */
 }
 
 /* ヘッダー */
 header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 60px;
 }
 
 h1 {
-    font-size: 2.5rem;
-    color: #2c3e50;
+    font-size: 3rem;
+    color: var(--title-color);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: var(--text-color);
+    opacity: 0.8;
 }
 
 /* ゲームカードのグリッド設定 */
 .game-grid {
     display: grid;
-    /* PCでは3列表示 */
-    grid-template-columns: repeat(3, 1fr);
+    /* PCでは4列表示 */
+    grid-template-columns: repeat(4, 1fr);
     gap: 30px;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 /* 各ゲームカードのスタイル */
 .game-card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    background-color: var(--card-bg-color);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 var(--shadow-color);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px); /* Safari対応 */
     overflow: hidden;
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 /* カードのホバー（マウスオーバー）効果 */
 .game-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 16px 40px 0 var(--shadow-color);
+    border-color: var(--accent-color);
 }
 
 /* カード内の画像 */
 .game-card img {
     width: 100%;
-    height: 200px; /* 高さを固定 */
-    object-fit: cover; /* アスペクト比を保ったままトリミング */
+    aspect-ratio: 16 / 10; /* アスペクト比を維持 */
+    object-fit: cover;
     display: block;
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* カード内のテキスト部分 */
 .card-content {
-    padding: 20px;
+    padding: 20px 15px;
     text-align: center;
-    flex-grow: 1; /* カードの高さを揃えるため */
+    flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -67,8 +93,9 @@ h1 {
 
 .card-content h2 {
     margin: 0;
-    font-size: 1.5rem;
-    color: #34495e;
+    font-size: 1.2rem;
+    color: var(--title-color);
+    font-weight: 700;
 }
 
 /* --- レスポンシブ対応 --- */
@@ -76,45 +103,49 @@ h1 {
 /* タブレットサイズ (幅900px以下) */
 @media (max-width: 900px) {
     .game-grid {
-        /* 2列表示に変更 */
-        grid-template-columns: repeat(2, 1fr);
+        /* 3列表示に変更 */
+        grid-template-columns: repeat(3, 1fr);
     }
     h1 {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
 }
 
 /* スマートフォンサイズ (幅600px以下) */
 @media (max-width: 600px) {
-    .game-grid {
-        /* 1列表示に変更 */
-        grid-template-columns: 1fr;
-    }
     body {
-        padding: 10px;
+        padding: 15px;
     }
-    .game-card img {
-        height: 180px;
+    .game-grid {
+        /* 2列表示に変更 */
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    h1 {
+        font-size: 2rem;
+    }
+    .card-content h2 {
+        font-size: 1rem;
     }
 }
 
 /* --- フッター --- */
 footer {
     text-align: center;
-    margin-top: 60px; /* mainコンテンツとの間隔 */
-    padding: 20px 0;
-    border-top: 1px solid #e0e0e0; /* 上に区切り線 */
+    margin-top: 80px;
+    padding: 25px 0;
+    border-top: 1px solid var(--border-color);
     font-size: 1rem;
 }
 
 footer p a {
-    color: #34495e;
+    color: var(--text-color);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 footer p a:hover {
-    color: #2c3e50;
+    color: var(--accent-color);
     text-decoration: underline;
 }
