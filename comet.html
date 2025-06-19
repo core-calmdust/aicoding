@@ -509,8 +509,13 @@ function hexToRgba(hex, alpha) {
 }
 
 function applyThemeStyles(theme) {
-    const borderAlpha = 0.7 + visualBeat * 0.3;
-    const shadowSize = 15 + visualBeat * 20;
+    // ★★★ 変更点 ★★★
+    // 光り方のエフェクトを強調するために、`visualBeat` の影響を大きくしました。
+    // これにより、ビートに合わせた明滅と光の広がりがよりダイナミックになります。
+    const borderAlpha = 0.5 + visualBeat * 0.5; // 変更前: 0.7 + visualBeat * 0.3
+    const shadowSize = 10 + visualBeat * 40;   // 変更前: 15 + visualBeat * 20
+    // ★★★ 変更ここまで ★★★
+
     canvas.style.borderColor = hexToRgba(theme.ui, borderAlpha);
     canvas.style.boxShadow = `0 0 ${shadowSize}px ${theme.ui}`;
     instructionsContainer.style.color = theme.ui;
