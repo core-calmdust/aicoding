@@ -108,10 +108,11 @@
 
 <script>
 // =================================================================================
-// ▼▼▼ Comet - A Synthwave dodging game (v76 - Mute Fix) ▼▼▼
+// ▼▼▼ Comet - A Synthwave dodging game (v77 - Energy Balance) ▼▼▼
 // =================================================================================
 //
-// SOUND OFF時にSEが再生されることがある問題を修正。
+// 1. エネルギー残量が1/3になったら警告音を鳴らす機能を追加。
+// 2. ステージ進行によるエネルギー減少率を緩和し、難易度を調整。
 //
 
 // ---------------------------------
@@ -158,7 +159,7 @@ const PLAYER_PIXEL_ART = [
     [2,1,1,0,1,1,1,1,1,1,0,1,1,2],
     [0,0,0,0,3,0,0,0,0,3,0,0,0,0],
 ];
-// ★変更: エネルギーアイテムのドット絵を14x14に描き直し
+// エネルギーアイテムのドット絵を14x14に描き直し
 const ENERGY_ITEM_PIXEL_ART = [
     [0,0,0,2,2,2,2,2,2,2,2,0,0,0],
     [0,0,2,2,2,2,2,2,2,2,2,2,0,0],
@@ -429,6 +430,11 @@ class AudioHandler {
                 this.createSound(1568, 0.1, 'sine', 0.8, 0.8, now); 
                 setTimeout(() => this.createSound(2093, 0.15, 'sine', 0.7, 0.8, now + 0.07), 70); 
                 break;
+            // ★追加: エネルギー低下警告音
+            case 'lowEnergy':
+                this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now);
+                setTimeout(() => this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now + 0.15), 150);
+                break;
         }
     }
     
@@ -491,6 +497,7 @@ let hasUsedInvincibility = false;
 let wasMPressed = false;
 let hasSpawned5000PointItem;
 let gameOverReason = '';
+let lowEnergyWarningPlayed; // ★追加: エネルギー低下警告の再生フラグ
 let screenShake = { intensity: 0, duration: 0 };
 let grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
 let chainCount = 0;
@@ -538,6 +545,7 @@ function init() {
     hasUsedInvincibility = false;
     hasSpawned5000PointItem = false;
     gameOverReason = '';
+    lowEnergyWarningPlayed = false; // ★追加: フラグをリセット
     screenShake = { intensity: 0, duration: 0 };
     grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
     chainCount = 0;
@@ -756,9 +764,24 @@ function updatePlayingState(dt_sec) {
     currentCometSpeed += config.cometSpeedIncrease * dt_sec;
     
     const baseEnergyMultiplier = 0.9;
-    const energyDecreaseRate = Math.pow(1.18, stage - 1);
+    const energyDecreaseRate = Math.pow(1.12, stage - 1);
     energy -= baseEnergyMultiplier * energyDecreaseRate * 60 * dt_sec;
     
+    // ★変更: エネルギー低下警告のロジックを繰り返し再生するように修正
+    const energyThreshold = config.energyTotal / 3;
+    if (energy <= energyThreshold && gameState === 'playing') {
+        // 警告状態フラグを立てる (エネルギーバーの点滅で使用)
+        lowEnergyWarningPlayed = true; 
+        
+        // 約1秒ごと(60フレームごと)に警告音を鳴らす
+        if (frameCount % 60 === 0) {
+            audioHandler.playSound('lowEnergy');
+        }
+    } else {
+        // エネルギーが回復したら警告状態を解除
+        lowEnergyWarningPlayed = false;
+    }
+
     if (energy <= 0 && !isPlayerInvincible) { gameOver('energy'); return; }
 
 
@@ -902,7 +925,7 @@ function updatePlayingState(dt_sec) {
                 audioHandler.playSound('itemGet');
             }
             energy = Math.min(config.energyTotal, energy);
-
+            
             effects.push({
                 type: 'textMorph',
                 life: finalInvincibleTime,
@@ -1199,7 +1222,7 @@ function draw() {
                 '1': '#ffffff',
                 '2': itemColor
             };
-            const pixelSize = 2; // ★変更: ドット絵の解像度を上げたので、ピクセルサイズは2に戻す
+            const pixelSize = 2;
             
             drawWithGlow(renderCtx, () => {
                 drawPixelArt(renderCtx, ENERGY_ITEM_PIXEL_ART, i.x, i.y, pixelSize, itemPalette);
@@ -1293,7 +1316,15 @@ function draw() {
     
     if (gameState==='playing' || gameState === 'paused') {
         const barW=200,barH=12,x=20,y=config.canvasHeight-35,r=5;
-        const energyRatio=energy/config.energyTotal,hue=energyRatio*120,energyColor=`hsl(${hue},100%,50%)`;
+        const energyRatio=energy/config.energyTotal;
+        const hue=energyRatio*120;
+        let energyColor=`hsl(${hue},100%,50%)`;
+
+        // ★追加: エネルギー低下時にバーの色を点滅させる効果
+        if (lowEnergyWarningPlayed && frameCount % 10 < 5) {
+            energyColor = '#FFFFFF';
+        }
+
         renderCtx.strokeStyle='rgba(255,255,255,0.5)';renderCtx.lineWidth=2;drawRoundRect(renderCtx, x,y,barW,barH,r);renderCtx.stroke();
         renderCtx.fillStyle='rgba(0,0,0,0.5)';drawRoundRect(renderCtx, x,y,barW,barH,r);renderCtx.fill();
         drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=energyColor;if(barW*energyRatio>0){renderCtx.beginPath();drawRoundRect(renderCtx, x,y,barW*energyRatio,barH,r);renderCtx.fill()}},energyColor, true);
