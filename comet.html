@@ -108,21 +108,10 @@
 
 <script>
 // =================================================================================
-// ▼▼▼ オンラインランキング用設定 ▼▼▼
-// =================================================================================
-const RANKING_CONFIG = {
-    // 【重要】Nhostプロジェクトのダッシュボードで取得したGraphQL EndpointのURLをここに貼り付けてください
-    API_ENDPOINT: "https://comet-outburst-ranking.nhost.run/v1/graphql", 
-};
-// =================================================================================
-// ▲▲▲ オンラインランキング用設定 ▲▲▲
-// =================================================================================
-
-// =================================================================================
-// ▼▼▼ Comet - A Synthwave dodging game (v76 - Online Ranking) ▼▼▼
+// ▼▼▼ Comet - A Synthwave dodging game (v76 - Mute Fix) ▼▼▼
 // =================================================================================
 //
-// オンラインランキング機能を追加。
+// SOUND OFF時にSEが再生されることがある問題を修正。
 //
 
 // ---------------------------------
@@ -148,7 +137,6 @@ const config = {
     glazeScore: 750,
     starGlazeScore: 500,
     highScoreKey: 'cometHighScore',
-    lastPlayerNameKey: 'cometLastPlayerName',
     fontFamily: '"Press Start 2P", monospace',
     glowBlur: 12,
     energyTotal: 20 * 60,
@@ -170,7 +158,7 @@ const PLAYER_PIXEL_ART = [
     [2,1,1,0,1,1,1,1,1,1,0,1,1,2],
     [0,0,0,0,3,0,0,0,0,3,0,0,0,0],
 ];
-// エネルギーアイテムのドット絵
+// ★変更: エネルギーアイテムのドット絵を14x14に描き直し
 const ENERGY_ITEM_PIXEL_ART = [
     [0,0,0,2,2,2,2,2,2,2,2,0,0,0],
     [0,0,2,2,2,2,2,2,2,2,2,2,0,0],
@@ -271,279 +259,115 @@ class AudioHandler {
         const rootNote = 27.50;
 
         const createKick = time => {
-            const osc = this.ctx.createOscillator(),
-                gain = this.ctx.createGain();
-            const noise = this.ctx.createBufferSource(),
-                noiseGain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(120, time);
-            osc.frequency.exponentialRampToValueAtTime(40, time + 0.15);
-            gain.gain.setValueAtTime(1.0, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-            osc.connect(gain).connect(this.masterGain);
-            const bufSize = this.ctx.sampleRate * 0.05;
-            const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < bufSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            noise.buffer = buf;
-            noiseGain.gain.setValueAtTime(0.3, time);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.02);
-            noise.connect(noiseGain).connect(this.masterGain);
-            osc.start(time);
-            osc.stop(time + 0.2);
-            noise.start(time);
-            noise.stop(time + 0.05);
-            this.bgmOscillators.push(osc, gain, noise, noiseGain);
+            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(); const noise = this.ctx.createBufferSource(), noiseGain = this.ctx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(120, time); osc.frequency.exponentialRampToValueAtTime(40, time + 0.15); gain.gain.setValueAtTime(1.0, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2); osc.connect(gain).connect(this.masterGain); const bufSize=this.ctx.sampleRate*0.05; const buf=this.ctx.createBuffer(1,bufSize,this.ctx.sampleRate); const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=Math.random()*2-1; noise.buffer=buf; noiseGain.gain.setValueAtTime(0.3, time); noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.02); noise.connect(noiseGain).connect(this.masterGain); osc.start(time); osc.stop(time + 0.2); noise.start(time); noise.stop(time + 0.05); this.bgmOscillators.push(osc, gain, noise, noiseGain);
         };
         const createHiHat = (time, open = false) => {
-            const noise = this.ctx.createBufferSource();
-            const bufSize = this.ctx.sampleRate * 0.5;
-            const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < bufSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            noise.buffer = buf;
-            const filter = this.ctx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.value = 8000;
-            const panner = this.ctx.createStereoPanner();
-            panner.pan.value = [-0.6, 0.6][this.hiHatPanIndex % 2];
-            this.hiHatPanIndex++;
-            const gain = this.ctx.createGain();
-            const decayTime = open ? 0.3 : 0.05;
-            gain.gain.setValueAtTime(open ? 0.3 : 0.2, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + decayTime);
+            const noise = this.ctx.createBufferSource(); const bufSize=this.ctx.sampleRate*0.5; const buf=this.ctx.createBuffer(1,bufSize,this.ctx.sampleRate); const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=Math.random()*2-1; noise.buffer=buf;
+            const filter = this.ctx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = 8000;
+            const panner = this.ctx.createStereoPanner(); panner.pan.value = [-0.6, 0.6][this.hiHatPanIndex % 2]; this.hiHatPanIndex++;
+            const gain = this.ctx.createGain(); const decayTime = open ? 0.3 : 0.05; gain.gain.setValueAtTime(open ? 0.3 : 0.2, time); gain.gain.exponentialRampToValueAtTime(0.01, time + decayTime);
             noise.connect(filter).connect(panner).connect(gain).connect(this.masterGain);
-            noise.start(time);
-            noise.stop(time + decayTime + 0.05);
-            this.bgmOscillators.push(noise, filter, panner, gain);
+            noise.start(time); noise.stop(time + decayTime + 0.05); this.bgmOscillators.push(noise, filter, panner, gain);
         };
         const createSnare = time => {
-            const noise = this.ctx.createBufferSource();
-            const bufSize = this.ctx.sampleRate * 0.2;
-            const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < bufSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            noise.buffer = buf;
-            const filter = this.ctx.createBiquadFilter();
-            filter.type = 'bandpass';
-            filter.frequency.value = 1500;
-            filter.Q.value = 1;
-            const gain = this.ctx.createGain();
-            gain.gain.setValueAtTime(0.8, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-            noise.connect(filter).connect(gain).connect(this.masterGain);
-            noise.start(time);
-            noise.stop(time + 0.1);
-            this.bgmOscillators.push(noise, filter, gain);
+            const noise = this.ctx.createBufferSource(); const bufSize=this.ctx.sampleRate*0.2; const buf=this.ctx.createBuffer(1,bufSize,this.ctx.sampleRate); const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=Math.random()*2-1; noise.buffer=buf; const filter = this.ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 1500; filter.Q.value = 1; const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.8, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1); noise.connect(filter).connect(gain).connect(this.masterGain); noise.start(time); noise.stop(time + 0.1); this.bgmOscillators.push(noise, filter, gain);
         };
         const createStereoBass = (time, note) => {
-            const oscL = this.ctx.createOscillator(),
-                oscR = this.ctx.createOscillator();
-            const pannerL = this.ctx.createStereoPanner(),
-                pannerR = this.ctx.createStereoPanner();
-            const filter = this.ctx.createBiquadFilter(),
-                gain = this.ctx.createGain();
-            oscL.type = 'square';
-            oscL.frequency.value = note;
-            oscR.type = 'sawtooth';
-            oscR.frequency.value = note * 1.01;
-            filter.type = 'lowpass';
-            filter.Q.value = 5;
-            filter.frequency.setValueAtTime(800, time);
-            filter.frequency.exponentialRampToValueAtTime(100, time + sixteenth * 0.8);
-            gain.gain.setValueAtTime(0.6, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 0.9);
-            pannerL.pan.value = -0.8;
-            oscL.connect(pannerL).connect(filter);
-            pannerR.pan.value = 0.8;
-            oscR.connect(pannerR).connect(filter);
+            const oscL = this.ctx.createOscillator(), oscR = this.ctx.createOscillator();
+            const pannerL = this.ctx.createStereoPanner(), pannerR = this.ctx.createStereoPanner();
+            const filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+            oscL.type = 'square'; oscL.frequency.value = note;
+            oscR.type = 'sawtooth'; oscR.frequency.value = note * 1.01;
+            filter.type = 'lowpass'; filter.Q.value = 5; filter.frequency.setValueAtTime(800, time); filter.frequency.exponentialRampToValueAtTime(100, time + sixteenth * 0.8);
+            gain.gain.setValueAtTime(0.6, time); gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 0.9);
+            pannerL.pan.value = -0.8; oscL.connect(pannerL); pannerL.connect(filter);
+            pannerR.pan.value = 0.8; oscR.connect(pannerR); pannerR.connect(filter);
             filter.connect(gain).connect(this.masterGain);
-            oscL.start(time);
-            oscL.stop(time + sixteenth);
-            oscR.start(time);
-            oscR.stop(time + sixteenth);
+            oscL.start(time); oscL.stop(time + sixteenth); oscR.start(time); oscR.stop(time + sixteenth);
             this.bgmOscillators.push(oscL, oscR, pannerL, pannerR, filter, gain);
         };
         const createSequence = (time, note) => {
-            const osc = this.ctx.createOscillator(),
-                panner = this.ctx.createStereoPanner(),
-                gain = this.ctx.createGain(),
-                delay = this.ctx.createDelay(),
-                feedback = this.ctx.createGain();
+            const osc=this.ctx.createOscillator(), panner=this.ctx.createStereoPanner(), gain=this.ctx.createGain(), delay=this.ctx.createDelay(), feedback=this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
-            osc.type = 'triangle';
-            osc.frequency.value = note;
-            gain.gain.setValueAtTime(0.3, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-            delay.delayTime.value = sixteenth * 3;
-            feedback.gain.value = 0.5;
+            osc.type = 'triangle'; osc.frequency.value = note; gain.gain.setValueAtTime(0.3, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+            delay.delayTime.value = sixteenth * 3; feedback.gain.value = 0.5;
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
-            osc.start(time);
-            osc.stop(time + 0.1);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            gain.connect(this.masterGain); gain.connect(delay); delay.connect(feedback).connect(delay); delay.connect(this.masterGain);
+            osc.start(time); osc.stop(time + 0.1); this.bgmOscillators.push(osc, panner, gain, delay, feedback);
         };
         const createStereoPad = (time, note) => {
-            const oscL = this.ctx.createOscillator(),
-                oscR = this.ctx.createOscillator();
-            const pannerL = this.ctx.createStereoPanner(),
-                pannerR = this.ctx.createStereoPanner();
-            const filter = this.ctx.createBiquadFilter(),
-                gain = this.ctx.createGain();
-            oscL.type = 'sawtooth';
-            oscR.type = 'sawtooth';
-            oscL.frequency.value = note;
-            oscR.frequency.value = note;
-            oscL.detune.value = -10;
-            oscR.detune.value = 10;
-            pannerL.pan.value = -1;
-            pannerR.pan.value = 1;
-            filter.type = 'lowpass';
-            filter.Q.value = 1;
-            filter.frequency.setValueAtTime(200, time);
-            filter.frequency.linearRampToValueAtTime(1500, time + sixteenth * 64);
-            filter.frequency.linearRampToValueAtTime(200, time + sixteenth * 128);
-            gain.gain.setValueAtTime(0, time);
-            gain.gain.linearRampToValueAtTime(0.2, time + sixteenth * 4);
-            gain.gain.setValueAtTime(0.2, time + sixteenth * 120);
-            gain.gain.linearRampToValueAtTime(0, time + sixteenth * 128);
-            oscL.connect(pannerL).connect(filter);
-            oscR.connect(pannerR).connect(filter);
+            const oscL = this.ctx.createOscillator(), oscR = this.ctx.createOscillator();
+            const pannerL = this.ctx.createStereoPanner(), pannerR = this.ctx.createStereoPanner();
+            const filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+            oscL.type = 'sawtooth'; oscR.type = 'sawtooth'; oscL.frequency.value = note; oscR.frequency.value = note;
+            oscL.detune.value = -10; oscR.detune.value = 10;
+            pannerL.pan.value = -1; pannerR.pan.value = 1;
+            filter.type = 'lowpass'; filter.Q.value = 1; filter.frequency.setValueAtTime(200, time); filter.frequency.linearRampToValueAtTime(1500, time + sixteenth * 64); filter.frequency.linearRampToValueAtTime(200, time + sixteenth * 128);
+            gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(0.2, time + sixteenth * 4); gain.gain.setValueAtTime(0.2, time + sixteenth * 120); gain.gain.linearRampToValueAtTime(0, time + sixteenth * 128);
+            oscL.connect(pannerL).connect(filter); oscR.connect(pannerR).connect(filter);
             filter.connect(gain).connect(this.masterGain);
-            oscL.start(time);
-            oscL.stop(time + sixteenth * 128);
-            oscR.start(time);
-            oscR.stop(time + sixteenth * 128);
+            oscL.start(time); oscL.stop(time + sixteenth * 128); oscR.start(time); oscR.stop(time + sixteenth * 128);
             this.bgmOscillators.push(oscL, oscR, pannerL, pannerR, filter, gain);
         };
         const createSequence2 = (time, note) => {
-            const osc = this.ctx.createOscillator(),
-                panner = this.ctx.createStereoPanner(),
-                gain = this.ctx.createGain();
+            const osc = this.ctx.createOscillator(), panner = this.ctx.createStereoPanner(), gain = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.7;
-            osc.type = 'sine';
-            osc.frequency.value = note;
-            gain.gain.setValueAtTime(0.45, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 1.5);
+            osc.type = 'sine'; osc.frequency.value = note; gain.gain.setValueAtTime(0.45, time); gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 1.5);
             osc.connect(panner).connect(gain).connect(this.masterGain);
-            osc.start(time);
-            osc.stop(time + sixteenth * 1.5);
-            this.bgmOscillators.push(osc, panner, gain);
+            osc.start(time); osc.stop(time + sixteenth * 1.5); this.bgmOscillators.push(osc, panner, gain);
         };
         const createSequence3 = (time, note) => {
-            const osc = this.ctx.createOscillator(),
-                panner = this.ctx.createStereoPanner(),
-                gain = this.ctx.createGain(),
-                delay = this.ctx.createDelay(),
-                feedback = this.ctx.createGain();
+            const osc = this.ctx.createOscillator(), panner = this.ctx.createStereoPanner(), gain = this.ctx.createGain(), delay = this.ctx.createDelay(), feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
-            osc.type = 'triangle';
-            osc.frequency.value = note;
-            gain.gain.setValueAtTime(0.4, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 2);
-            delay.delayTime.value = sixteenth * 4;
-            feedback.gain.value = 0.5;
+            osc.type = 'triangle'; osc.frequency.value = note; gain.gain.setValueAtTime(0.4, time); gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 2);
+            delay.delayTime.value = sixteenth * 4; feedback.gain.value = 0.5;
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
-            osc.start(time);
-            osc.stop(time + sixteenth * 2);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            gain.connect(this.masterGain); gain.connect(delay); delay.connect(feedback).connect(delay); delay.connect(this.masterGain);
+            osc.start(time); osc.stop(time + sixteenth * 2); this.bgmOscillators.push(osc, panner, gain, delay, feedback);
         };
         const createSequence4 = (time, note) => {
-            const osc = this.ctx.createOscillator(),
-                panner = this.ctx.createStereoPanner(),
-                gain = this.ctx.createGain(),
-                delay = this.ctx.createDelay(),
-                feedback = this.ctx.createGain();
+            const osc = this.ctx.createOscillator(), panner = this.ctx.createStereoPanner(), gain = this.ctx.createGain(), delay = this.ctx.createDelay(), feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
-            osc.type = 'sine';
-            osc.frequency.value = note;
-            gain.gain.setValueAtTime(0.35, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 3.5);
-            delay.delayTime.value = sixteenth * 3;
-            feedback.gain.value = 0.4;
+            osc.type = 'sine'; osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.35, time); gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 3.5);
+            delay.delayTime.value = sixteenth * 3; feedback.gain.value = 0.4;
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
-            osc.start(time);
-            osc.stop(time + sixteenth * 3.5);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            gain.connect(this.masterGain); gain.connect(delay); delay.connect(feedback).connect(delay); delay.connect(this.masterGain);
+            osc.start(time); osc.stop(time + sixteenth * 3.5); this.bgmOscillators.push(osc, panner, gain, delay, feedback);
         };
         const createSequence5 = (time, note) => {
-            const osc = this.ctx.createOscillator(),
-                panner = this.ctx.createStereoPanner(),
-                gain = this.ctx.createGain(),
-                delay = this.ctx.createDelay(),
-                feedback = this.ctx.createGain();
+            const osc = this.ctx.createOscillator(), panner = this.ctx.createStereoPanner(), gain = this.ctx.createGain(), delay = this.ctx.createDelay(), feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
-            osc.type = 'triangle';
-            osc.frequency.value = note;
-            gain.gain.setValueAtTime(0.4, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 4);
-            delay.delayTime.value = sixteenth * 6;
-            feedback.gain.value = 0.4;
+            osc.type = 'triangle'; osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.4, time); gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 4);
+            delay.delayTime.value = sixteenth * 6; feedback.gain.value = 0.4;
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
-            osc.start(time);
-            osc.stop(time + sixteenth * 4);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            gain.connect(this.masterGain); gain.connect(delay); delay.connect(feedback).connect(delay); delay.connect(this.masterGain);
+            osc.start(time); osc.stop(time + sixteenth * 4); this.bgmOscillators.push(osc, panner, gain, delay, feedback);
         };
 
         while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
-
+            
             if (noteInMeasure === 0) {
                 this.barTrigger = true;
             }
+
             if (noteInMeasure % 4 === 0) {
                 createKick(this.nextNoteTime);
                 visualBeat = 1.0;
             }
-            if (noteInMeasure === 4 || noteInMeasure === 12) {
-                createSnare(this.nextNoteTime);
-            }
-            if (noteInMeasure % 2 === 1) {
-                createHiHat(this.nextNoteTime, false);
-            }
-            if (noteInMeasure === 14) {
-                createHiHat(this.nextNoteTime, true);
-            }
-            if (beatInLoop === 0) {
-                createStereoPad(this.nextNoteTime, rootNote * 2);
-            }
+            if (noteInMeasure === 4 || noteInMeasure === 12) createSnare(this.nextNoteTime);
+            if (noteInMeasure % 2 === 1) createHiHat(this.nextNoteTime, false);
+            if (noteInMeasure === 14) createHiHat(this.nextNoteTime, true);
+            if (beatInLoop === 0) createStereoPad(this.nextNoteTime, rootNote * 2);
 
             const measureIn8BarLoop = Math.floor(beatInLoop / 16);
-            if (measureIn8BarLoop % 2 === 0) {
-                if ([0, 8].includes(noteInMeasure)) {
-                    createStereoBass(this.nextNoteTime, rootNote);
-                }
-            } else {
-                if ([0, 6, 10, 14].includes(noteInMeasure)) {
-                    createStereoBass(this.nextNoteTime, rootNote);
-                }
-            }
-
-            if ([3, 7, 10, 15].includes(noteInMeasure)) {
-                createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
-            }
+            if (measureIn8BarLoop % 2 === 0) { if ([0, 8].includes(noteInMeasure)) createStereoBass(this.nextNoteTime, rootNote);
+            } else { if ([0, 6, 10, 14].includes(noteInMeasure)) createStereoBass(this.nextNoteTime, rootNote); }
+            
+            if ([3, 7, 10, 15].includes(noteInMeasure)) createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
 
             if (bgmStage >= 2) {
                 if (noteInMeasure % 4 === 0) {
@@ -551,24 +375,21 @@ class AudioHandler {
                     createSequence2(this.nextNoteTime, rootNote * 8 * Math.pow(2, degree / 12));
                 }
             }
+
             if (bgmStage >= 3) {
                 if (beatInLoop === 62) {
-                    const chordIndex = 1;
-                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
-                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 7) / 12);
+                    const chordIndex = 1; const chordRootDegree = this.seq3ChordProgression[chordIndex]; const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 7) / 12);
                     createSequence3(this.nextNoteTime, note);
                 }
                 if (beatInLoop === 126) {
-                    const chordIndex = 3;
-                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
-                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 2) / 12);
+                    const chordIndex = 3; const chordRootDegree = this.seq3ChordProgression[chordIndex]; const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 2) / 12);
                     createSequence3(this.nextNoteTime, note);
                 }
             }
             if (bgmStage >= 4) {
-                if (beatInLoop % 8 === 0) {
+                if(beatInLoop % 8 === 0) {
                     const degree = this.seq4Melody[this.seq4MelodyIndex];
-                    const note = rootNote * 16 * Math.pow(2, degree / 12);
+                    const note = rootNote * 16 * Math.pow(2, degree/12);
                     createSequence4(this.nextNoteTime, note);
                     this.seq4MelodyIndex = (this.seq4MelodyIndex + 1) % this.seq4Melody.length;
                 }
@@ -577,15 +398,15 @@ class AudioHandler {
                 if (beatInLoop % 4 === 0) {
                     const degree = this.seq5Melody[this.seq5MelodyIndex];
                     if (degree !== null) {
-                        const note = rootNote * 8 * Math.pow(2, degree / 12);
+                        const note = rootNote * 8 * Math.pow(2, degree/12);
                         createSequence5(this.nextNoteTime, note);
                     }
                     this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
                 }
             }
-
+            
             this.nextNoteTime += sixteenth;
-            this.current16th = (this.current16th + 1) % 128;
+            this.current16th = (this.current16th + 1) % 128; 
         }
     }
     
@@ -604,7 +425,10 @@ class AudioHandler {
             case 'start': [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.4, now + i * 0.08)); break;
             case 'glaze': this.createSound(880, 0.1, 'triangle', 0.8, 0.5, now, true); break;
             case 'explosion': const b = this.ctx.sampleRate * 0.5; const buf = this.ctx.createBuffer(1, b, this.ctx.sampleRate); const o = buf.getChannelData(0); for (let i = 0; i < b; i++) o[i] = Math.random() * 2 - 1; const s = this.ctx.createBufferSource(); s.buffer = buf; const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(2000, now); f.frequency.exponentialRampToValueAtTime(100, now + 0.3); const g = this.ctx.createGain(); g.gain.setValueAtTime(0.7, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.4); s.connect(f).connect(g).connect(this.masterGain); s.start(now); s.stop(now + 0.5); break;
-            case 'invincibleHit': this.createSound(1568, 0.1, 'sine', 0.8, 0.8, now); setTimeout(() => this.createSound(2093, 0.15, 'sine', 0.7, 0.8, now + 0.07), 70); break;
+            case 'invincibleHit': 
+                this.createSound(1568, 0.1, 'sine', 0.8, 0.8, now); 
+                setTimeout(() => this.createSound(2093, 0.15, 'sine', 0.7, 0.8, now + 0.07), 70); 
+                break;
         }
     }
     
@@ -612,8 +436,16 @@ class AudioHandler {
         if (!this.isInitialized || this.isMuted) return;
         const now = this.ctx.currentTime;
         switch(type) {
-            case 'gameOver': this.createSound(220, 0.8, 'sawtooth', 0.2, 0.8, now); setTimeout(() => this.createSound(110, 0.8, 'sawtooth', 0.4, 0.8, now + 0.1), 100); setTimeout(() => this.createSound(55, 0.8, 'sawtooth', 0.6, 0.8, now + 0.2), 200); break;
-            case 'specialItemGet': [1046, 1318, 1567, 2093].forEach((f, i) => { this.createSound(f, 0.15, 'triangle', 0.8, 0.6, now + i * 0.07); }); break;
+            case 'gameOver':
+                this.createSound(220, 0.8, 'sawtooth', 0.2, 0.8, now);
+                setTimeout(() => this.createSound(110, 0.8, 'sawtooth', 0.4, 0.8, now + 0.1), 100);
+                setTimeout(() => this.createSound(55, 0.8, 'sawtooth', 0.6, 0.8, now + 0.2), 200);
+                break;
+            case 'specialItemGet':
+                [1046, 1318, 1567, 2093].forEach((f, i) => {
+                     this.createSound(f, 0.15, 'triangle', 0.8, 0.6, now + i * 0.07);
+                });
+                break;
         }
     }
 
@@ -626,7 +458,7 @@ class AudioHandler {
 }
 
 // ---------------------------------
-// ゲームのメインロジック
+// ゲームのメインロジック (完全版)
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -643,9 +475,10 @@ const controlsInstruction = document.getElementById('controls-instruction');
 const soundToggleButton = document.getElementById('sound-toggle-button');
 
 let gameState = 'title', score = 0, highScore = localStorage.getItem(config.highScoreKey) || 0, frameCount = 0;
-const input = { left: false, right: false, slow: false, startTrigger: false, pauseTrigger: false, quitTrigger: false, upTrigger: false, downTrigger: false, confirmTrigger: false, backTrigger: false };
-let wasStartPressed = false, wasPPressed = false, wasQPressed = false;
-let wasGpUpPressed = false, wasGpDownPressed = false, wasGpConfirmPressed = false, wasGpBackPressed = false;
+const input = { left: false, right: false, slow: false, startTrigger: false, pauseTrigger: false, quitTrigger: false };
+let wasStartPressed = false;
+let wasPPressed = false;
+let wasQPressed = false;
 let player, comets, stars, particles, effects, items, scoreTexts;
 let currentCometSpeed, lastInputDevice = 'keyboard';
 let stage, stageClearFrame, currentThemeIndex;
@@ -653,7 +486,8 @@ let energy, nextItemScore, nextSpecialItemScore, newHighScoreAchieved;
 let elapsedTime, lastTimestamp;
 let visualBeat = 0;
 let nextWayShotFrame;
-let isInvincible = false, hasUsedInvincibility = false;
+let isInvincible = false;
+let hasUsedInvincibility = false;
 let wasMPressed = false;
 let hasSpawned5000PointItem;
 let gameOverReason = '';
@@ -662,15 +496,10 @@ let grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
 let chainCount = 0;
 let chainEffectPending = false;
 
-// オンラインランキング関連の変数
-const selectableChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
-let onlineHighScores = [];
-let rankingStatus = 'loading'; // 'loading', 'loaded', 'error'
-let playerName = "";
-let nameEntryCursorBlink = 0;
-let nameEntrySelectedCharIndex = 0;
-
-function hexToRgba(hex, alpha) { const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r}, ${g}, ${b}, ${alpha})`; }
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 function applyThemeStyles(theme) {
     const borderAlpha = 0.7 + visualBeat * 0.3;
@@ -679,6 +508,7 @@ function applyThemeStyles(theme) {
     canvas.style.boxShadow = `0 0 ${shadowSize}px ${theme.ui}`;
     instructionsContainer.style.color = theme.ui;
     instructionsContainer.style.textShadow = `0 0 10px ${theme.ui}`;
+    
     soundToggleButton.style.color = theme.ui;
     soundToggleButton.style.textShadow = `0 0 5px ${theme.ui}`;
     soundToggleButton.style.borderColor = theme.ui;
@@ -686,74 +516,36 @@ function applyThemeStyles(theme) {
     soundToggleButton.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
 }
 
-// オンラインランキングAPI通信関数
-async function fetchHighScores() {
-    if (!RANKING_CONFIG.API_ENDPOINT.startsWith('https://')) {
-        rankingStatus = 'error';
-        console.error("API_ENDPOINTが正しく設定されていません。");
-        return;
-    }
-    rankingStatus = 'loading';
-    try {
-        const query = `query GetScores { scores(limit: 10, order_by: {score: desc}) { name score } }`;
-        const response = await fetch(RANKING_CONFIG.API_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
-        });
-        if (!response.ok) throw new Error(`Network response was not ok (${response.status})`);
-        const json = await response.json();
-        if (json.errors) throw new Error(json.errors[0].message);
-        onlineHighScores = json.data.scores;
-        rankingStatus = 'loaded';
-    } catch (error) {
-        console.error("Failed to fetch high scores:", error);
-        rankingStatus = 'error';
-    }
-}
-
-async function submitHighScore(name, score) {
-    if (!RANKING_CONFIG.API_ENDPOINT.startsWith('https://')) return;
-    try {
-        const mutation = `mutation InsertScore($name: String!, $score: bigint!) { insert_scores_one(object: {name: $name, score: $score}) { id } }`;
-        await fetch(RANKING_CONFIG.API_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: mutation, variables: { name, score } })
-        });
-        await fetchHighScores(); // 送信成功後、ランキングを再取得
-    } catch (error) {
-        console.error("Failed to submit high score:", error);
-    }
-}
-
-function submitAndSaveName(name) {
-    const finalName = name.padEnd(3, ' ');
-    localStorage.setItem(config.lastPlayerNameKey, finalName.trim());
-    submitHighScore(finalName, score).then(() => {
-        gameState = 'gameOver';
-    });
-}
-
 function init() {
-    player = { x: config.canvasWidth / 2, y: config.canvasHeight - 80, radius: config.playerHitboxRadius, invincibleTimer: 0, maxInvincibleTimer: 0 };
+    player = { 
+        x: config.canvasWidth / 2, 
+        y: config.canvasHeight - 80, 
+        radius: config.playerHitboxRadius,
+        invincibleTimer: 0,
+        maxInvincibleTimer: 0
+    };
     comets = []; particles = []; effects = []; items = []; scoreTexts = [];
     stars = Array.from({ length: config.starCount }, () => ({ x: Math.random()*config.canvasWidth, y:Math.random()*config.canvasHeight, width:Math.random()*1.5+1, length:Math.random()*10+5, speed:Math.random()*20+10, isGlazed:false, }));
     score = 0; frameCount = 0; elapsedTime = 0; lastTimestamp = 0;
     currentCometSpeed = config.initialCometSpeed;
-    stage = 1; stageClearFrame = STAGE_LENGTH_IN_FRAMES; currentThemeIndex = 0;
-    energy = config.energyTotal; nextItemScore = config.energyItemScoreNormal; nextSpecialItemScore = config.energyItemScoreSpecial; newHighScoreAchieved = false;
+    stage = 1; 
+    stageClearFrame = STAGE_LENGTH_IN_FRAMES; 
+    currentThemeIndex = 0;
+    energy = config.energyTotal; nextItemScore = config.energyItemScoreNormal;
+    nextSpecialItemScore = config.energyItemScoreSpecial; newHighScoreAchieved = false;
     nextWayShotFrame = (2 + Math.random() * 2) * 60;
-    isInvincible = false; hasUsedInvincibility = false; hasSpawned5000PointItem = false;
+    isInvincible = false;
+    hasUsedInvincibility = false;
+    hasSpawned5000PointItem = false;
     gameOverReason = '';
     screenShake = { intensity: 0, duration: 0 };
     grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
-    chainCount = 0; chainEffectPending = false;
-    highScore = localStorage.getItem(config.highScoreKey) || 0;
-    playerName = "";
-    nameEntrySelectedCharIndex = 0;
-    fetchHighScores();
-    canvas.style.filter = 'none'; canvas.style.webkitFilter = 'none';
+    chainCount = 0;
+    chainEffectPending = false;
+    
+    canvas.style.filter = 'none';
+    canvas.style.webkitFilter = 'none';
+    
     applyThemeStyles(themes[currentThemeIndex]);
 }
 
@@ -768,6 +560,7 @@ function updateInstructions() {
     const pauseText = lastInputDevice === 'keyboard' ? 'PAUSE: P' : 'PAUSE: START';
     mainInstruction.textContent = `${pauseText} / FULLSCREEN: F`;
     extraInstruction.textContent = 'ENERGY BOX @ 10,000 PTS';
+
     const moveText = lastInputDevice === 'keyboard' ? 'MOVE: ARROWS' : 'MOVE: PAD';
     const slowText = lastInputDevice === 'keyboard' ? 'SLOW: Z/SHIFT' : 'SLOW: BUTTON';
     controlsInstruction.textContent = `${moveText} | ${slowText}`;
@@ -775,20 +568,16 @@ function updateInstructions() {
 
 function pollInput() {
     const gamepads = navigator.getGamepads();
-    let gpLeft = false, gpRight = false, gpStart = false, gpSlow = false, gpSelect = false;
-    let gpUp = false, gpDown = false, gpConfirm = false, gpBack = false;
+    let gpLeft = false, gpRight = false, gpStart = false, gpSlow = false;
+    let gpSelect = false;
 
     for (const gp of gamepads) {
         if (!gp) continue;
         if (gp.buttons.some(b => b.pressed) || gp.axes.some(a => Math.abs(a) > 0.1)) lastInputDevice = 'gamepad';
         gpLeft = gp.buttons[14]?.pressed || gp.axes[0] < -0.5;
         gpRight = gp.buttons[15]?.pressed || gp.axes[0] > 0.5;
-        gpUp = gp.buttons[12]?.pressed || gp.axes[1] < -0.5;
-        gpDown = gp.buttons[13]?.pressed || gp.axes[1] > 0.5;
         gpStart = gp.buttons[9]?.pressed;
-        gpConfirm = gp.buttons[0]?.pressed; // A button
-        gpBack = gp.buttons[1]?.pressed; // B button
-        gpSlow = gp.buttons[2]?.pressed || gp.buttons[3]?.pressed || gp.buttons[6]?.pressed || gp.buttons[7]?.pressed;
+        gpSlow = gp.buttons[0]?.pressed || gp.buttons[1]?.pressed;
         gpSelect = gp.buttons[8]?.pressed;
     }
     input.left = keyState['ArrowLeft'] || gpLeft;
@@ -796,67 +585,51 @@ function pollInput() {
     input.slow = keyState['Shift'] || keyState['z'] || keyState['Z'] || gpSlow;
     
     const isStartPressed = keyState['Enter'] || gpStart;
-    input.startTrigger = isStartPressed && !wasStartPressed;
+    const wasStartJustPressed = isStartPressed && !wasStartPressed;
     wasStartPressed = isStartPressed;
     
+    input.startTrigger = wasStartJustPressed;
+
     const isPPressed = keyState['p'] || keyState['P'];
-    input.pauseTrigger = (isPPressed && !wasPPressed) || (input.startTrigger && lastInputDevice === 'gamepad' && (gameState === 'playing' || gameState === 'paused'));
+    const wasPJustPressed = isPPressed && !wasPPressed;
     wasPPressed = isPPressed;
-
+    input.pauseTrigger = wasPJustPressed || (wasStartJustPressed && lastInputDevice === 'gamepad');
+    
     const isQPressed = keyState['q'] || keyState['Q'];
-    input.quitTrigger = (isQPressed && !wasQPressed) || gpSelect;
+    const wasQJustPressed = isQPressed && !wasQPressed;
     wasQPressed = isQPressed;
-
-    // Name entry controls
-    const isGpUpPressed = keyState['ArrowUp'] || gpUp;
-    input.upTrigger = isGpUpPressed && !wasGpUpPressed;
-    wasGpUpPressed = isGpUpPressed;
-
-    const isGpDownPressed = keyState['ArrowDown'] || gpDown;
-    input.downTrigger = isGpDownPressed && !wasGpDownPressed;
-    wasGpDownPressed = isGpDownPressed;
-
-    const isGpConfirmPressed = gpConfirm;
-    input.confirmTrigger = isGpConfirmPressed && !wasGpConfirmPressed;
-    wasGpConfirmPressed = isGpConfirmPressed;
-
-    const isGpBackPressed = gpBack;
-    input.backTrigger = isGpBackPressed && !wasGpBackPressed;
-    wasGpBackPressed = isGpBackPressed;
+    input.quitTrigger = wasQJustPressed || gpSelect;
 }
 
 function toggleInvincibility() {
     isInvincible = !isInvincible;
-    if (isInvincible) { hasUsedInvincibility = true; } 
-    else {
+    if (isInvincible) {
+        hasUsedInvincibility = true;
+    } else {
+        const isPlayerInvincible = player.invincibleTimer > 0;
         let shouldGameOver = false;
-        if (energy <= 0) shouldGameOver = true;
-        for (const c of comets) {
-            const dx = player.x - c.x, dy = player.y - c.y;
-            if (Math.sqrt(dx*dx + dy*dy) < player.radius + c.radius) { shouldGameOver = true; break; }
+        if (energy <= 0) {
+            shouldGameOver = true;
         }
-        if (shouldGameOver) gameOver('collision');
+        for (const c of comets) {
+            const dx = player.x - c.x, dy = player.y - c.y, d = Math.sqrt(dx*dx + dy*dy);
+            if (!isPlayerInvincible && d < player.radius + c.radius) {
+                shouldGameOver = true;
+                break;
+            }
+        }
+        if (shouldGameOver) {
+            gameOver('collision');
+        }
     }
 }
 
 function gameOver(reason) {
-    if (gameState === 'gameOver' || gameState === 'nameEntry') return;
-    
+    if (gameState === 'gameOver') return;
+    gameState = 'gameOver';
     gameOverReason = reason;
-    audioHandler.stopBgm();
-    
-    const isTopTen = onlineHighScores.length < 10 || (onlineHighScores.length > 0 && score > onlineHighScores[onlineHighScores.length - 1].score);
 
-    //if (score > 0 && isTopTen && score > highScore) {
-    if (score > 0 && isTopTen) {
-        gameState = 'nameEntry';
-        playerName = "";
-        nameEntryCursorBlink = 0;
-        nameEntrySelectedCharIndex = 0;
-    } else {
-        gameState = 'gameOver';
-    }
-    
+    audioHandler.stopBgm();
     audioHandler.playJingle('gameOver');
     
     if (reason === 'collision') {
@@ -864,119 +637,216 @@ function gameOver(reason) {
         screenShake = { intensity: 25, duration: 45 };
         effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 30, maxLife: 30, radius: 20 });
         effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
-        for (let i = 0; i < 350; i++) { const angle = Math.random() * Math.PI * 2, speed = (Math.random() * 15 + 5) * 60, theme = themes[currentThemeIndex], color = [theme.player, theme.comet, theme.ui, '#ff3344', '#ffff00', '#ffffff'][Math.floor(Math.random() * 6)]; particles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: Math.random() * 100 + 80, maxLife: 180, color: color, size: Math.random() * 3.5 + 1.5, gravityMultiplier: Math.random() * 0.6 + 0.7, }); }
+        for (let i = 0; i < 350; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (Math.random() * 15 + 5) * 60;
+            const theme = themes[currentThemeIndex];
+            const color = [theme.player, theme.comet, theme.ui, '#ff3344', '#ffff00', '#ffffff'][Math.floor(Math.random() * 6)];
+            particles.push({
+                x: player.x, y: player.y, 
+                vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, 
+                life: Math.random() * 100 + 80, maxLife: 180, 
+                color: color, 
+                size: Math.random() * 3.5 + 1.5,
+                gravityMultiplier: Math.random() * 0.6 + 0.7,
+            });
+        }
     } else if (reason === 'energy') {
         effects.push({ type: 'energyGameOverFlash', life: 8, maxLife: 8 });
         grayscaleAnimation.isActive = true;
         grayscaleAnimation.progress = 0;
     }
 
-    if (score > highScore) {
+    if (!hasUsedInvincibility && score > highScore) {
         highScore = score;
         localStorage.setItem(config.highScoreKey, highScore);
         newHighScoreAchieved = true;
     }
 }
 
-function spawnWayComets() { const wayCount = Math.floor(Math.random() * (stage - 1)) + 2, startX = Math.random() * config.canvasWidth, startY = -config.cometCoreRadius * 2, targetX = player.x, targetY = player.y, angleToPlayer = Math.atan2(targetY - startY, targetX - startX), speed = currentCometSpeed * 0.75, spreadAngle = Math.PI / 8, totalAngle = spreadAngle * (wayCount - 1), startAngle = angleToPlayer - totalAngle / 2; for (let i = 0; i < wayCount; i++) { const angle = startAngle + i * spreadAngle; comets.push({ x: startX, y: startY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius: config.cometCoreRadius, isGlazed: false, isWay: true }); } }
+function spawnWayComets() {
+    const wayCount = Math.floor(Math.random() * (stage - 1)) + 2;
+    
+    const startX = Math.random() * config.canvasWidth;
+    const startY = -config.cometCoreRadius * 2;
+    
+    const targetX = player.x;
+    const targetY = player.y;
 
-function updateBackground(dt_sec) { let speedRatio = 0; if (gameState === 'playing') speedRatio = (currentCometSpeed / config.initialCometSpeed); else if (gameState === 'title') speedRatio = 0.3; if (speedRatio > 0) { stars.forEach(s => { s.y += s.speed * config.starScrollMultiplier * speedRatio * dt_sec; if (s.y > config.canvasHeight) { s.y = 0; s.x = Math.random()*config.canvasWidth; s.isGlazed = false; } }); } }
+    const angleToPlayer = Math.atan2(targetY - startY, targetX - startX);
+    const speed = currentCometSpeed * 0.75;
+
+    const spreadAngle = Math.PI / 8;
+    const totalAngle = spreadAngle * (wayCount - 1);
+    const startAngle = angleToPlayer - totalAngle / 2;
+
+    for (let i = 0; i < wayCount; i++) {
+        const angle = startAngle + i * spreadAngle;
+        comets.push({
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            radius: config.cometCoreRadius,
+            isGlazed: false,
+            isWay: true 
+        });
+    }
+}
+
+function updateBackground(dt_sec) {
+    let speedRatio = 0; 
+    if (gameState === 'playing') {
+        speedRatio = (currentCometSpeed / config.initialCometSpeed);
+    } else if (gameState === 'title') {
+        speedRatio = 0.3;
+    }
+    
+    if (speedRatio > 0) {
+        stars.forEach(s => {
+            s.y += s.speed * config.starScrollMultiplier * speedRatio * dt_sec;
+            if (s.y > config.canvasHeight) {
+                s.y = 0; s.x = Math.random()*config.canvasWidth; s.isGlazed = false;
+            }
+        });
+    }
+}
 
 function updatePlayingState(dt_sec) {
     if (audioHandler.barTrigger) {
-        effects.push({ type: 'barLine', life: 30, maxLife: 30 });
+        effects.push({
+            type: 'barLine',
+            life: 30,
+            maxLife: 30,
+        });
         audioHandler.barTrigger = false;
     }
+
     if (player.invincibleTimer > 0) {
         player.invincibleTimer -= 60 * dt_sec;
-        if (player.invincibleTimer <= 0) {
+        if(player.invincibleTimer <= 0) {
             player.invincibleTimer = 0;
             if (chainCount > 1) {
-                effects.push({ type: 'comboFadeOut', life: 12, maxLife: 12, count: chainCount });
+                effects.push({
+                    type: 'comboFadeOut',
+                    life: 12,
+                    maxLife: 12,
+                    count: chainCount
+                });
             }
             chainCount = 0;
         }
     }
+    
     const isPlayerTemporarilyInvincible = player.invincibleTimer > 0;
     const isPlayerInvincible = isInvincible || isPlayerTemporarilyInvincible;
+
     let currentSpeed = (input.slow ? config.playerSpeed * config.playerSlowModeMultiplier : config.playerSpeed) * dt_sec;
-    if (player.invincibleTimer > 0) currentSpeed *= 1.1;
+    if (player.invincibleTimer > 0) {
+        currentSpeed *= 1.1;
+    }
+
     if (input.left) player.x -= currentSpeed;
     if (input.right) player.x += currentSpeed;
     player.x = Math.max(0, Math.min(config.canvasWidth, player.x));
+    
     const stageMultiplier = Math.pow(1.1, stage - 1);
     score += Math.floor(config.distanceScoreMultiplier * (currentCometSpeed / config.initialCometSpeed) * stageMultiplier);
+    
     currentCometSpeed += config.cometSpeedIncrease * dt_sec;
-    energy -= 0.9 * Math.pow(1.18, stage - 1) * 60 * dt_sec;
-    if (energy <= 0 && !isPlayerInvincible) {
-        gameOver('energy');
-        return;
-    }
+    
+    const baseEnergyMultiplier = 0.9;
+    const energyDecreaseRate = Math.pow(1.18, stage - 1);
+    energy -= baseEnergyMultiplier * energyDecreaseRate * 60 * dt_sec;
+    
+    if (energy <= 0 && !isPlayerInvincible) { gameOver('energy'); return; }
+
+
     if (frameCount >= stageClearFrame) {
         stage++;
         currentThemeIndex = (currentThemeIndex + 1) % themes.length;
         stageClearFrame += STAGE_LENGTH_IN_FRAMES;
-        effects.push({ type: 'stageClear', text: `STAGE ${stage} START`, life: 120, maxLife: 120 });
+        effects.push({type:'stageClear', text:`STAGE ${stage} START`, life:120, maxLife:120});
         audioHandler.playSound('waveClear');
     }
+
     if (stage >= 2 && frameCount >= nextWayShotFrame) {
         spawnWayComets();
-        nextWayShotFrame = frameCount + Math.max(3, 10 - stage) * 15 * (0.5 + Math.random());
+        const baseInterval = Math.max(3, 10 - stage) * 15;
+        const randomInterval = baseInterval * (0.5 + Math.random());
+        nextWayShotFrame = frameCount + randomInterval;
     }
-    const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1,
-        totalMultiplier = stageMultiplier * comboMultiplier,
-        currentNormalThreshold = config.energyItemScoreNormal * totalMultiplier,
-        currentSpecialThreshold = config.energyItemScoreSpecial * totalMultiplier;
+    
+    const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+    const totalMultiplier = stageMultiplier * comboMultiplier;
+    
+    const currentNormalThreshold = config.energyItemScoreNormal * totalMultiplier;
+    const currentSpecialThreshold = config.energyItemScoreSpecial * totalMultiplier;
+
     if (!hasSpawned5000PointItem && score >= 5000) {
-        items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
+        items.push({x: Math.random()*config.canvasWidth, y:-20, type:'normal'});
         hasSpawned5000PointItem = true;
     }
+
     while (score >= nextSpecialItemScore) {
-        items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'special' });
+        items.push({x: Math.random()*config.canvasWidth, y:-20, type:'special'});
         nextSpecialItemScore += currentSpecialThreshold;
         nextItemScore = Math.floor(score / currentNormalThreshold) * currentNormalThreshold + currentNormalThreshold;
     }
+
     while (score >= nextItemScore) {
         if (nextItemScore < nextSpecialItemScore) {
-            items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
+            items.push({x: Math.random()*config.canvasWidth, y:-20, type:'normal'});
         }
         nextItemScore += currentNormalThreshold;
     }
-    const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval / (1 + (stage - 1) * 0.2)));
+
+    const stageSpeedMod = 1 + (stage - 1) * 0.08;
+    const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval/(1 + (stage-1)*0.2)));
     if (frameCount % spawnInterval === 0) {
-        for (let i = 0; i < config.cometSpawnAmount; i++) {
-            comets.push({ x: Math.random() * config.canvasWidth, y: -config.cometCoreRadius, radius: config.cometCoreRadius, isGlazed: false });
+        for (let i=0; i < config.cometSpawnAmount; i++) {
+            comets.push({x: Math.random()*config.canvasWidth, y:-config.cometCoreRadius, radius:config.cometCoreRadius, isGlazed:false});
         }
     }
+    
     for (let i = comets.length - 1; i >= 0; i--) {
         const c = comets[i];
-        if (c.vx !== undefined) {
+    
+        if (c.vx !== undefined && c.vy !== undefined) {
             c.x += c.vx * dt_sec;
             c.y += c.vy * dt_sec;
         } else {
-            c.y += currentCometSpeed * (1 + (stage - 1) * 0.08) * dt_sec;
+            c.y += currentCometSpeed * stageSpeedMod * dt_sec;
         }
+
         if (c.y - c.radius > config.canvasHeight || c.x < -c.radius || c.x > config.canvasWidth + c.radius) {
             comets.splice(i, 1);
-            continue;
+            continue; 
         }
-        const dx = player.x - c.x,
-            dy = player.y - c.y,
-            d = Math.sqrt(dx * dx + dy * dy);
+        
+        const dx = player.x - c.x;
+        const dy = player.y - c.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+
         if (isPlayerInvincible) {
             if (d < config.playerVisualSize + c.radius) {
-                const bonusScore = Math.floor(1500 * stageMultiplier * (chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1));
+                const baseBonusScore = 1500;
+                const chainMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+                const bonusScore = Math.floor(baseBonusScore * stageMultiplier * chainMultiplier);
+                
                 score += bonusScore;
-                scoreTexts.push({
+                const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+                const glazeRadius = player.radius + currentGlazeDistance;
+                scoreTexts.push({ 
                     x: player.x,
-                    y: player.y - (player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance)) - 15,
-                    text: `+${bonusScore}`,
-                    life: 60,
-                    type: 'bonus'
+                    y: player.y - glazeRadius - 15,
+                    text: `+${bonusScore}`, 
+                    life: 60, 
+                    type: 'bonus',
                 });
-                audioHandler.playSound('invincibleHit');
+                audioHandler.playSound('invincibleHit'); 
                 comets.splice(i, 1);
-                continue;
+                continue; 
             }
         } else {
             if (d < player.radius + c.radius) {
@@ -984,6 +854,7 @@ function updatePlayingState(dt_sec) {
                 return;
             }
         }
+        
         const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
         if (!c.isGlazed && d < player.radius + c.radius + currentGlazeDistance) {
             c.isGlazed = true;
@@ -993,9 +864,12 @@ function updatePlayingState(dt_sec) {
             audioHandler.playSound('glaze');
         }
     }
+    
     items.forEach((item, index) => {
         item.y += config.energyItemSpeed * dt_sec;
-        if (Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2)) < config.playerVisualSize + config.energyItemSize) {
+        const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
+        if (dist < config.playerVisualSize + config.energyItemSize) {
+
             if (player.invincibleTimer > 0) {
                 chainCount++;
                 effects.push({ type: 'chainComboUpdate', life: 60, maxLife: 60 });
@@ -1003,10 +877,23 @@ function updatePlayingState(dt_sec) {
             } else {
                 chainCount = 1;
             }
-            const timeReductionMultiplier = Math.pow(0.9, Math.floor((chainCount - 1) / 3));
-            const newItemInvincibleFrames = Math.floor(((item.type === 'special') ? 150 : 90) * timeReductionMultiplier);
-            player.invincibleTimer = (player.invincibleTimer > 0 ? Math.max(player.invincibleTimer, newItemInvincibleFrames) + 30 * timeReductionMultiplier : newItemInvincibleFrames);
-            player.maxInvincibleTimer = player.invincibleTimer;
+
+            const chainLevelForTime = Math.floor((chainCount - 1) / 3);
+            const timeReductionMultiplier = Math.pow(0.9, chainLevelForTime);
+
+            const baseInvincibleFrames = (item.type === 'special') ? 150 : 90; 
+            const newItemInvincibleFrames = Math.floor(baseInvincibleFrames * timeReductionMultiplier);
+
+            let finalInvincibleTime;
+            if (player.invincibleTimer > 0) {
+                const longerTime = Math.max(player.invincibleTimer, newItemInvincibleFrames);
+                finalInvincibleTime = longerTime + 30 * timeReductionMultiplier;
+            } else {
+                finalInvincibleTime = newItemInvincibleFrames;
+            }
+            player.invincibleTimer = finalInvincibleTime;
+            player.maxInvincibleTimer = finalInvincibleTime;
+
             if (item.type === 'special') {
                 energy = config.energyTotal;
                 audioHandler.playJingle('specialItemGet');
@@ -1015,62 +902,52 @@ function updatePlayingState(dt_sec) {
                 audioHandler.playSound('itemGet');
             }
             energy = Math.min(config.energyTotal, energy);
-            effects.push({ type: 'textMorph', life: player.invincibleTimer, maxLife: player.invincibleTimer });
+
+            effects.push({
+                type: 'textMorph',
+                life: finalInvincibleTime,
+                maxLife: finalInvincibleTime,
+            });
+            
             items.splice(index, 1);
             return;
         }
         if (item.y > config.canvasHeight + 20) items.splice(index, 1);
     });
+
     scoreTexts.forEach((st, i) => {
         st.life--;
         st.y -= 0.5;
-        if (st.life <= 0) scoreTexts.splice(i, 1);
+        if (st.life <= 0) {
+            scoreTexts.splice(i, 1);
+        }
     });
-}
-
-function updateNameEntryState() {
-    nameEntryCursorBlink = (nameEntryCursorBlink + 1) % 60;
-
-    // Controller input for name entry
-    if (lastInputDevice === 'gamepad') {
-        if (input.upTrigger) {
-            nameEntrySelectedCharIndex = (nameEntrySelectedCharIndex - 1 + selectableChars.length) % selectableChars.length;
-        }
-        if (input.downTrigger) {
-            nameEntrySelectedCharIndex = (nameEntrySelectedCharIndex + 1) % selectableChars.length;
-        }
-        if (input.backTrigger) {
-            playerName = playerName.slice(0, -1);
-        }
-        if (input.confirmTrigger) {
-            if (playerName.length < 3) {
-                playerName += selectableChars[nameEntrySelectedCharIndex];
-                nameEntrySelectedCharIndex = 0; // Reset for next character
-            } else {
-                 // Already 3 chars, A button confirms the name
-                submitAndSaveName(playerName);
-            }
-        }
-    }
 }
 
 function update(timestamp) {
     if (gameState !== 'paused') {
         if (!lastTimestamp) lastTimestamp = timestamp;
-        const dt_sec = Math.min((timestamp - lastTimestamp) / 1000, 1/30);
+        const dt_ms = timestamp - lastTimestamp;
+        const dt_sec = Math.min(dt_ms / 1000, 1/30);
         lastTimestamp = timestamp;
         
-        pollInput(); 
+        pollInput();
         updateInstructions();
         
         if (screenShake.duration > 0) {
             screenShake.duration--;
-            if (screenShake.duration <= 0) screenShake.intensity = 0;
-        }
-        if (grayscaleAnimation.isActive && grayscaleAnimation.progress < 1) {
-            grayscaleAnimation.progress = Math.min(1, grayscaleAnimation.progress + dt_sec / 1.0);
+            if (screenShake.duration <= 0) {
+                screenShake.intensity = 0;
+            }
         }
         
+        if (grayscaleAnimation.isActive && grayscaleAnimation.progress < 1) {
+            grayscaleAnimation.progress += dt_sec / 1.0;
+            if (grayscaleAnimation.progress > 1) {
+                grayscaleAnimation.progress = 1;
+            }
+        }
+
         if (gameState === 'playing' && input.pauseTrigger) {
             gameState = 'paused';
             audioHandler.masterGain.gain.exponentialRampToValueAtTime(0.001, audioHandler.ctx.currentTime + 0.2);
@@ -1078,90 +955,78 @@ function update(timestamp) {
         }
 
         const isMPressed = keyState['m'] || keyState['M'];
-        if (isMPressed && !wasMPressed && gameState === 'playing') {
-            toggleInvincibility();
+        if (isMPressed && !wasMPressed) {
+            if (gameState === 'playing') {
+                toggleInvincibility();
+            }
         }
         wasMPressed = isMPressed;
 
         const previousVisualBeat = visualBeat;
         visualBeat *= 0.85;
         if (visualBeat < 0.01) visualBeat = 0;
-        
+
         if (gameState === 'playing' || gameState === 'title' || gameState === 'gameOver') {
-            updateBackground(dt_sec);
+             updateBackground(dt_sec);
         }
         
-        particles.forEach((p, i) => {
+        particles.forEach((p, i) => { 
             p.life--;
             if (p.life <= 0) {
                 particles.splice(i, 1);
             } else {
-                if (p.gravityMultiplier) p.vy += config.gravity * p.gravityMultiplier * dt_sec;
-                p.x += p.vx * dt_sec;
+                if (p.gravityMultiplier) {
+                    p.vy += config.gravity * p.gravityMultiplier * dt_sec;
+                }
+                p.x += p.vx * dt_sec; 
                 p.y += p.vy * dt_sec;
             }
         });
-
-        effects.forEach((e, i) => {
-            e.life--;
-            if (e.life <= 0) effects.splice(i, 1);
-        });
+        effects.forEach((e, i) => { e.life--; if (e.life <= 0) effects.splice(i, 1); });
         
         if (gameState === 'playing') {
             frameCount++;
             audioHandler.scheduleBGM();
-            elapsedTime += (timestamp - lastTimestamp);
+            elapsedTime += dt_ms;
             updatePlayingState(dt_sec);
+            
             if (chainEffectPending && visualBeat >= 1.0 && previousVisualBeat < 1.0) {
                 effects.push({ type: 'shockwave', x: 150, y: 65, life: 20, maxLife: 20, radius: 20 });
                 effects.push({ type: 'screenFlash', life: 8, maxLife: 8 });
                 chainEffectPending = false;
             }
+
         } else if (gameState === 'title' && input.startTrigger) {
-            audioHandler.initialize();
-            startGame();
+             audioHandler.initialize();
+             startGame();
         } else if (gameState === 'gameOver' && input.startTrigger) {
-            gameState = 'title';
-            init();
-        } else if (gameState === 'nameEntry') {
-            updateNameEntryState();
-             if (input.startTrigger) { // Use last name with START button
-                const lastName = localStorage.getItem(config.lastPlayerNameKey) || 'AAA';
-                submitAndSaveName(lastName);
-            }
+             startGame();
         }
-    } else { // paused
+    } else { 
         pollInput();
         updateInstructions();
         if (input.pauseTrigger) {
             gameState = 'playing';
-            lastTimestamp = 0;
-            if (!audioHandler.isMuted) audioHandler.masterGain.gain.exponentialRampToValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime + 0.2);
+            lastTimestamp = 0; 
+            if (!audioHandler.isMuted) {
+                audioHandler.masterGain.gain.exponentialRampToValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime + 0.2);
+            }
         } else if (input.quitTrigger) {
             audioHandler.stopBgm();
-            if (audioHandler.masterGain && !audioHandler.isMuted) audioHandler.masterGain.gain.setValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime);
+            if (audioHandler.masterGain && !audioHandler.isMuted) {
+                 audioHandler.masterGain.gain.setValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime);
+            }
             gameState = 'title';
             init();
         }
     }
 }
 
-function drawRoundRect(ctx, x, y, w, h, r) {
-    if (w < 2 * r) {
-        r = w / 2;
-    }
-    if (h < 2 * r) {
-        r = h / 2;
-    }
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-}
 
+function drawRoundRect(ctx, x, y, w, h, r) {
+    if(w < 2*r) r=w/2; if(h < 2*r) r=h/2;
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
 function drawWithGlow(ctx, drawFunc, color, useBeat = false) {
     const blurAmount = useBeat ? (config.glowBlur + visualBeat * 8) : config.glowBlur;
     ctx.shadowColor = color;
@@ -1169,24 +1034,13 @@ function drawWithGlow(ctx, drawFunc, color, useBeat = false) {
     drawFunc();
     ctx.shadowBlur = 0;
 }
-
 function drawGrid(ctx, color) {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.globalAlpha = 0.06 + visualBeat * 0.04;
     ctx.lineWidth = 1;
-    for (let i = 0; i < config.canvasHeight; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(config.canvasWidth, i);
-        ctx.stroke();
-    }
-    for (let i = 0; i < config.canvasWidth; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, config.canvasHeight);
-        ctx.stroke();
-    }
+    for(let i=0;i<config.canvasHeight;i+=20){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(config.canvasWidth,i);ctx.stroke();}
+    for(let i=0;i<config.canvasWidth;i+=20){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,config.canvasHeight);ctx.stroke();}
     ctx.restore();
 }
 
@@ -1211,37 +1065,41 @@ function drawPixelArt(ctx, artData, centerX, centerY, pixelSize, palette) {
 
 function drawPlayer(ctx, color) {
     const pixelSize = 2;
-    const palette = { '1': color, '2': '#ffffff', '3': '#ffff00' };
+    const palette = {
+        '1': color,
+        '2': '#ffffff',
+        '3': '#ffff00',
+    };
+    
     drawWithGlow(ctx, () => {
         drawPixelArt(ctx, PLAYER_PIXEL_ART, player.x, player.y, pixelSize, palette);
     }, color, true);
-
+    
     if (input.slow) {
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(player.x, player.y, PLAYER_PIXEL_ART[0].length * pixelSize * 0.15, 0, Math.PI * 2);
+        const slowMarkerRadius = PLAYER_PIXEL_ART[0].length * pixelSize * 0.15;
+        ctx.arc(player.x, player.y, slowMarkerRadius, 0, Math.PI * 2);
         ctx.fill();
     }
 }
 
-function formatTime(ms) {
-    if (isNaN(ms)) ms = 0;
-    const m = Math.floor(ms / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    const msec = Math.floor(ms % 1000);
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(msec).padStart(3, '0')}`;
-}
+function formatTime(ms) { if(isNaN(ms))ms=0; const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000), msec=Math.floor(ms%1000); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(msec).padStart(3,'0')}`; }
 
 function drawChainComboText(renderCtx, count, alpha = 1.0) {
     const comboText = `${count} CHAIN COMBO!!`;
-    const baseFontSize = 16, sizeStep = 2, maxChainForSizing = 30;
-    let fontSize = baseFontSize + Math.floor((Math.min(count, maxChainForSizing) - 1) / 5) * sizeStep;
+    const baseFontSize = 16;
+    const sizeStep = 2;
+    const maxChainForSizing = 30;
+    const chainLevel = Math.floor((Math.min(count, maxChainForSizing) - 1) / 5);
+    let fontSize = baseFontSize + chainLevel * sizeStep;
+    
     const comboEffect = effects.find(e => e.type === 'chainComboUpdate');
     let textToDraw = comboText;
-
     if (comboEffect && alpha === 1.0) {
         const progress = 1 - (comboEffect.life / comboEffect.maxLife);
         fontSize = fontSize * 1.2 - (fontSize * 0.2) * progress;
+
         const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         textToDraw = "";
         for (let i = 0; i < comboText.length; i++) {
@@ -1255,14 +1113,17 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 
     renderCtx.save();
     renderCtx.globalAlpha = alpha;
+
     renderCtx.font = `${fontSize}px ${config.fontFamily}`;
     renderCtx.textAlign = 'left';
+    
     let currentX = 20;
     for (let i = 0; i < textToDraw.length; i++) {
         const char = textToDraw[i];
         const charWidth = renderCtx.measureText(char).width;
         const hue = (Date.now() / 15 + i * 20) % 360;
         const gamingColor = `hsl(${hue}, 100%, 75%)`;
+        
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = gamingColor;
             renderCtx.fillText(char, currentX, 70);
@@ -1275,16 +1136,17 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 function drawBackground(renderCtx) {
     let trailAlpha;
     if (gameState === 'playing' || gameState === 'paused') {
-        trailAlpha = Math.min(1.0, 0.15 + (stage - 1) * 0.02);
+        const baseTrailAlpha = 0.15;
+        const trailAlphaIncreasePerStage = 0.02;
+        trailAlpha = Math.min(1.0, baseTrailAlpha + (stage - 1) * trailAlphaIncreasePerStage);
     } else {
         trailAlpha = 0.4;
     }
-    renderCtx.fillStyle = `rgba(0, 0, 10, ${trailAlpha})`;
+    renderCtx.fillStyle = `rgba(0,0,10,${trailAlpha})`;
     renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
 
     const theme = themes[currentThemeIndex];
     drawGrid(renderCtx, theme.grid);
-
     renderCtx.strokeStyle = '#808080';
     stars.forEach(s => {
         renderCtx.globalAlpha = s.speed / 100;
@@ -1295,38 +1157,6 @@ function drawBackground(renderCtx) {
         renderCtx.stroke();
     });
     renderCtx.globalAlpha = 1;
-}
-
-function drawRanking(renderCtx, x, y, theme) {
-    renderCtx.save();
-    renderCtx.textAlign = 'left';
-    renderCtx.font = `14px ${config.fontFamily}`;
-    drawWithGlow(renderCtx, () => {
-        renderCtx.fillStyle = theme.ui;
-        renderCtx.fillText("TOP 10 ONLINE", x, y);
-    }, theme.ui);
-
-    const textY = y + 30;
-    if (rankingStatus === 'loading') {
-        drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = '#aaaaaa';
-            renderCtx.fillText("LOADING...", x, textY);
-        }, '#aaaaaa');
-    } else if (rankingStatus === 'error') {
-        drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = '#ff5555';
-            renderCtx.fillText("ERROR LOADING SCORES", x, textY);
-        }, '#ff5555');
-    } else {
-        onlineHighScores.forEach((entry, index) => {
-            const line = `${`${index + 1}`.padStart(2, ' ')}. ${entry.name.padEnd(3, ' ')} ${`${entry.score}`.padStart(8, ' ')}`;
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = '#ffffff';
-                renderCtx.fillText(line, x, textY + (index * 22));
-            }, '#ffffff');
-        });
-    }
-    renderCtx.restore();
 }
 
 function draw() {
@@ -1343,85 +1173,88 @@ function draw() {
         renderCtx.save();
         renderCtx.textAlign = 'center';
         scoreTexts.forEach(st => {
+            const fontSize = st.type === 'bonus' ? 14 : 10;
+            renderCtx.font = `${fontSize}px ${config.fontFamily}`;
+            
             const alpha = st.life / 60.0;
             const hue = (frameCount * 5 + st.x) % 360;
-            const color = `hsla(${hue}, 100%, 70%, ${alpha})`;
-            renderCtx.font = `${st.type === 'bonus' ? 14 : 10}px ${config.fontFamily}`;
+            const scoreColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
+            const glowColor = `hsla(${hue}, 100%, 70%, ${alpha / 2})`;
+            
             renderCtx.globalAlpha = alpha;
             drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = color;
+                renderCtx.fillStyle = scoreColor;
                 renderCtx.fillText(st.text, st.x, st.y);
-            }, `hsla(${hue}, 100%, 70%, ${alpha/2})`);
+            }, glowColor);
         });
         renderCtx.restore();
     }
     
-    if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameOver' || particles.length > 0 || comets.length > 0 || items.length > 0) {
-        particles.forEach(p => {
-            const a = p.life / p.maxLife;
-            renderCtx.globalAlpha = a;
-            renderCtx.fillStyle = p.color;
-            renderCtx.beginPath();
-            renderCtx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
-            renderCtx.fill();
-        });
-        renderCtx.globalAlpha = 1;
+    if (gameState==='playing'||gameState==='paused'||gameState==='gameOver'||particles.length>0||comets.length>0||items.length>0) {
+        particles.forEach(p=>{const a=p.life/p.maxLife;renderCtx.globalAlpha=a;renderCtx.fillStyle=p.color;renderCtx.beginPath();renderCtx.arc(p.x,p.y,p.size*a,0,Math.PI*2);renderCtx.fill();}); renderCtx.globalAlpha=1;
         
         items.forEach(i => {
-            const color = i.type === 'special' ? `hsl(${(frameCount * 4) % 360}, 100%, 70%)` : '#00ff88';
+            const itemColor = i.type === 'special' ? `hsl(${(frameCount * 4) % 360}, 100%, 70%)` : '#00ff88';
+            const itemPalette = {
+                '1': '#ffffff',
+                '2': itemColor
+            };
+            const pixelSize = 2; // ★変更: ドット絵の解像度を上げたので、ピクセルサイズは2に戻す
+            
             drawWithGlow(renderCtx, () => {
-                drawPixelArt(renderCtx, ENERGY_ITEM_PIXEL_ART, i.x, i.y, 2, { '1': '#ffffff', '2': color });
-            }, color, true);
+                drawPixelArt(renderCtx, ENERGY_ITEM_PIXEL_ART, i.x, i.y, pixelSize, itemPalette);
+            }, itemColor, true);
         });
-        
-        comets.forEach(c => {
-            const color = c.isGlazed ? '#ffffaa' : (c.isWay ? theme.player : theme.comet);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = color;
-                renderCtx.beginPath();
-                renderCtx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-                renderCtx.fill();
-            }, color, true);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = '#ffffff';
-                renderCtx.beginPath();
-                renderCtx.arc(c.x, c.y, c.radius * 0.6, 0, Math.PI * 2);
-                renderCtx.fill();
-            }, '#ffffff', true);
+
+        comets.forEach(c=>{
+            const cometBaseColor = c.isWay ? theme.player : theme.comet;
+            const a = c.isGlazed ? '#ffffaa' : cometBaseColor;
+            const o = '#ffffff';
+            drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=a;renderCtx.beginPath();renderCtx.arc(c.x,c.y,c.radius,0,Math.PI*2);renderCtx.fill();},a, true);
+            drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=o;renderCtx.beginPath();renderCtx.arc(c.x,c.y,c.radius*0.6,0,Math.PI*2);renderCtx.fill();},o, true);
         });
     }
-    
-    if (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && gameOverReason === 'energy')) {
-        const glazeRadius = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance);
+
+    if (gameState==='playing' || gameState === 'paused' || (gameState === 'gameOver' && gameOverReason === 'energy')) {
+        const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+        const glazeRadius=player.radius+currentGlazeDistance;
         renderCtx.save();
-        renderCtx.globalAlpha = 0.04 + visualBeat * 0.04;
-        renderCtx.fillStyle = theme.player;
-        renderCtx.beginPath();
-        renderCtx.arc(player.x, player.y, glazeRadius, 0, Math.PI * 2);
-        renderCtx.fill();
-        renderCtx.restore();
+        renderCtx.globalAlpha=0.04 + visualBeat * 0.04; renderCtx.fillStyle=theme.player; renderCtx.beginPath(); renderCtx.arc(player.x,player.y,glazeRadius,0,Math.PI*2); renderCtx.fill(); renderCtx.restore();
         
-        if (player.invincibleTimer > 0 && !(player.invincibleTimer < 30 && frameCount % 10 < 5)) {
+        if (player.invincibleTimer > 0) {
             renderCtx.save();
-            renderCtx.globalAlpha = 0.5 + Math.sin(frameCount * 0.2) * 0.2;
-            renderCtx.lineWidth = 2;
-            renderCtx.strokeStyle = '#FFFFFF';
-            drawWithGlow(renderCtx, () => {
-                renderCtx.beginPath();
-                renderCtx.arc(player.x, player.y, config.playerVisualSize * 1.5, 0, Math.PI * 2);
-                renderCtx.stroke();
-            }, '#FFFFFF');
-            renderCtx.restore();
-            
-            renderCtx.save();
-            const meterRadius = glazeRadius + 5;
-            const meterColor = `hsl(${(frameCount * 4) % 360}, 100%, 70%)`;
-            renderCtx.lineWidth = 3;
-            renderCtx.strokeStyle = meterColor;
-            if (!(player.invincibleTimer < 60 && frameCount % 10 < 5)) {
+            if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} 
+            else {
+                const shieldRadius = config.playerVisualSize * 1.5;
+                const shieldColor = '#FFFFFF';
+                renderCtx.globalAlpha = 0.5 + Math.sin(frameCount * 0.2) * 0.2;
+                renderCtx.lineWidth = 2;
+                renderCtx.strokeStyle = shieldColor;
                 drawWithGlow(renderCtx, () => {
                     renderCtx.beginPath();
-                    renderCtx.arc(player.x, player.y, meterRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (player.invincibleTimer / player.maxInvincibleTimer));
+                    renderCtx.arc(player.x, player.y, shieldRadius, 0, Math.PI * 2);
+                    renderCtx.stroke();
+                }, shieldColor);
+            }
+            renderCtx.restore();
+
+            renderCtx.save();
+            const meterRadius = glazeRadius + 5; 
+            const meterWidth = 3;
+            const meterColor = `hsl(${(frameCount * 4) % 360}, 100%, 70%)`;
+
+            const progress = player.invincibleTimer / player.maxInvincibleTimer;
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + (Math.PI * 2 * progress);
+
+            renderCtx.lineWidth = meterWidth;
+            renderCtx.strokeStyle = meterColor;
+            
+            if (player.invincibleTimer < 60 && frameCount % 10 < 5) {
+            } else {
+                drawWithGlow(renderCtx, () => {
+                    renderCtx.beginPath();
+                    renderCtx.arc(player.x, player.y, meterRadius, startAngle, endAngle, false);
                     renderCtx.stroke();
                 }, meterColor);
             }
@@ -1430,75 +1263,57 @@ function draw() {
         
         if (gameState !== 'gameOver' || gameOverReason !== 'collision') {
             drawPlayer(renderCtx, theme.player);
+            
             renderCtx.save();
-            renderCtx.fillStyle = `hsla(${(frameCount * 20) % 360}, 100%, 70%, 0.7)`;
+            const hue = (frameCount * 20) % 360; 
+            const gamingColor = `hsla(${hue}, 100%, 70%, 0.7)`; 
+            renderCtx.fillStyle = gamingColor;
             renderCtx.beginPath();
             renderCtx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-            renderCtx.fill();
+            renderCtx.fill(); 
             renderCtx.restore();
         }
     }
     
-    drawWithGlow(renderCtx, () => {
-        renderCtx.fillStyle = theme.ui;
-        const mainSize = 20 + visualBeat * 2;
-        const subSize = 18 + visualBeat * 2;
-        renderCtx.font = `${mainSize}px ${config.fontFamily}`;
-        renderCtx.textAlign = 'left';
-        renderCtx.fillText(`SCORE: ${score}`, 20, 40);
-        renderCtx.textAlign = 'center';
-        renderCtx.fillText(formatTime(elapsedTime), config.canvasWidth / 2, 40);
+    drawWithGlow(renderCtx, ()=>{
+        renderCtx.fillStyle=theme.ui;
+        const mainFontSize = 20 + visualBeat * 2;
+        const subFontSize = 18 + visualBeat * 2;
+        renderCtx.font=`${mainFontSize}px ${config.fontFamily}`;renderCtx.textAlign='left';renderCtx.fillText(`SCORE: ${score}`,20,40);
+        renderCtx.textAlign='center';renderCtx.fillText(formatTime(elapsedTime),config.canvasWidth/2,40);
         if (gameState === 'playing' || gameState === 'paused') {
-            renderCtx.font = `${subSize}px ${config.fontFamily}`;
-            renderCtx.fillText(`STAGE ${stage}`, config.canvasWidth / 2, config.canvasHeight - 20);
+            renderCtx.font=`${subFontSize}px ${config.fontFamily}`;
+            renderCtx.fillText(`STAGE ${stage}`,config.canvasWidth/2,config.canvasHeight-20);
         }
-    }, theme.ui, true);
+    },theme.ui, true);
     
     if (chainCount > 1 && player.invincibleTimer > 0) {
         drawChainComboText(renderCtx, chainCount, 1.0);
     }
     
-    if (gameState === 'playing' || gameState === 'paused') {
-        const barW = 200, barH = 12, x = 20, y = config.canvasHeight - 35, r = 5;
-        const energyRatio = energy / config.energyTotal;
-        const energyColor = `hsl(${energyRatio * 120}, 100%, 50%)`;
-        renderCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        renderCtx.lineWidth = 2;
-        drawRoundRect(renderCtx, x, y, barW, barH, r);
-        renderCtx.stroke();
-        renderCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        drawRoundRect(renderCtx, x, y, barW, barH, r);
-        renderCtx.fill();
-        if (barW * energyRatio > 0) {
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = energyColor;
-                renderCtx.beginPath();
-                drawRoundRect(renderCtx, x, y, barW * energyRatio, barH, r);
-                renderCtx.fill()
-            }, energyColor, true);
-        }
+    if (gameState==='playing' || gameState === 'paused') {
+        const barW=200,barH=12,x=20,y=config.canvasHeight-35,r=5;
+        const energyRatio=energy/config.energyTotal,hue=energyRatio*120,energyColor=`hsl(${hue},100%,50%)`;
+        renderCtx.strokeStyle='rgba(255,255,255,0.5)';renderCtx.lineWidth=2;drawRoundRect(renderCtx, x,y,barW,barH,r);renderCtx.stroke();
+        renderCtx.fillStyle='rgba(0,0,0,0.5)';drawRoundRect(renderCtx, x,y,barW,barH,r);renderCtx.fill();
+        drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=energyColor;if(barW*energyRatio>0){renderCtx.beginPath();drawRoundRect(renderCtx, x,y,barW*energyRatio,barH,r);renderCtx.fill()}},energyColor, true);
+
         if (player.invincibleTimer > 0) {
-            const invBarY = y + barH + 5, invBarH = 6, invRatio = player.invincibleTimer / player.maxInvincibleTimer;
-            renderCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            renderCtx.lineWidth = 1;
-            drawRoundRect(renderCtx, x, invBarY, barW, invBarH, r - 2);
-            renderCtx.stroke();
-            renderCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            drawRoundRect(renderCtx, x, invBarY, barW, invBarH, r - 2);
-            renderCtx.fill();
-            if (barW * invRatio > 0) {
-                drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = '#FFFFFF';
-                    renderCtx.beginPath();
-                    drawRoundRect(renderCtx, x, invBarY, barW * invRatio, invBarH, r - 2);
-                    renderCtx.fill()
-                }, '#FFFFFF', true);
-            }
+            const invincBarY = y + barH + 5;
+            const invincBarH = 6;
+            const invincRatio = player.invincibleTimer / player.maxInvincibleTimer;
+            const invincColor = '#FFFFFF';
+            renderCtx.strokeStyle='rgba(255,255,255,0.5)';renderCtx.lineWidth=1;drawRoundRect(renderCtx, x,invincBarY,barW,invincBarH,r-2);renderCtx.stroke();
+            renderCtx.fillStyle='rgba(0,0,0,0.5)';drawRoundRect(renderCtx, x,invincBarY,barW,invincBarH,r-2);renderCtx.fill();
+            drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=invincColor;if(barW*invincRatio>0){renderCtx.beginPath();drawRoundRect(renderCtx, x,invincBarY,barW*invincRatio,invincBarH,r-2);renderCtx.fill()}},invincColor, true);
         }
+
         if (isInvincible) {
             let mutekiY = config.canvasHeight - 50;
-            if (player.invincibleTimer > 0) mutekiY = config.canvasHeight - 50 - 12 - 5 - 6;
-            const mutekiColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
+            if (player.invincibleTimer > 0) {
+                mutekiY = config.canvasHeight - 50 - 12 - 5 - 6;
+            }
+            const mutekiColor = `hsl(${(frameCount*3)%360},100%,70%)`;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = mutekiColor;
                 renderCtx.font = `16px ${config.fontFamily}`;
@@ -1508,222 +1323,281 @@ function draw() {
         }
     }
     
-    effects.forEach(e => { /* effect drawing logic can be added here */ });
-    
+    effects.forEach(e => {
+        if (e.type === 'stageClear' && gameState !== 'gameOver') {
+            const l = e.life / e.maxLife;
+            const a = Math.sin(l * Math.PI);
+            renderCtx.globalAlpha = a;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `32px ${config.fontFamily}`;
+                renderCtx.textAlign = 'center';
+                renderCtx.fillText(e.text, config.canvasWidth / 2, config.canvasHeight / 2);
+            }, theme.ui, true);
+            renderCtx.globalAlpha = 1;
+        } else if (e.type === 'textMorph') {
+            const lifeProgress = 1 - (e.life / e.maxLife);
+            const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            
+            let displayText = "";
+            const mainTextY = config.canvasHeight / 2 + 30;
+            const subTextY = mainTextY + 25;
+
+            const transitionStart = 0.25; 
+            const transitionEnd = 0.75;
+
+            if (lifeProgress < transitionStart) {
+                displayText = "INVINCIBLE!!";
+            } else if (lifeProgress < transitionEnd) {
+                const toText = "MUTEKI!!";
+                const transitionProgress = (lifeProgress - transitionStart) / (transitionEnd - transitionStart);
+                
+                for(let i = 0; i < toText.length; i++) {
+                    if (transitionProgress > (i / toText.length) + (Math.random() * 0.1)) {
+                        displayText += toText[i];
+                    } else {
+                        displayText += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                }
+            } else {
+                displayText = "MUTEKI!!";
+            }
+            
+            renderCtx.save();
+            renderCtx.textAlign = 'center';
+
+            renderCtx.font = `24px ${config.fontFamily}`;
+            const totalWidth = renderCtx.measureText(displayText).width;
+            let currentX = config.canvasWidth / 2 - totalWidth / 2;
+
+            for (let i = 0; i < displayText.length; i++) {
+                const char = displayText[i];
+                const charWidth = renderCtx.measureText(char).width;
+                const hue = (frameCount * 5 + i * 25) % 360;
+                const color = `hsl(${hue}, 100%, 70%)`;
+
+                renderCtx.globalAlpha = 1;
+                drawWithGlow(renderCtx, () => {
+                    renderCtx.fillStyle = color;
+                    renderCtx.fillText(char, currentX + charWidth / 2, mainTextY);
+                }, color);
+                currentX += charWidth;
+            }
+
+            renderCtx.font = `10px ${config.fontFamily}`;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.fillText("Bonus Points for Hitting a Comet!!", config.canvasWidth / 2, subTextY);
+            }, theme.ui);
+            
+            renderCtx.restore();
+        } else if (e.type === 'shockwave') {
+            const progress = 1 - e.life / e.maxLife;
+            const radius = e.radius + progress * 300;
+            const alpha = e.life / e.maxLife;
+            renderCtx.save();
+            renderCtx.globalAlpha = alpha * 0.8;
+            renderCtx.strokeStyle = '#ffffff';
+            renderCtx.lineWidth = 3 + (1 - alpha) * 5;
+            renderCtx.beginPath();
+            renderCtx.arc(e.x, e.y, radius, 0, Math.PI * 2);
+            renderCtx.stroke();
+            renderCtx.restore();
+        } else if (e.type === 'comboFadeOut') {
+            drawChainComboText(renderCtx, e.count, e.life / e.maxLife);
+        } else if (e.type === 'screenFlash') {
+            const alpha = e.life / e.maxLife;
+            renderCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
+            renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        } 
+        else if (e.type === 'energyGameOverFlash') {
+            const progress = 1.0 - (e.life / e.maxLife);
+            const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.8;
+            renderCtx.fillStyle = `rgba(224, 224, 224, ${alpha})`;
+            renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        }
+        else if (e.type === 'barLine') {
+            const progress = 1.0 - (e.life / e.maxLife);
+            const y = config.canvasHeight * progress;
+            const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.3; 
+
+            renderCtx.save();
+            renderCtx.globalAlpha = alpha;
+            renderCtx.strokeStyle = theme.ui;
+            renderCtx.lineWidth = 2;
+            renderCtx.setLineDash([8, 8]);
+            
+            renderCtx.beginPath();
+            renderCtx.moveTo(0, y);
+            renderCtx.lineTo(config.canvasWidth, y);
+            renderCtx.stroke();
+            
+            renderCtx.restore();
+        }
+    });
+
     if (gameState === 'paused') {
         renderCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
-        const msg = 'PAUSED';
-        const resKey = lastInputDevice === 'keyboard' ? 'P' : 'START';
+        
+        const pauseMsg = 'PAUSED';
+        const resumeKey = lastInputDevice === 'keyboard' ? 'P' : 'START';
         const quitKey = lastInputDevice === 'keyboard' ? 'Q' : 'SELECT';
+        const resumeMsg = `Press ${resumeKey} to Resume`;
+        const quitMsg = `Press ${quitKey} to Title`;
+
         renderCtx.font = `48px ${config.fontFamily}`;
         renderCtx.textAlign = 'center';
-        let currentX = config.canvasWidth / 2 - renderCtx.measureText(msg).width / 2;
-        for (let i = 0; i < msg.length; i++) {
-            const char = msg[i];
-            const charW = renderCtx.measureText(char).width;
+        
+        const totalWidth = renderCtx.measureText(pauseMsg).width;
+        let currentX = config.canvasWidth / 2 - totalWidth / 2;
+
+        for (let i = 0; i < pauseMsg.length; i++) {
+            const char = pauseMsg[i];
+            const charWidth = renderCtx.measureText(char).width;
             const hue = (Date.now() / 15 + i * 30) % 360;
-            const color = `hsl(${hue}, 100%, 70%)`;
+            const gamingColor = `hsl(${hue}, 100%, 70%)`;
+            
             drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = color;
-                renderCtx.fillText(char, currentX + charW / 2, config.canvasHeight / 2 - 40);
-            }, color);
-            currentX += charW;
+                renderCtx.fillStyle = gamingColor;
+                renderCtx.fillText(char, currentX + charWidth / 2, config.canvasHeight / 2 - 40);
+            }, gamingColor);
+            currentX += charWidth;
         }
+
         renderCtx.fillStyle = theme.ui;
         renderCtx.font = `20px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
-            renderCtx.fillText(`Press ${resKey} to Resume`, config.canvasWidth / 2, config.canvasHeight / 2 + 30);
-            renderCtx.fillText(`Press ${quitKey} to Title`, config.canvasWidth / 2, config.canvasHeight / 2 + 60);
+            renderCtx.fillText(resumeMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 30);
+            renderCtx.fillText(quitMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 60);
         }, theme.ui, true);
-    } else if (gameState !== 'playing') {
-        renderCtx.textAlign = 'center';
+
+    } else if (gameState!=='playing') {
+        renderCtx.textAlign='center';
         if (gameState === 'title') {
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.player;
-                renderCtx.font = `60px ${config.fontFamily}`;
-                renderCtx.fillText('COMET', config.canvasWidth / 2, config.canvasHeight / 2 - 90);
-            }, theme.player);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.font = `16px ${config.fontFamily}`;
-                renderCtx.fillText('OUTBURST', config.canvasWidth / 2, config.canvasHeight / 2 - 45);
-            }, theme.ui);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.font = `20px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE: ${highScore}`, config.canvasWidth / 2, config.canvasHeight / 2 + 30);
-            }, theme.ui);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = '#ffffff';
-                renderCtx.font = `18px ${config.fontFamily}`;
-                renderCtx.fillText('Press Enter or Start to Start', config.canvasWidth / 2, config.canvasHeight - 60);
-            }, '#ffffff');
-            drawRanking(renderCtx, 30, 80, theme);
-        } else if (gameState === 'nameEntry') {
-            renderCtx.textBaseline = 'middle';
-            const color = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
-            const y = config.canvasHeight / 2 - 120;
-            
-            drawWithGlow(renderCtx, () => { renderCtx.fillStyle=color; renderCtx.font=`36px ${config.fontFamily}`; renderCtx.fillText('NEW HIGH SCORE!', config.canvasWidth/2, y); }, color);
-            drawWithGlow(renderCtx, () => { renderCtx.font=`24px ${config.fontFamily}`; renderCtx.fillStyle=theme.ui; renderCtx.fillText(`SCORE: ${score}`, config.canvasWidth/2, y + 60); }, theme.ui);
-            drawWithGlow(renderCtx, () => { renderCtx.font=`20px ${config.fontFamily}`; renderCtx.fillStyle='#ffffff'; renderCtx.fillText('ENTER YOUR NAME (3 CHARS)', config.canvasWidth/2, y + 110); }, '#ffffff');
-            
-            let displayName = playerName;
-            if (lastInputDevice === 'gamepad' && playerName.length < 3) {
-                 if (nameEntryCursorBlink < 30) {
-                    displayName += selectableChars[nameEntrySelectedCharIndex];
-                 } else {
-                    displayName += ' ';
-                 }
-            }
-            displayName = displayName.padEnd(3, '_');
-            
-            renderCtx.font = `48px ${config.fontFamily}`;
-            drawWithGlow(renderCtx, () => { renderCtx.fillStyle = '#ffffff'; renderCtx.fillText(displayName, config.canvasWidth / 2, y + 170); }, '#ffffff');
+            const titleColor = theme.player;
+            const uiColor = theme.ui;
 
-            renderCtx.font = `12px ${config.fontFamily}`;
-            renderCtx.fillStyle = '#cccccc';
-            if (lastInputDevice === 'keyboard') {
-                 drawWithGlow(renderCtx, () => { renderCtx.fillText('TYPE: A-Z 0-9 | DELETE: BACKSPACE', config.canvasWidth/2, y + 230); }, '#cccccc');
-                 drawWithGlow(renderCtx, () => { renderCtx.fillText('SUBMIT: ENTER', config.canvasWidth/2, y + 250); }, '#cccccc');
-            } else { // gamepad
-                 drawWithGlow(renderCtx, () => { renderCtx.fillText('SELECT:UP/DOWN | NEXT:A | BACK:B', config.canvasWidth/2, y + 230); }, '#cccccc');
-                 drawWithGlow(renderCtx, () => { renderCtx.fillText('SUBMIT: A (at 3 chars)', config.canvasWidth/2, y + 250); }, '#cccccc');
-            }
-            drawWithGlow(renderCtx, () => { renderCtx.fillText('EMPTY or START BTN TO USE LAST NAME', config.canvasWidth/2, y + 280); }, '#cccccc');
+            drawWithGlow(renderCtx, ()=>{
+                renderCtx.fillStyle=titleColor;
+                renderCtx.font=`60px ${config.fontFamily}`;
+                renderCtx.fillText('COMET',config.canvasWidth/2,config.canvasHeight/2 - 90);
+            },titleColor);
+            
+            drawWithGlow(renderCtx, ()=>{
+                renderCtx.fillStyle=uiColor;
+                renderCtx.font=`16px ${config.fontFamily}`;
+                renderCtx.fillText('OUTBURST',config.canvasWidth/2,config.canvasHeight/2 - 45);
+            },uiColor);
 
-            renderCtx.textBaseline = 'alphabetic';
-        } else { // 'gameOver'
+            drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=theme.ui; renderCtx.font=`20px ${config.fontFamily}`;renderCtx.fillText(`HI-SCORE: ${highScore}`,config.canvasWidth/2,config.canvasHeight/2 + 30);},theme.ui);
+            drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle='#ffffff'; renderCtx.font=`18px ${config.fontFamily}`;renderCtx.fillText('Press Enter or Start to Start',config.canvasWidth/2,config.canvasHeight/2+140);},'#ffffff');
+        } else { // gameState === 'gameOver'
             renderCtx.textBaseline = 'middle';
-            const y = 80;
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = '#ff3333';
-                renderCtx.font = `60px ${config.fontFamily}`;
-                renderCtx.fillText('GAME OVER', config.canvasWidth / 2, y);
-            }, '#ff3333');
+            const gameOverColor = '#ff3333';
+            const gameOverY = config.canvasHeight/2 - 90;
+            const scoreY = config.canvasHeight / 2 + 50;
+            
+            drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=gameOverColor;renderCtx.font=`60px ${config.fontFamily}`;renderCtx.fillText('GAME OVER',config.canvasWidth/2, gameOverY);},gameOverColor);
+            
             if (newHighScoreAchieved) {
-                const color = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
-                drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = color;
-                    renderCtx.font = `24px ${config.fontFamily}`;
-                    renderCtx.fillText('NEW LOCAL RECORD!', config.canvasWidth / 2, y + 50);
-                }, color);
+                const newRecordColor = `hsl(${(frameCount*3)%360},100%,70%)`;
+                const newRecordY = (gameOverY + scoreY) / 2;
+                drawWithGlow(renderCtx, ()=>{renderCtx.fillStyle=newRecordColor;renderCtx.font=`30px ${config.fontFamily}`;renderCtx.fillText('NEW RECORD!',config.canvasWidth/2, newRecordY);}, newRecordColor);
             }
-            drawWithGlow(renderCtx, () => {
-                renderCtx.font = `30px ${config.fontFamily}`;
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.fillText(`SCORE: ${score}`, config.canvasWidth / 2, y + 90);
-            }, theme.ui);
-            drawRanking(renderCtx, config.canvasWidth / 2 - 180, y + 140, theme);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.font = `20px ${config.fontFamily}`;
-                renderCtx.fillStyle = '#ffffff';
-                renderCtx.fillText('Press Enter or Start to Title', config.canvasWidth / 2, config.canvasHeight - 50);
-            }, '#ffffff');
+
+            drawWithGlow(renderCtx, ()=>{renderCtx.font=`30px ${config.fontFamily}`;renderCtx.fillStyle=theme.ui;renderCtx.fillText(`SCORE: ${score}`,config.canvasWidth/2, scoreY);},theme.ui);
+            drawWithGlow(renderCtx, ()=>{renderCtx.font=`20px ${config.fontFamily}`;renderCtx.fillStyle=theme.ui;renderCtx.fillText(`HI-SCORE: ${highScore}`,config.canvasWidth/2, scoreY + 40);},theme.ui);
+            drawWithGlow(renderCtx, ()=>{renderCtx.font=`20px ${config.fontFamily}`;renderCtx.fillStyle='#ffffff';renderCtx.fillText('Press Enter or Start to Replay',config.canvasWidth/2, scoreY + 90);},'#ffffff');
+            
             renderCtx.textBaseline = 'alphabetic';
         }
     }
     
     ctx.save();
-    if (screenShake.duration > 0) {
-        const intensity = screenShake.intensity * (screenShake.duration / 45);
-        ctx.translate((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity);
-    }
-    if (gameState === 'gameOver' && gameOverReason === 'energy') {
-        const p = grayscaleAnimation.progress;
-        const filter = `grayscale(${p}) brightness(${1 - p * 0.2})`;
-        canvas.style.filter = filter;
-        canvas.style.webkitFilter = filter;
-    } else if (canvas.style.filter !== 'none') {
-        canvas.style.filter = 'none';
-        canvas.style.webkitFilter = 'none';
-    }
-    ctx.drawImage(offscreenCanvas, 0, 0);
-    ctx.restore();
     
-    if (gameState === 'playing' && player.invincibleTimer > 0 && !(player.invincibleTimer < 30 && frameCount % 10 < 5)) {
-        ctx.fillStyle = `rgba(255, 255, 255, 0.05)`;
-        ctx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+    if (screenShake.duration > 0) {
+        const shakeIntensity = screenShake.intensity * (screenShake.duration / 45);
+        const shakeX = (Math.random() - 0.5) * shakeIntensity;
+        const shakeY = (Math.random() - 0.5) * shakeIntensity;
+        ctx.translate(shakeX, shakeY);
+    }
+    
+    if (gameState === 'gameOver' && gameOverReason === 'energy') {
+        const progress = grayscaleAnimation.progress;
+        const filterValue = `grayscale(${progress}) brightness(${1 - progress * 0.2})`;
+        canvas.style.filter = filterValue;
+        canvas.style.webkitFilter = filterValue;
+    } else {
+        if (canvas.style.filter !== 'none') {
+            canvas.style.filter = 'none';
+            canvas.style.webkitFilter = 'none';
+        }
+    }
+    
+    ctx.drawImage(offscreenCanvas, 0, 0);
+    
+    ctx.restore();
+
+    if (gameState === 'playing' && player.invincibleTimer > 0) {
+        if (player.invincibleTimer < 30 && frameCount % 10 < 5) {
+        } else {
+            const alpha = 0.05;
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        }
     }
 }
 
-function gameLoop(timestamp) {
-    update(timestamp);
-    draw();
+
+function gameLoop(timestamp){ 
+    update(timestamp); 
+    draw(); 
     requestAnimationFrame(gameLoop);
 }
 
-const keyState = {};
-window.addEventListener('keydown', e => {
-    keyState[e.key] = true;
-    if (e.key !== 'F12' && e.key !== 'F5') { // Prevent browser default actions
-        e.preventDefault();
-    }
-    
-    if (lastInputDevice !== 'keyboard' && !e.repeat) {
-        lastInputDevice = 'keyboard';
-    }
+const keyState={};
+window.addEventListener('keydown',e=>{lastInputDevice='keyboard';keyState[e.key]=true;if(!audioHandler.isInitialized)audioHandler.initialize();if(e.key.toLowerCase()==='f')toggleFullScreen();});
+window.addEventListener('keyup',e=>{keyState[e.key]=false;});
 
+soundToggleButton.addEventListener('click', () => {
     if (!audioHandler.isInitialized) {
         audioHandler.initialize();
     }
-
-    if (e.key.toLowerCase() === 'f') {
-        toggleFullScreen();
-    }
-    
-    if (gameState === 'nameEntry') {
-        if (e.key.length === 1 && selectableChars.includes(e.key.toUpperCase()) && playerName.length < 3) {
-            playerName += e.key.toUpperCase();
-        } else if (e.key === 'Backspace' || e.key === 'Delete') {
-            playerName = playerName.slice(0, -1);
-        } else if (e.key === 'Enter') {
-            if (playerName.length > 0) {
-                submitAndSaveName(playerName);
-            } else {
-                // Use last name if exists, otherwise default
-                const lastName = localStorage.getItem(config.lastPlayerNameKey) || 'AAA';
-                submitAndSaveName(lastName);
-            }
-        }
-    }
-});
-window.addEventListener('keyup', e => {
-    keyState[e.key] = false;
+    const isMuted = audioHandler.toggleMute();
+    soundToggleButton.textContent = isMuted ? 'SOUND OFF' : 'SOUND ON';
 });
 
-soundToggleButton.addEventListener('click', () => {
-    if (!audioHandler.isInitialized) audioHandler.initialize();
-    soundToggleButton.textContent = audioHandler.toggleMute() ? 'SOUND OFF' : 'SOUND ON';
-});
-
-function toggleFullScreen() {
-    const e = document.getElementById('fullscreen-root');
-    if (!document.fullscreenElement) {
-        e.requestFullscreen().catch(err => {
-            alert(`フルスクリーンにできませんでした: ${err.message}`);
-        });
+function toggleFullScreen(){
+    const e=document.getElementById('fullscreen-root');
+    if(!document.fullscreenElement) {
+        e.requestFullscreen().catch(err=>{alert(`フルスクリーンモードにできませんでした: ${err.message}`);});
     } else {
         document.exitFullscreen();
     }
 }
 
-function updateScale() {
-    const r = document.getElementById('fullscreen-root');
-    const w = document.getElementById('game-wrapper');
+function updateScale(){
+    const r=document.getElementById('fullscreen-root');
+    const w=document.getElementById('game-wrapper');
     if (document.fullscreenElement === r) {
-        const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + document.getElementById('instructions-container').offsetHeight;
-        const scale = Math.min(r.clientWidth / (w.offsetWidth + 20), r.clientHeight / (totalGameHeight + 20));
+        const instructionHeight = document.getElementById('instructions-container').offsetHeight;
+        const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + instructionHeight;
+        const margin = 20;
+        const effectiveWidth = w.offsetWidth + margin;
+        const effectiveHeight = totalGameHeight + margin;
+        
+        const scaleX = r.clientWidth / effectiveWidth;
+        const scaleY = r.clientHeight / effectiveHeight;
+        const scale = Math.min(scaleX, scaleY);
         w.style.setProperty('--scale-factor', scale);
     } else {
         w.style.removeProperty('--scale-factor');
     }
 }
 
-window.addEventListener('fullscreenchange', updateScale);
-window.addEventListener('resize', updateScale);
-
+window.addEventListener('fullscreenchange',updateScale);
+window.addEventListener('resize',updateScale);
 init();
 gameLoop();
 
