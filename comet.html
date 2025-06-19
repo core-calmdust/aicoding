@@ -509,12 +509,8 @@ function hexToRgba(hex, alpha) {
 }
 
 function applyThemeStyles(theme) {
-    // ★★★ 変更点 ★★★
-    // 光り方のエフェクトを強調するために、`visualBeat` の影響を大きくしました。
-    // これにより、ビートに合わせた明滅と光の広がりがよりダイナミックになります。
-    const borderAlpha = 0.5 + visualBeat * 0.5; // 変更前: 0.7 + visualBeat * 0.3
-    const shadowSize = 10 + visualBeat * 40;   // 変更前: 15 + visualBeat * 20
-    // ★★★ 変更ここまで ★★★
+    const borderAlpha = 0.5 + visualBeat * 0.5;
+    const shadowSize = 10 + visualBeat * 40;
 
     canvas.style.borderColor = hexToRgba(theme.ui, borderAlpha);
     canvas.style.boxShadow = `0 0 ${shadowSize}px ${theme.ui}`;
@@ -575,7 +571,7 @@ function updateInstructions() {
     extraInstruction.textContent = 'ENERGY BOX @ 10,000 PTS';
 
     const moveText = lastInputDevice === 'keyboard' ? 'MOVE: ARROWS' : 'MOVE: PAD';
-    const slowText = lastInputDevice === 'keyboard' ? 'SLOW: Z/SHIFT' : 'SLOW: BUTTON';
+    const slowText = lastInputDevice === 'keyboard' ? 'SLOW: Z/SHIFT' : 'SLOW: AB BUTTON';
     controlsInstruction.textContent = `${moveText} | ${slowText}`;
 }
 
@@ -772,18 +768,13 @@ function updatePlayingState(dt_sec) {
     const energyDecreaseRate = Math.pow(1.12, stage - 1);
     energy -= baseEnergyMultiplier * energyDecreaseRate * 60 * dt_sec;
     
-    // ★変更: エネルギー低下警告のロジックを繰り返し再生するように修正
     const energyThreshold = config.energyTotal / 3;
     if (energy <= energyThreshold && gameState === 'playing') {
-        // 警告状態フラグを立てる (エネルギーバーの点滅で使用)
         lowEnergyWarningPlayed = true; 
-        
-        // 約1秒ごと(60フレームごと)に警告音を鳴らす
         if (frameCount % 60 === 0) {
             audioHandler.playSound('lowEnergy');
         }
     } else {
-        // エネルギーが回復したら警告状態を解除
         lowEnergyWarningPlayed = false;
     }
 
@@ -1092,7 +1083,12 @@ function drawPixelArt(ctx, artData, centerX, centerY, pixelSize, palette) {
 }
 
 function drawPlayer(ctx, color) {
-    const pixelSize = 2;
+    // ★★★ 変更点 ★★★
+    // 自機の拡縮エフェクトをより派手にするため、ビートの影響を大きくしました。
+    const basePixelSize = 2;
+    const beatScale = visualBeat * 0.8; // 拡縮の度合いをさらに大きく (前: 0.4)
+    const pixelSize = basePixelSize + beatScale;
+    
     const palette = {
         '1': color,
         '2': '#ffffff',
@@ -1114,6 +1110,11 @@ function drawPlayer(ctx, color) {
 
 function formatTime(ms) { if(isNaN(ms))ms=0; const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000), msec=Math.floor(ms%1000); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(msec).padStart(3,'0')}`; }
 
+// ★★★ 変更点 ★★★
+// チェーンコンボエフェクトの描画処理を最適化しました。
+// 負荷の大きい「文字ごとのグロー描画」を廃止し、
+// テキスト全体にグラデーションをかけて一度に描画する方法に変更しました。
+// これにより、見た目のコンセプトを維持しつつ、フレームレートの低下を防ぎます。
 function drawChainComboText(renderCtx, count, alpha = 1.0) {
     const comboText = `${count} CHAIN COMBO!!`;
     const baseFontSize = 16;
@@ -1128,6 +1129,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
         const progress = 1 - (comboEffect.life / comboEffect.maxLife);
         fontSize = fontSize * 1.2 - (fontSize * 0.2) * progress;
 
+        // 文字がランダムに入れ替わるエフェクトは維持
         const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         textToDraw = "";
         for (let i = 0; i < comboText.length; i++) {
@@ -1145,19 +1147,23 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     renderCtx.font = `${fontSize}px ${config.fontFamily}`;
     renderCtx.textAlign = 'left';
     
-    let currentX = 20;
-    for (let i = 0; i < textToDraw.length; i++) {
-        const char = textToDraw[i];
-        const charWidth = renderCtx.measureText(char).width;
-        const hue = (Date.now() / 15 + i * 20) % 360;
-        const gamingColor = `hsl(${hue}, 100%, 75%)`;
-        
-        drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = gamingColor;
-            renderCtx.fillText(char, currentX, 70);
-        }, gamingColor);
-        currentX += charWidth;
+    // 最適化：テキスト全体に適用する虹色のグラデーションを作成
+    const textMetrics = renderCtx.measureText(textToDraw);
+    const gradient = renderCtx.createLinearGradient(20, 0, 20 + textMetrics.width, 0);
+
+    const numColors = 12; // グラデーションの色数
+    for (let i = 0; i < numColors; i++) {
+        const hue = (Date.now() / 15 + i * (360 / numColors)) % 360;
+        gradient.addColorStop(Math.max(0, Math.min(1, i / (numColors -1))), `hsl(${hue}, 100%, 70%)`);
     }
+
+    renderCtx.fillStyle = gradient;
+
+    // 最適化：テキスト全体に対してグロー描画を一度だけ実行
+    drawWithGlow(renderCtx, () => {
+        renderCtx.fillText(textToDraw, 20, 70);
+    }, '#ffffcc', true); // グローをビートに合わせる
+
     renderCtx.restore();
 }
 
@@ -1325,7 +1331,6 @@ function draw() {
         const hue=energyRatio*120;
         let energyColor=`hsl(${hue},100%,50%)`;
 
-        // ★追加: エネルギー低下時にバーの色を点滅させる効果
         if (lowEnergyWarningPlayed && frameCount % 10 < 5) {
             energyColor = '#FFFFFF';
         }
