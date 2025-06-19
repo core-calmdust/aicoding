@@ -112,7 +112,7 @@
 // =================================================================================
 const RANKING_CONFIG = {
     // 【重要】Nhostプロジェクトのダッシュボードで取得したGraphQL EndpointのURLをここに貼り付けてください
-    API_ENDPOINT: "https://iokobvcesrewgcuyiiup.nhost.run/v1/graphql", 
+    API_ENDPOINT: "https://iokobvcesrewgcujyjup.nhost.run/v1/graphql", 
 };
 // =================================================================================
 // ▲▲▲ オンラインランキング用設定 ▲▲▲
@@ -847,7 +847,8 @@ function gameOver(reason) {
     
     const isTopTen = onlineHighScores.length < 10 || (onlineHighScores.length > 0 && score > onlineHighScores[onlineHighScores.length - 1].score);
 
-    if (score > 0 && isTopTen && score > highScore) {
+    //if (score > 0 && isTopTen && score > highScore) {
+    if (score > 0 && isTopTen) {
         gameState = 'nameEntry';
         playerName = "";
         nameEntryCursorBlink = 0;
