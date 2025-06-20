@@ -130,10 +130,23 @@
             opacity: 0.8;
             padding-top: 4px;
         }
-        #sound-toggle-button {
+        
+        /* ▼▼▼ このブロックで、元のボタン関連CSSをすべて置き換える ▼▼▼ */
+
+        /* ボタンをまとめるコンテナのスタイル */
+        #buttons-container {
             position: absolute;
             bottom: 65px;
             right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* ボタンと区切り線の間のスペース */
+            z-index: 100;
+        }
+
+        /* 2つのボタンに共通のスタイル */
+        #sound-toggle-button,
+        #effects-toggle-button {
             font-family: 'Press Start 2P', monospace;
             font-size: 10px;
             color: #00ccff;
@@ -145,22 +158,47 @@
             cursor: pointer;
             user-select: none;
             text-shadow: 0 0 5px #00ccff;
-            z-index: 100;
             opacity: 0.7;
             transition: opacity 0.2s, background-color 0.2s;
+            
+            /* ボタンのサイズとテキスト配置を統一 */
+            box-sizing: border-box;
+            min-width: 100px;
+            text-align: center;
         }
-        #sound-toggle-button:hover {
+
+        #sound-toggle-button:hover,
+        #effects-toggle-button:hover {
             opacity: 1.0;
             background-color: var(--button-hover-bg, rgba(0, 204, 255, 0.2));
         }
+
+        /* 区切り線「|」のスタイル */
+        .button-separator {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 14px;
+            color: #00ccff;
+            opacity: 0.5;
+            text-shadow: 0 0 5px #00ccff;
+        }
+
+        /* ▲▲▲ 置き換えはここまで ▲▲▲ */
+        
     </style>
 </head>
 <body>
     <div id="fullscreen-root">
         <div id="game-wrapper">
             <canvas id="gameCanvas" width="800" height="600"></canvas>
-            <div id="sound-toggle-button">SOUND ON</div>
-            <div id="instructions-container">
+
+            <!-- ▼▼▼ 修正後のボタンのHTML構造 ▼▼▼ -->
+            <div id="buttons-container">
+                <button type="button" id="effects-toggle-button">EFX ON</button>
+                <button type="button" id="sound-toggle-button">SOUND ON</button>
+            </div>
+            <!-- ▲▲▲ ここまで ▲▲▲ -->
+            
+            <footer id="instructions-container">
                 <div>
                     <div id="main-instruction"></div>
                     <div id="extra-instruction"></div>
@@ -169,7 +207,7 @@
                     <div id="controls-instruction"></div>
                     <div id="controls-instruction-2" style="padding-top: 4px;"></div>
                 </div>
-            </div>
+            </footer>
         </div>
     </div>
 
@@ -376,10 +414,27 @@ class AudioHandler {
         osc.stop(startTime + dur);
     }
 
-    playBgm() {
-        if (!this.isInitialized || this.bgmPlaying) {
+    async playBgm() {
+        if (!this.isInitialized) {
             return;
         }
+
+        // AudioContextが停止状態(suspended)なら、再開(resume)を試みる
+        if (this.ctx.state === 'suspended') {
+            try {
+                // resume()が完了するのを待つ
+                await this.ctx.resume();
+            } catch (e) {
+                console.error("AudioContext resume failed, cannot play BGM.", e);
+                return; // 再開に失敗したらBGMは再生しない
+            }
+        }
+
+        // すでに再生中なら何もしない（状態チェックはresumeの後に行う）
+        if (this.bgmPlaying) {
+            return;
+        }
+
         this.stopBgm();
         this.bgmPlaying = true;
         this.current16th = 0;
@@ -853,6 +908,7 @@ const extraInstruction = document.getElementById('extra-instruction');
 const controlsInstruction = document.getElementById('controls-instruction');
 const controlsInstruction2 = document.getElementById('controls-instruction-2');
 const soundToggleButton = document.getElementById('sound-toggle-button');
+const effectsToggleButton = document.getElementById('effects-toggle-button');
 
 let gameState = 'title';
 let gameMode = 'STANDARD';
@@ -937,7 +993,21 @@ let hasUFOSpawnedThisStage = false;
 let hasLooperSpawnedThisStage = false;
 let looperSpawnFrame = -1;
 let highScoreDisplayToggle = 0;
+let isEffectsEnabled = true;
 
+// ▼▼▼ このブロックをグローバル変数セクションに追加 ▼▼▼
+let titleBottomText = ""; // タイトル画面下部に表示されるテキスト
+let descriptionTimer = 0; // 説明文の表示時間を管理するタイマー
+let effectTimer = 0;      // テキスト切り替えエフェクトの時間を管理するタイマー
+const DESCRIPTION_DISPLAY_DURATION = 120; // 説明文の表示時間 (2秒 @ 60fps)
+const EFFECT_DURATION = 12; // エフェクトの時間 (0.2秒 @ 60fps)
+const MODE_DESCRIPTIONS = [
+    'SHMUP-style Blasting through Enemy',
+    'Stay Alive through Energy',
+    'Dance Between the Falling Comets'
+];
+const RANDOM_CHARS = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+// ▲▲▲ 追加はここまで ▲▲▲
 
 function hexToRgba(hex, alpha) {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -955,11 +1025,18 @@ function applyThemeStyles(theme) {
     instructionsContainer.style.color = theme.ui;
     instructionsContainer.style.textShadow = `0 0 10px ${theme.ui}`;
     
-    soundToggleButton.style.color = theme.ui;
-    soundToggleButton.style.textShadow = `0 0 5px ${theme.ui}`;
-    soundToggleButton.style.borderColor = theme.ui;
-    soundToggleButton.style.boxShadow = `0 0 10px ${theme.ui}`;
-    soundToggleButton.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
+    // ▼▼▼ このブロックを修正 ▼▼▼
+    const buttons = [soundToggleButton, effectsToggleButton];
+    buttons.forEach(button => {
+        if (button) {
+            button.style.color = theme.ui;
+            button.style.textShadow = `0 0 5px ${theme.ui}`;
+            button.style.borderColor = theme.ui;
+            button.style.boxShadow = `0 0 10px ${theme.ui}`;
+            button.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
+        }
+    });
+    // ▲▲▲ 修正はここまで ▲▲▲
 }
 
 function init() {
@@ -1017,6 +1094,12 @@ function init() {
     hasLooperSpawnedThisStage = false;
     looperSpawnFrame = -1;
 
+    // ▼▼▼ 追加された初期化処理 ▼▼▼
+    descriptionTimer = 0;
+    effectTimer = 0;
+    titleBottomText = ""; // 最初は空にしてdraw関数で初期テキストを設定させる
+    // ▲▲▲ 追加された初期化処理 ▲▲▲
+
     canvas.style.filter = 'none';
     canvas.style.webkitFilter = 'none';
     
@@ -1046,7 +1129,7 @@ function setupNewStage() {
     }
 }
 
-function startGame(mode) {
+async function startGame(mode) {
     init();
     gameMode = mode;
     gameState = 'playing';
@@ -1059,7 +1142,8 @@ function startGame(mode) {
     looperSpawnFrame = -1; // 初回ステージでは出現しない
 
     audioHandler.playSound('start');
-    audioHandler.playBgm();
+    // BGMの再生準備が非同期で完了するのを待つ
+    await audioHandler.playBgm();
 }
 
 function updateInstructions() {
@@ -1252,7 +1336,11 @@ function gameOver(reason) {
         screenShake = { intensity: 25, duration: 45 };
         effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 30, maxLife: 30, radius: 20 });
         effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
-        for (let i = 0; i < 350; i++) {
+
+        // ▼▼▼ このブロックを修正 ▼▼▼
+        const particleCount = isEffectsEnabled ? 350 : 50; // EFX OFF時はパーティクルを減らす
+        for (let i = 0; i < particleCount; i++) {
+        // ▲▲▲ 修正はここまで ▲▲▲
             const angle = Math.random() * Math.PI * 2;
             const speed = (Math.random() * 15 + 5) * 60;
             const theme = themes[currentThemeIndex];
@@ -1265,7 +1353,6 @@ function gameOver(reason) {
                 life: Math.random() * 100 + 80,
                 maxLife: 180,
                 color: color,
-                size: Math.random() * 3.5 + 1.5,
                 gravityMultiplier: Math.random() * 0.6 + 0.7,
             });
         }
@@ -1859,12 +1946,54 @@ function update(timestamp) {
 
         } else if (gameState === 'title') {
             frameCount++;
+
+            // --- タイマー更新 ---
+            if (effectTimer > 0) {
+                effectTimer--;
+            }
+            if (descriptionTimer > 0) {
+                descriptionTimer--;
+                if (descriptionTimer === 0) {
+                    // 説明表示期間が完全に終了したので、元のテキストに戻るためのエフェクトを開始
+                    effectTimer = EFFECT_DURATION;
+                }
+            }
+
+            // --- 入力処理 ---
+            const prevMenuIndex = titleMenuIndex;
             if (input.upTrigger) {
                 titleMenuIndex = (titleMenuIndex - 1 + titleMenuItems.length) % titleMenuItems.length;
             }
             if (input.downTrigger) {
                 titleMenuIndex = (titleMenuIndex + 1) % titleMenuItems.length;
             }
+
+            if (prevMenuIndex !== titleMenuIndex) {
+                // メニューが変更されたので、エフェクトと説明タイマーを開始
+                effectTimer = EFFECT_DURATION;
+                descriptionTimer = DESCRIPTION_DISPLAY_DURATION;
+            }
+
+            // --- 表示テキストの決定 ---
+            let targetText;
+            if (descriptionTimer > 0) {
+                targetText = MODE_DESCRIPTIONS[titleMenuIndex];
+            } else {
+                targetText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
+            }
+
+            if (effectTimer > 0) {
+                let randomText = '';
+                // 表示されるテキストの長さに合わせてランダムな文字列を生成
+                for (let i = 0; i < targetText.length; i++) {
+                    randomText += RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)];
+                }
+                titleBottomText = randomText;
+            } else {
+                titleBottomText = targetText;
+            }
+            
+            // --- ゲーム開始処理 ---
             if (input.replayTrigger) {
                 audioHandler.initialize();
                 startGame(titleMenuItems[titleMenuIndex]);
@@ -1911,6 +2040,12 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 }
 
 function drawWithGlow(ctx, drawFunc, color, useBeat = false) {
+    // ▼▼▼ このブロックを修正 ▼▼▼
+    if (!isEffectsEnabled) {
+        drawFunc(); // EFX OFF時はグローを適用せず、描画関数のみ実行
+        return;
+    }
+    // ▲▲▲ 修正はここまで ▲▲▲
     const blurAmount = useBeat ? (config.glowBlur + visualBeat * 8) : config.glowBlur;
     ctx.shadowColor = color;
     ctx.shadowBlur = blurAmount;
@@ -2050,6 +2185,8 @@ function drawBackground(renderCtx) {
 
     const theme = themes[currentThemeIndex];
     drawGrid(renderCtx, theme.grid);
+    
+    // 星の描画を isEffectsEnabled の条件分岐の外に出す
     renderCtx.strokeStyle = '#808080';
     stars.forEach(s => {
         renderCtx.globalAlpha = s.speed / 100;
@@ -2234,17 +2371,32 @@ function draw() {
     }
 
     if (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && gameOverReason === 'energy')) {
+        // ▼▼▼ このブロックを修正 ▼▼▼
         const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
         const glazeRadius = player.radius + currentGlazeDistance;
+
+        // グレイズ範囲の描画（EFX OFFでも表示されるように）
         renderCtx.save();
-        renderCtx.globalAlpha = 0.04 + visualBeat * 0.04;
-        renderCtx.fillStyle = theme.player;
-        renderCtx.beginPath();
-        renderCtx.arc(player.x, player.y, glazeRadius, 0, Math.PI * 2);
-        renderCtx.fill();
+        if (isEffectsEnabled) {
+            // EFX ON: 半透明でビートに連動
+            renderCtx.globalAlpha = 0.04 + visualBeat * 0.04;
+            renderCtx.fillStyle = theme.player;
+            renderCtx.beginPath();
+            renderCtx.arc(player.x, player.y, glazeRadius, 0, Math.PI * 2);
+            renderCtx.fill();
+        } else {
+            // EFX OFF: シンプルな線で描画
+            renderCtx.globalAlpha = 0.3;
+            renderCtx.strokeStyle = theme.player;
+            renderCtx.lineWidth = 1;
+            renderCtx.beginPath();
+            renderCtx.arc(player.x, player.y, glazeRadius, 0, Math.PI * 2);
+            renderCtx.stroke();
+        }
         renderCtx.restore();
 
         if (player.invincibleTimer > 0) {
+            // 無敵シールドの描画
             renderCtx.save();
             if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} else {
                 const shieldRadius = config.playerVisualSize * 1.5;
@@ -2260,6 +2412,7 @@ function draw() {
             }
             renderCtx.restore();
 
+            // 無敵メーターの描画
             renderCtx.save();
             const meterRadius = glazeRadius + 5;
             const meterWidth = 3;
@@ -2282,15 +2435,15 @@ function draw() {
         if (gameState !== 'gameOver' || gameOverReason !== 'collision') {
             drawPlayer(renderCtx, theme.player);
 
+            // ヒットボックス（当たり判定）の表示
             renderCtx.save();
-            const hue = (frameCount * 20) % 360;
-            const gamingColor = `hsla(${hue}, 100%, 70%, 0.7)`;
-            renderCtx.fillStyle = gamingColor;
+            renderCtx.fillStyle = 'rgba(255, 255, 255, 0.7)'; // 白の半透明で常時表示
             renderCtx.beginPath();
             renderCtx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             renderCtx.fill();
             renderCtx.restore();
         }
+        // ▲▲▲ 修正はここまで ▲▲▲
     }
 
     // Draw UI
@@ -2309,23 +2462,19 @@ function draw() {
         }
     }, theme.ui, true);
     
-    // ▼▼▼ 安定版修正 ▼▼▼ ゲームモード名を右上に表示
     if (gameState === 'playing' || gameState === 'paused') {
     	const modeName = gameMode.replace(' MODE', '');
-    	// 他のUIとスタイルを統一
-    	const modeFontSize = 20 + visualBeat * 2; // SCOREと同じフォントサイズ
-    	const modeColor = theme.ui; // SCOREと同じ色
+    	const modeFontSize = 20 + visualBeat * 2;
+    	const modeColor = theme.ui;
     
     	renderCtx.font = `${modeFontSize}px ${config.fontFamily}`;
     	renderCtx.textAlign = 'right';
     
-    	// SCOREと同じスタイルで描画
     	drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = modeColor;
             renderCtx.fillText(modeName, config.canvasWidth - 20, 40);
     	}, modeColor, true);
     }
-    // ▲▲▲ 安定版修正 ▲▲▲
 
     if (chainCount > 1 && player.invincibleTimer > 0) {
         drawChainComboText(renderCtx, chainCount, 1.0);
@@ -2457,7 +2606,7 @@ function draw() {
                 renderCtx.fillText("Bonus Points for Hitting a Comet!!", config.canvasWidth / 2, subTextY);
             }, theme.ui);
             renderCtx.restore();
-        } else if (e.type === 'shockwave') {
+        } else if (e.type === 'shockwave' && isEffectsEnabled) {
             const progress = 1 - e.life / e.maxLife;
             const radius = e.radius + progress * 300;
             const alpha = e.life / e.maxLife;
@@ -2469,9 +2618,9 @@ function draw() {
             renderCtx.arc(e.x, e.y, radius, 0, Math.PI * 2);
             renderCtx.stroke();
             renderCtx.restore();
-        } else if (e.type === 'comboFadeOut') {
+        } else if (e.type === 'comboFadeOut' && isEffectsEnabled) {
             drawChainComboText(renderCtx, e.count, e.life / e.maxLife);
-        } else if (e.type === 'screenFlash') {
+        } else if (e.type === 'screenFlash' && isEffectsEnabled) {
             const alpha = e.life / e.maxLife;
             renderCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
             renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
@@ -2480,7 +2629,7 @@ function draw() {
             const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.8;
             renderCtx.fillStyle = `rgba(224, 224, 224, ${alpha})`;
             renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
-        } else if (e.type === 'barLine') {
+        } else if (e.type === 'barLine' && isEffectsEnabled) {
             const progress = 1.0 - (e.life / e.maxLife);
             const y = config.canvasHeight * progress;
             const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.3;
@@ -2548,10 +2697,9 @@ function draw() {
             const outburstFont = `16px ${config.fontFamily}`;
             drawTitleTextMorph(renderCtx, config.canvasWidth / 2, outburstY, outburstFont, uiColor);
 
-            // ▼▼▼ 安定版修正 ▼▼▼ タイトル画面のレイアウト調整
             // Draw Menu
             titleMenuItems.forEach((item, index) => {
-                const y = config.canvasHeight / 2 + index * 40; // Y座標を調整
+                const y = config.canvasHeight / 2 + index * 40;
                 if (index === titleMenuIndex) {
                     const selectorColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
                     drawWithGlow(renderCtx, () => {
@@ -2566,15 +2714,18 @@ function draw() {
                 }
             });
             
-            const startText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = '#ffffff';
                 renderCtx.font = `18px ${config.fontFamily}`;
-                renderCtx.fillText(startText, config.canvasWidth / 2, config.canvasHeight / 2 + 160); // Y座標を調整
+                // 初回描画時またはタイマーが切れたときにデフォルトテキストを設定
+                if (titleBottomText === "") {
+                    titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
+                }
+                renderCtx.fillText(titleBottomText, config.canvasWidth / 2, config.canvasHeight / 2 + 160);
             }, '#ffffff');
             
             // High Score Display
-            const highScoreY = config.canvasHeight / 2 + 220; // Y座標を調整
+            const highScoreY = config.canvasHeight / 2 + 220;
             const highScoreCycle = frameCount % 360; 
             if (highScoreCycle < 120) {
                  drawWithGlow(renderCtx, () => {
@@ -2595,8 +2746,6 @@ function draw() {
                     renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, config.canvasWidth / 2, highScoreY);
                 }, theme.ui);
             }
-            // ▲▲▲ 安定版修正 ▲▲▲
-
 
         } else { // gameState === 'gameOver'
             renderCtx.textBaseline = 'middle';
@@ -2659,14 +2808,6 @@ function draw() {
         }
     }
 
-    ctx.save();
-    if (screenShake.duration > 0) {
-        const shakeIntensity = screenShake.intensity * (screenShake.duration / 45);
-        const shakeX = (Math.random() - 0.5) * shakeIntensity;
-        const shakeY = (Math.random() - 0.5) * shakeIntensity;
-        ctx.translate(shakeX, shakeY);
-    }
-
     if (gameState === 'gameOver' && gameOverReason === 'energy') {
         const progress = grayscaleAnimation.progress;
         const filterValue = `grayscale(${progress}) brightness(${1 - progress * 0.2})`;
@@ -2703,6 +2844,11 @@ soundToggleButton.addEventListener('click', () => {
     }
     const isMuted = audioHandler.toggleMute();
     soundToggleButton.textContent = isMuted ? 'SOUND OFF' : 'SOUND ON';
+});
+
+effectsToggleButton.addEventListener('click', () => {
+    isEffectsEnabled = !isEffectsEnabled;
+    effectsToggleButton.textContent = isEffectsEnabled ? 'EFX ON' : 'EFX OFF';
 });
 
 function toggleFullScreen() {
