@@ -2447,33 +2447,42 @@ function draw() {
     }
 
     // Draw UI
-    drawWithGlow(renderCtx, () => {
-        renderCtx.fillStyle = theme.ui;
-        const mainFontSize = 20 + visualBeat * 2;
-        const subFontSize = 18 + visualBeat * 2;
-        renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
-        renderCtx.textAlign = 'left';
-        renderCtx.fillText(`SCORE: ${score}`, 20, 40);
-        renderCtx.textAlign = 'center';
-        renderCtx.fillText(formatTime(elapsedTime), config.canvasWidth / 2, 40);
-        if (gameState === 'playing' || gameState === 'paused') {
-            renderCtx.font = `${subFontSize}px ${config.fontFamily}`;
-            renderCtx.fillText(`STAGE ${stage}`, config.canvasWidth / 2, config.canvasHeight - 20);
-        }
-    }, theme.ui, true);
-    
-    if (gameState === 'playing' || gameState === 'paused') {
-    	const modeName = gameMode.replace(' MODE', '');
-    	const modeFontSize = 20 + visualBeat * 2;
-    	const modeColor = theme.ui;
-    
-    	renderCtx.font = `${modeFontSize}px ${config.fontFamily}`;
-    	renderCtx.textAlign = 'right';
-    
-    	drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = modeColor;
+    const uiColor = theme.ui;
+    const mainFontSize = 20 + visualBeat * 2;
+    const subFontSize = 18 + visualBeat * 2;
+
+    // SCOREとタイマー表示 (タイトル画面以外で表示)
+    if (gameState !== 'title') {
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
+            renderCtx.fillStyle = uiColor;
+            
+            renderCtx.textAlign = 'left';
+            renderCtx.fillText(`SCORE: ${score}`, 20, 40);
+
+            renderCtx.textAlign = 'center';
+            renderCtx.fillText(formatTime(elapsedTime), config.canvasWidth / 2, 40);
+        }, uiColor, true);
+    }
+
+    // ゲームモードとSTAGE表示 (playing, paused, gameOver の時に表示)
+    if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameOver') {
+        // ゲームモード名
+        const modeName = gameMode.replace(' MODE', '');
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
+            renderCtx.fillStyle = uiColor;
+            renderCtx.textAlign = 'right';
             renderCtx.fillText(modeName, config.canvasWidth - 20, 40);
-    	}, modeColor, true);
+        }, uiColor, true);
+
+        // STAGE表示
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `${subFontSize}px ${config.fontFamily}`;
+            renderCtx.fillStyle = uiColor;
+            renderCtx.textAlign = 'center';
+            renderCtx.fillText(`STAGE ${stage}`, config.canvasWidth / 2, config.canvasHeight - 20);
+        }, uiColor, true);
     }
 
     if (chainCount > 1 && player.invincibleTimer > 0) {
