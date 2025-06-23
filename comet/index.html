@@ -2443,7 +2443,9 @@ function draw() {
 
             // ヒットボックス（当たり判定）の表示
             renderCtx.save();
-            renderCtx.fillStyle = 'rgba(255, 255, 255, 0.7)'; // 白の半透明で常時表示
+            const hue = (frameCount * 10) % 360; // 色相を時間経過で変化させる
+            const gamingColor = `hsla(${hue}, 100%, 70%, 0.8)`; // ゲーミングカラーを生成
+            renderCtx.fillStyle = gamingColor;
             renderCtx.beginPath();
             renderCtx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             renderCtx.fill();
