@@ -1503,7 +1503,13 @@ function updatePlayingState(dt_sec) {
     if (stage >= 2 && frameCount >= nextWayShotFrame) {
         spawnWayComets();
         const baseInterval = Math.max(3, 10 - stage) * 15;
-        const randomInterval = baseInterval * (0.5 + Math.random());
+        let randomInterval = baseInterval * (0.5 + Math.random());
+
+        // STARTRAILモードの場合、発射間隔を3倍にする（頻度を1/3に）
+        if (gameMode === 'STARTRAIL MODE') {
+            randomInterval *= 3;
+        }
+
         nextWayShotFrame = frameCount + randomInterval;
     }
 
