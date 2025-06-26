@@ -105,6 +105,7 @@
             flex-direction: column;
             align-items: center;
             position: relative;
+            will-change: transform; /* ★ 追加: transformの変更をブラウザに予告 */
         }
         canvas {
             background-color: #000000;
@@ -996,6 +997,7 @@ let hasLooperSpawnedThisStage = false;
 let looperSpawnFrame = -1;
 let highScoreDisplayToggle = 0;
 let isEffectsEnabled = true;
+let resizeRequest = null; // ★ 追加: resizeイベント制御用
 
 // ▼▼▼ このブロックをグローバル変数セクションに追加 ▼▼▼
 let titleBottomText = ""; // タイトル画面下部に表示されるテキスト
@@ -2905,23 +2907,38 @@ function toggleFullScreen() {
 function updateScale() {
     const r = document.getElementById('fullscreen-root');
     const w = document.getElementById('game-wrapper');
-    if (document.fullscreenElement === r) {
-        const instructionHeight = document.getElementById('instructions-container').offsetHeight;
-        const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + instructionHeight;
-        const margin = 20;
-        const effectiveWidth = w.offsetWidth + margin;
-        const effectiveHeight = totalGameHeight + margin;
-        const scaleX = r.clientWidth / effectiveWidth;
-        const scaleY = r.clientHeight / effectiveHeight;
-        const scale = Math.min(scaleX, scaleY);
-        w.style.setProperty('--scale-factor', scale);
-    } else {
-        w.style.removeProperty('--scale-factor');
-    }
+
+    // スケール計算とスタイル適用を次の描画フレームに同期させる
+    requestAnimationFrame(() => {
+        if (document.fullscreenElement === r) {
+            const instructionHeight = document.getElementById('instructions-container').offsetHeight;
+            const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + instructionHeight;
+            const margin = 20;
+            const effectiveWidth = w.offsetWidth + margin;
+            const effectiveHeight = totalGameHeight + margin;
+            const scaleX = r.clientWidth / effectiveWidth;
+            const scaleY = r.clientHeight / effectiveHeight;
+            const scale = Math.min(scaleX, scaleY);
+            w.style.setProperty('--scale-factor', scale);
+        } else {
+            w.style.removeProperty('--scale-factor');
+        }
+    });
 }
 
+// フルスクリーン状態が変わった時にスケールを更新
 window.addEventListener('fullscreenchange', updateScale);
-window.addEventListener('resize', updateScale);
+
+// ウィンドウリサイズ時の処理を最適化
+window.addEventListener('resize', () => {
+    // 既にリクエストがあればキャンセル
+    if (resizeRequest) {
+        cancelAnimationFrame(resizeRequest);
+    }
+    // 次のフレームでupdateScaleを実行するようにリクエスト
+    resizeRequest = requestAnimationFrame(updateScale);
+});
+
 init();
 gameLoop();
 
