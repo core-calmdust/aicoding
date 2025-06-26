@@ -1334,29 +1334,31 @@ function gameOver(reason) {
         newHighScoreAchieved = true;
     }
 
-
-    if (reason === 'collision') {
+if (reason === 'collision') {
         audioHandler.playSound('explosion');
         screenShake = { intensity: 25, duration: 45 };
         effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 30, maxLife: 30, radius: 20 });
         effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
 
-        // ▼▼▼ このブロックを修正 ▼▼▼
-        const particleCount = isEffectsEnabled ? 350 : 50; // EFX OFF時はパーティクルを減らす
+        // ▼▼▼ 爆発エフェクトを動画のように強化 ▼▼▼
+        const particleCount = isEffectsEnabled ? 450 : 70; // ★ 変更点: パーティクル数を増加
+        
+        // ★ 変更点: 爆発専用の鮮やかなカラーパレットを定義
+        const explosionColors = ['#ff3344', '#ff8800', '#ffff00', '#88ff00', '#00ffff', '#4488ff', '#ff00ff', '#ffffff'];
+
         for (let i = 0; i < particleCount; i++) {
-        // ▲▲▲ 修正はここまで ▲▲▲
             const angle = Math.random() * Math.PI * 2;
-            const speed = (Math.random() * 15 + 5) * 60;
-            const theme = themes[currentThemeIndex];
-            const color = [theme.player, theme.comet, theme.ui, '#ff3344', '#ffff00', '#ffffff'][Math.floor(Math.random() * 6)];
+            const speed = (Math.random() * 18 + 6) * 60; // ★ 変更点: 速度に少し幅を持たせる
+            
             particles.push({
                 x: player.x,
                 y: player.y,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                life: Math.random() * 100 + 80,
-                maxLife: 180,
-                color: color,
+                life: Math.random() * 120 + 90, // ★ 変更点: 少し長めに表示
+                maxLife: 210,
+                color: explosionColors[Math.floor(Math.random() * explosionColors.length)], // ★ 変更点: 専用パレットから色を選択
+                size: Math.random() * 2.5 + 1, // ★ 追加: パーティクルのサイズをランダムに設定
                 gravityMultiplier: Math.random() * 0.6 + 0.7,
             });
         }
