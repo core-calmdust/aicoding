@@ -985,6 +985,7 @@ let screenShake = { intensity: 0, duration: 0 };
 let grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
 let chainCount = 0;
 let chainEffectPending = false;
+let chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーション専用のタイマー
 let titleMenuIndex = 0;
 const titleMenuItems = ['STANDARD MODE', 'JOURNEY MODE', 'STARTRAIL MODE'];
 let invaderSpawnCountForStage = 0;
@@ -1086,7 +1087,7 @@ function init() {
     grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
     chainCount = 0;
     chainEffectPending = false;
-    
+    chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーションタイマーをリセット
     // Reset stage-specific flags
     invaderSpawnCountForStage = 0;
     invadersSpawnedThisStage = 0;
@@ -1257,7 +1258,8 @@ function triggerNormalItemEffect() {
 function triggerInvincibility(baseFrames) {
     if (player.invincibleTimer > 0) {
         chainCount++;
-        effects.push({ type: 'chainComboUpdate', life: 60, maxLife: 60 });
+        // effects.push({ type: 'chainComboUpdate', life: 60, maxLife: 60 }); // ★ 変更点: effects配列への追加を削除
+        chainComboAnim.life = chainComboAnim.maxLife; // ★ 変更点: 専用タイマーをリセットしてアニメーションを開始
         chainEffectPending = true;
     } else {
         chainCount = 1;
@@ -1874,6 +1876,10 @@ function update(timestamp) {
 
         pollInput();
         updateInstructions();
+
+        if (chainComboAnim.life > 0) {
+            chainComboAnim.life--;
+        }
         
         if (screenShake.duration > 0) {
             screenShake.duration--;
@@ -1947,7 +1953,7 @@ function update(timestamp) {
             if (chainEffectPending && visualBeat >= 1.0 && previousVisualBeat < 1.0) {
                 effects.push({ type: 'shockwave', x: 150, y: 65, life: 20, maxLife: 20, radius: 20 });
                 effects.push({ type: 'screenFlash', life: 8, maxLife: 8 });
-                chainEffectPending = false;
+                chainEffectPending = false; // ★ 変更点: この行は元々ありましたが、この変更がパフォーマンス改善の鍵となります
             }
 
         } else if (gameState === 'title') {
@@ -2138,21 +2144,25 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     const chainLevel = Math.floor((Math.min(count, maxChainForSizing) - 1) / 5);
     let fontSize = baseFontSize + chainLevel * sizeStep;
     
-    const comboEffect = effects.find(e => e.type === 'chainComboUpdate');
+    // ★ 変更点: effects.find() をやめ、専用のタイマーを参照する
+    const comboEffect = chainComboAnim.life > 0 ? chainComboAnim : null;
     let textToDraw = comboText;
+
     if (comboEffect && alpha === 1.0) {
         const progress = 1 - (comboEffect.life / comboEffect.maxLife);
         fontSize = fontSize * 1.2 - (fontSize * 0.2) * progress;
 
         const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        textToDraw = "";
+        // ★ 変更点: 文字列の直接連結をやめ、配列を使って高速化
+        const textChars = [];
         for (let i = 0; i < comboText.length; i++) {
             if (progress > (i / comboText.length) * 0.5 + (Math.random() * 0.1)) {
-                textToDraw += comboText[i];
+                textChars.push(comboText[i]);
             } else {
-                textToDraw += chars[Math.floor(Math.random() * chars.length)];
+                textChars.push(chars[Math.floor(Math.random() * chars.length)]);
             }
         }
+        textToDraw = textChars.join('');
     }
 
     renderCtx.save();
