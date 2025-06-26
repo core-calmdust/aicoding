@@ -1783,7 +1783,7 @@ function updatePlayingState(dt_sec) {
                              score += earnedScore;
                              scoreTexts.push({ x: m.x, y: m.y, text: `+${earnedScore}`, life: 60, type: 'bonus' });
                              audioHandler.playSound('enemyDestroy');
-                             screenShake = { intensity: 15, duration: 30 };
+                             screenShake = { intensity:8, duration: 20 };
                              effects.push({ type: 'shockwave', x: m.x, y: m.y, life: 15, maxLife: 15, radius: 10 });
                              monsters.splice(i, 1);
                              triggerSpecialItemEffect();
@@ -1796,7 +1796,7 @@ function updatePlayingState(dt_sec) {
                         
                         audioHandler.playSound('enemyDestroy');
                         if(m.type === 'ufo') {
-                            screenShake = { intensity: 15, duration: 30 };
+                            screenShake = { intensity: 8, duration: 20 };
                         }
                         effects.push({ type: 'shockwave', x: m.x, y: m.y, life: 15, maxLife: 15, radius: 10 });
                         monsters.splice(i, 1);
@@ -1824,7 +1824,7 @@ function updatePlayingState(dt_sec) {
                     scoreTexts.push({ x: player.x, y: player.y - 30, text: `+${bonusScore}`, life: 60, type: 'bonus' });
                     audioHandler.playSound('invincibleHit');
                     if (m.type === 'ufo' || m.type === 'looper') {
-                        screenShake = { intensity: 15, duration: 30 };
+                        screenShake = { intensity: 8, duration: 20 };
                         triggerSpecialItemEffect();
                     } else {
                         triggerNormalItemEffect();
