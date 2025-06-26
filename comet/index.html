@@ -947,10 +947,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
-const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false };
+const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false, resetTrigger: false, confirmYesTrigger: false, confirmNoTrigger: false }; // ★ プロパティを追加
 let wasEnterPressed = false, wasQPressed = false, wasSelectPressed = false;
 let wasStartPressed = false, wasPPressed = false, wasUpPressed = false;
 let wasDownPressed = false, wasShootPressed = false;
+let wasKPressed = false, wasYPressed = false, wasNPressed = false; // ★ 追加
 
 let player;
 let comets;
@@ -997,6 +998,7 @@ let hasLooperSpawnedThisStage = false;
 let looperSpawnFrame = -1;
 let highScoreDisplayToggle = 0;
 let isEffectsEnabled = true;
+let isShowingModeInGame = true; // ★ 追加: ゲーム中のモード名/ハイスコア表示切り替え用
 let resizeRequest = null; // ★ 追加: resizeイベント制御用
 
 // ▼▼▼ このブロックをグローバル変数セクションに追加 ▼▼▼
@@ -1098,6 +1100,7 @@ function init() {
     hasUFOSpawnedThisStage = false;
     hasLooperSpawnedThisStage = false;
     looperSpawnFrame = -1;
+    isShowingModeInGame = true; // ★ 追加: 開始時は必ずモード名を表示する
 
     // ▼▼▼ 追加された初期化処理 ▼▼▼
     descriptionTimer = 0;
@@ -1202,6 +1205,31 @@ function pollInput() {
     input.shootTrigger = isShootPressed && !wasShootPressed;
     wasShootPressed = isShootPressed;
 
+    // ★ ここから追加 ★
+    // ハイスコアリセット関連のトリガー
+    const isKPressed = keyState['KeyK'];
+    const isYPressed = keyState['KeyY'];
+    const isNPressed = keyState['KeyN'];
+
+    if (gameState === 'title' && isKPressed && !wasKPressed) {
+        input.resetTrigger = true;
+    } else {
+        input.resetTrigger = false;
+    }
+
+    if (gameState === 'confirmReset') {
+        input.confirmYesTrigger = isYPressed && !wasYPressed;
+        input.confirmNoTrigger = isNPressed && !wasNPressed;
+    } else {
+        input.confirmYesTrigger = false;
+        input.confirmNoTrigger = false;
+    }
+
+    wasKPressed = isKPressed;
+    wasYPressed = isYPressed;
+    wasNPressed = isNPressed;
+    // ★ ここまで追加 ★
+
     const isPPressed = keyState['KeyP'];
     const isStartPressed = gpStart;
     input.pauseTrigger = (isPPressed && !wasPPressed) || (isStartPressed && !wasStartPressed);
@@ -1288,12 +1316,28 @@ function triggerInvincibility(baseFrames) {
     mutekiAnim.maxLife = finalInvincibleTime;
 }
 
+function resetHighScores() {
+    localStorage.removeItem(config.highScoreKeyStandard);
+    localStorage.removeItem(config.highScoreKeyJourney);
+    localStorage.removeItem(config.highScoreKeyStartrail);
+
+    highScoreStandard = 0;
+    highScoreJourney = 0;
+    highScoreStartrail = 0;
+    
+    // ユーザーへのフィードバック
+    audioHandler.playSound('explosion'); // 派手な音で知らせる
+    effects.push({ type: 'screenFlash', life: 20, maxLife: 20 });
+}
+
 function gameOver(reason) {
     if (gameState === 'gameOver') {
         return;
     }
     gameState = 'gameOver';
     gameOverReason = reason;
+
+    isShowingModeInGame = true; // ★ 追加: ゲームオーバー時は必ずモード名を表示する
 
     audioHandler.stopBgm();
     audioHandler.playJingle('gameOver');
@@ -1418,9 +1462,16 @@ function updateBackground(dt_sec) {
 }
 
 function updatePlayingState(dt_sec) {
-    // Bar line effect
+    // ▼▼▼ このブロックを修正 ▼▼▼
+    // 1小節ごとにUI表示を切り替え、小節線エフェクトを発生させる
     if (audioHandler.barTrigger) {
+        // 表示を切り替える
+        isShowingModeInGame = !isShowingModeInGame;
+        
+        // 小節線エフェクトを発生
         effects.push({ type: 'barLine', life: 30, maxLife: 30 });
+        
+        // トリガーをリセット
         audioHandler.barTrigger = false;
     }
 
@@ -1967,7 +2018,19 @@ function update(timestamp) {
                 chainEffectPending = false; // ★ 変更点: この行は元々ありましたが、この変更がパフォーマンス改善の鍵となります
             }
 
+        } else if (gameState === 'confirmReset') { // ★ この else if ブロックを追加
+            if (input.confirmYesTrigger) {
+                resetHighScores();
+                gameState = 'title';
+            } else if (input.confirmNoTrigger) {
+                gameState = 'title';
+            }
         } else if (gameState === 'title') {
+            // ★ ここから追加 ★
+            if (input.resetTrigger) {
+                gameState = 'confirmReset';
+                return; // 状態が変わったので、このフレームの残りの更新はスキップ
+            }
             frameCount++;
 
             // --- タイマー更新 ---
@@ -2496,14 +2559,41 @@ function draw() {
 
     // ゲームモードとSTAGE表示 (playing, paused, gameOver の時に表示)
     if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameOver') {
-        // ゲームモード名
-        const modeName = gameMode.replace(' MODE', '');
+        // ▼▼▼ このブロックを修正 ▼▼▼
+        // ゲームモード名とハイスコアを交互に表示
+        let textToDisplay;
+        if (isShowingModeInGame) {
+            textToDisplay = gameMode.replace(' MODE', '');
+        } else {
+            let currentHighScore;
+            switch(gameMode) {
+                case 'STANDARD MODE':
+                    currentHighScore = highScoreStandard;
+                    break;
+                case 'JOURNEY MODE':
+                    currentHighScore = highScoreJourney;
+                    break;
+                case 'STARTRAIL MODE':
+                    currentHighScore = highScoreStartrail;
+                    break;
+                default:
+                    currentHighScore = 0;
+            }
+            
+            // ★ ここからが変更点 ★
+            // 現在のスコアがハイスコアを上回っている場合、表示するスコアを現在のスコアにする
+            const scoreToDisplay = Math.max(currentHighScore, score);
+            textToDisplay = `HI: ${scoreToDisplay}`;
+            // ★ 変更はここまで ★
+        }
+        
         drawWithGlow(renderCtx, () => {
             renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             renderCtx.textAlign = 'right';
-            renderCtx.fillText(modeName, config.canvasWidth - 20, 40);
+            renderCtx.fillText(textToDisplay, config.canvasWidth - 20, 40);
         }, uiColor, true);
+        // ▲▲▲ 修正はここまで ▲▲▲
 
         // STAGE表示
         drawWithGlow(renderCtx, () => {
@@ -2689,8 +2779,7 @@ function draw() {
             renderCtx.restore();
         }
     });
-
-    // Draw Paused Screen
+    // Draw UI Screens (Paused, Confirm, Title, Game Over)
     if (gameState === 'paused') {
         renderCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
@@ -2725,131 +2814,154 @@ function draw() {
             renderCtx.fillText(quitMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 60);
         }, theme.ui, true);
 
-    } else if (gameState !== 'playing') {
+    } else if (gameState === 'confirmReset') {
+        // 背景を暗くして確認画面を目立たせる
+        renderCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+        const msg1 = "RESET ALL HIGH SCORES?";
+        const msg2 = "(Y/N)";
+        const msgColor = '#ff3333'; // 警告を示す赤色
+
         renderCtx.textAlign = 'center';
-        if (gameState === 'title') {
-            const titleColor = theme.player;
-            const uiColor = theme.ui;
+        renderCtx.textBaseline = 'middle';
 
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = titleColor;
-                renderCtx.font = `60px ${config.fontFamily}`;
-                renderCtx.fillText('COMET', config.canvasWidth / 2, config.canvasHeight / 2 - 120);
-            }, titleColor);
-            
-            const outburstY = config.canvasHeight / 2 - 75;
-            const outburstFont = `16px ${config.fontFamily}`;
-            drawTitleTextMorph(renderCtx, config.canvasWidth / 2, outburstY, outburstFont, uiColor);
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = msgColor;
+            renderCtx.font = `24px ${config.fontFamily}`;
+            renderCtx.fillText(msg1, config.canvasWidth / 2, config.canvasHeight / 2 - 20);
+        }, msgColor);
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.font = `20px ${config.fontFamily}`;
+            renderCtx.fillText(msg2, config.canvasWidth / 2, config.canvasHeight / 2 + 25);
+        }, '#ffffff');
+        
+        renderCtx.textBaseline = 'alphabetic'; // デフォルトに戻す
+    
+    } else if (gameState === 'title') {
+        renderCtx.textAlign = 'center';
+        const titleColor = theme.player;
+        const uiColor = theme.ui;
 
-            // Draw Menu
-            titleMenuItems.forEach((item, index) => {
-                const y = config.canvasHeight / 2 + index * 40;
-                if (index === titleMenuIndex) {
-                    const selectorColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
-                    drawWithGlow(renderCtx, () => {
-                        renderCtx.fillStyle = selectorColor;
-                        renderCtx.font = `22px ${config.fontFamily}`;
-                        renderCtx.fillText(`> ${item} <`, config.canvasWidth / 2, y);
-                    }, selectorColor, true);
-                } else {
-                    renderCtx.fillStyle = '#cccccc';
-                    renderCtx.font = `20px ${config.fontFamily}`;
-                    renderCtx.fillText(item, config.canvasWidth / 2, y);
-                }
-            });
-            
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = '#ffffff';
-                renderCtx.font = `18px ${config.fontFamily}`;
-                // 初回描画時またはタイマーが切れたときにデフォルトテキストを設定
-                if (titleBottomText === "") {
-                    titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
-                }
-                renderCtx.fillText(titleBottomText, config.canvasWidth / 2, config.canvasHeight / 2 + 160);
-            }, '#ffffff');
-            
-            // High Score Display
-            const highScoreY = config.canvasHeight / 2 + 220;
-            const highScoreCycle = frameCount % 360; 
-            if (highScoreCycle < 120) {
-                 drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = theme.ui;
-                    renderCtx.font = `14px ${config.fontFamily}`;
-                    renderCtx.fillText(`HI-SCORE (STANDARD): ${highScoreStandard}`, config.canvasWidth / 2, highScoreY);
-                }, theme.ui);
-            } else if (highScoreCycle < 240) {
-                 drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = theme.ui;
-                    renderCtx.font = `14px ${config.fontFamily}`;
-                    renderCtx.fillText(`HI-SCORE (JOURNEY): ${highScoreJourney}`, config.canvasWidth / 2, highScoreY);
-                }, theme.ui);
-            } else {
-                 drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = theme.ui;
-                    renderCtx.font = `14px ${config.fontFamily}`;
-                    renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, config.canvasWidth / 2, highScoreY);
-                }, theme.ui);
-            }
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = titleColor;
+            renderCtx.font = `60px ${config.fontFamily}`;
+            renderCtx.fillText('COMET', config.canvasWidth / 2, config.canvasHeight / 2 - 120);
+        }, titleColor);
+        
+        const outburstY = config.canvasHeight / 2 - 75;
+        const outburstFont = `16px ${config.fontFamily}`;
+        drawTitleTextMorph(renderCtx, config.canvasWidth / 2, outburstY, outburstFont, uiColor);
 
-        } else { // gameState === 'gameOver'
-            renderCtx.textBaseline = 'middle';
-            const gameOverColor = '#ff3333';
-            const gameOverY = config.canvasHeight / 2 - 150;
-            
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = gameOverColor;
-                renderCtx.font = `60px ${config.fontFamily}`;
-                renderCtx.fillText('GAME OVER', config.canvasWidth / 2, gameOverY);
-            }, gameOverColor);
-
-            if (newHighScoreAchieved) {
-                const newRecordColor = `hsl(${(frameCount*3)%360},100%,70%)`;
-                const newRecordY = gameOverY + 80;
+        // Draw Menu
+        titleMenuItems.forEach((item, index) => {
+            const y = config.canvasHeight / 2 + index * 40;
+            if (index === titleMenuIndex) {
+                const selectorColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
                 drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = newRecordColor;
-                    renderCtx.font = `30px ${config.fontFamily}`;
-                    renderCtx.fillText('NEW RECORD!', config.canvasWidth / 2, newRecordY);
-                }, newRecordColor);
-            }
-            
-            const scoreY = config.canvasHeight / 2;
-            let currentHighScore;
-            switch(gameMode) {
-                case 'STANDARD MODE': currentHighScore = highScoreStandard; break;
-                case 'JOURNEY MODE': currentHighScore = highScoreJourney; break;
-                case 'STARTRAIL MODE': currentHighScore = highScoreStartrail; break;
-                default: currentHighScore = 0;
-            }
-
-            drawWithGlow(renderCtx, () => {
-                renderCtx.font = `30px ${config.fontFamily}`;
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.fillText(`SCORE: ${score}`, config.canvasWidth / 2, scoreY);
-            }, theme.ui);
-            drawWithGlow(renderCtx, () => {
-                renderCtx.font = `20px ${config.fontFamily}`;
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, config.canvasWidth / 2, scoreY + 50);
-            }, theme.ui);
-            
-            let titleText, replayText;
-            if (lastInputDevice === 'keyboard') {
-                titleText = 'Press Q to Title';
-                replayText = 'Press Enter to Replay';
+                    renderCtx.fillStyle = selectorColor;
+                    renderCtx.font = `22px ${config.fontFamily}`;
+                    renderCtx.fillText(`> ${item} <`, config.canvasWidth / 2, y);
+                }, selectorColor, true);
             } else {
-                titleText = 'Press Select Button to Title';
-                replayText = 'Press Start Button to Replay';
+                renderCtx.fillStyle = '#cccccc';
+                renderCtx.font = `20px ${config.fontFamily}`;
+                renderCtx.fillText(item, config.canvasWidth / 2, y);
             }
-            const replayY = scoreY + 120;
-            drawWithGlow(renderCtx, () => {
-                renderCtx.font = `18px ${config.fontFamily}`;
-                renderCtx.fillStyle = '#ffffff';
-                renderCtx.fillText(replayText, config.canvasWidth / 2, replayY);
-                renderCtx.fillText(titleText, config.canvasWidth / 2, replayY + 30);
-            }, '#ffffff');
-
-            renderCtx.textBaseline = 'alphabetic';
+        });
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.font = `18px ${config.fontFamily}`;
+            if (titleBottomText === "") {
+                titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
+            }
+            renderCtx.fillText(titleBottomText, config.canvasWidth / 2, config.canvasHeight / 2 + 160);
+        }, '#ffffff');
+        
+        const highScoreY = config.canvasHeight / 2 + 220;
+        const highScoreCycle = frameCount % 360; 
+        if (highScoreCycle < 120) {
+             drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `14px ${config.fontFamily}`;
+                renderCtx.fillText(`HI-SCORE (STANDARD): ${highScoreStandard}`, config.canvasWidth / 2, highScoreY);
+            }, theme.ui);
+        } else if (highScoreCycle < 240) {
+             drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `14px ${config.fontFamily}`;
+                renderCtx.fillText(`HI-SCORE (JOURNEY): ${highScoreJourney}`, config.canvasWidth / 2, highScoreY);
+            }, theme.ui);
+        } else {
+             drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `14px ${config.fontFamily}`;
+                renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, config.canvasWidth / 2, highScoreY);
+            }, theme.ui);
         }
+
+    } else if (gameState === 'gameOver') {
+        renderCtx.textAlign = 'center';
+        renderCtx.textBaseline = 'middle';
+        const gameOverColor = '#ff3333';
+        const gameOverY = config.canvasHeight / 2 - 150;
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = gameOverColor;
+            renderCtx.font = `60px ${config.fontFamily}`;
+            renderCtx.fillText('GAME OVER', config.canvasWidth / 2, gameOverY);
+        }, gameOverColor);
+
+        if (newHighScoreAchieved) {
+            const newRecordColor = `hsl(${(frameCount*3)%360},100%,70%)`;
+            const newRecordY = gameOverY + 80;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = newRecordColor;
+                renderCtx.font = `30px ${config.fontFamily}`;
+                renderCtx.fillText('NEW RECORD!', config.canvasWidth / 2, newRecordY);
+            }, newRecordColor);
+        }
+        
+        const scoreY = config.canvasHeight / 2;
+        let currentHighScore;
+        switch(gameMode) {
+            case 'STANDARD MODE': currentHighScore = highScoreStandard; break;
+            case 'JOURNEY MODE': currentHighScore = highScoreJourney; break;
+            case 'STARTRAIL MODE': currentHighScore = highScoreStartrail; break;
+            default: currentHighScore = 0;
+        }
+
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `30px ${config.fontFamily}`;
+            renderCtx.fillStyle = theme.ui;
+            renderCtx.fillText(`SCORE: ${score}`, config.canvasWidth / 2, scoreY);
+        }, theme.ui);
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `20px ${config.fontFamily}`;
+            renderCtx.fillStyle = theme.ui;
+            renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, config.canvasWidth / 2, scoreY + 50);
+        }, theme.ui);
+        
+        let titleText, replayText;
+        if (lastInputDevice === 'keyboard') {
+            titleText = 'Press Q to Title';
+            replayText = 'Press Enter to Replay';
+        } else {
+            titleText = 'Press Select Button to Title';
+            replayText = 'Press Start Button to Replay';
+        }
+        const replayY = scoreY + 120;
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `18px ${config.fontFamily}`;
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.fillText(replayText, config.canvasWidth / 2, replayY);
+            renderCtx.fillText(titleText, config.canvasWidth / 2, replayY + 30);
+        }, '#ffffff');
+
+        renderCtx.textBaseline = 'alphabetic';
     }
 
     if (gameState === 'gameOver' && gameOverReason === 'energy') {
