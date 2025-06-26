@@ -1380,7 +1380,7 @@ function gameOver(reason) {
 
 if (reason === 'collision') {
         audioHandler.playSound('explosion');
-        screenShake = { intensity: 25, duration: 45 };
+        screenShake = { intensity: 20, duration: 20 }; // ★ 45フレームから約半分の22フレームに変更
         effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 30, maxLife: 30, radius: 20 });
         effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
 
@@ -2976,8 +2976,22 @@ function draw() {
         }
     }
 
+    // 1. メインキャンバスを一度クリアし、アーティファクト（残りカス）を防ぐ
+    ctx.fillStyle = '#00001a'; // ゲームの背景色
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. 画面揺れエフェクトを適用
+    ctx.save();
+    if (screenShake.intensity > 0) {
+        const shakeX = (Math.random() - 0.5) * 2 * screenShake.intensity;
+        const shakeY = (Math.random() - 0.5) * 2 * screenShake.intensity;
+        ctx.translate(shakeX, shakeY);
+    }
+
+    // 3. 揺らした座標にオフスクリーンバッファの内容を描画
     ctx.drawImage(offscreenCanvas, 0, 0);
-    ctx.restore();
+    
+    ctx.restore(); // 揺れをこのフレームだけに限定して元に戻す
 
     if (gameState === 'playing' && player.invincibleTimer > 0) {
         if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} else {
