@@ -983,6 +983,7 @@ let gameOverReason = '';
 let lowEnergyWarningPlayed;
 let screenShake = { intensity: 0, duration: 0 };
 let grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
+let mutekiAnim = { life: 0, maxLife: 0 }; // ★ 追加: MUTEKIアニメーション専用のタイマー
 let chainCount = 0;
 let chainEffectPending = false;
 let chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーション専用のタイマー
@@ -1085,6 +1086,7 @@ function init() {
     lowEnergyWarningPlayed = false;
     screenShake = { intensity: 0, duration: 0 };
     grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
+    mutekiAnim = { life: 0, maxLife: 0 }; // ★ 追加: MUTEKIアニメーションタイマーをリセット
     chainCount = 0;
     chainEffectPending = false;
     chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーションタイマーをリセット
@@ -1279,11 +1281,9 @@ function triggerInvincibility(baseFrames) {
     player.invincibleTimer = finalInvincibleTime;
     player.maxInvincibleTimer = finalInvincibleTime;
 
-    effects.push({
-        type: 'textMorph',
-        life: finalInvincibleTime,
-        maxLife: finalInvincibleTime,
-    });
+    // ★ 変更点: 専用タイマーを更新
+    mutekiAnim.life = finalInvincibleTime;
+    mutekiAnim.maxLife = finalInvincibleTime;
 }
 
 function gameOver(reason) {
@@ -1876,6 +1876,13 @@ function update(timestamp) {
 
         pollInput();
         updateInstructions();
+
+        // ★ ここから追加 ★
+        if (mutekiAnim.life > 0) {
+            mutekiAnim.life -= 60 * dt_sec; // フレームレートに依存しないようにdt_secで減算
+            if (mutekiAnim.life < 0) mutekiAnim.life = 0;
+        }
+        // ★ ここまで追加 ★
 
         if (chainComboAnim.life > 0) {
             chainComboAnim.life--;
@@ -2507,6 +2514,62 @@ function draw() {
         drawChainComboText(renderCtx, chainCount, 1.0);
     }
 
+    // ★ ここから追加 ★
+    if (mutekiAnim.life > 0) {
+        const lifeProgress = 1 - (mutekiAnim.life / mutekiAnim.maxLife);
+        const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let displayText = "";
+        const mainTextY = config.canvasHeight / 2 + 30;
+        const subTextY = mainTextY + 25;
+        const transitionStart = 0.25;
+        const transitionEnd = 0.75;
+
+        if (lifeProgress < transitionStart) {
+            displayText = "INVINCIBLE!!";
+        } else if (lifeProgress < transitionEnd) {
+            const toText = "MUTEKI!!";
+            const transitionProgress = (lifeProgress - transitionStart) / (transitionEnd - transitionStart);
+            const textChars = []; // 配列を使って高速化
+            for (let i = 0; i < toText.length; i++) {
+                if (transitionProgress > (i / toText.length) + (Math.random() * 0.1)) {
+                    textChars.push(toText[i]);
+                } else {
+                    textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+                }
+            }
+            displayText = textChars.join('');
+        } else {
+            displayText = "MUTEKI!!";
+        }
+        
+        renderCtx.save();
+        renderCtx.textAlign = 'center';
+        renderCtx.font = `24px ${config.fontFamily}`;
+        const totalWidth = renderCtx.measureText(displayText).width;
+        let currentX = config.canvasWidth / 2 - totalWidth / 2;
+
+        for (let i = 0; i < displayText.length; i++) {
+            const char = displayText[i];
+            const charWidth = renderCtx.measureText(char).width;
+            const hue = (frameCount * 5 + i * 25) % 360;
+            const color = `hsl(${hue}, 100%, 70%)`;
+            renderCtx.globalAlpha = 1;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = color;
+                renderCtx.fillText(char, currentX + charWidth / 2, mainTextY);
+            }, color);
+            currentX += charWidth;
+        }
+
+        renderCtx.font = `10px ${config.fontFamily}`;
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = theme.ui;
+            renderCtx.fillText("Bonus Points for Hitting a Comet!!", config.canvasWidth / 2, subTextY);
+        }, theme.ui);
+        renderCtx.restore();
+    }
+    // ★ ここまで追加 ★
+
     if ((gameState === 'playing' || gameState === 'paused') && gameMode !== 'STARTRAIL MODE') {
         const barW = 200, barH = 12, x = 20, y = config.canvasHeight - 35, r = 5;
         const energyRatio = Math.max(0, energy / config.energyTotal);
@@ -2583,56 +2646,6 @@ function draw() {
                 renderCtx.fillText(e.text, config.canvasWidth / 2, config.canvasHeight / 2);
             }, theme.ui, true);
             renderCtx.globalAlpha = 1;
-        } else if (e.type === 'textMorph') {
-            const lifeProgress = 1 - (e.life / e.maxLife);
-            const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let displayText = "";
-            const mainTextY = config.canvasHeight / 2 + 30;
-            const subTextY = mainTextY + 25;
-            const transitionStart = 0.25;
-            const transitionEnd = 0.75;
-
-            if (lifeProgress < transitionStart) {
-                displayText = "INVINCIBLE!!";
-            } else if (lifeProgress < transitionEnd) {
-                const toText = "MUTEKI!!";
-                const transitionProgress = (lifeProgress - transitionStart) / (transitionEnd - transitionStart);
-                for (let i = 0; i < toText.length; i++) {
-                    if (transitionProgress > (i / toText.length) + (Math.random() * 0.1)) {
-                        displayText += toText[i];
-                    } else {
-                        displayText += chars[Math.floor(Math.random() * chars.length)];
-                    }
-                }
-            } else {
-                displayText = "MUTEKI!!";
-            }
-            
-            renderCtx.save();
-            renderCtx.textAlign = 'center';
-            renderCtx.font = `24px ${config.fontFamily}`;
-            const totalWidth = renderCtx.measureText(displayText).width;
-            let currentX = config.canvasWidth / 2 - totalWidth / 2;
-
-            for (let i = 0; i < displayText.length; i++) {
-                const char = displayText[i];
-                const charWidth = renderCtx.measureText(char).width;
-                const hue = (frameCount * 5 + i * 25) % 360;
-                const color = `hsl(${hue}, 100%, 70%)`;
-                renderCtx.globalAlpha = 1;
-                drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = color;
-                    renderCtx.fillText(char, currentX + charWidth / 2, mainTextY);
-                }, color);
-                currentX += charWidth;
-            }
-
-            renderCtx.font = `10px ${config.fontFamily}`;
-            drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.fillText("Bonus Points for Hitting a Comet!!", config.canvasWidth / 2, subTextY);
-            }, theme.ui);
-            renderCtx.restore();
         } else if (e.type === 'shockwave' && isEffectsEnabled) {
             const progress = 1 - e.life / e.maxLife;
             const radius = e.radius + progress * 300;
