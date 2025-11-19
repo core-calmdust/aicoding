@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUTURESCAPES: GIGANT</title>
+    <title>FUTURESCAPES: OMEGA FULL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;300;400;700&display=swap" rel="stylesheet">
@@ -125,13 +125,14 @@
         <h1 id="main-title">FUTURESCAPES</h1>
         <div class="prompt" id="sub-title">PRESS START</div>
         <div class="sub-prompt">SPACE / GAMEPAD A</div>
+        <div class="sub-prompt" style="margin-top:5px; font-size:0.7rem;">PRESS 'F' FOR FULLSCREEN</div>
     </div>
 
 <script>
 /**
- * FUTURESCAPES: GIGANT
- * - Enemies scaled up 1.5x (Total 4.5x base)
- * - Strict "Game Over" logic with input cooldown
+ * FUTURESCAPES: OMEGA FULL
+ * - F Key Fullscreen Toggle Added
+ * - All previous features preserved
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -178,7 +179,7 @@ function project(x, y, z) {
     return { x: x2d, y: y2d, scale: scale, visible: true };
 }
 
-// --- Audio System (Heavy Synthwave) ---
+// --- Audio System ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let actx, masterGain, compressor;
 let nextNoteTime = 0, beatCount = 0;
@@ -290,7 +291,7 @@ let state = {
     shake: 0,
     gateZ: null,
     theme: THEMES[0],
-    inputCooldown: 0 // To prevent accidental restarts
+    inputCooldown: 0
 };
 
 const MODELS = {
@@ -350,7 +351,7 @@ function gameOver() {
     if(state.gameOver) return;
     state.gameOver = true;
     state.playing = false;
-    state.inputCooldown = 60; // ~1 second cooldown before restart allowed
+    state.inputCooldown = 60; 
     uiLayer.style.opacity = 0;
     startScreen.style.visibility = 'visible';
     startScreen.style.opacity = 1;
@@ -394,7 +395,7 @@ function update(dt) {
         state.scoreBuffer %= 1;
     }
 
-    // Phase Timer Logic
+    // Phase Timer
     if(!state.gateZ) {
         state.phaseTimer -= dt;
         if(state.phaseTimer <= 0) {
@@ -431,7 +432,7 @@ function update(dt) {
         }
     }
 
-    // Gate Logic
+    // Gate
     if(state.gateZ !== null) {
         state.gateZ -= state.speed * 1.5;
         if(state.gateZ < -200) { 
@@ -456,7 +457,6 @@ function update(dt) {
         const isObstacle = Math.random() > 0.5; 
         const xPos = (Math.random()-0.5) * 1400;
         
-        // Scaled width logic
         const widthScale = isObstacle ? 1.0 + Math.random() * 2.0 : 1.0;
         
         entities.push({
@@ -465,13 +465,14 @@ function update(dt) {
             y: isObstacle ? 0 : 60,
             z: 6000,
             alive: true,
+            processed: false,
             vx: (!isObstacle && state.phase >= 1) ? (Math.random()-0.5)*10 : 0,
             sine: (!isObstacle && state.phase >= 2) ? Math.random()*Math.PI : 0,
             wScale: widthScale
         });
     }
 
-    // Update Entities & Collision
+    // Entities
     for(let i=entities.length-1; i>=0; i--) {
         let e = entities[i];
         e.z -= state.speed * 1.5;
@@ -481,23 +482,17 @@ function update(dt) {
             if(e.sine !== undefined) e.x += Math.sin(Date.now()*0.003 + e.sine) * (state.phase * 3);
         }
 
-        // --- FATAL COLLISION CHECK ---
+        // STRICT COLLISION
         if(e.alive) {
-            const pWidth = 50; // Player Width
-            // Scale Factor: 4.5x from base model
-            // Base Obstacle W: 20 -> * 4.5 = 90. Then apply wScale (up to 3x)
-            // Base Enemy W: 60 -> * 4.5 = 270
-            
+            const pWidth = 50;
             const eWidth = e.type === 'obstacle' ? (90 * e.wScale) : 270;
             
-            // Z intersection (Player is at 0, check range)
             if (e.z > -150 && e.z < 150) {
-                // X overlap
                 if (Math.abs(e.x - player.x) < (pWidth + eWidth * 0.5)) {
                     playOsc('sawtooth', 50, actx.currentTime, 0.5, 0.8);
                     spawnParticles(player.x, player.y, 0, '#fff', 40);
                     gameOver();
-                    return; // Stop update loop immediately
+                    return;
                 }
             }
         }
@@ -555,12 +550,28 @@ function spawnParticles(x, y, z, color, count) {
 }
 
 function checkInput() {
-    if (state.inputCooldown > 0) return; // Prevent instant restart
-    
+    if (state.inputCooldown > 0) return;
     if(keys[' ']) { startGame(); return; }
     const gp = navigator.getGamepads()[0];
     if(gp && gp.buttons.some(b => b.pressed)) startGame();
 }
+
+// --- Window Events ---
+window.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    // Fullscreen Toggle
+    if(e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error enabling full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+});
+window.addEventListener('keyup', e => keys[e.key] = false);
+startScreen.addEventListener('click', startGame);
 
 // --- Draw ---
 function drawGrid() {
@@ -569,8 +580,6 @@ function drawGrid() {
     const offsetZ = state.distance % 200;
 
     ctx.beginPath();
-
-    // Floor
     for(let i=-2; i<50; i++) {
         const z = (i * 200) - offsetZ;
         if (z < -400) continue;
@@ -580,7 +589,6 @@ function drawGrid() {
             ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
         }
     }
-    // Verticals
     for(let i=-12; i<=12; i++) {
         const x = i * 400;
         const p1 = project(x, 0, -400);
@@ -592,7 +600,6 @@ function drawGrid() {
     ctx.globalAlpha = 0.4;
     ctx.stroke();
 
-    // Animated Retro Sun
     const sunY = (H/2 + HORIZON_Y_OFFSET) - 80;
     const sunR = 100;
     const grad = ctx.createLinearGradient(0, sunY-sunR, 0, sunY+sunR);
@@ -602,7 +609,6 @@ function drawGrid() {
     ctx.fillStyle = grad; ctx.globalAlpha = 1.0;
     ctx.beginPath(); ctx.arc(W/2, sunY, sunR, 0, Math.PI*2); ctx.fill();
     
-    // Sun Stripes
     ctx.fillStyle = state.theme.sky;
     const time = Date.now() * 0.001;
     for(let i=0; i<10; i++) {
@@ -619,11 +625,8 @@ function drawGate() {
     if(!state.gateZ) return;
     const p = project(0, 0, state.gateZ);
     if(!p.visible) return;
-    
-    // Rainbow Color
     const hue = (Date.now() / 5) % 360;
     const col = `hsl(${hue}, 100%, 60%)`;
-    
     const s = p.scale;
     ctx.save(); ctx.translate(p.x, p.y); ctx.scale(s, s);
     ctx.strokeStyle = col; ctx.lineWidth = 15; 
@@ -664,7 +667,6 @@ function draw() {
 
     list.forEach(e => {
         if(e.type) { 
-            // Scale factor 4.5 for HUGE enemies/obstacles
             if(e.type === 'obstacle') drawVector(MODELS.obstacle, e.x, e.y, e.z, 4.5, state.theme.obstacle, 0, e.wScale);
             else drawVector(MODELS.enemy, e.x, e.y, e.z, 4.5, state.theme.enemy);
         } else if(e.vx !== undefined) {
@@ -702,11 +704,7 @@ function loop(timestamp) {
     requestAnimationFrame(loop);
 }
 
-window.addEventListener('keydown', e => keys[e.key] = true);
-window.addEventListener('keyup', e => keys[e.key] = false);
-startScreen.addEventListener('click', startGame);
 loop(0);
-
 </script>
 </body>
 </html>
