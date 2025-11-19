@@ -1,0 +1,5 @@
+{
+  "name": "Master Reversi",
+  "description": "A feature-rich Reversi (Othello) game with AI opponents, analysis tools, and evaluation graphs.",
+  "requestFramePermissions": []
+}
