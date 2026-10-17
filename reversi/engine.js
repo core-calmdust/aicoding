@@ -250,7 +250,12 @@ function buildPatterns() {
   return { pats, total: offset };
 }
 const PB = buildPatterns();
-PATTERNS = PB.pats; PHASE_SIZE = PB.total + 1; // +1 bias
+PATTERNS = PB.pats;
+// extra scalar features (v2 weights): mobility / potential mobility tables, 64 entries each
+const EXT_OFF = PB.total, EXT_SIZE = 256, NEXT = 4;
+const PS_V1 = PB.total + 1, PS_V2 = PB.total + EXT_SIZE + 1;
+let USE_EXT = false;
+PHASE_SIZE = PS_V1; // +1 bias
 // flattened instance tables: for each instance -> offset, len, squares
 const INST_OFF = [], INST_LEN = [], INST_SQ = [];
 for (const p of PATTERNS) for (const m of p.inst) { INST_OFF.push(p.offset); INST_LEN.push(p.len); INST_SQ.push(m); }
@@ -265,14 +270,25 @@ function fillCells(pl, ph, ol, oh) {
   for (let s = 0; s < 32; s++) CELL[s + 32] = ((ph >>> s) & 1) | (((oh >>> s) & 1) << 1);
 }
 // feature indices (for training): writes into out (Int32Array of length NINST)
-function featureIndices(pl, ph, ol, oh, out) {
+function extCounts(pl, ph, ol, oh, out, o) {
+  genMoves(pl, ph, ol, oh); const mp = pc(ML) + pc(MH);
+  genMoves(ol, oh, pl, ph); const mo = pc(ML) + pc(MH);
+  const el = ~(pl | ol), eh = ~(ph | oh);
+  neighbours(ol, oh); const pp = pc(NL & el) + pc(NH & eh);
+  neighbours(pl, ph); const po = pc(NL & el) + pc(NH & eh);
+  out[o] = EXT_OFF + mp; out[o + 1] = EXT_OFF + 64 + mo; out[o + 2] = EXT_OFF + 128 + pp; out[o + 3] = EXT_OFF + 192 + po;
+}
+// feature indices (for training): writes NINST (+NEXT when ext) indices into out
+function featureIndices(pl, ph, ol, oh, out, ext) {
   fillCells(pl, ph, ol, oh);
   for (let i = 0; i < NINST; i++) {
     let idx = 0; const b = i * 10, n = I_LEN[i];
     for (let k = 0; k < n; k++) idx = idx * 3 + CELL[I_SQ[b + k]];
     out[i] = I_OFF[i] + idx;
   }
+  if (ext) extCounts(pl, ph, ol, oh, out, NINST);
 }
+const EXT_TMP = new Int32Array(NEXT);
 function phaseOf(discs) { // discs 4..64
   const ply = discs - 4;
   const ph = (ply * NPHASE / 61) | 0;
@@ -288,12 +304,20 @@ function evalPattern(pl, ph, ol, oh) {
     for (let k = 0; k < n; k++) idx = idx * 3 + CELL[I_SQ[b + k]];
     s += W[base + I_OFF[i] + idx];
   }
+  if (USE_EXT) {
+    extCounts(pl, ph, ol, oh, EXT_TMP, 0);
+    s += W[base + EXT_TMP[0]] + W[base + EXT_TMP[1]] + W[base + EXT_TMP[2]] + W[base + EXT_TMP[3]];
+  }
   // weights are in 1/32 disc units -> convert to 1/100 discs
   return ((s * 100) / 32) | 0;
 }
 let evaluate = evalHand;
 function setWeights(arr, nphase) {
   W = arr; NPHASE = nphase;
+  const per = arr.length / nphase;
+  if (per === PS_V2) { USE_EXT = true; PHASE_SIZE = PS_V2; }
+  else if (per === PS_V1) { USE_EXT = false; PHASE_SIZE = PS_V1; }
+  else throw new Error('weights size mismatch: ' + per);
   evaluate = evalPattern;
 }
 
@@ -777,7 +801,7 @@ const API = {
   think, analyze, setWeights, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
-  TUNE, NINST, PHASE_SIZE, PATTERNS, LEVELS, SCALE,
+  TUNE, NINST, NEXT, PS_V1, PS_V2, get PHASE_SIZE() { return PHASE_SIZE; }, PATTERNS, LEVELS, SCALE,
   genMovesList: legalList,
 };
 root.ReversiEngine = API;
