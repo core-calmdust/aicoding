@@ -241,6 +241,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .dots i.ok{background:#6fd3a0}.dots i.ng{background:#ff6b5b}.dots i.cur{box-shadow:0 0 0 2px var(--accent)}
 .dots{align-items:center}
 .dots i.pt{width:auto;min-width:24px;height:18px;border-radius:9px;font-size:11px;font-style:normal;line-height:18px;text-align:center;padding:0 4px;color:#0b1110;font-family:'JetBrains Mono',monospace}
+.dots.exam{flex-wrap:wrap;gap:4px}.dots.exam i.pt{min-width:18px;padding:0 2px}
 .dots i.pt.mid{background:#f2c060}.dots i.pt:not(.ok):not(.ng):not(.mid){color:var(--dim)}
 .dots .ptsum{font-size:12px;color:var(--accent);margin-left:4px;white-space:nowrap}
 .lesson-prompt{font-size:14px;line-height:1.7}
@@ -470,9 +471,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018b"></script>
-<script src="engine.js?v=20261018b"></script>
-<script src="strategy.js?v=20261018b"></script>
+<script src="i18n.js?v=20261018c"></script>
+<script src="engine.js?v=20261018c"></script>
+<script src="strategy.js?v=20261018c"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -541,7 +542,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018b');
+    const res = await fetch('weights.bin.gz?v=20261018c');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -554,7 +555,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018b');
+  const w = new Worker('engine.js?v=20261018c');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1611,7 +1612,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018b').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018c').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1622,7 +1623,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018b').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018c').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1630,7 +1631,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018b').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018c').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1686,7 +1687,7 @@ function startTsume(si, k, dailyDate) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018b').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018c').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
@@ -1696,15 +1697,16 @@ function openOpenList() {
   if (!OPEN) { $('#lessonList').innerHTML = ''; return; }
   $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
     const pr = oprog[g.id];
+    const head = g.handi && !(OPEN.sets[i - 1] || {}).handi ? `<p style="font-size:12.5px;color:var(--brass);margin:12px 0 2px">${t('op.handiHead')}</p><p style="font-size:11px;color:var(--dim);margin:0 0 6px;line-height:1.6">${t('op.handiNote')}</p>` : '';
     const st = pr ? `<span class="st ${pr.pass ? 'clear' : ''}">${pr.pass ? '✓ ' : ''}${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
-    return `<button class="lesson-item" data-o="${i}"><span class="no" style="font-size:13px">${L(g.label)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
+    return head + `<button class="lesson-item" data-o="${i}"><span class="no" style="font-size:13px">${L(g.label)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
   }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${L(OPEN.credit)}</p>`;
 }
 function startOpening(oi) {
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   const g = OPEN.sets[oi];
-  const probs = shuffle(g.problems).slice(0, 5);
-  lesson = { opening: true, gi: oi, g: { ...g, grade: g.title, prompt: { ja: '上位のソフトがいちばん多く指した手は？', en: 'Which move do strong engines play most here?', zh: '强力软件最常走的是哪一手？', ko: '강한 소프트가 가장 많이 둔 수는?' }, hint: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.' } }, probs, k: 0, results: [], pts: [], waiting: false };
+  const probs = g.handi ? shuffle(g.problems.map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : shuffle(g.problems).slice(0, 5);
+  lesson = { opening: true, gi: oi, g: { ...g, grade: g.title, prompt: g.handi ? { ja: t('op.handiPrompt'), en: t('op.handiPrompt') } : { ja: '上位のソフトがいちばん多く指した手は？', en: 'Which move do strong engines play most here?', zh: '强力软件最常走的是哪一手？', ko: '강한 소프트가 가장 많이 둔 수는?' }, hint: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.' } }, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
   loadProblem();
@@ -1721,11 +1723,14 @@ async function openLessons() {
     const st = pr && pr.pass ? `<span class="st clear">✓ ${t('ls.clear')}<br>${t('ls.pts', { p: pr.best })}</span>` : pr ? `<span class="st">${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
     return `<button class="lesson-item" data-i="${i}"><span class="no">${L(g.grade)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
   }).join('');
-  $('#lessonList').innerHTML = list + (LESSONS.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${L(LESSONS.credit)}</p>` : '');
+  const ex = exprog ? `<span class="st clear">${t('ex.best', { g: L(LESSONS.grades[exprog.best].grade) })}</span>` : `<span class="st">${t('ls.new')}</span>`;
+  const exam = `<button class="lesson-item" data-exam="1" style="border-color:rgba(201,169,97,.55)"><span class="no" style="font-size:13px">${t('ex.tag')}</span><span class="tx"><b>${t('ex.title')}</b><small>${t('ex.desc', { n: EXAM_N })}</small></span>${ex}</button>`;
+  $('#lessonList').innerHTML = exam + list + (LESSONS.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${L(LESSONS.credit)}</p>` : '');
 }
 function lessonView(v) { ['list', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
 $('#lessonList').onclick = e => {
   const b = e.target.closest('.lesson-item'); if (!b) return;
+  if (b.dataset.exam) { hideOverlay('#lessonOverlay'); startExam(); return; }
   if (b.dataset.o !== undefined) { hideOverlay('#lessonOverlay'); startOpening(+b.dataset.o); return; }
   if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#lessonOverlay'); startTsume(dl.si, dl.k, dl.date); return; }
   if (b.dataset.t !== undefined) { hideOverlay('#lessonOverlay'); startTsume(+b.dataset.t); }
@@ -1745,11 +1750,47 @@ $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesso
 $('#btnLesson').onclick = () => openLessons();
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitLesson(); };
-$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lesson && lesson.opening) startOpening(lesson.gi); else startLesson(lesson ? lesson.gi : introIdx); };
+$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lesson && lesson.exam) startExam(); else if (lesson && lesson.opening) startOpening(lesson.gi); else startLesson(lesson ? lesson.gi : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = Math.min(LESSONS.grades.length - 1, (lesson ? lesson.gi : introIdx) + 1); openIntro(n); };
 
 const PTS = 20, HINT_PEN = 4, PASS_RATE = 0.75;
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// ---- 棋力認定テスト: adaptive staircase over the lesson steps
+const EXAM_N = 12, ESTORE = 'shogi-kaya-exam-v1';
+let exprog = null;
+try { exprog = JSON.parse(localStorage.getItem(ESTORE) || 'null'); } catch (e) {}
+function examPick(idx) {
+  const g = LESSONS.grades[idx];
+  const pool = shuffle(g.problems.filter(p => !lesson.used.has(p.sfen)));
+  const p = pool[0] || g.problems[0];
+  lesson.used.add(p.sfen);
+  return p;
+}
+function startExam() {
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  lesson = { exam: true, gi: 0, idx: Math.min(5, LESSONS.grades.length - 1), levels: [], probs: [], k: 0, results: [], pts: [], waiting: false, used: new Set() };
+  lesson.g = examGrade(lesson.idx);
+  lesson.probs.push(examPick(lesson.idx)); lesson.levels.push(lesson.idx);
+  document.body.classList.add('in-lesson');
+  if (!game) game = newRecord(HANDI[0], 0);
+  loadProblem();
+}
+function examGrade(idx) { const g = LESSONS.grades[idx]; return { ...g, title: { ja: t('ex.title'), en: t('ex.title') } }; }
+function examNext() {
+  const ok = (lesson.pts[lesson.k] || 0) >= 16, step = lesson.k < 4 ? 2 : 1;
+  lesson.idx = Math.max(0, Math.min(LESSONS.grades.length - 1, lesson.idx + (ok ? step : -step)));
+  lesson.k++;
+  lesson.g = examGrade(lesson.idx);
+  lesson.probs.push(examPick(lesson.idx)); lesson.levels.push(lesson.idx);
+  loadProblem();
+}
+function examResult() {
+  const lv = lesson.levels, n = lv.length, last = lv.slice(-6);
+  const okLast = lesson.pts[n - 1] >= 16 ? 1 : -1;
+  const fin = Math.max(0, Math.min(LESSONS.grades.length - 1, lv[n - 1] + okLast * 0.5));
+  const mean = last.reduce((a, b) => a + b, 0) / last.length;
+  return Math.max(0, Math.min(LESSONS.grades.length - 1, Math.floor((fin + mean) / 2 + 0.4)));
+}
 function startLesson(gi) {
   busyToken++; cancelAI(); cancelAna();
   const g = LESSONS.grades[gi];
@@ -1780,6 +1821,7 @@ function lessonGame(sfen, moves) {
 }
 const sumPts = () => lesson.pts.reduce((a, b) => a + (b || 0), 0);
 function renderLesson() {
+  $('#lsDots').classList.remove('exam');
   const g = lesson.g, pr = lesson.cur;
   const chips = () => lesson.probs.map((_, i) => { const p = lesson.pts[i]; return `<i class="pt ${p === undefined ? '' : p >= 16 ? 'ok' : p >= 8 ? 'mid' : 'ng'} ${i === lesson.k ? 'cur' : ''}">${p === undefined ? '' : p}</i>`; }).join('') + `<b class="ptsum">${t('ls.pts', { p: sumPts() })}</b>`;
   if (lesson.review) {
@@ -1791,6 +1833,10 @@ function renderLesson() {
     $('#lsTitle').textContent = L(g.title);
     const k = g.problems.filter(p => tsolved[p.id]).length;
     $('#lsDots').innerHTML = `<span style="font-size:12px;color:var(--muted)">${t('ts.solved', { k, n: g.problems.length })}${tsolved[pr.id] ? ' ・ ✓' : ''}</span>`;
+  } else if (lesson.exam) {
+    $('#lsStep').textContent = `${t('ex.title')} ・ ${lesson.k + 1}/${EXAM_N} ・ ${t('ex.level', { g: L(g.grade) })}`;
+    $('#lsTitle').textContent = L(g.title);
+    $('#lsDots').classList.add('exam'); $('#lsDots').innerHTML = Array.from({ length: EXAM_N }, (_, i) => { const p = lesson.pts[i]; return `<i class="pt ${p === undefined ? '' : p >= 16 ? 'ok' : p >= 8 ? 'mid' : 'ng'} ${i === lesson.k ? 'cur' : ''}">${p === undefined ? '' : p >= 16 ? '○' : '×'}</i>`; }).join('');
   } else if (lesson.opening) {
     $('#lsStep').textContent = `${t('op.title')} ・ ${lesson.k + 1}/${lesson.probs.length}`;
     $('#lsTitle').textContent = L(g.title);
@@ -1819,6 +1865,7 @@ const kan1 = (sfen, u) => lineKanji(sfen, [u])[0];
 function movePoints(pr, usi, runtimeScore) {
   if (pr.mode === 'material' || pr.mode === 'freq') { const best = pr.cand[0][1], c = pr.cand.find(x => x[0] === usi); return c ? Math.round(PTS * c[1] / best) : 0; }
   if (pr.accept.includes(usi)) return PTS;
+  if (pr.mode === 'cp') { const best = pr.cand[0][1], c = pr.cand.find(x => x[0] === usi), s = c ? c[1] : pr.floor; return Math.max(0, Math.min(PTS - 1, Math.round(PTS * (1 - (best - s) / 500)))); }
   let best, s;
   if (pr.cand) { best = pr.cand[0][1]; const c = pr.cand.find(x => x[0] === usi); s = c ? c[1] : Math.min(pr.floor !== undefined ? pr.floor : best - 2000, best); }
   else { best = pr.bestScore; s = runtimeScore; if (best === undefined || s === undefined) return 0; }
@@ -1875,6 +1922,11 @@ function lessonReason(pr, usi) {
       const pct = u => { const c = pr.cand.find(x => x[0] === u); return c ? Math.round(c[1] * 100 / pr.total) : 0; };
       const my = pct(usi);
       return (my ? t('r.freq', { m: kan1(pr.sfen, usi), p: my }) : t('r.offbook', { m: kan1(pr.sfen, usi) })) + (usi !== pr.accept[0] ? ' ' + t('r.freq', { m: kan1(pr.sfen, pr.accept[0]), p: pct(pr.accept[0]) }) : '');
+    }
+    case 'handi': {
+      if (pr.accept.includes(usi)) return '';
+      const c = pr.cand.find(x => x[0] === usi), s = c ? c[1] : pr.floor;
+      return t('r.cp', { d: Math.max(0, Math.round(pr.cand[0][1] - s)) });
     }
     case 'trap':
       return usi === pr.bait ? t('r.bait', { m: kan1(pr.sfen, usi) }) : t('r.baitAvoided', { m: kan1(pr.sfen, pr.bait) });
@@ -1949,6 +2001,7 @@ $('#lsNext').onclick = () => {
   if (!lesson) return;
   if (!lesson.answered) { lesson.shownAnswer = true; lessonScored(0, { gaveUp: true }); playSolution(); return; }
   if (lesson.endless) { lesson.k = (lesson.k + 1) % lesson.probs.length; loadProblem(); return; }
+  if (lesson.exam) { if (lesson.k < EXAM_N - 1) examNext(); else finishLesson(); return; }
   if (lesson.k < lesson.probs.length - 1) { lesson.k++; loadProblem(); return; }
   finishLesson();
 };
@@ -1961,6 +2014,18 @@ function finishLesson() {
   if (lesson.review) {
     $('#ldTitle').textContent = t('rv.done');
     $('#ldRank').classList.add('hidden'); $('#btnLessonNextStep').classList.add('hidden'); $('#btnLessonRetry').classList.add('hidden');
+    lessonView('done'); showOverlay('#lessonOverlay'); return;
+  }
+  if (lesson.exam) {
+    const ri = examResult(), gr = LESSONS.grades[ri], okN = lesson.pts.filter(p => p >= 16).length;
+    const prev = exprog;
+    if (!exprog || ri > exprog.best) exprog = { best: ri, date: new Date().toISOString().slice(0, 10) };
+    exprog.last = ri; try { localStorage.setItem(ESTORE, JSON.stringify(exprog)); } catch (e) {}
+    $('#ldTitle').textContent = t('ex.result', { g: L(gr.grade) });
+    $('#ldSub').innerHTML = t('ex.sub', { k: okN, n: EXAM_N }) + (prev && ri > prev.best ? `<br><b style="color:var(--accent)">${t('ex.newBest')}</b>` : '') + `<br><span style="font-size:11.5px;color:var(--dim)">${t('ex.note')}</span>`;
+    $('#ldRank').classList.add('hidden');
+    $('#btnLessonNextStep').classList.add('hidden'); $('#btnLessonRetry').classList.remove('hidden');
+    playChime(true);
     lessonView('done'); showOverlay('#lessonOverlay'); return;
   }
   if (lesson.opening) {
