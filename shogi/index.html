@@ -242,6 +242,7 @@ body.in-lesson .review-card{display:none!important}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
+.play-choice{display:grid;gap:8px;margin-top:16px}
 .modal-actions{display:flex;gap:10px;margin-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
@@ -433,7 +434,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
       </div>
     </div>
     <div class="card controls">
-      <button class="btn" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
+      <button class="btn" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 3 7 6v14h10V6z"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnResign" data-i18n-title="btn.resign.title"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="btn.resign"></span></button>
@@ -525,6 +526,13 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 </div>
 
 <!-- confirm -->
+<div class="overlay" id="playOverlay">
+  <div class="modal" style="width:min(380px,100%)">
+    <h2 style="margin-bottom:8px" data-i18n="play.title"></h2>
+    <div class="result-sub" style="font-size:14.5px;color:var(--text);margin-bottom:4px" id="playText"></div>
+    <div class="play-choice"><button class="mbtn go" id="btnPlayResume" data-i18n="play.resume"></button><button class="mbtn" id="btnPlayNew" data-i18n="play.new"></button><button class="mbtn" id="btnPlayCancel" data-i18n="cancel"></button></div>
+  </div>
+</div>
 <div class="overlay" id="confirmOverlay">
   <div class="modal" style="width:min(340px,100%)">
     <div class="result-sub" style="font-size:15px;color:var(--text)" id="confirmText"></div>
@@ -532,9 +540,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018u"></script>
-<script src="engine.js?v=20261018u"></script>
-<script src="strategy.js?v=20261018u"></script>
+<script src="i18n.js?v=20261018v"></script>
+<script src="engine.js?v=20261018v"></script>
+<script src="strategy.js?v=20261018v"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -623,7 +631,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018u');
+    const res = await fetch('weights.bin.gz?v=20261018v');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -636,7 +644,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018u');
+  const w = new Worker('engine.js?v=20261018v');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -981,7 +989,7 @@ function renderInfo() {
   $('#btnResign').disabled = !!game.over || settings.mode === 'watch';
   $('#btnHint').disabled = !!game.over;
   $('#btnSound').classList.toggle('on', settings.sound);
-  $('#reviewBar').classList.toggle('show', reviewing);
+  $('#reviewBar').classList.remove('show');
   if (reviewing) $('#reviewText').textContent = t('review.label', { n: cur });
 }
 function renderGraph() {
@@ -1237,7 +1245,19 @@ document.addEventListener('keydown', e => {
 });
 
 // ====================================================================== controls
-$('#btnNew').onclick = () => openNewDialog();
+// 対局: if a game is in progress or a past position is shown, offer "resume from here" or "start over"
+$('#btnNew').onclick = () => {
+  if (!lesson && game && game.moves.length && (reviewing || !game.over)) {
+    $('#playText').textContent = reviewing ? t('play.atPly', { n: cur }) : t('play.inProgress', { n: game.moves.length });
+    $('#btnPlayResume').textContent = t(reviewing ? 'play.resume' : 'play.continue');
+    showOverlay('#playOverlay'); return;
+  }
+  openNewDialog();
+};
+$('#btnPlayResume').onclick = () => { hideOverlay('#playOverlay'); $('#btnResume').click(); };
+$('#btnPlayNew').onclick = () => { hideOverlay('#playOverlay'); openNewDialog(); };
+$('#btnPlayCancel').onclick = () => hideOverlay('#playOverlay');
+$('#playOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#playOverlay'); });
 $('#btnUndo').onclick = () => {
   if (!game || !game.moves.length) return;
   busyToken++; cancelAI(); cancelAna();
@@ -1747,7 +1767,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018u').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018v').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1758,7 +1778,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018u').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018v').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1766,7 +1786,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018u').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018v').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1834,7 +1854,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018u').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018v').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
