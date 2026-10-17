@@ -472,9 +472,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018k"></script>
-<script src="engine.js?v=20261018k"></script>
-<script src="strategy.js?v=20261018k"></script>
+<script src="i18n.js?v=20261018l"></script>
+<script src="engine.js?v=20261018l"></script>
+<script src="strategy.js?v=20261018l"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -543,7 +543,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018k');
+    const res = await fetch('weights.bin.gz?v=20261018l');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -556,7 +556,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018k');
+  const w = new Worker('engine.js?v=20261018l');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1613,7 +1613,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018k').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018l').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1624,7 +1624,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018k').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018l').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1632,7 +1632,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018k').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018l').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1700,7 +1700,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018k').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018l').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
@@ -1867,7 +1867,7 @@ function startLesson(gi) {
 }
 function loadProblem() {
   const pr = lesson.probs[lesson.k];
-  lesson.cur = pr; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = '';
+  lesson.cur = pr; lesson.retry = null; lesson.missed = false; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = '';
   lessonGame(pr.sfen, []);
   renderLesson();
 }
@@ -1921,6 +1921,7 @@ function renderLesson0() {
   const tag = pr.kind === 'tsume' ? t('mateIn', { n: pr.n }) : '';
   $('#lsPrompt').innerHTML = `${tag ? `<span class="tag">${tag}</span>` : ''}<b>${cname(side)}</b> — ${L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<br><span style="font-size:12px;color:var(--dim)">${t('ts.conv')}</span>` : ''}`;
   $('#lsFb').innerHTML = lesson.fbHtml || '';
+  if (lesson.retry) { $('#lsHint').textContent = t('ts.retry'); $('#lsHint').disabled = false; $('#lsNext').textContent = t('ls.answer'); $('#lsQuit').textContent = t('ls.quit'); return; }
   $('#lsHint').textContent = lesson.answered ? t('ls.answer') : t('ls.hint');
   $('#lsHint').disabled = (lesson.answered && lesson.shownAnswer) || (!lesson.answered && lesson.hintShown);
   $('#lsNext').textContent = lesson.answered ? (!lesson.endless && lesson.k >= lesson.probs.length - 1 ? t('ls.finish') : t('ls.next')) : t('ls.answer');
@@ -1951,7 +1952,11 @@ async function lessonMove(m) {
   const pen = lesson.hintShown ? HINT_PEN : 0;
   if (pr.kind === 'tsume') {
     const K = Math.ceil(pr.n / 2);
-    const fail = why => lessonScored(Math.max(0, Math.round(PTS / 2 * lesson.atkOk / K) - pen), { why, partial: lesson.atkOk, K });
+    const fail = why => {
+      // tsume mode: don't reveal the answer — offer a retry or the answer
+      if (lesson.endless) { lesson.retry = { why }; lesson.missed = true; lesson.waiting = false; lesson.fbHtml = `<b class="ng">${t('ts.wrong')}</b> ${why}`; renderLesson(); return; }
+      lessonScored(Math.max(0, Math.round(PTS / 2 * lesson.atkOk / K) - pen), { why, partial: lesson.atkOk, K });
+    };
     const p = posAt(moves.length);
     if (!p.inCheck()) return fail(t('ls.notCheck'));
     if (!p.legalMoves(false).length) return lessonScored(Math.max(0, PTS - pen), { solved: true });
@@ -2009,7 +2014,7 @@ function lessonScored(pts, info) {
   lesson.answered = true; lesson.waiting = false;
   if (lesson.pts[lesson.k] === undefined) { lesson.pts[lesson.k] = pts; lesson.results[lesson.k] = pts >= 16; }
   if (lesson.endless && pts >= PTS - (lesson.hintShown ? HINT_PEN : 0) && info.solved && !lesson.hintShown && pr.id) { tsolved[pr.id] = 1; try { localStorage.setItem(TSTORE, JSON.stringify(tsolved)); } catch (e) {} }
-  if (lesson.daily && lesson.k === 0 && info.solved) { dailySolved(lesson.daily, lesson.hintShown, lesson.dailyEasy); lesson.dailyMsg = true; }
+  if (lesson.daily && lesson.k === 0 && info.solved) { dailySolved(lesson.daily, lesson.hintShown || lesson.missed, lesson.dailyEasy); lesson.dailyMsg = true; }
   const sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
   let html = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b>`;
   if (lesson.hintShown && !lesson.shownAnswer) html += ` <span style="font-size:11.5px">(${t('ls.hintPen', { n: HINT_PEN })})</span>`;
@@ -2061,6 +2066,7 @@ async function playSolution() {
 $('#lsHint').onclick = () => {
   if (!lesson) return;
   if (lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(); } return; }
+  if (lesson.retry) { const pr = lesson.cur; lesson.retry = null; lesson.played = []; lesson.atkOk = 0; lesson.fbHtml = ''; lessonGame(pr.sfen, []); lesson.waiting = true; renderLesson(); return; }
   if (lesson.answered) { playSolution(); return; }
   lesson.hintShown = true;
   const pr = lesson.cur, sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
@@ -2071,6 +2077,7 @@ $('#lsHint').onclick = () => {
 };
 $('#lsNext').onclick = () => {
   if (!lesson) return;
+  if (lesson.retry) { const why = lesson.retry.why; lesson.retry = null; lesson.shownAnswer = true; lesson.played = []; lessonScored(0, { why, partial: 0, K: Math.ceil(lesson.cur.n / 2) }); playSolution(); return; }
   if (lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(); playPiece(false); } else { const oi = lesson.gi; exitLesson(true); startOpening(oi); } return; }
   if (!lesson.answered) { lesson.shownAnswer = true; lessonScored(0, { gaveUp: true }); playSolution(); return; }
   if (lesson.endless) { lesson.k = (lesson.k + 1) % lesson.probs.length; loadProblem(); return; }
