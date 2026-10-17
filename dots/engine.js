@@ -201,6 +201,50 @@ function approxLoony(p) {
   return loonyValue(chains, loops);
 }
 
+// ---------------------------------------------------------------- redundant moves in isolated chains / loops
+// In an isolated component whose boxes all have exactly two sides drawn (a plain chain or loop),
+// every opening of a loop or of a chain of length 1 or >= 3 leads to the same game, and components of
+// equal shape are interchangeable. A 2-chain has two distinct openings (middle = hard-hearted, end).
+// Marks every redundant edge with skip[e] = tag. This pruning keeps the search exact.
+const red = { stamp: new Int32Array(64), st: 1, list: new Int8Array(64), key: new Int32Array(160) };
+function markRedundant(p, skip, tag) {
+  const G = p.G, cnt = p.cnt, be = G.be, drawn = p.drawn, list = red.list;
+  const st = ++red.st;
+  let found = 0;
+  for (let b0 = 0; b0 < G.B; b0++) {
+    if (cnt[b0] !== 2 || red.stamp[b0] === st) continue;
+    let lo = 0, hi = 0, simple = true, inner = 0;
+    list[hi++] = b0; red.stamp[b0] = st;
+    while (lo < hi) {
+      const b = list[lo++]; if (cnt[b] !== 2) simple = false;
+      for (let i = b * 4; i < b * 4 + 4; i++) {
+        const e = be[i]; if (drawn[e]) continue;
+        const o = p.other(e, b); if (o < 0) continue;
+        if (o > b) inner++;
+        if (red.stamp[o] !== st) { red.stamp[o] = st; list[hi++] = o; }
+      }
+    }
+    if (!simple) continue;
+    const n = hi, loop = inner === n, key = loop ? 80 + n : n;
+    let keep1 = -1, keep2 = -1;
+    if (red.key[key] !== st) {
+      red.key[key] = st;
+      const a = list[0];
+      if (!loop && n === 2) {
+        const b = list[1];
+        for (let i = a * 4; i < a * 4 + 4; i++) { const e = be[i]; if (drawn[e]) continue; if (p.other(e, a) === b) keep1 = e; else if (keep2 < 0) keep2 = e; }
+      } else {
+        for (let i = a * 4; i < a * 4 + 4; i++) { const e = be[i]; if (!drawn[e]) { keep1 = e; break; } }
+      }
+    }
+    for (let j = 0; j < n; j++) {
+      const b = list[j];
+      for (let i = b * 4; i < b * 4 + 4; i++) { const e = be[i]; if (!drawn[e] && e !== keep1 && e !== keep2 && skip[e] !== tag) { skip[e] = tag; found++; } }
+    }
+  }
+  return found;
+}
+
 // ---------------------------------------------------------------- exact solver
 const INF = 127;
 class Solver {
@@ -211,8 +255,9 @@ class Solver {
     this.lo = new Int8Array(size); this.hi = new Int8Array(size); this.bm = new Int8Array(size); this.used = new Uint8Array(size);
     this.nodes = 0; this.maxNodes = Infinity; this.deadline = Infinity; this.aborted = false;
     this.mbuf = []; for (let i = 0; i <= G.E + 2; i++) this.mbuf.push(new Int8Array(G.E));
-    this.sbuf = []; for (let i = 0; i <= G.E + 2; i++) this.sbuf.push(new Int16Array(G.E));
+    this.sbuf = []; for (let i = 0; i <= G.E + 2; i++) this.sbuf.push(new Int32Array(G.E));
     this.order = new Int8Array(G.E); for (let i = 0; i < G.E; i++) this.order[i] = i;
+    this.prune = false; this.skip = new Int32Array(G.E); this.tag = 0;
   }
   canon(p) {
     const NS = this.G.NS, h1 = p.h1, h2 = p.h2; let s = 0;
@@ -257,11 +302,13 @@ class Solver {
       for (const e of cap.declines) mv[nm++] = e;
     } else {
       const sc = this.sbuf[ply];
-      const ord = this.order;
+      const ord = this.order, skip = this.skip;
+      let tag = -1;
+      if (this.prune) { tag = ++this.tag; markRedundant(p, skip, tag); }
       for (let i = 0; i < G.E; i++) {
-        const e = ord[i]; if (p.drawn[e]) continue;
+        const e = ord[i]; if (p.drawn[e] || skip[e] === tag) continue;
         const gv = p.gives(e);
-        mv[nm] = e; sc[nm] = e === ttMove ? -100 : gv * 10; nm++;
+        mv[nm] = e; sc[nm] = e === ttMove ? -1e9 : gv * 10; nm++;
       }
       // insertion sort by score
       for (let i = 1; i < nm; i++) { const e = mv[i], k = sc[i]; let j = i - 1; while (j >= 0 && sc[j] > k) { mv[j + 1] = mv[j]; sc[j + 1] = sc[j]; j--; } mv[j + 1] = e; sc[j + 1] = k; }
@@ -300,14 +347,21 @@ class Solver {
   }
   value(p) { const rem = this.G.B - p.filled; const v = this.search(p, -rem - 1, rem + 1, 0); return this.aborted ? null : v; }
   // best move by root alpha-beta. Returns {move, value} or null if aborted.
-  best(p, rand) {
+  // first: a move to try first (e.g. the heuristic choice). After an abort, this.partial holds the best move
+  // proven so far (only set once the first move has been solved), which is never worse than `first`.
+  best(p, rand, first) {
     const G = this.G, rem = G.B - p.filled;
+    this.partial = null;
     if (p.undrawn === 0) return null;
     let moves;
     const cap = p.hasCapture() ? captureMoves(p) : null;
     if (cap && cap.forced !== undefined) moves = [cap.forced];
     else if (cap) moves = cap.moves.concat(cap.declines);
-    else moves = p.legal().sort((a, b) => p.gives(a) - p.gives(b));
+    else {
+      moves = p.legal();
+      if (this.prune) { const tag = ++this.tag; markRedundant(p, this.skip, tag); moves = moves.filter(e => this.skip[e] !== tag); }
+      moves.sort((a, b) => p.gives(a) - p.gives(b));
+    }
     if (rand) { for (let i = moves.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [moves[i], moves[j]] = [moves[j], moves[i]]; } moves.sort((a, b) => p.gives(a) - p.gives(b)); }
     // a quick probe of the TT move first
     const s = this.canon(p), idx = p.h2[s] & this.mask;
@@ -315,11 +369,17 @@ class Solver {
       const tm = G.inv[s][this.bm[idx]], j = moves.indexOf(tm);
       if (j > 0 && !rand) { moves.splice(j, 1); moves.unshift(tm); }
     }
+    if (first !== undefined && first >= 0) { const j = moves.indexOf(first); if (j > 0) { moves.splice(j, 1); moves.unshift(first); } }
     let alpha = -rem - 1, bestMove = moves[0], bestV = -INF;
-    for (const e of moves) {
-      const v = this.moveValue(p, e, alpha, rem + 1);
+    for (let i = 0; i < moves.length; i++) {
+      const e = moves[i];
+      let v;
+      if (this.prune && i > 0) {   // null-window test first: only re-search moves that beat the current best
+        v = this.moveValue(p, e, alpha, alpha + 1);
+        if (v !== null && v > alpha) v = this.moveValue(p, e, alpha, rem + 1);
+      } else v = this.moveValue(p, e, alpha, rem + 1);
       if (v === null) return null;
-      if (v > bestV) { bestV = v; bestMove = e; }
+      if (v > bestV) { bestV = v; bestMove = e; this.partial = { move: e, value: v }; }
       if (v > alpha) alpha = v;
     }
     return { move: bestMove, value: bestV };
@@ -357,9 +417,12 @@ function evalH(p, salt, np) {
   return sum / np;
 }
 // candidate moves for the heuristic search (no captures available)
-function quietMoves(p) {
+const qSkip = { arr: new Int32Array(128), tag: 0 };
+function quietMoves(p, prune) {
   const safe = [], other = [];
-  for (let e = 0; e < p.G.E; e++) { if (p.drawn[e]) continue; if (p.gives(e) === 0) safe.push(e); else other.push(e); }
+  let tag = -1; const skip = qSkip.arr;
+  if (prune) { tag = ++qSkip.tag; markRedundant(p, skip, tag); }
+  for (let e = 0; e < p.G.E; e++) { if (p.drawn[e] || skip[e] === tag) continue; if (p.gives(e) === 0) safe.push(e); else other.push(e); }
   if (safe.length) {
     if (safe.length <= 10) { // small sacrifices can flip the parity late in the safe phase
       const sac = [];
@@ -376,7 +439,7 @@ function countSafe(p) { let n = 0; for (let e = 0; e < p.G.E; e++) if (!p.drawn[
 
 class HSearch {
   constructor(G) {
-    this.G = G; this.nodes = 0; this.deadline = Infinity; this.aborted = false; this.np = 3;
+    this.G = G; this.nodes = 0; this.deadline = Infinity; this.aborted = false; this.np = 3; this.prune = false;
     const size = 1 << 18; this.mask = size - 1;
     this.k1 = new Int32Array(size); this.k2 = new Int32Array(size); this.val = new Float32Array(size);
     this.dep = new Int8Array(size); this.flag = new Int8Array(size); this.bm = new Int8Array(size); this.used = new Uint8Array(size);
@@ -410,7 +473,7 @@ class HSearch {
         if (fl === 2 && v <= alpha) return v;
       }
     }
-    moves = cap ? cap.moves.concat(cap.declines) : quietMoves(p).moves;
+    moves = cap ? cap.moves.concat(cap.declines) : quietMoves(p, this.prune).moves;
     if (ttMove >= 0) { const j = moves.indexOf(ttMove); if (j > 0) { moves.splice(j, 1); moves.unshift(ttMove); } }
     const alpha0 = alpha;
     let best = -INF, bestMove = -1;
@@ -431,7 +494,7 @@ class HSearch {
   rootMoves(p, rand) {
     const cap = p.hasCapture() ? captureMoves(p) : null;
     if (cap && cap.forced !== undefined) return [cap.forced];
-    let moves = cap ? cap.moves.concat(cap.declines) : quietMoves(p).moves;
+    let moves = cap ? cap.moves.concat(cap.declines) : quietMoves(p, this.prune).moves;
     if (rand) { // shuffle, then keep safe moves in front
       for (let i = moves.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [moves[i], moves[j]] = [moves[j], moves[i]]; }
       if (!cap) moves.sort((a, b) => p.gives(a) - p.gives(b));
@@ -439,9 +502,10 @@ class HSearch {
     return moves;
   }
   // iterative deepening with full windows (scores of every candidate, for hints)
-  root(p, maxDepth, ms) {
+  root(p, maxDepth, ms, extra) {
     this.deadline = Date.now() + ms; this.aborted = false; this.nodes = 0;
     const moves = this.rootMoves(p, null);
+    if (extra) for (const e of extra) if (e >= 0 && !p.drawn[e] && !moves.includes(e)) moves.push(e);
     let result = moves.map(m => ({ m, v: -p.gives(m) * 3 }));
     for (let d = 0; d <= maxDepth; d++) {
       const cur = [];
@@ -458,6 +522,22 @@ class HSearch {
       if (d >= p.undrawn) break;
     }
     return result;
+  }
+  // principal variation from the table (after the root move has been played on q)
+  pv(q, n) {
+    const G = this.G, out = [];
+    for (let i = 0; i < n && q.undrawn > 0; i++) {
+      const cap = q.hasCapture() ? captureMoves(q) : null;
+      let e = -1;
+      if (cap && cap.forced !== undefined) e = cap.forced;
+      else {
+        const s = this.canon(q), idx = q.h2[s] & this.mask;
+        if (this.used[idx] && this.k1[idx] === q.h1[s] && this.k2[idx] === q.h2[s] && this.bm[idx] >= 0) e = G.inv[s][this.bm[idx]];
+      }
+      if (e < 0 || q.drawn[e]) break;
+      q.play(e); out.push(e);
+    }
+    return out;
   }
   best(p, maxDepth, ms, rand) {
     this.deadline = Date.now() + ms; this.aborted = false; this.nodes = 0;
@@ -501,13 +581,16 @@ const LEVELS = {
   5: { kind: 'search', own: true, exactNodes: 20000, safeGate: 6, depth: 1, ms: 400, np: 1 },
   6: { kind: 'search', own: true, exactNodes: 150000, safeGate: 8, depth: 3, ms: 800, np: 2 },
   7: { kind: 'search', exactMs: 500, safeGate: 9, depth: 14, ms: 1100, np: 2 },
-  8: { kind: 'search', exactMs: 950, safeGate: 12, depth: 40, ms: 1750, np: 3 },
+  // Lv8: its own exact solver (exact move pruning, null-window root search, bigger table); switches to it much earlier
+  8: { kind: 'search', fast: true, exactMs: 300, hMs: 400, safeGate: { 3: 99, 4: 27, 5: 21 }, depth: 40, ms: 1750, np: 3 },
 };
 
 const solvers = {}, smallSolvers = {};
 function solverFor(G) { const k = G.R + 'x' + G.C; return solvers[k] || (solvers[k] = new Solver(G)); }
 const hsCache = {};
-function hsFor(G, np) { const k = G.R + 'x' + G.C + ':' + np; if (!hsCache[k]) { hsCache[k] = new HSearch(G); hsCache[k].np = np; } return hsCache[k]; }
+function hsFor(G, np, fast) { const k = G.R + 'x' + G.C + ':' + np + (fast ? 'f' : ''); if (!hsCache[k]) { hsCache[k] = new HSearch(G); hsCache[k].np = np; hsCache[k].prune = !!fast; } return hsCache[k]; }
+const fastSolvers = {};
+function fastSolverFor(G) { const k = G.R + 'x' + G.C; if (!fastSolvers[k]) { const s = new Solver(G, 22); s.prune = true; fastSolvers[k] = s; } return fastSolvers[k]; }
 function smallSolverFor(G) { const k = G.R + 'x' + G.C; const s = smallSolvers[k] || (smallSolvers[k] = new Solver(G, 17)); s.used.fill(0); return s; }
 
 function chooseMove(p, level, rand) {
@@ -531,13 +614,31 @@ function chooseMove(p, level, rand) {
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
   const t0 = Date.now();
-  if (p.G.E <= 24 || countSafe(p) <= cfg.safeGate) {
-    const S = cfg.own ? smallSolverFor(p.G) : solverFor(p.G);
+  const gate = typeof cfg.safeGate === 'object' ? (cfg.safeGate[p.G.R] || 12) : cfg.safeGate;
+  if (cfg.fast && (p.G.E <= 24 || countSafe(p) <= gate)) {
+    // a short exact try (cheap once the table is warm), then the heuristic choice, then a longer exact run that
+    // starts from it; if that run is cut off, keep the best move it has proven so far
+    const S = fastSolverFor(p.G), safe = countSafe(p);
+    S.limit(0, safe <= 12 ? cfg.ms - 60 : cfg.exactMs);   // late positions almost always finish: give them everything
+    let r = S.best(p, rand);
+    if (r) return { move: r.move, value: r.value, exact: true, nodes: S.nodes };
+    const H = hsFor(p.G, cfg.np, true);
+    const h = H.best(p, cfg.depth, Math.max(80, Math.min(cfg.hMs, cfg.ms - (Date.now() - t0) - 120)), rand);
+    const left = cfg.ms - (Date.now() - t0);
+    if (left < 150) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+    S.limit(0, left);
+    r = S.best(p, rand, h.move);
+    if (r) return { move: r.move, value: r.value, exact: true, nodes: S.nodes };
+    if (S.partial) return { move: S.partial.move, value: S.partial.value, exact: false };
+    return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  }
+  if (!cfg.fast && (p.G.E <= 24 || countSafe(p) <= gate)) {
+    const S = cfg.own ? smallSolverFor(p.G) : cfg.fast ? fastSolverFor(p.G) : solverFor(p.G);
     S.limit(cfg.exactNodes, cfg.exactMs);
     const r = S.best(p, rand);
     if (r) return { move: r.move, value: r.value, exact: true, nodes: S.nodes };
   }
-  const H = hsFor(p.G, cfg.np);
+  const H = hsFor(p.G, cfg.np, cfg.fast);
   const left = Math.max(100, cfg.ms - (Date.now() - t0));
   const h = H.best(p, cfg.depth, left, rand);
   return { move: h.move, value: h.value, exact: false, depth: H.depth };
@@ -545,17 +646,54 @@ function chooseMove(p, level, rand) {
 
 // exact values of all moves within a time budget, otherwise heuristic scores
 function analyze(p, ms) {
-  const S = solverFor(p.G);
-  if (p.G.E <= 24 || countSafe(p) <= 14) {
+  const S = fastSolverFor(p.G);
+  if (p.G.E <= 24 || countSafe(p) <= (p.G.R <= 4 ? 20 : 15)) {
     S.limit(0, ms * 0.7);
     const ex = S.all(p);
     if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v) };
   }
-  const H = hsFor(p.G, 3);
+  const H = hsFor(p.G, 3, true);
   const list = H.root(p, 12, ms * 0.3 + 150);
   return { exact: false, list };
 }
-return { geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, solverFor, sacrificeSize, captureEdge, LEVELS, xorshift };
+
+// post-game review of one move: value of the best move and of the move played (net boxes for the mover),
+// plus a short best line. Exact when the solver finishes in time, otherwise a heuristic estimate.
+function reviewMove(p, played, ms) {
+  const G = p.G;
+  if (p.undrawn <= 1) return { skip: true };
+  const cap = p.hasCapture() ? captureMoves(p) : null;
+  if (cap && cap.forced !== undefined) return { skip: true };
+  const t0 = Date.now(), end = t0 + ms;
+  if (G.E <= 24 || countSafe(p) <= (G.R <= 4 ? 24 : 17)) {
+    const S = fastSolverFor(G);
+    S.limit(0, ms * 0.8);
+    const b = S.best(p);
+    let pv = null;
+    if (b) { S.limit(0, Math.max(60, end - Date.now())); pv = played === b.move ? b.value : S.moveValue(p, played); }
+    if (b && pv !== null) {
+      const q = p.clone(), line = [b.move]; q.play(b.move);
+      while (line.length < 12 && q.undrawn > 0) {
+        const c = q.hasCapture() ? captureMoves(q) : null;
+        let e;
+        if (c && c.forced !== undefined) e = c.forced;
+        else { S.limit(0, 120); const r = S.best(q); if (!r) break; e = r.move; }
+        q.play(e); line.push(e);
+      }
+      return { exact: true, best: b.value, played: Math.min(pv, b.value), bestMove: b.move, line };
+    }
+  }
+  const H = hsFor(G, 3, true);
+  const list = H.root(p, 12, Math.max(150, end - Date.now()), [played]);
+  if (!list.length) return { skip: true };
+  const mine = list.find(x => x.m === played);
+  const q = p.clone(); q.play(list[0].m);
+  const line = [list[0].m].concat(H.pv(q, 9));
+  // both moves safe: the estimate cannot tell them apart reliably (it is a parity guess), so the UI does not grade it
+  const quiet = !cap && p.gives(played) === 0 && p.gives(list[0].m) === 0;
+  return { exact: false, quiet, best: list[0].v, played: mine ? Math.min(mine.v, list[0].v) : list[0].v, bestMove: list[0].m, line };
+}
+return { geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -573,9 +711,12 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
         const r = DotsEngine.analyze(p, d.ms || 1500);
         self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact });
       } else if (d.type === 'solve') {
-        const S = DotsEngine.solverFor(G); S.limit(0, d.ms || 8000);
+        const S = DotsEngine.fastSolverFor(G); S.limit(0, d.ms || 8000);
         const list = S.all(p);
         self.postMessage({ type: 'solve', id: d.id, list });
+      } else if (d.type === 'review') {
+        const r = DotsEngine.reviewMove(p, d.played, d.ms || 600);
+        self.postMessage({ type: 'review', id: d.id, r });
       }
     } catch (err) {
       self.postMessage({ type: 'error', id: d.id, msg: String(err && err.stack || err) });
