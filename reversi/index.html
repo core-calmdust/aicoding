@@ -506,11 +506,13 @@ weightsReady = (async () => {
   try {
     const res = await fetch('weights.bin.gz');
     if (!res.ok) throw new Error('no weights');
-    let buf;
-    if ('DecompressionStream' in window) {
-      const ds = res.body.pipeThrough(new DecompressionStream('gzip'));
+    let buf = await res.arrayBuffer();
+    const u8 = new Uint8Array(buf, 0, 2);
+    if (u8[0] === 0x1f && u8[1] === 0x8b) {
+      if (!('DecompressionStream' in window)) throw new Error('no DecompressionStream');
+      const ds = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
       buf = await new Response(ds).arrayBuffer();
-    } else throw new Error('no DecompressionStream');
+    }
     const meta = await fetch('weights.json').then(r => r.json()).catch(() => ({ nphase: NPHASE_DEFAULT }));
     weights = { buffer: buf, nphase: meta.nphase };
   } catch (e) { console.warn('pattern weights unavailable, using fallback evaluator', e); }
