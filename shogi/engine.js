@@ -1181,6 +1181,28 @@ else root.ShogiEngine = api;
 if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof module === 'undefined') {
   const pos = new Position();
   const se = new Searcher(pos);
+  // WebAssembly build of the same search (engine.c): identical results, faster. Falls back to JS if unavailable.
+  let X = null, wProgress = null, wAProgress = null;
+  try {
+    const url = new URL('engine.wasm' + (self.location.search || ''), self.location.href);
+    WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
+      .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); })
+      .catch(() => { X = null; });
+  } catch (e) { X = null; }
+  function wsetup(d) {
+    const p = new Position(); p.setSfen(d.sfen);
+    const b = new Int8Array(X.memory.buffer, X.setup_ptr(), 98);
+    b.set(p.board, 0); b.set(p.hand, 81); b[97] = p.side; X.set_position();
+    for (const u of d.moves || []) X.play_move(p.fromUsi(u));
+  }
+  const useWasm = () => X && !NN;
+  function wasmAnalyze(o, onDepth) {
+    wAProgress = onDepth ? (depth, n, mp, sp) => { const ms = new Int32Array(X.memory.buffer, mp, n), ss = new Float64Array(X.memory.buffer, sp, n); onDepth(Array.from(ms, (m, i) => ({ m, s: ss[i] })), depth); } : null;
+    const n = X.analyze(o.time || 0, o.depth || 0, o.nodes || 0);
+    wAProgress = null;
+    const ms = new Int32Array(X.memory.buffer, X.ana_moves(), n), ss = new Float64Array(X.memory.buffer, X.ana_scores(), n), ds = new Int32Array(X.memory.buffer, X.ana_depths(), n);
+    return Array.from(ms, (m, i) => ({ m, s: ss[i], d: ds[i] }));
+  }
   function setup(d) {
     pos.setSfen(d.sfen);
     for (const u of d.moves || []) { pos.doMove(pos.fromUsi(u)); pos.histChk[pos.hn - 1] = pos.inCheck() ? 1 : 0; }
@@ -1191,7 +1213,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     if (d.type === 'weights') {
       const nn = parseNN(d.buffer);
       if (nn) NN = nn;
-      else { const w = new Int16Array(d.buffer); if (w.length === NFEAT) W = w; }
+      else { const w = new Int16Array(d.buffer); if (w.length === NFEAT) { W = w; if (X) new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W); } }
       return;
     }
     if (d.type === 'think') {
@@ -1199,7 +1221,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       const o = d.opts || {};
       if (o.noise) {
         // weak levels: score every root move with a shallow full-window search, then pick softly among near-best moves
-        const list = se.analyze({ depth: o.depth || 1 });
+        const list = useWasm() ? (wsetup(d), wasmAnalyze({ depth: o.depth || 1 })) : se.analyze({ depth: o.depth || 1 });
         if (!list.length) { self.postMessage({ type: 'result', id: d.id, move: null, score: -MATE, depth: 0, pv: [] }); return; }
         const top = list[0].s;
         const pool = list.filter(r => r.s >= top - o.noise && !(top < MATE - 100 && r.s < -MATE + 100));
@@ -1210,6 +1232,16 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
         // never miss a mate-in-one / never walk into an immediate mate at the weakest levels
         if (top > MATE - 100) pick = list[0];
         self.postMessage({ type: 'result', id: d.id, move: pos.toUsi(pick.m), score: pick.s, depth: o.depth || 1, pv: [pos.toUsi(pick.m)], nodes: se.nodes, time: 0 });
+        return;
+      }
+      if (useWasm()) {
+        wsetup(d);
+        wProgress = (depth, score, nodes, pp, pl) => self.postMessage({ type: 'progress', id: d.id, depth, score, pv: Array.from(new Int32Array(X.memory.buffer, pp, pl), m => pos.toUsi(m)), nodes });
+        const t0 = Date.now();
+        const mv = X.root_search(o.time || 0, o.depth || 0, o.nodes || 0);
+        wProgress = null;
+        const r = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+        self.postMessage({ type: 'result', id: d.id, move: mv ? pos.toUsi(mv) : null, score: X.res_score(), depth: r[1], pv: Array.from(r.subarray(4, 4 + r[3]), m => pos.toUsi(m)), nodes: r[2], time: Date.now() - t0, wasm: true });
         return;
       }
       const res = se.rootSearch({
@@ -1229,7 +1261,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     if (d.type === 'analyze') {
       setup(d);
       const o = d.opts || {};
-      const res = se.analyze({ time: o.time, depth: o.depth, onDepth: (list, depth) => self.postMessage({ type: 'analysisProgress', id: d.id, depth, list: list.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s })) }) });
+      const res = (useWasm() ? (wsetup(d), wasmAnalyze) : (oo, cb) => se.analyze({ ...oo, onDepth: cb }))({ time: o.time, depth: o.depth }, (list, depth) => self.postMessage({ type: 'analysisProgress', id: d.id, depth, list: list.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s })) }));
       self.postMessage({ type: 'analysis', id: d.id, list: res.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s, depth: r.d })) });
       return;
     }
