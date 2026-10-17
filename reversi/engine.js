@@ -382,9 +382,51 @@ function sortMoves(base, n) { // insertion sort descending by SC
 const MPC = { on: true, t: 1.5, A: 357.32, B: 1.1, C: -3.14, minDepth: 3 }; // fitted on 700 sample positions (depths 0-10)
 const mpcShallow = d => 2 * (d >> 2) + (d & 1); // ~d/2, same parity as d
 // -------------------------------------------------------- midgame PVS
+// ---- incremental pattern indices: per ply, A = indices with side-to-move coded 1 / opponent 2, B = colours swapped
+const NSTK = 96;
+const STA = new Int32Array(NSTK * NINST), STB = new Int32Array(NSTK * NINST);
+function initIdx(ply, pl, ph, ol, oh) {
+  const a0 = ply * NINST;
+  STA.fill(0, a0, a0 + NINST); STB.fill(0, a0, a0 + NINST);
+  let x, q, j, e;
+  x = pl; while (x) { q = 31 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += SQP[j]; STB[a0 + SQI[j]] += 2 * SQP[j]; } }
+  x = ph; while (x) { q = 63 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += SQP[j]; STB[a0 + SQI[j]] += 2 * SQP[j]; } }
+  x = ol; while (x) { q = 31 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += 2 * SQP[j]; STB[a0 + SQI[j]] += SQP[j]; } }
+  x = oh; while (x) { q = 63 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += 2 * SQP[j]; STB[a0 + SQI[j]] += SQP[j]; } }
+}
+// child after the side to move plays s flipping (fl, fh): the child's side to move is the old opponent
+function childIdx(ply, s, fl, fh) {
+  const a0 = ply * NINST, c0 = a0 + NINST;
+  for (let i = 0; i < NINST; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
+  let j, e, q, x;
+  for (j = SQ_START[s], e = SQ_START[s + 1]; j < e; j++) { STA[c0 + SQI[j]] += 2 * SQP[j]; STB[c0 + SQI[j]] += SQP[j]; }
+  x = fl; while (x) { q = 31 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[c0 + SQI[j]] += SQP[j]; STB[c0 + SQI[j]] -= SQP[j]; } }
+  x = fh; while (x) { q = 63 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[c0 + SQI[j]] += SQP[j]; STB[c0 + SQI[j]] -= SQP[j]; } }
+}
+function passIdx(ply) {
+  const a0 = ply * NINST, c0 = a0 + NINST;
+  for (let i = 0; i < NINST; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
+}
+function evalAt(ply, pl, ph, ol, oh) {
+  if (evaluate !== evalPattern) return evaluate(pl, ph, ol, oh);
+  const discs = pc(pl | ol) + pc(ph | oh);
+  const base = phaseOf(discs) * PHASE_SIZE, a0 = ply * NINST;
+  let s = W[base + PHASE_SIZE - 1];
+  for (let i = 0; i < NINST; i++) s += W[base + I_OFF[i] + STA[a0 + i]];
+  if (USE_EXT) {
+    extCounts(pl, ph, ol, oh, EXT_TMP, 0);
+    s += W[base + EXT_TMP[0]] + W[base + EXT_TMP[1]] + W[base + EXT_TMP[2]] + W[base + EXT_TMP[3]];
+  }
+  return ((s * 100) / 32) | 0;
+}
+// entry point used outside the recursive search: (re)initialises the index stack at this ply
 function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
+  initIdx(ply, pl, ph, ol, oh);
+  return searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed);
+}
+function searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
   if ((++nodes & 4095) === 0) checkTime();
-  if (depth <= 0) return evaluate(pl, ph, ol, oh);
+  if (depth <= 0) return evalAt(ply, pl, ph, ol, oh);
 
   const h = hash(pl, ph, ol, oh), ti = h & TT_MASK, k4 = ti * 4;
   let ttMove = -1;
@@ -406,7 +448,8 @@ function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
     if (passed) return finalScore(pl, ph, ol, oh) * SCALE;
     genMoves(ol, oh, pl, ph);
     if ((ML | MH) === 0) return finalScore(pl, ph, ol, oh) * SCALE;
-    return -search(ol, oh, pl, ph, depth, -beta, -alpha, ply + 1, true);
+    passIdx(ply);
+    return -searchI(ol, oh, pl, ph, depth, -beta, -alpha, ply + 1, true);
   }
 
   // Multi-ProbCut: predict the deep result from a shallow search and cut if it is far outside the window
@@ -416,12 +459,12 @@ function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
     const sig = (MPC.t * (MPC.A + MPC.B * depth + MPC.C * empties)) | 0;
     const hb = beta + sig;
     if (hb < 30000) {
-      const v = ds === 0 ? evaluate(pl, ph, ol, oh) : search(pl, ph, ol, oh, ds, hb - 1, hb, ply, passed);
+      const v = ds === 0 ? evalAt(ply, pl, ph, ol, oh) : searchI(pl, ph, ol, oh, ds, hb - 1, hb, ply, passed);
       if (v >= hb) return beta;
     }
     const lb = alpha - sig;
     if (lb > -30000) {
-      const v = ds === 0 ? evaluate(pl, ph, ol, oh) : search(pl, ph, ol, oh, ds, lb, lb + 1, ply, passed);
+      const v = ds === 0 ? evalAt(ply, pl, ph, ol, oh) : searchI(pl, ph, ol, oh, ds, lb, lb + 1, ply, passed);
       if (v <= lb) return alpha;
     }
   }
@@ -442,8 +485,9 @@ function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
       let npl, nph;
       if (s < 32) { npl = pl | fl | (1 << s); nph = ph | fh; } else { npl = pl | fl; nph = ph | fh | (1 << (s - 32)); }
       const nol = ol & ~fl, noh = oh & ~fh;
-      if (ordDepth === 0) sc = -evaluate(nol, noh, npl, nph);
-      else sc = -search(nol, noh, npl, nph, ordDepth, -32000, 32000, ply + 1, false);
+      childIdx(ply, s, fl, fh);
+      if (ordDepth === 0) sc = -evalAt(ply + 1, nol, noh, npl, nph);
+      else sc = -searchI(nol, noh, npl, nph, ordDepth, -32000, 32000, ply + 1, false);
     }
     SC[base + i] = sc;
   }
@@ -458,11 +502,12 @@ function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
     let npl, nph;
     if (s < 32) { npl = pl | fl | (1 << s); nph = ph | fh; } else { npl = pl | fl; nph = ph | fh | (1 << (s - 32)); }
     const nol = ol & ~fl, noh = oh & ~fh;
+    childIdx(ply, s, fl, fh);
     let v;
-    if (i === 0) v = -search(nol, noh, npl, nph, depth - 1, -beta, -alpha, ply + 1, false);
+    if (i === 0) v = -searchI(nol, noh, npl, nph, depth - 1, -beta, -alpha, ply + 1, false);
     else {
-      v = -search(nol, noh, npl, nph, depth - 1, -alpha - 1, -alpha, ply + 1, false);
-      if (v > alpha && v < beta) v = -search(nol, noh, npl, nph, depth - 1, -beta, -v, ply + 1, false);
+      v = -searchI(nol, noh, npl, nph, depth - 1, -alpha - 1, -alpha, ply + 1, false);
+      if (v > alpha && v < beta) v = -searchI(nol, noh, npl, nph, depth - 1, -beta, -v, ply + 1, false);
     }
     if (v > best) {
       best = v; bestMove = s;
