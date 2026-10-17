@@ -262,6 +262,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-item .tx small{display:block;font-size:12px;color:var(--dim);line-height:1.5}
 .lesson-item .st{font-size:12px;color:var(--dim);flex:none;text-align:right}
 .lesson-item .st.clear{color:#8fe3b8}
+.op-choice{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .lesson-item.daily{border-color:rgba(226,194,117,.55);background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))}
 .lesson-item.daily .no{font-size:18px}
 .lesson-intro p{font-size:14px;line-height:1.85;color:#cfd8d2;margin-bottom:10px}
@@ -471,9 +472,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018g"></script>
-<script src="engine.js?v=20261018g"></script>
-<script src="strategy.js?v=20261018g"></script>
+<script src="i18n.js?v=20261018h"></script>
+<script src="engine.js?v=20261018h"></script>
+<script src="strategy.js?v=20261018h"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -542,7 +543,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018g');
+    const res = await fetch('weights.bin.gz?v=20261018h');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -555,7 +556,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018g');
+  const w = new Worker('engine.js?v=20261018h');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1612,7 +1613,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018g').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018h').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1623,7 +1624,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018g').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018h').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1631,7 +1632,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018g').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018h').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1699,7 +1700,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018g').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018h').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
@@ -1743,13 +1744,60 @@ function lessonView(v) { ['list', 'intro', 'done'].forEach(x => $('#lesson' + x[
 $('#lessonList').onclick = e => {
   const b = e.target.closest('.lesson-item'); if (!b) return;
   if (b.dataset.exam) { hideOverlay('#lessonOverlay'); startExam(); return; }
-  if (b.dataset.o !== undefined) { hideOverlay('#lessonOverlay'); startOpening(+b.dataset.o); return; }
+  if (b.dataset.o !== undefined) { openOpeningChoice(+b.dataset.o); return; }
   if (b.dataset.daily) { const dl = dailyPick(b.dataset.daily === '2'); hideOverlay('#lessonOverlay'); startTsume(dl.si, dl.k, dl.date, dl.easy); return; }
   if (b.dataset.t !== undefined) { hideOverlay('#lessonOverlay'); startTsume(+b.dataset.t); }
   else openIntro(+b.dataset.i);
 };
 let introIdx = 0;
+let openChoiceIdx = -1;
+function openOpeningChoice(oi) {
+  openChoiceIdx = oi; const g = OPEN.sets[oi], st = g.study;
+  $('#liStep').textContent = g.handi ? t('op.handiHead') : t('op.title');
+  $('#liTitle').textContent = L(g.title);
+  const intro = st && st.intro ? (st.intro[LANG] || st.intro.ja) : [L(g.short)];
+  $('#liBody').innerHTML = intro.map(p => `<p>${p}</p>`).join('') +
+    `<div class="op-choice">${st ? `<button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: st.steps.length })}</small></span></button>` : ''}` +
+    `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button></div>`;
+  $('#btnLessonStart').classList.add('hidden');
+  lessonView('intro');
+}
+$('#liBody').addEventListener('click', e => {
+  const b = e.target.closest('.lesson-item'); if (!b || openChoiceIdx < 0) return;
+  hideOverlay('#lessonOverlay');
+  if (b.dataset.study) startStudy(openChoiceIdx); else startOpening(openChoiceIdx);
+});
+// ---- opening study: step through a standard line with notes
+function startStudy(oi) {
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  const g = OPEN.sets[oi];
+  lesson = { study: true, gi: oi, g, i: 0, probs: [], pts: [], results: [], k: 0, waiting: false };
+  document.body.classList.add('in-lesson');
+  if (!game) game = newRecord(HANDI[0], 0);
+  showStudy();
+}
+function showStudy() {
+  const g = lesson.g, st = g.study, i = lesson.i, N = st.steps.length;
+  lessonGame(st.start, st.steps.slice(0, i).map(s => s[0]));
+  $('#lsDots').classList.remove('exam');
+  $('#lsStep').textContent = `${t('op.study')} ・ ${i}/${N}`;
+  $('#lsTitle').textContent = L(g.title);
+  $('#lsDots').innerHTML = `<span style="display:block;height:4px;width:140px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><span style="display:block;height:100%;width:${Math.round(i * 100 / N)}%;background:var(--brass)"></span></span>`;
+  let pr = '', fb = '';
+  if (i === 0) { pr = t('op.studyStart'); fb = (st.intro ? (st.intro[LANG] || st.intro.ja) : [L(g.short)]).join('<br>'); }
+  else {
+    const [u, pct, win] = st.steps[i - 1];
+    pr = `<b style="font-size:16px">${i}. ${lineKanji(st.start, st.steps.slice(0, i).map(s => s[0])).pop()}</b>` + (pct != null ? ` <span style="font-size:12px;color:var(--muted)">${t('op.pct', { p: pct })}</span>` : '');
+    const note = st.notes && st.notes[i - 1]; fb = note ? (note[LANG] || note.ja) : '';
+  }
+  if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${t('op.studyEnd')}</b>`;
+  $('#lsPrompt').innerHTML = pr; $('#lsFb').innerHTML = fb;
+  $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
+  $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next');
+  $('#lsQuit').textContent = t('ls.quit');
+}
 function openIntro(i) {
+  openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   introIdx = i; const g = LESSONS.grades[i];
   $('#liStep').textContent = `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
   $('#liTitle').textContent = L(g.title);
@@ -1757,7 +1805,7 @@ function openIntro(i) {
   lessonView('intro');
 }
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
-$('#btnLessonBack').onclick = () => openLessons();
+$('#btnLessonBack').onclick = () => { if (openChoiceIdx >= 0) lsTab = 'open'; openLessons(); };
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLesson').onclick = () => { lsTab = 'lesson'; openLessons(); };
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
@@ -1833,6 +1881,7 @@ function lessonGame(sfen, moves) {
 }
 const sumPts = () => lesson.pts.reduce((a, b) => a + (b || 0), 0);
 function renderLesson() {
+  if (lesson.study) { showStudy(); return; }
   $('#lsDots').classList.remove('exam');
   const g = lesson.g, pr = lesson.cur;
   const chips = () => lesson.probs.map((_, i) => { const p = lesson.pts[i]; return `<i class="pt ${p === undefined ? '' : p >= 16 ? 'ok' : p >= 8 ? 'mid' : 'ng'} ${i === lesson.k ? 'cur' : ''}">${p === undefined ? '' : p}</i>`; }).join('') + `<b class="ptsum">${t('ls.pts', { p: sumPts() })}</b>`;
@@ -2001,6 +2050,7 @@ async function playSolution() {
 }
 $('#lsHint').onclick = () => {
   if (!lesson) return;
+  if (lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(); } return; }
   if (lesson.answered) { playSolution(); return; }
   lesson.hintShown = true;
   const pr = lesson.cur, sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
@@ -2011,6 +2061,7 @@ $('#lsHint').onclick = () => {
 };
 $('#lsNext').onclick = () => {
   if (!lesson) return;
+  if (lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(); playPiece(false); } else { const oi = lesson.gi; exitLesson(true); startOpening(oi); } return; }
   if (!lesson.answered) { lesson.shownAnswer = true; lessonScored(0, { gaveUp: true }); playSolution(); return; }
   if (lesson.endless) { lesson.k = (lesson.k + 1) % lesson.probs.length; loadProblem(); return; }
   if (lesson.exam) { if (lesson.k < EXAM_N - 1) examNext(); else finishLesson(); return; }
