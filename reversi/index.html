@@ -268,7 +268,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hidden{display:none!important}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1){
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){
   :root{--board:calc(min(100vw - 20px, var(--vh) - 330px, 900px) / 1.105)}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px}
   .side, .side-in{display:contents}
@@ -290,12 +290,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   .kifu-card .kifu{max-height:none}
   .info-line{display:none}
 }
-@media (max-aspect-ratio: 1/1) and (max-height: 640px){
+@media (max-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 640px){
   :root{--board:calc(min(100vw - 20px, var(--vh) - 250px, 900px) / 1.105)}
   .graph{display:none}
   .kifu-card{display:none}
 }
-@media (min-aspect-ratio: 1/1) and (max-height: 560px), (min-aspect-ratio: 1/1) and (max-width: 900px){
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   :root{--board:calc(min(var(--vh) - 24px, 100vw - 312px, 980px) / 1.105)}
   .app{padding:12px;gap:16px;grid-template-columns:auto minmax(260px,1fr)}
   .side{max-height:calc(var(--vh) - 24px)}
