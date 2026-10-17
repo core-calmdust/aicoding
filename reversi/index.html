@@ -388,12 +388,60 @@ a.snd.home{text-decoration:none}
 .ol-list > div.me{box-shadow:inset 0 0 0 1px rgba(201,169,97,.5)}
 .ol-list b{font-family:'JetBrains Mono',monospace;color:var(--accent)}
 .ol-list small{color:var(--dim)}
+.ol-priv{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:12px}
+.ol-priv input{accent-color:var(--brass)}
 .ol-wait{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0;text-align:center}
 .ol-wait small{font-size:12px;color:var(--dim);line-height:1.6}
 .ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent)}
 .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(201,169,97,.2);border-top-color:var(--accent);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 body.in-online #evalCard, body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online .review-card{display:none!important}
+/* online dock */
+.dock{display:none}
+.mtabs{display:none}
+@media not all and (pointer: coarse){
+  body:not(.no-online){--vh:calc(100dvh - 46px)}
+  body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#16211e,#0f1715);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.4)}
+  .dock-panel{height:0;overflow:hidden;transition:height .25s ease}
+  body.dock-open .dock-panel{height:min(42vh,380px)}
+}
+.dock-bar{display:flex;align-items:center;gap:12px;height:46px;padding:0 18px;cursor:pointer;flex:none;min-width:0}
+.dk-dot{width:8px;height:8px;border-radius:50%;background:#6fd3a0;box-shadow:0 0 8px #6fd3a0;flex:none}
+.dk-title{font-size:13px;letter-spacing:.08em;white-space:nowrap}
+.dk-stat{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk-sp{flex:1}
+.dk-me{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.dk-me b{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:500}
+.dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
+.dk-btn:hover{border-color:var(--brass2)}
+.dk-btn.go{background:linear-gradient(180deg,#d9b873,#b8964e);color:#1a1408;border-color:transparent;font-weight:700}
+.dk-btn.tg{width:34px;padding:6px 0;color:var(--muted)}
+.dock-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;padding:0 18px}
+body.dock-open .dock-panel{padding:4px 18px 16px}
+.dock-panel section{min-height:0;display:flex;flex-direction:column}
+.dock-panel h4{font-size:12px;color:var(--muted);letter-spacing:.1em;font-weight:500;margin:4px 0 8px}
+.dock-panel .ol-list{max-height:none;flex:1;overflow-y:auto;align-content:start;grid-auto-rows:min-content}
+.dock-panel .ol-list > div{align-items:center}
+.ol-list small.st{font-size:10.5px;padding:1px 6px;border-radius:5px;margin-left:6px;background:rgba(255,255,255,.06);color:var(--muted)}
+.ol-list small.st-play{color:#f2c060}.ol-list small.st-lobby{color:#8fe3b8}.ol-list small.st-room{color:#9fc7ff}
+.dk-join{font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(201,169,97,.5);background:rgba(201,169,97,.12);color:var(--accent)}
+.dk-join:hover{background:rgba(201,169,97,.22)}
+/* phones: bottom tab bar switches between the board and the online panel */
+@media (pointer: coarse){
+  body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#0f1715;border-top:1px solid var(--line)}
+  .mtabs button{flex:1;font-size:13px;color:var(--muted);letter-spacing:.06em}
+  .mtabs button.sel{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+  .mtabs em{font-style:normal;font-size:11px;color:#6fd3a0;margin-left:4px}
+  body:not(.no-online) .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+  body.mtab-online .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;top:0;bottom:calc(50px + env(safe-area-inset-bottom));z-index:44;background:var(--bg);overflow-y:auto}
+  body.mtab-online .dock-bar{flex-wrap:wrap;height:auto;padding:14px 14px 6px;gap:8px;cursor:default}
+  body.mtab-online .dk-sp,body.mtab-online .dk-btn.tg{display:none}
+  body.mtab-online .dk-stat{width:100%;order:3}
+  body.mtab-online .dk-me{width:100%;order:4}
+  body.mtab-online .dk-btn{order:5;flex:1;padding:10px}
+  body.mtab-online .dock-panel{display:flex;flex-direction:column;padding:8px 14px 20px;gap:14px}
+  body.mtab-online .dock-panel .ol-list{max-height:none}
+}
 .mark{position:absolute;inset:6%;border-radius:50%;z-index:5;pointer-events:none;border:3px solid}
 .mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
 .mark.ok{border-color:#6fd3a0}
@@ -759,6 +807,24 @@ body.in-lesson .controls{display:none}
     <div class="modal-actions"><button class="mbtn" id="pasteCancel" data-i18n="close"></button><button class="mbtn go" id="pasteOk" data-i18n="paste.load"></button></div>
   </div>
 </div>
+
+<div class="dock" id="dock">
+  <div class="dock-bar">
+    <span class="dk-dot"></span><b class="dk-title" data-i18n="ol.title"></b>
+    <span class="dk-stat" id="dkStat"></span>
+    <span class="dk-sp"></span>
+    <span class="dk-me" id="dkMe"></span>
+    <button id="dkAuto" class="dk-btn go" data-i18n="ol.auto"></button>
+    <button id="dkRoom" class="dk-btn" data-i18n="ol.create"></button>
+    <button id="dkToggle" class="dk-btn tg" aria-label="toggle">▲</button>
+  </div>
+  <div class="dock-panel">
+    <section><h4 data-i18n="ol.players"></h4><div class="ol-list" id="dkPlayers"></div></section>
+    <section><h4 data-i18n="ol.rooms"></h4><div class="ol-list" id="dkRooms"></div></section>
+    <section><h4 data-i18n="ol.ranking"></h4><div class="ol-list" id="dkRank"></div></section>
+  </div>
+</div>
+<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
 
 <!-- online -->
 <div class="overlay" id="onlineOverlay">
@@ -2366,11 +2432,13 @@ async function olRender(view) {
         <button class="mbtn go" id="olAuto">${t('ol.auto')}</button>
         <button class="mbtn" id="olCreate">${t('ol.create')}</button>
       </div>
+      <label class="ol-priv"><input type="checkbox" id="olPriv" ${olPriv() ? 'checked' : ''}> ${t('ol.priv')}</label>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
       <p class="ol-note small">${t('ol.rules')}</p>
       <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>`;
     $('#olName').onchange = async e => { e.target.value = await Online.setName(e.target.value); };
     $('#olAuto').onclick = olStartSearch;
+    $('#olPriv').onchange = e => { try { localStorage.setItem('reversi-room-priv', e.target.checked ? '1' : ''); } catch (_) {} };
     $('#olCreate').onclick = olCreateRoom;
     $('#olJoin').onclick = async () => { const c = $('#olCode').value; olRender('loading'); const gid = await Online.joinRoom(c); if (gid) startOnlineGame(gid); else { toast(t('ol.noRoom'), 2200); olRender('menu'); } };
     Online.topPlayers(10).then(list => { const el = $('#olRank'); if (!el) return; el.innerHTML = list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`; }).catch(() => {});
@@ -2393,6 +2461,7 @@ async function olRender(view) {
     $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
   }
 }
+function olPriv() { try { return !!localStorage.getItem('reversi-room-priv'); } catch (e) { return false; } }
 async function olStartSearch() {
   olSearch = { waiting: 0, window: 100, wait: 0 }; olList = [];
   olRender('search');
@@ -2404,7 +2473,7 @@ async function olStartSearch() {
 }
 async function olCreateRoom() {
   olRender('loading');
-  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid) }); olRender('room'); }
+  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olPriv() }); olRender('room'); }
   catch (e) { toast(t('ol.error'), 2000); olRender('menu'); }
 }
 $('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) await Online.leave(); };
@@ -2424,12 +2493,13 @@ function startOnlineGame(gid) {
   net.unsub = Online.watchGame(gid, onNetGame);
   net.timer = setInterval(netTick, 500);
   renderBoard(null); renderInfo();
-  toast(t('ol.start'), 1400); playChime(true);
+  toast(t('ol.start'), 1400); playChime(true); if (typeof mtab === 'function') mtab('game');
 }
 function leaveOnlineGame() {
   if (!net) return;
   net.unsub && net.unsub(); clearInterval(net.timer);
   net = null; document.body.classList.remove('in-online');
+  if (window.Online && Online.uid) Online.setPresence('idle', { room: null });
 }
 function onNetGame(g) {
   if (!net || !g) return;
@@ -2505,8 +2575,49 @@ function onlineResign() {
     });
   });
 })();
+// ====================================================================== online dock (PC: bar at the bottom / phone: "online" tab)
+const dock = { on: false, open: false, players: [], rooms: [], lobby: [], rank: [], unsub: [] };
+const ST_KEY = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play' };
+function dockRender() {
+  if (!dock.on) return;
+  const me = Online.profile;
+  const nPlay = dock.players.length, nWait = dock.lobby.length, nRoom = dock.rooms.length;
+  $('#dkStat').textContent = t('ol.dockStat', { n: nPlay, w: nWait, r: nRoom });
+  $('#mtCount').textContent = nPlay ? String(nPlay) : '';
+  $('#dkMe').innerHTML = me ? `${esc(me.name)} <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : '') : '';
+  $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${esc(p.name)} <small class="st st-${p.st || 'idle'}">${t(ST_KEY[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
+  $('#dkRooms').innerHTML = dock.rooms.length ? dock.rooms.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${esc(r.name)} <small>R ${r.rating}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${esc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
+}
+async function dockStart() {
+  if (dock.on || !window.Online || !Online.available) { if (!window.Online || !Online.available) document.body.classList.add('no-online'); return; }
+  try { await Online.init(); } catch (e) { $('#dkStat').textContent = t('ol.error'); return; }
+  dock.on = true;
+  Online.setPresence('idle');
+  dock.unsub.push(Online.watchPresence(l => { dock.players = l; dockRender(); }));
+  dock.unsub.push(Online.watchRooms(l => { dock.rooms = l; dockRender(); }));
+  dock.unsub.push(Online.watchLobby(l => { dock.lobby = l; dockRender(); }));
+  const rk = () => Online.topPlayers(10).then(l => { dock.rank = l; dockRender(); }).catch(() => {});
+  rk(); setInterval(rk, 60000);
+  dockRender();
+}
+function dockToggle(open) { dock.open = open ?? !dock.open; document.body.classList.toggle('dock-open', dock.open); $('#dkToggle').textContent = dock.open ? '▼' : '▲'; }
+$('#dkToggle').onclick = () => dockToggle();
+$('#dock .dock-bar').addEventListener('click', e => { if (!e.target.closest('button')) dockToggle(); });
+$('#dkAuto').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olStartSearch(); };
+$('#dkRoom').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olCreateRoom(); };
+$('#dock').addEventListener('click', async e => {
+  const b = e.target.closest('.dk-join'); if (!b) return;
+  b.disabled = true;
+  const gid = await Online.joinRoom(b.dataset.code);
+  if (gid) { mtab('game'); startOnlineGame(gid); } else { toast(t('ol.noRoom'), 2000); b.disabled = false; }
+});
+// phone tabs
+function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online'); $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.t === v)); if (v === 'online') dockStart(); }
+$('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
 // ====================================================================== boot
 loadOpenings().then(() => { if (positions.length) renderInfo(); });
+if (window.Online && Online.available) { if (!matchMedia('(pointer: coarse)').matches) setTimeout(dockStart, 800); } else document.body.classList.add('no-online');
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 const hadSave = load();
 if (settings.mode === 'online') settings.mode = 'ai';

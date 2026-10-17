@@ -128,10 +128,20 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .brand h1 small{font-size:12px;letter-spacing:.2em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
 .brand a{font-size:12px;color:var(--dim);text-decoration:none;white-space:nowrap}
 .brand a:hover{color:var(--muted)}
+.snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim);flex:none;padding:0;cursor:pointer}
+.snd:hover{color:var(--text)}
+.snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.snd .off-x{display:none}
+.snd.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
+.snd:not(.on) .on-w{display:none}
+.snd:not(.on) .off-x{display:inline}
 .brand a.home{display:inline-flex;align-items:center;justify-content:center;width:28px;height:26px;flex:none;border:1px solid var(--line);border-radius:7px;background:rgba(0,0,0,.25);color:var(--dim);text-decoration:none}
 .brand a.home:hover{color:var(--text)}
 .brand a.home svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .brand-r{display:flex;align-items:center;gap:10px}
+.brand h1{min-width:0;flex:1 1 auto;overflow:hidden;font-size:clamp(17px, calc((100cqw - 190px) / 7.8), 28px)}
+.brand-r{flex:none}
+@container (max-width: 620px){.brand h1 small{display:none}}
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
 #langSel:hover{color:var(--text)}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
@@ -161,7 +171,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .evline{margin-top:9px;font-size:12px;color:var(--dim);min-height:17px;line-height:1.45}
 .evline b{color:var(--accent);font-weight:500}
 
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0}
 .btn span{overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -390,7 +400,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
 @media (min-height: 561px){
 @container (min-width: 420px){
   .player .count{font-size:clamp(40px, 5cqw, 60px)}
-  .brand h1{font-size:clamp(26px, 4cqw, 36px)}
+  .brand h1{font-size:clamp(17px, calc((100cqw - 190px) / 7.8), 36px)}
   .kifu{grid-template-columns:repeat(6,1fr);font-size:13px}
 }
 }
@@ -427,7 +437,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>Dots &amp; Boxes<small data-i18n="sub"></small></h1>
-      <span class="brand-r"><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
 
     <div class="card lesson-card" id="lessonCard">
@@ -482,7 +492,6 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M5 5h6v6H5zM13 13h6v6h-6z"/><path d="M13 5h6M13 8h6M5 13v6M8 13v6"/></svg><span data-i18n="btn.puzzle"></span></button>
-      <button class="btn" id="btnSound" data-i18n-title="btn.sound.title"><svg viewBox="0 0 24 24" id="soundIcon"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><span data-i18n="btn.sound"></span></button>
     </div>
 
     <div class="card review-card" id="reviewCard">

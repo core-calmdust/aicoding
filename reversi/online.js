@@ -112,11 +112,25 @@
   const cleanName = s => String(s || '').replace(/[<>&"']/g, '').trim().slice(0, 16) || defaultName();
 
   async function setName(name) {
-    name = cleanName(name); profile.name = name;
+    name = cleanName(name); profile.name = name; if (presOn) db.update('presence/' + uid, { name });
     try { localStorage.setItem('reversi-online-name', name); } catch (e) {}
     await db.update('players/' + uid, { name });
     return name;
   }
+
+  // ---------------------------------------------------------------- presence (who is online and what they are doing)
+  let presOn = false, presState = 'idle';
+  async function setPresence(st, extra) {
+    if (!db || !uid) return;
+    presState = st || presState;
+    const v = Object.assign({ name: profile.name, rating: profile.rating, st: presState, t: db.stamp() }, extra || {});
+    await db.set('presence/' + uid, v);
+    if (!presOn) { db.onDisconnectRemove('presence/' + uid); presOn = true; }
+  }
+  const listOf = (v, me) => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
+  function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
+  function watchRooms(cb) { return db.on('rooms', v => cb(listOf(v).filter(r => !r.game && !r.priv).sort((a, b) => (a.created || 0) - (b.created || 0)))); }
+  function watchLobby(cb) { return db.on('lobby', v => cb(listOf(v).filter(x => !x.game))); }
 
   // ---------------------------------------------------------------- Elo
   const kFactor = games => games < 10 ? 40 : games < 30 ? 32 : 24;
@@ -132,6 +146,7 @@
 
   async function enterLobby({ onList, onMatched, onStatus }) {
     await leave();
+    setPresence('lobby');
     const since = db.now();
     lobbyState = { since, onMatched, onStatus };
     await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, since: db.stamp(), game: null });
@@ -172,13 +187,13 @@
   // ---------------------------------------------------------------- private rooms (unrated)
   let roomCode = null, roomUnsub = null;
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  async function createRoom({ onMatched }) {
+  async function createRoom({ onMatched, priv }) {
     await leave();
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, created: db.stamp(), game: null } : undefined);
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, created: db.stamp(), game: null, priv: !!priv } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid) continue;
-      roomCode = code;
+      roomCode = code; setPresence('room', { room: priv ? null : code });
       db.onDisconnectRemove('rooms/' + code);
       roomUnsub = db.on('rooms/' + code + '/game', gid => { if (gid) { const c = roomCode; leave(true); db.remove('rooms/' + c); onMatched(gid); } });
       return code;
@@ -200,6 +215,7 @@
   }
 
   async function leave(keepMatched) {
+    if (!keepMatched && presOn) setPresence('idle', { room: null });
     clearInterval(matchTimer); matchTimer = 0;
     lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub(); roomUnsub && roomUnsub();
     lobbyUnsub = selfUnsub = roomUnsub = null;
@@ -209,7 +225,7 @@
 
   // ---------------------------------------------------------------- games
   const enc = sq => 'abcdefgh'[sq & 7] + ((sq >> 3) + 1);
-  function watchGame(gid, cb) { return db.on('games/' + gid, cb); }
+  function watchGame(gid, cb) { setPresence('play', { room: null }); return db.on('games/' + gid, cb); }
   // append a move; n = number of moves already played (guards against double sends / races)
   async function sendMove(gid, n, sq) {
     const r = await db.txn('games/' + gid, g => {
@@ -235,7 +251,7 @@
       if (game.rated) { if (score === 1) p.wins = (p.wins || 0) + 1; else if (score === 0) p.losses = (p.losses || 0) + 1; else p.draws = (p.draws || 0) + 1; }
       p.last = gid; return p;
     });
-    if (r.committed && r.value) { out = { old: profile.rating, now: r.value.rating, rated: !!game.rated }; profile = r.value; }
+    if (r.committed && r.value) { out = { old: profile.rating, now: r.value.rating, rated: !!game.rated }; profile = r.value; if (presOn) db.update('presence/' + uid, { rating: profile.rating }); }
     return out;
   }
 
@@ -246,7 +262,7 @@
 
   window.Online = {
     available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL,
-    init, setName, enterLobby, createRoom, joinRoom, leave,
+    init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave,
     watchGame, sendMove, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),
   };

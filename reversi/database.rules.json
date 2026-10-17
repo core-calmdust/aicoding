@@ -14,8 +14,8 @@
       }
     },
     "rooms": {
+      ".read": "auth != null",
       "$code": {
-        ".read": "auth != null",
         ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || (!data.child('game').exists() && newData.child('host').val() === data.child('host').val()))"
       }
     },
@@ -23,6 +23,12 @@
       "$gid": {
         ".read": "auth != null",
         ".write": "auth != null && ((!data.exists() && (newData.child('b').val() === auth.uid || newData.child('w').val() === auth.uid)) || data.child('b').val() === auth.uid || data.child('w').val() === auth.uid)"
+      }
+    },
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }
