@@ -294,6 +294,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .sqlbl.c0{color:var(--accent);border-color:rgba(226,194,117,.6)}
 .sqlbl.x{color:#ff9b90;border-color:rgba(255,107,91,.6)}
 .sqlbl.c{color:#ffd29a;border-color:rgba(242,192,96,.6)}
+.mark.flip{border:2px dashed rgba(255,255,255,.85);inset:10%}
+.mark.ex{border:2px solid rgba(255,255,255,.7);inset:20%}
+.mark.front{border:2px dashed rgba(226,194,117,.9);inset:8%;z-index:6}
+.odot{position:absolute;width:24%;height:24%;border-radius:50%;background:#ff6b5b;box-shadow:0 0 8px rgba(255,107,91,.8);z-index:3;pointer-events:none}
+.edgeband{position:absolute;inset:0;background:rgba(226,194,117,.24);pointer-events:none;z-index:0}
+.sqlbl.n{color:#d8e6ff;border-color:rgba(180,200,255,.5)}
 .mark.danger{border:2px dashed rgba(255,107,91,.8);inset:14%}
 .lesson-card{display:none}
 body.in-lesson .lesson-card{display:block}
@@ -1275,7 +1281,8 @@ function startLesson(i) {
   const shuf = a => { a = a.slice(); for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; } return a; };
   const std = shuf(l.problems.filter(p => !p.trap)), trap = shuf(l.problems.filter(p => p.trap));
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
-  const probs = shuf([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);
+  const rest = shuf([...std.slice(1, 5 - nTrap), ...trap.slice(0, nTrap)]);
+  const probs = std.length ? [std[0], ...rest] : rest;   // problem 1 (tutorial) is always a standard one
   lesson = { idx: i, l, probs, i: 0, results: [], answered: false, hintShown: false };
   document.body.classList.add('in-lesson');
   hideOverlay('#resultOverlay');
@@ -1291,12 +1298,57 @@ function loadProblem() {
   renderLessonCard();
   $('#lsFb').innerHTML = '';
   const tx = LT(lesson.l);
-  if (lesson.i === 0 && tx.tutorial) { $('#lsFb').innerHTML = `📘 ${tx.tutorial}`; if (lesson.l.kind === 'corner') showSquareLabels(cells); }
+  if (lesson.i === 0 && tx.tutorial) { const info = showAids(lesson.l.kind, pr, cells, pr.toMove); $('#lsFb').innerHTML = `📘 ${tx.tutorial.replace('{m}', info.m || '').replace('{n}', info.n ?? '')}`; }
+  else if (lesson.i >= 3) $('#lsFb').innerHTML = `🎓 ${t('ls.examNote')}`;
+}
+// visual aids for a lesson kind (tutorial on problem 1, hint on problems 2-3)
+function showAids(kind, pr, cells, me) {
+  const op = 3 - me, info = {};
+  const lab = (q, cls, txt) => { const d = document.createElement('div'); d.className = 'sqlbl ' + cls; d.textContent = txt; cellEls[q].appendChild(d); };
+  const legal = legalMoves(cells, me);
+  switch (kind) {
+    case 'rules': {
+      const mv = legal.slice().sort((a, b) => flipsOf(cells, a, me).length - flipsOf(cells, b, me).length)[0];
+      info.m = sqName(mv); flipsOf(cells, mv, me).forEach(q => addMark(q, 'flip')); addMark(mv, 'ex');
+      break;
+    }
+    case 'corner': case 'exception': showSquareLabels(cells); break;
+    case 'mobility': case 'finish': {
+      const om = legalMoves(cells, op); info.n = om.length;
+      om.forEach(q => { const d = document.createElement('div'); d.className = 'odot'; cellEls[q].appendChild(d); });
+      break;
+    }
+    case 'quiet':
+      for (const q of legal) { const f = pr.f && pr.f[q]; if (f) lab(q, 'n', String(f[2])); }
+      break;
+    case 'wall': {
+      const touchesEmpty = q => { const r = q >> 3, c = q & 7; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8 && !cells[rr * 8 + cc]) return true; } return false; };
+      for (let q = 0; q < 64; q++) if (cells[q] === me && touchesEmpty(q)) addMark(q, 'front');
+      const opL = new Set(legalMoves(cells, op));
+      for (const q of legal) if (!opL.has(q)) lab(q, 'c0', t('lbl.reserve'));
+      break;
+    }
+    case 'edge':
+      for (let q = 0; q < 64; q++) { const r = q >> 3, c = q & 7; if (r === 0 || r === 7 || c === 0 || c === 7) { const d = document.createElement('div'); d.className = 'edgeband'; cellEls[q].appendChild(d); } }
+      break;
+    case 'parity': {
+      const seen = new Array(64).fill(-1), size = [];
+      for (let q = 0; q < 64; q++) {
+        if (cells[q] || seen[q] >= 0) continue;
+        const st = [q], id = size.length; seen[q] = id; let n = 0;
+        while (st.length) { const x = st.pop(); n++; const r = x >> 3, c = x & 7; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8) { const y = rr * 8 + cc; if (!cells[y] && seen[y] < 0) { seen[y] = id; st.push(y); } } } }
+        size.push(n);
+      }
+      for (let q = 0; q < 64; q++) if (!cells[q]) lab(q, size[seen[q]] % 2 ? 'c' : 'n', String(size[seen[q]]));
+      break;
+    }
+  }
+  return info;
 }
 function renderLessonCard() {
   const L = lesson, pr = L.probs[L.i];
   const x = LT(L.l);
-  $('#lsStep').textContent = t('ls.stepq', { s: L.idx + 1, i: L.i + 1 });
+  $('#lsStep').textContent = t('ls.stepq', { s: L.idx + 1, i: L.i + 1 }) + (L.i >= 3 ? '  ·  🎓 ' + t('ls.exam') : '');
   $('#lsTitle').textContent = x.title;
   $('#lsDots').innerHTML = L.probs.map((_, k) => `<i class="${k < L.results.length ? (L.results[k] ? 'ok' : 'ng') : k === L.i ? 'cur' : ''}"></i>`).join('');
   $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + x.prompt;
@@ -1304,7 +1356,7 @@ function renderLessonCard() {
   $('#lsNext').disabled = !L.answered; $('#lsNext').style.opacity = L.answered ? 1 : .4;
   $('#lsHint').disabled = L.answered; $('#lsHint').style.opacity = L.answered ? .4 : 1;
 }
-function clearMarks() { boardEl.querySelectorAll('.mark, .sqlbl').forEach(e => e.remove()); }
+function clearMarks() { boardEl.querySelectorAll('.mark, .sqlbl, .odot, .edgeband').forEach(e => e.remove()); }
 // label empty corners and the X / C squares next to them (tutorial aid)
 function showSquareLabels(cells) {
   const CN = [0, 7, 56, 63], X = { 0: [9], 7: [14], 56: [49], 63: [54] }, C = { 0: [1, 8], 7: [6, 15], 56: [48, 57], 63: [55, 62] };
@@ -1324,7 +1376,7 @@ function lessonAnswer(sq) {
   const ok = mine >= best - tol - 1e-9;
   L.results.push(ok);
   playPlace(ok ? 3 : 0);
-  clearHints(); boardEl.querySelectorAll('.sqlbl').forEach(e => e.remove());
+  clearHints(); boardEl.querySelectorAll('.sqlbl, .odot, .edgeband, .mark').forEach(e => e.remove());
   for (const m of moves) {
     const h = document.createElement('div');
     h.className = 'hint' + (sc[m] === best ? ' best' : '');
@@ -1396,8 +1448,11 @@ $('#lsHint').onclick = () => {
   lesson.hintShown = true;
   const pr = lesson.probs[lesson.i];
   let h = LT(lesson.l).hint || '';
-  if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
-  if (lesson.l.kind === 'corner' || lesson.l.kind === 'exception') { boardEl.querySelectorAll('.sqlbl').forEach(e => e.remove()); showSquareLabels(positions[0].cells); }
+  if (lesson.i < 3) {   // problems 4-5 are the "graduation exam": hint text only, no board aids
+    clearMarks();
+    if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
+    showAids(lesson.l.kind, pr, positions[0].cells, pr.toMove);
+  }
   $('#lsFb').innerHTML = `💡 ${h}`;
 };
 $('#lsNext').onclick = () => {

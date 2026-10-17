@@ -1,7 +1,7 @@
 // UI strings for Reversi V4 — ja / en / zh (Simplified) / ko
 window.I18N = {
 ja: {
-  'meta.title': 'Reversi V4', 'lbl.corner': '隅', 'book': '定石', 'ng.lesson': 'レッスン', 'ng.toLessons': 'レッスンを選ぶ', 'lang.name': '日本語',
+  'meta.title': 'Reversi V4', 'lbl.reserve': '余', 'ls.exam': '卒業試験', 'ls.examNote': '卒業試験です。ヒントを押しても盤面の印は出ません。ここまでの考え方だけで解いてみましょう。', 'lbl.corner': '隅', 'book': '定石', 'ng.lesson': 'レッスン', 'ng.toLessons': 'レッスンを選ぶ', 'lang.name': '日本語',
   'back': '← ゲーム一覧', 'black': '黒', 'white': '白', 'you': 'あなた', 'ai': 'AI', 'eval': '形勢', 'kifu': '棋譜', 'copy': 'コピー', 'copy.title': '棋譜をコピー',
   'btn.new': '新規', 'btn.new.title': '新しい対局', 'btn.undo': '待った', 'btn.undo.title': '待った (Ctrl+Z)', 'btn.hint': 'ヒント', 'btn.hint.title': 'ヒント（各手の評価値）',
   'btn.lesson': 'レッスン', 'btn.lesson.title': 'レッスン（段階的に学ぶ）', 'btn.sound': '音', 'btn.sound.title': '効果音',
@@ -33,7 +33,7 @@ ja: {
   'r.finalCmp': '{m} の結果は最終石差 {a}、{b} なら {c} です。', 'sep': '、', 'end': '。', 'join': '・',
 },
 en: {
-  'meta.title': 'Reversi V4', 'lbl.corner': 'Corner', 'book': 'book', 'ng.lesson': 'Lessons', 'ng.toLessons': 'Choose a lesson', 'lang.name': 'English',
+  'meta.title': 'Reversi V4', 'lbl.reserve': 'S', 'ls.exam': 'Final exam', 'ls.examNote': 'Final exam: the hint no longer marks the board. Solve it with what you have learned.', 'lbl.corner': 'Corner', 'book': 'book', 'ng.lesson': 'Lessons', 'ng.toLessons': 'Choose a lesson', 'lang.name': 'English',
   'back': '← All games', 'black': 'Black', 'white': 'White', 'you': 'You', 'ai': 'AI', 'eval': 'Evaluation', 'kifu': 'Moves', 'copy': 'Copy', 'copy.title': 'Copy the move record',
   'btn.new': 'New', 'btn.new.title': 'New game', 'btn.undo': 'Undo', 'btn.undo.title': 'Undo (Ctrl+Z)', 'btn.hint': 'Hint', 'btn.hint.title': 'Hint (score of every move)',
   'btn.lesson': 'Lessons', 'btn.lesson.title': 'Lessons (learn step by step)', 'btn.sound': 'Sound', 'btn.sound.title': 'Sound effects',
@@ -65,7 +65,7 @@ en: {
   'r.finalCmp': '{m} ends at {a}; {b} ends at {c}.', 'sep': ', ', 'end': '.', 'join': ' / ',
 },
 zh: {
-  'meta.title': 'Reversi V4', 'lbl.corner': '角', 'book': '定式', 'ng.lesson': '课程', 'ng.toLessons': '选择课程', 'lang.name': '中文',
+  'meta.title': 'Reversi V4', 'lbl.reserve': '余', 'ls.exam': '毕业考试', 'ls.examNote': '毕业考试：按提示也不会在棋盘上显示标记。只靠学到的思路来解吧。', 'lbl.corner': '角', 'book': '定式', 'ng.lesson': '课程', 'ng.toLessons': '选择课程', 'lang.name': '中文',
   'back': '← 游戏列表', 'black': '黑', 'white': '白', 'you': '你', 'ai': 'AI', 'eval': '形势', 'kifu': '棋谱', 'copy': '复制', 'copy.title': '复制棋谱',
   'btn.new': '新局', 'btn.new.title': '新对局', 'btn.undo': '悔棋', 'btn.undo.title': '悔棋 (Ctrl+Z)', 'btn.hint': '提示', 'btn.hint.title': '提示（每步的评估值）',
   'btn.lesson': '课程', 'btn.lesson.title': '课程（循序渐进地学习）', 'btn.sound': '声音', 'btn.sound.title': '音效',
@@ -97,7 +97,7 @@ zh: {
   'r.finalCmp': '{m} 的结果为最终子数差 {a}，{b} 则为 {c}。', 'sep': '，', 'end': '。', 'join': '・',
 },
 ko: {
-  'meta.title': 'Reversi V4', 'lbl.corner': '모서리', 'book': '정석', 'ng.lesson': '레슨', 'ng.toLessons': '레슨 고르기', 'lang.name': '한국어',
+  'meta.title': 'Reversi V4', 'lbl.reserve': '여', 'ls.exam': '졸업 시험', 'ls.examNote': '졸업 시험입니다. 힌트를 눌러도 판 위에 표시가 나오지 않습니다. 지금까지 배운 사고방식만으로 풀어 보세요.', 'lbl.corner': '모서리', 'book': '정석', 'ng.lesson': '레슨', 'ng.toLessons': '레슨 고르기', 'lang.name': '한국어',
   'back': '← 게임 목록', 'black': '흑', 'white': '백', 'you': '나', 'ai': 'AI', 'eval': '형세', 'kifu': '기보', 'copy': '복사', 'copy.title': '기보 복사',
   'btn.new': '새 게임', 'btn.new.title': '새 대국', 'btn.undo': '무르기', 'btn.undo.title': '무르기 (Ctrl+Z)', 'btn.hint': '힌트', 'btn.hint.title': '힌트 (각 수의 평가값)',
   'btn.lesson': '레슨', 'btn.lesson.title': '레슨 (단계별 학습)', 'btn.sound': '소리', 'btn.sound.title': '효과음',
