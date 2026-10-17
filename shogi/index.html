@@ -110,6 +110,14 @@ div.sq:nth-of-type(n+73){border-bottom:none}
 .brand a{font-size:12px;color:var(--dim);text-decoration:none}
 .brand a:hover{color:var(--muted)}
 .brand-r{display:flex;align-items:center;gap:10px}
+.snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim);cursor:pointer;padding:0}
+.snd:hover{color:var(--text)}
+.snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.snd .off-x{display:none}
+.snd.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
+.snd:not(.on) .on-w{display:none}
+.snd:not(.on) .off-x{display:inline}
+
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
 .players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -332,7 +340,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>将棋<small data-i18n="title.sub"></small></h1>
-      <div class="brand-r"><select id="langSel"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></div>
+      <div class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></div>
     </div>
     <div class="card edit-card" id="editCard">
       <div class="lh"><span class="lt" data-i18n="ed.title"></span></div>
@@ -370,7 +378,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnResign" data-i18n-title="btn.resign.title"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="btn.resign"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
-      <button class="btn" id="btnSound" data-i18n-title="btn.sound.title"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><span data-i18n="btn.sound"></span></button>
+      <button class="btn" id="btnTsume" data-i18n-title="btn.tsume.title"><svg viewBox="0 0 24 24"><path d="M12 3 7 6v6c0 4 2.5 7 5 9 2.5-2 5-5 5-9V6z"/><path d="M10 12h4M12 10v4"/></svg><span data-i18n="btn.tsume"></span></button>
     </div>
     <div class="card review-card" id="reviewCard"><div class="rv-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose">×</button></div><div id="rvBody"></div></div>
     <div class="card kifu-card">
