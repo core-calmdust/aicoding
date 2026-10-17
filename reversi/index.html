@@ -283,6 +283,13 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 .op-seq{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
 .op-seq b{color:var(--accent)}
+.op-seq button{font:inherit;color:inherit;padding:1px 3px;border-radius:5px}
+.op-seq button:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.op-seq button.cur{background:rgba(201,169,97,.2);color:var(--accent)}
+.op-nav{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap}
+.op-nav button{font-size:12px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.op-nav button:hover{border-color:var(--brass2);color:var(--text)}
+.op-nav .pos{font-size:11.5px;color:var(--dim);margin-left:4px}
 .op-facts{font-size:12px;color:var(--muted);margin:6px 0;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,.2);line-height:1.7}
 .op-facts small{color:var(--dim);font-size:11px}
 .op-info{font-size:12.5px;line-height:1.75;color:var(--text);margin:8px 0 6px;padding:8px 10px;border-left:3px solid var(--brass);background:rgba(201,169,97,.07);border-radius:0 8px 8px 0}
@@ -1176,7 +1183,7 @@ function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.c
 
 // ====================================================================== flow
 function isAITurnColor(c) { if (settings.mode === 'online') return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered; return p.toMove && !isAITurnColor(p.toMove); }
+function isHumanTurn() { const p = positions[cur]; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; return p.toMove && !isAITurnColor(p.toMove); }
 function levelFor(c) { return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
 function newGame() {
@@ -1280,6 +1287,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function onCellClick(sq) {
   ctx();
+  if (lesson && !lesson.drill && lesson.probs && lesson.probs[lesson.i].moves && (lesson.animating || cur !== positions.length - 1)) { opView(positions.length - 1); return; }
   if (lesson) { lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
   if (net) { netMove(sq); return; }
@@ -1556,9 +1564,12 @@ function startLesson(i) {
 function loadProblem() {
   const pr = lesson.probs[lesson.i];
   const cells = pr.cells.split('').map(Number);
-  const lastMv = pr.moves ? ((m) => m ? (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8 : -1)(pr.moves.slice(-2)) : -1;
-  positions = [{ cells, toMove: pr.toMove, last: lastMv, mover: 0, evalB: null }];
-  cur = 0; reviewing = false; lesson.answered = false; lesson.hintShown = false;
+  positions = [{ cells, toMove: pr.toMove, last: -1, mover: 0, evalB: null }];
+  if (pr.moves) {   // opening problem: rebuild the whole move history so the player can step back through it
+    positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
+    for (const m of (pr.moves.match(/../g) || [])) applyMove((m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
+  }
+  cur = positions.length - 1; reviewing = false; lesson.answered = false; lesson.hintShown = false; lesson.animating = false;
   $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show'); $('#toast').classList.remove('show');
   renderBoard(null);
   clearMarks();
@@ -1568,6 +1579,7 @@ function loadProblem() {
   lesson.aidInfo = null;
   if (lesson.i === 0 && tx.tutorial) lesson.aidInfo = showAids(lesson.l.kind, pr, cells, pr.toMove);
   $('#lsFb').innerHTML = preAnswerText();
+  if (pr.moves && pr.k <= 8 && positions.length > 1) opAnimate();
 }
 // visual aids for a lesson kind (tutorial on problem 1, hint on problems 2-3)
 function showAids(kind, pr, cells, me) {
@@ -1626,7 +1638,10 @@ function renderLessonCard() {
   $('#lsStep').textContent += `  ·  ${t('ls.total', { n: tot })}`;
   if (L.l.kind === 'opening') {
     const ln = L.l.lines[pr.line], seq = (pr.moves.match(/../g) || []);
-    $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + t('op.prompt', { name: `<b>${PT(ln.name)}</b>`, n: pr.k + 1 }) + `<div class="op-seq">${seq.map((m, i) => `${i + 1}.${m}`).join(' ')} <b>${pr.k + 1}.?</b></div>`;
+    $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + t('op.prompt', { name: `<b>${PT(ln.name)}</b>`, n: pr.k + 1 })
+      + `<div class="op-seq"><button data-ply="0">${t('op.start')}</button> ${seq.map((m, i) => `<button data-ply="${i + 1}">${i + 1}.${m}</button>`).join(' ')} <b>${pr.k + 1}.?</b></div>`
+      + `<div class="op-nav" id="opNav"><button data-opnav="first" title="⏮">⏮</button><button data-opnav="prev">◀</button><button data-opnav="play" title="${t('op.replay')}">↻ ${t('op.replay')}</button><button data-opnav="next">▶</button><button data-opnav="last">⏭</button><span class="pos"></span></div>`;
+    setTimeout(opSeqSync, 0);
   } else
   $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + x.prompt;
   $('#lsNext').textContent = t(L.i === L.probs.length - 1 ? 'ls.result' : 'ls.next');
@@ -1643,7 +1658,7 @@ function showSquareLabels(cells) {
 function addMark(sq, cls) { const m = document.createElement('div'); m.className = 'mark ' + cls; cellEls[sq].appendChild(m); }
 function lessonAnswer(sq) {
   const L = lesson; if (L.answered) return;
-  const pr = L.probs[L.i], p = positions[0];
+  const pr = L.probs[L.i], p = positions[positions.length - 1];
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
   L.answered = true;
   const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
@@ -1669,6 +1684,46 @@ function lessonAnswer(sq) {
   renderLessonCard();
 }
 // feedback text for an answered problem (re-rendered when the language changes)
+// ---- opening problems: browse / replay the moves leading to the problem position
+async function opAnimate() {
+  const L = lesson, last = positions.length - 1, idx = L.i;
+  L.animating = true; clearMarks(); opView(0, true);
+  await sleep(450);
+  for (let i = 1; i <= last; i++) {
+    if (lesson !== L || L.i !== idx || !L.animating) return;
+    cur = i; const p = positions[i], prev = positions[i - 1];
+    const flips = []; for (let q = 0; q < 64; q++) if (prev.cells[q] && prev.cells[q] !== p.cells[q]) flips.push(q);
+    renderBoard({ sq: p.last, flips }); playPlace(flips.length); opSeqSync();
+    await sleep(settings.anim ? 520 : 260);
+  }
+  if (lesson !== L || L.i !== idx) return;
+  L.animating = false; opView(last);
+}
+function opView(i, keepAnim) {
+  const L = lesson; if (!L || !L.probs[L.i].moves) return;
+  if (!keepAnim) L.animating = false;
+  const last = positions.length - 1; cur = Math.max(0, Math.min(last, i));
+  clearMarks(); clearHints(); renderBoard(null); opSeqSync();
+  if (cur === last) {
+    const pr = L.probs[L.i];
+    if (L.answered && L.lastSq !== undefined) {
+      const F = pr.f, moves = Object.keys(F).map(Number);
+      for (const m of moves) { const h = document.createElement('div'); h.className = 'hint' + (m === pr.ans ? ' best' : ''); h.textContent = fmtS(F[m][0], 'eval'); cellEls[m].appendChild(h); cellEls[m].classList.add('hinted'); }
+      addMark(pr.ans, 'best'); addMark(L.lastSq, L.results[L.results.length - 1] >= 16 ? 'ok' : 'ng');
+      cellEls.forEach(c => c.classList.remove('legal'));
+    } else if (L.hintShown) showAids(L.l.kind, pr, positions[last].cells, pr.toMove);
+  }
+}
+function opSeqSync() {
+  document.querySelectorAll('#lsPrompt .op-seq button[data-ply]').forEach(b => b.classList.toggle('cur', +b.dataset.ply === cur));
+  const nav = $('#opNav'); if (nav) nav.querySelector('.pos').textContent = cur === positions.length - 1 ? t('op.navNow') : t('op.navAt', { n: cur });
+}
+$('#lessonCard').addEventListener('click', e => {
+  const b = e.target.closest('[data-ply]'); if (b && lesson && !lesson.drill) { opView(+b.dataset.ply); return; }
+  const n = e.target.closest('[data-opnav]'); if (!n || !lesson) return;
+  const v = n.dataset.opnav, last = positions.length - 1;
+  if (v === 'play') opAnimate(); else opView(v === 'first' ? 0 : v === 'prev' ? cur - 1 : v === 'next' ? cur + 1 : last);
+});
 // opening problems: the book move of the target line scores 20, another named line's move 16, anything else by rank (max 14)
 function opPoints(pr, sq) {
   if (pr.ans === undefined) return null;
@@ -1704,7 +1759,7 @@ function opFeedback(sq) {
   const seq = ln.moves.match(/../g);
   fb += `<div class="op-seq">${seq.map((m, i) => i === pr.k ? `<b>${i + 1}.${m}</b>` : `${i + 1}.${m}`).join(' ')}</div>`;
   if (ln.moves.length > (pr.k + 1) * 2) fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.cont', { name: PT(ln.name) })}</span><br>`;
-  const cells = positions[0].cells, me = pr.toMove, fa = moveFacts(cells, pr.ans, me), fm = sq !== pr.ans ? moveFacts(cells, sq, me) : null;
+  const cells = positions[positions.length - 1].cells, me = pr.toMove, fa = moveFacts(cells, pr.ans, me), fm = sq !== pr.ans ? moveFacts(cells, sq, me) : null;
   const fl = (m, x) => x ? `<b>${sqName(m)}</b> ${t('op.fact', { f: x.flips, o: x.open, m: x.opp })}` : '';
   fb += `<div class="op-facts">${fl(pr.ans, fa)}${fm ? '<br>' + fl(sq, fm) : ''}<br><small>${t('op.factNote')}</small></div>`;
   if (ln.info) fb += `<div class="op-info"><b>${PT(ln.name)}</b> ${PT(ln.info)}</div>`;
@@ -1713,7 +1768,7 @@ function opFeedback(sq) {
 }
 function answerFeedback(sq) {
   if (lesson.l.kind === 'opening') return opFeedback(sq);
-  const L = lesson, pr = L.probs[L.i], p = positions[0];
+  const L = lesson, pr = L.probs[L.i], p = positions[positions.length - 1];
   const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
   for (const m of moves) sc[m] = F[m][0];
   let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
@@ -1795,7 +1850,7 @@ $('#lsHint').onclick = () => {
   if (lesson.i < 3 || lesson.l.kind === 'opening') {   // problems 4-5 are the "graduation exam": hint text only, no board aids
     clearMarks();
     if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
-    showAids(lesson.l.kind, pr, positions[0].cells, pr.toMove);
+    showAids(lesson.l.kind, pr, positions[positions.length - 1].cells, pr.toMove);
   }
   $('#lsFb').innerHTML = preAnswerText();
 };
