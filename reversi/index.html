@@ -173,6 +173,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:10px;
 }
 .review-bar.show{display:flex}
+.review-bar,.review-bar.show{display:none!important}
 .review-bar{max-width:calc(100% - 16px);flex-wrap:wrap;justify-content:center;row-gap:6px}
 #reviewText{white-space:normal;text-align:center}
 .review-bar button{padding:5px 10px;border-radius:7px;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
@@ -590,6 +591,8 @@ body.in-lesson .controls{display:none}
   .op-book{grid-template-columns:repeat(2, minmax(0, 1fr))}
   .pz-grid{grid-template-columns:repeat(10, 1fr)}
 }
+
+#resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 </style>
 </head>
 <body>
@@ -826,6 +829,17 @@ body.in-lesson .controls{display:none}
 </div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
 
+<div class="overlay" id="resumeOverlay">
+  <div class="modal" style="width:min(480px,100%)">
+    <h2 data-i18n="rs.title"></h2>
+    <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
+    <div class="modal-actions" style="flex-wrap:wrap">
+      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
+    </div>
+  </div>
+</div>
 <!-- online -->
 <div class="overlay" id="onlineOverlay">
   <div class="modal">
@@ -1369,7 +1383,7 @@ function onCellClick(sq) {
   if (lesson) { lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
   if (net) { netMove(sq); return; }
-  if (reviewing) return;
+  if (reviewing) { rsOpen(); return; }
   const p = positions[cur];
   if (!p.toMove || !isHumanTurn()) return;
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
@@ -1479,7 +1493,7 @@ function openNew() {
   $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach;
   segSync(); showOverlay('#newOverlay');
 }
-$('#btnNew').onclick = openNew;
+$('#btnNew').onclick = () => (lesson || puzzle || net) ? openNew() : rsOpen();
 $('#btnCancelNew').onclick = () => {
   // apply display options even when just closing
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
@@ -2615,6 +2629,18 @@ $('#dock').addEventListener('click', async e => {
 // phone tabs
 function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online'); $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.t === v)); if (v === 'online') dockStart(); }
 $('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
+
+// "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
+function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0; }
+function rsViewing() { return !lesson && !puzzle && !net && reviewing; }
+function rsOpen() {
+  if (!rsInProgress() && !rsViewing()) { openNew(); return; }
+  document.querySelector('#rsText').textContent = rsViewing() ? t('rs.viewing', { n: rsViewing() ? cur : positions.length - 1 }) : t('rs.playing', { n: rsViewing() ? cur : positions.length - 1 });
+  document.querySelector('#resumeOverlay').classList.add('show');
+}
+document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
+document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing) { positions.length = cur + 1; reviewing = false; update(null); }; };
 // ====================================================================== boot
 loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { if (!matchMedia('(pointer: coarse)').matches) setTimeout(dockStart, 800); } else document.body.classList.add('no-online');

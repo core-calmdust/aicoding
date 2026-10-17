@@ -411,6 +411,8 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   #lessonIntroView .lesson-intro > p{max-width:820px}
   .pz-grid{grid-template-columns:repeat(10, 1fr)}
 }
+
+#resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 </style>
 </head>
 <body>
@@ -598,6 +600,17 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
 </div>
 
 <!-- result -->
+<div class="overlay" id="resumeOverlay">
+  <div class="modal" style="width:min(480px,100%)">
+    <h2 data-i18n="rs.title"></h2>
+    <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
+    <div class="modal-actions" style="flex-wrap:wrap">
+      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="resultOverlay">
   <div class="modal">
     <div class="result-big" id="resultTitle"></div>
@@ -1092,7 +1105,7 @@ $('#btnStart').onclick = () => {
   Object.assign(settings, { mode: draft.mode, size: draft.size, order: draft.order, level: draft.level, level2: draft.level2, eval: draft.eval, anim: draft.anim });
   newGame();
 };
-$('#btnNew').onclick = openNew;
+$('#btnNew').onclick = () => (lesson || puzzle) ? openNew() : rsOpen();
 
 // ====================================================================== shared helpers for lessons & puzzles
 function enterSetup(setup, n) {
@@ -1605,6 +1618,18 @@ if (loadFromHash()) { /* a shared game opens in 2-player mode */ }
 else if (hadSave && game.moves.length && !S.over) { toast(t('saved'), 1400); next(); }
 else if (hadSave && game.moves.length) { /* finished game: just show it */ }
 else openNew();
+
+// "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
+function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && S && !S.over; }
+function rsViewing() { return !lesson && !puzzle && viewPly !== null && S && !S.over; }
+function rsOpen() {
+  if (!rsInProgress() && !rsViewing()) { openNew(); return; }
+  document.querySelector('#rsText').textContent = rsViewing() ? t('rs.viewing', { n: game.moves.length }) : t('rs.playing', { n: game.moves.length });
+  document.querySelector('#resumeOverlay').classList.add('show');
+}
+document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
+document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
 </script>
 </body>
 </html>
