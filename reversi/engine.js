@@ -595,15 +595,20 @@ function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
   let n = 0;
   while (ml) { const s = lsb(ml); ml &= ml - 1; MV[base + n++] = s; }
   while (mh) { const s = lsb(mh); mh &= mh - 1; MV[base + n++] = s + 32; }
-  // fastest-first ordering
+  // fastest-first ordering (+ enhanced transposition cutoff on children found in the endgame table)
+  const etc = empties >= 15;
   for (let i = 0; i < n; i++) {
     const s = MV[base + i];
-    if (s === ttMove) { SC[base + i] = 1 << 29; continue; }
     flips(s, pl, ph, ol, oh);
     const fl = FL, fh = FH;
     let npl, nph;
     if (s < 32) { npl = pl | fl | (1 << s); nph = ph | fh; } else { npl = pl | fl; nph = ph | fh | (1 << (s - 32)); }
     const nol = ol & ~fl, noh = oh & ~fh;
+    if (etc) {
+      const ci = hash(nol, noh, npl, nph) & ET_MASK, c4 = ci * 4;
+      if (E_V[ci] && E_K[c4] === nol && E_K[c4 + 1] === noh && E_K[c4 + 2] === npl && E_K[c4 + 3] === nph && -E_HI[ci] >= beta) return -E_HI[ci];
+    }
+    if (s === ttMove) { SC[base + i] = 1 << 29; continue; }
     genMoves(nol, noh, npl, nph);
     let sc = -(pc(ML) + pc(MH) + 2 * (pc(ML & 0x81) + pc(MH & 0x81000000))) * 64;
     if (empties > 14) {
