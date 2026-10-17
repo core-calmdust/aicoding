@@ -1017,6 +1017,8 @@ async function schedule(animInfo) {
     toast(t('pass', { c: cname(animInfo.passer) }));
   }
   if (p.toMove === 0) {
+    // show the result only right after the final move (not on reload / when browsing back to the end)
+    if (!animInfo) return;
     await sleep(settings.anim ? 700 : 150);
     if (token !== busyToken) return;
     showResult();
