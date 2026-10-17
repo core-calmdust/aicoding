@@ -24,7 +24,7 @@
   --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
   --cell: calc(var(--board) / 8);
   --vh: 100vh;
-  --board: calc(min(var(--vh) - 44px, 100vw - 410px, 980px) / 1.105);
+  --board: calc(min(var(--vh) - 44px, 100vw - 390px, 1600px) / 1.105);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100dvh){:root{--vh:100dvh}}
@@ -44,10 +44,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .app{
   height:var(--vh);
   display:grid;
-  grid-template-columns: auto 340px;
+  grid-template-columns: auto minmax(320px, 1fr);
   grid-template-areas:"board side";
   gap:28px;
-  justify-content:center;
+  justify-content:stretch;
   align-items:center;
   padding:20px;
 }
@@ -172,7 +172,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .review-bar button:hover{border-color:var(--brass2)}
 
 /* ---------------------------------------------------------------- side */
-.side{grid-area:side;display:flex;flex-direction:column;gap:12px;width:340px;height:calc(var(--board) * 1.105);min-height:0;max-height:calc(var(--vh) - 40px)}
+.side{grid-area:side;width:100%;height:calc(var(--board) * 1.105);min-height:0;max-height:calc(var(--vh) - 40px);container-type:inline-size}
+.side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+
 .kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
 .kifu-card .kifu{flex:1;min-height:0;max-height:none}
 .brand{display:flex;align-items:baseline;justify-content:space-between}
@@ -269,7 +271,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 @media (max-aspect-ratio: 1/1){
   :root{--board:calc(min(100vw - 20px, var(--vh) - 330px, 900px) / 1.105)}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px}
-  .side{display:contents}
+  .side, .side-in{display:contents}
   .side > *{width:calc(var(--board) * 1.105);max-width:100%;flex:none}
   .brand{order:-3;height:28px;align-items:center}
   .brand h1{font-size:22px}
@@ -295,8 +297,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 }
 @media (min-aspect-ratio: 1/1) and (max-height: 600px), (min-aspect-ratio: 1/1) and (max-width: 1000px){
   :root{--board:calc(min(var(--vh) - 24px, 100vw - 312px, 980px) / 1.105)}
-  .app{padding:12px;gap:16px;grid-template-columns:auto 270px}
-  .side{width:270px;gap:8px;max-height:calc(var(--vh) - 24px)}
+  .app{padding:12px;gap:16px;grid-template-columns:auto minmax(260px,1fr)}
+  .side{max-height:calc(var(--vh) - 24px)}
+  .side-in{gap:8px}
   .brand h1{font-size:20px}
   .card{padding:8px 10px}
   .player{padding:6px 8px}
@@ -305,6 +308,15 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   .btn{padding:6px 2px;font-size:11px}
   .btn svg{width:16px;height:16px}
   .info-line{display:none}
+}
+/* wide side panel: stretch to fill the remaining width */
+@container (min-width: 420px){
+  #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
+  #evalCard .graph{flex:1;height:auto;min-height:50px}
+  .kifu-card{flex:1 1 0}
+  .kifu{grid-template-columns:repeat(10,1fr);font-size:13px}
+  .player .count{font-size:clamp(40px, 5cqw, 64px)}
+  .brand h1{font-size:clamp(30px, 4.5cqw, 44px)}
 }
 </style>
 </head>
@@ -324,7 +336,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
     </div>
   </div>
 
-  <aside class="side">
+  <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>Reversi<small>V4</small></h1>
       <a href="../">← ゲーム一覧</a>
@@ -361,7 +373,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
       <div class="kifu" id="kifu"></div>
     </div>
     <div class="info-line" id="infoLine"></div>
-  </aside>
+  </div></aside>
 </div>
 
 <!-- new game -->
@@ -721,7 +733,7 @@ function renderGraph() {
     </defs>
     <path d="${area}" fill="rgba(0,0,0,.55)" clip-path="url(#top)"/>
     <path d="${area}" fill="rgba(235,235,228,.55)" clip-path="url(#bot)"/>
-    <line class="zero" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
+    <line class="zero" vector-effect="non-scaling-stroke" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
     <path d="${path}" fill="none" stroke="rgba(226,194,117,.9)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
     <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
 }
