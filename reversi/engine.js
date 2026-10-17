@@ -727,6 +727,22 @@ const LEVELS = [
   { depth: 60, exact: 20, time: 5000 },   // 10
 ];
 
+// ------------------------------------------------------------ opening book (self-generated)
+let BOOK = null;
+const SYMS = [];
+for (let t = 0; t < 8; t++) { const m = new Int8Array(64); for (let q = 0; q < 64; q++) { let r = q >> 3, c = q & 7; if (t & 1) c = 7 - c; if (t & 2) r = 7 - r; if (t & 4) { const x = r; r = c; c = x; } m[q] = r * 8 + c; } SYMS.push(m); }
+function symBits(pl, ph, ol, oh, m) { let a = 0, b = 0, c = 0, d = 0; for (let q = 0; q < 64; q++) { const t = m[q]; if (bit(pl, ph, q)) { if (t < 32) a |= 1 << t; else b |= 1 << (t - 32); } else if (bit(ol, oh, q)) { if (t < 32) c |= 1 << t; else d |= 1 << (t - 32); } } return [a, b, c, d]; }
+const hex8 = x => (x >>> 0).toString(16).padStart(8, '0');
+function bookLookup(pl, ph, ol, oh) {
+  if (!BOOK) return null;
+  let best = null, bt = 0;
+  for (let t = 0; t < 8; t++) { const k = symBits(pl, ph, ol, oh, SYMS[t]).map(hex8).join(''); if (best === null || k < best) { best = k; bt = t; } }
+  const e = BOOK[best]; if (!e) return null;
+  const inv = new Int8Array(64); for (let q = 0; q < 64; q++) inv[SYMS[bt][q]] = q;
+  return e.map(([m, v]) => ({ move: inv[m], score: v }));
+}
+function setBook(obj) { BOOK = obj; }
+
 /**
  * think(cells, toMove, opts) -> {move, score, depth, nodes, exact, ms}
  * cells: array(64) 0 empty / 1 black / 2 white; toMove: 1 or 2
@@ -752,6 +768,14 @@ function think(cells, toMove, opts, onProgress) {
   const t0 = Date.now();
   nodes = 0; aborted = false;
   if (moves.length === 0) return { move: -1, score: 0, depth: 0, nodes: 0, ms: 0 };
+  if ((opts.level || 7) >= 7 && !opts.noBook) {
+    const bk = bookLookup(pl, ph, ol, oh);
+    if (bk && bk.length) {
+      const top = bk[0].score, margin = opts.bookMargin ?? 0.8;
+      const c = bk.filter(x => x.score >= top - margin && moves.includes(x.move));
+      if (c.length) { const r = (opts.random || Math.random)(); const pick = c[Math.floor(r * c.length)]; return { move: pick.move, score: pick.score, depth: 0, nodes: 0, ms: Date.now() - t0, book: true }; }
+    }
+  }
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
   const time = opts.time ?? lv.time;
   const rand = opts.random || Math.random;
@@ -892,7 +916,7 @@ function searchMove(cells, toMove, move, depth, alpha, beta, mode, dl) {
   } catch (e) { if (e === ABORT) return null; throw e; }
 }
 const API = {
-  think, analyze, searchMove, setWeights, clearTT, toBits, legalList, childOf, featureIndices,
+  think, analyze, searchMove, setWeights, setBook, bookLookup, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
   TUNE, MPC, NINST, NEXT, PS_V1, PS_V2, get PHASE_SIZE() { return PHASE_SIZE; }, PATTERNS, LEVELS, SCALE,
@@ -918,6 +942,7 @@ if (typeof self !== 'undefined' && typeof self.postMessage === 'function' && typ
       const v = searchMove(m.cells, m.toMove, m.move, m.depth, m.alpha, m.beta, m.mode, m.deadline);
       self.postMessage({ type: 'jobDone', id: m.id, move: m.move, value: v, nodes });
     } else if (m.type === 'mpc') Object.assign(MPC, m.params);
+    else if (m.type === 'book') setBook(m.book);
     else if (m.type === 'clear') clearTT();
   };
 }

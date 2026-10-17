@@ -647,11 +647,14 @@ weightsReady = (async () => {
   return weights;
 })();
 
+let book = null;
+const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() => null).then(b => (book = b));
 function makeWorker(onmsg) {
   const w = new Worker('engine.js');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
+  if (book) w.postMessage({ type: 'book', book }); else bookReady.then(b => { if (b) w.postMessage({ type: 'book', book: b }); });
   return w;
 }
 let aiWorker = null, anaWorker = null;
@@ -1026,7 +1029,7 @@ async function schedule(animInfo) {
     await weightsReady;
     if (token !== busyToken) return;
     const lv = levelFor(color), [cb, cw] = counts(p.cells);
-    const usePar = NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 50 && legalMoves(p.cells, color).length > 1;
+    const usePar = NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 45 && legalMoves(p.cells, color).length > 1;
     const res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, m => {
       if (token !== busyToken) return;
       setStatus(color, `${t('depth', { d: m.depth })}  ${fmt(m.score)}`, true);
@@ -1038,7 +1041,7 @@ async function schedule(animInfo) {
     if (token !== busyToken) return;
     if (res.move < 0) return;
     p.evalB = color === BLACK ? res.score : -res.score;
-    const info = res.exact ? `${t('exact')} ${fmt(res.score)}` : `${t('depth', { d: res.depth })}  ${fmt(res.score)}`;
+    const info = res.book ? `${t('book')} ${fmt(res.score)}` : res.exact ? `${t('exact')} ${fmt(res.score)}` : `${t('depth', { d: res.depth })}  ${fmt(res.score)}`;
     const a = applyMove(res.move);
     playPlace(a.flips.length);
     update(a);

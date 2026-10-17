@@ -1,7 +1,7 @@
 // UI strings for Reversi V4 — ja / en / zh (Simplified) / ko
 window.I18N = {
 ja: {
-  'meta.title': 'Reversi V4', 'ng.lesson': 'レッスン', 'ng.toLessons': 'レッスンを選ぶ', 'lang.name': '日本語',
+  'meta.title': 'Reversi V4', 'book': '定石', 'ng.lesson': 'レッスン', 'ng.toLessons': 'レッスンを選ぶ', 'lang.name': '日本語',
   'back': '← ゲーム一覧', 'black': '黒', 'white': '白', 'you': 'あなた', 'ai': 'AI', 'eval': '形勢', 'kifu': '棋譜', 'copy': 'コピー', 'copy.title': '棋譜をコピー',
   'btn.new': '新規', 'btn.new.title': '新しい対局', 'btn.undo': '待った', 'btn.undo.title': '待った (Ctrl+Z)', 'btn.hint': 'ヒント', 'btn.hint.title': 'ヒント（各手の評価値）',
   'btn.lesson': 'レッスン', 'btn.lesson.title': 'レッスン（段階的に学ぶ）', 'btn.sound': '音', 'btn.sound.title': '効果音',
@@ -33,7 +33,7 @@ ja: {
   'r.finalCmp': '{m} の結果は最終石差 {a}、{b} なら {c} です。', 'sep': '、', 'end': '。', 'join': '・',
 },
 en: {
-  'meta.title': 'Reversi V4', 'ng.lesson': 'Lessons', 'ng.toLessons': 'Choose a lesson', 'lang.name': 'English',
+  'meta.title': 'Reversi V4', 'book': 'book', 'ng.lesson': 'Lessons', 'ng.toLessons': 'Choose a lesson', 'lang.name': 'English',
   'back': '← All games', 'black': 'Black', 'white': 'White', 'you': 'You', 'ai': 'AI', 'eval': 'Evaluation', 'kifu': 'Moves', 'copy': 'Copy', 'copy.title': 'Copy the move record',
   'btn.new': 'New', 'btn.new.title': 'New game', 'btn.undo': 'Undo', 'btn.undo.title': 'Undo (Ctrl+Z)', 'btn.hint': 'Hint', 'btn.hint.title': 'Hint (score of every move)',
   'btn.lesson': 'Lessons', 'btn.lesson.title': 'Lessons (learn step by step)', 'btn.sound': 'Sound', 'btn.sound.title': 'Sound effects',
@@ -65,7 +65,7 @@ en: {
   'r.finalCmp': '{m} ends at {a}; {b} ends at {c}.', 'sep': ', ', 'end': '.', 'join': ' / ',
 },
 zh: {
-  'meta.title': 'Reversi V4', 'ng.lesson': '课程', 'ng.toLessons': '选择课程', 'lang.name': '中文',
+  'meta.title': 'Reversi V4', 'book': '定式', 'ng.lesson': '课程', 'ng.toLessons': '选择课程', 'lang.name': '中文',
   'back': '← 游戏列表', 'black': '黑', 'white': '白', 'you': '你', 'ai': 'AI', 'eval': '形势', 'kifu': '棋谱', 'copy': '复制', 'copy.title': '复制棋谱',
   'btn.new': '新局', 'btn.new.title': '新对局', 'btn.undo': '悔棋', 'btn.undo.title': '悔棋 (Ctrl+Z)', 'btn.hint': '提示', 'btn.hint.title': '提示（每步的评估值）',
   'btn.lesson': '课程', 'btn.lesson.title': '课程（循序渐进地学习）', 'btn.sound': '声音', 'btn.sound.title': '音效',
@@ -97,7 +97,7 @@ zh: {
   'r.finalCmp': '{m} 的结果为最终子数差 {a}，{b} 则为 {c}。', 'sep': '，', 'end': '。', 'join': '・',
 },
 ko: {
-  'meta.title': 'Reversi V4', 'ng.lesson': '레슨', 'ng.toLessons': '레슨 고르기', 'lang.name': '한국어',
+  'meta.title': 'Reversi V4', 'book': '정석', 'ng.lesson': '레슨', 'ng.toLessons': '레슨 고르기', 'lang.name': '한국어',
   'back': '← 게임 목록', 'black': '흑', 'white': '백', 'you': '나', 'ai': 'AI', 'eval': '형세', 'kifu': '기보', 'copy': '복사', 'copy.title': '기보 복사',
   'btn.new': '새 게임', 'btn.new.title': '새 대국', 'btn.undo': '무르기', 'btn.undo.title': '무르기 (Ctrl+Z)', 'btn.hint': '힌트', 'btn.hint.title': '힌트 (각 수의 평가값)',
   'btn.lesson': '레슨', 'btn.lesson.title': '레슨 (단계별 학습)', 'btn.sound': '소리', 'btn.sound.title': '효과음',
