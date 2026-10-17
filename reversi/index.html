@@ -1303,10 +1303,12 @@ async function loadLessons() {
   return lessonData;
 }
 const LT = l => (l.text && (l.text[LANG] || l.text.ja)) || l;
-// 20 points for the best move; deductions by how much worse the chosen move is (2 points per disc lost)
-function problemPoints(pr, mine, best) {
-  if (pr.type === 'flips') return best > 0 ? Math.max(0, Math.round(20 * mine / best)) : 20;
-  return Math.max(0, Math.min(20, Math.round(20 - Math.max(0, best - mine) * 2)));
+// rank-based points: the best move scores 20, the worst 0, linear in between by rank among the candidates
+function problemPoints(pr, mine, best, all) {
+  const n = all.length;
+  if (n <= 1 || mine >= best - 1e-9) return 20;
+  const r = all.filter(v => v > mine + 1e-9).length;          // how many moves are strictly better
+  return Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1)));
 }
 function progressOf(id) {   // migrate old "correct count" progress to points
   const p = lessonProgress[id] || { best: 0, clear: false, v: 2 };
@@ -1452,7 +1454,7 @@ function lessonAnswer(sq) {
   let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
   const mine = sc[sq], tol = pr.tol || 0;
   const ok = mine >= best - tol - 1e-9;
-  const pts = problemPoints(pr, mine, best);
+  const pts = problemPoints(pr, mine, best, moves.map(m => sc[m]));
   L.results.push(pts);
   playPlace(pts >= 16 ? 3 : 0);
   clearHints(); boardEl.querySelectorAll('.sqlbl, .odot, .edgeband, .mark').forEach(e => e.remove());
@@ -1475,7 +1477,7 @@ function answerFeedback(sq) {
   const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
   for (const m of moves) sc[m] = F[m][0];
   let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
-  const mine = sc[sq], ok = mine >= best - (pr.tol || 0) - 1e-9, pts = problemPoints(pr, mine, best);
+  const mine = sc[sq], ok = mine >= best - (pr.tol || 0) - 1e-9, pts = problemPoints(pr, mine, best, moves.map(m => sc[m]));
   const bestMoves = moves.filter(m => sc[m] === best), bm = bestMoves[0];
   const bests = bestMoves.map(sqName).join(t('join'));
   const lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
