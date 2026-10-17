@@ -1,7 +1,7 @@
 // UI strings for Reversi V4 — ja / en / zh (Simplified) / ko
 window.I18N = {
 ja: {
-  'meta.title': 'Reversi V4', 'ls.goal': 'このステップの目的：', 'lbl.reserve': '余', 'ls.exam': '卒業試験', 'ls.examNote': '卒業試験です。ヒントを押しても盤面の印は出ません。ここまでの考え方だけで解いてみましょう。', 'lbl.corner': '隅', 'book': '定石', 'ng.lesson': 'レッスン', 'ng.toLessons': 'レッスンを選ぶ', 'lang.name': '日本語',
+  'meta.title': 'Reversi V4', 'u.pt': '{n}点', 'fb.perfect': '満点！', 'fb.good': '好手！', 'fb.bad': '悪手…', 'ls.total': '合計 {n}点', 'ls.passed': '合格！', 'ls.failed': '不合格…', 'ls.needPass': '75点以上で合格です。', 'ls.goal': 'このステップの目的：', 'lbl.reserve': '余', 'ls.exam': '卒業試験', 'ls.examNote': '卒業試験です。ヒントを押しても盤面の印は出ません。ここまでの考え方だけで解いてみましょう。', 'lbl.corner': '隅', 'book': '定石', 'ng.lesson': 'レッスン', 'ng.toLessons': 'レッスンを選ぶ', 'lang.name': '日本語',
   'back': '← ゲーム一覧', 'black': '黒', 'white': '白', 'you': 'あなた', 'ai': 'AI', 'eval': '形勢', 'kifu': '棋譜', 'copy': 'コピー', 'copy.title': '棋譜をコピー',
   'btn.new': '新規', 'btn.new.title': '新しい対局', 'btn.undo': '待った', 'btn.undo.title': '待った (Ctrl+Z)', 'btn.hint': 'ヒント', 'btn.hint.title': 'ヒント（各手の評価値）',
   'btn.lesson': 'レッスン', 'btn.lesson.title': 'レッスン（段階的に学ぶ）', 'btn.sound': '音', 'btn.sound.title': '効果音',
@@ -17,7 +17,7 @@ ja: {
   'q.best': '最善手', 'q.good': '好手', 'q.dubious': '疑問手', 'q.bad': '悪手', 'q.loss': '−{l}石  最善は {m}',
   'lv': ['', '入門', '初級', '初級+', '中級', '中級+', '上級', '上級+', '達人', '名人', '最強'],
   'lvd': ['', 'ほぼ気まぐれ', '1手読み', '3手読み', '4手読み', '6手読み', '8手読み・終盤14マス完全読み', '最大10手読み・終盤16マス', '約1.5秒・終盤18マス', '約3秒・終盤19マス', '約5秒・終盤20マス'],
-  'ls.title': 'レッスン', 'ls.desc': 'ステップごとに考え方を学び、練習問題で身につけよう。各ステップ5問、4問正解でクリア。', 'ls.back': '戻る', 'ls.start': '問題をはじめる', 'ls.toGame': '対局に戻る', 'ls.retry': 'もう一度', 'ls.nextStep': '次のステップへ',
+  'ls.title': 'レッスン', 'ls.desc': 'ステップごとに考え方を学び、練習問題で身につけよう。各ステップ5問・1問20点の100点満点。最善手が20点で、悪い手ほど減点。75点以上で合格。', 'ls.back': '戻る', 'ls.start': '問題をはじめる', 'ls.toGame': '対局に戻る', 'ls.retry': 'もう一度', 'ls.nextStep': '次のステップへ',
   'ls.hint': 'ヒント', 'ls.next': '次の問題', 'ls.result': '結果を見る', 'ls.quit': 'やめる', 'ls.clear': 'クリア', 'ls.notyet': '未挑戦', 'ls.fail': 'レッスンを読み込めませんでした。',
   'ls.stepq': 'STEP {s} ・ 問題 {i}/5', 'ls.turn': '{c}の番です。', 'ls.stepClear': 'ステップクリア！', 'ls.almost': 'もう一息！', 'ls.score': '5問中 <b>{n}</b> 問正解。', 'ls.need4': '4問正解でクリアです。',
   'u.disc': '{n}石', 'u.flip': '{n}枚', 'u.place': '{n}か所', 'u.sq': '{n}マス', 'odd': '奇数', 'even': '偶数',
@@ -33,7 +33,7 @@ ja: {
   'r.finalCmp': '{m} の結果は最終石差 {a}、{b} なら {c} です。', 'sep': '、', 'end': '。', 'join': '・',
 },
 en: {
-  'meta.title': 'Reversi V4', 'ls.goal': 'Goal of this step:', 'lbl.reserve': 'S', 'ls.exam': 'Final exam', 'ls.examNote': 'Final exam: the hint no longer marks the board. Solve it with what you have learned.', 'lbl.corner': 'Corner', 'book': 'book', 'ng.lesson': 'Lessons', 'ng.toLessons': 'Choose a lesson', 'lang.name': 'English',
+  'meta.title': 'Reversi V4', 'u.pt': '{n} pts', 'fb.perfect': 'Perfect!', 'fb.good': 'Good move!', 'fb.bad': 'Mistake…', 'ls.total': 'Total {n} pts', 'ls.passed': 'Passed!', 'ls.failed': 'Not passed…', 'ls.needPass': '75 points or more to pass.', 'ls.goal': 'Goal of this step:', 'lbl.reserve': 'S', 'ls.exam': 'Final exam', 'ls.examNote': 'Final exam: the hint no longer marks the board. Solve it with what you have learned.', 'lbl.corner': 'Corner', 'book': 'book', 'ng.lesson': 'Lessons', 'ng.toLessons': 'Choose a lesson', 'lang.name': 'English',
   'back': '← All games', 'black': 'Black', 'white': 'White', 'you': 'You', 'ai': 'AI', 'eval': 'Evaluation', 'kifu': 'Moves', 'copy': 'Copy', 'copy.title': 'Copy the move record',
   'btn.new': 'New', 'btn.new.title': 'New game', 'btn.undo': 'Undo', 'btn.undo.title': 'Undo (Ctrl+Z)', 'btn.hint': 'Hint', 'btn.hint.title': 'Hint (score of every move)',
   'btn.lesson': 'Lessons', 'btn.lesson.title': 'Lessons (learn step by step)', 'btn.sound': 'Sound', 'btn.sound.title': 'Sound effects',
@@ -49,7 +49,7 @@ en: {
   'q.best': 'Best move', 'q.good': 'Good', 'q.dubious': 'Inaccuracy', 'q.bad': 'Mistake', 'q.loss': '−{l} discs  best: {m}',
   'lv': ['', 'Beginner', 'Novice', 'Novice+', 'Intermediate', 'Intermediate+', 'Advanced', 'Advanced+', 'Expert', 'Master', 'Strongest'],
   'lvd': ['', 'mostly random', '1-ply search', '3-ply search', '4-ply search', '6-ply search', '8-ply, solves last 14', 'up to 10-ply, solves last 16', '~1.5 s, solves last 18', '~3 s, solves last 19', '~5 s, solves last 20'],
-  'ls.title': 'Lessons', 'ls.desc': 'Learn one idea per step and practice it with problems. 5 problems per step — get 4 right to clear.', 'ls.back': 'Back', 'ls.start': 'Start problems', 'ls.toGame': 'Back to game', 'ls.retry': 'Try again', 'ls.nextStep': 'Next step',
+  'ls.title': 'Lessons', 'ls.desc': 'Learn one idea per step and practice it with problems. 5 problems × 20 points: the best move scores 20, weaker moves lose points. 75 or more to pass.', 'ls.back': 'Back', 'ls.start': 'Start problems', 'ls.toGame': 'Back to game', 'ls.retry': 'Try again', 'ls.nextStep': 'Next step',
   'ls.hint': 'Hint', 'ls.next': 'Next', 'ls.result': 'See result', 'ls.quit': 'Quit', 'ls.clear': 'Cleared', 'ls.notyet': 'Not tried', 'ls.fail': 'Could not load lessons.',
   'ls.stepq': 'STEP {s} · Problem {i}/5', 'ls.turn': '{c} to move. ', 'ls.stepClear': 'Step cleared!', 'ls.almost': 'Almost there!', 'ls.score': '<b>{n}</b> of 5 correct. ', 'ls.need4': 'Get 4 right to clear.',
   'u.disc': '{n} discs', 'u.flip': '{n}', 'u.place': '{n}', 'u.sq': '{n}', 'odd': 'odd', 'even': 'even',
@@ -65,7 +65,7 @@ en: {
   'r.finalCmp': '{m} ends at {a}; {b} ends at {c}.', 'sep': ', ', 'end': '.', 'join': ' / ',
 },
 zh: {
-  'meta.title': 'Reversi V4', 'ls.goal': '本步目标：', 'lbl.reserve': '余', 'ls.exam': '毕业考试', 'ls.examNote': '毕业考试：按提示也不会在棋盘上显示标记。只靠学到的思路来解吧。', 'lbl.corner': '角', 'book': '定式', 'ng.lesson': '课程', 'ng.toLessons': '选择课程', 'lang.name': '中文',
+  'meta.title': 'Reversi V4', 'u.pt': '{n}分', 'fb.perfect': '满分！', 'fb.good': '好棋！', 'fb.bad': '坏棋…', 'ls.total': '合计 {n}分', 'ls.passed': '合格！', 'ls.failed': '不合格…', 'ls.needPass': '75分以上为合格。', 'ls.goal': '本步目标：', 'lbl.reserve': '余', 'ls.exam': '毕业考试', 'ls.examNote': '毕业考试：按提示也不会在棋盘上显示标记。只靠学到的思路来解吧。', 'lbl.corner': '角', 'book': '定式', 'ng.lesson': '课程', 'ng.toLessons': '选择课程', 'lang.name': '中文',
   'back': '← 游戏列表', 'black': '黑', 'white': '白', 'you': '你', 'ai': 'AI', 'eval': '形势', 'kifu': '棋谱', 'copy': '复制', 'copy.title': '复制棋谱',
   'btn.new': '新局', 'btn.new.title': '新对局', 'btn.undo': '悔棋', 'btn.undo.title': '悔棋 (Ctrl+Z)', 'btn.hint': '提示', 'btn.hint.title': '提示（每步的评估值）',
   'btn.lesson': '课程', 'btn.lesson.title': '课程（循序渐进地学习）', 'btn.sound': '声音', 'btn.sound.title': '音效',
@@ -81,7 +81,7 @@ zh: {
   'q.best': '最佳', 'q.good': '好棋', 'q.dubious': '疑问手', 'q.bad': '坏棋', 'q.loss': '−{l}子  最佳为 {m}',
   'lv': ['', '入门', '初级', '初级+', '中级', '中级+', '高级', '高级+', '达人', '名人', '最强'],
   'lvd': ['', '几乎随机', '搜索1步', '搜索3步', '搜索4步', '搜索6步', '搜索8步・残局14格完全解', '最多搜索10步・残局16格', '约1.5秒・残局18格', '约3秒・残局19格', '约5秒・残局20格'],
-  'ls.title': '课程', 'ls.desc': '每一步学习一个思路，再通过练习题掌握。每步5题，答对4题即可通关。', 'ls.back': '返回', 'ls.start': '开始做题', 'ls.toGame': '返回对局', 'ls.retry': '再试一次', 'ls.nextStep': '下一步',
+  'ls.title': '课程', 'ls.desc': '每一步学习一个思路，再通过练习题掌握。每步5题，每题20分，满分100分。最佳着法得20分，越差扣分越多。75分以上为合格。', 'ls.back': '返回', 'ls.start': '开始做题', 'ls.toGame': '返回对局', 'ls.retry': '再试一次', 'ls.nextStep': '下一步',
   'ls.hint': '提示', 'ls.next': '下一题', 'ls.result': '查看结果', 'ls.quit': '退出', 'ls.clear': '已通关', 'ls.notyet': '未挑战', 'ls.fail': '无法加载课程。',
   'ls.stepq': 'STEP {s} ・ 第{i}/5题', 'ls.turn': '轮到{c}。', 'ls.stepClear': '通关！', 'ls.almost': '差一点！', 'ls.score': '5题中答对 <b>{n}</b> 题。', 'ls.need4': '答对4题即可通关。',
   'u.disc': '{n}子', 'u.flip': '{n}枚', 'u.place': '{n}处', 'u.sq': '{n}格', 'odd': '奇数', 'even': '偶数',
@@ -97,7 +97,7 @@ zh: {
   'r.finalCmp': '{m} 的结果为最终子数差 {a}，{b} 则为 {c}。', 'sep': '，', 'end': '。', 'join': '・',
 },
 ko: {
-  'meta.title': 'Reversi V4', 'ls.goal': '이 단계의 목적:', 'lbl.reserve': '여', 'ls.exam': '졸업 시험', 'ls.examNote': '졸업 시험입니다. 힌트를 눌러도 판 위에 표시가 나오지 않습니다. 지금까지 배운 사고방식만으로 풀어 보세요.', 'lbl.corner': '모서리', 'book': '정석', 'ng.lesson': '레슨', 'ng.toLessons': '레슨 고르기', 'lang.name': '한국어',
+  'meta.title': 'Reversi V4', 'u.pt': '{n}점', 'fb.perfect': '만점!', 'fb.good': '호수!', 'fb.bad': '악수…', 'ls.total': '합계 {n}점', 'ls.passed': '합격!', 'ls.failed': '불합격…', 'ls.needPass': '75점 이상이면 합격입니다.', 'ls.goal': '이 단계의 목적:', 'lbl.reserve': '여', 'ls.exam': '졸업 시험', 'ls.examNote': '졸업 시험입니다. 힌트를 눌러도 판 위에 표시가 나오지 않습니다. 지금까지 배운 사고방식만으로 풀어 보세요.', 'lbl.corner': '모서리', 'book': '정석', 'ng.lesson': '레슨', 'ng.toLessons': '레슨 고르기', 'lang.name': '한국어',
   'back': '← 게임 목록', 'black': '흑', 'white': '백', 'you': '나', 'ai': 'AI', 'eval': '형세', 'kifu': '기보', 'copy': '복사', 'copy.title': '기보 복사',
   'btn.new': '새 게임', 'btn.new.title': '새 대국', 'btn.undo': '무르기', 'btn.undo.title': '무르기 (Ctrl+Z)', 'btn.hint': '힌트', 'btn.hint.title': '힌트 (각 수의 평가값)',
   'btn.lesson': '레슨', 'btn.lesson.title': '레슨 (단계별 학습)', 'btn.sound': '소리', 'btn.sound.title': '효과음',
@@ -113,7 +113,7 @@ ko: {
   'q.best': '최선수', 'q.good': '호수', 'q.dubious': '의문수', 'q.bad': '악수', 'q.loss': '−{l}개  최선은 {m}',
   'lv': ['', '입문', '초급', '초급+', '중급', '중급+', '상급', '상급+', '달인', '명인', '최강'],
   'lvd': ['', '거의 무작위', '1수 읽기', '3수 읽기', '4수 읽기', '6수 읽기', '8수 읽기・종반 14칸 완전 해석', '최대 10수 읽기・종반 16칸', '약 1.5초・종반 18칸', '약 3초・종반 19칸', '약 5초・종반 20칸'],
-  'ls.title': '레슨', 'ls.desc': '단계마다 사고방식을 배우고 연습 문제로 익히세요. 단계마다 5문제, 4문제를 맞히면 클리어.', 'ls.back': '뒤로', 'ls.start': '문제 시작', 'ls.toGame': '대국으로 돌아가기', 'ls.retry': '다시 하기', 'ls.nextStep': '다음 단계로',
+  'ls.title': '레슨', 'ls.desc': '단계마다 사고방식을 배우고 연습 문제로 익히세요. 단계마다 5문제・문제당 20점, 100점 만점. 최선수는 20점, 나쁜 수일수록 감점. 75점 이상이면 합격.', 'ls.back': '뒤로', 'ls.start': '문제 시작', 'ls.toGame': '대국으로 돌아가기', 'ls.retry': '다시 하기', 'ls.nextStep': '다음 단계로',
   'ls.hint': '힌트', 'ls.next': '다음 문제', 'ls.result': '결과 보기', 'ls.quit': '그만두기', 'ls.clear': '클리어', 'ls.notyet': '미도전', 'ls.fail': '레슨을 불러오지 못했습니다.',
   'ls.stepq': 'STEP {s} ・ 문제 {i}/5', 'ls.turn': '{c} 차례입니다. ', 'ls.stepClear': '단계 클리어!', 'ls.almost': '조금만 더!', 'ls.score': '5문제 중 <b>{n}</b>문제 정답. ', 'ls.need4': '4문제를 맞히면 클리어입니다.',
   'u.disc': '{n}개', 'u.flip': '{n}개', 'u.place': '{n}곳', 'u.sq': '{n}칸', 'odd': '홀수', 'even': '짝수',
