@@ -268,6 +268,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 #segMode{flex-wrap:wrap}
 #segMode button{flex:1 0 30%}
 @media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
+.ls-tabs{margin-bottom:16px}
+.ls-tabs button{font-size:13.5px;padding:9px 4px}
+.op-seq{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
+.op-seq b{color:var(--accent)}
+.op-lines{font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.5}
 .seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
 .level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
 .level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
@@ -648,8 +653,9 @@ body.in-lesson .controls{display:none}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <h2 data-i18n="ls.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button><button data-v="open" data-i18n="tab.open"></button></div>
+      <h2 id="lsListTitle"></h2>
+      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" id="lsListDesc"></p>
       <div class="lesson-list" id="lessonList"></div>
       <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
     </div>
@@ -671,6 +677,7 @@ body.in-lesson .controls{display:none}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button><button data-v="open" data-i18n="tab.open"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -1074,8 +1081,19 @@ function renderInfo() {
   $('#reviewBar').classList.toggle('show', reviewing);
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur });
   const [tb, tw] = counts(positions[positions.length - 1].cells);
-  $('#infoLine').textContent = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}`;
+  const opn = gameOpening();
+  $('#infoLine').textContent = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}` + (opn ? `  ·  ${t('info.opening', { n: opn })}` : '');
   renderReview();
+}
+// name of the opening played so far (first move normalised to f5 by symmetry)
+const OP_SYM = { 37: s => s, 44: s => (s & 7) * 8 + (s >> 3), 26: s => 63 - s, 19: s => (7 - (s & 7)) * 8 + (7 - (s >> 3)) };
+function gameOpening() {
+  if (!openData || !openData.names || positions.length < 2 || lesson || puzzle) return null;
+  const f = OP_SYM[positions[1].last]; if (!f) return null;
+  const upto = Math.min(cur, positions.length - 1);
+  let str = ''; for (let i = 1; i <= upto; i++) { if (positions[i].last < 0) return null; str += sqName(f(positions[i].last)); }
+  let b = null; for (const x of openData.names) if (str.startsWith(x.m) && (!b || x.m.length > b.m.length)) b = x;
+  return b ? PT(b.n) : null;
 }
 function renderGraph() {
   const svg = $('#graph'); const W = 300, H = 74, n = Math.max(positions.length, 20);
@@ -1431,8 +1449,32 @@ function progressOf(id) {   // migrate old "correct count" progress to points
   return p;
 }
 function saveLessonProgress() { try { localStorage.setItem(LESSON_STORE, JSON.stringify(lessonProgress)); } catch (e) {} }
+let lessonSrc = 'lesson';      // 'lesson' | 'open'
+let openData = null;
+async function loadOpenings() { if (!openData) { try { openData = await fetch('openings.json').then(r => r.json()); } catch (e) { openData = { sets: [] }; } } return openData; }
+const curSets = () => lessonSrc === 'open' ? (openData ? openData.sets : []) : (lessonData ? lessonData.lessons : []);
+function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); openPuzzles(); }
+  else { hideOverlay('#puzzleOverlay'); b.dataset.v === 'open' ? openOpenings() : openLessons(); }
+}));
+async function openOpenings() {
+  const d = await loadOpenings();
+  lessonSrc = 'open'; selTab('open');
+  $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
+  $('#lessonList').innerHTML = d.sets.map((l, i) => {
+    const pr = lessonProgress[l.id] ? progressOf(l.id) : null;
+    const st = pr ? (pr.clear ? `<span class="st clear">${t('ls.clear')} ✓ ${t('u.pt', { n: pr.best })}</span>` : `<span class="st">${t('u.pt', { n: pr.best })}</span>`) : `<span class="st">${t('ls.notyet')}</span>`;
+    const x = LT(l);
+    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${x.title}</b><small>${x.short}</small><span class="op-lines">${l.lines.map(n => PT(n.name)).join(' · ')}</span></span>${st}</button>`;
+  }).join('') + (d.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${PT(d.credit)}</p>` : '');
+  showLessonView('list'); showOverlay('#lessonOverlay');
+}
 async function openLessons() {
   const d = await loadLessons();
+  lessonSrc = 'lesson'; selTab('lesson');
+  $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
   const list = $('#lessonList');
   list.innerHTML = d.lessons.map((l, i) => {
     const pr = lessonProgress[l.id] ? progressOf(l.id) : null;
@@ -1450,9 +1492,9 @@ function showLessonView(v) {
 }
 let introIdx = 0;
 function openIntro(i) {
-  introIdx = i; const l = lessonData.lessons[i];
+  introIdx = i; const l = curSets()[i];
   const x = LT(l);
-  $('#liStep').textContent = `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
+  $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
   $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '');
   showLessonView('intro');
 }
@@ -1461,19 +1503,25 @@ $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonBack').onclick = () => showLessonView('list');
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
-$('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (n < lessonData.lessons.length) openIntro(n); else { endLesson(); openLessons(); } };
+$('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (n < curSets().length) openIntro(n); else { endLesson(); lessonSrc === 'open' ? openOpenings() : openLessons(); } };
 $('#btnLesson').onclick = openLessons;
 
 let savedGame = null;
 function startLesson(i) {
-  const l = lessonData.lessons[i];
+  const l = curSets()[i];
   busyToken++; cancelAI(); cancelAna();
   if (!lesson) savedGame = { positions, cur, reviewing };
   const shuf = a => { a = a.slice(); for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; } return a; };
   const std = shuf(l.problems.filter(p => !p.trap)), trap = shuf(l.problems.filter(p => p.trap));
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
   const rest = shuf([...std.slice(1, 5 - nTrap), ...trap.slice(0, nTrap)]);
-  const probs = std.length ? [std[0], ...rest] : rest;   // problem 1 (tutorial) is always a standard one
+  let probs = std.length ? [std[0], ...rest] : rest;   // problem 1 (tutorial) is always a standard one
+  if (l.kind === 'opening') {   // 5 problems from different lines where possible, early moves first
+    const byLine = {}; shuf(l.problems).forEach(p => { (byLine[p.line] = byLine[p.line] || []).push(p); });
+    const lines = shuf(Object.keys(byLine)); probs = [];
+    for (let r = 0; probs.length < 5 && r < 10; r++) for (const ln of lines) { if (probs.length < 5 && byLine[ln][r]) probs.push(byLine[ln][r]); }
+    probs.sort((a, b) => a.k - b.k);
+  }
   lesson = { idx: i, l, probs, i: 0, results: [], answered: false, hintShown: false };
   document.body.classList.add('in-lesson');
   hideOverlay('#resultOverlay');
@@ -1482,7 +1530,8 @@ function startLesson(i) {
 function loadProblem() {
   const pr = lesson.probs[lesson.i];
   const cells = pr.cells.split('').map(Number);
-  positions = [{ cells, toMove: pr.toMove, last: -1, mover: 0, evalB: null }];
+  const lastMv = pr.moves ? ((m) => m ? (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8 : -1)(pr.moves.slice(-2)) : -1;
+  positions = [{ cells, toMove: pr.toMove, last: lastMv, mover: 0, evalB: null }];
   cur = 0; reviewing = false; lesson.answered = false; lesson.hintShown = false;
   $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show'); $('#toast').classList.remove('show');
   renderBoard(null);
@@ -1500,6 +1549,9 @@ function showAids(kind, pr, cells, me) {
   const lab = (q, cls, txt) => { const d = document.createElement('div'); d.className = 'sqlbl ' + cls; d.textContent = txt; cellEls[q].appendChild(d); };
   const legal = legalMoves(cells, me);
   switch (kind) {
+    case 'opening':
+      (pr.book || [pr.ans]).forEach(q => addMark(q, 'best'));
+      break;
     case 'rules': {
       const mv = legal.slice().sort((a, b) => flipsOf(cells, a, me).length - flipsOf(cells, b, me).length)[0];
       info.m = sqName(mv); flipsOf(cells, mv, me).forEach(q => addMark(q, 'flip')); addMark(mv, 'ex');
@@ -1541,11 +1593,15 @@ function showAids(kind, pr, cells, me) {
 function renderLessonCard() {
   const L = lesson, pr = L.probs[L.i];
   const x = LT(L.l);
-  $('#lsStep').textContent = t('ls.stepq', { s: L.idx + 1, i: L.i + 1 }) + (L.i >= 3 ? '  ·  🎓 ' + t('ls.exam') : '');
+  $('#lsStep').textContent = t('ls.stepq', { s: L.idx + 1, i: L.i + 1 }) + (L.i >= 3 && L.l.kind !== 'opening' ? '  ·  🎓 ' + t('ls.exam') : '');
   $('#lsTitle').textContent = x.title;
   $('#lsDots').innerHTML = L.probs.map((_, k) => `<i class="${k < L.results.length ? (L.results[k] >= 16 ? 'ok' : L.results[k] >= 10 ? 'mid' : 'ng') : k === L.i ? 'cur' : ''}"></i>`).join('');
   const tot = L.results.reduce((a, b) => a + b, 0);
   $('#lsStep').textContent += `  ·  ${t('ls.total', { n: tot })}`;
+  if (L.l.kind === 'opening') {
+    const ln = L.l.lines[pr.line], seq = (pr.moves.match(/../g) || []);
+    $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + t('op.prompt', { name: `<b>${PT(ln.name)}</b>`, n: pr.k + 1 }) + `<div class="op-seq">${seq.map((m, i) => `${i + 1}.${m}`).join(' ')} <b>${pr.k + 1}.?</b></div>`;
+  } else
   $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + x.prompt;
   $('#lsNext').textContent = t(L.i === L.probs.length - 1 ? 'ls.result' : 'ls.next');
   $('#lsNext').disabled = !L.answered; $('#lsNext').style.opacity = L.answered ? 1 : .4;
@@ -1569,7 +1625,7 @@ function lessonAnswer(sq) {
   let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
   const mine = sc[sq], tol = pr.tol || 0;
   const ok = mine >= best - tol - 1e-9;
-  const pts = problemPoints(pr, mine, best, moves.map(m => sc[m]));
+  const pts = opPoints(pr, sq) ?? problemPoints(pr, mine, best, moves.map(m => sc[m]));
   L.results.push(pts);
   playPlace(pts >= 16 ? 3 : 0);
   clearHints(); boardEl.querySelectorAll('.sqlbl, .odot, .edgeband, .mark').forEach(e => e.remove());
@@ -1579,7 +1635,7 @@ function lessonAnswer(sq) {
     h.textContent = pr.type === 'flips' ? String(sc[m]) : fmtS(sc[m], pr.type);
     cellEls[m].appendChild(h); cellEls[m].classList.add('hinted');
   }
-  for (const m of moves) if (sc[m] === best) addMark(m, 'best');
+  if (pr.ans !== undefined) addMark(pr.ans, 'best'); else for (const m of moves) if (sc[m] === best) addMark(m, 'best');
   addMark(sq, pts >= 16 ? 'ok' : 'ng');
   L.lastSq = sq;
   $('#lsFb').innerHTML = answerFeedback(sq);
@@ -1587,7 +1643,39 @@ function lessonAnswer(sq) {
   renderLessonCard();
 }
 // feedback text for an answered problem (re-rendered when the language changes)
+// opening problems: the book move of the target line scores 20, another named line's move 16, anything else by rank (max 14)
+function opPoints(pr, sq) {
+  if (pr.ans === undefined) return null;
+  if (sq === pr.ans) return 20;
+  if (pr.book && pr.book.includes(sq)) return 16;
+  const F = pr.f, vals = Object.keys(F).map(m => F[m][0]), mine = F[sq] ? F[sq][0] : -99, best = Math.max(...vals);
+  return Math.min(14, problemPoints(pr, mine, best, vals));
+}
+function opNameAt(moves) {   // longest named line equal to this move string
+  if (!openData || !openData.names) return null;
+  let b = null; for (const x of openData.names) if (x.m === moves && (!b || x.m.length > b.m.length)) b = x;
+  return b ? PT(b.n) : null;
+}
+function opFeedback(sq) {
+  const L = lesson, pr = L.probs[L.i], ln = L.l.lines[pr.line];
+  const pts = opPoints(pr, sq), F = pr.f;
+  const lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
+  let fb = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `;
+  const v = m => F[m] ? fmtS(F[m][0], 'eval') : '—';
+  const after = pr.moves + sqName(sq), other = opNameAt(after) || (openData.names.find(x => x.m.startsWith(after)) ? PT(openData.names.find(x => x.m.startsWith(after)).n) : null);
+  if (pts === 20) fb += t('op.ok', { m: sqName(sq), name: PT(ln.name) });
+  else if (pts === 16) fb += t('op.other', { m: sqName(sq), other: other || '?', a: sqName(pr.ans), name: PT(ln.name) });
+  else fb += t('op.ng', { m: sqName(sq), a: sqName(pr.ans), name: PT(ln.name), v: v(sq), va: v(pr.ans) });
+  { const vals = Object.keys(F).map(Number), bm = vals.reduce((x, y) => F[y][0] > F[x][0] ? y : x, vals[0]);
+    if (pts === 20 && F[pr.ans] && F[bm][0] - F[pr.ans][0] >= 2) fb += ' ' + t('op.weak', { b: sqName(bm), vb: fmtS(F[bm][0], 'eval') }); }
+  const seq = ln.moves.match(/../g);
+  fb += `<div class="op-seq">${seq.map((m, i) => i === pr.k ? `<b>${i + 1}.${m}</b>` : `${i + 1}.${m}`).join(' ')}</div>`;
+  if (ln.moves.length > (pr.k + 1) * 2) fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.cont', { name: PT(ln.name) })}</span><br>`;
+  fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.nums')}</span>`;
+  return fb;
+}
 function answerFeedback(sq) {
+  if (lesson.l.kind === 'opening') return opFeedback(sq);
   const L = lesson, pr = L.probs[L.i], p = positions[0];
   const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
   for (const m of moves) sc[m] = F[m][0];
@@ -1615,7 +1703,7 @@ function preAnswerText() {
     const info = lesson.aidInfo || {};
     return (tx.goal ? `<div class="ls-goal">🎯 <b>${t('ls.goal')}</b> ${tx.goal}</div>` : '') + `📘 ${tx.tutorial.replace('{m}', info.m || '').replace('{n}', info.n ?? '')}`;
   }
-  if (lesson.i >= 3) return `🎓 ${t('ls.examNote')}`;
+  if (lesson.i >= 3 && lesson.l.kind !== 'opening') return `🎓 ${t('ls.examNote')}`;
   return '';
 }
 const fmtS = (v, t) => (v > 0 ? '+' : '') + (t === 'exact' ? v : (+v).toFixed(1));
@@ -1666,7 +1754,7 @@ $('#lsHint').onclick = () => {
   lesson.hintShown = true;
   const pr = lesson.probs[lesson.i];
   let h = LT(lesson.l).hint || '';
-  if (lesson.i < 3) {   // problems 4-5 are the "graduation exam": hint text only, no board aids
+  if (lesson.i < 3 || lesson.l.kind === 'opening') {   // problems 4-5 are the "graduation exam": hint text only, no board aids
     clearMarks();
     if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
     showAids(lesson.l.kind, pr, positions[0].cells, pr.toMove);
@@ -1682,7 +1770,7 @@ $('#lsNext').onclick = () => {
   introIdx = lesson.idx;
   $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
   $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
-  $('#btnLessonNextStep').style.display = introIdx + 1 < lessonData.lessons.length ? '' : 'none';
+  $('#btnLessonNextStep').style.display = introIdx + 1 < curSets().length ? '' : 'none';
   showLessonView('done'); showOverlay('#lessonOverlay');
 };
 $('#lsQuit').onclick = () => endLesson();
@@ -1704,7 +1792,7 @@ const PT = o => (o && (o[LANG] || o.ja)) || '';
 async function loadPuzzles() { if (!puzzleData) { try { puzzleData = await fetch('puzzles.json').then(r => r.json()); } catch (e) { puzzleData = { levels: [] }; } } return puzzleData; }
 function pzKey(li, i) { return puzzleData.levels[li].id + ':' + i; }
 async function openPuzzles() {
-  const d = await loadPuzzles();
+  const d = await loadPuzzles(); selTab('puzzle');
   const dl = dailyPick(), di = dailyInfo();
   $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${PT(d.levels[dl.li].name)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + d.levels.map((lv, i) => {
     const solved = lv.puzzles.filter((_, k) => pzProgress[lv.id + ':' + k]).length;
@@ -2232,6 +2320,7 @@ function onlineResign() {
   resignArm = 0; Online.resign(net.gid);
 }
 // ====================================================================== boot
+loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 const hadSave = load();
 if (settings.mode === 'online') settings.mode = 'ai';
@@ -2247,7 +2336,7 @@ $('#langSel').onchange = e => {
     $('#lsFb').innerHTML = lesson.answered ? answerFeedback(lesson.lastSq) : preAnswerText();
     if (!lesson.answered) { boardEl.querySelectorAll('.sqlbl').forEach(e => { if (e.classList.contains('c0') && !/^\d+$/.test(e.textContent)) e.textContent = lesson.l.kind === 'wall' ? t('lbl.reserve') : t('lbl.corner'); }); }
   } 
-  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
+  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) (lessonSrc === 'open' ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
 };
 const roomLink = (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1];
 if (roomLink) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
