@@ -143,11 +143,14 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
 .kifu-card .kifu{flex:1;min-height:0;max-height:none}
 .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:28px;letter-spacing:.1em;white-space:nowrap}
+.brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:clamp(17px, calc((100cqw - 200px) / 8.6), 28px);letter-spacing:.1em;white-space:nowrap}
 .brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
 .brand a{font-size:12px;color:var(--dim);text-decoration:none;white-space:nowrap}
 .brand a:hover{color:var(--muted)}
 .brand-r{display:flex;align-items:center;gap:8px}
+/* keep the title + header buttons on one line: the title shrinks with the side panel width */
+.brand h1{min-width:0;flex:1 1 auto;overflow:hidden}
+.brand-r{flex:none}
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
 #langSel:hover{color:var(--text)}
 .snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
@@ -410,7 +413,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .side-in:has(.review-card.show) #evalCard .graph{min-height:28px}
   .side-in:has(.review-card.show) .kifu-card{min-height:92px}
   .player .count{font-size:clamp(36px, 4.6cqw, 56px)}
-  .brand h1{font-size:clamp(28px, 4.2cqw, 40px)}
+  .brand h1{font-size:clamp(18px, calc((100cqw - 200px) / 8.6), 40px)}
 }
 }
 </style>
