@@ -179,6 +179,17 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{width:min(480px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
+.overlay.instant,.overlay.instant .modal{transition:none!important}
+.overlay{height:100vh;height:100dvh;bottom:auto}
+.modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overscroll-behavior:contain}
+.ls-tabs{margin-bottom:16px}
+.ls-tabs button{font-size:13.5px;padding:9px 4px}
+@media (max-width: 520px), (max-height: 560px){
+  .overlay{padding:10px}
+  .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);border-radius:14px}
+  .modal h2{font-size:19px;margin-bottom:12px}
+  .ls-tabs{margin-bottom:12px}
+}
 .modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.1em;margin-bottom:18px}
 .field{margin-bottom:16px}
 .field > label{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
@@ -457,6 +468,7 @@ body.in-lesson .controls, body.in-puzzle .controls, body.in-lesson .kifu-card, b
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="ls.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
       <div class="lesson-list" id="lessonList"></div>
@@ -480,6 +492,7 @@ body.in-lesson .controls, body.in-puzzle .controls, body.in-lesson .kifu-card, b
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -968,7 +981,7 @@ function lessonProgress() { try { return JSON.parse(localStorage.getItem(LSTORE)
 let introIdx = 0;
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openLessons() {
-  await lessonsReady;
+  await lessonsReady; selTab('lesson');
   if (!lessonData) { toast(t('ls.fail')); return; }
   const prog = lessonProgress();
   $('#lessonList').innerHTML = lessonData.steps.map((s, i) => {
@@ -1059,7 +1072,7 @@ const puzzlesReady = fetch('puzzles.json').then(r => r.json()).then(d => (puzzle
 function puzzleProgress() { try { return JSON.parse(localStorage.getItem(PSTORE) || '{}'); } catch (e) { return {}; } }
 let pzLevelIdx = 0;
 async function openPuzzles() {
-  await puzzlesReady;
+  await puzzlesReady; selTab('puzzle');
   if (!puzzleData) { toast(t('pz.fail2')); return; }
   const prog = puzzleProgress();
   $('#pzLevels').innerHTML = puzzleData.levels.map((lv, i) => {
@@ -1080,6 +1093,19 @@ function openPzGrid(i) {
 }
 $('#pzClose').onclick = () => $('#puzzleOverlay').classList.remove('show');
 $('#pzBack').onclick = () => openPuzzles();
+function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+// switch tabs without the fade so the two lists feel like one screen
+function swapOverlay(from, to, open) {
+  const a = $(from), b = $(to);
+  a.classList.add('instant'); b.classList.add('instant');
+  a.classList.remove('show'); open();
+  requestAnimationFrame(() => requestAnimationFrame(() => { a.classList.remove('instant'); b.classList.remove('instant'); }));
+}
+document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) swapOverlay('#lessonOverlay', '#puzzleOverlay', openPuzzles);
+  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) swapOverlay('#puzzleOverlay', '#lessonOverlay', openLessons);
+}));
 $('#btnPuzzle').onclick = openPuzzles;
 $('#btnLesson').onclick = openLessons;
 function startPuzzle(li, k) {
