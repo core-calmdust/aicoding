@@ -151,6 +151,85 @@ function solveMove(c, weak) {
   return r;
 }
 
+// ------------------------------------------------------------------ short forced wins (puzzles)
+// canWin(d): can the player to move force a four within d of its own moves (any defence)?
+let mateTT = new Map();
+function canWin(d) {
+  const pl = (ml + BOT_L) & BOARD_L, ph = (mh + BOT_H) & BOARD_H;
+  const wl = winPos(cl, ch, ml, mh), wh = _wh;
+  if ((wl & pl) | (wh & ph)) return true;
+  if (d <= 1 || nm >= SZ - 2) return false;
+  const key = cl + ',' + ch + ',' + ml + ',' + mh + ',' + d;
+  const hit = mateTT.get(key); if (hit !== undefined) return hit;
+  const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
+  let al = pl, ah = ph;
+  const fl = owl & pl, fh = owh & ph;
+  if (fl | fh) { if (popc(fl) + popc(fh) > 1) { mateTT.set(key, false); return false; } al = fl; ah = fh; }
+  al &= ~(owl >>> 1); ah &= ~(owh >>> 1);
+  let res = false;
+  for (let i = 0; i < W && !res; i++) {
+    const c = ORDER[i], vl = al & CML[c], vh = ah & CMH[c];
+    if (!(vl | vh)) continue;
+    const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
+    playBits(vl, vh);
+    res = allLose(d - 1);
+    cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
+  }
+  mateTT.set(key, res);
+  return res;
+}
+// the player to move is the defender: true if every reply still loses within d attacker moves
+function allLose(d) {
+  const pl = (ml + BOT_L) & BOARD_L, ph = (mh + BOT_H) & BOARD_H;
+  const wl = winPos(cl, ch, ml, mh), wh = _wh;
+  if ((wl & pl) | (wh & ph)) return false;
+  if (nm >= SZ) return false;
+  for (let c = 0; c < W; c++) {
+    const vl = pl & CML[c], vh = ph & CMH[c];
+    if (!(vl | vh)) continue;
+    const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
+    playBits(vl, vh);
+    const r = canWin(d);
+    cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
+    if (!r) return false;
+  }
+  return true;
+}
+// attacker to move: for each legal move, the number of own moves (incl. this one) needed to force a four, 0 = not within n
+function mateList(str, n) {
+  mateTT = new Map();
+  loadMoves(str);
+  const out = [];
+  for (let c = 0; c < W; c++) {
+    if (!canPlay(c)) continue;
+    if (isWinningMove(c)) { out.push({ c, need: 1 }); continue; }
+    const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
+    playCol(c);
+    let need = 0;
+    for (let d = 1; d < n && !need; d++) if (allLose(d)) need = d + 1;
+    cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
+    out.push({ c, need });
+  }
+  return out;
+}
+// defender to move: for each reply, the attacker's remaining moves needed after it (0 = the reply escapes within n)
+function defendList(str, n) {
+  mateTT = new Map();
+  loadMoves(str);
+  const out = [];
+  for (let c = 0; c < W; c++) {
+    if (!canPlay(c)) continue;
+    if (isWinningMove(c)) { out.push({ c, need: 0 }); continue; }
+    const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
+    playCol(c);
+    let need = 0;
+    for (let d = 1; d <= n && !need; d++) if (canWin(d)) need = d;
+    cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
+    out.push({ c, need });
+  }
+  return out;
+}
+
 // ------------------------------------------------------------------ heuristic search
 // Cell weights = number of 4-windows through each cell
 const CELLW = [
@@ -459,7 +538,7 @@ function think(str, level) {
   return { move: best.c, how: 'search', depth: hr.depth, ms: Date.now() - t0, score: best.kind !== 'heur' ? { kind: best.kind, v: best.v } : { kind: 'heur', v: best.h } };
 }
 
-const API = { loadMoves, solve, solveMove, analyzePosition, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
+const API = { loadMoves, solve, solveMove, analyzePosition, mateList, defendList, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
   state: () => ({ nm }), setDeadline: d => { deadline = d; aborted = false; }, nodes: () => nodes, evaluate, EP, rootHeur, setDeadline2: () => { deadline = Infinity; aborted = false; }, clearHT: () => { htF.fill(0); } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postMessage === 'function' && typeof module === 'undefined') {
@@ -472,6 +551,8 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postM
     } else if (m.type === 'analyze') {
       const r = analyzePosition(m.moves, m.time || 1000, (list, depth) => postMessage({ type: 'progress', id: m.id, list, depth }));
       postMessage({ type: 'analysis', id: m.id, ...r });
+    } else if (m.type === 'mate') {
+      postMessage({ type: 'mate', id: m.id, list: m.defend ? defendList(m.moves, m.n) : mateList(m.moves, m.n) });
     }
   };
 }
