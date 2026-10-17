@@ -305,6 +305,14 @@ a.snd.home{text-decoration:none}
 .ob-info p{font-size:14px;line-height:1.85;color:#d6dfda;margin:6px 0 0}
 .ob-info .tg{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#1a1408;background:var(--brass);border-radius:5px;padding:1px 7px;margin-right:8px;vertical-align:1px}
 .op-book .op-dr{margin:0}
+.op-book .ob{cursor:pointer;transition:border-color .2s,background .2s}
+.op-book .ob:hover{border-color:rgba(201,169,97,.55);background:rgba(201,169,97,.05)}
+.op-info-s p{font-size:13px}
+.st-pg{display:flex;align-items:center;gap:10px}
+.st-pg button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--accent);font-size:18px;line-height:1}
+.st-pg button:hover{border-color:var(--brass2)}
+.st-pg button:disabled{opacity:.3;pointer-events:none}
+.st-pg small{font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-left:auto}
 .op-dr{display:flex;gap:6px;margin:6px 0 2px}
 .op-dr button{font-size:11.5px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
 .op-dr button:hover{border-color:var(--brass2);color:var(--text)}
@@ -1406,7 +1414,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function onCellClick(sq) {
   ctx();
-  if (lesson && !lesson.drill && lesson.probs && lesson.probs[lesson.i].moves && (lesson.animating || cur !== positions.length - 1)) { opView(positions.length - 1); return; }
+  if (lesson && !lesson.drill && !lesson.study && lesson.probs && lesson.probs[lesson.i].moves && (lesson.animating || cur !== positions.length - 1)) { opView(positions.length - 1); return; }
+  if (lesson && lesson.study) return;
   if (lesson) { lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
   if (net) { netMove(sq); return; }
@@ -1662,7 +1671,7 @@ function openIntro(i) {
   const x = LT(l);
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
   $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '')
-    + (l.kind === 'opening' ? `<p class="note" style="margin-top:10px">${t('op.drillNote')}</p><div class="op-book">${l.lines.map((n, li) => `<div class="ob"><div class="ob-h"><span class="nm">${PT(n.name)}</span><span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div><div class="mv">${n.moves.match(/../g).map((m, i) => `<i>${i + 1}</i>${m}`).join(' ')}</div>${n.info ? `<div class="ob-info">${opInfoHtml(PT(n.info))}</div>` : ''}</div>`).join('')}</div>` : '');
+    + (l.kind === 'opening' ? `<p class="note" style="margin-top:10px">${t('op.drillNote')}</p><div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><div class="ob-h"><span class="nm">${PT(n.name)}</span><span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div><div class="mv">${n.moves.match(/../g).map((m, i) => `<i>${i + 1}</i>${m}`).join(' ')}</div>${n.info ? `<div class="ob-info">${opInfoHtml(PT(n.info))}</div>` : ''}</div>`).join('')}</div>` : '');
   showLessonView('intro');
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
@@ -1975,6 +1984,7 @@ function lessonReason(kind, pr, F, sq, bm, ok, p) {
   return out.join(' ');
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.study) { studyBack(); return; }
   if (lesson && lesson.drill) { drillHint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hintShown = true;
@@ -2004,12 +2014,81 @@ $('#lsQuit').onclick = () => endLesson();
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); endLesson(); };
 // ---- opening drill (通し稽古): play one side of a named line from the start; the other side is played automatically
 const decMoves = str => (str.match(/../g) || []).map(m => (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
-$('#liBody').addEventListener('click', e => { const b = e.target.closest('button[data-li]'); if (b) startDrill(introIdx, +b.dataset.li, +b.dataset.c); });
+$('#liBody').addEventListener('click', e => {
+  const b = e.target.closest('button[data-li]'); if (b) { startDrill(introIdx, +b.dataset.li, +b.dataset.c); return; }
+  const o = e.target.closest('.ob[data-ob]'); if (o) startStudy(introIdx, +o.dataset.ob);
+});
+// ---- opening study: show a named line on the board and replay it step by step
+function startStudy(si, li) {
+  const set = openData.sets[si], ln = set.lines[li];
+  busyToken++; cancelAI(); cancelAna();
+  if (!lesson && !savedGame) savedGame = { positions, cur, reviewing };
+  hideOverlay('#lessonOverlay'); hideOverlay('#resultOverlay');
+  lesson = { study: true, l: set, si, li, ln, answered: true, timer: 0 };
+  document.body.classList.add('in-lesson');
+  positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
+  for (const m of decMoves(ln.moves)) applyMove(m);
+  cur = 0; reviewing = false;
+  $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show');
+  clearMarks(); clearHints(); renderBoard(null); studyRender();
+  setTimeout(() => { if (lesson && lesson.study && lesson.ln === ln) studyNav('play'); }, 400);
+}
+function studyPage(d) {
+  const L = lesson; if (!L || !L.study) return;
+  const li = L.li + d; if (li < 0 || li >= L.l.lines.length) return;
+  if (L.timer) clearInterval(L.timer);
+  const si = L.si; lesson = null; startStudy(si, li);
+}
+function studyStep(i) {
+  const last = positions.length - 1; i = Math.max(0, Math.min(last, i));
+  if (i === cur + 1) {
+    cur = i; const p = positions[i], prev = positions[i - 1], flips = [];
+    for (let q = 0; q < 64; q++) if (prev.cells[q] && prev.cells[q] !== p.cells[q]) flips.push(q);
+    renderBoard({ sq: p.last, flips }); playPlace(flips.length);
+  } else { cur = i; renderBoard(null); }
+  cellEls.forEach(c => c.classList.remove('legal'));
+  studyRender();
+}
+function studyNav(what) {
+  const L = lesson; if (!L || !L.study) return;
+  const last = positions.length - 1;
+  if (what === 'play') {
+    if (L.timer) { clearInterval(L.timer); L.timer = 0; studyRender(); return; }
+    if (cur >= last) studyStep(0);
+    L.timer = setInterval(() => { if (lesson !== L || cur >= positions.length - 1) { clearInterval(L.timer); L.timer = 0; if (lesson === L) studyRender(); return; } studyStep(cur + 1); }, settings.anim ? 750 : 400);
+    studyRender(); return;
+  }
+  if (L.timer) { clearInterval(L.timer); L.timer = 0; }
+  studyStep(what === 'first' ? 0 : what === 'last' ? last : what === 'prev' ? cur - 1 : what === 'next' ? cur + 1 : +what);
+}
+function studyRender() {
+  const L = lesson, seq = L.ln.moves.match(/../g);
+  $('#lsStep').textContent = `${t('op.study')} · ${LT(L.l).title}`;
+  const nL = L.l.lines.length;
+  $('#lsTitle').innerHTML = `<span class="st-pg"><button data-spg="-1" ${L.li <= 0 ? 'disabled' : ''} title="${esc(t('op.prevLine'))}">‹</button><span>${esc(PT(L.ln.name))}</span><button data-spg="1" ${L.li >= nL - 1 ? 'disabled' : ''} title="${esc(t('op.nextLine'))}">›</button><small>${L.li + 1} / ${nL}</small></span>`;
+  $('#lsDots').innerHTML = '';
+  $('#lsPrompt').innerHTML = `<div class="op-seq"><button data-sply="0" class="${cur === 0 ? 'cur' : ''}">${t('op.start')}</button> ${seq.map((m, i) => `<button data-sply="${i + 1}" class="${cur === i + 1 ? 'cur' : ''}">${i + 1}.${m}</button>`).join(' ')}</div>`
+    + `<div class="op-nav"><button data-snav="first">⏮</button><button data-snav="prev">◀</button><button data-snav="play">${L.timer ? '⏸ ' + t('op.pause') : '▶ ' + t('op.replay')}</button><button data-snav="next">▶</button><button data-snav="last">⏭</button><span class="pos">${cur === 0 ? t('op.start') : t('op.navAt', { n: cur })}</span></div>`;
+  $('#lsFb').innerHTML = (L.ln.info ? `<div class="ob-info op-info-s">${opInfoHtml(PT(L.ln.info))}</div>` : '')
+    + `<div class="op-dr" style="margin-top:10px"><button data-sdr="1">● ${t('op.drillB')}</button><button data-sdr="2">○ ${t('op.drillW')}</button></div>`;
+  $('#lsHint').textContent = t('ls.back'); $('#lsHint').disabled = false; $('#lsHint').style.opacity = 1;
+  $('#lsNext').style.display = 'none';
+}
+$('#lessonCard').addEventListener('click', e => {
+  if (!lesson || !lesson.study) return;
+  const a = e.target.closest('[data-sply]'); if (a) { studyNav(a.dataset.sply); return; }
+  const n = e.target.closest('[data-snav]'); if (n) { studyNav(n.dataset.snav); return; }
+  const d = e.target.closest('[data-sdr]'); if (d) { startDrill(lesson.si, lesson.li, +d.dataset.sdr); return; }
+  const g = e.target.closest('[data-spg]'); if (g && !g.disabled) studyPage(+g.dataset.spg);
+});
+async function studyBack() { const si = lesson.si; endLesson(); lessonSrc = 'open'; await openOpenings(); openIntro(si); }
 function startDrill(si, li, color) {
   const set = openData.sets[si], ln = set.lines[li];
   busyToken++; cancelAI(); cancelAna();
   if (!lesson) savedGame = { positions, cur, reviewing };
   hideOverlay('#lessonOverlay'); hideOverlay('#resultOverlay');
+  if (lesson && lesson.timer) clearInterval(lesson.timer);
+  $('#lsNext').style.display = ''; $('#lsHint').textContent = t('ls.hint');
   lesson = { drill: true, l: set, si, li, ln, ms: decMoves(ln.moves), color, k: 0, miss: 0, mine: 0, answered: true, done: false, lastMiss: null };
   document.body.classList.add('in-lesson');
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }]; cur = 0; reviewing = false;
@@ -2069,6 +2148,8 @@ function drillRender() {
 }
 function endLesson() {
   if (!lesson) return;
+  if (lesson.timer) clearInterval(lesson.timer);
+  $('#lsNext').style.display = ''; $('#lsHint').textContent = t('ls.hint');
   lesson = null;
   document.body.classList.remove('in-lesson');
   clearMarks(); clearHints();
@@ -2716,7 +2797,8 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); segSync && Object.keys(draft).length && segSync();
-  if (lesson && lesson.drill) drillRender();
+  if (lesson && lesson.study) studyRender();
+  else if (lesson && lesson.drill) drillRender();
   else if (lesson) {
     renderLessonCard();
     $('#lsFb').innerHTML = lesson.answered ? answerFeedback(lesson.lastSq) : preAnswerText();
@@ -2745,6 +2827,7 @@ if (roomLink) {
 let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
+  if (lesson && lesson.study) { studyNav(what); return; }
   if (lesson || puzzle) return;
   const N = positions.length - 1;
   if (what === 'play') {
@@ -2763,7 +2846,8 @@ document.querySelector('#navBar').addEventListener('click', e => { const b = e.t
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
-  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  if (document.querySelector('.overlay.show') || (lesson && !lesson.study) || puzzle) return;
+  if (lesson && lesson.study && (e.key === 'PageUp' || e.key === 'PageDown' || e.key === '[' || e.key === ']')) { e.preventDefault(); studyPage(e.key === 'PageUp' || e.key === '[' ? -1 : 1); return; }
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
