@@ -1138,7 +1138,7 @@ async function openLessons() {
     const pr = lessonProgress[l.id];
     const st = pr ? (pr.clear ? `<span class="st clear">クリア ✓ ${pr.best}/5</span>` : `<span class="st">${pr.best}/5</span>`) : '<span class="st">未挑戦</span>';
     return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${l.title}</b><small>${l.short}</small></span>${st}</button>`;
-  }).join('') || '<p style="color:var(--dim)">レッスンを読み込めませんでした。</p>';
+  }).join('') + (d.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px">${d.credit}</p>` : '') || '<p style="color:var(--dim)">レッスンを読み込めませんでした。</p>';
   showLessonView('list');
   showOverlay('#lessonOverlay');
 }
@@ -1167,9 +1167,11 @@ function startLesson(i) {
   const l = lessonData.lessons[i];
   busyToken++; cancelAI(); cancelAna();
   if (!lesson) savedGame = { positions, cur, reviewing };
-  const pool = l.problems.slice();
-  for (let k = pool.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [pool[k], pool[j]] = [pool[j], pool[k]]; }
-  lesson = { idx: i, l, probs: pool.slice(0, 5), i: 0, results: [], answered: false, hintShown: false };
+  const shuf = a => { a = a.slice(); for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; } return a; };
+  const std = shuf(l.problems.filter(p => !p.trap)), trap = shuf(l.problems.filter(p => p.trap));
+  const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
+  const probs = shuf([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);
+  lesson = { idx: i, l, probs, i: 0, results: [], answered: false, hintShown: false };
   document.body.classList.add('in-lesson');
   hideOverlay('#resultOverlay');
   loadProblem();
@@ -1202,49 +1204,76 @@ function lessonAnswer(sq) {
   const pr = L.probs[L.i], p = positions[0];
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
   L.answered = true;
-  const sc = pr.scores, moves = Object.keys(sc).map(Number);
+  const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
+  for (const m of moves) sc[m] = F[m][0];
   let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
-  const mine = sc[sq];
-  const tol = pr.tol || 0;
+  const mine = sc[sq], tol = pr.tol || 0;
   const ok = mine >= best - tol - 1e-9;
   L.results.push(ok);
   playPlace(ok ? 3 : 0);
-  // show all scores
   clearHints();
   for (const m of moves) {
     const h = document.createElement('div');
     h.className = 'hint' + (sc[m] === best ? ' best' : '');
-    h.textContent = pr.type === 'flips' ? sc[m] + '枚' : (sc[m] > 0 ? '+' : '') + (pr.type === 'exact' ? sc[m] : (+sc[m]).toFixed(1));
+    h.textContent = pr.type === 'flips' ? sc[m] + '枚' : fmtS(sc[m], pr.type);
     cellEls[m].appendChild(h); cellEls[m].classList.add('hinted');
   }
   for (const m of moves) if (sc[m] === best) addMark(m, 'best');
   addMark(sq, ok ? 'ok' : 'ng');
-  // feedback
-  const bests = moves.filter(m => sc[m] === best).map(sqName).join('・');
-  const unit = pr.type === 'flips' ? '枚' : '石';
+  const bestMoves = moves.filter(m => sc[m] === best), bm = bestMoves[0];
+  const bests = bestMoves.map(sqName).join('・');
   let fb = ok ? `<b class="ok">正解！</b> ` : `<b class="ng">惜しい…</b> `;
   if (pr.type === 'flips') fb += ok ? `${sqName(sq)} で ${mine} 枚返せます。` : `${sqName(sq)} は ${mine} 枚。いちばん多いのは ${bests}（${best} 枚）です。`;
-  else if (ok) fb += mine === best ? `${sqName(sq)} は最善手です（${pr.type === 'exact' ? '最終石差 ' : '評価 '}${fmtS(mine, pr.type)}）。` : `${sqName(sq)} も最善とほぼ同じ価値の良い手です（最善 ${bests}）。`;
-  else fb += `${sqName(sq)} は最善より <b>${(best - mine).toFixed(pr.type === 'exact' ? 0 : 1)}${unit}</b> 損。最善は <b>${bests}</b>（${fmtS(best, pr.type)}）。`;
-  const why = ok ? L.l.good : (autoReason(p, sq, pr, moves, best) || L.l.bad);
+  else if (ok) fb += mine === best ? `${sqName(sq)} は最善手です。` : `${sqName(sq)} も最善（${bests}）とほぼ同じ価値の良い手です。`;
+  else fb += `${sqName(sq)} は最善より <b>${(best - mine).toFixed(pr.type === 'exact' ? 0 : 1)}石</b> 損。最善は <b>${bests}</b>。`;
+  const why = lessonReason(L.l.kind, pr, F, sq, bm, ok, p);
   if (why) fb += `<br>${why}`;
+  if (pr.trap && L.l.trapNote) fb += `<br><span style="color:var(--accent)">※ ${L.l.trapNote}</span>`;
   if (pr.type !== 'flips') fb += `<br><span style="font-size:11.5px;color:var(--dim)">盤上の数字は、それぞれの手を打った場合の${pr.type === 'exact' ? '最終石差（完全読み）' : '評価値（予想石差）'}です。</span>`;
   $('#lsFb').innerHTML = fb;
   cellEls.forEach(c => c.classList.remove('legal'));
   renderLessonCard();
 }
 const fmtS = (v, t) => (v > 0 ? '+' : '') + (t === 'exact' ? v : (+v).toFixed(1));
-function autoReason(p, sq, pr, moves, best) {
-  const c = CORNER_OF[sq];
-  if (c !== undefined && !p.cells[c]) {
-    const x = [9, 14, 49, 54].includes(sq);
-    return `${x ? 'X打ち' : 'C打ち'}（空いた角の隣）は、相手に角を取られるきっかけになりやすい手です。`;
+// facts: [score, flips, open, oppMob, givesCorner, regionSize, oppPass]
+function lessonReason(kind, pr, F, sq, bm, ok, p) {
+  const me = F[sq], b = F[bm], nm = sqName;
+  const xc = CORNER_OF[sq] !== undefined && !p.cells[CORNER_OF[sq]];
+  const out = [];
+  if (!ok && me[4]) out.push(`${nm(sq)} を打つと、相手が次に隅を取れるようになります。`);
+  else if (!ok && xc) out.push(`${nm(sq)} は空いた隅の隣（${[9, 14, 49, 54].includes(sq) ? 'X' : 'C'}）で、隅を渡すきっかけになりやすい手です。`);
+  switch (kind) {
+    case 'corner':
+      if (ok && [0, 7, 56, 63].includes(sq)) out.push('隅の石は二度と返されず、ここから確定石が広がります。');
+      else if (ok) out.push('相手に隅への通り道を作らない、安全な手です。');
+      break;
+    case 'mobility':
+      out.push(`打った後の相手の打てる場所：${nm(sq)} → <b>${me[3]}か所</b>${sq !== bm ? `、${nm(bm)} → <b>${b[3]}か所</b>` : ''}。` + (!ok && me[1] > b[1] ? `${me[1]}枚返すと外側の石が増え、相手の選択肢が広がります。` : ''));
+      break;
+    case 'quiet':
+      out.push(`開放度（返した石の周りの空き）：${nm(sq)} → <b>${me[2]}</b>${sq !== bm ? `、${nm(bm)} → <b>${b[2]}</b>` : ''}。` + (pr.trap ? '' : ok ? '相手に新しい打ち場所をほとんど与えない静かな手です。' : ''));
+      break;
+    case 'wall':
+      if (!pr.trap && !ok && pr.wall && pr.wall.includes(sq)) out.push('この手で外側に自分の石が連なり、壁ができます。壁の外側は相手だけが打てる場所になります。');
+      out.push(`打った後の相手の打てる場所：${nm(sq)} → ${me[3]}か所${sq !== bm ? `、${nm(bm)} → ${b[3]}か所` : ''}。`);
+      break;
+    case 'edge':
+      if (pr.wedge && pr.wedge.includes(bm)) out.push(`${nm(bm)} は相手の石にはさまれた辺のすき間に打つ「付け手」です。相手の辺の形を崩せます。`);
+      break;
+    case 'exception':
+      if (!pr.trap && [0, 7, 56, 63].includes(sq) && !ok) out.push(`隅は取れますが、その後に相手の打てる場所が ${me[3]}か所残り、局面の主導権を握られます。この局面では隅より手番が重要です。`);
+      if (pr.trap && ok) out.push('X打ちでも、相手がその隅をすぐには取れない（取っても得をしない）局面です。');
+      break;
+    case 'parity':
+      out.push(`${nm(sq)} の空きの塊は <b>${me[5]}マス</b>（${me[5] % 2 ? '奇数' : '偶数'}）` + (sq !== bm ? `、最善の ${nm(bm)} は ${b[5]}マス（${b[5] % 2 ? '奇数' : '偶数'}）` : '') + '。');
+      if (b[6]) out.push(`${nm(bm)} を打つと相手はパスになり、続けてあなたが打てます。`);
+      break;
+    case 'finish':
+      if (b[6]) out.push(`${nm(bm)} を打つと相手はパス。あなたが続けて打って、最後の1手まで握れます。`);
+      if (!ok) out.push(`${nm(sq)} の結果は最終石差 ${fmtS(me[0], 'exact')}、${nm(bm)} なら ${fmtS(b[0], 'exact')} です。`);
+      break;
   }
-  const f = flipsOf(p.cells, sq, p.toMove).length;
-  const bestM = moves.find(m => pr.scores[m] === best);
-  const fb = flipsOf(p.cells, bestM, p.toMove).length;
-  if (pr.type !== 'flips' && f >= fb + 3) return `${f}枚も返すと自分の石が外側に増え、相手の打てる場所を増やしてしまいます。`;
-  return '';
+  return out.join('');
 }
 $('#lsHint').onclick = () => {
   if (!lesson || lesson.answered) return;
