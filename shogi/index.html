@@ -85,6 +85,34 @@ div.sq:nth-of-type(n+73){border-bottom:none}
 .pc.s3 .k{width:82%;height:88%}
 .pc.s5 .k{width:88%;height:94%;font-size:calc(var(--cw)*0.6)}
 .pc.mv{animation:mv .2s ease-out}
+/* piece styles */
+.pc .k .two{display:flex;flex-direction:column;align-items:center;font-size:.6em;line-height:.98;letter-spacing:0}
+.pc.s1 .k .two{font-size:.66em}
+.pc .k svg.intl{width:100%;height:100%;overflow:visible}
+.pc.has-intl .k{padding:0}
+/* skins */
+body.skin-grain .board{background:repeating-linear-gradient(92deg,rgba(120,70,20,.0) 0 7px,rgba(120,70,20,.10) 7px 9px,rgba(120,70,20,0) 9px 15px,rgba(90,50,10,.16) 15px 16px),linear-gradient(170deg,#e9be76 0%,#d9a75a 50%,#c88f45 100%)}
+body.skin-grain .board::after{opacity:.55;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .09' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .25 0 0 0 0 .05 0 0 0 1.1 -.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+body.skin-grain .pc .k{background:repeating-linear-gradient(88deg,rgba(150,95,30,0) 0 3px,rgba(150,95,30,.13) 3px 4px),linear-gradient(175deg,#f5d79a 0%,#e6bf73 45%,#d2a252 100%)}
+body.skin-metal .frame{background:linear-gradient(145deg,#3b4248 0%,#1d2226 55%,#2f353a 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(200,210,220,.25)}
+body.skin-metal .board{background:linear-gradient(160deg,#c9d0d6 0%,#9aa3ab 45%,#b8c0c7 70%,#8a939b 100%);border-color:#22282c;box-shadow:inset 0 0 30px rgba(20,30,40,.35)}
+body.skin-metal .board::after{opacity:.18;mix-blend-mode:overlay;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.5) 0 1px,rgba(0,0,0,.25) 1px 2px)}
+body.skin-metal .sq{border-color:rgba(20,28,34,.7)}
+body.skin-metal .star{background:#1b2226}
+body.skin-metal .pc .k{background:linear-gradient(170deg,#f4f6f8 0%,#cfd5da 45%,#a9b1b8 100%);color:#15191c}
+body.skin-metal .pc.p .k{color:#c0281c}
+body.skin-metal .hand{background:linear-gradient(160deg,#363d43,#22272b);box-shadow:0 20px 40px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(200,210,220,.22)}
+body.skin-metal .coords,body.skin-metal .hand .hname{color:rgba(210,220,228,.65)}
+body.skin-ink .frame{background:linear-gradient(145deg,#141414 0%,#070707 60%,#121212 100%)}
+body.skin-ink .board{background:linear-gradient(170deg,#2b2622 0%,#1f1b18 100%);border-color:#000;box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
+body.skin-ink .board::after{opacity:.35;mix-blend-mode:screen}
+body.skin-ink .sq{border-color:rgba(214,180,110,.35)}
+body.skin-ink .star{background:#d6b46e}
+body.skin-ink .pc .k{background:linear-gradient(175deg,#2f2a25 0%,#1d1915 100%);color:#e9d39f;box-shadow:none}
+body.skin-ink .pc.p .k{color:#ff7a66}
+body.skin-ink .pc{filter:drop-shadow(0 0 1px rgba(214,180,110,.7)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+body.skin-ink .sq.last{background:rgba(214,180,110,.22)}
+
 @keyframes mv{from{transform:translate(var(--dx),var(--dy))}to{transform:none}}
 .board.no-anim .pc{animation:none!important}
 .promo{position:absolute;z-index:30;display:flex;gap:6px;padding:6px;border-radius:12px;background:rgba(10,16,14,.92);border:1px solid rgba(201,169,97,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);transform:translate(-50%,-50%)}
@@ -427,6 +455,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
+    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="intl" data-i18n="pc.intl"></button></div></div>
+    <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
     <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0</div>
   </div>
@@ -484,15 +514,33 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018p"></script>
-<script src="engine.js?v=20261018p"></script>
-<script src="strategy.js?v=20261018p"></script>
+<script src="i18n.js?v=20261018q"></script>
+<script src="engine.js?v=20261018q"></script>
+<script src="strategy.js?v=20261018q"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
 const { FU, KY, KE, GI, KA, HI, KI, OU, WF } = E;
 // ====================================================================== constants
 const KANJI = ['', '歩', '香', '桂', '銀', '角', '飛', '金', '玉', 'と', '杏', '圭', '全', '馬', '龍'];
+const KANJI2 = ['', '歩兵', '香車', '桂馬', '銀将', '角行', '飛車', '金将', '玉将', 'と金', '成香', '成桂', '成銀', '龍馬', '龍王'];
+// international pieces: kanji plus movement marks (dot = one step, wedge = any distance, knight jumps on top)
+const MV_POS = { N: [50, 24], S: [50, 96], W: [17, 62], E: [83, 62], NW: [27, 36], NE: [73, 36], SW: [20, 96], SE: [80, 96] };
+const MV_GOLD = ['NW', 'N', 'NE', 'W', 'E', 'S'];
+const MV = {
+  1: { s: ['N'] }, 2: { l: ['N'] }, 3: { kn: 1 }, 4: { s: ['NW', 'N', 'NE', 'SW', 'SE'] }, 5: { l: ['NW', 'NE', 'SW', 'SE'] }, 6: { l: ['N', 'S', 'W', 'E'] },
+  7: { s: MV_GOLD }, 8: { s: ['NW', 'N', 'NE', 'W', 'E', 'SW', 'S', 'SE'] }, 9: { s: MV_GOLD }, 10: { s: MV_GOLD }, 11: { s: MV_GOLD }, 12: { s: MV_GOLD },
+  13: { l: ['NW', 'NE', 'SW', 'SE'], s: ['N', 'S', 'W', 'E'] }, 14: { l: ['N', 'S', 'W', 'E'], s: ['NW', 'NE', 'SW', 'SE'] },
+};
+const MV_ANG = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
+function intlSvg(tp, kanji) {
+  const m = MV[tp] || {}, col = tp > 8 ? '#b8231a' : 'currentColor';
+  let g = '';
+  for (const d of m.s || []) { const [x, y] = MV_POS[d]; g += `<circle cx="${x}" cy="${y}" r="4.6" fill="${col}"/>`; }
+  for (const d of m.l || []) { const [x, y] = MV_POS[d]; g += `<path d="M0 -7 L5.5 4 L-5.5 4 Z" fill="${col}" transform="translate(${x} ${y}) rotate(${MV_ANG[d]})"/>`; }
+  if (m.kn) g += `<circle cx="33" cy="20" r="4.6" fill="${col}"/><circle cx="67" cy="20" r="4.6" fill="${col}"/>`;
+  return `<svg class="intl" viewBox="0 0 100 110"><text x="50" y="66" text-anchor="middle" dominant-baseline="middle" font-size="40" font-weight="800" fill="${tp > 8 ? '#b8231a' : 'currentColor'}" font-family="'Shippori Mincho B1',serif">${kanji}</text>${g}</svg>`;
+}
 const NAME = ['', '歩', '香', '桂', '銀', '角', '飛', '金', '玉', 'と', '成香', '成桂', '成銀', '馬', '龍'];
 const SIZE = ['', 1, 2, 2, 3, 4, 4, 3, 5, 1, 2, 2, 3, 4, 4];
 const ZEN = '０１２３４５６７８９', KAN = '〇一二三四五六七八九';
@@ -510,7 +558,7 @@ const LEVELS = [{ depth: 1, noise: 220 }, { depth: 2, noise: 150 }, { depth: 3, 
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: 4, level2: 4, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '' };
+const settings = { mode: 'ai', color: 0, level: 4, level2: 4, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: 'one', skin: 'classic' };
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return n.startsWith('ja') ? 'ja' : n.startsWith('zh') ? 'zh' : n.startsWith('ko') ? 'ko' : 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.ja)[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
@@ -555,7 +603,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018p');
+    const res = await fetch('weights.bin.gz?v=20261018q');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -568,7 +616,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018p');
+  const w = new Worker('engine.js?v=20261018q');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -682,7 +730,10 @@ function pieceEl(code, promoted) {
   const el = document.createElement('div');
   el.className = 'pc s' + SIZE[tp] + (tp > OU ? ' p' : '') + ((col === 1) !== flip ? ' g' : '');
   const k = document.createElement('div'); k.className = 'k';
-  k.textContent = tp === OU ? (col ? '王' : '玉') : KANJI[tp];
+  const one = tp === OU ? (col ? '王' : '玉') : KANJI[tp];
+  if (settings.pieces === 'two') { const w = tp === OU ? (col ? '王将' : '玉将') : KANJI2[tp]; k.innerHTML = `<span class="two">${w[0]}<br>${w[1]}</span>`; }
+  else if (settings.pieces === 'intl') { el.classList.add('has-intl'); k.innerHTML = intlSvg(tp, one); }
+  else k.textContent = one;
   el.appendChild(k);
   return el;
 }
@@ -1241,7 +1292,7 @@ function openNewDialog() {
   showOverlay('#newOverlay');
 }
 function updDialog() {
-  segSel('segMode', dlg.mode); segSel('segColor', dlg.color); segSel('segHandi', dlg.handicap); segSel('segClock', dlg.clock);
+  applyLook(); segSel('segMode', dlg.mode); segSel('segColor', dlg.color); segSel('segHandi', dlg.handicap); segSel('segClock', dlg.clock);
   const ls = dlg.mode === 'lesson' || dlg.mode === 'tsume' || dlg.mode === 'edit';
   $('#fLessonInfo').classList.toggle('hidden', !ls);
   $('#fLessonInfo p').textContent = t(dlg.mode === 'tsume' ? 'ts.desc' : dlg.mode === 'edit' ? 'ed.desc' : 'ls.desc');
@@ -1260,6 +1311,13 @@ function updDialog() {
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.color = +b.dataset.v; updDialog(); } };
+// piece style and board skin apply immediately
+function applyLook() {
+  ['grain', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
+  segSel('segPieces', settings.pieces); segSel('segSkin', settings.skin);
+}
+$('#segPieces').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.pieces = b.dataset.v; applyLook(); save(); if (game) { renderBoard(false); renderHands(); } };
+$('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applyLook(); save(); };
 $('#segClock').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.clock = +b.dataset.v; updDialog(); } };
 $('#segHandi').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.handicap = +b.dataset.v; updDialog(); } };
 $('#rngLevel').oninput = updDialog; $('#rngLevel2').oninput = updDialog;
@@ -1635,7 +1693,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018p').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018q').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1646,7 +1704,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018p').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018q').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1654,7 +1712,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018p').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018q').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1722,7 +1780,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018p').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018q').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
@@ -2167,6 +2225,7 @@ applyI18n();
   const had = load();
   if (settings.lang) LANG = settings.lang;
   applyI18n();
+  applyLook();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
   if (had && game.clock) game.clock.t0 = Date.now();
   if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
