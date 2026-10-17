@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1412">
+<meta name="description" content="学習済みパターン評価と終盤完全読みを備えた、強くて美しいブラウザ版リバーシ。">
+<title>リバーシ — Emerald</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23111'/%3E%3Ccircle cx='40' cy='40' r='13' fill='%23eee'/%3E%3C/svg%3E">
+<meta property="og:title" content="リバーシ EMERALD — 強くて美しいブラウザリバーシ">
+<meta property="og:description" content="学習済みパターン評価と終盤完全読みを備えた10段階AI。登録不要でスマホでも遊べます。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://core-calmdust.github.io/aicoding/reversi/">
+<meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/reversi_emerald.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1110; --bg2:#121b19; --panel:#141f1c; --panel2:#1a2724; --line:#26372f;
+  --text:#e8eee9; --muted:#8fa39a; --dim:#5d7068;
+  --felt:#1d6b4c; --felt2:#155238; --felt3:#0f3f2b; --grid:rgba(0,0,0,.38);
+  --brass:#c9a961; --brass2:#8e7440;
+  --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
+  --cell: calc(var(--board) / 8);
+  --board: min(88vw, 74vh, 640px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1200px 700px at 30% -10%, #1b2b26 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #16231f 0%, transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Zen Kaku Gothic New',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+.app{
+  min-height:100%;
+  display:grid;
+  grid-template-columns: auto 340px;
+  grid-template-areas:"board side";
+  gap:36px;
+  justify-content:center;
+  align-items:center;
+  padding:28px 24px;
+}
+/* ---------------------------------------------------------------- board */
+.board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:14px}
+.frame{
+  position:relative;
+  padding:calc(var(--cell)*0.42);
+  border-radius:18px;
+  background:
+    linear-gradient(145deg,#2a2018 0%,#16100b 55%,#22190f 100%);
+  box-shadow:
+    0 40px 80px -30px rgba(0,0,0,.85),
+    0 0 0 1px rgba(201,169,97,.25),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 0 0 calc(var(--cell)*0.42 - 3px) rgba(0,0,0,0);
+}
+.frame::before{ /* brass inner line */
+  content:"";position:absolute;inset:calc(var(--cell)*0.42 - 5px);
+  border-radius:6px;border:1px solid rgba(201,169,97,.55);pointer-events:none;
+}
+.coords{position:absolute;display:flex;color:rgba(226,194,117,.55);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell)*0.2);pointer-events:none;user-select:none}
+.coords.top{top:0;left:calc(var(--cell)*0.42);width:var(--board);height:calc(var(--cell)*0.42)}
+.coords.left{left:0;top:calc(var(--cell)*0.42);height:var(--board);width:calc(var(--cell)*0.42);flex-direction:column}
+.coords span{flex:1;display:flex;align-items:center;justify-content:center}
+.board{
+  position:relative;
+  width:var(--board);height:var(--board);
+  display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
+  border-radius:4px;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.07), transparent 65%),
+    radial-gradient(ellipse at 50% 50%, var(--felt) 0%, var(--felt2) 70%, var(--felt3) 100%);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.45);
+  perspective: 900px;
+}
+.board::after{ /* felt grain */
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.cell{
+  position:relative;
+  border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);
+  display:flex;align-items:center;justify-content:center;
+}
+.cell:nth-child(8n){border-right:none}
+.cell:nth-child(n+57){border-bottom:none}
+.star{position:absolute;width:calc(var(--cell)*0.11);height:calc(var(--cell)*0.11);border-radius:50%;background:rgba(0,0,0,.55);z-index:1;pointer-events:none;transform:translate(50%,50%);right:0;bottom:0}
+.cell.legal{cursor:pointer}
+.cell.legal::before{
+  content:"";position:absolute;width:22%;height:22%;border-radius:50%;
+  background:rgba(0,0,0,.28);transition:transform .15s, opacity .15s;
+}
+.board.turn-white .cell.legal::before{background:rgba(255,255,255,.28)}
+.board.hide-legal .cell.legal::before{opacity:0}
+@media (hover:hover){
+  .cell.legal:hover::before{opacity:0}
+  .cell.legal:hover .ghost{opacity:.42;transform:scale(1)}
+}
+.ghost{position:absolute;width:80%;height:80%;border-radius:50%;opacity:0;transform:scale(.85);transition:opacity .15s,transform .15s;pointer-events:none}
+.board.turn-black .ghost{background:radial-gradient(circle at 35% 30%,#555,#0a0a0a 70%)}
+.board.turn-white .ghost{background:radial-gradient(circle at 35% 30%,#fff,#cfd3d0 75%)}
+.hint{
+  position:absolute;z-index:4;pointer-events:none;
+  font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell)*0.24);font-weight:500;
+  color:rgba(255,255,255,.88);text-shadow:0 1px 2px rgba(0,0,0,.6);
+}
+.hint.best{color:var(--accent);font-size:calc(var(--cell)*0.28)}
+.hint.exact::after{content:"";}
+.cell.hinted::before{opacity:0}
+
+/* discs */
+.disc-wrap{position:absolute;width:82%;height:82%;z-index:2;pointer-events:none}
+.disc{
+  position:relative;width:100%;height:100%;
+  transform-style:preserve-3d;
+  transition:transform .48s cubic-bezier(.45,.05,.25,1);
+}
+.disc.white{transform:rotateY(180deg)}
+.face{
+  position:absolute;inset:0;border-radius:50%;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.face.b{
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 28%),
+    radial-gradient(circle at 50% 55%, #2a2d2c 0%, #0b0c0c 72%, #000 100%);
+  box-shadow: 0 3px 5px rgba(0,0,0,.55), inset 0 -3px 6px rgba(0,0,0,.6), inset 0 2px 2px rgba(255,255,255,.08);
+}
+.face.w{
+  transform:rotateY(180deg);
+  background:
+    radial-gradient(circle at 32% 26%, #ffffff 0%, rgba(255,255,255,0) 35%),
+    radial-gradient(circle at 50% 55%, #f4f3ee 0%, #dcdcd4 70%, #b9bbb3 100%);
+  box-shadow: 0 3px 5px rgba(0,0,0,.45), inset 0 -3px 6px rgba(0,0,0,.18);
+}
+.disc-wrap.flip{animation:lift .48s ease}
+@keyframes lift{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+.disc-wrap.drop{animation:drop .32s cubic-bezier(.2,1.4,.4,1)}
+@keyframes drop{0%{transform:scale(1.35);opacity:0}100%{transform:scale(1);opacity:1}}
+.board.no-anim .disc, .board.no-anim .disc-wrap{transition:none!important;animation:none!important}
+.last-mark{position:absolute;z-index:3;width:14%;height:14%;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(255,107,91,.8);pointer-events:none}
+.board.hide-last .last-mark{display:none}
+
+.toast{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;
+  background:rgba(10,16,14,.88);backdrop-filter:blur(6px);
+  border:1px solid rgba(201,169,97,.45);color:var(--text);
+  padding:14px 26px;border-radius:12px;font-weight:700;letter-spacing:.08em;
+  opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+.review-bar{
+  display:none;align-items:center;gap:10px;font-size:13px;color:var(--muted);
+  background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:10px;
+}
+.review-bar.show{display:flex}
+.review-bar button{padding:5px 10px;border-radius:7px;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.review-bar button:hover{border-color:var(--brass2)}
+
+/* ---------------------------------------------------------------- side */
+.side{grid-area:side;display:flex;flex-direction:column;gap:14px;width:340px}
+.brand{display:flex;align-items:baseline;justify-content:space-between}
+.brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:30px;letter-spacing:.12em}
+.brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
+.brand a{font-size:12px;color:var(--dim);text-decoration:none}
+.brand a:hover{color:var(--muted)}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player{
+  position:relative;border-radius:12px;padding:12px;background:rgba(0,0,0,.18);border:1px solid transparent;
+  transition:border-color .25s, background .25s;
+}
+.player.active{border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.07)}
+.player .top{display:flex;align-items:center;gap:8px}
+.pdisc{width:20px;height:20px;border-radius:50%;flex:none}
+.pdisc.b{background:radial-gradient(circle at 35% 30%,#555,#000 70%);box-shadow:0 0 0 1px #333}
+.pdisc.w{background:radial-gradient(circle at 35% 30%,#fff,#c9ccc6 75%)}
+.player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player .count{font-family:'Shippori Mincho B1',serif;font-size:40px;font-weight:800;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
+.player .status{font-size:11px;color:var(--dim);height:15px;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player.thinking .status{color:var(--accent)}
+.player.thinking .pdisc{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(226,194,117,.25)}}
+
+.evalrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.evalrow .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.evalrow .val{font-family:'JetBrains Mono',monospace;font-size:14px}
+.evalbar{position:relative;height:10px;border-radius:6px;background:#e9e8e2;overflow:hidden}
+.evalbar .fill{position:absolute;inset:0 auto 0 0;width:50%;background:linear-gradient(90deg,#000,#26292a);transition:width .5s ease}
+.evalbar .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--brass)}
+.graph{margin-top:10px;width:100%;height:74px;display:block;cursor:pointer}
+.graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
+.graph .cur{stroke:var(--accent);stroke-width:1}
+
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;
+  background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);
+  transition:border-color .2s,color .2s,background .2s;
+}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
+.btn.on{color:var(--accent);border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.08)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.primary{color:var(--text)}
+
+.kifu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.kifu-head .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.kifu-head button{font-size:11px;color:var(--dim);padding:2px 6px;border-radius:5px}
+.kifu-head button:hover{color:var(--text)}
+.kifu{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.kifu button{padding:3px 0;border-radius:5px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px}
+.kifu button i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.kifu button i.b{background:#000;box-shadow:0 0 0 1px #555}
+.kifu button i.w{background:#eee}
+.kifu button:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.kifu button.cur{background:rgba(201,169,97,.16);color:var(--accent)}
+.kifu .empty{grid-column:1/-1;color:var(--dim);font-family:'Zen Kaku Gothic New';font-size:12px;padding:6px 0}
+
+.info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono',monospace}
+
+/* ---------------------------------------------------------------- modal */
+.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{width:min(460px,100%);max-height:calc(100vh - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.overlay.show .modal{transform:none}
+.modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.12em;margin-bottom:18px}
+.field{margin-bottom:16px}
+.field > label{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
+.seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 4px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s}
+.seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
+.level-wrap{display:flex;align-items:center;gap:12px}
+.level-wrap input{flex:1;accent-color:var(--brass)}
+.level-name{min-width:96px;text-align:right;font-weight:700}
+.level-name small{display:block;font-weight:400;font-size:11px;color:var(--dim)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.checks input{accent-color:var(--brass);width:16px;height:16px}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+.mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
+.mbtn:hover{color:var(--text)}
+.mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.mbtn.go:hover{filter:brightness(1.07)}
+.result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
+.result-score{display:flex;justify-content:center;align-items:center;gap:18px;font-family:'Shippori Mincho B1',serif;font-size:44px;font-weight:800}
+.result-score .pdisc{width:28px;height:28px}
+.result-score span{display:flex;align-items:center;gap:10px}
+.result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+.hidden{display:none!important}
+
+/* ---------------------------------------------------------------- responsive */
+@media (max-width: 1000px){
+  :root{--board:min(100vw - 56px, 64vh, 640px)}
+  .app{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 12px 28px}
+  .side{display:contents}
+  .side > *{width:calc(var(--board) + var(--cell)*0.84);max-width:100%}
+  .brand{order:-3}
+  .players{order:-2}
+  .board-area{order:-1}
+  .player{padding:8px 10px}
+  .player .count{font-size:28px;margin-top:0}
+  .player .top{justify-content:flex-start}
+  .player .status{height:14px}
+  .brand h1{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="board-area">
+    <div class="frame">
+      <div class="coords top"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
+      <div class="coords left"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+      <div class="board turn-black" id="board"></div>
+      <div class="toast" id="toast"></div>
+    </div>
+    <div class="review-bar" id="reviewBar">
+      <span id="reviewText">棋譜を確認中</span>
+      <button id="btnResume">ここから打つ</button>
+      <button id="btnLatest">最新局面へ</button>
+    </div>
+  </div>
+
+  <aside class="side">
+    <div class="brand">
+      <h1>リバーシ<small>EMERALD</small></h1>
+      <a href="../">← ゲーム一覧</a>
+    </div>
+
+    <div class="card players">
+      <div class="player" id="pBlack">
+        <div class="top"><div class="pdisc b"></div><div class="name" id="nameBlack">黒</div></div>
+        <div class="count" id="countBlack">2</div>
+        <div class="status" id="statusBlack"></div>
+      </div>
+      <div class="player" id="pWhite">
+        <div class="top"><div class="pdisc w"></div><div class="name" id="nameWhite">白</div></div>
+        <div class="count" id="countWhite">2</div>
+        <div class="status" id="statusWhite"></div>
+      </div>
+    </div>
+
+    <div class="card" id="evalCard">
+      <div class="evalrow"><span class="label">形勢</span><span class="val" id="evalText">—</span></div>
+      <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
+      <svg class="graph" id="graph" viewBox="0 0 300 74" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="card controls">
+      <button class="btn primary" id="btnNew" title="新しい対局"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新規</button>
+      <button class="btn" id="btnUndo" title="待った (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>待った</button>
+      <button class="btn" id="btnHint" title="ヒント（各手の評価値）"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg>ヒント</button>
+      <button class="btn" id="btnSound" title="効果音"><svg viewBox="0 0 24 24" id="soundIcon"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>音</button>
+    </div>
+
+    <div class="card">
+      <div class="kifu-head"><span class="label">棋譜</span><button id="btnCopy" title="棋譜をコピー">コピー</button></div>
+      <div class="kifu" id="kifu"></div>
+    </div>
+    <div class="info-line" id="infoLine"></div>
+  </aside>
+</div>
+
+<!-- new game -->
+<div class="overlay" id="newOverlay">
+  <div class="modal">
+    <h2>新しい対局</h2>
+    <div class="field">
+      <label>対戦形式</label>
+      <div class="seg" id="segMode">
+        <button data-v="ai">AIと対戦</button>
+        <button data-v="pvp">二人で対戦</button>
+        <button data-v="watch">AI同士</button>
+      </div>
+    </div>
+    <div class="field" id="fColor">
+      <label>あなたの石</label>
+      <div class="seg" id="segColor">
+        <button data-v="1">黒（先手）</button>
+        <button data-v="2">白（後手）</button>
+        <button data-v="0">ランダム</button>
+      </div>
+    </div>
+    <div class="field" id="fLevel">
+      <label id="levelLabel">AIの強さ</label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="10" step="1" id="levelRange">
+        <div class="level-name" id="levelName"></div>
+      </div>
+    </div>
+    <div class="field hidden" id="fLevel2">
+      <label>白AIの強さ</label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="10" step="1" id="levelRange2">
+        <div class="level-name" id="levelName2"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>表示</label>
+      <div class="checks">
+        <label><input type="checkbox" id="optLegal">打てる場所</label>
+        <label><input type="checkbox" id="optLast">最終手</label>
+        <label><input type="checkbox" id="optEval">形勢表示</label>
+        <label><input type="checkbox" id="optAnim">アニメーション</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn" id="btnCancelNew">閉じる</button>
+      <button class="mbtn go" id="btnStart">対局開始</button>
+    </div>
+  </div>
+</div>
+
+<!-- result -->
+<div class="overlay" id="resultOverlay">
+  <div class="modal">
+    <div class="result-big" id="resultTitle"></div>
+    <div class="result-score">
+      <span><div class="pdisc b"></div><b id="resB">0</b></span>
+      <span style="color:var(--dim);font-size:28px">–</span>
+      <span><b id="resW">0</b><div class="pdisc w"></div></span>
+    </div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="modal-actions">
+      <button class="mbtn" id="btnReview">盤面を見る</button>
+      <button class="mbtn go" id="btnAgain">もう一局</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ====================================================================== rules
+const D8 = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const BLACK = 1, WHITE = 2;
+const LEVELS = [null,
+  ['入門','ほぼ気まぐれ'],['初級','1手読み'],['初級+','3手読み'],['中級','4手読み'],['中級+','6手読み'],
+  ['上級','8手読み・終盤14マス完全読み'],['上級+','10手読み・終盤16マス'],['達人','約1秒・終盤18マス'],['名人','約2秒・終盤19マス'],['最強','約4秒・終盤20マス']];
+const sqName = s => 'abcdefgh'[s & 7] + ((s >> 3) + 1);
+function initialCells() { const c = new Array(64).fill(0); c[27] = WHITE; c[36] = WHITE; c[28] = BLACK; c[35] = BLACK; return c; }
+function flipsOf(cells, sq, color) {
+  if (cells[sq]) return [];
+  const r0 = sq >> 3, c0 = sq & 7, opp = 3 - color, out = [];
+  for (const [dr, dc] of D8) {
+    let r = r0 + dr, c = c0 + dc; const line = [];
+    while (r >= 0 && r < 8 && c >= 0 && c < 8 && cells[r * 8 + c] === opp) { line.push(r * 8 + c); r += dr; c += dc; }
+    if (line.length && r >= 0 && r < 8 && c >= 0 && c < 8 && cells[r * 8 + c] === color) out.push(...line);
+  }
+  return out;
+}
+function legalMoves(cells, color) { const m = []; for (let s = 0; s < 64; s++) if (!cells[s] && flipsOf(cells, s, color).length) m.push(s); return m; }
+function counts(cells) { let b = 0, w = 0; for (const v of cells) { if (v === 1) b++; else if (v === 2) w++; } return [b, w]; }
+
+// ====================================================================== state
+const STORE = 'reversi-emerald-v1';
+const settings = { mode: 'ai', color: 1, level: 6, level2: 6, legal: true, last: true, eval: true, anim: true, sound: true, hint: false };
+let humanColor = 1;              // in 'ai' mode
+// positions[i]: {cells, toMove (0 = game over), last, mover, evalB}
+let positions = [];
+let cur = 0;                     // displayed index
+let reviewing = false;
+let busyToken = 0;
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (!d) return false;
+    Object.assign(settings, d.settings || {});
+    if (d.positions && d.positions.length) {
+      positions = d.positions.map(p => ({ ...p, cells: p.cells.split('').map(Number) }));
+      humanColor = d.humanColor || 1;
+      cur = positions.length - 1;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+function save() {
+  try {
+    localStorage.setItem(STORE, JSON.stringify({
+      settings, humanColor,
+      positions: positions.map(p => ({ ...p, cells: p.cells.join('') }))
+    }));
+  } catch (e) {}
+}
+
+// ====================================================================== engine workers
+let weights = null, weightsReady;
+const NPHASE_DEFAULT = 12;
+weightsReady = (async () => {
+  try {
+    const res = await fetch('weights.bin.gz');
+    if (!res.ok) throw new Error('no weights');
+    let buf;
+    if ('DecompressionStream' in window) {
+      const ds = res.body.pipeThrough(new DecompressionStream('gzip'));
+      buf = await new Response(ds).arrayBuffer();
+    } else throw new Error('no DecompressionStream');
+    const meta = await fetch('weights.json').then(r => r.json()).catch(() => ({ nphase: NPHASE_DEFAULT }));
+    weights = { buffer: buf, nphase: meta.nphase };
+  } catch (e) { console.warn('pattern weights unavailable, using fallback evaluator', e); }
+  return weights;
+})();
+
+function makeWorker(onmsg) {
+  const w = new Worker('engine.js');
+  w.onmessage = onmsg;
+  const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
+  if (weights) send(weights); else weightsReady.then(send);
+  return w;
+}
+let aiWorker = null, anaWorker = null;
+let aiJob = null, anaJob = null;
+function aiMsg(e) {
+  const m = e.data;
+  if (!aiJob || m.id !== aiJob.id) return;
+  if (m.type === 'progress') aiJob.onProgress(m);
+  else if (m.type === 'result') { const j = aiJob; aiJob = null; j.resolve(m); }
+}
+function anaMsg(e) {
+  const m = e.data;
+  if (!anaJob || m.id !== anaJob.id) return;
+  if (m.type === 'analysisProgress') anaJob.onProgress(m.list, false);
+  else if (m.type === 'analysis') { const j = anaJob; anaJob = null; j.onProgress(m.list, true); }
+}
+aiWorker = makeWorker(aiMsg);
+anaWorker = makeWorker(anaMsg);
+let jobId = 0;
+function cancelAI() { if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
+function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); anaJob = null; } }
+function think(cells, toMove, level, onProgress) {
+  return new Promise(resolve => {
+    aiJob = { id: ++jobId, resolve, onProgress };
+    aiWorker.postMessage({ type: 'think', id: aiJob.id, cells, toMove, opts: { level } });
+  });
+}
+function analyze(cells, toMove, time, onProgress) {
+  cancelAna();
+  anaJob = { id: ++jobId, onProgress };
+  anaWorker.postMessage({ type: 'analyze', id: anaJob.id, cells, toMove, opts: { time, exact: 18 } });
+}
+
+// ====================================================================== sound
+let actx = null;
+function ctx() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return actx; }
+function playPlace(flips) {
+  if (!settings.sound) return;
+  const a = ctx(); if (!a) return;
+  if (a.state === 'suspended') a.resume();
+  const t = a.currentTime;
+  // body thump
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.09);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.15);
+  // click
+  const n = a.createBufferSource(), len = a.sampleRate * 0.03, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+  n.buffer = buf; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 0.8;
+  const g2 = a.createGain(); g2.gain.value = 0.45; n.connect(f).connect(g2).connect(a.destination); n.start(t);
+  // soft ticks for flips
+  const k = Math.min(flips, 8);
+  for (let i = 0; i < k; i++) {
+    const tt = t + 0.12 + i * 0.045, o2 = a.createOscillator(), g3 = a.createGain();
+    o2.type = 'triangle'; o2.frequency.value = 1300 + i * 40;
+    g3.gain.setValueAtTime(0.0001, tt); g3.gain.exponentialRampToValueAtTime(0.05, tt + 0.003); g3.gain.exponentialRampToValueAtTime(0.0001, tt + 0.05);
+    o2.connect(g3).connect(a.destination); o2.start(tt); o2.stop(tt + 0.06);
+  }
+}
+function playChime(win) {
+  if (!settings.sound) return;
+  const a = ctx(); if (!a) return;
+  const t = a.currentTime, notes = win ? [523.25, 659.25, 783.99, 1046.5] : [392, 349.23, 311.13];
+  notes.forEach((fr, i) => {
+    const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = fr;
+    const tt = t + i * 0.12; g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.18, tt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.6);
+    o.connect(g).connect(a.destination); o.start(tt); o.stop(tt + 0.65);
+  });
+}
+
+// ====================================================================== DOM
+const $ = s => document.querySelector(s);
+const boardEl = $('#board');
+const cellEls = [], discEls = new Array(64).fill(null);
+for (let s = 0; s < 64; s++) {
+  const c = document.createElement('div');
+  c.className = 'cell'; c.dataset.sq = s;
+  const g = document.createElement('div'); g.className = 'ghost'; c.appendChild(g);
+  c.addEventListener('click', () => onCellClick(s));
+  boardEl.appendChild(c); cellEls.push(c);
+}
+// star points (intersections at b2/b6/f2/f6 corners)
+[9, 13, 41, 45].forEach(s => { const d = document.createElement('div'); d.className = 'star'; cellEls[s].appendChild(d); });
+
+function makeDisc(color) {
+  const w = document.createElement('div'); w.className = 'disc-wrap';
+  const d = document.createElement('div'); d.className = 'disc' + (color === WHITE ? ' white' : '');
+  d.innerHTML = '<div class="face b"></div><div class="face w"></div>';
+  w.appendChild(d); return w;
+}
+function setDisc(s, color, anim) {
+  const el = discEls[s];
+  if (!color) { if (el) { el.remove(); discEls[s] = null; } return; }
+  if (!el) {
+    const w = makeDisc(color); if (anim === 'drop') w.classList.add('drop');
+    cellEls[s].appendChild(w); discEls[s] = w; return;
+  }
+  const d = el.firstChild, isW = d.classList.contains('white');
+  if ((color === WHITE) !== isW) {
+    d.classList.toggle('white', color === WHITE);
+    if (anim && typeof anim === 'number') {
+      d.style.transitionDelay = anim + 'ms';
+      el.classList.remove('flip'); void el.offsetWidth;
+      el.style.animationDelay = anim + 'ms'; el.classList.add('flip');
+    } else d.style.transitionDelay = '0ms';
+  }
+}
+
+let lastMarkEl = null;
+function renderBoard(animInfo) {
+  const p = positions[cur];
+  const cells = p.cells;
+  const animate = animInfo && settings.anim;
+  if (!animate) boardEl.classList.add('no-anim');
+  for (let s = 0; s < 64; s++) {
+    if (animate && s === animInfo.sq) setDisc(s, cells[s], 'drop');
+    else if (animate && animInfo.flips.includes(s)) {
+      const dist = Math.max(Math.abs((s >> 3) - (animInfo.sq >> 3)), Math.abs((s & 7) - (animInfo.sq & 7)));
+      setDisc(s, cells[s], 40 + dist * 55);
+    } else setDisc(s, cells[s], false);
+  }
+  if (!animate) { void boardEl.offsetWidth; boardEl.classList.remove('no-anim'); }
+  // last move
+  if (lastMarkEl) { lastMarkEl.remove(); lastMarkEl = null; }
+  if (p.last >= 0) { lastMarkEl = document.createElement('div'); lastMarkEl.className = 'last-mark'; cellEls[p.last].appendChild(lastMarkEl); }
+  // legal
+  const human = isHumanTurn();
+  const legal = p.toMove && human && !reviewing ? legalMoves(cells, p.toMove) : [];
+  for (let s = 0; s < 64; s++) { cellEls[s].classList.toggle('legal', legal.includes(s)); cellEls[s].classList.remove('hinted'); }
+  boardEl.classList.toggle('turn-black', p.toMove === BLACK);
+  boardEl.classList.toggle('turn-white', p.toMove === WHITE);
+  boardEl.classList.toggle('hide-legal', !settings.legal);
+  boardEl.classList.toggle('hide-last', !settings.last);
+  clearHints();
+}
+function clearHints() { boardEl.querySelectorAll('.hint').forEach(e => e.remove()); cellEls.forEach(c => c.classList.remove('hinted')); }
+function showHints(list, done) {
+  clearHints();
+  if (!settings.hint || !list || !list.length) return;
+  let best = -1e9; for (const x of list) best = Math.max(best, x.score);
+  for (const x of list) {
+    const h = document.createElement('div');
+    h.className = 'hint' + (x.score === best ? ' best' : '');
+    const v = x.exact ? Math.round(x.score) : x.score;
+    h.textContent = (v > 0 ? '+' : '') + (x.exact ? v : v.toFixed(1));
+    cellEls[x.move].appendChild(h); cellEls[x.move].classList.add('hinted');
+  }
+}
+
+function playerName(color) {
+  if (settings.mode === 'pvp') return color === BLACK ? '黒' : '白';
+  if (settings.mode === 'watch') return 'AI ' + LEVELS[color === BLACK ? settings.level : settings.level2][0];
+  return color === humanColor ? 'あなた' : 'AI ' + LEVELS[settings.level][0];
+}
+function renderInfo() {
+  const p = positions[cur];
+  const [b, w] = counts(p.cells);
+  $('#countBlack').textContent = b; $('#countWhite').textContent = w;
+  $('#nameBlack').textContent = playerName(BLACK); $('#nameWhite').textContent = playerName(WHITE);
+  $('#pBlack').classList.toggle('active', p.toMove === BLACK);
+  $('#pWhite').classList.toggle('active', p.toMove === WHITE);
+  // eval
+  $('#evalCard').classList.toggle('hidden', !settings.eval);
+  let ev = null;
+  for (let i = cur; i >= 0 && i >= cur - 1; i--) if (positions[i].evalB != null) { ev = positions[i].evalB; break; }
+  if (p.toMove === 0) ev = b - w;
+  if (ev == null) { $('#evalText').textContent = '—'; }
+  else {
+    const a = Math.abs(ev);
+    const who = a < 0.5 ? '互角' : (ev > 0 ? '黒' : '白') + (a < 3 ? 'やや有利' : a < 8 ? '有利' : a < 20 ? '優勢' : '勝勢');
+    $('#evalText').textContent = `${who}  ${ev > 0 ? '+' : ''}${(Math.round(ev * 10) / 10).toFixed(1)}`;
+    const pct = 50 + 50 * Math.tanh(ev / 14);
+    $('#evalFill').style.width = pct + '%';
+  }
+  renderGraph();
+  renderKifu();
+  // buttons
+  $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  $('#btnHint').classList.toggle('on', settings.hint);
+  $('#btnSound').classList.toggle('on', settings.sound);
+  // review bar
+  $('#reviewBar').classList.toggle('show', reviewing);
+  if (reviewing) $('#reviewText').textContent = `${cur}手目を確認中`;
+  const [tb, tw] = counts(positions[positions.length - 1].cells);
+  $('#infoLine').textContent = `${positions.length - 1}手  ·  空き ${64 - tb - tw}`;
+}
+function renderGraph() {
+  const svg = $('#graph'); const W = 300, H = 74, n = Math.max(positions.length, 20);
+  const pts = [];
+  let last = 0;
+  positions.forEach((p, i) => {
+    let v = p.evalB;
+    if (p.toMove === 0) { const [b, w] = counts(p.cells); v = b - w; }
+    if (v == null) v = last; last = v;
+    const y = H / 2 - Math.tanh(v / 20) * (H / 2 - 4);
+    pts.push([i / (n - 1) * W, y]);
+  });
+  let path = '', area = '';
+  if (pts.length) {
+    path = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L');
+    area = path + `L${pts[pts.length - 1][0].toFixed(1)},${H / 2}L0,${H / 2}Z`;
+  }
+  const cx = cur / (n - 1) * W;
+  svg.innerHTML = `
+    <defs>
+      <clipPath id="top"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath>
+      <clipPath id="bot"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath>
+    </defs>
+    <path d="${area}" fill="rgba(0,0,0,.55)" clip-path="url(#top)"/>
+    <path d="${area}" fill="rgba(235,235,228,.55)" clip-path="url(#bot)"/>
+    <line class="zero" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
+    <path d="${path}" fill="none" stroke="rgba(226,194,117,.9)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
+    <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
+}
+function renderKifu() {
+  const k = $('#kifu');
+  if (positions.length <= 1) { k.innerHTML = '<div class="empty">まだ手がありません</div>'; return; }
+  let html = '';
+  for (let i = 1; i < positions.length; i++) {
+    const p = positions[i];
+    html += `<button data-i="${i}" class="${i === cur ? 'cur' : ''}"><i class="${p.mover === BLACK ? 'b' : 'w'}"></i>${sqName(p.last)}</button>`;
+  }
+  k.innerHTML = html;
+  const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
+}
+$('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#graph').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect(); const n = Math.max(positions.length, 20);
+  const i = Math.round((e.clientX - r.left) / r.width * (n - 1));
+  viewAt(Math.max(0, Math.min(positions.length - 1, i)));
+});
+
+let toastTimer = 0;
+function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
+
+// ====================================================================== flow
+function isAITurnColor(c) { return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
+function isHumanTurn() { const p = positions[cur]; return p.toMove && !isAITurnColor(p.toMove); }
+function levelFor(c) { return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
+
+function newGame() {
+  busyToken++; cancelAI(); cancelAna();
+  if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
+  positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
+  cur = 0; reviewing = false;
+  hideOverlay('#resultOverlay');
+  update(null);
+}
+
+function applyMove(sq) {
+  const p = positions[positions.length - 1];
+  const color = p.toMove;
+  const flips = flipsOf(p.cells, sq, color);
+  if (!flips.length) return null;
+  const cells = p.cells.slice(); cells[sq] = color; for (const f of flips) cells[f] = color;
+  let next = 3 - color, passed = false;
+  if (!legalMoves(cells, next).length) {
+    if (legalMoves(cells, color).length) { next = color; passed = true; }
+    else next = 0;
+  }
+  positions.push({ cells, toMove: next, last: sq, mover: color, evalB: null });
+  cur = positions.length - 1;
+  return { sq, flips, passed, passer: 3 - color };
+}
+
+function update(animInfo) {
+  renderBoard(animInfo);
+  renderInfo();
+  save();
+  schedule(animInfo);
+}
+
+function setStatus(color, text, thinking) {
+  const el = color === BLACK ? $('#pBlack') : $('#pWhite');
+  el.classList.toggle('thinking', !!thinking);
+  (color === BLACK ? $('#statusBlack') : $('#statusWhite')).textContent = text || '';
+}
+
+async function schedule(animInfo) {
+  const token = ++busyToken;
+  setStatus(BLACK, ''); setStatus(WHITE, '');
+  if (reviewing) return;
+  const p = positions[cur];
+  if (animInfo && animInfo.passed) {
+    toast(`${animInfo.passer === BLACK ? '黒' : '白'}は打てる場所がないのでパス`);
+  }
+  if (p.toMove === 0) {
+    await sleep(settings.anim ? 700 : 150);
+    if (token !== busyToken) return;
+    showResult();
+    return;
+  }
+  if (isAITurnColor(p.toMove)) {
+    const color = p.toMove;
+    setStatus(color, '考え中…', true);
+    const t0 = performance.now();
+    await weightsReady;
+    if (token !== busyToken) return;
+    const res = await think(p.cells.slice(), color, levelFor(color), m => {
+      if (token !== busyToken) return;
+      setStatus(color, `深さ${m.depth}  ${fmt(m.score)}`, true);
+    });
+    if (token !== busyToken) return;
+    const minDelay = settings.mode === 'watch' ? 450 : (animInfo && animInfo.passed ? 1100 : 380);
+    const wait = minDelay - (performance.now() - t0);
+    if (wait > 0) await sleep(wait);
+    if (token !== busyToken) return;
+    if (res.move < 0) return;
+    p.evalB = color === BLACK ? res.score : -res.score;
+    const info = res.exact ? `完全読み ${fmt(res.score)}` : `深さ${res.depth}  ${fmt(res.score)}`;
+    const a = applyMove(res.move);
+    playPlace(a.flips.length);
+    update(a);
+    setStatus(color, info, false);
+  } else {
+    // human's turn: background analysis for eval/hints
+    if (settings.hint || settings.eval) {
+      const idx = cur;
+      analyze(p.cells.slice(), p.toMove, settings.hint ? 1500 : 700, (list, done) => {
+        if (token !== busyToken || cur !== idx) return;
+        if (list && list.length) {
+          let best = -1e9; for (const x of list) best = Math.max(best, x.score);
+          positions[idx].evalB = p.toMove === BLACK ? best : -best;
+          if (done) { renderInfo(); save(); }
+          showHints(list, done);
+        }
+      });
+    }
+  }
+}
+const fmt = v => (v > 0 ? '+' : '') + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function onCellClick(sq) {
+  ctx();
+  if (reviewing) return;
+  const p = positions[cur];
+  if (!p.toMove || !isHumanTurn()) return;
+  if (!flipsOf(p.cells, sq, p.toMove).length) return;
+  busyToken++; cancelAna();
+  const a = applyMove(sq);
+  playPlace(a.flips.length);
+  update(a);
+}
+
+function canUndo() {
+  if (settings.mode === 'pvp') return positions.length > 1;
+  for (let i = positions.length - 2; i >= 0; i--) if (positions[i].toMove === humanColor) return true;
+  return false;
+}
+function undo() {
+  if (settings.mode === 'watch' || !canUndo()) return;
+  busyToken++; cancelAI(); cancelAna();
+  let i = positions.length - 2;
+  if (settings.mode === 'ai') while (i > 0 && positions[i].toMove !== humanColor) i--;
+  positions.length = i + 1; cur = i; reviewing = false;
+  hideOverlay('#resultOverlay');
+  update(null);
+}
+function viewAt(i) {
+  if (i === positions.length - 1 && !reviewing) return;
+  busyToken++; cancelAI(); cancelAna();
+  cur = i; reviewing = i !== positions.length - 1;
+  update(null);
+}
+$('#btnLatest').onclick = () => { reviewing = false; cur = positions.length - 1; update(null); };
+$('#btnResume').onclick = () => {
+  positions.length = cur + 1; reviewing = false;
+  update(null);
+};
+
+function showResult() {
+  const p = positions[positions.length - 1];
+  const [b, w] = counts(p.cells);
+  $('#resB').textContent = b; $('#resW').textContent = w;
+  let title, sub = '';
+  if (settings.mode === 'ai') {
+    const me = humanColor === BLACK ? b - w : w - b;
+    title = me > 0 ? 'あなたの勝ち' : me < 0 ? 'AIの勝ち' : '引き分け';
+    sub = `AI ${LEVELS[settings.level][0]}（Lv.${settings.level}）との対局 · ${me > 0 ? me + '石差で勝利' : me < 0 ? (-me) + '石差' : ''}`;
+    playChime(me >= 0);
+  } else {
+    title = b > w ? '黒の勝ち' : b < w ? '白の勝ち' : '引き分け';
+    sub = `${Math.abs(b - w)}石差`;
+    playChime(true);
+  }
+  $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
+  showOverlay('#resultOverlay');
+}
+
+// ====================================================================== overlays / settings
+function showOverlay(s) { $(s).classList.add('show'); }
+function hideOverlay(s) { $(s).classList.remove('show'); }
+const draft = {};
+function segInit(id, key) {
+  const el = $(id);
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; draft[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v; segSync(); });
+}
+function segSync() {
+  for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color']])
+    $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key]) === b.dataset.v));
+  $('#fColor').classList.toggle('hidden', draft.mode !== 'ai');
+  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp');
+  $('#fLevel2').classList.toggle('hidden', draft.mode !== 'watch');
+  $('#levelLabel').textContent = draft.mode === 'watch' ? '黒AIの強さ' : 'AIの強さ';
+  const lv = LEVELS[draft.level], lv2 = LEVELS[draft.level2];
+  $('#levelRange').value = draft.level; $('#levelRange2').value = draft.level2;
+  $('#levelName').innerHTML = `Lv.${draft.level} ${lv[0]}<small>${lv[1]}</small>`;
+  $('#levelName2').innerHTML = `Lv.${draft.level2} ${lv2[0]}<small>${lv2[1]}</small>`;
+}
+segInit('#segMode', 'mode'); segInit('#segColor', 'color');
+$('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+$('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+function openNew() {
+  Object.assign(draft, settings);
+  $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last;
+  $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim;
+  segSync(); showOverlay('#newOverlay');
+}
+$('#btnNew').onclick = openNew;
+$('#btnCancelNew').onclick = () => {
+  // apply display options even when just closing
+  settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
+  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked;
+  hideOverlay('#newOverlay'); renderBoard(null); renderInfo(); save();
+};
+$('#btnStart').onclick = () => {
+  ctx();
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
+  settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
+  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked;
+  hideOverlay('#newOverlay');
+  newGame();
+};
+$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); openNew(); };
+$('#btnReview').onclick = () => hideOverlay('#resultOverlay');
+$('#btnUndo').onclick = undo;
+$('#btnHint').onclick = () => {
+  settings.hint = !settings.hint; save();
+  if (!settings.hint) clearHints();
+  renderInfo();
+  if (!reviewing && isHumanTurn()) schedule(null);
+};
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playPlace(0); };
+$('#btnCopy').onclick = async () => {
+  const s = positions.slice(1).map(p => sqName(p.last)).join('');
+  try { await navigator.clipboard.writeText(s); toast('棋譜をコピーしました', 1000); } catch (e) { toast(s || '棋譜なし', 2500); }
+};
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+  else if (e.key === 'Escape') { hideOverlay('#newOverlay'); hideOverlay('#resultOverlay'); }
+  else if (e.key === 'ArrowLeft' && cur > 0) viewAt(cur - 1);
+  else if (e.key === 'ArrowRight' && cur < positions.length - 1) viewAt(cur + 1);
+});
+
+// ====================================================================== boot
+if (load()) {
+  reviewing = false;
+  update(null);
+} else {
+  positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
+  cur = 0;
+  renderBoard(null); renderInfo();
+  openNew();
+}
+</script>
+</body>
+</html>
