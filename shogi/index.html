@@ -264,7 +264,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .mark.ng{border-color:#ff6b5b}
 /* ---------------------------------------------------------------- responsive */
 @media (max-aspect-ratio: 1/1) and (pointer: coarse), (max-width: 700px) and (max-aspect-ratio: 1/1){
-  :root{--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 250px) / 12.3), 90px)}
+  :root{--cw:min(calc((100vw - 20px) / 9.75), 90px)}
+  .graph{height:64px}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px,env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   .board-area{order:-1;display:flex;flex-direction:column;gap:6px;width:calc(var(--bw) + var(--fp) + var(--cw)*0.16)}
