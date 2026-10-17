@@ -617,10 +617,10 @@ const LEVELS = [
   { depth: 4, exact: 10, noise: 110 },    // 4
   { depth: 6, exact: 12, noise: 40 },     // 5
   { depth: 8, exact: 14, noise: 0 },      // 6
-  { depth: 10, exact: 16, noise: 0 },     // 7
-  { depth: 60, exact: 18, time: 900 },    // 8
-  { depth: 60, exact: 19, time: 1800 },   // 9
-  { depth: 60, exact: 20, time: 3500 },   // 10
+  { depth: 10, exact: 16, time: 1000 },   // 7
+  { depth: 60, exact: 18, time: 1500 },   // 8
+  { depth: 60, exact: 19, time: 3000 },   // 9
+  { depth: 60, exact: 20, time: 5000 },   // 10
 ];
 
 /**

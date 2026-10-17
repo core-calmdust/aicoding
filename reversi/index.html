@@ -267,6 +267,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .result-score .pdisc{width:28px;height:28px}
 .result-score span{display:flex;align-items:center;gap:10px}
 .result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+.credit{margin-top:16px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center}
+.credit a{color:var(--muted)}
 .hidden{display:none!important}
 
 /* ---------------------------------------------------------------- responsive */
@@ -425,6 +427,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
       <button class="mbtn" id="btnCancelNew">閉じる</button>
       <button class="mbtn go" id="btnStart">対局開始</button>
     </div>
+    <p class="credit">AIの評価関数は <a href="https://www.egaroucid.nyanyan.dev/ja/" target="_blank" rel="noopener">Egaroucid</a> のサイトで公開されている学習データを使って学習しました。</p>
   </div>
 </div>
 
@@ -452,7 +455,7 @@ const D8 = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
 const BLACK = 1, WHITE = 2;
 const LEVELS = [null,
   ['入門','ほぼ気まぐれ'],['初級','1手読み'],['初級+','3手読み'],['中級','4手読み'],['中級+','6手読み'],
-  ['上級','8手読み・終盤14マス完全読み'],['上級+','10手読み・終盤16マス'],['達人','約1秒・終盤18マス'],['名人','約2秒・終盤19マス'],['最強','約4秒・終盤20マス']];
+  ['上級','8手読み・終盤14マス完全読み'],['上級+','最大10手読み・終盤16マス'],['達人','約1.5秒・終盤18マス'],['名人','約3秒・終盤19マス'],['最強','約5秒・終盤20マス']];
 const sqName = s => 'abcdefgh'[s & 7] + ((s >> 3) + 1);
 function initialCells() { const c = new Array(64).fill(0); c[27] = WHITE; c[36] = WHITE; c[28] = BLACK; c[35] = BLACK; return c; }
 function flipsOf(cells, sq, color) {
