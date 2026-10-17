@@ -379,8 +379,8 @@ function sortMoves(base, n) { // insertion sort descending by SC
 
 // -------------------------------------------------------- Multi-ProbCut
 // sigma (centi-discs) of (deep - shallow) search values, fitted on sample positions: s = A + B*depth + C*empties
-const MPC = { on: true, t: 1.5, A: 0, B: 0, C: 0, minDepth: 3 };
-const mpcShallow = d => (d >> 1) - 1 < 0 ? 0 : (d >> 1) - 1;
+const MPC = { on: true, t: 1.5, A: 357.32, B: 1.1, C: -3.14, minDepth: 3 }; // fitted on 700 sample positions (depths 0-10)
+const mpcShallow = d => 2 * (d >> 2) + (d & 1); // ~d/2, same parity as d
 // -------------------------------------------------------- midgame PVS
 function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
   if ((++nodes & 4095) === 0) checkTime();
@@ -695,6 +695,7 @@ function toBits(cells, toMove) {
 
 function think(cells, toMove, opts, onProgress) {
   const lv = LEVELS[opts.level] || LEVELS[7];
+  MPC.on = (opts.level || 7) >= 7; // keep the weaker levels as plain full-width searches
   const pos = toBits(cells, toMove);
   const [pl, ph, ol, oh] = pos;
   const moves = legalList(pl, ph, ol, oh);
@@ -800,6 +801,7 @@ function think(cells, toMove, opts, onProgress) {
 
 /** analyze: score all legal moves; returns [{move, score(discs), exact}] */
 function analyze(cells, toMove, opts, onProgress) {
+  MPC.on = true;
   const pos = toBits(cells, toMove);
   const [pl, ph, ol, oh] = pos;
   const moves = legalList(pl, ph, ol, oh);
@@ -827,8 +829,20 @@ function analyze(cells, toMove, opts, onProgress) {
   return out || moves.map(m => ({ move: m, score: 0 }));
 }
 
+/** search a single root move (for parallel root splitting). Returns score from the root side's perspective, or null if aborted. */
+function searchMove(cells, toMove, move, depth, alpha, beta, mode, dl) {
+  MPC.on = true;
+  const [pl, ph, ol, oh] = toBits(cells, toMove);
+  const empties = 64 - pc(pl | ol) - pc(ph | oh);
+  const [a, b, c, d] = childOf(pl, ph, ol, oh, move);
+  deadline = dl || Infinity; aborted = false; nodes = 0;
+  try {
+    if (mode === 'exact') return -solve(a, b, c, d, -beta, -alpha, empties - 1, 1, false);
+    return -search(a, b, c, d, depth - 1, -beta, -alpha, 1, false);
+  } catch (e) { if (e === ABORT) return null; throw e; }
+}
 const API = {
-  think, analyze, setWeights, clearTT, toBits, legalList, childOf, featureIndices,
+  think, analyze, searchMove, setWeights, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
   TUNE, MPC, NINST, NEXT, PS_V1, PS_V2, get PHASE_SIZE() { return PHASE_SIZE; }, PATTERNS, LEVELS, SCALE,
@@ -850,7 +864,11 @@ if (typeof self !== 'undefined' && typeof self.postMessage === 'function' && typ
     } else if (m.type === 'analyze') {
       const r = analyze(m.cells, m.toMove, m.opts, p => self.postMessage({ type: 'analysisProgress', id: m.id, list: p }));
       self.postMessage({ type: 'analysis', id: m.id, list: r });
-    } else if (m.type === 'clear') clearTT();
+    } else if (m.type === 'job') {
+      const v = searchMove(m.cells, m.toMove, m.move, m.depth, m.alpha, m.beta, m.mode, m.deadline);
+      self.postMessage({ type: 'jobDone', id: m.id, move: m.move, value: v, nodes });
+    } else if (m.type === 'mpc') Object.assign(MPC, m.params);
+    else if (m.type === 'clear') clearTT();
   };
 }
 })(typeof self !== 'undefined' ? self : globalThis);

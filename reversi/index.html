@@ -671,13 +671,79 @@ function anaMsg(e) {
 aiWorker = makeWorker(aiMsg);
 anaWorker = makeWorker(anaMsg);
 let jobId = 0;
-function cancelAI() { if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
+function cancelAI() { cancelPool(); if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
 function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); anaJob = null; } }
 function think(cells, toMove, level, onProgress) {
   return new Promise(resolve => {
     aiJob = { id: ++jobId, resolve, onProgress };
     aiWorker.postMessage({ type: 'think', id: aiJob.id, cells, toMove, opts: { level } });
   });
+}
+// ---------------------------------------------------------------- parallel root search (levels 8-10)
+// Root moves are split across several workers (no shared memory): the first move is searched with a full window,
+// the rest with a null window around the current best, re-searching on fail-high.
+const PAR_LEVELS = { 8: { exact: 18, time: 1500 }, 9: { exact: 19, time: 3000 }, 10: { exact: 20, time: 5000 } };
+const NPAR = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1));
+let pool = null;
+function makePool() {
+  const ws = [];
+  for (let i = 0; i < NPAR; i++) {
+    const w = makeWorker(e => { const m = e.data; if (m.type === 'jobDone' && w.job && w.job.id === m.id) { const j = w.job; w.job = null; j.resolve(m.value); } });
+    w.job = null; ws.push(w);
+  }
+  return ws;
+}
+function cancelPool() { if (pool && pool.some(w => w.job)) { pool.forEach(w => w.terminate()); pool = null; } }
+function runJob(w, msg) { return new Promise(resolve => { w.job = { id: ++jobId, resolve }; w.postMessage({ type: 'job', id: w.job.id, ...msg }); }); }
+async function rootSplit(cells, toMove, order, depth, mode, deadline) {
+  const INF = mode === 'exact' ? 65 : 32001;
+  const base = { cells, toMove, depth, mode, deadline };
+  let alpha = await runJob(pool[0], { ...base, move: order[0], alpha: -INF, beta: INF });
+  if (alpha === null) return null;
+  let best = order[0]; const scores = new Map([[order[0], alpha]]);
+  let next = 1, aborted = false;
+  const loop = async w => {
+    while (next < order.length && !aborted) {
+      const mv = order[next++];
+      let v = await runJob(w, { ...base, move: mv, alpha, beta: alpha + 1 });
+      if (v === null) { aborted = true; return; }
+      if (v > alpha) {
+        const v2 = await runJob(w, { ...base, move: mv, alpha, beta: INF });
+        if (v2 === null) { aborted = true; return; }
+        v = v2;
+        if (v > alpha) { alpha = v; best = mv; }
+      }
+      scores.set(mv, v);
+    }
+  };
+  await Promise.all(pool.map(loop));
+  if (aborted) return null;
+  return { move: best, score: alpha, scores };
+}
+async function parallelThink(cells, toMove, level, onProgress) {
+  const cfg = PAR_LEVELS[level];
+  const moves = legalMoves(cells, toMove);
+  const [b, w] = counts(cells), empties = 64 - b - w;
+  if (!pool) pool = makePool();
+  const t0 = Date.now(), hard = t0 + cfg.time * 2.5;
+  const doExact = empties <= cfg.exact;
+  let order = moves.slice(), result = null, depthDone = 0;
+  const maxD = doExact ? Math.min(10, empties) : empties;
+  for (let d = doExact ? 2 : 1; d <= maxD; d++) {
+    const r = await rootSplit(cells, toMove, order, d, 'mid', hard);
+    if (!r) break;
+    result = { move: r.move, score: r.score / 100 }; depthDone = d;
+    order = moves.slice().sort((x, y) => (x === r.move ? -1 : y === r.move ? 1 : (r.scores.get(y) ?? -1e9) - (r.scores.get(x) ?? -1e9)));
+    onProgress && onProgress({ depth: d, score: result.score });
+    if (Date.now() - t0 > cfg.time * 0.45 && !doExact) break;
+  }
+  let exact = false;
+  if (doExact) {
+    const r = await rootSplit(cells, toMove, order, 0, 'exact', t0 + Math.max(cfg.time * 2.5, 2000));
+    if (r) { result = { move: r.move, score: r.score }; exact = true; }
+  }
+  if (!result) result = { move: moves[0], score: 0 };
+  return { move: result.move, score: result.score, depth: exact ? empties : depthDone, exact };
 }
 function analyze(cells, toMove, time, onProgress) {
   cancelAna();
@@ -959,7 +1025,9 @@ async function schedule(animInfo) {
     const t0 = performance.now();
     await weightsReady;
     if (token !== busyToken) return;
-    const res = await think(p.cells.slice(), color, levelFor(color), m => {
+    const lv = levelFor(color), [cb, cw] = counts(p.cells);
+    const usePar = NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 50 && legalMoves(p.cells, color).length > 1;
+    const res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, m => {
       if (token !== busyToken) return;
       setStatus(color, `${t('depth', { d: m.depth })}  ${fmt(m.score)}`, true);
     });
