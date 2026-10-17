@@ -476,7 +476,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="ryoko_1kanji" data-i18n="pc.ryoko"></button><button data-v="intl" data-i18n="pc.intl"></button></div></div>
+    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="1kanji_3d" data-i18n="pc.ryoko"></button><button data-v="intl" data-i18n="pc.intl"></button></div></div>
     <div class="pc-credit" id="pcCredit"></div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
@@ -543,9 +543,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018x"></script>
-<script src="engine.js?v=20261018x"></script>
-<script src="strategy.js?v=20261018x"></script>
+<script src="i18n.js?v=20261018y"></script>
+<script src="engine.js?v=20261018y"></script>
+<script src="strategy.js?v=20261018y"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -562,7 +562,7 @@ const MV = {
   13: { l: ['NW', 'NE', 'SW', 'SE'], s: ['N', 'S', 'W', 'E'] }, 14: { l: ['N', 'S', 'W', 'E'], s: ['NW', 'NE', 'SW', 'SE'] },
 };
 const PCODE = ['', 'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'OU', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY'];
-const PIECE_SETS = { orangain: 'orangain (CC BY-SA 3.0)', '2kanji_3d': 'Little-Mage & orangain (CC BY-SA 3.0)', ryoko_1kanji: 'nexxogen (CC BY-SA 4.0)' };
+const PIECE_SETS = { orangain: 'orangain (CC BY-SA 3.0)', '2kanji_3d': 'Little-Mage & orangain (CC BY-SA 3.0)', '1kanji_3d': 'Little-Mage & CouchTomato87 (CC BY 4.0)' };
 const EN_LETTER = ['', 'P', 'L', 'N', 'S', 'B', 'R', 'G', 'K', '+P', '+L', '+N', '+S', '+B', '+R'];
 const MV_ANG = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
 function intlSvg(tp, kanji) {
@@ -636,7 +636,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018x');
+    const res = await fetch('weights.bin.gz?v=20261018y');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -649,7 +649,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018x');
+  const w = new Worker('engine.js?v=20261018y');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1393,6 +1393,7 @@ $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { d
 // piece style and board skin apply immediately
 function applyLook() {
   if (settings.pieces === 'real') settings.pieces = 'orangain';
+  if (settings.pieces === 'ryoko_1kanji') settings.pieces = '1kanji_3d';
   $('#pcCredit').textContent = PIECE_SETS[settings.pieces] ? t('pc.credit', { a: PIECE_SETS[settings.pieces] }) : '';
   ['grain', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
   segSel('segPieces', settings.pieces); segSel('segSkin', settings.skin);
@@ -1774,7 +1775,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018x').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018y').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1785,7 +1786,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018x').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018y').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1793,7 +1794,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018x').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018y').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1861,7 +1862,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018x').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018y').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}

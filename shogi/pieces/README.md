@@ -6,6 +6,6 @@ The image piece sets in this folder come from [lishogi](https://github.com/Wande
 |---|---|---|
 | `orangain/` | [orangain](https://github.com/orangain) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | `2kanji_3d/` | [Little-Mage](https://github.com/Little-Mage) and [orangain](https://github.com/orangain) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
-| `ryoko_1kanji/` | [nexxogen](https://github.com/nexxogen) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `1kanji_3d/` | [Little-Mage](https://github.com/Little-Mage) and [CouchTomato87](https://github.com/CouchTomato87) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
 The files are used unchanged. File names: `0` = piece pointing up (sente side), `1` = pointing down; `GY` = 玉, `OU` = 王.
