@@ -301,8 +301,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   :root{--board:calc(min(var(--vh) - 24px, 100vw - 312px, 980px) / 1.105)}
-  .app{padding:12px;gap:16px;grid-template-columns:auto minmax(260px,1fr)}
+  .app{padding:12px max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));gap:16px;grid-template-columns:auto minmax(260px,1fr)}
   .side{max-height:calc(var(--vh) - 24px)}
+  .btn{flex-direction:row;justify-content:center;gap:5px}
   .side-in{gap:8px}
   .brand h1{font-size:20px}
   .card{padding:8px 10px}
@@ -314,6 +315,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   .info-line{display:none}
 }
 /* wide side panel: stretch to fill the remaining width */
+@media (min-height: 561px){
 @container (min-width: 420px){
   #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
   #evalCard .graph{flex:1;height:auto;min-height:50px}
@@ -321,6 +323,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   .kifu{grid-template-columns:repeat(10,1fr);font-size:13px}
   .player .count{font-size:clamp(40px, 5cqw, 64px)}
   .brand h1{font-size:clamp(30px, 4.5cqw, 44px)}
+}
 }
 </style>
 </head>
