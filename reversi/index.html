@@ -212,7 +212,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
 
-.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .btn{
   display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;
   background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);
@@ -270,6 +270,51 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .credit{margin-top:16px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center}
 .credit a{color:var(--muted)}
 .hidden{display:none!important}
+/* coach & lesson */
+.kifu button.q-best{box-shadow:inset 0 -2px 0 #6fd3a0}
+.kifu button.q-good{box-shadow:inset 0 -2px 0 #9fc7ff}
+.kifu button.q-dubious{box-shadow:inset 0 -2px 0 #f2c060}
+.kifu button.q-bad{box-shadow:inset 0 -2px 0 #ff6b5b}
+.coach{position:absolute;left:50%;top:calc(var(--cell)*0.42 + 10px);transform:translate(-50%,-6px);z-index:16;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:700;background:rgba(10,16,14,.9);border:1px solid var(--line);opacity:0;transition:opacity .25s, transform .25s;pointer-events:none;white-space:nowrap}
+.coach.show{opacity:1;transform:translate(-50%,0)}
+.coach.q-best{border-color:#6fd3a0;color:#b8f0d2}
+.coach.q-good{border-color:#9fc7ff;color:#d3e5ff}
+.coach.q-dubious{border-color:#f2c060;color:#ffe2a6}
+.coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
+.mark{position:absolute;inset:6%;border-radius:50%;z-index:5;pointer-events:none;border:3px solid}
+.mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
+.mark.ok{border-color:#6fd3a0}
+.mark.ng{border-color:#ff6b5b}
+.mark.danger{border:2px dashed rgba(255,107,91,.8);inset:14%}
+.lesson-card{display:none}
+body.in-lesson .lesson-card{display:block}
+body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line{display:none!important}
+body.in-lesson .controls{display:none}
+.lesson-card .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lesson-card .lt{font-size:12px;color:var(--brass);letter-spacing:.12em}
+.lesson-card h3{font-family:'Shippori Mincho B1',serif;font-size:20px;margin:4px 0 8px;letter-spacing:.06em}
+.dots{display:flex;gap:5px}
+.dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
+.dots i.ok{background:#6fd3a0}.dots i.ng{background:#ff6b5b}.dots i.cur{box-shadow:0 0 0 2px var(--accent)}
+.lesson-prompt{font-size:14px;line-height:1.7}
+.lesson-fb{margin-top:10px;font-size:13px;line-height:1.75;color:var(--muted);min-height:40px}
+.lesson-fb b.ok{color:#8fe3b8}.lesson-fb b.ng{color:#ff9b90}
+.lesson-actions{display:flex;gap:8px;margin-top:12px}
+.lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
+.lesson-actions button:hover{color:var(--text)}
+.lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.lesson-list{display:grid;gap:8px}
+.lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
+.lesson-item:hover{border-color:var(--brass2)}
+.lesson-item .no{font-family:'Shippori Mincho B1',serif;font-size:20px;color:var(--brass);width:28px;text-align:center;flex:none}
+.lesson-item .tx{flex:1;min-width:0}
+.lesson-item .tx b{display:block;font-size:14px}
+.lesson-item .tx small{display:block;font-size:12px;color:var(--dim);line-height:1.5}
+.lesson-item .st{font-size:12px;color:var(--dim);flex:none}
+.lesson-item .st.clear{color:#8fe3b8}
+.lesson-intro p{font-size:14px;line-height:1.85;color:#cfd8d2;margin-bottom:10px}
+.lesson-intro p b{color:var(--accent)}
+.lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
 
 /* ---------------------------------------------------------------- responsive */
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){
@@ -354,6 +399,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
       <div class="coords left"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
       <div class="board turn-black" id="board"></div>
       <div class="toast" id="toast"></div>
+      <div class="coach" id="coach"></div>
       <div class="review-bar" id="reviewBar">
         <span id="reviewText">棋譜を確認中</span>
         <button id="btnResume">ここから打つ</button>
@@ -368,6 +414,17 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
       <a href="../">← ゲーム一覧</a>
     </div>
 
+    <div class="card lesson-card" id="lessonCard">
+      <div class="lh"><span class="lt" id="lsStep">STEP 1</span><div class="dots" id="lsDots"></div></div>
+      <h3 id="lsTitle"></h3>
+      <div class="lesson-prompt" id="lsPrompt"></div>
+      <div class="lesson-fb" id="lsFb"></div>
+      <div class="lesson-actions">
+        <button id="lsHint">ヒント</button>
+        <button id="lsNext" class="go">次の問題</button>
+        <button id="lsQuit">やめる</button>
+      </div>
+    </div>
     <div class="card players">
       <div class="player" id="pBlack">
         <div class="top"><div class="pdisc b"></div><div class="name" id="nameBlack">黒</div></div>
@@ -391,6 +448,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
       <button class="btn primary" id="btnNew" title="新しい対局"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新規</button>
       <button class="btn" id="btnUndo" title="待った (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>待った</button>
       <button class="btn" id="btnHint" title="ヒント（各手の評価値）"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg>ヒント</button>
+      <button class="btn" id="btnLesson" title="レッスン（段階的に学ぶ）"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg>レッスン</button>
       <button class="btn" id="btnSound" title="効果音"><svg viewBox="0 0 24 24" id="soundIcon"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>音</button>
     </div>
 
@@ -443,6 +501,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
         <label><input type="checkbox" id="optLast">最終手</label>
         <label><input type="checkbox" id="optEval">形勢表示</label>
         <label><input type="checkbox" id="optAnim">アニメーション</label>
+        <label><input type="checkbox" id="optCoach">コーチ（手の良し悪し）</label>
       </div>
     </div>
     <div class="modal-actions">
@@ -450,6 +509,29 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
       <button class="mbtn go" id="btnStart">対局開始</button>
     </div>
     <p class="credit">AIの評価関数は <a href="https://www.egaroucid.nyanyan.dev/ja/" target="_blank" rel="noopener">Egaroucid</a> のサイトで公開されている学習データを使って学習しました。</p>
+  </div>
+</div>
+
+<!-- lessons -->
+<div class="overlay" id="lessonOverlay">
+  <div class="modal">
+    <div id="lessonListView">
+      <h2>レッスン</h2>
+      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7">ステップごとに考え方を学び、練習問題で身につけよう。各ステップ5問、4問正解でクリア。</p>
+      <div class="lesson-list" id="lessonList"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonClose">閉じる</button></div>
+    </div>
+    <div id="lessonIntroView" class="hidden">
+      <div class="lt" style="font-size:12px;color:var(--brass);letter-spacing:.12em" id="liStep"></div>
+      <h2 id="liTitle" style="margin-top:4px"></h2>
+      <div class="lesson-intro" id="liBody"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonBack">戻る</button><button class="mbtn go" id="btnLessonStart">問題をはじめる</button></div>
+    </div>
+    <div id="lessonDoneView" class="hidden">
+      <div class="result-big" id="ldTitle"></div>
+      <div class="result-sub" id="ldSub" style="font-size:14px"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonQuit2">対局に戻る</button><button class="mbtn" id="btnLessonRetry">もう一度</button><button class="mbtn go" id="btnLessonNextStep">次のステップへ</button></div>
+    </div>
   </div>
 </div>
 
@@ -495,13 +577,14 @@ function counts(cells) { let b = 0, w = 0; for (const v of cells) { if (v === 1)
 
 // ====================================================================== state
 const STORE = 'reversi-emerald-v1';
-const settings = { mode: 'ai', color: 1, level: 6, level2: 6, legal: true, last: true, eval: true, anim: true, sound: true, hint: false };
+const settings = { mode: 'ai', color: 1, level: 6, level2: 6, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: false };
 let humanColor = 1;              // in 'ai' mode
 // positions[i]: {cells, toMove (0 = game over), last, mover, evalB}
 let positions = [];
 let cur = 0;                     // displayed index
 let reviewing = false;
 let busyToken = 0;
+let lesson = null;          // active lesson session
 
 function load() {
   try {
@@ -772,7 +855,7 @@ function renderKifu() {
   let html = '';
   for (let i = 1; i < positions.length; i++) {
     const p = positions[i];
-    html += `<button data-i="${i}" class="${i === cur ? 'cur' : ''}"><i class="${p.mover === BLACK ? 'b' : 'w'}"></i>${sqName(p.last)}</button>`;
+    html += `<button data-i="${i}" class="${i === cur ? 'cur' : ''} ${p.q ? 'q-' + p.q : ''}"><i class="${p.mover === BLACK ? 'b' : 'w'}"></i>${sqName(p.last)}</button>`;
   }
   k.innerHTML = html;
   const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
@@ -797,7 +880,7 @@ function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.c
 
 // ====================================================================== flow
 function isAITurnColor(c) { return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; return p.toMove && !isAITurnColor(p.toMove); }
+function isHumanTurn() { const p = positions[cur]; if (lesson) return !!p.toMove && !lesson.answered; return p.toMove && !isAITurnColor(p.toMove); }
 function levelFor(c) { return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
 function newGame() {
@@ -841,7 +924,7 @@ function setStatus(color, text, thinking) {
 async function schedule(animInfo) {
   const token = ++busyToken;
   setStatus(BLACK, ''); setStatus(WHITE, '');
-  if (reviewing) return;
+  if (reviewing || lesson) return;
   const p = positions[cur];
   if (animInfo && animInfo.passed) {
     toast(`${animInfo.passer === BLACK ? '黒' : '白'}は打てる場所がないのでパス`);
@@ -876,11 +959,12 @@ async function schedule(animInfo) {
     setStatus(color, info, false);
   } else {
     // human's turn: background analysis for eval/hints
-    if (settings.hint || settings.eval) {
+    if (settings.hint || settings.eval || (settings.coach && settings.mode !== 'watch')) {
       const idx = cur;
       analyze(p.cells.slice(), p.toMove, settings.hint ? 1500 : 700, (list, done) => {
         if (token !== busyToken || cur !== idx) return;
         if (list && list.length) {
+          positions[idx].ana = list.map(x => ({ move: x.move, score: x.score }));
           let best = -1e9; for (const x of list) best = Math.max(best, x.score);
           positions[idx].evalB = p.toMove === BLACK ? best : -best;
           if (done) { renderInfo(); save(); }
@@ -895,14 +979,35 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function onCellClick(sq) {
   ctx();
+  if (lesson) { lessonAnswer(sq); return; }
   if (reviewing) return;
   const p = positions[cur];
   if (!p.toMove || !isHumanTurn()) return;
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
   busyToken++; cancelAna();
+  const q = settings.coach && settings.mode !== 'watch' ? judgeMove(p, sq) : null;
   const a = applyMove(sq);
+  if (q) { positions[cur].q = q.cls; showCoach(q); }
   playPlace(a.flips.length);
   update(a);
+}
+// ---- coach
+function judgeMove(p, sq) {
+  if (!p.ana || !p.ana.length) return null;
+  let best = -1e9, bestMove = -1;
+  for (const x of p.ana) if (x.score > best) { best = x.score; bestMove = x.move; }
+  const mine = p.ana.find(x => x.move === sq); if (!mine) return null;
+  const loss = Math.max(0, best - mine.score);
+  const cls = loss < 0.6 ? 'best' : loss < 2 ? 'good' : loss < 5 ? 'dubious' : 'bad';
+  const label = { best: '最善手', good: '好手', dubious: '疑問手', bad: '悪手' }[cls];
+  let text = label;
+  if (cls !== 'best') text += `  −${loss.toFixed(1)}石  最善は ${sqName(bestMove)}`;
+  return { cls, text };
+}
+let coachTimer = 0;
+function showCoach(q) {
+  const el = $('#coach'); el.className = 'coach show q-' + q.cls; el.textContent = q.text;
+  clearTimeout(coachTimer); coachTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
 function canUndo() {
@@ -976,21 +1081,21 @@ $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 function openNew() {
   Object.assign(draft, settings);
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last;
-  $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim;
+  $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach;
   segSync(); showOverlay('#newOverlay');
 }
 $('#btnNew').onclick = openNew;
 $('#btnCancelNew').onclick = () => {
   // apply display options even when just closing
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
-  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked;
+  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
   hideOverlay('#newOverlay'); renderBoard(null); renderInfo(); save();
 };
 $('#btnStart').onclick = () => {
   ctx();
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
-  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked;
+  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
   hideOverlay('#newOverlay');
   newGame();
 };
@@ -1014,6 +1119,163 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowLeft' && cur > 0) viewAt(cur - 1);
   else if (e.key === 'ArrowRight' && cur < positions.length - 1) viewAt(cur + 1);
 });
+
+// ====================================================================== lessons
+const LESSON_STORE = 'reversi-emerald-lessons';
+let lessonData = null, lessonProgress = {};
+try { lessonProgress = JSON.parse(localStorage.getItem(LESSON_STORE) || '{}'); } catch (e) {}
+const CORNER_OF = { 9: 0, 14: 7, 49: 56, 54: 63, 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
+async function loadLessons() {
+  if (lessonData) return lessonData;
+  try { lessonData = await fetch('lessons.json').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
+  return lessonData;
+}
+function saveLessonProgress() { try { localStorage.setItem(LESSON_STORE, JSON.stringify(lessonProgress)); } catch (e) {} }
+async function openLessons() {
+  const d = await loadLessons();
+  const list = $('#lessonList');
+  list.innerHTML = d.lessons.map((l, i) => {
+    const pr = lessonProgress[l.id];
+    const st = pr ? (pr.clear ? `<span class="st clear">クリア ✓ ${pr.best}/5</span>` : `<span class="st">${pr.best}/5</span>`) : '<span class="st">未挑戦</span>';
+    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${l.title}</b><small>${l.short}</small></span>${st}</button>`;
+  }).join('') || '<p style="color:var(--dim)">レッスンを読み込めませんでした。</p>';
+  showLessonView('list');
+  showOverlay('#lessonOverlay');
+}
+function showLessonView(v) {
+  $('#lessonListView').classList.toggle('hidden', v !== 'list');
+  $('#lessonIntroView').classList.toggle('hidden', v !== 'intro');
+  $('#lessonDoneView').classList.toggle('hidden', v !== 'done');
+}
+let introIdx = 0;
+function openIntro(i) {
+  introIdx = i; const l = lessonData.lessons[i];
+  $('#liStep').textContent = `STEP ${i + 1}`; $('#liTitle').textContent = l.title;
+  $('#liBody').innerHTML = l.intro.map(t => t.startsWith('※') ? `<p class="note">${t}</p>` : `<p>${t}</p>`).join('');
+  showLessonView('intro');
+}
+$('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
+$('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
+$('#btnLessonBack').onclick = () => showLessonView('list');
+$('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
+$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
+$('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (n < lessonData.lessons.length) openIntro(n); else { endLesson(); openLessons(); } };
+$('#btnLesson').onclick = openLessons;
+
+let savedGame = null;
+function startLesson(i) {
+  const l = lessonData.lessons[i];
+  busyToken++; cancelAI(); cancelAna();
+  if (!lesson) savedGame = { positions, cur, reviewing };
+  const pool = l.problems.slice();
+  for (let k = pool.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [pool[k], pool[j]] = [pool[j], pool[k]]; }
+  lesson = { idx: i, l, probs: pool.slice(0, 5), i: 0, results: [], answered: false, hintShown: false };
+  document.body.classList.add('in-lesson');
+  hideOverlay('#resultOverlay');
+  loadProblem();
+}
+function loadProblem() {
+  const pr = lesson.probs[lesson.i];
+  const cells = pr.cells.split('').map(Number);
+  positions = [{ cells, toMove: pr.toMove, last: -1, mover: 0, evalB: null }];
+  cur = 0; reviewing = false; lesson.answered = false; lesson.hintShown = false;
+  renderBoard(null);
+  clearMarks();
+  renderLessonCard();
+  $('#lsFb').innerHTML = '';
+}
+function renderLessonCard() {
+  const L = lesson, pr = L.probs[L.i];
+  $('#lsStep').textContent = `STEP ${L.idx + 1} ・ 問題 ${L.i + 1}/5`;
+  $('#lsTitle').textContent = L.l.title;
+  $('#lsDots').innerHTML = L.probs.map((_, k) => `<i class="${k < L.results.length ? (L.results[k] ? 'ok' : 'ng') : k === L.i ? 'cur' : ''}"></i>`).join('');
+  const who = pr.toMove === BLACK ? '<b>黒</b>' : '<b>白</b>';
+  $('#lsPrompt').innerHTML = `${who}の番です。${L.l.prompt}`;
+  $('#lsNext').textContent = L.i === L.probs.length - 1 ? '結果を見る' : '次の問題';
+  $('#lsNext').disabled = !L.answered; $('#lsNext').style.opacity = L.answered ? 1 : .4;
+  $('#lsHint').disabled = L.answered; $('#lsHint').style.opacity = L.answered ? .4 : 1;
+}
+function clearMarks() { boardEl.querySelectorAll('.mark').forEach(e => e.remove()); }
+function addMark(sq, cls) { const m = document.createElement('div'); m.className = 'mark ' + cls; cellEls[sq].appendChild(m); }
+function lessonAnswer(sq) {
+  const L = lesson; if (L.answered) return;
+  const pr = L.probs[L.i], p = positions[0];
+  if (!flipsOf(p.cells, sq, p.toMove).length) return;
+  L.answered = true;
+  const sc = pr.scores, moves = Object.keys(sc).map(Number);
+  let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
+  const mine = sc[sq];
+  const tol = pr.tol || 0;
+  const ok = mine >= best - tol - 1e-9;
+  L.results.push(ok);
+  playPlace(ok ? 3 : 0);
+  // show all scores
+  clearHints();
+  for (const m of moves) {
+    const h = document.createElement('div');
+    h.className = 'hint' + (sc[m] === best ? ' best' : '');
+    h.textContent = pr.type === 'flips' ? sc[m] + '枚' : (sc[m] > 0 ? '+' : '') + (pr.type === 'exact' ? sc[m] : (+sc[m]).toFixed(1));
+    cellEls[m].appendChild(h); cellEls[m].classList.add('hinted');
+  }
+  for (const m of moves) if (sc[m] === best) addMark(m, 'best');
+  addMark(sq, ok ? 'ok' : 'ng');
+  // feedback
+  const bests = moves.filter(m => sc[m] === best).map(sqName).join('・');
+  const unit = pr.type === 'flips' ? '枚' : '石';
+  let fb = ok ? `<b class="ok">正解！</b> ` : `<b class="ng">惜しい…</b> `;
+  if (pr.type === 'flips') fb += ok ? `${sqName(sq)} で ${mine} 枚返せます。` : `${sqName(sq)} は ${mine} 枚。いちばん多いのは ${bests}（${best} 枚）です。`;
+  else if (ok) fb += mine === best ? `${sqName(sq)} は最善手です（${pr.type === 'exact' ? '最終石差 ' : '評価 '}${fmtS(mine, pr.type)}）。` : `${sqName(sq)} も最善とほぼ同じ価値の良い手です（最善 ${bests}）。`;
+  else fb += `${sqName(sq)} は最善より <b>${(best - mine).toFixed(pr.type === 'exact' ? 0 : 1)}${unit}</b> 損。最善は <b>${bests}</b>（${fmtS(best, pr.type)}）。`;
+  const why = ok ? L.l.good : (autoReason(p, sq, pr, moves, best) || L.l.bad);
+  if (why) fb += `<br>${why}`;
+  if (pr.type !== 'flips') fb += `<br><span style="font-size:11.5px;color:var(--dim)">盤上の数字は、それぞれの手を打った場合の${pr.type === 'exact' ? '最終石差（完全読み）' : '評価値（予想石差）'}です。</span>`;
+  $('#lsFb').innerHTML = fb;
+  cellEls.forEach(c => c.classList.remove('legal'));
+  renderLessonCard();
+}
+const fmtS = (v, t) => (v > 0 ? '+' : '') + (t === 'exact' ? v : (+v).toFixed(1));
+function autoReason(p, sq, pr, moves, best) {
+  const c = CORNER_OF[sq];
+  if (c !== undefined && !p.cells[c]) {
+    const x = [9, 14, 49, 54].includes(sq);
+    return `${x ? 'X打ち' : 'C打ち'}（空いた角の隣）は、相手に角を取られるきっかけになりやすい手です。`;
+  }
+  const f = flipsOf(p.cells, sq, p.toMove).length;
+  const bestM = moves.find(m => pr.scores[m] === best);
+  const fb = flipsOf(p.cells, bestM, p.toMove).length;
+  if (pr.type !== 'flips' && f >= fb + 3) return `${f}枚も返すと自分の石が外側に増え、相手の打てる場所を増やしてしまいます。`;
+  return '';
+}
+$('#lsHint').onclick = () => {
+  if (!lesson || lesson.answered) return;
+  lesson.hintShown = true;
+  const pr = lesson.probs[lesson.i];
+  let h = lesson.l.hint || '';
+  if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
+  $('#lsFb').innerHTML = `💡 ${h}`;
+};
+$('#lsNext').onclick = () => {
+  if (!lesson || !lesson.answered) return;
+  if (lesson.i < lesson.probs.length - 1) { lesson.i++; loadProblem(); return; }
+  const n = lesson.results.filter(Boolean).length, id = lesson.l.id;
+  const pr = lessonProgress[id] || { best: 0, clear: false };
+  pr.best = Math.max(pr.best, n); pr.clear = pr.clear || n >= 4; lessonProgress[id] = pr; saveLessonProgress();
+  introIdx = lesson.idx;
+  $('#ldTitle').textContent = n >= 4 ? 'ステップクリア！' : 'もう一息！';
+  $('#ldSub').innerHTML = `5問中 <b>${n}</b> 問正解。${n >= 4 ? '' : '4問正解でクリアです。'}`;
+  $('#btnLessonNextStep').style.display = introIdx + 1 < lessonData.lessons.length ? '' : 'none';
+  showLessonView('done'); showOverlay('#lessonOverlay');
+};
+$('#lsQuit').onclick = () => endLesson();
+$('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); endLesson(); };
+function endLesson() {
+  if (!lesson) return;
+  lesson = null;
+  document.body.classList.remove('in-lesson');
+  clearMarks(); clearHints();
+  if (savedGame) { positions = savedGame.positions; cur = savedGame.cur; reviewing = savedGame.reviewing; savedGame = null; }
+  update(null);
+}
 
 // ====================================================================== boot
 if (load()) {
