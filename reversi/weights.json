@@ -1,1 +1,1 @@
-{"nphase":30,"version":2,"features":"patterns+mobility","source":"Trained on Egaroucid public training data (https://www.egaroucid.nyanyan.dev/)"}
+{"nphase":30,"version":3,"features":"patterns(set B)+mobility","source":"Trained on Egaroucid public training data (https://www.egaroucid.nyanyan.dev/)"}

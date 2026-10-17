@@ -1651,6 +1651,7 @@ function renderPuzzleCard() {
   $('#pzNext').style.display = P.state === 'solved' ? '' : 'none';
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
+function themeLine() { const tg = (puzzle.pz.tags || []); return tg.length ? `<br><span style="color:var(--accent)">${t('pz.theme')} ${tg.map(x => t('pz.tag.' + x)).join(' / ')}</span>` : ''; }
 async function puzzleMove(sq) {
   const P = puzzle; if (!P || P.state !== 'play' || P.busy) return;
   const p = positions[cur]; if (p.toMove !== P.me || !flipsOf(p.cells, sq, P.me).length) return;
@@ -1663,7 +1664,7 @@ async function puzzleMove(sq) {
   if (!meets(P.goal, mine)) {
     P.state = 'failed'; P.busy = false;
     const bestMoves = list.filter(x => x.score === best).map(x => sqName(x.move)).join(t('join'));
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: sqName(sq), v: fmtS(mine, 'exact'), b: bestMoves })}`);
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: sqName(sq), v: fmtS(mine, 'exact'), b: bestMoves })}` + themeLine());
     renderBoard(null);
     return;
   }
@@ -1694,7 +1695,7 @@ function pzFinish() {
   if (meets(P.goal, v)) {
     P.state = 'solved'; pzProgress[pzKey(P.li, P.k)] = P.hint ? 'h' : 1;
     try { localStorage.setItem(PZ_STORE, JSON.stringify(pzProgress)); } catch (e) {}
-    pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.result', { b, w })}`); playChime(true);
+    pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.result', { b, w })}` + themeLine()); playChime(true);
   } else {
     P.state = 'failed'; pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.result', { b, w })}`);
   }
@@ -1726,7 +1727,7 @@ $('#pzAnswer').onclick = async () => {
     const a = applyMove(bm); playPlace(a.flips.length); renderBoard(a); renderInfo();
   }
   const [b, w] = counts(positions[cur].cells);
-  P.busy = false; pzStatus(`${t('pz.answerDone')} ${t('pz.result', { b, w })}`);
+  P.busy = false; pzStatus(`${t('pz.answerDone')} ${t('pz.result', { b, w })}` + themeLine());
 };
 $('#pzNext').onclick = () => {
   const P = puzzle; if (!P) return;
