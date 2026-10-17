@@ -1316,11 +1316,9 @@ function loadProblem() {
   renderLessonCard();
   $('#lsFb').innerHTML = '';
   const tx = LT(lesson.l);
-  if (lesson.i === 0 && tx.tutorial) {
-    const info = showAids(lesson.l.kind, pr, cells, pr.toMove);
-    $('#lsFb').innerHTML = (tx.goal ? `<div class="ls-goal">🎯 <b>${t('ls.goal')}</b> ${tx.goal}</div>` : '') + `📘 ${tx.tutorial.replace('{m}', info.m || '').replace('{n}', info.n ?? '')}`;
-  }
-  else if (lesson.i >= 3) $('#lsFb').innerHTML = `🎓 ${t('ls.examNote')}`;
+  lesson.aidInfo = null;
+  if (lesson.i === 0 && tx.tutorial) lesson.aidInfo = showAids(lesson.l.kind, pr, cells, pr.toMove);
+  $('#lsFb').innerHTML = preAnswerText();
 }
 // visual aids for a lesson kind (tutorial on problem 1, hint on problems 2-3)
 function showAids(kind, pr, cells, me) {
@@ -1409,6 +1407,18 @@ function lessonAnswer(sq) {
   }
   for (const m of moves) if (sc[m] === best) addMark(m, 'best');
   addMark(sq, pts >= 16 ? 'ok' : 'ng');
+  L.lastSq = sq;
+  $('#lsFb').innerHTML = answerFeedback(sq);
+  cellEls.forEach(c => c.classList.remove('legal'));
+  renderLessonCard();
+}
+// feedback text for an answered problem (re-rendered when the language changes)
+function answerFeedback(sq) {
+  const L = lesson, pr = L.probs[L.i], p = positions[0];
+  const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
+  for (const m of moves) sc[m] = F[m][0];
+  let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
+  const mine = sc[sq], ok = mine >= best - (pr.tol || 0) - 1e-9, pts = problemPoints(pr, mine, best);
   const bestMoves = moves.filter(m => sc[m] === best), bm = bestMoves[0];
   const bests = bestMoves.map(sqName).join(t('join'));
   const lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
@@ -1421,9 +1431,18 @@ function lessonAnswer(sq) {
   const lx = LT(L.l);
   if (pr.trap && lx.trapNote) fb += `<br><span style="color:var(--accent)">※ ${lx.trapNote}</span>`;
   if (pr.type !== 'flips') fb += `<br><span style="font-size:11.5px;color:var(--dim)">${t(pr.type === 'exact' ? 'fb.numsExact' : 'fb.numsEval')}</span>`;
-  $('#lsFb').innerHTML = fb;
-  cellEls.forEach(c => c.classList.remove('legal'));
-  renderLessonCard();
+  return fb;
+}
+// text shown before answering (tutorial / exam note / hint), re-rendered on language change
+function preAnswerText() {
+  const tx = LT(lesson.l);
+  if (lesson.hintShown) return `💡 ${tx.hint || ''}`;
+  if (lesson.i === 0 && tx.tutorial) {
+    const info = lesson.aidInfo || {};
+    return (tx.goal ? `<div class="ls-goal">🎯 <b>${t('ls.goal')}</b> ${tx.goal}</div>` : '') + `📘 ${tx.tutorial.replace('{m}', info.m || '').replace('{n}', info.n ?? '')}`;
+  }
+  if (lesson.i >= 3) return `🎓 ${t('ls.examNote')}`;
+  return '';
 }
 const fmtS = (v, t) => (v > 0 ? '+' : '') + (t === 'exact' ? v : (+v).toFixed(1));
 // facts: [score, flips, open, oppMob, givesCorner, regionSize, oppPass]
@@ -1478,7 +1497,7 @@ $('#lsHint').onclick = () => {
     if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
     showAids(lesson.l.kind, pr, positions[0].cells, pr.toMove);
   }
-  $('#lsFb').innerHTML = `💡 ${h}`;
+  $('#lsFb').innerHTML = preAnswerText();
 };
 $('#lsNext').onclick = () => {
   if (!lesson || !lesson.answered) return;
@@ -1512,7 +1531,11 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); segSync && Object.keys(draft).length && segSync();
-  if (lesson) { renderLessonCard(); } 
+  if (lesson) {
+    renderLessonCard();
+    $('#lsFb').innerHTML = lesson.answered ? answerFeedback(lesson.lastSq) : preAnswerText();
+    if (!lesson.answered) { boardEl.querySelectorAll('.sqlbl').forEach(e => { if (e.classList.contains('c0') && !/^\d+$/.test(e.textContent)) e.textContent = lesson.l.kind === 'wall' ? t('lbl.reserve') : t('lbl.corner'); }); }
+  } 
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
 };
 if (hadSave) {
