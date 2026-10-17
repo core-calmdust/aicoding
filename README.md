@@ -21,13 +21,25 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 
 | タイトル | 内容 |
 |---|---|
-| [Reversi V4](https://core-calmdust.github.io/aicoding/reversi/) 🆕 | 学習型評価関数＋終盤完全読みの本格AI（スマホ対応） |
+| [将棋 SHOGI](https://core-calmdust.github.io/aicoding/shogi/) 🆕 | Floodgateの棋譜・評価値で学習した将棋AI、段級位別レッスン、詰将棋（スマホ対応） |
+| [Reversi V4](https://core-calmdust.github.io/aicoding/reversi/) | 学習型評価関数＋終盤完全読みの本格AI（スマホ対応） |
 | [リバーシ v3.1](https://core-calmdust.github.io/aicoding/reversi_v3.html) | 前バージョン。多彩なAIとCPU同士の対戦 |
 | [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon.html) | サイコロと読みの古典ボードゲーム |
 | [コネクテッド4](https://core-calmdust.github.io/aicoding/connect4.html) | 縦・横・斜めに4つ並べる |
 | [チェッカー](https://core-calmdust.github.io/aicoding/checker.html) | 斜めに進んで跳び越えて取る |
 | [さめが〜め](https://core-calmdust.github.io/aicoding/samegame/) | 同じ色をまとめて消すパズル |
 | [無限数独](https://core-calmdust.github.io/aicoding/sudoku/) | 尽きることのない数独 |
+
+## 将棋 SHOGI について
+
+- **エンジン**: 9×9配列の合法手生成（perftで検証）、PVS＋置換表・反復深化・静止探索・SEE・1手詰判定・千日手/連続王手/入玉宣言（27点法）対応。Web Worker で動作
+- **評価関数**: 玉位置つき駒配置（KP）＋持ち駒の線形モデル。Floodgate 2021〜2025年（両者R3000以上）の 262,513局・22,251,071局面の棋譜と、そこに記録された対局エンジンの評価値から学習
+- **定跡**: R3500以上の対局の序盤の指し手頻度
+- **強さ**: 10段階。最弱は1手読みの入門向け、Lv.8〜10で将棋倶楽部24の5〜4級前後（技巧の深さ別レベルとの対局で計測した目安）
+- **レッスン**: 20級〜三段の14ステップ（駒の動き→タダの駒→王手の受け→1手詰→3手詰→両取り→詰めろ受け→5/7/9/11手詰・次の一手）。1問20点・減点方式で75点以上で合格。格言の例外問題（取ると損な駒）も混ぜて出題。問題はAIの自己対局から自動抽出し、詰み探索・深い探索で検証。段級位は当サイト基準の目安
+- **詰将棋**: 実戦詰将棋（1〜9手以上）と、余分な駒を削って手順を一通りに検証した創作風詰将棋
+- **機能**: ヒント（候補手の矢印）、指し手の採点、悪手の復習、形勢グラフ、待った、投了、駒落ち（香〜六枚）、KIF形式コピー、ドラッグ操作、対局の自動保存
+- **モデルカード**: [shogi/MODEL_CARD.md](shogi/MODEL_CARD.md)
 
 ## Reversi V4 について
 
@@ -46,6 +58,7 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 
 ```
 index.html          ゲーム一覧ページ
+shogi/              将棋 SHOGI（index.html / engine.js / i18n.js / weights.bin.gz / book.json / lessons.json / tsume.json / MODEL_CARD.md）
 reversi/            Reversi V4（index.html / engine.js / i18n.js / weights.bin.gz / lessons.json / MODEL_CARD.md）
 comet/ samegame/ sudoku/ quiz/   各ゲーム
 *.html              単一ファイルのゲーム
@@ -61,6 +74,7 @@ python3 -m http.server 8000
 
 ## クレジット
 
+- 将棋 SHOGI の評価関数と定跡は、[コンピュータ将棋対局場 Floodgate](https://wdoor.c.u-tokyo.ac.jp/shogi/) で公開されている棋譜から学習しました。棋譜データ自体はこのリポジトリに含まれていません。
 - Reversi V4 の評価関数は、[Egaroucid](https://www.egaroucid.nyanyan.dev/ja/) のサイトで公開されている学習データを使って学習しました。学習データ自体はこのリポジトリに含まれていません。
 
 ## ライセンス
