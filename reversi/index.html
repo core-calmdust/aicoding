@@ -259,6 +259,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{width:min(460px,100%);max-height:calc(100vh - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
+.overlay.instant,.overlay.instant .modal{transition:none!important}
 .overlay{height:100vh;height:100dvh;bottom:auto}
 .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 @media (max-width: 520px), (max-height: 560px){
@@ -282,6 +283,24 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 .op-seq{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
 .op-seq b{color:var(--accent)}
+.op-seq button{font:inherit;color:inherit;padding:1px 3px;border-radius:5px}
+.op-seq button:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.op-seq button.cur{background:rgba(201,169,97,.2);color:var(--accent)}
+.op-nav{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap}
+.op-nav button{font-size:12px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.op-nav button:hover{border-color:var(--brass2);color:var(--text)}
+.op-nav .pos{font-size:11.5px;color:var(--dim);margin-left:4px}
+.op-facts{font-size:12px;color:var(--muted);margin:6px 0;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,.2);line-height:1.7}
+.op-facts small{color:var(--dim);font-size:11px}
+.op-info{font-size:12.5px;line-height:1.75;color:var(--text);margin:8px 0 6px;padding:8px 10px;border-left:3px solid var(--brass);background:rgba(201,169,97,.07);border-radius:0 8px 8px 0}
+.op-info b{color:var(--accent)}
+.op-book{display:grid;gap:8px;margin-top:10px}
+.op-book > div{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);font-size:12.5px;line-height:1.7}
+.op-book .nm{font-weight:700;color:var(--accent)}
+.op-book .mv{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);margin-left:6px;word-break:break-all}
+.op-dr{display:flex;gap:6px;margin:6px 0 2px}
+.op-dr button{font-size:11.5px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.op-dr button:hover{border-color:var(--brass2);color:var(--text)}
 .op-lines{font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.5}
 .seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
 .level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
@@ -1164,7 +1183,7 @@ function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.c
 
 // ====================================================================== flow
 function isAITurnColor(c) { if (settings.mode === 'online') return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered; return p.toMove && !isAITurnColor(p.toMove); }
+function isHumanTurn() { const p = positions[cur]; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; return p.toMove && !isAITurnColor(p.toMove); }
 function levelFor(c) { return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
 function newGame() {
@@ -1268,7 +1287,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function onCellClick(sq) {
   ctx();
-  if (lesson) { lessonAnswer(sq); return; }
+  if (lesson && !lesson.drill && lesson.probs && lesson.probs[lesson.i].moves && (lesson.animating || cur !== positions.length - 1)) { opView(positions.length - 1); return; }
+  if (lesson) { lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
   if (net) { netMove(sq); return; }
   if (reviewing) return;
@@ -1466,8 +1486,11 @@ const curSets = () => lessonSrc === 'open' ? (openData ? openData.sets : []) : (
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
+  const instant = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  instant(true);
   if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); openPuzzles(); }
   else { hideOverlay('#puzzleOverlay'); b.dataset.v === 'open' ? openOpenings() : openLessons(); }
+  setTimeout(() => instant(false), 120);
 }));
 async function openOpenings() {
   const d = await loadOpenings();
@@ -1505,7 +1528,8 @@ function openIntro(i) {
   introIdx = i; const l = curSets()[i];
   const x = LT(l);
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
-  $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '');
+  $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '')
+    + (l.kind === 'opening' ? `<p class="note" style="margin-top:10px">${t('op.drillNote')}</p><div class="op-book">${l.lines.map((n, li) => `<div><span class="nm">${PT(n.name)}</span><span class="mv">${n.moves.match(/../g).join(' ')}</span><span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span>${n.info ? '<br>' + PT(n.info) : ''}</div>`).join('')}</div>` : '');
   showLessonView('intro');
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
@@ -1540,9 +1564,12 @@ function startLesson(i) {
 function loadProblem() {
   const pr = lesson.probs[lesson.i];
   const cells = pr.cells.split('').map(Number);
-  const lastMv = pr.moves ? ((m) => m ? (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8 : -1)(pr.moves.slice(-2)) : -1;
-  positions = [{ cells, toMove: pr.toMove, last: lastMv, mover: 0, evalB: null }];
-  cur = 0; reviewing = false; lesson.answered = false; lesson.hintShown = false;
+  positions = [{ cells, toMove: pr.toMove, last: -1, mover: 0, evalB: null }];
+  if (pr.moves) {   // opening problem: rebuild the whole move history so the player can step back through it
+    positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
+    for (const m of (pr.moves.match(/../g) || [])) applyMove((m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
+  }
+  cur = positions.length - 1; reviewing = false; lesson.answered = false; lesson.hintShown = false; lesson.animating = false;
   $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show'); $('#toast').classList.remove('show');
   renderBoard(null);
   clearMarks();
@@ -1552,6 +1579,7 @@ function loadProblem() {
   lesson.aidInfo = null;
   if (lesson.i === 0 && tx.tutorial) lesson.aidInfo = showAids(lesson.l.kind, pr, cells, pr.toMove);
   $('#lsFb').innerHTML = preAnswerText();
+  if (pr.moves && pr.k <= 8 && positions.length > 1) opAnimate();
 }
 // visual aids for a lesson kind (tutorial on problem 1, hint on problems 2-3)
 function showAids(kind, pr, cells, me) {
@@ -1610,7 +1638,10 @@ function renderLessonCard() {
   $('#lsStep').textContent += `  ·  ${t('ls.total', { n: tot })}`;
   if (L.l.kind === 'opening') {
     const ln = L.l.lines[pr.line], seq = (pr.moves.match(/../g) || []);
-    $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + t('op.prompt', { name: `<b>${PT(ln.name)}</b>`, n: pr.k + 1 }) + `<div class="op-seq">${seq.map((m, i) => `${i + 1}.${m}`).join(' ')} <b>${pr.k + 1}.?</b></div>`;
+    $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + t('op.prompt', { name: `<b>${PT(ln.name)}</b>`, n: pr.k + 1 })
+      + `<div class="op-seq"><button data-ply="0">${t('op.start')}</button> ${seq.map((m, i) => `<button data-ply="${i + 1}">${i + 1}.${m}</button>`).join(' ')} <b>${pr.k + 1}.?</b></div>`
+      + `<div class="op-nav" id="opNav"><button data-opnav="first" title="⏮">⏮</button><button data-opnav="prev">◀</button><button data-opnav="play" title="${t('op.replay')}">↻ ${t('op.replay')}</button><button data-opnav="next">▶</button><button data-opnav="last">⏭</button><span class="pos"></span></div>`;
+    setTimeout(opSeqSync, 0);
   } else
   $('#lsPrompt').innerHTML = t('ls.turn', { c: `<b>${cname(pr.toMove)}</b>` }) + x.prompt;
   $('#lsNext').textContent = t(L.i === L.probs.length - 1 ? 'ls.result' : 'ls.next');
@@ -1627,7 +1658,7 @@ function showSquareLabels(cells) {
 function addMark(sq, cls) { const m = document.createElement('div'); m.className = 'mark ' + cls; cellEls[sq].appendChild(m); }
 function lessonAnswer(sq) {
   const L = lesson; if (L.answered) return;
-  const pr = L.probs[L.i], p = positions[0];
+  const pr = L.probs[L.i], p = positions[positions.length - 1];
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
   L.answered = true;
   const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
@@ -1653,6 +1684,46 @@ function lessonAnswer(sq) {
   renderLessonCard();
 }
 // feedback text for an answered problem (re-rendered when the language changes)
+// ---- opening problems: browse / replay the moves leading to the problem position
+async function opAnimate() {
+  const L = lesson, last = positions.length - 1, idx = L.i;
+  L.animating = true; clearMarks(); opView(0, true);
+  await sleep(450);
+  for (let i = 1; i <= last; i++) {
+    if (lesson !== L || L.i !== idx || !L.animating) return;
+    cur = i; const p = positions[i], prev = positions[i - 1];
+    const flips = []; for (let q = 0; q < 64; q++) if (prev.cells[q] && prev.cells[q] !== p.cells[q]) flips.push(q);
+    renderBoard({ sq: p.last, flips }); playPlace(flips.length); opSeqSync();
+    await sleep(settings.anim ? 520 : 260);
+  }
+  if (lesson !== L || L.i !== idx) return;
+  L.animating = false; opView(last);
+}
+function opView(i, keepAnim) {
+  const L = lesson; if (!L || !L.probs[L.i].moves) return;
+  if (!keepAnim) L.animating = false;
+  const last = positions.length - 1; cur = Math.max(0, Math.min(last, i));
+  clearMarks(); clearHints(); renderBoard(null); opSeqSync();
+  if (cur === last) {
+    const pr = L.probs[L.i];
+    if (L.answered && L.lastSq !== undefined) {
+      const F = pr.f, moves = Object.keys(F).map(Number);
+      for (const m of moves) { const h = document.createElement('div'); h.className = 'hint' + (m === pr.ans ? ' best' : ''); h.textContent = fmtS(F[m][0], 'eval'); cellEls[m].appendChild(h); cellEls[m].classList.add('hinted'); }
+      addMark(pr.ans, 'best'); addMark(L.lastSq, L.results[L.results.length - 1] >= 16 ? 'ok' : 'ng');
+      cellEls.forEach(c => c.classList.remove('legal'));
+    } else if (L.hintShown) showAids(L.l.kind, pr, positions[last].cells, pr.toMove);
+  }
+}
+function opSeqSync() {
+  document.querySelectorAll('#lsPrompt .op-seq button[data-ply]').forEach(b => b.classList.toggle('cur', +b.dataset.ply === cur));
+  const nav = $('#opNav'); if (nav) nav.querySelector('.pos').textContent = cur === positions.length - 1 ? t('op.navNow') : t('op.navAt', { n: cur });
+}
+$('#lessonCard').addEventListener('click', e => {
+  const b = e.target.closest('[data-ply]'); if (b && lesson && !lesson.drill) { opView(+b.dataset.ply); return; }
+  const n = e.target.closest('[data-opnav]'); if (!n || !lesson) return;
+  const v = n.dataset.opnav, last = positions.length - 1;
+  if (v === 'play') opAnimate(); else opView(v === 'first' ? 0 : v === 'prev' ? cur - 1 : v === 'next' ? cur + 1 : last);
+});
 // opening problems: the book move of the target line scores 20, another named line's move 16, anything else by rank (max 14)
 function opPoints(pr, sq) {
   if (pr.ans === undefined) return null;
@@ -1665,6 +1736,13 @@ function opNameAt(moves) {   // longest named line equal to this move string
   if (!openData || !openData.names) return null;
   let b = null; for (const x of openData.names) if (x.m === moves && (!b || x.m.length > b.m.length)) b = x;
   return b ? PT(b.n) : null;
+}
+function moveFacts(cells, sq, me) {
+  const f = flipsOf(cells, sq, me); if (!f.length) return null;
+  const nc = cells.slice(); nc[sq] = me; f.forEach(q => nc[q] = me);
+  let open = 0; const seen = new Set();
+  for (const q of f) { const r = q >> 3, c = q & 7; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8 && !nc[rr * 8 + cc] && !seen.has(rr * 8 + cc)) { seen.add(rr * 8 + cc); open++; } } }
+  return { flips: f.length, open, opp: legalMoves(nc, 3 - me).length };
 }
 function opFeedback(sq) {
   const L = lesson, pr = L.probs[L.i], ln = L.l.lines[pr.line];
@@ -1681,12 +1759,16 @@ function opFeedback(sq) {
   const seq = ln.moves.match(/../g);
   fb += `<div class="op-seq">${seq.map((m, i) => i === pr.k ? `<b>${i + 1}.${m}</b>` : `${i + 1}.${m}`).join(' ')}</div>`;
   if (ln.moves.length > (pr.k + 1) * 2) fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.cont', { name: PT(ln.name) })}</span><br>`;
+  const cells = positions[positions.length - 1].cells, me = pr.toMove, fa = moveFacts(cells, pr.ans, me), fm = sq !== pr.ans ? moveFacts(cells, sq, me) : null;
+  const fl = (m, x) => x ? `<b>${sqName(m)}</b> ${t('op.fact', { f: x.flips, o: x.open, m: x.opp })}` : '';
+  fb += `<div class="op-facts">${fl(pr.ans, fa)}${fm ? '<br>' + fl(sq, fm) : ''}<br><small>${t('op.factNote')}</small></div>`;
+  if (ln.info) fb += `<div class="op-info"><b>${PT(ln.name)}</b> ${PT(ln.info)}</div>`;
   fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.nums')}</span>`;
   return fb;
 }
 function answerFeedback(sq) {
   if (lesson.l.kind === 'opening') return opFeedback(sq);
-  const L = lesson, pr = L.probs[L.i], p = positions[0];
+  const L = lesson, pr = L.probs[L.i], p = positions[positions.length - 1];
   const F = pr.f, moves = Object.keys(F).map(Number), sc = {};
   for (const m of moves) sc[m] = F[m][0];
   let best = -1e9; for (const m of moves) best = Math.max(best, sc[m]);
@@ -1760,6 +1842,7 @@ function lessonReason(kind, pr, F, sq, bm, ok, p) {
   return out.join(' ');
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.drill) { drillHint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hintShown = true;
   const pr = lesson.probs[lesson.i];
@@ -1767,11 +1850,12 @@ $('#lsHint').onclick = () => {
   if (lesson.i < 3 || lesson.l.kind === 'opening') {   // problems 4-5 are the "graduation exam": hint text only, no board aids
     clearMarks();
     if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
-    showAids(lesson.l.kind, pr, positions[0].cells, pr.toMove);
+    showAids(lesson.l.kind, pr, positions[positions.length - 1].cells, pr.toMove);
   }
   $('#lsFb').innerHTML = preAnswerText();
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.drill) { if (lesson.done) startDrill(lesson.si, lesson.li, lesson.color); return; }
   if (!lesson || !lesson.answered) return;
   if (lesson.i < lesson.probs.length - 1) { lesson.i++; loadProblem(); return; }
   const n = lesson.results.reduce((a, b) => a + b, 0), id = lesson.l.id, pass = n >= 75;
@@ -1785,6 +1869,71 @@ $('#lsNext').onclick = () => {
 };
 $('#lsQuit').onclick = () => endLesson();
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); endLesson(); };
+// ---- opening drill (通し稽古): play one side of a named line from the start; the other side is played automatically
+const decMoves = str => (str.match(/../g) || []).map(m => (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
+$('#liBody').addEventListener('click', e => { const b = e.target.closest('button[data-li]'); if (b) startDrill(introIdx, +b.dataset.li, +b.dataset.c); });
+function startDrill(si, li, color) {
+  const set = openData.sets[si], ln = set.lines[li];
+  busyToken++; cancelAI(); cancelAna();
+  if (!lesson) savedGame = { positions, cur, reviewing };
+  hideOverlay('#lessonOverlay'); hideOverlay('#resultOverlay');
+  lesson = { drill: true, l: set, si, li, ln, ms: decMoves(ln.moves), color, k: 0, miss: 0, mine: 0, answered: true, done: false, lastMiss: null };
+  document.body.classList.add('in-lesson');
+  positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }]; cur = 0; reviewing = false;
+  $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show');
+  clearMarks(); clearHints(); renderBoard(null); drillRender(); drillStep();
+}
+async function drillStep() {
+  const L = lesson;
+  while (L === lesson && L.k < L.ms.length) {
+    const p = positions[positions.length - 1];
+    if (p.toMove === L.color) { L.answered = false; renderBoard(null); drillRender(); return; }
+    L.answered = true; drillRender();
+    await sleep(settings.anim ? 500 : 150); if (L !== lesson) return;
+    const a = applyMove(L.ms[L.k]); L.k++; playPlace(a.flips.length); renderBoard(a);
+  }
+  if (L !== lesson) return;
+  L.done = true; L.answered = true; renderBoard(null); drillRender();
+  if (L.mine) { playChime(L.miss === 0); if (L.miss === 0) confetti(); }
+  const key = 'drill:' + L.ln.moves + ':' + L.color;
+  if (L.miss === 0 && L.mine) { lessonProgress[key] = 1; saveLessonProgress(); }
+}
+function drillAnswer(sq) {
+  const L = lesson; if (L.answered || L.done) return;
+  const p = positions[positions.length - 1];
+  if (!flipsOf(p.cells, sq, p.toMove).length) return;
+  const want = L.ms[L.k]; L.mine++; clearMarks();
+  if (sq !== want) {
+    L.miss++; L.answered = true; L.lastMiss = { sq, want, k: L.k };
+    addMark(sq, 'ng'); addMark(want, 'best'); drillRender();
+    setTimeout(() => { if (lesson !== L) return; clearMarks(); const a = applyMove(want); L.k++; playPlace(a.flips.length); renderBoard(a); drillStep(); }, 1300);
+    return;
+  }
+  L.lastMiss = null;
+  const a = applyMove(sq); L.k++; playPlace(a.flips.length); renderBoard(a); drillStep();
+}
+function drillHint() {
+  const L = lesson; if (!L || L.answered || L.done) return;
+  if (!L.hinted || L.hinted !== L.k) { L.hinted = L.k; L.miss++; }
+  clearMarks(); addMark(L.ms[L.k], 'best');
+  $('#lsFb').innerHTML = `💡 ${t('op.drillHint')}`;
+}
+function drillRender() {
+  const L = lesson, seq = L.ln.moves.match(/../g);
+  $('#lsStep').textContent = `${t('op.drill')} · ${cname(L.color)}`;
+  $('#lsTitle').textContent = PT(L.ln.name);
+  $('#lsDots').innerHTML = '';
+  const shown = seq.map((m, i) => i < L.k ? `${i + 1}.${m}` : i === L.k && !L.done ? `<b>${i + 1}.?</b>` : '').filter(Boolean).join(' ');
+  if (L.done) $('#lsPrompt').innerHTML = t('op.drillDone', { ok: L.mine - L.miss, n: L.mine }) + `<div class="op-seq">${seq.map((m, i) => `${i + 1}.${m}`).join(' ')}</div>`;
+  else $('#lsPrompt').innerHTML = (positions[positions.length - 1].toMove === L.color && !L.answered ? t('op.drillTurn', { c: `<b>${cname(L.color)}</b>`, n: L.k + 1 }) : t('op.drillWait')) + `<div class="op-seq">${shown}</div>`;
+  let fb = '';
+  if (L.lastMiss) fb = `<b class="ng">${t('fb.ng')}</b> ${t('op.drillMiss', { m: sqName(L.lastMiss.sq), a: sqName(L.lastMiss.want) })}`;
+  if (L.done) fb = (L.miss === 0 && L.mine ? `<b class="ok">${t('op.drillPerfect')}</b>` : '') + (L.ln.info ? `<div class="op-info"><b>${PT(L.ln.name)}</b> ${PT(L.ln.info)}</div>` : '');
+  $('#lsFb').innerHTML = fb;
+  $('#lsNext').textContent = t('op.drillAgain');
+  $('#lsNext').disabled = !L.done; $('#lsNext').style.opacity = L.done ? 1 : .4;
+  $('#lsHint').disabled = L.done || L.answered; $('#lsHint').style.opacity = L.done || L.answered ? .4 : 1;
+}
 function endLesson() {
   if (!lesson) return;
   lesson = null;
@@ -2341,7 +2490,8 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); segSync && Object.keys(draft).length && segSync();
-  if (lesson) {
+  if (lesson && lesson.drill) drillRender();
+  else if (lesson) {
     renderLessonCard();
     $('#lsFb').innerHTML = lesson.answered ? answerFeedback(lesson.lastSq) : preAnswerText();
     if (!lesson.answered) { boardEl.querySelectorAll('.sqlbl').forEach(e => { if (e.classList.contains('c0') && !/^\d+$/.test(e.textContent)) e.textContent = lesson.l.kind === 'wall' ? t('lbl.reserve') : t('lbl.corner'); }); }

@@ -1,6 +1,6 @@
 // UI strings for Dots & Boxes — ja / en / zh (Simplified) / ko
 window.I18N = {
-ja: {
+ja: { 'tab.lesson': 'レッスン', 'tab.puzzle': '詰めドット',
   'title': 'ドット・アンド・ボックス', 'sub': 'ドット・アンド・ボックス', 'lang.name': '日本語',
   'back': '← ゲーム一覧', 'you': 'あなた', 'ai': 'AI', 'pA': 'プレイヤーA', 'pB': 'プレイヤーB', 'aiA': 'AI・A', 'aiB': 'AI・B',
   'init.you': 'あ', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -46,7 +46,7 @@ ja: {
   'pz.retry': 'やり直す', 'pz.answer': '答えを見る', 'pz.next': '次の問題', 'pz.showing': '正解手順を再生しています…', 'pz.answerDone': '正解手順の再生が終わりました。', 'pz.hintText': 'テーマ：{t}', 'pz.fail2': 'パズルを読み込めませんでした。',
   'tag.safe': '安全な線を探す', 'tag.parity': '長鎖ルール（偶奇の調整）', 'tag.sacrifice': 'あえて箱を渡す', 'tag.hard': '2箱の鎖は真ん中から', 'tag.decline': 'ダブルディール（2つ残し）', 'tag.loop': 'ループの4つ残し', 'tag.take': '全部取るべきか？', 'tag.order': '渡す鎖の順番',
 },
-en: {
+en: { 'tab.lesson': 'Lessons', 'tab.puzzle': 'Puzzles',
   'title': 'Dots and Boxes', 'sub': 'classic pencil game', 'lang.name': 'English',
   'back': '← All games', 'you': 'You', 'ai': 'AI', 'pA': 'Player A', 'pB': 'Player B', 'aiA': 'AI A', 'aiB': 'AI B',
   'init.you': 'Y', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -92,7 +92,7 @@ en: {
   'pz.retry': 'Retry', 'pz.answer': 'Show answer', 'pz.next': 'Next puzzle', 'pz.showing': 'Replaying the solution…', 'pz.answerDone': 'Solution replay finished.', 'pz.hintText': 'Theme: {t}', 'pz.fail2': 'Could not load puzzles.',
   'tag.safe': 'find the safe line', 'tag.parity': 'long chain rule (parity)', 'tag.sacrifice': 'a deliberate sacrifice', 'tag.hard': 'open a 2-chain in the middle', 'tag.decline': 'double-dealing (all but two)', 'tag.loop': 'all but four in a loop', 'tag.take': 'take them all?', 'tag.order': 'which chain to give first',
 },
-zh: {
+zh: { 'tab.lesson': '课程', 'tab.puzzle': '残局题',
   'title': '点格棋', 'sub': 'Dots and Boxes', 'lang.name': '中文',
   'back': '← 游戏列表', 'you': '你', 'ai': 'AI', 'pA': '玩家A', 'pB': '玩家B', 'aiA': 'AI·A', 'aiB': 'AI·B',
   'init.you': '你', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -138,7 +138,7 @@ zh: {
   'pz.retry': '重来', 'pz.answer': '看答案', 'pz.next': '下一题', 'pz.showing': '正在演示正解…', 'pz.answerDone': '正解演示结束。', 'pz.hintText': '主题：{t}', 'pz.fail2': '无法加载题目。',
   'tag.safe': '寻找安全线', 'tag.parity': '长链规则（奇偶调整）', 'tag.sacrifice': '故意送格', 'tag.hard': '两格链从中间送', 'tag.decline': '双交（留两格）', 'tag.loop': '环留四格', 'tag.take': '该不该全拿？', 'tag.order': '送链的顺序',
 },
-ko: {
+ko: { 'tab.lesson': '레슨', 'tab.puzzle': '퍼즐',
   'title': '점과 상자', 'sub': 'Dots and Boxes', 'lang.name': '한국어',
   'back': '← 게임 목록', 'you': '나', 'ai': 'AI', 'pA': '플레이어 A', 'pB': '플레이어 B', 'aiA': 'AI·A', 'aiB': 'AI·B',
   'init.you': '나', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
