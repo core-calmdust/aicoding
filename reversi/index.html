@@ -259,6 +259,16 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{width:min(460px,100%);max-height:calc(100vh - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
+.overlay{height:100vh;height:100dvh;bottom:auto}
+.modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+@media (max-width: 520px), (max-height: 560px){
+  .overlay{padding:10px}
+  .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);border-radius:14px}
+  .modal h2{font-size:19px;margin-bottom:12px}
+  .lesson-item{padding:10px 12px;gap:10px}
+  .ls-tabs{margin-bottom:12px}
+  .modal-actions{margin-top:16px}
+}
 .modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.12em;margin-bottom:18px}
 .field{margin-bottom:16px}
 .field > label{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
