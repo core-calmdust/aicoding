@@ -768,7 +768,7 @@ function pieceEl(code, promoted) {
     // image piece sets (lishogi assets; see pieces/README.md for authors and licences)
     el.classList.add('img'); el.classList.remove('g');
     const up = (col === 1) !== flip, code = tp === OU ? (col ? 'OU' : 'GY') : PCODE[tp];
-    k.innerHTML = `<img src="pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg" alt="" draggable="false">`;
+    k.innerHTML = `<img src="pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=2" alt="" draggable="false">`;
   } else if (settings.pieces === 'two') { const w = tp === OU ? (col ? '王将' : '玉将') : KANJI2[tp]; k.innerHTML = `<span class="two">${w[0]}<br>${w[1]}</span>`; }
   else if (settings.pieces === 'intl') { el.classList.add('has-intl'); k.innerHTML = intlSvg(tp, one); }
   else k.textContent = one;
