@@ -196,19 +196,19 @@ a.snd.home{text-decoration:none}
 .review-card.show{display:block}
 body.in-lesson .review-card{display:none!important}
 .rv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.rv-head .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
-.rv-head button{color:var(--dim);font-size:16px;padding:0 6px}
+.rv-head .label{font-size:14px;color:var(--text);letter-spacing:.1em}
+.rv-head button{color:var(--muted);font-size:20px;padding:0 6px}
 .rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px}.rv-prog i{display:block;height:100%;background:var(--brass)}
-.rv-sum{display:grid;grid-template-columns:auto auto 1fr;gap:4px 12px;font-size:13px;align-items:center}
-.rv-sum .h{font-size:11px;color:var(--dim)}
-.rv-chips{display:flex;gap:4px;justify-content:flex-end}.rv-chips span{min-width:22px;text-align:center;border-radius:6px;font-size:11px;padding:1px 4px;color:#0b1110}
+.rv-sum{display:grid;grid-template-columns:auto auto 1fr;gap:6px 12px;font-size:15px;align-items:center;color:var(--text)}
+.rv-sum .h{font-size:12.5px;color:var(--muted)}
+.rv-chips{display:flex;gap:4px;justify-content:flex-end}.rv-chips span{min-width:26px;text-align:center;border-radius:6px;font-size:13px;font-weight:700;padding:2px 5px;color:#0b1110}
 .rv-chips .best{background:#6fd3a0}.rv-chips .good{background:#9fc7ff}.rv-chips .dubious{background:#f2c060}.rv-chips .bad{background:#ff6b5b}
-.rv-list{display:grid;gap:3px;margin-top:8px;max-height:150px;overflow-y:auto}
-.rv-list button{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;font-size:12px;color:var(--muted);text-align:left}
+.rv-list{display:grid;gap:3px;margin-top:10px;max-height:220px;overflow-y:auto}
+.rv-list button{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;font-size:14.5px;color:var(--text);text-align:left}
 .rv-list button:hover,.rv-list button.cur{background:rgba(201,169,97,.14);color:var(--text)}
-.rv-list .tag{font-size:10.5px;border-radius:5px;padding:0 5px;color:#0b1110;flex:none}.rv-list .tag.dubious{background:#f2c060}.rv-list .tag.bad{background:#ff6b5b}
+.rv-list .tag{font-size:12.5px;font-weight:700;border-radius:5px;padding:1px 6px;color:#0b1110;flex:none}.rv-list .tag.dubious{background:#f2c060}.rv-list .tag.bad{background:#ff6b5b}
 .rv-list .mv{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rv-list .ls{font-family:'JetBrains Mono',monospace;color:#ff9b90;flex:none}
+.rv-list .ls{font-family:'JetBrains Mono',monospace;font-size:14px;color:#ff9b90;flex:none}
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono',monospace}
 /* ---------------------------------------------------------------- modal */
 .overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
@@ -514,9 +514,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018q"></script>
-<script src="engine.js?v=20261018q"></script>
-<script src="strategy.js?v=20261018q"></script>
+<script src="i18n.js?v=20261018r"></script>
+<script src="engine.js?v=20261018r"></script>
+<script src="strategy.js?v=20261018r"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -603,7 +603,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018q');
+    const res = await fetch('weights.bin.gz?v=20261018r');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -616,7 +616,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018q');
+  const w = new Worker('engine.js?v=20261018r');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1693,7 +1693,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018q').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018r').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1704,7 +1704,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018q').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018r').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1712,7 +1712,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018q').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018r').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1780,7 +1780,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018q').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018r').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
