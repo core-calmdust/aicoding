@@ -1293,6 +1293,7 @@ function loadProblem() {
   const cells = pr.cells.split('').map(Number);
   positions = [{ cells, toMove: pr.toMove, last: -1, mover: 0, evalB: null }];
   cur = 0; reviewing = false; lesson.answered = false; lesson.hintShown = false;
+  $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show'); $('#toast').classList.remove('show');
   renderBoard(null);
   clearMarks();
   renderLessonCard();
