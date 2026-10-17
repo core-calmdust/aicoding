@@ -233,6 +233,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-item .tx small{display:block;font-size:12px;color:var(--dim);line-height:1.5}
 .lesson-item .st{font-size:12px;color:var(--dim);flex:none;text-align:right}
 .lesson-item .st.clear{color:#8fe3b8}
+.lesson-item.daily{border-color:rgba(226,194,117,.55);background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))}
+.lesson-item.daily .no{font-size:18px}
 .lesson-intro p{font-size:14px;line-height:1.85;color:#cfd8d2;margin-bottom:10px}
 .lesson-intro p b{color:var(--accent)}
 .lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
@@ -309,7 +311,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>将棋<small data-i18n="title.sub"></small></h1>
-      <div class="brand-r"><select id="langSel"><option value="ja">日本語</option><option value="en">English</option></select><a href="../" data-i18n="back"></a></div>
+      <div class="brand-r"><select id="langSel"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></div>
     </div>
     <div class="card lesson-card" id="lessonCard">
       <div class="lh"><span class="lt" id="lsStep"></span><div class="dots" id="lsDots"></div></div>
@@ -454,12 +456,12 @@ const LEVELS = [{ depth: 1, noise: 220 }, { depth: 2, noise: 150 }, { depth: 3, 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
 const settings = { mode: 'ai', color: 0, level: 4, level2: 4, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '' };
-function detectLang() { return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; }
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return n.startsWith('ja') ? 'ja' : n.startsWith('zh') ? 'zh' : n.startsWith('ko') ? 'ko' : 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.ja)[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const cname = c => t(c ? 'white' : 'black');
 function applyI18n() {
-  document.documentElement.lang = LANG;
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
   $('#langSel').value = LANG;
@@ -1152,7 +1154,7 @@ $('#btnCopy').onclick = () => {
   if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : '千日手'}\n`;
   navigator.clipboard.writeText(s).then(() => toast(t('copied')), () => toast('copy failed'));
 };
-$('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; applyI18n(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
+$('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
 // ---- new game dialog
@@ -1431,7 +1433,7 @@ let LESSONS = null;
 const lessonsReady = fetch('lessons.json').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
-const L = o => (o && (o[LANG] || o.ja)) || '';
+const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
 let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
@@ -1440,21 +1442,53 @@ const tsumeReady = fetch('tsume.json').then(r => r.json()).then(d => (TSUME = d)
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
+// ---- daily tsume with streak
+const DAILY_STORE = 'shogi-kaya-daily';
+let daily = { last: '', streak: 0, best: 0, days: {} };
+try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function dailyPick() {
+  if (!TSUME) return null;
+  const now = new Date(), date = ymd(now), wd = now.getDay();
+  // Mon-Tue: 3, Wed-Thu: 5, Fri-Sat: 7 or composed, Sun: 9+
+  const want = wd === 0 ? ['p9', 'p7'] : wd <= 2 ? ['p3'] : wd <= 4 ? ['p5'] : (wd === 5 ? ['art', 'p7'] : ['p7', 'art']);
+  const si = TSUME.sets.findIndex(x => x.id === want[0]) >= 0 ? TSUME.sets.findIndex(x => x.id === want[0]) : TSUME.sets.findIndex(x => want.includes(x.id));
+  if (si < 0) return null;
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
+  let h = day * 2654435761 >>> 0; h ^= h >>> 15;
+  return { date, si, k: h % TSUME.sets[si].problems.length };
+}
+function dailyInfo() {
+  const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
+  const alive = daily.last === today || daily.last === ymd(y);
+  return { streak: alive ? daily.streak : 0, best: daily.best || 0, today: !!daily.days[today] };
+}
+function dailySolved(date, hinted) {
+  if (daily.days[date]) return;
+  const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
+  daily.streak = daily.last === ymd(y) ? daily.streak + 1 : 1;
+  daily.last = date; daily.best = Math.max(daily.best || 0, daily.streak); daily.days[date] = hinted ? 'h' : 1;
+  try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
+}
 function openTsumeList() {
   segSel('segLs', 'tsume');
   $('#lsListTitle').textContent = t('ts.title'); $('#lsListDesc').textContent = t('ts.desc');
   if (!TSUME) { $('#lessonList').innerHTML = ''; return; }
-  $('#lessonList').innerHTML = TSUME.sets.map((g, i) => {
+  const dl = dailyPick(), di = dailyInfo();
+  const dHtml = dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${L(TSUME.sets[dl.si].title)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '';
+  $('#lessonList').innerHTML = dHtml + TSUME.sets.map((g, i) => {
     const k = g.problems.filter(p => tsolved[p.id]).length;
     return `<button class="lesson-item" data-t="${i}"><span class="no">${L(g.label)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span><span class="st ${k === g.problems.length ? 'clear' : ''}">${t('ts.solved', { k, n: g.problems.length })}</span></button>`;
   }).join('');
 }
-function startTsume(si) {
+function startTsume(si, k, dailyDate) {
   busyToken++; cancelAI(); cancelAna();
   const g = TSUME.sets[si];
   const un = g.problems.filter(p => !tsolved[p.id]), done = g.problems.filter(p => tsolved[p.id]);
   const sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  lesson = { endless: true, si, g, probs: [...sh(un), ...sh(done)], k: 0, results: [], pts: [], waiting: false };
+  let probs = [...sh(un), ...sh(done)];
+  if (k !== undefined) { const pz = g.problems[k]; probs = [pz, ...probs.filter(x => x !== pz)]; }
+  lesson = { endless: true, si, g, probs, k: 0, results: [], pts: [], waiting: false, daily: dailyDate || null };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
   loadProblem();
@@ -1475,6 +1509,7 @@ async function openLessons() {
 function lessonView(v) { ['list', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
 $('#lessonList').onclick = e => {
   const b = e.target.closest('.lesson-item'); if (!b) return;
+  if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#lessonOverlay'); startTsume(dl.si, dl.k, dl.date); return; }
   if (b.dataset.t !== undefined) { hideOverlay('#lessonOverlay'); startTsume(+b.dataset.t); }
   else openIntro(+b.dataset.i);
 };
@@ -1483,7 +1518,7 @@ function openIntro(i) {
   introIdx = i; const g = LESSONS.grades[i];
   $('#liStep').textContent = `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
   $('#liTitle').textContent = L(g.title);
-  $('#liBody').innerHTML = (g.intro[LANG] || g.intro.ja).map(p => `<p>${p}</p>`).join('') + (L(g.note) ? `<p class="note">${L(g.note)}</p>` : '');
+  $('#liBody').innerHTML = (g.intro[LANG] || (LANG !== 'ja' && g.intro.en) || g.intro.ja).map(p => `<p>${p}</p>`).join('') + (L(g.note) ? `<p class="note">${L(g.note)}</p>` : '');
   lessonView('intro');
 }
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
@@ -1534,7 +1569,7 @@ function renderLesson() {
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   } else if (lesson.endless) {
-    $('#lsStep').textContent = `${t('ts.title')} ・ ${L(g.label)}`;
+    $('#lsStep').textContent = (lesson.daily && lesson.k === 0 ? `${t('daily.title')} ${lesson.daily.slice(5).replace('-', '/')} ・ ` : '') + `${t('ts.title')} ・ ${L(g.label)}`;
     $('#lsTitle').textContent = L(g.title);
     const k = g.problems.filter(p => tsolved[p.id]).length;
     $('#lsDots').innerHTML = `<span style="font-size:12px;color:var(--muted)">${t('ts.solved', { k, n: g.problems.length })}${tsolved[pr.id] ? ' ・ ✓' : ''}</span>`;
@@ -1624,6 +1659,7 @@ function lessonScored(pts, info) {
   lesson.answered = true; lesson.waiting = false;
   if (lesson.pts[lesson.k] === undefined) { lesson.pts[lesson.k] = pts; lesson.results[lesson.k] = pts >= 16; }
   if (lesson.endless && pts >= PTS - (lesson.hintShown ? HINT_PEN : 0) && info.solved && !lesson.hintShown && pr.id) { tsolved[pr.id] = 1; try { localStorage.setItem(TSTORE, JSON.stringify(tsolved)); } catch (e) {} }
+  if (lesson.daily && lesson.k === 0 && info.solved) { dailySolved(lesson.daily, lesson.hintShown); lesson.dailyMsg = true; }
   const sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
   let html = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b>`;
   if (lesson.hintShown && !lesson.shownAnswer) html += ` <span style="font-size:11.5px">(${t('ls.hintPen', { n: HINT_PEN })})</span>`;
@@ -1640,6 +1676,7 @@ function lessonScored(pts, info) {
   if (pr.trap && L(lesson.g.trapNote)) html += `<br><span style="color:var(--accent)">※ ${L(lesson.g.trapNote)}</span>`;
   if (L(pr.expl)) html += `<br>${L(pr.expl)}`;
   html += `<br><span style="font-size:12px">${t(pr.kind === 'tsume' ? 'ls.mateLine' : 'ls.line', { pv: lineKanji(pr.sfen, sol).join(' ') })}</span>`;
+  if (lesson.dailyMsg) { html += `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}`; lesson.dailyMsg = false; }
   lesson.fbHtml = html;
   playChime(pts >= 16);
   // show the problem position again with the candidates and their points

@@ -718,6 +718,8 @@ class Searcher {
     this.pvTable = new Int32Array(MAXPLY * MAXPLY); this.pvLen = new Int32Array(MAXPLY);
     this.rootDepth = 1;
     this.useMate1 = true; this.useSee = true; this.seePrune = false; this.extAll = false; this.lmrLog = false;
+    this.rootMate = false; this.rfpDepth = 3; this.rfpMargin = 120; this.nullAdapt = false; this.histMalus = false;
+    this.triedQ = []; for (let i = 0; i < MAXPLY + 32; i++) this.triedQ.push(new Int32Array(1000));
     this.mateBuf = []; for (let i = 0; i < MAXPLY + 32; i++) this.mateBuf.push(new Int32Array(1000));
     this.quietBuf = []; this.quietScore = []; for (let i = 0; i < MAXPLY + 32; i++) { this.quietBuf.push(new Int32Array(1000)); this.quietScore.push(new Int32Array(1000)); }
   }
@@ -850,10 +852,10 @@ class Searcher {
     }
     let staticEval = inChk ? -INF : pos.evaluate();
     // reverse futility
-    if (!pvNode && !inChk && depth <= 3 && staticEval - 120 * depth >= beta && Math.abs(beta) < MATE - MAXPLY) return staticEval;
+    if (!pvNode && !inChk && depth <= this.rfpDepth && staticEval - this.rfpMargin * depth >= beta && Math.abs(beta) < MATE - MAXPLY) return staticEval;
     // null move
     if (!pvNode && !inChk && allowNull && depth >= 3 && staticEval >= beta) {
-      const R = 2 + (depth >= 7 ? 1 : 0);
+      const R = this.nullAdapt ? 3 + ((depth / 5) | 0) + Math.min(2, ((staticEval - beta) / 250) | 0) : 2 + (depth >= 7 ? 1 : 0);
       pos.doNull();
       const v = -this.search(depth - 1 - R, -beta, -beta + 1, ply + 1, false, false);
       pos.undoNull();
@@ -867,7 +869,8 @@ class Searcher {
     }
     const moves = this.moveBuf[ply], scores = this.scoreBuf[ply];
     const qmoves = this.quietBuf[ply], qscores = this.quietScore[ply];
-    let best = -INF, bestMove = 0, legal = 0;
+    let best = -INF, bestMove = 0, legal = 0, nq = 0;
+    const tq = this.triedQ[ply];
     const origAlpha = alpha;
     const us = pos.side;
     // staged generation: TT move, captures/promotions, then the rest
@@ -944,6 +947,7 @@ class Searcher {
       }
       pos.undoMove();
       if (this.stop) return 0;
+      if (quiet && nq < 1000) tq[nq++] = m;
       if (v > best) {
         best = v; bestMove = m;
         if (v > alpha) {
@@ -957,6 +961,7 @@ class Searcher {
               if (this.killers[ply * 2] !== m) { this.killers[ply * 2 + 1] = this.killers[ply * 2]; this.killers[ply * 2] = m; }
               const hi = ((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1);
               this.history[hi] += depth * depth; if (this.history[hi] > 1e6) for (let k = 0; k < this.history.length; k++) this.history[k] >>= 1;
+              if (this.histMalus) for (let k = 0; k < nq; k++) { const x = tq[k]; if (x === m) continue; const hx = ((us * 88 + (x & 127)) * 81 + ((x >> 7) & 127)) * 2 + ((x >> 14) & 1); this.history[hx] -= depth * depth; if (this.history[hx] < -1e6) this.history[hx] = -1e6; }
             }
             break;
           }
@@ -980,6 +985,11 @@ class Searcher {
     let legal = pos.legalMoves(false);
     if (opts.exclude) legal = legal.filter(m => !opts.exclude.includes(m));
     if (!legal.length) return { move: 0, score: -MATE, depth: 0, pv: [], nodes: 0 };
+    // short check-only mate search at the root: play a found mate immediately
+    if (this.rootMate && !opts.exclude && !opts.noMate) {
+      const r = solveMate(pos, 9, opts.mateNodes || 60000);
+      if (r && r.mate > 0 && legal.includes(r.pv[0])) return { move: r.pv[0], score: MATE - r.mate, depth: r.mate, pv: r.pv, nodes: r.nodes, time: Date.now() - t0, rootMoves: [{ m: r.pv[0], s: MATE - r.mate }] };
+    }
     // root move list with scores
     let rootMoves = legal.map(m => ({ m, s: -INF }));
     let best = { move: legal[0], score: 0, depth: 0, pv: [legal[0]] };
