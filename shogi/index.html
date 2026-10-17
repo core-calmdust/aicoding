@@ -121,6 +121,9 @@ div.sq:nth-of-type(n+73){border-bottom:none}
 .pmark.w{background:#eee}
 .player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player .side-l{font-family:'Shippori Mincho B1',serif;font-size:24px;font-weight:800;line-height:1.3;margin-top:2px}
+.player .clk{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--text);height:0;overflow:hidden}
+.player .clk.on{height:auto;margin-top:2px}
+.player .clk.low{color:var(--red)}
 .player .status{font-size:11px;color:var(--dim);height:15px;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player.thinking .status{color:var(--accent)}
 .player.thinking .pmark{animation:pulse 1s ease-in-out infinite}
@@ -204,6 +207,23 @@ body.in-lesson .review-card{display:none!important}
 /* lesson */
 .lesson-card{display:none}
 body.in-lesson .lesson-card{display:block}
+.edit-card{display:none}
+body.in-edit .edit-card{display:block}
+body.in-edit .players,body.in-edit #evalCard,body.in-edit .kifu-card,body.in-edit .info-line,body.in-edit .controls,body.in-edit .review-card,body.in-edit .lesson-card{display:none!important}
+.ed-pal{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:8px 0}
+.ed-pal button{position:relative;aspect-ratio:1/1.1;border-radius:7px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.ed-pal button .pc{--cw:30px;inset:6%}
+.ed-pal button.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(226,194,117,.15)}
+.ed-pal button.erase{font-size:16px;color:var(--muted)}
+.ed-promo{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:8px}.ed-promo input{accent-color:var(--brass)}
+.ed-hands{display:grid;grid-template-columns:auto repeat(7,1fr);gap:3px 4px;font-size:12px;align-items:center;margin-bottom:8px}
+.ed-hands .hn{text-align:center;color:var(--muted)}
+.ed-hands button{border-radius:5px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:11px;padding:1px 0;color:var(--text);width:100%}
+.ed-row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px}.ed-row .seg{flex:1}
+.ed-tools button{flex:1;padding:6px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:12px}
+.ed-tools button:hover{color:var(--text)}
+.ed-msg{font-size:12.5px;color:var(--muted);min-height:20px;line-height:1.6}
+.ed-msg .ng{color:#ff9b90}.ed-msg .ok{color:#8fe3b8}
 body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.in-lesson .info-line,body.in-lesson .controls{display:none!important}
 .lesson-card .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .lesson-card .lt{font-size:12px;color:var(--brass);letter-spacing:.12em}
@@ -313,6 +333,16 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
       <h1>将棋<small data-i18n="title.sub"></small></h1>
       <div class="brand-r"><select id="langSel"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></div>
     </div>
+    <div class="card edit-card" id="editCard">
+      <div class="lh"><span class="lt" data-i18n="ed.title"></span></div>
+      <div class="ed-pal" id="edPal"></div>
+      <label class="ed-promo"><input type="checkbox" id="edPromo"><span data-i18n="ed.promo"></span></label>
+      <div class="ed-hands" id="edHands"></div>
+      <div class="ed-row"><span data-i18n="ed.side"></span><div class="seg" id="edSide"><button data-v="0" data-i18n="black"></button><button data-v="1" data-i18n="white"></button></div></div>
+      <div class="ed-row ed-tools"><button id="edInit" data-i18n="ed.init"></button><button id="edTsume" data-i18n="ed.tsume"></button><button id="edClear" data-i18n="ed.clear"></button></div>
+      <div class="ed-msg" id="edMsg"></div>
+      <div class="lesson-actions"><button id="edStudy" class="go" data-i18n="ed.study"></button><button id="edPlay" data-i18n="ed.play"></button><button id="edMate" data-i18n="ed.mate"></button><button id="edQuit" data-i18n="ls.quit"></button></div>
+    </div>
     <div class="card lesson-card" id="lessonCard">
       <div class="lh"><span class="lt" id="lsStep"></span><div class="dots" id="lsDots"></div></div>
       <h3 id="lsTitle"></h3>
@@ -325,8 +355,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
       </div>
     </div>
     <div class="card players">
-      <div class="player" id="pBlack"><div class="top"><div class="pmark b"></div><div class="name" id="nameBlack"></div></div><div class="side-l" data-i18n="black"></div><div class="status" id="statusBlack"></div></div>
-      <div class="player" id="pWhite"><div class="top"><div class="pmark w"></div><div class="name" id="nameWhite"></div></div><div class="side-l" data-i18n="white"></div><div class="status" id="statusWhite"></div></div>
+      <div class="player" id="pBlack"><div class="top"><div class="pmark b"></div><div class="name" id="nameBlack"></div></div><div class="side-l" data-i18n="black"></div><div class="clk" id="clkBlack"></div><div class="status" id="statusBlack"></div></div>
+      <div class="player" id="pWhite"><div class="top"><div class="pmark w"></div><div class="name" id="nameWhite"></div></div><div class="side-l" data-i18n="white"></div><div class="clk" id="clkWhite"></div><div class="status" id="statusWhite"></div></div>
     </div>
     <div class="card" id="evalCard">
       <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
@@ -343,7 +373,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
     </div>
     <div class="card review-card" id="reviewCard"><div class="rv-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose">×</button></div><div id="rvBody"></div></div>
     <div class="card kifu-card">
-      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><span><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
+      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><span><button id="btnEdit" data-i18n="ed.btn" data-i18n-title="ed.btn.title"></button><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
       <div class="kifu" id="kifu"></div>
     </div>
     <div class="info-line" id="infoLine"></div>
@@ -355,13 +385,14 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
     <div class="field"><label data-i18n="ng.mode"></label>
-      <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button></div>
+      <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button><button data-v="edit" data-i18n="ng.edit"></button></div>
     </div>
     <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="field" id="fHandi"><label data-i18n="ng.handicap"></label><div class="seg" id="segHandi"></div><div class="note hidden" id="handiNote" data-i18n="ng.handiNote"></div></div>
     <div class="field" id="fColor"><label data-i18n="ng.color"></label>
       <div class="seg" id="segColor"><button data-v="0" data-i18n="ng.black"></button><button data-v="1" data-i18n="ng.white"></button><button data-v="2" data-i18n="ng.random"></button></div>
     </div>
+    <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div></div>
     <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="9" id="rngLevel"><div class="level-name" id="levelName"></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
     <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="9" id="rngLevel2"><div class="level-name" id="levelName2"></div></div></div>
@@ -751,6 +782,7 @@ boardEl.addEventListener('pointerdown', e => {
 });
 function onSquare(s, fromDrag) {
   ctx();
+  if (edit) { editClick(s); return; }
   if (!fromDrag && Date.now() - suppressClick < 300) return;
   if (!canInteract()) return;
   const p = P.board[s];
@@ -766,6 +798,7 @@ function onSquare(s, fromDrag) {
 }
 function onHand(col, tp) {
   ctx();
+  if (edit) { editHand(col, tp, -1); return; }
   if (!canInteract() || col !== P.side) return;
   if (sel && sel.hand === tp) { clearSel(); return; }
   sel = { hand: tp }; renderSelOnly();
@@ -918,6 +951,7 @@ function newGame() {
     if (settings.handicap > 0 && settings.color === 2) human = 0;
   }
   game = newRecord(start, human);
+  clockInit();
   cur = 0; reviewing = false; hintMoves = null; sel = null;
   flip = settings.mode === 'ai' && human === 1;
   hideOverlay('#resultOverlay');
@@ -941,6 +975,7 @@ function viewAt(i) {
   refresh(false);
 }
 function commitMove(m, fromHuman) {
+  clockOnMove(P.side);
   const usi = P.toUsi(m);
   const capture = !E.isDrop(m) && P.board[E.mTo(m)];
   game.moves.length = cur; game.info.length = cur + 1;
@@ -1073,6 +1108,7 @@ $('#btnUndo').onclick = () => {
     n--; while (n > 0 && (n % 2 === 0 ? sideAt0() : sideAt0() ^ 1) !== game.human) n--;
   } else n--;
   game.moves.length = Math.max(0, n); game.info.length = game.moves.length + 1; game.over = null;
+  if (game.clock) game.clock.t0 = Date.now();
   cur = game.moves.length; reviewing = false; hintMoves = null;
   hideOverlay('#resultOverlay');
   refresh(false);
@@ -1113,6 +1149,7 @@ $('#btnResume').onclick = () => {
   // continue the game from the displayed position
   busyToken++; cancelAI(); cancelAna();
   game.moves.length = cur; game.info.length = cur + 1; game.over = null; reviewing = false;
+  if (game.clock) game.clock.t0 = Date.now();
   if (settings.mode === 'ai') { /* keep human color */ }
   refresh(false);
 };
@@ -1158,10 +1195,10 @@ $('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; app
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
 // ---- new game dialog
-const dlg = { mode: 'ai', color: 0, handicap: 0 };
+const dlg = { mode: 'ai', color: 0, handicap: 0, clock: 0 };
 function segSel(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('sel', b.dataset.v === String(v))); }
 function openNewDialog() {
-  Object.assign(dlg, { mode: settings.mode === 'lesson' ? 'ai' : settings.mode, color: settings.color, handicap: settings.handicap });
+  Object.assign(dlg, { clock: settings.clock || 0, mode: settings.mode === 'lesson' ? 'ai' : settings.mode, color: settings.color, handicap: settings.handicap });
   $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join('');
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last; $('#optEval').checked = settings.eval; $('#optCoach').checked = settings.coach;
@@ -1169,11 +1206,12 @@ function openNewDialog() {
   showOverlay('#newOverlay');
 }
 function updDialog() {
-  segSel('segMode', dlg.mode); segSel('segColor', dlg.color); segSel('segHandi', dlg.handicap);
-  const ls = dlg.mode === 'lesson' || dlg.mode === 'tsume';
+  segSel('segMode', dlg.mode); segSel('segColor', dlg.color); segSel('segHandi', dlg.handicap); segSel('segClock', dlg.clock);
+  const ls = dlg.mode === 'lesson' || dlg.mode === 'tsume' || dlg.mode === 'edit';
   $('#fLessonInfo').classList.toggle('hidden', !ls);
-  $('#fLessonInfo p').textContent = t(dlg.mode === 'tsume' ? 'ts.desc' : 'ls.desc');
+  $('#fLessonInfo p').textContent = t(dlg.mode === 'tsume' ? 'ts.desc' : dlg.mode === 'edit' ? 'ed.desc' : 'ls.desc');
   $('#fHandi').classList.toggle('hidden', ls);
+  $('#fClock').classList.toggle('hidden', ls || dlg.mode === 'watch');
   $('#fColor').classList.toggle('hidden', dlg.mode !== 'ai');
   $('#fLevel').classList.toggle('hidden', dlg.mode === 'pvp' || ls);
   $('#fLevel2').classList.toggle('hidden', dlg.mode !== 'watch');
@@ -1187,16 +1225,159 @@ function updDialog() {
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.color = +b.dataset.v; updDialog(); } };
+$('#segClock').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.clock = +b.dataset.v; updDialog(); } };
 $('#segHandi').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.handicap = +b.dataset.v; updDialog(); } };
 $('#rngLevel').oninput = updDialog; $('#rngLevel2').oninput = updDialog;
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
+  if (dlg.mode === 'edit') { startEdit(false); return; }
   if (dlg.mode === 'lesson' || dlg.mode === 'tsume') { lsTab = dlg.mode; openLessons(); return; }
-  Object.assign(settings, { mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
+  Object.assign(settings, { clock: dlg.clock, mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
     legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
   newGame();
 };
+
+// ====================================================================== game clock
+const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }];
+function clockInit() {
+  const c = CLOCKS[settings.clock || 0];
+  game.clock = c && settings.mode !== 'watch' ? { main: [c.main, c.main], byo: c.byo, left: [c.main, c.main], byoLeft: c.byo, t0: Date.now(), ply: 0 } : null;
+}
+const clockActive = side => game && game.clock && !game.over && !reviewing && !lesson && !edit && cur === game.moves.length && (settings.mode === 'pvp' || (settings.mode === 'ai' && side === game.human));
+function clockOnMove(side) {
+  const c = game && game.clock; if (!c) return;
+  if (clockActive(side)) {
+    let el = (Date.now() - c.t0) / 1000;
+    if (c.left[side] > 0) { const use = Math.min(el, c.left[side]); c.left[side] -= use; el -= use; }
+  }
+  c.byoLeft = c.byo; c.t0 = Date.now();
+}
+function fmtClock(sec) { sec = Math.max(0, Math.ceil(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
+function clockTick() {
+  const c = game && game.clock;
+  for (const side of [0, 1]) {
+    const el = $(side ? '#clkWhite' : '#clkBlack');
+    if (!c || lesson || edit) { el.classList.remove('on'); continue; }
+    el.classList.add('on');
+    let main = c.left[side], byo = c.byo;
+    if (P && P.side === side && clockActive(side)) {
+      let used = (Date.now() - c.t0) / 1000;
+      const m = Math.min(used, main); main -= m; used -= m; byo = c.byo - used;
+      if (main <= 0 && byo <= 0) {
+        game.over = { winner: side ^ 1, reason: 'time', ply: game.moves.length };
+        busyToken++; cancelAI(); cancelAna(); renderInfo(); save(); showResult(); return;
+      }
+    }
+    el.textContent = main > 0 ? `${fmtClock(main)}  +${c.byo}s` : `${t('clk.byoLbl')} ${Math.max(0, Math.ceil(byo))}s`;
+    el.classList.toggle('low', main <= 0 && byo <= 10);
+  }
+}
+setInterval(clockTick, 250);
+
+// ====================================================================== position editor
+let edit = null;
+const ED_TYPES = [FU, KY, KE, GI, KI, KA, HI, OU];
+const TOTAL = [0, 18, 4, 4, 4, 2, 2, 4];
+function startEdit(fromCurrent) {
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  exitLesson(true);
+  const p = new E.Position();
+  if (fromCurrent && game) p.setSfen(posAt(cur).sfen()); else p.setSfen(HANDI[0]);
+  edit = { b: Array.from(p.board), h: Array.from(p.hand), side: p.side, pick: FU, color: 0, saved: game && !game.lessonGame ? game : null };
+  document.body.classList.add('in-edit');
+  flip = false; hideOverlay('#newOverlay');
+  renderEdit();
+}
+function editSfen() { const p = new E.Position(); p.board.set(edit.b); p.hand.set(edit.h); p.side = edit.side; p.ply = 0; return p.sfen(); }
+function editCounts() {
+  const c = new Array(8).fill(0), k = [0, 0];
+  edit.b.forEach(q => { if (!q) return; const t0 = E.UNPROMOTE[E.typeOf(q)]; if (t0 === OU) k[E.colorOf(q)]++; else c[t0]++; });
+  for (let t0 = 1; t0 <= 7; t0++) c[t0] += edit.h[t0] + edit.h[8 + t0];
+  return { c, k };
+}
+function editCheck() {
+  // returns {ok, msg, tsumeOk}
+  const { c, k } = editCounts();
+  for (let t0 = 1; t0 <= 7; t0++) if (c[t0] > TOTAL[t0]) return { ok: false, msg: t('ed.tooMany', { p: NAME[t0] }) };
+  const p = new E.Position(); p.setSfen(editSfen());
+  for (let f = 0; f < 9; f++) for (const col of [0, 1]) { let n = 0; for (let r = 0; r < 9; r++) if (p.board[r * 9 + f] === FU + (col ? WF : 0)) n++; if (n > 1) return { ok: false, msg: t('ed.nifu') }; }
+  if (p.king[p.side ^ 1] >= 0 && p.inCheck(p.side ^ 1)) return { ok: false, msg: t('ed.inCheck') };
+  if (k[p.side ^ 1] !== 1) return { ok: false, msg: t('ed.needKing') };
+  return { ok: true, both: k[0] === 1 && k[1] === 1 };
+}
+function renderEdit() {
+  P = new E.Position(); P.setSfen(editSfen());
+  game = newRecord(editSfen(), 0); game.lessonGame = true; cur = 0; reviewing = false; hintMoves = null; sel = null;
+  renderCoords(); renderBoard(false);
+  const promo = $('#edPromo').checked;
+  let pal = '';
+  for (const col of [0, 1]) for (const tp of ED_TYPES) {
+    const code = (promo && E.CAN_PROMOTE[tp] ? tp + 8 : tp) + (col ? WF : 0);
+    pal += `<button data-c="${col}" data-t="${tp}" class="${edit.pick === tp && edit.color === col ? 'sel' : ''}">${pieceEl(code).outerHTML}</button>`;
+    if (tp === OU && col === 0) pal += `<button class="erase ${edit.pick === 0 ? 'sel' : ''}" data-t="0" style="grid-row:span 2">✕</button>`;
+  }
+  $('#edPal').innerHTML = pal;
+  let hh = '<span></span>' + [HI, KA, KI, GI, KE, KY, FU].map(tp => `<span class="hn">${KANJI[tp]}</span>`).join('');
+  for (const col of [0, 1]) {
+    hh += `<span>${col ? '☖' : '☗'}</span>` + [HI, KA, KI, GI, KE, KY, FU].map(tp => `<span style="display:grid;grid-template-columns:1fr auto 1fr;gap:2px;align-items:center"><button data-h="${col},${tp},-1">−</button><b style="text-align:center;font-weight:500">${edit.h[col * 8 + tp]}</b><button data-h="${col},${tp},1">＋</button></span>`).join('');
+  }
+  $('#edHands').innerHTML = hh;
+  segSel('edSide', edit.side);
+  const chk = editCheck();
+  $('#edMsg').innerHTML = chk.ok ? `<span class="ok">${t(chk.both ? 'ed.ok' : 'ed.okTsume')}</span>` : `<span class="ng">${chk.msg}</span>`;
+  $('#edPlay').disabled = !chk.ok || !chk.both; $('#edStudy').disabled = !chk.ok; $('#edMate').disabled = !chk.ok;
+}
+function editClick(s) {
+  if (edit.pick === 0) { edit.b[s] = 0; renderEdit(); return; }
+  const promo = $('#edPromo').checked && E.CAN_PROMOTE[edit.pick];
+  const tp = promo ? edit.pick + 8 : edit.pick, code = tp + (edit.color ? WF : 0);
+  if (edit.b[s] === code) { edit.b[s] = 0; renderEdit(); return; }
+  if (!promo && E.deadEnd(edit.color, edit.pick, s)) { toast(t('ed.dead'), 1400); return; }
+  const old = edit.b[s]; edit.b[s] = code;
+  const { c, k } = editCounts();
+  if (k[edit.color] > 1 || (edit.pick !== OU && c[edit.pick] > TOTAL[edit.pick])) { edit.b[s] = old; toast(t('ed.tooMany', { p: NAME[edit.pick] }), 1400); return; }
+  renderEdit();
+}
+function editHand(col, tp, d) {
+  const i = col * 8 + tp, n = edit.h[i] + d;
+  if (n < 0) return;
+  if (d > 0) { const { c } = editCounts(); if (c[tp] >= TOTAL[tp]) { toast(t('ed.tooMany', { p: NAME[tp] }), 1400); return; } }
+  edit.h[i] = n; renderEdit();
+}
+$('#edPal').onclick = e => { const b = e.target.closest('button'); if (!b) return; edit.pick = +b.dataset.t; edit.color = +(b.dataset.c || 0); renderEdit(); };
+$('#edPromo').onchange = () => renderEdit();
+$('#edHands').onclick = e => { const b = e.target.closest('button[data-h]'); if (!b) return; const [c, tp, d] = b.dataset.h.split(',').map(Number); editHand(c, tp, d); };
+$('#edSide').onclick = e => { const b = e.target.closest('button'); if (b) { edit.side = +b.dataset.v; renderEdit(); } };
+$('#edInit').onclick = () => { const p = new E.Position(); p.setSfen(HANDI[0]); edit.b = Array.from(p.board); edit.h = Array.from(p.hand); edit.side = 0; renderEdit(); };
+$('#edClear').onclick = () => { edit.b = edit.b.map(q => q && E.typeOf(q) === OU ? q : 0); edit.h = new Array(16).fill(0); renderEdit(); };
+$('#edTsume').onclick = () => {
+  // tsume convention: no attacker (sente) king, defender holds every remaining piece
+  edit.b = edit.b.map(q => q && E.typeOf(q) === OU && E.colorOf(q) === 0 ? 0 : q);
+  const { c } = editCounts();
+  for (let tp = 1; tp <= 7; tp++) edit.h[8 + tp] += TOTAL[tp] - c[tp];
+  edit.side = 0; renderEdit();
+};
+function endEdit() { edit = null; document.body.classList.remove('in-edit'); }
+$('#edQuit').onclick = () => { const sv = edit && edit.saved; endEdit(); if (sv) { game = sv; cur = game.moves.length; flip = settings.mode === 'ai' && game.human === 1; refresh(false); } else newGame(); };
+$('#edStudy').onclick = () => {
+  const sf = editSfen(); endEdit();
+  settings.mode = 'pvp'; game = newRecord(sf, 0); cur = 0; reviewing = false; flip = false; refresh(false);
+};
+$('#edPlay').onclick = () => {
+  const sf = editSfen(), side = edit.side; endEdit();
+  settings.mode = 'ai'; game = newRecord(sf, side); cur = 0; reviewing = false; flip = side === 1; refresh(false);
+};
+$('#edMate').onclick = async () => {
+  $('#edMsg').innerHTML = t('ed.searching'); $('#edMate').disabled = true;
+  const sf = editSfen();
+  const r = await aiCall({ type: 'mate', sfen: sf, moves: [], maxPly: 15, nodes: 3000000 });
+  if (!edit) return;
+  $('#edMate').disabled = false;
+  if (r && r.mate > 0) $('#edMsg').innerHTML = `<span class="ok">${t('mateIn', { n: r.mate })}</span>: ${lineKanji(sf, r.pv.slice(0, r.mate)).join(' ')}`;
+  else $('#edMsg').innerHTML = `<span class="ng">${t(r && r.mate < 0 ? 'ed.mateUnknown' : 'ed.noMate')}</span>`;
+};
+$('#btnEdit').onclick = () => startEdit(true);
 
 // ====================================================================== post-game review
 const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
@@ -1766,6 +1947,7 @@ applyI18n();
   if (settings.lang) LANG = settings.lang;
   applyI18n();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
+  if (had && game.clock) game.clock.t0 = Date.now();
   if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
   else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); openNewDialog(); }
   const q = new URLSearchParams(location.search);
