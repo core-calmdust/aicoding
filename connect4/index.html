@@ -1219,6 +1219,7 @@ $('#btnCopy').onclick = async () => {
 };
 document.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input,select,textarea')) return;
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && ![...document.querySelectorAll('.overlay.show')].some(o => o.id !== 'resultOverlay')) { e.preventDefault(); undo(); return; }
   if (document.querySelector('.overlay.show')) { if (e.key === 'Escape') document.querySelectorAll('.overlay.show').forEach(o => { if (o.id !== 'resultOverlay' || true) o.classList.remove('show'); }); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
   if (e.key === 'ArrowLeft') { e.preventDefault(); viewAt(cur - 1); }
@@ -1779,6 +1780,21 @@ else if (!hadSave) { update(false); openNewDialog(); }
 else { update(false); afterPosition(); }
 // expose for tests
 window.__c4 = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, playMove: c => onColumn(c), statusOf, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; } };
+
+// clicking the dimmed area outside a dialog does the same as its close button
+(() => {
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', onlineOverlay: '#olClose', puzzleOverlay: '#pzClose' };
+  document.querySelectorAll('.overlay').forEach(o => {
+    let down = false;
+    o.addEventListener('pointerdown', e => { down = e.target === o; });
+    o.addEventListener('click', e => {
+      if (e.target !== o || !down) return; down = false;
+      if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
+      const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
+      if (b) b.click(); else o.classList.remove('show');
+    });
+  });
+})();
 </script>
 </body>
 </html>

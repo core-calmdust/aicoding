@@ -2233,6 +2233,21 @@ applyI18n();
   const q = new URLSearchParams(location.search);
   if (q.has('lesson') || q.has('tsume')) lessonsReady.then(() => { hideOverlay('#newOverlay'); lsTab = q.has('tsume') ? 'tsume' : 'lesson'; openLessons(); });
 })();
+
+// clicking the dimmed area outside a dialog does the same as its close button
+(() => {
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', confirmOverlay: '#btnConfirmNo' };
+  document.querySelectorAll('.overlay').forEach(o => {
+    let down = false;
+    o.addEventListener('pointerdown', e => { down = e.target === o; });
+    o.addEventListener('click', e => {
+      if (e.target !== o || !down) return; down = false;
+      if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
+      const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
+      if (b) b.click(); else o.classList.remove('show');
+    });
+  });
+})();
 </script>
 </body>
 </html>
