@@ -1,113 +1,387 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AIコーディングで制作した様々なブラウザゲームを遊べるサイトです。リバーシ、バックギャモン、弾幕シューティングなど、多様なゲームをPCでもスマホでも楽しめます。">
-    <title>ゲーム制作＠バイブコーディング</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="AIコーディングで制作したブラウザゲーム集。IVS NEOCREA 準グランプリ・Bandai Namco 021 Fund賞受賞の「NEORETRO ARCADES」シリーズ、学習型AI搭載のリバーシなど。登録不要・PCでもスマホでもすぐ遊べます。">
+<meta name="theme-color" content="#07080d">
+<title>ゲーム制作＠バイブコーディング — AI CODING ARCADE</title>
+<meta property="og:title" content="ゲーム制作＠バイブコーディング — AI CODING ARCADE">
+<meta property="og:description" content="AIと一緒に作った、ブラウザですぐ遊べるゲームたち。受賞作「NEORETRO ARCADES」シリーズほか。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://core-calmdust.github.io/aicoding/">
+<meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/danmaku-inv.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Unbounded:wght@500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080d; --bg2:#0d0f17; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --text:#eef0f6; --muted:#9aa0b4; --dim:#646a80;
+  --pink:#ff3fa4; --cyan:#30e6ff; --violet:#8b5cff; --gold:#f2cf7a;
+  --radius:20px;
+  --wrap:min(1180px, 100% - 48px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Zen Kaku Gothic New',system-ui,sans-serif;line-height:1.7;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.wrap{width:var(--wrap);margin:0 auto}
+.en{font-family:'Unbounded',sans-serif;letter-spacing:.02em}
+.mono{font-family:'JetBrains Mono',monospace}
 
-    <!-- パフォーマンス改善：Google Fontsの読み込みを非同期化 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script>
-      (function(d) {
-        var config = {
-          scriptTimeout: 3000,
-          async: true
-        },
-        h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{WebFont.load({google:{families:['Noto Sans JP:wght@400;700']}})}catch(e){}};s.parentNode.insertBefore(tk,s)
-      })(document);
-    </script>
+/* background atmosphere */
+.aurora{position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 12% -8%, rgba(139,92,255,.22), transparent 60%),
+    radial-gradient(800px 500px at 92% 4%, rgba(48,230,255,.13), transparent 60%),
+    radial-gradient(1000px 700px at 50% 120%, rgba(255,63,164,.10), transparent 60%),
+    var(--bg);}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.06;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(7,8,13,.6);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700}
+.logo-mark{width:26px;height:26px;border-radius:8px;background:conic-gradient(from 210deg,var(--pink),var(--violet),var(--cyan),var(--pink));box-shadow:0 0 18px rgba(139,92,255,.5)}
+.logo span{font-size:14px;letter-spacing:.04em}
+nav ul{display:flex;gap:26px;list-style:none;font-size:13px;color:var(--muted)}
+nav ul a:hover{color:var(--text)}
+
+/* hero */
+.hero{padding:96px 0 72px}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);letter-spacing:.18em;padding:6px 14px;border:1px solid var(--line2);border-radius:999px;background:rgba(255,255,255,.03)}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.hero h1{margin-top:26px;font-size:clamp(34px,6.2vw,76px);line-height:1.15;font-weight:900;letter-spacing:-.01em}
+.hero h1 .grad{background:linear-gradient(100deg,var(--pink) 0%,var(--violet) 45%,var(--cyan) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{margin-top:24px;max-width:640px;color:var(--muted);font-size:clamp(15px,1.6vw,17px)}
+.hero-cta{margin-top:36px;display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-weight:700;font-size:14px;transition:transform .2s, box-shadow .2s, background .2s}
+.btn.primary{background:var(--text);color:#0a0b10}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,255,255,.15)}
+.btn.ghost{border:1px solid var(--line2);color:var(--text)}
+.btn.ghost:hover{background:rgba(255,255,255,.06)}
+.stats{margin-top:64px;display:flex;flex-wrap:wrap;gap:40px 56px}
+.stat b{display:block;font-family:'Unbounded',sans-serif;font-size:30px;font-weight:700}
+.stat span{font-size:12px;color:var(--dim);letter-spacing:.1em}
+
+/* section head */
+section{padding:56px 0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:30px;flex-wrap:wrap}
+.sec-head .k{font-size:12px;letter-spacing:.24em;color:var(--dim)}
+.sec-head h2{font-size:clamp(24px,3.2vw,36px);font-weight:900;line-height:1.3;margin-top:6px}
+.sec-head p{color:var(--muted);font-size:14px;max-width:460px}
+
+/* NEORETRO */
+.neo{
+  position:relative;border-radius:28px;padding:clamp(22px,4vw,44px);overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(20,10,40,.85), rgba(8,8,18,.92)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+  border:1px solid rgba(139,92,255,.35);
+  box-shadow:0 0 0 1px rgba(255,63,164,.08) inset, 0 40px 120px -40px rgba(139,92,255,.45);
+}
+.neo::before{content:"";position:absolute;inset:auto -10% -55% -10%;height:80%;pointer-events:none;
+  background:
+    linear-gradient(transparent 0, transparent calc(100% - 1px), rgba(48,230,255,.35) 100%) 0 0/ 100% 36px,
+    linear-gradient(90deg, transparent 0, transparent calc(100% - 1px), rgba(255,63,164,.35) 100%) 0 0/ 60px 100%;
+  transform:perspective(500px) rotateX(62deg);transform-origin:top;mask-image:linear-gradient(transparent, #000 40%, transparent 95%);-webkit-mask-image:linear-gradient(transparent, #000 40%, transparent 95%);opacity:.55}
+.neo-top{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-bottom:30px}
+.neo-title .k{font-size:12px;letter-spacing:.3em;color:var(--cyan);text-shadow:0 0 12px rgba(48,230,255,.6)}
+.neo-title h2{font-family:'Unbounded',sans-serif;font-weight:900;font-size:clamp(28px,5vw,58px);line-height:1.05;margin-top:10px;
+  background:linear-gradient(90deg,#fff 0%,#ffd1ea 40%,var(--pink) 70%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(255,63,164,.35))}
+.neo-title p{margin-top:14px;color:#c7c2dd;font-size:14px;max-width:560px}
+.awards{display:flex;flex-direction:column;gap:10px}
+.award{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:rgba(242,207,122,.06);border:1px solid rgba(242,207,122,.35)}
+.award svg{flex:none;width:28px;height:28px;color:var(--gold);filter:drop-shadow(0 0 8px rgba(242,207,122,.5))}
+.award small{display:block;font-size:10px;letter-spacing:.2em;color:#b9a36a}
+.award b{font-size:14px;color:#fff3cf;letter-spacing:.04em}
+.neo-grid{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.neo-card{position:relative;display:block;border-radius:18px;overflow:hidden;background:#05040b;border:1px solid rgba(255,255,255,.1);transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .35s}
+.neo-card:hover{transform:translateY(-6px);border-color:rgba(48,230,255,.6);box-shadow:0 20px 50px -12px rgba(48,230,255,.35), 0 0 0 1px rgba(48,230,255,.25)}
+.neo-card .thumb{aspect-ratio:4/3;overflow:hidden;position:relative}
+.neo-card .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1), filter .4s;filter:saturate(1.05)}
+.neo-card:hover .thumb img{transform:scale(1.06);filter:saturate(1.3) brightness(1.08)}
+.neo-card .thumb::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);pointer-events:none;mix-blend-mode:multiply}
+.neo-card .num{position:absolute;top:12px;left:12px;z-index:2;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;background:rgba(5,4,11,.75);border:1px solid rgba(255,63,164,.6);color:#ffc2e2;backdrop-filter:blur(4px)}
+.neo-card .body{padding:16px 18px 20px}
+.neo-card h3{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;letter-spacing:.02em;line-height:1.3}
+.neo-card p{margin-top:8px;font-size:13px;color:#a9a4c0;line-height:1.65}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tag{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--muted)}
+.tag.mobile{border-color:rgba(48,230,255,.4);color:#9eefff}
+.tag.new{border-color:rgba(242,207,122,.55);color:var(--gold)}
+.tag.ai{border-color:rgba(139,92,255,.55);color:#c8b6ff}
+
+/* classic games */
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.card{position:relative;display:flex;flex-direction:column;border-radius:var(--radius);overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border:1px solid var(--line);transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s, background .3s}
+.card:hover{transform:translateY(-5px);border-color:var(--line2);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03))}
+.card .thumb{aspect-ratio:1/1;overflow:hidden;background:#111}
+.card .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.card:hover .thumb img{transform:scale(1.05)}
+.card .body{padding:16px 18px 20px;flex:1;display:flex;flex-direction:column}
+.card .cat{font-size:11px;letter-spacing:.16em;color:var(--dim)}
+.card h3{font-size:18px;font-weight:700;margin-top:4px}
+.card p{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.65;flex:1}
+.card.feature{grid-column:span 2;flex-direction:row}
+.card.feature .thumb{width:50%;aspect-ratio:auto;flex:none}
+.card.feature .body{padding:26px 28px;justify-content:center}
+.card.feature h3{font-size:clamp(22px,2.4vw,30px)}
+.card.feature p{flex:none;font-size:14px}
+.card.feature .play{margin-top:20px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text)}
+.card.feature .play::after{content:"→";transition:transform .2s}
+.card.feature:hover .play::after{transform:translateX(4px)}
+.card.feature::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,rgba(242,207,122,.6),transparent 40%,transparent 60%,rgba(48,230,255,.4));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+
+/* about */
+.about{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center;padding:40px;border-radius:28px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.about h2{font-size:clamp(22px,2.8vw,32px);font-weight:900;line-height:1.4}
+.about p{color:var(--muted);font-size:14px;margin-top:14px}
+.flow{display:grid;gap:12px}
+.flow div{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.flow b{font-family:'Unbounded',sans-serif;font-size:12px;color:var(--cyan);padding-top:2px}
+.flow span{font-size:13px;color:var(--muted)}
+.flow strong{display:block;color:var(--text);font-size:14px}
+
+footer{padding:56px 0 64px;color:var(--dim);font-size:12px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:28px}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--text)}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none}*{transition:none!important}}
+
+@media (max-width: 900px){
+  .neo-grid{grid-template-columns:1fr}
+  .neo-card{display:grid;grid-template-columns:44% 1fr}
+  .neo-card .thumb{aspect-ratio:auto;height:100%}
+  .about{grid-template-columns:1fr;padding:26px}
+  nav ul{display:none}
+}
+@media (max-width: 600px){
+  :root{--wrap:calc(100% - 32px)}
+  .hero{padding:64px 0 48px}
+  .stats{gap:24px 36px;margin-top:44px}
+  .stat b{font-size:24px}
+  .neo-card{grid-template-columns:1fr}
+  .neo-card .thumb{aspect-ratio:16/10}
+  .games{grid-template-columns:1fr 1fr;gap:12px}
+  .card .body{padding:12px 12px 14px}
+  .card h3{font-size:15px}
+  .card p{font-size:12px}
+  .card.feature{grid-column:1/-1;flex-direction:column}
+  .card.feature .thumb{width:100%;aspect-ratio:16/11}
+  .card.feature .body{padding:18px}
+}
+</style>
 </head>
 <body>
+<div class="aurora"></div><div class="grain"></div>
 
-    <header>
-        <!-- ▼▼▼ タイトルを元のシンプルなテキストに戻しました ▼▼▼ -->
-        <h1>ゲームを選んで遊ぼう！</h1>
-        <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
-        <p class="subtitle">AIコーディングで制作したゲームを公開中</p>
-    </header>
+<nav>
+  <div class="wrap">
+    <a href="./" class="logo"><div class="logo-mark"></div><span>ゲーム制作＠バイブコーディング</span></a>
+    <ul>
+      <li><a href="#neoretro">NEORETRO ARCADES</a></li>
+      <li><a href="#games">ボード＆パズル</a></li>
+      <li><a href="#about">このサイトについて</a></li>
+    </ul>
+  </div>
+</nav>
 
-    <main class="game-grid">
-        <!-- (以下、変更はありません) -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow reveal"><i></i><span class="en">AI CODING ARCADE</span></div>
+    <h1 class="reveal">AIと一緒に作った、<br><span class="grad">すぐ遊べる</span>ゲームたち。</h1>
+    <p class="lead reveal">コードを書くのはAI、アイデアと手ざわりの調整は人。<br>そんな“バイブコーディング”で生まれたゲームを公開しています。登録もインストールも不要、ブラウザを開けばPCでもスマホでもすぐ遊べます。</p>
+    <div class="hero-cta reveal">
+      <a class="btn primary" href="#neoretro">受賞作を遊ぶ</a>
+      <a class="btn ghost" href="./reversi/">新作 Reversi V4 →</a>
+    </div>
+    <div class="stats reveal">
+      <div class="stat"><b>10</b><span>タイトル公開中</span></div>
+      <div class="stat"><b>2</b><span>コンテスト受賞</span></div>
+      <div class="stat"><b>0円</b><span>登録・インストール不要</span></div>
+    </div>
+  </div>
+</header>
 
-        <a href="https://core-calmdust.github.io/aicoding/comet/" class="game-card">
-            <img src="./images/comet.webp" alt="COMET OUTBURST" fetchpriority="high" decoding="async">
-            <div class="card-content">
-                <h2>NEORETRO ARCADES#3<br />COMET OUTBURST</h2>
-            </div>
+<section id="neoretro">
+  <div class="wrap">
+    <div class="neo reveal">
+      <div class="neo-top">
+        <div class="neo-title">
+          <div class="k en">AWARD-WINNING SERIES</div>
+          <h2>NEORETRO<br>ARCADES</h2>
+          <p>80年代アーケードの手ざわりを、ネオンと現代のゲームデザインで再構築したシリーズ。ネオンが弾け、スコアが跳ねる、一瞬で熱くなれるアクションゲームです。</p>
+        </div>
+        <div class="awards">
+          <div class="award">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+            <div><small>IVS NEOCREA</small><b>準グランプリ</b></div>
+          </div>
+          <div class="award">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg>
+            <div><small>IVS NEOCREA</small><b>Bandai Namco 021 Fund賞</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="neo-grid">
+        <a class="neo-card" href="./comet/">
+          <span class="num">#3</span>
+          <div class="thumb"><img src="./images/comet.webp" alt="COMET OUTBURST のプレイ画面" fetchpriority="high" decoding="async"></div>
+          <div class="body">
+            <h3>COMET OUTBURST</h3>
+            <p>降りそそぐ彗星の雨をかいくぐり、撃ち抜け。無敵状態で彗星をなぎ払う爽快感とスコアの連鎖がたまらない、シリーズ最新作。</p>
+            <div class="tags"><span class="tag">シューティング</span><span class="tag new">最新作</span></div>
+          </div>
         </a>
-        
-        <a href="https://core-calmdust.github.io/aicoding/danmaku-inv.html" class="game-card">
-            <img src="./images/danmaku-inv.webp" alt="DANMAKU INVADER XTREME+" fetchpriority="high" decoding="async">
-            <div class="card-content">
-                <h2>NEORETRO ARCADES#2<br />DANMAKU INVADER XTREME+</h2>
-            </div>
+        <a class="neo-card" href="./danmaku-inv.html">
+          <span class="num">#2</span>
+          <div class="thumb"><img src="./images/danmaku-inv.webp" alt="DANMAKU INVADER XTREME+ のプレイ画面" fetchpriority="high" decoding="async"></div>
+          <div class="body">
+            <h3>DANMAKU INVADER XTREME+</h3>
+            <p>あのインベーダーが、弾幕をまとって帰ってきた。画面を埋め尽くす光の弾の隙間を縫い、ハイスコアを更新しよう。</p>
+            <div class="tags"><span class="tag">弾幕シューティング</span></div>
+          </div>
         </a>
-        
-        <a href="https://core-calmdust.github.io/aicoding/pong.html" class="game-card">
-            <img src="./images/pong.webp" alt="CYBER PONG XTREME+" decoding="async">
-            <div class="card-content">
-                <h2>NEORETRO ARCADES#1<br />CYBER PONG XTREME+📱</h2>
-            </div>
+        <a class="neo-card" href="./pong.html">
+          <span class="num">#1</span>
+          <div class="thumb"><img src="./images/pong.webp" alt="CYBER PONG XTREME+ のプレイ画面" decoding="async"></div>
+          <div class="body">
+            <h3>CYBER PONG XTREME+</h3>
+            <p>ゲームの原点「PONG」をサイバーに再起動。ブーストで打ち返す一球に、シンプルだからこその駆け引きが宿る。</p>
+            <div class="tags"><span class="tag">対戦アクション</span><span class="tag mobile">スマホ対応</span></div>
+          </div>
         </a>
-        
-        <a href="https://core-calmdust.github.io/aicoding/reversi/" class="game-card">
-            <img src="./images/reversi_v4.webp" alt="Reversi V4" decoding="async">
-            <div class="card-content">
-                <h2>Reversi V4📱</h2>
-            </div>
-        </a>
+      </div>
+    </div>
+  </div>
+</section>
 
-        <a href="https://core-calmdust.github.io/aicoding/reversi_v3.html" class="game-card">
-            <img src="./images/reversi_v3.webp" alt="リバーシ" decoding="async">
-            <div class="card-content">
-                <h2>リバーシ v3.1📱</h2>
-            </div>
-        </a>
+<section id="games">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <div class="k en">BOARD &amp; PUZZLE</div>
+        <h2>じっくり考える、定番ゲーム。</h2>
+      </div>
+      <p>ルールは知っていても、相手が強いと奥が深い。手軽に遊べるパズルから、本気のAIと戦えるボードゲームまで。</p>
+    </div>
 
-        <a href="https://core-calmdust.github.io/aicoding/backgammon.html" class="game-card">
-            <img src="./images/backgammon.webp" alt="バックギャモン" decoding="async">
-            <div class="card-content">
-                <h2>バックギャモン</h2>
-            </div>
-        </a>
+    <div class="games">
+      <a class="card feature reveal" href="./reversi/">
+        <div class="thumb"><img src="./images/reversi_v4.webp" alt="Reversi V4 の盤面" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">BOARD GAME · NEW</div>
+          <h3>Reversi V4</h3>
+          <p>2,500万局面で学習した評価関数と、終盤20マスの完全読みを積んだ本格AI。10段階の強さ、各手の評価値を示すヒント、形勢グラフをなぞって振り返れる棋譜機能つき。</p>
+          <div class="tags"><span class="tag new">NEW</span><span class="tag ai">学習型AI</span><span class="tag mobile">スマホ対応</span></div>
+          <span class="play">対局をはじめる</span>
+        </div>
+      </a>
 
-        <a href="https://core-calmdust.github.io/aicoding/connect4.html" class="game-card">
-            <img src="./images/connect4.webp" alt="コネクテッド4の画像" loading="lazy" decoding="async">
-            <div class="card-content">
-                <h2>コネクテッド4</h2>
-            </div>
-        </a>
+      <a class="card reveal" href="./reversi_v3.html">
+        <div class="thumb"><img src="./images/reversi_v3.webp" alt="リバーシ v3.1" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">BOARD GAME</div>
+          <h3>リバーシ v3.1</h3>
+          <p>多彩なタイプのAIとCPU同士の対戦も楽しめる、ひとつ前のバージョン。</p>
+          <div class="tags"><span class="tag mobile">スマホ対応</span></div>
+        </div>
+      </a>
 
-        <a href="https://core-calmdust.github.io/aicoding/samegame/" class="game-card">
-            <img src="./images/samegame.webp" alt="さめが〜め" loading="lazy" decoding="async">
-            <div class="card-content">
-                <h2>さめが〜め</h2>
-            </div>
-        </a>
+      <a class="card reveal" href="./backgammon.html">
+        <div class="thumb"><img src="./images/backgammon.webp" alt="バックギャモン" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">BOARD GAME</div>
+          <h3>バックギャモン</h3>
+          <p>サイコロの運と読みがせめぎ合う、世界最古級のボードゲーム。</p>
+        </div>
+      </a>
 
-        <a href="https://core-calmdust.github.io/aicoding/sudoku/" class="game-card">
-            <img src="./images/sudoku.webp" alt="無限数独" loading="lazy" decoding="async">
-            <div class="card-content">
-                <h2>無限数独</h2>
-            </div>
-        </a>
+      <a class="card reveal" href="./connect4.html">
+        <div class="thumb"><img src="./images/connect4.webp" alt="コネクテッド4" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">BOARD GAME</div>
+          <h3>コネクテッド4</h3>
+          <p>コインを落として、縦・横・斜めに4つ並べたら勝ち。シンプルなのに先が読めない。</p>
+        </div>
+      </a>
 
-        <a href="https://core-calmdust.github.io/aicoding/checker.html" class="game-card">
-            <img src="./images/checker.webp" alt="チェッカー" loading="lazy" decoding="async">
-            <div class="card-content">
-                <h2>チェッカー</h2>
-            </div>
-        </a>
-    </main>
+      <a class="card reveal" href="./checker.html">
+        <div class="thumb"><img src="./images/checker.webp" alt="チェッカー" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">BOARD GAME</div>
+          <h3>チェッカー</h3>
+          <p>斜めに進んで、跳び越えて取る。世界中で親しまれる古典の頭脳戦。</p>
+        </div>
+      </a>
 
-    <footer>
-        <p>
-            <a href="https://github.com/core-calmdust/aicoding" target="_blank" rel="noopener noreferrer">開発者ページ</a>
-        </p>
-    </footer>
+      <a class="card reveal" href="./samegame/">
+        <div class="thumb"><img src="./images/samegame.webp" alt="さめが〜め" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">PUZZLE</div>
+          <h3>さめが〜め</h3>
+          <p>同じ色のブロックをまとめて消す、懐かしの落ち物パズル。大きくつなげて高得点を狙おう。</p>
+        </div>
+      </a>
 
+      <a class="card reveal" href="./sudoku/">
+        <div class="thumb"><img src="./images/sudoku.webp" alt="無限数独" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <div class="cat en">PUZZLE</div>
+          <h3>無限数独</h3>
+          <p>問題は尽きることなく、いつでも新しい一問。すきま時間の頭の体操に。</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="about reveal">
+      <div>
+        <div class="sec-head" style="margin-bottom:0"><div><div class="k en">ABOUT</div></div></div>
+        <h2>“作りたい”を、<br>AIと一緒に形にする。</h2>
+        <p>このサイトのゲームは、AIに相談しながらコードを書き、遊んでは直すことを繰り返して作っています。思いついたアイデアが、その日のうちに遊べる形になる。そのスピード感ごと楽しんでもらえたら嬉しいです。</p>
+      </div>
+      <div class="flow">
+        <div><b>01</b><span><strong>アイデアを伝える</strong>どんなゲームにしたいかを、言葉でAIに伝える。</span></div>
+        <div><b>02</b><span><strong>AIがコードを書く</strong>ゲームの仕組みや画面を、AIが一気に組み上げる。</span></div>
+        <div><b>03</b><span><strong>遊んで、磨く</strong>実際に遊び、手ざわりや難しさを何度も調整して仕上げる。</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© ゲーム制作＠バイブコーディング</span>
+    <a href="https://github.com/core-calmdust/aicoding" target="_blank" rel="noopener noreferrer">開発者ページ（GitHub）→</a>
+  </div>
+</footer>
+
+<script>
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px' }) : null;
+  document.querySelectorAll('.reveal').forEach((el, i) => {
+    el.style.transitionDelay = (Math.min(i % 6, 5) * 60) + 'ms';
+    if (io) io.observe(el); else el.classList.add('in');
+  });
+</script>
 </body>
 </html>
