@@ -152,6 +152,23 @@ div.sq:nth-of-type(n+73){border-bottom:none}
 .kifu button.cur{background:rgba(201,169,97,.16);color:var(--accent)}
 .kifu button.q-best{box-shadow:inset 0 -2px 0 #6fd3a0}.kifu button.q-good{box-shadow:inset 0 -2px 0 #9fc7ff}.kifu button.q-dubious{box-shadow:inset 0 -2px 0 #f2c060}.kifu button.q-bad{box-shadow:inset 0 -2px 0 #ff6b5b}
 .kifu .empty{grid-column:1/-1;color:var(--dim);font-size:12px;padding:6px 0}
+.review-card{display:none}
+.review-card.show{display:block}
+body.in-lesson .review-card{display:none!important}
+.rv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rv-head .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.rv-head button{color:var(--dim);font-size:16px;padding:0 6px}
+.rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px}.rv-prog i{display:block;height:100%;background:var(--brass)}
+.rv-sum{display:grid;grid-template-columns:auto auto 1fr;gap:4px 12px;font-size:13px;align-items:center}
+.rv-sum .h{font-size:11px;color:var(--dim)}
+.rv-chips{display:flex;gap:4px;justify-content:flex-end}.rv-chips span{min-width:22px;text-align:center;border-radius:6px;font-size:11px;padding:1px 4px;color:#0b1110}
+.rv-chips .best{background:#6fd3a0}.rv-chips .good{background:#9fc7ff}.rv-chips .dubious{background:#f2c060}.rv-chips .bad{background:#ff6b5b}
+.rv-list{display:grid;gap:3px;margin-top:8px;max-height:150px;overflow-y:auto}
+.rv-list button{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;font-size:12px;color:var(--muted);text-align:left}
+.rv-list button:hover,.rv-list button.cur{background:rgba(201,169,97,.14);color:var(--text)}
+.rv-list .tag{font-size:10.5px;border-radius:5px;padding:0 5px;color:#0b1110;flex:none}.rv-list .tag.dubious{background:#f2c060}.rv-list .tag.bad{background:#ff6b5b}
+.rv-list .mv{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-list .ls{font-family:'JetBrains Mono',monospace;color:#ff9b90;flex:none}
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono',monospace}
 /* ---------------------------------------------------------------- modal */
 .overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
@@ -322,8 +339,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnSound" data-i18n-title="btn.sound.title"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><span data-i18n="btn.sound"></span></button>
     </div>
+    <div class="card review-card" id="reviewCard"><div class="rv-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose">×</button></div><div id="rvBody"></div></div>
     <div class="card kifu-card">
-      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></div>
+      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><span><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
       <div class="kifu" id="kifu"></div>
     </div>
     <div class="info-line" id="infoLine"></div>
@@ -388,7 +406,17 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   <div class="modal">
     <div class="result-big" id="resultTitle"></div>
     <div class="result-sub" id="resultSub"></div>
-    <div class="modal-actions"><button class="mbtn" id="btnReview" data-i18n="res.review"></button><button class="mbtn hidden" id="btnMistakes"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
+    <div class="modal-actions"><button class="mbtn" id="btnReview" data-i18n="res.review"></button><button class="mbtn" id="btnResAnalyze" data-i18n="rv.analyze"></button><button class="mbtn hidden" id="btnMistakes"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
+  </div>
+</div>
+
+<!-- paste kifu -->
+<div class="overlay" id="pasteOverlay">
+  <div class="modal">
+    <h2 data-i18n="paste.h"></h2>
+    <p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin:-8px 0 10px" data-i18n="paste.desc"></p>
+    <textarea id="pasteText" style="width:100%;height:180px;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:vertical"></textarea>
+    <div class="modal-actions"><button class="mbtn" id="pasteCancel" data-i18n="cancel"></button><button class="mbtn go" id="pasteOk" data-i18n="paste.ok"></button></div>
   </div>
 </div>
 
@@ -771,6 +799,23 @@ function drawArrows() {
       html += `<text x="${tx}" y="${ty + 44}" font-size="26" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.7)" stroke-width="5" paint-order="stroke" font-family="JetBrains Mono">${h.label || fmtScore(h.score)}</text>`;
     });
   }
+  // review: best move (gold) and the move actually played (blue = fine, red = mistake)
+  if (game && !lesson && game.rv && cur < game.moves.length) {
+    const r = rvLoss(cur + 1);
+    if (r) {
+      const arrow = (u, col, w, label) => {
+        const m = P.fromUsi(u), to = sqToDisp(E.mTo(m)), tx = (to % 9) * 100 + 50, ty = ((to / 9) | 0) * 110 + 55;
+        let a = '';
+        if (E.isDrop(m)) a += `<circle cx="${tx}" cy="${ty}" r="38" fill="none" stroke="${col}" stroke-width="8"/>`;
+        else { const fr = sqToDisp(E.mFrom(m)), fx = (fr % 9) * 100 + 50, fy = ((fr / 9) | 0) * 110 + 55, len = Math.hypot(tx - fx, ty - fy), ux = (tx - fx) / len, uy = (ty - fy) / len;
+          a += `<line x1="${fx + ux * 20}" y1="${fy + uy * 20}" x2="${tx - ux * 22}" y2="${ty - uy * 22}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" marker-end="url(#ah)"/>`; }
+        return a + `<text x="${tx}" y="${ty + 44}" font-size="24" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.7)" stroke-width="5" paint-order="stroke">${label}</text>`;
+      };
+      const q = qOfDrop(r.drop);
+      if (r.best !== r.played) html += arrow(r.best, 'rgba(226,150,30,.92)', 14, t('rv.bestLbl'));
+      html += arrow(r.played, q === 'bad' || q === 'dubious' ? 'rgba(255,90,80,.85)' : 'rgba(40,110,190,.8)', 10, t('q.' + q));
+    }
+  }
   arrowsEl.innerHTML = html;
 }
 
@@ -862,7 +907,7 @@ function setStatus(c, text, thinking) {
 function isAI(c) { return settings.mode === 'watch' || (settings.mode === 'ai' && c !== game.human); }
 function levelOf(c) { return settings.mode === 'watch' ? (c === 0 ? settings.level : settings.level2) : settings.level; }
 function newGame() {
-  busyToken++; cancelAI(); cancelAna();
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
   const start = HANDI[settings.handicap] || HANDI[0];
   let human = 0;
@@ -881,6 +926,7 @@ function refresh(anim) {
   renderCoords();
   renderBoard(anim);
   renderInfo();
+  renderReview();
   save();
   schedule();
 }
@@ -973,8 +1019,7 @@ async function schedule() {
       const before = game.info[idx - 1];
       if (before && before.best != null && !lv.noise) {
         const after = -res.score; // human's view after his move
-        const loss = before.best - after;
-        prev.q = loss <= 40 ? 'best' : loss <= 150 ? 'good' : loss <= 400 ? 'dubious' : 'bad';
+        prev.q = qOfDrop(Math.max(0, winRate(before.best) - winRate(after)));
         coach(prev.q);
       }
     }
@@ -1149,6 +1194,225 @@ $('#btnStart').onclick = () => {
   Object.assign(settings, { mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
     legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
   newGame();
+};
+
+// ====================================================================== post-game review
+const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
+let rvRun = null, rvOpen = true;
+const sideAtPly = i => ((game.start.split(' ')[1] === 'w' ? 1 : 0) + i) & 1;
+// quality of a move from the win-rate drop (mover's view)
+const qOfDrop = d => d <= 0.02 ? 'best' : d <= 0.06 ? 'good' : d <= 0.15 ? 'dubious' : 'bad';
+function thinkOnce(w, idx, time) {
+  return new Promise(resolve => {
+    const id = ++jobId;
+    w.onmessage = e => { const m = e.data; if (m.id === id && m.type === 'result') resolve(m); };
+    w.onerror = () => resolve(null);
+    w.postMessage({ type: 'think', id, sfen: game.start, moves: game.moves.slice(0, idx), opts: { time } });
+  });
+}
+function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
+async function runReview() {
+  if (!game || lesson || game.moves.length < 2) return;
+  rvCancel(); busyToken++; cancelAI(); cancelAna();
+  const n = game.moves.length, todo = [];
+  for (let i = 0; i <= n; i++) todo.push(i);
+  await weightsReady;
+  const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(makeWorker(() => {}));
+  const run = rvRun = { ws, done: 0, total: todo.length, game };
+  rvOpen = true; renderReview();
+  let next = 0;
+  const loop = async w => {
+    while (next < todo.length && rvRun === run) {
+      const i = todo[next++];
+      const p = posAt(i);
+      let ra;
+      if (!p.legalMoves(false).length) ra = { s: -E.MATE, bm: null };
+      else { const r = await thinkOnce(w, i, 450); if (!r) continue; ra = { s: r.score, bm: r.move, pv: (r.pv || []).slice(0, 4) }; }
+      if (rvRun !== run || run.game !== game) return;
+      game.info[i] = game.info[i] || {};
+      game.info[i].ra = ra; game.info[i].ev = sideAtPly(i) === 0 ? ra.s : -ra.s;
+      run.done++; renderReview(); renderGraph();
+    }
+  };
+  await Promise.all(ws.map(loop));
+  if (rvRun !== run) return;
+  ws.forEach(w => w.terminate()); rvRun = null;
+  if (run.game !== game) return;
+  for (let i = 1; i <= n; i++) { const r = rvLoss(i); if (r) game.info[i].q = qOfDrop(r.drop); }
+  game.rv = 1; save(); renderInfo(); renderReview();
+  toast(t('rv.done2'), 1200);
+}
+// win-rate drop of the move that led to position i (mover = side at i-1)
+function rvLoss(i) {
+  const a = game.info[i - 1] && game.info[i - 1].ra, b = game.info[i] && game.info[i].ra;
+  if (!a || !b || !a.bm) return null;
+  const best = winRate(a.s), mine = winRate(-b.s);
+  return { drop: Math.max(0, best - mine), best: a.bm, played: game.moves[i - 1] };
+}
+function sideName(c) { return settings.mode === 'ai' ? (c === game.human ? t('you') : 'AI') : cname(c); }
+function renderReview() {
+  const card = $('#reviewCard');
+  const show = !lesson && game && rvOpen && (rvRun || game.rv);
+  card.classList.toggle('show', !!show);
+  if (!show) return;
+  let html = '';
+  if (rvRun) html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rvRun.done, b: rvRun.total })}</div><div class="rv-prog"><i style="width:${rvRun.total ? rvRun.done / rvRun.total * 100 : 0}%"></i></div>`;
+  else {
+    const st = [0, 1].map(() => ({ n: 0, ok: 0, drop: 0, c: { best: 0, good: 0, dubious: 0, bad: 0 } }));
+    const bad = [];
+    for (let i = 1; i <= game.moves.length; i++) {
+      const r = rvLoss(i); if (!r) continue;
+      const sd = st[sideAtPly(i - 1)], q = qOfDrop(r.drop);
+      sd.n++; sd.drop += r.drop; if (r.drop <= 0.06) sd.ok++; sd.c[q]++;
+      if (q === 'bad' || q === 'dubious') bad.push({ i, ...r, q });
+    }
+    const names = kifList();
+    const row = c => { const x = st[c]; return `<span>${c ? '☖' : '☗'} ${sideName(c)}</span><span><b>${x.n ? Math.round(x.ok / x.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: x.n ? (x.drop / x.n * 100).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${x.c.best}</span><span class="good">${x.c.good}</span><span class="dubious">${x.c.dubious}</span><span class="bad">${x.c.bad}</span></span>`; };
+    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
+    bad.sort((a, b) => b.drop - a.drop);
+    if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${names[x.i - 1]} → ${kan1(posAt(x.i - 1).sfen(), x.best)}</span><span class="ls">−${Math.round(x.drop * 100)}%</span></button>`).join('')}</div>`;
+    else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
+  }
+  $('#rvBody').innerHTML = html;
+}
+$('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); };
+$('#btnAnalyze').onclick = () => runReview();
+$('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
+
+// ====================================================================== kifu share / load
+const HANDI_NAMES = ['平手', '香落ち', '角落ち', '飛車落ち', '二枚落ち', '四枚落ち', '六枚落ち'];
+function shareUrl() {
+  const hi = HANDI.indexOf(game.start);
+  let h = '#k=' + game.moves.join('.');
+  if (hi > 0) h += '&h=' + hi; else if (hi < 0) h += '&s=' + encodeURIComponent(game.start);
+  if (cur < game.moves.length) h += '&n=' + cur;
+  return location.origin + location.pathname + h;
+}
+$('#btnShare').onclick = async () => {
+  if (!game || !game.moves.length) { toast(t('kifu.empty')); return; }
+  const url = shareUrl();
+  try {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: '将棋 SHOGI', url }); return; }
+    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
+  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
+};
+// parse USI / CSA / KIF / share URL -> {start, moves} or {error}
+function parseKifu(text) {
+  text = text.trim();
+  const hm = text.match(/#(.*)$/m);
+  if (hm && /(^|&)k=/.test(hm[1])) {
+    const q = new URLSearchParams(hm[1]);
+    const start = q.get('s') ? decodeURIComponent(q.get('s')) : HANDI[+(q.get('h') || 0)] || HANDI[0];
+    return replayUsi(start, (q.get('k') || '').split('.').filter(Boolean), q.has('n') ? +q.get('n') : undefined);
+  }
+  // USI
+  const um = text.match(/(?:position\s+)?(startpos|sfen\s+(\S+\s+[bw]\s+\S+\s+\d+))(?:\s+moves\s+(.*))?/);
+  if (um && !/^[+-]\d{4}/m.test(text)) {
+    const start = um[1] === 'startpos' ? HANDI[0] : um[2];
+    return replayUsi(start, (um[3] || '').trim().split(/\s+/).filter(Boolean));
+  }
+  // CSA
+  if (/^[+-]\d{4}[A-Z]{2}/m.test(text)) {
+    const p = new E.Position(); p.setSfen(HANDI[0]);
+    const T = { FU: 1, KY: 2, KE: 3, GI: 4, KA: 5, HI: 6, KI: 7, OU: 8, TO: 9, NY: 10, NK: 11, NG: 12, UM: 13, RY: 14 };
+    const moves = [];
+    for (const ln of text.split(/\r?\n/)) {
+      const m = ln.match(/^[+-](\d)(\d)(\d)(\d)([A-Z]{2})/); if (!m) continue;
+      const to = E.makeSq(+m[3], +m[4]), pc = T[m[5]];
+      let mv;
+      if (m[1] === '0') mv = (80 + pc) | (to << 7);
+      else { const fr = E.makeSq(+m[1], +m[2]); mv = fr | (to << 7) | (pc !== E.typeOf(p.board[fr]) ? 1 << 14 : 0); }
+      if (!p.legalMoves(true).includes(mv)) return { error: moves.length + 1 };
+      moves.push(p.toUsi(mv)); p.doMove(mv); p.sp = 0;
+    }
+    return { start: HANDI[0], moves };
+  }
+  // KIF / KI2 (Japanese notation)
+  let start = HANDI[0];
+  const hd = text.match(/手合割：\s*(\S+)/); if (hd) { const k = HANDI_NAMES.indexOf(hd[1]); if (k > 0) start = HANDI[k]; }
+  const p = new E.Position(); p.setSfen(start);
+  const moves = [];
+  const PN = { '歩': 1, '香': 2, '桂': 3, '銀': 4, '角': 5, '飛': 6, '金': 7, '玉': 8, '王': 8, 'と': 9, '成香': 10, '杏': 10, '成桂': 11, '圭': 11, '成銀': 12, '全': 12, '馬': 13, '龍': 14, '竜': 14 };
+  const ZD = '０１２３４５６７８９', KD = '〇一二三四五六七八九';
+  const toks = [];
+  for (const ln of text.split(/\r?\n/)) {
+    if (/^\s*[#*&]/.test(ln) || /：/.test(ln)) continue;
+    const kif = ln.match(/^\s*\d+\s+(\S+(?:　\S+)?)/);
+    if (kif) { toks.push(kif[1]); continue; }
+    for (const m of ln.matchAll(/[▲△☗☖]([^▲△☗☖\s]+)/g)) toks.push(m[1]);
+  }
+  let prevTo = -1;
+  for (let tk of toks) {
+    if (/投了|中断|千日手|詰み|持将棋|切れ|反則|入玉/.test(tk)) break;
+    tk = tk.replace(/\s/g, '').replace(/　/g, '');
+    let to, rest;
+    if (tk[0] === '同') { to = prevTo; rest = tk.slice(1); }
+    else {
+      const f = ZD.indexOf(tk[0]) > 0 ? ZD.indexOf(tk[0]) : '0123456789'.indexOf(tk[0]), r = KD.indexOf(tk[1]);
+      if (f < 1 || r < 1) return { error: moves.length + 1 };
+      to = E.makeSq(f, r); rest = tk.slice(2);
+    }
+    const pm = rest.match(/^(成香|成桂|成銀|[歩香桂銀角飛金玉王と杏圭全馬龍竜])/);
+    if (!pm) return { error: moves.length + 1 };
+    const pt = PN[pm[1]]; rest = rest.slice(pm[1].length);
+    const from = rest.match(/\((\d)(\d)\)/);
+    const drop = rest.includes('打'), promo = /成/.test(rest.replace(/不成/, '')) && !rest.includes('不成');
+    let cands = p.legalMoves(true).filter(m => E.mTo(m) === to);
+    if (from) { const fs = E.makeSq(+from[1], +from[2]); cands = cands.filter(m => !E.isDrop(m) && E.mFrom(m) === fs); }
+    else cands = cands.filter(m => E.isDrop(m) ? E.dropType(m) === pt : E.typeOf(p.board[E.mFrom(m)]) === pt);
+    if (drop) cands = cands.filter(E.isDrop);
+    else if (cands.some(m => !E.isDrop(m))) cands = cands.filter(m => !E.isDrop(m));
+    cands = cands.filter(m => !!E.mPromo(m) === promo);
+    if (!cands.length) return { error: moves.length + 1 };
+    if (cands.length > 1 && !from) {
+      // disambiguate with 右左上引寄直 using our own notation
+      const nm = rest.replace(/打|成|不成|\(.*\)/g, '');
+      const hit = cands.filter(m => disamb(p, m, p.board[E.mFrom(m)]) === nm);
+      if (hit.length) cands = hit;
+    }
+    const mv = cands[0];
+    moves.push(p.toUsi(mv)); prevTo = to; p.doMove(mv); p.sp = 0;
+  }
+  if (!moves.length) return { error: 0 };
+  return { start, moves };
+}
+function replayUsi(start, usis, n) {
+  const p = new E.Position();
+  try { p.setSfen(start); } catch (e) { return { error: 0 }; }
+  for (let k = 0; k < usis.length; k++) {
+    let m; try { m = p.fromUsi(usis[k]); } catch (e) { return { error: k + 1 }; }
+    if (!p.legalMoves(true).includes(m)) return { error: k + 1 };
+    p.doMove(m); p.sp = 0;
+  }
+  return { start, moves: usis, n };
+}
+function openLoaded(r) {
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  exitLesson(true);
+  settings.mode = 'pvp';
+  const hi = HANDI.indexOf(r.start); settings.handicap = hi > 0 ? hi : 0;
+  game = newRecord(r.start, 0); game.moves = r.moves.slice(); game.info = r.moves.map(() => ({ ev: null })).concat([{ ev: null }]);
+  flip = false;
+  const end = game.moves.length;
+  cur = Math.max(0, Math.min(end, r.n === undefined || isNaN(r.n) ? end : r.n)); reviewing = cur !== end;
+  P = posAt(end); checkEnd();
+  hideOverlay('#resultOverlay'); refresh(false);
+}
+function loadFromHash() {
+  const h = location.hash.slice(1); if (!h || !/(^|&)k=/.test(h)) return false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  const r = parseKifu('#' + h);
+  if (r.error !== undefined) { toast(t('paste.bad', { n: r.error }), 2500); return false; }
+  openLoaded(r); toast(t('paste.loaded', { n: r.moves.length }), 1800);
+  return true;
+}
+$('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
+$('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
+$('#pasteOk').onclick = () => {
+  const r = parseKifu($('#pasteText').value);
+  if (r.error !== undefined) { toast(r.error ? t('paste.bad', { n: r.error }) : t('paste.none'), 2500); return; }
+  hideOverlay('#pasteOverlay'); openLoaded(r); toast(t('paste.loaded', { n: r.moves.length }), 1800);
 };
 
 // ====================================================================== opening book (Floodgate move frequencies)
@@ -1464,6 +1728,7 @@ applyI18n();
   const had = load();
   if (settings.lang) LANG = settings.lang;
   applyI18n();
+  if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
   if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
   else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); openNewDialog(); }
   const q = new URLSearchParams(location.search);
