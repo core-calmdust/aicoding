@@ -170,6 +170,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:10px;
 }
 .review-bar.show{display:flex}
+.review-bar{max-width:calc(100% - 16px);flex-wrap:wrap;justify-content:center;row-gap:6px}
+#reviewText{white-space:normal;text-align:center}
 .review-bar button{padding:5px 10px;border-radius:7px;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
 .review-bar button:hover{border-color:var(--brass2)}
 
@@ -177,13 +179,20 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .side{grid-area:side;width:100%;height:calc(var(--board) * 1.105);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
 .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
 
-.kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
+.kifu-card{flex:1 1 0;min-height:84px;display:flex;flex-direction:column}
 .kifu-card .kifu{flex:1;min-height:0;max-height:none}
 .brand{display:flex;align-items:baseline;justify-content:space-between}
 .brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:30px;letter-spacing:.12em}
 .brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
 .brand a{font-size:12px;color:var(--dim);text-decoration:none}
 .brand-r{display:flex;align-items:center;gap:10px}
+.snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
+.snd:hover{color:var(--text)}
+.snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.snd .off-x{display:none}
+.snd.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
+.snd:not(.on) .on-w{display:none}
+.snd:not(.on) .off-x{display:inline}
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
 #langSel:hover{color:var(--text)}
 .brand a:hover{color:var(--muted)}
@@ -288,6 +297,42 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .coach.q-good{border-color:#9fc7ff;color:#d3e5ff}
 .coach.q-dubious{border-color:#f2c060;color:#ffe2a6}
 .coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
+.review-card{display:none}
+:where(.review-card.show){flex:1 1 0;min-height:96px}
+.review-card.show{display:block;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
+.rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
+.rv-sum{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 10px;font-size:12px;margin-top:6px;align-items:center}
+.rv-sum .h{color:var(--dim);font-size:11px}
+.rv-sum b{font-size:15px;color:var(--text)}
+.rv-chips{display:flex;gap:4px;flex-wrap:wrap}
+.rv-chips span{font-size:11px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.25)}
+.rv-chips .best{color:#8fe3b8}.rv-chips .good{color:#b8d4ff}.rv-chips .dubious{color:#f2c060}.rv-chips .bad{color:#ff8b7d}
+.rv-list{display:grid;gap:4px;margin-top:10px}
+.rv-list button{display:flex;gap:8px;align-items:center;text-align:left;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font-size:12px;width:100%}
+.rv-list button:hover{border-color:var(--brass2)}
+.rv-list button.cur{border-color:var(--accent);background:rgba(201,169,97,.12)}
+.rv-list .tag{font-size:11px;font-weight:700;flex:none}
+.rv-list .tag.bad{color:#ff8b7d}.rv-list .tag.dubious{color:#f2c060}
+.rv-list .mv{font-family:'JetBrains Mono',monospace;flex:1}
+.rv-list .ls{color:var(--dim);font-family:'JetBrains Mono',monospace}
+.mark.played{border:3px solid #ff6b5b;inset:4%}
+.mark.played.okp{border-color:#6fd3a0}
+.kifu-head .kb{display:flex;gap:2px}
+.paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
+.daily{border-color:rgba(226,194,117,.55)!important;background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))!important}
+.daily .no{font-size:18px!important}
+/* effects */
+.fx-ring{position:absolute;inset:-10%;border-radius:50%;border:3px solid var(--accent);z-index:12;pointer-events:none;animation:fxring .9s ease-out forwards}
+.fx-ring.r2{animation-delay:.15s;opacity:0}
+@keyframes fxring{0%{transform:scale(.4);opacity:1}100%{transform:scale(2.4);opacity:0}}
+.fx-spark{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);z-index:12;pointer-events:none;left:47%;top:47%;animation:fxspark .8s ease-out forwards}
+@keyframes fxspark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+.board.fx-glow{animation:fxglow .7s ease-out}
+@keyframes fxglow{0%{box-shadow:0 0 0 0 rgba(226,194,117,.0)}30%{box-shadow:0 0 40px 6px rgba(226,194,117,.35)}100%{box-shadow:0 0 0 0 rgba(226,194,117,0)}}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
+@keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
+@media (prefers-reduced-motion: reduce){.fx-ring,.fx-spark,.confetti{display:none}.board.fx-glow{animation:none}}
 .mark{position:absolute;inset:6%;border-radius:50%;z-index:5;pointer-events:none;border:3px solid}
 .mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
 .mark.ok{border-color:#6fd3a0}
@@ -307,7 +352,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 body.in-lesson .lesson-card{display:block}
 .puzzle-card{display:none}
 body.in-puzzle .puzzle-card{display:block}
-body.in-puzzle .players, body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, body.in-puzzle .controls{display:none!important}
+body.in-puzzle .players, body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .review-card, body.in-lesson .review-card, body.in-puzzle .info-line, body.in-puzzle .controls{display:none!important}
 .puzzle-card .lt{font-size:12px;color:var(--brass);letter-spacing:.08em}
 .pz-goal{margin:6px 0 8px;padding:9px 12px;border-radius:10px;background:rgba(226,194,117,.08);border:1px solid rgba(226,194,117,.3);font-size:15px;font-weight:700}
 .pz-status{font-size:13px;line-height:1.75;color:var(--muted);min-height:44px}
@@ -374,7 +419,7 @@ body.in-lesson .controls{display:none}
   .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
   .card{padding:10px 12px}
   .controls{padding:8px;gap:6px}
-  .btn{flex-direction:row;justify-content:center;padding:8px 4px;gap:6px}
+  .btn{flex-direction:column;justify-content:center;padding:7px 2px;gap:3px;font-size:11px;white-space:nowrap;letter-spacing:0}
   .btn svg{width:17px;height:17px}
   .graph{height:72px;margin-top:8px}
   .kifu-card{flex:none;min-height:110px}
@@ -407,7 +452,7 @@ body.in-lesson .controls{display:none}
   .evalbar{height:6px}
   .graph{display:block;height:60px;margin-top:6px}
   .controls{gap:5px;padding:6px}
-  .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
+  .btn{flex-direction:row;justify-content:center;gap:3px;padding:6px 2px;font-size:10px;border-radius:8px;white-space:nowrap;letter-spacing:0;overflow:hidden}
   .btn svg{width:15px;height:15px}
   .kifu-head{margin-bottom:4px}
   .kifu-head .label{font-size:11px}
@@ -447,7 +492,7 @@ body.in-lesson .controls{display:none}
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>Reversi<small>V4</small></h1>
-      <span class="brand-r"><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></span>
     </div>
 
     <div class="card lesson-card" id="lessonCard">
@@ -500,11 +545,15 @@ body.in-lesson .controls{display:none}
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
-      <button class="btn" id="btnSound" data-i18n-title="btn.sound.title"><svg viewBox="0 0 24 24" id="soundIcon"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><span data-i18n="btn.sound"></span></button>
+      <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/><circle cx="7.75" cy="7.75" r="2" fill="currentColor"/><circle cx="16.25" cy="16.25" r="2"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
+    <div class="card review-card" id="reviewCard">
+      <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
+      <div id="rvBody"></div>
+    </div>
     <div class="card kifu-card">
-      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></div>
+      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><span class="kb"><button id="btnAnalyze" data-i18n="rv.btn" data-i18n-title="rv.btn.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
       <div class="kifu" id="kifu"></div>
     </div>
     <div class="info-line" id="infoLine"></div>
@@ -619,8 +668,19 @@ body.in-lesson .controls{display:none}
     <div class="result-sub" id="resultSub"></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
+      <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
       <button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
     </div>
+  </div>
+</div>
+
+<!-- paste kifu -->
+<div class="overlay" id="pasteOverlay">
+  <div class="modal">
+    <h2 data-i18n="paste.title"></h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px" data-i18n="paste.desc"></p>
+    <textarea class="paste-ta" id="pasteText" spellcheck="false" placeholder="f5d6c3d3c4f4f6..."></textarea>
+    <div class="modal-actions"><button class="mbtn" id="pasteCancel" data-i18n="close"></button><button class="mbtn go" id="pasteOk" data-i18n="paste.load"></button></div>
   </div>
 </div>
 
@@ -974,6 +1034,7 @@ function renderInfo() {
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur });
   const [tb, tw] = counts(positions[positions.length - 1].cells);
   $('#infoLine').textContent = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}`;
+  renderReview();
 }
 function renderGraph() {
   const svg = $('#graph'); const W = 300, H = 74, n = Math.max(positions.length, 20);
@@ -1059,6 +1120,7 @@ function applyMove(sq) {
   }
   positions.push({ cells, toMove: next, last: sq, mover: color, evalB: null });
   cur = positions.length - 1;
+  if (positions[0].rv && !lesson && !puzzle) { positions[0].rv = 0; }
   return { sq, flips, passed, passer: 3 - color };
 }
 
@@ -1081,7 +1143,7 @@ async function schedule(animInfo) {
   if (reviewing || lesson || puzzle) return;
   const p = positions[cur];
   if (animInfo && animInfo.passed) {
-    toast(t('pass', { c: cname(animInfo.passer) }));
+    toast(t('pass', { c: cname(animInfo.passer) })); playPass();
   }
   if (p.toMove === 0) {
     // show the result only right after the final move (not on reload / when browsing back to the end)
@@ -1113,7 +1175,7 @@ async function schedule(animInfo) {
     const info = res.book ? `${t('book')} ${fmt(res.score)}` : res.exact ? `${t('exact')} ${fmt(res.score)}` : `${t('depth', { d: res.depth })}  ${fmt(res.score)}`;
     const a = applyMove(res.move);
     playPlace(a.flips.length);
-    update(a);
+    update(a); moveFx(a);
     setStatus(color, info, false);
   } else {
     // human's turn: background analysis for eval/hints
@@ -1148,7 +1210,7 @@ function onCellClick(sq) {
   const a = applyMove(sq);
   if (q) { positions[cur].q = q.cls; showCoach(q); }
   playPlace(a.flips.length);
-  update(a);
+  update(a); moveFx(a);
 }
 // ---- coach
 function judgeMove(p, sq) {
@@ -1211,6 +1273,8 @@ function showResult() {
     playChime(true);
   }
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
+  countUp($('#resB'), b); countUp($('#resW'), w);
+  if ((settings.mode === 'ai' && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
   showOverlay('#resultOverlay');
 }
 
@@ -1280,6 +1344,7 @@ $('#btnHint').onclick = () => {
   renderInfo();
   if (!reviewing && isHumanTurn()) schedule(null);
 };
+$('#btnPuzzle').onclick = () => { ctx(); openPuzzles(); };
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playPlace(0); };
 $('#btnCopy').onclick = async () => {
   const s = positions.slice(1).map(p => sqName(p.last)).join('');
@@ -1287,7 +1352,8 @@ $('#btnCopy').onclick = async () => {
 };
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
-  else if (e.key === 'Escape') { hideOverlay('#newOverlay'); hideOverlay('#resultOverlay'); }
+  else if (e.target && e.target.tagName === 'TEXTAREA') return;
+  else if (e.key === 'Escape') { hideOverlay('#newOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#pasteOverlay'); }
   else if (e.key === 'ArrowLeft' && cur > 0) viewAt(cur - 1);
   else if (e.key === 'ArrowRight' && cur < positions.length - 1) viewAt(cur + 1);
 });
@@ -1590,7 +1656,8 @@ async function loadPuzzles() { if (!puzzleData) { try { puzzleData = await fetch
 function pzKey(li, i) { return puzzleData.levels[li].id + ':' + i; }
 async function openPuzzles() {
   const d = await loadPuzzles();
-  $('#pzLevels').innerHTML = d.levels.map((lv, i) => {
+  const dl = dailyPick(), di = dailyInfo();
+  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${PT(d.levels[dl.li].name)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + d.levels.map((lv, i) => {
     const solved = lv.puzzles.filter((_, k) => pzProgress[lv.id + ':' + k]).length;
     return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${PT(lv.name)}</b><small>${PT(lv.desc)}</small></span><span class="st ${solved === lv.puzzles.length ? 'clear' : ''}">${solved}/${lv.puzzles.length}</span></button>`;
   }).join('') || `<p style="color:var(--dim)">${t('ls.fail')}</p>`;
@@ -1604,7 +1671,7 @@ function openPuzzleLevel(li) {
   $('#pzGrid').innerHTML = lv.puzzles.map((_, k) => `<button data-k="${k}" class="${pzProgress[lv.id + ':' + k] ? 'solved' : ''}">${k + 1}</button>`).join('');
   $('#pzListView').classList.add('hidden'); $('#pzGridView').classList.remove('hidden');
 }
-$('#pzLevels').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openPuzzleLevel(+b.dataset.i); });
+$('#pzLevels').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#puzzleOverlay'); startPuzzle(dl.li, dl.k, dl.date); } else openPuzzleLevel(+b.dataset.i); });
 $('#pzGrid').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { hideOverlay('#puzzleOverlay'); startPuzzle(pzLevelIdx, +b.dataset.k); } });
 $('#pzBack').onclick = () => { $('#pzListView').classList.remove('hidden'); $('#pzGridView').classList.add('hidden'); };
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
@@ -1625,12 +1692,12 @@ function exactScores(cells, toMove) {
     anaWorker.postMessage({ type: 'analyze', id: anaJob.id, cells, toMove, opts: { time: 20000, exact: 24 } });
   });
 }
-function startPuzzle(li, k) {
+function startPuzzle(li, k, daily) {
   if (lesson) { lesson = null; document.body.classList.remove('in-lesson'); clearMarks(); }
   busyToken++; cancelAI(); cancelAna();
   if (!puzzle && !savedGame) savedGame = { positions, cur, reviewing };
   const pz = puzzleData.levels[li].puzzles[k];
-  puzzle = { li, k, pz, me: pz.toMove, goal: pz.goal, state: 'play', busy: false, hint: false };
+  puzzle = { li, k, pz, me: pz.toMove, goal: pz.goal, state: 'play', busy: false, hint: false, daily: daily || null };
   document.body.classList.add('in-puzzle');
   hideOverlay('#resultOverlay');
   resetPuzzleBoard();
@@ -1645,7 +1712,7 @@ function resetPuzzleBoard() {
 }
 function renderPuzzleCard() {
   const P = puzzle, lv = puzzleData.levels[P.li];
-  $('#pzStep').textContent = `${PT(lv.name)} · #${P.k + 1}` + (pzProgress[pzKey(P.li, P.k)] ? '  ✓' : '');
+  $('#pzStep').textContent = (P.daily ? `${t('daily.title')} · ${P.daily.slice(5).replace('-', '/')} · ` : '') + `${PT(lv.name)} · #${P.k + 1}` + (pzProgress[pzKey(P.li, P.k)] ? '  ✓' : '');
   $('#pzTitle').textContent = t('pz.title');
   $('#pzGoal').textContent = goalText(P.goal, P.me);
   $('#pzNext').style.display = P.state === 'solved' ? '' : 'none';
@@ -1695,7 +1762,8 @@ function pzFinish() {
   if (meets(P.goal, v)) {
     P.state = 'solved'; pzProgress[pzKey(P.li, P.k)] = P.hint ? 'h' : 1;
     try { localStorage.setItem(PZ_STORE, JSON.stringify(pzProgress)); } catch (e) {}
-    pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.result', { b, w })}` + themeLine()); playChime(true);
+    if (P.daily) dailySolved(P.daily, P.hint);
+    pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.result', { b, w })}` + themeLine() + (P.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '')); playChime(true); confetti();
   } else {
     P.state = 'failed'; pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.result', { b, w })}`);
   }
@@ -1745,6 +1813,225 @@ function endPuzzle() {
   update(null);
 }
 
+// ====================================================================== post-game review
+let rvRun = null;   // {token, done, total}
+let rvOpen = true;
+const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
+function anaOnce(w, cells, toMove, time) {
+  return new Promise(resolve => {
+    const id = ++jobId;
+    w.onmessage = e => { const m = e.data; if (m.id === id && m.type === 'analysis') resolve(m.list || []); };
+    w.postMessage({ type: 'analyze', id, cells, toMove, opts: { time, exact: 16 } });
+  });
+}
+function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
+async function runReview() {
+  if (lesson || puzzle || positions.length < 2) return;
+  rvCancel(); busyToken++; cancelAI(); cancelAna();
+  const todo = [];
+  for (let i = 0; i < positions.length - 1; i++) { const p = positions[i]; if (p.toMove && legalMoves(p.cells, p.toMove).length > 1) todo.push(i); else positions[i + 1].q = null; }
+  await weightsReady;
+  const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(makeWorker(() => {}));
+  const run = rvRun = { ws, done: 0, total: todo.length, game: positions };
+  rvOpen = true; positions[0].rv = 0; renderReview();
+  let next = 0;
+  const loop = async w => {
+    while (next < todo.length && rvRun === run) {
+      const i = todo[next++], p = positions[i];
+      const list = await anaOnce(w, p.cells.slice(), p.toMove, 450);
+      if (rvRun !== run || run.game !== positions) return;
+      p.ana = list.map(x => ({ move: x.move, score: x.score }));
+      let best = -1e9; for (const x of list) best = Math.max(best, x.score);
+      p.evalB = p.toMove === BLACK ? best : -best;
+      const q = judgeMove(p, positions[i + 1].last); positions[i + 1].q = q ? q.cls : null;
+      run.done++; renderReview(); renderGraph();
+    }
+  };
+  await Promise.all(ws.map(loop));
+  if (rvRun !== run) return;
+  ws.forEach(w => w.terminate()); rvRun = null;
+  if (run.game !== positions) return;
+  positions[0].rv = 1; save(); renderInfo();
+  toast(t('rv.done'), 1200);
+}
+function rvLoss(i) {   // loss of the move that led to position i (from the mover's view)
+  const p = positions[i - 1]; if (!p || !p.ana || !p.ana.length) return null;
+  let best = -1e9, bm = -1; for (const x of p.ana) if (x.score > best) { best = x.score; bm = x.move; }
+  const mine = p.ana.find(x => x.move === positions[i].last); if (!mine) return null;
+  return { loss: Math.max(0, best - mine.score), best: bm };
+}
+function sideLabel(c) { return settings.mode === 'ai' ? (c === humanColor ? t('you') : 'AI') : cname(c); }
+function renderReview() {
+  const card = $('#reviewCard');
+  const show = !lesson && !puzzle && rvOpen && (rvRun || positions[0].rv);
+  card.classList.toggle('show', !!show);
+  boardEl.querySelectorAll('.mark.played, .mark.rvbest').forEach(e => e.remove());
+  if (!show) return;
+  let html = '';
+  if (rvRun) {
+    html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rvRun.done, b: rvRun.total })}</div><div class="rv-prog"><i style="width:${rvRun.total ? rvRun.done / rvRun.total * 100 : 0}%"></i></div>`;
+  } else {
+    const st = { 1: { n: 0, ok: 0, loss: 0, c: { best: 0, good: 0, dubious: 0, bad: 0 } }, 2: { n: 0, ok: 0, loss: 0, c: { best: 0, good: 0, dubious: 0, bad: 0 } } };
+    const bad = [];
+    for (let i = 1; i < positions.length; i++) {
+      const r = rvLoss(i); if (!r) continue;
+      const s = st[positions[i].mover]; s.n++; s.loss += r.loss; if (r.loss < 0.6) s.ok++;
+      const q = positions[i].q; if (q) s.c[q]++;
+      if (q === 'bad' || q === 'dubious') bad.push({ i, ...r, q });
+    }
+    const row = c => { const s = st[c]; return `<span>${c === BLACK ? '●' : '○'} ${sideLabel(c)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: s.n ? (s.loss / s.n).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${s.c.best}</span><span class="good">${s.c.good}</span><span class="dubious">${s.c.dubious}</span><span class="bad">${s.c.bad}</span></span>`; };
+    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(BLACK)}${row(WHITE)}</div>`;
+    bad.sort((a, b) => b.loss - a.loss);
+    if (bad.length) html += `<div class="rv-list">${bad.slice(0, 6).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${positions[x.i].mover === BLACK ? '●' : '○'} ${sqName(positions[x.i].last)} → ${sqName(x.best)}</span><span class="ls">−${x.loss.toFixed(1)}</span></button>`).join('')}</div>`;
+    else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
+  }
+  $('#rvBody').innerHTML = html;
+  // on the board: when looking at a position whose next move was analysed, show the played move and the best move
+  if (cur < positions.length - 1 && positions[cur].ana) {
+    const r = rvLoss(cur + 1);
+    if (r) {
+      clearHints();
+      const best = Math.max(...positions[cur].ana.map(x => x.score));
+      for (const x of positions[cur].ana) {
+        const h = document.createElement('div'); h.className = 'hint' + (x.score === best ? ' best' : '');
+        h.textContent = fmt(Math.round(x.score * 10) / 10); cellEls[x.move].appendChild(h);
+      }
+      const m = document.createElement('div'); m.className = 'mark played' + (r.loss < 0.6 ? ' okp' : ''); cellEls[positions[cur + 1].last].appendChild(m);
+      const q = positions[cur + 1].q;
+      $('#reviewText').textContent = `${cur + 1}. ${cname(positions[cur + 1].mover)} ${sqName(positions[cur + 1].last)}` + (q ? ` ${t('q.' + q)}` : '') + (r.loss >= 0.6 ? ` ${t('q.loss', { l: r.loss.toFixed(1), m: sqName(r.best) })}` : '');
+    }
+  }
+}
+$('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) { viewAt(+b.dataset.i); } });
+$('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); };
+$('#btnAnalyze').onclick = () => runReview();
+$('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
+
+// ====================================================================== kifu share / load
+function movesStr(n) { return positions.slice(1, n === undefined ? undefined : n + 1).map(p => sqName(p.last)).join(''); }
+function replayMoves(str) {
+  const ms = (str.toLowerCase().match(/[a-h][1-8]/g) || []).map(x => (x.charCodeAt(0) - 97) + (+x[1] - 1) * 8);
+  const save0 = positions;
+  positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
+  for (let k = 0; k < ms.length; k++) {
+    if (!positions[positions.length - 1].toMove || !applyMove(ms[k])) { positions = save0; return { ok: false, at: k + 1 }; }
+  }
+  return { ok: true, n: ms.length };
+}
+function openLoaded(n) {
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  settings.mode = 'pvp';
+  const end = positions.length - 1;
+  cur = Math.max(0, Math.min(end, n === undefined || isNaN(n) ? end : n)); reviewing = cur !== end;
+  hideOverlay('#resultOverlay'); update(null);
+}
+function loadFromHash() {
+  const h = location.hash.slice(1); if (!h) return false;
+  const q = new URLSearchParams(h), k = q.get('k'); if (k === null) return false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  const r = replayMoves(k);
+  if (!r.ok) { toast(t('paste.bad', { n: r.at }), 2500); return false; }
+  openLoaded(q.has('n') ? +q.get('n') : undefined);
+  toast(t('paste.loaded', { n: r.n }), 1800);
+  return true;
+}
+$('#btnShare').onclick = async () => {
+  const url = location.origin + location.pathname + '#k=' + movesStr() + (cur < positions.length - 1 ? '&n=' + cur : '');
+  try {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: 'Reversi V4', url }); return; }
+    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
+  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
+};
+$('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
+$('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
+$('#pasteOk').onclick = () => {
+  let v = $('#pasteText').value.trim(), n;
+  const m = v.match(/#(.*)$/); if (m) { const q = new URLSearchParams(m[1]); v = q.get('k') || ''; if (q.has('n')) n = +q.get('n'); }
+  const r = replayMoves(v);
+  if (!r.ok || !r.n) { toast(r.ok ? t('nokifu') : t('paste.bad', { n: r.at }), 2500); return; }
+  hideOverlay('#pasteOverlay'); openLoaded(n); toast(t('paste.loaded', { n: r.n }), 1800);
+};
+
+// ====================================================================== daily puzzle
+const DAILY_STORE = 'reversi-emerald-daily';
+let daily = { last: '', streak: 0, best: 0, days: {} };
+try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function dailyPick() {
+  if (!puzzleData || puzzleData.levels.length < 5) return null;
+  const now = new Date(), date = ymd(now);
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
+  const wd = now.getDay();   // Mon-Tue: level 2, Wed-Thu: 3, Fri-Sat: 4, Sun: 5
+  const li = wd === 0 ? 4 : wd <= 2 ? 1 : wd <= 4 ? 2 : 3;
+  const n = puzzleData.levels[li].puzzles.length;
+  let h = day * 2654435761 >>> 0; h ^= h >>> 15;
+  return { date, li, k: h % n };
+}
+function dailyInfo() {
+  const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
+  const alive = daily.last === today || daily.last === ymd(y);
+  return { streak: alive ? daily.streak : 0, best: daily.best || 0, today: !!daily.days[today] };
+}
+function dailySolved(date, hinted) {
+  if (daily.days[date]) return;
+  const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
+  daily.streak = daily.last === ymd(y) ? daily.streak + 1 : 1;
+  daily.last = date; daily.best = Math.max(daily.best || 0, daily.streak); daily.days[date] = hinted ? 'h' : 1;
+  try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
+}
+
+// ====================================================================== effects
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function moveFx(a) {
+  if (!a || lesson) return;
+  const corner = [0, 7, 56, 63].includes(a.sq);
+  if (corner) { playCorner(); }
+  if (!settings.anim || reduceMotion) return;
+  if (corner) {
+    const c = cellEls[a.sq];
+    for (const cls of ['fx-ring', 'fx-ring r2']) { const r = document.createElement('div'); r.className = cls; c.appendChild(r); setTimeout(() => r.remove(), 1200); }
+    for (let i = 0; i < 10; i++) {
+      const s = document.createElement('div'); s.className = 'fx-spark'; const ang = i / 10 * Math.PI * 2;
+      s.style.setProperty('--dx', Math.cos(ang) * 46 + 'px'); s.style.setProperty('--dy', Math.sin(ang) * 46 + 'px');
+      c.appendChild(s); setTimeout(() => s.remove(), 900);
+    }
+  }
+  if (a.flips.length >= 6) { boardEl.classList.remove('fx-glow'); void boardEl.offsetWidth; boardEl.classList.add('fx-glow'); }
+}
+function playCorner() {
+  if (!settings.sound) return; const a = ctx(); if (!a) return;
+  const t0 = a.currentTime + 0.05;
+  [880, 1318.5].forEach((f, i) => {
+    const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f;
+    const tt = t0 + i * 0.07; g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.12, tt + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.7);
+    o.connect(g).connect(a.destination); o.start(tt); o.stop(tt + 0.75);
+  });
+}
+function playPass() {
+  if (!settings.sound) return; const a = ctx(); if (!a) return;
+  const t0 = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = 'triangle';
+  o.frequency.setValueAtTime(520, t0); o.frequency.exponentialRampToValueAtTime(260, t0 + 0.25);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.08, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3);
+  o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + 0.32);
+}
+function countUp(el, n) {
+  if (!settings.anim || reduceMotion) { el.textContent = n; return; }
+  const t0 = performance.now(), dur = 900;
+  const step = now => { const k = Math.min(1, (now - t0) / dur); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+  el.textContent = 0; requestAnimationFrame(step);
+}
+function confetti() {
+  if (!settings.anim || reduceMotion) return;
+  const cols = ['#e2c275', '#c9a961', '#6fd3a0', '#f4f1e8', '#9fc7ff'];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement('div'); c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
+    c.style.setProperty('--dx', (Math.random() - 0.5) * 200 + 'px'); c.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    c.style.animationDuration = 1.8 + Math.random() * 1.6 + 's'; c.style.animationDelay = Math.random() * 0.4 + 's';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 4200);
+  }
+}
+
 // ====================================================================== boot
 const hadSave = load();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
@@ -1761,7 +2048,9 @@ $('#langSel').onchange = e => {
   } 
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
 };
-if (hadSave) {
+if (loadFromHash()) {
+  /* shared game opened */
+} else if (hadSave) {
   reviewing = false;
   update(null);
 } else {
