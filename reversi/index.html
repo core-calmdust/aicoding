@@ -206,7 +206,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .evalbar{position:relative;height:10px;border-radius:6px;background:#e9e8e2;overflow:hidden}
 .evalbar .fill{position:absolute;inset:0 auto 0 0;width:50%;background:linear-gradient(90deg,#000,#26292a);transition:width .5s ease}
 .evalbar .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--brass)}
-.graph{margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
+.graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
 
@@ -749,11 +749,19 @@ function renderKifu() {
   const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
 }
 $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
-$('#graph').addEventListener('click', e => {
-  const r = e.currentTarget.getBoundingClientRect(); const n = Math.max(positions.length, 20);
-  const i = Math.round((e.clientX - r.left) / r.width * (n - 1));
-  viewAt(Math.max(0, Math.min(positions.length - 1, i)));
-});
+(() => {
+  const g = $('#graph');
+  let dragging = false;
+  const idxAt = x => {
+    const r = g.getBoundingClientRect(), n = Math.max(positions.length, 20);
+    return Math.max(0, Math.min(positions.length - 1, Math.round((x - r.left) / r.width * (n - 1))));
+  };
+  const go = x => { const i = idxAt(x); if (i !== cur) viewAt(i); };
+  g.addEventListener('pointerdown', e => { dragging = true; try { g.setPointerCapture(e.pointerId); } catch (_) {} go(e.clientX); e.preventDefault(); });
+  g.addEventListener('pointermove', e => { if (dragging) go(e.clientX); });
+  const end = e => { dragging = false; try { g.releasePointerCapture(e.pointerId); } catch (_) {} };
+  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
+})();
 
 let toastTimer = 0;
 function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
