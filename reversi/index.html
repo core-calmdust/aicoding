@@ -412,6 +412,11 @@ body.in-online #evalCard, body.in-online #btnHint, body.in-online #btnAnalyze, b
 .dk-stat{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dk-sp{flex:1}
 .dk-me{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.dk-name{font:inherit;color:var(--text);padding:3px 8px;border-radius:7px;border:1px dashed rgba(201,169,97,.45);background:rgba(0,0,0,.2)}
+.dk-name span{color:var(--dim);font-size:11px;margin-left:2px}
+.dk-name:hover{border-color:var(--accent)}
+.dk-input{width:150px;border-radius:7px;border:1px solid var(--brass2);background:rgba(0,0,0,.35);color:var(--text);padding:5px 8px;font:inherit;font-size:13px;margin-right:6px}
+.dk-me{display:flex;align-items:center;gap:6px}
 .dk-me b{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:500}
 .dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
 .dk-btn:hover{border-color:var(--brass2)}
@@ -593,6 +598,13 @@ body.in-lesson .controls{display:none}
 }
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+.navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.navbar button:hover{color:var(--text);border-color:rgba(201,169,97,.5)}
+.navbar button:disabled{opacity:.35;pointer-events:none}
+.navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
+.navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
 </style>
 </head>
 <body>
@@ -661,6 +673,13 @@ body.in-lesson .controls{display:none}
       <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
       <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
       <svg class="graph" id="graph" viewBox="0 0 300 74" preserveAspectRatio="none"></svg>
+      <div class="navbar" id="navBar">
+        <button data-n="first" data-i18n-title="nav.first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button>
+        <button data-n="prev" data-i18n-title="nav.prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button>
+        <button data-n="play" id="navPlay" data-i18n-title="nav.play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+        <button data-n="next" data-i18n-title="nav.next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button>
+        <button data-n="last" data-i18n-title="nav.last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button>
+      </div>
     </div>
 
     <div class="card controls">
@@ -834,9 +853,9 @@ body.in-lesson .controls{display:none}
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
     </div>
   </div>
 </div>
@@ -1543,8 +1562,6 @@ document.addEventListener('keydown', e => {
   if (e.target && e.target.closest && e.target.closest('input,select,textarea')) return;
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); if (!net && !lesson && !puzzle) undo(); }
   else if (e.key === 'Escape') { hideOverlay('#newOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#pasteOverlay'); }
-  else if (e.key === 'ArrowLeft' && cur > 0) viewAt(cur - 1);
-  else if (e.key === 'ArrowRight' && cur < positions.length - 1) viewAt(cur + 1);
 });
 
 // ====================================================================== lessons
@@ -2598,7 +2615,11 @@ function dockRender() {
   const nPlay = dock.players.length, nWait = dock.lobby.length, nRoom = dock.rooms.length;
   $('#dkStat').textContent = t('ol.dockStat', { n: nPlay, w: nWait, r: nRoom });
   $('#mtCount').textContent = nPlay ? String(nPlay) : '';
-  $('#dkMe').innerHTML = me ? `${esc(me.name)} <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : '') : '';
+  if (dock.editing) return dockRenderLists();
+  $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${esc(t('ol.rename'))}">${esc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : '') : '';
+  dockRenderLists();
+}
+function dockRenderLists() {
   $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${esc(p.name)} <small class="st st-${p.st || 'idle'}">${t(ST_KEY[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
   $('#dkRooms').innerHTML = dock.rooms.length ? dock.rooms.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${esc(r.name)} <small>R ${r.rating}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${esc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
   $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
@@ -2617,6 +2638,23 @@ async function dockStart() {
 }
 function dockToggle(open) { dock.open = open ?? !dock.open; document.body.classList.toggle('dock-open', dock.open); $('#dkToggle').textContent = dock.open ? '▼' : '▲'; }
 $('#dkToggle').onclick = () => dockToggle();
+// edit the online name from the dock
+$('#dkMe').addEventListener('click', e => {
+  const b = e.target.closest('.dk-name'); if (!b || !Online.profile) return;
+  e.stopPropagation();
+  dock.editing = true;
+  $('#dkMe').innerHTML = `<input class="dk-input" maxlength="16" value="${esc(Online.profile.name)}" aria-label="name"><button class="dk-btn dk-ok">${t('ol.save')}</button>`;
+  const inp = $('#dkMe .dk-input'); inp.focus(); inp.select();
+  const done = async ok => {
+    if (!dock.editing) return; dock.editing = false;
+    if (ok) { const n = await Online.setName(inp.value); toast(t('ol.renamed', { n }), 1400); const f = $('#olName'); if (f) f.value = n; }
+    dockRender();
+  };
+  inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') done(true); else if (ev.key === 'Escape') done(false); });
+  inp.addEventListener('click', ev => ev.stopPropagation());
+  $('#dkMe .dk-ok').addEventListener('click', ev => { ev.stopPropagation(); done(true); });
+  inp.addEventListener('blur', () => setTimeout(() => { if (dock.editing && document.activeElement !== $('#dkMe .dk-ok')) done(true); }, 150));
+});
 $('#dock .dock-bar').addEventListener('click', e => { if (!e.target.closest('button')) dockToggle(); });
 $('#dkAuto').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olStartSearch(); };
 $('#dkRoom').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olCreateRoom(); };
@@ -2678,6 +2716,35 @@ if (roomLink) {
   renderBoard(null); renderInfo();
   openNew();
 }
+
+// record navigation (first / prev / play / next / last) under the evaluation graph, with ← → ↑ ↓ and Space
+let playTimer = 0;
+function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }
+function navGo(what) {
+  if (lesson || puzzle) return;
+  const N = positions.length - 1;
+  if (what === 'play') {
+    if (playTimer) { stopPlay(); return; }
+    if (cur >= N) viewAt(0);
+    document.querySelector('#navPlay').classList.add('playing');
+    playTimer = setInterval(() => { if (lesson || puzzle || cur >= positions.length - 1) { stopPlay(); return; } viewAt(cur + 1); }, 900);
+    return;
+  }
+  stopPlay();
+  const to = what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? cur - 1 : cur + 1;
+  if (to < 0 || to > N || to === cur) return;
+  viewAt(to);
+}
+document.querySelector('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
+  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
+  if (!k) return;
+  e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+  navGo(k);
+});
 </script>
 </body>
 </html>

@@ -430,6 +430,13 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 }
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+.navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.navbar button:hover{color:var(--text);border-color:rgba(201,169,97,.5)}
+.navbar button:disabled{opacity:.35;pointer-events:none}
+.navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
+.navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
 </style>
 </head>
 <body>
@@ -507,6 +514,13 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
       <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
       <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
       <svg class="graph" id="graph" viewBox="0 0 300 74" preserveAspectRatio="none"></svg>
+      <div class="navbar" id="navBar">
+        <button data-n="first" data-i18n-title="nav.first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button>
+        <button data-n="prev" data-i18n-title="nav.prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button>
+        <button data-n="play" id="navPlay" data-i18n-title="nav.play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+        <button data-n="next" data-i18n-title="nav.next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button>
+        <button data-n="last" data-i18n-title="nav.last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button>
+      </div>
     </div>
 
     <div class="card controls">
@@ -644,9 +658,9 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
     </div>
   </div>
 </div>
@@ -1236,9 +1250,7 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && ![...document.querySelectorAll('.overlay.show')].some(o => o.id !== 'resultOverlay')) { e.preventDefault(); undo(); return; }
   if (document.querySelector('.overlay.show')) { if (e.key === 'Escape') document.querySelectorAll('.overlay.show').forEach(o => { if (o.id !== 'resultOverlay' || true) o.classList.remove('show'); }); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); viewAt(cur - 1); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); viewAt(cur + 1); }
-  else if (e.key === 'Home') viewAt(0);
+  if (e.key === 'Home') viewAt(0);
   else if (e.key === 'End') viewAt(moves.length);
   else if (/^[1-7]$/.test(e.key)) onColumn(+e.key - 1);
 });
@@ -1821,6 +1833,35 @@ function rsOpen() {
 document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNewDialog(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
+
+// record navigation (first / prev / play / next / last) under the evaluation graph, with ← → ↑ ↓ and Space
+let playTimer = 0;
+function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }
+function navGo(what) {
+  if (lesson || puzzle) return;
+  const N = moves.length;
+  if (what === 'play') {
+    if (playTimer) { stopPlay(); return; }
+    if (cur >= N) viewAt(0);
+    document.querySelector('#navPlay').classList.add('playing');
+    playTimer = setInterval(() => { if (lesson || puzzle || cur >= moves.length) { stopPlay(); return; } viewAt(cur + 1); }, 900);
+    return;
+  }
+  stopPlay();
+  const to = what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? cur - 1 : cur + 1;
+  if (to < 0 || to > N || to === cur) return;
+  viewAt(to);
+}
+document.querySelector('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
+  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
+  if (!k) return;
+  e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+  navGo(k);
+});
 </script>
 </body>
 </html>
