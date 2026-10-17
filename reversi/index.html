@@ -621,6 +621,24 @@ body.in-lesson .controls{display:none}
 .navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
 .navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
+
+/* larger text for lesson / puzzle / opening explanations */
+.lesson-card .lt{font-size:13px}
+.lesson-card h3{font-size:22px}
+.lesson-prompt{font-size:16px;line-height:1.75}
+.lesson-fb{font-size:15px;line-height:1.85}
+.op-seq{font-size:14px;line-height:1.9}
+.op-nav button{font-size:13.5px;padding:5px 11px}
+.op-nav .pos{font-size:13px}
+.op-facts{font-size:14px;line-height:1.8}
+.op-facts small{font-size:12.5px}
+.op-info{font-size:15px;line-height:1.85}
+.op-info-s p, .ob-info p{font-size:15px;line-height:1.9}
+.op-dr button{font-size:13px;padding:5px 12px}
+.pz-goal{font-size:16.5px}
+.pz-status{font-size:15px;line-height:1.85}
+.lesson-intro p{font-size:15.5px;line-height:1.9}
+.lesson-intro p.note{font-size:14px}
 </style>
 </head>
 <body>
@@ -1900,12 +1918,12 @@ function opFeedback(sq) {
     if (pts === 20 && F[pr.ans] && F[bm][0] - F[pr.ans][0] >= 2) fb += ' ' + t('op.weak', { b: sqName(bm), vb: fmtS(F[bm][0], 'eval') }); }
   const seq = ln.moves.match(/../g);
   fb += `<div class="op-seq">${seq.map((m, i) => i === pr.k ? `<b>${i + 1}.${m}</b>` : `${i + 1}.${m}`).join(' ')}</div>`;
-  if (ln.moves.length > (pr.k + 1) * 2) fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.cont', { name: PT(ln.name) })}</span><br>`;
+  if (ln.moves.length > (pr.k + 1) * 2) fb += `<span style="font-size:13px;color:var(--dim)">${t('op.cont', { name: PT(ln.name) })}</span><br>`;
   const cells = positions[positions.length - 1].cells, me = pr.toMove, fa = moveFacts(cells, pr.ans, me), fm = sq !== pr.ans ? moveFacts(cells, sq, me) : null;
   const fl = (m, x) => x ? `<b>${sqName(m)}</b> ${t('op.fact', { f: x.flips, o: x.open, m: x.opp })}` : '';
   fb += `<div class="op-facts">${fl(pr.ans, fa)}${fm ? '<br>' + fl(sq, fm) : ''}<br><small>${t('op.factNote')}</small></div>`;
-  if (ln.info) fb += `<div class="op-info"><b>${PT(ln.name)}</b> ${PT(ln.info)}</div>`;
-  fb += `<span style="font-size:11.5px;color:var(--dim)">${t('op.nums')}</span>`;
+  if (ln.info) fb += `<div class="op-info"><b>${PT(ln.name)}</b><div class="ob-info">${opInfoHtml(PT(ln.info))}</div></div>`;
+  fb += `<span style="font-size:13px;color:var(--dim)">${t('op.nums')}</span>`;
   return fb;
 }
 function answerFeedback(sq) {
@@ -1926,7 +1944,7 @@ function answerFeedback(sq) {
   if (why) fb += `<br>${why}`;
   const lx = LT(L.l);
   if (pr.trap && lx.trapNote) fb += `<br><span style="color:var(--accent)">※ ${lx.trapNote}</span>`;
-  if (pr.type !== 'flips') fb += `<br><span style="font-size:11.5px;color:var(--dim)">${t(pr.type === 'exact' ? 'fb.numsExact' : 'fb.numsEval')}</span>`;
+  if (pr.type !== 'flips') fb += `<br><span style="font-size:13px;color:var(--dim)">${t(pr.type === 'exact' ? 'fb.numsExact' : 'fb.numsEval')}</span>`;
   return fb;
 }
 // text shown before answering (tutorial / exam note / hint), re-rendered on language change
@@ -2140,7 +2158,7 @@ function drillRender() {
   else $('#lsPrompt').innerHTML = (positions[positions.length - 1].toMove === L.color && !L.answered ? t('op.drillTurn', { c: `<b>${cname(L.color)}</b>`, n: L.k + 1 }) : t('op.drillWait')) + `<div class="op-seq">${shown}</div>`;
   let fb = '';
   if (L.lastMiss) fb = `<b class="ng">${t('fb.ng')}</b> ${t('op.drillMiss', { m: sqName(L.lastMiss.sq), a: sqName(L.lastMiss.want) })}`;
-  if (L.done) fb = (L.miss === 0 && L.mine ? `<b class="ok">${t('op.drillPerfect')}</b>` : '') + (L.ln.info ? `<div class="op-info"><b>${PT(L.ln.name)}</b> ${PT(L.ln.info)}</div>` : '');
+  if (L.done) fb = (L.miss === 0 && L.mine ? `<b class="ok">${t('op.drillPerfect')}</b>` : '') + (L.ln.info ? `<div class="op-info"><b>${PT(L.ln.name)}</b><div class="ob-info">${opInfoHtml(PT(L.ln.info))}</div></div>` : '');
   $('#lsFb').innerHTML = fb;
   $('#lsNext').textContent = t('op.drillAgain');
   $('#lsNext').disabled = !L.done; $('#lsNext').style.opacity = L.done ? 1 : .4;
