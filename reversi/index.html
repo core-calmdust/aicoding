@@ -313,6 +313,7 @@ body.in-lesson .controls{display:none}
 .dots i.ok{background:#6fd3a0}.dots i.ng{background:#ff6b5b}.dots i.cur{box-shadow:0 0 0 2px var(--accent)}
 .lesson-prompt{font-size:14px;line-height:1.7}
 .lesson-fb{margin-top:10px;font-size:13px;line-height:1.75;color:var(--muted);min-height:40px}
+.ls-goal{margin-bottom:8px;padding:8px 10px;border-radius:9px;background:rgba(226,194,117,.08);border:1px solid rgba(226,194,117,.28);color:var(--text)}
 .lesson-fb b.ok{color:#8fe3b8}.lesson-fb b.ng{color:#ff9b90}
 .lesson-actions{display:flex;gap:8px;margin-top:12px}
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
@@ -1299,7 +1300,10 @@ function loadProblem() {
   renderLessonCard();
   $('#lsFb').innerHTML = '';
   const tx = LT(lesson.l);
-  if (lesson.i === 0 && tx.tutorial) { const info = showAids(lesson.l.kind, pr, cells, pr.toMove); $('#lsFb').innerHTML = `📘 ${tx.tutorial.replace('{m}', info.m || '').replace('{n}', info.n ?? '')}`; }
+  if (lesson.i === 0 && tx.tutorial) {
+    const info = showAids(lesson.l.kind, pr, cells, pr.toMove);
+    $('#lsFb').innerHTML = (tx.goal ? `<div class="ls-goal">🎯 <b>${t('ls.goal')}</b> ${tx.goal}</div>` : '') + `📘 ${tx.tutorial.replace('{m}', info.m || '').replace('{n}', info.n ?? '')}`;
+  }
   else if (lesson.i >= 3) $('#lsFb').innerHTML = `🎓 ${t('ls.examNote')}`;
 }
 // visual aids for a lesson kind (tutorial on problem 1, hint on problems 2-3)
