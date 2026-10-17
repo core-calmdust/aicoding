@@ -238,10 +238,17 @@ const PATTERN_DEFS = [
   ['diag5', P('d1 e2 f3 g4 h5')],
   ['diag4', P('e1 f2 g3 h4')],
 ];
-function buildPatterns() {
+// Pattern sets: set A (11 shapes) is the original; set B adds 4 ten-square shapes. The active set is chosen from the weights size.
+const PATTERN_DEFS_B = PATTERN_DEFS.concat([
+  ['triangle', P('a1 b1 c1 d1 a2 b2 c2 a3 b3 a4')],
+  ['cornerBlock', P('a1 c1 d1 e1 f1 h1 c2 d2 e2 f2')],
+  ['diag8c', P('a1 b2 c3 d4 e5 f6 g7 h8 b1 a2')],
+  ['narrowTri', P('a1 b1 c1 d1 e1 a2 b2 a3 a4 a5')],
+]);
+function buildPatterns(defs) {
   const pats = [];
   let offset = 0;
-  for (const [name, sqs] of PATTERN_DEFS) {
+  for (const [name, sqs] of defs) {
     const inst = symmetries(sqs);
     const size = POW3[sqs.length];
     pats.push({ name, len: sqs.length, size, offset, inst });
@@ -249,29 +256,30 @@ function buildPatterns() {
   }
   return { pats, total: offset };
 }
-const PB = buildPatterns();
-PATTERNS = PB.pats;
-// extra scalar features (v2 weights): mobility / potential mobility tables, 64 entries each
-const EXT_OFF = PB.total, EXT_SIZE = 256, NEXT = 4;
-const PS_V1 = PB.total + 1, PS_V2 = PB.total + EXT_SIZE + 1;
-let USE_EXT = false;
-PHASE_SIZE = PS_V1; // +1 bias
-// flattened instance tables: for each instance -> offset, len, squares
-const INST_OFF = [], INST_LEN = [], INST_SQ = [];
-for (const p of PATTERNS) for (const m of p.inst) { INST_OFF.push(p.offset); INST_LEN.push(p.len); INST_SQ.push(m); }
-const NINST = INST_OFF.length;
-const I_OFF = Int32Array.from(INST_OFF), I_LEN = Int8Array.from(INST_LEN);
-const I_SQ = new Int8Array(NINST * 10);
-for (let i = 0; i < NINST; i++) for (let k = 0; k < INST_LEN[i]; k++) I_SQ[i * 10 + k] = INST_SQ[i][k];
-// per-square contribution lists: for each square, (instance, power-of-3 at that square's position)
-const SQ_START = new Int32Array(65), SQ_INST = [], SQ_POW = [];
-{
+const EXT_SIZE = 256, NEXT = 4;
+let EXT_OFF = 0, PS_V1 = 0, PS_V2 = 0, USE_EXT = false, PATTERN_SET = '';
+let INST_OFF, INST_LEN, INST_SQ, NINST = 0;
+const MAXI = 80, NSTK = 96;
+const I_OFF = new Int32Array(MAXI), I_LEN = new Int8Array(MAXI), I_SQ = new Int8Array(MAXI * 10);
+const SQ_START = new Int32Array(65), SQI = new Int32Array(MAXI * 10), SQP = new Int32Array(MAXI * 10);
+const IDX = new Int32Array(MAXI), STA = new Int32Array(NSTK * MAXI), STB = new Int32Array(NSTK * MAXI);
+function setupPatterns(defs, name) {
+  const PB = buildPatterns(defs);
+  PATTERNS = PB.pats; PATTERN_SET = name;
+  EXT_OFF = PB.total; PS_V1 = PB.total + 1; PS_V2 = PB.total + EXT_SIZE + 1;
+  PHASE_SIZE = PS_V1;
+  INST_OFF = []; INST_LEN = []; INST_SQ = [];
+  for (const p of PATTERNS) for (const m of p.inst) { INST_OFF.push(p.offset); INST_LEN.push(p.len); INST_SQ.push(m); }
+  NINST = INST_OFF.length;
+  I_OFF.set(INST_OFF); I_LEN.set(INST_LEN);
+  for (let i = 0; i < NINST; i++) for (let k = 0; k < INST_LEN[i]; k++) I_SQ[i * 10 + k] = INST_SQ[i][k];
   const lists = Array.from({ length: 64 }, () => []);
   for (let i = 0; i < NINST; i++) { const n = INST_LEN[i]; for (let k = 0; k < n; k++) lists[INST_SQ[i][k]].push([i, POW3[n - 1 - k]]); }
-  let o = 0; for (let q = 0; q < 64; q++) { SQ_START[q] = o; for (const [i, pw] of lists[q]) { SQ_INST.push(i); SQ_POW.push(pw); o++; } } SQ_START[64] = o;
+  let o = 0; for (let q = 0; q < 64; q++) { SQ_START[q] = o; for (const [i, pw] of lists[q]) { SQI[o] = i; SQP[o] = pw; o++; } } SQ_START[64] = o;
 }
-const SQI = Int32Array.from(SQ_INST), SQP = Int32Array.from(SQ_POW);
-const IDX = new Int32Array(NINST);
+setupPatterns(PATTERN_DEFS, 'A');
+const SETS = { A: PATTERN_DEFS, B: PATTERN_DEFS_B };
+function sizesOf(defs) { const t = buildPatterns(defs).total; return [t + 1, t + EXT_SIZE + 1]; }
 // per square cell code: 0 empty, 1 player, 2 opponent
 const CELL = new Int8Array(64);
 function fillCells(pl, ph, ol, oh) {
@@ -325,6 +333,7 @@ let evaluate = evalHand;
 function setWeights(arr, nphase) {
   W = arr; NPHASE = nphase;
   const per = arr.length / nphase;
+  for (const k of ['A', 'B']) { const [v1, v2] = sizesOf(SETS[k]); if ((per === v1 || per === v2) && PATTERN_SET !== k) setupPatterns(SETS[k], k); }
   if (per === PS_V2) { USE_EXT = true; PHASE_SIZE = PS_V2; }
   else if (per === PS_V1) { USE_EXT = false; PHASE_SIZE = PS_V1; }
   else throw new Error('weights size mismatch: ' + per);
@@ -383,8 +392,6 @@ const MPC = { on: true, t: 1.5, A: 357.32, B: 1.1, C: -3.14, minDepth: 3 }; // f
 const mpcShallow = d => 2 * (d >> 2) + (d & 1); // ~d/2, same parity as d
 // -------------------------------------------------------- midgame PVS
 // ---- incremental pattern indices: per ply, A = indices with side-to-move coded 1 / opponent 2, B = colours swapped
-const NSTK = 96;
-const STA = new Int32Array(NSTK * NINST), STB = new Int32Array(NSTK * NINST);
 function initIdx(ply, pl, ph, ol, oh) {
   const a0 = ply * NINST;
   STA.fill(0, a0, a0 + NINST); STB.fill(0, a0, a0 + NINST);
@@ -919,7 +926,7 @@ const API = {
   think, analyze, searchMove, setWeights, setBook, bookLookup, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
-  TUNE, MPC, NINST, NEXT, PS_V1, PS_V2, get PHASE_SIZE() { return PHASE_SIZE; }, PATTERNS, LEVELS, SCALE,
+  TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, SCALE,
   genMovesList: legalList,
 };
 root.ReversiEngine = API;
