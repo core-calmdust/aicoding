@@ -36,6 +36,8 @@ static const i32 OPPD[8] = {7, 6, 5, 4, 3, 2, 1, 0};
 static i8 NB[81 * 8];
 static i8 KN_TO[2][81][2], KN_TO_N[2][81], KN_FROM[2][81][2], KN_FROM_N[2][81];
 static u8 STEP[32 * 8], SLIDE[32 * 8];
+/* per piece code: directions in increasing order, high bit = slide */
+static u8 DIRS[32][8], NDIRS[32];
 #define inZone(col, s) ((col) == 0 ? (s) < 27 : (s) >= 54)
 static inline int deadEnd(int col, int t, int s) {
   int r = s / 9, rr = col == 0 ? r : 8 - r;
@@ -244,13 +246,13 @@ static int gen(i32 *list, int mode) {
   int us = side, n = 0, full = mode == 2, capOnly = mode == 1;
   for (int s = 0; s < 81; s++) {
     int p = board[s]; if (!p || colorOf(p) != us) continue;
-    int t = typeOf(p), cp = CAN_PROMOTE[t], p8 = p * 8;
-    for (int d = 0; d < 8; d++) {
-      if (STEP[p8 + d]) {
+    int t = typeOf(p), cp = CAN_PROMOTE[t], nd = NDIRS[p];
+    for (int k = 0; k < nd; k++) {
+      int dd = DIRS[p][k], d = dd & 7;
+      if (!(dd & 8)) {
         int to = NB[s * 8 + d];
         if (to >= 0) { int q = board[to]; if (!q || colorOf(q) != us) n = addMove(list, n, s, to, t, cp, us, q, capOnly, full); }
-      }
-      if (SLIDE[p8 + d]) {
+      } else {
         int to = NB[s * 8 + d];
         while (to >= 0) {
           int q = board[to];
@@ -267,12 +269,17 @@ static int gen(i32 *list, int mode) {
   if (capOnly) return n;
   int hb = us * 8, pawnFiles = 0;
   if (hand[hb + FU]) for (int s = 0; s < 81; s++) if (board[s] == FU + (us ? WF : 0)) pawnFiles |= 1 << (s % 9);
+  int any = 0; for (int t = 1; t <= 7; t++) any |= hand[hb + t];
+  if (!any) return n;
+  u8 empty[81]; int ne = 0;
+  for (int s = 0; s < 81; s++) if (!board[s]) empty[ne++] = (u8)s;
   for (int t = 1; t <= 7; t++) {
     if (!hand[hb + t]) continue;
     int from = 80 + t;
-    for (int s = 0; s < 81; s++) {
-      if (board[s]) continue;
-      if (t <= KE && deadEnd(us, t, s)) continue;
+    if (t > KE) { for (int i = 0; i < ne; i++) list[n++] = from | (empty[i] << 7); continue; }
+    for (int i = 0; i < ne; i++) {
+      int s = empty[i];
+      if (deadEnd(us, t, s)) continue;
       if (t == FU && ((pawnFiles >> (s % 9)) & 1)) continue;
       list[n++] = from | (s << 7);
     }
@@ -369,6 +376,48 @@ static int hasLegalMove(void) {
       int q = board[t]; if (q && colorOf(q) == us) continue;
       board[k] = 0; board[t] = kp; int att = attacked(t, us ^ 1); board[t] = q; board[k] = kp;
       if (!att) return 1;
+    }
+  }
+  /* in check (always the case for our callers): only captures of the checker and interpositions can help */
+  if (k >= 0 && attacked(k, us ^ 1)) {
+    int chk[24], nc = attackers(k, us ^ 1, chk);
+    if (nc >= 2) return 0;                       /* double check: only king moves, already tried */
+    if (nc == 1) {
+      int cs = chk[0], tg[9], nt = 0, cr = cs / 9, cc = cs % 9, kr = k / 9, kc = k % 9;
+      tg[nt++] = cs;
+      int dr = (kr > cr) - (kr < cr), dc = (kc > cc) - (kc < cc);
+      int adjacentOrKnight = (cr - kr) * (cr - kr) > 1 || (cc - kc) * (cc - kc) > 1;
+      if (adjacentOrKnight && (cr == kr || cc == kc || (cr - kr == cc - kc) || (cr - kr == kc - cc)) && typeOf(board[cs]) != KE) {
+        int r = cr + dr, c = cc + dc;
+        while (r != kr || c != kc) { tg[nt++] = r * 9 + c; r += dr; c += dc; }
+      }
+      int at[24];
+      for (int i = 0; i < nt; i++) {
+        int t = tg[i], na = attackers(t, us, at);
+        for (int j = 0; j < na; j++) {
+          int f = at[j], tp = typeOf(board[f]); if (tp == OU) continue;
+          int m = f | (t << 7);
+          if (CAN_PROMOTE[tp] && (inZone(us, f) || inZone(us, t))) m |= 1 << 14;
+          doMove(m);
+          int ok = !attacked(king[side ^ 1], side);
+          undoMove();
+          if (ok) return 1;
+        }
+        if (i > 0) {                                  /* drops on the line between */
+          int hb = us * 8;
+          for (int tp = 1; tp <= 7; tp++) {
+            if (!hand[hb + tp]) continue;
+            if (tp <= KE && deadEnd(us, tp, t)) continue;
+            if (tp == FU) { int c = t % 9, fp = FU + (us ? WF : 0), dup = 0; for (int r = 0; r < 9; r++) if (board[r * 9 + c] == fp) dup = 1; if (dup) continue; }
+            int m = (80 + tp) | (t << 7);
+            doMove(m);
+            int ok = !attacked(king[side ^ 1], side);
+            undoMove();
+            if (ok) return 1;
+          }
+        }
+      }
+      return 0;
     }
   }
   int n = gen(hlBuf, 0);
@@ -902,6 +951,7 @@ EXPORT(init) void init(void) {
     for (int i = 0; i < ns; i++) { STEP[t * 8 + st[i]] = 1; STEP[(t + WF) * 8 + OPPD[st[i]]] = 1; }
     for (int i = 0; i < nsl; i++) { SLIDE[t * 8 + sl[i]] = 1; SLIDE[(t + WF) * 8 + OPPD[sl[i]]] = 1; }
   }
+  for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
   seed = 0x2545F491;
   for (int i = 0; i < 81 * 32; i++) { ZB_L[i] = rnd32(); ZB_H[i] = rnd32(); }
   for (int i = 0; i < 2 * 8 * 20; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rnd32(); }
