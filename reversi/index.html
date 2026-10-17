@@ -290,6 +290,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
 .mark.ok{border-color:#6fd3a0}
 .mark.ng{border-color:#ff6b5b}
+.sqlbl{position:absolute;z-index:4;pointer-events:none;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:calc(var(--cell)*0.26);padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);color:#fff}
+.sqlbl.c0{color:var(--accent);border-color:rgba(226,194,117,.6)}
+.sqlbl.x{color:#ff9b90;border-color:rgba(255,107,91,.6)}
+.sqlbl.c{color:#ffd29a;border-color:rgba(242,192,96,.6)}
 .mark.danger{border:2px dashed rgba(255,107,91,.8);inset:14%}
 .lesson-card{display:none}
 body.in-lesson .lesson-card{display:block}
@@ -1286,6 +1290,8 @@ function loadProblem() {
   clearMarks();
   renderLessonCard();
   $('#lsFb').innerHTML = '';
+  const tx = LT(lesson.l);
+  if (lesson.i === 0 && tx.tutorial) { $('#lsFb').innerHTML = `📘 ${tx.tutorial}`; if (lesson.l.kind === 'corner') showSquareLabels(cells); }
 }
 function renderLessonCard() {
   const L = lesson, pr = L.probs[L.i];
@@ -1298,7 +1304,13 @@ function renderLessonCard() {
   $('#lsNext').disabled = !L.answered; $('#lsNext').style.opacity = L.answered ? 1 : .4;
   $('#lsHint').disabled = L.answered; $('#lsHint').style.opacity = L.answered ? .4 : 1;
 }
-function clearMarks() { boardEl.querySelectorAll('.mark').forEach(e => e.remove()); }
+function clearMarks() { boardEl.querySelectorAll('.mark, .sqlbl').forEach(e => e.remove()); }
+// label empty corners and the X / C squares next to them (tutorial aid)
+function showSquareLabels(cells) {
+  const CN = [0, 7, 56, 63], X = { 0: [9], 7: [14], 56: [49], 63: [54] }, C = { 0: [1, 8], 7: [6, 15], 56: [48, 57], 63: [55, 62] };
+  const lab = (q, cls, txt) => { if (cells[q]) return; const d = document.createElement('div'); d.className = 'sqlbl ' + cls; d.textContent = txt; cellEls[q].appendChild(d); };
+  for (const c of CN) { if (cells[c]) continue; lab(c, 'c0', t('lbl.corner')); X[c].forEach(q => lab(q, 'x', 'X')); C[c].forEach(q => lab(q, 'c', 'C')); }
+}
 function addMark(sq, cls) { const m = document.createElement('div'); m.className = 'mark ' + cls; cellEls[sq].appendChild(m); }
 function lessonAnswer(sq) {
   const L = lesson; if (L.answered) return;
@@ -1312,7 +1324,7 @@ function lessonAnswer(sq) {
   const ok = mine >= best - tol - 1e-9;
   L.results.push(ok);
   playPlace(ok ? 3 : 0);
-  clearHints();
+  clearHints(); boardEl.querySelectorAll('.sqlbl').forEach(e => e.remove());
   for (const m of moves) {
     const h = document.createElement('div');
     h.className = 'hint' + (sc[m] === best ? ' best' : '');
@@ -1385,6 +1397,7 @@ $('#lsHint').onclick = () => {
   const pr = lesson.probs[lesson.i];
   let h = LT(lesson.l).hint || '';
   if (pr.danger) for (const d of pr.danger) addMark(d, 'danger');
+  if (lesson.l.kind === 'corner' || lesson.l.kind === 'exception') { boardEl.querySelectorAll('.sqlbl').forEach(e => e.remove()); showSquareLabels(positions[0].cells); }
   $('#lsFb').innerHTML = `💡 ${h}`;
 };
 $('#lsNext').onclick = () => {
