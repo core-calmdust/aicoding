@@ -472,9 +472,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018h"></script>
-<script src="engine.js?v=20261018h"></script>
-<script src="strategy.js?v=20261018h"></script>
+<script src="i18n.js?v=20261018i"></script>
+<script src="engine.js?v=20261018i"></script>
+<script src="strategy.js?v=20261018i"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -543,7 +543,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018h');
+    const res = await fetch('weights.bin.gz?v=20261018i');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -556,7 +556,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018h');
+  const w = new Worker('engine.js?v=20261018i');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -876,7 +876,7 @@ const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('m
 const winRate = v => 1 / (1 + Math.exp(-v / 600));
 function evAt(i) { for (let k = i; k >= 0 && k >= i - 1; k--) if (game.info[k] && game.info[k].ev != null) return game.info[k].ev; return null; }
 function renderInfo() {
-  try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classify(E, P) : null; $('#senkei').textContent = c ? '· ' + (LANG === 'ja' ? c.ja : c.en) : ''; } catch (e) {}
+  try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (LANG === 'ja' ? c.ja : c.en) : ''; } catch (e) {}
   $('#nameBlack').textContent = playerName(0); $('#nameWhite').textContent = playerName(1);
   $('#pBlack').classList.toggle('active', !game.over && P.side === 0);
   $('#pWhite').classList.toggle('active', !game.over && P.side === 1);
@@ -1613,7 +1613,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018h').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018i').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1624,7 +1624,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018h').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018i').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1632,7 +1632,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018h').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018i').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1700,7 +1700,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018h').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018i').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
