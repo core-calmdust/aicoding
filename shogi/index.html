@@ -333,6 +333,17 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   .kifu{grid-template-columns:repeat(3,1fr)}
 }
 }
+
+/* PC: use the browser width for the lesson / puzzle / opening dialogs (phones keep the single-column layout) */
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  #lessonOverlay .modal, #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
+  #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
+  #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
+  #lessonIntroView .lesson-intro > p, #liBody > p{max-width:820px}
+  .op-book{grid-template-columns:repeat(2, minmax(0, 1fr))}
+  .pz-grid{grid-template-columns:repeat(10, 1fr)}
+}
 </style>
 </head>
 <body>
