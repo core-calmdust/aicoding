@@ -19,11 +19,11 @@
 :root{
   --bg:#0b1110; --bg2:#121b19; --panel:#141f1c; --panel2:#1a2724; --line:#26372f;
   --text:#e8eee9; --muted:#8fa39a; --dim:#5d7068;
-  --felt:#1d6b4c; --felt2:#155238; --felt3:#0f3f2b;
+  --felt:#17573f; --felt2:#0e412e; --felt3:#07291c;
   --brass:#c9a961; --brass2:#8e7440;
   --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
-  --gold1:#fff1c2; --gold2:#e5c36c; --gold3:#a9812f; --gold4:#6d5020;
-  --ruby1:#ffb5a8; --ruby2:#d8483a; --ruby3:#9a271d; --ruby4:#561109;
+  --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;
+  --ruby1:#ffffff; --ruby2:#d4d9e0; --ruby3:#8f97a3; --ruby4:#3c424b;   /* platinum (second player) */
   --vh: 100vh;
   --pad: clamp(28px, 7vmin, 100px);
   --gap: clamp(24px, 3vw, 48px);
@@ -64,7 +64,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   position:relative;width:var(--fw);height:var(--fh);
   padding:calc(var(--cell) * var(--top)) calc(var(--cell)*0.42) calc(var(--cell)*0.55);
   border-radius:18px;
-  background:linear-gradient(145deg,#2a2018 0%,#16100b 55%,#22190f 100%);
+  background:linear-gradient(145deg,#1d1813 0%,#0c0a08 55%,#19140e 100%);
   box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25),inset 0 1px 0 rgba(255,255,255,.06);
   user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
@@ -76,8 +76,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .discs{position:absolute;inset:0}
 .disc{position:absolute;width:calc(var(--cell)*0.84);height:calc(var(--cell)*0.84);margin:calc(var(--cell)*0.08);border-radius:50%;will-change:transform}
 .disc::before{content:"";position:absolute;inset:16%;border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.25)}
-.disc.p1{background:radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35)}
-.disc.p2{background:radial-gradient(circle at 34% 28%,var(--ruby1) 0%,var(--ruby2) 26%,var(--ruby3) 68%,var(--ruby4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.4)}
+.disc.p1{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.22) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.14) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.35)}
+.disc.p2{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.28) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.18) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--ruby1) 0%,var(--ruby2) 26%,var(--ruby3) 68%,var(--ruby4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.4),inset 0 0 0 1.5px rgba(255,255,255,.4)}
 .disc.last::after{content:"";position:absolute;left:50%;top:50%;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 6px rgba(255,255,255,.8)}
 .board.hide-last .disc.last::after{display:none}
 .disc.ghost{opacity:.32;pointer-events:none}
@@ -110,7 +110,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .mark.ok{border-color:var(--accent);box-shadow:0 0 14px rgba(226,194,117,.7)}
 .mark.ng{border-color:#ff6b5b}
 .mark.threat{border:2px dashed rgba(255,255,255,.75);width:calc(var(--cell)*0.6);height:calc(var(--cell)*0.6);margin:calc(var(--cell)*0.2)}
-.mark.threat.op{border-color:rgba(255,107,91,.85)}
+.mark.threat.op{border-color:rgba(214,220,228,.9)}
 .winring{position:absolute;width:calc(var(--cell)*0.8);height:calc(var(--cell)*0.8);margin:calc(var(--cell)*0.1);border-radius:50%;border:3px solid #fff3cf;box-shadow:0 0 18px rgba(255,236,170,.85),inset 0 0 12px rgba(255,236,170,.6);pointer-events:none;z-index:8;animation:winp 1.1s ease-in-out infinite}
 @keyframes winp{50%{transform:scale(1.08);box-shadow:0 0 28px rgba(255,236,170,1),inset 0 0 18px rgba(255,236,170,.8)}}
 .winline{position:absolute;inset:0;z-index:9;pointer-events:none;overflow:visible}
@@ -143,15 +143,19 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
 .kifu-card .kifu{flex:1;min-height:0;max-height:none}
 .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:28px;letter-spacing:.1em;white-space:nowrap}
+.brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:clamp(17px, calc((100cqw - 200px) / 8.6), 28px);letter-spacing:.1em;white-space:nowrap}
 .brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
 .brand a{font-size:12px;color:var(--dim);text-decoration:none;white-space:nowrap}
 .brand a:hover{color:var(--muted)}
 .brand-r{display:flex;align-items:center;gap:8px}
+/* keep the title + header buttons on one line: the title shrinks with the side panel width */
+.brand h1{min-width:0;flex:1 1 auto;overflow:hidden}
+.brand-r{flex:none}
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
 #langSel:hover{color:var(--text)}
 .snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
 .snd:hover{color:var(--text)}
+a.snd.home{text-decoration:none}
 .snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .snd .off-x{display:none}
 .snd.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
@@ -409,7 +413,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .side-in:has(.review-card.show) #evalCard .graph{min-height:28px}
   .side-in:has(.review-card.show) .kifu-card{min-height:92px}
   .player .count{font-size:clamp(36px, 4.6cqw, 56px)}
-  .brand h1{font-size:clamp(28px, 4.2cqw, 40px)}
+  .brand h1{font-size:clamp(18px, calc((100cqw - 200px) / 8.6), 40px)}
 }
 }
 </style>
@@ -441,7 +445,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>Connect Four<small>V2</small></h1>
-      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" data-i18n="back"></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
 
     <div class="card lesson-card" id="lessonCard">
@@ -877,7 +881,7 @@ function renderFx() {
   // threats (optional display)
   if (settings.threat && !st.winner && !lesson) {
     for (const p of [P1, P2]) for (const [c, r] of emptyThreats(gridOf(shown), p)) {
-      const d = document.createElement('div'); d.className = 'mark threat' + (p === P2 ? ' op' : ''); d.style.borderColor = p === P1 ? 'rgba(229,195,108,.9)' : 'rgba(216,72,58,.95)';
+      const d = document.createElement('div'); d.className = 'mark threat' + (p === P2 ? ' op' : ''); d.style.borderColor = p === P1 ? 'rgba(230,205,140,.9)' : 'rgba(212,217,224,.95)';
       discPos(d, c, r); fxEl.appendChild(d);
     }
   }
@@ -1010,7 +1014,7 @@ function renderGraph() {
   const cx = cur / (n - 1) * W;
   svg.innerHTML = `<defs><clipPath id="ctop"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath><clipPath id="cbot"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath></defs>
     <path d="${area}" fill="rgba(229,195,108,.45)" clip-path="url(#ctop)"/>
-    <path d="${area}" fill="rgba(216,72,58,.45)" clip-path="url(#cbot)"/>
+    <path d="${area}" fill="rgba(200,206,214,.38)" clip-path="url(#cbot)"/>
     <line class="zero" vector-effect="non-scaling-stroke" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
     <path d="${path}" fill="none" stroke="rgba(240,230,200,.85)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
     <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
@@ -1163,7 +1167,7 @@ function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
 function confetti() {
   if (!settings.anim || reduceMotion) return;
-  const cols = ['#e5c36c', '#fff1c2', '#d8483a', '#ffb5a8', '#6fd3a0'];
+  const cols = ['#e6cd8c', '#fff6dc', '#d4d9e0', '#ffffff', '#b39249'];
   for (let i = 0; i < 70; i++) {
     const c = document.createElement('div'); c.className = 'confetti';
     c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
@@ -1288,7 +1292,7 @@ function miniBoardSVG(cells, marks) {
   let s = `<svg class="mini" viewBox="0 0 ${7 * cs + 12} ${6 * cs + 12}"><rect x="0" y="0" width="${7 * cs + 12}" height="${6 * cs + 12}" rx="8" fill="#1d6b4c" stroke="rgba(201,169,97,.5)"/>`;
   for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) {
     const v = g[c][r] || 0, x = 6 + c * cs + cs / 2, y = 6 + (5 - r) * cs + cs / 2;
-    const fill = v === 1 ? '#e5c36c' : v === 2 ? '#d8483a' : '#08110e';
+    const fill = v === 1 ? '#e6cd8c' : v === 2 ? '#d4d9e0' : '#08110e';
     s += `<circle cx="${x}" cy="${y}" r="${cs * 0.4}" fill="${fill}"/>`;
   }
   for (const mk of marks || []) { const x = 6 + mk[0] * cs + cs / 2, y = 6 + (5 - mk[1]) * cs + cs / 2; s += `<circle cx="${x}" cy="${y}" r="${cs * 0.36}" fill="none" stroke="${mk[2] || '#fff'}" stroke-width="2.4" stroke-dasharray="${mk[3] ? '4 3' : ''}"/>`; }
