@@ -373,7 +373,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
     </div>
     <div class="card review-card" id="reviewCard"><div class="rv-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose">×</button></div><div id="rvBody"></div></div>
     <div class="card kifu-card">
-      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><span><button id="btnEdit" data-i18n="ed.btn" data-i18n-title="ed.btn.title"></button><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
+      <div class="kifu-head"><span class="label"><span data-i18n="kifu"></span><span id="senkei" style="margin-left:8px;color:var(--brass)"></span></span><span><button id="btnEdit" data-i18n="ed.btn" data-i18n-title="ed.btn.title"></button><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
       <div class="kifu" id="kifu"></div>
     </div>
     <div class="info-line" id="infoLine"></div>
@@ -413,7 +413,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg" id="segLs" style="margin-bottom:16px"><button data-v="lesson" data-i18n="ls.tabLesson"></button><button data-v="tsume" data-i18n="ls.tabTsume"></button></div>
+      <div class="seg" id="segLs" style="margin-bottom:16px"><button data-v="lesson" data-i18n="ls.tabLesson"></button><button data-v="tsume" data-i18n="ls.tabTsume"></button><button data-v="open" data-i18n="ls.tabOpen"></button></div>
       <h2 id="lsListTitle"></h2>
       <p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin:-8px 0 14px" id="lsListDesc"></p>
       <div class="lesson-list" id="lessonList"></div>
@@ -463,6 +463,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 
 <script src="i18n.js"></script>
 <script src="engine.js"></script>
+<script src="strategy.js"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -864,6 +865,7 @@ const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('m
 const winRate = v => 1 / (1 + Math.exp(-v / 600));
 function evAt(i) { for (let k = i; k >= 0 && k >= i - 1; k--) if (game.info[k] && game.info[k].ev != null) return game.info[k].ev; return null; }
 function renderInfo() {
+  try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classify(E, P) : null; $('#senkei').textContent = c ? '· ' + (LANG === 'ja' ? c.ja : c.en) : ''; } catch (e) {}
   $('#nameBlack').textContent = playerName(0); $('#nameWhite').textContent = playerName(1);
   $('#pBlack').classList.toggle('active', !game.over && P.side === 0);
   $('#pWhite').classList.toggle('active', !game.over && P.side === 1);
@@ -1674,10 +1676,35 @@ function startTsume(si, k, dailyDate) {
   if (!game) game = newRecord(HANDI[0], 0);
   loadProblem();
 }
+let OPEN = null;
+const openReady = fetch('openings.json').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const OSTORE = 'shogi-kaya-open-v1';
+let oprog = {};
+try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
+function openOpenList() {
+  segSel('segLs', 'open');
+  $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
+  if (!OPEN) { $('#lessonList').innerHTML = ''; return; }
+  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
+    const pr = oprog[g.id];
+    const st = pr ? `<span class="st ${pr.pass ? 'clear' : ''}">${pr.pass ? '✓ ' : ''}${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
+    return `<button class="lesson-item" data-o="${i}"><span class="no" style="font-size:13px">${L(g.label)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
+  }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${L(OPEN.credit)}</p>`;
+}
+function startOpening(oi) {
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  const g = OPEN.sets[oi];
+  const probs = shuffle(g.problems).slice(0, 5);
+  lesson = { opening: true, gi: oi, g: { ...g, grade: g.title, prompt: { ja: '上位のソフトがいちばん多く指した手は？', en: 'Which move do strong engines play most here?', zh: '强力软件最常走的是哪一手？', ko: '강한 소프트가 가장 많이 둔 수는?' }, hint: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.' } }, probs, k: 0, results: [], pts: [], waiting: false };
+  document.body.classList.add('in-lesson');
+  if (!game) game = newRecord(HANDI[0], 0);
+  loadProblem();
+}
 async function openLessons() {
-  await lessonsReady; await tsumeReady; if (!LESSONS) return;
+  await lessonsReady; await tsumeReady; await openReady; if (!LESSONS) return;
   lessonView('list'); showOverlay('#lessonOverlay');
   if (lsTab === 'tsume') { openTsumeList(); return; }
+  if (lsTab === 'open') { openOpenList(); return; }
   segSel('segLs', 'lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
   const list = LESSONS.grades.map((g, i) => {
@@ -1690,6 +1717,7 @@ async function openLessons() {
 function lessonView(v) { ['list', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
 $('#lessonList').onclick = e => {
   const b = e.target.closest('.lesson-item'); if (!b) return;
+  if (b.dataset.o !== undefined) { hideOverlay('#lessonOverlay'); startOpening(+b.dataset.o); return; }
   if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#lessonOverlay'); startTsume(dl.si, dl.k, dl.date); return; }
   if (b.dataset.t !== undefined) { hideOverlay('#lessonOverlay'); startTsume(+b.dataset.t); }
   else openIntro(+b.dataset.i);
@@ -1708,7 +1736,7 @@ $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesso
 $('#btnLesson').onclick = () => openLessons();
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitLesson(); };
-$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(lesson ? lesson.gi : introIdx); };
+$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lesson && lesson.opening) startOpening(lesson.gi); else startLesson(lesson ? lesson.gi : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = Math.min(LESSONS.grades.length - 1, (lesson ? lesson.gi : introIdx) + 1); openIntro(n); };
 
 const PTS = 20, HINT_PEN = 4, PASS_RATE = 0.75;
@@ -1754,6 +1782,10 @@ function renderLesson() {
     $('#lsTitle').textContent = L(g.title);
     const k = g.problems.filter(p => tsolved[p.id]).length;
     $('#lsDots').innerHTML = `<span style="font-size:12px;color:var(--muted)">${t('ts.solved', { k, n: g.problems.length })}${tsolved[pr.id] ? ' ・ ✓' : ''}</span>`;
+  } else if (lesson.opening) {
+    $('#lsStep').textContent = `${t('op.title')} ・ ${lesson.k + 1}/${lesson.probs.length}`;
+    $('#lsTitle').textContent = L(g.title);
+    $('#lsDots').innerHTML = chips();
   } else {
     $('#lsStep').textContent = `STEP ${lesson.gi + 1} ・ ${L(g.grade)} ・ ${lesson.k + 1}/${lesson.probs.length}`;
     $('#lsTitle').textContent = L(g.title);
@@ -1776,7 +1808,7 @@ function lineKanji(sfen, moves) {
 const kan1 = (sfen, u) => lineKanji(sfen, [u])[0];
 // points for a move in a "best"-kind problem (0..20)
 function movePoints(pr, usi, runtimeScore) {
-  if (pr.mode === 'material') { const best = pr.cand[0][1], c = pr.cand.find(x => x[0] === usi); return c ? Math.round(PTS * c[1] / best) : 0; }
+  if (pr.mode === 'material' || pr.mode === 'freq') { const best = pr.cand[0][1], c = pr.cand.find(x => x[0] === usi); return c ? Math.round(PTS * c[1] / best) : 0; }
   if (pr.accept.includes(usi)) return PTS;
   let best, s;
   if (pr.cand) { best = pr.cand[0][1]; const c = pr.cand.find(x => x[0] === usi); s = c ? c[1] : Math.min(pr.floor !== undefined ? pr.floor : best - 2000, best); }
@@ -1829,6 +1861,11 @@ function lessonReason(pr, usi) {
     case 'evade': {
       const kind = x => E.isDrop(x) ? 'r.block' : E.typeOf(p.board[E.mFrom(x)]) === OU ? 'r.flee' : p.board[E.mTo(x)] ? 'r.capture' : 'r.block';
       return t('r.evade', { a: t(kind(m)), b: t(kind(bm)) });
+    }
+    case 'opening': {
+      const pct = u => { const c = pr.cand.find(x => x[0] === u); return c ? Math.round(c[1] * 100 / pr.total) : 0; };
+      const my = pct(usi);
+      return (my ? t('r.freq', { m: kan1(pr.sfen, usi), p: my }) : t('r.offbook', { m: kan1(pr.sfen, usi) })) + (usi !== pr.accept[0] ? ' ' + t('r.freq', { m: kan1(pr.sfen, pr.accept[0]), p: pct(pr.accept[0]) }) : '');
     }
     case 'trap':
       return usi === pr.bait ? t('r.bait', { m: kan1(pr.sfen, usi) }) : t('r.baitAvoided', { m: kan1(pr.sfen, pr.bait) });
@@ -1915,6 +1952,14 @@ function finishLesson() {
   if (lesson.review) {
     $('#ldTitle').textContent = t('rv.done');
     $('#ldRank').classList.add('hidden'); $('#btnLessonNextStep').classList.add('hidden'); $('#btnLessonRetry').classList.add('hidden');
+    lessonView('done'); showOverlay('#lessonOverlay'); return;
+  }
+  if (lesson.opening) {
+    const op = oprog[g.id] || { best: 0, pass: false };
+    op.best = Math.max(op.best, Math.round(total * 100 / max)); op.pass = op.pass || pass; oprog[g.id] = op;
+    try { localStorage.setItem(OSTORE, JSON.stringify(oprog)); } catch (e) {}
+    $('#ldTitle').textContent = pass ? t('op.pass') : t('ls.fail');
+    $('#ldRank').classList.add('hidden'); $('#btnLessonNextStep').classList.add('hidden'); $('#btnLessonRetry').classList.remove('hidden');
     lessonView('done'); showOverlay('#lessonOverlay'); return;
   }
   $('#btnLessonRetry').classList.remove('hidden');
