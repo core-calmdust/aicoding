@@ -263,6 +263,15 @@ const NINST = INST_OFF.length;
 const I_OFF = Int32Array.from(INST_OFF), I_LEN = Int8Array.from(INST_LEN);
 const I_SQ = new Int8Array(NINST * 10);
 for (let i = 0; i < NINST; i++) for (let k = 0; k < INST_LEN[i]; k++) I_SQ[i * 10 + k] = INST_SQ[i][k];
+// per-square contribution lists: for each square, (instance, power-of-3 at that square's position)
+const SQ_START = new Int32Array(65), SQ_INST = [], SQ_POW = [];
+{
+  const lists = Array.from({ length: 64 }, () => []);
+  for (let i = 0; i < NINST; i++) { const n = INST_LEN[i]; for (let k = 0; k < n; k++) lists[INST_SQ[i][k]].push([i, POW3[n - 1 - k]]); }
+  let o = 0; for (let q = 0; q < 64; q++) { SQ_START[q] = o; for (const [i, pw] of lists[q]) { SQ_INST.push(i); SQ_POW.push(pw); o++; } } SQ_START[64] = o;
+}
+const SQI = Int32Array.from(SQ_INST), SQP = Int32Array.from(SQ_POW);
+const IDX = new Int32Array(NINST);
 // per square cell code: 0 empty, 1 player, 2 opponent
 const CELL = new Int8Array(64);
 function fillCells(pl, ph, ol, oh) {
@@ -295,15 +304,16 @@ function phaseOf(discs) { // discs 4..64
   return ph < NPHASE ? ph : NPHASE - 1;
 }
 function evalPattern(pl, ph, ol, oh) {
-  fillCells(pl, ph, ol, oh);
   const discs = pc(pl | ol) + pc(ph | oh);
   const base = phaseOf(discs) * PHASE_SIZE;
+  IDX.fill(0);
+  let x, q, j, e;
+  x = pl; while (x) { q = 31 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) IDX[SQI[j]] += SQP[j]; }
+  x = ph; while (x) { q = 63 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) IDX[SQI[j]] += SQP[j]; }
+  x = ol; while (x) { q = 31 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) IDX[SQI[j]] += 2 * SQP[j]; }
+  x = oh; while (x) { q = 63 - Math.clz32(x & -x); x &= x - 1; for (j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) IDX[SQI[j]] += 2 * SQP[j]; }
   let s = W[base + PHASE_SIZE - 1];
-  for (let i = 0; i < NINST; i++) {
-    let idx = 0; const b = i * 10, n = I_LEN[i];
-    for (let k = 0; k < n; k++) idx = idx * 3 + CELL[I_SQ[b + k]];
-    s += W[base + I_OFF[i] + idx];
-  }
+  for (let i = 0; i < NINST; i++) s += W[base + I_OFF[i] + IDX[i]];
   if (USE_EXT) {
     extCounts(pl, ph, ol, oh, EXT_TMP, 0);
     s += W[base + EXT_TMP[0]] + W[base + EXT_TMP[1]] + W[base + EXT_TMP[2]] + W[base + EXT_TMP[3]];
@@ -367,6 +377,10 @@ function sortMoves(base, n) { // insertion sort descending by SC
   }
 }
 
+// -------------------------------------------------------- Multi-ProbCut
+// sigma (centi-discs) of (deep - shallow) search values, fitted on sample positions: s = A + B*depth + C*empties
+const MPC = { on: true, t: 1.5, A: 0, B: 0, C: 0, minDepth: 3 };
+const mpcShallow = d => (d >> 1) - 1 < 0 ? 0 : (d >> 1) - 1;
 // -------------------------------------------------------- midgame PVS
 function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
   if ((++nodes & 4095) === 0) checkTime();
@@ -395,6 +409,22 @@ function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
     return -search(ol, oh, pl, ph, depth, -beta, -alpha, ply + 1, true);
   }
 
+  // Multi-ProbCut: predict the deep result from a shallow search and cut if it is far outside the window
+  if (MPC.on && depth >= MPC.minDepth && beta - alpha === 1 && MPC.A > 0) {
+    const empties = 64 - pc(pl | ol) - pc(ph | oh);
+    const ds = mpcShallow(depth);
+    const sig = (MPC.t * (MPC.A + MPC.B * depth + MPC.C * empties)) | 0;
+    const hb = beta + sig;
+    if (hb < 30000) {
+      const v = ds === 0 ? evaluate(pl, ph, ol, oh) : search(pl, ph, ol, oh, ds, hb - 1, hb, ply, passed);
+      if (v >= hb) return beta;
+    }
+    const lb = alpha - sig;
+    if (lb > -30000) {
+      const v = ds === 0 ? evaluate(pl, ph, ol, oh) : search(pl, ph, ol, oh, ds, lb, lb + 1, ply, passed);
+      if (v <= lb) return alpha;
+    }
+  }
   // collect & order moves
   const base = ply * 36;
   let n = 0;
@@ -801,7 +831,7 @@ const API = {
   think, analyze, setWeights, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
-  TUNE, NINST, NEXT, PS_V1, PS_V2, get PHASE_SIZE() { return PHASE_SIZE; }, PATTERNS, LEVELS, SCALE,
+  TUNE, MPC, NINST, NEXT, PS_V1, PS_V2, get PHASE_SIZE() { return PHASE_SIZE; }, PATTERNS, LEVELS, SCALE,
   genMovesList: legalList,
 };
 root.ReversiEngine = API;

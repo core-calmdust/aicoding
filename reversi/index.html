@@ -252,6 +252,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .field > label{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
 .seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;padding:8px 4px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s}
+.seg button{white-space:nowrap}
+@media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
 .seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
 .level-wrap{display:flex;align-items:center;gap:12px}
 .level-wrap input{flex:1;accent-color:var(--brass)}
@@ -473,8 +475,10 @@ body.in-lesson .controls{display:none}
         <button data-v="ai" data-i18n="ng.ai"></button>
         <button data-v="pvp" data-i18n="ng.pvp"></button>
         <button data-v="watch" data-i18n="ng.watch"></button>
+        <button data-v="lesson" data-i18n="ng.lesson"></button>
       </div>
     </div>
+    <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="field" id="fColor">
       <label data-i18n="ng.color"></label>
       <div class="seg" id="segColor">
@@ -1081,7 +1085,9 @@ function segSync() {
   for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color']])
     $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key]) === b.dataset.v));
   $('#fColor').classList.toggle('hidden', draft.mode !== 'ai');
-  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp');
+  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson');
+  $('#fLessonInfo').classList.toggle('hidden', draft.mode !== 'lesson');
+  $('#btnStart').textContent = t(draft.mode === 'lesson' ? 'ng.toLessons' : 'start');
   $('#fLevel2').classList.toggle('hidden', draft.mode !== 'watch');
   $('#levelLabel').textContent = t(draft.mode === 'watch' ? 'ng.levelB' : 'ng.level');
   const lv = [LV(draft.level), LVD(draft.level)], lv2 = [LV(draft.level2), LVD(draft.level2)];
@@ -1107,6 +1113,11 @@ $('#btnCancelNew').onclick = () => {
 };
 $('#btnStart').onclick = () => {
   ctx();
+  if (draft.mode === 'lesson') {
+    settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
+    settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
+    save(); hideOverlay('#newOverlay'); openLessons(); return;
+  }
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
   settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
