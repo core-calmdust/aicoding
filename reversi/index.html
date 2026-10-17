@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0d1412">
 <meta name="description" content="学習済みパターン評価と終盤完全読みを備えた、強くて美しいブラウザ版リバーシ。">
 <title>Reversi V4</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23111'/%3E%3Ccircle cx='40' cy='40' r='13' fill='%23eee'/%3E%3C/svg%3E">
 <meta property="og:title" content="Reversi V4 — 強くて美しいブラウザリバーシ">
 <meta property="og:description" content="学習済みパターン評価と終盤完全読みを備えた10段階AI。登録不要でスマホでも遊べます。">
@@ -2229,6 +2232,7 @@ function onlineResign() {
   resignArm = 0; Online.resign(net.gid);
 }
 // ====================================================================== boot
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 const hadSave = load();
 if (settings.mode === 'online') settings.mode = 'ai';
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
