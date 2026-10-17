@@ -24,7 +24,9 @@
   --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
   --cell: calc(var(--board) / 8);
   --vh: 100vh;
-  --board: calc(min(var(--vh) - 44px, 100vw - 390px, 1600px) / 1.105);
+  --pad: clamp(28px, 7vmin, 100px);
+  --gap: clamp(24px, 3vw, 48px);
+  --board: calc(min(var(--vh) - var(--pad) * 2 - 8px, 100vw - var(--pad) * 2 - var(--gap) - 340px, 1400px) / 1.105);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100dvh){:root{--vh:100dvh}}
@@ -44,12 +46,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .app{
   height:var(--vh);
   display:grid;
-  grid-template-columns: auto minmax(320px, 1fr);
+  grid-template-columns: auto minmax(320px, 520px);
   grid-template-areas:"board side";
-  gap:28px;
-  justify-content:stretch;
+  gap:var(--gap);
+  justify-content:center;
   align-items:center;
-  padding:20px;
+  padding:var(--pad);
 }
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -172,7 +174,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .review-bar button:hover{border-color:var(--brass2)}
 
 /* ---------------------------------------------------------------- side */
-.side{grid-area:side;width:100%;height:calc(var(--board) * 1.105);min-height:0;max-height:calc(var(--vh) - 40px);container-type:inline-size}
+.side{grid-area:side;width:100%;height:calc(var(--board) * 1.105);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
 .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
 
 .kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
