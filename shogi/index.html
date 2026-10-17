@@ -255,6 +255,16 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
 .lesson-actions button:disabled{opacity:.35}
 .lesson-list{display:grid;gap:7px}
+@media (min-width: 900px) and (min-aspect-ratio: 1/1){
+  #lessonOverlay .modal{width:min(960px,94vw);padding:28px 32px}
+  #lessonOverlay .lesson-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  #lessonOverlay .lesson-list > p{grid-column:1/-1}
+  #lessonOverlay .lesson-item[data-exam]{grid-column:1/-1}
+  #lessonOverlay .op-choice{flex-direction:row}
+  #lessonOverlay .op-choice .lesson-item{flex:1}
+  #lessonOverlay .lesson-intro{font-size:15px}
+  #lessonDoneView{max-width:560px;margin:0 auto}
+}
 .lesson-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
 .lesson-item:hover{border-color:var(--brass2)}
 .lesson-item .no{font-family:'Shippori Mincho B1',serif;font-size:15px;color:var(--brass);width:46px;text-align:center;flex:none;line-height:1.15}
@@ -473,9 +483,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   </div>
 </div>
 
-<script src="i18n.js?v=20261018m"></script>
-<script src="engine.js?v=20261018m"></script>
-<script src="strategy.js?v=20261018m"></script>
+<script src="i18n.js?v=20261018n"></script>
+<script src="engine.js?v=20261018n"></script>
+<script src="strategy.js?v=20261018n"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -544,7 +554,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, g
 let weights = null;
 const weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz?v=20261018m');
+    const res = await fetch('weights.bin.gz?v=20261018n');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
@@ -557,7 +567,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018m');
+  const w = new Worker('engine.js?v=20261018n');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1614,7 +1624,7 @@ $('#pasteOk').onclick = () => {
 
 // ====================================================================== opening book (Floodgate move frequencies)
 let BOOK = null;
-fetch('book.json?v=20261018m').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
+fetch('book.json?v=20261018n').then(r => r.json()).then(b => (BOOK = b)).catch(() => {});
 function bookMove() {
   if (!BOOK || game.start !== HANDI[0] || cur > 30) return null;
   const e = BOOK[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
@@ -1625,7 +1635,7 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018m').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261018n').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
@@ -1633,7 +1643,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018m').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018n').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
@@ -1701,7 +1711,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018m').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261018n').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
