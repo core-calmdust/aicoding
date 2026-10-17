@@ -52,6 +52,9 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:6
 .logo-mark{width:26px;height:26px;border-radius:8px;background:conic-gradient(from 210deg,var(--pink),var(--violet),var(--cyan),var(--pink));box-shadow:0 0 18px rgba(139,92,255,.5)}
 .logo span{font-size:14px;letter-spacing:.04em}
 nav ul{display:flex;gap:26px;list-style:none;font-size:13px;color:var(--muted)}
+.nav-r{display:flex;align-items:center;gap:22px}
+#langSel{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--line2);border-radius:8px;font:inherit;font-size:12px;padding:5px 6px;cursor:pointer}
+#langSel:hover{color:var(--text)}
 nav ul a:hover{color:var(--text)}
 
 /* hero */
@@ -167,6 +170,7 @@ footer a:hover{color:var(--text)}
   .neo-card .thumb{aspect-ratio:auto;height:100%}
   .about{grid-template-columns:1fr;padding:26px}
   nav ul{display:none}
+  .logo span{font-size:13px}
 }
 @media (max-width: 600px){
   :root{--wrap:calc(100% - 32px)}
@@ -190,28 +194,31 @@ footer a:hover{color:var(--text)}
 
 <nav>
   <div class="wrap">
-    <a href="./" class="logo"><div class="logo-mark"></div><span>ゲーム制作＠バイブコーディング</span></a>
+    <a href="./" class="logo"><div class="logo-mark"></div><span data-i18n="site">ゲーム制作＠バイブコーディング</span></a>
+    <div class="nav-r">
     <ul>
       <li><a href="#neoretro">NEORETRO ARCADES</a></li>
-      <li><a href="#games">ボード＆パズル</a></li>
-      <li><a href="#about">このサイトについて</a></li>
+      <li><a href="#games" data-i18n="nav.games">ボード＆パズル</a></li>
+      <li><a href="#about" data-i18n="nav.about">このサイトについて</a></li>
     </ul>
+    <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select>
+    </div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
     <div class="eyebrow reveal"><i></i><span class="en">AI CODING ARCADE</span></div>
-    <h1 class="reveal">AIと一緒に作った、<br><span class="grad">すぐ遊べる</span>ゲームたち。</h1>
-    <p class="lead reveal">コードを書くのはAI、アイデアと手ざわりの調整は人。<br>そんな“バイブコーディング”で生まれたゲームを公開しています。登録もインストールも不要、ブラウザを開けばPCでもスマホでもすぐ遊べます。</p>
+    <h1 class="reveal" data-i18n="hero.h1">AIと一緒に作った、<br><span class="grad">すぐ遊べる</span>ゲームたち。</h1>
+    <p class="lead reveal" data-i18n="hero.lead">コードを書くのはAI、アイデアと手ざわりの調整は人。<br>そんな“バイブコーディング”で生まれたゲームを公開しています。登録もインストールも不要、ブラウザを開けばPCでもスマホでもすぐ遊べます。</p>
     <div class="hero-cta reveal">
-      <a class="btn primary" href="#neoretro">受賞作を遊ぶ</a>
-      <a class="btn ghost" href="./reversi/">新作 Reversi V4 →</a>
+      <a class="btn primary" href="#neoretro" data-i18n="hero.cta1">受賞作を遊ぶ</a>
+      <a class="btn ghost" href="./reversi/" data-i18n="hero.cta2">新作 Reversi V4 →</a>
     </div>
     <div class="stats reveal">
-      <div class="stat"><b>10</b><span>タイトル公開中</span></div>
-      <div class="stat"><b>2</b><span>コンテスト受賞</span></div>
-      <div class="stat"><b>0円</b><span>登録・インストール不要</span></div>
+      <div class="stat"><b>10</b><span data-i18n="stat.titles">タイトル公開中</span></div>
+      <div class="stat"><b>2</b><span data-i18n="stat.awards">コンテスト受賞</span></div>
+      <div class="stat"><b data-i18n="stat.free.num">0円</b><span data-i18n="stat.free">登録・インストール不要</span></div>
     </div>
   </div>
 </header>
@@ -223,16 +230,16 @@ footer a:hover{color:var(--text)}
         <div class="neo-title">
           <div class="k en">AWARD-WINNING SERIES</div>
           <h2>NEORETRO<br>ARCADES</h2>
-          <p>80年代アーケードの手ざわりを、ネオンと現代のゲームデザインで再構築したシリーズ。ネオンが弾け、スコアが跳ねる、一瞬で熱くなれるアクションゲームです。</p>
+          <p data-i18n="neo.desc">80年代アーケードの手ざわりを、ネオンと現代のゲームデザインで再構築したシリーズ。ネオンが弾け、スコアが跳ねる、一瞬で熱くなれるアクションゲームです。</p>
         </div>
         <div class="awards">
           <div class="award">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
-            <div><small>IVS NEOCREA</small><b>準グランプリ</b></div>
+            <div><small>IVS NEOCREA</small><b data-i18n="award.1">準グランプリ</b></div>
           </div>
           <div class="award">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg>
-            <div><small>IVS NEOCREA</small><b>Bandai Namco 021 Fund賞</b></div>
+            <div><small>IVS NEOCREA</small><b data-i18n="award.2">Bandai Namco 021 Fund賞</b></div>
           </div>
         </div>
       </div>
@@ -243,8 +250,8 @@ footer a:hover{color:var(--text)}
           <div class="thumb"><img src="./images/comet.webp" alt="COMET OUTBURST のプレイ画面" fetchpriority="high" decoding="async"></div>
           <div class="body">
             <h3>COMET OUTBURST</h3>
-            <p>降りそそぐ彗星の雨をかいくぐり、撃ち抜け。無敵状態で彗星をなぎ払う爽快感とスコアの連鎖がたまらない、シリーズ最新作。</p>
-            <div class="tags"><span class="tag">シューティング</span><span class="tag new">最新作</span></div>
+            <p data-i18n="comet.desc">降りそそぐ彗星の雨をかいくぐり、撃ち抜け。無敵状態で彗星をなぎ払う爽快感とスコアの連鎖がたまらない、シリーズ最新作。</p>
+            <div class="tags"><span class="tag" data-i18n="tag.shooter">シューティング</span><span class="tag new" data-i18n="tag.latest">最新作</span></div>
           </div>
         </a>
         <a class="neo-card" href="./danmaku-inv.html">
@@ -252,8 +259,8 @@ footer a:hover{color:var(--text)}
           <div class="thumb"><img src="./images/danmaku-inv.webp" alt="DANMAKU INVADER XTREME+ のプレイ画面" fetchpriority="high" decoding="async"></div>
           <div class="body">
             <h3>DANMAKU INVADER XTREME+</h3>
-            <p>あのインベーダーが、弾幕をまとって帰ってきた。画面を埋め尽くす光の弾の隙間を縫い、ハイスコアを更新しよう。</p>
-            <div class="tags"><span class="tag">弾幕シューティング</span></div>
+            <p data-i18n="danmaku.desc">あのインベーダーが、弾幕をまとって帰ってきた。画面を埋め尽くす光の弾の隙間を縫い、ハイスコアを更新しよう。</p>
+            <div class="tags"><span class="tag" data-i18n="tag.bullet">弾幕シューティング</span></div>
           </div>
         </a>
         <a class="neo-card" href="./pong.html">
@@ -261,8 +268,8 @@ footer a:hover{color:var(--text)}
           <div class="thumb"><img src="./images/pong.webp" alt="CYBER PONG XTREME+ のプレイ画面" decoding="async"></div>
           <div class="body">
             <h3>CYBER PONG XTREME+</h3>
-            <p>ゲームの原点「PONG」をサイバーに再起動。ブーストで打ち返す一球に、シンプルだからこその駆け引きが宿る。</p>
-            <div class="tags"><span class="tag">対戦アクション</span><span class="tag mobile">スマホ対応</span></div>
+            <p data-i18n="pong.desc">ゲームの原点「PONG」をサイバーに再起動。ブーストで打ち返す一球に、シンプルだからこその駆け引きが宿る。</p>
+            <div class="tags"><span class="tag" data-i18n="tag.versus">対戦アクション</span><span class="tag mobile" data-i18n="tag.mobile">スマホ対応</span></div>
           </div>
         </a>
       </div>
@@ -275,9 +282,9 @@ footer a:hover{color:var(--text)}
     <div class="sec-head reveal">
       <div>
         <div class="k en">BOARD &amp; PUZZLE</div>
-        <h2>じっくり考える、定番ゲーム。</h2>
+        <h2 data-i18n="board.h2">じっくり考える、定番ゲーム。</h2>
       </div>
-      <p>ルールは知っていても、相手が強いと奥が深い。手軽に遊べるパズルから、本気のAIと戦えるボードゲームまで。</p>
+      <p data-i18n="board.desc">ルールは知っていても、相手が強いと奥が深い。手軽に遊べるパズルから、本気のAIと戦えるボードゲームまで。</p>
     </div>
 
     <div class="games">
@@ -286,9 +293,9 @@ footer a:hover{color:var(--text)}
         <div class="body">
           <div class="cat en">BOARD GAME · NEW</div>
           <h3>Reversi V4</h3>
-          <p>2,500万局面で学習した評価関数と、終盤20マスの完全読みを積んだ本格AI。10段階の強さ、各手の評価値を示すヒント、形勢グラフをなぞって振り返れる棋譜機能つき。</p>
-          <div class="tags"><span class="tag new">NEW</span><span class="tag ai">学習型AI</span><span class="tag mobile">スマホ対応</span></div>
-          <span class="play">対局をはじめる</span>
+          <p data-i18n="rv4.desc">約4,800万局面で学習した評価関数と、終盤20マスの完全読みを積んだ本格AI。10段階の強さに加え、9ステップのレッスン、手の良し悪しを教えるコーチ、形勢グラフでなぞって振り返れる棋譜機能つき。</p>
+          <div class="tags"><span class="tag new">NEW</span><span class="tag ai" data-i18n="tag.ai">学習型AI</span><span class="tag mobile" data-i18n="tag.mobile">スマホ対応</span></div>
+          <span class="play" data-i18n="rv4.play">対局をはじめる</span>
         </div>
       </a>
 
@@ -296,9 +303,9 @@ footer a:hover{color:var(--text)}
         <div class="thumb"><img src="./images/reversi_v3.webp" alt="リバーシ v3.1" loading="lazy" decoding="async"></div>
         <div class="body">
           <div class="cat en">BOARD GAME</div>
-          <h3>リバーシ v3.1</h3>
-          <p>多彩なタイプのAIとCPU同士の対戦も楽しめる、ひとつ前のバージョン。</p>
-          <div class="tags"><span class="tag mobile">スマホ対応</span></div>
+          <h3 data-i18n="rv3.title">リバーシ v3.1</h3>
+          <p data-i18n="rv3.desc">多彩なタイプのAIとCPU同士の対戦も楽しめる、ひとつ前のバージョン。</p>
+          <div class="tags"><span class="tag mobile" data-i18n="tag.mobile">スマホ対応</span></div>
         </div>
       </a>
 
@@ -306,8 +313,8 @@ footer a:hover{color:var(--text)}
         <div class="thumb"><img src="./images/backgammon.webp" alt="バックギャモン" loading="lazy" decoding="async"></div>
         <div class="body">
           <div class="cat en">BOARD GAME</div>
-          <h3>バックギャモン</h3>
-          <p>サイコロの運と読みがせめぎ合う、世界最古級のボードゲーム。</p>
+          <h3 data-i18n="bg.title">バックギャモン</h3>
+          <p data-i18n="bg.desc">サイコロの運と読みがせめぎ合う、世界最古級のボードゲーム。</p>
         </div>
       </a>
 
@@ -315,8 +322,8 @@ footer a:hover{color:var(--text)}
         <div class="thumb"><img src="./images/connect4.webp" alt="コネクテッド4" loading="lazy" decoding="async"></div>
         <div class="body">
           <div class="cat en">BOARD GAME</div>
-          <h3>コネクテッド4</h3>
-          <p>コインを落として、縦・横・斜めに4つ並べたら勝ち。シンプルなのに先が読めない。</p>
+          <h3 data-i18n="c4.title">コネクテッド4</h3>
+          <p data-i18n="c4.desc">コインを落として、縦・横・斜めに4つ並べたら勝ち。シンプルなのに先が読めない。</p>
         </div>
       </a>
 
@@ -324,8 +331,8 @@ footer a:hover{color:var(--text)}
         <div class="thumb"><img src="./images/checker.webp" alt="チェッカー" loading="lazy" decoding="async"></div>
         <div class="body">
           <div class="cat en">BOARD GAME</div>
-          <h3>チェッカー</h3>
-          <p>斜めに進んで、跳び越えて取る。世界中で親しまれる古典の頭脳戦。</p>
+          <h3 data-i18n="ck.title">チェッカー</h3>
+          <p data-i18n="ck.desc">斜めに進んで、跳び越えて取る。世界中で親しまれる古典の頭脳戦。</p>
         </div>
       </a>
 
@@ -333,8 +340,8 @@ footer a:hover{color:var(--text)}
         <div class="thumb"><img src="./images/samegame.webp" alt="さめが〜め" loading="lazy" decoding="async"></div>
         <div class="body">
           <div class="cat en">PUZZLE</div>
-          <h3>さめが〜め</h3>
-          <p>同じ色のブロックをまとめて消す、懐かしの落ち物パズル。大きくつなげて高得点を狙おう。</p>
+          <h3 data-i18n="sg.title">さめが〜め</h3>
+          <p data-i18n="sg.desc">同じ色のブロックをまとめて消す、懐かしの落ち物パズル。大きくつなげて高得点を狙おう。</p>
         </div>
       </a>
 
@@ -342,8 +349,8 @@ footer a:hover{color:var(--text)}
         <div class="thumb"><img src="./images/sudoku.webp" alt="無限数独" loading="lazy" decoding="async"></div>
         <div class="body">
           <div class="cat en">PUZZLE</div>
-          <h3>無限数独</h3>
-          <p>問題は尽きることなく、いつでも新しい一問。すきま時間の頭の体操に。</p>
+          <h3 data-i18n="sd.title">無限数独</h3>
+          <p data-i18n="sd.desc">問題は尽きることなく、いつでも新しい一問。すきま時間の頭の体操に。</p>
         </div>
       </a>
     </div>
@@ -355,13 +362,13 @@ footer a:hover{color:var(--text)}
     <div class="about reveal">
       <div>
         <div class="sec-head" style="margin-bottom:0"><div><div class="k en">ABOUT</div></div></div>
-        <h2>“作りたい”を、<br>AIと一緒に形にする。</h2>
-        <p>このサイトのゲームは、AIに相談しながらコードを書き、遊んでは直すことを繰り返して作っています。思いついたアイデアが、その日のうちに遊べる形になる。そのスピード感ごと楽しんでもらえたら嬉しいです。</p>
+        <h2 data-i18n="about.h2">“作りたい”を、<br>AIと一緒に形にする。</h2>
+        <p data-i18n="about.p">このサイトのゲームは、AIに相談しながらコードを書き、遊んでは直すことを繰り返して作っています。思いついたアイデアが、その日のうちに遊べる形になる。そのスピード感ごと楽しんでもらえたら嬉しいです。</p>
       </div>
       <div class="flow">
-        <div><b>01</b><span><strong>アイデアを伝える</strong>どんなゲームにしたいかを、言葉でAIに伝える。</span></div>
-        <div><b>02</b><span><strong>AIがコードを書く</strong>ゲームの仕組みや画面を、AIが一気に組み上げる。</span></div>
-        <div><b>03</b><span><strong>遊んで、磨く</strong>実際に遊び、手ざわりや難しさを何度も調整して仕上げる。</span></div>
+        <div><b>01</b><span data-i18n="flow1"><strong>アイデアを伝える</strong>どんなゲームにしたいかを、言葉でAIに伝える。</span></div>
+        <div><b>02</b><span data-i18n="flow2"><strong>AIがコードを書く</strong>ゲームの仕組みや画面を、AIが一気に組み上げる。</span></div>
+        <div><b>03</b><span data-i18n="flow3"><strong>遊んで、磨く</strong>実際に遊び、手ざわりや難しさを何度も調整して仕上げる。</span></div>
       </div>
     </div>
   </div>
@@ -369,8 +376,8 @@ footer a:hover{color:var(--text)}
 
 <footer>
   <div class="wrap">
-    <span>© ゲーム制作＠バイブコーディング</span>
-    <a href="https://github.com/core-calmdust/aicoding" target="_blank" rel="noopener noreferrer">開発者ページ（GitHub）→</a>
+    <span data-i18n="footer.copy">© ゲーム制作＠バイブコーディング</span>
+    <a href="https://github.com/core-calmdust/aicoding" target="_blank" rel="noopener noreferrer" data-i18n="footer.gh">開発者ページ（GitHub）→</a>
   </div>
 </footer>
 
@@ -382,6 +389,27 @@ footer a:hover{color:var(--text)}
     el.style.transitionDelay = (Math.min(i % 6, 5) * 60) + 'ms';
     if (io) io.observe(el); else el.classList.add('in');
   });
+</script>
+<script>
+const I18N = {"ja": {"site": "ゲーム制作＠バイブコーディング", "nav.games": "ボード＆パズル", "nav.about": "このサイトについて", "hero.h1": "AIと一緒に作った、<br><span class=\"grad\">すぐ遊べる</span>ゲームたち。", "hero.lead": "コードを書くのはAI、アイデアと手ざわりの調整は人。<br>そんな“バイブコーディング”で生まれたゲームを公開しています。登録もインストールも不要、ブラウザを開けばPCでもスマホでもすぐ遊べます。", "hero.cta1": "受賞作を遊ぶ", "hero.cta2": "新作 Reversi V4 →", "stat.titles": "タイトル公開中", "stat.awards": "コンテスト受賞", "stat.free.num": "0円", "stat.free": "登録・インストール不要", "neo.desc": "80年代アーケードの手ざわりを、ネオンと現代のゲームデザインで再構築したシリーズ。ネオンが弾け、スコアが跳ねる、一瞬で熱くなれるアクションゲームです。", "award.1": "準グランプリ", "award.2": "Bandai Namco 021 Fund賞", "comet.desc": "降りそそぐ彗星の雨をかいくぐり、撃ち抜け。無敵状態で彗星をなぎ払う爽快感とスコアの連鎖がたまらない、シリーズ最新作。", "tag.shooter": "シューティング", "tag.latest": "最新作", "danmaku.desc": "あのインベーダーが、弾幕をまとって帰ってきた。画面を埋め尽くす光の弾の隙間を縫い、ハイスコアを更新しよう。", "tag.bullet": "弾幕シューティング", "pong.desc": "ゲームの原点「PONG」をサイバーに再起動。ブーストで打ち返す一球に、シンプルだからこその駆け引きが宿る。", "tag.versus": "対戦アクション", "tag.mobile": "スマホ対応", "board.h2": "じっくり考える、定番ゲーム。", "board.desc": "ルールは知っていても、相手が強いと奥が深い。手軽に遊べるパズルから、本気のAIと戦えるボードゲームまで。", "rv4.desc": "約4,800万局面で学習した評価関数と、終盤20マスの完全読みを積んだ本格AI。10段階の強さに加え、9ステップのレッスン、手の良し悪しを教えるコーチ、形勢グラフでなぞって振り返れる棋譜機能つき。", "tag.ai": "学習型AI", "rv4.play": "対局をはじめる", "rv3.title": "リバーシ v3.1", "rv3.desc": "多彩なタイプのAIとCPU同士の対戦も楽しめる、ひとつ前のバージョン。", "bg.title": "バックギャモン", "bg.desc": "サイコロの運と読みがせめぎ合う、世界最古級のボードゲーム。", "c4.title": "コネクテッド4", "c4.desc": "コインを落として、縦・横・斜めに4つ並べたら勝ち。シンプルなのに先が読めない。", "ck.title": "チェッカー", "ck.desc": "斜めに進んで、跳び越えて取る。世界中で親しまれる古典の頭脳戦。", "sg.title": "さめが〜め", "sg.desc": "同じ色のブロックをまとめて消す、懐かしの落ち物パズル。大きくつなげて高得点を狙おう。", "sd.title": "無限数独", "sd.desc": "問題は尽きることなく、いつでも新しい一問。すきま時間の頭の体操に。", "about.h2": "“作りたい”を、<br>AIと一緒に形にする。", "about.p": "このサイトのゲームは、AIに相談しながらコードを書き、遊んでは直すことを繰り返して作っています。思いついたアイデアが、その日のうちに遊べる形になる。そのスピード感ごと楽しんでもらえたら嬉しいです。", "flow1": "<strong>アイデアを伝える</strong>どんなゲームにしたいかを、言葉でAIに伝える。", "flow2": "<strong>AIがコードを書く</strong>ゲームの仕組みや画面を、AIが一気に組み上げる。", "flow3": "<strong>遊んで、磨く</strong>実際に遊び、手ざわりや難しさを何度も調整して仕上げる。", "footer.copy": "© ゲーム制作＠バイブコーディング", "footer.gh": "開発者ページ（GitHub）→", "title": "ゲーム制作＠バイブコーディング — AI CODING ARCADE"}, "en": {"site": "Vibe-Coded Games", "nav.games": "Board & Puzzle", "nav.about": "About", "hero.h1": "Games made with AI,<br><span class=\"grad\">ready to play</span> right now.", "hero.lead": "AI writes the code; people bring the ideas and fine-tune the feel.<br>These games were born from that kind of \"vibe coding.\" No sign-up or install — just open your browser and play on PC or phone.", "hero.cta1": "Play the award winners", "hero.cta2": "New: Reversi V4 →", "stat.titles": "titles available", "stat.awards": "contest awards", "stat.free.num": "Free", "stat.free": "no sign-up, no install", "neo.desc": "A series that rebuilds the feel of '80s arcades with neon and modern game design. Neon bursts, scores soar — action games that heat up in an instant.", "award.1": "Runner-up Grand Prix", "award.2": "Bandai Namco 021 Fund Award", "comet.desc": "Weave through a storm of falling comets and blast them away. The rush of plowing through comets while invincible — and chaining up your score — is irresistible. The latest in the series.", "tag.shooter": "Shooter", "tag.latest": "Latest", "danmaku.desc": "The invaders are back — wrapped in bullet hell. Thread the gaps in a screen full of light and beat your high score.", "tag.bullet": "Bullet hell", "pong.desc": "PONG, the origin of video games, rebooted in cyber style. In every boosted return lies the mind game that only simplicity can create.", "tag.versus": "Versus action", "tag.mobile": "Mobile", "board.h2": "Classics to think deeply about.", "board.desc": "You may know the rules, but a strong opponent reveals the depth. From quick puzzles to board games against a serious AI.", "rv4.desc": "A serious AI with an evaluation learned from about 48 million positions and perfect endgame reading of the last 20 squares. 10 levels, a 9-step lesson mode, a coach that rates your moves, and a game review you can scrub through on the evaluation graph.", "tag.ai": "Learned AI", "rv4.play": "Start a game", "rv3.title": "Reversi v3.1", "rv3.desc": "The previous version, with many AI types and CPU-vs-CPU matches.", "bg.title": "Backgammon", "bg.desc": "One of the world's oldest board games, where dice luck meets careful reading.", "c4.title": "Connect 4", "c4.desc": "Drop discs and line up four in a row, column or diagonal. Simple, yet hard to predict.", "ck.title": "Checkers", "ck.desc": "Move diagonally and jump to capture — a classic battle of wits loved worldwide.", "sg.title": "SameGame", "sg.desc": "A nostalgic puzzle: clear connected blocks of the same color. Build big groups for high scores.", "sd.title": "Infinite Sudoku", "sd.desc": "Endless puzzles, always a fresh one. A brain workout for spare moments.", "about.h2": "Turning \"I want to make this\"<br>into reality — with AI.", "about.p": "The games on this site are made by writing code in conversation with AI, then playing and fixing them over and over. An idea can become something playable the very same day. We hope you enjoy that speed, too.", "flow1": "<strong>Share the idea</strong>Describe the game you want to the AI in plain words.", "flow2": "<strong>AI writes the code</strong>The AI builds the game logic and screens in one go.", "flow3": "<strong>Play and polish</strong>Play it for real and keep tuning the feel and difficulty.", "footer.copy": "© Vibe-Coded Games", "footer.gh": "Developer page (GitHub) →", "title": "Vibe-Coded Games — AI CODING ARCADE"}, "zh": {"site": "Vibe Coding 游戏工坊", "nav.games": "棋类与益智", "nav.about": "关于本站", "hero.h1": "与AI一起打造，<br><span class=\"grad\">打开就能玩</span>的游戏。", "hero.lead": "写代码的是AI，构思与手感调校交给人。<br>这里公开的是用这种“Vibe Coding”方式诞生的游戏。无需注册或安装，打开浏览器，在电脑和手机上都能立即开玩。", "hero.cta1": "玩获奖作品", "hero.cta2": "新作 Reversi V4 →", "stat.titles": "款游戏已上线", "stat.awards": "项比赛奖项", "stat.free.num": "免费", "stat.free": "无需注册和安装", "neo.desc": "以霓虹与现代游戏设计重塑80年代街机手感的系列。霓虹迸射、分数飙升，瞬间让人热血沸腾的动作游戏。", "award.1": "准大奖", "award.2": "Bandai Namco 021 Fund奖", "comet.desc": "穿过倾泻而下的彗星雨，一一击破。无敌状态下横扫彗星的爽快感与连锁得分让人欲罢不能，系列最新作。", "tag.shooter": "射击", "tag.latest": "最新作", "danmaku.desc": "那群入侵者披着弹幕回来了。在铺满屏幕的光弹缝隙间穿梭，刷新你的最高分。", "tag.bullet": "弹幕射击", "pong.desc": "把游戏的原点“PONG”以赛博风格重启。每一记加速回击中，都藏着简单才有的博弈。", "tag.versus": "对战动作", "tag.mobile": "支持手机", "board.h2": "慢慢思考的经典游戏。", "board.desc": "规则也许你早已熟悉，但对手一强，就深不见底。从轻松的益智游戏到能与认真AI对战的棋类。", "rv4.desc": "使用约4800万局面训练的评估函数，并能完全计算残局最后20格的正统AI。10个难度、9步课程、为每一手打分的教练，以及可沿形势图回顾的棋谱功能。", "tag.ai": "学习型AI", "rv4.play": "开始对局", "rv3.title": "黑白棋 v3.1", "rv3.desc": "上一个版本，可与多种类型的AI对战，也能观看电脑互搏。", "bg.title": "双陆棋", "bg.desc": "骰子运气与计算相互较量，世界上最古老的棋类游戏之一。", "c4.title": "四子棋", "c4.desc": "投下棋子，横、竖、斜连成4个即可获胜。规则简单，却难以预料。", "ck.title": "跳棋（国际跳棋）", "ck.desc": "斜向前进，跳过即吃。风靡全球的经典智力对决。", "sg.title": "消消乐（SameGame）", "sg.desc": "一次消除同色相连方块的怀旧益智游戏。连得越大，分数越高。", "sd.title": "无限数独", "sd.desc": "题目源源不断，随时都有新的一题。利用碎片时间锻炼大脑。", "about.h2": "把“想做的东西”，<br>和AI一起变成现实。", "about.p": "本站的游戏都是一边与AI商量一边写代码，再反复试玩、修改而成的。灵感当天就能变成可以玩的作品——希望你也能享受这份速度感。", "flow1": "<strong>传达想法</strong>用语言告诉AI你想做什么样的游戏。", "flow2": "<strong>AI编写代码</strong>AI一口气搭建好游戏机制与画面。", "flow3": "<strong>试玩并打磨</strong>实际上手，反复调整手感与难度，最终完成。", "footer.copy": "© Vibe Coding 游戏工坊", "footer.gh": "开发者页面（GitHub）→", "title": "Vibe Coding 游戏工坊 — AI CODING ARCADE"}, "ko": {"site": "바이브 코딩 게임 공방", "nav.games": "보드 & 퍼즐", "nav.about": "사이트 소개", "hero.h1": "AI와 함께 만든,<br><span class=\"grad\">바로 즐기는</span> 게임들.", "hero.lead": "코드는 AI가, 아이디어와 손맛 조정은 사람이.<br>그런 \"바이브 코딩\"으로 탄생한 게임을 공개하고 있습니다. 가입도 설치도 필요 없이, 브라우저만 열면 PC에서도 스마트폰에서도 바로 즐길 수 있습니다.", "hero.cta1": "수상작 플레이", "hero.cta2": "신작 Reversi V4 →", "stat.titles": "개 타이틀 공개 중", "stat.awards": "개 대회 수상", "stat.free.num": "무료", "stat.free": "가입・설치 불필요", "neo.desc": "80년대 아케이드의 손맛을 네온과 현대적 게임 디자인으로 재구성한 시리즈. 네온이 터지고 점수가 치솟는, 순식간에 뜨거워지는 액션 게임입니다.", "award.1": "준그랑프리", "award.2": "Bandai Namco 021 Fund상", "comet.desc": "쏟아지는 혜성의 비를 피해 격파하라. 무적 상태로 혜성을 쓸어버리는 쾌감과 점수 연쇄가 짜릿한 시리즈 최신작.", "tag.shooter": "슈팅", "tag.latest": "최신작", "danmaku.desc": "그 인베이더가 탄막을 두르고 돌아왔다. 화면을 가득 메운 빛의 탄환 사이를 누비며 최고 점수를 갱신하자.", "tag.bullet": "탄막 슈팅", "pong.desc": "게임의 원점 \"PONG\"을 사이버하게 재기동. 부스트로 받아치는 한 구에 단순하기에 생기는 수 싸움이 깃든다.", "tag.versus": "대전 액션", "tag.mobile": "모바일 지원", "board.h2": "차분히 생각하는 클래식 게임.", "board.desc": "규칙은 알아도 상대가 강하면 깊이가 다릅니다. 가볍게 즐기는 퍼즐부터 진지한 AI와 겨루는 보드게임까지.", "rv4.desc": "약 4,800만 국면으로 학습한 평가 함수와 종반 20칸 완전 해석을 갖춘 본격 AI. 10단계 강도, 9단계 레슨, 수의 좋고 나쁨을 알려 주는 코치, 형세 그래프로 되돌아보는 기보 기능까지.", "tag.ai": "학습형 AI", "rv4.play": "대국 시작", "rv3.title": "리버시 v3.1", "rv3.desc": "다양한 타입의 AI, CPU끼리의 대전도 즐길 수 있는 이전 버전.", "bg.title": "백개먼", "bg.desc": "주사위의 운과 수읽기가 맞붙는, 세계에서 가장 오래된 보드게임 중 하나.", "c4.title": "커넥트 4", "c4.desc": "코인을 떨어뜨려 가로・세로・대각선으로 4개를 이으면 승리. 단순하지만 앞을 읽기 어렵다.", "ck.title": "체커", "ck.desc": "대각선으로 나아가 뛰어넘어 잡는다. 전 세계에서 사랑받는 고전 두뇌 게임.", "sg.title": "세임게임", "sg.desc": "같은 색 블록을 한꺼번에 지우는 추억의 퍼즐. 크게 이어서 고득점을 노려 보자.", "sd.title": "무한 스도쿠", "sd.desc": "문제는 끝이 없고, 언제나 새로운 한 문제. 자투리 시간의 두뇌 체조로.", "about.h2": "\"만들고 싶다\"를<br>AI와 함께 형태로.", "about.p": "이 사이트의 게임은 AI와 상의하며 코드를 쓰고, 플레이하고 고치기를 반복해 만들었습니다. 떠오른 아이디어가 그날 안에 플레이할 수 있는 형태가 됩니다. 그 속도감까지 즐겨 주시면 기쁘겠습니다.", "flow1": "<strong>아이디어 전달</strong>어떤 게임을 만들고 싶은지 말로 AI에게 전한다.", "flow2": "<strong>AI가 코드 작성</strong>게임의 구조와 화면을 AI가 단숨에 만들어 낸다.", "flow3": "<strong>플레이하며 다듬기</strong>직접 플레이하며 손맛과 난이도를 몇 번이고 조정해 완성한다.", "footer.copy": "© 바이브 코딩 게임 공방", "footer.gh": "개발자 페이지 (GitHub) →", "title": "바이브 코딩 게임 공방 — AI CODING ARCADE"}};
+(function () {
+  const KEY = 'aicoding-lang';
+  const detect = () => { const n = (navigator.language || 'ja').toLowerCase(); return n.startsWith('ja') ? 'ja' : n.startsWith('zh') ? 'zh' : n.startsWith('ko') ? 'ko' : 'en'; };
+  let lang; try { lang = localStorage.getItem(KEY); } catch (e) {}
+  if (!I18N[lang]) lang = detect();
+  function apply(l) {
+    const d = I18N[l] || I18N.ja;
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : l;
+    document.title = d.title;
+    document.querySelectorAll('[data-i18n]').forEach(e => { const v = d[e.dataset.i18n]; if (v !== undefined) e.innerHTML = v; });
+    document.getElementById('langSel').value = l;
+  }
+  apply(lang);
+  document.getElementById('langSel').addEventListener('change', e => {
+    lang = e.target.value; try { localStorage.setItem(KEY, lang); } catch (_) {}
+    apply(lang);
+  });
+})();
 </script>
 </body>
 </html>
