@@ -333,6 +333,29 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
 @media (prefers-reduced-motion: reduce){.fx-ring,.fx-spark,.confetti{display:none}.board.fx-glow{animation:none}}
+.ol-note{font-size:13px;color:var(--muted);line-height:1.7}
+.ol-note.small{font-size:12px;color:var(--dim);margin-top:10px}
+.ol-me{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.ol-me input,.ol-join input{flex:1;min-width:0;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:9px 12px;font:inherit;font-size:14px}
+.ol-r{display:flex;flex-direction:column;align-items:flex-end;font-size:12px;color:var(--muted)}
+.ol-r b{font-size:20px;color:var(--accent);font-family:'Shippori Mincho B1',serif}
+.ol-r small{font-size:11px;color:var(--dim)}
+.ol-acts{display:flex;gap:10px;margin-top:10px}
+.ol-acts .mbtn{flex:1}
+.ol-join{display:flex;gap:10px;margin-top:10px}
+.ol-join input{text-transform:uppercase;letter-spacing:.2em;font-family:'JetBrains Mono',monospace}
+.ol-sub{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:16px 0 6px}
+.ol-list{display:grid;gap:3px;max-height:200px;overflow-y:auto}
+.ol-list > div{display:flex;justify-content:space-between;font-size:13px;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.2)}
+.ol-list > div.me{box-shadow:inset 0 0 0 1px rgba(201,169,97,.5)}
+.ol-list b{font-family:'JetBrains Mono',monospace;color:var(--accent)}
+.ol-list small{color:var(--dim)}
+.ol-wait{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0;text-align:center}
+.ol-wait small{font-size:12px;color:var(--dim);line-height:1.6}
+.ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent)}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(201,169,97,.2);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+body.in-online #evalCard, body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online .review-card{display:none!important}
 .mark{position:absolute;inset:6%;border-radius:50%;z-index:5;pointer-events:none;border:3px solid}
 .mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
 .mark.ok{border-color:#6fd3a0}
@@ -572,9 +595,11 @@ body.in-lesson .controls{display:none}
         <button data-v="watch" data-i18n="ng.watch"></button>
         <button data-v="lesson" data-i18n="ng.lesson"></button>
         <button data-v="puzzle" data-i18n="ng.puzzle"></button>
+        <button data-v="online" data-i18n="ng.online"></button>
       </div>
     </div>
     <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc"></p></div>
+    <div class="field hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
     <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="field" id="fColor">
       <label data-i18n="ng.color"></label>
@@ -684,7 +709,18 @@ body.in-lesson .controls{display:none}
   </div>
 </div>
 
+<!-- online -->
+<div class="overlay" id="onlineOverlay">
+  <div class="modal">
+    <h2 data-i18n="ol.title"></h2>
+    <div id="olBody"></div>
+    <div class="modal-actions"><button class="mbtn" id="olClose" data-i18n="close"></button></div>
+  </div>
+</div>
+
 <script src="i18n.js"></script>
+<script src="firebase-config.js"></script>
+<script src="online.js"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -745,7 +781,7 @@ function load() {
   return false;
 }
 function save() {
-  if (lesson || puzzle) return;
+  if (lesson || puzzle || net) return;
   try {
     localStorage.setItem(STORE, JSON.stringify({
       settings, humanColor,
@@ -999,6 +1035,7 @@ function showHints(list, done) {
 }
 
 function playerName(color) {
+  if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; const nm = color === BLACK ? g.bn : g.wn, r = color === BLACK ? g.br : g.wr; return (color === net.me ? t('you') + ' · ' : '') + nm + ' (' + r + ')'; }
   if (settings.mode === 'pvp') return cname(color);
   if (settings.mode === 'watch') return 'AI ' + LV(color === BLACK ? settings.level : settings.level2);
   return color === humanColor ? t('you') : 'AI ' + LV(settings.level);
@@ -1026,7 +1063,8 @@ function renderInfo() {
   renderGraph();
   renderKifu();
   // buttons
-  $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  $('#btnUndo').disabled = settings.mode === 'online' ? !net || net.done : settings.mode === 'watch' || !canUndo();
+  $('#btnUndo').querySelector('span').textContent = t(settings.mode === 'online' && net ? 'ol.resign' : 'btn.undo');
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   // review bar
@@ -1094,8 +1132,8 @@ let toastTimer = 0;
 function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 
 // ====================================================================== flow
-function isAITurnColor(c) { return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered; return p.toMove && !isAITurnColor(p.toMove); }
+function isAITurnColor(c) { if (settings.mode === 'online') return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
+function isHumanTurn() { const p = positions[cur]; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered; return p.toMove && !isAITurnColor(p.toMove); }
 function levelFor(c) { return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
 function newGame() {
@@ -1140,7 +1178,7 @@ function setStatus(color, text, thinking) {
 async function schedule(animInfo) {
   const token = ++busyToken;
   setStatus(BLACK, ''); setStatus(WHITE, '');
-  if (reviewing || lesson || puzzle) return;
+  if (reviewing || lesson || puzzle || net) return;
   const p = positions[cur];
   if (animInfo && animInfo.passed) {
     toast(t('pass', { c: cname(animInfo.passer) })); playPass();
@@ -1201,6 +1239,7 @@ function onCellClick(sq) {
   ctx();
   if (lesson) { lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
+  if (net) { netMove(sq); return; }
   if (reviewing) return;
   const p = positions[cur];
   if (!p.toMove || !isHumanTurn()) return;
@@ -1290,10 +1329,11 @@ function segSync() {
   for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color']])
     $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key]) === b.dataset.v));
   $('#fColor').classList.toggle('hidden', draft.mode !== 'ai');
-  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson' || draft.mode === 'puzzle');
+  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson' || draft.mode === 'puzzle' || draft.mode === 'online');
   $('#fLessonInfo').classList.toggle('hidden', draft.mode !== 'lesson');
+  $('#fOnlineInfo').classList.toggle('hidden', draft.mode !== 'online');
   $('#fPuzzleInfo').classList.toggle('hidden', draft.mode !== 'puzzle');
-  $('#btnStart').textContent = t(draft.mode === 'lesson' ? 'ng.toLessons' : draft.mode === 'puzzle' ? 'ng.toPuzzles' : 'start');
+  $('#btnStart').textContent = t(draft.mode === 'lesson' ? 'ng.toLessons' : draft.mode === 'puzzle' ? 'ng.toPuzzles' : draft.mode === 'online' ? 'ng.toOnline' : 'start');
   $('#fLevel2').classList.toggle('hidden', draft.mode !== 'watch');
   $('#levelLabel').textContent = t(draft.mode === 'watch' ? 'ng.levelB' : 'ng.level');
   const lv = [LV(draft.level), LVD(draft.level)], lv2 = [LV(draft.level2), LVD(draft.level2)];
@@ -1319,6 +1359,12 @@ $('#btnCancelNew').onclick = () => {
 };
 $('#btnStart').onclick = () => {
   ctx();
+  if (draft.mode === 'online') {
+    settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked; settings.anim = $('#optAnim').checked;
+    hideOverlay('#newOverlay'); openOnline(); return;
+  }
+  if (net && !net.done) Online.resign(net.gid);
+  leaveOnlineGame();
   if (draft.mode === 'puzzle') {
     settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
     settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
@@ -1335,9 +1381,9 @@ $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   newGame();
 };
-$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); openNew(); };
+$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); } else openNew(); };
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
-$('#btnUndo').onclick = undo;
+$('#btnUndo').onclick = () => settings.mode === 'online' ? onlineResign() : undo();
 $('#btnHint').onclick = () => {
   settings.hint = !settings.hint; save();
   if (!settings.hint) clearHints();
@@ -1351,7 +1397,7 @@ $('#btnCopy').onclick = async () => {
   try { await navigator.clipboard.writeText(s); toast(t('copied'), 1000); } catch (e) { toast(s || t('nokifu'), 2500); }
 };
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); if (!net) undo(); }
   else if (e.target && e.target.tagName === 'TEXTAREA') return;
   else if (e.key === 'Escape') { hideOverlay('#newOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#pasteOverlay'); }
   else if (e.key === 'ArrowLeft' && cur > 0) viewAt(cur - 1);
@@ -2032,8 +2078,159 @@ function confetti() {
   }
 }
 
+// ====================================================================== online play (UI)
+let net = null;          // active online game: {gid, game, me, opp, unsub, done, timer}
+let olView = 'menu', olSearch = null, olRoom = null, olList = [];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+function fmtWait(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+async function openOnline(joinCode) {
+  showOverlay('#onlineOverlay');
+  if (!window.Online || !Online.available) { olRender('setup'); return; }
+  olRender('loading');
+  try { await Online.init(); } catch (e) { console.warn(e); olRender('error'); return; }
+  if (joinCode) { olRender('loading'); const gid = await Online.joinRoom(joinCode); if (gid) { startOnlineGame(gid); return; } toast(t('ol.noRoom'), 2200); }
+  olRender('menu');
+}
+async function olRender(view) {
+  olView = view || olView;
+  const P = window.Online && Online.profile, B = $('#olBody');
+  if (olView === 'setup') { B.innerHTML = `<p class="ol-note">${t('ol.setup')}</p>`; return; }
+  if (olView === 'loading') { B.innerHTML = `<p class="ol-note">${t('ol.loading')}</p>`; return; }
+  if (olView === 'error') { B.innerHTML = `<p class="ol-note">${t('ol.error')}</p>`; return; }
+  if (olView === 'menu') {
+    B.innerHTML = `
+      <div class="ol-me"><input id="olName" maxlength="16" value="${esc(P.name)}" aria-label="name"><span class="ol-r">R <b>${P.rating}</b><small>${t('ol.record', { g: P.games || 0, w: P.wins || 0, l: P.losses || 0, d: P.draws || 0 })}</small></span></div>
+      <div class="ol-acts">
+        <button class="mbtn go" id="olAuto">${t('ol.auto')}</button>
+        <button class="mbtn" id="olCreate">${t('ol.create')}</button>
+      </div>
+      <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
+      <p class="ol-note small">${t('ol.rules')}</p>
+      <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>`;
+    $('#olName').onchange = async e => { e.target.value = await Online.setName(e.target.value); };
+    $('#olAuto').onclick = olStartSearch;
+    $('#olCreate').onclick = olCreateRoom;
+    $('#olJoin').onclick = async () => { const c = $('#olCode').value; olRender('loading'); const gid = await Online.joinRoom(c); if (gid) startOnlineGame(gid); else { toast(t('ol.noRoom'), 2200); olRender('menu'); } };
+    Online.topPlayers(10).then(list => { const el = $('#olRank'); if (!el) return; el.innerHTML = list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`; }).catch(() => {});
+    return;
+  }
+  if (olView === 'search') {
+    const s = olSearch || {};
+    B.innerHTML = `<div class="ol-wait"><div class="spin"></div><b>${t('ol.searching')}</b><small>${t('ol.searchInfo', { n: s.waiting || 0, w: s.window || 100, t: fmtWait(s.wait || 0) })}</small></div>
+      <div class="ol-sub">${t('ol.lobby', { n: olList.length })}</div>
+      <div class="ol-list">${olList.map(p => `<div class="${p.me ? 'me' : ''}"><span>${esc(p.name)}${p.game ? ' <small>' + t('ol.matched') + '</small>' : ''}</span><b>${p.rating}</b></div>`).join('')}</div>
+      <div class="ol-acts"><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
+    $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
+    return;
+  }
+  if (olView === 'room') {
+    const url = location.origin + location.pathname + '#room=' + olRoom;
+    B.innerHTML = `<div class="ol-wait"><small>${t('ol.roomCode')}</small><div class="ol-code">${olRoom}</div><small>${t('ol.roomInfo')}</small></div>
+      <div class="ol-acts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
+    $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: 'Reversi V4', url }); else { await navigator.clipboard.writeText(url); toast(t('share.copied'), 1200); } } catch (e) {} };
+    $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
+  }
+}
+async function olStartSearch() {
+  olSearch = { waiting: 0, window: 100, wait: 0 }; olList = [];
+  olRender('search');
+  await Online.enterLobby({
+    onList: list => { olList = list; if (olView === 'search') olRender(); },
+    onStatus: s => { olSearch = s; if (olView === 'search') olRender(); },
+    onMatched: gid => startOnlineGame(gid),
+  });
+}
+async function olCreateRoom() {
+  olRender('loading');
+  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid) }); olRender('room'); }
+  catch (e) { toast(t('ol.error'), 2000); olRender('menu'); }
+}
+$('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) await Online.leave(); };
+
+const decSq = s => (s.charCodeAt(0) - 97) + (+s[1] - 1) * 8;
+function startOnlineGame(gid) {
+  hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay');
+  if (lesson) endLesson && endLesson();
+  if (puzzle) endPuzzle();
+  leaveOnlineGame();
+  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  settings.mode = 'online'; settings.hint = false; clearHints();
+  positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
+  cur = 0; reviewing = false;
+  net = { gid, game: null, me: 0, opp: null, done: false };
+  document.body.classList.add('in-online');
+  net.unsub = Online.watchGame(gid, onNetGame);
+  net.timer = setInterval(netTick, 500);
+  renderBoard(null); renderInfo();
+  toast(t('ol.start'), 1400); playChime(true);
+}
+function leaveOnlineGame() {
+  if (!net) return;
+  net.unsub && net.unsub(); clearInterval(net.timer);
+  net = null; document.body.classList.remove('in-online');
+}
+function onNetGame(g) {
+  if (!net || !g) return;
+  net.game = g; net.me = g.b === Online.uid ? BLACK : WHITE; humanColor = net.me; net.opp = g.b === Online.uid ? g.w : g.b;
+  const ms = (g.moves || '').match(/../g) || [];
+  const local = positions.slice(1).map(p => sqName(p.last));
+  // resync if the local record diverged from the server (e.g. a rejected send)
+  const n = Math.min(ms.length, local.length);
+  let ok = true; for (let i = 0; i < n; i++) if (ms[i] !== local[i]) { ok = false; break; }
+  if (!ok || (local.length > ms.length && !net.pending)) { positions.length = 1; }
+  let anim = null;
+  while (positions.length - 1 < ms.length) { const a = applyMove(decSq(ms[positions.length - 1])); if (!a) break; anim = a; }
+  if (!reviewing) cur = positions.length - 1;
+  if (anim && positions[positions.length - 1].mover !== net.me) { playPlace(anim.flips.length); renderBoard(anim); moveFx(anim); if (anim.passed) { toast(t('pass', { c: cname(anim.passer) })); playPass(); } }
+  else renderBoard(null);
+  renderInfo();
+  const last = positions[positions.length - 1];
+  if (g.status === 'play' && last.toMove === 0 && ms.length === positions.length - 1) Online.markOver(net.gid);
+  if (g.status !== 'play' && !net.done) finishOnline(g);
+}
+function netTick() {
+  if (!net || !net.game || net.done || net.game.status !== 'play') return;
+  const p = positions[positions.length - 1]; if (!p.toMove) return;
+  const left = Online.MOVE_LIMIT - (Online.now() - (net.game.t || Online.now()));
+  setStatus(p.toMove, t('ol.left', { s: Math.max(0, Math.ceil(left / 1000)) }), p.toMove !== net.me);
+  setStatus(3 - p.toMove, '');
+  if (p.toMove !== net.me && left < -3000 && !net.claiming) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).finally(() => { if (net) net.claiming = false; }); }
+}
+function netMove(sq) {
+  const p = positions[positions.length - 1];
+  if (!net || net.done || !net.game || net.game.status !== 'play' || reviewing || p.toMove !== net.me) return;
+  if (!flipsOf(p.cells, sq, p.toMove).length) return;
+  const n = positions.length - 1;
+  const a = applyMove(sq); playPlace(a.flips.length); renderBoard(a); renderInfo(); moveFx(a);
+  if (a.passed) { toast(t('pass', { c: cname(a.passer) })); playPass(); }
+  net.pending = true;
+  Online.sendMove(net.gid, n, sq).then(ok => { if (!net) return; net.pending = false; if (!ok) { positions.length = 1; onNetGame(net.game); } });
+}
+async function finishOnline(g) {
+  net.done = true;
+  let score;
+  const [b, w] = counts(positions[positions.length - 1].cells);
+  if (g.status === 'resign' || g.status === 'timeout') score = g.loser === Online.uid ? 0 : 1;
+  else { const d = net.me === BLACK ? b - w : w - b; score = d > 0 ? 1 : d < 0 ? 0 : 0.5; }
+  const r = await Online.applyResult(net.gid, g, score);
+  setStatus(BLACK, ''); setStatus(WHITE, '');
+  $('#resB').textContent = b; $('#resW').textContent = w; countUp($('#resB'), b); countUp($('#resW'), w);
+  $('#resultTitle').textContent = t(score === 1 ? 'res.youWin' : score === 0 ? 'ol.lose' : 'res.draw');
+  const why = g.status === 'resign' ? t(g.loser === Online.uid ? 'ol.youResigned' : 'ol.oppResigned') : g.status === 'timeout' ? t(g.loser === Online.uid ? 'ol.youTimeout' : 'ol.oppTimeout') : '';
+  const diff = r.now - r.old;
+  $('#resultSub').innerHTML = (why ? why + '<br>' : '') + (r.rated ? `R ${r.old} → <b>${r.now}</b> (${diff >= 0 ? '+' : ''}${diff})` : t('ol.unrated'));
+  playChime(score >= 0.5); if (score === 1) confetti();
+  showOverlay('#resultOverlay');
+}
+let resignArm = 0;
+function onlineResign() {
+  if (!net || net.done) return;
+  if (Date.now() - resignArm > 3000) { resignArm = Date.now(); toast(t('ol.resignConfirm'), 2500); return; }
+  resignArm = 0; Online.resign(net.gid);
+}
 // ====================================================================== boot
 const hadSave = load();
+if (settings.mode === 'online') settings.mode = 'ai';
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 else { try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {} }
 applyI18n();
@@ -2048,7 +2245,12 @@ $('#langSel').onchange = e => {
   } 
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
 };
-if (loadFromHash()) {
+const roomLink = (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1];
+if (roomLink) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+if (roomLink) {
+  if (hadSave) { reviewing = false; update(null); } else { positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }]; cur = 0; renderBoard(null); renderInfo(); }
+  openOnline(roomLink);
+} else if (loadFromHash()) {
   /* shared game opened */
 } else if (hadSave) {
   reviewing = false;
