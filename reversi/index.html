@@ -3836,6 +3836,7 @@ $('#dkChatIn').addEventListener('keydown', e => {
   if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }
   if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
   e.preventDefault();
+  if (!e.target.value.trim() && !olCoarse()) { e.target.blur(); dockToggle(false); return; }   // empty: fold the online box away again
   chatSend(); if (!olCoarse()) e.target.blur();   // back to the board: game keys work again
 });
 $('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
