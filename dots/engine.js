@@ -384,6 +384,33 @@ class Solver {
     }
     return { move: bestMove, value: bestV };
   }
+  // root moves exactly as best() would search them (redundant chain/loop openings removed), safe moves first
+  rootMoves(p) {
+    const cap = p.hasCapture() ? captureMoves(p) : null;
+    if (cap && cap.forced !== undefined) return [cap.forced];
+    if (cap) return cap.moves.concat(cap.declines);
+    let moves = p.legal();
+    if (this.prune) { const tag = ++this.tag; markRedundant(p, this.skip, tag); moves = moves.filter(e => this.skip[e] !== tag); }
+    return moves.sort((a, b) => p.gives(a) - p.gives(b));
+  }
+  // root alpha-beta over the given moves only (one share of a split root). Returns {move, value} or null if aborted;
+  // this.partial then holds the best move proven so far and this.firstV the exact value of moves[0] once known.
+  bestOf(p, moves) {
+    const rem = this.G.B - p.filled;
+    this.partial = null; this.firstV = null;
+    let alpha = -rem - 1, bestMove = moves[0], bestV = -INF;
+    for (let i = 0; i < moves.length; i++) {
+      const e = moves[i];
+      let v;
+      if (i > 0) { v = this.moveValue(p, e, alpha, alpha + 1); if (v !== null && v > alpha) v = this.moveValue(p, e, alpha, rem + 1); }
+      else v = this.moveValue(p, e, alpha, rem + 1);
+      if (v === null) return null;
+      if (i === 0) this.firstV = v;
+      if (v > bestV) { bestV = v; bestMove = e; this.partial = { move: e, value: v }; }
+      if (v > alpha) alpha = v;
+    }
+    return { move: bestMove, value: bestV };
+  }
   // exact values of every legal move. Returns array [{m, v}] or null.
   all(p) {
     const out = [];
@@ -583,6 +610,12 @@ const LEVELS = {
   7: { kind: 'search', exactMs: 500, safeGate: 9, depth: 14, ms: 1100, np: 2 },
   // Lv8: its own exact solver (exact move pruning, null-window root search, bigger table); switches to it much earlier
   8: { kind: 'search', fast: true, exactMs: 300, hMs: 400, safeGate: { 3: 99, 4: 27, 5: 21 }, depth: 40, ms: 1750, np: 3 },
+  // Lv9 / Lv10: more time, an earlier switch to the exact solver, its own tables, and helper workers when the device has
+  // spare cores (chooseMoveAsync): the exact solver splits the root moves, the heuristic search splits them per depth
+  // gate: try the exact solver at or below this many safe moves (pgate: with helper workers, which solve while this
+  // worker runs the heuristic search); sure: below this it usually finishes, so this worker solves as well
+  9: { kind: 'v2', ms: 3000, gate: { 3: 99, 4: 28, 5: 20 }, sure: { 3: 99, 4: 20, 5: 15 }, pgate: { 4: 34, 5: 24 }, depth: 40, np: 3, quick: 0.12, hs: 0.15, hn: 0.45 },
+  10: { kind: 'v2', ms: 5000, gate: { 3: 99, 4: 30, 5: 22 }, sure: { 3: 99, 4: 22, 5: 16 }, pgate: { 4: 36, 5: 26 }, depth: 40, np: 3, quick: 0.12, hs: 0.15, hn: 0.45 },
 };
 
 const solvers = {}, smallSolvers = {};
@@ -593,7 +626,7 @@ const fastSolvers = {};
 function fastSolverFor(G) { const k = G.R + 'x' + G.C; if (!fastSolvers[k]) { const s = new Solver(G, 22); s.prune = true; fastSolvers[k] = s; } return fastSolvers[k]; }
 function smallSolverFor(G) { const k = G.R + 'x' + G.C; const s = smallSolvers[k] || (smallSolvers[k] = new Solver(G, 17)); s.used.fill(0); return s; }
 
-function chooseMove(p, level, rand) {
+function chooseMove(p, level, rand, lead) {
   rand = rand || Math.random;
   const cfg = LEVELS[level] || LEVELS[8];
   const legal = p.legal();
@@ -613,6 +646,8 @@ function chooseMove(p, level, rand) {
   // search levels
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
+  if (cfg.kind === 'v2') return chooseV2(p, cfg, rand, lead);
+  if (cfg.book) { const bk = bookMove(p); if (bk) return bk; }
   const t0 = Date.now();
   const gate = typeof cfg.safeGate === 'object' ? (cfg.safeGate[p.G.R] || 12) : cfg.safeGate;
   if (cfg.fast && (p.G.E <= 24 || countSafe(p) <= gate)) {
@@ -643,6 +678,183 @@ function chooseMove(p, level, rand) {
   const h = H.best(p, cfg.depth, left, rand);
   return { move: h.move, value: h.value, exact: false, depth: H.depth };
 }
+
+// ---------------------------------------------------------------- Lv9+ search
+// What decides a game is who wins, so Lv9+ first asks the solver only that: an "outcome" search with a window of width 2
+// around the score needed for a draw (several times cheaper than an exact value), which reaches positions much earlier.
+// lead: the mover's boxes minus the opponent's so far (only needed once boxes have been taken).
+const v2Solvers = {}, v2Hs = {};
+let v2Bits = 22;   // helper workers use smaller tables
+function v2SolverFor(G) { const k = G.R + 'x' + G.C; if (!v2Solvers[k]) { const s = new Solver(G, G.E <= 24 ? 20 : v2Bits); s.prune = true; v2Solvers[k] = s; } return v2Solvers[k]; }
+function v2HsFor(G, np) { const k = G.R + 'x' + G.C + ':' + np; if (!v2Hs[k]) { const h = new HSearch(G); h.np = np; h.prune = true; v2Hs[k] = h; } return v2Hs[k]; }
+function v2Gate(cfg, G) { return G.E <= 24 ? 99 : (cfg.gate[G.R] || 20); }
+function v2Sure(cfg, G) { return G.E <= 24 ? 99 : (cfg.sure[G.R] || 14); }
+// net future boxes the mover needs for a draw, or null when unknown or already decided (then: exact values)
+function v2Target(p, lead) {
+  if (lead === undefined || lead === null) { if (p.filled > 0) return null; lead = 0; }
+  const t = -lead, rem = p.G.B - p.filled;
+  return (t > rem || t < -rem) ? null : t;
+}
+// outcome root search over the given moves: window (t-1, t+1), stops at the first win.
+// Returns {move, value, cls} (cls 1 win / 0 draw / -1 loss; value is exact only for a draw) or null if cut off;
+// this.partial then holds the best result proven so far.
+Solver.prototype.outcome = function (p, t, moves) {
+  this.partial = null; this.firstV = null;
+  let alpha = t - 1;
+  for (let i = 0; i < moves.length; i++) {
+    const e = moves[i], v = this.moveValue(p, e, alpha, t + 1);
+    if (v === null) return null;
+    if (i === 0) this.firstV = v;
+    if (!this.partial || v > this.partial.value) this.partial = { move: e, value: v, cls: v > t ? 1 : v === t ? 0 : -1 };
+    if (v > alpha) alpha = v;
+    if (alpha > t) break;
+  }
+  return this.partial;
+};
+function v2Moves(S, p, first, rand) {
+  let moves = S.rootMoves(p);
+  if (rand) for (let i = moves.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [moves[i], moves[j]] = [moves[j], moves[i]]; }
+  moves.sort((a, b) => p.gives(a) - p.gives(b));
+  if (first >= 0 && moves.includes(first)) moves = [first].concat(moves.filter(e => e !== first));
+  return moves;
+}
+// turn an outcome result into a move answer; null when it is no use (all moves lose: then exact values decide)
+function v2FromOutcome(o, t) {
+  if (!o || o.cls < 0) return null;
+  return { move: o.move, value: o.value, exact: o.cls === 0, outcome: o.cls };
+}
+// single-thread version (also the fallback when no helper workers are available)
+function chooseV2(p, cfg, rand, lead) {
+  const G = p.G, t0 = Date.now(), ms = cfg.ms;
+  const bk = bookMove(p); if (bk) return bk;
+  const safe = countSafe(p), exactOk = safe <= v2Gate(cfg, G), sure = safe <= v2Sure(cfg, G);
+  const S = v2SolverFor(G), H = v2HsFor(G, cfg.np), t = v2Target(p, lead);
+  const left = () => ms - (Date.now() - t0);
+  let r;
+  if (exactOk && (safe <= 12 || t === null || G.E <= 24)) {   // late, small board or score unknown: exact values
+    S.limit(0, safe <= 12 || G.E <= 24 ? ms - 60 : ms * (sure ? 0.2 : 0.1));
+    r = S.best(p, rand);
+    if (r) return { move: r.move, value: r.value, exact: true, nodes: S.nodes };
+  }
+  const h = H.best(p, cfg.depth, Math.max(80, exactOk ? ms * (sure ? cfg.hs : cfg.hn) : left() - 30), rand);
+  if (!exactOk || left() < 150) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  if (t !== null) {
+    S.limit(0, left() - 20);
+    const o = S.outcome(p, t, v2Moves(S, p, h.move, rand));
+    const ans = v2FromOutcome(o, t);
+    if (ans) {
+      // time to spare: the exact value (for the score shown and the best margin); never worse than the outcome move
+      if (ans.outcome > 0 && left() > ms * 0.3) { S.limit(0, left() - 20); r = S.best(p, rand, ans.move); if (r) return { move: r.move, value: r.value, exact: true }; }
+      return ans;
+    }
+    if (!o) {   // cut off: a proven draw is kept; a proven loss of the heuristic move with nothing else proven changes nothing
+      const pr = S.partial;
+      if (pr && pr.cls >= 0) return { move: pr.move, value: pr.value, exact: false };
+      return { move: h.move, value: h.value, exact: false, depth: H.depth };
+    }
+    if (left() < 150) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  }
+  // every move loses (or no outcome search): exact values for the best margin
+  S.limit(0, left() - 20);
+  r = S.best(p, rand, h.move);
+  if (r) return { move: r.move, value: r.value, exact: true, nodes: S.nodes };
+  if (S.partial && t === null) return { move: S.partial.move, value: S.partial.value, exact: false };
+  return { move: h.move, value: h.value, exact: false, depth: H.depth };
+}
+// work for a helper worker: an outcome (or exact) root search over the given moves, in that order
+function helperTask(d) {
+  const G = geom(d.R, d.C), p = Pos.from(G, d.edges);
+  if (d.bits) v2Bits = d.bits;
+  const S = v2SolverFor(G); S.limit(0, d.ms);
+  const r = d.t === null || d.t === undefined ? S.bestOf(p, d.moves) : S.outcome(p, d.t, d.moves);
+  return { done: !!r, best: r || S.partial, firstV: S.firstV };
+}
+// Lv9+ with helper workers. pool: { size, run(i, msg) -> Promise<result|null> }. Falls back to chooseMove without one.
+async function chooseMoveAsync(p, level, rand, pool, lead) {
+  rand = rand || Math.random;
+  const cfg = LEVELS[level] || LEVELS[8];
+  if (cfg.kind !== 'v2' || !pool || !pool.size) return chooseMove(p, level, rand, lead);
+  const legal = p.legal();
+  if (legal.length === 1) return { move: legal[0], exact: false };
+  const cap = p.hasCapture() ? captureMoves(p) : null;
+  if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
+  const bk = bookMove(p); if (bk) return bk;
+  const G = p.G, t0 = Date.now(), end = t0 + cfg.ms, safe = countSafe(p), edges = p.edges(), t = v2Target(p, lead);
+  if (safe <= 12 || t === null || safe > (G.E <= 24 ? 99 : (cfg.pgate[G.R] || 20))) return chooseV2(p, cfg, rand, lead);
+  const S = v2SolverFor(G), H = v2HsFor(G, cfg.np);
+  // a short try first: late positions (and a warm table) finish at once
+  S.limit(0, Math.min(250, cfg.ms * 0.06));
+  let o = S.outcome(p, t, v2Moves(S, p, -1, rand)), ans = v2FromOutcome(o, t);
+  if (ans) return ans;
+  const h = H.best(p, cfg.depth, Math.max(80, cfg.ms * cfg.quick), rand);
+  const moves = v2Moves(S, p, h.move, rand);
+  // Every helper runs the whole outcome search (the extra ones with other move orders: whichever finishes first counts)
+  // while this worker keeps deepening the heuristic search, the answer whenever no run finishes. When the run will
+  // very likely finish, this worker races as well.
+  const order = i => i ? v2Moves(S, p, h.move, rand) : moves;
+  const left = end - Date.now() - 40;
+  const jobs = []; for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', R: G.R, C: G.C, edges, moves: order(i), ms: left, t }));
+  let res, hm = h;
+  if (safe <= v2Sure(cfg, G)) {
+    S.limit(0, left);
+    o = S.outcome(p, t, order(pool.size));
+    if (o && o.cls >= 0) return v2FromOutcome(o, t);
+    res = [{ done: !!o, best: o || S.partial, firstV: S.firstV }].concat(await Promise.all(jobs));
+  } else {
+    hm = H.best(p, cfg.depth, Math.max(60, left - 20), rand);
+    res = await Promise.all(jobs);
+  }
+  let best = null, allLose = false;
+  for (const x of res) {
+    if (!x || !x.best) continue;
+    if (x.done && x.best.cls >= 0) return v2FromOutcome(x.best, t);
+    if (x.done) allLose = true;
+    if (x.best.cls >= 0 && (!best || x.best.value > best.value)) best = x.best;
+  }
+  if (best) return { move: best.move, value: best.value, exact: false };   // a proven draw (wins would have finished)
+  if (allLose && Date.now() < end - 150) {   // every move loses: the best margin with what time is left
+    S.limit(0, end - Date.now() - 20); const r = S.best(p, rand, hm.move);
+    if (r) return { move: r.move, value: r.value, exact: true };
+  }
+  return { move: hm.move, value: hm.value, exact: false };
+}
+
+// ---------------------------------------------------------------- opening book (4x4, Lv9+)
+// book4.js maps the canonical form of early positions (the drawn-edge bitmask, smallest over the 8 symmetries, base 36)
+// to [best move in that canonical frame, value]. Built offline by deep searches; only used while the game is in it.
+let BOOK = null, bookOn = true;
+function loadBook() {
+  if (BOOK !== null) return BOOK;
+  BOOK = false;
+  try {
+    const g = typeof self !== 'undefined' ? self : globalThis;
+    if (!g.DOTS_BOOK4) {
+      if (typeof importScripts === 'function' && typeof window === 'undefined') importScripts('book4.js');
+      else if (typeof require === 'function' && typeof __dirname === 'string') require(__dirname + '/book4.js');
+    }
+    BOOK = g.DOTS_BOOK4 || false;
+  } catch (e) { BOOK = false; }
+  return BOOK;
+}
+function canonKey(p) {
+  const G = p.G; let best = Infinity, bs = 0;
+  for (let s = 0; s < G.NS; s++) {
+    const pm = G.perms[s]; let v = 0;
+    for (let e = 0; e < G.E; e++) if (p.drawn[e]) v += 2 ** pm[e];
+    if (v < best) { best = v; bs = s; }
+  }
+  return { k: best.toString(36), s: bs };
+}
+function bookMove(p) {
+  if (!bookOn || p.G.R !== 4 || p.G.C !== 4 || p.filled > 0 || p.undrawn < p.G.E - 8) return null;
+  const B = loadBook(); if (!B) return null;
+  const c = canonKey(p), hit = B[c.k];
+  if (!hit) return null;
+  const m = p.G.inv[c.s][hit[0]];
+  if (p.drawn[m]) return null;
+  return { move: m, value: hit[1], exact: hit[2] === 1, book: true };
+}
+function setBook(on) { bookOn = !!on; }
 
 // exact values of all moves within a time budget, otherwise heuristic scores
 function analyze(p, ms) {
@@ -693,19 +905,46 @@ function reviewMove(p, played, ms) {
   const quiet = !cap && p.gives(played) === 0 && p.gives(list[0].m) === 0;
   return { exact: false, quiet, best: list[0].v, played: mine ? Math.min(mine.v, list[0].v) : list[0].v, bestMove: list[0].m, line };
 }
-return { geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
 if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
-  self.onmessage = ev => {
+  // helper workers for Lv9+ (nested workers, created on first use). None on single/dual-core or low-memory devices,
+  // or where a worker cannot start workers: then the search simply runs in this worker.
+  let pool = null;
+  const getPool = () => {
+    if (pool) return pool;
+    pool = { size: 0, ws: [], seq: 0 };
+    try {
+      const nav = self.navigator || {}, hc = nav.hardwareConcurrency || 1, dm = nav.deviceMemory;
+      let k = Math.min(3, hc - 1);
+      if (dm && dm <= 2) k = 0; else if (dm && dm < 4) k = Math.min(k, 1);
+      if (typeof Worker === 'function') for (let i = 0; i < k; i++) {
+        const w = new Worker('engine.js'), cb = new Map();
+        w.onmessage = ev => { const f = cb.get(ev.data.id); if (f) { cb.delete(ev.data.id); f(ev.data.type === 'error' ? null : ev.data.r); } };
+        w.onerror = ev => { ev.preventDefault && ev.preventDefault(); cb.forEach(f => f(null)); cb.clear(); };
+        pool.ws.push({ w, cb });
+      }
+    } catch (e) { pool.ws = []; }
+    pool.size = pool.ws.length;
+    pool.run = (i, msg) => new Promise(resolve => {
+      const h = pool.ws[i], id = ++pool.seq;
+      const timer = setTimeout(() => { if (h.cb.delete(id)) resolve(null); }, (msg.ms || 0) + 2000);
+      h.cb.set(id, r => { clearTimeout(timer); resolve(r); });
+      h.w.postMessage(Object.assign({ id, bits: 21 }, msg));
+    });
+    return pool;
+  };
+  self.onmessage = async ev => {
     const d = ev.data;
     try {
+      if (d.type === 'xpart') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.helperTask(d) }); return; }
       const G = DotsEngine.geom(d.R, d.C);
       const p = DotsEngine.Pos.from(G, d.edges);
       if (d.type === 'move') {
         const t0 = Date.now();
-        const r = DotsEngine.chooseMove(p, d.level);
+        const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(), d.lead) : DotsEngine.chooseMove(p, d.level);
         self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0 });
       } else if (d.type === 'analyze') {
         const r = DotsEngine.analyze(p, d.ms || 1500);
