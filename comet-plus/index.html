@@ -872,7 +872,7 @@ class AudioHandler {
 // ゲームのメインロジック
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
-const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 2);
+const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
 const HUD_W = config.canvasWidth; // 16:9
 const HUD_OX = (HUD_W - config.canvasWidth) / 2;
 canvas.width = HUD_W * HUD_SCALE;
@@ -2221,7 +2221,7 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 //   (x, y) → (X = x - 400, Y = 高さ, Z = y - 300)
 // =================================================================================
 const W = config.canvasWidth, H = config.canvasHeight;
-const PR = Math.min(window.devicePixelRatio || 1, 1.5);
+const PR = Math.min(window.devicePixelRatio || 1, 1.25);
 const VW = HUD_W;
 const toX = x => x - W / 2;
 const toZ = y => y - H / 2;
@@ -2253,8 +2253,8 @@ scene.background = BG_BASE.clone();
 scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
 
 camera = new THREE.PerspectiveCamera(40, VW / H, 1, 6000);
-const CAM_BASE = new THREE.Vector3(0, 880, 220);
-const CAM_LOOK = new THREE.Vector3(0, 0, 10);
+const CAM_BASE = new THREE.Vector3(0, 860, 460);
+const CAM_LOOK = new THREE.Vector3(0, 0, 20);
 
 if (gl3dOK) {
     composer = new EffectComposer(renderer);
@@ -2277,7 +2277,8 @@ scene.add(rimLight);
 // ---------------------------------
 // 共通マテリアル / テクスチャ
 // ---------------------------------
-const GLOW_SCALE = (H * PR / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+const GLOW_BASE = (H / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+const GLOW_SCALE = GLOW_BASE * PR;
 const glowMat = new THREE.ShaderMaterial({
     uniforms: { uScale: { value: GLOW_SCALE } },
     vertexShader: `
@@ -2539,7 +2540,6 @@ for (let i = 0; i < 90; i++) {
     } else {
         const w = rand(70, 200), d = rand(70, 200), h = rand(300, 1000);
         geo = towerGeometry(w, d, h, rand(25, 45), Math.random() < 0.3 ? rand(0.4, 0.8) : 1);
-        if (Math.random() < 0.6) { fill = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), buildingFillMat); fill.position.y = h / 2; }
     }
     const obj = new THREE.Group();
     obj.add(new THREE.LineSegments(geo, Math.random() < 0.18 ? buildingMatB : buildingMatA));
@@ -2634,15 +2634,20 @@ const fieldGrid = new THREE.LineSegments(fieldGridGeo, fieldGridMat);
 fieldGrid.frustumCulled = false;
 field.add(fieldGrid);
 let fieldScroll = 0;
+let fieldGridStaticDone = false;
 function updateFieldGrid() {
     let k = 0;
     for (let i = 0; i < fieldGridCountH; i++) {
         const z = -H / 2 + ((i * FIELD_GRID_STEP + fieldScroll) % H);
-        fieldGridPos.set([-W / 2, -4, z, W / 2, -4, z], k); k += 6;
+        fieldGridPos[k] = -W / 2; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
+        fieldGridPos[k + 3] = W / 2; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
     }
-    for (let i = -fieldGridHalfV; i <= fieldGridHalfV; i++) {
-        const x = i * FIELD_GRID_STEP;
-        fieldGridPos.set([x, -4, -H / 2, x, -4, H / 2], k); k += 6;
+    if (!fieldGridStaticDone) {
+        for (let i = -fieldGridHalfV; i <= fieldGridHalfV; i++) {
+            const x = i * FIELD_GRID_STEP;
+            fieldGridPos.set([x, -4, -H / 2, x, -4, H / 2], k); k += 6;
+        }
+        fieldGridStaticDone = true;
     }
     fieldGridGeo.attributes.position.needsUpdate = true;
 }
@@ -2877,6 +2882,46 @@ function project(x, y, h = 0) {
     return { x: (_v.x + 1) / 2 * HUD_W, y: (1 - _v.y) / 2 * H };
 }
 
+// ---------------------------------
+// 動的解像度: 60fpsを保てないときは描画解像度を下げる
+// ---------------------------------
+const Q_MAX = PR, Q_MIN = 0.55;
+let quality = PR, qCeil = PR;
+const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9 };
+function applyQuality() {
+    renderer.setPixelRatio(quality);
+    renderer.setSize(VW, H, false);
+    composer.setPixelRatio(quality);
+    composer.setSize(VW, H);
+    glowMat.uniforms.uScale.value = GLOW_BASE * quality;
+}
+function adaptQuality(now) {
+    if (!perf.t0) { perf.t0 = now; return; }
+    if (now - perf.lastFrame > 500) { perf.t0 = now; perf.frames = 0; } // タブ復帰などの長い空白は無視
+    perf.lastFrame = now;
+    perf.frames++;
+    const span = now - perf.t0;
+    if (span < 1000) return;
+    const fps = perf.frames * 1000 / span;
+    perf.t0 = now; perf.frames = 0;
+    if (fps < 54 && quality > Q_MIN) {
+        if (now - perf.lastRaise < 6000) qCeil = Math.max(Q_MIN, quality - 0.1); // 上げてすぐ落ちたら上限を下げる
+        quality = Math.max(Q_MIN, quality - 0.15);
+        perf.good = 0;
+        applyQuality();
+    } else if (fps >= 58) {
+        perf.good++;
+        if (perf.good >= 5 && quality < Math.min(Q_MAX, qCeil)) {
+            quality = Math.min(Q_MAX, qCeil, quality + 0.1);
+            perf.good = 0;
+            perf.lastRaise = now;
+            applyQuality();
+        }
+    } else {
+        perf.good = 0;
+    }
+}
+
 function render3D() {
     const now = performance.now();
     let dt = Math.min(0.05, (now - rLast) / 1000);
@@ -2938,7 +2983,9 @@ function render3D() {
         s.z += ws * s.sp * 1.6 * dt;
         if (s.z > WORLD_NEAR) { s.z -= WORLD_SPAN; s.x = rand(-1500, 1500); }
         const len = s.len * (0.5 + speedRatio);
-        starPos.set([s.x, s.y, s.z - len, s.x, s.y, s.z], i * 6);
+        const o = i * 6;
+        starPos[o] = s.x; starPos[o + 1] = s.y; starPos[o + 2] = s.z - len;
+        starPos[o + 3] = s.x; starPos[o + 4] = s.y; starPos[o + 5] = s.z;
     });
     starGeo.attributes.position.needsUpdate = true;
 
@@ -3227,6 +3274,7 @@ function render3D() {
     glow.end(); trails.end(); cometBodies.end(); cometWires.end(); bulletBodies.end(); debrisCubes.end();
 
     if (!gl3dOK) return;
+    adaptQuality(now);
     if (efx) {
         bloom.strength = 0.55 + visualBeat * 0.35;
         composer.render(dt);
