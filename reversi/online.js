@@ -7,7 +7,27 @@
   const MOCK = new URLSearchParams(location.search).has('mock');
   const FB_VER = '10.12.2';
   const INITIAL = 1500;
-  const MOVE_LIMIT = 90 * 1000;          // per-move time limit (ms)
+  const MOVE_LIMIT = 90 * 1000;          // legacy games (records without tc): fixed 90 s per move
+  // time controls: main time (ms) is used up first, then every move must be made within byo (byoyomi)
+  const TC = { fast: { main: 5 * 60000, byo: 30000 }, long: { main: 10 * 60000, byo: 30000 }, blitz: { main: 0, byo: 30000 } };
+  const TC_IDS = ['fast', 'long', 'blitz'];
+  const LEGACY = { main: 0, byo: MOVE_LIMIT };
+  const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
+  const CROSS_WAIT = 20000;              // after this wait, players with a different time control may be matched (played as 'fast')
+  const tcOf = g => (g && TC[g.tc]) || LEGACY;
+  const sideOf = (g, u) => (g.b === u ? 'b' : 'w');
+  const mainOf = (g, side) => { const v = g && g['m' + side]; return typeof v === 'number' ? Math.max(0, v) : tcOf(g).main; };
+  const tcFields = tc => (TC[tc] ? { tc, mb: TC[tc].main, mw: TC[tc].main } : {});
+  const tcDist = (a, b) => (a === b ? 0 : a === 'fast' || b === 'fast' ? 1 : 2);   // fast is "between" long and blitz
+  const tcMerge = (a, b) => (a === b ? a : 'fast');
+  // clock of one side ('b' / 'w'); moving = it is this side's turn (time since g.t is running)
+  function clockOf(g, side, moving, now) {
+    const c = tcOf(g), m = mainOf(g, side);
+    if (!moving) return { main: m, byo: m > 0 ? null : c.byo, left: m + c.byo, moving: false };
+    const el = Math.max(0, (now == null ? (db ? db.now() : Date.now()) : now) - (g.t || now || Date.now()));
+    const main = Math.max(0, m - el);
+    return { main, byo: main > 0 ? null : m + c.byo - el, left: m + c.byo - el, moving: true };
+  }
   let db = null, uid = null, profile = null, ready = null;
 
   // ---------------------------------------------------------------- backend adapters
@@ -144,12 +164,13 @@
   // window of acceptable rating difference grows with waiting time
   const windowFor = waitMs => Math.min(400, 100 + 50 * Math.floor(waitMs / 10000));
 
-  async function enterLobby({ onList, onMatched, onStatus }) {
+  async function enterLobby({ onList, onMatched, onStatus, tc }) {
     await leave();
     setPresence('lobby');
     const since = db.now();
-    lobbyState = { since, onMatched, onStatus };
-    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, since: db.stamp(), game: null });
+    tc = TC[tc] ? tc : 'fast';
+    lobbyState = { since, onMatched, onStatus, tc };
+    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), game: null });
     db.onDisconnectRemove('lobby/' + uid);
     lobbyUnsub = db.on('lobby', v => {
       const list = Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid })).sort((a, b) => b.rating - a.rating);
@@ -164,20 +185,24 @@
     const st = lobbyState; if (!st || !st.list || st.busy) return;
     const now = db.now(), myWait = now - st.since;
     const others = st.list.filter(x => !x.me && !x.game && typeof x.rating === 'number');
+    // same time control first; once both have waited CROSS_WAIT, nearer controls, then farther ones; closest rating within each
     let best = null;
     for (const o of others) {
-      const w = windowFor(Math.max(myWait, now - (o.since || now)));
-      const d = Math.abs(o.rating - profile.rating);
-      if (d <= w && (!best || d < best.d)) best = { ...o, d };
+      if (!TC[o.tc]) continue;                // old clients without time control support
+      const oWait = now - (o.since || now), dist = tcDist(st.tc, o.tc);
+      if (dist && (myWait < CROSS_WAIT || oWait < CROSS_WAIT)) continue;
+      const w = windowFor(Math.max(myWait, oWait));
+      const d = Math.abs(o.rating - profile.rating), key = dist * 1e6 + d;
+      if (d <= w && (!best || key < best.key)) best = { ...o, d, key };
     }
-    st.onStatus && st.onStatus({ waiting: others.length, window: windowFor(myWait), wait: myWait });
+    st.onStatus && st.onStatus({ waiting: others.length, same: others.filter(o => o.tc === st.tc).length, window: windowFor(myWait), wait: myWait, tc: st.tc, crossIn: Math.max(0, CROSS_WAIT - myWait) });
     if (!best || uid > best.id) return;        // the smaller uid starts the game so both sides do not create one
     st.busy = true;
     try {
       const gid = db.push('games');
       const black = Math.random() < 0.5 ? uid : best.id, white = black === uid ? best.id : uid;
       const names = { [uid]: profile.name, [best.id]: best.name }, rates = { [uid]: profile.rating, [best.id]: best.rating };
-      await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: true, created: db.stamp(), t: db.stamp() });
+      await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: true, ...tcFields(tcMerge(st.tc, best.tc)), created: db.stamp(), t: db.stamp() });
       const r = await db.txn('lobby/' + best.id, cur => { if (cur === null) return null; if (cur.game) return; cur.game = gid; return cur; });
       if (r.committed && r.value && r.value.game === gid) await db.update('lobby/' + uid, { game: gid });
       else await db.remove('games/' + gid);
@@ -185,15 +210,16 @@
   }
 
   // ---------------------------------------------------------------- private rooms (unrated)
-  let roomCode = null, roomUnsub = null;
+  let roomCode = null, roomTc = null, roomUnsub = null;
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  async function createRoom({ onMatched, priv }) {
+  async function createRoom({ onMatched, priv, tc }) {
+    tc = TC[tc] ? tc : 'fast';
     await leave();
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, created: db.stamp(), game: null, priv: !!priv } : undefined);
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), game: null, priv: !!priv } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid) continue;
-      roomCode = code; setPresence('room', { room: priv ? null : code });
+      roomCode = code; roomTc = tc; setPresence('room', { room: priv ? null : code });
       db.onDisconnectRemove('rooms/' + code);
       roomUnsub = db.on('rooms/' + code + '/game', gid => { if (gid) { const c = roomCode; leave(true); db.remove('rooms/' + c); onMatched(gid); } });
       return code;
@@ -208,7 +234,7 @@
     const gid = db.push('games');
     const black = Math.random() < 0.5 ? uid : room.host, white = black === uid ? room.host : uid;
     const names = { [uid]: profile.name, [room.host]: room.name }, rates = { [uid]: profile.rating, [room.host]: room.rating };
-    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, created: db.stamp(), t: db.stamp() });
+    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, ...tcFields(room.tc), created: db.stamp(), t: db.stamp() });
     const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.game) return; cur.game = gid; return cur; });
     if (!(r.committed && r.value && r.value.game === gid)) { await db.remove('games/' + gid); return null; }
     return gid;
@@ -226,17 +252,26 @@
   // ---------------------------------------------------------------- games
   const enc = sq => 'abcdefgh'[sq & 7] + ((sq >> 3) + 1);
   function watchGame(gid, cb) { setPresence('play', { room: null }); return db.on('games/' + gid, cb); }
+  // the sender is the side to move: subtract the time since the last move from its main time.
+  // false = it already used main + byoyomi (the move is refused and the opponent may claim the win)
+  function chargeClock(g) {
+    if (!TC[g.tc]) return true;            // legacy record: fixed per-move limit, nothing to store
+    const side = sideOf(g, uid), m = mainOf(g, side), el = Math.max(0, db.now() - (g.t || db.now()));
+    if (el > m + TC[g.tc].byo + 1000) return false;
+    g['m' + side] = Math.max(0, m - el);
+    return true;
+  }
   // append a move; n = number of moves already played (guards against double sends / races)
   async function sendMove(gid, n, sq) {
     const r = await db.txn('games/' + gid, g => {
       if (g === null) return null;
       if (g.status !== 'play' || (g.moves || '').length !== n * 2) return;
-      g.moves = (g.moves || '') + enc(sq); g.t = db.stamp(); return g;
+      g.moves = (g.moves || '') + enc(sq); if (!chargeClock(g)) return; g.t = db.stamp(); return g;
     });
     return r.committed;
   }
   const resign = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play') return; g.status = 'resign'; g.loser = uid; return g; });
-  const claimTimeout = (gid, oppUid) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || db.now() - g.t < MOVE_LIMIT) return; g.status = 'timeout'; g.loser = oppUid; return g; });
+  const claimTimeout = (gid, oppUid) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || db.now() - g.t < (TC[g.tc] ? mainOf(g, sideOf(g, oppUid)) + TC[g.tc].byo + GRACE : MOVE_LIMIT)) return; g.status = 'timeout'; g.loser = oppUid; return g; });
   const markOver = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play') return; g.status = 'over'; return g; });
 
   // apply the rating change for my side once per game. score: 1 / .5 / 0
@@ -261,7 +296,7 @@
   }
 
   window.Online = {
-    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL,
+    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, get roomTc() { return roomTc; },
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave,
     watchGame, sendMove, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),

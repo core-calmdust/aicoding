@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/dots.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0b1110; --bg2:#121b19; --panel:#141f1c; --panel2:#1a2724; --line:#26372f;
@@ -37,7 +37,7 @@ body{
     radial-gradient(900px 600px at 110% 110%, #16231f 0%, transparent 60%),
     var(--bg);
   color:var(--text);
-  font-family:'Zen Kaku Gothic New',system-ui,sans-serif;
+  font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
   -webkit-tap-highlight-color:transparent;
   overflow-x:hidden;
@@ -424,6 +424,14 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
 .lesson-intro p{font-size:15.5px;line-height:1.9}
 .lesson-intro p.note{font-size:14px}
 .rv-note{font-size:12.5px}
+/* Arabic: text blocks read right-to-left; layout, board, coordinates and move lists stay LTR */
+html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .lesson-card h3, .puzzle-card h3, .result-sub, .rv-note, .rules){direction:rtl;text-align:right}
+html[lang=ar] :is(p, .tx, .lesson-fb, .pz-status, .pz-goal, .rv-note) b{unicode-bidi:isolate}
+html[lang=ar] .result-sub{text-align:center}
+html[lang=ar] :is(.lesson-intro .note, .rules){border-left:0;border-right:2px solid var(--brass2);padding-left:0;padding-right:10px}
+html[lang=ar] *{letter-spacing:0 !important}
+/* Hindi / Arabic: the serif display font has no Devanagari/Arabic glyphs */
+html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .result-big){font-family:'Noto Sans Devanagari','Noto Sans Arabic','Zen Kaku Gothic New',sans-serif}
 </style>
 </head>
 <body>
@@ -450,7 +458,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>Dots &amp; Boxes<small data-i18n="sub"></small></h1>
-      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
 
     <div class="card lesson-card" id="lessonCard">
@@ -657,10 +665,10 @@ const $ = s => document.querySelector(s);
 const E = DotsEngine;
 const U = 100, M = 58;            // svg units: dot spacing and margin
 const STORE = 'dots-emerald-v1', LSTORE = 'dots-lessons-v1', PSTORE = 'dots-puzzles-v1';
-const SUPPORTED = ['ja', 'en', 'zh', 'ko'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return n.startsWith('ja') ? 'ja' : n.startsWith('zh') ? 'zh' : n.startsWith('ko') ? 'ko' : 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
-function t(k, v) { let x = (I18N[LANG] || I18N.ja)[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
+function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.title = t('title') + ' — Dots & Boxes';
