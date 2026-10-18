@@ -421,7 +421,6 @@ class AudioHandler {
         this.stopBgm();
         this.bgmPlaying = true;
         this.current16th = 0;
-        this.loopCount = 0;
         this.seq4MelodyIndex = 0;
         this.seq5MelodyIndex = 0;
         this.hiHatPanIndex = 0;
@@ -429,71 +428,35 @@ class AudioHandler {
     }
 
     // =========================================================
-    // BGM: EDM（プログレッシブ／ビッグルーム系）BPM130は従来通り
-    //  8小節のビルド → 8小節のドロップ を交互に繰り返す（Am - F - C - G）
-    //  リバーブ・サチュレーション・サイドチェイン・リミッターで音圧を出す
+    // BGM: Rez風トランス/テクノ（BPM130・16分×128ステップ＝8小節ループは従来通り）
+    //  Am - F - C - G の進行。ステージが進むほどレイヤーが重なっていく
     // =========================================================
     setupMusicBus() {
         const c = this.ctx;
-        const SR = c.sampleRate;
         if (!this.noiseBuf) {
-            this.noiseBuf = c.createBuffer(1, SR * 2, SR);
+            const n = c.sampleRate;
+            this.noiseBuf = c.createBuffer(1, n, c.sampleRate);
             const d = this.noiseBuf.getChannelData(0);
-            for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+            for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
         }
-        if (!this.irBuf) {
-            // 生成インパルス応答（ステレオ、2.4秒の拡散した残響）
-            const len = Math.floor(SR * 2.4);
-            this.irBuf = c.createBuffer(2, len, SR);
-            for (let ch = 0; ch < 2; ch++) {
-                const d = this.irBuf.getChannelData(ch);
-                let lp = 0;
-                for (let i = 0; i < len; i++) {
-                    const t = i / SR;
-                    lp += (Math.random() * 2 - 1 - lp) * (0.55 - 0.4 * Math.min(1, t / 2.4)); // 時間とともに高域が減衰
-                    d[i] = lp * Math.pow(1 - i / len, 2.6) * (t < 0.012 ? t / 0.012 : 1);
-                }
-            }
-        }
-        const curve = k => { const n = 2048, cv = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; cv[i] = Math.tanh(k * x) / Math.tanh(k); } return cv; };
-        this.satCurve = this.satCurve || curve(2.2);
-
-        // マスター: ハイシェルフ → コンプ → ソフトクリップ（リミッター代わり）
-        const shelf = c.createBiquadFilter(); shelf.type = 'highshelf'; shelf.frequency.value = 9000; shelf.gain.value = 2.5;
-        const lowcut = c.createBiquadFilter(); lowcut.type = 'highpass'; lowcut.frequency.value = 28;
+        // 楽曲全体 → コンプ → マスター
         this.comp = c.createDynamicsCompressor();
-        this.comp.threshold.value = -12; this.comp.knee.value = 8; this.comp.ratio.value = 3;
-        this.comp.attack.value = 0.003; this.comp.release.value = 0.12;
-        const clip = c.createWaveShaper(); clip.curve = curve(1.4); clip.oversample = '2x';
-        const out = c.createGain(); out.gain.value = 0.95;
+        this.comp.threshold.value = -14; this.comp.knee.value = 8; this.comp.ratio.value = 4;
+        this.comp.attack.value = 0.004; this.comp.release.value = 0.18;
         this.musicBus = c.createGain();
-        this.musicBus.gain.value = (window.__bgmGain ?? 0.42);
-        this.musicBus.connect(lowcut).connect(shelf).connect(this.comp).connect(clip).connect(out).connect(this.masterGain);
-        // ビルド中に開いていくフィルター（キック以外の全パート）
-        this.buildLP = c.createBiquadFilter(); this.buildLP.type = 'lowpass'; this.buildLP.frequency.value = 20000; this.buildLP.Q.value = 0.9;
-        this.buildLP.connect(this.musicBus);
-        // サイドチェイン用（ベース・コード・リード）
+        this.musicBus.gain.value = 0.9;
+        this.musicBus.connect(this.comp).connect(this.masterGain);
+        // キックでポンピングさせるバス（パッド・ベース・スタブ用）
         this.duck = c.createGain();
-        const synthLevel = c.createGain(); synthLevel.gain.value = window.__synthLv ?? 3.2;
-        this.duck.connect(synthLevel).connect(this.buildLP);
-        this.inst = c.createGain(); // ダッキングしないパート（ドラム類）
-        this.inst.connect(this.buildLP);
-        // リバーブ
-        this.revSend = c.createGain();
-        const conv = c.createConvolver(); conv.buffer = this.irBuf;
-        const revHP = c.createBiquadFilter(); revHP.type = 'highpass'; revHP.frequency.value = 350;
-        const revRet = c.createGain(); revRet.gain.value = 0.55;
-        this.revSend.connect(revHP).connect(conv).connect(revRet).connect(this.duck);
-        // ディレイ（付点8分・ピンポン風）
+        this.duck.connect(this.musicBus);
+        // 共有ディレイ（付点8分）
         const sixteenth = 60 / 130 / 4;
-        this.delaySend = c.createGain();
+        this.delaySend = c.createGain(); this.delaySend.gain.value = 1;
         const dl = c.createDelay(1.0); dl.delayTime.value = sixteenth * 3;
-        const fb = c.createGain(); fb.gain.value = 0.38;
-        const dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 4500;
-        const dpan = c.createStereoPanner(); dpan.pan.value = 0.45;
-        this.delaySend.connect(dl); dl.connect(dlp).connect(fb).connect(dl);
-        dlp.connect(dpan).connect(this.duck);
-        const rs = c.createGain(); rs.gain.value = 0.3; dlp.connect(rs).connect(this.revSend);
+        const fb = c.createGain(); fb.gain.value = 0.42;
+        const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+        this.delaySend.connect(dl); dl.connect(lp).connect(fb).connect(dl);
+        lp.connect(this.musicBus);
     }
 
     scheduleBGM() {
@@ -505,185 +468,155 @@ class AudioHandler {
         const bgmStage = ((stage - 1) % 6) + 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
-        const beat = sixteenth * 4;
         const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
         const noise = () => { const s = c.createBufferSource(); s.buffer = this.noiseBuf; s.loop = true; return s; };
-        const sat = () => { const w = c.createWaveShaper(); w.curve = this.satCurve; return w; };
-        const send = (node, bus, amt) => { const g = c.createGain(); g.gain.value = amt; node.connect(g).connect(bus); };
 
+        // 進行: 2小節ずつ Am F C G
         const CHORDS = [
-            { root: 33, tones: [57, 60, 64, 69] }, // Am
-            { root: 29, tones: [57, 60, 65, 69] }, // F
-            { root: 36, tones: [55, 60, 64, 67] }, // C
-            { root: 31, tones: [55, 59, 62, 67] }, // G
-        ];
-        // ドロップのフック（8分音符単位、null=休符、'-'=伸ばす）
-        const HOOK = [
-            76, '-', 76, 74, '-', 72, '-', 74,   72, '-', 69, '-', '-', '-', 67, 69,
-            72, '-', 72, 74, '-', 76, '-', 77,   76, '-', 74, '-', '-', '-', 72, 74,
-            76, '-', 76, 79, '-', 76, '-', 74,   72, '-', 74, '-', '-', '-', 76, '-',
-            74, '-', 74, 76, '-', 74, '-', 71,   74, '-', '-', '-', 71, '-', 67, '-',
+            { bass: 33, tones: [57, 60, 64] }, // Am
+            { bass: 29, tones: [57, 60, 65] }, // F
+            { bass: 36, tones: [55, 60, 64] }, // C
+            { bass: 31, tones: [55, 59, 62] }, // G
         ];
 
-        // ---------------- 楽器 ----------------
-        const kick = (t, vol = 1) => {
-            const o = c.createOscillator(), g = c.createGain(), s = sat(), pre = c.createGain();
+        const kick = t => {
+            const o = c.createOscillator(), g = c.createGain();
             o.type = 'sine';
-            o.frequency.setValueAtTime(220, t);
-            o.frequency.exponentialRampToValueAtTime(58, t + 0.045);
-            o.frequency.exponentialRampToValueAtTime(44, t + 0.38);
-            pre.gain.value = 2.2;
-            g.gain.setValueAtTime(0.0001, t);
-            g.gain.exponentialRampToValueAtTime(0.62 * vol, t + 0.003);
-            g.gain.setValueAtTime(0.62 * vol, t + 0.07);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
-            o.connect(pre).connect(s).connect(g).connect(this.musicBus);
-            o.start(t); o.stop(t + 0.45);
-            // トップ（アタック）
-            const n = noise(), hp = c.createBiquadFilter(), ng = c.createGain();
-            hp.type = 'bandpass'; hp.frequency.value = 3800; hp.Q.value = 0.8;
-            ng.gain.setValueAtTime(0.32 * vol, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
+            o.frequency.setValueAtTime(160, t);
+            o.frequency.exponentialRampToValueAtTime(48, t + 0.09);
+            o.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+            g.gain.setValueAtTime(1.15, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
+            o.connect(g).connect(this.musicBus);
+            o.start(t); o.stop(t + 0.36);
+            // クリック
+            const n = noise(), ng = c.createGain(), hp = c.createBiquadFilter();
+            hp.type = 'highpass'; hp.frequency.value = 2500;
+            ng.gain.setValueAtTime(0.35, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.012);
             n.connect(hp).connect(ng).connect(this.musicBus);
-            n.start(t, Math.random()); n.stop(t + 0.03);
-            // サイドチェイン
+            n.start(t, Math.random()); n.stop(t + 0.02);
+            // サイドチェイン（ポンピング）
             this.duck.gain.cancelScheduledValues(t);
-            this.duck.gain.setValueAtTime(1, t);
-            this.duck.gain.linearRampToValueAtTime(0.08, t + 0.006);
-            this.duck.gain.setTargetAtTime(1, t + 0.04, 0.085);
-        };
-        const clap = (t, vol = 1) => {
-            const n = noise(), bp = c.createBiquadFilter(), g = c.createGain();
-            bp.type = 'bandpass'; bp.frequency.value = 1350; bp.Q.value = 0.7;
-            g.gain.setValueAtTime(0.0001, t);
-            [0, 0.009, 0.019].forEach(o => { g.gain.setValueAtTime(0.6 * vol, t + o); g.gain.exponentialRampToValueAtTime(0.1 * vol, t + o + 0.008); });
-            g.gain.setValueAtTime(0.55 * vol, t + 0.028);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
-            n.connect(bp).connect(g).connect(this.inst);
-            send(g, this.revSend, 0.6);
-            n.start(t, Math.random()); n.stop(t + 0.3);
-            // スネアの胴鳴り
-            const o = c.createOscillator(), og = c.createGain();
-            o.type = 'triangle'; o.frequency.setValueAtTime(240, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.06);
-            og.gain.setValueAtTime(0.28 * vol, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-            o.connect(og).connect(this.inst); o.start(t); o.stop(t + 0.1);
+            this.duck.gain.setValueAtTime(0.18, t);
+            this.duck.gain.linearRampToValueAtTime(1, t + sixteenth * 2.6);
         };
         const hat = (t, open, vol = 1) => {
-            const n = noise(), hp = c.createBiquadFilter(), pk = c.createBiquadFilter(), g = c.createGain(), p = c.createStereoPanner();
-            hp.type = 'highpass'; hp.frequency.value = open ? 7500 : 9500;
-            pk.type = 'peaking'; pk.frequency.value = 11000; pk.gain.value = 5;
-            p.pan.value = open ? 0.18 : (Math.random() - 0.5) * 0.6;
-            const d = open ? 0.2 : 0.04;
-            g.gain.setValueAtTime((open ? 0.24 : 0.14) * vol, t);
+            const n = noise(), g = c.createGain(), hp = c.createBiquadFilter(), p = c.createStereoPanner();
+            hp.type = 'highpass'; hp.frequency.value = open ? 7000 : 9000;
+            p.pan.value = open ? 0.25 : -0.3;
+            const d = open ? 0.16 : 0.035;
+            g.gain.setValueAtTime((open ? 0.17 : 0.095) * vol, t);
             g.gain.exponentialRampToValueAtTime(0.001, t + d);
-            n.connect(hp).connect(pk).connect(g).connect(p).connect(this.inst);
-            if (open) send(p, this.revSend, 0.12);
+            n.connect(hp).connect(g).connect(p).connect(this.musicBus);
             n.start(t, Math.random()); n.stop(t + d + 0.02);
         };
-        const snareBuild = (t, vol) => {
-            const n = noise(), bp = c.createBiquadFilter(), g = c.createGain();
-            bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.6;
-            g.gain.setValueAtTime(0.42 * vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
-            n.connect(bp).connect(g).connect(this.inst);
-            send(g, this.revSend, 0.5);
-            n.start(t, Math.random()); n.stop(t + 0.12);
+        const clap = t => {
+            const n = noise(), g = c.createGain(), bp = c.createBiquadFilter();
+            bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = 0.9;
+            g.gain.setValueAtTime(0, t);
+            [0, 0.011, 0.022].forEach(o => { g.gain.setValueAtTime(0.55, t + o); g.gain.exponentialRampToValueAtTime(0.08, t + o + 0.009); });
+            g.gain.setValueAtTime(0.5, t + 0.033);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+            n.connect(bp).connect(g).connect(this.musicBus);
+            const s = c.createGain(); s.gain.value = 0.25; g.connect(s).connect(this.delaySend);
+            n.start(t, Math.random()); n.stop(t + 0.22);
         };
-        // ベース: サブ（サイン）＋ミッド（ノコギリ→LPF→サチュレーション）
-        const bass = (t, m, dur, vol = 1) => {
-            const sub = c.createOscillator(), mid = c.createOscillator(), mid2 = c.createOscillator();
-            sub.type = 'sine'; sub.frequency.value = mtof(m);
-            mid.type = 'sawtooth'; mid.frequency.value = mtof(m + 12); mid.detune.value = -8;
-            mid2.type = 'sawtooth'; mid2.frequency.value = mtof(m + 12); mid2.detune.value = 8;
-            const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 3;
-            lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(320, t + dur);
-            const s = sat(), gm = c.createGain(), gs = c.createGain(), env = c.createGain();
-            gm.gain.value = 0.11; gs.gain.value = 0.16; // ベースはシンセバス(×3.2)を通るので控えめ
-            env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(vol, t + 0.008);
-            env.gain.setValueAtTime(vol, t + dur * 0.75); env.gain.exponentialRampToValueAtTime(0.001, t + dur);
-            mid.connect(lp); mid2.connect(lp); lp.connect(s).connect(gm).connect(env);
-            sub.connect(gs).connect(env);
-            env.connect(this.duck);
-            [sub, mid, mid2].forEach(o => { o.start(t); o.stop(t + dur + 0.02); });
+        const snareRoll = (t, vol) => {
+            const n = noise(), g = c.createGain(), bp = c.createBiquadFilter();
+            bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.7;
+            g.gain.setValueAtTime(0.35 * vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+            n.connect(bp).connect(g).connect(this.musicBus);
+            n.start(t, Math.random()); n.stop(t + 0.08);
         };
-        // スーパーソウ（7ボイス、ステレオに広げる）
-        const supersaw = (t, notes, dur, vol, cutoff, opt = {}) => {
-            const f = c.createBiquadFilter(), hp = c.createBiquadFilter(), g = c.createGain();
-            f.type = 'lowpass'; f.Q.value = 0.8;
-            f.frequency.setValueAtTime(cutoff * (opt.env ? 3 : 1), t);
-            if (opt.env) f.frequency.exponentialRampToValueAtTime(cutoff, t + Math.min(dur, opt.env));
-            hp.type = 'highpass'; hp.frequency.value = opt.hp || 180;
-            const atk = opt.atk || 0.006;
+        // ローリングベース（オフビート3連打）
+        const bass = (t, m, accent) => {
+            const o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+            o.type = 'sawtooth'; o2.type = 'square';
+            o.frequency.value = mtof(m); o2.frequency.value = mtof(m - 12);
+            f.type = 'lowpass'; f.Q.value = 6;
+            f.frequency.setValueAtTime(accent ? 1500 : 950, t);
+            f.frequency.exponentialRampToValueAtTime(160, t + sixteenth * 0.9);
+            g.gain.setValueAtTime(0.42, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + sixteenth * 0.95);
+            o.connect(f); o2.connect(f); f.connect(g).connect(this.duck);
+            o.start(t); o2.start(t); o.stop(t + sixteenth); o2.stop(t + sixteenth);
+        };
+        // スーパーソウ（デチューンしたノコギリ波を重ねる）
+        const supersaw = (t, notes, dur, vol, cutoff, toDelay = 0) => {
+            const f = c.createBiquadFilter(), g = c.createGain();
+            f.type = 'lowpass'; f.Q.value = 1.5;
+            f.frequency.setValueAtTime(cutoff * 2.2, t);
+            f.frequency.exponentialRampToValueAtTime(cutoff, t + Math.min(dur, 0.25));
             g.gain.setValueAtTime(0.0001, t);
-            g.gain.exponentialRampToValueAtTime(vol, t + atk);
-            g.gain.setValueAtTime(vol, t + Math.max(atk, dur - (opt.rel || 0.06)));
+            g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+            g.gain.setValueAtTime(vol, t + dur * 0.6);
             g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-            f.connect(hp).connect(g).connect(this.duck);
-            send(g, this.revSend, opt.rev ?? 0.35);
-            if (opt.dly) send(g, this.delaySend, opt.dly);
-            const DET = [-22, -13, -6, 0, 6, 13, 22], PAN = [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9];
-            notes.forEach(m => {
-                DET.forEach((dt, k) => {
-                    const o = c.createOscillator(), p = c.createStereoPanner(), og = c.createGain();
-                    o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = dt;
-                    p.pan.value = PAN[k]; og.gain.value = k === 3 ? 0.62 : 0.4;
-                    o.connect(og).connect(p).connect(f);
-                    o.start(t, Math.random() * 0.01); o.stop(t + dur + 0.02);
+            f.connect(g).connect(this.duck);
+            if (toDelay) { const s = c.createGain(); s.gain.value = toDelay; g.connect(s).connect(this.delaySend); }
+            notes.forEach((m, i) => {
+                [-14, 0, 14].forEach((dt, k) => {
+                    const o = c.createOscillator(), p = c.createStereoPanner();
+                    o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = dt + (i - 1) * 3;
+                    p.pan.value = (k - 1) * 0.7;
+                    o.connect(p).connect(f);
+                    o.start(t); o.stop(t + dur + 0.02);
                 });
             });
         };
-        // プラック（ビルドの刻み）
-        const pluck = (t, notes, vol) => {
-            const f = c.createBiquadFilter(), g = c.createGain();
-            f.type = 'lowpass'; f.Q.value = 2;
-            f.frequency.setValueAtTime(5200, t); f.frequency.exponentialRampToValueAtTime(380, t + 0.22);
-            g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-            f.connect(g).connect(this.duck);
-            send(g, this.revSend, 0.45); send(g, this.delaySend, 0.3);
-            notes.forEach((m, i) => [-7, 7].forEach(dt => {
-                const o = c.createOscillator(), p = c.createStereoPanner();
-                o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = dt;
-                p.pan.value = dt > 0 ? 0.35 : -0.35;
-                o.connect(p).connect(f); o.start(t); o.stop(t + 0.32);
-            }));
-        };
-        const arpNote = (t, m, vol, pan) => {
-            const o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), p = c.createStereoPanner();
-            o.type = 'square'; o2.type = 'sawtooth'; o.frequency.value = mtof(m); o2.frequency.value = mtof(m + 12); o2.detune.value = 5;
-            f.type = 'lowpass'; f.Q.value = 3;
-            f.frequency.setValueAtTime(6000, t); f.frequency.exponentialRampToValueAtTime(700, t + 0.14);
-            g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        const pluck = (t, m, vol, pan) => {
+            const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), p = c.createStereoPanner();
+            o.type = 'square'; o.frequency.value = mtof(m);
+            f.type = 'lowpass'; f.Q.value = 4;
+            f.frequency.setValueAtTime(4200, t); f.frequency.exponentialRampToValueAtTime(500, t + 0.12);
+            g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
             p.pan.value = pan;
-            o.connect(f); o2.connect(f); f.connect(g).connect(p).connect(this.duck);
-            send(p, this.delaySend, 0.4); send(p, this.revSend, 0.25);
-            o.start(t); o2.start(t); o.stop(t + 0.2); o2.stop(t + 0.2);
+            o.connect(f).connect(g).connect(p);
+            p.connect(this.musicBus);
+            const s = c.createGain(); s.gain.value = 0.45; p.connect(s).connect(this.delaySend);
+            o.start(t); o.stop(t + 0.18);
         };
-        const riser = (t, dur, vol = 1) => {
+        const lead = (t, m, dur) => {
+            const o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+            o.type = 'sawtooth'; o2.type = 'sawtooth';
+            o.frequency.value = mtof(m); o2.frequency.value = mtof(m); o2.detune.value = 9;
+            lfo.frequency.value = 5.5; lg.gain.value = 6; lfo.connect(lg); lg.connect(o.detune); lg.connect(o2.detune);
+            f.type = 'lowpass'; f.frequency.value = 3400; f.Q.value = 2;
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+            g.gain.setValueAtTime(0.16, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+            o.connect(f); o2.connect(f); f.connect(g).connect(this.musicBus);
+            const s = c.createGain(); s.gain.value = 0.5; g.connect(s).connect(this.delaySend);
+            [o, o2, lfo].forEach(x => { x.start(t); x.stop(t + dur + 0.02); });
+        };
+        const acid = (t, m, accent) => {
+            const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+            o.type = 'sawtooth'; o.frequency.value = mtof(m);
+            f.type = 'lowpass'; f.Q.value = 14;
+            const peak = accent ? 2600 : 1400;
+            f.frequency.setValueAtTime(peak, t); f.frequency.exponentialRampToValueAtTime(220, t + sixteenth * 0.85);
+            g.gain.setValueAtTime(accent ? 0.17 : 0.11, t); g.gain.exponentialRampToValueAtTime(0.001, t + sixteenth * 0.9);
+            o.connect(f).connect(g).connect(this.duck);
+            o.start(t); o.stop(t + sixteenth);
+        };
+        const riser = (t, dur) => {
             const n = noise(), bp = c.createBiquadFilter(), g = c.createGain();
-            bp.type = 'bandpass'; bp.Q.value = 1.6;
-            bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(11000, t + dur);
-            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.26 * vol, t + dur);
-            n.connect(bp).connect(g).connect(this.inst);
-            send(g, this.revSend, 0.4);
+            bp.type = 'bandpass'; bp.Q.value = 2;
+            bp.frequency.setValueAtTime(350, t); bp.frequency.exponentialRampToValueAtTime(9000, t + dur);
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + dur);
+            n.connect(bp).connect(g).connect(this.musicBus);
             n.start(t, Math.random()); n.stop(t + dur);
-            // ピッチが上がるシンセ
-            const o = c.createOscillator(), og = c.createGain(), of = c.createBiquadFilter();
-            o.type = 'sawtooth'; o.frequency.setValueAtTime(mtof(45), t); o.frequency.exponentialRampToValueAtTime(mtof(81), t + dur);
-            of.type = 'lowpass'; of.frequency.setValueAtTime(600, t); of.frequency.exponentialRampToValueAtTime(8000, t + dur);
-            og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.07 * vol, t + dur);
-            o.connect(of).connect(og).connect(this.inst);
-            o.start(t); o.stop(t + dur);
         };
-        const impact = t => {
-            const n = noise(), lp = c.createBiquadFilter(), g = c.createGain();
-            lp.type = 'lowpass'; lp.frequency.setValueAtTime(9000, t); lp.frequency.exponentialRampToValueAtTime(300, t + 1.8);
-            g.gain.setValueAtTime(0.32, t); g.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
-            n.connect(lp).connect(g).connect(this.inst);
-            send(g, this.revSend, 0.6);
-            n.start(t, Math.random()); n.stop(t + 2.1);
-            const o = c.createOscillator(), og = c.createGain();
-            o.type = 'sine'; o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(30, t + 1.2);
-            og.gain.setValueAtTime(0.6, t); og.gain.exponentialRampToValueAtTime(0.001, t + 1.3);
-            o.connect(og).connect(this.musicBus); o.start(t); o.stop(t + 1.35);
+        const crash = t => {
+            const n = noise(), hp = c.createBiquadFilter(), g = c.createGain();
+            hp.type = 'highpass'; hp.frequency.value = 4500;
+            g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+            n.connect(hp).connect(g).connect(this.musicBus);
+            const s = c.createGain(); s.gain.value = 0.3; g.connect(s).connect(this.delaySend);
+            n.start(t, Math.random()); n.stop(t + 1.7);
         };
+
+        const ARP = [0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1, 2, 3];
+        const LEAD_A = [2, null, 1, null, 0, null, 1, 2];        // 8分音符×8（1小節目）
+        const LEAD_B = [3, null, null, 2, null, 1, null, null];  // 2小節目
 
         while (this.nextNoteTime < c.currentTime + 0.12) {
             const t = this.nextNoteTime;
@@ -691,77 +624,55 @@ class AudioHandler {
             const s16 = step % 16;
             const bar = Math.floor(step / 16);
             const ch = CHORDS[Math.floor(bar / 2)];
-            const isDrop = (this.loopCount || 0) % 2 === 1;
+            const lastBar = bar === 7;
 
             if (s16 === 0) this.barTrigger = true;
 
-            if (!isDrop) {
-                // ================= BUILD =================
-                if (step === 0) {
-                    this.buildLP.frequency.cancelScheduledValues(t);
-                    this.buildLP.frequency.setValueAtTime(700, t);
-                    this.buildLP.frequency.exponentialRampToValueAtTime(18000, t + sixteenth * 124);
+            // --- ドラム ---
+            const breakdown = lastBar && s16 >= 12 && bgmStage >= 3; // 8小節目の最後の拍はキックを抜く
+            if (s16 % 4 === 0 && !breakdown) { kick(t); visualBeat = 1.0; }
+            if (s16 % 4 === 2) hat(t, true);
+            if (bgmStage >= 2 && s16 % 2 === 1) hat(t, false, 0.8);
+            if (bgmStage >= 4 && s16 % 4 === 0) hat(t, false, 0.5);
+            if (bgmStage >= 2 && (s16 === 4 || s16 === 12) && !breakdown) clap(t);
+            if (bgmStage >= 3 && lastBar && s16 >= 8) snareRoll(t, 0.4 + (s16 - 8) / 8 * 0.8);
+            if (bgmStage >= 2 && step === 0) crash(t);
+            if (bgmStage >= 5 && step === 96) riser(t, sixteenth * 32);
+
+            // --- ベース: オフビートのローリング（1拍の2〜4つ目の16分）---
+            if (s16 % 4 !== 0) bass(t, ch.bass + 12, s16 % 4 === 2);
+
+            // --- パッド: 2小節ごとの和音（ポンピング）---
+            if (step % 32 === 0) supersaw(t, ch.tones, sixteenth * 31, bgmStage >= 2 ? 0.05 : 0.065, 1400);
+
+            // --- スタブ: シンコペーションの和音 ---
+            if (bgmStage >= 2 && [3, 6, 10, 14].includes(s16)) supersaw(t, ch.tones.map(m => m + 12), sixteenth * 1.4, 0.065, 2600, 0.35);
+
+            // --- アルペジオ ---
+            if (bgmStage >= 3) {
+                const pool = [...ch.tones, ch.tones[0] + 12, ch.tones[1] + 12].map(m => m + 12 + (bgmStage >= 6 ? 12 : 0));
+                const m = pool[ARP[s16] % pool.length];
+                pluck(t, m, 0.075, Math.sin(step * 0.7) * 0.6);
+            }
+
+            // --- アシッド（5面〜）---
+            if (bgmStage >= 5 && s16 % 2 === 0) {
+                const pat = [0, 12, 0, 7, 0, 12, 10, 0];
+                acid(t, ch.bass + 24 + pat[(s16 / 2) % 8], s16 % 8 === 4);
+            }
+
+            // --- リード（4面〜、8分音符）---
+            if (bgmStage >= 4 && s16 % 2 === 0) {
+                const phrase = bar % 2 === 0 ? LEAD_A : LEAD_B;
+                const idx = phrase[s16 / 2];
+                if (idx !== null) {
+                    const pool = [...ch.tones, ch.tones[0] + 12, ch.tones[1] + 12].map(m => m + 12);
+                    lead(t, pool[idx], sixteenth * 3);
                 }
-                const silent = bar === 7 && s16 >= 12; // ドロップ直前の一拍だけ無音
-                if (s16 % 4 === 0 && !silent) { kick(t, bar >= 6 ? 0.8 : 1); visualBeat = 1.0; }
-                if (s16 % 4 === 2) hat(t, true, 0.8);
-                if (bgmStage >= 2 && s16 % 2 === 1) hat(t, false, 0.7);
-                if (bar < 6 && (s16 === 4 || s16 === 12)) clap(t, 0.7);
-                // スネアビルド: 6小節目から4分→8分→16分と細かく
-                if (bar === 6 && s16 % 4 === 0) snareBuild(t, 0.5);
-                if (bar === 7 && !silent && (s16 < 8 ? s16 % 2 === 0 : true)) snareBuild(t, 0.5 + s16 / 16 * 0.6);
-                if (step === 64) riser(t, sixteenth * 60, bgmStage >= 5 ? 1.2 : 1);
-                // プラックの刻み（シンコペーション）
-                if ([0, 3, 6, 10, 12].includes(s16) && !silent) pluck(t, ch.tones.map(m => m + 12), 0.22);
-                // ベース（ビルドは4分の裏で軽く）
-                if (s16 % 4 === 2 && bar < 7) bass(t, ch.root + 12, sixteenth * 1.8, 0.55);
-                // アルペジオ（3面〜）
-                if (bgmStage >= 3 && !silent) {
-                    const pool = [...ch.tones, ch.tones[0] + 12].map(m => m + 12);
-                    const ARP = [0, 2, 1, 3, 4, 3, 1, 2];
-                    arpNote(t, pool[ARP[s16 % 8] % pool.length], 0.11, Math.sin(step * 0.9) * 0.5);
-                }
-            } else {
-                // ================= DROP =================
-                if (step === 0) {
-                    this.buildLP.frequency.cancelScheduledValues(t);
-                    this.buildLP.frequency.setValueAtTime(20000, t);
-                    impact(t);
-                }
-                if (s16 % 4 === 0) { kick(t); visualBeat = 1.0; }
-                if (s16 === 4 || s16 === 12) clap(t);
-                if (s16 % 4 === 2) hat(t, true);
-                if (s16 % 2 === 1) hat(t, false, bgmStage >= 3 ? 1 : 0.6);
-                if (bgmStage >= 3 && s16 % 4 === 3) hat(t, false, 0.5);
-                // ベース: 8分の裏（ポンピングで「ズンッ・ワッ」）
-                if (s16 % 4 === 2) bass(t, ch.root + 12, sixteenth * 2, 0.9);
-                if (s16 % 4 === 0 && bar % 2 === 1 && s16 === 12) bass(t, ch.root + 24, sixteenth, 0.5); // 小節末のアクセント
-                // オフビートのコードスタブ（ビッグルームの「ワッ」）
-                if (s16 % 4 === 2) supersaw(t, ch.tones, sixteenth * 1.7, bgmStage >= 2 ? 0.07 : 0.085, 3800, { env: 0.12, rev: 0.3 });
-                // フック（2面〜）
-                if (bgmStage >= 2 && s16 % 2 === 0) {
-                    const i8 = (step >> 1) % 64;
-                    const v = HOOK[i8];
-                    if (typeof v === 'number') {
-                        let len = 1; while (len < 8 && HOOK[(i8 + len) % 64] === '-') len++;
-                        const dur = sixteenth * 2 * len;
-                        const notes = bgmStage >= 6 ? [v, v + 12] : bgmStage >= 3 ? [v, v - 12] : [v];
-                        supersaw(t, notes, dur, 0.075, 5200, { atk: 0.004, rel: 0.05, rev: 0.4, dly: 0.22, hp: 300 });
-                    }
-                }
-                // カウンターのアルペジオ（4面〜）
-                if (bgmStage >= 4) {
-                    const pool = [...ch.tones, ch.tones[0] + 12].map(m => m + 24);
-                    const ARP = [0, 1, 2, 3, 4, 3, 2, 1];
-                    arpNote(t, pool[ARP[s16 % 8] % pool.length], 0.075, Math.cos(step * 0.7) * 0.6);
-                }
-                // ドロップ後半の盛り上げ（5面〜）
-                if (bgmStage >= 5 && step === 96) riser(t, sixteenth * 32, 0.6);
             }
 
             this.nextNoteTime += sixteenth;
             this.current16th = (this.current16th + 1) % 128;
-            if (this.current16th === 0) this.loopCount = (this.loopCount || 0) + 1;
         }
     }
 
@@ -772,7 +683,6 @@ class AudioHandler {
             try { this.musicBus.gain.setValueAtTime(0, this.ctx.currentTime); this.musicBus.disconnect(); } catch (e) {}
             this.musicBus = null;
         }
-        this.loopCount = 0;
         this.bgmOscillators = [];
     }
 
