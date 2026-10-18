@@ -240,17 +240,17 @@ const IS_MOBILE = (() => {
     return matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
 })();
 const config = {
-    canvasWidth: IS_MOBILE ? 600 : 1067, // PC: 16:9（オリジナルは800） / スマホ: 縦画面
+    canvasWidth: IS_MOBILE ? 780 : 1067, // PC: 16:9（オリジナルは800） / スマホ: 縦画面
     canvasHeight: IS_MOBILE ? 1120 : 780, // 奥行き
     playerSpeed: 300,
     playerSlowModeMultiplier: 0.5,
-    playerHitboxRadius: 3,
+    playerHitboxRadius: IS_MOBILE ? 4.5 : 3, // スマホは一回り大きく
     playerVisualSize: 16,
-    initialCometSpeed: IS_MOBILE ? 345 : 288, // スマホは縦長なので速め
-    cometSpeedIncrease: IS_MOBILE ? 0.084 : 0.07,
+    initialCometSpeed: IS_MOBILE ? 400 : 288, // スマホは縦長なので速め
+    cometSpeedIncrease: IS_MOBILE ? 0.097 : 0.07,
     distanceScoreMultiplier: 1,
     cometSpawnInterval: 12,
-    cometSpawnAmount: IS_MOBILE ? 2.7 : 4, // 横幅あたりの密度をオリジナル(800幅で3個)と同じに
+    cometSpawnAmount: IS_MOBILE ? 4.05 : 4, // 横幅あたりの密度をオリジナル(800幅で3個)と同じに
     cometCoreRadius: 5,
     starCount: 50,
     starScrollMultiplier: 16,
@@ -931,7 +931,7 @@ class AudioHandler {
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
 const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
-const HUD_W = config.canvasWidth; // 16:9
+const HUD_W = IS_MOBILE ? 600 : config.canvasWidth; // PC 16:9 / スマホは表示幅600（フィールドは780で画面いっぱいに）
 const HUD_H = IS_MOBILE ? 1067 : 600; // 表示の高さ（フィールドの奥行きとは別）
 const TITLE_S = IS_MOBILE ? 1.3 : 1, TITLE_PIV = 380; // スマホはタイトル画面を拡大
 const MENU_DY = (HUD_H - 600) / 2; // タイトル等を縦中央に置くためのずらし量
@@ -2183,9 +2183,9 @@ let bossCount = 0; // 出現した通算数（種類のローテーションに�
 // スマホは軽いLambertマテリアルで代用（金属感の計算を省く）
 class LiteMat extends THREE.MeshLambertMaterial { constructor(p = {}) { const q = Object.assign({}, p); delete q.metalness; delete q.roughness; super(q); } }
 const StdMat = IS_MOBILE ? LiteMat : THREE.MeshStandardMaterial;
-const BS = IS_MOBILE ? 1.2 : 1.7;
-const ENEMY_SPD = IS_MOBILE ? 1.25 : 1; // スマホは雑魚敵の動きを速めに
-const VS = IS_MOBILE ? 1.6 : 1; // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
+const BS = IS_MOBILE ? 1.5 : 1.7;
+const ENEMY_SPD = IS_MOBILE ? 1.4 : 1; // スマホは雑魚敵の動きを速めに
+const VS = IS_MOBILE ? 2.0 : 1; // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
 
 function bossShoot(x, y, angle, speed, radius = 4) {
@@ -3072,8 +3072,8 @@ scene.background = BG_BASE.clone();
 scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
 
 camera = new THREE.PerspectiveCamera(IS_MOBILE ? 40 : 48, VW / VH, 1, 6000);
-const CAM_BASE = IS_MOBILE ? new THREE.Vector3(0, 1525, 875) : new THREE.Vector3(0, 740, 480);
-const CAM_LOOK = IS_MOBILE ? new THREE.Vector3(0, 0, 70) : new THREE.Vector3(0, 0, 60);
+const CAM_BASE = IS_MOBILE ? new THREE.Vector3(0, 1950, 300) : new THREE.Vector3(0, 740, 480);
+const CAM_LOOK = IS_MOBILE ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, 0, 60);
 const LIFT_T = 0.76; // スマホのボス: カメラまでの距離を76%に（約1.3倍に見える）
 function liftToCam(o) { o.position.sub(CAM_BASE).multiplyScalar(LIFT_T).add(CAM_BASE); }
 
@@ -3628,7 +3628,7 @@ function makeHub(armCount = 8, accent = 0x22e6ff, core = 0xffb030) {
     return g;
 }
 const titleHub = makeHub(10);
-titleHub.scale.setScalar(IS_MOBILE ? 2.0 : 2.6);
+titleHub.scale.setScalar(IS_MOBILE ? 2.5 : 2.6);
 titleHub.position.set(0, -260, -40);
 scene.add(titleHub);
 const titleHubInner = makeHub(6, 0xff3cf0, 0xffffff);
@@ -3638,7 +3638,7 @@ scene.add(titleHubInner);
 const orbitRings = [];
 for (let i = 0; i < 3; i++) {
     const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry((260 + i * 70) * (IS_MOBILE ? 0.8 : 1), 3, 4, 64), mat);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry((260 + i * 70) * (IS_MOBILE ? 1.0 : 1), 3, 4, 64), mat);
     ring.position.copy(titleHub.position);
     scene.add(ring);
     orbitRings.push({ ring, mat });
@@ -4355,7 +4355,7 @@ function render3D() {
     if (gameState === 'playing') speedRatio = currentCometSpeed / config.initialCometSpeed;
     else if (frozen) speedRatio = 0;
     else speedRatio = 0.3;
-    const targetSpeed = (IS_MOBILE ? 470 : 360) * speedRatio * (1 + (stage - 1) * 0.05);
+    const targetSpeed = (IS_MOBILE ? 560 : 360) * speedRatio * (1 + (stage - 1) * 0.05);
     worldSpeedSmooth += (targetSpeed - worldSpeedSmooth) * Math.min(1, dt * 2);
     const ws = frozen ? 0 : worldSpeedSmooth * (1 + warpBoost * 3.5);
 
