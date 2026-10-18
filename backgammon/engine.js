@@ -4,8 +4,8 @@ let ready = null;
 async function init() {
   try {
     const j = await fetch('weights.json').then(r => r.json());
-    const net = new BG.Net(j.nh, new Float32Array(j.w));
-    BG.setNet(net);
+    if (j.contact && BG.setNets) BG.setNets(j);          // contact + race nets (GNUbg-style inputs)
+    else BG.setNet(new BG.Net(j.nh, new Float32Array(j.w)));
   } catch (e) { console.warn('net weights unavailable', e); }
   try {
     const res = await fetch('bearoff.bin.gz');

@@ -361,8 +361,64 @@ function decodeGame(str) {
 
 // ---------------------------------------------------------------------------------------------- neural evaluator
 // Inputs from the perspective of the side ON ROLL (s): its features first, then the opponent's.
-// Per side: 24 points x 4 (n>=1, n>=2, n>=3, (n-3)/2), bar n/2, off n/15 -> 98; plus 6 shared features.
-const NIN = 98 * 2 + 6;
+// Per side: 24 points x 4 (n>=1, n>=2, n>=3, (n-3)/2), bar n/2, off n/15 -> 98, then 12 GNUbg-style contact features
+// (break-contact pips, rear checker, anchors, chance of being hit, escapes / containment, entering, prime, home board);
+// finally 3 pip-count features. Two nets: one for contact positions, one for races (bear-offs use the database).
+const NRAW = 98, NSF = 12, NIN = (NRAW + NSF) * 2 + 3;
+// GNUbg escape table: bit i set = point at distance i+1 blocked; counts rolls (of 36) that jump past with the full roll
+const ESC = new Uint8Array(4096);
+for (let i = 0; i < 4096; i++) { let c = 0; for (let a = 0; a <= 5; a++) for (let b = 0; b <= a; b++) if (!(i & (1 << (a + b + 1))) && !((i & (1 << a)) && (i & (1 << b)))) c += a === b ? 1 : 2; ESC[i] = c; }
+const _blk = new Uint8Array(26), _opn = new Uint8Array(26), _att = new Int8Array(16), _blt = new Int8Array(16);
+// rolls (of 36) on which a checker of side X at X-point b passes the blockade of side Y (blocked: Y owns X-point)
+function escapes(blk, b) {
+  let af = 0; const m = Math.min(b - 1, 12);
+  for (let i = 0; i < m; i++) if (blk[b - i - 1]) af |= 1 << i;
+  return ESC[af];
+}
+function sideFeatures(p, X, x, k) {
+  const m = X * 26, o = 26 - m;
+  // _blk[i]: Y has a point at X-point i; _opn[i]: X does NOT have a point at X-point i (for Y's landing)
+  for (let i = 1; i <= 24; i++) { _blk[i] = p[o + 25 - i] >= 2 ? 1 : 0; _opn[i] = p[m + i] >= 2 ? 0 : 1; }
+  _opn[0] = 1;
+  let back = 0; for (let i = 25; i >= 1; i--) if (p[m + i]) { back = i; break; }
+  let yback = 0; for (let j = 25; j >= 1; j--) if (p[o + j]) { yback = j; break; }
+  const lim = 25 - yback;   // X checkers above X-point lim still have to pass Y's rear checker
+  let brk = 0; for (let i = lim + 1; i <= 25; i++) if (p[m + i]) brk += p[m + i] * (i - lim);
+  let bAnc = 0, nAnc = 0; for (let i = 19; i <= 24; i++) if (p[m + i] >= 2) { bAnc = i - 18; nAnc++; }
+  // chance that Y hits at least one X blot next roll
+  let nb = 0, na = 0;
+  for (let i = 1; i <= 24; i++) if (p[m + i] === 1) _blt[nb++] = i;
+  let hit = 0;
+  if (nb) {
+    if (p[o + 25] > 0) _att[na++] = 0; else for (let j = 1; j <= 24; j++) if (p[o + j]) { const A = 25 - j; if (A < _blt[nb - 1]) _att[na++] = A; }
+    for (let a = 1; a <= 6; a++) for (let b = a; b <= 6; b++) {
+      let h = false;
+      for (let q = 0; q < na && !h; q++) {
+        const A = _att[q];
+        for (let r = 0; r < nb; r++) {
+          const d = _blt[r] - A; if (d <= 0) continue;
+          if (a !== b) {
+            if (d === a || d === b || (d === a + b && (_opn[A + a] || _opn[A + b]))) { h = true; break; }
+          } else if (d % a === 0 && d <= 4 * a) {
+            let ok = true; for (let t = 1; t < d / a; t++) if (!_opn[A + a * t]) { ok = false; break; }
+            if (ok) { h = true; break; }
+          }
+        }
+      }
+      if (h) hit += a === b ? 1 : 2;
+    }
+  }
+  const bEsc = back >= 13 && back <= 24 ? escapes(_blk, back) : 36;
+  let cont = 36; for (let i = 15; i <= 24; i++) { const e = escapes(_blk, i); if (e < cont) cont = e; }
+  let closed = 0; for (let i = 19; i <= 24; i++) if (_blk[i]) closed++;
+  let run = 0, prime = 0; for (let i = 1; i <= 24; i++) { if (p[m + i] >= 2) { run++; if (run > prime) prime = run; } else run = 0; }
+  let home = 0; for (let i = 1; i <= 6; i++) if (p[m + i] >= 2) home++;
+  let backN = 0; for (let i = 19; i <= 25; i++) backN += p[m + i];
+  x[k++] = brk / 152; x[k++] = back / 24; x[k++] = bAnc / 6; x[k++] = nAnc / 2; x[k++] = hit / 36; x[k++] = bEsc / 36;
+  const c = (36 - cont) / 36; x[k++] = c; x[k++] = c * c;
+  x[k++] = p[m + 25] ? (closed / 6) * (closed / 6) : 0; x[k++] = Math.min(prime, 6) / 6; x[k++] = home / 6; x[k++] = backN / 5;
+  return k;
+}
 function features(p, s, x) {
   let k = 0;
   for (const side of [s, 1 - s]) {
@@ -373,13 +429,9 @@ function features(p, s, x) {
     }
     x[k++] = p[m + 25] / 2; x[k++] = p[m] / 15;
   }
+  k = sideFeatures(p, s, x, k); k = sideFeatures(p, 1 - s, x, k);
   const ps = pips(p, s), po = pips(p, 1 - s);
   x[k++] = ps / 167; x[k++] = po / 167; x[k++] = (po - ps) / 40;
-  x[k++] = contact(p) ? 1 : 0;
-  // checkers still back (in the opponent's home board or on the bar)
-  let bs = 0, bo = 0; const ms = s * 26, mo = 26 - ms;
-  for (let i = 19; i <= 25; i++) { bs += p[ms + i]; bo += p[mo + i]; }
-  x[k++] = bs / 5; x[k++] = bo / 5;
   return x;
 }
 function Net(nh, w) {
@@ -397,10 +449,9 @@ Net.prototype.randomize = function (rnd) {
   const w = this.w; rnd = rnd || Math.random;
   for (let i = 0; i < w.length; i++) w[i] = (rnd() * 2 - 1) * 0.1;
 };
-// forward on the feature vector this.x -> this.y (5 sigmoid outputs)
+// forward on the feature vector this.x -> this.y (5 sigmoid outputs); weights stored input-major per hidden unit
 Net.prototype.forwardX = function () {
   const w = this.w, x = this.x, h = this.h, y = this.y, ni = this.ni, nh = this.nh;
-  // sparse inputs: collect non-zero indices once
   const nz = this._nz || (this._nz = new Int32Array(ni)); let nn = 0;
   for (let i = 0; i < ni; i++) if (x[i] !== 0) nz[nn++] = i;
   for (let j = 0; j < nh; j++) {
@@ -510,13 +561,16 @@ function bearoffEval(p, s) {
 function boExpected(p, s) { const d = boDist(boIndexPos(p, s)); let e = 0; for (let n = 0; n < d.length; n++) e += n * d[n]; return e; }
 
 // ---------------------------------------------------------------------------------------------- evaluation
-let NET = null;
+let NET = null, NETR = null;
 function setNet(net) { NET = net; }
+// j: {contact:{nh,w}, race:{nh,w}} (w: arrays)
+function setNets(j) { NET = j && j.contact ? new Net(j.contact.nh, Float32Array.from(j.contact.w)) : null; NETR = j && j.race ? new Net(j.race.nh, Float32Array.from(j.race.w)) : null; }
 // static evaluation of position p with side s on roll -> probabilities (on-roll perspective)
 function evalPos(p, s) {
   const w = winner(p);
   if (w >= 0) { const k = winKind(p, w); const me = w === s; return me ? [1, k >= 2 ? 1 : 0, k >= 3 ? 1 : 0, 0, 0] : [0, 0, 0, k >= 2 ? 1 : 0, k >= 3 ? 1 : 0]; }
   if (isBearoffPos(p)) return bearoffEval(p, s);
+  if (NETR && !contact(p)) return sanitize(NETR.forward(p, s));
   if (NET) return sanitize(NET.forward(p, s));
   return heurEval(p, s);
 }
@@ -764,7 +818,7 @@ function aiChoosePlay(pos, side, dice, level, tag) {
   }
   if (level === 8) return analyzePlays(pos, side, dice[0], dice[1], { ply: 1, keep1: 6, margin1: 0.2 })[0];
   if (level === 9) return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 6, margin1: 0.2, keep2: 2, margin2: 0.05, deadline: nowMs() + 900 })[0];
-  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1400 })[0];
+  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1200 })[0];
 }
 // pre-roll cubeless probabilities for side on roll at a depth
 
@@ -786,13 +840,13 @@ function aiCube(level, pos, side, ctx, takerView) {
 
 
 Object.assign(BG, {
-  aiChoosePlay, aiCube,
+  aiChoosePlay, aiCube, setNets, escapes,
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,
   boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, evalRoll, buildMET, mwc,
   janowski, cubeDecision, cubeAvailable,
-  get NET() { return NET; }, get BO() { return BO; }
+  get NET() { return NET; }, get NETR() { return NETR; }, get BO() { return BO; }
 });
 if (typeof module !== 'undefined' && module.exports) module.exports = BG;
 else root.BG = BG;

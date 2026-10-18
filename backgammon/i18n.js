@@ -1,6 +1,8 @@
 // UI strings for Backgammon V2 — ja / en / zh / ko / es / fr / pt / de / hi / ar
 var I18N = window.I18N = {};
 I18N.ja = {
+  'land.tip': '横画面でも遊べます！', 'land.tipSub': '右上のボタンで、スマホを横にした大きな盤面に切り替えられます。', 'land.go': '横画面にする', 'land.keep': 'このまま',
+  'land.title': '横画面で遊ぶ（スマホ）', 'land.on': '横画面 ON', 'land.off': '横画面 OFF',
   'series': '世界のボドゲ大全',
   'tag.noshots': '残るブロットに相手の当たり目はありません。',
   'meta.title': 'バックギャモン V2', 'title': 'バックギャモン', 'back': 'ゲーム一覧', 'p0': '金', 'p1': '黒', 'you': 'あなた', 'pips': 'ピップ', 'pt': '点',
@@ -87,6 +89,8 @@ I18N.ja = {
   'ls.why.take': '{c}の勝率は約{p}%（ギャモン負け{l}%）。テイクすべき局面です（テイク後の期待値 {tk} ＞ パスの −1）。', 'ls.why.pass': '{c}の勝率は約{p}%（ギャモン負け{l}%）。テイクすると平均で−1以上失うのでパスが正解です（テイク後 {tk} ＜ −1）。',
 };
 I18N.en = {
+  'land.tip': 'You can also play in landscape!', 'land.tipSub': 'Use the button at the top right to switch to a bigger, sideways board.', 'land.go': 'Go landscape', 'land.keep': 'Keep as is',
+  'land.title': 'Play in landscape (phone)', 'land.on': 'Landscape on', 'land.off': 'Landscape off',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'Your opponent has no shot at your blots.',
   'meta.title': 'Backgammon V2', 'title': 'Backgammon', 'back': 'All games', 'p0': 'Gold', 'p1': 'Black', 'you': 'You', 'pips': 'pips', 'pt': 'pt',
@@ -172,6 +176,8 @@ I18N.en = {
   'ls.why.take': '{c} wins about {p}% (loses a gammon {l}%). A take (equity after taking {tk} > −1 for passing).', 'ls.why.pass': '{c} wins about {p}% (loses a gammon {l}%). Taking would cost more than one point on average, so pass (after taking {tk} < −1).',
 };
 I18N.zh = {
+  'land.tip': '也可以横屏玩！', 'land.tipSub': '点击右上角按钮，即可切换为更大的横屏棋盘。', 'land.go': '切换横屏', 'land.keep': '保持现状',
+  'land.title': '横屏游玩（手机）', 'land.on': '横屏 开', 'land.off': '横屏 关',
   'series': 'World Board Game Atlas',
   'tag.noshots': '对手没有任何骰子能打中你的孤子。',
   'meta.title': '双陆棋 V2', 'title': '双陆棋', 'back': '游戏列表', 'p0': '金', 'p1': '黑', 'you': '你', 'pips': '点数', 'pt': '分',
@@ -257,6 +263,8 @@ I18N.zh = {
   'ls.why.take': '{c}胜率约{p}%（被全胜{l}%）。应该接受（接受后的期望值 {tk} > 放弃的 −1）。', 'ls.why.pass': '{c}胜率约{p}%（被全胜{l}%）。接受平均会损失超过1分，所以放弃（接受后 {tk} < −1）。',
 };
 I18N.ko = {
+  'land.tip': '가로 화면으로도 즐길 수 있어요!', 'land.tipSub': '오른쪽 위 버튼으로 더 큰 가로 화면 보드로 바꿀 수 있습니다.', 'land.go': '가로 화면으로', 'land.keep': '이대로',
+  'land.title': '가로 화면으로 플레이 (휴대폰)', 'land.on': '가로 화면 켬', 'land.off': '가로 화면 끔',
   'series': 'World Board Game Atlas',
   'tag.noshots': '상대는 내 블롯을 맞힐 주사위가 없습니다.',
   'meta.title': '백개먼 V2', 'title': '백개먼', 'back': '게임 목록', 'p0': '금', 'p1': '흑', 'you': '나', 'pips': '핍', 'pt': '점',
@@ -342,6 +350,8 @@ I18N.ko = {
   'ls.why.take': '{c}의 승률은 약 {p}%(개먼 패 {l}%). 테이크해야 합니다(테이크 후 기대값 {tk} > 패스의 −1).', 'ls.why.pass': '{c}의 승률은 약 {p}%(개먼 패 {l}%). 테이크하면 평균 1점 넘게 잃으므로 패스가 정답입니다(테이크 후 {tk} < −1).',
 };
 I18N.es = {
+  'land.tip': '¡También puedes jugar en horizontal!', 'land.tipSub': 'Usa el botón de arriba a la derecha para ver un tablero más grande en horizontal.', 'land.go': 'Poner horizontal', 'land.keep': 'Dejar así',
+  'land.title': 'Jugar en horizontal (móvil)', 'land.on': 'Horizontal activado', 'land.off': 'Horizontal desactivado',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'Tu rival no tiene ningún tiro contra tus blots.',
   'meta.title': 'Backgammon V2', 'title': 'Backgammon', 'back': 'Todos los juegos', 'p0': 'Oro', 'p1': 'Negro', 'you': 'Tú', 'pips': 'pips', 'pt': 'pt',
@@ -427,6 +437,8 @@ I18N.es = {
   'ls.why.take': '{c} gana un {p}% aprox. (pierde gammon {l}%). Hay que aceptar (equity tras aceptar {tk} > −1 al rechazar).', 'ls.why.pass': '{c} gana un {p}% aprox. (pierde gammon {l}%). Aceptar costaría de media más de un punto, así que se rechaza (tras aceptar {tk} < −1).',
 };
 I18N.fr = {
+  'land.tip': 'Vous pouvez aussi jouer en paysage !', 'land.tipSub': 'Le bouton en haut à droite affiche un plateau plus grand, à l’horizontale.', 'land.go': 'Passer en paysage', 'land.keep': 'Garder ainsi',
+  'land.title': 'Jouer en paysage (mobile)', 'land.on': 'Paysage activé', 'land.off': 'Paysage désactivé',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'L\'adversaire n\'a aucun coup sur vos blots.',
   'meta.title': 'Backgammon V2', 'title': 'Backgammon', 'back': 'Tous les jeux', 'p0': 'Or', 'p1': 'Noir', 'you': 'Vous', 'pips': 'pips', 'pt': 'pt',
@@ -512,6 +524,8 @@ I18N.fr = {
   'ls.why.take': '{c} gagne environ {p} % (perd un gammon {l} %). Il faut accepter (équité après acceptation {tk} > −1 en refusant).', 'ls.why.pass': '{c} gagne environ {p} % (perd un gammon {l} %). Accepter coûterait plus d\'un point en moyenne : refusez (après acceptation {tk} < −1).',
 };
 I18N.pt = {
+  'land.tip': 'Você também pode jogar na horizontal!', 'land.tipSub': 'Use o botão no canto superior direito para ver um tabuleiro maior na horizontal.', 'land.go': 'Virar para horizontal', 'land.keep': 'Deixar assim',
+  'land.title': 'Jogar na horizontal (celular)', 'land.on': 'Horizontal ativado', 'land.off': 'Horizontal desativado',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'O adversário não tem nenhum tiro nos seus blots.',
   'meta.title': 'Gamão V2', 'title': 'Gamão', 'back': 'Todos os jogos', 'p0': 'Ouro', 'p1': 'Preto', 'you': 'Você', 'pips': 'pips', 'pt': 'pt',
@@ -597,6 +611,8 @@ I18N.pt = {
   'ls.why.take': '{c} vence cerca de {p}% (perde gammon {l}%). Deve aceitar (equity após aceitar {tk} > −1 ao recusar).', 'ls.why.pass': '{c} vence cerca de {p}% (perde gammon {l}%). Aceitar custaria mais de um ponto em média, então recuse (após aceitar {tk} < −1).',
 };
 I18N.de = {
+  'land.tip': 'Du kannst auch im Querformat spielen!', 'land.tipSub': 'Mit dem Knopf oben rechts wechselst du zu einem größeren Brett im Querformat.', 'land.go': 'Querformat', 'land.keep': 'So lassen',
+  'land.title': 'Im Querformat spielen (Handy)', 'land.on': 'Querformat an', 'land.off': 'Querformat aus',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'Der Gegner hat keinen Treffer auf deine Blots.',
   'meta.title': 'Backgammon V2', 'title': 'Backgammon', 'back': 'Alle Spiele', 'p0': 'Gold', 'p1': 'Schwarz', 'you': 'Du', 'pips': 'Pips', 'pt': 'Pkt',
@@ -682,6 +698,8 @@ I18N.de = {
   'ls.why.take': '{c} gewinnt etwa {p} % (verliert Gammon {l} %). Annehmen (Equity nach Annahme {tk} > −1 bei Aufgabe).', 'ls.why.pass': '{c} gewinnt etwa {p} % (verliert Gammon {l} %). Annehmen würde im Schnitt mehr als einen Punkt kosten, also aufgeben (nach Annahme {tk} < −1).',
 };
 I18N.hi = {
+  'land.tip': 'आप लैंडस्केप में भी खेल सकते हैं!', 'land.tipSub': 'ऊपर दाईं ओर के बटन से बड़े, आड़े बोर्ड पर जाएँ।', 'land.go': 'लैंडस्केप करें', 'land.keep': 'ऐसे ही रहने दें',
+  'land.title': 'लैंडस्केप में खेलें (फ़ोन)', 'land.on': 'लैंडस्केप चालू', 'land.off': 'लैंडस्केप बंद',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'प्रतिद्वंद्वी के पास आपके ब्लॉट पर मारने का कोई पासा नहीं है।',
   'meta.title': 'बैकगैमन V2', 'title': 'बैकगैमन', 'back': 'सभी गेम', 'p0': 'सुनहरा', 'p1': 'काला', 'you': 'आप', 'pips': 'पिप', 'pt': 'अंक',
@@ -767,6 +785,8 @@ I18N.hi = {
   'ls.why.take': '{c} लगभग {p}% जीतता है (गैमन हार {l}%)। स्वीकार करें (स्वीकार के बाद इक्विटी {tk} > छोड़ने पर −1)।', 'ls.why.pass': '{c} लगभग {p}% जीतता है (गैमन हार {l}%)। स्वीकार करने पर औसतन एक अंक से अधिक नुकसान होगा, इसलिए छोड़ें (स्वीकार के बाद {tk} < −1)।',
 };
 I18N.ar = {
+  'land.tip': 'يمكنك اللعب بالوضع الأفقي أيضًا!', 'land.tipSub': 'استخدم الزر في الأعلى لعرض لوحة أكبر بشكل أفقي.', 'land.go': 'تفعيل الوضع الأفقي', 'land.keep': 'إبقاء كما هو',
+  'land.title': 'العب بالوضع الأفقي (الهاتف)', 'land.on': 'الوضع الأفقي مفعّل', 'land.off': 'الوضع الأفقي متوقف',
   'series': 'World Board Game Atlas',
   'tag.noshots': 'لا يملك الخصم أي رمية تصيب قطعك المنفردة.',
   'meta.title': 'طاولة الزهر V2', 'title': 'الطاولة', 'back': 'كل الألعاب', 'p0': 'الذهبي', 'p1': 'الأسود', 'you': 'أنت', 'pips': 'نقطة', 'pt': 'نقطة',

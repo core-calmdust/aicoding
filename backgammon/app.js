@@ -159,7 +159,10 @@ function cancelWorker(which) {
 
 // ====================================================================== sound
 let actx = null;
-function ctx() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+// audio may only start after a user gesture (avoids the browser's autoplay warning when a saved game resumes)
+let userGestured = false;
+for (const ev of ['pointerdown', 'keydown', 'touchstart']) addEventListener(ev, () => { userGestured = true; }, { capture: true, passive: true });
+function ctx() { if (!userGestured && (!navigator.userActivation || !navigator.userActivation.hasBeenActive)) return null; if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
 function noise(a, dur, freq, q, vol, t0) {
   const n = a.createBufferSource(), len = Math.max(1, Math.floor(a.sampleRate * dur)), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
@@ -577,7 +580,11 @@ function commitTurn() {
   if (settings.coach && !isAI(tt.side) && settings.mode !== 'watch' && tt.plays.length > 1) coachRate(tt, moves);
 }
 // ---- pointer interaction
-function unitXY(e) { const r = frameEl.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * G.W, (e.clientY - r.top) / r.height * G.H]; }
+// ---- forced landscape: when the page is CSS-rotated 90deg, map screen coordinates into the page's own frame
+let ROT = false;
+function lp(e) { return ROT ? [e.clientY, innerWidth - e.clientX] : [e.clientX, e.clientY]; }
+function lrect(el) { const r = el.getBoundingClientRect(); return ROT ? { left: r.top, top: innerWidth - r.right, width: r.height, height: r.width } : r; }
+function unitXY(e) { const r = lrect(frameEl), [x, y] = lp(e); return [(x - r.left) / r.width * G.W, (y - r.top) / r.height * G.H]; }
 function hitPoint(ux, uy) {
   // returns view point (1..24), 25 bar, 0 tray, or -1
   if (ux >= G.TX - 0.15 && ux <= G.TX + G.TW + 0.3) return 0;
@@ -604,7 +611,7 @@ frameEl.addEventListener('pointerdown', e => {
   }
   if (p !== 0 && steps.some(x => x.from === p)) {
     const el = topChecker(s, p);
-    drag = { s, p, el, x: e.clientX, y: e.clientY, moved: false, pid: e.pointerId, wasSel: selected && selected.p === p };
+    drag = { s, p, el, x: lp(e)[0], y: lp(e)[1], moved: false, pid: e.pointerId, wasSel: selected && selected.p === p };
     selected = { s, p }; render();
     drag.el = topChecker(s, p);
     try { frameEl.setPointerCapture(e.pointerId); } catch (_) {}
@@ -615,7 +622,7 @@ frameEl.addEventListener('pointerdown', e => {
 });
 frameEl.addEventListener('pointermove', e => {
   if (!drag || e.pointerId !== drag.pid) return;
-  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  const [ex, ey] = lp(e), dx = ex - drag.x, dy = ey - drag.y;
   if (!drag.moved && Math.hypot(dx, dy) > 6) { drag.moved = true; if (drag.el) drag.el.classList.add('drag'); }
   if (drag.moved && drag.el) drag.el.style.transform = `translate(${dx}px,${dy}px) scale(1.08)`;
 });
@@ -1028,10 +1035,10 @@ function renderGraph() {
 }
 (() => {
   const g = $('#graph'); let dragging = false;
-  const idxAt = x => { const r = g.getBoundingClientRect(), n = Math.max(timeline().length, 30); return Math.max(0, Math.min(latestIdx(), Math.round((x - r.left) / r.width * (n - 1)))); };
+  const idxAt = x => { const r = lrect(g), n = Math.max(timeline().length, 30); return Math.max(0, Math.min(latestIdx(), Math.round((x - r.left) / r.width * (n - 1)))); };
   const go = x => { const i = idxAt(x); if (i !== cur) viewAt(i); };
-  g.addEventListener('pointerdown', e => { if (lesson || puzzle || !match) return; dragging = true; try { g.setPointerCapture(e.pointerId); } catch (_) {} go(e.clientX); e.preventDefault(); });
-  g.addEventListener('pointermove', e => { if (dragging) go(e.clientX); });
+  g.addEventListener('pointerdown', e => { if (lesson || puzzle || !match) return; dragging = true; try { g.setPointerCapture(e.pointerId); } catch (_) {} go(lp(e)[0]); e.preventDefault(); });
+  g.addEventListener('pointermove', e => { if (dragging) go(lp(e)[0]); });
   const end = e => { dragging = false; try { g.releasePointerCapture(e.pointerId); } catch (_) {} };
   g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
 })();
@@ -1222,7 +1229,7 @@ function confetti() {
   const cols = ['#e6cd8c', '#fff6dc', '#b39249', '#33363d', '#c9ccd2'];
   for (let i = 0; i < 70; i++) {
     const c = document.createElement('div'); c.className = 'confetti';
-    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
+    c.style.left = Math.random() * 100 + '%'; c.style.background = cols[i % cols.length];
     c.style.setProperty('--dx', (Math.random() - 0.5) * 200 + 'px'); c.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
     c.style.animationDuration = 1.8 + Math.random() * 1.6 + 's'; c.style.animationDelay = Math.random() * 0.4 + 's';
     document.body.appendChild(c); setTimeout(() => c.remove(), 4200);
@@ -1236,6 +1243,58 @@ $('#btnHint').onclick = () => {
   else maybeHint();
   renderInfo(); renderArrows();
 };
+// ---- landscape option for phones: real orientation lock where supported (Android, fullscreen), otherwise rotate the page
+const LAND_STORE = STORE + '-land';
+let landOn = false, landLocked = false;
+try { landOn = localStorage.getItem(LAND_STORE) === '1'; } catch (e) {}
+const mqPortrait = matchMedia('(orientation: portrait)'), mqCoarse = matchMedia('(pointer: coarse)');
+function applyLand() {
+  const rot = landOn && !landLocked && mqCoarse.matches && mqPortrait.matches;
+  if (rot !== ROT) { ROT = rot; document.documentElement.classList.toggle('rot', rot); selected = null; requestAnimationFrame(() => { try { render(); } catch (e) {} }); }
+  $('#btnLand').classList.toggle('on', landOn);
+}
+async function setLand(on) {
+  landOn = on; try { localStorage.setItem(LAND_STORE, on ? '1' : '0'); } catch (e) {}
+  if (on) {
+    landLocked = false;
+    try {
+      if (mqPortrait.matches && screen.orientation && screen.orientation.lock && document.documentElement.requestFullscreen) {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+        await screen.orientation.lock('landscape'); landLocked = true;
+        // some browsers resolve the lock without rotating: fall back to the CSS rotation
+        await sleep(700); if (mqPortrait.matches) landLocked = false;
+      }
+    } catch (e) { landLocked = false; if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (_) {} } }
+  } else {
+    if (landLocked) { try { screen.orientation.unlock(); } catch (e) {} if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (_) {} } }
+    landLocked = false;
+  }
+  applyLand();
+  toast(t(on ? 'land.on' : 'land.off'), 1100);
+}
+$('#btnLand').onclick = () => setLand(!landOn);
+(mqPortrait.addEventListener ? mqPortrait.addEventListener('change', applyLand) : mqPortrait.addListener(applyLand));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && landLocked) { landLocked = false; applyLand(); } });
+// the rotated page must never scroll (focus / scrollIntoView could shift it)
+for (const el of [document.documentElement, document.body]) el.addEventListener('scroll', () => { if (ROT && (el.scrollTop || el.scrollLeft)) { el.scrollTop = 0; el.scrollLeft = 0; } });
+applyLand();
+// ---- one-time tip for phone users in portrait: landscape play is available (queued behind any open dialog)
+const LAND_TIP = STORE + '-landtip';
+function landTipWanted() { try { if (localStorage.getItem(LAND_TIP)) return false; } catch (e) { return false; } return !landOn && mqCoarse.matches && mqPortrait.matches; }
+function pulseLand() { const b = $('#btnLand'); b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 4500); }
+function closeLandTip(on) { hideOverlay('#landTipOverlay'); if (on) setLand(true); setTimeout(pulseLand, 250); }
+$('#ltKeep').onclick = () => closeLandTip(false);
+$('#ltOn').onclick = () => closeLandTip(true);
+if (landTipWanted()) {
+  const iv = setInterval(() => {
+    if (!landTipWanted()) { clearInterval(iv); return; }
+    if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+    clearInterval(iv);
+    try { localStorage.setItem(LAND_TIP, '1'); } catch (e) {}
+    document.body.classList.toggle('no-anim', !settings.anim);
+    showOverlay('#landTipOverlay');
+  }, 700);
+}
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) SFX.tick(); };
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
@@ -1375,7 +1434,7 @@ async function runReview() {
   run.ws.forEach(w => w.terminate()); run.ws = null; run.running = false;
   renderInfo(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (!ROT && matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudgeAt(g, i) { if (!rv || rv.running || !rvOpen || rv.sig !== rvSig()) return null; return rv.items.get(g + ':' + i) || null; }
 function sideLabel(s) { return settings.mode === 'ai' ? (s === humanSide ? t('you') : 'AI') : pname(s); }
 function renderReview() {
@@ -1548,7 +1607,7 @@ document.addEventListener('keydown', e => {
 });
 // clicking outside a dialog = its close button
 (() => {
-  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel' };
+  const OUTSIDE = { landTipOverlay: '#ltKeep', newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel' };
   document.querySelectorAll('.overlay').forEach(o => {
     let down = false;
     o.addEventListener('pointerdown', e => { down = e.target === o; });

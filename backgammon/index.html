@@ -22,15 +22,22 @@
   --brass:#c9a961; --brass2:#8e7440; --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
   --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;
   --onyx1:#7b808a; --onyx2:#33363d; --onyx3:#16181c; --onyx4:#050506;
-  --vh: 100vh;
+  --vh: 100vh; --vw: 100vw;
   --pad: clamp(24px, 5vmin, 72px);
   --gap: clamp(20px, 2.6vw, 44px);
-  --u: min((var(--vh) - var(--pad) * 2) / 12, (100vw - var(--pad) * 2 - var(--gap) - 360px) / 15.85, 70px);
+  --u: min((var(--vh) - var(--pad) * 2) / 12, (var(--vw) - var(--pad) * 2 - var(--gap) - 360px) / 15.85, 70px);
   --fw: calc(var(--u) * 15.85);
   --fh: calc(var(--u) * 12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100dvh){:root{--vh:100dvh}}
+/* forced landscape on a portrait phone: rotate the whole page 90deg (fixed overlays rotate with it) */
+html.rot{--vh:100vw;--vw:100vh}
+@supports (height:100dvh){html.rot{--vw:100dvh}}
+html.rot body{position:fixed;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:0 0;transform:rotate(90deg);overflow:hidden}
+.snd.land{display:none}
+@media (pointer: coarse){.snd.land{display:inline-flex}}
+.snd.land.on{color:var(--accent);border-color:rgba(201,169,97,.6)}
 html,body{height:100%;overflow:hidden}
 body{
   background:
@@ -193,9 +200,9 @@ a.snd.home{text-decoration:none}
 .cubeline{font-size:12.5px;line-height:1.7}
 .cubeline b{color:var(--accent)}
 /* ---------------------------------------------------------------- modal */
-.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px;height:100vh;height:100dvh;bottom:auto}
+.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px;height:100vh;height:var(--vh);bottom:auto}
 .overlay.show{opacity:1;pointer-events:auto}
-.modal{width:min(480px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.modal{width:min(480px,100%);max-height:calc(100vh - 32px);max-height:calc(var(--vh) - 32px);overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
 .overlay.instant,.overlay.instant .modal{transition:none!important}
 .ls-tabs{margin-bottom:16px}
@@ -203,7 +210,7 @@ a.snd.home{text-decoration:none}
 .modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.12em;margin-bottom:16px}
 @media (max-width: 520px), (max-height: 560px){
   .overlay{padding:10px}
-  .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);border-radius:14px}
+  .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(var(--vh) - 20px);border-radius:14px}
   .modal h2{font-size:19px;margin-bottom:12px}
   .ls-tabs{margin-bottom:12px}
 }
@@ -323,6 +330,21 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 .paste-ta:focus{outline:none;border-color:var(--brass2)}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.03em}
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+/* landscape tip */
+.lt-modal{width:min(360px,100%);text-align:center}
+html .lt-modal h2{text-align:center;margin-bottom:6px}
+.lt-sub{font-size:13.5px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+html[lang=ar] .lt-sub{text-align:center}
+.lt-phone{width:120px;height:90px;display:block;margin:0 auto 8px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lt-phone .lt-scr{fill:rgba(201,169,97,.14);stroke:none}
+.lt-phone .lt-arc{stroke:var(--brass);stroke-width:1.8}
+.lt-rot{transform-origin:60px 41px;animation:ltRot 2.6s ease-in-out infinite}
+@keyframes ltRot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(90deg)}100%{transform:rotate(0)}}
+.snd.land.pulse{position:relative;color:var(--accent);border-color:var(--accent)}
+.snd.land.pulse::after{content:"";position:absolute;inset:-3px;border-radius:9px;border:2px solid var(--accent);animation:ltPulse 1.1s ease-out infinite;pointer-events:none}
+@keyframes ltPulse{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.55)}}
+body.no-anim .lt-rot{animation:none;transform:rotate(90deg)}
+@media (prefers-reduced-motion: reduce){.lt-rot{animation:none;transform:rotate(90deg)}.snd.land.pulse::after{animation:none;opacity:.9;transform:none}}
 /* Arabic: text blocks right-to-left, board stays LTR */
 html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .result-sub, .rv-note, .hint-note, .cubeline, .small-note, .choices button, .field > label){direction:rtl;text-align:right}
 html[lang=ar] .modal h2{text-align:right}
@@ -335,42 +357,42 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
 /* ---------------------------------------------------------------- responsive */
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){
   /* phone portrait */
-  :root{--u:min((100vw - 14px) / 15.85, (var(--vh) - 300px) / 12, 60px)}
-  html,body{overflow-x:hidden;overflow-y:auto;height:auto}
-  .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:8px 7px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
-  .side, .side-in{display:contents}
-  .side-in > *{width:var(--fw);max-width:100%;flex:none}
-  .brand{order:-3;height:28px;align-items:center;padding:0 4px}
-  .brand h1{font-size:19px;letter-spacing:.05em}
-  .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
-  .brand-r{gap:6px}
-  .players{order:-2;padding:6px;gap:6px}
-  .board-area{order:-1;flex:none}
-  .lesson-card,.puzzle-card{order:0;flex:none;overflow:visible}
-  .controls{order:1}
-  .hint-card{order:2}
-  #evalCard{order:3}
-  .review-card{order:4}
-  .kifu-card{order:5}
-  .info-line{display:none}
-  .player{padding:6px 9px}
-  .player .count{font-size:22px}
-  .card{padding:10px 12px}
-  .controls{padding:8px;gap:6px}
-  .btn{padding:7px 2px;gap:3px;font-size:11px}
-  .btn svg{width:17px;height:17px}
-  .graph{height:64px}
-  .kifu-card{flex:none;min-height:96px}
-  .kifu{max-height:none;overflow:visible}
-  .review-card.show{flex:none;overflow:visible}
-  #rvBody, #hintBody{overflow:visible}
-  .hint-card.show{min-height:0}
-  .coach{top:calc(var(--u)*.6);font-size:12px}
-  .toast{font-size:13px;padding:10px 16px}
+  html:not(.rot){--u:min((var(--vw) - 14px) / 15.85, (var(--vh) - 300px) / 12, 60px)}
+  html:not(.rot), html:not(.rot) body{overflow-x:hidden;overflow-y:auto;height:auto}
+  html:not(.rot) .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:8px 7px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
+  html:not(.rot) .side, html:not(.rot) .side-in{display:contents}
+  html:not(.rot) .side-in > *{width:var(--fw);max-width:100%;flex:none}
+  html:not(.rot) .brand{order:-3;height:28px;align-items:center;padding:0 4px}
+  html:not(.rot) .brand h1{font-size:19px;letter-spacing:.05em}
+  html:not(.rot) .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
+  html:not(.rot) .brand-r{gap:6px}
+  html:not(.rot) .players{order:-2;padding:6px;gap:6px}
+  html:not(.rot) .board-area{order:-1;flex:none}
+  html:not(.rot) .lesson-card, html:not(.rot) .puzzle-card{order:0;flex:none;overflow:visible}
+  html:not(.rot) .controls{order:1}
+  html:not(.rot) .hint-card{order:2}
+  html:not(.rot) #evalCard{order:3}
+  html:not(.rot) .review-card{order:4}
+  html:not(.rot) .kifu-card{order:5}
+  html:not(.rot) .info-line{display:none}
+  html:not(.rot) .player{padding:6px 9px}
+  html:not(.rot) .player .count{font-size:22px}
+  html:not(.rot) .card{padding:10px 12px}
+  html:not(.rot) .controls{padding:8px;gap:6px}
+  html:not(.rot) .btn{padding:7px 2px;gap:3px;font-size:11px}
+  html:not(.rot) .btn svg{width:17px;height:17px}
+  html:not(.rot) .graph{height:64px}
+  html:not(.rot) .kifu-card{flex:none;min-height:96px}
+  html:not(.rot) .kifu{max-height:none;overflow:visible}
+  html:not(.rot) .review-card.show{flex:none;overflow:visible}
+  html:not(.rot) #rvBody, html:not(.rot) #hintBody{overflow:visible}
+  html:not(.rot) .hint-card.show{min-height:0}
+  html:not(.rot) .coach{top:calc(var(--u)*.6);font-size:12px}
+  html:not(.rot) .toast{font-size:13px;padding:10px 16px}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
-  :root{--u:min((var(--vh) - 14px) / 12, (100vw - 290px) / 15.85, 60px)}
+  :root{--u:min((var(--vh) - 14px) / 12, (var(--vw) - 290px) / 15.85, 60px)}
   .app{padding:7px max(10px, env(safe-area-inset-right)) 7px max(10px, env(safe-area-inset-left));gap:12px;grid-template-columns:auto minmax(220px, 340px)}
   .side{max-height:calc(var(--vh) - 14px);height:calc(var(--vh) - 14px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
   .side::-webkit-scrollbar{display:none}
@@ -399,16 +421,51 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .info-line{display:none}
   .lesson-prompt{font-size:14px}.lesson-fb,.pz-status{font-size:13.5px}
 }
+/* phone landscape header: room for the title next to four controls */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px){ .brand-r{gap:5px} #langSel{max-width:76px} .brand h1{letter-spacing:.02em;font-size:15px} .brand h1 small{display:none} }
+html.rot .brand-r{gap:5px} html.rot #langSel{max-width:76px} html.rot .brand h1{letter-spacing:.02em;font-size:15px} html.rot .brand h1 small{display:none}
+/* forced landscape (CSS-rotated app on a portrait phone): same rules as phone landscape */
+@media (pointer: coarse){
+  /* phone landscape */
+  html.rot{--u:min((var(--vh) - 14px) / 12, (var(--vw) - 290px) / 15.85, 60px)}
+  html.rot .app{padding:7px max(10px, env(safe-area-inset-right)) 7px max(10px, env(safe-area-inset-left));gap:12px;grid-template-columns:auto minmax(220px, 340px)}
+  html.rot .side{max-height:calc(var(--vh) - 14px);height:calc(var(--vh) - 14px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  html.rot .side::-webkit-scrollbar{display:none}
+  html.rot .side-in{gap:7px;height:auto}
+  html.rot .kifu-card{flex:none;min-height:110px}
+  html.rot .kifu{max-height:none;overflow:visible}
+  html.rot .review-card.show{flex:none;overflow:visible}
+  html.rot #rvBody, html.rot #hintBody{overflow:visible}
+  html.rot .hint-card.show{min-height:0}
+  html.rot .lesson-card, html.rot .puzzle-card{flex:none;overflow:visible}
+  html.rot .brand{align-items:center}
+  html.rot .brand h1{font-size:16px;letter-spacing:.06em}
+  html.rot .brand h1 small{font-size:10px;margin-left:5px}
+  html.rot .card{padding:8px 10px;border-radius:12px}
+  html.rot .players{gap:6px;padding:6px}
+  html.rot .player{padding:5px 8px;border-radius:9px}
+  html.rot .player .name{font-size:11px}
+  html.rot .player .count{font-size:18px}
+  html.rot .evalrow{margin-bottom:5px}
+  html.rot .evalbar{height:6px}
+  html.rot .graph{height:50px;margin-top:6px}
+  html.rot .controls{gap:5px;padding:6px}
+  html.rot .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
+  html.rot .btn span{display:none}
+  html.rot .btn svg{width:16px;height:16px}
+  html.rot .info-line{display:none}
+  html.rot .lesson-prompt{font-size:14px}html.rot .lesson-fb, html.rot .pz-status{font-size:13.5px}
+}
 @media (min-height: 561px){
 @container (min-width: 420px){
-  #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
-  #evalCard .graph{flex:1;height:auto;min-height:40px}
-  .kifu-card{flex:1 1 0}
-  .side-in:has(.review-card.show) #evalCard{flex:.5 1 0;min-height:96px}
-  .side-in:has(.review-card.show) #evalCard .graph{min-height:24px}
-  .side-in:has(.hint-card.show) #evalCard{flex:.6 1 0}
-  .player .count{font-size:clamp(30px, 4.2cqw, 46px)}
-  .brand h1{font-size:clamp(18px, calc((100cqw - 200px) / 8.6), 40px)}
+  html:not(.rot) #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
+  html:not(.rot) #evalCard .graph{flex:1;height:auto;min-height:40px}
+  html:not(.rot) .kifu-card{flex:1 1 0}
+  html:not(.rot) .side-in:has(.review-card.show) #evalCard{flex:.5 1 0;min-height:96px}
+  html:not(.rot) .side-in:has(.review-card.show) #evalCard .graph{min-height:24px}
+  html:not(.rot) .side-in:has(.hint-card.show) #evalCard{flex:.6 1 0}
+  html:not(.rot) .player .count{font-size:clamp(30px, 4.2cqw, 46px)}
+  html:not(.rot) .brand h1{font-size:clamp(18px, calc((100cqw - 200px) / 8.6), 40px)}
 }
 }
 /* PC: wide lesson / puzzle dialogs */
@@ -449,7 +506,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   <aside class="side"><div class="side-in">
     <div class="brand">
       <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1><span data-i18n="title"></span><small>V2</small></h1></div>
-      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><button id="btnLand" class="snd land" data-i18n-title="land.title" aria-label="Landscape"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 4.5h6M17 21a4 4 0 0 0 3-3"/><path d="M19.5 16.5 20 18l1.5-.5"/></svg></button><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
 
     <div class="card lesson-card" id="lessonCard">
@@ -665,6 +722,15 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
       <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
     </div>
+  </div>
+</div>
+<!-- one-time landscape tip (phones) -->
+<div class="overlay" id="landTipOverlay">
+  <div class="modal lt-modal">
+    <svg class="lt-phone" viewBox="0 0 120 90" aria-hidden="true"><g class="lt-rot"><rect x="44" y="12" width="32" height="58" rx="6"/><path d="M56 63h8"/><rect class="lt-scr" x="48" y="19" width="24" height="40" rx="2"/></g><path class="lt-arc" d="M90 26a34 34 0 0 1 4 30"/><path class="lt-arc" d="M90 56l4 2 2-4"/></svg>
+    <h2 data-i18n="land.tip"></h2>
+    <p class="lt-sub" data-i18n="land.tipSub"></p>
+    <div class="modal-actions"><button class="mbtn" id="ltKeep" data-i18n="land.keep"></button><button class="mbtn go" id="ltOn" data-i18n="land.go"></button></div>
   </div>
 </div>
 <div class="overlay" id="pasteOverlay">
