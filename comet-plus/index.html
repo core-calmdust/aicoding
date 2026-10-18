@@ -1951,22 +1951,26 @@ function updatePlayingState(dt_sec) {
         const g = gems[i];
         g.age += dt_sec;
         const dx = player.x - g.x, dy = player.y - g.y, d = Math.hypot(dx, dy) || 1;
-        if (g.age > 0.7 && (d < 200 || g.age > 2.2)) {
-            const pull = (g.age > 2.2 ? 4200 : 2600) * dt_sec; // 自機へ吸い込まれる
-            g.vx = (g.vx + dx / d * pull) * 0.88;
-            g.vy = (g.vy + dy / d * pull) * 0.88;
+        if (g.age > 0.25 && d < 120) {
+            // 近づいたものだけ一気に吸い込む
+            const sp = 1100 + (120 - d) * 12;
+            g.vx = dx / d * sp;
+            g.vy = dy / d * sp;
         } else {
-            g.vx *= 0.965;
-            g.vy = g.vy * 0.965 + 90 * dt_sec;
+            // 弾けた勢いはすぐ収まり、ゆっくり落ちていく
+            g.vx *= 0.92;
+            g.vy = g.vy * 0.92 + (1 - 0.92) * 150;
         }
         g.x += g.vx * dt_sec; g.y += g.vy * dt_sec;
-        if (g.x < 12 || g.x > config.canvasWidth - 12) { g.vx *= -0.7; g.x = Math.max(12, Math.min(config.canvasWidth - 12, g.x)); }
-        if (g.y < 12 || g.y > config.canvasHeight - 12) { g.vy *= -0.7; g.y = Math.max(12, Math.min(config.canvasHeight - 12, g.y)); }
+        if (g.x < 12 || g.x > config.canvasWidth - 12) { g.vx *= -0.6; g.x = Math.max(12, Math.min(config.canvasWidth - 12, g.x)); }
+        if (g.y < 12) { g.vy = Math.abs(g.vy) * 0.6; g.y = 12; }
+        if (g.y > config.canvasHeight + 20) { gems.splice(i, 1); continue; }
         if (d < config.playerVisualSize + 16) {
             score += g.value;
             gemCombo++;
             gemComboTimer = 40;
-            scoreTexts.push({ x: g.x, y: g.y, text: `+${g.value}`, life: 40, type: 'gem' });
+            // CAVE風: 得点がジャラジャラと飛び散る
+            scoreTexts.push({ x: player.x + (Math.random() - 0.5) * 60, y: player.y - 20 - Math.random() * 30, text: `${g.value}`, life: 32, type: 'gem', vx: (Math.random() - 0.5) * 2.5 });
             audioHandler.playGem(gemCombo);
             gems.splice(i, 1);
         }
@@ -1976,7 +1980,7 @@ function updatePlayingState(dt_sec) {
     for (let i = scoreTexts.length - 1; i >= 0; i--) {
         const st = scoreTexts[i];
         st.life--;
-        st.y -= 0.5;
+        if (st.type === 'gem') { st.y -= 2.6; st.x += st.vx || 0; } else st.y -= 0.5;
         if (st.life <= 0) {
             scoreTexts.splice(i, 1);
         }
@@ -2204,7 +2208,7 @@ function killBoss() {
     const gemN = 48 + bossCount * 6;
     const gemValue = Math.floor(2500 * stageMultiplier * comboMultiplier);
     for (let i = 0; i < gemN; i++) {
-        const a = Math.random() * Math.PI * 2, sp = 180 + Math.random() * 620;
+        const a = Math.random() * Math.PI * 2, sp = 300 + Math.random() * 900;
         gems.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, age: Math.random() * 0.2, value: gemValue, big: i % 8 === 0 });
     }
     for (let k = 0; k < 7; k++) {
@@ -4351,10 +4355,10 @@ function draw() {
         renderCtx.save();
         renderCtx.textAlign = 'center';
         scoreTexts.forEach(st => {
-            const fontSize = st.type === 'bonus' ? 14 : st.type === 'gem' ? 9 : 10;
+            const fontSize = st.type === 'bonus' ? 14 : st.type === 'gem' ? 12 : 10;
             renderCtx.font = `${fontSize}px ${config.fontFamily}`;
-            const alpha = st.life / 60.0;
-            const hue = (frameCount * 5 + st.x) % 360;
+            const alpha = st.type === 'gem' ? Math.min(1, st.life / 14) : st.life / 60.0;
+            const hue = st.type === 'gem' ? 40 + (st.life * 7) % 30 : (frameCount * 5 + st.x) % 360;
             const scoreColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
             const glowColor = `hsla(${hue}, 100%, 70%, ${alpha / 2})`;
             const sp = project(st.x, st.y, 24);
