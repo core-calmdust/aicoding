@@ -246,11 +246,11 @@ const config = {
     playerSlowModeMultiplier: 0.5,
     playerHitboxRadius: 3,
     playerVisualSize: 16,
-    initialCometSpeed: 288,
-    cometSpeedIncrease: 0.07,
+    initialCometSpeed: IS_MOBILE ? 345 : 288, // スマホは縦長なので速め
+    cometSpeedIncrease: IS_MOBILE ? 0.084 : 0.07,
     distanceScoreMultiplier: 1,
     cometSpawnInterval: 12,
-    cometSpawnAmount: IS_MOBILE ? 2.25 : 4, // 横幅あたりの密度をオリジナル(800幅で3個)と同じに
+    cometSpawnAmount: IS_MOBILE ? 2.7 : 4, // 横幅あたりの密度をオリジナル(800幅で3個)と同じに
     cometCoreRadius: 5,
     starCount: 50,
     starScrollMultiplier: 16,
@@ -1923,12 +1923,12 @@ function updatePlayingState(dt_sec) {
             
             // Movement Update
             if (m.type === 'looper') {
-                m.angle += m.speed * m.direction * dt_sec;
+                m.angle += m.speed * m.direction * dt_sec * ENEMY_SPD;
                 m.x = config.canvasWidth / 2 + Math.cos(m.angle) * (config.canvasWidth / 2.5);
                 m.y = (config.canvasHeight / 4) + Math.sin(m.angle) * (config.canvasHeight / 5);
             } else {
-                m.x += m.vx * dt_sec;
-                m.y += m.vy * dt_sec;
+                m.x += m.vx * dt_sec * ENEMY_SPD;
+                m.y += m.vy * dt_sec * ENEMY_SPD;
             }
 
             // Monster shooting
@@ -2179,7 +2179,11 @@ function updatePlayingState(dt_sec) {
 let boss = null;
 let bossSpawnFrame = -1;
 let bossCount = 0; // 出現した通算数（種類のローテーションに使う）
+// スマホは軽いLambertマテリアルで代用（金属感の計算を省く）
+class LiteMat extends THREE.MeshLambertMaterial { constructor(p = {}) { const q = Object.assign({}, p); delete q.metalness; delete q.roughness; super(q); } }
+const StdMat = IS_MOBILE ? LiteMat : THREE.MeshStandardMaterial;
 const BS = IS_MOBILE ? 1.2 : 1.7;
+const ENEMY_SPD = IS_MOBILE ? 1.25 : 1; // スマホは雑魚敵の動きを速めに
 const VS = IS_MOBILE ? 1.35 : 1; // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
 
@@ -3035,7 +3039,7 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 // =================================================================================
 const W = config.canvasWidth, H = config.canvasHeight; // フィールド
 const VH = HUD_H; // ビューポートの高さ
-const PR = Math.min(window.devicePixelRatio || 1, IS_MOBILE ? 1.0 : 1.25);
+const PR = Math.min(window.devicePixelRatio || 1, IS_MOBILE ? 0.8 : 1.25); // スマホは描画解像度を抑える
 const VW = HUD_W;
 const toX = x => x - W / 2;
 const toZ = y => y - H / 2;
@@ -3149,7 +3153,7 @@ const trailGeo = new THREE.PlaneGeometry(1, 1);
 trailGeo.rotateX(-Math.PI / 2);
 
 function glowInstMaterial(k, extra = {}) {
-    const m = new THREE.MeshStandardMaterial(Object.assign({ color: 0xffffff, flatShading: true, metalness: 0.3, roughness: 0.35 }, extra));
+    const m = new StdMat(Object.assign({ color: 0xffffff, flatShading: true, metalness: 0.3, roughness: 0.35 }, extra));
     m.onBeforeCompile = sh => {
         sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>',
             `#include <emissivemap_fragment>
@@ -3185,7 +3189,7 @@ class GlowBatch {
         const k = this.n * 3;
         this.pos[k] = x; this.pos[k + 1] = y; this.pos[k + 2] = z;
         this.col[k] = c.r * intensity; this.col[k + 1] = c.g * intensity; this.col[k + 2] = c.b * intensity;
-        this.size[this.n] = size;
+        this.size[this.n] = IS_MOBILE ? size * 0.75 : size; // スマホは光の重なりを減らす
         this.n++;
     }
     end() {
@@ -3594,7 +3598,7 @@ world.add(starLines);
 // ---------------------------------
 function makeHub(armCount = 8, accent = 0x22e6ff, core = 0xffb030) {
     const g = new THREE.Group();
-    const metal = new THREE.MeshStandardMaterial({ color: 0x8a8ea8, flatShading: true, metalness: 0.7, roughness: 0.3 });
+    const metal = new StdMat({ color: 0x8a8ea8, flatShading: true, metalness: 0.7, roughness: 0.3 });
     const lineMat = new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.9 });
     const hexGeo = new THREE.CylinderGeometry(24, 24, 16, 6);
     g.add(new THREE.Mesh(hexGeo, metal));
@@ -3780,7 +3784,7 @@ function makeShipGeometry() {
     return g;
 }
 const shipGeo = makeShipGeometry();
-const shipMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.35, flatShading: true, metalness: 0.5, roughness: 0.25, side: THREE.DoubleSide });
+const shipMat = new StdMat({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.35, flatShading: true, metalness: 0.5, roughness: 0.25, side: THREE.DoubleSide });
 const shipEdgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
 const playerGroup = new THREE.Group();
 const shipPivot = new THREE.Group();
@@ -3827,7 +3831,7 @@ function makeItemObj() {
     const g = new THREE.Group();
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x00ff88 });
     const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(24, 24, 24)), edgeMat);
-    const coreMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x00ff88, emissiveIntensity: 0.9, flatShading: true });
+    const coreMat = new StdMat({ color: 0xffffff, emissive: 0x00ff88, emissiveIntensity: 0.9, flatShading: true });
     const core = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), coreMat);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.85 });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(20, 1.1, 4, 40), ringMat);
@@ -3861,7 +3865,7 @@ function buildVoxelModel(art, px, heights) {
     const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 });
     Object.keys(byCode).forEach(code => {
         const geo = mergeGeometries(byCode[code]);
-        const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x000000, flatShading: true, metalness: 0.35, roughness: 0.35 });
+        const mat = new StdMat({ color: 0xffffff, emissive: 0x000000, flatShading: true, metalness: 0.35, roughness: 0.35 });
         mats[code] = mat;
         group.add(new THREE.Mesh(geo, mat));
         group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
@@ -3899,7 +3903,7 @@ function makeMonsterObj(m) {
 // ボスのポリゴンモデル（10種）
 // ---------------------------------
 function bMat(color, emissive = 0.35, extra = {}) {
-    return new THREE.MeshStandardMaterial(Object.assign({ color, emissive: color, emissiveIntensity: emissive, flatShading: true, metalness: 0.45, roughness: 0.3, transparent: true }, extra));
+    return new StdMat(Object.assign({ color, emissive: color, emissiveIntensity: emissive, flatShading: true, metalness: 0.45, roughness: 0.3, transparent: true }, extra));
 }
 function withEdges(mesh, color = 0xffffff, opacity = 0.7) {
     const e = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 1), new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
@@ -4268,7 +4272,7 @@ function project(x, y, h = 0) {
 // ---------------------------------
 // 動的解像度: 60fpsを保てないときは描画解像度を下げる
 // ---------------------------------
-const Q_MAX = PR, Q_MIN = 0.55;
+const Q_MAX = PR, Q_MIN = IS_MOBILE ? 0.45 : 0.55;
 let quality = PR, qCeil = PR;
 const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9 };
 function applyQuality() {
@@ -4350,7 +4354,7 @@ function render3D() {
     if (gameState === 'playing') speedRatio = currentCometSpeed / config.initialCometSpeed;
     else if (frozen) speedRatio = 0;
     else speedRatio = 0.3;
-    const targetSpeed = 360 * speedRatio * (1 + (stage - 1) * 0.05);
+    const targetSpeed = (IS_MOBILE ? 470 : 360) * speedRatio * (1 + (stage - 1) * 0.05);
     worldSpeedSmooth += (targetSpeed - worldSpeedSmooth) * Math.min(1, dt * 2);
     const ws = frozen ? 0 : worldSpeedSmooth * (1 + warpBoost * 3.5);
 
