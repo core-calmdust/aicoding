@@ -1492,6 +1492,17 @@ document.querySelectorAll('.overlay').forEach(o => {
   o.addEventListener('pointerdown', e => { down = e.target === o; });
   o.addEventListener('click', e => { if (e.target !== o || !down) return; down = false; outsideClose(o); });
 });
+// the game title in the header: back to the board from lessons, puzzles and dialogs
+function backToBoard() {
+  document.querySelectorAll('.overlay.show').forEach(o => outsideClose(o));
+  if (lesson || puzzle) quitSpecial();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+(() => {
+  const h = document.querySelector('.brand h1.to-board'); if (!h) return;
+  h.addEventListener('click', backToBoard);
+  h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); backToBoard(); } });
+})();
 function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && !isOver(game.moves.length); }
 function rsOpen() {
   if (!rsInProgress() && !reviewing) { openNewDialog(); return; }

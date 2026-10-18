@@ -480,6 +480,9 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+.brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+.brand h1.to-board:hover{opacity:.78}
+.brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -508,7 +511,7 @@ body .info-line{font-size:12.5px}
 
   <aside class="side">
     <div class="brand">
-      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1>Connect Four<small>V2</small></h1></div>
+      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back">Connect Four<small>V2</small></h1></div>
       <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
     <div class="side-in">
@@ -717,7 +720,7 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js"></script>
+<script src="i18n.js?v=20261018tb"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1853,18 +1856,27 @@ else { update(false); afterPosition(); }
 window.__c4 = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, playMove: c => onColumn(c), statusOf, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; } };
 
 // clicking the dimmed area outside a dialog does the same as its close button
-(() => {
+function dismissOverlay(o) {
   const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', onlineOverlay: '#olClose', puzzleOverlay: '#pzClose' };
-  document.querySelectorAll('.overlay').forEach(o => {
-    let down = false;
-    o.addEventListener('pointerdown', e => { down = e.target === o; });
-    o.addEventListener('click', e => {
-      if (e.target !== o || !down) return; down = false;
-      if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
-      const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
-      if (b) b.click(); else o.classList.remove('show');
-    });
-  });
+  if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
+  const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
+  if (b) b.click(); else o.classList.remove('show');
+}
+document.querySelectorAll('.overlay').forEach(o => {
+  let down = false;
+  o.addEventListener('pointerdown', e => { down = e.target === o; });
+  o.addEventListener('click', e => { if (e.target !== o || !down) return; down = false; dismissOverlay(o); });
+});
+// the game title in the header: back to the board from lessons, puzzles and dialogs
+function backToBoard() {
+  document.querySelectorAll('.overlay.show').forEach(o => dismissOverlay(o));
+  if (lesson || puzzle) quitSpecial();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+(() => {
+  const h = document.querySelector('.brand h1.to-board'); if (!h) return;
+  h.addEventListener('click', backToBoard);
+  h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); backToBoard(); } });
 })();
 
 // "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
