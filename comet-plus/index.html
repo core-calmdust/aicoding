@@ -873,25 +873,27 @@ class AudioHandler {
                 this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now);
                 setTimeout(() => this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now + 0.15), 150);
                 break;
-            case 'bossWarning': { // サイレン風の警告音を4回（やや歪ませる）
+            case 'bossWarning': { // サイレン風の警告音を4回（強く歪ませてビックリさせる）
                 const c = this.ctx, out = this.masterGain, N = 4, L = 0.75, T = N * L + 0.3;
-                if (!this._distCurve) { // ソフトクリップの歪み
-                    const n = 1024, cv = new Float32Array(n), k = 6;
-                    for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; cv[i] = Math.tanh(k * x) / Math.tanh(k); }
+                if (!this._distCurve) { // ほぼ矩形まで潰す強いファズ（非対称で倍音を増やす）
+                    const n = 2048, cv = new Float32Array(n), k = 60;
+                    for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; const y = Math.tanh(k * (x + 0.08)) ; cv[i] = Math.max(-0.85, Math.min(1, y)); }
                     this._distCurve = cv;
                 }
-                const ws = c.createWaveShaper(); ws.curve = this._distCurve; ws.oversample = '2x';
-                const pre = c.createGain(); pre.gain.value = 0.9;
-                const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+                const ws = c.createWaveShaper(); ws.curve = this._distCurve; ws.oversample = 'none';
+                const pre = c.createGain(); pre.gain.value = 3.5;
+                const pk = c.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 2200; pk.Q.value = 1.2; pk.gain.value = 9; // 耳に刺さる帯域を強調
+                const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 6500;
+                pre.connect(ws).connect(pk);
                 const ag = c.createGain(); ag.gain.value = 0;
-                pre.connect(ws).connect(lp).connect(ag).connect(out);
-                [['sawtooth', 0], ['square', -12]].forEach(([tp, dt]) => {
+                pk.connect(lp).connect(ag).connect(out);
+                [['sawtooth', 0, 1], ['square', -25, 1], ['sawtooth', 0, 0.5]].forEach(([tp, dt, oct]) => {
                     const o = c.createOscillator(); o.type = tp; o.detune.value = dt;
                     for (let i = 0; i < N; i++) {
                         const t0 = now + i * L;
-                        o.frequency.setValueAtTime(480, t0);
-                        o.frequency.exponentialRampToValueAtTime(1080, t0 + L * 0.45);
-                        o.frequency.exponentialRampToValueAtTime(520, t0 + L * 0.95);
+                        o.frequency.setValueAtTime(480 * oct, t0);
+                        o.frequency.exponentialRampToValueAtTime(1080 * oct, t0 + L * 0.45);
+                        o.frequency.exponentialRampToValueAtTime(520 * oct, t0 + L * 0.95);
                     }
                     const og = c.createGain(); og.gain.value = 0.5;
                     o.connect(og).connect(pre); o.start(now); o.stop(now + T);
@@ -899,8 +901,8 @@ class AudioHandler {
                 for (let i = 0; i < N; i++) {
                     const t0 = now + i * L;
                     ag.gain.setValueAtTime(0.0001, t0);
-                    ag.gain.exponentialRampToValueAtTime(0.45, t0 + 0.06);
-                    ag.gain.setValueAtTime(0.45, t0 + L * 0.7);
+                    ag.gain.exponentialRampToValueAtTime(0.42, t0 + 0.012); // いきなり鳴る
+                    ag.gain.setValueAtTime(0.42, t0 + L * 0.7);
                     ag.gain.exponentialRampToValueAtTime(0.0001, t0 + L * 0.97);
                 }
                 break;
