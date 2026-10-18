@@ -96,7 +96,7 @@ static void init_zobrist(void) { for (int p = 0; p < 12; p++) for (int s = 0; s 
 
 /* ------------------------------------------------------------------ NNUE */
 #ifndef NN_H
-#define NN_H 256
+#define NN_H 384
 #endif
 #define NN_IN 768
 #define NN_BUCKETS 8
