@@ -45,3 +45,9 @@
 - GNUbg 学習データの議論（bug-gnubg ML）: https://lists.gnu.org/archive/html/bug-gnubg/2012-06/msg00035.html
 - Stochastic MuZero: https://iclr.cc/virtual/2022/poster/6832
 - Tesauro, "Temporal Difference Learning and TD-Gammon", CACM 1995（概要）: https://dl.acm.org/doi/10.1145/203330.203343
+
+## 4. ライセンス確認結果（同梱物）
+- backgammon/wildbg.bin, wildbg.json：wildbg（nets ブランチ commit 8c42b06）の contact.onnx / race.onnx を float16 に変換したもの。Cargo.toml `license = "Apache-2.0 OR MIT"`、README「Licensed under either of Apache-2.0 or MIT」、LICENSE-MIT・LICENSE-APACHE を確認。NOTICE ファイルは無し。Apache-2.0 側を選択して同梱し、変更点（float16化・並べ替え）を明記 → Apache-2.0 のサイトと両立。
+- backgammon/THIRD_PARTY_LICENSES.txt：出典・著作権表示・変更点・MIT 全文・Apache-2.0 全文を収録。
+- backgammon/weights.json（自前の高速ネット）：自前の自己対戦局面に wildbg の評価値（MIT/Apache）と wildbg-training のロールアウト値（CC0-1.0、LICENSE 確認）でラベルを付けて学習。GPL 物は一切不使用。
+- 不採用：GNUbg（GPL）、bgsage（MPL-2.0）。

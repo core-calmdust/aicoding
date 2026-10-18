@@ -52,3 +52,10 @@ wb:nets/fast1.json vs nets/n3_shipped.json [lv8,lv8] 1000 games: A wins 53.4%, A
   interim 20: A ppg -0.350 ± 0.559
   interim 40: A ppg -0.150 ± 0.389
   interim 60: A ppg -0.200 ± 0.339
+resuming with 76 games already played
+  interim 80: A ppg -0.063 ± 0.303
+  interim 100: A ppg -0.050 ± 0.271
+  interim 120: A ppg -0.100 ± 0.246
+  interim 140: A ppg -0.079 ± 0.227
+  interim 160: A ppg -0.075 ± 0.215
+  interim 180: A ppg -0.044 ± 0.199
