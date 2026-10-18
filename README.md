@@ -37,6 +37,7 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 | [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon/) | 10段階 | 7ステップ | 16問 | wildbg由来のニューラルネット＋2手読み、ベアオフ完全DB、ダブリングキューブ、3/5/7点マッチ、スマホ横画面モード |
 | [ナイン・メンズ・モリス](https://core-calmdust.github.io/aicoding/morris/) | 10段階 | 7ステップ | 90問 | ナイン／トゥエルブ／シックスの3ルール |
 | [チェス](https://core-calmdust.github.io/aicoding/chess/) | 10段階 | 7ステップ | メイト問題85問 | Lichessの評価済み約5,400万局面で学習したNNUE（Lv.8で目安Elo 2850）、定跡と読み切り探索、PGN・FEN読み込み（[モデルカード](chess/MODEL_CARD.md)） |
+| [まいにち数独](https://core-calmdust.github.io/aicoding/sudoku/) | — | — | 厳選500問 | デイリー3難易度（銅・銀・金メダルのカレンダー、月ごとの3日／1週間／皆勤実績）、10テーマ×50問のコレクションと実績、フリック入力、テクニック解説つきヒント、テーマごとのベクター背景 |
 
 🌐 = ネット対戦対応
 
@@ -46,7 +47,6 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 |---|---|
 | [チェッカー](https://core-calmdust.github.io/aicoding/checker.html) | 斜めに進んで跳び越えて取る |
 | [さめが〜め](https://core-calmdust.github.io/aicoding/samegame/) | 同じ色をまとめて消すパズル |
-| [無限数独](https://core-calmdust.github.io/aicoding/sudoku/) | 尽きることのない数独 |
 
 ### 過去のバージョン
 
