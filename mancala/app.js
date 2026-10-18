@@ -14,7 +14,7 @@ function t(k, v) {
   return x;
 }
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
-const RULE_ORDER = ['easy', 'basic', 'kalah', 'sunka'];   // 'basic' is shown as "Normal"
+const RULE_ORDER = ['basic', 'easy', 'kalah', 'sunka'];   // 'basic' is shown as "Normal"
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -258,35 +258,55 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // cancellable pause used by the move animation: skipAnim()/stopAnim() wake every sleeper at once
 let wakers = new Set();
 function nap(ms) { return new Promise(r => { const f = () => { clearTimeout(tm); wakers.delete(f); r(); }; const tm = setTimeout(f, ms); wakers.add(f); }); }
-function fly(s, to, dur, lift) {
+function fly(s, to, dur, lift, opt) {
   const [x0, y0] = seedXY(s);
   if (to.slot !== undefined) { s.slot = to.slot; s.x = to.x; s.y = to.y; s.vx = 0; s.vy = 0; }
   const [x1, y1] = seedXY(s);
   if (!s.el.animate) { posSeed(s); return; }
-  s.el.classList.add('fly');
-  const done = () => { s.el.classList.remove('fly'); posSeed(s); };
+  s.el.classList.add('fly'); if (opt && opt.cap) s.el.classList.add('capfly');
+  const done = () => { s.el.classList.remove('fly', 'capfly'); posSeed(s); };
   let kf;
   if (!motionOn()) {   // reduced motion: a short straight glide, no hop
     kf = [{ transform: `translate(${x0}px,${y0}px)` }, { transform: `translate(${x1}px,${y1}px)` }];
     dur = Math.min(dur, 220);
   } else {
     let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-    const h = (lift || 0.45) * U;
+    const h = (lift || 0.85) * U;
     if (vert) {
       // upright board: the arc bulges sideways, away from the middle of the board
       const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1; let nx = -dy / L, ny = dx / L;
       const cx = boardEl.clientWidth / 2; if ((mx - cx) * nx < 0) { nx = -nx; ny = -ny; }
-      mx += nx * h * 0.8; my += ny * h * 0.8 - h * 0.25;
+      mx += nx * h * 0.75; my += ny * h * 0.75 - h * 0.3;
     } else my -= h;
+    const up = opt && opt.cap ? 1.75 : 1.6;
     kf = [
-      { transform: `translate(${x0}px,${y0}px) scale(1)`, easing: 'cubic-bezier(.3,.0,.5,1)' },
-      { transform: `translate(${mx}px,${my}px) scale(1.32)`, offset: 0.48, easing: 'cubic-bezier(.5,0,.75,1)' },
-      { transform: `translate(${x1}px,${y1}px) scale(.94)`, offset: 0.86, easing: 'ease-out' },
-      { transform: `translate(${x1}px,${y1}px) scale(1)` }];   // soft landing
+      { transform: `translate(${x0}px,${y0}px) scale(1)`, easing: 'cubic-bezier(.25,0,.45,1)' },
+      { transform: `translate(${(x0 + mx) / 2}px,${(y0 + my) / 2 - h * 0.18}px) scale(${(1 + up) / 2})`, offset: 0.25, easing: 'linear' },
+      { transform: `translate(${mx}px,${my}px) scale(${up})`, offset: 0.48, easing: 'cubic-bezier(.55,0,.8,.9)' },
+      { transform: `translate(${x1}px,${y1}px) scale(.82,.9)`, offset: 0.78, easing: 'cubic-bezier(.2,.8,.3,1.2)' },   // bouncy landing
+      { transform: `translate(${x1}px,${y1 - 0.06 * U}px) scale(1.1)`, offset: 0.9 },
+      { transform: `translate(${x1}px,${y1}px) scale(1)` }];
+    // a fading trail of ghost gems behind the flying one
+    [0.07, 0.14, 0.21].forEach((d, j) => {
+      const g = s.el.cloneNode(false); g.className = 'seed ghost'; g.style.cssText = s.el.style.cssText; g.style.opacity = String(0.42 - j * 0.12);
+      seedsEl.appendChild(g);
+      const a = g.animate(kf.slice(0, 4), { duration: dur * 0.78, delay: dur * d, fill: 'backwards' });
+      a.onfinish = () => g.remove(); a.oncancel = () => g.remove();
+    });
+    setTimeout(() => splash(s.slot), dur * 0.78);
   }
   const a = s.el.animate(kf, { duration: dur });
   s.el.style.transform = `translate(${x1}px,${y1}px)`;
   a.onfinish = done; a.oncancel = done;
+}
+// a little ripple in the cup where a gem lands
+function splash(at) {
+  if (!motionOn() || at < 0 || !U) return;
+  const [x, y] = slotPx(at), st = isStore(at), d = document.createElement('div');
+  d.className = 'splash' + (st ? ' store' : '');
+  const w = st ? 1.0 * U : 0.8 * U, h = st ? 2.5 * U : 0.8 * U;
+  d.style.left = x + 'px'; d.style.top = y + 'px'; d.style.width = (vert && st ? h : w) + 'px'; d.style.height = (vert && st ? w : h) + 'px';
+  boardEl.appendChild(d); setTimeout(() => d.remove(), 700);
 }
 // the "hand": a glowing ring that travels pit by pit with the number of seeds still to sow
 const handEl = document.createElement('div'); handEl.className = 'hand'; handEl.innerHTML = '<b></b>'; boardEl.appendChild(handEl);
@@ -295,6 +315,7 @@ function handAt(at, n, cls) {
   handEl.style.left = x + 'px'; handEl.style.top = y + 'px';
   handEl.style.width = (vert && st ? h : w) + 'px'; handEl.style.height = (vert && st ? w : h) + 'px';
   handEl.className = 'hand show' + (st ? ' store' : '') + (cls ? ' ' + cls : '');
+  if (motionOn()) { void handEl.offsetWidth; handEl.classList.add('pulse'); }
   handEl.firstChild.textContent = n > 0 ? '×' + n : '';
 }
 function handHide() { handEl.className = 'hand'; }
@@ -309,7 +330,7 @@ async function animateMove(b, side, k, rules) {
   animating = true; boardEl.classList.add('animating');
   const counts = Int8Array.from(b), total = tr.events.filter(e => e.t === 'drop').length;
   // ~300 ms per seed, quicker for very long sows (relays can move dozens of seeds)
-  const step = total <= 8 ? 300 : Math.max(150, 300 - (total - 8) * 8), dur = Math.round(step * 1.25);
+  const step = total <= 8 ? 400 : Math.max(200, 400 - (total - 8) * 10), dur = Math.round(step * 1.35);
   let hand = [];
   try {
     for (const ev of tr.events) {
@@ -325,9 +346,9 @@ async function animateMove(b, side, k, rules) {
         const s = hand.shift() || newSeed();
         const [x, y] = placeIn(ev.at, seeds[ev.at]); seeds[ev.at].push(s);
         handAt(ev.at, hand.length, '');
-        fly(s, { slot: ev.at, x, y }, dur, isStore(ev.at) ? 0.6 : 0.45);
+        fly(s, { slot: ev.at, x, y }, dur, isStore(ev.at) ? 1.0 : 0.85);
         const at = ev.at;
-        setTimeout(() => { if (tok !== animTok) return; counts[at]++; setBadges(counts, at); sDrop(isStore(at)); }, motionOn() ? dur * 0.85 : 0);
+        setTimeout(() => { if (tok !== animTok) return; counts[at]++; setBadges(counts, at); sDrop(isStore(at)); }, motionOn() ? dur * 0.78 : 0);
         await nap(step);
       } else if (ev.t === 'cap') {
         await nap(dur);
@@ -340,8 +361,8 @@ async function animateMove(b, side, k, rules) {
         if (tok !== animTok) break;
         const got = seeds[ev.from].splice(0).concat(ev.own >= 0 ? seeds[ev.own].splice(0) : []);
         counts[ev.from] = 0; if (ev.own >= 0) counts[ev.own] = 0; setBadges(counts);
-        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: ev.to, x, y }, 850, 0.9); }, j * 70); });
-        await nap(900 + got.length * 70);
+        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: ev.to, x, y }, 1100, 1.7, { cap: true }); }, j * 110); });
+        await nap(1150 + got.length * 110);
         if (tok !== animTok) break;
         counts[ev.to] += got.length; setBadges(counts, ev.to);
       } else if (ev.t === 'sweep') {
@@ -942,8 +963,8 @@ function mbXY(i) {   // player 0 at the bottom
 // mini board: counts[14], marks: {i: 'land'|'cap'|'src'|'store'|'relay'}, path: [slot indices] drawn as numbered drops
 function miniBoard(counts, marks, path, opt) {
   opt = opt || {};
-  let s = `<svg viewBox="0 0 ${MB.W} ${MB.H}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e2c275"/></marker><linearGradient id="wd" x1="0" x2="1"><stop offset="0" stop-color="#5a341e"/><stop offset=".5" stop-color="#6e4226"/><stop offset="1" stop-color="#4a2a17"/></linearGradient><radialGradient id="cup" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#120a05"/><stop offset=".7" stop-color="#25150b"/><stop offset="1" stop-color="#3d2414"/></radialGradient><radialGradient id="gm" cx=".33" cy=".28" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".2" stop-color="#ffb3bd"/><stop offset=".6" stop-color="#d6324b"/><stop offset="1" stop-color="#5c0a18"/></radialGradient></defs>`;
-  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#wd)" stroke="rgba(226,194,117,.6)" stroke-width="1.5"/>`;
+  let s = `<svg viewBox="0 0 ${MB.W} ${MB.H}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e2c275"/></marker><linearGradient id="wd" x1="0" x2="1"><stop offset="0" stop-color="#202022"/><stop offset=".5" stop-color="#19191b"/><stop offset="1" stop-color="#101011"/></linearGradient><radialGradient id="cup" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#050506"/><stop offset=".7" stop-color="#121213"/><stop offset="1" stop-color="#232326"/></radialGradient><radialGradient id="gm" cx=".33" cy=".28" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".2" stop-color="#ffb3bd"/><stop offset=".6" stop-color="#d6324b"/><stop offset="1" stop-color="#5c0a18"/></radialGradient></defs>`;
+  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#wd)" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>`;
   for (let i = 0; i < 14; i++) {
     const [x, y] = mbXY(i), mk = marks && marks[i];
     if (isStore(i)) s += `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#cup)"/>`;
@@ -1150,6 +1171,8 @@ $('#lsNext').onclick = () => {
   if (pass) { confetti(); sChime(1); }
 };
 $('#lsQuit').onclick = () => quitSpecial();
+$('#lsToList').onclick = () => openLessons();
+$('#pzToList').onclick = () => openPuzzles();
 
 // ====================================================================== puzzles
 let pzLevel = 0;

@@ -94,7 +94,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .badge.store{height:calc(var(--u) * .38);font-size:calc(var(--u) * .26);min-width:calc(var(--u) * .54);border-color:rgba(226,194,117,.7);color:var(--accent)}
 .badge.zero{color:rgba(244,228,189,.35)}
 .badge.pop{animation:bpop .35s ease}
-@keyframes bpop{40%{transform:translate(-50%,-50%) scale(1.3)}}
+@keyframes bpop{35%{transform:translate(-50%,-50%) scale(1.5);color:#ffe7a8;text-shadow:0 0 14px rgba(255,214,120,.9),0 2px 8px rgba(0,0,0,.9)}}
 .pitno{position:absolute;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-size:calc(var(--u) * .13);color:rgba(226,194,117,.38);pointer-events:none}
 .seeds{position:absolute;inset:0;pointer-events:none;z-index:20}
 .seed{position:absolute;left:0;top:0;width:calc(var(--u) * .23);height:calc(var(--u) * .23);margin:calc(var(--u) * -.115) 0 0 calc(var(--u) * -.115);border-radius:50%;will-change:transform;
@@ -536,6 +536,29 @@ body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparen
 .lesson-fb,.pz-status{font-size:15px;line-height:1.75}
 .tip{font-size:clamp(11px, calc(var(--u) * .16), 15px)}
 @media (pointer: fine){.toast{max-width:min(680px, 70vw)!important;font-size:16px}}
+/* exaggerated sowing */
+.seed.fly{filter:drop-shadow(0 calc(var(--u) * .22) calc(var(--u) * .12) rgba(0,0,0,.6)) drop-shadow(0 0 calc(var(--u) * .1) rgba(255,214,130,.75))!important}
+.seed.capfly{filter:drop-shadow(0 calc(var(--u) * .25) calc(var(--u) * .14) rgba(0,0,0,.6)) drop-shadow(0 0 calc(var(--u) * .16) rgba(255,120,90,.9))!important}
+.seed.ghost{pointer-events:none;z-index:998;filter:blur(1px) drop-shadow(0 0 6px rgba(255,214,130,.8))}
+.hand.pulse{animation:hpulse .38s ease-out}
+@keyframes hpulse{0%{transform:translate(-50%,-50%) scale(1.18);box-shadow:0 0 30px rgba(255,226,150,1),inset 0 0 16px rgba(255,226,150,.5)}100%{transform:translate(-50%,-50%) scale(1)}}
+.splash{position:absolute;transform:translate(-50%,-50%) scale(.4);border-radius:50%;border:2px solid rgba(255,226,160,.85);box-shadow:0 0 12px rgba(255,214,130,.6);pointer-events:none;z-index:36;animation:splash .6s ease-out forwards}
+.splash.store{border-radius:999px}
+@keyframes splash{to{transform:translate(-50%,-50%) scale(1.15);opacity:0}}
+.tolist{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:6px 12px 6px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.55);background:rgba(201,169,97,.08);color:var(--accent);font-size:13px;font-weight:700;letter-spacing:.04em}
+.tolist:hover{background:rgba(201,169,97,.18)}
+.tolist svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media not all and (pointer: coarse){ .lesson-card > .tolist,.puzzle-card > .tolist{grid-column:1;justify-self:start} }
+@media (prefers-reduced-motion: reduce){.hand.pulse{animation:none}}
+.rl-lead{font-size:16px!important;line-height:1.75!important}
+.rl-item p{font-size:16px!important;line-height:1.75!important}
+.rl-item h4{font-size:17px!important;margin-bottom:8px}
+.rl-head b{font-size:25px!important}
+.rl-head .lvl{font-size:12.5px}
+#rulesTabs button{font-size:14.5px}
+.rulecard b{font-size:17px!important}
+.rulecard small{font-size:14px!important;line-height:1.55!important}
+.rulecard .lvl{font-size:11.5px}
 </style>
 </head>
 <body>
@@ -563,7 +586,7 @@ body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparen
     </div>
 
     <div class="card lesson-card" id="lessonCard">
-      <div class="lh"><span class="lt" id="lsStep"></span><div class="dots" id="lsDots"></div></div>
+      <button class="tolist" id="lsToList"><svg viewBox="0 0 24 24"><path d="M15 6 9 12l6 6"/><path d="M4 4v16"/></svg><span data-i18n="ls.toList"></span></button><div class="lh"><span class="lt" id="lsStep"></span><div class="dots" id="lsDots"></div></div>
       <h3 id="lsTitle"></h3>
       <div class="lesson-prompt" id="lsPrompt"></div>
       <div class="lesson-fb" id="lsFb"></div>
@@ -574,7 +597,7 @@ body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparen
       </div>
     </div>
     <div class="card puzzle-card" id="puzzleCard">
-      <div class="lh"><span class="lt" id="pzStep"></span></div>
+      <button class="tolist" id="pzToList"><svg viewBox="0 0 24 24"><path d="M15 6 9 12l6 6"/><path d="M4 4v16"/></svg><span data-i18n="pz.toList"></span></button><div class="lh"><span class="lt" id="pzStep"></span></div>
       <h3 id="pzTitle"></h3>
       <div class="pz-goal" id="pzGoal"></div>
       <div class="pz-status" id="pzStatus"></div>
