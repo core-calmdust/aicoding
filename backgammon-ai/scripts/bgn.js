@@ -818,7 +818,7 @@ function aiChoosePlay(pos, side, dice, level, tag) {
   }
   if (level === 8) return analyzePlays(pos, side, dice[0], dice[1], { ply: 1, keep1: 6, margin1: 0.2 })[0];
   if (level === 9) return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 6, margin1: 0.2, keep2: 2, margin2: 0.05, deadline: nowMs() + 900 })[0];
-  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1400 })[0];
+  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1200 })[0];
 }
 // pre-roll cubeless probabilities for side on roll at a depth
 

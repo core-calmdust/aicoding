@@ -13,8 +13,8 @@
 - [済] ロールアウト真値（CC0 wildbg-training 0021/0022/0016）に対する RMSE: 旧ネット 0.150 / 現行n3 0.138 / wildbg 0.057（contact）。
 - [済] 0-ply 対戦: wildbg vs 現行n3 = +0.092 ± 0.058（2000局）、wildbg vs 旧 = +0.105 ± 0.087（1000局）。
 - [済] ハイブリッド探索（scripts/bgw.js: hyb1/hyb2。相手の応手は高速ネット上位2手を wildbg で再評価）。Lv7=wildbg 0-ply、Lv8=1-ply、Lv9/10=2-ply（時間制限）。
-- [進行中] 高速ネット（GNUbg 風特徴 128/80）を wildbg ラベル（w1）＋CC0 ロールアウトで蒸留学習 → nets/fast1.json（エポックごとに保存、state.json で再開可）。
-- [未] 測定: 新Lv10 vs 現行Lv10、新Lv8 vs 現行Lv8（meas/*.jsonl に1局ずつ追記、RES 環境変数で再開可）。
+- [済] 高速ネット fast1（GNUbg 風特徴 128/80、n3 から warm start）を wildbg 0-ply ラベル 430万局面＋CC0 ロールアウト（×3）で8エポック学習 → nets/fast1.json。ロールアウト真値RMSE contact 0.167→0.095、race 0.118→0.075。0-ply 対戦 fast1 vs n3 = +0.043 ± 0.059（2000局、有意差なし）。
+- [進行中] 測定 scripts/run_meas.sh（再実行で続きから）: L8 1000局 → L10 400局。結果 meas/meas.log と meas/*.jsonl。
 - [未] サイト統合（bg.js←bgw.js、engine.js で wildbg.bin 読込、THIRD_PARTY_LICENSES 追加）とUIテスト。
 
 ## 再開方法

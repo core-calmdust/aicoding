@@ -1,0 +1,9 @@
+positions 5508295 contact 4392231 race 1116064
+epoch 0 lr 0.0060 147s  valid equity RMSE contact 0.0796 race 0.0653
+epoch 1 lr 0.0048 148s  valid equity RMSE contact 0.0753 race 0.0610
+epoch 2 lr 0.0038 147s  valid equity RMSE contact 0.0726 race 0.0587
+epoch 3 lr 0.0031 147s  valid equity RMSE contact 0.0711 race 0.0588
+epoch 4 lr 0.0025 147s  valid equity RMSE contact 0.0701 race 0.0588
+epoch 5 lr 0.0020 149s  valid equity RMSE contact 0.0698 race 0.0566
+epoch 6 lr 0.0016 150s  valid equity RMSE contact 0.0688 race 0.0563
+epoch 7 lr 0.0013 163s  valid equity RMSE contact 0.0686 race 0.0560

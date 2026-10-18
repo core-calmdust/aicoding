@@ -718,6 +718,9 @@ function hybReply(q, o, a, b, k) {
   return best;
 }
 const HYB_K = 2;
+// value of the position after a play (o to roll) at a given depth, with the best available evaluator
+function evalPly(q, o, ply) { return ply >= 2 ? (WB ? hyb2(q, o) : eval2(q, o)) : ply >= 1 ? (WB ? hyb1(q, o) : eval1(q, o)) : flip(evalPos(q, o)); }
+function hasWildbg() { return !!WB; }
 // 1-ply: position q, o to roll; probs from the perspective of 1-o (the player who just moved)
 function hyb1(q, o) {
   const w = winner(q);
@@ -957,7 +960,7 @@ Object.assign(BG, {
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,
-  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalRoll, buildMET, mwc,
+  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalPly, hasWildbg, evalRoll, buildMET, mwc,
   janowski, cubeDecision, cubeAvailable,
   get NET() { return NET; }, get NETR() { return NETR; }, get BO() { return BO; }
 });
