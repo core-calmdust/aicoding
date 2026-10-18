@@ -151,7 +151,8 @@
         /* ---- スマホ（縦画面）---- */
         body.mobile { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body.mobile #instructions-container { display: none; }
-        body.mobile #game-wrapper { transform: scale(var(--fit, 1)); transform-origin: center; }
+        body.mobile #fullscreen-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        body.mobile #game-wrapper { transform: scale(var(--fx, 1), var(--fy, 1)); transform-origin: center; } /* スマホは画面いっぱいに引き伸ばす */
         body.mobile #stage { touch-action: none; }
         .mob-only { display: none !important; }
         body.mobile .mob-only { display: inline-flex !important; }
@@ -259,13 +260,13 @@ const config = {
     canvasHeight: IS_MOBILE ? 1120 : 780, // 奥行き
     playerSpeed: 300,
     playerSlowModeMultiplier: 0.5,
-    playerHitboxRadius: IS_MOBILE ? 4.5 : 3, // スマホは一回り大きく
+    playerHitboxRadius: IS_MOBILE ? 5.7 : 3, // スマホは一回り大きく
     playerVisualSize: 16,
-    initialCometSpeed: IS_MOBILE ? 400 : 288, // スマホは縦長なので速め
-    cometSpeedIncrease: IS_MOBILE ? 0.097 : 0.07,
+    initialCometSpeed: IS_MOBILE ? 360 : 288, // スマホは縦長なので速め
+    cometSpeedIncrease: IS_MOBILE ? 0.087 : 0.07,
     distanceScoreMultiplier: 1,
     cometSpawnInterval: 12,
-    cometSpawnAmount: IS_MOBILE ? 4.05 : 4, // 横幅あたりの密度をオリジナル(800幅で3個)と同じに
+    cometSpawnAmount: IS_MOBILE ? 3.2 : 4, // 横幅あたりの密度をオリジナル(800幅で3個)と同じに
     cometCoreRadius: 5,
     starCount: 50,
     starScrollMultiplier: 16,
@@ -3739,6 +3740,7 @@ const frameLine2 = new THREE.LineLoop(frameGeo, borderMat); // 少し上にも�
 frameLine2.position.y = 1.2;
 frameLine2.frustumCulled = false;
 field.add(frameLine2);
+if (IS_MOBILE) frameLine.visible = frameLine2.visible = false; // スマホは外枠なし
 const frameWaves = [];
 function onKick() {
     frameWaves.push({ age: 0 });
@@ -3774,6 +3776,7 @@ const cornerGems = [];
     const m = new THREE.Mesh(new THREE.OctahedronGeometry(7, 0), cornerMat);
     m.position.set(sx * W / 2, -4, sz * H / 2);
     field.add(m); cornerGems.push(m);
+    if (IS_MOBILE) m.visible = false;
 });
 
 // 小節スイープ
@@ -4372,7 +4375,7 @@ function render3D() {
     if (gameState === 'playing') speedRatio = currentCometSpeed / config.initialCometSpeed;
     else if (frozen) speedRatio = 0;
     else speedRatio = 0.3;
-    const targetSpeed = (IS_MOBILE ? 560 : 360) * speedRatio * (1 + (stage - 1) * 0.05);
+    const targetSpeed = (IS_MOBILE ? 500 : 360) * speedRatio * (1 + (stage - 1) * 0.05);
     worldSpeedSmooth += (targetSpeed - worldSpeedSmooth) * Math.min(1, dt * 2);
     const ws = frozen ? 0 : worldSpeedSmooth * (1 + warpBoost * 3.5);
 
@@ -5644,8 +5647,8 @@ if (IS_MOBILE) {
         document.body.classList.toggle('landscape', land);
         if (land && gameState === 'playing') pauseGame();
         const w = document.getElementById('game-wrapper');
-        const sc = Math.min(innerWidth / HUD_W, innerHeight / HUD_H);
-        w.style.setProperty('--fit', sc);
+        w.style.setProperty('--fx', innerWidth / HUD_W);
+        w.style.setProperty('--fy', innerHeight / HUD_H);
     };
     addEventListener('resize', fit); addEventListener('orientationchange', fit); fit();
     // プレイ中だけボタンを出す
