@@ -932,6 +932,20 @@ window.addEventListener('keyup', e => {
     keyState[e.code] = false;
 });
 
+// 一時停止はAudioContextの時計ごと止める。再開すると予約済みの音も含めて
+// ぴったり続きから鳴るので、BGMとゲーム進行（小節の演出など）がズレない
+function pauseGame() {
+    gameState = 'paused';
+    if (audioHandler.ctx && audioHandler.ctx.state === 'running') {
+        audioHandler.ctx.suspend().catch(() => {});
+    }
+}
+function resumeAudioClock() {
+    if (audioHandler.ctx && audioHandler.ctx.state === 'suspended') {
+        audioHandler.ctx.resume().catch(() => {});
+    }
+}
+
 function resetKeys() {
     for (const key in keyState) {
         keyState[key] = false;
@@ -941,6 +955,8 @@ window.addEventListener('blur', resetKeys);
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
         resetKeys();
+        // タブを離れたら自動で一時停止（描画が止まる間に音楽だけ進んでズレるのを防ぐ）
+        if (gameState === 'playing') pauseGame();
     }
 });
 
@@ -2317,10 +2333,7 @@ function update(timestamp) {
         }
 
         if (gameState === 'playing' && input.pauseTrigger) {
-            gameState = 'paused';
-            if (audioHandler.ctx) {
-                audioHandler.masterGain.gain.exponentialRampToValueAtTime(0.001, audioHandler.ctx.currentTime + 0.2);
-            }
+            pauseGame();
             return;
         }
 
@@ -2458,14 +2471,10 @@ function update(timestamp) {
         if (input.pauseTrigger) {
             gameState = 'playing';
             lastTimestamp = 0;
-            if (!audioHandler.isMuted && audioHandler.ctx) {
-                audioHandler.masterGain.gain.exponentialRampToValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime + 0.2);
-            }
+            resumeAudioClock();
         } else if (input.titleTrigger) {
              audioHandler.stopBgm();
-             if (audioHandler.masterGain && !audioHandler.isMuted && audioHandler.ctx) {
-                 audioHandler.masterGain.gain.setValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime);
-             }
+             resumeAudioClock();
              gameState = 'title';
              init();
         }
