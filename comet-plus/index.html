@@ -114,6 +114,8 @@
             opacity: 0.8;
             padding-top: 4px;
         }
+        /* フルスクリーン中、マウスを動かさないとポインタを隠す */
+        #fullscreen-root.hide-cursor, #fullscreen-root.hide-cursor * { cursor: none !important; }
         #topbar {
             width: 1067px;
             height: 36px;
@@ -5428,6 +5430,18 @@ document.getElementById('langSel').addEventListener('change', e => {
     e.target.blur(); // キー操作がゲームに戻るように
 });
 document.querySelectorAll('#topbar button').forEach(b => b.addEventListener('mouseup', () => b.blur()));
+// フルスクリーン中はマウスポインタを隠す（動かすと1.5秒だけ表示）
+{
+    const root = document.getElementById('fullscreen-root');
+    let hideT = 0;
+    const arm = () => {
+        root.classList.remove('hide-cursor');
+        clearTimeout(hideT);
+        if (document.fullscreenElement) hideT = setTimeout(() => root.classList.add('hide-cursor'), 1500);
+    };
+    document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) root.classList.add('hide-cursor'); else { clearTimeout(hideT); root.classList.remove('hide-cursor'); } });
+    root.addEventListener('mousemove', arm);
+}
 applyLang();
 init();
 requestAnimationFrame(gameLoop);
