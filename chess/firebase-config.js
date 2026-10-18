@@ -16,4 +16,12 @@
 //      (make sure databaseURL is included), then bump the ?v= of firebase-config.js in chess/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, choosing online play shows "online play is being prepared" (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBglAVwkB0nDuH9oI3NLiTDz_lincMdSW8",
+  authDomain: "chess-multiplay.firebaseapp.com",
+  databaseURL: "https://chess-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chess-multiplay",
+  storageBucket: "chess-multiplay.firebasestorage.app",
+  messagingSenderId: "945966561006",
+  appId: "1:945966561006:web:7cd53243844c4a180665ff"
+};
