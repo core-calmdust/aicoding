@@ -40,7 +40,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Orbitron:wght@600;800;900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
     <style>
         html, body {
             width: 100%;
@@ -52,7 +52,8 @@
         body {
             margin: 0;
             background-color: #07001a;
-            font-family: 'Press Start 2P', monospace;
+            font-family: 'Chakra Petch', 'Zen Kaku Gothic New', sans-serif;
+            font-weight: 600;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -99,7 +100,8 @@
         }
         #instructions-container {
            color: #ccc;
-           font-size: 12px;
+           font-size: 13px;
+           letter-spacing: 0.06em;
            width: 1067px;
            padding: 8px 15px;
            box-sizing: border-box;
@@ -123,8 +125,10 @@
         }
         #sound-toggle-button,
         #effects-toggle-button {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 10px;
+            font-family: 'Chakra Petch', 'Zen Kaku Gothic New', sans-serif;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 0.08em;
             color: #00ccff;
             background-color: rgba(5, 0, 20, 0.4);
             border: 2px solid #00ccff;
@@ -218,7 +222,8 @@ const config = {
     highScoreKeyStandard: 'cometPlusHighScore_standard',
     highScoreKeyJourney: 'cometPlusHighScore_journey',
     highScoreKeyStartrail: 'cometPlusHighScore_startrail',
-    fontFamily: '"Press Start 2P", monospace',
+    fontFamily: '"Chakra Petch", "Zen Kaku Gothic New", sans-serif',
+    logoFontFamily: '"Orbitron", "Chakra Petch", sans-serif',
     glowBlur: 12,
     energyTotal: 20 * 60,
     energyItemSpeed: 305,
@@ -1007,7 +1012,7 @@ let chainCount = 0;
 let chainEffectPending = false;
 let chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーション専用のタイマー
 let titleMenuIndex = 0;
-const titleMenuItems = ['STANDARD MODE', 'JOURNEY MODE', 'STARTRAIL MODE'];
+const titleMenuItems = ['STANDARD MODE', 'JOURNEY MODE', 'STARTRAIL MODE', 'TUTORIAL'];
 let invaderSpawnCountForStage = 0;
 let invadersSpawnedThisStage = 0;
 let hasUFOSpawnedThisStage = false;
@@ -1025,9 +1030,12 @@ let effectTimer = 0;      // テキスト切り替えエフェクトの時間を
 const DESCRIPTION_DISPLAY_DURATION = 120; // 説明文の表示時間 (2秒 @ 60fps)
 const EFFECT_DURATION = 12; // エフェクトの時間 (0.2秒 @ 60fps)
 const MODE_DESCRIPTIONS = [
+    // 末尾にTUTORIALの説明を追加
     'SHMUP-style Blasting through Enemies',
     'Stay Alive through Energy',
     'Dance Between the Falling Comets'
+,
+    'Learn the Basics Step by Step'
 ];
 const RANDOM_CHARS = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 // ▲▲▲ 追加はここまで ▲▲▲
@@ -1123,6 +1131,7 @@ function init() {
     boss = null;
     bossSpawnFrame = -1;
     bossCount = 0;
+    tutorial = null;
 
     // ▼▼▼ 追加された初期化処理 ▼▼▼
     descriptionTimer = 0;
@@ -1359,6 +1368,10 @@ function gameOver(reason) {
     if (gameState === 'gameOver') {
         return;
     }
+    if (tutorial) { // チュートリアルではゲームオーバーにならない
+        tutorialHit();
+        return;
+    }
     gameState = 'gameOver';
     gameOverReason = reason;
 
@@ -1553,6 +1566,10 @@ function updatePlayingState(dt_sec) {
     score += Math.floor(config.distanceScoreMultiplier * (currentCometSpeed / config.initialCometSpeed) * stageMultiplier);
     currentCometSpeed += config.cometSpeedIncrease * dt_sec;
 
+    const stageSpeedMod = 1 + (stage - 1) * 0.08;
+    if (tutorial) {
+        updateTutorial(dt_sec);
+    } else {
     // Energy Management (STARTRAIL MODEではスキップ)
     if (gameMode !== 'STARTRAIL MODE') {
         const baseEnergyMultiplier = 0.9;
@@ -1595,7 +1612,6 @@ function updatePlayingState(dt_sec) {
         nextWayShotFrame = frameCount + randomInterval;
     }
 
-    const stageSpeedMod = 1 + (stage - 1) * 0.08;
     const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval / (1 + (stage - 1) * 0.2)));
     if (frameCount % spawnInterval === 0) {
         for (let i = 0; i < config.cometSpawnAmount; i++) {
@@ -1688,6 +1704,8 @@ function updatePlayingState(dt_sec) {
     }
 
 
+    }
+
     // Update Comets
     for (let i = comets.length - 1; i >= 0; i--) {
         const c = comets[i];
@@ -1715,6 +1733,7 @@ function updatePlayingState(dt_sec) {
                 score += bonusScore;
                 scoreTexts.push({ x: player.x, y: player.y - 30, text: `+${bonusScore}`, life: 60, type: 'bonus' });
                 audioHandler.playSound('invincibleHit');
+                if (tutorial) tutorial.smash++;
                 comets.splice(i, 1);
                 continue;
             }
@@ -1728,6 +1747,7 @@ function updatePlayingState(dt_sec) {
         const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
         if (!c.isGlazed && d < player.radius + c.radius + currentGlazeDistance) {
             c.isGlazed = true;
+            if (tutorial) tutorial.glazes++;
             const points = Math.floor(config.glazeScore * stageMultiplier);
             score += points;
             scoreTexts.push({ x: c.x, y: c.y, text: `+${points}`, life: 60, type: 'glaze' });
@@ -1826,6 +1846,7 @@ function updatePlayingState(dt_sec) {
                         }
                         effects.push({ type: 'shockwave', x: m.x, y: m.y, life: 15, maxLife: 15, radius: 10 });
                         monsters.splice(i, 1);
+                        if (tutorial) tutorial.kills++;
                         
                         if (m.type === 'ufo') {
                             triggerSpecialItemEffect();
@@ -1904,6 +1925,7 @@ function updatePlayingState(dt_sec) {
             const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
             if (!eb.isGlazed && dist < player.radius + eb.radius + currentGlazeDistance) {
                 eb.isGlazed = true;
+                if (tutorial) tutorial.glazes++;
                 const points = Math.floor(config.glazeScore * stageMultiplier);
                 score += points;
                 scoreTexts.push({ x: eb.x, y: eb.y, text: `+${points}`, life: 60, type: 'glaze' });
@@ -1932,6 +1954,7 @@ function updatePlayingState(dt_sec) {
         const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
 
         if (dist < config.playerVisualSize + config.energyItemSize) {
+            if (tutorial) tutorial.items++;
             if (item.type === 'special') {
                 triggerSpecialItemEffect();
             } else {
@@ -1997,6 +2020,7 @@ let bossCount = 0; // 出現した通算数（種類のローテーションに�
 const BS = 1.7; // ボスの大きさ倍率（見た目と当たり判定）
 
 function bossShoot(x, y, angle, speed, radius = 4) {
+    if (tutorial && Math.random() < 0.7) return; // チュートリアルのボスは弾を控えめに
     enemyBullets.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius, isGlazed: false, fromBoss: true });
 }
 function aimAt(x, y) { return Math.atan2(player.y - y, player.x - x); }
@@ -2301,6 +2325,180 @@ function damageBoss(hx, hy) {
     if (b.hp <= 0) killBoss();
 }
 
+
+// =================================================================================
+// ▼▼▼ TUTORIAL（タイトルメニューから選択）▼▼▼
+// =================================================================================
+let tutorial = null;
+const TUTORIAL_STEPS = [
+    { title: '移動', text: '← → キーで左右に移動しよう', goal: t => t.movedL > 120 && t.movedR > 120,
+      progress: t => `左 ${t.movedL > 120 ? '✔' : '…'}　右 ${t.movedR > 120 ? '✔' : '…'}` },
+    { title: '低速移動', text: 'Z / Shift を押しながら移動すると低速に。中心の色が変わる点だけが当たり判定', goal: t => t.slowFrames > 70,
+      progress: t => `低速で移動 ${Math.min(100, Math.floor(t.slowFrames / 70 * 100))}%` },
+    { title: '彗星をよける', text: '降ってくる彗星に当たらないように 8 秒間よけ続けよう', goal: t => t.survive > 8,
+      progress: t => `${Math.min(8, t.survive).toFixed(1)} / 8.0 秒`, comets: 0.9 },
+    { title: 'グレイズ', text: '彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう', goal: t => t.glazes >= 5,
+      progress: t => `グレイズ ${Math.min(5, t.glazes)} / 5`, comets: 1.4 },
+    { title: 'ショット', text: 'X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）', goal: t => t.kills >= 2,
+      progress: t => `撃破 ${Math.min(2, t.kills)} / 2` },
+    { title: 'エネルギー', text: 'エネルギーは時間とショットで減り、0 でゲームオーバー。回復アイテムを取ろう', goal: t => t.items >= 1,
+      progress: t => (t.items >= 1 ? '回復！' : 'アイテムを取る') },
+    { title: '無敵', text: 'アイテムを取ると少しの間だけ無敵。無敵中は彗星に体当たりでボーナス！ 5 個壊そう', goal: t => t.smash >= 5,
+      progress: t => `体当たり ${Math.min(5, t.smash)} / 5`, comets: 1.6 },
+    { title: 'ボス', text: '3 面ごとにボスが登場。モザイク表示の間は弾が効かない。倒すと宝石がジャラジャラ！', goal: t => t.bossDone && t.afterBoss > 2.5,
+      progress: t => (t.bossDone ? '撃破！ 宝石を集めよう' : 'ボスを倒そう') },
+];
+
+function startTutorial() {
+    startGame('STANDARD MODE');
+    tutorial = { step: 0, clearT: 0, hitFlash: 0, movedL: 0, movedR: 0, slowFrames: 0, survive: 0, glazes: 0, kills: 0, items: 0, smash: 0, bossDone: false, afterBoss: 0, doneT: 0, lastX: config.canvasWidth / 2, spawnT: 0 };
+    energy = config.energyTotal;
+}
+
+function tutorialHit() {
+    const t = tutorial;
+    t.hitFlash = 70;
+    if (t.step === 2) t.survive = 0;
+    audioHandler.playSound('explosion');
+    screenShake = { intensity: 8, duration: 12 };
+    effects.push({ type: 'screenFlash', life: 10, maxLife: 10 });
+    comets = comets.filter(c => Math.hypot(c.x - player.x, c.y - player.y) > 160);
+    enemyBullets = enemyBullets.filter(b => Math.hypot(b.x - player.x, b.y - player.y) > 160);
+    player.invincibleTimer = 60;
+    player.maxInvincibleTimer = 60;
+}
+
+function tutorialStepStart(i) {
+    const t = tutorial;
+    t.spawnT = 0;
+    comets = []; enemyBullets = [];
+    if (i === 4) { monsters = []; }
+    if (i === 5) { energy = config.energyTotal * 0.3; items = []; }
+    if (i === 7) {
+        const saved = bossCount;
+        bossCount = 0;
+        spawnBoss();
+        bossCount = saved;
+        boss.hp = boss.maxHp = 2;
+        t.bossSpawned = true;
+    }
+}
+
+function updateTutorial(dt) {
+    const t = tutorial;
+    if (t.hitFlash > 0) t.hitFlash--;
+    if (t.step !== 5) energy = config.energyTotal; // チュートリアル中はエネルギー切れにならない
+    lowEnergyWarningPlayed = false;
+
+    if (t.step >= TUTORIAL_STEPS.length) {
+        t.doneT += dt;
+        if (t.doneT > 3.5) {
+            tutorial = null;
+            audioHandler.stopBgm();
+            gameState = 'title';
+            init();
+        }
+        return;
+    }
+    const st = TUTORIAL_STEPS[t.step];
+
+    // ステップ達成後は少し間を置いて次へ
+    if (t.clearT > 0) {
+        t.clearT -= dt;
+        if (t.clearT <= 0) {
+            t.step++;
+            if (t.step < TUTORIAL_STEPS.length) tutorialStepStart(t.step);
+            else { comets = []; enemyBullets = []; audioHandler.playSound('waveClear'); }
+        }
+        return;
+    }
+
+    // 進捗の計測
+    const dx = player.x - t.lastX;
+    if (dx < 0) t.movedL += -dx; else t.movedR += dx;
+    t.lastX = player.x;
+    if (input.slow && (input.left || input.right)) t.slowFrames++;
+    if (t.step === 2 && t.hitFlash === 0) t.survive += dt;
+    if (t.step === 7 && t.bossSpawned && !boss) { t.bossDone = true; t.afterBoss += dt; }
+
+    // ステップごとの出現
+    t.spawnT += dt;
+    if (st.comets) {
+        const interval = 0.42 / st.comets;
+        while (t.spawnT > interval) {
+            t.spawnT -= interval;
+            const near = t.step === 3 && Math.random() < 0.5;
+            comets.push({ x: near ? player.x + (Math.random() < 0.5 ? -1 : 1) * (40 + Math.random() * 30) : Math.random() * config.canvasWidth, y: -10, vx: 0, vy: 230, radius: config.cometCoreRadius, isGlazed: false });
+        }
+    }
+    if (t.step === 4 && !monsters.some(m => m.type === 'invader')) {
+        monsters.push({ type: 'invader', x: config.canvasWidth * (0.3 + Math.random() * 0.4), y: -30, vx: 0, vy: 45, width: 56, height: 56, shootCooldown: 1e9 });
+    }
+    if (t.step === 5 && items.length === 0 && t.items === 0) {
+        items.push({ x: Math.max(80, Math.min(config.canvasWidth - 80, player.x + (Math.random() < 0.5 ? -1 : 1) * 220)), y: -20, type: 'normal' });
+    }
+    if (t.step === 6) {
+        if (player.invincibleTimer < 40) triggerInvincibility(240);
+        energy = config.energyTotal;
+    }
+
+    if (st.goal(t)) {
+        t.clearT = 1.4;
+        audioHandler.playSound('itemGet');
+    }
+}
+
+function drawTutorialPanel(ctx2) {
+    const t = tutorial;
+    if (!t) return;
+    const cx = HUD_W / 2, y0 = 56, w = 720, h = 80;
+    ctx2.save();
+    ctx2.fillStyle = 'rgba(6, 2, 20, 0.5)';
+    ctx2.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx2.lineWidth = 1;
+    if (ctx2.roundRect) { ctx2.beginPath(); ctx2.roundRect(cx - w / 2, y0, w, h, 10); ctx2.fill(); ctx2.stroke(); }
+    else { ctx2.fillRect(cx - w / 2, y0, w, h); ctx2.strokeRect(cx - w / 2, y0, w, h); }
+    ctx2.textAlign = 'center';
+    if (t.step >= TUTORIAL_STEPS.length) {
+        ctx2.fillStyle = `hsl(${(frameCount * 5) % 360}, 100%, 72%)`;
+        ctx2.font = `700 28px ${config.fontFamily}`;
+        ctx2.fillText('チュートリアル完了！', cx, y0 + 44);
+        ctx2.fillStyle = '#dfe6ff';
+        ctx2.font = `500 15px ${config.fontFamily}`;
+        ctx2.fillText('タイトルに戻ります', cx, y0 + 72);
+        ctx2.restore();
+        return;
+    }
+    const st = TUTORIAL_STEPS[t.step];
+    ctx2.fillStyle = themes[currentThemeIndex].ui;
+    ctx2.font = `700 13px ${config.fontFamily}`;
+    ctx2.fillText(`TUTORIAL  ${t.step + 1} / ${TUTORIAL_STEPS.length}　${st.title}`, cx, y0 + 19);
+    ctx2.fillStyle = '#ffffff';
+    ctx2.font = `600 17px ${config.fontFamily}`;
+    ctx2.fillText(st.text, cx, y0 + 44, w - 30);
+    if (t.clearT > 0) {
+        ctx2.fillStyle = `hsl(${(frameCount * 8) % 360}, 100%, 70%)`;
+        ctx2.font = `800 20px ${config.fontFamily}`;
+        ctx2.fillText('CLEAR!', cx, y0 + 69);
+    } else if (t.hitFlash > 0) {
+        ctx2.fillStyle = '#ff5577';
+        ctx2.font = `700 15px ${config.fontFamily}`;
+        ctx2.fillText('当たった！ もう一度', cx, y0 + 69);
+    } else {
+        ctx2.fillStyle = '#b8c4ff';
+        ctx2.font = `600 15px ${config.fontFamily}`;
+        ctx2.fillText(st.progress(t), cx, y0 + 69);
+    }
+    // ステップの進行ドット
+    for (let k = 0; k < TUTORIAL_STEPS.length; k++) {
+        ctx2.beginPath();
+        ctx2.arc(cx - (TUTORIAL_STEPS.length - 1) * 9 + k * 18, y0 + h + 10, 3.5, 0, Math.PI * 2);
+        ctx2.fillStyle = k < t.step ? '#7dffb0' : k === t.step ? '#ffffff' : 'rgba(255,255,255,0.25)';
+        ctx2.fill();
+    }
+    ctx2.restore();
+}
+
 function update(timestamp) {
     if (gameState !== 'paused') {
         if (!lastTimestamp) {
@@ -2460,7 +2658,8 @@ function update(timestamp) {
             // --- ゲーム開始処理 ---
             if (input.replayTrigger) {
                 audioHandler.initialize();
-                startGame(titleMenuItems[titleMenuIndex]);
+                if (titleMenuItems[titleMenuIndex] === 'TUTORIAL') startTutorial();
+                else startGame(titleMenuItems[titleMenuIndex]);
             }
         } else if (gameState === 'gameOver') {
             frameCount++; // Keep frameCount running for animations
@@ -2553,7 +2752,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 
     renderCtx.save();
     renderCtx.globalAlpha = alpha;
-    renderCtx.font = `${fontSize}px ${config.fontFamily}`;
+    renderCtx.font = `600 ${fontSize}px ${config.fontFamily}`;
     renderCtx.textAlign = 'left';
 
     const textMetrics = renderCtx.measureText(textToDraw);
@@ -2846,7 +3045,7 @@ class InstPool {
 const glow = new GlowBatch(4000);
 const trails = new TrailBatch(1500);
 const cometBodies = new InstPool(new THREE.IcosahedronGeometry(1, 0), glowInstMaterial(0.55), 900, 2);
-const cometWires = new InstPool(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }), 900, 3);
+const cometWires = new InstPool(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }), 900, 3);
 const bulletBodies = new InstPool(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), 1200, 23); // 敵弾は照明の影響を受けず常に明るく
 const gemBodies = new InstPool(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), 600, 22);
 const debrisCubes = new InstPool(new THREE.BoxGeometry(1, 1, 1), glowInstMaterial(0.6), 800, 2);
@@ -4040,7 +4239,8 @@ function render3D() {
         }
     });
 
-    // 彗星
+    // 彗星（数が増えるほど光を控えめに）
+    const cometDensityK = 1 / (1 + comets.length / 220);
     const stageSpeedMod = 1 + (stage - 1) * 0.08;
     comets.forEach(c => {
         if (c._r === undefined) c._r = Math.random() * 100;
@@ -4051,13 +4251,13 @@ function render3D() {
         const s = c.radius * 1.7 * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
         cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
-        glow.add(x, y, z, color, 14 + visualBeat * 8, 0.4);
+        glow.add(x, y, z, color, 13 + visualBeat * 6, 0.3 * cometDensityK);
         if (efx) {
             let vx, vy;
             if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod; }
             const sp = Math.hypot(vx, vy) || 1;
             const len = 34 + sp * 0.09;
-            trails.add(x - vx / sp * len, y, z - vy / sp * len, x, y, z, 13, color, 0.75);
+            trails.add(x - vx / sp * len, y, z - vy / sp * len, x, y, z, 12, color, 0.55 * cometDensityK);
         }
     });
 
@@ -4307,7 +4507,7 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = 0.55 + visualBeat * 0.35;
+        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260);
         composer.render(dt);
     } else {
         renderer.render(scene, camera);
@@ -4332,7 +4532,7 @@ function draw() {
 
     if (!gl3dOK) {
         renderCtx.fillStyle = '#ff3366';
-        renderCtx.font = `14px ${config.fontFamily}`;
+        renderCtx.font = `600 14px ${config.fontFamily}`;
         renderCtx.textAlign = 'center';
         renderCtx.fillText('WebGL is not available on this browser.', HUD_W / 2, HUD_H - 60);
     }
@@ -4356,7 +4556,7 @@ function draw() {
         renderCtx.textAlign = 'center';
         scoreTexts.forEach(st => {
             const fontSize = st.type === 'bonus' ? 14 : st.type === 'gem' ? 12 : 10;
-            renderCtx.font = `${fontSize}px ${config.fontFamily}`;
+            renderCtx.font = `600 ${fontSize}px ${config.fontFamily}`;
             const alpha = st.type === 'gem' ? Math.min(1, st.life / 14) : st.life / 60.0;
             const hue = st.type === 'gem' ? 40 + (st.life * 7) % 30 : (frameCount * 5 + st.x) % 360;
             const scoreColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
@@ -4379,7 +4579,7 @@ function draw() {
     // SCOREとタイマー表示 (タイトル画面以外で表示)
     if (gameState !== 'title') {
         drawWithGlow(renderCtx, () => {
-            renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
+            renderCtx.font = `600 ${mainFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             
             renderCtx.textAlign = 'left';
@@ -4396,7 +4596,7 @@ function draw() {
         // ゲームモード名とハイスコアを交互に表示
         let textToDisplay;
         if (isShowingModeInGame) {
-            textToDisplay = gameMode.replace(' MODE', '');
+            textToDisplay = tutorial ? 'TUTORIAL' : gameMode.replace(' MODE', '');
         } else {
             let currentHighScore;
             switch(gameMode) {
@@ -4421,7 +4621,7 @@ function draw() {
         }
         
         drawWithGlow(renderCtx, () => {
-            renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
+            renderCtx.font = `600 ${mainFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             renderCtx.textAlign = 'right';
             renderCtx.fillText(textToDisplay, HUD_W - 20, 40);
@@ -4430,12 +4630,14 @@ function draw() {
 
         // STAGE表示
         drawWithGlow(renderCtx, () => {
-            renderCtx.font = `${subFontSize}px ${config.fontFamily}`;
+            renderCtx.font = `600 ${subFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             renderCtx.textAlign = 'center';
             renderCtx.fillText(`STAGE ${stage}`, HUD_W / 2, HUD_H - 20);
         }, uiColor, true);
     }
+
+    if (tutorial && (gameState === 'playing' || gameState === 'paused')) drawTutorialPanel(renderCtx);
 
     // ボス: 警告とHPバー
     if (boss && (gameState === 'playing' || gameState === 'paused')) {
@@ -4445,16 +4647,16 @@ function draw() {
             renderCtx.globalAlpha = Math.floor(boss.enterT / 8) % 2 ? 1 : 0.35;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = '#ff3355';
-                renderCtx.font = `40px ${config.fontFamily}`;
+                renderCtx.font = `600 40px ${config.fontFamily}`;
                 renderCtx.fillText('WARNING', HUD_W / 2, HUD_H / 2 - 20);
             }, '#ff3355');
             renderCtx.globalAlpha = 1;
             renderCtx.fillStyle = theme.ui;
-            renderCtx.font = `14px ${config.fontFamily}`;
+            renderCtx.font = `600 14px ${config.fontFamily}`;
             renderCtx.fillText(`${boss.def.name} APPROACHING`, HUD_W / 2, HUD_H / 2 + 20);
         }
-        const bw = 360, bh = 8, bx = HUD_W / 2 - bw / 2, by = 64;
-        renderCtx.font = `10px ${config.fontFamily}`;
+        const bw = 360, bh = 8, bx = HUD_W / 2 - bw / 2, by = tutorial ? 166 : 64;
+        renderCtx.font = `600 10px ${config.fontFamily}`;
         renderCtx.textAlign = 'left';
         renderCtx.fillStyle = theme.ui;
         renderCtx.fillText(boss.def.name, bx, by - 6);
@@ -4501,7 +4703,7 @@ function draw() {
         
         renderCtx.save();
         renderCtx.textAlign = 'center';
-        renderCtx.font = `24px ${config.fontFamily}`;
+        renderCtx.font = `600 24px ${config.fontFamily}`;
         const totalWidth = renderCtx.measureText(displayText).width;
         let currentX = HUD_W / 2 - totalWidth / 2;
 
@@ -4518,7 +4720,7 @@ function draw() {
             currentX += charWidth;
         }
 
-        renderCtx.font = `10px ${config.fontFamily}`;
+        renderCtx.font = `600 10px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = theme.ui;
             renderCtx.fillText("Bonus Points for Hitting a Comet!!", HUD_W / 2, subTextY);
@@ -4584,7 +4786,7 @@ function draw() {
         const mutekiColor = `hsl(${(frameCount*3)%360},100%,70%)`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = mutekiColor;
-            renderCtx.font = `16px ${config.fontFamily}`;
+            renderCtx.font = `600 16px ${config.fontFamily}`;
             renderCtx.textAlign = 'left';
             renderCtx.fillText('MUTEKI', 20, mutekiY);
         }, mutekiColor, true);
@@ -4599,7 +4801,7 @@ function draw() {
             renderCtx.globalAlpha = a;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = theme.ui;
-                renderCtx.font = `32px ${config.fontFamily}`;
+                renderCtx.font = `600 32px ${config.fontFamily}`;
                 renderCtx.textAlign = 'center';
                 renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2);
             }, theme.ui, true);
@@ -4623,7 +4825,7 @@ function draw() {
             renderCtx.textAlign = 'center';
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = `hsl(${(frameCount * 6) % 360}, 100%, 70%)`;
-                renderCtx.font = `28px ${config.fontFamily}`;
+                renderCtx.font = `600 28px ${config.fontFamily}`;
                 renderCtx.fillText(`${e.name} DESTROYED`, HUD_W / 2, HUD_H / 2 - 60);
             }, '#ffffff');
             renderCtx.restore();
@@ -4650,7 +4852,7 @@ function draw() {
         const quitMsg = `Press ${lastInputDevice === 'keyboard' ? 'Q' : 'Select'} to Title`;
         const resumeMsg = `Press ${resumeKey} to Resume`;
         
-        renderCtx.font = `48px ${config.fontFamily}`;
+        renderCtx.font = `600 48px ${config.fontFamily}`;
         renderCtx.textAlign = 'center';
         
         const totalWidth = renderCtx.measureText(pauseMsg).width;
@@ -4669,7 +4871,7 @@ function draw() {
         }
 
         renderCtx.fillStyle = theme.ui;
-        renderCtx.font = `20px ${config.fontFamily}`;
+        renderCtx.font = `600 20px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillText(resumeMsg, HUD_W / 2, HUD_H / 2 + 30);
             renderCtx.fillText(quitMsg, HUD_W / 2, HUD_H / 2 + 60);
@@ -4689,80 +4891,102 @@ function draw() {
 
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = msgColor;
-            renderCtx.font = `24px ${config.fontFamily}`;
+            renderCtx.font = `600 24px ${config.fontFamily}`;
             renderCtx.fillText(msg1, HUD_W / 2, HUD_H / 2 - 20);
         }, msgColor);
         
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = '#ffffff';
-            renderCtx.font = `20px ${config.fontFamily}`;
+            renderCtx.font = `600 20px ${config.fontFamily}`;
             renderCtx.fillText(msg2, HUD_W / 2, HUD_H / 2 + 25);
         }, '#ffffff');
         
         renderCtx.textBaseline = 'alphabetic'; // デフォルトに戻す
     
     } else if (gameState === 'title') {
+        const cx = HUD_W / 2;
+        const hasLS = 'letterSpacing' in renderCtx;
+        renderCtx.save();
         renderCtx.textAlign = 'center';
-        const titleColor = theme.player;
-        const uiColor = theme.ui;
-
+        renderCtx.textBaseline = 'alphabetic';
+        // ロゴ: COMET（グラデーション＋グロー）
+        if (hasLS) renderCtx.letterSpacing = '14px';
+        renderCtx.font = `900 96px ${config.logoFontFamily}`;
+        const lg = renderCtx.createLinearGradient(cx - 300, 120, cx + 300, 210);
+        lg.addColorStop(0, theme.player);
+        lg.addColorStop(0.5, '#ffffff');
+        lg.addColorStop(1, theme.ui);
         drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = titleColor;
-            renderCtx.font = `60px ${config.fontFamily}`;
-            renderCtx.fillText('COMET', HUD_W / 2, HUD_H / 2 - 120);
-        }, titleColor);
-        
-        const outburstY = HUD_H / 2 - 75;
-        const outburstFont = `16px ${config.fontFamily}`;
-        drawTitleTextMorph(renderCtx, HUD_W / 2, outburstY, outburstFont, uiColor);
+            renderCtx.fillStyle = lg;
+            renderCtx.fillText('COMET', cx + 7, 196);
+        }, theme.player, true);
+        // OUTBURST+（モーフ）と左右のライン
+        if (hasLS) renderCtx.letterSpacing = '13px';
+        drawTitleTextMorph(renderCtx, cx + 6, 246, `700 28px ${config.logoFontFamily}`, theme.ui);
+        renderCtx.strokeStyle = theme.ui;
+        renderCtx.globalAlpha = 0.6;
+        renderCtx.lineWidth = 1.5;
+        renderCtx.beginPath();
+        renderCtx.moveTo(cx - 360, 236); renderCtx.lineTo(cx - 225, 236);
+        renderCtx.moveTo(cx + 225, 236); renderCtx.lineTo(cx + 360, 236);
+        renderCtx.stroke();
+        renderCtx.globalAlpha = 1;
+        if (hasLS) renderCtx.letterSpacing = '8px';
+        renderCtx.fillStyle = 'rgba(220, 228, 255, 0.6)';
+        renderCtx.font = `600 12px ${config.fontFamily}`;
+        renderCtx.fillText('3D EDITION', cx + 4, 282);
 
-        // Draw Menu
+        // メニュー
+        const menuY = 344, menuGap = 42;
         titleMenuItems.forEach((item, index) => {
-            const y = HUD_H / 2 + index * 40;
+            const y = menuY + index * menuGap;
+            const label = item.replace(' MODE', '');
             if (index === titleMenuIndex) {
-                const selectorColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
+                const bw = 380, bh = 36;
+                const bg = renderCtx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
+                bg.addColorStop(0, 'rgba(255,255,255,0)');
+                bg.addColorStop(0.5, hexToRgba(theme.ui, 0.32 + visualBeat * 0.2));
+                bg.addColorStop(1, 'rgba(255,255,255,0)');
+                renderCtx.fillStyle = bg;
+                renderCtx.fillRect(cx - bw / 2, y - bh / 2 - 7, bw, bh);
+                const sel = `hsl(${(frameCount * 3) % 360}, 100%, 72%)`;
+                const off = 150 + Math.sin(frameCount * 0.12) * 6;
+                renderCtx.fillStyle = sel;
+                renderCtx.beginPath();
+                renderCtx.moveTo(cx - off, y - 15); renderCtx.lineTo(cx - off + 10, y - 7); renderCtx.lineTo(cx - off, y + 1); renderCtx.fill();
+                renderCtx.beginPath();
+                renderCtx.moveTo(cx + off, y - 15); renderCtx.lineTo(cx + off - 10, y - 7); renderCtx.lineTo(cx + off, y + 1); renderCtx.fill();
+                if (hasLS) renderCtx.letterSpacing = '7px';
+                renderCtx.font = `700 22px ${config.fontFamily}`;
                 drawWithGlow(renderCtx, () => {
-                    renderCtx.fillStyle = selectorColor;
-                    renderCtx.font = `22px ${config.fontFamily}`;
-                    renderCtx.fillText(`> ${item} <`, HUD_W / 2, y);
-                }, selectorColor, true);
+                    renderCtx.fillStyle = '#ffffff';
+                    renderCtx.fillText(label, cx + 3, y);
+                }, theme.ui, true);
             } else {
-                renderCtx.fillStyle = '#cccccc';
-                renderCtx.font = `20px ${config.fontFamily}`;
-                renderCtx.fillText(item, HUD_W / 2, y);
+                if (hasLS) renderCtx.letterSpacing = '6px';
+                renderCtx.font = `600 18px ${config.fontFamily}`;
+                renderCtx.fillStyle = 'rgba(214, 222, 255, 0.5)';
+                renderCtx.fillText(label, cx + 3, y);
             }
         });
-        
-        drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = '#ffffff';
-            renderCtx.font = `18px ${config.fontFamily}`;
-            if (titleBottomText === "") {
-                titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
-            }
-            renderCtx.fillText(titleBottomText, HUD_W / 2, HUD_H / 2 + 160);
-        }, '#ffffff');
-        
-        const highScoreY = HUD_H / 2 + 220;
-        const highScoreCycle = frameCount % 360; 
-        if (highScoreCycle < 120) {
-             drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.font = `14px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE (STANDARD): ${highScoreStandard}`, HUD_W / 2, highScoreY);
-            }, theme.ui);
-        } else if (highScoreCycle < 240) {
-             drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.font = `14px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE (JOURNEY): ${highScoreJourney}`, HUD_W / 2, highScoreY);
-            }, theme.ui);
-        } else {
-             drawWithGlow(renderCtx, () => {
-                renderCtx.fillStyle = theme.ui;
-                renderCtx.font = `14px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, HUD_W / 2, highScoreY);
-            }, theme.ui);
+
+        if (hasLS) renderCtx.letterSpacing = '3px';
+        if (titleBottomText === "") {
+            titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
         }
+        renderCtx.font = `600 16px ${config.fontFamily}`;
+        renderCtx.globalAlpha = 0.65 + Math.sin(frameCount * 0.08) * 0.35;
+        renderCtx.fillStyle = '#ffffff';
+        renderCtx.fillText(titleBottomText, cx, 530);
+        renderCtx.globalAlpha = 1;
+
+        const highScoreCycle = frameCount % 360;
+        const hsText = highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`;
+        renderCtx.font = `600 13px ${config.fontFamily}`;
+        renderCtx.fillStyle = theme.ui;
+        renderCtx.fillText(hsText, cx, 566);
+        if (hasLS) renderCtx.letterSpacing = '0px';
+        renderCtx.restore();
 
     } else if (gameState === 'gameOver') {
         renderCtx.textAlign = 'center';
@@ -4772,7 +4996,7 @@ function draw() {
         
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = gameOverColor;
-            renderCtx.font = `60px ${config.fontFamily}`;
+            renderCtx.font = `600 60px ${config.fontFamily}`;
             renderCtx.fillText('GAME OVER', HUD_W / 2, gameOverY);
         }, gameOverColor);
 
@@ -4781,7 +5005,7 @@ function draw() {
             const newRecordY = gameOverY + 80;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = newRecordColor;
-                renderCtx.font = `30px ${config.fontFamily}`;
+                renderCtx.font = `600 30px ${config.fontFamily}`;
                 renderCtx.fillText('NEW RECORD!', HUD_W / 2, newRecordY);
             }, newRecordColor);
         }
@@ -4796,12 +5020,12 @@ function draw() {
         }
 
         drawWithGlow(renderCtx, () => {
-            renderCtx.font = `30px ${config.fontFamily}`;
+            renderCtx.font = `600 30px ${config.fontFamily}`;
             renderCtx.fillStyle = theme.ui;
             renderCtx.fillText(`SCORE: ${score}`, HUD_W / 2, scoreY);
         }, theme.ui);
         drawWithGlow(renderCtx, () => {
-            renderCtx.font = `20px ${config.fontFamily}`;
+            renderCtx.font = `600 20px ${config.fontFamily}`;
             renderCtx.fillStyle = theme.ui;
             renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, HUD_W / 2, scoreY + 50);
         }, theme.ui);
@@ -4816,7 +5040,7 @@ function draw() {
         }
         const replayY = scoreY + 120;
         drawWithGlow(renderCtx, () => {
-            renderCtx.font = `18px ${config.fontFamily}`;
+            renderCtx.font = `600 18px ${config.fontFamily}`;
             renderCtx.fillStyle = '#ffffff';
             renderCtx.fillText(replayText, HUD_W / 2, replayY);
             renderCtx.fillText(titleText, HUD_W / 2, replayY + 30);
