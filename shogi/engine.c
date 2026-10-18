@@ -92,6 +92,20 @@ static i32 histL[NST], histH[NST]; static u8 histChk[NST];
 static int hn = 0;
 static float nnA[2 * NN_MAXH];
 static float nnSt[NST * 2 * 32];
+/* NNUE (chess-style): (2534 -> 256) x 2 perspectives -> 1, SCReLU; int16 weights (x QA), int32 accumulators */
+#define NUE_H 256
+#define NUE_IN 2534
+#define NUE_QA 255
+#define NUE_QB 64
+static int nueOn = 0;
+static i16 nueW1[NUE_IN * NUE_H], nueW2[2 * NUE_H];
+static i32 nueB1[NUE_H], nueB2;
+static i32 nueA[2][NUE_H];
+static i32 nueSt[NST][2][NUE_H];
+static inline int nueB(int persp, int p, int s) { return ((colorOf(p) != persp) * 14 + typeOf(p) - 1) * 81 + (persp ? 80 - s : s); }
+static inline int nueHd(int persp, int hc, int t, int n) { return n > 19 ? -1 : 2268 + ((hc != persp) * 7 + t - 1) * 19 + n - 1; }
+static inline void nueAdd(int persp, int f) { if (f < 0) return; i32 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
+static inline void nueSub(int persp, int f) { if (f < 0) return; i32 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] -= w[j]; }
 
 static void setKingCache(int c) {
   int k = king[c];
@@ -153,11 +167,33 @@ static double nnEval(void) {
   double v = o * NN_K;
   return v > 20000 ? 20000 : v < -20000 ? -20000 : (double)(i32)v;
 }
+static void nueRefresh(void) {
+  for (int c = 0; c < 2; c++) {
+    for (int j = 0; j < NUE_H; j++) nueA[c][j] = nueB1[j];
+    for (int s = 0; s < 81; s++) if (board[s]) nueAdd(c, nueB(c, board[s], s));
+    for (int hc = 0; hc < 2; hc++) for (int t = 1; t <= 7; t++) for (int n = 1; n <= hand[hc * 8 + t]; n++) nueAdd(c, nueHd(c, hc, t, n));
+  }
+}
+static double nueEval(void) {
+  const i32 *a = nueA[side], *b = nueA[side ^ 1];
+  long long sum = 0;
+  for (int i0 = 0; i0 < NUE_H; i0 += 16) {
+    i32 part = 0;
+    for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > NUE_QA ? NUE_QA : a[i]; part += x * x * nueW2[i]; }
+    sum += part; part = 0;
+    for (int i = i0; i < i0 + 16; i++) { i32 x = b[i] < 0 ? 0 : b[i] > NUE_QA ? NUE_QA : b[i]; part += x * x * nueW2[NUE_H + i]; }
+    sum += part;
+  }
+  long long v = sum / NUE_QA + nueB2;
+  return (double)v * NN_K / (NUE_QA * NUE_QB);
+}
 static void refreshEval(void) {
+  if (nueOn) nueRefresh();
   if (nnOn) { nnRefresh(0); nnRefresh(1); return; }
   acc[0] = fullAcc(0); acc[1] = fullAcc(1);
 }
 static inline double evaluate(void) {
+  if (nueOn) return nueEval();
   if (nnOn) return nnEval();
   double v = (double)(acc[0] - acc[1]) / EVAL_Q;
   return (side ? -v : v) + (double)W[TEMPO] / EVAL_Q;
@@ -300,11 +336,14 @@ static void doMove(int m) {
   i32 a0 = acc[0], a1 = acc[1];
   int nn = nnOn;
   if (nn) memcpy(nnSt + s0 * 2 * nnH, nnA, sizeof(float) * 2 * nnH);
+  int nue = nueOn;
+  if (nue) memcpy(nueSt[s0], nueA, sizeof nueA);
   if (from > 80) {
     int t = from - 80, p = t + (us ? WF : 0), hi = us * 8 + t, n = hand[hi];
     l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
     if (nn) { nnHand(0, us, t, n, -1); nnHand(1, us, t, n, -1); nnPiece(0, p, to, 1); nnPiece(1, p, to, 1); }
     else { a0 -= hv_(0, us, t, n); a1 -= hv_(1, us, t, n); a0 += pv_(0, p, to); a1 += pv_(1, p, to); }
+    if (nue) for (int c = 0; c < 2; c++) { nueSub(c, nueHd(c, us, t, n)); nueAdd(c, nueB(c, p, to)); }
     hand[hi] = n - 1;
     board[to] = p; SETB(us, to); l ^= ZB_L[to * 32 + p]; h ^= ZB_H[to * 32 + p];
     stCap[s0] = 0;
@@ -318,6 +357,7 @@ static void doMove(int m) {
       int ct = UNPROMOTE[typeOf(cap)], hi = us * 8 + ct, n = hand[hi] + 1;
       hand[hi] = n;
       l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
+      if (nue) for (int c = 0; c < 2; c++) { nueSub(c, nueB(c, cap, to)); nueAdd(c, nueHd(c, us, ct, n)); }
       if (typeOf(cap) != OU) {
         if (nn) {
           if (!(isKing && us == 0)) { nnPiece(0, cap, to, -1); nnHand(0, us, ct, n, 1); }
@@ -330,6 +370,7 @@ static void doMove(int m) {
     }
     l ^= ZB_L[from * 32 + p] ^ ZB_L[to * 32 + np]; h ^= ZB_H[from * 32 + p] ^ ZB_H[to * 32 + np];
     board[from] = 0; board[to] = np; CLRB(us, from); SETB(us, to); if (cap) CLRB(them, to);
+    if (nue) for (int c = 0; c < 2; c++) { nueSub(c, nueB(c, p, from)); nueAdd(c, nueB(c, np, to)); }
     if (nn) {
       if (isKing) { king[us] = to; nnRefresh(us); nnPiece(them, p, from, -1); nnPiece(them, np, to, 1); }
       else { nnPiece(0, p, from, -1); nnPiece(0, np, to, 1); nnPiece(1, p, from, -1); nnPiece(1, np, to, 1); }
@@ -361,6 +402,7 @@ static void undoMove(void) {
   }
   hl = stHL[s0]; hh = stHH[s0]; acc[0] = stA0[s0]; acc[1] = stA1[s0];
   if (nnOn) memcpy(nnA, nnSt + s0 * 2 * nnH, sizeof(float) * 2 * nnH);
+  if (nueOn) memcpy(nueA, nueSt[s0], sizeof nueA);
 }
 static void doNull(void) {
   int s0 = sp;
@@ -993,6 +1035,11 @@ EXPORT(get_hash) i32 get_hash(int hi) { return hi ? hh : hl; }
 EXPORT(get_eval) double get_eval(void) { return evaluate(); }
 
 /* network: JS writes the float buffers via these pointers, then calls nn_enable(H) */
+EXPORT(nue_w1_ptr) i16 *nue_w1_ptr(void) { return nueW1; }
+EXPORT(nue_w2_ptr) i16 *nue_w2_ptr(void) { return nueW2; }
+EXPORT(nue_b1_ptr) i32 *nue_b1_ptr(void) { return nueB1; }
+EXPORT(nue_set_b2) void nue_set_b2(i32 b) { nueB2 = b; }
+EXPORT(nue_enable) void nue_enable(int on) { nueOn = on; refreshEval(); }
 EXPORT(nn_w1_ptr) float *nn_w1_ptr(void) { return nnStore; }
 EXPORT(nn_b1_ptr) float *nn_b1_ptr(void) { return nnb1; }
 EXPORT(nn_w2t_ptr) double *nn_w2t_ptr(void) { return nnW2T; }

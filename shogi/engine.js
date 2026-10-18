@@ -1182,11 +1182,31 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   const pos = new Position();
   const se = new Searcher(pos);
   // WebAssembly build of the same search (engine.c): identical results, faster. Falls back to JS if unavailable.
-  let X = null, wProgress = null, wAProgress = null;
+  let X = null, wProgress = null, wAProgress = null, nueReady = false, nueCur = false;
+  // WebAssembly SIMD (needed for the NNUE evaluation to be fast): engine_simd.wasm + nnue.bin.gz, otherwise engine.wasm with the linear evaluation
+  const simdOK = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
+  async function loadNNUE(x) {
+    if (typeof DecompressionStream === 'undefined') return;
+    const res = await fetch(new URL('nnue.bin.gz' + (self.location.search || ''), self.location.href));
+    if (!res.ok) return;
+    let buf = new Uint8Array(await res.arrayBuffer());
+    if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    if (dv.getUint32(0, true) !== 0x5145554E) return;
+    const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true), b = buf.buffer;
+    let o = buf.byteOffset + 12;
+    new Int16Array(x.memory.buffer, x.nue_w1_ptr(), NIN * H).set(new Int16Array(b.slice(o, o + NIN * H * 2))); o += NIN * H * 2;
+    new Int32Array(x.memory.buffer, x.nue_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
+    new Int16Array(x.memory.buffer, x.nue_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
+    x.nue_set_b2(dv.getInt32(o - buf.byteOffset, true));
+    nueReady = true;
+  }
+  // the NNUE evaluation for normal play, hints and analysis; the beginner levels (noise) keep the linear evaluation they were tuned with
+  function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } }
   try {
-    const url = new URL('engine.wasm' + (self.location.search || ''), self.location.href);
+    const url = new URL((simdOK ? 'engine_simd.wasm' : 'engine.wasm') + (self.location.search || ''), self.location.href);
     WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
-      .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); })
+      .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) loadNNUE(x).catch(() => { nueReady = false; }); })
       .catch(() => { X = null; });
   } catch (e) { X = null; }
   function wsetup(d) {
@@ -1221,7 +1241,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       const o = d.opts || {};
       if (o.noise) {
         // weak levels: score every root move with a shallow full-window search, then pick softly among near-best moves
-        const list = useWasm() ? (wsetup(d), wasmAnalyze({ depth: o.depth || 1 })) : se.analyze({ depth: o.depth || 1 });
+        const list = useWasm() ? (nueUse(false), wsetup(d), wasmAnalyze({ depth: o.depth || 1 })) : se.analyze({ depth: o.depth || 1 });
         if (!list.length) { self.postMessage({ type: 'result', id: d.id, move: null, score: -MATE, depth: 0, pv: [] }); return; }
         // beginner personality: likes captures and checks a little more than they are worth
         if (o.greedy) {
@@ -1245,13 +1265,13 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
         return;
       }
       if (useWasm()) {
-        wsetup(d);
+        nueUse(!o.linear); wsetup(d);
         wProgress = (depth, score, nodes, pp, pl) => self.postMessage({ type: 'progress', id: d.id, depth, score, pv: Array.from(new Int32Array(X.memory.buffer, pp, pl), m => pos.toUsi(m)), nodes });
         const t0 = Date.now();
         const mv = X.root_search(o.time || 0, o.depth || 0, o.nodes || 0);
         wProgress = null;
         const r = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
-        self.postMessage({ type: 'result', id: d.id, move: mv ? pos.toUsi(mv) : null, score: X.res_score(), depth: r[1], pv: Array.from(r.subarray(4, 4 + r[3]), m => pos.toUsi(m)), nodes: r[2], time: Date.now() - t0, wasm: true });
+        self.postMessage({ type: 'result', id: d.id, move: mv ? pos.toUsi(mv) : null, score: X.res_score(), depth: r[1], pv: Array.from(r.subarray(4, 4 + r[3]), m => pos.toUsi(m)), nodes: r[2], time: Date.now() - t0, wasm: true, nnue: nueCur });
         return;
       }
       const res = se.rootSearch({
@@ -1271,7 +1291,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     if (d.type === 'analyze') {
       setup(d);
       const o = d.opts || {};
-      const res = (useWasm() ? (wsetup(d), wasmAnalyze) : (oo, cb) => se.analyze({ ...oo, onDepth: cb }))({ time: o.time, depth: o.depth }, (list, depth) => self.postMessage({ type: 'analysisProgress', id: d.id, depth, list: list.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s })) }));
+      const res = (useWasm() ? (nueUse(true), wsetup(d), wasmAnalyze) : (oo, cb) => se.analyze({ ...oo, onDepth: cb }))({ time: o.time, depth: o.depth }, (list, depth) => self.postMessage({ type: 'analysisProgress', id: d.id, depth, list: list.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s })) }));
       self.postMessage({ type: 'analysis', id: d.id, list: res.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s, depth: r.d })) });
       return;
     }
