@@ -2700,13 +2700,15 @@ function drawTutorialPanel(ctx2) {
     const t = tutorial;
     if (!t) return;
     const st0 = t.step < TUTORIAL_STEPS.length ? TUTORIAL_STEPS[t.step] : null;
-    const w = Math.min(720, HUD_W - 24);
+    const S = IS_MOBILE ? 1.45 : 1; // スマホはパネルごと拡大して読みやすく
+    const w = Math.min(720, (HUD_W - 24) / S);
     ctx2.font = `600 17px ${config.fontFamily}`;
     const lines = st0 ? wrapLines(ctx2, typeof st0.text === 'function' ? st0.text() : st0.text, w - 30) : [''];
     const extra = (lines.length - 1) * 24;
     const cx = HUD_W / 2, y0 = IS_MOBILE ? 120 : 56, h = 80 + extra;
-    tutPanelBottom = y0 + h + 14;
+    tutPanelBottom = y0 + (h + 14) * S;
     ctx2.save();
+    if (S !== 1) { ctx2.translate(cx, y0); ctx2.scale(S, S); ctx2.translate(-cx, -y0); }
     ctx2.fillStyle = 'rgba(6, 2, 20, 0.5)';
     ctx2.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx2.lineWidth = 1;
