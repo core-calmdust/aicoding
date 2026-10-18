@@ -14,7 +14,7 @@ function t(k, v) {
   return x;
 }
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
-const RULE_ORDER = ['kalah', 'basic', 'easy', 'sunka'];
+const RULE_ORDER = ['easy', 'basic', 'kalah', 'sunka'];   // 'basic' is shown as "Normal"
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -37,7 +37,8 @@ let busyToken = 0, thinking = -1, animating = false, gameOverShown = false;
 let lesson = null, puzzle = null, savedGame = null;
 let hoverPit = -1;
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const animOn = () => settings.anim && !reduceMotion;
+const animOn = () => settings.anim;            // seed-by-seed sowing (with reduced motion the gems step without flying arcs)
+const motionOn = () => settings.anim && !reduceMotion;
 
 function startBoard() { return game.setup ? Int8Array.from(game.setup.b) : E.initial(game.seeds); }
 function startSide() { return game.setup ? game.setup.side : 0; }
@@ -144,8 +145,10 @@ function slotUV(i) {
   const k = own ? i - 7 : i;
   return bottom ? { x: 1.85 + 1.1 * k, y: 2.45, bottom } : { x: 7.35 - 1.1 * k, y: 1.05, bottom };
 }
-const toPx = (x, y) => vert ? [(BH - y) * U, x * U] : [x * U, y * U];
-const offPx = (dx, dy) => vert ? [-dy * U, dx * U] : [dx * U, dy * U];
+// phone portrait: the board is turned a quarter counter-clockwise, so sowing stays counter-clockwise,
+// your pits are the right column and your store is at the top
+const toPx = (x, y) => vert ? [y * U, (BW - x) * U] : [x * U, y * U];
+const offPx = (dx, dy) => vert ? [dy * U, -dx * U] : [dx * U, dy * U];
 function slotPx(i) { const p = slotUV(i); return toPx(p.x, p.y); }
 let slotEls = [], badgeEls = [], pitNoEls = [];
 function buildBoard() {
@@ -226,7 +229,7 @@ function seedXY(s) { const [cx, cy] = slotPx(s.slot), [ox, oy] = offPx(s.x, s.y)
 function posSeed(s) {
   const [x, y] = seedXY(s);
   s.el.style.transform = `translate(${x}px,${y}px)`;
-  s.el.style.zIndex = 100 + Math.round((vert ? s.x : s.y) * 100) + 200;
+  s.el.style.zIndex = 100 + Math.round((vert ? -s.x : s.y) * 100) + 200;
 }
 function addSeedTo(i, s) { const [x, y] = placeIn(i, seeds[i]); s.x = x; s.y = y; s.slot = i; seeds[i].push(s); }
 // make the gems match a board without animation (keeps the gems that are already in place)
@@ -250,14 +253,17 @@ function setBadges(b, popAt) {
   renderPlates(b);
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// cancellable pause used by the move animation: skipAnim()/stopAnim() wake every sleeper at once
+let wakers = new Set();
+function nap(ms) { return new Promise(r => { const f = () => { clearTimeout(tm); wakers.delete(f); r(); }; const tm = setTimeout(f, ms); wakers.add(f); }); }
 function fly(s, to, dur, lift) {
   const [x0, y0] = seedXY(s);
   if (to.slot !== undefined) { s.slot = to.slot; s.x = to.x; s.y = to.y; }
   const [x1, y1] = seedXY(s);
+  if (!motionOn() || !s.el.animate) { posSeed(s); return; }
   const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - (lift || 0.45) * U;
   s.el.classList.add('fly');
   const done = () => { s.el.classList.remove('fly'); posSeed(s); };
-  if (!s.el.animate) { done(); return; }
   const a = s.el.animate([
     { transform: `translate(${x0}px,${y0}px) scale(1)` },
     { transform: `translate(${mx}px,${my}px) scale(1.35)`, offset: 0.5 },
@@ -265,74 +271,104 @@ function fly(s, to, dur, lift) {
   s.el.style.transform = `translate(${x1}px,${y1}px)`;
   a.onfinish = done; a.oncancel = done;
 }
+// the "hand": a glowing ring that travels pit by pit with the number of seeds still to sow
+const handEl = document.createElement('div'); handEl.className = 'hand'; handEl.innerHTML = '<b></b>'; boardEl.appendChild(handEl);
+function handAt(at, n, cls) {
+  const [x, y] = slotPx(at), st = isStore(at), w = st ? 1.22 * U : 1.02 * U, h = st ? 2.82 * U : 1.02 * U;
+  handEl.style.left = x + 'px'; handEl.style.top = y + 'px';
+  handEl.style.width = (vert && st ? h : w) + 'px'; handEl.style.height = (vert && st ? w : h) + 'px';
+  handEl.className = 'hand show' + (st ? ' store' : '') + (cls ? ' ' + cls : '');
+  handEl.firstChild.textContent = n > 0 ? '×' + n : '';
+}
+function handHide() { handEl.className = 'hand'; }
 let animTok = 0;
 // animate one move from board b (side to move `side`, pit k): seed by seed sowing, relays, captures, final sweep
 async function animateMove(b, side, k, rules) {
   const tr = E.trace(b, side, k, rules);
+  lastAnimBoard = tr.board;
   const tok = ++animTok;
   if (!animOn()) { syncSeeds(tr.board); sDrop(false); return tr; }
-  animating = true;
+  animating = true; boardEl.classList.add('animating');
   const counts = Int8Array.from(b), total = tr.events.filter(e => e.t === 'drop').length;
-  const step = Math.max(55, Math.min(165, 190 - total * 5)), dur = step * 2.4;
+  // ~300 ms per seed, quicker for very long sows (relays can move dozens of seeds)
+  const step = total <= 8 ? 300 : Math.max(150, 300 - (total - 8) * 8), dur = Math.round(step * 1.25);
   let hand = [];
-  const myStore = E.storeOf(side);
   try {
     for (const ev of tr.events) {
       if (tok !== animTok) break;
       if (ev.t === 'pick') {
         hand = seeds[ev.at].splice(0);
         counts[ev.at] = 0; setBadges(counts);
-        slotEls[ev.at].classList.add('src'); setTimeout(() => slotEls[ev.at] && slotEls[ev.at].classList.remove('src'), 500);
-        if (ev.relay) { relayFx(ev.at); }
+        handAt(ev.at, hand.length, ev.relay ? 'relay' : '');
+        if (ev.relay) relayFx(ev.at);
         sPick();
-        await sleep(ev.relay ? step * 1.6 : step * 0.8);
+        await nap(ev.relay ? step * 1.8 : step * 1.1);
       } else if (ev.t === 'drop') {
         const s = hand.shift() || newSeed();
         const [x, y] = placeIn(ev.at, seeds[ev.at]); seeds[ev.at].push(s);
+        handAt(ev.at, hand.length, '');
         fly(s, { slot: ev.at, x, y }, dur, isStore(ev.at) ? 0.6 : 0.45);
         const at = ev.at;
-        setTimeout(() => { if (tok !== animTok) return; counts[at]++; setBadges(counts, at); sDrop(isStore(at)); }, dur * 0.85);
-        await sleep(step);
+        setTimeout(() => { if (tok !== animTok) return; counts[at]++; setBadges(counts, at); sDrop(isStore(at)); }, motionOn() ? dur * 0.85 : 0);
+        await nap(step);
       } else if (ev.t === 'cap') {
-        await sleep(dur * 0.9);
+        await nap(dur);
+        if (tok !== animTok) break;
+        // capture: both pits light up, then the seeds fly together into the store
+        capFx(ev.from); if (ev.own >= 0) capFx(ev.own);
+        handAt(ev.to, 0, 'cap');
+        showBanner(t('bn.capture'), '+' + (ev.n + (ev.own >= 0 ? 1 : 0)), 'cap'); sCapture();
+        await nap(650);
         if (tok !== animTok) break;
         const got = seeds[ev.from].splice(0).concat(ev.own >= 0 ? seeds[ev.own].splice(0) : []);
-        showBanner(t('bn.capture'), '+' + got.length, 'cap'); sCapture();
-        capFx(ev.from);
         counts[ev.from] = 0; if (ev.own >= 0) counts[ev.own] = 0; setBadges(counts);
-        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => fly(s, { slot: ev.to, x, y }, 620, 0.9), j * 45); });
-        await sleep(620 + got.length * 45);
+        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: ev.to, x, y }, 850, 0.9); }, j * 70); });
+        await nap(900 + got.length * 70);
+        if (tok !== animTok) break;
         counts[ev.to] += got.length; setBadges(counts, ev.to);
       } else if (ev.t === 'sweep') {
-        await sleep(dur);
+        await nap(dur);
         if (tok !== animTok) break;
+        handHide();
         const moving = [];
         for (let i = 0; i < 14; i++) if (!isStore(i) && seeds[i].length) { const to = ownerOf(i) ? 13 : 6; for (const s of seeds[i].splice(0)) moving.push([s, to]); counts[i] = 0; }
         setBadges(counts);
-        moving.forEach(([s, to], j) => { const [x, y] = placeIn(to, seeds[to]); seeds[to].push(s); setTimeout(() => fly(s, { slot: to, x, y }, 700, 0.7), j * 30); });
-        await sleep(720 + moving.length * 30);
+        moving.forEach(([s, to], j) => { const [x, y] = placeIn(to, seeds[to]); seeds[to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: to, x, y }, 800, 0.7); }, j * 40); });
+        await nap(850 + moving.length * 40);
       }
     }
-    if (tok === animTok) await sleep(dur * 0.9);
+    if (tok === animTok) {
+      if (tr.extra && !tr.over) { handAt(tr.land, 0, 'extra'); showBanner(t('bn.extra'), '', ''); sExtra(); await nap(motionOn() ? 900 : 500); }
+      else await nap(dur);
+    }
   } finally {
-    if (tok === animTok) { animating = false; syncSeeds(tr.board); }
+    if (tok === animTok) { animating = false; boardEl.classList.remove('animating'); handHide(); syncSeeds(tr.board); }
   }
-  if (tok === animTok && tr.extra && !tr.over) { showBanner(t('bn.extra'), '', ''); sExtra(); }
   return tr;
 }
-function stopAnim() { animTok++; animating = false; }
+// end the running sowing animation at once (tap on the board, undo, navigation…)
+function stopAnim() {
+  animTok++; animating = false; boardEl.classList.remove('animating'); handHide();
+  wakers.forEach(f => f()); wakers.clear();
+  for (let i = 0; i < 14; i++) for (const s of seeds[i]) if (s.el.getAnimations) s.el.getAnimations().forEach(a => a.finish());
+}
+let skippedAt = 0;
+function skipAnim() { if (!animating) return; skippedAt = performance.now(); stopAnim(); if (P.length) syncSeeds(lastAnimBoard || shownPos().b); }
+let lastAnimBoard = null;
+$('#frame').addEventListener('pointerdown', e => { if (animating) { e.preventDefault(); skipAnim(); } }, true);
 function relayFx(at) {
   if (!animOn()) return;
   const [x, y] = slotPx(at), d = document.createElement('div'); d.className = 'ring'; d.style.cssText = `left:${x}px;top:${y}px;width:${0.95 * U}px;height:${0.95 * U}px;border-color:#7fc8ff;transition:opacity .6s`;
-  fxEl.appendChild(d); setTimeout(() => { d.style.opacity = 0; }, 350); setTimeout(() => d.remove(), 1000);
+  fxEl.appendChild(d); setTimeout(() => { d.style.opacity = 0; }, 450); setTimeout(() => d.remove(), 1100);
 }
 function capFx(at) {
-  const [x, y] = slotPx(at), d = document.createElement('div'); d.className = 'ring cap'; d.style.cssText = `left:${x}px;top:${y}px;width:${0.95 * U}px;height:${0.95 * U}px;transition:opacity .6s`;
-  fxEl.appendChild(d); setTimeout(() => { d.style.opacity = 0; }, 500); setTimeout(() => d.remove(), 1200);
+  const [x, y] = slotPx(at), d = document.createElement('div'); d.className = 'ring cap'; d.style.cssText = `left:${x}px;top:${y}px;width:${0.98 * U}px;height:${0.98 * U}px;transition:opacity .6s`;
+  fxEl.appendChild(d); setTimeout(() => { d.style.opacity = 0; }, 1100); setTimeout(() => d.remove(), 1800);
 }
 let bannerTimer = 0;
 function showBanner(text, sub, cls) {
   if (!settings.anim) return;
+  if (!motionOn()) { toast(text + (sub ? ' ' + sub : ''), 900); return; }
   const b = $('#banner'); b.className = 'banner ' + (cls || ''); b.innerHTML = text + (sub ? `<small>${sub}</small>` : '');
   void b.offsetWidth; b.classList.add('show');
   clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove('show'), 1300);
@@ -413,7 +449,8 @@ function renderPlates(b) {
   const p = shownPos(); if (!p) return;
   b = b || p.b;
   const B = bottomSide();
-  [['Bot', B], ['Top', 1 - B]].forEach(([w, s]) => {
+  // phone portrait: your store is at the top, so your plate goes above the board
+  (vert ? [['Top', B], ['Bot', 1 - B]] : [['Bot', B], ['Top', 1 - B]]).forEach(([w, s]) => {
     const pl = $('#plate' + w);
     $('#disc' + w).className = 'pdisc p' + s;
     const ai = isAISide(s) || (puzzle && s === 1); const icon = ai ? 'R' : 'P';
@@ -541,6 +578,7 @@ function newGame() {
 }
 function onPit(i) {
   ctx();
+  if (performance.now() - skippedAt < 450) return;
   const p = shownPos();
   if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle && !animating) rsOpen(); return; }
   if (ownerOf(i) !== p.side) return;
@@ -659,7 +697,7 @@ function resumeHere() {
   update(); save(); afterPosition();
 }
 function confetti() {
-  if (!animOn()) return;
+  if (!motionOn()) return;
   const cols = ['#e6cd8c', '#fff6dc', '#d6324b', '#2f7fd6', '#26a65b', '#9152d6'];
   for (let i = 0; i < 70; i++) {
     const c = document.createElement('div'); c.className = 'confetti';
@@ -767,6 +805,7 @@ $('#segSeeds').onclick = e => { const b = e.target.closest('button'); if (b) { d
 $('#ruleCards').onclick = e => { const b = e.target.closest('.rulecard'); if (b) { draft.rules = b.dataset.r; segSync(); } };
 $('#ngRulesHelp').onclick = () => openRules(draft.rules);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
 $('#btnStart').onclick = () => {
@@ -1343,8 +1382,25 @@ $('#langSel').onchange = e => {
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
+// Phones: the board size is computed once and only recomputed when the width or the orientation really changes,
+// so the address bar appearing / disappearing while scrolling never resizes the board.
+const coarseMQ = matchMedia('(pointer: coarse)');
+let fixW = 0, fixPortrait = null;
+function fixSize() {
+  const root = document.documentElement.style;
+  if (!coarseMQ.matches) { root.removeProperty('--u'); root.removeProperty('--vh'); fixW = 0; return; }
+  const W = window.innerWidth, H = window.innerHeight, portrait = H >= W;
+  if (W === fixW && portrait === fixPortrait) return;   // height-only change (browser bars): keep the size
+  fixW = W; fixPortrait = portrait;
+  root.setProperty('--vh', H + 'px');
+  if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4, (H - 172) / 9.7, 100)) + 'px');
+  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 20 - 2 * 32 - 16) / 4, (W - 300) / 9.7, 110)) + 'px');
+  else root.removeProperty('--u');
+}
+fixSize();
 let rzT = 0;
-window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => layout(), 60); });
+window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { fixSize(); layout(); }, 60); });
+window.addEventListener('orientationchange', () => setTimeout(() => { fixW = 0; fixSize(); layout(); }, 120));
 requestAnimationFrame(() => {
   layout();
   if (loadFromHash()) { /* shared game opened */ }

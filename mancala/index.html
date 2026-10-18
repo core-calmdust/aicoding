@@ -246,7 +246,26 @@ a.snd.home{text-decoration:none}
 .rulecard small{display:block;font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:3px}
 .rulecard .std{color:var(--accent);font-size:10.5px}
 .level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
-.level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
+.lvctl{display:flex;align-items:center;gap:10px}
+.lvbtn{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--accent);font-size:24px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.lvbtn:hover{border-color:var(--brass2)}
+.lvbtn:active{background:rgba(201,169,97,.18)}
+.level-wrap input{flex:1;min-width:0;width:100%;margin:0;height:44px;touch-action:none;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer}
+.level-wrap input::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--accent))}
+.level-wrap input::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;margin-top:-11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6dc,#e6cd8c 40%,#a98a48);border:2px solid #1b150a;box-shadow:0 2px 8px rgba(0,0,0,.6)}
+.level-wrap input::-moz-range-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--accent))}
+.level-wrap input::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6dc,#e6cd8c 40%,#a98a48);border:2px solid #1b150a}
+.hand{position:absolute;left:0;top:0;width:0;height:0;transform:translate(-50%,-50%);border-radius:50%;border:2.5px solid rgba(255,236,170,.95);box-shadow:0 0 18px rgba(255,220,140,.75),inset 0 0 12px rgba(255,220,140,.3);pointer-events:none;z-index:45;opacity:0;transition:left .18s ease,top .18s ease,width .18s,height .18s,opacity .25s}
+.hand.show{opacity:1}
+.hand.store{border-radius:calc(var(--u) * .56)}
+.hand.relay{border-color:#7fc8ff;box-shadow:0 0 18px rgba(127,200,255,.8)}
+.hand.cap{border-color:#ff8b7d;box-shadow:0 0 22px rgba(255,107,91,.8)}
+.hand.extra{border-color:#fff3cf;animation:handx .45s ease-in-out 2}
+@keyframes handx{50%{box-shadow:0 0 34px rgba(255,236,170,1),inset 0 0 18px rgba(255,236,170,.6)}}
+.hand b{position:absolute;right:-8px;top:-10px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:calc(var(--u) * .18);background:#e2c275;color:#1b150a;border-radius:7px;padding:0 5px;line-height:1.35;box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.hand b:empty{display:none}
+.board.animating{cursor:pointer}
+@media (prefers-reduced-motion: reduce){.hand{transition:opacity .2s}.hand.extra{animation:none}}
 .level-name{font-weight:700;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
 .level-name small{font-weight:400;font-size:11px;color:var(--dim)}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
@@ -553,11 +572,11 @@ bdi{unicode-bidi:isolate}
     </div>
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
-      <div class="level-wrap"><input type="range" min="1" max="10" step="1" id="levelRange"><div class="level-name" id="levelName"></div></div>
+      <div class="level-wrap"><div class="lvctl"><button class="lvbtn" data-t="level" data-d="-1" aria-label="−">−</button><input type="range" min="1" max="10" step="1" id="levelRange"><button class="lvbtn" data-t="level" data-d="1" aria-label="+">+</button></div><div class="level-name" id="levelName"></div></div>
     </div>
     <div class="field hidden" id="fLevel2">
       <label data-i18n="ng.level2"></label>
-      <div class="level-wrap"><input type="range" min="1" max="10" step="1" id="levelRange2"><div class="level-name" id="levelName2"></div></div>
+      <div class="level-wrap"><div class="lvctl"><button class="lvbtn" data-t="level2" data-d="-1" aria-label="−">−</button><input type="range" min="1" max="10" step="1" id="levelRange2"><button class="lvbtn" data-t="level2" data-d="1" aria-label="+">+</button></div><div class="level-name" id="levelName2"></div></div>
     </div>
     <div class="field" id="fDisplay">
       <label data-i18n="ng.display"></label>
