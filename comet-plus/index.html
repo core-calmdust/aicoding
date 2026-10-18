@@ -79,7 +79,7 @@
         }
         #stage {
             position: relative;
-            width: 800px;
+            width: 1067px;
             height: 600px;
             background-color: #0b0220;
             border: 2px solid #0088cc;
@@ -90,7 +90,7 @@
             position: absolute;
             left: 0;
             top: 0;
-            width: 800px;
+            width: 1067px;
             height: 600px;
             display: block;
         }
@@ -100,7 +100,7 @@
         #instructions-container {
            color: #ccc;
            font-size: 12px;
-           width: 800px;
+           width: 1067px;
            padding: 8px 15px;
            box-sizing: border-box;
            display: flex;
@@ -159,8 +159,8 @@
     <div id="fullscreen-root">
         <div id="game-wrapper">
             <div id="stage">
-                <canvas id="glCanvas" width="800" height="600"></canvas>
-                <canvas id="gameCanvas" width="800" height="600"></canvas>
+                <canvas id="glCanvas" width="1067" height="600"></canvas>
+                <canvas id="gameCanvas" width="1067" height="600"></canvas>
             </div>
 
             <div id="buttons-container">
@@ -873,7 +873,9 @@ class AudioHandler {
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
 const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 2);
-canvas.width = config.canvasWidth * HUD_SCALE;
+const HUD_W = 1067; // 16:9 の表示幅（ゲームフィールドは中央の 800x600 のまま）
+const HUD_OX = (HUD_W - config.canvasWidth) / 2;
+canvas.width = HUD_W * HUD_SCALE;
 canvas.height = config.canvasHeight * HUD_SCALE;
 const ctx = canvas.getContext('2d');
 const stageEl = document.getElementById('stage');
@@ -2219,7 +2221,8 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 //   (x, y) → (X = x - 400, Y = 高さ, Z = y - 300)
 // =================================================================================
 const W = config.canvasWidth, H = config.canvasHeight;
-const PR = HUD_SCALE;
+const PR = Math.min(window.devicePixelRatio || 1, 1.5);
+const VW = HUD_W;
 const toX = x => x - W / 2;
 const toZ = y => y - H / 2;
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -2238,7 +2241,7 @@ let renderer, scene, camera, composer, bloom;
 try {
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('glCanvas'), antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(PR);
-    renderer.setSize(W, H, false);
+    renderer.setSize(VW, H, false);
 } catch (e) {
     gl3dOK = false;
     console.error('WebGL init failed', e);
@@ -2249,16 +2252,16 @@ scene = new THREE.Scene();
 scene.background = BG_BASE.clone();
 scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
 
-camera = new THREE.PerspectiveCamera(44, W / H, 1, 6000);
-const CAM_BASE = new THREE.Vector3(0, 825, 300);
-const CAM_LOOK = new THREE.Vector3(0, 0, 10);
+camera = new THREE.PerspectiveCamera(40, VW / H, 1, 6000);
+const CAM_BASE = new THREE.Vector3(0, 780, 520);
+const CAM_LOOK = new THREE.Vector3(0, 0, 40);
 
 if (gl3dOK) {
     composer = new EffectComposer(renderer);
     composer.setPixelRatio(PR);
-    composer.setSize(W, H);
+    composer.setSize(VW, H);
     composer.addPass(new RenderPass(scene, camera));
-    bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.6, 0.4, 0.38);
+    bloom = new UnrealBloomPass(new THREE.Vector2(VW, H), 0.6, 0.4, 0.38);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
 }
@@ -2869,7 +2872,7 @@ const _engC = new THREE.Color();
 
 function project(x, y, h = 0) {
     _v.set(toX(x), h, toZ(y)).project(camera);
-    return { x: (_v.x + 1) / 2 * W, y: (1 - _v.y) / 2 * H };
+    return { x: (_v.x + 1) / 2 * HUD_W, y: (1 - _v.y) / 2 * H };
 }
 
 function render3D() {
@@ -3240,7 +3243,7 @@ function draw() {
     const renderCtx = ctx;
     const theme = themes[currentThemeIndex];
     renderCtx.setTransform(HUD_SCALE, 0, 0, HUD_SCALE, 0, 0);
-    renderCtx.clearRect(0, 0, W, H);
+    renderCtx.clearRect(0, 0, HUD_W, H);
     renderCtx.save();
     if (screenShake.intensity > 0) {
         renderCtx.translate((Math.random() - 0.5) * screenShake.intensity * 0.6, (Math.random() - 0.5) * screenShake.intensity * 0.6);
@@ -3250,7 +3253,7 @@ function draw() {
         renderCtx.fillStyle = '#ff3366';
         renderCtx.font = `14px ${config.fontFamily}`;
         renderCtx.textAlign = 'center';
-        renderCtx.fillText('WebGL is not available on this browser.', W / 2, H - 60);
+        renderCtx.fillText('WebGL is not available on this browser.', HUD_W / 2, H - 60);
     }
 
     if (gameState === 'playing' || gameState === 'paused' || gameState === 'title') {
@@ -3259,11 +3262,11 @@ function draw() {
 
     // タイトル画面の読みやすさ確保用ベール
     if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver') {
-        const g = renderCtx.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, 480);
+        const g = renderCtx.createRadialGradient(HUD_W / 2, H / 2, 60, HUD_W / 2, H / 2, 560);
         g.addColorStop(0, 'rgba(5,0,18,0.55)');
         g.addColorStop(1, 'rgba(5,0,18,0.15)');
         renderCtx.fillStyle = g;
-        renderCtx.fillRect(0, 0, W, H);
+        renderCtx.fillRect(0, 0, HUD_W, H);
     }
 
     // スコアテキスト（3D位置をスクリーンに投影）
@@ -3302,7 +3305,7 @@ function draw() {
             renderCtx.fillText(`SCORE: ${score}`, 20, 40);
 
             renderCtx.textAlign = 'center';
-            renderCtx.fillText(formatTime(elapsedTime), config.canvasWidth / 2, 40);
+            renderCtx.fillText(formatTime(elapsedTime), HUD_W / 2, 40);
         }, uiColor, true);
     }
 
@@ -3340,7 +3343,7 @@ function draw() {
             renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             renderCtx.textAlign = 'right';
-            renderCtx.fillText(textToDisplay, config.canvasWidth - 20, 40);
+            renderCtx.fillText(textToDisplay, HUD_W - 20, 40);
         }, uiColor, true);
         // ▲▲▲ 修正はここまで ▲▲▲
 
@@ -3349,7 +3352,7 @@ function draw() {
             renderCtx.font = `${subFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             renderCtx.textAlign = 'center';
-            renderCtx.fillText(`STAGE ${stage}`, config.canvasWidth / 2, config.canvasHeight - 20);
+            renderCtx.fillText(`STAGE ${stage}`, HUD_W / 2, config.canvasHeight - 20);
         }, uiColor, true);
     }
 
@@ -3389,7 +3392,7 @@ function draw() {
         renderCtx.textAlign = 'center';
         renderCtx.font = `24px ${config.fontFamily}`;
         const totalWidth = renderCtx.measureText(displayText).width;
-        let currentX = config.canvasWidth / 2 - totalWidth / 2;
+        let currentX = HUD_W / 2 - totalWidth / 2;
 
         for (let i = 0; i < displayText.length; i++) {
             const char = displayText[i];
@@ -3407,7 +3410,7 @@ function draw() {
         renderCtx.font = `10px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = theme.ui;
-            renderCtx.fillText("Bonus Points for Hitting a Comet!!", config.canvasWidth / 2, subTextY);
+            renderCtx.fillText("Bonus Points for Hitting a Comet!!", HUD_W / 2, subTextY);
         }, theme.ui);
         renderCtx.restore();
     }
@@ -3487,7 +3490,7 @@ function draw() {
                 renderCtx.fillStyle = theme.ui;
                 renderCtx.font = `32px ${config.fontFamily}`;
                 renderCtx.textAlign = 'center';
-                renderCtx.fillText(e.text, config.canvasWidth / 2, config.canvasHeight / 2);
+                renderCtx.fillText(e.text, HUD_W / 2, config.canvasHeight / 2);
             }, theme.ui, true);
             renderCtx.globalAlpha = 1;
         } else if (e.type === 'shockwave' && e.hud && isEffectsEnabled) {
@@ -3507,18 +3510,18 @@ function draw() {
         } else if (e.type === 'screenFlash' && isEffectsEnabled) {
             const alpha = e.life / e.maxLife;
             renderCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
-            renderCtx.fillRect(-20, -20, config.canvasWidth + 40, config.canvasHeight + 40);
+            renderCtx.fillRect(-20, -20, HUD_W + 40, config.canvasHeight + 40);
         } else if (e.type === 'energyGameOverFlash') {
             const progress = 1.0 - (e.life / e.maxLife);
             const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.8;
             renderCtx.fillStyle = `rgba(224, 224, 224, ${alpha})`;
-            renderCtx.fillRect(-20, -20, config.canvasWidth + 40, config.canvasHeight + 40);
+            renderCtx.fillRect(-20, -20, HUD_W + 40, config.canvasHeight + 40);
         }
     });
     // Draw UI Screens (Paused, Confirm, Title, Game Over)
     if (gameState === 'paused') {
         renderCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        renderCtx.fillRect(0, 0, HUD_W, config.canvasHeight);
         
         const pauseMsg = 'PAUSED';
         const resumeKey = lastInputDevice === 'keyboard' ? 'P' : 'START';
@@ -3529,7 +3532,7 @@ function draw() {
         renderCtx.textAlign = 'center';
         
         const totalWidth = renderCtx.measureText(pauseMsg).width;
-        let currentX = config.canvasWidth / 2 - totalWidth / 2;
+        let currentX = HUD_W / 2 - totalWidth / 2;
 
         for (let i = 0; i < pauseMsg.length; i++) {
             const char = pauseMsg[i];
@@ -3546,14 +3549,14 @@ function draw() {
         renderCtx.fillStyle = theme.ui;
         renderCtx.font = `20px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
-            renderCtx.fillText(resumeMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 30);
-            renderCtx.fillText(quitMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 60);
+            renderCtx.fillText(resumeMsg, HUD_W / 2, config.canvasHeight / 2 + 30);
+            renderCtx.fillText(quitMsg, HUD_W / 2, config.canvasHeight / 2 + 60);
         }, theme.ui, true);
 
     } else if (gameState === 'confirmReset') {
         // 背景を暗くして確認画面を目立たせる
         renderCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        renderCtx.fillRect(0, 0, HUD_W, config.canvasHeight);
 
         const msg1 = "RESET ALL HIGH SCORES?";
         const msg2 = "(Y/N)";
@@ -3565,13 +3568,13 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = msgColor;
             renderCtx.font = `24px ${config.fontFamily}`;
-            renderCtx.fillText(msg1, config.canvasWidth / 2, config.canvasHeight / 2 - 20);
+            renderCtx.fillText(msg1, HUD_W / 2, config.canvasHeight / 2 - 20);
         }, msgColor);
         
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = '#ffffff';
             renderCtx.font = `20px ${config.fontFamily}`;
-            renderCtx.fillText(msg2, config.canvasWidth / 2, config.canvasHeight / 2 + 25);
+            renderCtx.fillText(msg2, HUD_W / 2, config.canvasHeight / 2 + 25);
         }, '#ffffff');
         
         renderCtx.textBaseline = 'alphabetic'; // デフォルトに戻す
@@ -3584,12 +3587,12 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = titleColor;
             renderCtx.font = `60px ${config.fontFamily}`;
-            renderCtx.fillText('COMET', config.canvasWidth / 2, config.canvasHeight / 2 - 120);
+            renderCtx.fillText('COMET', HUD_W / 2, config.canvasHeight / 2 - 120);
         }, titleColor);
         
         const outburstY = config.canvasHeight / 2 - 75;
         const outburstFont = `16px ${config.fontFamily}`;
-        drawTitleTextMorph(renderCtx, config.canvasWidth / 2, outburstY, outburstFont, uiColor);
+        drawTitleTextMorph(renderCtx, HUD_W / 2, outburstY, outburstFont, uiColor);
 
         // Draw Menu
         titleMenuItems.forEach((item, index) => {
@@ -3599,12 +3602,12 @@ function draw() {
                 drawWithGlow(renderCtx, () => {
                     renderCtx.fillStyle = selectorColor;
                     renderCtx.font = `22px ${config.fontFamily}`;
-                    renderCtx.fillText(`> ${item} <`, config.canvasWidth / 2, y);
+                    renderCtx.fillText(`> ${item} <`, HUD_W / 2, y);
                 }, selectorColor, true);
             } else {
                 renderCtx.fillStyle = '#cccccc';
                 renderCtx.font = `20px ${config.fontFamily}`;
-                renderCtx.fillText(item, config.canvasWidth / 2, y);
+                renderCtx.fillText(item, HUD_W / 2, y);
             }
         });
         
@@ -3614,7 +3617,7 @@ function draw() {
             if (titleBottomText === "") {
                 titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
             }
-            renderCtx.fillText(titleBottomText, config.canvasWidth / 2, config.canvasHeight / 2 + 160);
+            renderCtx.fillText(titleBottomText, HUD_W / 2, config.canvasHeight / 2 + 160);
         }, '#ffffff');
         
         const highScoreY = config.canvasHeight / 2 + 220;
@@ -3623,19 +3626,19 @@ function draw() {
              drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = theme.ui;
                 renderCtx.font = `14px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE (STANDARD): ${highScoreStandard}`, config.canvasWidth / 2, highScoreY);
+                renderCtx.fillText(`HI-SCORE (STANDARD): ${highScoreStandard}`, HUD_W / 2, highScoreY);
             }, theme.ui);
         } else if (highScoreCycle < 240) {
              drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = theme.ui;
                 renderCtx.font = `14px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE (JOURNEY): ${highScoreJourney}`, config.canvasWidth / 2, highScoreY);
+                renderCtx.fillText(`HI-SCORE (JOURNEY): ${highScoreJourney}`, HUD_W / 2, highScoreY);
             }, theme.ui);
         } else {
              drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = theme.ui;
                 renderCtx.font = `14px ${config.fontFamily}`;
-                renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, config.canvasWidth / 2, highScoreY);
+                renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, HUD_W / 2, highScoreY);
             }, theme.ui);
         }
 
@@ -3648,7 +3651,7 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = gameOverColor;
             renderCtx.font = `60px ${config.fontFamily}`;
-            renderCtx.fillText('GAME OVER', config.canvasWidth / 2, gameOverY);
+            renderCtx.fillText('GAME OVER', HUD_W / 2, gameOverY);
         }, gameOverColor);
 
         if (newHighScoreAchieved) {
@@ -3657,7 +3660,7 @@ function draw() {
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = newRecordColor;
                 renderCtx.font = `30px ${config.fontFamily}`;
-                renderCtx.fillText('NEW RECORD!', config.canvasWidth / 2, newRecordY);
+                renderCtx.fillText('NEW RECORD!', HUD_W / 2, newRecordY);
             }, newRecordColor);
         }
         
@@ -3673,12 +3676,12 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.font = `30px ${config.fontFamily}`;
             renderCtx.fillStyle = theme.ui;
-            renderCtx.fillText(`SCORE: ${score}`, config.canvasWidth / 2, scoreY);
+            renderCtx.fillText(`SCORE: ${score}`, HUD_W / 2, scoreY);
         }, theme.ui);
         drawWithGlow(renderCtx, () => {
             renderCtx.font = `20px ${config.fontFamily}`;
             renderCtx.fillStyle = theme.ui;
-            renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, config.canvasWidth / 2, scoreY + 50);
+            renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, HUD_W / 2, scoreY + 50);
         }, theme.ui);
         
         let titleText, replayText;
@@ -3693,8 +3696,8 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.font = `18px ${config.fontFamily}`;
             renderCtx.fillStyle = '#ffffff';
-            renderCtx.fillText(replayText, config.canvasWidth / 2, replayY);
-            renderCtx.fillText(titleText, config.canvasWidth / 2, replayY + 30);
+            renderCtx.fillText(replayText, HUD_W / 2, replayY);
+            renderCtx.fillText(titleText, HUD_W / 2, replayY + 30);
         }, '#ffffff');
 
         renderCtx.textBaseline = 'alphabetic';
@@ -3717,13 +3720,30 @@ function draw() {
     if (gameState === 'playing' && player.invincibleTimer > 0) {
         if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} else {
             renderCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+            renderCtx.fillRect(0, 0, HUD_W, config.canvasHeight);
         }
     }
 }
 
+// ゲーム進行は固定60Hzで回す（オリジナルの60fps時と同じテンポを保つ。描画fpsや画面のリフレッシュレートに左右されない）
+const SIM_STEP = 1000 / 60;
+let simRealLast = null;
+let simAcc = 0;
+let simTime = 0;
 function gameLoop(timestamp) {
-    update(timestamp);
+    if (timestamp !== undefined) {
+        if (simRealLast === null) simRealLast = timestamp;
+        simAcc += Math.min(250, timestamp - simRealLast);
+        simRealLast = timestamp;
+        let steps = 0;
+        while (simAcc >= SIM_STEP && steps < 6) {
+            simTime += SIM_STEP;
+            update(simTime);
+            simAcc -= SIM_STEP;
+            steps++;
+        }
+        if (steps >= 6) simAcc = 0;
+    }
     draw();
     requestAnimationFrame(gameLoop);
 }
@@ -3788,7 +3808,7 @@ window.addEventListener('resize', () => {
 });
 
 init();
-gameLoop();
+requestAnimationFrame(gameLoop);
 
 </script>
 </body>
