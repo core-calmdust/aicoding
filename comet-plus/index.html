@@ -891,20 +891,18 @@ class AudioHandler {
                     const o = c.createOscillator(); o.type = tp; o.detune.value = dt;
                     for (let i = 0; i < N; i++) {
                         const t0 = now + i * L;
-                        o.frequency.setValueAtTime(480 * oct, t0);
-                        o.frequency.exponentialRampToValueAtTime(1080 * oct, t0 + L * 0.45);
-                        o.frequency.exponentialRampToValueAtTime(520 * oct, t0 + L * 0.95);
+                        if (i === 0) o.frequency.setValueAtTime(480 * oct, t0);
+                        o.frequency.exponentialRampToValueAtTime(1080 * oct, t0 + L * 0.5);
+                        o.frequency.exponentialRampToValueAtTime(480 * oct, t0 + L);
                     }
                     const og = c.createGain(); og.gain.value = 0.5;
                     o.connect(og).connect(pre); o.start(now); o.stop(now + T);
                 });
-                for (let i = 0; i < N; i++) {
-                    const t0 = now + i * L;
-                    ag.gain.setValueAtTime(0.0001, t0);
-                    ag.gain.exponentialRampToValueAtTime(0.42, t0 + 0.012); // いきなり鳴る
-                    ag.gain.setValueAtTime(0.42, t0 + L * 0.7);
-                    ag.gain.exponentialRampToValueAtTime(0.0001, t0 + L * 0.97);
-                }
+                // 途切れずに4回うねる（最初はいきなり鳴り、最後だけ消える）
+                ag.gain.setValueAtTime(0.0001, now);
+                ag.gain.exponentialRampToValueAtTime(0.42, now + 0.012);
+                ag.gain.setValueAtTime(0.42, now + N * L - 0.25);
+                ag.gain.exponentialRampToValueAtTime(0.0001, now + N * L);
                 break;
             }
             case 'bossHit':
@@ -1095,7 +1093,15 @@ let perfLastT = 0;
 const keyState = {};
 window.addEventListener('keydown', e => {
     lastInputDevice = 'keyboard';
-    if (!keyState[e.code]) inputDirty = true;
+    if (!keyState[e.code]) {
+        inputDirty = true;
+        // PC: 押した瞬間に1フレーム分だけ先に動かす（次の描画を待たずに反応。当たり判定も一緒に動く）
+        if (!IS_MOBILE && gameState === 'playing' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
+            const slow = keyState['ShiftLeft'] || keyState['ShiftRight'] || keyState['KeyZ'];
+            const sp = config.playerSpeed * (slow ? config.playerSlowModeMultiplier : 1);
+            player.x = Math.max(0, Math.min(config.canvasWidth, player.x + (e.code === 'ArrowRight' ? 1 : -1) * sp / 60));
+        }
+    }
     keyState[e.code] = true;
     if (!audioHandler.isInitialized) {
         audioHandler.initialize();
