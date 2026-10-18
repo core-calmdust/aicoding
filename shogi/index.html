@@ -426,6 +426,13 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ol-rooms > div{align-items:center}
 .ol-rooms .dk-join{flex:none;padding:5px 14px;font-size:12.5px}
 .ol-join input::placeholder{letter-spacing:normal;text-transform:none;font-family:inherit}
+.ol-myroom{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:1px solid rgba(201,169,97,.45);background:rgba(201,169,97,.08);margin:0 0 6px}
+.ol-myroom .ol-mcode{font-family:'JetBrains Mono',monospace;font-size:20px;letter-spacing:.18em;color:var(--accent)}
+.ol-myroom small{font-size:12px;color:var(--muted)}
+.ol-acts .mbtn.warn,.dk-btn.warn{border-color:rgba(214,110,90,.7);color:#f0a492}
+.ol-acts.ol-racts{flex-wrap:wrap}
+.ol-acts.ol-racts .mbtn{flex:1 1 auto;white-space:nowrap}
+.dk-myroom{color:var(--accent);border-color:rgba(201,169,97,.5);font-family:inherit}
 .ol-lock{font-size:13px;padding:3px 12px;border-radius:999px;background:rgba(201,169,97,.12);color:var(--accent);border:1px solid rgba(201,169,97,.4)}
 /* online time control selector */
 .ol-tcbox{margin:0 0 12px}
@@ -712,6 +719,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
     <span class="dk-me" id="dkMe"></span>
     <div class="ol-tc dk-tc" id="dkTc"></div>
     <button id="dkAuto" class="dk-btn go" data-i18n="ol.auto"></button>
+    <button id="dkMyRoom" class="dk-btn dk-myroom hidden"></button>
     <button id="dkRoom" class="dk-btn" data-i18n="ol.create"></button>
     <button id="dkToggle" class="dk-btn tg" aria-label="toggle">▲</button>
   </div>
@@ -723,11 +731,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 </div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
 
-<script src="i18n.js?v=20261018rk"></script>
+<script src="i18n.js?v=20261018rm"></script>
 <script src="engine.js?v=20261018ol"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
-<script src="online.js?v=20261018rk"></script>
+<script src="online.js?v=20261018rm"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -2757,15 +2765,14 @@ function olRender(view) {
       <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
       </div><div class="ol-col">
       <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
-      <div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}
-      <div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>
+      ${olMyRoomHtml()}
       <div class="ol-sub">${t('ol.joinKey')}</div>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
       </div></div>`;
     $('#olName').onchange = async e => { try { e.target.value = await Online.setName(e.target.value); dockRender(); } catch (_) {} };
     $('#olAuto').onclick = olStartSearch;
     olWatchRooms();
-    $('#olCreate').onclick = olCreateRoom;
+    const cr = $('#olCreate'); if (cr) cr.onclick = olCreateRoom;
     $('#olJoin').onclick = async () => {
       const c = $('#olCode').value; olRender('loading');
       let gid = null; try { gid = await Online.joinRoom(c); } catch (e) { console.warn(e); }
@@ -2781,16 +2788,17 @@ function olRender(view) {
       <div class="ol-sub">${t('ol.lobby', { n: olList.length })}</div>
       <div class="ol-list">${olList.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small>${olEsc(tcTag(p.tc))}</small>${p.game ? ' <small>' + t('ol.matched') + '</small>' : ''}</span><b>${p.rating}</b></div>`).join('')}</div>
       <div class="ol-acts"><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
-    $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
+    $('#olCancel').onclick = async () => { await Online.leaveLobby(); olRender('menu'); };
     return;
   }
   if (olView === 'room') {
+    const R = Online.room; if (!R) { olView = 'menu'; olRender(); return; }
+    olRoom = R.code;
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
-    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small></div>
-      <div class="ol-acts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
+    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: '将棋 SHOGI', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
-    $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
   }
 }
 async function olStartSearch() {
@@ -2807,12 +2815,52 @@ async function olStartSearch() {
 }
 async function olCreateRoom() {
   olRender('loading');
-  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olRk() === 'key', tc: olTc() }); olRender('room'); }
+  try { olRoom = await Online.createRoom({ onMatched: olRoomMatched, priv: olRk() === 'key', tc: olTc() }); olRender('room'); }
   catch (e) { console.warn(e); toast(t('ol.error'), 2000); olRender('menu'); }
 }
-$('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) { try { await Online.leave(); } catch (e) {} } };
+// closing the dialog cancels a rated-game search, but the own room stays open (closed with 「部屋を閉じる」, by a join, or after Online.ROOM_TTL)
+$('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) { try { await Online.leaveLobby(); } catch (e) {} dockRender(); } };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#onlineOverlay').classList.contains('show')) $('#olClose').click(); });
+// ---- the own room (kept while the dialog is closed)
+function olLeftText() { const r = window.Online && Online.room; return r ? t('ol.roomLeft', { t: fmtClockMs(r.left) }) : ''; }
+function olMyRoomHtml() {
+  const r = Online.room;
+  if (!r) return `<div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}<div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>`;
+  return `<div class="ol-sub">${t('ol.myRoom')}</div><div class="ol-myroom ${r.priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(r.priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><b class="ol-mcode">${r.code}</b><small>${olEsc(tcTag(r.tc))} · <span class="ol-left">${olLeftText()}</span></small></div>
+    <p class="ol-note small">${t('ol.roomKeep')}</p><div class="ol-acts"><button class="mbtn go" id="olShowRoom">${t('ol.showRoom')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button></div>`;
+}
+// show the room view (code + share link); the host looking at it again restarts the expiry timer
+async function olShowRoom() { if (!Online.room) return; Online.extendRoom().catch(() => {}); olRender('room'); }
+async function olCloseRoomNow() { if (!Online.room) return; try { await Online.closeRoom(); } catch (e) { console.warn(e); } }
+$('#olBody').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'olShowRoom') olShowRoom();
+  else if (b.id === 'olCloseRoom') olCloseRoomNow();
+  else if (b.id === 'olBack') olRender('menu');
+});
+// someone joined the own room: start the game even when the dialog is closed (an AI game / lesson / puzzle in progress is left)
+function olRoomMatched(gid) {
+  const away = !$('#onlineOverlay').classList.contains('show');
+  document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));
+  startOnlineGame(gid, away ? t('ol.roomJoined') : null);
+}
+function olOnRoom(ev) {
+  if (ev === 'expired') toast(t('ol.roomExpired'), 3600);
+  else if (ev === 'closed' && olView !== 'search' && olView !== 'loading') toast(t('ol.roomClosed'), 1800);
+  else if (ev === 'gone') toast(t('ol.roomClosed'), 1800);
+  if ((ev === 'closed' || ev === 'expired' || ev === 'gone') && $('#onlineOverlay').classList.contains('show') && (olView === 'menu' || olView === 'room')) olRender('menu');
+  dockRender(); olRoomTick();
+}
+// remaining time of the own room (menu, room view, dock chip)
+function olRoomTick() {
+  const r = window.Online && Online.available && Online.room, chip = $('#dkMyRoom'), btn = $('#dkRoom');
+  if (btn) { const k = r ? 'ol.closeRoom' : 'ol.create'; if (btn.dataset.i18n !== k || btn.dataset.l !== LANG) { btn.dataset.i18n = k; btn.dataset.l = LANG; btn.textContent = t(k); btn.classList.toggle('warn', !!r); } }
+  if (chip) { chip.classList.toggle('hidden', !r); if (r) { chip.textContent = (r.priv ? '🔒 ' : '🔓 ') + r.code + ' · ' + tcTag(r.tc) + ' · ' + fmtClockMs(r.left); chip.title = t('ol.showRoom'); } }
+  if (r) document.querySelectorAll('.ol-left').forEach(el => { el.textContent = olLeftText(); });
+}
+if (window.Online && Online.available) { Online.onRoom(olOnRoom); setInterval(olRoomTick, 1000); }
 
-function startOnlineGame(gid) {
+function startOnlineGame(gid, intro) {
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#newOverlay'); hideOverlay('#playOverlay');
   leaveOnlineGame();
   busyToken++; cancelAI(); cancelAna(); rvCancel(); stopPlay();
@@ -2821,12 +2869,12 @@ function startOnlineGame(gid) {
   settings.mode = 'online';
   game = newRecord(HANDI[0], 0); game.clock = null;       // online games are always even (平手)
   cur = 0; reviewing = false; hintMoves = null; sel = null; flip = false;
-  net = { gid, game: null, me: 0, opp: null, done: false, first: true };
+  net = { gid, game: null, me: 0, opp: null, done: false, first: true, intro };
   document.body.classList.add('in-online');
   net.unsub = Online.watchGame(gid, onNetGame);
   net.timer = setInterval(netTick, 250);
   refresh(false);
-  toast(t('ol.start'), 1400); playChime(true); mtab('game');
+  toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); mtab('game');
 }
 function leaveOnlineGame() {
   if (!net) return;
@@ -2844,7 +2892,7 @@ function onNetGame(g) {
   const me = g.b === Online.uid ? 0 : 1, first = net.first;
   net.first = false;
   net.me = me; net.opp = me === 0 ? g.w : g.b; game.human = me;
-  if (first) { flip = me === 1; olTcToast(g, t('ol.youAre', { c: cname(me) })); }
+  if (first) { flip = me === 1; olTcToast(g, (net.intro ? net.intro + ' · ' : '') + t('ol.youAre', { c: cname(me) })); }
   const ms = String(g.moves || '').split(' ').filter(Boolean);
   let reset = false;
   for (let i = 0; i < Math.min(ms.length, game.moves.length); i++) if (ms[i] !== game.moves[i]) { reset = true; break; }
@@ -2943,7 +2991,7 @@ function dockRender() {
   $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
   $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
   const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"');
-  if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : '') : '';
+  if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
   $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
   $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
   $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
@@ -2981,7 +3029,11 @@ $('#dkMe').addEventListener('click', e => {
 });
 $('#dock .dock-bar').addEventListener('click', e => { if (!e.target.closest('button') && !e.target.closest('input')) dockToggle(); });
 $('#dkAuto').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olStartSearch(); };
-$('#dkRoom').onclick = async () => { await openOnline(); const c = $('#olCreate'); if (c) c.scrollIntoView({ block: 'center' }); };
+$('#dkRoom').onclick = async () => {
+  if (window.Online && Online.room) { olCloseRoomNow(); return; }        // 「部屋を閉じる」
+  await openOnline(); const c = $('#olCreate'); if (c) c.scrollIntoView({ block: 'center' });
+};
+$('#dkMyRoom').onclick = async () => { await openOnline(); if (Online.room) olShowRoom(); };
 $('#dock').addEventListener('click', async e => {
   const b = e.target.closest('.dk-join'); if (!b) return;
   b.disabled = true;

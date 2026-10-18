@@ -421,6 +421,13 @@ a.snd.home{text-decoration:none}
 .ol-rooms > div{align-items:center}
 .ol-rooms .dk-join{flex:none;padding:5px 14px;font-size:12.5px}
 .ol-join input::placeholder{letter-spacing:normal;text-transform:none;font-family:inherit}
+.ol-myroom{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:1px solid rgba(201,169,97,.45);background:rgba(201,169,97,.08);margin:0 0 6px}
+.ol-myroom .ol-mcode{font-family:'JetBrains Mono',monospace;font-size:20px;letter-spacing:.18em;color:var(--accent)}
+.ol-myroom small{font-size:12px;color:var(--muted)}
+.ol-acts .mbtn.warn,.dk-btn.warn{border-color:rgba(214,110,90,.7);color:#f0a492}
+.ol-acts.ol-racts{flex-wrap:wrap}
+.ol-acts.ol-racts .mbtn{flex:1 1 auto;white-space:nowrap}
+.dk-myroom{color:var(--accent);border-color:rgba(201,169,97,.5);font-family:inherit}
 .ol-lock{font-size:13px;padding:3px 12px;border-radius:999px;background:rgba(201,169,97,.12);color:var(--accent);border:1px solid rgba(201,169,97,.4)}
 /* online time control selector */
 .ol-tcbox{margin:0 0 12px}
@@ -952,6 +959,7 @@ body .info-line{font-size:12.5px}
     <span class="dk-me" id="dkMe"></span>
     <div class="ol-tc dk-tc" id="dkTc"></div>
     <button id="dkAuto" class="dk-btn go" data-i18n="ol.auto"></button>
+    <button id="dkMyRoom" class="dk-btn dk-myroom hidden"></button>
     <button id="dkRoom" class="dk-btn" data-i18n="ol.create"></button>
     <button id="dkToggle" class="dk-btn tg" aria-label="toggle">▲</button>
   </div>
@@ -983,9 +991,9 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018rk"></script>
+<script src="i18n.js?v=20261018rm"></script>
 <script src="firebase-config.js"></script>
-<script src="online.js?v=20261018rk"></script>
+<script src="online.js?v=20261018rm"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -2824,15 +2832,14 @@ async function olRender(view) {
       <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
       </div><div class="ol-col">
       <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
-      <div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}
-      <div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>
+      ${olMyRoomHtml()}
       <div class="ol-sub">${t('ol.joinKey')}</div>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
       </div></div>`;
     $('#olName').onchange = async e => { e.target.value = await Online.setName(e.target.value); };
     $('#olAuto').onclick = olStartSearch;
     olWatchRooms();
-    $('#olCreate').onclick = olCreateRoom;
+    const cr = $('#olCreate'); if (cr) cr.onclick = olCreateRoom;
     $('#olJoin').onclick = async () => { const c = $('#olCode').value; olRender('loading'); const gid = await Online.joinRoom(c); if (gid) startOnlineGame(gid); else { toast(t('ol.noRoom'), 2200); olRender('menu'); } };
     Online.topPlayers(10).then(list => { const el = $('#olRank'); if (!el) return; el.innerHTML = list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`; }).catch(() => {});
     return;
@@ -2843,16 +2850,17 @@ async function olRender(view) {
       <div class="ol-sub">${t('ol.lobby', { n: olList.length })}</div>
       <div class="ol-list">${olList.map(p => `<div class="${p.me ? 'me' : ''}"><span>${esc(p.name)} <small>${esc(tcTag(p.tc))}</small>${p.game ? ' <small>' + t('ol.matched') + '</small>' : ''}</span><b>${p.rating}</b></div>`).join('')}</div>
       <div class="ol-acts"><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
-    $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
+    $('#olCancel').onclick = async () => { await Online.leaveLobby(); olRender('menu'); };
     return;
   }
   if (olView === 'room') {
+    const R = Online.room; if (!R) { olView = 'menu'; olRender(); return; }
+    olRoom = R.code;
     const url = location.origin + location.pathname + '#room=' + olRoom;
     const priv = Online.roomPriv;
-    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small></div>
-      <div class="ol-acts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
+    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: 'Reversi V4', url }); else { await navigator.clipboard.writeText(url); toast(t('share.copied'), 1200); } } catch (e) {} };
-    $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
   }
 }
 async function olStartSearch() {
@@ -2867,13 +2875,53 @@ async function olStartSearch() {
 }
 async function olCreateRoom() {
   olRender('loading');
-  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olRk() === 'key', tc: olTc() }); olRender('room'); }
+  try { olRoom = await Online.createRoom({ onMatched: olRoomMatched, priv: olRk() === 'key', tc: olTc() }); olRender('room'); }
   catch (e) { toast(t('ol.error'), 2000); olRender('menu'); }
 }
-$('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) await Online.leave(); };
+// closing the dialog cancels a rated-game search, but the own room stays open (closed with 「部屋を閉じる」, by a join, or after Online.ROOM_TTL)
+$('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) { try { await Online.leaveLobby(); } catch (e) {} dockRender(); } };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#onlineOverlay').classList.contains('show')) $('#olClose').click(); });
+// ---- the own room (kept while the dialog is closed)
+function olLeftText() { const r = window.Online && Online.room; return r ? t('ol.roomLeft', { t: fmtClockMs(r.left) }) : ''; }
+function olMyRoomHtml() {
+  const r = Online.room;
+  if (!r) return `<div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}<div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>`;
+  return `<div class="ol-sub">${t('ol.myRoom')}</div><div class="ol-myroom ${r.priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(r.priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><b class="ol-mcode">${r.code}</b><small>${esc(tcTag(r.tc))} · <span class="ol-left">${olLeftText()}</span></small></div>
+    <p class="ol-note small">${t('ol.roomKeep')}</p><div class="ol-acts"><button class="mbtn go" id="olShowRoom">${t('ol.showRoom')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button></div>`;
+}
+// show the room view (code + share link); the host looking at it again restarts the expiry timer
+async function olShowRoom() { if (!Online.room) return; Online.extendRoom().catch(() => {}); olRender('room'); }
+async function olCloseRoomNow() { if (!Online.room) return; try { await Online.closeRoom(); } catch (e) { console.warn(e); } }
+$('#olBody').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'olShowRoom') olShowRoom();
+  else if (b.id === 'olCloseRoom') olCloseRoomNow();
+  else if (b.id === 'olBack') olRender('menu');
+});
+// someone joined the own room: start the game even when the dialog is closed (an AI game / lesson / puzzle in progress is left)
+function olRoomMatched(gid) {
+  const away = !$('#onlineOverlay').classList.contains('show');
+  document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));
+  startOnlineGame(gid, away ? t('ol.roomJoined') : null);
+}
+function olOnRoom(ev) {
+  if (ev === 'expired') toast(t('ol.roomExpired'), 3600);
+  else if (ev === 'closed' && olView !== 'search' && olView !== 'loading') toast(t('ol.roomClosed'), 1800);
+  else if (ev === 'gone') toast(t('ol.roomClosed'), 1800);
+  if ((ev === 'closed' || ev === 'expired' || ev === 'gone') && $('#onlineOverlay').classList.contains('show') && (olView === 'menu' || olView === 'room')) olRender('menu');
+  dockRender(); olRoomTick();
+}
+// remaining time of the own room (menu, room view, dock chip)
+function olRoomTick() {
+  const r = window.Online && Online.available && Online.room, chip = $('#dkMyRoom'), btn = $('#dkRoom');
+  if (btn) { const k = r ? 'ol.closeRoom' : 'ol.create'; if (btn.dataset.i18n !== k || btn.dataset.l !== LANG) { btn.dataset.i18n = k; btn.dataset.l = LANG; btn.textContent = t(k); btn.classList.toggle('warn', !!r); } }
+  if (chip) { chip.classList.toggle('hidden', !r); if (r) { chip.textContent = (r.priv ? '🔒 ' : '🔓 ') + r.code + ' · ' + tcTag(r.tc) + ' · ' + fmtClockMs(r.left); chip.title = t('ol.showRoom'); } }
+  if (r) document.querySelectorAll('.ol-left').forEach(el => { el.textContent = olLeftText(); });
+}
+if (window.Online && Online.available) { Online.onRoom(olOnRoom); setInterval(olRoomTick, 1000); }
 
 const decSq = s => (s.charCodeAt(0) - 97) + (+s[1] - 1) * 8;
-function startOnlineGame(gid) {
+function startOnlineGame(gid, intro) {
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay');
   if (lesson) endLesson && endLesson();
   if (puzzle) endPuzzle();
@@ -2882,12 +2930,12 @@ function startOnlineGame(gid) {
   settings.mode = 'online'; settings.hint = false; clearHints();
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
   cur = 0; reviewing = false;
-  net = { gid, game: null, me: 0, opp: null, done: false, first: true };
+  net = { gid, game: null, me: 0, opp: null, done: false, first: true, intro };
   document.body.classList.add('in-online');
   net.unsub = Online.watchGame(gid, onNetGame);
   net.timer = setInterval(netTick, 500);
   renderBoard(null); renderInfo();
-  toast(t('ol.start'), 1400); playChime(true); if (typeof mtab === 'function') mtab('game');
+  toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); if (typeof mtab === 'function') mtab('game');
 }
 function leaveOnlineGame() {
   if (!net) return;
@@ -2899,7 +2947,7 @@ function leaveOnlineGame() {
 function onNetGame(g) {
   if (!net || !g) return;
   net.game = g; net.me = g.b === Online.uid ? BLACK : WHITE; humanColor = net.me; net.opp = g.b === Online.uid ? g.w : g.b;
-  if (net.first) { net.first = false; olTcToast(g, t('ol.start')); }
+  if (net.first) { net.first = false; olTcToast(g, net.intro || t('ol.start')); }
   const ms = (g.moves || '').match(/../g) || [];
   const local = positions.slice(1).map(p => sqName(p.last));
   // resync if the local record diverged from the server (e.g. a rejected send)
@@ -2987,7 +3035,7 @@ function dockRender() {
   $('#mtCount').textContent = nPlay ? String(nPlay) : '';
   const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) { tcEl.dataset.l = LANG; tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"'); }
   if (dock.editing) return dockRenderLists();
-  $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${esc(t('ol.rename'))}">${esc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : '') : '';
+  $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${esc(t('ol.rename'))}">${esc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
   dockRenderLists();
 }
 function dockRenderLists() {
@@ -3028,7 +3076,11 @@ $('#dkMe').addEventListener('click', e => {
 });
 $('#dock .dock-bar').addEventListener('click', e => { if (!e.target.closest('button')) dockToggle(); });
 $('#dkAuto').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olStartSearch(); };
-$('#dkRoom').onclick = async () => { await openOnline(); const c = $('#olCreate'); if (c) c.scrollIntoView({ block: 'center' }); };
+$('#dkRoom').onclick = async () => {
+  if (window.Online && Online.room) { olCloseRoomNow(); return; }        // 「部屋を閉じる」
+  await openOnline(); const c = $('#olCreate'); if (c) c.scrollIntoView({ block: 'center' });
+};
+$('#dkMyRoom').onclick = async () => { await openOnline(); if (Online.room) olShowRoom(); };
 $('#dock').addEventListener('click', async e => {
   const b = e.target.closest('.dk-join'); if (!b) return;
   b.disabled = true;

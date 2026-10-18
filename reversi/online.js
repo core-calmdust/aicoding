@@ -13,7 +13,8 @@
   const TC_IDS = ['fast', 'long', 'blitz'];
   const LEGACY = { main: 0, byo: MOVE_LIMIT };
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
-  const CROSS_WAIT = 20000;              // after this wait, players with a different time control may be matched (played as 'fast')
+  const CROSS_WAIT = 20000;
+  const ROOM_TTL = 10 * 60000;           // a room nobody joins expires after 10 min (the host's 「部屋を表示」 restarts the timer)              // after this wait, players with a different time control may be matched (played as 'fast')
   const tcOf = g => (g && TC[g.tc]) || LEGACY;
   const sideOf = (g, u) => (g.b === u ? 'b' : 'w');
   const mainOf = (g, side) => { const v = g && g['m' + side]; return typeof v === 'number' ? Math.max(0, v) : tcOf(g).main; };
@@ -149,7 +150,16 @@
   }
   const listOf = (v, me) => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
   function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
-  function watchRooms(cb) { return db.on('rooms', v => cb(listOf(v).filter(r => !r.game && !r.priv).sort((a, b) => (a.created || 0) - (b.created || 0)))); }
+  // a room is usable while nobody joined it and it has not expired (expires; old records: created + ROOM_TTL). Lists hide expired rooms even if the host vanished without cleanup
+  const roomExp = r => (typeof r.expires === 'number' ? r.expires : (typeof r.created === 'number' ? r.created : 0) + ROOM_TTL);
+  const roomLive = (r, now) => !!r && !r.game && roomExp(r) > (now == null ? db.now() : now);
+  function watchRooms(cb) {
+    let last = null;
+    const emit = () => cb(listOf(last).filter(r => !r.priv && roomLive(r)).sort((a, b) => (a.created || 0) - (b.created || 0)));
+    const off = db.on('rooms', v => { last = v; emit(); });
+    const iv = setInterval(() => { if (last) emit(); }, 15000);     // drop rooms that expire while nothing changes
+    return () => { off(); clearInterval(iv); };
+  }
   function watchLobby(cb) { return db.on('lobby', v => cb(listOf(v).filter(x => !x.game))); }
 
   // ---------------------------------------------------------------- Elo
@@ -165,7 +175,7 @@
   const windowFor = waitMs => Math.min(400, 100 + 50 * Math.floor(waitMs / 10000));
 
   async function enterLobby({ onList, onMatched, onStatus, tc }) {
-    await leave();
+    await leave();       // searching for a rated game closes the own room (so two games can not start at once)
     setPresence('lobby');
     const since = db.now();
     tc = TC[tc] ? tc : 'fast';
@@ -210,43 +220,93 @@
   }
 
   // ---------------------------------------------------------------- rooms (unrated): open = listed under rooms, priv (closed) = joined only with the code (the key)
-  let roomCode = null, roomTc = null, roomPriv = false, roomUnsub = null;
+  // The room lives on until the host closes it (closeRoom), someone joins (onMatched), it expires (ROOM_TTL, deleted by the host's client)
+  // or the host disconnects (onDisconnect). Closing the online dialog does not touch it.
+  let roomCode = null, roomTc = null, roomPriv = false, roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
+  const roomListeners = new Set();
+  const roomEmit = ev => roomListeners.forEach(f => { try { f(ev, room()); } catch (e) { console.warn(e); } });
+  function onRoom(f) { roomListeners.add(f); return () => roomListeners.delete(f); }   // ev: 'open' | 'extend' | 'closed' | 'expired' | 'gone' | 'matched'
+  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()) } : null);
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  async function createRoom({ onMatched, priv, tc }) {
+  async function createRoom({ onMatched, onExpired, priv, tc }) {
     tc = TC[tc] ? tc : 'fast';
     await leave();
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), game: null, priv: !!priv } : undefined);
-      if (!r.committed || !r.value || r.value.host !== uid) continue;
-      roomCode = code; roomTc = tc; roomPriv = !!priv; setPresence('room', { room: priv ? null : code });
+      const expires = db.now() + ROOM_TTL;
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), expires, game: null, priv: !!priv } : undefined);
+      if (!r.committed || !r.value || r.value.host !== uid || r.value.expires !== expires) continue;
+      roomCode = code; roomTc = tc; roomPriv = !!priv; roomExpires = expires; roomCbs = { onMatched, onExpired };
+      setPresence('room', { room: priv ? null : code });
       db.onDisconnectRemove('rooms/' + code);
-      roomUnsub = db.on('rooms/' + code + '/game', gid => { if (gid) { const c = roomCode; leave(true); db.remove('rooms/' + c); onMatched(gid); } });
+      let seen = false;
+      roomUnsub = db.on('rooms/' + code, v => {
+        if (roomCode !== code) return;
+        if (v && v.host === uid) { seen = true; if (v.game) { const cb = roomCbs.onMatched; roomEnd(); db.remove('rooms/' + code); roomEmit('matched'); cb && cb(v.game); } return; }
+        if (seen || v) { roomEnd(); if (!v) roomEmit('gone'); }       // deleted elsewhere (e.g. another tab) or taken over after expiry
+      });
+      roomTimer = setInterval(roomCheck, 5000);
+      roomEmit('open');
       return code;
     }
     throw new Error('room');
   }
+  function roomCheck() {
+    if (!roomCode || db.now() < roomExpires) return;
+    const cb = roomCbs && roomCbs.onExpired;
+    closeRoom('expired').then(() => cb && cb());
+  }
+  // stop watching the own room (does not delete it)
+  function roomEnd() {
+    roomUnsub && roomUnsub(); roomUnsub = null; clearInterval(roomTimer); roomTimer = 0;
+    if (roomCode) db.cancelDisconnect('rooms/' + roomCode);
+    roomCode = null; roomCbs = null; roomExpires = 0;
+  }
+  // delete the own room (部屋を閉じる / expiry)
+  async function closeRoom(why) {
+    if (!roomCode) return;
+    const c = roomCode; roomEnd();
+    if (presOn && presState === 'room') setPresence('idle', { room: null });
+    await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid && !cur.game ? null : undefined));
+    roomEmit(why === 'expired' ? 'expired' : 'closed');
+  }
+  // restart the expiry timer (the host looked at the room again)
+  async function extendRoom() {
+    if (!roomCode) return;
+    roomExpires = db.now() + ROOM_TTL;
+    await db.update('rooms/' + roomCode, { expires: roomExpires });
+    roomEmit('extend');
+  }
   async function joinRoom(code) {
     code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const room = await db.get('rooms/' + code);
-    if (!room || room.game || room.host === uid) return null;
+    if (!code) return null;
+    const rm = await db.get('rooms/' + code);
+    if (!roomLive(rm) || rm.host === uid) return null;
     await leave();
     const gid = db.push('games');
-    const black = Math.random() < 0.5 ? uid : room.host, white = black === uid ? room.host : uid;
-    const names = { [uid]: profile.name, [room.host]: room.name }, rates = { [uid]: profile.rating, [room.host]: room.rating };
-    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, ...tcFields(room.tc), created: db.stamp(), t: db.stamp() });
-    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.game) return; cur.game = gid; return cur; });
+    const black = Math.random() < 0.5 ? uid : rm.host, white = black === uid ? rm.host : uid;
+    const names = { [uid]: profile.name, [rm.host]: rm.name }, rates = { [uid]: profile.rating, [rm.host]: rm.rating };
+    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, ...tcFields(rm.tc), created: db.stamp(), t: db.stamp() });
+    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; return cur; });
     if (!(r.committed && r.value && r.value.game === gid)) { await db.remove('games/' + gid); return null; }
     return gid;
   }
 
+  // cancel the rated-game search only (closing the online dialog)
+  async function leaveLobby() {
+    clearInterval(matchTimer); matchTimer = 0;
+    lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub();
+    lobbyUnsub = selfUnsub = null;
+    if (lobbyState) { lobbyState = null; db.cancelDisconnect('lobby/' + uid); await db.remove('lobby/' + uid); if (presOn && presState === 'lobby') setPresence(roomCode ? 'room' : 'idle', { room: roomCode && !roomPriv ? roomCode : null }); }
+  }
+  // leave the lobby and close the own room (before searching / creating / joining; keepMatched = a game was found, keep presence)
   async function leave(keepMatched) {
     if (!keepMatched && presOn) setPresence('idle', { room: null });
     clearInterval(matchTimer); matchTimer = 0;
-    lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub(); roomUnsub && roomUnsub();
-    lobbyUnsub = selfUnsub = roomUnsub = null;
+    lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub();
+    lobbyUnsub = selfUnsub = null;
     if (lobbyState) { lobbyState = null; db.cancelDisconnect('lobby/' + uid); await db.remove('lobby/' + uid); }
-    if (roomCode) { const c = roomCode; roomCode = null; db.cancelDisconnect('rooms/' + c); if (!keepMatched) await db.remove('rooms/' + c); }
+    if (roomCode) { const c = roomCode; roomEnd(); await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid && !cur.game ? null : undefined)); roomEmit('closed'); }
   }
 
   // ---------------------------------------------------------------- games
@@ -296,8 +356,8 @@
   }
 
   window.Online = {
-    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; },
-    init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave,
+    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, ROOM_TTL, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; }, get room() { return db ? room() : null; },
+    init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
     watchGame, sendMove, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),
   };
