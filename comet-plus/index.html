@@ -2116,7 +2116,7 @@ function spawnBoss() {
     const loop = Math.floor(bossCount / BOSS_DEFS.length);
     bossCount++;
     const def = BOSS_DEFS[idx];
-    const hp = Math.round(def.hp * (1 + loop * 0.5));
+    const hp = 2 + (bossCount - 1); // 1体目2発、2体目3発…と1発ずつ増える
     boss = { idx, def, x: config.canvasWidth / 2, y: -140, t: 0, enterT: 0, state: 'enter', hp, maxHp: hp, flash: 0, alpha: 1, invuln: false, contactCd: 0, r: def.r * BS };
     if (def.init) def.init(boss);
     audioHandler.playSound('bossWarning');
