@@ -12,11 +12,5 @@
   <circle cx="48" cy="59" r="7.5" fill="#ff5a5a"/>
   <circle cx="48" cy="75" r="7.5" fill="#ffd84a"/>
   <g fill="#fff" fill-opacity=".28"><circle cx="45.5" cy="40.5" r="2.2"/><circle cx="45.5" cy="56.5" r="2.2"/><circle cx="45.5" cy="72.5" r="2.2"/></g>
-  <g transform="translate(73 23)">
-    <circle r="13" fill="#07080d"/>
-    <circle r="11" fill="#151722" stroke="#f2cf7a" stroke-opacity=".75" stroke-width="1.4"/>
-    <path d="M-5.2 -2.6A6 6 0 1 1 -5.6 2.4" fill="none" stroke="#f2cf7a" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M-8 -5.6L-5.2 -2.4L-2 -5" fill="none" stroke="#f2cf7a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M0 -3V0.6L2.6 2" fill="none" stroke="#f2cf7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+  
 </svg>

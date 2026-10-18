@@ -8,11 +8,5 @@
   <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
   <rect x="15" y="17" width="66" height="62" rx="9" fill="#fff" fill-opacity=".04" stroke="#fff" stroke-opacity=".2" stroke-width="1.4"/>
   <g><path d="M18 20L30 20L24.0 45Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M18 76L30 76L24.0 51Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M30 20L42 20L36.0 45Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M30 76L42 76L36.0 51Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M42 20L54 20L48.0 45Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M42 76L54 76L48.0 51Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M54 20L66 20L60.0 45Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M54 76L66 76L60.0 51Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M66 20L78 20L72.0 45Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M66 76L78 76L72.0 51Z" fill="#e9dcc0" fill-opacity=".9"/></g>
-<g transform="translate(73 23)">
-    <circle r="13" fill="#07080d"/>
-    <circle r="11" fill="#151722" stroke="#f2cf7a" stroke-opacity=".75" stroke-width="1.4"/>
-    <path d="M-5.2 -2.6A6 6 0 1 1 -5.6 2.4" fill="none" stroke="#f2cf7a" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M-8 -5.6L-5.2 -2.4L-2 -5" fill="none" stroke="#f2cf7a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M0 -3V0.6L2.6 2" fill="none" stroke="#f2cf7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+
 </svg>
