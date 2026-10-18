@@ -5078,6 +5078,7 @@ function draw() {
         const cx = HUD_W / 2;
         const hasLS = 'letterSpacing' in renderCtx;
         renderCtx.save();
+        renderCtx.translate(0, -32); // 画面の上下中央に揃える
         renderCtx.textAlign = 'center';
         if (hasLS) renderCtx.letterSpacing = LS('16px');
         renderCtx.font = `300 34px ${config.logoFontFamily}`;
@@ -5137,6 +5138,7 @@ function draw() {
         const cx = HUD_W / 2;
         const hasLS = 'letterSpacing' in renderCtx;
         renderCtx.save();
+        renderCtx.translate(0, -40); // 画面の上下中央に揃える
         renderCtx.textAlign = 'center';
         renderCtx.textBaseline = 'alphabetic';
         // ロゴ: Rez風の細い小文字ロゴ
