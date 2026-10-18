@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="chess-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="chess-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#ff8a3d" stop-opacity=".30"/><stop offset=".6" stop-color="#ff8a3d" stop-opacity=".04"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
+    <linearGradient id="chess-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2c8"/><stop offset=".5" stop-color="#f2cf7a"/><stop offset="1" stop-color="#b8904a"/></linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#chess-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#chess-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <g fill="#fff" fill-opacity=".06"><rect x="16" y="16" width="16" height="16"/><rect x="48" y="16" width="16" height="16"/><rect x="32" y="32" width="16" height="16"/><rect x="64" y="32" width="16" height="16"/><rect x="16" y="48" width="16" height="16"/><rect x="48" y="48" width="16" height="16"/><rect x="32" y="64" width="16" height="16"/><rect x="64" y="64" width="16" height="16"/></g>
+  <rect x="16" y="16" width="64" height="64" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.2"/>
+  <g transform="translate(14 10) scale(.68)" fill="url(#chess-gold)" stroke="#6b5126" stroke-width="2.2" stroke-linejoin="round">
+    <path d="M24 88h52a4 4 0 0 0 4-4v-1a5 5 0 0 0-5-5H25a5 5 0 0 0-5 5v1a4 4 0 0 0 4 4z"/><path d="M30 78h40q0-6-6-7H36q-6 1-6 7z"/>
+    <path d="M33 71c-1-10 4-17 12-24c3-3 4-6 3-9l-9 6c-3 2-7 2-9-1c-2-3-1-6 1-8l13-12c2-2 3-6 3-9c3 1 5 3 6 5c2-2 4-3 7-3c-1 2-1 4 0 6c8 5 12 15 12 27c0 8-2 14-4 19z"/>
+    <path d="M58 27c5 6 8 14 8 24" fill="none"/>
+  </g>
+  <circle cx="46.3" cy="30.4" r="1.8" fill="#6b5126"/>
+</svg>
