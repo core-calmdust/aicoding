@@ -15,7 +15,9 @@
 - [済] ハイブリッド探索（scripts/bgw.js: hyb1/hyb2。相手の応手は高速ネット上位2手を wildbg で再評価）。Lv7=wildbg 0-ply、Lv8=1-ply、Lv9/10=2-ply（時間制限）。
 - [済] 高速ネット fast1（GNUbg 風特徴 128/80、n3 から warm start）を wildbg 0-ply ラベル 430万局面＋CC0 ロールアウト（×3）で8エポック学習 → nets/fast1.json。ロールアウト真値RMSE contact 0.167→0.095、race 0.118→0.075。0-ply 対戦 fast1 vs n3 = +0.043 ± 0.059（2000局、有意差なし）。
 - [進行中] 測定 scripts/run_meas.sh（再実行で続きから）: L8 1000局 → L10 400局。結果 meas/meas.log と meas/*.jsonl。
-- [未] サイト統合（bg.js←bgw.js、engine.js で wildbg.bin 読込、THIRD_PARTY_LICENSES 追加）とUIテスト。
+- [済] サイト統合（未コミット）: backgammon/bg.js←scripts/bgw.js、weights.json←fast1（4桁丸め）、wildbg.bin/json、THIRD_PARTY_LICENSES.txt、engine.js（wildbg 読込・evalPly）。旧版は nets/site_bg_n3.js.bak / site_weights_n3.json.bak。
+- [済] UI: 分析・共有/読込・Lv10 対局・390 スマホ OK、エラーなし。
+- [済] パズル再検証: 16問中1問（level4 #3, 'FEEB'）の正解が誤り → ロールアウト3000局で 3/off 1/off が +0.029 → puzzles.json を修正（答えを DABA に、テーマ bearoff）。レッスンは2-plyで全問一致。
 
 ## 再開方法
 - 学習: `node scripts/trainsup.js nets/fast1.json 8 2 128 80 0.006 nets/n3_shipped.json -- <data files>`（同じコマンドで続きから）
