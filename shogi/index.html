@@ -3398,7 +3398,7 @@ applyI18n();
   applyI18n();
   applyLook();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
-  if (had && game.clock) game.clock.t0 = Date.now();
+  if (had && game.clock && !(game.rated && !game.over)) game.clock.t0 = Date.now();   // rated: the clock keeps running across a reload
   if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
   else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); openNewDialog(); }
   const q = new URLSearchParams(location.search);
