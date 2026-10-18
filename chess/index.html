@@ -820,6 +820,10 @@ body.skin-ink .pw{stroke:#4a3410}body.skin-ink .pw .eye{fill:#4a3410}
 body.skin-ink .pb{stroke:#d4af55}body.skin-ink .pb .eye{fill:#d4af55}
 body.skin-ink .squares text.on-l{fill:#d4af55}body.skin-ink .squares text.on-d{fill:#b8954a}
 
+.coach{position:absolute;left:50%;top:8px;transform:translate(-50%,-6px);z-index:16;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:700;background:rgba(14,16,22,.9);border:1px solid var(--line);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+.coach.show{opacity:1;transform:translate(-50%,0)}
+.coach.q-best{border-color:#6fd3a0;color:#b8f0d2}.coach.q-good{border-color:#9fc7ff;color:#d3e5ff}.coach.q-dubious{border-color:#f2c060;color:#ffe2a6}.coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
+body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 </style>
 <div class="app">
   <div class="board-area">
@@ -829,6 +833,7 @@ body.skin-ink .squares text.on-l{fill:#d4af55}body.skin-ink .squares text.on-d{f
         <svg class="squares" id="squares" viewBox="0 0 8 8" preserveAspectRatio="none"></svg>
         <div class="pieces" id="pieces"></div>
         <div class="fx" id="fx"></div>
+        <div class="coach" id="coach"></div>
       </div>
       <div class="reserve bot" id="resBot"></div>
       <div class="toast" id="toast"></div>
@@ -968,6 +973,7 @@ body.skin-ink .squares text.on-l{fill:#d4af55}body.skin-ink .squares text.on-d{f
         <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
         <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
         <label><input type="checkbox" id="optThreat"><span data-i18n="opt.threat"></span></label>
+        <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
@@ -1039,6 +1045,7 @@ body.skin-ink .squares text.on-l{fill:#d4af55}body.skin-ink .squares text.on-d{f
     <div class="modal-actions">
       <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
       <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
+      <button class="mbtn hidden" id="btnMistakes"></button>
       <button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
     </div>
   </div>
@@ -1105,9 +1112,10 @@ body.skin-ink .squares text.on-l{fill:#d4af55}body.skin-ink .squares text.on-d{f
 
 <script src="i18n.js?v=20261019g"></script>
 <script src="i18n_basics.js?v=20261019ol"></script>
+<script src="i18n_coach.js?v=20261019c"></script>
 <script src="engine.js?v=20261019g"></script>
 <script src="firebase-config.js?v=20261019fb"></script>
 <script src="online.js?v=20261019ol"></script>
-<script src="app.js?v=20261019ol"></script>
+<script src="app.js?v=20261019c"></script>
 </body>
 </html>

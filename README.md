@@ -1,4 +1,4 @@
-# ゲーム制作＠バイブコーディング — AI CODING ARCADE
+# CALMDUST COLLECTION — AI CODING ARCADE
 
 AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 登録・インストール不要。PCでもスマホでも遊べます。
