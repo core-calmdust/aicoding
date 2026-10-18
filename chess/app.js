@@ -12,12 +12,19 @@ let posCache = { key: '' };
 function posAt(i) {
   const key = keyOf(i);
   if (posCache.key === key) return posCache;
+  if (lesson && lesson.drill) {
+    const pos = drillPos(startFen);
+    for (const m of moves.slice(0, i)) { pos.make(m); pos.side = 0; pos.ep = -1; }
+    posCache = { key, pos, hashes: [pos.h1], legal: drillLegal(pos, lesson.stage.safe) };
+    return posCache;
+  }
   const r = E.replay(startFen, moves.slice(0, i));
   posCache = { key, pos: r.pos, hashes: r.hashes, legal: r.pos.legal() };
   return posCache;
 }
 const sideP = pos => pos.side ? P2 : P1;
 function statusAt(i) {
+  if (lesson && lesson.drill) return { over: false };
   const { pos, hashes, legal } = posAt(i);
   if (!legal.length) return pos.inCheck() ? { over: true, winner: pos.side ? P1 : P2, why: 'mate' } : { over: true, winner: 0, draw: true, why: 'stalemate' };
   if (pos.half >= 100) return { over: true, winner: 0, draw: true, why: 'fifty' };
@@ -35,6 +42,29 @@ function sanOf(i) {   // SAN of move i (0-based)
 }
 function sanAt(pos, m) { return pos.san(m); }
 // pieces of `color` attacked by the opponent and either undefended or attacked by something cheaper
+// ---------------------------------------------------------------- drills (beginner course): white pieces only, black pieces stand still
+const DSENT = 0x08;   // off-board square used as "no king"
+function drillPos(fen) {
+  const pos = E.Pos.fromFEN(fen);
+  for (const c of [0, 1]) if (pos.b[pos.ksq[c]] !== (6 | (c ? 8 : 0))) pos.ksq[c] = DSENT;
+  const at = pos.attacked.bind(pos); pos.attacked = (s, by) => s === DSENT ? false : at(s, by);
+  return pos;
+}
+function drillPseudo(pos) {
+  const buf = new Int32Array(256), n = pos.gen(buf, false), out = [];
+  for (let i = 0; i < n; i++) if (pos.make(buf[i])) { pos.unmake(buf[i]); out.push(buf[i]); }
+  return out;
+}
+function drillDanger(pos, s) { const f = pos.b[s]; pos.b[s] = 0; const a = pos.attacked(s, 1); pos.b[s] = f; return a; }
+function drillLegal(pos, safe) {
+  const all = drillPseudo(pos);
+  if (!safe) return all;
+  return all.filter(m => { const f = mFrom(m), p = pos.b[f]; pos.b[f] = 0; const a = drillDanger(pos, mTo(m)); pos.b[f] = p; return !a; });
+}
+function drillStarsLeft() {
+  const st = lesson.stage, seen = new Set(moves.slice(0, cur).map(m => E.sqName(mTo(m))));
+  return st.stars.filter(q => !seen.has(q));
+}
 function hanging(pos, color) {
   const out = [], b = pos.b, them = color ^ 1, atk = new Map();
   const flip = pos.side !== them; if (flip) pos.makeNull();
@@ -90,7 +120,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261018b'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261019a'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -180,6 +210,7 @@ function animateMove(m, before) {
   return true;
 }
 function renderReserves(pos) {
+  if (lesson && lesson.drill) { $('#resTop').innerHTML = ''; $('#resBot').innerHTML = ''; return; }
   // captured pieces next to the player who took them; material balance
   const cnt = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]], init = [0, 8, 2, 2, 2, 1, 1];
   let mat = [0, 0];
@@ -245,6 +276,10 @@ function renderFx() {
     for (const x of legal) if (mFrom(x) === sel.from && !seen.has(mTo(x))) { seen.add(mTo(x)); const d = document.createElement('div'); d.className = 'dot' + (pos.b[mTo(x)] || (mFlag(x) & 2) ? ' cap' : ''); placeAt(d, mTo(x)); fxEl.appendChild(d); }
   }
   for (const k of lessonMarks) { if (k.arrow) arrow(svg, k.arrow[0], k.arrow[1], k.cls); else hlDiv(k.cls, k.at); }
+  if (lesson && lesson.drill) {
+    if (lesson.stage.safe) for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } if ((!pos.b[s] || (pos.b[s] >> 3) === 0) && drillDanger(pos, s)) hlDiv('danger', s); }
+    for (const q of drillStarsLeft()) { const d = document.createElement('div'); d.className = 'star'; d.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>'; placeAt(d, E.sqOf(q)); fxEl.appendChild(d); }
+  }
   if (labelList) drawLabels(labelList);
   else if (!drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
 }
@@ -425,12 +460,21 @@ function onSquare(s) {
 function tryMove(from, to, dragged) {
   const { legal } = posAt(cur);
   const c = legal.filter(m => mFrom(m) === from && mTo(m) === to);
-  if (!c.length) return false;
+  if (!c.length) { illegalHint(from, to); return false; }
   // a dropped piece already stands on its target square (still keyed by `from`), so the move does not slide it again
   if (dragged) { const el = pcEls.get(from); if (el) { el.style.transform = ''; placeAt(el, to); } }
   if (c.length > 1) { openPromo(c, to); return true; }
   commit(c[0], dragged);
   return true;
+}
+function illegalHint(from, to) {
+  const { pos } = posAt(cur), p = pos.b[from];
+  if (!p || (p >> 3) !== pos.side) return;
+  const buf = new Int32Array(256), n = pos.gen(buf, false);
+  let pseudo = false; for (let i = 0; i < n; i++) if (mFrom(buf[i]) === from && mTo(buf[i]) === to) pseudo = true;
+  if (!pseudo) return;
+  if (lesson && lesson.drill) { if (lesson.stage.safe) toast(t('dr.danger'), 2200); return; }
+  toast(t(pos.inCheck() ? 'ill.inCheck' : 'ill.self'), 2600);
 }
 let promoEl = null;
 function openPromo(cands, to) {
@@ -451,6 +495,7 @@ function openPromo(cands, to) {
 function closePromo(resync) { if (promoEl) { promoEl.remove(); promoEl = null; if (resync) syncPieces(posAt(cur).pos.b); } }
 function commit(m, dragged) {
   sel = null; closePromo();
+  if (lesson && lesson.drill) return drillMove(m);
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
   playMove(m);
@@ -700,7 +745,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018b').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261019a').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -723,9 +768,14 @@ async function openLessons() {
   await lessonsReady; selTab('lesson');
   if (!LESSONS) { toast(t('ls.fail')); return; }
   const pr = lsProgress();
+  let course = '', no = 0;
   $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
-    const r = pr[s.id];
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+    const r = pr[s.id], c = s.course || 'tactics';
+    let head = '';
+    if (c !== course) { course = c; no = 0; head = `<p class="ls-course"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></p>`; }
+    no++;
+    const score = r ? (s.kind === 'drill' ? '★' + r.best + '/' + s.stages.length * 3 : t('u.pt', { n: r.best })) : '';
+    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${no}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + score : t('ls.notyet')}</span></button>`;
   }).join('');
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
@@ -733,7 +783,7 @@ $('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if
 function fenPieces(fen) { const out = {}; const rows = fen.split(' ')[0].split('/'); rows.forEach((row, i) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; } out['abcdefgh'[f] + (8 - i)] = ch; f++; } }); return out; }
 function openIntro(i) {
   introIdx = i; const s = LESSONS.steps[i];
-  $('#liStep').textContent = 'STEP ' + (i + 1);
+  $('#liStep').textContent = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   const d = s.diagram;
   $('#liBody').innerHTML = (d ? `<div class="mini">${miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] })}</div>` : '') + t('ls.' + s.id + '.intro');
@@ -757,26 +807,50 @@ function startLesson(step) {
   document.body.classList.add('in-lesson');
   loadLessonProblem();
 }
+function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
 function lessonProblem() { return LESSONS.steps[lesson.step].problems[lesson.i]; }
 function loadLessonProblem() {
+  const s = LESSONS.steps[lesson.step];
+  if (s.kind === 'drill') {
+    const st = s.stages[lesson.i];
+    lesson.drill = true; lesson.stage = st; lesson.used = 0; lesson.me = P1;
+    enterSpecial(st.fen + ' w - - 0 1');
+    lesson.answered = false; lesson.hinted = false;
+    update(false); renderLessonCard(); $('#lsFb').innerHTML = t('dr.start', { p: st.par });
+    // a single piece: select it right away so the reachable squares are shown
+    const { pos } = posAt(0), mine = []; for (let q = 0; q < 128; q++) { if (q & 0x88) { q += 7; continue; } if (pos.b[q] && !(pos.b[q] >> 3)) mine.push(q); }
+    if (mine.length === 1) { sel = { from: mine[0] }; renderFx(); }
+    return;
+  }
+  lesson.drill = false;
   const P = lessonProblem();
   lesson.me = P.fen.split(' ')[1] === 'b' ? P2 : P1;
   enterSpecial(P.fen);
   // the stored moves are UCI strings: convert once for this position
-  const pos = posAt(0).pos; P._sc = P.sc.map(([u, v]) => [pos.fromUci(u), v]); P._best = pos.fromUci(P.best);
+  const pos = posAt(0).pos;
+  if (P.ok) { P._ok = new Set(P.ok.map(u => pos.fromUci(u))); P._best = pos.fromUci(P.ok[0]); P._sc = null; }
+  else { P._sc = P.sc.map(([u, v]) => [pos.fromUci(u), v]); P._best = pos.fromUci(P.best); }
   lesson.answered = false; lesson.hinted = false;
   update(false); renderLessonCard(); $('#lsFb').innerHTML = '';
 }
 function renderLessonCard() {
-  const s = LESSONS.steps[lesson.step], n = s.problems.length;
-  $('#lsStep').textContent = t('ls.stepq', { s: lesson.step + 1, i: lesson.i + 1, n });
+  const s = LESSONS.steps[lesson.step], n = s.kind === 'drill' ? s.stages.length : s.problems.length;
+  $('#lsStep').textContent = t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = t('ls.' + s.id + '.title');
-  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${t('ls.' + s.id + '.goal')}</span></div>`;
-  $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
+  if (s.kind === 'drill') {
+    $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="dstar">★</span><span>${t('ls.' + s.id + '.goal')} ${t('dr.par', { p: lesson.stage.par })}</span></div>`;
+    $('#lsDots').innerHTML = s.stages.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 2 ? 'ok' : 'mid'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
+    $('#lsHint').textContent = t('dr.reset'); $('#lsHint').disabled = false;
+  } else {
+    $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${t('ls.' + s.id + '.goal')}</span></div>`;
+    $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
+    $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = lesson.answered;
+  }
   $('#lsNext').textContent = lesson.i + 1 < n ? t('ls.next') : t('ls.result');
-  $('#lsNext').disabled = !lesson.answered; $('#lsHint').disabled = lesson.answered;
+  $('#lsNext').disabled = !lesson.answered;
 }
 function problemPoints(P, m) {
+  if (P._ok) return P._ok.has(m) ? 20 : 0;
   const val = new Map(P._sc), best = Math.max(...P._sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -MATE;
   if (best > MATET && mine > MATET) return mine >= best ? 20 : 16;
   if (mine >= best - 10) return 20;
@@ -790,10 +864,13 @@ function lessonAnswer(m) {
   lesson.answered = true;
   const pts = problemPoints(P, m); lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P._best, lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
-  const bs = pos.san(best), ms = pos.san(m), val = new Map(P._sc), fmt = v => valLabel(v).big;
-  let fb = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `;
-  fb += t('ls.' + s.id + '.why', { m: bs, x: ms });
-  fb += `<br><small style="color:var(--dim)">${t('fb.values', { a: fmt(val.has(m) ? val.get(m) : -MATE), b: fmt(val.get(best)), x: ms })}</small>`;
+  const bs = pos.san(best), ms = pos.san(m), val = new Map(P._sc || []), fmt = v => valLabel(v).big;
+  let fb = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> ` + (P._ok ? '' : `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `);
+  if (P._ok) fb += pts ? t('ls.' + s.id + '.why', { m: ms, x: ms }) : t('ls.' + s.id + '.ng', { m: bs, x: ms });
+  else {
+    fb += t('ls.' + s.id + '.why', { m: bs, x: ms });
+    fb += `<br><small style="color:var(--dim)">${t('fb.values', { a: fmt(val.has(m) ? val.get(m) : -MATE), b: fmt(val.get(best)), x: ms })}</small>`;
+  }
   $('#lsFb').innerHTML = fb;
   playChime(pts >= 16);
   playMove2(m);
@@ -802,7 +879,8 @@ function lessonAnswer(m) {
     if (!lesson || tok !== busyToken) return;
     moves = []; cur = 0; sel = null; lessonMarks = [];
     lessonMarks.push({ arrow: [mFrom(best), mTo(best)], cls: '' }, { at: mTo(best), cls: 'ok' });
-    if (m !== best) lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' }, { at: mTo(m), cls: 'ng' });
+    if (m !== best && !(P._ok && P._ok.has(m))) lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' }, { at: mTo(m), cls: 'ng' });
+    if (P._ok) { if (P._ok.has(m)) lessonMarks = [{ arrow: [mFrom(m), mTo(m)], cls: '' }, { at: mTo(m), cls: 'ok' }]; update(false); return; }
     const sorted = P._sc.slice().sort((a, b) => b[1] - a[1]).slice(0, 4), seen = new Set();
     labelList = [];
     for (const [mm, v] of sorted) { if (seen.has(mTo(mm))) continue; seen.add(mTo(mm)); const L = valLabel(v); labelList.push({ at: mTo(mm), big: L.big, cls: L.cls + (mm === best ? ' best' : '') }); }
@@ -811,6 +889,7 @@ function lessonAnswer(m) {
   }, moveDur() + 800);
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.drill) { loadLessonProblem(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
   const s = LESSONS.steps[lesson.step], { pos } = posAt(cur), me = pos.side, op = me ^ 1;
@@ -820,28 +899,55 @@ $('#lsHint').onclick = () => {
   if (s.id === 'escape') for (const q of hanging(pos, me)) lessonMarks.push({ at: q, cls: 'hang' });
   if (s.id === 'mate1' || s.id === 'mate2') lessonMarks.push({ at: pos.ksq[op], cls: 'hang' });
   if (s.id === 'fork' || s.id === 'pin') { const P = lessonProblem(); lessonMarks.push({ at: mFrom(P._best), cls: 'ok' }); }
-  if (s.id === 'promote') { const P = lessonProblem(); lessonMarks.push({ at: mFrom(P._best), cls: 'ok' }); }
+  if (s.id === 'promote' || s.id === 'b_special') { const P = lessonProblem(); lessonMarks.push({ at: mFrom(P._best), cls: 'ok' }); }
+  if (s.id === 'b_check' || s.id === 'b_mate' || s.id === 'b_draw') lessonMarks.push({ at: pos.ksq[op], cls: 'hang' });
+  if (s.id === 'b_escape') { lessonMarks.push({ at: pos.ksq[me], cls: 'hang' }); for (let q = 0; q < 128; q++) { if (q & 0x88) { q += 7; continue; } const p = pos.b[q]; if (!p || (p >> 3) !== op) continue; const b2 = pos.b.slice(); for (let z = 0; z < 128; z++) if (!(z & 0x88) && z !== q && pos.b[z] && (pos.b[z] >> 3) === op && (pos.b[z] & 7) !== 6) pos.b[z] = 0; const a = pos.attacked(pos.ksq[me], op); pos.b.set(b2); if (a) lessonMarks.push({ at: q, cls: 'ng' }); } }
   renderFx();
 };
 $('#lsNext').onclick = () => {
   if (!lesson || !lesson.answered) return;
-  const s = LESSONS.steps[lesson.step];
-  if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
-  const n = lesson.results.reduce((a, b) => a + b, 0), pass = n >= 75;
+  const s = LESSONS.steps[lesson.step], total = s.kind === 'drill' ? s.stages.length : s.problems.length;
+  if (lesson.i + 1 < total) { lesson.i++; loadLessonProblem(); return; }
+  const n = lesson.results.reduce((a, b) => a + b, 0), pass = s.kind === 'drill' ? true : n >= 75;
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
   $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
-  $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
+  if (s.kind === 'drill') $('#ldSub').innerHTML = `<div class="ld-score ok">★ ${n}<small> / ${total * 3}</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${'★'.repeat(x)}${'☆'.repeat(3 - x)}`).join('　') + `<br><small style="color:var(--dim)">${t('dr.more')}</small>`;
+  else $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
+  const lastBasic = s.course === 'basics' && !(LESSONS.steps[lesson.step + 1] && LESSONS.steps[lesson.step + 1].course === 'basics');
+  if (lastBasic && pass) $('#ldSub').innerHTML += `<p class="ls-grad">${t('course.graduate')}</p>`;
+  $('#btnLessonPlay').classList.toggle('hidden', !(lastBasic && pass));
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
   showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
+$('#btnLessonPlay').onclick = () => {
+  hideOverlay('#lessonOverlay'); savedGame = null; exitSpecial();
+  Object.assign(settings, { mode: 'ai', color: P1, level: 1 });
+  newGame();
+};
+function drillMove(m) {
+  const L = lesson; if (!L || L.answered) return;
+  const before = drillStarsLeft().length;
+  moves = moves.slice(0, cur); moves.push(m); cur = moves.length; L.used++;
+  update(true);
+  const left = drillStarsLeft();
+  if (left.length < before) playTick();
+  if (!left.length) {
+    L.answered = true;
+    const par = L.stage.par, k = L.used, st = k <= par ? 3 : k <= par + 2 ? 2 : 1;
+    L.results[L.i] = st;
+    setTimeout(() => playChime(true), 150);
+    $('#lsFb').innerHTML = `<b class="ok">${t('dr.clear')}</b> <span class="dstars">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span><br>${t('dr.used', { n: k, p: par })}` + (st < 3 ? ` ${t('dr.tryPar')}` : '');
+    renderLessonCard();
+  } else $('#lsFb').innerHTML = t('dr.progress', { n: L.used, left: left.length });
+}
 
 // ====================================================================== puzzles: mate in N
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261018b').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261019a').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {

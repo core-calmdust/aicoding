@@ -89,6 +89,18 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hl.played.bad{box-shadow:inset 0 0 0 4px rgba(255,107,91,.9)}
 .hl.played.dubious{box-shadow:inset 0 0 0 4px rgba(242,192,96,.9)}
 .hl.hov{box-shadow:inset 0 0 0 3px rgba(255,255,255,.55)}
+.hl.danger{background:repeating-linear-gradient(45deg,rgba(255,90,70,.30) 0 6px,rgba(255,90,70,.12) 6px 12px)}
+.star{position:absolute;width:12.5%;height:12.5%;pointer-events:none;z-index:4;display:flex;align-items:center;justify-content:center;animation:starIn .35s ease-out}
+.star svg{width:62%;height:62%;fill:#ffd65a;stroke:#9a6a12;stroke-width:1.2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));animation:starPulse 1.8s ease-in-out infinite}
+@keyframes starIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes starPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.dstar{color:#ffd65a;font-size:18px;line-height:1;flex:none}
+.dstars{color:#ffd65a;letter-spacing:2px;font-size:16px}
+.ls-course{grid-column:1 / -1;margin:10px 0 2px;display:flex;flex-direction:column;gap:2px}
+.ls-course:first-child{margin-top:0}
+.ls-course b{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass)}
+.ls-course small{font-size:12px;color:var(--dim);line-height:1.6}
+.ls-grad{margin-top:12px;font-size:14px;line-height:1.7;color:var(--text)}
 .dot{position:absolute;width:12.5%;height:12.5%;pointer-events:none;z-index:5;display:flex;align-items:center;justify-content:center}
 .dot::before{content:"";width:30%;height:30%;border-radius:50%;background:rgba(20,14,8,.35)}
 .dot.cap::before{width:86%;height:86%;background:transparent;box-shadow:inset 0 0 0 calc(var(--cell) * .07) rgba(20,14,8,.38)}
@@ -720,7 +732,7 @@ body .info-line{font-size:12.5px}
     <div id="lessonDoneView" class="hidden">
       <div class="result-big" id="ldTitle"></div>
       <div class="result-sub" id="ldSub" style="font-size:14px"></div>
-      <div class="modal-actions"><button class="mbtn" id="btnLessonQuit2" data-i18n="ls.toGame"></button><button class="mbtn" id="btnLessonRetry" data-i18n="ls.retry"></button><button class="mbtn go" id="btnLessonNextStep" data-i18n="ls.nextStep"></button></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonQuit2" data-i18n="ls.toGame"></button><button class="mbtn" id="btnLessonRetry" data-i18n="ls.retry"></button><button class="mbtn go hidden" id="btnLessonPlay" data-i18n="course.play"></button><button class="mbtn go" id="btnLessonNextStep" data-i18n="ls.nextStep"></button></div>
     </div>
   </div>
 </div>
@@ -778,8 +790,9 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018b"></script>
-<script src="engine.js?v=20261018b"></script>
-<script src="app.js?v=20261018b"></script>
+<script src="i18n.js?v=20261019a"></script>
+<script src="i18n_basics.js?v=20261019a"></script>
+<script src="engine.js?v=20261019a"></script>
+<script src="app.js?v=20261019a"></script>
 </body>
 </html>
