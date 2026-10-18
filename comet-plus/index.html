@@ -2674,38 +2674,68 @@ function updateFieldGrid() {
     fieldGridGeo.attributes.position.needsUpdate = true;
 }
 
-const borderMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.8 });
-function makeFrame(mat, thick) {
-    const g = new THREE.Group();
-    const bars = [];
-    [[0, -H / 2, true], [0, H / 2, true], [-W / 2, 0, false], [W / 2, 0, false]].forEach(([x, z, horiz]) => {
-        const m = new THREE.Mesh(horiz ? new THREE.BoxGeometry(W + thick, thick, thick) : new THREE.BoxGeometry(thick, thick, H + thick), mat);
-        m.position.set(x, 0, z);
-        m.userData.horiz = horiz;
-        g.add(m); bars.push(m);
-    });
-    g.userData.bars = bars;
-    return g;
+// 枠: 周囲を一周するラインを、キックごとに波打たせる
+const FRAME_N = 640;
+const framePerim = 2 * (W + H);
+const frameBase = new Float32Array(FRAME_N * 3);
+const frameS = new Float32Array(FRAME_N); // 下辺中央からの周回距離（左右対称）
+const frameNx = new Float32Array(FRAME_N), frameNz = new Float32Array(FRAME_N); // 外向き法線
+for (let i = 0; i < FRAME_N; i++) {
+    let d = (i / FRAME_N) * framePerim; // 下辺中央から時計回り
+    let x, z;
+    const hw = W / 2, hh = H / 2;
+    if (d < hw) { x = -d; z = hh; }
+    else if ((d -= hw) < H) { x = -hw; z = hh - d; }
+    else if ((d -= H) < W) { x = -hw + d; z = -hh; }
+    else if ((d -= W) < H) { x = hw; z = -hh + d; }
+    else { d -= H; x = hw - d; z = hh; }
+    frameBase[i * 3] = x; frameBase[i * 3 + 2] = z;
+    if (Math.abs(Math.abs(z) - hh) < 0.01) { frameNx[i] = 0; frameNz[i] = Math.sign(z); }
+    else { frameNx[i] = Math.sign(x); frameNz[i] = 0; }
+    const sd = (i / FRAME_N) * framePerim;
+    frameS[i] = Math.min(sd, framePerim - sd);
 }
-const borderFrame = makeFrame(borderMat, 2.5);
-borderFrame.position.y = -4;
-field.add(borderFrame);
-// キックごとに外へ広がる残響フレーム
-const frameEchoes = [];
-for (let i = 0; i < 4; i++) {
-    const mat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-    const fr = makeFrame(mat, 2);
-    fr.position.y = -4;
-    fr.visible = false;
-    field.add(fr);
-    frameEchoes.push({ fr, mat, life: 0 });
-}
-let echoIdx = 0;
+const framePos = new Float32Array(FRAME_N * 3);
+const frameGeo = new THREE.BufferGeometry();
+frameGeo.setAttribute('position', new THREE.BufferAttribute(framePos, 3).setUsage(THREE.DynamicDrawUsage));
+const borderMat = new THREE.LineBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.8 });
+const frameLine = new THREE.LineLoop(frameGeo, borderMat);
+frameLine.frustumCulled = false;
+field.add(frameLine);
+const frameLine2 = new THREE.LineLoop(frameGeo, borderMat); // 少し上にもう1本重ねて線を太く見せる
+frameLine2.position.y = 1.2;
+frameLine2.frustumCulled = false;
+field.add(frameLine2);
+const frameWaves = [];
 function onKick() {
-    const e = frameEchoes[echoIdx++ % frameEchoes.length];
-    e.life = 1;
+    frameWaves.push({ age: 0 });
+    if (frameWaves.length > 4) frameWaves.shift();
 }
-const cornerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+function updateFrame(dt) {
+    for (let k = frameWaves.length - 1; k >= 0; k--) {
+        frameWaves[k].age += dt;
+        if (frameWaves[k].age > 1.2) frameWaves.splice(k, 1);
+    }
+    const halfP = framePerim / 2;
+    for (let i = 0; i < FRAME_N; i++) {
+        const sd = frameS[i];
+        let y = Math.sin(sd * 0.012 - rTime * 2.2) * 1.5; // 常時のゆらぎ
+        let out = 0;
+        for (const w of frameWaves) {
+            const front = w.age * 2600;            // 波頭の位置（下辺中央から左右へ）
+            const u = (sd - front) / 140;
+            const env = Math.exp(-u * u) * Math.exp(-w.age * 2.2) * (1 - sd / halfP * 0.35);
+            const wv = env * Math.sin(sd * 0.045 - w.age * 30);
+            y += wv * 14;
+            out += wv * 12;
+        }
+        framePos[i * 3] = frameBase[i * 3] + frameNx[i] * out;
+        framePos[i * 3 + 1] = -4 + y;
+        framePos[i * 3 + 2] = frameBase[i * 3 + 2] + frameNz[i] * out;
+    }
+    frameGeo.attributes.position.needsUpdate = true;
+}
+const cornerMat = new THREE.MeshBasicMaterial({ color: 0x9fb8d8 });
 const cornerGems = [];
 [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
     const m = new THREE.Mesh(new THREE.OctahedronGeometry(7, 0), cornerMat);
@@ -2998,23 +3028,11 @@ function render3D() {
     fieldGridMat.color.copy(themeCur.grid);
     fieldGridMat.opacity = 0.08 + visualBeat * 0.1;
     borderMat.color.copy(themeCur.ui);
-    borderMat.opacity = 0.4 + visualBeat * 0.6;
-    borderMat.color.lerp(COL_WHITE, visualBeat * 0.55);
+    borderMat.color.copy(themeCur.ui);
+    borderMat.opacity = 0.55;
     if (visualBeat > prevBeatR + 0.3) onKick();
     prevBeatR = visualBeat;
-    const thick = 1 + visualBeat * 2.6;
-    borderFrame.userData.bars.forEach(b => { if (b.userData.horiz) b.scale.set(1, thick, thick); else b.scale.set(thick, thick, 1); });
-    borderFrame.position.y = -4 + visualBeat * 6;
-    frameEchoes.forEach(e => {
-        if (e.life <= 0) { e.fr.visible = false; return; }
-        e.life = Math.max(0, e.life - simDtR * 2.4);
-        const t = 1 - e.life;
-        e.fr.visible = true;
-        e.fr.scale.set(1 + t * 0.09, 1, 1 + t * 0.14);
-        e.fr.position.y = -4 - t * 10;
-        e.mat.color.copy(themeCur.ui);
-        e.mat.opacity = e.life * e.life * 0.85;
-    });
+    updateFrame(simDtR);
     shipMat.color.copy(themeCur.player);
     shipMat.emissive.copy(themeCur.player);
     shipMat.emissiveIntensity = 0.3 + visualBeat * 0.5;
@@ -3056,7 +3074,7 @@ function render3D() {
 
     fieldScroll = (fieldScroll + ws * 0.35 * dt) % H;
     updateFieldGrid();
-    cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(1 + visualBeat * 1.4); g.position.y = -4 + visualBeat * 10; });
+    cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(0.8 + visualBeat * 0.3); });
 
     // タイトル用ハブ
     const showHub = gameState === 'title' || gameState === 'confirmReset';
