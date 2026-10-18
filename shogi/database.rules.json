@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "players": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['name', 'rating']) && newData.child('rating').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 16"
+      }
+    },
+    "lobby": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || (data.exists() && newData.exists() && !data.child('game').exists() && newData.child('name').val() === data.child('name').val() && newData.child('rating').val() === data.child('rating').val()))"
+      }
+    },
+    "rooms": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || (!data.child('game').exists() && newData.child('host').val() === data.child('host').val()))"
+      }
+    },
+    "games": {
+      "$gid": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((!data.exists() && (newData.child('b').val() === auth.uid || newData.child('w').val() === auth.uid)) || data.child('b').val() === auth.uid || data.child('w').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['b', 'w', 'moves', 'status']) && newData.child('moves').isString() && newData.child('moves').val().length <= 4000"
+      }
+    },
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
