@@ -1941,6 +1941,7 @@ function updatePlayingState(dt_sec) {
     if (gameMode === 'STANDARD MODE') {
         for (let i = monsters.length - 1; i >= 0; i--) {
             const m = monsters[i];
+            if (!m._sized) { m._sized = true; m.width *= ES; m.height *= ES; }
             
             // Movement Update
             if (m.type === 'looper') {
@@ -2205,7 +2206,8 @@ class LiteMat extends THREE.MeshLambertMaterial { constructor(p = {}) { const q 
 const StdMat = IS_MOBILE ? LiteMat : THREE.MeshStandardMaterial;
 const BS = IS_MOBILE ? 1.5 : 1.7;
 const ENEMY_SPD = IS_MOBILE ? 1.4 : 1; // スマホは雑魚敵の動きを速めに
-const VS = IS_MOBILE ? 2.0 : 1; // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
+const VS = IS_MOBILE ? 2.0 : 1;
+const ES = IS_MOBILE ? 1 : 1.5; // PCは雑魚敵を1.5倍（見た目と当たり判定） // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
 
 function bossShoot(x, y, angle, speed, radius = 4) {
@@ -2494,8 +2496,8 @@ function updateBoss(isPlayerInvincible) {
         if (d < player.radius + p.r) {
             if (isPlayerInvincible) {
                 if (b.contactCd <= 0 && !b.invuln) { b.contactCd = 30; damageBoss(player.x, player.y - 20); if (!boss) return false; }
-            } else if (hurtTimer <= 0) {
-                takeHit();
+            } else {
+                gameOver('collision'); // ボスの体当たりはシールドに関係なく一発アウト
                 return true;
             }
         }
@@ -4556,14 +4558,14 @@ function render3D() {
             obj.position.set(toX(ix(m)), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(iy(m)));
             obj.userData.body.rotation.z = Math.sin(rTime * 2.4 + sd) * 0.18;
             obj.userData.body.rotation.x = Math.sin(rTime * 1.7 + sd) * 0.1;
-            const sc = VS * (1 + visualBeat * 0.12);
+            const sc = VS * ES * (1 + visualBeat * 0.12);
             obj.scale.setScalar(sc);
             if (obj.userData.hub) {
                 obj.userData.hub.rotation.y = rTime * 1.5;
                 obj.userData.hub.userData.lineMat.color.copy(themeCur.ui);
             }
             const gc = hsl(hue1, 1, 0.7);
-            glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, m.type === 'looper' ? 110 : 70, 0.14);
+            glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, (m.type === 'looper' ? 110 : 70) * ES, 0.14);
         });
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
