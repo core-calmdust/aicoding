@@ -805,10 +805,10 @@ function analyzePlays(p, s, d1, d2, opts) {
 function evalRoll(p, s, depth) {
   if (winner(p) >= 0) return evalPos(p, s);
   if (!depth) return evalPos(p, s);
-  const acc = [0, 0, 0, 0, 0];
+  const acc = [0, 0, 0, 0, 0], t0 = nowMs();   // depth 3: falls back to 0-ply per roll after ~0.9 s on slow devices
   for (const [a, b, pr] of ROLLS) {
     let v;
-    if (depth === 3 && WB) { const pl = bestPlay0(p, s, a, b); v = winner(pl.pos) >= 0 || isBearoffPos(pl.pos) ? pl.v : hyb1(pl.pos, 1 - s); }
+    if (depth === 3 && WB) { const pl = bestPlay0(p, s, a, b); v = winner(pl.pos) >= 0 || isBearoffPos(pl.pos) || nowMs() > t0 + 900 ? pl.v : hyb1(pl.pos, 1 - s); }
     else if (depth >= 2) { const pl = analyzePlays(p, s, a, b, { ply: 1, keep1: 3, margin1: 0.12 })[0]; v = pl.v; }
     else v = bestPlay0(p, s, a, b).v;
     for (let k = 0; k < 5; k++) acc[k] += pr * v[k];
@@ -947,7 +947,7 @@ const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Da
 // deterministic per-request noise (so a given level plays reproducibly for a given position)
 function rng(seedStr) { const h = cyrb128(seedStr); let a = h[0], b = h[1]; return () => { a ^= a << 13; a ^= a >>> 17; a ^= a << 5; b = (b + 0x6D2B79F5) | 0; return (((a ^ b) >>> 0) / 4294967296); }; }
 function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-let L10_SOFT = 2400, L10_HARD = 3400;   // Lv10 time budget (ms): soft = no new candidate, hard = abandon
+let L10_SOFT = 2300, L10_HARD = 3100;   // Lv10 time budget (ms): soft = no new candidate, hard = abandon
 const NOISE = [0, 0, 0.5, 0.25, 0.12, 0.06, 0.025, 0, 0, 0, 0];
 // Levels: 1 random · 2–6 net with decreasing noise · 7 net 0-ply · 8 1-ply · 9 2-ply (narrow) · 10 2-ply (wide, ~1–2 s)
 function aiChoosePlay(pos, side, dice, level, tag) {
