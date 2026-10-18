@@ -18,3 +18,34 @@
   interim 360: A ppg 0.089 ± 0.140
   interim 380: A ppg 0.118 ± 0.135
   interim 400: A ppg 0.110 ± 0.132
+  interim 420: A ppg 0.093 ± 0.129
+  interim 440: A ppg 0.093 ± 0.126
+  interim 460: A ppg 0.091 ± 0.124
+  interim 480: A ppg 0.094 ± 0.121
+  interim 500: A ppg 0.122 ± 0.119
+  interim 520: A ppg 0.133 ± 0.117
+  interim 540: A ppg 0.130 ± 0.114
+  interim 560: A ppg 0.127 ± 0.112
+  interim 580: A ppg 0.126 ± 0.109
+  interim 600: A ppg 0.115 ± 0.107
+  interim 620: A ppg 0.102 ± 0.105
+  interim 640: A ppg 0.108 ± 0.104
+  interim 660: A ppg 0.121 ± 0.103
+  interim 680: A ppg 0.131 ± 0.101
+  interim 700: A ppg 0.133 ± 0.099
+  interim 720: A ppg 0.132 ± 0.098
+  interim 740: A ppg 0.122 ± 0.097
+  interim 760: A ppg 0.122 ± 0.096
+  interim 780: A ppg 0.117 ± 0.094
+  interim 800: A ppg 0.111 ± 0.093
+  interim 820: A ppg 0.110 ± 0.092
+  interim 840: A ppg 0.107 ± 0.091
+  interim 860: A ppg 0.100 ± 0.091
+  interim 880: A ppg 0.098 ± 0.090
+  interim 900: A ppg 0.097 ± 0.089
+  interim 920: A ppg 0.095 ± 0.088
+  interim 940: A ppg 0.085 ± 0.087
+  interim 960: A ppg 0.074 ± 0.086
+  interim 980: A ppg 0.080 ± 0.085
+  interim 1000: A ppg 0.083 ± 0.084
+wb:nets/fast1.json vs nets/n3_shipped.json [lv8,lv8] 1000 games: A wins 53.4%, A ppg +0.083 ± 0.084 | ms/move A 61.3 (max 822) B 32.6 (max 638)
