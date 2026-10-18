@@ -1,0 +1,1355 @@
+'use strict';
+// Luxe Mancala — UI
+const E = window.MancalaEngine;
+const $ = s => document.querySelector(s);
+const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'en').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
+let LANG = detectLang();
+function t(k, v) {
+  let x = (I18N[LANG] || {})[k];
+  if (x === undefined) x = I18N.en[k];
+  if (x === undefined) x = I18N.ja[k];
+  if (x === undefined) return k;
+  if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
+  return x;
+}
+const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
+const RULE_ORDER = ['kalah', 'basic', 'easy', 'sunka'];
+function applyI18n() {
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  $('#langSel').value = LANG;
+  document.title = t('meta.title');
+  document.querySelectorAll('#segSeeds button').forEach(b => { b.textContent = t('ng.seedsN', { n: b.dataset.v }); });
+}
+
+// ====================================================================== state
+const STORE = 'aicoding-mancala-v1';
+const settings = { mode: 'ai', rules: 'kalah', seeds: 4, color: 0, level: 5, level2: 8, eval: true, anim: true, coach: true, preview: true, sound: true, hint: false, lang: '' };
+let game = { rules: 'kalah', seeds: 4, moves: [], human: 0, setup: null };
+let P = [];              // positions (engine replay)
+let cur = 0;             // number of moves shown
+let reviewing = false;
+let evals = [];          // evals[i] = {v: margin from player 0's view (seeds), exact}
+let anaLists = [];       // anaLists[i] = per-pit analysis of position i (mover's view)
+let busyToken = 0, thinking = -1, animating = false, gameOverShown = false;
+let lesson = null, puzzle = null, savedGame = null;
+let hoverPit = -1;
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const animOn = () => settings.anim && !reduceMotion;
+
+function startBoard() { return game.setup ? Int8Array.from(game.setup.b) : E.initial(game.seeds); }
+function startSide() { return game.setup ? game.setup.side : 0; }
+function recompute() {
+  const r = E.replay(startBoard(), startSide(), game.moves, game.rules);
+  if (r.bad >= 0) game.moves.length = r.bad;
+  P = r.positions;
+  if (cur > game.moves.length) cur = game.moves.length;
+}
+const shownPos = () => P[cur];
+const isOver = i => P[i === undefined ? cur : i].over;
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (!d) return false;
+    Object.assign(settings, d.settings || {});
+    if (!E.RULES[settings.rules]) settings.rules = 'kalah';
+    if (d.game && E.RULES[d.game.rules] && [4, 6].includes(d.game.seeds) && Array.isArray(d.game.moves)) {
+      game = { rules: d.game.rules, seeds: d.game.seeds, moves: d.game.moves.filter(x => x >= 0 && x <= 5), human: d.game.human ? 1 : 0, setup: null };
+      evals = Array.isArray(d.evals) ? d.evals : [];
+      recompute(); cur = game.moves.length;
+      gameOverShown = isOver();
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+function save() {
+  if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, game: { rules: game.rules, seeds: game.seeds, moves: game.moves, human: game.human }, evals: evals.slice(0, game.moves.length + 1) })); } catch (e) {}
+}
+
+// ====================================================================== workers
+let jobId = 0;
+function makeWorker() {
+  const w = new Worker('engine.js');
+  w.jobs = new Map();
+  w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (m.type === 'error') console.warn(m.msg); if (!j) return; w.jobs.delete(m.id); j.resolve(m.type === 'error' ? null : m); };
+  w.onerror = e => console.warn('worker', e.message);
+  return w;
+}
+let aiW = makeWorker(), anaW = makeWorker();
+function request(which, msg) {
+  const w = which === 'ai' ? aiW : anaW;
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ ...msg, id }); });
+}
+function cancelWorker(which) {
+  const w = which === 'ai' ? aiW : anaW;
+  if (!w.jobs.size) return;
+  w.terminate(); w.jobs.forEach(j => j.resolve(null));
+  if (which === 'ai') aiW = makeWorker(); else anaW = makeWorker();
+}
+const posMsg = (p, rules) => ({ b: Array.from(p.b), side: p.side, rules });
+
+// ====================================================================== sound
+let actx = null;
+function ctx() { if (!settings.sound) return null; if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (actx.state === 'suspended') actx.resume(); return actx; }
+function tone(a, f, t0, dur, vol, type) {
+  const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function noise(a, t0, dur, vol, freq, q, type) {
+  const len = Math.max(1, Math.floor(a.sampleRate * dur)), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+  const n = a.createBufferSource(); n.buffer = buf; const f = a.createBiquadFilter(); f.type = type || 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
+  const g = a.createGain(); g.gain.value = vol; n.connect(f).connect(g).connect(a.destination); n.start(t0);
+}
+let dropN = 0;
+function sDrop(store) {   // a gem settling into a wooden cup: soft knock + glassy tick
+  const a = ctx(); if (!a) return; const t0 = a.currentTime;
+  const f = store ? 150 : 210 + (dropN++ % 5) * 14;
+  tone(a, f, t0, 0.09, store ? 0.16 : 0.11);
+  noise(a, t0, 0.035, store ? 0.12 : 0.09, store ? 1400 : 2400 + Math.random() * 900, 1.2);
+  tone(a, 2200 + Math.random() * 900, t0 + 0.004, 0.06, 0.018, 'triangle');
+}
+function sPick() { const a = ctx(); if (!a) return; noise(a, a.currentTime, 0.12, 0.07, 900, 0.6, 'lowpass'); }
+function sExtra() { const a = ctx(); if (!a) return; const t0 = a.currentTime + 0.02; [659.25, 987.77].forEach((f, i) => { tone(a, f, t0 + i * 0.09, 0.5, 0.11, 'triangle'); tone(a, f * 2, t0 + i * 0.09, 0.25, 0.03); }); }
+function sCapture() {
+  const a = ctx(); if (!a) return; const t0 = a.currentTime;
+  noise(a, t0, 0.35, 0.12, 700, 0.5, 'bandpass');
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(a, f, t0 + 0.08 + i * 0.06, 0.45, 0.1, 'triangle'));
+}
+function sChime(win) {
+  const a = ctx(); if (!a) return; const t0 = a.currentTime + 0.05;
+  const notes = win > 0 ? [523.25, 659.25, 783.99, 1046.5, 1318.5] : win === 0 ? [392, 523.25, 659.25] : [392, 349.23, 311.13, 261.63];
+  notes.forEach((f, i) => tone(a, f, t0 + i * (win > 0 ? 0.1 : 0.15), 0.7, 0.14, win > 0 ? 'triangle' : 'sine'));
+}
+function sTick() { const a = ctx(); if (!a) return; tone(a, 880, a.currentTime, 0.08, 0.05, 'triangle'); }
+function sWrong() { const a = ctx(); if (!a) return; const t0 = a.currentTime; tone(a, 220, t0, 0.3, 0.12, 'triangle'); tone(a, 185, t0 + 0.12, 0.35, 0.1, 'triangle'); }
+
+// ====================================================================== board geometry
+const boardEl = $('#board'), slotsEl = $('#slots'), seedsEl = $('#seeds'), fxEl = $('#fx');
+const BW = 9.2, BH = 3.5;
+let vert = false, U = 60;
+const isStore = i => i === 6 || i === 13;
+const ownerOf = i => i <= 6 ? 0 : 1;
+const pitIndex = (side, k) => (side ? 7 : 0) + k;
+function bottomSide() { return (settings.mode === 'ai' && !lesson && !puzzle) ? game.human : 0; }
+function slotUV(i) {
+  const B = bottomSide(), own = ownerOf(i), bottom = own === B;
+  if (isStore(i)) return { x: bottom ? 8.45 : 0.75, y: 1.75, bottom };
+  const k = own ? i - 7 : i;
+  return bottom ? { x: 1.85 + 1.1 * k, y: 2.45, bottom } : { x: 7.35 - 1.1 * k, y: 1.05, bottom };
+}
+const toPx = (x, y) => vert ? [(BH - y) * U, x * U] : [x * U, y * U];
+const offPx = (dx, dy) => vert ? [-dy * U, dx * U] : [dx * U, dy * U];
+function slotPx(i) { const p = slotUV(i); return toPx(p.x, p.y); }
+let slotEls = [], badgeEls = [], pitNoEls = [];
+function buildBoard() {
+  slotsEl.innerHTML = ''; slotEls = []; badgeEls = []; pitNoEls = [];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('div'); s.className = 'slot ' + (isStore(i) ? 'store' : 'pit'); s.dataset.i = i;
+    slotsEl.appendChild(s); slotEls.push(s);
+    const b = document.createElement('div'); b.className = 'badge' + (isStore(i) ? ' store' : ''); slotsEl.appendChild(b); badgeEls.push(b);
+    if (!isStore(i)) { const n = document.createElement('div'); n.className = 'pitno'; n.textContent = (i % 7) + 1; slotsEl.appendChild(n); pitNoEls.push(n); } else pitNoEls.push(null);
+    if (!isStore(i)) {
+      s.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') setHover(i); });
+      s.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') setHover(-1); });
+      s.addEventListener('click', () => onPit(i));
+    }
+  }
+}
+function layout() {
+  vert = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches;
+  $('#frame').classList.toggle('vert', vert);
+  U = vert ? boardEl.clientHeight / BW : boardEl.clientWidth / BW;
+  if (!U) return;
+  for (let i = 0; i < 14; i++) {
+    const p = slotUV(i), [x, y] = toPx(p.x, p.y), s = slotEls[i];
+    s.style.left = x + 'px'; s.style.top = y + 'px';
+    if (isStore(i)) { const w = 1.1 * U, h = 2.7 * U; s.style.width = (vert ? h : w) + 'px'; s.style.height = (vert ? w : h) + 'px'; }
+    else { s.style.width = s.style.height = 0.9 * U + 'px'; }
+    const by = isStore(i) ? (p.bottom ? 3.2 : 0.3) : (p.bottom ? 3.17 : 0.33);
+    const [bx, byy] = toPx(p.x, by); badgeEls[i].style.left = bx + 'px'; badgeEls[i].style.top = byy + 'px';
+    if (pitNoEls[i]) { const [nx, ny] = toPx(p.x - 0.43, p.y + (p.bottom ? 0.47 : -0.47)); pitNoEls[i].style.left = nx + 'px'; pitNoEls[i].style.top = ny + 'px'; }
+  }
+  const [tx, ty] = toPx(4.6, 1.76); const tl = $('#turnLbl'); tl.style.top = ty + 'px';
+  for (let i = 0; i < 14; i++) for (const s of seeds[i]) posSeed(s);
+  renderFx();
+}
+
+// ====================================================================== gems
+const GEMS = [
+  ['#ffb3bd', '#d6324b', '#5c0a18'], ['#bfe0ff', '#2f7fd6', '#0b2a5c'], ['#c9ffd9', '#26a65b', '#0a3d20'], ['#ffe9b0', '#e0a526', '#6b4206'],
+  ['#e8ccff', '#9152d6', '#35115e'], ['#c4fbff', '#21b4c4', '#07434d'], ['#ffffff', '#d9dde6', '#7c8494'], ['#ffd1b0', '#e2702e', '#6b2a07'],
+];
+let seeds = Array.from({ length: 14 }, () => []);   // per slot: {el, x, y} (offsets in u, horizontal frame)
+let gemRs = 1;
+function gemRand() { gemRs = (Math.imul(gemRs, 1103515245) + 12345) & 0x7fffffff; return gemRs / 0x7fffffff; }
+function newSeed() {
+  const el = document.createElement('div'); el.className = 'seed';
+  const g = GEMS[Math.floor(gemRand() * GEMS.length)];
+  el.style.setProperty('--c1', g[0]); el.style.setProperty('--c2', g[1]); el.style.setProperty('--c3', g[2]);
+  seedsEl.appendChild(el);
+  return { el, x: 0, y: 0, slot: -1 };
+}
+function inside(i, x, y) {
+  if (isStore(i)) return [Math.max(-0.4, Math.min(0.4, x)), Math.max(-1.19, Math.min(1.19, y))];
+  const R = 0.31, r = Math.hypot(x, y); return r > R ? [x / r * R, y / r * R] : [x, y];
+}
+// drop a gem into a cup: random landing spot, then a few relaxation passes against the gems already there
+function placeIn(i, others) {
+  const st = isStore(i), n = others.length + 1;
+  const area = st ? 0.8 * 2.38 : Math.PI * 0.31 * 0.31;
+  const d = Math.min(0.215, Math.sqrt(area / (n * 0.92)));
+  let best = null, bestPen = Infinity;
+  for (let tr = 0; tr < 5; tr++) {
+    let x, y;
+    if (st) { x = (gemRand() - 0.5) * 0.8; y = (gemRand() - 0.5) * 2.3; } else { const a = gemRand() * Math.PI * 2, r = Math.sqrt(gemRand()) * 0.28; x = Math.cos(a) * r; y = Math.sin(a) * r; }
+    for (let it = 0; it < 14; it++) {
+      for (const o of others) {
+        const dx = x - o.x, dy = y - o.y, dd = Math.hypot(dx, dy);
+        if (dd < d) { const p = (d - dd) * 0.6 / (dd || 1); x += dx * p; y += dy * p; if (!dd) { x += (gemRand() - 0.5) * 0.05; } }
+      }
+      if (!st) { x *= 0.995; y *= 0.995; } else { y += 0.01; }   // gentle settle toward the bottom of the cup
+      [x, y] = inside(i, x, y);
+    }
+    let pen = 0; for (const o of others) { const dd = Math.hypot(x - o.x, y - o.y); if (dd < d) pen += d - dd; }
+    if (pen < bestPen) { bestPen = pen; best = [x, y]; if (pen < 1e-3) break; }
+  }
+  return best;
+}
+function seedXY(s) { const [cx, cy] = slotPx(s.slot), [ox, oy] = offPx(s.x, s.y); return [cx + ox, cy + oy]; }
+function posSeed(s) {
+  const [x, y] = seedXY(s);
+  s.el.style.transform = `translate(${x}px,${y}px)`;
+  s.el.style.zIndex = 100 + Math.round((vert ? s.x : s.y) * 100) + 200;
+}
+function addSeedTo(i, s) { const [x, y] = placeIn(i, seeds[i]); s.x = x; s.y = y; s.slot = i; seeds[i].push(s); }
+// make the gems match a board without animation (keeps the gems that are already in place)
+function syncSeeds(b) {
+  const pool = [];
+  for (let i = 0; i < 14; i++) while (seeds[i].length > b[i]) pool.push(seeds[i].pop());
+  for (let i = 0; i < 14; i++) while (seeds[i].length < b[i]) { const s = pool.pop() || newSeed(); addSeedTo(i, s); posSeed(s); }
+  for (const s of pool) s.el.remove();
+  setBadges(b);
+}
+function resetSeeds() { for (let i = 0; i < 14; i++) { for (const s of seeds[i]) s.el.remove(); seeds[i] = []; } gemRs = 7; }
+let shownCounts = new Int8Array(14);
+function setBadges(b, popAt) {
+  for (let i = 0; i < 14; i++) {
+    const el = badgeEls[i]; if (!el) continue;
+    if (el.textContent !== String(b[i])) el.textContent = b[i];
+    el.classList.toggle('zero', b[i] === 0);
+    shownCounts[i] = b[i];
+  }
+  if (popAt >= 0) { const el = badgeEls[popAt]; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+  renderPlates(b);
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function fly(s, to, dur, lift) {
+  const [x0, y0] = seedXY(s);
+  if (to.slot !== undefined) { s.slot = to.slot; s.x = to.x; s.y = to.y; }
+  const [x1, y1] = seedXY(s);
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - (lift || 0.45) * U;
+  s.el.classList.add('fly');
+  const done = () => { s.el.classList.remove('fly'); posSeed(s); };
+  if (!s.el.animate) { done(); return; }
+  const a = s.el.animate([
+    { transform: `translate(${x0}px,${y0}px) scale(1)` },
+    { transform: `translate(${mx}px,${my}px) scale(1.35)`, offset: 0.5 },
+    { transform: `translate(${x1}px,${y1}px) scale(1)` }], { duration: dur, easing: 'cubic-bezier(.35,.1,.3,1)' });
+  s.el.style.transform = `translate(${x1}px,${y1}px)`;
+  a.onfinish = done; a.oncancel = done;
+}
+let animTok = 0;
+// animate one move from board b (side to move `side`, pit k): seed by seed sowing, relays, captures, final sweep
+async function animateMove(b, side, k, rules) {
+  const tr = E.trace(b, side, k, rules);
+  const tok = ++animTok;
+  if (!animOn()) { syncSeeds(tr.board); sDrop(false); return tr; }
+  animating = true;
+  const counts = Int8Array.from(b), total = tr.events.filter(e => e.t === 'drop').length;
+  const step = Math.max(55, Math.min(165, 190 - total * 5)), dur = step * 2.4;
+  let hand = [];
+  const myStore = E.storeOf(side);
+  try {
+    for (const ev of tr.events) {
+      if (tok !== animTok) break;
+      if (ev.t === 'pick') {
+        hand = seeds[ev.at].splice(0);
+        counts[ev.at] = 0; setBadges(counts);
+        slotEls[ev.at].classList.add('src'); setTimeout(() => slotEls[ev.at] && slotEls[ev.at].classList.remove('src'), 500);
+        if (ev.relay) { relayFx(ev.at); }
+        sPick();
+        await sleep(ev.relay ? step * 1.6 : step * 0.8);
+      } else if (ev.t === 'drop') {
+        const s = hand.shift() || newSeed();
+        const [x, y] = placeIn(ev.at, seeds[ev.at]); seeds[ev.at].push(s);
+        fly(s, { slot: ev.at, x, y }, dur, isStore(ev.at) ? 0.6 : 0.45);
+        const at = ev.at;
+        setTimeout(() => { if (tok !== animTok) return; counts[at]++; setBadges(counts, at); sDrop(isStore(at)); }, dur * 0.85);
+        await sleep(step);
+      } else if (ev.t === 'cap') {
+        await sleep(dur * 0.9);
+        if (tok !== animTok) break;
+        const got = seeds[ev.from].splice(0).concat(ev.own >= 0 ? seeds[ev.own].splice(0) : []);
+        showBanner(t('bn.capture'), '+' + got.length, 'cap'); sCapture();
+        capFx(ev.from);
+        counts[ev.from] = 0; if (ev.own >= 0) counts[ev.own] = 0; setBadges(counts);
+        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => fly(s, { slot: ev.to, x, y }, 620, 0.9), j * 45); });
+        await sleep(620 + got.length * 45);
+        counts[ev.to] += got.length; setBadges(counts, ev.to);
+      } else if (ev.t === 'sweep') {
+        await sleep(dur);
+        if (tok !== animTok) break;
+        const moving = [];
+        for (let i = 0; i < 14; i++) if (!isStore(i) && seeds[i].length) { const to = ownerOf(i) ? 13 : 6; for (const s of seeds[i].splice(0)) moving.push([s, to]); counts[i] = 0; }
+        setBadges(counts);
+        moving.forEach(([s, to], j) => { const [x, y] = placeIn(to, seeds[to]); seeds[to].push(s); setTimeout(() => fly(s, { slot: to, x, y }, 700, 0.7), j * 30); });
+        await sleep(720 + moving.length * 30);
+      }
+    }
+    if (tok === animTok) await sleep(dur * 0.9);
+  } finally {
+    if (tok === animTok) { animating = false; syncSeeds(tr.board); }
+  }
+  if (tok === animTok && tr.extra && !tr.over) { showBanner(t('bn.extra'), '', ''); sExtra(); }
+  return tr;
+}
+function stopAnim() { animTok++; animating = false; }
+function relayFx(at) {
+  if (!animOn()) return;
+  const [x, y] = slotPx(at), d = document.createElement('div'); d.className = 'ring'; d.style.cssText = `left:${x}px;top:${y}px;width:${0.95 * U}px;height:${0.95 * U}px;border-color:#7fc8ff;transition:opacity .6s`;
+  fxEl.appendChild(d); setTimeout(() => { d.style.opacity = 0; }, 350); setTimeout(() => d.remove(), 1000);
+}
+function capFx(at) {
+  const [x, y] = slotPx(at), d = document.createElement('div'); d.className = 'ring cap'; d.style.cssText = `left:${x}px;top:${y}px;width:${0.95 * U}px;height:${0.95 * U}px;transition:opacity .6s`;
+  fxEl.appendChild(d); setTimeout(() => { d.style.opacity = 0; }, 500); setTimeout(() => d.remove(), 1200);
+}
+let bannerTimer = 0;
+function showBanner(text, sub, cls) {
+  if (!settings.anim) return;
+  const b = $('#banner'); b.className = 'banner ' + (cls || ''); b.innerHTML = text + (sub ? `<small>${sub}</small>` : '');
+  void b.offsetWidth; b.classList.add('show');
+  clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove('show'), 1300);
+}
+
+// ====================================================================== fx: preview, hints, lesson marks
+let fxMarks = [];   // [{at, cls, label}]
+function fxRing(at, cls) {
+  const [x, y] = slotPx(at), st = isStore(at), d = document.createElement('div');
+  d.className = 'ring' + (st ? ' store' : '') + (cls ? ' ' + cls : '');
+  const w = st ? 1.2 * U : 1.0 * U, h = st ? 2.8 * U : 1.0 * U;
+  d.style.left = x + 'px'; d.style.top = y + 'px'; d.style.width = (vert && st ? h : w) + 'px'; d.style.height = (vert && st ? w : h) + 'px';
+  fxEl.appendChild(d); return d;
+}
+function fxAt(at, dx, dy, cls, html) {
+  const p = slotUV(at), [x, y] = toPx(p.x + dx, p.y + dy), d = document.createElement('div');
+  d.className = cls; d.innerHTML = html; d.style.left = x + 'px'; d.style.top = y + 'px'; fxEl.appendChild(d); return d;
+}
+const fmtV = (v, exact) => { const r = exact ? Math.round(v) : Math.round(v * 10) / 10; return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r); };
+function renderFx() {
+  fxEl.innerHTML = '';
+  if (!P.length) return;
+  const p = shownPos();
+  for (const m of fxMarks) { if (m.ring) fxRing(m.at, m.cls); if (m.label) fxAt(m.at, 0, m.dy || -0.3, 'hintlbl' + (m.lcls ? ' ' + m.lcls : ''), m.label); }
+  if (drawReviewFx()) return;
+  // hint labels (per-pit predicted final margin for the side to move)
+  if (settings.hint && !lesson && !puzzle && !p.over && anaLists[cur] && canHumanPlay()) {
+    const list = anaLists[cur]; let best = -1e9; for (const x of list) best = Math.max(best, x.v);
+    for (const x of list) { const i = pitIndex(p.side, x.m), u = slotUV(i); fxAt(i, 0, u.bottom ? -0.36 : 0.36, 'hintlbl' + (x.v >= best - 1e-9 ? ' best' : '') + (x.v < 0 ? ' neg' : ''), fmtV(x.v, x.exact)); }
+  }
+  if (hoverPit >= 0) drawPreview(hoverPit);
+}
+function previewAllowed() { if (lesson) return lesson.i === 0 || lesson.hinted; if (puzzle) return false; return settings.preview; }
+function drawPreview(i) {
+  const p = shownPos(); if (p.over || !canHumanPlay() || ownerOf(i) !== p.side || !p.b[i]) return;
+  const tr = E.trace(p.b, p.side, i % 7, game.rules);
+  const cnt = new Map(), relays = [];
+  for (const ev of tr.events) { if (ev.t === 'drop') cnt.set(ev.at, (cnt.get(ev.at) || 0) + 1); if (ev.t === 'pick' && ev.relay) relays.push(ev.at); }
+  for (const [at, n] of cnt) { const u = slotUV(at); fxAt(at, isStore(at) ? 0 : 0.31, isStore(at) ? (u.bottom ? -1.05 : 1.05) : (u.bottom ? 0.3 : -0.3), 'chip', '+' + n); }
+  relays.forEach((at, j) => fxAt(at, -0.3, 0.3, 'chip relay', '↻' + (j + 1)));
+  if (tr.over) { fxRing(tr.land, ''); const u = slotUV(tr.land); fxAt(tr.land, 0, u.bottom ? -0.62 : -0.55, 'tip plain', t('pv.end')); return; }
+  fxRing(tr.land, tr.extra ? 'ok' : tr.cap ? '' : '');
+  const u = slotUV(tr.land);
+  const ty = isStore(tr.land) ? -1.42 : -0.55;
+  if (tr.extra) fxAt(tr.land, 0, ty, 'tip', t('pv.extra'));
+  else if (tr.cap) { fxRing(tr.capFrom, 'cap'); fxAt(tr.land, 0, u.bottom ? ty : ty, 'tip cap', t('pv.cap', { n: tr.cap + (E.RULES[game.rules].cap === 2 ? 1 : 0) })); }
+}
+function setHover(i) {
+  hoverPit = i;
+  slotEls.forEach((s, j) => s.classList.toggle('hov', j === i));
+  if (!previewAllowed() && i >= 0) { hoverPit = -1; renderFx(); hoverPit = i; return; }
+  renderFx();
+}
+
+// ====================================================================== players / panel
+function isAISide(s) { if (lesson || puzzle) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && s !== game.human); }
+function levelFor(s) { return settings.mode === 'watch' ? (s === 0 ? settings.level : settings.level2) : settings.level; }
+function canHumanPlay() {
+  const p = shownPos(); if (!p || p.over || animating) return false;
+  if (lesson) return !lesson.answered && p.side === 0;
+  if (puzzle) return puzzle.state === 'play' && !puzzle.busy && p.side === 0;
+  if (reviewing) return false;
+  return !isAISide(p.side) && thinking < 0;
+}
+function sideName(s) {
+  if (lesson || puzzle) return s === 0 ? t('you') : (puzzle && puzzle.P.kind === 'end' ? t('defender') : t('opp'));
+  if (settings.mode === 'ai') return s === game.human ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `AI ${LV(levelFor(s))}`;
+  return t(s === 0 ? 'p0' : 'p1');
+}
+function shortName(s) {
+  if (settings.mode === 'ai' && !lesson && !puzzle) return s === game.human ? t('you') : 'AI';
+  return t(s === 0 ? 'p0' : 'p1');
+}
+const ICON_P = '<svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M3.6 21.4c0-5 3.8-8 8.4-8s8.4 3 8.4 8z"/></svg>';
+const ICON_R = '<svg viewBox="0 0 24 24"><rect x="11" y="1.6" width="2" height="3.6"/><circle cx="12" cy="2" r="1.7"/><path fill-rule="evenodd" d="M7.6 5h8.8A3.6 3.6 0 0 1 20 8.6v6.2a3.6 3.6 0 0 1-3.6 3.6H7.6A3.6 3.6 0 0 1 4 14.8V8.6A3.6 3.6 0 0 1 7.6 5zM9 9.3a1.9 1.9 0 1 0 0 3.8a1.9 1.9 0 1 0 0-3.8zM15 9.3a1.9 1.9 0 1 0 0 3.8a1.9 1.9 0 1 0 0-3.8z"/><rect x="6.5" y="19.6" width="11" height="2.8" rx="1.2"/></svg>';
+function renderPlates(b) {
+  const p = shownPos(); if (!p) return;
+  b = b || p.b;
+  const B = bottomSide();
+  [['Bot', B], ['Top', 1 - B]].forEach(([w, s]) => {
+    const pl = $('#plate' + w);
+    $('#disc' + w).className = 'pdisc p' + s;
+    const ai = isAISide(s) || (puzzle && s === 1); const icon = ai ? 'R' : 'P';
+    if ($('#disc' + w).dataset.k !== icon) { $('#disc' + w).innerHTML = ai ? ICON_R : ICON_P; $('#disc' + w).dataset.k = icon; }
+    $('#name' + w).textContent = sideName(s) + (settings.mode === 'pvp' || lesson || puzzle ? '' : ' · ' + t(s === 0 ? 'p0' : 'p1'));
+    const sc = $('#score' + w), v = String(b[E.storeOf(s)]);
+    if (sc.textContent !== v) { sc.textContent = v; pl.classList.remove('bump'); void pl.offsetWidth; pl.classList.add('bump'); }
+    const active = !p.over && p.side === s && !animating;
+    pl.classList.toggle('active', !p.over && p.side === s);
+    pl.classList.toggle('thinking', thinking === s);
+    let st = '';
+    if (thinking === s) st = t('thinking');
+    else if (p.over) { const a = p.b[E.storeOf(s)], o = p.b[E.storeOf(1 - s)]; st = a > o ? t('st.win') : a === o ? t('st.draw') : ''; }
+    else if (active && cur > 0 && P[cur].mv && P[cur].mv.extra && P[cur].mv.side === s) st = t('st.again');
+    else if (active) st = t('st.turn');
+    $('#stat' + w).textContent = st;
+  });
+}
+function renderTurnLabel() {
+  const p = shownPos(), el = $('#turnLbl');
+  let txt = '';
+  if (p.over) { const a = p.b[6], o = p.b[13]; txt = a === o ? t('res.draw') : (settings.mode === 'ai' && !lesson && !puzzle) ? ((a > o ? 0 : 1) === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(a > o ? 0 : 1) }); }
+  else if (thinking >= 0) txt = t('turn.thinking');
+  else if (lesson || puzzle) txt = p.side === 0 ? t('turn.you') : t('turn.opp');
+  else if (settings.mode === 'ai') txt = p.side === game.human ? t('turn.you') : t('turn.ai');
+  else txt = t('turn.p', { c: shortName(p.side) });
+  el.textContent = txt;
+  el.className = 'turnlbl ' + (['en', 'es', 'fr', 'pt', 'de'].includes(LANG) ? 'script' : ['ja', 'zh', 'ko'].includes(LANG) ? 'mincho' : '');
+}
+function renderPits() {
+  const can = canHumanPlay(), p = shownPos();
+  for (let i = 0; i < 14; i++) if (!isStore(i)) slotEls[i].classList.toggle('can', can && ownerOf(i) === p.side && p.b[i] > 0);
+}
+function evalOf(i) {
+  const p = P[i]; if (!p) return null;
+  if (p.over) return { v: p.b[6] - p.b[13], exact: true, final: true };
+  return evals[i] || null;
+}
+function evalText(ev) {
+  if (!ev) return '—';
+  const v = ev.v, side = v > 0 ? 0 : 1, n = shortName(side);
+  if (ev.final) return Math.round(v) === 0 ? t('res.draw') : t('ev.won', { c: n, n: Math.abs(Math.round(v)) });
+  if (ev.exact) return Math.round(v) === 0 ? t('ev.drawExact') : t('ev.exact', { c: n, n: Math.abs(Math.round(v)) });
+  const a = Math.abs(v);
+  return a < 0.5 ? t('ev.even') : t(a < 3 ? 'ev.slight' : a < 8 ? 'ev.adv' : 'ev.sup', { c: n, n: (Math.round(a * 10) / 10).toFixed(1) });
+}
+const sq = v => Math.tanh(v / 10);
+function renderInfo() {
+  if (!P.length) return;
+  const p = shownPos();
+  renderPlates(); renderTurnLabel(); renderPits();
+  let ev = evalOf(cur); if (!ev && cur > 0) ev = evalOf(cur - 1);
+  if (!settings.eval && !(rv && rvOpen) && !(ev && ev.final)) ev = null;
+  $('#evalText').textContent = evalText(ev);
+  $('#evalFill').style.width = (50 + 50 * (ev ? sq(ev.v) : 0)) + '%';
+  renderGraph(); renderKifu();
+  $('#btnUndo').disabled = !canUndo();
+  $('#btnHint').classList.toggle('on', settings.hint);
+  $('#btnHint').disabled = settings.mode === 'watch';
+  $('#btnSound').classList.toggle('on', settings.sound);
+  $('#btnShare').disabled = !game.moves.length;
+  $('#btnAnalyze').disabled = !game.moves.length;
+  renderReview();
+  const nav = $('#navBar'); nav.querySelector('[data-n=first]').disabled = nav.querySelector('[data-n=prev]').disabled = cur === 0;
+  nav.querySelector('[data-n=next]').disabled = nav.querySelector('[data-n=last]').disabled = cur >= game.moves.length;
+  const mode = settings.mode === 'ai' ? `AI Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
+  $('#infoLine').textContent = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${mode} · ${t('info.moves', { n: game.moves.length })}`;
+}
+function renderGraph() {
+  const svg = $('#graph'), W = 300, H = 74, N = game.moves.length, n = Math.max(N + 1, 24);
+  const pts = []; let last = 0;
+  for (let i = 0; i <= N; i++) { const e = evalOf(i); let v = e ? sq(e.v) : last; last = v; pts.push([i / (n - 1) * W, H / 2 - v * (H / 2 - 4)]); }
+  const path = 'M' + pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join('L');
+  const area = path + `L${pts[pts.length - 1][0].toFixed(1)},${H / 2}L0,${H / 2}Z`;
+  const cx = cur / (n - 1) * W;
+  svg.innerHTML = `<defs><clipPath id="ctop"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath><clipPath id="cbot"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath></defs>
+    <path d="${area}" fill="rgba(229,195,108,.45)" clip-path="url(#ctop)"/><path d="${area}" fill="rgba(200,206,214,.38)" clip-path="url(#cbot)"/>
+    <line class="zero" vector-effect="non-scaling-stroke" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
+    <path d="${path}" fill="none" stroke="rgba(240,230,200,.85)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
+    <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
+}
+const mvLabel = mv => `${mv.k + 1}`;
+function renderKifu() {
+  const k = $('#kifu');
+  if (!game.moves.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
+  let html = '';
+  for (let i = 1; i < P.length; i++) {
+    const mv = P[i].mv, j = rvOpen && rv && !rv.running ? rvJudge(i - 1) : null;
+    const q = j && (j.q === 'bad' || j.q === 'dubious') ? ' q-' + j.q : '';
+    const sup = mv.extra ? '<sup>+</sup>' : mv.cap ? `<sup class="c">×${mv.cap}</sup>` : '';
+    html += `<button data-i="${i}" class="${i === cur ? 'cur' : ''}${q}" title="${i}${j && j.q ? ' ' + t('q.' + j.q) : ''}"><i class="p${mv.side}"></i>${mvLabel(mv)}${sup}</button>`;
+  }
+  k.innerHTML = html;
+  const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
+}
+$('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+(() => {
+  const g = $('#graph'); let dragging = false;
+  const idxAt = x => { const r = g.getBoundingClientRect(), n = Math.max(game.moves.length + 1, 24); return Math.max(0, Math.min(game.moves.length, Math.round((x - r.left) / r.width * (n - 1)))); };
+  const go = x => { const i = idxAt(x); if (i !== cur) viewAt(i); };
+  g.addEventListener('pointerdown', e => { if (lesson || puzzle) return; dragging = true; stopPlay(); try { g.setPointerCapture(e.pointerId); } catch (_) {} go(e.clientX); e.preventDefault(); });
+  g.addEventListener('pointermove', e => { if (dragging) go(e.clientX); });
+  const end = e => { dragging = false; try { g.releasePointerCapture(e.pointerId); } catch (_) {} };
+  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
+})();
+let toastTimer = 0, coachTimer = 0;
+function toast(msg, ms = 1500) { const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
+function coach(msg, cls, ms = 2400) { const el = $('#coach'); el.textContent = msg; el.className = 'coach show ' + (cls || ''); clearTimeout(coachTimer); coachTimer = setTimeout(() => el.classList.remove('show'), ms); }
+// full redraw of the shown position (no animation)
+function update() {
+  syncSeeds(shownPos().b);
+  renderInfo(); renderFx();
+}
+
+// ====================================================================== flow
+function newGame() {
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay();
+  rvCancel(); rv = null; rvOpen = false;
+  const human = settings.color === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
+  game = { rules: settings.rules, seeds: settings.seeds, moves: [], human, setup: null };
+  recompute(); cur = 0; reviewing = false; evals = []; anaLists = []; gameOverShown = false; fxMarks = [];
+  $('#resultOverlay').classList.remove('show');
+  resetSeeds(); layout(); update(); save();
+  afterPosition();
+}
+function onPit(i) {
+  ctx();
+  const p = shownPos();
+  if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle && !animating) rsOpen(); return; }
+  if (ownerOf(i) !== p.side) return;
+  if (!p.b[i]) { toast(t('emptyPit'), 1000); return; }
+  const k = i % 7;
+  setHover(-1);
+  if (lesson) return lessonAnswer(k);
+  if (puzzle) return puzzleMove(k);
+  const q = settings.coach && settings.mode !== 'watch' ? judgeCoach(cur, k) : null;
+  playMove(k).then(() => { if (q) coach(q.text, 'q-' + q.cls); });
+}
+// play move k from the shown position (truncating any future), animate it, then continue the game
+async function playMove(k, opts) {
+  const from = shownPos(), idx = cur;
+  game.moves = game.moves.slice(0, cur); game.moves.push(k);
+  evals.length = Math.min(evals.length, cur + 1); anaLists.length = Math.min(anaLists.length, cur + 1);
+  if (rv && !(opts && opts.keepRv)) { rvCancel(); rv = null; rvOpen = false; }
+  recompute(); reviewing = false;
+  fxMarks = [];
+  const tok = busyToken;
+  thinking = -1; renderInfo(); renderFx();
+  await animateMove(from.b, from.side, k, game.rules);
+  if (tok !== busyToken) return;
+  cur = idx + 1;
+  update(); save();
+  if (!(opts && opts.noFlow)) afterPosition();
+}
+function afterPosition() {
+  const tok = ++busyToken;
+  const p = shownPos();
+  if (p.over) { if (!lesson && !puzzle && cur === game.moves.length) setTimeout(() => { if (tok === busyToken) onGameEnd(); }, 350); return; }
+  if (lesson || puzzle) return;
+  if (!reviewing && isAISide(p.side)) maybeAI(tok);
+  else analyzeCurrent(tok);
+}
+async function maybeAI(tok) {
+  const p = shownPos(), side = p.side, idx = cur;
+  thinking = side; renderInfo();
+  const t0 = performance.now();
+  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side) });
+  if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
+  if (res.value !== undefined && res.value !== null) evals[idx] = { v: side === 0 ? res.value : -res.value, exact: !!res.exact };
+  const wait = (settings.mode === 'watch' ? 600 : (P[idx].mv && P[idx].mv.extra ? 280 : 420)) - (performance.now() - t0);
+  if (wait > 0) await sleep(wait);
+  if (tok !== busyToken) return;
+  thinking = -1;
+  playMove(res.move);
+}
+async function analyzeCurrent(tok) {
+  const p = shownPos(), idx = cur;
+  if (p.over || lesson || puzzle) return;
+  if (!settings.eval && !settings.hint && !settings.coach) return;
+  if (anaLists[idx]) { renderFx(); return; }
+  cancelWorker('ana');
+  const res = await request('ana', { type: 'analyze', ...posMsg(p, game.rules), ms: settings.hint ? 1500 : 900 });
+  if (!res || P[idx] !== p) return;
+  anaLists[idx] = res.list;
+  let best = -1e9; for (const x of res.list) best = Math.max(best, x.v);
+  if (!evals[idx] || !evals[idx].exact) evals[idx] = { v: p.side === 0 ? best : -best, exact: res.exact };
+  if (cur === idx) { renderInfo(); renderFx(); }
+  save();
+}
+function judgeCoach(idx, k) {
+  const L = anaLists[idx]; if (!L || L.length < 2) return null;
+  let best = -1e9, bm = -1; for (const x of L) if (x.v > best) { best = x.v; bm = x.m; }
+  const mine = L.find(x => x.m === k); if (!mine) return null;
+  const loss = Math.max(0, best - mine.v);
+  const flips = mine.exact && Math.sign(Math.round(best)) > Math.sign(Math.round(mine.v));
+  const cls = loss < 0.3 ? 'best' : flips || loss >= 4 ? 'bad' : loss < 1.5 ? 'good' : 'dubious';
+  let text = t('q.' + cls);
+  if (cls !== 'best') text += '  ' + t('q.loss', { l: (Math.round(loss * 10) / 10), m: bm + 1 });
+  return { cls, text };
+}
+function onGameEnd() {
+  if (cur !== game.moves.length || gameOverShown) return;
+  gameOverShown = true;
+  const b = shownPos().b, a = b[6], o = b[13], w = a > o ? 0 : a < o ? 1 : -1;
+  const youWin = settings.mode === 'ai' && w === game.human, aiWin = settings.mode === 'ai' && w >= 0 && w !== game.human;
+  sChime(w < 0 ? 0 : aiWin ? -1 : 1);
+  if (youWin || (settings.mode === 'pvp' && w >= 0)) confetti();
+  $('#resultTitle').textContent = w < 0 ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: shortName(w) });
+  $('#res0').textContent = a; $('#res1').textContent = o;
+  let sub = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${t('info.moves', { n: game.moves.length })}`;
+  if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
+  $('#resultSub').innerHTML = sub;
+  setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
+}
+function canUndo() {
+  if (lesson || puzzle || settings.mode === 'watch' || !P.length) return false;
+  if (settings.mode === 'pvp') return cur > 0;
+  for (let i = cur - 1; i >= 0; i--) if (P[i].side === game.human) return true;
+  return false;
+}
+function undo() {
+  if (!canUndo()) return;
+  busyToken++; cancelWorker('ai'); thinking = -1; stopAnim(); stopPlay();
+  let i = cur - 1;
+  if (settings.mode === 'ai') while (i > 0 && P[i].side !== game.human) i--;
+  game.moves = game.moves.slice(0, i); recompute(); cur = i; reviewing = false; gameOverShown = false; fxMarks = [];
+  evals.length = Math.min(evals.length, i + 1); anaLists.length = Math.min(anaLists.length, i + 1);
+  $('#resultOverlay').classList.remove('show');
+  update(); save(); afterPosition();
+}
+function viewAt(i) {
+  if (lesson || puzzle) return;
+  i = Math.max(0, Math.min(game.moves.length, i));
+  if (i === cur && !animating) return;
+  busyToken++; cancelWorker('ai'); thinking = -1; stopAnim();
+  cur = i; reviewing = i !== game.moves.length; fxMarks = [];
+  update(); afterPosition();
+}
+function resumeHere() {
+  if (!reviewing) return;
+  game.moves = game.moves.slice(0, cur); recompute(); reviewing = false; gameOverShown = false;
+  evals.length = Math.min(evals.length, cur + 1);
+  update(); save(); afterPosition();
+}
+function confetti() {
+  if (!animOn()) return;
+  const cols = ['#e6cd8c', '#fff6dc', '#d6324b', '#2f7fd6', '#26a65b', '#9152d6'];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement('div'); c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
+    c.style.setProperty('--dx', (Math.random() - 0.5) * 200 + 'px'); c.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    c.style.animationDuration = 1.8 + Math.random() * 1.6 + 's'; c.style.animationDelay = Math.random() * 0.4 + 's';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 4200);
+  }
+}
+
+// ====================================================================== controls
+$('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
+$('#btnUndo').onclick = undo;
+$('#btnHint').onclick = () => {
+  settings.hint = !settings.hint; save();
+  if (settings.hint) { if (!anaLists[cur]) analyzeCurrent(busyToken); else renderFx(); }
+  else renderFx();
+  renderInfo();
+};
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) sTick(); };
+$('#btnLesson').onclick = () => openLessons();
+$('#btnPuzzle').onclick = () => openPuzzles();
+$('#btnRules').onclick = () => openRules(game.rules);
+$('#btnReview').onclick = () => $('#resultOverlay').classList.remove('show');
+$('#btnAgain').onclick = () => { $('#resultOverlay').classList.remove('show'); openNewDialog(); };
+$('#btnResAnalyze').onclick = () => { $('#resultOverlay').classList.remove('show'); runReview(); };
+document.addEventListener('keydown', e => {
+  const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
+    if (lesson || puzzle) return;
+    if ([...document.querySelectorAll('.overlay.show')].some(o => o.id !== 'resultOverlay')) return;
+    e.preventDefault(); $('#resultOverlay').classList.remove('show'); undo(); return;
+  }
+  if (document.querySelector('.overlay.show')) { if (e.key === 'Escape') { const o = document.querySelector('.overlay.show'); outsideClose(o); } return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (/^[1-6]$/.test(e.key)) { const p = shownPos(); if (p && !p.over) onPit(pitIndex(p.side, +e.key - 1)); return; }
+  if (lesson || puzzle) return;
+  const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
+  if (!k) return;
+  e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+  navGo(k);
+});
+// record navigation under the evaluation graph
+let playTimer = 0;
+function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
+function navGo(what) {
+  if (lesson || puzzle) return;
+  const N = game.moves.length;
+  if (what === 'play') {
+    if (playTimer) { stopPlay(); return; }
+    if (cur >= N) viewAt(0);
+    $('#navPlay').classList.add('playing');
+    playTimer = setInterval(() => { if (lesson || puzzle || cur >= game.moves.length) { stopPlay(); return; } stepForward(); }, 1100);
+    return;
+  }
+  stopPlay();
+  const to = what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? cur - 1 : cur + 1;
+  if (to < 0 || to > N || to === cur) return;
+  if (what === 'next') stepForward(); else viewAt(to);
+}
+// one step forward through the record, sown seed by seed
+async function stepForward() {
+  if (cur >= game.moves.length || animating) return;
+  busyToken++; cancelWorker('ai'); thinking = -1;
+  const from = P[cur], k = game.moves[cur], tok = busyToken;
+  fxMarks = []; fxEl.innerHTML = '';
+  await animateMove(from.b, from.side, k, game.rules);
+  if (tok !== busyToken) return;
+  cur++; reviewing = cur !== game.moves.length;
+  update(); afterPosition();
+}
+$('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
+
+// ====================================================================== new game dialog
+let draft = {};
+function levelLabelHTML(v) { return `Lv.${v} ${LV(v)}<small>${LVD(v)}</small>`; }
+function renderRuleCards() {
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button class="rulecard ${draft.rules === r ? 'sel' : ''}" data-r="${r}"><span class="lvl">${t('rule.' + r + '.lvl')}</span><b>${t('rule.' + r)}</b><small>${t('rule.' + r + '.d')}${r === 'kalah' ? ` <span class="std">${t('rule.std')}</span>` : ''}</small></button>`).join('');
+}
+function segSync() {
+  document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
+  document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
+  document.querySelectorAll('#segSeeds button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.seeds));
+  const m = draft.mode, play = m === 'ai' || m === 'pvp' || m === 'watch';
+  ['#fRules', '#fSeeds', '#fDisplay'].forEach(s => $(s).classList.toggle('hidden', !play));
+  $('#fColor').classList.toggle('hidden', m !== 'ai');
+  $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
+  $('#fLevel2').classList.toggle('hidden', m !== 'watch');
+  $('#fInfo').classList.toggle('hidden', play);
+  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
+  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : t('start');
+  $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
+  $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
+  $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
+  renderRuleCards();
+}
+function openNewDialog() {
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, rules: settings.rules, seeds: settings.seeds };
+  $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach; $('#optPreview').checked = settings.preview;
+  segSync(); $('#newOverlay').classList.add('show');
+}
+$('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
+$('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
+$('#segSeeds').onclick = e => { const b = e.target.closest('button'); if (b) { draft.seeds = +b.dataset.v; segSync(); } };
+$('#ruleCards').onclick = e => { const b = e.target.closest('.rulecard'); if (b) { draft.rules = b.dataset.r; segSync(); } };
+$('#ngRulesHelp').onclick = () => openRules(draft.rules);
+$('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+$('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+$('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
+$('#btnStart').onclick = () => {
+  $('#newOverlay').classList.remove('show'); ctx();
+  if (draft.mode === 'lesson') { openLessons(); return; }
+  if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  exitSpecial();
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, rules: draft.rules, seeds: draft.seeds,
+    eval: $('#optEval').checked, anim: $('#optAnim').checked, coach: $('#optCoach').checked, preview: $('#optPreview').checked });
+  newGame();
+};
+
+// ====================================================================== rules page (illustrated)
+const MB = { W: 470, H: 192 };
+function mbXY(i) {   // player 0 at the bottom
+  if (i === 6) return [438, 85]; if (i === 13) return [32, 85];
+  if (i < 6) return [85 + i * 60, 122]; return [385 - (i - 7) * 60, 48];
+}
+// mini board: counts[14], marks: {i: 'land'|'cap'|'src'|'store'|'relay'}, path: [slot indices] drawn as numbered drops
+function miniBoard(counts, marks, path, opt) {
+  opt = opt || {};
+  let s = `<svg viewBox="0 0 ${MB.W} ${MB.H}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e2c275"/></marker><linearGradient id="wd" x1="0" x2="1"><stop offset="0" stop-color="#5a341e"/><stop offset=".5" stop-color="#6e4226"/><stop offset="1" stop-color="#4a2a17"/></linearGradient><radialGradient id="cup" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#120a05"/><stop offset=".7" stop-color="#25150b"/><stop offset="1" stop-color="#3d2414"/></radialGradient><radialGradient id="gm" cx=".33" cy=".28" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".2" stop-color="#ffb3bd"/><stop offset=".6" stop-color="#d6324b"/><stop offset="1" stop-color="#5c0a18"/></radialGradient></defs>`;
+  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#wd)" stroke="rgba(226,194,117,.6)" stroke-width="1.5"/>`;
+  for (let i = 0; i < 14; i++) {
+    const [x, y] = mbXY(i), mk = marks && marks[i];
+    if (isStore(i)) s += `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#cup)"/>`;
+    else s += `<circle cx="${x}" cy="${y}" r="23" fill="url(#cup)"/>`;
+    const n = counts[i];
+    // a few gems + the count
+    const g = Math.min(n, isStore(i) ? 8 : 5);
+    for (let j = 0; j < g; j++) { const a = j * 2.4, r = j ? 6 + (j % 3) * 3 : 0; const gx = x + Math.cos(a) * r, gy = y + Math.sin(a) * r * (isStore(i) ? 4 : 1) + (isStore(i) ? 0 : 0); s += `<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="5" fill="url(#gm)" opacity=".9"/>`; }
+    s += `<text x="${x}" y="${isStore(i) ? (i === 6 ? y + 78 : y - 70) : (i < 6 ? y + 38 : y - 30)}" fill="${n ? '#f4e4bd' : 'rgba(244,228,189,.4)'}" font-family="JetBrains Mono,monospace" font-size="15" font-weight="700" text-anchor="middle">${n}</text>`;
+    if (mk) {
+      const col = mk === 'cap' ? '#ff7a6a' : mk === 'relay' ? '#7fc8ff' : mk === 'src' ? '#ffffff' : '#e2c275';
+      if (isStore(i)) s += `<rect x="${x - 26}" y="${y - 66}" width="52" height="132" rx="26" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${mk === 'src' ? '0' : '6 4'}"/>`;
+      else s += `<circle cx="${x}" cy="${y}" r="27" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${mk === 'src' ? '0' : '6 4'}"/>`;
+    }
+  }
+  if (path && path.length > 1) {
+    const pts = path.map(i => { const [x, y] = mbXY(i); return [x, isStore(i) ? y : y < 85 ? y - 2 : y - 2]; });
+    let d = `M${pts[0][0]},${pts[0][1]}`;
+    for (let j = 1; j < pts.length; j++) { const [x0, y0] = pts[j - 1], [x1, y1] = pts[j]; const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - (Math.abs(y1 - y0) > 40 ? 0 : 26); d += ` Q${cx},${cy} ${x1},${y1}`; }
+    s += `<path d="${d}" fill="none" stroke="#e2c275" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" opacity=".95"/>`;
+    path.slice(1).forEach((i, j) => { const [x, y] = mbXY(i); const yy = isStore(i) ? y - 20 + j * 0 : y - 2; if (opt.nums !== false) s += `<circle cx="${x + 16}" cy="${yy - 16}" r="9" fill="#e2c275"/><text x="${x + 16}" y="${yy - 12}" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700" text-anchor="middle" fill="#1b150a">${j + 1}</text>`; });
+  }
+  if (opt.cross) { const [x, y] = mbXY(opt.cross); s += `<path d="M${x - 12} ${y - 12}L${x + 12} ${y + 12}M${x + 12} ${y - 12}L${x - 12} ${y + 12}" stroke="#ff6b5b" stroke-width="4" stroke-linecap="round"/>`; }
+  if (opt.capArrow) { const [x0, y0] = mbXY(opt.capArrow[0]), [x1, y1] = mbXY(opt.capArrow[1]); s += `<path d="M${x0},${y0 - 24} Q${(x0 + x1) / 2},${Math.min(y0, y1) - 40} ${x1},${y1 - 66}" fill="none" stroke="#ff8b7d" stroke-width="2.4" marker-end="url(#ah)"/>`; }
+  s += `<text x="${MB.W / 2}" y="${MB.H - 7}" fill="rgba(226,194,117,.55)" font-size="11" text-anchor="middle" font-family="sans-serif">${opt.caption || t('rl.youBottom')}</text>`;
+  return s + '</svg>';
+}
+const B0 = (bot, top, s0, s1) => { const b = new Array(14).fill(0); bot.forEach((v, i) => { b[i] = v; }); top.forEach((v, i) => { b[7 + i] = v; }); b[6] = s0 || 0; b[13] = s1 || 0; return b; };
+function ruleItems(r) {
+  const sow = `<div class="rl-item"><h4>${t('rl.sow.h')}</h4>${miniBoard(B0([1, 2, 4, 0, 1, 2], [3, 1, 2, 0, 4, 2], 5, 4), { 2: 'src' }, [2, 3, 4, 5, 6])}<p>${t('rl.sow')}</p></div>`;
+  const extra = `<div class="rl-item"><h4>${t('rl.extra.h')}</h4>${miniBoard(B0([2, 0, 1, 3, 0, 1], [1, 2, 0, 3, 1, 2], 6, 5), { 3: 'src', 6: 'land' }, [3, 4, 5, 6])}<p>${t('rl.extra')}</p></div>`;
+  const capB = B0([0, 2, 1, 0, 3, 1], [2, 1, 0, 5, 2, 1], 4, 6);
+  const cap = r === 'easy'
+    ? `<div class="rl-item"><h4>${t('rl.nocap.h')}</h4>${miniBoard(capB, { 1: 'src', 3: 'land' }, [1, 2, 3], { cross: 9 })}<p>${t('rl.nocap')}</p></div>`
+    : `<div class="rl-item"><h4>${t(r === 'basic' ? 'rl.capB.h' : 'rl.cap.h')}</h4>${miniBoard(capB, { 1: 'src', 3: 'land', 9: 'cap' }, [1, 2, 3], { capArrow: [9, 6] })}<p>${t(r === 'basic' ? 'rl.capB' : 'rl.cap')}</p></div>`;
+  const relay = `<div class="rl-item wide"><h4>${t('rl.relay.h')}</h4>${miniBoard(B0([3, 0, 0, 2, 1, 0], [1, 2, 0, 3, 1, 2], 2, 3), { 0: 'src', 3: 'relay', 6: 'land' }, [0, 1, 2, 3, 4, 5, 6])}<p>${t('rl.relay')}</p></div>`;
+  const end = `<div class="rl-item ${r === 'sunka' ? '' : 'wide'}"><h4>${t('rl.end.h')}</h4>${miniBoard(B0([0, 0, 0, 0, 0, 0], [2, 0, 3, 1, 0, 2], 26, 14), { 13: 'land' }, null, {})}<p>${t('rl.end')}</p></div>`;
+  return sow + extra + (r === 'sunka' ? relay : '') + cap + end;
+}
+let rulesTab = 'kalah';
+function openRules(r) {
+  rulesTab = RULE_ORDER.includes(r) ? r : 'kalah';
+  renderRules(); $('#rulesOverlay').classList.add('show');
+}
+function renderRules() {
+  $('#rulesTabs').innerHTML = RULE_ORDER.map(r => `<button data-r="${r}" class="${r === rulesTab ? 'sel' : ''}">${t('rule.' + r)}</button>`).join('');
+  const r = rulesTab;
+  $('#rulesBody').innerHTML = `<div class="rl-head"><b>${t('rule.' + r)}</b><span class="lvl">${t('rule.' + r + '.lvl')}</span></div><p class="rl-lead">${t('rl.lead.' + r)} ${t('rl.common')}</p><div class="rl-grid">${ruleItems(r)}</div>`;
+}
+$('#rulesTabs').onclick = e => { const b = e.target.closest('button[data-r]'); if (b) { rulesTab = b.dataset.r; renderRules(); } };
+$('#rulesClose').onclick = () => $('#rulesOverlay').classList.remove('show');
+
+// ====================================================================== lessons & puzzles: shared
+let LESSONS = null, PUZZLES = null;
+const lessonsReady = fetch('lessons.json').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
+function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
+function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
+function stashGame() { if (!lesson && !puzzle) savedGame = { game, cur, evals: evals.slice(), anaLists: anaLists.slice() }; }
+function exitSpecial() {
+  if (!lesson && !puzzle) return;
+  lesson = null; puzzle = null; fxMarks = [];
+  document.body.classList.remove('in-lesson', 'in-puzzle');
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); stopAnim(); thinking = -1;
+  if (savedGame) { game = savedGame.game; recompute(); cur = savedGame.cur; evals = savedGame.evals; anaLists = savedGame.anaLists; savedGame = null; }
+  reviewing = cur !== game.moves.length; gameOverShown = isOver(game.moves.length);
+}
+function quitSpecial() { exitSpecial(); layout(); update(); afterPosition(); }
+function enterSetup(b, side, rules) {
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); stopAnim(); stopPlay(); thinking = -1;
+  game = { rules, seeds: 4, moves: [], human: 0, setup: { b: Array.from(b), side } };
+  recompute(); cur = 0; reviewing = false; fxMarks = []; evals = []; anaLists = [];
+  resetSeeds(); layout(); update();
+}
+function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  inst(true);
+  if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
+  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
+  setTimeout(() => inst(false), 150);
+}));
+
+// ====================================================================== lessons
+let introIdx = 0;
+function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+async function openLessons() {
+  await lessonsReady; selTab('lesson');
+  if (!LESSONS) { toast(t('ls.fail')); return; }
+  const pr = lsProgress();
+  $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
+    const r = pr[s.id];
+    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+  }).join('');
+  showLessonView('lessonListView'); $('#lessonOverlay').classList.add('show');
+}
+$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); };
+const LESSON_DIAG = {
+  sow: () => miniBoard(B0([2, 1, 3, 0, 2, 1], [2, 1, 3, 0, 2, 2], 3, 4), { 2: 'src', 5: 'land' }, [2, 3, 4, 5]),
+  extra: () => miniBoard(B0([1, 4, 2, 0, 2, 1], [2, 1, 3, 1, 2, 2], 4, 4), { 5: 'src', 6: 'land' }, [5, 6]),
+  capture: () => miniBoard(B0([0, 2, 1, 0, 3, 1], [2, 1, 0, 5, 2, 1], 4, 6), { 1: 'src', 3: 'land', 9: 'cap' }, [1, 2, 3], { capArrow: [9, 6] }),
+  defend: () => miniBoard(B0([1, 2, 6, 1, 0, 2], [2, 0, 1, 0, 2, 3], 6, 6), { 2: 'cap', 7: 'src', 10: 'land' }, null),
+  chain: () => miniBoard(B0([3, 0, 2, 3, 2, 1], [2, 1, 1, 2, 3, 2], 5, 6), { 5: 'src', 6: 'land' }, [5, 6]),
+  endgame: () => miniBoard(B0([0, 0, 2, 0, 1, 1], [1, 0, 0, 2, 0, 0], 21, 21), { 6: 'land', 13: 'land' }, null),
+};
+function openIntro(i) {
+  introIdx = i; const s = LESSONS.steps[i];
+  $('#liStep').textContent = 'STEP ' + (i + 1);
+  $('#liTitle').textContent = t('ls.' + s.id + '.title');
+  $('#liBody').innerHTML = (LESSON_DIAG[s.id] ? LESSON_DIAG[s.id]() : '') + t('ls.' + s.id + '.intro') + `<p class="note">${t('ls.scoring')}</p>`;
+  showLessonView('lessonIntroView');
+}
+$('#btnLessonBack').onclick = () => openLessons();
+$('#btnLessonClose').onclick = () => $('#lessonOverlay').classList.remove('show');
+$('#btnLessonStart').onclick = () => startLesson(introIdx);
+$('#btnLessonQuit2').onclick = () => { $('#lessonOverlay').classList.remove('show'); quitSpecial(); };
+$('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
+$('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { $('#lessonOverlay').classList.remove('show'); quitSpecial(); } };
+function startLesson(step) {
+  $('#lessonOverlay').classList.remove('show');
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { step, i: 0, results: [], answered: false, hinted: false };
+  document.body.classList.add('in-lesson');
+  loadLessonProblem();
+}
+const lessonProblem = () => LESSONS.steps[lesson.step].problems[lesson.i];
+function lessonBaseMarks() {
+  const s = LESSONS.steps[lesson.step], pr = lessonProblem();
+  return s.id === 'sow' ? [{ at: pr.target, ring: true, cls: 'target' }] : [];
+}
+function loadLessonProblem() {
+  const pr = lessonProblem();
+  lesson.answered = false; lesson.hinted = false;
+  enterSetup(pr.b, 0, LESSONS.rules || 'kalah');
+  fxMarks = lessonBaseMarks(); renderFx();
+  renderLessonCard(); $('#lsFb').innerHTML = lesson.i === 0 ? `<small>${t('ls.tutorial')}</small>` : lesson.i >= 3 ? `<small>${t('ls.exam')}</small>` : '';
+}
+function renderLessonCard() {
+  const s = LESSONS.steps[lesson.step], n = s.problems.length;
+  $('#lsStep').textContent = t('ls.stepq', { s: lesson.step + 1, i: lesson.i + 1, n }) + (lesson.i >= 3 ? ' · ' + t('ls.examTag') : '');
+  $('#lsTitle').textContent = t('ls.' + s.id + '.title');
+  $('#lsPrompt').innerHTML = `<div class="ls-goal">${t('ls.' + s.id + '.goal')}</div>`;
+  $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
+  $('#lsNext').textContent = lesson.i + 1 < n ? t('ls.next') : t('ls.result');
+  $('#lsNext').disabled = !lesson.answered;
+  $('#lsHint').disabled = lesson.answered;
+}
+function problemPoints(sc, k) {
+  const all = sc.filter(v => v !== null), mine = sc[k], best = Math.max(...all), n = all.length;
+  if (n <= 1 || mine >= best - 1e-9) return 20;
+  const r = all.filter(v => v > mine + 1e-9).length;
+  return Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1)));
+}
+async function lessonAnswer(k) {
+  const pr = lessonProblem(), s = LESSONS.steps[lesson.step];
+  lesson.answered = true;
+  const pts = problemPoints(pr.sc, k);
+  lesson.results[lesson.i] = pts;
+  renderLessonCard();
+  const L = pts >= 16 ? 'ok' : 'ng', lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
+  let fb = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${L}">${t(lbl)}</b> `;
+  if (pts < 20) fb += t('fb.answerIs', { m: pr.best + 1 }) + ' ';
+  fb += t('ls.' + s.id + '.why', { m: pr.best + 1, x: k + 1 });
+  if (s.id !== 'sow') fb += `<br><small>${t('fb.values', { a: fmtV(pr.sc[k], false), b: fmtV(pr.sc[pr.best], false) })}</small>`;
+  $('#lsFb').innerHTML = fb;
+  if (pts >= 16) sChime(1); else sWrong();
+  const tok = busyToken;
+  await playMove(k, { noFlow: true });
+  if (!lesson || tok !== busyToken) return;
+  await sleep(900);
+  if (!lesson || tok !== busyToken) return;
+  // back to the problem: show the answer (gold ring), your move (red ring) and the engine's score of each pit
+  game.moves = []; recompute(); cur = 0;
+  fxMarks = lessonBaseMarks().concat([{ at: pr.best, ring: true, cls: 'ok' }]);
+  if (k !== pr.best) fxMarks.push({ at: k, ring: true, cls: 'ng' });
+  if (s.id !== 'sow') { let best = Math.max(...pr.sc.filter(v => v !== null)); pr.sc.forEach((v, j) => { if (v !== null) fxMarks.push({ at: j, label: fmtV(v, false), lcls: (v >= best ? 'best' : '') + (v < 0 ? ' neg' : ''), dy: -0.36 }); }); }
+  update();
+}
+$('#lsHint').onclick = () => {
+  if (!lesson || lesson.answered) return;
+  lesson.hinted = true;
+  const s = LESSONS.steps[lesson.step], pr = lessonProblem(), b = pr.b;
+  $('#lsFb').innerHTML = t('ls.' + s.id + '.hint');
+  fxMarks = lessonBaseMarks();
+  if (s.id === 'extra') fxMarks.push({ at: 6, ring: true, cls: '' });
+  if (s.id === 'capture') for (let i = 0; i < 6; i++) if (!b[i] && b[12 - i]) fxMarks.push({ at: 12 - i, ring: true, cls: 'cap' });
+  if (s.id === 'defend') { for (let k = 0; k < 6; k++) { const i = 7 + k; if (!b[i]) continue; const tr = E.trace(Int8Array.from(b), 1, k, 'kalah'); if (tr.cap) fxMarks.push({ at: tr.capFrom, ring: true, cls: 'cap' }); } }
+  renderFx();
+};
+$('#lsNext').onclick = () => {
+  if (!lesson || !lesson.answered) return;
+  const s = LESSONS.steps[lesson.step];
+  if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
+  const n = lesson.results.reduce((a, b) => a + b, 0), pass = n >= 75;
+  const pr = lsProgress(); const old = pr[s.id] || { best: 0, clear: false };
+  pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
+  try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
+  $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
+  showLessonView('lessonDoneView'); $('#lessonOverlay').classList.add('show');
+  if (pass) { confetti(); sChime(1); }
+};
+$('#lsQuit').onclick = () => quitSpecial();
+
+// ====================================================================== puzzles
+let pzLevel = 0;
+function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+async function openPuzzles() {
+  await puzzlesReady; selTab('puzzle');
+  if (!PUZZLES) { toast(t('ls.fail')); return; }
+  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
+  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.' + PUZZLES.levels[dl.L].id)} · ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
+    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length;
+    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.' + L.id)}</b><small>${t('pz.' + L.id + '.d')}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+  }).join('');
+  showPzView('pzListView'); $('#puzzleOverlay').classList.add('show');
+}
+$('#pzLevels').onclick = e => {
+  const b = e.target.closest('.lesson-item'); if (!b) return;
+  if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
+};
+function openPzGrid(i) {
+  pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
+  $('#pzLevelTitle').textContent = `${i + 1}. ${t('pz.' + L.id)}`;
+  $('#pzGrid').innerHTML = L.puzzles.map((_, j) => `<button data-j="${j}" class="${pr[`${i}-${j}`] ? 'solved' : ''}">${j + 1}</button>`).join('');
+  showPzView('pzGridView'); $('#puzzleOverlay').classList.add('show');
+}
+$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzLevel, +b.dataset.j); };
+$('#pzBack').onclick = () => openPuzzles();
+$('#pzClose').onclick = () => $('#puzzleOverlay').classList.remove('show');
+function startPuzzle(L, j, daily) {
+  $('#puzzleOverlay').classList.remove('show');
+  stashGame(); lesson = null; document.body.classList.remove('in-lesson');
+  const pz = PUZZLES.levels[L].puzzles[j];
+  puzzle = { L, j, P: pz, state: 'play', busy: false, daily: daily || null, hinted: false };
+  document.body.classList.add('in-puzzle');
+  enterSetup(pz.b, 0, pz.rules);
+  renderPuzzleCard(); pzStatus(t(pz.kind === 'turn' ? 'pz.startTurn' : 'pz.startEnd'));
+}
+function pzGain() { return shownPos().b[6] - puzzle.P.b[6]; }
+function renderPuzzleCard() {
+  const Z = puzzle, L = PUZZLES.levels[Z.L], pz = Z.P;
+  $('#pzStep').textContent = Z.daily ? `★ ${t('daily.title')} · ${Z.daily.slice(5).replace('-', '/')}` : `${Z.L + 1}. ${t('pz.' + L.id)} · No.${Z.j + 1}`;
+  $('#pzTitle').textContent = t('pz.' + L.id);
+  $('#pzGoal').innerHTML = (pz.rules !== 'kalah' ? `<small style="color:var(--accent);font-weight:500">${t('rule.' + pz.rules)}</small><br>` : '') + (pz.kind === 'turn' ? t('pz.goalTurn', { n: pz.goal }) : t('pz.goalEnd', { a: pz.goal[0], b: pz.goal[1] }));
+  $('#pzNext').disabled = !!Z.daily || (Z.j + 1 >= L.puzzles.length && Z.L + 1 >= PUZZLES.levels.length);
+  $('#pzHint').disabled = Z.state !== 'play' || Z.busy; $('#pzAnswer').disabled = Z.busy;
+  renderInfo();
+}
+function pzStatus(html) { $('#pzStatus').innerHTML = html; }
+function solveReq(p) { return request('ana', { type: 'solve', ...posMsg(p, puzzle.P.rules), ms: 9000 }); }
+async function puzzleMove(k) {
+  const Z = puzzle, pz = Z.P, p = shownPos();
+  Z.busy = true; renderPuzzleCard();
+  const tok = busyToken;
+  if (pz.kind === 'turn') {
+    const g = E.turnMaxFirst(p.b, 0, pz.rules), gain = pzGain();
+    if (gain + g[k] < pz.goal) return puzzleFail(k, p, () => { const best = g.indexOf(Math.max(...g.filter(x => x !== null))); return best; }, t('pz.failTurn', { m: k + 1, n: gain + g[k], g: pz.goal }));
+    await playMove(k, { noFlow: true });
+    if (puzzle !== Z || tok !== busyToken) return;
+    const q = shownPos();
+    if (q.over || q.side !== 0) return puzzleSolved(t('pz.solvedTurn', { n: pzGain() }));
+    Z.busy = false; renderPuzzleCard(); pzStatus(`<b class="ok">${t('pz.good')}</b> ${t('pz.again', { n: pz.goal - pzGain() })}`);
+    return;
+  }
+  // endgame puzzle: every move must keep the exact optimum
+  let ok;
+  let list = null;
+  if (cur === 0) ok = k === pz.best;
+  else { pzStatus(t('pz.checking')); const r = await solveReq(p); if (puzzle !== Z || tok !== busyToken) return; list = r && r.list; const best = Math.max(...list.map(x => x.v)); const mine = list.find(x => x.m === k); ok = mine && mine.v >= best - 1e-9; }
+  if (!ok) return puzzleFail(k, p, () => cur === 0 ? pz.best : list.reduce((a, x) => x.v > a.v ? x : a).m, t('pz.failEnd', { m: k + 1 }));
+  await playMove(k, { noFlow: true });
+  if (puzzle !== Z || tok !== busyToken) return;
+  await defenderLoop(Z, tok);
+}
+async function defenderLoop(Z, tok) {
+  for (;;) {
+    const q = shownPos();
+    if (q.over) return Z.state === 'answer' ? answerDone() : puzzleSolved(t('pz.solvedEnd', { a: q.b[6], b: q.b[13] }));
+    if (q.side === 0) { if (Z.state === 'answer') { await answerStep(Z, tok); return; } Z.busy = false; renderPuzzleCard(); pzStatus(`<b class="ok">${t('pz.good')}</b> ${t('pz.yourMove')}`); return; }
+    pzStatus(t('pz.opp')); thinking = 1; renderInfo();
+    const r = await solveReq(q);
+    if (puzzle !== Z || tok !== busyToken) return;
+    thinking = -1;
+    const m = r.list.reduce((a, x) => x.v > a.v ? x : a).m;
+    await sleep(350); if (puzzle !== Z || tok !== busyToken) return;
+    await playMove(m, { noFlow: true });
+    if (puzzle !== Z || tok !== busyToken) return;
+  }
+}
+function puzzleFail(k, p, bestFn, msg) {
+  const Z = puzzle; Z.state = 'fail'; Z.busy = false;
+  const best = bestFn();
+  fxMarks = [{ at: pitIndex(0, best), ring: true, cls: 'ok' }, { at: pitIndex(0, k), ring: true, cls: 'ng' }];
+  renderFx(); sWrong();
+  pzStatus(`<b class="ng">${t('pz.fail')}</b> ${msg} ${t('pz.bestWas', { m: best + 1 })}`);
+  renderPuzzleCard();
+}
+function puzzleSolved(msg) {
+  const Z = puzzle; if (!Z) return;
+  if (Z.state === 'answer') return answerDone();
+  Z.state = 'solved'; Z.busy = false;
+  const pr = pzProgress(); pr[`${Z.L}-${Z.j}`] = true;
+  try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
+  if (Z.daily) dailySolved(Z.daily, Z.hinted);
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${msg}` + (Z.daily ? `<br>${t('daily.streak', { n: dailyInfo().streak })}` : ''));
+  sChime(1); confetti(); renderPuzzleCard();
+}
+function answerDone() { const Z = puzzle; Z.busy = false; Z.state = 'done'; renderPuzzleCard(); pzStatus(t('pz.answerDone')); }
+$('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hinted; startPuzzle(puzzle.L, puzzle.j, puzzle.daily); puzzle.hinted = h; } };
+$('#pzNext').onclick = () => {
+  if (!puzzle) return;
+  let { L, j } = puzzle; j++;
+  if (j >= PUZZLES.levels[L].puzzles.length) { L++; j = 0; }
+  if (L < PUZZLES.levels.length) startPuzzle(L, j);
+};
+$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.L); };
+$('#pzQuit').onclick = () => quitSpecial();
+$('#pzHint').onclick = async () => {
+  const Z = puzzle; if (!Z || Z.state !== 'play' || Z.busy) return;
+  Z.hinted = true;
+  const p = shownPos(); let k;
+  if (Z.P.kind === 'turn') { const g = E.turnMaxFirst(p.b, 0, Z.P.rules), need = Z.P.goal - pzGain(); k = g.findIndex(v => v !== null && v >= need); pzStatus(t('pz.hintTurn')); }
+  else if (cur === 0) { k = Z.P.best; pzStatus(t('pz.hintEnd')); }
+  else { const r = await solveReq(p); if (puzzle !== Z) return; k = r.list.reduce((a, x) => x.v > a.v ? x : a).m; pzStatus(t('pz.hintEnd')); }
+  fxMarks = [{ at: pitIndex(0, k), ring: true, cls: 'ok' }]; renderFx();
+};
+async function answerStep(Z, tok) {
+  const p = shownPos();
+  let k;
+  if (Z.P.kind === 'turn') { const g = E.turnMaxFirst(p.b, 0, Z.P.rules), need = Z.P.goal - pzGain(); k = g.findIndex(v => v !== null && v >= need); }
+  else if (cur === 0) k = Z.P.best;
+  else { const r = await solveReq(p); if (puzzle !== Z || tok !== busyToken) return; k = r.list.reduce((a, x) => x.v > a.v ? x : a).m; }
+  fxMarks = []; await sleep(450); if (puzzle !== Z || tok !== busyToken) return;
+  await playMove(k, { noFlow: true });
+  if (puzzle !== Z || tok !== busyToken) return;
+  const q = shownPos();
+  if (Z.P.kind === 'turn') { if (q.over || q.side !== 0) return answerDone(); return answerStep(Z, tok); }
+  return defenderLoop(Z, tok);
+}
+$('#pzAnswer').onclick = () => {
+  const Z0 = puzzle; if (!Z0 || Z0.busy) return;
+  startPuzzle(Z0.L, Z0.j, Z0.daily);
+  const Z = puzzle; Z.state = 'answer'; Z.busy = true; Z.hinted = true; renderPuzzleCard();
+  pzStatus(t('pz.showing'));
+  answerStep(Z, busyToken);
+};
+
+// ====================================================================== post-game review
+const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
+let rv = null, rvOpen = false;
+function rvCancel() {
+  if (rv && rv.ws) { rv.ws.forEach(w => { w.terminate(); w.jobs.forEach(j => j.resolve(null)); }); rv.ws = null; }
+  if (rv && rv.running) rv = null;
+}
+const rvKey = () => game.rules + game.seeds + ':' + game.moves.join('');
+async function runReview() {
+  if (lesson || puzzle) return;
+  if (!game.moves.length) { toast(t('nokifu')); return; }
+  if (rv && rv.key === rvKey()) { rvOpen = true; renderInfo(); renderFx(); revealReview(); return; }
+  rvCancel();
+  const key = rvKey(), N = game.moves.length, Ps = P.slice(), rules = game.rules;
+  const run = rv = { key, list: [], done: 0, total: N, running: true, ws: [] };
+  for (let k = 0; k < RV_WORKERS; k++) run.ws.push(makeWorker());
+  rvOpen = true; renderInfo(); revealReview();
+  let next = N - 1;   // from the end: late positions are solved exactly and warm the tables
+  const loop = async w => {
+    while (next >= 0 && rv === run) {
+      const i = next--;
+      let list = anaLists[i];
+      if (!list) {
+        const res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', ...posMsg(Ps[i], rules), ms: 650, id }); });
+        if (rv !== run || !res) return;
+        list = res.list; anaLists[i] = list;
+        let best = -1e9; for (const x of list) best = Math.max(best, x.v);
+        if (!evals[i] || !evals[i].exact) evals[i] = { v: Ps[i].side === 0 ? best : -best, exact: res.exact };
+      }
+      run.list[i] = list; run.done++;
+      renderReview(); renderGraph();
+    }
+  };
+  await Promise.all(run.ws.map(loop));
+  if (rv !== run) return;
+  run.ws.forEach(w => w.terminate()); run.ws = null; run.running = false;
+  save(); renderInfo(); renderFx(); toast(t('rv.done'), 1200);
+}
+function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function rvJudge(i) {
+  if (!rv || rv.key !== rvKey()) return null;
+  const L = rv.list[i]; if (!L || L.length < 2) return null;
+  const k = game.moves[i], mine = L.find(x => x.m === k); if (!mine) return null;
+  let best = L[0]; for (const x of L) if (x.v > best.v) best = x;
+  const loss = Math.max(0, best.v - mine.v);
+  const flips = mine.exact && best.exact && Math.sign(Math.round(best.v)) > Math.sign(Math.round(mine.v));
+  const q = loss < 0.3 ? 'best' : flips || loss >= 4 ? 'bad' : loss < 1.5 ? 'good' : 'dubious';
+  return { q, loss, best: best.m, k, side: P[i].side, exact: mine.exact && best.exact };
+}
+function renderReview() {
+  const card = $('#reviewCard');
+  if (rv && rv.key !== rvKey() && !rv.running) { rv = null; rvOpen = false; }
+  const show = !lesson && !puzzle && rvOpen && rv;
+  card.classList.toggle('show', !!show);
+  if (!show) return;
+  let html;
+  if (rv.running) html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rv.done, b: rv.total })}</div><div class="rv-prog"><i style="width:${rv.total ? rv.done / rv.total * 100 : 0}%"></i></div>`;
+  else {
+    const st = [0, 1].map(() => ({ n: 0, ok: 0, bad: 0, dubious: 0, loss: 0 })), list = [];
+    for (let i = 0; i < game.moves.length; i++) {
+      const j = rvJudge(i); if (!j) continue;
+      const s = st[j.side]; s.n++; s.loss += j.loss; if (j.q === 'best') s.ok++; if (j.q === 'bad' || j.q === 'dubious') { s[j.q]++; list.push({ i, ...j }); }
+    }
+    const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${shortName(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: s.n ? (s.loss / s.n).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
+    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(0)}${row(1)}</div>`;
+    const shown = list.length > 10 ? list.slice().sort((a, b) => b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
+    if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${x.side}"></i>${x.k + 1} → ${x.best + 1}</span><span class="ls">−${(Math.round(x.loss * 10) / 10)}</span></button>`).join('')}</div>`;
+    else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
+    html += `<div class="rv-note">${t('rv.note')}</div>`;
+  }
+  $('#rvBody').innerHTML = html;
+}
+// the viewed position in a finished review: per-pit values, the move played and the best move
+function drawReviewFx() {
+  if (lesson || puzzle || !rvOpen || !rv || rv.running || rv.key !== rvKey() || cur >= game.moves.length) return false;
+  const L = rv.list[cur]; if (!L) return false;
+  const p = shownPos(); let best = -1e9; for (const x of L) best = Math.max(best, x.v);
+  for (const x of L) { const i = pitIndex(p.side, x.m), u = slotUV(i); fxAt(i, 0, u.bottom ? -0.36 : 0.36, 'hintlbl' + (x.v >= best - 1e-9 ? ' best' : '') + (x.v < 0 ? ' neg' : ''), fmtV(x.v, x.exact)); }
+  const j = rvJudge(cur);
+  fxRing(pitIndex(p.side, game.moves[cur]), 'played' + (j && (j.q === 'bad' || j.q === 'dubious') ? ' ' + j.q : ''));
+  return true;
+}
+$('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderInfo(); renderFx(); };
+$('#btnAnalyze').onclick = () => runReview();
+
+// ====================================================================== share / load
+const RULE_CODE = { kalah: 'kalah', basic: 'basic', easy: 'easy', sunka: 'sunka' };
+function parseGameText(v) {
+  v = (v || '').trim(); let n, r = null, s = null;
+  const h = v.match(/#(.*)$/) || (/(^|&)k=/.test(v) ? [null, v] : null);
+  if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; v = q.get('k') || ''; if (q.has('n')) n = parseInt(q.get('n'), 10); r = q.get('r'); s = q.get('s'); }
+  if (!/^[\s1-6,.-]*$/.test(v)) return null;
+  const moves = v.replace(/[^1-6]/g, '').split('').map(c => +c - 1);
+  return { moves, n, rules: RULE_CODE[r] || 'kalah', seeds: s === '6' ? 6 : 4 };
+}
+function openLoaded(d) {
+  ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay', '#rulesOverlay'].forEach(s => $(s).classList.remove('show'));
+  if (lesson || puzzle) { savedGame = null; exitSpecial(); }
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = -1; stopAnim(); stopPlay();
+  settings.mode = 'pvp'; settings.rules = d.rules; settings.seeds = d.seeds;
+  game = { rules: d.rules, seeds: d.seeds, moves: d.moves.slice(), human: 0, setup: null };
+  recompute(); evals = []; anaLists = []; fxMarks = [];
+  cur = d.n === undefined || isNaN(d.n) ? game.moves.length : Math.max(0, Math.min(game.moves.length, d.n));
+  reviewing = cur !== game.moves.length; gameOverShown = isOver(game.moves.length);
+  resetSeeds(); layout(); update(); save(); afterPosition();
+}
+function loadText(v) {
+  const d = parseGameText(v);
+  if (!d || !d.moves.length) { toast(t('paste.invalid'), 2200); return false; }
+  const r = E.replay(E.initial(d.seeds), 0, d.moves, d.rules);
+  if (r.bad >= 0) { toast(t('paste.bad', { n: r.bad + 1 }), 2500); return false; }
+  openLoaded(d); toast(t('paste.loaded', { n: d.moves.length }), 1800);
+  return true;
+}
+function loadFromHash() {
+  const h = location.hash.slice(1); if (!h || !new URLSearchParams(h).has('k')) return false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  return loadText('#' + h);
+}
+window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
+$('#btnShare').onclick = async () => {
+  if (!game.moves.length || game.setup) { toast(t('nokifu')); return; }
+  const url = location.origin + location.pathname + '#k=' + game.moves.map(k => k + 1).join('') + '&r=' + game.rules + '&s=' + game.seeds + (cur < game.moves.length ? '&n=' + cur : '');
+  try {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: 'Luxe Mancala', url }); return; }
+    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
+  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
+};
+$('#btnPaste').onclick = () => { $('#pasteText').value = ''; $('#pasteOverlay').classList.add('show'); setTimeout(() => $('#pasteText').focus(), 50); };
+$('#pasteCancel').onclick = () => $('#pasteOverlay').classList.remove('show');
+$('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };
+$('#pasteText').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#pasteOk').click(); } });
+
+// ====================================================================== daily puzzle
+const DAILY_STORE = STORE + '-daily';
+let daily = { last: '', streak: 0, best: 0, days: {} };
+try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function dailyPick() {
+  if (!PUZZLES || PUZZLES.levels.length < 5) return null;
+  const now = new Date(), date = ymd(now);
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
+  const L = [3, 0, 1, 2, 4, 2, 3][now.getDay()];   // Sun..Sat: easier early in the week, deep endgames at the weekend
+  const n = PUZZLES.levels[L].puzzles.length;
+  let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
+  return { date, L, j: (h >>> 0) % n };
+}
+function dailyInfo() {
+  const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
+  const alive = daily.last === today || daily.last === ymd(y);
+  return { streak: alive ? daily.streak : 0, best: daily.best || 0, today: !!daily.days[today] };
+}
+function dailySolved(date, hinted) {
+  if (daily.days[date]) return;
+  const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
+  daily.streak = daily.last === ymd(y) ? daily.streak + 1 : 1;
+  daily.last = date; daily.best = Math.max(daily.best || 0, daily.streak); daily.days[date] = hinted ? 'h' : 1;
+  try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
+}
+
+// ====================================================================== dialogs: outside click, resume popup
+const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', resumeOverlay: '#rsCancel' };
+function outsideClose(o) {
+  if (o.id === 'lessonOverlay') { if (!$('#lessonDoneView').classList.contains('hidden')) $('#btnLessonQuit2').click(); else $('#btnLessonClose').click(); return; }
+  const b = OUTSIDE[o.id] && $(OUTSIDE[o.id]);
+  if (b) b.click(); else o.classList.remove('show');
+}
+document.querySelectorAll('.overlay').forEach(o => {
+  let down = false;
+  o.addEventListener('pointerdown', e => { down = e.target === o; });
+  o.addEventListener('click', e => { if (e.target !== o || !down) return; down = false; outsideClose(o); });
+});
+function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && !isOver(game.moves.length); }
+function rsOpen() {
+  if (!rsInProgress() && !reviewing) { openNewDialog(); return; }
+  $('#rsText').textContent = reviewing ? t('rs.viewing', { n: cur }) : t('rs.playing', { n: game.moves.length });
+  $('#resumeOverlay').classList.add('show');
+}
+$('#rsCancel').onclick = () => $('#resumeOverlay').classList.remove('show');
+$('#rsRestart').onclick = () => { $('#resumeOverlay').classList.remove('show'); openNewDialog(); };
+$('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
+
+// ====================================================================== boot
+buildBoard();
+const hadSave = load();
+if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
+try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
+try { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (_) {} } } catch (e) {}
+applyI18n();
+if (!P.length) recompute();
+$('#langSel').onchange = e => {
+  LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
+  try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
+  renderInfo(); renderFx();
+  if ($('#newOverlay').classList.contains('show')) segSync();
+  if ($('#rulesOverlay').classList.contains('show')) renderRules();
+  if (lesson) renderLessonCard();
+  if (puzzle) renderPuzzleCard();
+  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
+  if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
+};
+let rzT = 0;
+window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => layout(), 60); });
+requestAnimationFrame(() => {
+  layout();
+  if (loadFromHash()) { /* shared game opened */ }
+  else if (!hadSave) { update(); openNewDialog(); }
+  else { update(); if (!isOver()) toast(t('saved'), 1400); afterPosition(); }
+});
+// test hooks
+window.__mancala = { get game() { return game; }, get cur() { return cur; }, get P() { return P; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, onPit, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get animating() { return animating; }, get thinking() { return thinking; }, startPuzzle, startLesson, viewAt };
