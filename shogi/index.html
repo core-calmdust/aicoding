@@ -556,6 +556,8 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay .ng-col:first-child > *{grid-column:1}
   #fHandi{grid-row:1}#fColor{grid-row:2}#fClock{grid-row:3}#fLevel{grid-row:4}#lvNote{grid-row:5}
   #fLevel2{grid-row:2 / 4;align-self:start}
+  #newOverlay.ng-watch #fLevel{grid-row:2 / 4;align-self:start}
+  #newOverlay.ng-watch #fLevel2{grid-row:4}
   #newOverlay .ng-info{grid-row:1 / 4;align-self:start}
 }
 .brand-l{display:flex;flex-direction:column;min-width:0}
@@ -882,7 +884,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261018tb"></script>
+<script src="i18n.js?v=20261018ng"></script>
 <script src="engine.js?v=20261018p57"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
@@ -1779,7 +1781,8 @@ function updDialog() {
   const ol = dlg.mode === 'online';
   $('#fOnlineInfo').classList.toggle('hidden', !ol);
   if (ol) ['#fHandi', '#fClock', '#fColor', '#fLevel', '#fLevel2', '#lvNote', '#fOpts', '#handiNote'].forEach(q => $(q).classList.add('hidden'));
-  $('#btnStart').textContent = t(ol ? 'ng.toOnline' : 'start');
+  $('#newOverlay').classList.toggle('ng-watch', dlg.mode === 'watch');
+  $('#btnStart').textContent = t(ol ? 'ng.toOnline' : dlg.mode === 'lesson' ? 'ng.goLesson' : dlg.mode === 'tsume' ? 'ng.goTsume' : dlg.mode === 'edit' ? 'ng.goEdit' : 'start');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.color = +b.dataset.v; updDialog(); } };
