@@ -848,6 +848,16 @@ class AudioHandler {
         }
     }
 
+    playGem(n) {
+        if (!this.isInitialized || this.isMuted) return;
+        const now = this.ctx.currentTime;
+        const scale = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+        const step = (n - 1) % scale.length, oct = Math.floor((n - 1) / scale.length) % 2;
+        const f = 880 * Math.pow(2, (scale[step] + oct * 12) / 12);
+        this.createSound(f, 0.09, 'triangle', 0.8, 0.28, now);
+        this.createSound(f * 2, 0.05, 'sine', 0.7, 0.12, now + 0.02);
+    }
+
     playJingle(type) {
         if (!this.isInitialized || this.isMuted) {
             return;
@@ -951,6 +961,8 @@ let scoreTexts;
 let playerBullet;
 let monsters;
 let enemyBullets;
+let gems = []; // ボス撃破で撒かれる得点アイテム
+let gemCombo = 0, gemComboTimer = 0;
 
 let currentCometSpeed;
 let lastInputDevice = 'keyboard';
@@ -1049,6 +1061,8 @@ function init() {
     playerBullet = null;
     monsters = [];
     enemyBullets = [];
+    gems = [];
+    gemCombo = 0; gemComboTimer = 0;
     stars = Array.from({ length: config.starCount }, () => ({
         x: Math.random() * config.canvasWidth,
         y: Math.random() * config.canvasHeight,
@@ -1888,7 +1902,15 @@ function updatePlayingState(dt_sec) {
     // Update Items
     for (let index = items.length - 1; index >= 0; index--) {
         const item = items[index];
-        item.y += config.energyItemSpeed * dt_sec;
+        if (item.phys) {
+            // ボスから弾け飛んだアイテム: 放物線を描いてから通常の落下へ
+            item.vx *= 0.97;
+            item.vy = Math.min(config.energyItemSpeed * 0.7, item.vy + 520 * dt_sec);
+            item.x = Math.max(16, Math.min(config.canvasWidth - 16, item.x + item.vx * dt_sec));
+            item.y += item.vy * dt_sec;
+        } else {
+            item.y += config.energyItemSpeed * dt_sec;
+        }
         const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
 
         if (dist < config.playerVisualSize + config.energyItemSize) {
@@ -1902,6 +1924,33 @@ function updatePlayingState(dt_sec) {
         }
         if (item.y > config.canvasHeight + 20) {
             items.splice(index, 1);
+        }
+    }
+
+    // Update Gems（得点アイテム）
+    if (gemComboTimer > 0 && --gemComboTimer === 0) gemCombo = 0;
+    for (let i = gems.length - 1; i >= 0; i--) {
+        const g = gems[i];
+        g.age += dt_sec;
+        const dx = player.x - g.x, dy = player.y - g.y, d = Math.hypot(dx, dy) || 1;
+        if (g.age > 0.7 && (d < 200 || g.age > 2.2)) {
+            const pull = (g.age > 2.2 ? 4200 : 2600) * dt_sec; // 自機へ吸い込まれる
+            g.vx = (g.vx + dx / d * pull) * 0.88;
+            g.vy = (g.vy + dy / d * pull) * 0.88;
+        } else {
+            g.vx *= 0.965;
+            g.vy = g.vy * 0.965 + 90 * dt_sec;
+        }
+        g.x += g.vx * dt_sec; g.y += g.vy * dt_sec;
+        if (g.x < 12 || g.x > config.canvasWidth - 12) { g.vx *= -0.7; g.x = Math.max(12, Math.min(config.canvasWidth - 12, g.x)); }
+        if (g.y < 12 || g.y > config.canvasHeight - 12) { g.vy *= -0.7; g.y = Math.max(12, Math.min(config.canvasHeight - 12, g.y)); }
+        if (d < config.playerVisualSize + 16) {
+            score += g.value;
+            gemCombo++;
+            gemComboTimer = 40;
+            scoreTexts.push({ x: g.x, y: g.y, text: `+${g.value}`, life: 40, type: 'gem' });
+            audioHandler.playGem(gemCombo);
+            gems.splice(i, 1);
         }
     }
 
@@ -2130,9 +2179,20 @@ function killBoss() {
     const b = boss;
     const stageMultiplier = Math.pow(1.1, stage - 1);
     const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
-    const earned = Math.floor(100000 * stageMultiplier * comboMultiplier);
+    const earned = Math.floor(30000 * stageMultiplier * comboMultiplier);
     score += earned;
     scoreTexts.push({ x: b.x, y: b.y, text: `+${earned}`, life: 90, type: 'bonus' });
+    // ご褒美: 得点アイテムと回復アイテムを画面中にばら撒く
+    const gemN = 48 + bossCount * 6;
+    const gemValue = Math.floor(2500 * stageMultiplier * comboMultiplier);
+    for (let i = 0; i < gemN; i++) {
+        const a = Math.random() * Math.PI * 2, sp = 180 + Math.random() * 620;
+        gems.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, age: Math.random() * 0.2, value: gemValue, big: i % 8 === 0 });
+    }
+    for (let k = 0; k < 7; k++) {
+        const a = -Math.PI / 2 + (k - 3) * 0.45;
+        items.push({ x: b.x, y: b.y, type: k === 3 ? 'special' : 'normal', vx: Math.cos(a) * 380, vy: Math.sin(a) * 300 - 120, phys: true });
+    }
     audioHandler.playSound('explosion');
     audioHandler.playSound('enemyDestroy');
     screenShake = { intensity: 16, duration: 30 };
@@ -2772,7 +2832,8 @@ const glow = new GlowBatch(4000);
 const trails = new TrailBatch(1500);
 const cometBodies = new InstPool(new THREE.IcosahedronGeometry(1, 0), glowInstMaterial(0.55), 900, 2);
 const cometWires = new InstPool(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }), 900, 3);
-const bulletBodies = new InstPool(new THREE.OctahedronGeometry(1, 0), glowInstMaterial(0.8), 1200, 2);
+const bulletBodies = new InstPool(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), 1200, 23); // 敵弾は照明の影響を受けず常に明るく
+const gemBodies = new InstPool(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), 600, 22);
 const debrisCubes = new InstPool(new THREE.BoxGeometry(1, 1, 1), glowInstMaterial(0.6), 800, 2);
 
 // ---------------------------------
@@ -3303,6 +3364,22 @@ glazeRing.rotation.x = -Math.PI / 2;
 glazeRing.renderOrder = 5;
 scene.add(glazeRing);
 
+// 当たり判定マーカー（色が回る芯＋補色のリング。常に最前面）
+const hitDotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, depthWrite: false, transparent: true });
+const hitDot = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), hitDotMat);
+hitDot.renderOrder = 40;
+scene.add(hitDot);
+// 機体の明るい色と分離するための暗い下地
+const hitBack = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x05000f, transparent: true, opacity: 0.75, depthTest: false, depthWrite: false }));
+hitBack.rotation.x = -Math.PI / 2;
+hitBack.renderOrder = 39;
+scene.add(hitBack);
+const hitRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, side: THREE.DoubleSide });
+const hitRing = new THREE.Mesh(new THREE.RingGeometry(0.72, 1, 32), hitRingMat);
+hitRing.rotation.x = -Math.PI / 2;
+hitRing.renderOrder = 41;
+scene.add(hitRing);
+
 const shieldMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
 const shield = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), shieldMat);
 scene.add(shield);
@@ -3334,7 +3411,7 @@ function makeItemObj() {
     scene.add(g);
     return g;
 }
-for (let i = 0; i < 16; i++) itemPool.push(makeItemObj());
+for (let i = 0; i < 40; i++) itemPool.push(makeItemObj());
 
 // ---------------------------------
 // モンスター（ドット絵をボクセル化）
@@ -3902,7 +3979,7 @@ function render3D() {
     camera.lookAt(CAM_LOOK.x + camFollow + shakeX * 0.5, CAM_LOOK.y, CAM_LOOK.z);
 
     // ---- エンティティ ----
-    glow.begin(); trails.begin(); cometBodies.begin(); cometWires.begin(); bulletBodies.begin(); debrisCubes.begin();
+    glow.begin(); trails.begin(); cometBodies.begin(); cometWires.begin(); bulletBodies.begin(); debrisCubes.begin(); gemBodies.begin();
 
     if (showHub) {
         const b = visualBeat, hueBase = rTime * 60;
@@ -4002,13 +4079,13 @@ function render3D() {
         });
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
-            const c = eb.isGlazed ? COL_GLAZE : hsl(Date.now() / 10 + eb.y, 1, 0.62);
+            const c = eb.isGlazed ? COL_GLAZE : hsl(Date.now() / 10 + eb.y, 1, 0.72);
             const x = toX(ix(eb)), z = toZ(iy(eb)), y = 16;
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * pulse;
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
-            glow.add(x, y, z, c, eb.radius * 11, 0.85);     // 色のハロー
-            glow.add(x, y + 2, z, COL_WHITE, eb.radius * 4, 1.8);   // 白い芯
+            glow.add(x, y, z, c, eb.radius * 13, 1.25);     // 色のハロー
+            glow.add(x, y + 2, z, COL_WHITE, eb.radius * 5, 2.2);   // 白い芯
             if (efx) {
                 const sp = Math.hypot(eb.vx, eb.vy) || 1;
                 trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
@@ -4028,6 +4105,19 @@ function render3D() {
     });
 
     renderBoss(dt);
+
+    // 得点アイテム（金色の宝石）
+    gems.forEach((g, k) => {
+        const x = toX(ix(g)), z = toZ(iy(g)), y = 18 + Math.sin(rTime * 6 + k) * 4;
+        const c = hsl(45 + Math.sin(rTime * 3 + k) * 15, 1, g.big ? 0.75 : 0.6);
+        const sz = g.big ? 9 : 6;
+        gemBodies.add(x, y, z, sz, sz * 1.5, sz, 0, rTime * 5 + k, 0, c);
+        glow.add(x, y, z, c, sz * 6, 0.9);
+        if (isEffectsEnabled && Math.hypot(g.vx, g.vy) > 60) {
+            const sp = Math.hypot(g.vx, g.vy);
+            trails.add(x - g.vx / sp * 26, y, z - g.vy / sp * 26, x, y, z, 6, c, 0.7);
+        }
+    });
 
     // プレイヤー弾
     if (playerBullet) {
@@ -4070,6 +4160,7 @@ function render3D() {
     playerGroup.visible = playerVisible;
     glazeDisc.visible = glazeRing.visible = showPlayer;
     shield.visible = meter.visible = false;
+    hitDot.visible = hitRing.visible = hitBack.visible = false;
     if (showPlayer) {
         const px = toX(ix(player)), pz = toZ(iy(player));
         const bankTarget = frozen ? shipBank : (input.left && !input.right ? 0.55 : input.right && !input.left ? -0.55 : 0);
@@ -4096,8 +4187,20 @@ function render3D() {
                 if (efx) trails.add(ex, 11, ez + 34 * flick, ex, 11, ez, 7, themeCur.player, 0.9);
             });
             // 当たり判定とスローマーカー
-            glow.add(px, 22, pz, hsl(frameCount * 10, 1, 0.7, _engC), 9, 1.6);
-            if (input.slow) glow.add(px, 23, pz, COL_WHITE, 16, 1.4);
+            hsl(frameCount * 10, 1, 0.6, _engC);
+            hitDot.visible = hitRing.visible = true;
+            hitDot.position.set(px, 30, pz);
+            hitDot.rotation.set(rTime * 4, rTime * 6, 0);
+            hitDot.scale.setScalar(config.playerHitboxRadius * 2.2 * (input.slow ? 1.25 : 1));
+            hitBack.visible = true;
+            hitBack.position.set(px, 30, pz);
+            hitBack.scale.setScalar(config.playerHitboxRadius * 3.1 * (input.slow ? 1.3 : 1));
+            hitDotMat.color.copy(_engC);
+            hitRing.position.set(px, 30, pz);
+            hitRing.scale.setScalar(config.playerHitboxRadius * 4.4 * (input.slow ? 1.3 : 1));
+            hsl(frameCount * 10 + 180, 1, 0.7, hitRingMat.color);
+            glow.add(px, 31, pz, _engC, 18, 0.9);
+            if (input.slow) glow.add(px, 31, pz, COL_WHITE, 26, 0.8);
         }
 
         if (player.invincibleTimer > 0) {
@@ -4173,7 +4276,7 @@ function render3D() {
         glow.add(tx, 8, tz, COL_GLAZE, 40 * a, a);
     });
 
-    glow.end(); trails.end(); cometBodies.end(); cometWires.end(); bulletBodies.end(); debrisCubes.end();
+    glow.end(); trails.end(); cometBodies.end(); cometWires.end(); bulletBodies.end(); debrisCubes.end(); gemBodies.end();
 
     if (!gl3dOK) return;
     adaptQuality(now);
@@ -4226,7 +4329,7 @@ function draw() {
         renderCtx.save();
         renderCtx.textAlign = 'center';
         scoreTexts.forEach(st => {
-            const fontSize = st.type === 'bonus' ? 14 : 10;
+            const fontSize = st.type === 'bonus' ? 14 : st.type === 'gem' ? 9 : 10;
             renderCtx.font = `${fontSize}px ${config.fontFamily}`;
             const alpha = st.life / 60.0;
             const hue = (frameCount * 5 + st.x) % 360;
@@ -4733,6 +4836,7 @@ function snapshotPrev() {
     if (items) items.forEach(sp);
     if (monsters) monsters.forEach(sp);
     if (particles) particles.forEach(sp);
+    if (gems) gems.forEach(sp);
 }
 function ix(o) { if (o._px === undefined) return o.x; const d = o.x - o._px; return Math.abs(d) > 120 ? o.x : o._px + d * simAlpha; }
 function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; return Math.abs(d) > 120 ? o.y : o._py + d * simAlpha; }
