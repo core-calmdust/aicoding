@@ -25,6 +25,25 @@
         ".write": "auth != null && ((!data.exists() && (newData.child('b').val() === auth.uid || newData.child('w').val() === auth.uid)) || data.child('b').val() === auth.uid || data.child('w').val() === auth.uid)"
       }
     },
+    "chat": {
+      ".read": "auth != null",
+      "seq": {
+        ".write": "auth != null",
+        ".validate": "newData.isNumber() && ((!data.exists() && newData.val() === 1) || newData.val() === data.val() + 1)"
+      },
+      "msgs": {
+        "$slot": {
+          ".write": "auth != null && newData.exists()",
+          ".validate": "$slot.matches(/^(1[0-9]|[0-9])$/) && newData.hasChildren(['n', 'uid', 'name', 'text', 't']) && newData.child('uid').val() === auth.uid",
+          "n": { ".validate": "newData.isNumber() && newData.val() >= 1" },
+          "uid": { ".validate": "newData.isString()" },
+          "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+          "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100" },
+          "t": { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "presence": {
       ".read": "auth != null",
       "$uid": {

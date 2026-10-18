@@ -720,6 +720,81 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+/* ---- online: player names never overflow the two boxes; big clocks; rematch prompt; public chat (shared by the shogi / reversi pages) */
+.players{grid-template-columns:repeat(2,minmax(0,1fr))}
+.player{min-width:0}
+.player .top{min-width:0}
+.player .name{min-width:0;flex:1 1 auto}
+.player .name.pn{display:flex;align-items:baseline;gap:5px;overflow:hidden}
+.pn-you{flex:none;font-size:10.5px;line-height:1.5;padding:0 5px;border-radius:4px;background:rgba(201,169,97,.18);color:var(--accent)}
+.pn-n{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.pn-r{flex:none;font-family:'JetBrains Mono',monospace;font-size:.88em;color:var(--dim)}
+.player .clk{display:none}
+.player .clk.on{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;height:auto;overflow:visible;margin:0;padding:4px 8px 5px;border-radius:9px;font-family:'JetBrains Mono',monospace;line-height:1;color:var(--muted);min-width:0;max-width:100%;transition:background .2s,color .2s}
+.player .clk small{font-size:10.5px;letter-spacing:.04em;color:var(--dim);margin-bottom:3px;white-space:nowrap;font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif}
+.player .clk b{font-size:clamp(18px, 19cqi, 50px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.player .clk.move{color:var(--accent);background:rgba(201,169,97,.15);box-shadow:inset 0 0 0 1px rgba(201,169,97,.6)}
+.player .clk.move small{color:var(--accent)}
+.player .clk.low{color:#ff6b5b;background:rgba(255,107,91,.15);box-shadow:inset 0 0 0 1px rgba(255,107,91,.7)}
+.player .clk.low small{color:#ff9b90}
+.player .clk.low.move{animation:clkPulse 1s ease-in-out infinite}
+@keyframes clkPulse{50%{background:rgba(255,107,91,.32)}}
+body.in-online .player{container-type:inline-size;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"top top" "lab clk";align-items:center;column-gap:8px;row-gap:4px}
+body.in-online .player .top{grid-area:top}
+body.in-online .player .count, body.in-online .player .side-l{grid-area:lab}
+body.in-online .player .clk{grid-area:clk;justify-self:end}
+body.in-online .player .status{display:none}
+body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
+@media (pointer: coarse), (max-width: 520px){
+  body.in-online .player{padding:7px 9px}
+  .player .clk b{font-size:clamp(18px, 19cqi, 44px)}
+  .player .clk.on{padding:3px 7px 4px}
+  .player .clk small{font-size:9.5px;margin-bottom:2px}
+}
+@media (min-aspect-ratio: 1/1) and (max-height: 560px){ .player .clk b{font-size:20px} .player .clk small{display:none} }
+.ol-again{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:rgba(201,169,97,.1);border:1px solid rgba(201,169,97,.45);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;font-size:14px;line-height:1.6;text-align:center}
+.ol-again > span{flex:1 1 100%}
+.ol-again b.cd{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--accent);margin:0 2px}
+.ol-again .mbtn{min-height:44px;min-width:110px;flex:0 1 auto}
+.ol-again.muted{background:rgba(0,0,0,.2);border-color:var(--line);color:var(--muted)}
+.dk-unread{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid rgba(111,211,160,.6);background:rgba(111,211,160,.15);color:#8fe3b8;white-space:nowrap;flex:none;min-height:28px}
+.dk-unread b{font-family:'JetBrains Mono',monospace;margin-left:3px}
+.mt-chat{color:#8fe3b8!important}
+.dock-panel section.dk-chat{min-width:0}
+.dk-chat h4 small{font-size:10.5px;color:var(--dim);letter-spacing:0;margin-left:6px}
+.chat-list{flex:1;min-height:60px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 4px 2px 0;display:flex;flex-direction:column;gap:2px}
+.cm{font-size:13px;line-height:1.5;padding:3px 6px;border-radius:6px;overflow-wrap:anywhere;color:var(--text)}
+.cm:hover{background:rgba(255,255,255,.04)}
+.cm b{color:var(--accent);font-weight:600;margin-right:6px}
+.cm.me b{color:#8fe3b8}
+.cm time{color:var(--dim);font-size:10.5px;margin-left:6px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.chat-form{display:flex;gap:6px;margin-top:8px;flex:none}
+.chat-form input{flex:1;min-width:0;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:0 10px;font:inherit;font-size:14px}
+.chat-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(201,169,97,.25)}
+.chat-form button{height:36px;min-width:64px;padding:0 14px}
+@media not all and (pointer: coarse){
+  .dock-panel{grid-template-columns:1.1fr 1fr .9fr 1.4fr}
+  .dock-panel section{min-height:0;overflow:hidden}
+}
+@media not all and (pointer: coarse){ @media (max-width: 1279px){
+  .dock-panel{grid-template-columns:1fr 1fr 1.3fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pl ro ch" "rk ro ch"}
+  .dock-panel .dk-pl{grid-area:pl}.dock-panel .dk-ro{grid-area:ro}.dock-panel .dk-rk{grid-area:rk}.dock-panel .dk-chat{grid-area:ch}
+} }
+@media not all and (pointer: coarse){ @media (max-width: 760px){
+  .dock-panel{grid-template-columns:1fr 1.2fr;grid-template-areas:"pl ch" "ro ch";gap:12px}
+  .dock-panel .dk-rk{display:none}
+} }
+@media (pointer: coarse){
+  .chat-form input{font-size:16px;height:44px}
+  .chat-form button{height:44px;min-width:72px}
+  .dk-unread{min-height:36px;padding:4px 12px}
+  body.mtab-online .dock{bottom:max(calc(50px + env(safe-area-inset-bottom)), var(--kb, 0px))}
+  body.mtab-online .dock-panel .dk-chat{order:1}
+  body.mtab-online .dock-panel .dk-rk{order:2}
+  body.mtab-online .chat-list{max-height:min(46vh, 340px);min-height:120px;flex:none}
+  body.mtab-online .dock-bar .dk-unread{order:2}
+  body.mtab-online .chat-form .dk-btn{flex:none;order:0;padding:0 16px}
+}
 </style>
 </head>
 <body>
@@ -776,11 +851,13 @@ body .info-line{font-size:12.5px}
       <div class="player" id="pBlack">
         <div class="top"><div class="pdisc b"></div><div class="name" id="nameBlack"></div></div>
         <div class="count" id="countBlack">2</div>
+        <div class="clk" id="clkBlack"></div>
         <div class="status" id="statusBlack"></div>
       </div>
       <div class="player" id="pWhite">
         <div class="top"><div class="pdisc w"></div><div class="name" id="nameWhite"></div></div>
         <div class="count" id="countWhite">2</div>
+        <div class="clk" id="clkWhite"></div>
         <div class="status" id="statusWhite"></div>
       </div>
     </div>
@@ -928,6 +1005,7 @@ body .info-line{font-size:12.5px}
       <span><b id="resW">0</b><div class="pdisc w"></div></span>
     </div>
     <div class="result-sub" id="resultSub"></div>
+    <div class="ol-again hidden" id="olAgain"></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
       <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
@@ -961,6 +1039,7 @@ body .info-line{font-size:12.5px}
 <div class="dock" id="dock">
   <div class="dock-bar">
     <span class="dk-dot"></span><b class="dk-title" data-i18n="ol.title"></b>
+    <button id="dkUnread" class="dk-unread hidden" type="button">💬<b>0</b></button>
     <span class="dk-stat" id="dkStat"></span>
     <span class="dk-sp"></span>
     <span class="dk-me" id="dkMe"></span>
@@ -971,12 +1050,13 @@ body .info-line{font-size:12.5px}
     <button id="dkToggle" class="dk-btn tg" aria-label="toggle">▲</button>
   </div>
   <div class="dock-panel">
-    <section><h4 data-i18n="ol.players"></h4><div class="ol-list" id="dkPlayers"></div></section>
-    <section><h4 data-i18n="ol.rooms"></h4><div class="ol-list" id="dkRooms"></div></section>
-    <section><h4 data-i18n="ol.ranking"></h4><div class="ol-list" id="dkRank"></div></section>
+    <section class="dk-pl"><h4 data-i18n="ol.players"></h4><div class="ol-list" id="dkPlayers"></div></section>
+    <section class="dk-ro"><h4 data-i18n="ol.rooms"></h4><div class="ol-list" id="dkRooms"></div></section>
+    <section class="dk-rk"><h4 data-i18n="ol.ranking"></h4><div class="ol-list" id="dkRank"></div></section>
+    <section class="dk-chat"><h4 id="dkChatHead"><span data-i18n="ol.chat"></span></h4><div class="chat-list" id="dkChat" role="log" aria-live="polite"></div><form class="chat-form" id="dkChatForm" autocomplete="off"><input id="dkChatIn" maxlength="100" enterkeyhint="send" autocomplete="off"><button type="submit" class="dk-btn go" id="dkChatSend"></button></form></section>
   </div>
 </div>
-<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
+<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
 <div class="overlay" id="resumeOverlay">
   <div class="modal" style="width:min(480px,100%)">
@@ -998,9 +1078,9 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018rt"></script>
+<script src="i18n.js?v=20261018ch"></script>
 <script src="firebase-config.js"></script>
-<script src="online.js?v=20261018rt"></script>
+<script src="online.js?v=20261018ch"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1324,7 +1404,7 @@ function renderInfo() {
   const p = positions[cur];
   const [b, w] = counts(p.cells);
   $('#countBlack').textContent = b; $('#countWhite').textContent = w;
-  $('#nameBlack').textContent = playerName(BLACK); $('#nameWhite').textContent = playerName(WHITE);
+  olPName($('#nameBlack'), BLACK); olPName($('#nameWhite'), WHITE);
   $('#pBlack').classList.toggle('active', p.toMove === BLACK);
   $('#pWhite').classList.toggle('active', p.toMove === WHITE);
   // eval
@@ -2893,7 +2973,7 @@ async function olCreateRoom() {
 $('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) { try { await Online.leaveLobby(); } catch (e) {} dockRender(); } };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#onlineOverlay').classList.contains('show')) $('#olClose').click(); });
 // ---- the own room (kept while the dialog is closed)
-function olLeftText() { const r = window.Online && Online.room; return r ? t('ol.roomLeft', { t: fmtClockMs(r.left) }) : ''; }
+function olLeftText() { const r = window.Online && Online.room; return r ? (r.game ? t('ol.st.play') : t('ol.roomLeft', { t: fmtClockMs(r.left) })) : ''; }
 function olMyRoomHtml() {
   const r = Online.room;
   if (!r) return `<div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}<label class="ol-title"><small>${t('ol.roomTitle')}</small><input id="olRoomTitle" maxlength="24" placeholder="${esc(t('ol.roomTitlePh'))}" value="${esc(olTitleSaved())}"></label><div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>`;
@@ -2913,7 +2993,8 @@ $('#olBody').addEventListener('click', e => {
 function olRoomMatched(gid) {
   const away = !$('#onlineOverlay').classList.contains('show');
   document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));
-  startOnlineGame(gid, away ? t('ol.roomJoined') : null);
+  const again = net && net.done && net.game && net.game.post === 'again';
+  startOnlineGame(gid, again ? t('ol.againGo') : away ? t('ol.roomJoined') : null);
 }
 function olOnRoom(ev) {
   if (ev === 'expired') toast(t('ol.roomExpired'), 3600);
@@ -2926,13 +3007,14 @@ function olOnRoom(ev) {
 function olRoomTick() {
   const r = window.Online && Online.available && Online.room, chip = $('#dkMyRoom'), btn = $('#dkRoom');
   if (btn) { const k = r ? 'ol.closeRoom' : 'ol.create'; if (btn.dataset.i18n !== k || btn.dataset.l !== LANG) { btn.dataset.i18n = k; btn.dataset.l = LANG; btn.textContent = t(k); btn.classList.toggle('warn', !!r); } }
-  if (chip) { chip.classList.toggle('hidden', !r); if (r) { chip.textContent = (r.priv ? '🔒 ' : '🔓 ') + r.code + ' · ' + tcTag(r.tc) + ' · ' + fmtClockMs(r.left); chip.title = t('ol.showRoom'); } }
+  if (chip) { chip.classList.toggle('hidden', !r); if (r) { chip.textContent = (r.priv ? '🔒 ' : '🔓 ') + r.code + ' · ' + tcTag(r.tc) + ' · ' + (r.game ? t('ol.st.play') : fmtClockMs(r.left)); chip.title = t('ol.showRoom'); } }
   if (r) document.querySelectorAll('.ol-left').forEach(el => { el.textContent = olLeftText(); });
 }
 if (window.Online && Online.available) { Online.onRoom(olOnRoom); setInterval(olRoomTick, 1000); }
 
 const decSq = s => (s.charCodeAt(0) - 97) + (+s[1] - 1) * 8;
 function startOnlineGame(gid, intro) {
+  if (net && net.gid === gid) return;
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay');
   if (lesson) endLesson && endLesson();
   if (puzzle) endPuzzle();
@@ -2952,8 +3034,8 @@ function leaveOnlineGame() {
   if (!net) return;
   net.unsub && net.unsub(); clearInterval(net.timer);
   net = null; document.body.classList.remove('in-online');
-  $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low');
-  if (window.Online && Online.uid) Online.setPresence('idle', { room: null });
+  $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low'); olClkOff($('#clkBlack')); olClkOff($('#clkWhite'));
+  if (window.Online && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }); }
 }
 function onNetGame(g) {
   if (!net || !g) return;
@@ -2974,16 +3056,18 @@ function onNetGame(g) {
   const last = positions[positions.length - 1];
   if (g.status === 'play' && last.toMove === 0 && ms.length === positions.length - 1) Online.markOver(net.gid);
   if (g.status !== 'play' && !net.done) finishOnline(g);
+  if (net && net.done) olAfter();
 }
 function netTick() {
+  if (net && net.done) { olAfter(); return; }
   if (!net || !net.game || net.done || net.game.status !== 'play') return;
   const g = net.game, p = positions[positions.length - 1]; if (!p.toMove) return;
   const now = Online.now();
   // both clocks: remaining main time, or the byoyomi countdown once it is used up (frozen while my move is being sent)
   for (const c of [BLACK, WHITE]) {
     const k = Online.clockOf(g, c === BLACK ? 'b' : 'w', c === p.toMove && !net.pending, now);
-    setStatus(c, olClockText(k), c === p.toMove && c !== net.me);
-    $(c === BLACK ? '#statusBlack' : '#statusWhite').classList.toggle('low', olClockLow(k));
+    setStatus(c, '', c === p.toMove && c !== net.me);
+    olClk($(c === BLACK ? '#clkBlack' : '#clkWhite'), k, c === p.toMove);
   }
   // the opponent ran out of time (with a little grace for latency): claim the win
   if (p.toMove !== net.me && !net.pending && !net.claiming && Online.clockOf(g, p.toMove === BLACK ? 'b' : 'w', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).finally(() => { if (net) net.claiming = false; }); }
@@ -3005,7 +3089,7 @@ async function finishOnline(g) {
   if (g.status === 'resign' || g.status === 'timeout') score = g.loser === Online.uid ? 0 : 1;
   else { const d = net.me === BLACK ? b - w : w - b; score = d > 0 ? 1 : d < 0 ? 0 : 0.5; }
   const r = await Online.applyResult(net.gid, g, score);
-  setStatus(BLACK, ''); setStatus(WHITE, ''); $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low');
+  setStatus(BLACK, ''); setStatus(WHITE, ''); $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low'); olClkOff($('#clkBlack')); olClkOff($('#clkWhite'));
   $('#resB').textContent = b; $('#resW').textContent = w; countUp($('#resB'), b); countUp($('#resW'), w);
   $('#resultTitle').textContent = t(score === 1 ? 'res.youWin' : score === 0 ? 'ol.lose' : 'res.draw');
   const why = g.status === 'resign' ? t(g.loser === Online.uid ? 'ol.youResigned' : 'ol.oppResigned') : g.status === 'timeout' ? t(g.loser === Online.uid ? 'ol.youTimeout' : 'ol.oppTimeout') : '';
@@ -3184,6 +3268,167 @@ document.addEventListener('keydown', e => {
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
+function olBlack() { return BLACK; }
+// ====================================================================== online extras (same code in shogi / reversi)
+// player names in the side panel, big clocks, rematch & room lifecycle after a room game, public chat
+function olX(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+// side-panel name: "you" tag + name (cut with … when long) + rating (always visible)
+function olPName(el, c) {
+  const g = settings.mode === 'online' && net && net.game;
+  if (!g) { el.classList.remove('pn'); el.removeAttribute('title'); el.textContent = playerName(c); return; }
+  const b = c === olBlack(), nm = b ? g.bn : g.wn, r = b ? g.br : g.wr, you = c === net.me;
+  const h = (you ? `<span class="pn-you">${olX(t('you'))}</span>` : '') + `<span class="pn-n">${olX(nm)}</span><span class="pn-r">${olX(r)}</span>`;
+  el.classList.add('pn'); el.title = (you ? t('you') + ' · ' : '') + nm + ' (' + r + ')';
+  if (el.innerHTML !== h) el.innerHTML = h;
+}
+// one side's clock (Online.clockOf result): label (main time / byoyomi) + big digits; toMove = this side is thinking
+function olClk(el, k, toMove) {
+  const byo = k.byo !== null;
+  const h = `<small>${olX(t(byo ? 'ol.clkByo' : 'ol.clkMain'))}</small><b>${byo ? Math.max(0, Math.ceil(k.byo / 1000)) : fmtClockMs(k.main)}</b>`;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+  el.classList.add('on'); el.classList.toggle('move', !!toMove); el.classList.toggle('low', olClockLow(k));
+}
+function olClkOff(el) { if (!el) return; el.classList.remove('on', 'move', 'low'); el.dataset.h = ''; el.innerHTML = ''; }
+
+// ---- after a room game: either player may ask for a rematch (the other has Online.REMATCH_MS to answer); otherwise the guest
+// leaves (declined / no answer / left the result screen) and the host's room takes entrants again. Rated games are not affected.
+function olRoomGame(g) { return !!(g && g.room && !g.rated); }
+function olPostText(g, mine) {        // why the guest left, from the point of view of this player
+  const me = Online.uid, host = g.host === me;
+  const by = g.post === 'no' ? ((g.again && g.again.by === me) ? 'opp' : 'me') : null;
+  if (host) return (g.post === 'no' ? t(by === 'me' ? 'ol.pNoMe' : 'ol.pNoOpp') + ' · ' : g.post === 'timeout' ? t('ol.pTimeout') + ' · ' : g.post === 'left' ? t('ol.pLeft') + ' · ' : '') + t('ol.pReopen');
+  return (g.post === 'no' ? t(by === 'me' ? 'ol.pNoMe' : 'ol.pNoOpp') + ' · ' : g.post === 'timeout' ? t('ol.pTimeout') + ' · ' : g.post === 'host' ? t('ol.pHost') + ' · ' : '') + t('ol.pOut');
+}
+function olAfter() {
+  const box = $('#olAgain'), btn = $('#btnAgain');
+  const g = net && net.done && net.game;
+  if (!olRoomGame(g)) { if (box) box.classList.add('hidden'); if (btn) btn.disabled = false; return; }
+  const me = Online.uid, gid = net.gid;
+  if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.againGo')); return; }
+  if (g.post && g.post !== 'again' && !net.postSeen) {
+    net.postSeen = true;
+    if (g.host !== me) { toast(olPostText(g), 3800); Online.setPresence(Online.room ? 'room' : 'idle', { room: Online.room && !Online.room.priv ? Online.room.code : null }).catch(() => {}); }
+  }
+  const pending = g.again && !g.post;
+  const left = pending ? Math.max(0, Math.ceil((Online.REMATCH_MS - (Online.now() - g.again.t)) / 1000)) : 0;
+  if (pending && left <= 0 && !net.expiring) { net.expiring = true; Online.expireRematch(gid).catch(() => {}).finally(() => { if (net) net.expiring = false; }); }
+  let h = '', muted = false;
+  if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
+  else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
+  else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  if (box) {
+    box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
+    if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+  }
+  if (btn) btn.disabled = !!(pending && g.again.by === me) || g.post === 'again';
+}
+// 「もう一度」 in a room game = ask for a rematch (or accept the opponent's request); otherwise the usual behaviour
+(() => {
+  const b = $('#btnAgain'), orig = b.onclick;
+  b.onclick = e => {
+    const g = net && net.done && net.game;
+    if (olRoomGame(g) && !g.post && !g.next) {
+      if (!(g.again && g.again.by === Online.uid)) Online.requestRematch(net.gid).catch(err => { console.warn(err); toast(t('ol.error'), 2000); });
+      return;
+    }
+    orig && orig.call(b, e);
+  };
+})();
+$('#olAgain').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !net || !net.done) return;
+  if (b.id === 'olAgainYes' || b.id === 'olAgainNo') { b.disabled = true; Online.answerRematch(net.gid, b.id === 'olAgainYes').catch(() => {}); }
+});
+// leaving the result screen of a room game in any way (振り返り, outside click, Esc, new game, …): the guest leaves the room,
+// the host stays in it but offers no rematch (the guest is told and leaves)
+new MutationObserver(() => {
+  const shown = $('#resultOverlay').classList.contains('show');
+  if (shown) { if (net && net.done) net.resShown = true; return; }
+  const g = net && net.done && net.resShown && net.game;
+  if (!olRoomGame(g) || g.post || g.next) return;
+  Online.setPost(net.gid, g.host === Online.uid ? 'host' : 'left').catch(() => {});
+}).observe($('#resultOverlay'), { attributes: true, attributeFilter: ['class'] });
+// host: the guest left and the room takes entrants again
+if (window.Online && Online.available) Online.onRoom((ev, r, g) => {
+  if (ev !== 'reopen') return;
+  toast(g ? olPostText(Object.assign({}, g, { host: Online.uid })) : t('ol.pReopen'), 3800);
+  dockRender(); olRoomTick();
+});
+
+// ---- public chat: one room shared by everyone online in this game (latest Online.CHAT_N messages; no private messages)
+const chat = { list: [], seen: -1, unsub: null };
+const olCoarse = () => matchMedia('(pointer: coarse)').matches;
+function chatVisible() { const B = document.body.classList; return B.contains('mtab-online') || (!olCoarse() && B.contains('dock-open')); }
+function chatShown() { return dock.on && !document.body.classList.contains('no-online') && (!olCoarse() || document.body.classList.contains('mtab-online')); }
+function chatStart() {
+  if (chat.unsub || !window.Online || !Online.uid) return;
+  chat.unsub = Online.watchChat(l => {
+    const top = l.length ? l[l.length - 1].n : 0;
+    chat.list = l;
+    if (chat.seen < 0 || chatVisible()) chat.seen = top;      // history present on arrival is not "unread"
+    chatRender();
+  });
+}
+function chatTime(ts) { if (typeof ts !== 'number') return ''; const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function chatRender() {
+  const el = $('#dkChat'), inp = $('#dkChatIn'); if (!el) return;
+  if (inp && inp.dataset.l !== LANG) { inp.dataset.l = LANG; inp.placeholder = t('ol.chatPh'); inp.setAttribute('aria-label', t('ol.chat')); $('#dkChatSend').textContent = t('ol.chatSend'); $('#dkChatHead').title = t('ol.chatNote'); }
+  const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  const h = chat.list.length ? chat.list.map(m => `<div class="cm${m.me ? ' me' : ''}"><b>${olX(m.name)}</b><span>${olX(m.text)}</span><time>${chatTime(m.t)}</time></div>`).join('')
+    : `<div class="ol-note small">${olX(t('ol.chatEmpty'))}<br>${olX(t('ol.chatNote'))}</div>`;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; if (bottom || chat.toBottom) el.scrollTop = el.scrollHeight; chat.toBottom = false; }
+  const n = chat.list.filter(m => m.n > chat.seen && !m.me).length, badge = $('#dkUnread'), mt = $('#mtChat');
+  badge.classList.toggle('hidden', !n); badge.querySelector('b').textContent = n > 9 ? '9+' : String(n);
+  const last = chat.list[chat.list.length - 1]; badge.title = last ? last.name + ': ' + last.text : '';
+  if (mt) mt.textContent = n ? '💬' + (n > 9 ? '9+' : n) : '';
+}
+function chatSeen() { if (chatVisible() && chat.list.length) { const top = chat.list[chat.list.length - 1].n; if (top !== chat.seen) { chat.seen = top; chatRender(); } } }
+new MutationObserver(chatSeen).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+// open the chat (PC: unfold the dock, phone: online tab) and put the cursor in the input
+function chatOpen(focus) {
+  if (olCoarse()) { if (!document.body.classList.contains('mtab-online')) mtab('online'); }
+  else if (!dock.open) dockToggle(true);
+  chatStart();
+  const el = $('#dkChat'); chat.toBottom = true; el.scrollTop = el.scrollHeight;
+  if (focus) { const inp = $('#dkChatIn'); inp.focus({ preventScroll: true }); chatKeep(); }
+  else if (olCoarse()) $('#dkChatForm').scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+// phones: keep the input above the on-screen keyboard
+function chatKeep() {
+  if (!olCoarse()) return;
+  const vv = window.visualViewport;
+  document.body.style.setProperty('--kb', vv ? Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)) + 'px' : '0px');
+  setTimeout(() => { if (document.activeElement === $('#dkChatIn')) $('#dkChatForm').scrollIntoView({ block: 'end' }); }, 250);
+}
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (document.activeElement === $('#dkChatIn')) chatKeep(); else document.body.style.setProperty('--kb', '0px'); });
+async function chatSend() {
+  const inp = $('#dkChatIn'), v = inp.value;
+  if (!v.trim()) return false;
+  if (!Online.uid) { try { await Online.init(); } catch (e) { toast(t('ol.error'), 1600); return false; } }
+  const r = await Online.sendChat(v);
+  if (r.ok) { inp.value = ''; chat.toBottom = true; return true; }
+  toast(t(r.why === 'rate' ? 'ol.chatWait' : 'ol.error'), 1600);
+  return false;
+}
+$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); chatSend(); if (olCoarse()) $('#dkChatIn').focus({ preventScroll: true }); });
+$('#dkChatIn').addEventListener('keydown', e => {
+  e.stopPropagation();                        // typing never reaches the board / record shortcuts
+  if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }
+  if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  chatSend(); if (!olCoarse()) e.target.blur();   // back to the board: game keys work again
+});
+$('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
+$('#dkChatIn').addEventListener('blur', () => document.body.style.setProperty('--kb', '0px'));
+$('#dkUnread').addEventListener('click', e => { e.stopPropagation(); chatOpen(!olCoarse()); });
+// Enter anywhere (not in a field, no dialog open) = type in the chat
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  const tg = e.target; if (tg && tg.closest && tg.closest('input,textarea,select,[contenteditable="true"]')) return;
+  if (document.querySelector('.overlay.show') || !chatShown()) return;
+  e.preventDefault(); chatOpen(true);
+});
+if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStart(); }, 1000);
 </script>
 </body>
 </html>

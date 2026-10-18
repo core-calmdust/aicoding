@@ -220,13 +220,18 @@
   }
 
   // ---------------------------------------------------------------- rooms (unrated): open = listed under rooms, priv (closed) = joined only with the code (the key)
-  // The room lives on until the host closes it (closeRoom), someone joins (onMatched), it expires (ROOM_TTL, deleted by the host's client)
-  // or the host disconnects (onDisconnect). Closing the online dialog does not touch it.
+  // The room lives on until the host closes it (closeRoom), it expires (ROOM_TTL, deleted by the host's client) or the host disconnects
+  // (onDisconnect). Closing the online dialog does not touch it. A guest joining sets rooms/<code>/game (+ guest); after that game the
+  // two may agree on a rematch (games/<gid>/again → post 'again' → the host creates the next game, swapped colours, and sets next).
+  // Otherwise post records why the guest left ('no' declined, 'timeout' no answer in REMATCH_MS, 'left' guest left, 'host' host declined)
+  // and the host's client reopens the room (game/guest cleared, fresh expiry) for the next entrant.
+  const REMATCH_MS = 10000;
   let roomCode = null, roomTc = null, roomPriv = false, roomTitle = '', roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
+  let roomGame = null, roomG = null, roomGameUnsub = null, roomBusy = false;
   const roomListeners = new Set();
-  const roomEmit = ev => roomListeners.forEach(f => { try { f(ev, room()); } catch (e) { console.warn(e); } });
-  function onRoom(f) { roomListeners.add(f); return () => roomListeners.delete(f); }   // ev: 'open' | 'extend' | 'closed' | 'expired' | 'gone' | 'matched'
-  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, title: roomTitle, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()) } : null);
+  const roomEmit = (ev, x) => roomListeners.forEach(f => { try { f(ev, room(), x); } catch (e) { console.warn(e); } });
+  function onRoom(f) { roomListeners.add(f); return () => roomListeners.delete(f); }   // ev: 'open' | 'extend' | 'closed' | 'expired' | 'gone' | 'matched' | 'reopen' (x = the finished game)
+  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, title: roomTitle, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()), game: roomGame } : null);
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   async function createRoom({ onMatched, onExpired, priv, tc, title }) {
     title = String(title || '').replace(/\s+/g, ' ').trim().slice(0, 24);
@@ -235,7 +240,7 @@
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
       const expires = db.now() + ROOM_TTL;
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), expires, game: null, priv: !!priv, title } : undefined);
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), expires, game: null, guest: null, priv: !!priv, title } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid || r.value.expires !== expires) continue;
       roomCode = code; roomTc = tc; roomPriv = !!priv; roomTitle = title; roomExpires = expires; roomCbs = { onMatched, onExpired };
       setPresence('room', { room: priv ? null : code });
@@ -243,7 +248,19 @@
       let seen = false;
       roomUnsub = db.on('rooms/' + code, v => {
         if (roomCode !== code) return;
-        if (v && v.host === uid) { seen = true; if (v.game) { const cb = roomCbs.onMatched; roomEnd(); db.remove('rooms/' + code); roomEmit('matched'); cb && cb(v.game); } return; }
+        if (v && v.host === uid) {
+          seen = true;
+          if (typeof v.expires === 'number' && !v.game) roomExpires = v.expires;
+          if (v.game && v.game !== roomGame) {            // someone joined (or a rematch started): the room stays with the host
+            roomWatchGame(v.game);
+            const cb = roomCbs && roomCbs.onMatched; roomEmit('matched'); cb && cb(v.game);
+          } else if (!v.game && roomGame) {               // the guest left: the room takes entrants again
+            const g = roomG; roomWatchGame(null);
+            if (presState !== 'play' || !g || g.status !== 'play') setPresence('room', { room: roomPriv ? null : code });
+            roomEmit('reopen', g);
+          }
+          return;
+        }
         if (seen || v) { roomEnd(); if (!v) roomEmit('gone'); }       // deleted elsewhere (e.g. another tab) or taken over after expiry
       });
       roomTimer = setInterval(roomCheck, 5000);
@@ -253,22 +270,63 @@
     throw new Error('room');
   }
   function roomCheck() {
-    if (!roomCode || db.now() < roomExpires) return;
+    if (!roomCode) return;
+    if (roomGame) {          // a game in the room (no expiry); after it, drop a guest who went offline without leaving
+      const g = roomG, gid = roomGame;
+      if (g && g.status !== 'play' && !g.post) {
+        const guest = g.b === uid ? g.w : g.b;
+        db.get('presence/' + guest).then(p => { if (!p && roomGame === gid) setPost(gid, 'left'); }).catch(() => {});
+        if (g.again && db.now() - g.again.t > REMATCH_MS + 2000) expireRematch(gid);
+      }
+      return;
+    }
+    if (db.now() < roomExpires) return;
     const cb = roomCbs && roomCbs.onExpired;
     closeRoom('expired').then(() => cb && cb());
+  }
+  // the host follows the game played in the own room: create the rematch / reopen the room when the guest leaves
+  function roomWatchGame(gid) {
+    roomGameUnsub && roomGameUnsub(); roomGameUnsub = null;
+    roomGame = gid || null; roomG = null;
+    if (!gid) return;
+    roomGameUnsub = db.on('games/' + gid, g => { if (roomGame !== gid) return; roomG = g; roomFollow(gid, g); });
+  }
+  async function roomFollow(gid, g) {
+    if (roomBusy || roomGame !== gid || !roomCode) return;
+    const code = roomCode;
+    if (g && (g.status === 'play' || !g.post || g.next)) return;
+    roomBusy = true;
+    try {
+      if (g && g.post === 'again') {      // both agreed: next game in the same room, colours swapped
+        const ngid = db.push('games');
+        const meB = g.w === uid, me = { n: profile.name, r: profile.rating }, op = g.b === uid ? { n: g.wn, r: g.wr } : { n: g.bn, r: g.br };
+        const B = meB ? me : op, W = meB ? op : me;
+        await db.set('games/' + ngid, { b: g.w, w: g.b, bn: B.n, wn: W.n, br: B.r, wr: W.r, moves: '', status: 'play', rated: false, room: code, host: uid, ...tcFields(g.tc), created: db.stamp(), t: db.stamp() });
+        const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = ngid; return cur; });
+        if (r.committed && r.value && r.value.game === ngid) await db.update('games/' + gid, { next: ngid });
+        else await db.remove('games/' + ngid);
+      } else {                              // the guest leaves: reopen with a fresh expiry
+        await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = null; cur.guest = null; cur.expires = db.now() + ROOM_TTL; return cur; });
+      }
+    } catch (e) { console.warn(e); } finally {
+      roomBusy = false;
+      setTimeout(() => { if (roomGame === gid && roomG && roomG !== g) roomFollow(gid, roomG); }, 0);    // changed meanwhile
+    }
   }
   // stop watching the own room (does not delete it)
   function roomEnd() {
     roomUnsub && roomUnsub(); roomUnsub = null; clearInterval(roomTimer); roomTimer = 0;
+    roomWatchGame(null);
     if (roomCode) db.cancelDisconnect('rooms/' + roomCode);
     roomCode = null; roomCbs = null; roomExpires = 0;
   }
-  // delete the own room (部屋を閉じる / expiry)
+  // delete the own room (部屋を閉じる / expiry); a guest still in it is told that there is no rematch
   async function closeRoom(why) {
     if (!roomCode) return;
-    const c = roomCode; roomEnd();
+    const c = roomCode, gid = roomGame; roomEnd();
+    if (gid) setPost(gid, 'host').catch(() => {});
     if (presOn && presState === 'room') setPresence('idle', { room: null });
-    await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid && !cur.game ? null : undefined));
+    await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid ? null : undefined));
     roomEmit(why === 'expired' ? 'expired' : 'closed');
   }
   // restart the expiry timer (the host looked at the room again)
@@ -287,11 +345,23 @@
     const gid = db.push('games');
     const black = Math.random() < 0.5 ? uid : rm.host, white = black === uid ? rm.host : uid;
     const names = { [uid]: profile.name, [rm.host]: rm.name }, rates = { [uid]: profile.rating, [rm.host]: rm.rating };
-    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, ...tcFields(rm.tc), created: db.stamp(), t: db.stamp() });
-    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; return cur; });
+    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, room: code, host: rm.host, ...tcFields(rm.tc), created: db.stamp(), t: db.stamp() });
+    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; cur.guest = uid; return cur; });
     if (!(r.committed && r.value && r.value.game === gid)) { await db.remove('games/' + gid); return null; }
     return gid;
   }
+  // ---- after a room game (either player; the host's client acts on the result in roomFollow)
+  const postable = (g, v) => g && !g.post && !g.next && g.room && !g.rated && (g.status !== 'play' || v === 'host');
+  // the guest leaves / the host declines (v: 'left' | 'host'); no-op once decided
+  const setPost = (gid, v) => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g, v)) return; g.post = v; return g; });
+  // ask for a rematch; if the opponent already asked, this accepts it
+  const requestRematch = gid => db.txn('games/' + gid, g => {
+    if (g === null) return null; if (!postable(g)) return;
+    if (g.again) { if (g.again.by === uid) return; g.post = 'again'; return g; }
+    g.again = { by: uid, t: db.stamp() }; return g;
+  });
+  const answerRematch = (gid, yes) => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g) || !g.again || g.again.by === uid) return; g.post = yes ? 'again' : 'no'; return g; });
+  const expireRematch = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g) || !g.again || db.now() - g.again.t < REMATCH_MS) return; g.post = 'timeout'; return g; });
 
   // cancel the rated-game search only (closing the online dialog)
   async function leaveLobby() {
@@ -307,7 +377,7 @@
     lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub();
     lobbyUnsub = selfUnsub = null;
     if (lobbyState) { lobbyState = null; db.cancelDisconnect('lobby/' + uid); await db.remove('lobby/' + uid); }
-    if (roomCode) { const c = roomCode; roomEnd(); await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid && !cur.game ? null : undefined)); roomEmit('closed'); }
+    if (roomCode) { const c = roomCode, gid = roomGame; roomEnd(); if (gid) setPost(gid, 'host').catch(() => {}); await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid ? null : undefined)); roomEmit('closed'); }
   }
 
   // ---------------------------------------------------------------- games
@@ -356,9 +426,34 @@
     return Object.entries(all).filter(([, p]) => p && p.games > 0).map(([id, p]) => ({ id, ...p, me: id === uid })).sort((a, b) => b.rating - a.rating).slice(0, n);
   }
 
+  // ---------------------------------------------------------------- public chat (everyone online in this game; no private messages)
+  // A ring of CHAT_N slots: chat/seq counts messages (transaction), message n goes to chat/msgs/<n % CHAT_N>, overwriting the oldest,
+  // so the database never holds more than the latest CHAT_N messages.
+  const CHAT_N = 20, CHAT_LEN = 100, CHAT_GAP = 2000;
+  let chatLast = 0;
+  const chatClean = s => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_LEN).trim();
+  function watchChat(cb) {
+    return db.on('chat/msgs', v => cb(Object.values(v || {}).filter(m => m && typeof m.n === 'number' && typeof m.text === 'string').sort((a, b) => a.n - b.n).slice(-CHAT_N).map(m => ({ ...m, me: m.uid === uid }))));
+  }
+  // → { ok } | { ok: false, why: 'empty' | 'rate' | 'error', wait }
+  async function sendChat(text) {
+    text = chatClean(text);
+    if (!text) return { ok: false, why: 'empty' };
+    const now = Date.now();
+    if (now - chatLast < CHAT_GAP) return { ok: false, why: 'rate', wait: CHAT_GAP - (now - chatLast) };
+    chatLast = now;
+    try {
+      const r = await db.txn('chat/seq', n => (typeof n === 'number' ? n : 0) + 1);
+      if (!r.committed || typeof r.value !== 'number') return { ok: false, why: 'error' };
+      await db.set('chat/msgs/' + (r.value % CHAT_N), { n: r.value, uid, name: profile.name, text, t: db.stamp() });
+      return { ok: true };
+    } catch (e) { console.warn(e); return { ok: false, why: 'error' }; }
+  }
+
   window.Online = {
-    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, ROOM_TTL, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; }, get room() { return db ? room() : null; },
+    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, ROOM_TTL, REMATCH_MS, CHAT_N, CHAT_LEN, CHAT_GAP, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; }, get room() { return db ? room() : null; },
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
+    setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat,
     watchGame, sendMove, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),
   };
