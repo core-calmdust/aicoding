@@ -418,8 +418,8 @@ bdi{unicode-bidi:isolate}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
-  :root{--plate:32px;--u:min((var(--vh) - 20px - 2 * var(--plate) - 16px) / 4.2, (100vw - 300px) / 9.7, 110px)}
-  .app{padding:10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));gap:16px;grid-template-columns:auto minmax(220px, 340px)}
+  :root{--plate:32px;--u:min((var(--vh) - 20px - 2 * var(--plate) - 16px) / 4.2, (100vw - 270px) / 9.7, 110px)}
+  .app{padding:10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));gap:16px;grid-template-columns:auto minmax(214px, 340px)}
   .board-area{gap:8px}
   .plate{padding:0 10px;gap:8px;border-radius:9px}
   .plate .pdisc{width:16px;height:16px}
@@ -577,6 +577,14 @@ body.no-bganim #bgfx{display:none}
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
+body.rotwrap{overflow:hidden!important;height:100%}
+body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
+#btnRot.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
+@media not all and (pointer: coarse){#btnRot{display:none}}
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  .controls{grid-template-columns:repeat(3,1fr)!important}
+  .controls .btn{flex-direction:row;justify-content:center;gap:4px;font-size:10.5px;padding:7px 2px}
+}
 </style>
 </head>
 <body>
@@ -601,7 +609,7 @@ body.no-bganim #bgfx{display:none}
   <aside class="side"><div class="side-in">
     <div class="brand">
       <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back">Luxe Mancala<small data-i18n="sub"></small></h1></div>
-      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+      <span class="brand-r"><button id="btnRot" class="snd" data-i18n-title="rot.title" aria-label="Landscape"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M8 3.5h6.5a3 3 0 0 1 3 3"/><path d="M15.5 1.8l2 1.7-2 1.7"/></svg></button><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
 
     <div class="card lesson-card" id="lessonCard">
@@ -806,8 +814,32 @@ body.no-bganim #bgfx{display:none}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018tb"></script>
+<script src="i18n.js?v=20261018rot"></script>
 <script src="engine.js"></script>
-<script src="app.js?v=20261018tb"></script>
+<script>
+// "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
+// embedded page sees a landscape viewport (its own layout, hit testing and touch coordinates stay correct)
+(function () {
+  var KEY = 'aicoding-mancala-landscape', embed = /[?&]embed=1/.test(location.search), on = false;
+  window.__EMBED = embed;
+  try { on = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  if (!embed && on && matchMedia('(pointer: coarse)').matches) {
+    window.__ROTWRAP = true;
+    document.body.classList.add('rotwrap');
+    var f = document.createElement('iframe'); f.id = 'rotFrame'; f.title = 'Luxe Mancala'; f.setAttribute('allow', 'fullscreen');
+    f.src = location.pathname + '?embed=1' + location.search.replace(/^\?/, '&') + location.hash;
+    document.body.appendChild(f);
+    var lastW = 0, lastP = null;
+    var fit = function () {
+      var W = innerWidth, H = innerHeight, p = H > W;
+      if (W === lastW && p === lastP) return;   // the browser bars only changed the height: keep the size
+      lastW = W; lastP = p;
+      f.style.cssText = p ? 'position:fixed;left:' + W + 'px;top:0;width:' + H + 'px;height:' + W + 'px;transform:rotate(90deg);transform-origin:0 0;border:0;display:block'
+                          : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
+    };
+    fit(); addEventListener('resize', fit);
+  } else document.write('<script src="app.js?v=20261018rot"><\/script>');
+})();
+</script>
 </body>
 </html>

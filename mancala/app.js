@@ -1513,6 +1513,31 @@ $('#rsCancel').onclick = () => $('#resumeOverlay').classList.remove('show');
 $('#rsRestart').onclick = () => { $('#resumeOverlay').classList.remove('show'); openNewDialog(); };
 $('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
 
+// ====================================================================== landscape option (phones)
+const ROT_KEY = 'aicoding-mancala-landscape';
+function rotOn() { try { return localStorage.getItem(ROT_KEY) === '1'; } catch (e) { return false; } }
+function renderRotBtn() { const b = $('#btnRot'); if (b) b.classList.toggle('on', rotOn()); }
+$('#btnRot').onclick = async () => {
+  const want = !rotOn();
+  try { localStorage.setItem(ROT_KEY, want ? '1' : '0'); } catch (e) {}
+  renderRotBtn();
+  if (want) {
+    toast(t('rot.title') + ' ON', 1200);
+    if (window.innerWidth > window.innerHeight) return;            // already held sideways
+    let locked = false;
+    try {                                                          // Android: real fullscreen + orientation lock
+      if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+      if (screen.orientation && screen.orientation.lock) { await screen.orientation.lock('landscape'); locked = true; }
+    } catch (e) {}
+    if (!locked) { try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {} location.reload(); }   // iOS etc.: turned iframe
+  } else {
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+    if (window.__EMBED && window.top !== window) window.top.location.reload();
+  }
+};
+if (window.__EMBED) document.querySelectorAll('a.home, a.series').forEach(a => { a.target = '_top'; });
+renderRotBtn();
+
 // ====================================================================== boot
 // animated background: off with the animation setting, paused while the tab is hidden
 function applyBg() { document.body.classList.toggle('no-bganim', !settings.anim); }
@@ -1548,7 +1573,7 @@ function fixSize() {
   fixW = W; fixPortrait = portrait;
   root.setProperty('--vh', H + 'px');
   if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - 172) / 9.7, 100)) + 'px');
-  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 20 - 2 * 32 - 16) / 4.2, (W - 300) / 9.7, 110)) + 'px');
+  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 20 - 2 * 32 - 16) / 4.2, (W - 270) / 9.7, 110)) + 'px');
   else root.removeProperty('--u');
 }
 fixSize();
