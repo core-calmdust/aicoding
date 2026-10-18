@@ -54,3 +54,8 @@ dots/ の Lv9/Lv10 を 4×4 マス（5×5 点、40 辺）で初手から完全�
 - [~] 定石生成: phase1 完了、AI先手側（book_1,2 計 約8.5万局面）05:25 完了。AI後手側（book_3,4）実行中、見込み 3 時間程度（〜08:30 JST）
 - [x] engine.js 組込み（wasm + 定石 + 保証値）済み。Node / Playwright で動作確認済み（エラーなし）。定石完成後に build4.sh で dots4book.bin を再生成すること
 - [ ] 検証（Lv10 vs ランダム/Lv8、ブラウザ）
+
+## 検証メモ
+- 05:40 AI先手のみ（定石 side0 完成時点、bookgen と CPU 競合下）: Lv10 vs Lv8 6局 + vs ランダム 8局。
+  AI の判断 209 手すべて厳密最適（oracle 照合）。定石外の最大思考 0.95 秒（ply10）。AI は全局 8 箱以上。
+  ログ: scratchpad g_s0_*.jsonl（check.js で照合）。

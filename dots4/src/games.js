@@ -8,7 +8,7 @@ let rs = seed >>> 0 || 1; const rand = () => { rs ^= rs << 13; rs >>>= 0; rs ^= 
 const hex = p => { let v = 0n; for (let e = 0; e < 40; e++) if (p.drawn[e]) v |= 1n << BigInt(e); return v.toString(16); };
 const res = [];
 for (let g = 0; g < N; g++) {
-  const aiSide = g % 2;   // 0: AI moves first
+  const aiSide = process.env.SIDE !== undefined ? +process.env.SIDE : g % 2;   // 0: AI moves first
   const p = new E.Pos(G), hist = []; const sc = [0, 0]; let turn = 0;
   while (p.undrawn > 0) {
     let mv, rec = null;
@@ -19,6 +19,7 @@ for (let g = 0; g < N; g++) {
       mv = r.move;
       if (!r.forced && p.legal().length > 1) rec = { g, ply: hist.length, mask: hex(p), move: mv, ms: Date.now() - t0, exact: !!r.exact, book: !!r.book, value: r.value, lead };
     } else {
+      if (process.env.OPPRAND && hist.length < 2 && turn !== aiSide) mv = E.chooseMove(p, 1, rand).move; else
       mv = opp === 'random' ? E.chooseMove(p, 1, rand).move : E.chooseMove(p, +opp, rand, lead, hist.slice()).move;
     }
     if (rec) fs.appendFileSync(out, JSON.stringify(rec) + '\n');
