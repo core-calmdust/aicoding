@@ -405,6 +405,25 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ol-list small{color:var(--dim)}
 .ol-priv{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:12px}
 .ol-priv input{accent-color:var(--brass)}
+/* online time control selector */
+.ol-tcbox{margin:0 0 12px}
+.ol-tcl{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 6px}
+.ol-tc{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.ol-tc button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:7px;color:var(--muted);font:inherit;font-size:13px;line-height:1.25;background:none;border:0;cursor:pointer;white-space:nowrap}
+.ol-tc button small{font-size:10.5px;color:var(--dim)}
+.ol-tc button:hover{color:var(--text)}
+.ol-tc button.sel{background:rgba(201,169,97,.2);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(201,169,97,.55);font-weight:700}
+.ol-tc button.sel small{color:var(--text);font-weight:400}
+.ol-tcinfo{color:var(--accent)!important}
+.dk-tc{flex:none;padding:2px;border-radius:8px}
+.dk-tc button{padding:4px 9px;font-size:12px;border-radius:6px}
+.dk-tc button small{display:none}
+@media (pointer: coarse){
+  body.mtab-online .dk-tc{order:5;width:100%}
+  body.mtab-online .dk-tc button{padding:7px 4px}
+  body.mtab-online .dk-tc button small{display:block}
+  body.mtab-online .dock-bar .dk-btn{order:6}
+}
 .ol-wait{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0;text-align:center}
 .ol-wait small{font-size:12px;color:var(--dim);line-height:1.6}
 .ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent)}
@@ -649,6 +668,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
     <span class="dk-stat" id="dkStat"></span>
     <span class="dk-sp"></span>
     <span class="dk-me" id="dkMe"></span>
+    <div class="ol-tc dk-tc" id="dkTc"></div>
     <button id="dkAuto" class="dk-btn go" data-i18n="ol.auto"></button>
     <button id="dkRoom" class="dk-btn" data-i18n="ol.create"></button>
     <button id="dkToggle" class="dk-btn tg" aria-label="toggle">▲</button>
@@ -661,11 +681,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 </div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
 
-<script src="i18n.js?v=20261018ol"></script>
+<script src="i18n.js?v=20261018tc"></script>
 <script src="engine.js?v=20261018ol"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
-<script src="online.js?v=20261018ol"></script>
+<script src="online.js?v=20261018tc"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -2473,6 +2493,32 @@ let net = null;          // active online game: {gid, game, me, opp, unsub, time
 let olView = 'menu', olSearch = null, olRoom = null, olList = [];
 const olEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function olFmtWait(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+// ---- time control (chosen before searching / creating a room; remembered per browser)
+const OL_TC_KEY = 'shogi-online-tc';
+function olTc() { try { const v = localStorage.getItem(OL_TC_KEY); if (Online.TC[v]) return v; } catch (e) {} return 'fast'; }
+function olSetTc(v) {
+  if (!Online.TC[v]) return;
+  try { localStorage.setItem(OL_TC_KEY, v); } catch (e) {}
+  document.querySelectorAll('.ol-tc button').forEach(b => { b.classList.toggle('sel', b.dataset.tc === v); b.setAttribute('aria-checked', String(b.dataset.tc === v)); });
+}
+const tcName = id => (window.Online && Online.TC[id] ? t('ol.tc.' + id) : t('ol.tc.legacy'));
+const tcTag = id => (window.Online && Online.TC[id] ? t('ol.tcn.' + id) : t('ol.tc.legacy'));
+function olTcSel(cls) {
+  const cur = olTc();
+  return `<div class="ol-tc ${cls || ''}" role="radiogroup" aria-label="${olEsc(t('ol.tc'))}">` + Online.TC_IDS.map(id => `<button type="button" role="radio" data-tc="${id}" class="${id === cur ? 'sel' : ''}" aria-checked="${id === cur}" title="${olEsc(t('ol.tc.' + id))}"><b>${t('ol.tcn.' + id)}</b><small>${t('ol.tcd.' + id)}</small></button>`).join('') + '</div>';
+}
+document.addEventListener('click', e => { const b = e.target.closest('.ol-tc button'); if (b) olSetTc(b.dataset.tc); });
+// clock text of one side (Online.clockOf result)
+function olClockText(k) { return k.byo === null ? fmtClockMs(k.main) : t('ol.byo', { s: Math.max(0, Math.ceil(k.byo / 1000)) }); }
+function fmtClockMs(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+const olClockLow = k => k.moving && (k.byo !== null ? k.byo <= 10000 : k.main <= 10000);
+function olTcToast(g, extra) {
+  const nm = tcName(g.tc);
+  toast((extra ? extra + ' · ' : '') + (g.rated && Online.TC[g.tc] && g.tc !== olTc() ? t('ol.tcCross', { tc: nm }) : t('ol.tcStart', { tc: nm })), 3200);
+}
+function olSearchTc(s) {
+  return `<small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(s.tc || olTc()) })}</small><small>${s.crossIn > 0 || s.crossIn == null ? t('ol.crossIn', { s: Math.ceil((s.crossIn == null ? Online.CROSS_WAIT : s.crossIn) / 1000) }) : t('ol.crossOn')}</small>`;
+}
 async function openOnline(joinCode) {
   showOverlay('#onlineOverlay');
   if (!window.Online || !Online.available) { olRender('setup'); return; }
@@ -2495,6 +2541,7 @@ function olRender(view) {
     B.innerHTML = `
       <p class="ol-note" style="margin:-8px 0 14px">${t('ol.desc')}</p>
       <div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(Pr.name)}" aria-label="name"><span class="ol-r">R <b>${Pr.rating}</b><small>${t('ol.record', { g: Pr.games || 0, w: Pr.wins || 0, l: Pr.losses || 0, d: Pr.draws || 0 })}</small></span></div>
+      <div class="ol-tcbox"><div class="ol-tcl">${t('ol.tc')}</div>${olTcSel()}</div>
       <div class="ol-acts">
         <button class="mbtn go" id="olAuto">${t('ol.auto')}</button>
         <button class="mbtn" id="olCreate">${t('ol.create')}</button>
@@ -2518,16 +2565,16 @@ function olRender(view) {
   }
   if (olView === 'search') {
     const s = olSearch || {};
-    B.innerHTML = `<div class="ol-wait"><div class="ol-spin"></div><b>${t('ol.searching')}</b><small>${t('ol.searchInfo', { n: s.waiting || 0, w: s.window || 100, t: olFmtWait(s.wait || 0) })}</small></div>
+    B.innerHTML = `<div class="ol-wait"><div class="ol-spin"></div><b>${t('ol.searching')}</b><small>${t('ol.searchInfo', { n: s.waiting || 0, w: s.window || 100, t: olFmtWait(s.wait || 0) })}</small>${olSearchTc(s)}</div>
       <div class="ol-sub">${t('ol.lobby', { n: olList.length })}</div>
-      <div class="ol-list">${olList.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)}${p.game ? ' <small>' + t('ol.matched') + '</small>' : ''}</span><b>${p.rating}</b></div>`).join('')}</div>
+      <div class="ol-list">${olList.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small>${olEsc(tcTag(p.tc))}</small>${p.game ? ' <small>' + t('ol.matched') + '</small>' : ''}</span><b>${p.rating}</b></div>`).join('')}</div>
       <div class="ol-acts"><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
     $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
     return;
   }
   if (olView === 'room') {
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
-    B.innerHTML = `<div class="ol-wait"><small>${t('ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small>${t('ol.roomInfo')}</small></div>
+    B.innerHTML = `<div class="ol-wait"><small>${t('ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t('ol.roomInfo')}</small></div>
       <div class="ol-acts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: '将棋 SHOGI', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
     $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
@@ -2535,19 +2582,20 @@ function olRender(view) {
 }
 function olPriv() { try { return !!localStorage.getItem('shogi-room-priv'); } catch (e) { return false; } }
 async function olStartSearch() {
-  olSearch = { waiting: 0, window: 100, wait: 0 }; olList = [];
+  olSearch = { waiting: 0, window: 100, wait: 0, tc: olTc() }; olList = [];
   olRender('search');
   try {
     await Online.enterLobby({
       onList: list => { olList = list; if (olView === 'search') olRender(); },
       onStatus: s => { olSearch = s; if (olView === 'search') olRender(); },
       onMatched: gid => startOnlineGame(gid),
+      tc: olTc(),
     });
   } catch (e) { console.warn(e); olRender('error'); }
 }
 async function olCreateRoom() {
   olRender('loading');
-  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olPriv() }); olRender('room'); }
+  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olPriv(), tc: olTc() }); olRender('room'); }
   catch (e) { console.warn(e); toast(t('ol.error'), 2000); olRender('menu'); }
 }
 $('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) { try { await Online.leave(); } catch (e) {} } };
@@ -2584,7 +2632,7 @@ function onNetGame(g) {
   const me = g.b === Online.uid ? 0 : 1, first = net.first;
   net.first = false;
   net.me = me; net.opp = me === 0 ? g.w : g.b; game.human = me;
-  if (first) { flip = me === 1; toast(t('ol.youAre', { c: cname(me) }), 1800); }
+  if (first) { flip = me === 1; olTcToast(g, t('ol.youAre', { c: cname(me) })); }
   const ms = String(g.moves || '').split(' ').filter(Boolean);
   let reset = false;
   for (let i = 0; i < Math.min(ms.length, game.moves.length); i++) if (ms[i] !== game.moves[i]) { reset = true; break; }
@@ -2624,16 +2672,17 @@ function netMarkOver() {
 }
 function netTick() {
   if (!net || !net.game || net.done || net.game.status !== 'play' || game.over) return;
-  const side = (game.moves.length + (sideAt0() ? 1 : 0)) & 1;
-  const left = net.pending ? Online.MOVE_LIMIT : Online.MOVE_LIMIT - (Online.now() - (net.game.t || Online.now()));
-  const s = Math.max(0, Math.ceil(left / 1000));
+  const g = net.game, side = (game.moves.length + (sideAt0() ? 1 : 0)) & 1, now = Online.now(), byo = Online.tcOf(g).byo;
+  // both clocks: remaining main time (+ byoyomi), or the byoyomi countdown once it is used up (frozen while my move is being sent)
   for (const c of [0, 1]) {
     const el = $(c ? '#clkWhite' : '#clkBlack');
-    if (c === side) { el.classList.add('on'); el.textContent = t('ol.left', { s }); el.classList.toggle('low', s <= 10); }
-    else el.classList.remove('on', 'low');
+    const k = Online.clockOf(g, c ? 'w' : 'b', c === side && !net.pending, now);
+    el.classList.add('on');
+    el.textContent = k.byo === null ? `${fmtClock(k.main / 1000)}  +${byo / 1000}s` : olClockText(k);
+    el.classList.toggle('low', olClockLow(k));
   }
   // the opponent ran out of time (with a little grace for latency): claim the win
-  if (side !== net.me && left < -3000 && !net.claiming) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).catch(() => {}).finally(() => { if (net) net.claiming = false; }); }
+  if (side !== net.me && !net.pending && !net.claiming && Online.clockOf(g, side ? 'w' : 'b', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).catch(() => {}).finally(() => { if (net) net.claiming = false; }); }
 }
 function netMove(m) {
   if (!net || !canInteract()) return;
@@ -2681,9 +2730,10 @@ function dockRender() {
   const me = Online.profile;
   $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
   $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
+  const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"');
   if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : '') : '';
   $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
-  $('#dkRooms').innerHTML = dock.rooms.length ? dock.rooms.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${olEsc(r.name)} <small>R ${r.rating}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  $('#dkRooms').innerHTML = dock.rooms.length ? dock.rooms.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
   $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
 }
 async function dockStart() {
