@@ -2604,6 +2604,8 @@ function tutorialStepStart(i) {
     const t = tutorial;
     t.spawnT = 0;
     comets = []; enemyBullets = [];
+    // 前のステップで溜まった回数を持ち越さない（グレイズ等が即クリアになるのを防ぐ）
+    t.glazes = 0; t.kills = 0; t.items = 0; t.smash = 0;
     if (i === 4) { monsters = []; }
     if (i === 5) { energy = config.energyTotal * 0.3; items = []; }
     if (i === 7) {
