@@ -2339,7 +2339,7 @@ const TUTORIAL_STEPS = [
       progress: t => `低速で移動 ${Math.min(100, Math.floor(t.slowFrames / 70 * 100))}%` },
     { title: '彗星をよける', text: '降ってくる彗星に当たらないように 8 秒間よけ続けよう', goal: t => t.survive > 8,
       progress: t => `${Math.min(8, t.survive).toFixed(1)} / 8.0 秒`, comets: 0.9 },
-    { title: 'グレイズ', text: '彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう', goal: t => t.glazes >= 5,
+    { title: 'グレイズ', text: '彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう\nグレイズでジャラジャラ稼ぐほどスコアが伸び、回復アイテムが出やすくなる', goal: t => t.glazes >= 5,
       progress: t => `グレイズ ${Math.min(5, t.glazes)} / 5`, comets: 1.4 },
     { title: 'ショット', text: K('X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）', 'X / Y ボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）'), goal: t => t.kills >= 2,
       progress: t => `撃破 ${Math.min(2, t.kills)} / 2` },
@@ -2453,7 +2453,10 @@ function updateTutorial(dt) {
 function drawTutorialPanel(ctx2) {
     const t = tutorial;
     if (!t) return;
-    const cx = HUD_W / 2, y0 = 56, w = 720, h = 80;
+    const st0 = t.step < TUTORIAL_STEPS.length ? TUTORIAL_STEPS[t.step] : null;
+    const lines = st0 ? (typeof st0.text === 'function' ? st0.text() : st0.text).split('\n') : [''];
+    const extra = (lines.length - 1) * 24;
+    const cx = HUD_W / 2, y0 = 56, w = 720, h = 80 + extra;
     ctx2.save();
     ctx2.fillStyle = 'rgba(6, 2, 20, 0.5)';
     ctx2.strokeStyle = 'rgba(255, 255, 255, 0.25)';
@@ -2477,19 +2480,19 @@ function drawTutorialPanel(ctx2) {
     ctx2.fillText(`TUTORIAL  ${t.step + 1} / ${TUTORIAL_STEPS.length}　${st.title}`, cx, y0 + 19);
     ctx2.fillStyle = '#ffffff';
     ctx2.font = `600 17px ${config.fontFamily}`;
-    ctx2.fillText(typeof st.text === 'function' ? st.text() : st.text, cx, y0 + 44, w - 30);
+    lines.forEach((ln, k) => ctx2.fillText(ln, cx, y0 + 44 + k * 24, w - 30));
     if (t.clearT > 0) {
         ctx2.fillStyle = `hsl(${(frameCount * 8) % 360}, 100%, 70%)`;
         ctx2.font = `800 20px ${config.fontFamily}`;
-        ctx2.fillText('CLEAR!', cx, y0 + 69);
+        ctx2.fillText('CLEAR!', cx, y0 + 69 + extra);
     } else if (t.hitFlash > 0) {
         ctx2.fillStyle = '#ff5577';
         ctx2.font = `700 15px ${config.fontFamily}`;
-        ctx2.fillText('当たった！ もう一度', cx, y0 + 69);
+        ctx2.fillText('当たった！ もう一度', cx, y0 + 69 + extra);
     } else {
         ctx2.fillStyle = '#b8c4ff';
         ctx2.font = `600 15px ${config.fontFamily}`;
-        ctx2.fillText(st.progress(t), cx, y0 + 69);
+        ctx2.fillText(st.progress(t), cx, y0 + 69 + extra);
     }
     // ステップの進行ドット
     for (let k = 0; k < TUTORIAL_STEPS.length; k++) {
