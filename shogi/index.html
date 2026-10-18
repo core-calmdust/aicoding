@@ -417,6 +417,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ol-list b{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:500}
 .ol-list small{color:var(--dim)}
 /* room type (open = listed / closed = key) and the open-room list in the online menu */
+.ol-title{display:flex;flex-direction:column;gap:3px;margin-top:8px}.ol-title small{color:var(--dim);font-size:11px}.ol-title input{width:100%;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:14px}
+.ol-rtitle{color:var(--accent);font-weight:700;overflow-wrap:anywhere}
 .ol-rk{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
 .ol-rk button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border-radius:7px;color:var(--muted);font:inherit;font-size:13px;line-height:1.25;background:none;border:0;cursor:pointer}
 .ol-rk button small{font-size:10.5px;color:var(--dim);text-align:center}
@@ -746,11 +748,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 </div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
 
-<script src="i18n.js?v=20261018ro"></script>
+<script src="i18n.js?v=20261018rt"></script>
 <script src="engine.js?v=20261018ol"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
-<script src="online.js?v=20261018ro"></script>
+<script src="online.js?v=20261018rt"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -2733,6 +2735,9 @@ function olSearchTc(s) {
 }
 // ---- room type: open (listed under open rooms, anyone joins with one tap) / closed (not listed, joined with the key = room code)
 const OL_RK_KEY = 'shogi-room-type';
+const OL_TITLE_KEY = 'shogi-room-title';
+function olTitleSaved() { try { return localStorage.getItem(OL_TITLE_KEY) || ''; } catch (e) { return ''; } }
+function olTitle() { const el = document.getElementById('olRoomTitle'); const v = (el ? el.value : olTitleSaved()).replace(/\s+/g, ' ').trim().slice(0, 24); try { localStorage.setItem(OL_TITLE_KEY, v); } catch (e) {} return v; }
 function olRk() { try { const v = localStorage.getItem(OL_RK_KEY); if (v === 'open' || v === 'key') return v; if (localStorage.getItem('shogi-room-priv')) return 'key'; } catch (e) {} return 'open'; }
 function olRkSel() {
   const cur = olRk();
@@ -2747,7 +2752,7 @@ document.addEventListener('click', e => {
 // open rooms (live; shown in the online menu and the dock / phone online tab), own room marked
 let olRooms = [], olRoomsUnsub = null;
 function olRoomRows(list) {
-  return list.length ? list.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  return list.length ? list.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b> ` : ''}${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
 }
 function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
 function olWatchRooms() { if (!olRoomsUnsub && window.Online && Online.uid) olRoomsUnsub = Online.watchRooms(l => { olRooms = l; olRoomsRender(); }); }
@@ -2818,7 +2823,7 @@ function olRender(view) {
     olRoom = R.code;
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
-    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
+    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${Online.room && Online.room.title ? `<b class="ol-rtitle">${olEsc(Online.room.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
       <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: '将棋 SHOGI', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
   }
@@ -2836,8 +2841,9 @@ async function olStartSearch() {
   } catch (e) { console.warn(e); olRender('error'); }
 }
 async function olCreateRoom() {
+  const title = olTitle();
   olRender('loading');
-  try { olRoom = await Online.createRoom({ onMatched: olRoomMatched, priv: olRk() === 'key', tc: olTc() }); olRender('room'); }
+  try { olRoom = await Online.createRoom({ onMatched: olRoomMatched, priv: olRk() === 'key', tc: olTc(), title }); olRender('room'); }
   catch (e) { console.warn(e); toast(t('ol.error'), 2000); olRender('menu'); }
 }
 // closing the dialog cancels a rated-game search, but the own room stays open (closed with 「部屋を閉じる」, by a join, or after Online.ROOM_TTL)
@@ -2847,8 +2853,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#online
 function olLeftText() { const r = window.Online && Online.room; return r ? t('ol.roomLeft', { t: fmtClockMs(r.left) }) : ''; }
 function olMyRoomHtml() {
   const r = Online.room;
-  if (!r) return `<div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}<div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>`;
-  return `<div class="ol-sub">${t('ol.myRoom')}</div><div class="ol-myroom ${r.priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(r.priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><b class="ol-mcode">${r.code}</b><small>${olEsc(tcTag(r.tc))} · <span class="ol-left">${olLeftText()}</span></small></div>
+  if (!r) return `<div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}<label class="ol-title"><small>${t('ol.roomTitle')}</small><input id="olRoomTitle" maxlength="24" placeholder="${olEsc(t('ol.roomTitlePh'))}" value="${olEsc(olTitleSaved())}"></label><div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>`;
+  return `<div class="ol-sub">${t('ol.myRoom')}</div><div class="ol-myroom ${r.priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(r.priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b>` : ''}<b class="ol-mcode">${r.code}</b><small>${olEsc(tcTag(r.tc))} · <span class="ol-left">${olLeftText()}</span></small></div>
     <p class="ol-note small">${t('ol.roomKeep')}</p><div class="ol-acts"><button class="mbtn go" id="olShowRoom">${t('ol.showRoom')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button></div>`;
 }
 // show the room view (code + share link); the host looking at it again restarts the expiry timer

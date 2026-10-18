@@ -222,21 +222,22 @@
   // ---------------------------------------------------------------- rooms (unrated): open = listed under rooms, priv (closed) = joined only with the code (the key)
   // The room lives on until the host closes it (closeRoom), someone joins (onMatched), it expires (ROOM_TTL, deleted by the host's client)
   // or the host disconnects (onDisconnect). Closing the online dialog does not touch it.
-  let roomCode = null, roomTc = null, roomPriv = false, roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
+  let roomCode = null, roomTc = null, roomPriv = false, roomTitle = '', roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
   const roomListeners = new Set();
   const roomEmit = ev => roomListeners.forEach(f => { try { f(ev, room()); } catch (e) { console.warn(e); } });
   function onRoom(f) { roomListeners.add(f); return () => roomListeners.delete(f); }   // ev: 'open' | 'extend' | 'closed' | 'expired' | 'gone' | 'matched'
-  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()) } : null);
+  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, title: roomTitle, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()) } : null);
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  async function createRoom({ onMatched, onExpired, priv, tc }) {
+  async function createRoom({ onMatched, onExpired, priv, tc, title }) {
+    title = String(title || '').replace(/\s+/g, ' ').trim().slice(0, 24);
     tc = TC[tc] ? tc : 'fast';
     await leave();
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
       const expires = db.now() + ROOM_TTL;
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), expires, game: null, priv: !!priv } : undefined);
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), expires, game: null, priv: !!priv, title } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid || r.value.expires !== expires) continue;
-      roomCode = code; roomTc = tc; roomPriv = !!priv; roomExpires = expires; roomCbs = { onMatched, onExpired };
+      roomCode = code; roomTc = tc; roomPriv = !!priv; roomTitle = title; roomExpires = expires; roomCbs = { onMatched, onExpired };
       setPresence('room', { room: priv ? null : code });
       db.onDisconnectRemove('rooms/' + code);
       let seen = false;
