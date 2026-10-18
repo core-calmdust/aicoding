@@ -170,8 +170,9 @@ function buildBoard() {
 function layout() {
   vert = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches;
   $('#frame').classList.toggle('vert', vert);
-  U = vert ? boardEl.clientHeight / BW : boardEl.clientWidth / BW;
-  if (!U) return;
+  const nu = vert ? boardEl.clientHeight / BW : boardEl.clientWidth / BW;
+  if (!(nu > 4)) { setTimeout(layout, 120); return; }   // not laid out yet (iframe loading, rotation in progress): keep the old size and retry
+  U = nu;
   for (let i = 0; i < 14; i++) {
     const p = slotUV(i), [x, y] = toPx(p.x, p.y), s = slotEls[i];
     s.style.left = x + 'px'; s.style.top = y + 'px';
@@ -1585,13 +1586,16 @@ $('#langSel').onchange = e => {
 // Phones: the board size is computed once and only recomputed when the width or the orientation really changes,
 // so the address bar appearing / disappearing while scrolling never resizes the board.
 const coarseMQ = matchMedia('(pointer: coarse)');
-let fixW = 0, fixPortrait = null;
+let fixW = 0, fixH = 0, fixPortrait = null;
 function fixSize() {
   const root = document.documentElement.style;
   if (!coarseMQ.matches) { root.removeProperty('--u'); root.removeProperty('--vh'); fixW = 0; return; }
   const W = window.innerWidth, H = window.innerHeight, portrait = H >= W;
-  if (W === fixW && portrait === fixPortrait) return;   // height-only change (browser bars): keep the size
-  fixW = W; fixPortrait = portrait;
+  // a height-only change from the browser bars keeps the size; a big height change (or a bogus first measurement
+  // taken mid-rotation / while an iframe is still sizing) is recomputed
+  if (W === fixW && portrait === fixPortrait && Math.abs(H - fixH) < fixH * 0.25) return;
+  if (W < 200 || H < 200) { fixW = 0; root.removeProperty('--u'); return; }   // transient: wait for a real size
+  fixW = W; fixH = H; fixPortrait = portrait;
   root.setProperty('--vh', H + 'px');
   if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - 172) / 9.7, 100)) + 'px');
   else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 6 - 34 - 6 - 8) / 4.2, (W - 24) / 9.7, 110)) + 'px');   // board across the width, cards below
@@ -1601,6 +1605,8 @@ fixSize();
 let rzT = 0;
 window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { fixSize(); layout(); }, 60); });
 window.addEventListener('orientationchange', () => setTimeout(() => { fixW = 0; fixSize(); layout(); }, 120));
+if (window.ResizeObserver) { let lastBW = 0, lastBH = 0; new ResizeObserver(() => { const w = boardEl.clientWidth, h = boardEl.clientHeight; if (w !== lastBW || h !== lastBH) { lastBW = w; lastBH = h; if (w && h) layout(); } }).observe(boardEl); }
+if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { fixSize(); layout(); }, 80); });
 requestAnimationFrame(() => {
   layout();
   if (loadFromHash()) { /* shared game opened */ }
