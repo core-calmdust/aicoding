@@ -403,14 +403,25 @@ a.snd.home{text-decoration:none}
 .ol-acts .mbtn{flex:1}
 .ol-join{display:flex;gap:10px;margin-top:10px}
 .ol-join input{text-transform:uppercase;letter-spacing:.2em;font-family:'JetBrains Mono',monospace}
+.ol-join .mbtn{flex:none;padding:10px 18px}
 .ol-sub{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:16px 0 6px}
 .ol-list{display:grid;gap:3px;max-height:200px;overflow-y:auto}
 .ol-list > div{display:flex;justify-content:space-between;font-size:13px;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.2)}
 .ol-list > div.me{box-shadow:inset 0 0 0 1px rgba(201,169,97,.5)}
 .ol-list b{font-family:'JetBrains Mono',monospace;color:var(--accent)}
 .ol-list small{color:var(--dim)}
-.ol-priv{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:12px}
-.ol-priv input{accent-color:var(--brass)}
+/* room type (open = listed / closed = key) and the open-room list in the online menu */
+.ol-rk{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.ol-rk button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border-radius:7px;color:var(--muted);font:inherit;font-size:13px;line-height:1.25;background:none;border:0;cursor:pointer}
+.ol-rk button small{font-size:10.5px;color:var(--dim);text-align:center}
+.ol-rk button:hover{color:var(--text)}
+.ol-rk button.sel{background:rgba(201,169,97,.2);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(201,169,97,.55);font-weight:700}
+.ol-rk button.sel small{color:var(--text);font-weight:400}
+.ol-rooms{max-height:150px}
+.ol-rooms > div{align-items:center}
+.ol-rooms .dk-join{flex:none;padding:5px 14px;font-size:12.5px}
+.ol-join input::placeholder{letter-spacing:normal;text-transform:none;font-family:inherit}
+.ol-lock{font-size:13px;padding:3px 12px;border-radius:999px;background:rgba(201,169,97,.12);color:var(--accent);border:1px solid rgba(201,169,97,.4)}
 /* online time control selector */
 .ol-tcbox{margin:0 0 12px}
 .ol-tcl{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 6px}
@@ -950,9 +961,9 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018tc"></script>
+<script src="i18n.js?v=20261018rk"></script>
 <script src="firebase-config.js"></script>
-<script src="online.js?v=20261018tc"></script>
+<script src="online.js?v=20261018rk"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -2639,6 +2650,33 @@ function olTcToast(g, extra) {
 function olSearchTc(s) {
   return `<small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(s.tc || olTc()) })}</small><small>${s.crossIn > 0 || s.crossIn == null ? t('ol.crossIn', { s: Math.ceil((s.crossIn == null ? Online.CROSS_WAIT : s.crossIn) / 1000) }) : t('ol.crossOn')}</small>`;
 }
+// ---- room type: open (listed under open rooms, anyone joins with one tap) / closed (not listed, joined with the key = room code)
+const OL_RK_KEY = 'reversi-room-type';
+function olRk() { try { const v = localStorage.getItem(OL_RK_KEY); if (v === 'open' || v === 'key') return v; if (localStorage.getItem('reversi-room-priv')) return 'key'; } catch (e) {} return 'open'; }
+function olRkSel() {
+  const cur = olRk();
+  return `<div class="ol-rk" role="radiogroup" aria-label="${esc(t('ol.newRoom'))}">` + ['open', 'key'].map(id => `<button type="button" role="radio" data-rk="${id}" class="${id === cur ? 'sel' : ''}" aria-checked="${id === cur}"><b>${id === 'open' ? '🔓' : '🔒'} ${t('ol.rk.' + id)}</b><small>${t('ol.rkd.' + id)}</small></button>`).join('') + '</div>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.ol-rk button'); if (!b) return;
+  try { localStorage.setItem(OL_RK_KEY, b.dataset.rk); } catch (_) {}
+  document.querySelectorAll('.ol-rk button').forEach(x => { x.classList.toggle('sel', x.dataset.rk === b.dataset.rk); x.setAttribute('aria-checked', String(x.dataset.rk === b.dataset.rk)); });
+  const c = $('#olCreate'); if (c) c.textContent = t(b.dataset.rk === 'key' ? 'ol.createKey' : 'ol.createOpen');
+});
+// open rooms (live; shown in the online menu and the dock / phone online tab), own room marked
+let olRooms = [], olRoomsUnsub = null;
+function olRoomRows(list) {
+  return list.length ? list.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${esc(r.name)} <small>R ${r.rating} · ${esc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${esc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+}
+function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
+function olWatchRooms() { if (!olRoomsUnsub && window.Online && Online.uid) olRoomsUnsub = Online.watchRooms(l => { olRooms = l; olRoomsRender(); }); }
+async function olJoin(code, btn) {
+  if (btn) btn.disabled = true;
+  let gid = null; try { gid = await Online.joinRoom(code); } catch (e) { console.warn(e); }
+  if (gid) { if (typeof mtab === 'function') mtab('game'); startOnlineGame(gid); return true; }
+  toast(t('ol.noRoom'), 2200); if (btn) btn.disabled = false; return false;
+}
+$('#olBody').addEventListener('click', e => { const b = e.target.closest('.dk-join'); if (b) olJoin(b.dataset.code, b); });
 async function openOnline(joinCode) {
   showOverlay('#onlineOverlay');
   if (!window.Online || !Online.available) { olRender('setup'); return; }
@@ -2657,17 +2695,17 @@ async function olRender(view) {
     B.innerHTML = `
       <div class="ol-me"><input id="olName" maxlength="16" value="${esc(P.name)}" aria-label="name"><span class="ol-r">R <b>${P.rating}</b><small>${t('ol.record', { g: P.games || 0, w: P.wins || 0, l: P.losses || 0, d: P.draws || 0 })}</small></span></div>
       <div class="ol-tcbox"><div class="ol-tcl">${t('ol.tc')}</div>${olTcSel()}</div>
-      <div class="ol-acts">
-        <button class="mbtn go" id="olAuto">${t('ol.auto')}</button>
-        <button class="mbtn" id="olCreate">${t('ol.create')}</button>
-      </div>
-      <label class="ol-priv"><input type="checkbox" id="olPriv" ${olPriv() ? 'checked' : ''}> ${t('ol.priv')}</label>
+      <div class="ol-acts"><button class="mbtn go" id="olAuto">${t('ol.auto')}</button></div>
+      <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
+      <div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}
+      <div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>
+      <div class="ol-sub">${t('ol.joinKey')}</div>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
       <p class="ol-note small">${t('ol.rules')}</p>
       <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>`;
     $('#olName').onchange = async e => { e.target.value = await Online.setName(e.target.value); };
     $('#olAuto').onclick = olStartSearch;
-    $('#olPriv').onchange = e => { try { localStorage.setItem('reversi-room-priv', e.target.checked ? '1' : ''); } catch (_) {} };
+    olWatchRooms();
     $('#olCreate').onclick = olCreateRoom;
     $('#olJoin').onclick = async () => { const c = $('#olCode').value; olRender('loading'); const gid = await Online.joinRoom(c); if (gid) startOnlineGame(gid); else { toast(t('ol.noRoom'), 2200); olRender('menu'); } };
     Online.topPlayers(10).then(list => { const el = $('#olRank'); if (!el) return; el.innerHTML = list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`; }).catch(() => {});
@@ -2684,13 +2722,13 @@ async function olRender(view) {
   }
   if (olView === 'room') {
     const url = location.origin + location.pathname + '#room=' + olRoom;
-    B.innerHTML = `<div class="ol-wait"><small>${t('ol.roomCode')}</small><div class="ol-code">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t('ol.roomInfo')}</small></div>
+    const priv = Online.roomPriv;
+    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small></div>
       <div class="ol-acts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: 'Reversi V4', url }); else { await navigator.clipboard.writeText(url); toast(t('share.copied'), 1200); } } catch (e) {} };
     $('#olCancel').onclick = async () => { await Online.leave(); olRender('menu'); };
   }
 }
-function olPriv() { try { return !!localStorage.getItem('reversi-room-priv'); } catch (e) { return false; } }
 async function olStartSearch() {
   olSearch = { waiting: 0, window: 100, wait: 0, tc: olTc() }; olList = [];
   olRender('search');
@@ -2703,7 +2741,7 @@ async function olStartSearch() {
 }
 async function olCreateRoom() {
   olRender('loading');
-  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olPriv(), tc: olTc() }); olRender('room'); }
+  try { olRoom = await Online.createRoom({ onMatched: gid => startOnlineGame(gid), priv: olRk() === 'key', tc: olTc() }); olRender('room'); }
   catch (e) { toast(t('ol.error'), 2000); olRender('menu'); }
 }
 $('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (window.Online && Online.available && Online.uid) await Online.leave(); };
@@ -2828,7 +2866,7 @@ function dockRender() {
 }
 function dockRenderLists() {
   $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${esc(p.name)} <small class="st st-${p.st || 'idle'}">${t(ST_KEY[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
-  $('#dkRooms').innerHTML = dock.rooms.length ? dock.rooms.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${esc(r.name)} <small>R ${r.rating} · ${esc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${esc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
   $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${esc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
 }
 async function dockStart() {
@@ -2864,7 +2902,7 @@ $('#dkMe').addEventListener('click', e => {
 });
 $('#dock .dock-bar').addEventListener('click', e => { if (!e.target.closest('button')) dockToggle(); });
 $('#dkAuto').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olStartSearch(); };
-$('#dkRoom').onclick = async () => { await openOnline(); if (window.Online && Online.available && Online.uid) olCreateRoom(); };
+$('#dkRoom').onclick = async () => { await openOnline(); const c = $('#olCreate'); if (c) c.scrollIntoView({ block: 'center' }); };
 $('#dock').addEventListener('click', async e => {
   const b = e.target.closest('.dk-join'); if (!b) return;
   b.disabled = true;

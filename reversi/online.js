@@ -209,8 +209,8 @@
     } finally { if (lobbyState === st) st.busy = false; }
   }
 
-  // ---------------------------------------------------------------- private rooms (unrated)
-  let roomCode = null, roomTc = null, roomUnsub = null;
+  // ---------------------------------------------------------------- rooms (unrated): open = listed under rooms, priv (closed) = joined only with the code (the key)
+  let roomCode = null, roomTc = null, roomPriv = false, roomUnsub = null;
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   async function createRoom({ onMatched, priv, tc }) {
     tc = TC[tc] ? tc : 'fast';
@@ -219,7 +219,7 @@
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
       const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), game: null, priv: !!priv } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid) continue;
-      roomCode = code; roomTc = tc; setPresence('room', { room: priv ? null : code });
+      roomCode = code; roomTc = tc; roomPriv = !!priv; setPresence('room', { room: priv ? null : code });
       db.onDisconnectRemove('rooms/' + code);
       roomUnsub = db.on('rooms/' + code + '/game', gid => { if (gid) { const c = roomCode; leave(true); db.remove('rooms/' + c); onMatched(gid); } });
       return code;
@@ -296,7 +296,7 @@
   }
 
   window.Online = {
-    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, get roomTc() { return roomTc; },
+    available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; },
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave,
     watchGame, sendMove, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),
