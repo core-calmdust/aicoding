@@ -943,9 +943,9 @@ $('#ngRulesHelp').onclick = () => openRules(draft.rules);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
-$('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
+$('#btnCancelNew').onclick = () => { $('#newOverlay').classList.remove('show'); maybeRotTip(); };
 $('#btnStart').onclick = () => {
-  $('#newOverlay').classList.remove('show'); ctx();
+  $('#newOverlay').classList.remove('show'); ctx(); maybeRotTip();
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   exitSpecial();
@@ -1482,7 +1482,7 @@ function dailySolved(date, hinted) {
 }
 
 // ====================================================================== dialogs: outside click, resume popup
-const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', resumeOverlay: '#rsCancel' };
+const OUTSIDE = { rotTipOverlay: '#rotTipNo', newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', resumeOverlay: '#rsCancel' };
 function outsideClose(o) {
   if (o.id === 'lessonOverlay') { if (!$('#lessonDoneView').classList.contains('hidden')) $('#btnLessonQuit2').click(); else $('#btnLessonClose').click(); return; }
   const b = OUTSIDE[o.id] && $(OUTSIDE[o.id]);
@@ -1528,7 +1528,10 @@ $('#btnRot').onclick = async () => {
     let locked = false;
     try {                                                          // Android: real fullscreen + orientation lock
       if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-      if (screen.orientation && screen.orientation.lock) { await screen.orientation.lock('landscape'); locked = true; }
+      if (screen.orientation && screen.orientation.lock) {
+        await Promise.race([screen.orientation.lock('landscape'), sleep(1500).then(() => { throw new Error('lock timeout'); })]);
+        await sleep(350); locked = window.innerWidth > window.innerHeight;   // only trust it if the viewport really turned
+      }
     } catch (e) {}
     if (!locked) { try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {} location.reload(); }   // iOS etc.: turned iframe
   } else {
@@ -1538,6 +1541,23 @@ $('#btnRot').onclick = async () => {
 };
 if (window.__EMBED) document.querySelectorAll('a.home, a.series').forEach(a => { a.target = '_top'; });
 renderRotBtn();
+
+// one-time tip for phone users: landscape mode exists (shown after the first dialog closes, never over another one)
+const ROTTIP_KEY = 'aicoding-mancala-rottip';
+function maybeRotTip() {
+  setTimeout(() => {
+    let seen = true; try { seen = localStorage.getItem(ROTTIP_KEY) === '1'; } catch (e) {}
+    if (seen || window.__EMBED || rotOn() || !matchMedia('(pointer: coarse)').matches || window.innerWidth > window.innerHeight) return;
+    if (document.querySelector('.overlay.show')) return;
+    try { localStorage.setItem(ROTTIP_KEY, '1'); } catch (e) {}
+    $('#rotTipOverlay').classList.add('show');
+  }, 450);
+}
+$('#rotTipYes').onclick = () => { $('#rotTipOverlay').classList.remove('show'); if (!rotOn()) $('#btnRot').click(); };
+$('#rotTipNo').onclick = () => {
+  $('#rotTipOverlay').classList.remove('show');
+  const b = $('#btnRot'); b.classList.add('hintpulse'); setTimeout(() => b.classList.remove('hintpulse'), 5000);
+};
 
 // ====================================================================== boot
 // animated background: off with the animation setting, paused while the tab is hidden

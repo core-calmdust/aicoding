@@ -622,6 +622,22 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   .kifu{grid-template-columns:repeat(6,1fr)}
   .review-card.show{grid-area:rv}
 }
+/* one-time tip: landscape mode */
+.rottip{width:min(400px,100%);text-align:center}
+.rottip h2{margin:6px 0 10px}
+.rottip p{font-size:15px;line-height:1.7;color:var(--muted)}
+html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
+.rt-phone svg{width:110px;height:110px;display:block;margin:0 auto}
+.rt-dev{transform-box:fill-box;transform-origin:center;animation:rtTurn 2.6s ease-in-out infinite}
+.rt-dev rect:first-child{fill:#1d1d20;stroke:var(--accent);stroke-width:2.5}
+.rt-scr{fill:rgba(226,194,117,.18)}
+.rt-btn{fill:var(--accent)}
+.rt-arrow{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+@keyframes rtTurn{0%,18%{transform:rotate(0)}45%,72%{transform:rotate(90deg)}100%{transform:rotate(0)}}
+#btnRot.hintpulse{position:relative;color:var(--accent);border-color:var(--accent)}
+#btnRot.hintpulse::after{content:"";position:absolute;inset:-5px;border-radius:10px;border:2px solid var(--accent);animation:rtPulse 1.1s ease-out infinite;pointer-events:none}
+@keyframes rtPulse{0%{opacity:1;transform:scale(.9)}100%{opacity:0;transform:scale(1.5)}}
+@media (prefers-reduced-motion: reduce){.rt-dev{animation:none;transform:rotate(90deg)}#btnRot.hintpulse::after{animation:none;opacity:.9}}
 </style>
 </head>
 <body>
@@ -840,6 +856,14 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
       <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
     </div>
+  </div>
+</div>
+<div class="overlay" id="rotTipOverlay">
+  <div class="modal rottip">
+    <div class="rt-phone" aria-hidden="true"><svg viewBox="0 0 120 120"><g class="rt-dev"><rect x="40" y="18" width="40" height="84" rx="8"/><rect x="45" y="27" width="30" height="62" rx="3" class="rt-scr"/><circle cx="60" cy="95" r="2.6" class="rt-btn"/></g><path class="rt-arrow" d="M96 40a38 38 0 0 1 0 40"/><path class="rt-arrow" d="M92 76l4 6 6-4"/></svg></div>
+    <h2 data-i18n="rotTip.title"></h2>
+    <p data-i18n="rotTip.text"></p>
+    <div class="modal-actions"><button class="mbtn" id="rotTipNo" data-i18n="rotTip.no"></button><button class="mbtn go" id="rotTipYes" data-i18n="rotTip.yes"></button></div>
   </div>
 </div>
 <div class="overlay" id="pasteOverlay">
