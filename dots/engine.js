@@ -626,7 +626,7 @@ const fastSolvers = {};
 function fastSolverFor(G) { const k = G.R + 'x' + G.C; if (!fastSolvers[k]) { const s = new Solver(G, 22); s.prune = true; fastSolvers[k] = s; } return fastSolvers[k]; }
 function smallSolverFor(G) { const k = G.R + 'x' + G.C; const s = smallSolvers[k] || (smallSolvers[k] = new Solver(G, 17)); s.used.fill(0); return s; }
 
-function chooseMove(p, level, rand, lead) {
+function chooseMove(p, level, rand, lead, hist) {
   rand = rand || Math.random;
   const cfg = LEVELS[level] || LEVELS[8];
   const legal = p.legal();
@@ -646,7 +646,7 @@ function chooseMove(p, level, rand, lead) {
   // search levels
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
-  if (cfg.kind === 'v2') return chooseV2(p, cfg, rand, lead);
+  if (cfg.kind === 'v2') return chooseV2(p, cfg, rand, lead, hist);
   if (cfg.book) { const bk = bookMove(p); if (bk) return bk; }
   const t0 = Date.now();
   const gate = typeof cfg.safeGate === 'object' ? (cfg.safeGate[p.G.R] || 12) : cfg.safeGate;
@@ -724,9 +724,14 @@ function v2FromOutcome(o, t) {
   return { move: o.move, value: o.value, exact: o.cls === 0, outcome: o.cls };
 }
 // single-thread version (also the fallback when no helper workers are available)
-function chooseV2(p, cfg, rand, lead) {
+function chooseV2(p, cfg, rand, lead, hist) {
   const G = p.G, t0 = Date.now(), ms = cfg.ms;
-  const bk = bookMove(p); if (bk) return bk;
+  if (G.R === 4 && G.C === 4 && x4Ready() === true) {   // 4x4: book, then the exact WebAssembly solver
+    const r = x4Choose(p, cfg, lead, hist, ms - 300);
+    if (r) return r;
+    const h = v2HsFor(G, cfg.np).best(p, cfg.depth, 150, rand);
+    return { move: h.move, value: h.value, exact: false, depth: v2HsFor(G, cfg.np).depth };
+  }
   const safe = countSafe(p), exactOk = safe <= v2Gate(cfg, G), sure = safe <= v2Sure(cfg, G);
   const S = v2SolverFor(G), H = v2HsFor(G, cfg.np), t = v2Target(p, lead);
   const left = () => ms - (Date.now() - t0);
@@ -770,17 +775,17 @@ function helperTask(d) {
   return { done: !!r, best: r || S.partial, firstV: S.firstV };
 }
 // Lv9+ with helper workers. pool: { size, run(i, msg) -> Promise<result|null> }. Falls back to chooseMove without one.
-async function chooseMoveAsync(p, level, rand, pool, lead) {
+async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   rand = rand || Math.random;
   const cfg = LEVELS[level] || LEVELS[8];
-  if (cfg.kind !== 'v2' || !pool || !pool.size) return chooseMove(p, level, rand, lead);
+  if (cfg.kind === 'v2' && p.G.R === 4 && p.G.C === 4) { const rd = x4Ready(); if (rd && rd.then) await rd; if (X4.st === 2) return chooseMove(p, level, rand, lead, hist); }
+  if (cfg.kind !== 'v2' || !pool || !pool.size) return chooseMove(p, level, rand, lead, hist);
   const legal = p.legal();
   if (legal.length === 1) return { move: legal[0], exact: false };
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
-  const bk = bookMove(p); if (bk) return bk;
   const G = p.G, t0 = Date.now(), end = t0 + cfg.ms, safe = countSafe(p), edges = p.edges(), t = v2Target(p, lead);
-  if (safe <= 12 || t === null || safe > (G.E <= 24 ? 99 : (cfg.pgate[G.R] || 20))) return chooseV2(p, cfg, rand, lead);
+  if (safe <= 12 || t === null || safe > (G.E <= 24 ? 99 : (cfg.pgate[G.R] || 20))) return chooseV2(p, cfg, rand, lead, hist);
   const S = v2SolverFor(G), H = v2HsFor(G, cfg.np);
   // a short try first: late positions (and a warm table) finish at once
   S.limit(0, Math.min(250, cfg.ms * 0.06));
@@ -819,45 +824,158 @@ async function chooseMoveAsync(p, level, rand, pool, lead) {
   return { move: hm.move, value: hm.value, exact: false };
 }
 
-// ---------------------------------------------------------------- opening book (4x4, Lv9+)
-// book4.js maps the canonical form of early positions (the drawn-edge bitmask, smallest over the 8 symmetries, base 36)
-// to [best move in that canonical frame, value]. Built offline by deep searches; only used while the game is in it.
-let BOOK = null, bookOn = true;
-function loadBook() {
-  if (BOOK !== null) return BOOK;
-  BOOK = false;
-  try {
-    const g = typeof self !== 'undefined' ? self : globalThis;
-    if (!g.DOTS_BOOK4) {
-      if (typeof importScripts === 'function' && typeof window === 'undefined') importScripts('book4.js');
-      else if (typeof require === 'function' && typeof __dirname === 'string') require(__dirname + '/book4.js');
-    }
-    BOOK = g.DOTS_BOOK4 || false;
-  } catch (e) { BOOK = false; }
-  return BOOK;
+// ---------------------------------------------------------------- 4x4: exact solver (WebAssembly) + opening book (Lv9+)
+// solver4.c compiled to dots4.wasm: alpha-beta on net boxes with Berlekamp's capture rules, exact simple-loony values,
+// chain/loop/corner move pruning and a symmetry-reduced table. dots4book.bin: every position the AI can face (either side)
+// in the opening, with an exactly optimal move and the exact value (computed offline; 4x4 is a draw).
+// Between moves the AI keeps a guarantee: the final margin its last move was proven to secure. The next search starts from
+// it, so a search that runs out of time still plays a move that keeps that margin (never losing a won or drawn game).
+const X4V = '?v=20261019';
+const X4 = { st: 0, x: null, io: null, slots: [], loading: null, nbook: 0 };
+let bookOn = true;
+function x4Init(wasm, book) {
+  const now = typeof performance !== 'undefined' ? () => performance.now() : () => Date.now();
+  const inst = new WebAssembly.Instance(new WebAssembly.Module(wasm), { env: { now } });
+  const x = inst.exports; x.w_setup(4, 4, 22);
+  X4.x = x; X4.io = new Int32Array(x.memory.buffer, x.io_ptr(), 256);
+  if (book) X4.nbook = x4LoadBook(x, new Uint8Array(book));
+  X4.st = 2;
 }
-function canonKey(p) {
-  const G = p.G; let best = Infinity, bs = 0;
-  for (let s = 0; s < G.NS; s++) {
-    const pm = G.perms[s]; let v = 0;
-    for (let e = 0; e < G.E; e++) if (p.drawn[e]) v += 2 ** pm[e];
-    if (v < best) { best = v; bs = s; }
+// book file: "DB4" 1, u32 count, then per entry (sorted by key): varint key delta, byte move | flag << 6, byte value + 32
+function x4LoadBook(x, b) {
+  if (b[0] !== 68 || b[1] !== 66 || b[2] !== 52) return 0;
+  const n = b[4] | (b[5] << 8) | (b[6] << 16) | (b[7] << 24);
+  const ptr = x.book_alloc(n), out = new BigUint64Array(x.memory.buffer, ptr, n);
+  let i = 8, key = 0n;
+  for (let j = 0; j < n; j++) {
+    let d = 0n, sh = 0n, c;
+    do { c = b[i++]; d |= BigInt(c & 127) << sh; sh += 7n; } while (c & 128);
+    key += d;
+    const mf = b[i++], val = b[i++];
+    out[j] = (key << 20n) | (BigInt(mf >> 6) << 18n) | (BigInt(val) << 12n) | BigInt(mf & 63);
   }
-  return { k: best.toString(36), s: bs };
+  return n;
 }
-function bookMove(p) {
-  if (!bookOn || p.G.R !== 4 || p.G.C !== 4 || p.filled > 0 || p.undrawn < p.G.E - 8) return null;
-  const B = loadBook(); if (!B) return null;
-  const c = canonKey(p), hit = B[c.k];
-  if (!hit) return null;
-  const m = p.G.inv[c.s][hit[0]];
-  if (p.drawn[m]) return null;
-  return { move: m, value: hit[1], exact: hit[2] === 1, book: true };
+// Node: load synchronously; worker: fetch once (x4Ready() resolves when done). Never on the page itself.
+function x4Ready() {
+  if (X4.st === 2) return true;
+  if (X4.st < 0) return false;
+  if (typeof process !== 'undefined' && process.versions && process.versions.node && typeof require === 'function') {
+    try { const fs = require('fs'); x4Init(fs.readFileSync(__dirname + '/dots4.wasm'), fs.readFileSync(__dirname + '/dots4book.bin')); } catch (e) { X4.st = -1; return false; }
+    return true;
+  }
+  if (typeof importScripts !== 'function' || typeof WebAssembly === 'undefined' || typeof fetch !== 'function') { X4.st = -1; return false; }
+  if (!X4.loading) {
+    X4.st = 1;
+    const get = f => fetch(new URL(f + X4V, self.location.href)).then(r => { if (!r.ok) throw new Error(f + ' ' + r.status); return r.arrayBuffer(); });
+    X4.loading = Promise.all([get('dots4.wasm'), get('dots4book.bin').catch(() => null)])
+      .then(([w, b]) => { x4Init(w, b); return true; }).catch(() => { X4.st = -1; return false; });
+  }
+  return X4.loading;
 }
+const x4Ok = p => p.G.R === 4 && p.G.C === 4 && X4.st === 2;
+function x4Set(p) {   // drawn edges -> io[0..1]
+  let lo = 0, hi = 0; const d = p.drawn;
+  for (let e = 0; e < 32; e++) if (d[e]) lo |= 1 << e;
+  for (let e = 32; e < 40; e++) if (d[e]) hi |= 1 << (e - 32);
+  X4.io[0] = lo; X4.io[1] = hi;
+}
+// book entry of p: {move, value, exact} or null
+function x4Book(p) {
+  if (!bookOn || !x4Ok(p)) return null;
+  x4Set(p); const r = X4.x.w_book_probe();
+  if (r < 0) return null;
+  return { move: r & 255, value: ((r >> 16) & 63) - 32, flag: (r >> 8) & 3 };
+}
+// replay the history: lead of each move's mover, and who moved
+function x4Replay(G, hist) {
+  const q = new Pos(G), info = []; let turn = 0; const sc = [0, 0];
+  for (const e of hist) { info.push({ mover: turn, lead: sc[turn] - sc[1 - turn] }); const k = q.play(e); sc[turn] += k; if (!k) turn ^= 1; }
+  return { info, turn, sc };
+}
+// lower bound for the mover's net future boxes, from the guarantee of its previous decision (worker memory or the book)
+function x4Lower(p, lead, hist) {
+  if (!hist || lead === undefined || lead === null) return null;
+  let best = null;
+  for (const sl of X4.slots) {   // memory: {n, edges, k, G}
+    if (hist.length < sl.n) continue;
+    let ok = true; for (let i = 0; i < sl.n; i++) if (hist[i] !== sl.edges[i]) { ok = false; break; }
+    if (!ok) continue;
+    const extra = hist.slice(sl.n);
+    if (sl.k > 0) { if (extra.length) continue; }
+    else {
+      if (!extra.length) continue;
+      const q = Pos.from(p.G, hist.slice(0, sl.n));
+      for (let i = 0; i < extra.length && ok; i++) { const k = q.play(extra[i]); if ((i < extra.length - 1) !== (k > 0)) ok = false; }
+      if (!ok) continue;
+    }
+    const L = sl.G - lead; if (best === null || L > best) best = L;
+  }
+  // the book: the mover's last decision before the opponent's turn
+  const R = x4Replay(p.G, hist);
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (R.info[i].mover !== R.turn) continue;
+    const q = Pos.from(p.G, hist.slice(0, i)), bk = x4Book(q);
+    if (bk && bk.flag === 1) {
+      x4Set(q); X4.x.w_canon(hist[i]); const a0 = X4.io[6], a1 = X4.io[7];
+      X4.x.w_canon(bk.move);
+      if (a0 === X4.io[6] && a1 === X4.io[7]) { const L = R.info[i].lead + bk.value - lead; if (best === null || L > best) best = L; }
+    }
+    break;
+  }
+  return best;
+}
+function x4Remember(p, hist, lead, move, v) {
+  if (!hist || lead === undefined || lead === null) return;
+  X4.slots.unshift({ n: hist.length + 1, edges: hist.concat([move]), k: p.completes(move), G: lead + v });
+  if (X4.slots.length > 2) X4.slots.length = 2;
+}
+// Lv9+ on 4x4. Returns a move answer, or null when nothing was proven in time (the caller falls back).
+function x4Choose(p, cfg, lead, hist, ms) {
+  const x = X4.x, io = X4.io, t0 = Date.now();
+  const bk = x4Book(p);
+  if (bk && bk.flag === 1) { x4Remember(p, hist, lead, bk.move, bk.value); return { move: bk.move, value: bk.value, exact: true, book: true }; }
+  let L = x4Lower(p, lead, hist), first = -1;
+  if (bk && bk.flag === 2) { first = bk.move; if (L === null || bk.value > L) L = bk.value; }
+  x4Set(p); io[6] = L === null ? -100 : L; io[2] = first;
+  const v = x.w_best_from(Math.max(50, ms - (Date.now() - t0)));
+  if (v !== -999 && io[3] >= 0) {
+    if (L !== null && v < L) { io[6] = -100; io[2] = -1; const w = x.w_best_from(Math.max(50, ms - (Date.now() - t0))); if (w === -999) return null; x4Remember(p, hist, lead, io[3], w); return { move: io[3], value: w, exact: true }; }
+    x4Remember(p, hist, lead, io[3], v); return { move: io[3], value: v, exact: true };
+  }
+  if (io[4] >= 0) { x4Remember(p, hist, lead, io[4], io[5]); return { move: io[4], value: io[5], exact: false }; }   // proven >= the guarantee
+  return null;
+}
+// exact values of the given moves within a time budget (null if cut off)
+function x4Values(p, moves, ms) {
+  const x = X4.x, t0 = Date.now(), out = [];
+  for (const m of moves) {
+    x4Set(p); const v = x.w_move_value(m, -17, 17, Math.max(20, ms - (Date.now() - t0)));
+    if (v === -999) return null;
+    out.push({ m, v });
+  }
+  return out;
+}
+function bookMove(p) { const b = x4Book(p); return b && b.flag === 1 ? { move: b.move, value: b.value, exact: true, book: true } : null; }
+function canonKey(p) { if (!x4Ok(p)) return null; x4Set(p); X4.x.w_canon(-1); return (X4.io[7] >>> 0).toString(16) + ':' + (X4.io[6] >>> 0).toString(16); }
 function setBook(on) { bookOn = !!on; }
 
 // exact values of all moves within a time budget, otherwise heuristic scores
+// 4x4 with the WebAssembly solver: exact best move / move values within a time budget (null if cut off)
+function x4BestW(p, ms) { x4Set(p); X4.io[2] = -1; const v = X4.x.w_best(Math.max(20, ms)); return v === -999 ? null : { move: X4.io[3], value: v }; }
+function x4MoveW(p, e, ms) { x4Set(p); const v = X4.x.w_move_value(e, -17, 17, Math.max(20, ms)); return v === -999 ? null : v; }
+function x4All(p, ms) {
+  const t0 = Date.now(), b = x4BestW(p, ms); if (!b) return null;
+  const out = [];
+  for (const e of p.legal()) {
+    const v = e === b.move ? b.value : x4MoveW(p, e, ms - (Date.now() - t0));
+    if (v === null) return null;
+    out.push({ m: e, v });
+  }
+  return out;
+}
 function analyze(p, ms) {
+  if (x4Ok(p)) { const ex = x4All(p, ms * 0.7); if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v) }; }
   const S = fastSolverFor(p.G);
   if (p.G.E <= 24 || countSafe(p) <= (p.G.R <= 4 ? 20 : 15)) {
     S.limit(0, ms * 0.7);
@@ -866,6 +984,8 @@ function analyze(p, ms) {
   }
   const H = hsFor(p.G, 3, true);
   const list = H.root(p, 12, ms * 0.3 + 150);
+  const bk = x4Book(p);   // 4x4 opening: the book's exactly optimal move goes first
+  if (bk && bk.flag === 1) { const i = list.findIndex(x => x.m === bk.move); const it = i >= 0 ? list.splice(i, 1)[0] : { m: bk.move }; it.v = bk.value; it.book = true; list.unshift(it); }
   return { exact: false, list };
 }
 
@@ -877,6 +997,21 @@ function reviewMove(p, played, ms) {
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { skip: true };
   const t0 = Date.now(), end = t0 + ms;
+  if (x4Ok(p)) {
+    const b = x4BestW(p, ms * 0.7);
+    const pv = b ? (played === b.move ? b.value : x4MoveW(p, played, end - Date.now() - 20)) : null;
+    if (b && pv !== null) {
+      const q = p.clone(), line = [b.move]; q.play(b.move);
+      while (line.length < 12 && q.undrawn > 0) {
+        const c = q.hasCapture() ? captureMoves(q) : null;
+        let e;
+        if (c && c.forced !== undefined) e = c.forced;
+        else { const r = x4BestW(q, 120); if (!r) break; e = r.move; }
+        q.play(e); line.push(e);
+      }
+      return { exact: true, best: b.value, played: Math.min(pv, b.value), bestMove: b.move, line };
+    }
+  }
   if (G.E <= 24 || countSafe(p) <= (G.R <= 4 ? 24 : 17)) {
     const S = fastSolverFor(G);
     S.limit(0, ms * 0.8);
@@ -905,7 +1040,7 @@ function reviewMove(p, played, ms) {
   const quiet = !cap && p.gives(played) === 0 && p.gives(list[0].m) === 0;
   return { exact: false, quiet, best: list[0].v, played: mine ? Math.min(mine.v, list[0].v) : list[0].v, bestMove: list[0].m, line };
 }
-return { chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -942,16 +1077,18 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       if (d.type === 'xpart') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.helperTask(d) }); return; }
       const G = DotsEngine.geom(d.R, d.C);
       const p = DotsEngine.Pos.from(G, d.edges);
+      if (d.R === 4 && d.C === 4 && (d.type !== 'move' || d.level >= 9)) { const rd = DotsEngine.x4Ready(); if (rd && rd.then) await rd; }
       if (d.type === 'move') {
         const t0 = Date.now();
-        const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(), d.lead) : DotsEngine.chooseMove(p, d.level);
+        const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
         self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0 });
       } else if (d.type === 'analyze') {
         const r = DotsEngine.analyze(p, d.ms || 1500);
         self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact });
       } else if (d.type === 'solve') {
-        const S = DotsEngine.fastSolverFor(G); S.limit(0, d.ms || 8000);
-        const list = S.all(p);
+        let list = null;
+        if (d.R === 4 && d.C === 4 && DotsEngine.X4.st === 2) list = DotsEngine.x4All(p, d.ms || 8000);
+        else { const S = DotsEngine.fastSolverFor(G); S.limit(0, d.ms || 8000); list = S.all(p); }
         self.postMessage({ type: 'solve', id: d.id, list });
       } else if (d.type === 'review') {
         const r = DotsEngine.reviewMove(p, d.played, d.ms || 600);
