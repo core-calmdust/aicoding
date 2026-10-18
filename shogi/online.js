@@ -153,12 +153,13 @@
   }
   const listOf = (v, me) => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
   function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
-  // a room is usable while nobody joined it and it has not expired (expires; old records: created + ROOM_TTL). Lists hide expired rooms even if the host vanished without cleanup
+  // a room is usable while nobody joined it and it has not expired (expires; old records: created + ROOM_TTL). Lists hide expired rooms even if the host vanished without cleanup.
+  // Open rooms with a game in progress stay listed (marked as playing, with a watch button); closed rooms are never listed
   const roomExp = r => (typeof r.expires === 'number' ? r.expires : (typeof r.created === 'number' ? r.created : 0) + ROOM_TTL);
   const roomLive = (r, now) => !!r && !r.game && roomExp(r) > (now == null ? db.now() : now);
   function watchRooms(cb) {
     let last = null;
-    const emit = () => cb(listOf(last).filter(r => !r.priv && roomLive(r)).sort((a, b) => (a.created || 0) - (b.created || 0)));
+    const emit = () => cb(listOf(last).filter(r => !r.priv && (r.game ? !!r.host : roomLive(r))).sort((a, b) => (a.game ? 1 : 0) - (b.game ? 1 : 0) || (a.created || 0) - (b.created || 0)));
     const off = db.on('rooms', v => { last = v; emit(); });
     const iv = setInterval(() => { if (last) emit(); }, 15000);     // drop rooms that expire while nothing changes
     return () => { off(); clearInterval(iv); };
@@ -266,8 +267,8 @@
     if (!s || !s.code || !s.gid || roomCode) return null;
     const g = await db.get('games/' + s.gid);
     if (!g || g.room !== s.code || g.host !== uid || g.status !== 'play') return null;
-    const expires = db.now() + ROOM_TTL, guest = g.b === uid ? g.w : g.b;
-    const r = await db.txn('rooms/' + s.code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc: s.tc || g.tc || 'fast', created: db.stamp(), expires, game: s.gid, guest, priv: !!s.priv, title: s.title || '' } : cur.host === uid ? cur : undefined);
+    const expires = db.now() + ROOM_TTL, guest = g.b === uid ? g.w : g.b, gname = g.b === uid ? g.wn : g.bn;
+    const r = await db.txn('rooms/' + s.code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc: s.tc || g.tc || 'fast', created: db.stamp(), expires, game: s.gid, guest, gname, priv: !!s.priv, title: s.title || '' } : cur.host === uid ? cur : undefined);
     if (!r.committed || !r.value || r.value.host !== uid) return null;
     const v = r.value;
     roomAttach(s.code, { tc: v.tc, priv: v.priv, title: v.title, expires: v.expires, game: v.game }, cbs);
@@ -324,7 +325,7 @@
         if (r.committed && r.value && r.value.game === ngid) await db.update('games/' + gid, { next: ngid });
         else await db.remove('games/' + ngid);
       } else {                              // the guest leaves: reopen with a fresh expiry
-        await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = null; cur.guest = null; cur.expires = db.now() + ROOM_TTL; return cur; });
+        await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = null; cur.guest = null; cur.gname = null; cur.expires = db.now() + ROOM_TTL; return cur; });
       }
     } catch (e) { console.warn(e); } finally {
       roomBusy = false;
@@ -364,7 +365,7 @@
     const black = Math.random() < 0.5 ? uid : rm.host, white = black === uid ? rm.host : uid;
     const names = { [uid]: profile.name, [rm.host]: rm.name }, rates = { [uid]: profile.rating, [rm.host]: rm.rating };
     await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, room: code, host: rm.host, ...tcFields(rm.tc), created: db.stamp(), t: db.stamp() });
-    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; cur.guest = uid; return cur; });
+    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; cur.guest = uid; cur.gname = profile.name; return cur; });
     if (!(r.committed && r.value && r.value.game === gid)) { await db.remove('games/' + gid); return null; }
     return gid;
   }
@@ -380,6 +381,28 @@
   });
   const answerRematch = (gid, yes) => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g) || !g.again || g.again.by === uid) return; g.post = yes ? 'again' : 'no'; return g; });
   const expireRematch = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g) || !g.again || db.now() - g.again.t < REMATCH_MS) return; g.post = 'timeout'; return g; });
+
+  // ---- spectating: anyone may follow the game of an OPEN room read-only. The only write is the spectator count
+  // watch/<gid>/<uid> = true (removed on leaving / disconnect)
+  let watchGid = null;
+  async function roomGameOf(code) {
+    code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const rm = code ? await db.get('rooms/' + code) : null;
+    return rm && !rm.priv && rm.game && rm.host !== uid && rm.guest !== uid ? rm.game : null;
+  }
+  function watchUnmark() {
+    if (!watchGid) return;
+    const p = 'watch/' + watchGid + '/' + uid; watchGid = null;
+    db.cancelDisconnect(p); db.remove(p).catch(() => {});
+  }
+  function spectate(gid, cb) {
+    setPresence('watch', { room: null });
+    watchUnmark(); watchGid = gid;
+    db.set('watch/' + gid + '/' + uid, true).then(() => { if (watchGid === gid) db.onDisconnectRemove('watch/' + gid + '/' + uid); }).catch(() => {});
+    const off = db.on('games/' + gid, cb);
+    return () => { off(); if (watchGid === gid) watchUnmark(); };
+  }
+  const watchCount = (gid, cb) => db.on('watch/' + gid, v => cb(Object.keys(v || {}).length));
 
   // cancel the rated-game search only (closing the online dialog)
   async function leaveLobby() {
@@ -476,7 +499,7 @@
     available: !!CFG || MOCK, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, ROOM_TTL, REMATCH_MS, CHAT_N, CHAT_LEN, CHAT_GAP, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; }, get room() { return db ? room() : null; },
     getGame: gid => db.get('games/' + gid), resumeRoom,
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
-    setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat,
+    setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat, roomGameOf, spectate, watchCount,
     watchGame, sendMove, moveCount, USI_RE, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),
   };

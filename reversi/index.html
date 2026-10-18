@@ -493,6 +493,23 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .ol-list small.st-play{color:#f2c060}.ol-list small.st-lobby{color:#8fe3b8}.ol-list small.st-room{color:#9fc7ff}
 .dk-join{font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(201,169,97,.5);background:rgba(201,169,97,.12);color:var(--accent)}
 .dk-join:hover{background:rgba(201,169,97,.22)}
+.dk-watch{flex:none;font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(143,227,184,.55);background:rgba(143,227,184,.12);color:#8fe3b8}
+.dk-watch:hover{background:rgba(143,227,184,.22)}
+.dk-watch:disabled{opacity:.55;pointer-events:none}
+.ol-rooms .dk-watch{padding:5px 14px;font-size:12.5px}
+.ol-list > div.ingame{background:rgba(0,0,0,.12)}
+.ol-list > div > span{min-width:0}
+.ol-list small.ol-ing{color:#f2c060;white-space:nowrap}
+.ol-list small.st-watch{color:#d4b0ff}
+.ol-watch{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 12px;border-color:rgba(143,227,184,.55);background:linear-gradient(180deg,rgba(143,227,184,.10),rgba(143,227,184,.03)),var(--panel)}
+.ol-watch .wl{font-weight:700;color:#8fe3b8;font-size:14px;white-space:nowrap}
+.ol-watch .wi{flex:1 1 60px;font-size:12.5px;color:var(--muted);min-width:0}
+.ol-watch .wr{flex:1 1 100%;order:-1;font-size:14px;line-height:1.5;color:var(--accent);font-weight:700}
+.ol-watch .wr small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.ol-watch button{min-height:34px;padding:5px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:12.5px;cursor:pointer}
+.ol-watch button:hover{border-color:var(--brass2)}
+.ol-watch button.warn{border-color:rgba(255,107,91,.5);color:#ffb0a6}
+.ol-watch.pl{padding:5px 12px;border-color:var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel))}
 /* phones: bottom tab bar switches between the board and the online panel */
 @media (pointer: coarse){
   body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#0f1715;border-top:1px solid var(--line)}
@@ -870,6 +887,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
         <button id="pzQuit" data-i18n="ls.quit"></button>
       </div>
     </div>
+    <div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>
     <div class="card players">
       <div class="player" id="pBlack">
         <div class="top"><div class="pdisc b"></div><div class="name" id="nameBlack"></div></div>
@@ -1102,9 +1120,9 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018rs"></script>
+<script src="i18n.js?v=20261018wt"></script>
 <script src="firebase-config.js"></script>
-<script src="online.js?v=20261018rs"></script>
+<script src="online.js?v=20261018wt"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1447,7 +1465,7 @@ function renderInfo() {
   renderGraph();
   renderKifu();
   // buttons
-  $('#btnUndo').disabled = settings.mode === 'online' ? !net || net.done : settings.mode === 'watch' || !canUndo();
+  $('#btnUndo').disabled = settings.mode === 'online' ? !net || net.done || net.spectate : settings.mode === 'watch' || !canUndo();
   $('#btnUndo').querySelector('span').textContent = t(settings.mode === 'online' && net ? 'ol.resign' : 'btn.undo');
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1760,6 +1778,7 @@ $('#btnStart').onclick = () => {
     settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked; settings.anim = $('#optAnim').checked;
     hideOverlay('#newOverlay'); openOnline(); return;
   }
+  if (net && net.spectate) olWatchStop();
   if (net && !net.done) Online.resign(net.gid);
   leaveOnlineGame();
   if (draft.mode === 'puzzle') {
@@ -1902,6 +1921,7 @@ $('#btnLesson').onclick = openLessons;
 
 let savedGame = null;
 function startLesson(i) {
+  if (net && net.spectate) olWatchStop();
   const l = curSets()[i];
   busyToken++; cancelAI(); cancelAna();
   if (!lesson) savedGame = { positions, cur, reviewing };
@@ -2421,6 +2441,7 @@ function exactScores(cells, toMove) {
   });
 }
 function startPuzzle(li, k, daily) {
+  if (net && net.spectate) olWatchStop();
   if (lesson) { lesson = null; document.body.classList.remove('in-lesson'); clearMarks(); }
   busyToken++; cancelAI(); cancelAna();
   if (!puzzle && !savedGame) savedGame = { positions, cur, reviewing };
@@ -2911,7 +2932,14 @@ document.addEventListener('click', e => {
 // open rooms (live; shown in the online menu and the dock / phone online tab), own room marked
 let olRooms = [], olRoomsUnsub = null;
 function olRoomRows(list) {
-  return list.length ? list.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${r.title ? `<b class="ol-rtitle">${esc(r.title)}</b> ` : ''}${esc(r.name)} <small>R ${r.rating} · ${esc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${esc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  const me = Online.uid;
+  return list.length ? list.map(r => {
+    const tl = r.title ? `<b class="ol-rtitle">${esc(r.title)}</b> ` : '';
+    if (!r.game) return `<div class="${r.host === me ? 'me' : ''}"><span>${tl}${esc(r.name)} <small>R ${r.rating} · ${esc(tcTag(r.tc))}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${esc(r.id)}">${t('ol.join')}</button>`}</div>`;
+    // a game is being played in this open room: players' names + 「観戦」 (the own room / own game: no button)
+    const mine = r.host === me || r.guest === me, watching = !!(net && net.spectate && net.game && net.game.room === r.id && net.gid === r.game);
+    return `<div class="ingame${mine ? ' me' : ''}"><span>${tl}${esc(r.name)}${r.gname ? ' <small>vs</small> ' + esc(r.gname) : ''} <small class="ol-ing">${t('ol.st.play')} · ${esc(tcTag(r.tc))}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${esc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
+  }).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
 }
 function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
 function olWatchRooms() { if (!olRoomsUnsub && window.Online && Online.uid) olRoomsUnsub = Online.watchRooms(l => { olRooms = l; olRoomsRender(); }); }
@@ -3052,36 +3080,42 @@ setTimeout(async () => {
 }, 0);
 
 const decSq = s => (s.charCodeAt(0) - 97) + (+s[1] - 1) * 8;
-function startOnlineGame(gid, intro) {
+// spec = room code: watch the game read-only (spectator) instead of playing it
+function startOnlineGame(gid, intro, spec) {
   if (net && net.gid === gid) return;
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay');
   if (lesson) endLesson && endLesson();
   if (puzzle) endPuzzle();
+  const saved = spec ? (net ? (net.spectate ? net.saved : null) : { positions, cur, mode: settings.mode, hint: settings.hint }) : null;
   leaveOnlineGame();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   settings.mode = 'online'; settings.hint = false; clearHints();
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
   cur = 0; reviewing = false;
-  net = { gid, game: null, me: 0, opp: null, done: false, first: true, intro };
-  olLiveSave(gid);
-  document.body.classList.add('in-online');
-  net.unsub = Online.watchGame(gid, onNetGame);
+  net = { gid, game: null, me: spec ? -1 : 0, opp: null, done: false, first: true, intro, spectate: !!spec, code: spec || null, saved, watchers: 0 };
+  if (!spec) olLiveSave(gid);
+  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
+  net.unsub = spec ? Online.spectate(gid, onNetGame) : Online.watchGame(gid, onNetGame);
+  net.wUnsub = Online.watchCount(gid, n => { if (net && net.gid === gid) { net.watchers = n; olWatchRender(); } });
   net.timer = setInterval(netTick, 500);
   renderBoard(null); renderInfo();
-  toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); if (typeof mtab === 'function') mtab('game');
+  if (!spec) { toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); }
+  if (typeof mtab === 'function') mtab('game');
+  olWatchRender(); dockRender();
 }
 function leaveOnlineGame() {
   if (!net) return;
-  olLiveClear();
-  net.unsub && net.unsub(); clearInterval(net.timer);
-  net = null; document.body.classList.remove('in-online');
+  if (!net.spectate) olLiveClear();
+  net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
+  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender();
   $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low'); olClkOff($('#clkBlack')); olClkOff($('#clkWhite'));
   if (window.Online && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }); }
 }
 function onNetGame(g) {
   if (!net || !g) return;
-  net.game = g; net.me = g.b === Online.uid ? BLACK : WHITE; humanColor = net.me; net.opp = g.b === Online.uid ? g.w : g.b;
-  if (net.first) { net.first = false; olTcToast(g, net.intro || t('ol.start')); }
+  const spec = net.spectate, first = net.first;
+  net.game = g; net.me = spec ? -1 : g.b === Online.uid ? BLACK : WHITE; if (!spec) humanColor = net.me; net.opp = spec ? null : g.b === Online.uid ? g.w : g.b;
+  if (first) { net.first = false; olTcToast(g, spec ? net.intro || t('ol.watchStart') : net.intro || t('ol.start')); }
   const ms = (g.moves || '').match(/../g) || [];
   const local = positions.slice(1).map(p => sqName(p.last));
   // resync if the local record diverged from the server (e.g. a rejected send)
@@ -3091,15 +3125,16 @@ function onNetGame(g) {
   let anim = null;
   while (positions.length - 1 < ms.length) { const a = applyMove(decSq(ms[positions.length - 1])); if (!a) break; anim = a; }
   if (!reviewing) cur = positions.length - 1;
-  if (anim && positions[positions.length - 1].mover !== net.me) { playPlace(anim.flips.length); renderBoard(anim); moveFx(anim); if (anim.passed) { toast(t('pass', { c: cname(anim.passer) })); playPass(); } }
+  if (anim && !(spec && first) && positions[positions.length - 1].mover !== net.me) { playPlace(anim.flips.length); renderBoard(anim); moveFx(anim); if (anim.passed) { toast(t('pass', { c: cname(anim.passer) })); playPass(); } }
   else renderBoard(null);
   renderInfo();
   const last = positions[positions.length - 1];
-  if (g.status === 'play' && last.toMove === 0 && ms.length === positions.length - 1) Online.markOver(net.gid);
+  if (!spec && g.status === 'play' && last.toMove === 0 && ms.length === positions.length - 1) Online.markOver(net.gid);
   if (g.status !== 'play' && !net.done) finishOnline(g);
   if (net && net.done) olAfter();
 }
 function netTick() {
+  olWatchRender();
   if (net && net.done) { olAfter(); return; }
   if (!net || !net.game || net.done || net.game.status !== 'play') return;
   const g = net.game, p = positions[positions.length - 1]; if (!p.toMove) return;
@@ -3111,7 +3146,7 @@ function netTick() {
     olClk($(c === BLACK ? '#clkBlack' : '#clkWhite'), k, c === p.toMove);
   }
   // the opponent ran out of time (with a little grace for latency): claim the win
-  if (p.toMove !== net.me && !net.pending && !net.claiming && Online.clockOf(g, p.toMove === BLACK ? 'b' : 'w', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).finally(() => { if (net) net.claiming = false; }); }
+  if (!net.spectate && p.toMove !== net.me && !net.pending && !net.claiming && Online.clockOf(g, p.toMove === BLACK ? 'b' : 'w', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).finally(() => { if (net) net.claiming = false; }); }
 }
 function netMove(sq) {
   const p = positions[positions.length - 1];
@@ -3125,9 +3160,17 @@ function netMove(sq) {
 }
 async function finishOnline(g) {
   net.done = true;
-  olLiveClear();
+  if (!net.spectate) olLiveClear();
   let score;
   const [b, w] = counts(positions[positions.length - 1].cells);
+  if (net.spectate) {        // spectators: who won and why (no rating change, no result dialog, nothing written)
+    setStatus(BLACK, ''); setStatus(WHITE, ''); $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low'); olClkOff($('#clkBlack')); olClkOff($('#clkWhite'));
+    const win = g.status === 'resign' || g.status === 'timeout' ? (g.loser === g.b ? WHITE : BLACK) : b > w ? BLACK : w > b ? WHITE : 0;
+    const why = g.status === 'resign' ? t('ol.wResign') : g.status === 'timeout' ? t('ol.wTime') : b + ' - ' + w;
+    net.result = (win ? t('ol.wWin', { c: cname(win), n: win === BLACK ? g.bn : g.wn }) : t('res.draw')) + ' · ' + why;
+    toast(net.result, 4200); playChime(true); renderInfo(); olWatchRender(); dockRender();
+    return;
+  }
   if (g.status === 'resign' || g.status === 'timeout') score = g.loser === Online.uid ? 0 : 1;
   else { const d = net.me === BLACK ? b - w : w - b; score = d > 0 ? 1 : d < 0 ? 0 : 0.5; }
   const r = await Online.applyResult(net.gid, g, score);
@@ -3142,7 +3185,7 @@ async function finishOnline(g) {
 }
 let resignArm = 0;
 function onlineResign() {
-  if (!net || net.done) return;
+  if (!net || net.done || net.spectate) return;
   if (Date.now() - resignArm > 3000) { resignArm = Date.now(); toast(t('ol.resignConfirm'), 2500); return; }
   resignArm = 0; Online.resign(net.gid);
 }
@@ -3163,7 +3206,7 @@ function onlineResign() {
 })();
 // ====================================================================== online dock (PC: bar at the bottom / phone: "online" tab)
 const dock = { on: false, open: false, players: [], rooms: [], lobby: [], rank: [], unsub: [] };
-const ST_KEY = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play' };
+const ST_KEY = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play', watch: 'ol.st.watch' };
 function dockRender() {
   if (!dock.on) return;
   const me = Online.profile;
@@ -3172,7 +3215,7 @@ function dockRender() {
   $('#mtCount').textContent = nPlay ? String(nPlay) : '';
   const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) { tcEl.dataset.l = LANG; tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"'); }
   if (dock.editing) return dockRenderLists();
-  $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${esc(t('ol.rename'))}">${esc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
+  $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${esc(t('ol.rename'))}">${esc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && net.spectate ? ` · ${t('ol.st.watch')}` : net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
   dockRenderLists();
 }
 function dockRenderLists() {
@@ -3311,6 +3354,14 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 function olBlack() { return BLACK; }
+var OL_CAN_FLIP = false;         // the reversi board is not turned
+function olFlipBoard() {}
+// after watching: put back the local game that was on the board (or start a fresh one)
+function olRestoreLocal(sv) {
+  settings.mode = sv && sv.mode && sv.mode !== 'online' ? sv.mode : 'ai';
+  if (sv && sv.positions) { positions = sv.positions; cur = Math.min(sv.cur, positions.length - 1); reviewing = cur < positions.length - 1; settings.hint = !!sv.hint; update(null); }
+  else newGame();
+}
 // ====================================================================== online extras (same code in shogi / reversi)
 // player names in the side panel, big clocks, rematch & room lifecycle after a room game, public chat
 function olX(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
@@ -3344,6 +3395,13 @@ function olPostText(g, mine) {        // why the guest left, from the point of v
 function olAfter() {
   const box = $('#olAgain'), btn = $('#btnAgain');
   const g = net && net.done && net.game;
+  if (net && net.spectate) {      // spectator: follow the rematch, or stay on the final position
+    if (box) box.classList.add('hidden');
+    if (!g) return;
+    if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.watchNext'), net.code); return; }
+    if (g.post && g.post !== 'again' && !net.note) { net.note = t('ol.watchEnd'); toast(net.note, 3200); olWatchRender(); }
+    return;
+  }
   if (!olRoomGame(g)) { if (box) box.classList.add('hidden'); if (btn) btn.disabled = false; return; }
   const me = Online.uid, gid = net.gid;
   if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.againGo')); return; }
@@ -3386,7 +3444,7 @@ $('#olAgain').addEventListener('click', e => {
 new MutationObserver(() => {
   const shown = $('#resultOverlay').classList.contains('show');
   if (shown) { if (net && net.done) net.resShown = true; return; }
-  const g = net && net.done && net.resShown && net.game;
+  const g = net && net.done && net.resShown && !net.spectate && net.game;
   if (!olRoomGame(g) || g.post || g.next) return;
   Online.setPost(net.gid, g.host === Online.uid ? 'host' : 'left').catch(() => {});
 }).observe($('#resultOverlay'), { attributes: true, attributeFilter: ['class'] });
@@ -3396,6 +3454,45 @@ if (window.Online && Online.available) Online.onRoom((ev, r, g) => {
   toast(g ? olPostText(Object.assign({}, g, { host: Online.uid })) : t('ol.pReopen'), 3800);
   dockRender(); olRoomTick();
 });
+
+// ---- spectating the game of an OPEN room (read-only; follows rematches). net.spectate: no moves, no result / rating / rematch / room
+// writes, no resume after a reload. The only write is the spectator count (Online.spectate); players see "N watching" as well.
+function olWatchRender() {
+  const el = $('#olWatch'); if (!el) return;
+  const n = (net && net.watchers) || 0, spec = !!(net && net.spectate);
+  let h = '';
+  if (spec) {
+    h = (net.result || net.note ? `<span class="wr">${olX(net.result || '')}${net.note ? `<small>${olX(net.note)}</small>` : ''}</span>` : '')
+      + `<span class="wl">👁 ${olX(t('ol.st.watch'))}</span><span class="wi">${n ? olX(t('ol.watchers', { n })) : ''}</span>`
+      + (OL_CAN_FLIP ? `<button type="button" id="olWatchFlip">${olX(t('ol.flip'))}</button>` : '')
+      + `<button type="button" class="warn" id="olWatchStop">${olX(t('ol.watchStop'))}</button>`;
+  } else if (net && n) h = `<span class="wi">👁 ${olX(t('ol.watchers', { n }))}</span>`;
+  el.classList.toggle('hidden', !h); el.classList.toggle('pl', !!h && !spec);
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+async function olWatchRoom(code, btn) {
+  if (net && !net.done && !net.spectate) { toast(t('ol.watchBusy'), 2200); return; }
+  if (btn) btn.disabled = true;
+  let gid = null; try { await Online.init(); gid = await Online.roomGameOf(code); } catch (e) { console.warn(e); }
+  if (btn) btn.disabled = false;
+  if (!gid) { toast(t('ol.noWatch'), 2200); return; }
+  if (typeof mtab === 'function') mtab('game');
+  if (net && net.spectate && net.gid === gid) { hideOverlay('#onlineOverlay'); return; }
+  startOnlineGame(gid, null, code);
+}
+// 「観戦をやめる」: back to the local game that was on the board before watching
+function olWatchStop() {
+  if (!net || !net.spectate) return;
+  const sv = net.saved; leaveOnlineGame(); olRestoreLocal(sv);
+  dockRender();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.dk-watch, #olWatchStop, #olWatchFlip'); if (!b) return;
+  e.stopPropagation();
+  if (b.id === 'olWatchStop') olWatchStop();
+  else if (b.id === 'olWatchFlip') olFlipBoard();
+  else olWatchRoom(b.dataset.code, b);
+}, true);
 
 // ---- public chat: one room shared by everyone online in this game (latest Online.CHAT_N messages; no private messages)
 const chat = { list: [], seen: -1, unsub: null };

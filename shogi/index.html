@@ -499,6 +499,23 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .ol-list small.st-play{color:#f2c060}.ol-list small.st-lobby{color:#8fe3b8}.ol-list small.st-room{color:#9fc7ff}
 .dk-join{font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(201,169,97,.5);background:rgba(201,169,97,.12);color:var(--accent)}
 .dk-join:hover{background:rgba(201,169,97,.22)}
+.dk-watch{flex:none;font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(143,227,184,.55);background:rgba(143,227,184,.12);color:#8fe3b8}
+.dk-watch:hover{background:rgba(143,227,184,.22)}
+.dk-watch:disabled{opacity:.55;pointer-events:none}
+.ol-rooms .dk-watch{padding:5px 14px;font-size:12.5px}
+.ol-list > div.ingame{background:rgba(0,0,0,.12)}
+.ol-list > div > span{min-width:0}
+.ol-list small.ol-ing{color:#f2c060;white-space:nowrap}
+.ol-list small.st-watch{color:#d4b0ff}
+.ol-watch{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 12px;border-color:rgba(143,227,184,.55);background:linear-gradient(180deg,rgba(143,227,184,.10),rgba(143,227,184,.03)),var(--panel)}
+.ol-watch .wl{font-weight:700;color:#8fe3b8;font-size:14px;white-space:nowrap}
+.ol-watch .wi{flex:1 1 60px;font-size:12.5px;color:var(--muted);min-width:0}
+.ol-watch .wr{flex:1 1 100%;order:-1;font-size:14px;line-height:1.5;color:var(--accent);font-weight:700}
+.ol-watch .wr small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.ol-watch button{min-height:34px;padding:5px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:12.5px;cursor:pointer}
+.ol-watch button:hover{border-color:var(--brass2)}
+.ol-watch button.warn{border-color:rgba(255,107,91,.5);color:#ffb0a6}
+.ol-watch.pl{padding:5px 12px;border-color:var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel))}
 @media (pointer: coarse){
   body:not(.no-online){--vh:calc(100dvh - 50px - 40px - env(safe-area-inset-bottom));--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))} }
@@ -678,6 +695,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
       <button id="lsPlayHere" class="ls-play hidden" data-i18n="op.playHere"></button>
       <button id="lsBackOp" class="ls-play ls-back hidden" data-i18n="op.backToIntro"></button>
     </div>
+    <div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>
     <div class="card players">
       <div class="player" id="pBlack"><div class="top"><div class="pmark b"></div><div class="name" id="nameBlack"></div></div><div class="side-l" data-i18n="black"></div><div class="clk" id="clkBlack"></div><div class="status" id="statusBlack"></div></div>
       <div class="player" id="pWhite"><div class="top"><div class="pmark w"></div><div class="name" id="nameWhite"></div></div><div class="side-l" data-i18n="white"></div><div class="clk" id="clkWhite"></div><div class="status" id="statusWhite"></div></div>
@@ -849,11 +867,11 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261018rs"></script>
+<script src="i18n.js?v=20261018wt"></script>
 <script src="engine.js?v=20261018p57"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
-<script src="online.js?v=20261018rs"></script>
+<script src="online.js?v=20261018wt"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -1320,7 +1338,7 @@ function renderInfo() {
   $('#btnUndo').disabled = !humanCanUndo;
   $('#btnResign').disabled = !!game.over || settings.mode === 'watch';
   $('#btnHint').disabled = !!game.over;
-  if (settings.mode === 'online') { const live = !!net && !net.done && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
+  if (settings.mode === 'online') { const live = !!net && !net.done && !net.spectate && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
   else { $('#btnLesson').disabled = false; $('#btnTsume').disabled = false; }
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.remove('show');
@@ -1637,7 +1655,7 @@ $('#btnHint').onclick = async () => {
   if (token === busyToken && isAI(P.side)) {} // AI continues independently
 };
 $('#btnResign').onclick = () => {
-  if (settings.mode === 'online') { if (net && !net.done) confirmBox(t('confirm.resign'), t('resign.yes'), () => { if (net && !net.done) Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); return; }
+  if (settings.mode === 'online') { if (net && !net.done && !net.spectate) confirmBox(t('confirm.resign'), t('resign.yes'), () => { if (net && !net.done && !net.spectate) Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); return; }
   if (!game || game.over) return;
   confirmBox(t('confirm.resign'), t('resign.yes'), () => {
     busyToken++; cancelAI(); cancelAna();
@@ -1767,7 +1785,7 @@ $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (net) {   // starting something else ends the online game (resigning it if it is still going)
-    if (!net.done) { const gid = net.gid, g = net.game; Online.resign(gid).then(() => g && Online.applyResult(gid, g, 0)).catch(() => {}); }
+    if (!net.done && !net.spectate) { const gid = net.gid, g = net.game; Online.resign(gid).then(() => g && Online.applyResult(gid, g, 0)).catch(() => {}); }
     leaveOnlineGame();
   }
   if (dlg.mode === 'online') { openOnline(); return; }
@@ -2853,7 +2871,14 @@ document.addEventListener('click', e => {
 // open rooms (live; shown in the online menu and the dock / phone online tab), own room marked
 let olRooms = [], olRoomsUnsub = null;
 function olRoomRows(list) {
-  return list.length ? list.map(r => `<div class="${r.host === Online.uid ? 'me' : ''}"><span>${r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b> ` : ''}${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === Online.uid ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  const me = Online.uid;
+  return list.length ? list.map(r => {
+    const tl = r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b> ` : '';
+    if (!r.game) return `<div class="${r.host === me ? 'me' : ''}"><span>${tl}${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`;
+    // a game is being played in this open room: players' names + 「観戦」 (the own room / own game: no button)
+    const mine = r.host === me || r.guest === me, watching = !!(net && net.spectate && net.game && net.game.room === r.id && net.gid === r.game);
+    return `<div class="ingame${mine ? ' me' : ''}"><span>${tl}${olEsc(r.name)}${r.gname ? ' <small>vs</small> ' + olEsc(r.gname) : ''} <small class="ol-ing">${t('ol.st.play')} · ${olEsc(tcTag(r.tc))}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${olEsc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
+  }).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
 }
 function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
 function olWatchRooms() { if (!olRoomsUnsub && window.Online && Online.uid) olRoomsUnsub = Online.watchRooms(l => { olRooms = l; olRoomsRender(); }); }
@@ -3005,8 +3030,11 @@ setTimeout(async () => {
   } catch (e) { console.warn(e); }
 }, 0);
 
-function startOnlineGame(gid, intro) {
+// spec = room code: watch the game read-only (spectator) instead of playing it
+function startOnlineGame(gid, intro, spec) {
   if (net && net.gid === gid) return;
+  const saved = spec ? (net ? (net.spectate ? net.saved : null) : (lesson || edit ? null : { game, mode: settings.mode })) : null;
+  const keepFlip = !!(spec && net && net.spectate && flip);
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#newOverlay'); hideOverlay('#playOverlay');
   leaveOnlineGame();
   busyToken++; cancelAI(); cancelAna(); rvCancel(); stopPlay();
@@ -3014,20 +3042,22 @@ function startOnlineGame(gid, intro) {
   exitLesson(true);
   settings.mode = 'online';
   game = newRecord(HANDI[0], 0); game.clock = null;       // online games are always even (平手)
-  cur = 0; reviewing = false; hintMoves = null; sel = null; flip = false;
-  net = { gid, game: null, me: 0, opp: null, done: false, first: true, intro };
-  olLiveSave(gid);
-  document.body.classList.add('in-online');
-  net.unsub = Online.watchGame(gid, onNetGame);
+  cur = 0; reviewing = false; hintMoves = null; sel = null; flip = keepFlip;
+  net = { gid, game: null, me: spec ? -1 : 0, opp: null, done: false, first: true, intro, spectate: !!spec, code: spec || null, saved, watchers: 0 };
+  if (!spec) olLiveSave(gid);
+  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
+  net.unsub = spec ? Online.spectate(gid, onNetGame) : Online.watchGame(gid, onNetGame);
+  net.wUnsub = Online.watchCount(gid, n => { if (net && net.gid === gid) { net.watchers = n; olWatchRender(); } });
   net.timer = setInterval(netTick, 250);
   refresh(false);
-  toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); mtab('game');
+  if (!spec) { toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); }
+  mtab('game'); olWatchRender(); dockRender();
 }
 function leaveOnlineGame() {
   if (!net) return;
-  olLiveClear();
-  net.unsub && net.unsub(); clearInterval(net.timer);
-  net = null; document.body.classList.remove('in-online');
+  if (!net.spectate) olLiveClear();
+  net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
+  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender();
   if (settings.mode === 'online') settings.mode = 'pvp';
   ['#clkBlack', '#clkWhite'].forEach(s => olClkOff($(s)));
   if (window.Online && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
@@ -3037,10 +3067,10 @@ function leaveOnlineGame() {
 function onNetGame(g) {
   if (!net || !g) return;
   net.game = g;
-  const me = g.b === Online.uid ? 0 : 1, first = net.first;
+  const spec = net.spectate, me = spec ? -1 : g.b === Online.uid ? 0 : 1, first = net.first;
   net.first = false;
-  net.me = me; net.opp = me === 0 ? g.w : g.b; game.human = me;
-  if (first) { flip = me === 1; olTcToast(g, (net.intro ? net.intro + ' · ' : '') + t('ol.youAre', { c: cname(me) })); }
+  net.me = me; net.opp = spec ? null : me === 0 ? g.w : g.b; game.human = spec ? 0 : me;
+  if (first) { if (!spec) flip = me === 1; olTcToast(g, spec ? net.intro || t('ol.watchStart') : (net.intro ? net.intro + ' · ' : '') + t('ol.youAre', { c: cname(me) })); }
   const ms = String(g.moves || '').split(' ').filter(Boolean);
   let reset = false;
   for (let i = 0; i < Math.min(ms.length, game.moves.length); i++) if (ms[i] !== game.moves[i]) { reset = true; break; }
@@ -3066,20 +3096,21 @@ function onNetGame(g) {
     if (!game.over && game.moves.length) { P = posAt(game.moves.length); checkEnd(); }
     if (!reviewing) cur = game.moves.length;
     sel = null;
-    if (added && !reviewing) playPiece(capture);
+    if (added && !reviewing && !(spec && first)) playPiece(capture);
     refresh(added > 0 && !reviewing);
     if (added && !reviewing && P.inCheck() && !game.over) toast(t('check'), 900);
   } else renderInfo();
-  if (g.status === 'play' && game.over && ms.length === game.moves.length) netMarkOver();
+  if (!spec && g.status === 'play' && game.over && ms.length === game.moves.length) netMarkOver();
   if (g.status !== 'play' && !net.done) finishOnline(g);
   if (net && net.done) olAfter();
 }
 function netMarkOver() {
-  if (!net || net.marking || !game.over) return;
+  if (!net || net.spectate || net.marking || !game.over) return;
   net.marking = true;
   Online.markOver(net.gid, game.over.winner, game.over.reason, game.moves.length).catch(e => console.warn(e)).finally(() => { if (net) net.marking = false; });
 }
 function netTick() {
+  olWatchRender();
   if (net && net.done) { olAfter(); return; }
   if (!net || !net.game || net.done || net.game.status !== 'play' || game.over) return;
   const g = net.game, side = (game.moves.length + (sideAt0() ? 1 : 0)) & 1, now = Online.now(), byo = Online.tcOf(g).byo;
@@ -3090,7 +3121,7 @@ function netTick() {
     olClk(el, k, c === side);
   }
   // the opponent ran out of time (with a little grace for latency): claim the win
-  if (side !== net.me && !net.pending && !net.claiming && Online.clockOf(g, side ? 'w' : 'b', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).catch(() => {}).finally(() => { if (net) net.claiming = false; }); }
+  if (!net.spectate && side !== net.me && !net.pending && !net.claiming && Online.clockOf(g, side ? 'w' : 'b', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).catch(() => {}).finally(() => { if (net) net.claiming = false; }); }
 }
 function netMove(m) {
   if (!net || !canInteract()) return;
@@ -3105,7 +3136,7 @@ function netMove(m) {
 }
 async function finishOnline(g) {
   net.done = true;
-  olLiveClear();
+  if (!net.spectate) olLiveClear();
   let winner, reason;
   if (g.status === 'resign' || g.status === 'timeout') { winner = (g.loser === g.b ? 0 : 1) ^ 1; reason = g.status === 'resign' ? 'resign' : 'time'; }
   else { winner = typeof g.win === 'number' ? g.win : game.over ? game.over.winner : -1; reason = g.reason || (game.over && game.over.reason) || 'mate'; }
@@ -3113,6 +3144,13 @@ async function finishOnline(g) {
   const score = winner < 0 ? 0.5 : winner === net.me ? 1 : 0;
   ['#clkBlack', '#clkWhite'].forEach(s => olClkOff($(s)));
   setStatus(0, ''); setStatus(1, '');
+  if (net.spectate) {        // spectators: who won and why (no rating change, no result dialog, nothing written)
+    renderBoard(false); renderInfo();
+    const why = reason === 'resign' ? t('ol.wResign') : reason === 'time' ? t('ol.wTime') : reason === 'mate' ? t('res.mate', { n: game.moves.length }) : t('res.' + reason);
+    net.result = (winner < 0 ? t('res.draw') : t('ol.wWin', { c: cname(winner), n: winner === 0 ? g.bn : g.wn })) + ' · ' + why;
+    toast(net.result, 4200); playChime(true); olWatchRender(); dockRender();
+    return;
+  }
   renderBoard(false); renderInfo(); save();
   const gid = net.gid;
   let r = { old: Online.profile.rating, now: Online.profile.rating, rated: !!g.rated };
@@ -3129,18 +3167,18 @@ async function finishOnline(g) {
   dockRender();
 }
 // leaving a finished online game for lessons / tsume / editing / loading a record
-['#btnLesson', '#btnTsume', '#btnEdit', '#btnPaste'].forEach(s => { const b = $(s); if (b) b.addEventListener('click', () => { if (net && net.done) leaveOnlineGame(); }, true); });
+['#btnLesson', '#btnTsume', '#btnEdit', '#btnPaste'].forEach(s => { const b = $(s); if (b) b.addEventListener('click', () => { if (net && net.spectate) olWatchStop(); else if (net && net.done) leaveOnlineGame(); }, true); });
 
 // ====================================================================== online dock (PC: bar at the bottom / phone: "online" tab)
 const dock = { on: false, open: false, players: [], rooms: [], lobby: [], rank: [], unsub: [] };
-const OL_ST = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play' };
+const OL_ST = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play', watch: 'ol.st.watch' };
 function dockRender() {
   if (!dock.on) return;
   const me = Online.profile;
   $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
   $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
   const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"');
-  if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
+  if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && net.spectate ? ` · ${t('ol.st.watch')}` : net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
   $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
   $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
   $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
@@ -3237,6 +3275,16 @@ applyI18n();
   });
 })();
 function olBlack() { return 0; }
+var OL_CAN_FLIP = true;          // spectators may turn the board (sente at the bottom by default)
+function olFlipBoard() { flip = !flip; renderCoords(); renderBoard(false); renderInfo(); }
+// after watching: put back the local game that was on the board (or start a fresh one)
+function olRestoreLocal(sv) {
+  if (!sv || !sv.game) { newGame(); return; }
+  settings.mode = sv.mode; game = sv.game; cur = game.moves.length; reviewing = false; hintMoves = null; sel = null;
+  flip = settings.mode === 'ai' && game.human === 1;
+  if (game.clock) game.clock.t0 = Date.now();
+  refresh(false);
+}
 // ====================================================================== online extras (same code in shogi / reversi)
 // player names in the side panel, big clocks, rematch & room lifecycle after a room game, public chat
 function olX(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
@@ -3270,6 +3318,13 @@ function olPostText(g, mine) {        // why the guest left, from the point of v
 function olAfter() {
   const box = $('#olAgain'), btn = $('#btnAgain');
   const g = net && net.done && net.game;
+  if (net && net.spectate) {      // spectator: follow the rematch, or stay on the final position
+    if (box) box.classList.add('hidden');
+    if (!g) return;
+    if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.watchNext'), net.code); return; }
+    if (g.post && g.post !== 'again' && !net.note) { net.note = t('ol.watchEnd'); toast(net.note, 3200); olWatchRender(); }
+    return;
+  }
   if (!olRoomGame(g)) { if (box) box.classList.add('hidden'); if (btn) btn.disabled = false; return; }
   const me = Online.uid, gid = net.gid;
   if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.againGo')); return; }
@@ -3312,7 +3367,7 @@ $('#olAgain').addEventListener('click', e => {
 new MutationObserver(() => {
   const shown = $('#resultOverlay').classList.contains('show');
   if (shown) { if (net && net.done) net.resShown = true; return; }
-  const g = net && net.done && net.resShown && net.game;
+  const g = net && net.done && net.resShown && !net.spectate && net.game;
   if (!olRoomGame(g) || g.post || g.next) return;
   Online.setPost(net.gid, g.host === Online.uid ? 'host' : 'left').catch(() => {});
 }).observe($('#resultOverlay'), { attributes: true, attributeFilter: ['class'] });
@@ -3322,6 +3377,45 @@ if (window.Online && Online.available) Online.onRoom((ev, r, g) => {
   toast(g ? olPostText(Object.assign({}, g, { host: Online.uid })) : t('ol.pReopen'), 3800);
   dockRender(); olRoomTick();
 });
+
+// ---- spectating the game of an OPEN room (read-only; follows rematches). net.spectate: no moves, no result / rating / rematch / room
+// writes, no resume after a reload. The only write is the spectator count (Online.spectate); players see "N watching" as well.
+function olWatchRender() {
+  const el = $('#olWatch'); if (!el) return;
+  const n = (net && net.watchers) || 0, spec = !!(net && net.spectate);
+  let h = '';
+  if (spec) {
+    h = (net.result || net.note ? `<span class="wr">${olX(net.result || '')}${net.note ? `<small>${olX(net.note)}</small>` : ''}</span>` : '')
+      + `<span class="wl">👁 ${olX(t('ol.st.watch'))}</span><span class="wi">${n ? olX(t('ol.watchers', { n })) : ''}</span>`
+      + (OL_CAN_FLIP ? `<button type="button" id="olWatchFlip">${olX(t('ol.flip'))}</button>` : '')
+      + `<button type="button" class="warn" id="olWatchStop">${olX(t('ol.watchStop'))}</button>`;
+  } else if (net && n) h = `<span class="wi">👁 ${olX(t('ol.watchers', { n }))}</span>`;
+  el.classList.toggle('hidden', !h); el.classList.toggle('pl', !!h && !spec);
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+async function olWatchRoom(code, btn) {
+  if (net && !net.done && !net.spectate) { toast(t('ol.watchBusy'), 2200); return; }
+  if (btn) btn.disabled = true;
+  let gid = null; try { await Online.init(); gid = await Online.roomGameOf(code); } catch (e) { console.warn(e); }
+  if (btn) btn.disabled = false;
+  if (!gid) { toast(t('ol.noWatch'), 2200); return; }
+  if (typeof mtab === 'function') mtab('game');
+  if (net && net.spectate && net.gid === gid) { hideOverlay('#onlineOverlay'); return; }
+  startOnlineGame(gid, null, code);
+}
+// 「観戦をやめる」: back to the local game that was on the board before watching
+function olWatchStop() {
+  if (!net || !net.spectate) return;
+  const sv = net.saved; leaveOnlineGame(); olRestoreLocal(sv);
+  dockRender();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.dk-watch, #olWatchStop, #olWatchFlip'); if (!b) return;
+  e.stopPropagation();
+  if (b.id === 'olWatchStop') olWatchStop();
+  else if (b.id === 'olWatchFlip') olFlipBoard();
+  else olWatchRoom(b.dataset.code, b);
+}, true);
 
 // ---- public chat: one room shared by everyone online in this game (latest Online.CHAT_N messages; no private messages)
 const chat = { list: [], seen: -1, unsub: null };
