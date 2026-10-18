@@ -25,6 +25,7 @@ function posAt(i) {
 const sideP = pos => pos.side ? P2 : P1;
 function statusAt(i) {
   if (lesson && lesson.drill) return { over: false };
+  if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
   const { pos, hashes, legal } = posAt(i);
   if (!legal.length) return pos.inCheck() ? { over: true, winner: pos.side ? P1 : P2, why: 'mate' } : { over: true, winner: 0, draw: true, why: 'stalemate' };
   if (pos.half >= 100) return { over: true, winner: 0, draw: true, why: 'fifty' };
@@ -107,6 +108,7 @@ function load() {
     Object.assign(settings, d.settings || {});
     if (Array.isArray(d.moves) && validMoves(d.moves)) {
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
+      rgame = d.rated && d.rated.id ? d.rated : null;
       cur = moves.length; gameOverShown = statusAt(cur).over; return true;
     }
   } catch (e) {}
@@ -114,13 +116,13 @@ function load() {
 }
 function save() {
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1) })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
 }
 
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019e'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261019f'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -319,7 +321,7 @@ function evalText(ev) {
 
 // ====================================================================== panel
 function isAIColor(p) { return settings.mode === 'watch' || (settings.mode === 'ai' && p !== humanColor); }
-function levelFor(p) { return settings.mode === 'watch' ? (p === P1 ? settings.level : settings.level2) : settings.level; }
+function levelFor(p) { if (rgame && settings.mode === 'ai') return rgame.lv; return settings.mode === 'watch' ? (p === P1 ? settings.level : settings.level2) : settings.level; }
 function gameOver(i) { return statusAt(i).over; }
 function canHumanPlay() {
   if (gameOver(cur) || animating) return false;
@@ -332,6 +334,7 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
   if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
+  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
 }
 function material(pos, c) { let m = 0; for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } const p = pos.b[s]; if (p && (p >> 3) === c) m += PVAL[p & 7]; } return m; }
@@ -339,14 +342,15 @@ function renderInfo() {
   const { pos } = posAt(cur), st = statusAt(cur), tm = sideP(pos);
   for (const p of [P1, P2]) {
     const c = p - 1;
-    $('#count' + p).textContent = material(pos, c);
-    $('#hand' + p).textContent = t('mat');
+    if (rgame && !lesson && !puzzle && settings.mode === 'ai') { $('#count' + p).textContent = fmtClock(rtClockLeft(c)); $('#hand' + p).textContent = t('rt.clock'); }
+    else { $('#count' + p).textContent = material(pos, c); $('#hand' + p).textContent = t('mat'); }
     const n = playerName(p); $('#name' + p).textContent = n ? n + ' · ' + pname(p) : pname(p);
     const el = $('#pl' + p);
     el.classList.toggle('active', !st.over && tm === p); el.classList.toggle('won', st.winner === p); el.classList.toggle('thinking', thinking === p);
     $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (pos.inCheck() ? ' · ' + t('st.check') : '') : '');
   }
-  $('#evalCard').classList.toggle('hidden', !settings.eval);
+  $('#evalCard').classList.toggle('hidden', !settings.eval && !rtLive());
+  document.body.classList.toggle('rated-live', rtLive()); $('#evalCard').dataset.rtnote = t('rt.noEval');
   let ev = st.over ? { s: st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0, kind: 'final', side: st.winner } : evals[cur];
   if (!ev && cur > 0 && evals[cur - 1]) ev = evals[cur - 1];
   $('#evalText').textContent = evalText(ev);
@@ -357,7 +361,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnFlip').classList.toggle('on', !!settings.flip);
   renderReview();
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
 }
 function evalAt(i) { const st = statusAt(i); if (st.over) return st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0; return evals[i] ? evals[i].s : null; }
 function renderGraph() {
@@ -502,16 +506,19 @@ function commit(m, dragged) {
 }
 
 // ====================================================================== flow
-function newGame() {
+function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
   startFen = null;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
+  rgame = null;
+  if (rated) { humanColor = Math.random() < 0.5 ? P1 : P2; rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() }); }
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null;
   hideOverlay('#resultOverlay');
   orient(); drawSquares(); shownKey = ''; syncPieces(new Int8Array(128));
   update(false); save(); afterPosition();
 }
 function playMove(m) {
+  if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (now - rgame.t)) + RT_CLOCK.inc; rgame.t = now; }
   moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false;
   evals.length = moves.length; hintList = null;
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
@@ -538,6 +545,7 @@ async function maybeAI(tok) {
 async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
+  if (rtLive()) { hintList = null; return; }
   if (!settings.eval && !settings.hint) return;
   const mover = toMoveAt(idx);
   const apply = list => {
@@ -560,12 +568,15 @@ function onGameEnd(st) {
   $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
   $('#resultTitle').textContent = st.draw ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: pname(st.winner) });
   let sub = t('res.why.' + st.why) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) });
-  if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
+  if (rgame) {
+    const rx = rtSettle(st);
+    if (rx) sub += `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span> · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
+  } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
 function canUndo() {
-  if (lesson || puzzle) return false;
+  if (lesson || puzzle || rgame) return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
@@ -586,7 +597,7 @@ function viewAt(i) {
   cur = i; reviewing = i !== moves.length; hintList = null;
   update(step); afterPosition();
 }
-function resumeHere() { if (!reviewing) return; moves = moves.slice(0, cur); evals.length = cur + 1; reviewing = false; gameOverShown = false; update(false); save(); afterPosition(); }
+function resumeHere() { if (!reviewing) return; if (rgame) { viewAt(moves.length); return; } moves = moves.slice(0, cur); evals.length = cur + 1; reviewing = false; gameOverShown = false; update(false); save(); afterPosition(); }
 function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
 function confetti() {
@@ -605,6 +616,7 @@ function confetti() {
 $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
 $('#btnHint').onclick = () => {
+  if (rtLive()) { toast(t('rt.noEval')); return; }
   settings.hint = !settings.hint; save();
   if (!settings.hint) { hintList = null; renderFx(); renderInfo(); }
   else { const k = keyOf(cur); if (anaCache.has(k)) { hintList = anaCache.get(k); renderFx(); } else analyzeCurrent(busyToken); renderInfo(); }
@@ -627,7 +639,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 $('#btnResume').onclick = resumeHere;
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
-$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); newGame(); };
+$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame(); };
 function pgnText() {
   const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*';
   const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side, s = '';
@@ -714,19 +726,21 @@ function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
   document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
+  $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
+  if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
   $('#fDisplay').classList.toggle('hidden', !game);
   $('#fInfo').classList.toggle('hidden', game);
   $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
-  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : t('start');
+  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : t('start');
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog() {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat;
   segSync(); showOverlay('#newOverlay');
 }
@@ -740,13 +754,113 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   exitSpecial();
+  if (draft.mode === 'rated') { rtStart(); return; }
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, flip: false });
   newGame();
 };
 
+// ====================================================================== rated games against the AI (local Elo)
+// Each AI level has a rating measured against Stockfish's UCI_Elo scale (MODEL_CARD.md); the opponent is picked around the
+// player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
+let rgame = null;
+const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
+const RT_LV = [0, 700, 1000, 1450, 1700, 1900, 2200, 2450, 3000, 3050, 3100];
+function rtLoad() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
+  if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
+  if (!Array.isArray(s.hist)) s.hist = [];
+  return s;
+}
+function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
+const RT_CLASS = [800, 1200, 1600, 2000, 2400, 2700];
+function rtRank(r) { let k = 0; while (k < RT_CLASS.length && r >= RT_CLASS[k]) k++; return t('rt.class' + (k + 1)); }
+const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
+const rtLvName = lv => `Lv.${lv} ${LV(lv)}`;
+function rtPick(r) {
+  const u = Math.random(), v = Math.random();
+  const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
+  let lv = 1; for (let i = 1; i <= 10; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
+  const diff = RT_LV[lv] - r;
+  return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
+}
+function rtLive() { return !!(rgame && !rgame.over && !gameOverRaw() && !lesson && !puzzle && settings.mode === 'ai'); }
+function gameOverRaw() { const st = statusAtRaw(moves.length); return st.over; }
+function statusAtRaw(i) { const keep = rgame; rgame = null; try { return statusAt(i); } finally { rgame = keep; } }
+function rtClockLeft(c) {   // c: 0 white, 1 black
+  if (!rgame || !rgame.ct) return 0;
+  let v = rgame.ct[c];
+  if (rtLive() && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
+  return Math.max(0, v);
+}
+function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
+setInterval(() => {
+  if (!rtLive()) return;
+  const c = toMoveAt(moves.length) - 1, left = rtClockLeft(c);
+  const el = $('#count' + (c + 1)); if (el) el.textContent = fmtClock(left);
+  if (left <= 0) { rgame.over = { over: true, winner: c ? P1 : P2, why: 'time' }; busyToken++; cancelWorker('ai'); thinking = 0; save(); update(false); onGameEnd(rgame.over); }
+}, 250);
+// the result of a finished rated game is applied once (the game id is kept in the history, so a reload never counts twice)
+function rtSettle(st) {
+  const R = rgame; if (!R || !st || !st.over) return null;
+  if (R.done) return R.done;
+  const S = rtLoad(), prev = S.hist.find(h => h.id === R.id);
+  if (prev) { R.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return R.done; }
+  const sc = st.draw || !st.winner ? 0.5 : st.winner === humanColor ? 1 : 0;
+  const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - S.r) / 400));
+  const old = S.r, now = Math.max(0, Math.round(old + K * (sc - Ex)));
+  S.r = now; S.n++; if (sc === 1) S.w++; else if (sc === 0) S.l++; else S.d++;
+  S.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s: sc, d: now - old, r: now, why: st.why });
+  if (S.hist.length > 100) S.hist = S.hist.slice(-100);
+  rtStore(S); R.done = { old, now, d: now - old }; if (!R.over) R.over = st; save();
+  return R.done;
+}
+function rtForfeit() {
+  if (!rtLive()) return null;
+  busyToken++; cancelWorker('ai'); thinking = 0;
+  rgame.over = { over: true, winner: humanColor === P1 ? P2 : P1, why: 'abandon' };
+  const x = rtSettle(rgame.over); save();
+  if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
+  return x;
+}
+function rtStart() {
+  const S = rtLoad(), pk = rtPick(S.r);
+  exitSpecial();
+  settings.mode = 'ai';
+  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, or: pk.or, my: S.r, tag: pk.tag });
+  toast(t('rt.vs', { lv: rtLvName(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
+}
+function rtStatsHtml() {
+  const S = rtLoad(), h = S.hist.slice(-10).reverse();
+  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${t('rt.title')}</span><b class="rt-r">R ${S.r}</b><span class="rt-rank">${rtRank(S.r)}</span>${S.n < 10 ? `<span class="rt-prov">${t('rt.prov')}</span>` : ''}</div>`;
+  html += `<div class="rt-rec">${S.n ? t('rt.rec', { n: S.n, w: S.w, l: S.l, d: S.d }) : t('rt.none')}</div>`;
+  const sp = S.hist.slice(-30);
+  if (sp.length >= 2) {
+    const pts = [sp[0].r - sp[0].d].concat(sp.map(x => x.r)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 34;
+    const y = v => (H - 3 - (v - lo) / (hi - lo) * (H - 6)).toFixed(1);
+    html += `<svg class="rt-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${y(pts[0])}" y2="${y(pts[0])}" vector-effect="non-scaling-stroke"/><polyline vector-effect="non-scaling-stroke" points="${pts.map((v, i) => (i / (pts.length - 1) * W).toFixed(1) + ',' + y(v)).join(' ')}"/></svg>`;
+  }
+  if (h.length) html += `<div class="rt-lbl2">${t('rt.recent')}</div><div class="rt-hist">` + h.map(x => { const c = x.s === 1 ? 'w' : x.s === 0 ? 'l' : 'd'; return `<span class="rt-chip ${c}" title="${rtLvName(x.lv)} · R${x.or}"><i>${t('rt.' + c.toUpperCase())}</i><b>${rtD(x.d)}</b></span>`; }).join('') + '</div>';
+  return html + '</div>';
+}
+// buttons that leave a rated game in progress ask first (the game is then lost)
+const RT_GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnStart';
+let rtPass = false;
+document.addEventListener('click', e => {
+  if (rtPass || !rtLive()) return;
+  const b = e.target.closest && e.target.closest(RT_GUARD); if (!b || b.disabled) return;
+  if (b.id === 'btnNew') { e.preventDefault(); e.stopImmediatePropagation(); rtConfirm(() => { update(false); onGameEnd(rgame.over); }); return; }
+  e.preventDefault(); e.stopImmediatePropagation();
+  rtConfirm(() => { gameOverShown = true; rtPass = true; try { b.click(); } finally { rtPass = false; } });
+}, true);
+function rtConfirm(after) {
+  $('#rtConfirmText').textContent = t('rt.abandonQ'); $('#rtConfirmYes').textContent = t('rt.abandonYes');
+  showOverlay('#rtConfirm');
+  $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirm'); const x = rtForfeit(); renderInfo(); if (x) after(); };
+}
+
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261019e').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261019f').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -966,7 +1080,7 @@ function drillMove(m) {
 
 // ====================================================================== openings: study a main line, then practice the moves strong players choose
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=20261019e').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=20261019f').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1070,7 +1184,7 @@ function openingAnswer(P, m, pos) {
 
 // ====================================================================== puzzles: mate in N
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261019e').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261019f').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
@@ -1241,6 +1355,7 @@ const gameKey = () => keyOf(moves.length);
 function rvCancel() { if (rv && rv.ws) { rv.ws.forEach(w => { w.terminate(); w.jobs.forEach(j => j.resolve(null)); }); rv.ws = null; } if (rv && rv.running) rv = null; }
 async function runReview() {
   if (lesson || puzzle) return;
+  if (rtLive()) { toast(t('rt.noEval')); return; }
   if (moves.length < 1) { toast(t('nokifu')); return; }
   if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); revealReview(); return; }
   rvCancel();
