@@ -923,6 +923,9 @@ let highScoreJourney = localStorage.getItem(config.highScoreKeyJourney) || 0;
 let highScoreStartrail = localStorage.getItem(config.highScoreKeyStartrail) || 0;
 let frameCount = 0;
 
+let showPerf = false;
+const perfHist = [];
+let perfLastT = 0;
 const keyState = {};
 window.addEventListener('keydown', e => {
     lastInputDevice = 'keyboard';
@@ -933,6 +936,7 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyF') {
         toggleFullScreen();
     }
+    if (e.code === 'KeyG') showPerf = !showPerf; // フレームレート表示（デバッグ用）
 });
 window.addEventListener('keyup', e => {
     keyState[e.code] = false;
@@ -1047,18 +1051,20 @@ function hexToRgba(hex, alpha) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// DOMのスタイル書き換えは負荷（再計算・再描画）が大きいので、値が変わった時だけ行う
+let _themeStyleKey = '';
 function applyThemeStyles(theme) {
-    const borderAlpha = 0.5 + visualBeat * 0.5;
-    const shadowSize = 10 + visualBeat * 40;
-
-    stageEl.style.borderColor = hexToRgba(theme.ui, borderAlpha);
-    stageEl.style.boxShadow = `0 0 ${shadowSize}px ${theme.ui}`;
+    const beatStep = Math.round(visualBeat * 4) / 4; // 4段階に量子化
+    const key = theme.ui + beatStep;
+    if (key === _themeStyleKey) return;
+    const themeChanged = !_themeStyleKey.startsWith(theme.ui);
+    _themeStyleKey = key;
+    stageEl.style.borderColor = hexToRgba(theme.ui, 0.5 + beatStep * 0.5);
+    stageEl.style.boxShadow = `0 0 ${10 + beatStep * 30}px ${theme.ui}`;
+    if (!themeChanged) return;
     instructionsContainer.style.color = theme.ui;
     instructionsContainer.style.textShadow = `0 0 10px ${theme.ui}`;
-    
-    // ▼▼▼ このブロックを修正 ▼▼▼
-    const buttons = [soundToggleButton, effectsToggleButton];
-    buttons.forEach(button => {
+    [soundToggleButton, effectsToggleButton].forEach(button => {
         if (button) {
             button.style.color = theme.ui;
             button.style.textShadow = `0 0 5px ${theme.ui}`;
@@ -1067,7 +1073,6 @@ function applyThemeStyles(theme) {
             button.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
         }
     });
-    // ▲▲▲ 修正はここまで ▲▲▲
 }
 
 function init() {
@@ -1188,22 +1193,18 @@ async function startGame(mode) {
     await audioHandler.playBgm();
 }
 
+let _instrKey = '';
 function updateInstructions() {
+    const key = lastInputDevice + gameMode;
+    if (key === _instrKey) return; // 変わった時だけDOMを書き換える
+    _instrKey = key;
     const pauseText = lastInputDevice === 'keyboard' ? 'PAUSE: P' : 'PAUSE: START';
     mainInstruction.textContent = `${pauseText} / FULLSCREEN: F`;
-    
-    if (gameMode === 'STARTRAIL MODE') {
-        extraInstruction.textContent = 'AVOID COMETS AS LONG AS POSSIBLE';
-    } else {
-        extraInstruction.textContent = 'ENERGY BOX @ 10,000 PTS';
-    }
-
+    extraInstruction.textContent = gameMode === 'STARTRAIL MODE' ? 'AVOID COMETS AS LONG AS POSSIBLE' : 'ENERGY BOX @ 10,000 PTS';
     const moveText = lastInputDevice === 'keyboard' ? 'MOVE: ARROWS' : 'MOVE: PAD';
     const slowText = lastInputDevice === 'keyboard' ? 'SLOW: Z/SHIFT' : 'SLOW: AB BTN';
     controlsInstruction.textContent = `${moveText} | ${slowText}`;
-
-    const shootText = lastInputDevice === 'keyboard' ? 'SHOOT: X/SPACE' : 'SHOOT: XY BTN';
-    controlsInstruction2.textContent = shootText;
+    controlsInstruction2.textContent = lastInputDevice === 'keyboard' ? 'SHOOT: X/SPACE' : 'SHOOT: XY BTN';
 }
 
 
@@ -4066,15 +4067,15 @@ function adaptQuality(now) {
     const fps = perf.frames * 1000 / span;
     perf.t0 = now; perf.frames = 0;
     perf.bad = fps < 54 ? (perf.bad || 0) + 1 : 0;
-    if (perf.bad >= 2 && quality > Q_MIN) {
+    if (perf.bad >= 3 && quality > Q_MIN) {
         perf.bad = 0;
-        if (now - perf.lastRaise < 6000) qCeil = Math.max(Q_MIN, quality - 0.1); // 上げてすぐ落ちたら上限を下げる
+        if (now - perf.lastRaise < 20000) qCeil = Math.max(Q_MIN, quality - 0.05); // 上げてすぐ落ちたら上限を固定（行ったり来たりを防ぐ）
         quality = Math.max(Q_MIN, quality - 0.15);
         perf.good = 0;
         applyQuality();
     } else if (fps >= 58) {
         perf.good++;
-        if (perf.good >= 5 && quality < Math.min(Q_MAX, qCeil)) {
+        if (perf.good >= 12 && quality < Math.min(Q_MAX, qCeil)) {
             quality = Math.min(Q_MAX, qCeil, quality + 0.1);
             perf.good = 0;
             perf.lastRaise = now;
@@ -4085,6 +4086,7 @@ function adaptQuality(now) {
     }
 }
 
+const _aliveSet = new Set();
 function render3D() {
     const now = performance.now();
     let dt = Math.min(0.05, (now - rLast) / 1000);
@@ -4286,7 +4288,7 @@ function render3D() {
     for (; ii < itemPool.length; ii++) itemPool[ii].visible = false;
 
     // モンスター
-    const alive = new Set();
+    const alive = _aliveSet; alive.clear();
     if (gameMode === 'STANDARD MODE') {
         const hue1 = (frameCount * 2) % 360;
         const mm = monsterModels;
@@ -4568,10 +4570,15 @@ function draw() {
             const glowColor = `hsla(${hue}, 100%, 70%, ${alpha / 2})`;
             const sp = project(st.x, st.y, 24);
             renderCtx.globalAlpha = alpha;
-            drawWithGlow(renderCtx, () => {
+            if (st.type === 'gem') {
                 renderCtx.fillStyle = scoreColor;
                 renderCtx.fillText(st.text, sp.x, sp.y);
-            }, glowColor);
+            } else {
+                drawWithGlow(renderCtx, () => {
+                    renderCtx.fillStyle = scoreColor;
+                    renderCtx.fillText(st.text, sp.x, sp.y);
+                }, glowColor);
+            }
         });
         renderCtx.restore();
     }
@@ -5053,6 +5060,28 @@ function draw() {
     }
 
     renderCtx.restore();
+
+    // フレーム時間の記録と表示（Gキー）
+    const nowT = performance.now();
+    if (perfLastT) { perfHist.push(nowT - perfLastT); if (perfHist.length > 120) perfHist.shift(); }
+    perfLastT = nowT;
+    if (showPerf && perfHist.length > 2) {
+        const avg = perfHist.reduce((a, b) => a + b, 0) / perfHist.length;
+        const mx = Math.max(...perfHist);
+        renderCtx.save();
+        renderCtx.fillStyle = 'rgba(0,0,0,0.6)';
+        renderCtx.fillRect(HUD_W - 250, HUD_H - 140, 240, 92);
+        renderCtx.font = `600 13px ${config.fontFamily}`;
+        renderCtx.fillStyle = '#ffffff';
+        renderCtx.textAlign = 'left';
+        renderCtx.fillText(`fps ${(1000 / avg).toFixed(1)}  max ${mx.toFixed(1)}ms  res x${quality.toFixed(2)}`, HUD_W - 242, HUD_H - 122);
+        perfHist.forEach((v, k) => {
+            const hgt = Math.min(60, v * 1.8);
+            renderCtx.fillStyle = v > 20 ? '#ff4466' : v > 17.5 ? '#ffcc44' : '#44ff99';
+            renderCtx.fillRect(HUD_W - 242 + k * 1.9, HUD_H - 52 - hgt, 1.5, hgt);
+        });
+        renderCtx.restore();
+    }
 
     if (gameState === 'playing' && player.invincibleTimer > 0) {
         if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} else {
