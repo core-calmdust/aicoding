@@ -290,8 +290,8 @@ function renderFx() {
   else if (!drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
 }
 function valLabel(v) {
-  if (v > MATET) return { cls: 'win', big: 'M' + ((MATE - v + 1) >> 1) };
-  if (v < -MATET) return { cls: 'loss', big: '-M' + ((MATE + v) >> 1) };
+  if (v > MATET) return { cls: 'win', big: t('lb.win', { n: (MATE - v + 1) >> 1 }) };
+  if (v < -MATET) return { cls: 'loss', big: t('lb.loss', { n: (MATE + v) >> 1 }) };
   const x = v / 100; return { cls: x < -0.05 ? 'neg' : '', big: (x > 0.05 ? '+' : '') + (Math.abs(x) < 0.05 ? '0.0' : x.toFixed(1)) };
 }
 function drawHints(list, svg) {
@@ -1446,7 +1446,19 @@ function rvJudge(i) {
   else if (loss >= 0.3) { q = 'bad'; desc = t('rv.eval', { l: ((best.v - mine.v) / 100).toFixed(1) }); }
   else if (loss >= 0.12) { q = 'dubious'; desc = t('rv.eval', { l: ((best.v - mine.v) / 100).toFixed(1) }); }
   const ok = !q && mine.v >= best.v - 15 && mine.kind !== 'ub';
-  return { q, ok, desc, best: best.m, m, loss };
+  return { q, ok, desc, best: best.m, m, loss, plain: q ? plainWhy(best, mine, toMoveAt(i), posAt(i).pos) : '' };
+}
+// the reason in plain words: lost win / walked into mate / how much material it was worth
+function plainWhy(best, mine, mover, pos) {
+  const b = pos.san(best.m), nb = (MATE - best.v + 1) >> 1, nl = (MATE + mine.v) >> 1;
+  if (best.v > MATET && mine.v < -MATET) return t('rx.winToLoss', { b, n: nb, k: nl });
+  if (best.v > MATET) return t('rx.missWin', { b, n: nb });
+  if (mine.v < -MATET) return t('rx.toLoss', { b, k: nl });
+  const d = (best.v - mine.v) / 100;
+  const amt = d >= 7 ? t('rx.amtQ') : d >= 4 ? t('rx.amtR') : d >= 2.5 ? t('rx.amtN') : t('rx.amtP', { x: d.toFixed(1) });
+  const word = v => { const x = sOfV(v); return t(x > 0.5 ? 'rx.s4' : x > 0.25 ? 'rx.s3' : x > 0.08 ? 'rx.s2' : x >= -0.08 ? 'rx.s0' : x >= -0.25 ? 'rx.s-2' : x >= -0.5 ? 'rx.s-3' : 'rx.s-4'); };
+  const sa = word(best.v), sb = word(mine.v);
+  return t('rx.cp', { b, a: amt }) + (sa !== sb ? ' ' + t('rx.flow', { c: sideLabel(mover), x: sa, y: sb }) : '');
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
 function renderReview() {
@@ -1463,7 +1475,7 @@ function renderReview() {
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
     html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
-    if (shown.length) html += `<div class="rv-list">${shown.map(x => { const ps = posAt(x.i).pos; return `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${Math.floor(x.i / 2) + 1}${ps.side ? '…' : '.'} <i class="p${ps.side ? 2 : 1}"></i>${sanOf(x.i)} → ${ps.san(x.best)}</span><span class="ls">${x.desc}</span></button>`; }).join('')}</div>`;
+    if (shown.length) html += `<div class="rv-list">${shown.map(x => { const ps = posAt(x.i).pos; return `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${Math.floor(x.i / 2) + 1}${ps.side ? '…' : '.'} <i class="p${ps.side ? 2 : 1}"></i>${sanOf(x.i)} → ${ps.san(x.best)}</span><span class="ls">${x.desc}</span><span class="ex">${x.plain}</span></button>`; }).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note" style="color:var(--dim);font-size:11px;line-height:1.6">${t('rv.note')}</div>`;
   }
