@@ -1680,8 +1680,8 @@ async function openOpenings() {
 }
 // list as many opening names as fit on one line, then "etc."
 function opInfoHtml(txt) {
-  const parts = String(txt).split(/(?=【)|(?=\[(?:Name|Idea|Type)\])/).map(x => x.trim()).filter(Boolean);
-  return parts.map(p => { const m = p.match(/^(?:【([^】]+)】|\[([^\]]+)\])\s*(.*)$/s); return m ? `<p><span class="tg">${m[1] || m[2]}</span>${m[3]}</p>` : `<p>${p}</p>`; }).join('');
+  const parts = String(txt).split(/(?=【)|(?=\[[\p{L}\p{M}]{1,16}\])/u).map(x => x.trim()).filter(Boolean);
+  return parts.map(p => { const m = p.match(/^(?:【([^】]+)】|\[([\p{L}\p{M}]{1,16})\])\s*(.*)$/su); return m ? `<p><span class="tg">${m[1] || m[2]}</span>${m[3]}</p>` : `<p>${p}</p>`; }).join('');
 }
 function fitOpLines() {
   const fits = el => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width <= el.getBoundingClientRect().width - 1; };

@@ -1,6 +1,6 @@
 // UI strings for Dots & Boxes — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar
 window.I18N = {
-ja: { 'rs.title': "対局", 'rs.playing': "対局の途中です（{n}手目）。続きから打つか、新しく始めるか選んでください。", 'rs.viewing': "{n}手目の局面を表示しています。ここから打ち直すか、新しく始めるか選んでください。", 'rs.resume': "ここから再開", 'rs.restart': "最初から", 'tab.lesson': 'レッスン', 'tab.puzzle': '詰めドット',
+ja: { "nav.first": "最初へ (↓)", "nav.prev": "1手戻る (←)", "nav.play": "再生／停止 (Space)", "nav.next": "1手進む (→)", "nav.last": "最新へ (↑)",  'rs.title': "対局", 'rs.playing': "対局の途中です（{n}手目）。続きから打つか、新しく始めるか選んでください。", 'rs.viewing': "{n}手目の局面を表示しています。ここから打ち直すか、新しく始めるか選んでください。", 'rs.resume': "ここから再開", 'rs.restart': "最初から", 'tab.lesson': 'レッスン', 'tab.puzzle': '詰めドット',
   'title': 'ドット・アンド・ボックス', 'sub': 'ドット・アンド・ボックス', 'lang.name': '日本語',
   'back': 'ゲーム一覧', 'you': 'あなた', 'ai': 'AI', 'pA': 'プレイヤーA', 'pB': 'プレイヤーB', 'aiA': 'AI・A', 'aiB': 'AI・B',
   'init.you': 'あ', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -47,7 +47,7 @@ ja: { 'rs.title': "対局", 'rs.playing': "対局の途中です（{n}手目）�
   'tag.safe': '安全な線を探す', 'tag.parity': '長鎖ルール（偶奇の調整）', 'tag.sacrifice': 'あえて箱を渡す', 'tag.hard': '2箱の鎖は真ん中から', 'tag.decline': 'ダブルディール（2つ残し）', 'tag.loop': 'ループの4つ残し', 'tag.take': '全部取るべきか？', 'tag.order': '渡す鎖の順番',
   'rv.title': '振り返り', 'rv.btn': '分析', 'rv.btn.title': '対局を振り返り分析（悪手・疑問手を表示）', 'rv.running': '全手を分析中… {a}/{b}', 'rv.done': '分析が終わりました', 'rv.avg': '平均損失 {l}箱', 'rv.acc': '最善一致率', 'rv.clean': '大きなミスはありませんでした。', 'rv.note': '損失は最善手と比べて失った箱の数です。1箱で疑問手、2箱以上か勝敗が変わる手は悪手。ミスを押すとその局面と最善手順（番号つき）を盤に表示します。', 'rv.approx': '≈ は完全読みが届かない序盤の推定値で、2箱以上で疑問手、4箱以上で悪手としています。', 'rv.live': '最新', 'rv.viewing': '{n}手目', 'rv.forced': '取るしかない手', 'q.best': '最善手', 'q.good': '好手', 'q.dubious': '疑問手', 'q.bad': '悪手', 'q.loss': '−{l}箱  最善は {m}', 'share': '共有', 'share.title': '対局をURLで共有', 'share.copied': '共有URLをコピーしました', 'paste': '読込', 'paste.title': '対局を読み込む', 'paste.desc': '共有URLを貼り付けてください。読み込むと二人対戦モードで開き、手順をたどったり、好きな局面から続きを打ったりできます。', 'paste.load': '読み込む', 'paste.bad': '{n}手目が不正な手です', 'paste.loaded': '{n}手の対局を読み込みました', 'nokifu': '手順がありません', 'daily.title': '今日の一問', 'daily.streak': '連続{n}日', 'daily.best': '最高{n}日', 'daily.go': '挑戦',
 },
-en: { 'rs.title': "Play", 'rs.playing': "A game is in progress (move {n}). Continue it or start a new one?", 'rs.viewing': "Showing the position after move {n}. Play on from here or start a new game?", 'rs.resume': "Resume from here", 'rs.restart': "New game", 'tab.lesson': 'Lessons', 'tab.puzzle': 'Puzzles',
+en: { "nav.first": "First (↓)", "nav.prev": "Back one move (←)", "nav.play": "Play / pause (Space)", "nav.next": "Forward one move (→)", "nav.last": "Latest (↑)",  'rs.title': "Play", 'rs.playing': "A game is in progress (move {n}). Continue it or start a new one?", 'rs.viewing': "Showing the position after move {n}. Play on from here or start a new game?", 'rs.resume': "Resume from here", 'rs.restart': "New game", 'tab.lesson': 'Lessons', 'tab.puzzle': 'Puzzles',
   'title': 'Dots and Boxes', 'sub': 'classic pencil game', 'lang.name': 'English',
   'back': 'All games', 'you': 'You', 'ai': 'AI', 'pA': 'Player A', 'pB': 'Player B', 'aiA': 'AI A', 'aiB': 'AI B',
   'init.you': 'Y', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -94,7 +94,7 @@ en: { 'rs.title': "Play", 'rs.playing': "A game is in progress (move {n}). Conti
   'tag.safe': 'find the safe line', 'tag.parity': 'long chain rule (parity)', 'tag.sacrifice': 'a deliberate sacrifice', 'tag.hard': 'open a 2-chain in the middle', 'tag.decline': 'double-dealing (all but two)', 'tag.loop': 'all but four in a loop', 'tag.take': 'take them all?', 'tag.order': 'which chain to give first',
   'rv.title': 'Game review', 'rv.btn': 'Review', 'rv.btn.title': 'Analyse the whole game (mistakes and inaccuracies)', 'rv.running': 'Analysing every move… {a}/{b}', 'rv.done': 'Review finished', 'rv.avg': 'avg loss {l}', 'rv.acc': 'Best-move rate', 'rv.clean': 'No big mistakes.', 'rv.note': 'Loss = boxes given up compared with the best move. 1 box is an inaccuracy; 2 or more, or a move that changes the result, is a mistake. Tap a mistake to see that position and the numbered best line.', 'rv.approx': '≈ marks early-game estimates where exact solving is out of reach; there 2+ boxes counts as an inaccuracy and 4+ as a mistake.', 'rv.live': 'Latest', 'rv.viewing': 'Move {n}', 'rv.forced': 'forced capture', 'q.best': 'Best', 'q.good': 'Good', 'q.dubious': 'Inaccuracy', 'q.bad': 'Mistake', 'q.loss': '−{l} boxes  best: {m}', 'share': 'Share', 'share.title': 'Share the game as a URL', 'share.copied': 'Share URL copied', 'paste': 'Load', 'paste.title': 'Load a game', 'paste.desc': 'Paste a share URL. The game opens in 2-player mode so you can step through it or play on from any position.', 'paste.load': 'Load', 'paste.bad': 'Move {n} is invalid', 'paste.loaded': 'Loaded {n} moves', 'nokifu': 'No moves', 'daily.title': 'Daily puzzle', 'daily.streak': '{n}-day streak', 'daily.best': 'best {n}', 'daily.go': 'Play',
 },
-zh: { 'rs.title': "对局", 'rs.playing': "对局进行中（第{n}手）。继续下，还是重新开始？", 'rs.viewing': "正在显示第{n}手的局面。从这里接着下，还是重新开始？", 'rs.resume': "从这里继续", 'rs.restart': "从头开始", 'tab.lesson': '课程', 'tab.puzzle': '残局题',
+zh: { "nav.first": "到开头 (↓)", "nav.prev": "后退一步 (←)", "nav.play": "播放／暂停 (Space)", "nav.next": "前进一步 (→)", "nav.last": "到最新 (↑)",  'rs.title': "对局", 'rs.playing': "对局进行中（第{n}手）。继续下，还是重新开始？", 'rs.viewing': "正在显示第{n}手的局面。从这里接着下，还是重新开始？", 'rs.resume': "从这里继续", 'rs.restart': "从头开始", 'tab.lesson': '课程', 'tab.puzzle': '残局题',
   'title': '点格棋', 'sub': 'Dots and Boxes', 'lang.name': '中文',
   'back': '游戏列表', 'you': '你', 'ai': 'AI', 'pA': '玩家A', 'pB': '玩家B', 'aiA': 'AI·A', 'aiB': 'AI·B',
   'init.you': '你', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -141,7 +141,7 @@ zh: { 'rs.title': "对局", 'rs.playing': "对局进行中（第{n}手）。继�
   'tag.safe': '寻找安全线', 'tag.parity': '长链规则（奇偶调整）', 'tag.sacrifice': '故意送格', 'tag.hard': '两格链从中间送', 'tag.decline': '双交（留两格）', 'tag.loop': '环留四格', 'tag.take': '该不该全拿？', 'tag.order': '送链的顺序',
   'rv.title': '复盘', 'rv.btn': '分析', 'rv.btn.title': '复盘分析整局（标出恶手和疑问手）', 'rv.running': '正在分析每一步… {a}/{b}', 'rv.done': '分析完成', 'rv.avg': '平均损失 {l}格', 'rv.acc': '最佳着法率', 'rv.clean': '没有大的失误。', 'rv.note': '损失＝与最佳着法相比少得的格子数。少1格为疑问手，2格以上或改变胜负的为恶手。点击失误可在棋盘上查看该局面和带编号的最佳手顺。', 'rv.approx': '≈ 为开局阶段无法完全计算时的推算值；推算时2格以上为疑问手，4格以上为恶手。', 'rv.live': '最新', 'rv.viewing': '第{n}步', 'rv.forced': '只能吃格', 'q.best': '最佳', 'q.good': '好棋', 'q.dubious': '疑问手', 'q.bad': '恶手', 'q.loss': '−{l}格  最佳为 {m}', 'share': '分享', 'share.title': '用链接分享对局', 'share.copied': '已复制分享链接', 'paste': '导入', 'paste.title': '导入对局', 'paste.desc': '粘贴分享链接。导入后以双人模式打开，可以逐步查看，也可以从任意局面接着下。', 'paste.load': '导入', 'paste.bad': '第{n}步不合法', 'paste.loaded': '已导入{n}步对局', 'nokifu': '没有着法', 'daily.title': '每日一题', 'daily.streak': '连续{n}天', 'daily.best': '最高{n}天', 'daily.go': '挑战',
 },
-ko: { 'rs.title': "대국", 'rs.playing': "대국 중입니다({n}수째). 이어서 둘지 새로 시작할지 선택하세요.", 'rs.viewing': "{n}수째 국면을 보고 있습니다. 여기서 다시 둘지 새로 시작할지 선택하세요.", 'rs.resume': "여기서 재개", 'rs.restart': "처음부터", 'tab.lesson': '레슨', 'tab.puzzle': '퍼즐',
+ko: { "nav.first": "처음으로 (↓)", "nav.prev": "한 수 뒤로 (←)", "nav.play": "재생/정지 (Space)", "nav.next": "한 수 앞으로 (→)", "nav.last": "최신으로 (↑)",  'rs.title': "대국", 'rs.playing': "대국 중입니다({n}수째). 이어서 둘지 새로 시작할지 선택하세요.", 'rs.viewing': "{n}수째 국면을 보고 있습니다. 여기서 다시 둘지 새로 시작할지 선택하세요.", 'rs.resume': "여기서 재개", 'rs.restart': "처음부터", 'tab.lesson': '레슨', 'tab.puzzle': '퍼즐',
   'title': '점과 상자', 'sub': 'Dots and Boxes', 'lang.name': '한국어',
   'back': '게임 목록', 'you': '나', 'ai': 'AI', 'pA': '플레이어 A', 'pB': '플레이어 B', 'aiA': 'AI·A', 'aiB': 'AI·B',
   'init.you': '나', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
@@ -188,7 +188,7 @@ ko: { 'rs.title': "대국", 'rs.playing': "대국 중입니다({n}수째). 이�
   'tag.safe': '안전한 선 찾기', 'tag.parity': '긴 사슬 규칙 (홀짝 조절)', 'tag.sacrifice': '일부러 상자 내주기', 'tag.hard': '2칸 사슬은 가운데서', 'tag.decline': '더블딜 (두 개 남기기)', 'tag.loop': '루프의 네 개 남기기', 'tag.take': '전부 가져갈까?', 'tag.order': '사슬을 내주는 순서',
   'rv.title': '복기', 'rv.btn': '분석', 'rv.btn.title': '대국 전체를 복기 분석 (악수·의문수 표시)', 'rv.running': '모든 수를 분석 중… {a}/{b}', 'rv.done': '분석이 끝났습니다', 'rv.avg': '평균 손실 {l}상자', 'rv.acc': '최선 일치율', 'rv.clean': '큰 실수는 없었습니다.', 'rv.note': '손실은 최선수와 비교해 잃은 상자 수입니다. 1상자면 의문수, 2상자 이상이거나 승패가 바뀌는 수는 악수. 실수를 누르면 그 국면과 번호가 붙은 최선 수순을 보드에 표시합니다.', 'rv.approx': '≈ 는 완전 계산이 닿지 않는 초반의 추정치이며, 추정에서는 2상자 이상을 의문수, 4상자 이상을 악수로 봅니다.', 'rv.live': '최신', 'rv.viewing': '{n}수째', 'rv.forced': '잡을 수밖에 없는 수', 'q.best': '최선수', 'q.good': '호수', 'q.dubious': '의문수', 'q.bad': '악수', 'q.loss': '−{l}상자  최선은 {m}', 'share': '공유', 'share.title': '대국을 URL로 공유', 'share.copied': '공유 URL을 복사했습니다', 'paste': '불러오기', 'paste.title': '대국 불러오기', 'paste.desc': '공유 URL을 붙여 넣으세요. 2인 대전 모드로 열려 수순을 따라가거나 원하는 국면에서 이어서 둘 수 있습니다.', 'paste.load': '불러오기', 'paste.bad': '{n}수째가 올바르지 않은 수입니다', 'paste.loaded': '{n}수 대국을 불러왔습니다', 'nokifu': '수순이 없습니다', 'daily.title': '오늘의 문제', 'daily.streak': '{n}일 연속', 'daily.best': '최고 {n}일', 'daily.go': '도전',
 },
-es: {
+es: { "nav.first": "Inicio (↓)", "nav.prev": "Retroceder una jugada (←)", "nav.play": "Reproducir / pausa (Space)", "nav.next": "Avanzar una jugada (→)", "nav.last": "Última (↑)", 
   "rs.title": "Partida",
   "rs.playing": "Hay una partida en curso (jugada {n}). ¿Continuarla o empezar una nueva?",
   "rs.viewing": "Se muestra la posición tras la jugada {n}. ¿Seguir jugando desde aquí o empezar una nueva partida?",
@@ -382,7 +382,7 @@ es: {
   "daily.best": "récord {n}",
   "daily.go": "Jugar",
 },
-fr: {
+fr: { "nav.first": "Début (↓)", "nav.prev": "Reculer d'un coup (←)", "nav.play": "Lecture / pause (Space)", "nav.next": "Avancer d'un coup (→)", "nav.last": "Dernier (↑)", 
   "rs.title": "Partie",
   "rs.playing": "Une partie est en cours (coup {n}). La continuer ou en commencer une nouvelle ?",
   "rs.viewing": "Position après le coup {n}. Reprendre d'ici ou commencer une nouvelle partie ?",
@@ -576,7 +576,7 @@ fr: {
   "daily.best": "record {n}",
   "daily.go": "Jouer",
 },
-pt: {
+pt: { "nav.first": "Início (↓)", "nav.prev": "Voltar uma jogada (←)", "nav.play": "Reproduzir / pausar (Space)", "nav.next": "Avançar uma jogada (→)", "nav.last": "Mais recente (↑)", 
   "rs.title": "Partida",
   "rs.playing": "Há uma partida em andamento (jogada {n}). Continuar ou começar uma nova?",
   "rs.viewing": "Mostrando a posição após a jogada {n}. Continuar daqui ou começar uma nova partida?",
@@ -770,7 +770,7 @@ pt: {
   "daily.best": "recorde {n}",
   "daily.go": "Jogar",
 },
-de: {
+de: { "nav.first": "Anfang (↓)", "nav.prev": "Einen Zug zurück (←)", "nav.play": "Abspielen / Pause (Space)", "nav.next": "Einen Zug vor (→)", "nav.last": "Aktuell (↑)", 
   "rs.title": "Partie",
   "rs.playing": "Eine Partie läuft (Zug {n}). Fortsetzen oder neu beginnen?",
   "rs.viewing": "Stellung nach Zug {n}. Von hier weiterspielen oder neu beginnen?",
@@ -964,7 +964,7 @@ de: {
   "daily.best": "Rekord {n}",
   "daily.go": "Los",
 },
-hi: {
+hi: { "nav.first": "शुरुआत (↓)", "nav.prev": "एक चाल पीछे (←)", "nav.play": "चलाएँ / रोकें (Space)", "nav.next": "एक चाल आगे (→)", "nav.last": "नवीनतम (↑)", 
   "rs.title": "खेल",
   "rs.playing": "एक खेल चल रहा है (चाल {n})। इसे जारी रखें या नया शुरू करें?",
   "rs.viewing": "चाल {n} के बाद की स्थिति दिख रही है। यहाँ से आगे खेलें या नया खेल शुरू करें?",
@@ -1158,7 +1158,7 @@ hi: {
   "daily.best": "सर्वश्रेष्ठ {n}",
   "daily.go": "खेलें",
 },
-ar: {
+ar: { "nav.first": "البداية (↓)", "nav.prev": "نقلة للخلف (←)", "nav.play": "تشغيل / إيقاف (Space)", "nav.next": "نقلة للأمام (→)", "nav.last": "الأحدث (↑)", 
   "rs.title": "لعب",
   "rs.playing": "هناك مباراة جارية (النقلة {n}). هل تتابعها أم تبدأ مباراة جديدة؟",
   "rs.viewing": "يُعرض الوضع بعد النقلة {n}. هل تتابع اللعب من هنا أم تبدأ مباراة جديدة؟",
