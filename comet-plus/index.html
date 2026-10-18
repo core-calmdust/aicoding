@@ -903,7 +903,7 @@ const HUD_H = 600; // 表示の高さ（フィールドの奥行きとは別）
 const HUD_OX = (HUD_W - config.canvasWidth) / 2;
 canvas.width = HUD_W * HUD_SCALE;
 canvas.height = HUD_H * HUD_SCALE;
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { desynchronized: true });
 const stageEl = document.getElementById('stage');
 
 const audioHandler = new AudioHandler();
@@ -929,6 +929,7 @@ let perfLastT = 0;
 const keyState = {};
 window.addEventListener('keydown', e => {
     lastInputDevice = 'keyboard';
+    if (!keyState[e.code]) inputDirty = true;
     keyState[e.code] = true;
     if (!audioHandler.isInitialized) {
         audioHandler.initialize();
@@ -939,6 +940,7 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyG') showPerf = !showPerf; // フレームレート表示（デバッグ用）
 });
 window.addEventListener('keyup', e => {
+    inputDirty = true;
     keyState[e.code] = false;
 });
 
@@ -4404,7 +4406,7 @@ function render3D() {
     shield.visible = meter.visible = false;
     hitDot.visible = false;
     if (showPlayer) {
-        const px = toX(ix(player)), pz = toZ(iy(player));
+        const px = toX(player.x), pz = toZ(player.y); // 自機は補間せず最新位置で描く（入力遅延を最小に）
         const bankTarget = frozen ? shipBank : (input.left && !input.right ? 0.55 : input.right && !input.left ? -0.55 : 0);
         shipBank += (bankTarget - shipBank) * Math.min(1, dt * 10);
         playerGroup.position.set(px, 12 + Math.sin(rTime * 4) * 2, pz);
@@ -4494,7 +4496,7 @@ function render3D() {
         l.life -= dt;
         const a = Math.max(0, l.life / l.max);
         l.line.visible = true;
-        const sx = toX(ix(player)), sz = toZ(iy(player)), tx = toX(l.tx), tz = toZ(l.ty);
+        const sx = toX(player.x), sz = toZ(player.y), tx = toX(l.tx), tz = toZ(l.ty);
         const mx = (sx + tx) / 2 + (tz - sz) * 0.35 * l.bend, mz = (sz + tz) / 2 - (tx - sx) * 0.35 * l.bend;
         for (let i = 0; i < LINK_PTS; i++) {
             const t = i / (LINK_PTS - 1);
@@ -5093,6 +5095,7 @@ function draw() {
 
 // ゲーム進行は固定60Hzで回す（オリジナルの60fps時と同じテンポを保つ。描画fpsや画面のリフレッシュレートに左右されない）
 const SIM_STEP = 1000 / 60;
+let inputDirty = false;
 // 描画補間: 直前の更新時の位置と現在位置の間を、端数時間ぶん補間して描く
 // （120Hz/144Hzなどの画面でも動きが滑らかになる）
 let simAlpha = 1;
@@ -5117,6 +5120,9 @@ function gameLoop(timestamp) {
     if (timestamp !== undefined) {
         if (simRealLast === null) simRealLast = timestamp;
         let delta = Math.min(250, timestamp - simRealLast);
+        // 高リフレッシュレート画面では、入力の変化があれば半ステップ以上溜まった時点で前倒しで進める
+        if (inputDirty && simAcc + delta >= SIM_STEP * 0.5 && simAcc + delta < SIM_STEP) { simAcc = SIM_STEP - delta; }
+        inputDirty = false;
         simRealLast = timestamp;
         // 60Hz付近の揺らぎは1ステップ分に吸着させる（0回/2回更新が交互に起きるカクつき防止）
         if (Math.abs(delta - SIM_STEP) < 1.6) delta = SIM_STEP;
