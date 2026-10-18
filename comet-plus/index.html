@@ -3637,7 +3637,7 @@ function renderBoss(dt) {
         scene.add(bossObj);
     }
     const b = boss;
-    bossObj.position.set(toX(b.x), 50 + Math.sin(rTime * 2) * 8, toZ(b.y));
+    bossObj.position.set(toX(ix(b)), 50 + Math.sin(rTime * 2) * 8, toZ(iy(b)));
     bossObj.userData.anim(bossObj, b, rTime);
     const fl = b.flash > 0 ? 3.5 : 0;
     bossObj.userData.mats.forEach(({ m, base }) => { m.emissiveIntensity = base + fl + visualBeat * 0.25; });
@@ -3751,7 +3751,9 @@ function adaptQuality(now) {
     if (span < 1000) return;
     const fps = perf.frames * 1000 / span;
     perf.t0 = now; perf.frames = 0;
-    if (fps < 54 && quality > Q_MIN) {
+    perf.bad = fps < 54 ? (perf.bad || 0) + 1 : 0;
+    if (perf.bad >= 2 && quality > Q_MIN) {
+        perf.bad = 0;
         if (now - perf.lastRaise < 6000) qCeil = Math.max(Q_MIN, quality - 0.1); // 上げてすぐ落ちたら上限を下げる
         quality = Math.max(Q_MIN, quality - 0.15);
         perf.good = 0;
@@ -3934,7 +3936,7 @@ function render3D() {
         if (c._r === undefined) c._r = Math.random() * 100;
         const baseColor = c.isWay ? themeCur.player : themeCur.comet;
         const color = c.isGlazed ? COL_GLAZE : baseColor;
-        const x = toX(c.x), z = toZ(c.y), y = 7;
+        const x = toX(ix(c)), z = toZ(iy(c)), y = 7;
         const rot = rTime * 3 + c._r;
         const s = c.radius * 1.7 * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
@@ -3955,7 +3957,7 @@ function render3D() {
         const obj = itemPool[ii++];
         if (!obj) return;
         obj.visible = true;
-        obj.position.set(toX(it.x), 14, toZ(it.y));
+        obj.position.set(toX(ix(it)), 14, toZ(iy(it)));
         const c = it.type === 'special' ? hsl(frameCount * 4, 1, 0.65) : hexColor('#00ff88');
         const u = obj.userData;
         u.edgeMat.color.copy(c); u.coreMat.emissive.copy(c); u.ringMat.color.copy(c);
@@ -3986,7 +3988,7 @@ function render3D() {
             if (!obj) { obj = makeMonsterObj(m); monsterObjs.set(m, obj); }
             obj.userData.lastX = m.x; obj.userData.lastY = m.y;
             const sd = obj.userData.seed;
-            obj.position.set(toX(m.x), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(m.y));
+            obj.position.set(toX(ix(m)), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(iy(m)));
             obj.userData.body.rotation.z = Math.sin(rTime * 2.4 + sd) * 0.18;
             obj.userData.body.rotation.x = Math.sin(rTime * 1.7 + sd) * 0.1;
             const sc = 1 + visualBeat * 0.12;
@@ -4001,7 +4003,7 @@ function render3D() {
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
             const c = eb.isGlazed ? COL_GLAZE : hsl(Date.now() / 10 + eb.y, 1, 0.62);
-            const x = toX(eb.x), z = toZ(eb.y), y = 16;
+            const x = toX(ix(eb)), z = toZ(iy(eb)), y = 16;
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * pulse;
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
@@ -4029,7 +4031,7 @@ function render3D() {
 
     // プレイヤー弾
     if (playerBullet) {
-        const x = toX(playerBullet.x), z = toZ(playerBullet.y), y = 8;
+        const x = toX(ix(playerBullet)), z = toZ(iy(playerBullet)), y = 8;
         trails.add(x, y, z + 70, x, y, z - 6, 9, COL_CYAN, 1.6);
         trails.add(x, y, z + 40, x, y, z - 4, 3, COL_WHITE, 1.5);
         glow.add(x, y, z, COL_CYAN, 34, 1.4);
@@ -4042,7 +4044,7 @@ function render3D() {
         st.t += simDt;
         st.h = Math.max(0, 6 + st.vy * st.t - 260 * st.t * st.t);
         const a = p.life / p.maxLife;
-        glow.add(toX(p.x), st.h, toZ(p.y), hexColor(p.color), (p.size || 2) * 7 * (0.4 + a), a * 1.3);
+        glow.add(toX(ix(p)), st.h, toZ(iy(p)), hexColor(p.color), (p.size || 2) * 7 * (0.4 + a), a * 1.3);
     });
 
     // レンダラー側のデブリ
@@ -4069,7 +4071,7 @@ function render3D() {
     glazeDisc.visible = glazeRing.visible = showPlayer;
     shield.visible = meter.visible = false;
     if (showPlayer) {
-        const px = toX(player.x), pz = toZ(player.y);
+        const px = toX(ix(player)), pz = toZ(iy(player));
         const bankTarget = frozen ? shipBank : (input.left && !input.right ? 0.55 : input.right && !input.left ? -0.55 : 0);
         shipBank += (bankTarget - shipBank) * Math.min(1, dt * 10);
         playerGroup.position.set(px, 12 + Math.sin(rTime * 4) * 2, pz);
@@ -4156,7 +4158,7 @@ function render3D() {
         l.life -= dt;
         const a = Math.max(0, l.life / l.max);
         l.line.visible = true;
-        const sx = toX(player.x), sz = toZ(player.y), tx = toX(l.tx), tz = toZ(l.ty);
+        const sx = toX(ix(player)), sz = toZ(iy(player)), tx = toX(l.tx), tz = toZ(l.ty);
         const mx = (sx + tx) / 2 + (tz - sz) * 0.35 * l.bend, mz = (sz + tz) / 2 - (tx - sx) * 0.35 * l.bend;
         for (let i = 0; i < LINK_PTS; i++) {
             const t = i / (LINK_PTS - 1);
@@ -4718,22 +4720,44 @@ function draw() {
 
 // ゲーム進行は固定60Hzで回す（オリジナルの60fps時と同じテンポを保つ。描画fpsや画面のリフレッシュレートに左右されない）
 const SIM_STEP = 1000 / 60;
+// 描画補間: 直前の更新時の位置と現在位置の間を、端数時間ぶん補間して描く
+// （120Hz/144Hzなどの画面でも動きが滑らかになる）
+let simAlpha = 1;
+function snapshotPrev() {
+    const sp = o => { o._px = o.x; o._py = o.y; };
+    if (player) sp(player);
+    if (playerBullet) sp(playerBullet);
+    if (boss) sp(boss);
+    if (comets) comets.forEach(sp);
+    if (enemyBullets) enemyBullets.forEach(sp);
+    if (items) items.forEach(sp);
+    if (monsters) monsters.forEach(sp);
+    if (particles) particles.forEach(sp);
+}
+function ix(o) { if (o._px === undefined) return o.x; const d = o.x - o._px; return Math.abs(d) > 120 ? o.x : o._px + d * simAlpha; }
+function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; return Math.abs(d) > 120 ? o.y : o._py + d * simAlpha; }
 let simRealLast = null;
 let simAcc = 0;
 let simTime = 0;
 function gameLoop(timestamp) {
     if (timestamp !== undefined) {
         if (simRealLast === null) simRealLast = timestamp;
-        simAcc += Math.min(250, timestamp - simRealLast);
+        let delta = Math.min(250, timestamp - simRealLast);
         simRealLast = timestamp;
+        // 60Hz付近の揺らぎは1ステップ分に吸着させる（0回/2回更新が交互に起きるカクつき防止）
+        if (Math.abs(delta - SIM_STEP) < 1.6) delta = SIM_STEP;
+        else if (Math.abs(delta - SIM_STEP * 2) < 2.0) delta = SIM_STEP * 2;
+        simAcc += delta;
         let steps = 0;
         while (simAcc >= SIM_STEP && steps < 6) {
             simTime += SIM_STEP;
+            snapshotPrev();
             update(simTime);
             simAcc -= SIM_STEP;
             steps++;
         }
         if (steps >= 6) simAcc = 0;
+        simAlpha = Math.min(1, simAcc / SIM_STEP);
     }
     draw();
     requestAnimationFrame(gameLoop);
