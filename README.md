@@ -13,22 +13,48 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 
 | # | タイトル | ジャンル |
 |---|---|---|
+| #4 | [COMET OUTBURST+](https://core-calmdust.github.io/aicoding/comet-plus/) 🧪BETA | 3Dシューティング |
 | #3 | [COMET OUTBURST](https://core-calmdust.github.io/aicoding/comet/) | シューティング |
 | #2 | [DANMAKU INVADER XTREME+](https://core-calmdust.github.io/aicoding/danmaku-inv.html) | 弾幕シューティング |
 | #1 | [CYBER PONG XTREME+](https://core-calmdust.github.io/aicoding/pong.html) | 対戦アクション（スマホ対応） |
 
-## ボード＆パズル
+## 世界のボドゲ大全 — World Board Game Atlas
+
+世界のボードゲームを、本気のAI・レッスン・パズル付きで遊べるシリーズ（約50タイトル予定）。
+トップページではアイコン一覧＋詳細パネルで選べます（カテゴリ絞り込み・検索・`#game=<id>` で直接表示、スマホは左右スワイプで切り替え）。
+
+### ♛ プレミアム（AIと本気で対局）
+
+全タイトル共通: 10言語（日本語 / English / 中文 / 한국어 / Español / Français / Português / Deutsch / हिन्दी / العربية）、スマホ対応、形勢グラフと棋譜ナビ（← → ↑ ↓ / Space）、待った（Cmd/Ctrl+Z）、ヒント・コーチ、対局後の振り返り分析、URLでの棋譜共有、レッスンとパズルのタブ付きダイアログ、今日の一問、対局の自動保存と再開。
+
+| タイトル | AI | レッスン | パズル | 特徴 |
+|---|---|---|---|---|
+| [将棋 SHOGI](https://core-calmdust.github.io/aicoding/shogi/) 🌐 | 10段階 | 14ステップ | 詰将棋137問 | Floodgateの棋譜・評価値で学習、駒落ち、ネット対戦 |
+| [Reversi V4](https://core-calmdust.github.io/aicoding/reversi/) 🌐 | 10段階 | 9ステップ | 詰めオセロ170問 | 学習型評価関数＋終盤20マス完全読み、定石トレーニング85本、ネット対戦（レーティング・部屋・ロビー） |
+| [ドット・アンド・ボックス](https://core-calmdust.github.io/aicoding/dots/) | 10段階 | 5ステップ | 詰めドット45問 | 3×3は完全読み、Lv9/10は終盤の勝敗判定探索＋並列Worker、4×4定跡 |
+| [コネクトフォー](https://core-calmdust.github.io/aicoding/connect4/) | 8段階 | 5ステップ | 45問 | 完全読み（最強は先手必勝を逃さない） |
+| [マンカラ](https://core-calmdust.github.io/aicoding/mancala/) | 10段階 | 6ステップ | 100問 | ノーマル／イージー／カラハ／スンカの4ルール、終盤完全読み、物理演算で転がる種、スマホ横画面モード |
+| [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon/) | 10段階 | 7ステップ | 16問 | 自己対局で学習したニューラルネット（接触局面用・レース用の2本）＋ベアオフ完全DB、ダブリングキューブ、3/5/7点マッチ、スマホ横画面モード |
+| [ナイン・メンズ・モリス](https://core-calmdust.github.io/aicoding/morris/) | 10段階 | 7ステップ | 90問 | ナイン／トゥエルブ／シックスの3ルール |
+| [チェス](https://core-calmdust.github.io/aicoding/chess/) | 10段階 | 7ステップ | メイト問題85問 | 定跡と読み切り探索、PGN・FEN読み込み |
+
+🌐 = ネット対戦対応
+
+### クラシック ＆ パズル
 
 | タイトル | 内容 |
 |---|---|
-| [将棋 SHOGI](https://core-calmdust.github.io/aicoding/shogi/) 🆕 | Floodgateの棋譜・評価値で学習した将棋AI、段級位別レッスン、詰将棋（スマホ対応） |
-| [Reversi V4](https://core-calmdust.github.io/aicoding/reversi/) | 学習型評価関数＋終盤完全読みの本格AI（スマホ対応） |
-| [リバーシ v3.1](https://core-calmdust.github.io/aicoding/reversi_v3.html) | 前バージョン。多彩なAIとCPU同士の対戦 |
-| [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon.html) | サイコロと読みの古典ボードゲーム |
-| [コネクテッド4](https://core-calmdust.github.io/aicoding/connect4.html) | 縦・横・斜めに4つ並べる |
 | [チェッカー](https://core-calmdust.github.io/aicoding/checker.html) | 斜めに進んで跳び越えて取る |
 | [さめが〜め](https://core-calmdust.github.io/aicoding/samegame/) | 同じ色をまとめて消すパズル |
 | [無限数独](https://core-calmdust.github.io/aicoding/sudoku/) | 尽きることのない数独 |
+
+### 過去のバージョン
+
+| タイトル | 内容 |
+|---|---|
+| [リバーシ v3.1](https://core-calmdust.github.io/aicoding/reversi_v3.html) | Reversi V4 の前バージョン |
+| [コネクテッド4](https://core-calmdust.github.io/aicoding/connect4.html) | コネクトフォーの前バージョン |
+| [Backgammon V1](https://core-calmdust.github.io/aicoding/backgammon.html) | バックギャモンの前バージョン |
 
 ## 将棋 SHOGI について
 
@@ -53,21 +79,22 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 - **詰めオセロ**: 6段階・170問（入門〜達人＋傑作選）。自前エンジンの完全読みで自動生成し、解の一意性・直感手の失敗・パスなどの条件で選別。相手は完全読みで最善の応手
 - **コーチ**: 対局中、自分の手を「最善手／好手／疑問手／悪手」で評価
 - **機能**: ヒント（全候補手の評価値）、形勢グラフ（ドラッグで局面を振り返り）、待った、棋譜コピー、効果音、対局の自動保存
-- **言語**: 日本語 / English / 中文 / 한국어
+- **言語**: 10言語（日本語 / English / 中文 / 한국어 / Español / Français / Português / Deutsch / हिन्दी / العربية）
 - **モデルカード**: [reversi/MODEL_CARD.md](reversi/MODEL_CARD.md)
 
 ## 構成
 
 ```
-index.html          ゲーム一覧ページ
+index.html          トップページ（ゲーム一覧：アイコン＋詳細パネル）
 shogi/              将棋 SHOGI（index.html / engine.js / i18n.js / weights.bin.gz / book.json / lessons.json / tsume.json / MODEL_CARD.md）
-reversi/            Reversi V4（index.html / engine.js / i18n.js / weights.bin.gz / lessons.json / MODEL_CARD.md）
-comet/ samegame/ sudoku/ quiz/   各ゲーム
-*.html              単一ファイルのゲーム
-images/             サムネイル・アイコン
+reversi/            Reversi V4（index.html / engine.js / i18n.js / online.js / weights.bin.gz / openings.json / lessons.json / puzzles.json / MODEL_CARD.md）
+dots/ connect4/ mancala/ backgammon/ morris/ chess/   世界のボドゲ大全の各タイトル
+comet/ comet-plus/ samegame/ sudoku/ quiz/   各ゲーム
+*.html              単一ファイルのゲーム（旧バージョンなど）
+images/             サムネイル・アイコン（images/icons/）
 ```
 
-ビルド不要の静的サイトです。ローカルで動かす場合は、任意の静的サーバーで配信してください（Reversi V4 は Web Worker と fetch を使うため、ファイルを直接開くのではなくサーバー経由が必要です）。
+ビルド不要の静的サイトです。ローカルで動かす場合は、任意の静的サーバーで配信してください（各ゲームは Web Worker と fetch を使うため、ファイルを直接開くのではなくサーバー経由が必要です）。
 
 ```sh
 python3 -m http.server 8000
