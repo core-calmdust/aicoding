@@ -40,7 +40,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@500;600;700;800&family=Zen+Old+Mincho:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&family=DotGothic16&display=swap" rel="stylesheet">
     <style>
         html, body {
             width: 100%;
@@ -52,7 +52,7 @@
         body {
             margin: 0;
             background-color: #07001a;
-            font-family: 'Montserrat', 'Zen Old Mincho', sans-serif;
+            font-family: 'Rajdhani', 'DotGothic16', sans-serif;
             font-weight: 600;
             display: flex;
             justify-content: center;
@@ -125,7 +125,7 @@
         }
         #sound-toggle-button,
         #effects-toggle-button {
-            font-family: 'Montserrat', 'Zen Old Mincho', sans-serif;
+            font-family: 'Rajdhani', 'DotGothic16', sans-serif;
             font-weight: 600;
             font-size: 12px;
             letter-spacing: 0.08em;
@@ -222,8 +222,8 @@ const config = {
     highScoreKeyStandard: 'cometPlusHighScore_standard',
     highScoreKeyJourney: 'cometPlusHighScore_journey',
     highScoreKeyStartrail: 'cometPlusHighScore_startrail',
-    fontFamily: '"Montserrat", "Zen Old Mincho", sans-serif',
-    logoFontFamily: '"Cinzel", "Zen Old Mincho", serif',
+    fontFamily: '"Rajdhani", "DotGothic16", sans-serif',
+    logoFontFamily: '"Michroma", "Rajdhani", sans-serif',
     glowBlur: 12,
     energyTotal: 20 * 60,
     energyItemSpeed: 305,
@@ -4912,33 +4912,31 @@ function draw() {
         renderCtx.textAlign = 'center';
         renderCtx.textBaseline = 'alphabetic';
         // ロゴ: COMET（グラデーション＋グロー）
-        if (hasLS) renderCtx.letterSpacing = '16px';
-        renderCtx.font = `700 100px ${config.logoFontFamily}`;
+        if (hasLS) renderCtx.letterSpacing = '12px';
+        renderCtx.font = `400 84px ${config.logoFontFamily}`;
         const lg = renderCtx.createLinearGradient(cx - 300, 120, cx + 300, 210);
-        lg.addColorStop(0, '#c9a45c');
-        lg.addColorStop(0.35, '#fff3d6');
+        lg.addColorStop(0, theme.player);
         lg.addColorStop(0.5, '#ffffff');
-        lg.addColorStop(0.65, '#f3dca4');
-        lg.addColorStop(1, theme.player);
+        lg.addColorStop(1, theme.ui);
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = lg;
             renderCtx.fillText('COMET', cx + 7, 196);
         }, theme.player, true);
         // OUTBURST+（モーフ）と左右のライン
         if (hasLS) renderCtx.letterSpacing = '14px';
-        drawTitleTextMorph(renderCtx, cx + 7, 246, `600 26px ${config.logoFontFamily}`, '#f3dca4');
-        renderCtx.strokeStyle = '#d9b779';
-        renderCtx.globalAlpha = 0.75;
-        renderCtx.lineWidth = 1;
+        drawTitleTextMorph(renderCtx, cx + 7, 246, `400 24px ${config.logoFontFamily}`, theme.ui);
+        renderCtx.strokeStyle = theme.ui;
+        renderCtx.globalAlpha = 0.6;
+        renderCtx.lineWidth = 1.5;
         renderCtx.beginPath();
         renderCtx.moveTo(cx - 360, 236); renderCtx.lineTo(cx - 225, 236);
         renderCtx.moveTo(cx + 225, 236); renderCtx.lineTo(cx + 360, 236);
         renderCtx.stroke();
         renderCtx.globalAlpha = 1;
         if (hasLS) renderCtx.letterSpacing = '10px';
-        renderCtx.fillStyle = 'rgba(243, 220, 164, 0.7)';
-        renderCtx.font = `500 11px ${config.fontFamily}`;
-        renderCtx.fillText('— 3D EDITION —', cx + 5, 282);
+        renderCtx.fillStyle = 'rgba(220, 228, 255, 0.65)';
+        renderCtx.font = `600 13px ${config.fontFamily}`;
+        renderCtx.fillText('3D EDITION', cx + 5, 282);
 
         // メニュー
         const menuY = 344, menuGap = 42;
@@ -4960,16 +4958,16 @@ function draw() {
                 renderCtx.moveTo(cx - off, y - 15); renderCtx.lineTo(cx - off + 10, y - 7); renderCtx.lineTo(cx - off, y + 1); renderCtx.fill();
                 renderCtx.beginPath();
                 renderCtx.moveTo(cx + off, y - 15); renderCtx.lineTo(cx + off - 10, y - 7); renderCtx.lineTo(cx + off, y + 1); renderCtx.fill();
-                if (hasLS) renderCtx.letterSpacing = '9px';
-                renderCtx.font = `600 19px ${config.fontFamily}`;
+                if (hasLS) renderCtx.letterSpacing = '8px';
+                renderCtx.font = `700 24px ${config.fontFamily}`;
                 drawWithGlow(renderCtx, () => {
                     renderCtx.fillStyle = '#ffffff';
                     renderCtx.fillText(label, cx + 3, y);
                 }, theme.ui, true);
             } else {
-                if (hasLS) renderCtx.letterSpacing = '8px';
-                renderCtx.font = `500 16px ${config.fontFamily}`;
-                renderCtx.fillStyle = 'rgba(232, 226, 210, 0.5)';
+                if (hasLS) renderCtx.letterSpacing = '7px';
+                renderCtx.font = `600 20px ${config.fontFamily}`;
+                renderCtx.fillStyle = 'rgba(214, 222, 255, 0.5)';
                 renderCtx.fillText(label, cx + 3, y);
             }
         });
@@ -4978,7 +4976,7 @@ function draw() {
         if (titleBottomText === "") {
             titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
         }
-        renderCtx.font = `500 14px ${config.fontFamily}`;
+        renderCtx.font = `600 17px ${config.fontFamily}`;
         renderCtx.globalAlpha = 0.65 + Math.sin(frameCount * 0.08) * 0.35;
         renderCtx.fillStyle = '#ffffff';
         renderCtx.fillText(titleBottomText, cx, 530);
@@ -4986,8 +4984,8 @@ function draw() {
 
         const highScoreCycle = frameCount % 360;
         const hsText = highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`;
-        renderCtx.font = `500 12px ${config.fontFamily}`;
-        renderCtx.fillStyle = '#d9b779';
+        renderCtx.font = `600 15px ${config.fontFamily}`;
+        renderCtx.fillStyle = theme.ui;
         renderCtx.fillText(hsText, cx, 566);
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
