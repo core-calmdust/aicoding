@@ -281,9 +281,17 @@ a.snd.home{text-decoration:none}
 .seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;padding:8px 4px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s}
 .seg button{white-space:nowrap}
-#segMode{flex-wrap:wrap}
-#segMode button{flex:1 0 22%}
-@media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
+/* 7 modes: an even 3 + 4 grid at every width (the long "rated" label sits in the wider first row) */
+#segMode{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))}
+#segMode button{grid-column:span 3;min-width:0;white-space:normal;line-height:1.25}
+#segMode button:nth-child(-n+3){grid-column:span 4}
+@media (max-width: 520px){
+  #segMode button{font-size:12px;padding:8px 2px;letter-spacing:0;overflow-wrap:anywhere}
+  #segClock button{font-size:12px;padding:8px 2px;white-space:normal;line-height:1.25}
+}
+#newOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:.02em;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#newOverlay #btnCancelNew{flex:0 1 auto;padding-left:18px;padding-right:18px}
+#newOverlay #btnStart{flex:1 1 auto}
 .ls-tabs{margin-bottom:16px}
 /* rated games vs the AI: rating card in the new-game dialog; evaluation hidden while the game is going */
 .rt-card{margin-top:10px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
@@ -789,6 +797,13 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   .player .clk small{font-size:9.5px;margin-bottom:2px}
 }
 @media (min-aspect-ratio: 1/1) and (max-height: 560px){ .player .clk b{font-size:20px} .player .clk small{display:none} }
+/* offline game clock (vs AI / two players / rated): the same big clock as online, next to the disc count */
+body.has-clk .player{container-type:inline-size;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"top top" "lab clk" "st st";align-items:center;column-gap:8px;row-gap:4px}
+body.has-clk .player .top{grid-area:top}
+body.has-clk .player .count{grid-area:lab}
+body.has-clk .player .clk{grid-area:clk;justify-self:end}
+body.has-clk .player .status{grid-area:st}
+@media (pointer: coarse), (max-width: 520px){ body.has-clk .player{padding:7px 9px 15px;grid-template-areas:"top top" "lab clk"} body.has-clk .player .status{grid-area:auto} }
 .ol-again{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:rgba(201,169,97,.1);border:1px solid rgba(201,169,97,.45);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;font-size:14px;line-height:1.6;text-align:center}
 .ol-again > span{flex:1 1 100%}
 .ol-again b.cd{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--accent);margin:0 2px}
@@ -987,6 +1002,10 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
         <button data-v="0" data-i18n="ng.random"></button>
       </div>
     </div>
+    <div class="field" id="fClock">
+      <label data-i18n="ng.clock"></label>
+      <div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div>
+    </div>
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
@@ -1151,7 +1170,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018rt2"></script>
+<script src="i18n.js?v=20261019clk"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261018wt"></script>
 <script>
@@ -1177,7 +1196,7 @@ function counts(cells) { let b = 0, w = 0; for (const v of cells) { if (v === 1)
 
 // ====================================================================== state
 const STORE = 'reversi-emerald-v1';
-const settings = { mode: 'ai', color: 1, level: 6, level2: 6, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: false, lang: '' };
+const settings = { mode: 'ai', color: 1, clock: 0, level: 6, level2: 6, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: false, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return SUPPORTED.find(l => n.startsWith(l)) || 'en'; }
 let LANG = detectLang();
@@ -1199,6 +1218,7 @@ let busyToken = 0;
 let lesson = null;          // active lesson session
 let puzzle = null;          // active puzzle session
 let rated = null;           // rated game vs the AI: {id, lv, or, my, tag, done?, res?} (only meaningful in 'ai' mode)
+let clock = null;           // game clock of an offline game (see "game clock" below)
 
 function load() {
   try {
@@ -1209,6 +1229,9 @@ function load() {
       positions = d.positions.map(p => ({ ...p, cells: p.cells.split('').map(Number) }));
       humanColor = d.humanColor || 1;
       rated = d.rated && d.rated.id ? d.rated : null;
+      clock = d.clock && d.clock.left ? d.clock : null;
+      // a running clock is paused by a reload, except in a rated game still going (wall time keeps counting)
+      if (clock && clock.t0 && !(rated && !rated.done && settings.mode === 'ai' && !clock.lost)) clock.t0 = 0;
       cur = positions.length - 1;
       return true;
     }
@@ -1219,7 +1242,7 @@ function save() {
   if (lesson || puzzle || net) return;
   try {
     localStorage.setItem(STORE, JSON.stringify({
-      settings, humanColor, rated,
+      settings, humanColor, rated, clock,
       positions: positions.map(p => ({ ...p, cells: p.cells.join('') }))
     }));
   } catch (e) {}
@@ -1483,6 +1506,7 @@ function renderInfo() {
   olPName($('#nameBlack'), BLACK); olPName($('#nameWhite'), WHITE);
   $('#pBlack').classList.toggle('active', p.toMove === BLACK);
   $('#pWhite').classList.toggle('active', p.toMove === WHITE);
+  clockSync();
   // eval
   $('#evalCard').classList.toggle('hidden', !settings.eval);
   let ev = null;
@@ -1584,8 +1608,8 @@ let toastTimer = 0;
 function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 
 // ====================================================================== flow
-function isAITurnColor(c) { if (settings.mode === 'online') return false; if (rtGame() && rated.done) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; if (rtGame() && rated.done) return false; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; return p.toMove && !isAITurnColor(p.toMove); }
+function isAITurnColor(c) { if (settings.mode === 'online') return false; if (rtGame() && rated.done) return false; if (clock && clock.lost && !lesson && !puzzle) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
+function isHumanTurn() { const p = positions[cur]; if (rtGame() && rated.done) return false; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; if (clock && clock.lost) return false; return p.toMove && !isAITurnColor(p.toMove); }
 function levelFor(c) { if (rated && settings.mode === 'ai') return rated.lv; return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
 function newGame(r) {
@@ -1596,6 +1620,7 @@ function newGame(r) {
   else if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
   cur = 0; reviewing = false;
+  clockInit();
   hideOverlay('#resultOverlay');
   update(null);
 }
@@ -1633,7 +1658,7 @@ function setStatus(color, text, thinking) {
 async function schedule(animInfo) {
   const token = ++busyToken;
   setStatus(BLACK, ''); setStatus(WHITE, '');
-  if (reviewing || lesson || puzzle || net) return;
+  if (reviewing || lesson || puzzle || net || (clock && clock.lost)) return;
   const p = positions[cur];
   if (animInfo && animInfo.passed) {
     toast(t('pass', { c: cname(animInfo.passer) })); playPass();
@@ -1666,6 +1691,7 @@ async function schedule(animInfo) {
     if (res.move < 0) return;
     p.evalB = color === BLACK ? res.score : -res.score;
     const info = rtLive() ? (res.book ? t('book') : res.exact ? t('exact') : t('depth', { d: res.depth })) : res.book ? `${t('book')} ${fmt(res.score)}` : res.exact ? `${t('exact')} ${fmt(res.score)}` : `${t('depth', { d: res.depth })}  ${fmt(res.score)}`;
+    clockOnMove(color);
     const a = applyMove(res.move);
     playPlace(a.flips.length);
     update(a); moveFx(a);
@@ -1703,6 +1729,7 @@ function onCellClick(sq) {
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
   busyToken++; cancelAna();
   const q = settings.coach && settings.mode !== 'watch' && settings.mode !== 'online' && !rtLive() ? judgeMove(p, sq) : null;
+  clockOnMove(p.toMove);
   const a = applyMove(sq);
   if (q) { positions[cur].q = q.cls; showCoach(q); }
   playPlace(a.flips.length);
@@ -1737,7 +1764,7 @@ function undo() {
   busyToken++; cancelAI(); cancelAna();
   let i = positions.length - 2;
   if (settings.mode === 'ai') while (i > 0 && positions[i].toMove !== humanColor) i--;
-  positions.length = i + 1; cur = i; reviewing = false;
+  positions.length = i + 1; cur = i; reviewing = false; clockReset();
   hideOverlay('#resultOverlay');
   update(null);
 }
@@ -1750,7 +1777,7 @@ function viewAt(i) {
 $('#btnLatest').onclick = () => { reviewing = false; cur = positions.length - 1; update(null); };
 $('#btnResume').onclick = () => {
   if (rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; }   // rated: no taking back
-  positions.length = cur + 1; reviewing = false;
+  positions.length = cur + 1; reviewing = false; clockReset();
   update(null);
 };
 
@@ -1760,11 +1787,16 @@ function showResult() {
   $('#resB').textContent = b; $('#resW').textContent = w;
   let title, sub = '';
   const rx = rtGame() ? rtSettleBoard() || rated.done : null;
+  const lost = clock && clock.lost, early = lost || (rx && rated.res === 'resign');   // decided by time / resignation, not by the disc count
   if (settings.mode === 'ai') {
-    const me = rx && rated.res === 'resign' ? -1 : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
+    const me = lost ? (lost === humanColor ? -1 : 1) : early ? -1 : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
     title = t(me > 0 ? 'res.youWin' : me < 0 ? 'res.aiWin' : 'res.draw');
-    sub = t('res.vs', { name: LV(lv), lv }) + (rx && rated.res === 'resign' ? ' · ' + t('rt.resigned') : me ? ' · ' + t(me > 0 ? 'res.winBy' : 'res.lossBy', { n: Math.abs(me) }) : '');
+    sub = t('res.vs', { name: LV(lv), lv }) + (lost ? ' · ' + t('res.time') : early ? ' · ' + t('rt.resigned') : me ? ' · ' + t(me > 0 ? 'res.winBy' : 'res.lossBy', { n: Math.abs(me) }) : '');
     playChime(me >= 0);
+  } else if (lost) {
+    title = t(lost === WHITE ? 'res.bWin' : 'res.wWin');
+    sub = t('res.time') + ' (' + cname(lost) + ')';
+    playChime(true);
   } else {
     title = t(b > w ? 'res.bWin' : b < w ? 'res.wWin' : 'res.draw');
     sub = b !== w ? t('res.diff', { n: Math.abs(b - w) }) : '';
@@ -1773,9 +1805,73 @@ function showResult() {
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
   if (rx) $('#resultSub').innerHTML = esc(sub) + `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span><br><small style="color:var(--muted)">${esc(t('rt.opp', { lv: rtLvName(rated.lv), r: rated.or }))}</small>`;
   countUp($('#resB'), b); countUp($('#resW'), w);
-  if ((settings.mode === 'ai' && !(rx && rated.res === 'resign') && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
+  if (lost ? settings.mode === 'pvp' || lost !== humanColor : (settings.mode === 'ai' && !early && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
   showOverlay('#resultOverlay');
 }
+
+// ====================================================================== game clock (offline games: vs AI = only your clock, two players = both)
+// Main time, then byoyomi per move (same choices as shogi). A clock runs only for the side to move at the latest
+// position (passes are implicit: the side that moves next is simply positions[last].toMove); browsing / review /
+// lessons pause it, except in a rated game, where it keeps running (also across a reload).
+// clock = {main, byo, left: [_, black s, white s], used: s banked this turn, t0: ms the running stretch began (0 = paused), lost: colour that ran out}
+const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }];
+const RT_CLOCK = 2;            // rated games: 10 min + 30 s byoyomi (CLOCKS[2]) on the player's side
+function clockInit() {
+  const c = CLOCKS[rated ? RT_CLOCK : settings.mode === 'ai' || settings.mode === 'pvp' ? settings.clock || 0 : 0];
+  clock = c ? { main: c.main, byo: c.byo, left: [0, c.main, c.main], used: 0, t0: 0, lost: 0 } : null;
+}
+function clockReset() { if (clock) { clock.used = 0; clock.t0 = 0; clock.lost = 0; } }   // undo / continue from here: a fresh turn
+function clockRuns(color) {
+  const c = clock; if (!c || c.lost || lesson || puzzle || net) return false;
+  if (settings.mode !== 'pvp' && settings.mode !== 'ai') return false;
+  const L = positions[positions.length - 1];
+  if (!L || L.toMove !== color || (settings.mode === 'ai' && color !== humanColor)) return false;
+  if (rtGame()) return !rated.done;
+  return !reviewing && cur === positions.length - 1;
+}
+const clockUsed = () => clock.used + (clock.t0 ? Math.max(0, Date.now() - clock.t0) / 1000 : 0);
+// start / pause the running clock to match the state; returns the colour whose clock runs (0 = none)
+function clockSync() {
+  const c = clock; if (!c) return 0;
+  const side = positions.length ? positions[positions.length - 1].toMove : 0, run = !!side && clockRuns(side);
+  if (run && !c.t0) { c.t0 = Date.now(); if (rtGame()) save(); }
+  else if (!run && c.t0) { c.used += Math.max(0, Date.now() - c.t0) / 1000; c.t0 = 0; }
+  return run ? side : 0;
+}
+// `color` is about to play a move: charge the time it used (main time first; the byoyomi restarts every move)
+function clockOnMove(color) {
+  const c = clock; if (!c) return;
+  clockSync();
+  c.left[color] = Math.max(0, c.left[color] - clockUsed());
+  c.used = 0; c.t0 = 0;
+}
+function clockTimeUp(color) {
+  const c = clock; c.lost = color; c.left[color] = 0; c.used = 0; c.t0 = 0;
+  busyToken++; cancelAI(); cancelAna(); clearHints();
+  if (rtGame() && !rated.done) { rated.res = 'time'; rtSettle(color === humanColor ? 0 : 1, 'time'); }
+  reviewing = false; cur = positions.length - 1;
+  renderBoard(null); renderInfo(); save();
+  showResult();
+}
+function clockTick() {
+  if (net || settings.mode === 'online') return;   // the online clocks are drawn by netTick()
+  const c = clock, show = !!c && !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp');
+  document.body.classList.toggle('has-clk', show);
+  if (!show) { olClkOff($('#clkBlack')); olClkOff($('#clkWhite')); return; }
+  const side = clockSync();
+  for (const color of [BLACK, WHITE]) {
+    const el = $(color === BLACK ? '#clkBlack' : '#clkWhite');
+    if (settings.mode === 'ai' && color !== humanColor) { olClkOff(el); continue; }
+    let left = c.left[color], byo = c.byo;
+    if (side === color) {
+      let u = clockUsed(); const m = Math.min(u, left); left -= m; u -= m; byo = c.byo - u;
+      if (left <= 0 && byo <= 0) { clockTimeUp(color); return; }
+    }
+    if (c.lost === color) { left = 0; byo = 0; }
+    olClk(el, { main: left * 1000, byo: left > 0 ? null : byo * 1000, moving: side === color || c.lost === color }, side === color);
+  }
+}
+setInterval(clockTick, 250);
 
 // ====================================================================== rated games against the AI (local Elo, kept apart from the online rating)
 // Each AI level has a fixed rating (ladder in MODEL_CARD.md); the opponent is picked around the player's rating
@@ -1800,7 +1896,7 @@ function rtPick(r, rnd = Math.random) {
   const diff = RT_LV[lv] - r;
   return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
-const rtOver = () => positions.length > 0 && positions[positions.length - 1].toMove === 0;
+const rtOver = () => positions.length > 0 && (positions[positions.length - 1].toMove === 0 || !!(clock && clock.lost));
 function rtGame() { return !!(rated && settings.mode === 'ai' && !lesson && !puzzle && !net); }   // the board shows a rated game
 function rtLive() { return rtGame() && !rated.done && !rtOver(); }
 // apply a result once (the game id is kept in the history, so a reload never counts twice)
@@ -1821,6 +1917,7 @@ function rtSettle(s, why) {
 }
 function rtSettleBoard() {
   if (!rated || rated.done || !rtOver()) return null;
+  if (clock && clock.lost) { rated.res = 'time'; return rtSettle(clock.lost === humanColor ? 0 : 1, 'time'); }
   const [b, w] = counts(positions[positions.length - 1].cells), me = humanColor === BLACK ? b - w : w - b;
   return rtSettle(me > 0 ? 1 : me < 0 ? 0 : 0.5, 'end');
 }
@@ -1894,9 +1991,10 @@ function segInit(id, key) {
   el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; draft[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v; segSync(); });
 }
 function segSync() {
-  for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color']])
-    $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key]) === b.dataset.v));
+  for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color'], ['#segClock', 'clock']])
+    $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key] ?? 0) === b.dataset.v));
   $('#fColor').classList.toggle('hidden', draft.mode !== 'ai');
+  $('#fClock').classList.toggle('hidden', draft.mode !== 'ai' && draft.mode !== 'pvp');
   $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson' || draft.mode === 'puzzle' || draft.mode === 'online' || draft.mode === 'rated');
   const rt = draft.mode === 'rated';
   $('#fRatedInfo').classList.toggle('hidden', !rt);
@@ -1913,7 +2011,7 @@ function segSync() {
   $('#levelName').innerHTML = `Lv.${draft.level} ${lv[0]}<small>${lv[1]}</small>`;
   $('#levelName2').innerHTML = `Lv.${draft.level2} ${lv2[0]}<small>${lv2[1]}</small>`;
 }
-segInit('#segMode', 'mode'); segInit('#segColor', 'color');
+segInit('#segMode', 'mode'); segInit('#segColor', 'color'); segInit('#segClock', 'clock');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 function openNew() {
@@ -1955,7 +2053,7 @@ $('#btnStart').onclick = () => {
     settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
     hideOverlay('#newOverlay'); rtStart(); return;
   }
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0 });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
   settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
   hideOverlay('#newOverlay');
@@ -2833,7 +2931,7 @@ function replayMoves(str) {
   return { ok: true, n: ms.length };
 }
 function openLoaded(n) {
-  rtForfeit(); rated = null;
+  rtForfeit(); rated = null; clock = null;
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   settings.mode = 'pvp';
   const end = positions.length - 1;
@@ -3253,7 +3351,8 @@ function startOnlineGame(gid, intro, spec) {
   if (lesson) endLesson && endLesson();
   if (puzzle) endPuzzle();
   rtForfeit();
-  const saved = spec ? (net ? (net.spectate ? net.saved : null) : { positions, cur, mode: settings.mode, hint: settings.hint }) : null;
+  const saved = spec ? (net ? (net.spectate ? net.saved : null) : { positions, cur, mode: settings.mode, hint: settings.hint, clock }) : null;
+  if (!spec) clock = null;           // an online game replaces the local one (online games have their own clock)
   leaveOnlineGame();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   settings.mode = 'online'; settings.hint = false; clearHints();
@@ -3451,7 +3550,7 @@ function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online')
 $('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
 
 // "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
-function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0 && !(rtGame() && rated.done); }
+function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0 && !(clock && clock.lost) && !(rtGame() && rated.done); }
 function rsViewing() { return !lesson && !puzzle && !net && reviewing; }
 function rsOpen() {
   if (!rsInProgress() && !rsViewing()) { openNew(); return; }
@@ -3460,7 +3559,7 @@ function rsOpen() {
 }
 document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
-document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing && rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; } if (reviewing) { positions.length = cur + 1; reviewing = false; update(null); }; };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing && rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; } if (reviewing) { positions.length = cur + 1; reviewing = false; clockReset(); update(null); }; };
 // ====================================================================== boot
 loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { setTimeout(dockStart, 800); } else document.body.classList.add('no-online');
@@ -3539,7 +3638,7 @@ function olFlipBoard() {}
 // after watching: put back the local game that was on the board (or start a fresh one)
 function olRestoreLocal(sv) {
   settings.mode = sv && sv.mode && sv.mode !== 'online' ? sv.mode : 'ai';
-  if (sv && sv.positions) { positions = sv.positions; cur = Math.min(sv.cur, positions.length - 1); reviewing = cur < positions.length - 1; settings.hint = !!sv.hint; update(null); }
+  if (sv && sv.positions) { positions = sv.positions; clock = sv.clock || null; cur = Math.min(sv.cur, positions.length - 1); reviewing = cur < positions.length - 1; settings.hint = !!sv.hint; update(null); }
   else newGame();
 }
 // ====================================================================== online extras (same code in shogi / reversi)
