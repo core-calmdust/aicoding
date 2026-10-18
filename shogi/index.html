@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/shogi.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#130d09; --bg2:#1b130d; --panel:#21170f; --panel2:#2b1f15; --line:#45321f;
@@ -33,7 +33,7 @@
 html,body{height:100%;overflow:hidden}
 body{
   background:radial-gradient(1200px 700px at 30% -10%, #34230f 0%, transparent 60%),radial-gradient(900px 600px at 110% 110%, #281a0d 0%, transparent 60%),var(--bg);
-  color:var(--text);font-family:'Zen Kaku Gothic New',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  color:var(--text);font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
 }
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .app{height:var(--vh);display:grid;grid-template-columns:auto minmax(320px,500px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:var(--pad)}
@@ -152,6 +152,9 @@ a.snd.home{text-decoration:none}
 .snd:not(.on) .off-x{display:inline}
 
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
+/* Arabic: board/kifu stay LTR; text blocks read right-to-left */
+html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .note, .desc, .result-sub, .ol-note, .modal h2, .lesson-card h3){direction:rtl;text-align:right}
+html[lang=ar] bdi{unicode-bidi:isolate;direction:ltr}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
 .players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .player{position:relative;border-radius:12px;padding:10px 12px;background:rgba(0,0,0,.18);border:1px solid transparent;transition:border-color .25s,background .25s}
@@ -505,7 +508,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   <aside class="side"><div class="side-in">
     <div class="brand">
       <h1>将棋<small data-i18n="title.sub"></small></h1>
-      <div class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option></select><a href="../" class="snd home" data-i18n-title="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
+      <div class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
     </div>
     <div class="card edit-card" id="editCard">
       <div class="lh"><span class="lt" data-i18n="ed.title"></span></div>
@@ -744,9 +747,10 @@ const LEVELS = [{ depth: 1, noise: 40, greedy: 1 }, { depth: 2, noise: 60, greed
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
 const settings = { mode: 'ai', color: 0, level: 4, level2: 4, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: 'one', skin: 'classic' };
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return n.startsWith('ja') ? 'ja' : n.startsWith('zh') ? 'zh' : n.startsWith('ko') ? 'ko' : 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
-function t(k, v) { let x = (I18N[LANG] || I18N.ja)[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
+function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const cname = c => t(c ? 'white' : 'black');
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
@@ -1544,7 +1548,7 @@ $('#btnCopy').onclick = () => {
   if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : '千日手'}\n`;
   navigator.clipboard.writeText(s).then(() => toast(t('copied')), () => toast('copy failed'));
 };
-$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
+$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
 // ---- new game dialog
@@ -2101,7 +2105,7 @@ let LESSONS = null;
 const lessonsReady = fetch('lessons.json?v=20261018ol').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
-const L = o => (o && (o[LANG] || (LANG !== 'ja' && o.en) || o.ja)) || '';
+const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
 let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
@@ -2229,7 +2233,7 @@ function openOpeningChoice(oi) {
   openChoiceIdx = oi; const g = OPEN.sets[oi], st = g.study;
   $('#liStep').textContent = g.handi ? t('op.handiHead') : t('op.title');
   $('#liTitle').textContent = L(g.title);
-  const intro = st && st.intro ? (st.intro[LANG] || st.intro.ja) : [L(g.short)];
+  const intro = st && st.intro ? (st.intro[LANG] || st.intro.en || st.intro.ja) : [L(g.short)];
   $('#liBody').innerHTML = intro.map(p => `<p>${p}</p>`).join('') +
     `<div class="op-choice">${st ? `<button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: st.steps.length })}</small></span></button>` : ''}` +
     `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button></div>`;
@@ -2259,11 +2263,11 @@ function showStudy() {
   $('#lsTitle').textContent = L(g.title);
   $('#lsDots').innerHTML = `<span style="display:block;height:4px;width:140px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><span style="display:block;height:100%;width:${Math.round(i * 100 / N)}%;background:var(--brass)"></span></span>`;
   let pr = '', fb = '';
-  if (i === 0) { pr = t('op.studyStart'); fb = (st.intro ? (st.intro[LANG] || st.intro.ja) : [L(g.short)]).join('<br>'); }
+  if (i === 0) { pr = t('op.studyStart'); fb = (st.intro ? (st.intro[LANG] || st.intro.en || st.intro.ja) : [L(g.short)]).join('<br>'); }
   else {
     const [u, pct, win] = st.steps[i - 1];
     pr = `<b style="font-size:16px">${i}. ${lineKanji(st.start, st.steps.slice(0, i).map(s => s[0])).pop()}</b>` + (pct != null ? ` <span style="font-size:12px;color:var(--muted)">${t('op.pct', { p: pct })}</span>` : '');
-    const note = st.notes && st.notes[i - 1]; fb = note ? (note[LANG] || note.ja) : '';
+    const note = st.notes && st.notes[i - 1]; fb = note ? (note[LANG] || note.en || note.ja) : '';
   }
   if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${t('op.studyEnd')}</b>`;
   $('#lsPrompt').innerHTML = pr; $('#lsFb').innerHTML = fb;
@@ -2292,7 +2296,7 @@ function openIntro(i) {
   introIdx = i; const g = LESSONS.grades[i];
   $('#liStep').textContent = `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
   $('#liTitle').textContent = L(g.title);
-  $('#liBody').innerHTML = (g.intro[LANG] || (LANG !== 'ja' && g.intro.en) || g.intro.ja).map(p => `<p>${p}</p>`).join('') + (L(g.note) ? `<p class="note">${L(g.note)}</p>` : '');
+  $('#liBody').innerHTML = (g.intro[LANG] || g.intro.en || g.intro.ja).map(p => `<p>${p}</p>`).join('') + (L(g.note) ? `<p class="note">${L(g.note)}</p>` : '');
   lessonView('intro');
 }
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
@@ -2931,7 +2935,9 @@ applyI18n();
   let had = load();
   if (settings.mode === 'online') { settings.mode = 'ai'; had = false; game = null; cur = 0; }
   if (had && game.over) game.resultShown = true;   // a finished game restored on reload: do not pop the result dialog up again   // an online game cannot be resumed after a reload
-  if (settings.lang) LANG = settings.lang;
+  if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
+  try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
+  { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; settings.lang = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
   applyI18n();
   applyLook();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
