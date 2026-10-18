@@ -611,6 +611,18 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 </div>
 
 <!-- paste kifu -->
+<div class="overlay" id="exportOverlay">
+  <div class="modal" style="width:min(560px,100%)">
+    <h2 data-i18n="ex2.title"></h2>
+    <div class="seg" id="segExport" style="margin-bottom:10px"><button data-v="kif">KIF</button><button data-v="ki2">KI2</button><button data-v="csa">CSA</button><button data-v="usi">USI</button><button data-v="url">URL</button><button data-v="img" data-i18n="ex2.img"></button></div>
+    <textarea id="exportText" readonly style="width:100%;height:220px;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:vertical"></textarea>
+    <div id="exportImg" class="hidden" style="text-align:center">
+      <div class="seg" id="segImg" style="margin-bottom:8px"><button data-v="board" data-i18n="ex2.board"></button><button data-v="both" data-i18n="ex2.both"></button></div>
+      <img id="exportPreview" alt="" style="max-width:100%;max-height:46vh;border-radius:8px;border:1px solid var(--line)">
+    </div>
+    <div class="modal-actions"><button class="mbtn" id="exportClose" data-i18n="close"></button><button class="mbtn" id="exportDl" data-i18n="ex2.download"></button><button class="mbtn go" id="exportCopy" data-i18n="copy"></button></div>
+  </div>
+</div>
 <div class="overlay" id="pasteOverlay">
   <div class="modal">
     <h2 data-i18n="paste.h"></h2>
@@ -830,7 +842,22 @@ function playChime(win) {
 // ====================================================================== notation
 const sqZen = s => ZEN[E.sqFile(s)] + KAN[E.sqRank(s)];
 // Japanese move name (without ▲△). prevTo: destination of the previous move (for 同)
-function kifName(pos, m, prevTo, forFile) {
+// Western (Hosking) notation for non-Japanese UI: P-7f, Sx3c, B*5e, Rx2b+, G6i-5h (origin only when ambiguous)
+const W_LETTER = ['', 'P', 'L', 'N', 'S', 'B', 'R', 'G', 'K', '+P', '+L', '+N', '+S', '+B', '+R'];
+const wSq = s => E.sqFile(s) + 'abcdefghi'[E.sqRank(s) - 1];
+function westName(pos, m) {
+  const from = E.mFrom(m), to = E.mTo(m), us = pos.side;
+  if (E.isDrop(m)) return W_LETTER[E.dropType(m)] + '*' + wSq(to);
+  const p = pos.board[from], tp = E.typeOf(p);
+  const amb = pos.legalMoves(true).some(x => !E.isDrop(x) && E.mTo(x) === to && E.mFrom(x) !== from && pos.board[E.mFrom(x)] === p);
+  let s = W_LETTER[tp] + (amb ? wSq(from) : '') + (pos.board[to] ? 'x' : '-') + wSq(to);
+  if (E.mPromo(m)) s += '+';
+  else if (E.CAN_PROMOTE[tp] && (E.inZone(us, from) || E.inZone(us, to))) s += '=';
+  return s;
+}
+// forFile: KIF file notation; ja: force Japanese (KI2 export)
+function kifName(pos, m, prevTo, forFile, ja) {
+  if (!forFile && !ja && LANG !== 'ja') return westName(pos, m);
   const from = E.mFrom(m), to = E.mTo(m), us = pos.side;
   let dest = (prevTo === to) ? (forFile ? '同　' : '同') : sqZen(to);
   if (E.isDrop(m)) {
@@ -1140,7 +1167,8 @@ function renderGraph() {
 }
 function kifList() {
   // cached kanji move names
-  if (!game._kif || game._kif.length !== game.moves.length) {
+  if (!game._kif || game._kif.length !== game.moves.length || game._kifLang !== LANG) {
+    Object.defineProperty(game, '_kifLang', { value: LANG, enumerable: false, writable: true, configurable: true });
     const p = new E.Position(); p.setSfen(game.start);
     const out = []; let prevTo = -1;
     for (const u of game.moves) { const m = p.fromUsi(u); out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; }
@@ -1496,7 +1524,7 @@ $('#btnCopy').onclick = () => {
   if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : '千日手'}\n`;
   navigator.clipboard.writeText(s).then(() => toast(t('copied')), () => toast('copy failed'));
 };
-$('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
+$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
 // ---- new game dialog
@@ -1793,18 +1821,131 @@ $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview()
 const HANDI_NAMES = ['平手', '香落ち', '角落ち', '飛車落ち', '二枚落ち', '四枚落ち', '六枚落ち'];
 function shareUrl() {
   const hi = HANDI.indexOf(game.start);
-  let h = '#k=' + game.moves.join('.');
+  let h = '#k=' + game.moves.map(u => u.replace('+', '%2B')).join('.');
   if (hi > 0) h += '&h=' + hi; else if (hi < 0) h += '&s=' + encodeURIComponent(game.start);
   if (cur < game.moves.length) h += '&n=' + cur;
   return location.origin + location.pathname + h;
 }
-$('#btnShare').onclick = async () => {
+// ---- export: KIF / KI2 / CSA / USI / URL / image (局面図)
+const CSA_PC = ['', 'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'OU', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY'];
+const pad2 = n => String(n).padStart(2, '0');
+function kifHeader() {
+  const d = new Date();
+  return `開始日時：${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}\n手合割：${t('handi')[HANDI.indexOf(game.start)] || '平手'}\n先手：${playerName(0)}\n後手：${playerName(1)}\n`;
+}
+function endWord() { const o = game.over; if (!o) return ''; return o.reason === 'declare' ? '入玉勝ち' : o.reason === 'rep' || o.winner < 0 ? '千日手' : o.reason === 'time' ? '切れ負け' : '投了'; }
+function exportKIF() {
+  const p = new E.Position(); p.setSfen(game.start); let prevTo = -1, s = '# KIF形式棋譜ファイル\n' + kifHeader() + '手数----指手---------消費時間--\n';
+  game.moves.forEach((u, i) => { const m = p.fromUsi(u); s += `${String(i + 1).padStart(4)} ${kifName(p, m, prevTo, true)}\n`; prevTo = E.mTo(m); p.doMove(m); p.sp = 0; });
+  if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${endWord()}\n`;
+  return s;
+}
+function exportKI2() {
+  const p = new E.Position(); p.setSfen(game.start); let prevTo = -1; const out = [];
+  for (const u of game.moves) { const m = p.fromUsi(u); out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo, false, true)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; }
+  let s = kifHeader() + '\n';
+  for (let i = 0; i < out.length; i += 6) s += out.slice(i, i + 6).map(x => x.padEnd(8, '　')).join('').trimEnd() + '\n';
+  if (game.over) s += `まで${game.moves.length}手で${game.over.winner === 0 ? '先手' : game.over.winner === 1 ? '後手' : ''}の${endWord() === '千日手' ? '千日手' : '勝ち'}\n`;
+  return s;
+}
+function exportCSA() {
+  const p = new E.Position(); p.setSfen(game.start);
+  let s = `V2.2\nN+${playerName(0)}\nN-${playerName(1)}\n`;
+  if (game.start === HANDI[0]) s += 'PI\n+\n';
+  else {
+    for (let r = 1; r <= 9; r++) { let line = 'P' + r; for (let f = 9; f >= 1; f--) { const q = p.board[E.makeSq(f, r)]; line += q ? (E.colorOf(q) ? '-' : '+') + CSA_PC[E.typeOf(q)] : ' * '; } s += line + '\n'; }
+    for (const c of [0, 1]) { let line = ''; for (let tp = 7; tp >= 1; tp--) for (let k = 0; k < p.hand[c * 8 + tp]; k++) line += '00' + CSA_PC[tp]; if (line) s += 'P' + (c ? '-' : '+') + line + '\n'; }
+    s += (p.side ? '-' : '+') + '\n';
+  }
+  for (const u of game.moves) {
+    const m = p.fromUsi(u), to = E.mTo(m), sq = x => '' + E.sqFile(x) + E.sqRank(x);
+    let pc;
+    if (E.isDrop(m)) { pc = CSA_PC[E.dropType(m)]; s += (p.side ? '-' : '+') + '00' + sq(to) + pc + '\n'; }
+    else { const tp = E.typeOf(p.board[E.mFrom(m)]) + (E.mPromo(m) ? 8 : 0); s += (p.side ? '-' : '+') + sq(E.mFrom(m)) + sq(to) + CSA_PC[tp] + '\n'; }
+    p.doMove(m); p.sp = 0;
+  }
+  if (game.over) s += game.over.reason === 'declare' ? '%KACHI\n' : game.over.winner < 0 ? '%SENNICHITE\n' : game.over.reason === 'time' ? '%TIME_UP\n' : '%TORYO\n';
+  return s;
+}
+function exportUSI() { return (game.start === HANDI[0] ? 'position startpos' : 'position sfen ' + game.start) + (game.moves.length ? ' moves ' + game.moves.join(' ') : '') + '\n'; }
+// 局面図 (diagram) image on a canvas: classic black-on-white diagram, gote pieces upside down, hands as text
+function diagramCanvas(withKifu) {
+  const p = posAt(cur), S = 64, M = 40, W = S * 9 + M * 2 + 220;
+  const names = [];
+  { const q = new E.Position(); q.setSfen(game.start); let pt = -1; for (const u of game.moves.slice(0, cur)) { const m = q.fromUsi(u); names.push((q.side ? '△' : '▲') + kifName(q, m, pt, false, true)); pt = E.mTo(m); q.doMove(m); q.sp = 0; } }
+  const rows = withKifu ? Math.ceil(names.length / 4) : 0, KH = withKifu ? 40 + rows * 26 + 20 : 0;
+  const H = S * 9 + M * 2 + 80 + KH;
+  const cv = document.createElement('canvas'); const dpr = 2; cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  g.fillStyle = '#fbf8f0'; g.fillRect(0, 0, W, H);
+  const ox = 110, oy = M + 40, ink = '#1a140c', serif = "'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif";
+  g.fillStyle = ink; g.font = `700 20px ${serif}`; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.fillText(cur ? `${cur}手目 ${names[cur - 1]} まで` : '開始局面', ox, 34);
+  // board
+  g.strokeStyle = ink; g.lineWidth = 2.5; g.strokeRect(ox, oy, S * 9, S * 9); g.lineWidth = 1;
+  for (let i = 1; i < 9; i++) { g.beginPath(); g.moveTo(ox + i * S, oy); g.lineTo(ox + i * S, oy + S * 9); g.stroke(); g.beginPath(); g.moveTo(ox, oy + i * S); g.lineTo(ox + S * 9, oy + i * S); g.stroke(); }
+  for (const [a, b] of [[3, 3], [6, 3], [3, 6], [6, 6]]) { g.beginPath(); g.arc(ox + a * S, oy + b * S, 3, 0, 7); g.fill(); }
+  g.font = `16px ${serif}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let c = 0; c < 9; c++) g.fillText('９８７６５４３２１'[c], ox + c * S + S / 2, oy - 14);
+  for (let r = 0; r < 9; r++) g.fillText(KAN[r + 1], ox + S * 9 + 16, oy + r * S + S / 2);
+  const lastTo = cur > 0 ? E.mTo(p.fromUsi(game.moves[cur - 1])) : -1;
+  for (let s = 0; s < 81; s++) {
+    const q = p.board[s]; const r = (s / 9) | 0, c = s % 9, x = ox + c * S + S / 2, y = oy + r * S + S / 2;
+    if (s === lastTo) { g.fillStyle = 'rgba(200,160,60,.28)'; g.fillRect(ox + c * S + 1, oy + r * S + 1, S - 2, S - 2); }
+    if (!q) continue;
+    const tp = E.typeOf(q), ch = tp === E.OU ? (E.colorOf(q) ? '王' : '玉') : KANJI[tp];
+    g.save(); g.translate(x, y); if (E.colorOf(q)) g.rotate(Math.PI);
+    g.fillStyle = tp > 8 ? '#a01810' : ink; g.font = `700 38px ${serif}`; g.fillText(ch, 0, 2); g.restore();
+  }
+  // hands
+  const handTxt = c => { let s2 = ''; for (const tp of [6, 5, 7, 4, 3, 2, 1]) { const n = p.hand[c * 8 + tp]; if (n) s2 += KANJI[tp] + (n > 1 ? KAN[n] || n : ''); } return s2 || 'なし'; };
+  const vert = (txt, x, y0, rot) => { g.save(); g.font = `20px ${serif}`; g.fillStyle = ink; g.textAlign = 'center'; [...txt].forEach((ch, i) => { const y = y0 + i * 24; g.save(); g.translate(x, y); if (rot) g.rotate(Math.PI); g.fillText(ch, 0, 0); g.restore(); }); g.restore(); };
+  const pn = c => { const n = String(playerName(c) || ''); return n && n !== '先手' && n !== '後手' && n !== 'Sente' && n !== 'Gote' ? ' ' + n.slice(0, 8) : ''; };
+  vert('☗先手' + pn(0) + '　持駒 ' + handTxt(0), ox + S * 9 + 60, oy + 10, false);
+  vert('☖後手' + pn(1) + '　持駒 ' + handTxt(1), 50, oy + 10, false);
+  // kifu
+  if (withKifu) {
+    let y = oy + S * 9 + 60; g.fillStyle = ink; g.textAlign = 'left'; g.font = `700 18px ${serif}`; g.fillText('棋譜', ox, y); y += 30; g.font = `16px ${serif}`;
+    names.forEach((nm, i) => { const col = i % 4, row = (i / 4) | 0; g.fillText(`${i + 1} ${nm}`, ox - 60 + col * 175, y + row * 26); });
+  }
+  g.font = `12px sans-serif`; g.fillStyle = '#8a7a60'; g.textAlign = 'right'; g.fillText('core-calmdust.github.io/aicoding/shogi', W - 14, H - 14);
+  return cv;
+}
+let exportFmt = 'kif', exportImgMode = 'board', exportBlob = null;
+function exportRender() {
+  segSel('segExport', exportFmt); segSel('segImg', exportImgMode);
+  const img = exportFmt === 'img';
+  $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
+  $('#exportCopy').textContent = t(img ? 'ex2.share' : exportFmt === 'url' ? 'ex2.copyUrl' : 'copy');
+  if (img) { const cv = diagramCanvas(exportImgMode === 'both'); $('#exportPreview').src = cv.toDataURL('image/png'); cv.toBlob(b => { exportBlob = b; }); return; }
+  $('#exportText').value = exportFmt === 'kif' ? exportKIF() : exportFmt === 'ki2' ? exportKI2() : exportFmt === 'csa' ? exportCSA() : exportFmt === 'usi' ? exportUSI() : shareUrl();
+}
+$('#btnShare').onclick = () => {
   if (!game || !game.moves.length) { toast(t('kifu.empty')); return; }
-  const url = shareUrl();
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: '将棋 SHOGI', url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
+  try { exportFmt = localStorage.getItem('shogi-export-fmt') || 'kif'; } catch (e) {}
+  exportRender(); showOverlay('#exportOverlay');
+};
+$('#segExport').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportFmt = b.dataset.v; try { localStorage.setItem('shogi-export-fmt', exportFmt); } catch (er) {} exportRender(); };
+$('#segImg').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportImgMode = b.dataset.v; exportRender(); };
+$('#exportClose').onclick = () => hideOverlay('#exportOverlay');
+$('#exportOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#exportOverlay'); });
+const stamp = () => { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; };
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+$('#exportDl').onclick = () => {
+  if (exportFmt === 'img') { if (exportBlob) download(exportBlob, `shogi_${stamp()}.png`); return; }
+  const ext = { kif: 'kif', ki2: 'ki2', csa: 'csa', usi: 'usi', url: 'txt' }[exportFmt];
+  download(new Blob([$('#exportText').value], { type: 'text/plain;charset=utf-8' }), `shogi_${stamp()}.${ext}`);
+};
+$('#exportCopy').onclick = async () => {
+  if (exportFmt === 'img') {
+    const file = exportBlob && new File([exportBlob], `shogi_${stamp()}.png`, { type: 'image/png' });
+    try { if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '将棋 SHOGI' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': exportBlob })]); toast(t('copied')); } catch (e) { if (exportBlob) download(exportBlob, `shogi_${stamp()}.png`); }
+    return;
+  }
+  const v = $('#exportText').value;
+  if (exportFmt === 'url' && navigator.share && matchMedia('(pointer: coarse)').matches) { try { await navigator.share({ title: '将棋 SHOGI', url: v }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  navigator.clipboard.writeText(v).then(() => toast(t('copied')), () => { $('#exportText').select(); });
 };
 // parse USI / CSA / KIF / share URL -> {start, moves} or {error}
 function parseKifu(text) {
@@ -1813,7 +1954,7 @@ function parseKifu(text) {
   if (hm && /(^|&)k=/.test(hm[1])) {
     const q = new URLSearchParams(hm[1]);
     const start = q.get('s') ? decodeURIComponent(q.get('s')) : HANDI[+(q.get('h') || 0)] || HANDI[0];
-    return replayUsi(start, (q.get('k') || '').split('.').filter(Boolean), q.has('n') ? +q.get('n') : undefined);
+    return replayUsi(start, (q.get('k') || '').split('.').filter(Boolean).map(u => u.replace(/ $/, '+')), q.has('n') ? +q.get('n') : undefined);
   }
   // USI
   const um = text.match(/(?:position\s+)?(startpos|sfen\s+(\S+\s+[bw]\s+\S+\s+\d+))(?:\s+moves\s+(.*))?/);
