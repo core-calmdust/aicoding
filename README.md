@@ -36,7 +36,7 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 | [マンカラ](https://core-calmdust.github.io/aicoding/mancala/) | 10段階 | 6ステップ | 100問 | ノーマル／イージー／カラハ／スンカの4ルール、終盤完全読み、物理演算で転がる種、スマホ横画面モード |
 | [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon/) | 10段階 | 7ステップ | 16問 | wildbg由来のニューラルネット＋2手読み、ベアオフ完全DB、ダブリングキューブ、3/5/7点マッチ、スマホ横画面モード |
 | [ナイン・メンズ・モリス](https://core-calmdust.github.io/aicoding/morris/) | 10段階 | 7ステップ | 90問 | ナイン／トゥエルブ／シックスの3ルール |
-| [チェス](https://core-calmdust.github.io/aicoding/chess/) | 10段階 | 7ステップ | メイト問題85問 | 定跡と読み切り探索、PGN・FEN読み込み |
+| [チェス](https://core-calmdust.github.io/aicoding/chess/) | 10段階 | 7ステップ | メイト問題85問 | Lichessの評価済み約5,400万局面で学習したNNUE（Lv.8で目安Elo 2850）、定跡と読み切り探索、PGN・FEN読み込み（[モデルカード](chess/MODEL_CARD.md)） |
 
 🌐 = ネット対戦対応
 
@@ -105,6 +105,7 @@ python3 -m http.server 8000
 
 - 将棋 SHOGI の評価関数と定跡は、[コンピュータ将棋対局場 Floodgate](https://wdoor.c.u-tokyo.ac.jp/shogi/) で公開されている棋譜から学習しました。棋譜データ自体はこのリポジトリに含まれていません。
 - Reversi V4 の評価関数は、[Egaroucid](https://www.egaroucid.nyanyan.dev/ja/) のサイトで公開されている学習データを使って学習しました。学習データ自体はこのリポジトリに含まれていません。
+- チェスの評価関数（NNUE）は、[Lichess の評価済み局面データベース](https://database.lichess.org/#evals)（CC0）の局面で学習しました。学習データ自体はこのリポジトリに含まれていません。
 - バックギャモンは [wildbg](https://github.com/carsten-wenderdel/wildbg)（© 2023 Carsten Wenderdel、MIT / Apache-2.0）のニューラルネットを JavaScript に移植して同梱しています（詳細は [backgammon/THIRD_PARTY_LICENSES.txt](backgammon/THIRD_PARTY_LICENSES.txt)）。軽量ネットは自前の自己対局局面に、wildbg の評価値と [wildbg-training](https://github.com/carsten-wenderdel/wildbg-training) のロールアウトデータ（CC0）でラベルを付けて学習しました。
 
 ## ライセンス
