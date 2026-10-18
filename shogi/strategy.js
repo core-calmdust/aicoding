@@ -19,8 +19,8 @@
     const bName = { 8: ['向かい飛車', 'Opposing Rook'], 7: ['三間飛車', 'Third-file Rook'], 6: ['四間飛車', 'Fourth-file Rook'], 5: ['中飛車', 'Central Rook'] };
     const wName = { 2: bName[8], 3: bName[7], 4: bName[6], 5: bName[5] };
     if (bSide && wSide) return { id: 'aifuri', ja: '相振り飛車', en: 'Double Ranging Rook' };
-    if (bSide) return { id: 'furi', ja: `対抗形（先手${bName[bSide][0]}）`, en: `Static vs Ranging (Sente ${bName[bSide][1]})` };
-    if (wSide) return { id: 'furi', ja: `対抗形（後手${wName[wSide][0]}）`, en: `Static vs Ranging (Gote ${wName[wSide][1]})` };
+    if (bSide) return { id: 'furi', side: 0, rook: bSide, ja: `対抗形（先手${bName[bSide][0]}）`, en: `Static vs Ranging (Sente ${bName[bSide][1]})` };
+    if (wSide) return { id: 'furi', side: 1, rook: 10 - wSide, ja: `対抗形（後手${wName[wSide][0]}）`, en: `Static vs Ranging (Gote ${wName[wSide][1]})` };
     // double static rook
     if (bishopsOnBoard === 0 && pos.hand[KA] + pos.hand[8 + KA] === 2) return { id: 'kakugawari', ja: '角換わり', en: 'Bishop Exchange' };
     if ((br >= 0 && rank(br) <= 4 && file(br) >= 3 && file(br) <= 4) || (wr >= 0 && rank(wr) >= 6 && file(wr) >= 6 && file(wr) <= 7)) return { id: 'yokofu', ja: '横歩取り', en: 'Side Pawn Capture' };
@@ -47,7 +47,33 @@
     }
     return found || cur;
   }
-  const api = { classify, classifyGame };
+  // localized name of a classify() result (falls back: lang -> en -> ja)
+  const NAMES = {
+    aifuri: { zh: '相振飞车', ko: '상후리비샤', es: 'Doble torre desplazada', fr: 'Double tour déplacée', pt: 'Torre deslocada dupla', de: 'Doppelschwenkturm', hi: 'दोहरा घूमता हाथी', ar: 'الرخ المتنقل المزدوج' },
+    kakugawari: { zh: '角换', ko: '각교환', es: 'Cambio de alfiles', fr: 'Échange des fous', pt: 'Troca de bispos', de: 'Läufertausch', hi: 'ऊँट की अदला-बदली', ar: 'تبادل الفيلة' },
+    yokofu: { zh: '横步取', ko: '횡보잡기', es: 'Captura del peón lateral', fr: 'Prise du pion latéral', pt: 'Captura do peão lateral', de: 'Seitenbauernraub', hi: 'बगल का प्यादा पकड़ना', ar: 'أسر الجندي الجانبي' },
+    yagura: { zh: '矢仓', ko: '야구라', es: 'Yagura', fr: 'Yagura', pt: 'Yagura', de: 'Yagura', hi: 'यागुरा', ar: 'ياغورا' },
+    aigakari: { zh: '相挂', ko: '아이가카리', es: 'Doble ataque de ala', fr: "Double attaque d'aile", pt: 'Ataque duplo de ala', de: 'Doppelflügelangriff', hi: 'दोहरा विंग आक्रमण', ar: 'هجوم الجناحين المزدوج' },
+    ibisha: { zh: '相居飞车', ko: '상이비샤', es: 'Doble torre estática', fr: 'Double tour statique', pt: 'Torre estática dupla', de: 'Doppel-Standturm', hi: 'दोहरा स्थिर हाथी', ar: 'الرخ الثابت المزدوج' },
+  };
+  // ranging-rook file 8,7,6,5 (from Sente's view) / side names / template
+  const FURI = {
+    zh: { r: { 8: '向飞车', 7: '三间飞车', 6: '四间飞车', 5: '中飞车' }, s: ['先手', '后手'], f: '对抗形（{s}{r}）' },
+    ko: { r: { 8: '무카이비샤', 7: '산켄비샤', 6: '시켄비샤', 5: '나카비샤' }, s: ['선수', '후수'], f: '대항형({s} {r})' },
+    es: { r: { 8: 'Torre opuesta', 7: 'Torre en 3.ª columna', 6: 'Torre en 4.ª columna', 5: 'Torre central' }, s: ['Sente', 'Gote'], f: 'Estática vs. desplazada ({s}: {r})' },
+    fr: { r: { 8: 'Tour opposée', 7: 'Tour en 3e colonne', 6: 'Tour en 4e colonne', 5: 'Tour centrale' }, s: ['Sente', 'Gote'], f: 'Statique contre déplacée ({s} : {r})' },
+    pt: { r: { 8: 'Torre oposta', 7: 'Torre na 3ª coluna', 6: 'Torre na 4ª coluna', 5: 'Torre central' }, s: ['Sente', 'Gote'], f: 'Estática x deslocada ({s}: {r})' },
+    de: { r: { 8: 'Gegenturm', 7: 'Turm auf 3. Linie', 6: 'Turm auf 4. Linie', 5: 'Zentralturm' }, s: ['Sente', 'Gote'], f: 'Stand- gg. Schwenkturm ({s}: {r})' },
+    hi: { r: { 8: 'आमने-सामने हाथी', 7: 'तीसरे कॉलम का हाथी', 6: 'चौथे कॉलम का हाथी', 5: 'केंद्रीय हाथी' }, s: ['सेन्ते', 'गोते'], f: 'स्थिर बनाम घूमता ({s}: {r})' },
+    ar: { r: { 8: 'الرخ المقابل', 7: 'رخ العمود الثالث', 6: 'رخ العمود الرابع', 5: 'الرخ المركزي' }, s: ['سينتي', 'غوتي'], f: 'ثابت ضد متنقل ({s}: {r})' },
+  };
+  function localName(c, lang) {
+    if (!c) return '';
+    if (lang === 'ja') return c.ja;
+    if (c.id === 'furi' && FURI[lang] && c.rook) { const F = FURI[lang]; return F.f.replace('{s}', F.s[c.side]).replace('{r}', F.r[c.rook]); }
+    return (NAMES[c.id] && NAMES[c.id][lang]) || c.en || c.ja;
+  }
+  const api = { classify, classifyGame, localName };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ShogiStrategy = api;
 })(typeof self !== 'undefined' ? self : this);

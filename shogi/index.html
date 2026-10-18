@@ -1160,7 +1160,7 @@ const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('m
 const winRate = v => 1 / (1 + Math.exp(-v / 600));
 function evAt(i) { for (let k = i; k >= 0 && k >= i - 1; k--) if (game.info[k] && game.info[k].ev != null) return game.info[k].ev; return null; }
 function renderInfo() {
-  try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (LANG === 'ja' ? c.ja : c.en) : ''; } catch (e) {}
+  try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (ShogiStrategy.localName ? ShogiStrategy.localName(c, LANG) : (LANG === 'ja' ? c.ja : c.en)) : ''; } catch (e) {}
   $('#nameBlack').textContent = playerName(0); $('#nameWhite').textContent = playerName(1);
   $('#pBlack').classList.toggle('active', !game.over && P.side === 0);
   $('#pWhite').classList.toggle('active', !game.over && P.side === 1);
@@ -1523,6 +1523,16 @@ $('#btnResume').onclick = () => {
 $('#btnLatest').onclick = () => viewAt(game.moves.length);
 $('#btnReview').onclick = () => { hideOverlay('#resultOverlay'); viewAt(Math.max(0, game.moves.length - 1)); };
 $('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); return; } newGame(); };
+// texts built in code (all 10 languages; read via L())
+const DTXT = {
+  hl: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.', zh: '已将要走的棋子高亮显示。', ko: '움직일 말을 표시했습니다.', es: 'Se resalta la pieza que hay que mover.', fr: 'La pièce à jouer est surlignée.', pt: 'A peça a mover está destacada.', de: 'Der zu ziehende Stein ist markiert.', hi: 'चलने वाला मोहरा हाइलाइट है।', ar: 'القطعة التي يجب تحريكها مميَّزة.' },
+  opPrompt: { ja: '上位のソフトがいちばん多く指した手は？', en: 'Which move do strong engines play most here?', zh: '强力软件最常走的是哪一手？', ko: '강한 소프트가 가장 많이 둔 수는?', es: '¿Qué jugada eligen más los motores fuertes aquí?', fr: 'Quel coup les moteurs forts jouent-ils le plus ici ?', pt: 'Qual lance as engines fortes mais jogam aqui?', de: 'Welchen Zug spielen starke Engines hier am häufigsten?', hi: 'यहाँ मज़बूत इंजन सबसे ज़्यादा कौन-सी चाल खेलते हैं?', ar: 'ما النقلة التي تلعبها المحركات القوية هنا أكثر من غيرها؟' },
+  rvGrade: { ja: '復習', en: 'Review', zh: '复习', ko: '복습', es: 'Repaso', fr: 'Révision', pt: 'Revisão', de: 'Wiederholung', hi: 'दोहराव', ar: 'مراجعة' },
+  rvTitle: { ja: 'この対局の復習', en: 'Review this game', zh: '复习本局', ko: '이 대국 복습', es: 'Repasar esta partida', fr: 'Réviser cette partie', pt: 'Revisar esta partida', de: 'Diese Partie wiederholen', hi: 'इस गेम को दोहराएँ', ar: 'مراجعة هذه المباراة' },
+  rvPrompt: { ja: '実戦で逃した好手を指してください。', en: 'Find the better move you missed.', zh: '请走出实战中错过的好棋。', ko: '실전에서 놓친 호수를 두세요.', es: 'Encuentra la jugada mejor que se te escapó.', fr: 'Trouvez le meilleur coup que vous avez manqué.', pt: 'Encontre o lance melhor que você deixou passar.', de: 'Finde den besseren Zug, den du verpasst hast.', hi: 'वह बेहतर चाल खोजें जो आपसे छूट गई।', ar: 'جد النقلة الأفضل التي فاتتك.' },
+  rvExpl: { ja: '実戦の{m}は{q}でした（{i}手目）。', en: 'In the game you played {m} ({q}, move {i}).', zh: '实战中你走了{m}（{q}，第{i}手）。', ko: '실전에서 둔 {m}은(는) {q}였습니다({i}수째).', es: 'En la partida jugaste {m} ({q}, jugada {i}).', fr: 'Dans la partie, vous avez joué {m} ({q}, coup {i}).', pt: 'Na partida você jogou {m} ({q}, lance {i}).', de: 'In der Partie hast du {m} gespielt ({q}, Zug {i}).', hi: 'गेम में आपने {m} खेली ({q}, चाल {i})।', ar: 'في المباراة لعبت <bdi>{m}</bdi> ({q}، النقلة {i}).' },
+};
+const fillT = (o, v) => { const r = {}; for (const k in o) r[k] = o[k].replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return r; };
 // positions where the human played a dubious/bad move and the analysis knew a better one
 function mistakeProblems() {
   if (!game || settings.mode !== 'ai') return [];
@@ -1532,7 +1542,7 @@ function mistakeProblems() {
     if ((q === 'dubious' || q === 'bad') && b && b.bm && b.bm !== game.moves[i - 1]) {
       const p = posAt(i - 1), played = lineKanji(p.sfen(), [game.moves[i - 1]])[0];
       out.push({ kind: 'best', sfen: p.sfen(), accept: [b.bm], bestScore: b.best, pv: b.bpv && b.bpv.length ? b.bpv : [b.bm],
-        expl: { ja: `実戦の${played}は${t('q.' + q)}でした（${i}手目）。`, en: `In the game you played ${played} (${t('q.' + q)}, move ${i}).` } });
+        expl: fillT(DTXT.rvExpl, { m: played, q: t('q.' + q), i }) });
     }
   }
   return out;
@@ -1541,7 +1551,7 @@ $('#btnMistakes').onclick = () => {
   const probs = mistakeProblems(); if (!probs.length) return;
   hideOverlay('#resultOverlay');
   busyToken++; cancelAI(); cancelAna();
-  const g = { id: null, grade: { ja: '復習', en: 'Review' }, title: { ja: 'この対局の復習', en: 'Review this game' }, prompt: { ja: '実戦で逃した好手を指してください。', en: 'Find the better move you missed.' }, hint: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.' }, problems: probs };
+  const g = { id: null, grade: DTXT.rvGrade, title: DTXT.rvTitle, prompt: DTXT.rvPrompt, hint: DTXT.hl, problems: probs };
   lesson = { review: true, gi: -1, g, probs, k: 0, results: [], pts: [], waiting: false, savedGame: game };
   document.body.classList.add('in-lesson');
   loadProblem();
@@ -2207,7 +2217,7 @@ function startOpening(oi) {
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   const g = OPEN.sets[oi];
   const probs = g.handi ? shuffle(g.problems.map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : shuffle(g.problems).slice(0, 5);
-  lesson = { opening: true, gi: oi, g: { ...g, grade: g.title, prompt: g.handi ? { ja: t('op.handiPrompt'), en: t('op.handiPrompt') } : { ja: '上位のソフトがいちばん多く指した手は？', en: 'Which move do strong engines play most here?', zh: '强力软件最常走的是哪一手？', ko: '강한 소프트가 가장 많이 둔 수는?' }, hint: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.' } }, probs, k: 0, results: [], pts: [], waiting: false };
+  lesson = { opening: true, gi: oi, g: { ...g, grade: g.title, prompt: g.handi ? { ja: t('op.handiPrompt'), en: t('op.handiPrompt') } : DTXT.opPrompt, hint: DTXT.hl }, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
   loadProblem();
@@ -2276,7 +2286,7 @@ function showStudy() {
   if (i === 0) { pr = t('op.studyStart'); fb = (st.intro ? (st.intro[LANG] || st.intro.en || st.intro.ja) : [L(g.short)]).join('<br>'); }
   else {
     const [u, pct, win] = st.steps[i - 1];
-    pr = `<b style="font-size:16px">${i}. ${lineKanji(st.start, st.steps.slice(0, i).map(s => s[0])).pop()}</b>` + (pct != null ? ` <span style="font-size:12px;color:var(--muted)">${t('op.pct', { p: pct })}</span>` : '');
+    pr = `<b style="font-size:16px"><bdi>${i}. ${lineKanji(st.start, st.steps.slice(0, i).map(s => s[0])).pop()}</bdi></b>` + (pct != null ? ` <span style="font-size:12px;color:var(--muted)">${t('op.pct', { p: pct })}</span>` : '');
     const note = st.notes && st.notes[i - 1]; fb = note ? (note[LANG] || note.en || note.ja) : '';
   }
   if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${t('op.studyEnd')}</b>`;
