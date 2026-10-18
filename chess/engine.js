@@ -663,10 +663,11 @@ const LEVELS = {
   3: { d: 2, noise: 65 },
   4: { d: 3, noise: 38 },
   5: { d: 4, noise: 22, book: true },
-  6: { d: 5, noise: 11, book: true },
-  7: { d: 6, ms: 500, book: true },
-  8: { d: 64, ms: 1000, book: true },
-  9: { d: 64, ms: 2000, book: true },
+  // wnodes / ms: limits for the WebAssembly engine; d / ms are also used by the JS fallback
+  6: { d: 4, ms: 150, wnodes: 1500, book: true },
+  7: { d: 64, ms: 300, wnodes: 8000, book: true },
+  8: { d: 64, ms: 500, book: true },
+  9: { d: 64, ms: 1500, book: true },
   10: { d: 64, ms: 4000, book: true },
 };
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
@@ -732,12 +733,85 @@ const API = { P, N, B, R, Q, K, MATE, MATET, START, Pos, Engine, evaluate, repla
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.ChessEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  self.onmessage = e => {
+  // WebAssembly search (engine.c) with the NNUE evaluation (nnue.bin.gz). Falls back to the JS engine if unavailable.
+  const VER = self.location.search || '';
+  let X = null;
+  const wasmReady = (async () => {
+    try {
+      const r = await WebAssembly.instantiateStreaming(fetch(new URL('engine.wasm' + VER, self.location.href)), { env: { now: () => performance.now(), progress: () => {} } });
+      const x = r.instance.exports; x.init(); x.new_game();
+      const res = await fetch(new URL('nnue.bin.gz' + VER, self.location.href));
+      if (!res.ok) throw new Error('nnue ' + res.status);
+      let buf;
+      if (typeof DecompressionStream === 'function') buf = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+      else throw new Error('no DecompressionStream');
+      if (buf.length !== x.nn_size()) throw new Error('nnue size');
+      new Uint8Array(x.memory.buffer).set(buf, x.nn_ptr()); x.nn_enable(1);
+      X = x;
+    } catch (err) { X = null; }
+  })();
+  const CMATE = 31000, CMATE_MAX = CMATE - 256;
+  const toJS = v => v >= CMATE_MAX ? MATE - (CMATE - v) : v <= -CMATE_MAX ? -MATE + (CMATE + v) : v;
+  function wSet(fen, moves) {
+    const pos = Pos.fromFEN(fen || START), u = [];
+    for (const m of moves || []) { u.push(pos.uci(m)); pos.make(m); }
+    const s = (fen || START) + (u.length ? ' moves ' + u.join(' ') : '') + '\0';
+    new Uint8Array(X.memory.buffer).set(new TextEncoder().encode(s), X.setup_ptr());
+    X.set_position();
+    return pos;
+  }
+  const wUci = m => { const a = new Uint8Array(X.memory.buffer), p = X.move_uci(m); let s = ''; for (let i = p; a[i]; i++) s += String.fromCharCode(a[i]); return s; };
+  // values of all root moves, depth by depth, until the time runs out
+  function wRootLoop(pos, ms, maxDepth, margin, onDepth, nodeLim) {
+    const legal = X.legal_moves(), L = Array.from(new Int32Array(X.memory.buffer, X.legal_ptr(), legal));
+    let order = L, last = null, depth = 0; const t0 = performance.now();
+    X.ana_begin(ms, nodeLim || 0);
+    for (let d = 1; d <= maxDepth; d++) {
+      new Int32Array(X.memory.buffer, X.ana_moves(), order.length).set(order);
+      const n = X.analyze_depth(order.length, d, margin);
+      if (n < 0) break;
+      const vals = new Int32Array(X.memory.buffer, X.ana_vals(), n), kinds = new Int32Array(X.memory.buffer, X.ana_kind(), n);
+      last = order.map((cm, i) => ({ cm, v: toJS(vals[i]), kind: kinds[i] ? 'ub' : 'exact' })); depth = d;
+      if (onDepth) onDepth(last, d);
+      order = last.slice().sort((a, b) => (b.v - a.v) || ((a.kind === 'ub') - (b.kind === 'ub'))).map(e => e.cm);
+      const top = Math.max(...last.map(e => e.v));
+      if (Math.abs(top) > MATET && MATE - Math.abs(top) < d) break;
+      if (performance.now() - t0 > ms * 0.5) break;
+    }
+    return { list: (last || []).map(e => ({ m: pos.fromUci(wUci(e.cm)), v: e.v, kind: e.kind })), depth };
+  }
+  function wThink(fen, moves, level, rand) {
+    rand = rand || Math.random;
+    const L = LEVELS[level] || LEVELS[5];
+    const jpos = replay(fen, moves).pos;
+    if (!jpos.legal().length) return { move: 0 };
+    if (L.book && !fen) {
+      const bk = bookMoves(uciSeq(moves));
+      if (bk.length) { const u = bk[Math.floor(rand() * bk.length)], m = jpos.fromUci(u); if (m) return { move: m, book: true }; }
+    }
+    const pos = wSet(fen, moves);
+    if (L.noise !== undefined) {
+      const r = wRootLoop(pos, 4000, L.d, 0, null, L.nodes);
+      const vals = r.list.length ? r.list : jpos.legal().map(m => ({ m, v: 0 }));
+      if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
+      let best = null, bv = -Infinity;
+      for (const e of vals) { const x = e.v + (Math.abs(e.v) > MATET ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
+      return { move: best };
+    }
+    const cm = L.wnodes ? X.think(0, 0, 64, L.wnodes) : X.think(L.ms * 0.55, L.ms, 64, 0);
+    const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8);
+    return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], wasm: true };
+  }
+  self.onmessage = async e => {
     const m = e.data;
     try {
-      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.fen, m.moves, m.level) });
+      if (m.type !== 'mate') await wasmReady;
+      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(X ? wThink(m.fen, m.moves, m.level) : think(m.fen, m.moves, m.level)) });
       else if (m.type === 'analyze') {
-        const r = analyze(m.fen, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
+        const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
+        let r;
+        if (X) { const pos = wSet(m.fen, m.moves); r = wRootLoop(pos, m.time || 1000, 64, 150, (l, d) => prog(l.map(x => ({ m: pos.fromUci(wUci(x.cm)), v: x.v, kind: x.kind })), d)); }
+        else r = analyze(m.fen, m.moves, m.time || 1000, prog);
         self.postMessage({ id: m.id, type: 'result', ...r });
       } else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.fen, m.moves, m.n, m.defend, m.maxNodes) });
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
