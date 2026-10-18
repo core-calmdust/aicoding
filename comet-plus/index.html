@@ -2156,16 +2156,17 @@ const BOSS_DEFS = [
         init(b) { b.hist = []; b.segs = []; },
         fight(b) {
             const CW = config.canvasWidth;
-            b.x = CW / 2 + Math.sin(b.t * 0.02) * CW * 0.38;
-            b.y = 230 + Math.sin(b.t * 0.037) * 150;
+            // 動きをゆっくり・狭めに（以前は 0.02 / 0.037、振れ幅 0.38 / 150）
+            b.x = CW / 2 + Math.sin(b.t * 0.012) * CW * 0.32;
+            b.y = 210 + Math.sin(b.t * 0.022) * 110;
             b.hist.unshift({ x: b.x, y: b.y });
             if (b.hist.length > 160) b.hist.pop();
             b.segs = [];
-            for (let k = 1; k <= 12; k++) { const h = b.hist[Math.min(b.hist.length - 1, k * 12)]; b.segs.push({ x: h.x, y: h.y }); }
-            if (b.t % 45 === 0) { const s = b.segs[(b.t / 45) % b.segs.length | 0]; bossShoot(s.x, s.y, aimAt(s.x, s.y), 260); }
-            if (b.t % 120 === 60) fan(b.x, b.y, Math.PI / 2, 7, 1.4, 220);
+            for (let k = 1; k <= 8; k++) { const h = b.hist[Math.min(b.hist.length - 1, k * 14)]; b.segs.push({ x: h.x, y: h.y }); }
+            if (b.t % 80 === 0) { const s = b.segs[(b.t / 80) % b.segs.length | 0]; bossShoot(s.x, s.y, aimAt(s.x, s.y), 200); }
+            if (b.t % 150 === 75) fan(b.x, b.y, Math.PI / 2, 5, 1.1, 180);
         },
-        bodies(b) { return [{ x: b.x, y: b.y, r: 30 * BS }, ...b.segs.map(s => ({ x: s.x, y: s.y, r: 17 * BS }))]; },
+        bodies(b) { return [{ x: b.x, y: b.y, r: 30 * BS }, ...b.segs.map(s => ({ x: s.x, y: s.y, r: 11 * BS }))]; },
     },
     {   // 4. HALO: 楕円軌道を回るリング。8つの砲台が回転スプリンクラー、周期的に全砲台が自機狙い
         name: 'HALO', hp: 7, r: 38,
@@ -2361,7 +2362,7 @@ function updateBoss(isPlayerInvincible) {
         const p = Math.min(1, b.enterT / 110);
         b.y = -140 + (homeY + 140) * (1 - Math.pow(1 - p, 3));
         if (b.def.name === 'MIRROR') b.d = 270;
-        if (b.def.name === 'SERPENT') { b.hist.unshift({ x: b.x, y: b.y }); if (b.hist.length > 160) b.hist.pop(); b.segs = []; for (let k = 1; k <= 12; k++) { const h = b.hist[Math.min(b.hist.length - 1, k * 12)]; b.segs.push({ x: h.x, y: h.y }); } }
+        if (b.def.name === 'SERPENT') { b.hist.unshift({ x: b.x, y: b.y }); if (b.hist.length > 160) b.hist.pop(); b.segs = []; for (let k = 1; k <= 8; k++) { const h = b.hist[Math.min(b.hist.length - 1, k * 14)]; b.segs.push({ x: h.x, y: h.y }); } }
         if (p >= 1) { b.state = 'fight'; b.t = 0; }
         return false;
     }
@@ -2377,7 +2378,7 @@ function updateBoss(isPlayerInvincible) {
 
     // 自機弾との判定
     if (playerBullet && !b.invuln) {
-        const hit = (b.def.name === 'SERPENT' ? [{ x: b.x, y: b.y, r: 30 * BS }] : bossBodies(b)).some(p => Math.hypot(playerBullet.x - p.x, playerBullet.y - p.y) < p.r + config.playerBulletHitRadius);
+        const hit = (b.def.name === 'SERPENT' ? [{ x: b.x, y: b.y, r: 38 * BS }, ...b.segs.map(s => ({ x: s.x, y: s.y, r: 17 * BS }))] : bossBodies(b)).some(p => Math.hypot(playerBullet.x - p.x, playerBullet.y - p.y) < p.r + config.playerBulletHitRadius);
         if (hit) {
             const hx = playerBullet.x, hy = playerBullet.y;
             playerBullet = null;
@@ -3846,7 +3847,7 @@ const BOSS_BUILDERS = [
         g.add(head);
         const segs = [];
         const segGeo = new THREE.BoxGeometry(28, 20, 28);
-        for (let k = 0; k < 12; k++) {
+        for (let k = 0; k < 8; k++) {
             const m = withEdges(new THREE.Mesh(segGeo, bMat(k % 2 ? 0x2fd08a : 0x1aa0ff, 0.35)));
             m.scale.setScalar((1 - k * 0.045) * BS);
             scene.add(m);
