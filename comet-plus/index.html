@@ -3690,6 +3690,27 @@ const BOSS_BUILDERS = [
 ];
 
 let bossObj = null, bossObjFor = null;
+// 当たり判定がない間（登場中・無敵中）はドット状のモザイクで半透明にする
+const bossMosaicU = { value: 0 };
+function applyMosaic(mat) {
+    if (mat.userData.mosaic) return;
+    mat.userData.mosaic = true;
+    mat.transparent = true;
+    mat.customProgramCacheKey = () => 'bossMosaic';
+    mat.onBeforeCompile = sh => {
+        sh.uniforms.uMosaic = bossMosaicU;
+        sh.fragmentShader = 'uniform float uMosaic;\n' + sh.fragmentShader.replace('#include <tonemapping_fragment>', `
+            if (uMosaic > 0.001) {
+                float cs = mix(1.5, 7.0, uMosaic);
+                vec2 f = fract(gl_FragCoord.xy / cs) - 0.5;
+                if (length(f) > mix(0.75, 0.34, uMosaic)) discard;
+                gl_FragColor.a *= mix(1.0, 0.5, uMosaic);
+                gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(dot(gl_FragColor.rgb, vec3(0.3333))), 0.35 * uMosaic);
+            }
+            #include <tonemapping_fragment>`);
+    };
+    mat.needsUpdate = true;
+}
 function renderBoss(dt) {
     if (bossObj && bossObjFor !== boss) {
         // ボスが消えた: 撃破なら破片
@@ -3704,9 +3725,14 @@ function renderBoss(dt) {
     }
     if (!boss) return;
     if (!bossObj) {
+        bossMosaicU.value = 1;
         bossObj = BOSS_BUILDERS[boss.idx]();
         bossObj.userData.mats = [];
-        const collect = o => o.traverse(c => { if (c.material && c.material.emissive) bossObj.userData.mats.push({ m: c.material, base: c.material.emissiveIntensity }); });
+        const collect = o => o.traverse(c => {
+            if (!c.material) return;
+            applyMosaic(c.material);
+            if (c.material.emissive) bossObj.userData.mats.push({ m: c.material, base: c.material.emissiveIntensity });
+        });
         collect(bossObj);
         (bossObj.userData.extra || []).forEach(collect);
         bossObjFor = boss;
@@ -3714,11 +3740,12 @@ function renderBoss(dt) {
         scene.add(bossObj);
     }
     const b = boss;
+    const noHit = b.state !== 'fight' || b.invuln;
+    bossMosaicU.value = noHit ? Math.min(1, bossMosaicU.value + dt * 6) : Math.max(0, bossMosaicU.value - dt * 3.5);
     bossObj.position.set(toX(ix(b)), 50 + Math.sin(rTime * 2) * 8, toZ(iy(b)));
     bossObj.userData.anim(bossObj, b, rTime);
     const fl = b.flash > 0 ? 3.5 : 0;
     bossObj.userData.mats.forEach(({ m, base }) => { m.emissiveIntensity = base + fl + visualBeat * 0.25; });
-    if (b.invuln && b.state === 'fight') bossObj.userData.mats.forEach(({ m }) => { m.emissiveIntensity *= 0.4; });
     if (isEffectsEnabled) glow.add(bossObj.position.x, 20, bossObj.position.z, themeCur.ui, 380, 0.12 + visualBeat * 0.08);
 }
 
