@@ -65,3 +65,8 @@ dots/ の Lv9/Lv10 を 4×4 マス（5×5 点、40 辺）で初手から完全�
 - 05:40 AI先手のみ（定石 side0 完成時点、bookgen と CPU 競合下）: Lv10 vs Lv8 6局 + vs ランダム 8局。
   AI の判断 209 手すべて厳密最適（oracle 照合）。定石外の最大思考 0.95 秒（ply10）。AI は全局 8 箱以上。
   ログ: scratchpad g_s0_*.jsonl（check.js で照合）。
+
+## 最終状態（完了）
+- 4×4 の作業はコーディネータにより main に反映・公開済み。
+- バックグラウンドジョブ（bookgen / run2.sh / commit_loop / テスト / http.server）はすべて停止済み。再開不要。
+- 生成物・ログ・site ファイルのコピーは wip-ai-data/dots4/ に push 済み。
