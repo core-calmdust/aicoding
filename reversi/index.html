@@ -282,9 +282,29 @@ a.snd.home{text-decoration:none}
 .seg button{flex:1;padding:8px 4px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s}
 .seg button{white-space:nowrap}
 #segMode{flex-wrap:wrap}
-#segMode button{flex:1 0 30%}
+#segMode button{flex:1 0 22%}
 @media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
 .ls-tabs{margin-bottom:16px}
+/* rated games vs the AI: rating card in the new-game dialog; evaluation hidden while the game is going */
+.rt-card{margin-top:10px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.rt-lbl{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.rt-r{font-family:'JetBrains Mono',monospace;font-size:21px;color:var(--accent);font-weight:700}
+.rt-prov{font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.rt-rec{font-size:12.5px;color:var(--muted);margin-top:3px}
+.rt-spark{display:block;width:100%;height:34px;margin-top:8px}
+.rt-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.5}
+.rt-spark line{stroke:var(--line);stroke-dasharray:3 3}
+.rt-lbl2{font-size:11.5px;color:var(--dim);margin:7px 0 5px}
+.rt-hist{display:flex;flex-wrap:wrap;gap:4px}
+.rt-chip{font-size:11px;line-height:1.5;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:inline-flex;gap:4px;font-family:'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap}
+.rt-chip i{font-style:normal;font-family:sans-serif}
+.rt-chip.w i,.rt-chip.w b{color:var(--good)}.rt-chip.l i,.rt-chip.l b{color:var(--red)}
+.rt-chip b{font-weight:600}
+.rt-res{font-family:'JetBrains Mono',monospace}
+body.rated-live #evalCard .evalrow, body.rated-live #evalCard .evalbar, body.rated-live #evalCard .graph{display:none}
+body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-size:12px;color:var(--dim);margin:0 0 10px;line-height:1.6}
+#newOverlay .checks input:disabled + span{opacity:.45}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 .op-seq{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
 .op-seq b{color:var(--accent)}
@@ -947,6 +967,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
         <button data-v="ai" data-i18n="ng.ai"></button>
+        <button data-v="rated" data-i18n="ng.rated"></button>
         <button data-v="pvp" data-i18n="ng.pvp"></button>
         <button data-v="watch" data-i18n="ng.watch"></button>
         <button data-v="lesson" data-i18n="ng.lesson"></button>
@@ -954,6 +975,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
         <button data-v="online" data-i18n="ng.online"></button>
       </div>
     </div>
+    <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc"></p></div>
     <div class="field hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
     <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
@@ -1103,6 +1125,12 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
+<div class="overlay" id="rtConfirmOverlay">
+  <div class="modal" style="width:min(400px,100%)">
+    <p id="rtConfirmText" style="font-size:14.5px;line-height:1.7;margin:0 0 4px"></p>
+    <div class="modal-actions"><button class="mbtn" id="rtConfirmNo" data-i18n="ol.cancel"></button><button class="mbtn go" id="rtConfirmYes"></button></div>
+  </div>
+</div>
 <div class="overlay" id="resumeOverlay">
   <div class="modal" style="width:min(480px,100%)">
     <h2 data-i18n="rs.title"></h2>
@@ -1123,7 +1151,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018tb"></script>
+<script src="i18n.js?v=20261018rt2"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261018wt"></script>
 <script>
@@ -1170,6 +1198,7 @@ let reviewing = false;
 let busyToken = 0;
 let lesson = null;          // active lesson session
 let puzzle = null;          // active puzzle session
+let rated = null;           // rated game vs the AI: {id, lv, or, my, tag, done?, res?} (only meaningful in 'ai' mode)
 
 function load() {
   try {
@@ -1179,6 +1208,7 @@ function load() {
     if (d.positions && d.positions.length) {
       positions = d.positions.map(p => ({ ...p, cells: p.cells.split('').map(Number) }));
       humanColor = d.humanColor || 1;
+      rated = d.rated && d.rated.id ? d.rated : null;
       cur = positions.length - 1;
       return true;
     }
@@ -1189,7 +1219,7 @@ function save() {
   if (lesson || puzzle || net) return;
   try {
     localStorage.setItem(STORE, JSON.stringify({
-      settings, humanColor,
+      settings, humanColor, rated,
       positions: positions.map(p => ({ ...p, cells: p.cells.join('') }))
     }));
   } catch (e) {}
@@ -1443,6 +1473,7 @@ function playerName(color) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; const nm = color === BLACK ? g.bn : g.wn, r = color === BLACK ? g.br : g.wr; return (color === net.me ? t('you') + ' · ' : '') + nm + ' (' + r + ')'; }
   if (settings.mode === 'pvp') return cname(color);
   if (settings.mode === 'watch') return 'AI ' + LV(color === BLACK ? settings.level : settings.level2);
+  if (rated && settings.mode === 'ai') return color === humanColor ? t('you') + ' · R' + rated.my : 'AI ' + rtLvName(rated.lv) + ' · R' + rated.or;
   return color === humanColor ? t('you') : 'AI ' + LV(settings.level);
 }
 function renderInfo() {
@@ -1468,8 +1499,13 @@ function renderInfo() {
   renderGraph();
   renderKifu();
   // buttons
-  $('#btnUndo').disabled = settings.mode === 'online' ? !net || net.done || net.spectate : settings.mode === 'watch' || !canUndo();
-  $('#btnUndo').querySelector('span').textContent = t(settings.mode === 'online' && net ? 'ol.resign' : 'btn.undo');
+  // rated game: the undo button becomes "resign"; no hint / analysis / evaluation while it is going
+  const rtG = rtGame(), rl = rtLive();
+  document.body.classList.toggle('rated-live', rl);
+  $('#evalCard').dataset.rtnote = t('rt.noEval');
+  $('#btnUndo').disabled = settings.mode === 'online' ? !net || net.done || net.spectate : rtG ? !rl : settings.mode === 'watch' || !canUndo();
+  $('#btnUndo').querySelector('span').textContent = t((settings.mode === 'online' && net) || rtG ? 'ol.resign' : 'btn.undo');
+  $('#btnHint').disabled = rl; $('#btnAnalyze').disabled = rl;
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   // review bar
@@ -1548,13 +1584,16 @@ let toastTimer = 0;
 function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 
 // ====================================================================== flow
-function isAITurnColor(c) { if (settings.mode === 'online') return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; return p.toMove && !isAITurnColor(p.toMove); }
-function levelFor(c) { return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
+function isAITurnColor(c) { if (settings.mode === 'online') return false; if (rtGame() && rated.done) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
+function isHumanTurn() { const p = positions[cur]; if (rtGame() && rated.done) return false; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; return p.toMove && !isAITurnColor(p.toMove); }
+function levelFor(c) { if (rated && settings.mode === 'ai') return rated.lv; return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
-function newGame() {
+function newGame(r) {
+  rtForfeit();
+  rated = r && r.id ? r : null;
   busyToken++; cancelAI(); cancelAna();
-  if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
+  if (rated) humanColor = Math.random() < 0.5 ? 1 : 2;      // rated: random colour
+  else if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
   cur = 0; reviewing = false;
   hideOverlay('#resultOverlay');
@@ -1617,7 +1656,7 @@ async function schedule(animInfo) {
     const usePar = NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 45 && legalMoves(p.cells, color).length > 1;
     const res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, m => {
       if (token !== busyToken) return;
-      setStatus(color, `${t('depth', { d: m.depth })}  ${fmt(m.score)}`, true);
+      setStatus(color, rtLive() ? t('depth', { d: m.depth }) : `${t('depth', { d: m.depth })}  ${fmt(m.score)}`, true);
     });
     if (token !== busyToken) return;
     const minDelay = settings.mode === 'watch' ? 450 : (animInfo && animInfo.passed ? 1100 : 380);
@@ -1626,14 +1665,14 @@ async function schedule(animInfo) {
     if (token !== busyToken) return;
     if (res.move < 0) return;
     p.evalB = color === BLACK ? res.score : -res.score;
-    const info = res.book ? `${t('book')} ${fmt(res.score)}` : res.exact ? `${t('exact')} ${fmt(res.score)}` : `${t('depth', { d: res.depth })}  ${fmt(res.score)}`;
+    const info = rtLive() ? (res.book ? t('book') : res.exact ? t('exact') : t('depth', { d: res.depth })) : res.book ? `${t('book')} ${fmt(res.score)}` : res.exact ? `${t('exact')} ${fmt(res.score)}` : `${t('depth', { d: res.depth })}  ${fmt(res.score)}`;
     const a = applyMove(res.move);
     playPlace(a.flips.length);
     update(a); moveFx(a);
     setStatus(color, info, false);
   } else {
     // human's turn: background analysis for eval/hints
-    if (settings.mode !== 'online' && (settings.hint || settings.eval || (settings.coach && settings.mode !== 'watch'))) {
+    if (settings.mode !== 'online' && !rtLive() && (settings.hint || settings.eval || (settings.coach && settings.mode !== 'watch'))) {
       const idx = cur;
       analyze(p.cells.slice(), p.toMove, settings.hint ? 1500 : 700, (list, done) => {
         if (token !== busyToken || cur !== idx) return;
@@ -1663,7 +1702,7 @@ function onCellClick(sq) {
   if (!p.toMove || !isHumanTurn()) return;
   if (!flipsOf(p.cells, sq, p.toMove).length) return;
   busyToken++; cancelAna();
-  const q = settings.coach && settings.mode !== 'watch' && settings.mode !== 'online' ? judgeMove(p, sq) : null;
+  const q = settings.coach && settings.mode !== 'watch' && settings.mode !== 'online' && !rtLive() ? judgeMove(p, sq) : null;
   const a = applyMove(sq);
   if (q) { positions[cur].q = q.cls; showCoach(q); }
   playPlace(a.flips.length);
@@ -1694,7 +1733,7 @@ function canUndo() {
   return false;
 }
 function undo() {
-  if (settings.mode === 'watch' || !canUndo()) return;
+  if (settings.mode === 'watch' || rtGame() || !canUndo()) return;
   busyToken++; cancelAI(); cancelAna();
   let i = positions.length - 2;
   if (settings.mode === 'ai') while (i > 0 && positions[i].toMove !== humanColor) i--;
@@ -1710,6 +1749,7 @@ function viewAt(i) {
 }
 $('#btnLatest').onclick = () => { reviewing = false; cur = positions.length - 1; update(null); };
 $('#btnResume').onclick = () => {
+  if (rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; }   // rated: no taking back
   positions.length = cur + 1; reviewing = false;
   update(null);
 };
@@ -1719,10 +1759,11 @@ function showResult() {
   const [b, w] = counts(p.cells);
   $('#resB').textContent = b; $('#resW').textContent = w;
   let title, sub = '';
+  const rx = rtGame() ? rtSettleBoard() || rated.done : null;
   if (settings.mode === 'ai') {
-    const me = humanColor === BLACK ? b - w : w - b;
+    const me = rx && rated.res === 'resign' ? -1 : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
     title = t(me > 0 ? 'res.youWin' : me < 0 ? 'res.aiWin' : 'res.draw');
-    sub = t('res.vs', { name: LV(settings.level), lv: settings.level }) + (me ? ' · ' + t(me > 0 ? 'res.winBy' : 'res.lossBy', { n: Math.abs(me) }) : '');
+    sub = t('res.vs', { name: LV(lv), lv }) + (rx && rated.res === 'resign' ? ' · ' + t('rt.resigned') : me ? ' · ' + t(me > 0 ? 'res.winBy' : 'res.lossBy', { n: Math.abs(me) }) : '');
     playChime(me >= 0);
   } else {
     title = t(b > w ? 'res.bWin' : b < w ? 'res.wWin' : 'res.draw');
@@ -1730,10 +1771,119 @@ function showResult() {
     playChime(true);
   }
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
+  if (rx) $('#resultSub').innerHTML = esc(sub) + `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span><br><small style="color:var(--muted)">${esc(t('rt.opp', { lv: rtLvName(rated.lv), r: rated.or }))}</small>`;
   countUp($('#resB'), b); countUp($('#resW'), w);
-  if ((settings.mode === 'ai' && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
+  if ((settings.mode === 'ai' && !(rx && rated.res === 'resign') && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
   showOverlay('#resultOverlay');
 }
+
+// ====================================================================== rated games against the AI (local Elo, kept apart from the online rating)
+// Each AI level has a fixed rating (ladder in MODEL_CARD.md); the opponent is picked around the player's rating
+// (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
+const RT_STORE = 'reversi-rated-v1', RT_START = 1000;
+const RT_LV = [0, 400, 650, 850, 1000, 1150, 1300, 1450, 1600, 1700, 1800];   // index = level 1..10
+function rtLoad() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
+  if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
+  if (!Array.isArray(s.hist)) s.hist = [];
+  return s;
+}
+function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
+const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
+const rtLvName = lv => `Lv.${lv} ${LV(lv)}`;
+// opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) → nearest level
+function rtPick(r, rnd = Math.random) {
+  const u = rnd(), v = rnd();
+  const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100;
+  const target = r + off;
+  let lv = 1; for (let i = 2; i <= 10; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
+  const diff = RT_LV[lv] - r;
+  return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
+}
+const rtOver = () => positions.length > 0 && positions[positions.length - 1].toMove === 0;
+function rtGame() { return !!(rated && settings.mode === 'ai' && !lesson && !puzzle && !net); }   // the board shows a rated game
+function rtLive() { return rtGame() && !rated.done && !rtOver(); }
+// apply a result once (the game id is kept in the history, so a reload never counts twice)
+function rtSettle(s, why) {
+  if (!rated) return null;
+  if (rated.done) return rated.done;
+  const st = rtLoad(), prev = st.hist.find(h => h.id === rated.id);
+  if (prev) { rated.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return rated.done; }
+  const K = st.n < 10 ? 48 : 24, E = 1 / (1 + Math.pow(10, (rated.or - st.r) / 400));
+  const old = st.r, now = Math.max(0, Math.round(old + K * (s - E)));
+  st.r = now; st.n++; if (s === 1) st.w++; else if (s === 0) st.l++; else st.d++;
+  st.hist.push({ id: rated.id, t: Date.now(), lv: rated.lv, or: rated.or, s, d: now - old, r: now, why });
+  if (st.hist.length > 100) st.hist = st.hist.slice(-100);
+  rtStore(st);
+  rated.done = { old, now, d: now - old };
+  save();
+  return rated.done;
+}
+function rtSettleBoard() {
+  if (!rated || rated.done || !rtOver()) return null;
+  const [b, w] = counts(positions[positions.length - 1].cells), me = humanColor === BLACK ? b - w : w - b;
+  return rtSettle(me > 0 ? 1 : me < 0 ? 0 : 0.5, 'end');
+}
+// on load: a finished rated game that was not counted yet (reload right at the end), or one counted elsewhere
+function rtSync() {
+  if (!rated || rated.done) return;
+  const prev = rtLoad().hist.find(h => h.id === rated.id);
+  if (prev) { rated.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return; }
+  if (settings.mode === 'ai') rtSettleBoard();
+}
+// leaving a rated game that is still going (another game, lessons, puzzles, loading a record, online…) = loss
+function rtForfeit() {
+  if (!rated || rated.done || settings.mode !== 'ai' || rtOver()) return null;
+  busyToken++; cancelAI(); cancelAna();
+  rated.res = 'abandon';
+  const x = rtSettle(0, 'abandon');
+  if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
+  return x;
+}
+function rtResign() {
+  if (!rtLive()) return;
+  rtConfirm(t('rt.resignQ'), t('ol.resign'), () => {
+    if (!rtLive()) return;
+    busyToken++; cancelAI(); cancelAna();
+    rated.res = 'resign'; rtSettle(0, 'resign');
+    reviewing = false; cur = positions.length - 1; update(null);
+    showResult();
+  });
+}
+function rtStart() {
+  const st = rtLoad(), pk = rtPick(st.r);
+  settings.mode = 'ai';
+  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, or: pk.or, my: st.r, tag: pk.tag });
+  toast(t('rt.vs', { lv: rtLvName(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
+}
+function rtStatsHtml() {
+  const st = rtLoad(), h = st.hist.slice(-10).reverse();
+  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${esc(t('rt.title'))}</span><b class="rt-r">R ${st.r}</b>${st.n < 10 ? `<span class="rt-prov">${esc(t('rt.prov'))}</span>` : ''}</div>`;
+  html += `<div class="rt-rec">${esc(st.n ? t('rt.rec', { n: st.n, w: st.w, l: st.l, d: st.d }) : t('rt.none'))}</div>`;
+  const sp = st.hist.slice(-30);
+  if (sp.length >= 2) {
+    const pts = [sp[0].r - sp[0].d].concat(sp.map(x => x.r)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 34;
+    const y = v => (H - 3 - (v - lo) / (hi - lo) * (H - 6)).toFixed(1);
+    html += `<svg class="rt-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${y(pts[0])}" y2="${y(pts[0])}" vector-effect="non-scaling-stroke"/><polyline vector-effect="non-scaling-stroke" points="${pts.map((v, i) => (i / (pts.length - 1) * W).toFixed(1) + ',' + y(v)).join(' ')}"/></svg>`;
+  }
+  if (h.length) html += `<div class="rt-lbl2">${esc(t('rt.recent'))}</div><div class="rt-hist">` + h.map(x => { const c = x.s === 1 ? 'w' : x.s === 0 ? 'l' : 'd'; return `<span class="rt-chip ${c}" title="${esc(rtLvName(x.lv) + ' · R' + x.or)}"><i>${esc(t('rt.' + c.toUpperCase()))}</i>Lv${x.lv}<b>${rtD(x.d)}</b></span>`; }).join('') + '</div>';
+  return html + '</div>';
+}
+function rtConfirm(text, yes, fn) {
+  $('#rtConfirmText').textContent = text; $('#rtConfirmYes').textContent = yes;
+  $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirmOverlay'); fn(); };
+  showOverlay('#rtConfirmOverlay');
+}
+$('#rtConfirmNo').onclick = () => hideOverlay('#rtConfirmOverlay');
+// buttons that leave a rated game in progress ask first (and the game is then lost)
+const RT_GUARD = '#btnStart, #btnLesson, #btnPuzzle, #btnPaste, #dkAuto, #dkRoom, .dk-join';
+let rtPass = false;
+document.addEventListener('click', e => {
+  if (rtPass || !rtLive()) return;
+  const b = e.target.closest && e.target.closest(RT_GUARD); if (!b || b.disabled) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  rtConfirm(t('rt.abandonQ'), t('rt.abandonYes'), () => { rtForfeit(); renderInfo(); save(); rtPass = true; try { b.click(); } finally { rtPass = false; } });
+}, true);
 
 // ====================================================================== overlays / settings
 function showOverlay(s) { $(s).classList.add('show'); }
@@ -1747,11 +1897,15 @@ function segSync() {
   for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color']])
     $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key]) === b.dataset.v));
   $('#fColor').classList.toggle('hidden', draft.mode !== 'ai');
-  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson' || draft.mode === 'puzzle' || draft.mode === 'online');
+  $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson' || draft.mode === 'puzzle' || draft.mode === 'online' || draft.mode === 'rated');
+  const rt = draft.mode === 'rated';
+  $('#fRatedInfo').classList.toggle('hidden', !rt);
+  if (rt) $('#rtStats').innerHTML = rtStatsHtml();
+  $('#optEval').disabled = rt; $('#optCoach').disabled = rt;
   $('#fLessonInfo').classList.toggle('hidden', draft.mode !== 'lesson');
   $('#fOnlineInfo').classList.toggle('hidden', draft.mode !== 'online');
   $('#fPuzzleInfo').classList.toggle('hidden', draft.mode !== 'puzzle');
-  $('#btnStart').textContent = t(draft.mode === 'lesson' ? 'ng.toLessons' : draft.mode === 'puzzle' ? 'ng.toPuzzles' : draft.mode === 'online' ? 'ng.toOnline' : 'start');
+  $('#btnStart').textContent = t(rt ? 'rt.start' : draft.mode === 'lesson' ? 'ng.toLessons' : draft.mode === 'puzzle' ? 'ng.toPuzzles' : draft.mode === 'online' ? 'ng.toOnline' : 'start');
   $('#fLevel2').classList.toggle('hidden', draft.mode !== 'watch');
   $('#levelLabel').textContent = t(draft.mode === 'watch' ? 'ng.levelB' : 'ng.level');
   const lv = [LV(draft.level), LVD(draft.level)], lv2 = [LV(draft.level2), LVD(draft.level2)];
@@ -1764,6 +1918,7 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 function openNew() {
   Object.assign(draft, settings);
+  if (rated && settings.mode === 'ai') draft.mode = 'rated';
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last;
   $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach;
   segSync(); showOverlay('#newOverlay');
@@ -1794,16 +1949,23 @@ $('#btnStart').onclick = () => {
     settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
     save(); hideOverlay('#newOverlay'); openLessons(); return;
   }
+  if (draft.mode === 'rated') {
+    settings.mode = 'ai';
+    settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
+    settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
+    hideOverlay('#newOverlay'); rtStart(); return;
+  }
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
   settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
   hideOverlay('#newOverlay');
   newGame();
 };
-$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); } else openNew(); };
+$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); } else if (rtGame()) rtStart(); else openNew(); };
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
-$('#btnUndo').onclick = () => settings.mode === 'online' ? onlineResign() : undo();
+$('#btnUndo').onclick = () => settings.mode === 'online' ? onlineResign() : rtGame() ? rtResign() : undo();
 $('#btnHint').onclick = () => {
+  if (rtLive()) return;
   settings.hint = !settings.hint; save();
   if (!settings.hint) clearHints();
   renderInfo();
@@ -2671,6 +2833,7 @@ function replayMoves(str) {
   return { ok: true, n: ms.length };
 }
 function openLoaded(n) {
+  rtForfeit(); rated = null;
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   settings.mode = 'pvp';
   const end = positions.length - 1;
@@ -3089,6 +3252,7 @@ function startOnlineGame(gid, intro, spec) {
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay');
   if (lesson) endLesson && endLesson();
   if (puzzle) endPuzzle();
+  rtForfeit();
   const saved = spec ? (net ? (net.spectate ? net.saved : null) : { positions, cur, mode: settings.mode, hint: settings.hint }) : null;
   leaveOnlineGame();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
@@ -3287,7 +3451,7 @@ function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online')
 $('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
 
 // "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
-function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0; }
+function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0 && !(rtGame() && rated.done); }
 function rsViewing() { return !lesson && !puzzle && !net && reviewing; }
 function rsOpen() {
   if (!rsInProgress() && !rsViewing()) { openNew(); return; }
@@ -3296,12 +3460,13 @@ function rsOpen() {
 }
 document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
-document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing) { positions.length = cur + 1; reviewing = false; update(null); }; };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing && rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; } if (reviewing) { positions.length = cur + 1; reviewing = false; update(null); }; };
 // ====================================================================== boot
 loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { setTimeout(dockStart, 800); } else document.body.classList.add('no-online');
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 const hadSave = load();
+rtSync();
 if (settings.mode === 'online') settings.mode = 'ai';
 const qLang = new URLSearchParams(location.search).get('lang');
 if (SUPPORTED.includes(qLang)) { LANG = qLang; settings.lang = qLang; try { localStorage.setItem('aicoding-lang', qLang); } catch (e) {} }

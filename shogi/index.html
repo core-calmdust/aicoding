@@ -559,7 +559,29 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay.ng-watch #fLevel{grid-row:2 / 4;align-self:start}
   #newOverlay.ng-watch #fLevel2{grid-row:4}
   #newOverlay .ng-info{grid-row:1 / 4;align-self:start}
+  #newOverlay #fRatedInfo{grid-row:1 / 6}
 }
+/* rated games vs the AI: rating card in the new-game dialog; evaluation hidden while the game is going */
+.rt-card{margin-top:10px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.rt-lbl{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.rt-r{font-family:'JetBrains Mono',monospace;font-size:21px;color:var(--accent);font-weight:700}
+.rt-rank{font-size:12.5px;color:var(--text)}
+.rt-prov{font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.rt-rec{font-size:12.5px;color:var(--muted);margin-top:3px}
+.rt-spark{display:block;width:100%;height:34px;margin-top:8px}
+.rt-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.5}
+.rt-spark line{stroke:var(--line);stroke-dasharray:3 3}
+.rt-lbl2{font-size:11.5px;color:var(--dim);margin:7px 0 5px}
+.rt-hist{display:flex;flex-wrap:wrap;gap:4px}
+.rt-chip{font-size:11px;line-height:1.5;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:inline-flex;gap:4px;font-family:'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap}
+.rt-chip i{font-style:normal;font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif}
+.rt-chip.w i,.rt-chip.w b{color:var(--good)}.rt-chip.l i,.rt-chip.l b{color:var(--red)}
+.rt-chip b{font-weight:600}
+.rt-res{font-family:'JetBrains Mono',monospace}
+body.rated-live #evalCard .evalrow, body.rated-live #evalCard .evalbar, body.rated-live #evalCard .graph{display:none}
+body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-size:12px;color:var(--dim);margin:0 0 10px;line-height:1.6}
+#newOverlay .checks input:disabled + span{opacity:.45}
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
@@ -751,10 +773,11 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
     <div class="field"><label data-i18n="ng.mode"></label>
-      <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button><button data-v="edit" data-i18n="ng.edit"></button><button data-v="online" data-i18n="ng.online"></button></div>
+      <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="rated" data-i18n="ng.rated"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button><button data-v="edit" data-i18n="ng.edit"></button><button data-v="online" data-i18n="ng.online"></button></div>
     </div>
     <div class="ng-cols"><div class="ng-col">
     <div class="field ng-info hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
+    <div class="field ng-info hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field ng-info hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="field" id="fHandi"><label data-i18n="ng.handicap"></label><div class="seg" id="segHandi"></div><div class="note hidden" id="handiNote" data-i18n="ng.handiNote"></div></div>
     <div class="field" id="fColor"><label data-i18n="ng.color"></label>
@@ -884,7 +907,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261018rk"></script>
+<script src="i18n.js?v=20261018rt2"></script>
 <script src="engine.js?v=20261018pb"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
@@ -1332,6 +1355,7 @@ function playerName(c) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; return (c === net.me ? t('you') + ' · ' : '') + (c === 0 ? g.bn : g.wn) + ' (' + (c === 0 ? g.br : g.wr) + ')'; }
   if (settings.mode === 'pvp') return cname(c);
   if (settings.mode === 'watch') return 'AI ' + t('lv')[c === 0 ? settings.level : settings.level2];
+  if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : 'AI ' + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
   return c === game.human ? t('you') : 'AI ' + t('lv')[settings.level];
 }
 const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('mated') : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(Math.round(v));
@@ -1355,6 +1379,11 @@ function renderInfo() {
   $('#btnUndo').disabled = !humanCanUndo;
   $('#btnResign').disabled = !!game.over || settings.mode === 'watch';
   $('#btnHint').disabled = !!game.over;
+  // rated game: no undo at all (also not after the end), no hint / analysis / evaluation while it is going
+  document.body.classList.toggle('rated-live', rtLive());
+  $('#evalCard').dataset.rtnote = t('rt.noEval');
+  if (game.rated && !lesson) { $('#btnUndo').disabled = true; if (!game.over) $('#btnHint').disabled = true; }
+  $('#btnAnalyze').disabled = rtLive();
   if (settings.mode === 'online') { const live = !!net && !net.done && !net.spectate && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
   else { $('#btnLesson').disabled = false; $('#btnTsume').disabled = false; }
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1418,18 +1447,22 @@ function setStatus(c, text, thinking) {
 
 // ====================================================================== game flow
 function isAI(c) { return settings.mode === 'watch' || (settings.mode === 'ai' && c !== game.human); }
-function levelOf(c) { return settings.mode === 'watch' ? (c === 0 ? settings.level : settings.level2) : settings.level; }
-function newGame() {
+function levelOf(c) { if (game && game.rated && settings.mode === 'ai') return game.rated.lv; return settings.mode === 'watch' ? (c === 0 ? settings.level : settings.level2) : settings.level; }
+function newGame(rated) {
   if (net) leaveOnlineGame();
+  rtForfeit();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
-  const start = HANDI[settings.handicap] || HANDI[0];
+  if (rated && !rated.id) rated = null;
+  const start = rated ? HANDI[0] : HANDI[settings.handicap] || HANDI[0];
   let human = 0;
-  if (settings.mode === 'ai') {
+  if (rated) human = Math.random() < 0.5 ? 0 : 1;      // rated: even game, random sente / gote
+  else if (settings.mode === 'ai') {
     human = settings.color === 2 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
     if (settings.handicap > 0 && settings.color === 2) human = 0;
   }
   game = newRecord(start, human);
+  if (rated) game.rated = rated;
   clockInit();
   cur = 0; reviewing = false; hintMoves = null; sel = null;
   flip = settings.mode === 'ai' && human === 1;
@@ -1531,7 +1564,7 @@ function humanMove(m) {
   const before = cur;
   commitMove(m, true);
   // coach: compare with analysis of the previous position (filled later when AI result arrives)
-  game.info[before + 1].pendingQ = settings.coach && settings.mode === 'ai';
+  game.info[before + 1].pendingQ = settings.coach && settings.mode === 'ai' && !game.rated;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function schedule() {
@@ -1559,7 +1592,7 @@ async function schedule() {
       return;
     }
     const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: lv }, m => {
-      if (token === busyToken) setStatus(side, `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
+      if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
     if (res.error) { const lm = P.legalMoves(false); res.move = lm.length ? P.toUsi(lm[Math.floor(Math.random() * lm.length)]) : null; res.score = 0; res.depth = 0; }
@@ -1586,11 +1619,11 @@ async function schedule() {
     }
     const m = P.fromUsi(res.move);
     commitMove(m, false);
-    setStatus(side, `${t('thinking.d', { d: res.depth })}  ${fmtScore(res.score)}`, false);
+    setStatus(side, rtLive() ? t('thinking.d', { d: res.depth }) : `${t('thinking.d', { d: res.depth })}  ${fmtScore(res.score)}`, false);
     $('#infoLine').textContent = res.time ? t('info', { nps: Math.round(res.nodes / Math.max(1, res.time) * 1000).toLocaleString() }) : '';
   } else {
     // human to move: background analysis for evaluation / coaching
-    if (settings.eval || settings.coach) {
+    if ((settings.eval || settings.coach) && !rtLive()) {
       const res = await anaCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 900 } });
       if (!res || token !== busyToken || cur !== idx) return;
       game.info[idx].best = res.score; game.info[idx].bm = res.move; game.info[idx].bpv = (res.pv || []).slice(0, 5);
@@ -1608,6 +1641,8 @@ function showResult() {
   else title = o.winner === 0 ? t('res.bwin') : t('res.wwin');
   const sub = o.reason === 'mate' ? t('res.mate', { n: o.ply }) : o.reason === 'resign' ? t('res.resign', { n: o.ply }) : t('res.' + o.reason);
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
+  const rx = game.rated && rtSettle(game);
+  if (rx) $('#resultSub').innerHTML = olX(sub) + `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span> · ${olX(rtRank(rx.now))}<br><small style="color:var(--muted)">${olX(t('rt.opp', { lv: rtLvName(game.rated.lv), r: game.rated.or }))}</small>`;
   const mk = mistakeProblems();
   $('#btnMistakes').classList.toggle('hidden', !mk.length);
   $('#btnMistakes').textContent = t('rv.btn', { n: mk.length });
@@ -1643,7 +1678,7 @@ $('#btnPlayNew').onclick = () => { hideOverlay('#playOverlay'); openNewDialog();
 $('#btnPlayCancel').onclick = () => hideOverlay('#playOverlay');
 $('#playOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#playOverlay'); });
 $('#btnUndo').onclick = () => {
-  if (!game || !game.moves.length || settings.mode === 'online') return;
+  if (!game || !game.moves.length || settings.mode === 'online' || game.rated) return;
   busyToken++; cancelAI(); cancelAna();
   let n = game.moves.length;
   if (settings.mode === 'ai') {
@@ -1658,7 +1693,7 @@ $('#btnUndo').onclick = () => {
 };
 function sideAt0() { return game.start.split(' ')[1] === 'w' ? 1 : 0; }
 $('#btnHint').onclick = async () => {
-  if (!game || game.over || settings.mode === 'online') return;
+  if (!game || game.over || settings.mode === 'online' || rtLive()) return;
   const idx = cur, token = busyToken;
   $('#btnHint').classList.add('on');
   const res = await anaCall({ type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: 3 } }, (m) => {
@@ -1690,7 +1725,7 @@ function confirmBox(text, yes, fn) {
 $('#btnConfirmNo').onclick = () => hideOverlay('#confirmOverlay');
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; renderInfo(); save(); };
 $('#btnResume').onclick = () => {
-  if (settings.mode === 'online') { viewAt(game.moves.length); return; }
+  if (settings.mode === 'online' || (game && game.rated)) { viewAt(game.moves.length); return; }   // rated: no taking back
   // continue the game from the displayed position
   busyToken++; cancelAI(); cancelAna();
   game.moves.length = cur; game.info.length = cur + 1; game.over = null; delete game.resultShown; reviewing = false;
@@ -1700,7 +1735,7 @@ $('#btnResume').onclick = () => {
 };
 $('#btnLatest').onclick = () => viewAt(game.moves.length);
 $('#btnReview').onclick = () => { hideOverlay('#resultOverlay'); viewAt(Math.max(0, game.moves.length - 1)); };
-$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); return; } newGame(); };
+$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); return; } if (game && game.rated) { rtStart(); return; } newGame(); };
 // texts built in code (all 10 languages; read via L())
 const DTXT = {
   hl: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.', zh: '已将要走的棋子高亮显示。', ko: '움직일 말을 표시했습니다.', es: 'Se resalta la pieza que hay que mover.', fr: 'La pièce à jouer est surlignée.', pt: 'A peça a mover está destacada.', de: 'Der zu ziehende Stein ist markiert.', hi: 'चलने वाला मोहरा हाइलाइट है।', ar: 'القطعة التي يجب تحريكها مميَّزة.' },
@@ -1741,19 +1776,104 @@ $('#btnCopy').onclick = () => {
     return out;
   })();
   const d = new Date();
-  let s = `# KIF形式棋譜ファイル\n開始日時：${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}\n手合割：${t('handi')[settings.handicap] || '平手'}\n先手：${playerName(0)}\n後手：${playerName(1)}\n手数----指手---------消費時間--\n`;
+  let s = `# KIF形式棋譜ファイル\n開始日時：${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}\n手合割：${(game.rated ? '' : t('handi')[settings.handicap]) || '平手'}\n先手：${playerName(0)}\n後手：${playerName(1)}\n手数----指手---------消費時間--\n`;
   names.forEach((nm, i) => { s += `${String(i + 1).padStart(4)} ${nm}\n`; });
-  if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : '千日手'}\n`;
+  if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : game.over.reason === 'time' ? '切れ負け' : game.over.reason === 'abandon' ? '中断' : '千日手'}\n`;
   navigator.clipboard.writeText(s).then(() => toast(t('copied')), () => toast('copy failed'));
 };
 $('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
+// ====================================================================== rated games against the AI (local Elo, kept apart from the online rating)
+// Each AI level has a fixed rating on a Shogi Club 24-like scale (100 points per kyu, see MODEL_CARD.md); the opponent is picked
+// around the player's rating (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
+const RT_STORE = 'shogi-rated-v1', RT_START = 900, RT_CLOCK = 2;      // RT_CLOCK: 10 min + 30 s byoyomi (CLOCKS[2])
+const RT_LV = [150, 300, 450, 650, 850, 1050, 1250, 1450, 1650, 2100];
+function rtLoad() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
+  if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
+  if (!Array.isArray(s.hist)) s.hist = [];
+  return s;
+}
+function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
+// rating → 24 rank: 15級 = 400–499 … 1級 = 1800–1899, 初段 = 1900–2099, then 200 points per dan
+function rtRank(r) {
+  const k = r < 400 ? t('rt.below') : r < 1900 ? t('rt.kyu', { n: 15 - Math.floor((r - 400) / 100) }) : t('rt.dan', { n: Math.min(9, 1 + Math.floor((r - 1900) / 200)) });
+  return t('rt.rank', { r: k });
+}
+const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
+const rtLvName = lv => `Lv.${lv + 1} ${t('lv')[lv]}`;
+// opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) → nearest level
+function rtPick(r, rnd = Math.random) {
+  const u = rnd(), v = rnd();
+  const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100;
+  const target = r + off;
+  let lv = 0; RT_LV.forEach((x, i) => { if (Math.abs(x - target) < Math.abs(RT_LV[lv] - target)) lv = i; });
+  const diff = RT_LV[lv] - r;
+  return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
+}
+function rtLive() { return !!(game && game.rated && !game.over && !lesson && !edit && settings.mode === 'ai'); }
+// apply the result of a finished rated game once (the game id is kept in the history, so a reload never counts twice)
+function rtSettle(g) {
+  const R = g && g.rated; if (!R || !g.over) return null;
+  if (R.done) return R.done;
+  const st = rtLoad(), prev = st.hist.find(h => h.id === R.id);
+  if (prev) { R.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return R.done; }
+  const s = g.over.winner < 0 ? 0.5 : g.over.winner === g.human ? 1 : 0;
+  const K = st.n < 10 ? 48 : 24, E = 1 / (1 + Math.pow(10, (R.or - st.r) / 400));
+  const old = st.r, now = Math.max(0, Math.round(old + K * (s - E)));
+  st.r = now; st.n++; if (s === 1) st.w++; else if (s === 0) st.l++; else st.d++;
+  st.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s, d: now - old, r: now, why: g.over.reason });
+  if (st.hist.length > 100) st.hist = st.hist.slice(-100);
+  rtStore(st);
+  R.done = { old, now, d: now - old };
+  save();
+  return R.done;
+}
+// leaving a rated game that is still going (another game, lessons, editor, online…) = loss
+function rtForfeit() {
+  const g = (lesson && lesson.savedGame) || (edit && edit.saved) || game;
+  if (!g || !g.rated || g.over) return null;
+  if (g === game) { busyToken++; cancelAI(); cancelAna(); }
+  g.over = { winner: g.human ^ 1, reason: 'abandon', ply: g.moves.length }; g.resultShown = true;
+  const x = rtSettle(g); save();
+  if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
+  return x;
+}
+function rtStart() {
+  const st = rtLoad(), pk = rtPick(st.r);
+  settings.mode = 'ai';
+  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, or: pk.or, my: st.r, tag: pk.tag });
+  toast(t('rt.vs', { lv: rtLvName(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
+}
+function rtStatsHtml() {
+  const st = rtLoad(), h = st.hist.slice(-10).reverse();
+  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${olX(t('rt.title'))}</span><b class="rt-r">R ${st.r}</b><span class="rt-rank">${olX(rtRank(st.r))}</span>${st.n < 10 ? `<span class="rt-prov">${olX(t('rt.prov'))}</span>` : ''}</div>`;
+  html += `<div class="rt-rec">${olX(st.n ? t('rt.rec', { n: st.n, w: st.w, l: st.l, d: st.d }) : t('rt.none'))}</div>`;
+  const sp = st.hist.slice(-30);
+  if (sp.length >= 2) {
+    const pts = [sp[0].r - sp[0].d].concat(sp.map(x => x.r)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 34;
+    const y = v => (H - 3 - (v - lo) / (hi - lo) * (H - 6)).toFixed(1);
+    html += `<svg class="rt-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${y(pts[0])}" y2="${y(pts[0])}" vector-effect="non-scaling-stroke"/><polyline vector-effect="non-scaling-stroke" points="${pts.map((v, i) => (i / (pts.length - 1) * W).toFixed(1) + ',' + y(v)).join(' ')}"/></svg>`;
+  }
+  if (h.length) html += `<div class="rt-lbl2">${olX(t('rt.recent'))}</div><div class="rt-hist">` + h.map(x => { const c = x.s === 1 ? 'w' : x.s === 0 ? 'l' : 'd'; return `<span class="rt-chip ${c}" title="${olX(rtLvName(x.lv) + ' · R' + x.or)}"><i>${olX(t('rt.' + c.toUpperCase()))}</i>Lv${x.lv + 1}<b>${rtD(x.d)}</b></span>`; }).join('') + '</div>';
+  return html + '</div>';
+}
+// buttons that leave a rated game in progress ask first (and the game is then lost)
+const RT_GUARD = '#btnStart, #btnLesson, #btnTsume, #btnEdit, #btnPaste, #dkAuto, #dkRoom, .dk-join';
+let rtPass = false;
+document.addEventListener('click', e => {
+  if (rtPass || !rtLive()) return;
+  const b = e.target.closest && e.target.closest(RT_GUARD); if (!b || b.disabled) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  confirmBox(t('rt.abandonQ'), t('rt.abandonYes'), () => { rtForfeit(); renderInfo(); rtPass = true; try { b.click(); } finally { rtPass = false; } });
+}, true);
+
 // ---- new game dialog
 const dlg = { mode: 'ai', color: 0, handicap: 0, clock: 0 };
 function segSel(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('sel', b.dataset.v === String(v))); }
 function openNewDialog() {
-  Object.assign(dlg, { clock: settings.clock || 0, mode: settings.mode === 'lesson' ? 'ai' : settings.mode, color: settings.color, handicap: settings.handicap });
+  Object.assign(dlg, { clock: settings.clock || 0, mode: settings.mode === 'lesson' ? 'ai' : settings.mode === 'ai' && game && game.rated ? 'rated' : settings.mode, color: settings.color, handicap: settings.handicap });
   $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join('');
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last; $('#optEval').checked = settings.eval; $('#optCoach').checked = settings.coach;
@@ -1781,8 +1901,13 @@ function updDialog() {
   const ol = dlg.mode === 'online';
   $('#fOnlineInfo').classList.toggle('hidden', !ol);
   if (ol) ['#fHandi', '#fClock', '#fColor', '#fLevel', '#fLevel2', '#lvNote', '#fOpts', '#handiNote'].forEach(q => $(q).classList.add('hidden'));
+  // rated vs AI: everything is fixed (even game, random colour, 10 min + 30 s), so only the description and the rating card are shown
+  const rt = dlg.mode === 'rated';
+  $('#fRatedInfo').classList.toggle('hidden', !rt);
+  if (rt) { ['#fHandi', '#fClock', '#fColor', '#fLevel', '#fLevel2', '#lvNote', '#handiNote'].forEach(q => $(q).classList.add('hidden')); $('#rtStats').innerHTML = rtStatsHtml(); }
+  $('#optEval').disabled = rt; $('#optCoach').disabled = rt;
   $('#newOverlay').classList.toggle('ng-watch', dlg.mode === 'watch');
-  $('#btnStart').textContent = t(ol ? 'ng.toOnline' : dlg.mode === 'lesson' ? 'ng.goLesson' : dlg.mode === 'tsume' ? 'ng.goTsume' : dlg.mode === 'edit' ? 'ng.goEdit' : 'start');
+  $('#btnStart').textContent = t(rt ? 'rt.start' : ol ? 'ng.toOnline' : dlg.mode === 'lesson' ? 'ng.goLesson' : dlg.mode === 'tsume' ? 'ng.goTsume' : dlg.mode === 'edit' ? 'ng.goEdit' : 'start');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.color = +b.dataset.v; updDialog(); } };
@@ -1809,6 +1934,10 @@ $('#btnStart').onclick = () => {
   if (dlg.mode === 'online') { openOnline(); return; }
   if (dlg.mode === 'edit') { startEdit(false); return; }
   if (dlg.mode === 'lesson' || dlg.mode === 'tsume') { lsTab = dlg.mode; openLessons(); return; }
+  if (dlg.mode === 'rated') {
+    Object.assign(settings, { mode: 'ai', legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
+    rtStart(); return;
+  }
   Object.assign(settings, { clock: dlg.clock, mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
     legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
   newGame();
@@ -1817,7 +1946,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== game clock
 const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }];
 function clockInit() {
-  const c = CLOCKS[settings.clock || 0];
+  const c = CLOCKS[game.rated ? RT_CLOCK : settings.clock || 0];
   game.clock = c && settings.mode !== 'watch' ? { main: [c.main, c.main], byo: c.byo, left: [c.main, c.main], byoLeft: c.byo, t0: Date.now(), ply: 0 } : null;
 }
 const clockActive = side => game && game.clock && !game.over && !reviewing && !lesson && !edit && cur === game.moves.length && (settings.mode === 'pvp' || (settings.mode === 'ai' && side === game.human));
@@ -1857,6 +1986,7 @@ let edit = null;
 const ED_TYPES = [FU, KY, KE, GI, KI, KA, HI, OU];
 const TOTAL = [0, 18, 4, 4, 4, 2, 2, 4];
 function startEdit(fromCurrent) {
+  rtForfeit();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
   const p = new E.Position();
@@ -2261,6 +2391,7 @@ function replayUsi(start, usis, n) {
   return { start, moves: usis, n };
 }
 function openLoaded(r) {
+  rtForfeit();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
   settings.mode = 'pvp';
@@ -2572,6 +2703,7 @@ function loadProblem() {
   renderLesson();
 }
 function lessonGame(sfen, moves) {
+  rtForfeit();
   const keep = game && !game.lessonGame ? game : (lesson && lesson.savedGame) || null;
   if (lesson && !lesson.savedGame && keep) lesson.savedGame = keep;
   game = newRecord(sfen, 0); game.lessonGame = true; game.moves = moves.slice(); game.info = moves.map(() => ({})).concat([{}]);
@@ -3051,6 +3183,7 @@ setTimeout(async () => {
 // spec = room code: watch the game read-only (spectator) instead of playing it
 function startOnlineGame(gid, intro, spec) {
   if (net && net.gid === gid) return;
+  rtForfeit();
   const saved = spec ? (net ? (net.spectate ? net.saved : null) : (lesson || edit ? null : { game, mode: settings.mode })) : null;
   const keepFlip = !!(spec && net && net.spectate && flip);
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#newOverlay'); hideOverlay('#playOverlay');
@@ -3258,7 +3391,7 @@ applyI18n();
   if (settings.lang) LANG = settings.lang;
   let had = load();
   if (settings.mode === 'online') { settings.mode = 'ai'; had = false; game = null; cur = 0; }
-  if (had && game.over) game.resultShown = true;   // a finished game restored on reload: do not pop the result dialog up again   // an online game cannot be resumed after a reload
+  if (had && game.over) { game.resultShown = true; if (game.rated) rtSettle(game); }   // a finished game restored on reload: do not pop the result dialog up again   // an online game cannot be resumed after a reload
   if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
   try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
   { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; settings.lang = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
