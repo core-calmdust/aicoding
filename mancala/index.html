@@ -585,6 +585,43 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   .controls{grid-template-columns:repeat(3,1fr)!important}
   .controls .btn{flex-direction:row;justify-content:center;gap:4px;font-size:10.5px;padding:7px 2px}
 }
+/* ================================================================ phone landscape: header + player bars in one row, the board across the width, everything else below */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  :root{--plate:34px}
+  html,body{height:auto!important;overflow-x:hidden!important;overflow-y:auto!important}
+  .app{display:grid!important;height:auto!important;min-height:var(--vh);align-content:start;justify-content:stretch;gap:6px 8px!important;
+    padding:6px max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left))!important;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+    grid-template-areas:"pt brand pb" "fr fr fr" "ls ls ls" "ctrl ctrl ctrl" "ev ev kf" "rv rv rv"!important}
+  .side,.side-in,.board-area{display:contents!important}
+  #plateTop{grid-area:pt}
+  #plateBot{grid-area:pb;flex-direction:row-reverse}
+  #plateBot .pstat{margin-left:0;margin-right:auto}
+  .plate{height:var(--plate);min-width:0}
+  .brand{grid-area:brand;height:var(--plate);align-items:center!important;gap:8px;padding:0 4px}
+  .brand-l{flex:none}
+  .brand h1{font-size:18px!important;letter-spacing:.03em!important;overflow:visible!important;flex:none!important}
+  .brand h1 small{display:none}
+  #langSel{max-width:76px}
+  .frame{grid-area:fr;justify-self:center}
+  .lesson-card,.puzzle-card{grid-area:ls}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(220px,300px);column-gap:16px;grid-auto-rows:min-content;align-content:start}
+  .lesson-card > :not(.lesson-actions), .puzzle-card > :not(.lesson-actions){grid-column:1}
+  .lesson-card > .tolist,.puzzle-card > .tolist{justify-self:start}
+  .lesson-card > .lesson-actions{grid-column:2;grid-row:1 / span 5;flex-direction:column;align-self:center;margin-top:0}
+  .puzzle-card > .lesson-actions{grid-column:2;margin-top:6px}
+  .puzzle-card > .lesson-actions:nth-last-child(2){grid-row:1 / span 3;align-self:end}
+  .puzzle-card > .lesson-actions:last-child{grid-row:4 / span 3;align-self:start}
+  .controls{grid-area:ctrl;display:flex!important;gap:6px!important;padding:0!important;background:none!important;border:none!important;box-shadow:none!important}
+  .controls .btn{flex:1;flex-direction:row!important;justify-content:center;gap:5px;padding:9px 4px!important;font-size:12px!important}
+  .controls .btn span{display:inline!important}
+  .controls .btn svg{width:16px;height:16px}
+  #evalCard{grid-area:ev;display:flex;flex-direction:column;min-height:0}
+  #evalCard .graph{height:64px}
+  .kifu-card{grid-area:kf;min-height:150px!important}
+  .kifu{grid-template-columns:repeat(6,1fr)}
+  .review-card.show{grid-area:rv}
+}
 </style>
 </head>
 <body>

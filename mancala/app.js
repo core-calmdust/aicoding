@@ -1036,6 +1036,7 @@ function exitSpecial() {
 }
 function quitSpecial() { exitSpecial(); layout(); update(); afterPosition(); }
 function enterSetup(b, side, rules) {
+  if (matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => window.scrollTo(0, 0), 0);   // phone landscape: board first
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); stopAnim(); stopPlay(); thinking = -1;
   game = { rules, seeds: 4, moves: [], human: 0, setup: { b: Array.from(b), side } };
   recompute(); cur = 0; reviewing = false; fxMarks = []; evals = []; anaLists = [];
@@ -1573,7 +1574,7 @@ function fixSize() {
   fixW = W; fixPortrait = portrait;
   root.setProperty('--vh', H + 'px');
   if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - 172) / 9.7, 100)) + 'px');
-  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 20 - 2 * 32 - 16) / 4.2, (W - 270) / 9.7, 110)) + 'px');
+  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 6 - 34 - 6 - 8) / 4.2, (W - 24) / 9.7, 110)) + 'px');   // board across the width, cards below
   else root.removeProperty('--u');
 }
 fixSize();
