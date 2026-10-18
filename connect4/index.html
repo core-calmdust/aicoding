@@ -464,6 +464,17 @@ html[lang=ar] :is(.lesson-intro .note, .rules){border-left:0;border-right:2px so
 html[lang=ar] *{letter-spacing:0 !important}
 /* Hindi / Arabic: the serif display font has no Devanagari/Arabic glyphs */
 html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .result-big){font-family:'Noto Sans Devanagari','Noto Sans Arabic','Zen Kaku Gothic New',sans-serif}
+/* larger review / record text */
+body .kifu-head .label, body .evalrow .label{font-size:13.5px}
+body .kifu-head button{font-size:12.5px}
+body .evalrow .val{font-size:14.5px}
+body .kifu{font-size:14px;gap:5px} body .kifu button{padding:5px 0} body .kifu button i{width:8px;height:8px}
+body .rv-sum{font-size:14px;gap:6px 12px} body .rv-sum .h{font-size:12.5px} body .rv-sum b{font-size:18px} body .rv-sum .who .pdisc{width:14px;height:14px}
+body .rv-chips span{font-size:13px;padding:2px 8px}
+body .rv-list{gap:6px} body .rv-list button{font-size:14.5px;padding:8px 10px} body .rv-list .tag{font-size:13px} body .rv-list .ls{font-size:13px} body .rv-list .mv i{width:9px;height:9px}
+body .rv-note{font-size:13.5px!important;line-height:1.65!important}
+body .info-line{font-size:12.5px}
+@media (min-height: 561px){ @container (min-width: 420px){ body .side-in:has(.review-card.show) #evalCard{min-height:156px} body .side-in:has(.review-card.show) #evalCard .graph{min-height:40px} } }
 </style>
 </head>
 <body>
