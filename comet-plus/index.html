@@ -152,7 +152,7 @@
         body.mobile { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body.mobile #instructions-container { display: none; }
         body.mobile #fullscreen-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        body.mobile #game-wrapper { transform: scale(var(--fx, 1), var(--fy, 1)); transform-origin: center; } /* スマホは画面いっぱいに引き伸ばす */
+        body.mobile #game-wrapper { transform: scale(var(--fit, 1)); transform-origin: center; }
         body.mobile #stage { touch-action: none; }
         .mob-only { display: none !important; }
         body.mobile .mob-only { display: inline-flex !important; }
@@ -255,9 +255,11 @@ const IS_MOBILE = (() => {
     if (q === '0') return false;
     return matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
 })();
+// スマホの縦長比率に合わせてフィールドを縦に伸ばす（キャラは引き伸ばさない）
+const MOB_K = IS_MOBILE ? Math.max(0.85, Math.min(1.45, (600 * Math.max(innerWidth, innerHeight) / Math.max(1, Math.min(innerWidth, innerHeight))) / 1067)) : 1;
 const config = {
     canvasWidth: IS_MOBILE ? 780 : 1067, // PC: 16:9（オリジナルは800） / スマホ: 縦画面
-    canvasHeight: IS_MOBILE ? 1120 : 780, // 奥行き
+    canvasHeight: IS_MOBILE ? Math.round(1120 * MOB_K) : 780, // 奥行き
     playerSpeed: 300,
     playerSlowModeMultiplier: 0.5,
     playerHitboxRadius: IS_MOBILE ? 5.7 : 3, // スマホは一回り大きく
@@ -948,7 +950,7 @@ class AudioHandler {
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
 const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
 const HUD_W = IS_MOBILE ? 600 : config.canvasWidth; // PC 16:9 / スマホは表示幅600（フィールドは780で画面いっぱいに）
-const HUD_H = IS_MOBILE ? 1067 : 600; // 表示の高さ（フィールドの奥行きとは別）
+const HUD_H = IS_MOBILE ? Math.round(1067 * MOB_K) : 600; // 表示の高さ（フィールドの奥行きとは別）
 const TITLE_S = IS_MOBILE ? 1.3 : 1, TITLE_PIV = 380; // スマホはタイトル画面を拡大
 const MENU_DY = (HUD_H - 600) / 2; // タイトル等を縦中央に置くためのずらし量
 if (IS_MOBILE) document.body.classList.add('mobile');
@@ -3089,7 +3091,7 @@ scene = new THREE.Scene();
 scene.background = BG_BASE.clone();
 scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
 
-camera = new THREE.PerspectiveCamera(IS_MOBILE ? 40 : 48, VW / VH, 1, 6000);
+camera = new THREE.PerspectiveCamera(IS_MOBILE ? 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(THREE.MathUtils.degToRad(20)) * MOB_K)) : 48, VW / VH, 1, 6000);
 const CAM_BASE = IS_MOBILE ? new THREE.Vector3(0, 1950, 300) : new THREE.Vector3(0, 740, 480);
 const CAM_LOOK = IS_MOBILE ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, 0, 60);
 const LIFT_T = 0.76; // スマホのボス: カメラまでの距離を76%に（約1.3倍に見える）
@@ -5647,8 +5649,7 @@ if (IS_MOBILE) {
         document.body.classList.toggle('landscape', land);
         if (land && gameState === 'playing') pauseGame();
         const w = document.getElementById('game-wrapper');
-        w.style.setProperty('--fx', innerWidth / HUD_W);
-        w.style.setProperty('--fy', innerHeight / HUD_H);
+        w.style.setProperty('--fit', Math.min(innerWidth / HUD_W, innerHeight / HUD_H));
     };
     addEventListener('resize', fit); addEventListener('orientationchange', fit); fit();
     // プレイ中だけボタンを出す
