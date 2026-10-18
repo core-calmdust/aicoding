@@ -198,7 +198,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // ---------------------------------
 const config = {
     canvasWidth: 1067, // 16:9（オリジナルは800）
-    canvasHeight: 600,
+    canvasHeight: 780, // 奥行きを拡張（オリジナルは600）
     playerSpeed: 300,
     playerSlowModeMultiplier: 0.5,
     playerHitboxRadius: 3,
@@ -874,9 +874,10 @@ class AudioHandler {
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
 const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
 const HUD_W = config.canvasWidth; // 16:9
+const HUD_H = 600; // 表示の高さ（フィールドの奥行きとは別）
 const HUD_OX = (HUD_W - config.canvasWidth) / 2;
 canvas.width = HUD_W * HUD_SCALE;
-canvas.height = config.canvasHeight * HUD_SCALE;
+canvas.height = HUD_H * HUD_SCALE;
 const ctx = canvas.getContext('2d');
 const stageEl = document.getElementById('stage');
 
@@ -2220,7 +2221,8 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 //   ゲームロジックは 800x600 の2D座標のまま。描画だけを3D空間に写像する。
 //   (x, y) → (X = x - 400, Y = 高さ, Z = y - 300)
 // =================================================================================
-const W = config.canvasWidth, H = config.canvasHeight;
+const W = config.canvasWidth, H = config.canvasHeight; // フィールド
+const VH = HUD_H; // ビューポートの高さ
 const PR = Math.min(window.devicePixelRatio || 1, 1.25);
 const VW = HUD_W;
 const toX = x => x - W / 2;
@@ -2241,7 +2243,7 @@ let renderer, scene, camera, composer, bloom;
 try {
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('glCanvas'), antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(PR);
-    renderer.setSize(VW, H, false);
+    renderer.setSize(VW, VH, false);
 } catch (e) {
     gl3dOK = false;
     console.error('WebGL init failed', e);
@@ -2252,16 +2254,16 @@ scene = new THREE.Scene();
 scene.background = BG_BASE.clone();
 scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
 
-camera = new THREE.PerspectiveCamera(40, VW / H, 1, 6000);
-const CAM_BASE = new THREE.Vector3(0, 860, 460);
-const CAM_LOOK = new THREE.Vector3(0, 0, 20);
+camera = new THREE.PerspectiveCamera(48, VW / VH, 1, 6000);
+const CAM_BASE = new THREE.Vector3(0, 740, 480);
+const CAM_LOOK = new THREE.Vector3(0, 0, 60);
 
 if (gl3dOK) {
     composer = new EffectComposer(renderer);
     composer.setPixelRatio(PR);
-    composer.setSize(VW, H);
+    composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
-    bloom = new UnrealBloomPass(new THREE.Vector2(VW, H), 0.6, 0.4, 0.38);
+    bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
 }
@@ -2277,7 +2279,7 @@ scene.add(rimLight);
 // ---------------------------------
 // 共通マテリアル / テクスチャ
 // ---------------------------------
-const GLOW_BASE = (H / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+const GLOW_BASE = (VH / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
 const GLOW_SCALE = GLOW_BASE * PR;
 const glowMat = new THREE.ShaderMaterial({
     uniforms: { uScale: { value: GLOW_SCALE } },
@@ -2591,6 +2593,7 @@ function makeHub(armCount = 8, accent = 0x22e6ff, core = 0xffb030) {
     g.add(eye);
     const armGeo = new THREE.BoxGeometry(7, 7, 74);
     const armEdge = new THREE.EdgesGeometry(armGeo);
+    const arms = [];
     for (let i = 0; i < armCount; i++) {
         const a = (i / armCount) * Math.PI * 2;
         const arm = new THREE.Group();
@@ -2603,14 +2606,33 @@ function makeHub(armCount = 8, accent = 0x22e6ff, core = 0xffb030) {
         arm.rotation.y = a;
         arm.rotation.x = (i % 2 === 0 ? 1 : -1) * 0.38;
         g.add(arm);
+        arms.push({ arm, parts: [m, e], baseX: arm.rotation.x, i });
     }
-    g.userData = { eyeMat, lineMat };
+    g.userData = { eyeMat, lineMat, arms, eye };
     return g;
 }
 const titleHub = makeHub(10);
 titleHub.scale.setScalar(2.6);
 titleHub.position.set(0, -260, -40);
 scene.add(titleHub);
+const titleHubInner = makeHub(6, 0xff3cf0, 0xffffff);
+titleHubInner.scale.setScalar(1.3);
+titleHubInner.position.copy(titleHub.position);
+scene.add(titleHubInner);
+const orbitRings = [];
+for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(260 + i * 70, 3, 4, 64), mat);
+    ring.position.copy(titleHub.position);
+    scene.add(ring);
+    orbitRings.push({ ring, mat });
+}
+const kickRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+const kickRing = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 96), kickRingMat);
+kickRing.rotation.x = -Math.PI / 2;
+kickRing.position.copy(titleHub.position);
+scene.add(kickRing);
+let kickRingLife = 0;
 
 // ---------------------------------
 // プレイフィールド
@@ -2624,7 +2646,7 @@ fieldGlass.renderOrder = 1;
 field.add(fieldGlass);
 
 const FIELD_GRID_STEP = 40;
-const fieldGridCountH = H / FIELD_GRID_STEP;
+const fieldGridCountH = Math.ceil(H / FIELD_GRID_STEP);
 const fieldGridHalfV = Math.floor((W / 2) / FIELD_GRID_STEP);
 const fieldGridPos = new Float32Array((fieldGridCountH + fieldGridHalfV * 2 + 1) * 6);
 const fieldGridGeo = new THREE.BufferGeometry();
@@ -2638,7 +2660,7 @@ let fieldGridStaticDone = false;
 function updateFieldGrid() {
     let k = 0;
     for (let i = 0; i < fieldGridCountH; i++) {
-        const z = -H / 2 + ((i * FIELD_GRID_STEP + fieldScroll) % H);
+        const z = -H / 2 + ((i * FIELD_GRID_STEP + fieldScroll) % (fieldGridCountH * FIELD_GRID_STEP)) * (H / (fieldGridCountH * FIELD_GRID_STEP));
         fieldGridPos[k] = -W / 2; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
         fieldGridPos[k + 3] = W / 2; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
     }
@@ -2653,12 +2675,36 @@ function updateFieldGrid() {
 }
 
 const borderMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.8 });
-[[0, -H / 2, W + 4, 2.5], [0, H / 2, W + 4, 2.5]].forEach(([x, z, w, d]) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.5, d), borderMat); m.position.set(x, -4, z); field.add(m);
-});
-[[-W / 2, 0], [W / 2, 0]].forEach(([x, z]) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.5, H + 4), borderMat); m.position.set(x, -4, z); field.add(m);
-});
+function makeFrame(mat, thick) {
+    const g = new THREE.Group();
+    const bars = [];
+    [[0, -H / 2, true], [0, H / 2, true], [-W / 2, 0, false], [W / 2, 0, false]].forEach(([x, z, horiz]) => {
+        const m = new THREE.Mesh(horiz ? new THREE.BoxGeometry(W + thick, thick, thick) : new THREE.BoxGeometry(thick, thick, H + thick), mat);
+        m.position.set(x, 0, z);
+        m.userData.horiz = horiz;
+        g.add(m); bars.push(m);
+    });
+    g.userData.bars = bars;
+    return g;
+}
+const borderFrame = makeFrame(borderMat, 2.5);
+borderFrame.position.y = -4;
+field.add(borderFrame);
+// キックごとに外へ広がる残響フレーム
+const frameEchoes = [];
+for (let i = 0; i < 4; i++) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const fr = makeFrame(mat, 2);
+    fr.position.y = -4;
+    fr.visible = false;
+    field.add(fr);
+    frameEchoes.push({ fr, mat, life: 0 });
+}
+let echoIdx = 0;
+function onKick() {
+    const e = frameEchoes[echoIdx++ % frameEchoes.length];
+    e.life = 1;
+}
 const cornerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const cornerGems = [];
 [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
@@ -2869,6 +2915,8 @@ const COL_ORANGE = new THREE.Color(0xff8a20);
 // 描画ステート
 // ---------------------------------
 let rLast = performance.now();
+let prevBeatR = 0;
+let simDtR = 0;
 let rTime = 0;
 let camFollow = 0;
 let shipBank = 0;
@@ -2879,7 +2927,7 @@ const _engC = new THREE.Color();
 
 function project(x, y, h = 0) {
     _v.set(toX(x), h, toZ(y)).project(camera);
-    return { x: (_v.x + 1) / 2 * HUD_W, y: (1 - _v.y) / 2 * H };
+    return { x: (_v.x + 1) / 2 * HUD_W, y: (1 - _v.y) / 2 * VH };
 }
 
 // ---------------------------------
@@ -2890,9 +2938,9 @@ let quality = PR, qCeil = PR;
 const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9 };
 function applyQuality() {
     renderer.setPixelRatio(quality);
-    renderer.setSize(VW, H, false);
+    renderer.setSize(VW, VH, false);
     composer.setPixelRatio(quality);
-    composer.setSize(VW, H);
+    composer.setSize(VW, VH);
     glowMat.uniforms.uScale.value = GLOW_BASE * quality;
 }
 function adaptQuality(now) {
@@ -2928,6 +2976,7 @@ function render3D() {
     rLast = now;
     const frozen = gameState === 'paused' || gameState === 'confirmReset';
     const simDt = frozen ? 0 : dt;
+    simDtR = simDt;
     rTime += simDt;
 
     const theme = themes[currentThemeIndex];
@@ -2949,7 +2998,23 @@ function render3D() {
     fieldGridMat.color.copy(themeCur.grid);
     fieldGridMat.opacity = 0.08 + visualBeat * 0.1;
     borderMat.color.copy(themeCur.ui);
-    borderMat.opacity = 0.35 + visualBeat * 0.4;
+    borderMat.opacity = 0.4 + visualBeat * 0.6;
+    borderMat.color.lerp(COL_WHITE, visualBeat * 0.55);
+    if (visualBeat > prevBeatR + 0.3) onKick();
+    prevBeatR = visualBeat;
+    const thick = 1 + visualBeat * 2.6;
+    borderFrame.userData.bars.forEach(b => { if (b.userData.horiz) b.scale.set(1, thick, thick); else b.scale.set(thick, thick, 1); });
+    borderFrame.position.y = -4 + visualBeat * 6;
+    frameEchoes.forEach(e => {
+        if (e.life <= 0) { e.fr.visible = false; return; }
+        e.life = Math.max(0, e.life - simDtR * 2.4);
+        const t = 1 - e.life;
+        e.fr.visible = true;
+        e.fr.scale.set(1 + t * 0.09, 1, 1 + t * 0.14);
+        e.fr.position.y = -4 - t * 10;
+        e.mat.color.copy(themeCur.ui);
+        e.mat.opacity = e.life * e.life * 0.85;
+    });
     shipMat.color.copy(themeCur.player);
     shipMat.emissive.copy(themeCur.player);
     shipMat.emissiveIntensity = 0.3 + visualBeat * 0.5;
@@ -2991,16 +3056,50 @@ function render3D() {
 
     fieldScroll = (fieldScroll + ws * 0.35 * dt) % H;
     updateFieldGrid();
-    cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(1 + visualBeat * 0.6); });
+    cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(1 + visualBeat * 1.4); g.position.y = -4 + visualBeat * 10; });
 
     // タイトル用ハブ
     const showHub = gameState === 'title' || gameState === 'confirmReset';
-    titleHub.visible = showHub;
+    titleHub.visible = titleHubInner.visible = kickRing.visible = showHub;
+    orbitRings.forEach(o => { o.ring.visible = showHub; });
+    field.visible = !showHub; // タイトルではフィールド枠を見せない
     if (showHub) {
-        titleHub.rotation.y += dt * 0.35;
-        titleHub.rotation.z = Math.sin(rTime * 0.4) * 0.15;
-        titleHub.userData.lineMat.color.copy(themeCur.ui);
-        titleHub.userData.eyeMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.2 + visualBeat * 0.5);
+        const b = visualBeat;
+        const hueBase = rTime * 60;
+        // 外側のハブ: 回転＋タンブル、キックで膨らむ
+        titleHub.rotation.y += dt * (0.9 + b * 5);
+        titleHub.rotation.x = Math.sin(rTime * 0.7) * 0.55;
+        titleHub.rotation.z = Math.cos(rTime * 0.5) * 0.4;
+        titleHub.scale.setScalar(2.6 * (1 + b * 0.16));
+        hsl(hueBase, 1, 0.6, titleHub.userData.lineMat.color);
+        hsl(hueBase + 180, 1, 0.55 + b * 0.35, titleHub.userData.eyeMat.color);
+        titleHub.userData.arms.forEach(a => {
+            const ext = Math.sin(rTime * 3 + a.i * 0.9) * 14 + b * 28;
+            a.parts.forEach(pt => { pt.position.z = 63 + ext; });
+            a.arm.rotation.x = a.baseX + Math.sin(rTime * 1.6 + a.i) * 0.45;
+        });
+        // 内側のハブ: 逆回転
+        titleHubInner.rotation.y -= dt * (2.2 + b * 8);
+        titleHubInner.rotation.z = Math.sin(rTime * 1.1) * 0.8;
+        titleHubInner.scale.setScalar(1.3 * (1 + b * 0.3));
+        hsl(hueBase + 120, 1, 0.65, titleHubInner.userData.lineMat.color);
+        titleHubInner.userData.arms.forEach(a => {
+            a.parts.forEach(pt => { pt.position.z = 63 + Math.sin(rTime * 5 + a.i) * 18; });
+        });
+        // 周回リング
+        orbitRings.forEach((o, k) => {
+            o.ring.rotation.x = rTime * (0.4 + k * 0.25) + k;
+            o.ring.rotation.y = rTime * (0.3 - k * 0.2);
+            o.ring.scale.setScalar(1 + b * (0.08 + k * 0.04));
+            hsl(hueBase + k * 90, 1, 0.6, o.mat.color);
+            o.mat.opacity = 0.35 + b * 0.5;
+        });
+        // キックで床に広がるリング
+        if (b > 0.95 && kickRingLife < 0.6) kickRingLife = 1;
+        kickRingLife = Math.max(0, kickRingLife - dt * 1.8);
+        kickRing.scale.setScalar(120 + (1 - kickRingLife) * 900);
+        kickRingMat.opacity = kickRingLife * 0.8;
+        hsl(hueBase + 60, 1, 0.7, kickRingMat.color);
     }
 
     // カメラ
@@ -3018,6 +3117,19 @@ function render3D() {
 
     // ---- エンティティ ----
     glow.begin(); trails.begin(); cometBodies.begin(); cometWires.begin(); bulletBodies.begin(); debrisCubes.begin();
+
+    if (showHub) {
+        const b = visualBeat, hueBase = rTime * 60;
+        // 周回する光の粒
+        const hp = titleHub.position;
+        for (let k = 0; k < 36; k++) {
+            const a = rTime * (1.2 + (k % 3) * 0.5) + k * 0.7;
+            const r = 330 + (k % 4) * 60 + b * 60;
+            const tilt = (k % 5) * 0.5;
+            glow.add(hp.x + Math.cos(a) * r, hp.y + Math.sin(a * 1.3 + tilt) * 160, hp.z + Math.sin(a) * r,
+                hsl(hueBase + k * 10, 1, 0.6), 34 + b * 30, 1.1);
+        }
+    }
     const efx = isEffectsEnabled;
 
     // スコアテキストからロックオン演出を検出
@@ -3293,7 +3405,7 @@ function draw() {
     const renderCtx = ctx;
     const theme = themes[currentThemeIndex];
     renderCtx.setTransform(HUD_SCALE, 0, 0, HUD_SCALE, 0, 0);
-    renderCtx.clearRect(0, 0, HUD_W, H);
+    renderCtx.clearRect(0, 0, HUD_W, HUD_H);
     renderCtx.save();
     if (screenShake.intensity > 0) {
         renderCtx.translate((Math.random() - 0.5) * screenShake.intensity * 0.6, (Math.random() - 0.5) * screenShake.intensity * 0.6);
@@ -3303,7 +3415,7 @@ function draw() {
         renderCtx.fillStyle = '#ff3366';
         renderCtx.font = `14px ${config.fontFamily}`;
         renderCtx.textAlign = 'center';
-        renderCtx.fillText('WebGL is not available on this browser.', HUD_W / 2, H - 60);
+        renderCtx.fillText('WebGL is not available on this browser.', HUD_W / 2, HUD_H - 60);
     }
 
     if (gameState === 'playing' || gameState === 'paused' || gameState === 'title') {
@@ -3312,11 +3424,11 @@ function draw() {
 
     // タイトル画面の読みやすさ確保用ベール
     if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver') {
-        const g = renderCtx.createRadialGradient(HUD_W / 2, H / 2, 60, HUD_W / 2, H / 2, 560);
+        const g = renderCtx.createRadialGradient(HUD_W / 2, HUD_H / 2, 60, HUD_W / 2, HUD_H / 2, 560);
         g.addColorStop(0, 'rgba(5,0,18,0.55)');
         g.addColorStop(1, 'rgba(5,0,18,0.15)');
         renderCtx.fillStyle = g;
-        renderCtx.fillRect(0, 0, HUD_W, H);
+        renderCtx.fillRect(0, 0, HUD_W, HUD_H);
     }
 
     // スコアテキスト（3D位置をスクリーンに投影）
@@ -3402,7 +3514,7 @@ function draw() {
             renderCtx.font = `${subFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
             renderCtx.textAlign = 'center';
-            renderCtx.fillText(`STAGE ${stage}`, HUD_W / 2, config.canvasHeight - 20);
+            renderCtx.fillText(`STAGE ${stage}`, HUD_W / 2, HUD_H - 20);
         }, uiColor, true);
     }
 
@@ -3415,7 +3527,7 @@ function draw() {
         const lifeProgress = 1 - (mutekiAnim.life / mutekiAnim.maxLife);
         const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let displayText = "";
-        const mainTextY = config.canvasHeight / 2 + 30;
+        const mainTextY = HUD_H / 2 + 30;
         const subTextY = mainTextY + 25;
         const transitionStart = 0.25;
         const transitionEnd = 0.75;
@@ -3467,7 +3579,7 @@ function draw() {
     // ★ ここまで追加 ★
 
     if ((gameState === 'playing' || gameState === 'paused') && gameMode !== 'STARTRAIL MODE') {
-        const barW = 200, barH = 12, x = 20, y = config.canvasHeight - 35, r = 5;
+        const barW = 200, barH = 12, x = 20, y = HUD_H - 35, r = 5;
         const energyRatio = Math.max(0, energy / config.energyTotal);
         const hue = energyRatio * 120;
         let energyColor = `hsl(${hue},100%,50%)`;
@@ -3516,9 +3628,9 @@ function draw() {
     }
 
     if (isInvincible) {
-        let mutekiY = config.canvasHeight - 50;
+        let mutekiY = HUD_H - 50;
         if (player.invincibleTimer > 0 && gameMode !== 'STARTRAIL MODE') {
-            mutekiY = config.canvasHeight - 50 - 12 - 5 - 6;
+            mutekiY = HUD_H - 50 - 12 - 5 - 6;
         }
         const mutekiColor = `hsl(${(frameCount*3)%360},100%,70%)`;
         drawWithGlow(renderCtx, () => {
@@ -3540,7 +3652,7 @@ function draw() {
                 renderCtx.fillStyle = theme.ui;
                 renderCtx.font = `32px ${config.fontFamily}`;
                 renderCtx.textAlign = 'center';
-                renderCtx.fillText(e.text, HUD_W / 2, config.canvasHeight / 2);
+                renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2);
             }, theme.ui, true);
             renderCtx.globalAlpha = 1;
         } else if (e.type === 'shockwave' && e.hud && isEffectsEnabled) {
@@ -3560,18 +3672,18 @@ function draw() {
         } else if (e.type === 'screenFlash' && isEffectsEnabled) {
             const alpha = e.life / e.maxLife;
             renderCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
-            renderCtx.fillRect(-20, -20, HUD_W + 40, config.canvasHeight + 40);
+            renderCtx.fillRect(-20, -20, HUD_W + 40, HUD_H + 40);
         } else if (e.type === 'energyGameOverFlash') {
             const progress = 1.0 - (e.life / e.maxLife);
             const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.8;
             renderCtx.fillStyle = `rgba(224, 224, 224, ${alpha})`;
-            renderCtx.fillRect(-20, -20, HUD_W + 40, config.canvasHeight + 40);
+            renderCtx.fillRect(-20, -20, HUD_W + 40, HUD_H + 40);
         }
     });
     // Draw UI Screens (Paused, Confirm, Title, Game Over)
     if (gameState === 'paused') {
         renderCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        renderCtx.fillRect(0, 0, HUD_W, config.canvasHeight);
+        renderCtx.fillRect(0, 0, HUD_W, HUD_H);
         
         const pauseMsg = 'PAUSED';
         const resumeKey = lastInputDevice === 'keyboard' ? 'P' : 'START';
@@ -3591,7 +3703,7 @@ function draw() {
             const gamingColor = `hsl(${hue}, 100%, 70%)`;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = gamingColor;
-                renderCtx.fillText(char, currentX + charWidth / 2, config.canvasHeight / 2 - 40);
+                renderCtx.fillText(char, currentX + charWidth / 2, HUD_H / 2 - 40);
             }, gamingColor);
             currentX += charWidth;
         }
@@ -3599,14 +3711,14 @@ function draw() {
         renderCtx.fillStyle = theme.ui;
         renderCtx.font = `20px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
-            renderCtx.fillText(resumeMsg, HUD_W / 2, config.canvasHeight / 2 + 30);
-            renderCtx.fillText(quitMsg, HUD_W / 2, config.canvasHeight / 2 + 60);
+            renderCtx.fillText(resumeMsg, HUD_W / 2, HUD_H / 2 + 30);
+            renderCtx.fillText(quitMsg, HUD_W / 2, HUD_H / 2 + 60);
         }, theme.ui, true);
 
     } else if (gameState === 'confirmReset') {
         // 背景を暗くして確認画面を目立たせる
         renderCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        renderCtx.fillRect(0, 0, HUD_W, config.canvasHeight);
+        renderCtx.fillRect(0, 0, HUD_W, HUD_H);
 
         const msg1 = "RESET ALL HIGH SCORES?";
         const msg2 = "(Y/N)";
@@ -3618,13 +3730,13 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = msgColor;
             renderCtx.font = `24px ${config.fontFamily}`;
-            renderCtx.fillText(msg1, HUD_W / 2, config.canvasHeight / 2 - 20);
+            renderCtx.fillText(msg1, HUD_W / 2, HUD_H / 2 - 20);
         }, msgColor);
         
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = '#ffffff';
             renderCtx.font = `20px ${config.fontFamily}`;
-            renderCtx.fillText(msg2, HUD_W / 2, config.canvasHeight / 2 + 25);
+            renderCtx.fillText(msg2, HUD_W / 2, HUD_H / 2 + 25);
         }, '#ffffff');
         
         renderCtx.textBaseline = 'alphabetic'; // デフォルトに戻す
@@ -3637,16 +3749,16 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = titleColor;
             renderCtx.font = `60px ${config.fontFamily}`;
-            renderCtx.fillText('COMET', HUD_W / 2, config.canvasHeight / 2 - 120);
+            renderCtx.fillText('COMET', HUD_W / 2, HUD_H / 2 - 120);
         }, titleColor);
         
-        const outburstY = config.canvasHeight / 2 - 75;
+        const outburstY = HUD_H / 2 - 75;
         const outburstFont = `16px ${config.fontFamily}`;
         drawTitleTextMorph(renderCtx, HUD_W / 2, outburstY, outburstFont, uiColor);
 
         // Draw Menu
         titleMenuItems.forEach((item, index) => {
-            const y = config.canvasHeight / 2 + index * 40;
+            const y = HUD_H / 2 + index * 40;
             if (index === titleMenuIndex) {
                 const selectorColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
                 drawWithGlow(renderCtx, () => {
@@ -3667,10 +3779,10 @@ function draw() {
             if (titleBottomText === "") {
                 titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
             }
-            renderCtx.fillText(titleBottomText, HUD_W / 2, config.canvasHeight / 2 + 160);
+            renderCtx.fillText(titleBottomText, HUD_W / 2, HUD_H / 2 + 160);
         }, '#ffffff');
         
-        const highScoreY = config.canvasHeight / 2 + 220;
+        const highScoreY = HUD_H / 2 + 220;
         const highScoreCycle = frameCount % 360; 
         if (highScoreCycle < 120) {
              drawWithGlow(renderCtx, () => {
@@ -3696,7 +3808,7 @@ function draw() {
         renderCtx.textAlign = 'center';
         renderCtx.textBaseline = 'middle';
         const gameOverColor = '#ff3333';
-        const gameOverY = config.canvasHeight / 2 - 150;
+        const gameOverY = HUD_H / 2 - 150;
         
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = gameOverColor;
@@ -3714,7 +3826,7 @@ function draw() {
             }, newRecordColor);
         }
         
-        const scoreY = config.canvasHeight / 2;
+        const scoreY = HUD_H / 2;
         let currentHighScore;
         switch(gameMode) {
             case 'STANDARD MODE': currentHighScore = highScoreStandard; break;
@@ -3770,7 +3882,7 @@ function draw() {
     if (gameState === 'playing' && player.invincibleTimer > 0) {
         if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} else {
             renderCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            renderCtx.fillRect(0, 0, HUD_W, config.canvasHeight);
+            renderCtx.fillRect(0, 0, HUD_W, HUD_H);
         }
     }
 }
