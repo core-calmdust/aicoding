@@ -40,7 +40,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&family=DotGothic16&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&family=M+PLUS+1:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         html, body {
             width: 100%;
@@ -52,7 +52,7 @@
         body {
             margin: 0;
             background-color: #07001a;
-            font-family: 'Rajdhani', 'DotGothic16', sans-serif;
+            font-family: 'Jura', 'M PLUS 1', sans-serif;
             font-weight: 600;
             display: flex;
             justify-content: center;
@@ -125,7 +125,7 @@
         }
         #sound-toggle-button,
         #effects-toggle-button {
-            font-family: 'Rajdhani', 'DotGothic16', sans-serif;
+            font-family: 'Jura', 'M PLUS 1', sans-serif;
             font-weight: 600;
             font-size: 12px;
             letter-spacing: 0.08em;
@@ -222,8 +222,8 @@ const config = {
     highScoreKeyStandard: 'cometPlusHighScore_standard',
     highScoreKeyJourney: 'cometPlusHighScore_journey',
     highScoreKeyStartrail: 'cometPlusHighScore_startrail',
-    fontFamily: '"Rajdhani", "DotGothic16", sans-serif',
-    logoFontFamily: '"Michroma", "Rajdhani", sans-serif',
+    fontFamily: '"Jura", "M PLUS 1", sans-serif',
+    logoFontFamily: '"Jura", "M PLUS 1", sans-serif',
     glowBlur: 12,
     energyTotal: 20 * 60,
     energyItemSpeed: 305,
@@ -2341,9 +2341,9 @@ const TUTORIAL_STEPS = [
       progress: t => `${Math.min(8, t.survive).toFixed(1)} / 8.0 秒`, comets: 0.9 },
     { title: 'グレイズ', text: '彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう\nグレイズでジャラジャラ稼ぐほどスコアが伸び、回復アイテムが出やすくなる', goal: t => t.glazes >= 5,
       progress: t => `グレイズ ${Math.min(5, t.glazes)} / 5`, comets: 1.4 },
-    { title: 'ショット', text: K('X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）', 'X / Y ボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）'), goal: t => t.kills >= 2,
+    { title: 'ショット', text: K('X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる', 'X / Y ボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる'), goal: t => t.kills >= 2,
       progress: t => `撃破 ${Math.min(2, t.kills)} / 2` },
-    { title: 'エネルギー', text: 'エネルギーは時間とショットで減り、0 でゲームオーバー。回復アイテムを取ろう', goal: t => t.items >= 1,
+    { title: 'エネルギー', text: 'エネルギーは時間とショットで減り、0 でゲームオーバー。回復アイテムを取ろう\n回復するのはアイテムと、敵を倒したとき', goal: t => t.items >= 1,
       progress: t => (t.items >= 1 ? '回復！' : 'アイテムを取る') },
     { title: '無敵', text: 'アイテムを取ると少しの間だけ無敵。無敵中は彗星に体当たりでボーナス！ 5 個壊そう', goal: t => t.smash >= 5,
       progress: t => `体当たり ${Math.min(5, t.smash)} / 5`, comets: 1.6 },
@@ -2778,8 +2778,8 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 }
 
 function drawTitleTextMorph(renderCtx, x, y, font, color) {
-    const originalText = 'OUTBURST+';
-    const chars = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const originalText = 'outburst+';
+    const chars = "!?#$@%&<>*=/+abcdefghijklmnopqrstuvwxyz0123456789";
     const now = Date.now();
     const cycle = 2000; // 2秒周期
     const timeInCycle = now % cycle;
@@ -4549,7 +4549,7 @@ function draw() {
     // タイトル画面の読みやすさ確保用ベール
     if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver') {
         const g = renderCtx.createRadialGradient(HUD_W / 2, HUD_H / 2, 60, HUD_W / 2, HUD_H / 2, 560);
-        g.addColorStop(0, 'rgba(5,0,18,0.55)');
+        g.addColorStop(0, gameState === 'title' ? 'rgba(5,0,18,0.7)' : 'rgba(5,0,18,0.55)');
         g.addColorStop(1, 'rgba(5,0,18,0.15)');
         renderCtx.fillStyle = g;
         renderCtx.fillRect(0, 0, HUD_W, HUD_H);
@@ -4914,72 +4914,58 @@ function draw() {
         renderCtx.save();
         renderCtx.textAlign = 'center';
         renderCtx.textBaseline = 'alphabetic';
-        // ロゴ: COMET（グラデーション＋グロー）
-        if (hasLS) renderCtx.letterSpacing = '12px';
-        renderCtx.font = `400 84px ${config.logoFontFamily}`;
-        const lg = renderCtx.createLinearGradient(cx - 300, 120, cx + 300, 210);
-        lg.addColorStop(0, theme.player);
-        lg.addColorStop(0.5, '#ffffff');
-        lg.addColorStop(1, theme.ui);
+        // ロゴ: Rez風の細い小文字ロゴ
+        if (hasLS) renderCtx.letterSpacing = '34px';
+        renderCtx.font = `300 112px ${config.logoFontFamily}`;
         drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = lg;
-            renderCtx.fillText('COMET', cx + 7, 196);
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.fillText('comet', cx + 17, 196);
         }, theme.player, true);
-        // OUTBURST+（モーフ）と左右のライン
-        if (hasLS) renderCtx.letterSpacing = '14px';
-        drawTitleTextMorph(renderCtx, cx + 7, 246, `400 24px ${config.logoFontFamily}`, theme.ui);
-        renderCtx.strokeStyle = theme.ui;
-        renderCtx.globalAlpha = 0.6;
-        renderCtx.lineWidth = 1.5;
+        if (hasLS) renderCtx.letterSpacing = '22px';
+        drawTitleTextMorph(renderCtx, cx + 11, 248, `300 26px ${config.logoFontFamily}`, theme.ui);
+        renderCtx.strokeStyle = 'rgba(255,255,255,0.55)';
+        renderCtx.lineWidth = 1;
         renderCtx.beginPath();
-        renderCtx.moveTo(cx - 360, 236); renderCtx.lineTo(cx - 225, 236);
-        renderCtx.moveTo(cx + 225, 236); renderCtx.lineTo(cx + 360, 236);
+        renderCtx.moveTo(cx - 300, 266); renderCtx.lineTo(cx + 300, 266);
         renderCtx.stroke();
-        renderCtx.globalAlpha = 1;
-        if (hasLS) renderCtx.letterSpacing = '10px';
-        renderCtx.fillStyle = 'rgba(220, 228, 255, 0.65)';
-        renderCtx.font = `600 13px ${config.fontFamily}`;
-        renderCtx.fillText('3D EDITION', cx + 5, 282);
+        if (hasLS) renderCtx.letterSpacing = '12px';
+        renderCtx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        renderCtx.font = `400 12px ${config.fontFamily}`;
+        renderCtx.fillText('3d edition', cx + 6, 290);
 
         // メニュー
         const menuY = 344, menuGap = 42;
         titleMenuItems.forEach((item, index) => {
             const y = menuY + index * menuGap;
-            const label = item.replace(' MODE', '');
+            const label = item.replace(' MODE', '').toLowerCase();
             if (index === titleMenuIndex) {
-                const bw = 380, bh = 36;
-                const bg = renderCtx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
-                bg.addColorStop(0, 'rgba(255,255,255,0)');
-                bg.addColorStop(0.5, hexToRgba(theme.ui, 0.32 + visualBeat * 0.2));
-                bg.addColorStop(1, 'rgba(255,255,255,0)');
-                renderCtx.fillStyle = bg;
-                renderCtx.fillRect(cx - bw / 2, y - bh / 2 - 7, bw, bh);
-                const sel = `hsl(${(frameCount * 3) % 360}, 100%, 72%)`;
-                const off = 150 + Math.sin(frameCount * 0.12) * 6;
-                renderCtx.fillStyle = sel;
+                const w2 = 150 + Math.sin(frameCount * 0.1) * 4;
+                renderCtx.strokeStyle = hexToRgba(theme.ui, 0.75 + visualBeat * 0.25);
+                renderCtx.lineWidth = 1;
                 renderCtx.beginPath();
-                renderCtx.moveTo(cx - off, y - 15); renderCtx.lineTo(cx - off + 10, y - 7); renderCtx.lineTo(cx - off, y + 1); renderCtx.fill();
-                renderCtx.beginPath();
-                renderCtx.moveTo(cx + off, y - 15); renderCtx.lineTo(cx + off - 10, y - 7); renderCtx.lineTo(cx + off, y + 1); renderCtx.fill();
-                if (hasLS) renderCtx.letterSpacing = '8px';
-                renderCtx.font = `700 24px ${config.fontFamily}`;
+                // 細いブラケット [ ]
+                renderCtx.moveTo(cx - w2 + 10, y - 22); renderCtx.lineTo(cx - w2, y - 22); renderCtx.lineTo(cx - w2, y + 6); renderCtx.lineTo(cx - w2 + 10, y + 6);
+                renderCtx.moveTo(cx + w2 - 10, y - 22); renderCtx.lineTo(cx + w2, y - 22); renderCtx.lineTo(cx + w2, y + 6); renderCtx.lineTo(cx + w2 - 10, y + 6);
+                renderCtx.stroke();
+                if (hasLS) renderCtx.letterSpacing = '10px';
+                renderCtx.font = `500 22px ${config.fontFamily}`;
                 drawWithGlow(renderCtx, () => {
                     renderCtx.fillStyle = '#ffffff';
-                    renderCtx.fillText(label, cx + 3, y);
+                    renderCtx.fillText(label, cx + 5, y);
                 }, theme.ui, true);
             } else {
-                if (hasLS) renderCtx.letterSpacing = '7px';
-                renderCtx.font = `600 20px ${config.fontFamily}`;
-                renderCtx.fillStyle = 'rgba(214, 222, 255, 0.5)';
-                renderCtx.fillText(label, cx + 3, y);
+                if (hasLS) renderCtx.letterSpacing = '10px';
+                renderCtx.font = `300 18px ${config.fontFamily}`;
+                renderCtx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+                renderCtx.fillText(label, cx + 5, y);
             }
         });
 
-        if (hasLS) renderCtx.letterSpacing = '5px';
+        if (hasLS) renderCtx.letterSpacing = '6px';
         if (titleBottomText === "") {
             titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
         }
-        renderCtx.font = `600 17px ${config.fontFamily}`;
+        renderCtx.font = `400 15px ${config.fontFamily}`;
         renderCtx.globalAlpha = 0.65 + Math.sin(frameCount * 0.08) * 0.35;
         renderCtx.fillStyle = '#ffffff';
         renderCtx.fillText(titleBottomText, cx, 530);
@@ -4987,9 +4973,9 @@ function draw() {
 
         const highScoreCycle = frameCount % 360;
         const hsText = highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`;
-        renderCtx.font = `600 15px ${config.fontFamily}`;
-        renderCtx.fillStyle = theme.ui;
-        renderCtx.fillText(hsText, cx, 566);
+        renderCtx.font = `400 13px ${config.fontFamily}`;
+        renderCtx.fillStyle = hexToRgba(theme.ui, 0.85);
+        renderCtx.fillText(hsText.toLowerCase(), cx, 566);
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
 
