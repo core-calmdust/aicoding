@@ -1,0 +1,12 @@
+2026-10-18T18:44:50Z start root solve mask=100940b200, loaded 0 TT entries
+2026-10-18T18:44:52Z outcome search (-1,1) -> 2  (0.0 min, 6.06e+06 nodes)
+2026-10-18T18:44:52Z tt dump tt_test.bin: 1043001 entries (undrawn >= 0), nodes 7.88e+05
+2026-10-18T18:44:52Z exact value 2
+2026-10-18T18:44:58Z start root solve mask=100940b200, loaded 1043001 TT entries
+2026-10-18T18:44:58Z outcome search (-1,1) -> 2  (0.0 min, 1 nodes)
+2026-10-18T18:44:58Z tt dump tt_test.bin: 1043001 entries (undrawn >= 0), nodes 1
+2026-10-18T18:44:58Z exact value 2
+2026-10-18T18:45:05Z start root solve mask=0, loaded 0 TT entries
+2026-10-18T18:54:39Z outcome search (-1,1) -> 0  (9.6 min, 1.14e+09 nodes)
+2026-10-18T18:54:42Z tt dump tt_root.bin: 22368287 entries (undrawn >= 25), nodes 1.14e+09
+2026-10-18T18:54:42Z exact value 0
