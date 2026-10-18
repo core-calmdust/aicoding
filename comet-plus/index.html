@@ -2330,16 +2330,18 @@ function damageBoss(hx, hy) {
 // ▼▼▼ TUTORIAL（タイトルメニューから選択）▼▼▼
 // =================================================================================
 let tutorial = null;
+// 最後に使った入力機器に合わせて操作名を切り替える（キーボード / ゲームパッド）
+const K = (kb, pad) => () => (lastInputDevice === 'gamepad' ? pad : kb);
 const TUTORIAL_STEPS = [
-    { title: '移動', text: '← → キーで左右に移動しよう', goal: t => t.movedL > 120 && t.movedR > 120,
+    { title: '移動', text: K('← → キーで左右に移動しよう', '十字キー / 左スティックで左右に移動しよう'), goal: t => t.movedL > 120 && t.movedR > 120,
       progress: t => `左 ${t.movedL > 120 ? '✔' : '…'}　右 ${t.movedR > 120 ? '✔' : '…'}` },
-    { title: '低速移動', text: 'Z / Shift を押しながら移動すると低速に。中心の色が変わる点だけが当たり判定', goal: t => t.slowFrames > 70,
+    { title: '低速移動', text: K('Z / Shift を押しながら移動すると低速に。中心の色が変わる点だけが当たり判定', 'A / B ボタンを押しながら移動すると低速に。中心の色が変わる点だけが当たり判定'), goal: t => t.slowFrames > 70,
       progress: t => `低速で移動 ${Math.min(100, Math.floor(t.slowFrames / 70 * 100))}%` },
     { title: '彗星をよける', text: '降ってくる彗星に当たらないように 8 秒間よけ続けよう', goal: t => t.survive > 8,
       progress: t => `${Math.min(8, t.survive).toFixed(1)} / 8.0 秒`, comets: 0.9 },
     { title: 'グレイズ', text: '彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう', goal: t => t.glazes >= 5,
       progress: t => `グレイズ ${Math.min(5, t.glazes)} / 5`, comets: 1.4 },
-    { title: 'ショット', text: 'X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）', goal: t => t.kills >= 2,
+    { title: 'ショット', text: K('X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）', 'X / Y ボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）'), goal: t => t.kills >= 2,
       progress: t => `撃破 ${Math.min(2, t.kills)} / 2` },
     { title: 'エネルギー', text: 'エネルギーは時間とショットで減り、0 でゲームオーバー。回復アイテムを取ろう', goal: t => t.items >= 1,
       progress: t => (t.items >= 1 ? '回復！' : 'アイテムを取る') },
@@ -2465,7 +2467,7 @@ function drawTutorialPanel(ctx2) {
         ctx2.fillText('チュートリアル完了！', cx, y0 + 44);
         ctx2.fillStyle = '#dfe6ff';
         ctx2.font = `500 15px ${config.fontFamily}`;
-        ctx2.fillText('タイトルに戻ります', cx, y0 + 72);
+        ctx2.fillText('タイトルに戻ります', cx, y0 + 66);
         ctx2.restore();
         return;
     }
@@ -2475,7 +2477,7 @@ function drawTutorialPanel(ctx2) {
     ctx2.fillText(`TUTORIAL  ${t.step + 1} / ${TUTORIAL_STEPS.length}　${st.title}`, cx, y0 + 19);
     ctx2.fillStyle = '#ffffff';
     ctx2.font = `600 17px ${config.fontFamily}`;
-    ctx2.fillText(st.text, cx, y0 + 44, w - 30);
+    ctx2.fillText(typeof st.text === 'function' ? st.text() : st.text, cx, y0 + 44, w - 30);
     if (t.clearT > 0) {
         ctx2.fillStyle = `hsl(${(frameCount * 8) % 360}, 100%, 70%)`;
         ctx2.font = `800 20px ${config.fontFamily}`;
