@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1412">
+<meta name="description" content="完全読みソルバーを備えたブラウザ版ドット・アンド・ボックス。レッスンと詰めドットで鎖・長鎖ルール・ダブルディールが学べます。">
+<title>ドット・アンド・ボックス</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23ee7a5c'/%3E%3Cpath d='M16 16h32M16 32h16M16 16v32M32 16v16' stroke='%23efe6cc' stroke-width='4' stroke-linecap='round'/%3E%3Cg fill='%23c9a961'%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3Ccircle cx='32' cy='16' r='4'/%3E%3Ccircle cx='48' cy='16' r='4'/%3E%3Ccircle cx='16' cy='32' r='4'/%3E%3Ccircle cx='32' cy='32' r='4'/%3E%3Ccircle cx='48' cy='32' r='4'/%3E%3Ccircle cx='16' cy='48' r='4'/%3E%3Ccircle cx='32' cy='48' r='4'/%3E%3Ccircle cx='48' cy='48' r='4'/%3E%3C/g%3E%3C/svg%3E">
+<meta property="og:title" content="ドット・アンド・ボックス — 完全読みAIと学べる点と箱">
+<meta property="og:description" content="3×3〜5×5、10段階AI（上位は完全読み＋並列探索）。レッスンと詰めドットつき。登録不要でスマホでも遊べます。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://core-calmdust.github.io/aicoding/dots/">
+<meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/dots.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1110; --bg2:#121b19; --panel:#141f1c; --panel2:#1a2724; --line:#26372f;
+  --text:#e8eee9; --muted:#8fa39a; --dim:#5d7068;
+  --felt:#1d6b4c; --felt2:#155238; --felt3:#0f3f2b;
+  --brass:#c9a961; --brass2:#8e7440;
+  --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
+  --p0:#ef7d5e; --p0d:#b9533a; --p1:#5fa9e9; --p1d:#3a77b0;
+  --vh: 100vh;
+  --top: 58px;  /* room above the side panel for the title row (PC) */
+  --pad: clamp(28px, 7vmin, 100px);
+  --gap: clamp(24px, 3vw, 48px);
+  --board: calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1100px) / 1.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (height:100dvh){:root{--vh:100dvh}}
+html,body{height:100%;overflow:hidden}
+body{
+  background:
+    radial-gradient(1200px 700px at 30% -10%, #1b2b26 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #16231f 0%, transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+.app{
+  height:var(--vh);
+  display:grid;
+  grid-template-columns: auto minmax(320px, 520px);
+  grid-template-areas:"board side";
+  gap:var(--gap);
+  justify-content:center;
+  align-items:center;
+  padding:calc(var(--pad) + var(--top)) var(--pad) var(--pad);
+}
+/* ---------------------------------------------------------------- board */
+.board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:14px}
+.frame{
+  position:relative;
+  padding:calc(var(--board)*0.035);
+  border-radius:18px;
+  background:linear-gradient(145deg,#2a2018 0%,#16100b 55%,#22190f 100%);
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.frame::before{content:"";position:absolute;inset:calc(var(--board)*0.035 - 5px);border-radius:8px;border:1px solid rgba(201,169,97,.55);pointer-events:none}
+.board{
+  position:relative;width:var(--board);height:var(--board);border-radius:6px;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.07), transparent 65%),
+    radial-gradient(ellipse at 50% 50%, var(--felt) 0%, var(--felt2) 70%, var(--felt3) 100%);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.45);
+}
+.board::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+#svg{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+#svg.can-move{cursor:pointer}
+.guide{stroke:rgba(0,0,0,.28);stroke-width:2.2;stroke-dasharray:3 9;stroke-linecap:round}
+.coord{fill:rgba(226,194,117,.5);font-family:'JetBrains Mono',monospace;font-size:15px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.edge{stroke-width:9;stroke-linecap:round;fill:none}
+.edge.p0{stroke:#f6c2b2}.edge.p1{stroke:#bcdaf6}.edge.pn{stroke:#e9e2c8}
+.edge.last.p0{stroke:var(--p0);filter:drop-shadow(0 0 5px rgba(239,125,94,.85))}
+.edge.last.p1{stroke:var(--p1);filter:drop-shadow(0 0 5px rgba(95,169,233,.85))}
+.edge.new{stroke-dasharray:1 1;animation:draw .26s cubic-bezier(.3,.7,.3,1) both}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.preview{stroke-width:9;stroke-linecap:round;opacity:.9;pointer-events:none;stroke-dasharray:14 8}
+.preview.p0{stroke:#ffb7a2}.preview.p1{stroke:#a9d3fa}
+.hintline{stroke:var(--accent);stroke-width:12;stroke-linecap:round;stroke-dasharray:4 14;animation:hintmove 1s linear infinite;filter:drop-shadow(0 0 6px rgba(226,194,117,.9));pointer-events:none}
+@keyframes hintmove{to{stroke-dashoffset:-18}}
+.badline{stroke:var(--red);stroke-width:12;stroke-linecap:round;opacity:.9;pointer-events:none}
+.box rect{transform-box:fill-box;transform-origin:center}
+.box.p0 rect{fill:url(#g0)}.box.p1 rect{fill:url(#g1)}.box.pn rect{fill:rgba(233,226,200,.18)}
+.box .bic{transform-box:fill-box;transform-origin:center}
+.box.p0 .bic{fill:#ffe3d9}.box.p1 .bic{fill:#e0efff}
+.box.new .bic{animation:iconin .34s cubic-bezier(.2,1.4,.4,1) .34s both}
+@keyframes iconin{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.swatch .pic{width:78%;height:78%;display:block}
+.pic.p0{fill:#ffe3d9}.pic.p1{fill:#e0efff}
+.box text{font-family:'Shippori Mincho B1',serif;font-weight:800;text-anchor:middle;dominant-baseline:central;fill:rgba(255,255,255,.92);pointer-events:none}
+.box.new rect{animation:boxin .42s cubic-bezier(.2,1.5,.4,1) .16s both}
+.box.new text{animation:fadein .3s ease .34s both}
+@keyframes boxin{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.ripple{fill:none;stroke-width:4;transform-box:fill-box;transform-origin:center;animation:ripple .7s ease-out .2s both;pointer-events:none}
+@keyframes ripple{from{transform:scale(.7);opacity:.9}to{transform:scale(1.5);opacity:0}}
+.dot{fill:url(#gd)}
+.cap3{fill:rgba(226,194,117,.10);stroke:rgba(226,194,117,.6);stroke-width:2.5;stroke-dasharray:7 6;pointer-events:none;animation:cap3 1.6s ease-in-out infinite}
+@keyframes cap3{50%{fill:rgba(226,194,117,.2)}}
+.board.no-anim *{animation:none!important}
+
+.toast{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;
+  background:rgba(10,16,14,.88);backdrop-filter:blur(6px);
+  border:1px solid rgba(201,169,97,.45);color:var(--text);text-align:center;max-width:86%;
+  padding:14px 26px;border-radius:12px;font-weight:700;letter-spacing:.06em;
+  opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.coach{position:absolute;left:50%;top:calc(var(--board)*0.035 + 10px);transform:translate(-50%,-6px);z-index:16;padding:6px 16px;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.08em;background:rgba(10,16,14,.9);border:1px solid var(--line);opacity:0;transition:opacity .25s, transform .25s;pointer-events:none;white-space:nowrap}
+.coach.show{opacity:1;transform:translate(-50%,0)}
+.coach.p0{border-color:var(--p0);color:#ffd2c4}.coach.p1{border-color:var(--p1);color:#d3e8ff}
+.coach.gold{border-color:var(--accent);color:#ffe9b0}
+
+/* ---------------------------------------------------------------- side */
+.side{grid-area:side;width:100%;height:calc(var(--board) * 1.07);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
+.side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+.side{position:relative}
+.side > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:28px;letter-spacing:.08em;white-space:nowrap}
+.brand h1 small{font-size:12px;letter-spacing:.2em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
+.brand a{font-size:12px;color:var(--dim);text-decoration:none;white-space:nowrap}
+.brand a:hover{color:var(--muted)}
+.snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim);flex:none;padding:0;cursor:pointer}
+.snd:hover{color:var(--text)}
+.snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.snd .off-x{display:none}
+.snd.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
+.snd:not(.on) .on-w{display:none}
+.snd:not(.on) .off-x{display:inline}
+.brand a.home{display:inline-flex;align-items:center;justify-content:center;width:28px;height:26px;flex:none;border:1px solid var(--line);border-radius:7px;background:rgba(0,0,0,.25);color:var(--dim);text-decoration:none}
+.brand a.home:hover{color:var(--text)}
+.brand a.home svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.brand-r{display:flex;align-items:center;gap:10px}
+.brand h1{min-width:0;flex:1 1 auto;overflow:hidden;font-size:clamp(17px, calc((100cqw - 190px) / 7.8), 28px)}
+.brand-r{flex:none}
+@container (max-width: 620px){.brand h1 small{display:none}}
+#langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
+#langSel:hover{color:var(--text)}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player{position:relative;border-radius:12px;padding:12px;background:rgba(0,0,0,.18);border:1px solid transparent;transition:border-color .25s, background .25s}
+.player.active{border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.07)}
+.player .top{display:flex;align-items:center;gap:8px}
+.swatch{width:20px;height:20px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;font-family:'Shippori Mincho B1',serif}
+.swatch.p0{background:linear-gradient(145deg,var(--p0),var(--p0d))}
+.swatch.p1{background:linear-gradient(145deg,var(--p1),var(--p1d))}
+.player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player .count{font-family:'Shippori Mincho B1',serif;font-size:40px;font-weight:800;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
+.player .status{font-size:11px;color:var(--dim);height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player.thinking .status, .player.again .status{color:var(--accent)}
+.player.thinking .swatch{animation:pulse 1s ease-in-out infinite}
+.player.again .swatch{animation:pulse .5s ease-in-out 2}
+.player.bump .count{animation:bump .4s ease}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(226,194,117,.25)}}
+@keyframes bump{40%{transform:scale(1.18)}}
+
+.progrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.progrow .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.progrow .val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.boxbar{display:flex;gap:2px;height:12px}
+.boxbar i{flex:1;border-radius:3px;background:rgba(255,255,255,.07);transition:background .4s}
+.boxbar i.p0{background:var(--p0)}.boxbar i.p1{background:var(--p1)}.boxbar i.pn{background:rgba(233,226,200,.3)}
+.graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:8px;width:100%;height:clamp(40px, 9vh, 84px);display:block;cursor:pointer}
+.graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
+.graph .cur{stroke:var(--accent);stroke-width:1}
+.navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.navbar button:hover{color:var(--text);border-color:rgba(201,169,97,.5)}
+.navbar button:disabled{opacity:.35;pointer-events:none}
+.navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
+.navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
+.evline{margin-top:9px;font-size:12px;color:var(--dim);min-height:17px;line-height:1.45}
+.evline b{color:var(--accent);font-weight:500}
+
+.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0}
+.btn span{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
+.btn.on{color:var(--accent);border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.08)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.primary{color:var(--text)}
+
+.kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
+.review-card.show.slim{flex:none;min-height:0}
+.review-card.show ~ .kifu-card{min-height:84px}
+.kifu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.kifu-head .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.kifu-head .val{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.kifu{flex:1;min-height:0;display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:repeat(5,1fr);gap:3px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.kifu span{padding:3px 0;border-radius:5px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.kifu span i{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
+.kifu span i.p0{background:var(--p0)}.kifu span i.p1{background:var(--p1)}
+.kifu span sup{color:var(--accent);font-size:9px}
+.kifu span.cur{background:rgba(201,169,97,.16);color:var(--accent)}
+.kifu .empty{grid-column:1/-1;color:var(--dim);font-family:'Zen Kaku Gothic New';font-size:12px;padding:6px 0;justify-content:flex-start}
+.info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono',monospace}
+.kifu-head .kb{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
+.kifu-head button{font-size:11px;color:var(--dim);padding:2px 6px;border-radius:5px}
+.kifu-head button:hover:not(:disabled){color:var(--text)}
+.kifu-head button:disabled{opacity:.35;cursor:default}
+.kifu.clickable span[data-i]{cursor:pointer}
+.kifu.clickable span[data-i]:hover{background:rgba(255,255,255,.06)}
+.kifu span.q-bad{box-shadow:inset 0 -2px 0 #ff8b7d}.kifu span.q-dubious{box-shadow:inset 0 -2px 0 #f2c060}
+/* post-game review */
+.review-card{display:none}
+.review-card.show{display:block;flex:1.4 1 0;min-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
+.rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
+.rv-sum{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;font-size:12px;align-items:center}
+.rv-sum .h{color:var(--dim);font-size:11px}
+.rv-sum b{font-size:15px;color:var(--text)}
+.rv-sum .who{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.rv-sum .who i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.rv-sum .who i.p0{background:var(--p0)}.rv-sum .who i.p1{background:var(--p1)}
+.rv-chips{display:flex;gap:4px;flex-wrap:wrap}
+.rv-chips span{font-size:11px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.25);font-family:'JetBrains Mono',monospace}
+.rv-chips .best{color:#8fe3b8}.rv-chips .good{color:#b8d4ff}.rv-chips .dubious{color:#f2c060}.rv-chips .bad{color:#ff8b7d}
+.rv-list{display:grid;gap:4px;margin-top:10px}
+.rv-list button{display:flex;gap:8px;align-items:center;text-align:left;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font-size:12px;width:100%}
+.rv-list button:hover{border-color:var(--brass2)}
+.rv-list button.cur{border-color:var(--accent);background:rgba(201,169,97,.12)}
+.rv-list .tag{font-size:11px;font-weight:700;flex:none}
+.rv-list .tag.bad{color:#ff8b7d}.rv-list .tag.dubious{color:#f2c060}
+.rv-list .mv{font-family:'JetBrains Mono',monospace;flex:1;display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden}
+.rv-list .mv i{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
+.rv-list .mv i.p0{background:var(--p0)}.rv-list .mv i.p1{background:var(--p1)}
+.rv-list .ls{color:var(--dim);font-family:'JetBrains Mono',monospace;flex:none}
+.rv-note{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5}
+.rv-view{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:6px 8px;border-radius:10px;background:rgba(201,169,97,.07);border:1px solid rgba(201,169,97,.3)}
+.rv-view button{flex:none;padding:5px 10px;border-radius:7px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font-size:12px}
+.rv-view button:hover:not(:disabled){border-color:var(--brass2)}
+.rv-view button:disabled{opacity:.35;cursor:default}
+.rv-view span{flex:1;min-width:0;font-size:12px;color:var(--muted);line-height:1.45}
+.rv-view span b.bad{color:#ff8b7d}.rv-view span b.dubious{color:#f2c060}.rv-view span b.best,.rv-view span b.good{color:#8fe3b8}
+.playline{stroke-width:12;stroke-linecap:round;opacity:.9;pointer-events:none}
+.playline.bad{stroke:var(--red)}.playline.ok{stroke:#6fd3a0}.playline.dubious{stroke:#f2c060}
+.bestline{stroke-width:7;stroke-linecap:round;stroke-dasharray:10 9;pointer-events:none;opacity:.95}
+.bestline.p0{stroke:#ffb7a2}.bestline.p1{stroke:#a9d3fa}
+.bl-num circle{stroke:rgba(0,0,0,.35);stroke-width:2}
+.bl-num.p0 circle{fill:var(--p0)}.bl-num.p1 circle{fill:var(--p1)}
+.bl-num text{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.bl-num.first circle{stroke:var(--accent);stroke-width:3}
+body.viewing #svg{cursor:default}
+.paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
+.daily{border-color:rgba(226,194,117,.55)!important;background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))!important}
+.daily .no{font-size:18px!important}
+
+/* ---------------------------------------------------------------- modal */
+.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{width:min(480px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.overlay.show .modal{transform:none}
+.overlay.instant,.overlay.instant .modal{transition:none!important}
+.overlay{height:100vh;height:100dvh;bottom:auto}
+.modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overscroll-behavior:contain}
+.ls-tabs{margin-bottom:16px}
+.ls-tabs button{font-size:13.5px;padding:9px 4px}
+@media (max-width: 520px), (max-height: 560px){
+  .overlay{padding:10px}
+  .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);border-radius:14px}
+  .modal h2{font-size:19px;margin-bottom:12px}
+  .ls-tabs{margin-bottom:12px}
+  #resultOverlay .modal-actions{gap:8px}
+  #resultOverlay .mbtn{padding:12px 4px;letter-spacing:.02em;min-width:0}
+}
+.modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.1em;margin-bottom:18px}
+.field{margin-bottom:16px}
+.field > label{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
+.seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 4px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s;white-space:nowrap}
+.seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
+#segMode{flex-wrap:wrap}
+#segMode button{flex:1 0 30%}
+@media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
+.level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
+.level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
+.level-name{font-weight:700;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
+.level-name small{font-weight:400;font-size:11px;color:var(--dim)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.checks input{accent-color:var(--brass);width:16px;height:16px}
+.rules{font-size:12.5px;color:var(--muted);line-height:1.75;margin:-6px 0 16px;padding-left:10px;border-left:2px solid var(--brass2)}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+.mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.06em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
+.mbtn:hover{color:var(--text)}
+.mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.mbtn.go:hover{filter:brightness(1.07)}
+.result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
+.result-score{display:flex;justify-content:center;align-items:center;gap:18px;font-family:'Shippori Mincho B1',serif;font-size:44px;font-weight:800}
+.result-score .swatch{width:28px;height:28px;font-size:13px}
+.result-score span{display:flex;align-items:center;gap:10px}
+.result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+.hidden{display:none!important}
+
+/* lesson & puzzle cards */
+.lesson-card,.puzzle-card{display:none}
+body.in-lesson .lesson-card{display:block}
+body.in-puzzle .puzzle-card{display:block}
+body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .controls, body.in-puzzle .controls, body.in-lesson .kifu-card, body.in-puzzle .kifu-card, body.in-lesson .info-line, body.in-puzzle .info-line, body.in-lesson #progCard, body.in-puzzle #progCard{display:none!important}
+.lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lt{font-size:12px;color:var(--brass);letter-spacing:.12em}
+.lesson-card h3,.puzzle-card h3{font-family:'Shippori Mincho B1',serif;font-size:20px;margin:4px 0 8px;letter-spacing:.06em}
+.ldots{display:flex;gap:5px}
+.ldots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
+.ldots i.ok{background:#6fd3a0}.ldots i.ng{background:#ff6b5b}.ldots i.cur{box-shadow:0 0 0 2px var(--accent)}
+.lesson-prompt{font-size:14px;line-height:1.7}
+.lesson-fb{margin-top:10px;font-size:13px;line-height:1.75;color:var(--muted);min-height:40px}
+.lesson-fb b.ok{color:#8fe3b8}.lesson-fb b.ng{color:#ff9b90}
+.lesson-fb b{color:var(--text)}
+.lesson-actions{display:flex;gap:8px;margin-top:12px}
+.lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
+.lesson-actions button:hover{color:var(--text)}
+.lesson-actions button:disabled{opacity:.4;cursor:default}
+.lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.pz-goal{margin:6px 0 8px;padding:9px 12px;border-radius:10px;background:rgba(226,194,117,.08);border:1px solid rgba(226,194,117,.3);font-size:15px}
+.pz-goal b{color:var(--accent)}
+.pz-status{font-size:13px;line-height:1.75;color:var(--muted);min-height:44px}
+.pz-status b.ok{color:#8fe3b8}.pz-status b.ng{color:#ff9b90}
+.pz-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.pz-grid button{padding:12px 0;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px}
+.pz-grid button:hover{border-color:var(--brass2)}
+.pz-grid button.solved{border-color:rgba(111,211,160,.6);color:#8fe3b8}
+.pz-grid button.solved::after{content:" ✓"}
+.lesson-list{display:grid;gap:8px}
+.lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
+.lesson-item:hover{border-color:var(--brass2)}
+.lesson-item .no{font-family:'Shippori Mincho B1',serif;font-size:20px;color:var(--brass);width:28px;text-align:center;flex:none}
+.lesson-item .tx{flex:1;min-width:0}
+.lesson-item .tx b{display:block;font-size:14px}
+.lesson-item .tx small{display:block;font-size:12px;color:var(--dim);line-height:1.5}
+.lesson-item .st{font-size:12px;color:var(--dim);flex:none}
+.lesson-item .st.clear{color:#8fe3b8}
+.lesson-intro p{font-size:14px;line-height:1.85;color:#cfd8d2;margin-bottom:10px}
+.lesson-intro p b{color:var(--accent)}
+.lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
+
+/* ---------------------------------------------------------------- responsive */
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+  /* phone portrait */
+  :root{--board:calc(min(100vw - 20px, var(--vh) - 230px, 900px) / 1.07)}
+  html,body{overflow-x:hidden;overflow-y:auto;height:auto}
+  .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
+  :root{--top:0px}
+  .side > .brand{position:static;width:calc(var(--board) * 1.07);max-width:100%;flex:none}
+  .side, .side-in{display:contents}
+  .side-in > *{width:calc(var(--board) * 1.07);max-width:100%;flex:none}
+  .brand{order:-3;height:28px;align-items:center}
+  .brand h1{font-size:20px}
+  .brand h1 small{display:none}
+  .players{order:-2;padding:8px;gap:8px}
+  .board-area{order:-1;flex:none}
+  .controls{order:0}
+  #progCard{order:1}
+  .review-card{order:1}
+  .review-card.show{flex:none;min-height:0;max-height:none;overflow:visible}
+  .kifu-card{order:2}
+  .info-line{display:none}
+  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+  .player .top{min-width:0}
+  .player .count{font-size:26px;margin-top:0;line-height:1}
+  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .card{padding:10px 12px}
+  .controls{padding:8px;gap:5px}
+  .btn{padding:7px 1px;gap:3px;font-size:10.5px}
+  .btn svg{width:17px;height:17px}
+  .kifu-card{flex:none;min-height:110px}
+  .kifu{max-height:none;overflow:visible}
+}
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  /* phone landscape */
+  :root{--board:calc(min(var(--vh) - 20px, 100vw - 300px, 980px) / 1.07)}
+  .app{padding:10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));gap:18px;grid-template-columns:auto minmax(220px, 360px)}
+  .side{max-height:calc(var(--vh) - 20px);height:calc(var(--vh) - 20px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  :root{--top:0px}
+  .side{display:flex;flex-direction:column;gap:8px}
+  .side > .brand{position:static}
+  .side-in{gap:8px;height:auto;flex:none}
+  .kifu-card{flex:none;min-height:110px}
+  .kifu{max-height:none;overflow:visible}
+  .review-card.show{flex:none;min-height:0;max-height:none;overflow:visible}
+  .brand{align-items:center}
+  .brand h1{font-size:17px;letter-spacing:.06em}
+  .brand h1 small{display:none}
+  .brand a{font-size:11px}
+  .card{padding:8px 10px;border-radius:12px}
+  .players{display:flex;gap:6px;padding:6px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player .top{flex:1;min-width:0;gap:6px}
+  .swatch{width:14px;height:14px;font-size:8px}
+  .player .name{font-size:11px}
+  .player .count{font-size:20px;margin:0;line-height:1}
+  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .controls{gap:4px;padding:6px}
+  .btn{padding:6px 1px;font-size:9.5px;border-radius:8px;gap:2px}
+  .btn svg{width:15px;height:15px}
+  .info-line{display:none}
+  .lesson-card h3,.puzzle-card h3{font-size:16px}
+  .lesson-prompt{font-size:13px}
+  .lesson-fb,.pz-status{font-size:12px;line-height:1.6}
+  .lesson-actions button{padding:7px}
+}
+@container (max-width: 480px){ .brand h1 small{display:none} }
+@media (min-height: 561px){
+@container (min-width: 420px){
+  .player .count{font-size:clamp(40px, 5cqw, 60px)}
+  .brand h1{font-size:clamp(17px, calc((100cqw - 190px) / 7.8), 36px)}
+  .kifu{grid-template-columns:repeat(6,1fr);font-size:13px}
+}
+}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
+  #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p, #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
+  .pz-grid{grid-template-columns:repeat(10, 1fr)}
+}
+
+#resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+
+/* larger text for lesson / puzzle explanations (same as Reversi) */
+.lesson-card .lt{font-size:13px}
+.lesson-card h3{font-size:22px}
+.lesson-prompt{font-size:16px;line-height:1.75}
+.lesson-fb{font-size:15px;line-height:1.85}
+.pz-goal{font-size:16.5px}
+.pz-status{font-size:15px;line-height:1.85}
+.lesson-intro p{font-size:15.5px;line-height:1.9}
+.lesson-intro p.note{font-size:14px}
+.rv-note{font-size:12.5px}
+/* Arabic: text blocks read right-to-left; layout, board, coordinates and move lists stay LTR */
+html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .lesson-card h3, .puzzle-card h3, .result-sub, .rv-note, .rules){direction:rtl;text-align:right}
+html[lang=ar] :is(p, .tx, .lesson-fb, .pz-status, .pz-goal, .rv-note) b{unicode-bidi:isolate}
+html[lang=ar] .result-sub{text-align:center}
+html[lang=ar] :is(.lesson-intro .note, .rules){border-left:0;border-right:2px solid var(--brass2);padding-left:0;padding-right:10px}
+html[lang=ar] *{letter-spacing:0 !important}
+/* Hindi / Arabic: the serif display font has no Devanagari/Arabic glyphs */
+html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .result-big){font-family:'Noto Sans Devanagari','Noto Sans Arabic','Zen Kaku Gothic New',sans-serif}
+
+/* larger, easier-to-read review and move list */
+body .kifu-head .label{font-size:13.5px}
+body .kifu-head .val{font-size:12.5px}
+body .kifu-head button{font-size:12.5px;padding:3px 8px}
+body .kifu{font-size:14px;gap:5px}
+body .kifu span{padding:5px 0}
+body .kifu span i{width:9px;height:9px}
+body .kifu span sup{font-size:10.5px}
+body .rv-sum{font-size:14px;gap:8px 12px}
+body .rv-sum .h{font-size:12.5px}
+body .rv-sum b{font-size:18px}
+body .rv-chips span{font-size:13px;padding:2px 8px}
+body .rv-list{gap:6px}
+body .rv-list button{font-size:14px;padding:8px 10px}
+body .rv-list .tag{font-size:13px}
+body .rv-list .mv i{width:9px;height:9px}
+body .rv-note{font-size:13px}
+body .rv-view button{font-size:13.5px}
+.brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+.brand h1.to-board:hover{opacity:.78}
+.brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
+.brand-l{display:flex;flex-direction:column;min-width:0}
+.brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
+.brand a.series:hover{opacity:1;color:var(--accent)}
+.brand:has(.brand-l){align-items:flex-end}
+@media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="board-area">
+    <div class="frame">
+      <div class="board" id="board">
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f28a6c"/><stop offset="1" stop-color="#b44f37"/></linearGradient>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6db3ee"/><stop offset="1" stop-color="#346ea6"/></linearGradient>
+            <symbol id="icPerson" viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M3.6 21.4c0-5 3.8-8 8.4-8s8.4 3 8.4 8z"/></symbol>
+            <symbol id="icRobot" viewBox="0 0 24 24"><rect x="11" y="1.6" width="2" height="3.6"/><circle cx="12" cy="2" r="1.7"/><rect x="1.6" y="9.4" width="2.4" height="4.6" rx="1.1"/><rect x="20" y="9.4" width="2.4" height="4.6" rx="1.1"/><path fill-rule="evenodd" d="M7.6 5h8.8A3.6 3.6 0 0 1 20 8.6v6.2a3.6 3.6 0 0 1-3.6 3.6H7.6A3.6 3.6 0 0 1 4 14.8V8.6A3.6 3.6 0 0 1 7.6 5zM9 9.3a1.9 1.9 0 1 0 0 3.8a1.9 1.9 0 1 0 0-3.8zM15 9.3a1.9 1.9 0 1 0 0 3.8a1.9 1.9 0 1 0 0-3.8zM9 14.7h6v1.6H9z"/><rect x="6.5" y="19.6" width="11" height="2.8" rx="1.2"/></symbol>
+            <radialGradient id="gd" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f3dc9c"/><stop offset=".55" stop-color="#c9a961"/><stop offset="1" stop-color="#7a6132"/></radialGradient>
+          </defs>
+          <g id="gGuides"></g><g id="gBoxes"></g><g id="gEdges"></g><g id="gFx"></g><g id="gPreview"></g><g id="gDots"></g>
+        </svg>
+      </div>
+      <div class="toast" id="toast"></div>
+      <div class="coach" id="coach"></div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back">Dots &amp; Boxes<small data-i18n="sub"></small></h1></div>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+    </div>
+    <div class="side-in">
+
+    <div class="card lesson-card" id="lessonCard">
+      <div class="lh"><span class="lt" id="lsStep"></span><div class="ldots" id="lsDots"></div></div>
+      <h3 id="lsTitle"></h3>
+      <div class="lesson-prompt" id="lsPrompt"></div>
+      <div class="lesson-fb" id="lsFb"></div>
+      <div class="lesson-actions">
+        <button id="lsHint" data-i18n="ls.hint"></button>
+        <button id="lsNext" class="go"></button>
+        <button id="lsQuit" data-i18n="ls.quit"></button>
+      </div>
+    </div>
+    <div class="card puzzle-card" id="puzzleCard">
+      <div class="lh"><span class="lt" id="pzStep"></span></div>
+      <h3 id="pzTitle"></h3>
+      <div class="pz-goal" id="pzGoal"></div>
+      <div class="pz-status" id="pzStatus"></div>
+      <div class="lesson-actions">
+        <button id="pzHint" data-i18n="ls.hint"></button>
+        <button id="pzRetry" data-i18n="pz.retry"></button>
+        <button id="pzAnswer" data-i18n="pz.answer"></button>
+      </div>
+      <div class="lesson-actions">
+        <button id="pzNext" class="go" data-i18n="pz.next"></button>
+        <button id="pzQuit" data-i18n="ls.quit"></button>
+      </div>
+    </div>
+
+    <div class="card players">
+      <div class="player" id="pl0">
+        <div class="top"><div class="swatch p0" id="sw0"></div><div class="name" id="name0"></div></div>
+        <div class="count" id="count0">0</div>
+        <div class="status" id="status0"></div>
+      </div>
+      <div class="player" id="pl1">
+        <div class="top"><div class="swatch p1" id="sw1"></div><div class="name" id="name1"></div></div>
+        <div class="count" id="count1">0</div>
+        <div class="status" id="status1"></div>
+      </div>
+    </div>
+
+    <div class="card" id="progCard">
+      <div class="progrow"><span class="label" data-i18n="boxes"></span><span class="val" id="leftText"></span></div>
+      <div class="boxbar" id="boxbar"></div>
+      <div class="evline" id="evLine"></div>
+      <svg class="graph" id="graph" viewBox="0 0 300 74" preserveAspectRatio="none"></svg>
+      <div class="navbar" id="navBar">
+        <button data-n="first" data-i18n-title="nav.first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button>
+        <button data-n="prev" data-i18n-title="nav.prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button>
+        <button data-n="play" id="navPlay" data-i18n-title="nav.play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+        <button data-n="next" data-i18n-title="nav.next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button>
+        <button data-n="last" data-i18n-title="nav.last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="card controls">
+      <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
+      <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
+      <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
+      <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M5 5h6v6H5zM13 13h6v6h-6z"/><path d="M13 5h6M13 8h6M5 13v6M8 13v6"/></svg><span data-i18n="btn.puzzle"></span></button>
+    </div>
+
+    <div class="card review-card" id="reviewCard">
+      <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
+      <div class="rv-view hidden" id="rvView"><button id="rvPrev" aria-label="prev">◀</button><span id="rvText"></span><button id="rvNext" aria-label="next">▶</button><button id="rvLive" data-i18n="rv.live"></button></div>
+      <div id="rvBody"></div>
+    </div>
+
+    <div class="card kifu-card">
+      <div class="kifu-head"><span class="label"><span data-i18n="kifu"></span> <span class="val" id="kifuCount"></span></span><span class="kb"><button id="btnAnalyze" data-i18n="rv.btn" data-i18n-title="rv.btn.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button></span></div>
+      <div class="kifu" id="kifu"></div>
+    </div>
+    <div class="info-line" id="infoLine"></div>
+  </div></aside>
+</div>
+
+<!-- new game -->
+<div class="overlay" id="newOverlay">
+  <div class="modal">
+    <h2 data-i18n="ng.title"></h2>
+    <p class="rules" data-i18n="ng.rules"></p>
+    <div class="field">
+      <label data-i18n="ng.mode"></label>
+      <div class="seg" id="segMode">
+        <button data-v="ai" data-i18n="ng.ai"></button>
+        <button data-v="pvp" data-i18n="ng.pvp"></button>
+        <button data-v="watch" data-i18n="ng.watch"></button>
+        <button data-v="lesson" data-i18n="ng.lesson"></button>
+        <button data-v="puzzle" data-i18n="ng.puzzle"></button>
+      </div>
+    </div>
+    <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
+    <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc"></p></div>
+    <div class="field" id="fSize">
+      <label data-i18n="ng.size"></label>
+      <div class="seg" id="segSize"><button data-v="3">3 × 3</button><button data-v="4">4 × 4</button><button data-v="5">5 × 5</button></div>
+    </div>
+    <div class="field" id="fOrder">
+      <label data-i18n="ng.order"></label>
+      <div class="seg" id="segOrder"><button data-v="0" data-i18n="ng.first"></button><button data-v="1" data-i18n="ng.second"></button><button data-v="-1" data-i18n="ng.random"></button></div>
+    </div>
+    <div class="field" id="fLevel">
+      <label id="levelLabel"></label>
+      <div class="level-wrap"><input type="range" min="1" max="10" step="1" id="levelRange"><div class="level-name" id="levelName"></div></div>
+    </div>
+    <div class="field hidden" id="fLevel2">
+      <label data-i18n="ng.levelB"></label>
+      <div class="level-wrap"><input type="range" min="1" max="10" step="1" id="levelRange2"><div class="level-name" id="levelName2"></div></div>
+    </div>
+    <div class="field" id="fDisplay">
+      <label data-i18n="ng.display"></label>
+      <div class="checks">
+        <label><input type="checkbox" id="optEval"><span data-i18n="opt.eval"></span></label>
+        <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
+    </div>
+  </div>
+</div>
+
+<!-- lessons -->
+<div class="overlay" id="lessonOverlay">
+  <div class="modal">
+    <div id="lessonListView">
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <h2 data-i18n="ls.title"></h2>
+      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
+      <div class="lesson-list" id="lessonList"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
+    </div>
+    <div id="lessonIntroView" class="hidden">
+      <div class="lt" id="liStep"></div>
+      <h2 id="liTitle" style="margin-top:4px"></h2>
+      <div class="lesson-intro" id="liBody"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonBack" data-i18n="ls.back"></button><button class="mbtn go" id="btnLessonStart" data-i18n="ls.start"></button></div>
+    </div>
+    <div id="lessonDoneView" class="hidden">
+      <div class="result-big" id="ldTitle"></div>
+      <div class="result-sub" id="ldSub" style="font-size:14px"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonQuit2" data-i18n="ls.toGame"></button><button class="mbtn" id="btnLessonRetry" data-i18n="ls.retry"></button><button class="mbtn go" id="btnLessonNextStep" data-i18n="ls.nextStep"></button></div>
+    </div>
+  </div>
+</div>
+
+<!-- puzzles -->
+<div class="overlay" id="puzzleOverlay">
+  <div class="modal">
+    <div id="pzListView">
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <h2 data-i18n="pz.title"></h2>
+      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
+      <div class="lesson-list" id="pzLevels"></div>
+      <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
+    </div>
+    <div id="pzGridView" class="hidden">
+      <h2 id="pzLevelTitle"></h2>
+      <div class="pz-grid" id="pzGrid"></div>
+      <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
+    </div>
+  </div>
+</div>
+
+<!-- result -->
+<div class="overlay" id="resumeOverlay">
+  <div class="modal" style="width:min(480px,100%)">
+    <h2 data-i18n="rs.title"></h2>
+    <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
+    <div class="modal-actions" style="flex-wrap:wrap">
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="resultOverlay">
+  <div class="modal">
+    <div class="result-big" id="resultTitle"></div>
+    <div class="result-score">
+      <span><div class="swatch p0" id="resSw0"></div><b id="res0">0</b></span>
+      <span style="color:var(--dim);font-size:28px">–</span>
+      <span><b id="res1">0</b><div class="swatch p1" id="resSw1"></div></span>
+    </div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="modal-actions">
+      <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
+      <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
+      <button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
+    </div>
+  </div>
+</div>
+
+<!-- load a shared game -->
+<div class="overlay" id="pasteOverlay">
+  <div class="modal">
+    <h2 data-i18n="paste.title"></h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px" data-i18n="paste.desc"></p>
+    <textarea class="paste-ta" id="pasteText" spellcheck="false" placeholder="https://…/dots/#k=…&amp;s=4"></textarea>
+    <div class="modal-actions"><button class="mbtn" id="pasteCancel" data-i18n="close"></button><button class="mbtn go" id="pasteOk" data-i18n="paste.load"></button></div>
+  </div>
+</div>
+
+<script src="i18n.js?v=20261019d4"></script>
+<script src="engine.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const E = DotsEngine;
+const U = 100, M = 58;            // svg units: dot spacing and margin
+const STORE = 'dots-emerald-v1', LSTORE = 'dots-lessons-v1', PSTORE = 'dots-puzzles-v1';
+const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+let LANG = detectLang();
+function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
+function applyI18n() {
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
+  document.title = t('title') + ' — Dots & Boxes';
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  $('#langSel').value = LANG;
+}
+
+// ====================================================================== state
+const settings = { mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '' };
+// game: n, moves[], human (player index of the human in 'ai' mode), setup {edges, owners} for lessons/puzzles
+let game = { n: 4, moves: [], human: 0, setup: null };
+let S = null;              // derived state (see compute)
+let busy = 0;              // token to cancel pending AI work
+let lesson = null, puzzle = null, savedGame = null;
+let lastEval = null; let liveEv = {};   // ply -> {k: moves prefix, v: predicted final margin (p0 - p1)} from the AI's searches
+      // {exact, final:[a,b]} from the AI's last search
+let hintEdge = -1, badEdge = -1;
+let viewPly = null;        // review: index of the move about to be played in the shown position (null = live)
+let SF = null;             // derived state of the whole game (S is the shown position)
+
+function compute(g) {
+  const G = E.geom(g.n, g.n), p = new E.Pos(G);
+  const owner = new Int8Array(G.B).fill(-1), by = new Int8Array(G.E).fill(-1), order = new Int16Array(G.E).fill(-1);
+  const scores = [0, 0];
+  if (g.setup) {
+    for (const e of g.setup.edges) { p.play(e); by[e] = 2; }
+    g.setup.owners.forEach((o, b) => { if (o >= 0) { owner[b] = o; scores[o]++; } else if (p.cnt[b] === 4) owner[b] = 2; });
+  }
+  let turn = 0; const log = [];
+  for (let i = 0; i < g.moves.length; i++) {
+    const e = g.moves[i];
+    if (p.drawn[e]) { g.moves.length = i; break; }   // corrupted save: cut
+    const k = p.play(e); by[e] = turn; order[e] = i;
+    const boxes = [];
+    if (k) {
+      for (const b of [G.eb0[e], G.eb1[e]]) if (b >= 0 && p.cnt[b] === 4 && owner[b] < 0) { owner[b] = turn; boxes.push(b); }
+      scores[turn] += k;
+    }
+    log.push({ e, pl: turn, k, boxes });
+    if (!k) turn ^= 1;
+  }
+  return { G, p, owner, by, order, scores, turn, log, over: p.undrawn === 0 };
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (!d) return false;
+    Object.assign(settings, d.settings || {});
+    if (d.game && [3, 4, 5].includes(d.game.n) && Array.isArray(d.game.moves)) { game = { n: d.game.n, moves: d.game.moves.slice(), human: d.game.human | 0, setup: null }; return true; }
+  } catch (e) {}
+  return false;
+}
+function save() {
+  if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, game: { n: game.n, moves: game.moves, human: game.human } })); } catch (e) {}
+}
+
+// ====================================================================== names
+function playerName(i) {
+  if (lesson || puzzle) return i === 0 ? t('you') : t('ai');
+  if (settings.mode === 'ai') return i === game.human ? t('you') : 'AI ' + t('lv')[settings.level];
+  if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2];
+  return i === 0 ? t('pA') : t('pB');
+}
+// person icon for human players, robot icon for AI players (2-player: both people, AI vs AI: both robots)
+function playerKind(i) {
+  if (lesson || puzzle) return i === 0 ? 'Person' : 'Robot';
+  if (settings.mode === 'ai') return i === game.human ? 'Person' : 'Robot';
+  return settings.mode === 'watch' ? 'Robot' : 'Person';
+}
+function iconSvg(i) { return `<svg class="pic p${i}" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic${playerKind(i)}"/></svg>`; }
+function initial(i) {
+  if (lesson || puzzle) return i === 0 ? t('init.you') : t('init.ai');
+  if (settings.mode === 'ai') return i === game.human ? t('init.you') : t('init.ai');
+  return i === 0 ? t('init.a') : t('init.b');
+}
+function shortName(i) {
+  if (lesson || puzzle) return i === 0 ? t('you') : t('ai');
+  if (settings.mode === 'ai') return i === game.human ? t('you') : t('ai');
+  if (settings.mode === 'watch') return i === 0 ? t('aiA') : t('aiB');
+  return i === 0 ? t('pA') : t('pB');
+}
+function isAITurn() {
+  if (!S || S.over || viewPly !== null) return false;
+  if (lesson) return false;
+  if (puzzle) return S.turn === 1 && puzzle.state === 'play';
+  if (settings.mode === 'watch') return true;
+  if (settings.mode === 'ai') return S.turn !== game.human;
+  return false;
+}
+function canHumanMove() {
+  if (!S || S.over || viewPly !== null || isAITurn()) return false;
+  if (lesson) return !lesson.answered;
+  if (puzzle) return puzzle.state === 'play' && !puzzle.waiting;
+  return !aiPending;
+}
+function levelFor(pl) { return settings.mode === 'watch' ? (pl === 0 ? settings.level : settings.level2) : settings.level; }
+const letters = 'abcdef';
+function edgeName(e) {
+  const G = E.geom(game.n, game.n), [r1, c1, r2, c2] = G.ed[e];
+  return letters[c1] + (r1 + 1) + (r1 === r2 ? '–' : '|');
+}
+
+// ====================================================================== workers
+function makeWorker(onmsg) { const w = new Worker('engine.js'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
+function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
+function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
+aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
+function cancelAI() { if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } aiPending = false; }
+function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); anaJob = null; } }
+function allEdges() { return (game.setup ? game.setup.edges : []).concat(game.moves); }
+function askAI(level) {
+  return new Promise(resolve => { aiJob = { id: ++jobId, resolve }; aiWorker.postMessage({ type: 'move', id: aiJob.id, R: game.n, C: game.n, edges: allEdges(), level, lead: S.scores[S.turn] - S.scores[1 - S.turn] }); });
+}
+function askAna(type, ms) {
+  cancelAna();
+  return new Promise(resolve => { anaJob = { id: ++jobId, resolve }; anaWorker.postMessage({ type, id: anaJob.id, R: game.n, C: game.n, edges: allEdges(), ms }); });
+}
+
+// ====================================================================== sound
+let actx = null;
+function ac() { if (!settings.sound) return null; if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (actx.state === 'suspended') actx.resume(); return actx; }
+function tone(a, freq, t0, dur, vol, type) {
+  const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function playLine() {
+  const a = ac(); if (!a) return; const t0 = a.currentTime;
+  const len = Math.floor(a.sampleRate * 0.09), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2) * (0.6 + 0.4 * Math.sin(i / 40));
+  const n = a.createBufferSource(); n.buffer = buf; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 0.7;
+  const g = a.createGain(); g.gain.value = 0.35; n.connect(f).connect(g).connect(a.destination); n.start(t0);
+  tone(a, 520, t0, 0.07, 0.06, 'triangle');
+}
+let chainCount = 0;
+function playBox(k) {
+  const a = ac(); if (!a) return; const t0 = a.currentTime + 0.14;
+  const scale = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.5, 1567.98];
+  for (let i = 0; i < k; i++) { const f = scale[Math.min(chainCount++, scale.length - 1)]; tone(a, f, t0 + i * 0.07, 0.45, 0.16); tone(a, f * 2, t0 + i * 0.07, 0.25, 0.04); }
+}
+function playChime(win) {
+  const a = ac(); if (!a) return; const t0 = a.currentTime;
+  const notes = win === 1 ? [523.25, 659.25, 783.99, 1046.5] : win === 0 ? [392, 523.25, 659.25] : [392, 349.23, 311.13];
+  notes.forEach((f, i) => tone(a, f, t0 + i * 0.12, 0.6, 0.18));
+}
+function playWrong() { const a = ac(); if (!a) return; const t0 = a.currentTime; tone(a, 220, t0, 0.3, 0.12, 'triangle'); tone(a, 185, t0 + 0.12, 0.35, 0.1, 'triangle'); }
+
+// ====================================================================== board rendering
+const svg = $('#svg'), gGuides = $('#gGuides'), gBoxes = $('#gBoxes'), gEdges = $('#gEdges'), gFx = $('#gFx'), gPreview = $('#gPreview'), gDots = $('#gDots');
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const x = document.createElementNS(NS, tag); for (const k in attrs) x.setAttribute(k, attrs[k]); if (parent) parent.appendChild(x); return x; }
+let builtFor = '';
+function edgeXY(e) { const G = E.geom(game.n, game.n), [r1, c1, r2, c2] = G.ed[e]; return [M + c1 * U, M + r1 * U, M + c2 * U, M + r2 * U]; }
+function buildBoard() {
+  const n = game.n, W = n * U + 2 * M, key = n + '';
+  if (builtFor === key) return;
+  builtFor = key;
+  svg.setAttribute('viewBox', `0 0 ${W} ${W}`);
+  gGuides.innerHTML = ''; gDots.innerHTML = '';
+  const G = E.geom(n, n);
+  for (let e = 0; e < G.E; e++) { const [x1, y1, x2, y2] = edgeXY(e); el('line', { x1, y1, x2, y2, class: 'guide', pathLength: 100 }, gGuides); }
+  for (let r = 0; r <= n; r++) for (let c = 0; c <= n; c++) el('circle', { cx: M + c * U, cy: M + r * U, r: 9, class: 'dot' }, gDots);
+  for (let c = 0; c <= n; c++) { const tx = el('text', { x: M + c * U, y: M - 36, class: 'coord' }, gGuides); tx.textContent = letters[c]; }
+  for (let r = 0; r <= n; r++) { const tx = el('text', { x: M - 38, y: M + r * U, class: 'coord' }, gGuides); tx.textContent = r + 1; }
+}
+function renderBoard(anim) {
+  buildBoard();
+  const G = S.G, p = S.p;
+  gEdges.innerHTML = ''; gBoxes.innerHTML = ''; gFx.innerHTML = '';
+  const lastE = S.log.length ? S.log[S.log.length - 1].e : -1;
+  for (let e = 0; e < G.E; e++) {
+    if (!p.drawn[e]) continue;
+    const [x1, y1, x2, y2] = edgeXY(e), b = S.by[e];
+    const cls = 'edge ' + (b === 2 ? 'pn' : 'p' + b) + (e === lastE ? ' last' : '') + (anim && e === lastE ? ' new' : '');
+    el('line', { x1, y1, x2, y2, class: cls, pathLength: 1 }, gEdges);
+  }
+  const newBoxes = anim && S.log.length ? S.log[S.log.length - 1].boxes : [];
+  const fs = 46;
+  for (let b = 0; b < G.B; b++) {
+    const o = S.owner[b]; if (o < 0) continue;
+    const r = Math.floor(b / game.n), c = b % game.n;
+    const g = el('g', { class: 'box ' + (o === 2 ? 'pn' : 'p' + o) + (newBoxes.includes(b) ? ' new' : '') }, gBoxes);
+    el('rect', { x: M + c * U + 9, y: M + r * U + 9, width: U - 18, height: U - 18, rx: 8 }, g);
+    if (o !== 2) el('use', { href: '#ic' + playerKind(o), x: M + c * U + U / 2 - fs / 2, y: M + r * U + U / 2 - fs / 2, width: fs, height: fs, class: 'bic' }, g);
+    if (newBoxes.includes(b)) el('rect', { x: M + c * U + 9, y: M + r * U + 9, width: U - 18, height: U - 18, rx: 8, class: 'ripple', stroke: o === 0 ? '#ef7d5e' : '#5fa9e9' }, gFx);
+  }
+  if ((lesson || puzzle) && !S.over) for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) { const r = Math.floor(b / game.n), c = b % game.n; el('rect', { x: M + c * U + 14, y: M + r * U + 14, width: U - 28, height: U - 28, rx: 6, class: 'cap3' }, gFx); }
+  if (hintEdge >= 0 && !p.drawn[hintEdge]) { const [x1, y1, x2, y2] = edgeXY(hintEdge); el('line', { x1, y1, x2, y2, class: 'hintline' }, gFx); }
+  if (badEdge >= 0 && !p.drawn[badEdge]) { const [x1, y1, x2, y2] = edgeXY(badEdge); el('line', { x1, y1, x2, y2, class: 'badline' }, gFx); }
+  if (viewPly !== null) drawReviewOverlay();
+  document.body.classList.toggle('viewing', viewPly !== null);
+  $('#board').classList.toggle('no-anim', !settings.anim);
+  svg.classList.toggle('can-move', canHumanMove());
+}
+// ---------------------------------------------------------------- pointer input
+let previewEdge = -1, pressing = false;
+function edgeAt(ev) {
+  const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+  const ctm = svg.getScreenCTM(); if (!ctm) return -1;
+  const q = pt.matrixTransform(ctm.inverse());
+  const n = game.n, u = (q.x - M) / U, v = (q.y - M) / U;
+  if (u < -0.55 || v < -0.55 || u > n + 0.55 || v > n + 0.55) return -1;
+  const G = E.geom(n, n);
+  // nearest horizontal edge
+  let best = -1, bd = 9;
+  const hr = Math.round(v), hc = Math.floor(u);
+  if (hr >= 0 && hr <= n && hc >= -1 && hc <= n) { const c = Math.min(n - 1, Math.max(0, hc)); const d = Math.abs(v - hr) + (hc < 0 || hc >= n ? 0.3 : 0); if (d < bd) { bd = d; best = hr * n + c; } }
+  const vc = Math.round(u), vr = Math.floor(v);
+  if (vc >= 0 && vc <= n && vr >= -1 && vr <= n) { const r = Math.min(n - 1, Math.max(0, vr)); const d = Math.abs(u - vc) + (vr < 0 || vr >= n ? 0.3 : 0); if (d < bd) { bd = d; best = G.HN + r * (n + 1) + vc; } }
+  if (bd > 0.6) return -1;
+  return best;
+}
+function setPreview(e) {
+  if (e === previewEdge) return;
+  previewEdge = e; gPreview.innerHTML = '';
+  if (e < 0 || !S || S.p.drawn[e] || !canHumanMove()) { previewEdge = -1; return; }
+  const [x1, y1, x2, y2] = edgeXY(e);
+  el('line', { x1, y1, x2, y2, class: 'preview p' + S.turn }, gPreview);
+}
+svg.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse' || pressing) setPreview(canHumanMove() ? edgeAt(ev) : -1); });
+svg.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') setPreview(-1); });
+svg.addEventListener('pointerdown', ev => { if (!canHumanMove()) return; pressing = true; ac(); setPreview(edgeAt(ev)); try { svg.setPointerCapture(ev.pointerId); } catch (_) {} });
+svg.addEventListener('pointerup', ev => {
+  if (!pressing) return; pressing = false;
+  const e = edgeAt(ev); setPreview(-1);
+  if (e >= 0 && canHumanMove() && !S.p.drawn[e]) humanMove(e);
+});
+svg.addEventListener('pointercancel', () => { pressing = false; setPreview(-1); });
+
+// ====================================================================== side panel
+let toastTimer = 0, coachTimer = 0;
+function toast(msg, ms = 1500) { const x = $('#toast'); x.textContent = msg; x.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => x.classList.remove('show'), ms); }
+function coach(msg, cls, ms = 1100) { const x = $('#coach'); x.textContent = msg; x.className = 'coach show ' + (cls || ''); clearTimeout(coachTimer); coachTimer = setTimeout(() => x.classList.remove('show'), ms); }
+function renderInfo() {
+  for (let i = 0; i < 2; i++) {
+    $('#name' + i).textContent = playerName(i);
+    if ($('#sw' + i).dataset.k !== playerKind(i)) { $('#sw' + i).innerHTML = iconSvg(i); $('#sw' + i).dataset.k = playerKind(i); }
+    $('#count' + i).textContent = S.scores[i];
+    const pl = $('#pl' + i);
+    pl.classList.toggle('active', !S.over && S.turn === i);
+    pl.classList.toggle('thinking', !S.over && S.turn === i && aiPending);
+    const last = S.log[S.log.length - 1];
+    const again = !S.over && last && last.k > 0 && last.pl === i && S.turn === i;
+    pl.classList.toggle('again', again && !aiPending);
+    $('#status' + i).textContent = (!S.over && S.turn === i) ? (aiPending ? t('thinking') : again ? t('again') : '') : '';
+  }
+  // box bar
+  const bar = $('#boxbar'), B = S.G.B;
+  if (bar.children.length !== B) { bar.innerHTML = ''; for (let i = 0; i < B; i++) bar.appendChild(document.createElement('i')); }
+  // order: player 0 boxes from the left, player 1 from the right
+  const c0 = S.scores[0], c1 = S.scores[1], neutral = S.owner.reduce((a, o) => a + (o === 2 ? 1 : 0), 0);
+  [...bar.children].forEach((x, i) => { x.className = i < c0 ? 'p0' : i >= B - c1 ? 'p1' : (i < c0 + neutral ? 'pn' : ''); });
+  $('#leftText').textContent = t('info.left', { b: B - S.p.filled, e: S.p.undrawn });
+  // eval line
+  const ev = $('#evLine');
+  if (settings.eval && lastEval && lastEval.exact && !S.over && viewPly === null && settings.mode !== 'pvp') ev.innerHTML = t('ev.exact', { a: shortName(0), b: shortName(1), x: '<b>' + lastEval.final[0] + '</b>', y: '<b>' + lastEval.final[1] + '</b>' });
+  else ev.textContent = '';
+  // move list
+  const k = $('#kifu'), L = SF.log, curI = viewPly === null ? L.length - 1 : viewPly;
+  k.classList.toggle('clickable', canReview());
+  if (!L.length) k.innerHTML = '<span class="empty">' + t('kifu.empty') + '</span>';
+  else {
+    k.innerHTML = L.map((x, i) => { const q = rvQuality(i); return `<span data-i="${i}" class="${i === curI ? 'cur' : ''}${q === 'bad' || q === 'dubious' ? ' q-' + q : ''}" title="${i + 1}"><i class="p${x.pl}"></i>${edgeName(x.e)}${x.k ? '<sup>+' + x.k + '</sup>' : ''}</span>`; }).join('');
+    if (viewPly === null) k.scrollTop = k.scrollHeight;
+    else { const c = k.children[curI]; if (c && (c.offsetTop < k.scrollTop || c.offsetTop > k.scrollTop + k.clientHeight - 20)) k.scrollTop = c.offsetTop - k.clientHeight / 2; }
+  }
+  $('#kifuCount').textContent = L.length ? '#' + L.length : '';
+  $('#btnAnalyze').disabled = !canReview() || !!(rv && rv.running);
+  $('#btnShare').disabled = !L.length || !!game.setup;
+  $('#btnUndo').disabled = !canUndo();
+  $('#btnHint').disabled = !canHumanMove() || settings.mode === 'watch';
+  $('#btnSound').classList.toggle('on', settings.sound);
+  $('#infoLine').textContent = game.n + '×' + game.n + ' · ' + (settings.mode === 'pvp' ? t('ng.pvp') : settings.mode === 'watch' ? t('ng.watch') : 'Lv.' + settings.level + ' ' + t('lv')[settings.level]);
+  svg.classList.toggle('can-move', canHumanMove());
+}
+
+// ====================================================================== game flow
+function refresh(anim) {
+  SF = compute(game);
+  if (viewPly !== null && (viewPly >= game.moves.length || viewPly < 0)) viewPly = null;
+  S = viewPly === null ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly), human: game.human, setup: game.setup });
+  renderBoard(anim); renderInfo(); renderReview(); renderGraph();
+}
+function applyMove(e, fromHuman) {
+  hintEdge = -1; badEdge = -1;
+  if (viewPly !== null) viewPly = null;
+  if (rv) { rvCancel(); rv = null; }
+  const prevTurn = S ? S.turn : 0;
+  game.moves.push(e);
+  refresh(true);
+  const last = S.log[S.log.length - 1];
+  playLine();
+  if (last.k) {
+    playBox(last.k);
+    const pl = $('#pl' + last.pl); pl.classList.remove('bump'); void pl.offsetWidth; pl.classList.add('bump');
+    if (!S.over && !lesson) coach(t('again'), 'p' + last.pl);
+  } else chainCount = 0;
+  save();
+  if (lesson) return;
+  if (puzzle) return;
+  next();
+}
+function next() {
+  renderInfo();
+  if (S.over) { setTimeout(showResult, 650); return; }
+  if (isAITurn()) aiTurn();
+}
+function aiTurn() {
+  const tok = ++busy;
+  aiPending = true; renderInfo();
+  const last = S.log[S.log.length - 1];
+  const delay = settings.mode === 'watch' || puzzle ? (last && last.k ? 300 : 480) : (last && last.k && last.pl === S.turn ? 260 : 420);
+  const t0 = performance.now();
+  const lv = puzzle ? 8 : levelFor(S.turn);
+  const before = { rem: S.G.B - S.p.filled, sc: S.scores.slice(), pl: S.turn };
+  askAI(lv).then(r => {
+    if (tok !== busy) return;
+    if (r.type === 'error' || r.move === undefined || r.move < 0 || S.p.drawn[r.move]) { aiPending = false; console.warn('AI failed', r); return; }
+    if (r.value !== undefined && r.value !== null && (r.exact || lv >= 5)) {
+      const v = Math.round(r.value), mine = before.sc[before.pl] + (before.rem + v) / 2, theirs = before.sc[1 - before.pl] + (before.rem - v) / 2;
+      if (Number.isInteger(mine)) { const fin = []; fin[before.pl] = mine; fin[1 - before.pl] = theirs; lastEval = { exact: r.exact, final: fin }; liveEv[game.moves.length] = { k: game.moves.join(','), v: fin[0] - fin[1] }; }
+    }
+    const wait = Math.max(0, delay - (performance.now() - t0));
+    setTimeout(() => {
+      if (tok !== busy) return;
+      aiPending = false;
+      applyMove(r.move, false);
+      if (puzzle) puzzleAfterMove();
+    }, wait);
+  });
+}
+function humanMove(e) {
+  ac();
+  if (lesson) return lessonAnswer(e);
+  if (puzzle) return puzzleHumanMove(e);
+  applyMove(e, true);
+}
+function canUndo() {
+  if (lesson || puzzle || settings.mode === 'watch' || !S) return false;
+  if (settings.mode === 'pvp') return game.moves.length > 0;
+  return S.log.some(x => x.pl === game.human);
+}
+function undo() {
+  if (!canUndo()) return;
+  busy++; cancelAI(); cancelAna();
+  hintEdge = -1; badEdge = -1; lastEval = null; viewPly = null; rvCancel(); rv = null;
+  if (settings.mode === 'pvp') game.moves.pop();
+  else {
+    S = compute(game);
+    while (S.log.length && S.log[S.log.length - 1].pl !== game.human) { game.moves.pop(); S.log.pop(); }
+    if (S.log.length) { game.moves.pop(); S.log.pop(); }
+  }
+  chainCount = 0;
+  refresh(false); save();
+  next();
+}
+function newGame() {
+  busy++; cancelAI(); cancelAna();
+  hintEdge = -1; badEdge = -1; lastEval = null; chainCount = 0; viewPly = null; rvCancel(); rv = null;
+  game = { n: settings.size, moves: [], human: settings.order === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.order, setup: null };
+  builtFor = '';
+  refresh(false); save();
+  next();
+}
+function showResult() {
+  if (!S.over || lesson || puzzle) return;
+  if (!rv && canReview()) setTimeout(() => { if (!rv && canReview() && SF.over) runReview(true); }, 300);
+  const [a, b] = S.scores;
+  let title, win = 0;
+  if (a === b) title = t('res.draw');
+  else {
+    const w = a > b ? 0 : 1;
+    if (settings.mode === 'ai') { title = w === game.human ? t('res.youWin') : t('res.aiWin'); win = w === game.human ? 1 : -1; }
+    else { title = t('res.pWin', { p: shortName(w) }); win = 1; }
+  }
+  $('#resultTitle').textContent = title;
+  $('#res0').textContent = a; $('#res1').textContent = b;
+  $('#resSw0').innerHTML = iconSvg(0); $('#resSw1').innerHTML = iconSvg(1);
+  $('#resultSub').textContent = settings.mode === 'ai' ? t('res.vs', { name: t('lv')[settings.level], lv: settings.level, n: game.n }) : t('res.pvp', { n: game.n });
+  playChime(win);
+  $('#resultOverlay').classList.add('show');
+}
+$('#btnReview').onclick = () => $('#resultOverlay').classList.remove('show');
+$('#btnResAnalyze').onclick = () => { $('#resultOverlay').classList.remove('show'); runReview(); };
+$('#btnAgain').onclick = () => { $('#resultOverlay').classList.remove('show'); openNew(); };
+$('#btnUndo').onclick = undo;
+// Ctrl+Z / Cmd+Z = undo (not while typing, not in lessons/puzzles; allowed over the result dialog only)
+document.addEventListener('keydown', ev => {
+  if (!(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.altKey || (ev.key !== 'z' && ev.key !== 'Z')) return;
+  const tg = ev.target, tag = tg && tg.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tg && tg.isContentEditable)) return;
+  if (lesson || puzzle) return;
+  const open = [...document.querySelectorAll('.overlay.show')].map(o => o.id);
+  if (open.some(id => id !== 'resultOverlay')) return;
+  ev.preventDefault();
+  if (!canUndo()) return;
+  $('#resultOverlay').classList.remove('show');
+  undo();
+});
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playLine(); };
+$('#btnHint').onclick = () => {
+  if (!canHumanMove()) return;
+  const tok = busy;
+  coach(t('hint.wait'), 'gold', 4000);
+  askAna('analyze', 1500).then(r => {
+    if (tok !== busy || !r.list || !r.list.length) return;
+    hintEdge = r.list[0].m; renderBoard(false);
+    const rem = S.G.B - S.p.filled, v = r.list[0].v, me = S.turn;
+    if (r.exact) { const a = S.scores[me] + (rem + v) / 2, b = S.scores[1 - me] + (rem - v) / 2; coach(t('hint.best', { a, b }), 'gold', 3200); }
+    else coach(t('hint.heur'), 'gold', 2400);
+  });
+};
+
+// ====================================================================== new-game dialog
+let draft = {};
+function segSync() {
+  document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
+  document.querySelectorAll('#segSize button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.size));
+  document.querySelectorAll('#segOrder button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.order));
+  const m = draft.mode, play = m === 'ai' || m === 'pvp' || m === 'watch';
+  $('#fSize').classList.toggle('hidden', !play);
+  $('#fOrder').classList.toggle('hidden', m !== 'ai');
+  $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
+  $('#fLevel2').classList.toggle('hidden', m !== 'watch');
+  $('#fDisplay').classList.toggle('hidden', !play);
+  $('#fLessonInfo').classList.toggle('hidden', m !== 'lesson');
+  $('#fPuzzleInfo').classList.toggle('hidden', m !== 'puzzle');
+  $('#levelLabel').textContent = t(m === 'watch' ? 'ng.levelA' : 'ng.level');
+  $('#levelRange').value = draft.level; $('#levelRange2').value = draft.level2;
+  $('#levelName').innerHTML = `Lv.${draft.level} ${t('lv')[draft.level]} <small>${t('lvd')[draft.level]}</small>`;
+  $('#levelName2').innerHTML = `Lv.${draft.level2} ${t('lv')[draft.level2]} <small>${t('lvd')[draft.level2]}</small>`;
+  $('#optEval').checked = draft.eval; $('#optAnim').checked = draft.anim;
+  $('#btnStart').textContent = m === 'lesson' ? t('ls.title') : m === 'puzzle' ? t('pz.title') : t('start');
+}
+function openNew() {
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, size: settings.size, order: settings.order, level: settings.level, level2: settings.level2, eval: settings.eval, anim: settings.anim };
+  segSync(); $('#newOverlay').classList.add('show');
+}
+document.querySelectorAll('#segMode button').forEach(b => b.onclick = () => { draft.mode = b.dataset.v; segSync(); });
+document.querySelectorAll('#segSize button').forEach(b => b.onclick = () => { draft.size = +b.dataset.v; segSync(); });
+document.querySelectorAll('#segOrder button').forEach(b => b.onclick = () => { draft.order = +b.dataset.v; segSync(); });
+$('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+$('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+$('#optEval').onchange = e => { draft.eval = e.target.checked; };
+$('#optAnim').onchange = e => { draft.anim = e.target.checked; };
+$('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
+$('#btnStart').onclick = () => {
+  $('#newOverlay').classList.remove('show'); ac();
+  if (draft.mode === 'lesson') { openLessons(); return; }
+  if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  endLesson(true); endPuzzle(true); savedGame = null;
+  Object.assign(settings, { mode: draft.mode, size: draft.size, order: draft.order, level: draft.level, level2: draft.level2, eval: draft.eval, anim: draft.anim });
+  newGame();
+};
+$('#btnNew').onclick = () => (lesson || puzzle) ? openNew() : rsOpen();
+
+// ====================================================================== shared helpers for lessons & puzzles
+function enterSetup(setup, n) {
+  busy++; cancelAI(); cancelAna();
+  if (!lesson && !puzzle && !savedGame) savedGame = { game, mode: settings.mode, rv, viewPly };
+  rvCancel(); viewPly = null;
+  hintEdge = -1; badEdge = -1; lastEval = null; chainCount = 0;
+  game = { n, moves: [], human: 0, setup };
+  builtFor = '';
+}
+function restoreGame() {
+  busy++; cancelAI(); cancelAna();
+  hintEdge = -1; badEdge = -1; lastEval = null;
+  if (savedGame) { game = savedGame.game; rv = savedGame.rv && !savedGame.rv.running ? savedGame.rv : null; viewPly = rv ? savedGame.viewPly : null; savedGame = null; }
+  builtFor = '';
+  refresh(false); next();
+}
+function finalFromValue(v) { const rem = S.G.B - S.p.filled; return [S.scores[0] + (rem + v) / 2, S.scores[1] + (rem - v) / 2]; }
+
+// ====================================================================== lessons
+let lessonData = null;
+const lessonsReady = fetch('lessons.json').then(r => r.json()).then(d => (lessonData = d)).catch(e => { console.warn(e); return null; });
+function lessonProgress() { try { return JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) { return {}; } }
+let introIdx = 0;
+function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+async function openLessons() {
+  await lessonsReady; selTab('lesson');
+  if (!lessonData) { toast(t('ls.fail')); return; }
+  const prog = lessonProgress();
+  $('#lessonList').innerHTML = lessonData.steps.map((s, i) => {
+    const pr = prog[i];
+    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('ls.s' + (i + 1) + '.t')}</b><small>${t('ls.s' + (i + 1) + '.d')}</small></span><span class="st ${pr >= 2 ? 'clear' : ''}">${pr === undefined ? t('ls.notyet') : pr >= 2 ? t('ls.clear') + ' ' + pr + '/3' : pr + '/3'}</span></button>`;
+  }).join('');
+  $('#lessonList').querySelectorAll('button').forEach(b => b.onclick = () => openIntro(+b.dataset.i));
+  showLessonView('lessonListView');
+  $('#lessonOverlay').classList.add('show');
+}
+function openIntro(i) {
+  introIdx = i;
+  $('#liStep').textContent = 'STEP ' + (i + 1);
+  $('#liTitle').textContent = t('ls.s' + (i + 1) + '.t');
+  $('#liBody').innerHTML = t('ls.s' + (i + 1) + '.body');
+  showLessonView('lessonIntroView');
+  $('#lessonOverlay').classList.add('show');
+}
+$('#btnLessonClose').onclick = () => $('#lessonOverlay').classList.remove('show');
+$('#btnLessonBack').onclick = () => openLessons();
+$('#btnLessonStart').onclick = () => { $('#lessonOverlay').classList.remove('show'); startLesson(introIdx); };
+$('#btnLessonQuit2').onclick = () => { $('#lessonOverlay').classList.remove('show'); endLesson(); };
+$('#btnLessonRetry').onclick = () => { $('#lessonOverlay').classList.remove('show'); startLesson(lesson ? lesson.i : introIdx); };
+$('#btnLessonNextStep').onclick = () => { const i = lesson ? lesson.i + 1 : 0; if (i < lessonData.steps.length) openIntro(i); else { $('#lessonOverlay').classList.remove('show'); endLesson(); } };
+function startLesson(i) {
+  endPuzzle(true);
+  enterSetup(null, 4);
+  lesson = { i, k: 0, results: [], answered: false };
+  document.body.classList.add('in-lesson');
+  loadLessonProblem();
+}
+function loadLessonProblem() {
+  const pr = lessonData.steps[lesson.i].problems[lesson.k];
+  lesson.pr = pr; lesson.answered = false; lesson.hinted = false;
+  hintEdge = -1; badEdge = -1; chainCount = 0;
+  game = { n: pr.n, moves: [], human: 0, setup: { edges: pr.edges, owners: pr.owners } };
+  builtFor = '';
+  refresh(false);
+  renderLessonCard();
+  $('#lsFb').innerHTML = '';
+}
+function renderLessonCard() {
+  const s = lesson.i + 1;
+  $('#lsStep').textContent = t('ls.stepq', { s, i: lesson.k + 1 });
+  $('#lsTitle').textContent = t('ls.s' + s + '.t');
+  $('#lsPrompt').textContent = t('ls.s' + s + '.q');
+  $('#lsDots').innerHTML = [0, 1, 2].map(j => `<i class="${lesson.results[j] === true ? 'ok' : lesson.results[j] === false ? 'ng' : ''} ${j === lesson.k ? 'cur' : ''}"></i>`).join('');
+  $('#lsNext').textContent = !lesson.answered ? t('ls.next') : lesson.k < 2 ? t('ls.next') : t('ls.result');
+  $('#lsNext').disabled = !lesson.answered;
+  $('#lsHint').disabled = lesson.answered;
+}
+function lessonAnswer(e) {
+  const pr = lesson.pr, vals = new Map(pr.values), v = vals.get(e), best = pr.values[0][1];
+  const ok = v === best;
+  lesson.answered = true; lesson.results[lesson.k] = ok;
+  applyMove(e, true);
+  const fin = finalFromValueAt(pr, v), fb = finalFromValueAt(pr, best);
+  if (!ok) { hintEdge = pr.best; badEdge = -1; renderBoard(false); playWrong(); }
+  else coach(t('ls.ok'), 'gold', 1200);
+  const s = lesson.i + 1;
+  $('#lsFb').innerHTML = `<b class="${ok ? 'ok' : 'ng'}">${t(ok ? 'ls.ok' : 'ls.ng')}</b> ${t('ls.outcome', { a: fin[0], b: fin[1] })}${ok ? '' : '<br>' + t('ls.bestIs', { a: fb[0], b: fb[1] })}<br>${t('ls.s' + s + '.tip')}`;
+  renderLessonCard();
+}
+function finalFromValueAt(pr, v) { const sc = [0, 0]; let filled = 0; pr.owners.forEach(o => { if (o >= 0) { sc[o]++; filled++; } }); const rem = pr.n * pr.n - filled; return [sc[0] + (rem + v) / 2, sc[1] + (rem - v) / 2]; }
+$('#lsHint').onclick = () => { if (!lesson || lesson.answered) return; lesson.hinted = true; $('#lsFb').innerHTML = t('ls.s' + (lesson.i + 1) + '.hint'); };
+$('#lsNext').onclick = () => {
+  if (!lesson || !lesson.answered) return;
+  if (lesson.k < 2) { lesson.k++; loadLessonProblem(); return; }
+  const n = lesson.results.filter(x => x).length;
+  const prog = lessonProgress(); prog[lesson.i] = Math.max(prog[lesson.i] || 0, n);
+  try { localStorage.setItem(LSTORE, JSON.stringify(prog)); } catch (e) {}
+  $('#ldTitle').textContent = n >= 2 ? t('ls.stepClear') : t('ls.almost');
+  $('#ldSub').innerHTML = t('ls.score', { n }) + (n >= 2 ? '' : t('ls.need'));
+  $('#btnLessonNextStep').classList.toggle('hidden', lesson.i + 1 >= lessonData.steps.length);
+  playChime(n >= 2 ? 1 : -1);
+  showLessonView('lessonDoneView'); $('#lessonOverlay').classList.add('show');
+};
+$('#lsQuit').onclick = () => endLesson();
+function endLesson(silent) {
+  if (!lesson) return;
+  lesson = null; document.body.classList.remove('in-lesson');
+  if (!silent) restoreGame();
+}
+
+// ====================================================================== puzzles
+let puzzleData = null;
+const puzzlesReady = fetch('puzzles.json').then(r => r.json()).then(d => (puzzleData = d)).catch(e => { console.warn(e); return null; });
+function puzzleProgress() { try { return JSON.parse(localStorage.getItem(PSTORE) || '{}'); } catch (e) { return {}; } }
+let pzLevelIdx = 0;
+async function openPuzzles() {
+  await puzzlesReady; selTab('puzzle');
+  if (!puzzleData) { toast(t('pz.fail2')); return; }
+  const prog = puzzleProgress();
+  const dl = dailyPick(), di = dailyInfo();
+  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.level', { n: dl.li + 1 })} · ${t('pz.lvdesc')[dl.li + 1]} · ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + puzzleData.levels.map((lv, i) => {
+    const solved = lv.puzzles.filter((_, k) => prog[i + '-' + k]).length;
+    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.level', { n: i + 1 })}</b><small>${t('pz.lvdesc')[i + 1]}</small></span><span class="st ${solved === lv.puzzles.length ? 'clear' : ''}">${t('pz.solvedCount', { n: solved, t: lv.puzzles.length })}</span></button>`;
+  }).join('');
+  $('#pzLevels').querySelectorAll('button').forEach(b => b.onclick = () => {
+    if (b.dataset.daily) { const d = dailyPick(); $('#puzzleOverlay').classList.remove('show'); startPuzzle(d.li, d.k, d.date); }
+    else openPzGrid(+b.dataset.i);
+  });
+  $('#pzListView').classList.remove('hidden'); $('#pzGridView').classList.add('hidden');
+  $('#puzzleOverlay').classList.add('show');
+}
+function openPzGrid(i) {
+  pzLevelIdx = i;
+  const prog = puzzleProgress();
+  $('#pzLevelTitle').textContent = t('pz.level', { n: i + 1 }) + ' · ' + t('pz.lvdesc')[i + 1];
+  $('#pzGrid').innerHTML = puzzleData.levels[i].puzzles.map((_, k) => `<button data-k="${k}" class="${prog[i + '-' + k] ? 'solved' : ''}">${k + 1}</button>`).join('');
+  $('#pzGrid').querySelectorAll('button').forEach(b => b.onclick = () => { $('#puzzleOverlay').classList.remove('show'); startPuzzle(i, +b.dataset.k); });
+  $('#pzListView').classList.add('hidden'); $('#pzGridView').classList.remove('hidden');
+}
+$('#pzClose').onclick = () => $('#puzzleOverlay').classList.remove('show');
+$('#pzBack').onclick = () => openPuzzles();
+function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+// switch tabs without the fade so the two lists feel like one screen
+function swapOverlay(from, to, open) {
+  const a = $(from), b = $(to);
+  a.classList.add('instant'); b.classList.add('instant');
+  a.classList.remove('show'); open();
+  requestAnimationFrame(() => requestAnimationFrame(() => { a.classList.remove('instant'); b.classList.remove('instant'); }));
+}
+document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) swapOverlay('#lessonOverlay', '#puzzleOverlay', openPuzzles);
+  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) swapOverlay('#puzzleOverlay', '#lessonOverlay', openLessons);
+}));
+$('#btnPuzzle').onclick = openPuzzles;
+$('#btnLesson').onclick = openLessons;
+function startPuzzle(li, k, daily) {
+  endLesson(true);
+  const pz = puzzleData.levels[li].puzzles[k];
+  enterSetup({ edges: pz.edges, owners: pz.owners }, pz.n);
+  puzzle = { li, k, pz, state: 'play', waiting: false, first: true, daily: daily || null, hint: false };
+  document.body.classList.add('in-puzzle');
+  refresh(false);
+  renderPuzzleCard(t('pz.start'));
+}
+function renderPuzzleCard(status) {
+  const P = puzzle;
+  $('#pzStep').textContent = (P.daily ? `★ ${t('daily.title')} ${P.daily.slice(5).replace('-', '/')} · ` : '') + t('pz.level', { n: P.li + 1 }) + ' · ' + t('pz.num', { k: P.k + 1 });
+  $('#pzTitle').textContent = t('pz.title');
+  $('#pzGoal').innerHTML = t('pz.goal', { a: P.pz.target[0], b: P.pz.target[1] });
+  if (status !== undefined) $('#pzStatus').innerHTML = status;
+  const lv = puzzleData.levels[P.li];
+  $('#pzNext').disabled = P.k + 1 >= lv.puzzles.length && P.li + 1 >= puzzleData.levels.length;
+}
+function puzzleFail(e, v, bestE) {
+  const P = puzzle; P.state = 'fail';
+  const fin = finalFromValue(v);
+  hintEdge = bestE; badEdge = e; renderBoard(false); playWrong();
+  renderPuzzleCard(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: edgeName(e), a: fin[0], b: fin[1] })}`);
+}
+async function puzzleHumanMove(e) {
+  const P = puzzle; if (P.state !== 'play' || P.waiting) return;
+  let v, best, bestE;
+  if (P.first) { const vals = new Map(P.pz.values); v = vals.get(e); best = P.pz.values[0][1]; bestE = P.pz.best; }
+  else {
+    P.waiting = true; renderInfo();
+    const tok = busy;
+    const r = await askAna('solve', 8000);
+    if (tok !== busy || puzzle !== P) return;
+    P.waiting = false;
+    if (!r.list) { v = 0; best = 0; }
+    else { const m = new Map(r.list.map(x => [x.m, x.v])); v = m.get(e); best = Math.max(...r.list.map(x => x.v)); bestE = r.list.find(x => x.v === best).m; }
+  }
+  if (v < best) { puzzleFail(e, v, bestE); return; }
+  P.first = false;
+  applyMove(e, true);
+  if (S.over) return puzzleDone();
+  renderPuzzleCard(`<b class="ok">${t('pz.good')}</b>`);
+  puzzleAfterMove();
+}
+function puzzleAfterMove() {
+  const P = puzzle; if (!P) return;
+  if (S.over) return puzzleDone();
+  if (P.state === 'answer') return answerStep();
+  if (S.turn === 1) { renderPuzzleCard(t('pz.opp')); aiTurn(); }
+  else if (!P.first) renderPuzzleCard(`<b class="ok">${t('pz.good')}</b> ${t('yourTurn')}`);
+}
+function puzzleDone() {
+  const P = puzzle; if (!P) return;
+  if (P.state === 'answer') { renderPuzzleCard(t('pz.answerDone') + '<br>' + t('pz.final', { a: S.scores[0], b: S.scores[1] })); P.state = 'done'; return; }
+  P.state = 'solved';
+  const prog = puzzleProgress(); prog[P.li + '-' + P.k] = 1;
+  try { localStorage.setItem(PSTORE, JSON.stringify(prog)); } catch (e) {}
+  if (P.daily) dailySolved(P.daily, P.hint);
+  playChime(1); coach(t('pz.solved'), 'gold', 1800);
+  renderPuzzleCard(`<b class="ok">${t('pz.solved')}</b> ${t('pz.final', { a: S.scores[0], b: S.scores[1] })}` + (P.daily ? `<br>★ ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
+}
+function answerStep() {
+  const P = puzzle; if (!P || P.state !== 'answer') return;
+  if (S.over) return puzzleDone();
+  const tok = busy;
+  if (game.moves.length === 0) { setTimeout(() => { if (tok !== busy) return; applyMove(P.pz.best, true); answerStep(); }, 500); return; }
+  aiPending = true; renderInfo();
+  askAI(8).then(r => { if (tok !== busy) return; setTimeout(() => { if (tok !== busy) return; aiPending = false; applyMove(r.move, true); answerStep(); }, 420); });
+}
+$('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hint; startPuzzle(puzzle.li, puzzle.k, puzzle.daily); puzzle.hint = h; } };
+$('#pzAnswer').onclick = () => {
+  if (!puzzle) return;
+  const P = puzzle; startPuzzle(P.li, P.k, P.daily); puzzle.state = 'answer'; puzzle.hint = true;
+  hintEdge = puzzle.pz.best; renderBoard(false);
+  renderPuzzleCard(t('pz.showing')); answerStep();
+};
+$('#pzHint').onclick = () => { if (!puzzle) return; puzzle.hint = true; renderPuzzleCard(t('pz.hintText', { t: t('tag.' + puzzle.pz.tag) })); };
+$('#pzNext').onclick = () => {
+  if (!puzzle) return; const P = puzzle, lv = puzzleData.levels[P.li];
+  if (P.k + 1 < lv.puzzles.length) startPuzzle(P.li, P.k + 1);
+  else if (P.li + 1 < puzzleData.levels.length) startPuzzle(P.li + 1, 0);
+};
+$('#pzQuit').onclick = () => endPuzzle();
+function endPuzzle(silent) {
+  if (!puzzle) return;
+  puzzle = null; document.body.classList.remove('in-puzzle');
+  if (!silent) restoreGame();
+}
+
+// ====================================================================== post-game review
+let rv = null;        // { key, n, items[], mover[], sc[][], done, total, running, ws[] }
+let rvOpen = true;
+const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
+function canReview() { return !lesson && !puzzle && !!SF && game.moves.length > 0 && !game.setup && (SF.over || settings.mode === 'pvp'); }
+function rvCancel() { if (rv && rv.running) { rv.ws.forEach(w => w.terminate()); rv = null; } }
+function rvOnce(w, n, edges, played, ms) {
+  return new Promise(resolve => {
+    const id = ++jobId;
+    w.onmessage = ev => { const m = ev.data; if (m.id !== id) return; resolve(m.type === 'review' ? m.r : { skip: true }); };
+    w.postMessage({ type: 'review', id, R: n, C: n, edges, played, ms });
+  });
+}
+async function runReview(silent) {
+  if (!canReview()) return;
+  rvCancel(); busy++; cancelAI(); cancelAna();
+  const moves = game.moves.slice(), n = game.n, G = E.geom(n, n), p = new E.Pos(G);
+  const items = new Array(moves.length).fill(null), mover = [], sc = [], todo = [];
+  let turn = 0; const score = [0, 0];
+  for (let i = 0; i < moves.length; i++) {
+    mover.push(turn); sc.push(score.slice());
+    const cap = p.hasCapture() ? E.captureMoves(p) : null;
+    if (p.undrawn > 1 && !(cap && cap.forced !== undefined)) todo.push(i); else items[i] = { skip: true };
+    const k = p.play(moves[i]); score[turn] += k; if (!k) turn ^= 1;
+  }
+  todo.reverse();   // the end first: its exact results warm the solver's table for earlier positions
+  const ms = n === 3 ? 1500 : n === 4 ? 600 : 750;   // a cap: late positions are solved in a few ms
+  const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(makeWorker(() => {}));
+  const run = rv = { key: moves.join(','), n, items, mover, sc, done: 0, total: todo.length, running: true, ws };
+  if (!silent) rvOpen = true; renderReview(); renderInfo();
+  let nx = 0;
+  const loop = async w => {
+    while (nx < todo.length && rv === run) {
+      const i = todo[nx++];
+      const r = await rvOnce(w, n, moves.slice(0, i), moves[i], ms);
+      if (rv !== run) return;
+      items[i] = r; run.done++;
+      renderReview(); renderGraph();
+    }
+  };
+  await Promise.all(ws.map(loop));
+  if (rv !== run) return;
+  ws.forEach(w => w.terminate()); run.ws = []; run.running = false;
+  renderInfo(); renderReview();
+  if (viewPly !== null) renderBoard(false);
+  renderGraph();
+  if (!silent) toast(t('rv.done'), 1200);
+}
+// grade of move i: loss in boxes versus the best move; exact results: 1 box = inaccuracy, 2+ or a changed result = mistake
+function rvJudge(i) {
+  if (!rv || rv.key !== game.moves.join(',') && !game.moves.join(',').startsWith(rv.key)) return null;
+  const it = rv.items[i]; if (!it || it.skip) return null;
+  const played = game.moves[i];
+  if (!it.exact && it.quiet) return { loss: 0, q: played === it.bestMove ? 'best' : 'good', exact: false, it };
+  const loss = Math.max(0, (it.best - it.played) / 2);
+  let q;
+  if (it.exact) {
+    const me = rv.mover[i], diff = rv.sc[i][me] - rv.sc[i][1 - me];
+    const res = v => Math.sign(diff + v);
+    q = loss < 0.5 ? 'best' : (loss >= 2 || res(it.played) < res(it.best)) ? 'bad' : 'dubious';
+  } else q = loss < 1 ? (played === it.bestMove ? 'best' : 'good') : loss < 2 ? 'good' : loss < 4 ? 'dubious' : 'bad';
+  return { loss, q, exact: it.exact, it };
+}
+function rvQuality(i) { const j = rv && !rv.running ? rvJudge(i) : null; return j ? j.q : null; }
+const fmtLoss = j => Math.round(j.loss * 10) / 10, approxMark = j => j.exact ? '' : '≈';
+function renderReview() {
+  const card = $('#reviewCard');
+  const hasRv = !!rv && rv.key === game.moves.join(',');
+  const show = !lesson && !puzzle && ((rvOpen && hasRv) || viewPly !== null);
+  card.classList.toggle('show', show);
+  document.body.classList.toggle('reviewing', show);
+  card.classList.toggle('slim', !hasRv);
+  $('#rvView').classList.toggle('hidden', !show || viewPly === null);
+  if (!show) return;
+  let html = '';
+  if (!hasRv) html = `<div class="rv-note" style="margin-top:0">${t('rv.btn.title')}</div>`;
+  else if (rv.running) {
+    html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rv.done, b: rv.total })}</div><div class="rv-prog"><i style="width:${rv.total ? rv.done / rv.total * 100 : 0}%"></i></div>`;
+  } else {
+    const st = [0, 1].map(() => ({ n: 0, ok: 0, loss: 0, c: { best: 0, good: 0, dubious: 0, bad: 0 } }));
+    const bad = []; let approx = false;
+    for (let i = 0; i < game.moves.length; i++) {
+      const j = rvJudge(i); if (!j) continue;
+      const s = st[rv.mover[i]]; s.n++; s.loss += j.loss; if (j.q === 'best') s.ok++; s.c[j.q]++;
+      if (!j.exact) approx = true;
+      if (j.q === 'bad' || j.q === 'dubious') bad.push({ i, j });
+    }
+    const row = c => { const s = st[c]; return `<span class="who"><i class="p${c}"></i>${shortName(c)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: s.n ? (s.loss / s.n).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best" title="${t('q.best')}">${s.c.best}</span><span class="good" title="${t('q.good')}">${s.c.good}</span><span class="dubious" title="${t('q.dubious')}">${s.c.dubious}</span><span class="bad" title="${t('q.bad')}">${s.c.bad}</span></span>`; };
+    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
+    bad.sort((a, b) => b.j.loss - a.j.loss);
+    if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i}" class="${viewPly === x.i ? 'cur' : ''}"><span class="tag ${x.j.q}">${t('q.' + x.j.q)}</span><span class="mv">${x.i + 1}. <i class="p${rv.mover[x.i]}"></i>${edgeName(game.moves[x.i])} → ${edgeName(x.j.it.bestMove)}</span><span class="ls">${approxMark(x.j)}−${fmtLoss(x.j)}</span></button>`).join('')}</div>`;
+    else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
+    html += `<div class="rv-note">${t('rv.note')}${approx ? ' ' + t('rv.approx') : ''}</div>`;
+  }
+  $('#rvBody').innerHTML = html;
+  if (viewPly !== null) {
+    const i = viewPly, L = SF.log[i], j = !hasRv || rv.running ? null : rvJudge(i);
+    let txt = `${t('rv.viewing', { n: i + 1 })} · ${shortName(L.pl)} ${edgeName(L.e)}`;
+    if (j) txt += ` <b class="${j.q}">${t('q.' + j.q)}</b>` + (j.loss >= 0.5 ? ' ' + approxMark(j) + t('q.loss', { l: fmtLoss(j), m: edgeName(j.it.bestMove) }) : '');
+    else if (hasRv && rv.items[i] && rv.items[i].skip) txt += ` · ${t('rv.forced')}`;
+    $('#rvText').innerHTML = txt;
+    $('#rvPrev').disabled = i <= 0; $('#rvNext').disabled = false;
+  }
+}
+// the played move (red/amber/green) and the best line, numbered, on the board
+function drawReviewOverlay() {
+  const i = viewPly; if (i === null || i >= game.moves.length) return;
+  const j = rv && !rv.running ? rvJudge(i) : null, played = game.moves[i];
+  const [x1, y1, x2, y2] = edgeXY(played);
+  el('line', { x1, y1, x2, y2, class: 'playline ' + (!j || j.q === 'best' || j.q === 'good' ? 'ok' : j.q) }, gFx);
+  if (!j || j.loss < 0.5 || !j.it.line) return;
+  const G = S.G, q = S.p.clone(); let turn = S.turn;
+  const labels = [];
+  j.it.line.slice(0, 8).forEach((e, k) => {
+    if (q.drawn[e]) return;
+    const [a1, b1, a2, b2] = edgeXY(e);
+    el('line', { x1: a1, y1: b1, x2: a2, y2: b2, class: 'bestline p' + turn }, gFx);
+    labels.push([(a1 + a2) / 2, (b1 + b2) / 2, k + 1, turn]);
+    if (!q.play(e)) turn ^= 1;
+  });
+  for (const [x, y, k, pl] of labels) {
+    const g = el('g', { class: 'bl-num p' + pl + (k === 1 ? ' first' : '') }, gFx);
+    el('circle', { cx: x, cy: y, r: 14 }, g);
+    const tx = el('text', { x, y: y + 1 }, g); tx.textContent = k;
+  }
+}
+function viewAt(i) {
+  if (!canReview()) return;
+  hintEdge = -1; badEdge = -1;
+  viewPly = i === null || i >= game.moves.length ? null : Math.max(0, i);
+  refresh(false);
+}
+$('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#kifu').addEventListener('click', e => { const b = e.target.closest('span[data-i]'); if (b && canReview()) viewAt(+b.dataset.i); });
+$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); viewPly = null; refresh(false); };
+$('#rvPrev').onclick = () => { if (viewPly !== null) viewAt(viewPly - 1); };
+$('#rvNext').onclick = () => { if (viewPly !== null) viewAt(viewPly + 1); };
+$('#rvLive').onclick = () => viewAt(null);
+$('#btnAnalyze').onclick = () => { if (rv && !rv.running && rv.key === game.moves.join(',')) { rvOpen = true; viewAt(viewPly === null ? 0 : viewPly); return; } runReview(); };
+// evaluation graph (predicted final margin, first player up) + record navigation with ← → ↑ ↓ / Space
+function scoreDiffs() {
+  const G = E.geom(game.n, game.n), p = new E.Pos(G), out = [0]; let turn = 0, d = 0;
+  for (const e of game.moves) { const k = p.play(e); d += turn === 0 ? k : -k; if (!k) turn ^= 1; out.push(d); }
+  return out;
+}
+function evalAt(k) {
+  const N = game.moves.length;
+  if (k === N && SF && SF.over) return SF.scores[0] - SF.scores[1];
+  if (rv && rv.key === game.moves.join(',')) {
+    const it = rv.items[k];
+    if (it && !it.skip && Number.isFinite(it.best)) { const sc = rv.sc[k]; return sc[0] - sc[1] + (rv.mover[k] === 0 ? it.best : -it.best); }
+  }
+  const L = liveEv[k];
+  if (L && L.k === game.moves.slice(0, k).join(',')) return L.v;
+  return null;
+}
+function curPly() { return viewPly === null ? game.moves.length : viewPly; }
+function renderGraph() {
+  const svg = $('#graph'); if (!svg || !SF) return;
+  const N = game.moves.length, B = game.n * game.n, W = 300, H = 74, n = Math.max(N + 1, 2 * game.n * (game.n + 1) + 1);
+  const y = v => H / 2 - Math.max(-1, Math.min(1, v / B)) * (H / 2 - 4), x = i => i / (n - 1) * W;
+  const sd = scoreDiffs();
+  const ev = []; let last = null, any = false;
+  for (let i = 0; i <= N; i++) { const v = evalAt(i); if (v != null) { any = true; last = v; } ev.push(v != null ? v : last); }
+  const pts = ev.map((v, i) => [x(i), y(v == null ? sd[i] : v)]);
+  const path = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L');
+  const area = path + `L${pts[pts.length - 1][0].toFixed(1)},${H / 2}L0,${H / 2}Z`;
+  const sdp = 'M' + sd.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1)).join('L');
+  const cx = x(curPly());
+  svg.innerHTML = `<defs><clipPath id="ctop"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath><clipPath id="cbot"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath></defs>
+    <path d="${area}" fill="var(--p0)" fill-opacity=".38" clip-path="url(#ctop)"/>
+    <path d="${area}" fill="var(--p1)" fill-opacity=".38" clip-path="url(#cbot)"/>
+    <line class="zero" vector-effect="non-scaling-stroke" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
+    ${any ? `<path d="${sdp}" fill="none" stroke="rgba(233,226,200,.35)" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>` : ''}
+    <path d="${path}" fill="none" stroke="rgba(240,230,200,.9)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
+    <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
+  const ok = canReview(), c = curPly();
+  $('#navBar').querySelectorAll('button').forEach(b => { const d = b.dataset.n; b.disabled = !ok || ((d === 'first' || d === 'prev') && c <= 0) || ((d === 'last' || d === 'next') && c >= N); });
+  if (!ok) stopPlay();
+}
+let playTimer = 0;
+function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
+function navGo(what) {
+  if (lesson || puzzle || !canReview()) return;
+  const N = game.moves.length, cur = curPly();
+  if (what === 'play') {
+    if (playTimer) { stopPlay(); return; }
+    if (cur >= N) viewAt(0);
+    $('#navPlay').classList.add('playing');
+    playTimer = setInterval(() => { if (lesson || puzzle || !canReview() || curPly() >= game.moves.length) { stopPlay(); return; } viewAt(curPly() + 1); }, 700);
+    return;
+  }
+  stopPlay();
+  const to = what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? cur - 1 : cur + 1;
+  if (to < 0 || to > N || to === cur) return;
+  viewAt(to >= N ? null : to);
+}
+$('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
+(() => {
+  const g = $('#graph'); let dragging = false;
+  const go = cx => { if (!canReview()) return; const r = g.getBoundingClientRect(), N = game.moves.length, n = Math.max(N + 1, 2 * game.n * (game.n + 1) + 1); const i = Math.max(0, Math.min(N, Math.round((cx - r.left) / r.width * (n - 1)))); if (i !== curPly()) { stopPlay(); viewAt(i >= N ? null : i); } };
+  g.addEventListener('pointerdown', e => { dragging = true; g.setPointerCapture(e.pointerId); go(e.clientX); });
+  g.addEventListener('pointermove', e => { if (dragging) go(e.clientX); });
+  g.addEventListener('pointerup', () => { dragging = false; });
+  g.addEventListener('pointercancel', () => { dragging = false; });
+})();
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
+  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  if (e.key === 'Escape' && viewPly !== null) { stopPlay(); viewAt(null); return; }
+  const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
+  if (!k || !canReview()) return;
+  e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+  navGo(k);
+});
+
+// ====================================================================== share / load games by URL
+// #k=<one character per edge>&s=<board size>&n=<ply to show>
+const K64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const encMoves = ms => ms.map(e => K64[e]).join('');
+function decodeGame(k, sz) {
+  k = (k || '').trim();
+  const idx = [...k].map(c => K64.indexOf(c));
+  const bad0 = idx.findIndex(x => x < 0);
+  if (bad0 >= 0) return { ok: false, at: bad0 + 1 };
+  let n = +sz;
+  if (![3, 4, 5].includes(n)) { const mx = Math.max(-1, ...idx); n = [3, 4, 5].find(m => E.geom(m, m).E > mx && (m === game.n || E.geom(m, m).E > mx)) || 5; if (E.geom(game.n, game.n).E > mx) n = game.n; }
+  const G = E.geom(n, n), seen = new Uint8Array(G.E);
+  for (let i = 0; i < idx.length; i++) { const e = idx[i]; if (e >= G.E || seen[e]) return { ok: false, at: i + 1 }; seen[e] = 1; }
+  return { ok: true, n, moves: idx };
+}
+function openLoaded(d, ply) {
+  busy++; cancelAI(); cancelAna(); rvCancel(); rv = null;
+  endLesson(true); endPuzzle(true); savedGame = null;
+  ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(s => $(s).classList.remove('show'));
+  settings.mode = 'pvp'; settings.size = d.n;
+  hintEdge = -1; badEdge = -1; lastEval = null; chainCount = 0;
+  game = { n: d.n, moves: d.moves.slice(), human: 0, setup: null };
+  builtFor = '';
+  viewPly = ply !== undefined && !isNaN(ply) && ply >= 0 && ply < d.moves.length ? ply : null;
+  refresh(false); save();
+  toast(t('paste.loaded', { n: d.moves.length }), 1800);
+}
+function loadFromHash() {
+  const h = location.hash.slice(1); if (!h) return false;
+  const q = new URLSearchParams(h), k = q.get('k'); if (k === null) return false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  const d = decodeGame(k, q.get('s'));
+  if (!d.ok) { toast(t('paste.bad', { n: d.at }), 2500); return false; }
+  openLoaded(d, q.has('n') ? +q.get('n') : undefined);
+  return true;
+}
+window.addEventListener('hashchange', loadFromHash);
+$('#btnShare').onclick = async () => {
+  if (!game.moves.length || game.setup) return;
+  const url = location.origin + location.pathname + '#k=' + encMoves(game.moves) + '&s=' + game.n + (viewPly !== null ? '&n=' + viewPly : '');
+  try {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: 'Dots & Boxes', url }); return; }
+    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
+  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
+};
+$('#btnPaste').onclick = () => { $('#pasteText').value = ''; $('#pasteOverlay').classList.add('show'); setTimeout(() => $('#pasteText').focus(), 50); };
+$('#pasteCancel').onclick = () => $('#pasteOverlay').classList.remove('show');
+$('#pasteOk').onclick = () => {
+  let v = $('#pasteText').value.trim(), sz = null, ply;
+  const m = v.match(/#(.*)$/) || (/(^|&)k=/.test(v) ? [null, v] : null);
+  if (m) { const q = new URLSearchParams(m[1]); v = q.get('k') || ''; sz = q.get('s'); if (q.has('n')) ply = +q.get('n'); }
+  const d = decodeGame(v, sz);
+  if (!d.ok || !d.moves.length) { toast(d.ok ? t('nokifu') : t('paste.bad', { n: d.at }), 2500); return; }
+  openLoaded(d, ply);
+};
+
+// ====================================================================== daily puzzle
+const DAILY_STORE = 'dots-daily-v1';
+let daily = { last: '', streak: 0, best: 0, days: {} };
+try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+// Mon–Tue 3×3, Wed–Thu 4×4, Fri–Sun 5×5; the first day of each pair takes the easier half of the set, Sunday the hardest third
+function dailyPick() {
+  if (!puzzleData || puzzleData.levels.length < 3) return null;
+  const now = new Date(), date = ymd(now);
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
+  const wd = (now.getDay() + 6) % 7;   // Mon = 0 … Sun = 6
+  const li = wd <= 1 ? 0 : wd <= 3 ? 1 : 2;
+  const cnt = puzzleData.levels[li].puzzles.length, half = Math.ceil(cnt / 2);
+  const [lo, hi] = wd === 6 ? [Math.floor(cnt * 2 / 3), cnt] : wd % 2 === 0 ? [0, half] : [half - 1, cnt];
+  let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15;
+  return { date, li, k: lo + h % (hi - lo), wd };
+}
+function dailyInfo() {
+  const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
+  const alive = daily.last === today || daily.last === ymd(y);
+  return { streak: alive ? daily.streak : 0, best: daily.best || 0, today: !!daily.days[today] };
+}
+function dailySolved(date, hinted) {
+  if (daily.days[date]) return;
+  const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
+  daily.streak = daily.last === ymd(y) ? daily.streak + 1 : 1;
+  daily.last = date; daily.best = Math.max(daily.best || 0, daily.streak); daily.days[date] = hinted ? 'h' : 1;
+  try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
+}
+
+// clicking the dimmed area outside a dialog does the same as its close button
+function dismissOverlay(o) {
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose' };
+  if (o.id === 'lessonOverlay') { const done = $('#lessonDoneView'); if (done && !done.classList.contains('hidden')) $('#btnLessonQuit2').click(); else $('#btnLessonClose').click(); return; }
+  const b = OUTSIDE[o.id] && $(OUTSIDE[o.id]);
+  if (b) b.click(); else o.classList.remove('show');
+}
+document.querySelectorAll('.overlay').forEach(o => {
+  let down = false;
+  o.addEventListener('pointerdown', e => { down = e.target === o; });
+  o.addEventListener('click', e => { if (e.target !== o || !down) return; down = false; dismissOverlay(o); });
+});
+// the game title in the header: back to the board from lessons, puzzles and dialogs
+function backToBoard() {
+  document.querySelectorAll('.overlay.show').forEach(o => dismissOverlay(o));
+  if (lesson) endLesson();
+  if (puzzle) endPuzzle();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+(() => {
+  const h = document.querySelector('.brand h1.to-board'); if (!h) return;
+  h.addEventListener('click', backToBoard);
+  h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); backToBoard(); } });
+})();
+// ====================================================================== boot
+const hadSave = load();
+if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
+try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
+{ const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
+applyI18n();
+$('#langSel').onchange = e => {
+  LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
+  try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
+  renderBoard(false); renderInfo(); renderReview();
+  if ($('#newOverlay').classList.contains('show')) segSync();
+  if (lesson) { renderLessonCard(); $('#lsFb').innerHTML = ''; }
+  if (puzzle) renderPuzzleCard(t('pz.start'));
+  if ($('#lessonOverlay').classList.contains('show') && !$('#lessonListView').classList.contains('hidden')) openLessons();
+  if ($('#lessonOverlay').classList.contains('show') && !$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx);
+  if ($('#puzzleOverlay').classList.contains('show')) openPuzzles();
+};
+refresh(false);
+if (loadFromHash()) { /* a shared game opens in 2-player mode */ }
+else if (hadSave && game.moves.length && !S.over) { toast(t('saved'), 1400); next(); }
+else if (hadSave && game.moves.length) { /* finished game: just show it */ }
+else openNew();
+
+// "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
+function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && S && !S.over; }
+function rsViewing() { return !lesson && !puzzle && viewPly !== null && S && !S.over; }
+function rsOpen() {
+  if (!rsInProgress() && !rsViewing()) { openNew(); return; }
+  document.querySelector('#rsText').textContent = rsViewing() ? t('rs.viewing', { n: game.moves.length }) : t('rs.playing', { n: game.moves.length });
+  document.querySelector('#resumeOverlay').classList.add('show');
+}
+document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
+document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
+</script>
+</body>
+</html>
