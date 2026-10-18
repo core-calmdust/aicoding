@@ -951,6 +951,7 @@ $('#btnStart').onclick = () => {
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, rules: draft.rules, seeds: draft.seeds,
     eval: $('#optEval').checked, anim: $('#optAnim').checked, coach: $('#optCoach').checked, preview: $('#optPreview').checked });
+  applyBg();
   newGame();
 };
 
@@ -1502,12 +1503,16 @@ $('#rsRestart').onclick = () => { $('#resumeOverlay').classList.remove('show'); 
 $('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
 
 // ====================================================================== boot
+// animated background: off with the animation setting, paused while the tab is hidden
+function applyBg() { document.body.classList.toggle('no-bganim', !settings.anim); }
+document.addEventListener('visibilitychange', () => { const b = document.getElementById('bgfx'); if (b) b.classList.toggle('paused', document.hidden); });
 buildBoard();
 const hadSave = load();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 try { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (_) {} } } catch (e) {}
 applyI18n();
+applyBg();
 if (!P.length) recompute();
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();

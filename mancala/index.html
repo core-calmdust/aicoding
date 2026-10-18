@@ -559,9 +559,25 @@ body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparen
 .rulecard b{font-size:17px!important}
 .rulecard small{font-size:14px!important;line-height:1.55!important}
 .rulecard .lvl{font-size:11.5px}
+/* drifting pale-gold light behind everything (transform / opacity only) */
+#bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
+#bgfx i{position:absolute;display:block;will-change:transform,opacity}
+#bgfx .glow{width:70vmax;height:70vmax;border-radius:50%;background:radial-gradient(circle,rgba(232,200,128,.11) 0%,rgba(232,200,128,.045) 32%,rgba(232,200,128,0) 62%)}
+#bgfx .g1{left:-20vmax;top:-28vmax;animation:bgA 34s ease-in-out infinite alternate}
+#bgfx .g2{right:-26vmax;top:10vh;width:60vmax;height:60vmax;animation:bgB 27s ease-in-out infinite alternate;opacity:.8}
+#bgfx .g3{left:20vw;bottom:-36vmax;width:80vmax;height:80vmax;animation:bgC 39s ease-in-out infinite alternate;opacity:.7}
+#bgfx .sheen{left:-50%;top:-50%;width:200%;height:200%;background:linear-gradient(115deg,rgba(255,230,170,0) 44%,rgba(255,230,170,.028) 50%,rgba(255,230,170,0) 56%);animation:bgS 23s ease-in-out infinite alternate}
+@keyframes bgA{0%{transform:translate(0,0) scale(1);opacity:.75}50%{opacity:1}100%{transform:translate(18vw,12vh) scale(1.15);opacity:.8}}
+@keyframes bgB{0%{transform:translate(0,0) scale(1.05);opacity:.6}100%{transform:translate(-16vw,22vh) scale(.92);opacity:.95}}
+@keyframes bgC{0%{transform:translate(0,0) scale(1);opacity:.55}100%{transform:translate(-12vw,-14vh) scale(1.12);opacity:.85}}
+@keyframes bgS{0%{transform:translate(-12%,-6%) rotate(0deg)}100%{transform:translate(12%,6%) rotate(4deg)}}
+#bgfx.paused i{animation-play-state:paused}
+body.no-bganim #bgfx{display:none}
+@media (prefers-reduced-motion: reduce){#bgfx{display:none}}
 </style>
 </head>
 <body>
+<div id="bgfx" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="glow g3"></i><i class="sheen"></i></div>
 <div class="app">
   <div class="board-area">
     <div class="plate" id="plateTop"><div class="pdisc" id="discTop"></div><div class="pname" id="nameTop"></div><div class="pstat" id="statTop"></div><div class="pscore" id="scoreTop">0</div></div>
