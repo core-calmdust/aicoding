@@ -3,7 +3,7 @@ const fs = require('fs'), { spawn } = require('child_process');
 const recs = [], results = [];
 for (const f of process.argv[2].split(',')) for (const l of fs.readFileSync(f, 'utf8').split('\n')) { if (!l) continue; const r = JSON.parse(l); if (r.result) results.push(r); else recs.push(r); }
 const max = +process.argv[3] || recs.length;
-const sel = recs.slice(0, max);
+const sel = recs.filter(r => !(process.env.SKIPBOOK && r.book)).slice(0, max);
 const o = spawn(__dirname + '/oracle', ['26'], { env: Object.assign({}, process.env, { TTSEED: '/home/claude/work/ckpt/dots4/root/tt_root.bin' }) });
 let buf = '', i = 0; const out = [];
 o.stdout.on('data', d => {

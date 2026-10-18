@@ -8,6 +8,7 @@ cp $C/progress.md $W/dots4/
 cp $C/root/root_*.txt $C/root/solver.log $W/dots4/root/ 2>/dev/null || true
 for f in $C/book/book_*.txt; do [ -f "$f" ] && gzip -c "$f" > $W/dots4/book/$(basename $f).gz; done
 cp $C/book/*.done $C/book/run_*.out $W/dots4/book/ 2>/dev/null || true
+mkdir -p $W/dots4/tests; for f in $C/tests/*; do case $f in *.jsonl) gzip -c $f > $W/dots4/tests/$(basename $f).gz;; *) cp $f $W/dots4/tests/;; esac; done; cp $C/verify*.log $W/dots4/ 2>/dev/null || true
 cd $W
 git rev-parse --abbrev-ref HEAD | grep -qx wip-ai-data
 git add dots4
