@@ -873,50 +873,52 @@ class AudioHandler {
                 this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now);
                 setTimeout(() => this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now + 0.15), 150);
                 break;
-            case 'bossWarning': { // 巨大戦艦が迫る重い警報（低い和音のブザー＋残響＋重低音＋最後の衝撃音）
-                const c = this.ctx, out = this.masterGain, P = 4, GAP = 0.78, T = P * GAP + 0.9;
-                // 残響（フィードバックディレイ）
-                const dl = c.createDelay(1); dl.delayTime.value = 0.21;
-                const fb = c.createGain(); fb.gain.value = 0.42;
-                const wet = c.createGain(); wet.gain.value = 0.5;
+            case 'bossWarning': { // 外伝風: 甲高く速い2音の警報を連打＋うねる低音ドローン＋最後の衝撃音
+                const c = this.ctx, out = this.masterGain, BURSTS = 3, BLEN = 0.96, T = BURSTS * BLEN + 0.9;
+                const dl = c.createDelay(1); dl.delayTime.value = 0.12;
+                const fb = c.createGain(); fb.gain.value = 0.35;
+                const wet = c.createGain(); wet.gain.value = 0.35;
                 dl.connect(fb).connect(dl); dl.connect(wet).connect(out);
-                const bus = c.createGain(); bus.gain.value = 1;
-                bus.connect(out); bus.connect(dl);
-                // 低い和音のブザー（くぐもった音がパルスごとに開く）
-                const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 6;
+                const bus = c.createGain(); bus.connect(out); bus.connect(dl);
+                // 甲高い2音の警報（ピーポーを速く刻む）。バーストごとに少し音程が上がる
+                const hp = c.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 1400; hp.Q.value = 0.8;
                 const ag = c.createGain(); ag.gain.value = 0;
-                lp.connect(ag).connect(bus);
-                [[98, 'sawtooth', 0], [98, 'square', 9], [147, 'sawtooth', -7], [196, 'sawtooth', 5], [49, 'square', 0]].forEach(([f, tp, dt]) => {
+                hp.connect(ag).connect(bus);
+                [['square', 0, 0.2], ['sawtooth', 8, 0.14]].forEach(([tp, dt, v]) => {
                     const o = c.createOscillator(); o.type = tp; o.detune.value = dt;
-                    const og = c.createGain(); og.gain.value = f === 49 ? 0.5 : 0.32;
-                    for (let i = 0; i < P; i++) {
-                        const t0 = now + i * GAP;
-                        o.frequency.setValueAtTime(f, t0);
-                        o.frequency.setValueAtTime(f, t0 + 0.42);
-                        o.frequency.exponentialRampToValueAtTime(f * 0.94, t0 + 0.58);
+                    const og = c.createGain(); og.gain.value = v;
+                    for (let k = 0; k < BURSTS; k++) {
+                        const up = Math.pow(2, k * 2 / 12);
+                        for (let i = 0; i < 8; i++) {
+                            const t0 = now + k * BLEN + i * 0.09;
+                            o.frequency.setValueAtTime((i % 2 ? 932 : 1245) * up, t0);
+                        }
                     }
-                    o.connect(og).connect(lp); o.start(now); o.stop(now + T);
+                    o.connect(og).connect(hp); o.start(now); o.stop(now + T);
                 });
-                for (let i = 0; i < P; i++) {
-                    const t0 = now + i * GAP;
+                for (let k = 0; k < BURSTS; k++) for (let i = 0; i < 8; i++) {
+                    const t0 = now + k * BLEN + i * 0.09;
                     ag.gain.setValueAtTime(0.0001, t0);
-                    ag.gain.exponentialRampToValueAtTime(0.32, t0 + 0.04);
-                    ag.gain.setValueAtTime(0.32, t0 + 0.44);
-                    ag.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
-                    lp.frequency.setValueAtTime(320, t0);
-                    lp.frequency.exponentialRampToValueAtTime(1500 + i * 250, t0 + 0.18);
-                    lp.frequency.exponentialRampToValueAtTime(420, t0 + 0.6);
+                    ag.gain.exponentialRampToValueAtTime(1, t0 + 0.006);
+                    ag.gain.exponentialRampToValueAtTime(0.25, t0 + 0.08);
+                    ag.gain.setValueAtTime(0.0001, t0 + 0.088);
                 }
-                // 地鳴りのような重低音（だんだん強く）
-                const sub = c.createOscillator(); sub.type = 'sine'; sub.frequency.setValueAtTime(41, now); sub.frequency.linearRampToValueAtTime(36, now + T);
-                const sbg = c.createGain(); sbg.gain.setValueAtTime(0.0001, now); sbg.gain.exponentialRampToValueAtTime(0.55, now + T - 0.8); sbg.gain.exponentialRampToValueAtTime(0.0001, now + T);
-                sub.connect(sbg).connect(out); sub.start(now); sub.stop(now + T);
-                // 最後に重い衝撃音
-                const ti = now + P * GAP;
-                this.createSound(110, 0.9, 'sine', 1, 0.9, ti, { endFreq: 28 });
-                this.createSound(220, 0.25, 'square', 0.9, 0.2, ti, { endFreq: 55 });
+                // うねる低音ドローン（不穏な短2度＋トレモロ）
+                const dg = c.createGain(); dg.gain.setValueAtTime(0.0001, now); dg.gain.exponentialRampToValueAtTime(0.3, now + 0.4); dg.gain.setValueAtTime(0.3, now + T - 0.9); dg.gain.exponentialRampToValueAtTime(0.0001, now + T - 0.2);
+                const lfo = c.createOscillator(); lfo.frequency.value = 7; const lg = c.createGain(); lg.gain.value = 0.12;
+                lfo.connect(lg).connect(dg.gain); lfo.start(now); lfo.stop(now + T);
+                const dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.setValueAtTime(300, now); dlp.frequency.exponentialRampToValueAtTime(900, now + T - 0.9);
+                dlp.connect(dg).connect(bus);
+                [[55, 'sawtooth'], [58.3, 'sawtooth'], [27.5, 'square']].forEach(([f, tp]) => {
+                    const o = c.createOscillator(); o.type = tp; o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f * 1.12, now + T - 0.9);
+                    o.connect(dlp); o.start(now); o.stop(now + T);
+                });
+                // 最後の衝撃音
+                const ti = now + BURSTS * BLEN;
+                this.createSound(130, 0.9, 'sine', 1, 0.9, ti, { endFreq: 30 });
+                this.createSound(260, 0.2, 'square', 0.9, 0.18, ti, { endFreq: 60 });
                 const ns = c.createBufferSource(); ns.buffer = this.getNoise();
-                const nf = c.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.setValueAtTime(2200, ti); nf.frequency.exponentialRampToValueAtTime(150, ti + 0.8);
+                const nf = c.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.setValueAtTime(3000, ti); nf.frequency.exponentialRampToValueAtTime(160, ti + 0.8);
                 const ng = c.createGain(); ng.gain.setValueAtTime(0.5, ti); ng.gain.exponentialRampToValueAtTime(0.001, ti + 0.85);
                 ns.connect(nf).connect(ng).connect(bus); ns.start(ti); ns.stop(ti + 0.9);
                 break;
