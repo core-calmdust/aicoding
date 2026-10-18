@@ -442,7 +442,7 @@ body.in-online #evalCard, body.in-online #btnHint, body.in-online #btnAnalyze, b
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px)}
+  body:not(.no-online){--vh:calc(100dvh - 46px);--board:calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1400px) / 1.105)}
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#16211e,#0f1715);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.4)}
   .dock-panel{height:0;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
