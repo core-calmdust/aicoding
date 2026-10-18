@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>COMET OUTBURST+ - 3Dサイバー弾幕シューティング・ドッジゲーム</title>
+    <title>COMET OUTBURST+ (β版) - 3Dサイバー弾幕シューティング・ドッジゲーム</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="「COMET OUTBURST+」は、シンセウェイヴのビートに乗りながら彗星群を潜り抜けるサイバー弾幕ドッジゲーム「COMET OUTBURST」の3D版。ポリゴンとカラフルなワイヤーフレームが交錯する電脳空間で、ハイスコアを目指せ。">
     <meta name="keywords" content="弾幕, ドッジゲーム, STG, シューティング, 3D, WebGL, three.js, synthwave, wireframe, AI, AI programming, javascript game">
@@ -12,11 +12,11 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
-    <meta property="og:title" content="COMET OUTBURST+ - 3Dサイバー弾幕シューティング・ドッジゲーム">
+    <meta property="og:title" content="COMET OUTBURST+ (β版) - 3Dサイバー弾幕シューティング・ドッジゲーム">
     <meta property="og:description" content="ポリゴンとワイヤーフレームが交錯する電脳空間で、彗星群を潜り抜けろ。COMET OUTBURST の3D強化版。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://core-calmdust.github.io/aicoding/comet-plus/">
-    <meta property="og:image" content="https://core-calmdust.github.io/aicoding/comet/ogp-image.webp">
+    <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/comet-plus.webp">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="COMET OUTBURST+">
@@ -29,7 +29,7 @@
       "@type": "VideoGame",
       "name": "COMET OUTBURST+",
       "url": "https://core-calmdust.github.io/aicoding/comet-plus/",
-      "image": "https://core-calmdust.github.io/aicoding/comet/ogp-image.webp",
+      "image": "https://core-calmdust.github.io/aicoding/images/comet-plus.webp",
       "description": "シンセウェイヴのビートに乗りながら彗星群を潜り抜けるサイバー弾幕ドッジゲーム「COMET OUTBURST」の3D版。",
       "author": { "@type": "Person", "name": "CALMDUST" },
       "genre": ["Shooter", "Action", "Music/Rhythm Game"],
@@ -4938,7 +4938,7 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '12px';
         renderCtx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         renderCtx.font = `400 12px ${config.fontFamily}`;
-        renderCtx.fillText('3d edition', cx + 6, 290);
+        renderCtx.fillText('3d edition · beta', cx + 6, 290);
 
         // メニュー
         const menuY = 344, menuGap = 42;
