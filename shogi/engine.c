@@ -561,7 +561,7 @@ static i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 3, rfpMargin = 120, nullAdapt = 0, histMalus = 0;
-static int P[32] = {[5] = 1, [7] = 1};
+static int P[32] = {[5] = 1, [7] = 1, [14] = 1};
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; }
 /* experimental features (all off by default):
    P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base */
@@ -906,7 +906,11 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
       if (score >= beta) { beta = beta + delta; if (beta > INF) beta = INF; delta *= 2; continue; }
       break;
     }
-    if (stopFlag && depth > 1) break;
+    if (stopFlag && depth > 1) {
+      /* aborted iteration: a root move that already beat the previous best in this iteration is kept */
+      if (P[14] && rootM[0] != res[0]) { res[0] = rootM[0]; res[3] = 1; res[4] = rootM[0]; }
+      break;
+    }
     sortRoot();
     prevScore = score;
     int pl = pvLen[0];
@@ -915,7 +919,7 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
     res[0] = rootM[0]; res[1] = depth; res[2] = nodes; res[3] = pl; resScore = score;
     js_progress(depth, score, nodes, res + 4, pl);
     if ((score < 0 ? -score : score) > MATE - MAXPLY && depth > 3) break;
-    if (deadline > 0 && js_now() - t0 > (deadline - t0) * 0.55) break;
+    if (deadline > 0 && js_now() - t0 > (deadline - t0) * (P[15] ? P[15] / 100.0 : 0.55)) break;
     if (nRoot == 1 && depth >= 2) break;
   }
   res[2] = nodes;
