@@ -397,6 +397,10 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
 .gx-facts div.str dd{font-family:inherit;font-size:16px;font-weight:700;letter-spacing:.02em;color:var(--gold)}
 .mbk,.pmk{display:inline-flex;align-items:center;gap:4px;vertical-align:top;line-height:inherit}
 .mbk svg{transform:translateY(-.5px)}
+.pmk svg,.tag.premium svg{width:13px;height:13px;flex:none;fill:currentColor;stroke:currentColor;stroke-width:1.2;stroke-linejoin:round;stroke-linecap:round}
+.pmk svg path+path,.tag.premium svg path+path{fill:none;stroke-width:2}
+.tag.premium{display:inline-flex;align-items:center;gap:4px}
+.tag.premium svg{width:11px;height:11px}
 </style>
 </head>
 <body>
@@ -737,10 +741,10 @@ function makeGallery(C) {
     $(C.p + '-bg').src = g.thumb;
     $(C.p + '-media').href = g.href;
     $(C.p + '-count').textContent = String(i + 1).padStart(2, '0') + ' / ' + String(C.games.length).padStart(2, '0');
-    $(C.p + '-cat').innerHTML = (g.tags.includes('mobile') ? '<span class="mbk"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg> ' + tr('tag.mobile') + '</span> · ' : '<span class="mbk pc"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg> ' + tr('gx.pc') + '</span> · ') + (g.premium ? '<span class="pmk">♛ ' + tr('gx.premium') + '</span> · ' : '') + esc(g.kind) + (C.cats ? ' · ' + tr('sub.' + g.cat) : '') + (g.isNew ? ' · <span class="nw">NEW</span>' : '');
+    $(C.p + '-cat').innerHTML = (g.tags.includes('mobile') ? '<span class="mbk"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg> ' + tr('tag.mobile') + '</span> · ' : '<span class="mbk pc"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg> ' + tr('gx.pc') + '</span> · ') + (g.premium ? '<span class="pmk"><svg viewBox="0 0 24 24"><path d="M3.5 8.5 8 12l4-6.5 4 6.5 4.5-3.5-1.6 9.5H5.1z"/><path d="M5.5 20.5h13"/></svg> ' + tr('gx.premium') + '</span> · ' : '') + esc(g.kind) + (C.cats ? ' · ' + tr('sub.' + g.cat) : '') + (g.isNew ? ' · <span class="nw">NEW</span>' : '');
     $(C.p + '-title').innerHTML = t;
     $(C.p + '-desc').innerHTML = desc(g);
-    $(C.p + '-tags').innerHTML = (g.premium ? '<span class="tag premium">♛ ' + tr('gx.premium') + '</span>' : '') + (g.isNew ? '<span class="tag new">NEW</span>' : '') + (g.beta ? '<span class="tag new">' + tr('tag.beta') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${tr('tag.' + k)}</span>`).join('');
+    $(C.p + '-tags').innerHTML = (g.premium ? '<span class="tag premium"><svg viewBox="0 0 24 24"><path d="M3.5 8.5 8 12l4-6.5 4 6.5 4.5-3.5-1.6 9.5H5.1z"/><path d="M5.5 20.5h13"/></svg> ' + tr('gx.premium') + '</span>' : '') + (g.isNew ? '<span class="tag new">NEW</span>' : '') + (g.beta ? '<span class="tag new">' + tr('tag.beta') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${tr('tag.' + k)}</span>`).join('');
     const f = g.facts || {};
     $(C.p + '-facts').innerHTML = C.facts.filter(k => f[k] != null)
       .map(k => { const v = k === 'ai' ? (tr(g.key + '.str') || tr('gx.levels').replace('{n}', f[k])) : f[k]; return `<div${k === 'ai' ? ' class="str"' : ''}><dt>${tr('gx.' + k)}</dt><dd>${esc(v)}</dd></div>`; }).join('');
