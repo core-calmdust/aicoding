@@ -722,27 +722,54 @@ const HYB_K = 2;
 function evalPly(q, o, ply) { return ply >= 2 ? (WB ? hyb2(q, o) : eval2(q, o)) : ply >= 1 ? (WB ? hyb1(q, o) : eval1(q, o)) : flip(evalPos(q, o)); }
 function hasWildbg() { return !!WB; }
 // 1-ply: position q, o to roll; probs from the perspective of 1-o (the player who just moved)
-function hyb1(q, o) {
+function hyb1(q, o, k, dl) {
   const w = winner(q);
   if (w >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
   const acc = [0, 0, 0, 0, 0];
   for (const [a, b, pr] of ROLLS) {
-    const v = hybReply(q, o, a, b, HYB_K).v;   // o's perspective after its reply
+    if (dl && nowMs() > dl) return null;
+    const v = hybReply(q, o, a, b, k || HYB_K).v;   // o's perspective after its reply
     acc[0] += pr * (1 - v[0]); acc[1] += pr * v[3]; acc[2] += pr * v[4]; acc[3] += pr * v[1]; acc[4] += pr * v[2];
   }
   return acc;
 }
-// 2-ply: o replies (hybrid choice), then the reply is valued by our hybrid 1-ply
-function hyb2(q, o) {
+// 2-ply: o replies (hybrid choice), then the reply is valued by our hybrid 1-ply; k = replies re-valued per roll
+function hyb2(q, o, k, dl) {
   const w = winner(q);
   if (w >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
   const acc = [0, 0, 0, 0, 0];
   for (const [a, b, pr] of ROLLS) {
-    const r = hybReply(q, o, a, b, HYB_K);
-    const v = winner(r.pos) >= 0 || isBearoffPos(r.pos) ? r.v : hyb1(r.pos, 1 - o);   // o's perspective
+    const r = hybReply(q, o, a, b, k || HYB_K);
+    let v = r.v;
+    if (!(winner(r.pos) >= 0 || isBearoffPos(r.pos))) { v = hyb1(r.pos, 1 - o, k, dl); if (!v) return null; }   // o's perspective
     acc[0] += pr * (1 - v[0]); acc[1] += pr * v[3]; acc[2] += pr * v[4]; acc[3] += pr * v[1]; acc[4] += pr * v[2];
   }
   return acc;
+}
+// Lv10 "deep" search with a time budget (iterative widening): all plays at 0-ply (strong net) -> wide hybrid 1-ply
+// with 4 replies re-valued per roll -> hybrid 2-ply on the best candidates while time remains. `soft`: no new
+// candidate is started after it; `hard`: a running evaluation is abandoned (the move falls back to the shallower
+// ranking), so slow devices still answer in time.
+function deepPlays(p, s, d1, d2, soft, hard) {
+  const t0 = nowMs(), plays = analyzePlays(p, s, d1, d2, { ply: 0 });
+  if (plays.length < 2 || !WB) return plays;
+  const top0 = plays[0].e;
+  for (let i = 0; i < Math.min(plays.length, 16); i++) {
+    if (i > 1 && plays[i].e < top0 - 0.4) break;
+    if (i > 1 && nowMs() > t0 + soft * 0.4) break;
+    const v = hyb1(plays[i].pos, 1 - s, 4, t0 + hard); if (!v) break;
+    plays[i].v = v; plays[i].e = equity(v); plays[i].ply = 1;
+  }
+  plays.sort((a, b) => (b.ply - a.ply) || (b.e - a.e));
+  const top1 = plays[0].e;
+  for (let i = 0; i < Math.min(plays.length, 8); i++) {
+    if (plays[i].ply < 1 || (i > 0 && plays[i].e < top1 - 0.16)) break;
+    if (i > 0 && nowMs() > t0 + soft) break;
+    const v = hyb2(plays[i].pos, 1 - s, i < 2 ? 4 : 3, t0 + hard); if (!v) break;
+    plays[i].v = v; plays[i].e = equity(v); plays[i].ply = 2;
+  }
+  plays.sort((a, b) => (b.ply - a.ply) || (b.e - a.e));
+  return plays;
 }
 // rank plays: returns [{pos, moves, v, e, ply}] sorted by equity (mover's perspective, cubeless money)
 // opts: {ply: 0|1|2, keep1: n candidates for 1-ply, keep2: n for 2-ply, margin1, margin2, deadline}
@@ -781,7 +808,8 @@ function evalRoll(p, s, depth) {
   const acc = [0, 0, 0, 0, 0];
   for (const [a, b, pr] of ROLLS) {
     let v;
-    if (depth >= 2) { const pl = analyzePlays(p, s, a, b, { ply: 1, keep1: 3, margin1: 0.12 })[0]; v = pl.v; }
+    if (depth === 3 && WB) { const pl = bestPlay0(p, s, a, b); v = winner(pl.pos) >= 0 || isBearoffPos(pl.pos) ? pl.v : hyb1(pl.pos, 1 - s); }
+    else if (depth >= 2) { const pl = analyzePlays(p, s, a, b, { ply: 1, keep1: 3, margin1: 0.12 })[0]; v = pl.v; }
     else v = bestPlay0(p, s, a, b).v;
     for (let k = 0; k < 5; k++) acc[k] += pr * v[k];
   }
@@ -919,6 +947,7 @@ const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Da
 // deterministic per-request noise (so a given level plays reproducibly for a given position)
 function rng(seedStr) { const h = cyrb128(seedStr); let a = h[0], b = h[1]; return () => { a ^= a << 13; a ^= a >>> 17; a ^= a << 5; b = (b + 0x6D2B79F5) | 0; return (((a ^ b) >>> 0) / 4294967296); }; }
 function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+let L10_SOFT = 2400, L10_HARD = 3400;   // Lv10 time budget (ms): soft = no new candidate, hard = abandon
 const NOISE = [0, 0, 0.5, 0.25, 0.12, 0.06, 0.025, 0, 0, 0, 0];
 // Levels: 1 random · 2–6 net with decreasing noise · 7 net 0-ply · 8 1-ply · 9 2-ply (narrow) · 10 2-ply (wide, ~1–2 s)
 function aiChoosePlay(pos, side, dice, level, tag) {
@@ -934,6 +963,7 @@ function aiChoosePlay(pos, side, dice, level, tag) {
   }
   if (level === 8) return analyzePlays(pos, side, dice[0], dice[1], { ply: 1, keep1: 6, margin1: 0.2 })[0];
   if (level === 9) return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 8, margin1: 0.2, keep2: 2, margin2: 0.05, deadline: nowMs() + 900 })[0];
+  if (WB) return deepPlays(pos, side, dice[0], dice[1], L10_SOFT, L10_HARD)[0];
   return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1300 })[0];
 }
 // pre-roll cubeless probabilities for side on roll at a depth
@@ -944,7 +974,7 @@ function aiCube(level, pos, side, ctx, takerView) {
     const v = evalPos(pos, side);   // side = the player on roll (the doubler); take is answered for the opponent
     return { double: v[0] > 0.74, take: v[0] < 0.76, v };
   }
-  const depth = WB ? (level >= 8 ? 1 : 0) : (level >= 10 ? 2 : level >= 8 ? 1 : 0);
+  const depth = WB ? (level >= 10 ? 3 : level >= 8 ? 1 : 0) : (level >= 10 ? 2 : level >= 8 ? 1 : 0);
   const v = evalRoll(pos, side, depth);
   const d = cubeDecision(v, ctx);
   if (level <= 5) {   // a little sloppy
@@ -960,7 +990,7 @@ Object.assign(BG, {
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,
-  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalPly, hasWildbg, evalRoll, buildMET, mwc,
+  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalPly, hasWildbg, deepPlays, setL10Time: (a, b) => { L10_SOFT = a; L10_HARD = b; }, evalRoll, buildMET, mwc,
   janowski, cubeDecision, cubeAvailable,
   get NET() { return NET; }, get NETR() { return NETR; }, get BO() { return BO; }
 });

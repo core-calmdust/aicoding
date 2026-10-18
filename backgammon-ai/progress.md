@@ -28,3 +28,9 @@
 - 測定: `RES=meas/xxx.jsonl INTERIM=1 node scripts/cmpw.js <A> <B> N 2 lv10,lv10`（A に `wb:nets/fast1.json` で wildbg+高速ネット）
 
 - [終了] 2026-10-19 03:10 全バックグラウンドジョブ停止（測定・学習は完了済み、残りはテスト用HTTPサーバのみで停止）。作業はコミット・公開済み。
+
+## タスク: Lv10 の思考時間延長（2026-10-19 07:00〜）
+- 実装（backgammon/bg.js、未コミット）: deepPlays()（0-ply 全手 → wildbg 再評価4手のハイブリッド1-ply を最大16候補 → ハイブリッド2-ply を最大8候補、soft 2.4秒で新規候補停止・hard 3.4秒で打ち切り）。キューブ判断は Lv10 のみ「各ダイスの0-ply最善手をハイブリッド1-plyで評価」（約0.5秒）。Lv9 以下は不変。
+- 旧 Lv10 エンジンは scripts/bg_l10v1.js として保存。
+- 時間計測（node、他負荷小）: 平均 1.6 秒、最大 2.9 秒。
+- [進行中] 測定 scripts/run_l10b.sh（55分チャンク×最大7、再実行で再開）→ meas/L10b_deep_vs_v1.jsonl、ログ meas/meas_l10b.log。

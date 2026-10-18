@@ -21,7 +21,7 @@ if (isMainThread) {
   const { A, B, N, T, i, mode, skip } = workerData; const SK = new Set(skip || []);
   const bo = fs.readFileSync('/home/claude/work/data/backgammon/bearoff.bin');
   const mk = f => {
-    if (f.startsWith('wb')) { const path = __dirname + '/bgw.js'; delete require.cache[require.resolve(path)]; const BG = require(path); BG.loadBearoff(bo.buffer.slice(bo.byteOffset, bo.byteOffset + bo.length)); const bin = fs.readFileSync(__dirname + '/../nets/wildbg.bin'); BG.loadWildbg(JSON.parse(fs.readFileSync(__dirname + '/../nets/wildbg.json')), bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.length)); const fn = f.split(':')[1]; if (fn) BG.setNets(JSON.parse(fs.readFileSync(fn))); return BG; }
+    if (f.startsWith('wb')) { const path = __dirname + (f.startsWith('wbv1') ? '/bg_l10v1.js' : '/bgw.js'); delete require.cache[require.resolve(path)]; const BG = require(path); BG.loadBearoff(bo.buffer.slice(bo.byteOffset, bo.byteOffset + bo.length)); const bin = fs.readFileSync(__dirname + '/../nets/wildbg.bin'); BG.loadWildbg(JSON.parse(fs.readFileSync(__dirname + '/../nets/wildbg.json')), bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.length)); const fn = f.split(':')[1]; if (fn) BG.setNets(JSON.parse(fs.readFileSync(fn))); return BG; }
     const j = JSON.parse(fs.readFileSync(f));
     const path = j.contact ? __dirname + '/bgn.js' : __dirname + '/bg_old.js';
     delete require.cache[require.resolve(path)];
