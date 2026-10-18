@@ -77,7 +77,7 @@ function hanging(pos, color) {
 
 // ====================================================================== state
 const STORE = 'aicoding-chess';
-const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false };
+const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -120,7 +120,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019c'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261019d'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -745,7 +745,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261019c').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261019d').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -947,7 +947,7 @@ function drillMove(m) {
 
 // ====================================================================== puzzles: mate in N
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261019c').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261019d').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
@@ -1233,6 +1233,13 @@ function dailySolved(date, hinted) {
 
 // ====================================================================== boot
 const hadSave = load();
+// board & piece skin: applied immediately, kept with the settings
+function applySkin() {
+  ['grain', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, settings.skin === k));
+  $('#segSkin').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === (settings.skin || 'classic')));
+}
+$('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applySkin(); save(); };
+applySkin();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
