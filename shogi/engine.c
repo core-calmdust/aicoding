@@ -242,10 +242,14 @@ static inline int addMove(i32 *list, int n, int s, int to, int t, int cp, int us
   } else if (!capOnly || q) list[n++] = s | (to << 7);
   return n;
 }
+static u32 pmask[2][3];
+#define SETB(c, s) (pmask[c][(s) / 27] |= 1u << ((s) % 27))
+#define CLRB(c, s) (pmask[c][(s) / 27] &= ~(1u << ((s) % 27)))
 static int gen(i32 *list, int mode) {
   int us = side, n = 0, full = mode == 2, capOnly = mode == 1;
-  for (int s = 0; s < 81; s++) {
-    int p = board[s]; if (!p || colorOf(p) != us) continue;
+  for (int w = 0; w < 3; w++) for (u32 bits = pmask[us][w]; bits; bits &= bits - 1) {
+    int s = w * 27 + __builtin_ctz(bits);
+    int p = board[s];
     int t = typeOf(p), cp = CAN_PROMOTE[t], nd = NDIRS[p];
     for (int k = 0; k < nd; k++) {
       int dd = DIRS[p][k], d = dd & 7;
@@ -302,7 +306,7 @@ static void doMove(int m) {
     if (nn) { nnHand(0, us, t, n, -1); nnHand(1, us, t, n, -1); nnPiece(0, p, to, 1); nnPiece(1, p, to, 1); }
     else { a0 -= hv_(0, us, t, n); a1 -= hv_(1, us, t, n); a0 += pv_(0, p, to); a1 += pv_(1, p, to); }
     hand[hi] = n - 1;
-    board[to] = p; l ^= ZB_L[to * 32 + p]; h ^= ZB_H[to * 32 + p];
+    board[to] = p; SETB(us, to); l ^= ZB_L[to * 32 + p]; h ^= ZB_H[to * 32 + p];
     stCap[s0] = 0;
   } else {
     int p = board[from], cap = board[to];
@@ -325,7 +329,7 @@ static void doMove(int m) {
       }
     }
     l ^= ZB_L[from * 32 + p] ^ ZB_L[to * 32 + np]; h ^= ZB_H[from * 32 + p] ^ ZB_H[to * 32 + np];
-    board[from] = 0; board[to] = np;
+    board[from] = 0; board[to] = np; CLRB(us, from); SETB(us, to); if (cap) CLRB(them, to);
     if (nn) {
       if (isKing) { king[us] = to; nnRefresh(us); nnPiece(them, p, from, -1); nnPiece(them, np, to, 1); }
       else { nnPiece(0, p, from, -1); nnPiece(0, np, to, 1); nnPiece(1, p, from, -1); nnPiece(1, np, to, 1); }
@@ -348,10 +352,10 @@ static void undoMove(void) {
   int us = side ^ 1;
   side = us;
   int from = m & 127, to = (m >> 7) & 127;
-  if (from > 80) { board[to] = 0; hand[us * 8 + from - 80]++; }
+  if (from > 80) { board[to] = 0; hand[us * 8 + from - 80]++; CLRB(us, to); }
   else {
     int np = board[to], p = (m >> 14) & 1 ? np - 8 : np, cap = stCap[s0];
-    board[from] = p; board[to] = cap;
+    board[from] = p; board[to] = cap; CLRB(us, to); SETB(us, from); if (cap) SETB(us ^ 1, to);
     if (cap) hand[us * 8 + UNPROMOTE[typeOf(cap)]]--;
     if (typeOf(p) == OU) { king[us] = from; setKingCache(us); }
   }
@@ -439,6 +443,21 @@ static int lastMoveLegal(int m) {
   }
   return 1;
 }
+/* same result as lastMoveLegal, but skips the king-safety scan when the mover was not in check and could not be pinned */
+static int legalAfter(int m, int wasInChk) {
+  if (wasInChk) return lastMoveLegal(m);
+  int f = m & 127, us = side ^ 1;
+  if (f > 80) {
+    if (f == 80 + FU) { int to = (m >> 7) & 127, ek = king[side]; if (ek == (us == 0 ? to - 9 : to + 9) && !hasLegalMove()) return 0; }
+    return 1;
+  }
+  int to = (m >> 7) & 127;
+  if (typeOf(board[to]) == OU) return lastMoveLegal(m);
+  int k = king[us]; if (k < 0) return 1;
+  int dr = f / 9 - k / 9, dc = f % 9 - k % 9;
+  if (dr && dc && dr != dc && dr != -dc) return 1;
+  return lastMoveLegal(m);
+}
 static i32 lmBuf[1000];
 static int legalMoves(i32 *out, int full) {
   int n = gen(lmBuf, full ? 2 : 0), k = 0;
@@ -498,6 +517,27 @@ static int isPseudo(int m) {
   return 0;
 }
 
+/* mate in 3 for the side to move (checks only); returns first move or 0 */
+static i32 m3a[1000], m3b[1000], m3c[600];
+static int mate3(void) {
+  int us = side, n = gen(m3a, 0);
+  for (int i = 0; i < n; i++) {
+    int m = m3a[i];
+    doMove(m);
+    if (!inCheck() || !lastMoveLegal(m)) { undoMove(); continue; }
+    int nr = gen(m3b, 0), legal = 0, ok = 1;
+    for (int j = 0; j < nr && ok; j++) {
+      int r = m3b[j];
+      doMove(r);
+      if (lastMoveLegal(r)) { legal++; if (!mate1(m3c)) ok = 0; }
+      undoMove();
+    }
+    undoMove();
+    if (ok && legal) return m;
+    (void)us;
+  }
+  return 0;
+}
 /* ------------------------------------------------------------------ search */
 #define MATE 30000
 #define INF 32000
@@ -521,7 +561,13 @@ static i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 3, rfpMargin = 120, nullAdapt = 0, histMalus = 0;
-EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; }
+static int P[32] = {[5] = 1, [7] = 1};
+EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; }
+/* experimental features (all off by default):
+   P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base */
+static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
+static i8 LMRT[64][64];
+static i32 counterMv[32 * 81];
 
 static inline int timeUp(void) {
   if ((nodes & 1023) == 0) {
@@ -565,6 +611,7 @@ static void orderMoves(i32 *moves, i32 *scores, int n, int ttm, int ply) {
     else if ((m >> 14) & 1) sc = 90000000 + VALUE[typeOf(board[f]) + 8] - VALUE[typeOf(board[f])];
     else if (m == k0) sc = 80000002;
     else if (m == k1) sc = 80000001;
+    else if (P[6] && sp > 0 && stMove[sp - 1] && m == counterMv[board[(stMove[sp - 1] >> 7) & 127] * 81 + ((stMove[sp - 1] >> 7) & 127)]) sc = 79000000;
     else sc = history[((us * 88 + f) * 81 + t) * 2 + ((m >> 14) & 1)];
     scores[i] = sc;
   }
@@ -575,7 +622,7 @@ static inline int pick(i32 *moves, i32 *scores, int n, int i) {
   if (bi != i) { i32 tm = moves[i]; moves[i] = moves[bi]; moves[bi] = tm; i32 ts = scores[i]; scores[i] = scores[bi]; scores[bi] = ts; }
   return moves[i];
 }
-static double qsearch(double alpha, double beta, int ply) {
+static double qsearch(double alpha, double beta, int ply, int qd) {
   nodes++;
   if (timeUp()) return 0;
   int inChk = inCheck();
@@ -600,19 +647,34 @@ static double qsearch(double alpha, double beta, int ply) {
       if (see(m) < 0) continue;
     }
     doMove(m);
-    if (!lastMoveLegal(m)) { undoMove(); continue; }
+    if (!legalAfter(m, inChk)) { undoMove(); continue; }
     legal++;
-    double v = -qsearch(-beta, -alpha, ply + 1);
+    double v = -qsearch(-beta, -alpha, ply + 1, qd + 1);
     undoMove();
     if (stopFlag) return 0;
     if (v > best) { best = v; if (v > alpha) { alpha = v; if (v >= beta) return v; } }
   }
   if (inChk && !legal) return -MATE + ply;
+  if (P[7] && !inChk && qd == 0) {
+    /* quiet checking moves (incl. drops) at the first quiescence ply */
+    i32 *qm = quietBuf[ply];
+    int nn = gen(qm, 0);
+    for (int i = 0; i < nn; i++) {
+      int m = qm[i]; if (board[(m >> 7) & 127]) continue;
+      doMove(m);
+      if (!inCheck() || !lastMoveLegal(m)) { undoMove(); continue; }
+      if (seeAfterCheck(m) < 0) { undoMove(); continue; }
+      double v = -qsearch(-beta, -alpha, ply + 1, qd + 1);
+      undoMove();
+      if (stopFlag) return 0;
+      if (v > best) { best = v; if (v > alpha) { alpha = v; if (v >= beta) return v; } }
+    }
+  }
   return best;
 }
 static double search(int depth, double alpha, double beta, int ply, int pvNode, int allowNull) {
   pvLen[ply] = ply;
-  if (depth <= 0) return qsearch(alpha, beta, ply);
+  if (depth <= 0) return qsearch(alpha, beta, ply, 0);
   nodes++;
   if (timeUp()) return 0;
   int inChk = inCheck();
@@ -639,8 +701,16 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     int mm = mate1(mateBuf[ply]);
     if (mm) { double v = MATE - ply - 1; store(depth, v, F_EXACT, mm, ply); pvTable[ply * MAXPLY + ply] = mm; pvLen[ply] = ply + 1; return v; }
   }
+  if (P[13] && !inChk && depth >= P[13]) {
+    int mm = mate3();
+    if (mm) { double v = MATE - ply - 3; store(depth, v, F_EXACT, mm, ply); pvTable[ply * MAXPLY + ply] = mm; pvLen[ply] = ply + 1; return v; }
+  }
   double staticEval = inChk ? -INF : evaluate();
   if (!pvNode && !inChk && depth <= rfpDepth && staticEval - rfpMargin * depth >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) return staticEval;
+  if (P[10] && !pvNode && !inChk && depth <= 2 && staticEval + P[10] * depth < alpha) {
+    double v = qsearch(alpha, beta, ply, 0);
+    if (v < alpha) return v;
+  }
   if (!pvNode && !inChk && allowNull && depth >= 3 && staticEval >= beta) {
     int R;
     if (nullAdapt) { int x = (int)((staticEval - beta) / 250); R = 3 + depth / 5 + (x < 2 ? x : 2); }
@@ -687,26 +757,31 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
     if (!pvNode && !inChk && quiet && legal > 0 && depth <= 2 && staticEval + 150 * depth + 100 <= alpha) {
       doMove(m);
-      int ok = lastMoveLegal(m), chk = ok && inCheck();
+      int ok = legalAfter(m, inChk), chk = ok && inCheck();
       undoMove();
       if (!chk) continue;
     }
-    if (!pvNode && !inChk && quiet && depth <= 3 && legal > 6 + depth * depth * 3) {
+    if (!pvNode && !inChk && quiet && depth <= 3 && legal > (P[12] ? P[12] : 6) + depth * depth * 3) {
       doMove(m); int chk = inCheck(); undoMove();
       if (!chk) continue;
     }
     doMove(m);
-    if (!lastMoveLegal(m)) { undoMove(); continue; }
+    if (!legalAfter(m, inChk)) { undoMove(); continue; }
     legal++;
     int givesChk = inCheck();
-    int ext = givesChk && ply < rootDepth * 2 && seeAfterCheck(m) >= 0 ? 1 : 0;
+    int ext = givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     double v;
     int nd = depth - 1 + ext;
     if (legal == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode, 1);
     else {
       int r = 0;
       if (depth >= 3 && quiet && !inChk && !givesChk && legal > 3) {
-        r = 1 + (legal > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
+        if (P[5]) {
+          r = LMRT[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
+          if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--;
+          i32 hv = history[((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1)];
+          if (hv > 2000) r--; else if (hv == 0) r++;
+        } else r = 1 + (legal > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
         if (pvNode) r--;
         if (r < 0) r = 0;
         if (r > depth - 2) r = depth - 2;
@@ -728,6 +803,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         if (v >= beta) {
           if (quiet) {
             if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
+            if (P[6] && sp > 0 && stMove[sp - 1]) { int pt = (stMove[sp - 1] >> 7) & 127; counterMv[board[pt] * 81 + pt] = m; }
             int hi = ((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1);
             history[hi] += depth * depth;
             if (history[hi] > 1000000) for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 1;
@@ -901,6 +977,7 @@ EXPORT(set_position) void set_position(void) {
   side = setupBuf[97];
   king[0] = king[1] = -1;
   for (int s = 0; s < 81; s++) { int p = board[s]; if (typeOf(p) == OU) king[colorOf(p)] = s; }
+  memset(pmask, 0, sizeof pmask); for (int s = 0; s < 81; s++) if (board[s]) SETB(colorOf(board[s]), s);
   computeHash(); refreshEval();
   sp = 0; hn = 0;
   histL[hn] = hl; histH[hn] = hh; histChk[hn] = inCheck() ? 1 : 0; hn++;
@@ -952,6 +1029,7 @@ EXPORT(init) void init(void) {
     for (int i = 0; i < nsl; i++) { SLIDE[t * 8 + sl[i]] = 1; SLIDE[(t + WF) * 8 + OPPD[sl[i]]] = 1; }
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
+  for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / 2.0);
   seed = 0x2545F491;
   for (int i = 0; i < 81 * 32; i++) { ZB_L[i] = rnd32(); ZB_H[i] = rnd32(); }
   for (int i = 0; i < 2 * 8 * 20; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rnd32(); }

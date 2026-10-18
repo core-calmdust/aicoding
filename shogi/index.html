@@ -826,7 +826,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
 <script src="i18n.js?v=20261018ch"></script>
-<script src="engine.js?v=20261018ol"></script>
+<script src="engine.js?v=20261018p57"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
 <script src="online.js?v=20261018ch"></script>
@@ -934,7 +934,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261018ol');
+  const w = new Worker('engine.js?v=20261018p57');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
