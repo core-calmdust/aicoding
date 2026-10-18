@@ -546,6 +546,18 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay .modal{width:min(920px,94vw);padding:28px 32px}
   .ng-cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 32px;align-items:start}
 }
+/* PC: the new-game dialog keeps one size in every mode — fields keep their slots (hidden ones stay invisible), buttons pinned at the bottom */
+@media (min-width: 760px) and (min-height: 600px) and (hover: hover){
+  #newOverlay .modal{display:flex;flex-direction:column;height:min(var(--ngh, 772px), calc(var(--vh) - 32px));overflow:hidden}
+  #newOverlay .ng-cols{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
+  #newOverlay .modal-actions{margin-top:auto;padding-top:14px;flex:none}
+  #newOverlay .ng-col:first-child{display:grid;grid-template-rows:repeat(5, auto);align-content:start}
+  #newOverlay .ng-col > .field.hidden:not(.ng-info), #newOverlay #handiNote.hidden{display:block!important;visibility:hidden}
+  #newOverlay .ng-col:first-child > *{grid-column:1}
+  #fHandi{grid-row:1}#fColor{grid-row:2}#fClock{grid-row:3}#fLevel{grid-row:4}#lvNote{grid-row:5}
+  #fLevel2{grid-row:2 / 4;align-self:start}
+  #newOverlay .ng-info{grid-row:1 / 4;align-self:start}
+}
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
@@ -739,9 +751,9 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
     <div class="field"><label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button><button data-v="edit" data-i18n="ng.edit"></button><button data-v="online" data-i18n="ng.online"></button></div>
     </div>
-    <div class="field hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
-    <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="ng-cols"><div class="ng-col">
+    <div class="field ng-info hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
+    <div class="field ng-info hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="field" id="fHandi"><label data-i18n="ng.handicap"></label><div class="seg" id="segHandi"></div><div class="note hidden" id="handiNote" data-i18n="ng.handiNote"></div></div>
     <div class="field" id="fColor"><label data-i18n="ng.color"></label>
       <div class="seg" id="segColor"><button data-v="0" data-i18n="ng.black"></button><button data-v="1" data-i18n="ng.white"></button><button data-v="2" data-i18n="ng.random"></button></div>
