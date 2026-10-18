@@ -1223,6 +1223,16 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
         // weak levels: score every root move with a shallow full-window search, then pick softly among near-best moves
         const list = useWasm() ? (wsetup(d), wasmAnalyze({ depth: o.depth || 1 })) : se.analyze({ depth: o.depth || 1 });
         if (!list.length) { self.postMessage({ type: 'result', id: d.id, move: null, score: -MATE, depth: 0, pv: [] }); return; }
+        // beginner personality: likes captures and checks a little more than they are worth
+        if (o.greedy) {
+          const p2 = new Position(); p2.setSfen(d.sfen); for (const u of d.moves || []) { p2.doMove(p2.fromUsi(u)); p2.sp = 0; }
+          for (const r of list) {
+            const cap = isDrop(r.m) ? 0 : p2.board[mTo(r.m)];
+            p2.doMove(r.m); const chk = p2.inCheck(); p2.undoMove();
+            if (Math.abs(r.s) < MATE - 100) r.s += (cap ? VALUE[typeOf(cap)] * 0.25 : 0) + (chk ? 60 : 0);
+          }
+          list.sort((a, b) => b.s - a.s);
+        }
         const top = list[0].s;
         const pool = list.filter(r => r.s >= top - o.noise && !(top < MATE - 100 && r.s < -MATE + 100));
         if (!pool.length) pool.push(list[0]);

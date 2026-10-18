@@ -707,7 +707,7 @@ const HANDI = [
   '2sgkgs2/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1',
 ];
 // AI levels: depth-limited with randomness for the weak ones, time-limited for the rest
-const LEVELS = [{ depth: 1, noise: 220 }, { depth: 2, noise: 150 }, { depth: 3, noise: 80 }, { depth: 3, noise: 35 }, { nodes: 15000 }, { nodes: 40000 }, { nodes: 120000 }, { nodes: 400000 }, { time: 3000 }, { time: 10000 }];
+const LEVELS = [{ depth: 1, noise: 40, greedy: 1 }, { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 35 }, { nodes: 15000 }, { nodes: 40000 }, { nodes: 120000 }, { nodes: 400000 }, { time: 3000 }, { time: 10000 }];
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
