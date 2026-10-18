@@ -166,9 +166,7 @@
         }
         .tbtn.down { opacity: 1; background: rgba(0, 204, 255, 0.28); transform: scale(0.95); }
         #t-shot { right: 26px; }
-        #t-slow { right: 168px; bottom: 46px; width: 92px; height: 92px; font-size: 15px; }
         #touch-ui.left #t-shot { right: auto; left: 26px; }
-        #touch-ui.left #t-slow { right: auto; left: 168px; }
         #rotate-msg { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center; text-align: center;
             background: #07001a; color: #00ccff; font: 600 20px 'Jura', 'M PLUS 1', sans-serif; letter-spacing: 0.1em; padding: 24px; }
         body.mobile.landscape #rotate-msg { display: flex; }
@@ -200,7 +198,7 @@
             <div id="stage">
                 <canvas id="glCanvas" width="1067" height="600"></canvas>
                 <canvas id="gameCanvas" width="1067" height="600"></canvas>
-                <div id="touch-ui"><div class="tbtn" id="t-slow">SLOW</div><div class="tbtn" id="t-shot">SHOT</div></div>
+                <div id="touch-ui"><div class="tbtn" id="t-shot">SHOT</div></div>
             </div>
 
 
@@ -2575,6 +2573,7 @@ function updateTutorial(dt) {
         t.clearT -= dt;
         if (t.clearT <= 0) {
             t.step++;
+            if (IS_MOBILE && t.step === 1) t.step++; // スマホは低速移動なし
             if (t.step < TUTORIAL_STEPS.length) tutorialStepStart(t.step);
             else { comets = []; enemyBullets = []; audioHandler.playSound('waveClear'); }
         }
@@ -2661,7 +2660,7 @@ function drawTutorialPanel(ctx2) {
     const st = TUTORIAL_STEPS[t.step];
     ctx2.fillStyle = themes[currentThemeIndex].ui;
     ctx2.font = `700 13px ${config.fontFamily}`;
-    ctx2.fillText(`${T('tut.label')}  ${t.step + 1} / ${TUTORIAL_STEPS.length}　${st.title()}`, cx, y0 + 19);
+    ctx2.fillText(`${T('tut.label')}  ${t.step + 1 - (IS_MOBILE && t.step > 1 ? 1 : 0)} / ${TUTORIAL_STEPS.length - (IS_MOBILE ? 1 : 0)}　${st.title()}`, cx, y0 + 19);
     ctx2.fillStyle = '#ffffff';
     ctx2.font = `600 17px ${config.fontFamily}`;
     lines.forEach((ln, k) => ctx2.fillText(ln, cx, y0 + 44 + k * 24));
@@ -2679,9 +2678,11 @@ function drawTutorialPanel(ctx2) {
         ctx2.fillText(st.progress(t), cx, y0 + 69 + extra);
     }
     // ステップの進行ドット
-    for (let k = 0; k < TUTORIAL_STEPS.length; k++) {
+    const nDots = TUTORIAL_STEPS.length - (IS_MOBILE ? 1 : 0);
+    for (let k = 0, d = 0; k < TUTORIAL_STEPS.length; k++) {
+        if (IS_MOBILE && k === 1) continue;
         ctx2.beginPath();
-        ctx2.arc(cx - (TUTORIAL_STEPS.length - 1) * 9 + k * 18, y0 + h + 10, 3.5, 0, Math.PI * 2);
+        ctx2.arc(cx - (nDots - 1) * 9 + (d++) * 18, y0 + h + 10, 3.5, 0, Math.PI * 2);
         ctx2.fillStyle = k < t.step ? '#7dffb0' : k === t.step ? '#ffffff' : 'rgba(255,255,255,0.25)';
         ctx2.fill();
     }
@@ -5042,6 +5043,7 @@ function draw() {
         if (player.invincibleTimer > 0 && gameMode !== 'STARTRAIL MODE') {
             mutekiY = HUD_H - 50 - 12 - 5 - 6;
         }
+        if (IS_MOBILE) mutekiY = 132; // スマホはボタンと重ならないよう上部のゲージ下に
         const mutekiColor = `hsl(${(frameCount*3)%360},100%,70%)`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = mutekiColor;
@@ -5552,7 +5554,7 @@ document.querySelectorAll('#topbar button').forEach(b => b.addEventListener('mou
 if (IS_MOBILE) {
     const stage = document.getElementById('stage');
     const tui = document.getElementById('touch-ui');
-    try { if (localStorage.getItem('cometPlusBtnLeft') === '1') tui.classList.add('left'); } catch (e) {}
+    try { if (localStorage.getItem('cometPlusBtnLeft') !== '0') tui.classList.add('left'); } catch (e) {}
     const toHud = e => { const r = stage.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * HUD_W, y: (e.clientY - r.top) / r.height * HUD_H, w: r.width }; };
     const drag = new Map(); // pointerId -> {x, y, sx, sy}
     const wake = () => { lastInputDevice = 'touch'; if (!audioHandler.isInitialized) audioHandler.initialize(); else if (audioHandler.ctx && audioHandler.ctx.state === 'suspended' && gameState !== 'paused') audioHandler.ctx.resume(); };
@@ -5585,7 +5587,6 @@ if (IS_MOBILE) {
         el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
     };
     hold('t-shot', v => { touchShot = v; });
-    hold('t-slow', v => { touchSlow = v; });
     document.getElementById('pause-button').addEventListener('click', () => { if (gameState === 'playing' || gameState === 'paused') tapPauseReq = true; });
     document.getElementById('swap-button').addEventListener('click', () => {
         const left = tui.classList.toggle('left');
