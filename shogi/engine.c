@@ -561,12 +561,14 @@ static i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 3, rfpMargin = 120, nullAdapt = 0, histMalus = 0;
-static int P[32] = {[5] = 1, [7] = 1, [14] = 1};
-EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; }
+static int P[32] = {[5] = 1, [7] = 1, [14] = 1, [16] = 100};
+static void lmrInit(double div);
+EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
    P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base */
 static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
 static i8 LMRT[64][64];
+static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); }
 static i32 counterMv[32 * 81];
 
 static inline int timeUp(void) {
@@ -755,7 +757,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       m = pick(qmoves, qscores, n2, i2++);
     }
     int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
-    if (!pvNode && !inChk && quiet && legal > 0 && depth <= 2 && staticEval + 150 * depth + 100 <= alpha) {
+    if (!pvNode && !inChk && quiet && legal > 0 && depth <= (P[18] ? P[18] : 2) && staticEval + (P[16] ? P[16] : 150) * depth + 100 <= alpha) {
       doMove(m);
       int ok = legalAfter(m, inChk), chk = ok && inCheck();
       undoMove();
@@ -1033,7 +1035,7 @@ EXPORT(init) void init(void) {
     for (int i = 0; i < nsl; i++) { SLIDE[t * 8 + sl[i]] = 1; SLIDE[(t + WF) * 8 + OPPD[sl[i]]] = 1; }
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
-  for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / 2.0);
+  lmrInit(2.0);
   seed = 0x2545F491;
   for (int i = 0; i < 81 * 32; i++) { ZB_L[i] = rnd32(); ZB_H[i] = rnd32(); }
   for (int i = 0; i < 2 * 8 * 20; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rnd32(); }
