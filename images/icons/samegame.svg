@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="samegame-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="samegame-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#8b5cff" stop-opacity=".30"/><stop offset=".6" stop-color="#8b5cff" stop-opacity=".04"/><stop offset="1" stop-color="#8b5cff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#samegame-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#samegame-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <g><rect x="20" y="20" width="16" height="16" rx="4" fill="#ff3fa4"/><rect x="22" y="22" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="40" y="20" width="16" height="16" rx="4" fill="#ff3fa4"/><rect x="42" y="22" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="60" y="20" width="16" height="16" rx="4" fill="#30e6ff"/><rect x="62" y="22" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="20" y="40" width="16" height="16" rx="4" fill="#8b5cff"/><rect x="22" y="42" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="40" y="40" width="16" height="16" rx="4" fill="#f2cf7a"/><rect x="42" y="42" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="60" y="40" width="16" height="16" rx="4" fill="#30e6ff"/><rect x="62" y="42" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="20" y="60" width="16" height="16" rx="4" fill="#8b5cff"/><rect x="22" y="62" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="40" y="60" width="16" height="16" rx="4" fill="#8b5cff"/><rect x="42" y="62" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="60" y="60" width="16" height="16" rx="4" fill="#ff3fa4"/><rect x="62" y="62" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/></g>
+</svg>

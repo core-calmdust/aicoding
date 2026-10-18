@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="checkers-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="checkers-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#ff3fa4" stop-opacity=".30"/><stop offset=".6" stop-color="#ff3fa4" stop-opacity=".04"/><stop offset="1" stop-color="#ff3fa4" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#checkers-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#checkers-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <defs><radialGradient id="checkers-d" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ff6fbb"/><stop offset="1" stop-color="#a81a62"/></radialGradient></defs>
+  <ellipse cx="48" cy="57" rx="25" ry="23" fill="#6e0f40"/>
+  <circle cx="48" cy="52" r="25" fill="url(#checkers-d)"/>
+  <circle cx="48" cy="52" r="18.5" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1.4"/>
+  <path d="M35.5 60L33.5 44L41.5 50.5L48 40L54.5 50.5L62.5 44L60.5 60Z" fill="#f2cf7a" stroke="#fff3cf" stroke-opacity=".6" stroke-width=".8" stroke-linejoin="round"/>
+  <g fill="#f2cf7a"><circle cx="33.5" cy="43" r="2.2"/><circle cx="48" cy="38.6" r="2.4"/><circle cx="62.5" cy="43" r="2.2"/></g>
+</svg>

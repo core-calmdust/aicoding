@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="dots-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="dots-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#30e6ff" stop-opacity=".30"/><stop offset=".6" stop-color="#30e6ff" stop-opacity=".04"/><stop offset="1" stop-color="#30e6ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#dots-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#dots-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <rect x="24" y="24" width="24" height="24" fill="#ff3fa4" fill-opacity=".28"/>
+  <g stroke="#30e6ff" stroke-width="3.2" stroke-linecap="round"><path d="M24 24L48 24"/><path d="M24 24L24 48"/><path d="M48 24L48 48"/><path d="M24 48L48 48"/><path d="M48 24L72 24"/><path d="M48 48L72 48"/><path d="M72 48L72 72"/><path d="M24 72L48 72"/></g>
+  <g fill="#eef0f6"><circle cx="24" cy="24" r="3.8"/><circle cx="24" cy="48" r="3.8"/><circle cx="24" cy="72" r="3.8"/><circle cx="48" cy="24" r="3.8"/><circle cx="48" cy="48" r="3.8"/><circle cx="48" cy="72" r="3.8"/><circle cx="72" cy="24" r="3.8"/><circle cx="72" cy="48" r="3.8"/><circle cx="72" cy="72" r="3.8"/></g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="backgammon-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="backgammon-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#8b5cff" stop-opacity=".30"/><stop offset=".6" stop-color="#8b5cff" stop-opacity=".04"/><stop offset="1" stop-color="#8b5cff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#backgammon-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#backgammon-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <rect x="15" y="17" width="66" height="62" rx="9" fill="#fff" fill-opacity=".04" stroke="#fff" stroke-opacity=".2" stroke-width="1.4"/>
+  <g><path d="M18 20L30 20L24.0 45Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M18 76L30 76L24.0 51Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M30 20L42 20L36.0 45Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M30 76L42 76L36.0 51Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M42 20L54 20L48.0 45Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M42 76L54 76L48.0 51Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M54 20L66 20L60.0 45Z" fill="#e9dcc0" fill-opacity=".9"/><path d="M54 76L66 76L60.0 51Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M66 20L78 20L72.0 45Z" fill="#ff3fa4" fill-opacity=".9"/><path d="M66 76L78 76L72.0 51Z" fill="#e9dcc0" fill-opacity=".9"/></g>
+</svg>
