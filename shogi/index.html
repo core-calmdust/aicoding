@@ -467,11 +467,11 @@ body.in-online #evalCard .navbar{margin-top:0}
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px);--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
+  body:not(.no-online){--vh:calc(100dvh - 46px - 62px);--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))} }
-  @media (max-width: 700px) and (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} body:not(.no-online) .app{padding-bottom:62px} }
+  @media (max-width: 700px) and (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} body:not(.no-online) .app{padding-bottom:124px} }
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#24180f,#150e09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
-  .dock-panel{height:0;overflow:hidden;transition:height .25s ease}
+  .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
 }
 .dock-bar{display:flex;align-items:center;gap:12px;height:46px;padding:0 18px;cursor:pointer;flex:none;min-width:0}
@@ -500,7 +500,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .dk-join{font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(201,169,97,.5);background:rgba(201,169,97,.12);color:var(--accent)}
 .dk-join:hover{background:rgba(201,169,97,.22)}
 @media (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 50px - env(safe-area-inset-bottom));--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
+  body:not(.no-online){--vh:calc(100dvh - 50px - 40px - env(safe-area-inset-bottom));--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))} }
   @media (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} }
   body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#150e09;border-top:1px solid var(--line)}
@@ -608,6 +608,29 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   body.mtab-online .chat-list{max-height:min(46vh, 340px);min-height:120px;flex:none}
   body.mtab-online .dock-bar .dk-unread{order:2}
   body.mtab-online .chat-form .dk-btn{flex:none;order:0;padding:0 16px}
+}
+/* collapsed dock (PC): compact chat strip — a few recent lines + input */
+@media not all and (pointer: coarse){
+  body:not(.dock-open) .dock-panel{display:block;padding:0 18px 8px}
+  body:not(.dock-open) .dock-panel > section:not(.dk-chat){display:none}
+  body:not(.dock-open) .dock-panel .dk-chat{flex-direction:row;align-items:stretch;gap:14px;height:100%;border-top:1px solid rgba(255,255,255,.05);padding-top:4px;box-sizing:border-box}
+  body:not(.dock-open) .dk-chat h4{display:none}
+  body:not(.dock-open) .chat-list{min-height:0;height:100%;gap:0}
+  body:not(.dock-open) .cm{font-size:12px;line-height:1.4;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
+  body:not(.dock-open) .chat-list .ol-note{font-size:11.5px;padding:2px 6px;margin:0}
+  body:not(.dock-open) .chat-list .ol-note br{display:none}
+  body:not(.dock-open) .chat-form{margin-top:0;width:min(420px,42%);align-self:center}
+  body:not(.dock-open) .chat-form input,body:not(.dock-open) .chat-form button{height:32px}
+}
+/* phones: two latest chat lines above the tab bar; tap to open the chat */
+.mt-strip{display:none}
+@media (pointer: coarse){
+  body:not(.no-online):not(.mtab-online) .mt-strip{display:flex;flex-direction:column;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));height:40px;z-index:45;padding:0 14px;background:#1b130c;border-top:1px solid var(--line);cursor:pointer;overflow:hidden}
+  body:not(.no-online) .app{padding-bottom:calc(102px + env(safe-area-inset-bottom))}
+  .mt-strip div{font-size:12px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+  .mt-strip b{color:var(--accent);font-weight:600;margin-right:6px}
+  .mt-strip .me b{color:#8fe3b8}
+  .mt-strip .empty{color:var(--dim)}
 }
 </style>
 </head>
@@ -823,9 +846,10 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
     <section class="dk-chat"><h4 id="dkChatHead"><span data-i18n="ol.chat"></span></h4><div class="chat-list" id="dkChat" role="log" aria-live="polite"></div><form class="chat-form" id="dkChatForm" autocomplete="off"><input id="dkChatIn" maxlength="100" enterkeyhint="send" autocomplete="off"><button type="submit" class="dk-btn go" id="dkChatSend"></button></form></section>
   </div>
 </div>
+<div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261018ch"></script>
+<script src="i18n.js?v=20261018mc"></script>
 <script src="engine.js?v=20261018p57"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
@@ -3150,7 +3174,7 @@ $('#dock').addEventListener('click', async e => {
 // phone tabs
 function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online'); $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.t === v)); if (v === 'online') dockStart(); }
 $('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
-if (window.Online && Online.available) { if (!matchMedia('(pointer: coarse)').matches) setTimeout(dockStart, 800); } else document.body.classList.add('no-online');
+if (window.Online && Online.available) { setTimeout(dockStart, 800); } else document.body.classList.add('no-online');
 
 $('#langSel').addEventListener('change', () => { dockRender(); if ($('#onlineOverlay').classList.contains('show')) olRender(); });
 
@@ -3284,7 +3308,7 @@ if (window.Online && Online.available) Online.onRoom((ev, r, g) => {
 // ---- public chat: one room shared by everyone online in this game (latest Online.CHAT_N messages; no private messages)
 const chat = { list: [], seen: -1, unsub: null };
 const olCoarse = () => matchMedia('(pointer: coarse)').matches;
-function chatVisible() { const B = document.body.classList; return B.contains('mtab-online') || (!olCoarse() && B.contains('dock-open')); }
+function chatVisible() { const B = document.body.classList; return B.contains('mtab-online') || !olCoarse(); }
 function chatShown() { return dock.on && !document.body.classList.contains('no-online') && (!olCoarse() || document.body.classList.contains('mtab-online')); }
 function chatStart() {
   if (chat.unsub || !window.Online || !Online.uid) return;
@@ -3307,6 +3331,8 @@ function chatRender() {
   badge.classList.toggle('hidden', !n); badge.querySelector('b').textContent = n > 9 ? '9+' : String(n);
   const last = chat.list[chat.list.length - 1]; badge.title = last ? last.name + ': ' + last.text : '';
   if (mt) mt.textContent = n ? '💬' + (n > 9 ? '9+' : n) : '';
+  const st = $('#mtStrip');
+  if (st) { const hs = chat.list.length ? chat.list.slice(-2).map(m => `<div class="${m.me ? 'me' : ''}"><b>${olX(m.name)}</b>${olX(m.text)}</div>`).join('') : `<div class="empty">💬 ${olX(t('ol.chat'))} · ${olX(t('ol.chatEmpty'))}</div>`; if (st.dataset.h !== hs) { st.dataset.h = hs; st.innerHTML = hs; } }
 }
 function chatSeen() { if (chatVisible() && chat.list.length) { const top = chat.list[chat.list.length - 1].n; if (top !== chat.seen) { chat.seen = top; chatRender(); } } }
 new MutationObserver(chatSeen).observe(document.body, { attributes: true, attributeFilter: ['class'] });
@@ -3346,6 +3372,7 @@ $('#dkChatIn').addEventListener('keydown', e => {
 });
 $('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
 $('#dkChatIn').addEventListener('blur', () => document.body.style.setProperty('--kb', '0px'));
+$('#mtStrip').addEventListener('click', () => chatOpen(true));
 $('#dkUnread').addEventListener('click', e => { e.stopPropagation(); chatOpen(!olCoarse()); });
 // Enter anywhere (not in a field, no dialog open) = type in the chat
 document.addEventListener('keydown', e => {
