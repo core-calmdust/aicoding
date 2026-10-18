@@ -120,7 +120,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019d'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261019e'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -167,7 +167,7 @@ const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), sqEl = $(
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const animOn = () => settings.anim && !reduceMotion;
 let flipped = false;
-function orient() { const base = settings.mode === 'ai' ? humanColor === P2 : puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : false; flipped = base !== !!settings.flip; }
+function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!settings.flip; }
 const sqX = s => flipped ? 7 - (s & 7) : (s & 7), sqY = s => flipped ? (s >> 4) : 7 - (s >> 4);
 function placeAt(el, s) { el.style.left = sqX(s) * 12.5 + '%'; el.style.top = sqY(s) * 12.5 + '%'; }
 function pieceSVG(p) { return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'}"><use href="#s${PT[p & 7]}"/></svg>`; }
@@ -620,7 +620,8 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
   if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
-  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
+  if (b.dataset.v === 'lesson') { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
+  if (b.dataset.v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
   setTimeout(() => inst(false), 150);
 }));
 $('#btnResume').onclick = resumeHere;
@@ -745,7 +746,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261019d').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261019e').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -766,6 +767,7 @@ function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openLessons() {
   await lessonsReady; selTab('lesson');
+  $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
   if (!LESSONS) { toast(t('ls.fail')); return; }
   const pr = lsProgress();
   let course = '', no = 0;
@@ -779,21 +781,21 @@ async function openLessons() {
   }).join('');
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
-$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); };
+$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.o !== undefined) openOpeningChoice(+b.dataset.o); else openIntro(+b.dataset.i); };
 function fenPieces(fen) { const out = {}; const rows = fen.split(' ')[0].split('/'); rows.forEach((row, i) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; } out['abcdefgh'[f] + (8 - i)] = ch; f++; } }); return out; }
 function openIntro(i) {
-  introIdx = i; const s = LESSONS.steps[i];
+  introIdx = i; const s = LESSONS.steps[i]; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   $('#liStep').textContent = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   const d = s.diagram;
   $('#liBody').innerHTML = (d ? `<div class="mini">${miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] })}</div>` : '') + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
-$('#btnLessonBack').onclick = () => openLessons();
+$('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons();
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
-$('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
+$('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function enterSpecial(fen) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; stopPlay();
@@ -808,9 +810,10 @@ function startLesson(step) {
   loadLessonProblem();
 }
 function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
-function lessonProblem() { return LESSONS.steps[lesson.step].problems[lesson.i]; }
+const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
+function lessonProblem() { return curStep().problems[lesson.i]; }
 function loadLessonProblem() {
-  const s = LESSONS.steps[lesson.step];
+  const s = curStep();
   if (s.kind === 'drill') {
     const st = s.stages[lesson.i];
     lesson.drill = true; lesson.stage = st; lesson.used = 0; lesson.me = P1;
@@ -828,21 +831,22 @@ function loadLessonProblem() {
   enterSpecial(P.fen);
   // the stored moves are UCI strings: convert once for this position
   const pos = posAt(0).pos;
-  if (P.ok) { P._ok = new Set(P.ok.map(u => pos.fromUci(u))); P._best = pos.fromUci(P.ok[0]); P._sc = null; }
+  if (P.cand) { P._freq = new Map(P.cand.map(([u, c]) => [pos.fromUci(u), c])); P._best = pos.fromUci(P.cand[0][0]); P._sc = null; P._ok = null; }
+  else if (P.ok) { P._ok = new Set(P.ok.map(u => pos.fromUci(u))); P._best = pos.fromUci(P.ok[0]); P._sc = null; }
   else { P._sc = P.sc.map(([u, v]) => [pos.fromUci(u), v]); P._best = pos.fromUci(P.best); }
   lesson.answered = false; lesson.hinted = false;
   update(false); renderLessonCard(); $('#lsFb').innerHTML = '';
 }
 function renderLessonCard() {
-  const s = LESSONS.steps[lesson.step], n = s.kind === 'drill' ? s.stages.length : s.problems.length;
-  $('#lsStep').textContent = t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
-  $('#lsTitle').textContent = t('ls.' + s.id + '.title');
+  const s = curStep(), n = s.kind === 'drill' ? s.stages.length : s.problems.length;
+  $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
+  $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
   if (s.kind === 'drill') {
     $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="dstar">★</span><span>${t('ls.' + s.id + '.goal')} ${t('dr.par', { p: lesson.stage.par })}</span></div>`;
     $('#lsDots').innerHTML = s.stages.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 2 ? 'ok' : 'mid'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
     $('#lsHint').textContent = t('dr.reset'); $('#lsHint').disabled = false;
   } else {
-    $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${t('ls.' + s.id + '.goal')}</span></div>`;
+    $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${lesson.virt ? t('op.goal') : t('ls.' + s.id + '.goal')}</span></div>`;
     $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
     $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = lesson.answered;
   }
@@ -850,6 +854,7 @@ function renderLessonCard() {
   $('#lsNext').disabled = !lesson.answered;
 }
 function problemPoints(P, m) {
+  if (P._freq) { const c = P._freq.get(m) || 0, top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * c / top)) : 0; }
   if (P._ok) return P._ok.has(m) ? 20 : 0;
   const val = new Map(P._sc), best = Math.max(...P._sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -MATE;
   if (best > MATET && mine > MATET) return mine >= best ? 20 : 16;
@@ -860,8 +865,9 @@ function problemPoints(P, m) {
   return Math.max(0, Math.round(20 * (1 - loss / 0.45)));
 }
 function lessonAnswer(m) {
-  const P = lessonProblem(), s = LESSONS.steps[lesson.step], { pos } = posAt(0);
+  const P = lessonProblem(), s = curStep(), { pos } = posAt(0);
   lesson.answered = true;
+  if (P._freq) return openingAnswer(P, m, pos);
   const pts = problemPoints(P, m); lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P._best, lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
   const bs = pos.san(best), ms = pos.san(m), val = new Map(P._sc || []), fmt = v => valLabel(v).big;
@@ -889,10 +895,12 @@ function lessonAnswer(m) {
   }, moveDur() + 800);
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(false); } return; }
   if (lesson && lesson.drill) { loadLessonProblem(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
-  const s = LESSONS.steps[lesson.step], { pos } = posAt(cur), me = pos.side, op = me ^ 1;
+  const s = curStep(), { pos } = posAt(cur), me = pos.side, op = me ^ 1;
+  if (lesson.virt) { const P = lessonProblem(); lessonMarks = [{ at: mFrom(P._best), cls: 'ok' }]; $('#lsFb').innerHTML = t('op.hint'); renderFx(); return; }
   $('#lsFb').innerHTML = t('ls.' + s.id + '.hint');
   lessonMarks = [];
   if (s.id === 'capture') for (const q of hanging(pos, op)) lessonMarks.push({ at: q, cls: 'hang' });
@@ -905,10 +913,21 @@ $('#lsHint').onclick = () => {
   renderFx();
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
   if (!lesson || !lesson.answered) return;
-  const s = LESSONS.steps[lesson.step], total = s.kind === 'drill' ? s.stages.length : s.problems.length;
+  const s = curStep(), total = s.kind === 'drill' ? s.stages.length : s.problems.length;
   if (lesson.i + 1 < total) { lesson.i++; loadLessonProblem(); return; }
   const n = lesson.results.reduce((a, b) => a + b, 0), pass = s.kind === 'drill' ? true : n >= 75;
+  if (lesson.virt) {
+    const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
+    try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
+    $('#btnLessonPlay').classList.add('hidden'); $('#btnLessonNextStep').classList.add('hidden');
+    showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
+    if (pass) confetti();
+    return;
+  }
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
@@ -945,25 +964,135 @@ function drillMove(m) {
   } else $('#lsFb').innerHTML = t('dr.progress', { n: L.used, left: left.length });
 }
 
+// ====================================================================== openings: study a main line, then practice the moves strong players choose
+let OPEN = null, openChoiceIdx = -1;
+const openReady = fetch('openings.json?v=20261019e').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+  .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
+const OP_STORE = STORE + '-open';
+function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
+const LL = o => o ? (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
+async function openOpenings() {
+  await openReady; selTab('open');
+  if (!OPEN) { toast(t('ls.fail')); return; }
+  $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
+  const pr = opProg();
+  let head = '';
+  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
+    const r = pr[g.id], first = g.prefix.split(' ')[0];
+    const grp = first === 'e2e4' ? 'e4' : first === 'd2d4' ? 'd4' : 'other';
+    let h = ''; if (grp !== head) { head = grp; h = `<p class="ls-course"><b>${t('op.grp.' + grp)}</b></p>`; }
+    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${LL(g.label)}</span><span class="tx"><b>${LL(g.title)}</b><small>${LL(g.short)}</small></span><span class="st ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+  }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${LL(OPEN.credit)}</p>`;
+  showLessonView('lessonListView'); showOverlay('#lessonOverlay');
+}
+function lineAfter(uciList) { const pos = E.Pos.fromFEN(E.START); const pcs = {}; for (const u of uciList) pos.make(pos.fromUci(u)); for (let q = 0; q < 128; q++) { if (q & 0x88) { q += 7; continue; } const p = pos.b[q]; if (p) pcs[E.sqName(q)] = ' PNBRQK'[p & 7][p & 8 ? 'toLowerCase' : 'toUpperCase'](); } return pcs; }
+function openOpeningChoice(i) {
+  openChoiceIdx = i; const g = OPEN.sets[i], pre = g.prefix.split(' ');
+  $('#liStep').textContent = t('op.title') + ' · ' + t(g.side === 'w' ? 'op.forWhite' : 'op.forBlack');
+  $('#liTitle').textContent = LL(g.title);
+  const last = pre[pre.length - 1];
+  $('#liBody').innerHTML = `<div class="mini">${miniBoard(lineAfter(pre), { arrows: [[last.slice(0, 2), last.slice(2, 4)]], hl: [], dots: [] })}</div>` + LL(g.intro).map(x => `<p>${x}</p>`).join('') +
+    `<div class="op-choice"><button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: g.study.steps.length })}</small></span></button>` +
+    `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t('op.practiceDesc')}</small></span></button></div>`;
+  $('#btnLessonStart').classList.add('hidden');
+  showLessonView('lessonIntroView'); showOverlay('#lessonOverlay');
+}
+$('#liBody').addEventListener('click', e => {
+  const b = e.target.closest('.lesson-item'); if (!b || openChoiceIdx < 0) return;
+  hideOverlay('#lessonOverlay');
+  if (b.dataset.study) startStudy(openChoiceIdx); else startPractice(openChoiceIdx);
+});
+function startStudy(gi) {
+  const g = OPEN.sets[gi];
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { study: true, gi, g, i: 0, results: [], answered: true, me: g.side === 'b' ? P2 : P1 };
+  document.body.classList.add('in-lesson');
+  enterSpecial(null);
+  const pos = E.Pos.fromFEN(E.START); lesson.line = g.study.steps.map(st => { const m = pos.fromUci(st[0]); pos.make(m); return m; });
+  showStudy(false);
+}
+function showStudy(anim) {
+  const L = lesson, g = L.g, st = g.study, i = L.i, N = st.steps.length;
+  moves = L.line.slice(0, i); cur = i; lessonMarks = []; labelList = null; hintList = null;
+  update(anim);
+  $('#lsStep').textContent = `${t('op.study')} · ${i}/${N}`;
+  $('#lsTitle').textContent = LL(g.title);
+  $('#lsDots').innerHTML = `<span class="study-bar"><span style="width:${Math.round(i * 100 / N)}%"></span></span>`;
+  let pr, fb = '';
+  if (i === 0) { pr = t('op.studyStart'); fb = LL(g.intro).join('<br>'); }
+  else {
+    const [, pct, win] = st.steps[i - 1], no = Math.floor((i - 1) / 2) + 1, dots = (i - 1) % 2 ? '…' : '.';
+    pr = `<b style="font-size:16px"><bdi>${no}${dots} ${sanOf(i - 1)}</bdi></b> <span class="op-meta">${t('op.pct', { p: pct, w: win })}</span>`;
+    const note = st.notes && st.notes[i - 1]; fb = note ? LL(note) : '';
+  }
+  if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--brass)">${t('op.studyEnd')}</b>`;
+  fb += `<br><button class="op-play" id="lsPlayHere">${t('op.playHere')}</button>`;
+  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span>${pr}</span></div>`; $('#lsFb').innerHTML = fb;
+  $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
+  $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
+}
+$('#lsFb').addEventListener('click', e => {
+  if (!e.target.closest('#lsPlayHere') || !lesson || !lesson.study) return;
+  const mv = lesson.line.slice(0, lesson.i), side = mv.length % 2 === 0 ? P1 : P2;
+  savedGame = null; exitSpecial();
+  busyToken++; cancelWorker('ai'); cancelWorker('ana');
+  Object.assign(settings, { mode: 'ai' }); humanColor = side;
+  moves = mv; cur = mv.length; evals = []; reviewing = false; gameOverShown = false;
+  orient(); drawSquares(); shownKey = ''; syncPieces(new Int8Array(128)); update(false); save(); afterPosition();
+  toast(t('op.playing'));
+});
+function startPractice(gi) {
+  const g = OPEN.sets[gi], pool = g.problems.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  hideOverlay('#lessonOverlay');
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { step: 0, gi, virt: { id: g.id, title: g.title, problems: pool.slice(0, 5) }, i: 0, results: [], answered: false, hinted: false, me: P1 };
+  document.body.classList.add('in-lesson');
+  loadLessonProblem();
+}
+function openingAnswer(P, m, pos) {
+  const pts = problemPoints(P, m); lesson.results[lesson.i] = pts; renderLessonCard();
+  const tot = P.cand.reduce((a, c) => a + c[1], 0), pc = c => Math.round(c * 100 / tot);
+  const ms = pos.san(m), top = P.cand.slice(0, 3).map(([u, c]) => `<bdi>${pos.san(pos.fromUci(u))}</bdi> ${pc(c)}%`).join(' · ');
+  const c = P._freq.get(m) || 0, lbl = pts === 20 ? 'fb.perfect' : pts >= 10 ? 'fb.good' : 'fb.bad';
+  $('#lsFb').innerHTML = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts >= 10 ? 'ok' : 'ng'}">${t(lbl)}</b> ` + (c ? t('op.yourPct', { m: ms, p: pc(c) }) : t('op.rare', { m: ms })) + `<br><small style="color:var(--dim)">${t('op.top')}: ${top}</small>`;
+  playChime(pts >= 10); playMove2(m);
+  const tok = busyToken;
+  setTimeout(() => {
+    if (!lesson || tok !== busyToken) return;
+    moves = []; cur = 0; sel = null; lessonMarks = [];
+    labelList = [];
+    P.cand.slice(0, 3).forEach(([u, cc], k) => { const mm = pos.fromUci(u); lessonMarks.push({ arrow: [mFrom(mm), mTo(mm)], cls: k ? 'a' + Math.min(3, k + 1) : '' }); labelList.push({ at: mTo(mm), big: pc(cc) + '%', cls: k ? '' : 'best' }); });
+    if (!c) lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' });
+    update(false);
+  }, moveDur() + 800);
+}
+
 // ====================================================================== puzzles: mate in N
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261019d').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261019e').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.level' + (dl.L + 1))} · ${t('pz.winIn', { n: PUZZLES.levels[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
-    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length;
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.level' + (i + 1))}</b><small>${t('pz.levelSub', { n: L.n })}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
-  }).join('');
+  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${pzName(dl.L)} · ${PUZZLES.levels[dl.L].kind === 'line' ? pzSub(dl.L) : t('pz.winIn', { n: PUZZLES.levels[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
+    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length, prev = PUZZLES.levels[i - 1];
+    let head = '';
+    if (i === 0) head = `<p class="ls-course"><b>${t('pz.mateHead')}</b><small>${t('pz.mateHeadSub')}</small></p>`;
+    if (L.kind === 'line' && (!prev || prev.kind !== 'line')) head = `<p class="ls-course"><b>${t('pz.tacHead')}</b><small>${t('pz.tacHeadSub')}</small></p>`;
+    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${pzNo(i)}</span><span class="tx"><b>${pzName(i)}</b><small>${pzSub(i)}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+  }).join('') + (PUZZLES.levels.some(L => L.kind === 'line') ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit')}</p>` : '');
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
 $('#pzLevels').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i); };
+function pzNo(i) { const L = PUZZLES.levels[i]; let k = 0; for (let q = 0; q <= i; q++) if ((PUZZLES.levels[q].kind || 'mate') === (L.kind || 'mate')) k++; return k; }
+function pzName(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('pz.tlevel' + pzNo(i)) : t('pz.level' + (i + 1)); }
+function pzSub(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('pz.tsub', { a: L.band[0], b: L.band[1] }) : t('pz.levelSub', { n: L.n }); }
 function openPzGrid(i) {
   pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
-  $('#pzLevelTitle').textContent = t('pz.level' + (i + 1)) + ' — ' + t('pz.winIn', { n: L.n });
+  $('#pzLevelTitle').textContent = pzName(i) + ' — ' + (L.kind === 'line' ? pzSub(i) : t('pz.winIn', { n: L.n }));
   $('#pzGrid').innerHTML = L.puzzles.map((_, j) => `<button data-j="${j}" class="${pr[`${i}-${j}`] ? 'solved' : ''}">${j + 1}</button>`).join('');
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
@@ -974,16 +1103,51 @@ function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   const P = PUZZLES.levels[L].puzzles[j];
+  if (P.line) {
+    // tactics: the opponent's last move is shown first, then you play the solution line
+    const me = P.fen.split(' ')[1] === 'b' ? P1 : P2;
+    puzzle = { L, j, P, me, n: P.line.length >> 1, line: true, k: 1, state: 'play', busy: true, used: 0, daily: daily || null, hinted: false };
+    document.body.classList.add('in-puzzle');
+    enterSpecial(P.fen);
+    update(false); renderPuzzleCard(); pzStatus(t('pz.tStart'));
+    const Pz = puzzle;
+    setTimeout(() => { if (puzzle !== Pz) return; playMove2(posAt(0).pos.fromUci(P.line[0])); setTimeout(() => { if (puzzle !== Pz) return; Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay()); }, moveDur()); }, 450);
+    return;
+  }
   puzzle = { L, j, P, me: P.fen.split(' ')[1] === 'b' ? P2 : P1, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.fen);
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
 }
+const THEMES = ['mateIn1', 'mateIn2', 'mateIn3', 'fork', 'pin', 'skewer', 'discoveredAttack', 'doubleCheck', 'sacrifice', 'deflection', 'attraction', 'hangingPiece', 'trappedPiece', 'backRankMate', 'smotheredMate', 'promotion', 'xRayAttack', 'intermezzo', 'quietMove', 'clearance', 'interference', 'capturingDefender', 'zugzwang', 'exposedKing', 'defensiveMove', 'endgame'];
+function themeText(P) { return (P.th || []).filter(x => THEMES.includes(x)).map(x => t('th.' + x)).join(' · '); }
+async function linePuzzleMove(m) {
+  const Pz = puzzle, P = Pz.P, { pos } = posAt(cur), exp = pos.fromUci(P.line[Pz.k]), last = Pz.k === P.line.length - 1, ms = pos.san(m), es = pos.san(exp);
+  Pz.busy = true; lessonMarks = [];
+  playMove2(m); Pz.used++;
+  const st = statusAt(cur), ok = m === exp || (last && st.over && st.winner === Pz.me);
+  renderPuzzleCard();
+  if (!ok) {
+    Pz.state = 'fail';
+    await sleep(moveDur() + 400); if (puzzle !== Pz) return;
+    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--; Pz.busy = false;
+    lessonMarks = [{ arrow: [mFrom(exp), mTo(exp)], cls: '' }, { at: mTo(exp), cls: 'ok' }, { arrow: [mFrom(m), mTo(m)], cls: 'ng' }];
+    update(false); playChime(false);
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failLine', { m: ms, b: es })}`); renderPuzzleCard(); return;
+  }
+  if (last) { setTimeout(() => puzzleSolved(), moveDur() + 300); return; }
+  pzStatus(t('pz.tGood'));
+  await sleep(moveDur() + 350); if (puzzle !== Pz) return;
+  playMove2(posAt(cur).pos.fromUci(P.line[Pz.k + 1])); Pz.k += 2;
+  await sleep(moveDur()); if (puzzle !== Pz) return;
+  Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
+  pzStatus(t('pz.tYourMove', { n: Pz.n - Pz.used }));
+}
 function renderPuzzleCard() {
   const Pz = puzzle, L = PUZZLES.levels[Pz.L];
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pz.level' + (Pz.L + 1))} · No.${Pz.j + 1}`;
-  $('#pzTitle').textContent = t('pz.winIn', { n: Pz.n });
-  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
+  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${pzName(Pz.L)} · No.${Pz.j + 1}`;
+  $('#pzTitle').textContent = Pz.line ? t('pz.tTitle') : t('pz.winIn', { n: Pz.n });
+  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${Pz.line ? t('pz.tGoal', { c: pname(Pz.me), n: Pz.n }) : t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
   $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.L + 1 >= PUZZLES.levels.length);
   $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.busy;
@@ -995,6 +1159,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 async function puzzleMove(m) {
+  if (puzzle.line) return linePuzzleMove(m);
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   const left = Pz.n - Pz.used, tok = busyToken, { pos } = posAt(cur), ms = pos.san(m);
   pzStatus(t('pz.checking'));
@@ -1031,7 +1196,8 @@ function puzzleSolved() {
   const pr = pzProgress(); pr[`${Pz.L}-${Pz.j}`] = true;
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
-  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.used })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
+  const th = Pz.line ? themeText(Pz.P) : '';
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${Pz.line ? t('pz.tSolved', { r: Pz.P.r }) : t('pz.solvedSub', { n: Pz.used })}` + (th ? `<br><small style="color:var(--dim)">${t('pz.theme')}: ${th}</small>` : '') + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
   playChime(true); confetti(); renderPuzzleCard();
 }
 $('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hinted; startPuzzle(puzzle.L, puzzle.j, puzzle.daily); puzzle.hinted = h; } };
@@ -1040,6 +1206,7 @@ $('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzle
 $('#pzQuit').onclick = () => quitSpecial();
 $('#pzHint').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.state !== 'play' || Pz.busy) return;
+  if (Pz.line) { Pz.hinted = true; const m = posAt(cur).pos.fromUci(Pz.P.line[Pz.k]); lessonMarks = [{ at: mFrom(m), cls: 'ok' }]; renderFx(); pzStatus(t('pz.hintText')); return; }
   const left = Pz.n - Pz.used, list = await mateReq(left); if (puzzle !== Pz || !list) return;
   Pz.hinted = true;
   lessonMarks = list.filter(x => x.need && x.need <= left).map(g => ({ at: mFrom(g.m), cls: 'ok' }));
@@ -1049,6 +1216,11 @@ $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.busy) return;
   Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; lessonMarks = []; hintList = null;
   moves = []; cur = 0; Pz.used = 0; update(false); renderPuzzleCard(); pzStatus(t('pz.showing'));
+  if (Pz.line) {
+    for (let k = 0; k < Pz.P.line.length; k++) { await sleep(k ? 700 : 300); if (puzzle !== Pz) return; playMove2(posAt(cur).pos.fromUci(Pz.P.line[k])); if (k & 1) Pz.used++; renderPuzzleCard(); }
+    const th = themeText(Pz.P);
+    Pz.busy = false; renderPuzzleCard(); pzStatus(t('pz.answerDone') + (th ? `<br><small style="color:var(--dim)">${t('pz.theme')}: ${th}</small>` : '')); return;
+  }
   for (let step = 0; step < 12; step++) {
     if (puzzle !== Pz || statusAt(cur).over) break;
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
@@ -1218,7 +1390,8 @@ const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')
 function dailyPick() {
   if (!PUZZLES || PUZZLES.levels.length < 4) return null;
   const now = new Date(), date = ymd(now), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
-  const wd = now.getDay(), L = wd >= 1 && wd <= 2 ? 1 : wd >= 3 && wd <= 4 ? 2 : 3;
+  const wd = now.getDay(), T = PUZZLES.levels.map((x, i) => x.kind === 'line' ? i : -1).filter(i => i >= 0);
+  const L = T.length >= 5 ? [3, T[0], T[1], T[2], T[2], T[3], T[4]][wd] : (wd >= 1 && wd <= 2 ? 1 : wd >= 3 && wd <= 4 ? 2 : 3);
   const n = PUZZLES.levels[L].puzzles.length;
   let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
   return { date, L, j: (h >>> 0) % n };
