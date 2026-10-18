@@ -5391,11 +5391,10 @@ function updateScale() {
     // スケール計算とスタイル適用を次の描画フレームに同期させる
     requestAnimationFrame(() => {
         if (document.fullscreenElement === r) {
-            const instructionHeight = document.getElementById('instructions-container').offsetHeight;
-            const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + instructionHeight;
+            // 上部バー・画面・下の説明を含めたゲーム全体の大きさで縮尺を決める
             const margin = 20;
             const effectiveWidth = w.offsetWidth + margin;
-            const effectiveHeight = totalGameHeight + margin;
+            const effectiveHeight = w.offsetHeight + margin;
             const scaleX = r.clientWidth / effectiveWidth;
             const scaleY = r.clientHeight / effectiveHeight;
             const scale = Math.min(scaleX, scaleY);
