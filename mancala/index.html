@@ -27,8 +27,8 @@
   --gap: clamp(24px, 3vw, 48px);
   --plate: 50px;
   /* the board is 9.2u x 3.5u inside a 0.25u frame */
-  --u: min((var(--vh) - var(--pad) * 2 - var(--plate) * 2 - 28px) / 4, (100vw - var(--pad) * 2 - var(--gap) - 380px) / 9.7, 118px);
-  --bw: calc(var(--u) * 9.2); --bh: calc(var(--u) * 3.5);
+  --u: min((var(--vh) - var(--pad) * 2 - var(--plate) * 2 - 28px) / 4.2, (100vw - var(--pad) * 2 - var(--gap) - 380px) / 9.7, 118px);
+  --bw: calc(var(--u) * 9.2); --bh: calc(var(--u) * 3.7);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100dvh){:root{--vh:100dvh}}
@@ -389,7 +389,7 @@ bdi{unicode-bidi:isolate}
 }
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){
   /* phone portrait: the board stands upright (stores at top and bottom) */
-  :root{--plate:40px;--u:min((100vw - 24px) / 4, (var(--vh) - 196px) / 9.7, 100px);--bw:calc(var(--u) * 3.5);--bh:calc(var(--u) * 9.2)}
+  :root{--plate:40px;--u:min((100vw - 24px) / 4.2, (var(--vh) - 196px) / 9.7, 100px);--bw:calc(var(--u) * 3.7);--bh:calc(var(--u) * 9.2)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   .side, .side-in{display:contents}
@@ -418,7 +418,7 @@ bdi{unicode-bidi:isolate}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
-  :root{--plate:32px;--u:min((var(--vh) - 20px - 2 * var(--plate) - 16px) / 4, (100vw - 300px) / 9.7, 110px)}
+  :root{--plate:32px;--u:min((var(--vh) - 20px - 2 * var(--plate) - 16px) / 4.2, (100vw - 300px) / 9.7, 110px)}
   .app{padding:10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));gap:16px;grid-template-columns:auto minmax(220px, 340px)}
   .board-area{gap:8px}
   .plate{padding:0 10px;gap:8px;border-radius:9px}
@@ -452,38 +452,33 @@ bdi{unicode-bidi:isolate}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
-/* ================================================================ PC: board across the full width, cards below */
+/* ================================================================ PC: player bars around the board, menu row, two cards */
 @media not all and (pointer: coarse){
   :root{
-    --plate:40px; --tb:50px;
-    --R:clamp(150px, calc(var(--vh) * .2), 200px);
-    --u:min((100vw - 56px) / 9.7, (var(--vh) - 28px - 48px - var(--plate) - 8px - 3 * 14px - var(--tb) - var(--R)) / 4, 136px);
+    --plate:clamp(34px, calc(var(--vh) * .046), 42px); --tb:clamp(40px, calc(var(--vh) * .054), 48px); --C:clamp(118px, calc(var(--vh) * .19), 176px);
+    --u:min((100vw - 64px) / 9.7, (var(--vh) - 24px - 50px - 2 * var(--plate) - 16px - 3 * 12px - var(--tb) - var(--C)) / 4.2, 132px);
   }
-  .app{display:grid;width:min(calc(var(--u) * 9.7), calc(100vw - 32px));margin:0 auto;padding:14px 0;gap:14px;height:var(--vh);
-    grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto var(--tb) minmax(0,1fr);
-    grid-template-areas:"brand brand brand" "board board board" "ctrl ctrl ctrl" "eval eval kifu";align-content:stretch;justify-content:stretch}
-  .app:has(.review-card.show){grid-template-areas:"brand brand brand" "board board board" "ctrl ctrl ctrl" "eval rv kifu"}
+  html,body{overflow-y:auto}
+  .app{display:grid;width:min(calc(var(--u) * 9.7), calc(100vw - 32px));margin:0 auto;padding:12px 0;gap:12px;height:auto;min-height:var(--vh);
+    grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:auto auto var(--tb) var(--C);
+    grid-template-areas:"brand brand brand brand brand brand" "board board board board board board" "ctrl ctrl ctrl ctrl ctrl ctrl" "eval eval eval kifu kifu kifu";align-content:center}
+  .app:has(.review-card.show){grid-template-areas:"brand brand brand brand brand brand" "board board board board board board" "ctrl ctrl ctrl ctrl ctrl ctrl" "eval eval rv rv kifu kifu"}
   .side,.side-in{display:contents}
-  .brand{grid-area:brand;align-items:flex-end!important;padding:0 4px}
-  .brand h1{font-size:34px!important}
-  .board-area{grid-area:board;display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"pt pb" "fr fr";gap:8px 14px}
-  #plateTop{grid-area:pt}
-  #plateBot{grid-area:pb;flex-direction:row-reverse}
-  #plateBot .pstat{margin-left:0;margin-right:auto}
-  #plateBot .pscore{text-align:left}
-  .frame{grid-area:fr;justify-self:center}
-  .controls{grid-area:ctrl;display:flex;gap:8px;padding:6px;align-items:stretch;align-self:stretch;min-height:0}
-  .controls .btn{flex:1;flex-direction:row;justify-content:center;gap:7px;padding:0 6px;font-size:12.5px;border-radius:10px}
+  .brand{grid-area:brand;align-items:flex-end!important;padding:0 2px}
+  .brand h1{font-size:36px!important}
+  .board-area{grid-area:board;display:flex;flex-direction:column;gap:8px}
+  .frame{align-self:center}
+  .controls{grid-area:ctrl;display:flex;gap:8px;padding:0;background:none!important;border:none!important;box-shadow:none!important;align-self:stretch}
+  .controls .btn{flex:1;flex-direction:row;justify-content:center;gap:8px;padding:0 6px;font-size:13px;border-radius:12px}
   .controls .btn svg{width:18px;height:18px}
   .info-line{grid-area:brand;justify-self:end;align-self:end;margin:0 190px 7px 0;max-width:calc(100% - 640px);font-size:11.5px;color:var(--muted);letter-spacing:.04em}
-  #evalCard{grid-area:eval;display:flex;flex-direction:column;min-height:0!important;align-self:stretch;overflow:hidden;padding:12px 14px}
-  #evalCard .graph{flex:1 1 0;height:0!important;min-height:24px;margin-top:8px}
+  #evalCard{grid-area:eval;display:flex;flex-direction:column;min-height:0!important;align-self:stretch;overflow:hidden;padding:12px 16px}
+  #evalCard .graph{flex:1 1 0;height:0!important;min-height:22px;margin-top:8px}
   #evalCard .navbar{margin-top:6px}
   .review-card.show{grid-area:rv;min-height:0!important;flex:none;align-self:stretch;padding:12px 14px}
-  .kifu-card{grid-area:kifu;min-height:0!important;align-self:stretch;overflow:hidden;padding:12px 14px}
-  .kifu{grid-template-columns:repeat(6,1fr)}
-  /* lessons & puzzles take the whole area under the board: text on the left, buttons on the right */
-  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:3 / 1 / 5 / 4;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,330px);grid-auto-rows:min-content;column-gap:24px;overflow-y:auto;min-height:0;align-content:start}
+  .kifu-card{grid-area:kifu;min-height:0!important;align-self:stretch;overflow:hidden;padding:12px 16px}
+  .kifu{grid-template-columns:repeat(8,1fr)}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:3 / 1 / 5 / 7;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,330px);grid-auto-rows:min-content;column-gap:24px;overflow-y:auto;min-height:0;align-content:start}
   .lesson-card > :not(.lesson-actions), .puzzle-card > :not(.lesson-actions){grid-column:1}
   .lesson-card > .lesson-actions{grid-column:2;grid-row:1 / span 4;flex-direction:column;align-self:center;margin-top:0}
   .puzzle-card > .lesson-actions{grid-column:2;margin-top:8px}
@@ -492,6 +487,55 @@ bdi{unicode-bidi:isolate}
   .lesson-card h3,.puzzle-card h3{margin:2px 0 6px}
   .lesson-fb,.pz-status{min-height:0}
 }
+/* ================================================================ black luxe (after the original Luxe Mancala) */
+:root{--bg:#0c0c0d; --panel:#151516; --panel2:#1d1d1f; --line:#2a2a2d; --text:#f3eee6; --muted:#a49e95; --dim:#6e6962; --brass:#c9a961; --brass2:#8a7448; --accent:#e3c27a}
+body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparent 62%),linear-gradient(180deg,#131314,#09090a)!important}
+.card{background:linear-gradient(180deg,#19191b,#121213)!important;border:1px solid #29292c!important;box-shadow:0 18px 40px -26px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.035)!important}
+.plate{background:linear-gradient(180deg,#19191b,#121213)!important;border:1px solid #29292c;border-radius:14px}
+.plate.active{border-color:rgba(201,169,97,.65);box-shadow:0 0 0 1px rgba(201,169,97,.15),0 10px 28px -14px rgba(226,194,117,.35)}
+.plate .pscore{font-family:'Cormorant Garamond','Shippori Mincho B1',serif;font-weight:700;font-size:30px;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:'lnum' 1}
+.frame{border-radius:calc(var(--u) * .55);
+  background:radial-gradient(140% 160% at 25% -10%, #262628 0%, #18181a 42%, #0d0d0e 100%)!important;
+  box-shadow:0 46px 90px -34px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.07),inset 0 -30px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.045)!important}
+.frame::before{display:none}
+.board{background:none!important;box-shadow:none!important;overflow:hidden}
+.board::after{display:none}
+.board::before{content:"";position:absolute;left:16%;right:16%;top:50%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07) 25%,rgba(255,255,255,.07) 75%,transparent);pointer-events:none}
+.vert .board::before{left:50%;right:auto;top:16%;bottom:16%;width:1px;height:auto;background:linear-gradient(180deg,transparent,rgba(255,255,255,.07) 25%,rgba(255,255,255,.07) 75%,transparent)}
+.slot{background:radial-gradient(circle at 50% 42%,#060607 0%,#0e0e0f 55%,#18181a 84%,#222225 100%)!important;
+  box-shadow:inset 0 calc(var(--u) * .08) calc(var(--u) * .18) rgba(0,0,0,.95),inset 0 calc(var(--u) * -.02) calc(var(--u) * .04) rgba(255,255,255,.06),0 0 0 1px rgba(255,255,255,.055),0 calc(var(--u) * .025) calc(var(--u) * .03) rgba(255,255,255,.035)!important}
+.slot.store{border-radius:999px!important}
+.slot.pit.can:hover,.slot.pit.can.hov{box-shadow:inset 0 calc(var(--u) * .08) calc(var(--u) * .18) rgba(0,0,0,.95),0 0 0 2px rgba(226,194,117,.7),0 0 calc(var(--u) * .28) rgba(226,194,117,.3)!important}
+.badge,.badge.store{background:none;border:none;min-width:0;height:auto;padding:0;z-index:35;line-height:1;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:'lnum' 1;
+  font-family:'Cormorant Garamond','Shippori Mincho B1',serif;font-weight:700;font-size:calc(var(--u) * .52);color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.95)}
+.badge.store{font-size:calc(var(--u) * .64);color:#f1d89c}
+.badge.zero{color:rgba(255,255,255,.16);text-shadow:none}
+.pitno{color:rgba(255,255,255,.3);font-size:calc(var(--u) * .14);font-family:'Zen Kaku Gothic New',sans-serif;letter-spacing:.05em}
+.slabel{position:absolute;transform:translate(-50%,-50%);font-size:calc(var(--u) * .15);letter-spacing:.16em;font-weight:700;color:var(--muted);pointer-events:none;white-space:nowrap;z-index:30}
+.slabel.me{color:var(--accent)}
+.vert .slabel{display:none}
+.turnlbl{color:#ecd08e;text-shadow:0 0 18px rgba(226,194,117,.4),0 2px 6px rgba(0,0,0,.7)}
+.turnlbl.script{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:calc(var(--u) * .5)}
+.tip.below{transform:translate(-50%,0)}
+.modal{background:linear-gradient(180deg,#1b1b1d,#111112)!important;border-color:rgba(201,169,97,.32)!important}
+.overlay{background:rgba(0,0,0,.66)!important}
+.mbtn.go,.lesson-actions button.go{background:linear-gradient(180deg,#d1ac55,#a8862f)!important;color:#140f05!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 18px -10px rgba(201,169,97,.7)!important}
+#btnNew{background:linear-gradient(180deg,#c9a24a,#a1802c);color:#140f05;border-color:transparent}
+#btnNew:hover{filter:brightness(1.08);color:#140f05}
+.btn{background:linear-gradient(180deg,#1a1a1c,#131314);border-color:#2b2b2e}
+.seg{background:#0f0f10}
+.seg button.sel{background:#232326}
+.rulecard{background:#121213}
+.lesson-item{background:#121213}
+/* messages: wide enough to read comfortably */
+.toast{position:fixed!important;width:max-content;max-width:min(560px, 92vw)!important;font-size:15px;line-height:1.55;letter-spacing:.03em;padding:12px 22px;text-wrap:balance;background:rgba(18,18,19,.94)!important;border-color:rgba(201,169,97,.5)!important}
+.coach{width:max-content;max-width:min(560px, 92vw);white-space:normal;text-align:center;font-size:14px;line-height:1.5;padding:7px 16px;text-wrap:balance}
+.banner{font-size:clamp(20px, calc(var(--u) * .36), 34px)}
+.lesson-prompt,.ls-goal,.pz-goal{font-size:16px;line-height:1.7}
+.lesson-fb,.pz-status{font-size:15px;line-height:1.75}
+.tip{font-size:clamp(11px, calc(var(--u) * .16), 15px)}
+@media (pointer: fine){.toast{max-width:min(680px, 70vw)!important;font-size:16px}}
 </style>
 </head>
 <body>

@@ -133,7 +133,7 @@ function sWrong() { const a = ctx(); if (!a) return; const t0 = a.currentTime; t
 
 // ====================================================================== board geometry
 const boardEl = $('#board'), slotsEl = $('#slots'), seedsEl = $('#seeds'), fxEl = $('#fx');
-const BW = 9.2, BH = 3.5;
+const BW = 9.2, BH = 3.7;
 let vert = false, U = 60;
 const isStore = i => i === 6 || i === 13;
 const ownerOf = i => i <= 6 ? 0 : 1;
@@ -141,18 +141,19 @@ const pitIndex = (side, k) => (side ? 7 : 0) + k;
 function bottomSide() { return (settings.mode === 'ai' && !lesson && !puzzle) ? game.human : 0; }
 function slotUV(i) {
   const B = bottomSide(), own = ownerOf(i), bottom = own === B;
-  if (isStore(i)) return { x: bottom ? 8.45 : 0.75, y: 1.75, bottom };
+  if (isStore(i)) return { x: bottom ? 8.45 : 0.75, y: 1.85, bottom };
   const k = own ? i - 7 : i;
-  return bottom ? { x: 1.85 + 1.1 * k, y: 2.45, bottom } : { x: 7.35 - 1.1 * k, y: 1.05, bottom };
+  return bottom ? { x: 1.85 + 1.1 * k, y: 2.9, bottom } : { x: 7.35 - 1.1 * k, y: 0.8, bottom };
 }
 // phone portrait: the board is turned a quarter counter-clockwise, so sowing stays counter-clockwise,
 // your pits are the right column and your store is at the top
 const toPx = (x, y) => vert ? [y * U, (BW - x) * U] : [x * U, y * U];
 const offPx = (dx, dy) => vert ? [dy * U, -dx * U] : [dx * U, dy * U];
 function slotPx(i) { const p = slotUV(i); return toPx(p.x, p.y); }
-let slotEls = [], badgeEls = [], pitNoEls = [];
+let slotEls = [], badgeEls = [], pitNoEls = [], storeLbl = [];
 function buildBoard() {
   slotsEl.innerHTML = ''; slotEls = []; badgeEls = []; pitNoEls = [];
+  storeLbl = [0, 1].map(() => { const d = document.createElement('div'); d.className = 'slabel'; slotsEl.appendChild(d); return d; });
   for (let i = 0; i < 14; i++) {
     const s = document.createElement('div'); s.className = 'slot ' + (isStore(i) ? 'store' : 'pit'); s.dataset.i = i;
     slotsEl.appendChild(s); slotEls.push(s);
@@ -176,11 +177,11 @@ function layout() {
     s.style.left = x + 'px'; s.style.top = y + 'px';
     if (isStore(i)) { const w = 1.1 * U, h = 2.7 * U; s.style.width = (vert ? h : w) + 'px'; s.style.height = (vert ? w : h) + 'px'; }
     else { s.style.width = s.style.height = 0.9 * U + 'px'; }
-    const by = isStore(i) ? (p.bottom ? 3.2 : 0.3) : (p.bottom ? 3.17 : 0.33);
-    const [bx, byy] = toPx(p.x, by); badgeEls[i].style.left = bx + 'px'; badgeEls[i].style.top = byy + 'px';
-    if (pitNoEls[i]) { const [nx, ny] = toPx(p.x - 0.43, p.y + (p.bottom ? 0.47 : -0.47)); pitNoEls[i].style.left = nx + 'px'; pitNoEls[i].style.top = ny + 'px'; }
+    badgeEls[i].style.left = x + 'px'; badgeEls[i].style.top = (y + 0.03 * U) + 'px';   // the count sits inside the cup, over the gems
+    if (pitNoEls[i]) { const [nx, ny] = toPx(p.x, p.y + (p.bottom ? -0.62 : 0.62)); pitNoEls[i].style.left = nx + 'px'; pitNoEls[i].style.top = ny + 'px'; }
   }
-  const [tx, ty] = toPx(4.6, 1.76); const tl = $('#turnLbl'); tl.style.top = ty + 'px';
+  const [tx, ty] = toPx(4.6, 1.85); const tl = $('#turnLbl'); tl.style.top = ty + 'px';
+  [6, 13].forEach((st, j) => { const p = slotUV(st), [lx, ly] = toPx(p.x, 0.26); storeLbl[j].style.left = lx + 'px'; storeLbl[j].style.top = ly + 'px'; storeLbl[j].dataset.st = st; });
   for (let i = 0; i < 14; i++) for (const s of seeds[i]) posSeed(s);
   renderFx();
 }
@@ -241,7 +242,7 @@ function syncSeeds(b) {
   for (const s of pool) s.el.remove();
   setBadges(b);
 }
-function resetSeeds() { for (let i = 0; i < 14; i++) { for (const s of seeds[i]) s.el.remove(); seeds[i] = []; } gemRs = 7; }
+function resetSeeds() { stopPhysics(); for (let i = 0; i < 14; i++) { for (const s of seeds[i]) s.el.remove(); seeds[i] = []; } gemRs = 7; }
 let shownCounts = new Int8Array(14);
 function setBadges(b, popAt) {
   for (let i = 0; i < 14; i++) {
@@ -259,16 +260,31 @@ let wakers = new Set();
 function nap(ms) { return new Promise(r => { const f = () => { clearTimeout(tm); wakers.delete(f); r(); }; const tm = setTimeout(f, ms); wakers.add(f); }); }
 function fly(s, to, dur, lift) {
   const [x0, y0] = seedXY(s);
-  if (to.slot !== undefined) { s.slot = to.slot; s.x = to.x; s.y = to.y; }
+  if (to.slot !== undefined) { s.slot = to.slot; s.x = to.x; s.y = to.y; s.vx = 0; s.vy = 0; }
   const [x1, y1] = seedXY(s);
-  if (!motionOn() || !s.el.animate) { posSeed(s); return; }
-  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - (lift || 0.45) * U;
+  if (!s.el.animate) { posSeed(s); return; }
   s.el.classList.add('fly');
   const done = () => { s.el.classList.remove('fly'); posSeed(s); };
-  const a = s.el.animate([
-    { transform: `translate(${x0}px,${y0}px) scale(1)` },
-    { transform: `translate(${mx}px,${my}px) scale(1.35)`, offset: 0.5 },
-    { transform: `translate(${x1}px,${y1}px) scale(1)` }], { duration: dur, easing: 'cubic-bezier(.35,.1,.3,1)' });
+  let kf;
+  if (!motionOn()) {   // reduced motion: a short straight glide, no hop
+    kf = [{ transform: `translate(${x0}px,${y0}px)` }, { transform: `translate(${x1}px,${y1}px)` }];
+    dur = Math.min(dur, 220);
+  } else {
+    let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    const h = (lift || 0.45) * U;
+    if (vert) {
+      // upright board: the arc bulges sideways, away from the middle of the board
+      const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1; let nx = -dy / L, ny = dx / L;
+      const cx = boardEl.clientWidth / 2; if ((mx - cx) * nx < 0) { nx = -nx; ny = -ny; }
+      mx += nx * h * 0.8; my += ny * h * 0.8 - h * 0.25;
+    } else my -= h;
+    kf = [
+      { transform: `translate(${x0}px,${y0}px) scale(1)`, easing: 'cubic-bezier(.3,.0,.5,1)' },
+      { transform: `translate(${mx}px,${my}px) scale(1.32)`, offset: 0.48, easing: 'cubic-bezier(.5,0,.75,1)' },
+      { transform: `translate(${x1}px,${y1}px) scale(.94)`, offset: 0.86, easing: 'ease-out' },
+      { transform: `translate(${x1}px,${y1}px) scale(1)` }];   // soft landing
+  }
+  const a = s.el.animate(kf, { duration: dur });
   s.el.style.transform = `translate(${x1}px,${y1}px)`;
   a.onfinish = done; a.oncancel = done;
 }
@@ -287,6 +303,7 @@ let animTok = 0;
 async function animateMove(b, side, k, rules) {
   const tr = E.trace(b, side, k, rules);
   lastAnimBoard = tr.board;
+  stopPhysics();
   const tok = ++animTok;
   if (!animOn()) { syncSeeds(tr.board); sDrop(false); return tr; }
   animating = true; boardEl.classList.add('animating');
@@ -376,36 +393,82 @@ function showBanner(text, sub, cls) {
 }
 
 // ====================================================================== gems roll when brushed (mouse over a pit, or a finger sliding across)
+// Each touched cup gets a tiny 2-D simulation: the brush gives nearby gems a push, then they roll with friction,
+// bounce off each other and off the cup wall (a circle for pits, a pill for stores) and come to rest.
 let lastBrush = null;
-function brushAt(x, y, now) {
-  if (!motionOn() || animating || !U) return;
-  const r = boardEl.getBoundingClientRect(), bx = x - r.left, by = y - r.top;
-  let vx = 0, vy = 0;
-  if (lastBrush && now - lastBrush.t < 120) { vx = bx - lastBrush.x; vy = by - lastBrush.y; }
-  lastBrush = { x: bx, y: by, t: now };
-  const sp = Math.hypot(vx, vy); if (sp < 0.5) return;
-  const reach = 0.3 * U;
-  for (let i = 0; i < 14; i++) for (const s of seeds[i]) {
-    if (s.el.classList.contains('fly')) continue;
-    const [sx, sy] = seedXY(s), dx = sx - bx, dy = sy - by, d = Math.hypot(dx, dy);
-    if (d > reach || (s.jt && now - s.jt < 260)) continue;
-    s.jt = now;
-    const k = (1 - d / reach) * Math.min(1, sp / 14), push = 0.075 * U * k;
-    // roll along the brush direction, a little away from the finger
-    const ux = (vx / sp) * 0.75 + (dx / (d || 1)) * 0.25, uy = (vy / sp) * 0.75 + (dy / (d || 1)) * 0.25;
-    const px = ux * push, py = uy * push, rot = (vx >= 0 ? 1 : -1) * 120 * k;
-    const base = `translate(${sx}px,${sy}px)`;
-    s.el.animate([
-      { transform: base + ' rotate(0deg)' },
-      { transform: `translate(${sx + px}px,${sy + py}px) rotate(${rot}deg)`, offset: 0.3 },
-      { transform: `translate(${sx - px * 0.35}px,${sy - py * 0.35}px) rotate(${-rot * 0.4}deg)`, offset: 0.62 },
-      { transform: `translate(${sx + px * 0.12}px,${sy + py * 0.12}px) rotate(${rot * 0.25}deg)`, offset: 0.84 },
-      { transform: base + ' rotate(0deg)' }], { duration: 620, easing: 'ease-out' });
+const physSlots = new Set();
+let physRAF = 0, physLast = 0;
+function slotAtPx(bx, by) {
+  for (let i = 0; i < 14; i++) {
+    const [cx, cy] = slotPx(i), ox = bx - cx, oy = by - cy;
+    const lx = vert ? -oy / U : ox / U, ly = vert ? ox / U : oy / U;   // offset in the horizontal frame
+    if (isStore(i) ? (Math.abs(lx) < 0.56 && Math.abs(ly) < 1.36) : Math.hypot(lx, ly) < 0.47) return { i, lx, ly };
   }
+  return null;
 }
+function brushAt(x, y, now) {
+  if (!motionOn() || animating || !U) { lastBrush = null; return; }
+  const r = boardEl.getBoundingClientRect(), bx = x - r.left, by = y - r.top;
+  const prev = lastBrush; lastBrush = { x: bx, y: by, t: now };
+  if (!prev || now - prev.t > 120 || now === prev.t) return;
+  const dt = (now - prev.t) / 1000;
+  let vx = (bx - prev.x) / U / dt, vy = (by - prev.y) / U / dt;      // u per second, screen frame
+  if (vert) { const hx = -vy, hy = vx; vx = hx; vy = hy; }           // to the horizontal frame
+  const sp = Math.hypot(vx, vy); if (sp < 0.15) return;
+  if (sp > 6) { vx *= 6 / sp; vy *= 6 / sp; }
+  const hit = slotAtPx(bx, by); if (!hit) return;
+  let touched = false;
+  for (const s of seeds[hit.i]) {
+    if (s.el.classList.contains('fly')) continue;
+    const dx = s.x - hit.lx, dy = s.y - hit.ly, d = Math.hypot(dx, dy);
+    if (d > 0.24) continue;
+    const k = 1 - d / 0.24;
+    s.vx = (s.vx || 0) + vx * 0.5 * k + (dx / (d || 1)) * 0.6 * k;
+    s.vy = (s.vy || 0) + vy * 0.5 * k + (dy / (d || 1)) * 0.6 * k;
+    touched = true;
+  }
+  if (touched) { physSlots.add(hit.i); if (!physRAF) { physLast = performance.now(); physRAF = requestAnimationFrame(physStep); } }
+}
+function physStep(now) {
+  const dt = Math.min(0.033, (now - physLast) / 1000); physLast = now;
+  for (const i of [...physSlots]) {
+    const list = seeds[i], st = isStore(i), n = list.length;
+    const d = Math.min(0.215, Math.sqrt((st ? 0.8 * 2.38 : Math.PI * 0.31 * 0.31) / (Math.max(1, n) * 0.92)));
+    let moving = false;
+    for (const s of list) {
+      s.vx = s.vx || 0; s.vy = s.vy || 0;
+      // carved bowl: a gentle pull toward the centre, rolling friction
+      if (!st) { s.vx -= s.x * 2.2 * dt; s.vy -= s.y * 2.2 * dt; }
+      const f = Math.exp(-2.6 * dt); s.vx *= f; s.vy *= f;
+      s.x += s.vx * dt; s.y += s.vy * dt;
+    }
+    for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {   // gem-to-gem collisions
+      const A = list[a], B = list[b], dx = B.x - A.x, dy = B.y - A.y, dd = Math.hypot(dx, dy);
+      if (dd >= d || dd === 0) continue;
+      const nx = dx / dd, ny = dy / dd, ov = (d - dd) / 2;
+      A.x -= nx * ov; A.y -= ny * ov; B.x += nx * ov; B.y += ny * ov;
+      const rv = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny;
+      if (rv < 0) { const j = -0.85 * rv; A.vx -= j * nx; A.vy -= j * ny; B.vx += j * nx; B.vy += j * ny; }
+    }
+    for (const s of list) {                                          // the wall of the cup
+      if (st) {
+        if (Math.abs(s.x) > 0.4) { s.x = Math.sign(s.x) * 0.4; s.vx *= -0.45; }
+        if (Math.abs(s.y) > 1.19) { s.y = Math.sign(s.y) * 1.19; s.vy *= -0.45; }
+      } else {
+        const r = Math.hypot(s.x, s.y);
+        if (r > 0.31) { const nx = s.x / r, ny = s.y / r; s.x = nx * 0.31; s.y = ny * 0.31; const vn = s.vx * nx + s.vy * ny; if (vn > 0) { s.vx -= 1.5 * vn * nx; s.vy -= 1.5 * vn * ny; } }
+      }
+      if (Math.hypot(s.vx, s.vy) > 0.02) moving = true; else { s.vx = 0; s.vy = 0; }
+      posSeed(s);
+    }
+    if (!moving) physSlots.delete(i);
+  }
+  physRAF = physSlots.size ? requestAnimationFrame(physStep) : 0;
+}
+function stopPhysics() { physSlots.clear(); if (physRAF) cancelAnimationFrame(physRAF); physRAF = 0; for (let i = 0; i < 14; i++) for (const s of seeds[i]) { s.vx = 0; s.vy = 0; } }
 boardEl.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') brushAt(e.clientX, e.clientY, performance.now()); });
 boardEl.addEventListener('pointerleave', () => { lastBrush = null; });
-// touchmove keeps firing while the page scrolls, so a finger sliding over the pits rolls the gems without blocking scrolling
+// touchmove keeps firing while the page scrolls, so a finger sliding over the cups rolls the gems without blocking scrolling
 boardEl.addEventListener('touchmove', e => { const tc = e.touches[0]; if (tc) brushAt(tc.clientX, tc.clientY, performance.now()); }, { passive: true });
 boardEl.addEventListener('touchend', () => { lastBrush = null; }, { passive: true });
 
@@ -442,14 +505,14 @@ function drawPreview(i) {
   const tr = E.trace(p.b, p.side, i % 7, game.rules);
   const cnt = new Map(), relays = [];
   for (const ev of tr.events) { if (ev.t === 'drop') cnt.set(ev.at, (cnt.get(ev.at) || 0) + 1); if (ev.t === 'pick' && ev.relay) relays.push(ev.at); }
-  for (const [at, n] of cnt) { const u = slotUV(at); fxAt(at, isStore(at) ? 0 : 0.31, isStore(at) ? (u.bottom ? -1.05 : 1.05) : (u.bottom ? 0.3 : -0.3), 'chip', '+' + n); }
+  for (const [at, n] of cnt) { const u = slotUV(at); fxAt(at, isStore(at) ? 0 : 0.33, isStore(at) ? (u.bottom ? 1.05 : -1.05) : (u.bottom ? -0.3 : 0.3), 'chip', '+' + n); }
   relays.forEach((at, j) => fxAt(at, -0.3, 0.3, 'chip relay', '↻' + (j + 1)));
-  if (tr.over) { fxRing(tr.land, ''); const u = slotUV(tr.land); fxAt(tr.land, 0, u.bottom ? -0.62 : -0.55, 'tip plain', t('pv.end')); return; }
+  const tipAt = (at, cls, txt) => { const u = slotUV(at); if (isStore(at)) return fxAt(at, vert ? (u.bottom ? -1.55 : 1.55) : 0, vert ? 0 : -0.2, cls, txt); return fxAt(at, 0, u.bottom ? -0.52 : 0.52, cls + (u.bottom ? '' : ' below'), txt); };
+  if (tr.over) { fxRing(tr.land, ''); tipAt(tr.land, 'tip plain', t('pv.end')); return; }
   fxRing(tr.land, tr.extra ? 'ok' : tr.cap ? '' : '');
   const u = slotUV(tr.land);
-  const ty = isStore(tr.land) ? -1.42 : -0.55;
-  if (tr.extra) { if (vert && isStore(tr.land)) fxAt(tr.land, u.bottom ? -1.55 : 1.55, 0, 'tip', t('pv.extra')); else fxAt(tr.land, 0, ty, 'tip', t('pv.extra')); }
-  else if (tr.cap) { fxRing(tr.capFrom, 'cap'); fxAt(tr.land, 0, u.bottom ? ty : ty, 'tip cap', t('pv.cap', { n: tr.cap + (E.RULES[game.rules].cap === 2 ? 1 : 0) })); }
+  if (tr.extra) tipAt(tr.land, 'tip', t('pv.extra'));
+  else if (tr.cap) { fxRing(tr.capFrom, 'cap'); tipAt(tr.land, 'tip cap', t('pv.cap', { n: tr.cap + (E.RULES[game.rules].cap === 2 ? 1 : 0) })); }
 }
 function setHover(i) {
   hoverPit = i;
@@ -504,7 +567,12 @@ function renderPlates(b) {
     $('#stat' + w).textContent = st;
   });
 }
+function renderStoreLabels() {
+  if (!storeLbl.length) return;
+  for (const d of storeLbl) { const st = +d.dataset.st, side = st === 6 ? 0 : 1; d.textContent = shortName(side); d.classList.toggle('me', !puzzle && !lesson ? (settings.mode === 'ai' ? side === game.human : side === 0) : side === 0); }
+}
 function renderTurnLabel() {
+  renderStoreLabels();
   const p = shownPos(), el = $('#turnLbl');
   let txt = '';
   if (p.over) { const a = p.b[6], o = p.b[13]; txt = a === o ? t('res.draw') : (settings.mode === 'ai' && !lesson && !puzzle) ? ((a > o ? 0 : 1) === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(a > o ? 0 : 1) }); }
@@ -1440,8 +1508,8 @@ function fixSize() {
   if (W === fixW && portrait === fixPortrait) return;   // height-only change (browser bars): keep the size
   fixW = W; fixPortrait = portrait;
   root.setProperty('--vh', H + 'px');
-  if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4, (H - 172) / 9.7, 100)) + 'px');
-  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 20 - 2 * 32 - 16) / 4, (W - 300) / 9.7, 110)) + 'px');
+  if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - 172) / 9.7, 100)) + 'px');
+  else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 20 - 2 * 32 - 16) / 4.2, (W - 300) / 9.7, 110)) + 'px');
   else root.removeProperty('--u');
 }
 fixSize();
