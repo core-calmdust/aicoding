@@ -34,7 +34,8 @@
   --fh: calc(var(--cell) * 9.7);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-@supports (height:100dvh){:root{--vh:100dvh}}
+/* size the board from the large viewport so it does not change while the browser toolbars show/hide on scroll */
+@supports (height:100lvh){:root{--vh:100lvh}}
 html,body{height:100%;overflow:hidden}
 body{
   background:
