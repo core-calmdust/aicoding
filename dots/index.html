@@ -413,6 +413,17 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
 }
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+
+/* larger text for lesson / puzzle explanations (same as Reversi) */
+.lesson-card .lt{font-size:13px}
+.lesson-card h3{font-size:22px}
+.lesson-prompt{font-size:16px;line-height:1.75}
+.lesson-fb{font-size:15px;line-height:1.85}
+.pz-goal{font-size:16.5px}
+.pz-status{font-size:15px;line-height:1.85}
+.lesson-intro p{font-size:15.5px;line-height:1.9}
+.lesson-intro p.note{font-size:14px}
+.rv-note{font-size:12.5px}
 </style>
 </head>
 <body>
@@ -1601,6 +1612,7 @@ function dailySolved(date, hinted) {
 const hadSave = load();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
+{ const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
