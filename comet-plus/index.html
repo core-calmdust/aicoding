@@ -873,35 +873,52 @@ class AudioHandler {
                 this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now);
                 setTimeout(() => this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now + 0.15), 150);
                 break;
-            case 'bossWarning': { // 危機感を煽るサイレン＋重低音の鼓動＋ノイズの上昇音
-                const c = this.ctx, out = this.masterGain, T = 2.4;
-                const sg = c.createGain();
-                sg.gain.setValueAtTime(0.0001, now);
-                sg.gain.exponentialRampToValueAtTime(0.22, now + 0.1);
-                sg.gain.setValueAtTime(0.22, now + T - 0.3);
-                sg.gain.exponentialRampToValueAtTime(0.001, now + T);
-                const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400; lp.Q.value = 4;
-                lp.connect(sg).connect(out);
-                ['sawtooth', 'square'].forEach((tp, k) => {
-                    const o = c.createOscillator(); o.type = tp; o.detune.value = k ? -18 : 12;
-                    for (let i = 0; i < 4; i++) {
-                        const t0 = now + i * 0.6;
-                        o.frequency.setValueAtTime(420, t0);
-                        o.frequency.exponentialRampToValueAtTime(980, t0 + 0.32);
-                        o.frequency.exponentialRampToValueAtTime(420, t0 + 0.6);
+            case 'bossWarning': { // 巨大戦艦が迫る重い警報（低い和音のブザー＋残響＋重低音＋最後の衝撃音）
+                const c = this.ctx, out = this.masterGain, P = 4, GAP = 0.78, T = P * GAP + 0.9;
+                // 残響（フィードバックディレイ）
+                const dl = c.createDelay(1); dl.delayTime.value = 0.21;
+                const fb = c.createGain(); fb.gain.value = 0.42;
+                const wet = c.createGain(); wet.gain.value = 0.5;
+                dl.connect(fb).connect(dl); dl.connect(wet).connect(out);
+                const bus = c.createGain(); bus.gain.value = 1;
+                bus.connect(out); bus.connect(dl);
+                // 低い和音のブザー（くぐもった音がパルスごとに開く）
+                const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 6;
+                const ag = c.createGain(); ag.gain.value = 0;
+                lp.connect(ag).connect(bus);
+                [[98, 'sawtooth', 0], [98, 'square', 9], [147, 'sawtooth', -7], [196, 'sawtooth', 5], [49, 'square', 0]].forEach(([f, tp, dt]) => {
+                    const o = c.createOscillator(); o.type = tp; o.detune.value = dt;
+                    const og = c.createGain(); og.gain.value = f === 49 ? 0.5 : 0.32;
+                    for (let i = 0; i < P; i++) {
+                        const t0 = now + i * GAP;
+                        o.frequency.setValueAtTime(f, t0);
+                        o.frequency.setValueAtTime(f, t0 + 0.42);
+                        o.frequency.exponentialRampToValueAtTime(f * 0.94, t0 + 0.58);
                     }
-                    o.connect(lp); o.start(now); o.stop(now + T);
+                    o.connect(og).connect(lp); o.start(now); o.stop(now + T);
                 });
-                for (let i = 0; i < 4; i++) { // 鼓動のような低音
-                    this.createSound(90, 0.32, 'sine', 1, 0.7, now + i * 0.6, { endFreq: 32 });
-                    this.createSound(160, 0.06, 'square', 0.8, 0.18, now + i * 0.6, { endFreq: 60 });
+                for (let i = 0; i < P; i++) {
+                    const t0 = now + i * GAP;
+                    ag.gain.setValueAtTime(0.0001, t0);
+                    ag.gain.exponentialRampToValueAtTime(0.32, t0 + 0.04);
+                    ag.gain.setValueAtTime(0.32, t0 + 0.44);
+                    ag.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
+                    lp.frequency.setValueAtTime(320, t0);
+                    lp.frequency.exponentialRampToValueAtTime(1500 + i * 250, t0 + 0.18);
+                    lp.frequency.exponentialRampToValueAtTime(420, t0 + 0.6);
                 }
-                const ns = c.createBufferSource(); ns.buffer = this.getNoise(); ns.loop = true;
-                const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.5;
-                bp.frequency.setValueAtTime(250, now); bp.frequency.exponentialRampToValueAtTime(4000, now + T);
-                const ng = c.createGain();
-                ng.gain.setValueAtTime(0.001, now); ng.gain.exponentialRampToValueAtTime(0.3, now + T - 0.05); ng.gain.linearRampToValueAtTime(0, now + T);
-                ns.connect(bp).connect(ng).connect(out); ns.start(now); ns.stop(now + T);
+                // 地鳴りのような重低音（だんだん強く）
+                const sub = c.createOscillator(); sub.type = 'sine'; sub.frequency.setValueAtTime(41, now); sub.frequency.linearRampToValueAtTime(36, now + T);
+                const sbg = c.createGain(); sbg.gain.setValueAtTime(0.0001, now); sbg.gain.exponentialRampToValueAtTime(0.55, now + T - 0.8); sbg.gain.exponentialRampToValueAtTime(0.0001, now + T);
+                sub.connect(sbg).connect(out); sub.start(now); sub.stop(now + T);
+                // 最後に重い衝撃音
+                const ti = now + P * GAP;
+                this.createSound(110, 0.9, 'sine', 1, 0.9, ti, { endFreq: 28 });
+                this.createSound(220, 0.25, 'square', 0.9, 0.2, ti, { endFreq: 55 });
+                const ns = c.createBufferSource(); ns.buffer = this.getNoise();
+                const nf = c.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.setValueAtTime(2200, ti); nf.frequency.exponentialRampToValueAtTime(150, ti + 0.8);
+                const ng = c.createGain(); ng.gain.setValueAtTime(0.5, ti); ng.gain.exponentialRampToValueAtTime(0.001, ti + 0.85);
+                ns.connect(nf).connect(ng).connect(bus); ns.start(ti); ns.stop(ti + 0.9);
                 break;
             }
             case 'bossHit':
