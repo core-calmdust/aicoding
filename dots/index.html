@@ -24,9 +24,10 @@
   --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
   --p0:#ef7d5e; --p0d:#b9533a; --p1:#5fa9e9; --p1d:#3a77b0;
   --vh: 100vh;
+  --top: 58px;  /* room above the side panel for the title row (PC) */
   --pad: clamp(28px, 7vmin, 100px);
   --gap: clamp(24px, 3vw, 48px);
-  --board: calc(min(var(--vh) - var(--pad) * 2 - 8px, 100vw - var(--pad) * 2 - var(--gap) - 340px, 1100px) / 1.07);
+  --board: calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1100px) / 1.07);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100dvh){:root{--vh:100dvh}}
@@ -51,7 +52,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   gap:var(--gap);
   justify-content:center;
   align-items:center;
-  padding:var(--pad);
+  padding:calc(var(--pad) + var(--top)) var(--pad) var(--pad);
 }
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -123,6 +124,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 /* ---------------------------------------------------------------- side */
 .side{grid-area:side;width:100%;height:calc(var(--board) * 1.07);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
 .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+.side{position:relative}
+.side > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px)}
 .brand{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .brand h1{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:28px;letter-spacing:.08em;white-space:nowrap}
 .brand h1 small{font-size:12px;letter-spacing:.2em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
@@ -350,6 +353,8 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   :root{--board:calc(min(100vw - 20px, var(--vh) - 230px, 900px) / 1.07)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
+  :root{--top:0px}
+  .side > .brand{position:static;width:calc(var(--board) * 1.07);max-width:100%;flex:none}
   .side, .side-in{display:contents}
   .side-in > *{width:calc(var(--board) * 1.07);max-width:100%;flex:none}
   .brand{order:-3;height:28px;align-items:center}
@@ -380,7 +385,10 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   .app{padding:10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));gap:18px;grid-template-columns:auto minmax(220px, 360px)}
   .side{max-height:calc(var(--vh) - 20px);height:calc(var(--vh) - 20px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
   .side::-webkit-scrollbar{display:none}
-  .side-in{gap:8px;height:auto}
+  :root{--top:0px}
+  .side{display:flex;flex-direction:column;gap:8px}
+  .side > .brand{position:static}
+  .side-in{gap:8px;height:auto;flex:none}
   .kifu-card{flex:none;min-height:110px}
   .kifu{max-height:none;overflow:visible}
   .review-card.show{flex:none;min-height:0;max-height:none;overflow:visible}
@@ -483,11 +491,12 @@ body .rv-view button{font-size:13.5px}
     </div>
   </div>
 
-  <aside class="side"><div class="side-in">
+  <aside class="side">
     <div class="brand">
       <h1>Dots &amp; Boxes<small data-i18n="sub"></small></h1>
       <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
+    <div class="side-in">
 
     <div class="card lesson-card" id="lessonCard">
       <div class="lh"><span class="lt" id="lsStep"></span><div class="ldots" id="lsDots"></div></div>
