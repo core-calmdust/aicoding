@@ -342,7 +342,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 /* ---------------------------------------------------------------- responsive */
 @media (max-aspect-ratio: 1/1) and (pointer: coarse), (max-width: 700px) and (max-aspect-ratio: 1/1){
   :root{--top:0px}
-  .side > .brand{position:static}
+  .side > .brand{position:static;width:calc(var(--bw) + var(--fp) + var(--cw)*0.16);max-width:100%;flex:none}
   :root{--cw:min(calc((100vw - 20px) / 9.75), 90px)}
   .graph{height:64px}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
