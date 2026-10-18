@@ -5,6 +5,7 @@ const P1 = 1, P2 = 2;                         // P1 = White, P2 = Black
 const mFrom = m => m & 127, mTo = m => (m >> 7) & 127, mPromo = m => (m >> 14) & 7, mFlag = m => m >> 17;
 const PT = ' PNBRQK', PVAL = [0, 1, 3, 3, 5, 9, 0];
 let startFen = null;           // lesson / puzzle start (null = normal start)
+let net = null;                // online game in progress or being watched (see the online section)
 let moves = [];                // game record (engine move ints)
 let cur = 0;                   // number of moves shown
 const keyOf = i => (startFen || '') + '|' + moves.slice(0, i).join(',');
@@ -25,6 +26,7 @@ function posAt(i) {
 const sideP = pos => pos.side ? P2 : P1;
 function statusAt(i) {
   if (lesson && lesson.drill) return { over: false };
+  if (net && net.over && i === moves.length && !lesson && !puzzle) return net.over;
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
   const { pos, hashes, legal } = posAt(i);
   if (!legal.length) return pos.inCheck() ? { over: true, winner: pos.side ? P1 : P2, why: 'mate' } : { over: true, winner: 0, draw: true, why: 'stalemate' };
@@ -106,6 +108,7 @@ function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (settings.mode === 'online') settings.mode = 'ai';
     if (Array.isArray(d.moves) && validMoves(d.moves)) {
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null;
@@ -115,6 +118,7 @@ function load() {
   return false;
 }
 function save() {
+  if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp', flip: false }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
 }
@@ -169,7 +173,7 @@ const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), sqEl = $(
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const animOn = () => settings.anim && !reduceMotion;
 let flipped = false;
-function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!settings.flip; }
+function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'online' ? !!(net && net.me === P2) : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!settings.flip; }
 const sqX = s => flipped ? 7 - (s & 7) : (s & 7), sqY = s => flipped ? (s >> 4) : 7 - (s >> 4);
 function placeAt(el, s) { el.style.left = sqX(s) * 12.5 + '%'; el.style.top = sqY(s) * 12.5 + '%'; }
 function pieceSVG(p) { return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'}"><use href="#s${PT[p & 7]}"/></svg>`; }
@@ -328,11 +332,13 @@ function canHumanPlay() {
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
   if (lesson) return !lesson.answered;
   if (reviewing) return false;
+  if (settings.mode === 'online') return olLive() && !!net.game && net.game.status === 'play' && !net.pending && cur === moves.length && toMoveAt(cur) === net.me;
   return !isAIColor(toMoveAt(cur)) && !thinking;
 }
 function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
+  if (settings.mode === 'online') { const g = net && net.game; return !g ? '' : !net.spectate && p === net.me ? t('you') : p === P1 ? g.wn : g.bn; }
   if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
@@ -342,14 +348,19 @@ function renderInfo() {
   const { pos } = posAt(cur), st = statusAt(cur), tm = sideP(pos);
   for (const p of [P1, P2]) {
     const c = p - 1;
-    if (rgame && !lesson && !puzzle && settings.mode === 'ai') { $('#count' + p).textContent = fmtClock(rtClockLeft(c)); $('#hand' + p).textContent = t('rt.clock'); }
+    if (settings.mode === 'online' && !lesson && !puzzle) { /* clocks: olClocks() below */ }
+    else if (rgame && !lesson && !puzzle && settings.mode === 'ai') { $('#count' + p).textContent = fmtClock(rtClockLeft(c)); $('#hand' + p).textContent = t('rt.clock'); }
     else { $('#count' + p).textContent = material(pos, c); $('#hand' + p).textContent = t('mat'); }
-    const n = playerName(p); $('#name' + p).textContent = n ? n + ' · ' + pname(p) : pname(p);
+    const nmEl = $('#name' + p);
+    if (settings.mode === 'online' && !lesson && !puzzle) olPName(nmEl, p);
+    else { const n = playerName(p); nmEl.classList.remove('pn'); nmEl.removeAttribute('title'); nmEl.textContent = n ? n + ' · ' + pname(p) : pname(p); }
     const el = $('#pl' + p);
     el.classList.toggle('active', !st.over && tm === p); el.classList.toggle('won', st.winner === p); el.classList.toggle('thinking', thinking === p);
     $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (pos.inCheck() ? ' · ' + t('st.check') : '') : '');
   }
-  $('#evalCard').classList.toggle('hidden', !settings.eval && !rtLive());
+  if (settings.mode === 'online' && !lesson && !puzzle) olClocks(); else olClocksOff();
+  $('#btnResign').disabled = !olLive();
+  $('#evalCard').classList.toggle('hidden', !settings.eval && !rtLive() && settings.mode !== 'online');
   document.body.classList.toggle('rated-live', rtLive()); $('#evalCard').dataset.rtnote = t('rt.noEval');
   let ev = st.over ? { s: st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0, kind: 'final', side: st.winner } : evals[cur];
   if (!ev && cur > 0 && evals[cur - 1]) ev = evals[cur - 1];
@@ -416,7 +427,7 @@ let drag = null;     // { from, el, x0, y0, moved, pid }
 boardEl.addEventListener('pointerdown', e => {
   ctx(); if (e.button > 0) return;
   const s = squareAt(e.clientX, e.clientY); if (s < 0) return;
-  if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle) rsOpen(); return; }
+  if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle) { if (settings.mode === 'online') viewAt(moves.length); else rsOpen(); } return; }
   if (promoEl) { closePromo(true); sel = null; renderFx(); return; }
   const { pos, legal } = posAt(cur), p = pos.b[s];
   if (p && (p >> 3) === pos.side && legal.some(m => mFrom(m) === s)) {
@@ -502,11 +513,13 @@ function commit(m, dragged) {
   if (lesson && lesson.drill) return drillMove(m);
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
+  if (settings.mode === 'online') return netMove(m);
   playMove(m);
 }
 
 // ====================================================================== flow
 function newGame(rated) {
+  if (net) leaveOnlineGame();
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
   startFen = null;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
@@ -545,7 +558,7 @@ async function maybeAI(tok) {
 async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
-  if (rtLive()) { hintList = null; return; }
+  if (rtLive() || settings.mode === 'online') { hintList = null; return; }
   if (!settings.eval && !settings.hint) return;
   const mover = toMoveAt(idx);
   const apply = list => {
@@ -560,6 +573,7 @@ async function analyzeCurrent(tok) {
   anaCache.set(key, res.list); apply(res.list); save();
 }
 function onGameEnd(st) {
+  if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor, aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
@@ -576,7 +590,7 @@ function onGameEnd(st) {
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
 function canUndo() {
-  if (lesson || puzzle || rgame) return false;
+  if (lesson || puzzle || rgame || settings.mode === 'online') return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
@@ -617,6 +631,7 @@ $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
+  if (settings.mode === 'online') return;
   settings.hint = !settings.hint; save();
   if (!settings.hint) { hintList = null; renderFx(); renderInfo(); }
   else { const k = keyOf(cur); if (anaCache.has(k)) { hintList = anaCache.get(k); renderFx(); } else analyzeCurrent(busyToken); renderInfo(); }
@@ -639,13 +654,20 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 $('#btnResume').onclick = resumeHere;
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
-$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame(); };
+$('#btnAgain').onclick = () => {
+  if (net) {     // online: in a room game ask for a rematch (or accept the opponent's request); otherwise back to the online menu
+    const g = net.done && net.game;
+    if (olRoomGame(g) && !g.post && !g.next) { if (!(g.again && g.again.by === Online.uid)) Online.requestRematch(net.gid).catch(err => { console.warn(err); toast(t('ol.error'), 2000); }); return; }
+    hideOverlay('#resultOverlay'); openOnline(); return;
+  }
+  hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame();
+};
 function pgnText() {
   const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*';
   const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side, s = '';
   for (let i = 0; i < moves.length; i++) { if (side === 0) s += full + '. '; else if (i === 0) s += full + '... '; s += sanOf(i) + ' '; if (side === 1) full++; side ^= 1; }
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  return `[Event "World Board Game Atlas"]\n[Date "${date}"]\n[White "${settings.mode === 'ai' ? (humanColor === P1 ? 'You' : 'AI Lv.' + settings.level) : 'White'}"]\n[Black "${settings.mode === 'ai' ? (humanColor === P2 ? 'You' : 'AI Lv.' + settings.level) : 'Black'}"]\n[Result "${res}"]\n${startFen ? `[FEN "${startFen}"]\n` : ''}\n${s}${res}`;
+  return `[Event "World Board Game Atlas"]\n[Date "${date}"]\n[White "${net && net.game ? String(net.game.wn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P1 ? 'You' : 'AI Lv.' + settings.level) : 'White'}"]\n[Black "${net && net.game ? String(net.game.bn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P2 ? 'You' : 'AI Lv.' + settings.level) : 'Black'}"]\n[Result "${res}"]\n${startFen ? `[FEN "${startFen}"]\n` : ''}\n${s}${res}`;
 }
 $('#btnCopy').onclick = async () => {
   if (!moves.length) { toast(t('nokifu')); return; }
@@ -725,22 +747,22 @@ function levelLabelHTML(v) { return `Lv.${v} ${LV(v)}<small>${LVD(v)}</small>`; 
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
   document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
-  const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
+  const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch', ol = m === 'online';
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
   $('#fDisplay').classList.toggle('hidden', !game);
-  $('#fInfo').classList.toggle('hidden', game);
-  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
-  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : t('start');
+  $('#fInfo').classList.toggle('hidden', game || m === 'rated');
+  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : ol ? t('ol.desc') : '';
+  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : ol ? t('ng.toOnline') : t('start');
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog() {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : net ? 'online' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat;
   segSync(); showOverlay('#newOverlay');
 }
@@ -751,6 +773,7 @@ $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
+  if (draft.mode === 'online') { openOnline(); return; }
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   exitSpecial();
@@ -843,7 +866,7 @@ function rtStatsHtml() {
   return html + '</div>';
 }
 // buttons that leave a rated game in progress ask first (the game is then lost)
-const RT_GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnStart';
+const RT_GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnStart, #dkAuto, .dk-join, .dk-watch, #olAuto, #olJoin, #btnPaste';
 let rtPass = false;
 document.addEventListener('click', e => {
   if (rtPass || !rtLive()) return;
@@ -853,7 +876,7 @@ document.addEventListener('click', e => {
   rtConfirm(() => { gameOverShown = true; rtPass = true; try { b.click(); } finally { rtPass = false; } });
 }, true);
 function rtConfirm(after) {
-  $('#rtConfirmText').textContent = t('rt.abandonQ'); $('#rtConfirmYes').textContent = t('rt.abandonYes');
+  $('#rtConfirmHead').textContent = t('ng.rated'); $('#rtConfirmText').textContent = t('rt.abandonQ'); $('#rtConfirmYes').textContent = t('rt.abandonYes');
   showOverlay('#rtConfirm');
   $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirm'); const x = rtForfeit(); renderInfo(); if (x) after(); };
 }
@@ -865,7 +888,7 @@ const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
 let introIdx = 0, savedGame = null;
-function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
+function stashGame() { olDetach(); if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
 function exitSpecial() {
   if (!lesson && !puzzle) return;
   lesson = null; puzzle = null; lessonMarks = []; labelList = null;
@@ -1356,6 +1379,7 @@ function rvCancel() { if (rv && rv.ws) { rv.ws.forEach(w => { w.terminate(); w.j
 async function runReview() {
   if (lesson || puzzle) return;
   if (rtLive()) { toast(t('rt.noEval')); return; }
+  if (net) return;
   if (moves.length < 1) { toast(t('nokifu')); return; }
   if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); revealReview(); return; }
   rvCancel();
@@ -1461,6 +1485,8 @@ function parseGameText(v) {
 function openLoaded(fen, list, n) {
   ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(hideOverlay);
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
+  if (net) leaveOnlineGame();
+  rtForfeit(); rgame = null;
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = 0; animating = false;
   settings.mode = 'pvp'; startFen = fen || null;
   moves = list; evals = []; hintList = null;
@@ -1519,6 +1545,639 @@ function dailySolved(date, hinted) {
   try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
 }
 
+// ====================================================================== online play (UI; backend in online.js — ported from the Shogi page)
+// net = active online game: {gid, game, me (P1 / P2, 0 spectator), opp, unsub, timer, done, pending, over, spectate, saved}
+let olView = 'menu', olSearch = null, olRoom = null, olList = [];
+const olEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const olX = olEsc;
+const olOn = () => !!(window.Online && Online.available);
+const olLive = () => !!(net && !net.done && !net.spectate);
+function olFmtWait(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function ucisOf(list) { const p = E.Pos.fromFEN(E.START), out = []; for (const m of list) { out.push(p.uci(m)); p.make(m); } return out; }
+// ---- time control (chosen before searching / creating a room; remembered per browser)
+const OL_TC_KEY = 'chess-online-tc';
+function olTc() { try { const v = localStorage.getItem(OL_TC_KEY); if (Online.TC[v]) return v; } catch (e) {} return Online.DEF_TC; }
+function olSetTc(v) {
+  if (!Online.TC[v]) return;
+  try { localStorage.setItem(OL_TC_KEY, v); } catch (e) {}
+  document.querySelectorAll('.ol-tc button').forEach(b => { b.classList.toggle('sel', b.dataset.tc === v); b.setAttribute('aria-checked', String(b.dataset.tc === v)); });
+}
+const tcName = id => t('ol.tc.' + (window.Online && Online.TC[id] ? id : Online.DEF_TC));
+const tcTag = id => t('ol.tcn.' + (window.Online && Online.TC[id] ? id : Online.DEF_TC)) + ' ' + t('ol.tcd.' + (window.Online && Online.TC[id] ? id : Online.DEF_TC));
+function olTcSel(cls) {
+  const cur = olTc();
+  return `<div class="ol-tc ${cls || ''}" role="radiogroup" aria-label="${olEsc(t('ol.tc'))}">` + Online.TC_IDS.map(id => `<button type="button" role="radio" data-tc="${id}" class="${id === cur ? 'sel' : ''}" aria-checked="${id === cur}" title="${olEsc(t('ol.tc.' + id))}"><b>${t('ol.tcn.' + id)}</b><small>${t('ol.tcd.' + id)}</small></button>`).join('') + '</div>';
+}
+document.addEventListener('click', e => { const b = e.target.closest('.ol-tc button'); if (b) olSetTc(b.dataset.tc); });
+function olTcToast(g, extra) {
+  const nm = tcName(g.tc);
+  toast((extra ? extra + ' · ' : '') + (g.rated && Online.TC[g.tc] && g.tc !== olTc() ? t('ol.tcCross', { tc: nm }) : t('ol.tcStart', { tc: nm })), 3200);
+}
+function olSearchTc(s) {
+  return `<small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(s.tc || olTc()) })}</small><small>${s.crossIn > 0 || s.crossIn == null ? t('ol.crossIn', { s: Math.ceil((s.crossIn == null ? Online.CROSS_WAIT : s.crossIn) / 1000) }) : t('ol.crossOn')}</small>`;
+}
+// ---- room type: open (listed under open rooms, anyone joins with one tap) / closed (not listed, joined with the key = room code)
+const OL_RK_KEY = 'chess-room-type', OL_TITLE_KEY = 'chess-room-title';
+function olTitleSaved() { try { return localStorage.getItem(OL_TITLE_KEY) || ''; } catch (e) { return ''; } }
+function olTitle() { const el = document.getElementById('olRoomTitle'); const v = (el ? el.value : olTitleSaved()).replace(/\s+/g, ' ').trim().slice(0, 24); try { localStorage.setItem(OL_TITLE_KEY, v); } catch (e) {} return v; }
+function olRk() { try { const v = localStorage.getItem(OL_RK_KEY); if (v === 'open' || v === 'key') return v; } catch (e) {} return 'open'; }
+function olRkSel() {
+  const cur = olRk();
+  return `<div class="ol-rk" role="radiogroup" aria-label="${olEsc(t('ol.newRoom'))}">` + ['open', 'key'].map(id => `<button type="button" role="radio" data-rk="${id}" class="${id === cur ? 'sel' : ''}" aria-checked="${id === cur}"><b>${id === 'open' ? '🔓' : '🔒'} ${t('ol.rk.' + id)}</b><small>${t('ol.rkd.' + id)}</small></button>`).join('') + '</div>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.ol-rk button'); if (!b) return;
+  try { localStorage.setItem(OL_RK_KEY, b.dataset.rk); } catch (_) {}
+  document.querySelectorAll('.ol-rk button').forEach(x => { x.classList.toggle('sel', x.dataset.rk === b.dataset.rk); x.setAttribute('aria-checked', String(x.dataset.rk === b.dataset.rk)); });
+  const c = $('#olCreate'); if (c) c.textContent = t(b.dataset.rk === 'key' ? 'ol.createKey' : 'ol.createOpen');
+});
+// open rooms (live; shown in the online menu and the dock / phone online tab), own room marked
+let olRooms = [], olRoomsUnsub = null;
+function olRoomRows(list) {
+  const me = Online.uid;
+  return list.length ? list.map(r => {
+    const tl = r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b> ` : '';
+    if (!r.game) return `<div class="${r.host === me ? 'me' : ''}"><span>${tl}${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`;
+    const mine = r.host === me || r.guest === me, watching = !!(net && net.spectate && net.game && net.game.room === r.id && net.gid === r.game);
+    return `<div class="ingame${mine ? ' me' : ''}"><span>${tl}${olEsc(r.name)}${r.gname ? ' <small>vs</small> ' + olEsc(r.gname) : ''} <small class="ol-ing">${t('ol.st.play')} · ${olEsc(tcTag(r.tc))}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${olEsc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
+  }).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+}
+function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
+function olWatchRooms() { if (!olRoomsUnsub && window.Online && Online.uid) olRoomsUnsub = Online.watchRooms(l => { olRooms = l; olRoomsRender(); }); }
+async function olJoin(code, btn) {
+  if (btn) btn.disabled = true;
+  let gid = null; try { gid = await Online.joinRoom(code); } catch (e) { console.warn(e); }
+  if (gid) { mtab('game'); startOnlineGame(gid); return true; }
+  toast(t('ol.noRoom'), 2200); if (btn) btn.disabled = false; return false;
+}
+async function openOnline(joinCode) {
+  showOverlay('#onlineOverlay');
+  if (!olOn()) { olRender('setup'); return; }
+  olRender('loading');
+  try { await Online.init(); } catch (e) { console.warn(e); olRender('error'); return; }
+  if (joinCode) {
+    let gid = null; try { gid = await Online.joinRoom(joinCode); } catch (e) { console.warn(e); }
+    if (gid) { startOnlineGame(gid); return; }
+    toast(t('ol.noRoom'), 2200);
+  }
+  olRender('menu');
+}
+function olRender(view) {
+  olView = view || olView;
+  const Pr = window.Online && Online.profile, B = $('#olBody');
+  if (olView === 'setup') { B.innerHTML = `<div class="ol-setup"><span class="ol-setup-ic">♞</span><p class="ol-note">${t('ol.setup')}</p><p class="ol-note small">${t('ol.desc')}</p></div>`; return; }
+  if (olView === 'loading') { B.innerHTML = `<div class="ol-wait"><div class="ol-spin"></div><small>${t('ol.loading')}</small></div>`; return; }
+  if (olView === 'error' || !Pr) { B.innerHTML = `<p class="ol-note">${t('ol.error')}</p>`; return; }
+  if (olView === 'menu') {
+    B.innerHTML = `
+      <p class="ol-note" style="margin:-8px 0 14px">${t('ol.desc')}</p>
+      <div class="ol-grid"><div class="ol-col">
+      <div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(Pr.name)}" aria-label="name"><span class="ol-r">R <b>${Pr.rating}</b><small>${t('ol.record', { g: Pr.games || 0, w: Pr.wins || 0, l: Pr.losses || 0, d: Pr.draws || 0 })}</small></span></div>
+      <div class="ol-tcbox"><div class="ol-tcl">${t('ol.tc')}</div>${olTcSel()}</div>
+      <div class="ol-acts"><button class="mbtn go" id="olAuto">${t('ol.auto')}</button></div>
+      <p class="ol-note small">${t('ol.rules')}</p>
+      <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
+      </div><div class="ol-col">
+      <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
+      ${olMyRoomHtml()}
+      <div class="ol-sub">${t('ol.joinKey')}</div>
+      <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
+      </div></div>`;
+    $('#olName').onchange = async e => { try { e.target.value = await Online.setName(e.target.value); dockRender(); } catch (_) {} };
+    $('#olAuto').onclick = olStartSearch;
+    olWatchRooms();
+    const cr = $('#olCreate'); if (cr) cr.onclick = olCreateRoom;
+    $('#olJoin').onclick = async () => {
+      const c = $('#olCode').value; olRender('loading');
+      let gid = null; try { gid = await Online.joinRoom(c); } catch (e) { console.warn(e); }
+      if (gid) startOnlineGame(gid); else { toast(t('ol.noRoom'), 2200); olRender('menu'); }
+    };
+    $('#olCode').onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') $('#olJoin').click(); };
+    Online.topPlayers(10).then(list => { const el = $('#olRank'); if (!el) return; el.innerHTML = list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`; }).catch(() => {});
+    return;
+  }
+  if (olView === 'search') {
+    const s = olSearch || {};
+    B.innerHTML = `<div class="ol-wait"><div class="ol-spin"></div><b>${t('ol.searching')}</b><small>${t('ol.searchInfo', { n: s.waiting || 0, w: s.window || 100, t: olFmtWait(s.wait || 0) })}</small>${olSearchTc(s)}</div>
+      <div class="ol-sub">${t('ol.lobby', { n: olList.length })}</div>
+      <div class="ol-list">${olList.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small>${olEsc(tcTag(p.tc))}</small>${p.game ? ' <small>' + t('ol.matched') + '</small>' : ''}</span><b>${p.rating}</b></div>`).join('')}</div>
+      <div class="ol-acts"><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
+    $('#olCancel').onclick = async () => { await Online.leaveLobby(); olRender('menu'); };
+    return;
+  }
+  if (olView === 'room') {
+    const R = Online.room; if (!R) { olView = 'menu'; olRender(); return; }
+    olRoom = R.code;
+    const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
+    const priv = Online.roomPriv;
+    B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${R.title ? `<b class="ol-rtitle">${olEsc(R.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
+    $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: 'Chess', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
+  }
+}
+async function olStartSearch() {
+  olSearch = { waiting: 0, window: 100, wait: 0, tc: olTc() }; olList = [];
+  olRender('search');
+  try {
+    await Online.enterLobby({
+      onList: list => { olList = list; if (olView === 'search') olRender(); },
+      onStatus: s => { olSearch = s; if (olView === 'search') olRender(); },
+      onMatched: gid => startOnlineGame(gid),
+      tc: olTc(),
+    });
+  } catch (e) { console.warn(e); olRender('error'); }
+}
+async function olCreateRoom() {
+  const title = olTitle();
+  olRender('loading');
+  try { olRoom = await Online.createRoom({ onMatched: olRoomMatched, priv: olRk() === 'key', tc: olTc(), title }); olRender('room'); }
+  catch (e) { console.warn(e); toast(t('ol.error'), 2000); olRender('menu'); }
+}
+// closing the dialog cancels a rated-game search, but the own room stays open (closed with "close room", by a join, or after Online.ROOM_TTL)
+$('#olClose').onclick = async () => { hideOverlay('#onlineOverlay'); if (olOn() && Online.uid) { try { await Online.leaveLobby(); } catch (e) {} dockRender(); } };
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#onlineOverlay').classList.contains('show')) { e.stopImmediatePropagation(); $('#olClose').click(); } }, true);
+// ---- the own room (kept while the dialog is closed)
+function olLeftText() { const r = olOn() && Online.room; return r ? (r.game ? t('ol.st.play') : t('ol.roomLeft', { t: fmtClock(r.left) })) : ''; }
+function olMyRoomHtml() {
+  const r = Online.room;
+  if (!r) return `<div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}<label class="ol-title"><small>${t('ol.roomTitle')}</small><input id="olRoomTitle" maxlength="24" placeholder="${olEsc(t('ol.roomTitlePh'))}" value="${olEsc(olTitleSaved())}"></label><div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>`;
+  return `<div class="ol-sub">${t('ol.myRoom')}</div><div class="ol-myroom ${r.priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(r.priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b>` : ''}<b class="ol-mcode">${r.code}</b><small>${olEsc(tcTag(r.tc))} · <span class="ol-left">${olLeftText()}</span></small></div>
+    <p class="ol-note small">${t('ol.roomKeep')}</p><div class="ol-acts"><button class="mbtn go" id="olShowRoom">${t('ol.showRoom')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button></div>`;
+}
+async function olShowRoom() { if (!Online.room) return; Online.extendRoom().catch(() => {}); olRender('room'); }
+async function olCloseRoomNow() { if (!Online.room) return; try { await Online.closeRoom(); } catch (e) { console.warn(e); } }
+$('#olBody').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.classList.contains('dk-join')) olJoin(b.dataset.code, b);
+  else if (b.id === 'olShowRoom') olShowRoom();
+  else if (b.id === 'olCloseRoom') olCloseRoomNow();
+  else if (b.id === 'olBack') olRender('menu');
+});
+// someone joined the own room: start the game even when the dialog is closed (an AI game / lesson / puzzle in progress is left)
+function olRoomMatched(gid) {
+  const away = !$('#onlineOverlay').classList.contains('show');
+  document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));
+  const again = net && net.done && net.game && net.game.post === 'again';
+  startOnlineGame(gid, again ? t('ol.againGo') : away ? t('ol.roomJoined') : null);
+}
+function olOnRoom(ev, r, g) {
+  if (ev === 'reopen') { toast(g ? olPostText(Object.assign({}, g, { host: Online.uid })) : t('ol.pReopen'), 3800); dockRender(); olRoomTick(); return; }
+  if (ev === 'expired') toast(t('ol.roomExpired'), 3600);
+  else if (ev === 'closed' && olView !== 'search' && olView !== 'loading') toast(t('ol.roomClosed'), 1800);
+  else if (ev === 'gone') toast(t('ol.roomClosed'), 1800);
+  if ((ev === 'closed' || ev === 'expired' || ev === 'gone') && $('#onlineOverlay').classList.contains('show') && (olView === 'menu' || olView === 'room')) olRender('menu');
+  dockRender(); olRoomTick();
+}
+// remaining time of the own room (menu, room view, dock chip)
+function olRoomTick() {
+  const r = olOn() && Online.room, chip = $('#dkMyRoom'), btn = $('#dkRoom');
+  if (btn) { const k = r ? 'ol.closeRoom' : 'ol.create'; if (btn.dataset.i18n !== k || btn.dataset.l !== LANG) { btn.dataset.i18n = k; btn.dataset.l = LANG; btn.textContent = t(k); btn.classList.toggle('warn', !!r); } }
+  if (chip) { chip.classList.toggle('hidden', !r); if (r) { chip.textContent = (r.priv ? '🔒 ' : '🔓 ') + r.code + ' · ' + tcTag(r.tc) + ' · ' + (r.game ? t('ol.st.play') : fmtClock(r.left)); chip.title = t('ol.showRoom'); } }
+  if (r) document.querySelectorAll('.ol-left').forEach(el => { el.textContent = olLeftText(); });
+}
+if (olOn()) { Online.onRoom(olOnRoom); setInterval(olRoomTick, 1000); }
+// a reload during an online game keeps it: rejoin (and put the own room back) until the game is over
+const OL_LIVE = 'chess-online-live';
+function olLiveSave(gid) { try { const r = olOn() && Online.room; localStorage.setItem(OL_LIVE, JSON.stringify({ gid, room: r && r.game === gid ? { code: r.code, tc: r.tc, priv: r.priv, title: r.title } : null })); } catch (e) {} }
+function olLiveClear() { try { localStorage.removeItem(OL_LIVE); } catch (e) {} }
+setTimeout(async () => {
+  let s = null; try { s = JSON.parse(localStorage.getItem(OL_LIVE) || 'null'); } catch (e) {}
+  if (!s || !s.gid || !olOn()) return;
+  try {
+    await Online.init();
+    const g = await Online.getGame(s.gid);
+    if (!g || g.status !== 'play' || (g.b !== Online.uid && g.w !== Online.uid)) { olLiveClear(); return; }
+    if (s.room) await Online.resumeRoom(Object.assign({ gid: s.gid }, s.room), { onMatched: olRoomMatched }).catch(e => console.warn(e));
+    ['#newOverlay', '#resumeOverlay'].forEach(hideOverlay);
+    startOnlineGame(s.gid, t('ol.resumed'));
+  } catch (e) { console.warn(e); }
+}, 0);
+
+// the local game on the board (put back after spectating)
+function olSnap() { return { moves: moves.slice(), cur, evals: evals.slice(), humanColor, mode: settings.mode, rgame }; }
+function olRestoreLocal(sv) {
+  if (!sv || sv.mode === 'online') { newGame(); return; }
+  settings.mode = sv.mode; moves = sv.moves; cur = sv.cur; evals = sv.evals; humanColor = sv.humanColor; rgame = sv.rgame || null;
+  if (rgame && !rgame.over) rgame.t = Date.now();
+  startFen = null; reviewing = cur !== moves.length; hintList = null; sel = null; gameOverShown = gameOver(moves.length);
+  orient(); drawSquares(); shownKey = ''; syncPieces(new Int8Array(128)); update(false); save(); afterPosition();
+}
+// stop following the online game before something else takes the board (spectators get their local game back)
+function olDetach() { if (!net) return; if (net.spectate) olWatchStop(); else leaveOnlineGame(); }
+// spec = room code: watch the game read-only (spectator) instead of playing it
+function startOnlineGame(gid, intro, spec) {
+  if (net && net.gid === gid) return;
+  ['#onlineOverlay', '#resultOverlay', '#newOverlay', '#resumeOverlay', '#lessonOverlay', '#puzzleOverlay', '#rtConfirm'].forEach(hideOverlay);
+  if (lesson || puzzle) exitSpecial();
+  rtForfeit();
+  const saved = spec ? (net ? (net.spectate ? net.saved : null) : olSnap()) : null;
+  const keepFlip = !!(spec && net && net.spectate && settings.flip);
+  leaveOnlineGame();
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; stopPlay(); thinking = 0; animating = false;
+  rgame = null; settings.mode = 'online'; settings.flip = keepFlip;
+  startFen = null; moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; closePromo();
+  net = { gid, game: null, me: spec ? 0 : P1, opp: null, done: false, first: true, intro, spectate: !!spec, code: spec || null, saved, watchers: 0 };
+  if (!spec) olLiveSave(gid);
+  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
+  net.unsub = spec ? Online.spectate(gid, onNetGame) : Online.watchGame(gid, onNetGame);
+  net.wUnsub = Online.watchCount(gid, n => { if (net && net.gid === gid) { net.watchers = n; olWatchRender(); } });
+  net.timer = setInterval(netTick, 250);
+  orient(); drawSquares(); shownKey = ''; syncPieces(new Int8Array(128)); update(false);
+  if (!spec) { toast(intro || t('ol.start'), intro ? 3200 : 1400); playChime(true); }
+  mtab('game'); olWatchRender(); dockRender();
+}
+function leaveOnlineGame() {
+  if (!net) return;
+  if (!net.spectate) olLiveClear();
+  net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
+  const wasOver = net.over;
+  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender();
+  if (settings.mode === 'online') settings.mode = 'pvp';
+  gameOverShown = gameOver(moves.length) || !!wasOver;
+  if (olOn() && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
+  renderInfo(); save();
+}
+// leaving a live online game (another game, lessons, puzzles, a new search…) = resigning it
+function olResignLeave() {
+  if (!olLive()) return;
+  const gid = net.gid, g = net.game;
+  Online.resign(gid).then(() => g && Online.applyResult(gid, g, 0)).catch(e => console.warn(e));
+  leaveOnlineGame(); update(false);
+}
+// server state changed: append the opponent's moves (checked with the engine), detect the end of the game
+function onNetGame(g) {
+  if (!net || !g) return;
+  net.game = g;
+  const spec = net.spectate, me = spec ? 0 : g.w === Online.uid ? P1 : P2, first = net.first;
+  net.first = false;
+  net.me = me; net.opp = spec ? null : me === P1 ? g.b : g.w;
+  if (first) {
+    if (!spec) { humanColor = me; orient(); drawSquares(); shownKey = ''; syncPieces(posAt(cur).pos.b); }
+    olTcToast(g, spec ? net.intro || t('ol.watchStart') : (net.intro ? net.intro + ' · ' : '') + t('ol.youAre', { c: pname(me) }));
+  }
+  const ms = String(g.moves || '').split(' ').filter(Boolean), mine = ucisOf(moves);
+  let reset = false;
+  for (let i = 0; i < Math.min(ms.length, mine.length); i++) if (ms[i] !== mine[i]) { reset = true; break; }
+  if (reset || (moves.length > ms.length && !net.pending)) { moves = []; evals = []; cur = 0; reviewing = false; reset = true; }
+  const before = moves.length;
+  for (const u of ms.slice(before)) {
+    const m = Online.UCI_RE.test(u) ? posAt(moves.length).pos.fromUci(u) : 0;
+    if (!m) { if (!net.warned) { net.warned = true; toast(t('ol.illegal'), 2500); } console.warn('illegal online move', u); break; }
+    moves.push(m);
+  }
+  const added = moves.length - before;
+  if (added || reset || first) {
+    if (!reviewing) cur = moves.length;
+    const anim = added === 1 && !reviewing && !first && !reset;
+    if (anim) { animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur()); }
+    update(anim);
+  } else renderInfo();
+  if (!spec && g.status === 'play' && ms.length === moves.length) netMarkOver();
+  if (g.status !== 'play' && !net.done) finishOnline(g);
+  if (net && net.done) olAfter();
+}
+// a finished position on the board (mate, stalemate, repetition, 50 moves, material) is reported by either player
+function netMarkOver() {
+  if (!net || net.spectate || net.marking || net.done) return;
+  const st = statusAt(moves.length); if (!st.over) return;
+  net.marking = true;
+  Online.markOver(net.gid, st.winner || 0, st.why, moves.length).catch(e => console.warn(e)).finally(() => { if (net) net.marking = false; });
+}
+const olSideToMove = g => (Online.moveCount(g.moves) % 2 ? 'b' : 'w');
+// can this colour (1 / 2) still checkmate? (lone king, or king + one minor piece, cannot)
+function canMate(p) {
+  const { pos } = posAt(moves.length), c = p - 1; let minors = 0;
+  for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } const x = pos.b[s]; if (!x || (x >> 3) !== c) continue; const k = x & 7; if (k === 1 || k === 4 || k === 5) return true; if (k === 2 || k === 3) minors++; }
+  return minors >= 2;
+}
+function olClocks() {
+  if (!net) return;
+  const g = net.game, live = !!(g && g.status === 'play' && !net.done), stm = g ? olSideToMove(g) : 'w', now = Online.now(), tc = Online.tcOf(g);
+  for (const p of [P1, P2]) {
+    const side = p === P1 ? 'w' : 'b', k = g ? Online.clockOf(g, side, live && side === stm && !net.pending, now) : { main: tc.main, left: tc.main, moving: false };
+    const el = $('#count' + p), txt = fmtClock(Math.max(0, k.left));
+    if (el.textContent !== txt) el.textContent = txt;
+    el.classList.toggle('ol-clk', true); el.classList.toggle('ol-move', !!k.moving); el.classList.toggle('ol-low', !!k.moving && k.left <= 20000);
+    const h = $('#hand' + p), lbl = '+' + Math.round(tc.inc / 1000) + 's';
+    if (h.textContent !== lbl) h.textContent = lbl;
+  }
+}
+function olClocksOff() { [1, 2].forEach(p => { const el = $('#count' + p); if (el) el.classList.remove('ol-clk', 'ol-move', 'ol-low'); }); }
+function netTick() {
+  olWatchRender();
+  if (net && net.done) { olAfter(); return; }
+  if (!net || !net.game) return;
+  olClocks();
+  const g = net.game; if (g.status !== 'play') return;
+  const stm = olSideToMove(g), mine = net.me === P1 ? 'w' : 'b';
+  // the opponent ran out of time (with a little grace for latency): claim the win (a draw if I cannot mate)
+  if (!net.spectate && stm !== mine && !net.pending && !net.claiming && Online.clockOf(g, stm, true).left < -Online.GRACE) {
+    net.claiming = true; Online.claimTimeout(net.gid, net.opp, !canMate(net.me)).catch(() => {}).finally(() => { if (net) net.claiming = false; });
+  }
+}
+function netMove(m) {
+  if (!olLive() || !net.game || net.game.status !== 'play' || net.pending || cur !== moves.length || toMoveAt(cur) !== net.me) { update(false); return; }
+  const n = moves.length, uci = posAt(n).pos.uci(m);
+  net.pending = true;
+  playMove(m);
+  const gid = net.gid;
+  Online.sendMove(gid, n, uci).then(ok => {
+    if (!net || net.gid !== gid) return; net.pending = false;
+    if (!ok) { onNetGame(net.game); return; }      // rejected (race / flag fell / game over): resync with the server
+    netMarkOver(); renderInfo();
+  }).catch(e => { console.warn(e); if (!net) return; net.pending = false; toast(t('ol.error'), 2200); onNetGame(net.game); });
+}
+async function finishOnline(g) {
+  net.done = true;
+  if (!net.spectate) olLiveClear();
+  const W = g.w, bst = statusAt(moves.length);
+  let winner, why;
+  if (g.status === 'resign') { winner = g.loser === W ? P2 : P1; why = 'resign'; }
+  else if (g.status === 'timeout') { winner = g.draw ? 0 : g.loser === W ? P2 : P1; why = g.draw ? 'timeDraw' : 'time'; }
+  else { winner = typeof g.win === 'number' ? g.win : bst.over ? bst.winner || 0 : 0; why = g.reason || bst.why || 'mate'; }
+  net.over = { over: true, winner, draw: !winner, why };
+  gameOverShown = true; sel = null; closePromo();
+  update(false); olClocks();
+  const nameOf = p => (p === P1 ? g.wn : g.bn);
+  const whyTxt = mine => why === 'resign' ? (mine ? t(g.loser === Online.uid ? 'ol.youResigned' : 'ol.oppResigned') : t('ol.wResign'))
+    : why === 'time' ? (mine ? t(g.loser === Online.uid ? 'ol.youTimeout' : 'ol.oppTimeout') : t('ol.wTime'))
+    : why === 'timeDraw' ? t('ol.timeDraw') : t('res.why.' + why);
+  if (net.spectate) {        // spectators: who won and why (no rating change, no result dialog, nothing written)
+    net.result = (winner ? t('ol.wWin', { c: pname(winner), n: nameOf(winner) }) : t('res.draw')) + ' · ' + whyTxt(false);
+    toast(net.result, 4200); playChime(true); olWatchRender(); dockRender();
+    return;
+  }
+  const score = !winner ? 0.5 : winner === net.me ? 1 : 0, gid = net.gid;
+  let r = { old: Online.profile.rating, now: Online.profile.rating, rated: !!g.rated };
+  try { r = await Online.applyResult(gid, g, score); } catch (e) { console.warn(e); }
+  if (!net || net.gid !== gid) return;
+  $('#resultDisc').innerHTML = winner ? `<div class="pdisc p${winner}"></div>` : '';
+  $('#resultTitle').textContent = t(score === 1 ? 'res.youWin' : score === 0 ? 'ol.lose' : 'res.draw');
+  const diff = r.now - r.old;
+  $('#resultSub').innerHTML = olEsc(whyTxt(true)) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) }) + '<br>' + (r.rated ? `<span class="rt-res">R ${r.old} → <b>${r.now}</b> (${rtD(diff)})</span>` : olEsc(t('ol.unrated')));
+  showOverlay('#resultOverlay');
+  playChime(score >= 0.5); if (score === 1) confetti();
+  dockRender();
+}
+// side-panel name: "you" tag + name (cut with … when long) + rating (always visible)
+function olPName(el, p) {
+  const g = net && net.game;
+  if (!g) { el.classList.remove('pn'); el.textContent = '… · ' + pname(p); return; }
+  const nm = p === P1 ? g.wn : g.bn, r = p === P1 ? g.wr : g.br, you = !net.spectate && p === net.me;
+  const h = (you ? `<span class="pn-you">${olX(t('you'))}</span>` : '') + `<span class="pn-n">${olX(nm)}</span><span class="pn-r">${olX(r)}</span>`;
+  el.classList.add('pn'); el.title = (you ? t('you') + ' · ' : '') + nm + ' (' + r + ') · ' + pname(p);
+  if (el.innerHTML !== h) el.innerHTML = h;
+}
+$('#btnResign').onclick = () => { if (olLive()) olConfirm(t('confirm.resign'), t('resign.yes'), () => { if (olLive()) Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
+$('#btnOnline').onclick = () => openOnline();
+// a small yes / no dialog (shared with the rated-game confirmation)
+function olConfirm(text, yes, fn) {
+  $('#rtConfirmHead').textContent = t('ol.title'); $('#rtConfirmText').textContent = text; $('#rtConfirmYes').textContent = yes;
+  showOverlay('#rtConfirm');
+  $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirm'); fn(); };
+}
+// buttons that leave a live online game ask first (the game is then resigned)
+const OL_GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnStart, #dkAuto, .dk-join, #olAuto, #olJoin, #btnPaste';
+let olPass = false;
+document.addEventListener('click', e => {
+  if (olPass || !olLive()) return;
+  const b = e.target.closest && e.target.closest(OL_GUARD); if (!b || b.disabled) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  olConfirm(t('ol.leaveQ'), t('ol.leaveYes'), () => {
+    olResignLeave();
+    if (b.id === 'btnNew') { openNewDialog(); return; }
+    olPass = true; try { b.click(); } finally { olPass = false; }
+  });
+}, true);
+
+// ====================================================================== online dock (PC: bar at the bottom / phone: "online" tab)
+const dock = { on: false, open: false, players: [], rooms: [], lobby: [], rank: [], unsub: [] };
+const OL_ST = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play', watch: 'ol.st.watch' };
+function dockRender() {
+  if (!dock.on) return;
+  const me = Online.profile;
+  $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
+  $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
+  const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"');
+  if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && net.spectate ? ` · ${t('ol.st.watch')}` : net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
+  $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
+  $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
+  $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
+}
+async function dockStart() {
+  if (dock.on || !olOn()) return;
+  try { await Online.init(); } catch (e) { console.warn(e); $('#dkStat').textContent = t('ol.error'); return; }
+  if (dock.on) return;
+  dock.on = true;
+  Online.setPresence(net && net.spectate ? 'watch' : net && !net.done ? 'play' : 'idle').catch(() => {});
+  dock.unsub.push(Online.watchPresence(l => { dock.players = l; dockRender(); }));
+  dock.unsub.push(Online.watchRooms(l => { dock.rooms = l; dockRender(); }));
+  dock.unsub.push(Online.watchLobby(l => { dock.lobby = l; dockRender(); }));
+  const rk = () => Online.topPlayers(10).then(l => { dock.rank = l; dockRender(); }).catch(() => {});
+  rk(); setInterval(rk, 60000);
+  dockRender();
+}
+function dockToggle(open) { dock.open = open ?? !dock.open; document.body.classList.toggle('dock-open', dock.open); $('#dkToggle').textContent = dock.open ? '▼' : '▲'; }
+$('#dkToggle').onclick = () => dockToggle();
+$('#dkMe').addEventListener('click', e => {
+  const b = e.target.closest('.dk-name'); if (!b || !Online.profile) return;
+  e.stopPropagation();
+  dock.editing = true;
+  $('#dkMe').innerHTML = `<input class="dk-input" maxlength="16" value="${olEsc(Online.profile.name)}" aria-label="name"><button class="dk-btn dk-ok">${t('ol.save')}</button>`;
+  const inp = $('#dkMe .dk-input'); inp.focus(); inp.select();
+  const done = async ok => {
+    if (!dock.editing) return; dock.editing = false;
+    if (ok) { try { const n = await Online.setName(inp.value); toast(t('ol.renamed', { n }), 1400); const f = $('#olName'); if (f) f.value = n; } catch (_) {} }
+    dockRender();
+  };
+  inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') done(true); else if (ev.key === 'Escape') done(false); });
+  inp.addEventListener('click', ev => ev.stopPropagation());
+  $('#dkMe .dk-ok').addEventListener('click', ev => { ev.stopPropagation(); done(true); });
+  inp.addEventListener('blur', () => setTimeout(() => { if (dock.editing && document.activeElement !== $('#dkMe .dk-ok')) done(true); }, 150));
+});
+$('#dock .dock-bar').addEventListener('click', e => { if (!e.target.closest('button') && !e.target.closest('input')) dockToggle(); });
+$('#dkAuto').onclick = async () => { await openOnline(); if (olOn() && Online.uid) olStartSearch(); };
+$('#dkRoom').onclick = async () => {
+  if (olOn() && Online.room) { olCloseRoomNow(); return; }
+  await openOnline(); const c = $('#olCreate'); if (c) c.scrollIntoView({ block: 'center' });
+};
+$('#dkMyRoom').onclick = async () => { await openOnline(); if (Online.room) olShowRoom(); };
+$('#dock').addEventListener('click', e => { const b = e.target.closest('.dk-join'); if (b) olJoin(b.dataset.code, b); });
+// phone tabs
+function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online'); $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.t === v)); if (v === 'online') dockStart(); }
+$('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
+if (olOn()) setTimeout(dockStart, 800); else document.body.classList.add('no-online');
+$('#langSel').addEventListener('change', () => { olRoomTick(); dockRender(); chatRender(); if ($('#onlineOverlay').classList.contains('show')) olRender(); });
+
+// ---- after a room game: either player may ask for a rematch (the other has Online.REMATCH_MS to answer); otherwise the guest
+// leaves (declined / no answer / left the result screen) and the host's room takes entrants again. Rated games are not affected.
+function olRoomGame(g) { return !!(g && g.room && !g.rated); }
+function olPostText(g) {        // why the guest left, from the point of view of this player
+  const me = Online.uid, host = g.host === me;
+  const by = g.post === 'no' ? ((g.again && g.again.by === me) ? 'opp' : 'me') : null;
+  if (host) return (g.post === 'no' ? t(by === 'me' ? 'ol.pNoMe' : 'ol.pNoOpp') + ' · ' : g.post === 'timeout' ? t('ol.pTimeout') + ' · ' : g.post === 'left' ? t('ol.pLeft') + ' · ' : '') + t('ol.pReopen');
+  return (g.post === 'no' ? t(by === 'me' ? 'ol.pNoMe' : 'ol.pNoOpp') + ' · ' : g.post === 'timeout' ? t('ol.pTimeout') + ' · ' : g.post === 'host' ? t('ol.pHost') + ' · ' : '') + t('ol.pOut');
+}
+function olAfter() {
+  const box = $('#olAgain'), btn = $('#btnAgain');
+  const g = net && net.done && net.game;
+  if (net && net.spectate) {      // spectator: follow the rematch, or stay on the final position
+    box.classList.add('hidden');
+    if (!g) return;
+    if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.watchNext'), net.code); return; }
+    if (g.post && g.post !== 'again' && !net.note) { net.note = t('ol.watchEnd'); toast(net.note, 3200); olWatchRender(); }
+    return;
+  }
+  if (!olRoomGame(g)) { box.classList.add('hidden'); btn.disabled = false; return; }
+  const me = Online.uid, gid = net.gid;
+  if (g.next) { if (net.gid !== g.next) startOnlineGame(g.next, t('ol.againGo')); return; }
+  if (g.post && g.post !== 'again' && !net.postSeen) {
+    net.postSeen = true;
+    if (g.host !== me) { toast(olPostText(g), 3800); Online.setPresence(Online.room ? 'room' : 'idle', { room: Online.room && !Online.room.priv ? Online.room.code : null }).catch(() => {}); }
+  }
+  const pending = g.again && !g.post;
+  const left = pending ? Math.max(0, Math.ceil((Online.REMATCH_MS - (Online.now() - g.again.t)) / 1000)) : 0;
+  if (pending && left <= 0 && !net.expiring) { net.expiring = true; Online.expireRematch(gid).catch(() => {}).finally(() => { if (net) net.expiring = false; }); }
+  let h = '', muted = false;
+  if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
+  else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
+  else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
+  if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+  btn.disabled = !!(pending && g.again.by === me) || g.post === 'again';
+}
+$('#olAgain').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !net || !net.done) return;
+  if (b.id === 'olAgainYes' || b.id === 'olAgainNo') { b.disabled = true; Online.answerRematch(net.gid, b.id === 'olAgainYes').catch(() => {}); }
+});
+// leaving the result screen of a room game in any way (view board, outside click, Esc, new game, …): the guest leaves the room,
+// the host stays in it but offers no rematch (the guest is told and leaves)
+new MutationObserver(() => {
+  const shown = $('#resultOverlay').classList.contains('show');
+  if (shown) { if (net && net.done) net.resShown = true; else { $('#olAgain').classList.add('hidden'); $('#btnAgain').disabled = false; } return; }
+  const g = net && net.done && net.resShown && !net.spectate && net.game;
+  if (!olRoomGame(g) || g.post || g.next) return;
+  Online.setPost(net.gid, g.host === Online.uid ? 'host' : 'left').catch(() => {});
+}).observe($('#resultOverlay'), { attributes: true, attributeFilter: ['class'] });
+
+// ---- spectating the game of an OPEN room (read-only; follows rematches). net.spectate: no moves, no result / rating / rematch / room
+// writes, no resume after a reload. The only write is the spectator count (Online.spectate); players see "N watching" as well.
+function olWatchRender() {
+  const el = $('#olWatch'); if (!el) return;
+  const n = (net && net.watchers) || 0, spec = !!(net && net.spectate);
+  let h = '';
+  if (spec) {
+    h = (net.result || net.note ? `<span class="wr">${olX(net.result || '')}${net.note ? `<small>${olX(net.note)}</small>` : ''}</span>` : '')
+      + `<span class="wl">👁 ${olX(t('ol.st.watch'))}</span><span class="wi">${n ? olX(t('ol.watchers', { n })) : ''}</span>`
+      + `<button type="button" id="olWatchFlip">${olX(t('ol.flip'))}</button>`
+      + `<button type="button" class="warn" id="olWatchStop">${olX(t('ol.watchStop'))}</button>`;
+  } else if (net && n) h = `<span class="wi">👁 ${olX(t('ol.watchers', { n }))}</span>`;
+  el.classList.toggle('hidden', !h); el.classList.toggle('pl', !!h && !spec);
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+async function olWatchRoom(code, btn) {
+  if (olLive()) { toast(t('ol.watchBusy'), 2200); return; }
+  if (btn) btn.disabled = true;
+  let gid = null; try { await Online.init(); gid = await Online.roomGameOf(code); } catch (e) { console.warn(e); }
+  if (btn) btn.disabled = false;
+  if (!gid) { toast(t('ol.noWatch'), 2200); return; }
+  mtab('game');
+  if (net && net.spectate && net.gid === gid) { hideOverlay('#onlineOverlay'); return; }
+  startOnlineGame(gid, null, code);
+}
+// "stop watching": back to the local game that was on the board before watching
+function olWatchStop() {
+  if (!net || !net.spectate) return;
+  const sv = net.saved; settings.flip = false; leaveOnlineGame(); olRestoreLocal(sv);
+  dockRender();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.dk-watch, #olWatchStop, #olWatchFlip'); if (!b) return;
+  e.stopPropagation();
+  if (b.id === 'olWatchStop') olWatchStop();
+  else if (b.id === 'olWatchFlip') $('#btnFlip').click();
+  else olWatchRoom(b.dataset.code, b);
+}, true);
+
+// ---- public chat: one room shared by everyone online in this game (latest Online.CHAT_N messages; no private messages)
+const chat = { list: [], seen: -1, unsub: null };
+const olCoarse = () => matchMedia('(pointer: coarse)').matches;
+function chatVisible() { return document.body.classList.contains('mtab-online') || !olCoarse(); }
+function chatShown() { return dock.on && !document.body.classList.contains('no-online') && (!olCoarse() || document.body.classList.contains('mtab-online')); }
+function chatStart() {
+  if (chat.unsub || !window.Online || !Online.uid) return;
+  chat.unsub = Online.watchChat(l => {
+    const top = l.length ? l[l.length - 1].n : 0;
+    chat.list = l;
+    if (chat.seen < 0 || chatVisible()) chat.seen = top;      // history present on arrival is not "unread"
+    chatRender();
+  });
+}
+function chatTime(ts) { if (typeof ts !== 'number') return ''; const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function chatRender() {
+  const el = $('#dkChat'), inp = $('#dkChatIn'); if (!el || !olOn()) return;
+  if (inp && inp.dataset.l !== LANG) { inp.dataset.l = LANG; inp.placeholder = matchMedia('(hover: hover) and (pointer: fine)').matches ? t('ol.chatPh') : t('ol.chatPh').split(' · ')[0]; inp.setAttribute('aria-label', t('ol.chat')); $('#dkChatSend').textContent = t('ol.chatSend'); $('#dkChatHead').title = t('ol.chatNote'); }
+  const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  const h = chat.list.length ? chat.list.map(m => `<div class="cm${m.me ? ' me' : ''}"><b>${olX(m.name)}</b><span>${olX(m.text)}</span><time>${chatTime(m.t)}</time></div>`).join('')
+    : `<div class="ol-note small">${olX(t('ol.chatEmpty'))}<br>${olX(t('ol.chatNote'))}</div>`;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; if (bottom || chat.toBottom) el.scrollTop = el.scrollHeight; chat.toBottom = false; }
+  const n = chat.list.filter(m => m.n > chat.seen && !m.me).length, badge = $('#dkUnread'), mt = $('#mtChat');
+  badge.classList.toggle('hidden', !n); badge.querySelector('b').textContent = n > 9 ? '9+' : String(n);
+  const last = chat.list[chat.list.length - 1]; badge.title = last ? last.name + ': ' + last.text : '';
+  if (mt) mt.textContent = n ? '💬' + (n > 9 ? '9+' : n) : '';
+  const st = $('#mtStrip');
+  if (st) { const hs = chat.list.length ? chat.list.slice(-2).map(m => `<div class="${m.me ? 'me' : ''}"><b>${olX(m.name)}</b>${olX(m.text)}</div>`).join('') : `<div class="empty">💬 ${olX(t('ol.chat'))} · ${olX(t('ol.chatEmpty'))}</div>`; if (st.dataset.h !== hs) { st.dataset.h = hs; st.innerHTML = hs; } }
+}
+function chatSeen() { if (chatVisible() && chat.list.length) { const top = chat.list[chat.list.length - 1].n; if (top !== chat.seen) { chat.seen = top; chatRender(); } } }
+new MutationObserver(chatSeen).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+// open the chat (PC: unfold the dock, phone: online tab) and put the cursor in the input
+function chatOpen(focus) {
+  if (olCoarse()) { if (!document.body.classList.contains('mtab-online')) mtab('online'); }
+  else if (!dock.open) dockToggle(true);
+  chatStart();
+  const el = $('#dkChat'); chat.toBottom = true; el.scrollTop = el.scrollHeight;
+  if (focus) { const inp = $('#dkChatIn'); inp.focus({ preventScroll: true }); chatKeep(); }
+  else if (olCoarse()) $('#dkChatForm').scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+// phones: keep the input above the on-screen keyboard
+function chatKeep() {
+  if (!olCoarse()) return;
+  const vv = window.visualViewport;
+  document.body.style.setProperty('--kb', vv ? Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)) + 'px' : '0px');
+  setTimeout(() => { if (document.activeElement === $('#dkChatIn')) $('#dkChatForm').scrollIntoView({ block: 'end' }); }, 250);
+}
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (document.activeElement === $('#dkChatIn')) chatKeep(); else document.body.style.setProperty('--kb', '0px'); });
+async function chatSend() {
+  const inp = $('#dkChatIn'), v = inp.value;
+  if (!v.trim()) return false;
+  if (!Online.uid) { try { await Online.init(); } catch (e) { toast(t('ol.error'), 1600); return false; } }
+  const r = await Online.sendChat(v);
+  if (r.ok) { inp.value = ''; chat.toBottom = true; return true; }
+  toast(t(r.why === 'rate' ? 'ol.chatWait' : 'ol.error'), 1600);
+  return false;
+}
+$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); chatSend(); if (olCoarse()) $('#dkChatIn').focus({ preventScroll: true }); });
+$('#dkChatIn').addEventListener('keydown', e => {
+  e.stopPropagation();                        // typing never reaches the board / record shortcuts
+  if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }
+  if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  chatSend(); if (!olCoarse()) e.target.blur();   // back to the board: game keys work again
+});
+$('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
+$('#dkChatIn').addEventListener('blur', () => document.body.style.setProperty('--kb', '0px'));
+$('#mtStrip').addEventListener('click', () => chatOpen(true));
+$('#dkUnread').addEventListener('click', e => { e.stopPropagation(); chatOpen(!olCoarse()); });
+// Enter anywhere (not in a field, no dialog open) = type in the chat
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  const tg = e.target; if (tg && tg.closest && tg.closest('input,textarea,select,[contenteditable="true"]')) return;
+  if (document.querySelector('.overlay.show') || !chatShown()) return;
+  e.preventDefault(); chatOpen(true);
+});
+if (olOn()) setInterval(() => { if (dock.on) chatStart(); }, 1000);
+
 // ====================================================================== boot
 const hadSave = load();
 // board & piece skin: applied immediately, kept with the settings
@@ -1542,13 +2201,19 @@ $('#langSel').onchange = e => {
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
+const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { update(false); if (!olRoomQ) openNewDialog(); }
 else { update(false); afterPosition(); }
-window.__ch = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, statusAt, posAt, newGame, sanOf, tryMove, onSquare, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, commit };
+// ?room=CODE (or #room=CODE): join a friend's online room
+if (olRoomQ) {
+  try { const u = new URL(location.href); u.searchParams.delete('room'); if (/room=/.test(u.hash)) u.hash = ''; history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) {}
+  openOnline(olRoomQ);
+}
+window.__ch = { get net() { return net; }, get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, statusAt, posAt, newGame, sanOf, tryMove, onSquare, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, commit };
 
 function dismissOverlay(o) {
-  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose' };
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', onlineOverlay: '#olClose' };
   if (o.id === 'lessonOverlay') { const done = $('#lessonDoneView'); if (done && !done.classList.contains('hidden')) $('#btnLessonQuit2').click(); else $('#btnLessonClose').click(); return; }
   const b = OUTSIDE[o.id] && $(OUTSIDE[o.id]); if (b) b.click(); else o.classList.remove('show');
 }
@@ -1557,11 +2222,12 @@ document.querySelectorAll('.overlay').forEach(o => {
   o.addEventListener('pointerdown', e => { down = e.target === o; });
   o.addEventListener('click', e => { if (e.target !== o || !down) return; down = false; dismissOverlay(o); });
 });
-function backToBoard() { document.querySelectorAll('.overlay.show').forEach(o => dismissOverlay(o)); if (lesson || puzzle) quitSpecial(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function backToBoard() { document.querySelectorAll('.overlay.show').forEach(o => dismissOverlay(o)); if (lesson || puzzle) quitSpecial(); if (document.body.classList.contains('mtab-online')) mtab('game'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 (() => { const h = $('.brand h1.to-board'); if (!h) return; h.addEventListener('click', backToBoard); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); backToBoard(); } }); })();
 function rsInProgress() { return !lesson && !puzzle && moves.length > 0 && !gameOver(moves.length); }
 function rsViewing() { return !lesson && !puzzle && reviewing; }
 function rsOpen() {
+  if (net) { openNewDialog(); return; }
   if (!rsInProgress() && !rsViewing()) { openNewDialog(); return; }
   $('#rsText').textContent = rsViewing() ? t('rs.viewing', { n: cur }) : t('rs.playing', { n: moves.length });
   $('#resumeOverlay').classList.add('show');
