@@ -1,0 +1,3795 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>COMET OUTBURST+ - 3Dサイバー弾幕シューティング・ドッジゲーム</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="「COMET OUTBURST+」は、シンセウェイヴのビートに乗りながら彗星群を潜り抜けるサイバー弾幕ドッジゲーム「COMET OUTBURST」の3D版。ポリゴンとカラフルなワイヤーフレームが交錯する電脳空間で、ハイスコアを目指せ。">
+    <meta name="keywords" content="弾幕, ドッジゲーム, STG, シューティング, 3D, WebGL, three.js, synthwave, wireframe, AI, AI programming, javascript game">
+    <meta name="author" content="CALMDUST">
+    <link rel="canonical" href="https://core-calmdust.github.io/aicoding/comet-plus/">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta property="og:title" content="COMET OUTBURST+ - 3Dサイバー弾幕シューティング・ドッジゲーム">
+    <meta property="og:description" content="ポリゴンとワイヤーフレームが交錯する電脳空間で、彗星群を潜り抜けろ。COMET OUTBURST の3D強化版。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://core-calmdust.github.io/aicoding/comet-plus/">
+    <meta property="og:image" content="https://core-calmdust.github.io/aicoding/comet/ogp-image.webp">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="COMET OUTBURST+">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@core_tan">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "COMET OUTBURST+",
+      "url": "https://core-calmdust.github.io/aicoding/comet-plus/",
+      "image": "https://core-calmdust.github.io/aicoding/comet/ogp-image.webp",
+      "description": "シンセウェイヴのビートに乗りながら彗星群を潜り抜けるサイバー弾幕ドッジゲーム「COMET OUTBURST」の3D版。",
+      "author": { "@type": "Person", "name": "CALMDUST" },
+      "genre": ["Shooter", "Action", "Music/Rhythm Game"],
+      "gamePlatform": ["PC", "Web Browser"],
+      "operatingSystem": "Any"
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            margin: 0;
+            background-color: #07001a;
+            font-family: 'Press Start 2P', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #fullscreen-root:fullscreen {
+            background-color: #07001a;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #fullscreen-root:fullscreen #game-wrapper {
+            transform: scale(var(--scale-factor, 1));
+            transform-origin: center;
+        }
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            will-change: transform;
+        }
+        #stage {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: #0b0220;
+            border: 2px solid #0088cc;
+            box-shadow: 0 0 20px #0088cc;
+            transition: border-color 0.2s, box-shadow 0.2s, filter 1s ease-out, -webkit-filter 1s ease-out;
+        }
+        #stage canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 800px;
+            height: 600px;
+            display: block;
+        }
+        #gameCanvas {
+            pointer-events: none;
+        }
+        #instructions-container {
+           color: #ccc;
+           font-size: 12px;
+           width: 800px;
+           padding: 8px 15px;
+           box-sizing: border-box;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           text-shadow: 0 0 10px #00ccff;
+        }
+        #extra-instruction {
+            opacity: 0.8;
+            padding-top: 4px;
+        }
+        #buttons-container {
+            position: absolute;
+            bottom: 65px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }
+        #sound-toggle-button,
+        #effects-toggle-button {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: #00ccff;
+            background-color: rgba(5, 0, 20, 0.4);
+            border: 2px solid #00ccff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #00ccff;
+            cursor: pointer;
+            user-select: none;
+            text-shadow: 0 0 5px #00ccff;
+            opacity: 0.7;
+            transition: opacity 0.2s, background-color 0.2s;
+            box-sizing: border-box;
+            min-width: 100px;
+            text-align: center;
+        }
+        #sound-toggle-button:hover,
+        #effects-toggle-button:hover {
+            opacity: 1.0;
+            background-color: var(--button-hover-bg, rgba(0, 204, 255, 0.2));
+        }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+    </script>
+</head>
+<body>
+    <div id="fullscreen-root">
+        <div id="game-wrapper">
+            <div id="stage">
+                <canvas id="glCanvas" width="800" height="600"></canvas>
+                <canvas id="gameCanvas" width="800" height="600"></canvas>
+            </div>
+
+            <div id="buttons-container">
+                <button type="button" id="effects-toggle-button">EFX ON</button>
+                <button type="button" id="sound-toggle-button">SOUND ON</button>
+            </div>
+
+            <footer id="instructions-container">
+                <div>
+                    <div id="main-instruction"></div>
+                    <div id="extra-instruction"></div>
+                </div>
+                <div style="text-align: right;">
+                    <div id="controls-instruction"></div>
+                    <div id="controls-instruction-2" style="padding-top: 4px;"></div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+// =================================================================================
+// ▼▼▼ COMET OUTBURST+ - A Synthwave dodging game, 3D edition ▼▼▼
+// =================================================================================
+
+// ---------------------------------
+// ゲーム設定
+// ---------------------------------
+const config = {
+    canvasWidth: 800,
+    canvasHeight: 600,
+    playerSpeed: 300,
+    playerSlowModeMultiplier: 0.5,
+    playerHitboxRadius: 3,
+    playerVisualSize: 16,
+    initialCometSpeed: 288,
+    cometSpeedIncrease: 0.07,
+    distanceScoreMultiplier: 1,
+    cometSpawnInterval: 12,
+    cometSpawnAmount: 3,
+    cometCoreRadius: 5,
+    starCount: 50,
+    starScrollMultiplier: 16,
+    starGlazeRadius: 20,
+    glazeDistance: 40,
+    glazeScore: 750,
+    starGlazeScore: 500,
+    highScoreKeyStandard: 'cometPlusHighScore_standard',
+    highScoreKeyJourney: 'cometPlusHighScore_journey',
+    highScoreKeyStartrail: 'cometPlusHighScore_startrail',
+    fontFamily: '"Press Start 2P", monospace',
+    glowBlur: 12,
+    energyTotal: 20 * 60,
+    energyItemSpeed: 305,
+    energyItemSize: 16,
+    energyItemScoreNormal: 10000,
+    energyItemScoreSpecial: 50000,
+    gravity: 600,
+    playerBulletSpeed: 800,
+    monsterUFOBaseScore: 10000,
+    monsterInvaderBaseScore: 3000,
+    monsterLooperBaseScore: 50000,
+    monsterCollisionBonus: 10000,
+};
+
+// ---------------------------------
+// ドット絵データ
+// ---------------------------------
+const PLAYER_PIXEL_ART = [
+    [0,0,0,0,0,0,2,2,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,2,1,1,1,1,1,1,2,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [2,1,1,0,1,1,1,1,1,1,0,1,1,2],
+    [0,0,0,0,3,0,0,0,0,3,0,0,0,0],
+];
+const ENERGY_ITEM_PIXEL_ART = [
+    [0,0,0,2,2,2,2,2,2,2,2,0,0,0],
+    [0,0,2,2,2,2,2,2,2,2,2,2,0,0],
+    [0,2,2,0,0,0,0,0,0,0,0,2,2,0],
+    [2,2,0,0,1,1,1,1,1,1,0,0,2,2],
+    [2,2,0,1,1,0,0,0,0,0,0,0,2,2],
+    [2,2,0,1,1,0,0,0,0,0,0,0,2,2],
+    [2,2,0,1,1,1,1,1,1,0,0,0,2,2],
+    [2,2,0,1,1,1,1,1,1,0,0,0,2,2],
+    [2,2,0,1,1,0,0,0,0,0,0,0,2,2],
+    [2,2,0,1,1,0,0,0,0,0,0,0,2,2],
+    [2,2,0,0,1,1,1,1,1,1,0,0,2,2],
+    [0,2,2,0,0,0,0,0,0,0,0,2,2,0],
+    [0,0,2,2,2,2,2,2,2,2,2,2,0,0],
+    [0,0,0,2,2,2,2,2,2,2,2,0,0,0]
+];
+// UFO (0:透明, 1:メイン, 2:サブ, 3:ドーム, 4:アクセント)
+const UFO_PIXEL_ART_FINAL = [
+    [0,0,0,0,0,3,3,3,3,0,0,0,0,0],
+    [0,0,0,3,3,3,3,3,3,3,3,0,0,0],
+    [0,0,3,1,1,3,3,3,3,1,1,3,0,0],
+    [0,3,1,4,4,1,3,3,1,4,4,1,3,0],
+    [3,1,4,4,4,4,1,1,4,4,4,4,1,3],
+    [3,1,1,4,4,1,1,1,1,4,4,1,1,3],
+    [3,2,2,1,1,1,1,1,1,1,1,2,2,3],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,1,2,2,2,2,2,2,2,2,2,2,1,1],
+    [0,1,1,2,2,2,2,2,2,2,2,1,1,0],
+    [0,0,1,1,1,2,2,2,2,1,1,1,0,0],
+    [0,0,0,1,1,1,2,2,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+];
+// インベーダー (0:透明, 1:メイン, 2:サブ, 3:アクセント)
+const INVADER_PIXEL_ART_GAMING =[
+    [0,0,0,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,1,2,1,1,2,2,2,2,1,1,2,1,0],
+    [1,2,1,3,3,1,2,2,1,3,3,1,2,1],
+    [1,2,1,3,3,1,1,1,1,3,3,1,2,1],
+    [1,2,2,1,1,1,1,1,1,1,1,2,2,1],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,1,1,0,0,0,0,0,0,1,1,1,0],
+    [0,0,0,1,1,1,0,0,1,1,1,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+];
+// ループド (タコ) (0:透明, 1:ボディ, 2:目, 3:吸盤)
+const LOOPER_PIXEL_ART = [
+    [0,0,0,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,1,1,2,1,1,1,1,1,2,1,1,1,0],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,3,1,1,1,1,1,1,1,1,1,1,3,1],
+    [1,0,3,1,1,1,1,1,1,1,1,3,0,1],
+    [1,0,0,3,1,1,1,1,1,1,3,0,0,1],
+    [0,0,0,1,3,1,0,0,1,3,1,0,0,0],
+    [0,0,0,0,1,3,0,0,0,1,3,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+];
+
+const STAGE_LENGTH_IN_FRAMES = 886;
+
+const themes = [
+    { name: 'Synthwave', grid: '#ff00ff', player: '#00ffff', comet: '#00aaff', ui: '#00ccff' },
+    { name: 'Outrun',    grid: '#ff8c00', player: '#ffdf00', comet: '#ff4500', ui: '#ffd700' },
+    { name: 'Aurora', grid: '#4B0082', player: '#00FF7F', comet: '#9400D3', ui: '#7CFC00' },
+    { name: 'Coral Reef', grid: '#1E90FF', player: '#FFD700', comet: '#FF4500', ui: '#00FFFF' },
+    { name: 'Neon Jungle', grid: '#006400', player: '#FF00FF', comet: '#39FF14', ui: '#F0E68C' },
+    { name: 'Midnight Sun', grid: '#483D8B', player: '#FFFFE0', comet: '#FF8C00', ui: '#FFDAB9' },
+    { name: 'Deep Space', grid: '#191970', player: '#FFFFFF', comet: '#B0C4DE', ui: '#E6E6FA' },
+    { name: 'Sakura', grid: '#3CB371', player: '#FFFFFF', comet: '#FFB6C1', ui: '#FFC0CB' },
+    { name: 'Autumn', grid: '#8B4513', player: '#FFFF00', comet: '#FF4500', ui: '#FFA500' },
+    { name: 'Tropical', grid: '#008080', player: '#ADFF2F', comet: '#FF1493', ui: '#F0E68C' },
+    { name: 'Galaxy', grid: '#483D8B', player: '#FFD700', comet: '#DA70D6', ui: '#BA55D3' },
+    { name: 'Inferno', grid: '#8B0000', player: '#FFFF00', comet: '#FF4500', ui: '#FF6347' },
+    { name: 'Crystal Cave', grid: '#00008B', player: '#E0FFFF', comet: '#AFEEEE', ui: '#ADD8E6' },
+    { name: 'Gilded Age', grid: '#2F4F4F', player: '#FFD700', comet: '#F0E68C', ui: '#DAA520' },
+    { name: 'Cosmic',    grid: '#a953e6', player: '#ffffff', comet: '#68d9f5', ui: '#f06e8c' },
+    { name: 'Monochrome',grid: '#888888', player: '#ffffff', comet: '#cccccc', ui: '#dddddd' }
+];
+
+// ---------------------------------
+// オーディオハンドラ
+// ---------------------------------
+class AudioHandler {
+    constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.bgmOscillators = [];
+        this.isInitialized = false;
+        this.bgmPlaying = false;
+        this.nextNoteTime = 0;
+        this.current16th = 0;
+        this.seq3ChordProgression = [0, -2, 3, 5];
+        this.seq4Melody = [12, 10, 7, 5, 3, 0, -2, 0];
+        this.seq4MelodyIndex = 0;
+        this.seq5Melody = [12, null, 15, 10, null, 12, 7, null, 14, null, 17, 12, null, 10, 5, null];
+        this.seq5MelodyIndex = 0;
+        this.hiHatPanIndex = 0;
+        this.isMuted = false;
+        this.volume = 0.4;
+        this.barTrigger = false;
+    }
+
+    initialize() {
+        if (this.isInitialized) {
+            return;
+        }
+        try {
+            this.ctx = new(window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.connect(this.ctx.destination);
+            this.masterGain.gain.value = this.isMuted ? 0 : this.volume;
+            this.isInitialized = true;
+        } catch (e) {
+            console.error("Web Audio API is not supported in this browser.");
+        }
+    }
+
+    createSound(freq, dur, type, decay, vol, startTime, ramp) {
+        if (!this.ctx) {
+            return;
+        }
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain).connect(this.masterGain);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime);
+        if (ramp) {
+            osc.frequency.exponentialRampToValueAtTime(ramp.endFreq, startTime + dur);
+        }
+        gain.gain.setValueAtTime(vol, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur * decay);
+        osc.start(startTime);
+        osc.stop(startTime + dur);
+    }
+
+    async playBgm() {
+        if (!this.isInitialized) {
+            return;
+        }
+
+        // AudioContextが停止状態(suspended)なら、再開(resume)を試みる
+        if (this.ctx.state === 'suspended') {
+            try {
+                // resume()が完了するのを待つ
+                await this.ctx.resume();
+            } catch (e) {
+                console.error("AudioContext resume failed, cannot play BGM.", e);
+                return; // 再開に失敗したらBGMは再生しない
+            }
+        }
+
+        // すでに再生中なら何もしない（状態チェックはresumeの後に行う）
+        if (this.bgmPlaying) {
+            return;
+        }
+
+        this.stopBgm();
+        this.bgmPlaying = true;
+        this.current16th = 0;
+        this.seq4MelodyIndex = 0;
+        this.seq5MelodyIndex = 0;
+        this.hiHatPanIndex = 0;
+        this.nextNoteTime = this.ctx.currentTime + 0.1;
+    }
+
+    scheduleBGM() {
+        if (!this.bgmPlaying) {
+            return;
+        }
+
+        const bgmStage = ((stage - 1) % 6) + 1;
+        const bpm = 130;
+        const sixteenth = 60 / bpm / 4;
+        const rootNote = 27.50;
+
+        const createKick = time => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const noise = this.ctx.createBufferSource();
+            const noiseGain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(120, time);
+            osc.frequency.exponentialRampToValueAtTime(40, time + 0.15);
+            gain.gain.setValueAtTime(1.0, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+            osc.connect(gain).connect(this.masterGain);
+            const bufSize = this.ctx.sampleRate * 0.05;
+            const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            noise.buffer = buf;
+            noiseGain.gain.setValueAtTime(0.3, time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.02);
+            noise.connect(noiseGain).connect(this.masterGain);
+            osc.start(time);
+            osc.stop(time + 0.2);
+            noise.start(time);
+            noise.stop(time + 0.05);
+            this.bgmOscillators.push(osc, gain, noise, noiseGain);
+        };
+        const createHiHat = (time, open = false) => {
+            const noise = this.ctx.createBufferSource();
+            const bufSize = this.ctx.sampleRate * 0.5;
+            const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            noise.buffer = buf;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 8000;
+            const panner = this.ctx.createStereoPanner();
+            panner.pan.value = [-0.6, 0.6][this.hiHatPanIndex % 2];
+            this.hiHatPanIndex++;
+            const gain = this.ctx.createGain();
+            const decayTime = open ? 0.3 : 0.05;
+            gain.gain.setValueAtTime(open ? 0.3 : 0.2, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + decayTime);
+            noise.connect(filter).connect(panner).connect(gain).connect(this.masterGain);
+            noise.start(time);
+            noise.stop(time + decayTime + 0.05);
+            this.bgmOscillators.push(noise, filter, panner, gain);
+        };
+        const createSnare = time => {
+            const noise = this.ctx.createBufferSource();
+            const bufSize = this.ctx.sampleRate * 0.2;
+            const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            noise.buffer = buf;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1500;
+            filter.Q.value = 1;
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.8, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+            noise.connect(filter).connect(gain).connect(this.masterGain);
+            noise.start(time);
+            noise.stop(time + 0.1);
+            this.bgmOscillators.push(noise, filter, gain);
+        };
+        const createStereoBass = (time, note) => {
+            const oscL = this.ctx.createOscillator();
+            const oscR = this.ctx.createOscillator();
+            const pannerL = this.ctx.createStereoPanner();
+            const pannerR = this.ctx.createStereoPanner();
+            const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+            oscL.type = 'square';
+            oscL.frequency.value = note;
+            oscR.type = 'sawtooth';
+            oscR.frequency.value = note * 1.01;
+            filter.type = 'lowpass';
+            filter.Q.value = 5;
+            filter.frequency.setValueAtTime(800, time);
+            filter.frequency.exponentialRampToValueAtTime(100, time + sixteenth * 0.8);
+            gain.gain.setValueAtTime(0.6, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 0.9);
+            pannerL.pan.value = -0.8;
+            oscL.connect(pannerL).connect(filter);
+            pannerR.pan.value = 0.8;
+            oscR.connect(pannerR).connect(filter);
+            filter.connect(gain).connect(this.masterGain);
+            oscL.start(time);
+            oscL.stop(time + sixteenth);
+            oscR.start(time);
+            oscR.stop(time + sixteenth);
+            this.bgmOscillators.push(oscL, oscR, pannerL, pannerR, filter, gain);
+        };
+        const createSequence = (time, note) => {
+            const osc = this.ctx.createOscillator();
+            const panner = this.ctx.createStereoPanner();
+            const gain = this.ctx.createGain();
+            const delay = this.ctx.createDelay();
+            const feedback = this.ctx.createGain();
+            panner.pan.value = (Math.random() * 2 - 1) * 0.9;
+            osc.type = 'triangle';
+            osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.3, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+            delay.delayTime.value = sixteenth * 3;
+            feedback.gain.value = 0.5;
+            osc.connect(panner).connect(gain);
+            gain.connect(this.masterGain);
+            gain.connect(delay);
+            delay.connect(feedback).connect(delay);
+            delay.connect(this.masterGain);
+            osc.start(time);
+            osc.stop(time + 0.1);
+            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+        };
+        const createStereoPad = (time, note) => {
+            const oscL = this.ctx.createOscillator();
+            const oscR = this.ctx.createOscillator();
+            const pannerL = this.ctx.createStereoPanner();
+            const pannerR = this.ctx.createStereoPanner();
+            const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+            oscL.type = 'sawtooth';
+            oscR.type = 'sawtooth';
+            oscL.frequency.value = note;
+            oscR.frequency.value = note;
+            oscL.detune.value = -10;
+            oscR.detune.value = 10;
+            pannerL.pan.value = -1;
+            pannerR.pan.value = 1;
+            filter.type = 'lowpass';
+            filter.Q.value = 1;
+            filter.frequency.setValueAtTime(200, time);
+            filter.frequency.linearRampToValueAtTime(1500, time + sixteenth * 64);
+            filter.frequency.linearRampToValueAtTime(200, time + sixteenth * 128);
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(0.2, time + sixteenth * 4);
+            gain.gain.setValueAtTime(0.2, time + sixteenth * 120);
+            gain.gain.linearRampToValueAtTime(0, time + sixteenth * 128);
+            oscL.connect(pannerL).connect(filter);
+            oscR.connect(pannerR).connect(filter);
+            filter.connect(gain).connect(this.masterGain);
+            oscL.start(time);
+            oscL.stop(time + sixteenth * 128);
+            oscR.start(time);
+            oscR.stop(time + sixteenth * 128);
+            this.bgmOscillators.push(oscL, oscR, pannerL, pannerR, filter, gain);
+        };
+        const createSequence2 = (time, note) => {
+            const osc = this.ctx.createOscillator();
+            const panner = this.ctx.createStereoPanner();
+            const gain = this.ctx.createGain();
+            panner.pan.value = (Math.random() * 2 - 1) * 0.7;
+            osc.type = 'sine';
+            osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.45, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 1.5);
+            osc.connect(panner).connect(gain).connect(this.masterGain);
+            osc.start(time);
+            osc.stop(time + sixteenth * 1.5);
+            this.bgmOscillators.push(osc, panner, gain);
+        };
+        const createSequence3 = (time, note) => {
+            const osc = this.ctx.createOscillator();
+            const panner = this.ctx.createStereoPanner();
+            const gain = this.ctx.createGain();
+            const delay = this.ctx.createDelay();
+            const feedback = this.ctx.createGain();
+            panner.pan.value = (Math.random() * 2 - 1) * 0.9;
+            osc.type = 'triangle';
+            osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.4, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 2);
+            delay.delayTime.value = sixteenth * 4;
+            feedback.gain.value = 0.5;
+            osc.connect(panner).connect(gain);
+            gain.connect(this.masterGain);
+            gain.connect(delay);
+            delay.connect(feedback).connect(delay);
+            delay.connect(this.masterGain);
+            osc.start(time);
+            osc.stop(time + sixteenth * 2);
+            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+        };
+        const createSequence4 = (time, note) => {
+            const osc = this.ctx.createOscillator();
+            const panner = this.ctx.createStereoPanner();
+            const gain = this.ctx.createGain();
+            const delay = this.ctx.createDelay();
+            const feedback = this.ctx.createGain();
+            panner.pan.value = (Math.random() * 2 - 1) * 0.9;
+            osc.type = 'sine';
+            osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.35, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 3.5);
+            delay.delayTime.value = sixteenth * 3;
+            feedback.gain.value = 0.4;
+            osc.connect(panner).connect(gain);
+            gain.connect(this.masterGain);
+            gain.connect(delay);
+            delay.connect(feedback).connect(delay);
+            delay.connect(this.masterGain);
+            osc.start(time);
+            osc.stop(time + sixteenth * 3.5);
+            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+        };
+        const createSequence5 = (time, note) => {
+            const osc = this.ctx.createOscillator();
+            const panner = this.ctx.createStereoPanner();
+            const gain = this.ctx.createGain();
+            const delay = this.ctx.createDelay();
+            const feedback = this.ctx.createGain();
+            panner.pan.value = (Math.random() * 2 - 1) * 0.9;
+            osc.type = 'triangle';
+            osc.frequency.value = note;
+            gain.gain.setValueAtTime(0.4, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 4);
+            delay.delayTime.value = sixteenth * 6;
+            feedback.gain.value = 0.4;
+            osc.connect(panner).connect(gain);
+            gain.connect(this.masterGain);
+            gain.connect(delay);
+            delay.connect(feedback).connect(delay);
+            delay.connect(this.masterGain);
+            osc.start(time);
+            osc.stop(time + sixteenth * 4);
+            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+        };
+
+        while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
+            const beatInLoop = this.current16th % 128;
+            const noteInMeasure = beatInLoop % 16;
+
+            if (noteInMeasure === 0) {
+                this.barTrigger = true;
+            }
+
+            if (noteInMeasure % 4 === 0) {
+                createKick(this.nextNoteTime);
+                visualBeat = 1.0;
+            }
+            if (noteInMeasure === 4 || noteInMeasure === 12) {
+                createSnare(this.nextNoteTime);
+            }
+            if (noteInMeasure % 2 === 1) {
+                createHiHat(this.nextNoteTime, false);
+            }
+            if (noteInMeasure === 14) {
+                createHiHat(this.nextNoteTime, true);
+            }
+            if (beatInLoop === 0) {
+                createStereoPad(this.nextNoteTime, rootNote * 2);
+            }
+
+            const measureIn8BarLoop = Math.floor(beatInLoop / 16);
+            if (measureIn8BarLoop % 2 === 0) {
+                if ([0, 8].includes(noteInMeasure)) {
+                    createStereoBass(this.nextNoteTime, rootNote);
+                }
+            } else {
+                if ([0, 6, 10, 14].includes(noteInMeasure)) {
+                    createStereoBass(this.nextNoteTime, rootNote);
+                }
+            }
+
+            if ([3, 7, 10, 15].includes(noteInMeasure)) {
+                createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
+            }
+
+            if (bgmStage >= 2) {
+                if (noteInMeasure % 4 === 0) {
+                    const degree = [0, 7, 3, 5][Math.floor(noteInMeasure / 4)];
+                    createSequence2(this.nextNoteTime, rootNote * 8 * Math.pow(2, degree / 12));
+                }
+            }
+
+            if (bgmStage >= 3) {
+                if (beatInLoop === 62) {
+                    const chordIndex = 1;
+                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
+                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 7) / 12);
+                    createSequence3(this.nextNoteTime, note);
+                }
+                if (beatInLoop === 126) {
+                    const chordIndex = 3;
+                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
+                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 2) / 12);
+                    createSequence3(this.nextNoteTime, note);
+                }
+            }
+            if (bgmStage >= 4) {
+                if (beatInLoop % 8 === 0) {
+                    const degree = this.seq4Melody[this.seq4MelodyIndex];
+                    const note = rootNote * 16 * Math.pow(2, degree / 12);
+                    createSequence4(this.nextNoteTime, note);
+                    this.seq4MelodyIndex = (this.seq4MelodyIndex + 1) % this.seq4Melody.length;
+                }
+            }
+            if (bgmStage >= 5) {
+                if (beatInLoop % 4 === 0) {
+                    const degree = this.seq5Melody[this.seq5MelodyIndex];
+                    if (degree !== null) {
+                        const note = rootNote * 8 * Math.pow(2, degree / 12);
+                        createSequence5(this.nextNoteTime, note);
+                    }
+                    this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
+                }
+            }
+
+            this.nextNoteTime += sixteenth;
+            this.current16th = (this.current16th + 1) % 128;
+        }
+    }
+
+    stopBgm() {
+        this.bgmPlaying = false;
+        this.bgmOscillators.forEach(o => {
+            try {
+                o.disconnect();
+                if (o.stop) {
+                    o.stop(0);
+                }
+            } catch (e) {}
+        });
+        this.bgmOscillators = [];
+    }
+
+    playSound(type) {
+        if (!this.isInitialized || this.isMuted) {
+            return;
+        }
+        const now = this.ctx.currentTime;
+        switch (type) {
+            case 'itemGet':
+                this.createSound(1046, 0.05, "triangle", 0.8, 0.7, now);
+                setTimeout(() => this.createSound(1396, 0.1, "triangle", 0.7, 0.7, now + 0.08), 80);
+                break;
+            case 'waveClear':
+                setTimeout(() => this.createSound(523, 0.1, 'sine', 0.9, 0.5, now), 0);
+                setTimeout(() => this.createSound(659, 0.1, 'sine', 0.9, 0.5, now + 0.1), 100);
+                setTimeout(() => this.createSound(783, 0.1, 'sine', 0.9, 0.5, now + 0.2), 200);
+                setTimeout(() => this.createSound(1046, 0.2, 'sine', 0.8, 0.6, now + 0.3), 300);
+                break;
+            case 'start':
+                [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.4, now + i * 0.08));
+                break;
+            case 'glaze':
+                this.createSound(880, 0.1, 'triangle', 0.8, 0.5, now, {endFreq: 1200});
+                break;
+            case 'explosion':
+                const b = this.ctx.sampleRate * 0.5;
+                const buf = this.ctx.createBuffer(1, b, this.ctx.sampleRate);
+                const o = buf.getChannelData(0);
+                for (let i = 0; i < b; i++) o[i] = Math.random() * 2 - 1;
+                const s = this.ctx.createBufferSource();
+                s.buffer = buf;
+                const f = this.ctx.createBiquadFilter();
+                f.type = 'lowpass';
+                f.frequency.setValueAtTime(2000, now);
+                f.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                const g = this.ctx.createGain();
+                g.gain.setValueAtTime(0.7, now);
+                g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                s.connect(f).connect(g).connect(this.masterGain);
+                s.start(now);
+                s.stop(now + 0.5);
+                break;
+            case 'invincibleHit':
+                this.createSound(1568, 0.1, 'sine', 0.8, 0.8, now);
+                setTimeout(() => this.createSound(2093, 0.15, 'sine', 0.7, 0.8, now + 0.07), 70);
+                break;
+            case 'lowEnergy':
+                this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now);
+                setTimeout(() => this.createSound(987, 0.1, 'sawtooth', 0.8, 0.5, now + 0.15), 150);
+                break;
+            case 'playerShoot':
+                this.createSound(2200, 0.1, 'sawtooth', 0.9, 0.4, now, {endFreq: 300});
+                break;
+            case 'enemyDestroy':
+                this.createSound(200, 0.2, 'square', 0.8, 0.5, now, { endFreq: 50 });
+                const noise = this.ctx.createBufferSource();
+                const bufSize = this.ctx.sampleRate * 0.15;
+                const noiseBuf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+                const data = noiseBuf.getChannelData(0);
+                for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+                noise.buffer = noiseBuf;
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.value = 1200;
+                noiseFilter.Q.value = 1;
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.6, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                noise.connect(noiseFilter).connect(noiseGain).connect(this.masterGain);
+                noise.start(now);
+                noise.stop(now + 0.15);
+                this.createSound(1000, 0.1, 'sine', 0.7, 0.3, now + 0.03);
+                break;
+        }
+    }
+
+    playJingle(type) {
+        if (!this.isInitialized || this.isMuted) {
+            return;
+        }
+        const now = this.ctx.currentTime;
+        switch (type) {
+            case 'gameOver':
+                this.createSound(220, 0.8, 'sawtooth', 0.2, 0.8, now);
+                setTimeout(() => this.createSound(110, 0.8, 'sawtooth', 0.4, 0.8, now + 0.1), 100);
+                setTimeout(() => this.createSound(55, 0.8, 'sawtooth', 0.6, 0.8, now + 0.2), 200);
+                break;
+            case 'specialItemGet':
+                [1046, 1318, 1567, 2093].forEach((f, i) => {
+                    this.createSound(f, 0.15, 'triangle', 0.8, 0.6, now + i * 0.07);
+                });
+                break;
+        }
+    }
+
+    toggleMute() {
+        if (!this.isInitialized) {
+            return;
+        }
+        this.isMuted = !this.isMuted;
+        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
+        return this.isMuted;
+    }
+}
+
+// ---------------------------------
+// ゲームのメインロジック
+// ---------------------------------
+const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
+const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = config.canvasWidth * HUD_SCALE;
+canvas.height = config.canvasHeight * HUD_SCALE;
+const ctx = canvas.getContext('2d');
+const stageEl = document.getElementById('stage');
+
+const audioHandler = new AudioHandler();
+const instructionsContainer = document.getElementById('instructions-container');
+const mainInstruction = document.getElementById('main-instruction');
+const extraInstruction = document.getElementById('extra-instruction');
+const controlsInstruction = document.getElementById('controls-instruction');
+const controlsInstruction2 = document.getElementById('controls-instruction-2');
+const soundToggleButton = document.getElementById('sound-toggle-button');
+const effectsToggleButton = document.getElementById('effects-toggle-button');
+
+let gameState = 'title';
+let gameMode = 'STANDARD';
+let score = 0;
+let highScoreStandard = localStorage.getItem(config.highScoreKeyStandard) || 0;
+let highScoreJourney = localStorage.getItem(config.highScoreKeyJourney) || 0;
+let highScoreStartrail = localStorage.getItem(config.highScoreKeyStartrail) || 0;
+let frameCount = 0;
+
+const keyState = {};
+window.addEventListener('keydown', e => {
+    lastInputDevice = 'keyboard';
+    keyState[e.code] = true;
+    if (!audioHandler.isInitialized) {
+        audioHandler.initialize();
+    }
+    if (e.code === 'KeyF') {
+        toggleFullScreen();
+    }
+});
+window.addEventListener('keyup', e => {
+    keyState[e.code] = false;
+});
+
+function resetKeys() {
+    for (const key in keyState) {
+        keyState[key] = false;
+    }
+}
+window.addEventListener('blur', resetKeys);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        resetKeys();
+    }
+});
+
+
+const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false, resetTrigger: false, confirmYesTrigger: false, confirmNoTrigger: false }; // ★ プロパティを追加
+let wasEnterPressed = false, wasQPressed = false, wasSelectPressed = false;
+let wasStartPressed = false, wasPPressed = false, wasUpPressed = false;
+let wasDownPressed = false, wasShootPressed = false;
+let wasKPressed = false, wasYPressed = false, wasNPressed = false; // ★ 追加
+
+let player;
+let comets;
+let stars;
+let particles;
+let effects;
+let items;
+let scoreTexts;
+let playerBullet;
+let monsters;
+let enemyBullets;
+
+let currentCometSpeed;
+let lastInputDevice = 'keyboard';
+let stage;
+let stageClearFrame;
+let currentThemeIndex;
+let energy;
+let nextItemScore;
+let nextSpecialItemScore;
+let newHighScoreAchieved;
+let elapsedTime;
+let lastTimestamp;
+let visualBeat = 0;
+let nextWayShotFrame;
+let isInvincible = false;
+let hasUsedInvincibility = false;
+let wasMPressed = false;
+let hasSpawned5000PointItem;
+let gameOverReason = '';
+let lowEnergyWarningPlayed;
+let screenShake = { intensity: 0, duration: 0 };
+let grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
+let mutekiAnim = { life: 0, maxLife: 0 }; // ★ 追加: MUTEKIアニメーション専用のタイマー
+let chainCount = 0;
+let chainEffectPending = false;
+let chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーション専用のタイマー
+let titleMenuIndex = 0;
+const titleMenuItems = ['STANDARD MODE', 'JOURNEY MODE', 'STARTRAIL MODE'];
+let invaderSpawnCountForStage = 0;
+let invadersSpawnedThisStage = 0;
+let hasUFOSpawnedThisStage = false;
+let hasLooperSpawnedThisStage = false;
+let looperSpawnFrame = -1;
+let highScoreDisplayToggle = 0;
+let isEffectsEnabled = true;
+let isShowingModeInGame = true; // ★ 追加: ゲーム中のモード名/ハイスコア表示切り替え用
+let resizeRequest = null; // ★ 追加: resizeイベント制御用
+
+// ▼▼▼ このブロックをグローバル変数セクションに追加 ▼▼▼
+let titleBottomText = ""; // タイトル画面下部に表示されるテキスト
+let descriptionTimer = 0; // 説明文の表示時間を管理するタイマー
+let effectTimer = 0;      // テキスト切り替えエフェクトの時間を管理するタイマー
+const DESCRIPTION_DISPLAY_DURATION = 120; // 説明文の表示時間 (2秒 @ 60fps)
+const EFFECT_DURATION = 12; // エフェクトの時間 (0.2秒 @ 60fps)
+const MODE_DESCRIPTIONS = [
+    'SHMUP-style Blasting through Enemies',
+    'Stay Alive through Energy',
+    'Dance Between the Falling Comets'
+];
+const RANDOM_CHARS = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+// ▲▲▲ 追加はここまで ▲▲▲
+
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function applyThemeStyles(theme) {
+    const borderAlpha = 0.5 + visualBeat * 0.5;
+    const shadowSize = 10 + visualBeat * 40;
+
+    stageEl.style.borderColor = hexToRgba(theme.ui, borderAlpha);
+    stageEl.style.boxShadow = `0 0 ${shadowSize}px ${theme.ui}`;
+    instructionsContainer.style.color = theme.ui;
+    instructionsContainer.style.textShadow = `0 0 10px ${theme.ui}`;
+    
+    // ▼▼▼ このブロックを修正 ▼▼▼
+    const buttons = [soundToggleButton, effectsToggleButton];
+    buttons.forEach(button => {
+        if (button) {
+            button.style.color = theme.ui;
+            button.style.textShadow = `0 0 5px ${theme.ui}`;
+            button.style.borderColor = theme.ui;
+            button.style.boxShadow = `0 0 10px ${theme.ui}`;
+            button.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
+        }
+    });
+    // ▲▲▲ 修正はここまで ▲▲▲
+}
+
+function init() {
+    player = {
+        x: config.canvasWidth / 2,
+        y: config.canvasHeight - 80,
+        radius: config.playerHitboxRadius,
+        invincibleTimer: 0,
+        maxInvincibleTimer: 0
+    };
+    comets = [];
+    particles = [];
+    effects = [];
+    items = [];
+    scoreTexts = [];
+    playerBullet = null;
+    monsters = [];
+    enemyBullets = [];
+    stars = Array.from({ length: config.starCount }, () => ({
+        x: Math.random() * config.canvasWidth,
+        y: Math.random() * config.canvasHeight,
+        width: Math.random() * 1.5 + 1,
+        length: Math.random() * 10 + 5,
+        speed: Math.random() * 20 + 10,
+        isGlazed: false,
+    }));
+
+    score = 0;
+    frameCount = 0;
+    elapsedTime = 0;
+    lastTimestamp = 0;
+    currentCometSpeed = config.initialCometSpeed;
+    stage = 1;
+    stageClearFrame = STAGE_LENGTH_IN_FRAMES;
+    currentThemeIndex = 0;
+    energy = config.energyTotal;
+    nextItemScore = config.energyItemScoreNormal;
+    nextSpecialItemScore = config.energyItemScoreSpecial;
+    newHighScoreAchieved = false;
+    nextWayShotFrame = (2 + Math.random() * 2) * 60;
+    isInvincible = false;
+    hasUsedInvincibility = false;
+    hasSpawned5000PointItem = false;
+    gameOverReason = '';
+    lowEnergyWarningPlayed = false;
+    screenShake = { intensity: 0, duration: 0 };
+    grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
+    mutekiAnim = { life: 0, maxLife: 0 }; // ★ 追加: MUTEKIアニメーションタイマーをリセット
+    chainCount = 0;
+    chainEffectPending = false;
+    chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーションタイマーをリセット
+    // Reset stage-specific flags
+    invaderSpawnCountForStage = 0;
+    invadersSpawnedThisStage = 0;
+    hasUFOSpawnedThisStage = false;
+    hasLooperSpawnedThisStage = false;
+    looperSpawnFrame = -1;
+    isShowingModeInGame = true; // ★ 追加: 開始時は必ずモード名を表示する
+
+    // ▼▼▼ 追加された初期化処理 ▼▼▼
+    descriptionTimer = 0;
+    effectTimer = 0;
+    titleBottomText = ""; // 最初は空にしてdraw関数で初期テキストを設定させる
+    // ▲▲▲ 追加された初期化処理 ▲▲▲
+
+    stageEl.style.filter = 'none';
+    stageEl.style.webkitFilter = 'none';
+    
+    applyThemeStyles(themes[currentThemeIndex]);
+}
+
+function setupNewStage() {
+    stage++;
+    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    stageClearFrame += STAGE_LENGTH_IN_FRAMES;
+    effects.push({ type: 'stageClear', text: `STAGE ${stage} START`, life: 120, maxLife: 120 });
+    audioHandler.playSound('waveClear');
+
+    // Reset stage-specific flags and determine monster spawn counts for this new stage
+    invadersSpawnedThisStage = 0;
+    invaderSpawnCountForStage = Math.floor(stage / 2);
+    hasUFOSpawnedThisStage = false;
+    hasLooperSpawnedThisStage = false;
+    
+    // Set Looper spawn frame for this stage
+    if (stage >= 4 && stage % 2 === 0) {
+        const minSpawnFrame = stageClearFrame - STAGE_LENGTH_IN_FRAMES * 0.7;
+        const maxSpawnFrame = stageClearFrame - STAGE_LENGTH_IN_FRAMES * 0.3;
+        looperSpawnFrame = Math.floor(Math.random() * (maxSpawnFrame - minSpawnFrame) + minSpawnFrame);
+    } else {
+        looperSpawnFrame = -1;
+    }
+}
+
+async function startGame(mode) {
+    init();
+    gameMode = mode;
+    gameState = 'playing';
+    
+    // Determine monster spawn counts for the first stage
+    invaderSpawnCountForStage = Math.floor(stage / 2);
+    invadersSpawnedThisStage = 0;
+    hasUFOSpawnedThisStage = false;
+    hasLooperSpawnedThisStage = false;
+    looperSpawnFrame = -1; // 初回ステージでは出現しない
+
+    audioHandler.playSound('start');
+    // BGMの再生準備が非同期で完了するのを待つ
+    await audioHandler.playBgm();
+}
+
+function updateInstructions() {
+    const pauseText = lastInputDevice === 'keyboard' ? 'PAUSE: P' : 'PAUSE: START';
+    mainInstruction.textContent = `${pauseText} / FULLSCREEN: F`;
+    
+    if (gameMode === 'STARTRAIL MODE') {
+        extraInstruction.textContent = 'AVOID COMETS AS LONG AS POSSIBLE';
+    } else {
+        extraInstruction.textContent = 'ENERGY BOX @ 10,000 PTS';
+    }
+
+    const moveText = lastInputDevice === 'keyboard' ? 'MOVE: ARROWS' : 'MOVE: PAD';
+    const slowText = lastInputDevice === 'keyboard' ? 'SLOW: Z/SHIFT' : 'SLOW: AB BTN';
+    controlsInstruction.textContent = `${moveText} | ${slowText}`;
+
+    const shootText = lastInputDevice === 'keyboard' ? 'SHOOT: X/SPACE' : 'SHOOT: XY BTN';
+    controlsInstruction2.textContent = shootText;
+}
+
+
+function pollInput() {
+    const gamepads = navigator.getGamepads();
+    let gpLeft = false, gpRight = false, gpUp = false, gpDown = false;
+    let gpStart = false, gpSlow = false, gpSelect = false, gpShoot = false;
+
+    for (const gp of gamepads) {
+        if (!gp) continue;
+        if (gp.buttons.some(b => b.pressed) || gp.axes.some(a => Math.abs(a) > 0.1)) {
+            lastInputDevice = 'gamepad';
+        }
+        gpLeft = gp.buttons[14]?.pressed || gp.axes[0] < -0.5;
+        gpRight = gp.buttons[15]?.pressed || gp.axes[0] > 0.5;
+        gpUp = gp.buttons[12]?.pressed || gp.axes[1] < -0.5;
+        gpDown = gp.buttons[13]?.pressed || gp.axes[1] > 0.5;
+        gpStart = gp.buttons[9]?.pressed;
+        gpSlow = gp.buttons[0]?.pressed || gp.buttons[1]?.pressed;
+        gpShoot = gp.buttons[2]?.pressed || gp.buttons[3]?.pressed;
+        gpSelect = gp.buttons[8]?.pressed;
+    }
+
+    // Direct state for continuous actions (movement, slow)
+    input.left = keyState['ArrowLeft'] || gpLeft;
+    input.right = keyState['ArrowRight'] || gpRight;
+    input.up = keyState['ArrowUp'] || gpUp;
+    input.down = keyState['ArrowDown'] || gpDown;
+    input.slow = keyState['ShiftLeft'] || keyState['ShiftRight'] || keyState['KeyZ'] || gpSlow;
+
+    // Trigger states for single-press actions
+    const isShootPressed = keyState['Space'] || keyState['KeyX'] || gpShoot;
+    input.shootTrigger = isShootPressed && !wasShootPressed;
+    wasShootPressed = isShootPressed;
+
+    // ★ ここから追加 ★
+    // ハイスコアリセット関連のトリガー
+    const isKPressed = keyState['KeyK'];
+    const isYPressed = keyState['KeyY'];
+    const isNPressed = keyState['KeyN'];
+
+    if (gameState === 'title' && isKPressed && !wasKPressed) {
+        input.resetTrigger = true;
+    } else {
+        input.resetTrigger = false;
+    }
+
+    if (gameState === 'confirmReset') {
+        input.confirmYesTrigger = isYPressed && !wasYPressed;
+        input.confirmNoTrigger = isNPressed && !wasNPressed;
+    } else {
+        input.confirmYesTrigger = false;
+        input.confirmNoTrigger = false;
+    }
+
+    wasKPressed = isKPressed;
+    wasYPressed = isYPressed;
+    wasNPressed = isNPressed;
+    // ★ ここまで追加 ★
+
+    const isPPressed = keyState['KeyP'];
+    const isStartPressed = gpStart;
+    input.pauseTrigger = (isPPressed && !wasPPressed) || (isStartPressed && !wasStartPressed);
+    wasPPressed = isPPressed;
+    
+    const isEnterPressed = keyState['Enter'];
+    const isQPressed = keyState['KeyQ'];
+    const isSelectPressed = gpSelect;
+
+    const enterTrigger = isEnterPressed && !wasEnterPressed;
+    const qTrigger = isQPressed && !wasQPressed;
+    const startTrigger = isStartPressed && !wasStartPressed;
+    const selectTrigger = isSelectPressed && !wasSelectPressed;
+
+    // gameStateに応じてトリガーを設定
+    if (gameState === 'title') {
+        input.replayTrigger = enterTrigger || startTrigger;
+        input.titleTrigger = false;
+    } else if (gameState === 'gameOver') {
+        input.replayTrigger = enterTrigger || startTrigger;
+        input.titleTrigger = qTrigger || selectTrigger;
+    } else if (gameState === 'paused') {
+        input.replayTrigger = false;
+        input.titleTrigger = qTrigger || selectTrigger;
+    } else { // playing
+        input.replayTrigger = false;
+        input.titleTrigger = false;
+    }
+     
+    const isUpPressed = input.up;
+    input.upTrigger = isUpPressed && !wasUpPressed;
+    wasUpPressed = isUpPressed;
+
+    const isDownPressed = input.down;
+    input.downTrigger = isDownPressed && !wasDownPressed;
+    wasDownPressed = isDownPressed;
+    
+    wasStartPressed = isStartPressed;
+    wasEnterPressed = isEnterPressed;
+    wasSelectPressed = isSelectPressed;
+    wasQPressed = isQPressed;
+}
+
+
+function triggerSpecialItemEffect() {
+    energy = config.energyTotal;
+    audioHandler.playJingle('specialItemGet');
+    triggerInvincibility(150);
+}
+
+function triggerNormalItemEffect() {
+    energy += config.energyTotal * 0.5;
+    energy = Math.min(config.energyTotal, energy);
+    audioHandler.playSound('itemGet');
+    triggerInvincibility(90);
+}
+
+function triggerInvincibility(baseFrames) {
+    if (player.invincibleTimer > 0) {
+        chainCount++;
+        // effects.push({ type: 'chainComboUpdate', life: 60, maxLife: 60 }); // ★ 変更点: effects配列への追加を削除
+        chainComboAnim.life = chainComboAnim.maxLife; // ★ 変更点: 専用タイマーをリセットしてアニメーションを開始
+        chainEffectPending = true;
+    } else {
+        chainCount = 1;
+    }
+
+    const chainLevelForTime = Math.floor((chainCount - 1) / 3);
+    const timeReductionMultiplier = Math.pow(0.9, chainLevelForTime);
+    const newItemInvincibleFrames = Math.floor(baseFrames * timeReductionMultiplier);
+
+    let finalInvincibleTime;
+    if (player.invincibleTimer > 0) {
+        const longerTime = Math.max(player.invincibleTimer, newItemInvincibleFrames);
+        finalInvincibleTime = longerTime + 30 * timeReductionMultiplier;
+    } else {
+        finalInvincibleTime = newItemInvincibleFrames;
+    }
+    player.invincibleTimer = finalInvincibleTime;
+    player.maxInvincibleTimer = finalInvincibleTime;
+
+    // ★ 変更点: 専用タイマーを更新
+    mutekiAnim.life = finalInvincibleTime;
+    mutekiAnim.maxLife = finalInvincibleTime;
+}
+
+function resetHighScores() {
+    localStorage.removeItem(config.highScoreKeyStandard);
+    localStorage.removeItem(config.highScoreKeyJourney);
+    localStorage.removeItem(config.highScoreKeyStartrail);
+
+    highScoreStandard = 0;
+    highScoreJourney = 0;
+    highScoreStartrail = 0;
+    
+    // ユーザーへのフィードバック
+    audioHandler.playSound('explosion'); // 派手な音で知らせる
+    effects.push({ type: 'screenFlash', life: 20, maxLife: 20 });
+}
+
+function gameOver(reason) {
+    if (gameState === 'gameOver') {
+        return;
+    }
+    gameState = 'gameOver';
+    gameOverReason = reason;
+
+    isShowingModeInGame = true; // ★ 追加: ゲームオーバー時は必ずモード名を表示する
+
+    audioHandler.stopBgm();
+    audioHandler.playJingle('gameOver');
+    
+    let currentHighScore;
+    let highScoreKey;
+
+    switch(gameMode) {
+        case 'STANDARD MODE':
+            currentHighScore = highScoreStandard;
+            highScoreKey = config.highScoreKeyStandard;
+            break;
+        case 'JOURNEY MODE':
+            currentHighScore = highScoreJourney;
+            highScoreKey = config.highScoreKeyJourney;
+            break;
+        case 'STARTRAIL MODE':
+            currentHighScore = highScoreStartrail;
+            highScoreKey = config.highScoreKeyStartrail;
+            break;
+    }
+
+    if (score > currentHighScore && !hasUsedInvincibility) {
+        currentHighScore = score;
+        localStorage.setItem(highScoreKey, currentHighScore);
+        
+        switch(gameMode) {
+            case 'STANDARD MODE':
+                highScoreStandard = currentHighScore;
+                break;
+            case 'JOURNEY MODE':
+                highScoreJourney = currentHighScore;
+                break;
+            case 'STARTRAIL MODE':
+                highScoreStartrail = currentHighScore;
+                break;
+        }
+        newHighScoreAchieved = true;
+    }
+
+if (reason === 'collision') {
+        audioHandler.playSound('explosion');
+        screenShake = { intensity: 20, duration: 20 }; // ★ 45フレームから約半分の22フレームに変更
+        effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 30, maxLife: 30, radius: 20 });
+        effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
+
+        // ▼▼▼ 爆発エフェクトを動画のように強化 ▼▼▼
+        const particleCount = isEffectsEnabled ? 450 : 70; // ★ 変更点: パーティクル数を増加
+        
+        // ★ 変更点: 爆発専用の鮮やかなカラーパレットを定義
+        const explosionColors = ['#ff3344', '#ff8800', '#ffff00', '#88ff00', '#00ffff', '#4488ff', '#ff00ff', '#ffffff'];
+
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (Math.random() * 18 + 6) * 60; // ★ 変更点: 速度に少し幅を持たせる
+            
+            particles.push({
+                x: player.x,
+                y: player.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: Math.random() * 120 + 90, // ★ 変更点: 少し長めに表示
+                maxLife: 210,
+                color: explosionColors[Math.floor(Math.random() * explosionColors.length)], // ★ 変更点: 専用パレットから色を選択
+                size: Math.random() * 2.5 + 1, // ★ 追加: パーティクルのサイズをランダムに設定
+                gravityMultiplier: Math.random() * 0.6 + 0.7,
+            });
+        }
+    } else if (reason === 'energy') {
+        effects.push({ type: 'energyGameOverFlash', life: 8, maxLife: 8 });
+        grayscaleAnimation.isActive = true;
+        grayscaleAnimation.progress = 0;
+    }
+}
+
+function spawnWayComets() {
+    const wayCount = Math.floor(Math.random() * (stage - 1)) + 2;
+    const startX = Math.random() * config.canvasWidth;
+    const startY = -config.cometCoreRadius * 2;
+    const targetX = player.x;
+    const targetY = player.y;
+    const angleToPlayer = Math.atan2(targetY - startY, targetX - startX);
+    const speed = currentCometSpeed * 0.75;
+    const spreadAngle = Math.PI / 8;
+    const totalAngle = spreadAngle * (wayCount - 1);
+    const startAngle = angleToPlayer - totalAngle / 2;
+
+    for (let i = 0; i < wayCount; i++) {
+        const angle = startAngle + i * spreadAngle;
+        comets.push({
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            radius: config.cometCoreRadius,
+            isGlazed: false,
+            isWay: true
+        });
+    }
+}
+
+function updateBackground(dt_sec) {
+    if (gameState === 'playing' || gameState === 'title' || gameState === 'gameOver') {
+        let speedRatio;
+        if (gameState === 'playing') {
+            speedRatio = currentCometSpeed / config.initialCometSpeed;
+        } else { // title or gameOver
+            speedRatio = 0.3;
+        }
+
+        if (speedRatio > 0 && !isNaN(dt_sec)) {
+            stars.forEach(s => {
+                s.y += s.speed * config.starScrollMultiplier * speedRatio * dt_sec;
+                if (s.y > config.canvasHeight) {
+                    s.y = 0;
+                    s.x = Math.random() * config.canvasWidth;
+                    s.isGlazed = false;
+                }
+            });
+        }
+    }
+}
+
+function updatePlayingState(dt_sec) {
+    // ▼▼▼ このブロックを修正 ▼▼▼
+    // 1小節ごとにUI表示を切り替え、小節線エフェクトを発生させる
+    if (audioHandler.barTrigger) {
+        // 表示を切り替える
+        isShowingModeInGame = !isShowingModeInGame;
+        
+        // 小節線エフェクトを発生
+        effects.push({ type: 'barLine', life: 30, maxLife: 30 });
+        
+        // トリガーをリセット
+        audioHandler.barTrigger = false;
+    }
+
+    // Player invincibility timer
+    if (player.invincibleTimer > 0) {
+        player.invincibleTimer -= 60 * dt_sec;
+        if (player.invincibleTimer <= 0) {
+            player.invincibleTimer = 0;
+            if (chainCount > 1) {
+                effects.push({ type: 'comboFadeOut', life: 12, maxLife: 12, count: chainCount });
+            }
+            chainCount = 0;
+        }
+    }
+
+    // Player Movement
+    const isPlayerTemporarilyInvincible = player.invincibleTimer > 0;
+    const isPlayerInvincible = isInvincible || isPlayerTemporarilyInvincible;
+    let currentSpeed = (input.slow ? config.playerSpeed * config.playerSlowModeMultiplier : config.playerSpeed) * dt_sec;
+    if (player.invincibleTimer > 0) {
+        currentSpeed *= 1.1;
+    }
+    if (input.left) player.x -= currentSpeed;
+    if (input.right) player.x += currentSpeed;
+    player.x = Math.max(0, Math.min(config.canvasWidth, player.x));
+
+    // Player Shooting (Both modes)
+    if (input.shootTrigger && !playerBullet) {
+        if (gameMode !== 'STARTRAIL MODE') {
+            if (!lowEnergyWarningPlayed) {
+                energy -= config.energyTotal / 15;
+            }
+        }
+
+        playerBullet = {
+            x: player.x,
+            y: player.y - config.playerVisualSize,
+            width: 3,
+            height: 10,
+        };
+        audioHandler.playSound('playerShoot');
+    }
+
+    // Update Player Bullet
+    if (playerBullet) {
+        playerBullet.y -= config.playerBulletSpeed * dt_sec;
+        if (playerBullet.y < 0) {
+            playerBullet = null;
+        }
+    }
+
+    // Score and Difficulty Progression
+    const stageMultiplier = Math.pow(1.1, stage - 1);
+    score += Math.floor(config.distanceScoreMultiplier * (currentCometSpeed / config.initialCometSpeed) * stageMultiplier);
+    currentCometSpeed += config.cometSpeedIncrease * dt_sec;
+
+    // Energy Management (STARTRAIL MODEではスキップ)
+    if (gameMode !== 'STARTRAIL MODE') {
+        const baseEnergyMultiplier = 0.9;
+        const energyDecreaseRate = Math.pow(1.12, stage - 1);
+        energy -= baseEnergyMultiplier * energyDecreaseRate * 60 * dt_sec;
+
+        const energyThreshold = config.energyTotal / 3;
+        if (energy <= energyThreshold && gameState === 'playing') {
+            if (!lowEnergyWarningPlayed) lowEnergyWarningPlayed = true;
+            if (frameCount % 60 === 0) {
+                audioHandler.playSound('lowEnergy');
+            }
+        } else {
+            if (lowEnergyWarningPlayed) lowEnergyWarningPlayed = false;
+        }
+
+        if (energy <= 0 && !isPlayerInvincible) {
+            gameOver('energy');
+            return;
+        }
+    }
+
+
+    // Stage Progression
+    if (frameCount >= stageClearFrame) {
+        setupNewStage();
+    }
+
+    // Comet Spawning
+    if (stage >= 2 && frameCount >= nextWayShotFrame) {
+        spawnWayComets();
+        const baseInterval = Math.max(3, 10 - stage) * 15;
+        let randomInterval = baseInterval * (0.5 + Math.random());
+
+        // STARTRAILモードの場合、発射間隔を3倍にする（頻度を1/3に）
+        if (gameMode === 'STARTRAIL MODE') {
+            randomInterval *= 3;
+        }
+
+        nextWayShotFrame = frameCount + randomInterval;
+    }
+
+    const stageSpeedMod = 1 + (stage - 1) * 0.08;
+    const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval / (1 + (stage - 1) * 0.2)));
+    if (frameCount % spawnInterval === 0) {
+        for (let i = 0; i < config.cometSpawnAmount; i++) {
+            comets.push({
+                x: Math.random() * config.canvasWidth,
+                y: -config.cometCoreRadius,
+                radius: config.cometCoreRadius,
+                isGlazed: false
+            });
+        }
+    }
+    
+    // Monster Spawning (Standard Mode only)
+    if (gameMode === 'STANDARD MODE') {
+        // Looper Spawning
+        if (looperSpawnFrame !== -1 && frameCount >= looperSpawnFrame && !hasLooperSpawnedThisStage) {
+            hasLooperSpawnedThisStage = true;
+            monsters.push({
+                type: 'looper',
+                hp: 1,
+                angle: Math.random() * Math.PI * 2,
+                speed: (1.5 + (stage * 0.1)) * (4/9), 
+                direction: Math.random() < 0.5 ? 1 : -1,
+                width: 14 * 6,
+                height: 14 * 6,
+                shootCooldown: 0,
+                shootAngle: Math.random() * Math.PI * 2
+            });
+        }
+        
+        const spawnCheckInterval = 120;
+        if (frameCount % spawnCheckInterval === 0) {
+            // UFO Spawning
+            if (stage % 3 === 0 && !hasUFOSpawnedThisStage && Math.random() < 0.2) {
+                hasUFOSpawnedThisStage = true;
+                const startX = Math.random() < 0.5 ? -30 : config.canvasWidth + 30;
+                const speedX = startX < 0 ? 250 : -250;
+                monsters.push({
+                    type: 'ufo',
+                    x: startX,
+                    y: 50 + Math.random() * 100,
+                    vx: speedX,
+                    vy: 0,
+                    width: 14 * 4,
+                    height: 14 * 4,
+                    shootCooldown: 30 + Math.random() * 15,
+                });
+            }
+
+            // Invader Spawning
+            const hasInvaderOnScreen = monsters.some(m => m.type === 'invader');
+            if (invadersSpawnedThisStage < invaderSpawnCountForStage && !hasInvaderOnScreen && Math.random() < 0.5) {
+                invadersSpawnedThisStage++;
+                monsters.push({
+                    type: 'invader',
+                    x: Math.random() * config.canvasWidth,
+                    y: -30,
+                    vx: 0,
+                    vy: 150,
+                    width: 14 * 4,
+                    height: 14 * 4,
+                    shootCooldown: 30 + Math.random() * 30,
+                });
+            }
+        }
+    }
+
+    // Energy Item Spawning (STARTRAIL MODEではスキップ)
+    if (gameMode !== 'STARTRAIL MODE') {
+        const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+        const totalMultiplier = stageMultiplier * comboMultiplier;
+        const currentNormalThreshold = config.energyItemScoreNormal * totalMultiplier;
+        const currentSpecialThreshold = config.energyItemScoreSpecial * totalMultiplier;
+
+        if (!hasSpawned5000PointItem && score >= 5000) {
+            items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
+            hasSpawned5000PointItem = true;
+        }
+        while (score >= nextSpecialItemScore) {
+            items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'special' });
+            nextSpecialItemScore += currentSpecialThreshold;
+            nextItemScore = Math.floor(score / currentNormalThreshold) * currentNormalThreshold + currentNormalThreshold;
+        }
+        while (score >= nextItemScore) {
+            if (nextItemScore < nextSpecialItemScore) {
+                items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
+            }
+            nextItemScore += currentNormalThreshold;
+        }
+    }
+
+
+    // Update Comets
+    for (let i = comets.length - 1; i >= 0; i--) {
+        const c = comets[i];
+        if (c.vx !== undefined && c.vy !== undefined) {
+            c.x += c.vx * dt_sec;
+            c.y += c.vy * dt_sec;
+        } else {
+            c.y += currentCometSpeed * stageSpeedMod * dt_sec;
+        }
+
+        if (c.y - c.radius > config.canvasHeight || c.x < -c.radius || c.x > config.canvasWidth + c.radius) {
+            comets.splice(i, 1);
+            continue;
+        }
+
+        const dx = player.x - c.x;
+        const dy = player.y - c.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+
+        if (isPlayerInvincible) {
+            if (d < config.playerVisualSize + c.radius) {
+                const baseBonusScore = 1500;
+                const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+                const bonusScore = Math.floor(baseBonusScore * stageMultiplier * comboMultiplier);
+                score += bonusScore;
+                scoreTexts.push({ x: player.x, y: player.y - 30, text: `+${bonusScore}`, life: 60, type: 'bonus' });
+                audioHandler.playSound('invincibleHit');
+                comets.splice(i, 1);
+                continue;
+            }
+        } else {
+            if (d < player.radius + c.radius) {
+                gameOver('collision');
+                return;
+            }
+        }
+
+        const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+        if (!c.isGlazed && d < player.radius + c.radius + currentGlazeDistance) {
+            c.isGlazed = true;
+            const points = Math.floor(config.glazeScore * stageMultiplier);
+            score += points;
+            scoreTexts.push({ x: c.x, y: c.y, text: `+${points}`, life: 60, type: 'glaze' });
+            audioHandler.playSound('glaze');
+        }
+    }
+    
+    // Update Monsters (Standard Mode only)
+    if (gameMode === 'STANDARD MODE') {
+        for (let i = monsters.length - 1; i >= 0; i--) {
+            const m = monsters[i];
+            
+            // Movement Update
+            if (m.type === 'looper') {
+                m.angle += m.speed * m.direction * dt_sec;
+                m.x = config.canvasWidth / 2 + Math.cos(m.angle) * (config.canvasWidth / 2.5);
+                m.y = (config.canvasHeight / 4) + Math.sin(m.angle) * (config.canvasHeight / 5);
+            } else {
+                m.x += m.vx * dt_sec;
+                m.y += m.vy * dt_sec;
+            }
+
+            // Monster shooting
+            if (m.shootCooldown !== undefined) {
+                m.shootCooldown -= 60 * dt_sec;
+                if (m.shootCooldown <= 0) {
+                     if (m.type === 'looper') {
+			// ▼▼▼ ループド攻撃パターン変更 ▼▼▼
+                        m.shootAngle += (Math.PI / 6); // 30度ずつ回転
+                        const bulletSpeed = 200;
+                        enemyBullets.push({
+                            x: m.x, y: m.y, 
+                            vx: bulletSpeed * Math.cos(m.shootAngle), 
+                            vy: bulletSpeed * Math.sin(m.shootAngle), 
+                            radius: 4, isGlazed: false
+                        });
+                        // 1秒に16発になるようにクールダウンを設定 (1/16=0.0625)
+                        m.shootCooldown = 60 * 0.0625;
+                        // ▲▲▲ ループド攻撃パターン変更 ▲▲▲
+                    } else if (m.type === 'ufo') {
+                        const angles = [-0.4, -0.2, 0, 0.2, 0.4]; // 5-way
+                        angles.forEach(angle => {
+                            enemyBullets.push({x: m.x, y: m.y, vx: 250 * Math.sin(angle), vy: 250 * Math.cos(angle), radius: 4, isGlazed: false});
+                        });
+                        m.shootCooldown = 45 + Math.random() * 15;
+                    } else if (m.type === 'invader') {
+                        const angleToPlayer = Math.atan2(player.y - m.y, player.x - m.x);
+                        const spread = Math.PI / 8;
+                        const angles = [angleToPlayer - spread, angleToPlayer, angleToPlayer + spread];
+                        const bulletSpeed = 350;
+                        angles.forEach(angle => {
+                            enemyBullets.push({
+                                x: m.x, y: m.y, 
+                                vx: bulletSpeed * Math.cos(angle), 
+                                vy: bulletSpeed * Math.sin(angle), 
+                                radius: 4, isGlazed: false
+                            });
+                        });
+                        m.shootCooldown = 90 + Math.random() * 40;
+                    }
+                }
+            }
+
+            // Check collision with player bullet
+            if (playerBullet) {
+                if (playerBullet.x > m.x - m.width / 2 && playerBullet.x < m.x + m.width / 2 &&
+                    playerBullet.y > m.y - m.height / 2 && playerBullet.y < m.y + m.height / 2) {
+                    
+                    playerBullet = null;
+                    audioHandler.playSound('invincibleHit');
+                    const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+                    
+                    if (m.hp) {
+                        m.hp--;
+                        if (m.hp <= 0) {
+                             const baseScore = config.monsterLooperBaseScore;
+                             const earnedScore = Math.floor(baseScore * stageMultiplier * comboMultiplier);
+                             score += earnedScore;
+                             scoreTexts.push({ x: m.x, y: m.y, text: `+${earnedScore}`, life: 60, type: 'bonus' });
+                             audioHandler.playSound('enemyDestroy');
+                             screenShake = { intensity:8, duration: 20 };
+                             effects.push({ type: 'shockwave', x: m.x, y: m.y, life: 15, maxLife: 15, radius: 10 });
+                             monsters.splice(i, 1);
+                             triggerSpecialItemEffect();
+                        }
+                    } else {
+                        const baseScore = m.type === 'ufo' ? config.monsterUFOBaseScore : config.monsterInvaderBaseScore;
+                        const earnedScore = Math.floor(baseScore * stageMultiplier * comboMultiplier);
+                        score += earnedScore;
+                        scoreTexts.push({ x: m.x, y: m.y, text: `+${earnedScore}`, life: 60, type: 'bonus' });
+                        
+                        audioHandler.playSound('enemyDestroy');
+                        if(m.type === 'ufo') {
+                            screenShake = { intensity: 8, duration: 20 };
+                        }
+                        effects.push({ type: 'shockwave', x: m.x, y: m.y, life: 15, maxLife: 15, radius: 10 });
+                        monsters.splice(i, 1);
+                        
+                        if (m.type === 'ufo') {
+                            triggerSpecialItemEffect();
+                        } else {
+                            triggerNormalItemEffect();
+                        }
+                    }
+                    continue;
+                }
+            }
+            
+            // Check collision with player
+            const dx = player.x - m.x;
+            const dy = player.y - m.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (isPlayerInvincible) {
+                if (dist < player.radius + m.width / 2) {
+                    const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+                    const bonusScore = Math.floor(config.monsterCollisionBonus * stageMultiplier * comboMultiplier);
+                    score += bonusScore;
+                    scoreTexts.push({ x: player.x, y: player.y - 30, text: `+${bonusScore}`, life: 60, type: 'bonus' });
+                    audioHandler.playSound('invincibleHit');
+                    if (m.type === 'ufo' || m.type === 'looper') {
+                        screenShake = { intensity: 8, duration: 20 };
+                        triggerSpecialItemEffect();
+                    } else {
+                        triggerNormalItemEffect();
+                    }
+                    monsters.splice(i, 1);
+                    continue;
+                }
+            } else {
+                 if (dist < player.radius + m.width / 2) {
+                    gameOver('collision');
+                    return;
+                }
+            }
+
+            // Despawn if off-screen (for UFO and Invader)
+            if (m.type !== 'looper' && (m.y > config.canvasHeight + 50 || m.x < -50 || m.x > config.canvasWidth + 50)) {
+                monsters.splice(i, 1);
+            }
+        }
+
+        // Update Enemy Bullets
+        for (let i = enemyBullets.length - 1; i >= 0; i--) {
+            const eb = enemyBullets[i];
+            eb.x += eb.vx * dt_sec;
+            eb.y += eb.vy * dt_sec;
+
+            const dx = player.x - eb.x;
+            const dy = player.y - eb.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (isPlayerInvincible) {
+                 if (dist < config.playerVisualSize + eb.radius) {
+                    const baseBonusScore = 1500;
+                    const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+                    const bonusScore = Math.floor(baseBonusScore * stageMultiplier * comboMultiplier);
+                    score += bonusScore;
+                    scoreTexts.push({ x: player.x, y: player.y - 30, text: `+${bonusScore}`, life: 60, type: 'bonus' });
+                    audioHandler.playSound('invincibleHit');
+                    enemyBullets.splice(i, 1);
+                    continue;
+                }
+            } else {
+                if (dist < player.radius + eb.radius) {
+                    gameOver('collision');
+                    return;
+                }
+            }
+
+            const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+            if (!eb.isGlazed && dist < player.radius + eb.radius + currentGlazeDistance) {
+                eb.isGlazed = true;
+                const points = Math.floor(config.glazeScore * stageMultiplier);
+                score += points;
+                scoreTexts.push({ x: eb.x, y: eb.y, text: `+${points}`, life: 60, type: 'glaze' });
+                audioHandler.playSound('glaze');
+            }
+
+            if (eb.y > config.canvasHeight + 20 || eb.y < -20 || eb.x < -20 || eb.x > config.canvasWidth + 20) {
+                enemyBullets.splice(i, 1);
+            }
+        }
+    }
+
+
+    // Update Items
+    for (let index = items.length - 1; index >= 0; index--) {
+        const item = items[index];
+        item.y += config.energyItemSpeed * dt_sec;
+        const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
+
+        if (dist < config.playerVisualSize + config.energyItemSize) {
+            if (item.type === 'special') {
+                triggerSpecialItemEffect();
+            } else {
+                triggerNormalItemEffect();
+            }
+            items.splice(index, 1);
+            continue;
+        }
+        if (item.y > config.canvasHeight + 20) {
+            items.splice(index, 1);
+        }
+    }
+
+    // Update Score Texts
+    for (let i = scoreTexts.length - 1; i >= 0; i--) {
+        const st = scoreTexts[i];
+        st.life--;
+        st.y -= 0.5;
+        if (st.life <= 0) {
+            scoreTexts.splice(i, 1);
+        }
+    }
+}
+
+function update(timestamp) {
+    if (gameState !== 'paused') {
+        if (!lastTimestamp) {
+            lastTimestamp = timestamp;
+        }
+        const dt_ms = timestamp - lastTimestamp;
+        const dt_sec = Math.min(dt_ms / 1000, 1 / 30);
+        lastTimestamp = timestamp;
+
+        pollInput();
+        updateInstructions();
+
+        // ★ ここから追加 ★
+        if (mutekiAnim.life > 0) {
+            mutekiAnim.life -= 60 * dt_sec; // フレームレートに依存しないようにdt_secで減算
+            if (mutekiAnim.life < 0) mutekiAnim.life = 0;
+        }
+        // ★ ここまで追加 ★
+
+        if (chainComboAnim.life > 0) {
+            chainComboAnim.life--;
+        }
+        
+        if (screenShake.duration > 0) {
+            screenShake.duration--;
+            if (screenShake.duration <= 0) {
+                screenShake.intensity = 0;
+            }
+        }
+
+        if (grayscaleAnimation.isActive && grayscaleAnimation.progress < 1) {
+            grayscaleAnimation.progress += dt_sec / 1.0;
+            if (grayscaleAnimation.progress > 1) {
+                grayscaleAnimation.progress = 1;
+            }
+        }
+
+        if (gameState === 'playing' && input.pauseTrigger) {
+            gameState = 'paused';
+            if (audioHandler.ctx) {
+                audioHandler.masterGain.gain.exponentialRampToValueAtTime(0.001, audioHandler.ctx.currentTime + 0.2);
+            }
+            return;
+        }
+
+        // Toggle invincibility cheat
+        const isMPressed = keyState['KeyM'];
+        if (isMPressed && !wasMPressed) {
+            if (gameState === 'playing') {
+                isInvincible = !isInvincible;
+                if (isInvincible) hasUsedInvincibility = true;
+            }
+        }
+        wasMPressed = isMPressed;
+
+
+        const previousVisualBeat = visualBeat;
+        visualBeat *= 0.85;
+        if (visualBeat < 0.01) {
+            visualBeat = 0;
+        }
+
+        updateBackground(dt_sec);
+        
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.life--;
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+            } else {
+                if (p.gravityMultiplier) {
+                    p.vy += config.gravity * p.gravityMultiplier * dt_sec;
+                }
+                p.x += p.vx * dt_sec;
+                p.y += p.vy * dt_sec;
+            }
+        }
+        
+        for (let i = effects.length - 1; i >= 0; i--) {
+            const e = effects[i];
+            e.life--;
+            if (e.life <= 0) {
+                effects.splice(i, 1);
+            }
+        }
+
+        if (gameState === 'playing') {
+            frameCount++;
+            audioHandler.scheduleBGM();
+            elapsedTime += dt_ms;
+            updatePlayingState(dt_sec);
+
+            if (chainEffectPending && visualBeat >= 1.0 && previousVisualBeat < 1.0) {
+                effects.push({ type: 'shockwave', x: 150, y: 65, life: 20, maxLife: 20, radius: 20, hud: true });
+                effects.push({ type: 'screenFlash', life: 8, maxLife: 8 });
+                chainEffectPending = false; // ★ 変更点: この行は元々ありましたが、この変更がパフォーマンス改善の鍵となります
+            }
+
+        } else if (gameState === 'confirmReset') { // ★ この else if ブロックを追加
+            if (input.confirmYesTrigger) {
+                resetHighScores();
+                gameState = 'title';
+            } else if (input.confirmNoTrigger) {
+                gameState = 'title';
+            }
+        } else if (gameState === 'title') {
+            // ★ ここから追加 ★
+            if (input.resetTrigger) {
+                gameState = 'confirmReset';
+                return; // 状態が変わったので、このフレームの残りの更新はスキップ
+            }
+            frameCount++;
+
+            // --- タイマー更新 ---
+            if (effectTimer > 0) {
+                effectTimer--;
+            }
+            if (descriptionTimer > 0) {
+                descriptionTimer--;
+                if (descriptionTimer === 0) {
+                    // 説明表示期間が完全に終了したので、元のテキストに戻るためのエフェクトを開始
+                    effectTimer = EFFECT_DURATION;
+                }
+            }
+
+            // --- 入力処理 ---
+            const prevMenuIndex = titleMenuIndex;
+            if (input.upTrigger) {
+                titleMenuIndex = (titleMenuIndex - 1 + titleMenuItems.length) % titleMenuItems.length;
+            }
+            if (input.downTrigger) {
+                titleMenuIndex = (titleMenuIndex + 1) % titleMenuItems.length;
+            }
+
+            if (prevMenuIndex !== titleMenuIndex) {
+                // メニューが変更されたので、エフェクトと説明タイマーを開始
+                effectTimer = EFFECT_DURATION;
+                descriptionTimer = DESCRIPTION_DISPLAY_DURATION;
+            }
+
+            // --- 表示テキストの決定 ---
+            let targetText;
+            if (descriptionTimer > 0) {
+                targetText = MODE_DESCRIPTIONS[titleMenuIndex];
+            } else {
+                targetText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
+            }
+
+            if (effectTimer > 0) {
+                let randomText = '';
+                // 表示されるテキストの長さに合わせてランダムな文字列を生成
+                for (let i = 0; i < targetText.length; i++) {
+                    randomText += RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)];
+                }
+                titleBottomText = randomText;
+            } else {
+                titleBottomText = targetText;
+            }
+            
+            // --- ゲーム開始処理 ---
+            if (input.replayTrigger) {
+                audioHandler.initialize();
+                startGame(titleMenuItems[titleMenuIndex]);
+            }
+        } else if (gameState === 'gameOver') {
+            frameCount++; // Keep frameCount running for animations
+            if (input.titleTrigger) {
+                 gameState = 'title';
+                 init();
+            } else if (input.replayTrigger) {
+                startGame(gameMode);
+            }
+        }
+    } else { // Paused
+        pollInput();
+        updateInstructions();
+        if (input.pauseTrigger) {
+            gameState = 'playing';
+            lastTimestamp = 0;
+            if (!audioHandler.isMuted && audioHandler.ctx) {
+                audioHandler.masterGain.gain.exponentialRampToValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime + 0.2);
+            }
+        } else if (input.titleTrigger) {
+             audioHandler.stopBgm();
+             if (audioHandler.masterGain && !audioHandler.isMuted && audioHandler.ctx) {
+                 audioHandler.masterGain.gain.setValueAtTime(audioHandler.volume, audioHandler.ctx.currentTime);
+             }
+             gameState = 'title';
+             init();
+        }
+    }
+}
+
+
+function drawRoundRect(ctx, x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function drawWithGlow(ctx, drawFunc, color, useBeat = false) {
+    // ▼▼▼ このブロックを修正 ▼▼▼
+    if (!isEffectsEnabled) {
+        drawFunc(); // EFX OFF時はグローを適用せず、描画関数のみ実行
+        return;
+    }
+    // ▲▲▲ 修正はここまで ▲▲▲
+    const blurAmount = useBeat ? (config.glowBlur + visualBeat * 8) : config.glowBlur;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = blurAmount;
+    drawFunc();
+    ctx.shadowBlur = 0;
+}
+
+function formatTime(ms) {
+    if (isNaN(ms)) ms = 0;
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const msec = Math.floor(ms % 1000);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(msec).padStart(3,'0')}`;
+}
+
+function drawChainComboText(renderCtx, count, alpha = 1.0) {
+    const comboText = `${count} CHAIN COMBO!!`;
+    const baseFontSize = 16;
+    const sizeStep = 2;
+    const maxChainForSizing = 30;
+    const chainLevel = Math.floor((Math.min(count, maxChainForSizing) - 1) / 5);
+    let fontSize = baseFontSize + chainLevel * sizeStep;
+    
+    // ★ 変更点: effects.find() をやめ、専用のタイマーを参照する
+    const comboEffect = chainComboAnim.life > 0 ? chainComboAnim : null;
+    let textToDraw = comboText;
+
+    if (comboEffect && alpha === 1.0) {
+        const progress = 1 - (comboEffect.life / comboEffect.maxLife);
+        fontSize = fontSize * 1.2 - (fontSize * 0.2) * progress;
+
+        const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        // ★ 変更点: 文字列の直接連結をやめ、配列を使って高速化
+        const textChars = [];
+        for (let i = 0; i < comboText.length; i++) {
+            if (progress > (i / comboText.length) * 0.5 + (Math.random() * 0.1)) {
+                textChars.push(comboText[i]);
+            } else {
+                textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+            }
+        }
+        textToDraw = textChars.join('');
+    }
+
+    renderCtx.save();
+    renderCtx.globalAlpha = alpha;
+    renderCtx.font = `${fontSize}px ${config.fontFamily}`;
+    renderCtx.textAlign = 'left';
+
+    const textMetrics = renderCtx.measureText(textToDraw);
+    const gradient = renderCtx.createLinearGradient(20, 0, 20 + textMetrics.width, 0);
+    const numColors = 12;
+    for (let i = 0; i < numColors; i++) {
+        const hue = (Date.now() / 15 + i * (360 / numColors)) % 360;
+        gradient.addColorStop(Math.max(0, Math.min(1, i / (numColors - 1))), `hsl(${hue}, 100%, 70%)`);
+    }
+
+    renderCtx.fillStyle = gradient;
+
+    drawWithGlow(renderCtx, () => {
+        renderCtx.fillText(textToDraw, 20, 70);
+    }, '#ffffcc', true);
+
+    renderCtx.restore();
+}
+
+function drawTitleTextMorph(renderCtx, x, y, font, color) {
+    const originalText = 'OUTBURST+';
+    const chars = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const now = Date.now();
+    const cycle = 2000; // 2秒周期
+    const timeInCycle = now % cycle;
+    let textToShow = '';
+
+    // 0-999ms: 静的表示
+    if (timeInCycle < 1000) {
+        textToShow = originalText;
+    } else {
+        // 1000-2000ms: アニメーション
+        const animProgress = (timeInCycle - 1000) / 1000; // 0.0 ~ 1.0
+
+        if (animProgress > 0.8) {
+            // 最後の0.2秒で収束
+            const convergeProgress = (animProgress - 0.8) / 0.2; // 0.0 ~ 1.0
+            const len = originalText.length + Math.round(originalText.length * (1 - convergeProgress));
+            for(let i = 0; i < len; i++) {
+                textToShow += chars[Math.floor(Math.random() * chars.length)];
+            }
+        } else {
+            // 最初の0.8秒は倍の長さ
+            const expandedLength = originalText.length * 2;
+            for(let i = 0; i < expandedLength; i++) {
+                textToShow += chars[Math.floor(Math.random() * chars.length)];
+            }
+        }
+    }
+
+    drawWithGlow(renderCtx, () => {
+        renderCtx.font = font;
+        renderCtx.fillStyle = color;
+        renderCtx.fillText(textToShow, x, y);
+    }, color);
+}
+
+// =================================================================================
+// ▼▼▼ 3D RENDERER (COMET OUTBURST+) ▼▼▼
+//   ゲームロジックは 800x600 の2D座標のまま。描画だけを3D空間に写像する。
+//   (x, y) → (X = x - 400, Y = 高さ, Z = y - 300)
+// =================================================================================
+const W = config.canvasWidth, H = config.canvasHeight;
+const PR = HUD_SCALE;
+const toX = x => x - W / 2;
+const toZ = y => y - H / 2;
+const rand = (a, b) => a + Math.random() * (b - a);
+const _hexCache = new Map();
+function hexColor(str) {
+    let c = _hexCache.get(str);
+    if (!c) { c = new THREE.Color(str); _hexCache.set(str, c); }
+    return c;
+}
+const _tmpC = new THREE.Color();
+const _tmpC2 = new THREE.Color();
+const hsl = (h, s, l, target = _tmpC) => target.setHSL(((h % 360) + 360) % 360 / 360, s, l);
+
+let gl3dOK = true;
+let renderer, scene, camera, composer, bloom;
+try {
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('glCanvas'), antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(PR);
+    renderer.setSize(W, H, false);
+} catch (e) {
+    gl3dOK = false;
+    console.error('WebGL init failed', e);
+}
+
+const BG_BASE = new THREE.Color(0x0b0220);
+scene = new THREE.Scene();
+scene.background = BG_BASE.clone();
+scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
+
+camera = new THREE.PerspectiveCamera(44, W / H, 1, 6000);
+const CAM_BASE = new THREE.Vector3(0, 825, 300);
+const CAM_LOOK = new THREE.Vector3(0, 0, 10);
+
+if (gl3dOK) {
+    composer = new EffectComposer(renderer);
+    composer.setPixelRatio(PR);
+    composer.setSize(W, H);
+    composer.addPass(new RenderPass(scene, camera));
+    bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.6, 0.4, 0.38);
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+}
+
+scene.add(new THREE.HemisphereLight(0xa8b8ff, 0x2a0c40, 0.85));
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.25);
+sunLight.position.set(-300, 700, 300);
+scene.add(sunLight);
+const rimLight = new THREE.DirectionalLight(0xff66cc, 0.9);
+rimLight.position.set(400, 200, -500);
+scene.add(rimLight);
+
+// ---------------------------------
+// 共通マテリアル / テクスチャ
+// ---------------------------------
+const GLOW_SCALE = (H * PR / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+const glowMat = new THREE.ShaderMaterial({
+    uniforms: { uScale: { value: GLOW_SCALE } },
+    vertexShader: `
+        attribute float size;
+        attribute vec3 gcolor;
+        varying vec3 vColor;
+        uniform float uScale;
+        void main() {
+            vColor = gcolor;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = size * uScale / -mv.z;
+            gl_Position = projectionMatrix * mv;
+        }`,
+    fragmentShader: `
+        varying vec3 vColor;
+        void main() {
+            float r = length(gl_PointCoord - 0.5) * 2.0;
+            if (r > 1.0) discard;
+            float halo = pow(1.0 - r, 2.2) * 0.85;
+            float core = smoothstep(0.32, 0.0, r);
+            gl_FragColor = vec4(vColor * halo + vec3(core) * length(vColor) * 0.6, 1.0);
+        }`,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    transparent: true,
+});
+
+function makeTrailTexture() {
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 128;
+    const g = c.getContext('2d');
+    const img = g.createImageData(32, 128);
+    for (let y = 0; y < 128; y++) {
+        const along = Math.pow(1 - y / 127, 1.7);
+        for (let x = 0; x < 32; x++) {
+            const dx = (x - 15.5) / 15.5;
+            const across = Math.exp(-dx * dx * 4.0);
+            const a = Math.min(1, along * across * 1.1);
+            const i = (y * 32 + x) * 4;
+            img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+            img.data[i + 3] = a * 255;
+        }
+    }
+    g.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+}
+const trailTex = makeTrailTexture();
+const trailGeo = new THREE.PlaneGeometry(1, 1);
+trailGeo.rotateX(-Math.PI / 2);
+
+function glowInstMaterial(k, extra = {}) {
+    const m = new THREE.MeshStandardMaterial(Object.assign({ color: 0xffffff, flatShading: true, metalness: 0.3, roughness: 0.35 }, extra));
+    m.onBeforeCompile = sh => {
+        sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>',
+            `#include <emissivemap_fragment>
+            #ifdef USE_INSTANCING_COLOR
+                totalEmissiveRadiance += vColor * ${k.toFixed(2)};
+            #endif`);
+    };
+    return m;
+}
+
+// ---------------------------------
+// バッチ描画ユーティリティ
+// ---------------------------------
+class GlowBatch {
+    constructor(max) {
+        this.max = max; this.n = 0;
+        this.pos = new Float32Array(max * 3);
+        this.col = new Float32Array(max * 3);
+        this.size = new Float32Array(max);
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
+        g.setAttribute('gcolor', new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage));
+        g.setAttribute('size', new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage));
+        this.geo = g;
+        this.points = new THREE.Points(g, glowMat);
+        this.points.frustumCulled = false;
+        this.points.renderOrder = 20;
+        scene.add(this.points);
+    }
+    begin() { this.n = 0; }
+    add(x, y, z, c, size, intensity = 1) {
+        if (this.n >= this.max) return;
+        const k = this.n * 3;
+        this.pos[k] = x; this.pos[k + 1] = y; this.pos[k + 2] = z;
+        this.col[k] = c.r * intensity; this.col[k + 1] = c.g * intensity; this.col[k + 2] = c.b * intensity;
+        this.size[this.n] = size;
+        this.n++;
+    }
+    end() {
+        this.geo.setDrawRange(0, this.n);
+        const a = this.geo.attributes;
+        a.position.needsUpdate = a.gcolor.needsUpdate = a.size.needsUpdate = true;
+    }
+}
+
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _v = new THREE.Vector3(), _s = new THREE.Vector3(), _e = new THREE.Euler();
+const AXIS_Y = new THREE.Vector3(0, 1, 0);
+
+class TrailBatch {
+    constructor(max) {
+        const mat = new THREE.MeshBasicMaterial({ map: trailTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide });
+        this.mesh = new THREE.InstancedMesh(trailGeo, mat, max);
+        this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        this.mesh.setColorAt(0, new THREE.Color());
+        this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+        this.mesh.frustumCulled = false;
+        this.mesh.renderOrder = 19;
+        this.mesh.count = 0;
+        this.max = max; this.n = 0;
+        scene.add(this.mesh);
+    }
+    begin() { this.n = 0; }
+    // a = 尾, b = 先端
+    add(ax, ay, az, bx, by, bz, width, c, intensity = 1) {
+        if (this.n >= this.max) return;
+        const dx = bx - ax, dz = bz - az;
+        const len = Math.max(0.001, Math.hypot(dx, dz));
+        _v.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
+        _q.setFromAxisAngle(AXIS_Y, Math.atan2(-dx, -dz));
+        _s.set(width, 1, len);
+        _m4.compose(_v, _q, _s);
+        this.mesh.setMatrixAt(this.n, _m4);
+        _tmpC2.copy(c).multiplyScalar(intensity);
+        this.mesh.setColorAt(this.n, _tmpC2);
+        this.n++;
+    }
+    end() {
+        this.mesh.count = this.n;
+        this.mesh.instanceMatrix.needsUpdate = true;
+        this.mesh.instanceColor.needsUpdate = true;
+    }
+}
+
+class InstPool {
+    constructor(geo, mat, max, renderOrder = 0) {
+        this.mesh = new THREE.InstancedMesh(geo, mat, max);
+        this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        this.mesh.setColorAt(0, new THREE.Color());
+        this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+        this.mesh.frustumCulled = false;
+        this.mesh.renderOrder = renderOrder;
+        this.mesh.count = 0;
+        this.max = max; this.n = 0;
+        scene.add(this.mesh);
+    }
+    begin() { this.n = 0; }
+    add(x, y, z, sx, sy, sz, rx, ry, rz, c) {
+        if (this.n >= this.max) return;
+        _v.set(x, y, z);
+        _q.setFromEuler(_e.set(rx, ry, rz));
+        _s.set(sx, sy, sz);
+        _m4.compose(_v, _q, _s);
+        this.mesh.setMatrixAt(this.n, _m4);
+        this.mesh.setColorAt(this.n, c);
+        this.n++;
+    }
+    end() {
+        this.mesh.count = this.n;
+        this.mesh.instanceMatrix.needsUpdate = true;
+        this.mesh.instanceColor.needsUpdate = true;
+    }
+}
+
+const glow = new GlowBatch(4000);
+const trails = new TrailBatch(1500);
+const cometBodies = new InstPool(new THREE.IcosahedronGeometry(1, 0), glowInstMaterial(0.55), 900, 2);
+const cometWires = new InstPool(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }), 900, 3);
+const bulletBodies = new InstPool(new THREE.OctahedronGeometry(1, 0), glowInstMaterial(0.8), 1200, 2);
+const debrisCubes = new InstPool(new THREE.BoxGeometry(1, 1, 1), glowInstMaterial(0.6), 800, 2);
+
+// ---------------------------------
+// ワールド（Rez風ワイヤーフレーム都市）
+// ---------------------------------
+const world = new THREE.Group();
+scene.add(world);
+const FLOOR_Y = -420;
+const WORLD_NEAR = 900, WORLD_FAR = -2600, WORLD_SPAN = WORLD_NEAR - WORLD_FAR;
+
+function gridLines(size, step, y) {
+    const p = [];
+    for (let i = -size; i <= size; i += step) {
+        p.push(-size, y, i, size, y, i, i, y, -size, i, y, size);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    return g;
+}
+const floorMat = new THREE.LineBasicMaterial({ color: 0x5a3cff, transparent: true, opacity: 0.32 });
+const floorGrid = new THREE.LineSegments(gridLines(3200, 100, FLOOR_Y), floorMat);
+world.add(floorGrid);
+
+function towerGeometry(w, d, h, step, taper = 1) {
+    const p = [];
+    const ring = (y, s) => {
+        const x0 = -w / 2 * s, x1 = w / 2 * s, z0 = -d / 2 * s, z1 = d / 2 * s;
+        p.push(x0, y, z0, x1, y, z0, x1, y, z0, x1, y, z1, x1, y, z1, x0, y, z1, x0, y, z1, x0, y, z0);
+    };
+    const levels = Math.max(1, Math.floor(h / step));
+    for (let i = 0; i <= levels; i++) {
+        const y = (i / levels) * h;
+        ring(y, 1 + (taper - 1) * (i / levels));
+    }
+    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    corners.forEach(([sx, sz]) => {
+        p.push(sx * w / 2, 0, sz * d / 2, sx * w / 2 * taper, h, sz * d / 2 * taper);
+    });
+    // 窓のような縦線
+    for (let k = 1; k < 3; k++) {
+        const fx = -w / 2 + (w * k) / 3;
+        p.push(fx, 0, d / 2, fx * taper, h, d / 2 * taper, fx, 0, -d / 2, fx * taper, h, -d / 2 * taper);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    return g;
+}
+function spireGeometry(r, h) {
+    const p = [];
+    const sides = 4;
+    for (let i = 0; i < sides; i++) {
+        const a0 = (i / sides) * Math.PI * 2 + Math.PI / 4, a1 = ((i + 1) / sides) * Math.PI * 2 + Math.PI / 4;
+        p.push(Math.cos(a0) * r, 0, Math.sin(a0) * r, 0, h, 0);
+        for (let lv = 0; lv < 8; lv++) {
+            const t = lv / 8, s = 1 - t;
+            p.push(Math.cos(a0) * r * s, h * t, Math.sin(a0) * r * s, Math.cos(a1) * r * s, h * t, Math.sin(a1) * r * s);
+        }
+        // クロスブレース
+        p.push(Math.cos(a0) * r, 0, Math.sin(a0) * r, Math.cos(a1) * r * 0.5, h * 0.5, Math.sin(a1) * r * 0.5);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    return g;
+}
+const buildingMatA = new THREE.LineBasicMaterial({ color: 0x8fb4ff, transparent: true, opacity: 0.42 });
+const buildingMatB = new THREE.LineBasicMaterial({ color: 0xff7a3c, transparent: true, opacity: 0.38 });
+const buildingFillMat = new THREE.MeshBasicMaterial({ color: 0x3a3070, transparent: true, opacity: 0.045, depthWrite: false });
+const buildings = [];
+function placeBuilding(b, z) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    if (b.under) {
+        b.obj.position.set(rand(-560, 560), FLOOR_Y, z);
+    } else {
+        b.obj.position.set(side * rand(520, 1500), FLOOR_Y, z);
+    }
+}
+for (let i = 0; i < 90; i++) {
+    const under = i < 30;
+    const kind = Math.random();
+    let geo, fill = null;
+    if (under) {
+        const w = rand(60, 160), d = rand(60, 160), h = rand(80, 330);
+        geo = towerGeometry(w, d, h, rand(22, 40));
+        if (Math.random() < 0.5) { fill = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), buildingFillMat); fill.position.y = h / 2; }
+    } else if (kind < 0.25) {
+        geo = spireGeometry(rand(50, 90), rand(700, 1300));
+    } else {
+        const w = rand(70, 200), d = rand(70, 200), h = rand(300, 1000);
+        geo = towerGeometry(w, d, h, rand(25, 45), Math.random() < 0.3 ? rand(0.4, 0.8) : 1);
+        if (Math.random() < 0.6) { fill = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), buildingFillMat); fill.position.y = h / 2; }
+    }
+    const obj = new THREE.Group();
+    obj.add(new THREE.LineSegments(geo, Math.random() < 0.18 ? buildingMatB : buildingMatA));
+    if (fill) obj.add(fill);
+    const b = { obj, under };
+    placeBuilding(b, rand(WORLD_FAR, WORLD_NEAR));
+    buildings.push(b);
+    world.add(obj);
+}
+
+// 流れるワイヤー（Rezの青い流線）
+const flows = [];
+const FLOW_COLORS = [0x2f6bff, 0x5b4dff, 0x1ec8ff, 0xa04dff, 0x3d9bff];
+for (let i = 0; i < 22; i++) {
+    const n = 110;
+    const pos = new Float32Array(n * 3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    const mat = new THREE.LineBasicMaterial({ color: FLOW_COLORS[i % FLOW_COLORS.length], transparent: true, opacity: rand(0.45, 0.8), blending: THREE.AdditiveBlending, depthWrite: false });
+    const line = new THREE.Line(g, mat);
+    line.frustumCulled = false;
+    world.add(line);
+    flows.push({ line, pos, n, x0: rand(-900, 900), y0: rand(-260, -50), amp: rand(30, 110), freq: rand(0.002, 0.006), speed: rand(0.6, 1.6), phase: rand(0, 10) });
+}
+
+// 星屑ストリーク
+const STAR_N = 260;
+const starPos = new Float32Array(STAR_N * 6);
+const starData = Array.from({ length: STAR_N }, () => ({ x: rand(-1500, 1500), y: rand(FLOOR_Y + 30, -30), z: rand(WORLD_FAR, WORLD_NEAR), len: rand(25, 90), sp: rand(0.8, 1.6) }));
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3).setUsage(THREE.DynamicDrawUsage));
+const starMat = new THREE.LineBasicMaterial({ color: 0xc8c8ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+const starLines = new THREE.LineSegments(starGeo, starMat);
+starLines.frustumCulled = false;
+world.add(starLines);
+
+// ---------------------------------
+// ハブ（画像のような多脚の発光コア）
+// ---------------------------------
+function makeHub(armCount = 8, accent = 0x22e6ff, core = 0xffb030) {
+    const g = new THREE.Group();
+    const metal = new THREE.MeshStandardMaterial({ color: 0x8a8ea8, flatShading: true, metalness: 0.7, roughness: 0.3 });
+    const lineMat = new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.9 });
+    const hexGeo = new THREE.CylinderGeometry(24, 24, 16, 6);
+    g.add(new THREE.Mesh(hexGeo, metal));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(27, 27, 18, 6)), lineMat));
+    const eyeMat = new THREE.MeshBasicMaterial({ color: core });
+    const eye = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 20, 6), eyeMat);
+    g.add(eye);
+    const armGeo = new THREE.BoxGeometry(7, 7, 74);
+    const armEdge = new THREE.EdgesGeometry(armGeo);
+    for (let i = 0; i < armCount; i++) {
+        const a = (i / armCount) * Math.PI * 2;
+        const arm = new THREE.Group();
+        const m = new THREE.Mesh(armGeo, metal);
+        m.position.z = 26 + 37;
+        arm.add(m);
+        const e = new THREE.LineSegments(armEdge, lineMat);
+        e.position.z = 26 + 37;
+        arm.add(e);
+        arm.rotation.y = a;
+        arm.rotation.x = (i % 2 === 0 ? 1 : -1) * 0.38;
+        g.add(arm);
+    }
+    g.userData = { eyeMat, lineMat };
+    return g;
+}
+const titleHub = makeHub(10);
+titleHub.scale.setScalar(2.6);
+titleHub.position.set(0, -260, -40);
+scene.add(titleHub);
+
+// ---------------------------------
+// プレイフィールド
+// ---------------------------------
+const field = new THREE.Group();
+scene.add(field);
+const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.62, depthWrite: false }));
+fieldGlass.rotation.x = -Math.PI / 2;
+fieldGlass.position.y = -8;
+fieldGlass.renderOrder = 1;
+field.add(fieldGlass);
+
+const FIELD_GRID_STEP = 40;
+const fieldGridCountH = H / FIELD_GRID_STEP;
+const fieldGridPos = new Float32Array((fieldGridCountH + (W / FIELD_GRID_STEP + 1)) * 6);
+const fieldGridGeo = new THREE.BufferGeometry();
+fieldGridGeo.setAttribute('position', new THREE.BufferAttribute(fieldGridPos, 3).setUsage(THREE.DynamicDrawUsage));
+const fieldGridMat = new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.12, depthWrite: false });
+const fieldGrid = new THREE.LineSegments(fieldGridGeo, fieldGridMat);
+fieldGrid.frustumCulled = false;
+field.add(fieldGrid);
+let fieldScroll = 0;
+function updateFieldGrid() {
+    let k = 0;
+    for (let i = 0; i < fieldGridCountH; i++) {
+        const z = -H / 2 + ((i * FIELD_GRID_STEP + fieldScroll) % H);
+        fieldGridPos.set([-W / 2, -4, z, W / 2, -4, z], k); k += 6;
+    }
+    for (let x = -W / 2; x <= W / 2; x += FIELD_GRID_STEP) {
+        fieldGridPos.set([x, -4, -H / 2, x, -4, H / 2], k); k += 6;
+    }
+    fieldGridGeo.attributes.position.needsUpdate = true;
+}
+
+const borderMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.8 });
+[[0, -H / 2, W + 4, 2.5], [0, H / 2, W + 4, 2.5]].forEach(([x, z, w, d]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.5, d), borderMat); m.position.set(x, -4, z); field.add(m);
+});
+[[-W / 2, 0], [W / 2, 0]].forEach(([x, z]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.5, H + 4), borderMat); m.position.set(x, -4, z); field.add(m);
+});
+const cornerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const cornerGems = [];
+[[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
+    const m = new THREE.Mesh(new THREE.OctahedronGeometry(7, 0), cornerMat);
+    m.position.set(sx * W / 2, -4, sz * H / 2);
+    field.add(m); cornerGems.push(m);
+});
+
+// 小節スイープ
+const sweepMat = new THREE.MeshBasicMaterial({ map: trailTex, color: 0x00ccff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+const sweep = new THREE.Mesh(new THREE.PlaneGeometry(W, 90), sweepMat);
+sweep.rotation.x = -Math.PI / 2;
+sweep.renderOrder = 18;
+scene.add(sweep);
+
+// ---------------------------------
+// プレイヤー機（ローポリ）
+// ---------------------------------
+function makeShipGeometry() {
+    const N = [0, 2, -20], L = [-18, -1, 8], R = [18, -1, 8], T = [0, 9, 1], B = [0, -5, 4],
+        Lb = [-6, 1, 11], Rb = [6, 1, 11], LF = [-17, 8, 10], RF = [17, 8, 10];
+    const faces = [
+        [N, T, L], [N, R, T], [T, Lb, L], [T, R, Rb], [T, Rb, Lb],
+        [N, L, B], [N, B, R], [B, L, Lb], [B, Rb, R], [B, Lb, Rb],
+        [L, LF, Lb], [R, Rb, RF],
+    ];
+    const p = [];
+    faces.forEach(f => f.forEach(v => p.push(...v)));
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    g.computeVertexNormals();
+    return g;
+}
+const shipGeo = makeShipGeometry();
+const shipMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.35, flatShading: true, metalness: 0.5, roughness: 0.25, side: THREE.DoubleSide });
+const shipEdgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+const playerGroup = new THREE.Group();
+const shipPivot = new THREE.Group();
+shipPivot.add(new THREE.Mesh(shipGeo, shipMat));
+shipPivot.add(new THREE.LineSegments(new THREE.EdgesGeometry(shipGeo, 1), shipEdgeMat));
+playerGroup.add(shipPivot);
+scene.add(playerGroup);
+
+const glazeFillMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+const glazeDisc = new THREE.Mesh(new THREE.CircleGeometry(1, 64), glazeFillMat);
+glazeDisc.rotation.x = -Math.PI / 2;
+glazeDisc.renderOrder = 5;
+scene.add(glazeDisc);
+const glazeRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+const glazeRing = new THREE.Mesh(new THREE.RingGeometry(0.97, 1.0, 64), glazeRingMat);
+glazeRing.rotation.x = -Math.PI / 2;
+glazeRing.renderOrder = 5;
+scene.add(glazeRing);
+
+const shieldMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+const shield = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), shieldMat);
+scene.add(shield);
+
+const METER_SEG = 96;
+const meterMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, side: THREE.DoubleSide, depthWrite: false });
+const meter = new THREE.Mesh(new THREE.RingGeometry(0.955, 1.045, METER_SEG, 1, Math.PI / 2, Math.PI * 2), meterMat);
+meter.rotation.x = -Math.PI / 2;
+meter.scale.x = -1; // 時計回り
+meter.renderOrder = 6;
+scene.add(meter);
+
+// ---------------------------------
+// アイテム
+// ---------------------------------
+const itemPool = [];
+function makeItemObj() {
+    const g = new THREE.Group();
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x00ff88 });
+    const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(24, 24, 24)), edgeMat);
+    const coreMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x00ff88, emissiveIntensity: 0.9, flatShading: true });
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), coreMat);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.85 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(20, 1.1, 4, 40), ringMat);
+    ring.rotation.x = Math.PI / 2;
+    g.add(box, core, ring);
+    g.userData = { box, core, ring, edgeMat, coreMat, ringMat };
+    g.visible = false;
+    scene.add(g);
+    return g;
+}
+for (let i = 0; i < 16; i++) itemPool.push(makeItemObj());
+
+// ---------------------------------
+// モンスター（ドット絵をボクセル化）
+// ---------------------------------
+function buildVoxelModel(art, px, heights) {
+    const group = new THREE.Group();
+    const rows = art.length, cols = art[0].length;
+    const byCode = {};
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const code = art[r][c];
+            if (!code) continue;
+            const h = px * (heights[code] || 1);
+            const box = new THREE.BoxGeometry(px * 0.94, h, px * 0.94);
+            box.translate((c - cols / 2 + 0.5) * px, h / 2, (r - rows / 2 + 0.5) * px);
+            (byCode[code] = byCode[code] || []).push(box);
+        }
+    }
+    const mats = {};
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 });
+    Object.keys(byCode).forEach(code => {
+        const geo = mergeGeometries(byCode[code]);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x000000, flatShading: true, metalness: 0.35, roughness: 0.35 });
+        mats[code] = mat;
+        group.add(new THREE.Mesh(geo, mat));
+        group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    });
+    return { group, mats, edgeMat };
+}
+const monsterModels = {
+    ufo: buildVoxelModel(UFO_PIXEL_ART_FINAL, 4, { 1: 1.4, 2: 0.9, 3: 2.6, 4: 1.9 }),
+    invader: buildVoxelModel(INVADER_PIXEL_ART_GAMING, 4, { 1: 1.5, 2: 1.0, 3: 2.4 }),
+    looper: buildVoxelModel(LOOPER_PIXEL_ART, 6, { 1: 1.3, 2: 2.4, 3: 0.8 }),
+};
+// ルーパーには画像風のハブを装着
+const monsterObjs = new Map();
+function makeMonsterObj(m) {
+    const model = monsterModels[m.type] || monsterModels.invader;
+    const obj = new THREE.Group();
+    const body = model.group.clone();
+    obj.add(body);
+    if (m.type === 'looper') {
+        const hub = makeHub(8, 0x22e6ff, 0xff9a20);
+        hub.scale.setScalar(0.85);
+        hub.position.y = -14;
+        obj.add(hub);
+        obj.userData.hub = hub;
+    }
+    obj.userData.body = body;
+    obj.userData.seed = Math.random() * 100;
+    obj.userData.type = m.type;
+    scene.add(obj);
+    return obj;
+}
+
+// ---------------------------------
+// 衝撃波 / ロックオンライン / デブリ
+// ---------------------------------
+const shockPool = [];
+for (let i = 0; i < 10; i++) {
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.94, 1, 72), ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    const sphMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const sph = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), sphMat);
+    ring.visible = sph.visible = false;
+    ring.renderOrder = sph.renderOrder = 21;
+    scene.add(ring, sph);
+    shockPool.push({ ring, sph, ringMat, sphMat });
+}
+
+const LINK_PTS = 18;
+const linkPool = [];
+for (let i = 0; i < 28; i++) {
+    const pos = new Float32Array(LINK_PTS * 3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    const mat = new THREE.LineBasicMaterial({ color: 0xc060ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const line = new THREE.Line(g, mat);
+    line.frustumCulled = false;
+    line.visible = false;
+    line.renderOrder = 22;
+    scene.add(line);
+    linkPool.push({ line, pos, mat, life: 0, max: 1, tx: 0, ty: 0, bend: 1 });
+}
+function spawnLink(tx, ty) {
+    let l = linkPool.find(o => o.life <= 0) || linkPool[0];
+    l.life = l.max = 0.38;
+    l.tx = tx; l.ty = ty;
+    l.bend = Math.random() < 0.5 ? -1 : 1;
+}
+
+const debris = [];
+function spawnBurst(x, y, color, count, opts = {}) {
+    if (!isEffectsEnabled) count = Math.ceil(count / 3);
+    for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = rand(80, opts.speed || 320);
+        debris.push({
+            x: toX(x), y: opts.h || 10, z: toZ(y),
+            vx: Math.cos(a) * sp, vy: rand(120, opts.up || 420), vz: Math.sin(a) * sp,
+            life: rand(0.5, 1.1), max: 1.1,
+            color: color.clone ? color.clone() : hexColor(color).clone(),
+            size: rand(opts.minSize || 3, opts.maxSize || 7),
+            cube: opts.cube !== false && Math.random() < 0.6,
+            rx: rand(0, 6), ry: rand(0, 6), spin: rand(-8, 8),
+        });
+    }
+}
+
+// ---------------------------------
+// テーマ色の補間
+// ---------------------------------
+const themeCur = { grid: new THREE.Color(0xff00ff), player: new THREE.Color(0x00ffff), comet: new THREE.Color(0x00aaff), ui: new THREE.Color(0x00ccff) };
+const PALE_BLUE = new THREE.Color(0x8fb4ff);
+const COL_WHITE = new THREE.Color(0xffffff);
+const COL_GLAZE = new THREE.Color(0xffffaa);
+const COL_CYAN = new THREE.Color(0x00ffff);
+const COL_ORANGE = new THREE.Color(0xff8a20);
+
+// ---------------------------------
+// 描画ステート
+// ---------------------------------
+let rLast = performance.now();
+let rTime = 0;
+let camFollow = 0;
+let shipBank = 0;
+let worldSpeedSmooth = 80;
+const seenTexts = new WeakSet();
+const particleH = new WeakMap();
+const _engC = new THREE.Color();
+
+function project(x, y, h = 0) {
+    _v.set(toX(x), h, toZ(y)).project(camera);
+    return { x: (_v.x + 1) / 2 * W, y: (1 - _v.y) / 2 * H };
+}
+
+function render3D() {
+    const now = performance.now();
+    let dt = Math.min(0.05, (now - rLast) / 1000);
+    rLast = now;
+    const frozen = gameState === 'paused' || gameState === 'confirmReset';
+    const simDt = frozen ? 0 : dt;
+    rTime += simDt;
+
+    const theme = themes[currentThemeIndex];
+    const k = 1 - Math.exp(-dt * 3);
+    themeCur.grid.lerp(hexColor(theme.grid), k);
+    themeCur.player.lerp(hexColor(theme.player), k);
+    themeCur.comet.lerp(hexColor(theme.comet), k);
+    themeCur.ui.lerp(hexColor(theme.ui), k);
+
+    // 背景とワールドの色
+    _tmpC.copy(BG_BASE).lerp(themeCur.grid, 0.012);
+    scene.background.copy(_tmpC);
+    scene.fog.color.copy(_tmpC);
+    floorMat.color.copy(themeCur.grid).lerp(PALE_BLUE, 0.4).multiplyScalar(0.6);
+    floorMat.opacity = 0.18 + visualBeat * 0.15;
+    buildingMatA.color.copy(PALE_BLUE).lerp(themeCur.grid, 0.3);
+    buildingMatA.opacity = 0.26 + visualBeat * 0.2;
+    buildingMatB.color.copy(themeCur.comet).lerp(COL_ORANGE, 0.5);
+    fieldGridMat.color.copy(themeCur.grid);
+    fieldGridMat.opacity = 0.08 + visualBeat * 0.1;
+    borderMat.color.copy(themeCur.ui);
+    borderMat.opacity = 0.35 + visualBeat * 0.4;
+    shipMat.color.copy(themeCur.player);
+    shipMat.emissive.copy(themeCur.player);
+    shipMat.emissiveIntensity = 0.3 + visualBeat * 0.5;
+
+    // ワールドのスクロール
+    let speedRatio;
+    if (gameState === 'playing') speedRatio = currentCometSpeed / config.initialCometSpeed;
+    else if (frozen) speedRatio = 0;
+    else speedRatio = 0.3;
+    const targetSpeed = 360 * speedRatio * (1 + (stage - 1) * 0.05);
+    worldSpeedSmooth += (targetSpeed - worldSpeedSmooth) * Math.min(1, dt * 2);
+    const ws = frozen ? 0 : worldSpeedSmooth;
+
+    floorGrid.position.z = (floorGrid.position.z + ws * dt) % 100;
+    buildings.forEach(b => {
+        b.obj.position.z += ws * dt;
+        if (b.obj.position.z > WORLD_NEAR) placeBuilding(b, b.obj.position.z - WORLD_SPAN);
+    });
+    flows.forEach(f => {
+        const t = rTime * f.speed + f.phase;
+        for (let i = 0; i < f.n; i++) {
+            const z = WORLD_FAR + (i / (f.n - 1)) * WORLD_SPAN;
+            const zz = z - rTime * ws * 0.5;
+            f.pos[i * 3] = f.x0 + Math.sin(zz * f.freq + t) * f.amp;
+            f.pos[i * 3 + 1] = f.y0 + Math.sin(zz * f.freq * 0.7 + t * 1.3) * f.amp * 0.35;
+            f.pos[i * 3 + 2] = z;
+        }
+        f.line.geometry.attributes.position.needsUpdate = true;
+    });
+    starData.forEach((s, i) => {
+        s.z += ws * s.sp * 1.6 * dt;
+        if (s.z > WORLD_NEAR) { s.z -= WORLD_SPAN; s.x = rand(-1500, 1500); }
+        const len = s.len * (0.5 + speedRatio);
+        starPos.set([s.x, s.y, s.z - len, s.x, s.y, s.z], i * 6);
+    });
+    starGeo.attributes.position.needsUpdate = true;
+
+    fieldScroll = (fieldScroll + ws * 0.35 * dt) % H;
+    updateFieldGrid();
+    cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(1 + visualBeat * 0.6); });
+
+    // タイトル用ハブ
+    const showHub = gameState === 'title' || gameState === 'confirmReset';
+    titleHub.visible = showHub;
+    if (showHub) {
+        titleHub.rotation.y += dt * 0.35;
+        titleHub.rotation.z = Math.sin(rTime * 0.4) * 0.15;
+        titleHub.userData.lineMat.color.copy(themeCur.ui);
+        titleHub.userData.eyeMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.2 + visualBeat * 0.5);
+    }
+
+    // カメラ
+    const inGame = gameState === 'playing' || gameState === 'paused' || gameState === 'gameOver';
+    const followTarget = inGame ? toX(player.x) * 0.05 : Math.sin(rTime * 0.25) * 60;
+    camFollow += (followTarget - camFollow) * Math.min(1, dt * 2.5);
+    let shakeX = 0, shakeY = 0;
+    if (screenShake.intensity > 0) {
+        shakeX = (Math.random() - 0.5) * 2 * screenShake.intensity * 0.9;
+        shakeY = (Math.random() - 0.5) * 2 * screenShake.intensity * 0.9;
+    }
+    const beatPush = visualBeat * 7;
+    camera.position.set(CAM_BASE.x + camFollow + shakeX, CAM_BASE.y - beatPush + shakeY, CAM_BASE.z - beatPush * 0.7);
+    camera.lookAt(CAM_LOOK.x + camFollow + shakeX * 0.5, CAM_LOOK.y, CAM_LOOK.z);
+
+    // ---- エンティティ ----
+    glow.begin(); trails.begin(); cometBodies.begin(); cometWires.begin(); bulletBodies.begin(); debrisCubes.begin();
+    const efx = isEffectsEnabled;
+
+    // スコアテキストからロックオン演出を検出
+    scoreTexts.forEach(st => {
+        if (seenTexts.has(st)) return;
+        seenTexts.add(st);
+        if (st.type === 'glaze') {
+            spawnLink(st.x, st.y);
+        } else if (st.type === 'bonus') {
+            const nearPlayer = Math.abs(st.x - player.x) < 1 && Math.abs(st.y - (player.y - 30)) < 1;
+            spawnBurst(st.x, nearPlayer ? player.y - 10 : st.y, nearPlayer ? COL_WHITE : themeCur.comet, nearPlayer ? 10 : 18, { cube: !nearPlayer });
+        }
+    });
+
+    // 彗星
+    const stageSpeedMod = 1 + (stage - 1) * 0.08;
+    comets.forEach(c => {
+        if (c._r === undefined) c._r = Math.random() * 100;
+        const baseColor = c.isWay ? themeCur.player : themeCur.comet;
+        const color = c.isGlazed ? COL_GLAZE : baseColor;
+        const x = toX(c.x), z = toZ(c.y), y = 7;
+        const rot = rTime * 3 + c._r;
+        const s = c.radius * 1.7 * (1 + visualBeat * 0.2);
+        cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
+        cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
+        glow.add(x, y, z, color, 15 + visualBeat * 10, 0.55);
+        if (efx) {
+            let vx, vy;
+            if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod; }
+            const sp = Math.hypot(vx, vy) || 1;
+            const len = 34 + sp * 0.09;
+            trails.add(x - vx / sp * len, y, z - vy / sp * len, x, y, z, 13, color, 0.75);
+        }
+    });
+
+    // アイテム
+    let ii = 0;
+    items.forEach(it => {
+        const obj = itemPool[ii++];
+        if (!obj) return;
+        obj.visible = true;
+        obj.position.set(toX(it.x), 14, toZ(it.y));
+        const c = it.type === 'special' ? hsl(frameCount * 4, 1, 0.65) : hexColor('#00ff88');
+        const u = obj.userData;
+        u.edgeMat.color.copy(c); u.coreMat.emissive.copy(c); u.ringMat.color.copy(c);
+        u.box.rotation.set(rTime * 1.3, rTime * 1.7, 0);
+        u.core.rotation.y = -rTime * 3;
+        u.ring.rotation.z = rTime * 2;
+        const sc = 1 + visualBeat * 0.2;
+        obj.scale.setScalar(sc);
+        glow.add(obj.position.x, obj.position.y, obj.position.z, c, 34, 0.5);
+    });
+    for (; ii < itemPool.length; ii++) itemPool[ii].visible = false;
+
+    // モンスター
+    const alive = new Set();
+    if (gameMode === 'STANDARD MODE') {
+        const hue1 = (frameCount * 2) % 360;
+        const mm = monsterModels;
+        const setMat = (mat, h, s, l, e = 0.18) => { hsl(h, s, l, mat.color); mat.emissive.copy(mat.color).multiplyScalar(e); };
+        setMat(mm.ufo.mats[1], hue1, 0.85, 0.55); setMat(mm.ufo.mats[2], hue1, 0.6, 0.32, 0.1);
+        setMat(mm.ufo.mats[3], hue1, 0.7, 0.8, 0.25); setMat(mm.ufo.mats[4], hue1 + 180, 1, 0.55, 0.6);
+        setMat(mm.invader.mats[1], hue1, 1, 0.55); setMat(mm.invader.mats[2], hue1 + 120, 1, 0.5); setMat(mm.invader.mats[3], hue1 + 240, 1, 0.6, 0.7);
+        mm.looper.mats[1].color.set('#9400D3'); mm.looper.mats[1].emissive.set('#4a0070');
+        mm.looper.mats[2].color.set('#ffffff'); mm.looper.mats[2].emissive.set('#ffffff');
+        mm.looper.mats[3].color.set('#FFD700'); mm.looper.mats[3].emissive.set('#a07000');
+        monsters.forEach(m => {
+            alive.add(m);
+            let obj = monsterObjs.get(m);
+            if (!obj) { obj = makeMonsterObj(m); monsterObjs.set(m, obj); }
+            obj.userData.lastX = m.x; obj.userData.lastY = m.y;
+            const sd = obj.userData.seed;
+            obj.position.set(toX(m.x), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(m.y));
+            obj.userData.body.rotation.z = Math.sin(rTime * 2.4 + sd) * 0.18;
+            obj.userData.body.rotation.x = Math.sin(rTime * 1.7 + sd) * 0.1;
+            const sc = 1 + visualBeat * 0.12;
+            obj.scale.setScalar(sc);
+            if (obj.userData.hub) {
+                obj.userData.hub.rotation.y = rTime * 1.5;
+                obj.userData.hub.userData.lineMat.color.copy(themeCur.ui);
+            }
+            const gc = hsl(hue1, 1, 0.7);
+            glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, m.type === 'looper' ? 110 : 70, 0.14);
+        });
+        enemyBullets.forEach(eb => {
+            if (eb._r === undefined) eb._r = Math.random() * 10;
+            const c = eb.isGlazed ? COL_GLAZE : hsl(Date.now() / 10 + eb.y, 1, 0.62);
+            const x = toX(eb.x), z = toZ(eb.y), y = 8;
+            const s = eb.radius * 1.4;
+            bulletBodies.add(x, y, z, s, s * 1.3, s, 0, rTime * 6 + eb._r, 0, c);
+            glow.add(x, y, z, c, 18, 0.8);
+            if (efx) {
+                const sp = Math.hypot(eb.vx, eb.vy) || 1;
+                trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
+            }
+        });
+    }
+    // 消えたモンスター: 撃破ならボクセル片を散らす
+    monsterObjs.forEach((obj, m) => {
+        if (alive.has(m)) return;
+        const lx = obj.userData.lastX, ly = obj.userData.lastY;
+        if (lx > -20 && lx < W + 20 && ly > -20 && ly < H + 20 && gameState !== 'title') {
+            const c = obj.userData.type === 'looper' ? hexColor('#9400D3') : hsl(frameCount * 2, 1, 0.65, new THREE.Color());
+            spawnBurst(lx, ly, c, obj.userData.type === 'invader' ? 34 : 60, { speed: 420, up: 520, minSize: 3, maxSize: 8 });
+        }
+        scene.remove(obj);
+        monsterObjs.delete(m);
+    });
+
+    // プレイヤー弾
+    if (playerBullet) {
+        const x = toX(playerBullet.x), z = toZ(playerBullet.y), y = 8;
+        trails.add(x, y, z + 70, x, y, z - 6, 9, COL_CYAN, 1.6);
+        trails.add(x, y, z + 40, x, y, z - 4, 3, COL_WHITE, 1.5);
+        glow.add(x, y, z, COL_CYAN, 34, 1.4);
+    }
+
+    // パーティクル（爆発）: 3Dの高さを与える
+    particles.forEach(p => {
+        let st = particleH.get(p);
+        if (!st) { st = { vy: rand(80, 520), h: 6, t: 0 }; particleH.set(p, st); }
+        st.t += simDt;
+        st.h = Math.max(0, 6 + st.vy * st.t - 260 * st.t * st.t);
+        const a = p.life / p.maxLife;
+        glow.add(toX(p.x), st.h, toZ(p.y), hexColor(p.color), (p.size || 2) * 7 * (0.4 + a), a * 1.3);
+    });
+
+    // レンダラー側のデブリ
+    for (let i = debris.length - 1; i >= 0; i--) {
+        const d = debris[i];
+        d.life -= simDt;
+        if (d.life <= 0) { debris.splice(i, 1); continue; }
+        d.vy -= 900 * simDt;
+        d.x += d.vx * simDt; d.y += d.vy * simDt; d.z += d.vz * simDt;
+        if (d.y < 0) { d.y = 0; d.vy *= -0.45; d.vx *= 0.7; d.vz *= 0.7; }
+        d.rx += d.spin * simDt; d.ry += d.spin * 0.7 * simDt;
+        const a = Math.min(1, d.life / d.max * 1.6);
+        if (d.cube) {
+            const s = d.size * a;
+            debrisCubes.add(d.x, d.y, d.z, s, s, s, d.rx, d.ry, 0, d.color);
+        }
+        glow.add(d.x, d.y, d.z, d.color, d.size * 4, a);
+    }
+
+    // プレイヤー
+    const showPlayer = (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && gameOverReason === 'energy'));
+    const playerVisible = showPlayer && !(gameState === 'gameOver' && gameOverReason === 'collision');
+    playerGroup.visible = playerVisible;
+    glazeDisc.visible = glazeRing.visible = showPlayer;
+    shield.visible = meter.visible = false;
+    if (showPlayer) {
+        const px = toX(player.x), pz = toZ(player.y);
+        const bankTarget = frozen ? shipBank : (input.left && !input.right ? 0.55 : input.right && !input.left ? -0.55 : 0);
+        shipBank += (bankTarget - shipBank) * Math.min(1, dt * 10);
+        playerGroup.position.set(px, 12 + Math.sin(rTime * 4) * 2, pz);
+        shipPivot.rotation.z = shipBank;
+        shipPivot.rotation.x = -0.12;
+        playerGroup.scale.setScalar(1 + visualBeat * 0.18);
+
+        const glazeR = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance);
+        glazeDisc.position.set(px, 1, pz); glazeDisc.scale.setScalar(glazeR);
+        glazeRing.position.set(px, 1.5, pz); glazeRing.scale.setScalar(glazeR);
+        glazeFillMat.color.copy(themeCur.player);
+        glazeRingMat.color.copy(themeCur.player);
+        glazeFillMat.opacity = efx ? 0.025 + visualBeat * 0.04 : 0.0;
+        glazeRingMat.opacity = efx ? 0.16 + visualBeat * 0.22 : 0.3;
+
+        // エンジン
+        if (playerVisible) {
+                        const flick = 0.8 + Math.random() * 0.4;
+            [-6, 6].forEach(off => {
+                const ex = px + off * Math.cos(shipBank), ez = pz + 13;
+                glow.add(ex, 12, ez, themeCur.player, 18 * flick, 1.2);
+                if (efx) trails.add(ex, 11, ez + 34 * flick, ex, 11, ez, 7, themeCur.player, 0.9);
+            });
+            // 当たり判定とスローマーカー
+            glow.add(px, 22, pz, hsl(frameCount * 10, 1, 0.7, _engC), 9, 1.6);
+            if (input.slow) glow.add(px, 23, pz, COL_WHITE, 16, 1.4);
+        }
+
+        if (player.invincibleTimer > 0) {
+            const blinkShield = player.invincibleTimer < 30 && frameCount % 10 < 5;
+            shield.visible = !blinkShield;
+            shield.position.set(px, 12, pz);
+            shield.scale.setScalar(config.playerVisualSize * 1.5 * (1 + visualBeat * 0.15));
+            shield.rotation.set(rTime * 1.2, rTime * 1.8, 0);
+            shieldMat.opacity = 0.45 + Math.sin(frameCount * 0.2) * 0.2;
+
+            const blinkMeter = player.invincibleTimer < 60 && frameCount % 10 < 5;
+            meter.visible = !blinkMeter;
+            const prog = Math.max(0, Math.min(1, player.invincibleTimer / player.maxInvincibleTimer));
+            meter.geometry.setDrawRange(0, 6 * Math.round(METER_SEG * prog));
+            meter.position.set(px, 2, pz);
+            const mr = glazeR + 5;
+            meter.scale.set(-mr, mr, mr);
+            hsl(frameCount * 4, 1, 0.7, meterMat.color);
+        }
+    }
+
+    // 衝撃波（HUD用 x=150,y=65 はHUDで描画）
+    let si = 0;
+    effects.forEach(e => {
+        if (e.type !== 'shockwave' || e.hud || !efx) return;
+        const s = shockPool[si++];
+        if (!s) return;
+        const progress = 1 - e.life / e.maxLife;
+        const alpha = e.life / e.maxLife;
+        const r = e.radius + progress * 300;
+        s.ring.visible = s.sph.visible = true;
+        s.ring.position.set(toX(e.x), 3, toZ(e.y));
+        s.ring.scale.setScalar(r);
+        s.ringMat.opacity = alpha * 0.9;
+        s.sph.position.set(toX(e.x), 10, toZ(e.y));
+        s.sph.scale.setScalar(e.radius + progress * 140);
+        s.sph.rotation.y = progress * 2;
+        s.sphMat.opacity = alpha * 0.55;
+        s.sphMat.color.copy(themeCur.ui).lerp(COL_WHITE, 0.4);
+    });
+    for (; si < shockPool.length; si++) shockPool[si].ring.visible = shockPool[si].sph.visible = false;
+
+    // 小節スイープ
+    const bar = effects.find(e => e.type === 'barLine');
+    if (bar && efx && gameState !== 'title') {
+        const progress = 1 - bar.life / bar.maxLife;
+        sweep.visible = true;
+        sweep.position.set(0, 2, -H / 2 + H * progress);
+        sweepMat.color.copy(themeCur.ui);
+        sweepMat.opacity = Math.sin((1 - progress) * Math.PI) * 0.22;
+    } else {
+        sweep.visible = false;
+    }
+
+    // ロックオンライン
+    linkPool.forEach(l => {
+        if (l.life <= 0) { l.line.visible = false; return; }
+        l.life -= dt;
+        const a = Math.max(0, l.life / l.max);
+        l.line.visible = true;
+        const sx = toX(player.x), sz = toZ(player.y), tx = toX(l.tx), tz = toZ(l.ty);
+        const mx = (sx + tx) / 2 + (tz - sz) * 0.35 * l.bend, mz = (sz + tz) / 2 - (tx - sx) * 0.35 * l.bend;
+        for (let i = 0; i < LINK_PTS; i++) {
+            const t = i / (LINK_PTS - 1);
+            const it = 1 - t;
+            l.pos[i * 3] = it * it * sx + 2 * it * t * mx + t * t * tx;
+            l.pos[i * 3 + 1] = 12 + Math.sin(t * Math.PI) * 50;
+            l.pos[i * 3 + 2] = it * it * sz + 2 * it * t * mz + t * t * tz;
+        }
+        l.line.geometry.attributes.position.needsUpdate = true;
+        l.mat.color.setRGB(0.75, 0.38, 1).multiplyScalar(a * 1.4);
+        l.mat.opacity = a;
+        glow.add(tx, 8, tz, COL_GLAZE, 40 * a, a);
+    });
+
+    glow.end(); trails.end(); cometBodies.end(); cometWires.end(); bulletBodies.end(); debrisCubes.end();
+
+    if (!gl3dOK) return;
+    if (efx) {
+        bloom.strength = 0.55 + visualBeat * 0.35;
+        composer.render(dt);
+    } else {
+        renderer.render(scene, camera);
+    }
+}
+
+
+// =================================================================================
+// ▼▼▼ HUD（2Dオーバーレイ）▼▼▼
+// =================================================================================
+function draw() {
+    render3D();
+
+    const renderCtx = ctx;
+    const theme = themes[currentThemeIndex];
+    renderCtx.setTransform(HUD_SCALE, 0, 0, HUD_SCALE, 0, 0);
+    renderCtx.clearRect(0, 0, W, H);
+    renderCtx.save();
+    if (screenShake.intensity > 0) {
+        renderCtx.translate((Math.random() - 0.5) * screenShake.intensity * 0.6, (Math.random() - 0.5) * screenShake.intensity * 0.6);
+    }
+
+    if (!gl3dOK) {
+        renderCtx.fillStyle = '#ff3366';
+        renderCtx.font = `14px ${config.fontFamily}`;
+        renderCtx.textAlign = 'center';
+        renderCtx.fillText('WebGL is not available on this browser.', W / 2, H - 60);
+    }
+
+    if (gameState === 'playing' || gameState === 'paused' || gameState === 'title') {
+        applyThemeStyles(theme);
+    }
+
+    // タイトル画面の読みやすさ確保用ベール
+    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver') {
+        const g = renderCtx.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, 480);
+        g.addColorStop(0, 'rgba(5,0,18,0.55)');
+        g.addColorStop(1, 'rgba(5,0,18,0.15)');
+        renderCtx.fillStyle = g;
+        renderCtx.fillRect(0, 0, W, H);
+    }
+
+    // スコアテキスト（3D位置をスクリーンに投影）
+    if (scoreTexts.length > 0) {
+        renderCtx.save();
+        renderCtx.textAlign = 'center';
+        scoreTexts.forEach(st => {
+            const fontSize = st.type === 'bonus' ? 14 : 10;
+            renderCtx.font = `${fontSize}px ${config.fontFamily}`;
+            const alpha = st.life / 60.0;
+            const hue = (frameCount * 5 + st.x) % 360;
+            const scoreColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
+            const glowColor = `hsla(${hue}, 100%, 70%, ${alpha / 2})`;
+            const sp = project(st.x, st.y, 24);
+            renderCtx.globalAlpha = alpha;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = scoreColor;
+                renderCtx.fillText(st.text, sp.x, sp.y);
+            }, glowColor);
+        });
+        renderCtx.restore();
+    }
+
+    // Draw UI
+    const uiColor = theme.ui;
+    const mainFontSize = 20 + visualBeat * 2;
+    const subFontSize = 18 + visualBeat * 2;
+
+    // SCOREとタイマー表示 (タイトル画面以外で表示)
+    if (gameState !== 'title') {
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
+            renderCtx.fillStyle = uiColor;
+            
+            renderCtx.textAlign = 'left';
+            renderCtx.fillText(`SCORE: ${score}`, 20, 40);
+
+            renderCtx.textAlign = 'center';
+            renderCtx.fillText(formatTime(elapsedTime), config.canvasWidth / 2, 40);
+        }, uiColor, true);
+    }
+
+    // ゲームモードとSTAGE表示 (playing, paused, gameOver の時に表示)
+    if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameOver') {
+        // ▼▼▼ このブロックを修正 ▼▼▼
+        // ゲームモード名とハイスコアを交互に表示
+        let textToDisplay;
+        if (isShowingModeInGame) {
+            textToDisplay = gameMode.replace(' MODE', '');
+        } else {
+            let currentHighScore;
+            switch(gameMode) {
+                case 'STANDARD MODE':
+                    currentHighScore = highScoreStandard;
+                    break;
+                case 'JOURNEY MODE':
+                    currentHighScore = highScoreJourney;
+                    break;
+                case 'STARTRAIL MODE':
+                    currentHighScore = highScoreStartrail;
+                    break;
+                default:
+                    currentHighScore = 0;
+            }
+            
+            // ★ ここからが変更点 ★
+            // 現在のスコアがハイスコアを上回っている場合、表示するスコアを現在のスコアにする
+            const scoreToDisplay = Math.max(currentHighScore, score);
+            textToDisplay = `HI: ${scoreToDisplay}`;
+            // ★ 変更はここまで ★
+        }
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `${mainFontSize}px ${config.fontFamily}`;
+            renderCtx.fillStyle = uiColor;
+            renderCtx.textAlign = 'right';
+            renderCtx.fillText(textToDisplay, config.canvasWidth - 20, 40);
+        }, uiColor, true);
+        // ▲▲▲ 修正はここまで ▲▲▲
+
+        // STAGE表示
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `${subFontSize}px ${config.fontFamily}`;
+            renderCtx.fillStyle = uiColor;
+            renderCtx.textAlign = 'center';
+            renderCtx.fillText(`STAGE ${stage}`, config.canvasWidth / 2, config.canvasHeight - 20);
+        }, uiColor, true);
+    }
+
+    if (chainCount > 1 && player.invincibleTimer > 0) {
+        drawChainComboText(renderCtx, chainCount, 1.0);
+    }
+
+    // ★ ここから追加 ★
+    if (mutekiAnim.life > 0) {
+        const lifeProgress = 1 - (mutekiAnim.life / mutekiAnim.maxLife);
+        const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let displayText = "";
+        const mainTextY = config.canvasHeight / 2 + 30;
+        const subTextY = mainTextY + 25;
+        const transitionStart = 0.25;
+        const transitionEnd = 0.75;
+
+        if (lifeProgress < transitionStart) {
+            displayText = "INVINCIBLE!!";
+        } else if (lifeProgress < transitionEnd) {
+            const toText = "MUTEKI!!";
+            const transitionProgress = (lifeProgress - transitionStart) / (transitionEnd - transitionStart);
+            const textChars = []; // 配列を使って高速化
+            for (let i = 0; i < toText.length; i++) {
+                if (transitionProgress > (i / toText.length) + (Math.random() * 0.1)) {
+                    textChars.push(toText[i]);
+                } else {
+                    textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+                }
+            }
+            displayText = textChars.join('');
+        } else {
+            displayText = "MUTEKI!!";
+        }
+        
+        renderCtx.save();
+        renderCtx.textAlign = 'center';
+        renderCtx.font = `24px ${config.fontFamily}`;
+        const totalWidth = renderCtx.measureText(displayText).width;
+        let currentX = config.canvasWidth / 2 - totalWidth / 2;
+
+        for (let i = 0; i < displayText.length; i++) {
+            const char = displayText[i];
+            const charWidth = renderCtx.measureText(char).width;
+            const hue = (frameCount * 5 + i * 25) % 360;
+            const color = `hsl(${hue}, 100%, 70%)`;
+            renderCtx.globalAlpha = 1;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = color;
+                renderCtx.fillText(char, currentX + charWidth / 2, mainTextY);
+            }, color);
+            currentX += charWidth;
+        }
+
+        renderCtx.font = `10px ${config.fontFamily}`;
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = theme.ui;
+            renderCtx.fillText("Bonus Points for Hitting a Comet!!", config.canvasWidth / 2, subTextY);
+        }, theme.ui);
+        renderCtx.restore();
+    }
+    // ★ ここまで追加 ★
+
+    if ((gameState === 'playing' || gameState === 'paused') && gameMode !== 'STARTRAIL MODE') {
+        const barW = 200, barH = 12, x = 20, y = config.canvasHeight - 35, r = 5;
+        const energyRatio = Math.max(0, energy / config.energyTotal);
+        const hue = energyRatio * 120;
+        let energyColor = `hsl(${hue},100%,50%)`;
+
+        if (lowEnergyWarningPlayed && frameCount % 10 < 5) {
+            energyColor = '#FFFFFF';
+        }
+
+        renderCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+        renderCtx.lineWidth = 2;
+        drawRoundRect(renderCtx, x, y, barW, barH, r);
+        renderCtx.stroke();
+        renderCtx.fillStyle = 'rgba(0,0,0,0.5)';
+        drawRoundRect(renderCtx, x, y, barW, barH, r);
+        renderCtx.fill();
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = energyColor;
+            if (barW * energyRatio > 0) {
+                renderCtx.beginPath();
+                drawRoundRect(renderCtx, x, y, barW * energyRatio, barH, r);
+                renderCtx.fill()
+            }
+        }, energyColor, true);
+
+        if (player.invincibleTimer > 0) {
+            const invincBarY = y + barH + 5;
+            const invincBarH = 6;
+            const invincRatio = player.invincibleTimer / player.maxInvincibleTimer;
+            const invincColor = '#FFFFFF';
+            renderCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+            renderCtx.lineWidth = 1;
+            drawRoundRect(renderCtx, x, invincBarY, barW, invincBarH, r - 2);
+            renderCtx.stroke();
+            renderCtx.fillStyle = 'rgba(0,0,0,0.5)';
+            drawRoundRect(renderCtx, x, invincBarY, barW, invincBarH, r - 2);
+            renderCtx.fill();
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = invincColor;
+                if (barW * invincRatio > 0) {
+                    renderCtx.beginPath();
+                    drawRoundRect(renderCtx, x, invincBarY, barW * invincRatio, invincBarH, r - 2);
+                    renderCtx.fill()
+                }
+            }, invincColor, true);
+        }
+    }
+
+    if (isInvincible) {
+        let mutekiY = config.canvasHeight - 50;
+        if (player.invincibleTimer > 0 && gameMode !== 'STARTRAIL MODE') {
+            mutekiY = config.canvasHeight - 50 - 12 - 5 - 6;
+        }
+        const mutekiColor = `hsl(${(frameCount*3)%360},100%,70%)`;
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = mutekiColor;
+            renderCtx.font = `16px ${config.fontFamily}`;
+            renderCtx.textAlign = 'left';
+            renderCtx.fillText('MUTEKI', 20, mutekiY);
+        }, mutekiColor, true);
+    }
+    
+
+    // Draw Effects (HUD側)
+    effects.forEach(e => {
+        if (e.type === 'stageClear' && gameState !== 'gameOver') {
+            const l = e.life / e.maxLife;
+            const a = Math.sin(l * Math.PI);
+            renderCtx.globalAlpha = a;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `32px ${config.fontFamily}`;
+                renderCtx.textAlign = 'center';
+                renderCtx.fillText(e.text, config.canvasWidth / 2, config.canvasHeight / 2);
+            }, theme.ui, true);
+            renderCtx.globalAlpha = 1;
+        } else if (e.type === 'shockwave' && e.hud && isEffectsEnabled) {
+            const progress = 1 - e.life / e.maxLife;
+            const radius = e.radius + progress * 300;
+            const alpha = e.life / e.maxLife;
+            renderCtx.save();
+            renderCtx.globalAlpha = alpha * 0.8;
+            renderCtx.strokeStyle = '#ffffff';
+            renderCtx.lineWidth = 3 + (1 - alpha) * 5;
+            renderCtx.beginPath();
+            renderCtx.arc(e.x, e.y, radius, 0, Math.PI * 2);
+            renderCtx.stroke();
+            renderCtx.restore();
+        } else if (e.type === 'comboFadeOut' && isEffectsEnabled) {
+            drawChainComboText(renderCtx, e.count, e.life / e.maxLife);
+        } else if (e.type === 'screenFlash' && isEffectsEnabled) {
+            const alpha = e.life / e.maxLife;
+            renderCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
+            renderCtx.fillRect(-20, -20, config.canvasWidth + 40, config.canvasHeight + 40);
+        } else if (e.type === 'energyGameOverFlash') {
+            const progress = 1.0 - (e.life / e.maxLife);
+            const alpha = Math.sin((1.0 - progress) * Math.PI) * 0.8;
+            renderCtx.fillStyle = `rgba(224, 224, 224, ${alpha})`;
+            renderCtx.fillRect(-20, -20, config.canvasWidth + 40, config.canvasHeight + 40);
+        }
+    });
+    // Draw UI Screens (Paused, Confirm, Title, Game Over)
+    if (gameState === 'paused') {
+        renderCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        
+        const pauseMsg = 'PAUSED';
+        const resumeKey = lastInputDevice === 'keyboard' ? 'P' : 'START';
+        const quitMsg = `Press ${lastInputDevice === 'keyboard' ? 'Q' : 'Select'} to Title`;
+        const resumeMsg = `Press ${resumeKey} to Resume`;
+        
+        renderCtx.font = `48px ${config.fontFamily}`;
+        renderCtx.textAlign = 'center';
+        
+        const totalWidth = renderCtx.measureText(pauseMsg).width;
+        let currentX = config.canvasWidth / 2 - totalWidth / 2;
+
+        for (let i = 0; i < pauseMsg.length; i++) {
+            const char = pauseMsg[i];
+            const charWidth = renderCtx.measureText(char).width;
+            const hue = (Date.now() / 15 + i * 30) % 360;
+            const gamingColor = `hsl(${hue}, 100%, 70%)`;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = gamingColor;
+                renderCtx.fillText(char, currentX + charWidth / 2, config.canvasHeight / 2 - 40);
+            }, gamingColor);
+            currentX += charWidth;
+        }
+
+        renderCtx.fillStyle = theme.ui;
+        renderCtx.font = `20px ${config.fontFamily}`;
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillText(resumeMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 30);
+            renderCtx.fillText(quitMsg, config.canvasWidth / 2, config.canvasHeight / 2 + 60);
+        }, theme.ui, true);
+
+    } else if (gameState === 'confirmReset') {
+        // 背景を暗くして確認画面を目立たせる
+        renderCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+        const msg1 = "RESET ALL HIGH SCORES?";
+        const msg2 = "(Y/N)";
+        const msgColor = '#ff3333'; // 警告を示す赤色
+
+        renderCtx.textAlign = 'center';
+        renderCtx.textBaseline = 'middle';
+
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = msgColor;
+            renderCtx.font = `24px ${config.fontFamily}`;
+            renderCtx.fillText(msg1, config.canvasWidth / 2, config.canvasHeight / 2 - 20);
+        }, msgColor);
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.font = `20px ${config.fontFamily}`;
+            renderCtx.fillText(msg2, config.canvasWidth / 2, config.canvasHeight / 2 + 25);
+        }, '#ffffff');
+        
+        renderCtx.textBaseline = 'alphabetic'; // デフォルトに戻す
+    
+    } else if (gameState === 'title') {
+        renderCtx.textAlign = 'center';
+        const titleColor = theme.player;
+        const uiColor = theme.ui;
+
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = titleColor;
+            renderCtx.font = `60px ${config.fontFamily}`;
+            renderCtx.fillText('COMET', config.canvasWidth / 2, config.canvasHeight / 2 - 120);
+        }, titleColor);
+        
+        const outburstY = config.canvasHeight / 2 - 75;
+        const outburstFont = `16px ${config.fontFamily}`;
+        drawTitleTextMorph(renderCtx, config.canvasWidth / 2, outburstY, outburstFont, uiColor);
+
+        // Draw Menu
+        titleMenuItems.forEach((item, index) => {
+            const y = config.canvasHeight / 2 + index * 40;
+            if (index === titleMenuIndex) {
+                const selectorColor = `hsl(${(frameCount * 3) % 360}, 100%, 70%)`;
+                drawWithGlow(renderCtx, () => {
+                    renderCtx.fillStyle = selectorColor;
+                    renderCtx.font = `22px ${config.fontFamily}`;
+                    renderCtx.fillText(`> ${item} <`, config.canvasWidth / 2, y);
+                }, selectorColor, true);
+            } else {
+                renderCtx.fillStyle = '#cccccc';
+                renderCtx.font = `20px ${config.fontFamily}`;
+                renderCtx.fillText(item, config.canvasWidth / 2, y);
+            }
+        });
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.font = `18px ${config.fontFamily}`;
+            if (titleBottomText === "") {
+                titleBottomText = lastInputDevice === 'keyboard' ? 'Press Enter to Start' : 'Press Start Button to Start';
+            }
+            renderCtx.fillText(titleBottomText, config.canvasWidth / 2, config.canvasHeight / 2 + 160);
+        }, '#ffffff');
+        
+        const highScoreY = config.canvasHeight / 2 + 220;
+        const highScoreCycle = frameCount % 360; 
+        if (highScoreCycle < 120) {
+             drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `14px ${config.fontFamily}`;
+                renderCtx.fillText(`HI-SCORE (STANDARD): ${highScoreStandard}`, config.canvasWidth / 2, highScoreY);
+            }, theme.ui);
+        } else if (highScoreCycle < 240) {
+             drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `14px ${config.fontFamily}`;
+                renderCtx.fillText(`HI-SCORE (JOURNEY): ${highScoreJourney}`, config.canvasWidth / 2, highScoreY);
+            }, theme.ui);
+        } else {
+             drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = theme.ui;
+                renderCtx.font = `14px ${config.fontFamily}`;
+                renderCtx.fillText(`HI-SCORE (STARTRAIL): ${highScoreStartrail}`, config.canvasWidth / 2, highScoreY);
+            }, theme.ui);
+        }
+
+    } else if (gameState === 'gameOver') {
+        renderCtx.textAlign = 'center';
+        renderCtx.textBaseline = 'middle';
+        const gameOverColor = '#ff3333';
+        const gameOverY = config.canvasHeight / 2 - 150;
+        
+        drawWithGlow(renderCtx, () => {
+            renderCtx.fillStyle = gameOverColor;
+            renderCtx.font = `60px ${config.fontFamily}`;
+            renderCtx.fillText('GAME OVER', config.canvasWidth / 2, gameOverY);
+        }, gameOverColor);
+
+        if (newHighScoreAchieved) {
+            const newRecordColor = `hsl(${(frameCount*3)%360},100%,70%)`;
+            const newRecordY = gameOverY + 80;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = newRecordColor;
+                renderCtx.font = `30px ${config.fontFamily}`;
+                renderCtx.fillText('NEW RECORD!', config.canvasWidth / 2, newRecordY);
+            }, newRecordColor);
+        }
+        
+        const scoreY = config.canvasHeight / 2;
+        let currentHighScore;
+        switch(gameMode) {
+            case 'STANDARD MODE': currentHighScore = highScoreStandard; break;
+            case 'JOURNEY MODE': currentHighScore = highScoreJourney; break;
+            case 'STARTRAIL MODE': currentHighScore = highScoreStartrail; break;
+            default: currentHighScore = 0;
+        }
+
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `30px ${config.fontFamily}`;
+            renderCtx.fillStyle = theme.ui;
+            renderCtx.fillText(`SCORE: ${score}`, config.canvasWidth / 2, scoreY);
+        }, theme.ui);
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `20px ${config.fontFamily}`;
+            renderCtx.fillStyle = theme.ui;
+            renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, config.canvasWidth / 2, scoreY + 50);
+        }, theme.ui);
+        
+        let titleText, replayText;
+        if (lastInputDevice === 'keyboard') {
+            titleText = 'Press Q to Title';
+            replayText = 'Press Enter to Replay';
+        } else {
+            titleText = 'Press Select Button to Title';
+            replayText = 'Press Start Button to Replay';
+        }
+        const replayY = scoreY + 120;
+        drawWithGlow(renderCtx, () => {
+            renderCtx.font = `18px ${config.fontFamily}`;
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.fillText(replayText, config.canvasWidth / 2, replayY);
+            renderCtx.fillText(titleText, config.canvasWidth / 2, replayY + 30);
+        }, '#ffffff');
+
+        renderCtx.textBaseline = 'alphabetic';
+    }
+
+    if (gameState === 'gameOver' && gameOverReason === 'energy') {
+        const progress = grayscaleAnimation.progress;
+        const filterValue = `grayscale(${progress}) brightness(${1 - progress * 0.2})`;
+        stageEl.style.filter = filterValue;
+        stageEl.style.webkitFilter = filterValue;
+    } else {
+        if (stageEl.style.filter !== 'none') {
+            stageEl.style.filter = 'none';
+            stageEl.style.webkitFilter = 'none';
+        }
+    }
+
+    renderCtx.restore();
+
+    if (gameState === 'playing' && player.invincibleTimer > 0) {
+        if (player.invincibleTimer < 30 && frameCount % 10 < 5) {} else {
+            renderCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            renderCtx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        }
+    }
+}
+
+function gameLoop(timestamp) {
+    update(timestamp);
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+soundToggleButton.addEventListener('click', () => {
+    if (!audioHandler.isInitialized) {
+        audioHandler.initialize();
+    }
+    const isMuted = audioHandler.toggleMute();
+    soundToggleButton.textContent = isMuted ? 'SOUND OFF' : 'SOUND ON';
+});
+
+effectsToggleButton.addEventListener('click', () => {
+    isEffectsEnabled = !isEffectsEnabled;
+    effectsToggleButton.textContent = isEffectsEnabled ? 'EFX ON' : 'EFX OFF';
+});
+
+function toggleFullScreen() {
+    const e = document.getElementById('fullscreen-root');
+    if (!document.fullscreenElement) {
+        e.requestFullscreen().catch(err => {
+            alert(`フルスクリーンモードにできませんでした: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+function updateScale() {
+    const r = document.getElementById('fullscreen-root');
+    const w = document.getElementById('game-wrapper');
+
+    // スケール計算とスタイル適用を次の描画フレームに同期させる
+    requestAnimationFrame(() => {
+        if (document.fullscreenElement === r) {
+            const instructionHeight = document.getElementById('instructions-container').offsetHeight;
+            const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + instructionHeight;
+            const margin = 20;
+            const effectiveWidth = w.offsetWidth + margin;
+            const effectiveHeight = totalGameHeight + margin;
+            const scaleX = r.clientWidth / effectiveWidth;
+            const scaleY = r.clientHeight / effectiveHeight;
+            const scale = Math.min(scaleX, scaleY);
+            w.style.setProperty('--scale-factor', scale);
+        } else {
+            w.style.removeProperty('--scale-factor');
+        }
+    });
+}
+
+// フルスクリーン状態が変わった時にスケールを更新
+window.addEventListener('fullscreenchange', updateScale);
+
+// ウィンドウリサイズ時の処理を最適化
+window.addEventListener('resize', () => {
+    // 既にリクエストがあればキャンセル
+    if (resizeRequest) {
+        cancelAnimationFrame(resizeRequest);
+    }
+    // 次のフレームでupdateScaleを実行するようにリクエスト
+    resizeRequest = requestAnimationFrame(updateScale);
+});
+
+init();
+gameLoop();
+
+</script>
+</body>
+</html>
