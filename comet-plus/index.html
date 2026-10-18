@@ -197,7 +197,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // ゲーム設定
 // ---------------------------------
 const config = {
-    canvasWidth: 800,
+    canvasWidth: 1067, // 16:9（オリジナルは800）
     canvasHeight: 600,
     playerSpeed: 300,
     playerSlowModeMultiplier: 0.5,
@@ -207,7 +207,7 @@ const config = {
     cometSpeedIncrease: 0.07,
     distanceScoreMultiplier: 1,
     cometSpawnInterval: 12,
-    cometSpawnAmount: 3,
+    cometSpawnAmount: 4, // 横幅1.33倍に合わせて密度を維持（オリジナルは3）
     cometCoreRadius: 5,
     starCount: 50,
     starScrollMultiplier: 16,
@@ -873,7 +873,7 @@ class AudioHandler {
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
 const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 2);
-const HUD_W = 1067; // 16:9 の表示幅（ゲームフィールドは中央の 800x600 のまま）
+const HUD_W = config.canvasWidth; // 16:9
 const HUD_OX = (HUD_W - config.canvasWidth) / 2;
 canvas.width = HUD_W * HUD_SCALE;
 canvas.height = config.canvasHeight * HUD_SCALE;
@@ -2253,8 +2253,8 @@ scene.background = BG_BASE.clone();
 scene.fog = new THREE.Fog(BG_BASE.clone(), 1100, 3200);
 
 camera = new THREE.PerspectiveCamera(40, VW / H, 1, 6000);
-const CAM_BASE = new THREE.Vector3(0, 780, 520);
-const CAM_LOOK = new THREE.Vector3(0, 0, 40);
+const CAM_BASE = new THREE.Vector3(0, 880, 220);
+const CAM_LOOK = new THREE.Vector3(0, 0, 10);
 
 if (gl3dOK) {
     composer = new EffectComposer(renderer);
@@ -2521,9 +2521,9 @@ const buildings = [];
 function placeBuilding(b, z) {
     const side = Math.random() < 0.5 ? -1 : 1;
     if (b.under) {
-        b.obj.position.set(rand(-560, 560), FLOOR_Y, z);
+        b.obj.position.set(rand(-700, 700), FLOOR_Y, z);
     } else {
-        b.obj.position.set(side * rand(520, 1500), FLOOR_Y, z);
+        b.obj.position.set(side * rand(650, 1600), FLOOR_Y, z);
     }
 }
 for (let i = 0; i < 90; i++) {
@@ -2625,7 +2625,8 @@ field.add(fieldGlass);
 
 const FIELD_GRID_STEP = 40;
 const fieldGridCountH = H / FIELD_GRID_STEP;
-const fieldGridPos = new Float32Array((fieldGridCountH + (W / FIELD_GRID_STEP + 1)) * 6);
+const fieldGridHalfV = Math.floor((W / 2) / FIELD_GRID_STEP);
+const fieldGridPos = new Float32Array((fieldGridCountH + fieldGridHalfV * 2 + 1) * 6);
 const fieldGridGeo = new THREE.BufferGeometry();
 fieldGridGeo.setAttribute('position', new THREE.BufferAttribute(fieldGridPos, 3).setUsage(THREE.DynamicDrawUsage));
 const fieldGridMat = new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.12, depthWrite: false });
@@ -2639,7 +2640,8 @@ function updateFieldGrid() {
         const z = -H / 2 + ((i * FIELD_GRID_STEP + fieldScroll) % H);
         fieldGridPos.set([-W / 2, -4, z, W / 2, -4, z], k); k += 6;
     }
-    for (let x = -W / 2; x <= W / 2; x += FIELD_GRID_STEP) {
+    for (let i = -fieldGridHalfV; i <= fieldGridHalfV; i++) {
+        const x = i * FIELD_GRID_STEP;
         fieldGridPos.set([x, -4, -H / 2, x, -4, H / 2], k); k += 6;
     }
     fieldGridGeo.attributes.position.needsUpdate = true;
@@ -2956,7 +2958,7 @@ function render3D() {
 
     // カメラ
     const inGame = gameState === 'playing' || gameState === 'paused' || gameState === 'gameOver';
-    const followTarget = inGame ? toX(player.x) * 0.05 : Math.sin(rTime * 0.25) * 60;
+    const followTarget = inGame ? 0 : Math.sin(rTime * 0.25) * 40;
     camFollow += (followTarget - camFollow) * Math.min(1, dt * 2.5);
     let shakeX = 0, shakeY = 0;
     if (screenShake.intensity > 0) {
