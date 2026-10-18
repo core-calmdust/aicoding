@@ -122,7 +122,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019f'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261019g'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -860,7 +860,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261019f').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261019g').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -968,7 +968,7 @@ function renderLessonCard() {
   $('#lsNext').disabled = !lesson.answered;
 }
 function problemPoints(P, m) {
-  if (P._freq) { const c = P._freq.get(m) || 0, top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * c / top)) : 0; }
+  if (P._freq) { const c = P._freq.get(m) || 0, top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }
   if (P._ok) return P._ok.has(m) ? 20 : 0;
   const val = new Map(P._sc), best = Math.max(...P._sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -MATE;
   if (best > MATET && mine > MATET) return mine >= best ? 20 : 16;
@@ -1080,7 +1080,7 @@ function drillMove(m) {
 
 // ====================================================================== openings: study a main line, then practice the moves strong players choose
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=20261019f').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=20261019g').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1168,8 +1168,8 @@ function openingAnswer(P, m, pos) {
   const pts = problemPoints(P, m); lesson.results[lesson.i] = pts; renderLessonCard();
   const tot = P.cand.reduce((a, c) => a + c[1], 0), pc = c => Math.round(c * 100 / tot);
   const ms = pos.san(m), top = P.cand.slice(0, 3).map(([u, c]) => `<bdi>${pos.san(pos.fromUci(u))}</bdi> ${pc(c)}%`).join(' · ');
-  const c = P._freq.get(m) || 0, lbl = pts === 20 ? 'fb.perfect' : pts >= 10 ? 'fb.good' : 'fb.bad';
-  $('#lsFb').innerHTML = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts >= 10 ? 'ok' : 'ng'}">${t(lbl)}</b> ` + (c ? t('op.yourPct', { m: ms, p: pc(c) }) : t('op.rare', { m: ms })) + `<br><small style="color:var(--dim)">${t('op.top')}: ${top}</small>`;
+  const c = P._freq.get(m) || 0, lbl = pts === 20 ? 'fb.perfect' : c ? 'fb.good' : 'fb.bad';
+  $('#lsFb').innerHTML = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${c ? 'ok' : 'ng'}">${t(lbl)}</b> ` + (c ? t('op.yourPct', { m: ms, p: pc(c) }) : t('op.rare', { m: ms })) + `<br><small style="color:var(--dim)">${t('op.top')}: ${top}</small>`;
   playChime(pts >= 10); playMove2(m);
   const tok = busyToken;
   setTimeout(() => {
@@ -1184,7 +1184,7 @@ function openingAnswer(P, m, pos) {
 
 // ====================================================================== puzzles: mate in N
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261019f').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261019g').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
