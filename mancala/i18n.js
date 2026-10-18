@@ -1,6 +1,7 @@
 // UI strings for Luxe Mancala — ja / en / zh / ko / es / fr / pt / de / hi / ar
 var I18N = window.I18N = {};
 I18N.ja = {
+  'tap.again': 'もう一度タップで決定',
   'series': '世界のボドゲ大全',
   'meta.title': 'Luxe Mancala — マンカラ', 'sub': 'マンカラ', 'back': 'ゲーム一覧', 'you': 'あなた', 'opp': '相手', 'defender': '守り手（完全読み）', 'p0': '先手', 'p1': '後手',
   'eval': '形勢', 'kifu': '棋譜', 'kifu.empty': 'まだ手がありません', 'nokifu': '棋譜がありません', 'emptyPit': '空の穴は選べません', 'saved': '前回の対局を再開しました', 'thinking': '考え中…',
@@ -79,6 +80,7 @@ I18N.ja = {
   'pz.solvedTurn': 'この手番で{n}粒獲得しました。', 'pz.solvedEnd': '{a} − {b} で終局しました。', 'pz.answerDone': '正解の手順を再生しました。', 'pz.hintTurn': '金の丸の穴から始めよう。', 'pz.hintEnd': '金の丸が最善手です。', 'pz.showing': '正解の手順を再生します…',
 };
 I18N.en = {
+  'tap.again': 'Tap again to play',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala', 'sub': 'Mancala', 'back': 'All games', 'you': 'You', 'opp': 'Opponent', 'defender': 'Defender (perfect play)', 'p0': 'First', 'p1': 'Second',
   'eval': 'Evaluation', 'kifu': 'Moves', 'kifu.empty': 'No moves yet', 'nokifu': 'No moves to share', 'emptyPit': 'That pit is empty', 'saved': 'Resumed your last game', 'thinking': 'Thinking…',
@@ -157,6 +159,7 @@ I18N.en = {
   'pz.solvedTurn': 'You gained {n} seeds this turn.', 'pz.solvedEnd': 'Finished {a} − {b}.', 'pz.answerDone': 'That was the solution.', 'pz.hintTurn': 'Start with the pit in the gold ring.', 'pz.hintEnd': 'The gold ring is the best move.', 'pz.showing': 'Playing the solution…',
 };
 I18N.zh = {
+  'tap.again': '再点一次确定',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala — 播棋', 'sub': '播棋', 'back': '游戏列表', 'you': '你', 'opp': '对手', 'defender': '防守方（完美应对）', 'p0': '先手', 'p1': '后手',
   'eval': '形势', 'kifu': '棋谱', 'kifu.empty': '还没有着法', 'nokifu': '没有棋谱', 'emptyPit': '不能选择空坑', 'saved': '已恢复上次的对局', 'thinking': '思考中…',
@@ -235,6 +238,7 @@ I18N.zh = {
   'pz.solvedTurn': '本回合得到{n}颗。', 'pz.solvedEnd': '以 {a} − {b} 结束。', 'pz.answerDone': '以上就是正解。', 'pz.hintTurn': '从金圈的坑开始。', 'pz.hintEnd': '金圈是最佳着法。', 'pz.showing': '正在演示正解…',
 };
 I18N.ko = {
+  'tap.again': '한 번 더 탭하면 둡니다',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala — 만칼라', 'sub': '만칼라', 'back': '게임 목록', 'you': '나', 'opp': '상대', 'defender': '수비자 (완벽한 수)', 'p0': '선공', 'p1': '후공',
   'eval': '형세', 'kifu': '기보', 'kifu.empty': '아직 수가 없습니다', 'nokifu': '기보가 없습니다', 'emptyPit': '빈 구멍은 고를 수 없습니다', 'saved': '지난 대국을 이어서 합니다', 'thinking': '생각 중…',
@@ -313,6 +317,7 @@ I18N.ko = {
   'pz.solvedTurn': '이번 차례에 {n}개를 얻었습니다.', 'pz.solvedEnd': '{a} − {b}로 끝났습니다.', 'pz.answerDone': '정답 수순을 보여 드렸습니다.', 'pz.hintTurn': '금색 원의 구멍부터 시작하세요.', 'pz.hintEnd': '금색 원이 최선수입니다.', 'pz.showing': '정답 수순을 재생합니다…',
 };
 I18N.es = {
+  'tap.again': 'Toca otra vez para jugar',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala', 'sub': 'Mancala', 'back': 'Todos los juegos', 'you': 'Tú', 'opp': 'Rival', 'defender': 'Defensor (juego perfecto)', 'p0': 'Primero', 'p1': 'Segundo',
   'eval': 'Evaluación', 'kifu': 'Jugadas', 'kifu.empty': 'Aún no hay jugadas', 'nokifu': 'No hay jugadas', 'emptyPit': 'Ese hoyo está vacío', 'saved': 'Se reanudó tu última partida', 'thinking': 'Pensando…',
@@ -391,6 +396,7 @@ I18N.es = {
   'pz.solvedTurn': 'Has ganado {n} semillas en este turno.', 'pz.solvedEnd': 'Terminado {a} − {b}.', 'pz.answerDone': 'Esa era la solución.', 'pz.hintTurn': 'Empieza por el hoyo del anillo dorado.', 'pz.hintEnd': 'El anillo dorado es la mejor jugada.', 'pz.showing': 'Mostrando la solución…',
 };
 I18N.fr = {
+  'tap.again': 'Touchez à nouveau pour jouer',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala', 'sub': 'Mancala', 'back': 'Tous les jeux', 'you': 'Vous', 'opp': 'Adversaire', 'defender': 'Défenseur (jeu parfait)', 'p0': 'Premier', 'p1': 'Second',
   'eval': 'Évaluation', 'kifu': 'Coups', 'kifu.empty': 'Aucun coup pour l\'instant', 'nokifu': 'Aucun coup', 'emptyPit': 'Ce trou est vide', 'saved': 'Votre dernière partie a repris', 'thinking': 'Réflexion…',
@@ -469,6 +475,7 @@ I18N.fr = {
   'pz.solvedTurn': 'Vous avez gagné {n} graines ce tour-ci.', 'pz.solvedEnd': 'Terminé {a} − {b}.', 'pz.answerDone': 'Voilà la solution.', 'pz.hintTurn': 'Commencez par le trou de l\'anneau doré.', 'pz.hintEnd': 'L\'anneau doré est le meilleur coup.', 'pz.showing': 'Lecture de la solution…',
 };
 I18N.pt = {
+  'tap.again': 'Toque de novo para jogar',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala', 'sub': 'Mancala', 'back': 'Todos os jogos', 'you': 'Você', 'opp': 'Adversário', 'defender': 'Defensor (jogo perfeito)', 'p0': 'Primeiro', 'p1': 'Segundo',
   'eval': 'Avaliação', 'kifu': 'Lances', 'kifu.empty': 'Ainda não há lances', 'nokifu': 'Não há lances', 'emptyPit': 'Essa casa está vazia', 'saved': 'Sua última partida foi retomada', 'thinking': 'Pensando…',
@@ -547,6 +554,7 @@ I18N.pt = {
   'pz.solvedTurn': 'Você ganhou {n} sementes nesta vez.', 'pz.solvedEnd': 'Terminou {a} − {b}.', 'pz.answerDone': 'Essa era a solução.', 'pz.hintTurn': 'Comece pela casa do anel dourado.', 'pz.hintEnd': 'O anel dourado é o melhor lance.', 'pz.showing': 'Mostrando a solução…',
 };
 I18N.de = {
+  'tap.again': 'Nochmal tippen zum Ziehen',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala', 'sub': 'Mancala', 'back': 'Alle Spiele', 'you': 'Du', 'opp': 'Gegner', 'defender': 'Verteidiger (perfektes Spiel)', 'p0': 'Erster', 'p1': 'Zweiter',
   'eval': 'Bewertung', 'kifu': 'Züge', 'kifu.empty': 'Noch keine Züge', 'nokifu': 'Keine Züge vorhanden', 'emptyPit': 'Diese Mulde ist leer', 'saved': 'Deine letzte Partie wurde fortgesetzt', 'thinking': 'Denkt nach…',
@@ -625,6 +633,7 @@ I18N.de = {
   'pz.solvedTurn': 'Du hast in diesem Zug {n} Samen gewonnen.', 'pz.solvedEnd': 'Beendet mit {a} − {b}.', 'pz.answerDone': 'Das war die Lösung.', 'pz.hintTurn': 'Beginne mit der Mulde im goldenen Ring.', 'pz.hintEnd': 'Der goldene Ring ist der beste Zug.', 'pz.showing': 'Lösung wird abgespielt…',
 };
 I18N.hi = {
+  'tap.again': 'चलने के लिए फिर से टैप करें',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala — मनकाला', 'sub': 'मनकाला', 'back': 'सभी खेल', 'you': 'आप', 'opp': 'प्रतिद्वंद्वी', 'defender': 'रक्षक (सटीक खेल)', 'p0': 'पहला', 'p1': 'दूसरा',
   'eval': 'मूल्यांकन', 'kifu': 'चालें', 'kifu.empty': 'अभी कोई चाल नहीं', 'nokifu': 'कोई चाल नहीं', 'emptyPit': 'यह गड्ढा खाली है', 'saved': 'आपका पिछला खेल फिर से शुरू हुआ', 'thinking': 'सोच रहा है…',
@@ -703,6 +712,7 @@ I18N.hi = {
   'pz.solvedTurn': 'इस बारी में आपको {n} बीज मिले।', 'pz.solvedEnd': '{a} − {b} पर खत्म।', 'pz.answerDone': 'यही हल था।', 'pz.hintTurn': 'सुनहरे घेरे वाले गड्ढे से शुरू करें।', 'pz.hintEnd': 'सुनहरा घेरा सबसे अच्छी चाल है।', 'pz.showing': 'हल दिखाया जा रहा है…',
 };
 I18N.ar = {
+  'tap.again': 'انقر مرة أخرى للعب',
   'series': 'World Board Game Atlas',
   'meta.title': 'Luxe Mancala — منقلة', 'sub': 'منقلة', 'back': 'كل الألعاب', 'you': 'أنت', 'opp': 'الخصم', 'defender': 'المدافع (لعب مثالي)', 'p0': 'الأول', 'p1': 'الثاني',
   'eval': 'التقييم', 'kifu': 'النقلات', 'kifu.empty': 'لا توجد نقلات بعد', 'nokifu': 'لا توجد نقلات', 'emptyPit': 'هذه الحفرة فارغة', 'saved': 'تم استئناف مباراتك السابقة', 'thinking': 'يفكر…',

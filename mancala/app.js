@@ -161,6 +161,7 @@ function buildBoard() {
     if (!isStore(i)) {
       s.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') setHover(i); });
       s.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') setHover(-1); });
+      s.addEventListener('pointerdown', e => { lastPtr = e.pointerType; });
       s.addEventListener('click', () => onPit(i));
     }
   }
@@ -374,6 +375,40 @@ function showBanner(text, sub, cls) {
   clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove('show'), 1300);
 }
 
+// ====================================================================== gems roll when brushed (mouse over a pit, or a finger sliding across)
+let lastBrush = null;
+function brushAt(x, y, now) {
+  if (!motionOn() || animating || !U) return;
+  const r = boardEl.getBoundingClientRect(), bx = x - r.left, by = y - r.top;
+  let vx = 0, vy = 0;
+  if (lastBrush && now - lastBrush.t < 120) { vx = bx - lastBrush.x; vy = by - lastBrush.y; }
+  lastBrush = { x: bx, y: by, t: now };
+  const sp = Math.hypot(vx, vy); if (sp < 0.5) return;
+  const reach = 0.3 * U;
+  for (let i = 0; i < 14; i++) for (const s of seeds[i]) {
+    if (s.el.classList.contains('fly')) continue;
+    const [sx, sy] = seedXY(s), dx = sx - bx, dy = sy - by, d = Math.hypot(dx, dy);
+    if (d > reach || (s.jt && now - s.jt < 260)) continue;
+    s.jt = now;
+    const k = (1 - d / reach) * Math.min(1, sp / 14), push = 0.075 * U * k;
+    // roll along the brush direction, a little away from the finger
+    const ux = (vx / sp) * 0.75 + (dx / (d || 1)) * 0.25, uy = (vy / sp) * 0.75 + (dy / (d || 1)) * 0.25;
+    const px = ux * push, py = uy * push, rot = (vx >= 0 ? 1 : -1) * 120 * k;
+    const base = `translate(${sx}px,${sy}px)`;
+    s.el.animate([
+      { transform: base + ' rotate(0deg)' },
+      { transform: `translate(${sx + px}px,${sy + py}px) rotate(${rot}deg)`, offset: 0.3 },
+      { transform: `translate(${sx - px * 0.35}px,${sy - py * 0.35}px) rotate(${-rot * 0.4}deg)`, offset: 0.62 },
+      { transform: `translate(${sx + px * 0.12}px,${sy + py * 0.12}px) rotate(${rot * 0.25}deg)`, offset: 0.84 },
+      { transform: base + ' rotate(0deg)' }], { duration: 620, easing: 'ease-out' });
+  }
+}
+boardEl.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') brushAt(e.clientX, e.clientY, performance.now()); });
+boardEl.addEventListener('pointerleave', () => { lastBrush = null; });
+// touchmove keeps firing while the page scrolls, so a finger sliding over the pits rolls the gems without blocking scrolling
+boardEl.addEventListener('touchmove', e => { const tc = e.touches[0]; if (tc) brushAt(tc.clientX, tc.clientY, performance.now()); }, { passive: true });
+boardEl.addEventListener('touchend', () => { lastBrush = null; }, { passive: true });
+
 // ====================================================================== fx: preview, hints, lesson marks
 let fxMarks = [];   // [{at, cls, label}]
 function fxRing(at, cls) {
@@ -413,7 +448,7 @@ function drawPreview(i) {
   fxRing(tr.land, tr.extra ? 'ok' : tr.cap ? '' : '');
   const u = slotUV(tr.land);
   const ty = isStore(tr.land) ? -1.42 : -0.55;
-  if (tr.extra) fxAt(tr.land, 0, ty, 'tip', t('pv.extra'));
+  if (tr.extra) { if (vert && isStore(tr.land)) fxAt(tr.land, u.bottom ? -1.55 : 1.55, 0, 'tip', t('pv.extra')); else fxAt(tr.land, 0, ty, 'tip', t('pv.extra')); }
   else if (tr.cap) { fxRing(tr.capFrom, 'cap'); fxAt(tr.land, 0, u.bottom ? ty : ty, 'tip cap', t('pv.cap', { n: tr.cap + (E.RULES[game.rules].cap === 2 ? 1 : 0) })); }
 }
 function setHover(i) {
@@ -561,6 +596,7 @@ function toast(msg, ms = 1500) { const el = $('#toast'); el.textContent = msg; e
 function coach(msg, cls, ms = 2400) { const el = $('#coach'); el.textContent = msg; el.className = 'coach show ' + (cls || ''); clearTimeout(coachTimer); coachTimer = setTimeout(() => el.classList.remove('show'), ms); }
 // full redraw of the shown position (no animation)
 function update() {
+  armedPit = -1; hoverPit = -1; slotEls.forEach(s => s.classList.remove('hov'));
   syncSeeds(shownPos().b);
   renderInfo(); renderFx();
 }
@@ -576,9 +612,20 @@ function newGame() {
   resetSeeds(); layout(); update(); save();
   afterPosition();
 }
+// touch: the first tap on a pit previews the move (landing pit, counts, capture / extra turn), a second tap plays it
+let lastPtr = 'mouse', armedPit = -1;
+function disarm() { if (armedPit >= 0) { armedPit = -1; setHover(-1); } }
+document.addEventListener('pointerdown', e => { if (armedPit >= 0 && !(e.target.closest && e.target.closest('.slot.pit'))) disarm(); }, true);
 function onPit(i) {
   ctx();
   if (performance.now() - skippedAt < 450) return;
+  if (lastPtr === 'touch' && canHumanPlay() && ownerOf(i) === shownPos().side && shownPos().b[i] && armedPit !== i) {
+    armedPit = i; setHover(i);
+    let n = 0; try { n = +localStorage.getItem(STORE + '-taphint') || 0; } catch (e) {}
+    if (n < 2) { toast(t('tap.again'), 1600); try { localStorage.setItem(STORE + '-taphint', n + 1); } catch (e) {} }
+    return;
+  }
+  armedPit = -1;
   const p = shownPos();
   if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle && !animating) rsOpen(); return; }
   if (ownerOf(i) !== p.side) return;
