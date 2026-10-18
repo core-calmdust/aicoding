@@ -507,6 +507,13 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body.mtab-online .dock-panel{display:flex;flex-direction:column;padding:8px 14px 20px;gap:14px}
   body.mtab-online .dock-panel .ol-list{max-height:none}
 }
+
+@media (min-width: 760px){
+  #onlineOverlay .modal{width:min(920px,94vw);padding:28px 32px}
+  .ol-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 32px;align-items:start}
+  .ol-grid .ol-col > :first-child{margin-top:0}
+  .ol-grid .ol-rooms{max-height:260px;overflow-y:auto}
+}
 </style>
 </head>
 <body>
@@ -2742,16 +2749,19 @@ function olRender(view) {
   if (olView === 'menu') {
     B.innerHTML = `
       <p class="ol-note" style="margin:-8px 0 14px">${t('ol.desc')}</p>
+      <div class="ol-grid"><div class="ol-col">
       <div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(Pr.name)}" aria-label="name"><span class="ol-r">R <b>${Pr.rating}</b><small>${t('ol.record', { g: Pr.games || 0, w: Pr.wins || 0, l: Pr.losses || 0, d: Pr.draws || 0 })}</small></span></div>
       <div class="ol-tcbox"><div class="ol-tcl">${t('ol.tc')}</div>${olTcSel()}</div>
       <div class="ol-acts"><button class="mbtn go" id="olAuto">${t('ol.auto')}</button></div>
+      <p class="ol-note small">${t('ol.rules')}</p>
+      <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
+      </div><div class="ol-col">
       <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
       <div class="ol-sub">${t('ol.newRoom')}</div>${olRkSel()}
       <div class="ol-acts"><button class="mbtn" id="olCreate">${t(olRk() === 'key' ? 'ol.createKey' : 'ol.createOpen')}</button></div>
       <div class="ol-sub">${t('ol.joinKey')}</div>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
-      <p class="ol-note small">${t('ol.rules')}</p>
-      <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>`;
+      </div></div>`;
     $('#olName').onchange = async e => { try { e.target.value = await Online.setName(e.target.value); dockRender(); } catch (_) {} };
     $('#olAuto').onclick = olStartSearch;
     olWatchRooms();
