@@ -918,9 +918,48 @@ const effectsToggleButton = document.getElementById('effects-toggle-button');
 let gameState = 'title';
 let gameMode = 'STANDARD';
 let score = 0;
-let highScoreStandard = localStorage.getItem(config.highScoreKeyStandard) || 0;
-let highScoreJourney = localStorage.getItem(config.highScoreKeyJourney) || 0;
-let highScoreStartrail = localStorage.getItem(config.highScoreKeyStartrail) || 0;
+// ---- 難易度（EASY / STANDARD / ARCADE）: 耐えられる被弾回数＝シールド数 ----
+const DIFFS = [
+    { id: 'EASY',     shields: 2, en: '2 shields · survive 2 hits',  ja: '2回までダメージOK' },
+    { id: 'STANDARD', shields: 1, en: '1 shield · survive 1 hit',    ja: '1回までダメージOK' },
+    { id: 'ARCADE',   shields: 0, en: 'no shield · one hit and out', ja: 'ノーダメージ（オリジナルと同じ）' },
+];
+let difficultyIndex = 1;
+try { const d = +localStorage.getItem('cometPlusDifficulty'); if (d >= 0 && d < DIFFS.length && localStorage.getItem('cometPlusDifficulty') !== null) difficultyIndex = d; } catch (e) {}
+let diffMenuIndex = difficultyIndex;
+let pendingMode = null;
+let shields = 0, maxShields = 0, hurtTimer = 0, pendingHitClear = false;
+// ハイスコアは難易度ごとに保存（STANDARDは従来のキーをそのまま使う）
+const hsKey = base => base + (DIFFS[difficultyIndex].id === 'STANDARD' ? '' : '_' + DIFFS[difficultyIndex].id.toLowerCase());
+const readHS = base => { try { return +localStorage.getItem(hsKey(base)) || 0; } catch (e) { return 0; } };
+let highScoreStandard = 0, highScoreJourney = 0, highScoreStartrail = 0;
+function loadHighScores() {
+    highScoreStandard = readHS(config.highScoreKeyStandard);
+    highScoreJourney = readHS(config.highScoreKeyJourney);
+    highScoreStartrail = readHS(config.highScoreKeyStartrail);
+}
+loadHighScores();
+
+function takeHit() {
+    if (!tutorial && shields > 0) {
+        shields--;
+        hurtTimer = 120; // 2秒の猶予（点滅中は当たらない）
+        pendingHitClear = true;
+        audioHandler.playSound('explosion');
+        audioHandler.playSound('bossHit');
+        screenShake = { intensity: 12, duration: 16 };
+        effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 26, maxLife: 26, radius: 20 });
+        effects.push({ type: 'screenFlash', life: 10, maxLife: 10 });
+        effects.push({ type: 'shieldMsg', text: shields > 0 ? `SHIELD BREAK  ·  ${shields} LEFT` : 'SHIELD BREAK  ·  LAST LIFE', color: '#ff5577', life: 90, maxLife: 90 });
+        return;
+    }
+    gameOver('collision');
+}
+function gainShield() {
+    if (tutorial || shields >= maxShields) return;
+    shields++;
+    effects.push({ type: 'shieldMsg', text: 'SHIELD +1', color: '#7dffd0', life: 80, maxLife: 80 });
+}
 let frameCount = 0;
 
 let showPerf = false;
@@ -977,7 +1016,7 @@ const input = { left: false, right: false, up: false, down: false, slow: false, 
 let wasEnterPressed = false, wasQPressed = false, wasSelectPressed = false;
 let wasStartPressed = false, wasPPressed = false, wasUpPressed = false;
 let wasDownPressed = false, wasShootPressed = false;
-let wasKPressed = false, wasYPressed = false, wasNPressed = false; // ★ 追加
+let wasKPressed = false, wasYPressed = false, wasNPressed = false, wasEscPressed = false; // ★ 追加
 
 let player;
 let comets;
@@ -1181,6 +1220,8 @@ function setupNewStage() {
 async function startGame(mode) {
     init();
     gameMode = mode;
+    maxShields = shields = DIFFS[difficultyIndex].shields;
+    hurtTimer = 0;
     gameState = 'playing';
     
     // Determine monster spawn counts for the first stage
@@ -1282,9 +1323,15 @@ function pollInput() {
     const selectTrigger = isSelectPressed && !wasSelectPressed;
 
     // gameStateに応じてトリガーを設定
+    const isEscPressed = keyState['Escape'] || keyState['Backspace'];
+    const escTrigger = isEscPressed && !wasEscPressed;
+    wasEscPressed = isEscPressed;
     if (gameState === 'title') {
         input.replayTrigger = enterTrigger || startTrigger;
         input.titleTrigger = false;
+    } else if (gameState === 'difficulty') {
+        input.replayTrigger = enterTrigger || startTrigger;
+        input.titleTrigger = qTrigger || selectTrigger || escTrigger;
     } else if (gameState === 'gameOver') {
         input.replayTrigger = enterTrigger || startTrigger;
         input.titleTrigger = qTrigger || selectTrigger;
@@ -1354,9 +1401,12 @@ function triggerInvincibility(baseFrames) {
 }
 
 function resetHighScores() {
-    localStorage.removeItem(config.highScoreKeyStandard);
-    localStorage.removeItem(config.highScoreKeyJourney);
-    localStorage.removeItem(config.highScoreKeyStartrail);
+    const keep = difficultyIndex;
+    for (let d = 0; d < DIFFS.length; d++) {
+        difficultyIndex = d;
+        [config.highScoreKeyStandard, config.highScoreKeyJourney, config.highScoreKeyStartrail].forEach(k => { try { localStorage.removeItem(hsKey(k)); } catch (e) {} });
+    }
+    difficultyIndex = keep;
 
     highScoreStandard = 0;
     highScoreJourney = 0;
@@ -1403,7 +1453,7 @@ function gameOver(reason) {
 
     if (score > currentHighScore && !hasUsedInvincibility) {
         currentHighScore = score;
-        localStorage.setItem(highScoreKey, currentHighScore);
+        try { localStorage.setItem(hsKey(highScoreKey), currentHighScore); } catch (e) {}
         
         switch(gameMode) {
             case 'STANDARD MODE':
@@ -1503,6 +1553,7 @@ function updateBackground(dt_sec) {
 }
 
 function updatePlayingState(dt_sec) {
+    if (hurtTimer > 0) hurtTimer -= 60 * dt_sec;
     // ▼▼▼ このブロックを修正 ▼▼▼
     // 1小節ごとにUI表示を切り替え、小節線エフェクトを発生させる
     if (audioHandler.barTrigger) {
@@ -1741,8 +1792,8 @@ function updatePlayingState(dt_sec) {
                 continue;
             }
         } else {
-            if (d < player.radius + c.radius) {
-                gameOver('collision');
+            if (hurtTimer <= 0 && d < player.radius + c.radius) {
+                takeHit();
                 return;
             }
         }
@@ -1883,8 +1934,8 @@ function updatePlayingState(dt_sec) {
                     continue;
                 }
             } else {
-                 if (dist < player.radius + m.width / 2) {
-                    gameOver('collision');
+                 if (hurtTimer <= 0 && dist < player.radius + m.width / 2) {
+                    takeHit();
                     return;
                 }
             }
@@ -1919,8 +1970,8 @@ function updatePlayingState(dt_sec) {
                     continue;
                 }
             } else {
-                if (dist < player.radius + eb.radius) {
-                    gameOver('collision');
+                if (hurtTimer <= 0 && dist < player.radius + eb.radius) {
+                    takeHit();
                     return;
                 }
             }
@@ -1959,6 +2010,7 @@ function updatePlayingState(dt_sec) {
         if (dist < config.playerVisualSize + config.energyItemSize) {
             if (tutorial) tutorial.items++;
             if (item.type === 'special') {
+                gainShield();
                 triggerSpecialItemEffect();
             } else {
                 triggerNormalItemEffect();
@@ -2307,8 +2359,8 @@ function updateBoss(isPlayerInvincible) {
         if (d < player.radius + p.r) {
             if (isPlayerInvincible) {
                 if (b.contactCd <= 0 && !b.invuln) { b.contactCd = 30; damageBoss(player.x, player.y - 20); if (!boss) return false; }
-            } else {
-                gameOver('collision');
+            } else if (hurtTimer <= 0) {
+                takeHit();
                 return true;
             }
         }
@@ -2595,6 +2647,12 @@ function update(timestamp) {
             audioHandler.scheduleBGM();
             elapsedTime += dt_ms;
             updatePlayingState(dt_sec);
+            if (pendingHitClear) {
+                pendingHitClear = false;
+                const far = o => Math.hypot(o.x - player.x, o.y - player.y) > 150;
+                comets = comets.filter(far);
+                enemyBullets = enemyBullets.filter(far);
+            }
 
             if (chainEffectPending && visualBeat >= 1.0 && previousVisualBeat < 1.0) {
                 effects.push({ type: 'shockwave', x: 150, y: 65, life: 20, maxLife: 20, radius: 20, hud: true });
@@ -2667,7 +2725,25 @@ function update(timestamp) {
             if (input.replayTrigger) {
                 audioHandler.initialize();
                 if (titleMenuItems[titleMenuIndex] === 'TUTORIAL') startTutorial();
-                else startGame(titleMenuItems[titleMenuIndex]);
+                else {
+                    // モードを選んだら難易度選択へ
+                    pendingMode = titleMenuItems[titleMenuIndex];
+                    diffMenuIndex = difficultyIndex;
+                    gameState = 'difficulty';
+                    audioHandler.playSound('glaze');
+                }
+            }
+        } else if (gameState === 'difficulty') {
+            frameCount++;
+            if (input.upTrigger) { diffMenuIndex = (diffMenuIndex + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('glaze'); }
+            if (input.downTrigger) { diffMenuIndex = (diffMenuIndex + 1) % DIFFS.length; audioHandler.playSound('glaze'); }
+            if (input.titleTrigger) {
+                gameState = 'title';
+            } else if (input.replayTrigger) {
+                difficultyIndex = diffMenuIndex;
+                try { localStorage.setItem('cometPlusDifficulty', difficultyIndex); } catch (e) {}
+                loadHighScores();
+                startGame(pendingMode);
             }
         } else if (gameState === 'gameOver') {
             frameCount++; // Keep frameCount running for animations
@@ -4163,7 +4239,7 @@ function render3D() {
     cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(0.8 + visualBeat * 0.3); });
 
     // タイトル用ハブ
-    const showHub = gameState === 'title' || gameState === 'confirmReset';
+    const showHub = gameState === 'title' || gameState === 'confirmReset' || gameState === 'difficulty';
     titleHub.visible = titleHubInner.visible = kickRing.visible = showHub;
     orbitRings.forEach(o => { o.ring.visible = showHub; });
     field.visible = !showHub; // タイトルではフィールド枠を見せない
@@ -4401,7 +4477,14 @@ function render3D() {
     // プレイヤー
     const showPlayer = (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && gameOverReason === 'energy'));
     const playerVisible = showPlayer && !(gameState === 'gameOver' && gameOverReason === 'collision');
-    playerGroup.visible = playerVisible;
+    playerGroup.visible = playerVisible && !(hurtTimer > 0 && Math.floor(hurtTimer / 4) % 2 === 0);
+    // 残りシールドを自機のまわりを回る光で表示
+    if (playerVisible && shields > 0) {
+        for (let k = 0; k < shields; k++) {
+            const a = rTime * 3.2 + k * Math.PI * 2 / shields;
+            glow.add(toX(player.x) + Math.cos(a) * 30, 18, toZ(player.y) + Math.sin(a) * 30, COL_CYAN, 22, 1.3);
+        }
+    }
     glazeDisc.visible = glazeRing.visible = showPlayer;
     shield.visible = meter.visible = false;
     hitDot.visible = false;
@@ -4551,7 +4634,7 @@ function draw() {
     }
 
     // タイトル画面の読みやすさ確保用ベール
-    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver') {
+    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver' || gameState === 'difficulty') {
         const g = renderCtx.createRadialGradient(HUD_W / 2, HUD_H / 2, 60, HUD_W / 2, HUD_H / 2, 560);
         g.addColorStop(0, gameState === 'title' ? 'rgba(5,0,18,0.7)' : 'rgba(5,0,18,0.55)');
         g.addColorStop(1, 'rgba(5,0,18,0.15)');
@@ -4591,7 +4674,7 @@ function draw() {
     const subFontSize = 18 + visualBeat * 2;
 
     // SCOREとタイマー表示 (タイトル画面以外で表示)
-    if (gameState !== 'title') {
+    if (gameState !== 'title' && gameState !== 'difficulty' && gameState !== 'confirmReset') {
         drawWithGlow(renderCtx, () => {
             renderCtx.font = `600 ${mainFontSize}px ${config.fontFamily}`;
             renderCtx.fillStyle = uiColor;
@@ -4610,7 +4693,7 @@ function draw() {
         // ゲームモード名とハイスコアを交互に表示
         let textToDisplay;
         if (isShowingModeInGame) {
-            textToDisplay = tutorial ? 'TUTORIAL' : gameMode.replace(' MODE', '');
+            textToDisplay = tutorial ? 'TUTORIAL' : gameMode.replace(' MODE', '') + ' / ' + DIFFS[difficultyIndex].id;
         } else {
             let currentHighScore;
             switch(gameMode) {
@@ -4679,6 +4762,36 @@ function draw() {
             const on = k < boss.hp;
             renderCtx.fillStyle = on ? (boss.flash > 0 ? '#ffffff' : '#ff3d6e') : 'rgba(255,255,255,0.15)';
             renderCtx.fillRect(bx + k * seg + 1, by, seg - 2, bh);
+        }
+        renderCtx.restore();
+    }
+
+    // シールド表示（エネルギーバーの右）
+    if ((gameState === 'playing' || gameState === 'paused') && !tutorial) {
+        const sx = gameMode === 'STARTRAIL MODE' ? 20 : 236, sy = HUD_H - 29;
+        renderCtx.save();
+        renderCtx.textAlign = 'left';
+        renderCtx.font = `600 13px ${config.fontFamily}`;
+        renderCtx.fillStyle = theme.ui;
+        renderCtx.fillText(DIFFS[difficultyIndex].id, sx, sy + 5);
+        const lx = sx + renderCtx.measureText(DIFFS[difficultyIndex].id).width + 12;
+        if (maxShields === 0) {
+            renderCtx.fillStyle = 'rgba(255,255,255,0.45)';
+            renderCtx.fillText('NO SHIELD', lx, sy + 5);
+        }
+        for (let k = 0; k < maxShields; k++) {
+            const cx = lx + 9 + k * 24, on = k < shields;
+            renderCtx.beginPath();
+            for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; renderCtx[v ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * 9, sy + Math.sin(a) * 9); }
+            renderCtx.closePath();
+            renderCtx.lineWidth = 1.6;
+            renderCtx.strokeStyle = on ? '#7dffd0' : 'rgba(255,255,255,0.35)';
+            if (on) {
+                renderCtx.fillStyle = 'rgba(125,255,208,' + (0.45 + visualBeat * 0.35) + ')';
+                drawWithGlow(renderCtx, () => { renderCtx.fill(); renderCtx.stroke(); }, '#7dffd0');
+            } else {
+                renderCtx.stroke();
+            }
         }
         renderCtx.restore();
     }
@@ -4843,6 +4956,17 @@ function draw() {
                 renderCtx.fillText(`${e.name} DESTROYED`, HUD_W / 2, HUD_H / 2 - 60);
             }, '#ffffff');
             renderCtx.restore();
+        } else if (e.type === 'shieldMsg') {
+            const a = Math.min(1, e.life / 25);
+            renderCtx.save();
+            renderCtx.globalAlpha = a;
+            renderCtx.textAlign = 'center';
+            renderCtx.font = `700 22px ${config.fontFamily}`;
+            drawWithGlow(renderCtx, () => {
+                renderCtx.fillStyle = e.color;
+                renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2 + 90);
+            }, e.color);
+            renderCtx.restore();
         } else if (e.type === 'comboFadeOut' && isEffectsEnabled) {
             drawChainComboText(renderCtx, e.count, e.life / e.maxLife);
         } else if (e.type === 'screenFlash' && isEffectsEnabled) {
@@ -4917,6 +5041,65 @@ function draw() {
         
         renderCtx.textBaseline = 'alphabetic'; // デフォルトに戻す
     
+    } else if (gameState === 'difficulty') {
+        const cx = HUD_W / 2;
+        const hasLS = 'letterSpacing' in renderCtx;
+        renderCtx.save();
+        renderCtx.textAlign = 'center';
+        if (hasLS) renderCtx.letterSpacing = '16px';
+        renderCtx.font = `300 34px ${config.logoFontFamily}`;
+        drawWithGlow(renderCtx, () => { renderCtx.fillStyle = '#ffffff'; renderCtx.fillText('difficulty', cx + 8, 132); }, theme.player, true);
+        if (hasLS) renderCtx.letterSpacing = '8px';
+        renderCtx.font = `400 14px ${config.fontFamily}`;
+        renderCtx.fillStyle = hexToRgba(theme.ui, 0.9);
+        renderCtx.fillText((pendingMode || '').toLowerCase(), cx + 4, 166);
+        DIFFS.forEach((d, i) => {
+            const y = 236 + i * 92, sel = i === diffMenuIndex;
+            const w = 300;
+            if (sel) {
+                const bg = renderCtx.createLinearGradient(cx - w, 0, cx + w, 0);
+                bg.addColorStop(0, 'rgba(255,255,255,0)');
+                bg.addColorStop(0.5, hexToRgba(theme.ui, 0.22 + visualBeat * 0.12));
+                bg.addColorStop(1, 'rgba(255,255,255,0)');
+                renderCtx.fillStyle = bg;
+                renderCtx.fillRect(cx - w, y - 34, w * 2, 72);
+                renderCtx.strokeStyle = hexToRgba(theme.ui, 0.8);
+                renderCtx.lineWidth = 1;
+                renderCtx.beginPath();
+                renderCtx.moveTo(cx - w + 14, y - 34); renderCtx.lineTo(cx - w, y - 34); renderCtx.lineTo(cx - w, y + 38); renderCtx.lineTo(cx - w + 14, y + 38);
+                renderCtx.moveTo(cx + w - 14, y - 34); renderCtx.lineTo(cx + w, y - 34); renderCtx.lineTo(cx + w, y + 38); renderCtx.lineTo(cx + w - 14, y + 38);
+                renderCtx.stroke();
+            }
+            if (hasLS) renderCtx.letterSpacing = '10px';
+            renderCtx.font = `${sel ? 600 : 400} ${sel ? 26 : 22}px ${config.fontFamily}`;
+            renderCtx.fillStyle = sel ? '#ffffff' : 'rgba(255,255,255,0.45)';
+            if (sel) drawWithGlow(renderCtx, () => renderCtx.fillText(d.id.toLowerCase(), cx + 5, y), theme.ui, true);
+            else renderCtx.fillText(d.id.toLowerCase(), cx + 5, y);
+            // シールドのアイコン
+            for (let k = 0; k < 2; k++) {
+                const hx = cx + 196 + k * 26, hy = y - 8, on = k < d.shields;
+                renderCtx.beginPath();
+                for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; renderCtx[v ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * 10, hy + Math.sin(a) * 10); }
+                renderCtx.closePath();
+                renderCtx.lineWidth = 1.5;
+                renderCtx.strokeStyle = on ? (sel ? '#7dffd0' : 'rgba(125,255,208,0.5)') : 'rgba(255,255,255,0.18)';
+                if (on) { renderCtx.fillStyle = sel ? 'rgba(125,255,208,0.55)' : 'rgba(125,255,208,0.2)'; renderCtx.fill(); }
+                renderCtx.stroke();
+            }
+            if (hasLS) renderCtx.letterSpacing = '2px';
+            renderCtx.font = `400 13px ${config.fontFamily}`;
+            renderCtx.fillStyle = sel ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)';
+            renderCtx.fillText(`${d.en}  ·  ${d.ja}`, cx, y + 26);
+        });
+        if (hasLS) renderCtx.letterSpacing = '4px';
+        renderCtx.font = `400 13px ${config.fontFamily}`;
+        renderCtx.fillStyle = 'rgba(255,255,255,0.6)';
+        renderCtx.fillText(lastInputDevice === 'keyboard' ? 'enter: start   ·   q / esc: back' : 'start: start   ·   select: back', cx, 530);
+        renderCtx.fillStyle = hexToRgba(theme.ui, 0.75);
+        renderCtx.fillText('special item restores 1 shield  ·  スペシャルアイテムでシールド1回復', cx, 562);
+        if (hasLS) renderCtx.letterSpacing = '0px';
+        renderCtx.restore();
+
     } else if (gameState === 'title') {
         const cx = HUD_W / 2;
         const hasLS = 'letterSpacing' in renderCtx;
@@ -4981,7 +5164,8 @@ function draw() {
         renderCtx.globalAlpha = 1;
 
         const highScoreCycle = frameCount % 360;
-        const hsText = highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`;
+        const hsDiff = '  ·  ' + DIFFS[difficultyIndex].id;
+        const hsText = (highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`) + hsDiff;
         renderCtx.font = `400 13px ${config.fontFamily}`;
         renderCtx.fillStyle = hexToRgba(theme.ui, 0.85);
         renderCtx.fillText(hsText.toLowerCase(), cx, 566);
@@ -5027,7 +5211,7 @@ function draw() {
         drawWithGlow(renderCtx, () => {
             renderCtx.font = `600 20px ${config.fontFamily}`;
             renderCtx.fillStyle = theme.ui;
-            renderCtx.fillText(`HI-SCORE: ${currentHighScore}`, HUD_W / 2, scoreY + 50);
+            renderCtx.fillText(`HI-SCORE (${DIFFS[difficultyIndex].id}): ${currentHighScore}`, HUD_W / 2, scoreY + 50);
         }, theme.ui);
         
         let titleText, replayText;
