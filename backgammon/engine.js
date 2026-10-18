@@ -7,6 +7,12 @@ async function init() {
     if (j.contact && BG.setNets) BG.setNets(j);          // contact + race nets (GNUbg-style inputs)
     else BG.setNet(new BG.Net(j.nh, new Float32Array(j.w)));
   } catch (e) { console.warn('net weights unavailable', e); }
+  try {   // strong evaluator: wildbg contact/race networks (MIT OR Apache-2.0, see THIRD_PARTY_LICENSES.txt)
+    if (BG.loadWildbg) {
+      const [man, bin] = await Promise.all([fetch('wildbg.json').then(r => r.json()), fetch('wildbg.bin').then(r => r.arrayBuffer())]);
+      BG.loadWildbg(man, bin);
+    }
+  } catch (e) { console.warn('wildbg networks unavailable', e); }
   try {
     const res = await fetch('bearoff.bin.gz');
     let buf = await res.arrayBuffer();
@@ -46,7 +52,7 @@ onmessage = async e => {
         const k = m.played, x = pl.find(y => BG.key(y.pos) === k);
         if (x) {
           const top = pl[0].ply;
-          if (x.ply < top) { x.v = top >= 2 ? BG.eval2(x.pos, 1 - m.side) : BG.eval1(x.pos, 1 - m.side); x.e = BG.equity(x.v); x.ply = top; }
+          if (x.ply < top) { x.v = BG.evalPly ? BG.evalPly(x.pos, 1 - m.side, top) : top >= 2 ? BG.eval2(x.pos, 1 - m.side) : BG.eval1(x.pos, 1 - m.side); x.e = BG.equity(x.v); x.ply = top; }
           out.played = { moves: x.moves, e: x.e, v: x.v, ply: x.ply, key: k };
         }
       }

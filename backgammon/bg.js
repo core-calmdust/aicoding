@@ -470,6 +470,69 @@ Net.prototype.forwardX = function () {
 };
 Net.prototype.forward = function (p, s) { features(p, s, this.x); return this.forwardX(); };
 
+// ---------------------------------------------------------------------------------------------- wildbg evaluator
+// Optional stronger evaluator: the contact / race networks of wildbg (https://github.com/carsten-wenderdel/wildbg,
+// MIT OR Apache-2.0, (c) Carsten Wenderdel), trained by supervised learning on rollouts. Weights are stored as
+// float16 in wildbg.bin (layout in wildbg.json). Inputs follow wildbg's crates/engine/src/inputs.rs.
+let WB = null;
+function f16(h) {
+  const s = h & 0x8000 ? -1 : 1, e = (h >> 10) & 31, f = h & 1023;
+  if (e === 0) return s * f * 5.960464477539063e-8;
+  if (e === 31) return f ? NaN : s * Infinity;
+  return s * (1 + f / 1024) * Math.pow(2, e - 15);
+}
+function loadWildbg(man, buf) {
+  const u16 = new Uint16Array(buf), tab = new Float32Array(65536);
+  for (let i = 0; i < 65536; i++) tab[i] = f16(i);
+  const nets = {};
+  for (const k in man.nets) {
+    const N = man.nets[k], L = N.layers.map(l => {
+      const a = new Float32Array(l.n); for (let i = 0; i < l.n; i++) a[i] = tab[u16[l.offset + i]];
+      return { rows: l.rows, cols: l.cols, w: a.subarray(0, l.rows * l.cols), b: a.subarray(l.rows * l.cols) };
+    });
+    nets[k] = { act: N.act, ni: N.inputs, L, x: new Float32Array(N.inputs), hs: L.map(l => new Float32Array(l.transposed ? l.cols : (l.rows))) };
+    // hidden buffers: layer 0 (transposed [in][out]) has cols outputs, the others [out][in] have rows outputs
+    nets[k].hs = [new Float32Array(L[0].cols), new Float32Array(L[1].rows), new Float32Array(L[2].rows), new Float32Array(L[3].rows)];
+  }
+  WB = nets; return WB;
+}
+function wbTd(x, k, n) { if (n === 1) x[k] = 1; else if (n === 2) x[k + 1] = 1; else if (n >= 3) { x[k + 2] = 1; x[k + 3] = n - 3; } }
+function wbInputs(p, s, race, x) {
+  x.fill(0);
+  const m = s * 26, o = 26 - m;
+  x[0] = p[m]; x[1] = p[o];
+  if (race) {
+    let k = 2; for (let i = 1; i <= 23; i++, k += 4) wbTd(x, k, p[m + i]);
+    for (let i = 2; i <= 24; i++, k += 4) wbTd(x, k, p[o + 25 - i]);
+  } else {
+    wbTd(x, 2, p[m + 25]);
+    let k = 6; for (let i = 1; i <= 24; i++, k += 4) wbTd(x, k, p[m + i]);
+    wbTd(x, k, p[o + 25]); k += 4;
+    for (let i = 1; i <= 24; i++, k += 4) wbTd(x, k, p[o + 25 - i]);
+  }
+}
+function wbForward(net) {
+  const L = net.L, x = net.x, hs = net.hs, hard = net.act === 'hardsigmoid';
+  // layer 1: sparse inputs, weights [in][out]
+  const h1 = hs[0], n1 = L[0].cols, w1 = L[0].w; h1.set(L[0].b);
+  for (let i = 0; i < net.ni; i++) { const v = x[i]; if (v === 0) continue; const r = i * n1; for (let j = 0; j < n1; j++) h1[j] += v * w1[r + j]; }
+  const act = h => { for (let j = 0; j < h.length; j++) { const a = h[j]; h[j] = hard ? (a <= -3 ? 0 : a >= 3 ? 1 : a / 6 + 0.5) : (a > 0 ? a : 0); } };
+  act(h1);
+  let prev = h1;
+  for (let l = 1; l < 4; l++) {
+    const W = L[l].w, B = L[l].b, out = hs[l], ni = L[l].cols, no = L[l].rows;
+    for (let j = 0; j < no; j++) { let a = B[j]; const r = j * ni; for (let i = 0; i < ni; i++) a += W[r + i] * prev[i]; out[j] = a; }
+    if (l < 3) act(out);
+    prev = out;
+  }
+  // softmax over [winN, winG, winBG, loseN, loseG, loseBG]
+  let mx = -1e9; for (let j = 0; j < 6; j++) if (prev[j] > mx) mx = prev[j];
+  let sum = 0; const e = [0, 0, 0, 0, 0, 0]; for (let j = 0; j < 6; j++) { e[j] = Math.exp(prev[j] - mx); sum += e[j]; }
+  const wn = e[0] / sum, wg = e[1] / sum, wb = e[2] / sum, lg = e[4] / sum, lb = e[5] / sum;
+  return [wn + wg + wb, wg + wb, wb, lg + lb, lb];
+}
+function wbEval(p, s) { const race = !contact(p), net = race ? WB.race : WB.contact; wbInputs(p, s, race, net.x); return wbForward(net); }
+
 // probabilities from the perspective of the side on roll: [win, winG, winBG, loseG, loseBG] (gammons include backgammons)
 function sanitize(y) {
   let w = Math.min(1, Math.max(0, y[0]));
@@ -570,6 +633,7 @@ function evalPos(p, s) {
   const w = winner(p);
   if (w >= 0) { const k = winKind(p, w); const me = w === s; return me ? [1, k >= 2 ? 1 : 0, k >= 3 ? 1 : 0, 0, 0] : [0, 0, 0, k >= 2 ? 1 : 0, k >= 3 ? 1 : 0]; }
   if (isBearoffPos(p)) return bearoffEval(p, s);
+  if (WB) return wbEval(p, s);
   if (NETR && !contact(p)) return sanitize(NETR.forward(p, s));
   if (NET) return sanitize(NET.forward(p, s));
   return heurEval(p, s);
@@ -629,12 +693,63 @@ function eval2(q, o) {
   return acc;
 }
 
+
+// ---- hybrid search used when the wildbg evaluator is loaded: the fast net (GNUbg-style inputs) pre-selects the
+// opponent's replies (like GNUbg's pruning nets) and only the best few are valued by the strong evaluator.
+function evalFast(p, s) {
+  const w = winner(p);
+  if (w >= 0 || isBearoffPos(p)) return evalPos(p, s);
+  if (NETR && !contact(p)) return sanitize(NETR.forward(p, s));
+  if (NET) return sanitize(NET.forward(p, s));
+  return evalPos(p, s);
+}
+// best reply of side o with dice (a,b): top `k` by the fast net, re-valued by the strong evaluator; returns o's probs
+function hybReply(q, o, a, b, k) {
+  const plays = genPlays(q, o, a, b);
+  if (plays.length === 1) return { pos: plays[0].pos, v: flip(evalPos(plays[0].pos, 1 - o)) };
+  const sc = plays.map(pl => ({ pl, e: equity(flip(evalFast(pl.pos, 1 - o))) }));
+  sc.sort((x, y) => y.e - x.e);
+  let best = null, be = -1e9;
+  for (let i = 0; i < Math.min(k, sc.length); i++) {
+    if (i > 0 && sc[i].e < sc[0].e - 0.12) break;
+    const v = flip(evalPos(sc[i].pl.pos, 1 - o)), e = equity(v);
+    if (e > be) { be = e; best = { pos: sc[i].pl.pos, v }; }
+  }
+  return best;
+}
+const HYB_K = 2;
+// value of the position after a play (o to roll) at a given depth, with the best available evaluator
+function evalPly(q, o, ply) { return ply >= 2 ? (WB ? hyb2(q, o) : eval2(q, o)) : ply >= 1 ? (WB ? hyb1(q, o) : eval1(q, o)) : flip(evalPos(q, o)); }
+function hasWildbg() { return !!WB; }
+// 1-ply: position q, o to roll; probs from the perspective of 1-o (the player who just moved)
+function hyb1(q, o) {
+  const w = winner(q);
+  if (w >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
+  const acc = [0, 0, 0, 0, 0];
+  for (const [a, b, pr] of ROLLS) {
+    const v = hybReply(q, o, a, b, HYB_K).v;   // o's perspective after its reply
+    acc[0] += pr * (1 - v[0]); acc[1] += pr * v[3]; acc[2] += pr * v[4]; acc[3] += pr * v[1]; acc[4] += pr * v[2];
+  }
+  return acc;
+}
+// 2-ply: o replies (hybrid choice), then the reply is valued by our hybrid 1-ply
+function hyb2(q, o) {
+  const w = winner(q);
+  if (w >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
+  const acc = [0, 0, 0, 0, 0];
+  for (const [a, b, pr] of ROLLS) {
+    const r = hybReply(q, o, a, b, HYB_K);
+    const v = winner(r.pos) >= 0 || isBearoffPos(r.pos) ? r.v : hyb1(r.pos, 1 - o);   // o's perspective
+    acc[0] += pr * (1 - v[0]); acc[1] += pr * v[3]; acc[2] += pr * v[4]; acc[3] += pr * v[1]; acc[4] += pr * v[2];
+  }
+  return acc;
+}
 // rank plays: returns [{pos, moves, v, e, ply}] sorted by equity (mover's perspective, cubeless money)
 // opts: {ply: 0|1|2, keep1: n candidates for 1-ply, keep2: n for 2-ply, margin1, margin2, deadline}
 function analyzePlays(p, s, d1, d2, opts) {
   opts = opts || {};
   const plays = genPlays(p, s, d1, d2);
-  for (const pl of plays) { pl.v = evalAfter(pl.pos, s); pl.e = equity(pl.v); pl.ply = 0; }
+  for (const pl of plays) { pl.v = opts.fast ? flip(evalFast(pl.pos, 1 - s)) : evalAfter(pl.pos, s); pl.e = equity(pl.v); pl.ply = 0; }
   plays.sort((a, b) => b.e - a.e);
   const ply = opts.ply || 0;
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -643,7 +758,7 @@ function analyzePlays(p, s, d1, d2, opts) {
     for (let i = 0; i < k1; i++) {
       if (i > 1 && plays[i].e < top - m1) break;
       if (opts.deadline && i > 1 && now() > opts.deadline) break;
-      plays[i].v = eval1(plays[i].pos, 1 - s); plays[i].e = equity(plays[i].v); plays[i].ply = 1;
+      plays[i].v = WB ? hyb1(plays[i].pos, 1 - s) : eval1(plays[i].pos, 1 - s); plays[i].e = equity(plays[i].v); plays[i].ply = 1;
     }
     plays.sort((a, b) => (b.ply - a.ply) || (b.e - a.e));
     if (ply >= 2 && plays.length > 1) {
@@ -652,7 +767,7 @@ function analyzePlays(p, s, d1, d2, opts) {
         if (plays[i].ply < 1) break;
         if (i > 0 && plays[i].e < top2 - m2) break;
         if (opts.deadline && i > 0 && now() > opts.deadline) break;
-        plays[i].v = eval2(plays[i].pos, 1 - s); plays[i].e = equity(plays[i].v); plays[i].ply = 2;
+        plays[i].v = WB ? hyb2(plays[i].pos, 1 - s) : eval2(plays[i].pos, 1 - s); plays[i].e = equity(plays[i].v); plays[i].ply = 2;
       }
       plays.sort((a, b) => (b.ply - a.ply) || (b.e - a.e));
     }
@@ -810,15 +925,16 @@ function aiChoosePlay(pos, side, dice, level, tag) {
   const r = rng(key(pos) + '|' + dice.join('') + '|' + level + '|' + (tag || ''));
   if (level <= 1) { const pl = genPlays(pos, side, dice[0], dice[1]); return pl[Math.floor(r() * pl.length)]; }
   if (level <= 7) {
-    const pl = analyzePlays(pos, side, dice[0], dice[1], { ply: 0 });
+    // gentle levels use the fast net (+ noise); level 7 = strongest 0-ply evaluator
+    const pl = analyzePlays(pos, side, dice[0], dice[1], { ply: 0, fast: level < 7 });
     if (pl.length === 1 || !NOISE[level]) return pl[0];
     let best = pl[0], be = -1e9;
     for (const x of pl) { const e = x.e + NOISE[level] * gauss(r); if (e > be) { be = e; best = x; } }
     return best;
   }
   if (level === 8) return analyzePlays(pos, side, dice[0], dice[1], { ply: 1, keep1: 6, margin1: 0.2 })[0];
-  if (level === 9) return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 6, margin1: 0.2, keep2: 2, margin2: 0.05, deadline: nowMs() + 900 })[0];
-  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1200 })[0];
+  if (level === 9) return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 8, margin1: 0.2, keep2: 2, margin2: 0.05, deadline: nowMs() + 900 })[0];
+  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1300 })[0];
 }
 // pre-roll cubeless probabilities for side on roll at a depth
 
@@ -828,7 +944,7 @@ function aiCube(level, pos, side, ctx, takerView) {
     const v = evalPos(pos, side);   // side = the player on roll (the doubler); take is answered for the opponent
     return { double: v[0] > 0.74, take: v[0] < 0.76, v };
   }
-  const depth = level >= 10 ? 2 : level >= 8 ? 1 : 0;
+  const depth = WB ? (level >= 8 ? 1 : 0) : (level >= 10 ? 2 : level >= 8 ? 1 : 0);
   const v = evalRoll(pos, side, depth);
   const d = cubeDecision(v, ctx);
   if (level <= 5) {   // a little sloppy
@@ -840,11 +956,11 @@ function aiCube(level, pos, side, ctx, takerView) {
 
 
 Object.assign(BG, {
-  aiChoosePlay, aiCube, setNets, escapes,
+  aiChoosePlay, aiCube, setNets, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,
-  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, evalRoll, buildMET, mwc,
+  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalPly, hasWildbg, evalRoll, buildMET, mwc,
   janowski, cubeDecision, cubeAvailable,
   get NET() { return NET; }, get NETR() { return NETR; }, get BO() { return BO; }
 });
