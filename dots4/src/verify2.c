@@ -29,6 +29,9 @@ int main(int argc, char **argv) {
     if (v != w) { bad++; if (bad < 10) printf("MISMATCH %llx solver %d brute %d\n", m, v, w); }
     i8 mv[MAXE]; int nm = root_moves(m, mv), bestv = -100;
     for (int i = 0; i < nm; i++) { set_pos(m); int kk = play(mv[i]); int x = bf(m | (1ULL << mv[i])); x = kk ? kk + x : -x; if (x > bestv) bestv = x; }
+    { int lw = (t % 3 == 0) ? -100 : w - 2 * (int)(rnd() % 3); int bm, pbm, pbv; limits(0, 0); int bv = best_from(m, lw, -1, &bm, &pbm, &pbv);
+      set_pos(m); int kk = play(bm); int x = bf(m | (1ULL << bm)); x = kk ? kk + x : -x;
+      if (bv != w || x != w) { badm++; if (badm < 10) printf("BEST_FROM MISMATCH %llx L=%d got %d move %d (%d) true %d\n", m, lw, bv, bm, x, w); } }
     if (bestv != w) { badm++; if (badm < 10) printf("PRUNED MISMATCH %llx %d %d\n", m, bestv, w); }
   }
   printf("%dx%d: %d positions (<= %d undrawn): %ld value mismatches, %ld pruned-move mismatches\n", r, c, samples, maxund, bad, badm);

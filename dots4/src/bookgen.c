@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static const char *dir; static int myid, nproc, PF, PS, symply = 99;
+static const char *dir; static int myid, fileid, nproc, PF, PS, symply = 99;
 static double t_start, t_limit, t_lastdump, t_lastflush;
 static FILE *out;
 static long solved_now, total_nodes_k;
@@ -25,14 +25,14 @@ static int oseen(u64 k) { u64 h = vhash(k ^ 0x5555); while (okey[h]) { if (okey[
 
 static void tt_dump_small(void) {
   /* keep the TT entries with >= 26 undrawn edges for a warm restart */
-  char tmp[600], fin[600]; snprintf(tmp, sizeof tmp, "%s/tt_book_%d.bin.tmp", dir, myid); snprintf(fin, sizeof fin, "%s/tt_book_%d.bin", dir, myid);
+  char tmp[600], fin[600]; snprintf(tmp, sizeof tmp, "%s/tt_book_%d.bin.tmp", dir, fileid); snprintf(fin, sizeof fin, "%s/tt_book_%d.bin", dir, fileid);
   FILE *f = fopen(tmp, "wb"); if (!f) return;
   u64 size = 1ULL << ttbits; long n = 0;
   for (u64 i = 0; i < size; i++) if (tt[i] && E - popc(tt[i] & KEYMASK) >= 26) { fwrite(&tt[i], 8, 1, f); n++; }
   fflush(f); fsync(fileno(f)); fclose(f); rename(tmp, fin);
 }
 static void tt_load_small(void) {
-  char fin[600]; snprintf(fin, sizeof fin, "%s/tt_book_%d.bin", dir, myid);
+  char fin[600]; snprintf(fin, sizeof fin, "%s/tt_book_%d.bin", dir, fileid);
   FILE *f = fopen(fin, "rb"); if (!f) return; u64 x;
   while (fread(&x, 8, 1, f) == 1) tt_store(x & KEYMASK, E_LO(x), E_HI(x), E_MV(x) == 63 ? -1 : E_MV(x));
   fclose(f);
@@ -121,7 +121,7 @@ static void expand_opp(u64 m, int ply, int side) {
 
 int main(int argc, char **argv) {
   if (argc < 7) { fprintf(stderr, "usage: bookgen <ttbits> <dir> <id> <nprocs> <P_first> <P_second> [minutes] [symply]\n"); return 1; }
-  int bits = atoi(argv[1]); dir = argv[2]; myid = atoi(argv[3]); nproc = atoi(argv[4]); PF = atoi(argv[5]); PS = atoi(argv[6]);
+  int bits = atoi(argv[1]); dir = argv[2]; myid = atoi(argv[3]); fileid = getenv("FILEID") ? atoi(getenv("FILEID")) : myid; nproc = atoi(argv[4]); PF = atoi(argv[5]); PS = atoi(argv[6]);
   double minutes = argc > 7 ? atof(argv[7]) : 55; if (argc > 8) symply = atoi(argv[8]);
   setup(4, 4); tt_init(bits);
   vkey = calloc(1 << VBITS, 8); vmv = calloc(1 << VBITS, 1); vval = calloc(1 << VBITS, 1); okey = calloc(1 << VBITS, 8);
@@ -136,14 +136,15 @@ int main(int argc, char **argv) {
   }
   tt_load_small();
   if (getenv("TTSEED")) { FILE *f = fopen(getenv("TTSEED"), "rb"); u64 x; long n = 0; if (f) { while (fread(&x, 8, 1, f) == 1) { tt_store(x & KEYMASK, E_LO(x), E_HI(x), E_MV(x) == 63 ? -1 : E_MV(x)); n++; } fclose(f); } fprintf(stderr, "seeded %ld TT entries\n", n); }
-  char p[600]; snprintf(p, sizeof p, "%s/book_%d.txt", dir, myid);
+  char p[600]; snprintf(p, sizeof p, "%s/book_%d.txt", dir, fileid);
   /* drop a partial last line (crash during write) */
   { FILE *f = fopen(p, "r"); if (f) { fseek(f, 0, SEEK_END); long sz = ftell(f); if (sz > 0) { fseek(f, sz - 1, SEEK_SET); int c = fgetc(f); fclose(f); if (c != '\n') { FILE *g = fopen(p, "a"); fputc('\n', g); fclose(g); } } else fclose(f); } }
   out = fopen(p, "a");
   t_start = t_lastdump = t_lastflush = js_now(); t_limit = minutes * 60000; hook = bk_hook;
   fprintf(stderr, "bookgen %d/%d PF=%d PS=%d loaded %ld\n", myid, nproc, PF, PS, loaded);
-  expand_ai(0, 0, 0);          /* AI moves first */
-  if (!timed_out) expand_opp(0, 0, 1);   /* AI moves second */
+  int sides = getenv("SIDES") ? atoi(getenv("SIDES")) : 3;
+  if (sides & 1) expand_ai(0, 0, 0);                  /* AI moves first */
+  if (!timed_out && (sides & 2)) expand_opp(0, 0, 1);  /* AI moves second */
   fflush(out); fsync(fileno(out)); fclose(out);
   tt_dump_small();
   fprintf(stderr, "done=%d solved %ld new nodes (%.1f min, %ldk search nodes)\n", !timed_out, solved_now, (js_now() - t_start) / 60000, total_nodes_k);

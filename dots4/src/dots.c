@@ -23,6 +23,7 @@ typedef unsigned char u8;
 IMPORT(now) double js_now(void);
 void *memset(void *d, int c, unsigned long n) { u8 *p = d; while (n--) *p++ = (u8)c; return d; }
 void *memcpy(void *d, const void *s, unsigned long n) { u8 *p = d; const u8 *q = s; while (n--) *p++ = *q++; return d; }
+void *memmove(void *d, const void *s, unsigned long n) { u8 *p = d; const u8 *q = s; if (p < q) while (n--) *p++ = *q++; else { p += n; q += n; while (n--) *--p = *--q; } return d; }
 #define TT_MAXBITS 23
 static u64 tt_static[1u << TT_MAXBITS];
 #else
@@ -525,13 +526,21 @@ static int best_from(u64 m, int lower, int first, int *bm, int *pbm, int *pbv) {
   if (first >= 0) for (int i = 1; i < n; i++) if (mv[i] == first) { mv[i] = mv[0]; mv[0] = (i8)first; break; }
   set_pos(m); int rem = B - filled, alpha = lower > -100 ? lower - 1 : -rem - 1, bv = -100, bmv = mv[0];
   *pbm = -1; *pbv = 0; *bm = -1;
+  if (lower > -100) {   /* first secure a move that keeps the bound (null windows are cheap), then improve on it */
+    for (int i = 0; i < n; i++) {
+      int v = move_value(m, mv[i], lower - 1, lower);
+      if (v == -999) return -999;
+      if (v >= lower) { *pbm = mv[i]; *pbv = lower; if (i) { i8 t = mv[i]; for (int j = i; j > 0; j--) mv[j] = mv[j - 1]; mv[0] = t; } break; }
+    }
+    if (*pbm < 0) lower = -100, alpha = -rem - 1;   /* the bound was wrong: plain search */
+  }
   for (int i = 0; i < n; i++) {
     int v;
     if (i > 0) { v = move_value(m, mv[i], alpha, alpha + 1); if (v != -999 && v > alpha) v = move_value(m, mv[i], alpha, rem + 1); }
     else v = move_value(m, mv[i], alpha, rem + 1);
     if (v == -999) return -999;
-    if (v > bv) { bv = v; bmv = mv[i]; *pbm = bmv; *pbv = bv; }
-    if (v > alpha) alpha = v;
+    if (v > alpha) { bv = v; bmv = mv[i]; *pbm = bmv; *pbv = bv; alpha = v; }   /* exact (beats everything so far) */
+    else if (*pbm < 0 && v > bv) { bv = v; bmv = mv[i]; }                        /* all below the bound so far: upper bounds only */
   }
   *bm = bmv; return bv;
 }
