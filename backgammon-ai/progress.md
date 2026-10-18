@@ -26,3 +26,5 @@
 ## 再開方法
 - 学習: `node scripts/trainsup.js nets/fast1.json 8 2 128 80 0.006 nets/n3_shipped.json -- <data files>`（同じコマンドで続きから）
 - 測定: `RES=meas/xxx.jsonl INTERIM=1 node scripts/cmpw.js <A> <B> N 2 lv10,lv10`（A に `wb:nets/fast1.json` で wildbg+高速ネット）
+
+- [終了] 2026-10-19 03:10 全バックグラウンドジョブ停止（測定・学習は完了済み、残りはテスト用HTTPサーバのみで停止）。作業はコミット・公開済み。
