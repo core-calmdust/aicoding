@@ -303,6 +303,7 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-prompt{font-size:16px;line-height:1.75}
 .lesson-fb{font-size:15px;line-height:1.85;color:#d9c9b2}
 .ls-play{display:block;width:100%;margin-top:8px;padding:9px;border-radius:10px;border:1px solid rgba(201,169,97,.45);color:var(--accent);background:rgba(201,169,97,.08);font-size:14px}
+.ls-back{color:var(--muted);border-color:var(--line);background:none}
 .ls-play:hover{background:rgba(201,169,97,.18)}
 .lesson-fb b.ok{color:#8fe3b8}.lesson-fb b.ng{color:#ff9b90}
 .lesson-actions{display:flex;gap:8px;margin-top:12px}
@@ -521,6 +522,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   .ol-grid .ol-col > :first-child{margin-top:0}
   .ol-grid .ol-rooms{max-height:260px;overflow-y:auto}
 }
+
+@media (min-width: 760px){
+  #newOverlay .modal{width:min(920px,94vw);padding:28px 32px}
+  .ng-cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 32px;align-items:start}
+}
 </style>
 </head>
 <body>
@@ -565,6 +571,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
         <button id="lsQuit" data-i18n="ls.quit"></button>
       </div>
       <button id="lsPlayHere" class="ls-play hidden" data-i18n="op.playHere"></button>
+      <button id="lsBackOp" class="ls-play ls-back hidden" data-i18n="op.backToIntro"></button>
     </div>
     <div class="card players">
       <div class="player" id="pBlack"><div class="top"><div class="pmark b"></div><div class="name" id="nameBlack"></div></div><div class="side-l" data-i18n="black"></div><div class="clk" id="clkBlack"></div><div class="status" id="statusBlack"></div></div>
@@ -608,6 +615,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
     </div>
     <div class="field hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
     <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field" id="fHandi"><label data-i18n="ng.handicap"></label><div class="seg" id="segHandi"></div><div class="note hidden" id="handiNote" data-i18n="ng.handiNote"></div></div>
     <div class="field" id="fColor"><label data-i18n="ng.color"></label>
       <div class="seg" id="segColor"><button data-v="0" data-i18n="ng.black"></button><button data-v="1" data-i18n="ng.white"></button><button data-v="2" data-i18n="ng.random"></button></div>
@@ -616,6 +624,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
     <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="9" id="rngLevel"><div class="level-name" id="levelName"></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
     <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="9" id="rngLevel2"><div class="level-name" id="levelName2"></div></div></div>
+    </div><div class="ng-col">
     <div class="field" id="fOpts"><label data-i18n="ng.options"></label>
       <div class="checks">
         <label><input type="checkbox" id="optLegal"><span data-i18n="ng.legal"></span></label>
@@ -627,6 +636,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
     <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="1kanji_3d" data-i18n="pc.ryoko"></button><button data-v="intl" data-i18n="pc.intl"></button></div></div>
     <div class="pc-credit" id="pcCredit"></div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
+    </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
     <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0</div>
   </div>
@@ -731,11 +741,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 </div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>
 
-<script src="i18n.js?v=20261018rm"></script>
+<script src="i18n.js?v=20261018rn"></script>
 <script src="engine.js?v=20261018ol"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
-<script src="online.js?v=20261018rm"></script>
+<script src="online.js?v=20261018rn"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -2319,9 +2329,16 @@ function showStudy() {
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
   $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next');
   $('#lsQuit').textContent = t('ls.quit');
-  $('#lsPlayHere').classList.remove('hidden');
+  $('#lsPlayHere').classList.remove('hidden'); $('#lsBackOp').classList.remove('hidden');
 }
 // play against the AI from the position shown in the study (you take the side to move)
+// back to the opening's explanation / choice screen (解説 or 実戦練習)
+$('#lsBackOp').onclick = () => {
+  if (!lesson || !(lesson.study || lesson.opening)) return;
+  const gi = lesson.gi;
+  exitLesson(); $('#lsBackOp').classList.add('hidden');
+  lsTab = 'open'; showOverlay('#lessonOverlay'); openOpeningChoice(gi);
+};
 $('#lsPlayHere').onclick = () => {
   if (!lesson || !lesson.study) return;
   const st = lesson.g.study, mv = st.steps.slice(0, lesson.i).map(s => s[0]);
@@ -2428,7 +2445,7 @@ function keepBoardPos(fn) {
   const d = el.getBoundingClientRect().top - y0;
   if (Math.abs(d) > 1 && document.documentElement.scrollHeight > innerHeight + 4) window.scrollBy(0, d);
 }
-function renderLesson() { keepBoardPos(renderLesson0); }
+function renderLesson() { keepBoardPos(renderLesson0); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
 function renderLesson0() {
   if (lesson.study) { showStudy(); return; }
   $('#lsDots').classList.remove('exam');
@@ -2669,7 +2686,7 @@ function finishLesson() {
 }
 // leave a lesson and restore the previous game
 function exitLesson(silent) {
-  $('#lsPlayHere').classList.add('hidden');
+  $('#lsPlayHere').classList.add('hidden'); $('#lsBackOp').classList.add('hidden');
   const saved = lesson && lesson.savedGame;
   if (!lesson) return;
   lesson = null; document.body.classList.remove('in-lesson');
