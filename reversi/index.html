@@ -1102,9 +1102,9 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018mc"></script>
+<script src="i18n.js?v=20261018rs"></script>
 <script src="firebase-config.js"></script>
-<script src="online.js?v=20261018ch"></script>
+<script src="online.js?v=20261018rs"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -3035,6 +3035,21 @@ function olRoomTick() {
   if (r) document.querySelectorAll('.ol-left').forEach(el => { el.textContent = olLeftText(); });
 }
 if (window.Online && Online.available) { Online.onRoom(olOnRoom); setInterval(olRoomTick, 1000); }
+// a reload during an online game keeps it: rejoin (and put the own room back) until the game is over
+const OL_LIVE = 'reversi-online-live';
+function olLiveSave(gid) { try { const r = window.Online && Online.room; localStorage.setItem(OL_LIVE, JSON.stringify({ gid, room: r && r.game === gid ? { code: r.code, tc: r.tc, priv: r.priv, title: r.title } : null })); } catch (e) {} }
+function olLiveClear() { try { localStorage.removeItem(OL_LIVE); } catch (e) {} }
+setTimeout(async () => {
+  let s = null; try { s = JSON.parse(localStorage.getItem(OL_LIVE) || 'null'); } catch (e) {}
+  if (!s || !s.gid || !window.Online || !Online.available) return;
+  try {
+    await Online.init();
+    const g = await Online.getGame(s.gid);
+    if (!g || g.status !== 'play' || (g.b !== Online.uid && g.w !== Online.uid)) { olLiveClear(); return; }
+    if (s.room) await Online.resumeRoom(Object.assign({ gid: s.gid }, s.room), { onMatched: olRoomMatched }).catch(e => console.warn(e));
+    hideOverlay('#newOverlay'); startOnlineGame(s.gid, t('ol.resumed'));
+  } catch (e) { console.warn(e); }
+}, 0);
 
 const decSq = s => (s.charCodeAt(0) - 97) + (+s[1] - 1) * 8;
 function startOnlineGame(gid, intro) {
@@ -3048,6 +3063,7 @@ function startOnlineGame(gid, intro) {
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: null }];
   cur = 0; reviewing = false;
   net = { gid, game: null, me: 0, opp: null, done: false, first: true, intro };
+  olLiveSave(gid);
   document.body.classList.add('in-online');
   net.unsub = Online.watchGame(gid, onNetGame);
   net.timer = setInterval(netTick, 500);
@@ -3056,6 +3072,7 @@ function startOnlineGame(gid, intro) {
 }
 function leaveOnlineGame() {
   if (!net) return;
+  olLiveClear();
   net.unsub && net.unsub(); clearInterval(net.timer);
   net = null; document.body.classList.remove('in-online');
   $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low'); olClkOff($('#clkBlack')); olClkOff($('#clkWhite'));
@@ -3108,6 +3125,7 @@ function netMove(sq) {
 }
 async function finishOnline(g) {
   net.done = true;
+  olLiveClear();
   let score;
   const [b, w] = counts(positions[positions.length - 1].cells);
   if (g.status === 'resign' || g.status === 'timeout') score = g.loser === Online.uid ? 0 : 1;
