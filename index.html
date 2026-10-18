@@ -421,7 +421,7 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
       <a class="btn ghost" href="./shogi/" data-i18n="hero.cta2">新作 将棋 SHOGI →</a>
     </div>
     <div class="stats reveal">
-      <div class="stat"><b>14</b><span data-i18n="stat.titles">タイトル公開中</span></div>
+      <div class="stat"><b id="stat-titles">15</b><span data-i18n="stat.titles">タイトル公開中</span></div>
       <div class="stat"><b>2</b><span data-i18n="stat.awards">コンテスト受賞</span></div>
       <div class="stat"><b data-i18n="stat.free.num">0円</b><span data-i18n="stat.free">登録・インストール不要</span></div>
     </div>
@@ -632,7 +632,9 @@ const ARCADE = [
   { id:'comet',      href:'./comet/',           thumb:'images/comet.webp',       icon:'images/icons/comet.svg',      kind:'SHOOTER',       key:'comet',     name:'COMET OUTBURST',          tags:['shooter'], facts:{ modes:3, stages:'∞', players:'1' } },
   { id:'danmaku',    href:'./danmaku-inv.html', thumb:'images/danmaku-inv.webp', icon:'images/icons/danmaku.svg',    kind:'BULLET HELL',   key:'danmaku',   name:'DANMAKU INVADER XTREME+', tags:['bullet'], facts:{ players:'1' } },
   { id:'pong',       href:'./pong.html',        thumb:'images/pong.webp',        icon:'images/icons/pong.svg',       kind:'VERSUS ACTION', key:'pong',      name:'CYBER PONG XTREME+',      tags:['versus','mobile'], facts:{ players:'1–2' } },
-];   // chip order; label keys: gx.all, sub.ai, sub.classic, sub.old
+];
+// published-title count (previous versions excluded) — updates automatically when games are added
+(function () { const el = document.getElementById('stat-titles'); if (el) el.textContent = GAMES.filter(g => g.cat !== 'old').length + ARCADE.length; })();   // chip order; label keys: gx.all, sub.ai, sub.classic, sub.old
 
 function makeGallery(C) {
   const $ = id => document.getElementById(id);
