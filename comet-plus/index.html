@@ -1741,8 +1741,10 @@ function updatePlayingState(dt_sec) {
     if (player.invincibleTimer > 0) {
         currentSpeed *= 1.1;
     }
-    if (input.left) player.x -= currentSpeed;
-    if (input.right) player.x += currentSpeed;
+    if (IS_MOBILE) { // PCは描画フレームごとに実時間で動かす（movePlayerRT）
+        if (input.left) player.x -= currentSpeed;
+        if (input.right) player.x += currentSpeed;
+    }
     if (touchDX) { player.x += touchDX; touchDX = 0; } // スワイプ移動
     player.x = Math.max(0, Math.min(config.canvasWidth, player.x));
 
@@ -4696,17 +4698,8 @@ function render3D() {
     shield.visible = meter.visible = false;
     hitDot.visible = false;
     if (showPlayer) {
-        // 自機は補間せず最新位置で描き、さらに押している方向へ次の計算までの端数分だけ先読みする（入力遅延を最小に）
-        let lead = 0;
-        if (!IS_MOBILE && gameState === 'playing' && !frozen) {
-            const kl = keyState['ArrowLeft'] || input.left, kr = keyState['ArrowRight'] || input.right;
-            if (kl !== kr) {
-                const slow = keyState['ShiftLeft'] || keyState['ShiftRight'] || keyState['KeyZ'] || input.slow;
-                const sp = config.playerSpeed * (slow ? config.playerSlowModeMultiplier : 1) * (player.invincibleTimer > 0 ? 1.1 : 1);
-                lead = (kr ? 1 : -1) * sp * simAlpha * SIM_STEP / 1000;
-            }
-        }
-        const px = toX(Math.max(0, Math.min(config.canvasWidth, player.x + lead))), pz = toZ(player.y);
+        // 自機は補間せず最新位置で描く（PCは移動も毎フレーム実時間なので、見た目・当たり判定・弾の位置が一致）
+        const px = toX(player.x), pz = toZ(player.y);
         const bankTarget = frozen ? shipBank : (input.left && !input.right ? 0.55 : input.right && !input.left ? -0.55 : 0);
         shipBank += (bankTarget - shipBank) * Math.min(1, dt * 10);
         playerGroup.position.set(px, 12 + Math.sin(rTime * 4) * 2, pz);
@@ -4715,8 +4708,8 @@ function render3D() {
         playerGroup.scale.setScalar(VS * (1 + visualBeat * 0.18));
 
         const glazeR = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance);
-        glazeDisc.position.set(px, 1, pz); glazeDisc.scale.setScalar(glazeR);
-        glazeRing.position.set(px, 1.5, pz); glazeRing.scale.setScalar(glazeR);
+        glazeDisc.position.set(px, 11, pz); glazeDisc.scale.setScalar(glazeR);
+        glazeRing.position.set(px, 11.5, pz); glazeRing.scale.setScalar(glazeR);
         glazeFillMat.color.copy(themeCur.player);
         glazeRingMat.color.copy(themeCur.player);
         glazeFillMat.opacity = efx ? 0.025 + visualBeat * 0.04 : 0.0;
@@ -4733,7 +4726,7 @@ function render3D() {
             // 当たり判定とスローマーカー
             // 当たり判定の円だけを、色を回して表示
             hitDot.visible = true;
-            hitDot.position.set(px, 30, pz);
+            hitDot.position.set(px, 12, pz); // 機体・円と同じ高さに置き、遠近で中心がずれないように
             hitDot.scale.setScalar(config.playerHitboxRadius);
             hsl(frameCount * 10, 1, 0.6, hitDotMat.color);
         }
@@ -5542,6 +5535,15 @@ function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; ret
 let simRealLast = null;
 let simAcc = 0;
 let simTime = 0;
+// PCの自機移動: 固定60Hzの計算を待たず、毎フレーム実時間で動かす（当たり判定・弾の位置も描画と一致）
+function movePlayerRT(ms) {
+    if (gameState !== 'playing' || ms <= 0) return;
+    const kl = keyState['ArrowLeft'] || input.left, kr = keyState['ArrowRight'] || input.right;
+    if (kl === kr) return;
+    const slow = keyState['ShiftLeft'] || keyState['ShiftRight'] || keyState['KeyZ'] || input.slow;
+    const sp = config.playerSpeed * (slow ? config.playerSlowModeMultiplier : 1) * (player.invincibleTimer > 0 ? 1.1 : 1);
+    player.x = Math.max(0, Math.min(config.canvasWidth, player.x + (kr ? 1 : -1) * sp * ms / 1000));
+}
 function gameLoop(timestamp) {
     if (timestamp !== undefined) {
         if (simRealLast === null) simRealLast = timestamp;
@@ -5553,6 +5555,8 @@ function gameLoop(timestamp) {
         // 60Hz付近の揺らぎは1ステップ分に吸着させる（0回/2回更新が交互に起きるカクつき防止）
         if (Math.abs(delta - SIM_STEP) < 1.6) delta = SIM_STEP;
         else if (Math.abs(delta - SIM_STEP * 2) < 2.0) delta = SIM_STEP * 2;
+        if (!IS_MOBILE) movePlayerRT(Math.min(50, timestamp - (gameLoop._lt || timestamp)));
+        gameLoop._lt = timestamp;
         simAcc += delta;
         let steps = 0;
         while (simAcc >= SIM_STEP && steps < 6) {
