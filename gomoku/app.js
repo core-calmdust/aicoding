@@ -48,7 +48,7 @@ const sanOf = i => sqName(moves[i]);
 
 // ====================================================================== state
 const STORE = 'aicoding-gomoku';
-const settings = { mode: 'ai', rule: 'renju', color: 1, level: 4, level2: 4, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, forbid: true, num: false, confirm: null, lang: '', skin: 'classic' };
+const settings = { coach: true, mode: 'ai', rule: 'renju', color: 1, level: 4, level2: 4, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, forbid: true, num: false, confirm: null, lang: '', skin: 'classic' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -104,9 +104,9 @@ function makeWorker() {
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
-let aiW = makeWorker(), anaW = makeWorker();
+let aiW = makeWorker(), anaW = makeWorker(), coachW = null;
 function request(which, msg, onProgress) {
-  const w = which === 'ai' ? aiW : anaW;
+  const w = which === 'ai' ? aiW : which === 'coach' ? (coachW || (coachW = makeWorker())) : anaW;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ rule, start: startPos, ...msg, id }); });
 }
 function cancelWorker(which) {
@@ -404,14 +404,49 @@ function newGame(rated) {
   startPos = null;
   setRule(rated ? 'renju' : settings.rule);
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
-  rgame = null;
+  rgame = null; coachQ = new Map(); coachPend = null;
   if (rated) { humanColor = Math.random() < 0.5 ? P1 : P2; rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() }); }
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; pend = -1;
   hideOverlay('#resultOverlay');
   shownKey = ''; syncStones(0);
   update(false); save(); afterPosition();
 }
+// ---------------------------------------------------------------- coach: grades your moves in games against the AI
+let coachQ = new Map(), coachPend = null, anaLast = null, coachTimer = 0;   // coachQ: ply index -> { q, list, m }
+function coachOn() { return settings.coach && settings.mode === 'ai' && !rgame && !lesson && !puzzle; }
+function gradeVals(best, mine, m) {
+  const loss = sOfV(best.v) - sOfV(mine.v);
+  if ((best.v > WINT && mine.v <= WINT) || (best.v >= -WINT && mine.v < -WINT) || loss >= 0.3) return 'bad';
+  if (loss >= 0.12) return 'dubious';
+  if (m === best.m || mine.v >= best.v - 20) return 'best';
+  return 'good';
+}
+function coachShow(q) { const el = $('#coach'); el.className = 'coach show q-' + q; el.textContent = t('cq.' + q); clearTimeout(coachTimer); coachTimer = setTimeout(() => el.classList.remove('show'), 1700); }
+function coachMove(idx, m) {
+  if (!coachOn() || toMoveAt(idx) !== humanColor) return;
+  coachPend = null;
+  const key = keyOf(idx), list = anaCache.get(key) || (anaLast && anaLast.key === key ? anaLast.list : null);
+  if (!list || !list.length) return;
+  let best = list[0]; for (const e of list) if (e.v > best.v) best = e;
+  const mine = list.find(e => e.m === m);
+  // a move outside the AI's candidate list: graded once the next position has been analysed
+  if (!mine) {
+    const pend = coachPend = { idx, m, list, best }, after = moves.slice(0, idx).concat([m]);
+    if (statusAt(idx).over) return;
+    request('coach', { type: 'analyze', moves: after, time: 500 }).then(r => { if (r && r.list && coachPend === pend) coachResolve(idx + 1, r.list); });
+    return;
+  }
+  const q = gradeVals(best, mine, m); coachQ.set(idx, { q, list, m }); coachShow(q);
+}
+function coachResolve(idx, list) {
+  const c = coachPend; if (!c || c.idx + 1 !== idx || moves[c.idx] !== c.m || !list.length) return;
+  coachPend = null;
+  let b2 = -Infinity; for (const e of list) b2 = Math.max(b2, e.v);
+  const mine = { m: c.m, v: -b2 }, q = gradeVals(c.best, mine, c.m);
+  coachQ.set(c.idx, { q, list: c.list.concat([mine]), m: c.m }); coachShow(q);
+}
 function playMove(m) {
+  coachMove(cur, m);
   if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (now - rgame.t)) + RT_CLOCK.inc; rgame.t = now; }
   moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false;
   evals.length = moves.length; hintList = null;
@@ -441,18 +476,19 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || settings.mode === 'online') { hintList = null; return; }
-  if (!settings.eval && !settings.hint) return;
+  if (!settings.eval && !settings.hint && !(coachOn() && (toMoveAt(idx) === humanColor || coachPend))) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list || !list.length) return;
+    anaLast = { key, list };
     const ev = evalFromList(list, mover); if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
   };
-  if (anaCache.has(key)) { apply(anaCache.get(key)); return; }
+  if (anaCache.has(key)) { apply(anaCache.get(key)); coachResolve(idx, anaCache.get(key)); return; }
   cancelWorker('ana');
   const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint ? 1600 : 900 }, m => apply(m.list));
   if (!res || res.error) return;
-  anaCache.set(key, res.list); apply(res.list); save();
+  anaCache.set(key, res.list); apply(res.list); coachResolve(idx, res.list); save();
 }
 function onGameEnd(st) {
   if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
@@ -469,6 +505,8 @@ function onGameEnd(st) {
     if (rx) sub += `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span> · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
+  const mk = settings.mode === 'ai' && !rgame ? mistakeProblems() : [];
+  $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
   setTimeout(() => showOverlay('#resultOverlay'), 900);
 }
 function canUndo() {
@@ -662,7 +700,7 @@ function segSync() {
 }
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : net ? 'online' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, rule: settings.rule };
-  $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat;
+  $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optCoach').checked = settings.coach;
   $('#optForbid').checked = settings.forbid; $('#optNum').checked = !!settings.num; $('#optConfirm').checked = confirmOn();
   segSync(); showOverlay('#newOverlay');
 }
@@ -680,7 +718,7 @@ $('#btnStart').onclick = () => {
   exitSpecial();
   if (draft.mode === 'rated') { rtStart(); return; }
   const cf = $('#optConfirm').checked;
-  Object.assign(settings, { mode: draft.mode, rule: draft.rule, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, forbid: $('#optForbid').checked, num: $('#optNum').checked, confirm: cf === coarse() ? null : cf });
+  Object.assign(settings, { mode: draft.mode, rule: draft.rule, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, coach: $('#optCoach').checked, forbid: $('#optForbid').checked, num: $('#optNum').checked, confirm: cf === coarse() ? null : cf });
   newGame();
 };
 
@@ -831,7 +869,7 @@ $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLe
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
-$('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
+$('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt && lesson.virt.id === 'mk') startMistakes(lesson.virt.problems); else if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 // a set-up position on the board (lessons, openings practice, puzzles)
 function enterSpecial(sp, r) {
@@ -864,9 +902,9 @@ function loadLessonProblem() {
 }
 function renderLessonCard() {
   const s = curStep(), n = s.problems.length;
-  $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
-  $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
-  const goal = lesson.virt ? t('op.goal') : t('ls.' + s.id + '.goal');
+  $('#lsStep').textContent = lesson.virt ? t(lesson.virt.id === 'mk' ? 'mk.step' : 'op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
+  $('#lsTitle').textContent = lesson.virt ? (s.id === 'mk' ? t('mk.title') : LL(s.title)) : t('ls.' + s.id + '.title');
+  const goal = lesson.virt ? t(s.id === 'mk' ? 'mk.goal' : 'op.goal') : t('ls.' + s.id + '.goal');
   $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${lesson.pick ? '' : t('ls.turn', { c: pname(lesson.me) }) + ' '}${goal}</span></div>`;
   $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
   $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = lesson.answered;
@@ -892,7 +930,8 @@ function lessonAnswer(m) {
   const ms = sqName(m), bs = best !== undefined ? sqName(best) : '';
   const lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
   let fb = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `;
-  if (lesson.virt) fb += pts >= 16 ? t('op.good', { m: ms }) : t('op.better', { m: bs, x: ms });
+  if (lesson.virt && s.id === 'mk') fb += pts >= 16 ? t('mk.good') + ' ' + t('op.good', { m: ms }) : t('mk.why', { m: bs, x: P.played || '', q: t('q.' + (P.q || 'bad')) });
+  else if (lesson.virt) fb += pts >= 16 ? t('op.good', { m: ms }) : t('op.better', { m: bs, x: ms });
   else fb += pts >= 16 ? t('ls.' + s.id + '.why', { m: ms, n: okList.length }) : t('ls.' + s.id + '.ng', { m: okList.slice(0, 4).map(sqName).join(' / '), x: ms });
   $('#lsFb').innerHTML = fb;
   playChime(pts >= 16);
@@ -920,7 +959,7 @@ $('#lsHint').onclick = () => {
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
   const s = curStep(), P = lessonProblem();
-  if (lesson.virt) { const b = P._sc.slice().sort((a, c) => c[1] - a[1])[0][0]; lessonMarks = [{ at: b, cls: 'hl2' }]; $('#lsFb').innerHTML = t('op.hint'); renderFx(); return; }
+  if (lesson.virt) { const b = P._sc.slice().sort((a, c) => c[1] - a[1])[0][0]; lessonMarks = [{ at: b, cls: 'hl2' }]; $('#lsFb').innerHTML = t(s.id === 'mk' ? 'mk.hint' : 'op.hint'); renderFx(); return; }
   $('#lsFb').innerHTML = t('ls.' + s.id + '.hint');
   lessonMarks = (P.hint ? toCells(P.hint) : []).map(q => ({ at: q, cls: 'hl2' }));
   renderFx();
@@ -933,9 +972,8 @@ $('#lsNext').onclick = () => {
   const n = lesson.results.reduce((a, b) => a + b, 0), pass = n >= 75;
   const scoreHtml = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
   if (lesson.virt) {
-    const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
-    try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
-    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    if (s.id !== 'mk') { const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass }; try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {} }
+    $('#ldTitle').textContent = s.id === 'mk' ? t('mk.done') : t(pass ? 'op.pass' : 'ls.failed');
     $('#ldSub').innerHTML = scoreHtml;
     $('#btnLessonPlay').classList.add('hidden'); $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -956,7 +994,7 @@ $('#lsNext').onclick = () => {
 };
 $('#lsQuit').onclick = () => quitSpecial();
 // back to the list the lesson / opening was chosen from (the board keeps the current lesson until another is picked)
-$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.virt && lesson.virt.id === 'mk') openLessons(); else if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
 $('#btnLessonPlay').onclick = () => {
   hideOverlay('#lessonOverlay'); savedGame = null; exitSpecial();
   Object.assign(settings, { mode: 'ai', color: P1, level: 1, rule: 'free' });
@@ -1260,7 +1298,59 @@ function rvJudge(i) {
   else if (loss >= 0.3) { q = 'bad'; desc = t('rv.eval', { l: ((best.v - mine.v) / 100).toFixed(1) }); }
   else if (loss >= 0.12) { q = 'dubious'; desc = t('rv.eval', { l: ((best.v - mine.v) / 100).toFixed(1) }); }
   const ok = !q && mine.v >= best.v - 20;
-  return { q, ok, desc, best: best.m, m, loss };
+  return { q, ok, desc, best: best.m, m, loss, bv: best.v, mv: mine.v };
+}
+// threats on the board in plain words
+const C = E.C;
+function threatOf(pos, c) {   // the strongest thing colour c could do next: 'five' | 'win' (four-three / straight four) | ''
+  let k = '';
+  for (let m = 0; m < N * N; m++) {
+    if (pos.at(m)) continue;
+    const x = pos.cls[c][E.M2I[m]];
+    if (x === C.FIVE) return 'five';
+    if ((x === C.F4 || x === C.F43) && (c !== P1 || !pos.renju || !pos.forbidden(m))) k = 'win';
+  }
+  return k;
+}
+function bestKind(pos, m) {
+  const me = pos.side, op = 3 - me, i = E.M2I[m], a = pos.cls[me][i], d = pos.cls[op][i];
+  if (a === C.FIVE || a === C.F4 || a === C.F43) return 'win';
+  if (d >= C.F3) return 'block';
+  if (a === C.B4) return 'four';
+  if (a === C.F3) return 'three';
+  return 'shape';
+}
+// the reason in plain words: lost win / walked into a loss / what the move left open / what the best move does
+function plainWhy(i, j) {
+  const pos = posAt(i), mover = pos.side, op = 3 - mover, b = sqName(j.best);
+  let h;
+  if (j.bv > WINT && j.mv < -WINT) h = t('rx.winToLoss', { b });
+  else if (j.bv > WINT) h = t('rx.missWin', { b });
+  else if (j.mv < -WINT) h = t('rx.toLoss', { b });
+  else {
+    const word = v => { const x = sOfV(v); return t(x > 0.5 ? 'rx.s4' : x > 0.25 ? 'rx.s3' : x > 0.08 ? 'rx.s2' : x >= -0.08 ? 'rx.s0' : x >= -0.25 ? 'rx.s-2' : x >= -0.5 ? 'rx.s-3' : 'rx.s-4'); };
+    const sa = word(j.bv), sb = word(j.mv);
+    h = t('rx.cp', { b, x: ((j.bv - j.mv) / 100).toFixed(1) }) + (sa !== sb ? ' ' + t('rx.flow', { c: sideLabel(mover), x: sa, y: sb }) : '');
+  }
+  // what the played move left to the opponent, if the best move would not have
+  const kb = bestKind(pos, j.best);
+  pos.make(j.m); const tm = threatOf(pos, op); pos.unmake();
+  pos.make(j.best); const tb = threatOf(pos, op); pos.unmake();
+  const lvl = x => x === 'five' ? 2 : x === 'win' ? 1 : 0;
+  let extra = '';
+  if (lvl(tm) > lvl(tb)) extra = t(tm === 'five' ? 'rx.t.five' : kb === 'block' ? 'rx.t.three' : 'rx.t.win');
+  return h + (extra ? ' ' + extra : '') + ' ' + t('rx.b.' + kb, { b });
+}
+// the move at the current position only (like shogi / chess): what the best move was and why
+function rvExplainHtml() {
+  if (!rv || rv.running || cur >= moves.length) return '';
+  const j = rvJudge(cur); if (!j) return '';
+  const p = toMoveAt(cur), tag = j.q ? `<span class="tag ${j.q}">${t('q.' + j.q)}</span>` : '';
+  let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${cur + 1}. <i class="p${p}"></i><b>${sanOf(cur)}</b></span>${tag}</div>`;
+  if (j.best === j.m) h += `<p>${t('rv.ex.same')}</p>`;
+  else if (!j.q) h += `<p>${t('rv.ex.alt', { m: `<b class="bm">${sqName(j.best)}</b>` })}</p>`;
+  else h += `<p>${t('rv.ex.best', { m: `<b class="bm">${sqName(j.best)}</b>` })} <span class="ls">${j.desc}</span></p><p class="why">${plainWhy(cur, j)}</p>`;
+  return h + '</div>';
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
 function renderReview() {
@@ -1275,7 +1365,7 @@ function renderReview() {
     const st = { 1: { n: 0, ok: 0, bad: 0, dubious: 0 }, 2: { n: 0, ok: 0, bad: 0, dubious: 0 } }, list = [];
     for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (!j) continue; const s = st[toMoveAt(i)]; s.n++; if (j.ok) s.ok++; if (j.q) { s[j.q]++; list.push({ i, ...j }); } }
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
-    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
+    html = rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${toMoveAt(x.i)}"></i>${sanOf(x.i)} → ${sqName(x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
@@ -1295,6 +1385,24 @@ $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
+// your dubious moves and blunders against the AI (graded by the coach) become practice problems
+function mistakeProblems() {
+  const out = [];
+  for (const [idx, c] of [...coachQ.entries()].sort((a, b) => a[0] - b[0])) {
+    if ((c.q !== 'dubious' && c.q !== 'bad') || idx >= moves.length || moves[idx] !== c.m) continue;
+    const pos = posAt(idx), b = [], w = [];
+    for (let m = 0; m < N * N; m++) { const x = pos.at(m); if (x === P1) b.push(sqName(m)); else if (x === P2) w.push(sqName(m)); }
+    out.push({ b: b.join(' '), w: w.join(' '), side: pos.side, last: idx ? sqName(moves[idx - 1]) : undefined, sc: c.list.map(e => [sqName(e.m), e.v]), played: sqName(c.m), q: c.q, rule });
+  }
+  return out.slice(-10);
+}
+function startMistakes(probs) {
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { step: 0, virt: { id: 'mk', problems: probs }, i: 0, results: [], answered: false, hinted: false, me: P1 };
+  document.body.classList.add('in-lesson');
+  loadLessonProblem();
+}
+$('#btnMistakes').onclick = () => { const p = mistakeProblems(); if (!p.length) return; hideOverlay('#resultOverlay'); startMistakes(p); };
 
 // ====================================================================== share / load (coordinates, URL)
 function parseGameText(v) {

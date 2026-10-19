@@ -766,6 +766,15 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body:not(.no-online) .mtabs{height:calc(42px + env(safe-area-inset-bottom))}
   body.mtab-online .dock{bottom:max(calc(42px + env(safe-area-inset-bottom)), var(--kb, 0px))}
 }
+.rv-ex{border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.07);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:14px;line-height:1.6;color:var(--text)}
+.rv-ex-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.rv-ex-h i{display:inline-block;width:11px;height:11px;border-radius:50%;margin:0 5px 0 2px;vertical-align:-1px}.rv-ex-h i.p1{background:#111;box-shadow:inset 0 0 0 1px #666}.rv-ex-h i.p2{background:#f3efe6}
+.rv-ex p{margin:2px 0}.rv-ex .bm{color:#f0b54a}.rv-ex .ls{color:var(--muted);font-size:12.5px}.rv-ex .why{color:var(--muted);font-size:13px}
+.rv-ex .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b1110;flex:none}.rv-ex .tag.dubious{background:#f2c060}.rv-ex .tag.bad{background:#ff6b5b}
+.coach{position:absolute;left:50%;top:8px;transform:translate(-50%,-6px);z-index:16;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:700;background:rgba(14,16,22,.9);border:1px solid var(--line);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+.coach.show{opacity:1;transform:translate(-50%,0)}
+.coach.q-best{border-color:#6fd3a0;color:#b8f0d2}.coach.q-good{border-color:#9fc7ff;color:#d3e5ff}.coach.q-dubious{border-color:#f2c060;color:#ffe2a6}.coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
+body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 </style>
 </head>
 <body>
@@ -792,6 +801,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
         <svg class="grid" id="grid" viewBox="0 0 16 16" preserveAspectRatio="none"></svg>
         <div class="stones" id="stones"></div>
         <div class="fx" id="fx"></div>
+        <div class="coach" id="coach"></div>
       </div>
       <div class="toast" id="toast"></div>
       <div class="review-bar" id="reviewBar"><span id="reviewText"></span><button id="btnResume" data-i18n="review.resume"></button><button id="btnLatest" data-i18n="review.latest"></button></div>
@@ -940,6 +950,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
         <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
         <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
         <label><input type="checkbox" id="optThreat"><span data-i18n="opt.threat"></span></label>
+        <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
         <label><input type="checkbox" id="optForbid"><span data-i18n="opt.forbid"></span></label>
         <label><input type="checkbox" id="optNum"><span data-i18n="opt.num"></span></label>
         <label><input type="checkbox" id="optConfirm"><span data-i18n="opt.confirm"></span></label>
@@ -1015,6 +1026,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
     <div class="modal-actions">
       <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
       <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
+      <button class="mbtn hidden" id="btnMistakes"></button>
       <button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
     </div>
   </div>
