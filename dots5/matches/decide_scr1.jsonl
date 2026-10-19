@@ -1,0 +1,5 @@
+{"g":0,"winner":"A","firstSolved":16,"safeAtSolve":27,"startWinner":"B","mistakes":[{"i":17,"who":"B","safe":25,"from":1,"to":-1},{"i":18,"who":"A","safe":22,"from":1,"to":-1},{"i":19,"who":"B","safe":20,"from":1,"to":-1}]}
+{"g":1,"winner":"A","firstSolved":15,"safeAtSolve":27,"startWinner":"A","mistakes":[{"i":17,"who":"A","safe":23,"from":1,"to":-1},{"i":18,"who":"B","safe":20,"from":1,"to":-1}]}
+{"g":2,"winner":"A","firstSolved":17,"safeAtSolve":25,"startWinner":"B","mistakes":[{"i":17,"who":"B","safe":25,"from":1,"to":-1},{"i":18,"who":"A","safe":23,"from":1,"to":-1},{"i":19,"who":"B","safe":20,"from":1,"to":-1}]}
+{"g":3,"winner":"A","firstSolved":17,"safeAtSolve":24,"startWinner":"A","mistakes":[{"i":17,"who":"A","safe":24,"from":1,"to":-1},{"i":18,"who":"B","safe":23,"from":1,"to":-1},{"i":19,"who":"A","safe":18,"from":1,"to":-1},{"i":20,"who":"B","safe":15,"from":1,"to":-1}]}
+{"g":4,"winner":"A","firstSolved":16,"safeAtSolve":29,"startWinner":"A","mistakes":[{"i":16,"who":"A","safe":29,"from":1,"to":-1},{"i":17,"who":"B","safe":27,"from":1,"to":-1}]}
