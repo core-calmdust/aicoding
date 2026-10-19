@@ -36,12 +36,24 @@
         "$slot": {
           ".write": "auth != null && newData.exists()",
           ".validate": "$slot.matches(/^(1[0-9]|[0-9])$/) && newData.hasChildren(['n', 'uid', 'name', 'text', 't']) && newData.child('uid').val() === auth.uid",
-          "n": { ".validate": "newData.isNumber() && newData.val() >= 1" },
-          "uid": { ".validate": "newData.isString()" },
-          "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
-          "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100" },
-          "t": { ".validate": "newData.isNumber() && newData.val() <= now" },
-          "$other": { ".validate": false }
+          "n": {
+            ".validate": "newData.isNumber() && newData.val() >= 1"
+          },
+          "uid": {
+            ".validate": "newData.isString()"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now"
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       }
     },
@@ -58,6 +70,29 @@
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "kv": {
+          "$key": {
+            ".validate": "$key.length <= 200 && newData.hasChildren(['v', 't']) && newData.child('v').isString() && newData.child('v').val().length < 400000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000",
+            "v": {
+              ".validate": true
+            },
+            "t": {
+              ".validate": true
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     }
   }
