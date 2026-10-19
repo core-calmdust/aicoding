@@ -1279,7 +1279,7 @@ function openName(first) {
   $('#nameX').hidden = first;
   $('#mName').dataset.lock = first ? '1' : '';
   $('#nameBody').innerHTML = `<div class="hero" id="nmHero">${iconSvg(pick)}</div>
-    <p style="margin:4px 0 0;font-size:13.5px;line-height:1.7">${esc(first ? t('nm.desc') : t('nm.desc2'))}</p>
+    <p class="nmdesc">${esc(first ? t('nm.desc') : t('nm.desc2'))}</p>
     ${picks.length ? `<div class="picks">${picks.map(id => `<button data-id="${id}" class="${id === pick ? 'on' : ''}" title="${esc(iconName(id))}">${iconSvg(id, { still: true })}</button>`).join('')}</div><p class="note" style="margin:0">${esc(t('nm.pick'))}</p>` : ''}
     <input id="nmIn" maxlength="12" autocomplete="nickname" placeholder="${esc(t('nm.ph'))}" value="${esc(DB.prof.name)}">
     <div class="cnt"><span id="nmCnt">0</span>/12</div>
