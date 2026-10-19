@@ -14,7 +14,7 @@ for (let i = todo.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)
 const OUT = `/home/claude/work/eval/labels_${PART}.jsonl`;
 const done = new Set(); try { for (const l of fs.readFileSync(OUT, 'utf8').split('\n')) if (l) { const o = JSON.parse(l); done.add(o.g + ':' + o.k); } } catch (e) {}
 (async () => {
-  const r = new Rapfi(); let rule = null;
+  let r = new Rapfi(); let rule = null;
   await r.start('renju', 100000); r.setNodes(NODES);
   let n = 0; const t0 = Date.now();
   for (let q = PART; q < todo.length; q += PARTS) {
@@ -25,6 +25,7 @@ const done = new Set(); try { for (const l of fs.readFileSync(OUT, 'utf8').split
     if (pos.status().over || pos.cnt[me][E.C.FIVE] || pos.cnt[op][E.C.FIVE] >= 2) continue;
     if (g.rule !== rule) { r.send('INFO rule ' + ({ free: 0, standard: 1, renju: 4 }[g.rule])); rule = g.rule; }
     const res = await r.think(mv);
+    if (!res) { r.quit(); r = new Rapfi(); await r.start('renju', 100000); r.setNodes(NODES); rule = null; continue; }
     if (res.ev === null) continue;
     fs.appendFileSync(OUT, JSON.stringify({ g: gi, k, ev: res.ev, bm: res.move }) + '\n');
     if (++n % 500 === 0) console.log(n, ((Date.now() - t0) / n).toFixed(0) + 'ms/pos');

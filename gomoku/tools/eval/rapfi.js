@@ -10,7 +10,7 @@ class Rapfi {
     this.p.stderr.on('data', () => {});
     this.rule = null;
   }
-  line(l) { if (process.env.DBG) console.error('<', l); if (l.startsWith('MESSAGE') || l.startsWith('DEBUG')) { this.msgs.push(l); return; } const w = this.waiters.shift(); if (w) w(l); }
+  line(l) { if (process.env.DBG) console.error('<', l); const ans = /^\d+,\d+$/.test(l) || l === 'OK'; if (!ans) { this.msgs.push(l); return; } const w = this.waiters.shift(); if (w) w(l); }
   send(s) { this.p.stdin.write(s + '\n'); }
   next() { return new Promise(r => this.waiters.push(r)); }
   async start(rule, turnMs) {
@@ -28,7 +28,8 @@ class Rapfi {
     const s = ['BOARD'];
     moves.forEach((m, k) => s.push(`${m % 15},${Math.floor(m / 15)},${((moves.length - k) % 2) ? 2 : 1}`));
     s.push('DONE'); this.send(s.join('\n'));
-    const l = await this.next();
+    const l = await Promise.race([this.next(), new Promise(r => setTimeout(() => r(null), 15000))]);
+    if (l === null) { this.waiters = []; return null; }
     const mm = l.match(/^(\d+),(\d+)$/); const move = mm ? +mm[2] * 15 + +mm[1] : -1;
     // last eval reported: "... ev X ..." (X may be +M5 / -M5 for mates)
     let ev = null;
