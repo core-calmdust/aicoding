@@ -569,9 +569,10 @@ class HSearch {
     }
     return out;
   }
-  best(p, maxDepth, ms, rand) {
+  best(p, maxDepth, ms, rand, exclude) {
     this.deadline = Date.now() + ms; this.aborted = false; this.nodes = 0;
     let moves = this.rootMoves(p, rand);
+    if (exclude) { const m2 = moves.filter(e => !exclude.has(e)); if (m2.length) moves = m2; }
     if (moves.length === 1) return { move: moves[0], value: 0 };
     let bestMove = moves[0], bestV = 0;
     for (let d = 0; d <= maxDepth; d++) {
@@ -617,8 +618,8 @@ const LEVELS = {
   // spare cores (chooseMoveAsync): the exact solver splits the root moves, the heuristic search splits them per depth
   // gate: try the exact solver at or below this many safe moves (pgate: with helper workers, which solve while this
   // worker runs the heuristic search); sure: below this it usually finishes, so this worker solves as well
-  9: { kind: 'v2', ms: 3000, gate: { 3: 99, 4: 28, 5: 20 }, sure: { 3: 99, 4: 20, 5: 15 }, pgate: { 4: 34, 5: 24 }, depth: 40, np: 3, quick: 0.12, hs: 0.15, hn: 0.45 },
-  10: { kind: 'v2', ms: 5000, gate: { 3: 99, 4: 30, 5: 22 }, sure: { 3: 99, 4: 22, 5: 16 }, pgate: { 4: 36, 5: 26 }, depth: 40, np: 3, quick: 0.12, hs: 0.15, hn: 0.45 },
+  9: { kind: 'v2', ms: 3000, gate: { 3: 99, 4: 28, 5: 20 }, sure: { 3: 99, 4: 20, 5: 15 }, pgate: { 4: 34, 5: 24 }, w5: { gate: 27, sure: 20, pgate: 27, hs: 0.15, hn: 0.35, re: 0.1 }, depth: 40, np: 3, quick: 0.12, hs: 0.15, hn: 0.45 },
+  10: { kind: 'v2', ms: 5000, gate: { 3: 99, 4: 30, 5: 22 }, sure: { 3: 99, 4: 22, 5: 16 }, pgate: { 4: 36, 5: 26 }, w5: { gate: 28, sure: 21, pgate: 28, hs: 0.15, hn: 0.35, re: 0.1 }, depth: 40, np: 3, quick: 0.12, hs: 0.15, hn: 0.45 },
 };
 
 const solvers = {}, smallSolvers = {};
@@ -649,7 +650,7 @@ function chooseMove(p, level, rand, lead, hist) {
   // search levels
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
-  if (cfg.kind === 'v2') return chooseV2(p, cfg, rand, lead, hist);
+  if (cfg.kind === 'v2') { if (p.G.R === 5 && p.G.C === 5 && X5.st === 0 && typeof importScripts !== 'function') x5Ready(); return chooseV2(p, cfg, rand, lead, hist); }
   if (cfg.book) { const bk = bookMove(p); if (bk) return bk; }
   const t0 = Date.now();
   const gate = typeof cfg.safeGate === 'object' ? (cfg.safeGate[p.G.R] || 12) : cfg.safeGate;
@@ -688,10 +689,14 @@ function chooseMove(p, level, rand, lead, hist) {
 // lead: the mover's boxes minus the opponent's so far (only needed once boxes have been taken).
 const v2Solvers = {}, v2Hs = {};
 let v2Bits = 22;   // helper workers use smaller tables
-function v2SolverFor(G) { const k = G.R + 'x' + G.C; if (!v2Solvers[k]) { const s = new Solver(G, G.E <= 24 ? 20 : v2Bits); s.prune = true; v2Solvers[k] = s; } return v2Solvers[k]; }
+function v2SolverFor(G) {
+  if (x5Ok(G)) return X5.w;
+  const k = G.R + 'x' + G.C; if (!v2Solvers[k]) { const s = new Solver(G, G.E <= 24 ? 20 : v2Bits); s.prune = true; v2Solvers[k] = s; } return v2Solvers[k];
+}
 function v2HsFor(G, np) { const k = G.R + 'x' + G.C + ':' + np; if (!v2Hs[k]) { const h = new HSearch(G); h.np = np; h.prune = true; v2Hs[k] = h; } return v2Hs[k]; }
-function v2Gate(cfg, G) { return G.E <= 24 ? 99 : (cfg.gate[G.R] || 20); }
-function v2Sure(cfg, G) { return G.E <= 24 ? 99 : (cfg.sure[G.R] || 14); }
+function v2Gate(cfg, G) { return G.E <= 24 ? 99 : x5Ok(G) ? cfg.w5.gate : (cfg.gate[G.R] || 20); }
+function v2Sure(cfg, G) { return G.E <= 24 ? 99 : x5Ok(G) ? cfg.w5.sure : (cfg.sure[G.R] || 14); }
+function v2PGate(cfg, G) { return G.E <= 24 ? 99 : x5Ok(G) ? cfg.w5.pgate : (cfg.pgate[G.R] || 20); }
 // net future boxes the mover needs for a draw, or null when unknown or already decided (then: exact values)
 function v2Target(p, lead) {
   if (lead === undefined || lead === null) { if (p.filled > 0) return null; lead = 0; }
@@ -739,6 +744,7 @@ function chooseV2(p, cfg, rand, lead, hist) {
   const S = v2SolverFor(G), H = v2HsFor(G, cfg.np), t = v2Target(p, lead);
   const left = () => ms - (Date.now() - t0);
   let r;
+  if (x5Ok(G) && t !== null && safe > 12 && exactOk) return chooseW5(p, cfg, rand, t, sure, t0);
   if (exactOk && (safe <= 12 || t === null || G.E <= 24)) {   // late, small board or score unknown: exact values
     S.limit(0, safe <= 12 || G.E <= 24 ? ms - 60 : ms * (sure ? 0.2 : 0.1));
     r = S.best(p, rand);
@@ -769,11 +775,110 @@ function chooseV2(p, cfg, rand, lead, hist) {
   if (S.partial && t === null) return { move: S.partial.move, value: S.partial.value, exact: false };
   return { move: h.move, value: h.value, exact: false, depth: H.depth };
 }
+// 5x5 with the wasm solver: a heuristic search first (short when the solver will very likely finish), then outcome
+// searches of every move in growing slices: play a proven win (or draw); otherwise never a move proven to lose
+function chooseW5(p, cfg, rand, t, sure, t0) {
+  const G = p.G, ms = cfg.ms, S = X5.w, H = v2HsFor(G, cfg.np), left = () => ms - (Date.now() - t0);
+  const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
+  const moves = v2Moves(S, p, h.move, rand);
+  const o = S.sliced(p, t, moves, left() - (sure ? 30 : ms * cfg.w5.re));
+  if (o.win) {
+    if (left() > ms * 0.3) { S.limit(0, left() - 20); const r = S.best(p, rand, o.win.move); if (r) return { move: r.move, value: r.value, exact: true }; }
+    return { move: o.win.move, value: o.win.value, exact: false, outcome: 1 };
+  }
+  if (o.draw) return { move: o.draw.move, value: o.draw.value, exact: false, outcome: 0 };
+  if (!o.open.length) {   // every move loses: the best margin
+    S.limit(0, left() - 20); const r = S.best(p, rand, h.move);
+    if (r) return { move: r.move, value: r.value, exact: true };
+    return { move: h.move, value: h.value, exact: false };
+  }
+  if (!o.lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  if (o.open.length === 1 || left() < 60) return { move: o.open[0], value: h.value, exact: false };
+  const h2 = H.best(p, cfg.depth, left() - 20, rand, o.lost);
+  return { move: o.lost.has(h2.move) ? o.open[0] : h2.move, value: h2.value, exact: false, depth: H.depth };
+}
+// Pondering (5x5, Lv9+): while the opponent thinks, prove the outcome of each of the opponent's replies, round-robin in
+// growing slices. The work stays in the table, so the next search starts warm (often already solved).
+// ponderStart(p, lead): p = the position after our move, lead = the opponent's lead. ponderStep(ms) works for about ms;
+// returns false when there is nothing (more) to do.
+const PD = { on: false };
+function ponderStart(p, lead, level) {
+  PD.on = false;
+  const cfg = LEVELS[level] || {};
+  if (!x5Ok(p.G) || cfg.kind !== 'v2' || !p.undrawn || p.hasCapture()) return false;
+  const safe = countSafe(p), t = v2Target(p, lead);
+  if (t === null || safe > cfg.w5.gate + 4 || safe <= 6) return false;
+  const S = X5.w; S.set(p);
+  Object.assign(PD, { on: true, until: Date.now() + 20000, lo: X5.io[0], hi: X5.io[1], t, moves: S.rootMoves(p), st: null, b: 30, i: 0, open: 0 });
+  PD.st = new Int8Array(PD.moves.length);
+  return true;
+}
+function ponderStep(ms) {
+  if (!PD.on || !x5Ok(geom(5, 5))) return false;
+  if (Date.now() > PD.until) { PD.on = false; return false; }   // at most 20 s per move
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    if (PD.i >= PD.moves.length) { if (!PD.open) { PD.on = false; return false; } PD.i = 0; PD.open = 0; PD.b *= 3; }
+    const i = PD.i++;
+    if (PD.st[i]) continue;
+    X5.io[0] = PD.lo; X5.io[1] = PD.hi;
+    const v = X5.x.w_move_value(PD.moves[i], PD.t - 1, PD.t + 1, Math.max(5, Math.min(PD.b, end - Date.now())));
+    if (v === -999) PD.open++; else PD.st[i] = 1;
+  }
+  return true;
+}
+function ponderStop() { PD.on = false; }
+// the same with helper workers: each proves a share of the moves while this worker runs the heuristic search and then
+// proves its own share (the heuristic move first)
+async function chooseW5Async(p, cfg, rand, t, sure, t0, pool) {
+  const G = p.G, ms = cfg.ms, S = X5.w, H = v2HsFor(G, cfg.np), end = t0 + ms, left = () => end - Date.now();
+  const winAns = (w, exactOk) => {
+    if (exactOk && left() > ms * 0.3) { S.limit(0, left() - 20); const r = S.best(p, rand, w.move); if (r) return { move: r.move, value: r.value, exact: true }; }
+    return { move: w.move, value: w.value, exact: false, outcome: 1 };
+  };
+  const all = v2Moves(S, p, -1, rand);
+  const q = S.sliced(p, t, all, Math.min(200, ms * 0.05));   // late positions and a warm table finish at once
+  if (q.win) return winAns(q.win, true);
+  if (q.draw && !q.open.length) return { move: q.draw.move, value: q.draw.value, exact: false, outcome: 0 };
+  const open = q.open, n = pool.size + 1, edges = p.edges(), span = Math.max(50, left() - (sure ? 40 : ms * cfg.w5.re) - 40);
+  const jobs = [];
+  for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', kind: 'sliced', R: G.R, C: G.C, edges, moves: open.filter((m, j) => j % n === i + 1), ms: span, t, x5: true }));
+  const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
+  const mine = [h.move].concat(open.filter((m, j) => j % n === 0 && m !== h.move));
+  const o = S.sliced(p, t, mine, Math.max(30, end - (sure ? 40 : ms * cfg.w5.re) - Date.now()));
+  if (o.win) { Promise.all(jobs); return winAns(o.win, false); }
+  const res = await Promise.all(jobs);
+  const lost = new Set(q.lost); for (const m of o.lost) lost.add(m);
+  let draw = q.draw || o.draw, helpersOk = true;
+  for (const r of res) {
+    if (!r || !Array.isArray(r.lost)) { helpersOk = false; continue; }
+    if (r.win) return winAns(r.win, false);
+    if (r.draw && !draw) draw = r.draw;
+    for (const m of r.lost) lost.add(m);
+  }
+  if (draw) return { move: draw.move, value: draw.value, exact: false, outcome: 0 };
+  if (helpersOk && all.every(m => lost.has(m))) {   // every move loses: the best margin
+    S.limit(0, left() - 20); const r = S.best(p, rand, h.move);
+    if (r) return { move: r.move, value: r.value, exact: true };
+    return { move: h.move, value: h.value, exact: false };
+  }
+  if (!lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  const rest = all.filter(m => !lost.has(m));
+  if (rest.length === 1 || left() < 60) return { move: rest[0], value: h.value, exact: false };
+  const h2 = H.best(p, cfg.depth, left() - 20, rand, lost);
+  return { move: lost.has(h2.move) ? rest[0] : h2.move, value: h2.value, exact: false, depth: H.depth };
+}
 // work for a helper worker: an outcome (or exact) root search over the given moves, in that order
 function helperTask(d) {
   const G = geom(d.R, d.C), p = Pos.from(G, d.edges);
   if (d.bits) v2Bits = d.bits;
+  if (d.x5 === false && x5Ok(G)) return { done: false, best: null, firstV: null };   // the main worker has no wasm: stay out
   const S = v2SolverFor(G); S.limit(0, d.ms);
+  if (d.kind === 'sliced') {
+    if (!S.sliced) return null;
+    const o = S.sliced(p, d.t, d.moves, d.ms);
+    return { win: o.win, draw: o.draw, lost: Array.from(o.lost) };
+  }
   const r = d.t === null || d.t === undefined ? S.bestOf(p, d.moves) : S.outcome(p, d.t, d.moves);
   return { done: !!r, best: r || S.partial, firstV: S.firstV };
 }
@@ -788,7 +893,8 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
   const G = p.G, t0 = Date.now(), end = t0 + cfg.ms, safe = countSafe(p), edges = p.edges(), t = v2Target(p, lead);
-  if (safe <= 12 || t === null || safe > (G.E <= 24 ? 99 : (cfg.pgate[G.R] || 20))) return chooseV2(p, cfg, rand, lead, hist);
+  if (x5Ok(G) && t !== null && safe > 12 && safe <= v2PGate(cfg, G)) return chooseW5Async(p, cfg, rand, t, safe <= v2Sure(cfg, G), t0, pool);
+  if (safe <= 12 || t === null || safe > v2PGate(cfg, G)) return chooseV2(p, cfg, rand, lead, hist);
   const S = v2SolverFor(G), H = v2HsFor(G, cfg.np);
   // a short try first: late positions (and a warm table) finish at once
   S.limit(0, Math.min(250, cfg.ms * 0.06));
@@ -801,7 +907,7 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   // very likely finish, this worker races as well.
   const order = i => i ? v2Moves(S, p, h.move, rand) : moves;
   const left = end - Date.now() - 40;
-  const jobs = []; for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', R: G.R, C: G.C, edges, moves: order(i), ms: left, t }));
+  const jobs = []; for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', R: G.R, C: G.C, edges, moves: order(i), ms: left, t, x5: x5Ok(G) }));
   let res, hm = h;
   if (safe <= v2Sure(cfg, G)) {
     S.limit(0, left);
@@ -826,6 +932,87 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   }
   return { move: hm.move, value: hm.value, exact: false };
 }
+
+// ---------------------------------------------------------------- 5x5: exact solver (WebAssembly, Lv9+)
+// solver5.c compiled to dots5.wasm: the same solver as dots4.wasm with 64-bit table keys (5x5 has 60 edges). It reaches
+// positions several times earlier than the JavaScript solver, so Lv9+ switches to exact play much sooner. W5 has the
+// interface of Solver that the Lv9+ code uses (limit / best / bestOf / outcome / rootMoves / moveValue / partial).
+const X5V = '?v=20261019';
+const X5 = { st: 0, x: null, io: null, w: null, loading: null, bits: 22 };
+class W5 {
+  constructor() { this.G = geom(5, 5); this.deadline = Infinity; this.aborted = false; this.nodes = 0; this.partial = null; this.firstV = null; }
+  limit(maxNodes, ms) { this.aborted = false; this.nodes = 0; this.deadline = ms ? Date.now() + ms : Infinity; }
+  set(p) { let lo = 0, hi = 0; const d = p.drawn; for (let e = 0; e < 32; e++) if (d[e]) lo |= 1 << e; for (let e = 32; e < 60; e++) if (d[e]) hi |= 1 << (e - 32); X5.io[0] = lo; X5.io[1] = hi; }
+  left() { const l = this.deadline === Infinity ? 0 : this.deadline - Date.now(); if (this.deadline !== Infinity && l <= 0) this.aborted = true; return l; }
+  moveValue(p, e, alpha, beta) {
+    const rem = p.G.B - p.filled; if (alpha === undefined) { alpha = -rem - 1; beta = rem + 1; }
+    const ms = this.left(); if (this.aborted) return null;
+    this.set(p); const v = X5.x.w_move_value(e, alpha, beta, ms);
+    this.nodes += X5.x.w_nodes();
+    if (v === -999) { this.aborted = true; return null; }
+    return v;
+  }
+  rootMoves(p) { this.set(p); const n = X5.x.w_root_moves(), out = []; for (let i = 0; i < n; i++) out.push(X5.io[8 + i]); return out.sort((a, b) => p.gives(a) - p.gives(b)); }
+  best(p, rand, first) {
+    this.partial = null; if (p.undrawn === 0) return null;
+    const ms = this.left(); if (this.aborted) return null;
+    this.set(p); X5.io[2] = first !== undefined && first >= 0 ? first : -1;
+    const v = X5.x.w_best(ms); this.nodes += X5.x.w_nodes();
+    if (v === -999) { this.aborted = true; if (X5.io[4] >= 0) this.partial = { move: X5.io[4], value: X5.io[5] }; return null; }
+    return { move: X5.io[3], value: v };
+  }
+  value(p) { const ms = this.left(); if (this.aborted) return null; this.set(p); const rem = p.G.B - p.filled, v = X5.x.w_value(-rem - 1, rem + 1, ms); return v === -999 ? null : v; }
+}
+// outcome of every move against the target t in growing time slices (the table keeps the work between slices), so that
+// within the time it proves as many moves as it can rather than spending everything on the first one. Stops at a win.
+// Returns { win: {move, value} | null, draw: {move, value} | null, lost: Set of moves proven to lose, open: moves unknown }
+W5.prototype.sliced = function (p, t, moves, ms) {
+  const end = Date.now() + ms, st = new Int8Array(moves.length), lost = new Set(); let draw = null, b = 25;
+  this.set(p); const lo = X5.io[0], hi = X5.io[1];
+  for (;;) {
+    let open = 0;
+    for (let i = 0; i < moves.length; i++) {
+      if (st[i]) continue;
+      const left = end - Date.now(); if (left <= 3) return { win: null, draw, lost, open: moves.filter((m, j) => !st[j]) };
+      X5.io[0] = lo; X5.io[1] = hi;
+      const v = X5.x.w_move_value(moves[i], t - 1, t + 1, Math.min(b, left)); this.nodes += X5.x.w_nodes();
+      if (v === -999) { open++; continue; }
+      if (v > t) return { win: { move: moves[i], value: v }, draw, lost, open: [] };
+      if (v === t) { st[i] = 2; if (!draw) draw = { move: moves[i], value: v }; } else { st[i] = 1; lost.add(moves[i]); }
+    }
+    if (!open) return { win: null, draw, lost, open: [] };
+    b *= 3;
+  }
+};
+W5.prototype.bestOf = Solver.prototype.bestOf;
+W5.prototype.outcome = Solver.prototype.outcome;
+W5.prototype.all = Solver.prototype.all;
+function x5Init(wasm) {
+  const now = typeof performance !== 'undefined' ? () => performance.now() : () => Date.now();
+  const x = new WebAssembly.Instance(new WebAssembly.Module(wasm), { env: { now } }).exports;
+  x.w_setup(5, 5, X5.bits);
+  X5.x = x; X5.io = new Int32Array(x.memory.buffer, x.io_ptr(), 256); X5.w = new W5(); X5.st = 2;
+}
+// Node: load synchronously; worker: fetch once (x5Ready() resolves when done). Never on the page itself.
+function x5Ready(bits) {
+  if (X5.st === 2) return true;
+  if (X5.st < 0) return false;
+  if (bits) X5.bits = bits;
+  if (typeof process !== 'undefined' && process.versions && process.versions.node && typeof require === 'function') {
+    try { x5Init(require('fs').readFileSync(__dirname + '/dots5.wasm')); } catch (e) { X5.st = -1; return false; }
+    return true;
+  }
+  if (typeof importScripts !== 'function' || typeof WebAssembly === 'undefined' || typeof fetch !== 'function') { X5.st = -1; return false; }
+  if (!X5.loading) {
+    X5.st = 1;
+    X5.loading = fetch(new URL('dots5.wasm' + X5V, self.location.href)).then(r => { if (!r.ok) throw new Error('dots5.wasm ' + r.status); return r.arrayBuffer(); })
+      .then(w => { x5Init(w); return true; }).catch(() => { X5.st = -1; return false; });
+  }
+  return X5.loading;
+}
+let x5On = true;   // tests: false = the JavaScript solver (the previous Lv9+)
+const x5Ok = G => x5On && G.R === 5 && G.C === 5 && X5.st === 2;
+function setX5(on) { x5On = !!on; }
 
 // ---------------------------------------------------------------- 4x4: exact solver (WebAssembly) + opening book (Lv9+)
 // solver4.c compiled to dots4.wasm: alpha-beta on net boxes with Berlekamp's capture rules, exact simple-loony values,
@@ -1043,7 +1230,7 @@ function reviewMove(p, played, ms) {
   const quiet = !cap && p.gives(played) === 0 && p.gives(list[0].m) === 0;
   return { exact: false, quiet, best: list[0].v, played: mine ? Math.min(mine.v, list[0].v) : list[0].v, bestMove: list[0].m, line };
 }
-return { chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -1059,7 +1246,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       let k = Math.min(3, hc - 1);
       if (dm && dm <= 2) k = 0; else if (dm && dm < 4) k = Math.min(k, 1);
       if (typeof Worker === 'function') for (let i = 0; i < k; i++) {
-        const w = new Worker('engine.js'), cb = new Map();
+        const w = new Worker('engine.js' + ((self.location && self.location.search) || '')), cb = new Map();   // same version as this worker
         w.onmessage = ev => { const f = cb.get(ev.data.id); if (f) { cb.delete(ev.data.id); f(ev.data.type === 'error' ? null : ev.data.r); } };
         w.onerror = ev => { ev.preventDefault && ev.preventDefault(); cb.forEach(f => f(null)); cb.clear(); };
         pool.ws.push({ w, cb });
@@ -1074,17 +1261,29 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
     });
     return pool;
   };
+  // pondering between moves (5x5 Lv9+ with the wasm solver): short steps, so that a new request is served at once
+  let pondering = 0;
+  const ponderLoop = tok => { if (tok !== pondering) return; if (DotsEngine.ponderStep(40)) setTimeout(() => ponderLoop(tok), 0); };
   self.onmessage = async ev => {
     const d = ev.data;
+    pondering++; DotsEngine.ponderStop();
     try {
-      if (d.type === 'xpart') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.helperTask(d) }); return; }
+      if (d.type === 'xpart') {
+        if (d.R === 5 && d.C === 5 && d.x5) { const rd = DotsEngine.x5Ready(d.bits); if (rd && rd.then) await rd; }
+        self.postMessage({ type: d.type, id: d.id, r: DotsEngine.helperTask(d) }); return;
+      }
       const G = DotsEngine.geom(d.R, d.C);
       const p = DotsEngine.Pos.from(G, d.edges);
       if (d.R === 4 && d.C === 4 && (d.type !== 'move' || d.level >= 9)) { const rd = DotsEngine.x4Ready(); if (rd && rd.then) await rd; }
+      if (d.R === 5 && d.C === 5 && d.type === 'move' && d.level >= 9) { const rd = DotsEngine.x5Ready(); if (rd && rd.then) await rd; }
       if (d.type === 'move') {
         const t0 = Date.now();
         const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
         self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0 });
+        if (d.level >= 9 && d.R === 5 && d.C === 5 && d.ponder !== false) {
+          const k = p.play(r.move);
+          if (!k && DotsEngine.ponderStart(p, -(d.lead || 0), d.level)) { const tok = ++pondering; setTimeout(() => ponderLoop(tok), 0); }
+        }
       } else if (d.type === 'analyze') {
         const r = DotsEngine.analyze(p, d.ms || 1500);
         self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact });

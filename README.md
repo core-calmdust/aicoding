@@ -31,7 +31,7 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 |---|---|---|---|---|
 | [将棋 SHOGI](https://core-calmdust.github.io/aicoding/shogi/) 🌐 | 10段階 | 14ステップ | 詰将棋137問 | Floodgateの棋譜・評価値で学習、駒落ち、ネット対戦 |
 | [Reversi V4](https://core-calmdust.github.io/aicoding/reversi/) 🌐 | 10段階 | 9ステップ | 詰めオセロ170問 | 学習型評価関数＋終盤20マス完全読み、定石トレーニング85本、ネット対戦（レーティング・部屋・ロビー） |
-| [ドット・アンド・ボックス](https://core-calmdust.github.io/aicoding/dots/) | 10段階 | 15ステップ＋図解ルール | 詰めドット450問（9テーマ） | 3×3は完全読み、4×4はLv9/10が完全プレイ（厳密解の定跡＋WebAssembly完全読み、4×4は引き分け）、ソルバー検証済みの定跡（3×3・4×4、学習＋通し練習） |
+| [ドット・アンド・ボックス](https://core-calmdust.github.io/aicoding/dots/) | 10段階 | 15ステップ＋図解ルール | 詰めドット450問（9テーマ） | 3×3は完全読み、4×4はLv9/10が完全プレイ（厳密解の定跡＋WebAssembly完全読み、4×4は引き分け）、5×5はLv9/10がWebAssembly解析器で終盤を早くから完全読み（勝敗の証明・負け手の回避・相手の手番中の先読み）、ソルバー検証済みの定跡（3×3・4×4、学習＋通し練習） |
 | [コネクトフォー](https://core-calmdust.github.io/aicoding/connect4/) | 8段階 | 5ステップ | 45問 | 完全解析（Lv8 は1手目から完全プレイ・先手なら必勝） |
 | [マンカラ](https://core-calmdust.github.io/aicoding/mancala/) | 10段階 | 6ステップ | 100問 | ノーマル／イージー／カラハ／スンカの4ルール、終盤完全読み、物理演算で転がる種、スマホ横画面モード |
 | [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon/) | 10段階 | 7ステップ | 16問 | wildbg由来のニューラルネット＋2手読み、ベアオフ完全DB、ダブリングキューブ、3/5/7点マッチ、スマホ横画面モード |
