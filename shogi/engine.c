@@ -95,17 +95,21 @@ static float nnSt[NST * 2 * 32];
 /* NNUE (chess-style): (2534 -> 256) x 2 perspectives -> 1, SCReLU; int16 weights (x QA), int32 accumulators */
 #define NUE_H 256
 #define NUE_IN 2534
-#define NUE_QA 255
+#define NUE_QA 127
 #define NUE_QB 64
 static int nueOn = 0;
-static i16 nueW1[NUE_IN * NUE_H], nueW2[2 * NUE_H];
-static i32 nueB1[NUE_H], nueB2;
-static i32 nueA[2][NUE_H];
-static i32 nueSt[NST][2][NUE_H];
+#define NUE_NB 8
+static int nueNB = 1;
+static i16 nueW1[NUE_IN * NUE_H], nueW2[NUE_NB * 2 * NUE_H];
+static i32 nueB1[NUE_H], nueB2[NUE_NB];
+/* output bucket: number of pieces in hand (both sides) */
+static inline int nueBucket(void) { if (nueNB == 1) return 0; int t = 0; for (int i = 1; i < 8; i++) t += hand[i] + hand[8 + i]; return t < 1 ? 0 : t < 3 ? 1 : t < 5 ? 2 : t < 7 ? 3 : t < 9 ? 4 : t < 12 ? 5 : t < 16 ? 6 : 7; }
+static i16 nueA[2][NUE_H];
+static i16 nueSt[NST][2][NUE_H];
 static inline int nueB(int persp, int p, int s) { return ((colorOf(p) != persp) * 14 + typeOf(p) - 1) * 81 + (persp ? 80 - s : s); }
 static inline int nueHd(int persp, int hc, int t, int n) { return n > 19 ? -1 : 2268 + ((hc != persp) * 7 + t - 1) * 19 + n - 1; }
-static inline void nueAdd(int persp, int f) { if (f < 0) return; i32 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
-static inline void nueSub(int persp, int f) { if (f < 0) return; i32 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] -= w[j]; }
+static inline void nueAdd(int persp, int f) { if (f < 0) return; i16 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
+static inline void nueSub(int persp, int f) { if (f < 0) return; i16 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] -= w[j]; }
 
 static void setKingCache(int c) {
   int k = king[c];
@@ -169,22 +173,23 @@ static double nnEval(void) {
 }
 static void nueRefresh(void) {
   for (int c = 0; c < 2; c++) {
-    for (int j = 0; j < NUE_H; j++) nueA[c][j] = nueB1[j];
+    for (int j = 0; j < NUE_H; j++) nueA[c][j] = (i16)nueB1[j];
     for (int s = 0; s < 81; s++) if (board[s]) nueAdd(c, nueB(c, board[s], s));
     for (int hc = 0; hc < 2; hc++) for (int t = 1; t <= 7; t++) for (int n = 1; n <= hand[hc * 8 + t]; n++) nueAdd(c, nueHd(c, hc, t, n));
   }
 }
 static double nueEval(void) {
-  const i32 *a = nueA[side], *b = nueA[side ^ 1];
+  const i16 *a = nueA[side], *b = nueA[side ^ 1];
+  const int bk = nueBucket(); const i16 *w2 = nueW2 + bk * 2 * NUE_H;
   long long sum = 0;
   for (int i0 = 0; i0 < NUE_H; i0 += 16) {
     i32 part = 0;
-    for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > NUE_QA ? NUE_QA : a[i]; part += x * x * nueW2[i]; }
+    for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > NUE_QA ? NUE_QA : a[i]; part += x * x * w2[i]; }
     sum += part; part = 0;
-    for (int i = i0; i < i0 + 16; i++) { i32 x = b[i] < 0 ? 0 : b[i] > NUE_QA ? NUE_QA : b[i]; part += x * x * nueW2[NUE_H + i]; }
+    for (int i = i0; i < i0 + 16; i++) { i32 x = b[i] < 0 ? 0 : b[i] > NUE_QA ? NUE_QA : b[i]; part += x * x * w2[NUE_H + i]; }
     sum += part;
   }
-  long long v = sum / NUE_QA + nueB2;
+  long long v = sum / NUE_QA + nueB2[bk];
   return (double)v * NN_K / (NUE_QA * NUE_QB);
 }
 static void refreshEval(void) {
@@ -1038,7 +1043,9 @@ EXPORT(get_eval) double get_eval(void) { return evaluate(); }
 EXPORT(nue_w1_ptr) i16 *nue_w1_ptr(void) { return nueW1; }
 EXPORT(nue_w2_ptr) i16 *nue_w2_ptr(void) { return nueW2; }
 EXPORT(nue_b1_ptr) i32 *nue_b1_ptr(void) { return nueB1; }
-EXPORT(nue_set_b2) void nue_set_b2(i32 b) { nueB2 = b; }
+EXPORT(nue_set_b2) void nue_set_b2(i32 b) { nueB2[0] = b; }
+EXPORT(nue_b2_ptr) i32 *nue_b2_ptr(void) { return nueB2; }
+EXPORT(nue_set_nb) void nue_set_nb(int n) { nueNB = n == NUE_NB ? NUE_NB : 1; }
 EXPORT(nue_enable) void nue_enable(int on) { nueOn = on; refreshEval(); }
 EXPORT(nn_w1_ptr) float *nn_w1_ptr(void) { return nnStore; }
 EXPORT(nn_b1_ptr) float *nn_b1_ptr(void) { return nnb1; }
