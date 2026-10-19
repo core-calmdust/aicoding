@@ -1203,6 +1203,7 @@ body.has-clk .player .status{grid-area:st}
 
 <script src="i18n.js?v=20261020rl"></script>
 <script src="../shared/pzbook.js?v=2"></script>
+<script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=2"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020pr"></script>
@@ -1836,7 +1837,7 @@ function showResult() {
     playChime(true);
   }
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
-  if (rx) $('#resultSub').innerHTML = esc(sub) + `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span><br><small style="color:var(--muted)">${esc(t('rt.opp', { lv: rtLvName(rated.lv), r: rated.or }))}</small>`;
+  if (rx) $('#resultSub').innerHTML = esc(sub) + `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`}<br><small style="color:var(--muted)">${esc(t('rt.opp', { lv: rtLvName(rated.lv), r: rated.or }))}</small>`;
   countUp($('#resB'), b); countUp($('#resW'), w);
   if (lost ? settings.mode === 'pvp' || lost !== humanColor : (settings.mode === 'ai' && !early && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
   showOverlay('#resultOverlay');
@@ -1922,6 +1923,7 @@ const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
 const rtLvName = lv => `Lv.${lv} ${LV(lv)}`;
 // opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) → nearest level
 function rtPick(r, rnd = Math.random) {
+  { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x]).slice(1)); }
   const u = rnd(), v = rnd();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100;
   const target = r + off;
@@ -1938,13 +1940,14 @@ function rtSettle(s, why) {
   if (rated.done) return rated.done;
   const st = rtLoad(), prev = st.hist.find(h => h.id === rated.id);
   if (prev) { rated.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return rated.done; }
-  const K = st.n < 10 ? 48 : 24, E = 1 / (1 + Math.pow(10, (rated.or - st.r) / 400));
-  const old = st.r, now = Math.max(0, Math.round(old + K * (s - E)));
+  const old = st.r, pl = Placement.on(st) ? Placement.record(st, rated.or, s) : null;   // 予備選: the first 3 games set the rating
+  const K = st.n < 10 ? 48 : 24, E = 1 / (1 + Math.pow(10, (rated.or - old) / 400));
+  const now = pl ? pl.r : Math.max(0, Math.round(old + K * (s - E)));
   st.r = now; st.n++; if (s === 1) st.w++; else if (s === 0) st.l++; else st.d++;
-  st.hist.push({ id: rated.id, t: Date.now(), lv: rated.lv, or: rated.or, s, d: now - old, r: now, why });
+  st.hist.push({ id: rated.id, t: Date.now(), lv: rated.lv, or: rated.or, s, d: now - old, r: now, why, pl: pl ? pl.k : undefined });
   if (st.hist.length > 100) st.hist = st.hist.slice(-100);
   rtStore(st);
-  rated.done = { old, now, d: now - old };
+  rated.done = { old, now, d: now - old, pl }; if (pl && pl.final) Placement.reveal(st, '');
   save();
   return rated.done;
 }
@@ -1981,6 +1984,7 @@ function rtResign() {
   });
 }
 function rtStart() {
+  if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
   const st = rtLoad(), pk = rtPick(st.r);
   settings.mode = 'ai';
   newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, or: pk.or, my: st.r, tag: pk.tag });
@@ -1988,8 +1992,9 @@ function rtStart() {
 }
 function rtStatsHtml() {
   const st = rtLoad(), h = st.hist.slice(-10).reverse();
-  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${esc(t('rt.title'))}</span><b class="rt-r">R ${st.r}</b>${st.n < 10 ? `<span class="rt-prov">${esc(t('rt.prov'))}</span>` : ''}</div>`;
+  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${esc(t('rt.title'))}</span><b class="rt-r">R ${st.r}</b>${Placement.on(st) ? Placement.badge(st) : st.n < 10 ? `<span class="rt-prov">${esc(t('rt.prov'))}</span>` : ''}</div>`;
   html += `<div class="rt-rec">${esc(st.n ? t('rt.rec', { n: st.n, w: st.w, l: st.l, d: st.d }) : t('rt.none'))}</div>`;
+  html += Placement.note(st);
   const sp = st.hist.slice(-30);
   if (sp.length >= 2) {
     const pts = [sp[0].r - sp[0].d].concat(sp.map(x => x.r)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 34;

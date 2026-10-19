@@ -41,6 +41,7 @@ let RT = get(RT_CUR, null);
 if (RT && !RT.id) RT = null;
 // opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) -> nearest level
 function rtPick(r) {
+  { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x]).slice(1)); }
   const u = Math.random(), v = Math.random();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
   let lv = 1; for (let i = 2; i <= 8; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
@@ -56,13 +57,14 @@ function rtSettle(s, why) {
   if (RT.done) return RT.done;
   const st = rtLoad(), prev = st.hist.find(h => h.id === RT.id);
   if (prev) { RT.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; put(RT_CUR, RT); return RT.done; }
-  const K = st.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (RT.or - st.r) / 400));
-  const old = st.r, now = Math.max(0, Math.round(old + K * (s - Ex)));
+  const old = st.r, pl = Placement.on(st) ? Placement.record(st, RT.or, s) : null;   // 予備選: the first 3 games set the rating
+  const K = st.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (RT.or - old) / 400));
+  const now = pl ? pl.r : Math.max(0, Math.round(old + K * (s - Ex)));
   st.r = now; st.n++; if (s === 1) st.w++; else if (s === 0) st.l++; else st.d++;
-  st.hist.push({ id: RT.id, t: Date.now(), lv: RT.lv, or: RT.or, s, d: now - old, r: now, why });
+  st.hist.push({ id: RT.id, t: Date.now(), lv: RT.lv, or: RT.or, s, d: now - old, r: now, why, pl: pl ? pl.k : undefined });
   if (st.hist.length > 100) st.hist = st.hist.slice(-100);
   put(RT_STORE, st);
-  RT.done = { old, now, d: now - old }; put(RT_CUR, RT);
+  RT.done = { old, now, d: now - old, pl }; if (pl && pl.final) Placement.reveal(st, ''); put(RT_CUR, RT);
   return RT.done;
 }
 function rtSettleBoard() {
@@ -79,6 +81,7 @@ function rtForfeit() {
 }
 let pick = null;   // the opponent shown in the dialog: {lv, or, tag}
 function rtStart() {
+  if (Placement.gate(rtLoad(), s => put(RT_STORE, s), () => { pick = null; rtStart(); })) return;
   const st = rtLoad(), pk = pick || rtPick(st.r);
   pick = null;
   const human = Math.random() < 0.5 ? P1 : P2;   // rated: random colour
@@ -91,8 +94,9 @@ function rtStart() {
 }
 function rtStatsHtml() {
   const st = rtLoad(), h = st.hist.slice(-10).reverse();
-  let html = `<div class="rt-card"><div class="rt-head"><b class="rt-r">R ${st.r}</b>${st.n < 10 ? `<span class="rt-prov">${esc(t('rt.prov'))}</span>` : ''}</div>`;
+  let html = `<div class="rt-card"><div class="rt-head"><b class="rt-r">R ${st.r}</b>${Placement.on(st) ? Placement.badge(st) : st.n < 10 ? `<span class="rt-prov">${esc(t('rt.prov'))}</span>` : ''}</div>`;
   html += `<div class="rt-rec">${esc(st.n ? t('rt.rec', { n: st.n, w: st.w, l: st.l, d: st.d }) : t('rt.none'))}</div>`;
+  html += Placement.note(st);
   const sp = st.hist.slice(-30);
   if (sp.length >= 2) {
     const pts = [sp[0].r - sp[0].d].concat(sp.map(x => x.r)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 40;
@@ -170,7 +174,7 @@ onGameEnd = function (st) {
   _onGameEnd.apply(this, arguments);
   if (was || !rtGame()) return;
   const x = rtSettleBoard(); if (!x) return;
-  $('#resultSub').innerHTML = esc(t('res.vs', { name: LV(RT.lv), lv: RT.lv })) + `<br><span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span><br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
+  $('#resultSub').innerHTML = esc(t('res.vs', { name: LV(RT.lv), lv: RT.lv })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
   renderInfo();
 };
 segSync = function () {

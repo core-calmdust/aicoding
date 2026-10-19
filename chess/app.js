@@ -606,7 +606,7 @@ function onGameEnd(st) {
   let sub = t('res.why.' + st.why) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) });
   if (rgame) {
     const rx = rtSettle(st);
-    if (rx) sub += `<br><span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span> · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
+    if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   const mk = settings.mode === 'ai' ? mistakeProblems() : [];
@@ -824,6 +824,7 @@ function rtRank(r) { let k = 0; while (k < RT_CLASS.length && r >= RT_CLASS[k]) 
 const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
 const rtLvName = lv => `Lv.${lv} ${LV(lv)}`;
 function rtPick(r) {
+  { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x]).slice(1)); }
   const u = Math.random(), v = Math.random();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
   let lv = 1; for (let i = 1; i <= 10; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
@@ -853,12 +854,13 @@ function rtSettle(st) {
   const S = rtLoad(), prev = S.hist.find(h => h.id === R.id);
   if (prev) { R.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return R.done; }
   const sc = st.draw || !st.winner ? 0.5 : st.winner === humanColor ? 1 : 0;
-  const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - S.r) / 400));
-  const old = S.r, now = Math.max(0, Math.round(old + K * (sc - Ex)));
+  const old = S.r, pl = Placement.on(S) ? Placement.record(S, R.or, sc) : null;   // 予備選: the first 3 games set the rating
+  const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - old) / 400));
+  const now = pl ? pl.r : Math.max(0, Math.round(old + K * (sc - Ex)));
   S.r = now; S.n++; if (sc === 1) S.w++; else if (sc === 0) S.l++; else S.d++;
-  S.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s: sc, d: now - old, r: now, why: st.why });
+  S.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s: sc, d: now - old, r: now, why: st.why, pl: pl ? pl.k : undefined });
   if (S.hist.length > 100) S.hist = S.hist.slice(-100);
-  rtStore(S); R.done = { old, now, d: now - old }; if (!R.over) R.over = st; save();
+  rtStore(S); R.done = { old, now, d: now - old, pl }; if (pl && pl.final) Placement.reveal(S, rtRank(now)); if (!R.over) R.over = st; save();
   return R.done;
 }
 function rtForfeit() {
@@ -870,6 +872,7 @@ function rtForfeit() {
   return x;
 }
 function rtStart() {
+  if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
   const S = rtLoad(), pk = rtPick(S.r);
   exitSpecial();
   settings.mode = 'ai';
@@ -878,8 +881,9 @@ function rtStart() {
 }
 function rtStatsHtml() {
   const S = rtLoad(), h = S.hist.slice(-10).reverse();
-  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${t('rt.title')}</span><b class="rt-r">R ${S.r}</b><span class="rt-rank">${rtRank(S.r)}</span>${S.n < 10 ? `<span class="rt-prov">${t('rt.prov')}</span>` : ''}</div>`;
+  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${t('rt.title')}</span><b class="rt-r">R ${S.r}</b><span class="rt-rank">${rtRank(S.r)}</span>${Placement.on(S) ? Placement.badge(S) : S.n < 10 ? `<span class="rt-prov">${t('rt.prov')}</span>` : ''}</div>`;
   html += `<div class="rt-rec">${S.n ? t('rt.rec', { n: S.n, w: S.w, l: S.l, d: S.d }) : t('rt.none')}</div>`;
+  html += Placement.note(S);
   const sp = S.hist.slice(-30);
   if (sp.length >= 2) {
     const pts = [sp[0].r - sp[0].d].concat(sp.map(x => x.r)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 34;
