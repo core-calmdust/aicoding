@@ -1714,7 +1714,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== rated games vs the AI (solo, nine men's morris)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
-const RT_LV = [0, 600, 800, 1000, 1150, 1300, 1450, 1600, 1800, 1950, 2100];   // this site's own scale
+const RT_LV = [0, 350, 550, 1000, 1400, 1650, 1750, 1900, 2350, 2500, 2550];   // this site's own scale, measured by level-vs-level self-play (Lv3 = 1000)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
