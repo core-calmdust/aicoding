@@ -413,28 +413,31 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
   :root{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html,body{height:auto;overflow-x:hidden;overflow-y:auto}
-  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:5px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand players ctrl" "board board board" "ls ls ls" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
+  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "ctrl ctrl" "board board" "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
   .side, .side-in{display:contents}
   .board-area{grid-area:board;justify-self:center}
   .frame{touch-action:pan-y}
-  .brand{grid-area:brand;flex-direction:row;align-items:center;gap:8px;height:34px;padding:0 2px}
-  .brand-l{min-width:0;flex:none}
-  .brand h1{font-size:15px;letter-spacing:.02em;overflow:visible;flex:none}
+  .brand{grid-area:brand;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;height:32px;padding:0 2px;min-width:0}
+  .brand-l{min-width:0;flex:0 1 auto;overflow:hidden}
+  .brand h1{font-size:14px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none;max-width:100%}
   .brand h1 small{display:none}
   .brand a.series{display:none}
-  .brand-r{gap:4px;flex-wrap:nowrap}
-  #langSel{max-width:74px}
-  .players{grid-area:players;grid-template-columns:repeat(2, minmax(0,1fr));gap:5px;padding:0;background:none;border:none;box-shadow:none;height:34px}
-  .player{display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:8px;height:34px;border:1px solid var(--line)}
-  .player .top{flex:1 1 auto;min-width:0;gap:6px}
+  .brand-r{gap:4px;flex-wrap:nowrap;flex:none;align-items:center}
+  .brand-r .snd{width:32px;height:30px;flex:none}
+  .brand-r .snd svg{width:16px;height:16px}
+  #langSel{width:76px;max-width:76px;height:30px;padding:0 4px;font-size:12px;line-height:28px;-webkit-appearance:menulist;flex:none}
+  .players{grid-area:players;display:flex;gap:5px;padding:0;background:none;border:none;box-shadow:none;height:32px;justify-self:end;min-width:0}
+  .player{display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:8px;height:32px;border:1px solid var(--line);flex:0 0 auto;width:auto;min-width:0}
+  .player .top{flex:0 1 auto;min-width:0;gap:5px}
+  .player .pdisc{width:14px;height:14px;flex:none}
   .player .name{font-size:11px}
   .player .row{margin:0;flex:none;gap:6px}
-  .player .count{font-size:17px;line-height:1}
+  .player .count{font-size:16px;line-height:1;white-space:nowrap}
   .player .count small{display:none}
   .player .score{font-size:11px}
   .player .status{display:none}
-  .controls{grid-area:ctrl;display:flex;gap:4px;padding:0;background:none;border:none;box-shadow:none;height:34px}
-  .btn{flex:none;width:34px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
+  .controls{grid-area:ctrl;display:flex;justify-content:flex-end;align-items:center;gap:5px;padding:0;background:none;border:none;box-shadow:none;height:30px}
+  .btn{flex:none;width:40px;height:30px;flex-direction:row;justify-content:center;align-items:center;gap:0;padding:0;font-size:9px;border-radius:8px}
   .btn span{display:none}
   .btn svg{width:17px;height:17px}
   .lesson-card,.puzzle-card{grid-area:ls;flex:none;overflow:visible}
@@ -447,6 +450,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .kifu{max-height:none;overflow:visible}
   #rvBody, #hintBody{overflow:visible}
   .card{padding:8px 10px;border-radius:12px}
+  .card.players, .card.controls{padding:0;border-radius:0}
   .evalrow{margin-bottom:5px}
   .evalbar{height:6px}
   .graph{height:56px;margin-top:6px}
@@ -455,7 +459,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .player .name .nl{display:none}
   .player .name .ns{display:inline}
   /* lessons / puzzles: the problem card becomes a slim strip in the top row, so the problem text and the whole board are visible together */
-  body:is(.in-lesson,.in-puzzle) .app{grid-template-areas:"brand ls ls" "board board board" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
+  body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"brand ls" "board board" "hint hint" "ev ev" "rv rv" "kf kf"}
   body:is(.in-lesson,.in-puzzle) .players{display:none}
   body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{display:grid;grid-area:ls;align-self:start;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;grid-template-areas:"lh a1 a2" "pr pr pr" "ch ch ch" "fb fb fb";column-gap:6px;align-items:center;padding:5px 8px 5px 10px;max-height:calc(var(--vh) * .36);overflow-y:auto;scrollbar-width:thin;border-radius:10px}
   :is(.lesson-card,.puzzle-card) .lh{grid-area:lh}
@@ -477,29 +481,32 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
   html.rot{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html.rot body{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
-  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:5px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand players ctrl" "board board board" "ls ls ls" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
+  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "ctrl ctrl" "board board" "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
   html.rot .side, html.rot .side-in{display:contents}
   html.rot .board-area{grid-area:board;justify-self:center}
   html.rot .frame{touch-action:none}
   html.rot body{touch-action:none}
-  html.rot .brand{grid-area:brand;flex-direction:row;align-items:center;gap:8px;height:34px;padding:0 2px}
-  html.rot .brand-l{min-width:0;flex:none}
-  html.rot .brand h1{font-size:15px;letter-spacing:.02em;overflow:visible;flex:none}
+  html.rot .brand{grid-area:brand;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;height:32px;padding:0 2px;min-width:0}
+  html.rot .brand-l{min-width:0;flex:0 1 auto;overflow:hidden}
+  html.rot .brand h1{font-size:14px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none;max-width:100%}
   html.rot .brand h1 small{display:none}
   html.rot .brand a.series{display:none}
-  html.rot .brand-r{gap:4px;flex-wrap:nowrap}
-  html.rot #langSel{max-width:74px}
-  html.rot .players{grid-area:players;grid-template-columns:repeat(2, minmax(0,1fr));gap:5px;padding:0;background:none;border:none;box-shadow:none;height:34px}
-  html.rot .player{display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:8px;height:34px;border:1px solid var(--line)}
-  html.rot .player .top{flex:1 1 auto;min-width:0;gap:6px}
+  html.rot .brand-r{gap:4px;flex-wrap:nowrap;flex:none;align-items:center}
+  html.rot .brand-r .snd{width:32px;height:30px;flex:none}
+  html.rot .brand-r .snd svg{width:16px;height:16px}
+  html.rot #langSel{width:76px;max-width:76px;height:30px;padding:0 4px;font-size:12px;line-height:28px;-webkit-appearance:menulist;flex:none}
+  html.rot .players{grid-area:players;display:flex;gap:5px;padding:0;background:none;border:none;box-shadow:none;height:32px;justify-self:end;min-width:0}
+  html.rot .player{display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:8px;height:32px;border:1px solid var(--line);flex:0 0 auto;width:auto;min-width:0}
+  html.rot .player .top{flex:0 1 auto;min-width:0;gap:5px}
+  html.rot .player .pdisc{width:14px;height:14px;flex:none}
   html.rot .player .name{font-size:11px}
   html.rot .player .row{margin:0;flex:none;gap:6px}
-  html.rot .player .count{font-size:17px;line-height:1}
+  html.rot .player .count{font-size:16px;line-height:1;white-space:nowrap}
   html.rot .player .count small{display:none}
   html.rot .player .score{font-size:11px}
   html.rot .player .status{display:none}
-  html.rot .controls{grid-area:ctrl;display:flex;gap:4px;padding:0;background:none;border:none;box-shadow:none;height:34px}
-  html.rot .btn{flex:none;width:34px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
+  html.rot .controls{grid-area:ctrl;display:flex;justify-content:flex-end;align-items:center;gap:5px;padding:0;background:none;border:none;box-shadow:none;height:30px}
+  html.rot .btn{flex:none;width:40px;height:30px;flex-direction:row;justify-content:center;align-items:center;gap:0;padding:0;font-size:9px;border-radius:8px}
   html.rot .btn span{display:none}
   html.rot .btn svg{width:17px;height:17px}
   html.rot .lesson-card, html.rot .puzzle-card{grid-area:ls;flex:none;overflow:visible}
@@ -512,6 +519,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html.rot .kifu{max-height:none;overflow:visible}
   html.rot #rvBody, html.rot #hintBody{overflow:visible}
   html.rot .card{padding:8px 10px;border-radius:12px}
+  html.rot .card.players, html.rot .card.controls{padding:0;border-radius:0}
   html.rot .evalrow{margin-bottom:5px}
   html.rot .evalbar{height:6px}
   html.rot .graph{height:56px;margin-top:6px}
@@ -520,7 +528,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html.rot .player .name .nl{display:none}
   html.rot .player .name .ns{display:inline}
   /* lessons / puzzles: the problem card becomes a slim strip in the top row, so the problem text and the whole board are visible together */
-  html.rot body:is(.in-lesson,.in-puzzle) .app{grid-template-areas:"brand ls ls" "board board board" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
+  html.rot body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"brand ls" "board board" "hint hint" "ev ev" "rv rv" "kf kf"}
   html.rot body:is(.in-lesson,.in-puzzle) .players{display:none}
   html.rot body.in-lesson .lesson-card, html.rot body.in-puzzle .puzzle-card{display:grid;grid-area:ls;align-self:start;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;grid-template-areas:"lh a1 a2" "pr pr pr" "ch ch ch" "fb fb fb";column-gap:6px;align-items:center;padding:5px 8px 5px 10px;max-height:calc(var(--vh) * .36);overflow-y:auto;scrollbar-width:thin;border-radius:10px}
   html.rot :is(.lesson-card,.puzzle-card) .lh{grid-area:lh}
