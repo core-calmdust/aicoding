@@ -217,7 +217,7 @@
   function warm(id) { if (initGL()) Table3D.prepare(id, window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null); }
   function flyOpen(id, img) {
     if (flying) return;
-    if (!img || !img.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return openBoard(id);
+    if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
     flying = true; initGL();
     const r = img.getBoundingClientRect(), W = innerWidth, H = innerHeight, wide = W > 900 && W / H > 1.25;
     const cx = wide ? W * .62 : W / 2, cy = wide ? H / 2 : H * .3;
@@ -228,7 +228,7 @@
     Object.assign(fly.style, { width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.25))', transformOrigin: '50% 55%', backfaceVisibility: 'visible' });
     wrap.appendChild(fly); document.body.appendChild(wrap); img.style.visibility = 'hidden';
     const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sc = Math.min(W * .55, 280) / Math.max(r.width, 1);
-    const T1 = 440;
+    const T1 = 720;
     wrap.animate([
       { transform: 'translate(0,0) scale(1)' },
       { transform: 'translate(0,8px) scale(1.06)', offset: .14 },
@@ -247,7 +247,7 @@
     let done = false;
     const finish = () => {   // pop: the icon bursts and the board lands
       if (done) return; done = true;
-      wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(${sc * 1.5})` }], { duration: 200, easing: 'ease-out', fill: 'forwards' })
+      wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(${sc * 1.5})` }], { duration: 280, easing: 'ease-out', fill: 'forwards' })
         .onfinish = () => { wrap.remove(); img.style.visibility = ''; flying = false; };
       burst();
     };
@@ -455,7 +455,6 @@
   function toast(s) { const el = $('toast'); el.textContent = s; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
   function bumpCoins() { const p = $('coinPill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
   function confetti(n) {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const cv = $('confetti'), g = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
     const cols = ['#ff5d5d', '#ffc928', '#3ccf91', '#36b4ff', '#8d6bff', '#ff7fbe'];
     const ps = Array.from({ length: n }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .45, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6.28, s: 6 + Math.random() * 6, c: cols[Math.random() * 6 | 0] }));
