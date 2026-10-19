@@ -1057,20 +1057,29 @@ const puzzlesReady = fetch('puzzles.json?v=20261019a').then(r => r.json()).then(
 let pzCat = 0, pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 const pzKey = (c, l, j) => PUZZLES.cats[c].id + '-' + PUZZLES.cats[c].levels[l].n + '-' + j;
+function pzLevelsHtml(c, pr, dl, di) {
+  const C = PUZZLES.cats[c];
+  return (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pzc.' + PUZZLES.cats[dl.c].id)} · ${t('pz.winIn', { n: PUZZLES.cats[dl.c].levels[dl.l].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="lst ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
+    `<p class="ls-course"><b>${t('pzc.' + C.id)}</b><small>${t('pzc.' + C.id + '.sub')}</small></p>` +
+    C.levels.map((L, i) => {
+      const solved = L.puzzles.filter((_, j) => pr[pzKey(c, i, j)]).length;
+      return `<button class="lesson-item" data-i="${i}"><span class="no">${L.n}</span><span class="tx"><b>${t('pz.winIn', { n: L.n })}</b><small>${t('pzl.' + C.id, { n: L.n, k: L.puzzles.length })}</small></span><span class="lst ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+    }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit', { n: PUZZLES.total })}</p>`;
+}
 async function openPuzzles(cat) {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
   if (cat !== undefined) pzCat = cat;
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
   $('#pzCats').innerHTML = PUZZLES.cats.map((C, i) => `<button data-c="${i}" class="${i === pzCat ? 'sel' : ''}">${t('pzc.' + C.id)}</button>`).join('');
-  const C = PUZZLES.cats[pzCat];
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pzc.' + PUZZLES.cats[dl.c].id)} · ${t('pz.winIn', { n: PUZZLES.cats[dl.c].levels[dl.l].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="lst ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
-    `<p class="ls-course"><b>${t('pzc.' + C.id)}</b><small>${t('pzc.' + C.id + '.sub')}</small></p>` +
-    C.levels.map((L, i) => {
-      const solved = L.puzzles.filter((_, j) => pr[pzKey(pzCat, i, j)]).length;
-      return `<button class="lesson-item" data-i="${i}"><span class="no">${L.n}</span><span class="tx"><b>${t('pz.winIn', { n: L.n })}</b><small>${t('pzl.' + C.id, { n: L.n, k: L.puzzles.length })}</small></span><span class="lst ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
-    }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit', { n: PUZZLES.total })}</p>`;
+  const box = $('#pzLevels');
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
+  // keep the box the size of the tallest category so switching categories does not resize the dialog
+  box.style.minHeight = ''; box.style.alignContent = 'start';
+  let hMax = 0;
+  for (let c = 0; c < PUZZLES.cats.length; c++) { box.innerHTML = pzLevelsHtml(c, pr, dl, di); hMax = Math.max(hMax, box.offsetHeight); }
+  box.innerHTML = pzLevelsHtml(pzCat, pr, dl, di);
+  if (hMax) box.style.minHeight = hMax + 'px';
 }
 $('#pzCats').onclick = e => { const b = e.target.closest('button[data-c]'); if (b) openPuzzles(+b.dataset.c); };
 $('#pzLevels').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.c, dl.l, dl.j, dl.date); } else openPzGrid(+b.dataset.i); };
