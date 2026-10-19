@@ -189,6 +189,7 @@
       });
     })(performance.now());
   }
+  (window.requestIdleCallback || (f => setTimeout(f, 1200)))(() => { if (!glOK) initGL(); });
   function renderHome() {
     renderHero();
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
@@ -199,7 +200,7 @@
     $('iconGrid').innerHTML = A_.byUpdate().map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
         <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
-    document.querySelectorAll('#updRow [data-g], #iconGrid [data-g]').forEach(b => b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')));
+    document.querySelectorAll('#updRow [data-g], #iconGrid [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     renderProfile();
   }
 
@@ -213,28 +214,36 @@
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
+  function warm(id) { if (initGL()) Table3D.prepare(id, window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null); }
   function flyOpen(id, img) {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (flying) return;
-    if (!img || reduce || !img.animate) return openBoard(id);
-    flying = true;
-    const r = img.getBoundingClientRect(), W = innerWidth, H = innerHeight;
-    const size = Math.min(W * .62, H * .42, 360), cx = W / 2, cy = W > 900 && W / H > 1.25 ? H / 2 : H * .3;
-    const fly = img.cloneNode(); fly.removeAttribute('loading');
-    Object.assign(fly.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: 0, zIndex: 90, pointerEvents: 'none', objectFit: 'contain', filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.25))', transform: 'none', right: 'auto', bottom: 'auto' });
-    document.body.appendChild(fly);
-    img.style.visibility = 'hidden';
-    const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sc = size / Math.max(r.width, 1);
+    if (!img || !img.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return openBoard(id);
+    flying = true; initGL();
+    const r = img.getBoundingClientRect(), W = innerWidth, H = innerHeight, wide = W > 900 && W / H > 1.25;
+    const cx = wide ? W * .62 : W / 2, cy = wide ? H / 2 : H * .3;
+    const fly = img.cloneNode(); fly.removeAttribute('loading'); fly.removeAttribute('class');
+    Object.assign(fly.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: 0, zIndex: 90, pointerEvents: 'none', objectFit: 'contain', filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.25))', transform: 'none', right: 'auto', bottom: 'auto', transformOrigin: '50% 60%' });
+    document.body.appendChild(fly); img.style.visibility = 'hidden';
+    const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sc = Math.min(W * .5, 260) / Math.max(r.width, 1);
+    // anticipation squash → leap with stretch → arrive
     fly.animate([
-      { transform: 'translate(0,0) rotate(0) scale(1)' },
-      { transform: `translate(${dx * .55}px, ${dy * .55 - 60}px) rotate(200deg) scale(${1 + (sc - 1) * .6})`, offset: .55 },
-      { transform: `translate(${dx}px, ${dy}px) rotate(360deg) scale(${sc})` },
-    ], { duration: 460, easing: 'cubic-bezier(.45,.05,.35,1)', fill: 'forwards' });
+      { transform: 'translate(0,0) scale(1,1)' },
+      { transform: 'translate(0,6px) scale(1.14,.82)', offset: .2 },
+      { transform: `translate(${dx * .5}px, ${dy * .5 - 70}px) scale(${sc * .55},${sc * .7}) rotate(-12deg)`, offset: .62 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${sc},${sc}) rotate(0deg)` },
+    ], { duration: 300, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'forwards' });
+    requestAnimationFrame(() => setTimeout(() => warm(id), 0));
     setTimeout(() => {
       openBoard(id, true, true);
-      $('bv').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
-      fly.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) rotate(360deg) scale(${sc})` }, { opacity: 0, transform: `translate(${dx}px, ${dy}px) rotate(380deg) scale(${sc * 1.35})` }], { duration: 300, easing: 'ease-in', fill: 'forwards' }).onfinish = () => { fly.remove(); img.style.visibility = ''; flying = false; };
-    }, 420);
+      setTimeout(() => { fly.remove(); img.style.visibility = ''; flying = false; }, 90);
+    }, 290);
+  }
+  // star burst at the board when the icon turns into it
+  function burst() {
+    const gl = $('gl').getBoundingClientRect(), b = document.createElement('div');
+    b.className = 'burst'; b.style.left = (gl.left + gl.width / 2) + 'px'; b.style.top = (gl.top + gl.height * .5) + 'px';
+    b.innerHTML = '<i></i>' + Array.from({ length: 10 }, (_, i) => `<b style="--a:${i * 36}deg"></b>`).join('');
+    $('bv').appendChild(b); setTimeout(() => b.remove(), 600);
   }
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
@@ -242,7 +251,11 @@
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
-    if (initGL()) { Table3D.show(id); Table3D.play(false); }
+    if (initGL()) {
+      const can = flown && window.Icons3D && Icons3D.ICONS[id];
+      Table3D.show(id, null, can ? { introFromCache: true, intro: null, introScale: 1.9, onSwap: burst } : {});
+      Table3D.play(false);
+    }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
     const rows = [];
@@ -257,7 +270,8 @@
       <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div>`;
     if (ad) $('bvStart').onclick = startPlay;
     fitStage();
-    if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 160 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
+    if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 520 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
+    $('dhint').querySelector('span').textContent = t('drag');
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close'));
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)

@@ -8,6 +8,7 @@
    ===================================================================== */
 (function () {
   'use strict';
+  if (!window.THREE || !window.Table3D) return;
   const T = THREE, X = Table3D, M = X.M, mesh = X.mesh;
   const C = (hex, o) => M(Object.assign({ color: hex, roughness: .42 }, o || {}));
   const gloss = (hex) => C(hex, { roughness: .22 });

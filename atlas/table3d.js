@@ -226,6 +226,7 @@
   };
 
   /* ---------- scene ---------- */
+  let vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   function mount(container) {
     el = container;
@@ -244,9 +245,17 @@
     const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: wood('table', '#c98b52', '#8a5428', 1024, 1024, 2), roughness: .6 }));
     table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
     root = new (T().Group)(); scene.add(root);
-    container.addEventListener('pointerdown', e => { if (mode === 'view') { drag = { x: e.clientX, y: yaw }; spin = false; } });
-    container.addEventListener('pointermove', e => { if (drag) yaw = drag.y + (e.clientX - drag.x) * .008; });
-    const up = () => { drag = null; };
+    // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
+    container.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
+    container.addEventListener('pointermove', e => {
+      if (!drag) return;
+      if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) { drag.moved = true; spin = false; try { container.setPointerCapture(e.pointerId); } catch (x) {} }
+      if (!drag.moved) return;
+      const dx = e.clientX - drag.lx, dy = e.clientY - drag.ly, now = performance.now(), dt = Math.max(8, now - drag.t);
+      yaw += dx * .011; vel = dx * .011 / dt * 16; tilt = Math.max(-.35, Math.min(.35, tilt + dy * .004));
+      drag.lx = e.clientX; drag.ly = e.clientY; drag.t = now;
+    });
+    const up = () => { if (drag && drag.moved) { dragEnd = performance.now(); idleT = performance.now(); } drag = null; };
     container.addEventListener('pointerup', up); container.addEventListener('pointercancel', up);
     new ResizeObserver(resize).observe(container); resize();
     loop();
@@ -265,24 +274,61 @@
     const pitch = .78 + k * .55;                       // view: 3/4 · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
-  function show(id, model) {
+  // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
+  // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
+  const ease = { outBack: k => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2), out3: k => 1 - Math.pow(1 - k, 3), in2: k => k * k };
+  function dispose(o) { o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); }
+  // build (and compile shaders for) a board ahead of time, e.g. on pointerdown, so the transition doesn't hitch
+  const prepared = {};
+  function prepare(id, extra) {
+    if (!R || prepared[id] || !MODELS[id]) return;
+    const g = MODELS[id](), tmp = new (T().Scene)(); tmp.add(g); if (extra) tmp.add(extra);
+    try { R.compile(tmp, cam); } catch (e) {}
+    tmp.remove(g); if (extra) tmp.remove(extra);
+    prepared[id] = { g, extra };
+  }
+  function take(id) { const p = prepared[id]; delete prepared[id]; return p; }
+  function show(id, model, opts = {}) {
     if (!R) return null;
-    mode = 'view'; camTo = 0; spin = true; yaw = 0;
-    if (cur) { const old = cur; root.remove(old); old.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
-    const g = model || (MODELS[id] ? MODELS[id]() : null);
+    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now();
+    if (cur) { const old = cur; root.remove(old); dispose(old); }
+    const pre = !model && take(id);
+    const g = model || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
+    if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
-    cur = new (T().Group)(); cur.add(g); root.add(cur);
-    const c = cur, start = performance.now();
-    c.scale.setScalar(.01);
-    (function anim(now) {   // pop in: drop + springy scale
-      const k = Math.min(1, (now - start) / 560);
-      const e = k === 1 ? 1 : 1 - Math.pow(2, -9 * k) * Math.cos(k * 10);
-      c.scale.setScalar(Math.max(.01, e)); c.position.y = Math.max(0, 1 - k * 1.8) * 4;
-      if (k < 1) requestAnimationFrame(anim);
-    })(start);
+    const c = new (T().Group)(); c.add(g); cur = c;
+    const land = () => {        // board drops in and lands with squash & stretch
+      root.add(c);
+      const t0 = performance.now();
+      (function anim(now) {
+        const t = now - t0; let y = 0, sy = 1, sxz = 1;
+        if (t < 150) { const k = ease.in2(t / 150); y = 3.2 * (1 - k); sy = 1.12; sxz = .9; }
+        else if (t < 250) { const k = (t - 150) / 100; sy = 1.12 - .44 * Math.sin(k * Math.PI / 2); sxz = .9 + .26 * Math.sin(k * Math.PI / 2); }
+        else if (t < 430) { const k = ease.out3((t - 250) / 180); sy = .68 + .4 * k; sxz = 1.16 - .2 * k; }
+        else if (t < 560) { const k = ease.out3((t - 430) / 130); sy = 1.08 - .08 * k; sxz = .96 + .04 * k; }
+        c.position.y = y; c.scale.set(sxz, sy, sxz);
+        if (t < 560 && cur === c) requestAnimationFrame(anim); else c.scale.set(1, 1, 1);
+      })(t0);
+    };
+    if (!opts.intro) { land(); return g; }
+    // intro: the icon spins one turn while it grows and rises, then pops
+    const ic = new (T().Group)(); ic.add(opts.intro); root.add(ic); spin = false; yaw = 0;
+    const t0 = performance.now(), S0 = opts.introScale || 1.7, D = 380;
+    (function anim(now) {
+      const k = Math.min(1, (now - t0) / D);
+      const s = S0 * (.55 + .45 * ease.outBack(k));
+      ic.scale.setScalar(s); ic.position.y = Math.sin(k * Math.PI) * 1.4;
+      ic.rotation.y = Math.PI / 4 - (1 - ease.out3(k)) * Math.PI * 2;
+      if (k < 1 && cur === c) return requestAnimationFrame(anim);
+      root.remove(ic); dispose(ic);
+      if (cur !== c) return;
+      if (opts.onSwap) opts.onSwap();
+      land(); spin = true;
+    })(t0);
     return g;
   }
-  function play(on) { mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; }
+  function play(on) { mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; }
+  const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
   function pick(ev, y) {
     if (!cur) return null;
@@ -297,14 +343,19 @@
     requestAnimationFrame(loop);
     if (document.hidden || !el.offsetParent) return;
     camK += (camTo - camK) * .07;
-    if (mode === 'play') yaw *= .88; else if (spin) yaw += .004;
-    root.rotation.y = mode === 'play' ? yaw : Math.sin(yaw) * .5;
-    const p = camPose(camK), q = camPose(0), r2 = camPose(1);
-    cam.position.set(0, q[1] + (r2[1] - q[1]) * camK, q[2] + (r2[2] - q[2]) * camK);
+    if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
+    if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
+    if (!drag && !vel && mode === 'play' && performance.now() - idleT > 1800) {           // in a game, ease back to the home angle
+      const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .06;
+    }
+    root.rotation.y = yaw;
+    const q = camPose(0), r2 = camPose(1), k = camK;
+    const py = q[1] + (r2[1] - q[1]) * k, pz = q[2] + (r2[2] - q[2]) * k, d = Math.hypot(py, pz), a = Math.atan2(py, pz) + tilt;
+    cam.position.set(0, d * Math.sin(a), d * Math.cos(a));
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
     cam.lookAt(0, .4, 0);   // the canvas itself is kept clear of the info card (app.js fitStage)
     R.render(scene, cam);
   }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
 })();

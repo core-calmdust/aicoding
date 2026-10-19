@@ -125,7 +125,7 @@
       ctx.onEnd({ win: me > op, draw: me === op, level: ctx.level, score: me + ' - ' + op });
     }
     function onClick(e) {
-      if (over || busy || turn !== human) return;
+      if (over || busy || turn !== human || T3.wasDrag()) return;
       const p = T3.pick(e, Y); if (!p) return;
       const c = Math.floor((p.x + S / 2) / (S / 8)), r = Math.floor((p.z + S / 2) / (S / 8));
       if (c < 0 || c > 7 || r < 0 || r > 7) return;
