@@ -32,8 +32,9 @@ function applyI18n() {
 const STORE = 'aicoding-backgammon-v2';
 const settings = { mode: 'ai', color: 0, level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: false, anim: true, sound: true, hint: false, lang: '' };
 const $ = s => document.querySelector(s);
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const anim = () => settings.anim && !reduceMotion;
+// the game's own animation setting is the only switch (the OS "reduce motion" preference is not used: the user
+// asked for dice / checker animations to play regardless)
+const anim = () => !!settings.anim;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // match: {seed, len, cube, games:[{actions, start:[a,b], crawford}]}
@@ -389,6 +390,7 @@ function diceLayout(s, dice, usedCount) {
   return null;
 }
 function renderDice(s, dice, used) {
+  if (rollAnimating) return;
   // used: array of booleans per die (non-double) or count (double)
   if (!dice) { diceLayer.innerHTML = ''; return; }
   const cx = s === view ? G.RX + 3 : G.LX + 3, y = G.MID;
@@ -403,45 +405,56 @@ addEventListener('pointerdown', () => { if (rollAnimating) rollSkip = true; }, {
 function setPips(el, v) { const on = new Set(PIPS[v] || []); el.querySelectorAll('i').forEach((i, k) => i.classList.toggle('on', on.has(k))); }
 async function rollAnim(s, dice, opening) {
   SFX.dice();
-  if (!anim()) return;
+  if (!settings.anim) return;                       // animations switched off in the settings: instant
+  const gentle = false;
+  const touch = matchMedia('(pointer: coarse)').matches;
   const cx = s === view ? G.RX + 3 : G.LX + 3;
   // [side, final value, final x, direction (+1: comes from the right)]
   const items = opening
     ? [[0, dice[0], 0 === view ? G.RX + 3 : G.LX + 3], [1, dice[1], 1 === view ? G.RX + 3 : G.LX + 3]].map(([ss, v, x]) => [ss, v, x, x > G.BX ? 1 : -1])
     : [[s, dice[0], cx - 0.55, cx > G.BX ? 1 : -1], [s, dice[1], cx + 0.55, cx > G.BX ? 1 : -1]];
+  rollAnimating = true; rollSkip = false;
   diceLayer.innerHTML = items.map(([ss, v, x]) => dieHTML(ss, v, x, G.MID)).join('');
   const els = [...diceLayer.querySelectorAll('.die')];
   const P = items.map(([ss, v, x, dir], i) => {
     const edge = dir > 0 ? (x > G.BX ? G.RE - 0.45 : G.BX - 0.45) : (x > G.BX ? G.RX + 0.45 : G.LX + 0.45);
-    return { el: els[i], v, x1: x, x0: edge + dir * 0.2, y0: G.MID + (i ? 0.9 : -0.9) * (Math.random() * 0.6 + 0.4), dir, spin: (Math.random() * 0.6 + 0.7) * dir * 720, wob: Math.random() * 6, face: v, next: 0 };
+    return { el: els[i], v, x1: x, x0: gentle ? x : edge + dir * 0.2, y0: gentle ? G.MID : G.MID + (i ? 0.9 : -0.9) * (Math.random() * 0.6 + 0.4), dir,
+      spin: (Math.random() * 0.6 + 0.9) * dir * 720, ph: Math.random() * 6, face: 0, next: 0 };
   });
-  const dur = 760, t0 = performance.now(), persp = Math.round(uPx() * 6);
-  rollAnimating = true; rollSkip = false;
+  const dur = gentle ? 700 : touch ? 1000 : 780, t0 = performance.now();
   let landed = 0;
   try {
     for (;;) {
       const el = performance.now() - t0, t = Math.min(1, el / dur);
       if (rollSkip || t >= 1) break;
-      const e = 1 - Math.pow(1 - Math.min(1, t / 0.82), 3);           // ease-out travel
-      // bounce height: a high first hop, a small second one, then rest
-      const h = t < 0.42 ? Math.sin(Math.PI * t / 0.42) * 0.9 : t < 0.68 ? Math.sin(Math.PI * (t - 0.42) / 0.26) * 0.28 : 0;
-      if (t >= 0.42 && landed === 0) landed = 1;
-      if (t >= 0.68 && landed === 1) { landed = 2; SFX.land(); }
+      if (!diceLayer.contains(P[0].el)) diceLayer.replaceChildren(...P.map(d => d.el));   // re-attach if something cleared the layer
+      const e = 1 - Math.pow(1 - Math.min(1, t / 0.8), 3);              // ease-out travel
+      const h = gentle ? 0 : t < 0.42 ? Math.sin(Math.PI * t / 0.42) * 0.9 : t < 0.66 ? Math.sin(Math.PI * (t - 0.42) / 0.24) * 0.28 : 0;
+      if (!gentle && t >= 0.42 && landed === 0) landed = 1;
+      if (!gentle && t >= 0.66 && landed === 1) { landed = 2; SFX.land(); }
       for (const d of P) {
-        const x = d.x0 + (d.x1 - d.x0) * e, y = d.y0 + (G.MID - d.y0) * e - h * 0.35;
+        const x = d.x0 + (d.x1 - d.x0) * e, y = d.y0 + (G.MID - d.y0) * e - h * 0.4;
         d.el.style.left = U(x); d.el.style.top = U(y);
-        const k = 1 - e, sq = landed && h < 0.05 && t < 0.78 ? 0.92 : 1;
-        d.el.style.transform = `perspective(${persp}px) rotateZ(${(d.spin * k).toFixed(1)}deg) rotateX(${(Math.sin(el / 45 + d.wob) * 38 * k).toFixed(1)}deg) rotateY(${(Math.cos(el / 52 + d.wob) * 32 * k).toFixed(1)}deg) scale(${(1 + h * 0.22).toFixed(3)}, ${(sq * (1 + h * 0.22)).toFixed(3)})`;
-        d.el.style.boxShadow = h > 0.02 ? `0 calc(var(--u) * ${(0.08 + h * 0.35).toFixed(2)}) calc(var(--u) * ${(0.14 + h * 0.3).toFixed(2)}) rgba(0,0,0,.45)` : '';
-        // faces cycle while tumbling (slowing down), the final face shows from ~70%
-        if (t > 0.7) { if (d.face !== d.v) { d.face = d.v; setPips(d.el, d.v); } }
-        else if (el >= d.next) { d.face = 1 + Math.floor(Math.random() * 6); setPips(d.el, d.face); d.next = el + 45 + t * 110; }
+        let tf;
+        if (gentle) {   // small pulse only
+          const k = 1 - t; tf = `scale(${(1 + 0.06 * Math.sin(el / 60) * k).toFixed(3)})`; d.el.style.opacity = (0.75 + 0.25 * Math.min(1, t * 3)).toFixed(2);
+        } else {
+          // 2D only (works everywhere): spin + a fake tumble by squashing one axis, lifted while airborne
+          const k = 1 - e, tumble = Math.abs(Math.cos(el / 70 + d.ph)) * k;
+          const sq = landed && h < 0.05 && t < 0.76 ? 0.9 : 1;
+          tf = `rotate(${(d.spin * k).toFixed(1)}deg) scale(${((1 + h * 0.25) * (1 - 0.35 * tumble)).toFixed(3)}, ${((1 + h * 0.25) * sq).toFixed(3)})`;
+          d.el.style.boxShadow = h > 0.02 ? `0 ${(uPx() * (0.08 + h * 0.4)).toFixed(1)}px ${(uPx() * (0.14 + h * 0.3)).toFixed(1)}px rgba(0,0,0,.45)` : '';
+        }
+        d.el.style.transform = tf;
+        // faces change about every 70 ms while rolling; the result shows for the last ~22 %
+        if (t > 0.78) { if (d.face !== d.v) { d.face = d.v; setPips(d.el, d.v); } }
+        else if (el >= d.next) { let f; do { f = 1 + Math.floor(Math.random() * 6); } while (f === d.face); d.face = f; setPips(d.el, f); d.next = el + 70; }
       }
       await new Promise(r => requestAnimationFrame(r));
     }
   } finally { rollAnimating = false; }
-  if (landed < 2) SFX.land();
-  for (const d of P) { d.el.style.transform = ''; d.el.style.boxShadow = ''; d.el.style.left = U(d.x1); d.el.style.top = U(G.MID); setPips(d.el, d.v); }
+  if (landed < 2 || gentle) SFX.land();
+  for (const d of P) { d.el.style.transform = ''; d.el.style.boxShadow = ''; d.el.style.opacity = ''; d.el.style.left = U(d.x1); d.el.style.top = U(G.MID); setPips(d.el, d.v); }
   if (!opening && dice[0] === dice[1]) dblFlashUntil = performance.now() + 1100;
 }
 
@@ -453,6 +466,7 @@ function lastMap(st) {
 }
 let selected = null;     // {s, p}
 function render() {
+  document.body.classList.toggle('no-anim', !settings.anim);   // CSS effects follow the game's animation setting
   const st = shownState();
   const opts = {};
   if (turn && isLatest() && !reviewing && canInteract()) {
@@ -463,11 +477,12 @@ function render() {
   if (!turn || !isLatest()) opts.last = lastMap(st);
   renderCheckers(st.pos, opts);
   renderCube(st);
-  // dice
-  if (turn && isLatest() && !reviewing) renderTurnDice();
+  // dice (left alone while the roll animation owns the dice layer)
+  if (rollAnimating) {}
+  else if (turn && isLatest() && !reviewing) renderTurnDice();
   else if (st.dice && st.lastSide >= 0 && !st.over && !st.offered) renderDice(st.lastSide, st.dice, st.dice[0] === st.dice[1] ? 4 : [true, true]);
   else diceLayer.innerHTML = '';
-  if (st.dice && !turn && diceLayer.innerHTML && !reviewing) diceLayer.querySelectorAll('.die').forEach(d => d.classList.add('used'));
+  if (!rollAnimating && st.dice && !turn && diceLayer.innerHTML && !reviewing) diceLayer.querySelectorAll('.die').forEach(d => d.classList.add('used'));
   renderDests();
   drawLabels();
   renderArrows();
