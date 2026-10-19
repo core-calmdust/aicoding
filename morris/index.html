@@ -591,6 +591,7 @@ body .info-line{font-size:12.5px}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 </style>
+<link rel="stylesheet" href="online.css?v=20261020a">
 </head>
 <body>
 <div class="app">
@@ -863,6 +864,9 @@ body .info-line{font-size:12.5px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=1"></script>
 <script src="engine.js?v=20261019n"></script>
+<script src="i18n-online.js?v=20261020a"></script>
+<script src="firebase-config.js?v=20261020a"></script>
+<script src="online.js?v=20261020a"></script>
 <script>
 'use strict';
 // ====================================================================== rules (shared with the engine)
@@ -887,6 +891,7 @@ function posAt(i) {
 }
 // {over, winner, draw, why}
 function statusAt(i) {
+  if (settings.mode === 'online' && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
   const { pos, hashes } = posAt(i), st = pos.status();
   if (st === -1) return { over: true, winner: 3 - pos.side, why: pos.cnt[pos.side] + pos.hand[pos.side] < 3 ? 'count' : 'block' };
@@ -951,6 +956,7 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (settings.mode === 'online') settings.mode = 'pvp';
     if (settings.level > 10) settings.level = 10; if (settings.level2 > 10) settings.level2 = 10;
     if (Array.isArray(d.moves)) {
       setVariant(d.rule || settings.rule); startSpec = null;
@@ -964,6 +970,7 @@ function load() {
   return false;
 }
 function save() {
+  if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
 }
@@ -1261,11 +1268,13 @@ function canHumanPlay() {
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
   if (lesson) return !lesson.answered;
   if (reviewing) return false;
+  if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
   return !isAIColor(toMoveAt(cur)) && !thinking;
 }
 function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson) return '';
+  if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
   if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${rtLvName(rgame.lv)} · R${rgame.or}`;
@@ -1285,7 +1294,7 @@ function renderInfo() {
     el.classList.toggle('thinking', thinking === p);
     $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + ' · ' + phaseText(pos, p) : '');
   }
-  $('#evalCard').classList.toggle('hidden', !settings.eval && !rtLive());
+  $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());
   for (const p of [P1, P2]) { const c = $('#clk' + p); if (rgame && settings.mode === 'ai' && !lesson && !puzzle) { const ms = rtClockLeft(p - 1); c.textContent = fmtClock(ms); c.classList.toggle('low', ms < 30000 && rtLive()); } else c.textContent = ''; }
   let ev = st.over ? { s: st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0, kind: 'final', side: st.winner } : evals[cur];
@@ -1294,13 +1303,14 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
-  $('#btnHint').disabled = rtLive();
+  $('#btnHint').disabled = rtLive() || settings.mode === 'online';
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
   $('#infoLine').textContent = `${t('rule.' + gv)}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
   renderBrand();
+  if (window.olAfterInfo) olAfterInfo();
 }
 function evalAt(i) {
   const st = statusAt(i);
@@ -1430,6 +1440,7 @@ function commit(m) {
   }
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
+  if (settings.mode === 'online' && window.olHumanMove) return olHumanMove(m);
   playMove(m);
 }
 
@@ -1481,7 +1492,7 @@ async function maybeAI(tok) {
 async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
-  if (rtLive()) { hintList = null; return; }
+  if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
   if (!settings.eval && !settings.hint) return;
   const mover = toMoveAt(idx);
   const apply = list => {
@@ -1500,6 +1511,7 @@ async function analyzeCurrent(tok) {
 }
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
+  if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
@@ -1516,7 +1528,7 @@ function onGameEnd(st) {
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
 function canUndo() {
-  if (lesson || puzzle || rgame) return false;
+  if (lesson || puzzle || rgame || settings.mode === 'online') return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
@@ -2607,6 +2619,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
+<script src="online-ui.js?v=20261020a"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=1" defer></script>
