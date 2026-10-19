@@ -182,6 +182,7 @@ const SFX = {
   off() { if (!settings.sound) return; const a = ctx(); if (!a) return; noise(a, 0.12, 900, 0.8, 0.35); tone(a, 520, 330, 0.12, 0.12, 'triangle'); },
   dice() { if (!settings.sound) return; const a = ctx(); if (!a) return; const t0 = a.currentTime; for (let i = 0; i < 7; i++) noise(a, 0.025, 2200 + Math.random() * 2400, 2, 0.32 * (1 - i / 9), t0 + i * 0.055 + Math.random() * 0.02); tone(a, 260, 140, 0.08, 0.15, 'sine', t0 + 0.4); },
   cube() { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 180, 70, 0.22, 0.45); noise(a, 0.06, 700, 1, 0.5); },
+  land() { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 210, 120, 0.07, 0.22); noise(a, 0.03, 1800, 1.2, 0.35); },
   tick() { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 880, 880, 0.08, 0.05, 'triangle'); },
   chime(win) {
     if (!settings.sound) return; const a = ctx(); if (!a) return;
@@ -382,6 +383,7 @@ function diceLayout(s, dice, usedCount) {
   if (dice[0] === dice[1]) {
     let h = ''; const xs = [-1.38, -0.46, 0.46, 1.38];
     for (let i = 0; i < 4; i++) h += dieHTML(s, dice[0], cx + xs[i], y, i < usedCount, 0.74);
+    if (performance.now() < dblFlashUntil) h = h.replace(/class="die /g, 'class="die dbl ');
     return h;
   }
   return null;
@@ -394,19 +396,53 @@ function renderDice(s, dice, used) {
   const u = used || [false, false];
   diceLayer.innerHTML = dieHTML(s, dice[0], cx - 0.55, y, u[0]) + dieHTML(s, dice[1], cx + 0.55, y, u[1]);
 }
+// dice roll: the dice tumble in from the outer edge of their half with a 3D-ish spin, two bounces and cycling faces,
+// then settle on the result (~750 ms). Tapping anywhere skips to the result; no animation when animations are off.
+let rollSkip = false, rollAnimating = false, dblFlashUntil = 0;
+addEventListener('pointerdown', () => { if (rollAnimating) rollSkip = true; }, { capture: true, passive: true });
+function setPips(el, v) { const on = new Set(PIPS[v] || []); el.querySelectorAll('i').forEach((i, k) => i.classList.toggle('on', on.has(k))); }
 async function rollAnim(s, dice, opening) {
   SFX.dice();
-  if (!anim()) { return; }
+  if (!anim()) return;
   const cx = s === view ? G.RX + 3 : G.LX + 3;
-  const t0 = performance.now(), dur = 560;
-  while (performance.now() - t0 < dur) {
-    const f = (performance.now() - t0) / dur;
-    const r1 = 1 + Math.floor(Math.random() * 6), r2 = 1 + Math.floor(Math.random() * 6);
-    if (opening) diceLayer.innerHTML = dieHTML(0, r1, (0 === view ? G.RX + 3 : G.LX + 3) + (Math.random() - .5) * .2, G.MID + (Math.random() - .5) * .2) + dieHTML(1, r2, (1 === view ? G.RX + 3 : G.LX + 3) + (Math.random() - .5) * .2, G.MID + (Math.random() - .5) * .2);
-    else diceLayer.innerHTML = dieHTML(s, r1, cx - 0.55 + (1 - f) * 1.2 + (Math.random() - .5) * .25, G.MID + (Math.random() - .5) * .5 * (1 - f)) + dieHTML(s, r2, cx + 0.55 + (1 - f) * 1.6 + (Math.random() - .5) * .25, G.MID + (Math.random() - .5) * .5 * (1 - f));
-    diceLayer.querySelectorAll('.die').forEach(d => { d.style.transform = `rotate(${(Math.random() - .5) * 60 * (1 - f)}deg)`; });
-    await sleep(55);
-  }
+  // [side, final value, final x, direction (+1: comes from the right)]
+  const items = opening
+    ? [[0, dice[0], 0 === view ? G.RX + 3 : G.LX + 3], [1, dice[1], 1 === view ? G.RX + 3 : G.LX + 3]].map(([ss, v, x]) => [ss, v, x, x > G.BX ? 1 : -1])
+    : [[s, dice[0], cx - 0.55, cx > G.BX ? 1 : -1], [s, dice[1], cx + 0.55, cx > G.BX ? 1 : -1]];
+  diceLayer.innerHTML = items.map(([ss, v, x]) => dieHTML(ss, v, x, G.MID)).join('');
+  const els = [...diceLayer.querySelectorAll('.die')];
+  const P = items.map(([ss, v, x, dir], i) => {
+    const edge = dir > 0 ? (x > G.BX ? G.RE - 0.45 : G.BX - 0.45) : (x > G.BX ? G.RX + 0.45 : G.LX + 0.45);
+    return { el: els[i], v, x1: x, x0: edge + dir * 0.2, y0: G.MID + (i ? 0.9 : -0.9) * (Math.random() * 0.6 + 0.4), dir, spin: (Math.random() * 0.6 + 0.7) * dir * 720, wob: Math.random() * 6, face: v, next: 0 };
+  });
+  const dur = 760, t0 = performance.now(), persp = Math.round(uPx() * 6);
+  rollAnimating = true; rollSkip = false;
+  let landed = 0;
+  try {
+    for (;;) {
+      const el = performance.now() - t0, t = Math.min(1, el / dur);
+      if (rollSkip || t >= 1) break;
+      const e = 1 - Math.pow(1 - Math.min(1, t / 0.82), 3);           // ease-out travel
+      // bounce height: a high first hop, a small second one, then rest
+      const h = t < 0.42 ? Math.sin(Math.PI * t / 0.42) * 0.9 : t < 0.68 ? Math.sin(Math.PI * (t - 0.42) / 0.26) * 0.28 : 0;
+      if (t >= 0.42 && landed === 0) landed = 1;
+      if (t >= 0.68 && landed === 1) { landed = 2; SFX.land(); }
+      for (const d of P) {
+        const x = d.x0 + (d.x1 - d.x0) * e, y = d.y0 + (G.MID - d.y0) * e - h * 0.35;
+        d.el.style.left = U(x); d.el.style.top = U(y);
+        const k = 1 - e, sq = landed && h < 0.05 && t < 0.78 ? 0.92 : 1;
+        d.el.style.transform = `perspective(${persp}px) rotateZ(${(d.spin * k).toFixed(1)}deg) rotateX(${(Math.sin(el / 45 + d.wob) * 38 * k).toFixed(1)}deg) rotateY(${(Math.cos(el / 52 + d.wob) * 32 * k).toFixed(1)}deg) scale(${(1 + h * 0.22).toFixed(3)}, ${(sq * (1 + h * 0.22)).toFixed(3)})`;
+        d.el.style.boxShadow = h > 0.02 ? `0 calc(var(--u) * ${(0.08 + h * 0.35).toFixed(2)}) calc(var(--u) * ${(0.14 + h * 0.3).toFixed(2)}) rgba(0,0,0,.45)` : '';
+        // faces cycle while tumbling (slowing down), the final face shows from ~70%
+        if (t > 0.7) { if (d.face !== d.v) { d.face = d.v; setPips(d.el, d.v); } }
+        else if (el >= d.next) { d.face = 1 + Math.floor(Math.random() * 6); setPips(d.el, d.face); d.next = el + 45 + t * 110; }
+      }
+      await new Promise(r => requestAnimationFrame(r));
+    }
+  } finally { rollAnimating = false; }
+  if (landed < 2) SFX.land();
+  for (const d of P) { d.el.style.transform = ''; d.el.style.boxShadow = ''; d.el.style.left = U(d.x1); d.el.style.top = U(G.MID); setPips(d.el, d.v); }
+  if (!opening && dice[0] === dice[1]) dblFlashUntil = performance.now() + 1100;
 }
 
 // ====================================================================== render
@@ -727,6 +763,7 @@ function setButtons(list, side, own) {
   }
 }
 function renderButtons() {
+  renderStatusBox();
   if (!match) { setButtons([]); return; }
   if (lesson || puzzle) {
     if (turn && canInteract()) {
@@ -1019,6 +1056,27 @@ function resumeHere() {
 }
 function isPlayingMatch() { return !!match; }
 
+
+// one-line status box (phone landscape header): whose turn / what to do, the last move, the game result
+function statusText(st) {
+  if (lesson) return `${$('#lsStep').textContent} · ${$('#lsTitle').textContent}`;
+  if (puzzle) return $('#pzStep').textContent;
+  if (!match) return '';
+  const name = s => isAI(s) ? `AI Lv${levelFor(s)}` : settings.mode === 'pvp' ? pname(s) : t('you');
+  if (st.over) return `${name(st.winner)} ${t('st.win', { n: st.points })}`;
+  let last = '';
+  if (st.lastMoves && st.lastSide >= 0) last = `${name(st.lastSide)}: ${st.lastMoves.length ? BG.notation(st.lastMoves) : t('nomove')}`;
+  let now = '';
+  if (!isLatest()) now = '';
+  else if (thinking >= 0) now = isAI(thinking) ? t('sb.aiThinking') : t('thinking');
+  else if (st.offered) now = isAI(st.doubler) ? t('sb.offered') : t('st.offer');
+  else if (turn && !isAI(turn.side)) now = !legalNow().length && !turn.steps.length ? t('nomove') : settings.mode === 'pvp' ? `${pname(turn.side)}: ${t('sb.yourTurn')}` : t('sb.yourTurn');
+  else if (!turn && !busyRolling && !isAI(st.turn)) now = settings.mode === 'pvp' ? `${pname(st.turn)}: ${t('sb.roll')}` : t('sb.roll');
+  else if (!turn && isAI(st.turn)) now = t('sb.aiThinking');
+  return [last, now].filter(Boolean).join(' · ');
+}
+function renderStatusBox(st) { const el = $('#statusBox'); if (!el || (!match && !lesson && !puzzle)) return; const txt = statusText(st || shownState()); if (el.textContent !== txt) { el.textContent = txt; el.title = txt; } }
+$('#statusBox').addEventListener('click', () => { const txt = $('#statusBox').textContent; if (txt) toast(txt, 2600); });
 // ====================================================================== info panel
 function renderInfo() {
   if (!match) return;
@@ -1043,6 +1101,7 @@ function renderInfo() {
     else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : turn && isLatest() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : t('st.turn');
     $('#status' + s).textContent = status;
   }
+  renderStatusBox(st);
   // eval
   $('#evalCard').classList.toggle('hidden', !settings.eval);
   const ev = evalOf(g, a);

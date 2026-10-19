@@ -1,6 +1,7 @@
 // UI strings for Backgammon V2 — ja / en / zh / ko / es / fr / pt / de / hi / ar
 var I18N = window.I18N = {};
 I18N.ja = {
+  'sb.yourTurn': "あなたの番です", 'sb.roll': "ダイスを振ってください", 'sb.aiThinking': "AIが考えています…", 'sb.offered': "ダブルを提案されました",
   'land.info': '情報', 'land.board': '盤面',
   'land.tip': '横画面でも遊べます！', 'land.tipSub': '右上のボタンで、スマホを横にした大きな盤面に切り替えられます。', 'land.go': '横画面にする', 'land.keep': 'このまま',
   'land.title': '横画面で遊ぶ（スマホ）', 'land.on': '横画面 ON', 'land.off': '横画面 OFF',
@@ -103,6 +104,7 @@ I18N.ja = {
   'rl.match.h': 'マッチ戦とクロフォード', 'rl.match': '3・5・7点先取のマッチでは、ゲームを重ねて先に規定点に届いた方が優勝です。どちらかが初めてあと1点になった直後の1ゲームはクロフォードゲームで、ダブルできません。',
 };
 I18N.en = {
+  'sb.yourTurn': "Your turn", 'sb.roll': "Roll the dice", 'sb.aiThinking': "AI is thinking…", 'sb.offered': "You've been offered a double",
   'land.info': 'Info', 'land.board': 'Board',
   'land.tip': 'You can also play in landscape!', 'land.tipSub': 'Use the button at the top right to switch to a bigger, sideways board.', 'land.go': 'Go landscape', 'land.keep': 'Keep as is',
   'land.title': 'Play in landscape (phone)', 'land.on': 'Landscape on', 'land.off': 'Landscape off',
@@ -204,6 +206,7 @@ I18N.en = {
   'rl.match.h': 'Matches and the Crawford rule', 'rl.match': 'In a 3, 5 or 7-point match, games are played until one player reaches the target. The game right after a player first gets within one point is the Crawford game: no doubling in it.',
 };
 I18N.zh = {
+  'sb.yourTurn': "轮到你了", 'sb.roll': "请掷骰子", 'sb.aiThinking': "AI 正在思考…", 'sb.offered': "对方提出加倍",
   'land.info': '信息', 'land.board': '棋盘',
   'land.tip': '也可以横屏玩！', 'land.tipSub': '点击右上角按钮，即可切换为更大的横屏棋盘。', 'land.go': '切换横屏', 'land.keep': '保持现状',
   'land.title': '横屏游玩（手机）', 'land.on': '横屏 开', 'land.off': '横屏 关',
@@ -305,6 +308,7 @@ I18N.zh = {
   'rl.match.h': '比赛与克劳福德规则', 'rl.match': '在3、5、7分制的比赛中，连续进行多局，先达到目标分数者获胜。有人第一次离目标只差1分后的那一局是克劳福德局，不能加倍。',
 };
 I18N.ko = {
+  'sb.yourTurn': "당신 차례입니다", 'sb.roll': "주사위를 굴리세요", 'sb.aiThinking': "AI가 생각 중…", 'sb.offered': "더블을 제안받았습니다",
   'land.info': '정보', 'land.board': '보드',
   'land.tip': '가로 화면으로도 즐길 수 있어요!', 'land.tipSub': '오른쪽 위 버튼으로 더 큰 가로 화면 보드로 바꿀 수 있습니다.', 'land.go': '가로 화면으로', 'land.keep': '이대로',
   'land.title': '가로 화면으로 플레이 (휴대폰)', 'land.on': '가로 화면 켬', 'land.off': '가로 화면 끔',
@@ -406,6 +410,7 @@ I18N.ko = {
   'rl.match.h': '매치와 크로퍼드', 'rl.match': '3·5·7점 매치에서는 여러 게임을 이어 하여 먼저 목표 점수에 닿은 쪽이 이깁니다. 누군가 처음으로 1점만 남게 된 직후의 한 게임은 크로퍼드 게임으로, 더블할 수 없습니다.',
 };
 I18N.es = {
+  'sb.yourTurn': "Tu turno", 'sb.roll': "Tira los dados", 'sb.aiThinking': "La IA está pensando…", 'sb.offered': "Te ofrecen doblar",
   'land.info': 'Info', 'land.board': 'Tablero',
   'land.tip': '¡También puedes jugar en horizontal!', 'land.tipSub': 'Usa el botón de arriba a la derecha para ver un tablero más grande en horizontal.', 'land.go': 'Poner horizontal', 'land.keep': 'Dejar así',
   'land.title': 'Jugar en horizontal (móvil)', 'land.on': 'Horizontal activado', 'land.off': 'Horizontal desactivado',
@@ -507,6 +512,7 @@ I18N.es = {
   'rl.match.h': 'Match y regla Crawford', 'rl.match': 'En un match a 3, 5 o 7 puntos se juegan partidas hasta que alguien alcanza la meta. La partida justo después de que un jugador quede por primera vez a un punto es la partida Crawford: en ella no se puede doblar.',
 };
 I18N.fr = {
+  'sb.yourTurn': "À vous de jouer", 'sb.roll': "Lancez les dés", 'sb.aiThinking': "L’IA réfléchit…", 'sb.offered': "On vous propose un videau",
   'land.info': 'Infos', 'land.board': 'Plateau',
   'land.tip': 'Vous pouvez aussi jouer en paysage !', 'land.tipSub': 'Le bouton en haut à droite affiche un plateau plus grand, à l’horizontale.', 'land.go': 'Passer en paysage', 'land.keep': 'Garder ainsi',
   'land.title': 'Jouer en paysage (mobile)', 'land.on': 'Paysage activé', 'land.off': 'Paysage désactivé',
@@ -608,6 +614,7 @@ I18N.fr = {
   'rl.match.h': 'Match et règle de Crawford', 'rl.match': 'Dans un match en 3, 5 ou 7 points, on enchaîne les parties jusqu’à ce qu’un joueur atteigne le score. La partie qui suit le moment où un joueur arrive pour la première fois à 1 point du but est la partie Crawford : pas de double.',
 };
 I18N.pt = {
+  'sb.yourTurn': "Sua vez", 'sb.roll': "Role os dados", 'sb.aiThinking': "A IA está pensando…", 'sb.offered': "Você recebeu uma oferta de dobra",
   'land.info': 'Info', 'land.board': 'Tabuleiro',
   'land.tip': 'Você também pode jogar na horizontal!', 'land.tipSub': 'Use o botão no canto superior direito para ver um tabuleiro maior na horizontal.', 'land.go': 'Virar para horizontal', 'land.keep': 'Deixar assim',
   'land.title': 'Jogar na horizontal (celular)', 'land.on': 'Horizontal ativado', 'land.off': 'Horizontal desativado',
@@ -709,6 +716,7 @@ I18N.pt = {
   'rl.match.h': 'Partida e regra Crawford', 'rl.match': 'Numa partida de 3, 5 ou 7 pontos, joga-se até alguém atingir a meta. O jogo logo depois de um jogador ficar pela primeira vez a 1 ponto da meta é o jogo Crawford: nele não se pode dobrar.',
 };
 I18N.de = {
+  'sb.yourTurn': "Du bist dran", 'sb.roll': "Würfle", 'sb.aiThinking': "Die KI denkt nach…", 'sb.offered': "Dir wird gedoppelt",
   'land.info': 'Infos', 'land.board': 'Brett',
   'land.tip': 'Du kannst auch im Querformat spielen!', 'land.tipSub': 'Mit dem Knopf oben rechts wechselst du zu einem größeren Brett im Querformat.', 'land.go': 'Querformat', 'land.keep': 'So lassen',
   'land.title': 'Im Querformat spielen (Handy)', 'land.on': 'Querformat an', 'land.off': 'Querformat aus',
@@ -810,6 +818,7 @@ I18N.de = {
   'rl.match.h': 'Match und Crawford-Regel', 'rl.match': 'In einem Match auf 3, 5 oder 7 Punkte wird gespielt, bis jemand die Punktzahl erreicht. Das Spiel direkt nachdem ein Spieler erstmals nur noch 1 Punkt braucht, ist das Crawford-Spiel: Darin wird nicht gedoppelt.',
 };
 I18N.hi = {
+  'sb.yourTurn': "आपकी बारी", 'sb.roll': "पासे फेंकें", 'sb.aiThinking': "AI सोच रहा है…", 'sb.offered': "आपको डबल का प्रस्ताव मिला",
   'land.info': 'जानकारी', 'land.board': 'बोर्ड',
   'land.tip': 'आप लैंडस्केप में भी खेल सकते हैं!', 'land.tipSub': 'ऊपर दाईं ओर के बटन से बड़े, आड़े बोर्ड पर जाएँ।', 'land.go': 'लैंडस्केप करें', 'land.keep': 'ऐसे ही रहने दें',
   'land.title': 'लैंडस्केप में खेलें (फ़ोन)', 'land.on': 'लैंडस्केप चालू', 'land.off': 'लैंडस्केप बंद',
@@ -911,6 +920,7 @@ I18N.hi = {
   'rl.match.h': 'मैच और क्रॉफ़र्ड नियम', 'rl.match': '3, 5 या 7 अंकों के मैच में कई गेम खेले जाते हैं; जो पहले लक्ष्य तक पहुँचे वह जीतता है। जब कोई पहली बार लक्ष्य से 1 अंक दूर हो, उसके ठीक बाद वाला गेम क्रॉफ़र्ड गेम होता है: उसमें डबल नहीं।',
 };
 I18N.ar = {
+  'sb.yourTurn': "دورك", 'sb.roll': "ارمِ النرد", 'sb.aiThinking': "الذكاء الاصطناعي يفكر…", 'sb.offered': "عُرض عليك المضاعفة",
   'land.info': 'معلومات', 'land.board': 'اللوحة',
   'land.tip': 'يمكنك اللعب بالوضع الأفقي أيضًا!', 'land.tipSub': 'استخدم الزر في الأعلى لعرض لوحة أكبر بشكل أفقي.', 'land.go': 'تفعيل الوضع الأفقي', 'land.keep': 'إبقاء كما هو',
   'land.title': 'العب بالوضع الأفقي (الهاتف)', 'land.on': 'الوضع الأفقي مفعّل', 'land.off': 'الوضع الأفقي متوقف',
