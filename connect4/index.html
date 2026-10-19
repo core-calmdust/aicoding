@@ -819,6 +819,9 @@ function save() {
 // ====================================================================== engine workers
 let BOOK = null;
 const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() => null).then(b => (BOOK = b));
+// Lv8 opening tree (binary, decoded inside each worker)
+let TREEBUF = null;
+const treeReady = fetch('tree.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (TREEBUF = b));
 let jobId = 0;
 function makeWorker() {
   const w = new Worker('engine.js');
@@ -828,7 +831,9 @@ function makeWorker() {
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
     w.jobs.delete(m.id); j.resolve(m);
   };
-  bookReady.then(b => { if (b) w.postMessage({ type: 'book', book: b }); });
+  // post synchronously when already loaded, so the data arrives before the first job
+  if (BOOK) w.postMessage({ type: 'book', book: BOOK }); else bookReady.then(b => { if (b) w.postMessage({ type: 'book', book: b }); });
+  if (TREEBUF) w.postMessage({ type: 'tree', buf: TREEBUF }); else treeReady.then(buf => { if (buf) w.postMessage({ type: 'tree', buf }); });
   return w;
 }
 let aiW = makeWorker(), anaW = makeWorker();

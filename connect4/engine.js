@@ -397,6 +397,92 @@ function bookLookup(str) {
 }
 function inBook(str) { if (!BOOK) return false; const [k] = keyOf(str); return !!((BOOK.a && BOOK.a[k]) || (BOOK.b && BOOK.b[k])); }
 
+// ------------------------------------------------------------------ Lv8 opening tree (tree.bin)
+// Every position Lv8 can face up to ply D (any opponent replies x Lv8's own move), solved offline by an exact
+// C port of this solver. Stored as 9-bit records (move 3 bits, value 6 bits) in the DFS order below, so no keys
+// are stored: decodeTree replays the same DFS (canonical/mirror dedup) to rebuild the key -> record map.
+// value code: 0..36 = exact Pons score + 18, 37..39 = weak loss/draw/win.
+let TREE = null;
+function decodeTree(buf) {
+  const u8 = new Uint8Array(buf);
+  if (u8.length < 16 || String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'C4T1') return null;
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  const cnt = [dv.getUint32(4, true), dv.getUint32(8, true)], DD = [u8[12], u8[13]];
+  let bp = 128;
+  const get = k => { let x = 0; for (let i = 0; i < k; i++, bp++) if ((u8[bp >> 3] >> (bp & 7)) & 1) x |= 1 << i; return x; };
+  const map = new Map(), hgt = new Int8Array(7), grid = new Int8Array(42), p1 = new Int32Array(7);
+  let n = 0, D = 0, left = 0;
+  const key = mir => { let v = 0; for (let k = 6; k >= 0; k--) { const c = mir ? 6 - k : k; v = v * 128 + ((1 << hgt[c]) | p1[c]); } return v; };
+  const DIRS = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const wins = c => {
+    const r = hgt[c], p = (n & 1) + 1;
+    for (const [dc, dr] of DIRS) {
+      let k = 1;
+      for (let sg = -1; sg <= 1; sg += 2) { let cc = c + dc * sg, rr = r + dr * sg; while (cc >= 0 && cc < 7 && rr >= 0 && rr < 6 && grid[cc * 6 + rr] === p) { k++; cc += dc * sg; rr += dr * sg; } }
+      if (k >= 4) return true;
+    }
+    return false;
+  };
+  const put = c => { const r = hgt[c]; grid[c * 6 + r] = (n & 1) + 1; if (!(n & 1)) p1[c] |= 1 << r; hgt[c]++; n++; };
+  const take = c => { n--; hgt[c]--; const r = hgt[c]; grid[c * 6 + r] = 0; p1[c] &= ~(1 << r); };
+  function dfs() {
+    const a = key(false), b = key(true), k = a <= b ? a : b, mir = b < a;
+    if (map.has(k)) return;
+    if (left-- <= 0) throw new Error('tree: record count');
+    const mc = get(3), vc = get(6);
+    map.set(k, mc * 64 + vc);
+    const mv = mir ? 6 - mc : mc;
+    if (wins(mv)) return;
+    put(mv);
+    if (n + 1 <= D) for (let r = 0; r < 7; r++) {
+      if (hgt[r] >= 6 || wins(r)) continue;
+      put(r); if (n <= D && n < 42) dfs(); take(r);
+    }
+    take(mv);
+  }
+  // roots: every position of ply side, side+2, ... <= RR[side] (column order), as in the generator
+  const RR = [u8[14], u8[15]];
+  const roots = t => {
+    if (n === t) { dfs(); return; }
+    for (let c = 0; c < 7; c++) { if (hgt[c] >= 6 || wins(c)) continue; put(c); roots(t); take(c); }
+  };
+  for (let sd = 0; sd < 2; sd++) {
+    D = DD[sd]; left = cnt[sd];
+    for (let r = sd; r <= Math.max(sd, RR[sd]); r += 2) roots(r);
+    if (left !== 0) throw new Error('tree: record count');
+  }
+  return map;
+}
+function treeKey(str) {
+  const hgt = [0, 0, 0, 0, 0, 0, 0], p1 = [0, 0, 0, 0, 0, 0, 0];
+  for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i) - 49; if (!(i & 1)) p1[c] |= 1 << hgt[c]; hgt[c]++; }
+  let a = 0, b = 0;
+  for (let k = 6; k >= 0; k--) { a = a * 128 + ((1 << hgt[k]) | p1[k]); b = b * 128 + ((1 << hgt[6 - k]) | p1[6 - k]); }
+  return a <= b ? [a, false] : [b, true];
+}
+// {mv, kind: 'exact'|'weak', v} for a position the tree covers (mover's view), else null
+function treeLookup(str) {
+  if (!TREE) return null;
+  const [k, mir] = treeKey(str), e = TREE.get(k);
+  if (e === undefined) return null;
+  const mc = e >> 6, vc = e & 63;
+  return { mv: mir ? 6 - mc : mc, kind: vc <= 36 ? 'exact' : 'weak', v: vc <= 36 ? vc - 18 : vc - 38 };
+}
+// values of every legal move from the tree (each reply leads to a tree node), mover's view; null if not covered
+function treeList(str) {
+  if (!TREE) return null;
+  loadMoves(str);
+  const out = [];
+  for (const c of ORDER) {
+    if (!canPlay(c)) continue;
+    if (isWinningMove(c)) { out.push({ c, kind: 'exact', v: (SZ + 1 - nm) >> 1 }); continue; }
+    const t = treeLookup(str + (c + 1));
+    if (!t) return null;
+    out.push({ c, kind: t.kind, v: -t.v });
+  }
+  return out;
+}
+
 // ------------------------------------------------------------------ analysis & move choice
 // result list entries: {c, kind: 'exact'|'weak'|'heur', v}
 // exact v: Pons score; weak v: -1/0/1 (or Pons score when immediate); heur v: heuristic score
@@ -404,6 +490,9 @@ function analyzePosition(str, timeMs, onProgress) {
   loadMoves(str);
   const legal = ORDER.filter(c => canPlay(c));
   const t0 = Date.now();
+  const tl = treeList(str);
+  if (tl) return { list: tl, book: true };
+  loadMoves(str);
   const bk = bookLookup(str);
   if (bk && !bk.partial) {
     const list = legal.map(c => ({ c, kind: bk.kind, v: bk.sc[c] }));
@@ -428,6 +517,9 @@ function analyzePosition(str, timeMs, onProgress) {
     return { c, kind: 'heur', v: hv, h: hv };
   });
   if (bk && bk.partial) for (const e of list) if (bk.sc[e.c] === 1 && e.kind === 'heur') { e.kind = 'weak'; e.v = 1; }
+  // a Lv8 tree node: the stored move's value is known exactly (or weakly)
+  const tn = treeLookup(str);
+  if (tn) { const e = list.find(x => x.c === tn.mv); if (e && e.kind === 'heur') { e.kind = tn.kind; e.v = tn.v; } }
   onProgress && onProgress(list.map(x => ({ ...x })), hr.depth);
   // weak pass then strong pass, each per move under the deadline
   for (const mode of ['weak', 'exact']) {
@@ -459,9 +551,62 @@ const LEVELS = {
   5: { depth: 8, noise: 1.5 },
   6: { depth: 12, time: 500, solveLate: 24 },
   7: { depth: 42, time: 1000, solve: 800, book: 4 },
-  8: { depth: 42, time: 1800, solve: 1400, book: 99 },
+  8: { depth: 42, time: 1800, solve: 1400, book: 99, perfect: true, hard: 60000 },
 };
 function rnd() { return Math.random(); }
+// is the score of move c (mover's view) >= s ?  null-window test, null on timeout
+function moveGE(c, s) {
+  if (isWinningMove(c)) return true;
+  const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
+  playCol(c);
+  let r;
+  if (nm >= SZ) r = 0 >= s;
+  else if (canWinNext()) r = -((SZ + 1 - nm) >> 1) >= s;
+  else { const v = negamax(-s, -s + 1); r = aborted ? null : v <= -s; }
+  cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
+  return r;
+}
+// Lv8 outside the tree: weak-solve the position once, then take the first move (heuristic order) that keeps
+// that value. A lost position is refined to the slowest loss while the normal budget lasts.
+// Solving continues up to cfg.hard ms rather than falling back to a guess; null only if even that runs out.
+function thinkPerfect(str, cfg) {
+  const t0 = Date.now();
+  const hr = heurID(cfg.depth, 120);
+  loadMoves(str);
+  const order = (hr.list || ORDER.filter(c => canPlay(c)).map(c => ({ c, s: 0 }))).slice().sort((a, b) => b.s - a.s).map(x => x.c);
+  deadline = t0 + cfg.hard; aborted = false;
+  const v = solve(true);
+  if (v === null) { deadline = Infinity; aborted = false; return null; }
+  const cls = v > 0 ? 1 : v < 0 ? -1 : 0;
+  let move = -1, score = { kind: 'weak', v: cls }, msProof = 0;
+  if (cls >= 0) {
+    for (const c of order) {
+      const ok = moveGE(c, cls);
+      if (ok === null) { deadline = Infinity; aborted = false; return null; }
+      if (ok) { move = c; break; }
+    }
+    msProof = Date.now() - t0;
+  } else {
+    msProof = Date.now() - t0;
+    // every move loses: delay the loss as long as possible (exact, within the normal budget)
+    deadline = t0 + cfg.time; aborted = false;
+    let best = -99;
+    for (const c of order) {
+      const sv = solveMove(c, false);
+      if (sv === null) break;
+      if (sv > best) { best = sv; move = c; }
+    }
+    aborted = false;
+    if (move >= 0) score = { kind: 'exact', v: best };
+    else {   // out of time: any move that does not lose at once
+      const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
+      move = order.find(c => !(((owl >>> 1) & moveBitsL(c)) | ((owh >>> 1) & moveBitsH(c)))) ?? order[0];
+    }
+  }
+  deadline = Infinity; aborted = false;
+  if (move < 0) return null;
+  return { move, how: 'search', ms: Date.now() - t0, msProof, score };
+}
 function think(str, level) {
   const cfg = LEVELS[level] || LEVELS[5];
   loadMoves(str);
@@ -470,6 +615,14 @@ function think(str, level) {
   // immediate win
   for (const c of legal) if (isWinningMove(c)) {
     if (!cfg.blunder || rnd() > cfg.blunder * 0.5) return { move: c, how: 'win' };
+  }
+  // Lv8: opening tree (exact), then the exact solver with no heuristic fallback
+  if (cfg.perfect) {
+    const t = treeLookup(str);
+    if (t && canPlay(t.mv)) return { move: t.mv, how: 'book', score: { kind: t.kind, v: t.v } };
+    const r = thinkPerfect(str, cfg);
+    if (r) return r;
+    loadMoves(str);
   }
   // book
   if (cfg.book && nm <= cfg.book) {
@@ -493,7 +646,7 @@ function think(str, level) {
     return { move: c, how: 'random' };
   }
   const t0 = Date.now();
-  const early = nm < 8;   // too early for the exact solver: spend the time on the heuristic search
+  const early = nm < 8 && !cfg.perfect;   // too early for the exact solver: spend the time on the heuristic search
   const timeH = cfg.time ? (cfg.solve && !early ? cfg.time - cfg.solve : cfg.time * (cfg.solve ? 0.7 : 1)) : 3000;
   const hr = heurID(cfg.depth, Math.max(80, timeH));
   loadMoves(str);
@@ -506,7 +659,8 @@ function think(str, level) {
     const sorted = list.slice().sort((a, b) => b.h - a.h);
     let complete = true;
     for (const e of sorted) {
-      deadline = dl; aborted = false;
+      // Lv8 keeps solving past the normal budget (rare: positions just past the tree) instead of guessing
+      deadline = cfg.perfect ? t0 + cfg.hard : dl; aborted = false;
       const v = solveMove(e.c, true); deadline = Infinity;
       if (v === null) { aborted = false; complete = false; break; }
       e.kind = Math.abs(v) <= 1 ? 'weak' : 'exact'; e.v = v;
@@ -538,13 +692,14 @@ function think(str, level) {
   return { move: best.c, how: 'search', depth: hr.depth, ms: Date.now() - t0, score: best.kind !== 'heur' ? { kind: best.kind, v: best.v } : { kind: 'heur', v: best.h } };
 }
 
-const API = { loadMoves, solve, solveMove, analyzePosition, mateList, defendList, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
+const API = { decodeTree, treeLookup, treeList, setTree: m => { TREE = m; }, loadMoves, solve, solveMove, analyzePosition, mateList, defendList, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
   state: () => ({ nm }), setDeadline: d => { deadline = d; aborted = false; }, nodes: () => nodes, evaluate, EP, rootHeur, setDeadline2: () => { deadline = Infinity; aborted = false; }, clearHT: () => { htF.fill(0); } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postMessage === 'function' && typeof module === 'undefined') {
   self.onmessage = e => {
     const m = e.data;
     if (m.type === 'book') BOOK = m.book;
+    else if (m.type === 'tree') { try { TREE = decodeTree(m.buf); } catch (err) { TREE = null; } }
     else if (m.type === 'think') {
       const r = think(m.moves, m.level);
       postMessage({ type: 'result', id: m.id, ...r });
