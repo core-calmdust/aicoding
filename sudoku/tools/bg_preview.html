@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BG Preview</title>
+<style>
+body{margin:0;padding:12px;background:#fbf7fc;font-family:system-ui,sans-serif;color:#4a3846}
+h2{margin:14px 0 6px;font-size:16px}
+.row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.L{width:600px;height:400px}.P{width:300px;height:550px}
+.box{position:relative;overflow:hidden;border-radius:8px;box-shadow:0 1px 4px #0002}
+.box svg{width:100%;height:100%;display:block}
+.box .cut{position:absolute;left:0;right:0;border-top:1px dashed #f00a}
+.deco{width:600px;height:90px;background:#f6efe4}
+.drift{animation:drift var(--d,50s) ease-in-out infinite alternate}
+.sway{animation:sway var(--d,4s) ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.bob,.float{animation:bob var(--d,6s) ease-in-out infinite alternate}
+.hop{animation:hop var(--d,3s) ease-in-out infinite}
+.tail{animation:tail var(--d,3s) ease-in-out infinite alternate}
+.twinkle{animation:twinkle var(--d,3s) ease-in-out infinite alternate;animation-delay:var(--o,0s)}
+.glow{animation:glow 2.8s ease-in-out infinite alternate}
+.fall,.snowf{animation:fall var(--d,12s) linear infinite;animation-delay:var(--o,0s)}
+.rise{animation:rise var(--d,10s) linear infinite;animation-delay:var(--o,0s)}
+.swim{animation:swim var(--d,10s) ease-in-out infinite alternate}
+.swim2{animation:swim2 4s ease-in-out infinite alternate}
+.wave{animation:wavex var(--d,4s) ease-in-out infinite alternate}
+.flutter{animation:flutter var(--d,7s) ease-in-out infinite alternate}
+.burst{animation:burst var(--d,3s) ease-out infinite;animation-delay:var(--o,0s)}
+.shoot{animation:shoot 7s ease-in infinite}
+@keyframes drift{to{transform:translateX(40px)}}
+@keyframes sway{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}
+@keyframes bob{to{transform:translateY(-10px)}}
+@keyframes hop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(-14px)}90%{transform:translateY(0)}}
+@keyframes tail{from{transform:rotate(-12deg)}to{transform:rotate(14deg)}}
+@keyframes twinkle{from{opacity:.25}to{opacity:1}}
+@keyframes glow{from{opacity:.75}to{opacity:1}}
+@keyframes fall{from{transform:translate(0,-12vh) rotate(0)}to{transform:translate(4vw,112vh) rotate(260deg)}}
+@keyframes rise{from{transform:translateY(20vh);opacity:0}15%{opacity:.8}to{transform:translateY(-110vh);opacity:0}}
+@keyframes swim{to{transform:translateX(-60px) translateY(8px)}}
+@keyframes swim2{to{transform:translateX(-14px)}}
+@keyframes wavex{to{transform:translateX(16px)}}
+@keyframes flutter{0%{transform:translate(0,0)}50%{transform:translate(30px,-20px)}100%{transform:translate(-20px,10px)}}
+@keyframes burst{0%{transform:scale(.2);opacity:0}15%{opacity:1}70%{opacity:.9}100%{transform:scale(1.1);opacity:0}}
+@keyframes shoot{0%,80%{transform:translate(-40px,-20px);opacity:0}85%{opacity:1}100%{transform:translate(120px,40px);opacity:0}}
+body.still *{animation:none!important}
+</style></head><body>
+<div id="out"></div>
+<script src="../bg.js"></script>
+<script>
+// ?t=a,b (themes) &tod=day|eve|night &still
+const B = window.SudokuBG, q = new URLSearchParams(location.search);
+if (q.has('still')) document.body.classList.add('still');
+const list = q.get('t') ? q.get('t').split(',') : B.THEMES, tod = q.get('tod') || 'day';
+let h = '';
+for (const t of list) {
+  const r = B.rng(7); let d = '';
+  for (let i = 0; i < 12; i++) { const x = 25 + i * 48; d += B.deco(t, x, 60, 30 + r() * 16, r); }
+  const big = B.svg(t, 1200, 800, undefined, tod);
+  h += `<h2>${t} — ${(big.length / 1024).toFixed(1)} KB</h2><div class="row"><div class="box L">${big}<div class="cut" style="top:75%"></div></div><div class="box P">${B.svg(t, 600, 1100, undefined, tod)}<div class="cut" style="top:75%"></div></div></div><div class="box deco"><svg viewBox="0 0 600 90">${d}</svg></div>`;
+}
+document.getElementById('out').innerHTML = h;
+</script></body></html>

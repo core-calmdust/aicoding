@@ -10,9 +10,10 @@ const STORE = 'mainichi-sudoku-v1';
 const FIRST_DAY = '2026-10-01';
 const DIFFS = ['e', 'm', 'h'];
 const DTIER = { e: 1, m: 2, h: 3 };
-const THEMES = ['forest', 'harbor', 'sweets', 'sea', 'garden', 'festival', 'autumn', 'snow', 'stars', 'castle'];
-const VTYPES = ['x', 'hyper', 'jigsaw', 'oddeven', 'killer'];
-const VCOL = { x: ['#ffd9e6', '#e6dcff'], hyper: ['#d6ecff', '#e0fff1'], jigsaw: ['#fff1c9', '#ffd9cc'], oddeven: ['#ffe3cc', '#d9e9ff'], killer: ['#e8dcff', '#ffd6e6'] };
+const THEMES = ['forest', 'harbor', 'sweets', 'sea', 'garden', 'festival', 'autumn', 'snow', 'stars', 'castle', 'cloudranch', 'park', 'iceberg', 'desert', 'toytown', 'library', 'rain', 'jungle', 'bakery', 'moon'];
+const NT = THEMES.length, NCOL = NT * 50;
+const VTYPES = ['x', 'hyper', 'jigsaw', 'oddeven', 'killer', 'ineq', 'antiknight', 'kropki', 'thermo', 'arrow'];
+const VCOL = { x: ['#ffd9e6', '#e6dcff'], hyper: ['#d6ecff', '#e0fff1'], jigsaw: ['#fff1c9', '#ffd9cc'], oddeven: ['#ffe3cc', '#d9e9ff'], killer: ['#e8dcff', '#ffd6e6'], ineq: ['#dff4ff', '#ffe6d6'], antiknight: ['#e6f0d8', '#fff0cc'], kropki: ['#fff', '#e3e6ff'], thermo: ['#ffe0dc', '#fff2d0'], arrow: ['#dcf5ec', '#e4e0ff'] };
 const URL_SELF = 'https://core-calmdust.github.io/aicoding/sudoku/';
 const GACHA_COST = 2500, GACHA10_COST = 22500, STARTER_PTS = 2500;
 const RATES = [['UR', .005], ['SSR', .025], ['SR', .09], ['R', .28], ['N', .6]];
@@ -164,6 +165,10 @@ function varSpec(si, pi) {
   if (p.r) spec.regions = Array.from(p.r, Number);
   if (p.e) spec.parity = Array.from(p.e, Number);
   if (p.c) spec.cages = p.c;
+  if (p.g) spec.ineq = p.g;
+  if (p.w) spec.dots = p.w;
+  if (p.t) spec.thermos = p.t;
+  if (p.a) spec.arrows = p.a;
   return spec;
 }
 const varPuzzle = (si, pi) => { const p = vset(si).puzzles[pi]; return { puzzle: Array.from(p.p, Number), lv: p.lv }; };
@@ -317,9 +322,9 @@ function route() {
   const p = location.hash.replace(/^#/, '').split('/');
   if ($('.modal.on')) $$('.modal.on').forEach(m => m.classList.remove('on'));
   if (p[0] === 'd' && /^\d{4}-\d\d-\d\d$/.test(p[1]) && DIFFS.includes(p[2]) && p[1] >= FIRST_DAY && p[1] <= today()) return openGame({ kind: 'd', date: p[1], d: p[2] });
-  if (p[0] === 'c' && +p[1] >= 1 && +p[1] <= 10 && +p[2] >= 1 && +p[2] <= 50) return openGame({ kind: 'c', ti: +p[1] - 1, pi: +p[2] - 1 });
+  if (p[0] === 'c' && +p[1] >= 1 && +p[1] <= NT && +p[2] >= 1 && +p[2] <= 50) return openGame({ kind: 'c', ti: +p[1] - 1, pi: +p[2] - 1 });
   if (p[0] === 'x' && PV && vset(+p[1] - 1) && +p[2] >= 1 && +p[2] <= vsetLen(+p[1] - 1)) return openGame({ kind: 'x', si: +p[1] - 1, pi: +p[2] - 1 });
-  if (p[0] === 't' && +p[1] >= 1 && +p[1] <= 10) return openTheme(+p[1] - 1, p[2] === 'm' ? 'map' : '');
+  if (p[0] === 't' && +p[1] >= 1 && +p[1] <= NT) return openTheme(+p[1] - 1, p[2] === 'm' ? 'map' : '');
   if (p[0] === 'v' && PV && vset(+p[1] - 1)) return openVset(+p[1] - 1);
   openHome();
 }
@@ -396,8 +401,8 @@ function renderHome() {
   if (!calMonth) calMonth = td.slice(0, 7);
   renderCal();
   const tot = totalCleared();
-  $('#colBar').style.width = (tot / 5) + '%';
-  $('#colCount').textContent = tot + ' / 500';
+  $('#colBar').style.width = (tot / NCOL * 100) + '%';
+  $('#colCount').textContent = tot + ' / ' + NCOL;
   $('#themes').innerHTML = THEMES.map((k, i) => {
     const n = themeCleared(i), lvs = [...new Set(PZ.themes[i].map(s => +s[81]))];
     return `<button class="tcard ${n === 50 ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(k, 320, 200)}<span class="no">${i + 1}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(t('th.' + i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n * 2}%"></i></span>${n}/50</span></div></button>`;
@@ -485,6 +490,7 @@ function openTheme(ti, stage) {
   $('#tlProg').innerHTML = `${n}/50 · ${STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${themeStars(ti)}/150`;
   const lvs = [...new Set(PZ.themes[ti].map(s => +s[81]))];
   const legend = `<div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
+  $('#theme').classList.toggle('ovw', stage !== 'map');
   if (stage !== 'map') {
     // stage 1: overview box
     const st = startTarget('c', ti);
@@ -543,9 +549,10 @@ function drawMap(ti, scrollToNext, focusK) {
   d += `L${pts[N - 1][0].toFixed(1)} ${(pts[N - 1][1] - 60).toFixed(1)}`;
   const night = curTod() === 'night';
   const th = THEMES[ti];
-  const ground = { forest: ['#dff5cf', '#c3ebaa'], harbor: ['#d7efff', '#f6e3c2'], sweets: ['#ffe6f1', '#fff0e0'], sea: ['#bfeaf5', '#8fd6ea'], garden: ['#e9f9d9', '#d2f0bc'], festival: ['#ffe4d6', '#f7d1e4'], autumn: ['#ffeacc', '#f6d2a3'], snow: ['#f2f6ff', '#dfe8ff'], stars: ['#3b2f7a', '#251d5a'], castle: ['#f8e6ff', '#ffe6f2'] }[th];
-  const roadC = th === 'sea' ? '#f6e6b8' : th === 'stars' ? '#6b5bb8' : th === 'snow' ? '#ffffff' : '#fff3dc';
-  const edgeC = th === 'stars' ? '#4a3d95' : th === 'snow' ? '#c9d6f5' : '#e9cfa3';
+  const ground = { forest: ['#dff5cf', '#c3ebaa'], harbor: ['#d7efff', '#f6e3c2'], sweets: ['#ffe6f1', '#fff0e0'], sea: ['#bfeaf5', '#8fd6ea'], garden: ['#e9f9d9', '#d2f0bc'], festival: ['#ffe4d6', '#f7d1e4'], autumn: ['#ffeacc', '#f6d2a3'], snow: ['#f2f6ff', '#dfe8ff'], stars: ['#3b2f7a', '#251d5a'], castle: ['#f8e6ff', '#ffe6f2'], cloudranch: ['#eaf6ff', '#d6ecff'], park: ['#fff0f6', '#e8f4ff'], iceberg: ['#e6f6ff', '#cfe9fb'], desert: ['#fff1d2', '#f7dcaa'], toytown: ['#fff3dd', '#e3f1ff'], library: ['#f6e8d6', '#ead6bd'], rain: ['#e3f0f7', '#d8e9df'], jungle: ['#d6f2c6', '#a9dd98'], bakery: ['#fff1de', '#f9e0c2'], moon: ['#4a3f86', '#2c2563'] }[th];
+  const dark = th === 'stars' || th === 'moon', icy = th === 'snow' || th === 'iceberg' || th === 'cloudranch';
+  const roadC = th === 'sea' ? '#f6e6b8' : dark ? '#6b5bb8' : icy ? '#ffffff' : '#fff3dc';
+  const edgeC = dark ? '#4a3d95' : icy ? '#c9d6f5' : '#e9cfa3';
   const r = BG.rng(97 + ti * 13);
   let deco = '';
   for (let k = 0; k < N * 1.6; k++) {
@@ -613,12 +620,19 @@ function miniBoard(type, big) {
       const m = Math.min(...cs); s += `<text x="${P + (m % 9) * S + 3}" y="${P + ((m / 9) | 0) * S + 7.5}" font-size="6.5" font-family="Fredoka,Arial" font-weight="700" fill="#7a4cb0">${sum}</text>`;
     }
   }
+  const ctr = i => [P + (i % 9) * S + S / 2, P + ((i / 9) | 0) * S + S / 2];
+  if (type === 'antiknight') { const c0 = 40; s += cell(c0, '#ffe3a8'); for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) s += cell(c0 + dr * 9 + dc, '#dcefc8'); }
+  if (type === 'thermo') for (const th of [[19, 20, 21, 12], [57, 58, 49, 40], [33, 34, 35]]) { const pts = th.map(ctr); s += `<path d="M${pts.map(p => p.join(' ')).join('L')}" stroke="#f3b2a8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="${pts[0][0]}" cy="${pts[0][1]}" r="7" fill="#f3b2a8"/>`; }
+  if (type === 'arrow') for (const [c0, cs] of [[10, [20, 30, 40]], [52, [61, 70]], [16, [25, 34]]]) { const p0 = ctr(c0), pts = cs.map(ctr), L = pts[pts.length - 1], Q = pts.length > 1 ? pts[pts.length - 2] : p0, dx = L[0] - Q[0], dy = L[1] - Q[1], m = Math.hypot(dx, dy), ux = dx / m, uy = dy / m; s += `<circle cx="${p0[0]}" cy="${p0[1]}" r="7.5" fill="#fff" stroke="#5aa98c" stroke-width="1.6"/><path d="M${p0[0] + ux * 0} ${p0[1]}M${[p0, ...pts].map(p => p.join(' ')).join('L')}" stroke="#5aa98c" stroke-width="1.6" fill="none" stroke-dasharray="0" opacity=".9"/><path d="M${L[0] - ux * 5 - uy * 4} ${L[1] - uy * 5 + ux * 4}L${L[0]} ${L[1]}L${L[0] - ux * 5 + uy * 4} ${L[1] - uy * 5 - ux * 4}" stroke="#5aa98c" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; }
   const digits = { 4: 5, 13: 3, 36: 8, 42: 1, 60: 7, 76: 2 };
+  if (type === 'ineq') for (const [x0, y0, dir] of [[1, 0, 'r'], [3, 1, 'd'], [5, 2, 'l'], [1, 4, 'u'], [6, 4, 'r'], [4, 6, 'd'], [7, 7, 'l'], [2, 7, 'r']]) { const vx = dir === 'r' ? 1 : dir === 'l' ? -1 : 0, vy = dir === 'd' ? 1 : dir === 'u' ? -1 : 0, mx = P + (x0 + .5 + (vx ? .5 : 0) * (vx || 0) + (vx < 0 ? 0 : 0)) * S, my = P + (y0 + .5 + (vy ? .5 * vy : 0)) * S; const cx = P + (x0 + .5 + vx * .5) * S, cy = P + (y0 + .5 + vy * .5) * S; s += `<path d="M${cx - vx * 3 - vy * 4} ${cy - vy * 3 + vx * 4}L${cx + vx * 3} ${cy + vy * 3}L${cx - vx * 3 + vy * 4} ${cy - vy * 3 - vx * 4}" stroke="#4a8fd0" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; }
+  if (type === 'kropki') for (const [x0, y0, h] of [[0, 0, 1], [2, 1, 0], [4, 0, 1], [6, 2, 0], [1, 3, 1], [5, 4, 1], [3, 5, 0], [7, 5, 0], [0, 6, 1], [4, 7, 1], [6, 7, 0], [2, 8, 1]]) { const cx = P + (x0 + (h ? 1 : .5)) * S, cy = P + (y0 + (h ? .5 : 1)) * S; s += `<circle cx="${cx}" cy="${cy}" r="3.4" fill="#fff" stroke="#6a6fc8" stroke-width="1.4"/>`; }
   if (type !== 'killer') for (const i in digits) s += `<text x="${P + (i % 9) * S + S / 2}" y="${P + ((i / 9) | 0) * S + S / 2}" dy=".36em" text-anchor="middle" font-size="11" font-family="Fredoka,Arial" font-weight="600" fill="#43385a">${digits[i]}</text>`;
   return s + '</svg>';
 }
 let curVset = 0;
 function openVset(si) {
+  $('#theme').classList.remove('ovw');
   curVset = si; show('theme');
   $('#tlBack').onclick = () => go('');
   setScene('wonder', '', 'wonder');
@@ -688,6 +702,32 @@ function drawOverlay(spec) {
     }
     out += `<path d="${p}" stroke="${col}" stroke-width="2.6" stroke-dasharray="9 7" fill="none"/>`;
     spec.cages.forEach(([sum, cs]) => { const m = Math.min(...cs), x = (m % 9) * U, y = ((m / 9) | 0) * U; out += `<text x="${x + 13}" y="${y + 30}" font-family="Fredoka,Arial" font-weight="700" font-size="24" fill="${col}" stroke="var(--cellbg)" stroke-width="5" paint-order="stroke">${sum}</text>`; });
+  }
+  const cc = i => [(i % 9) * U + U / 2, ((i / 9) | 0) * U + U / 2];
+  const markC = night ? '#e8e0ff' : 'color-mix(in srgb,var(--acc) 70%,#3a3050)';
+  if (type === 'thermo' && spec.thermos) {
+    const tc = night ? 'rgba(220,210,255,.22)' : 'color-mix(in srgb,var(--acc) 26%,transparent)';
+    let th = '';
+    for (const path of spec.thermos) { const p = path.map(cc); th += `<path d="M${p.map(q => q.join(' ')).join('L')}" stroke="${tc}" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="${p[0][0]}" cy="${p[0][1]}" r="36" fill="${tc}"/>`; }
+    out = th + out;
+  }
+  if (type === 'arrow' && spec.arrows) {
+    const ac = night ? '#bfe8d6' : 'color-mix(in srgb,var(--acc) 65%,#2f4a40)';
+    for (const [c0, cs] of spec.arrows) {
+      const p0 = cc(c0), pts = cs.map(cc), f = pts[0], dx0 = f[0] - p0[0], dy0 = f[1] - p0[1], m0 = Math.hypot(dx0, dy0);
+      const st = [p0[0] + dx0 / m0 * 40, p0[1] + dy0 / m0 * 40];
+      const L = pts[pts.length - 1], Q = pts.length > 1 ? pts[pts.length - 2] : p0, dx = L[0] - Q[0], dy = L[1] - Q[1], m = Math.hypot(dx, dy), ux = dx / m, uy = dy / m;
+      const tip = [L[0] + ux * 22, L[1] + uy * 22];
+      out += `<circle cx="${p0[0]}" cy="${p0[1]}" r="40" fill="none" stroke="${ac}" stroke-width="5"/><path d="M${[st, ...pts, tip].map(q => q.map(v => v.toFixed(1)).join(' ')).join('L')}" stroke="${ac}" stroke-width="5" fill="none" stroke-linejoin="round" opacity=".85"/><path d="M${(tip[0] - ux * 18 - uy * 14).toFixed(1)} ${(tip[1] - uy * 18 + ux * 14).toFixed(1)}L${tip[0].toFixed(1)} ${tip[1].toFixed(1)}L${(tip[0] - ux * 18 + uy * 14).toFixed(1)} ${(tip[1] - uy * 18 - ux * 14).toFixed(1)}" stroke="${ac}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+  }
+  if (type === 'ineq' && spec.ineq) for (const [ga, lb] of spec.ineq) {
+    const A = cc(ga), Bc = cc(lb), mx = (A[0] + Bc[0]) / 2, my = (A[1] + Bc[1]) / 2, vx = Math.sign(Bc[0] - A[0]), vy = Math.sign(Bc[1] - A[1]);
+    out += `<path d="M${mx - vx * 8 - vy * 11} ${my - vy * 8 + vx * 11}L${mx + vx * 8} ${my + vy * 8}L${mx - vx * 8 + vy * 11} ${my - vy * 8 - vx * 11}" stroke="var(--cellbg)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${mx - vx * 8 - vy * 11} ${my - vy * 8 + vx * 11}L${mx + vx * 8} ${my + vy * 8}L${mx - vx * 8 + vy * 11} ${my - vy * 8 - vx * 11}" stroke="${markC}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  if (type === 'kropki' && spec.dots) for (const [x, y] of spec.dots) {
+    const A = cc(x), Bc = cc(y);
+    out += `<circle cx="${(A[0] + Bc[0]) / 2}" cy="${(A[1] + Bc[1]) / 2}" r="12" fill="${night ? '#fff' : '#fff'}" stroke="${markC}" stroke-width="4"/>`;
   }
   $('#ov').innerHTML = out;
   // per-cell variant marks
@@ -961,6 +1001,9 @@ function explain(s) {
     case 'coloring': return t('x.coloring', { d });
     case 'cageLast': return t('x.cageLast', { s: G.spec && G.spec.cages && s.cage != null ? G.spec.cages[s.cage][0] : '', d });
     case 'innieOutie': return t('x.innie', { u: (s.units || []).map(unitName).join(t('sep')), s: s.sum ?? '' });
+    case 'bounds': return t('x.bounds');
+    case 'dots': return t('x.dots');
+    case 'arrowSum': return t('x.arrowSum');
     case 'cage': return t('x.cage', { s: G.spec && G.spec.cages && s.cage != null ? G.spec.cages[s.cage][0] : '' });
   }
   return '';
@@ -1148,8 +1191,8 @@ function catalog() {
   const triDays = Object.keys(DB.daily).filter(ds => DIFFS.every(d => DB.daily[ds][d])).length;
   [[1, 2], [10, 3]].forEach(([n, ti]) => add('daily', 'tri' + n, triDays >= n, ti, 'cal', t('a.tri', { n }), t('a.tri.d', { n }), [triDays, n]));
   const tot = totalCleared();
-  [[50, 1], [100, 2], [250, 3], [500, 4]].forEach(([n, ti]) => add('col', 'tot' + n, tot >= n, ti, String(n), n === 500 ? t('a.master') : t('a.tot', { n }), t('a.tot.d', { n }), [tot, n]));
-  for (let i = 0; i < 10; i++) {
+  [[50, 1], [100, 2], [250, 3], [500, 3], [1000, 4]].forEach(([n, ti]) => add('col', 'tot' + n, tot >= n, ti, String(n), n === NCOL ? t('a.master') : t('a.tot', { n }), t('a.tot.d', { n }), [tot, n]));
+  for (let i = 0; i < NT; i++) {
     const c = themeCleared(i), s = themeStars(i);
     [[10, 1], [25, 2], [50, 3]].forEach(([n, ti]) => add('theme' + i, 'th' + i + '.' + n, c >= n, ti, String(n), t('a.th', { t: t('th.' + i), n }), t('a.th.d', { n }), [c, n]));
     add('theme' + i, 'th' + i + '.p', s >= 150, 4, 'star', t('a.thp', { t: t('th.' + i) }), t('a.thp.d'), [s, 150]);
@@ -1169,7 +1212,7 @@ function catalog() {
   add('chal', 'nohint50', nohint >= 50, 2, 'bulb', t('a.nohint', { n: 50 }), t('a.nohint.d', { n: 50 }), [nohint, 50]);
   add('chal', 'early', recs.some(r => r.hr >= 4 && r.hr < 7), 1, 'sun', t('a.early'), t('a.early.d'));
   add('chal', 'owl', recs.some(r => r.hr >= 0 && r.hr < 4), 1, 'moon', t('a.owl'), t('a.owl.d'));
-  add('chal', 'tour', [...Array(10).keys()].every(i => themeCleared(i) > 0), 2, 'map', t('a.tour'), t('a.tour.d'));
+  add('chal', 'tour', [...Array(NT).keys()].every(i => themeCleared(i) > 0), 2, 'map', t('a.tour'), t('a.tour.d'));
   const own = ownedCount(), hasUR = Object.keys(DB.icons).some(id => iconInfo(+id).rarity === 'UR');
   [[10, 1], [50, 2], [150, 3], [500, 4]].forEach(([n, ti]) => add('chal', 'ic' + n, own >= n, ti, 'face', t('a.ic', { n }), t('a.ic.d', { n }), [own, n]));
   add('chal', 'icUR', hasUR, 4, 'crown', t('a.icUR'), t('a.icUR.d'));
@@ -1230,11 +1273,11 @@ function openAch() {
     h += `<p class="note">${esc(t('ach.month.tier'))}</p></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.lifetime'))}</h4><div class="agrid">${by('daily').map(cell).join('')}</div></div>`;
   } else if (achTab === 'col') {
-    const tot = totalCleared(), m = C.find(a => a.id === 'tot500');
-    h += `<div class="big ${m.got ? '' : 'lock'}">${badge(4, 'crown')}<div><b>${esc(t('a.master'))}</b><small>${esc(t('a.master.d'))}</small><div class="col-total" style="margin:8px 0 0"><div class="bar"><i style="width:${tot / 5}%"></i></div><b class="num">${tot}/500</b></div></div></div>`;
+    const tot = totalCleared(), m = C.find(a => a.id === 'tot' + NCOL);
+    h += `<div class="big ${m.got ? '' : 'lock'}">${badge(4, 'crown')}<div><b>${esc(t('a.master'))}</b><small>${esc(t('a.master.d'))}</small><div class="col-total" style="margin:8px 0 0"><div class="bar"><i style="width:${tot / NCOL * 100}%"></i></div><b class="num">${tot}/${NCOL}</b></div></div></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.total'))}</h4><div class="agrid">${by('col').map(cell).join('')}</div></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.themes'))}</h4>`;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < NT; i++) {
       const a = by('theme' + i);
       h += `<div class="trow"><div class="tp">${BG.svg(THEMES[i], 160, 100)}</div><div class="tn"><b>${esc(t('th.' + i))}</b><small>${themeCleared(i)}/50 · ★${themeStars(i)}/150</small></div><div class="mb">${a.map(x => `<span title="${esc(x.name + ' — ' + x.desc)}" class="${x.got ? '' : 'lock'}">${badge(x.tier, x.icon)}</span>`).join('')}</div></div>`;
     }
@@ -1247,7 +1290,7 @@ function openAch() {
     h += `<div class="stats">
       <div class="stat"><small>${esc(t('st.solved'))}</small><b>${recs.length}</b></div>
       <div class="stat"><small>${esc(t('st.daily'))}</small><b>${recs.filter(r => r.kind === 'd').length}</b></div>
-      <div class="stat"><small>${esc(t('st.col'))}</small><b>${totalCleared()}</b><em>/500</em></div>
+      <div class="stat"><small>${esc(t('st.col'))}</small><b>${totalCleared()}</b><em>/${NCOL}</em></div>
       <div class="stat"><small>${esc(t('var.title'))}</small><b>${totalVar()}</b><em>/${totalVarLen()}</em></div>
       <div class="stat"><small>${esc(t('st.streak'))}</small><b>${sk.cur}</b><em>${esc(t('st.best', { n: sk.best }))}</em></div>
       <div class="stat"><small>${esc(t('st.perfect'))}</small><b>${recs.filter(r => !r.m && !r.h).length}</b></div>
@@ -1333,7 +1376,7 @@ async function renderRank() {
   let ctl = '';
   if (rkTab === 'daily') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(fmtDate(rkDate, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }))}</b><button class="ib flip" data-nav="1" ${rkDate >= today() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="chips">${DIFFS.map(d => `<button data-d="${d}" class="${d === rkDiff ? 'on' : ''}">${esc(t('d.' + d))}</button>`).join('')}</div>`;
   if (rkTab === 'month') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1" ${rkMonth <= FIRST_DAY.slice(0, 7) ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(fmtMonth(rkMonth))}</b><button class="ib flip" data-nav="1" ${rkMonth >= thisMonth() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><p class="note" style="margin:-4px 0 10px;text-align:center">${esc(t('rk.month.note'))}</p>`;
-  if (rkTab === 'col') ctl = `<div class="chips">${THEMES.map((_, i) => `<button data-s="c${i}" class="${rkSet === 'c' + i ? 'on' : ''}">${esc(t('th.' + i))}</button>`).join('')}${PV ? PV.sets.map(s => `<button data-s="v${s.type}" class="${rkSet === 'v' + s.type ? 'on' : ''}">${esc(t('vt.' + s.type))}</button>`).join('') : ''}</div>`;
+  if (rkTab === 'col') ctl = `<div class="rkctl"><select id="rkSel" class="rksel"><optgroup label="${esc(t('ht.col'))}">${THEMES.map((_, i) => `<option value="c${i}" ${rkSet === 'c' + i ? 'selected' : ''}>${i + 1}. ${esc(t('th.' + i))}</option>`).join('')}</optgroup>${PV ? `<optgroup label="${esc(t('ht.var'))}">${PV.sets.map(s => `<option value="v${s.type}" ${rkSet === 'v' + s.type ? 'selected' : ''}>${esc(t('vt.' + s.type))}</option>`).join('')}</optgroup>` : ''}</select></div>`;
   body.innerHTML = ctl + `<div id="rkList"><div class="rkmsg">${esc(t('rk.loading'))}</div></div>`;
   body.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
     const n = +b.dataset.nav;
@@ -1343,6 +1386,7 @@ async function renderRank() {
   });
   body.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { rkDiff = b.dataset.d; SFX.tap(); renderRank(); });
   body.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { rkSet = b.dataset.s; SFX.tap(); renderRank(); });
+  const rs = $('#rkSel'); if (rs) rs.onchange = () => { rkSet = rs.value; SFX.tap(); renderRank(); };
   const list = $('#rkList');
   if (!ON || !ON.available) { list.innerHTML = `<div class="rkmsg">${badge(1, 'podium')}${esc(t('rk.prep'))}</div>`; return; }
   const key = rkTab + rkDate + rkDiff + rkMonth + rkSet;
@@ -1691,8 +1735,8 @@ if (DEBUG) window.__sudoku = { get G() { return G; }, DB: () => DB, catalog, set
 document.body.insertAdjacentHTML('afterbegin', SPRITE);
 applyI18n(); applySettings(); buildBoard(); layout(); lastTod = curTod();
 Promise.all([
-  fetch('puzzles.json').then(r => r.json()),
-  fetch('puzzles_variants.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
+  fetch('puzzles.json?v=2').then(r => r.json()),
+  fetch('puzzles_variants.json?v=2').then(r => (r.ok ? r.json() : null)).catch(() => null),
 ]).then(([j, v]) => {
   PZ = j; PV = v && v.sets && E.setVariant ? v : null;
   syncAch(false); persist();
