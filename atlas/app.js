@@ -47,7 +47,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=1` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=2` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -116,14 +116,39 @@
     ['stoneB', 'gomoku', 33, 92, 70, 0], ['c4', 'connect4', 92, 20, 92, 14], ['gem', 'mancala', 78, 10, 64, 0], ['tile', 'sudoku', 95, 64, 80, 10],
     ['checker', 'morris', 80, 88, 92, -8], ['knight', 'chess', 66, 92, 86, 6], ['stoneW', 'gomoku', 45, 8, 60, 0], ['gem2', 'mancala', 60, 6, 54, 0],
     ['shogi2', 'shogi', 3, 45, 70, -14], ['pawn', 'chess', 97, 42, 64, 0], ['bgChecker', 'backgammon', 50, 95, 72, 0]];
+  // title emblem: a compass seal (the "atlas") with ring lettering and a swallow-tail ribbon
+  function emblem(main, pre, n) {
+    const ring = 'WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ ';
+    const big = main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)));
+    const pts = (len, w) => [0, 90, 180, 270].map(a => `<path d="M320 ${200 - len}L${320 + w} 200H${320 - w}z" transform="rotate(${a} 320 200)"/>`).join('');
+    return `<svg viewBox="0 0 640 400" role="img" aria-hidden="true">
+      <defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
+      <circle cx="320" cy="200" r="176" fill="#111"/>
+      <g class="spin"><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP">${ring}</textPath></text></g>
+      <circle cx="320" cy="200" r="136" fill="#fff"/>
+      <circle cx="320" cy="200" r="128" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="3 5"/>
+      <g fill="#111" opacity=".16">${pts(118, 22)}</g>
+      <g fill="#111" transform="rotate(45 320 200)" opacity=".1">${pts(92, 16)}</g>
+      <g fill="#111">${[0, 90, 180, 270].map(a => `<path d="M320 ${200 - 124}L320 200H${320 - 22}z" transform="rotate(${a} 320 200)"/>`).join('')}</g>
+      <!-- ribbon -->
+      <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#111" transform="translate(8 8)"/>
+      <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#fff" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M86 172H554M86 238H554" stroke="#111" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
+      ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'Dela Gothic One',sans-serif" font-size="24" fill="#fff">${esc(pre)}</text>` : ''}
+      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'Dela Gothic One','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="2">${esc(main)}</text>
+      <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="'Dela Gothic One',sans-serif" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
+      <!-- piece tips on the compass -->
+      <g fill="#fff" stroke="#111" stroke-width="4">
+        <g transform="translate(320 72) scale(.8)"><circle r="13"/><path d="M-12 30h24l-4-14h-16z"/></g>
+        <g transform="translate(412 112) rotate(14) scale(.8)"><rect x="-15" y="-15" width="30" height="30" rx="7"/><circle cx="-6" cy="-6" r="2.6" fill="#111" stroke="none"/><circle cx="6" cy="6" r="2.6" fill="#111" stroke="none"/></g>
+        <g transform="translate(228 112) rotate(-10) scale(.8)"><path d="M0-19l13 6 4 30h-34l4-30z"/></g>
+      </g>
+    </svg>`;
+  }
   function renderHero() {
     const ja = lang === 'ja', phone = innerWidth < 760;
-    $('tRuby').textContent = ja ? 'せかいの ぼどげ たいぜん' : (lang === 'en' ? '世界のボドゲ大全' : 'WORLD BOARD GAME ATLAS');
-    $('tNo').textContent = ja ? '世界の' : ''; $('tNo').hidden = !ja;
-    const main = ja ? 'ボドゲ大全' : t('title');
-    $('tMain').textContent = main; $('tMain').style.fontSize = ja ? '' : `min(${phone ? 34 : 64}px, ${Math.round((phone ? 300 : 700) / Math.max(6, main.length * .62))}px)`;
-    $('tEn').textContent = 'WORLD BOARD GAME ATLAS';
-    $('tCnt').textContent = A_.GAMES.length;
+    $('ttl').innerHTML = emblem(ja ? 'ボドゲ大全' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
+    $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<img src="../images/atlas/p-${img}.webp?v=1" alt="" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg;--d:${2.6 + (i % 5) * .5}s;--dl:${-i * .37}s">`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => openBoard(b.dataset.g));
   }

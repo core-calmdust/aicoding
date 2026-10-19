@@ -101,25 +101,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   animation:float var(--d) ease-in-out infinite alternate;animation-delay:var(--dl);will-change:transform;cursor:pointer;transition:filter .2s}
 .props img:hover{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
 @keyframes float{from{transform:translate(-50%,-50%) rotate(var(--r)) translateY(0)}to{transform:translate(-50%,-50%) rotate(calc(var(--r) + 6deg)) translateY(-12px)}}
-.ttl{position:relative;z-index:2;margin:0;display:inline-flex;flex-direction:column;align-items:flex-start;gap:6px;background:#fff;padding:16px 22px 18px;border:5px solid #111;box-shadow:10px 10px 0 #111;color:#111;font-weight:400}
-.ttl .ruby{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:13px;letter-spacing:.32em;padding-inline-start:4px}
-.ttl .l1{display:flex;align-items:center;gap:12px}
-.ttl .no{font-family:'Dela Gothic One','Zen Maru Gothic',sans-serif;font-size:26px;line-height:1;letter-spacing:.04em;background:#111;color:#fff;padding:8px 10px 10px;border-radius:4px;align-self:flex-end;margin-bottom:6px}
-.ttl .main{font-family:'Dela Gothic One','Zen Maru Gothic',sans-serif;font-size:76px;line-height:1;letter-spacing:.02em;white-space:nowrap}
-.ttl .l2{display:flex;align-items:center;gap:12px;width:100%;border-top:4px solid #111;padding-top:10px}
-.ttl .chk{flex:none;width:96px;height:24px;background:conic-gradient(#111 25%,#fff 0 50%,#111 0 75%,#fff 0) 0 0/24px 24px;border:3px solid #111}
-.ttl .en{font-family:'Fredoka',sans-serif;font-weight:700;font-size:17px;letter-spacing:.34em;white-space:nowrap;flex:1}
-.ttl .cnt{flex:none;display:flex;align-items:baseline;gap:4px;background:#111;color:#fff;padding:2px 10px 4px;border-radius:4px}
-.ttl .cnt b{font-family:'Dela Gothic One',sans-serif;font-size:26px;line-height:1}
-.ttl .cnt small{font-family:'Fredoka',sans-serif;font-weight:700;font-size:11px;letter-spacing:.14em}
-[dir=rtl] .ttl{box-shadow:-10px 10px 0 #111}
-@media (max-width:760px){
-  .hero{height:330px;border-radius:24px}
-  .ttl{padding:10px 14px 12px;border-width:4px;box-shadow:6px 6px 0 #111;gap:4px}
-  .ttl{max-width:calc(100% - 30px)}.ttl .main{font-size:clamp(26px,8.6vw,40px)}.ttl .no{font-size:14px;padding:5px 6px 6px;margin-bottom:3px}
-  .ttl .ruby{font-size:10px}.ttl .chk{width:56px;height:16px;background-size:16px 16px;border-width:2px}
-  .ttl .en{font-size:8.5px;letter-spacing:.12em}.ttl .l2{gap:7px}.ttl .cnt b{font-size:16px}.ttl .cnt small{font-size:9px}
-}
+.ttl{position:relative;z-index:2;margin:0;width:min(640px,96%);line-height:0;filter:drop-shadow(0 14px 18px rgba(0,0,0,.12))}
+.ttl svg{width:100%;height:auto;overflow:visible}
+.ttl .spin{transform-origin:320px 200px;animation:spin 60s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:760px){.hero{height:330px;border-radius:24px}.ttl{width:104%}}
 
 /* ---------- home: updated row + icon grid ---------- */
 .updrow{display:flex;gap:16px;overflow-x:auto;padding:30px 4px 16px;margin-top:-18px;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -141,28 +127,28 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .ut p{margin:5px 0 0;font-size:13px;font-weight:700;color:var(--ink2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:3em}
 @media (max-width:560px){.ut{width:270px}.ut .pan{height:124px}.ut .pan img{width:160px}}
 
-/* game "boxes": 3D board on a coloured tile, like a game case on a shelf */
-.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:30px 16px;padding:20px 0 6px}
-.ic{--c:#ff5d5d;position:relative;display:flex;flex-direction:column;border:0;padding:0;border-radius:26px;background:#fff;text-align:center;cursor:pointer;
-  box-shadow:0 5px 0 color-mix(in srgb,var(--c) 50%,#3a2a10),0 14px 24px -14px rgba(80,40,0,.55);transition:transform .18s cubic-bezier(.3,1.6,.5,1)}
-.ic:hover,.ic:focus-visible{transform:translateY(-5px)}
-.ic:active{transform:translateY(3px);box-shadow:0 2px 0 color-mix(in srgb,var(--c) 50%,#3a2a10)}
-.ic .art{position:relative;aspect-ratio:1/.78;border-radius:26px 26px 0 0;
-  background:radial-gradient(110% 110% at 30% 0%,color-mix(in srgb,var(--c) 40%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 72%,#000) 100%)}
-.ic .art::before{content:'';position:absolute;inset:0;border-radius:inherit;opacity:.16;background-image:radial-gradient(circle at 2px 2px,#fff 1.6px,transparent 2px);background-size:14px 14px}
-.ic .art::after{content:'';position:absolute;left:8%;right:8%;top:6px;height:34%;border-radius:20px 20px 50% 50%;background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,0))}
-.ic .art img{position:absolute;left:50%;bottom:-10%;width:104%;transform:translateX(-50%);filter:drop-shadow(0 8px 6px rgba(0,0,0,.3));transition:transform .25s cubic-bezier(.3,1.6,.5,1);z-index:1}
-.ic:hover .art img{transform:translateX(-50%) translateY(-10px) rotate(-2deg) scale(1.05)}
-.ic[data-g=connect4] .art img{width:80%;bottom:-4%}.ut[data-g=connect4] .pan img{width:150px}
-.ic .art img.flat{width:52%;bottom:16%;border-radius:22%}
-.ic .no{position:absolute;top:9px;inset-inline-start:11px;z-index:2;font-family:var(--round);font-weight:700;font-size:11px;letter-spacing:.06em;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25)}
-.ic .bdg{position:absolute;top:-9px;inset-inline-end:-6px;z-index:3;display:flex;gap:4px}
-.ic .bdg .badge{height:21px;font-size:10.5px;padding:0 7px}
-.ic .lab{position:relative;z-index:2;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:7px}
-.ic span.n{font-weight:900;font-size:14.5px;line-height:1.3}
-.ic .pr{width:78%;height:8px;border-radius:9px;background:#f1e9d6;overflow:hidden}
+/* game icons: the diamond-based 3D icon stands on its own, name below (phone: 4 per row) */
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:18px 12px;padding:10px 0 6px}
+.ic{--c:#ff5d5d;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;padding:4px 2px;background:none;text-align:center;cursor:pointer;border-radius:20px}
+.ic .art{position:relative;width:100%;aspect-ratio:1}
+.ic .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 6px rgba(60,30,0,.18));transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.ic:hover .art img,.ic:focus-visible .art img{transform:translateY(-8px) scale(1.05)}
+.ic:active .art img{transform:scale(.94)}
+.ic .art img.flat{inset:14%;width:72%;height:72%;border-radius:24%}
+.ic .no{display:none}
+.ic .bdg{position:absolute;top:2px;inset-inline-end:0;z-index:3;display:flex;gap:4px}
+.ic .bdg .badge{height:19px;font-size:10px;padding:0 6px}
+.ic .lab{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%}
+.ic span.n{font-weight:900;font-size:14px;line-height:1.25}
+.ic .pr{width:56%;height:6px;border-radius:9px;background:#efe6d0;overflow:hidden}
 .ic .pr i{display:block;height:100%;background:var(--c);border-radius:9px}
-@media (max-width:560px){.igrid{grid-template-columns:repeat(2,1fr);gap:24px 12px}.ic span.n{font-size:13px}}
+@media (max-width:560px){
+  .igrid{grid-template-columns:repeat(4,1fr);gap:12px 4px}
+  .ic{gap:3px;padding:2px 0}
+  .ic span.n{font-size:10.5px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ic .bdg{top:-2px;inset-inline-end:-2px}.ic .bdg .badge{height:15px;font-size:8px;padding:0 4px;border-radius:5px}
+  .ic .pr{height:4px;width:60%}
+}
 
 /* small 3D tile used in cards / viewer */
 .g3{--c:#ff5d5d;flex:none;width:58px;height:58px;border-radius:17px;position:relative;overflow:visible;
@@ -386,11 +372,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   <section class="pg" id="pg-home">
     <div class="hero" id="hero">
       <div class="props" id="props" aria-hidden="true"></div>
-      <h1 class="ttl" id="ttl">
-        <span class="ruby" id="tRuby"></span>
-        <span class="l1"><span class="no" id="tNo"></span><span class="main" id="tMain"></span></span>
-        <span class="l2"><span class="chk" aria-hidden="true"></span><span class="en" id="tEn"></span><span class="cnt"><b id="tCnt"></b><small>GAMES</small></span></span>
-      </h1>
+      <h1 class="ttl" id="ttl"></h1>
     </div>
     <h2 class="h" id="hUpd"></h2>
     <div class="updrow" id="updRow"></div>

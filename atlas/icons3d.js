@@ -109,12 +109,18 @@
   };
 
   /* ---------- icon scenes ---------- */
-  function boardChunk(n, size, topMat, sideMat, lines, h = .5) {   // small board fragment
-    const g = new T.Group();
-    g.add(rbox(size, h, size, .32, sideMat));
-    const top = mesh(new T.PlaneGeometry(size - .3, size - .3), topMat); top.rotation.x = -Math.PI / 2; top.position.y = h + .002; g.add(top);
+  // square, chunky base (seen corner-on it reads as a diamond). Its pieces are placed at y = .5 and lifted by BASE_H - .5
+  const BASE_H = 1.05;
+  function boardChunk(n, size, topMat, sideMat, lines, h) {
+    const g = new T.Group(), inner = new T.Group();
+    g.add(rbox(size, BASE_H, size, .3, sideMat));
+    const top = mesh(new T.PlaneGeometry(size - .5, size - .5), topMat); top.rotation.x = -Math.PI / 2; top.position.y = BASE_H + .004; g.add(top);
+    g.userData.lift = BASE_H - (h || .5);
     return g;
   }
+  // wrap a scene: everything added after the base is lifted onto its top
+  function lifted(base, ...items) { const L = new T.Group(); L.position.y = base.userData.lift || 0; items.forEach(i => L.add(i)); base.add(L); return base; }
+  function plinth(size, mat) { const b = new T.Group(); b.add(rbox(size, BASE_H, size, .3, mat)); b.userData.lift = BASE_H; return b; }
   const gridMat = (key, base, line, n, opt = {}) => M({ map: X.canvasTex('icg-' + key, 512, 512, (g, W) => {
     g.fillStyle = base; g.fillRect(0, 0, W, W); g.strokeStyle = line; g.lineWidth = opt.lw || 14; g.lineCap = 'round';
     const pad = opt.points ? W / (n * 2) : 0, st = opt.points ? (W - 2 * pad) / (n - 1) : W / n;
@@ -141,7 +147,7 @@
       const g = boardChunk(3, 3.6, gridMat('cs', '#f3dcb1', '#f3dcb1', 3, { check: '#8a5a36' }), C(0x6b4325));
       g.add(at(pawnChess(C(0x26232a, { roughness: .3 }), .7), 1.1, .5, 1.0));
       g.add(at(pawnChess(C(0xf2ede2, { roughness: .3 }), .7), -1.15, .5, -1.05));
-      g.add(at(knight(C(0xe6dece, { roughness: .32 }), 1.05), -.1, .5, .15, 0, .5, 0));
+      g.add(at(knight(C(0xe6dece, { roughness: .32 }), 1.15), -.1, .5, .15, 0, -.95, 0));
       return g;
     },
     gomoku() {
@@ -175,13 +181,13 @@
     },
     mancala() {
       const g = new T.Group();
-      g.add(rbox(4.2, .8, 2.4, .5, M({ map: X.wood('icm', '#c68a4c', '#7a4a20', 512, 512, 1.4), roughness: .5 })));
+      g.add(rbox(3.9, .7, 3.9, .3, M({ map: X.wood('icm', '#c68a4c', '#7a4a20', 512, 512, 1.4), roughness: .5 })));
       const pit = C(0x6b3f1c, { roughness: .8 }), cols = [0xff5d5d, 0x36b4ff, 0xffc928, 0x3ccf91, 0x8d6bff, 0xff7fbe];
       [-1, 1].forEach((x, k) => {
-        const p = mesh(new T.CylinderGeometry(.82, .68, .1, 40), pit); p.position.set(x, .81, 0); g.add(p);
-        for (let i = 0; i < (k ? 7 : 5); i++) { const a = i * 2.3, r = .1 + .25 * (i % 3) / 2; g.add(at(gem(cols[(i + k * 2) % 6], .55), x + Math.cos(a) * r, .78 + .14 * (i / 3 | 0), Math.sin(a) * r)); }
+        const p = mesh(new T.CylinderGeometry(.82, .68, .1, 40), pit); p.position.set(x * .9, .71, x * .9); g.add(p);
+        for (let i = 0; i < (k ? 7 : 5); i++) { const a = i * 2.3, r = .1 + .25 * (i % 3) / 2; g.add(at(gem(cols[(i + k * 2) % 6], .55), x * .9 + Math.cos(a) * r, .68 + .14 * (i / 3 | 0), x * .9 + Math.sin(a) * r)); }
       });
-      g.add(at(gem(0xff5d5d, .8), .2, 1.9, -.3, .3, .4, .2)); g.add(at(gem(0x36b4ff, .6), -.6, 2.4, .1, .6, 0, 0));
+      g.add(at(gem(0xff5d5d, .8), .9, 1.7, -.9, .3, .4, .2)); g.add(at(gem(0x36b4ff, .6), -.2, 2.3, -.4, .6, 0, 0));
       return g;
     },
     backgammon() {
@@ -212,5 +218,20 @@
       return g;
     },
   };
-  window.Icons3D = { PIECES, ICONS };
+  // post-process: pieces onto the thick base; scenes without a board get a square plinth
+  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9] };
+  const FIX = {};
+  Object.keys(ICONS).forEach(id => {
+    FIX[id] = () => {
+      const g = ICONS[id]();
+      if (PLINTH[id]) {
+        const [col, size] = PLINTH[id], wrap = new T.Group(), pl = rbox(size, BASE_H, size, .34, id === 'mancala' ? M({ map: X.wood('icpl', '#d39a5c', '#8a5a2a'), roughness: .5 }) : gloss(col));
+        g.position.y = BASE_H; wrap.add(pl, g); return wrap;
+      }
+      const lift = g.userData.lift || 0;
+      g.children.forEach((c, i) => { if (i >= 2) c.position.y += lift; });
+      return g;
+    };
+  });
+  window.Icons3D = { PIECES, ICONS: FIX };
 })();

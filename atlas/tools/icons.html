@@ -25,12 +25,20 @@
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
   const q = new URLSearchParams(location.search), kind = q.get('kind') || 'icon';
   const g = kind === 'piece' ? Icons3D.PIECES[id]() : (Icons3D.ICONS[id] || Table3D.MODELS[id])(); scene.add(g);
-  g.rotation.y = kind === 'piece' ? (+q.get('ry') || -0.5) : -0.62;
+  g.rotation.y = kind === 'piece' ? (+q.get('ry') || -0.5) : Math.PI / 4;   // icons: corner-on → diamond
   // fit: bounding sphere
   const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), r = box.getBoundingSphere(new THREE.Sphere()).radius;
-  const cam = new THREE.PerspectiveCamera(24, 1, .1, 200);
-  const dist = r / Math.sin(13 * Math.PI / 180) * .84;
-  cam.position.set(c.x + dist * .05, c.y + dist * .62, c.z + dist * .78); cam.lookAt(c.x, c.y - r * .04, c.z);
+  // icons: orthographic, isometric-ish (≈32° down) so the square base reads as a clean diamond
+  let cam;
+  if (kind === 'piece') {
+    cam = new THREE.PerspectiveCamera(24, 1, .1, 200);
+    const dist = r / Math.sin(13 * Math.PI / 180) * .84;
+    cam.position.set(c.x + dist * .05, c.y + dist * .62, c.z + dist * .78); cam.lookAt(c.x, c.y - r * .04, c.z);
+  } else {
+    cam = new THREE.OrthographicCamera(-r, r, r, -r, .1, 200);
+    const el = 35.26 * Math.PI / 180;   // true isometric
+    cam.position.set(c.x, c.y + 40 * Math.sin(el), c.z + 40 * Math.cos(el)); cam.lookAt(c.x, c.y, c.z); cam.updateProjectionMatrix();
+  }
   R.render(scene, cam);
   window.SHOT = R.domElement.toDataURL('image/png');
 })();
