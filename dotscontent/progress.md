@@ -42,3 +42,6 @@ main にはコミットしない（コーディネータが反映）。wip-ai-da
 - [x] 6. トップ index.html（dots facts: lessons15, puzzles450, dt.desc 10言語）と README の dots 行を更新（git pull --rebase --autostash origin main 済み）。
 
 ## 完了。main へのコミットはコーディネータが行う。
+
+## 最終状態 (2026-10-19T07:38:35Z)
+- main に反映・公開済み（コーディネータ）。バックグラウンドジョブ（http.server 等）はすべて停止。再開不要。
