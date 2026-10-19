@@ -395,6 +395,10 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .rv-chips{display:flex;gap:4px;flex-wrap:wrap}
 .rv-chips span{font-size:11px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.25)}
 .rv-chips .best{color:#8fe3b8}.rv-chips .good{color:#b8d4ff}.rv-chips .dubious{color:#f2c060}.rv-chips .bad{color:#ff8b7d}
+.rv-ex{border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.07);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:14px;line-height:1.6;color:var(--text)}
+.rv-ex-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.rv-ex p{margin:2px 0}.rv-ex .bm{color:#f0b54a}.rv-ex .ls,.rv-ex .ft{color:var(--muted);font-size:12.5px}.rv-ex .why{color:var(--muted);font-size:13px}.rv-ex .hintnote{color:var(--dim);font-size:11.5px}
+.rv-ex .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b1110;flex:none;background:#8fe3b8}.rv-ex .tag.good{background:#9fc7ff}.rv-ex .tag.dubious{background:#f2c060}.rv-ex .tag.bad{background:#ff6b5b}
 .rv-list{display:grid;gap:4px;margin-top:10px}
 .rv-list button{display:flex;gap:8px;align-items:center;text-align:left;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font-size:12px;width:100%}
 .rv-list button:hover{border-color:var(--brass2)}
@@ -1171,7 +1175,7 @@ body.has-clk .player .status{grid-area:st}
   </div>
 </div>
 
-<script src="i18n.js?v=20261019clk"></script>
+<script src="i18n.js?v=20261019rvx"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261018wt"></script>
 <script>
@@ -1590,7 +1594,7 @@ function renderKifu() {
   k.innerHTML = html;
   const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
 }
-$('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (!b) return; if (positions[0].rv && !rvRun && !rvOpen) rvOpen = true; viewAt(+b.dataset.i); renderReview(); });
 (() => {
   const g = $('#graph');
   let dragging = false;
@@ -2874,6 +2878,33 @@ function rvLoss(i) {   // loss of the move that led to position i (from the move
   return { loss: Math.max(0, best - mine.score), best: bm };
 }
 function sideLabel(c) { return settings.mode === 'ai' ? (c === humanColor ? t('you') : 'AI') : cname(c); }
+// review: explain only the move at the current position (like shogi)
+const RV_CN = [0, 7, 56, 63], RV_X = [9, 14, 49, 54], RV_C = [1, 8, 6, 15, 48, 57, 55, 62];
+function rvSqKind(q, cells) {
+  if (RV_CN.includes(q)) return 'corner';
+  const near = c => !cells[c];
+  if (RV_X.includes(q) && near(RV_CN[RV_X.indexOf(q)])) return 'x';
+  if (RV_C.includes(q) && near(RV_CN[Math.floor(RV_C.indexOf(q) / 2)])) return 'c';
+  const f = q % 8, r = q >> 3; if (f === 0 || f === 7 || r === 0 || r === 7) return 'edge';
+  return '';
+}
+function rvExplainHtml() {
+  if (!positions[0].rv || cur >= positions.length - 1) return '';
+  const r = rvLoss(cur + 1); if (!r) return '';
+  const nx = positions[cur + 1], cells = positions[cur].cells, q = nx.q, played = nx.last;
+  const kind = sq => { const k = rvSqKind(sq, cells); return k ? `<span class="ft">${(LANG === 'ja' || LANG === 'zh') ? '（' + t('sq.' + k) + '）' : ' (' + t('sq.' + k) + ')'}</span>` : ''; };
+  let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${t('rv.ex.move', { n: cur + 1 })} ${nx.mover === BLACK ? '●' : '○'} <b>${sqName(played)}</b>${kind(played)}</span>${q ? `<span class="tag ${q}">${t('q.' + q)}</span>` : ''}</div>`;
+  if (r.best === played) h += `<p>${t('rv.ex.same')}</p>`;
+  else if (q !== 'bad' && q !== 'dubious') h += `<p>${t('rv.ex.alt', { m: `<b class="bm">${sqName(r.best)}</b>` })}${kind(r.best)}</p>`;
+  else {
+    h += `<p>${t('rv.ex.best', { m: `<b class="bm">${sqName(r.best)}</b>` })}${kind(r.best)} <span class="ls">${t('rv.ex.loss', { l: r.loss.toFixed(1) })}</span></p>`;
+    const kp = rvSqKind(played, cells), kb = rvSqKind(r.best, cells);
+    if (kb === 'corner' && kp !== 'corner') h += `<p class="why">${t('rv.ex.cornerMiss')}</p>`;
+    else if (kp === 'x') h += `<p class="why">${t('rv.ex.xwarn')}</p>`;
+    else if (kp === 'c') h += `<p class="why">${t('rv.ex.cwarn')}</p>`;
+  }
+  return h + `<p class="hintnote">${t('rv.ex.board')}</p></div>`;
+}
 function renderReview() {
   const card = $('#reviewCard');
   const show = !lesson && !puzzle && rvOpen && (rvRun || positions[0].rv);
@@ -2893,7 +2924,7 @@ function renderReview() {
       if (q === 'bad' || q === 'dubious') bad.push({ i, ...r, q });
     }
     const row = c => { const s = st[c]; return `<span>${c === BLACK ? '●' : '○'} ${sideLabel(c)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: s.n ? (s.loss / s.n).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${s.c.best}</span><span class="good">${s.c.good}</span><span class="dubious">${s.c.dubious}</span><span class="bad">${s.c.bad}</span></span>`; };
-    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(BLACK)}${row(WHITE)}</div>`;
+    html = rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(BLACK)}${row(WHITE)}</div>`;
     bad.sort((a, b) => b.loss - a.loss);
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 6).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${positions[x.i].mover === BLACK ? '●' : '○'} ${sqName(positions[x.i].last)} → ${sqName(x.best)}</span><span class="ls">−${x.loss.toFixed(1)}</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
