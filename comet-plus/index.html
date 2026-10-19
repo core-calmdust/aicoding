@@ -3761,21 +3761,23 @@ function updateFieldGrid() {
 
 // 枠: 周囲を一周するラインを、キックごとに波打たせる
 const FRAME_N = 640;
-const framePerim = 2 * (W + H);
+const FRAME_TOP_EXT = IS_MOBILE ? 0 : 95; // PCは枠の上辺を時計の上まで伸ばす（見た目だけ）
+const FH = H + FRAME_TOP_EXT;
+const framePerim = 2 * (W + FH);
 const frameBase = new Float32Array(FRAME_N * 3);
 const frameS = new Float32Array(FRAME_N); // 下辺中央からの周回距離（左右対称）
 const frameNx = new Float32Array(FRAME_N), frameNz = new Float32Array(FRAME_N); // 外向き法線
 for (let i = 0; i < FRAME_N; i++) {
     let d = (i / FRAME_N) * framePerim; // 下辺中央から時計回り
     let x, z;
-    const hw = W / 2, hh = H / 2;
+    const hw = W / 2, hh = H / 2, ht = hh + FRAME_TOP_EXT;
     if (d < hw) { x = -d; z = hh; }
-    else if ((d -= hw) < H) { x = -hw; z = hh - d; }
-    else if ((d -= H) < W) { x = -hw + d; z = -hh; }
-    else if ((d -= W) < H) { x = hw; z = -hh + d; }
-    else { d -= H; x = hw - d; z = hh; }
+    else if ((d -= hw) < FH) { x = -hw; z = hh - d; }
+    else if ((d -= FH) < W) { x = -hw + d; z = -ht; }
+    else if ((d -= W) < FH) { x = hw; z = -ht + d; }
+    else { d -= FH; x = hw - d; z = hh; }
     frameBase[i * 3] = x; frameBase[i * 3 + 2] = z;
-    if (Math.abs(Math.abs(z) - hh) < 0.01) { frameNx[i] = 0; frameNz[i] = Math.sign(z); }
+    if (Math.abs(z - hh) < 0.01 || Math.abs(z + ht) < 0.01) { frameNx[i] = 0; frameNz[i] = Math.sign(z); }
     else { frameNx[i] = Math.sign(x); frameNz[i] = 0; }
     const sd = (i / FRAME_N) * framePerim;
     frameS[i] = Math.min(sd, framePerim - sd);
@@ -3825,7 +3827,7 @@ const cornerMat = new THREE.MeshBasicMaterial({ color: 0x9fb8d8 });
 const cornerGems = [];
 [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
     const m = new THREE.Mesh(new THREE.OctahedronGeometry(7, 0), cornerMat);
-    m.position.set(sx * W / 2, -4, sz * H / 2);
+    m.position.set(sx * W / 2, -4, sz < 0 ? -(H / 2 + FRAME_TOP_EXT) : H / 2);
     field.add(m); cornerGems.push(m);
     if (IS_MOBILE) m.visible = false;
 });
