@@ -307,7 +307,7 @@
   };
 
   /* ---------- scene ---------- */
-  let envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
+  let zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   function mount(container) {
     el = container;
@@ -343,9 +343,17 @@
     table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
-    container.addEventListener('pointerdown', e => { if (mode === 'play') return; drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
+    // zoom (view mode): mouse wheel, or pinch with two fingers
+    container.addEventListener('wheel', e => { if (mode === 'play') return; e.preventDefault(); zoomTo = Math.max(.55, Math.min(1.7, zoomTo * Math.exp(e.deltaY * .0012))); }, { passive: false });
+    const pts = new Map(); let pinch0 = 0, zoom0 = 1;
+    const pdist = () => { const a = [...pts.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
+    container.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2 && mode !== 'play') { pinch0 = pdist(); zoom0 = zoomTo; drag = null; } }, true);
+    container.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2 && pinch0 && mode !== 'play') { zoomTo = Math.max(.55, Math.min(1.7, zoom0 * pinch0 / Math.max(10, pdist()))); dragEnd = performance.now(); } }, true);
+    const pup = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; };
+    container.addEventListener('pointerup', pup, true); container.addEventListener('pointercancel', pup, true);
+    container.addEventListener('pointerdown', e => { if (mode === 'play' || pts.size > 1) return; drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
     container.addEventListener('pointermove', e => {
-      if (!drag) return;
+      if (!drag || pts.size > 1) return;
       if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) { drag.moved = true; spin = false; try { container.setPointerCapture(e.pointerId); } catch (x) {} }
       if (!drag.moved) return;
       const dx = e.clientX - drag.lx, dy = e.clientY - drag.ly, now = performance.now(), dt = Math.max(8, now - drag.t);
@@ -377,7 +385,7 @@
     const a = cam.aspect || 1, th = Math.tan(cam.fov * Math.PI / 360);
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const needW = (k ? 6.0 : 6.5) / (th * a), needH = (k ? 7.0 : 6.8) / th;
-    const dist = Math.max(needW, needH) * (k ? 1 : 1.08);
+    const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k));   // zoom applies to the showcase view only
     const pitch = .78 + k * .55;                       // view: 3/4 · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
@@ -397,7 +405,7 @@
   function take(id) { const p = prepared[id]; delete prepared[id]; return p; }
   function show(id, model, opts = {}) {
     if (!R) return null;
-    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now();
+    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1;
     if (cur) { const old = cur; root.remove(old); dispose(old); }
     const pre = !model && take(id);
     const g = model || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
@@ -466,7 +474,7 @@
     if (document.hidden || !el.offsetParent) return;
     if (now - lastT < FRAME_MS - 2) return;
     lastT = now;
-    camK += (camTo - camK) * .07;
+    camK += (camTo - camK) * .07; zoom += (zoomTo - zoom) * .18;
     if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * .14; frame(); } else if (inset !== insetTo) { inset = insetTo; frame(); }
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
