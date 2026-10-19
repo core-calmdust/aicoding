@@ -52,6 +52,41 @@
       g.putImageData(img, 0, 0);
     });
   }
+  // planked wood (table): several boards, each with its own tone, long fibres and flame figure, thin dark seams
+  function planks(key, base, dark, n = 4, W = 1024) {
+    return canvasTex(key, W, W, (g) => {
+      const N = makeNoise(key.length * 7 + 3), A = hex(base), B = hex(dark), img = g.createImageData(W, W), d = img.data, ph = W / n;
+      for (let y = 0; y < W; y++) {
+        const k = Math.floor(y / ph), vy = (y % ph) / ph, tone = (N(k * 7.3, 1.7, 1) - .5) * .35, off = k * 13.1;
+        // tileable in x: blend the pattern at u and u-1 so repeated tiles join without a visible line
+        const val = (u) => {
+          const flame = Math.sin((vy * 3.2 + N(u * 1.6 + off, vy * 2 + off, 3) * 2.2) * Math.PI * 2) * .5 + .5;
+          const fibre = N(u * 6 + off, y / W * 160, 3);
+          return Math.pow(flame, 3) * .32 + (fibre - .5) * .55 + (N(u * 120 + off, y / W * 900, 1) > .86 ? .18 : 0);
+        };
+        for (let x = 0; x < W; x++) {
+          const u = x / W, b = u < .5 ? 0 : (u - .5) * 2;
+          let t = .18 + tone + val(u) * (1 - b) + val(u - 1) * b;
+          const seam = Math.min(y % ph, ph - (y % ph)); if (seam < 2.2) t = .95; else if (seam < 4) t += .25;
+          t = Math.max(0, Math.min(1, t));
+          const i = (y * W + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      }
+      g.putImageData(img, 0, 0);
+    });
+  }
+  // felt: dense fine fibres + soft mottling
+  function felt(key, base, W = 1024) {
+    return canvasTex(key, W, W, (g) => {
+      const N = makeNoise(key.length * 23 + 5), A = hex(base), img = g.createImageData(W, W), d = img.data;
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+        const k = (Math.random() - .5) * 22 + (N(x / 2.2, y / 2.2, 2) - .5) * 26 + (N(x / 40, y / 40, 3) - .5) * 18, i = (y * W + x) * 4;
+        d[i] = A[0] + k * .6; d[i + 1] = A[1] + k; d[i + 2] = A[2] + k * .6; d[i + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
+    });
+  }
   // fine cloth / paper-like noise on a flat colour
   function cloth(key, base, amt = 18, W = 512) {
     return canvasTex(key, W, W, (g) => {
@@ -66,6 +101,7 @@
   function grid(key, base, line, n, m, opts = {}) {
     return canvasTex(key, 1024, 1024 * (m / n) | 0, (g, W, H) => {
       if (opts.woodBase) { g.drawImage(wood(key + 'w', base, opts.woodBase).image, 0, 0, W, H); }
+      else if (opts.felt) { g.drawImage(felt(key + 'f', base).image, 0, 0, W, H); }
       else if (opts.cloth) { g.drawImage(cloth(key + 'c', base, opts.cloth).image, 0, 0, W, H); }
       else { g.fillStyle = base; g.fillRect(0, 0, W, H); }
       const pad = opts.pad ?? 0, cw = (W - 2 * pad) / (opts.points ? n - 1 : n), ch = (H - 2 * pad) / (opts.points ? m - 1 : m);
@@ -111,19 +147,22 @@
     reversi(live) {
       const g = new (T().Group)(), S = 8.4, TT = T();
       // bezel: a square ring with rounded, bevelled edges, a little higher than the field
-      const O = 5.25, I = S / 2 + .02, rr = .55, sh = new TT.Shape();
+      const O = S / 2 + .55, I = S / 2 + .02, rr = .42, sh = new TT.Shape();
       sh.moveTo(-O + rr, -O); sh.lineTo(O - rr, -O); sh.quadraticCurveTo(O, -O, O, -O + rr); sh.lineTo(O, O - rr); sh.quadraticCurveTo(O, O, O - rr, O); sh.lineTo(-O + rr, O); sh.quadraticCurveTo(-O, O, -O, O - rr); sh.lineTo(-O, -O + rr); sh.quadraticCurveTo(-O, -O, -O + rr, -O);
       const hole = new TT.Path(); hole.moveTo(-I, -I); hole.lineTo(-I, I); hole.lineTo(I, I); hole.lineTo(I, -I); hole.closePath(); sh.holes.push(hole);
-      const bz = new TT.ExtrudeGeometry(sh, { depth: .46, bevelEnabled: true, bevelThickness: .14, bevelSize: .16, bevelSegments: 5, curveSegments: 8 });
-      bz.rotateX(-Math.PI / 2); bz.translate(0, .14, 0);
-      const wal = wood('rvf2', '#4a2a16', '#1e0f06', 512, 512, 1.4);
-      const frame = M({ map: wal, color: 0xffffff, roughness: .34, clearcoat: .8, clearcoatRoughness: .22, bumpScale: .006 });
+      const bz = new TT.ExtrudeGeometry(sh, { depth: .4, bevelEnabled: true, bevelThickness: .1, bevelSize: .1, bevelSegments: 6, curveSegments: 10 });
+      bz.rotateX(-Math.PI / 2); bz.translate(0, .1, 0);
+      // planar UVs from the top view: the grain runs continuously round the frame (no stretched stripes)
+      const P = bz.attributes.position, UV = bz.attributes.uv;
+      for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + O) / (2 * O) + P.getY(i) * .05, (P.getZ(i) + O) / (2 * O));
+      const wal = wood('rvf3', '#6a3a1e', '#2a1309', 1024, 1024, 1.1);
+      const frame = M({ map: wal, color: 0xffffff, roughness: .3, clearcoat: .9, clearcoatRoughness: .18, bumpScale: .004 });
       g.add(mesh(bz, frame));
-      g.add(at3(slab(O * 2 - .2, .3, O * 2 - .2, frame, frame), 0, 0, 0));
-      // sunken field: deep green cloth, thick black lines, four star points, a soft inner shadow at the rim
-      const top = M({ map: grid('rv3', '#0f8a3c', '#0a1a10', 8, 8, { lw: 7, cloth: 16, stars: [[2, 2], [6, 2], [2, 6], [6, 6]], after: (c, W, H) => { const r = c.createLinearGradient(0, 0, 0, 40); ['top', 'bottom', 'left', 'right'].forEach(() => {}); c.fillStyle = 'rgba(0,0,0,.28)'; c.fillRect(0, 0, W, 10); c.fillRect(0, 0, 10, H); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(0, H - 6, W, 6); c.fillRect(W - 6, 0, 6, H); } }), roughness: .9, bumpScale: .003 });
-      const field = mesh(new TT.PlaneGeometry(S, S), top); field.rotation.x = -Math.PI / 2; field.position.y = .46; field.receiveShadow = true; field.castShadow = false; g.add(field);
-      g.userData.S = S; g.userData.top = .47;
+      const base = M({ map: wal, roughness: .4, bumpScale: .003 });
+      g.add(at3(slab(O * 2 - .1, .2, O * 2 - .1, base, base), 0, 0, 0));
+      const top = M({ map: grid('rv5', '#0b7d33', '#061509', 8, 8, { lw: 6, felt: true, stars: [[2, 2], [6, 2], [2, 6], [6, 6]] }), roughness: 1, bumpScale: .006, sheen: new TT.Color(0x153a22) });
+      const field = mesh(new TT.PlaneGeometry(S, S), top); field.rotation.x = -Math.PI / 2; field.position.y = .42; field.receiveShadow = true; field.castShadow = false; g.add(field);
+      g.userData.S = S; g.userData.top = .43;
       if (live) return g;
       const pos = { 27: 0, 28: 1, 35: 1, 36: 0, 19: 1, 26: 1, 37: 0, 44: 1, 20: 0, 29: 1 };
       const W = WHITE(), B = BLACK();
@@ -298,7 +337,10 @@
     key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const rim = new (T().DirectionalLight)(0xbfd8ff, .3); rim.position.set(8, 6, -10); scene.add(rim);
-    const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: wood('table', '#c98b52', '#8a5428', 1024, 1024, 2), roughness: .6, bumpScale: .006 }));
+    const tw = planks('tablePl2', '#d6995a', '#94582c', 4); tw.wrapS = tw.wrapT = T().RepeatWrapping; tw.repeat.set(7, 10);
+    tw.repeat.set(26, 36);
+    scene.fog = new (T().Fog)(0xb57a45, 45, 130);
+    const table = new (T().Mesh)(new (T().CircleGeometry)(300, 64), M({ map: tw, roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .004 }));
     table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
@@ -437,5 +479,5 @@
     R.render(scene, cam);
   }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
 })();
