@@ -850,7 +850,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/pzbook.js?v=2"></script><!-- learn-ui -->
 <link rel="stylesheet" href="learn.css?v=20261019L"><!-- learn-ui -->
 <script src="engine.js?v=20261020d5"></script>
-<script src="learn.js?v=20261019L"></script>
+<script src="learn.js?v=20261020S"></script>
 <script src="i18n-online.js?v=20261019c"></script>
 <script src="firebase-config.js?v=20261019o"></script>
 <script src="online.js?v=20261020pr"></script>
@@ -994,8 +994,9 @@ function askAna(type, ms) {
 
 // ====================================================================== sound
 let actx = null;
-function ac() { if (!settings.sound) return null; if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (actx.state === 'suspended') actx.resume(); return actx; }
+function ac() { if (!settings.sound || document.hidden) return null; if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (actx.state === 'suspended') actx.resume(); return actx; }
 function tone(a, freq, t0, dur, vol, type) {
+  if (document.hidden) return;
   const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
   g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
@@ -1008,6 +1009,10 @@ function playLine() {
   const g = a.createGain(); g.gain.value = 0.35; n.connect(f).connect(g).connect(a.destination); n.start(t0);
   tone(a, 520, t0, 0.07, 0.06, 'triangle');
 }
+// a background tab stays silent: suspend the audio clock when the page is hidden; ac() resumes it on the next sound
+function audioSuspend() { if (actx && actx.state === 'running') actx.suspend().catch(() => {}); }
+document.addEventListener('visibilitychange', () => { if (document.hidden) audioSuspend(); });
+window.addEventListener('pagehide', audioSuspend);
 let chainCount = 0;
 function playBox(k) {
   const a = ac(); if (!a) return; const t0 = a.currentTime + 0.14;
@@ -1542,7 +1547,7 @@ function navGo(what) {
     if (playTimer) { stopPlay(); return; }
     if (cur >= N) viewAt(0);
     $('#navPlay').classList.add('playing');
-    playTimer = setInterval(() => { if (lesson || puzzle || !canReview() || curPly() >= game.moves.length) { stopPlay(); return; } viewAt(curPly() + 1); }, 700);
+    playTimer = setInterval(() => { if (document.hidden) return; if (lesson || puzzle || !canReview() || curPly() >= game.moves.length) { stopPlay(); return; } viewAt(curPly() + 1); }, 700);
     return;
   }
   stopPlay();

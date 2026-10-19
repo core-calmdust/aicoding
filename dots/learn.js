@@ -12,6 +12,9 @@ const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'nu
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 const escH = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const sleepL = ms => new Promise(r => setTimeout(r, ms));
+// resolves once the page is visible again (sequences pause in a background tab instead of playing on)
+const waitVis = () => !document.hidden ? Promise.resolve() : new Promise(r => { const f = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', f); r(); } }; document.addEventListener('visibilitychange', f); });
+const sleepV = ms => sleepL(ms).then(waitVis);
 const ltr = s => `<bdi dir="ltr" class="mvn">${s}</bdi>`;
 
 // ---------------------------------------------------------------- long texts (content/text.<lang>.json, loaded on demand)
@@ -91,7 +94,7 @@ function longChains(p) { return E.components(p, true).filter(c => c.simple && !c
 // ======================================================================== tabs
 function selTabL(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 let lessonSrc = 'lesson';   // which list the lesson overlay shows: rules | lesson | open
-function showLView(v) { if (v !== 'opDetailView') opDetailStop(); ['lessonListView', 'lessonIntroView', 'lessonDoneView', 'rulesView', 'opDetailView'].forEach(id => { const x = $('#' + id); if (x) x.classList.toggle('hidden', id !== v); }); $('#lessonOverlay .modal').dataset.view = v; }
+function showLView(v) { if (v !== 'opDetailView') opDetailStop(); if (v !== 'rulesView') rulesStop(); ['lessonListView', 'lessonIntroView', 'lessonDoneView', 'rulesView', 'opDetailView'].forEach(id => { const x = $('#' + id); if (x) x.classList.toggle('hidden', id !== v); }); $('#lessonOverlay .modal').dataset.view = v; }
 function swapOv(from, to, open) {
   const a = $(from), b = $(to);
   a.classList.add('instant'); b.classList.add('instant');
@@ -101,7 +104,7 @@ function swapOv(from, to, open) {
 }
 function tabClick(v) {
   const inPz = $('#puzzleOverlay').classList.contains('show');
-  if (v === 'puzzle') { if (!inPz) swapOv('#lessonOverlay', '#puzzleOverlay', openPuzzles); return; }
+  if (v === 'puzzle') { if (!inPz) { rulesStop(); opDetailStop(); swapOv('#lessonOverlay', '#puzzleOverlay', openPuzzles); } return; }
   const go = v === 'rules' ? openRules : v === 'open' ? openOpenings : openLessons;
   swapOv(inPz ? '#puzzleOverlay' : '#lessonOverlay', '#lessonOverlay', go);
 }
@@ -126,8 +129,11 @@ async function openRules(i) {
   showLView('rulesView'); $('#lessonOverlay').classList.add('show');
   rulesRender();
 }
+// stop every running rules sequence (animation, the opponent's reply, delayed re-render): timers are cleared and
+// async loops see a new generation number and quit
+function rulesStop() { if (!RU) return; clearTimeout(RU.timer); RU.timer = 0; RU.gen = (RU.gen || 0) + 1; }
 function rulesPageInit() {
-  const P = RULES[RU.i]; RU.timer && clearTimeout(RU.timer); RU.timer = 0;
+  const P = RULES[RU.i]; rulesStop();
   RU.st = null; if (!P.R) return;
   const by = {}; (P.setup || []).forEach(e => by[e] = 2);
   RU.st = { by, own: Object.assign({}, P.own || {}), turn: 0, score: [0, 0], done: false, msg: '', took: 0, hl: [], bad: [], newBox: [] };
@@ -167,20 +173,21 @@ function rulesTaskText(extra) {
 }
 // play a scripted sequence on the mini board, then hand over to the task
 async function rulesAnim() {
-  const P = RULES[RU.i], st = RU.st, my = RU, G = E.geom(P.R, P.C);
+  const P = RULES[RU.i], st = RU.st, my = RU, gen = RU.gen, G = E.geom(P.R, P.C);
+  const gone = () => RU !== my || RU.gen !== gen || RULES[RU.i] !== P || RU.st !== st;
   st.wait = true; rulesDraw(); rulesTaskText(`<div class="ru-msg">${escH(t('ru.watch'))}</div>`);
-  await sleepL(500);
+  await sleepV(500);
   for (const [e, pl] of P.anim) {
-    if (RU !== my || RULES[RU.i] !== P || !RU.st || RU.st !== st) return;
+    if (gone()) return;
     const p = E.Pos.from(G, Object.keys(st.by).map(Number));
     const k = p.play(e); st.by[e] = pl; st.last = e;
     st.newBox = [];
     if (k) for (const b of [G.eb0[e], G.eb1[e]]) if (b >= 0 && p.cnt[b] === 4 && st.own[b] === undefined) { st.own[b] = pl; st.score[pl]++; st.newBox.push(b); }
     playLine(); if (k) { chainCount = 0; playBox(k); }
     rulesDraw();
-    await sleepL(settings.anim ? 750 : 350);
+    await sleepV(settings.anim ? 750 : 350);
   }
-  if (RU !== my || RU.st !== st) return;
+  if (gone()) return;
   st.wait = false;
   if (P.task === 'end') {   // finished game: show the final count, then offer replay
     st.done = true; st.msg = t('ru.p5.ok', { a: Object.values(st.own).filter(o => o === 0).length, b: Object.values(st.own).filter(o => o === 1).length }); st.msgCls = 'ok';
@@ -225,11 +232,11 @@ function rulesClick(e) {
       if (k || gives) {   // the opponent takes what was given
         st.by[e] = 0; st.last = e; p.play(e); playLine(); playWrong();
         st.bad = [e]; st.msg = t('ru.p4.ng', { n: gives }); st.msgCls = 'ng'; st.wait = true; rulesDraw(); rulesTaskText();
-        const my = st;
+        const my = st, R0 = RU, gen = RU.gen, gone = () => RU !== R0 || RU.gen !== gen || RU.st !== my;
         RU.timer = setTimeout(async () => {
-          if (!RU || RU.st !== my) return;
-          for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) { const f = p.missing(b, -1); p.play(f); my.by[f] = 1; my.last = f; for (const bb of [G.eb0[f], G.eb1[f]]) if (bb >= 0 && p.cnt[bb] === 4 && my.own[bb] === undefined) my.own[bb] = 1; playLine(); playBox(1); rulesDraw(); await sleepL(500); b = -1; }
-          setTimeout(() => { if (RU && RU.st === my) rulesRender(); }, 1500);
+          await waitVis(); if (gone()) return;
+          for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) { const f = p.missing(b, -1); p.play(f); my.by[f] = 1; my.last = f; for (const bb of [G.eb0[f], G.eb1[f]]) if (bb >= 0 && p.cnt[bb] === 4 && my.own[bb] === undefined) my.own[bb] = 1; playLine(); playBox(1); rulesDraw(); await sleepV(500); if (gone()) return; b = -1; }
+          RU.timer = setTimeout(() => { if (!gone()) rulesRender(); }, 1500);
         }, 900);
         return;
       }
@@ -254,8 +261,10 @@ function rulesWire() {
   // hover preview on the mini board
   $('#rulesBody').addEventListener('pointerover', e => { const h = e.target.closest('.mb-hit'); if (h) h.classList.add('hov'); });
   $('#rulesBody').addEventListener('pointerout', e => { const h = e.target.closest('.mb-hit'); if (h) h.classList.remove('hov'); });
+  // however the dialog gets hidden (close button, Esc, backdrop, switching to the puzzle dialog, loading a game…), stop its sounds
+  new MutationObserver(() => { if (!$('#lessonOverlay').classList.contains('show')) { rulesStop(); opDetailStop(); } }).observe($('#lessonOverlay'), { attributes: true, attributeFilter: ['class'] });
 }
-function closeLessonOverlay() { if (RU && RU.timer) clearTimeout(RU.timer); opDetailStop(); $('#lessonOverlay').classList.remove('show'); }
+function closeLessonOverlay() { rulesStop(); opDetailStop(); $('#lessonOverlay').classList.remove('show'); }
 
 // ======================================================================== lessons
 function lessonProg() {
@@ -570,7 +579,7 @@ function opDetailNav(what) {
   if (what === 'play') {
     if (L.timer) { clearInterval(L.timer); L.timer = 0; opDetailRender(); return; }
     if (L.cur >= last) L.cur = 0;
-    L.timer = setInterval(() => { if (OD !== L || L.cur >= last || $('#opDetailView').classList.contains('hidden')) { clearInterval(L.timer); L.timer = 0; if (OD === L) opDetailRender(); return; } L.cur++; playLine(); opDetailRender(); }, settings.anim ? 800 : 450);
+    L.timer = setInterval(() => { if (document.hidden) return; if (OD !== L || L.cur >= last || $('#opDetailView').classList.contains('hidden')) { clearInterval(L.timer); L.timer = 0; if (OD === L) opDetailRender(); return; } L.cur++; playLine(); opDetailRender(); }, settings.anim ? 800 : 450);
     opDetailRender(); return;
   }
   if (L.timer) { clearInterval(L.timer); L.timer = 0; }
@@ -620,7 +629,7 @@ function studyNav(what) {
   if (what === 'play') {
     if (L.timer) { clearInterval(L.timer); L.timer = 0; studyRender(); return; }
     if (L.cur >= last) { L.cur = 0; studyShow(); }
-    L.timer = setInterval(() => { if (lesson !== L || L.cur >= last) { clearInterval(L.timer); L.timer = 0; if (lesson === L) studyRender(); return; } L.cur++; playLine(); studyShow(true); }, settings.anim ? 800 : 420);
+    L.timer = setInterval(() => { if (document.hidden) return; if (lesson !== L || L.cur >= last) { clearInterval(L.timer); L.timer = 0; if (lesson === L) studyRender(); return; } L.cur++; playLine(); studyShow(true); }, settings.anim ? 800 : 420);
     studyRender(); return;
   }
   if (L.timer) { clearInterval(L.timer); L.timer = 0; }
@@ -685,7 +694,7 @@ async function drillStep() {
   while (L === lesson && L.k < L.l.drill) {
     if (S.turn === L.color) { L.answered = false; refresh(false); drillRender(); return; }
     L.answered = true; drillRender();
-    await sleepL(settings.anim ? 550 : 200); if (L !== lesson) return;
+    await sleepV(settings.anim ? 550 : 200); if (L !== lesson) return;
     game.moves.push(L.moves[L.k]); L.k++; playLine(); refresh(true);
   }
   if (L !== lesson) return;
@@ -864,6 +873,7 @@ function answerStep() {
   const P = puzzle; if (!P || P.state !== 'answer') return;
   if (S.over) return puzzleDone();
   const tok = busy;
+  if (document.hidden) { waitVis().then(() => { if (tok === busy && puzzle === P) answerStep(); }); return; }   // pause the answer playback in a background tab
   if (game.moves.length === 0) { setTimeout(() => { if (tok !== busy) return; applyMove(P.pz.best, true); answerStep(); }, 500); return; }
   aiPending = true; renderInfo();
   askAI(8).then(r => { if (tok !== busy) return; setTimeout(() => { if (tok !== busy) return; aiPending = false; applyMove(r.move, true); answerStep(); }, 420); });
