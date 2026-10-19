@@ -819,11 +819,16 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg" id="segLs" style="margin-bottom:16px"><button data-v="lesson" data-i18n="ls.tabLesson"></button><button data-v="tsume" data-i18n="ls.tabTsume"></button><button data-v="open" data-i18n="ls.tabOpen"></button></div>
+      <div class="seg" id="segLs" style="margin-bottom:16px"><button data-v="lesson" data-i18n="ls.tabLesson"></button><button data-v="open" data-i18n="ls.tabOpen"></button><button data-v="tsume" data-i18n="ls.tabTsume"></button></div>
       <h2 id="lsListTitle"></h2>
       <p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin:-8px 0 14px" id="lsListDesc"></p>
       <div class="lesson-list" id="lessonList"></div>
       <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
+    </div>
+    <div id="lessonGridView" class="hidden">
+      <h2 id="tsGridTitle" style="margin-bottom:12px"></h2>
+      <div id="tsGrid"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnTsGridBack" data-i18n="ls.back"></button></div>
     </div>
     <div id="lessonIntroView" class="hidden">
       <div style="font-size:12px;color:var(--brass);letter-spacing:.12em" id="liStep"></div>
@@ -920,6 +925,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <script src="i18n.js?v=20261019ll"></script>
 <script src="engine.js?v=20261019n3"></script>
 <script src="strategy.js?v=20261018ol"></script>
+<script src="../shared/pzbook.js?v=2"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
 <script src="online.js?v=20261018wt"></script>
 <script>
@@ -2494,10 +2500,21 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018ol').then(r => r.json()).then(d => (TSUME = d)).catch(() => {});
+const tsumeReady = fetch('tsume.json?v=20261018ol').then(r => r.json()).then(d => {
+  // PZBook: problems in each set go from easy to hard (stable by difficulty d); progress is stored per problem id
+  for (const g of d.sets) g.problems = g.problems.map((p, i) => [p, i]).sort((a, b) => ((a[0].d || 0) - (b[0].d || 0)) || a[1] - b[1]).map(x => x[0]);
+  TSUME = d;
+}).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
 try { tsolved = JSON.parse(localStorage.getItem(TSTORE) || '{}'); } catch (e) {}
+// stars 1..3 per problem id (v2); v1 only knew "solved" -> ★3
+const TSTORE2 = 'shogi-kaya-tsume-v2';
+let tstars = null;
+try { tstars = JSON.parse(localStorage.getItem(TSTORE2) || 'null'); } catch (e) {}
+if (!tstars) { tstars = {}; for (const id in tsolved) if (tsolved[id]) tstars[id] = 3; }
+const tsRecs = g => g.problems.map(p => tstars[p.id] || 0);
+const TS_TIER = { p1: 0, p3: 1, p5: 2, p7: 3, p9: 4, art: 5 };
 // ---- daily tsume with streak
 const DAILY_STORE = 'shogi-kaya-daily';
 const DAILY_EASY_STORE = 'shogi-kaya-daily-easy';
@@ -2544,19 +2561,28 @@ function openTsumeList() {
   $('#lsListTitle').textContent = t('ts.title'); $('#lsListDesc').textContent = t('ts.desc');
   if (!TSUME) { $('#lessonList').innerHTML = ''; return; }
   const dItem = easy => { const dl = dailyPick(easy), di = dailyInfo(easy); return dl ? `<button class="lesson-item daily" data-daily="${easy ? 2 : 1}"><span class="no">${easy ? '☆' : '★'}</span><span class="tx"><b>${t(easy ? 'daily.titleEasy' : 'daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${L(TSUME.sets[dl.si].title)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : ''; };
-  $('#lessonList').innerHTML = dItem(true) + dItem(false) + TSUME.sets.map((g, i) => {
-    const k = g.problems.filter(p => tsolved[p.id]).length;
-    return `<button class="lesson-item" data-t="${i}"><span class="no">${L(g.label)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span><span class="st ${k === g.problems.length ? 'clear' : ''}">${t('ts.solved', { k, n: g.problems.length })}</span></button>`;
-  }).join('');
+  PZBook.setLang(LANG);
+  $('#lessonList').innerHTML = dItem(true) + dItem(false) + TSUME.sets.map((g, i) => PZBook.card({ i, no: g.id === 'art' ? (LANG === 'ja' || LANG === 'zh' ? '創' : '✦') : g.id.replace(/^p/, '') + (g.id === 'p9' ? '+' : ''), name: L(g.title), sub: L(g.short), recs: tsRecs(g), tier: TS_TIER[g.id] !== undefined ? TS_TIER[g.id] : Math.min(5, i) })).join('');
 }
+let tsGridSet = 0;
+function openTsGrid(si, cur) {
+  tsGridSet = si; const g = TSUME.sets[si];
+  PZBook.setLang(LANG);
+  $('#tsGridTitle').textContent = `${L(g.title)} — ${L(g.short)}`;
+  $('#tsGrid').innerHTML = PZBook.grid({ recs: tsRecs(g), cur });
+  lessonView('grid'); showOverlay('#lessonOverlay');
+}
+$('#tsGrid').onclick = e => {
+  const b = e.target.closest('button[data-j]'); if (!b) return;
+  if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
+  hideOverlay('#lessonOverlay'); startTsume(tsGridSet, +b.dataset.j);
+};
+$('#btnTsGridBack').onclick = () => { lsTab = 'tsume'; openLessons(); };
+// one problem of a set (k = index in the set, easy -> hard); "next" walks on through the unlocked stages
 function startTsume(si, k, dailyDate, dailyEasy) {
   busyToken++; cancelAI(); cancelAna();
   const g = TSUME.sets[si];
-  const un = g.problems.filter(p => !tsolved[p.id]), done = g.problems.filter(p => tsolved[p.id]);
-  const sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  let probs = [...sh(un), ...sh(done)];
-  if (k !== undefined) { const pz = g.problems[k]; probs = [pz, ...probs.filter(x => x !== pz)]; }
-  lesson = { endless: true, si, g, probs, k: 0, results: [], pts: [], waiting: false, daily: dailyDate || null, dailyEasy: !!dailyEasy };
+  lesson = { endless: true, si, g, probs: g.problems, k: k || 0, results: [], pts: [], waiting: false, daily: dailyDate || null, dailyEasy: !!dailyEasy };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
   loadProblem();
@@ -2602,12 +2628,13 @@ async function openLessons() {
   const exam = `<button class="lesson-item" data-exam="1" style="border-color:rgba(201,169,97,.55)"><span class="no" style="font-size:13px">${t('ex.tag')}</span><span class="tx"><b>${t('ex.title')}</b><small>${t('ex.desc', { n: EXAM_N })}</small></span>${ex}</button>`;
   $('#lessonList').innerHTML = exam + list + (LESSONS.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${L(LESSONS.credit)}</p>` : '');
 }
-function lessonView(v) { ['list', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
+function lessonView(v) { ['list', 'grid', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
 $('#lessonList').onclick = e => {
-  const b = e.target.closest('.lesson-item'); if (!b) return;
+  const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return;
   if (b.dataset.exam) { hideOverlay('#lessonOverlay'); startExam(); return; }
   if (b.dataset.o !== undefined) { openOpeningChoice(+b.dataset.o); return; }
   if (b.dataset.daily) { const dl = dailyPick(b.dataset.daily === '2'); hideOverlay('#lessonOverlay'); startTsume(dl.si, dl.k, dl.date, dl.easy); return; }
+  if (b.dataset.i !== undefined && b.classList.contains('pb-card')) { openTsGrid(+b.dataset.i); return; }
   if (b.dataset.t !== undefined) { hideOverlay('#lessonOverlay'); startTsume(+b.dataset.t); }
   else openIntro(+b.dataset.i);
 };
@@ -2786,10 +2813,10 @@ function renderLesson0() {
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   } else if (lesson.endless) {
-    $('#lsStep').textContent = (lesson.daily && lesson.k === 0 ? `${t(lesson.dailyEasy ? 'daily.titleEasy' : 'daily.title')} ${lesson.daily.slice(5).replace('-', '/')} ・ ` : '') + `${t('ts.title')} ・ ${L(g.label)}`;
+    $('#lsStep').textContent = lesson.daily ? `${t(lesson.dailyEasy ? 'daily.titleEasy' : 'daily.title')} ${lesson.daily.slice(5).replace('-', '/')} ・ ${L(g.label)}` : `${t('ts.title')} ・ ${L(g.label)} ・ ${PZBook.t('stage', { n: Math.floor(lesson.k / PZBook.STAGE) + 1 })} ・ No.${lesson.k + 1}`;
     $('#lsTitle').textContent = L(g.title);
-    const k = g.problems.filter(p => tsolved[p.id]).length;
-    $('#lsDots').innerHTML = `<span style="font-size:12px;color:var(--muted)">${t('ts.solved', { k, n: g.problems.length })}${tsolved[pr.id] ? ' ・ ✓' : ''}</span>`;
+    const recs = tsRecs(g), k = recs.filter(x => x > 0).length, st = tstars[pr.id] || 0;
+    $('#lsDots').innerHTML = `<span style="font-size:12px;color:var(--muted)">${t('ts.solved', { k, n: g.problems.length })}${st ? ' ・ ' + '★'.repeat(st) : ''}</span>`;
   } else if (lesson.exam) {
     $('#lsStep').textContent = `${t('ex.title')} ・ ${lesson.k + 1}/${EXAM_N} ・ ${t('ex.level', { g: L(g.grade) })}`;
     $('#lsTitle').textContent = L(g.title);
@@ -2899,7 +2926,14 @@ function lessonScored(pts, info) {
   const pr = lesson.cur;
   lesson.answered = true; lesson.waiting = false;
   if (lesson.pts[lesson.k] === undefined) { lesson.pts[lesson.k] = pts; lesson.results[lesson.k] = pts >= 16; }
-  if (lesson.endless && pts >= PTS - (lesson.hintShown ? HINT_PEN : 0) && info.solved && !lesson.hintShown && pr.id) { tsolved[pr.id] = 1; try { localStorage.setItem(TSTORE, JSON.stringify(tsolved)); } catch (e) {} }
+  let book = '';
+  if (lesson.endless && info.solved && pr.id) {
+    const before = tsRecs(lesson.g), stars = PZBook.starsFor({ hinted: lesson.hintShown, failed: lesson.missed, answered: lesson.shownAnswer });
+    tstars[pr.id] = Math.max(tstars[pr.id] || 0, stars);
+    try { localStorage.setItem(TSTORE2, JSON.stringify(tstars)); } catch (e) {}
+    const after = tsRecs(lesson.g), ev = PZBook.events(before, after, lesson.k);
+    PZBook.setLang(LANG); book = PZBook.solved({ stars, recs: after, j: lesson.k, events: ev });
+  }
   if (lesson.daily && lesson.k === 0 && info.solved) { dailySolved(lesson.daily, lesson.hintShown || lesson.missed, lesson.dailyEasy); lesson.dailyMsg = true; }
   const sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
   let html = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b>`;
@@ -2918,7 +2952,7 @@ function lessonScored(pts, info) {
   if (L(pr.expl)) html += `<br>${L(pr.expl)}`;
   html += `<br><span style="font-size:12px">${t(pr.kind === 'tsume' ? 'ls.mateLine' : 'ls.line', { pv: lineKanji(pr.sfen, sol).join(' ') })}</span>`;
   if (lesson.dailyMsg) { html += `<br>🔥 ${t('daily.streak', { n: dailyInfo(lesson.dailyEasy).streak })}`; lesson.dailyMsg = false; }
-  lesson.fbHtml = html;
+  lesson.fbHtml = html + book;
   playChime(pts >= 16);
   // show the problem position again with the candidates and their points
   if (pr.kind !== 'tsume') {
@@ -2966,13 +3000,17 @@ $('#lsNext').onclick = () => {
   if (lesson.retry) { const why = lesson.retry.why; lesson.retry = null; lesson.shownAnswer = true; lesson.played = []; lessonScored(0, { why, partial: 0, K: Math.ceil(lesson.cur.n / 2) }); playSolution(); return; }
   if (lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(); playPiece(false); } else { const oi = lesson.gi; exitLesson(true); startOpening(oi); } return; }
   if (!lesson.answered) { lesson.shownAnswer = true; lessonScored(0, { gaveUp: true }); playSolution(); return; }
-  if (lesson.endless) { lesson.k = (lesson.k + 1) % lesson.probs.length; loadProblem(); return; }
+  if (lesson.endless) {
+    const n = lesson.k + 1, si = lesson.si;
+    if (!lesson.daily && n < lesson.probs.length && PZBook.isOpen(tsRecs(lesson.g), n)) { lesson.k = n; loadProblem(); return; }
+    exitLesson(); lsTab = 'tsume'; openTsGrid(si, Math.min(n, lesson ? lesson.k : n)); return;
+  }
   if (lesson.exam) { if (lesson.k < EXAM_N - 1) examNext(); else finishLesson(); return; }
   if (lesson.k < lesson.probs.length - 1) { lesson.k++; loadProblem(); return; }
   finishLesson();
 };
 $('#lsQuit').onclick = () => exitLesson();
-$('#lsList').onclick = () => { if (!lesson) return; lsTab = lesson.study || lesson.opening ? 'open' : lesson.endless ? 'tsume' : 'lesson'; openLessons(); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.endless && !lesson.daily) { openTsGrid(lesson.si, lesson.k); return; } lsTab = lesson.study || lesson.opening ? 'open' : lesson.endless ? 'tsume' : 'lesson'; openLessons(); };
 function finishLesson() {
   const n = lesson.probs.length, total = sumPts(), max = PTS * n, need = Math.ceil(max * PASS_RATE);
   const pass = total >= need;
