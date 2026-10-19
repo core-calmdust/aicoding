@@ -37,6 +37,7 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 | [バックギャモン](https://core-calmdust.github.io/aicoding/backgammon/) | 10段階 | 7ステップ | 16問 | wildbg由来のニューラルネット＋2手読み、ベアオフ完全DB、ダブリングキューブ、3/5/7点マッチ、スマホ横画面モード |
 | [ナイン・メンズ・モリス](https://core-calmdust.github.io/aicoding/morris/) | 10段階 | 7ステップ | 90問 | ナイン／トゥエルブ／シックスの3ルール |
 | [チェス](https://core-calmdust.github.io/aicoding/chess/) | 10段階 | 7ステップ | メイト問題85問 | Lichessの評価済み約5,400万局面で学習したNNUE（Lv.8で目安Elo 2850）、定跡と読み切り探索、PGN・FEN読み込み（[モデルカード](chess/MODEL_CARD.md)） |
+| [五目並べ・連珠](https://core-calmdust.github.io/aicoding/gomoku/) | 10段階 | 12ステップ | 詰め連珠500問 | 連珠（禁手：三三・四四・長連、否三々まで厳密判定）／標準／自由の3ルール、VCF・VCT脅威探索つきαβ探索、26珠型の定石学習、ネット対戦（レーティング・部屋・ロビー） |
 | [まいにち数独](https://core-calmdust.github.io/aicoding/sudoku/) | — | — | 厳選500問 | デイリー3難易度（銅・銀・金メダルのカレンダー、月ごとの3日／1週間／皆勤実績）、10テーマ×50問のコレクションと実績、フリック入力、テクニック解説つきヒント、テーマごとのベクター背景 |
 
 🌐 = ネット対戦対応
@@ -88,7 +89,7 @@ AIと一緒に作った、ブラウザですぐ遊べるゲーム集です。
 index.html          トップページ（ゲーム一覧：アイコン＋詳細パネル）
 shogi/              将棋 SHOGI（index.html / engine.js / i18n.js / weights.bin.gz / book.json / lessons.json / tsume.json / MODEL_CARD.md）
 reversi/            Reversi V4（index.html / engine.js / i18n.js / online.js / weights.bin.gz / openings.json / lessons.json / puzzles.json / MODEL_CARD.md）
-dots/ connect4/ mancala/ backgammon/ morris/ chess/   世界のボドゲ大全の各タイトル
+dots/ connect4/ mancala/ backgammon/ morris/ chess/ gomoku/   世界のボドゲ大全の各タイトル
 comet/ comet-plus/ samegame/ sudoku/ quiz/   各ゲーム
 *.html              単一ファイルのゲーム（旧バージョンなど）
 images/             サムネイル・アイコン（images/icons/）

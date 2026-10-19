@@ -1,0 +1,787 @@
+{
+ "v": 1,
+ "steps": [
+  {
+   "id": "five",
+   "course": "basics",
+   "problems": [
+    {
+     "b": "h6 i6 d7 h8 f9 g10 i10",
+     "w": "e7 f7 g7 i7 e8 f8",
+     "side": 2,
+     "last": "i10",
+     "ok": [
+      "h7"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "j4 g5 h5 g6 h7 g8 h8 i8 h9 h10",
+     "w": "f5 i5 h6 i6 g7 i7 f8 k9 h11",
+     "side": 2,
+     "last": "j4",
+     "ok": [
+      "e9"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "k5 j6 i7 j7 l7 h8 j8 j9 h10 i10",
+     "w": "i5 j5 k7 e8 k8 g9 h9 i9 f10 j10",
+     "side": 1,
+     "last": "g9",
+     "ok": [
+      "l4"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h6 i6 g7 h7 i7 j7 g8 h8 j8 f9 i9",
+     "w": "g5 j5 j6 f7 k7 f8 i8 k8 h9 j9 j10",
+     "side": 1,
+     "last": "j5",
+     "ok": [
+      "e10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "i6 g7 l7 h8 i8 j8 k8 h9 i9 j9 l9 i10",
+     "w": "h6 m6 f7 h7 i7 j7 k7 g8 l8 k9 j10 l10",
+     "side": 1,
+     "last": "m6",
+     "ok": [
+      "h11"
+     ],
+     "rule": "free"
+    }
+   ],
+   "diagram": {
+    "b": [
+     "f8",
+     "g8",
+     "h8",
+     "i8"
+    ],
+    "w": [
+     "g9",
+     "h9",
+     "f7",
+     "j7"
+    ],
+    "o": [
+     "j8"
+    ],
+    "d": [
+     "e8"
+    ]
+   }
+  },
+  {
+   "id": "block",
+   "course": "basics",
+   "problems": [
+    {
+     "b": "h6 j6 h8 i8 i9",
+     "w": "d9 f9 g9 h9 g10",
+     "side": 1,
+     "last": "d9",
+     "ok": [
+      "e9"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "f7 g7 h8 f9 j9 f11 j11",
+     "w": "h9 h10 i10 g11 h11 i11 h12",
+     "side": 1,
+     "last": "h12",
+     "ok": [
+      "h13"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "d6 h6 i6 h7 i7 g8 h8 i8 i9 i11",
+     "w": "e7 g7 f8 j8 g9 h9 h10 i10 g11",
+     "side": 2,
+     "last": "i6",
+     "ok": [
+      "i5"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "j5 e7 f7 f8 h8 i8 g9 h9 h10 h11",
+     "w": "d6 i6 g7 h7 i7 j7 g8 i10 i11 h12",
+     "side": 1,
+     "last": "j7",
+     "ok": [
+      "k7"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "i4 h6 g7 e8 h8 j8 g9 i9 j9 g10 j10",
+     "w": "i5 f6 g6 i6 j6 i7 i8 h9 h10 h11",
+     "side": 2,
+     "last": "j10",
+     "ok": [
+      "k11"
+     ],
+     "rule": "free"
+    }
+   ],
+   "diagram": {
+    "w": [
+     "f9",
+     "g9",
+     "h9",
+     "j9"
+    ],
+    "b": [
+     "g8",
+     "h8",
+     "f8"
+    ],
+    "o": [
+     "i9"
+    ]
+   }
+  },
+  {
+   "id": "three",
+   "course": "basics",
+   "problems": [
+    {
+     "b": "g7 g8 h8 i9",
+     "w": "f8 f9 g9",
+     "side": 2,
+     "last": "g7",
+     "ok": [
+      "f6",
+      "j10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h7 g8 h8 h9 g10",
+     "w": "g7 e8 j8 i11",
+     "side": 2,
+     "last": "h9",
+     "ok": [
+      "h6",
+      "h10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 h9 j9 g10 h10 i10",
+     "w": "j7 i8 k8 i9 f10",
+     "side": 2,
+     "last": "h9",
+     "ok": [
+      "h7",
+      "h11"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "g5 i5 f6 h6 g7 h8 g9",
+     "w": "j4 g6 h7 i7 j8 e9",
+     "side": 2,
+     "last": "f6",
+     "ok": [
+      "e5",
+      "i9"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h6 i6 h7 h8 j8 f9 g10 h10 i10",
+     "w": "g7 i7 e8 f8 i8 h9 j9 f10",
+     "side": 2,
+     "last": "i6",
+     "ok": [
+      "j5",
+      "g8",
+      "e10"
+     ],
+     "rule": "free"
+    }
+   ],
+   "diagram": {
+    "w": [
+     "g8",
+     "h8",
+     "i8"
+    ],
+    "b": [
+     "g9",
+     "h9"
+    ],
+    "o": [
+     "f8",
+     "j8"
+    ],
+    "d": [
+     "e8",
+     "k8"
+    ]
+   }
+  },
+  {
+   "id": "sfour",
+   "course": "basics",
+   "problems": [
+    {
+     "b": "h6 f7 g7 h8 i8 f9 g9",
+     "w": "g4 h5 g6 i6 h7 g8",
+     "side": 2,
+     "last": "f9",
+     "ok": [
+      "f3",
+      "j7"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h6 f7 h7 i7 g8 h8 j8 h9",
+     "w": "h5 g7 e8 i8 g9 k9 h10 j10",
+     "side": 1,
+     "last": "h10",
+     "ok": [
+      "e6",
+      "i10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "g6 j7 h8 i8 j8 h9 j9 g10 h10",
+     "w": "k6 h7 e8 e9 g9 i10 j10 f11 j11",
+     "side": 1,
+     "last": "f11",
+     "ok": [
+      "g8",
+      "k8"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "j5 h6 i6 i7 j7 h8 l8 i9 k9 i10",
+     "w": "k6 h7 l7 i8 j8 k8 m8 j9 f10",
+     "side": 2,
+     "last": "i10",
+     "ok": [
+      "g6",
+      "k10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "i6 g7 h8 e9 h9 i9 j9 h10 i10 k10 h11",
+     "w": "g5 i5 f6 j6 h7 f8 g8 k9 g10 k11 h12",
+     "side": 1,
+     "last": "h12",
+     "ok": [
+      "k8",
+      "g12"
+     ],
+     "rule": "free"
+    }
+   ],
+   "diagram": {
+    "b": [
+     "g8",
+     "h8",
+     "i8"
+    ],
+    "w": [
+     "g9",
+     "i9",
+     "h7"
+    ],
+    "o": [
+     "f8",
+     "j8"
+    ]
+   }
+  },
+  {
+   "id": "fourthree",
+   "course": "basics",
+   "problems": [
+    {
+     "b": "i5 f6 g6 i6 g7 h8",
+     "w": "j6 h7 e8 g8 j8 i9",
+     "side": 1,
+     "last": "i9",
+     "ok": [
+      "h6"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "e5 g5 h5 g6 f8 g8 h8",
+     "w": "f5 h6 h7 j7 e8 g9 i10",
+     "side": 1,
+     "last": "f5",
+     "ok": [
+      "g7"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "g6 f7 h7 f8 g8 h8 f9 g9",
+     "w": "h5 f6 i6 j6 g7 i8 h9 j9",
+     "side": 1,
+     "last": "i6",
+     "ok": [
+      "f10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "j6 j7 k7 m7 h8 k8 l8 c9 h9 m10",
+     "w": "i5 k6 h7 l7 j8 d9 e9 f9 g9 l9",
+     "side": 1,
+     "last": "l9",
+     "ok": [
+      "m9"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "i6 k6 g7 l7 h8 g9 i9 j9 f10 h10 f11 j12",
+     "w": "f6 j6 h7 i7 j7 k7 f8 i8 h9 k9 g10 i10",
+     "side": 1,
+     "last": "f8",
+     "ok": [
+      "j10"
+     ],
+     "rule": "free"
+    }
+   ],
+   "diagram": {
+    "b": [
+     "f8",
+     "g8",
+     "h8",
+     "j10",
+     "j11"
+    ],
+    "w": [
+     "e8",
+     "j12",
+     "h9"
+    ],
+    "o": [
+     "j8"
+    ],
+    "line": [
+     "f8",
+     "j8"
+    ]
+   }
+  },
+  {
+   "id": "forbid33",
+   "course": "renju",
+   "problems": [
+    {
+     "b": "f7 h8 f9 g9 g10",
+     "w": "h7 j7 g8 j8 i9",
+     "side": 1,
+     "last": "i9",
+     "ok": [
+      "f10"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "h8 i8 f9 j9 f10 g10",
+     "w": "e7 e9 g9 h9 i9 h10",
+     "side": 1,
+     "last": "e7",
+     "ok": [
+      "f8"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "f7 h8 i8 f9 g9 h9 h10",
+     "w": "g6 h7 g8 e9 i9 g10 i11",
+     "side": 1,
+     "last": "e9",
+     "ok": [
+      "f10"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "i6 j7 h8 f9 g9 i10 k10 h11 j11",
+     "w": "h6 g8 i8 k8 j9 f10 h10 j10 i11",
+     "side": 1,
+     "last": "g8",
+     "ok": [
+      "i12"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "g5 g6 i6 f8 h8 h9 f10 i10 j10 l10 g11 h11 j12",
+     "w": "i5 h6 f7 k7 d8 g8 i8 k8 g9 i9 g10 h10 i11",
+     "side": 1,
+     "last": "k8",
+     "ok": [
+      "i13"
+     ],
+     "kind": "pick"
+    }
+   ],
+   "diagram": {
+    "b": [
+     "g8",
+     "i8",
+     "h9",
+     "h10"
+    ],
+    "x": [
+     "h8"
+    ]
+   }
+  },
+  {
+   "id": "forbid44",
+   "course": "renju",
+   "problems": [
+    {
+     "b": "g6 h6 h7 e8 f8 g8 h8 j8 j9",
+     "w": "h5 i6 g7 j7 d8 g9 h9 g10 g11",
+     "side": 1,
+     "last": "d8",
+     "ok": [
+      "i8"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "h5 i5 e6 f6 g6 h6 h7 g8 h8 g9 i9",
+     "w": "h4 g5 d6 i6 f7 i7 i8 h9 i10 i11 j11",
+     "side": 1,
+     "last": "i11",
+     "ok": [
+      "g7"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "g8 h8 i8 f9 g9 j9 h10 i10 k10 i11 j11 j12",
+     "w": "i5 h7 j7 f8 e9 h9 i9 f10 g10 l10 h11 k13",
+     "side": 1,
+     "last": "k13",
+     "ok": [
+      "j8"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "i5 g6 d7 e7 f7 g7 i7 j7 g8 h8 m8 i9 g10 h10 f11 h11 j11 l11",
+     "w": "g5 h5 f6 c7 h7 f8 i8 j8 k8 l8 g9 h9 j9 k9 f10 i10 j10 k10",
+     "side": 1,
+     "last": "c7",
+     "ok": [
+      "i11"
+     ],
+     "kind": "pick"
+    },
+    {
+     "b": "h6 e7 j7 h8 i8 e9 g9 k9 f10 i10 d11 i11 j11 k11 f12 g12 i12 d13 k13",
+     "w": "g7 i7 f8 k8 f9 h9 i9 j9 e10 j10 k10 f11 g11 h11 l11 d12 e12 i13 j13",
+     "side": 1,
+     "last": "l11",
+     "ok": [
+      "j12"
+     ],
+     "kind": "pick"
+    }
+   ],
+   "diagram": {
+    "b": [
+     "e8",
+     "f8",
+     "g8",
+     "h9",
+     "h10",
+     "h11"
+    ],
+    "w": [
+     "d8",
+     "h12"
+    ],
+    "x": [
+     "h8"
+    ]
+   }
+  },
+  {
+   "id": "fourthreeB",
+   "course": "renju",
+   "problems": [
+    {
+     "b": "g6 f7 h7 e8 g8 h8 f9",
+     "w": "i6 j6 g7 f8 d9 j9 g10",
+     "side": 1,
+     "last": "i6",
+     "ok": [
+      "h5"
+     ]
+    },
+    {
+     "b": "f8 h8 i8 i9 g10 g11 h11 i11",
+     "w": "g7 h7 e8 h9 j9 f10 i10 f11",
+     "side": 1,
+     "last": "i10",
+     "ok": [
+      "j8"
+     ]
+    },
+    {
+     "b": "h6 i6 g7 i7 h8 j8 f9 i9",
+     "w": "h7 g8 i8 h9 k9 f10 j10 g11",
+     "side": 1,
+     "last": "i8",
+     "ok": [
+      "f6"
+     ]
+    },
+    {
+     "b": "j6 k6 f7 j7 k7 h8 j8 k8 g9 f12",
+     "w": "j5 g7 i7 f8 l8 f9 k9 f10 h10 f11",
+     "side": 1,
+     "last": "k9",
+     "ok": [
+      "i8"
+     ]
+    },
+    {
+     "b": "m4 h6 i6 g7 l7 h8 k8 h9 j9 k9 h10 i10 j10 k10 g11",
+     "w": "i5 l5 f6 k6 m6 h7 i7 j7 k7 i8 g9 i9 g10 l10 h11",
+     "side": 1,
+     "last": "m6",
+     "ok": [
+      "k12"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "trap",
+   "course": "renju",
+   "problems": [
+    {
+     "b": "k7 h8 g9 i9 g10 h10",
+     "w": "i6 h7 i7 j7 i8",
+     "side": 2,
+     "last": "k7",
+     "ok": [
+      "f7"
+     ]
+    },
+    {
+     "b": "g5 i6 e7 h8 j8 i9 g10",
+     "w": "g6 f7 g7 h7 g8 g9",
+     "side": 2,
+     "last": "e7",
+     "ok": [
+      "j7"
+     ]
+    },
+    {
+     "b": "e5 g5 h6 e8 f8 h8 i9 g10",
+     "w": "i4 g6 f7 g7 g8 g9 h10",
+     "side": 2,
+     "last": "e8",
+     "ok": [
+      "j3"
+     ]
+    },
+    {
+     "b": "h5 d6 g7 f8 h8 d9 f9 i10",
+     "w": "i4 e6 f6 g6 f7 e8 g9",
+     "side": 2,
+     "last": "d6",
+     "ok": [
+      "i6"
+     ]
+    },
+    {
+     "b": "h7 j7 g8 h8 i9 h10 l10 h11 k11",
+     "w": "k8 h9 j9 k9 g10 i10 j10 k10",
+     "side": 2,
+     "last": "k11",
+     "ok": [
+      "k6"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "vcf",
+   "course": "tactics",
+   "problems": [
+    {
+     "b": "h6 h8 g9 g10 h10 j10 i11",
+     "w": "f8 j8 i9 j9 i10 g11 j11",
+     "side": 1,
+     "last": "f8",
+     "ok": [
+      "h9"
+     ]
+    },
+    {
+     "b": "g6 h6 h7 h8 j8 d9 i9 k9 g10 h10 j10 i11 k11",
+     "w": "g5 h5 i6 g7 k7 i8 e9 f9 g9 h9 i10 h12 l12",
+     "side": 1,
+     "last": "l12",
+     "ok": [
+      "g11"
+     ]
+    },
+    {
+     "b": "g6 h6 h7 i7 h8 f9 h9 i9 e10 g10 f11 h11 i11 g12",
+     "w": "h5 f6 g7 e8 g8 i8 j8 d9 g9 k9 h10 g11 j11 h12",
+     "side": 1,
+     "last": "h5",
+     "ok": [
+      "i12"
+     ]
+    },
+    {
+     "b": "g6 l6 b7 h7 i7 e8 h8 m8 h9 j9 d10 i10 j10 g11 h11 i11 j11 g12 j12",
+     "w": "h6 k7 c8 g8 i8 j8 k8 l8 d9 e9 i9 e10 f10 g10 h10 f11 k11 f13 j13",
+     "side": 1,
+     "last": "j13",
+     "ok": [
+      "k12"
+     ]
+    },
+    {
+     "b": "g6 h6 f7 h7 i7 h8 i8 f9 g9 k9 g10",
+     "w": "h5 i5 f6 g7 g8 j8 j9 f10 h10 h11 i11",
+     "side": 1,
+     "last": "j8",
+     "ok": [
+      "j6"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "defend",
+   "course": "tactics",
+   "problems": [
+    {
+     "b": "j6 k6 i7 g8 h8 i8",
+     "w": "h7 f8 g9 i9 g10",
+     "side": 2,
+     "last": "k6",
+     "ok": [
+      "k9"
+     ]
+    },
+    {
+     "b": "e6 g6 i6 h8 j8 j9",
+     "w": "i5 h7 g8 k8 i9",
+     "side": 2,
+     "last": "e6",
+     "ok": [
+      "h6",
+      "j6",
+      "k6"
+     ]
+    },
+    {
+     "b": "h6 i6 h8 e9 h9 e10 g10 h10",
+     "w": "h7 f8 g8 f9 g9 i9 i10",
+     "side": 2,
+     "last": "e10",
+     "ok": [
+      "f10"
+     ]
+    },
+    {
+     "b": "f5 c6 f6 g6 f8 g8 h8 h9 f10 j10 h11 i11",
+     "w": "d7 f7 e8 i8 f9 g9 j9 g10 h10 i10 j12",
+     "side": 2,
+     "last": "j10",
+     "ok": [
+      "g7",
+      "i9"
+     ]
+    },
+    {
+     "b": "i5 g6 i6 i7 k7 h8 i8 j8 l8 f9 j9 g10 i10 g11",
+     "w": "i4 h5 f6 h6 j6 f7 h7 j7 f8 k8 g9 h9 i9 j10",
+     "side": 1,
+     "last": "f6",
+     "ok": [
+      "h3",
+      "h4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "vct",
+   "course": "tactics",
+   "problems": [
+    {
+     "b": "i6 i7 h8 i8 f9 l9 k10",
+     "w": "j7 k7 k8 i9 j9 k9",
+     "side": 2,
+     "last": "k10",
+     "ok": [
+      "j8"
+     ]
+    },
+    {
+     "b": "k4 l5 d6 g6 k6 j7 e8 h8 i8 e9 f9 j9 i10 g11 i11",
+     "w": "m4 h5 i5 i6 j6 e7 h7 f8 g8 k8 g9 h9 i9 h10",
+     "side": 2,
+     "last": "k4",
+     "ok": [
+      "g5"
+     ]
+    },
+    {
+     "b": "h3 i3 j3 g4 h4 f5 h5 j5 g6 f7 f8 h8 i8 j8 k8 f9 k9 g10",
+     "w": "i2 g3 i4 k4 i5 f6 h6 i6 h7 e8 g8 l8 g9 h9 i9 j9 f10 i11",
+     "side": 1,
+     "last": "g3",
+     "ok": [
+      "j4"
+     ]
+    },
+    {
+     "b": "d5 h5 e6 f6 f7 d8 g8 h8 e9 i9",
+     "w": "c4 i5 g7 h7 e8 f8 f9 g9 h9 e10",
+     "side": 1,
+     "last": "f8",
+     "ok": [
+      "b6"
+     ]
+    },
+    {
+     "b": "f7 i7 j7 k7 f8 h8 j9 g10 h10 i10",
+     "w": "h6 g7 l7 e8 g8 j8 g9 i9 f10 h11",
+     "side": 1,
+     "last": "l7",
+     "ok": [
+      "i8"
+     ]
+    }
+   ]
+  }
+ ]
+}

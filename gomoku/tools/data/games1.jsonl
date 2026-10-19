@@ -1,0 +1,653 @@
+{"lv":[4,6],"moves":"h8 i9 g9 k9 g8 f8 f10 i7 j8 i8 i6 h7 g6 g7 j7 j9 e11 d12 h9 k8 i10 k10 l11 k11 f7 k7","winner":2}
+{"lv":[6,7],"moves":"h8 g7 g6 h6 i5 i7 j8 j9 k7 i8 f7 e8 h9 i10 i9 h10 g10 e9 f8 g11 h5 h11 i4 j3 l6 m5 k8 e11 f11 e10 e7 e12","winner":2}
+{"lv":[4,8],"moves":"h8 g7 f8 g8 g9 f10 h7 g6 j7 f7 i7 h9 e6 i10 j11 h10 j10 k7 e9 k8 k9 h11 j9 j8 i9 j13 e10 j6 l8 h12 h13 g5 g4 m7 e11 e12 k10 i12 l11 i8 l9 m9 l10 l7 l12","winner":1}
+{"lv":[6,7],"moves":"h8 i9 g7 g8 i7 f7 j7 j6 i6 h7 i10 k8 f8 k7 k9 j8 h10 l8 m9 m8 i8 n8","winner":2}
+{"lv":[8,4],"moves":"h8 h7 g10 g8 f9 h10 e8 h11 i9 i5 e7 g7 f7 h6 f8 k3 j4 f10 d7 c6 e6 e9 f5 f6 c8 g4 b9","winner":1}
+{"lv":[6,5],"moves":"h8 g7 i9 f8 h10 i7 j8 g11 h9 h7 j7 j9 f7 k10 h11 h12 k7 l6 l11 e9 h6 f10 d8 i13","winner":2}
+{"lv":[8,7],"moves":"h8 g8 f9 g9 g7 g10 j7 f6 g11 e6 h10 f5 f12 i9 h9 h7 f10 f11 h12 h11 e9 d8 i13","winner":1}
+{"lv":[8,4],"moves":"h8 h7 g6 g10 i7 g8 i6 i5 e6 j6 f7 h5 f6 h6 h4 e8 g5 e7 g7 e5 f4 f5 g4 g3 e4 i4 d4","winner":1}
+{"lv":[8,5],"moves":"h8 h9 g6 g8 i9 g10 f7 e8 e10 i7 f8 f6 f11 g11 f9 f10 g7 e7 j10 k11 c11 g9 g12 d9 h11 d8 e9 d10 h6 i5 h13 i14 d7 g5 h4 c9","winner":2}
+{"lv":[7,7],"moves":"h8 g7 j6 g9 i7 i11 h10 i6 g8 h9 i9 e8 i5 k7 j8 i8 j5 j7 k5 l4 h5 g5 l5","winner":1}
+{"lv":[5,7],"moves":"h8 i8 h10 g9 i10 h11 g7 f6 h9 h6 g6 f7 f9 g11 j8 g5 k7 j11 i11 k10 i9 l6 j9 l9 k11 j10 i12 i13 e7 f4 f5 e3 i7 d2","winner":2}
+{"lv":[7,8],"moves":"h8 i9 f9 g9 g10 h10 f8 i8 e8 d7 f7 f10 h5 g6 h7 h6 g8 d8 i6 j5 e10","winner":1}
+{"lv":[6,8],"moves":"h8 i7 g6 j7 i9 k9 h7 j10 i8 j9 j8 g8 h6 h9 f4 f5 k7 h10 h4 h5 l8 k8 j6 i5 i6 f6 k6","winner":1}
+{"lv":[7,6],"moves":"h8 g8 h10 f9 i9 g9 g10 h9 h6 g6 e5 i10 g7 f6 f7 h7 e10 g11 j8 h11 k11 j10 e9 j5 i6 i5 k8 k9 l8 i8 l6 k7 f10 d10 f5 j7 k6 j6 i7 k10 j9 j11 k12 j4 j3 f11 i11 l10 m10 h4 g3 g5 i3 d8 e7 h3 n9 h5 k5 e11 d11 h2 h1 l11 m8 n8 l7 o10 l5 l4 l9","winner":1}
+{"lv":[4,5],"moves":"h8 h7 j6 i7 i8 i6 g8 j8 k7 f6 g7 g10 i10 i5 h6 h9 g11 h5 h10 e7 f7 g5 f8 e8 e9 d10 d8 f5 f10 e5","winner":2}
+{"lv":[7,5],"moves":"h8 h7 j9 g10 i9 f10 j8 g8 k9 h9 i7 h6 j7 j10 j6 j5 k5 i6 l4","winner":1}
+{"lv":[7,6],"moves":"h8 g9 i10 g10 i8 f8 h10 h7 i9 i7 h11 g7 h12 h9 i11 i12 h13 h14 f7 g8 g6 g11","winner":2}
+{"lv":[8,5],"moves":"h8 h7 g6 g8 i6 j6 f6 j8 i5 e8 g7 i9 h6 e6 f8 f10 j4","winner":1}
+{"lv":[8,6],"moves":"h8 h9 h7 g9 i9 g7 g10 i10 g8 f9 f10 e9 d9 f8 d10 e10 e11 j8 h6 d11 e6 f6 f5 h5 e7 g6 e8 e5 j9 k9 d7 c12 b13 d4 c3 c8 c9 f12 d8 d6 b11 c10 b10 a11 b12 b9 b14","winner":1}
+{"lv":[5,6],"moves":"h8 g9 h7 g8 g11 f7 h11 d9 h9 h10 h6 h5 g6 f11 e7 f5 i10 g5 e5 f8 f9 f4 j7 f6","winner":2}
+{"lv":[8,8],"moves":"h8 i9 i6 i7 h7 g6 h9 h6 g8 f9 j8 i8 j9 i10 i11 h11 j10 j11 g10 h12 f10 g12 e12 h13 h10 i12 j7 j6 f11 d13 e10 d10 j5 k4 k10 j12 f12 k12","winner":2}
+{"lv":[8,7],"moves":"h8 h9 f10 i7 i9 j7 g10 i10 e8 f7 g8 h7","winner":0}
+{"lv":[5,4],"moves":"h8 i9 f9 g10 h9 h10 j8 f10 i10 g11 j9 g8 g9 k8 k10 i6 i7 j6 h6 e10 d10 f12 e13 k9 h7 h5 i8 j7 g6","winner":1}
+{"lv":[8,6],"moves":"h8 i8 g6 i7 i9 j10 g7 f6 f7 e7 g10 e8 d8 f10 d7 d10 d5 d6 g8 g9 e6 c4 h9","winner":1}
+{"lv":[8,7],"moves":"h8 g7 j10 f10 g6 h6 f8 i8 k9 g11 i10 g10 k7 f11 h9 e10 d10 g9 g8 g12 g13 d9 c8 h13","winner":2}
+{"lv":[8,7],"moves":"h8 i9 f6 h10 j8 i10 i8 g8 g10 h9 j11 k8 h11 e6 f7 g9 j9 e9","winner":0}
+{"lv":[6,6],"moves":"h8 h7 g8 i8 g6 i7 i9 j7 k7 f7","winner":0}
+{"lv":[8,8],"moves":"h8 g8 j9 g9 g10 f9 i9 f7 h9 f8 f6 g7 h7 h6 h10 h11 e9 e8 k9 l9 i10 g6 g5 h5 i4 d9","winner":2}
+{"lv":[5,4],"moves":"h8 h7 j6 i7 k7 i9 i6 j8 i8 h9 f7 g11 g7 j9 k9 g10 i10 g9 f9 g12 j7 g8","winner":2}
+{"lv":[8,4],"moves":"h8 g9 j8 h9 i9 g10 i8 g8 g7 j10 f7 i5 h7 g11 g12 i7 f5 g6 f6 e5 f8 f10 f4","winner":1}
+{"lv":[7,8],"moves":"h8 i8 g6 j7 i9 g7 h9 h6 h10 h11 i10 i7 f7 g8 j8 k7 h7 g9 e9 f10 i5 h5 k8 j11 f11 e11 g10 f12 k10 j10 k11 e7 j12 i13 l8 n8 l7 l6 l11 k12 g13 f4 g5 e5 d9 h4 e8 c10 d6 e12 l9 l10 m6 j9 o4 n5 g12 e10 c13 g4 g14 g11 i4 e4 d4 f3 i6 e2 d1 e3 e1 e6","winner":2}
+{"lv":[4,6],"moves":"h8 i8 j9 g10 h9 h7 i10 f9 j7 h11 i12 f10 h6 e10 g8 d10 f7 c10","winner":2}
+{"lv":[7,5],"moves":"h8 g8 h6 g10 g6 j6 f7 h10 i9 h9 g7 f6 h7 i7 h5 h4 i4 f10 j3","winner":1}
+{"lv":[8,7],"moves":"h8 i7 i6 k6 h7 h9 i9 g7 h5 h6 g5 j5 j8 k8 f8 k7 k9 l7 g8 i8 f9 e10 d8 e8 j7 m8 i4 n9","winner":2}
+{"lv":[8,5],"moves":"h8 i9 h10 f10 j8 h11 g6 i7 i8 g8 h7 j9 f7 h9 f5 e4 k8 l8 k9 e7 k6 k7 h6 e8 j6 i6 f9 f8 e6 i5 d6 f6 h5 h4 i4 j3 g5 j5 d7 c8 d8 d9 g4 h3 g3 g10 g2","winner":1}
+{"lv":[5,7],"moves":"h8 i9 f9 j7 i8 j9 i6 k9 l9 k8 i7 k7 k10 j8 i5 i4 h10 j10 i10 j6","winner":2}
+{"lv":[5,6],"moves":"h8 g9 f7 h9 i7 h7 e9 g10 i8 i9 j9 g8 g11 h10 e10 h11 e7 h12 h13 g7 g6 e8 i12 i11 j12 j10 i10 k9 j7 l8","winner":2}
+{"lv":[6,7],"moves":"h8 i7 j7 f9 i9 j10 k8 i6 k9 g8 h7 k10 i10 h9 h11 j9 k6 i11 f11 k7 h4 f6 g12 g6 h6 h5 f7 h13 j12 j5 f12 f14 g11 h12 g13 g10 h10 j8 e13","winner":1}
+{"lv":[5,4],"moves":"h8 h9 i6 j9 g7 g10 h6 h11 i8 i9 g9 i7 g8 k9 l9 f8 g6 g5 j6 f10 f6","winner":1}
+{"lv":[5,6],"moves":"h8 i9 h6 h7 g9 f10 i6 f8 j8 j6 h9 k9 i10 i5 g8 j11 g10 g11 i8 k8 j7 k6 f11","winner":1}
+{"lv":[7,8],"moves":"h8 g7 j7 g9 j9 i10 g8 h10 i8 j8 e7 k10 j10 e10 i9 f9 f10 k9 i7 j11 e6 f8 f5 h9 i6 i5 g6 h7 l12 k11 h6 f6 k6 j6 l5 m4 k12 k7 k8 h4 g3 l8","winner":2}
+{"lv":[4,8],"moves":"h8 g7 j6 h9 j7 i10 i6 j8 e7 h6 g8 f8 i5 k9 g5 e9 d10 l10 m11 i7","winner":2}
+{"lv":[5,8],"moves":"h8 i8 j9 g9 h6 j7 e11 h9 g10 k6 l5 j5 k7 i4 l7 j8 g7 k8 i10 j4 j6 g2 h3 m8 f7 l8","winner":2}
+{"lv":[7,4],"moves":"h8 h9 j10 h7 i11 i8 j11 h11 i9 k11 k9 l8 j12 j9 k10 h10 i12 g6 f5 l9 h12 g13 k12 f10 g12","winner":1}
+{"lv":[8,5],"moves":"h8 g9 j8 j9 i9 i8 h7 h10 h6 h5 e7 g7 d8 g8 g6 g11 g10 h11 i11 k9 k6 i6 l7 g5 k7 f7 l6 m5 k5 k8 j7 i7 m7 n7 j4 i5 i3","winner":1}
+{"lv":[6,5],"moves":"h8 g7 j10 i7 k9 h10 j9 j8 f7 i11 i8 i9 k7 f10 g11 f8 g9 k10 g12 g10 e10 j11 i12 h11 e8 d9 f5 g6 e6 h6 e9 e7 e12 e11 g5 i6 h12 f12 k12 j12 f6 k6 j6 f9 f11 i4 f4 f3 h13 i14 j4 h5 j7 h3 j5 j3 k2 h4 h2 h7","winner":2}
+{"lv":[7,7],"moves":"h8 h9 i6 g9 i9 g7 j8 i10 g8 i8 h7 j5 h6 h5 g5 i7 e8 f9 f6 d9 e9 g6 d8 f8 e7 h4 c9","winner":1}
+{"lv":[7,6],"moves":"h8 i7 h10 h9 i10 g10 j7 k7 k9 f9 f11 i5 i9 h11 e8 g7 j10 k11 l9 j11 j9 m9 j6 j8 l10 k10 g11 l11","winner":0}
+{"lv":[5,7],"moves":"h8 i9 i6 i7 j8 j7 j9 k10 k7 f7 g7 g6 h9 h7 f9 f8 e9 j11 e11 i12 l9 i11 i8 i13 i10 h13 g14 i14 i15 k8 g11 e8 d9 g9 h10 i4 h5 h11 k9 j13 c9 b9 m9 n9 g13 k14 g12 g10","winner":2}
+{"lv":[5,8],"moves":"h8 h9 h10 g9 i8 i10 g8 j8 f9 j9 j7 e8 k9 i5 e11 k7 f11 l8 j6 l6 i9 l7 k8 l5 f7 l4","winner":2}
+{"lv":[4,6],"moves":"h8 g8 f6 f9 j8 h9 j9 g10 i8 g9 k8 l8 e9 g7 i10 g6","winner":2}
+{"lv":[7,7],"moves":"h8 h7 f10 g9 g11 f7 h11 g7 e7 g6 g8 e9 f11 i11 f9 f8 d10 i5 h6 e11 h10 j7 i7 g10 f12 f13 i9 j8 e13","winner":1}
+{"lv":[6,4],"moves":"h8 i9 j6 i7 i6 j8 k7 g11 k8 j9 k11 h10 f12 f10 k9 k10 k6 k5 h6 h9 g6","winner":1}
+{"lv":[7,4],"moves":"h8 g7 f10 i7 f7 h9 j9 j8 h6 g10 f11 i8 i6 g11 h5 g9 g8 f9 e9 h10 i9 h11 h7 h4 k4 j5 i12 f8 e7 k8 i10 f6 i11 i13 e10 e8 d7 j10 c7 b7 b6 d8 k7 k6 j7 m8 l8 l7 i4 n9","winner":2}
+{"lv":[8,6],"moves":"h8 g8 i7 g9 g10 j8 i9 h9 e8 i11 i6 i10 f7 g7 g5 g6 f6 e7 i5 i8 f8 j11 k12 f9 f5 f4 h5 e5 j5","winner":1}
+{"lv":[4,7],"moves":"h8 g9 h7 h10 j9 k10 j8 k8 h6 h5 j7 j6 g7 i7 e9 f8 j10 j11 i9 f6 k11","winner":1}
+{"lv":[5,7],"moves":"h8 g8 g6 f9 j7 f10 h6 j6 g7 e10 d11 i6 i10 h7","winner":2}
+{"lv":[6,6],"moves":"h8 g8 j10 h7 i6 g10 j7 k8 g9 f10 i9 g7 i7 i8 j6 k5 j9 j8 h9 f9 k9","winner":1}
+{"lv":[8,6],"moves":"h8 g8 i7 g9 g10 h10 f8 f7 i9 g7 g5 i8 e6 g6 f5 h5 i4 j9 k10 i6 g4 d7 e7 f9 h3 i2 h7 d9 e8 e9 c9 h9","winner":2}
+{"lv":[8,7],"moves":"h8 g7 g8 f8 i6 f7 i7 f9 f10 g9 i8 i9 h9 e7 j8 k8 i5 i4 h10 d7 c7 h7","winner":2}
+{"lv":[4,6],"moves":"h8 h9 i9 g7 i6 i10 h10 j8 j7 g5 g8 k8 i8 f8 f7 h6 i7 i5 e9 j4","winner":2}
+{"lv":[5,7],"moves":"h8 i9 h10 f9 h9 h7 i6 g10 h6 g6 j7 f7 h11 h12 i8 e8 d9 f8 k6 l5 j6 l6 f10 f5 f6 d7 c6 e7 g7 e4 d3 e5 e6 h5 i4 g5 i10 d5","winner":2}
+{"lv":[6,4],"moves":"h8 i7 f9 j8 i9 j10 j7 f6 e8 f8 k8 e7 h11 g10 j9 i10 h9 g9 h10 f10 h7","winner":1}
+{"lv":[7,6],"moves":"h8 i8 i9 g7 h10 h9 j7 j8 i7 g6 k8 f8 j9 i10 l9 i6 k7 h7 k9 m9 k10 k6 k11","winner":1}
+{"lv":[8,7],"moves":"h8 g7 f8 h10 g6 f9 h7 h6 e8 g8 e9 g11 j8 f12 e13 e10 f10 h9 f11 i10 f7 g9 g10 c12 d11 k12 j11 i9","winner":0}
+{"lv":[8,7],"moves":"h8 h7 j6 g9 i6 k6 k7 i5 g6 h5 g5 h6 h4 e7 f8 j5 i9 f7 i7 k5 l5 d7","winner":0}
+{"lv":[6,8],"moves":"h8 i8 g7 f6 g10 g6 h6 f9 h7 h9 f7 e7 h5 h4 g5 i7 i9 i5 g11 g4 f4 h10 d6 e9 f5 e5 d9 f11 i6 d8 k11 j10 e6 j11 k4 j5 d5 c4 j12 g9 l10 i13 k12 g8 f8 i12 l9 j7 m9 n8 k9 j9 j8 l5 k6 b10 c9 k5 m5 k8 d2 e3 n9 o9 n12 m11 l12 m12 l11 l8 l13","winner":1}
+{"lv":[4,8],"moves":"h8 g9 h9 h10 g10 i8 f9 j11 j8 h11 j7 i11 g11 j12 i10 f8","winner":2}
+{"lv":[4,7],"moves":"h8 i9 j10 h7 i6 g9 j8 h9 j9 f9 e9 j7 i7 k9 e11 f8 e10 e12 g11 f11 e7 e8 j12 j11 f7 g10 i8 d13","winner":2}
+{"lv":[8,8],"moves":"h8 i8 h6 g9 i6 j7 j9 k6 h9 h7 i10 f6 h10 h11 g11 k7 l7 i5 k9 i9 k10 i7 g7 l5 m4 g10 j10 l10 k8 m6 k12 k11 j11 g8 l13","winner":1}
+{"lv":[4,6],"moves":"h8 i9 j7 f10 i8 h7 j8 g8 i6 k8 j9 j6 f9 j11 e10 k10 e9 i11 h9 g10 g9 d9 k9 i12 l9 h11 k6 l5 m9 n9 g11 i10 i13 l11 k11 j13 k14 k12 m10 j10 h10 j12 j14 h12 f7 g12","winner":2}
+{"lv":[4,5],"moves":"h8 i9 g6 h9 j9 j6 g10 h7 j7 i8 f7 g11 j8 f10 k9 i5 e9 i6 i7 h6 k7 j11 g8 i10 i11 k10 f8 k6 l6 k8 g9 g7 h10 e7 j12","winner":1}
+{"lv":[8,4],"moves":"h8 i7 j9 i9 j8 i8 i6 j6 h11 i5 h7 g8 i10 k8 j10 j11 h10 h9 g10 f10 k10","winner":1}
+{"lv":[6,7],"moves":"h8 h7 f9 i7 i9 h9 k8 i10 k10 f7 j7 g8 e6 j11","winner":2}
+{"lv":[6,8],"moves":"h8 g8 j10 i9 j9 g9 g7 h9 g11 i10 j11 j12 i11 h11 k10 f9 e9 i12 g10 g12 j7 j8 f12 f7 e6 k12","winner":0}
+{"lv":[5,5],"moves":"h8 i7 h10 k8 g7 f8 f7 i9 g10 h9 k9 g11 h11 e7 i6 e8 g8 j6 e9 i10 i8 j11 g6 g9 k10 j9 f9 l7 m6 h7 i12 j13 j10 g5 k7 j5 d8 k5 i5 h12 j8 f10 j7 e6 k6 f4 h6 f6 e10 h5 f11 i11 e11 e5 e4 d6 c5 c7 g3 b8","winner":2}
+{"lv":[7,5],"moves":"h8 i7 h7 f6 h9 h6 i10 h11 g8 f7 i6 f9 f8 i8 e8 d8 e7 g9 j8 j9 k11 g11 j10 i9 k10 h10 k12 j11 k9 f10 k8","winner":1}
+{"lv":[6,5],"moves":"h8 h9 h7 i7 i10 j9 i9 g8 j8 i11 h5 j10 g6 f6 g5 g11 i5 f5 g3 g4 h4 h6 j6 f10 f2","winner":1}
+{"lv":[8,6],"moves":"h8 i8 f7 f10 g6 j6 g7 h7 f6 i9 f8 f5 g8 g9 e8 d8 h5 i4 d9","winner":1}
+{"lv":[5,5],"moves":"h8 g8 i8 i7 g7 h9 j8 k8 j9 f6 e10 f8 g10 e7 i9 j10 k7 h10 m5 l6 i11 i10 f7 h11 k10 k12 j11 h13 h12 l11 g6 h7 d8 g5 i5 f9 e9 j7 g11 f10 i6 j6 f4 j5 h5 e8 h4 i4 f11 l9 h6 m10 n11 j13 n9 i14","winner":2}
+{"lv":[5,4],"moves":"h8 g9 j7 f10 j9 h9 j8 j10 i8 k8 g11 g8 i10 i7 k7 j6 e7 h7 f9 i6 h11 f6 i9 h10 i11 i12 f11 g6 e11","winner":1}
+{"lv":[6,6],"moves":"h8 h7 j6 i6 g8 i7 g7 j8 i5 k7 i9 j10 h5 g5 h6 f8 h4 h3 f7 j5 i4 j7 l7 j9 j11 l3 k4 g6 i10 h9 g4 j4 f4 e4 g3 f2 e5 f6 h2 i1 d6","winner":1}
+{"lv":[4,4],"moves":"h8 i8 h9 j9 f7 i7 i10 g8 i6 h10 g7 f8 e9 f6 e10 g9 i11 f10 e11 e8 e7 d7 j8 h5 g11 h6 g12 f11 f9 g6 e12 e13 e6 h7 j7 f5","winner":2}
+{"lv":[6,7],"moves":"h8 i7 f6 j7 f7 g7 e8 g6 g5 i8 k7 h9 g10 i9 i6 j9 i10 k9 g9 l9","winner":2}
+{"lv":[4,7],"moves":"h8 g9 i7 g8 h10 j9 g10 i10 h9 h11 g12 h7 f9 k9 e10 k8 l7 k10 f10 d10 i8 k11 j7 k7","winner":2}
+{"lv":[8,6],"moves":"h8 i9 f7 h7 j8 g9 j9 j10 g6 i10 g10 f9 i8 g8 e10 e9 h9 i6 j5 f11 k8 l8 h5 d9 c9 i4 k5 i5 k6 j7 k7 k4 k9","winner":1}
+{"lv":[6,4],"moves":"h8 i7 j8 g10 i9 h9 k8 l8 k10 h10 j10 k11 j9 j11 i8 g8 h7 i10 g6","winner":1}
+{"lv":[7,7],"moves":"h8 g9 j8 j9 i9 j10 i8 g8 j7 k8 i10 i7 h11 i11 g10 h9 h12 f9 h10 g11 e9 e10 d11 k7 i12 j6 g12 h7 i6 f12 h13 h14 f13 e14 j13 k14 k12 j12 i13 g13 l13 k13 j11 m14 g14 k10 f15","winner":1}
+{"lv":[4,6],"moves":"h8 i9 h9 h7 i6 j8 j7 k6 i7 k7 l6 k8 k9 h10 g11 l7 i8 g9 h11 f11 i11 l8 m8 j11 f7 g8 g6 i4 h6 f6 i10 j9 i5 l5 e9 k4 k5 m6 n5 n7 j3 o8","winner":2}
+{"lv":[8,7],"moves":"h8 g7 j8 g9 j7 j9 g6 k8 l7 k7 k6 j5 h9 i8 f7 h6 f8 i10 h11 h10 f9 f10 f5 f6 g10 e8 i11 e7 l11 i6 j11 k11 i7 k9 k10 i12 e6 g11 d8 j12 d7 g4 d5 g8 d6 d4 d9","winner":1}
+{"lv":[6,4],"moves":"h8 g7 g8 j6 i10 i8 h9 f7 j9 h11 h6 h7 i7 k9 f10 g11 g9 e11 f11 e7 d7 f9 h10 j10 h12 j11 k11 k7 e10 g10 i12 i5 l8 f8 f5 k8 k6 k10 i11 h4 g3 i9 j12 k13 g12 k12 f12","winner":1}
+{"lv":[8,4],"moves":"h8 g9 g10 i9 h9 h10 j8 j10 f8 i8 h7 i7 i10 i5 i6 e8 f7 g8 f6 f9 h6 h5 g6 f10 e6","winner":1}
+{"lv":[4,6],"moves":"h8 i7 i9 g7 f9 h9 g10 e8 h10 f10 f7 k8 k9 j7 e7 j8 k7 j5 j9 i8 i10 j4 j6 k6 l5 m8 l8 l7 i5 i4","winner":2}
+{"lv":[8,7],"moves":"h8 g7 f7 g9 g6 h9 g10 e8 f8 f5 j8 i8 e6 k9 i9 k7 f10 f9 k8 j6 l8 e10 e9 j7 h7 g11 l7 f11 d11 j9 i6 g5 j5 k6 l5 g8 l6 l4 l9","winner":1}
+{"lv":[5,7],"moves":"h8 h7 g8 i10 g10 g7 i8 f8 h9 j7 i7 g9 e7 i6 j8 k8 l9 h6 i5 g6 f11 e12 f6 h5 g4 k6 j6 e9 d10 h3 f7 h4","winner":2}
+{"lv":[6,6],"moves":"h8 g9 f9 h10 g11 g10 i11 f11 j10 g6 g8 i8 h9 h7 j9 k9 k11 e4 f5 i9 i10 f7 h11 j11 g12 k8 f13","winner":1}
+{"lv":[4,7],"moves":"h8 g8 h7 i7 h6 h9 i10 j9 g11 g10 g9 k9 i9 j8 f9 j7 h5 h4 i8 j6 f7 j5","winner":2}
+{"lv":[4,5],"moves":"h8 i9 f8 i7 i6 i8 f9 f10 e7 g11 g8 h7 f7 e8 h6 f6 i10 h9 h10 g9 j9 j7 g10 k7 g7 l7","winner":2}
+{"lv":[8,5],"moves":"h8 i8 g6 j6 k8 j9 k9 h5 j10 h7 k10 k11 i7 i11 j11 f10 m10 l10 m8 l9 m7 m9 l8 n6 n8 h9 j8","winner":1}
+{"lv":[7,8],"moves":"h8 i9 h10 h7 i6 k8 g6 k6 k9 j5 l7 k5 i5 j6 f8 k7 k4 j7 j8 j4 j3 g7","winner":0}
+{"lv":[7,4],"moves":"h8 g7 i9 f10 g6 i8 g10 h11 k8 g11 j7 h5 k7 j10 k6 k9 i7 h7 k5 k4 j6 h9 l4","winner":1}
+{"lv":[8,8],"moves":"h8 i7 g9 k9 f8 i11 g7 h6 j8 g8 i9 j10 l8 f9 k8 i8 l7 h10 j5 k6 l6 l5 j7 h12 g13 j9 l9 l10 i6 h5 m10","winner":1}
+{"lv":[4,5],"moves":"h8 i8 h9 g8 j7 i9 j9 g10 h10 h7 f9 k8 i7 j6 h6 h11 e9 f8 g9 d9 e7 e8 g11 f10 k10 e10 i10 c8 d8 f11 f7 b7","winner":2}
+{"lv":[8,6],"moves":"h8 h7 f6 f9 g8 i8 g6 i7 e8 j7 f8 d8 k7 f7","winner":0}
+{"lv":[8,8],"moves":"h8 h9 g9 i10 g8 g10 i8 f8 g6 f10 k8 j8 h10 h7 k9 i5 h6 i6 g5 g7 e6 k7 j7 f7 f6 d6 e7 d8 d7 e9 g11 d10 c11 f11 f9 e10 c10 e12 d13 e11 e8 e13","winner":2}
+{"lv":[7,6],"moves":"h8 g9 i6 f10 i9 g7 i8 i10 g8 j8 h7 f9 i5 i7 h5 h9 j5 k4 g5 f5 k5","winner":1}
+{"lv":[4,8],"moves":"h8 g7 j6 h9 i8 g9 e9 g8 g10 j8 f7 k9 i7 h12 i9 i10 k7 i5 i11 k5 e10 j4 h6 j5 h5 k12 j11 g5 j7 g6","winner":2}
+{"lv":[4,8],"moves":"h8 g8 j6 g10 i6 f9 g7 h9 j7 f7 i10 f10 f8 e10 h10 d11 j9 h7","winner":2}
+{"lv":[7,7],"moves":"h8 i8 f9 g10 h9 g9 h7 h6 g8 i6 f8 f6 g6 i7 i9 e8 i10 j11 g12 i5 i4 f10 h11 h10 j9 k8 f13","winner":1}
+{"lv":[8,8],"moves":"h8 i8 i10 j9 j7 k7 k10 h10 j11 l9 i9 l8 h6 j10 i11 k5 k11 h11 i13 i12 k9 k12 l10 j12 m11 l11 n12 j8 o13","winner":1}
+{"lv":[8,8],"moves":"h8 i9 g7 h7 i6 j6 f8 h10 f10 e9 g8 e8 f7 f9 g10 g9 h9 d9 c9 i10 i8 j8 j7 k6 f11","winner":1}
+{"lv":[8,7],"moves":"h8 g7 h7 g9 g8 f9 h9 h10 f7 i10 e8 f8 h5 h6 g6 i4 d9","winner":1}
+{"lv":[7,6],"moves":"h8 h9 f6 i9 j9 g10 j8 g9 i10 k8 e9 h11 j7 j6 k10 j10 h6 g11 g8 i8 i11 h10 g12 f10 f11 f9 e8 j13 i12 h12","winner":0}
+{"lv":[6,5],"moves":"h8 i9 i10 j6 h10 j9 h9 h11 g8 f7 e10 h7 i8 f8 g10 f10 f11 k8 j7","winner":1}
+{"lv":[6,5],"moves":"h8 i7 f6 i9 i10 j9 h9 h10 j7 g11 f12 i11 i8 j8 k7 g10 h6 g9 h7 h5 k6 l5 g8 f8 e7 j12","winner":2}
+{"lv":[8,7],"moves":"h8 g7 i6 g9 g6 f8 e7 e9 h6 j6 h7 h5 e4 d10 c11 i8 e6 f6 e5 e3 e8","winner":1}
+{"lv":[5,6],"moves":"h8 h9 j8 j6 i8 g8 i10 i7 i9 j10 e10 i11 k9 g11 k7 l6 k8 l8 k10 k6 k11","winner":1}
+{"lv":[4,4],"moves":"h8 g7 i9 g10 h10 g8 g9 h7 j8 g11 i8 i7 k7 l6 k8 l8 j7 j9 i11 e7 f7 j12 e9 h9 f9 i6 e11 f10 g6 h5 j10 g5 i10 i12 k10 l10 k9 j5 k6","winner":1}
+{"lv":[5,4],"moves":"h8 g9 h7 j10 i8 h9 j9 g6 g8 f8 e7 k9 i7 k8 e9 e8 k7 j7 i11 i6 f7 g7 k10 l11 l9 h6 i10 i9 j6 f10 h10 g10 f9 f6 e6 k5 i5 l8 g12 d7 j11 h5 g4 m7 n6 i12 h11 f13 g11 j8 f11","winner":1}
+{"lv":[5,5],"moves":"h8 i8 j9 j8 g7 i9 h10 h11 i7 i11 f9 f10 g11 j10 k9 h7 i10 g10 e9 j11 e10 k10 f8 d10 g9 k11 l11 l12 m13 h9 e7 d6 e8 j7 e6","winner":1}
+{"lv":[5,5],"moves":"h8 i8 g8 k9 i7 k8 g9 f10 g7 g6 j8 j6 i9 j10 g11 g10 h10 h9 k7","winner":1}
+{"lv":[8,5],"moves":"h8 i9 i7 h9 j8 j9 k9 g9 f9 h6 k8 i8 h7 g7 k7 k6 j7 l7 k10 k11 m10 i6 l10 m11 j10 j6 i10","winner":1}
+{"lv":[5,7],"moves":"h8 h9 j10 i10 g8 g7 i8 j8 i6 h7 f7 f8 e9 k7 k9 j7 i7 i5 j9 j4 h6 j6 j5 h4 h10 g3","winner":2}
+{"lv":[5,6],"moves":"h8 i7 g7 f6 g9 h6 g11 e7 i9 g5 g10 g8 g12 g13 j10 k11 j8 h4 h10 i3","winner":2}
+{"lv":[7,8],"moves":"h8 g7 h7 h6 f8 g6 g8 i8 h9 i6 e8 d8 f6 i10 f9 i9 i7 i11 i12 j6 k6 f7 h10 h11 g9 e10 f10 e11 g11 f12 j12 g12 f13 d9 h13 d10 d6 e7 j9 c9 b8 g13","winner":2}
+{"lv":[5,5],"moves":"h8 h7 f6 g8 i6 i9 f7 j8 j7 j9 g11 k9 h9 k8 g6 h6 i7 k10 k7 i8 l11 f10 i10 g10 i5 h5 h10 h11 l7 m7 l8 j6 e7 j10 j11 f8 k6 i4 f9 e8 e9 l9 m9 d9 d8 h4 h3 c9 j5 i11 h12 g7 g9 e10 f11 d10 c10 k11 k12 l13 n9 m8 m10 j13 o8","winner":1}
+{"lv":[6,5],"moves":"h8 h7 h10 i8 i9 i7 k8 k9 g7 j10 h6 i5 f8 i11 h12 f6 g11 i6 i4 l8 m7 j8 e9 d10 f10 h9 d8","winner":1}
+{"lv":[4,4],"moves":"h8 g8 j6 h7 i7 g9 i6 j9 i8 i5 h6 g6 k6 l6 k5 k8 l4","winner":1}
+{"lv":[4,4],"moves":"h8 g8 h9 h10 g11 j6 j8 h7 g10 i5 j9 i8 i7 g9 k9 h6 i9 l9 g7 j10 i6 k10 f8 h11 k7 k8 i10 h5 f9 f10 g6 i11 j11 e7 d8 e8 e11 f6 g5 j5 h4 l10 j7 e6 e5 l7 l6 m5 l8 k5 l5 h12 f4 g4 d7 g12 f7 j12 k13 i12 e9 f12","winner":2}
+{"lv":[5,4],"moves":"h8 g9 h7 j10 j9 j8 g7 h9 i6 h10 h6 f8 h5 h4 e7 i11 j12 i7 j7 g4 i9 f6 g6 i8 f7 d7 e8 f10 i4","winner":1}
+{"lv":[7,4],"moves":"h8 h7 i6 j10 h6 j6 k8 i8 j7 h5 k10 j9 f5 i11 h12 g11 j11 l9 k9 k7 i5 h9 i12 k12 f6 i9 i7 j8 h10 f7 e6 g6 i4 i3 f9 g10 f11 e10 f8 e8 d9 j4 e9 g7 c9 l6 b9","winner":1}
+{"lv":[6,4],"moves":"h8 g9 i10 i7 g7 i9 h10 h11 i8 g10 g8 f8 k9 k8 j10 h9 f9 h7 j11 i5 g5 j6 h4 j8 f6 e7 d6 g6 j7 k10 i4 k6 e5 d4 k5 i6 h6 h12 j4 l6 m6 k7 m5 l8 m9 m8 n8 g4 j2 i3 l4 k4 k3 f10 i1","winner":1}
+{"lv":[7,8],"moves":"h8 h9 i6 f9 g7 f10 j6 h6 j8 f7 f6 i9 j9 j7 i10 g6 e8 h12 d8 g8 f11 e9 g9 h10 g12 h11 h13 g11 i13 e13 f12 e10 k5 i7 i14 j15 e5 d4 i12 i11 h7 d5 e6 d10 g10 d11 c12 c10 b10 e12 e11 b9 a8 f13","winner":2}
+{"lv":[8,8],"moves":"h8 i9 j8 j9 h9 k9 h7 h6 g8 f8 g10 l9 m9 f11 f9 i6 h11 h10 e8 d7 i12","winner":1}
+{"lv":[4,5],"moves":"h8 h7 g6 j6 i8 g10 e9 h10 i10 i9 j8 g8 f9 k8 f7 g9 g11 h5 k9 f10 i7 h6 e11 i6 l10 m11 j7 h9 j9 j10 e7 e8 k6 i5 h4 j5 k4 g5 f5 k5","winner":2}
+{"lv":[5,7],"moves":"h8 h9 j7 k7 j8 j6 g7 k8 h6 j9 g8 f8 i7 g5 i9 j10 i6 i8 h7 f7 f9 j5 e10","winner":1}
+{"lv":[4,4],"moves":"h8 g7 h7 j9 i6 g10 g8 f9 h6 h9 i8 j8 i7 i5 g6 j6 i9 i10 f8 e8 h4 h5 j5 k4 f5 e4 f6 e6 f4 f7 g5 e3 e7 h11 i3","winner":1}
+{"lv":[6,8],"moves":"h8 i9 h6 h9 j8 j9 g9 k9 l9 k8 k10 i10 h11 i8 i7 l7 m6 f10 g6 i6 h7 f7 j11 i12 i11 g11 f8 e7 g10 e6 g8 g7 e9 g4 e8 d8 d7 f9 k4 h5 j7 m8 k6 k5 l5 j3 j4 l4 i5 j6 e11 h10 e10 e12 l10 l11 m4 n3 k3 l2 c9 f4 o8 n7 e4 f12 e13 i4 f5 d3 k2 d5 e2 e5 g12 b3 c4 d6 g3 d4 d2 c3 f6 e3 a3 f3","winner":2}
+{"lv":[6,5],"moves":"h8 h9 j6 i7 i5 i9 h6 j9 g9 f8 j7 k9 l9 j8 h4 l10 m11 k7 h5 h7 i6 k8 g6 h10 f6","winner":1}
+{"lv":[4,6],"moves":"h8 g9 i7 f9 j7 f10 i8 h10 j8 k8 i10 i11 f8 g8 h6 j12 k13 k9 j9 j10 i6 i9 i5 i4 g7 j4 e9","winner":1}
+{"lv":[6,8],"moves":"h8 i9 i7 g9 j8 j7 i8 k8 j9 k9 h6 g6 h7 h5 g8 f8 i6 f9 f7 e7 k10 l11 d6 h10 i11 g5 d8 e6 i5 i4 j11 d7 j6 k6 k2 m8 j5 k4 e5 g4 h9 i10 j10 j12 k5 l4 l5 m5 f5 g3 g2 g7","winner":2}
+{"lv":[5,8],"moves":"h8 h7 h9 f9 g11 j8 g8 h11 g10 g9 i9 i10 j9 k9 i7 i8 f8 e9 i11 d8 k7 i5 g6 h5 e10 l10 f11 l8 j10 m11 n12 k11 g12 k8 m8 k12 k10 d9 c9 e12 e11 g14 j11 i12 l7 j12 j7 m7 g7 f6 g5 g4 l9 n7 d11 c11 h13 i14 m9 l12 f7 h12","winner":2}
+{"lv":[8,8],"moves":"h8 h9 j9 f10 k8 i10 i7 g10 h10 f9 i8 g8 l8 j8 f7 g9 e9 g11 g7 g12","winner":2}
+{"lv":[6,7],"moves":"h8 i7 h7 h6 g5 k9 h5 f5 g8 i6 g6 g7 h9 i5 h10 h11 i8 f8 j4 e9","winner":2}
+{"lv":[6,8],"moves":"h8 i7 g10 k9 g7 h9 j9 k8 f8 j7 h10 k7 k10 l7 h7 m7","winner":2}
+{"lv":[6,4],"moves":"h8 g8 f10 h7 f9 i9 g10 f8 g11 h9 h11 e8 i10 h10 g9 d8 c8 i7 g12 g13 f13 k8 j9","winner":1}
+{"lv":[5,8],"moves":"h8 i7 h7 h9 j8 k10 g7 f6 g11 k8 g8 i8 i9 h10 e10 f9 e9 g10 j7 k11 k7 h11 l6 m5 e8 i10 j10 j9 e7 l7","winner":2}
+{"lv":[5,8],"moves":"h8 i8 j10 j9 h10 g9 i10 k10 h7 h9 g10 f10 k9 f9 i9 g7 g11 j8 f11 j7 i6 k8 f7 e9 d9 m8 l8 k6 l5 j5 j6 l7 i11 i4","winner":2}
+{"lv":[6,5],"moves":"h8 i8 j9 f10 k8 j8 i9 g7 h9 k9 h7 h10 f9 g9 i6 g8 h5 h6 j7 g10 g4","winner":1}
+{"lv":[8,5],"moves":"h8 i9 f10 i7 g10 h7 f9 h10 h11 e8 f11 f8 g11 e11 g12 g9 f13 f12 i10 i11 j9","winner":1}
+{"lv":[4,5],"moves":"h8 g7 i10 f10 j7 j9 i8 i7 i6 k8 g8 f8 e7 h9 e10 k9 i9 i11 f9 h7 h6 j10 d11 c12 l8 j8 f7 g10 j11 k10 k7 j6 h11 g11 g13 h10 g9 l9 j12 e11 f11 d9 g12 l10 m11 f6 e9 h5 g6 k11 k12 i5 e8 e6 f4 g5 i12 h12 h13 i14 f13 e14 i13 j5 e13","winner":1}
+{"lv":[4,7],"moves":"h8 g7 j9 h7 i10 g9 j7 g10 g8 e6 h9 j11 i9 j8 i6 l9 f7 i8 g6 h6 f8 e8 i11 k8 m8 f5 h11 h12 g12 f13 e10 e5 e7 g5 i12 i13 i7 h5 h10 d5","winner":2}
+{"lv":[4,4],"moves":"h8 i9 f10 g10 j9 j8 g8 i7 i6 h7 g11 j10 g7 i5 f11 i11 k9 h11 i10 j11 g6 g5 h6 f6 e9 k11 l11 l12 m13 h12 f7 h9 e8 h10 h13 k7 l6 j7 l7 i8 k6 g13 f14 h5 f9 f8 d9 c10 c9 g9 b9","winner":1}
+{"lv":[5,8],"moves":"h8 h9 g6 g10 i6 j6 i7 h7 g7 i5 g8 g5 i8 f8 i9 i10 j10 f6 k11","winner":1}
+{"lv":[8,4],"moves":"h8 i9 h10 f8 g10 h7 i10 j10 h9 g8 h11 h12 f11 e12 g12 j9 e10 f10 d9 k8 c8","winner":1}
+{"lv":[4,6],"moves":"h8 i9 i6 g9 j9 h9 i8 k10 g8 f9 e9 f8 k9 l9 e7 l10 g11 k8 h10 m10 i10 n10 j7 j10","winner":2}
+{"lv":[7,7],"moves":"h8 i7 j8 i6 i9 j7 h9 k8 h5 k7 h7 h6 i10 k6 h10 h11 g11 f12 k9 j6 g6 l6","winner":2}
+{"lv":[8,8],"moves":"h8 h7 j8 g9 i9 g8 i6 g7 g10 g6 g5 f7 e7 j7","winner":0}
+{"lv":[7,4],"moves":"h8 g8 f8 h7 i6 j9 g7 j6 i8 f10 i7 i9 i5 i4 h6 h9 j4","winner":1}
+{"lv":[4,7],"moves":"h8 g9 i6 h9 g10 k6 e9 k8 e7 j5 h6 j9 i9 l7 i10 m8 f7 i4","winner":2}
+{"lv":[4,5],"moves":"h8 i9 i10 f10 g11 j9 h6 g10 f9 i11 k9 h5 i6 j6 j7 j8 k7 k8 g6 i5 g8 h7 f7 h9 e9 f8 e7 e8 f11 g9 g5 e6 f4 j12 h10 j11 j10 e3 h4 f6 g4 g7 i4 i8 e4","winner":1}
+{"lv":[7,7],"moves":"h8 g7 i10 g9 g10 h10 f8 f9 j7 g8 j9 j8 i8 h9 i9 i11 k8 g6 g5 d9 e9 j12 k13 h11 i6 i7 h5 g4 l9","winner":1}
+{"lv":[7,8],"moves":"h8 h7 i10 j8 i9 h9 g6 i6 h11 i11 j10 g7 k8 j9 k10 h10 k11 l12 k9 k7 k12","winner":1}
+{"lv":[6,5],"moves":"h8 i8 g10 i7 i9 j9 h7 j10 j11 h11 g8 g11 f6 k8 i10 h9 f9 i6 g7 e5 g6 g9 e10 d11 f10 h10 f7 f8 e7 d7 g5 g4 h4 j8 i3","winner":1}
+{"lv":[6,5],"moves":"h8 h7 i7 g8 i6 j6 j9 i8 h10 f10 j10 g7 k9 i9 h12 i11 i10 g10 l10 k10 j8 g9 h6","winner":1}
+{"lv":[4,4],"moves":"h8 g9 f8 h9 g10 f10 j9 i11 f7 g8 i7 i8 g7 h7 k9 i9 f9 h11 g11 h10 i10 h6 i6 f6 k10 j10 e10 j11 i12 k7 j8 k5 e7 e9 j12 h12 h13 g6 k8 e6 d6 l10 f11 g13 f14 f5 e4 g12 l7 m6 k11 k12 f4 c7 h5 b6 d8 g4 l9 j7 d7 d5 m8 n9 k6 f12 l8 n8 e11 e5 c5 b4 d11 c11 e12 h3 i2 j6 i5 e8 g5 d9 h4 j5 l6 l5 n7 o6 j4 e13 c9 g3 c12 b13 d10 m5 n5 i4 l11 g2 k4 f1","winner":2}
+{"lv":[4,7],"moves":"h8 g9 i10 g7 f9 h10 g8 h9 e7 j9 k9 h7 i8 f8 i7 i11 j12 j8 k7 h12 g11 i6 g12 h6 e9 j6 j7 g6 f7 f6","winner":2}
+{"lv":[6,7],"moves":"h8 g9 j8 f9 g7 f10 j7 i8 h6 f8 f7 h7 i9 j10 i7 f11 f12 k9 i6 h9 f6 e5 g6 e6 j6","winner":1}
+{"lv":[7,7],"moves":"h8 i7 j8 j7 g7 i8 g10 k7 l7 k6 h9 k8 k9 i6 i10 i5 i4 i9","winner":2}
+{"lv":[8,7],"moves":"h8 i8 h6 j6 k8 j7 k7 i10 h9 h10 g10 k9 i11 i6 i9 f9 g8 j8 j9 k6 g12 g9 j5 l7 l5 h5 f11 l9 l10 g7 e11 e12 e8 e9 d9 g4 f3 l6 m6 e10 g11 h11 g13 g14 d8 f8 d11 c11 d10 d7 d12","winner":1}
+{"lv":[8,7],"moves":"h8 i9 g8 i8 h7 j7 h9 h10 i10 f7 g11 g9 e8 e9 f9 e10 h11 g10 j11 k12 i11 f11 k11","winner":1}
+{"lv":[5,7],"moves":"h8 g9 g7 h10 j8 i9 j9 h7 j7 j10 f9 i10 k10 i11 j5 j6 i8 j12 g8 f8","winner":2}
+{"lv":[5,7],"moves":"h8 i8 h10 j7 i6 j9 i9 h7 g6 l11 k10 j8 j6 j11 h6 j10","winner":2}
+{"lv":[6,8],"moves":"h8 g7 h10 g9 g10 i10 h9 h11 i8 j7 j8 k8 h7 h6 f8 g8 j9 g6 g5 i6 k10 l11 f11 e12 h5 f6 e6 j6","winner":2}
+{"lv":[8,8],"moves":"h8 g9 i6 h10 g10 f9 i9 f7 f8 g7 g6 h6 k8 j7 j9 k9 i7 i8 i11 i5 j5 i10 e9 e10 k4 l3 j6 l6 l7 j4 k3 l5 g8 h7 d8 e8 m4 k5 m7 m6 d7 k6 h9 f10 c9 d9 f11 c10 b11 e12 d10 e11 j11 h11 e14 d11 b12 c11 f13 c12 b13 c13 d12 c14","winner":2}
+{"lv":[4,5],"moves":"h8 g8 g9 j6 j9 h11 i6 g11 g10 h10 i9 h9 f11 f6 e10 g6 i10 i11 e7 i7 j7 e8 h6 k10 j10 g7 k9 l9 j11 j8 k8 e6 f7 f8 j12 j13 f9 d9 d8 h5 k7 g5 g4 k5 l7 m6 h12 g12 f4 d10 l8 i4 k11 l12 i5 k6 i8 f10 e9 h7 f5 e11 k4 j5 j4 l5 i12 l10 h4 d7 f12 d11 m8 e5 d4 e4 l11 d6 c6 e12 c9 h3 g2 d12 d13 m5 n5 m3 l4 m4 m2 m7","winner":2}
+{"lv":[7,8],"moves":"h8 h9 h7 j9 i9 i10 g8 j10 k8 g10 h10 j7 j8 i8 k6 f11","winner":2}
+{"lv":[6,8],"moves":"h8 g8 i8 f9 h7 g10 i9 h9 f6 g7 g6 f5 e7 d7 c6 e6 j9 k10 i10 c8 g4 b9","winner":2}
+{"lv":[4,7],"moves":"h8 i8 j7 j6 g9 i6 h6 e11 e9 i5 i7 g5 g8 g10 g7 h7 i9 j10 i10 f10 h9 f9 f7 e6 j11","winner":1}
+{"lv":[8,4],"moves":"h8 g8 j7 k8 i9 j10 j8 h10 i7 j9 g7 h7 j6 g9 h6 k9 j4 j5 i5 i6 k3","winner":1}
+{"lv":[7,4],"moves":"h8 g9 h7 j9 i9 h9 g8 f6 k8 h5 i6 f9 i8 j8 i7 f10 i5","winner":1}
+{"lv":[8,5],"moves":"h8 i8 j8 j10 i6 j9 h7 i7 g6 i11 i9 j6 h6 h9 f6 e6 g8 f9 g7 e5 g5 f10 g4","winner":1}
+{"lv":[5,5],"moves":"h8 h9 j8 g8 i10 j6 i8 k8 g9 f10 i9 i11 k9 i6 g7 j10 f9 i5 e7 h5 j7 h6 e5 f6 g6 h7 f7 j5 k4 g5 j9 f5","winner":2}
+{"lv":[8,4],"moves":"h8 i8 i9 f10 j8 h7 j9 h9 k9 i7 k7 h10 j6 j10 m9 l9 l8 g10 i5","winner":1}
+{"lv":[4,7],"moves":"h8 i8 g8 j7 g10 f10 g9 g7 e9 h7 i7 j6 j8 g6 g11 g12 j9 k7 e7 h6 i6 i5 h4 j4 i10 k3","winner":2}
+{"lv":[5,6],"moves":"h8 h7 g8 i7 g7 i8 h6 h9 e9 f8 j9 g10 j7 j8 g6 f11 e12 g5 i11 f10 f7 h10 i10 h11 f9 e10 d10 h13 h12 g12 g9 d9","winner":2}
+{"lv":[4,6],"moves":"h8 g9 h6 g8 g10 f9 e9 f8 h10 i10 h9 h7 i6 i9 e10 f10 f11 e12 g6 f6 f7 d8 e11 e8 c8 d9 h11 h12 g11 d11 i11","winner":1}
+{"lv":[5,5],"moves":"h8 i9 i10 f10 k10 j9 j8 g10 k9 i7 h9 g8 g9 h10 i6 g6 f7 h11 f9 g7 f11 k7 j7 h6 j11 e10 d10 k8 j10 g5 g4 i11 e9 d9 j12 h7 i8 f8 i5 l10 i12 f4 e3 l9 k12 l13 h12 g12 l12","winner":1}
+{"lv":[7,5],"moves":"h8 g8 h6 h9 g7 g10 i6 j6 i5 j4 f6 i9 i7 i8 i3 i4 e5 d4 e6 g6 e9 f8 e7 e8 g5 h4 f4 j7 e3","winner":1}
+{"lv":[5,5],"moves":"h8 i7 j7 j9 i9 j10 i6 f10 g7 j6 g8 g6 i8 j8 f9 j11 j12 h7 g9 h9 i10 g10 i11 i12 h10 k8 f8","winner":1}
+{"lv":[4,4],"moves":"h8 g8 i6 j8 i7 h9 g9 k5 f10 g10 j6","winner":1}
+{"lv":[6,6],"moves":"h8 g8 h7 i7 i10 h6 h11 j9 j8 i11 f6 h9 e7 i9 g9 k6 g10 i6 j6 i8 i5 j7 l5 l9 k9 k8 h5 m10","winner":2}
+{"lv":[7,5],"moves":"h8 h7 f6 g7 g6 h10 e6 h6 f7 i7 e8 h5 f9 k7 j7 h4 h3 f10 f5 f8 g4 i5 i2","winner":1}
+{"lv":[8,4],"moves":"h8 g9 h9 h10 i11 g8 g10 j8 f11 i8 h11 j11 e10 i9 k7 k9 e12 d13 g12 d9 e11 g11 f12 e8 h12 i12 d12","winner":1}
+{"lv":[6,4],"moves":"h8 h7 h6 i7 i6 j9 i9 f6 i8 k8 f8 g8 j7 h9 i10 i11 e6 g7 e7 j10 g9 c5 f10 g11 e8 e9 f9 f11 h10 d6 g10 e10 d7 h11 c6","winner":1}
+{"lv":[7,6],"moves":"h8 h9 i10 j9 i9 i8 j8 k7 k6 j6 h7 k9 l8 g7 g10 k10 k11 e8 f10 h10 l7 e11 j12 l10 i11 i12 g11 j11 l12 j10 l9 g12 e10 f12 e12 k12 m10 d10 c9 f11 h13 e9 f8 j5 k8 n11 k5 l5 m8 n8 c10 d11 c11 m12 l11 c8 d8 i6 d6 e6 f6 e7 e5 f7 n9 o10 c7 f4 g6 d5 g8 g4 f5 f3 e4 d3 c12 c13 a9 b8 j7 b3 c4 l13 k14 e3 c3 g3 h3 i5 h4 i7 i4 g5 h6 d2 c1 e2","winner":0}
+{"lv":[8,6],"moves":"h8 h7 g9 f9 f8 f10 e10 e7 g7 g8 e12 e9 h6 f6 d8 e8 i6 d6 e6 k6 f11 d9 f5 i8 h5 i5 g12 j7 h9 k7 h12 l7 i7 l5 m4 m7 n7 c9 b9 f12 h11 h10 g10 d13 g11 g13 e11 d11 i11","winner":1}
+{"lv":[8,6],"moves":"h8 g9 g10 h10 f8 f7 i9 g7 e6 e8 g6 j7 j8 h6 i8 g8 i10 i7 h7 j9 f5 e4 f11 i11 e10 d9 f12 d7 f10 f9 e12 h9 e9 f13 d10 c10 b11 e7 c7 j12 k13 c6 b5 d8 e11 e13 g13 c9 h14","winner":1}
+{"lv":[4,4],"moves":"h8 h7 f10 h9 e9 g8 j7 j9 f9 i9 k9 f8 g9 e11 i7 j8 j6","winner":1}
+{"lv":[5,4],"moves":"h8 h9 j7 g10 j8 j10 i7 i8 g7 h7 k10 k9 e9 j6 h10 i11 h12 h11 f11 i9 j9 i12 i10 f9 f7 e8","winner":2}
+{"lv":[8,5],"moves":"h8 i8 j6 i9 i5 k8 h7 i7 i10 g7 h6 h5 i6 k6 g8 f9 h9 h10 f7 f10 e6","winner":1}
+{"lv":[7,8],"moves":"h8 g7 f9 g9 g10 h10 i11 e8 h11 e7 f8 f7 i12 j13 h7 e6 e5 g6 h5 g8 g5 h9 d5 i10","winner":2}
+{"lv":[6,6],"moves":"h8 h9 i8 j8 i10 i7 j7 j9 k9 f9 j10 g10 i9 g7 i11 i12 l8 m7 h12","winner":1}
+{"lv":[8,4],"moves":"h8 g8 h7 f10 g7 h10 i9 e5 j10 h9 f6","winner":1}
+{"lv":[5,4],"moves":"h8 i8 g10 h9 f9 g8 e7 h10 g7 i7 i9 f6 f11 f8 f7 d7 e10 g6 e11 h11 g9 f10 i10 e8 g11 g12 e9 i5 j10 k11 h6 i6 i4 h12 h13 h7 e12 e13 d11 c11 d9 c9 c8 b7 c12 b13 d13 c14 d12 d10 b12 j9 a12","winner":1}
+{"lv":[6,8],"moves":"h8 g8 g9 f9 f7 f10 h7 h10 h6 h5 g10 j8 i7 g7 j9 i8 g11 k5 k9 k7 l8 h11 k6 j7 l6 l9 i6 j6 j5 k10 f4 h9 l7 i4 i10 m10 h13 m7 k8 m6 g13 g12 m8 n9 e10 e12 f12 k4 k2 f13 f6 f5 h4 e14 d15 e7 e5 e6 g4 l4 m4 h14 g6 d6 h3 k3 d11 m3 n2 j3 g5 e3 i3 j2 g3 g2 i1 h2 d4 e4 n8 o8 l5 e8 d10 d7 c6 c8 b9 d8 f8 f2 i2 c9 d5 c7 b10 l11 k12 b12 n6 n3 l3 b7 a7 o6 k11 l12 a1 l10 l13 n10 j10 o10","winner":2}
+{"lv":[4,4],"moves":"h8 g8 i6 g10 g11 j9 j7 i9 g9 h11 f9 i7 g7 f8 i10 j6 e10 i11 h9 k9 e9 d9 e11 l9 m9 e8 f10 d12 h12 h7 d8","winner":1}
+{"lv":[7,5],"moves":"h8 g9 f7 j8 g6 i9 h10 h9 j9 h7 e8 f9 e9 h5 d8 f8 e6 e7 d6 f6 d9 c10 d7 f10 d5","winner":1}
+{"lv":[7,5],"moves":"h8 i8 i6 j9 i7 j6 h7 g8 j8 k9 h9 h6 k7 j7 h10 h11 i9 f10 l6","winner":1}
+{"lv":[8,7],"moves":"h8 i8 f8 g9 g7 e9 h9 i10 h7 h6 h10 h11 i7 j7 f6 i9 f7 e7 f9 f5 f10","winner":1}
+{"lv":[8,7],"moves":"h8 h9 f6 g9 g10 i10 i11 j9 i9 j10 j11 j7 h11 j8 j6 g11 e8 f9 h6 i6 g6 e9 d9 f7 d8 g8 e6 d6 e5 g7 e7 e4 g5 h4 c9","winner":1}
+{"lv":[5,6],"moves":"h8 h7 h6 f10 i8 g8 i7 j6 f9 i5 i9 i10 h9 g9 g10 j7 j8 g5 h10 g7 g6 g11 h11 h12 e8 d7 i12","winner":1}
+{"lv":[4,5],"moves":"h8 h9 g6 j10 i7 j6 g10 i9 j7 k9 j9 h7 e9 k8 g9 f10 e7 e8 k10 g8 i6 k7 i11 f8 i10 i5 l8 h6 k6 g5 f7 h5 j5 h4 g7 g3","winner":2}
+{"lv":[6,5],"moves":"h8 i9 f6 j9 h9 h10 j8 k9 f7 h7 f8 f5 g8 i8 g6 k10 l11 l9 m9 i10 e6 d5 h6 i7 d6","winner":1}
+{"lv":[5,8],"moves":"h8 i7 h9 g8 i9 h7 i6 j10 g10 g5 g7 f6 j8 f9 i8 j7 e10 f10 f11 e12 h11 h12 i11 f8 f7 k7 l7 g11 i10 i12 j9 k8 k9 g9 l9","winner":1}
+{"lv":[8,6],"moves":"h8 g8 i10 f9 h7 g10 g7 h9 k10 i7 j9 i8 f11 i9 g9 k8 i6 k6 j7 j5 h10 j10 h5 k5 k7 h6 i4 h11 e8 f7 f4 g4 k9 d6 e6 e7 e10 d9 d8 f10 j11 i12 j13 j4 k12 k11 l11 f8 f6 l12 m13 c5 b4 m10 l13 m14 k13 i13 n13","winner":1}
+{"lv":[8,6],"moves":"h8 g8 i8 f9 h7 j9 i7 g7 h9 h6 i10 i9 f10 g9 h10 h11 g10 e10 j10","winner":1}
+{"lv":[8,8],"moves":"h8 i7 h6 k6 g7 f6 g10 f8 f9 e8 h9 h7 h11 g9 f11 i8 h10 h12 i10 f10 j10 k10 i9 k11 i12 j13 i11 i13 g11 e11 j11","winner":1}
+{"lv":[6,4],"moves":"h8 i8 f9 f10 g10 j6 g6 i9 f7 h9 g8 g7 i6 h7 f6 k8 e6 h6 f5 f8 c6 d6 e8 d7 h5 i5 i4","winner":1}
+{"lv":[7,8],"moves":"h8 h9 j10 i10 i11 i9 j11 j9 k9 h12 k8 h11 k10 g9 f9 g12 f13 h13 h10 h14 h15 k7 k11 k12 l8 m7 l11 m11 j8 i8 m8 n8 l9 n7 i12","winner":1}
+{"lv":[5,6],"moves":"h8 h9 f10 i8 g9 e11 g11 i10 j7 e9 h10 g8 f7 h7 f11 f9 e10 g12 i6 j9 i7 j6 d10 g10 c10 b10 k10 h11 k8 f13","winner":2}
+{"lv":[7,5],"moves":"h8 i9 g6 j8 h6 i7 k7 j9 i5 j6 j7 f8 h5 h7 i6 g4 k5 j5 k8 l9 k6 k9 k4","winner":1}
+{"lv":[7,6],"moves":"h8 h7 g9 f9 j7 f10 f8 g10 e10 h10 e8 d8 f7 e9 i8 g8 g11 d9 j10 i6 j5 j6 i11 l8 i5 h6 g6 h5 k6 l5 f6 c7 b6 i9 j11 h11 k7 l6 j9 j8 f4 f5 j13 j12 l9 c9 b9 h3 h4 l4","winner":0}
+{"lv":[8,7],"moves":"h8 g8 f10 g9 g7 g11 i10 h11 h10 j10 f11 k9 e8 j11 g10 e10 i11 j9 j12 f9 k13 l14 h7 j8 j7 i9","winner":0}
+{"lv":[8,7],"moves":"h8 i8 f8 g9 g7 i9 i10 g11 h9 h7 h6 e9 f5 f7 g5 h5 f6 e8 i5 j4 e5 d4 d5 c5 i4 d9","winner":0}
+{"lv":[5,7],"moves":"h8 i9 h9 h10 j8 f10 i8 g8 g10 j7 i6 f11 f9 h6 i7 i5 h11 e8 g7 e7 g6 d8 f8 e9 i12 j13 k8 l8 g11 e10 i10 e6","winner":2}
+{"lv":[8,4],"moves":"h8 g8 f10 g10 g11 g7 f11 h9 e9 d8 h10 i11 d9 g9 g6 j9 f9 i9 k9 f8 f12 f13 g12 e8 c8 e10 h12 i13 e12 i10 d12","winner":1}
+{"lv":[5,7],"moves":"h8 i7 j7 h9 g11 k9 j8 g8 e7 i6 i8 k8 f7 k10 k7 j5 h7 h10 g7 d7 i10 j10 f8 f5 i9 h12 f6 e5 f10 f9 i11 i12 h11 k12 k11 j11 e11 f11 g9 d12 l6 m5 d6 c5 j12 l9 m8 h13","winner":2}
+{"lv":[7,7],"moves":"h8 h7 i8 g8 i6 g9 i9 i10 j8 g7 g10 f7 i7 i5 h9 j7 h10 g11 f11 e12 k9 e7 d7 g5 g6 h6 h11 h12 k7 l6 k8 l8 k10 k6 k11","winner":1}
+{"lv":[6,4],"moves":"h8 h9 f10 g8 f11 j9 f7 i9 g9 e11 e7 f8 e8 i7 e9 k9 l9 e6 f9 d9 g11 d8 g10 h11 d7 c6 g7 h7 c7","winner":1}
+{"lv":[5,7],"moves":"h8 g7 i6 g9 i9 i8 j7 h6 g8 k8 f7 e9 f8 d9 e8 d8 h9 c9 i10 f9","winner":2}
+{"lv":[6,7],"moves":"h8 g7 f7 f9 e8 g9 g6 h5 e9 e10 h6 f6 j9 i8 g8 d9 j7 h9 f11 d8 d7 e7 c9 d11 d10 e11 k8 g5 h4 i10 i5 i11 i9 h10 f8 g10 f10 h11 c11 b12 i7 i12 j13 h12 h13 j10 k10 g13 k9 f14","winner":2}
+{"lv":[7,4],"moves":"h8 g7 j9 i7 g6 h7 f7 j8 f8 h10 i9 k8 g8 e8 f9 k7 j7 f10 h9 g9 i10 g10 e6","winner":1}
+{"lv":[6,8],"moves":"h8 h9 g8 f10 g10 g11 i7 h10 j8 i8 g7 g9 h7 j7 f9 e10 f7 e7 f8 k6 l5 k8 e8 d8 d7 c6 h11","winner":1}
+{"lv":[7,6],"moves":"h8 g9 g8 f8 h10 i8 i9 j8 j10 g7 h9 h7 h11 h12 j11 i10 k11 l12 i11 g11 l11","winner":1}
+{"lv":[6,4],"moves":"h8 g9 i7 g8 g10 h7 i10 j8 h10 f10 i9 i8 j10 k10 g7 j9 f6","winner":1}
+{"lv":[4,7],"moves":"h8 h7 g8 i7 j7 f7 g7 i8 f9 g6 j9 f5 e4 i6 i5 f6 i10 h6 e6 j6","winner":2}
+{"lv":[6,4],"moves":"h8 h9 g7 h10 i7 i9 j8 f10 g8 f8 g9 g6 j7 h7 j6 k5 j5 g10 j4","winner":1}
+{"lv":[8,7],"moves":"h8 g8 i10 f9 h7 i7 h6 h9 g7 f6 e8 f7 f8 e9 i9 e7 d8 j10 k7 i5 k8 d7 g9 d9 d5 f11 e10 e6 f5 d6 h5 h4 g5 e5 c6 c7 b7 f4 g3 b8","winner":2}
+{"lv":[6,7],"moves":"h8 h9 i7 g9 i9 g7 g10 i10 i6 f8 g8 e7 i5 i8 h10 f7 i4 i3 c7 h7 d7 f5 j9 f6 f4 f9","winner":2}
+{"lv":[8,4],"moves":"h8 h7 f10 i8 i9 j9 g6 j10 k10 i7 j11 k8 j7 k9 l8 f6 l7 g7 k7 h9 n7 m7 l9 m8 l6 j8 l5","winner":1}
+{"lv":[5,4],"moves":"h8 i9 f8 j10 i7 h7 e9 j9 g8 i8 e8 d8 k10 k9 h9 j8 j11 i10 i11 k8 h11 j6 j7 g6 f5 l9 m9 l7 m6 l8 m8 l10 h10 l6","winner":2}
+{"lv":[5,8],"moves":"h8 i8 f7 f10 i7 k5 i9 j7 j8 g10 h9 e10 d10 i10 j9 h10","winner":2}
+{"lv":[5,8],"moves":"h8 h9 h7 j9 g9 i10 g8 i7 g10 g7 g11 g12 h11 f9 e9 k9 i11 i9 l9 i8 i6 f11 f8 h10 d8 e8 f10 c7 h12","winner":1}
+{"lv":[8,6],"moves":"h8 h7 j9 f9 j8 f10 k9 g8 e10 g10 j10 i6 j5 j11 l8 i11 k11 i9 k8 i8 k10 k7 k12","winner":1}
+{"lv":[8,7],"moves":"h8 g8 i6 g9 g6 f7 h9 g10 g11 h6 f10 i5 g5 d8 h11 h10 f8 i11 j10 i9 j12 k7 l10 i8 i10 k8 j8 j11 f11 f12 e9 m9 e10 e11 d10 g7 d9 j6 l8 h4 g3 j4 k3 g12 i13 h12 g4 g2 c8 b7 c10 b10 c11 b12 c9 c7 c12","winner":1}
+{"lv":[7,6],"moves":"h8 g8 f7 g9 g6 f11 g10 e8 f8 f6 h7 h6 i10 j9 i7 g7 j7 i8 h10 j10 h11 h9 k7 l7 i9 j8 f12 i12 l8 e10 g12 g11 h12 e11 e9 h5 d11 d12 k5 j11 j12 j6 k11 l10 h13 h14 j4 k6 l6 c13 f10 i3 k10 d9 i13 j13 j5 f5 e5 k9 c10 m11 n12 b14 a15 e14 c8 m8 m7 n8 h4 l11 k12 m10 m9 e13 e12 b9 n9 k13 f13 g14 l12 m12 f14 c7 m13 g4 i6 n5 k2 k4 i2 g3 h3 d7 k8 e7 d8 c11 b7 d13 a9 b11 n10 o11 n11 n13 o15 n14 c12 b13 a13 b12 b10 b15","winner":2}
+{"lv":[4,6],"moves":"h8 h7 h10 f9 i6 f10 i7 i8 i9 g10 j8 k7 k9 l10 g7 f6 j9 f8 f7 f12 f11 h9 j10 k11 j7 j6 j11","winner":1}
+{"lv":[5,4],"moves":"h8 h9 j9 i7 i6 k8 g7 j6 h10 i9 g8 h7 g10 g9 e9 i8 i10 f10 f9 k10 f8 h6 e8 d8 h11 j8 d7","winner":1}
+{"lv":[5,4],"moves":"h8 g8 g6 j6 j7 g10 i6 i9 g7 k8 f7 f8 e9 k9 e10 h7 h6 f6 i10 j8 g9 i5 k7 e8 g11 i11 i8 j11 h12 d8 c8 f10 h11 f11 l7 m7 j9 g5 e7 k10 h9 h10 g12 f13 k6 l5 d7 c7 f9 d9 i12 j12 k11 f12 f14 k5 j5 l8 j10 m8 n8 i7 i4 h3 h5 j3 e11 l9 n7 h4 g3 k4 e12 e13 g4 f3 e6 f5 a10 b9 i2 l10 m11 f4 f2 l11 l12 d10 j4 d11 d12 l6 i3 m10 k12 m5 m13 n14 m6 o5 n6 n5","winner":2}
+{"lv":[5,6],"moves":"h8 g9 i10 h10 i9 g7 g8 i8 j9 j7 e7 k7 h9 j11 k9 l9 i7 h6 f8 e8 i11 f9 j10 h12 j8 k11 g10 l10 k8 h11 k6 j12 f7 e6 i13 i12 l7 m6 l8 m7 m8 n8 m9 k12 j5 g12","winner":2}
+{"lv":[5,7],"moves":"h8 i9 g7 i6 g9 f10 g8 g10 i7 h7 j8 k8 g5 g6 h6 f4 k9","winner":1}
+{"lv":[6,6],"moves":"h8 i7 j6 h6 j8 j7 k7 h10 i9 g7 k6 l6 l8 h7 f7 i5 k8 i8 k9 k5 k10","winner":1}
+{"lv":[4,8],"moves":"h8 i7 f8 f9 g10 j7 g8 i8 g9 g7 f7 i6 g12 g11 e8 d8 i9 i4 i5 l7 h7 k6 j5 l5 i10 m4","winner":2}
+{"lv":[5,7],"moves":"h8 g8 g7 h7 i6 j6 e9 f8 i9 f6 j9 k9 k10 i5 h9 g5 h10 k11 i10 g10 h11 h12 g12 k8 f13","winner":1}
+{"lv":[5,6],"moves":"h8 g9 h6 f8 i9 g7 h10 h9 f7 j8 g10 i10 g6 e8 j9 e9 f11 e7 e10 e5 e6 d6 c5 d9 f9 d10 c11 d8 d7 c8 j7 b8","winner":2}
+{"lv":[6,7],"moves":"h8 h7 i7 g9 j8 f9 j9 g10 j7 j6 i9 j10 k7 l6 k8 i8 l7 m7 i10 m6 h11","winner":1}
+{"lv":[4,4],"moves":"h8 g9 i7 f8 h6 h9 i9 j10 j7 j8 f9 h7 h10 j9 i6 i5 g10 h5 g6 f6 e10 j11 j12 d10 i11 i10 g8 e8 e7 k10 k6 j6 i8 d9 k7 f7 f4 f10 k8 l10 m10 l9 k5 i12 k4","winner":1}
+{"lv":[5,8],"moves":"h8 h9 j7 i7 i8 k10 f7 k9 g11 j8 l10 i9 l9 k7 j9 k8 h10 k6","winner":2}
+{"lv":[8,6],"moves":"h8 i8 h10 f10 j8 j7 h9 h7 i9 g11 j9 k9 g9 f9 j10 g7 j12 j11 i11 f8 k13","winner":1}
+{"lv":[5,6],"moves":"h8 g7 g9 i7 i6 h7 f7 h6 j8 g5 j7 h5 g8 i8 j9 j10 g10 i5 g11 g12 j5 j6 f8 h4 h3 g3 i10 f2","winner":2}
+{"lv":[6,7],"moves":"h8 g9 j9 h10 i9 g7 i10 i8 k8 h11 j7 g11 e9 i11 l7 m6 f11 f8 e7 j12","winner":2}
+{"lv":[7,8],"moves":"h8 g8 j7 g9 g10 i10 i11 j9 h9 i8 h11 h10 h7 h5 g5 i7 f6 e7 f8 f7 g6 g7 i12 j13 e8 f9 k10 j12 j10 i6 i9 k11 l10 j11 l8 k9 k8 l11 f11 j6 e6 d6 e12 d13 e11 g11 h12 f12 m10 n10 d7 e10 d11 l9 m11 m8 d8 b9 g13 f14 h4 n9 m9 k6 d9 d10 c8 b8 f5 g4 i3 j2 e4 d3 b11 c11 c10 a12 f13 g14 m13 m12 h6 l7 j5 o10","winner":2}
+{"lv":[8,4],"moves":"h8 i8 g6 i7 i6 k8 g7 g10 h6 f6 g5 g4 h7 h9 g8 g9 j5 f10 k4","winner":1}
+{"lv":[5,5],"moves":"h8 h9 h10 i9 j9 h7 g10 h11 g8 f8 k10 g11 j8 j10 k9 k8 f11 i7 e10 f10 e9 i8 i6 e7 j11 g6 g7 e8 g12 h13 f9 g9 h6 f6 i10 j6 f7 h5 e6 g5 d9 c8 c9 b9 d11 c12 d5 c4 d8 f5 e4 i5 d10 e5","winner":2}
+{"lv":[8,7],"moves":"h8 h9 g8 g10 j9 j8 i7 h7 f11 f10 e10 g12 g11 e11 k8 f12 h12 k5 k10 i10 l9 k9 l10 l11 d10 m10 d9 j11 k12 f9 e8 f8 f7 j10 h10 g6 d7 d8 c10 b11 c7 e7 c8 b7 c9 c6 c11","winner":1}
+{"lv":[8,4],"moves":"h8 h7 j10 i9 i11 g10 i7 j8 g11 f10 j9 g9 e10 g8 f9 f6 g6 i8 k8 i6 k9 l8 k11 j5 k4 k10 h11 j11 i10 h9 l7","winner":1}
+{"lv":[5,6],"moves":"h8 i8 f10 j7 i10 h7 g9 i7 k7 f7 g7 h9 e11 d12 k6 f11 j9 g10","winner":2}
+{"lv":[6,4],"moves":"h8 g9 j10 i9 i10 h10 j8 g10 i11 i7 l8 k9 j9 j11 k8 i8 l7 f10 m6","winner":1}
+{"lv":[7,6],"moves":"h8 g8 g10 f9 h7 h9 f7 i7 h5 g6 g7 h6 i6 i9 j9 i10 j8 j7 i8 k10 j10 i11 k12 j11 i12 j12 e9 e7 l11 g5 f6 k7 f4 f5 f10 g11 k8 l8 e5 d4 k11 m8 l7 m10 m9 e10 k13 d6 f11 g4 f8 d7 d10 c11 m6 n5 k14 k15 j13 h11 i14 h15 e6 d5 d3 d8","winner":2}
+{"lv":[7,6],"moves":"h8 i9 f6 f9 f7 h10 g6 g10 e8 h5 h6 i6 g8 f8 e6 d6 d5 c4 h9","winner":1}
+{"lv":[7,4],"moves":"h8 i9 j9 g10 j8 g8 i10 h11 g7 h9 i8 i11 j7 j6 k10 h7 j10 j11 l10 f10 h10","winner":1}
+{"lv":[6,4],"moves":"h8 h9 g9 h7 j7 j6 k8 g8 g6 h5 k7 f10 f7 k9 f6 j10 e7 i11 h12 h11 e8 g11 c10 d9 j11 g10 e10 f11 e11 e9 e12 f9 e13 e14 f12 h10 i10 b9","winner":0}
+{"lv":[6,4],"moves":"h8 i8 g7 h7 g6 h9 h6 i7 j7 i9 i6 f6 i5 j4 i10 k8 h5 g4 e8 f7 j6 k6 f8 e9 g8 d8 g9 f10 g5","winner":1}
+{"lv":[8,4],"moves":"h8 g9 h9 h7 g8 i7 h10 f8 j7 g7 f7 i10 i8 g10 h6 j8 h5 g6 h11 h12 k6 l5 i6 g4 g5 f6 k8 l9 i5 j5 k7 k9 j6 l6 h4 f10 g3","winner":1}
+{"lv":[6,8],"moves":"h8 i8 i10 f10 h9 g8 h10 h11 f9 g9 g6 h6 g5 g11 g7 k9 i11 k10 h5 l9 f6 g10 g12 e5 f7 e8 f5 f8 g4 g3 f3 f4 e2 d1 i6","winner":1}
+{"lv":[5,8],"moves":"h8 g8 h10 f9 i9 g7 f7 f10 f11 g11 i7 g9 g10 e9 h12 d9 i10 c9","winner":2}
+{"lv":[7,6],"moves":"h8 i8 j8 g9 j7 j9 h7 h6 i9 h10 f8 g7 g8 f9 i10 e8 k7 f7 i6 l7 k8 h5 k4 j5 k6 k5 l6 m5 m6 j6 k10 k9 l9 m10 o6 n6 n7 m8 l5 j3 o8","winner":1}
+{"lv":[8,8],"moves":"h8 h7 f6 f10 g6 e9 g8 h6 d4 g7 f8 e8 d6 e7 i8 j8 e6 c6 i7 d7","winner":0}
+{"lv":[4,7],"moves":"h8 g8 g7 g10 i6 h9 j7 i10 f7 h7 h10 i11 i9 f6 j8 j11 k7 k12","winner":2}
+{"lv":[5,6],"moves":"h8 i8 g6 j6 f7 i5 h10 j8 h6 h9 i10 j7 j9 k6 i7 l5","winner":2}
+{"lv":[4,7],"moves":"h8 h7 f6 j5 g8 g9 e7 j7 f9 i8 k10 l5 k6 i5 m5 h5 k5 f5 g5 g6 i10 e4","winner":2}
+{"lv":[4,6],"moves":"h8 h7 g8 f8 i8 j8 f7 g9 g11 k7 j7 i9 h10 f9 j9 e9 d9 h9","winner":2}
+{"lv":[8,7],"moves":"h8 g8 f10 f9 h7 g9 g7 g10 f7 e7 i9 f6 i7 j7 i8 g11 g12 i6 j9 g6 i10 i11 h11 k8 f13","winner":1}
+{"lv":[6,5],"moves":"h8 h9 g9 i7 h6 j10 j9 g10 i8 h7 f8 e8 f9 h5 g7 e9 j8 g8 i10 k8 i9 f10 i11 i12 h10 g11 e7","winner":1}
+{"lv":[6,7],"moves":"h8 i9 i8 g9 j7 e9 h9 g10 g8 j8 i10 j11 h7 h6 j9 g6 h11 h10 k8 l7 g12","winner":1}
+{"lv":[7,6],"moves":"h8 i9 g8 f10 h9 i8 i10 j11 f8 g11 e9 e8 f6 f7 h7 h6 f9 i6 g9 d9 h10 h11 e7 d6 i11","winner":1}
+{"lv":[7,8],"moves":"h8 g8 i9 g9 g10 f9 h9 i8 h7 h10 f8 g7 g5 h5 f4 f6 f11 i11 e10 j10 j12 j8 h12 e9 k9 g12 k8 k10 l10 f10 d9 l9 j11 i4 k12 i13 i12 l12 d8 i6 c8 b7 f7 e8 e6 d7 i7 l7 k6 j6 l13 i10 g4 i5 e12 d13 m14 n15 g6 h6 j4 k5 l5 e11 d12 d10 e5 g3 h4 e3 e4 d4 d3 f5 j9 b5 c6 b6 c5 b8 b4 b9","winner":2}
+{"lv":[8,5],"moves":"h8 i8 i6 j6 h7 h5 g7 i9 f6 g8 e7 i7 h6 g6 f8 i11 i10 i5 f7 d7 f5 f10 f4","winner":1}
+{"lv":[4,4],"moves":"h8 g7 f9 f10 h6 j8 i7 j6 i10 j9 j7 h9 g11 k9 l9 k8 f11 j10 i9 i8 l8 g8 i11 h11 g9 k10 i12 i13 k7 h7 f7 g6","winner":2}
+{"lv":[6,4],"moves":"h8 i8 j10 j9 k9 j6 i7 g7 k8 g8 i9 k11 g9 i6 i11 h12 h10 f8 f10 e11 i10 g10 l10 k10 j8 h7 h6","winner":1}
+{"lv":[7,5],"moves":"h8 g8 j9 f10 i9 g7 h9 g9 k9 l9 g10 h10 j10 i11 k11 l12 j12 j11 i8 f8 e7 j7 i7 i6 k8 g6 g5 k10 l8 j8 m8 h7 n8 o8 m7 n6 m9 l10 m6 f9 m5","winner":1}
+{"lv":[4,4],"moves":"h8 g9 j6 k8 j9 g8 g10 f10 i6 j10 e9 i8 i10 k9 h6 g6 k10 h7 f9 h5 g7 f8 e10 i11 k6 l6 h10 h12 f7 l8","winner":2}
+{"lv":[4,6],"moves":"h8 i7 h6 g10 g11 f9 g7 h9 e9 f8 i10 f11 f7 i8 j7 e12","winner":2}
+{"lv":[8,7],"moves":"h8 i7 f10 j7 h7 h6 i8 j9 j8 g8 i10 i6 h10 j10 g10 e10 h11 h9 i9 g11 i12 i11 f9 e8 j13","winner":1}
+{"lv":[6,4],"moves":"h8 h9 j7 i9 j8 i7 j9 j10 k8 i8 i10 h11 g6 h5 l8 i6 i5 j6 k6 f10 l7 m6 m8 n8 j5 g10 i4","winner":1}
+{"lv":[8,6],"moves":"h8 i9 f10 g10 g11 f9 h11 e9 j6 e11 i11 f11 h10 h7 g9 i7 f8 e7 j12","winner":1}
+{"lv":[8,5],"moves":"h8 h9 f9 g11 j8 g8 g7 f10 i7 h7 i9 j10 h6 k9 i6 i8 f6 e5 g6 g10 e6","winner":1}
+{"lv":[5,8],"moves":"h8 g7 f6 g9 g10 f7 e7 h5 g8 j7 i7 d9 j8 i8 g6 e9 c9 d8 i6 h6 f8 d6 d7 h9 i10 f9","winner":2}
+{"lv":[6,5],"moves":"h8 h7 i9 i8 j8 h9 j7 h10 j9 j10 k9 i7 k7 j6 k8 k10 l9 m9 i6 f10 h5","winner":1}
+{"lv":[4,8],"moves":"h8 h9 g7 j8 i6 f10 h6 i9 f7 h10 g11 i10 g10 g9 j9 i11 i8 f8 j7 e7","winner":2}
+{"lv":[8,7],"moves":"h8 g7 j7 g9 g6 h9 k8 i6 j8 i8 i7 g10 k9 l10 j6 g11 g8 f11 e12 g12 g13 j9 k5 l4 k7 k6 l7 h7 m7","winner":1}
+{"lv":[8,4],"moves":"h8 g9 i8 i7 g7 h11 f8 j8 h6 i5 f6 e5 f7 f5 h5 h9 e8 g8 g6 f10 i4","winner":1}
+{"lv":[8,4],"moves":"h8 g7 h7 j8 g6 f6 h4 h5 g10 h10 f9 k8 e8 h11 i8 j9 g8 f8 i6 f10 j5","winner":1}
+{"lv":[5,7],"moves":"h8 i8 g10 i7 g7 j9 i10 i9 g8 g9 f9 g6 h7 i6 i5 k9 l9 h9","winner":2}
+{"lv":[7,6],"moves":"h8 i9 h7 h9 j9 k7 j8 i8 g10 j7 k8 i10 i7 k6 l5 l8 g8 j6 m9 j10 i11 h6 i6 j5 g7 g9 f7 e7 f9 e10 e8 i5 h4 j4 j3 k3 l2 k4 k5 h11 f8 d8 f6 f5 f10","winner":1}
+{"lv":[4,5],"moves":"h8 g8 g6 f6 e9 h10 f7 g10 g9 h5 i7 f10 e10 i9 f11 h11 j8 j10 i10 k9 i11 i5 j7 j6 i6 e7 h7 g7 k7 l7 i8 j9 k8 l8 e4 f5 l9 m10 g5 k6 h6 f4 f9 d9 j5 d7 j11 d8 d6 g4 e6 e8 d10 h12 h13 i12 g12 i14 l10 j12 k12 h9 e11 f8 c8 g11 k4 l3 e12 e13 f12 c9 b10 d11 c10 a10 k10 m7 n6 m8 h14 g13 d12 c12 m11 l11 e5 m6 m9 j4 h4 e3 d5 f3 f2 k3 f13 l6 f14 f15 l13 m14 b3 c4 k5 j14 l4 i13","winner":2}
+{"lv":[8,8],"moves":"h8 h7 f10 g9 i9 g7 g8 e7 i7 d7 f7 d6 h10 c5","winner":0}
+{"lv":[7,6],"moves":"h8 i8 f9 h7 g10 h11 g9 g11 g6 e9 f10 e11 g7 g8 f11 f8 f7 e8 e10 d10 f12 f13 e12 d13 i12 g12 i10 h10 j11 i9 j12 k12 k7 d7 j6 i7 c8 d9 d11 d6 d8 h13 h12 k9 j7 k8 k11 h9 i6 h6 j8 g13 e13 j5 c11 c12 e14 l11 j9 j13 i13 m10 n9 i14","winner":2}
+{"lv":[7,7],"moves":"h8 h7 g8 i10 g6 g9 f8 e8 g5 h6 h5 j7 e5 f5 g7 g4 f6 d4 i9","winner":1}
+{"lv":[7,6],"moves":"h8 i8 g10 j9 h7 i10 i7 h9 h11 j11 g8 i9 k9 i12 i11 k12 l13 f9","winner":0}
+{"lv":[7,5],"moves":"h8 i9 i8 j6 i10 g8 f9 f8 j9 k8 e8 h10 g11 g9 i11 i6 g6 h7 j7 i5 k6 h9 e9 e7 d6 h5 l5 m4 k4 g7 f7 h6 j4 h4 h3 k7 g3 l8","winner":2}
+{"lv":[8,4],"moves":"h8 i9 f10 g10 f8 h9 i8 g8 g11 g9 f9 f11 g7 h5 f6 f7 e6 g6 i4 h7 k9 j10 j11 j8 j5 h6 j7 i5 k6 e8 d9 l7 j6 k8 h3 g2 j4 j3 m4 l5 k4 l4 g4 h4 f5 l6 i2","winner":1}
+{"lv":[4,6],"moves":"h8 i8 f10 g9 i6 f8 j9 j7 g11 e9 f9 g7 h6 i7 f7 k7 l7 h7","winner":2}
+{"lv":[5,8],"moves":"h8 g9 j6 g10 i8 f9 h6 h9 i9 d9 e9 g8 g11 g6 i10 g7","winner":2}
+{"lv":[4,4],"moves":"h8 g8 g9 g10 i8 i7 i6 h11 h6 j6 e9 i9 i10 h5 f9 h9 g6 f6 f7 e8 k7 h7 f8 g7 k10 f10 e10 h10 i11 e7 h12 k9 g5 j10 f11 j9 i5 l9","winner":2}
+{"lv":[5,5],"moves":"h8 h7 j9 i7 i9 g7 j7 h9 i6 k8 k9 g10 e7 g6 i10 i11 f11 e8 e10 f8 f9 h6 l9 m9 e9 g8 g9 g5 g4 f4 f7 e3","winner":2}
+{"lv":[7,7],"moves":"h8 g8 h10 f9 i9 g9 i10 g10 g7 j10 i8 i7 g11 j8 h11 h9 i11 i12 j11 f11 k11","winner":1}
+{"lv":[7,6],"moves":"h8 h9 g8 i7 g7 i9 i6 f8 j9 g10 j7 f9 k8 g9 e9 h5 j8 i8 j6 j5 j10","winner":1}
+{"lv":[6,4],"moves":"h8 i8 i7 j6 h10 g8 j9 h9 g9 k8 j10 g10 f10 e11 j7 j8 i11 f11 e12 l8 m8 j12 f12 i9 e9 j11 k12 h11 d11 k10 d9 i10 f7 h7 f8 e7 c9 f9 b9 a9 c10 i6 a8","winner":1}
+{"lv":[4,4],"moves":"h8 i9 g6 h9 i7 j9 g9 f10 f7 g10 i6 j6 i8 h5 g7 k9 l9 h7 g8 g5 j8 k8 f8","winner":1}
+{"lv":[6,4],"moves":"h8 h7 f6 h10 g6 g10 g8 i9 h6 e6 g5 g7 i7 j8 j6 i6 k5 f10 l4","winner":1}
+{"lv":[6,7],"moves":"h8 g9 j7 g7 g6 g11 h5 k8 j8 j9 g10 i10 l7 h11 g12 h9 i9 j11 f7 i11 f11 k11","winner":2}
+{"lv":[5,8],"moves":"h8 g8 f7 f9 g10 j6 i6 k7 i9 j7 g7 j10 h10 e10 f6 e5 d11 j8 j9 l8 i5 i7 m7 k8 i8 l7 i10 h7","winner":2}
+{"lv":[8,8],"moves":"h8 g9 j6 h9 i9 i10 g8 h10 f8 i8 g10 j9 f9 e8 g7 f6 d10 e9 e10 h7 f10 c10 f11 f7 f12","winner":1}
+{"lv":[4,8],"moves":"h8 i7 f9 k9 g10 k10 i8 i10 g8 f8 i6 h7 j7 h9 k8 j8 l9 h5 m10","winner":1}
+{"lv":[4,4],"moves":"h8 h9 g7 i7 h10 j9 i6 g8 e9 i9 k9 j10 e7 j8 j11 g9 f9 i8 j7 g6 h7 g10 i10 h6 g11 h5 f11 f7 h11 i11 e11 d11 e8 k8 e10","winner":1}
+{"lv":[6,4],"moves":"h8 i7 g8 g10 h9 j9 h7 h6 e8 i8 e7 f8 e9 e10 e6 e5 f7 f10 d5","winner":1}
+{"lv":[6,4],"moves":"h8 i8 j8 j6 i9 h10 g10 f6 e8 h11 g9 i7 g7 g6 j9 i6 h6 i5 i4 h9 j10 k11 j11 f10 j7","winner":1}
+{"lv":[7,7],"moves":"h8 i7 h7 h6 j8 j9 i9 h10 i10 i11 g8 i8 h9 f7 g7 f6 g9 g10 f9 e9 i6 j5 e10","winner":1}
+{"lv":[5,8],"moves":"h8 h9 g7 i9 i7 h7 e9 i10 g8 j9 k9 f9 f7 g9","winner":2}
+{"lv":[6,5],"moves":"h8 i7 i10 h9 j10 i9 h10 k10 k9 f10 j12 g9 f9 h5 i12 i11 g8 e8 i8 k8 f7 j11 h7 i6 f8 j8 f5 f6 g6 j7 e4","winner":1}
+{"lv":[8,8],"moves":"h8 i7 g7 f6 g10 h6 g6 f7 g8 g9 i8 j8 g5 g4 h9 j7 h11 k9 l10 h7 e8 f8 f9 d7 i12","winner":1}
+{"lv":[4,7],"moves":"h8 i7 i10 k9 j7 j10 g7 k8 h6 g6 e7 f8 g11 f7 g10 h9 g9 g8 e10 e6 d5 h10 e8 g12 h11 f9 e11 e9 f11 d11 i11","winner":1}
+{"lv":[5,4],"moves":"h8 i8 f7 i7 i9 j10 i10 f8 h6 j9 g7 j6 i6 g8 g11 h7 f6 e5 k10 h11 g6 e6 e7 i5 k7 j8 j7 e8 g5 d8 c8 g4 e10 h12 i12 i11 c7 d7 g13 h10 h4 i3 g9 h13 f9 h9","winner":2}
+{"lv":[8,8],"moves":"h8 i8 g7 i10 g6 g9 i9 f6 f7 h5 j8 h10 j10 k11 j7 j9 g5 g8 i7 h7 h6 f4 k9","winner":1}
+{"lv":[6,5],"moves":"h8 i9 f10 h7 f8 j8 h10 i8 i10 g10 h9 j9 h11 h12 g6 i7 e11 g9 f9 i6 i5 k10 l11 f7 f11 f12 g11 g7 d11","winner":1}
+{"lv":[7,8],"moves":"h8 g8 j10 f9 h7 g10 g7 i9 j9 f7 j11 j8 i10 g6 h11 k8 h10 h9 k10 l10 l11 i8 i11 k11 j12 j13 g9 f8 k13","winner":1}
+{"lv":[6,5],"moves":"h8 i8 g7 j10 i10 j9 g6 f6 h5 h9 g5 g4 f7 e8 i7 h7 g9 g8 f10 g10 j6","winner":1}
+{"lv":[6,6],"moves":"h8 i7 f10 j7 h10 h7 g7 i8 i6 i10 i9 k7 l7 f6 j9 k9 k6 j6 g9 h9 j12 g10 f11 f8 j10 k11 j11 j8 j13","winner":1}
+{"lv":[4,5],"moves":"h8 g7 i8 j8 i10 i7 j7 g10 g9 h11 k9 f8 f9 i11 i6 k8 e7 e8 h9 e9 h6 d10 c11 h7 k6 l5 j6 f10 g6","winner":1}
+{"lv":[5,8],"moves":"h8 g9 i10 h10 g11 f9 e9 h12 i9 h11 h13 i12 g10 j12 i11 g12 f7 f12","winner":2}
+{"lv":[7,8],"moves":"h8 g8 i8 f9 h7 j9 h9 h6 j7 g10 i7 g7 g9 j6 k8 k7 i9 i6 h10 h11 i11 i10 f8 e7 j12","winner":1}
+{"lv":[5,4],"moves":"h8 h9 j7 j8 i6 h7 g8 f10 h6 i8 i9 k9 g7 f6 g6 g5 k10 g11 f7 h5 h10 j10 f8 i5 g9 g10 e7 j5 d6","winner":1}
+{"lv":[5,8],"moves":"h8 i9 i10 f9 g9 g10 f11 i7 f7 j7 h10 i8 g8 h9 k6 j9 h6 i6 i5 l9 k9 k8 e9 h5","winner":2}
+{"lv":[8,5],"moves":"h8 h9 j9 f8 j7 j6 k8 j8 g6 h5 k7 i7 i9 k9 l10 j10 l8 i6 k10 h7 m9 f10 n10 o11 m10 o10 l9 n11 l7 h11 l6","winner":1}
+{"lv":[7,6],"moves":"h8 i9 j8 j9 h9 g10 g6 h6 f9 i10 i8 k8 h11 h10 f8 g8 f10 l7 m6 f7 e11 j10 k10 i7 f11 f12 g11 d11 i11","winner":1}
+{"lv":[6,6],"moves":"h8 g7 h10 g9 i10 g10 g11 j9 j7 g6 g8 i9 f9 k9","winner":0}
+{"lv":[5,8],"moves":"h8 h7 h10 f9 g11 f12 f11 e11 i7 c9 d10 e10 g8 e9 e7 e12 e8 e13","winner":2}
+{"lv":[6,6],"moves":"h8 g7 f8 g9 f7 f9 g8 e8 h9 i10 g6 h6 h11 h10 g11 i8 i7 i11 i12 j10 k10 f10 g10 h5 h12 g12 j12 i5 j11 j4 k3 l9 k12 l12 j13 k14 h13 g14 j14 j15 i13 k15 k13 g13 l13","winner":1}
+{"lv":[7,8],"moves":"h8 i7 h7 h6 j8 j9 h10 f10 i9 g11 i11 i10 j10 g7 i8 k8 f8 g8 g9 e7 j12","winner":1}
+{"lv":[4,8],"moves":"h8 h7 i10 f9 h6 g10 g8 i8 k10 f10 j9 f11 f7 h9 j7 e12","winner":2}
+{"lv":[4,5],"moves":"h8 i7 f7 j9 i6 g10 h6 k8 g7 f6 g11 h9 i9 k9 e7 d7 h10 j8 i11 f8 f9 i10 h11 j11 j10 k11 f11 e11 f12 e13 f13 f10 f14 f15 h12 g13 h13 h14 k12 h7 j7 k10 k7 i8 g9 g6","winner":2}
+{"lv":[8,7],"moves":"h8 h7 j9 f9 j8 g10 i9 g8 e10 j10 k9 h9 i7 l10 i8 i6 j5 f10 j6 j7 k5 l4 g9","winner":1}
+{"lv":[5,5],"moves":"h8 i9 j8 h7 i7 j6 g8 k8 j9 i8 g7 g6 e9 i6 k6 f6 i10 h6","winner":2}
+{"lv":[4,4],"moves":"h8 i7 j9 f8 j7 h9 h6 j6 e9 f6 k10 g10 e7 f10 f7 h11 i6 h7 e10 e8 f9 g9 i11 g8 g11 k8 k9 g6 g7 h5 j10 d8 c8 h12 h10 j8 i10 l10 i9 k11 i12 i8 i13","winner":1}
+{"lv":[4,5],"moves":"h8 h9 j6 i7 h6 g8 i10 i9 j7 j9 g9 k9 l9 i8 g6 i6 i5 j8 k7 h4 k10 f8 f9 k8 e8 j11 j10 l10 m11 g11 e9 d9 e7 e10 h10 g10 f11 g7 e11 d7 h5 e6 d8 f10 j5 l8 i11 m8","winner":2}
+{"lv":[8,4],"moves":"h8 i8 i6 h10 h6 j6 j9 j10 h9 h7 i5 k9 i11 k8 k7 g7 f10 g6 f7 g11 g9 e4 f5 i9 e11 f12 i7","winner":1}
+{"lv":[7,7],"moves":"h8 g9 i7 f9 h7 g7 i8 f8 g6 j9 h6 h9 i9 i6 g5 e9 d9 d10 c11 j8 h5 h4 f5 e4 i5 e5 j5","winner":1}
+{"lv":[7,4],"moves":"h8 g7 i6 g8 g6 j6 f8 f6 k8 h10 f7 g10 f10 h5 i7 h11 g9 e11 i9 i8 f9 f11 h9 g11 e9","winner":1}
+{"lv":[5,6],"moves":"h8 i7 g9 j8 j7 h9 f11 i10 g8 i11 f9 g10 e10 i8 i9 h7 g11 e11 f8 f10 h10 d8 e8 e7 g7 f6 c12 d11 g5 g6 f5 d7 j10 k11 f7 c9 b10 d10 d9 b8 g12 a7","winner":2}
+{"lv":[7,6],"moves":"h8 h9 f10 g9 j9 g11 g10 h11 f11 h10 i9 k11 i11 e7 k8 i10 g6 k10 j10 k12 g7 f6 j11 k13 k9 k14","winner":2}
+{"lv":[4,5],"moves":"h8 h9 i6 j8 f7 j6 h10 i9 e7 j9 j7 k9 i10 g9","winner":2}
+{"lv":[7,5],"moves":"h8 g9 j8 g8 i9 j10 g10 i8 f8 k9 h7 g7 h11 h10 i11 k8 g12 i10 k10 f9 j11 g11 e10 i5 g5 h5 i12 h13 e9 e8 l10 f10 l11 k11 l9 m8 l12 h9 l8","winner":1}
+{"lv":[5,5],"moves":"h8 i8 i7 j6 j9 g7 g10 f10 g11 k9 h10 g9 f9 h7 e10 i6 h11 e8 i10 k8 f7 h9 k10 j10 f11 i11 g12 f13 d9 h12 c8","winner":1}
+{"lv":[8,5],"moves":"h8 g8 j10 g10 i11 i7 j11 h11 i12 g7 g9 h10 j12 j9 i9 i8 l12 k11 k12 f10 h12","winner":1}
+{"lv":[6,7],"moves":"h8 i8 g9 i7 j7 j9 h10 k9 i9 j10 i11 j12 j11 k10 h7 h9 i10 l10 j8 l11 m12 m10 n10 g11 k11 l7 l9 k6 j5 l6 m6 k7 k8 i6 i5 h5 f10 j6 h6 f8 e8 f11 d11 l8 l5 k4 k5 m5 h11 e10 d9 d12 e12 j4 l4 m11 k12 m7 n6 m8 m9 l13 h12 c10 g12 n12 o13 l14 l12 f13 e11 g13 f6 c11 c9 n7 o7 o10 n9 o3 n4 g10 f12 i12 d10 b8 d8 d7 e7 g5 b10","winner":1}
+{"lv":[7,6],"moves":"h8 i7 j9 h7 k8 i6 k9 k6 i9 h9 j10 k11 l8 i11 j8 i8 j7 j6 j11","winner":1}
+{"lv":[7,5],"moves":"h8 i9 h9 g10 i10 h11 f9 g8 g6 g11 g9 h10 f12 h5 h6 j6 f8 j8 k7 f10 e9 d9 g7 h7 i5","winner":1}
+{"lv":[8,6],"moves":"h8 i8 j8 j6 j7 i6 i9 k9 j10 k11 h10 k7 g10 k10 k8 k12 k13 h11 f10 i10 g11 f12 g7 f6 g9 g8 e11 i7 d12","winner":1}
+{"lv":[5,7],"moves":"h8 g9 i10 h10 i6 g11 i9 i11 f8 i8 g7 f6 g8 h12 f11 g12 f7 j12 k13 i12 f9 f12","winner":2}
+{"lv":[7,6],"moves":"h8 h7 i8 g8 i6 g9 g7 k6 f8 h6 g10 f9 h9 e10 d11 f11 d8 e9 c8 f6 f7 d10 h5 d9 c9 f10 f12 e8 e11 d7 c6 c7 g12 i7 e7 d6 c10 e12 h10 f4 h12 h11 i12 j12 c11 c12 b10 a11 g5 e5 g3 b8","winner":2}
+{"lv":[6,6],"moves":"h8 i9 i8 g9 j7 j8 k7 k6 k8 l7 h7 l9 i6 h6 g6 j9 i7 g7 i4 i5 h5 g4 j3 k2 f7","winner":1}
+{"lv":[6,7],"moves":"h8 i7 i10 k9 k8 j9 g6 j7 h6 j8 j10 h10 i9 g7 h7 h5 e9 j5 j6 i6 i5 l7 k6 i11 g9 f9 f11 k7 m7 k11 j11 l10 m11 m9 j12 l9 n9 l8 l6 l11","winner":2}
+{"lv":[6,8],"moves":"h8 h7 h9 f9 g8 i8 h10 f10 j9 h11 j10 g11 i11 i9 f8 g9 f7 i10 e9 e8 g10 h12 h6 i6 i7 i13 j14 g7 g5 j8 f4 e3 d5 e6 f5 f6 e5 c5 h5","winner":1}
+{"lv":[6,8],"moves":"h8 g9 j6 h10 g11 i10 i11 h11 g10 j9 g12 k9 k8 j11 h9 l9 g13 g14 m9 k10 i12 j10 l10 j8 j7 j12","winner":2}
+{"lv":[8,6],"moves":"h8 h9 f8 g9 g10 g8 g7 f9 i9 j10 e10 i11 e9 d10 i6 h6 e6 f7 g5 e8 h5 e5 g6 g4 i10 j9 k9 j11 j12 k7 k11 k10 i12 h12 j7 e11 g13 d6 h13 b8 h10 f10 i8 i7 k8 l9 j8 l8 f12 g11 c7 d12 c13 n7 m8 a7 c9 f11 h11 d11 c11 d9 d8 d13","winner":2}
+{"lv":[6,5],"moves":"h8 g7 g6 j6 h7 j9 f7 h5 f8 f6 g9 h9 g8 i8 f9 i6 f10 f11 e11 g10 i7","winner":1}
+{"lv":[6,8],"moves":"h8 i8 h9 i7 i10 h7 j9 k9 g7 k7 g8 l7 j7 j11 g9 g10 i9 f9 j10 f6 k11","winner":1}
+{"lv":[4,5],"moves":"h8 i8 f9 f10 i10 g11 i6 h11 g7 h10 g8 h7 i9 f6 j7 i11 j11 h9 h12 g6 j10 k11 j9 j8 e8 g10 e11 d9 e10 e12 f11 e7 g5 g9 f8 d8 k10 k8 j12 j13 l10 m10 f7 e9 c7 i7 h6 d7 i5 j4 d11 c12 c11 b11 d6 f5 e4 e6 g4 h5 k9 l9 k7 j6 g12 c9 b10 b9 i12 c8","winner":2}
+{"lv":[8,5],"moves":"h8 g8 j8 g10 i10 j9 i9 i8 i7 g9 g7 j10 h6 g5 k7 g11 g12 h10 h7 j7 h5 h9 h4","winner":1}
+{"lv":[4,5],"moves":"h8 h9 g10 h10 g8 g9 f11 h7 j9 h11 e9 k9 i8 j8 h6 e8 f7 i11 f8 h12 h13 j10 i10 l8","winner":2}
+{"lv":[8,4],"moves":"h8 i8 j8 j6 j9 g10 h9 h7 i9 k9 g9 f9 h10 k7 j12 f8 j10 j11 k11 f10 g7","winner":1}
+{"lv":[5,6],"moves":"h8 g8 f6 f9 h10 f10 e7 i9 g9 i11 g7 i6 f8 d6 e5 d4 e10 j5 i10 h7","winner":2}
+{"lv":[8,7],"moves":"h8 g9 f8 f7 g7 i9 i10 e8 j8 e9 h9 f9 g6 e10 g8 i8 e11 d7 j11 k12 g4 g5 g10 d9 c9 e7 e6 b7 c7 c8 a6 f11","winner":2}
+{"lv":[6,4],"moves":"h8 i7 g6 g10 g7 h10 h6 j9 g8 g5 k6 j6 h7 h9 i6 f9 f6 e6 e5 f10 d4","winner":1}
+{"lv":[7,4],"moves":"h8 g8 f9 h10 h11 j9 f10 h9 g11 f8 f12 f11 g10 i12 j6 g9 i11 g7 e8 d7 f7 i5 j11 j10 k11","winner":1}
+{"lv":[4,4],"moves":"h8 g7 h9 i7 h10 h11 g10 i8 f9 h7 j7 f10 i6 j8 g9 e9 g11 e7 f7 g8 e8 j9 g6 k10 l11 h5 f11 k8 i10 d9 i9 h12 g12 g13 e11 e10 h6 j6 j12 i11 c6 d7 j10 i5 l8 f12 l10 f14 e15 l9 k11 l12 m9 f8 n8","winner":1}
+{"lv":[6,6],"moves":"h8 i9 h7 i7 h9 h6 j8 i8 h11 h10 i6 g11 g9 f10 e10 i10 i11 f8 j10 f9 f11 e9 f7 d8 c7 h12","winner":2}
+{"lv":[6,5],"moves":"h8 i8 f9 j6 g10 j9 g9 i7 h11 e8 h10 h9 g11 g8 f10 i10 e11 d12 f11 i9 d11","winner":1}
+{"lv":[4,7],"moves":"h8 i8 f8 g9 h6 h9 g10 j9 f9 k10 h7 k8 k9 j8 g8 l8 m8 l11 m12 i6 e8 d8 h11 d7 i12","winner":1}
+{"lv":[6,4],"moves":"h8 h9 i7 j8 i6 i9 j7 j9 g9 l9 k9 j6 g6 h5 f8 h10 k7 f12 g11 h7 e9 f10 g7 h6 g8 g5 e8 g10 d8","winner":1}
+{"lv":[5,4],"moves":"h8 h9 i10 h11 i8 j8 k10 i7 g7 f6 f9 j6 k9 h7 i9 j10 j9 i11 j7 i5 e8 i6 g6 f8 e11 h10 m12 l11 m9 l9 g9 i4 i3 k11 j11 g5 h6 l7 k6 h5 k7 k8 g8 g10 f5 h12 h13 e7 f10 d12 d8 k5 j5 e10 i12 g14 l8 g4 d7 j12 m8 g11 g13 f4 m4 l5 e4 f12 e12 d11 d10 h4 j4 d6 g3 i13 d3 c2 c6 b5 h14 j13 f7 d9 k13 m10 o11 n10 k12 c7 c8 d5 e5 e3 b6 e13 d14 e6 j3 h3 l13 m14 e9 f11 b8 a8 f3 c11 b10 m5 l4 k4 j1 j2 b7 b9 o9 n5 o5 c9","winner":0}
+{"lv":[5,5],"moves":"h8 i7 h6 f10 j7 f8 i6 h7 g7 i9 g9 k8 f9 g6 i10 g11 i8 h5 h10 h9 e8 k9 i11 k10 k7 j9 l9 j8 j11 f6 h12 g5 i12 j12 l10 h11 i5 f7 f4 e6 g8 l7 k6 j6 k11 l11 d8 f5 d7 c6 d6 d9 e9 g10 e7 e10 f11 j10 e11 k5 j4 k3 e5 m6 n5 c7 g12 f12 l5 m4 m3 l8 d5 d4 m8 g4 h4 j5 i13 i14 d10 i4 j3 e3 h3 g3 g2 c5 c8 f2 b6 g1","winner":2}
+{"lv":[8,8],"moves":"h8 g7 j8 g9 g6 h9 h6 i6 h7 g10 e8 h5 j9 g11 g8 j7 f8 d8 k8 i8 k6 f11","winner":2}
+{"lv":[7,8],"moves":"h8 i7 h10 k9 i8 k6 j8 g8 j10 k10 k8 l8 f10 i10 h9 h11 f11 g10 f12 f9 i9 g11 g7 f6 k11","winner":1}
+{"lv":[7,4],"moves":"h8 h7 h6 f8 g6 j6 e8 h5 i6 f10 e9 e6 f7 h9 f9 d9 g5 g11 g7 g4 f6 i9 e7 d8 d7 c7 c6 g10 b5","winner":1}
+{"lv":[6,6],"moves":"h8 i7 f6 h9 j9 i6 g7 e5 i8 h7 j8 k8 j10 i9 j7 j6 j11","winner":1}
+{"lv":[7,6],"moves":"h8 i9 g7 h7 g6 f6 i6 g9 h5 g5 f8 e9 h6 f9 h9 e8 e7 d9 c9 d7 g10 c6 b5 j7 i4 j3 i5 j4 i7 i3 i8","winner":1}
+{"lv":[4,7],"moves":"h8 i7 f9 k9 i8 k7 k10 j9 i9 j8 h6 j7 j10 l7 e9 h7","winner":2}
+{"lv":[8,5],"moves":"h8 g7 j10 i7 h7 j8 k9 h11 k8 g11 k11 k10 h9 h10 i9 l12 j9 f10 g9","winner":1}
+{"lv":[5,8],"moves":"h8 g7 g10 f9 i8 f10 i7 i6 g8 f8 f11 h9 j8 k8 h6 g5 i9 e7 f7 e9 g9 g11 d8 j9 j7 l7 k5 j6 m6 k7 j10 i10 h11 l10 i5 l6 h12 j12 l9 d9 i11 g13 e10 h13 k9 l8 m9 m7 h5 f12 d10 e13 h4 h7 k11 l12 j11 l11 l5 j5 k6 m4 h3 h2 o9 n9 h10 f13 i13 d13","winner":2}
+{"lv":[4,5],"moves":"h8 i7 g10 j8 i6 i9 h6 j9 j7 i8 h9 h7 k10 k9 g6 f6 i10 k8 h10 j10 h11 h12 e10 f10 k6 j6 i11 f8 f7 g8 g9 h5 f9 l9 m9 j12 j11 l10 m11 l8 f11 m8","winner":2}
+{"lv":[5,7],"moves":"h8 g9 g7 h10 i10 j9 i9 j10 f7 j12 f6 e5 i11 j11 i8 j8","winner":2}
+{"lv":[7,5],"moves":"h8 g8 f7 j9 e8 f10 g9 i8 h7 i7 h9 h6 f9 i9 d9 e9 g6 i6 h5","winner":1}
+{"lv":[5,7],"moves":"h8 g7 g9 i7 i10 h6 h10 g6 i6 g5 j8 g4 f7 g3","winner":2}
+{"lv":[8,7],"moves":"h8 i9 g7 g8 g6 h9 i10 f9 e9 g10 j9 f8 f10 g9 h11 g12 g11 d8 i12 f11 h12 i13 k8 l7 i8 c8 e8 e10 d9 h7 i6 d11","winner":2}
+{"lv":[8,7],"moves":"h8 g8 f7 g9 g10 f9 g6 h5 i6 h6 e7 i5 g5 k7 h4 f6 e10 g7 f8 k5 j4 l5 j5 k6 k8 k3","winner":0}
+{"lv":[6,5],"moves":"h8 i8 j10 j9 k9 g7 k10 k8 h11 g9 h12 i11 h10 h9 i10 f10 g10","winner":1}
+{"lv":[6,8],"moves":"h8 i8 h7 g10 h9 h10 i9 g9 g7 j10 i10 h5 e8 e5 f8 f7 e10 g8 h11 e9 g12 j9 j11 i11 h12 k10 e11 f12 k12 l13 l11 f11 h6 j6 j12 i12 k7 c7 f4 j7 j8 i5 g4 i4 g5 i7 i6 k6 j5 e3 d8 g6 j3 f13 f14 f9 f10 e7 e4 c4 d7 c8 l3 k4 l6 m5 d4 h4 d5 d6 g11 c9 d9 c6 c5 c10","winner":2}
+{"lv":[6,5],"moves":"h8 g7 j8 j9 h10 f8 h6 i7 i10 i8 h7 h9 g10 f10 f9 e8 i6 g8 g11 f12 j6 d8 c8 g6 h4 h5 k7 i9 i5 k9 g3","winner":1}
+{"lv":[8,5],"moves":"h8 i7 i10 h11 j8 f10 j7 g11 i8 k8 h9 g10 g8 f8 j11 h7 f7","winner":1}
+{"lv":[7,7],"moves":"h8 h9 h7 j9 h6 g10 g6 h5 i9 j7 k6 i6 k8 f10 j8 i8 f11 j10 g7 k9 h10 g4 f3 k7 e7 i7 f6 e5 f7 d7 f5 f4 d6 e6 d3 e4 g9 f8 g5 g8 h4 i3 d8","winner":1}
+{"lv":[4,7],"moves":"h8 i9 j9 f9 j7 g9 g11 f10 i8 j8 f11 g10 e9 e10 h10 g8 d11 g6 g7 i6 i10 h7","winner":2}
+{"lv":[5,7],"moves":"h8 i8 j6 g9 i7 g7 g10 j9 k10 h10 f9 k9 i6 i11 k5 l4 f8 i9 h9 j12 k13 m9 l9 i10 f7 i12","winner":2}
+{"lv":[4,7],"moves":"h8 h7 i8 f10 g9 j8 i10 i7 h6 f9 g8 f7 f8 e8 j7 e7 j9 g7","winner":2}
+{"lv":[8,6],"moves":"h8 i9 f8 g9 g8 i8 g6 h9 f9 i10 i11 j9 k9 k8 h11 g10 e8 d8 j7 i6 i7 m6 l7 e12","winner":0}
+{"lv":[8,8],"moves":"h8 h7 i8 f10 i6 k8 k6 j6 l7 i5 l8 j7 i9 g7 i7 i10 j5 i4 j9 h4 g3 j4 m8 n9 h6 g4 f4 k4","winner":2}
+{"lv":[5,8],"moves":"h8 g8 i10 f9 j7 g10 g7 f10 i7 h7 e10 g11 j8 g9 g12 e9 i6 h9 i9 d9","winner":2}
+{"lv":[5,7],"moves":"h8 h9 h7 j9 i9 i10 g8 j10 j7 k8 h11 k10 l10 g10 h10 k9 k11 k6 f7 k7","winner":2}
+{"lv":[8,4],"moves":"h8 i8 j8 k8 g6 h10 g7 i7 f7 i9 i6 h9 h5 e8 f6 i11 i10 j6 f5 f8 f3 f4 g4 g9 e2","winner":1}
+{"lv":[8,5],"moves":"h8 h7 j7 f10 h6 j6 i9 g7 i10 h11 g6 h9 e8 i8 g10 i6 f9 i11 e9 i5 i7 h5 d7 c6 d9 c9 e6 e7 d6 f6 d8 k8 d5","winner":1}
+{"lv":[4,4],"moves":"h8 i8 j6 g10 i6 k8 j7 h9 g7 i7 j9 f11 e12 j8 e9 k9 l10 f10 g6 h6 g5 g8 e8 h5 f7 h7 e10 e11 e7 e6 k10 j10 i11 h10 i10 g11 d7 c7 d9 c10 g4 g3 g9 i9 f9 k7","winner":2}
+{"lv":[7,5],"moves":"h8 g9 g8 f8 i9 j8 h7 g7 e7 i8 h9 h6 i5 k9 g5 i6 j6 f6 e6 e9 d10 f7 f9 i11 d8 h10 j12 d11 j10 j11 k10 i10 l10 k11 h11 k7 f5 l11 m11 e5 g12 g10 k12 e10 f10 h12 l12 d4 c3 m12 n10 m10 k13 k8 o9","winner":1}
+{"lv":[7,4],"moves":"h8 h7 h9 g8 i6 g10 i7 i9 g9 j6 h10 j9 f10 e11 f8 i11 f9 f7 e9 d9 h12 h11 g11 k8 d8","winner":1}
+{"lv":[6,7],"moves":"h8 i9 j8 j9 h9 k9 h7 h6 g8 l9 m9 f8 g10 f11 f9 i6 h11 h10 e8 d7 i12","winner":1}
+{"lv":[6,7],"moves":"h8 g7 h9 f10 i7 h7 j9 i9 j8 j6 k9 l10 i8 k8 j11 j10 g8 f8 i10 f7 k12","winner":1}
+{"lv":[4,4],"moves":"h8 g7 h9 f8 i10 i9 i6 j8 h10 h11 g9 g10 g8 j11 h7 h6 f9 f10 j5","winner":1}
+{"lv":[5,4],"moves":"h8 i8 h10 j10 i10 j9 k10 j8 j7 h7 h6 k9 g9 f8 g6 i9 l9 i7 f7 f10 f9 i5 e9 i6","winner":2}
+{"lv":[5,6],"moves":"h8 g8 f10 g9 g10 f9 i6 h10 i9 j10 g7 h6 e10 i11 j12 h11 k9 i10 g11 e7 f8 h12 h9 j11 j9 l9 f7 k10 l10 i12 j7 m8","winner":2}
+{"lv":[6,8],"moves":"h8 g8 f8 f9 e10 e8 g9 e7 f10 e11 i10 g7 h11 h10 f11 d7 i7 j6 f7 c6 b5 g10","winner":2}
+{"lv":[4,7],"moves":"h8 i7 h9 h7 i9 g7 f7 g8 f9 g9 g6 f10 g11 i5 h10 j7 k7 j8 i11 h11 k10 h6 f12 e13 e9 j4 k9 k3","winner":2}
+{"lv":[8,8],"moves":"h8 i7 f7 g10 f8 f9 e8 g8 h6 j7 g7 e9 h7 h9 h5 h4 g6 i4 d9","winner":1}
+{"lv":[7,7],"moves":"h8 i7 j6 i6 i5 k7 i9 j7 h7 k8 h5 h6 k9 l10 m10 l9 l7 j11 k6 m8 n7 j8 i8 n8 l8 j9","winner":0}
+{"lv":[5,7],"moves":"h8 h7 j10 f9 i8 g9 i9 g7 i6 i10 g8 f8 j7 k8 f7 e9 i5 i7 k11 l12 h6 d9 j9 c9","winner":2}
+{"lv":[7,5],"moves":"h8 h7 g9 j9 g6 h11 g8 g5 f8 i8 f7 e8 f9 k10 l11 f10 g7 g10 f6 f5 i9 h9 e5","winner":1}
+{"lv":[8,6],"moves":"h8 i9 f7 g9 g10 h10 f8 f9 e9 j9 h9 h6 e8 g8 e10 e11 c10 d9 d10 f10 c11 g7 b12","winner":1}
+{"lv":[8,5],"moves":"h8 g7 f9 j9 e8 g10 g6 j6 f7 d9 g8 f8 h7 i6 h5 i4 h6 f10 h4","winner":1}
+{"lv":[5,6],"moves":"h8 g7 i7 g9 g10 h10 f11 j11 f9 h9 g8 e7 i11 d6 i10 f8","winner":2}
+{"lv":[8,6],"moves":"h8 h9 i8 j8 i7 i9 j9 k10 g6 i6 g9 f10 g7 g10 h7 f5 f7 e7 j7","winner":1}
+{"lv":[8,7],"moves":"h8 h9 g8 i7 i6 k8 g7 g6 f8 i8 e9 d10 d8 e8 f10 c7 f6 i9 f9 f7 h7 j5 e10","winner":1}
+{"lv":[5,4],"moves":"h8 g7 g8 f10 i6 j6 i8 j8 h10 f8 f7 h9 e9 i11 k9 h5 e10 i5 h6 i7 j7 i10 e8 e7 f9 h7 g11 g10 g9 k8 d9 c9 c10 i9 g6","winner":1}
+{"lv":[7,5],"moves":"h8 i7 i10 j9 j7 h7 i9 g7 i8 g10 g9 f8 e9 j8 e8 k9 h6 j10 g6 h9 f11 i11 h12 k8 j12 k10 k7 f10 a1 g8 f7 l10 m11 l8 m7 k11 k12 m10 n10 n8 m8 m9 o7 l9 n9 l7 l6 l11","winner":2}
+{"lv":[8,5],"moves":"h8 h9 j9 i7 j8 k8 g10 i9 i6 g7 g6 h7 f7 h5 f8 i8 j7 j6 i11 f10 g9 h10 g11 g8 j11 j10 h11 f11 k11","winner":1}
+{"lv":[4,5],"moves":"h8 h7 h6 g10 j7 i9 f7 i8 g11 h11 i7 j9 k10 h9 g9 g6 f5 j6 e10 f10 i10 f8 f9 i5 k9 j8 e9 k7 d9 c9 h10 l8 i6 h4","winner":2}
+{"lv":[6,6],"moves":"h8 g7 g10 f9 g6 f10 f7 i6 h9 i8 i7 h5 f11 j5 e11 e9 g8 e6 i10 j11 g11 h11 e12 d13 g12 g9 d11 c11 g14 g13 f13 c10 h15","winner":1}
+{"lv":[4,6],"moves":"h8 h9 g10 f9 g11 g8 e7 h7 i6 j8 g9 i10 g12 g13 j11 k8 j7 i11 i9 k9 i8 f10 f7 h10 j10 g7 j9 e11 k10 i12 i5 i7 l10 g5 e9 h6","winner":2}
+{"lv":[8,7],"moves":"h8 i7 g6 i6 g8 i8 i9 h6 f8 e8 j8 g7 h9 h10 e9 f7 h7 i10 f10 g11 g12 f9 h11 j10 k10 k9 i5 j6 e11 j12 i11 c7 d7 d9 e10 d12 g10 i12 d11 c10 b11 c11 f13 e12 f12 g13 l6 h5 g4 f4 c9 e3 g5 e6 e7 f6 d8 b8 d5 e5 d6 d4 c3 c5 f14 f11 e14 d15 f2 h3 g3 g2 c12 f5 f3 e4 e2 h4 h2 b6 a7 b4 c4 b5 b7 b2 b3 d13 b10 a11 b13 a14 b12 b9 b14","winner":1}
+{"lv":[8,4],"moves":"h8 i9 h10 j6 k8 g11 h7 h9 k9 g9 f9 i8 g10 i6 i7 f10 k10 k7 h11 e8 i10 j10 j9 f8 l7","winner":1}
+{"lv":[7,6],"moves":"h8 g9 h6 g8 g10 h10 f8 f7 i9 g6 e5 g7 g5 i4 e8 j3","winner":0}
+{"lv":[7,8],"moves":"h8 i8 h10 j7 h9 h7 j9 i7 g7 i6 h11 h12 i5 k7 l7 i10","winner":0}
+{"lv":[7,8],"moves":"h8 h9 i9 i10 g8 f10 f8 i8 g7 f6 g6 g9 f7 d8 h5 i4 h6 i5 h7 h4 i7 e7 j7","winner":1}
+{"lv":[4,7],"moves":"h8 i9 h9 h10 i6 i10 g10 i11 i8 j7 h6 j8 f11 e12 g11 j9 j6 k6 g6 f6 k10 k8 h7 h5 f5 e4 h11 k7 l6 k5 f7 k4","winner":2}
+{"lv":[8,7],"moves":"h8 i7 i9 g7 j8 j9 g6 k7 k8 j7 h7 i8 h9 h6 e9 f9 e8 e10 d8 m7 l7 c7 f7 h5 g8 f8 e6 d5 i10","winner":1}
+{"lv":[6,7],"moves":"h8 h9 f6 i7 j9 i6 g7 e5 g5 i8 i5 j7 i9 j10 k6 g8 h4 g10 f11 i3 h6 f8 h5 h7 j5 f5 k5","winner":1}
+{"lv":[4,5],"moves":"h8 g9 i8 g8 i7 h11 f7 h7 h6 i9 f9 h10 g11 k9 h9 g10 i6 g6 g7 f8 i11 k10 k7 i5 e7 j11 j7 j6 e10 j9 k6 l5 i10 l9 m9 i12 e9 m8","winner":2}
+{"lv":[4,4],"moves":"h8 h7 h10 i7 j7 f8 e9 i8 g10 j9 k10 k8 i10 j10 h9 h11 g11 f10 j8 k7 e10 f6 f7 g6 f5 g8 g9 f9 g12 g13 i6 i9 f11 d9 e12 d13 e11 e8 e13","winner":1}
+{"lv":[4,5],"moves":"h8 i9 i10 g8 j7 g10 k10 j10 e9 h9 f9 k9 j9 g9 g11 g6 g7 f8 i8 l11 h11 g12 f11 i11 k8 l7 l8 j8 e11 d11 h10 i6 i7 h7 h12 k4 j5 f10 e7 e10 e8 j11 i5 d9 d8 g5 f12 j6 h14 h13 g13 h6 d10","winner":1}
+{"lv":[8,5],"moves":"h8 h7 g10 j8 i10 g11 i9 f10 h11 h9 g6 i11 e8 f9 g7 j10 g8 g9 f8 e9 d8","winner":1}
+{"lv":[5,7],"moves":"h8 i9 h10 f10 f11 j11 g11 j9 g8 i8 g7 i11 i10 l11 g9 g10 g6 g5 k10 k11 f7 h11","winner":2}
+{"lv":[4,4],"moves":"h8 i7 j10 i9 h6 g8 f9 j8 g9 h11 h10 f8 e7 h5 e9 d9 i10 h7 k10 f10 g10","winner":1}
+{"lv":[7,6],"moves":"h8 g7 i7 g9 g10 h10 f8 f9 e10 j9 i8 g8 h9 j7 e11 e12 j8 i6 g5 k9 l9 j5 h7 k6 g6 i5 h4 h6 j6 k5 k8 l8 f5 e4 l5 k3 j4 k4 k2 k7","winner":2}
+{"lv":[6,8],"moves":"h8 g7 f10 f9 i10 g9 g8 j9 h9 f7 h11 h10 g11 i11 f8 e8 h7 e9 g6 e7 h6 h5 i8 j8 j11 k12 f5 e4 e10 d7 c7 c6 b5 g10","winner":2}
+{"lv":[7,7],"moves":"h8 g7 i10 g9 j9 f8 i7 k8 h6 h9 e9 g10 g6 j7 f11 k6","winner":0}
+{"lv":[5,7],"moves":"h8 h7 g6 i6 g8 g9 i9 j10 i8 f8 f11 i11 h10 k7 k9 j7 g7 j9 j8 k8 f12 g11 g5 g4 h5 f5 h6 i7 l7 g10 h11 h12 f6 e5 g12 e6 d7 e7 e8 c5 d6 i4 f7 d9 i5 e9 j5 k5 j4 k3 f9 f10 i10 d8","winner":2}
+{"lv":[6,6],"moves":"h8 i7 f10 j7 h6 j8 j9 h7 k7 i6 i5 g10 e11 j6 j5 f9 g7 f8 g8 k5 h5 g9 f7 e8 f5 g5 j4 k3 d7 h9 e7 c7 i8 e9 d9 i9","winner":2}
+{"lv":[8,6],"moves":"h8 g9 g10 h10 f8 e8 i9 i11 h6 j10 f4 j9 j11 f7 f6 g7 g5 i7 h7 h5 g6 e6 i10 d7 e5 e7 c7 k13 j12 e10 e9 d6 f5 i8 e4 d3 e3 d2 f3 f2 d5 c5 g2 h1 c6","winner":1}
+{"lv":[5,7],"moves":"h8 g8 g7 i9 i6 j6 g9 i10 h10 i11 i12 j9 h9 h11 g12 j8 j7 i8 i7 k10 e11 f10 l11 k8 l7 l8 m8 g6 f7 h7","winner":2}
+{"lv":[6,7],"moves":"h8 g8 i9 g9 g6 f8 h10 j10 g7 i6 h7 h6 j7 k7 i8 j9 h9 h11 g10 k6 f11","winner":1}
+{"lv":[8,4],"moves":"h8 h7 h9 i7 i9 g7 j7 j9 i10 g10 f7 g8 g6 k9 h6 h5 g11 i6 j5 j6 f10 i8 f9 i5 i4 k10 l11 f8 e9 g9 h12 k8 d8","winner":1}
+{"lv":[4,6],"moves":"h8 g8 i10 f9 i6 g10 g11 j8 i7 f10 j7 e10 i8 i9 i5 i4 h10 d11 f7 h7","winner":2}
+{"lv":[6,6],"moves":"h8 g9 f8 f9 g7 g8 h7 h6 j9 i9 e9 i7 j8 i8 i10 g10 h11 g12 g11 h9 j7 f11 e12 j10 j5 j6 k8 l7 i6 l9 e10 e11 h5 g4 e8 e6 f6 l8 l6 l11 l10 f7 d5 g5 k5 h4 i5 l5 i4 e3 f4 f10 i3 i2 j4 h2 m7","winner":1}
+{"lv":[5,7],"moves":"h8 g8 f9 g10 g7 f7 i9 f6 j9 h9 i10 g6 e6 i11 g11 j10 h6 k8 i8 i7 e8 e7 f8 e9 k9 h10 j11 l9 g9 c7 g5 h11 j5 i5 f10 l8 e11 d12 k7 m10 n11 f11 i12 g12 h12 j7 i6 d9 j14 i13 e10 d13 e12 d7 b7 d10 d11 d8 d6 c9 b10 a9 k10 b9","winner":2}
+{"lv":[5,7],"moves":"h8 h7 g8 i7 i8 f8 g9 k9 g7 g6 i9 j10 f9 h9 g11 g10 j8 k8 h10 k7 f12","winner":1}
+{"lv":[4,5],"moves":"h8 i7 h7 h5 g8 i8 g10 g11 i10 h10 f9 i6 i9 g7 f11 e8 e9 g9 i11 h6 i5 g6 e10 d11 i12 i13 h11 j13 f7 j6 j7 f6","winner":2}
+{"lv":[4,7],"moves":"h8 g9 i9 g8 i10 i11 j7 h10 j12 h11 i6 g11 i7 i8 g10 f11 f7 e11","winner":2}
+{"lv":[8,7],"moves":"h8 h7 f8 f10 i6 j8 g6 h10 h6 f6 i5 e9 i7 i8 j6 k6 k5 l4 g9","winner":1}
+{"lv":[6,8],"moves":"h8 g7 h7 h9 g6 h6 f7 i7 e8 d9 h5 i4 f8 g8 g5 f5 e7 f10 d8 c9 e6 e9 f6 h4 d6 c6 c5 b4 g9","winner":1}
+{"lv":[7,6],"moves":"h8 g8 h7 h9 i7 g9 g7 f7 e6 i9 j9 g10 i8 f9 e9 k10 j8 i10 j11 j10 h10 h6 d7 f5 g11 i11 e8 e10 k9 a1 l10 m11 l9 k8 k7 j7 l8 f8 f6 f10 f11 i12 i13 h11 j13 d10 c10 d11 c12 l7 m9 n9 j6 i5 n10","winner":1}
+{"lv":[5,4],"moves":"h8 g8 i10 h7 g10 g11 i6 f10 i9 i8 g7 f6 f9 h11 j9 k9 f11 j10 i11 i5 g9 h9 e8 e7 e9 k7 e11 d9 g5 j7 i12 i13 e10 e12 f7 k6 l5 k8 h10 k5","winner":2}
+{"lv":[5,8],"moves":"h8 h7 j9 f9 i7 g9 g10 e9 h9 f10 f11 i8 i9 e7 j8 k9 h10 g11 d8 e10 k7 l6 h12 h11 e12 d13 i6 e8 i10 e6","winner":2}
+{"lv":[4,5],"moves":"h8 h7 h9 j8 i8 i9 j7 g10 h10 f8 g11 f6 k10 k8 e7 e8 i10 g6 g8 j11 h6 h11 j10 l10 k6 l5 f9 f7 d9 i5 g9 e9 g5 k9 i7 j6 k7 e10 e11 f10 d10 l9 j5 h5 i4 f4 f5 m9 j9 m11 n12 h3 e6 l11 m8 l7 l8 k11 i11 n11","winner":2}
+{"lv":[4,8],"moves":"h8 g8 g6 f9 g9 e8 g10 e9 g7 e10 i6 e7 e11 e6","winner":2}
+{"lv":[7,7],"moves":"h8 i9 h7 i7 h9 h6 j8 i8 i10 g8 g11 i5 i6 g5 h11 h10 g7 i11 h5 e7 f6 g4 g6 k8 f4 e8 e6 d6 f5 f7 g9 j6 k7 d7 e5 d4 d5 g3 h4 e4 f10 f8 c5 b5 c6 d8 c8 d9 d10 g2 g1 c7 b7 e11 l7 h12 e9 g12 f12 j12 j10 k10 k12 j11 h13 j5 j13 l11 c10 m12 j9 m11 k11 e10 k13 n13 o14 i13 k14 k15 i12 g10 l15","winner":1}
+{"lv":[7,6],"moves":"h8 i7 g6 i6 g7 h9 g8 g5 i8 f8 j9 h7 j10 i9 j8 k8 j7 j6 j11","winner":1}
+{"lv":[4,8],"moves":"h8 g9 i7 f8 h10 i10 f11 g7 e9 g8 g6 g11 g10 f7 j11 e6 d5 h9","winner":2}
+{"lv":[8,6],"moves":"h8 i9 j8 j9 h9 k9 h7 h6 g8 i8 i10 f7 g9 l9 m9 i6 g10 i7 i5 g11 h10 h11 f10 e10 j10","winner":1}
+{"lv":[4,8],"moves":"h8 h9 j8 j9 g10 f9 f7 e10 i6 i9 g9 d11 c12 h7 i10 g8","winner":2}
+{"lv":[7,6],"moves":"h8 g8 f8 g9 g7 f9 h7 h6 j9 i9 i10 g10 e9 i7 h11 k8 g11 k6 k9 f11 j10 i8 h9 h10 i6 j8 j11 m8 l8 k7 l6 g5 f4 k5 k4 m7 h12 i11 f10 d8 i13","winner":1}
+{"lv":[8,8],"moves":"h8 g9 g7 h10 f8 e9 j8 g11 i9 f6 i8 g8 j10 k11 i11 g10 g12 i7 l8 k8 k9 m7 h12","winner":1}
+{"lv":[4,6],"moves":"h8 i7 g6 i6 j9 h7 i9 k9 g8 j7 k7 f7 i10 g7","winner":2}
+{"lv":[5,8],"moves":"h8 i8 j8 j6 i9 k7 g7 f6 g10 h9 i7 e7 k9 h6 h10 g6 i6 e6 d6 i10 f7 g8 j9 k12 j11 f10 g9 h7 j12 j10 i11 f8 k13","winner":1}
+{"lv":[5,8],"moves":"h8 g7 f6 g9 g10 f7 f9 h5 g8 g6 i4 d9 i10 e8","winner":2}
+{"lv":[8,7],"moves":"h8 h9 i8 k10 j8 k8 i7 g9 i9 i6 g7 j10 h6 k9 f8 g8 i5 j4 e9","winner":1}
+{"lv":[5,5],"moves":"h8 g8 j7 j6 i8 g10 j9 f10 i9 h7 h10 i6 f9 g7 g11 j8 f7 i11 h9 g9 g6 k9 e8 h5 i5 k8 k10 k7 h12 h11 k6 l5 j11 j10 i10 l7 l8 k5 i7 f12 g12 i12 j5 e11 f6 e9 f8 f5 d10 d9 e7 e6 d7 d8 h4 g4 f11 e12 e10 c7 b6 l11 d6 h6 g5 i3 k12 l13 h13 i14 l9 i13 i15 j13 k14 c9 m8 n7 k11 k13 m13 j12 l14 l10 f4 d11 b9 m7 o7 i4 c6 b5 m6 j4 l6 m11 n12 m10 g3 e5 c5 b4 h3 d12 c13 c11 f3 e3 n10 e13 f2 e1 n6 o6 k15 o11 b10 c10 c8 f13","winner":0}
+{"lv":[6,8],"moves":"h8 h9 h7 g9 g10 h10 i9 i11 f8 j11 g8 j12 k13 e8 i6 f9 i8 j8 i7 i5 i10","winner":1}
+{"lv":[6,4],"moves":"h8 g8 j7 h7 i6 j6 i9 j8 f7 i8 g6 h5 e7 f10 e6 f6 k8 j10 e8 e9 d7 c7 d9 c10 e5 e4 d8 d6 f11 k9 g5 g7 g10 c6 c9 i5 f8 f9 e10 g12 b8 c8 d10 d11 e11 h9 a7","winner":1}
+{"lv":[8,6],"moves":"h8 i9 g9 h10 j8 k8 h7 h9 g8 i7 g6 g10 i8 f8 j9 f5 k10","winner":1}
+{"lv":[5,8],"moves":"h8 i9 f10 g9 g10 h10 i8 h9 j9 e9 f9 e7 i11 d6 i10 f8","winner":2}
+{"lv":[7,4],"moves":"h8 i9 i6 h9 g6 i7 h7 j9 g9 j8 h6 f6 k7 j6 h5 h4 j5 k9 l9 j7 j10 l10 m11 g8 k5 i5 k4 l3 k6 f10 k3","winner":1}
+{"lv":[4,5],"moves":"h8 i9 g6 g10 i6 j6 i7 g11 f7 h5 g7 h7 g8 g5 i8 f8 e7 f10 e10 i5 d7 c7 j5 h10 j8 k8 e9 i10 j10 e8 h11 k9 g9 k7 k10 l8 j7 h4","winner":2}
+{"lv":[6,7],"moves":"h8 h7 f7 f9 g8 f10 h9 i10 e7 e8 h11 h10 g10 i8 g6 d5 f11 i11 i9 g9 j12 k10 j10 j9 l11 k11 d8 f6 d9 d7 i12 h12 h13 e10 g11 j13 k9 e11 l8 d10 e12 d13 c9 f12 c10 e5 b5 g4 h5 e4 h4 g7 d4 h6 e9 d11 d12 c12 b13 g5 e6 c7 i7 f4 i4 j3 m7 n6 b10 a11 b9 a9 b11 b12 b8 b7 c6 g3 d6 e3 d2 f5 c5 f3 f2 d3 c3 h3","winner":2}
+{"lv":[6,5],"moves":"h8 g8 j10 i7 i10 j8 i11 g7 h10 k10 g10 f10 g9 f8 g11 g13 j11 h11 j12 k13 j13 h9 j9","winner":1}
+{"lv":[4,7],"moves":"h8 g8 g7 i9 f9 f7 g10 h10 i8 h9 i10 g6 j9 h12 j7 e6 d5 h13 h6 h11","winner":2}
+{"lv":[8,8],"moves":"h8 h7 j9 i7 h6 i6 g8 i8 i5 i10 i9 j7 k7 f7","winner":0}
+{"lv":[7,4],"moves":"h8 g9 g6 g10 h7 h10 i9 g7 i8 j9 j8 g8 g11 i11 f8 j11 j12 i10 k8 l8 f5 e4 f7 f10 e10 j10","winner":2}
+{"lv":[6,4],"moves":"h8 h9 f9 g8 g10 i7 h11 e8 i9 h7 j11 g11 j10 g7 j13 i12 j12 f10 j9","winner":1}
+{"lv":[5,8],"moves":"h8 h9 i7 g9 i9 i10 g11 g8 f7 g6 g10 g5 j7 g7","winner":2}
+{"lv":[6,8],"moves":"h8 i7 f6 j7 h7 j9 h6 h5 f7 i6 k8 j8 j6 i9 i8 k9 h9 h10 k7 l10 m11 l9 m9 l8 l7 j10 j11 i11 m7 h12","winner":2}
+{"lv":[4,7],"moves":"h8 h9 f9 i10 j9 g11 g7 h11 f11 i11 j11 h10 f7 h12 h13 f10 e9 g10 j7 e10","winner":2}
+{"lv":[5,6],"moves":"h8 g8 j9 g9 g10 f9 i9 f10 f11 f7 h9 i8 g7 f6 f8 h6 i6 h5 e10 g6 e12 d13 k11 j10 e8 h7 e9 e11 k9 l9 e7 e6 d6 f5 e4 h3 h4 g4 i10 i2","winner":2}
+{"lv":[6,7],"moves":"h8 h9 j9 g9 g10 k9 e10 e8 h10 f10 k8 i10 i7 f9 e9 f7 g8 f8 f6 f11","winner":2}
+{"lv":[5,4],"moves":"h8 g8 f7 i9 f9 h7 i6 f10 j7 k8 g11 j9 k9 f6 i10 g9 g6 i8 e7 e8 k7 j8 j10 i11 k10 h10 f8 h5 i5 h6 f11 e10 j11 l7 e11 d11 g10 h11 h12 l9 l10 m10 g12 i12 h9 f12 j12 i7 d7 g5 f4 l8 m8 l5 l6 h4 h3 m6 n5 i3 j2 n11 o12 c7 e9 k11 k5 d10 k12 l13 l11 e12 c10 i4 h13 j6 g7 d9 d12 g13 k4 e6 j13 j14 d5 i13 k6 k3 j5 f5 d8 d6 c9 g4 j4 m7 j3 j1 b10 a11 f13 e3 l3 m2 j15 i14 i15 m11 k14 f3 b6 g3 e2 c11 c3 c6 l4 e5 e4 n4","winner":0}
+{"lv":[8,5],"moves":"h8 g7 h10 i7 g6 g8 f7 h5 f8 f6 h11 h7 g11 i6 h12 h9 h13 h14 f9 j7 k7 k8 g4 l9","winner":2}
+{"lv":[4,6],"moves":"h8 g7 j8 g9 g10 h10 i8 k8 j7 h9 j9 j10 h6 g8 g6 h7 j6 j5 i6 f6 k6","winner":1}
+{"lv":[7,8],"moves":"h8 g8 g10 f9 i6 f7 f10 h10 h9 i8 h6 f8 j9 h7 g9 i7 i9 k9 g7 e10 d11 f6 f5 e11 h5 e8 e9 d9 j10 k11 c10 c8 d8 b7 a6 f11","winner":2}
+{"lv":[5,7],"moves":"h8 h9 f7 f10 f11 j9 g7 j8 i9 f6 j7 i10 g8 j10 h10 f8 i7 h7 g6 g5 h11 h5 e7 k10 i5 i8 l11 k8 j11 l8 m8 k9 g10 g9 d7 c7 f9 e8 i12 j13 g11 i11 k7 m7","winner":2}
+{"lv":[8,6],"moves":"h8 g7 i7 g9 g10 h10 f8 f9 g8 e8 j8 i8 k9 h6 j9 f7 j10 j11 j7 j6 k7 l7 k10 k8 l10 m11 m10 i10 n10","winner":1}
+{"lv":[8,6],"moves":"h8 i7 g9 h9 g10 j8 f10 i10 d10 e10 g11 g12 e9 h12 g7 g8 f8 h6 c11","winner":1}
+{"lv":[5,8],"moves":"h8 h9 g6 f10 i7 j6 g10 k7 g7 i9 f7 h7 h10 e8 j9 e9 f9 k8 e7 g9 g11 g5 i11 i6 h11 j11 i10 g12 h12 j10 k6 i5 j13 i12 f11 e11 d7 c7 h13 h14 h4 l8 m9 d8 b6 d12 c13 e12 e10 f12 c12 g13 j7 d10","winner":2}
+{"lv":[5,8],"moves":"h8 g8 i9 g9 i10 i11 h10 j10 g7 g11 h6 i6 e9 f8 g10 e8 f11 e10 h7 h9 i7 d8 c8 j7 e7 f7 g6 d5 e6 f9 h5 h4 f10 f5 j9 f6","winner":2}
+{"lv":[7,6],"moves":"h8 i9 f10 g9 e9 g10 j9 g11 g8 h10 f12 f11 i11 e10 g12 k10 k8 i6 i8 j8 k7 i12 h11 i10 j10 k6 g13 h12 d10 e11 f8 e8 g7 h6 c11","winner":1}
+{"lv":[8,8],"moves":"h8 i8 i10 j9 j7 k9 h7 h6 h9 j10 i7 g7 h10 h11 f10 g9 g8 j11 e10 g10 f9 i6 d11","winner":1}
+{"lv":[8,8],"moves":"h8 i9 f8 g9 g8 e8 f7 j8 h9 e6 f10 f9 h10 h7 i10 j11 g10 e10 j10","winner":1}
+{"lv":[7,6],"moves":"h8 g7 f9 g9 g10 h10 f8 i8 g8 e8 h11 f7 g6 e7 h7 i6 e9 h5 f10 d7 c7 g11 g12 f12 i9 e6 f11 e10 g4 g5 e5 d6 i11 i12 d8 b6 c6 j6 c9 c10 f4 b9 c8 c5 f5 h4 i5 j9 f6 b7 b8 j7 f2 f3 j8 k6 e4 d3 d4 c4 c3 b2 h6 l5 m4 h9","winner":2}
+{"lv":[6,5],"moves":"h8 i7 h9 h7 i9 j8 j7 i8 g6 j10 g8 k9 h6 k8 l8 j9 k10 h11 i10 j11 j12 e6 i11 g9 l10 i13 f6 h12 i5 f10 g7 e5 f8 g10 j4","winner":1}
+{"lv":[6,7],"moves":"h8 g9 f6 g7 e7 f9 g10 g5 g6 e9 d9 i9 h9 f8 d10 i5","winner":0}
+{"lv":[4,7],"moves":"h8 i7 h10 i10 i8 j9 g8 f8 j7 f9 g10 h9 g7 g11 g6 g9 i9 f6 k8 j8 f7 k9 l10 j10 e7 j11 j12 c7 i11 g5 h6 h5 f11 d6 e10 e5 h7 d7 f5 e4 k13 l14 f4 d9 e9 d8 e8 d5","winner":2}
+{"lv":[5,5],"moves":"h8 g8 f8 h7 i6 g7 i7 g9 g6 j10 g11 h5 f7 f6 f11 j9 g10 i10 h11 i11 f9 f10 e8 h9 d7","winner":1}
+{"lv":[5,7],"moves":"h8 h9 i9 i10 i6 j9 g8 i8 g7 f6 j7 g6 j10 k11 k10 f5 f7 h7","winner":2}
+{"lv":[5,7],"moves":"h8 i9 j7 j6 g9 f10 k10 h10 g10 g11 j8 f9 f11 i8 g6 h12 e9 g12 f12 i10 i7 g8 h11 l10 i11 i12 f7 j12 k12 i13 j14 k11 j9 m9","winner":2}
+{"lv":[4,4],"moves":"h8 i9 g6 h9 j7 j8 i8 j9 g9 g8 h6 h5 h10 k9 l9 h11 e7 f8 e10 j10 j11 f10 i6 f6 f7 k10 k7 j6 g12 d9 g7 d7 i11 g10 e8 e9 k8 m10 l10 f12 f11 e6 i12 h7 i14 h13 i13 i7 i10","winner":1}
+{"lv":[8,7],"moves":"h8 h7 h6 g9 g6 i6 f9 j7 j9 k7 l7 k8 h5 i7 g7 k6 k9 k4 k5 j5 l3 g8","winner":2}
+{"lv":[4,7],"moves":"h8 i8 f6 f10 i7 f9 g11 g10 f11 i10 h10 i12 e8 h11 j13 i11 i13 i9","winner":2}
+{"lv":[7,4],"moves":"h8 h9 g8 h7 g7 j8 g6 g9 f8 e8 f6 i9 f9 j9 k9 f7 e7 g5 j6 h6 k7 i5 f4 i10 e6 f10 e5 d4 d6 c6 c7 g10 g3","winner":1}
+{"lv":[4,4],"moves":"h8 i7 f9 j6 e9 i9 f7 f8 g10 j9 j7 i8 i10 h10 g6 k9 h9 i5 i6 m9 l9 k7 l8 j8 g8 l6","winner":2}
+{"lv":[6,6],"moves":"h8 g9 i8 k8 i10 f8 h10 g10 i9 i7 h11 h7 g11 j8 i11 i12 j11 f11 k11","winner":1}
+{"lv":[5,4],"moves":"h8 i7 i6 j9 g7 h11 h6 f8 g8 k8 i10 f6 g10 g11 j7 g9 h10 f10 h7 h9 f9 j8 j5","winner":1}
+{"lv":[8,8],"moves":"h8 g9 i8 f7 i9 i10 i6 g7 g8 j8 h7 f9 i5 i7 h5 h9 j5 k4 g5 f5 k5","winner":1}
+{"lv":[4,6],"moves":"h8 i8 j7 j6 f9 i6 e9 i5 i9 k7 l8 g5 i7 g6 g9 h9 e11 f10 d9 c9 h6 g3 h4 g4 i10 g2","winner":2}
+{"lv":[6,7],"moves":"h8 h9 j6 g9 i9 i10 g8 f8 h10 i6 i5 k7 j5 k5 g7 f6 h6 j7 g6 k3 k11 j10 k6 l7 i7 m7 n7 g5 h5 h4 i3 k8 j9 l9 m10 l8 e7 l6 l5 l10","winner":2}
+{"lv":[4,6],"moves":"h8 g8 f9 f10 e7 i6 i8 k8 h10 h9 g7 h7 j9 f8 g11 j6 k10 j7 l11 m12 l9 j5 k4 j4 i10 j3","winner":2}
+{"lv":[5,7],"moves":"h8 h7 h6 f10 i6 k6 i9 k8 i7 i8 k9 j8 j7 m8 l8 l7 j5 j9 i10 k10 f7 g6","winner":2}
+{"lv":[6,4],"moves":"h8 i8 i9 h9 j7 h7 g6 f10 k8 h5 k9 j9 k10 k11 h6 j6 j8 i7 k7 k6 h10 g10 l6","winner":1}
+{"lv":[5,7],"moves":"h8 h7 g10 f9 i8 g8 i6 f10 h6 i9 f7 h9 e9 i5 k7 j9 g9 j6 g6 e8 f8 k8 k9 h10 j8 g5 g12 j11 i10 g11 f11 e10 d11 d10 h12 j12 l10 i7 h5 c11 i12 e12 e6 f6 f12 i11 h11 j13 j10 k11 k10 m10 l11 h4 i3 k13 l14 m11 j14 m7 j7 b10 c10 d8 e7 f2 g3 m9 m8 m13 m12 l13 f3 i13","winner":2}
+{"lv":[4,8],"moves":"h8 g8 j6 g9 g10 f9 i6 h10 i9 e7 f8 e9 d9 e10 d11 e8 i10 e6","winner":2}
+{"lv":[6,6],"moves":"h8 h7 g10 f9 g8 f10 j9 e9 i9 g7 h9 k9 j8 i8 i10 j11 h11 k8 h10 h12 g11 k7 f12","winner":1}
+{"lv":[7,8],"moves":"h8 i8 j8 j7 h9 g9 g6 i6 h7 h6 h5 f7 i5 i10 i9 h10 f6 g7 g10 g5 i11 k7 h11 k6 e12 l6 j6 f11 l9 l5 m4 l7 j9 k9 i7 k8 k5 k10","winner":2}
+{"lv":[5,7],"moves":"h8 h9 g9 i7 g10 i10 h10 i11 g8 g7 f11 j8 e10 g12 f9 i9 i8 i12 i13 h7 e8 f8 d7 c6 h11","winner":1}
+{"lv":[5,5],"moves":"h8 g9 f10 g8 i7 j9 g7 k9 h6 i9 h9 h7 i6 j6 j7 i5 k7 h10 i11 i10 i8 g10 g11 h11 l5 k6 k8 g12 f13 k10 j10 l9 m9 h12 j11 f9 j8 l8 g5 f4 l7 m7 g4 h5 g6 g3 f6 e6 e5 d4 e8 i12 j13 f12 f7 e12","winner":2}
+{"lv":[8,4],"moves":"h8 h9 g6 j6 f7 j8 h7 j9 j7 h5 f5 e4 f6 f8 g7 i7 e5 f10 d4","winner":1}
+{"lv":[7,8],"moves":"h8 i7 j6 h9 k7 f9 j8 j9 i9 l6 h7 i5 k8 i8 k6 i6 i4 k5 h10 g11 j10 g7 k10 k9 i10 g10 l10","winner":1}
+{"lv":[6,8],"moves":"h8 i7 j8 j9 i9 g7 g6 k7 k8 j7 h7 g8 g10 h9 h5 i4 f5 e4 e8 i8 k6 i5 i6 j4 f7 d9 f8 m7 l7 k3","winner":0}
+{"lv":[5,6],"moves":"h8 g7 g8 f8 i6 h6 i5 f7 i7 e9 d10 i8 f9 h7 j9 h5 e7 f6 g6 e6 i10 f5 f4 h3 h4 g4 j7 i2","winner":2}
+{"lv":[5,6],"moves":"h8 i8 h9 h7 i10 j9 g6 k9 k10 j11 f7 j10 e6 g8 j8 i12 f9 j12 j13 h12 i11 g12 j7 f12","winner":2}
+{"lv":[6,8],"moves":"h8 g8 g6 f10 i6 h10 g10 f7 i9 g7 i8 i7 h7 f5 h9 j7 h6 h5 f6 e6 j6","winner":1}
+{"lv":[6,5],"moves":"h8 h9 f10 g11 i9 i7 g10 h10 h11 i11 f8 g8 f6 j10 f9 f7 e8 h7 d7","winner":1}
+{"lv":[5,4],"moves":"h8 h9 g6 j8 e7 f10 e9 j6 i6 j9 j7 i9 g9 h10 g11 k8 k7 j10 i10 i8 k9 f6 h7 j11 j12 m8 l8 g7 e10 e8 g12 g10 i7 l7 f9 g8 d9 c9 f11 f8 c8","winner":1}
+{"lv":[5,8],"moves":"h8 i7 i10 k9 g7 j7 k10 k6 g10 j10 g9 g8 j9 l7 k7 l8 i11 l5 i8 l6 f7 l4","winner":2}
+{"lv":[5,6],"moves":"h8 h7 i10 i7 i9 k9 g7 f6 k10 j10 j7 i8 e9 h6 j8 g6 j9 i6 f7 e6","winner":2}
+{"lv":[4,5],"moves":"h8 g9 i8 h10 j9 h7 g11 h5 j7 j8 g7 g8 i6 i9 i10 h9 e9 i5 k7 h11 e8 k9 g12 i11 f8 h12 h13 j10 f7 l8","winner":2}
+{"lv":[6,4],"moves":"h8 g7 g6 j6 f7 j9 f8 g8 i6 j8 j7 f6 f9 h5 e8 g9 i7 h11 g12 f10 e10 g11 g10 d9 k7 l7 d7 c6 e11 e9 h12 j11 i11 h9 i10 i9 k9 f12 h10 e7 k10 j10 j12 d8 c7 g5 h4 c9","winner":2}
+{"lv":[5,4],"moves":"h8 g7 i7 h10 h6 j6 g10 h11 i6 g8 g6 h5 e7 f6 f9 i11 h9 g9 j12 g11 f11 i8 k7 j9 g12 k8 j7 l7 i10 d9 j11 h12 k9 j8 j5 f10 e12 d13 k12 l13 e9 h7 f7 f8 k10 i9 f12 l9 l10 k11 j10 m10 e6 j13 e8 i13 e5","winner":1}
+{"lv":[4,6],"moves":"h8 i8 g7 f10 g10 i9 e9 g9 f9 h10 e7 i11 i10 j12 f7 f8","winner":2}
+{"lv":[7,7],"moves":"h8 i8 i10 j9 j7 k9 h7 h6 h9 i7 j8 i6 i5 h10 j6 j11 g5 j5 g8 e7 f6 f7 e9 k10 k11 l9 i12 m9 i9 n9","winner":2}
+{"lv":[7,7],"moves":"h8 h7 j6 g9 k7 f9 k8 k6 j7 e9 h9 j8 l8 d9 c9 i5 m7 l7 m10 l9 m9 n10 m8 m6 m11","winner":1}
+{"lv":[6,4],"moves":"h8 i8 h7 j9 j7 g7 g6 j6 h4 h5 g5 f6 f4 k9 f5 e4 h10 h6 g9 i6 i7 j10 i11 f8 j12 k13 h11 h9 i5 k8 f10 e11 k6 k10 k11 j11 i9 k7 i4 e9 d10 g10 g4 j4 g2 g3 h3 j5 i2 e12 j1","winner":1}
+{"lv":[8,8],"moves":"h8 i8 j10 j9 k9 g9 k10 g7 g8 i10 i9 k11 h11 l10 j12 l8 k8 k7 h12 j7 h9 h10 i7 l7 g13 i11 l11 f8 e7 i5 h6 j6 h4 m9","winner":2}
+{"lv":[8,7],"moves":"h8 g8 f8 g9 g7 f9 h6 i5 j7 i6 e9 d10 e10 j5","winner":0}
+{"lv":[4,7],"moves":"h8 i7 g8 e8 g7 h9 i6 g6 g10 e9 i9 j10 j7 f9 e10 d9 h5 g9","winner":2}
+{"lv":[7,5],"moves":"h8 i8 i9 j10 i10 j9 h7 g7 k7 h10 k8 g9 i11 h5 j11 g8 g10 i5 g5 h6 f8 j7 k6 j4 k3 k10 h11 j6 j8 j5 j3 k5 l5 l11 m12 g11 i12 i13 f9 f10 e8","winner":1}
+{"lv":[7,7],"moves":"h8 i7 h6 j9 i9 j7 h7 h9 g6 h5 e5 f6 i6 k6 i8 e7 j10 k11 k9 j5 j8 k8 i11 h12 h10 g11 i10 i12 g10 f10 k10","winner":1}
+{"lv":[7,7],"moves":"h8 i7 f8 f9 g7 h6 g8 i8 g5 g6 f6 i9 d8 e8 e7 h4 c9","winner":1}
+{"lv":[6,5],"moves":"h8 g8 f6 i7 g6 h9 f7 g11 e7 g10 g9 i8 j7 i9 i10 i6 i5 h11 e11 e8 f9 f8 f5 i11 f11 k7 d8 h10 j8 j11 k11 h12 h13 f12 e13 g5 c9 b10 d9 e9 e10 g12 b7 c8 d7 c7 d6 f10 d5","winner":1}
+{"lv":[6,7],"moves":"h8 g9 j9 h10 i9 i10 j10 g7 g8 f10 i11 h12 j11 g10 e10 j8 k11 l12 l11 h11 m11","winner":1}
+{"lv":[7,5],"moves":"h8 i8 j8 k8 i9 h10 i10 k9 k7 j6 i11 g7 j11 h9 j10 j9 k11 l12 h11 f10 g11","winner":1}
+{"lv":[5,7],"moves":"h8 h9 j10 i10 i7 g7 j9 g6 j7 j8 g8 e10 g10 k7 f11 i9 l6 i11 i8 e9 g9 g11 h10 f10 f8 e8 j6 k5 e7 d6 h12 d8 c7 d9 f7 d7 h6 d5","winner":2}
+{"lv":[4,8],"moves":"h8 g8 f10 f9 e7 g9 j9 g10 g11 e8 h11 g6 g7 d9 f7 e9 i10 c9","winner":2}
+{"lv":[8,5],"moves":"h8 i7 j10 h7 k9 g7 j7 h11 j8 j11 k8 i8 l9 e7 f7 i6 j9 j6 i9 f10 h9","winner":1}
+{"lv":[6,7],"moves":"h8 h9 g6 g10 i7 g9 g7 i9 f9 j7 i8 j9 k9 j10 j11 j6","winner":0}
+{"lv":[7,6],"moves":"h8 i7 g7 h7 i9 j10 i6 f6 k8 k9 l8 j7 j8 i8 g6 g5 k6 j6 l6 k7 l7 l9 m8 n8 j5 i4 n9","winner":1}
+{"lv":[7,6],"moves":"h8 g7 h6 g9 g6 i6 g10 f9 h7 h9 i9 h5 h10 i8 j8 k7 k9 g5 j10 e9 d9 i10 i11 h12 k11 l12 g11 f12 j11 h11 j9 j7 j12","winner":1}
+{"lv":[5,5],"moves":"h8 i8 h9 i9 i7 g11 j9 f10 i10 h7 h10 k8 e10 i6 f11 h11 g10 j11 e9 e8 i11 g9 h6 k10 k9 g5 g12 h13 i12 h12 j7 j6 j5 f7 h5 e7 l10 j8 i5 f6 e12 d13 e11 e13 k5 l5 d9 c8 i13 i14 d8 f8 f9 g6 c9 b9 g7 f5 f4 e4","winner":2}
+{"lv":[5,5],"moves":"h8 h9 h6 g10 i10 j9 g7 i9 k9 g11 f9 k8 j7 i7 g6 g8 h10 f6 i11 f8 e10 e8 g12 g9 i5 j10 h12 f7 i8 f10 e9 h7 i6 j6 e7 j8 e6 h11 i12 j12 j11 f11 f12 e12 d13 k5 k10 d11 e11 d8 c8 l9 k11 f5 f4 h5 k7 d9 l11 m11 k12 k13 i14 i13 j13 d10 m10","winner":1}
+{"lv":[6,7],"moves":"h8 h9 f7 f9 i9 j10 j8 i7 e8 g6 e7 k7 e5 e6 g7 f6 d7 c7 h7","winner":1}
+{"lv":[7,5],"moves":"h8 h9 i9 i7 j8 j10 i10 k9 h10 k7 i11 i8 g12 g11 j12 g9 i12 i13 h12 f10 f12","winner":1}
+{"lv":[6,8],"moves":"h8 h9 i7 g9 j7 i10 j10 i9 f9 h7 j11 j9 k9 i8 k10 g12 h11 g6 f5 i11","winner":0}
+{"lv":[7,8],"moves":"h8 i7 i10 g10 j8 f9 i9 k7 h9 g8 j9 g9 g7 j10 k8 l7 h7 g12 g11 m7 j7 n7 o7 h5 i8 l8 g6 f5 k10","winner":1}
+{"lv":[5,8],"moves":"h8 g8 i8 f9 i7 g10 g7 f7 i6 i9 j9 i10 h9 f10 i5 i4 h10 f8 j7 f6","winner":2}
+{"lv":[6,6],"moves":"h8 i9 j10 g10 j9 j8 i7 f11 g11 e10 h7 e9 g6 i8 h9 h6 e8 d9 g12 f10 d10 h10 i10 k8 j11 k7 l6 l8 m8 c8 b7 g8 h11 f13 i11 k11 j12 j13 k12 l13 h12 i12 g13 k9 f14","winner":1}
+{"lv":[4,6],"moves":"h8 h7 j9 f9 i6 j6 e9 k7 e7 e8 g10 f10 i9 k9 i8 i5 l8 k8 k10 g7 j7 k6 k5 i10 f7 h5 f11 h9 f8 j8 h6 g6 i11 g3 h4 g5 g4 f5 h10 e5","winner":2}
+{"lv":[4,5],"moves":"h8 g8 j8 g7 g9 i7 j7 j9 i8 f8 e9 h9 i6 k8 f9 i11 k9 e8 g6 i10 d9 c9 f7 h11 h10 l7","winner":2}
+{"lv":[5,8],"moves":"h8 i8 j7 j6 g10 f9 i9 g7 j9 h9 k9 h6 k7 k8 j8 h10 i7 h7 i10 f10 f7 f8 e9 j4 i5 f12 f11 g8 i6 e10 d11 j10 g11 h11 e11 c11 e7 l6 h5 i4 g12 g13 i11 g4 l10 m11 i13 i12 m9 l9 m7 l7 j12 k11 k4 f4 h4 g6 g9 g5","winner":2}
+{"lv":[6,6],"moves":"h8 h7 g8 i7 g7 f8 i10 g10 j9 f6 e8 g6 h9 f7 f5 k9 j8 f9 f10 k8 j11 k12 j10 j7 j12","winner":1}
+{"lv":[6,7],"moves":"h8 h7 f6 f9 i6 i9 e8 j9 e7 i10 g7 e6 e5 d4 g5 d8 i7 g6 i8 h9 g9 g8 f7 k9 l9 j11 k12 e10 d11 f10 i5 i4 f5 h5 f4 f3 f8","winner":1}
+{"lv":[8,7],"moves":"h8 g8 h10 g9 g10 f9 h9 h7 i6 i8 g6 f10 f11 f7 e11 h11 e10 e9 f8 g12 g11 i9 f12 d9 c9 d10 h13 c11 i10 f6 d8 k10 e7 j7 i7 k9 j9 l10 f13 b12 a13 i13 d14 e13 f14 f15 g14 e14 e12 d13 d11 c10 h15","winner":1}
+{"lv":[8,8],"moves":"h8 g7 i10 g9 g10 h10 f8 f9 e10 j9 i9 g6 d8 i11 j11 e8 d9 g5 g8 h9 f10 d7 d10 c10 e9 j12 k13 g11 e11 c11 g12 g4 g3 c6 b5 f11 d12 d11 e12 e13 f12 c12 h12","winner":1}
+{"lv":[7,5],"moves":"h8 h9 j9 g10 i7 j6 k8 i8 j7 g11 k9 i11 j11 j8 i9 l9 k10 f11 e12 h11 e11 k7 k11 k12 j10 f10 g7","winner":1}
+{"lv":[7,4],"moves":"h8 h7 i9 g10 i7 j9 i8 i10 f8 j8 g7 j10 i5 i6 h6 f10 j4","winner":1}
+{"lv":[7,4],"moves":"h8 g8 i9 j9 i8 h7 k8 j8 i6 i7 j7 h5 k10 i11 j10 g7 m10 l9 l10 f10 i10","winner":1}
+{"lv":[8,6],"moves":"h8 h7 h10 f10 i6 k6 k8 j7 i8 j8 i7 i5 e8 j6 f8 g8 j9 j5 j4 i10 f7 e7 h9 g5 f5 f6 h4 g11 d8 k7 k5 l7 h12 h11 c8 b8 m8 l8 m9 i4 h3 n7","winner":0}
+{"lv":[7,6],"moves":"h8 g7 i8 g9 f7 f8 g6 h7 e7 e8 h6 i6 d8 j7 e6 f6 d7 g8 j5 j9 d10 d9 e9 f10 c7 b7 b6 a5 e10 j8 j10 g11 g10 k7 i7 i9 h10 h9 f9 k9","winner":2}
+{"lv":[4,7],"moves":"h8 g9 h9 h10 e7 h7 f11 g10 j7 g8 g7 e10 i10 f9 f7 i6","winner":2}
+{"lv":[7,4],"moves":"h8 h7 g8 g7 j8 i8 i7 k8 h9 k9 f7 e6 h11 g11 i10 j11 f10 j6 h10 g9 h12","winner":1}
+{"lv":[7,8],"moves":"h8 g9 g10 h10 f8 f7 i9 g7 e6 e8 g6 j7 j8 i7 h7 i8 f5 i6 h5 i5 i4 h6 g5 e4 h4 d7 k6 d8 k5 k4 m8 l7 k8 l8 f4 k7 m7 j4 k3 d5 j3 k2 d6 c6 f9 b7 f3 a8","winner":2}
+{"lv":[7,7],"moves":"h8 i7 f7 f9 e8 g6 g7 h6 e7 d7 e6 e5 f10 e10 i6 d11 c12 h7","winner":0}
+{"lv":[6,6],"moves":"h8 i9 j9 k8 g6 h7 j8 g8 i6 i5 e6 f6 j6 j10 i7 g9 h6 k6 g5 f4 k9","winner":1}
+{"lv":[6,4],"moves":"h8 g8 f6 i8 g6 g10 f7 h10 g7 i9 e7 h7 e6 h6 e5 d4 e8 h5 e4","winner":1}
+{"lv":[8,6],"moves":"h8 i7 i9 h9 j8 k8 i11 j10 f8 i10 g11 h10 g8 i8 g10 k10 l10 g7 h11 j11 e8 d8 f9 d7 i12","winner":1}
+{"lv":[8,7],"moves":"h8 g8 i8 g9 g10 f9 i9 i10 h9 j7 e10 f11 g7 f6 h10 h11 e7 h6 e9 e8 g11 j8 f10 d10 d8 c7 h12","winner":1}
+{"lv":[6,4],"moves":"h8 g8 j10 g10 g9 f10 j9 h9 i10 h7 j8 j7 i8 k8 i11 i9 j12 j11 h10 f8 k13","winner":1}
+{"lv":[5,5],"moves":"h8 h7 j6 j8 g7 f10 i10 j9 g9 i9 g8 g6 f5 f8 g11 g10 k10 h9 k9 f6 f9 j7 f11 k8 j10 i8 k6 h10 i7 k5 h12 e10 d10 l6 k7 l8 m8 i11 l9 n7 e11 d11 g5 l7 j11 i12 l10 m10 f7 h11 h6 h5 f4 e3 e9 c9 i6 e8 e7 d9 d7 c7 g12 e6 c6 f12 i5 l5 l4 m6 n5 k4 j3 o8","winner":2}
+{"lv":[5,4],"moves":"h8 g8 j6 g7 g9 i7 g10 h10 h6 g11 j7 f8 h9 k6 j8 j9 i8 f11 f9 i9 e9 d9 h11 f12 e13 e8 c8 h7 f7 k9 i5 l8 g5 j5 k7 k8 i10 l7 i12 j13 h4 g3 m8 l9 m9 l10 i6 l6","winner":2}
+{"lv":[6,5],"moves":"h8 i9 i7 j8 k7 f10 k8 k9 k6 k5 j9 g7 h7 l7 h6 h9 i6 j6 h5 h4 j7 g10 g4","winner":1}
+{"lv":[8,8],"moves":"h8 g8 h6 g9 g10 h10 f8 f7 i9 g5 e5 g7 g6 h7 i7 j5 f9 e7 d7 k4","winner":0}
+{"lv":[7,7],"moves":"h8 i7 i6 k6 g7 f6 f8 h6 g8 e8 j8 i8 h9 g9 j9 j11 i9 l9 h7 f9 h10 h11 k7 l6 g11","winner":1}
+{"lv":[5,4],"moves":"h8 i7 i9 h10 j9 g7 j7 g10 e10 j6 g8 f8 e7 h9 f11 i11 g6 h7 k9 i5 h6 k8 j10 j11 e11 f9 g12 d9 j12 g9 e9 e8 h11 f10 i10 f13 f7 d7 c6 j8 i8 l9 h12 i12 g11 d11 k10 d8 d10 h5 i6 f6 k7 l7 k6 d6 d5 e6 c8 g5 l10 k5 m10","winner":1}
+{"lv":[7,4],"moves":"h8 g8 f7 f10 i6 h10 g6 g11 e8 h5 h6 j6 e9 e6 f9 d9 g7 f8 e7 d7 i9 j10 i7 h7 i8 h9 i5","winner":1}
+{"lv":[8,8],"moves":"h8 g9 i9 h10 i11 i10 j10 g7 j11 k11 g6 j9 h11 g12 g10 f9 h6 f11 e10 f7 f8 e6 g8 i8 k10 e11 j12 i12 f10 f12 d7 d8 h5 h12 e12 h4 i5 e7 f6 j5 e5 c9 h7 h9 j13 j14 j6 i6 d10 c10 c11 k6 i4 k8 l7 d9 e9 b12 b10 l8 m8 l5 j7 i7 m10 m11 k13 l10 k9 l11 f4 f5 k5 i13 j4 i3 e13 l9 l12 o11 n11 d12 m9 j3 k4 m7 g3 d6 k14 l4 l3 k3 m5 j15 n10 c6 e8 c5 b6 e4 c7 d5 l14 m15 h2 i1 f3 k15 g11 l15 i15 n15","winner":2}
+{"lv":[7,6],"moves":"h8 g8 h7 g9 g7 i9 j9 h9 i10 f8 j7 f7 f9 h10 i11 e8 e6 d9 k7 i7 g6 d6 e7 d8 c8 d7 d5 d10","winner":2}
+{"lv":[7,6],"moves":"h8 h7 h10 f9 i6 g9 i9 j8 j7 g10 i8 i7 h6 j6 e8 f8 h5 k8 f6 j10 g6 e6 f7 i4 d9","winner":1}
+{"lv":[4,6],"moves":"h8 g7 i10 g9 g10 h10 f11 h6 e7 g6 k9 i7 g5 i5 f8 i6 f6 i4 f7 i3","winner":2}
+{"lv":[5,6],"moves":"h8 i9 g9 h10 i7 j6 j7 k7 j8 k8 f7 h6 g8 f10 g7 h7 g10 g6 g11","winner":1}
+{"lv":[4,7],"moves":"h8 i9 j10 j9 i8 k6 g11 k10 g8 f8 g10 g7 f11 h9 j8 k8 g9 g12 k9 h12 h11 e11 e9 i7 e7 e8 h7 j11 l9 h5 g5 d10 f9 i6 i12 j13 f7 i4 e10 d11 i5 c9 f12 b8 a7 d8 c8 d9 i10 d7","winner":2}
+{"lv":[6,4],"moves":"h8 h7 j10 f8 j8 i9 k10 j9 i7 k9 h9 f10 l9 g8 g10 i8 i12 g6 f5 j11 h10 i10 h11 h12 f9 k8 e8","winner":1}
+{"lv":[5,7],"moves":"h8 g9 f7 h10 e7 g7 g8 h9 f9 e10 i8 f8 g6 j9 j8 k8 i11 k9 i9 i10 h11 g10 f10 k10 j10 k7 j7 k6","winner":2}
+{"lv":[8,8],"moves":"h8 g7 h7 g9 g6 h6 e8 g10 g8 f8 e9 e7 h10 f7 e11 f9 h11 h9 e12 e10 f6 f11 f10 d6 c5 d9 g12 d7 c7 d8 d5 d10","winner":2}
+{"lv":[5,7],"moves":"h8 i9 f10 g10 g11 f9 h6 h9 g9 e11 e9 d8 k9 j6 i7 j8 k7 j7 h12 i13 j9 i8 i10 k6","winner":2}
+{"lv":[7,6],"moves":"h8 h7 j6 j8 i5 i6 j5 j7 f10 i7 k7 l8 h5 g5 h6 l9 k8 l5 l7 k9 g7 l10 m11 l11 l12 j4 f7 h9 f8 e9 f9 f6 f11","winner":1}
+{"lv":[5,5],"moves":"h8 g9 h9 g8 g10 h10 i7 j8 i9 k9 h6 g7 g6 f6 i11 i8 f11 e8 h11 j11 e10 g11 f9 h12 g12 d9 h7 h5 e11 f10 e12 d13 e13 e9 e14","winner":1}
+{"lv":[4,8],"moves":"h8 i7 g9 k9 h6 j7 g7 h7 i6 k10 k7 f8 j9 i10 g8 g6 h10 g11 f7 j11 h9 i9 i11 j8 g12 h12 e11 l9 f10 d12 e6 d5 j12 k13 i12 l10 m11 m10 j10 k8 n11 m8 n7 l8 i8 n8","winner":2}
+{"lv":[5,5],"moves":"h8 g9 g6 h10 g11 h11 f7 h7 e7 h5 h6 f6 g7 j10 i10 h9 k9 j9 f9 i5 e8 g10 e9 h12 h13 e10 f8 d10 f10 f11 g8 i8 d8","winner":1}
+{"lv":[7,5],"moves":"h8 h7 h6 f10 i6 j6 i9 k8 j9 h9 j10 g7 k9 g8 k11 l12 j12 j8 m9 l9 l10 g10 n8","winner":1}
+{"lv":[4,5],"moves":"h8 i7 h7 f8 g10 h10 f9 g8 e7 i9 f7 d7 i6 j8 g11 h11 h6 h4 g6 k7 l6 j6 h5 h9 e8 f10 i4","winner":1}
+{"lv":[4,5],"moves":"h8 i8 g8 j6 g9 g10 f7 h9 f11 k8 e7 g7 e10 k9 j7 j9 f9 l9 i9 m9 n9 h7 f8 f10 h10 g6 d6","winner":1}
+{"lv":[8,8],"moves":"h8 i7 g7 f6 f8 e7 h9 h6 g8 i8 h11 h10 g10 g9 e8 d8 f9 d7 i12","winner":1}
+{"lv":[4,6],"moves":"h8 h7 i8 g9 e9 k8 f7 k7 h10 j8 g11 k9 k10 i7 j7 h6 i10 g5","winner":2}
+{"lv":[6,7],"moves":"h8 i7 g8 e8 g7 h9 i6 g6 j8 i8 j9 f9 g10 e9 i9 j10 h5 d9 g9 g11 h4 f7 c10 h7 f10 d7 e10 d10 h10 i10 k7 l6 e11 d12 f6 e5 d8 f5 e4 b5 c6 b9 c9 e6 e7 c8","winner":2}
+{"lv":[6,7],"moves":"h8 g7 j10 f9 i10 f7 h7 h6 h10 k10 j9 h11 j8 j7 g9 f10 j12 j11 i11 f8 k13","winner":1}
+{"lv":[8,8],"moves":"h8 i8 g6 j6 g10 k7 i9 k8 g7 f6 g9 g8 h9 j9 h10 h7 j10 k11 i10 f10 k10","winner":1}
+{"lv":[7,6],"moves":"h8 i7 h6 f10 i10 j9 i9 j7 h7 h9 i5 g7 j5 h5 g11 g10 f11 i8 k6 g4 k8 f3","winner":0}
+{"lv":[5,4],"moves":"h8 g9 j9 h7 i6 f8 e9 g11 e7 g10 g12 h10 e10 e8 k10 f10 f7 j10 i10 i11 j12 h11 f9 j11 j7 f11","winner":2}
+{"lv":[6,7],"moves":"h8 i7 f6 h9 j9 i6 g5 e7 g6 f7 h7 i8 i9 g7 g10 e6 d5 f5 d7 e9 e8 i5 i4 f8 h6 i10 g8 f9 g9 f10 f11 g11 h4 h5 j2 i3 h12 j11 g4 f4 j5 c7 d8 k12 l13 c11 d10 k8 g2 g3 h3 f1 k6","winner":1}
+{"lv":[6,8],"moves":"h8 h7 g6 f10 g8 g9 f8 e8 g5 h6 i9 f6 h5 j7 i8 j8 i5 j5 i7 i6 j6 g7 g11 e5 e11 i10 e10 h11 g12 j10 f12 g10 h10 e13 f9 h13 h12 e12 j9 d11 f13 d10 d9 i12 g4 g3 f4 i11 g13 c8 k5 l4 f11 h14 i13 i4 g14 g15 j14 k15 f15 f14 k4 c11 d12 e6 e7 b9 d7 c10 a8 c9 c7 c12","winner":2}
+{"lv":[6,6],"moves":"h8 i7 j9 h7 k8 i6 g8 j8 i10 h11 g7 g10 f8 e8 f9 f6 h9 j11 g9 i9 e9 d9 h6 i5 d10","winner":1}
+{"lv":[6,7],"moves":"h8 i7 j6 i6 i5 k7 i9 j7 h7 k8 l9 k6 k9 l7 m7 k4 k5 g4","winner":0}
+{"lv":[7,5],"moves":"h8 i8 f7 g7 g6 h5 j7 h10 j8 k9 k6 j6 i10 g9 i11 k8 j11 g11 l7 g10 g8 h9 k7 g12 g13 e12 f11 m7 j5 j9 i9 i4 h7 i7 i6 f10 k4","winner":1}
+{"lv":[6,5],"moves":"h8 h9 i6 j6 j7 j9 g7 j8 g8 i9 k9 f8 k7 g9 f9 k8 l7 h7 m7 f10 i7","winner":1}
+{"lv":[7,8],"moves":"h8 g7 h6 g9 j7 i10 g6 i6 h7 h9 f7 e8 j5 j9 f9 g11 h5 h4 i4 j3 h11 i9 k9 h10 j8 g10 g8 f10 e10 j10","winner":2}
+{"lv":[6,5],"moves":"h8 i8 f6 g7 g6 j9 h6 i6 e7 i7 i9 h7 j7 g8 f9 h5 j5 g9 e9 e6 d9 g10 g11 c9 f10 i5 i4 k10 l11 h12 d8 c7 f8 f7 f12 f11 h10 h9 j8","winner":1}
+{"lv":[5,7],"moves":"h8 g9 h10 h9 i8 i10 g7 j9 i9 f6 g8 j8 j7 f8 e7 f9 f7 d7 e8 d9 e9 e10 g6 g4 f11 f10 g10 d11 j10 k11 e11 f12 h6 d10 d8 c10 b10 c12 b13 d12 d13 e12 g12 b12","winner":2}
+{"lv":[6,6],"moves":"h8 i8 g9 f9 f10 i7 h11 i11 i10 j9 i6 j7 h7 j10 h9 h10 h6 h5 j8 g8 g12 e11 h12 l8 f11 f12 g10 g13 d10 e10 e9 d8 f6 d11 c12 m7 k9 k7 l7 h14 i15 j6 g7 f8 e5 d4 i9","winner":1}
+{"lv":[7,7],"moves":"h8 h7 i7 g9 g10 f9 i9 f8 h10 i8 e10 f10 f11 g6 j9 d9 e9 f7 f6 e8 h5 c10","winner":2}
