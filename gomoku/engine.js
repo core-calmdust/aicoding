@@ -918,7 +918,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const ready = typeof fetch !== 'function' ? Promise.resolve() : Promise.all([
     fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}),
     // renju: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails
-    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=1').then(r => r.ok ? gunzip(r) : null)])
+    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=3').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('renju', w, b); }).catch(() => {}),
   ]);
   self.onmessage = async e => {
