@@ -146,6 +146,9 @@
       </g>
     </svg>`;
   }
+  // SVG text doesn't always trigger web-font loading (iOS Safari) → load the title face explicitly, then redraw
+  let tfReady = false;
+  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大全世界の').then(() => { tfReady = true; if (page === 'home') renderHero(); }).catch(() => {});
   function renderHero() {
     const ja = lang === 'ja', phone = innerWidth < 760;
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大全' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
