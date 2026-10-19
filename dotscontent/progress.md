@@ -37,7 +37,8 @@ main にはコミットしない（コーディネータが反映）。wip-ai-da
       3×3: 初手4分類 A外周角/B外周中/C内側端/D中央箱の辺。Dは最善応手が3通り（鏡うつし応手 b3– は負け）。
       4×4: 家族b=先手練習用（後手はbook手）、家族a=後手練習用（先手はbook手、初手9）。
 - [x] 3. UI: dots/learn.js（ルール入門/レッスン/定跡学習・ドリル/詰めドット/今日の一問）。index.html は旧レッスン・パズルコード削除、learnInit() 呼出し。ja でPlaywrightスモーク(/home/claude/work/pw/dc_smoke.js)エラー0
-- [ ] 3b. 翻訳: content/text.ja.json 完成。en→他8言語を作る（キーは ja と同じ集合。check: 全言語のキー一致）
-- [ ] 4. 翻訳
-- [ ] 5. テスト
-- [ ] 6. トップページ/README
+- [x] 3b. 翻訳（10言語 content/text.<lang>.json 各299キー、プレースホルダ一致を確認）: content/text.ja.json 完成。en→他8言語を作る（キーは ja と同じ集合。check: 全言語のキー一致）
+- [x] 5. テスト: dc_smoke.js を ja/en/de/ar × 1440/390 で実行、コンソールエラー0・はみ出し0（モバイルの一覧グリッド修正済み）。dc_lang.js で言語切替の再描画確認。
+- [x] 6. トップ index.html（dots facts: lessons15, puzzles450, dt.desc 10言語）と README の dots 行を更新（git pull --rebase --autostash origin main 済み）。
+
+## 完了。main へのコミットはコーディネータが行う。

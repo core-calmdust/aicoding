@@ -574,6 +574,8 @@ figure.mini figcaption{font-size:13px;color:var(--muted);line-height:1.65;margin
 .op-lines{display:block;font-size:11.5px;color:var(--dim);margin-top:5px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .op-credit{font-size:11.5px;color:var(--dim);line-height:1.65;margin-top:6px}
 .lesson-item .tx{overflow:hidden}
+.lesson-list{grid-template-columns:minmax(0,1fr)}
+.lesson-item{min-width:0}
 .pz-total{font-size:12.5px;color:var(--dim);margin:0 0 2px}
 .pz-bar{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:6px;overflow:hidden}
 .pz-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),#8fe3b8)}
@@ -719,7 +721,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
       </div>
     </div>
     <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
-    <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc"></p></div>
+    <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc2"></p></div>
     <div class="field" id="fSize">
       <label data-i18n="ng.size"></label>
       <div class="seg" id="segSize"><button data-v="3">3 × 3</button><button data-v="4">4 × 4</button><button data-v="5">5 × 5</button></div>
