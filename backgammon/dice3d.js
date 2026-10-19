@@ -1,7 +1,7 @@
 // Backgammon V2 — dice throws drawn in 3D on a canvas
 //
-// plan():   lays out the whole throw before it is shown: each die drops from the hand, makes three bounces of decreasing
-//           height under constant gravity while tumbling, rolls over its edges, tips over and settles (see choreo()).
+// plan():   lays out the whole throw before it is shown: each die drops from the hand, makes 2–4 bounces of decreasing
+//           height under constant gravity while tumbling (each die with its own throw), rolls over its edges, tips over and settles (see choreo()).
 //           The resting orientation is fixed first; the faces are then labelled (a rotation of the standard die, so
 //           opposite faces still sum to 7 and the chirality is kept) so the rolled number ends on top.
 // draw():   renders one instant with a camera above each die (so a die in the air looks bigger, and a resting die looks
@@ -48,120 +48,134 @@
   const rollDist = phi => { const q = phi / QP, k = Math.floor(q), f = (q - k) * QP; return k * A + H * (Math.sin(f) - Math.cos(f)) + H; };
 
   // ---- one die's throw (choreographed, but every part follows simple mechanics):
-  //  * the lowest point of the die follows parabolas under one constant gravity: a drop from the hand, then exactly three
-  //    bounces whose heights fall by a constant ratio (h, r·h, r²·h) — so their durations go with √h;
-  //  * the centre sits on top of that lowest point (support height of the tilted cube), so the die never sinks into the felt;
-  //  * it tumbles steadily about the horizontal axis across its path; each impact slows the spin and the forward speed;
-  //  * after the last bounce it rolls over its edges — centre travel tied to the turned angle, no sliding — slows down,
-  //    tips over one last time (slow over the top, falling flat), and rocks back a little before resting.
-  // The resting orientation is fixed in advance and the turned angle is counted back from it, so the motion is continuous.
+  //  * the lowest point of the die follows parabolas under one constant gravity: a drop from the hand, then 2–4 bounces
+  //    whose heights fall by a constant ratio (h, r·h, r²·h, …) — so their durations go with √h;
+  //  * the centre sits exactly on top of that lowest point (computed from the cube's orientation), so it never sinks
+  //    into the felt;
+  //  * in the air it tumbles forward about the horizontal axis across its path, with some side spin and wobble; each
+  //    impact slows the spin and the forward speed, and the side spin dies out on the last landing;
+  //  * then it rolls over its edges — centre travel tied to the turned angle, no sliding — slows down, tips over one last
+  //    time (slow over the top, falling flat), and rocks back a little before resting.
+  // The resting orientation is fixed in advance and the turned angles are counted back from it, so the motion is continuous.
   function choreo(o) {
-    const g = o.g, r = o.r, d = o.d, k = [-d[1], d[0], 0];          // k = z × d: turning about k rolls the top towards d
+    const g = o.g, r = o.r, d = o.d, k = [-d[1], d[0], 0], nb = o.nb;  // k = z × d: turning about k rolls the top towards d
     // drop from the hand: lowest point from z0 with upward speed vz0 until it touches the floor
     const T0 = (o.vz0 + Math.sqrt(o.vz0 * o.vz0 + 2 * g * o.z0)) / g;
-    const hs = [o.h, o.h * r, o.h * r * r], vs = hs.map(h => Math.sqrt(2 * g * h)), Ts = vs.map(v => 2 * v / g);
-    const tImp = [T0, T0 + Ts[0], T0 + Ts[0] + Ts[1], T0 + Ts[0] + Ts[1] + Ts[2]];
-    const us = [o.u0, o.u0 * o.fu, o.u0 * o.fu * o.fu, o.u0 * Math.pow(o.fu, 3)];      // forward speed per flight
-    const ws = [o.w0, o.w0 * o.fw, o.w0 * o.fw * o.fw, o.w0 * Math.pow(o.fw, 3)];      // spin per flight
-    const tA = tImp[3];
-    // forward distance and turned angle at the end of each flight
-    const sAt = [0], thAt = [0];
-    const segs = [[0, T0], [T0, tImp[1]], [tImp[1], tImp[2]], [tImp[2], tImp[3]]];
-    segs.forEach(([a, b], i) => { sAt.push(sAt[i] + us[i] * (b - a)); thAt.push(thAt[i] + ws[i] * (b - a)); });
-    // on the floor: roll the rest of the current quarter (plus o.extra quarters) at the speed left after the last impact,
+    const hs = [], vs = [], Ts = [];
+    for (let i = 0; i < nb; i++) { hs.push(o.h * Math.pow(r, i)); vs.push(Math.sqrt(2 * g * hs[i])); Ts.push(2 * vs[i] / g); }
+    const segs = [[0, T0]];
+    for (let i = 0; i < nb; i++) segs.push([segs[i][1], segs[i][1] + Ts[i]]);
+    const tA = segs[nb][1];                                          // last landing: from here on it rolls
+    const us = segs.map((_, i) => o.u0 * Math.pow(o.fu, i));          // forward speed per flight
+    const ws = segs.map((_, i) => o.w0 * Math.pow(o.fw, i));          // forward tumble per flight
+    const ss = segs.map((_, i) => o.sw * Math.pow(o.fw, i));          // side spin per flight
+    const sAt = [0], thAt = [0], sgAt = [0];
+    segs.forEach(([a, b], i) => { sAt.push(sAt[i] + us[i] * (b - a)); thAt.push(thAt[i] + ws[i] * (b - a)); sgAt.push(sgAt[i] + ss[i] * (b - a)); });
+    const seg = t => { let i = 0; while (i < nb && t > segs[i][1]) i++; return i; };
+    // on the floor: finish the current quarter (plus o.extra whole quarters) at the rolling speed the last impact gave it,
     // then the final tip, slow over the top and falling flat
-    const wIn = ws[3] * o.fw, rem = o.rem, tRem = rem / wIn;
-    const wTip = wIn * 0.85, c = 0.3, tTip = QP * (1 + c) / wTip;
-    const Theta = thAt[4] + rem + QP;                                 // the angle at which the die lies flat for good
-    const tFlat = tA + tRem + tTip, tRock = 0.14, tEnd = tFlat + tRock;
-    const phiAt = t => {                                               // turned angle relative to the final orientation (≤ 0)
+    const wIn = o.wRoll, rem = o.rem + o.extra * QP, tRem = rem / wIn;
+    const c = o.tipC, wTip = wIn * 0.85, tTip = QP * (1 + c) / wTip;
+    const Theta = thAt[nb + 1] + rem + QP;                           // the angle at which the die lies flat for good
+    const tFlat = tA + tRem + tTip, tRock = o.rockT, tEnd = tFlat + tRock;
+    const phiAt = t => {                                              // turned angle relative to the final orientation (≤ 0)
       let th;
-      if (t <= tA) { let i = 0; while (i < 3 && t > segs[i][1]) i++; th = thAt[i] + ws[i] * (Math.max(segs[i][0], t) - segs[i][0]); }
-      else if (t <= tA + tRem) th = thAt[4] + wIn * (t - tA);
-      else { const s = Math.min(1, (t - tA - tRem) / tTip); th = thAt[4] + rem + QP * (s - c * Math.sin(2 * Math.PI * s) / (2 * Math.PI)); }
+      if (t <= tA) { const i = seg(t); th = thAt[i] + ws[i] * (Math.max(segs[i][0], t) - segs[i][0]); }
+      else if (t <= tA + tRem) th = thAt[nb + 1] + wIn * (t - tA);
+      else { const s = Math.min(1, (t - tA - tRem) / tTip); th = thAt[nb + 1] + rem + QP * (s - c * Math.sin(2 * Math.PI * s) / (2 * Math.PI)); }
       return th - Theta;
     };
-    const phiA = phiAt(tA), sA = sAt[4];
+    const sigAt = t => {                                              // side spin angle, 0 from the last landing on
+      if (t >= tA) return 0;
+      const i = seg(t); return sgAt[i] + ss[i] * (Math.max(segs[i][0], t) - segs[i][0]) - sgAt[nb + 1];
+    };
+    const phiA = phiAt(tA), sA = sAt[nb + 1];
     const fwd = t => {                                                // distance along the path
-      if (t <= tA) { let i = 0; while (i < 3 && t > segs[i][1]) i++; return sAt[i] + us[i] * (t - segs[i][0]); }
-      return sA + rollDist(phiAt(Math.min(t, tFlat)) + 8 * QP) - rollDist(phiA + 8 * QP);
+      if (t <= tA) { const i = seg(t); return sAt[i] + us[i] * (t - segs[i][0]); }
+      return sA + rollDist(phiAt(Math.min(t, tFlat)) + 16 * QP) - rollDist(phiA + 16 * QP);
     };
     const sFlat = fwd(tFlat);
     const low = t => {                                                // height of the lowest point
-      if (t < 0) return o.z0 + o.vz0 * t - g * t * t / 2;
+      if (t < 0) return o.z0 - t * 2.5;                               // still coming down from the hand
       if (t <= T0) return o.z0 + o.vz0 * t - g * t * t / 2;
-      for (let i = 0; i < 3; i++) if (t <= tImp[i + 1]) { const u = t - tImp[i]; return Math.max(0, vs[i] * u - g * u * u / 2); }
+      for (let i = 0; i < nb; i++) if (t <= segs[i + 1][1]) { const u = t - segs[i + 1][0]; return Math.max(0, vs[i] * u - g * u * u / 2); }
       return 0;
     };
-    // small wobble about the path direction and a slight turn about the vertical, both dying out before the die lands for the last time
+    // wobble about the path direction and a turn about the vertical, both dying out by the last landing
     const env = t => t >= tA ? 0 : Math.pow(1 - Math.max(0, t) / tA, 2);
-    const wob = t => o.wob * env(t) * Math.sin(2 * Math.PI * 2.2 * t + o.ph);
+    const wob = t => o.wob * env(t) * Math.sin(2 * Math.PI * o.wobF * t + o.ph);
     const yawW = t => o.yawW * env(t);
-    const Qf = qaxis([0, 0, 1], Math.atan2(d[1], d[0]) + o.yaw0);     // final orientation: lying flat, faces along the path
+    const Qf = qaxis([0, 0, 1], Math.atan2(d[1], d[0]));             // final orientation: lying flat, faces along the path
     const at = t => {
       let s, z, q;
       if (t < tFlat) {
-        const phi = phiAt(t), w = wob(t);
         s = t < 0 ? us[0] * t : fwd(t);
-        z = low(t) + support(phi) * (Math.abs(Math.cos(w)) + Math.abs(Math.sin(w)));
-        q = qmul(qaxis([0, 0, 1], yawW(t)), qmul(qaxis([d[0], d[1], 0], w), qmul(qaxis(k, phi), Qf)));
+        // side spin about the die's own path axis (body x), forward tumble about k, then wobble and yaw in world space
+        q = qmul(qaxis([0, 0, 1], yawW(t)), qmul(qaxis([d[0], d[1], 0], wob(t)), qmul(qaxis(k, phiAt(t)), qmul(Qf, qaxis([1, 0, 0], sigAt(t))))));
+        const m = qmat(q[0], q[1], q[2], q[3]);
+        z = low(t) + H * (Math.abs(m[6]) + Math.abs(m[7]) + Math.abs(m[8]));
       } else {                                                        // rocking back on the rear edge, twice, smaller each time
-        const u = Math.min(t, tEnd) - tFlat;
-        const rho = u < 0.08 ? 0.085 * Math.sin(Math.PI * u / 0.08) : 0.03 * Math.max(0, Math.sin(Math.PI * (u - 0.08) / 0.06));
+        const u = Math.min(t, tEnd) - tFlat, a1 = o.rockA, p1 = tRock * 0.57, p2 = tRock - p1;
+        const rho = u < p1 ? a1 * Math.sin(Math.PI * u / p1) : a1 * 0.35 * Math.max(0, Math.sin(Math.PI * (u - p1) / p2));
         s = sFlat - H + H * Math.cos(rho) - H * Math.sin(rho); z = H * Math.sin(rho) + H * Math.cos(rho);
         q = qmul(qaxis(k, -rho), Qf);
       }
       const lat = o.curve * s * s;                                    // a slight curve
       return [o.x0 + d[0] * s - d[1] * lat, o.y0 + d[1] * s + d[0] * lat, z, q];
     };
-    const impacts = [[T0, Math.sqrt(o.vz0 * o.vz0 + 2 * g * o.z0)], ...vs.map((v, i) => [tImp[i + 1], v * r ** 0.5]), [tFlat, 1.2]];
-    return { at, tEnd, Qf, impacts, sEnd: sFlat };
+    const impacts = [[T0, Math.sqrt(o.vz0 * o.vz0 + 2 * g * o.z0)], ...vs.map((v, i) => [segs[i + 1][1], v * Math.sqrt(r)]), [tFlat, 1.2]];
+    return { at, tEnd, Qf, impacts, sEnd: sFlat, nb };
   }
-  // the dice of one half: parameters drawn at random (same throw for both, with small differences), retried until the
-  // paths stay on the board, end in the half and never overlap
+  // the dice of one half: each die gets its own throw (direction, speed, bounces, spin, roll-out, timing), retried until
+  // the paths stay on the board, end in the half, in the band between the points, and never overlap
+  const REJ = { row: 0, dur: 0, sync: 0, bounds: 0, rest: 0, overlap: 0 };
   function planGroup(items, opt, rnd) {
-    const R = (a, b) => a + rnd() * (b - a);
-    for (let tries = 0; tries < 60; tries++) {
-      const it0 = items[0], dir = it0.dir, outer = dir > 0 ? it0.hx1 : it0.hx0, halfW = it0.hx1 - it0.hx0;
-      const ang = R(-0.2, 0.2), side = rnd() < 0.5 ? -1 : 1;
-      const base = { g: 95, r: 0.45, h: R(0.75, 0.9), z0: R(0.9, 1.15), vz0: R(0.3, 0.7), u0: R(3.0, 3.5), fu: 0.88, w0: R(14.5, 17.5), fw: 0.82 };
+    const R = (a, b) => a + rnd() * (b - a), pick = (...w) => { let x = rnd() * w.reduce((s, v) => s + v, 0); for (let i = 0; i < w.length; i++) if ((x -= w[i]) < 0) return i; return w.length - 1; };
+    const it0 = items[0], dir = it0.dir, outer = dir > 0 ? it0.hx1 : it0.hx0, m = items.length;
+    for (let tries = 0; tries < 400; tries++) {
+      // paths open up (diverge) or close in and may cross (the later die passes behind the earlier one)
+      const side = rnd() < 0.5 ? -1 : 1, spread = R(0.26, 0.7) * (rnd() < 0.3 ? 1 : -1), a0 = R(-0.18, 0.18);
+      const far = m > 1 && rnd() < 0.55 ? Math.floor(rnd() * 2) : -1, first = Math.floor(rnd() * 2);
       const dice = items.map((it, i) => {
-        const delay = i ? R(0.06, 0.12) : 0, lane = items.length > 1 ? (i ? 1 : -1) * side * R(0.6, 0.75) : 0;
-        const a = ang + R(-0.06, 0.06), d = [-dir * Math.cos(a), -dir * Math.sin(a)];
-        const p = Object.assign({}, base, {
-          d, x0: outer - dir * R(0.35, 0.55) - d[1] * lane * 0, y0: lane, h: base.h * R(0.9, 1.1), u0: base.u0 * R(0.93, 1.07), w0: base.w0 * R(0.88, 1.12),
-          rem: R(0.25, 1.25), wob: R(0.12, 0.25), ph: R(0, 6.3), yawW: R(-0.35, 0.35), yaw0: 0, curve: R(-0.03, 0.03) });
+        const delay = m > 1 && i !== first ? R(0.08, 0.25) : 0;
+        const lane = m > 1 ? (i ? 1 : -1) * side * R(0.45, 0.8) : 0;
+        const a = a0 + (m > 1 ? (i ? 0.5 : -0.5) * side * spread : 0), dv = [-dir * Math.cos(a), -dir * Math.sin(a)];
+        const p = {
+          g: 95, d: dv, nb: 2 + pick(0.3, 0.45, 0.25), r: R(0.35, 0.55), h: R(0.55, 1.0), z0: R(0.8, 1.25), vz0: R(0.1, 0.9),
+          u0: R(2.2, 2.8) * (i === far ? R(1.3, 1.5) : 1), wRoll: R(6.5, 9.5), fu: R(0.82, 0.92), w0: R(12, 19), fw: R(0.76, 0.86), sw: R(-9, 9),
+          x0: outer - dir * R(0.35, 0.7), y0: lane, rem: R(0.15, 1.4), extra: rnd() < 0.35 ? 1 : 0, tipC: R(0.2, 0.42),
+          rockA: R(0.04, 0.1), rockT: R(0.1, 0.17), wob: R(0.08, 0.3), wobF: R(1.4, 3), ph: R(0, 6.3), yawW: R(-0.5, 0.5), curve: R(-0.04, 0.04) };
         const c = choreo(p);
-        return { it, delay, c, at: t => c.at(t - delay), end: delay + c.tEnd };
+        return { it, delay, c, p, at: t => c.at(t - delay), end: delay + c.tEnd };
       });
       const dur = Math.max(...dice.map(x => x.end));
-      if (dur < 1.05 || dur > 1.45) continue;
+      if (dur < 1.0 || dur > 1.6) { REJ.dur++; continue; }
+      if (m > 1 && Math.abs(dice[0].end - dice[1].end) < 0.15 && tries < 120) { REJ.sync++; continue; }   // keep the two from finishing together
+      // where they come to rest; centre the group on yMid (a sideways shift changes nothing in the motion)
+      const ends = dice.map(x => x.at(x.end));
+      const dy = opt.yMid + R(-0.12, 0.12) - ends.reduce((sm, e) => sm + e[1], 0) / m;
+      const rest = ends.map(e => ({ x: e[0], y: e[1] + dy }));
+      const band = opt.band + (tries > 100 ? 0.3 : 0) + (tries > 250 ? 0.4 : 0);
+      if (rest.some(p => p.x < it0.hx0 + A * 0.7 || p.x > it0.hx1 - A * 0.7 || Math.abs(p.y - opt.yMid) > band)) { REJ.rest++; continue; }
+      if (m > 1 && Math.abs(rest[0].x - rest[1].x) < 0.35 && tries < 150) { REJ.row++; continue; }   // not a neat row
       const n = Math.ceil(dur / DT) + 1, frames = [];
-      for (let f = 0; f < n; f++) {
-        const t = f * DT, fr = new Float32Array(dice.length * 7);
-        dice.forEach((x, i) => { const [px, py, pz, q] = x.at(Math.min(t, x.end)); fr.set([px, py, pz, q[0], q[1], q[2], q[3]], i * 7); });
+      let ok = true;
+      for (let f = 0; f < n && ok; f++) {
+        const t = f * DT, fr = new Float32Array(m * 7);
+        dice.forEach((x, i) => {
+          const [px, py, pz, q] = x.at(Math.min(t, x.end)), y = py + dy;
+          fr.set([px, y, pz, q[0], q[1], q[2], q[3]], i * 7);
+          if (y < opt.yMin + A * 0.62 || y > opt.yMax - A * 0.62) ok = false;
+          if ((px < it0.hx0 + H - 1e-6 || px > it0.hx1 - H + 1e-6) && pz < H * 1.5) ok = false;   // only in the air may it pass the rim
+        });
         frames.push(fr);
       }
-      // place the group: centre the resting dice on yMid (a sideways shift changes nothing in the motion)
-      const last = frames[n - 1], m = dice.length;
-      let my = 0; for (let i = 0; i < m; i++) my += last[i * 7 + 1]; my /= m;
-      const dy = opt.yMid + R(-0.1, 0.1) - my;
-      let ok = true;
-      for (const f of frames) for (let i = 0; i < m && ok; i++) {
-        f[i * 7 + 1] += dy;
-        const x = f[i * 7], y = f[i * 7 + 1];
-        if (y < opt.yMin + A * 0.62 || y > opt.yMax - A * 0.62) ok = false;
-        if (x < it0.hx0 + H - 1e-6 || x > it0.hx1 - H + 1e-6) { if (f[i * 7 + 2] < H * 1.5) ok = false; }   // only in the air may it pass the rim
-      }
-      if (!ok) continue;
-      // rest: inside the half, in the band, apart
-      const rest = dice.map((x, i) => ({ x: last[i * 7], y: last[i * 7 + 1] }));
-      if (rest.some(p => p.x < it0.hx0 + A * 0.7 || p.x > it0.hx1 - A * 0.7 || Math.abs(p.y - opt.yMid) > opt.band)) continue;
+      if (!ok) { REJ.bounds++; continue; }
       // never overlapping: the centres always stay further apart than the diagonal of a die
       if (m === 2) {
         let bad = false;
         for (const f of frames) { const dd = Math.hypot(f[0] - f[7], f[1] - f[8]); if (dd < A * 1.42) { bad = true; break; } }
-        if (bad) continue;
+        if (bad) { REJ.overlap++; continue; }
       }
       const out = dice.map((x, i) => {
         const mf = qmat(...x.c.Qf);
@@ -172,7 +186,8 @@
         const Rm = cands[Math.floor(rnd() * cands.length)];
         const top = mul(mm(mf, Rm), FACE_OF(x.it.v).u);
         return { v: x.it.v, side: x.it.side, R: Rm, rest: { x: rest[i].x, y: rest[i].y, yaw: Math.atan2(top[1], top[0]) },
-          impacts: x.c.impacts.map(([t, v]) => [t + x.delay, v]) };
+          impacts: x.c.impacts.map(([t, v]) => [t + x.delay, v]),
+          meta: { dir: Math.atan2(x.p.d[1], x.p.d[0]), delay: x.delay, end: x.end, nb: x.c.nb, travel: x.c.sEnd } };
       });
       return { frames, dice: out, dur, tries: tries + 1 };
     }
@@ -282,5 +297,5 @@
     for (const F of FACES) { const n = mul(m, F.n); if (n[2] > best) { best = n[2]; v = F.v; } }
     return v;
   }
-  root.Dice3D = { plan, draw, pose, topValue, DT, A, ready: true, _choreo: choreo };
+  root.Dice3D = { plan, draw, pose, topValue, DT, A, ready: true, _choreo: choreo, _rej: REJ };
 })(typeof window !== 'undefined' ? window : globalThis);
