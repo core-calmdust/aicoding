@@ -46,3 +46,6 @@ Lv8 を1手目から完全プレイにする。オフラインで「AIが直面�
 - 23:10 最終検証ログ ver2/rand.txt (500局 Lv8全勝), ver2/self.txt (300局) 完了。C 検証: src/vrun.sh ver2/results.txt ver2/rand.txt ver2/self.txt (中断しても再実行で続きから)
 - 23:25 ブラウザ確認 (1440 AI先手 / 390 AI後手, ヒント・振り返り) エラー0。i18n Lv8 説明10言語, トップ index.html に c4v2.str 10言語, README 行 更新済み (未コミット)
 - C 検証 ver2: 8899/約8970 件 OK (残りは ply≤4 の重い局面)。終わらなければ src/vrun.sh を再実行
+- 00:13 検証完了: rand 500局 (Lv8 先手250全勝/後手250全勝) 2,970手、self 300局 (ランダム序盤1〜2手) 11,946手、計14,916手すべて C 弱解で最善 (BAD 0)。
+  木外の証明時間 (node, 共有CPU): ply13〜16 で max 671ms。思考時間全体の最大 1.8s (負け局面の最遅負け精緻化に予算を使う仕様)
+- 作業完了。main 作業ツリーに未コミット: connect4/engine.js, index.html, i18n.js, tree.bin, README.md, トップ index.html (c4v2.str)
