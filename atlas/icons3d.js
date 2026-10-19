@@ -219,6 +219,99 @@
       return g;
     },
   };
+
+  /* ---------- collectible creatures ("Atlas Mon") — original board-game spirits ---------- */
+  // shared cute parts: big glossy eyes, blush, tiny feet. Everything faces +z (towards the camera).
+  function eyes(g, x, y, z, r = .2, gap = .32, look = 0) {
+    const W = C(0xffffff, { roughness: .2 }), K = C(0x1d1b26, { roughness: .15 }), H = M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: .6 });
+    [-1, 1].forEach(s => {
+      const e = ball(r, W); e.scale.set(.85, 1.08, .5); e.position.set(x + s * gap, y, z); g.add(e);
+      const p = ball(r * .66, K); p.scale.set(.9, 1.05, .45); p.position.set(x + s * gap + look, y - r * .05, z + r * .2); g.add(p);
+      const h = ball(r * .22, H); h.position.set(x + s * gap + look - r * .22, y + r * .32, z + r * .42); g.add(h);
+    });
+  }
+  function blush(g, x, y, z, gap = .55) { const m = C(0xff7fa8, { roughness: .6, transparent: true, opacity: .7 }); [-1, 1].forEach(s => { const b = ball(.1, m); b.scale.set(1.5, .7, .3); b.position.set(x + s * gap, y, z); g.add(b); }); }
+  function smile(g, x, y, z, w = .14) { const m = mesh(new T.TorusGeometry(w, .028, 8, 20, Math.PI), C(0x1d1b26)); m.rotation.z = Math.PI; m.position.set(x, y, z); g.add(m); }
+  function feet(g, mat, y = 0, gap = .38, z = .1) { [-1, 1].forEach(s => { const f = ball(.2, mat); f.scale.set(1, .6, 1.3); f.position.set(s * gap, y + .1, z); g.add(f); }); }
+
+  const MONS = {
+    // ダイスン: a die puppy — its spots are the pips
+    dice() {
+      const g = new T.Group(), Wm = C(0xffffff, { roughness: .32 }), red = C(0xe63b3b, { roughness: .3 }), K = C(0x2b3044, { roughness: .3 });
+      g.add(at(rbox(1.6, 1.5, 1.4, .42, Wm), 0, .25, 0));
+      eyes(g, 0, 1.12, .7, .2, .3); blush(g, 0, .86, .7, .52); smile(g, 0, .86, .72, .1);
+      [[-.86, 1.62, 0, .6], [.86, 1.62, 0, -.6]].forEach(([x, y, z, r]) => { const ear = rbox(.42, .16, .7, .12, red); ear.position.set(x, y - .25, z); ear.rotation.z = r * 1.6; g.add(ear); });
+      [[-.5, .55], [.5, .55], [0, .4]].forEach(([x, y]) => { const p = ball(.11, K); p.scale.z = .35; p.position.set(x * 1.2, y + .1, -.71); g.add(p); });
+      [[.81, 1.0, .3], [.81, .6, -.3]].forEach(([x, y, z]) => { const p = ball(.11, K); p.scale.x = .35; p.position.set(x, y, z); g.add(p); });
+      const top = ball(.17, red); top.scale.y = .35; top.position.set(0, 1.76, 0); g.add(top);
+      feet(g, Wm, 0, .45, .3);
+      const tail = ball(.16, Wm); tail.position.set(0, .7, -.82); g.add(tail);
+      return g;
+    },
+    // リバモン: a reversi-disc turtle, shell half black / half white
+    disc() {
+      const g = new T.Group(), skin = C(0x7ed957, { roughness: .45 }), B = C(0x17181d, { roughness: .25 }), Wt = C(0xf6f3ea, { roughness: .28 });
+      const lo = puck(1.05, .32, B, .5), hi = puck(1.05, .32, Wt, .5); hi.position.y = .32; const shell = grp(lo, hi); shell.position.y = .38; shell.rotation.x = -.18; g.add(shell);
+      const dome = ball(.86, Wt, .45); dome.position.y = 1.02; dome.rotation.x = -.18; g.add(dome);
+      const head = ball(.52, skin); head.position.set(0, .86, .98); g.add(head);
+      eyes(g, 0, .98, 1.38, .15, .22); blush(g, 0, .78, 1.35, .32); smile(g, 0, .76, 1.47, .08);
+      [[-.72, .55], [.72, .55], [-.6, -.62], [.6, -.62]].forEach(([x, z]) => { const l = ball(.24, skin); l.scale.set(1, .6, 1.1); l.position.set(x, .2, z); g.add(l); });
+      const tl = ball(.14, skin); tl.position.set(0, .3, -1.08); g.add(tl);
+      return g;
+    },
+    // ショウギツネ: a fox spirit wearing a shogi-piece hood (王)
+    shogi() {
+      const g = new T.Group(), fur = C(0xff9b4a, { roughness: .5 }), cream = C(0xfff2dc, { roughness: .55 });
+      const body = ball(.78, fur, .95); body.position.y = .72; g.add(body);
+      const belly = ball(.52, cream, .9); belly.position.set(0, .62, .42); belly.scale.z = .55; g.add(belly);
+      const head = ball(.72, fur, .92); head.position.set(0, 1.62, .1); g.add(head);
+      const muz = ball(.36, cream, .7); muz.position.set(0, 1.46, .66); g.add(muz);
+      const nose = ball(.08, C(0x1d1b26)); nose.position.set(0, 1.56, 1.0); g.add(nose);
+      eyes(g, 0, 1.78, .66, .17, .3); blush(g, 0, 1.5, .62, .5);
+      [-1, 1].forEach(s => { const e = mesh(new T.ConeGeometry(.24, .6, 16), fur); e.position.set(s * .42, 2.3, 0); e.rotation.z = -s * .35; g.add(e); const ei = mesh(new T.ConeGeometry(.12, .32, 12), cream); ei.position.set(s * .42, 2.26, .1); ei.rotation.z = -s * .35; g.add(ei); });
+      const hood = shogiPiece('王', .78); hood.position.set(0, 2.32, -.34); hood.rotation.x = -.35; g.add(hood);
+      const tail = ball(.42, fur, 1.3); tail.position.set(.62, .72, -.62); tail.rotation.z = -.6; g.add(tail); const tt = ball(.22, cream); tt.position.set(.88, 1.12, -.72); g.add(tt);
+      feet(g, fur, 0, .36, .3);
+      return g;
+    },
+    // ナイトン: a chubby knight-piece pony
+    knight() {
+      const g = new T.Group(), Wm = C(0xe9e3d6, { roughness: .32 }), mane = C(0x8d6bff, { roughness: .4 });
+      g.add(puck(.82, .32, C(0x2b3044, { roughness: .3 }), .5));
+      const body = ball(.68, Wm, .9); body.position.y = .82; g.add(body);
+      const head = ball(.66, Wm); head.scale.set(1, .95, 1.2); head.position.set(0, 1.62, .22); g.add(head);
+      const snout = ball(.42, Wm); snout.scale.set(1.05, .82, 1); snout.position.set(0, 1.42, .78); g.add(snout);
+      [-1, 1].forEach(s => { const n = ball(.05, C(0x8a7f6a)); n.position.set(s * .14, 1.46, 1.18); g.add(n); });
+      eyes(g, 0, 1.82, .78, .16, .3); blush(g, 0, 1.56, .72, .5);
+      [-1, 1].forEach(s => { const e = mesh(new T.ConeGeometry(.15, .38, 12), Wm); e.position.set(s * .3, 2.32, .02); e.rotation.z = -s * .2; g.add(e); });
+      for (let i = 0; i < 5; i++) { const m = ball(.2 - i * .015, mane); m.position.set(0, 2.24 - i * .24, -.28 - i * .12); g.add(m); }
+      return g;
+    },
+    // ゴイシペン: a go-stone penguin (black stone body, white stone belly)
+    stone() {
+      const g = new T.Group(), B = C(0x1a1b22, { roughness: .16 }), Wt = C(0xfbfaf4, { roughness: .2 }), beak = C(0xffb21e, { roughness: .4 });
+      const body = ball(.9, B, .95); body.position.y = .92; g.add(body);
+      const belly = ball(.66, Wt, .95); belly.scale.z = .6; belly.position.set(0, .86, .44); g.add(belly);
+      eyes(g, 0, 1.32, .78, .17, .27); blush(g, 0, 1.06, .78, .44);
+      const bk = mesh(new T.ConeGeometry(.12, .28, 16), beak); bk.rotation.x = Math.PI / 2; bk.position.set(0, 1.12, .98); g.add(bk);
+      [-1, 1].forEach(s => { const w = ball(.3, B); w.scale.set(.35, 1, .7); w.position.set(s * .9, .88, 0); w.rotation.z = s * .4; g.add(w); });
+      feet(g, beak, 0, .3, .4);
+      const hat = puck(.42, .18, Wt, .5); hat.position.set(.08, 1.78, 0); hat.rotation.z = -.2; g.add(hat);
+      return g;
+    },
+    // マンカラビ: a gem beetle — mancala gems on its back
+    gem() {
+      const g = new T.Group(), shell = C(0xb37540, { roughness: .45 }), dark = C(0x5e3a1a, { roughness: .6 });
+      const b = ball(.95, shell, .62); b.position.y = .62; g.add(b);
+      const head = ball(.5, dark, .9); head.position.set(0, .72, .86); g.add(head);
+      eyes(g, 0, .86, 1.24, .16, .22); blush(g, 0, .66, 1.24, .34);
+      [0xff5d5d, 0x36b4ff, 0xffc928, 0x3ccf91, 0x8d6bff].forEach((c, i) => { const a = i / 5 * Math.PI * 2; g.add(at(gem(c, .62), Math.cos(a) * .5, .86, Math.sin(a) * .5 - .1)); });
+      [-1, 1].forEach(s => { const an = mesh(new T.CylinderGeometry(.03, .03, .5, 8), dark); an.position.set(s * .2, 1.3, 1.0); an.rotation.z = -s * .4; g.add(an); const tip = ball(.08, C(0xffc928, { roughness: .2 })); tip.position.set(s * .32, 1.52, 1.0); g.add(tip); });
+      for (let i = 0; i < 3; i++) [-1, 1].forEach(s => { const l = ball(.12, dark); l.scale.set(1.6, .5, .6); l.position.set(s * .86, .16, .4 - i * .4); g.add(l); });
+      return g;
+    },
+  };
+
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
   const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9] };
   const FIX = {};
@@ -234,5 +327,5 @@
       return g;
     };
   });
-  window.Icons3D = { PIECES, ICONS: FIX };
+  window.Icons3D = { PIECES, ICONS: FIX, MONS };
 })();
