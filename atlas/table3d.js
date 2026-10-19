@@ -275,7 +275,7 @@
     const c = cur, start = performance.now();
     c.scale.setScalar(.01);
     (function anim(now) {   // pop in: drop + springy scale
-      const k = Math.min(1, (now - start) / 750);
+      const k = Math.min(1, (now - start) / 560);
       const e = k === 1 ? 1 : 1 - Math.pow(2, -9 * k) * Math.cos(k * 10);
       c.scale.setScalar(Math.max(.01, e)); c.position.y = Math.max(0, 1 - k * 1.8) * 4;
       if (k < 1) requestAnimationFrame(anim);
