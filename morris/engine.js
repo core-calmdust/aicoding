@@ -501,7 +501,39 @@ function mate(variant, start, moves, n, defend, maxNodes) {
   });
 }
 
-const API = { NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
+// forced mill: can the attacker make a mill (remove a piece) within n of its own moves, whatever the defender does?
+// A defender that removes a piece first refutes it; a defender left without a move counts as a success.
+function millAtt(pos, k, ply, bufs) {
+  const buf = bufs[ply], n = pos.gen(buf);
+  for (let i = 0; i < n; i++) if (((buf[i] >> 10) & 31) !== NONE) return true;
+  if (k <= 1 || !n) return false;
+  const ms = Array.from(buf.subarray(0, n));
+  for (const m of ms) { pos.play(m); const ok = millDef(pos, k - 1, ply + 1, bufs); pos.undo(m); if (ok) return true; }
+  return false;
+}
+function millDef(pos, k, ply, bufs) {
+  const buf = bufs[ply], n = pos.gen(buf);
+  if (!n) return pos.cnt[1] + pos.cnt[2] !== pos.G.n;
+  for (let i = 0; i < n; i++) if (((buf[i] >> 10) & 31) !== NONE) return false;
+  const ms = Array.from(buf.subarray(0, n));
+  for (const m of ms) { pos.play(m); const ok = millAtt(pos, k, ply + 1, bufs); pos.undo(m); if (!ok) return false; }
+  return true;
+}
+// attacker to move (defend = false): need = own moves to force a mill after each move (0 = not within n)
+// defender to move (defend = true): need = attacker moves still needed after each reply (0 = refuted)
+function mill(variant, start, moves, n, defend) {
+  const { pos } = replay(variant, start, moves), bufs = Array.from({ length: 2 * n + 4 }, () => new Int32Array(1200));
+  return pos.moves().map(m => {
+    if (((m >> 10) & 31) !== NONE) return { m, need: defend ? 0 : 1 };
+    pos.play(m); let need = 0;
+    if (pos.status() === -1) need = defend ? 0 : 1;
+    else for (let k = 1; k <= (defend ? n : n - 1); k++) { if (defend ? millAtt(pos, k, 0, bufs) : millDef(pos, k, 0, bufs)) { need = defend ? k : k + 1; break; } }
+    pos.undo(m);
+    return { m, need };
+  });
+}
+
+const API = { mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.MorrisEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
@@ -512,7 +544,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       else if (m.type === 'analyze') {
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
         self.postMessage({ id: m.id, type: 'result', ...r });
-      } else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.variant, m.start, m.moves, m.n, m.defend, m.maxNodes) });
+      } else if (m.type === 'mill') self.postMessage({ id: m.id, type: 'result', list: mill(m.variant, m.start, m.moves, m.n, m.defend) });
+      else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.variant, m.start, m.moves, m.n, m.defend, m.maxNodes) });
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }

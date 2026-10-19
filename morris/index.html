@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0e16">
-<meta name="description" content="ミルを作って相手の駒を取る、二千年以上遊ばれてきた陣取りゲーム。ナイン・トゥエルブ・シックスの3ルール、10段階AI、レッスンと詰めパズル、今日の一問。">
+<meta name="description" content="ミルを作って相手の駒を取る、二千年以上遊ばれてきた陣取りゲーム。ナイン・トゥエルブ・シックスの3ルール、10段階AI、入門〜戦術レッスン21ステップ、序盤の定跡、詰めモリス600問、今日の一問。">
 <title>Nine Men's Morris</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23142c4a'/%3E%3Cg fill='none' stroke='%23e2c275' stroke-width='3'%3E%3Crect x='8' y='8' width='48' height='48'/%3E%3Crect x='20' y='20' width='24' height='24'/%3E%3Cpath d='M32 8v12M32 44v12M8 32h12M44 32h12'/%3E%3C/g%3E%3Ccircle cx='8' cy='8' r='6' fill='%23f1dc9f'/%3E%3Ccircle cx='32' cy='8' r='6' fill='%23f1dc9f'/%3E%3Ccircle cx='56' cy='8' r='6' fill='%23f1dc9f'/%3E%3Ccircle cx='44' cy='44' r='6' fill='%23dfe3ea'/%3E%3C/svg%3E">
 <meta property="og:title" content="Nine Men's Morris — ミルを作って駒を取る陣取りゲーム">
-<meta property="og:description" content="3つのルール、10段階AI、レッスン・詰めパズル・今日の一問。登録不要でスマホでも遊べます。">
+<meta property="og:description" content="3つのルール、10段階AI、レッスン・定跡・詰めモリス600問・今日の一問。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://core-calmdust.github.io/aicoding/morris/">
 <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/morris.webp">
@@ -329,6 +329,18 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .lesson-actions button:disabled{opacity:.35}
 .lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
 .lesson-list{display:grid;gap:8px}
+.ls-course{grid-column:1 / -1;margin:10px 0 2px;display:flex;flex-direction:column;gap:2px}
+.ls-course:first-child{margin-top:0}
+.ls-course b{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass)}
+.ls-course small{font-size:12px;color:var(--dim);line-height:1.6}
+.ls-grad{margin-top:12px;font-size:14px;line-height:1.7;color:var(--text)}
+.lesson-item .no.op{font-size:13px;font-family:inherit;width:34px}
+.op-choice{display:grid;gap:8px;margin-top:14px}
+.op-meta{font-size:12px;color:var(--muted);font-weight:400}
+.op-play{margin-top:10px;font-size:12.5px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text)}
+.op-play:hover{border-color:var(--brass2)}
+.study-bar{display:block;height:4px;width:140px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.study-bar > span{display:block;height:100%;background:var(--brass)}
 .lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
 .lesson-item:hover{border-color:var(--brass2)}
 .lesson-item .no{font-family:'Shippori Mincho B1',serif;font-size:20px;color:var(--brass);width:28px;text-align:center;flex:none}
@@ -705,9 +717,9 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="ls.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <h2 id="lsListTitle" data-i18n="ls.title"></h2>
+      <p id="lsListDesc" style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
       <div class="lesson-list" id="lessonList"></div>
       <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
     </div>
@@ -729,7 +741,7 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -779,7 +791,8 @@ body .info-line{font-size:12.5px}
 </div>
 
 <script src="i18n.js?v=20261018a"></script>
-<script src="engine.js?v=20261018a"></script>
+<script src="i18n_more.js?v=20261019b"></script>
+<script src="engine.js?v=20261019b"></script>
 <script>
 'use strict';
 // ====================================================================== rules (shared with the engine)
@@ -885,7 +898,7 @@ function save() {
 // ====================================================================== engine workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261018a');
+  const w = new Worker('engine.js?v=20261019b');
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -1480,7 +1493,8 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
   if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
-  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
+  if (b.dataset.v === 'lesson') { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
+  if (b.dataset.v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
   setTimeout(() => inst(false), 150);
 }));
 $('#btnResume').onclick = resumeHere;
@@ -1610,8 +1624,8 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018a').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
-const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
+const lessonsReady = fetch('lessons.json?v=20261019b').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles2';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
 let introIdx = 0;
@@ -1634,28 +1648,32 @@ function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneVi
 async function openLessons() {
   await lessonsReady; selTab('lesson');
   if (!LESSONS) { toast(t('ls.fail')); return; }
-  const pr = lsProgress();
+  openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
+  $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
+  const pr = lsProgress(); let course = '';
   $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
-    const r = pr[s.id];
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+    const r = pr[s.id], c = s.course || 'tactics';
+    let head = ''; if (c !== course) { course = c; head = `<p class="ls-course"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></p>`; }
+    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${stepNo(i)}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
   }).join('');
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
-$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); };
+$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item[data-i]'); if (b) openIntro(+b.dataset.i); };
 function specToB(spec) { const b = {}; for (let i = 0; i < spec.b.length; i++) if (spec.b[i] !== '0') b[i] = +spec.b[i]; return b; }
+function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
 function openIntro(i) {
-  introIdx = i; const s = LESSONS.steps[i];
-  $('#liStep').textContent = 'STEP ' + (i + 1);
+  introIdx = i; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
+  $('#liStep').textContent = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   const d = s.diagram;
   $('#liBody').innerHTML = (d ? miniSVG('nine', bOf('nine', d.p1 || [], d.p2 || []), { marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom('nine').index[n], k])), arrows: (d.arrows || []).map(a => nm('nine', ...a)), mills: (d.mills || []).map(a => nm('nine', ...a)) }) : '') + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
-$('#btnLessonBack').onclick = () => openLessons();
+$('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons();
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
-$('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
+$('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function enterSpecial(spec) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; stopPlay();
@@ -1669,7 +1687,8 @@ function startLesson(step) {
   document.body.classList.add('in-lesson');
   loadLessonProblem();
 }
-function lessonProblem() { return LESSONS.steps[lesson.step].problems[lesson.i]; }
+const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
+function lessonProblem() { return curStep().problems[lesson.i]; }
 function loadLessonProblem() {
   const P = lessonProblem();
   enterSpecial(P.s);
@@ -1678,17 +1697,19 @@ function loadLessonProblem() {
   $('#lsFb').innerHTML = '';
 }
 function renderLessonCard() {
-  const s = LESSONS.steps[lesson.step], n = s.problems.length, P = lessonProblem();
-  $('#lsStep').textContent = t('ls.stepq', { s: lesson.step + 1, i: lesson.i + 1, n });
-  $('#lsTitle').textContent = t('ls.' + s.id + '.title');
+  const s = curStep(), n = s.problems.length, P = lessonProblem();
+  $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
+  $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
   const me = P.s.side;
-  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${t('ls.' + s.id + '.goal')}</span></div>`;
+  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${lesson.virt ? t('op.goal') : t('ls.' + s.id + '.goal')}</span></div>`;
+  $('#lsHint').textContent = t('ls.hint');
   $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
   $('#lsNext').textContent = lesson.i + 1 < n ? t('ls.next') : t('ls.result');
   $('#lsNext').disabled = !lesson.answered;
   $('#lsHint').disabled = lesson.answered;
 }
 function problemPoints(P, m) {
+  if (P.ok) return P.ok.includes(m) ? 20 : 0;
   const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
   if (mine >= best - 6 && !(best > WINT && mine < best)) return 20;
   if (best > WINT && mine > WINT) return 16;          // a slower forced win
@@ -1698,14 +1719,15 @@ function problemPoints(P, m) {
   return Math.max(0, Math.round(20 * (1 - loss / 0.5)));
 }
 function lessonAnswer(m) {
-  const P = lessonProblem(), s = LESSONS.steps[lesson.step];
+  const P = lessonProblem(), s = curStep();
   lesson.answered = true;
   const pts = problemPoints(P, m);
+  if (P.ok) return okAnswer(P, s, m, pts);
   lesson.results[lesson.i] = pts;
   renderLessonCard();
   const best = P.best, lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : pts >= 10 ? 'fb.ng' : 'fb.bad';
   let fb = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `;
-  fb += t('ls.' + s.id + '.why', { m: mvName(best), x: mvName(m) });
+  fb += lesson.virt ? t('op.why', { m: mvName(best) }) : t('ls.' + s.id + '.why', { m: mvName(best), x: mvName(m) });
   const val = new Map(P.sc), fmt = v => valLabel(v).big + (valLabel(v).small ? ' ' + valLabel(v).small : '');
   fb += `<br><small style="color:var(--dim)">${t('fb.values', { a: fmt(val.has(m) ? val.get(m) : -WIN), b: fmt(val.get(best)) })}</small>`;
   $('#lsFb').innerHTML = fb;
@@ -1725,45 +1747,167 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m) + 700);
 }
+function okAnswer(P, s, m, pts) {
+  lesson.results[lesson.i] = pts; renderLessonCard();
+  const best = P.ok.includes(m) ? m : P.best;
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvName(m) }) : t('ls.' + s.id + '.ng', { m: mvName(best), x: mvName(m) }));
+  playChime(!!pts); playMove2(m);
+  const tok = busyToken;
+  setTimeout(() => {
+    if (!lesson || tok !== busyToken) return;
+    moves = []; cur = 0; sel = null; lessonMarks = [];
+    const mark = (mm, cls) => { if (mFrom(mm) !== NONE) lessonMarks.push({ arrow: [mFrom(mm), mTo(mm)], cls }); lessonMarks.push({ at: mTo(mm), cls }); if (mRm(mm) !== NONE) lessonMarks.push({ at: mRm(mm), cls }); };
+    mark(best, 'ok'); if (!pts) mark(m, 'ng');
+    update(false);
+  }, moveDur(m) + 700);
+}
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(false); } return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
-  const s = LESSONS.steps[lesson.step], { pos } = posAt(cur), me = pos.side, op = 3 - me;
-  $('#lsFb').innerHTML = t('ls.' + s.id + '.hint');
+  const s = curStep(), { pos } = posAt(cur), me = pos.side, op = 3 - me, P = lessonProblem();
   lessonMarks = [];
+  if (lesson.virt) { lessonMarks.push({ at: mFrom(P.best) !== NONE ? mFrom(P.best) : mTo(P.best), cls: 'ok' }); $('#lsFb').innerHTML = t('op.hint'); renderFx(); return; }
+  $('#lsFb').innerHTML = t('ls.' + s.id + '.hint');
+  if (P.ok) {
+    const pts = new Set(P.ok.map(m => s.id === 'b_reopen' ? mFrom(m) : mTo(m)));
+    for (const i of pts) lessonMarks.push({ at: i, cls: 'ok' });
+    if (s.id === 'b_take' || s.id === 'b_block') for (const i of threatPoints(pos, op)) lessonMarks.push({ at: i, cls: 'threat op' });
+    renderFx(); return;
+  }
+  if (s.id === 'counter' || s.id === 'defend' || s.id === 'endgame') for (const i of threatPoints(pos, op)) lessonMarks.push({ at: i, cls: 'threat op' });
+  if (s.id === 'endgame' || s.id === 'counter') for (const i of threatPoints(pos, me)) lessonMarks.push({ at: i, cls: 'threat' });
   if (s.id === 'block' || s.id === 'fly') for (const i of threatPoints(pos, op)) lessonMarks.push({ at: i, cls: 'threat op' });
   if (s.id === 'mill' || s.id === 'fork' || s.id === 'remove' || s.id === 'double') for (const i of threatPoints(pos, me)) lessonMarks.push({ at: i, cls: 'threat' });
   if (s.id === 'remove' || s.id === 'blockade') for (const i of threatPoints(pos, op)) lessonMarks.push({ at: i, cls: 'threat op' });
   renderFx();
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.study) { if (lesson.i < lesson.g.study.line.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
   if (!lesson || !lesson.answered) return;
-  const s = LESSONS.steps[lesson.step];
+  const s = curStep();
   if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
   const n = lesson.results.reduce((a, b) => a + b, 0), pass = n >= 75;
+  if (lesson.virt) {
+    const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
+    try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
+    $('#btnLessonNextStep').classList.add('hidden');
+    showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
+    if (pass) confetti();
+    return;
+  }
   const pr = lsProgress(); const old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
   $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
   $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
+  const nx = LESSONS.steps[lesson.step + 1];
+  if (pass && s.course === 'basics' && !(nx && nx.course === 'basics')) $('#ldSub').innerHTML += `<p class="ls-grad">${t('course.graduate')}</p>`;
   showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
 
+// ====================================================================== openings (engine-researched placement lines)
+let OPEN = null, openChoiceIdx = -1;
+const openReady = fetch('openings.json?v=20261019b').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+  .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
+const OP_STORE = STORE + '-open';
+function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
+const LL = o => o ? (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
+async function openOpenings() {
+  await openReady; selTab('open');
+  if (!OPEN) { toast(t('ls.fail')); return; }
+  $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
+  const pr = opProg(); let head = '';
+  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
+    const r = pr[g.id], grp = g.grp || 'w';
+    let h = ''; if (grp !== head) { head = grp; h = `<p class="ls-course"><b>${t('op.grp.' + grp)}</b><small>${t('op.grp.' + grp + '.sub')}</small></p>`; }
+    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${LL(g.label)}</span><span class="tx"><b>${LL(g.title)}</b><small>${LL(g.short)}</small></span><span class="st ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+  }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('op.credit')}</p>`;
+  showLessonView('lessonListView'); showOverlay('#lessonOverlay');
+}
+$('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item[data-o]'); if (b) openOpeningChoice(+b.dataset.o); });
+function lineBoard(line) { const { pos } = E.replay('nine', null, line); const b = {}; for (let i = 0; i < pos.b.length; i++) if (pos.b[i]) b[i] = pos.b[i]; return b; }
+function openOpeningChoice(i) {
+  openChoiceIdx = i; const g = OPEN.sets[i], pre = g.study.line.slice(0, g.show || 2), last = pre[pre.length - 1];
+  $('#liStep').textContent = t('op.title') + ' · ' + t(g.side === 2 ? 'op.forBlack' : 'op.forWhite');
+  $('#liTitle').textContent = LL(g.title);
+  $('#liBody').innerHTML = miniSVG('nine', lineBoard(pre), { marks: last !== undefined ? { [mTo(last)]: 'ring' } : {} }) + LL(g.intro).map(x => `<p>${x}</p>`).join('') +
+    `<div class="op-choice"><button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: g.study.line.length })}</small></span></button>` +
+    `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t('op.practiceDesc')}</small></span></button></div>`;
+  $('#btnLessonStart').classList.add('hidden');
+  showLessonView('lessonIntroView'); showOverlay('#lessonOverlay');
+}
+$('#liBody').addEventListener('click', e => {
+  const b = e.target.closest('.lesson-item'); if (!b || openChoiceIdx < 0) return;
+  hideOverlay('#lessonOverlay');
+  if (b.dataset.study) startStudy(openChoiceIdx); else startPractice(openChoiceIdx);
+});
+function startStudy(gi) {
+  const g = OPEN.sets[gi];
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { study: true, gi, g, i: 0, results: [], answered: true };
+  document.body.classList.add('in-lesson');
+  enterSpecial(null);
+  showStudy(false);
+}
+function showStudy(anim) {
+  const L = lesson, g = L.g, st = g.study, i = L.i, N = st.line.length;
+  moves = st.line.slice(0, i); cur = i; lessonMarks = []; labelList = null; hintList = null;
+  update(anim);
+  $('#lsStep').textContent = `${t('op.study')} · ${i}/${N}`;
+  $('#lsTitle').textContent = LL(g.title);
+  $('#lsDots').innerHTML = `<span class="study-bar"><span style="width:${Math.round(i * 100 / N)}%"></span></span>`;
+  let pr, fb = '';
+  if (i === 0) { pr = t('op.studyStart'); fb = LL(g.intro).join('<br>'); }
+  else {
+    const side = (i - 1) % 2 ? P2 : P1;
+    pr = `<span class="pdisc p${side}"></span><b style="font-size:16px"><bdi>${i}. ${mvName(st.line[i - 1])}</bdi></b>`;
+    const note = st.notes && st.notes[i - 1]; fb = note ? LL(note) : '';
+  }
+  if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--brass)">${t('op.studyEnd')}</b>`;
+  fb += `<br><button class="op-play" id="lsPlayHere">${t('op.playHere')}</button>`;
+  $('#lsPrompt').innerHTML = `<div class="ls-goal">${pr}</div>`; $('#lsFb').innerHTML = fb;
+  $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
+  $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
+}
+$('#lsFb').addEventListener('click', e => {
+  if (!e.target.closest('#lsPlayHere') || !lesson || !lesson.study) return;
+  const mv = lesson.g.study.line.slice(0, lesson.i), side = mv.length % 2 === 0 ? P1 : P2;
+  savedGame = null; exitSpecial();
+  busyToken++; cancelWorker('ai'); cancelWorker('ana');
+  Object.assign(settings, { mode: 'ai', rule: 'nine' }); setVariant('nine'); drawLines(); humanColor = side;
+  moves = mv; cur = mv.length; evals = []; reviewing = false; gameOverShown = false;
+  update(false); save(); afterPosition();
+  toast(t('op.playing'));
+});
+function startPractice(gi) {
+  const g = OPEN.sets[gi], pool = g.problems.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  hideOverlay('#lessonOverlay');
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { step: 0, gi, virt: { id: g.id, title: g.title, problems: pool.slice(0, 5) }, i: 0, results: [], answered: false, hinted: false };
+  document.body.classList.add('in-lesson');
+  loadLessonProblem();
+}
+
 // ====================================================================== puzzles: win within N moves
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261018a').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261019b').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
-  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.level' + (dl.L + 1))} · ${t('pz.winIn', { n: PUZZLES.levels[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
-    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length;
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.level' + (i + 1))}</b><small>${t('pz.levelSub', { n: L.n })}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo(); let grp = '', no = 0;
+  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.th.' + PUZZLES.themes[dl.L].id)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.themes.map((L, i) => {
+    let h = ''; if (L.grp !== grp) { grp = L.grp; no = 0; h = `<p class="ls-course"><b>${t('pz.grp' + grp)}</b><small>${t('pz.grp' + grp + 'Sub')}</small></p>`; }
+    const solved = L.puzzles.filter((_, j) => pr[`${L.id}-${j}`]).length; no++;
+    return h + `<button class="lesson-item" data-i="${i}"><span class="no">${no}</span><span class="tx"><b>${t('pz.th.' + L.id)}</b><small>${t('pz.th.' + L.id + '.sub')}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
   }).join('');
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
@@ -1772,9 +1916,9 @@ $('#pzLevels').onclick = e => {
   if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
 };
 function openPzGrid(i) {
-  pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
-  $('#pzLevelTitle').textContent = t('pz.level' + (i + 1)) + ' — ' + t('pz.winIn', { n: L.n });
-  $('#pzGrid').innerHTML = L.puzzles.map((_, j) => `<button data-j="${j}" class="${pr[`${i}-${j}`] ? 'solved' : ''}">${j + 1}</button>`).join('');
+  pzLevel = i; const pr = pzProgress(), L = PUZZLES.themes[i];
+  $('#pzLevelTitle').textContent = t('pz.th.' + L.id) + ' — ' + t('pz.th.' + L.id + '.sub');
+  $('#pzGrid').innerHTML = L.puzzles.map((P, j) => `<button data-j="${j}" class="${pr[`${L.id}-${j}`] ? 'solved' : ''}">${j + 1}</button>`).join('');
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
 $('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzLevel, +b.dataset.j); };
@@ -1783,24 +1927,24 @@ $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const P = PUZZLES.levels[L].puzzles[j];
-  puzzle = { L, j, P, me: P.s.side, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false };
+  const T = PUZZLES.themes[L], P = T.puzzles[j];
+  puzzle = { L, j, P, T, goal: T.goal || 'win', me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.s);
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
 }
 function renderPuzzleCard() {
-  const Pz = puzzle, L = PUZZLES.levels[Pz.L];
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pz.level' + (Pz.L + 1))} · No.${Pz.j + 1}`;
-  $('#pzTitle').textContent = t('pz.winIn', { n: Pz.n });
-  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
+  const Pz = puzzle, L = Pz.T, mill = Pz.goal === 'mill';
+  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pz.th.' + L.id)} · No.${Pz.j + 1}`;
+  $('#pzTitle').textContent = t(mill ? 'pz.millIn' : 'pz.winIn', { n: Pz.n });
+  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t(mill ? 'pz.goalMill' : 'pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
-  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.L + 1 >= PUZZLES.levels.length);
+  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.L + 1 >= PUZZLES.themes.length);
   $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.busy;
   renderInfo();
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
-function mateReq(n, defend) { return request('ai', { type: 'mate', moves: moves.slice(0, cur), n, defend: !!defend }).then(r => r && r.list); }
+function mateReq(n, defend) { return request('ai', { type: puzzle && puzzle.goal === 'mill' ? 'mill' : 'mate', moves: moves.slice(0, cur), n, defend: !!defend }).then(r => r && r.list); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
@@ -1813,8 +1957,8 @@ async function puzzleMove(m) {
   playMove2(m);
   Pz.used++;
   renderPuzzleCard();
-  if (statusAt(cur).winner === Pz.me) { setTimeout(() => puzzleSolved(), moveDur(m) + 200); return; }
   const e = list.find(x => x.m === m);
+  if (statusAt(cur).winner === Pz.me || (Pz.goal === 'mill' && e && e.need === 1 && (mRm(m) !== NONE || statusAt(cur).over))) { setTimeout(() => puzzleSolved(), moveDur(m) + 200); return; }
   if (!e || !e.need || e.need > left) {
     const good = list.filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
     Pz.state = 'fail'; Pz.busy = false;
@@ -1824,7 +1968,7 @@ async function puzzleMove(m) {
     const mark = (mm, cls) => { if (mFrom(mm) !== NONE) lessonMarks.push({ arrow: [mFrom(mm), mTo(mm)], cls }); lessonMarks.push({ at: mTo(mm), cls }); if (mRm(mm) !== NONE) lessonMarks.push({ at: mRm(mm), cls }); };
     if (good[0]) mark(good[0].m, 'ok'); mark(m, 'ng');
     update(false); playChime(false);
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: mvName(m), b: good.length ? mvName(good[0].m) : '—', n: Pz.n })}`);
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t(Pz.goal === 'mill' ? 'pz.failMill' : 'pz.failWhy', { m: mvName(m), b: good.length ? mvName(good[0].m) : '—', n: Pz.n })}`);
     renderPuzzleCard();
     return;
   }
@@ -1846,18 +1990,18 @@ function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(); pr[`${Pz.L}-${Pz.j}`] = true;
+  const pr = pzProgress(); pr[`${Pz.T.id}-${Pz.j}`] = true;
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
-  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.used })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t(Pz.goal === 'mill' ? 'pz.solvedMill' : 'pz.solvedSub', { n: Pz.used })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
   playChime(true); confetti(); renderPuzzleCard();
 }
 $('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hinted; startPuzzle(puzzle.L, puzzle.j, puzzle.daily); puzzle.hinted = h; } };
 $('#pzNext').onclick = () => {
   if (!puzzle) return;
   let { L, j } = puzzle; j++;
-  if (j >= PUZZLES.levels[L].puzzles.length) { L++; j = 0; }
-  if (L < PUZZLES.levels.length) startPuzzle(L, j);
+  if (j >= PUZZLES.themes[L].puzzles.length) { L++; j = 0; }
+  if (L < PUZZLES.themes.length) startPuzzle(L, j);
 };
 $('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.L); };
 $('#pzQuit').onclick = () => quitSpecial();
@@ -1880,6 +2024,7 @@ $('#pzAnswer').onclick = async () => {
   for (let step = 0; step < 14; step++) {
     if (puzzle !== Pz) return;
     if (statusAt(cur).over) break;
+    if (Pz.goal === 'mill' && cur > 0 && mRm(moves[cur - 1]) !== NONE) break;
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = Pz.P.answer;
@@ -2077,12 +2222,13 @@ let daily = { last: '', streak: 0, best: 0, days: {} };
 try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 function dailyPick() {
-  if (!PUZZLES || PUZZLES.levels.length < 4) return null;
+  if (!PUZZLES || !PUZZLES.themes) return null;
   const now = new Date(), date = ymd(now);
   const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
-  const wd = now.getDay();   // Mon-Tue: level 2, Wed-Thu: level 3, Fri-Sun: level 4
-  const L = wd >= 1 && wd <= 2 ? 1 : wd >= 3 && wd <= 4 ? 2 : 3;
-  const n = PUZZLES.levels[L].puzzles.length;
+  // a different theme each weekday
+  const ids = ['zwick', 'win2', 'fork', 'mill2', 'win3', 'block', 'quiet'], id = ids[now.getDay()];
+  const L = Math.max(0, PUZZLES.themes.findIndex(x => x.id === id));
+  const n = PUZZLES.themes[L].puzzles.length;
   let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
   return { date, L, j: (h >>> 0) % n };
 }
