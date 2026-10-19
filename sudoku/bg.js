@@ -238,10 +238,63 @@ S.castle = (W, H) => {
   return s;
 };
 
-const THEMES = ['forest', 'harbor', 'sweets', 'sea', 'garden', 'festival', 'autumn', 'snow', 'stars', 'castle'];
-function svg(name, W, H, variant) {
-  const fn = S[name] || S.daily;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${fn(W, H, variant)}</svg>`;
+/* wonder room (variant collection): checkered floor, floating toy blocks and balloons */
+S.wonder = (W, H) => {
+  const u = Math.min(W, H) / 10;
+  let s = sky('sk', [[0, '#d9ccff'], [.6, '#ffe3f1'], [1, '#fff1d6']]) + `<rect width="${W}" height="${H}" fill="url(#${CUR})"/>`;
+  s += scatter(W, H, 26, 17, (x, y, r) => sparkle(x, y, 3 + r() * 6, ['#fff', '#fff3b0', '#ffd1e8'][(r() * 3) | 0]), [0, 0, 1, .7]);
+  // checkered floor in perspective
+  const fy = H * .8; let fl = `<rect x="0" y="${f(fy)}" width="${W}" height="${f(H - fy)}" fill="#ffe7c7"/>`;
+  const n = 14;
+  for (let i = -n; i <= n; i += 2) fl += `<path d="M${f(W / 2 + i * W / n * .35)} ${f(fy)}L${f(W / 2 + (i + 1) * W / n * .35)} ${f(fy)}L${f(W / 2 + (i + 1) * W / n * 1.6)} ${H}L${f(W / 2 + i * W / n * 1.6)} ${H}Z" fill="#ffd2e2" opacity=".75"/>`;
+  s += fl;
+  const block = (x, y, sz, c, ch, d) => `<g class="bob" style="--d:${d}s"><g transform="translate(${f(x)} ${f(y)}) rotate(${(x * 7) % 20 - 10})"><rect x="${f(-sz / 2)}" y="${f(-sz / 2)}" width="${f(sz)}" height="${f(sz)}" rx="${f(sz * .18)}" fill="${c}"/><rect x="${f(-sz / 2)}" y="${f(-sz / 2)}" width="${f(sz)}" height="${f(sz * .3)}" rx="${f(sz * .18)}" fill="#fff" opacity=".35"/><text x="0" y="${f(sz * .2)}" text-anchor="middle" font-family="Fredoka,Arial" font-weight="700" font-size="${f(sz * .6)}" fill="#fff">${ch}</text></g></g>`;
+  s += block(W * .12, H * .3, u * 1.1, '#ff9fb8', 7, 5) + block(W * .86, H * .22, u * 1.2, '#8fc4ff', 3, 6) + block(W * .78, H * .62, u * .8, '#ffcd6b', 9, 4.5) + block(W * .2, H * .64, u * .9, '#9fe0b4', 5, 5.5) + block(W * .5, H * .12, u * .6, '#c7a8ff', 1, 7);
+  const balloon = (x, y, c) => `<g class="float" style="--d:${f(5 + (x % 3))}s"><path d="M${f(x)} ${f(y + u * .55)}q${f(-u * .2)} ${f(u * .5)} 0 ${f(u * 1.1)}" stroke="#a99" fill="none" stroke-width="1.5"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(u * .42)}" ry="${f(u * .52)}" fill="${c}"/><ellipse cx="${f(x - u * .14)}" cy="${f(y - u * .2)}" rx="${f(u * .08)}" ry="${f(u * .14)}" fill="#fff" opacity=".6"/></g>`;
+  s += balloon(W * .32, H * .2, '#ff8fb6') + balloon(W * .66, H * .38, '#ffd36b') + balloon(W * .93, H * .45, '#9fd8ff');
+  s += bunny(W * .1, H * .97, u * .5) + cat(W * .9, H * .975, u * .55, '#c7a8ff', true);
+  return s;
+};
+
+/* time of day: evening and night versions of every scene */
+function timeLayer(name, W, H, tod, variant) {
+  if (!tod || tod === 'day') return '';
+  const alreadyNight = name === 'stars' || (name === 'daily' && variant === 'h');
+  if (tod === 'eve') {
+    if (alreadyNight) return '';
+    const id = 'ev' + (++GID);
+    return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a7a"/><stop offset=".55" stop-color="#ffb37a"/><stop offset="1" stop-color="#c58bd8"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${id})" opacity=".42" style="mix-blend-mode:multiply"/><circle cx="${f(W * .82)}" cy="${f(H * .62)}" r="${f(Math.min(W, H) * .09)}" fill="#ffcf7a" opacity=".55"/>`;
+  }
+  if (alreadyNight) return '';
+  const id = 'nt' + (++GID), u = Math.min(W, H) / 10;
+  let s = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141848"/><stop offset=".6" stop-color="#2c2a6b"/><stop offset="1" stop-color="#3b2f6e"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${id})" opacity=".78" style="mix-blend-mode:multiply"/><rect width="${W}" height="${H}" fill="#1a1d4f" opacity=".25"/>`;
+  s += scatter(W, H, 70, 99, (x, y, r) => `<circle class="twinkle" style="--d:${f(2 + r() * 3)}s;--o:${f(-r() * 4)}s" cx="${f(x)}" cy="${f(y)}" r="${f(.7 + r() * 1.6)}" fill="#fff"/>`, [0, 0, 1, .5]);
+  const mx = W * .16, my = H * .13, mr = u * .75, mk = 'nm' + GID;
+  s += `<g class="bob" style="--d:8s"><circle cx="${f(mx)}" cy="${f(my)}" r="${f(mr * 1.7)}" fill="#fff6c9" opacity=".12"/><mask id="${mk}"><circle cx="${f(mx)}" cy="${f(my)}" r="${f(mr)}" fill="#fff"/><circle cx="${f(mx + mr * .55)}" cy="${f(my - mr * .3)}" r="${f(mr * .85)}" fill="#000"/></mask><circle cx="${f(mx)}" cy="${f(my)}" r="${f(mr)}" fill="#fff3c4" mask="url(#${mk})"/>${face(mx - mr * .4, my + mr * .2, mr * .26, '#7a6a4a')}</g>`;
+  s += scatter(W, H, 16, 101, (x, y, r) => `<circle class="float" style="--d:${f(4 + r() * 4)}s" cx="${f(x)}" cy="${f(y)}" r="${f(2 + r() * 2.5)}" fill="#fff5a8" opacity=".9"><animate attributeName="opacity" values=".2;1;.2" dur="${f(2 + r() * 3)}s" repeatCount="indefinite"/></circle>`, [0, .6, 1, .95]);
+  return s;
 }
-window.SudokuBG = { THEMES, svg };
+
+/* small theme decorations for the collection map */
+const DECO = {
+  forest: [(x, y, s, r) => tree(x, y, s * 1.4, ['#8fd68a', '#74c779', '#a3dc8c'][(r() * 3) | 0]), (x, y, s) => mushroom(x, y, s * .6), (x, y, s, r) => flower(x, y, s * .22, ['#ff9fb0', '#ffd76a', '#fff'][(r() * 3) | 0], '#ffd76a', false), (x, y, s) => bunny(x, y, s * .45)],
+  harbor: [(x, y, s, r) => house(x, y, s * 1.1, ['#fff1e0', '#e6f4ff', '#fff6c9'][(r() * 3) | 0], ['#ff8f7a', '#6aa9e8', '#f2a65a'][(r() * 3) | 0]), (x, y, s, r) => cat(x, y, s * .6, ['#f6b56b', '#8a8a99', '#fff'][(r() * 3) | 0], r() < .5), (x, y, s) => `<path d="M${f(x - s * .4)} ${f(y)}q${f(s * .2)} ${f(-s * .12)} ${f(s * .4)} 0t${f(s * .4)} 0" stroke="#7cc8f2" stroke-width="3" fill="none" stroke-linecap="round"/>`],
+  sweets: [(x, y, s, r) => `<g><rect x="${f(x - s * .04)}" y="${f(y - s)}" width="${f(s * .08)}" height="${f(s)}" fill="#fff" stroke="#f5c6d6"/><circle cx="${f(x)}" cy="${f(y - s * 1.1)}" r="${f(s * .32)}" fill="${['#ff8fb6', '#9fd8ff', '#ffd36b'][(r() * 3) | 0]}"/><path d="M${f(x - s * .18)} ${f(y - s * 1.1)}a${f(s * .18)} ${f(s * .18)} 0 1 1 ${f(s * .18)} ${f(s * .18)}" stroke="#fff" stroke-width="${f(s * .07)}" fill="none"/></g>`, (x, y, s, r) => `<g><circle cx="${f(x)}" cy="${f(y - s * .3)}" r="${f(s * .32)}" fill="#e8b27a"/><circle cx="${f(x)}" cy="${f(y - s * .3)}" r="${f(s * .27)}" fill="${['#ff9fc5', '#a8e0ff', '#c7b2ff'][(r() * 3) | 0]}"/><circle cx="${f(x)}" cy="${f(y - s * .3)}" r="${f(s * .1)}" fill="#fff4f8"/></g>`, (x, y, s, r) => sparkle(x, y - s * .5, s * .15, '#fff', '')],
+  sea: [(x, y, s, r) => fish(x, y - s * .4, s * .5, ['#ffd36b', '#ff9fb0', '#b9a4ff', '#9fe6ff'][(r() * 4) | 0], ''), (x, y, s) => `<path d="M${f(x)} ${f(y)}q${f(-s * .2)} ${f(-s * .4)} 0 ${f(-s * .8)}t0 ${f(-s * .7)}" stroke="#6fd39b" stroke-width="${f(s * .12)}" fill="none" stroke-linecap="round"/>`, (x, y, s) => `<g fill="none" stroke="#ff8fa3" stroke-width="${f(s * .1)}" stroke-linecap="round"><path d="M${f(x)} ${f(y)}V${f(y - s * .7)}M${f(x)} ${f(y - s * .35)}l${f(-s * .25)} ${f(-s * .25)}M${f(x)} ${f(y - s * .5)}l${f(s * .28)} ${f(-s * .25)}"/></g>`, (x, y, s) => `<circle cx="${f(x)}" cy="${f(y - s * .5)}" r="${f(s * .12)}" fill="none" stroke="#fff" stroke-width="2"/>`],
+  garden: [(x, y, s, r) => flower(x, y - s * .6, s * .3, ['#ff8fb6', '#ffd36b', '#b9a4ff', '#ff9f7a'][(r() * 4) | 0]), (x, y, s, r) => flower(x, y - s * .2, s * .2, ['#fff', '#ffb3c6'][(r() * 2) | 0], '#ffd76a', false), (x, y, s) => bunny(x, y, s * .45)],
+  festival: [(x, y, s, r) => `<g><ellipse cx="${f(x)}" cy="${f(y - s * .5)}" rx="${f(s * .25)}" ry="${f(s * .3)}" fill="${r() < .5 ? '#ff6b6b' : '#ffe08a'}"/><rect x="${f(x - s * .04)}" y="${f(y - s * .85)}" width="${f(s * .08)}" height="${f(s * .08)}" fill="#3b2b4b"/></g>`, (x, y, s) => fish(x, y - s * .3, s * .3, '#ff7b5c', ''), (x, y, s) => star(x, y - s * .5, s * .15, '#ffd36b')],
+  autumn: [(x, y, s, r) => tree(x, y, s * 1.3, ['#ff9f5c', '#ffcf5c', '#ff7b5c'][(r() * 3) | 0], '#8f5b3e'), (x, y, s, r) => mushroom(x, y, s * .55, ['#ff7b6b', '#ffb35c', '#c38fff'][(r() * 3) | 0]), (x, y, s) => `<path d="M${f(x)} ${f(y - s * .3)}q${f(s * .2)} ${f(-s * .2)} ${f(s * .4)} 0q${f(-s * .2)} ${f(s * .2)} ${f(-s * .4)} 0Z" fill="#ff7b5c"/>`],
+  snow: [(x, y, s) => `<g><path d="M${f(x)} ${f(y - s * 1.2)}l${f(s * .4)} ${f(s * .55)}h${f(-s * .15)}l${f(s * .3)} ${f(s * .45)}h${f(-s * 1.1)}l${f(s * .3)} ${f(-s * .45)}h${f(-s * .15)}Z" fill="#6fae9a"/><path d="M${f(x)} ${f(y - s * 1.2)}l${f(s * .2)} ${f(s * .28)}h${f(-s * .4)}Z" fill="#fff"/></g>`, (x, y, s) => `<g><circle cx="${f(x)}" cy="${f(y - s * .3)}" r="${f(s * .3)}" fill="#fff" stroke="#dde6ff" stroke-width="2"/><circle cx="${f(x)}" cy="${f(y - s * .75)}" r="${f(s * .22)}" fill="#fff" stroke="#dde6ff" stroke-width="2"/>${face(x, y - s * .76, s * .1)}</g>`, (x, y, s, r) => house(x, y, s * .9, '#ffe1c4', '#e36f6f', true)],
+  stars: [(x, y, s, r) => star(x, y - s * .5, s * (.15 + r() * .12), ['#ffe27a', '#ffd1e8', '#c6e6ff'][(r() * 3) | 0], 'twinkle'), (x, y, s) => sparkle(x, y - s * .4, s * .2, '#fff'), (x, y, s) => `<circle cx="${f(x)}" cy="${f(y - s * .4)}" r="${f(s * .18)}" fill="#c7a8ff"/><ellipse cx="${f(x)}" cy="${f(y - s * .4)}" rx="${f(s * .32)}" ry="${f(s * .08)}" fill="none" stroke="#ffd36b" stroke-width="2"/>`],
+  castle: [(x, y, s, r) => star(x, y - s * .5, s * .16, '#ffe27a'), (x, y, s, r) => `<g><rect x="${f(x - s * .2)}" y="${f(y - s * .8)}" width="${f(s * .4)}" height="${f(s * .8)}" fill="#fff4fb" stroke="#f0cfe3"/><path d="M${f(x - s * .3)} ${f(y - s * .8)}L${f(x)} ${f(y - s * 1.3)}L${f(x + s * .3)} ${f(y - s * .8)}Z" fill="${r() < .5 ? '#c38fff' : '#ff8fb6'}"/></g>`, (x, y, s) => cloud(x, y - s * .4, s / 120, '#fff', .9, '')],
+};
+function deco(theme, x, y, s, r) { const L = DECO[theme] || DECO.forest; return L[(r() * L.length) | 0](x, y, s, r); }
+
+const THEMES = ['forest', 'harbor', 'sweets', 'sea', 'garden', 'festival', 'autumn', 'snow', 'stars', 'castle'];
+function svg(name, W, H, variant, tod) {
+  const fn = S[name] || S.daily;
+  if (name === 'daily' && tod === 'night') variant = 'h';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${fn(W, H, variant)}${timeLayer(name, W, H, tod, variant)}</svg>`;
+}
+window.SudokuBG = { THEMES, svg, deco, rng: R };
 })();

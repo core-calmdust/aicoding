@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Icons Preview</title>
+<style>
+body{margin:0;padding:16px;background:#fbf7fc;font-family:system-ui,sans-serif;color:#4a3846}
+h2{margin:18px 0 8px;font-size:18px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--w,104px),1fr));gap:10px}
+.c{text-align:center;font-size:10px;line-height:1.25}
+.c svg{display:block;margin:0 auto 3px;width:var(--s,96px);height:var(--s,96px)}
+.c small{color:#998;display:block}
+#st{font-size:12px;color:#866}
+</style></head><body>
+<div id="st"></div><div id="out"></div>
+<script src="../icons.js"></script>
+<script>
+const I = window.SudokuIcons, q = new URLSearchParams(location.search);
+const only = q.get('r'), size = +q.get('s') || 96, still = q.has('still'), sil = q.has('sil'), from = +q.get('from') || 0, to = q.has('to') ? +q.get('to') : 499;
+document.documentElement.style.setProperty('--s', size + 'px'); document.documentElement.style.setProperty('--w', (size + 8) + 'px');
+let t0 = performance.now(); for (let i = 0; i < 500; i++) I.svg(i); const t1 = performance.now() - t0;
+t0 = performance.now(); for (let i = 0; i < 500; i++) I.svg(i, { uid: 'x' + i }); const t2 = performance.now() - t0;
+document.getElementById('st').textContent = `cold ${t1.toFixed(1)} ms / cached ${t2.toFixed(1)} ms for 500`;
+window.__timing = { cold: t1, cached: t2 };
+let h = '';
+for (const r of I.RARITIES) {
+  if (only && only !== r) continue;
+  const ids = I.byRarity(r).filter(id => id >= from && id <= to);
+  if (!ids.length) continue;
+  h += `<h2>${r} (${I.byRarity(r).length})</h2><div class="g">` + ids.map(id => { const n = I.info(id); return `<div class="c">${sil ? I.silhouette(id) : I.svg(id, { still, uid: 'p' + id })}<b>${n.name('ja')}</b><small>${n.name('en')}</small></div>`; }).join('') + '</div>';
+}
+document.getElementById('out').innerHTML = h;
+</script></body></html>
