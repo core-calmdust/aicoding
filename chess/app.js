@@ -1235,31 +1235,41 @@ function openingAnswer(P, m, pos) {
 let PUZZLES = null;
 const puzzlesReady = fetch('puzzles.json?v=20261019g').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
+// progress: { "level-index": stars 0..3 } (old saves stored true = solved, read as ★3)
+const pzKey = (i, j) => `${i}-${j}`;
+const starVal = x => x === true ? 3 : (+x || 0);
+function pzRecs(i, pr) { pr = pr || pzProgress(); return PUZZLES.levels[i].puzzles.map((_, j) => starVal(pr[pzKey(i, j)])); }
+// card colour from difficulty: mate length (1..4) or the tactics rating band
+function themeTier(L) { if (L.kind === 'line') { const m = (L.band[0] + L.band[1]) / 2; return Math.max(0, Math.min(5, Math.floor((m - 700) / 300))); } return Math.max(0, Math.min(5, Math.round(((L.n || 1) - 1) * 1.4))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
-  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
+  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo(); PZBook.setLang(LANG);
   $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${pzName(dl.L)} · ${PUZZLES.levels[dl.L].kind === 'line' ? pzSub(dl.L) : t('pz.winIn', { n: PUZZLES.levels[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
-    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length, prev = PUZZLES.levels[i - 1];
+    const prev = PUZZLES.levels[i - 1];
     let head = '';
     if (i === 0) head = `<p class="ls-course"><b>${t('pz.mateHead')}</b><small>${t('pz.mateHeadSub')}</small></p>`;
     if (L.kind === 'line' && (!prev || prev.kind !== 'line')) head = `<p class="ls-course"><b>${t('pz.tacHead')}</b><small>${t('pz.tacHeadSub')}</small></p>`;
-    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${pzNo(i)}</span><span class="tx"><b>${pzName(i)}</b><small>${pzSub(i)}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+    return head + PZBook.card({ i, no: pzNo(i), name: pzName(i), sub: pzSub(i), recs: pzRecs(i, pr), tier: themeTier(L) });
   }).join('') + (PUZZLES.levels.some(L => L.kind === 'line') ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit')}</p>` : '');
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
-$('#pzLevels').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i); };
+$('#pzLevels').onclick = e => { const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i); };
 function pzNo(i) { const L = PUZZLES.levels[i]; let k = 0; for (let q = 0; q <= i; q++) if ((PUZZLES.levels[q].kind || 'mate') === (L.kind || 'mate')) k++; return k; }
 function pzName(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('pz.tlevel' + pzNo(i)) : t('pz.level' + (i + 1)); }
 function pzSub(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('pz.tsub', { a: L.band[0], b: L.band[1] }) : t('pz.levelSub', { n: L.n }); }
-function openPzGrid(i) {
-  pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
+function openPzGrid(i, cur) {
+  pzLevel = i; const L = PUZZLES.levels[i]; PZBook.setLang(LANG);
   $('#pzLevelTitle').textContent = pzName(i) + ' — ' + (L.kind === 'line' ? pzSub(i) : t('pz.winIn', { n: L.n }));
-  $('#pzGrid').innerHTML = L.puzzles.map((_, j) => `<button data-j="${j}" class="${pr[`${i}-${j}`] ? 'solved' : ''}">${j + 1}</button>`).join('');
+  $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(i), cur });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
-$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzLevel, +b.dataset.j); };
+$('#pzGrid').onclick = e => {
+  const b = e.target.closest('button[data-j]'); if (!b) return;
+  if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
+  startPuzzle(pzLevel, +b.dataset.j);
+};
 $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(L, j, daily) {
@@ -1269,7 +1279,7 @@ function startPuzzle(L, j, daily) {
   if (P.line) {
     // tactics: the opponent's last move is shown first, then you play the solution line
     const me = P.fen.split(' ')[1] === 'b' ? P1 : P2;
-    puzzle = { L, j, P, me, n: P.line.length >> 1, line: true, k: 1, state: 'play', busy: true, used: 0, daily: daily || null, hinted: false };
+    puzzle = { L, j, P, me, n: P.line.length >> 1, line: true, k: 1, state: 'play', busy: true, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
     document.body.classList.add('in-puzzle');
     enterSpecial(P.fen);
     update(false); renderPuzzleCard(); pzStatus(t('pz.tStart'));
@@ -1277,7 +1287,7 @@ function startPuzzle(L, j, daily) {
     setTimeout(() => { if (puzzle !== Pz) return; playMove2(posAt(0).pos.fromUci(P.line[0])); setTimeout(() => { if (puzzle !== Pz) return; Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay()); }, moveDur()); }, 450);
     return;
   }
-  puzzle = { L, j, P, me: P.fen.split(' ')[1] === 'b' ? P2 : P1, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false };
+  puzzle = { L, j, P, me: P.fen.split(' ')[1] === 'b' ? P2 : P1, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.fen);
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
@@ -1291,7 +1301,7 @@ async function linePuzzleMove(m) {
   const st = statusAt(cur), ok = m === exp || (last && st.over && st.winner === Pz.me);
   renderPuzzleCard();
   if (!ok) {
-    Pz.state = 'fail';
+    Pz.state = 'fail'; Pz.failed = true;
     await sleep(moveDur() + 400); if (puzzle !== Pz) return;
     moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--; Pz.busy = false;
     lessonMarks = [{ arrow: [mFrom(exp), mTo(exp)], cls: '' }, { at: mTo(exp), cls: 'ok' }, { arrow: [mFrom(m), mTo(m)], cls: 'ng' }];
@@ -1307,12 +1317,12 @@ async function linePuzzleMove(m) {
   pzStatus(t('pz.tYourMove', { n: Pz.n - Pz.used }));
 }
 function renderPuzzleCard() {
-  const Pz = puzzle, L = PUZZLES.levels[Pz.L];
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${pzName(Pz.L)} · No.${Pz.j + 1}`;
+  const Pz = puzzle, L = PUZZLES.levels[Pz.L]; PZBook.setLang(LANG);
+  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${pzName(Pz.L)} · ${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1}`;
   $('#pzTitle').textContent = Pz.line ? t('pz.tTitle') : t('pz.winIn', { n: Pz.n });
   $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${Pz.line ? t('pz.tGoal', { c: pname(Pz.me), n: Pz.n }) : t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
-  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.L + 1 >= PUZZLES.levels.length);
+  $('#pzNext').disabled = !!Pz.daily || Pz.j + 1 >= L.puzzles.length || !PZBook.isOpen(pzRecs(Pz.L), Pz.j + 1);
   $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.busy;
   renderInfo();
 }
@@ -1333,7 +1343,7 @@ async function puzzleMove(m) {
   const e = list.find(x => x.m === m);
   if (!e || !e.need || e.need > left) {
     const good = list.filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
-    Pz.state = 'fail'; Pz.busy = false;
+    Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
     await sleep(moveDur() + 400); if (puzzle !== Pz) return;
     moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
     if (good[0]) lessonMarks.push({ arrow: [mFrom(good[0].m), mTo(good[0].m)], cls: '' }, { at: mTo(good[0].m), cls: 'ok' });
@@ -1356,16 +1366,24 @@ function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(); pr[`${Pz.L}-${Pz.j}`] = true;
+  const pr = pzProgress(), k = pzKey(Pz.L, Pz.j), stars = PZBook.starsFor(Pz);
+  const before = pzRecs(Pz.L, pr);
+  pr[k] = Math.max(starVal(pr[k]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
+  const after = pzRecs(Pz.L, pr), ev = PZBook.events(before, after, Pz.j);
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
+  PZBook.setLang(LANG);
   const th = Pz.line ? themeText(Pz.P) : '';
-  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${Pz.line ? t('pz.tSolved', { r: Pz.P.r }) : t('pz.solvedSub', { n: Pz.used })}` + (th ? `<br><small style="color:var(--dim)">${t('pz.theme')}: ${th}</small>` : '') + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
-  playChime(true); confetti(); renderPuzzleCard();
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${Pz.line ? t('pz.tSolved', { r: Pz.P.r }) : t('pz.solvedSub', { n: Pz.used })}` + (th ? `<br><small style="color:var(--dim)">${t('pz.theme')}: ${th}</small>` : '') + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }));
+  playChime(true); confetti(); if (ev.length) setTimeout(confetti, 600); renderPuzzleCard();
 }
-$('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hinted; startPuzzle(puzzle.L, puzzle.j, puzzle.daily); puzzle.hinted = h; } };
-$('#pzNext').onclick = () => { if (!puzzle) return; let { L, j } = puzzle; j++; if (j >= PUZZLES.levels[L].puzzles.length) { L++; j = 0; } if (L < PUZZLES.levels.length) startPuzzle(L, j); };
-$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.L); };
+$('#pzRetry').onclick = () => { if (puzzle) { const { hinted: h, failed: f, answered: a } = puzzle; startPuzzle(puzzle.L, puzzle.j, puzzle.daily); Object.assign(puzzle, { hinted: h, failed: f || puzzle.state !== 'play', answered: a }); } };
+$('#pzNext').onclick = () => {
+  if (!puzzle || puzzle.daily) return;
+  const { L, j } = puzzle;
+  if (j + 1 < PUZZLES.levels[L].puzzles.length && PZBook.isOpen(pzRecs(L), j + 1)) startPuzzle(L, j + 1);
+};
+$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.L, puzzle.j); };
 $('#pzQuit').onclick = () => quitSpecial();
 $('#pzHint').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.state !== 'play' || Pz.busy) return;
@@ -1377,7 +1395,7 @@ $('#pzHint').onclick = async () => {
 };
 $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.busy) return;
-  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; lessonMarks = []; hintList = null;
+  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.answered = true; lessonMarks = []; hintList = null;
   moves = []; cur = 0; Pz.used = 0; update(false); renderPuzzleCard(); pzStatus(t('pz.showing'));
   if (Pz.line) {
     for (let k = 0; k < Pz.P.line.length; k++) { await sleep(k ? 700 : 300); if (puzzle !== Pz) return; playMove2(posAt(cur).pos.fromUci(Pz.P.line[k])); if (k & 1) Pz.used++; renderPuzzleCard(); }
