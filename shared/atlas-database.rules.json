@@ -6,9 +6,13 @@
         ".write": "auth != null && auth.uid === $uid",
         "kv": {
           "$key": {
-            ".validate": "newData.hasChildren(['v', 't']) && newData.child('v').isString() && newData.child('v').val().length < 400000 && newData.child('t').isNumber()"
+            ".validate": "$key.length <= 200 && newData.hasChildren(['v', 't']) && newData.child('v').isString() && newData.child('v').val().length < 400000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000",
+            "v": { ".validate": true },
+            "t": { ".validate": true },
+            "$other": { ".validate": false }
           }
-        }
+        },
+        "$other": { ".validate": false }
       }
     }
   }
