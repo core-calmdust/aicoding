@@ -166,7 +166,29 @@ static int egProbe(const Pos *p) {
 static inline int egScore(int v, int ply) { return v == 0 ? 0 : v < 128 ? WIN - ply - v : -(WIN - ply - (v - 128)); }
 
 // ---------------------------------------------------------------- evaluation (side to move), same as engine.js
+// learned evaluation for nine men's morris (optional): 71 inputs -> H ReLU -> 1, weights set by the host
+#define NET_HMAX 128
+static float NETW[71 * NET_HMAX + 2 * NET_HMAX + 1]; static int netH = 0;
+EXPORT(net_ptr) float *net_ptr(void) { return NETW; }
+EXPORT(net_on) void net_on(int h) { netH = h; }
+static int netEval(const Pos *p) {
+  int H = netH, s = p->side, o = 3 - s; const float *W1 = NETW, *B1 = NETW + 71 * H, *W2 = B1 + H; float b2 = W2[H];
+  float acc[NET_HMAX];
+  for (int k = 0; k < H; k++) acc[k] = B1[k];
+#define ADDR(r) do { const float *w = W1 + (r) * H; for (int k = 0; k < H; k++) acc[k] += w[k]; } while (0)
+  for (u32 x = p->bb[s]; x; x &= x - 1) ADDR(__builtin_ctz(x));
+  for (u32 x = p->bb[o]; x; x &= x - 1) ADDR(24 + __builtin_ctz(x));
+  ADDR(48 + p->hand[s]); ADDR(58 + p->hand[o]);
+  if (!p->hand[s] && p->cnt[s] == 3) ADDR(68);
+  if (!p->hand[o] && p->cnt[o] == 3) ADDR(69);
+  if (p->hand[s] || p->hand[o]) ADDR(70);
+#undef ADDR
+  float out = b2; for (int k = 0; k < H; k++) if (acc[k] > 0) out += acc[k] * W2[k];
+  int v = (int)(out * 200.0f + (out >= 0 ? 0.5f : -0.5f));
+  return v > 20000 ? 20000 : v < -20000 ? -20000 : v;
+}
 static int evaluate(const Pos *p) {
+  if (netH && N == 24 && NM == 16) return netEval(p);
   int s = p->side, o = 3 - s; u32 S = p->bb[s], O = p->bb[o], E = ALL & ~(S | O);
   int sc = 100 * ((p->cnt[s] + p->hand[s]) - (p->cnt[o] + p->hand[o]));
   int placing = p->hand[1] > 0 || p->hand[2] > 0;

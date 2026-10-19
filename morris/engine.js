@@ -641,9 +641,17 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   // load the WebAssembly search; until it is ready (or if it fails) the JS search is used
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } };
-    const url = new URL('engine.wasm?v=20261019w', self.location.href);
+    const url = new URL('engine.wasm?v=20261019n', self.location.href);
     (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
-      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+      .then(r => {
+        WX = r.instance.exports;
+        // learned evaluation for nine men's morris (MNN1: H, then 71*H + 2*H + 1 float32)
+        return fetch(new URL('evalnet.bin?v=1', self.location.href)).then(x => x.ok ? x.arrayBuffer() : null).then(b => {
+          if (!b) return; const dv = new DataView(b); if (dv.getUint32(0, true) !== 0x314E4E4D) return;
+          const H = dv.getUint32(4, true), f = new Float32Array(b, 8, 71 * H + 2 * H + 1);
+          new Float32Array(WX.memory.buffer, WX.net_ptr(), f.length).set(f); WX.net_on(H);
+        }).catch(() => {});
+      }).catch(() => { WX = null; });
   }
   self.onmessage = e => {
     const m = e.data;
