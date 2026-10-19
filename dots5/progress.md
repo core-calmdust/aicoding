@@ -38,6 +38,9 @@
 - 実行中: m10_v1_vs_lv8.jsonl（v1 Lv10 vs Lv8, 100局）。再開: timeout 2400 node match.js .../m10_v1_vs_lv8.jsonl 100 .../v1/engine.js,10,1,1 .../engine.orig.js,8,0,1
 - 残り: Lv9 新旧(〜40局), ポンダー効果(PONDER=5000, 〜30局), rated.jsの5×5 Lv9/10暫定レート見直し, 最終報告
 
+- [01:00] m10_v1_vs_lv8: 42局 32勝10敗(76%)。注意: `while pgrep -f "<文字列>"` は自分自身のコマンド行にもマッチして永久待ちになる（ジョブ2が始まらなかった）。直接起動すること。
+- [01:00] 並行で m9_v1_vs_old.jsonl（Lv9 新vs旧 40局）開始。
+
 ## ファイル
 - dots5src/match.js（対局, 再開可）, agent.js, stats.js, decide.js, mkset.js, evaltest.js, evalsum.js, outc.c（ネイティブオラクル）, bench.js
 - engine.orig.js = 作業前のengine.js（旧Lv10比較用。dots5src内にあり）
