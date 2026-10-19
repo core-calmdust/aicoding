@@ -697,10 +697,24 @@ body.in-lesson .controls{display:none}
 }
 }
 
+/* rules page */
+#rulesOverlay .modal{width:min(900px,100%)}
+.rl-lead{font-size:14.5px;line-height:1.8;color:#d6dfd9;margin:-6px 0 14px}
+.rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width: 620px){.rl-grid{grid-template-columns:1fr}}
+.rl-item{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);padding:10px 12px}
+.rl-item h4{font-size:13.5px;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
+.rl-item p{font-size:13px;line-height:1.7;color:#d6dfd9}
+.rl-item p b{color:var(--accent)}
+.rl-item svg{display:block;width:min(210px,100%);height:auto;margin:6px auto}
+.rl-pair{display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 0}
+.rl-pair svg{width:calc(50% - 14px);max-width:200px;margin:0}
+.rl-to{color:var(--accent);font-size:18px;flex:none}
+
 /* PC: use the browser width for the lesson / puzzle / opening dialogs (phones keep the single-column layout) */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
-  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal, #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
   #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
@@ -1049,7 +1063,7 @@ body.has-clk .player .status{grid-area:st}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 id="lsListTitle"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" id="lsListDesc"></p>
       <div class="lesson-list" id="lessonList"></div>
@@ -1073,7 +1087,7 @@ body.has-clk .player .status{grid-area:st}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -1084,6 +1098,16 @@ body.has-clk .player .status{grid-area:st}
       <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
+  </div>
+</div>
+
+<!-- rules (illustrated) -->
+<div class="overlay" id="rulesOverlay">
+  <div class="modal">
+    <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+    <h2 data-i18n="rl.title"></h2>
+    <div id="rulesBody"></div>
+    <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
   </div>
 </div>
 
@@ -1177,8 +1201,9 @@ body.has-clk .player .status{grid-area:st}
   </div>
 </div>
 
-<script src="i18n.js?v=20261019pz"></script>
+<script src="i18n.js?v=20261020rl"></script>
 <script src="../shared/pzbook.js?v=2"></script>
+<script src="../shared/rulesoffer.js?v=2"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020pr"></script>
 <script>
@@ -2120,12 +2145,101 @@ const curSets = () => lessonSrc === 'open' ? (openData ? openData.sets : []) : (
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const instant = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  const instant = on => ['#lessonOverlay', '#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   instant(true);
-  if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); openPuzzles(); }
+  if (b.dataset.v !== 'rules') hideOverlay('#rulesOverlay');
+  if (b.dataset.v === 'rules') { hideOverlay('#lessonOverlay'); hideOverlay('#puzzleOverlay'); openRules(); }
+  else if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); openPuzzles(); }
   else { hideOverlay('#puzzleOverlay'); b.dataset.v === 'open' ? openOpenings() : openLessons(); }
   setTimeout(() => instant(false), 120);
 }));
+// ====================================================================== rules (illustrated)
+// position from 8 strings ('B' black, 'W' white, '.' empty) -> 64 cells
+const rlPos = rows => rows.join('').split('').map(ch => ch === 'B' ? BLACK : ch === 'W' ? WHITE : 0);
+const rlSq = n => 'abcdefgh'.indexOf(n[0]) + (+n.slice(1) - 1) * 8;
+// small board picture. o.crop = [r0, c0, h, w], o.marks = {sq: 'ring'|'x'|'new'|'flip'|'good'|'bad'|'warn'}, o.arrows = [[fromSq, toSq]], o.coords, o.foot = [black, white]
+function rlSVG(cells, o) {
+  o = o || {};
+  const [r0, c0, h, w] = o.crop || [0, 0, 8, 8], u = 26, cp = o.coords ? 14 : 0, pad = 4;
+  const W = w * u + pad * 2 + cp, H = h * u + pad * 2 + cp + (o.foot ? 26 : 0);
+  const X = c => pad + cp + (c - c0) * u, Y = r => pad + cp + (r - r0) * u;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  s += `<rect x="${X(c0) - 2}" y="${Y(r0) - 2}" width="${w * u + 4}" height="${h * u + 4}" rx="5" fill="#155238" stroke="rgba(201,169,97,.55)"/>`;
+  s += `<rect x="${X(c0)}" y="${Y(r0)}" width="${w * u}" height="${h * u}" fill="#1d6b4c"/>`;
+  for (let i = 0; i <= w; i++) s += `<line x1="${X(c0 + i)}" y1="${Y(r0)}" x2="${X(c0 + i)}" y2="${Y(r0 + h)}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
+  for (let i = 0; i <= h; i++) s += `<line x1="${X(c0)}" y1="${Y(r0 + i)}" x2="${X(c0 + w)}" y2="${Y(r0 + i)}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
+  for (const [r, c] of [[2, 2], [2, 6], [6, 2], [6, 6]]) if (r > r0 && r < r0 + h && c > c0 && c < c0 + w) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="2.2" fill="rgba(0,0,0,.55)"/>`;
+  if (o.coords) {
+    for (let c = c0; c < c0 + w; c++) s += `<text x="${X(c) + u / 2}" y="${pad + 9}" font-size="9.5" text-anchor="middle" fill="#8fa39a" font-family="JetBrains Mono,monospace">${'abcdefgh'[c]}</text>`;
+    for (let r = r0; r < r0 + h; r++) s += `<text x="${pad + 5}" y="${Y(r) + u / 2 + 3.5}" font-size="9.5" text-anchor="middle" fill="#8fa39a" font-family="JetBrains Mono,monospace">${r + 1}</text>`;
+  }
+  const mk = o.marks || {};
+  const cx = q => X(q & 7) + u / 2, cy = q => Y(q >> 3) + u / 2;
+  for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) {
+    const q = r * 8 + c, v = cells[q], x = cx(q), y = cy(q), m = mk[q];
+    if (m === 'good' || m === 'bad' || m === 'warn') s += `<rect x="${X(c) + 1}" y="${Y(r) + 1}" width="${u - 2}" height="${u - 2}" rx="3" fill="${m === 'good' ? '#e2c275' : m === 'bad' ? '#e0574a' : '#f0883a'}" fill-opacity="${m === 'warn' ? .8 : .85}"/>`;
+    if (m === 'good') s += `<circle cx="${x}" cy="${y}" r="${u * 0.22}" fill="none" stroke="#5a4515" stroke-width="2"/>`;
+    if (m === 'bad') s += `<path d="M${x - 5},${y - 5}L${x + 5},${y + 5}M${x + 5},${y - 5}L${x - 5},${y + 5}" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
+    if (v) {
+      s += v === BLACK ? `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="#121413" stroke="#000" stroke-width="1"/><circle cx="${x - 3}" cy="${y - 3.5}" r="3" fill="rgba(255,255,255,.16)"/>`
+        : `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="#ecebe5" stroke="#9a9c95" stroke-width="1"/><circle cx="${x - 3}" cy="${y - 3.5}" r="3" fill="rgba(255,255,255,.8)"/>`;
+    }
+    if (m === 'ring') s += `<circle cx="${x}" cy="${y}" r="${u * 0.3}" fill="rgba(226,194,117,.18)" stroke="#e2c275" stroke-width="2" stroke-dasharray="3.5 2.5"/>`;
+    else if (m === 'new') s += `<circle cx="${x}" cy="${y}" r="${u * 0.46}" fill="none" stroke="#e2c275" stroke-width="2.4"/>`;
+    else if (m === 'flip') s += `<circle cx="${x}" cy="${y}" r="${u * 0.46}" fill="none" stroke="#ff6b5b" stroke-width="2.2"/>`;
+    else if (m === 'x') s += `<path d="M${x - 6},${y - 6}L${x + 6},${y + 6}M${x + 6},${y - 6}L${x - 6},${y + 6}" stroke="#ff6b5b" stroke-width="2.6" stroke-linecap="round"/>`;
+  }
+  for (const [f, tt] of o.arrows || []) {
+    const x1 = cx(f), y1 = cy(f), x2 = cx(tt), y2 = cy(tt), L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+    const sx = x1 + ux * 6, sy = y1 + uy * 6, ex = x2 - ux * 4, ey = y2 - uy * 4, hh = 5;
+    s += `<path d="M${sx},${sy}L${ex},${ey}M${ex - ux * hh - uy * hh},${ey - uy * hh + ux * hh}L${ex},${ey}L${ex - ux * hh + uy * hh},${ey - uy * hh - ux * hh}" stroke="#ffe9a8" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>`;
+  }
+  if (o.foot) {
+    const fy = Y(r0 + h) + 18, mid = X(c0) + (w * u) / 2;
+    s += `<circle cx="${mid - 46}" cy="${fy - 4}" r="7" fill="#121413" stroke="#8fa39a"/><text x="${mid - 34}" y="${fy}" font-size="13" font-weight="700" fill="#e8eee9" font-family="JetBrains Mono,monospace">${o.foot[0]}</text>`;
+    s += `<circle cx="${mid + 14}" cy="${fy - 4}" r="7" fill="#ecebe5" stroke="#9a9c95"/><text x="${mid + 26}" y="${fy}" font-size="13" font-weight="700" fill="#e8eee9" font-family="JetBrains Mono,monospace">${o.foot[1]}</text>`;
+  }
+  return s + '</svg>';
+}
+// before -> after (black plays sq): the played disc and the flipped discs are marked
+function rlPair(cells, sq, o) {
+  const fl = flipsOf(cells, sq, BLACK), after = cells.slice(); fl.forEach(q => (after[q] = BLACK)); after[sq] = BLACK;
+  const m1 = { [sq]: 'ring' }; fl.forEach(q => (m1[q] = 'flip'));
+  const m2 = { [sq]: 'new' };
+  return `<div class="rl-pair">${rlSVG(cells, { crop: o.crop, marks: m1, arrows: o.arrows })}<span class="rl-to">${document.documentElement.dir === 'rtl' ? '←' : '→'}</span>${rlSVG(after, { crop: o.crop, marks: m2 })}</div>`;
+}
+const RL = {
+  flip: rlPos(['........', '........', '........', '..BWWW..', '........', '........', '........', '........']),
+  multi: rlPos(['........', '...B....', '...W....', '....WB..', '..WW....', '.B......', '........', '........']),
+  no: rlPos(['........', '.BW.W...', '........', '..BWW...', '........', '...WW...', '........', '........']),
+  pass: rlPos(['........', '...W....', '...W.W..', '..WWW.W.', '...WBW.B', '.B.BBBBB', '..BBBBBB', '..BBBBBB']),
+  end: rlPos(['BBBBBBBW', 'BBWWWBBW', 'BBBBBBBW', 'BBBBWWBW', 'BWBBWBBW', 'BBWWWWWW', 'BBBWWWBW', 'WWWWWWBW']),
+};
+function rlItems() {
+  const it = (k, svg) => `<div class="rl-item"><h4>${t('rl.' + k + '.h')}</h4>${svg}<p>${t('rl.' + k)}</p></div>`;
+  const start = initialCells(), ms = {};
+  legalMoves(start, BLACK).forEach(q => (ms[q] = 'ring'));
+  const noM = {}; legalMoves(RL.no, BLACK).forEach(q => (noM[q] = 'ring'));
+  for (const n of ['f2', 'c6', 'f6']) noM[rlSq(n)] = 'x';
+  const tips = new Array(64).fill(0), tm = {};
+  for (const n of ['a1', 'h1', 'a8', 'h8']) tm[rlSq(n)] = 'good';
+  for (const n of ['b2', 'g2', 'b7', 'g7']) tm[rlSq(n)] = 'bad';
+  for (const n of ['b1', 'a2', 'g1', 'h2', 'a7', 'b8', 'h7', 'g8']) tm[rlSq(n)] = 'warn';
+  const [eb, ew] = counts(RL.end);
+  return [
+    it('board', rlSVG(start, { coords: true })),
+    it('legal', rlSVG(start, { marks: ms })),
+    it('flip', rlPair(RL.flip, rlSq('g4'), { crop: [2, 1, 3, 7] })),
+    it('multi', rlPair(RL.multi, rlSq('d4'), { crop: [0, 0, 7, 7] })),
+    it('no', rlSVG(RL.no, { crop: [0, 0, 7, 8], marks: noM })),
+    it('pass', rlSVG(RL.pass, {})),
+    it('end', rlSVG(RL.end, { foot: [eb, ew] })),
+    it('tips', rlSVG(tips, { marks: tm })),
+  ].join('');
+}
+function renderRules() { $('#rulesBody').innerHTML = `<p class="rl-lead">${t('rl.lead')}</p><div class="rl-grid">${rlItems()}</div>`; }
+function openRules() { selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
+$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
 async function openOpenings() {
   const d = await loadOpenings();
   lessonSrc = 'open'; selTab('open');
@@ -3513,7 +3627,7 @@ function onlineResign() {
 
 // clicking the dimmed area outside a dialog does the same as its close button
 function dismissOverlay(o) {
-  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', exportOverlay: '#exportClose', onlineOverlay: '#olClose', puzzleOverlay: '#pzClose' };
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', exportOverlay: '#exportClose', onlineOverlay: '#olClose', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose' };
   if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
   const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
   if (b) b.click(); else o.classList.remove('show');
@@ -3627,8 +3741,10 @@ if (SUPPORTED.includes(qLang)) { LANG = qLang; settings.lang = qLang; try { loca
 else if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 else { try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {} }
 applyI18n();
+if (window.RulesOffer) RulesOffer.init({ game: 'reversi', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
+  if ($('#rulesOverlay').classList.contains('show')) renderRules();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); segSync && Object.keys(draft).length && segSync();
   if (lesson && lesson.study) studyRender();
