@@ -4,3 +4,5 @@ const X = {"ja": {"tab.open": "定跡", "ls.desc": "ルールを知らない人�
 const I = window.I18N;
 for (const l in X) if (I[l]) Object.assign(I[l], X[l]);
 })();
+
+(function(){const A={"ja": "自動再生／停止（スペース）", "en": "Autoplay / stop (Space)", "zh": "自动播放／停止（空格）", "ko": "자동 재생/정지(스페이스)", "es": "Reproducción automática / parar (Espacio)", "fr": "Lecture auto / arrêt (Espace)", "pt": "Reprodução automática / parar (Espaço)", "de": "Automatisch abspielen / Stopp (Leertaste)", "hi": "अपने-आप चलाएँ / रोकें (Space)", "ar": "تشغيل تلقائي / إيقاف (مسافة)"};for(const l in A) if(window.I18N[l]) window.I18N[l]['op.auto']=A[l];})();

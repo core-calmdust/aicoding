@@ -303,6 +303,19 @@ a.snd.home{text-decoration:none}
 
 /* lesson & puzzle */
 .lesson-card,.puzzle-card{display:none}
+/* opening study: compact step bar under the board (phones) + autoplay */
+.st-nav{display:none;align-items:center;justify-content:center;gap:6px;direction:ltr}
+.st-nav button{width:42px;height:36px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent}
+.st-nav button:disabled{opacity:.35;pointer-events:none}
+.st-nav svg,#lsAuto svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st-nav .st-auto,#lsAuto{color:var(--accent);border-color:rgba(201,169,97,.55)}
+.st-nav .st-auto{width:54px}
+.st-nav .st-auto.on,#lsAuto.on{background:rgba(201,169,97,.2)}
+.st-nav .i-pause,#lsAuto .i-pause{display:none}
+.st-nav .on .i-pause,#lsAuto.on .i-pause{display:block}.st-nav .on .i-play,#lsAuto.on .i-play{display:none}
+.st-pos{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--dim);min-width:58px;text-align:center;white-space:nowrap}
+.lesson-actions #lsAuto{flex:0 0 46px;padding:0;display:flex;align-items:center;justify-content:center}
+.lesson-actions #lsAuto.hidden{display:none}
 body.in-lesson .lesson-card{display:block}
 body.in-puzzle .puzzle-card{display:block}
 body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line, body.in-lesson .controls,
@@ -411,6 +424,9 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
   .lesson-card,.puzzle-card{order:0}
+  body.in-study .board-area{display:flex;flex-direction:column;gap:6px}
+  body.in-study .st-nav{display:flex}
+  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:1}
   #evalCard{order:2}
   .review-card{order:3}
@@ -486,7 +502,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* PC: use the browser width for the lesson / puzzle dialogs (phones keep the single-column layout) */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
-  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal, #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
   #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
@@ -573,6 +589,7 @@ body .info-line{font-size:12.5px}
         <button id="btnLatest" data-i18n="review.latest"></button>
       </div>
     </div>
+    <div class="st-nav" id="stNav" dir="ltr"><button data-sn="first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button><button data-sn="prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button><button data-sn="auto" class="st-auto"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button data-sn="next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button><button data-sn="last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button><span class="st-pos" id="stPos"></span></div>
   </div>
 
   <aside class="side">
@@ -589,6 +606,7 @@ body .info-line{font-size:12.5px}
       <div class="lesson-fb" id="lsFb"></div>
       <div class="lesson-actions">
         <button id="lsHint" data-i18n="ls.hint"></button>
+        <button id="lsAuto" class="ls-auto hidden"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
         <button id="lsNext" class="go"></button>
         <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
@@ -718,6 +736,7 @@ body .info-line{font-size:12.5px}
 <!-- rules -->
 <div class="overlay" id="rulesOverlay">
   <div class="modal">
+    <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
     <h2 data-i18n="rl.title"></h2>
     <div class="seg" id="rulesTabs"></div>
     <div id="rulesBody" style="margin-top:14px"></div>
@@ -729,7 +748,7 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <div class="seg var-tabs" id="lsVarTabs"></div>
       <h2 id="lsListTitle" data-i18n="ls.title"></h2>
       <p id="lsListDesc" style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
@@ -754,7 +773,7 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <div class="seg var-tabs" id="pzVarTabs"></div>
       <h2 data-i18n="pz.title"></h2>
       <p id="pzDesc" style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
@@ -805,7 +824,7 @@ body .info-line{font-size:12.5px}
 </div>
 
 <script src="i18n.js?v=20261019ll"></script>
-<script src="i18n_more.js?v=20261019b"></script>
+<script src="i18n_more.js?v=20261020st"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="engine.js?v=20261019n"></script>
 <script>
@@ -1284,7 +1303,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); }
+function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); }
 
 // ====================================================================== input
 function pointAt(clientX, clientY) {
@@ -1505,8 +1524,10 @@ $('#btnRules').onclick = () => openRules(gv);
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  const inst = on => ['#lessonOverlay', '#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
+  if (b.dataset.v !== 'rules') $('#rulesOverlay').classList.remove('show');
+  if (b.dataset.v === 'rules') { $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show'); openRules(gv); }
   if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
   if (b.dataset.v === 'lesson') { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
   if (b.dataset.v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
@@ -1586,7 +1607,7 @@ function ruleItems(r) {
   return items.join('');
 }
 let rulesTab = 'nine';
-function openRules(r) { rulesTab = RULE_ORDER.includes(r) ? r : 'nine'; renderRules(); showOverlay('#rulesOverlay'); }
+function openRules(r) { rulesTab = RULE_ORDER.includes(r) ? r : 'nine'; selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
 function renderRules() {
   $('#rulesTabs').innerHTML = RULE_ORDER.map(r => `<button data-r="${r}" class="${r === rulesTab ? 'sel' : ''}">${t('rule.' + r)}</button>`).join('');
   const r = rulesTab;
@@ -1902,7 +1923,46 @@ function showStudy(anim) {
   $('#lsPrompt').innerHTML = `<div class="ls-goal">${pr}</div>`; $('#lsFb').innerHTML = fb;
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
   $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
+  stSync();
 }
+// ---- opening study: compact step bar (phones) + autoplay (about one move every 1.2 s; any tap / key stops it)
+var stTimer = 0;
+function stStop() { if (stTimer) { clearInterval(stTimer); stTimer = 0; } stSync(); }
+function stTo(to) {
+  const N = lesson.g.study.line.length;
+  if (to < 0 || to > N || to === lesson.i) return;
+  const one = to === lesson.i + 1; lesson.i = to; showStudy(one);
+}
+function stGo(what) {
+  if (!lesson || !lesson.study) return;
+  const N = lesson.g.study.line.length;
+  if (what === 'auto') {
+    if (stTimer) { stStop(); return; }
+    if (lesson.i >= N) { lesson.i = 0; showStudy(false); }
+    const L0 = lesson;
+    stTimer = setInterval(() => { if (lesson !== L0 || !lesson.study || lesson.i >= N) { stStop(); return; } stTo(lesson.i + 1); if (lesson.i >= N) stStop(); }, 1200);
+    stSync(); return;
+  }
+  if (stTimer) stStop();
+  stTo(what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? lesson.i - 1 : lesson.i + 1);
+}
+function stSync() {
+  const on = !!(lesson && lesson.study), nav = document.getElementById('stNav'), au = document.getElementById('lsAuto');
+  if (!nav || !au) return;
+  document.body.classList.toggle('in-study', on);
+  au.classList.toggle('hidden', !on);
+  if (!on) { document.body.classList.remove('st-end'); if (stTimer) { clearInterval(stTimer); stTimer = 0; } return; }
+  const N = lesson.g.study.line.length, i = lesson.i, q = k => nav.querySelector('[data-sn="' + k + '"]');
+  document.body.classList.toggle('st-end', i >= N);
+  document.getElementById('stPos').textContent = i + ' / ' + N;
+  q('first').disabled = q('prev').disabled = i === 0;
+  q('next').disabled = q('last').disabled = i >= N;
+  for (const b of [q('auto'), au]) { b.classList.toggle('on', !!stTimer); b.title = t('op.auto'); b.setAttribute('aria-label', t('op.auto')); }
+  for (const k of ['first', 'prev', 'next', 'last']) q(k).title = t('nav.' + k);
+}
+$('#stNav').addEventListener('click', e => { const b = e.target.closest('button[data-sn]'); if (b) stGo(b.dataset.sn); });
+$('#lsAuto').onclick = () => stGo('auto');
+document.addEventListener('click', e => { if (stTimer && !e.target.closest('[data-sn="auto"],#lsAuto')) stStop(); }, true);
 $('#lsFb').addEventListener('click', e => {
   if (!e.target.closest('#lsPlayHere') || !lesson || !lesson.study) return;
   const mv = lesson.g.study.line.slice(0, lesson.i), side = mv.length % 2 === 0 ? P1 : P2;
@@ -2375,10 +2435,10 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.overlay.show')) return;
   // opening study: the arrow keys step through the line like the kifu (← → one move, ↓ ↑ first / last)
   if (lesson && lesson.study) {
-    const N = lesson.g.study.line.length, to = { ArrowLeft: lesson.i - 1, ArrowRight: lesson.i + 1, ArrowDown: 0, ArrowUp: N }[e.key];
-    if (to === undefined) return;
+    const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowDown: 'first', ArrowUp: 'last', ' ': 'auto' }[e.key];
+    if (k === undefined) return;
     e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
-    if (to >= 0 && to <= N && to !== lesson.i) { const one = to === lesson.i + 1; lesson.i = to; showStudy(one); }
+    stGo(k);
     return;
   }
   if (lesson || puzzle) return;
