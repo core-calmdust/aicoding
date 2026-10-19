@@ -2840,7 +2840,7 @@ function update(timestamp) {
             }
 
             if (chainEffectPending && visualBeat >= 1.0 && previousVisualBeat < 1.0) {
-                effects.push({ type: 'shockwave', x: 150, y: IS_MOBILE ? 145 : 65, life: 20, maxLife: 20, radius: 20, hud: true });
+                effects.push({ type: 'shockwave', x: 150, y: IS_MOBILE ? 170 : 65, life: 20, maxLife: 20, radius: 20, hud: true });
                 effects.push({ type: 'screenFlash', life: 8, maxLife: 8 });
                 chainEffectPending = false; // ★ 変更点: この行は元々ありましたが、この変更がパフォーマンス改善の鍵となります
             }
@@ -2995,7 +2995,7 @@ function formatTime(ms) {
 
 function drawChainComboText(renderCtx, count, alpha = 1.0) {
     const comboText = `${count} CHAIN COMBO!!`;
-    const baseFontSize = 16;
+    const baseFontSize = IS_MOBILE ? 22 : 16;
     const sizeStep = 2;
     const maxChainForSizing = 30;
     const chainLevel = Math.floor((Math.min(count, maxChainForSizing) - 1) / 5);
@@ -3038,7 +3038,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     renderCtx.fillStyle = gradient;
 
     drawWithGlow(renderCtx, () => {
-        renderCtx.fillText(textToDraw, 20, IS_MOBILE ? 150 : 70);
+        renderCtx.fillText(textToDraw, 20, IS_MOBILE ? 176 : 70);
     }, '#ffffcc', true);
 
     renderCtx.restore();
@@ -4970,7 +4970,7 @@ function draw() {
             renderCtx.font = `600 14px ${config.fontFamily}`;
             renderCtx.fillText(T('hud.approach', { name: boss.def.name }), HUD_W / 2, HUD_H / 2 + 20);
         }
-        const bw = 360, bh = 8, bx = HUD_W / 2 - bw / 2, by = tutorial ? tutPanelBottom + 28 : (IS_MOBILE ? 136 : 64);
+        const bw = 360, bh = 8, bx = HUD_W / 2 - bw / 2, by = tutorial ? tutPanelBottom + 28 : (IS_MOBILE ? 206 : 64); // スマホはMUTEKI・コンボ表示の下
         renderCtx.font = `600 10px ${config.fontFamily}`;
         renderCtx.textAlign = 'left';
         renderCtx.fillStyle = theme.ui;
@@ -5024,7 +5024,7 @@ function draw() {
         const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let displayText = "";
         const mainTextY = HUD_H / 2 + 30;
-        const subTextY = mainTextY + 25;
+        const subTextY = mainTextY + (IS_MOBILE ? 36 : 25);
         const transitionStart = 0.25;
         const transitionEnd = 0.75;
 
@@ -5048,7 +5048,7 @@ function draw() {
         
         renderCtx.save();
         renderCtx.textAlign = 'center';
-        renderCtx.font = `600 24px ${config.fontFamily}`;
+        renderCtx.font = `600 ${IS_MOBILE ? 38 : 24}px ${config.fontFamily}`;
         const totalWidth = renderCtx.measureText(displayText).width;
         let currentX = HUD_W / 2 - totalWidth / 2;
 
@@ -5065,10 +5065,10 @@ function draw() {
             currentX += charWidth;
         }
 
-        renderCtx.font = `600 10px ${config.fontFamily}`;
+        renderCtx.font = `600 ${IS_MOBILE ? 17 : 10}px ${config.fontFamily}`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = theme.ui;
-            renderCtx.fillText(T('hud.bonus'), HUD_W / 2, subTextY);
+            renderCtx.fillText(T('hud.bonus'), HUD_W / 2, subTextY, HUD_W - 24);
         }, theme.ui);
         renderCtx.restore();
     }
@@ -5128,11 +5128,11 @@ function draw() {
         if (player.invincibleTimer > 0 && gameMode !== 'STARTRAIL MODE') {
             mutekiY = HUD_H - 50 - 12 - 5 - 6;
         }
-        if (IS_MOBILE) mutekiY = 132; // スマホはボタンと重ならないよう上部のゲージ下に
+        if (IS_MOBILE) mutekiY = 142; // スマホはボタンと重ならないよう上部のゲージ下に
         const mutekiColor = `hsl(${(frameCount*3)%360},100%,70%)`;
         drawWithGlow(renderCtx, () => {
             renderCtx.fillStyle = mutekiColor;
-            renderCtx.font = `600 16px ${config.fontFamily}`;
+            renderCtx.font = `600 ${IS_MOBILE ? 22 : 16}px ${config.fontFamily}`;
             renderCtx.textAlign = 'left';
             renderCtx.fillText('MUTEKI', 20, mutekiY);
         }, mutekiColor, true);
@@ -5180,10 +5180,10 @@ function draw() {
             renderCtx.save();
             renderCtx.globalAlpha = a;
             renderCtx.textAlign = 'center';
-            renderCtx.font = `700 22px ${config.fontFamily}`;
+            renderCtx.font = `700 ${IS_MOBILE ? 28 : 22}px ${config.fontFamily}`;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = e.color;
-                renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2 + 90);
+                renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2 + (IS_MOBILE ? 112 : 90), HUD_W - 24);
             }, e.color);
             renderCtx.restore();
         } else if (e.type === 'comboFadeOut' && isEffectsEnabled) {
