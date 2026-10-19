@@ -100,7 +100,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019b'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261019c'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -1341,15 +1341,35 @@ function plainWhy(i, j) {
   if (lvl(tm) > lvl(tb)) extra = t(tm === 'five' ? 'rx.t.five' : kb === 'block' ? 'rx.t.three' : 'rx.t.win');
   return h + (extra ? ' ' + extra : '') + ' ' + t('rx.b.' + kb, { b });
 }
-// the move at the current position only (like shogi / chess): what the best move was and why
+// what a move does, in words (attack: five / four-three / four / three / two; defence: blocks a four / a four-three point / a three)
+function moveDesc(pos, m) {
+  const me = pos.side, op = 3 - me, i = E.M2I[m], a = pos.cls[me][i], d = pos.cls[op][i], out = [];
+  if (a === C.FIVE) return ['five'];
+  if (d === C.FIVE) out.push('block4');
+  else if (d === C.F4 || d === C.F43) out.push('blockwin');
+  else if (d === C.F3 || d === C.F33) out.push('block3');
+  if (a === C.F4 || a === C.F43) out.unshift('win');
+  else if (a === C.B4) out.push('four');
+  else if (a === C.F3 || a === C.F33) out.push('three');
+  else if (!out.length && (a === C.F2 || a === C.T3)) out.push('two');
+  return out.length ? out : ['quiet'];
+}
+const descText = (pos, m) => t('rx.does', { m: `<b>${sqName(m)}</b>`, d: moveDesc(pos, m).map(k => t('rx.m.' + k)).join(t('rx.and')) });
+const winPct = v => Math.round(50 + 50 * sOfV(v)) + '%';
+// the move at the current position (like shogi / chess): what the move does, the best move and why, win chances
 function rvExplainHtml() {
   if (!rv || rv.running || cur >= moves.length) return '';
   const j = rvJudge(cur); if (!j) return '';
-  const p = toMoveAt(cur), tag = j.q ? `<span class="tag ${j.q}">${t('q.' + j.q)}</span>` : '';
-  let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${cur + 1}. <i class="p${p}"></i><b>${sanOf(cur)}</b></span>${tag}</div>`;
+  const pos = posAt(cur), p = pos.side, q = j.q || (j.ok || j.best === j.m ? 'best' : 'good');
+  let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${cur + 1}. <i class="p${p}"></i><b>${sanOf(cur)}</b></span><span class="tag ${q}">${t('cq.' + q)}</span></div>`;
+  h += `<p>${descText(pos, j.m)}</p>`;
   if (j.best === j.m) h += `<p>${t('rv.ex.same')}</p>`;
-  else if (!j.q) h += `<p>${t('rv.ex.alt', { m: `<b class="bm">${sqName(j.best)}</b>` })}</p>`;
-  else h += `<p>${t('rv.ex.best', { m: `<b class="bm">${sqName(j.best)}</b>` })} <span class="ls">${j.desc}</span></p><p class="why">${plainWhy(cur, j)}</p>`;
+  else {
+    h += `<p>${t(j.q ? 'rv.ex.best' : 'rv.ex.alt', { m: `<b class="bm">${sqName(j.best)}</b>` })}${j.q ? ` <span class="ls">${j.desc}</span>` : ''}</p>`;
+    const same = moveDesc(pos, j.best).join() === moveDesc(pos, j.m).join();
+    h += j.q ? `<p class="why">${plainWhy(cur, j)}</p>` : same ? '' : `<p class="why">${descText(pos, j.best)}</p>`;
+  }
+  h += `<p class="wr">${t('rv.ex.wr', { a: winPct(Math.max(j.bv, j.mv)), b: winPct(j.mv) })}</p>`;
   return h + '</div>';
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }

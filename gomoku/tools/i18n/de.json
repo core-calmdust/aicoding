@@ -312,5 +312,17 @@
   "rx.b.block": "{b} war der Schlüsselpunkt, um die Drei oder Vier des Gegners zu blockieren.",
   "rx.b.four": "{b} bildet eine Vier und behält die Initiative.",
   "rx.b.three": "{b} bildet eine Drei und greift an.",
-  "rx.b.shape": "{b} nutzt die Steine gut und bereitet den nächsten Angriff vor."
+  "rx.b.shape": "{b} nutzt die Steine gut und bereitet den nächsten Angriff vor.",
+  "rx.does": "{m} ist {d}.",
+  "rx.and": ", und ",
+  "rx.m.five": "ein Zug, der die Fünf vollendet und gewinnt",
+  "rx.m.win": "eine gewinnende Vier-Drei oder offene Vier",
+  "rx.m.four": "eine Vier, die den Gegner zum Blockieren zwingt",
+  "rx.m.three": "eine angreifende Drei",
+  "rx.m.two": "eine Zwei, die die Form ausbaut",
+  "rx.m.block4": "ein Zug, der die Vier des Gegners blockiert",
+  "rx.m.blockwin": "ein Zug, der den Punkt der gegnerischen Vier-Drei oder offenen Vier vorab besetzt",
+  "rx.m.block3": "ein Zug, der die Drei des Gegners blockiert",
+  "rx.m.quiet": "ein ruhiger Zug, der den nächsten Angriff oder die Verteidigung vorbereitet",
+  "rv.ex.wr": "Gewinnchance (Schätzung): {a} mit dem besten Zug → {b} mit dem gespielten Zug"
 }

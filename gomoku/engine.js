@@ -814,7 +814,7 @@ function solve(rule, moves, start, n, defend, maxNodes) {
 }
 
 const API = { N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
-  C: { NONE: C_NONE, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
+  C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {

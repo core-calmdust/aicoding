@@ -312,5 +312,17 @@
   "rx.b.block": "{b} era o ponto-chave para bloquear o três ou o quatro do adversário.",
   "rx.b.four": "{b} faz um quatro e mantém a iniciativa.",
   "rx.b.three": "{b} faz um três e ataca.",
-  "rx.b.shape": "{b} aproveita bem as pedras e prepara o próximo ataque."
+  "rx.b.shape": "{b} aproveita bem as pedras e prepara o próximo ataque.",
+  "rx.does": "{m} é {d}.",
+  "rx.and": ", e ",
+  "rx.m.five": "um lance que completa cinco e vence",
+  "rx.m.win": "um quatro-três ou quatro aberto vencedor",
+  "rx.m.four": "um quatro que obriga o adversário a bloquear",
+  "rx.m.three": "um três que ataca",
+  "rx.m.two": "um dois que desenvolve a forma",
+  "rx.m.block4": "um lance que bloqueia o quatro do adversário",
+  "rx.m.blockwin": "um lance que ocupa antes o ponto do quatro-três ou quatro aberto do adversário",
+  "rx.m.block3": "um lance que bloqueia o três do adversário",
+  "rx.m.quiet": "um lance tranquilo que prepara o próximo ataque ou defesa",
+  "rv.ex.wr": "Chance de vitória (estimativa): {a} com o melhor lance → {b} com o lance jogado"
 }

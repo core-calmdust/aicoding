@@ -312,5 +312,17 @@
   "rx.b.block": "{b} was the key point that stops the opponent's three or four.",
   "rx.b.four": "{b} makes a four and keeps the initiative.",
   "rx.b.three": "{b} makes a three and attacks.",
-  "rx.b.shape": "{b} puts the stones to good use and prepares the next attack."
+  "rx.b.shape": "{b} puts the stones to good use and prepares the next attack.",
+  "rx.does": "{m} is {d}.",
+  "rx.and": ", and ",
+  "rx.m.five": "a move that completes five and wins",
+  "rx.m.win": "a winning four-three or straight four",
+  "rx.m.four": "a four that forces the opponent to block",
+  "rx.m.three": "a three that attacks",
+  "rx.m.two": "a two that builds shape",
+  "rx.m.block4": "a move that blocks the opponent's four",
+  "rx.m.blockwin": "a move that takes the point of the opponent's four-three or straight four first",
+  "rx.m.block3": "a move that blocks the opponent's three",
+  "rx.m.quiet": "a quiet move that prepares the next attack or defence",
+  "rv.ex.wr": "Win chance (estimate): {a} with the best move → {b} with the move played"
 }
