@@ -815,7 +815,7 @@ async function openLessons() {
     let head = '';
     if (c !== course) { course = c; no = 0; head = `<p class="ls-course"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></p>`; }
     no++;
-    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${no}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${no}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="lst ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
   }).join('');
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
@@ -979,7 +979,7 @@ async function openOpenings() {
   $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
     const r = pr[g.id];
     let h = ''; if (g.kind !== head) { head = g.kind; h = `<p class="ls-course"><b>${t('op.grp.' + g.kind)}</b><small>${t('op.grp.' + g.kind + '.sub')}</small></p>`; }
-    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${g.kind === 'direct' ? 'D' : 'I'}${g.no}</span><span class="tx"><b>${opName(g)}${LANG === 'ja' ? `<small style="display:inline;margin-left:6px">${g.kana}</small>` : LANG !== 'zh' ? ` <small style="display:inline;color:var(--dim)">${g.kanji}</small>` : ''} ${opEval(g)}</b><small>${t('op.third', { m: g.line.split(' ')[2] })}</small></span><span class="st ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${g.kind === 'direct' ? 'D' : 'I'}${g.no}</span><span class="tx"><b>${opName(g)}${LANG === 'ja' ? `<small style="display:inline;margin-left:6px">${g.kana}</small>` : LANG !== 'zh' ? ` <small style="display:inline;color:var(--dim)">${g.kanji}</small>` : ''} ${opEval(g)}</b><small>${t('op.third', { m: g.line.split(' ')[2] })}</small></span><span class="lst ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
   }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('op.credit')}</p>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
@@ -1018,7 +1018,7 @@ function showStudy(anim) {
   let pr, fb = '';
   const x = g.study[i - 1];
   if (i === 3) { pr = t('op.studyStart'); fb = t('op.ev.' + g.ev); }
-  else { pr = `<b style="font-size:16px"><bdi>${i}. ${sqName(moves[i - 1])}</bdi></b> <span class="op-meta">${x && x[1] !== undefined ? evalText(evalFromStudy(x[1], i)) : ''}</span>`; fb = x && x[2] ? LL(x[2]) : ''; }
+  else { pr = `<b style="font-size:16px"><bdi>${i}. ${sqName(moves[i - 1])}</bdi></b> <span class="op-meta">${x && x[1] !== undefined ? evalText(evalFromStudy(x[1], i)) : ''}</span>`; fb = x && x[2] ? (typeof x[2] === 'string' && x[2].startsWith('op.n.') ? t(x[2], { c: pname(x[1] > 0 ? P1 : P2) }) : LL(x[2])) : ''; }
   if (i === N0) fb += (fb ? '<br>' : '') + `<b style="color:var(--brass)">${t('op.studyEnd')}</b>`;
   fb += `<br><button class="op-play" id="lsPlayHere">${t('op.playHere')}</button>`;
   $('#lsPrompt').innerHTML = `<div class="ls-goal"><span>${pr}</span></div>`; $('#lsFb').innerHTML = fb;
@@ -1062,11 +1062,11 @@ async function openPuzzles(cat) {
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
   $('#pzCats').innerHTML = PUZZLES.cats.map((C, i) => `<button data-c="${i}" class="${i === pzCat ? 'sel' : ''}">${t('pzc.' + C.id)}</button>`).join('');
   const C = PUZZLES.cats[pzCat];
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pzc.' + PUZZLES.cats[dl.c].id)} · ${t('pz.winIn', { n: PUZZLES.cats[dl.c].levels[dl.l].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
+  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pzc.' + PUZZLES.cats[dl.c].id)} · ${t('pz.winIn', { n: PUZZLES.cats[dl.c].levels[dl.l].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="lst ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
     `<p class="ls-course"><b>${t('pzc.' + C.id)}</b><small>${t('pzc.' + C.id + '.sub')}</small></p>` +
     C.levels.map((L, i) => {
       const solved = L.puzzles.filter((_, j) => pr[pzKey(pzCat, i, j)]).length;
-      return `<button class="lesson-item" data-i="${i}"><span class="no">${L.n}</span><span class="tx"><b>${t('pz.winIn', { n: L.n })}</b><small>${t('pzl.' + C.id, { n: L.n, k: L.puzzles.length })}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+      return `<button class="lesson-item" data-i="${i}"><span class="no">${L.n}</span><span class="tx"><b>${t('pz.winIn', { n: L.n })}</b><small>${t('pzl.' + C.id, { n: L.n, k: L.puzzles.length })}</small></span><span class="lst ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
     }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit', { n: PUZZLES.total })}</p>`;
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
