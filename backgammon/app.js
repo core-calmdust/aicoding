@@ -183,7 +183,7 @@ const SFX = {
   off() { if (!settings.sound) return; const a = ctx(); if (!a) return; noise(a, 0.12, 900, 0.8, 0.35); tone(a, 520, 330, 0.12, 0.12, 'triangle'); },
   dice() { if (!settings.sound) return; const a = ctx(); if (!a) return; const t0 = a.currentTime; for (let i = 0; i < 7; i++) noise(a, 0.025, 2200 + Math.random() * 2400, 2, 0.32 * (1 - i / 9), t0 + i * 0.055 + Math.random() * 0.02); tone(a, 260, 140, 0.08, 0.15, 'sine', t0 + 0.4); },
   cube() { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 180, 70, 0.22, 0.45); noise(a, 0.06, 700, 1, 0.5); },
-  land() { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 210, 120, 0.07, 0.22); noise(a, 0.03, 1800, 1.2, 0.35); },
+  land(g = 1) { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 210, 120, 0.07, 0.22 * g); noise(a, 0.03, 1800, 1.2, 0.35 * g); },
   tick() { if (!settings.sound) return; const a = ctx(); if (!a) return; tone(a, 880, 880, 0.08, 0.05, 'triangle'); },
   chime(win) {
     if (!settings.sound) return; const a = ctx(); if (!a) return;
@@ -372,9 +372,11 @@ function renderCube(st, offeredBy) {
   cubeEl.style.display = (match && match.cube && !lesson && !puzzle) || (lesson && lesson.cubeQ) ? '' : 'none';
 }
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-function dieHTML(s, v, x, y, used, size) {
+function dieHTML(s, v, x, y, used, size, yaw) {
   const on = new Set(PIPS[v] || []);
-  let h = `<div class="die p${s}${used ? ' used' : ''}" style="left:${U(x)};top:${U(y)};${size ? `--ds:${size}` : ''}">`;
+  // yaw: the angle a thrown die came to rest at; the drop shadow is turned back so it still falls straight down
+  const rot = yaw ? `transform:rotate(${yaw.toFixed(4)}rad);--sx:${(0.08 * Math.sin(yaw)).toFixed(4)};--sy:${(0.08 * Math.cos(yaw)).toFixed(4)};` : '';
+  let h = `<div class="die p${s}${used ? ' used' : ''}" style="left:${U(x)};top:${U(y)};${size ? `--ds:${size};` : ''}${rot}">`;
   for (let i = 0; i < 9; i++) h += `<i class="${on.has(i) ? 'on' : ''}"></i>`;
   return h + '</div>';
 }
@@ -396,110 +398,81 @@ function renderDice(s, dice, used) {
   const cx = s === view ? G.RX + 3 : G.LX + 3, y = G.MID;
   if (dice[0] === dice[1]) { diceLayer.innerHTML = diceLayout(s, dice, used || 0); return; }
   const u = used || [false, false];
+  const rp = restFor(s, dice);
+  if (rp) { diceLayer.innerHTML = rp.map((r, i) => dieHTML(s, dice[i], r.x, r.y, u[i], 0, r.yaw)).join(''); return; }
   diceLayer.innerHTML = dieHTML(s, dice[0], cx - 0.55, y, u[0]) + dieHTML(s, dice[1], cx + 0.55, y, u[1]);
 }
-// dice roll: the dice are thrown from the outer edge of the roller's half and roll ~3 units across the board —
-// tumbling in proportion to the distance travelled (each quarter turn shows a new face), 3 decreasing bounces with squash,
-// friction slow-down and a short skid, each die on its own path and timing, with a drop shadow that stays on the board.
-// 2D transforms only (works in the rotated iframe mode). Tapping anywhere skips to the result; off when animations are off.
+// where the dice of the latest throw came to rest (non-doubles keep that place for the whole turn)
+let restPose = null;
+function restFor(s, dice) {
+  const r = restPose;
+  if (!r || r.opening || reviewing || !isLatest() || r.s !== s || r.dice[0] !== dice[0] || r.dice[1] !== dice[1] || dice[0] === dice[1]) return null;
+  return r.pos;
+}
+// dice roll: a real rigid-body simulation (dice3d.js / cannon-es). The whole throw is simulated first, until both dice
+// rest; the faces of each die are then relabelled (a rotation of the standard die) so that the face that physically
+// ended on top shows the rolled number, and the recording is played back as it is, drawn in 3D on a canvas.
+// Non-doubles stay where they came to rest; doubles slide together into the four-dice row afterwards.
+// Tapping anywhere skips to the result; nothing is animated when animations are off in the settings.
 let rollSkip = false, rollAnimating = false, dblFlashUntil = 0;
 addEventListener('pointerdown', () => { if (rollAnimating) rollSkip = true; }, { capture: true, passive: true });
-function setPips(el, v) { const on = new Set(PIPS[v] || []); el.querySelectorAll('i').forEach((i, k) => i.classList.toggle('on', on.has(k))); }
-// height of a die over the board at time u (0..1 of its own roll): falls in, then bounces of decreasing height
-const BOUNCES = [[0, 0.17, 1.0, true], [0.17, 0.43, 0.42], [0.43, 0.61, 0.17], [0.61, 0.71, 0.06]];
-function dieHeight(u) {
-  for (const [a, b, hh, fall] of BOUNCES) if (u < b) { const q = (u - a) / (b - a); return fall ? hh * (1 - q * q) : hh * 4 * q * (1 - q); }
-  return 0;
-}
 async function rollAnim(s, dice, opening) {
   SFX.dice();
-  if (!settings.anim) return;                       // animations switched off in the settings: instant
-  const touch = matchMedia('(pointer: coarse)').matches;
-  const cx = s === view ? G.RX + 3 : G.LX + 3;
-  // [side, final value, final x, direction (+1: comes from the right)]
-  const items = opening
-    ? [[0, dice[0], 0 === view ? G.RX + 3 : G.LX + 3], [1, dice[1], 1 === view ? G.RX + 3 : G.LX + 3]].map(([ss, v, x]) => [ss, v, x, x > G.BX ? 1 : -1])
-    : [[s, dice[0], cx - 0.55, cx > G.BX ? 1 : -1], [s, dice[1], cx + 0.55, cx > G.BX ? 1 : -1]];
+  restPose = null;
+  if (!settings.anim || !window.Dice3D || !Dice3D.ready) return;      // animations switched off in the settings: instant
+  const half = side => side === view ? { hx0: G.RX, hx1: G.RE, dir: 1 } : { hx0: G.LX, hx1: G.BX, dir: -1 };
+  const specDice = opening ? [Object.assign({ v: dice[0], side: 0 }, half(0)), Object.assign({ v: dice[1], side: 1 }, half(1))]
+    : [Object.assign({ v: dice[0], side: s }, half(s)), Object.assign({ v: dice[1], side: s }, half(s))];
+  const plan = Dice3D.plan({ dice: specDice, yMid: G.MID, yMin: G.TOP, yMax: G.BOT, band: Math.max(0.7, G.MID - G.TOP - G.PL + 0.15) });
+  if (!plan) return;
+  const cams = specDice.map(d => [(d.hx0 + d.hx1) / 2, G.MID]);
+  // impact sounds straight from the simulation
+  const hits = plan.dice.flatMap(d => d.impacts).sort((a, b) => a[0] - b[0]);
+  const sfx = []; for (const [t, v] of hits) if (!sfx.length || t - sfx[sfx.length - 1][0] > 0.07) sfx.push([t, Math.min(1, v / 6)]);
+  let si = 0;
+  const cv = document.createElement('canvas'); cv.className = 'dice3d';
+  const ctx = cv.getContext('2d');
   rollAnimating = true; rollSkip = false;
-  diceLayer.innerHTML = items.map(([ss, v, x]) => `<div class="dsh"></div>` + dieHTML(ss, v, x, G.MID)).join('');
-  const els = [...diceLayer.querySelectorAll('.die')], shs = [...diceLayer.querySelectorAll('.dsh')];
-  const total = touch ? 1200 : 1000, rnd = (a, b) => a + Math.random() * (b - a);
-  const side0 = Math.random() < 0.5 ? -1 : 1;
-  const P = items.map(([ss, v, x, dir], i) => {
-    const edge = dir > 0 ? (x > G.BX ? G.RE : G.BX) : (x > G.BX ? G.RX : G.LX);
-    const delay = i ? rnd(40, 110) : 0;
-    const sy = (i ? -side0 : side0) * rnd(1.1, 1.8);
-    const x0 = edge - dir * rnd(0.35, 0.6), y0 = Math.max(G.TOP + 0.6, Math.min(G.BOT - 0.6, G.MID + sy));
-    // a gently curved path: quadratic Bezier with the control point pushed sideways
-    const mx = (x0 + x) / 2, my = (y0 + G.MID) / 2, nx = -(G.MID - y0), ny = x - x0, nl = Math.hypot(nx, ny) || 1, bend = rnd(-0.35, 0.35);
-    const d = { el: els[i], sh: shs[i], v, x1: x, x0, y0, cxp: mx + nx / nl * bend, cyp: my + ny / nl * bend, delay, dur: total - delay - rnd(0, 60),
-      quarters: Math.round(rnd(10, 13)), yaw0: rnd(-40, 40), face: 0, q: -1, hit: 0 };
-    const pt = t => [(1 - t) * (1 - t) * d.x0 + 2 * (1 - t) * t * d.cxp + t * t * d.x1, (1 - t) * (1 - t) * d.y0 + 2 * (1 - t) * t * d.cyp + t * t * G.MID];
-    d.pt = pt;
-    let L = 0, [px, py] = pt(0); for (let k = 1; k <= 24; k++) { const [qx, qy] = pt(k / 24); L += Math.hypot(qx - px, qy - py); px = qx; py = qy; }
-    d.len = L;
-    return d;
-  });
-  const insetOnly = 'inset 0 -2px 3px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25)';
+  diceLayer.replaceChildren(cv);
   const t0 = performance.now();
-  let sounded = 0;
+  const end = plan.dice.map(d => d.rest);
   try {
     for (;;) {
-      const now = performance.now() - t0;
-      if (rollSkip || P.every(d => now >= d.delay + d.dur)) break;
-      if (!diceLayer.contains(P[0].el)) diceLayer.replaceChildren(...P.flatMap(d => [d.sh, d.el]));   // re-attach if something cleared the layer
-      const up = uPx();
-      const pos = P.map(d => {
-        const u = Math.max(0, Math.min(1, (now - d.delay) / d.dur));
-        const p = 1 - Math.pow(1 - u, 1.7);                 // friction: fast throw, steady slow-down
-        const [x, y] = d.pt(p);
-        const [x2, y2] = d.pt(Math.min(1, p + 0.01)), [xb, yb] = d.pt(Math.max(0, p - 0.01));
-        return { d, u, p, x, y, ang: Math.atan2(y2 - yb, x2 - xb) };
-      });
-      // light collision: dice on the ground never overlap, they push each other apart
-      if (pos.length === 2) {
-        const [A, B] = pos, dx = B.x - A.x, dy = B.y - A.y, dist = Math.hypot(dx, dy) || 1e-3;
-        if (dist < 0.86) { const k = (0.86 - dist) / 2 / dist; A.x -= dx * k; A.y -= dy * k; B.x += dx * k; B.y += dy * k; }
-      }
-      for (const { d, u, p, x, y, ang } of pos) {
-        const h = dieHeight(u);
-        // rolling: rotation follows the distance travelled and stops a little before the end (the skid)
-        const roll = Math.min(1, p / 0.94) * d.quarters, q = Math.floor(roll), fr = roll - q;
-        if (u >= 1 || q >= d.quarters) { if (d.face !== d.v) { d.face = d.v; setPips(d.el, d.v); } }
-        else if (q !== d.q) {    // a new face rolls up: never the same or the opposite face; the last quarter shows the result
-          d.q = q; let f;
-          if (q === d.quarters - 1) f = d.v;
-          else { do { f = 1 + Math.floor(Math.random() * 6); } while (f === d.face || f === 7 - d.face || (q === d.quarters - 2 && (f === d.v || f === 7 - d.v))); }
-          d.face = f; setPips(d.el, f);
-        }
-        // foreshortening along the direction of travel while the cube tips over an edge
-        const tip = q >= d.quarters ? 1 : Math.max(Math.cos(fr * Math.PI / 2), Math.sin(fr * Math.PI / 2));
-        // squash for ~60 ms after each impact
-        let sq = 0;
-        for (let k = 1; k < BOUNCES.length; k++) { const du = (u - BOUNCES[k][0]) * d.dur; if (du >= 0 && du < 70) sq = Math.max(sq, (1 - du / 70) * (0.2 - k * 0.04)); }
-        { const du = (u - 0.71) * d.dur; if (du >= 0 && du < 70) sq = Math.max(sq, (1 - du / 70) * 0.05); }
-        if (u >= BOUNCES[1][0] && !d.hit) { d.hit = 1; if (!sounded++) SFX.land(); }
-        const yaw = d.yaw0 * Math.pow(1 - p, 2), deg = ang * 180 / Math.PI;
-        const lift = 1 + h * 0.32;
-        d.el.style.left = U(x); d.el.style.top = U(y);
-        d.el.style.transform = `translate(${(-h * 0.25 * up).toFixed(1)}px, ${(-h * 0.55 * up).toFixed(1)}px) rotate(${deg.toFixed(1)}deg) scale(${(lift * tip * (1 - sq * 0.6)).toFixed(3)}, ${(lift * (1 + sq * 0.4)).toFixed(3)}) rotate(${(yaw - deg).toFixed(1)}deg)`;
-        d.el.style.boxShadow = insetOnly;
-        d.el.style.filter = tip < 0.97 ? `brightness(${(0.82 + 0.18 * tip).toFixed(3)})` : '';
-        // the shadow stays on the board under the die; it drifts away and fades while the die is in the air
-        d.sh.style.left = U(x + 0.06 + h * 0.3); d.sh.style.top = U(y + 0.08 + h * 0.45);
-        d.sh.style.transform = `rotate(${(yaw).toFixed(1)}deg) scale(${(1 - h * 0.12).toFixed(3)})`;
-        d.sh.style.opacity = (0.5 - h * 0.25).toFixed(2);
-        d.sh.style.filter = `blur(${((0.05 + h * 0.12) * up).toFixed(1)}px)`;
-      }
+      const t = (performance.now() - t0) / 1000;
+      if (rollSkip || t >= plan.dur) break;
+      if (!diceLayer.contains(cv)) diceLayer.replaceChildren(cv);   // re-attach if something cleared the layer
+      const k = uPx() * Math.min(2, window.devicePixelRatio || 1), W = Math.round(G.W * k), Hh = Math.round(G.H * k);
+      if (cv.width !== W || cv.height !== Hh) { cv.width = W; cv.height = Hh; cv.style.width = U(G.W); cv.style.height = U(G.H); }
+      else ctx.clearRect(0, 0, W, Hh);
+      Dice3D.draw(ctx, k, plan.dice.map((d, i) => ({ d, t, cam: cams[i] })));
+      while (si < sfx.length && sfx[si][0] <= t) { if (si < 6) SFX.land(sfx[si][1]); si++; }
       await new Promise(r => requestAnimationFrame(r));
     }
+    // resting dice as normal dice elements, exactly where (and at the angle) the simulation left them
+    diceLayer.innerHTML = plan.dice.map((d, i) => dieHTML(d.side, dice[i], end[i].x, end[i].y, false, 0, end[i].yaw)).join('');
+    if (!opening && dice[0] === dice[1] && !rollSkip) {
+      // doubles: the two dice slide together into the middle of the four-dice row
+      const cx = s === view ? G.RX + 3 : G.LX + 3, order = end[0].x <= end[1].x ? [0, 1] : [1, 0];
+      const els = [...diceLayer.querySelectorAll('.die')];
+      const tgt = i => cx + (order.indexOf(i) ? 0.46 : -0.46);
+      const sym = (dice[0] === 2 || dice[0] === 3 || dice[0] === 6) ? Math.PI : Math.PI / 2;
+      const yawT = end.map(e => Math.round(e.yaw / sym) * sym);
+      const g0 = performance.now();
+      for (;;) {
+        const q = Math.min(1, (performance.now() - g0) / 240), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+        if (rollSkip) break;
+        els.forEach((el, i) => {
+          const yaw = end[i].yaw + (yawT[i] - end[i].yaw) * e, sc = 1 + (0.74 / 0.82 - 1) * e;
+          el.style.left = U(end[i].x + (tgt(i) - end[i].x) * e); el.style.top = U(end[i].y + (G.MID - end[i].y) * e);
+          el.style.transform = `rotate(${yaw.toFixed(4)}rad) scale(${sc.toFixed(4)})`;
+        });
+        if (q >= 1) break;
+        await new Promise(r => requestAnimationFrame(r));
+      }
+    }
   } finally { rollAnimating = false; }
-  if (!sounded) SFX.land();
-  for (const d of P) {
-    d.sh.remove();
-    for (const k of ['transform', 'boxShadow', 'opacity', 'filter']) d.el.style[k] = '';
-    d.el.style.left = U(d.x1); d.el.style.top = U(G.MID); setPips(d.el, d.v);
-  }
+  if (!sfx.length) SFX.land();
+  restPose = { s, opening, dice: dice.slice(), pos: end.map(e => ({ x: e.x, y: e.y, yaw: e.yaw })) };
   if (!opening && dice[0] === dice[1]) dblFlashUntil = performance.now() + 1100;
 }
 
@@ -934,7 +907,9 @@ async function doRoll(g, opening) {
   await rollAnim(s, dice, opening);
   if (tok !== busyToken) { busyRolling = false; return; }
   if (opening) {
-    diceLayer.innerHTML = dieHTML(0, dice[0], 0 === view ? G.RX + 3 : G.LX + 3, G.MID) + dieHTML(1, dice[1], 1 === view ? G.RX + 3 : G.LX + 3, G.MID);
+    const rp = restPose && restPose.opening ? restPose.pos : null;
+    diceLayer.innerHTML = rp ? rp.map((r, i) => dieHTML(i, dice[i], r.x, r.y, false, 0, r.yaw)).join('')
+      : dieHTML(0, dice[0], 0 === view ? G.RX + 3 : G.LX + 3, G.MID) + dieHTML(1, dice[1], 1 === view ? G.RX + 3 : G.LX + 3, G.MID);
     toast(t('toast.opening', { c: pname(s), a: dice[0], b: dice[1] }), 1300);
     await sleep(anim() ? 1100 : 400);
     if (tok !== busyToken) { busyRolling = false; return; }
@@ -1040,6 +1015,7 @@ function nextGame() {
   save(); updateCommit(); afterAction();
 }
 function startNewMatch() {
+  restPose = null;
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1;
   if (settings.mode === 'ai') humanSide = settings.color === 2 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
   view = settings.mode === 'ai' ? humanSide : 0;

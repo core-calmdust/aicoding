@@ -19,6 +19,12 @@ Third-party material in this folder
 The small network in weights.json was trained by us on positions from our own self-play, labelled by the wildbg
 networks above and by the CC0 rollout data.
 
+3) cannon-es 0.20.0 (3D rigid-body physics, used for the dice)  ->  cannon-es.min.js
+   Source:    https://github.com/pmndrs/cannon-es  (npm package cannon-es@0.20.0, dist/cannon-es.js)
+   Copyright: (c) 2015 cannon.js Authors
+   License:   MIT (text reproduced below)
+   Changes:   minified and wrapped as a classic script exposing the global CANNON (esbuild); no code changes.
+
 -------------------------------------------------------------------------------
 MIT License (wildbg)
 
@@ -248,3 +254,27 @@ Apache License 2.0 (wildbg)
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+-------------------------------------------------------------------------------
+MIT License (cannon-es)
+
+Copyright (c) 2015 cannon.js Authors
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use, copy,
+modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
