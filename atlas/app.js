@@ -228,7 +228,7 @@
     Object.assign(fly.style, { width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.25))', transformOrigin: '50% 55%', backfaceVisibility: 'visible' });
     wrap.appendChild(fly); document.body.appendChild(wrap); img.style.visibility = 'hidden';
     const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sc = Math.min(W * .55, 280) / Math.max(r.width, 1);
-    const T1 = 680;
+    const T1 = 560;
     wrap.animate([
       { transform: 'translate(0,0) scale(1)' },
       { transform: 'translate(0,8px) scale(1.06)', offset: .14 },
@@ -236,13 +236,13 @@
       { transform: `translate(${dx}px, ${dy}px) scale(${sc * 1.06})`, offset: .86 },
       { transform: `translate(${dx}px, ${dy}px) scale(${sc})` },
     ], { duration: T1, easing: 'cubic-bezier(.35,0,.25,1)', fill: 'forwards' });
-    fly.animate([   // squash → stretch while leaping → one turn (coin flip) → landing squash
+    fly.animate([   // squash → stretch while leaping → two full turns (coin flip) → landing squash
       { transform: 'scale(1,1) rotateY(0)' },
       { transform: 'scale(1.18,.78) rotateY(0)', offset: .14 },
-      { transform: 'scale(.86,1.2) rotateY(150deg)', offset: .5 },
-      { transform: 'scale(1,1) rotateY(330deg)', offset: .84 },
-      { transform: 'scale(1.12,.88) rotateY(360deg)', offset: .93 },
-      { transform: 'scale(1,1) rotateY(360deg)' },
+      { transform: 'scale(.86,1.2) rotateY(300deg)', offset: .5 },
+      { transform: 'scale(1,1) rotateY(640deg)', offset: .84 },
+      { transform: 'scale(1.12,.88) rotateY(720deg)', offset: .93 },
+      { transform: 'scale(1,1) rotateY(720deg)' },
     ], { duration: T1, easing: 'linear', fill: 'forwards' });
     let done = false;
     const finish = () => {   // pop: the icon bursts and the board lands
@@ -253,7 +253,7 @@
     };
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
-      fly.animate([{ transform: 'rotateY(360deg) translateY(0)' }, { transform: 'rotateY(380deg) translateY(-6px)' }, { transform: 'rotateY(340deg) translateY(0)' }], { duration: 360, iterations: Infinity, easing: 'ease-in-out' });
+      fly.animate([{ transform: 'rotateY(720deg) translateY(0)' }, { transform: 'rotateY(740deg) translateY(-6px)' }, { transform: 'rotateY(700deg) translateY(0)' }], { duration: 360, iterations: Infinity, easing: 'ease-in-out' });
       requestAnimationFrame(() => setTimeout(() => {
         openBoard(id, true, true);
         requestAnimationFrame(() => requestAnimationFrame(finish));
