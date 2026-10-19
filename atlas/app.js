@@ -117,7 +117,7 @@
     ['checker', 'morris', 80, 88, 92, -8], ['knight', 'chess', 66, 92, 86, 6], ['stoneW', 'gomoku', 45, 8, 60, 0], ['gem2', 'mancala', 60, 6, 54, 0],
     ['shogi2', 'shogi', 3, 45, 70, -14], ['pawn', 'chess', 97, 42, 64, 0], ['bgChecker', 'backgammon', 50, 95, 72, 0]];
   // title emblem: a compass seal (the "atlas") with ring lettering and a swallow-tail ribbon
-  const TF = 'Mochiy Pop One';   // title face: characterful but stays legible (Dela Gothic crushed the dakuten)
+  const TF = 'RocknRoll One';   // title face: characterful but stays legible (Dela Gothic crushed the dakuten)
   function emblem(main, pre, n) {
     const ring = 'WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ ';
     const big = main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)));
