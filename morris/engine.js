@@ -518,7 +518,32 @@ let ENG = null, MENG = null;
 const eng = () => ENG || (ENG = new Engine());
 const meng = () => MENG || (MENG = new Engine());
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
+// ---------------------------------------------------------------- WebAssembly search (engine.c), used by the worker when available
+let WX = null, wGeo = '', wProg = null;
+const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
+function wGeom(variant) {
+  if (wGeo === variant) return;
+  const G = geom(variant), a = [G.n, G.pieces, G.fly ? 1 : 0, G.mills.length];
+  for (const m of G.mills) a.push(...m);
+  const inMills = (i, j) => G.mills.some(m => (m[0] === i && m[1] === j) || (m[1] === i && m[2] === j) || (m[0] === j && m[1] === i) || (m[1] === j && m[2] === i));
+  const extra = []; for (let i = 0; i < G.n; i++) for (const j of G.adj[i]) if (j > i && !inMills(i, j)) extra.push(i, j);
+  a.push(extra.length / 2, ...extra); wIO().set(a); WX.set_geometry(); WX.new_game(); wGeo = variant;
+}
+function wSetup(variant, start, moves) {
+  wGeom(variant);
+  const G = geom(variant), p = Pos.from(G, start), a = [];
+  for (let i = 0; i < G.n; i++) a.push(p.b[i]);
+  a.push(p.hand[1], p.hand[2], p.side, p.quiet, moves.length, ...moves);
+  wIO().set(a); return WX.setup();
+}
+function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: r[2 + 2 * i], v: r[3 + 2 * i], kind: kindOf(r[3 + 2 * i]) }); return L; }
 function think(variant, start, moves, level, rand) {
+  const L0 = LEVELS[level] || LEVELS[5];
+  if (WX && L0.noise === undefined && moves.length < 1000) {
+    if (!wSetup(variant, start, moves)) return { move: -1 };
+    WX.best(L0.d, L0.ms || 0, 0); const r = wIO();
+    return { move: r[0], v: r[1], depth: r[2] };
+  }
   rand = rand || Math.random;
   const { pos, hashes } = replay(variant, start, moves);
   const E = eng(); E.setHistory(hashes);
@@ -539,6 +564,13 @@ function think(variant, start, moves, level, rand) {
   return { move: r.m, v: r.v, depth: r.depth };
 }
 function analyze(variant, start, moves, ms, onProgress) {
+  if (WX && moves.length < 1000) {
+    if (!wSetup(variant, start, moves)) return { list: [], depth: 0, solved: false };
+    wProg = onProgress ? (d => onProgress(wList(), d)) : null;
+    WX.analyze(ms, 40); wProg = null;
+    const list = wList();
+    return { list, depth: wIO()[1], solved: list.length > 0 && list.every(e => Math.abs(e.v) > WINT) };
+  }
   const { pos, hashes } = replay(variant, start, moves);
   const E = eng(); E.setHistory(hashes);
   const res = E.analyze(pos, ms, 40, (vals, d) => onProgress && onProgress(vals.map(e => ({ m: e.m, v: e.v, kind: kindOf(e.v) })), d));
@@ -606,6 +638,13 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     fetch(EGDB_URL).then(r => { if (!r.ok) throw 0; return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); })
       .then(b => { if (!setEGDB(b)) egdbState = 0; }).catch(() => { egdbState = 0; });
   };
+  // load the WebAssembly search; until it is ready (or if it fails) the JS search is used
+  if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
+    const imp = { env: { now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } };
+    const url = new URL('engine.wasm?v=20261019w', self.location.href);
+    (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+  }
   self.onmessage = e => {
     const m = e.data;
     if (m.type === 'think' || m.type === 'analyze') wantDB(m);
