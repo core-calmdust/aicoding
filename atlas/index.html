@@ -47,7 +47,22 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.86);backdro
 @keyframes bump{30%{transform:scale(1.15)}}
 .icbtn{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:#fff;display:grid;place-items:center;box-shadow:0 2px 0 var(--line);color:var(--ink)}
 .icbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-#langSel{height:40px;border-radius:99px;border:2px solid var(--line);background:#fff;padding:0 10px;font-weight:700;box-shadow:0 2px 0 var(--line)}
+#langSel{display:none}
+.lbtn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px 0 9px;border-radius:99px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);font-family:var(--round);font-weight:700;font-size:14px;color:var(--ink);transition:transform .1s}
+.lbtn svg{width:20px;height:20px}
+.lbtn:active{transform:translateY(2px);box-shadow:0 0 0 var(--line)}
+.lbtn[aria-expanded=true]{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 2px 0 #161a28}
+.hd{position:relative}
+.lpop{position:absolute;top:62px;inset-inline-end:60px;z-index:60;width:276px;padding:8px;border-radius:24px;background:#fffdf7;border:2px solid var(--line);box-shadow:0 6px 0 var(--line),0 24px 40px -18px rgba(80,40,0,.5);display:grid;grid-template-columns:1fr 1fr;gap:6px;transform-origin:85% 0;animation:lpIn .22s cubic-bezier(.3,1.5,.5,1)}
+.lpop[hidden]{display:none}
+@keyframes lpIn{from{opacity:0;transform:scale(.85) translateY(-6px)}}
+.lpop button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;border-radius:16px;background:#f6efdd;padding:9px 12px;text-align:start;cursor:pointer;transition:background .12s,transform .1s}
+.lpop button:hover{background:#ffe9b0}
+.lpop button:active{transform:scale(.96)}
+.lpop button b{font-size:15px;font-weight:900;line-height:1.2}
+.lpop button small{white-space:nowrap;font-family:var(--round);font-size:11px;font-weight:700;color:var(--ink2);letter-spacing:.08em}
+.lpop button[aria-selected=true]{background:var(--sun);box-shadow:0 3px 0 var(--sun2)}
+.lpop button[aria-selected=true] small{color:#6a4200}
 
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:6px;justify-content:center;padding:12px 0 4px}
@@ -63,7 +78,8 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.86);backdro
   .tab[aria-selected=true]{background:transparent;color:var(--coral2);box-shadow:none}
   .tab[aria-selected=true] svg{transform:translateY(-2px) scale(1.12)}
   .brand .wm b{font-size:16px}.brand img{width:40px;height:40px}.brand .wm small{font-size:10px}
-  #langSel{width:44px;padding:0 4px;font-size:0;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b3044' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18'/%3E%3C/svg%3E") center/20px no-repeat;-webkit-appearance:none;appearance:none}
+  .lbtn{width:40px;padding:0;justify-content:center}.lbtn b{display:none}
+  .lpop{top:56px;inset-inline-end:56px;width:min(260px,calc(100vw - 32px))}
   .hd{gap:8px;height:60px}
   .coin{font-size:15px}
 }
@@ -167,13 +183,10 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 #gl{position:absolute;inset:0;touch-action:none;transition:top .45s,bottom .45s,left .45s,right .45s}
 #gl canvas{display:block;width:100%!important;height:100%!important}
 .bv .x{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;z-index:3}
-.bvi{position:absolute;z-index:2;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(560px,calc(100% - 24px));padding:16px 18px;border-radius:26px;background:rgba(255,253,247,.94);backdrop-filter:blur(8px);border:2px solid #fff;box-shadow:0 18px 40px -18px rgba(80,40,0,.55);transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
+/* info card: always docked at the bottom; on wide screens it spans the width in two columns */
+.bvi{position:absolute;z-index:2;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(1080px,calc(100% - 24px));padding:16px 18px;border-radius:26px;background:rgba(255,253,247,.95);backdrop-filter:blur(8px);border:2px solid #fff;box-shadow:0 18px 40px -18px rgba(80,40,0,.55);transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
 .bv.playing .bvi{transform:translateX(-50%) translateY(140%);opacity:0;pointer-events:none}
-@media (min-width:900px) and (min-aspect-ratio:5/4){
-  .bvi{left:max(24px,calc(50% - 600px));bottom:auto;top:50%;transform:translateY(-50%);width:430px}
-  .bv.playing .bvi{transform:translateY(-50%) translateX(-130%)}
-  [dir=rtl] .bvi{left:auto;right:max(24px,calc(50% - 600px))}
-}
+.bvi .cols{display:block}
 .bvi .row{display:flex;gap:12px;align-items:center}
 .bvi h3{margin:0;font-size:22px;font-weight:900}
 .bvi .bd{display:flex;gap:5px;margin-top:4px}
@@ -185,6 +198,24 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .act .btn.big{font-size:19px;padding:14px 34px}
 .bvi .soon{font-size:13px;font-weight:700;color:var(--ink2);margin-top:10px}
 .bvi .pgl{margin-top:10px}
+@media (min-width:820px){
+  .bvi{padding:24px 30px;border-radius:30px;bottom:24px}
+  .bvi .cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px 36px;align-items:center}
+  .bvi .R{border-inline-start:2px dashed var(--line);padding-inline-start:32px;display:flex;flex-direction:column;justify-content:center}
+  .bvi h3{font-size:32px}
+  .bvi .g3{width:76px;height:76px;border-radius:22px}
+  .bvi .ring{width:64px;height:64px;font-size:15px}
+  .bvi .badge{height:25px;font-size:13px;padding:0 11px}
+  .bvi .tags{margin-top:14px;gap:7px}.bvi .tag{height:30px;font-size:14.5px;padding:0 12px 0 8px}.bvi .tag svg{width:17px;height:17px}
+  .bvi .pgl{margin-top:14px;font-size:15px;gap:8px 12px}.bvi .pgl b{font-size:15px}.bvi .pgl .bar{height:12px}
+  .bvi .opts{margin-top:0;gap:14px 22px}
+  .bvi label{font-size:15px;gap:10px}
+  .bvi select{height:48px;font-size:17px;padding:0 14px;border-radius:14px;min-width:120px}
+  .bvi .act{margin-top:18px;gap:14px}
+  .bvi .act .btn.big{font-size:24px;padding:18px 48px;flex:1;max-width:340px}
+  .bvi .act .btn.sm{font-size:16px;padding:12px 20px}
+  .bvi .soon{font-size:16px;margin-top:0}
+}
 .hud{position:absolute;z-index:2;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-160%);display:flex;align-items:center;gap:8px;padding:6px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);transition:transform .45s cubic-bezier(.3,1.3,.5,1);max-width:calc(100% - 120px)}
 .bv.playing .hud{transform:translateX(-50%)}
 @media (max-width:560px){
@@ -201,7 +232,10 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bv.playing .quit{display:inline-flex}
 .magic{position:fixed;inset:0;z-index:95;pointer-events:none}
 .magic i{position:absolute;display:block;background:currentColor;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px currentColor)}
-.magic b{position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.9),rgba(255,236,170,.45) 55%,rgba(255,255,255,0))}
+.magic b{position:absolute;width:320px;height:320px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,1),rgba(255,236,150,.6) 50%,rgba(255,200,240,.25) 75%,rgba(255,255,255,0))}
+.magic .smoke{position:absolute;width:0;height:0}
+.magic .smoke span{position:absolute;left:0;top:0;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fff 0 42%,#f1eef6 62%,#d9d3e6 100%);box-shadow:0 6px 0 rgba(140,120,170,.18)}
+.magic .smoke .core{background:radial-gradient(circle at 40% 35%,#fff 0 50%,#f3f0f8 80%,#e2dcec 100%)}
 .burst{position:fixed;z-index:3;width:0;height:0;pointer-events:none}
 .burst i{position:absolute;left:-90px;top:-90px;width:180px;height:180px;border-radius:50%;border:10px solid #fff;animation:bRing .5s cubic-bezier(.2,.8,.3,1) forwards}
 .burst b{position:absolute;left:-5px;top:-5px;width:10px;height:44px;border-radius:6px;background:#fff;transform:rotate(var(--a)) translateY(-70px);animation:bRay .45s cubic-bezier(.2,.8,.3,1) forwards;box-shadow:0 0 0 3px rgba(255,201,40,.7)}
@@ -373,7 +407,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
     </a>
     <span class="sp"></span>
     <span class="coin" id="coinPill"><i>¢</i><span id="coinN">0</span></span>
-    <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
+    <button type="button" class="lbtn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><b id="langCode">JA</b></button>
+    <div class="lpop" id="langPop" role="listbox" hidden></div>
+    <select id="langSel" aria-hidden="true" tabindex="-1" hidden><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
     <a class="icbtn" href="../" id="homeBtn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
   </div>
   <nav class="wrap tabs" role="tablist" id="tabs"></nav>
@@ -459,6 +495,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="table3d.js?v=6"></script>
 <script src="icons3d.js?v=1"></script>
 <script src="games/reversi.js?v=2"></script>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>

@@ -267,21 +267,34 @@
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
   function magic(cx, cy, rise, size) {
     const box = document.createElement('div'); box.className = 'magic'; document.body.appendChild(box);
-    const cols = ['#ffe27a', '#fff', '#ffb3e0', '#a8e6ff', '#ffd1a1'];
+    const cols = ['#ffd84a', '#fff6b0', '#ff8fd0', '#7fdcff', '#b99bff', '#ffffff', '#7af0b0'];
     const add = (x, y, delay, kf, dur, sz) => {
       const e = document.createElement('i'); e.style.left = x + 'px'; e.style.top = y + 'px'; e.style.width = e.style.height = sz + 'px'; e.style.color = cols[Math.random() * cols.length | 0];
       box.appendChild(e); e.animate(kf, { duration: dur, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' });
     };
-    for (let i = 0; i < 12; i++) {            // trail behind the icon as it zips up
-      const t = i / 12, x = cx + (Math.random() - .5) * size * .5, y = cy - rise * t + (Math.random() - .5) * 30;
-      add(x, y, t * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(0)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(90deg)', offset: .3 }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${20 + Math.random() * 30}px) scale(.3) rotate(180deg)` }], 520, 10 + Math.random() * 12);
+    for (let i = 0; i < 22; i++) {            // trail behind the icon as it zips up
+      const t = i / 22, x = cx + (Math.random() - .5) * size * .6, y = cy - rise * t + (Math.random() - .5) * 40;
+      add(x, y, t * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(0)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.15) rotate(90deg)', offset: .3 }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${20 + Math.random() * 40}px) scale(.3) rotate(200deg)` }], 560, 14 + Math.random() * 18);
     }
-    for (let i = 0; i < 18; i++) {            // magic dust falls onto the board and twinkles out
-      const a = Math.random() * Math.PI * 2, r = size * (.15 + Math.random() * .55), x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .6;
-      add(x, y, 180 + Math.random() * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) translateY(-60px) scale(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.1) rotate(45deg)', offset: .5 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(120deg)' }], 520, 8 + Math.random() * 16);
+    // "dorone": a puff of cartoon smoke bursts out where the board appears
+    const smoke = document.createElement('div'); smoke.className = 'smoke'; smoke.style.left = cx + 'px'; smoke.style.top = (cy + size * .08) + 'px'; box.appendChild(smoke);
+    for (let i = 0; i < 13; i++) {
+      const a = i / 13 * Math.PI * 2 + Math.random() * .3, d = size * (.32 + Math.random() * .22), pz = size * (.26 + Math.random() * .2), p = document.createElement('span');
+      p.style.width = p.style.height = pz + 'px'; smoke.appendChild(p);
+      p.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .55}px), calc(-50% + ${Math.sin(a) * d * .4}px)) scale(1)`, offset: .3 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d * .7 - 30}px)) scale(1.35)` }], { duration: 640, delay: 150 + Math.random() * 40, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
+    }
+    const core = document.createElement('span'); core.className = 'core'; core.style.width = core.style.height = size * .75 + 'px'; smoke.appendChild(core);
+    core.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.05)', offset: .25 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' }], { duration: 520, delay: 150, easing: 'ease-out', fill: 'both' });
+    for (let i = 0; i < 16; i++) {            // big stars shooting out of the smoke
+      const a = i / 16 * Math.PI * 2 + Math.random() * .2, d = size * (.55 + Math.random() * .45);
+      add(cx, cy, 170 + Math.random() * 60, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .6}px), calc(-50% + ${Math.sin(a) * d * .6}px)) scale(1.3) rotate(120deg)`, offset: .45 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d + 30}px)) scale(.4) rotate(260deg)` }], 620, 20 + Math.random() * 22);
+    }
+    for (let i = 0; i < 30; i++) {            // glitter rains onto the board and twinkles out
+      const a = Math.random() * Math.PI * 2, r = size * (.1 + Math.random() * .7), x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .6;
+      add(x, y, 260 + Math.random() * 260, [{ opacity: 0, transform: 'translate(-50%,-50%) translateY(-70px) scale(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.2) rotate(45deg)', offset: .5 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(140deg)' }], 480, 8 + Math.random() * 16);
     }
     const ring = document.createElement('b'); ring.style.left = cx + 'px'; ring.style.top = cy + 'px'; box.appendChild(ring);
-    ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: .9, transform: 'translate(-50%,-50%) scale(.9)', offset: .4 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' }], { duration: 560, delay: 140, easing: 'ease-out', fill: 'both' });
+    ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.8)' }], { duration: 560, delay: 140, easing: 'ease-out', fill: 'both' });
     setTimeout(() => box.remove(), 1100);
   }
   function openBoard(id, push = true, flown = false) {
@@ -299,12 +312,12 @@
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
     const lv = pref[id + ':lv'] || Math.min(4, ad ? ad.levels : 4), side = pref[id + ':side'] || 1;
-    $('bvi').innerHTML = `<div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
+    $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      ${ad ? `<div class="opts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}</option>`).join('')}</select></label>
+      </div><div class="R">${ad ? `<div class="opts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' ? '' : t('bv.soon')}</div>`}
-      <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div>`;
+      <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div></div></div>`;
     if (ad) $('bvStart').onclick = startPlay;
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
@@ -315,9 +328,7 @@
     const gl = $('gl'), card = $('bvi'), playing = $('bv').classList.contains('playing');
     gl.style.top = gl.style.bottom = gl.style.left = gl.style.right = '';
     if (playing || !$('bv').classList.contains('on')) return;
-    const r = card.getBoundingClientRect(), W = innerWidth, H = innerHeight;
-    if (r.left > 40 || r.width < W * .6) { if (document.dir === 'rtl') gl.style.right = (W - r.left + 10) + 'px'; else gl.style.left = (r.right + 10) + 'px'; }
-    else gl.style.bottom = (H - r.top + 4) + 'px';
+    gl.style.bottom = (innerHeight - card.getBoundingClientRect().top + 4) + 'px';   // the board sits centred above the card
   }
   addEventListener('resize', () => fitStage());
   function startPlay() {
@@ -505,10 +516,22 @@
     if (lang === 'ja') $('wm').innerHTML = [...title].map(c => `<span>${esc(c)}</span>`).join('');
     $('wmSub').textContent = t('sub');
     document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大全' : 'World Board Game Atlas');
-    $('langSel').value = lang;
+    $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
     $('homeBtn').setAttribute('aria-label', t('back')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });
   }
+  // game-styled language picker (the native <select> stays as the source of the options)
+  const LNAME = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
+  function openLang(on) {
+    const pop = $('langPop'), btn = $('langBtn');
+    if (on === undefined) on = pop.hidden;
+    if (on) pop.innerHTML = [...$('langSel').options].map(o => `<button type="button" role="option" data-l="${o.value}" aria-selected="${o.value === lang}"><b>${esc(o.text)}</b><small>${o.value.toUpperCase()} · ${LNAME[o.value]}</small></button>`).join('');
+    pop.hidden = !on; btn.setAttribute('aria-expanded', on);
+    pop.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { openLang(false); if (b.dataset.l !== lang) { $('langSel').value = b.dataset.l; $('langSel').dispatchEvent(new Event('change')); } });
+  }
+  $('langBtn').onclick = e => { e.stopPropagation(); openLang(); };
+  document.addEventListener('click', e => { if (!$('langPop').hidden && !$('langPop').contains(e.target)) openLang(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('langPop').hidden) openLang(false); });
   $('langSel').onchange = e => { lang = e.target.value; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); };
 
   function render(k) {
