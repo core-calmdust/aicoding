@@ -134,9 +134,9 @@
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#111" transform="translate(8 8)"/>
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#fff" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
       <path d="M86 172H554M86 238H554" stroke="#111" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
-      ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'Dela Gothic One',sans-serif" font-size="24" fill="#fff">${esc(pre)}</text>` : ''}
-      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'Dela Gothic One','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="2">${esc(main)}</text>
-      <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="'Dela Gothic One',sans-serif" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
+      ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="23" letter-spacing="2" fill="#fff">${esc(pre)}</text>` : ''}
+      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'Zen Kaku Gothic New','Zen Maru Gothic',sans-serif" font-weight="900" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .08)}">${esc(main)}</text>
+      <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
       <!-- piece tips on the compass -->
       <g fill="#fff" stroke="#111" stroke-width="4">
         <g transform="translate(320 72) scale(.8)"><circle r="13"/><path d="M-12 30h24l-4-14h-16z"/></g>
