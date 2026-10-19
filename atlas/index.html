@@ -197,8 +197,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .dk.b{background:#24262d}.dk.w{background:#f6f3ea;border:1px solid #d9d2bf}
 .bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
 .bv.playing .quit{display:inline-flex}
-.dhint{position:absolute;z-index:2;top:calc(18px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.75);font-size:12px;font-weight:900;color:#6a4a20;pointer-events:none;animation:fadeIn .4s .9s both}
-.bv.playing .dhint{display:none}
 .burst{position:fixed;z-index:3;width:0;height:0;pointer-events:none}
 .burst i{position:absolute;left:-90px;top:-90px;width:180px;height:180px;border-radius:50%;border:10px solid #fff;animation:bRing .5s cubic-bezier(.2,.8,.3,1) forwards}
 .burst b{position:absolute;left:-5px;top:-5px;width:10px;height:44px;border-radius:6px;background:#fff;transform:rotate(var(--a)) translateY(-70px);animation:bRay .45s cubic-bezier(.2,.8,.3,1) forwards;box-shadow:0 0 0 3px rgba(255,201,40,.7)}
@@ -440,7 +438,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   <button class="icbtn x" id="bvClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <button class="btn sm ghost quit" id="bvQuit"></button>
   <div class="hud" id="hud"></div>
-  <div class="dhint" id="dhint"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg><span></span></div>
   <div class="bvi" id="bvi"></div>
   <div class="endc" id="endc"></div>
 </div>
@@ -457,6 +454,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="table3d.js?v=5"></script>
 <script src="icons3d.js?v=1"></script>
 <script src="games/reversi.js?v=2"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
