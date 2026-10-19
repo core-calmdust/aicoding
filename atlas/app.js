@@ -220,7 +220,7 @@
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
     flying = true; initGL();
     const r = img.getBoundingClientRect(), W = innerWidth, H = innerHeight, wide = W > 900 && W / H > 1.25;
-    const cx = wide ? W * .62 : W / 2, cy = wide ? H / 2 : H * .3;
+    const cx = W / 2, cy = H / 2;   // the exact centre of the screen
     // wrapper does the travel (translate/scale), the image inside does the 3D spin → both run on the compositor
     const wrap = document.createElement('div'), fly = img.cloneNode();
     fly.removeAttribute('loading'); fly.removeAttribute('class');
