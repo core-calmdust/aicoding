@@ -106,6 +106,36 @@ function buildComb(renjuBlack) {
   return T;
 }
 const COMB_N = buildComb(false), COMB_R = buildComb(true);
+// ---------------------------------------------------------------- learned evaluation
+// Every empty cell, for each colour: the unordered combination of its four direction patterns (715 combos, +1 for a
+// cell forbidden to black). Weights per role (side to move / opponent) x colour, learned from game records.
+const NCOMB = 716;
+const COMBO = new Int16Array(65536).fill(-1);
+{
+  const key = new Map(); let id = 0;
+  for (let a = 0; a < 10; a++) for (let b = a; b < 10; b++) for (let c = b; c < 10; c++) for (let d = c; d < 10; d++) key.set(((a * 10 + b) * 10 + c) * 10 + d, id++);
+  for (let pk = 0; pk < 65536; pk++) {
+    const v = [pk & 15, (pk >> 4) & 15, (pk >> 8) & 15, (pk >> 12) & 15]; if (v[0] > 9 || v[1] > 9 || v[2] > 9 || v[3] > 9) continue;
+    v.sort((x, y) => x - y); COMBO[pk] = key.get(((v[0] * 10 + v[1]) * 10 + v[2]) * 10 + v[3]);
+  }
+}
+const PAIR = 4 * NCOMB, BIAS = PAIR + 200;   // + (black class, white class) of each empty cell x side to move, + bias by side to move
+const LW = { renju: null, std: null };   // Int32Array(BIAS + 2) per rule group, set by setWeights()
+const LK = { renju: 0, std: 0 };   // weight of the hand-made evaluation inside the learned one (residual learning)
+function setWeights(group, arr, oldK) { LW[group] = arr ? Int32Array.from(arr) : null; LK[group] = oldK || 0; }
+// finer part: the raw 10-neighbour window code of every empty cell / direction / colour (mirror-canonical, 29646 codes)
+const LCANON = new Int32Array(59049).fill(-1), TRIV = new Uint8Array(59049); let NL = 0;
+for (let code = 0; code < 59049; code++) {
+  let x = code, r = 0, stone = false; for (let k = 0; k < 10; k++) { const v = x % 3; if (v === 1) stone = true; r += v * POW3[9 - k]; x = (x / 3) | 0; }
+  TRIV[code] = stone ? 0 : 1;
+  if (LCANON[code] < 0) { LCANON[code] = LCANON[r] = NL++; }
+}
+const LW2 = { renju: null, std: null };   // [null, A1, A2, B1?..] lookup by raw code: A[c] (colour c to move), B[c] (colour c not to move)
+function setLineWeights(group, arr) {   // arr: 4 * NL (role mover black, mover white, opponent black, opponent white)
+  if (!arr) { LW2[group] = null; return; }
+  const T = [0, 1, 2, 3].map(t => { const a = new Int32Array(59049); for (let c = 0; c < 59049; c++) a[c] = TRIV[c] ? 0 : arr[t * NL + LCANON[c]]; return a; });
+  LW2[group] = { A: [null, T[0], T[1]], B: [null, T[2], T[3]] };
+}
 
 // ---------------------------------------------------------------- zobrist
 function xorshift(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s | 0; }; }
@@ -129,6 +159,11 @@ class Pos {
     this.pat = [null, new Uint16Array(SIZE), new Uint16Array(SIZE)];  // four direction patterns packed in nibbles
     this.CB = this.renju ? COMB_R : COMB_N;
     this.sc = [null, new Int32Array(SIZE), new Int32Array(SIZE)];
+    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std'];
+    this.cb = [null, new Int16Array(SIZE).fill(-1), new Int16Array(SIZE).fill(-1)];
+    this.tA = [0, 0, 0]; this.tB = [0, 0, 0];   // learned sums: colour c as side to move / as opponent
+    this.pk = new Int16Array(SIZE).fill(-1); this.tP = [0, 0, 0];   // cell class pairs, sums for black / white to move
+    this.lw2 = LW2[this.renju ? 'renju' : 'std']; this.LA = [0, 0, 0]; this.LB = [0, 0, 0];
     this.fb = new Int8Array(SIZE);          // black only: 0 ok, 1 forbidden for sure (overline / 4-4), 2 maybe (3-3, needs the exact test)
     this.tot = [0, 0, 0];
     this.near = new Int16Array(SIZE);
@@ -147,6 +182,11 @@ class Pos {
       }
     }
     for (let i = 0; i < SIZE; i++) if (I2M[i] >= 0) { this.refresh(i); }
+    if (this.lw2) for (let i = 0; i < SIZE; i++) if (I2M[i] >= 0) this.lineCell(i, 1);
+  }
+  lineCell(i, s) {   // add / remove the window codes of cell i (both colours, four directions)
+    const L = this.lw2, cb = this.code[1], cw = this.code[2];
+    for (let d = 0; d < 4; d++) { const x = i * 4 + d; this.LA[1] += s * L.A[1][cb[x]]; this.LB[1] += s * L.B[1][cb[x]]; this.LA[2] += s * L.A[2][cw[x]]; this.LB[2] += s * L.B[2][cw[x]]; }
   }
   static from(rule, moves) { const p = new Pos(rule); for (const m of moves || []) p.make(m); return p; }
   clone() { const p = new Pos(this.rule); for (let k = 0; k < this.ply; k++) p.make(I2M[this.stack[k]]); p.fresh = this.fresh; return p; }
@@ -158,12 +198,33 @@ class Pos {
     this.cls[c][i] = k; this.cnt[c][k]++;
     this.tot[c] += s - this.sc[c][i]; this.sc[c][i] = s;
     if (c === 1) this.fb[i] = (x >> 4) & 3;
+    const lw = this.lw;
+    if (lw) {
+      const nb = c === 1 && this.renju && ((x >> 4) & 3) === 1 ? 715 : COMBO[this.pat[c][i]], ob = this.cb[c][i];
+      if (nb !== ob) {
+        const ta = (c - 1) * NCOMB, tb = (2 + c - 1) * NCOMB;
+        if (ob >= 0) { this.tA[c] -= lw[ta + ob]; this.tB[c] -= lw[tb + ob]; }
+        this.tA[c] += lw[ta + nb]; this.tB[c] += lw[tb + nb]; this.cb[c][i] = nb;
+      }
+      this.pairUpd(i);
+    }
+  }
+  pairUpd(i) {
+    const lw = this.lw, a = this.cls[1][i], b = this.cls[2][i], nk = a >= 0 && b >= 0 ? a * 10 + b : -1, ok = this.pk[i];
+    if (nk === ok) return;
+    if (ok >= 0) { this.tP[1] -= lw[PAIR + ok]; this.tP[2] -= lw[PAIR + 100 + ok]; }
+    if (nk >= 0) { this.tP[1] += lw[PAIR + nk]; this.tP[2] += lw[PAIR + 100 + nk]; }
+    this.pk[i] = nk;
   }
   cellOff(i, c) {
     const ok = this.cls[c][i];
     if (ok >= 0) this.cnt[c][ok]--;
     this.cls[c][i] = -1; this.tot[c] -= this.sc[c][i]; this.sc[c][i] = 0;
     if (c === 1) this.fb[i] = 0;
+    const ob = this.cb[c][i];
+    if (ob >= 0 && this.lw) { this.tA[c] -= this.lw[(c - 1) * NCOMB + ob]; this.tB[c] -= this.lw[(2 + c - 1) * NCOMB + ob]; }
+    this.cb[c][i] = -1;
+    if (this.lw) this.pairUpd(i);
   }
   refresh(i) {
     for (let c = 1; c <= 2; c++) {
@@ -177,7 +238,7 @@ class Pos {
   // place / remove a stone: update the line codes and patterns of every cell that sees it
   _put(i, color, sign) {
     const cb = this.code[1], cw = this.code[2], vb = color === 1 ? sign : 2 * sign, vw = color === 2 ? sign : 2 * sign;
-    const TB = this.TB, TW = this.TW, pb = this.pat[1], pw = this.pat[2], b = this.b;
+    const TB = this.TB, TW = this.TW, pb = this.pat[1], pw = this.pat[2], b = this.b, L = this.lw2, LA = this.LA, LB = this.LB;
     for (let d = 0; d < 4; d++) {
       const D = DIRS[d], sh = 4 * d, mask = ~(15 << sh);
       for (let o = -5; o <= 5; o++) {
@@ -185,7 +246,9 @@ class Pos {
         const q = i - o * D;
         if (I2M[q] < 0) continue;
         const k = o > 0 ? o + 4 : o + 5, x = q * 4 + d;
+        if (L && b[q] === EMPTY) { LA[1] -= L.A[1][cb[x]]; LB[1] -= L.B[1][cb[x]]; LA[2] -= L.A[2][cw[x]]; LB[2] -= L.B[2][cw[x]]; }
         cb[x] += vb * POW3[k]; cw[x] += vw * POW3[k];
+        if (L && b[q] === EMPTY) { LA[1] += L.A[1][cb[x]]; LB[1] += L.B[1][cb[x]]; LA[2] += L.A[2][cw[x]]; LB[2] += L.B[2][cw[x]]; }
         pb[q] = (pb[q] & mask) | (TB[cb[x]] << sh); pw[q] = (pw[q] & mask) | (TW[cw[x]] << sh);
         if (b[q] === EMPTY) { this.cellUpd(q, 1); this.cellUpd(q, 2); }
       }
@@ -194,6 +257,7 @@ class Pos {
   _nearUpd(i, s) { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) this.near[i + dy * S + dx] += s; }
   make(m) {
     const i = M2I[m], c = this.side;
+    if (this.lw2) this.lineCell(i, -1);
     this.b[i] = c; this.cellOff(i, 1); this.cellOff(i, 2);
     this._put(i, c, 1); this._nearUpd(i, 1);
     this.h1 ^= ZA[i * 3 + c] ^ ZS1; this.h2 ^= ZB[i * 3 + c] ^ ZS2;
@@ -202,6 +266,7 @@ class Pos {
   unmake() {
     const i = this.stack[--this.ply], c = this.b[i];
     this.b[i] = EMPTY; this._put(i, c, -1); this._nearUpd(i, -1);
+    if (this.lw2) this.lineCell(i, 1);
     this.cellUpd(i, 1); this.cellUpd(i, 2);
     this.h1 ^= ZA[i * 3 + c] ^ ZS1; this.h2 ^= ZB[i * 3 + c] ^ ZS2;
     this.side = c;
@@ -522,6 +587,11 @@ class Engine {
   timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit)) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
+    if (pos.lw && this.learned !== false) {
+      // learned units: 600 = one logit; scaled to the hand-made evaluation's units (about 10000 per logit) and clamped below the win scores
+      const v = (pos.tA[me] + pos.tB[op] + pos.tP[me] + pos.lw[BIAS + me - 1] + (pos.lw2 ? pos.LA[me] + pos.LB[op] : 0)) * 16 + pos.lk * 16 * (pos.tot[me] * 12 - pos.tot[op] * 10) / 10;
+      return Math.max(-60000, Math.min(60000, v)) | 0;
+    }
     return ((pos.tot[me] * 12 - pos.tot[op] * 10) / 10) | 0;
   }
   // candidate moves for the side to move, ordered; also handles forced replies
@@ -813,12 +883,22 @@ function solve(rule, moves, start, n, defend, maxNodes) {
   return list.map(e => ({ m: I2M[e.i], need: e.need }));
 }
 
-const API = { N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
+// learned weights file: Int8 [combo/pair/bias part (BIAS + 2) | line part (4 * NL)]
+function loadWeightsBuffer(group, buf) {
+  const a = new Int8Array(buf), nf = BIAS + 2;
+  if (a.length !== nf + 4 * NL) return false;
+  setWeights(group, a.subarray(0, nf)); setLineWeights(group, a.subarray(nf));
+  return true;
+}
+const API = { loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
   C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  self.onmessage = e => {
+  // the learned evaluation for standard / freestyle (renju keeps the hand-made one for now)
+  const ready = (typeof fetch === 'function' ? fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}) : Promise.resolve());
+  self.onmessage = async e => {
+    await ready;
     const m = e.data;
     try {
       if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.rule, m.moves, m.level, m.start) });
