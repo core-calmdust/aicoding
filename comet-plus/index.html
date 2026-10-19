@@ -256,6 +256,7 @@ const IS_MOBILE = (() => {
     return matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
 })();
 // スマホの縦長比率に合わせてフィールドを縦に伸ばす（キャラは引き伸ばさない）
+const TOP_EXT = IS_MOBILE ? 0 : 95; // PC: フィールドの上を時計の上まで伸ばした分（彗星と上から来る敵はここから出る）
 const MOB_K = IS_MOBILE ? Math.max(0.85, Math.min(1.45, (600 * Math.max(innerWidth, innerHeight) / Math.max(1, Math.min(innerWidth, innerHeight))) / 1067)) : 1;
 const config = {
     canvasWidth: IS_MOBILE ? 780 : 1067, // PC: 16:9（オリジナルは800） / スマホ: 縦画面
@@ -1668,7 +1669,7 @@ if (reason === 'collision') {
 function spawnWayComets() {
     const wayCount = Math.floor(Math.random() * (stage - 1)) + 2;
     const startX = Math.random() * config.canvasWidth;
-    const startY = -config.cometCoreRadius * 2;
+    const startY = -config.cometCoreRadius * 2 - TOP_EXT;
     const targetX = player.x;
     const targetY = player.y;
     const angleToPlayer = Math.atan2(targetY - startY, targetX - startX);
@@ -1774,7 +1775,7 @@ function updatePlayingState(dt_sec) {
     // Update Player Bullet
     if (playerBullet) {
         playerBullet.y -= config.playerBulletSpeed * dt_sec;
-        if (playerBullet.y < 0) {
+        if (playerBullet.y < -TOP_EXT) {
             playerBullet = null;
         }
     }
@@ -1837,7 +1838,7 @@ function updatePlayingState(dt_sec) {
         for (; cometSpawnCarry >= 1; cometSpawnCarry--) {
             comets.push({
                 x: Math.random() * config.canvasWidth,
-                y: -config.cometCoreRadius,
+                y: -config.cometCoreRadius - TOP_EXT,
                 radius: config.cometCoreRadius,
                 isGlazed: false
             });
@@ -1888,7 +1889,7 @@ function updatePlayingState(dt_sec) {
                 monsters.push({
                     type: 'invader',
                     x: Math.random() * config.canvasWidth,
-                    y: -30,
+                    y: -30 - TOP_EXT,
                     vx: 0,
                     vy: 150,
                     width: 14 * 4,
@@ -2153,7 +2154,7 @@ function updatePlayingState(dt_sec) {
                 audioHandler.playSound('glaze');
             }
 
-            if (eb.y > config.canvasHeight + 20 || eb.y < -20 || eb.x < -20 || eb.x > config.canvasWidth + 20) {
+            if (eb.y > config.canvasHeight + 20 || eb.y < -20 - TOP_EXT || eb.x < -20 || eb.x > config.canvasWidth + 20) {
                 enemyBullets.splice(i, 1);
             }
         }
@@ -3724,14 +3725,16 @@ let kickRingLife = 0;
 // ---------------------------------
 const field = new THREE.Group();
 scene.add(field);
-const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.62, depthWrite: false }));
+const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H + TOP_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.62, depthWrite: false }));
 fieldGlass.rotation.x = -Math.PI / 2;
 fieldGlass.position.y = -8;
+fieldGlass.position.z = -TOP_EXT / 2;
 fieldGlass.renderOrder = 1;
 field.add(fieldGlass);
 
 const FIELD_GRID_STEP = 40;
-const fieldGridCountH = Math.ceil(H / FIELD_GRID_STEP);
+const GH = H + TOP_EXT, GZ0 = -H / 2 - TOP_EXT; // グリッドも伸ばした枠まで
+const fieldGridCountH = Math.ceil(GH / FIELD_GRID_STEP);
 const fieldGridHalfV = Math.floor((W / 2) / FIELD_GRID_STEP);
 const fieldGridPos = new Float32Array((fieldGridCountH + fieldGridHalfV * 2 + 1) * 6);
 const fieldGridGeo = new THREE.BufferGeometry();
@@ -3745,14 +3748,14 @@ let fieldGridStaticDone = false;
 function updateFieldGrid() {
     let k = 0;
     for (let i = 0; i < fieldGridCountH; i++) {
-        const z = -H / 2 + ((i * FIELD_GRID_STEP + fieldScroll) % (fieldGridCountH * FIELD_GRID_STEP)) * (H / (fieldGridCountH * FIELD_GRID_STEP));
+        const z = GZ0 + ((i * FIELD_GRID_STEP + fieldScroll) % (fieldGridCountH * FIELD_GRID_STEP)) * (GH / (fieldGridCountH * FIELD_GRID_STEP));
         fieldGridPos[k] = -W / 2; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
         fieldGridPos[k + 3] = W / 2; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
     }
     if (!fieldGridStaticDone) {
         for (let i = -fieldGridHalfV; i <= fieldGridHalfV; i++) {
             const x = i * FIELD_GRID_STEP;
-            fieldGridPos.set([x, -4, -H / 2, x, -4, H / 2], k); k += 6;
+            fieldGridPos.set([x, -4, GZ0, x, -4, H / 2], k); k += 6;
         }
         fieldGridStaticDone = true;
     }
@@ -3761,7 +3764,7 @@ function updateFieldGrid() {
 
 // 枠: 周囲を一周するラインを、キックごとに波打たせる
 const FRAME_N = 640;
-const FRAME_TOP_EXT = IS_MOBILE ? 0 : 95; // PCは枠の上辺を時計の上まで伸ばす（見た目だけ）
+const FRAME_TOP_EXT = TOP_EXT;
 const FH = H + FRAME_TOP_EXT;
 const framePerim = 2 * (W + FH);
 const frameBase = new Float32Array(FRAME_N * 3);
