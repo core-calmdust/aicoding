@@ -554,6 +554,59 @@ const LEVELS = {
   8: { depth: 42, time: 1800, solve: 1400, book: 99, perfect: true, hard: 60000 },
 };
 function rnd() { return Math.random(); }
+// is the score of move c (mover's view) >= s ?  null-window test, null on timeout
+function moveGE(c, s) {
+  if (isWinningMove(c)) return true;
+  const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
+  playCol(c);
+  let r;
+  if (nm >= SZ) r = 0 >= s;
+  else if (canWinNext()) r = -((SZ + 1 - nm) >> 1) >= s;
+  else { const v = negamax(-s, -s + 1); r = aborted ? null : v <= -s; }
+  cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
+  return r;
+}
+// Lv8 outside the tree: weak-solve the position once, then take the first move (heuristic order) that keeps
+// that value. A lost position is refined to the slowest loss while the normal budget lasts.
+// Solving continues up to cfg.hard ms rather than falling back to a guess; null only if even that runs out.
+function thinkPerfect(str, cfg) {
+  const t0 = Date.now();
+  const hr = heurID(cfg.depth, 120);
+  loadMoves(str);
+  const order = (hr.list || ORDER.filter(c => canPlay(c)).map(c => ({ c, s: 0 }))).slice().sort((a, b) => b.s - a.s).map(x => x.c);
+  deadline = t0 + cfg.hard; aborted = false;
+  const v = solve(true);
+  if (v === null) { deadline = Infinity; aborted = false; return null; }
+  const cls = v > 0 ? 1 : v < 0 ? -1 : 0;
+  let move = -1, score = { kind: 'weak', v: cls }, msProof = 0;
+  if (cls >= 0) {
+    for (const c of order) {
+      const ok = moveGE(c, cls);
+      if (ok === null) { deadline = Infinity; aborted = false; return null; }
+      if (ok) { move = c; break; }
+    }
+    msProof = Date.now() - t0;
+  } else {
+    msProof = Date.now() - t0;
+    // every move loses: delay the loss as long as possible (exact, within the normal budget)
+    deadline = t0 + cfg.time; aborted = false;
+    let best = -99;
+    for (const c of order) {
+      const sv = solveMove(c, false);
+      if (sv === null) break;
+      if (sv > best) { best = sv; move = c; }
+    }
+    aborted = false;
+    if (move >= 0) score = { kind: 'exact', v: best };
+    else {   // out of time: any move that does not lose at once
+      const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
+      move = order.find(c => !(((owl >>> 1) & moveBitsL(c)) | ((owh >>> 1) & moveBitsH(c)))) ?? order[0];
+    }
+  }
+  deadline = Infinity; aborted = false;
+  if (move < 0) return null;
+  return { move, how: 'search', ms: Date.now() - t0, msProof, score };
+}
 function think(str, level) {
   const cfg = LEVELS[level] || LEVELS[5];
   loadMoves(str);
@@ -567,6 +620,8 @@ function think(str, level) {
   if (cfg.perfect) {
     const t = treeLookup(str);
     if (t && canPlay(t.mv)) return { move: t.mv, how: 'book', score: { kind: t.kind, v: t.v } };
+    const r = thinkPerfect(str, cfg);
+    if (r) return r;
     loadMoves(str);
   }
   // book

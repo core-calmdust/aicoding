@@ -12,7 +12,7 @@ const res = {};
 for (let g = done; g < G; g++) {
   let s = (seed * 1000003 + g * 7919) >>> 0 || 1; const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
   const aiSide = mode === 'rand' ? g & 1 : -1;       // 0: Lv8 first, 1: Lv8 second, -1: both
-  const openN = mode === 'self' ? 1 + Math.floor(rnd() * 4) : 0;
+  const openN = mode === 'self' ? 1 + Math.floor(rnd() * 2) : 0;   // random opening of 1-2 plies (tree roots cover ply <= 3)
   let m = '', lines = [], winner = 0;
   while (true) {
     const p = m.length & 1;

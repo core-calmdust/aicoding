@@ -40,3 +40,6 @@ Lv8 を1手目から完全プレイにする。オフラインで「AIが直面�
 - 18:13 side1 D=11 R=3 実行中 (CPU は dots エージェントと共有で遅い)
 - 21:42 サーバ再起動後に再開。side1 D=11 R=3 を cache_s1.bin (41k件) から再開
 - 22:25 side1 D=11 R=3 完了 72,800ノード。最終 tree.bin = s0_d10_r2 + s1_d11_r3 を配置
+- 検証ログ: ver/rand.txt (500局), ver/self.txt (300局) → src/vrun.sh ver/results.txt ver/rand.txt ver/self.txt
+- 22:50 rand500: Lv8全勝, 全3072手中 book2277/search295/win500, search最大337ms。self300: 探索手 ply12 で証明時間 max1.7s (1/300>1.4s) → side0 を D=12 R=2 に延長開始。engine.js: Lv8 木外は thinkPerfect (局面弱解1回+null window で手を選ぶ, 負けは最遅負けを予算内で)
+- 22:57 side0 D=12 R=2 完了 63,244ノード(522秒)。最終 tree.bin = s0_d12_r2 + s1_d11_r3 (encode 引数 12 / 11, R 2 3)。次: 最終検証 ver2/
