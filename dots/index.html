@@ -599,6 +599,7 @@ html[lang=ar] :is(.ls-desc, .rules-offer, .ru-task, figure.mini figcaption, .op-
 html[lang=ar] .ru-task{text-align:center}
 html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-radius:8px 0 0 8px}
 </style>
+<link rel="stylesheet" href="online.css?v=20261019o">
 </head>
 <body>
 <div class="app">
@@ -838,8 +839,14 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 </div>
 
 <script src="i18n.js?v=20261019e"></script>
+<script src="i18n-learn.js?v=20261019L"></script><!-- learn-ui -->
+<script src="../shared/pzbook.js?v=2"></script><!-- learn-ui -->
+<link rel="stylesheet" href="learn.css?v=20261019L"><!-- learn-ui -->
 <script src="engine.js?v=20261019e"></script>
-<script src="learn.js?v=20261019e"></script>
+<script src="learn.js?v=20261019L"></script>
+<script src="i18n-online.js?v=20261019o"></script>
+<script src="firebase-config.js?v=20261019o"></script>
+<script src="online.js?v=20261019o"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -899,11 +906,13 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (settings.mode === 'online') settings.mode = 'pvp';
     if (d.game && [3, 4, 5].includes(d.game.n) && Array.isArray(d.game.moves)) { game = { n: d.game.n, moves: d.game.moves.slice(), human: d.game.human | 0, setup: null }; return true; }
   } catch (e) {}
   return false;
 }
 function save() {
+  if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   try { localStorage.setItem(STORE, JSON.stringify({ settings, game: { n: game.n, moves: game.moves, human: game.human } })); } catch (e) {}
 }
@@ -911,6 +920,7 @@ function save() {
 // ====================================================================== names
 function playerName(i) {
   if (lesson || puzzle) return learnPlayerName(i);
+  if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(i);
   if (settings.mode === 'ai') return i === game.human ? t('you') : 'AI ' + t('lv')[settings.level];
   if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2];
   return i === 0 ? t('pA') : t('pB');
@@ -919,6 +929,7 @@ function playerName(i) {
 function playerKind(i) {
   if (lesson && (lesson.study || lesson.drill)) return lesson.drill && i === lesson.color ? 'Person' : lesson.drill ? 'Robot' : 'Person';
   if (lesson || puzzle) return i === 0 ? 'Person' : 'Robot';
+  if (settings.mode === 'online') return 'Person';
   if (settings.mode === 'ai') return i === game.human ? 'Person' : 'Robot';
   return settings.mode === 'watch' ? 'Robot' : 'Person';
 }
@@ -930,13 +941,14 @@ function initial(i) {
 }
 function shortName(i) {
   if (lesson || puzzle) return i === 0 ? t('you') : t('ai');
+  if (settings.mode === 'online' && window.olShortName) return olShortName(i);
   if (settings.mode === 'ai') return i === game.human ? t('you') : t('ai');
   if (settings.mode === 'watch') return i === 0 ? t('aiA') : t('aiB');
   return i === 0 ? t('pA') : t('pB');
 }
 function isAITurn() {
   if (!S || S.over || viewPly !== null) return false;
-  if (lesson) return false;
+  if (lesson || settings.mode === 'online') return false;
   if (puzzle) return S.turn === 1 && puzzle.state === 'play';
   if (settings.mode === 'watch') return true;
   if (settings.mode === 'ai') return S.turn !== game.human;
@@ -946,6 +958,7 @@ function canHumanMove() {
   if (!S || S.over || viewPly !== null || isAITurn()) return false;
   if (lesson) return !lesson.answered;
   if (puzzle) return puzzle.state === 'play' && !puzzle.waiting;
+  if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
   return !aiPending;
 }
 function levelFor(pl) { return settings.mode === 'watch' ? (pl === 0 ? settings.level : settings.level2) : settings.level; }
@@ -1125,10 +1138,11 @@ function renderInfo() {
   $('#btnAnalyze').disabled = !canReview() || !!(rv && rv.running);
   $('#btnShare').disabled = !L.length || !!game.setup;
   $('#btnUndo').disabled = !canUndo();
-  $('#btnHint').disabled = !canHumanMove() || settings.mode === 'watch';
+  $('#btnHint').disabled = !canHumanMove() || settings.mode === 'watch' || settings.mode === 'online';
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#infoLine').textContent = game.n + '×' + game.n + ' · ' + (settings.mode === 'pvp' ? t('ng.pvp') : settings.mode === 'watch' ? t('ng.watch') : 'Lv.' + settings.level + ' ' + t('lv')[settings.level]);
   svg.classList.toggle('can-move', canHumanMove());
+  if (window.olAfterInfo) olAfterInfo();
 }
 
 // ====================================================================== game flow
@@ -1190,10 +1204,11 @@ function humanMove(e) {
   ac();
   if (lesson) return lessonAnswer(e);
   if (puzzle) return puzzleHumanMove(e);
+  if (settings.mode === 'online') return olHumanMove(e);
   applyMove(e, true);
 }
 function canUndo() {
-  if (lesson || puzzle || settings.mode === 'watch' || !S) return false;
+  if (lesson || puzzle || settings.mode === 'watch' || settings.mode === 'online' || !S) return false;
   if (settings.mode === 'pvp') return game.moves.length > 0;
   return S.log.some(x => x.pl === game.human);
 }
@@ -1220,7 +1235,7 @@ function newGame() {
   next();
 }
 function showResult() {
-  if (!S.over || lesson || puzzle) return;
+  if (!S.over || lesson || puzzle || settings.mode === 'online') return;   // online: the result comes from online-ui.js
   if (!rv && canReview()) setTimeout(() => { if (!rv && canReview() && SF.over) runReview(true); }, 300);
   const [a, b] = S.scores;
   let title, win = 0;
@@ -1423,6 +1438,7 @@ function renderReview() {
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i}" class="${viewPly === x.i ? 'cur' : ''}"><span class="tag ${x.j.q}">${t('q.' + x.j.q)}</span><span class="mv">${x.i + 1}. <i class="p${rv.mover[x.i]}"></i>${edgeName(game.moves[x.i])} → ${edgeName(x.j.it.bestMove)}</span><span class="ls">${approxMark(x.j)}−${fmtLoss(x.j)}</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
     html += `<div class="rv-note">${t('rv.note')}${approx ? ' ' + t('rv.approx') : ''}</div>`;
+    if (typeof rvCoach === 'function') html += rvCoach();   /* learn-ui: 振り返り解説 */
   }
   $('#rvBody').innerHTML = html;
   if (viewPly !== null) {
@@ -1662,5 +1678,7 @@ document.querySelector('#rsCancel').onclick = () => document.querySelector('#res
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
 </script>
+<script src="online-ui.js?v=20261019o"></script>
+<script src="rated.js?v=20261019L"></script><!-- learn-ui: レーティング戦 -->
 </body>
 </html>

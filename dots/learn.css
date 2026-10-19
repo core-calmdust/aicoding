@@ -1,0 +1,243 @@
+/* learn-ui — readability pass for the learning dialogs (lessons / 定跡 / 詰めドット), the 定跡 list + detail view,
+   the puzzle book (PZBook) sizes, the 2-column new-game dialog on PC, レーティング戦 and the coach review.
+   Loaded after the page styles, online.css and the PZBook styles, so equal selectors here win. */
+
+/* ---------------------------------------------------------------- bigger text in the dialogs */
+.modal h2{font-size:24px;line-height:1.35}
+.ls-tabs button{font-size:14.5px;padding:10px 4px}
+.ls-desc{font-size:15px;line-height:1.75;margin:-8px 0 16px}
+.lesson-list{gap:10px}
+.lesson-item{padding:14px 16px;gap:14px}
+.lesson-item .tx b{font-size:16px;line-height:1.45}
+.lesson-item .tx small{font-size:14px;line-height:1.6;margin-top:3px}
+.lesson-item .st{font-size:13.5px}
+.lesson-item .no{font-size:20px;width:32px}
+.ls-course{margin:16px 0 4px;gap:3px}
+.ls-course b{font-size:19px}
+.ls-course small{font-size:14px;line-height:1.6}
+.lesson-intro p{font-size:16px;line-height:1.8;margin-bottom:12px}
+.lesson-intro p.note,.lesson-intro .note{font-size:14.5px;line-height:1.75}
+#liStep,.lt{font-size:13.5px}
+figure.mini figcaption{font-size:14.5px;line-height:1.7}
+.ru-task{font-size:16px;line-height:1.75}
+.ru-msg{font-size:15px}
+.ru-steps button{width:34px;height:34px;font-size:13.5px}
+.ru-sizes figcaption{font-size:13.5px}
+.pz-total{font-size:14px;margin:4px 0 2px}
+.pz-catdesc{font-size:15.5px;line-height:1.8;margin:-6px 0 16px}
+.op-credit{font-size:13px;line-height:1.7;margin-top:10px;grid-column:1 / -1}
+.op-info{font-size:15.5px;line-height:1.8}
+.op-seq{font-size:14px}
+.op-nav button{font-size:14px;padding:6px 12px}
+.op-opt{font-size:14px}
+.modal-actions .mbtn{font-size:15px}
+.dl-date{color:var(--dim);font-weight:400}
+@media (max-width: 520px), (max-height: 560px){
+  .modal h2{font-size:21px}
+  .ls-tabs button{font-size:13px;padding:9px 1px}
+  .lesson-item{padding:12px 13px;gap:11px}
+  .lesson-item .tx b{font-size:15.5px}
+  .lesson-item .tx small{font-size:13.5px}
+}
+
+/* ---------------------------------------------------------------- one dialog size for every tab (ルール・レッスン・定跡・詰めドット) */
+#lessonOverlay .modal:is([data-view=lessonListView],[data-view=rulesView],[data-view=opDetailView]), #puzzleOverlay .modal{height:calc(100vh - 20px);height:calc(100dvh - 20px)}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  #lessonOverlay .modal:is([data-view=lessonListView],[data-view=rulesView],[data-view=opDetailView]), #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))!important;height:min(880px, calc(100vh - 40px));height:min(880px, calc(100dvh - 40px));padding:28px 32px}
+  #lessonOverlay .modal[data-view=rulesView] #rulesBody{max-width:760px;margin:0 auto}
+}
+
+/* ---------------------------------------------------------------- PZBook: larger text */
+.pb-list,#pzLevels{gap:12px}
+.pb-card{padding:14px 16px;gap:14px}
+.pb-no{width:46px;height:46px;font-size:21px}
+.pb-tx{gap:5px}
+.pb-tx b{font-size:16.5px}
+.pb-tx small{font-size:13.5px;line-height:1.55}
+.pb-prog{font-size:12.5px}
+.pb-st{font-size:12.5px}
+.pb-st .pb-star{width:13px;height:13px}
+.pb-medals .pb-medal{width:17px;height:17px}
+.pb-pip{width:10px;height:10px}
+.pb-full{font-size:11.5px}
+.pb-hs > small{font-size:13px}
+.pb-ring{width:64px;height:64px}
+.pb-ring b{font-size:19px}.pb-ring small{font-size:11.5px}
+.pb-st.big{font-size:20px}
+.pb-cont{font-size:15px;padding:11px 18px}
+.pb-sn{font-size:13.5px}
+.pb-tier{font-size:13.5px;padding:2px 10px}
+.pb-sp{font-size:12.5px}
+.pb-lk{font-size:13px}
+.pb-tile .n{font-size:16.5px}
+.pb-tile .nx{font-size:10px}
+.pb-tile .s .pb-star{width:11px;height:11px}
+.pb-sv-tx{font-size:13.5px}
+.pb-ev{font-size:15px}
+#puzzleOverlay .lesson-list > .pb-card{min-width:0}
+#puzzleOverlay .lesson-list > .ls-course,#puzzleOverlay .lesson-list > .pz-total{grid-column:1 / -1}
+.confetti-l{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:200}
+
+/* ---------------------------------------------------------------- 定跡: sub-tabs, compact cards, 基本の考え方 */
+.lesson-list.op-list{align-items:start}
+.op-sub{grid-column:1 / -1;margin:0 0 6px}
+.op-sub button{font-size:15px;padding:10px 6px}
+.op-head{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:14px 16px;border-radius:12px;background:rgba(201,169,97,.08);border:1px solid rgba(201,169,97,.28)}
+.op-lead{flex:1 1 320px;font-size:16.5px;line-height:1.65;color:var(--text);margin:0}
+.op-cnt{font-size:13.5px;color:var(--dim);white-space:nowrap}.op-cnt.clear{color:#8fe3b8}
+.op-about{flex:1 1 100%}
+.op-about summary{cursor:pointer;font-size:14.5px;color:var(--brass);padding:4px 0;list-style-position:inside}
+.op-about summary:hover{color:var(--accent)}
+.op-about p{font-size:15.5px;line-height:1.8;color:#cfd8d2;margin:8px 0 0}
+.op-about p b{color:var(--accent)}
+.op-card{display:flex;flex-direction:column;gap:8px;padding:14px 16px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);cursor:pointer;transition:border-color .2s,background .2s,transform .15s;min-width:0}
+.op-card:hover,.op-card:focus-visible{border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.05);outline:none}
+.op-card.done{border-color:rgba(111,211,160,.4)}
+.oc-top{display:flex;align-items:center;gap:10px}
+.oc-no{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--brass);border:1px solid var(--brass2)}
+.oc-nm{flex:1;min-width:0;font-size:16.5px;color:var(--accent);letter-spacing:.02em;line-height:1.4}
+.oc-ok{color:#8fe3b8;font-weight:700;font-size:17px}
+.oc-sum{font-size:15px;line-height:1.7;color:#d6dfda;margin:0}
+.hm{color:var(--accent);font-weight:600;white-space:nowrap}
+.oc-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.oc-badge{font-size:12.5px;line-height:1.5;padding:1px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.oc-badge i{font-style:normal;opacity:.25}
+.oc-badge.lv1{color:#8fe3b8;border-color:rgba(111,211,160,.45)}
+.oc-badge.lv2{color:#f2d07a;border-color:rgba(242,192,96,.45)}
+.oc-badge.lv3{color:#ffab9e;border-color:rgba(255,139,125,.5)}
+.oc-badge.ok{color:#8fe3b8;border-color:rgba(111,211,160,.45)}
+.oc-mv{font-size:12.5px;color:var(--dim)}
+.oc-btns{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:2px}
+.oc-btns button{font-size:13.5px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.oc-btns button:hover{border-color:var(--brass2);color:var(--text)}
+.oc-open{margin-left:auto;font-size:13.5px;color:var(--brass)}
+.op-basic{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr);gap:4px 24px;padding:16px 18px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18)}
+.op-basic h3{font-family:'Shippori Mincho B1',serif;font-size:19px;color:var(--brass);letter-spacing:.04em;margin:0 0 6px}
+.op-basic p{font-size:16px;line-height:1.8;color:#d6dfda;margin:0 0 10px}
+.op-basic p:last-child{margin-bottom:0}
+.op-basic p b{color:var(--accent)}
+.op-basic figure.mini{margin:6px auto 0;max-width:240px}
+@media (min-width: 760px){
+  .op-basic.has-fig{grid-template-columns:minmax(0,1fr) 240px}
+  .op-basic.has-fig h3{grid-column:1 / -1}
+  .op-basic.has-fig figure.mini{margin:0}
+}
+@media (max-width: 520px){ .op-sub button{font-size:14px;padding:9px 2px} }
+
+/* ---------------------------------------------------------------- 定跡: detail view */
+#opDetailView .lt{color:var(--brass)}
+.od-title{display:flex;align-items:center;gap:10px;margin:4px 0 8px!important}
+.od-title > span{flex:0 1 auto;min-width:0}
+.od-pg{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--accent);font-size:20px;line-height:1}
+.od-pg:disabled{opacity:.3;pointer-events:none}
+.od-meta{margin-bottom:14px}
+.od-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.od-board{max-width:min(380px,92%);margin:0 auto}
+.od-ply{text-align:center;font-size:15px;color:var(--muted);margin-top:8px}
+.od-who.p0{color:#ffb7a2}.od-who.p1{color:#a9d2f7}
+.od-nav{justify-content:center;margin-top:8px;gap:6px}
+.od-nav button{min-width:46px;font-size:15px;padding:7px 10px}
+.od-left .op-opt{display:flex;justify-content:center;margin:10px 0 0}
+.od-seq{max-height:120px;overflow-y:auto;margin-top:10px;padding:6px 8px;border-radius:9px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+.od-keys{text-align:center;font-size:12.5px;color:var(--dim);margin-top:6px}
+.od-sec{padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18);margin-bottom:12px}
+.od-sec h3{font-family:'Shippori Mincho B1',serif;font-size:18.5px;color:var(--brass);letter-spacing:.04em;margin:0 0 8px}
+.od-pts{margin:0;padding-inline-start:20px}
+.od-pts li{font-size:16px;line-height:1.8;color:#d6dfda;margin-bottom:6px}
+.od-pts li::marker{color:var(--brass)}
+#odNow p{font-size:16px;line-height:1.8;color:#d6dfda;margin:0 0 8px}
+#odNow p:last-child{margin-bottom:0}
+#odNow b{color:var(--accent)}
+.od-actions{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.od-row{display:flex;gap:10px;flex-wrap:wrap}
+.od-row .mbtn{flex:1 1 0;min-width:140px;padding:12px 10px}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  .od-grid{grid-template-columns:minmax(300px,400px) minmax(0,1fr);gap:28px;align-items:start}
+  .od-board{max-width:100%}
+}
+
+/* ---------------------------------------------------------------- lesson / puzzle cards: second button row */
+#lsList,#pzList{flex:1}
+
+/* ---------------------------------------------------------------- new-game dialog: 2 columns on PC */
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:36px;align-content:start;padding:28px 34px;
+    grid-template-areas:"h h" "offer offer" "rules rules" "mode mode" "info info" "size disp" "order level" "rated level2" "act act"}
+  #newOverlay .modal.m-rated{grid-template-areas:"h h" "offer offer" "rules rules" "mode mode" "info info" "size rated" "disp rated" ". rated" "act act"}
+  #newOverlay .modal > *{grid-column:1 / -1}
+  #newOverlay .modal > h2{grid-area:h}
+  #newOverlay #rulesOffer{grid-area:offer}
+  #newOverlay .modal > p.rules{grid-area:rules}
+  #newOverlay .modal > .field:has(#segMode){grid-area:mode}
+  #newOverlay #fLessonInfo,#newOverlay #fPuzzleInfo{grid-area:info}
+  #newOverlay #fSize{grid-area:size}
+  #newOverlay #fDisplay{grid-area:disp}
+  #newOverlay #fOrder{grid-area:order}
+  #newOverlay #fLevel{grid-area:level}
+  #newOverlay #fLevel2{grid-area:level2}
+  #newOverlay #fRated{grid-area:rated}
+  #newOverlay .modal-actions{grid-area:act;max-width:560px;justify-self:end;width:100%}
+  #newOverlay #segMode{flex-wrap:wrap}
+  #newOverlay #segMode button{flex:1 1 auto}
+}
+#newOverlay .field > label{font-size:13px}
+
+/* ---------------------------------------------------------------- レーティング戦 */
+#fRated > label{margin-bottom:6px}
+.rt-card{padding:12px 14px 13px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.rt-lbl{font-size:12.5px;color:var(--muted);letter-spacing:.06em}
+.rt-r{font-family:'JetBrains Mono',monospace;font-size:23px;color:var(--accent);font-weight:700}
+.rt-prov{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.rt-rec{font-size:13.5px;color:var(--muted);margin-top:3px}
+.rt-spark{display:block;width:100%;height:40px;margin-top:8px}
+.rt-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.6}
+.rt-spark line{stroke:var(--line);stroke-dasharray:3 3}
+.rt-lbl2{font-size:12px;color:var(--dim);margin:8px 0 5px}
+.rt-hist{display:flex;flex-wrap:wrap;gap:4px}
+.rt-chip{font-size:11.5px;line-height:1.5;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:inline-flex;gap:4px;font-family:'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap}
+.rt-chip i{font-style:normal;font-family:sans-serif}
+.rt-chip.w i,.rt-chip.w b{color:#8fe3b8}.rt-chip.l i,.rt-chip.l b{color:#ff9b90}
+.rt-chip b{font-weight:600}
+.rt-opp{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:14px;color:var(--muted);line-height:1.6}
+.rt-opp b{color:var(--text)}
+.rt-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:12px;padding:0 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.rt-tag.up{color:#ffab9e;border-color:rgba(255,139,125,.5)}.rt-tag.down{color:#8fe3b8;border-color:rgba(111,211,160,.45)}.rt-tag.even{color:#f2d07a;border-color:rgba(242,192,96,.45)}
+.rt-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-top:8px}
+.rt-res{font-family:'JetBrains Mono',monospace;font-size:16px}
+.rt-res .up{color:#8fe3b8}.rt-res .down{color:#ff9b90}
+.rt-ressub{color:var(--muted)}
+.rt-q{font-size:15.5px;line-height:1.75;margin:4px 0 6px}
+body.rated-live #evLine, body.rated-live #graph{visibility:hidden}
+
+/* ---------------------------------------------------------------- 振り返り解説 (coach review) */
+.cr-box{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.06)}
+.cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
+.cr-box p{font-size:14px;line-height:1.75;color:#d6dfda;margin:0 0 6px}
+.cr-box p:last-child{margin-bottom:0}
+.cr-mv b{color:var(--text)}
+.cr-mv .tag{font-size:12.5px;font-weight:700;margin-left:6px}
+.cr-mv .tag.bad{color:#ff8b7d}.cr-mv .tag.dubious{color:#f2c060}.cr-mv .tag.best,.cr-mv .tag.good{color:#8fe3b8}
+.cr-why{color:var(--muted)!important}
+.cr-tip{color:#e9dcb4!important}
+.cr-list{margin:0;padding-inline-start:18px}
+.cr-list li{font-size:14px;line-height:1.75;color:#d6dfda;margin-bottom:5px}
+.cr-list li::marker{color:var(--brass)}
+.cr-go{font-size:12.5px;padding:1px 9px;border-radius:7px;border:1px solid var(--brass2);color:var(--accent);background:rgba(0,0,0,.2);margin-inline-start:4px}
+
+/* ---------------------------------------------------------------- Arabic: text right-to-left, boards and move lists left-to-right */
+html[lang=ar] :is(.op-lead, .op-about, .op-card, .op-basic, .od-sec, .od-ply, .cr-box, .rt-card, .rt-desc, .rt-q, .ls-desc, .pz-catdesc, .pz-total, .pb-tx){direction:rtl;text-align:right}
+html[lang=ar] .od-ply{text-align:center}
+html[lang=ar] .oc-open{margin-left:0;margin-right:auto}
+html[lang=ar] :is(.op-seq, .od-nav, .mini-svg){direction:ltr}
+.pz-ord{color:var(--dim)}
+/* detail board: smaller dots and a finer "next move" mark at this size */
+.od-board .mb-dot{r:2.6px}
+.od-board .mb-hl{stroke-width:3.4;stroke-dasharray:5 4}
+.od-board .mb-edge{stroke-width:3.6}
+.od-board{max-width:min(360px,92%)}
+#newOverlay .seg button{font-size:14px}
+.od-seq{position:relative}
+.od-title{letter-spacing:.04em}
+html[lang=ar] #newOverlay .field > label{direction:rtl;text-align:right}
+.od-board .mb-bad{stroke-width:2.4;stroke-dasharray:3 5;opacity:.75}
