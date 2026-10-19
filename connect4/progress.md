@@ -43,3 +43,6 @@ Lv8 を1手目から完全プレイにする。オフラインで「AIが直面�
 - 検証ログ: ver/rand.txt (500局), ver/self.txt (300局) → src/vrun.sh ver/results.txt ver/rand.txt ver/self.txt
 - 22:50 rand500: Lv8全勝, 全3072手中 book2277/search295/win500, search最大337ms。self300: 探索手 ply12 で証明時間 max1.7s (1/300>1.4s) → side0 を D=12 R=2 に延長開始。engine.js: Lv8 木外は thinkPerfect (局面弱解1回+null window で手を選ぶ, 負けは最遅負けを予算内で)
 - 22:57 side0 D=12 R=2 完了 63,244ノード(522秒)。最終 tree.bin = s0_d12_r2 + s1_d11_r3 (encode 引数 12 / 11, R 2 3)。次: 最終検証 ver2/
+- 23:10 最終検証ログ ver2/rand.txt (500局 Lv8全勝), ver2/self.txt (300局) 完了。C 検証: src/vrun.sh ver2/results.txt ver2/rand.txt ver2/self.txt (中断しても再実行で続きから)
+- 23:25 ブラウザ確認 (1440 AI先手 / 390 AI後手, ヒント・振り返り) エラー0。i18n Lv8 説明10言語, トップ index.html に c4v2.str 10言語, README 行 更新済み (未コミット)
+- C 検証 ver2: 8899/約8970 件 OK (残りは ply≤4 の重い局面)。終わらなければ src/vrun.sh を再実行
