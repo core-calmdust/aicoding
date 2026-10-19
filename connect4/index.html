@@ -190,8 +190,8 @@ a.snd.home{text-decoration:none}
 .graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
-.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0}
+.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
 .btn.on{color:var(--accent);border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.08)}
@@ -222,6 +222,16 @@ a.snd.home{text-decoration:none}
 .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overscroll-behavior:contain}
 .ls-tabs{margin-bottom:16px}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
+/* rules page */
+#rulesOverlay .modal{width:min(900px,100%)}
+.rl-lead{font-size:14.5px;line-height:1.8;color:#d6e2dc;margin:-6px 0 14px}
+.rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width: 620px){.rl-grid{grid-template-columns:1fr}}
+.rl-item{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);padding:10px 12px}
+.rl-item h4{font-size:13.5px;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
+.rl-item p{font-size:13px;line-height:1.7;color:#d6e2dc}
+.rl-item svg{display:block;width:min(200px,100%);height:auto;margin:6px auto 8px}
+html[lang=ar] :is(.rl-lead, .rl-item, #rulesOverlay h2){direction:rtl;text-align:right}
 @media (max-width: 520px), (max-height: 560px){
   .overlay{padding:10px}
   .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);border-radius:14px}
@@ -347,7 +357,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .side > .brand{position:static;width:var(--fw);max-width:100%;flex:none}
   .side, .side-in{display:contents}
   .side-in > *{width:var(--fw);max-width:100%;flex:none}
-  .brand{order:-3;height:28px;align-items:center}
+  .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:19px;letter-spacing:.06em}
   .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
   .brand-r{gap:6px}
@@ -355,7 +365,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
   .lesson-card,.puzzle-card{order:0}
-  .controls{order:1}
+  .controls{order:-4}
   #evalCard{order:2}
   .review-card{order:3}
   .kifu-card{order:4}
@@ -582,6 +592,7 @@ body .info-line{font-size:12.5px}
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
+      <button class="btn" id="btnRules" data-i18n-title="btn.rules.title"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span data-i18n="btn.rules"></span></button>
     </div>
 
     <div class="card review-card" id="reviewCard">
@@ -649,11 +660,21 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
+<!-- rules (illustrated) -->
+<div class="overlay" id="rulesOverlay">
+  <div class="modal">
+    <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+    <h2 data-i18n="rl.title"></h2>
+    <div id="rulesBody"></div>
+    <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
+  </div>
+</div>
+
 <!-- lessons -->
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="ls.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
       <div class="lesson-list" id="lessonList"></div>
@@ -677,7 +698,7 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -726,7 +747,8 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018tb"></script>
+<script src="i18n.js?v=20261020r"></script>
+<script src="../shared/rulesoffer.js?v=2"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1285,15 +1307,58 @@ $('#btnHint').onclick = () => {
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playTick(); };
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
+$('#btnRules').onclick = () => openRules();
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  const inst = on => ['#lessonOverlay', '#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
+  if (b.dataset.v !== 'rules') $('#rulesOverlay').classList.remove('show');
+  if (b.dataset.v === 'rules') { $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show'); openRules(); }
   if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
   if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
   setTimeout(() => inst(false), 150);
 }));
+// ---------------------------------------------------------------- rules (illustrated)
+// small board picture. rows: 6 strings (top → bottom) of '.', '1' (gold), '2' (silver)
+// o.line = [[c,r],[c,r]] winning line, o.rings = {'c,r': 'ring'|'dash'}, o.drop = [col, row, player], o.xcol = col, o.col = highlighted col
+function miniSVG(rows, o) {
+  o = o || {};
+  const u = 26, pad = 7, top = 30, W = 7 * u + pad * 2, H = top + 6 * u + pad;
+  const X = c => pad + (c + 0.5) * u, Y = r => top + (r + 0.5) * u;
+  const disc = (x, y, p, extra) => `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.5" ${extra || ''}/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="${p === 1 ? 'rgba(94,71,32,.45)' : 'rgba(60,66,75,.4)'}" stroke-width="1.2" ${extra || ''}/>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect x="1" y="${top - 6}" width="${W - 2}" height="${H - top + 5}" rx="8" fill="#14100c" stroke="rgba(201,169,97,.45)"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="4" fill="#17573f"/>`;
+  if (o.col !== undefined) s += `<rect x="${pad + o.col * u + 1}" y="${top - 4}" width="${u - 2}" height="${6 * u + 6}" rx="5" fill="rgba(226,194,117,.18)" stroke="rgba(226,194,117,.7)" stroke-width="1.2"/>`;
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) {
+    const p = +rows[r][c] || 0;
+    s += p ? disc(X(c), Y(r), p) : `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="#06100c" stroke="rgba(201,169,97,.4)" stroke-width="1"/>`;
+  }
+  if (o.line) { const [[a, b], [c, d]] = o.line; s += `<line x1="${X(a)}" y1="${Y(b)}" x2="${X(c)}" y2="${Y(d)}" stroke="#fff3cf" stroke-width="5" stroke-linecap="round" opacity=".75"/>`; }
+  for (const k in o.rings || {}) { const [c, r] = k.split(',').map(Number), v = o.rings[k]; s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.42}" fill="none" stroke="${v === 'dash' ? 'rgba(255,255,255,.9)' : '#e2c275'}" stroke-width="2.2" ${v === 'dash' ? 'stroke-dasharray="4 3"' : ''}/>`; }
+  if (o.drop) {
+    const [c, r, p] = o.drop, x = X(c), y0 = 13, y1 = Y(r) - u * 0.5;
+    s += `<circle cx="${x}" cy="${Y(r)}" r="${u * 0.42}" fill="none" stroke="#e2c275" stroke-width="2.2" stroke-dasharray="4 3"/>`;
+    s += `<path d="M${x},${y0 + 13}L${x},${y1}M${x - 5},${y1 - 6}L${x},${y1}L${x + 5},${y1 - 6}" stroke="#ffe9a8" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    s += disc(x, y0, p, '');
+  }
+  if (o.xcol !== undefined) { const x = X(o.xcol), y = 13; s += `<path d="M${x - 6},${y - 6}L${x + 6},${y + 6}M${x + 6},${y - 6}L${x - 6},${y + 6}" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round"/>`; }
+  return s + '</svg>';
+}
+function ruleItems() {
+  const v = { a: t('p1'), b: t('p2') };
+  const it = (h, svg, p) => `<div class="rl-item"><h4>${t(h, v)}</h4>${svg}<p>${t(p, v)}</p></div>`;
+  return [
+    it('rl.board.h', miniSVG(['.......', '.......', '.......', '...1...', '..21...', '..112.2'], {}), 'rl.board'),
+    it('rl.drop.h', miniSVG(['.......', '.......', '.......', '.......', '...2...', '..211..'], { drop: [3, 3, 1] }), 'rl.drop'),
+    it('rl.win.h', miniSVG(['.......', '.......', '....1..', '...12..', '..122..', '.1211.2'], { line: [[1, 5], [4, 2]] }), 'rl.win'),
+    it('rl.full.h', miniSVG(['...2...', '...1...', '...2...', '...1...', '...2...', '..211..'], { xcol: 3 }), 'rl.full'),
+    it('rl.draw.h', miniSVG(['1122112', '2211221', '1122112', '2211221', '1122112', '2211221'], {}), 'rl.draw'),
+    it('rl.tips.h', miniSVG(['.......', '.......', '.......', '.......', '...11..', '..222.1'], { col: 3, rings: { '1,5': 'dash', '5,5': 'dash' } }), 'rl.tips'),
+  ].join('');
+}
+function openRules() { selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
+function renderRules() { $('#rulesBody').innerHTML = `<p class="rl-lead">${t('rl.lead')}</p><div class="rl-grid">${ruleItems()}</div>`; }
+$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
 $('#btnResume').onclick = resumeHere;
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
@@ -1778,7 +1843,7 @@ function replayCheck(str) {
   return { ok: true, n: str.length };
 }
 function openLoaded(str, n) {
-  ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(hideOverlay);
+  ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay', '#rulesOverlay'].forEach(hideOverlay);
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = 0;
   settings.mode = 'pvp';
@@ -1849,6 +1914,7 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
+const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' }) : null;
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
@@ -1856,6 +1922,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) segSync();
   if (lesson) { renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
+  if (rulesOffer) rulesOffer.sync();
+  if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
@@ -1868,7 +1936,7 @@ window.__c4 = { get moves() { return moves; }, get cur() { return cur; }, settin
 
 // clicking the dimmed area outside a dialog does the same as its close button
 function dismissOverlay(o) {
-  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', onlineOverlay: '#olClose', puzzleOverlay: '#pzClose' };
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', onlineOverlay: '#olClose', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose' };
   if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
   const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
   if (b) b.click(); else o.classList.remove('show');
