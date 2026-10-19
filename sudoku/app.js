@@ -568,7 +568,7 @@ function drawMap(ti, scrollToNext, focusK) {
     const [x, y] = pts[k];
     html += `<button class="node ${rec ? 'cleared' : ''} ${k === next ? 'next' : ''} ${k % 10 === 9 ? 'boss' : ''}" data-p="${k}" style="left:${(x / W * 100).toFixed(3)}%;top:${y.toFixed(1)}px" title="${esc(t('lv.' + lv))}"><span class="lvd" style="background:${LVCOL[lv]}"></span>${sv && !rec ? '<span class="ip"></span>' : ''}<span class="n">${k + 1}</span><span class="stars">${rec ? [1, 2, 3].map(q => STAR(q <= rec.s)).join('') : ''}</span></button>`;
   }
-  if (next >= 0) html += `<div class="me" style="left:${(pts[next][0] / W * 100).toFixed(3)}%;top:${pts[next][1].toFixed(1)}px">${avatar(DB.prof.icon, 44)}</div>`;
+  if (next >= 0) html += `<div class="mapme" style="left:${(pts[next][0] / W * 100).toFixed(3)}%;top:${pts[next][1].toFixed(1)}px">${avatar(DB.prof.icon, 44)}</div>`;
   host.innerHTML = html;
   host.querySelectorAll('.node').forEach(b => b.onclick = () => { SFX.tap(); go('c/' + (ti + 1) + '/' + (+b.dataset.p + 1)); });
   if (scrollToNext) {
