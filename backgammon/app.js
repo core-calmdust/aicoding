@@ -190,7 +190,12 @@ const SFX = {
 };
 
 // ====================================================================== board geometry (units)
-const G = { W: 15.85, H: 12, LX: 0.5, BX: 6.5, B: 1.2, RX: 7.7, RE: 13.7, TX: 14.05, TW: 1.3, TOP: 0.5, BOT: 11.5, MID: 6, C: 0.94 };
+const G = { W: 15.85, H: 12, LX: 0.5, BX: 6.5, B: 1.2, RX: 7.7, RE: 13.7, TX: 14.05, TW: 1.3, TOP: 0.5, BOT: 11.5, MID: 6, C: 0.94, PL: 4.6, FLAT: false };
+// phone landscape uses a flatter board (shorter points, stacks compress earlier) so it can use more of the width
+const FLAT_H = 9.2;
+function setGeom(flat) {
+  G.FLAT = flat; G.H = flat ? FLAT_H : 12; G.BOT = G.H - 0.5; G.MID = G.H / 2; G.PL = (G.MID - G.TOP) * 0.836;
+}
 const frameEl = $('#frame'), ckLayer = $('#ckLayer'), dstLayer = $('#dstLayer'), diceLayer = $('#diceLayer'), glowLayer = $('#glowLayer'), lblLayer = $('#lblLayer'), cubeEl = $('#cube'), arrowsEl = $('#arrows'), bbtns = $('#bbtns');
 const uPx = () => frameEl.clientWidth / G.W;
 const toV = (s, p) => (p === 0 || p === 25) ? p : (s === view ? p : 25 - p);       // side-s point -> view point
@@ -201,14 +206,14 @@ function slotX(vp) {
   if (vp <= 18) return G.LX + (vp - 13) + 0.5;
   return G.RX + (vp - 19) + 0.5;
 }
-function stackStep(n) { return n <= 5 ? G.C : (5 * G.C - G.C) / (n - 1); }
+function stackStep(n) { const avail = G.FLAT ? G.MID - G.TOP - 0.12 : 5 * G.C; return n <= 1 ? G.C : Math.min(G.C, (avail - G.C) / (n - 1)); }
 function slotXY(vp, k, n) {
   const st = stackStep(n);
   if (vp >= 13) return [slotX(vp), G.TOP + G.C / 2 + k * st];
   return [slotX(vp), G.BOT - G.C / 2 - k * st];
 }
 function barXY(s, k, n) {
-  const st = n <= 4 ? G.C : (3.9 - G.C) / (n - 1), x = G.BX + G.B / 2;
+  const ba = G.MID - G.TOP - 1.6, st = n <= 1 ? G.C : Math.min(G.C, (ba - G.C) / (n - 1)), x = G.BX + G.B / 2;
   return s === view ? [x, G.MID - 1.02 - k * st] : [x, G.MID + 1.02 + k * st];
 }
 function offXY(s, k) {
@@ -242,8 +247,8 @@ function drawBoardSvg() {
     r += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.BOT - G.TOP) * S}" fill="#fff" filter="url(#nz)" opacity=".9"/>`;
     for (let i = 0; i < 6; i++) {
       const x = (x0 + i) * S, a = (i % 2 === 0);
-      r += `<path d="M${x + 4} ${G.TOP * S} L${x + S - 4} ${G.TOP * S} L${x + S / 2} ${(G.TOP + 4.6) * S} Z" fill="url(#${a ? 'ivory' : 'ox'})" filter="url(#ptShadow)"/>`;
-      r += `<path d="M${x + 4} ${G.BOT * S} L${x + S - 4} ${G.BOT * S} L${x + S / 2} ${(G.BOT - 4.6) * S} Z" fill="url(#${a ? 'oxB' : 'ivoryB'})" filter="url(#ptShadow)"/>`;
+      r += `<path d="M${x + 4} ${G.TOP * S} L${x + S - 4} ${G.TOP * S} L${x + S / 2} ${(G.TOP + G.PL) * S} Z" fill="url(#${a ? 'ivory' : 'ox'})" filter="url(#ptShadow)"/>`;
+      r += `<path d="M${x + 4} ${G.BOT * S} L${x + S - 4} ${G.BOT * S} L${x + S / 2} ${(G.BOT - G.PL) * S} Z" fill="url(#${a ? 'oxB' : 'ivoryB'})" filter="url(#ptShadow)"/>`;
     }
     r += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.BOT - G.TOP) * S}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="6"/>`;
     return r;
@@ -263,6 +268,7 @@ function drawBoardSvg() {
   for (const [cx, cy] of [[24, 24], [w - 24, 24], [24, h - 24], [w - 24, h - 24]]) s += `<circle cx="${cx}" cy="${cy}" r="9" fill="url(#brassG)" stroke="rgba(0,0,0,.4)" stroke-width="2"/>`;
   // hinge marks on the bar
   for (const y of [G.TOP + 1.2, G.BOT - 1.2]) s += `<rect x="${(G.BX + 0.32) * S}" y="${y * S - 22}" width="${(G.B - 0.64) * S}" height="44" rx="6" fill="url(#brassG)" opacity=".75"/>`;
+  $('#boardSvg').setAttribute('viewBox', `0 0 ${w} ${h}`); $('#arrows').setAttribute('viewBox', `0 0 ${w} ${h}`);
   $('#boardSvg').innerHTML = s;
 }
 function drawLabels() {
@@ -1248,11 +1254,21 @@ const LAND_STORE = STORE + '-land';
 let landOn = false, landLocked = false;
 try { landOn = localStorage.getItem(LAND_STORE) === '1'; } catch (e) {}
 const mqPortrait = matchMedia('(orientation: portrait)'), mqCoarse = matchMedia('(pointer: coarse)');
+const mqLandPhone = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
+let geomReady = false;
+// flat board in any phone-landscape layout (physical landscape or the rotated page)
+function updateGeom() {
+  const flat = ROT || mqLandPhone.matches;
+  if (flat === G.FLAT && geomReady) return;
+  setGeom(flat);
+  if (geomReady) { try { drawBoardSvg(); render(); } catch (e) {} }
+}
 function applyLand() {
   const rot = landOn && !landLocked && mqCoarse.matches && mqPortrait.matches;
-  if (rot !== ROT) { ROT = rot; document.documentElement.classList.toggle('rot', rot); selected = null; requestAnimationFrame(() => { try { render(); } catch (e) {} }); }
+  if (rot !== ROT) { ROT = rot; document.documentElement.classList.toggle('rot', rot); selected = null; updateGeom(); requestAnimationFrame(() => { try { render(); } catch (e) {} }); }
   $('#btnLand').classList.toggle('on', landOn);
 }
+(mqLandPhone.addEventListener ? mqLandPhone.addEventListener('change', updateGeom) : mqLandPhone.addListener(updateGeom));
 async function setLand(on) {
   landOn = on; try { localStorage.setItem(LAND_STORE, on ? '1' : '0'); } catch (e) {}
   if (on) {
@@ -1276,11 +1292,12 @@ $('#btnLand').onclick = () => setLand(!landOn);
 (mqPortrait.addEventListener ? mqPortrait.addEventListener('change', applyLand) : mqPortrait.addListener(applyLand));
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && landLocked) { landLocked = false; applyLand(); } });
 // the rotated page must never scroll (focus / scrollIntoView could shift it)
-for (const el of [document.documentElement, document.body]) el.addEventListener('scroll', () => { if (ROT && (el.scrollTop || el.scrollLeft)) { el.scrollTop = 0; el.scrollLeft = 0; } });
+// (the rotated body itself scrolls vertically in its own frame; only sideways shifts are undone)
+for (const el of [document.documentElement, document.body]) el.addEventListener('scroll', () => { if (!ROT) return; if (el.scrollLeft) el.scrollLeft = 0; if (el === document.documentElement && el.scrollTop) el.scrollTop = 0; });
 applyLand();
 // ---- one-time tip for phone users in portrait: landscape play is available (queued behind any open dialog)
 const LAND_TIP = STORE + '-landtip';
-function landTipWanted() { try { if (localStorage.getItem(LAND_TIP)) return false; } catch (e) { return false; } return !landOn && mqCoarse.matches && mqPortrait.matches; }
+function landTipWanted() { return !landOn && mqCoarse.matches && mqPortrait.matches; }   // shown on every visit in portrait (once per page load)
 function pulseLand() { const b = $('#btnLand'); b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 4500); }
 function closeLandTip(on) { hideOverlay('#landTipOverlay'); if (on) setLand(true); setTimeout(pulseLand, 250); }
 $('#ltKeep').onclick = () => closeLandTip(false);
@@ -1290,7 +1307,6 @@ if (landTipWanted()) {
     if (!landTipWanted()) { clearInterval(iv); return; }
     if (document.querySelector('.overlay.show') || lesson || puzzle) return;
     clearInterval(iv);
-    try { localStorage.setItem(LAND_TIP, '1'); } catch (e) {}
     document.body.classList.toggle('no-anim', !settings.anim);
     showOverlay('#landTipOverlay');
   }, 700);
@@ -1648,7 +1664,11 @@ function setupProblem(p, side, dice) {
 }
 // shownState() for special modes uses turn.pos; the cube/scores come from the dummy match
 function problemPoints(n, rank) { if (n <= 1 || rank === 0) return 20; return Math.max(0, Math.round(20 * (n - 1 - rank) / (n - 1))); }
-function miniBoardSVG(p, side, opts) {
+function miniBoardSVG(p, side, opts) {   // always drawn with the standard (tall) geometry
+  const flat = G.FLAT; if (flat) setGeom(false);
+  try { return miniBoardSVG0(p, side, opts); } finally { if (flat) setGeom(true); }
+}
+function miniBoardSVG0(p, side, opts) {
   opts = opts || {};
   const S = 20, W = 15.85 * S, H = 12 * S;
   let s = `<svg class="mini" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" rx="8" fill="#2b1a10"/>`;
@@ -1961,6 +1981,7 @@ function dailySolved(date, hinted) {
 }
 
 // ====================================================================== boot
+updateGeom(); geomReady = true;
 drawBoardSvg();
 const hadSave = load();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;

@@ -28,7 +28,8 @@
   --ttop: 0px;
   --u: min((var(--vh) - var(--pad) * 2 - var(--ttop)) / 12,(var(--vw) - var(--pad) * 2 - var(--gap) - 360px) / 15.85, 70px);
   --fw: calc(var(--u) * 15.85);
-  --fh: calc(var(--u) * 12);
+  --gh: 12;
+  --fh: calc(var(--u) * var(--gh));
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100dvh){:root{--vh:100dvh}}
@@ -392,70 +393,97 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html:not(.rot) .toast{font-size:13px;padding:10px 16px}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
-  /* phone landscape */
-  :root{--u:min((var(--vh) - 14px) / 12, (var(--vw) - 290px) / 15.85, 60px)}
-  .app{padding:7px max(10px, env(safe-area-inset-right)) 7px max(10px, env(safe-area-inset-left));gap:12px;grid-template-columns:auto minmax(220px, 340px)}
-  .side{max-height:calc(var(--vh) - 14px);height:calc(var(--vh) - 14px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
-  .side::-webkit-scrollbar{display:none}
-  .side-in{gap:7px;height:auto}
-  .kifu-card{flex:none;min-height:110px}
-  .kifu{max-height:none;overflow:visible}
-  .review-card.show{flex:none;overflow:visible}
-  #rvBody, #hintBody{overflow:visible}
+  /* phone landscape: flat board on the left at full height, a compact column on the right (header, players, menu), panels below (page scrolls) */
+  :root{--gh:9.2;--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 186px) / 15.85, 60px)}
+  html,body{height:auto;overflow-x:hidden;overflow-y:auto}
+  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:center;gap:6px 10px;padding:6px max(8px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));grid-template-columns:var(--fw) minmax(150px, 190px);grid-template-rows:auto auto auto 1fr;grid-template-areas:"board brand" "board players" "board ctrl" "board ." "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  .side, .side-in{display:contents}
+  .board-area{grid-area:board;align-self:start}
+  .brand{grid-area:brand;flex-direction:column;align-items:stretch;gap:5px;height:auto;padding:0}
+  .brand-l{min-width:0}
+  .brand h1{font-size:15px;letter-spacing:.02em}
+  .brand h1 small{display:none}
+  .brand a.series{display:none}
+  .brand-r{gap:4px;justify-content:space-between;flex-wrap:wrap}
+  #langSel{max-width:none;flex:1 1 60px;min-width:0}
+  .players{grid-area:players;grid-template-columns:1fr;gap:4px;padding:5px}
+  .player{padding:4px 7px;border-radius:8px}
+  .player .name{font-size:10.5px}
+  .player .count{font-size:16px}
+  .player .count small{font-size:9px}
+  .player .status{font-size:10px;min-height:0}
+  .controls{grid-area:ctrl;display:grid;grid-template-columns:repeat(3, 1fr);gap:4px;padding:5px}
+  .btn{flex-direction:column;justify-content:center;gap:1px;padding:5px 1px;font-size:9px;border-radius:8px}
+  .btn span{display:none}
+  .btn svg{width:17px;height:17px}
+  .lesson-card,.puzzle-card{grid-area:ls;flex:none;overflow:visible}
+  .hint-card{grid-area:hint}
   .hint-card.show{min-height:0}
-  .lesson-card,.puzzle-card{flex:none;overflow:visible}
-  .brand{align-items:center}
-  .brand h1{font-size:16px;letter-spacing:.06em}
-  .brand h1 small{font-size:10px;margin-left:5px}
+  #evalCard{grid-area:ev}
+  .review-card{grid-area:rv}
+  .review-card.show{flex:none;overflow:visible}
+  .kifu-card{grid-area:kf;flex:none;min-height:110px}
+  .kifu{max-height:none;overflow:visible}
+  #rvBody, #hintBody{overflow:visible}
   .card{padding:8px 10px;border-radius:12px}
-  .players{gap:6px;padding:6px}
-  .player{padding:5px 8px;border-radius:9px}
-  .player .name{font-size:11px}
-  .player .count{font-size:18px}
   .evalrow{margin-bottom:5px}
   .evalbar{height:6px}
-  .graph{height:50px;margin-top:6px}
-  .controls{gap:5px;padding:6px}
-  .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
-  .btn span{display:none}
-  .btn svg{width:16px;height:16px}
+  .graph{height:56px;margin-top:6px}
   .info-line{display:none}
   .lesson-prompt{font-size:14px}.lesson-fb,.pz-status{font-size:13.5px}
+  /* lessons / puzzles: the lesson card takes the right column (a little wider), next to the board */
+  body:is(.in-lesson,.in-puzzle){--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 250px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
+  body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:var(--fw) minmax(200px, 1fr);grid-template-areas:"board brand" "board ls" "board ls" "board ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  body:is(.in-lesson,.in-puzzle) .players{display:none}
+  body:is(.in-lesson,.in-puzzle) :is(#lsHint,#lsNext,#lsQuit,#pzHint,#pzRetry,#pzAnswer,#pzNext,#pzList,#pzQuit){font-size:11.5px;padding-left:3px;padding-right:3px;letter-spacing:0}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{align-self:stretch;max-height:calc(var(--vh) - 84px);overflow-y:auto;scrollbar-width:thin;padding:8px 10px}
 }
-/* phone landscape header: room for the title next to four controls */
-@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px){ .brand-r{gap:5px} #langSel{max-width:76px} .brand h1{letter-spacing:.02em;font-size:15px} .brand h1 small{display:none} }
-html.rot .brand-r{gap:5px} html.rot #langSel{max-width:76px} html.rot .brand h1{letter-spacing:.02em;font-size:15px} html.rot .brand h1 small{display:none}
 /* forced landscape (CSS-rotated app on a portrait phone): same rules as phone landscape */
 @media (pointer: coarse){
-  /* phone landscape */
-  html.rot{--u:min((var(--vh) - 14px) / 12, (var(--vw) - 290px) / 15.85, 60px)}
-  html.rot .app{padding:7px max(10px, env(safe-area-inset-right)) 7px max(10px, env(safe-area-inset-left));gap:12px;grid-template-columns:auto minmax(220px, 340px)}
-  html.rot .side{max-height:calc(var(--vh) - 14px);height:calc(var(--vh) - 14px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
-  html.rot .side::-webkit-scrollbar{display:none}
-  html.rot .side-in{gap:7px;height:auto}
-  html.rot .kifu-card{flex:none;min-height:110px}
-  html.rot .kifu{max-height:none;overflow:visible}
-  html.rot .review-card.show{flex:none;overflow:visible}
-  html.rot #rvBody, html.rot #hintBody{overflow:visible}
+  /* phone landscape: flat board on the left at full height, a compact column on the right (header, players, menu), panels below (page scrolls) */
+  html.rot{--gh:9.2;--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 186px) / 15.85, 60px)}
+  html.rot body{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:center;gap:6px 10px;padding:6px max(8px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));grid-template-columns:var(--fw) minmax(150px, 190px);grid-template-rows:auto auto auto 1fr;grid-template-areas:"board brand" "board players" "board ctrl" "board ." "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  html.rot .side, html.rot .side-in{display:contents}
+  html.rot .board-area{grid-area:board;align-self:start}
+  html.rot .brand{grid-area:brand;flex-direction:column;align-items:stretch;gap:5px;height:auto;padding:0}
+  html.rot .brand-l{min-width:0}
+  html.rot .brand h1{font-size:15px;letter-spacing:.02em}
+  html.rot .brand h1 small{display:none}
+  html.rot .brand a.series{display:none}
+  html.rot .brand-r{gap:4px;justify-content:space-between;flex-wrap:wrap}
+  html.rot #langSel{max-width:none;flex:1 1 60px;min-width:0}
+  html.rot .players{grid-area:players;grid-template-columns:1fr;gap:4px;padding:5px}
+  html.rot .player{padding:4px 7px;border-radius:8px}
+  html.rot .player .name{font-size:10.5px}
+  html.rot .player .count{font-size:16px}
+  html.rot .player .count small{font-size:9px}
+  html.rot .player .status{font-size:10px;min-height:0}
+  html.rot .controls{grid-area:ctrl;display:grid;grid-template-columns:repeat(3, 1fr);gap:4px;padding:5px}
+  html.rot .btn{flex-direction:column;justify-content:center;gap:1px;padding:5px 1px;font-size:9px;border-radius:8px}
+  html.rot .btn span{display:none}
+  html.rot .btn svg{width:17px;height:17px}
+  html.rot .lesson-card, html.rot .puzzle-card{grid-area:ls;flex:none;overflow:visible}
+  html.rot .hint-card{grid-area:hint}
   html.rot .hint-card.show{min-height:0}
-  html.rot .lesson-card, html.rot .puzzle-card{flex:none;overflow:visible}
-  html.rot .brand{align-items:center}
-  html.rot .brand h1{font-size:16px;letter-spacing:.06em}
-  html.rot .brand h1 small{font-size:10px;margin-left:5px}
+  html.rot #evalCard{grid-area:ev}
+  html.rot .review-card{grid-area:rv}
+  html.rot .review-card.show{flex:none;overflow:visible}
+  html.rot .kifu-card{grid-area:kf;flex:none;min-height:110px}
+  html.rot .kifu{max-height:none;overflow:visible}
+  html.rot #rvBody, html.rot #hintBody{overflow:visible}
   html.rot .card{padding:8px 10px;border-radius:12px}
-  html.rot .players{gap:6px;padding:6px}
-  html.rot .player{padding:5px 8px;border-radius:9px}
-  html.rot .player .name{font-size:11px}
-  html.rot .player .count{font-size:18px}
   html.rot .evalrow{margin-bottom:5px}
   html.rot .evalbar{height:6px}
-  html.rot .graph{height:50px;margin-top:6px}
-  html.rot .controls{gap:5px;padding:6px}
-  html.rot .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
-  html.rot .btn span{display:none}
-  html.rot .btn svg{width:16px;height:16px}
+  html.rot .graph{height:56px;margin-top:6px}
   html.rot .info-line{display:none}
   html.rot .lesson-prompt{font-size:14px}html.rot .lesson-fb, html.rot .pz-status{font-size:13.5px}
+  /* lessons / puzzles: the lesson card takes the right column (a little wider), next to the board */
+  html.rot body:is(.in-lesson,.in-puzzle){--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 250px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
+  html.rot body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:var(--fw) minmax(200px, 1fr);grid-template-areas:"board brand" "board ls" "board ls" "board ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  html.rot body:is(.in-lesson,.in-puzzle) .players{display:none}
+  html.rot body:is(.in-lesson,.in-puzzle) :is(#lsHint,#lsNext,#lsQuit,#pzHint,#pzRetry,#pzAnswer,#pzNext,#pzList,#pzQuit){font-size:11.5px;padding-left:3px;padding-right:3px;letter-spacing:0}
+  html.rot body.in-lesson .lesson-card, html.rot body.in-puzzle .puzzle-card{align-self:stretch;max-height:calc(var(--vh) - 84px);overflow-y:auto;scrollbar-width:thin;padding:8px 10px}
 }
 @media (min-height: 561px){
 @container (min-width: 420px){
