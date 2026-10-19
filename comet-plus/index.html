@@ -428,9 +428,13 @@ class AudioHandler {
         }
         try {
             const AC = window.AudioContext || window.webkitAudioContext;
-            try { this.ctx = new AC({ latencyHint: 0 }); } catch (e) { this.ctx = new AC({ latencyHint: 'interactive' }); } // 最小の出力遅延
+            try { this.ctx = new AC({ latencyHint: IS_MOBILE ? 'interactive' : 0 }); } catch (e) { this.ctx = new AC({ latencyHint: 'interactive' }); } // PCは最小の出力遅延、スマホは音飛びしない標準設定
             this.masterGain = this.ctx.createGain();
-            this.masterGain.connect(this.ctx.destination);
+            // 音が重なっても割れないようにリミッターを通す
+            this.limiter = this.ctx.createDynamicsCompressor();
+            this.limiter.threshold.value = -8; this.limiter.knee.value = 6; this.limiter.ratio.value = 12;
+            this.limiter.attack.value = 0.002; this.limiter.release.value = 0.12;
+            this.masterGain.connect(this.limiter).connect(this.ctx.destination);
             this.masterGain.gain.value = this.isMuted ? 0 : this.volume;
             this.isInitialized = true;
         } catch (e) {
@@ -438,6 +442,18 @@ class AudioHandler {
         }
     }
 
+    echoBus(t, fb) { // 同じ設定のエコーは1本を使い回す
+        this._echo = this._echo || {};
+        const key = t.toFixed(4) + '_' + fb;
+        let e = this._echo[key];
+        if (!e) {
+            const d = this.ctx.createDelay(2), g = this.ctx.createGain();
+            d.delayTime.value = t; g.gain.value = fb;
+            d.connect(g).connect(d); d.connect(this.masterGain);
+            e = this._echo[key] = d;
+        }
+        return e;
+    }
     getNoise() {
         if (!this._noise) {
             const n = this.ctx.sampleRate;
@@ -500,12 +516,12 @@ class AudioHandler {
         if (!this.bgmPlaying) {
             return;
         }
-
+        // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
+        if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
         const bgmStage = ((stage - 1) % 6) + 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
-
         const createKick = time => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -598,23 +614,17 @@ class AudioHandler {
             const osc = this.ctx.createOscillator();
             const panner = this.ctx.createStereoPanner();
             const gain = this.ctx.createGain();
-            const delay = this.ctx.createDelay();
-            const feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
             osc.type = 'triangle';
             osc.frequency.value = note;
             gain.gain.setValueAtTime(0.3, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-            delay.delayTime.value = sixteenth * 3;
-            feedback.gain.value = 0.5;
             osc.connect(panner).connect(gain);
             gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
+            gain.connect(this.echoBus(sixteenth * 3, 0.5)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + 0.1);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            this.bgmOscillators.push(osc, panner, gain);
         };
         const createStereoPad = (time, note) => {
             const oscL = this.ctx.createOscillator();
@@ -667,77 +677,56 @@ class AudioHandler {
             const osc = this.ctx.createOscillator();
             const panner = this.ctx.createStereoPanner();
             const gain = this.ctx.createGain();
-            const delay = this.ctx.createDelay();
-            const feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
             osc.type = 'triangle';
             osc.frequency.value = note;
             gain.gain.setValueAtTime(0.4, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 2);
-            delay.delayTime.value = sixteenth * 4;
-            feedback.gain.value = 0.5;
             osc.connect(panner).connect(gain);
             gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
+            gain.connect(this.echoBus(sixteenth * 4, 0.5)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + sixteenth * 2);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            this.bgmOscillators.push(osc, panner, gain);
         };
         const createSequence4 = (time, note) => {
             const osc = this.ctx.createOscillator();
             const panner = this.ctx.createStereoPanner();
             const gain = this.ctx.createGain();
-            const delay = this.ctx.createDelay();
-            const feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
             osc.type = 'sine';
             osc.frequency.value = note;
             gain.gain.setValueAtTime(0.35, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 3.5);
-            delay.delayTime.value = sixteenth * 3;
-            feedback.gain.value = 0.4;
             osc.connect(panner).connect(gain);
             gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
+            gain.connect(this.echoBus(sixteenth * 3, 0.4)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + sixteenth * 3.5);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            this.bgmOscillators.push(osc, panner, gain);
         };
         const createSequence5 = (time, note) => {
             const osc = this.ctx.createOscillator();
             const panner = this.ctx.createStereoPanner();
             const gain = this.ctx.createGain();
-            const delay = this.ctx.createDelay();
-            const feedback = this.ctx.createGain();
             panner.pan.value = (Math.random() * 2 - 1) * 0.9;
             osc.type = 'triangle';
             osc.frequency.value = note;
             gain.gain.setValueAtTime(0.4, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 4);
-            delay.delayTime.value = sixteenth * 6;
-            feedback.gain.value = 0.4;
             osc.connect(panner).connect(gain);
             gain.connect(this.masterGain);
-            gain.connect(delay);
-            delay.connect(feedback).connect(delay);
-            delay.connect(this.masterGain);
+            gain.connect(this.echoBus(sixteenth * 6, 0.4)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + sixteenth * 4);
-            this.bgmOscillators.push(osc, panner, gain, delay, feedback);
+            this.bgmOscillators.push(osc, panner, gain);
         };
-
         while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
-
             if (noteInMeasure === 0) {
                 this.barTrigger = true;
             }
-
             if (noteInMeasure % 4 === 0) {
                 createKick(this.nextNoteTime);
                 visualBeat = 1.0;
@@ -754,7 +743,6 @@ class AudioHandler {
             if (beatInLoop === 0) {
                 createStereoPad(this.nextNoteTime, rootNote * 2);
             }
-
             const measureIn8BarLoop = Math.floor(beatInLoop / 16);
             if (measureIn8BarLoop % 2 === 0) {
                 if ([0, 8].includes(noteInMeasure)) {
@@ -765,18 +753,15 @@ class AudioHandler {
                     createStereoBass(this.nextNoteTime, rootNote);
                 }
             }
-
             if ([3, 7, 10, 15].includes(noteInMeasure)) {
                 createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
             }
-
             if (bgmStage >= 2) {
                 if (noteInMeasure % 4 === 0) {
                     const degree = [0, 7, 3, 5][Math.floor(noteInMeasure / 4)];
                     createSequence2(this.nextNoteTime, rootNote * 8 * Math.pow(2, degree / 12));
                 }
             }
-
             if (bgmStage >= 3) {
                 if (beatInLoop === 62) {
                     const chordIndex = 1;
@@ -809,7 +794,6 @@ class AudioHandler {
                     this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
                 }
             }
-
             this.nextNoteTime += sixteenth;
             this.current16th = (this.current16th + 1) % 128;
         }
