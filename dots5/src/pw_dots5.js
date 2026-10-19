@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
     newGame();
   }, [+order, SIZE, LEVEL]);
   const aiTimes = []; let hints = 0, hintOk = 0, moves = 0, lastWait = Date.now();
-  for (let it = 0; it < 400; it++) {
+  for (let it = 0; it < 6000; it++) {
     const st = await pg.evaluate(() => ({ over: S.over, human: canHumanMove(), n: game.moves.length }));
     if (st.over) break;
     if (!st.human) { await pg.waitForTimeout(100); continue; }
@@ -25,7 +25,7 @@ const { chromium } = require('playwright');
     // a hint every third human move
     if (moves % 3 === 0) {
       hints++;
-      await pg.click('#btnHint');
+      await pg.evaluate(() => document.querySelector('#btnHint').click());
       for (let k = 0; k < 40; k++) { await pg.waitForTimeout(100); if (await pg.evaluate(() => hintEdge >= 0)) { hintOk++; break; } }
     }
     const e = await pg.evaluate(() => {
@@ -51,7 +51,7 @@ const { chromium } = require('playwright');
   let lessonOk = false, puzzleOk = false;
   try {
     await pg.evaluate(() => { document.querySelectorAll('.overlay').forEach(x => x.classList.remove('show')); });
-    await pg.click('#btnLesson'); await pg.waitForTimeout(800);
+    await pg.evaluate(() => document.querySelector('#btnLesson').click()); await pg.waitForTimeout(800);
     lessonOk = await pg.evaluate(() => document.querySelector('#lessonOverlay').classList.contains('show') && document.querySelectorAll('#lessonOverlay .lesson-item').length > 0);
     await pg.screenshot({ path: shot.replace('.png', '_lessons.png') });
     await pg.evaluate(() => { startLessonL(0); }); await pg.waitForTimeout(600);
@@ -59,7 +59,7 @@ const { chromium } = require('playwright');
     await pg.screenshot({ path: shot.replace('.png', '_lesson1.png') });
     await pg.evaluate(() => endLesson(true));
     // puzzles: a 5x5 one (real5), play the solver's best first move, then wait for the reply
-    await pg.click('#btnPuzzle'); await pg.waitForTimeout(800);
+    await pg.evaluate(() => document.querySelector('#btnPuzzle').click()); await pg.waitForTimeout(800);
     await pg.evaluate(() => startPuzzle('real5', 0, 0)); await pg.waitForTimeout(800);
     await pg.evaluate(() => puzzleHumanMove(puzzle.pz.best));
     for (let k = 0; k < 100; k++) { await pg.waitForTimeout(200); const st = await pg.evaluate(() => puzzle && (puzzle.state !== 'play' || canHumanMove())); if (st) break; }

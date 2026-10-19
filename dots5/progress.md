@@ -28,6 +28,10 @@
 - 実行中ジョブ: m10_v1_vs_old.jsonl（v1 Lv10 vs 旧Lv10, 時間1.0, 100局, 再開可）。再開: cd dots5src && timeout 3480 node match.js /home/claude/work/ckpt/dots5/matches/m10_v1_vs_old.jsonl 100 /home/claude/work/dots5src/v1/engine.js,10,1,1 /home/claude/work/dots5src/engine.orig.js,10,0,1
 - 実行中: mkset.js → decisive2.jsonl（gen2対局から）
 
+- [19:05] m10 v1 vs 旧Lv10: 39局で 31勝8敗（サーバ再起動で中断）→ [21:45] ジョブ2で再開。
+- [19:20] ブラウザ試験(5×5 Lv10, 1440×900/390×844): 完走, ヒント9/9, 振り返り完了, レッスン/詰めOK, Firebase(localhost拒否)以外のエラーなし, AI待ち最大5.6–5.7s。
+- [21:45] coordinator: main が更新（オンライン/チャット/レート戦）。git pull済み(up to date)、HEADのengine.js==engine.orig.js。UIのworker API不変。rated.jsの5×5 Lv9/10レートは暫定値→測定後に見直し候補。
+
 ## ファイル
 - dots5src/match.js（対局, 再開可）, agent.js, stats.js, decide.js, mkset.js, evaltest.js, evalsum.js, outc.c（ネイティブオラクル）, bench.js
 - engine.orig.js = 作業前のengine.js（旧Lv10比較用。dots5src内にあり）

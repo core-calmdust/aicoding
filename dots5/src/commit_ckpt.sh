@@ -8,6 +8,8 @@ cp /home/claude/work/ckpt/dots5/progress.md dots5/
 cp /home/claude/work/ckpt/dots5/matches/*.jsonl dots5/matches/ 2>/dev/null
 cp /home/claude/work/dots5src/*.c /home/claude/work/dots5src/*.js /home/claude/work/dots5src/*.sh dots5/src/ 2>/dev/null
 rm -f dots5/src/engine.orig.js
+for d in /home/claude/work/dots5src/v*/; do [ -f $d/engine.js ] && cp $d/engine.js dots5/src/$(basename $d)_engine.js; done
+cp /home/claude/work/ckpt/dots5/*.jsonl dots5/ 2>/dev/null
 git add dots5
 git diff --cached --quiet && { echo "nothing to commit"; exit 0; }
 git commit -q -m "wip: dots5 checkpoints $(date -u +%Y-%m-%dT%H:%MZ)
