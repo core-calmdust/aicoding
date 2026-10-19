@@ -2,6 +2,7 @@
 (function () {
 const S = {
 ja: {
+  'ol.chat': "チャット", 'ol.chatPh': "全員に公開されます · Enterで入力", 'ol.chatSend': "送信", 'ol.chatEmpty': "まだ発言はありません", 'ol.chatWait': "連続投稿は2秒あけてください", 'ol.chatNote': "公開チャット：オンラインの全員が読めます。保存されるのは最新20件のみで、個別メッセージ機能はありません。",
   'ol.title': 'オンライン', 'ol.tabGame': '対局', 'ol.online': 'オンライン中', 'ol.rooms': '部屋', 'ol.rank': 'ランキング', 'ol.open': 'オンラインへ',
   'ol.setup1': 'オンライン対戦は準備中です。', 'ol.setup2': '公開までもうしばらくお待ちください。AI対戦・二人対戦・レッスン・詰めドットはこのまま遊べます。',
   'ol.connecting': '接続中…', 'ol.error': '接続できませんでした。', 'ol.retry': 'もう一度', 'ol.rating': 'レーティング', 'ol.record': '{w}勝 {l}敗 {d}分',
@@ -33,6 +34,7 @@ ja: {
   'err.popup': 'ポップアップがブロックされました。ページを移動してログインします。', 'err.config': 'Firebase Authentication が有効になっていません（コンソールで「始める」を押してください）。',
 },
 en: {
+  'ol.chat': "Chat", 'ol.chatPh': "Visible to everyone · press Enter to type", 'ol.chatSend': "Send", 'ol.chatEmpty': "No messages yet", 'ol.chatWait': "Please wait 2 seconds between messages", 'ol.chatNote': "Public chat: everyone online can read it. Only the latest 20 messages are kept; there are no private messages.",
   'ol.title': 'Online', 'ol.tabGame': 'Game', 'ol.online': 'Online now', 'ol.rooms': 'Rooms', 'ol.rank': 'Ranking', 'ol.open': 'Go online',
   'ol.setup1': 'Online play is being prepared.', 'ol.setup2': 'Please wait a little longer. Play vs AI, 2-player games, lessons and puzzles work as usual.',
   'ol.connecting': 'Connecting…', 'ol.error': 'Could not connect.', 'ol.retry': 'Try again', 'ol.rating': 'Rating', 'ol.record': '{w}W {l}L {d}D',
@@ -64,6 +66,7 @@ en: {
   'err.popup': 'The popup was blocked. Signing in on a new page instead.', 'err.config': 'Firebase Authentication is not enabled (press "Get started" in the console).',
 },
 zh: {
+  'ol.chat': "聊天", 'ol.chatPh': "所有人可见 · 按 Enter 输入", 'ol.chatSend': "发送", 'ol.chatEmpty': "还没有消息", 'ol.chatWait': "请间隔 2 秒再发送", 'ol.chatNote': "公开聊天：所有在线玩家都能看到。仅保留最新 20 条，没有私信功能。",
   'ol.title': '在线', 'ol.tabGame': '对局', 'ol.online': '在线玩家', 'ol.rooms': '房间', 'ol.rank': '排行榜', 'ol.open': '进入在线',
   'ol.setup1': '在线对战正在准备中。', 'ol.setup2': '请稍候。对战AI、双人对战、课程和残局题可照常游玩。',
   'ol.connecting': '连接中…', 'ol.error': '无法连接。', 'ol.retry': '重试', 'ol.rating': '等级分', 'ol.record': '{w}胜 {l}负 {d}平',
@@ -95,6 +98,7 @@ zh: {
   'err.popup': '弹出窗口被拦截，将跳转页面登录。', 'err.config': 'Firebase Authentication 未启用（请在控制台点击“开始”）。',
 },
 ko: {
+  'ol.chat': "채팅", 'ol.chatPh': "모두에게 공개 · Enter로 입력", 'ol.chatSend': "전송", 'ol.chatEmpty': "아직 메시지가 없습니다", 'ol.chatWait': "메시지는 2초 간격으로 보낼 수 있습니다", 'ol.chatNote': "공개 채팅: 접속 중인 모두가 볼 수 있습니다. 최신 20개만 저장되며 개인 메시지 기능은 없습니다.",
   'ol.title': '온라인', 'ol.tabGame': '대국', 'ol.online': '접속 중', 'ol.rooms': '방', 'ol.rank': '랭킹', 'ol.open': '온라인으로',
   'ol.setup1': '온라인 대전은 준비 중입니다.', 'ol.setup2': '조금만 기다려 주세요. AI 대전, 2인 대전, 레슨, 퍼즐은 그대로 즐길 수 있습니다.',
   'ol.connecting': '연결 중…', 'ol.error': '연결할 수 없습니다.', 'ol.retry': '다시 시도', 'ol.rating': '레이팅', 'ol.record': '{w}승 {l}패 {d}무',
@@ -126,6 +130,7 @@ ko: {
   'err.popup': '팝업이 차단되어 페이지를 이동해 로그인합니다.', 'err.config': 'Firebase Authentication이 켜져 있지 않습니다(콘솔에서 "시작하기"를 누르세요).',
 },
 es: {
+  'ol.chat': "Chat", 'ol.chatPh': "Visible para todos · pulsa Enter para escribir", 'ol.chatSend': "Enviar", 'ol.chatEmpty': "Aún no hay mensajes", 'ol.chatWait': "Espera 2 segundos entre mensajes", 'ol.chatNote': "Chat público: todos los conectados pueden leerlo. Solo se guardan los 20 últimos mensajes; no hay mensajes privados.",
   'ol.title': 'En línea', 'ol.tabGame': 'Partida', 'ol.online': 'Conectados', 'ol.rooms': 'Salas', 'ol.rank': 'Clasificación', 'ol.open': 'Ir en línea',
   'ol.setup1': 'El juego en línea se está preparando.', 'ol.setup2': 'Espera un poco más. Contra la IA, 2 jugadores, lecciones y problemas funcionan como siempre.',
   'ol.connecting': 'Conectando…', 'ol.error': 'No se pudo conectar.', 'ol.retry': 'Reintentar', 'ol.rating': 'Rating', 'ol.record': '{w}G {l}P {d}E',
@@ -157,6 +162,7 @@ es: {
   'err.popup': 'Se bloqueó la ventana emergente. Iniciando sesión en otra página.', 'err.config': 'Firebase Authentication no está activado (pulsa «Comenzar» en la consola).',
 },
 fr: {
+  'ol.chat': "Chat", 'ol.chatPh': "Visible par tous · Entrée pour écrire", 'ol.chatSend': "Envoyer", 'ol.chatEmpty': "Aucun message pour l’instant", 'ol.chatWait': "Attendez 2 secondes entre deux messages", 'ol.chatNote': "Chat public : tous les joueurs en ligne peuvent le lire. Seuls les 20 derniers messages sont conservés ; pas de messages privés.",
   'ol.title': 'En ligne', 'ol.tabGame': 'Partie', 'ol.online': 'Connectés', 'ol.rooms': 'Salons', 'ol.rank': 'Classement', 'ol.open': 'Jouer en ligne',
   'ol.setup1': 'Le jeu en ligne est en préparation.', 'ol.setup2': 'Encore un peu de patience. Contre l’IA, à deux, leçons et problèmes fonctionnent normalement.',
   'ol.connecting': 'Connexion…', 'ol.error': 'Connexion impossible.', 'ol.retry': 'Réessayer', 'ol.rating': 'Classement Elo', 'ol.record': '{w}V {l}D {d}N',
@@ -188,6 +194,7 @@ fr: {
   'err.popup': 'La fenêtre a été bloquée. Connexion sur une nouvelle page.', 'err.config': 'Firebase Authentication n’est pas activé (cliquez « Commencer » dans la console).',
 },
 pt: {
+  'ol.chat': "Chat", 'ol.chatPh': "Visível para todos · Enter para digitar", 'ol.chatSend': "Enviar", 'ol.chatEmpty': "Ainda não há mensagens", 'ol.chatWait': "Aguarde 2 segundos entre as mensagens", 'ol.chatNote': "Chat público: todos online podem ler. Apenas as 20 mensagens mais recentes são mantidas; não há mensagens privadas.",
   'ol.title': 'Online', 'ol.tabGame': 'Partida', 'ol.online': 'Online agora', 'ol.rooms': 'Salas', 'ol.rank': 'Ranking', 'ol.open': 'Jogar online',
   'ol.setup1': 'O jogo online está sendo preparado.', 'ol.setup2': 'Aguarde mais um pouco. Contra a IA, 2 jogadores, lições e problemas funcionam normalmente.',
   'ol.connecting': 'Conectando…', 'ol.error': 'Não foi possível conectar.', 'ol.retry': 'Tentar de novo', 'ol.rating': 'Rating', 'ol.record': '{w}V {l}D {d}E',
@@ -219,6 +226,7 @@ pt: {
   'err.popup': 'O pop-up foi bloqueado. Entrando em uma nova página.', 'err.config': 'O Firebase Authentication não está ativado (clique em "Começar" no console).',
 },
 de: {
+  'ol.chat': "Chat", 'ol.chatPh': "Für alle sichtbar · Enter zum Schreiben", 'ol.chatSend': "Senden", 'ol.chatEmpty': "Noch keine Nachrichten", 'ol.chatWait': "Bitte 2 Sekunden zwischen Nachrichten warten", 'ol.chatNote': "Öffentlicher Chat: Alle Online-Spieler können mitlesen. Nur die letzten 20 Nachrichten bleiben erhalten; private Nachrichten gibt es nicht.",
   'ol.title': 'Online', 'ol.tabGame': 'Partie', 'ol.online': 'Jetzt online', 'ol.rooms': 'Räume', 'ol.rank': 'Rangliste', 'ol.open': 'Online spielen',
   'ol.setup1': 'Online-Spiel wird vorbereitet.', 'ol.setup2': 'Bitte noch etwas Geduld. Gegen die KI, zu zweit, Lektionen und Aufgaben funktionieren wie gewohnt.',
   'ol.connecting': 'Verbinde…', 'ol.error': 'Keine Verbindung möglich.', 'ol.retry': 'Erneut versuchen', 'ol.rating': 'Wertung', 'ol.record': '{w}S {l}N {d}R',
@@ -250,6 +258,7 @@ de: {
   'err.popup': 'Das Popup wurde blockiert. Anmeldung auf einer neuen Seite.', 'err.config': 'Firebase Authentication ist nicht aktiviert (in der Konsole auf „Jetzt starten“ klicken).',
 },
 hi: {
+  'ol.chat': "चैट", 'ol.chatPh': "सभी को दिखेगा · लिखने के लिए Enter दबाएँ", 'ol.chatSend': "भेजें", 'ol.chatEmpty': "अभी कोई संदेश नहीं", 'ol.chatWait': "संदेशों के बीच 2 सेकंड रुकें", 'ol.chatNote': "सार्वजनिक चैट: ऑनलाइन सभी इसे पढ़ सकते हैं। केवल नवीनतम 20 संदेश रखे जाते हैं; निजी संदेश की सुविधा नहीं है।",
   'ol.title': 'ऑनलाइन', 'ol.tabGame': 'खेल', 'ol.online': 'अभी ऑनलाइन', 'ol.rooms': 'रूम', 'ol.rank': 'रैंकिंग', 'ol.open': 'ऑनलाइन खेलें',
   'ol.setup1': 'ऑनलाइन खेल की तैयारी चल रही है।', 'ol.setup2': 'कृपया थोड़ा इंतज़ार करें। AI से खेल, दो खिलाड़ी, पाठ और पहेलियाँ पहले की तरह चलती हैं।',
   'ol.connecting': 'कनेक्ट हो रहा है…', 'ol.error': 'कनेक्ट नहीं हो सका।', 'ol.retry': 'फिर कोशिश करें', 'ol.rating': 'रेटिंग', 'ol.record': '{w}जीत {l}हार {d}ड्रॉ',
@@ -281,6 +290,7 @@ hi: {
   'err.popup': 'पॉप-अप रोका गया। नए पेज पर लॉगिन हो रहा है।', 'err.config': 'Firebase Authentication चालू नहीं है (कंसोल में "Get started" दबाएँ)।',
 },
 ar: {
+  'ol.chat': "الدردشة", 'ol.chatPh': "مرئية للجميع · اضغط Enter للكتابة", 'ol.chatSend': "إرسال", 'ol.chatEmpty': "لا توجد رسائل بعد", 'ol.chatWait': "انتظر ثانيتين بين الرسائل", 'ol.chatNote': "دردشة عامة: يمكن لكل المتصلين قراءتها. تُحفظ آخر 20 رسالة فقط، ولا توجد رسائل خاصة.",
   'ol.title': 'عبر الإنترنت', 'ol.tabGame': 'المباراة', 'ol.online': 'المتصلون الآن', 'ol.rooms': 'الغرف', 'ol.rank': 'الترتيب', 'ol.open': 'العب عبر الإنترنت',
   'ol.setup1': 'اللعب عبر الإنترنت قيد التجهيز.', 'ol.setup2': 'يُرجى الانتظار قليلًا. اللعب ضد الذكاء الاصطناعي ولاعبَين والدروس والألغاز تعمل كالمعتاد.',
   'ol.connecting': 'جارٍ الاتصال…', 'ol.error': 'تعذّر الاتصال.', 'ol.retry': 'أعد المحاولة', 'ol.rating': 'التصنيف', 'ol.record': '{w} فوز · {l} خسارة · {d} تعادل',

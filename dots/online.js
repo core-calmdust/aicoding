@@ -538,7 +538,32 @@
     return Object.entries(all).filter(([, p]) => p && p.games > 0).map(([id, p]) => ({ id, ...p, me: id === uid })).sort((a, b) => b.rating - a.rating).slice(0, n);
   }
 
+  // ---------------------------------------------------------------- public chat (everyone online in this game; no private messages)
+  // A ring of CHAT_N slots: chat/seq counts messages (transaction), message n goes to chat/msgs/<n % CHAT_N>, overwriting the oldest,
+  // so the database never holds more than the latest CHAT_N messages.
+  const CHAT_N = 20, CHAT_LEN = 100, CHAT_GAP = 2000;
+  let chatLast = 0;
+  const chatClean = s => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_LEN).trim();
+  function watchChat(cb) {
+    return db.on('chat/msgs', v => cb(Object.values(v || {}).filter(m => m && typeof m.n === 'number' && typeof m.text === 'string').sort((a, b) => a.n - b.n).slice(-CHAT_N).map(m => ({ ...m, me: m.uid === uid }))));
+  }
+  // → { ok } | { ok: false, why: 'empty' | 'rate' | 'error', wait }
+  async function sendChat(text) {
+    text = chatClean(text);
+    if (!text) return { ok: false, why: 'empty' };
+    const now = Date.now();
+    if (now - chatLast < CHAT_GAP) return { ok: false, why: 'rate', wait: CHAT_GAP - (now - chatLast) };
+    chatLast = now;
+    try {
+      const r = await db.txn('chat/seq', n => (typeof n === 'number' ? n : 0) + 1);
+      if (!r.committed || typeof r.value !== 'number') return { ok: false, why: 'error' };
+      await db.set('chat/msgs/' + (r.value % CHAT_N), { n: r.value, uid, name: profile.name, text, t: db.stamp() });
+      return { ok: true };
+    } catch (e) { console.warn(e); return { ok: false, why: 'error' }; }
+  }
+
   window.DotsOnline = {
+    CHAT_N, CHAT_LEN, CHAT_GAP, watchChat, sendChat,
     available: !!CFG || MOCK, configured: !!CFG, mock: MOCK, INITIAL, SIZES, DEF_N, TC, GRACE, ROOM_TTL, REMATCH_MS, K64,
     tcOf, clockOf, replay, winOf, cleanName, defaultName, localName,
     get room() { return db ? room() : null; },

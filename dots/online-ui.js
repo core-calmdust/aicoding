@@ -28,7 +28,7 @@ document.body.insertAdjacentHTML('beforeend', `
   <div class="modal-actions"><button class="mbtn" id="olcNo" data-i18n="close"></button><button class="mbtn go" id="olcYes"></button></div></div></div>
 <div class="dock" id="dock">
   <div class="dock-bar">
-    <span class="dk-dot"></span><span class="dk-title" data-i18n="ol.title"></span><span class="dk-stat" id="dkStat"></span><span class="dk-sp"></span>
+    <span class="dk-dot"></span><span class="dk-title" data-i18n="ol.title"></span><button id="dkUnread" class="dk-unread hidden" type="button">💬<b>0</b></button><span class="dk-stat" id="dkStat"></span><span class="dk-sp"></span>
     <span class="dk-me" id="dkMe"></span>
     <button class="dk-btn dk-g" id="dkG"></button>
     <button class="dk-btn dk-myroom hidden" id="dkMyRoom"></button>
@@ -41,9 +41,11 @@ document.body.insertAdjacentHTML('beforeend', `
     <section class="dk-ro"><h4 data-i18n="ol.rooms"></h4><div class="ol-list ol-rooms" id="dkRooms"></div></section>
     <section class="dk-rk"><h4 data-i18n="ol.rank"></h4><div class="ol-list" id="dkRank"></div></section>
     <section class="dk-acc"><h4 data-i18n="sync.title"></h4><div id="dkAcc"></div></section>
+    <section class="dk-chat"><h4 id="dkChatHead"><span data-i18n="ol.chat"></span></h4><div class="chat-list" id="dkChat" role="log" aria-live="polite"></div><form class="chat-form" id="dkChatForm" autocomplete="off"><input id="dkChatIn" maxlength="100" enterkeyhint="send" autocomplete="off"><button type="submit" class="dk-btn go" id="dkChatSend"></button></form></section>
   </div>
 </div>
-<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em></button></nav>`);
+<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
+<div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.side-in').insertAdjacentHTML('afterbegin', '<div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>');
 $('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="ol.resign"></span></button>`);
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
@@ -502,6 +504,89 @@ async function googleLink() {
   } finally { gBusy = false; dockRender(); }
 }
 
+// ====================================================================== public chat (ported from the Chess page): one room for everyone online
+// in this game (latest ON.CHAT_N messages, no private messages). PC: dock (strip when folded, panel when open) / phone: online tab + 2-line strip
+const chat = { list: [], seen: -1, unsub: null };
+const olCoarse = () => matchMedia('(pointer: coarse)').matches;
+function chatVisible() { return document.body.classList.contains('mtab-online') || !olCoarse(); }
+function chatShown() { return dock.on && !document.body.classList.contains('no-online') && (!olCoarse() || document.body.classList.contains('mtab-online')); }
+function chatStart() {
+  if (chat.unsub || !olOn() || !ON.ready) return;
+  chat.unsub = ON.watchChat(l => {
+    const top = l.length ? l[l.length - 1].n : 0;
+    chat.list = l;
+    if (chat.seen < 0 || chatVisible()) chat.seen = top;      // history present on arrival is not "unread"
+    chatRender();
+  });
+}
+function chatTime(ts) { if (typeof ts !== 'number') return ''; const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function chatRender() {
+  const el = $('#dkChat'), inp = $('#dkChatIn'); if (!el || !olOn()) return;
+  if (inp && inp.dataset.l !== LANG) { inp.dataset.l = LANG; inp.placeholder = matchMedia('(hover: hover) and (pointer: fine)').matches ? t('ol.chatPh') : t('ol.chatPh').split(' · ')[0]; inp.setAttribute('aria-label', t('ol.chat')); $('#dkChatSend').textContent = t('ol.chatSend'); $('#dkChatHead').title = t('ol.chatNote'); }
+  const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  const h = chat.list.length ? chat.list.map(m => `<div class="cm${m.me ? ' me' : ''}"><b>${olEsc(m.name)}</b><span>${olEsc(m.text)}</span><time>${chatTime(m.t)}</time></div>`).join('')
+    : `<div class="ol-note small">${olEsc(t('ol.chatEmpty'))}<br>${olEsc(t('ol.chatNote'))}</div>`;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; if (bottom || chat.toBottom) el.scrollTop = el.scrollHeight; chat.toBottom = false; }
+  const n = chat.list.filter(m => m.n > chat.seen && !m.me).length, badge = $('#dkUnread'), mt = $('#mtChat');
+  badge.classList.toggle('hidden', !n); badge.querySelector('b').textContent = n > 9 ? '9+' : String(n);
+  const last = chat.list[chat.list.length - 1]; badge.title = last ? last.name + ': ' + last.text : '';
+  if (mt) mt.textContent = n ? '💬' + (n > 9 ? '9+' : n) : '';
+  const st = $('#mtStrip');
+  if (st) { const hs = chat.list.length ? chat.list.slice(-2).map(m => `<div class="${m.me ? 'me' : ''}"><b>${olEsc(m.name)}</b> ${olEsc(m.text)}</div>`).join('') : `<div class="empty">💬 ${olEsc(t('ol.chat'))} · ${olEsc(t('ol.chatEmpty'))}</div>`; if (st.dataset.h !== hs) { st.dataset.h = hs; st.innerHTML = hs; } }
+}
+function chatSeen() { if (chatVisible() && chat.list.length) { const top = chat.list[chat.list.length - 1].n; if (top !== chat.seen) { chat.seen = top; chatRender(); } } }
+new MutationObserver(chatSeen).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+// open the chat (PC: unfold the dock, phone: online tab) and put the cursor in the input
+function chatOpen(focus) {
+  if (olCoarse()) { if (!document.body.classList.contains('mtab-online')) mtab('online'); }
+  else if (!dock.open) dockToggle(true);
+  chatStart();
+  const el = $('#dkChat'); chat.toBottom = true; el.scrollTop = el.scrollHeight;
+  if (focus) { const inp = $('#dkChatIn'); inp.focus({ preventScroll: true }); chatKeep(); }
+  else if (olCoarse()) $('#dkChatForm').scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+// phones: keep the input above the on-screen keyboard
+function chatKeep() {
+  if (!olCoarse()) return;
+  const vv = window.visualViewport;
+  document.body.style.setProperty('--kb', vv ? Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)) + 'px' : '0px');
+  setTimeout(() => { if (document.activeElement === $('#dkChatIn')) $('#dkChatForm').scrollIntoView({ block: 'end' }); }, 250);
+}
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (document.activeElement === $('#dkChatIn')) chatKeep(); else document.body.style.setProperty('--kb', '0px'); });
+async function chatSend() {
+  const inp = $('#dkChatIn'), v = inp.value;
+  if (!v.trim()) return false;
+  if (!ON.ready) { try { await ON.init(); } catch (e) { toast(t('ol.error'), 1600); return false; } }
+  const r = await ON.sendChat(v);
+  if (r.ok) { inp.value = ''; chat.toBottom = true; return true; }
+  toast(t(r.why === 'rate' ? 'ol.chatWait' : 'ol.error'), 1600);
+  return false;
+}
+$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); chatSend(); if (olCoarse()) $('#dkChatIn').focus({ preventScroll: true }); });
+$('#dkChatIn').addEventListener('keydown', e => {
+  e.stopPropagation();                        // typing never reaches the board / record shortcuts
+  if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }
+  if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  if (!e.target.value.trim() && !olCoarse()) { e.target.blur(); dockToggle(false); return; }   // empty: fold the online box away again
+  chatSend(); if (!olCoarse()) e.target.blur();   // back to the board: record keys work again
+});
+$('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
+$('#dkChatIn').addEventListener('blur', () => document.body.style.setProperty('--kb', '0px'));
+$('#dkChatForm').addEventListener('click', e => e.stopPropagation());
+$('#mtStrip').addEventListener('click', () => chatOpen(true));
+$('#dkUnread').addEventListener('click', e => { e.stopPropagation(); chatOpen(!olCoarse()); });
+// Enter anywhere (not in a field, no dialog open) = type in the chat
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  const tg = e.target; if (tg && tg.closest && tg.closest('input,textarea,select,button,[contenteditable="true"]')) return;
+  if (document.querySelector('.overlay.show') || !chatShown() || lesson || puzzle) return;
+  e.preventDefault(); chatOpen(true);
+});
+if (olOn()) { setInterval(() => { if (dock.on) chatStart(); }, 1000); chatRender(); }
+// a different account (Google switch / sign-out) is a different "me"
+if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null; } chatStart(); });
+
 // ====================================================================== cloud sync of local progress (sync/<uid> = {d, t})
 // d = JSON of a snapshot: ls lessons {id: {best, clear}}, pz puzzles {key: 1}, op openings {key: 1}, ru rules {id: 1},
 // dy daily {last, streak, best, days{date: 1 | 'h'}}, set settings (+ setT), nm name (+ nmT), rt rating (+ rtT).
@@ -670,7 +755,7 @@ window.addEventListener('keydown', e => {
   for (const [id, b] of [['#olConfirm', '#olcNo'], ['#onlineOverlay', '#olClose'], ['#profOverlay', '#pfLater']]) if (isShown(id)) { e.stopImmediatePropagation(); $(b).click(); return; }
 }, true);
 function olLangChanged() {
-  applyI18n(); olSegSync(); dockRender(); olWatchRender(); olResRender();
+  applyI18n(); chatRender(); olSegSync(); dockRender(); olWatchRender(); olResRender();
   if (isShown('#onlineOverlay')) olRender();
   if (net && net.done && isShown('#resultOverlay')) olShowResult();
   renderInfo();
