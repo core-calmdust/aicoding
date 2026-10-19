@@ -277,7 +277,8 @@
       add(x, y, t * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(0)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.15) rotate(90deg)', offset: .3 }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${20 + Math.random() * 40}px) scale(.3) rotate(200deg)` }], 560, 14 + Math.random() * 18);
     }
     // "dorone": a puff of cartoon smoke bursts out where the board appears
-    const smoke = document.createElement('div'); smoke.className = 'smoke'; smoke.style.left = cx + 'px'; smoke.style.top = (cy + size * .08) + 'px'; box.appendChild(smoke);
+    const gr = $('gl').getBoundingClientRect(), bx = gr.left + gr.width / 2, by = gr.top + gr.height / 2;   // where the board appears
+    const smoke = document.createElement('div'); smoke.className = 'smoke'; smoke.style.left = bx + 'px'; smoke.style.top = by + 'px'; box.appendChild(smoke);
     for (let i = 0; i < 13; i++) {
       const a = i / 13 * Math.PI * 2 + Math.random() * .3, d = size * (.32 + Math.random() * .22), pz = size * (.26 + Math.random() * .2), p = document.createElement('span');
       p.style.width = p.style.height = pz + 'px'; smoke.appendChild(p);
@@ -287,13 +288,13 @@
     core.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.05)', offset: .25 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' }], { duration: 520, delay: 150, easing: 'ease-out', fill: 'both' });
     for (let i = 0; i < 16; i++) {            // big stars shooting out of the smoke
       const a = i / 16 * Math.PI * 2 + Math.random() * .2, d = size * (.55 + Math.random() * .45);
-      add(cx, cy, 170 + Math.random() * 60, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .6}px), calc(-50% + ${Math.sin(a) * d * .6}px)) scale(1.3) rotate(120deg)`, offset: .45 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d + 30}px)) scale(.4) rotate(260deg)` }], 620, 20 + Math.random() * 22);
+      add(bx, by, 170 + Math.random() * 60, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .6}px), calc(-50% + ${Math.sin(a) * d * .6}px)) scale(1.3) rotate(120deg)`, offset: .45 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d + 30}px)) scale(.4) rotate(260deg)` }], 620, 20 + Math.random() * 22);
     }
     for (let i = 0; i < 30; i++) {            // glitter rains onto the board and twinkles out
-      const a = Math.random() * Math.PI * 2, r = size * (.1 + Math.random() * .7), x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .6;
+      const a = Math.random() * Math.PI * 2, r = size * (.1 + Math.random() * .7), x = bx + Math.cos(a) * r, y = by + Math.sin(a) * r * .6;
       add(x, y, 260 + Math.random() * 260, [{ opacity: 0, transform: 'translate(-50%,-50%) translateY(-70px) scale(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.2) rotate(45deg)', offset: .5 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(140deg)' }], 480, 8 + Math.random() * 16);
     }
-    const ring = document.createElement('b'); ring.style.left = cx + 'px'; ring.style.top = cy + 'px'; box.appendChild(ring);
+    const ring = document.createElement('b'); ring.style.left = bx + 'px'; ring.style.top = by + 'px'; box.appendChild(ring);
     ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.8)' }], { duration: 560, delay: 140, easing: 'ease-out', fill: 'both' });
     setTimeout(() => box.remove(), 1100);
   }
