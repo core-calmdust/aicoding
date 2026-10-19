@@ -32,6 +32,12 @@
 - [19:20] ブラウザ試験(5×5 Lv10, 1440×900/390×844): 完走, ヒント9/9, 振り返り完了, レッスン/詰めOK, Firebase(localhost拒否)以外のエラーなし, AI待ち最大5.6–5.7s。
 - [21:45] coordinator: main が更新（オンライン/チャット/レート戦）。git pull済み(up to date)、HEADのengine.js==engine.orig.js。UIのworker API不変。rated.jsの5×5 Lv9/10レートは暫定値→測定後に見直し候補。
 
+- [23:17] **確定: 新Lv10(v1) vs 旧Lv10 100局 83勝17敗（83.0%, 95%CI 74.5–89.1, 平均差+2.42箱±0.54, z=6.6, 約+275Elo）**。平均思考 1.40s vs 1.73s/手、最大5.27s。
+- 3×3: Lv9/10 357手すべて最善。4×4: Lv10 vs Lv8 4局(10-6,8-8,9-7,8-8)、非定跡の30手すべて最善。Lv1–4 2480手で旧と完全一致、LEVELS 1–8 不変。
+- i18n.js の Lv9/10 説明(10言語)とREADMEのドット行を更新済み（未コミット、mainにはコミットしない）。390pxで横はみ出しなし。
+- 実行中: m10_v1_vs_lv8.jsonl（v1 Lv10 vs Lv8, 100局）。再開: timeout 2400 node match.js .../m10_v1_vs_lv8.jsonl 100 .../v1/engine.js,10,1,1 .../engine.orig.js,8,0,1
+- 残り: Lv9 新旧(〜40局), ポンダー効果(PONDER=5000, 〜30局), rated.jsの5×5 Lv9/10暫定レート見直し, 最終報告
+
 ## ファイル
 - dots5src/match.js（対局, 再開可）, agent.js, stats.js, decide.js, mkset.js, evaltest.js, evalsum.js, outc.c（ネイティブオラクル）, bench.js
 - engine.orig.js = 作業前のengine.js（旧Lv10比較用。dots5src内にあり）
