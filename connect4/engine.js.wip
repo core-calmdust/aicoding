@@ -508,6 +508,9 @@ function analyzePosition(str, timeMs, onProgress) {
     return { c, kind: 'heur', v: hv, h: hv };
   });
   if (bk && bk.partial) for (const e of list) if (bk.sc[e.c] === 1 && e.kind === 'heur') { e.kind = 'weak'; e.v = 1; }
+  // a Lv8 tree node: the stored move's value is known exactly (or weakly)
+  const tn = treeLookup(str);
+  if (tn) { const e = list.find(x => x.c === tn.mv); if (e && e.kind === 'heur') { e.kind = tn.kind; e.v = tn.v; } }
   onProgress && onProgress(list.map(x => ({ ...x })), hr.depth);
   // weak pass then strong pass, each per move under the deadline
   for (const mode of ['weak', 'exact']) {

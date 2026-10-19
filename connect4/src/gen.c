@@ -5,6 +5,7 @@
 #include "c4.h"
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 typedef struct { u64 key; int8_t mv, val, used; } Ent;   // val: exact score, or 100+{-1,0,1} for weak
 static Ent *HT; static size_t HN, HCAP;
 static size_t hslot(u64 k){ size_t i=(size_t)((k*0x9E3779B97F4A7C15ULL)>>30) & (HCAP-1); while(HT[i].used && HT[i].key!=k) i=(i+1)&(HCAP-1); return i; }
@@ -27,8 +28,12 @@ static void decide(const Pos*P,int*mv,int*val){
   int strong = P->n >= SFROM;
   int s = solve(P, !strong);
   int best=-1;
+  if(!strong && s<0){            // weakly lost: find the slowest loss exactly (descending thresholds)
+    for(int t=-1; best<0 && t>=-21; t--) for(int i=0;i<7 && best<0;i++){ int c=ORDER[i]; if(canplay(P,c) && movege(P,c,t)){ best=c; s=t; } }
+    strong=1;
+  }
   for(int i=0;i<7 && best<0;i++){ int c=ORDER[i]; if(!canplay(P,c)) continue; if(movege(P,c,s)) best=c; }
-  if(best<0){ fprintf(stderr,"no move?\n"); exit(3);}  // cannot happen
+  if(best<0){ fprintf(stderr,"no move?\n"); save(); exit(3);}  // cannot happen
   *mv=best; *val = strong ? s : 100+s;
   hput(k, mir?6-best:best, *val); newsolved++;
   if(time(0)-LASTSAVE >= 600) save();
@@ -53,16 +58,23 @@ static void dfs(Pos P){
   }
   path[P.n]=0;
 }
+// enumerate all positions of exactly ply t (no four on the board), in column order, and run dfs from each
+static void onterm(int sig){ (void)sig; timeout_hit=1; }
+static void roots(Pos P,int t){
+  if(timeout_hit) return;
+  if(P.n==t){ dfs(P); return; }
+  for(int c=0;c<7;c++){ if(!canplay(&P,c)||iswin(&P,c)) continue; Pos Q=P; play(&Q,c); path[P.n]='1'+c; path[P.n+1]=0; roots(Q,t); path[P.n]=0; }
+}
 int main(int argc,char**argv){
   if(argc<7){fprintf(stderr,"usage\n");return 1;}
   int side=atoi(argv[1]); D=atoi(argv[2]); SFROM=atoi(argv[3]); CACHE=argv[4]; MAXSEC=atoi(argv[6]);
-  T0=LASTSAVE=time(0);
+  T0=LASTSAVE=time(0); signal(SIGTERM,onterm); signal(SIGINT,onterm);
   tt_init(25); HCAP=1<<22; HT=calloc(HCAP,sizeof(Ent)); VCAP=1<<22; VIS=calloc(VCAP,8);
   load(); fprintf(stderr,"cache %zu\n",HN);
   OUT=fopen(argv[5],"w");
   Pos P={0,0,0};
-  if(side==0) dfs(P);
-  else for(int r=0;r<7;r++){ Pos R=P; play(&R,r); path[0]='1'+r; path[1]=0; dfs(R); }
+  int RMAX = argc>7 ? atoi(argv[7]) : side;   // roots: every position of ply side, side+2, ... <= RMAX
+  for(int r=side;r<=RMAX;r+=2) roots(P,r);
   save(); fclose(OUT);
   fprintf(stderr,"nodes %lld new %lld cache %zu sec %ld %s\n",nnodes,newsolved,HN,(long)(time(0)-T0), timeout_hit?"TIMEOUT":"DONE");
   return timeout_hit?2:0;
