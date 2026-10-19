@@ -46,6 +46,11 @@
   }
 
   /* ---------- common renderers ---------- */
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku']);   // images/atlas/<id>.webp exists
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=1` : `../${g.icon}`;
+  const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
+  const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
+  const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
   function tagHtml(k) { const T = A_.TAGS[k]; return `<span class="tag" style="--c:${T.c}"><svg viewBox="0 0 24 24"><path d="${T.i}"/></svg>${esc(t('tag.' + k))}</span>`; }
   function badgeHtml(b) { return `<span class="badge ${b}">${{ new: 'NEW', update: 'UPDATE', beta: 'BETA', premium: 'PREMIUM' }[b]}</span>`; }
   function ring(pct, col) {
@@ -62,7 +67,7 @@
     if (r.rt && r.rt.n) extra.push(`${t('pg.rt')} ${r.rt.r}`);
     if (r.op) extra.push(`${t('pg.op')} ${r.op}`);
     return `<a class="card gc" href="../${g.href}" data-open="${g.id}">
-      <div class="top"><img class="gicon" src="../${g.icon}" alt="" width="56" height="56" loading="lazy">
+      <div class="top">${g3(g)}
         <div style="min-width:0"><h4>${esc(gname(g))}</h4><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       ${withUpd && u ? `<div class="upd"><time>${fmtDate(u[0])}</time>${esc(lang === 'ja' ? u[2] : u[3])}</div>` : ''}
@@ -107,11 +112,18 @@
     AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
   }
   function renderHome() {
+    $('heroT').innerHTML = [...t('title')].map(c => `<span>${esc(c)}</span>`).join(''); $('heroS').textContent = t('sub').toUpperCase();
+    const shelf = A_.byUpdate().filter(g => R3.has(g.id)).slice(0, 7), n = shelf.length;
+    $('heroShelf').innerHTML = shelf.map((g, i) => `<img src="${artSrc(g)}" alt="" data-g="${g.id}" style="left:calc(${(i + .5) / n * 100}% - ${innerWidth < 760 ? 52 : 75}px);animation-delay:${-i * .6}s">`).join('');
+    $('heroShelf').querySelectorAll('[data-g]').forEach(b => b.onclick = () => openBoard(b.dataset.g));
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
     const seen = new Set(), ups = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1]));
-    $('updRow').innerHTML = ups.map(u => { const g = A_.GAMES.find(x => x.id === u[1]); return `<button class="ut" data-g="${g.id}"><img src="../${g.icon}" alt=""><span style="min-width:0"><b>${esc(gname(g))}</b><span class="bd">${A_.badges(g).slice(0, 1).map(badgeHtml).join('')}<small style="font-family:var(--round);font-size:11px;color:var(--sky2);font-weight:700">${fmtDate(u[0])}</small></span><p>${esc(lang === 'ja' ? u[2] : u[3])}</p></span></button>`; }).join('');
+    $('updRow').innerHTML = ups.map(u => { const g = A_.GAMES.find(x => x.id === u[1]);
+      return `<button class="ut" data-g="${g.id}" style="--c:${g.color}"><span class="pan"><span class="new">${A_.badges(g).slice(0, 1).map(badgeHtml).join('')}</span><span class="dt">${fmtDate(u[0])}</span>${artImg(g)}</span>
+        <span class="tx"><b>${esc(gname(g))}</b><p>${esc(lang === 'ja' ? u[2] : u[3])}</p></span></button>`; }).join('');
     $('iconGrid').innerHTML = A_.byUpdate().map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
-      return `<button class="ic" data-g="${g.id}"><span class="w"><img src="../${g.icon}" alt="" width="84" height="84">${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}${P[g.id].pct ? `<span class="pr" style="--c:${g.color}"><i style="width:${P[g.id].pct}%"></i></span>` : ''}</span><span class="n">${esc(gname(g))}</span></button>`; }).join('');
+      return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
+        <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
     document.querySelectorAll('#updRow [data-g], #iconGrid [data-g]').forEach(b => b.onclick = () => openBoard(b.dataset.g));
     renderProfile();
   }
@@ -131,13 +143,13 @@
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) { Table3D.show(id); Table3D.play(false); }
-    else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="../${g.icon}" alt="" width="160" height="160" style="border-radius:44px;box-shadow:0 10px 0 rgba(0,0,0,.12)"></div>`;
+    else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
     const rows = [];
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
     const lv = pref[id + ':lv'] || Math.min(4, ad ? ad.levels : 4), side = pref[id + ':side'] || 1;
-    $('bvi').innerHTML = `<div class="row"><img class="gicon" src="../${g.icon}" alt="" width="56" height="56"><div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
+    $('bvi').innerHTML = `<div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       ${ad ? `<div class="opts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}</option>`).join('')}</select></label>
@@ -201,7 +213,7 @@
     const groups = [['all', t('ach.all'), null], ['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])];
     $('achChips').innerHTML = groups.map(([k, l, g]) => {
       const list = k === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === k);
-      return `<button class="chip" aria-pressed="${achF === k}" data-k="${k}">${g ? `<img src="../${g.icon}" alt="">` : ''}${esc(l)} <em>${list.filter(a => a.done).length}/${list.length}</em></button>`;
+      return `<button class="chip" aria-pressed="${achF === k}" data-k="${k}">${g ? `<img src="${artSrc(g)}" alt="" style="object-fit:contain;background:none">` : ''}${esc(l)} <em>${list.filter(a => a.done).length}/${list.length}</em></button>`;
     }).join('');
     $('achChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { achF = b.dataset.k; renderAch(); });
     const list = (achF === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === achF)).slice()

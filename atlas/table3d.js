@@ -49,7 +49,11 @@
   }
 
   /* ---------- material helpers ---------- */
-  const M = (o) => new (T().MeshStandardMaterial)(Object.assign({ roughness: .55, metalness: 0 }, o));
+  const M = (o) => {   // colours are given as sRGB hex (as designed) → convert to linear for the sRGB output
+    const m = new (T().MeshStandardMaterial)(Object.assign({ roughness: .55, metalness: 0 }, o));
+    if (o.color !== undefined) m.color.convertSRGBToLinear();
+    return m;
+  };
   function mesh(geo, mat, x = 0, y = 0, z = 0) {
     const m = new (T().Mesh)(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; return m;
   }
@@ -171,7 +175,7 @@
       const addPit = (x, z, r, sx, cnt) => {
         const p = mesh(new (T().CylinderGeometry)(r, r * .82, .08, 32), pit); p.scale.x = sx; p.position.set(x, .93, z); g.add(p);
         const rim = mesh(new (T().TorusGeometry)(r, .06, 8, 32), M({ color: 0xc9925a })); rim.rotation.x = Math.PI / 2; rim.scale.x = sx; rim.position.set(x, .95, z); g.add(rim);
-        for (let i = 0; i < cnt; i++) { const s = mesh(new (T().SphereGeometry)(.14, 12, 8), gems[(i + Math.round(x * 3)) % 6]); s.scale.y = .7; const a = i * 2.4, rr = .12 + .1 * (i % 3); s.position.set(x + Math.cos(a) * rr * sx, 1.04 + .08 * (i / 3 | 0), z + Math.sin(a) * rr); g.add(s); }
+        for (let i = 0; i < cnt; i++) { const s = mesh(new (T().SphereGeometry)(.17, 14, 10), gems[(i + Math.round(x * 3)) % 6]); s.scale.y = .7; const a = i * 2.4, rr = .12 + .1 * (i % 3); s.position.set(x + Math.cos(a) * rr * sx, 1.04 + .08 * (i / 3 | 0), z + Math.sin(a) * rr); g.add(s); }
       };
       for (let i = 0; i < 6; i++) { addPit(-3.5 + i * 1.4, -1, .55, 1, 4); addPit(-3.5 + i * 1.4, 1, .55, 1, 4); }
       addPit(-4.75, 0, .5, 1.1, 3); addPit(4.75, 0, .5, 1.1, 5);

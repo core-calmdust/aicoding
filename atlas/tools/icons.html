@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- Dev tool: renders every board model in table3d.js to a transparent PNG for the portal's 3D icons.
+     Open via a local server: http://localhost:8000/atlas/tools/icons.html?id=reversi  → window.SHOT holds the data URL.
+     The repo's images/atlas/<id>.webp files were made with this page (headless Chromium) — rerun after changing a model. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script>
+(function () {
+  const id = new URLSearchParams(location.search).get('id') || 'reversi', S = 640;
+  const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.1;
+  document.body.appendChild(R.domElement);
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xfff6e8, 0x7a5a40, .75));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(-7, 16, 9); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); key.shadow.bias = -.0005;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xcfe6ff, .55); rim.position.set(9, 5, -9); scene.add(rim);
+  // shadow catcher only (transparent floor)
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: .28 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  const g = Table3D.MODELS[id](); scene.add(g);
+  g.rotation.y = -0.42;
+  // fit: bounding sphere
+  const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), r = box.getBoundingSphere(new THREE.Sphere()).radius;
+  const cam = new THREE.PerspectiveCamera(26, 1, .1, 200);
+  const dist = r / Math.sin(13 * Math.PI / 180) * .84;
+  cam.position.set(c.x + dist * .05, c.y + dist * .62, c.z + dist * .78); cam.lookAt(c.x, c.y - r * .04, c.z);
+  R.render(scene, cam);
+  window.SHOT = R.domElement.toDataURL('image/png');
+})();
+</script>
+</body></html>
