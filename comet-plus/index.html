@@ -901,8 +901,8 @@ class AudioHandler {
                 });
                 // 途切れずに4回うねる（最初はいきなり鳴り、最後だけ消える）
                 ag.gain.setValueAtTime(0.0001, now);
-                ag.gain.exponentialRampToValueAtTime(0.42, now + 0.012);
-                ag.gain.setValueAtTime(0.42, now + N * L - 0.25);
+                ag.gain.exponentialRampToValueAtTime(0.17, now + 0.012); // 音量は控えめに
+                ag.gain.setValueAtTime(0.17, now + N * L - 0.25);
                 ag.gain.exponentialRampToValueAtTime(0.0001, now + N * L);
                 break;
             }
