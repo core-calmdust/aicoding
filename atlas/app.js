@@ -125,7 +125,7 @@
     return `<svg viewBox="0 0 640 400" role="img" aria-hidden="true">
       <defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
       <circle cx="320" cy="200" r="176" fill="#111"/>
-      <g class="spin"><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP">${ring}</textPath></text></g>
+      <g><animateTransform attributeName="transform" type="rotate" from="0 320 200" to="360 320 200" dur="20s" repeatCount="indefinite"/><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP">${ring}</textPath></text></g>
       <circle cx="320" cy="200" r="136" fill="#fff"/>
       <circle cx="320" cy="200" r="128" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="3 5"/>
       <g fill="#111" opacity=".16">${pts(118, 22)}</g>
