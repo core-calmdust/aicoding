@@ -914,12 +914,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   // the learned evaluation for standard / freestyle (renju keeps the hand-made one for now)
-  const ready = (typeof fetch === 'function' ? fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}) : Promise.resolve());
+  const gunzip = r => typeof DecompressionStream === 'function' ? new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : Promise.reject(new Error('no gzip'));
+  const ready = typeof fetch !== 'function' ? Promise.resolve() : Promise.all([
+    fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}),
+    // renju: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails
+    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=1').then(r => r.ok ? gunzip(r) : null)])
+      .then(([w, b]) => { if (w && b) setNN('renju', w, b); }).catch(() => {}),
+  ]);
   self.onmessage = async e => {
     await ready;
     const m = e.data;
     try {
-      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.rule, m.moves, m.level, m.start) });
+      if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, learnedStd: !!LW.std });
+      else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.rule, m.moves, m.level, m.start) });
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
         self.postMessage({ id: m.id, type: 'result', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog) });
