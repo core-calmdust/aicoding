@@ -121,7 +121,8 @@ const COMBO = new Int16Array(65536).fill(-1);
 }
 const PAIR = 4 * NCOMB, BIAS = PAIR + 200;   // + (black class, white class) of each empty cell x side to move, + bias by side to move
 const LW = { renju: null, std: null };   // Int32Array(BIAS + 2) per rule group, set by setWeights()
-function setWeights(group, arr) { LW[group] = arr ? Int32Array.from(arr) : null; }
+const LK = { renju: 0, std: 0 };   // weight of the hand-made evaluation inside the learned one (residual learning)
+function setWeights(group, arr, oldK) { LW[group] = arr ? Int32Array.from(arr) : null; LK[group] = oldK || 0; }
 // finer part: the raw 10-neighbour window code of every empty cell / direction / colour (mirror-canonical, 29646 codes)
 const LCANON = new Int32Array(59049).fill(-1), TRIV = new Uint8Array(59049); let NL = 0;
 for (let code = 0; code < 59049; code++) {
@@ -158,7 +159,7 @@ class Pos {
     this.pat = [null, new Uint16Array(SIZE), new Uint16Array(SIZE)];  // four direction patterns packed in nibbles
     this.CB = this.renju ? COMB_R : COMB_N;
     this.sc = [null, new Int32Array(SIZE), new Int32Array(SIZE)];
-    this.lw = LW[this.renju ? 'renju' : 'std'];
+    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std'];
     this.cb = [null, new Int16Array(SIZE).fill(-1), new Int16Array(SIZE).fill(-1)];
     this.tA = [0, 0, 0]; this.tB = [0, 0, 0];   // learned sums: colour c as side to move / as opponent
     this.pk = new Int16Array(SIZE).fill(-1); this.tP = [0, 0, 0];   // cell class pairs, sums for black / white to move
@@ -586,7 +587,7 @@ class Engine {
   timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit)) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
-    if (pos.lw && this.learned !== false) return (pos.tA[me] + pos.tB[op] + pos.tP[me] + pos.lw[BIAS + me - 1] + (pos.lw2 ? pos.LA[me] + pos.LB[op] : 0)) | 0;
+    if (pos.lw && this.learned !== false) return (pos.tA[me] + pos.tB[op] + pos.tP[me] + pos.lw[BIAS + me - 1] + (pos.lw2 ? pos.LA[me] + pos.LB[op] : 0) + pos.lk * (pos.tot[me] * 12 - pos.tot[op] * 10) / 10) | 0;
     return ((pos.tot[me] * 12 - pos.tot[op] * 10) / 10) | 0;
   }
   // candidate moves for the side to move, ordered; also handles forced replies
