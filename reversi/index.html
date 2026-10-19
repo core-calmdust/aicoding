@@ -624,15 +624,16 @@ body.in-lesson .controls{display:none}
   :root{--board:calc(min(100vw - 20px, var(--vh) - 200px, 900px) / 1.105)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
-  .controls{order:0}
+  .controls{order:-4}
   #evalCard{order:1}
-  .kifu-card{order:2}
-  .info-line{order:3}
+  .review-card{order:2}
+  .kifu-card{order:3}
+  .info-line{order:4}
   :root{--top:0px}
   .side > .brand{position:static;width:calc(var(--board) * 1.105);max-width:100%;flex:none}
   .side, .side-in{display:contents}
   .side-in > *{width:calc(var(--board) * 1.105);max-width:100%;flex:none}
-  .brand{order:-3;height:28px;align-items:center}
+  .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:22px}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
