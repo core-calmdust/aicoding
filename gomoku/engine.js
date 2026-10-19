@@ -159,7 +159,7 @@ class Pos {
     this.pat = [null, new Uint16Array(SIZE), new Uint16Array(SIZE)];  // four direction patterns packed in nibbles
     this.CB = this.renju ? COMB_R : COMB_N;
     this.sc = [null, new Int32Array(SIZE), new Int32Array(SIZE)];
-    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std'];
+    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std']; this.nn = NNI[this.renju ? 'renju' : 'std'];
     this.cb = [null, new Int16Array(SIZE).fill(-1), new Int16Array(SIZE).fill(-1)];
     this.tA = [0, 0, 0]; this.tB = [0, 0, 0];   // learned sums: colour c as side to move / as opponent
     this.pk = new Int16Array(SIZE).fill(-1); this.tP = [0, 0, 0];   // cell class pairs, sums for black / white to move
@@ -587,7 +587,18 @@ class Engine {
   timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit)) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
-    if (pos.lw && this.learned !== false) return (pos.tA[me] + pos.tB[op] + pos.tP[me] + pos.lw[BIAS + me - 1] + (pos.lw2 ? pos.LA[me] + pos.LB[op] : 0) + pos.lk * (pos.tot[me] * 12 - pos.tot[op] * 10) / 10) | 0;
+    const nn = pos.nn;
+    if (nn && this.useNN !== false) {
+      const b = pos.b, fb = pos.fb, bd = nn.board, fm = nn.forb, rj = pos.renju;
+      for (let m = 0; m < 225; m++) { const i = M2I[m], x = b[i]; bd[m] = x; fm[m] = rj && x === EMPTY && fb[i] === 1 ? 1 : 0; }
+      const v = nn.eval(me);
+      return v > 60000 ? 60000 : v < -60000 ? -60000 : v;
+    }
+    if (pos.lw && this.learned !== false) {
+      // learned units: 600 = one logit; scaled to the hand-made evaluation's units (about 10000 per logit) and clamped below the win scores
+      const v = (pos.tA[me] + pos.tB[op] + pos.tP[me] + pos.lw[BIAS + me - 1] + (pos.lw2 ? pos.LA[me] + pos.LB[op] : 0)) * 16 + pos.lk * 16 * (pos.tot[me] * 12 - pos.tot[op] * 10) / 10;
+      return Math.max(-60000, Math.min(60000, v)) | 0;
+    }
     return ((pos.tot[me] * 12 - pos.tot[op] * 10) / 10) | 0;
   }
   // candidate moves for the side to move, ordered; also handles forced replies
@@ -879,12 +890,33 @@ function solve(rule, moves, start, n, defend, maxNodes) {
   return list.map(e => ({ m: I2M[e.i], need: e.need }));
 }
 
-const API = { setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
+// neural evaluation (nn.c compiled to WebAssembly), one instance per rule group
+const NNI = { renju: null, std: null };
+function setNN(group, wasmBytes, weightBytes) {
+  if (!wasmBytes) { NNI[group] = null; return true; }
+  const inst = new WebAssembly.Instance(new WebAssembly.Module(wasmBytes), {});
+  const x = inst.exports, mem = new Uint8Array(x.memory.buffer), n = x.nn_weights_size();
+  if (weightBytes.byteLength !== n) return false;
+  mem.set(new Uint8Array(weightBytes), x.nn_weights()); x.nn_init();
+  NNI[group] = { eval: x.nn_eval, board: new Uint8Array(x.memory.buffer, x.nn_board(), 225), forb: new Uint8Array(x.memory.buffer, x.nn_forb(), 225) };
+  return true;
+}
+// learned weights file: Int8 [combo/pair/bias part (BIAS + 2) | line part (4 * NL)]
+function loadWeightsBuffer(group, buf) {
+  const a = new Int8Array(buf), nf = BIAS + 2;
+  if (a.length !== nf + 4 * NL) return false;
+  setWeights(group, a.subarray(0, nf)); setLineWeights(group, a.subarray(nf));
+  return true;
+}
+const API = { setNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
   C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  self.onmessage = e => {
+  // the learned evaluation for standard / freestyle (renju keeps the hand-made one for now)
+  const ready = (typeof fetch === 'function' ? fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}) : Promise.resolve());
+  self.onmessage = async e => {
+    await ready;
     const m = e.data;
     try {
       if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.rule, m.moves, m.level, m.start) });
