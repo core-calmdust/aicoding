@@ -73,8 +73,12 @@ async function init() {
       await loadScript(base + 'firebase-app-compat.js');
       await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
       if (!firebase.apps.length) firebase.initializeApp(CFG);
-      const cred = await firebase.auth().signInAnonymously();
-      uid = cred.user.uid; db = firebaseDB();
+      const auth = firebase.auth();
+      // keep an existing session (Google or anonymous); only create an anonymous one if none
+      const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
+      try { const rr = await auth.getRedirectResult(); if (rr && rr.user) { uid = rr.user.uid; } } catch (e) {}
+      const u = auth.currentUser || cur || (await auth.signInAnonymously()).user;
+      uid = u.uid; db = firebaseDB();
     }
     return uid;
   })();
@@ -83,6 +87,7 @@ async function init() {
 }
 const clean = s => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12) || '???';
 
+async function removeMine(paths) { await Promise.all(paths.map(p => db.set(p + '/' + uid, null).catch(() => {}))); }
 window.SudokuOnline = {
   get available() { return !!CFG || MOCK; },
   mock: MOCK,
@@ -101,6 +106,32 @@ window.SudokuOnline = {
   async topDaily(date, d, n = 50) { await init(); return db.top(`daily/${date}/${d}`, 't', n, true); },
   async topScore(path, n = 50) { await init(); return db.top(path, 's', n, false); },
   async myDaily(date, d) { await init(); const me = await db.get(`daily/${date}/${d}/${uid}`); if (!me) return null; return { me, rank: 1 + await db.better(`daily/${date}/${d}`, 't', me.t, true) }; },
+  account() { if (MOCK) return null; try { const u = firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; } },
+  // sign in with Google; the anonymous account is upgraded when possible.
+  // paths: this player's ranking entries to remove from the anonymous account when switching to an existing Google account
+  async google(paths) {
+    if (MOCK) throw new Error('mock');
+    await init();
+    const auth = firebase.auth(), prov = new firebase.auth.GoogleAuthProvider();
+    prov.setCustomParameters({ prompt: 'select_account' });
+    const u = auth.currentUser;
+    try {
+      const r = u && u.isAnonymous ? await u.linkWithPopup(prov) : await auth.signInWithPopup(prov);
+      uid = r.user.uid; return { uid, linked: true };
+    } catch (e) {
+      if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+        const cred = e.credential || firebase.auth.GoogleAuthProvider.credentialFromError(e);
+        await removeMine(paths || []);
+        const r = await auth.signInWithCredential(cred);
+        uid = r.user.uid; return { uid, linked: false };
+      }
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') { await (u && u.isAnonymous ? u.linkWithRedirect(prov) : auth.signInWithRedirect(prov)); }
+      throw e;
+    }
+  },
+  async logout() { if (MOCK) return; await firebase.auth().signOut(); ready = null; uid = null; await init(); },
+  async pull() { await init(); return db.get('sync/' + uid); },
+  async push(d) { await init(); return db.set('sync/' + uid, { d, t: Date.now() }); },
   async myScore(path) { await init(); const me = await db.get(`${path}/${uid}`); if (!me) return null; return { me, rank: 1 + await db.better(path, 's', me.s, false) }; },
 };
 })();

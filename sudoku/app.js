@@ -32,13 +32,16 @@ function load() {
   d.sc = Object.assign({ tot: 0, m: {} }, d.sc || {});
   d.icons = d.icons || {};
   d.rk = d.rk || {}; d.seenRule = d.seenRule || {};
+  if (d.autoLeft == null) d.autoLeft = 3;
+  d.homeTab = d.homeTab || 'daily'; d.mt = d.mt || 0;
   return d;
 }
 let DB = load();
 let saveT = 0;
 function persist(now) {
   clearTimeout(saveT);
-  const w = () => { try { localStorage.setItem(STORE, JSON.stringify(DB)); } catch (e) {} };
+  DB.mt = Date.now();
+  const w = () => { try { localStorage.setItem(STORE, JSON.stringify(DB)); } catch (e) {} schedulePush(); };
   if (now) w(); else saveT = setTimeout(w, 150);
 }
 
@@ -373,8 +376,16 @@ async function loadMyRanks() {
     if (screen === 'home') renderProfile();
   } catch (e) {}
 }
+function setHomeTab(p) {
+  if (p === 'var' && (!PV || !E.setVariant)) p = 'daily';
+  DB.homeTab = p; persist();
+  $$('#htabs button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === p));
+}
 function renderHome() {
   renderProfile();
+  $('#htabs [data-p=var]').hidden = !PV || !E.setVariant;
+  setHomeTab(DB.homeTab);
   const td = today();
   $('#todayDate').textContent = fmtDate(td, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   const sk = streakInfo();
@@ -449,9 +460,28 @@ function openTheme(ti) {
     <dt>${esc(t('ti.theme'))}</dt><dd>${esc(t('thd.' + ti))}</dd>
     <dt>${esc(t('ti.level'))}</dt><dd>${lvs.map(lvChip).join(' ')} <span class="note" style="margin:0">${esc(t('thl.' + ti))}</span></dd>
     <dt>${esc(t('ti.score'))}</dt><dd class="num">${fmtN(themeScore(ti))}</dd></dl>
-    <div class="story">${esc(t('ths.' + ti))}</div></div>`;
+    <div class="story">${esc(t('ths.' + ti))}</div>${startRow('c', ti)}</div>`;
+  wireStart();
   $('#tlBody').innerHTML = `<div class="mapwrap"><div class="map" id="map"></div></div><div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
-  drawMap(ti, true);
+  drawMap(ti, false);
+}
+/* intro start button: はじめる / つづきから */
+function startTarget(kind, ix) {
+  const L = kind === 'c' ? 50 : vsetLen(ix), pre = kind === 'c' ? 'c/' : 'x/';
+  const rec = kind === 'c' ? colRec : varRec;
+  for (let k = 0; k < L; k++) if (DB.saves[pre + (ix + 1) + '/' + (k + 1)] && !rec(ix, k)) return { k, cont: true };
+  const played = [...Array(L).keys()].some(k => rec(ix, k));
+  const nx = kind === 'c' ? nextUncleared(ix, -1) : nextVar(ix, -1);
+  return { k: nx, cont: played };
+}
+function startRow(kind, ix) {
+  const st = startTarget(kind, ix);
+  const lab = st.k < 0 ? t('tl.allclear') : st.cont ? t('st.cont', { n: st.k + 1 }) : t('st.start');
+  return `<div class="startrow"><button class="btn big" id="stGo" data-to="${st.k < 0 ? '' : (kind === 'c' ? 'c/' : 'x/') + (ix + 1) + '/' + (st.k + 1)}" ${st.k < 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${kind === 'c' ? `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>` : ''}</div>`;
+}
+function wireStart() {
+  const g = $('#stGo'); if (g) g.onclick = () => { if (g.dataset.to) { SFX.tap(); go(g.dataset.to); } };
+  const m = $('#stMap'); if (m) m.onclick = () => { const nx = $('#map .node.next') || $('#map .node'); if (nx) nx.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
 }
 function drawMap(ti, scrollToNext) {
   const host = $('#map'); if (!host) return;
@@ -550,7 +580,8 @@ function openVset(si) {
   const s = vset(si), L = vsetLen(si), n = vsetCleared(si);
   $('#tlName').textContent = t('vt.' + s.type);
   $('#tlProg').innerHTML = `${n}/${L} · ${STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${vsetStars(si)}/${L * 3}`;
-  $('#tlIntro').innerHTML = `<div class="rulebox">${miniBoard(s.type)}<div><b>${esc(t('vt.' + s.type))}</b><p>${esc(t('vr.' + s.type))}</p><button class="btn sm ghost" id="vRule" style="margin-top:8px">${esc(t('rule.more'))}</button></div></div>`;
+  $('#tlIntro').innerHTML = `<div class="rulebox">${miniBoard(s.type)}<div><b>${esc(t('vt.' + s.type))}</b><p>${esc(t('vr.' + s.type))}</p><button class="btn sm ghost" id="vRule" style="margin-top:8px">${esc(t('rule.more'))}</button></div></div>${startRow('x', si)}`;
+  wireStart();
   $('#vRule').onclick = () => openRule(s.type);
   const lvs = [...new Set(s.puzzles.map(p => p.lv))];
   $('#tlBody').innerHTML = `<div class="plist">${s.puzzles.map((p, pi) => { const r = varRec(si, pi), sv = DB.saves['x/' + (si + 1) + '/' + (pi + 1)]; return `<button class="pz ${r ? 'cleared' : ''}" data-p="${pi}" title="${esc(t('lv.' + p.lv))}"><span class="dt" style="background:${LVCOL[p.lv]}"></span>${sv && !r ? '<span class="ip"></span>' : ''}<span class="n">${pi + 1}</span><span class="stars">${r ? [1, 2, 3].map(k => STAR(k <= r.s)).join('') : ''}</span></button>`; }).join('')}</div><div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
@@ -653,7 +684,7 @@ function openGame(o) {
   else $('#gTitle').innerHTML = lvChip(G.lv) + `<span>${esc(t('vt.' + spec.type))} #${o.pi + 1}</span>`;
   $('#gRule').hidden = o.kind !== 'x';
   $('#gRule').onclick = () => spec && openRule(spec.type);
-  sel = -1; lockD = 0; memo = false; paused = false; closeHint();
+  sel = -1; lockD = 0; memo = false; memoFocus = 0; paused = false; closeHint();
   $('#board').classList.remove('paused', 'done');
   drawOverlay(spec);
   layout(); render(); startTimer();
@@ -690,7 +721,7 @@ document.addEventListener('visibilitychange', () => { lastTick = performance.now
 function render() {
   if (!G) return;
   const s = DB.set;
-  const focusD = lockD || (sel >= 0 ? G.grid[sel] : 0);
+  const focusD = lockD || (sel >= 0 && G.grid[sel] ? G.grid[sel] : (memo ? memoFocus : 0));
   const peers = sel >= 0 ? new Set(E.PEERS[sel]) : null;
   for (let i = 0; i < 81; i++) {
     const el = cellEls[i], v = G.grid[i];
@@ -721,6 +752,7 @@ function render() {
   const mi = $('#gMist'); mi.hidden = !s.check; mi.classList.toggle('z', !G.mist); $('#gMistN').textContent = G.mist;
   $('#gTime').hidden = !s.timer; $('#gClock').textContent = fmtTime(G.time);
   const hn = $('#hintN'); hn.hidden = !G.hints; hn.textContent = G.hints;
+  const ab = $('#autoN'); ab.textContent = DB.autoLeft > 0 ? DB.autoLeft : '+'; ab.title = DB.autoLeft > 0 ? t('auto.left', { n: DB.autoLeft }) : t('auto.paid', { n: AUTO_COST });
 }
 function flash(i, cls, ms = 400) { const el = cellEls[i]; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 
@@ -742,7 +774,8 @@ function setValue(i, d, fromHint) {
   render(); saveGame();
   if (G.grid.every((v, k) => v === G.sol[k])) finish();
 }
-function toggleNote(i, d) { if (G.grid[i]) return; pushHist([i]); G.notes[i] ^= bitD(d); SFX.note(); render(); saveGame(); }
+let memoFocus = 0;
+function toggleNote(i, d) { if (G.grid[i]) return; pushHist([i]); G.notes[i] ^= bitD(d); memoFocus = d; SFX.note(); render(); saveGame(); }
 function erase(i) {
   if (!G || G.done || i < 0 || G.puz[i]) return;
   if (!G.grid[i] && !G.notes[i]) return;
@@ -764,12 +797,19 @@ function redo() {
   for (const c of h) { G.grid[c.i] = c.v; G.notes[c.i] = c.n; }
   sel = h[0].i; SFX.tap(); render(); saveGame();
 }
+const AUTO_COST = 500;
 function autoNotes() {
   if (!G || G.done || paused) return;
   const g = G.grid.map((v, i) => (v === G.sol[i] ? v : 0));
   const cand = E.candidates(g), cells = [];
   for (let i = 0; i < 81; i++) if (!G.grid[i] && G.notes[i] !== cand[i]) cells.push(i);
   if (!cells.length) { toast(esc(t('auto.none')), 'msg'); return; }
+  if (DB.autoLeft <= 0) {
+    if (DB.pts < AUTO_COST) { toast(esc(t('auto.nopts', { n: fmtN(AUTO_COST) })), 'msg'); return; }
+    if (!confirm(t('auto.buy', { n: fmtN(AUTO_COST), p: fmtN(DB.pts) }))) return;
+    DB.pts -= AUTO_COST; DB.autoLeft++;
+  }
+  DB.autoLeft--; persist();
   pushHist(cells);
   for (const i of cells) G.notes[i] = cand[i];
   SFX.hint(); render(); saveGame();
@@ -1363,21 +1403,111 @@ function closeReveal() {
 }
 
 /* ================= zukan (icon collection) ================= */
-let zkTab = 'all', zkSel = -1;
+let zkMode = 'mine', zkRar = 'all', zkSel = -1;
+const RORD = ['UR', 'SSR', 'SR', 'R', 'N'];
 function openZukan() {
   if (!IC) return;
-  const tabs = ['all', 'UR', 'SSR', 'SR', 'R', 'N'];
-  $('#zkTabs').innerHTML = tabs.map(k => `<button class="tab ${k === zkTab ? 'on' : ''}" data-k="${k}">${k === 'all' ? esc(t('zk.all')) : k}</button>`).join('');
-  $$('#zkTabs .tab').forEach(b => b.onclick = () => { zkTab = b.dataset.k; SFX.tap(); openZukan(); });
-  const ids = zkTab === 'all' ? [...Array(IC.COUNT).keys()] : IC.byRarity(zkTab);
-  const own = ids.filter(id => DB.icons[id]).length;
+  $('#zkTabs').innerHTML = [['mine', 'zk.mine'], ['book', 'zk.book']].map(([k, l]) => `<button class="tab ${k === zkMode ? 'on' : ''}" data-k="${k}">${esc(t(l))}</button>`).join('');
+  $$('#zkTabs .tab').forEach(b => b.onclick = () => { zkMode = b.dataset.k; SFX.tap(); openZukan(); });
+  let ids = zkRar === 'all' ? [...Array(IC.COUNT).keys()] : IC.byRarity(zkRar);
+  const total = ids.length, own = ids.filter(id => DB.icons[id]).length;
+  if (zkMode === 'mine') ids = ids.filter(id => DB.icons[id]).sort((x, y) => RORD.indexOf(iconInfo(x).rarity) - RORD.indexOf(iconInfo(y).rarity) || x - y);
   if (zkSel < 0 || !DB.icons[zkSel]) zkSel = DB.prof.icon;
-  const det = zkSel >= 0 && DB.icons[zkSel] ? `<div class="zdet"><div class="ic">${iconSvg(zkSel)}</div><div style="min-width:0">${rarChip(iconInfo(zkSel).rarity)} <small>No.${String(zkSel + 1).padStart(3, '0')} · ×${DB.icons[zkSel]}</small><b>${esc(iconName(zkSel))}</b>${zkSel === DB.prof.icon ? `<span class="note">${esc(t('zk.current'))}</span>` : `<button class="btn sm" id="zkSet">${esc(t('zk.set'))}</button>`}</div></div>` : `<div class="zdet"><div class="ic">${iconSvg(-1)}</div><div><b>${esc(t('zk.none'))}</b><button class="btn sm" id="zkGa">${esc(t('ga.btn'))}</button></div></div>`;
-  $('#zkBody').innerHTML = det + `<div class="zk-top"><div class="bar"><i style="width:${own / ids.length * 100}%"></i></div><b>${own}/${ids.length}</b></div><div class="zk">${ids.map(id => DB.icons[id] ? `<button data-id="${id}" class="${id === DB.prof.icon ? 'eq' : ''}" title="${esc(iconName(id))}">${iconSvg(id, { still: true })}${DB.icons[id] > 1 ? `<span class="cnt">×${DB.icons[id]}</span>` : ''}</button>` : `<button disabled title="No.${id + 1}">${IC.silhouette(id)}</button>`).join('')}</div>`;
+  const det = zkSel >= 0 && DB.icons[zkSel] ? `<div class="zdet"><div class="ic">${iconSvg(zkSel)}</div><div style="min-width:0">${rarChip(iconInfo(zkSel).rarity)} <small>No.${String(zkSel + 1).padStart(3, '0')} · ×${DB.icons[zkSel]}</small><b>${esc(iconName(zkSel))}</b>${zkSel === DB.prof.icon ? `<span class="note">${esc(t('zk.current'))}</span>` : `<button class="btn sm" id="zkSet">${esc(t('zk.set'))}</button>`}</div></div>` : '';
+  const chips = `<div class="chips">${['all', ...RORD].map(r => `<button data-r="${r}" class="${r === zkRar ? 'on' : ''}">${r === 'all' ? esc(t('zk.all')) : r}</button>`).join('')}</div>`;
+  const top = `<div class="zk-top"><div class="bar"><i style="width:${own / total * 100}%"></i></div><b>${zkMode === 'mine' ? esc(t('zk.owned', { n: own, m: total })) : own + '/' + total}</b></div>`;
+  const grid = ids.length ? `<div class="zk">${ids.map(id => DB.icons[id] ? `<button data-id="${id}" class="${id === DB.prof.icon ? 'eq' : ''}" title="${esc(iconName(id))}">${iconSvg(id, { still: true })}${DB.icons[id] > 1 ? `<span class="cnt">×${DB.icons[id]}</span>` : ''}</button>` : `<button disabled title="No.${id + 1}">${IC.silhouette(id)}</button>`).join('')}</div>`
+    : `<div class="rkmsg">${esc(t('zk.none'))}<br><button class="btn sm" id="zkGa" style="margin-top:10px">${esc(t('ga.btn'))}</button></div>`;
+  $('#zkBody').innerHTML = det + (zkMode === 'book' ? `<p class="note" style="margin:0 0 8px">${esc(t('zk.booknote'))}</p>` : '') + chips + top + grid;
+  $$('#zkBody .chips [data-r]').forEach(b => b.onclick = () => { zkRar = b.dataset.r; SFX.tap(); openZukan(); });
   $$('#zkBody .zk button[data-id]').forEach(b => b.onclick = () => { zkSel = +b.dataset.id; SFX.tap(); openZukan(); $('#zkBody').scrollTop = 0; });
   const set = $('#zkSet'); if (set) set.onclick = () => { DB.prof.icon = zkSel; persist(); SFX.pop(); if (ON && ON.available && DB.prof.name) ON.profile({ n: DB.prof.name, i: zkSel }).catch(() => {}); toast(esc(t('zk.set.done')), 'msg'); openZukan(); if (screen === 'home') renderProfile(); };
   const ga = $('#zkGa'); if (ga) ga.onclick = () => { closeModals(); setTimeout(openGacha, 60); };
   openModal('mZukan');
+}
+
+
+/* ================= cloud sync (Google sign-in) ================= */
+let pushT = 0, syncing = false;
+const signedIn = () => !!(ON && ON.available && ON.account && (() => { try { return ON.account(); } catch (e) { return null; } })());
+function schedulePush() { if (!signedIn() || syncing) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 4000); }
+async function pushNow() { clearTimeout(pushT); if (!signedIn()) return; try { await ON.push(JSON.stringify(DB)); } catch (e) { if (DEBUG) console.warn(e); } }
+function mergeDB(L, C) {
+  const out = (C.mt || 0) > (L.mt || 0) ? JSON.parse(JSON.stringify(C)) : JSON.parse(JSON.stringify(L));
+  const other = out === C ? L : C, o = (C.mt || 0) > (L.mt || 0) ? L : C;
+  // records: union with the better result
+  out.daily = out.daily || {};
+  for (const ds in (o.daily || {})) for (const d in o.daily[ds]) {
+    const a = (out.daily[ds] = out.daily[ds] || {})[d], b = o.daily[ds][d];
+    if (!a) out.daily[ds][d] = b; else { const first = (b.at || 0) < (a.at || 0) ? b : a; out.daily[ds][d] = Object.assign({}, first, { t: Math.min(a.t, b.t) }); }
+  }
+  for (const key of ['col', 'vcol']) {
+    out[key] = out[key] || {};
+    for (const k in (o[key] || {})) { const a = out[key][k], b = o[key][k]; out[key][k] = !a ? b : Object.assign({}, a, { s: Math.max(a.s, b.s), sc: Math.max(a.sc || 0, b.sc || 0), t: Math.min(a.t, b.t) }); }
+  }
+  out.icons = out.icons || {}; for (const id in (o.icons || {})) out.icons[id] = Math.max(out.icons[id] || 0, o.icons[id]);
+  out.ach = out.ach || {}; for (const id in (o.ach || {})) out.ach[id] = Math.max(out.ach[id] || 0, o.ach[id]);
+  out.rk = Object.assign({}, o.rk || {}, out.rk || {});
+  out.sc = out.sc || { tot: 0, m: {} }; const os = o.sc || { tot: 0, m: {} };
+  out.sc.tot = Math.max(out.sc.tot || 0, os.tot || 0); out.sc.m = out.sc.m || {};
+  for (const ym in (os.m || {})) out.sc.m[ym] = Math.max(out.sc.m[ym] || 0, os.m[ym]);
+  out.saves = Object.assign({}, o.saves || {}, out.saves || {});
+  out.play = Math.max(out.play || 0, o.play || 0);
+  if (!out.prof || !out.prof.name) out.prof = o.prof;
+  out.seenHelp = out.seenHelp || o.seenHelp; out.seenRule = Object.assign({}, o.seenRule || {}, out.seenRule || {});
+  return out;
+}
+async function syncNow(quiet) {
+  if (!signedIn() || syncing) return;
+  syncing = true;
+  try {
+    const c = await ON.pull();
+    if (c && c.d) {
+      const cloud = JSON.parse(c.d);
+      const merged = mergeDB(DB, cloud);
+      DB = Object.assign(load(), merged);
+      DB.set = Object.assign({}, DEF_SET, DB.set || {});
+      try { localStorage.setItem(STORE, JSON.stringify(DB)); } catch (e) {}
+    }
+    syncing = false;
+    await pushNow();
+    if (!quiet) toast(esc(t('sync.done')), 'msg');
+    applySettings(); if (screen === 'home') renderHome();
+    if (DB.prof.name) ON.profile({ n: DB.prof.name, i: Math.max(0, DB.prof.icon) }).catch(() => {});
+  } catch (e) { if (!quiet) toast(esc(t('sync.err')), 'msg'); if (DEBUG) console.warn(e); }
+  syncing = false;
+}
+function myRankPaths() {
+  const p = ['profiles', 'total', ...Object.keys(DB.sc.m).map(ym => 'month/' + ym), ...THEMES.map((_, i) => 'col/' + i), ...VTYPES.map(v => 'var/' + v)];
+  for (const ds in DB.daily) for (const d of DIFFS) if (DB.daily[ds][d] && !DB.daily[ds][d].late) p.push('daily/' + ds + '/' + d);
+  return p;
+}
+async function googleLogin() {
+  try {
+    await ON.google(myRankPaths());
+    await syncNow();
+    // re-submit scores under the (possibly new) account
+    if (DB.prof.name) {
+      const me = { n: DB.prof.name, i: Math.max(0, DB.prof.icon) };
+      await Promise.all([ON.putScore('month/' + thisMonth(), Object.assign({ s: monthScore() }, me)), ON.putScore('total', Object.assign({ s: DB.sc.tot }, me))]).catch(() => {});
+    }
+    openSettings();
+  } catch (e) {
+    if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) return;
+    toast(esc(t('sync.err')) + (DEBUG ? ' ' + esc(e.code || e.message) : ''), 'msg');
+  }
+}
+function syncSection() {
+  if (!ON || !ON.available || ON.mock) return '';
+  const acc = signedIn() ? ON.account() : null;
+  return `<div class="syncbox"><b>${esc(t('sync.title'))}</b><p>${esc(acc ? t('sync.on', { e: acc.email || acc.name }) : t('sync.desc'))}</p>
+    ${acc ? `<div class="sbtns"><button class="btn sm" id="syNow">${esc(t('sync.now'))}</button><button class="btn sm ghost" id="syOut">${esc(t('sync.logout'))}</button></div>`
+      : `<button class="btn gbtn" id="syIn"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>${esc(t('sync.google'))}</button>`}</div>`;
+}
+function wireSync() {
+  const a = $('#syIn'); if (a) a.onclick = googleLogin;
+  const b = $('#syNow'); if (b) b.onclick = () => syncNow();
+  const c = $('#syOut'); if (c) c.onclick = async () => { if (!confirm(t('sync.logout.q'))) return; await pushNow(); await ON.logout(); toast(esc(t('sync.out')), 'msg'); openSettings(); };
 }
 
 /* ================= settings / help ================= */
@@ -1386,9 +1516,10 @@ function openSettings() {
   const tods = ['auto', 'day', 'eve', 'night'];
   $('#setBody').innerHTML = `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
-    + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
+    + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
   $$('#todSeg button').forEach(b => b.onclick = () => { DB.set.tod = b.dataset.k; persist(); $$('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); applyTod(); SFX.tap(); });
   $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
+  wireSync();
   $('#setName').onclick = () => { closeModals(); setTimeout(() => openName(!DB.prof.name), 60); };
   $('#resetAll').onclick = () => { if (confirm(t('set.reset.q'))) { localStorage.removeItem(STORE); DB = load(); persist(true); closeModals(); go(''); } };
   openModal('mSet');
@@ -1480,6 +1611,7 @@ $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
 $('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (G.ti + 1)); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
 $('#tlBack').onclick = () => go('');
+$$('#htabs button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
 $('#logo').onclick = () => go('');
 $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); };
 $('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); };
@@ -1497,7 +1629,8 @@ document.addEventListener('pointerdown', e => {
   if (sel >= 0 || lockD) { sel = -1; lockD = 0; render(); }
 });
 addEventListener('hashchange', route);
-addEventListener('pagehide', () => { if (G && screen === 'game') saveGame(); persist(true); });
+addEventListener('pagehide', () => { if (G && screen === 'game') saveGame(); persist(true); pushNow(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pushNow(); else if (signedIn()) syncNow(true); });
 let lastDay = today();
 setInterval(() => { const td = today(); if (td !== lastDay) { lastDay = td; if (screen === 'home') renderHome(); } applyTod(); }, 30000);
 
@@ -1513,5 +1646,6 @@ Promise.all([
   syncAch(false); persist();
   if (ON && ON.available && DB.prof.name) ON.profile({ n: DB.prof.name, i: Math.max(0, DB.prof.icon) }).catch(() => {});
   route();
+  if (ON && ON.available && !ON.mock) ON.init().then(() => { if (signedIn()) syncNow(true); }).catch(() => {});
 }).catch(err => { document.body.insertAdjacentHTML('beforeend', `<p style="position:fixed;inset:auto 0 20px;text-align:center;z-index:99">${esc(String(err))}</p>`); });
 })();
