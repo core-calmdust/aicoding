@@ -86,6 +86,7 @@
     if (o.color !== undefined) m.color.convertSRGBToLinear();
     return m;
   };
+  const at3 = (o, x, y, z) => { o.position.set(x, y, z); return o; };
   function mesh(geo, mat, x = 0, y = 0, z = 0) {
     const m = new (T().Mesh)(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; return m;
   }
@@ -108,12 +109,21 @@
   const WHITE = () => M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), BLACK = () => M({ color: 0x16171b, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
   const MODELS = {
     reversi(live) {
-      const g = new (T().Group)(), S = 8.4;
-      const top = M({ map: grid('rv2', '#1e8a52', '#0b2a1a', 8, 8, { lw: 4, cloth: 14, stars: [[2, 2], [6, 2], [2, 6], [6, 6]] }), roughness: .92, bumpScale: .004 });
-      const frame = M({ map: wood('rvf', '#5a3820', '#2a1608', 512, 512, 1.2), roughness: .38, clearcoat: .5, clearcoatRoughness: .3 });
-      g.add(slab(9.4, .45, 9.4, frame, frame));
-      const inner = slab(S, .1, S, top); inner.position.y = .45; g.add(inner);
-      g.userData.S = S; g.userData.top = .55;
+      const g = new (T().Group)(), S = 8.4, TT = T();
+      // bezel: a square ring with rounded, bevelled edges, a little higher than the field
+      const O = 5.25, I = S / 2 + .02, rr = .55, sh = new TT.Shape();
+      sh.moveTo(-O + rr, -O); sh.lineTo(O - rr, -O); sh.quadraticCurveTo(O, -O, O, -O + rr); sh.lineTo(O, O - rr); sh.quadraticCurveTo(O, O, O - rr, O); sh.lineTo(-O + rr, O); sh.quadraticCurveTo(-O, O, -O, O - rr); sh.lineTo(-O, -O + rr); sh.quadraticCurveTo(-O, -O, -O + rr, -O);
+      const hole = new TT.Path(); hole.moveTo(-I, -I); hole.lineTo(-I, I); hole.lineTo(I, I); hole.lineTo(I, -I); hole.closePath(); sh.holes.push(hole);
+      const bz = new TT.ExtrudeGeometry(sh, { depth: .46, bevelEnabled: true, bevelThickness: .14, bevelSize: .16, bevelSegments: 5, curveSegments: 8 });
+      bz.rotateX(-Math.PI / 2); bz.translate(0, .14, 0);
+      const wal = wood('rvf2', '#4a2a16', '#1e0f06', 512, 512, 1.4);
+      const frame = M({ map: wal, color: 0xffffff, roughness: .34, clearcoat: .8, clearcoatRoughness: .22, bumpScale: .006 });
+      g.add(mesh(bz, frame));
+      g.add(at3(slab(O * 2 - .2, .3, O * 2 - .2, frame, frame), 0, 0, 0));
+      // sunken field: deep green cloth, thick black lines, four star points, a soft inner shadow at the rim
+      const top = M({ map: grid('rv3', '#0f8a3c', '#0a1a10', 8, 8, { lw: 7, cloth: 16, stars: [[2, 2], [6, 2], [2, 6], [6, 6]], after: (c, W, H) => { const r = c.createLinearGradient(0, 0, 0, 40); ['top', 'bottom', 'left', 'right'].forEach(() => {}); c.fillStyle = 'rgba(0,0,0,.28)'; c.fillRect(0, 0, W, 10); c.fillRect(0, 0, 10, H); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(0, H - 6, W, 6); c.fillRect(W - 6, 0, 6, H); } }), roughness: .9, bumpScale: .003 });
+      const field = mesh(new TT.PlaneGeometry(S, S), top); field.rotation.x = -Math.PI / 2; field.position.y = .46; field.receiveShadow = true; field.castShadow = false; g.add(field);
+      g.userData.S = S; g.userData.top = .47;
       if (live) return g;
       const pos = { 27: 0, 28: 1, 35: 1, 36: 0, 19: 1, 26: 1, 37: 0, 44: 1, 20: 0, 29: 1 };
       const W = WHITE(), B = BLACK();
@@ -259,14 +269,14 @@
   };
 
   /* ---------- scene ---------- */
-  let vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
+  let envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   function mount(container) {
     el = container;
     R = new (T().WebGLRenderer)({ antialias: true, alpha: true });
     R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     R.shadowMap.enabled = true; R.shadowMap.type = T().PCFSoftShadowMap;
-    R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .95; R.physicallyCorrectLights = false;
+    R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .78;
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
     cam = new (T().PerspectiveCamera)(32, 1, .1, 200);
@@ -275,24 +285,21 @@
       const env = new (T().Scene)(), TT = T();
       const sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
       const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
-      for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 30; c.setRGB(.10 + .5 * Math.max(0, y), .08 + .42 * Math.max(0, y), .06 + .3 * Math.max(0, y)); col.push(c.r, c.g, c.b); }
+      for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 30; c.setRGB(.05 + .26 * Math.max(0, y), .04 + .22 * Math.max(0, y), .03 + .16 * Math.max(0, y)); col.push(c.r, c.g, c.b); }
       sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
-      [[-8, 16, 6, 14, 8, 3], [10, 10, -6, 8, 6, 1.6], [0, 6, 18, 18, 4, .9]].forEach(([x, y, z, w, h, k]) => {
+      [[-8, 16, 6, 12, 7, 1.6], [10, 10, -6, 8, 6, .8], [0, 6, 18, 18, 4, .4]].forEach(([x, y, z, w, h, k]) => {
         const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: new TT.Color(k, k * .95, k * .86), side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p);
       });
       const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
+      envOK = true;
     } catch (e) {}
-    scene.add(new (T().HemisphereLight)(0xfff1dc, 0x3a2614, .35));
-    const key = new (T().DirectionalLight)(0xfff0d8, 1.25); key.position.set(-6, 14, 8); key.castShadow = true;
+    scene.add(new (T().HemisphereLight)(0xfff1dc, 0x3a2614, .3));
+    const key = new (T().DirectionalLight)(0xfff0d8, 1.0); key.position.set(-6, 14, 8); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const rim = new (T().DirectionalLight)(0xbfd8ff, .3); rim.position.set(8, 6, -10); scene.add(rim);
-    // a darker walnut tabletop that falls off into shadow at the edges
-    const tw = wood('table3', '#5e3c22', '#3b2311', 1024, 1024, 1.6); tw.wrapS = tw.wrapT = T().RepeatWrapping; tw.repeat.set(4, 4);
-    const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: tw, roughness: .55, bumpScale: .02 }));
+    const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: wood('table', '#c98b52', '#8a5428', 1024, 1024, 2), roughness: .6, bumpScale: .006 }));
     table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
-    const pool = new (T().Mesh)(new (T().CircleGeometry)(80, 64), new (T().MeshBasicMaterial)({ transparent: true, depthWrite: false, map: canvasTex('vign', 256, 256, (g, W) => { const r = g.createRadialGradient(W / 2, W / 2, W * .06, W / 2, W / 2, W / 2); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(.6, 'rgba(10,5,0,.55)'); r.addColorStop(1, 'rgba(10,5,0,.92)'); g.fillStyle = r; g.fillRect(0, 0, W, W); }) }));
-    pool.rotation.x = -Math.PI / 2; pool.position.y = .005; pool.scale.setScalar(.5); scene.add(pool);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     container.addEventListener('pointerdown', e => { if (mode === 'play') return; drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
@@ -309,16 +316,26 @@
     new ResizeObserver(resize).observe(container); resize();
     loop();
   }
+  // the canvas always fills the screen (no seams); `inset` px at the bottom are covered by the info card,
+  // so the camera frames the board inside the free area above it (view offset), easing when it changes
+  let inset = 0, insetTo = 0, cw = 1, ch = 1;
+  function frame() {
+    const free = Math.max(120, ch - inset);
+    cam.aspect = cw / free;
+    if (inset > .5) cam.setViewOffset(cw, free, 0, 0, cw, ch); else cam.clearViewOffset();
+    cam.updateProjectionMatrix();
+  }
+  function setInset(px) { insetTo = Math.max(0, px || 0); }
   function resize() {
     if (!R) return;
     const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
-    R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+    cw = w; ch = h; R.setSize(w, h, false); frame();
   }
   // camera distance keeps a ~11-unit board in frame for any aspect ratio
   function camPose(k) {
     const a = cam.aspect || 1, th = Math.tan(cam.fov * Math.PI / 360);
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
-    const needW = (k ? 5.4 : 6.2) / (th * a), needH = (k ? 6.3 : 6.4) / th;
+    const needW = (k ? 6.0 : 6.5) / (th * a), needH = (k ? 7.0 : 6.8) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : 1.08);
     const pitch = .78 + k * .55;                       // view: 3/4 · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
@@ -397,10 +414,15 @@
     if (!rc.ray.intersectPlane(new (T().Plane)(new (T().Vector3)(0, 1, 0), -(y || 0)), p)) return null;
     cur.worldToLocal(p); return { x: p.x, z: p.z };
   }
-  function loop() {
+  // frame cap: at most 60 fps (120 Hz phones/monitors would otherwise render twice as often for nothing)
+  const FRAME_MS = 1000 / 60; let lastT = 0;
+  function loop(now = performance.now()) {
     requestAnimationFrame(loop);
     if (document.hidden || !el.offsetParent) return;
+    if (now - lastT < FRAME_MS - 2) return;
+    lastT = now;
     camK += (camTo - camK) * .07;
+    if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * .14; frame(); } else if (inset !== insetTo) { inset = insetTo; frame(); }
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
     if (mode === 'play') {   // in a game the board stays still, squared to the player
@@ -415,5 +437,5 @@
     R.render(scene, cam);
   }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
 })();

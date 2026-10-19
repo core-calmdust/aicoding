@@ -167,9 +167,13 @@
     const els = [...$('props').querySelectorAll('img')];
     els.forEach((el, i) => { el._ph = i * 1.7; el._sp = .7 + (i % 5) * .12; el._r = parseFloat(el.style.getPropertyValue('--r')) || 0; el._z = .4 + (i % 4) * .2; });
     let nextHop = performance.now() + 1200;
+    let lastP = 0;
     (function step(now) {
       propRaf = requestAnimationFrame(step);
       if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
+      if (now - lastP < 1000 / 60 - 2) return;   // 60 fps cap
+      lastP = now;
+      if ($('bv').classList.contains('on')) return;   // hidden behind the 3D board
       px += (tx - px) * .06; py += (ty - py) * .06;
       if (now > nextHop) { hop(els[Math.random() * els.length | 0]); nextHop = now + 900 + Math.random() * 1400; }
       const t = now / 1000;
@@ -334,11 +338,10 @@
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close'));
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
-  function fitStage() {
-    const gl = $('gl'), card = $('bvi'), playing = $('bv').classList.contains('playing');
-    gl.style.top = gl.style.bottom = gl.style.left = gl.style.right = '';
-    if (playing || !$('bv').classList.contains('on')) return;
-    gl.style.bottom = (innerHeight - card.getBoundingClientRect().top + 4) + 'px';   // the board sits centred above the card
+  function fitStage() {   // the board is framed above the info card (the canvas itself stays full-screen: no seams)
+    if (!glOK) return;
+    const card = $('bvi'), playing = $('bv').classList.contains('playing');
+    Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - card.getBoundingClientRect().top + 4);
   }
   addEventListener('resize', () => fitStage());
   function startPlay() {
