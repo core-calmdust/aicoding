@@ -922,7 +922,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261019ll"></script>
+<script src="i18n.js?v=20261019tc"></script>
 <script src="engine.js?v=20261019n3"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="../shared/pzbook.js?v=2"></script>
@@ -2500,7 +2500,7 @@ let lsTab = 'lesson';
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261018ol').then(r => r.json()).then(d => {
+const tsumeReady = fetch('tsume.json?v=20261019tc').then(r => r.json()).then(d => {
   // PZBook: problems in each set go from easy to hard (stable by difficulty d); progress is stored per problem id
   for (const g of d.sets) g.problems = g.problems.map((p, i) => [p, i]).sort((a, b) => ((a[0].d || 0) - (b[0].d || 0)) || a[1] - b[1]).map(x => x[0]);
   TSUME = d;
@@ -2514,7 +2514,11 @@ let tstars = null;
 try { tstars = JSON.parse(localStorage.getItem(TSTORE2) || 'null'); } catch (e) {}
 if (!tstars) { tstars = {}; for (const id in tsolved) if (tsolved[id]) tstars[id] = 3; }
 const tsRecs = g => g.problems.map(p => tstars[p.id] || 0);
-const TS_TIER = { p1: 0, p3: 1, p5: 2, p7: 3, p9: 4, art: 5 };
+const TS_TIER = { p1: 0, p3: 1, p5: 2, p7: 3, p9: 4, art: 5, c3: 0, c5: 1, c7: 2, c9: 3, c13: 5, t_sac: 1, t_funari: 2, t_touchi: 2, t_uchifu: 3, t_aigoma: 3, t_aki: 2, t_kwalk: 4 };
+// composed collection: themes by length (group 'comp') and by tactic (group 'theme'); practical mates (group 'prac')
+const TS_GROUPS = ['comp', 'theme', 'prac'], TS_GKEY = { comp: 'ts.gComp', theme: 'ts.gTheme', prac: 'ts.gPrac' };
+const TS_ICON = { t_sac: '捨', t_funari: '不', t_touchi: '遠', t_uchifu: '歩', t_aigoma: '合', t_aki: '開', t_kwalk: '追' };
+const tsNo = g => g.id === 'art' ? (LANG === 'ja' || LANG === 'zh' ? '創' : '✦') : TS_ICON[g.id] ? (LANG === 'ja' || LANG === 'zh' ? TS_ICON[g.id] : '✦') : g.id.replace(/^[pc]/, '') + (g.id === 'p9' || g.id === 'c13' ? '+' : '');
 // ---- daily tsume with streak
 const DAILY_STORE = 'shogi-kaya-daily';
 const DAILY_EASY_STORE = 'shogi-kaya-daily-easy';
@@ -2529,13 +2533,13 @@ function dailyPick(easy) {
   if (easy) {
     // EASY: mate in 3 or 5 (3 <= n < 7), alternating by day; different hash from the regular one
     const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
-    const si = TSUME.sets.findIndex(x => x.id === (day % 2 ? 'p5' : 'p3'));
-    if (si < 0) return null;
+    const si = [...(day % 2 ? ['c5', 'p5'] : ['c3', 'p3'])].map(id => TSUME.sets.findIndex(x => x.id === id)).find(i => i >= 0);
+    if (si === undefined) return null;
     let h = (day * 2246822519 + 374761393) >>> 0; h ^= h >>> 13; h = Math.imul(h, 3266489917) >>> 0; h ^= h >>> 16;
     return { date, si, k: h % TSUME.sets[si].problems.length, easy: true };
   }
-  // Mon-Tue: 3, Wed-Thu: 5, Fri-Sat: 7 or composed, Sun: 9+
-  const want = wd === 0 ? ['p9', 'p7'] : wd <= 2 ? ['p3'] : wd <= 4 ? ['p5'] : (wd === 5 ? ['art', 'p7'] : ['p7', 'art']);
+  // composed: Mon-Tue 5, Wed-Thu 7, Sat 9-11, Sun 13+; Fri practical 7 (each falls back to the practical sets)
+  const want = wd === 0 ? ['c13', 'c9', 'p9'] : wd <= 2 ? ['c5', 'p3'] : wd <= 4 ? ['c7', 'p5'] : wd === 5 ? ['p7', 'c7'] : ['c9', 'p9'];
   const si = TSUME.sets.findIndex(x => x.id === want[0]) >= 0 ? TSUME.sets.findIndex(x => x.id === want[0]) : TSUME.sets.findIndex(x => want.includes(x.id));
   if (si < 0) return null;
   const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
@@ -2562,7 +2566,12 @@ function openTsumeList() {
   if (!TSUME) { $('#lessonList').innerHTML = ''; return; }
   const dItem = easy => { const dl = dailyPick(easy), di = dailyInfo(easy); return dl ? `<button class="lesson-item daily" data-daily="${easy ? 2 : 1}"><span class="no">${easy ? '☆' : '★'}</span><span class="tx"><b>${t(easy ? 'daily.titleEasy' : 'daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${L(TSUME.sets[dl.si].title)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : ''; };
   PZBook.setLang(LANG);
-  $('#lessonList').innerHTML = dItem(true) + dItem(false) + TSUME.sets.map((g, i) => PZBook.card({ i, no: g.id === 'art' ? (LANG === 'ja' || LANG === 'zh' ? '創' : '✦') : g.id.replace(/^p/, '') + (g.id === 'p9' ? '+' : ''), name: L(g.title), sub: L(g.short), recs: tsRecs(g), tier: TS_TIER[g.id] !== undefined ? TS_TIER[g.id] : Math.min(5, i) })).join('');
+  const card = (g, i) => PZBook.card({ i, no: tsNo(g), name: L(g.title), sub: L(g.short), recs: tsRecs(g), tier: TS_TIER[g.id] !== undefined ? TS_TIER[g.id] : Math.min(5, i) });
+  const grp = g => g.group || 'prac', multi = TSUME.sets.some(g => grp(g) !== 'prac');
+  $('#lessonList').innerHTML = dItem(true) + dItem(false) + (multi ? TS_GROUPS.map(k => {
+    const items = TSUME.sets.map((g, i) => grp(g) === k ? card(g, i) : '').join('');
+    return items ? `<p style="grid-column:1/-1;font-size:12.5px;color:var(--brass);margin:10px 0 0;letter-spacing:.06em">${t(TS_GKEY[k])}</p>` + items : '';
+  }).join('') : TSUME.sets.map(card).join(''));
 }
 let tsGridSet = 0;
 function openTsGrid(si, cur) {
@@ -2873,7 +2882,10 @@ async function lessonMove(m) {
     const p = posAt(moves.length);
     if (!p.inCheck()) return fail(t('ls.notCheck'));
     if (!p.legalMoves(false).length) return lessonScored(Math.max(0, PTS - pen), { solved: true });
-    const res = await aiCall({ type: 'tsumeReply', sfen: pr.sfen, moves, remain: pr.n - moves.length });
+    // composed problems (u): unique solution, and the stored line already holds the defender's longest non-futile
+    // defence, so the reply comes from the line (an engine call could prefer a futile interposition)
+    const res = pr.u ? (moves.every((u, i) => u === pr.sol[i]) && pr.sol[moves.length] ? { reply: pr.sol[moves.length] } : null)
+      : await aiCall({ type: 'tsumeReply', sfen: pr.sfen, moves, remain: pr.n - moves.length });
     if (!lesson || lesson.cur !== pr) return;
     if (!res || !res.reply) return fail(t('ls.notMate'));
     lesson.atkOk++;
@@ -2950,6 +2962,7 @@ function lessonScored(pts, info) {
   } else html += `<br>${t('ls.answerIs', { m: kan1(pr.sfen, sol[0]) })}`;
   if (pr.trap && L(lesson.g.trapNote)) html += `<br><span style="color:var(--accent)">※ ${L(lesson.g.trapNote)}</span>`;
   if (L(pr.expl)) html += `<br>${L(pr.expl)}`;
+  if (pr.kind === 'tsume' && pr.tags && pr.tags.length) html += `<br><span style="font-size:12px;color:var(--brass)">${t('ts.themes')}: ${pr.tags.map(x => t('ts.th.' + x)).join('・')}</span>`;
   html += `<br><span style="font-size:12px">${t(pr.kind === 'tsume' ? 'ls.mateLine' : 'ls.line', { pv: lineKanji(pr.sfen, sol).join(' ') })}</span>`;
   if (lesson.dailyMsg) { html += `<br>🔥 ${t('daily.streak', { n: dailyInfo(lesson.dailyEasy).streak })}`; lesson.dailyMsg = false; }
   lesson.fbHtml = html + book;
