@@ -16,7 +16,7 @@
 
   /* ---------- state ---------- */
   let W = A_.load(), P = A_.allProgress(), ACH = A_.achievements(P, W), C = A_.coins(W, ACH);
-  function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); $('coinN').textContent = C.balance.toLocaleString(); }
+  function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
 
   /* ---------- tabs ---------- */
   const ICO = {
@@ -247,9 +247,11 @@
     let done = false;
     const finish = () => {   // pop: the icon bursts and the board lands
       if (done) return; done = true;
-      wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(${sc * 1.5})` }], { duration: 280, easing: 'ease-out', fill: 'forwards' })
+      // spin and float up out of view, fading
+      fly.getAnimations().forEach(a => a.cancel());
+      fly.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(540deg)' }], { duration: 420, easing: 'cubic-bezier(.3,0,.6,1)', fill: 'forwards' });
+      wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 1, transform: `translate(${dx}px, ${dy - 40}px) scale(${sc * .9})`, offset: .45 }, { opacity: 0, transform: `translate(${dx}px, ${dy - Math.min(260, H * .32)}px) scale(${sc * .6})` }], { duration: 420, easing: 'cubic-bezier(.4,0,.7,.4)', fill: 'forwards' })
         .onfinish = () => { wrap.remove(); img.style.visibility = ''; flying = false; };
-      burst();
     };
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
@@ -396,7 +398,7 @@
   function renderGacha() {
     $('machine').innerHTML = MACHINE;
     const R = A_.GACHA;
-    $('gpanel').innerHTML = `<h3>${t('g.h')}</h3>
+    $('gpanel').innerHTML = `<div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><h3>${t('g.h')}</h3><span class="coin mob"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
       <div class="gbtns"><button class="btn sky" id="g1" ${C.balance < R.one ? 'disabled' : ''}>${t('g.one')}<small><span class="price"><i></i>${R.one}</span></small></button>
       <button class="btn" id="g10" ${C.balance < R.ten ? 'disabled' : ''}>${t('g.ten')}<small><span class="price"><i></i>${R.ten}</span></small></button></div>
       <div class="gnote">★ ${t('g.tenNote')}<br>★ ${t('g.dup')}</div>

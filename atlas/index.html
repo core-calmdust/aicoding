@@ -67,7 +67,9 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.86);backdro
   .hd{gap:8px;height:60px}
   .coin{font-size:15px}
 }
-@media (min-width:761px){ body{padding-bottom:40px} }
+@media (min-width:761px){ body{padding-bottom:40px} .coin.mob{display:none} }
+/* phones: the coin pill leaves the header (the title needs the room) and sits on the hero / shop / gacha */
+@media (max-width:760px){ #coinPill{display:none} .heroCoin{position:absolute;top:12px;inset-inline-end:12px;z-index:3;font-size:14px;padding:3px 10px 3px 4px} .heroCoin i{width:20px;height:20px} }
 
 /* ---------- shared bits ---------- */
 section.pg{display:none;padding:14px 0 24px}
@@ -378,6 +380,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   <!-- HOME -->
   <section class="pg" id="pg-home">
     <div class="hero" id="hero">
+      <span class="coin mob heroCoin"><i>¢</i><span class="coinM">0</span></span>
       <div class="props" id="props" aria-hidden="true"></div>
       <h1 class="ttl" id="ttl"></h1>
     </div>
@@ -407,7 +410,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 
   <!-- SHOP -->
   <section class="pg" id="pg-shop">
-    <div class="shophead"><h2 class="h" id="hShop"></h2><span class="note" id="shopNote"></span></div>
+    <div class="shophead"><h2 class="h" id="hShop"></h2><span class="note" id="shopNote"></span><span class="coin mob" style="margin-inline-start:auto"><i>¢</i><span class="coinM">0</span></span></div>
     <div class="items" id="shopItems"></div>
     <p class="how" id="how1"></p>
   </section>
@@ -453,6 +456,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="table3d.js?v=5"></script>
 <script src="icons3d.js?v=1"></script>
 <script src="games/reversi.js?v=2"></script>
-<script src="app.js?v=13"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>
