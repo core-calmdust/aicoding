@@ -324,5 +324,6 @@
   "rx.m.blockwin": "ein Zug, der den Punkt der gegnerischen Vier-Drei oder offenen Vier vorab besetzt",
   "rx.m.block3": "ein Zug, der die Drei des Gegners blockiert",
   "rx.m.quiet": "ein ruhiger Zug, der den nächsten Angriff oder die Verteidigung vorbereitet",
-  "rv.ex.wr": "Gewinnchance (Schätzung): {a} mit dem besten Zug → {b} mit dem gespielten Zug"
+  "rv.ex.wr": "Gewinnchance (Schätzung): {a} mit dem besten Zug → {b} mit dem gespielten Zug",
+  "op.auto": "Automatisch abspielen / Stopp (Leertaste)"
 }

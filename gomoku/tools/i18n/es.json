@@ -324,5 +324,6 @@
   "rx.m.blockwin": "una jugada que ocupa antes el punto del cuatro-tres o cuatro abierto del rival",
   "rx.m.block3": "una jugada que bloquea el tres del rival",
   "rx.m.quiet": "una jugada tranquila que prepara el siguiente ataque o defensa",
-  "rv.ex.wr": "Probabilidad de ganar (estimada): {a} con la mejor jugada → {b} con la jugada realizada"
+  "rv.ex.wr": "Probabilidad de ganar (estimada): {a} con la mejor jugada → {b} con la jugada realizada",
+  "op.auto": "Reproducción automática / parar (Espacio)"
 }

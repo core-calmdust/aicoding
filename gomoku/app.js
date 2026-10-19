@@ -345,7 +345,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) pend = -1; renderBoard(anim); renderInfo(); }
+function update(anim) { if (!anim) pend = -1; renderBoard(anim); renderInfo(); stSync(); }
 
 // ====================================================================== input: tap / click an intersection
 function pointAt(x, y) {
@@ -1062,9 +1062,50 @@ function showStudy(anim) {
   if (i === N0) fb += (fb ? '<br>' : '') + `<b style="color:var(--brass)">${t('op.studyEnd')}</b>`;
   fb += `<br><button class="op-play" id="lsPlayHere">${t('op.playHere')}</button>`;
   $('#lsPrompt').innerHTML = `<div class="ls-goal"><span>${pr}</span></div>`; $('#lsFb').innerHTML = fb;
+  // keep the card from shrinking while stepping through the line (a shorter note would pull the page up on phones)
+  { const c = $('#lessonCard'); L.cardMin = Math.max(L.cardMin || 0, c.offsetHeight); c.style.minHeight = L.cardMin + 'px'; }
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 3;
   $('#lsNext').textContent = i === N0 ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
+  stSync();
 }
+// ---- opening study: compact step bar (phones) + autoplay (about one move every 1.2 s; any tap / key stops it)
+var stTimer = 0;
+function stStop() { if (stTimer) { clearInterval(stTimer); stTimer = 0; } stSync(); }
+function stTo(to) {
+  const last = lesson.line.length - 3;
+  if (to < 0 || to > last || to === lesson.i) return;
+  const one = to === lesson.i + 1; lesson.i = to; showStudy(one);
+}
+function stGo(what) {
+  if (!lesson || !lesson.study) return;
+  const last = lesson.line.length - 3;
+  if (what === 'auto') {
+    if (stTimer) { stStop(); return; }
+    if (lesson.i >= last) { lesson.i = 0; showStudy(false); }
+    const L0 = lesson;
+    stTimer = setInterval(() => { if (lesson !== L0 || !lesson.study || lesson.i >= last) { stStop(); return; } stTo(lesson.i + 1); if (lesson.i >= last) stStop(); }, 1200);
+    stSync(); return;
+  }
+  if (stTimer) stStop();
+  stTo(what === 'first' ? 0 : what === 'last' ? last : what === 'prev' ? lesson.i - 1 : lesson.i + 1);
+}
+function stSync() {
+  const on = !!(lesson && lesson.study), nav = document.getElementById('stNav'), au = document.getElementById('lsAuto');
+  if (!nav || !au) return;
+  document.body.classList.toggle('in-study', on);
+  au.classList.toggle('hidden', !on);
+  if (!on) { document.body.classList.remove('st-end'); const lc = document.getElementById('lessonCard'); if (lc) lc.style.minHeight = ''; if (stTimer) { clearInterval(stTimer); stTimer = 0; } return; }
+  const last = lesson.line.length - 3, i = lesson.i, q = k => nav.querySelector('[data-sn="' + k + '"]');
+  document.body.classList.toggle('st-end', i >= last);
+  document.getElementById('stPos').textContent = (i + 3) + ' / ' + lesson.line.length;
+  q('first').disabled = q('prev').disabled = i === 0;
+  q('next').disabled = q('last').disabled = i >= last;
+  for (const b of [q('auto'), au]) { b.classList.toggle('on', !!stTimer); b.title = t('op.auto'); b.setAttribute('aria-label', t('op.auto')); }
+  for (const k of ['first', 'prev', 'next', 'last']) q(k).title = t('nav.' + k);
+}
+$('#stNav').addEventListener('click', e => { const b = e.target.closest('button[data-sn]'); if (b) stGo(b.dataset.sn); });
+$('#lsAuto').onclick = () => stGo('auto');
+document.addEventListener('click', e => { if (stTimer && !e.target.closest('[data-sn="auto"],#lsAuto')) stStop(); }, true);
 // study values are stored from black's point of view
 function evalFromStudy(v, i) { if (v > WINT) return { s: 0.95, kind: 'win', side: P1 }; if (v < -WINT) return { s: -0.95, kind: 'win', side: P2 }; return { s: sOfV(v), kind: 'cp', cp: v }; }
 $('#lsFb').addEventListener('click', e => {
@@ -2220,10 +2261,10 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.overlay.show')) return;
   // opening study: the arrow keys step through the line like the kifu (← → one move, ↓ ↑ first / last)
   if (lesson && lesson.study) {
-    const L = lesson, last = L.line.length - 3, to = { ArrowLeft: L.i - 1, ArrowRight: L.i + 1, ArrowDown: 0, ArrowUp: last }[e.key];
-    if (to === undefined) return;
+    const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowDown: 'first', ArrowUp: 'last', ' ': 'auto' }[e.key];
+    if (k === undefined) return;
     e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
-    if (to >= 0 && to <= last && to !== L.i) { const one = to === L.i + 1; L.i = to; showStudy(one); }
+    stGo(k);
     return;
   }
   if (lesson || puzzle) return;

@@ -324,5 +324,6 @@
   "rx.m.blockwin": "a move that takes the point of the opponent's four-three or straight four first",
   "rx.m.block3": "a move that blocks the opponent's three",
   "rx.m.quiet": "a quiet move that prepares the next attack or defence",
-  "rv.ex.wr": "Win chance (estimate): {a} with the best move → {b} with the move played"
+  "rv.ex.wr": "Win chance (estimate): {a} with the best move → {b} with the move played",
+  "op.auto": "Autoplay / stop (Space)"
 }

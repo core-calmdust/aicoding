@@ -320,6 +320,19 @@ a.snd.home{text-decoration:none}
 
 /* lesson & puzzle */
 .lesson-card,.puzzle-card{display:none}
+/* opening study: compact step bar under the board (phones) + autoplay */
+.st-nav{display:none;align-items:center;justify-content:center;gap:6px;direction:ltr}
+.st-nav button{width:42px;height:36px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent}
+.st-nav button:disabled{opacity:.35;pointer-events:none}
+.st-nav svg,#lsAuto svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st-nav .st-auto,#lsAuto{color:var(--accent);border-color:rgba(201,169,97,.55)}
+.st-nav .st-auto{width:54px}
+.st-nav .st-auto.on,#lsAuto.on{background:rgba(201,169,97,.2)}
+.st-nav .i-pause,#lsAuto .i-pause{display:none}
+.st-nav .on .i-pause,#lsAuto.on .i-pause{display:block}.st-nav .on .i-play,#lsAuto.on .i-play{display:none}
+.st-pos{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--dim);min-width:58px;text-align:center;white-space:nowrap}
+.lesson-actions #lsAuto{flex:0 0 46px;padding:0;display:flex;align-items:center;justify-content:center}
+.lesson-actions #lsAuto.hidden{display:none}
 body.in-lesson .lesson-card{display:block}
 body.in-puzzle .puzzle-card{display:block}
 body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line, body.in-lesson .controls,
@@ -415,6 +428,9 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
   .lesson-card,.puzzle-card{order:0}
+  body.in-study .board-area{display:flex;flex-direction:column;gap:6px}
+  body.in-study .st-nav{display:flex}
+  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
   #evalCard{order:2}
   .review-card{order:3}
@@ -812,6 +828,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
       <div class="toast" id="toast"></div>
       <div class="review-bar" id="reviewBar"><span id="reviewText"></span><button id="btnResume" data-i18n="review.resume"></button><button id="btnLatest" data-i18n="review.latest"></button></div>
     </div>
+    <div class="st-nav" id="stNav" dir="ltr"><button data-sn="first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button><button data-sn="prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button><button data-sn="auto" class="st-auto"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button data-sn="next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button><button data-sn="last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button><span class="st-pos" id="stPos"></span></div>
   </div>
 
   <aside class="side">
@@ -828,6 +845,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
       <div class="lesson-fb" id="lsFb"></div>
       <div class="lesson-actions">
         <button id="lsHint" data-i18n="ls.hint"></button>
+        <button id="lsAuto" class="ls-auto hidden"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
         <button id="lsNext" class="go"></button>
         <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
@@ -1097,10 +1115,10 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261019c"></script>
+<script src="i18n.js?v=20261020st"></script>
 <script src="engine.js?v=20261019c"></script>
 <script src="firebase-config.js?v=20261019a"></script>
 <script src="online.js?v=20261019c"></script>
-<script src="app.js?v=20261019c"></script>
+<script src="app.js?v=20261020sd"></script>
 </body>
 </html>

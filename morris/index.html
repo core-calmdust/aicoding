@@ -2070,7 +2070,7 @@ function showStudy(anim) {
   fb += `<br><button class="op-play" id="lsPlayHere">${t('op.playHere')}</button>`;
   $('#lsPrompt').innerHTML = `<div class="ls-goal">${pr}</div>`; $('#lsFb').innerHTML = fb;
   // keep the card from shrinking while stepping through the line (a shorter note would pull the page up on phones)
-  { const c = $('#lessonCard'); c.style.minHeight = ''; const h = c.offsetHeight; lesson.cardMin = Math.max(lesson.cardMin || 0, h); c.style.minHeight = lesson.cardMin + 'px'; }
+  { const c = $('#lessonCard'); lesson.cardMin = Math.max(lesson.cardMin || 0, c.offsetHeight); c.style.minHeight = lesson.cardMin + 'px'; }
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
   $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
   stSync();

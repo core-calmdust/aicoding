@@ -324,5 +324,6 @@
   "rx.m.blockwin": "um lance que ocupa antes o ponto do quatro-três ou quatro aberto do adversário",
   "rx.m.block3": "um lance que bloqueia o três do adversário",
   "rx.m.quiet": "um lance tranquilo que prepara o próximo ataque ou defesa",
-  "rv.ex.wr": "Chance de vitória (estimativa): {a} com o melhor lance → {b} com o lance jogado"
+  "rv.ex.wr": "Chance de vitória (estimativa): {a} com o melhor lance → {b} com o lance jogado",
+  "op.auto": "Reprodução automática / parar (Espaço)"
 }
