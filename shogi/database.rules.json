@@ -72,27 +72,18 @@
         ".write": "auth != null && auth.uid === $uid"
       }
     },
-    "users": {
+    "profiles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['n']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 16"
+      }
+    },
+    "sync": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid",
-        "kv": {
-          "$key": {
-            ".validate": "$key.length <= 200 && newData.hasChildren(['v', 't']) && newData.child('v').isString() && newData.child('v').val().length < 400000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000",
-            "v": {
-              ".validate": true
-            },
-            "t": {
-              ".validate": true
-            },
-            "$other": {
-              ".validate": false
-            }
-          }
-        },
-        "$other": {
-          ".validate": false
-        }
+        ".validate": "newData.hasChildren(['d', 't']) && newData.child('d').isString() && newData.child('d').val().length <= 400000 && newData.child('t').isNumber()"
       }
     }
   }
