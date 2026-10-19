@@ -106,6 +106,22 @@ function buildComb(renjuBlack) {
   return T;
 }
 const COMB_N = buildComb(false), COMB_R = buildComb(true);
+// ---------------------------------------------------------------- learned evaluation
+// Every empty cell, for each colour: the unordered combination of its four direction patterns (715 combos, +1 for a
+// cell forbidden to black). Weights per role (side to move / opponent) x colour, learned from game records.
+const NCOMB = 716;
+const COMBO = new Int16Array(65536).fill(-1);
+{
+  const key = new Map(); let id = 0;
+  for (let a = 0; a < 10; a++) for (let b = a; b < 10; b++) for (let c = b; c < 10; c++) for (let d = c; d < 10; d++) key.set(((a * 10 + b) * 10 + c) * 10 + d, id++);
+  for (let pk = 0; pk < 65536; pk++) {
+    const v = [pk & 15, (pk >> 4) & 15, (pk >> 8) & 15, (pk >> 12) & 15]; if (v[0] > 9 || v[1] > 9 || v[2] > 9 || v[3] > 9) continue;
+    v.sort((x, y) => x - y); COMBO[pk] = key.get(((v[0] * 10 + v[1]) * 10 + v[2]) * 10 + v[3]);
+  }
+}
+const PAIR = 4 * NCOMB, BIAS = PAIR + 200;   // + (black class, white class) of each empty cell x side to move, + bias by side to move
+const LW = { renju: null, std: null };   // Int32Array(BIAS + 2) per rule group, set by setWeights()
+function setWeights(group, arr) { LW[group] = arr ? Int32Array.from(arr) : null; }
 
 // ---------------------------------------------------------------- zobrist
 function xorshift(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s | 0; }; }
@@ -129,6 +145,10 @@ class Pos {
     this.pat = [null, new Uint16Array(SIZE), new Uint16Array(SIZE)];  // four direction patterns packed in nibbles
     this.CB = this.renju ? COMB_R : COMB_N;
     this.sc = [null, new Int32Array(SIZE), new Int32Array(SIZE)];
+    this.lw = LW[this.renju ? 'renju' : 'std'];
+    this.cb = [null, new Int16Array(SIZE).fill(-1), new Int16Array(SIZE).fill(-1)];
+    this.tA = [0, 0, 0]; this.tB = [0, 0, 0];   // learned sums: colour c as side to move / as opponent
+    this.pk = new Int16Array(SIZE).fill(-1); this.tP = [0, 0, 0];   // cell class pairs, sums for black / white to move
     this.fb = new Int8Array(SIZE);          // black only: 0 ok, 1 forbidden for sure (overline / 4-4), 2 maybe (3-3, needs the exact test)
     this.tot = [0, 0, 0];
     this.near = new Int16Array(SIZE);
@@ -158,12 +178,33 @@ class Pos {
     this.cls[c][i] = k; this.cnt[c][k]++;
     this.tot[c] += s - this.sc[c][i]; this.sc[c][i] = s;
     if (c === 1) this.fb[i] = (x >> 4) & 3;
+    const lw = this.lw;
+    if (lw) {
+      const nb = c === 1 && this.renju && ((x >> 4) & 3) === 1 ? 715 : COMBO[this.pat[c][i]], ob = this.cb[c][i];
+      if (nb !== ob) {
+        const ta = (c - 1) * NCOMB, tb = (2 + c - 1) * NCOMB;
+        if (ob >= 0) { this.tA[c] -= lw[ta + ob]; this.tB[c] -= lw[tb + ob]; }
+        this.tA[c] += lw[ta + nb]; this.tB[c] += lw[tb + nb]; this.cb[c][i] = nb;
+      }
+      this.pairUpd(i);
+    }
+  }
+  pairUpd(i) {
+    const lw = this.lw, a = this.cls[1][i], b = this.cls[2][i], nk = a >= 0 && b >= 0 ? a * 10 + b : -1, ok = this.pk[i];
+    if (nk === ok) return;
+    if (ok >= 0) { this.tP[1] -= lw[PAIR + ok]; this.tP[2] -= lw[PAIR + 100 + ok]; }
+    if (nk >= 0) { this.tP[1] += lw[PAIR + nk]; this.tP[2] += lw[PAIR + 100 + nk]; }
+    this.pk[i] = nk;
   }
   cellOff(i, c) {
     const ok = this.cls[c][i];
     if (ok >= 0) this.cnt[c][ok]--;
     this.cls[c][i] = -1; this.tot[c] -= this.sc[c][i]; this.sc[c][i] = 0;
     if (c === 1) this.fb[i] = 0;
+    const ob = this.cb[c][i];
+    if (ob >= 0 && this.lw) { this.tA[c] -= this.lw[(c - 1) * NCOMB + ob]; this.tB[c] -= this.lw[(2 + c - 1) * NCOMB + ob]; }
+    this.cb[c][i] = -1;
+    if (this.lw) this.pairUpd(i);
   }
   refresh(i) {
     for (let c = 1; c <= 2; c++) {
@@ -522,6 +563,7 @@ class Engine {
   timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit)) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
+    if (pos.lw && this.learned !== false) return (pos.tA[me] + pos.tB[op] + pos.tP[me] + pos.lw[BIAS + me - 1]) | 0;
     return ((pos.tot[me] * 12 - pos.tot[op] * 10) / 10) | 0;
   }
   // candidate moves for the side to move, ordered; also handles forced replies
@@ -813,7 +855,7 @@ function solve(rule, moves, start, n, defend, maxNodes) {
   return list.map(e => ({ m: I2M[e.i], need: e.need }));
 }
 
-const API = { N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
+const API = { setWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
   C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;

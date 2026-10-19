@@ -1,0 +1,35 @@
+// old eval vs learned eval, same search, fixed node budget per move. node match.js <rule> <pairs> <nodes> [wfile]
+'use strict';
+const fs = require('fs');
+const E = require('/home/claude/aicoding/gomoku/engine.js');
+const [RULE, PAIRS, NODES, WF] = [process.argv[2] || 'renju', +process.argv[3] || 20, +process.argv[4] || 20000, process.argv[5]];
+const G = RULE === 'renju' ? 'renju' : 'std';
+E.setWeights(G, JSON.parse(fs.readFileSync(WF || `/home/claude/work/eval/w_${G}.json`, 'utf8')));
+const games = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(g => (RULE === 'renju') === (g.rule === 'renju'));
+let seed = +process.env.SEED || 99; const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
+const eOld = new E.Engine(), eNew = new E.Engine(); eOld.learned = false; eNew.learned = true;
+let sc = { new: 0, old: 0, draw: 0 };
+function play(open, newBlack) {
+  const pos = E.setup(RULE, { b: [], w: [] });
+  for (const m of open) pos.make(m);
+  eOld.clear(); eNew.clear();
+  while (true) {
+    const st = pos.status(); if (st.over) return st.winner;
+    if (!pos.legal().length) return 3 - pos.side;
+    const eng = (pos.side === 1) === newBlack ? eNew : eOld;
+    const r = eng.best(pos, { ms: 1e9, nodes: NODES, vct: 9, defend: 5 });
+    let m = r.i >= 0 ? E.I2M[r.i] : pos.legal()[0];
+    if (!pos.isLegal(m)) return 3 - pos.side;
+    pos.make(m);
+    if (pos.ply >= 225) return 0;
+  }
+}
+for (let k = 0; k < PAIRS; k++) {
+  const g = games[Math.floor(rnd() * games.length)], n = 4 + Math.floor(rnd() * 3), open = g.moves.slice(0, n);
+  for (const nb of [true, false]) {
+    const w = play(open, nb);
+    if (!w) sc.draw++; else if ((w === 1) === nb) sc.new++; else sc.old++;
+  }
+  const N = sc.new + sc.old + sc.draw, s = (sc.new + sc.draw / 2) / N;
+  console.log(`pair ${k + 1}: new ${sc.new} old ${sc.old} draw ${sc.draw}  score ${(s * 100).toFixed(1)}%  elo ${(-400 * Math.log10(1 / Math.max(0.01, Math.min(0.99, s)) - 1)).toFixed(0)}`);
+}
