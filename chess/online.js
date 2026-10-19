@@ -159,12 +159,12 @@
     if (!presOn) {
       db.onDisconnectRemove('presence/' + uid); presOn = true;
       if (db.onReconnect) db.onReconnect(() => setPresence().catch(() => {}));
-      setInterval(() => { if (presOn) db.update('presence/' + uid, { t: db.stamp() }).catch(() => {}); }, PRES_BEAT);   // heartbeat
+      setInterval(() => { if (presOn) setPresence().catch(() => {}); }, PRES_BEAT);   // heartbeat: rewrite the whole entry (a bare {t} update after an onDisconnect removal left nameless ghosts)
     }
   }
   // entries whose owner stopped beating (crashed tab, lost disconnect handler) are not shown
   const PRES_BEAT = 60000, PRES_STALE = 150000;
-  const presLive = x => typeof x.t === 'number' && db.now() - x.t < PRES_STALE;
+  const presLive = x => typeof x.t === 'number' && !!x.name && db.now() - x.t < PRES_STALE;
   const listOf = (v, me) => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
   function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).filter(x => x.me || presLive(x)).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
   // a room is usable while nobody joined it and it has not expired (expires; old records: created + ROOM_TTL). Lists hide expired rooms even if the host vanished without cleanup.

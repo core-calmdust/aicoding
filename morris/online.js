@@ -297,12 +297,12 @@
     if (!presOn) {
       db.onDisconnectRemove('presence/' + uid); presOn = true;
       if (db.onReconnect) db.onReconnect(() => setPresence().catch(() => {}));
-      setInterval(() => { if (presOn) db.update('presence/' + uid, { t: db.stamp() }).catch(() => {}); }, PRES_BEAT);   // heartbeat
+      setInterval(() => { if (presOn) setPresence().catch(() => {}); }, PRES_BEAT);   // heartbeat: rewrite the whole entry (a bare {t} update after an onDisconnect removal left nameless ghosts)
     }
   }
   // entries whose owner stopped beating (crashed tab, lost disconnect handler) are not shown
   const PRES_BEAT = 60000, PRES_STALE = 150000;
-  const presLive = x => typeof x.t === 'number' && db.now() - x.t < PRES_STALE;
+  const presLive = x => typeof x.t === 'number' && !!x.name && db.now() - x.t < PRES_STALE;
   const listOf = v => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
   function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).filter(x => x.me || presLive(x)).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
   const roomExp = r => (typeof r.expires === 'number' ? r.expires : (typeof r.created === 'number' ? r.created : 0) + ROOM_TTL);
