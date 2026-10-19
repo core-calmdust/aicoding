@@ -252,7 +252,7 @@
       const rise = Math.min(300, H * .38);
       wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 1, transform: `translate(${dx}px, ${dy + 14}px) scale(${sc * 1.04},${sc * .92})`, offset: .18 }, { opacity: 0, transform: `translate(${dx}px, ${dy - rise}px) scale(${sc * .55},${sc * .8})` }], { duration: 340, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' })
         .onfinish = () => { wrap.remove(); img.style.visibility = ''; flying = false; };
-      magic(cx, cy, rise, Math.min(W * .55, 280));
+      magic(cx, cy, rise, Math.min(W * .55, 280));   // effects are scaled to the whole screen inside
     };
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
@@ -267,36 +267,45 @@
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
   function magic(cx, cy, rise, size) {
     const box = document.createElement('div'); box.className = 'magic'; document.body.appendChild(box);
-    const cols = ['#ffd84a', '#fff6b0', '#ff8fd0', '#7fdcff', '#b99bff', '#ffffff', '#7af0b0'];
-    const add = (x, y, delay, kf, dur, sz) => {
-      const e = document.createElement('i'); e.style.left = x + 'px'; e.style.top = y + 'px'; e.style.width = e.style.height = sz + 'px'; e.style.color = cols[Math.random() * cols.length | 0];
+    const W = innerWidth, H = innerHeight, big = Math.hypot(W, H) / 2, sm = Math.min(W, H);
+    const cols = ['#ffd84a', '#fff6b0', '#ff8fd0', '#7fdcff', '#b99bff', '#ffffff', '#7af0b0', '#ff9b5a'];
+    const add = (x, y, delay, kf, dur, sz, cls) => {
+      const e = document.createElement('i'); if (cls) e.className = cls; e.style.left = x + 'px'; e.style.top = y + 'px'; e.style.width = e.style.height = sz + 'px'; e.style.color = cols[Math.random() * cols.length | 0];
       box.appendChild(e); e.animate(kf, { duration: dur, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' });
     };
-    for (let i = 0; i < 22; i++) {            // trail behind the icon as it zips up
-      const t = i / 22, x = cx + (Math.random() - .5) * size * .6, y = cy - rise * t + (Math.random() - .5) * 40;
-      add(x, y, t * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(0)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.15) rotate(90deg)', offset: .3 }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${20 + Math.random() * 40}px) scale(.3) rotate(200deg)` }], 560, 14 + Math.random() * 18);
-    }
-    // "dorone": a puff of cartoon smoke bursts out where the board appears
     const gr = $('gl').getBoundingClientRect(), bx = gr.left + gr.width / 2, by = gr.top + gr.height / 2;   // where the board appears
+    // 1) trail behind the icon as it zips up
+    for (let i = 0; i < 30; i++) {
+      const t = i / 30, x = cx + (Math.random() - .5) * size * .8, y = cy - rise * t + (Math.random() - .5) * 50;
+      add(x, y, t * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(0)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.2) rotate(90deg)', offset: .3 }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${30 + Math.random() * 50}px) scale(.3) rotate(200deg)` }], 560, 16 + Math.random() * 22);
+    }
+    // 2) full-screen flash + rotating light rays
+    const flash = document.createElement('u'); flash.className = 'flash'; box.appendChild(flash);
+    flash.animate([{ opacity: 0 }, { opacity: .85, offset: .25 }, { opacity: 0 }], { duration: 420, delay: 160, easing: 'ease-out', fill: 'both' });
+    const rays = document.createElement('u'); rays.className = 'rays'; rays.style.left = bx + 'px'; rays.style.top = by + 'px'; rays.style.width = rays.style.height = big * 2.4 + 'px'; box.appendChild(rays);
+    rays.animate([{ opacity: 0, transform: 'translate(-50%,-50%) rotate(0deg) scale(.4)' }, { opacity: .75, transform: 'translate(-50%,-50%) rotate(40deg) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) rotate(90deg) scale(1.15)' }], { duration: 720, delay: 160, easing: 'ease-out', fill: 'both' });
+    // 3) "dorone": a big puff of cartoon smoke
     const smoke = document.createElement('div'); smoke.className = 'smoke'; smoke.style.left = bx + 'px'; smoke.style.top = by + 'px'; box.appendChild(smoke);
-    for (let i = 0; i < 13; i++) {
-      const a = i / 13 * Math.PI * 2 + Math.random() * .3, d = size * (.32 + Math.random() * .22), pz = size * (.26 + Math.random() * .2), p = document.createElement('span');
+    for (let i = 0; i < 20; i++) {
+      const a = i / 20 * Math.PI * 2 + Math.random() * .3, d = sm * (.32 + Math.random() * .3), pz = sm * (.22 + Math.random() * .2), p = document.createElement('span');
       p.style.width = p.style.height = pz + 'px'; smoke.appendChild(p);
-      p.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .55}px), calc(-50% + ${Math.sin(a) * d * .4}px)) scale(1)`, offset: .3 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d * .7 - 30}px)) scale(1.35)` }], { duration: 640, delay: 150 + Math.random() * 40, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
+      p.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .5}px), calc(-50% + ${Math.sin(a) * d * .42}px)) scale(1)`, offset: .3 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d * 1.25}px), calc(-50% + ${Math.sin(a) * d * .9 - 40}px)) scale(1.45)` }], { duration: 700, delay: 150 + Math.random() * 50, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
     }
-    const core = document.createElement('span'); core.className = 'core'; core.style.width = core.style.height = size * .75 + 'px'; smoke.appendChild(core);
-    core.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.05)', offset: .25 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' }], { duration: 520, delay: 150, easing: 'ease-out', fill: 'both' });
-    for (let i = 0; i < 16; i++) {            // big stars shooting out of the smoke
-      const a = i / 16 * Math.PI * 2 + Math.random() * .2, d = size * (.55 + Math.random() * .45);
-      add(bx, by, 170 + Math.random() * 60, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .6}px), calc(-50% + ${Math.sin(a) * d * .6}px)) scale(1.3) rotate(120deg)`, offset: .45 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d + 30}px)) scale(.4) rotate(260deg)` }], 620, 20 + Math.random() * 22);
+    const core = document.createElement('span'); core.className = 'core'; core.style.width = core.style.height = sm * .62 + 'px'; smoke.appendChild(core);
+    core.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.05)', offset: .25 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.6)' }], { duration: 560, delay: 150, easing: 'ease-out', fill: 'both' });
+    // 4) stars shooting out to the edges of the screen
+    for (let i = 0; i < 30; i++) {
+      const a = i / 30 * Math.PI * 2 + Math.random() * .2, d = big * (.6 + Math.random() * .55);
+      add(bx, by, 170 + Math.random() * 80, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: `translate(calc(-50% + ${Math.cos(a) * d * .55}px), calc(-50% + ${Math.sin(a) * d * .55}px)) scale(1.4) rotate(140deg)`, offset: .45 }, { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d + 40}px)) scale(.5) rotate(300deg)` }], 720, 24 + Math.random() * 30);
     }
-    for (let i = 0; i < 30; i++) {            // glitter rains onto the board and twinkles out
-      const a = Math.random() * Math.PI * 2, r = size * (.1 + Math.random() * .7), x = bx + Math.cos(a) * r, y = by + Math.sin(a) * r * .6;
-      add(x, y, 260 + Math.random() * 260, [{ opacity: 0, transform: 'translate(-50%,-50%) translateY(-70px) scale(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.2) rotate(45deg)', offset: .5 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(140deg)' }], 480, 8 + Math.random() * 16);
+    // 5) glitter all over the screen, twinkling out
+    for (let i = 0; i < 70; i++) {
+      const x = Math.random() * W, y = Math.random() * H;
+      add(x, y, 240 + Math.random() * 380, [{ opacity: 0, transform: 'translate(-50%,-50%) translateY(-40px) scale(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.2) rotate(45deg)', offset: .45 }, { opacity: 0, transform: 'translate(-50%,-50%) translateY(20px) scale(.2) rotate(150deg)' }], 520, 8 + Math.random() * 18);
     }
-    const ring = document.createElement('b'); ring.style.left = bx + 'px'; ring.style.top = by + 'px'; box.appendChild(ring);
-    ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.8)' }], { duration: 560, delay: 140, easing: 'ease-out', fill: 'both' });
-    setTimeout(() => box.remove(), 1100);
+    const ring = document.createElement('b'); ring.style.left = bx + 'px'; ring.style.top = by + 'px'; ring.style.width = ring.style.height = sm * .9 + 'px'; box.appendChild(ring);
+    ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(2.2)' }], { duration: 600, delay: 140, easing: 'ease-out', fill: 'both' });
+    setTimeout(() => box.remove(), 1300);
   }
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
