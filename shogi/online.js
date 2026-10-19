@@ -123,7 +123,7 @@
         const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
         await loadScript(base + 'firebase-app-compat.js');
         await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
-        if (!firebase.apps.length) firebase.initializeApp(CFG);
+        if (!firebase.apps.some(a => a.name === '[DEFAULT]')) firebase.initializeApp(CFG);   // the shared-account app ('atlas') may already exist
         const cred = await firebase.auth().signInAnonymously();
         uid = cred.user.uid;
         db = firebaseDB();
