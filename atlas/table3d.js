@@ -67,8 +67,7 @@
         for (let x = 0; x < W; x++) {
           const u = x / W, b = u < .5 ? 0 : (u - .5) * 2;
           let t = .18 + tone + val(u) * (1 - b) + val(u - 1) * b;
-          const seam = Math.min(y % ph, ph - (y % ph)); if (seam < 2.2) t = .95; else if (seam < 4) t += .25;
-          t = Math.max(0, Math.min(1, t));
+                    t = Math.max(0, Math.min(1, t));
           const i = (y * W + x) * 4;
           d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
         }
@@ -337,7 +336,7 @@
     key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const rim = new (T().DirectionalLight)(0xbfd8ff, .3); rim.position.set(8, 6, -10); scene.add(rim);
-    const tw = planks('tablePl2', '#d6995a', '#94582c', 4); tw.wrapS = tw.wrapT = T().RepeatWrapping; tw.repeat.set(7, 10);
+    const tw = planks('tablePl3', '#d6995a', '#94582c', 1); tw.wrapS = tw.wrapT = T().RepeatWrapping; tw.repeat.set(7, 10);
     tw.repeat.set(26, 36);
     scene.fog = new (T().Fog)(0xb57a45, 45, 130);
     const table = new (T().Mesh)(new (T().CircleGeometry)(300, 64), M({ map: tw, roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .004 }));
@@ -418,13 +417,15 @@
         if (t < 560 && cur === c) requestAnimationFrame(anim); else c.scale.set(1, 1, 1);
       })(t0);
     };
-    if (opts.magic) {           // materialise: grows out of a sparkle with a little twist and overshoot
-      root.add(c); const t0 = performance.now();
+    if (opts.magic) {           // materialise: grows out of the smoke with a little twist and overshoot
+      root.add(c); c.visible = false; c.scale.setScalar(.02);
+      const go = () => { if (cur !== c || c.visible) return; c.visible = true; const t0 = performance.now();
       (function anim(now) {
         const k = Math.min(1, (now - t0) / 480), e = k === 1 ? 1 : 1 - Math.pow(2, -8 * k) * Math.cos(k * 9.5);
         c.scale.setScalar(Math.max(.02, e)); c.rotation.y = (1 - ease.out3(k)) * -.9; c.position.y = (1 - ease.out3(k)) * 1.2;
         if (k < 1 && cur === c) requestAnimationFrame(anim); else { c.scale.set(1, 1, 1); c.rotation.y = 0; c.position.y = 0; }
-      })(t0);
+      })(t0); };
+      if (opts.hold) { revealFn = go; setTimeout(go, 1500); } else go();   // hold: wait for reveal() (the moment the icon vanishes)
       return g;
     }
     if (!opts.intro) { land(); return g; }
@@ -444,6 +445,8 @@
     })(t0);
     return g;
   }
+  let revealFn = null;
+  function reveal() { const f = revealFn; revealFn = null; if (f) f(); }
   function play(on) { mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
@@ -479,5 +482,5 @@
     R.render(scene, cam);
   }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
 })();
