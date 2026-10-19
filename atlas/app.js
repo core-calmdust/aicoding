@@ -228,7 +228,7 @@
     Object.assign(fly.style, { width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.25))', transformOrigin: '50% 55%', backfaceVisibility: 'visible' });
     wrap.appendChild(fly); document.body.appendChild(wrap); img.style.visibility = 'hidden';
     const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sc = Math.min(W * .55, 280) / Math.max(r.width, 1);
-    const T1 = 720;
+    const T1 = 560;
     wrap.animate([
       { transform: 'translate(0,0) scale(1)' },
       { transform: 'translate(0,8px) scale(1.06)', offset: .14 },
