@@ -25,7 +25,8 @@
   --vh: 100vh; --vw: 100vw;
   --pad: clamp(24px, 5vmin, 72px);
   --gap: clamp(20px, 2.6vw, 44px);
-  --u: min((var(--vh) - var(--pad) * 2) / 12, (var(--vw) - var(--pad) * 2 - var(--gap) - 360px) / 15.85, 70px);
+  --ttop: 0px;
+  --u: min((var(--vh) - var(--pad) * 2 - var(--ttop)) / 12,(var(--vw) - var(--pad) * 2 - var(--gap) - 360px) / 15.85, 70px);
   --fw: calc(var(--u) * 15.85);
   --fh: calc(var(--u) * 12);
 }
@@ -482,6 +483,15 @@ html.rot .brand-r{gap:5px} html.rot #langSel{max-width:76px} html.rot .brand h1{
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
+/* PC: header row above the board-top line like the other games — title above the board's top-left corner, icons above the side panel; the panel's top lines up with the board's top */
+@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+  :root:not(.rot){--ttop:58px}
+  html:not(.rot) .app{padding-top:calc(var(--pad) + var(--ttop))}
+  html:not(.rot) .side{position:relative}
+  html:not(.rot) .side-in > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px);justify-content:flex-end}
+  html:not(.rot) .side-in > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
+  html:not(.rot) .side-in > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
+}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 </style>
 </head>

@@ -748,6 +748,12 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
+/* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
+@media (pointer: fine) and (min-aspect-ratio: 1/1) and (min-height: 561px), (pointer: fine) and (max-aspect-ratio: 1/1) and (min-width: 701px), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+  .side > .brand{justify-content:flex-end}
+  .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--cw) * 12.55);max-width:none}
+  .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--cw) * 12.55) / 18), 30px)}
+}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* ---- online: player names never overflow the two boxes; big clocks; rematch prompt; public chat (shared by the shogi / reversi pages) */
 .players{grid-template-columns:repeat(2,minmax(0,1fr))}
