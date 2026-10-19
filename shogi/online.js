@@ -39,6 +39,13 @@
     const f = firebase.database();
     let offset = 0;
     f.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
+    // onDisconnect handlers fire once and are gone: after every reconnect (sleep, network change) register them again and let the app rewrite its presence
+    const disc = new Set(), recon = new Set(); let wasUp = false;
+    f.ref('.info/connected').on('value', s => {
+      const up = !!s.val();
+      if (up && wasUp === 'down') { disc.forEach(p => f.ref(p).onDisconnect().remove()); recon.forEach(cb => { try { cb(); } catch (e) {} }); }
+      wasUp = up ? true : (wasUp ? 'down' : false);
+    });
     return {
       on(path, cb) { const r = f.ref(path), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
       get: async p => (await f.ref(p).get()).val(),
@@ -46,8 +53,9 @@
       update: (p, v) => f.ref(p).update(v),
       remove: p => f.ref(p).remove(),
       async txn(p, fn) { const r = await f.ref(p).transaction(fn); return { committed: r.committed, value: r.snapshot.val() }; },
-      onDisconnectRemove: p => f.ref(p).onDisconnect().remove(),
-      cancelDisconnect: p => f.ref(p).onDisconnect().cancel(),
+      onDisconnectRemove: p => { disc.add(p); return f.ref(p).onDisconnect().remove(); },
+      cancelDisconnect: p => { disc.delete(p); return f.ref(p).onDisconnect().cancel(); },
+      onReconnect: cb => recon.add(cb),
       stamp: () => firebase.database.ServerValue.TIMESTAMP,
       now: () => Date.now() + offset,
       push: p => f.ref(p).push().key,
@@ -149,10 +157,17 @@
     presState = st || presState;
     const v = Object.assign({ name: profile.name, rating: profile.rating, st: presState, t: db.stamp() }, extra || {});
     await db.set('presence/' + uid, v);
-    if (!presOn) { db.onDisconnectRemove('presence/' + uid); presOn = true; }
+    if (!presOn) {
+      db.onDisconnectRemove('presence/' + uid); presOn = true;
+      if (db.onReconnect) db.onReconnect(() => setPresence().catch(() => {}));
+      setInterval(() => { if (presOn) db.update('presence/' + uid, { t: db.stamp() }).catch(() => {}); }, PRES_BEAT);   // heartbeat
+    }
   }
+  // entries whose owner stopped beating (crashed tab, lost disconnect handler) are not shown
+  const PRES_BEAT = 60000, PRES_STALE = 150000;
+  const presLive = x => typeof x.t === 'number' && db.now() - x.t < PRES_STALE;
   const listOf = (v, me) => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
-  function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
+  function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).filter(x => x.me || presLive(x)).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
   // a room is usable while nobody joined it and it has not expired (expires; old records: created + ROOM_TTL). Lists hide expired rooms even if the host vanished without cleanup.
   // Open rooms with a game in progress stay listed (marked as playing, with a watch button); closed rooms are never listed
   const roomExp = r => (typeof r.expires === 'number' ? r.expires : (typeof r.created === 'number' ? r.created : 0) + ROOM_TTL);
