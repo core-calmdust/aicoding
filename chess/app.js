@@ -414,7 +414,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) { sel = null; closePromo(); } renderBoard(anim); renderInfo(); }
+function update(anim) { if (!anim) { sel = null; closePromo(); } renderBoard(anim); renderInfo(); stSync(); }
 
 // ====================================================================== input: tap or drag
 function squareAt(cx, cy) {
@@ -1193,7 +1193,47 @@ function showStudy(anim) {
   $('#lsPrompt').innerHTML = `<div class="ls-goal"><span>${pr}</span></div>`; $('#lsFb').innerHTML = fb;
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
   $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
+  stSync();
 }
+// ---- opening study: compact step bar (phones) + autoplay (about one move every 1.2 s; any tap / key stops it)
+var stTimer = 0;
+function stStop() { if (stTimer) { clearInterval(stTimer); stTimer = 0; } stSync(); }
+function stTo(to) {
+  const N = lesson.g.study.steps.length;
+  if (to < 0 || to > N || to === lesson.i) return;
+  const one = to === lesson.i + 1; lesson.i = to; showStudy(one);
+}
+function stGo(what) {
+  if (!lesson || !lesson.study) return;
+  const N = lesson.g.study.steps.length;
+  if (what === 'auto') {
+    if (stTimer) { stStop(); return; }
+    if (lesson.i >= N) { lesson.i = 0; showStudy(false); }
+    const L0 = lesson;
+    stTimer = setInterval(() => { if (lesson !== L0 || !lesson.study || lesson.i >= N) { stStop(); return; } stTo(lesson.i + 1); if (lesson.i >= N) stStop(); }, 1200);
+    stSync(); return;
+  }
+  if (stTimer) stStop();
+  stTo(what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? lesson.i - 1 : lesson.i + 1);
+}
+function stSync() {
+  const on = !!(lesson && lesson.study), nav = document.getElementById('stNav'), au = document.getElementById('lsAuto');
+  if (!nav || !au) return;
+  document.body.classList.toggle('in-study', on);
+  au.classList.toggle('hidden', !on);
+  if (!on) { document.body.classList.remove('st-end'); if (stTimer) { clearInterval(stTimer); stTimer = 0; } return; }
+  const N = lesson.g.study.steps.length, i = lesson.i, q = k => nav.querySelector('[data-sn="' + k + '"]');
+  document.body.classList.toggle('st-end', i >= N);
+  document.getElementById('stPos').textContent = i + ' / ' + N;
+  q('first').disabled = q('prev').disabled = i === 0;
+  q('next').disabled = q('last').disabled = i >= N;
+  for (const b of [q('auto'), au]) { b.classList.toggle('on', !!stTimer); b.title = t('op.auto'); b.setAttribute('aria-label', t('op.auto')); }
+  for (const k of ['first', 'prev', 'next', 'last']) q(k).title = t('nav.' + k);
+}
+$('#stNav').addEventListener('click', e => { const b = e.target.closest('button[data-sn]'); if (b) stGo(b.dataset.sn); });
+$('#lsAuto').onclick = () => stGo('auto');
+document.addEventListener('click', e => { if (stTimer && !e.target.closest('[data-sn="auto"],#lsAuto')) stStop(); }, true);
+
 $('#lsFb').addEventListener('click', e => {
   if (!e.target.closest('#lsPlayHere') || !lesson || !lesson.study) return;
   const mv = lesson.line.slice(0, lesson.i), side = mv.length % 2 === 0 ? P1 : P2;
@@ -2345,10 +2385,10 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.overlay.show')) return;
   // opening study: the arrow keys step through the line like the kifu (← → one move, ↓ ↑ first / last)
   if (lesson && lesson.study) {
-    const N = lesson.g.study.steps.length, to = { ArrowLeft: lesson.i - 1, ArrowRight: lesson.i + 1, ArrowDown: 0, ArrowUp: N }[e.key];
-    if (to === undefined) return;
+    const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowDown: 'first', ArrowUp: 'last', ' ': 'auto' }[e.key];
+    if (k === undefined) return;
     e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
-    if (to >= 0 && to <= N && to !== lesson.i) { const one = to === lesson.i + 1; lesson.i = to; showStudy(one); }
+    stGo(k);
     return;
   }
   if (lesson || puzzle) return;

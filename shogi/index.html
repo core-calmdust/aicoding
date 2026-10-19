@@ -319,6 +319,19 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
 .lesson-actions button:disabled{opacity:.35}
 .lesson-list{display:grid;gap:7px}
+/* opening study: compact step bar under the board (phones) + autoplay */
+.st-nav{display:none;align-items:center;justify-content:center;gap:6px;direction:ltr}
+.st-nav button{width:42px;height:36px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent}
+.st-nav button:disabled{opacity:.35;pointer-events:none}
+.st-nav svg,#lsAuto svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st-nav .st-auto,#lsAuto{color:var(--accent);border-color:rgba(201,169,97,.55)}
+.st-nav .st-auto{width:54px}
+.st-nav .st-auto.on,#lsAuto.on{background:rgba(201,169,97,.2)}
+.st-nav .i-pause,#lsAuto .i-pause{display:none}
+.st-nav .on .i-pause,#lsAuto.on .i-pause{display:block}.st-nav .on .i-play,#lsAuto.on .i-play{display:none}
+.st-pos{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--dim);min-width:58px;text-align:center;white-space:nowrap}
+.lesson-actions #lsAuto{flex:0 0 46px;padding:0;display:flex;align-items:center;justify-content:center}
+.lesson-actions #lsAuto.hidden{display:none}
 @media (min-width: 760px){
   #lessonOverlay .modal{width:min(960px,94vw);padding:28px 32px}
   #lessonOverlay .lesson-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -521,6 +534,10 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
   .players{order:-2;padding:8px;gap:8px}
   .player .side-l{display:none}
   .lesson-card{order:-2}
+  body.in-study .lesson-card{order:0}
+  body.in-study .st-nav{display:flex}
+  body.in-study .mt-strip{display:none!important}
+  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4;padding:8px;gap:5px}
   #evalCard{order:1}
   .review-card{order:2}
@@ -871,6 +888,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
       <div class="review-bar" id="reviewBar"><span id="reviewText"></span><button id="btnResume" data-i18n="review.resume"></button><button id="btnLatest" data-i18n="review.latest"></button></div>
     </div>
     <div class="hand bottom" id="handBottom"></div>
+    <div class="st-nav" id="stNav" dir="ltr"><button data-sn="first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button><button data-sn="prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button><button data-sn="auto" class="st-auto"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button data-sn="next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button><button data-sn="last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button><span class="st-pos" id="stPos"></span></div>
   </div>
 
   <aside class="side">
@@ -896,6 +914,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
       <div class="lesson-fb" id="lsFb"></div>
       <div class="lesson-actions">
         <button id="lsHint" data-i18n="ls.hint"></button>
+        <button id="lsAuto" class="ls-auto hidden"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
         <button id="lsNext" class="go"></button>
         <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
@@ -1081,7 +1100,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261019ru"></script>
+<script src="i18n.js?v=20261020st"></script>
 <script src="rules-i18n.js?v=20261019ru"></script>
 <script src="engine.js?v=20261019q16"></script>
 <script src="strategy.js?v=20261018ol"></script>
@@ -1698,10 +1717,10 @@ document.addEventListener('keydown', e => {
   const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
   if (document.querySelector('.overlay.show')) return;
   if (lesson && lesson.study) {
-    const N = lesson.g.study.steps.length, to = { ArrowLeft: lesson.i - 1, ArrowRight: lesson.i + 1, ArrowUp: N, ArrowDown: 0 }[e.key];
-    if (to === undefined) return;
-    e.preventDefault();
-    if (to >= 0 && to <= N && to !== lesson.i) { lesson.i = to; showStudy(); playPiece(false); }
+    const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'auto' }[e.key];
+    if (k === undefined) return;
+    e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+    stGo(k);
     return;
   }
   if (lesson) return;
@@ -2857,7 +2876,47 @@ function showStudy() {
   $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next');
   $('#lsQuit').textContent = t('ls.quit');
   $('#lsPlayHere').classList.remove('hidden'); $('#lsBackOp').classList.remove('hidden');
+  stSync();
 }
+// ---- opening study: compact step bar (phones) + autoplay (about one move every 1.2 s; any tap / key stops it)
+var stTimer = 0;
+function stStop() { if (stTimer) { clearInterval(stTimer); stTimer = 0; } stSync(); }
+function stTo(to) {
+  const N = lesson.g.study.steps.length;
+  if (to < 0 || to > N || to === lesson.i) return;
+  const one = to === lesson.i + 1; lesson.i = to; showStudy(); if (one) playPiece(false);
+}
+function stGo(what) {
+  if (!lesson || !lesson.study) return;
+  const N = lesson.g.study.steps.length;
+  if (what === 'auto') {
+    if (stTimer) { stStop(); return; }
+    if (lesson.i >= N) { lesson.i = 0; showStudy(); }
+    const L0 = lesson;
+    stTimer = setInterval(() => { if (lesson !== L0 || !lesson.study || lesson.i >= N) { stStop(); return; } stTo(lesson.i + 1); if (lesson.i >= N) stStop(); }, 1200);
+    stSync(); return;
+  }
+  if (stTimer) stStop();
+  stTo(what === 'first' ? 0 : what === 'last' ? N : what === 'prev' ? lesson.i - 1 : lesson.i + 1);
+}
+function stSync() {
+  const on = !!(lesson && lesson.study), nav = document.getElementById('stNav'), au = document.getElementById('lsAuto');
+  if (!nav || !au) return;
+  document.body.classList.toggle('in-study', on);
+  au.classList.toggle('hidden', !on);
+  if (!on) { document.body.classList.remove('st-end'); if (stTimer) { clearInterval(stTimer); stTimer = 0; } return; }
+  const N = lesson.g.study.steps.length, i = lesson.i, q = k => nav.querySelector('[data-sn="' + k + '"]');
+  document.body.classList.toggle('st-end', i >= N);
+  document.getElementById('stPos').textContent = i + ' / ' + N;
+  q('first').disabled = q('prev').disabled = i === 0;
+  q('next').disabled = q('last').disabled = i >= N;
+  for (const b of [q('auto'), au]) { b.classList.toggle('on', !!stTimer); b.title = t('op.auto'); b.setAttribute('aria-label', t('op.auto')); }
+  for (const k of ['first', 'prev', 'next', 'last']) q(k).title = t('nav.' + k);
+}
+$('#stNav').addEventListener('click', e => { const b = e.target.closest('button[data-sn]'); if (b) stGo(b.dataset.sn); });
+$('#lsAuto').onclick = () => stGo('auto');
+document.addEventListener('click', e => { if (stTimer && !e.target.closest('[data-sn="auto"],#lsAuto')) stStop(); }, true);
+
 // play against the AI from the position shown in the study (you take the side to move)
 // back to the opening's explanation / choice screen (解説 or 実戦練習)
 $('#lsBackOp').onclick = () => {
@@ -2973,7 +3032,7 @@ function keepBoardPos(fn) {
   const d = el.getBoundingClientRect().top - y0;
   if (Math.abs(d) > 1 && document.documentElement.scrollHeight > innerHeight + 4) window.scrollBy(0, d);
 }
-function renderLesson() { keepBoardPos(renderLesson0); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
+function renderLesson() { keepBoardPos(renderLesson0); stSync(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
 function renderLesson0() {
   if (lesson.study) { showStudy(); return; }
   $('#lsDots').classList.remove('exam');
@@ -3233,7 +3292,7 @@ function exitLesson(silent) {
   $('#lsPlayHere').classList.add('hidden'); $('#lsBackOp').classList.add('hidden');
   const saved = lesson && lesson.savedGame;
   if (!lesson) return;
-  lesson = null; document.body.classList.remove('in-lesson');
+  lesson = null; document.body.classList.remove('in-lesson'); stSync();
   if (silent) return;
   if (saved) { game = saved; cur = game.moves.length; reviewing = false; flip = settings.mode === 'ai' && game.human === 1; refresh(false); }
   else newGame();
