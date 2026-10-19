@@ -275,5 +275,6 @@
   "rl.indirect.h": "Indirekte Eröffnungen",
   "rl.indirect": "Der zweite Zug liegt diagonal neben der Mitte. Auch daraus ergeben sich 13 Eröffnungen (Hogetsu, Chosei …).",
   "rl.pro.h": "Eröffnungsregeln im Turnier",
-  "rl.pro": "Viele Eröffnungen sind bekannte forcierte Siege für Schwarz, daher gibt es in Turnieren zusätzliche Eröffnungsregeln (abwechselnde Wahl der Eröffnung, Angebot zweier fünfter Züge, Taraguchi-Regel der RIF …). Für lockeres Spielen lässt diese App Schwarz die ersten drei Züge frei wählen. Lerne die 26 Eröffnungen im Reiter „Eröffnungen“."
+  "rl.pro": "Viele Eröffnungen sind bekannte forcierte Siege für Schwarz, daher gibt es in Turnieren zusätzliche Eröffnungsregeln (abwechselnde Wahl der Eröffnung, Angebot zweier fünfter Züge, Taraguchi-Regel der RIF …). Für lockeres Spielen lässt diese App Schwarz die ersten drei Züge frei wählen. Lerne die 26 Eröffnungen im Reiter „Eröffnungen“.",
+  "ls.list": "Zur Liste"
 }

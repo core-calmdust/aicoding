@@ -48,7 +48,19 @@
   "fb.k1": "3-3",
   "fb.k2": "4-4",
   "fb.k3": "sobrelinha",
-  "lvd": ["", "às vezes não vê quatros e três", "1 lance, às vezes descuidada", "2 lances", "3 lances", "4 lances", "6 lances, busca de ameaças em 3", "8 lances, ameaças em 5", "≈1,3 s, ameaças em 7", "≈2 s, ameaças em 9", "≈3,5 s, ameaças em 11"],
+  "lvd": [
+    "",
+    "às vezes não vê quatros e três",
+    "1 lance, às vezes descuidada",
+    "2 lances",
+    "3 lances",
+    "4 lances",
+    "6 lances, busca de ameaças em 3",
+    "8 lances, ameaças em 5",
+    "≈1,3 s, ameaças em 7",
+    "≈2 s, ameaças em 9",
+    "≈3,5 s, ameaças em 11"
+  ],
   "rv.note": "Erro grave = um lance que transforma uma vitória em derrota (ou em empate), ou que perde muito. Imprecisão = uma perda menor, mas clara. Os números no tabuleiro são a avaliação da IA para jogar ali (+ = bom para quem joga, V = vitória forçada). O anel branco marca o lance jogado.",
   "paste.desc": "Cole uma partida (ex.: h8 h9 i9 … ou 1.h8 2.h9 …) ou uma URL compartilhada. Ela abre no modo dois jogadores, para você continuar de qualquer lance.",
   "paste.bad": "O lance {n} não é legal",
@@ -263,5 +275,6 @@
   "rl.indirect.h": "Aberturas indiretas",
   "rl.indirect": "O segundo lance fica na diagonal ao lado do centro. Também há 13 aberturas (Hogetsu, Chosei…).",
   "rl.pro.h": "Regras de abertura de torneio",
-  "rl.pro": "Muitas aberturas são vitórias forçadas conhecidas das pretas, por isso os torneios adicionam regras de abertura (escolher aberturas alternadamente, oferecer dois quintos lances, a regra Taraguchi da RIF…). No jogo casual, este app deixa as pretas escolherem livremente os três primeiros lances. Aprenda as 26 aberturas na aba \"Aberturas\"."
+  "rl.pro": "Muitas aberturas são vitórias forçadas conhecidas das pretas, por isso os torneios adicionam regras de abertura (escolher aberturas alternadamente, oferecer dois quintos lances, a regra Taraguchi da RIF…). No jogo casual, este app deixa as pretas escolherem livremente os três primeiros lances. Aprenda as 26 aberturas na aba \"Aberturas\".",
+  "ls.list": "Voltar à lista"
 }

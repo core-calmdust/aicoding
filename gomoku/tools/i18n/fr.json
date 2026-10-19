@@ -275,5 +275,6 @@
   "rl.indirect.h": "Ouvertures indirectes",
   "rl.indirect": "Le deuxième coup est en diagonale à côté du centre. Elles donnent aussi 13 ouvertures (Hogetsu, Chosei…).",
   "rl.pro.h": "Règles d'ouverture en tournoi",
-  "rl.pro": "Beaucoup d'ouvertures sont des victoires forcées connues pour Noir ; les tournois ajoutent donc des règles d'ouverture (choix alterné des ouvertures, proposition de deux cinquièmes coups, règle Taraguchi de la RIF…). Pour le jeu de loisir, cette appli laisse Noir choisir librement les trois premiers coups. Apprenez les 26 ouvertures dans l'onglet « Ouvertures »."
+  "rl.pro": "Beaucoup d'ouvertures sont des victoires forcées connues pour Noir ; les tournois ajoutent donc des règles d'ouverture (choix alterné des ouvertures, proposition de deux cinquièmes coups, règle Taraguchi de la RIF…). Pour le jeu de loisir, cette appli laisse Noir choisir librement les trois premiers coups. Apprenez les 26 ouvertures dans l'onglet « Ouvertures ».",
+  "ls.list": "Retour à la liste"
 }

@@ -955,6 +955,8 @@ $('#lsNext').onclick = () => {
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
+// back to the list the lesson / opening was chosen from (the board keeps the current lesson until another is picked)
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
 $('#btnLessonPlay').onclick = () => {
   hideOverlay('#lessonOverlay'); savedGame = null; exitSpecial();
   Object.assign(settings, { mode: 'ai', color: P1, level: 1, rule: 'free' });
@@ -2078,7 +2080,16 @@ $('#navBar').addEventListener('click', e => { const b = e.target.closest('button
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
-  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  if (document.querySelector('.overlay.show')) return;
+  // opening study: the arrow keys step through the line like the kifu (← → one move, ↓ ↑ first / last)
+  if (lesson && lesson.study) {
+    const L = lesson, last = L.line.length - 3, to = { ArrowLeft: L.i - 1, ArrowRight: L.i + 1, ArrowDown: 0, ArrowUp: last }[e.key];
+    if (to === undefined) return;
+    e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+    if (to >= 0 && to <= last && to !== L.i) { const one = to === L.i + 1; L.i = to; showStudy(one); }
+    return;
+  }
+  if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
