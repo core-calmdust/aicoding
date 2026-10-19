@@ -39,7 +39,7 @@
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), pass: t('p.pass'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const board = T3.MODELS.reversi(true); T3.show('reversi', board);
     const S = board.userData.S, Y = board.userData.top;
-    const W = T3.M({ color: 0xf6f3ea, roughness: .35 }), B = T3.M({ color: 0x0e0f12, roughness: .28 });
+    const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
     const hintM = new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: .55 });
     const lastM = new THREE.MeshBasicMaterial({ color: 0xff5d5d });
     const pos = sq => [T3.cellPos(8, S, sq & 7), T3.cellPos(8, S, sq >> 3)];

@@ -21,22 +21,52 @@
     if (rep) { t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(rep, rep); }
     return (texCache[key] = t);
   }
+  // value noise / fbm for natural-looking textures
+  function makeNoise(seed) {
+    const P = new Uint8Array(512); let x = seed * 9301 + 49297 | 0;
+    for (let i = 0; i < 256; i++) P[i] = i;
+    for (let i = 255; i > 0; i--) { x = (x * 1103515245 + 12345) & 0x7fffffff; const j = x % (i + 1); [P[i], P[j]] = [P[j], P[i]]; }
+    for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+    const f = t => t * t * (3 - 2 * t), h = (i, j) => P[P[i & 255] + (j & 255)] / 255;
+    const n = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = f(xf), v = f(yf);
+      return (h(xi, yi) * (1 - u) + h(xi + 1, yi) * u) * (1 - v) + (h(xi, yi + 1) * (1 - u) + h(xi + 1, yi + 1) * u) * v; };
+    return (x, y, oct = 4) => { let s = 0, a = .5, fr = 1; for (let o = 0; o < oct; o++) { s += a * n(x * fr, y * fr); a *= .5; fr *= 2.03; } return s / (1 - Math.pow(.5, oct)); };
+  }
+  const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  // realistic wood: long fibres, growth rings, pores, gentle colour drift
   function wood(key, base, dark, w = 512, h = 512, grain = 1) {
     return canvasTex(key, w, h, (g, W, H) => {
-      g.fillStyle = base; g.fillRect(0, 0, W, H);
-      for (let i = 0; i < 90 * grain; i++) {
-        const y = Math.random() * H, a = .04 + Math.random() * .1;
-        g.strokeStyle = dark; g.globalAlpha = a; g.lineWidth = 1 + Math.random() * 3;
-        g.beginPath(); g.moveTo(0, y);
-        for (let x = 0; x <= W; x += 32) g.lineTo(x, y + Math.sin(x / 70 + i) * 4 + Math.sin(x / 23) * 1.5);
-        g.stroke();
+      const N = makeNoise(key.length * 31 + key.charCodeAt(0)), A = hex(base), B = hex(dark), img = g.createImageData(W, H), d = img.data;
+      const ringF = 9 * grain;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const u = x / W, v = y / H;
+        const warp = N(u * 2.2, v * 6, 4) * 1.6;                                   // fibres run along x
+        const ring = Math.sin((v * ringF + warp * 2.4 + N(u * 1.2, v * 1.2, 2) * 2) * Math.PI * 2) * .5 + .5;
+        const fibre = N(u * 40, v * 260, 2);
+        let t = Math.pow(ring, 2.6) * .55 + fibre * .3 + N(u * 3, v * 3, 3) * .25;
+        if (N(u * 90, v * 600, 1) > .82) t += .25;                                 // pores
+        t = Math.max(0, Math.min(1, t));
+        const i = (y * W + x) * 4;
+        d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
       }
-      g.globalAlpha = 1;
+      g.putImageData(img, 0, 0);
+    });
+  }
+  // fine cloth / paper-like noise on a flat colour
+  function cloth(key, base, amt = 18, W = 512) {
+    return canvasTex(key, W, W, (g) => {
+      const N = makeNoise(key.length * 17), A = hex(base), img = g.createImageData(W, W), d = img.data;
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+        const k = (N(x / 6, y / 6, 2) - .5) * amt + (N(x / 60, y / 60, 3) - .5) * amt * .8, i = (y * W + x) * 4;
+        d[i] = A[0] + k; d[i + 1] = A[1] + k; d[i + 2] = A[2] + k; d[i + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
     });
   }
   function grid(key, base, line, n, m, opts = {}) {
     return canvasTex(key, 1024, 1024 * (m / n) | 0, (g, W, H) => {
       if (opts.woodBase) { g.drawImage(wood(key + 'w', base, opts.woodBase).image, 0, 0, W, H); }
+      else if (opts.cloth) { g.drawImage(cloth(key + 'c', base, opts.cloth).image, 0, 0, W, H); }
       else { g.fillStyle = base; g.fillRect(0, 0, W, H); }
       const pad = opts.pad ?? 0, cw = (W - 2 * pad) / (opts.points ? n - 1 : n), ch = (H - 2 * pad) / (opts.points ? m - 1 : m);
       g.strokeStyle = line; g.lineWidth = opts.lw || 4;
@@ -50,7 +80,9 @@
 
   /* ---------- material helpers ---------- */
   const M = (o) => {   // colours are given as sRGB hex (as designed) → convert to linear for the sRGB output
-    const m = new (T().MeshStandardMaterial)(Object.assign({ roughness: .55, metalness: 0 }, o));
+    const phys = o.clearcoat !== undefined || o.sheen !== undefined;
+    const m = new (T()[phys ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'])(Object.assign({ roughness: .55, metalness: 0 }, o));
+    if (o.map && o.bump !== false && !o.bumpMap) { m.bumpMap = o.map; m.bumpScale = o.bumpScale ?? .012; }
     if (o.color !== undefined) m.color.convertSRGBToLinear();
     return m;
   };
@@ -73,12 +105,13 @@
   const cellPos = (n, size, i) => -size / 2 + size / n * (i + .5);
 
   /* ---------- board builders ---------- */
-  const WHITE = () => M({ color: 0xf6f3ea, roughness: .35 }), BLACK = () => M({ color: 0x24262d, roughness: .3 });
+  const WHITE = () => M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), BLACK = () => M({ color: 0x16171b, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
   const MODELS = {
     reversi(live) {
       const g = new (T().Group)(), S = 8.4;
-      const top = M({ map: grid('rv', '#1f9a5c', '#0d5a34', 8, 8, { lw: 5, stars: [[2, 2], [6, 2], [2, 6], [6, 6]] }) });
-      g.add(slab(9.4, .45, 9.4, M({ color: 0x0f6d40 }), M({ color: 0x0b4f2f })));
+      const top = M({ map: grid('rv2', '#1e8a52', '#0b2a1a', 8, 8, { lw: 4, cloth: 14, stars: [[2, 2], [6, 2], [2, 6], [6, 6]] }), roughness: .92, bumpScale: .004 });
+      const frame = M({ map: wood('rvf', '#5a3820', '#2a1608', 512, 512, 1.2), roughness: .38, clearcoat: .5, clearcoatRoughness: .3 });
+      g.add(slab(9.4, .45, 9.4, frame, frame));
       const inner = slab(S, .1, S, top); inner.position.y = .45; g.add(inner);
       g.userData.S = S; g.userData.top = .55;
       if (live) return g;
@@ -233,20 +266,36 @@
     R = new (T().WebGLRenderer)({ antialias: true, alpha: true });
     R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     R.shadowMap.enabled = true; R.shadowMap.type = T().PCFSoftShadowMap;
-    R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .85;
+    R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .95; R.physicallyCorrectLights = false;
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
     cam = new (T().PerspectiveCamera)(32, 1, .1, 200);
-    scene.add(new (T().HemisphereLight)(0xfff4e0, 0x6a4a30, .6));
-    const key = new (T().DirectionalLight)(0xfff0d8, 1.05); key.position.set(-6, 14, 8); key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0005;
+    // studio-like image-based lighting (soft boxes) for believable reflections on lacquer, stones and discs
+    try {
+      const env = new (T().Scene)(), TT = T();
+      const sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
+      const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
+      for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 30; c.setRGB(.10 + .5 * Math.max(0, y), .08 + .42 * Math.max(0, y), .06 + .3 * Math.max(0, y)); col.push(c.r, c.g, c.b); }
+      sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
+      [[-8, 16, 6, 14, 8, 3], [10, 10, -6, 8, 6, 1.6], [0, 6, 18, 18, 4, .9]].forEach(([x, y, z, w, h, k]) => {
+        const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: new TT.Color(k, k * .95, k * .86), side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p);
+      });
+      const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
+    } catch (e) {}
+    scene.add(new (T().HemisphereLight)(0xfff1dc, 0x3a2614, .35));
+    const key = new (T().DirectionalLight)(0xfff0d8, 1.25); key.position.set(-6, 14, 8); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
-    const rim = new (T().DirectionalLight)(0xbfe0ff, .35); rim.position.set(8, 6, -10); scene.add(rim);
-    const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: wood('table', '#c98b52', '#8a5428', 1024, 1024, 2), roughness: .6 }));
+    const rim = new (T().DirectionalLight)(0xbfd8ff, .3); rim.position.set(8, 6, -10); scene.add(rim);
+    // a darker walnut tabletop that falls off into shadow at the edges
+    const tw = wood('table3', '#5e3c22', '#3b2311', 1024, 1024, 1.6); tw.wrapS = tw.wrapT = T().RepeatWrapping; tw.repeat.set(4, 4);
+    const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: tw, roughness: .55, bumpScale: .02 }));
     table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
+    const pool = new (T().Mesh)(new (T().CircleGeometry)(80, 64), new (T().MeshBasicMaterial)({ transparent: true, depthWrite: false, map: canvasTex('vign', 256, 256, (g, W) => { const r = g.createRadialGradient(W / 2, W / 2, W * .06, W / 2, W / 2, W / 2); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(.6, 'rgba(10,5,0,.55)'); r.addColorStop(1, 'rgba(10,5,0,.92)'); g.fillStyle = r; g.fillRect(0, 0, W, W); }) }));
+    pool.rotation.x = -Math.PI / 2; pool.position.y = .005; pool.scale.setScalar(.5); scene.add(pool);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
-    container.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
+    container.addEventListener('pointerdown', e => { if (mode === 'play') return; drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
     container.addEventListener('pointermove', e => {
       if (!drag) return;
       if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) { drag.moved = true; spin = false; try { container.setPointerCapture(e.pointerId); } catch (x) {} }
@@ -336,7 +385,7 @@
     })(t0);
     return g;
   }
-  function play(on) { mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; }
+  function play(on) { mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
   function pick(ev, y) {
@@ -354,8 +403,8 @@
     camK += (camTo - camK) * .07;
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
-    if (!drag && !vel && mode === 'play' && performance.now() - idleT > 1800) {           // in a game, ease back to the home angle
-      const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .06;
+    if (mode === 'play') {   // in a game the board stays still, squared to the player
+      const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .15; vel = 0;
     }
     root.rotation.y = yaw;
     const q = camPose(0), r2 = camPose(1), k = camK;
@@ -366,5 +415,5 @@
     R.render(scene, cam);
   }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
 })();

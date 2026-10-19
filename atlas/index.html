@@ -178,7 +178,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .g3 img.flat{width:76%;border-radius:22%}
 
 /* ---------- board viewer (3D) ---------- */
-.bv{position:fixed;inset:0;z-index:70;display:none;background:#d6a46a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3Cpath d='M0 12q40-6 80 0t80 0M0 30q40-5 80 0t80 0' stroke='%23b5793f' stroke-opacity='.25' stroke-width='2' fill='none'/%3E%3C/svg%3E")}
+.bv{position:fixed;inset:0;z-index:70;display:none;background:radial-gradient(120% 90% at 50% 40%,#5a3a22 0%,#3a2414 60%,#1e120a 100%)}
 .bv.on{display:block;animation:fadeIn .25s}
 #gl{position:absolute;inset:0;touch-action:none;transition:top .45s,bottom .45s,left .45s,right .45s}
 #gl canvas{display:block;width:100%!important;height:100%!important}
@@ -494,9 +494,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas-firebase-config.js?v=1"></script>
 <script src="../shared/atlas-account.js?v=1"></script>
 <script src="i18n.js?v=1"></script>
-<script src="table3d.js?v=6"></script>
+<script src="table3d.js?v=7"></script>
 <script src="icons3d.js?v=1"></script>
-<script src="games/reversi.js?v=2"></script>
+<script src="games/reversi.js?v=3"></script>
 <script src="app.js?v=21"></script>
 </body>
 </html>
