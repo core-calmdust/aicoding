@@ -50,7 +50,7 @@
   let db = null, uid = null, profile = null, ready = null;
 
   // ---------------------------------------------------------------- backend adapters
-  function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); }); }
+  function loadScript(src) { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); })); }  // shared with shared/atlas-account.js
 
   function firebaseDB() {
     const f = firebase.database();

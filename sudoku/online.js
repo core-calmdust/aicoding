@@ -7,7 +7,7 @@ const MOCK = new URLSearchParams(location.search).has('mock');
 const FB_VER = '10.12.2';
 let db = null, uid = null, ready = null;
 
-const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); });
+const loadScript = src => { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); })); };
 
 function firebaseDB() {
   const f = firebase.database();

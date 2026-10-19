@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "kv": {
+          "$key": {
+            ".validate": "newData.hasChildren(['v', 't']) && newData.child('v').isString() && newData.child('v').val().length < 400000 && newData.child('t').isNumber()"
+          }
+        }
+      }
+    }
+  }
+}
