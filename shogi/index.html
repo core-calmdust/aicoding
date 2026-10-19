@@ -738,6 +738,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
       <div class="lesson-actions">
         <button id="lsHint" data-i18n="ls.hint"></button>
         <button id="lsNext" class="go"></button>
+        <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
       </div>
       <button id="lsPlayHere" class="ls-play hidden" data-i18n="op.playHere"></button>
@@ -2971,6 +2972,7 @@ $('#lsNext').onclick = () => {
   finishLesson();
 };
 $('#lsQuit').onclick = () => exitLesson();
+$('#lsList').onclick = () => { if (!lesson) return; lsTab = lesson.study || lesson.opening ? 'open' : lesson.endless ? 'tsume' : 'lesson'; openLessons(); };
 function finishLesson() {
   const n = lesson.probs.length, total = sumPts(), max = PTS * n, need = Math.ceil(max * PASS_RATE);
   const pass = total >= need;

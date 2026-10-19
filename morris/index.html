@@ -579,6 +579,7 @@ body .info-line{font-size:12.5px}
       <div class="lesson-actions">
         <button id="lsHint" data-i18n="ls.hint"></button>
         <button id="lsNext" class="go"></button>
+        <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
       </div>
     </div>
@@ -1810,6 +1811,7 @@ $('#lsNext').onclick = () => {
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
 
 // ====================================================================== openings (engine-researched placement lines)
 let OPEN = null, openChoiceIdx = -1;
@@ -2328,7 +2330,16 @@ document.querySelector('#navBar').addEventListener('click', e => { const b = e.t
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
-  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  if (document.querySelector('.overlay.show')) return;
+  // opening study: the arrow keys step through the line like the kifu (← → one move, ↓ ↑ first / last)
+  if (lesson && lesson.study) {
+    const N = lesson.g.study.line.length, to = { ArrowLeft: lesson.i - 1, ArrowRight: lesson.i + 1, ArrowDown: 0, ArrowUp: N }[e.key];
+    if (to === undefined) return;
+    e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
+    if (to >= 0 && to <= N && to !== lesson.i) { const one = to === lesson.i + 1; lesson.i = to; showStudy(one); }
+    return;
+  }
+  if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();

@@ -912,6 +912,7 @@ body.has-clk .player .status{grid-area:st}
       <div class="lesson-actions">
         <button id="lsHint" data-i18n="ls.hint"></button>
         <button id="lsNext" class="go"></button>
+        <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
       </div>
     </div>
@@ -2517,6 +2518,7 @@ $('#lsNext').onclick = () => {
   showLessonView('done'); showOverlay('#lessonOverlay');
 };
 $('#lsQuit').onclick = () => endLesson();
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.drill) openOpenings(); else openLessons(); };
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); endLesson(); };
 // ---- opening drill (通し稽古): play one side of a named line from the start; the other side is played automatically
 const decMoves = str => (str.match(/../g) || []).map(m => (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
