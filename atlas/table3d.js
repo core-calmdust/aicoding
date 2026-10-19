@@ -310,6 +310,15 @@
         if (t < 560 && cur === c) requestAnimationFrame(anim); else c.scale.set(1, 1, 1);
       })(t0);
     };
+    if (opts.magic) {           // materialise: grows out of a sparkle with a little twist and overshoot
+      root.add(c); const t0 = performance.now();
+      (function anim(now) {
+        const k = Math.min(1, (now - t0) / 480), e = k === 1 ? 1 : 1 - Math.pow(2, -8 * k) * Math.cos(k * 9.5);
+        c.scale.setScalar(Math.max(.02, e)); c.rotation.y = (1 - ease.out3(k)) * -.9; c.position.y = (1 - ease.out3(k)) * 1.2;
+        if (k < 1 && cur === c) requestAnimationFrame(anim); else { c.scale.set(1, 1, 1); c.rotation.y = 0; c.position.y = 0; }
+      })(t0);
+      return g;
+    }
     if (!opts.intro) { land(); return g; }
     // intro: the icon spins one turn while it grows and rises, then pops
     const ic = new (T().Group)(); ic.add(opts.intro); root.add(ic); spin = false; yaw = 0;

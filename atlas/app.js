@@ -247,11 +247,12 @@
     let done = false;
     const finish = () => {   // pop: the icon bursts and the board lands
       if (done) return; done = true;
-      // spin and float up out of view, fading
+      // the icon zips straight up, leaving a trail of sparkles; the magic lands on the board
       fly.getAnimations().forEach(a => a.cancel());
-      fly.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(540deg)' }], { duration: 420, easing: 'cubic-bezier(.3,0,.6,1)', fill: 'forwards' });
-      wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 1, transform: `translate(${dx}px, ${dy - 40}px) scale(${sc * .9})`, offset: .45 }, { opacity: 0, transform: `translate(${dx}px, ${dy - Math.min(260, H * .32)}px) scale(${sc * .6})` }], { duration: 420, easing: 'cubic-bezier(.4,0,.7,.4)', fill: 'forwards' })
+      const rise = Math.min(300, H * .38);
+      wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 1, transform: `translate(${dx}px, ${dy + 14}px) scale(${sc * 1.04},${sc * .92})`, offset: .18 }, { opacity: 0, transform: `translate(${dx}px, ${dy - rise}px) scale(${sc * .55},${sc * .8})` }], { duration: 340, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' })
         .onfinish = () => { wrap.remove(); img.style.visibility = ''; flying = false; };
+      magic(cx, cy, rise, Math.min(W * .55, 280));
     };
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
@@ -263,12 +264,25 @@
       }, 0));
     }, T1);
   }
-  // star burst at the board when the icon turns into it
-  function burst() {
-    const gl = $('gl').getBoundingClientRect(), b = document.createElement('div');
-    b.className = 'burst'; b.style.left = (gl.left + gl.width / 2) + 'px'; b.style.top = (gl.top + gl.height * .5) + 'px';
-    b.innerHTML = '<i></i>' + Array.from({ length: 10 }, (_, i) => `<b style="--a:${i * 36}deg"></b>`).join('');
-    $('bv').appendChild(b); setTimeout(() => b.remove(), 600);
+  // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
+  function magic(cx, cy, rise, size) {
+    const box = document.createElement('div'); box.className = 'magic'; document.body.appendChild(box);
+    const cols = ['#ffe27a', '#fff', '#ffb3e0', '#a8e6ff', '#ffd1a1'];
+    const add = (x, y, delay, kf, dur, sz) => {
+      const e = document.createElement('i'); e.style.left = x + 'px'; e.style.top = y + 'px'; e.style.width = e.style.height = sz + 'px'; e.style.color = cols[Math.random() * cols.length | 0];
+      box.appendChild(e); e.animate(kf, { duration: dur, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' });
+    };
+    for (let i = 0; i < 12; i++) {            // trail behind the icon as it zips up
+      const t = i / 12, x = cx + (Math.random() - .5) * size * .5, y = cy - rise * t + (Math.random() - .5) * 30;
+      add(x, y, t * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(0)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(90deg)', offset: .3 }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${20 + Math.random() * 30}px) scale(.3) rotate(180deg)` }], 520, 10 + Math.random() * 12);
+    }
+    for (let i = 0; i < 18; i++) {            // magic dust falls onto the board and twinkles out
+      const a = Math.random() * Math.PI * 2, r = size * (.15 + Math.random() * .55), x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .6;
+      add(x, y, 180 + Math.random() * 220, [{ opacity: 0, transform: 'translate(-50%,-50%) translateY(-60px) scale(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.1) rotate(45deg)', offset: .5 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(120deg)' }], 520, 8 + Math.random() * 16);
+    }
+    const ring = document.createElement('b'); ring.style.left = cx + 'px'; ring.style.top = cy + 'px'; box.appendChild(ring);
+    ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: .9, transform: 'translate(-50%,-50%) scale(.9)', offset: .4 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' }], { duration: 560, delay: 140, easing: 'ease-out', fill: 'both' });
+    setTimeout(() => box.remove(), 1100);
   }
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
@@ -277,7 +291,7 @@
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
-      Table3D.show(id); Table3D.play(false);
+      Table3D.show(id, null, flown ? { magic: true } : {}); Table3D.play(false);
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
