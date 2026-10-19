@@ -32,7 +32,16 @@ const CAGES = [];                                  // [{sum, cells}]
 const CAGE_OF = new Int8Array(81).fill(-1);
 const EXCL = [];                                   // PEERS ∪ cage mates (digits that must differ)
 const SEE = new Uint8Array(81 * 81);               // SEE[a*81+b] = 1 if a, b must hold different digits
-let LOCK_PAIRS = [];                               // [A, B, inter] with an extra unit involved
+let LOCK_PAIRS = [];
+/* relation variants (ineq / antiknight / kropki / thermo / arrow) */
+const GT = [];                                     // [hi, lo] : value(hi) > value(lo)
+const GT_OF = [];                                  // per cell: [[other, +1 if cell > other else -1], ...]
+const ADJ4 = [];                                   // kropki: per cell [[nb, isDot], ...] (orthogonal neighbours)
+const DOTS = [];                                   // kropki: [a, b] marked pairs
+const ARROWS = [];                                 // [{c, cells}]
+const ARROW_OF = [];                               // per cell: arrow indices (circle or shaft)
+const KNIGHT = [];                                 // antiknight: knight-move neighbours per cell
+let REL = false;                                   // true for the relation variants (propagating solver)                               // [A, B, inter] with an extra unit involved
 let KINDS = [];
 let SPEC = { type: 'std' };
 let IS_STD = true;
@@ -64,6 +73,36 @@ function buildGeometry(spec) {
     const s = new Set(); for (const u of cu) for (const j of UNITS[u]) if (j !== i) s.add(j);
     PEERS[i] = [...s];
   }
+  // antiknight: knight-move cells must differ (conflict relation, not a unit)
+  KNIGHT.length = 0;
+  for (let i = 0; i < 81; i++) {
+    const k = [];
+    if (type === 'antiknight') for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) {
+      const r = ROW[i] + dr, c = COL[i] + dc;
+      if (r >= 0 && r < 9 && c >= 0 && c < 9) k.push(r * 9 + c);
+    }
+    KNIGHT.push(k);
+    if (k.length) { const s = new Set(PEERS[i]); for (const j of k) s.add(j); PEERS[i] = [...s]; }
+  }
+  // order relations (ineq signs, thermometers)
+  GT.length = 0;
+  if (type === 'ineq') for (const [a, b] of spec.ineq) GT.push([a, b]);
+  if (type === 'thermo') for (const t of spec.thermos) for (let k = 1; k < t.length; k++) GT.push([t[k], t[k - 1]]);
+  GT_OF.length = 0; for (let i = 0; i < 81; i++) GT_OF.push([]);
+  for (const [a, b] of GT) { GT_OF[a].push([b, 1]); GT_OF[b].push([a, -1]); }
+  // kropki (white dots, negative constraint on unmarked orthogonal pairs)
+  DOTS.length = 0; ADJ4.length = 0;
+  const dotSet = new Set();
+  if (type === 'kropki') for (const [a, b] of spec.dots) { DOTS.push([a, b]); dotSet.add(a * 81 + b); dotSet.add(b * 81 + a); }
+  for (let i = 0; i < 81; i++) {
+    const a = [];
+    if (type === 'kropki') for (const j of [i - 9, i + 9, COL[i] ? i - 1 : -1, COL[i] < 8 ? i + 1 : -1]) if (j >= 0 && j < 81) a.push([j, dotSet.has(i * 81 + j) ? 1 : 0]);
+    ADJ4.push(a);
+  }
+  // arrows
+  ARROWS.length = 0; ARROW_OF.length = 0; for (let i = 0; i < 81; i++) ARROW_OF.push([]);
+  if (type === 'arrow') spec.arrows.forEach(([c, cells], k) => { ARROWS.push({ c, cells: cells.slice() }); ARROW_OF[c].push(k); for (const i of cells) ARROW_OF[i].push(k); });
+  REL = ['ineq', 'antiknight', 'kropki', 'thermo', 'arrow'].includes(type);
   // parity
   for (let i = 0; i < 81; i++) {
     PARITY[i] = type === 'oddeven' && spec.parity ? spec.parity[i] : 0;
@@ -91,13 +130,21 @@ function buildGeometry(spec) {
 function setVariant(spec) {
   if (!spec || !spec.type || spec.type === 'std') spec = { type: 'std' };
   const t = spec.type;
-  if (!['std', 'x', 'hyper', 'jigsaw', 'oddeven', 'killer'].includes(t)) throw new Error('unknown variant ' + t);
+  if (!['std', 'x', 'hyper', 'jigsaw', 'oddeven', 'killer', 'ineq', 'antiknight', 'kropki', 'thermo', 'arrow'].includes(t)) throw new Error('unknown variant ' + t);
+  if (t === 'ineq' && !Array.isArray(spec.ineq)) throw new Error('ineq needs ineq pairs');
+  if (t === 'kropki' && !Array.isArray(spec.dots)) throw new Error('kropki needs dots');
+  if (t === 'thermo' && !Array.isArray(spec.thermos)) throw new Error('thermo needs thermos');
+  if (t === 'arrow' && !Array.isArray(spec.arrows)) throw new Error('arrow needs arrows');
   if (t === 'jigsaw' && !(spec.regions && spec.regions.length === 81)) throw new Error('jigsaw needs regions[81]');
   if (t === 'killer' && !Array.isArray(spec.cages)) throw new Error('killer needs cages');
   SPEC = Object.assign({}, spec);
   if (spec.regions) SPEC.regions = Array.from(spec.regions, Number);
   if (spec.parity) SPEC.parity = Array.from(spec.parity, Number);
   if (spec.cages) SPEC.cages = spec.cages.map(([s, c]) => [s, c.slice()]);
+  if (spec.ineq) SPEC.ineq = spec.ineq.map(([a, b]) => [+a, +b]);
+  if (spec.dots) SPEC.dots = spec.dots.map(([a, b]) => [+a, +b]);
+  if (spec.thermos) SPEC.thermos = spec.thermos.map(t => Array.from(t, Number));
+  if (spec.arrows) SPEC.arrows = spec.arrows.map(([c, cells]) => [+c, Array.from(cells, Number)]);
   buildGeometry(SPEC);
   IS_STD = t === 'std';
   return SPEC;
@@ -154,6 +201,7 @@ function solve(grid, limit = 2) {
 /* generic solver: any units, parity, killer cages (cage-sum pruning, MRV).
    opts.rng: randomise digit order; opts.nodeLimit: give up (count -1); opts.all: collect up to `limit` solutions */
 function solveG(grid, limit = 2, opts = {}) {
+  if (REL) return solveP(grid, limit, opts);
   const g = grid.slice(), NU = UNITS.length, NC = CAGES.length;
   const um = new Uint16Array(NU), cu = new Uint16Array(NC), crem = new Int16Array(NC), ccnt = new Uint8Array(NC);
   for (let c = 0; c < NC; c++) { crem[c] = CAGES[c].sum; ccnt[c] = CAGES[c].cells.length; }
@@ -205,6 +253,91 @@ function solveG(grid, limit = 2, opts = {}) {
   return { count, solution, solutions: sols };
 }
 
+/* propagating solver for the relation variants: candidate masks + queue propagation
+   (singles → EXCL, order bounds, kropki adjacency, arrow sum bounds) + hidden singles, MRV branching */
+const ADJM = new Uint16Array(512), NONADJ = new Uint16Array(512), MAXD = new Uint8Array(512);
+for (let m = 1; m < 512; m++) { ADJM[m] = ((m << 1) | (m >> 1)) & ALL; MAXD[m] = 32 - Math.clz32(m); }
+for (let m = 1; m < 512; m++) {
+  for (let d = 1; d <= 9; d++) if (m & ~(ADJM[bit(d)] | bit(d))) NONADJ[m] |= bit(d);
+}
+const above = m => ALL & ~((1 << LOWBIT_D[m]) - 1);           // digits > min(m)
+const below = m => (1 << (MAXD[m] - 1)) - 1;                   // digits < max(m)
+const rangeMask = (lo, hi) => (lo < 1 ? (lo = 1) : 0, hi > 9 ? (hi = 9) : 0, lo > hi ? 0 : ((1 << hi) - 1) & ~((1 << (lo - 1)) - 1));
+function propagate(cand, done, queue) {
+  const inQ = new Uint8Array(81); for (const i of queue) inQ[i] = 1;
+  const push = j => { if (!inQ[j]) { inQ[j] = 1; queue.push(j); } };
+  const set = (j, m) => { if (m === cand[j]) return true; if (!m) return false; cand[j] = m; push(j); return true; };
+  for (;;) {
+    while (queue.length) {
+      const x = queue.pop(); inQ[x] = 0; const mx = cand[x];
+      if (!mx) return false;
+      if (POP[mx] === 1 && !done[x]) { done[x] = 1; for (const p of EXCL[x]) if (!set(p, cand[p] & ~mx)) return false; }
+      const go = GT_OF[x];
+      for (let k = 0; k < go.length; k++) {
+        const y = go[k][0];
+        if (!set(y, cand[y] & (go[k][1] > 0 ? below(mx) : above(mx)))) return false;
+      }
+      const ad = ADJ4[x];
+      for (let k = 0; k < ad.length; k++) {
+        const y = ad[k][0];
+        if (!set(y, cand[y] & (ad[k][1] ? ADJM[mx] : NONADJ[mx]))) return false;
+      }
+      const ao = ARROW_OF[x];
+      for (let k = 0; k < ao.length; k++) {
+        const A = ARROWS[ao[k]]; let sMin = 0, sMax = 0;
+        for (const s of A.cells) { sMin += LOWBIT_D[cand[s]]; sMax += MAXD[cand[s]]; }
+        if (!set(A.c, cand[A.c] & rangeMask(sMin, sMax))) return false;
+        const cMin = LOWBIT_D[cand[A.c]], cMax = MAXD[cand[A.c]];
+        for (const s of A.cells) if (!set(s, cand[s] & rangeMask(cMin - (sMax - MAXD[cand[s]]), cMax - (sMin - LOWBIT_D[cand[s]])))) return false;
+      }
+    }
+    // hidden singles over real units
+    let found = false;
+    for (let u = 0; u < UNITS.length; u++) {
+      const U = UNITS[u]; let once = 0, twice = 0;
+      for (let k = 0; k < U.length; k++) { const m = cand[U[k]]; twice |= once & m; once |= m; }
+      if (once !== ALL) return false;
+      let h = once & ~twice;
+      while (h) {
+        const b = h & -h; h ^= b;
+        for (let k = 0; k < U.length; k++) { const i = U[k]; if ((cand[i] & b) && cand[i] !== b) { cand[i] = b; push(i); found = true; } }
+      }
+    }
+    if (!found) return true;
+  }
+}
+function solveP(grid, limit = 2, opts = {}) {
+  const fail = { count: 0, solution: null, solutions: [] };
+  const cand = new Uint16Array(81), done = new Uint8Array(81), q = [];
+  for (let i = 0; i < 81; i++) {
+    cand[i] = grid[i] ? bit(grid[i]) & PARMASK[i] : PARMASK[i];
+    if (!cand[i]) return fail; q.push(i);
+  }
+  for (let i = 0; i < 81; i++) if (grid[i]) for (const p of EXCL[i]) if (grid[p] === grid[i]) return fail;
+  if (!propagate(cand, done, q)) return fail;
+  const rng = opts.rng, nodeLimit = opts.nodeLimit || 0, sols = [];
+  let count = 0, solution = null, nodes = 0, aborted = false;
+  function rec(cand, done) {
+    if (nodeLimit && ++nodes > nodeLimit) { aborted = true; return true; }
+    let best = -1, bestC = 10;
+    for (let i = 0; i < 81; i++) { const c = POP[cand[i]]; if (c > 1 && c < bestC) { bestC = c; best = i; if (c === 2) break; } }
+    if (best < 0) {
+      count++; const g = Array.from(cand, m => LOWBIT_D[m]);
+      if (!solution) solution = g; if (opts.all) sols.push(g);
+      return count >= limit;
+    }
+    const ds = rng ? shuffle(digitsOf(cand[best]), rng) : digitsOf(cand[best]);
+    for (const d of ds) {
+      const c2 = cand.slice(), d2 = done.slice(); c2[best] = bit(d);
+      if (propagate(c2, d2, [best]) && rec(c2, d2)) return true;
+    }
+    return false;
+  }
+  rec(cand, done);
+  if (aborted) return { count: -1, solution: null, solutions: sols };
+  return { count, solution, solutions: sols };
+}
+
 function randomFull(rng) {
   if (!IS_STD) return solveG(new Array(81).fill(0), 1, { rng }).solution;
   const g = new Array(81).fill(0);
@@ -251,6 +384,9 @@ const TECH = {
   hiddenSingleL: { level: 1, w: 2.5 },
   cageLast:      { level: 1, w: 2 },
   nakedSingle:   { level: 1, w: 4 },
+  bounds:        { level: 1, w: 1 },
+  dots:          { level: 2, w: 3 },
+  arrowSum:      { level: 2, w: 4 },
   cage:          { level: 2, w: 10 },
   pointing:      { level: 2, w: 12 },
   claiming:      { level: 2, w: 14 },
@@ -592,13 +728,116 @@ function fInnieOutie(st) {
   return null;
 }
 
+/* ineq / thermo: order relations trim the candidate ranges of both cells of a relation;
+   a cell greater (smaller) than several mutually distinct cells must exceed (undercut) all of them */
+const cval = (st, i) => (st.v[i] ? bit(st.v[i]) : st.cand[i]);
+/* smallest possible max (largest possible min) over an assignment of distinct digits to cells that all see each other */
+function extremeOf(st, cells, wantMax) {
+  let best = wantMax ? 10 : 0;
+  (function dfs(k, used, ext) {
+    if (wantMax ? ext >= best : ext <= best) return;
+    if (k === cells.length) { best = ext; return; }
+    let m = cval(st, cells[k]) & ~used;
+    while (m) { const b = m & -m; m ^= b; const d = LOWBIT_D[b]; dfs(k + 1, used | b, wantMax ? Math.max(ext, d) : Math.min(ext, d)); }
+  })(0, 0, wantMax ? 0 : 10);
+  return best;
+}
+function fBounds(st) {
+  for (const [h, l] of GT) {
+    const mh = cval(st, h), ml = cval(st, l); if (!mh || !ml) continue;
+    const el = [];
+    if (!st.v[h] && (st.cand[h] & ~above(ml))) el.push([h, ALL & ~above(ml)]);
+    if (!st.v[l] && (st.cand[l] & ~below(mh))) el.push([l, ALL & ~below(mh)]);
+    let gone = 0; for (const [i, m] of el) gone |= st.cand[i] & m;
+    const s = elimStep(st, 'bounds', el, { cells: [h, l], units: [], digits: digitsOf(gone) });
+    if (s) return s;
+  }
+  for (let i = 0; i < 81; i++) {
+    if (st.v[i] || GT_OF[i].length < 2) continue;
+    for (const dir of [1, -1]) {
+      const os = GT_OF[i].filter(([, d]) => d === dir).map(([o]) => o);
+      if (os.length < 2 || os.length > 4) continue;
+      let ok = true; for (let a = 0; a < os.length && ok; a++) for (let b = a + 1; b < os.length; b++) if (!SEE[os[a] * 81 + os[b]]) { ok = false; break; }
+      if (!ok) continue;
+      const e = extremeOf(st, os, dir > 0);
+      if (e < 1 || e > 9) continue;
+      const allow = dir > 0 ? ALL & ~((1 << e) - 1) : (1 << (e - 1)) - 1;
+      const s = elimStep(st, 'bounds', [[i, ALL & ~allow]], { cells: [i, ...os], units: [], digits: digitsOf(st.cand[i] & ~allow) });
+      if (s) return s;
+    }
+  }
+  return null;
+}
+/* kropki: a dotted neighbour needs a consecutive digit; an unmarked neighbour must not be consecutive.
+   Several dotted neighbours that see each other need distinct consecutive digits */
+function fDots(st) {
+  for (let i = 0; i < 81; i++) {
+    if (st.v[i]) continue;
+    for (const [j, dot] of ADJ4[i]) {
+      const mj = cval(st, j); if (!mj) continue;
+      const allow = dot ? ADJM[mj] : NONADJ[mj];
+      const s = elimStep(st, 'dots', [[i, ALL & ~allow]], { cells: [j, i], units: [], digits: digitsOf(st.cand[i] & ~allow) });
+      if (s) return s;
+    }
+  }
+  for (let i = 0; i < 81; i++) {
+    if (st.v[i]) continue;
+    const nbs = ADJ4[i];
+    if (nbs.filter(([, d]) => d).length < 2) continue;
+    const ds = nbs.map(([j]) => j);
+    let bad = 0;
+    for (const d of digitsOf(st.cand[i])) {
+      const near = ADJM[bit(d)];
+      // all neighbours at once: dotted ones need d±1, unmarked ones neither d±1 nor d; distinct where they see each other
+      let ok = false;
+      (function dfs(k, used) {
+        if (ok) return; if (k === ds.length) { ok = true; return; }
+        let m = cval(st, ds[k]) & (nbs[k][1] ? near : ALL & ~near & ~bit(d));
+        for (let a = 0; a < k; a++) if (SEE[ds[a] * 81 + ds[k]]) m &= ~used[a];
+        while (m && !ok) { const b = m & -m; m ^= b; used[k] = b; dfs(k + 1, used); }
+      })(0, []);
+      if (!ok) bad |= bit(d);
+    }
+    const s = elimStep(st, 'dots', [[i, bad]], { cells: [i, ...ds], units: [], digits: digitsOf(bad) });
+    if (s) return s;
+  }
+  return null;
+}
+/* arrow: the shaft digits sum to the circle digit (digits in one unit differ) */
+function fArrowSum(st) {
+  for (let k = 0; k < ARROWS.length; k++) {
+    const { c, cells } = ARROWS[k];
+    const all = [c, ...cells];
+    if (all.every(i => st.v[i])) continue;
+    const poss = new Uint16Array(cells.length); let pc = 0;
+    const asg = new Uint8Array(cells.length), mc = cval(st, c);
+    (function dfs(j, sum) {
+      if (sum > 9) return;
+      if (j === cells.length) { if (mc & bit(sum)) { pc |= bit(sum); for (let a = 0; a < j; a++) poss[a] |= bit(asg[a]); } return; }
+      let m = cval(st, cells[j]);
+      for (let a = 0; a < j; a++) if (SEE[cells[a] * 81 + cells[j]]) m &= ~bit(asg[a]);
+      while (m) { const b = m & -m; m ^= b; asg[j] = LOWBIT_D[b]; dfs(j + 1, sum + asg[j]); }
+    })(0, 0);
+    const el = [];
+    if (!st.v[c]) el.push([c, ALL & ~pc]);
+    cells.forEach((i, j) => { if (!st.v[i]) el.push([i, ALL & ~poss[j]]); });
+    let gone = 0; for (const [i, m] of el) gone |= st.cand[i] & m;
+    const s = elimStep(st, 'arrowSum', el, { cells: all, units: [], arrow: k, digits: digitsOf(gone) });
+    if (s) return s;
+  }
+  return null;
+}
+
 const FINDERS = [
   st => fFullHouse(st),
   st => (CAGES.length ? fCageLast(st) : null),
   st => fHiddenSingle(st, true),
   st => fHiddenSingle(st, false),
   st => fNakedSingle(st),
+  st => (GT.length ? fBounds(st) : null),
   st => (CAGES.length ? fCage(st) : null),
+  st => (DOTS.length || SPEC.type === 'kropki' ? fDots(st) : null),
+  st => (ARROWS.length ? fArrowSum(st) : null),
   st => fLocked(st),
   st => (CAGES.length ? fInnieOutie(st) : null),
   st => fNakedSubset(st, 2),
@@ -632,7 +871,7 @@ function grade(grid, maxLevel = 4) {
   const st = makeState(grid);
   let level = 1, score = 0; const counts = {};
   let empties = st.v.filter(x => !x).length;
-  let guard = 2000;
+  let guard = REL ? 20000 : 2000;
   while (empties > 0 && guard--) {
     // count how many singles are available to measure "how easy to find"
     const s = nextStep(st, maxLevel);
@@ -653,7 +892,7 @@ function beginnerScore(counts) { return (counts.nakedSingle || 0) * 3 + (counts.
 function hint(grid) {
   const st = makeState(grid);
   const pre = [];
-  for (let k = 0; k < 200; k++) {
+  for (let k = 0, lim = REL ? 3000 : 200; k < lim; k++) {
     const s = nextStep(st, 4);
     if (!s) return { pre, step: null };
     if (s.place) return { pre, step: s };

@@ -1,5 +1,5 @@
 // Builds puzzles_variants.json: 30 puzzles each for x / hyper / jigsaw / oddeven / killer
-// usage: node tools/build_variants.js [outPath]   (deterministic)
+// usage: node tools/build_variants.js [outPath]   (deterministic; writes only these 5 sets — run tools/build_variants2.js afterwards to append ineq / antiknight / kropki / thermo / arrow)
 const E = require('../engine.js');
 const V = require('./variant_gen.js');
 const fs = require('fs'), path = require('path');
