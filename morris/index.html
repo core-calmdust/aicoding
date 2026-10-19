@@ -1636,7 +1636,7 @@ let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
 function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261019c`).then(r => r.json()).catch(() => null)); }
-function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261019c`).then(r => r.json()).catch(() => null)); }
+function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261019d`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
 function varTabs(sel, cur) { $(sel).innerHTML = RULE_ORDER.map(r => `<button data-r="${r}" class="${r === cur ? 'sel' : ''}">${t('rule.' + r)}</button>`).join(''); }
