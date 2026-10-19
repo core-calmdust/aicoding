@@ -35,3 +35,46 @@ function features(pos, out) {
   return out;
 }
 module.exports = { E, NCOMB, NT, NF, BIAS, PAIR, COMBO, features };
+// ---- line-code features (finer): every empty cell x direction x colour, the raw 10-neighbour window code (mirror-canonical)
+const POW3 = [1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683];
+const LCANON = new Int32Array(59049).fill(-1); let NL = 0;
+for (let code = 0; code < 59049; code++) {
+  if (LCANON[code] >= 0) continue;
+  let x = code, r = 0; for (let k = 0; k < 10; k++) { r += (x % 3) * POW3[9 - k]; x = (x / 3) | 0; }
+  LCANON[code] = LCANON[r] = NL++;
+}
+const LBASE = 0, LNT = 4, LBIAS = LNT * NL, LNF = LBIAS + 2;
+// windows with no stone of either colour inside are skipped (code 0 = all empty, or only walls)
+function onlyWalls(code) { let x = code; for (let k = 0; k < 10; k++) { const v = x % 3; x = (x / 3) | 0; if (v === 1) return false; } return true; }
+const TRIV = new Uint8Array(59049); for (let c = 0; c < 59049; c++) TRIV[c] = onlyWalls(c) ? 1 : 0;
+function lineFeatures(pos, out) {
+  out = out || new Map(); out.clear();
+  const me = pos.side;
+  for (let m = 0; m < 225; m++) {
+    const i = E.M2I[m]; if (pos.b[i] !== 0) continue;
+    for (let c = 1; c <= 2; c++) {
+      const t = (c === me ? 0 : 2) + (c - 1), code = pos.code[c];
+      for (let d = 0; d < 4; d++) {
+        const x = code[i * 4 + d]; if (TRIV[x]) continue;
+        const f = t * NL + LCANON[x]; out.set(f, (out.get(f) || 0) + 1);
+      }
+    }
+  }
+  out.set(LBIAS + me - 1, 1);
+  return out;
+}
+module.exports.lineFeatures = lineFeatures; module.exports.NL = NL; module.exports.LNF = LNF; module.exports.LCANON = LCANON; module.exports.TRIV = TRIV;
+// combined: combo + pair + bias (0..NF-1), then line codes (NF ..)
+function features2(pos, out) {
+  out = features(pos, out);
+  const me = pos.side;
+  for (let m = 0; m < 225; m++) {
+    const i = E.M2I[m]; if (pos.b[i] !== 0) continue;
+    for (let c = 1; c <= 2; c++) {
+      const t = (c === me ? 0 : 2) + (c - 1), code = pos.code[c];
+      for (let d = 0; d < 4; d++) { const x = code[i * 4 + d]; if (TRIV[x]) continue; const f = NF + t * NL + LCANON[x]; out.set(f, (out.get(f) || 0) + 1); }
+    }
+  }
+  return out;
+}
+module.exports.features2 = features2; module.exports.NF2 = NF + 4 * NL;

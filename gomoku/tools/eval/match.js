@@ -4,7 +4,8 @@ const fs = require('fs');
 const E = require('/home/claude/aicoding/gomoku/engine.js');
 const [RULE, PAIRS, NODES, WF] = [process.argv[2] || 'renju', +process.argv[3] || 20, +process.argv[4] || 20000, process.argv[5]];
 const G = RULE === 'renju' ? 'renju' : 'std';
-E.setWeights(G, JSON.parse(fs.readFileSync(WF || `/home/claude/work/eval/w_${G}.json`, 'utf8')));
+{ const W = JSON.parse(fs.readFileSync(WF || `/home/claude/work/eval/w_${G}.json`, 'utf8')), NF = E.NCOMB * 4 + 202;
+  E.setWeights(G, W.slice(0, NF)); if (W.length > NF) E.setLineWeights(G, W.slice(NF)); }
 const games = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(g => (RULE === 'renju') === (g.rule === 'renju'));
 let seed = +process.env.SEED || 99; const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
 const eOld = new E.Engine(), eNew = new E.Engine(); eOld.learned = false; eNew.learned = true;

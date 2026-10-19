@@ -1,7 +1,7 @@
 // labels_*.jsonl (Rapfi evals) -> binary training set per rule group; lab = Rapfi win probability for the side to move
 'use strict';
 const fs = require('fs');
-const { E, features } = require('./feat.js');
+const F = require('./feat.js'), { E } = F; const features = process.env.F2 ? F.features2 : F.features;
 const GROUP = process.argv[2] || 'renju';
 const games = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l));
 const labs = [];
@@ -19,8 +19,8 @@ for (const o of labs) {
   for (const [f, c] of fm) { ids.push(f); cnts.push(Math.min(255, c)); }
   offs.push(ids.length); lab.push(p); gid.push(o.g); old.push((pos.tot[me] * 12 - pos.tot[op] * 10) / 10); res.push(g.winner ? (g.winner === me ? 1 : 0) : 0.5);
 }
-const dir = '/home/claude/work/eval/lab_' + GROUP; fs.mkdirSync(dir, { recursive: true });
-fs.writeFileSync(dir + '/ids.bin', Buffer.from(new Uint16Array(ids).buffer));
+const dir = '/home/claude/work/eval/lab' + (process.env.F2 ? '2' : '') + '_' + GROUP; fs.mkdirSync(dir, { recursive: true });
+fs.writeFileSync(dir + (process.env.F2 ? '/ids32.bin' : '/ids.bin'), Buffer.from((process.env.F2 ? new Int32Array(ids) : new Uint16Array(ids)).buffer));
 fs.writeFileSync(dir + '/cnt.bin', Buffer.from(new Uint8Array(cnts).buffer));
 fs.writeFileSync(dir + '/off.bin', Buffer.from(new Int32Array(offs).buffer));
 fs.writeFileSync(dir + '/lab.bin', Buffer.from(new Float32Array(lab).buffer));

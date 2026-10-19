@@ -1,13 +1,14 @@
 // Logistic regression on pattern-combination features (Adam, L2), validation by game.
 'use strict';
 const fs = require('fs');
-const { NF } = require('./feat.js');
+const FT = require('./feat.js'); const NF = process.env.F2 ? FT.NF2 : FT.NF;
 const G = process.argv[2] || 'renju', EPOCHS = +process.argv[3] || 6, SRC = process.argv[4] || 'data', dir = '/home/claude/work/eval/' + SRC + '_' + G;
 const rd = (f, T) => { const b = fs.readFileSync(dir + '/' + f); return new T(b.buffer, b.byteOffset, b.byteLength / T.BYTES_PER_ELEMENT); };
-const ids = rd('ids.bin', Uint16Array), cnt = rd('cnt.bin', Uint8Array), off = rd('off.bin', Int32Array), lab = rd('lab.bin', Float32Array), gid = rd('gid.bin', Int32Array), old = rd('old.bin', Float32Array);
+const ids = fs.existsSync(dir + '/ids32.bin') ? rd('ids32.bin', Int32Array) : rd('ids.bin', Uint16Array), cnt = rd('cnt.bin', Uint8Array), off = rd('off.bin', Int32Array), lab = rd('lab.bin', Float32Array), gid = rd('gid.bin', Int32Array), old = rd('old.bin', Float32Array);
 const NP = lab.length;
 const isVal = i => gid[i] % 10 === 0;
 const W = new Float64Array(NF), M = new Float64Array(NF), V = new Float64Array(NF);
+if (process.env.INIT) JSON.parse(fs.readFileSync(process.env.INIT, 'utf8')).forEach((x, i) => { W[i] = x; });
 const SCALE = 1 / 600;   // output v in "eval units"; p = sigmoid(v * SCALE)
 const sig = x => 1 / (1 + Math.exp(-x));
 function pred(i) { let v = 0; for (let k = off[i]; k < off[i + 1]; k++) v += W[ids[k]] * cnt[k]; return v; }
@@ -28,7 +29,7 @@ function oldBaseline() {
 }
 console.log('positions', NP, 'old eval baseline', oldBaseline());
 const order = []; for (let i = 0; i < NP; i++) if (!isVal(i)) order.push(i);
-let lr = 2.0; const b1 = 0.9, b2 = 0.999, L2 = 1e-6, BS = 256;
+let lr = +process.env.LR || 2.0; const b1 = 0.9, b2 = 0.999, L2 = +process.env.L2 || 1e-6, BS = 256;
 const grad = new Float64Array(NF); let step = 0;
 for (let ep = 0; ep < EPOCHS; ep++) {
   for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }

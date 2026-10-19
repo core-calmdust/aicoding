@@ -1,7 +1,7 @@
 // games.jsonl -> binary training set per rule group (renju | std: standard + free)
 'use strict';
 const fs = require('fs');
-const { E, features } = require('./feat.js');
+const F = require('./feat.js'), { E } = F; const features = process.env.F2 ? F.features2 : F.features;
 const GROUP = process.argv[2] || 'renju', STEP = +process.argv[3] || 2;
 const games = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l))
   .filter(g => g.winner && (GROUP === 'renju' ? g.rule === 'renju' : g.rule !== 'renju'));
@@ -19,8 +19,8 @@ games.forEach((g, gi) => {
     offs.push(ids.length); lab.push(g.winner === me ? 1 : 0); gid.push(gi); old.push((pos.tot[me] * 12 - pos.tot[op] * 10) / 10);
   }
 });
-const dir = '/home/claude/work/eval/data_' + GROUP; fs.mkdirSync(dir, { recursive: true });
-fs.writeFileSync(dir + '/ids.bin', Buffer.from(new Uint16Array(ids).buffer));
+const dir = '/home/claude/work/eval/data' + (process.env.F2 ? '2' : '') + '_' + GROUP; fs.mkdirSync(dir, { recursive: true });
+fs.writeFileSync(dir + (process.env.F2 ? '/ids32.bin' : '/ids.bin'), Buffer.from((process.env.F2 ? new Int32Array(ids) : new Uint16Array(ids)).buffer));
 fs.writeFileSync(dir + '/cnt.bin', Buffer.from(new Uint8Array(cnts).buffer));
 fs.writeFileSync(dir + '/off.bin', Buffer.from(new Int32Array(offs).buffer));
 fs.writeFileSync(dir + '/lab.bin', Buffer.from(new Float32Array(lab).buffer));
