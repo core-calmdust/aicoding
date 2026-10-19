@@ -117,6 +117,7 @@
     ['checker', 'morris', 80, 88, 92, -8], ['knight', 'chess', 66, 92, 86, 6], ['stoneW', 'gomoku', 45, 8, 60, 0], ['gem2', 'mancala', 60, 6, 54, 0],
     ['shogi2', 'shogi', 3, 45, 70, -14], ['pawn', 'chess', 97, 42, 64, 0], ['bgChecker', 'backgammon', 50, 95, 72, 0]];
   // title emblem: a compass seal (the "atlas") with ring lettering and a swallow-tail ribbon
+  const TF = 'Mochiy Pop One';   // title face: characterful but stays legible (Dela Gothic crushed the dakuten)
   function emblem(main, pre, n) {
     const ring = 'WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ ';
     const big = main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)));
@@ -134,8 +135,8 @@
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#111" transform="translate(8 8)"/>
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#fff" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
       <path d="M86 172H554M86 238H554" stroke="#111" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
-      ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="23" letter-spacing="2" fill="#fff">${esc(pre)}</text>` : ''}
-      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'Zen Kaku Gothic New','Zen Maru Gothic',sans-serif" font-weight="900" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .08)}">${esc(main)}</text>
+      ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'${TF}',sans-serif" font-size="22" letter-spacing="1" fill="#fff">${esc(pre)}</text>` : ''}
+      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'${TF}','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .05)}">${esc(main)}</text>
       <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
       <!-- piece tips on the compass -->
       <g fill="#fff" stroke="#111" stroke-width="4">
@@ -194,13 +195,24 @@
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' ? '' : t('bv.soon')}</div>`}
       <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div>`;
     if (ad) $('bvStart').onclick = startPlay;
+    fitStage();
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close'));
   }
+  // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
+  function fitStage() {
+    const gl = $('gl'), card = $('bvi'), playing = $('bv').classList.contains('playing');
+    gl.style.top = gl.style.bottom = gl.style.left = gl.style.right = '';
+    if (playing || !$('bv').classList.contains('on')) return;
+    const r = card.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    if (r.left > 40 || r.width < W * .6) { if (document.dir === 'rtl') gl.style.right = (W - r.left + 10) + 'px'; else gl.style.left = (r.right + 10) + 'px'; }
+    else gl.style.bottom = (H - r.top + 4) + 'px';
+  }
+  addEventListener('resize', () => fitStage());
   function startPlay() {
     const g = bvGame, ad = Atlas3D[g.id];
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1;
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
-    $('bv').classList.add('playing'); $('endc').classList.remove('on');
+    $('bv').classList.add('playing'); $('endc').classList.remove('on'); fitStage();
     session = ad.start({ el: $('gl'), Table3D, lang, t, level, side, hud: h => { $('hud').innerHTML = h; },
       onEnd: res => {
         A_.recordPlay(W, g.id, res); refresh();

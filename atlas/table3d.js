@@ -241,7 +241,7 @@
     key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0005;
     scene.add(key);
     const rim = new (T().DirectionalLight)(0xbfe0ff, .35); rim.position.set(8, 6, -10); scene.add(rim);
-    const table = new (T().Mesh)(new (T().CircleGeometry)(22, 64), M({ map: wood('table', '#c98b52', '#8a5428', 1024, 1024, 2), roughness: .6 }));
+    const table = new (T().Mesh)(new (T().CircleGeometry)(80, 64), M({ map: wood('table', '#c98b52', '#8a5428', 1024, 1024, 2), roughness: .6 }));
     table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
     root = new (T().Group)(); scene.add(root);
     container.addEventListener('pointerdown', e => { if (mode === 'view') { drag = { x: e.clientX, y: yaw }; spin = false; } });
@@ -261,7 +261,7 @@
     const a = cam.aspect || 1, th = Math.tan(cam.fov * Math.PI / 360);
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const needW = (k ? 5.4 : 6.2) / (th * a), needH = (k ? 6.3 : 6.4) / th;
-    const dist = Math.max(needW, needH) * (a > 1.25 && !k ? 1.22 : 1);
+    const dist = Math.max(needW, needH) * (k ? 1 : 1.08);
     const pitch = .78 + k * .55;                       // view: 3/4 · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
@@ -302,8 +302,7 @@
     const p = camPose(camK), q = camPose(0), r2 = camPose(1);
     cam.position.set(0, q[1] + (r2[1] - q[1]) * camK, q[2] + (r2[2] - q[2]) * camK);
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
-    const wide = (cam.aspect || 1) > 1.25, v = 1 - camK;
-    cam.lookAt(wide ? -3.4 * v : 0, .4, v * (wide ? 1.2 : 4.2));
+    cam.lookAt(0, .4, 0);   // the canvas itself is kept clear of the info card (app.js fitStage)
     R.render(scene, cam);
   }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
