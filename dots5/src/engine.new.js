@@ -797,12 +797,88 @@ function chooseW5(p, cfg, rand, t, sure, t0) {
   const h2 = H.best(p, cfg.depth, left() - 20, rand, o.lost);
   return { move: o.lost.has(h2.move) ? o.open[0] : h2.move, value: h2.value, exact: false, depth: H.depth };
 }
+// Pondering (5x5, Lv9+): while the opponent thinks, prove the outcome of each of the opponent's replies, round-robin in
+// growing slices. The work stays in the table, so the next search starts warm (often already solved).
+// ponderStart(p, lead): p = the position after our move, lead = the opponent's lead. ponderStep(ms) works for about ms;
+// returns false when there is nothing (more) to do.
+const PD = { on: false };
+function ponderStart(p, lead, level) {
+  PD.on = false;
+  const cfg = LEVELS[level] || {};
+  if (!x5Ok(p.G) || cfg.kind !== 'v2' || !p.undrawn || p.hasCapture()) return false;
+  const safe = countSafe(p), t = v2Target(p, lead);
+  if (t === null || safe > cfg.w5.gate + 4 || safe <= 6) return false;
+  const S = X5.w; S.set(p);
+  Object.assign(PD, { on: true, until: Date.now() + 20000, lo: X5.io[0], hi: X5.io[1], t, moves: S.rootMoves(p), st: null, b: 30, i: 0, open: 0 });
+  PD.st = new Int8Array(PD.moves.length);
+  return true;
+}
+function ponderStep(ms) {
+  if (!PD.on || !x5Ok(geom(5, 5))) return false;
+  if (Date.now() > PD.until) { PD.on = false; return false; }   // at most 20 s per move
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    if (PD.i >= PD.moves.length) { if (!PD.open) { PD.on = false; return false; } PD.i = 0; PD.open = 0; PD.b *= 3; }
+    const i = PD.i++;
+    if (PD.st[i]) continue;
+    X5.io[0] = PD.lo; X5.io[1] = PD.hi;
+    const v = X5.x.w_move_value(PD.moves[i], PD.t - 1, PD.t + 1, Math.max(5, Math.min(PD.b, end - Date.now())));
+    if (v === -999) PD.open++; else PD.st[i] = 1;
+  }
+  return true;
+}
+function ponderStop() { PD.on = false; }
+// the same with helper workers: each proves a share of the moves while this worker runs the heuristic search and then
+// proves its own share (the heuristic move first)
+async function chooseW5Async(p, cfg, rand, t, sure, t0, pool) {
+  const G = p.G, ms = cfg.ms, S = X5.w, H = v2HsFor(G, cfg.np), end = t0 + ms, left = () => end - Date.now();
+  const winAns = (w, exactOk) => {
+    if (exactOk && left() > ms * 0.3) { S.limit(0, left() - 20); const r = S.best(p, rand, w.move); if (r) return { move: r.move, value: r.value, exact: true }; }
+    return { move: w.move, value: w.value, exact: false, outcome: 1 };
+  };
+  const all = v2Moves(S, p, -1, rand);
+  const q = S.sliced(p, t, all, Math.min(200, ms * 0.05));   // late positions and a warm table finish at once
+  if (q.win) return winAns(q.win, true);
+  if (q.draw && !q.open.length) return { move: q.draw.move, value: q.draw.value, exact: false, outcome: 0 };
+  const open = q.open, n = pool.size + 1, edges = p.edges(), span = Math.max(50, left() - (sure ? 40 : ms * cfg.w5.re) - 40);
+  const jobs = [];
+  for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', kind: 'sliced', R: G.R, C: G.C, edges, moves: open.filter((m, j) => j % n === i + 1), ms: span, t, x5: true }));
+  const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
+  const mine = [h.move].concat(open.filter((m, j) => j % n === 0 && m !== h.move));
+  const o = S.sliced(p, t, mine, Math.max(30, end - (sure ? 40 : ms * cfg.w5.re) - Date.now()));
+  if (o.win) { Promise.all(jobs); return winAns(o.win, false); }
+  const res = await Promise.all(jobs);
+  const lost = new Set(q.lost); for (const m of o.lost) lost.add(m);
+  let draw = q.draw || o.draw, helpersOk = true;
+  for (const r of res) {
+    if (!r) { helpersOk = false; continue; }
+    if (r.win) return winAns(r.win, false);
+    if (r.draw && !draw) draw = r.draw;
+    for (const m of r.lost) lost.add(m);
+  }
+  if (draw) return { move: draw.move, value: draw.value, exact: false, outcome: 0 };
+  if (helpersOk && all.every(m => lost.has(m))) {   // every move loses: the best margin
+    S.limit(0, left() - 20); const r = S.best(p, rand, h.move);
+    if (r) return { move: r.move, value: r.value, exact: true };
+    return { move: h.move, value: h.value, exact: false };
+  }
+  if (!lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  const rest = all.filter(m => !lost.has(m));
+  if (rest.length === 1 || left() < 60) return { move: rest[0], value: h.value, exact: false };
+  const h2 = H.best(p, cfg.depth, left() - 20, rand, lost);
+  return { move: lost.has(h2.move) ? rest[0] : h2.move, value: h2.value, exact: false, depth: H.depth };
+}
 // work for a helper worker: an outcome (or exact) root search over the given moves, in that order
 function helperTask(d) {
   const G = geom(d.R, d.C), p = Pos.from(G, d.edges);
   if (d.bits) v2Bits = d.bits;
   if (d.x5 === false && x5Ok(G)) return { done: false, best: null, firstV: null };   // the main worker has no wasm: stay out
   const S = v2SolverFor(G); S.limit(0, d.ms);
+  if (d.kind === 'sliced') {
+    if (!S.sliced) return null;
+    const o = S.sliced(p, d.t, d.moves, d.ms);
+    return { win: o.win, draw: o.draw, lost: Array.from(o.lost) };
+  }
   const r = d.t === null || d.t === undefined ? S.bestOf(p, d.moves) : S.outcome(p, d.t, d.moves);
   return { done: !!r, best: r || S.partial, firstV: S.firstV };
 }
@@ -817,6 +893,7 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
   const G = p.G, t0 = Date.now(), end = t0 + cfg.ms, safe = countSafe(p), edges = p.edges(), t = v2Target(p, lead);
+  if (x5Ok(G) && t !== null && safe > 12 && safe <= v2PGate(cfg, G)) return chooseW5Async(p, cfg, rand, t, safe <= v2Sure(cfg, G), t0, pool);
   if (safe <= 12 || t === null || safe > v2PGate(cfg, G)) return chooseV2(p, cfg, rand, lead, hist);
   const S = v2SolverFor(G), H = v2HsFor(G, cfg.np);
   // a short try first: late positions (and a warm table) finish at once
@@ -1153,7 +1230,7 @@ function reviewMove(p, played, ms) {
   const quiet = !cap && p.gives(played) === 0 && p.gives(list[0].m) === 0;
   return { exact: false, quiet, best: list[0].v, played: mine ? Math.min(mine.v, list[0].v) : list[0].v, bestMove: list[0].m, line };
 }
-return { x5Ready, setX5, X5, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -1184,8 +1261,12 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
     });
     return pool;
   };
+  // pondering between moves (5x5 Lv9+ with the wasm solver): short steps, so that a new request is served at once
+  let pondering = 0;
+  const ponderLoop = tok => { if (tok !== pondering) return; if (DotsEngine.ponderStep(40)) setTimeout(() => ponderLoop(tok), 0); };
   self.onmessage = async ev => {
     const d = ev.data;
+    pondering++; DotsEngine.ponderStop();
     try {
       if (d.type === 'xpart') {
         if (d.R === 5 && d.C === 5 && d.x5) { const rd = DotsEngine.x5Ready(d.bits); if (rd && rd.then) await rd; }
@@ -1199,6 +1280,10 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
         const t0 = Date.now();
         const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
         self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0 });
+        if (d.level >= 9 && d.R === 5 && d.C === 5 && d.ponder !== false) {
+          const k = p.play(r.move);
+          if (!k && DotsEngine.ponderStart(p, -(d.lead || 0), d.level)) { const tok = ++pondering; setTimeout(() => ponderLoop(tok), 0); }
+        }
       } else if (d.type === 'analyze') {
         const r = DotsEngine.analyze(p, d.ms || 1500);
         self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact });

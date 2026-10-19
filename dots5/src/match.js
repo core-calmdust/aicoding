@@ -3,7 +3,7 @@
 const fs = require('fs'), { spawn } = require('child_process');
 const E = require('/home/claude/aicoding/dots/engine.js');
 const [out, N, A, B, OP] = [process.argv[2], +process.argv[3], process.argv[4].split(','), process.argv[5].split(','), +(process.argv[6] || 4)];
-const R = 5, C = 5, G = E.geom(R, C);
+const R = 5, C = 5, G = E.geom(R, C), PONDER = +(process.env.PONDER || 0);
 const done = new Set(); if (fs.existsSync(out)) for (const l of fs.readFileSync(out, 'utf8').split('\n')) if (l.trim()) done.add(JSON.parse(l).g);
 function agent(a) {
   const ch = spawn('nice', ['-n', '5', 'node', __dirname + '/agent.js', ...a], { stdio: ['pipe', 'pipe', 'inherit'] });
@@ -24,10 +24,11 @@ function opening(seed) {   // OP random safe moves
     const first = g % 2;   // index of the agent that moves first
     const hist = opening(Math.floor(g / 2)), p = E.Pos.from(G, hist), sc = [0, 0];
     let turn = OP % 2;   // side to move after the opening (side 0 = first mover)
-    const ms = [0, 0], nm = [0, 0], maxms = [0, 0];
+    const ms = [0, 0], nm = [0, 0], maxms = [0, 0]; let lastWho = -1;
     while (p.undrawn > 0) {
       const who = turn === 0 ? first : 1 - first;
-      const r = await ag[who].ask({ R, C, edges: hist, lead: sc[turn] - sc[1 - turn] });
+      if (PONDER && who === 1 && lastWho === 0) await ag[0].ask({ ponder: PONDER });   // A thinks while a (human-like) opponent would
+      const r = await ag[who].ask({ R, C, edges: hist, lead: sc[turn] - sc[1 - turn] }); lastWho = who;
       if (p.drawn[r.move] || r.move < 0 || r.move >= G.E) throw new Error('illegal move ' + r.move);
       ms[who] += r.ms; nm[who]++; if (r.ms > maxms[who]) maxms[who] = r.ms;
       const k = p.play(r.move); hist.push(r.move); sc[turn] += k; if (!k) turn ^= 1;

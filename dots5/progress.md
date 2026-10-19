@@ -21,6 +21,13 @@
 - [17:30] engine.js に追加: W5（dots5.wasmをSolver互換で包む）、W5.sliced（全手を時間スライス倍増で勝敗証明、勝ち手発見で終了、負け証明手は除外）、chooseW5（5×5 wasm時のLv9/10本体）。LEVELS[9/10].w5 にゲート。
 - 評価法: decisive.jsonl（対局から safe19–28 局面、オラクル20sで勝敗付き）で「勝ち局面で勝ちを保つ率」を evaltest.js で測る（対局より安く高感度）。
 
+- [17:50] 勝ち保持テスト(decisive.jsonl, Lv10 5秒): 旧 14/34, 新(v1) 21/33。safe19–21: 5/13→11/13, 22–24: 4/10→6/10, 25–28: 5/11→4/10（ヒューリスティック領域は改善なし）。
+- ネイティブ探索オプション(ETC/killer/history)は効果なし→既定のまま。
+- 追加実装: chooseW5Async（ヘルパーワーカーで手を分担してsliced）、ポンダー（相手手番中にwasmで相手の各応手を証明、最大20秒、worker内40ms刻み）。agent.js/match.js に PONDER=ms で人間の思考時間をシミュレート。
+- [18:05] v1 スナップショット: dots5src/v1/engine.js + dots5.wasm（対局はこれを使う。engine.jsを編集しても対局に影響しない）
+- 実行中ジョブ: m10_v1_vs_old.jsonl（v1 Lv10 vs 旧Lv10, 時間1.0, 100局, 再開可）。再開: cd dots5src && timeout 3480 node match.js /home/claude/work/ckpt/dots5/matches/m10_v1_vs_old.jsonl 100 /home/claude/work/dots5src/v1/engine.js,10,1,1 /home/claude/work/dots5src/engine.orig.js,10,0,1
+- 実行中: mkset.js → decisive2.jsonl（gen2対局から）
+
 ## ファイル
 - dots5src/match.js（対局, 再開可）, agent.js, stats.js, decide.js, mkset.js, evaltest.js, evalsum.js, outc.c（ネイティブオラクル）, bench.js
 - engine.orig.js = 作業前のengine.js（旧Lv10比較用。dots5src内にあり）
