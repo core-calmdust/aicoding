@@ -28,9 +28,16 @@ main にはコミットしない（コーディネータが反映）。wip-ai-da
 
 ## 状況
 - [x] 0. 既存コード調査
-- [ ] 1. 生成器（レッスン/パズル）
-- [ ] 2. 定跡データ
-- [ ] 3. UI
+- [x] 1. 生成器（レッスン/パズル）: gen.js（ランダム実戦→分類→allv/allv5で全手厳密値）→ cand_<n>.jsonl、derive_loops.js（ループ4つ残し局面）、
+      select.js → dots/lessons.json(15段階×10問) と dots/puzzles/*.json(9カテゴリ×3レベル=450問, 旧45問含む)。
+      出荷する600問はすべて C ソルバ(allv/allv5)と JS ソルバ(engine.js)の両方で全手の値が一致（不一致0）。再実行: node select.js
+  * 重要: engine.js の Zobrist 乱数が xorshift（GF(2)線形）でハッシュ衝突→置換表が壊れて誤値が出ていた。splitmix32 に修正済み（engine.js 45行付近）。
+  * allv5 = dots5.c（TTキーを64bit幅にした dots.c のコピー）で 5×5 も厳密解。
+- [x] 2. 定跡データ（build_open.js で dots/openings.json 生成。SEL4 環境変数で4×4手順を選択: f9 f8 f4 s10 s27 s4 s22 s0）: op3.js（3×3, 全手値, 54手順候補→op3.json）、op4.js（4×4, 定石book+wasm, op4.json, キャッシュ op4_cache.jsonl）。
+      3×3: 初手4分類 A外周角/B外周中/C内側端/D中央箱の辺。Dは最善応手が3通り（鏡うつし応手 b3– は負け）。
+      4×4: 家族b=先手練習用（後手はbook手）、家族a=後手練習用（先手はbook手、初手9）。
+- [x] 3. UI: dots/learn.js（ルール入門/レッスン/定跡学習・ドリル/詰めドット/今日の一問）。index.html は旧レッスン・パズルコード削除、learnInit() 呼出し。ja でPlaywrightスモーク(/home/claude/work/pw/dc_smoke.js)エラー0
+- [ ] 3b. 翻訳: content/text.ja.json 完成。en→他8言語を作る（キーは ja と同じ集合。check: 全言語のキー一致）
 - [ ] 4. 翻訳
 - [ ] 5. テスト
 - [ ] 6. トップページ/README
