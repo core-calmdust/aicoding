@@ -290,6 +290,10 @@ function setScene(name, variant, th) {
 }
 const refreshScene = () => setScene(scene[0], scene[1], scene[2]);
 const homeVariant = () => { const h = new Date().getHours(); return h >= 11 ? 'm' : 'e'; };
+// home background: any collection theme cleared 50/50 can be used
+const hbOK = k => { const i = THEMES.indexOf(k); return i >= 0 && PZ && themeCleared(i) === 50; };
+function homeScene() { const k = DB.set.homeBg; if (k && hbOK(k)) setScene(k, '', k); else setScene('daily', homeVariant(), 'de'); }
+function setHomeBg(k) { DB.set.homeBg = k; persist(); SFX.tap(); toast(esc(t('hb.done', { t: k ? t('th.' + THEMES.indexOf(k)) : t('hb.def') }))); }
 
 /* ================= modals (with back-button support) ================= */
 function openModal(id) {
@@ -342,7 +346,7 @@ function go(h) {
 /* ================= home ================= */
 function openHome() {
   show('home');
-  setScene('daily', homeVariant(), 'de');
+  homeScene();
   renderHome();
   if (!DB.prof.name) setTimeout(() => openName(true), 350);
   else checkMonthAwards();
@@ -503,10 +507,11 @@ function openTheme(ti, stage) {
       <dt>${esc(t('ti.level'))}</dt><dd>${lvs.map(lvChip).join(' ')} <span class="note" style="margin:0">${esc(t('thl.' + ti))}</span></dd>
       <dt>${esc(t('ti.score'))}</dt><dd class="num">${fmtN(themeScore(ti))}</dd></dl>
       <div class="story">${esc(t('ths.' + ti))}</div>
-      <div class="startrow"><button class="btn xl" id="stGo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button><button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button></div></div>`;
+      <div class="startrow"><button class="btn xl" id="stGo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${st.k < 0 ? '' : `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>`}${n === 50 ? `<button class="btn ghost sm hbbtn ${DB.set.homeBg === THEMES[ti] ? 'on' : ''}" id="stHb">${esc(t(DB.set.homeBg === THEMES[ti] ? 'hb.on' : 'hb.set'))}</button>` : ''}</div></div>`;
     $('#tlBody').innerHTML = '';
     const toMap = () => { SFX.tap(); go('t/' + (ti + 1) + '/m'); };
-    $('#stGo').onclick = toMap; $('#stMap').onclick = toMap; $('#tlBan').onclick = toMap;
+    $('#stGo').onclick = toMap; if ($('#stMap')) $('#stMap').onclick = toMap; $('#tlBan').onclick = toMap;
+    const hb = $('#stHb'); if (hb) hb.onclick = () => { if (DB.set.homeBg === THEMES[ti]) return; setHomeBg(THEMES[ti]); hb.classList.add('on'); hb.textContent = t('hb.on'); };
     $('#tlBack').onclick = () => go('');
     return;
   }
@@ -1082,7 +1087,7 @@ function finish() {
     const k = (G.kind === 'c' ? G.ti : G.si) + '.' + G.pi, prev = store[k];
     const sc = puzzleScore(G.lv, stars, G.kind === 'x' ? 1.2 : 1);
     rec.s = stars; rec.sc = sc;
-    if (!prev) { store[k] = rec; earned = sc; }
+    if (!prev) { store[k] = rec; earned = sc; if (G.kind === 'c' && themeCleared(G.ti) === 50) setTimeout(() => toast(esc(t('hb.unlock', { t: t('th.' + G.ti) })), 'gold'), 2600); }
     else {
       earned = Math.max(0, sc - (prev.sc || 0)); prev.sc = Math.max(prev.sc || 0, sc);
       prev.s = Math.max(prev.s, stars); if (rec.t < prev.t) { prev.t = rec.t; newBest = true; }
@@ -1615,10 +1620,12 @@ function openSettings() {
   const items = [['check', 'set.check'], ['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
   const tods = ['auto', 'day', 'eve', 'night'];
   $('#setBody').innerHTML = `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
+    + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}</small></span><div class="hbgrid">${['', ...ORDER.map(i => THEMES[i])].map(k => { const ok = !k || hbOK(k), on = (DB.set.homeBg || '') === k && ok || (!k && DB.set.homeBg && !hbOK(DB.set.homeBg)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(k ? t('th.' + THEMES.indexOf(k)) + (ok ? '' : ' · ' + t('hb.lock')) : t('hb.def'))}">${BG.svg(k || 'daily', 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(k ? t('th.' + THEMES.indexOf(k)) : t('hb.def'))}</span></button>`; }).join('')}</div></div>`
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
     + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
   $$('#todSeg button').forEach(b => b.onclick = () => { DB.set.tod = b.dataset.k; persist(); $$('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); applyTod(); SFX.tap(); });
   $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
+  $$('#setBody .hbt:not(.lock)').forEach(b => b.onclick = () => { setHomeBg(b.dataset.hb); $$('#setBody .hbt').forEach(x => x.classList.toggle('on', x === b)); if (screen === 'home') homeScene(); });
   wireSync();
   $('#setName').onclick = () => { closeModals(); setTimeout(() => openName(!DB.prof.name), 60); };
   $('#resetAll').onclick = () => { if (confirm(t('set.reset.q'))) { localStorage.removeItem(STORE); DB = load(); persist(true); closeModals(); go(''); } };
