@@ -161,7 +161,7 @@ a.snd.home{text-decoration:none}
 .navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
 .navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
-.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px}
+.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding:10px}
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -169,6 +169,8 @@ a.snd.home{text-decoration:none}
 .btn.on{color:var(--accent);border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.08)}
 .btn:disabled{opacity:.35;cursor:default}
 .btn.primary{color:var(--text)}
+/* narrow side panel (PC): six menu buttons as two rows of three, icon beside the label */
+@container (max-width: 440px){ html:not(.rot) .controls{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px} html:not(.rot) .controls .btn{flex-direction:row;justify-content:center;gap:6px;padding:7px 6px} }
 .kifu-card{flex:1;min-height:92px;display:flex;flex-direction:column}
 .hint-card.show{flex:0 1 auto;min-height:min(150px, 15vh);overflow:hidden;flex-direction:column}
 @media (max-height: 800px) and (pointer: fine){ .side-in:has(.hint-card.show) .graph, .side-in:has(.review-card.show) .graph{height:30px} }
@@ -295,6 +297,15 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .lesson-intro p b{color:var(--accent)}
 .lesson-intro .note{font-size:13px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
 .mini{display:block;margin:2px auto 12px;width:min(340px,90%);height:auto}
+/* rules page */
+#rulesOverlay .modal{width:min(900px,100%)}
+.rl-lead{font-size:14.5px;line-height:1.8;color:#cfd8d2;margin:-4px 0 14px}
+.rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width: 620px){.rl-grid{grid-template-columns:1fr}}
+.rl-item{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);padding:10px 12px;min-width:0}
+.rl-item h4{font-size:13.5px;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
+.rl-item p{font-size:13px;line-height:1.7;color:#cfd8d2}
+.rl-item svg{display:block;width:min(330px,100%);height:auto;margin:4px auto 8px}
 .pz-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .pz-grid button{padding:12px 0;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px}
 .pz-grid button:hover{border-color:var(--brass2)}
@@ -348,8 +359,9 @@ html[lang=ar] .lt-sub{text-align:center}
 body.no-anim .lt-rot{animation:none;transform:rotate(90deg)}
 @media (prefers-reduced-motion: reduce){.lt-rot{animation:none;transform:rotate(90deg)}.snd.land.pulse::after{animation:none;opacity:.9;transform:none}}
 /* Arabic: text blocks right-to-left, board stays LTR */
-html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .result-sub, .rv-note, .hint-note, .cubeline, .small-note, .choices button, .field > label){direction:rtl;text-align:right}
+html[lang=ar] :is(p, .rl-item, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .result-sub, .rv-note, .hint-note, .cubeline, .small-note, .choices button, .field > label){direction:rtl;text-align:right}
 html[lang=ar] .modal h2{text-align:right}
+html[lang=ar] .rl-grid{direction:rtl}
 html[lang=ar] #seedInput::placeholder{font-family:'Noto Sans Arabic',sans-serif}
 html[lang=ar] #evalText{font-family:'Noto Sans Arabic','JetBrains Mono',sans-serif}
 /* letter-spacing breaks Arabic joining and Devanagari conjuncts */
@@ -364,14 +376,14 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html:not(.rot) .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:8px 7px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   html:not(.rot) .side, html:not(.rot) .side-in{display:contents}
   html:not(.rot) .side-in > *{width:var(--fw);max-width:100%;flex:none}
-  html:not(.rot) .brand{order:-3;height:28px;align-items:center;padding:0 4px}
+  html:not(.rot) .controls{order:-4}
+  html:not(.rot) .brand{order:-5;height:28px;align-items:center;padding:0 4px}
   html:not(.rot) .brand h1{font-size:19px;letter-spacing:.05em}
   html:not(.rot) .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
   html:not(.rot) .brand-r{gap:6px}
   html:not(.rot) .players{order:-2;padding:6px;gap:6px}
   html:not(.rot) .board-area{order:-1;flex:none}
   html:not(.rot) .lesson-card, html:not(.rot) .puzzle-card{order:0;flex:none;overflow:visible}
-  html:not(.rot) .controls{order:1}
   html:not(.rot) .hint-card{order:2}
   html:not(.rot) #evalCard{order:3}
   html:not(.rot) .review-card{order:4}
@@ -416,7 +428,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .player .score{font-size:11px}
   .player .status{display:none}
   .controls{grid-area:ctrl;display:flex;gap:4px;padding:0;background:none;border:none;box-shadow:none;height:34px}
-  .btn{flex:none;width:38px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
+  .btn{flex:none;width:34px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
   .btn span{display:none}
   .btn svg{width:17px;height:17px}
   .lesson-card,.puzzle-card{grid-area:ls;flex:none;overflow:visible}
@@ -460,7 +472,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html.rot .player .score{font-size:11px}
   html.rot .player .status{display:none}
   html.rot .controls{grid-area:ctrl;display:flex;gap:4px;padding:0;background:none;border:none;box-shadow:none;height:34px}
-  html.rot .btn{flex:none;width:38px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
+  html.rot .btn{flex:none;width:34px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
   html.rot .btn span{display:none}
   html.rot .btn svg{width:17px;height:17px}
   html.rot .lesson-card, html.rot .puzzle-card{grid-area:ls;flex:none;overflow:visible}
@@ -500,6 +512,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
   .pz-grid{grid-template-columns:repeat(10, 1fr)}
   #newOverlay .modal{width:min(560px,100%)}
+  #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
 }
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
@@ -602,6 +615,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg><span data-i18n="btn.puzzle"></span></button>
+      <button class="btn" id="btnRules" data-i18n-title="btn.rules.title"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 8h8M8 12h6"/></svg><span data-i18n="btn.rules"></span></button>
     </div>
 
     <div class="card hint-card" id="hintCard">
@@ -693,7 +707,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="ls.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
       <div class="lesson-list" id="lessonList"></div>
@@ -717,7 +731,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -728,6 +742,17 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
       <div class="pz-grid" id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
+  </div>
+</div>
+
+<!-- rules -->
+<div class="overlay" id="rulesOverlay">
+  <div class="modal">
+    <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+    <h2 data-i18n="rl.title"></h2>
+    <p class="rl-lead" data-i18n="rl.lead"></p>
+    <div class="rl-grid" id="rulesBody"></div>
+    <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
   </div>
 </div>
 
@@ -776,6 +801,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
 
 <script src="i18n.js"></script>
 <script src="bg.js"></script>
+<script src="../shared/rulesoffer.js?v=2"></script>
 <script src="app.js"></script>
 </body>
 </html>

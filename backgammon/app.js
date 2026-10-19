@@ -1631,7 +1631,7 @@ document.addEventListener('keydown', e => {
 });
 // clicking outside a dialog = its close button
 (() => {
-  const OUTSIDE = { landTipOverlay: '#ltKeep', newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel' };
+  const OUTSIDE = { landTipOverlay: '#ltKeep', newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel', rulesOverlay: '#rulesClose' };
   document.querySelectorAll('.overlay').forEach(o => {
     let down = false;
     o.addEventListener('pointerdown', e => { down = e.target === o; });
@@ -1695,6 +1695,131 @@ function miniBoardSVG0(p, side, opts) {
   return s + '</svg>';
 }
 
+// ====================================================================== rules (illustrated)
+// positions for the pictures: gold by its own points, black by the view (= gold) point numbers
+function rlPos(g, b, o) {
+  o = o || {}; const p = new Int8Array(52);
+  for (const k in g) p[+k] = g[k];
+  for (const k in b) p[26 + 25 - +k] = b[k];
+  if (o.gOff) p[0] = o.gOff; if (o.bOff) p[26] = o.bOff; if (o.gBar) p[25] = o.gBar; if (o.bBar) p[51] = o.bBar;
+  return p;
+}
+const RL_INIT = () => rlPos({ 24: 2, 13: 5, 8: 3, 6: 5 }, { 1: 2, 12: 5, 17: 3, 19: 5 });
+function rulesSVG(p, o) {
+  const flat = G.FLAT, fh = G.H; if (flat) setGeom(false);
+  const v0 = view; view = 0;
+  try { return rulesSVG0(p, o || {}); } finally { view = v0; if (flat) setGeom(true, fh); }
+}
+function rlDie(x, y, n, dark, sz) {
+  const S = 20, z = (sz || 0.8) * S, x0 = x * S - z / 2, y0 = y * S - z / 2, r = z * 0.09;
+  const PIPS = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]] };
+  let s = `<rect x="${x0}" y="${y0}" width="${z}" height="${z}" rx="${z * .18}" fill="${dark ? '#24272d' : '#f6eedb'}" stroke="${dark ? '#8a8f99' : '#b8a882'}" stroke-width=".8"/>`;
+  for (const [i, j] of PIPS[n]) s += `<circle cx="${x0 + z * (0.24 + i * 0.26)}" cy="${y0 + z * (0.24 + j * 0.26)}" r="${r}" fill="${dark ? '#e2c275' : '#6b2420'}"/>`;
+  return s;
+}
+function rulesSVG0(p, o) {
+  const S = 20, W = G.W * S, H = G.H * S, q = p ? p.slice() : null;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img"><rect width="${W}" height="${H}" rx="8" fill="#2b1a10"/>`;
+  for (const x0 of [G.LX, G.RX]) {
+    s += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${11 * S}" fill="#17573f"/>`;
+    for (let i = 0; i < 6; i++) { const x = (x0 + i) * S; s += `<path d="M${x + 1} ${G.TOP * S}L${x + S - 1} ${G.TOP * S}L${x + S / 2} ${(G.TOP + 4.6) * S}Z" fill="${i % 2 ? '#6b2420' : '#e6dbc2'}"/><path d="M${x + 1} ${G.BOT * S}L${x + S - 1} ${G.BOT * S}L${x + S / 2} ${(G.BOT - 4.6) * S}Z" fill="${i % 2 ? '#e6dbc2' : '#6b2420'}"/>`; }
+  }
+  s += `<rect x="${G.TX * S}" y="${G.TOP * S}" width="${G.TW * S}" height="${11 * S}" rx="3" fill="#0d2f21"/>`;
+  if (o.homes) {
+    s += `<rect x="${G.RX * S}" y="${G.MID * S}" width="${6 * S}" height="${(G.BOT - G.MID) * S}" fill="rgba(226,194,117,.22)" stroke="#e2c275" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    s += `<rect x="${G.RX * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.MID - G.TOP) * S}" fill="rgba(201,204,210,.16)" stroke="#c9ccd2" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  }
+  if (o.nums) for (let vp = 1; vp <= 24; vp++) s += `<text x="${slotX(vp) * S}" y="${(vp >= 13 ? G.TOP - 0.1 : G.BOT + 0.42) * S}" font-size="7.5" font-family="JetBrains Mono,monospace" fill="rgba(226,194,117,.85)" text-anchor="middle">${vp}</text>`;
+  const ck = (sd, x, y) => `<circle cx="${x * S}" cy="${y * S}" r="${0.45 * S}" fill="${sd ? '#202328' : '#e2c275'}" stroke="${sd ? '#c9ccd2' : '#7a5c22'}" stroke-width="1"/>`;
+  const slab = (sd, k) => { const [x, y] = offXY(sd, k); return `<rect x="${(x - 0.5) * S}" y="${(y - 0.12) * S}" width="${S}" height="${0.24 * S}" rx="1.5" fill="${sd ? '#33363d' : '#e2c275'}" stroke="${sd ? '#9aa0aa' : '#7a5c22'}" stroke-width=".6"/>`; };
+  if (p) for (const sd of [0, 1]) {
+    for (let pt = 1; pt <= 25; pt++) { const n = p[sd * 26 + pt]; for (let k = 0; k < n; k++) { const [x, y] = ckXY(sd, pt, k, n); s += ck(sd, x, y); } }
+    for (let k = 0; k < p[sd * 26]; k++) s += slab(sd, k);
+  }
+  // track arrows (direction of play)
+  if (o.track) {
+    const yT = G.TOP + 3.1, yB = G.BOT - 3.1, xL = G.LX + 0.5, xR = G.RE - 0.5, ex = G.TX + G.TW / 2;
+    const gold = `M${xR * S} ${yT * S}L${xL * S} ${yT * S}Q${(xL - 0.35) * S} ${G.MID * S} ${xL * S} ${yB * S}L${(xR + 0.2) * S} ${yB * S}L${ex * S} ${(yB + 1.6) * S}`;
+    const yT2 = G.TOP + 1.2, yB2 = G.BOT - 1.2;
+    const blk = `M${xR * S} ${yB2 * S}L${xL * S} ${yB2 * S}Q${(xL - 0.35) * S} ${G.MID * S} ${xL * S} ${yT2 * S}L${(xR + 0.2) * S} ${yT2 * S}L${ex * S} ${(yT2 - 0.3) * S}`;
+    s += `<defs><marker id="rlA0" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffe6a0"/></marker><marker id="rlA1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#dfe3ea"/></marker></defs>`;
+    s += `<path d="${blk}" fill="none" stroke="#dfe3ea" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 4" marker-end="url(#rlA1)" opacity=".9"/>`;
+    s += `<path d="${gold}" fill="none" stroke="#ffe6a0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#rlA0)"/>`;
+    const lab = (x, y, txt, c) => `<text x="${x * S}" y="${y * S}" font-size="10" font-weight="700" fill="${c}" text-anchor="middle" stroke="#0b1110" stroke-width="2.6" paint-order="stroke">${txt}</text>`;
+    s += lab(G.RX + 3, G.MID + 1.25, t('rl.home', { c: pname(0) }), '#ffe6a0') + lab(G.RX + 3, G.MID - 0.9, t('rl.home', { c: pname(1) }), '#e6e9ee');
+  }
+  // checker moves, played in order on a copy: [side, from, to, kind]  (own point numbers; 25 = bar, 0 = off)
+  for (const [sd, f, to, kind] of o.moves || []) {
+    const b = sd * 26, nf = q[b + f];
+    const [x0, y0] = ckXY(sd, f, Math.max(0, nf - 1), Math.max(1, nf));
+    q[b + f]--;
+    let x1, y1;
+    if (to === 0) [x1, y1] = offXY(sd, q[b]);
+    else { const nt = q[b + to]; [x1, y1] = ckXY(sd, to, nt, nt + 1); }
+    if (kind !== 'ng') q[b + to]++;
+    const col = kind === 'ng' || kind === 'hit' ? '#ff9b90' : '#ffe6a0';
+    const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, bend = Math.min(1.4, L * 0.22);
+    const cx = (x0 + x1) / 2 + dy / L * bend, cy = (y0 + y1) / 2 - dx / L * bend;
+    const tx = x1 - cx, ty = y1 - cy, tl = Math.hypot(tx, ty) || 1, ux = tx / tl, uy = ty / tl, h = 0.34;
+    const ex = x1 - ux * 0.32, ey = y1 - uy * 0.32;
+    s += `<path d="M${x0 * S} ${y0 * S}Q${cx * S} ${cy * S} ${ex * S} ${ey * S}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round"${kind === 'hit' || kind === 'ng' ? ' stroke-dasharray="4 3"' : ''}/>`;
+    s += `<path d="M${(ex - ux * h - uy * h) * S} ${(ey - uy * h + ux * h) * S}L${ex * S} ${ey * S}L${(ex - ux * h + uy * h) * S} ${(ey - uy * h - ux * h) * S}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (kind === 'ng') s += `<path d="M${(x1 - .32) * S} ${(y1 - .32) * S}L${(x1 + .32) * S} ${(y1 + .32) * S}M${(x1 + .32) * S} ${(y1 - .32) * S}L${(x1 - .32) * S} ${(y1 + .32) * S}" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  // rings / crosses on a view point's top checker: [vp, kind]
+  for (const [vp, kind] of o.marks || []) {
+    const n0 = p[vp], n1 = p[26 + 25 - vp], sd = n1 ? 1 : 0, n = n0 + n1;
+    const [x, y] = ckXY(sd, sd ? 25 - vp : vp, Math.max(0, n - 1), Math.max(1, n));
+    if (kind === 'x') s += `<path d="M${(x - .3) * S} ${(y - .3) * S}L${(x + .3) * S} ${(y + .3) * S}M${(x + .3) * S} ${(y - .3) * S}L${(x - .3) * S} ${(y + .3) * S}" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round"/>`;
+    else s += `<circle cx="${x * S}" cy="${y * S}" r="${0.56 * S}" fill="none" stroke="${kind === 'ng' ? '#ff6b5b' : '#fff3cf'}" stroke-width="2.2"/>`;
+  }
+  // dice: [[n, dark, x?]]
+  (o.dice || []).forEach((d, i, a) => { const x = d[2] !== undefined ? d[2] : G.RX + 3 + (i - (a.length - 1) / 2) * 0.95; s += rlDie(x, G.MID, d[0], d[1]); });
+  if (o.cube) { const x = o.cube[1], z = 0.86 * S; s += `<rect x="${x * S - z / 2}" y="${G.MID * S - z / 2}" width="${z}" height="${z}" rx="${z * .16}" fill="#e2c275" stroke="${o.cube[2] ? '#fff3cf' : '#8e7440'}" stroke-width="${o.cube[2] ? 2.2 : 1}"/><text x="${x * S}" y="${G.MID * S + 4}" font-size="11" font-weight="700" font-family="JetBrains Mono,monospace" fill="#2a1e08" text-anchor="middle">${o.cube[0]}</text>`; }
+  return s + '</svg>';
+}
+function rlMatchSVG() {
+  const W = 317, H = 130;
+  const disc = (x, sd) => `<circle cx="${x}" cy="52" r="17" fill="${sd ? '#202328' : '#e2c275'}" stroke="${sd ? '#c9ccd2' : '#7a5c22'}" stroke-width="1.5"/>`;
+  const num = (x, n) => `<text x="${x}" y="64" font-size="32" font-weight="800" font-family="Shippori Mincho B1,serif" fill="#e8eee9" text-anchor="middle">${n}</text>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img"><rect width="${W}" height="${H}" rx="10" fill="#2b1a10"/><rect x="8" y="8" width="${W - 16}" height="${H - 16}" rx="7" fill="#17573f"/>`;
+  s += `<text x="${W / 2}" y="27" font-size="12" font-weight="700" fill="#e2c275" text-anchor="middle">${t('info.match', { n: 5 })}</text>`;
+  s += disc(46, 0) + num(96, 4) + `<text x="${W / 2 - 40}" y="62" font-size="22" fill="#8fa39a" text-anchor="middle">–</text>` + num(W / 2 - 4, 2) + disc(W / 2 + 34, 1);
+  const cx = 262, cy = 56, z = 30;
+  s += `<rect x="${cx - z / 2}" y="${cy - z / 2}" width="${z}" height="${z}" rx="5" fill="#e2c275" stroke="#8e7440"/><text x="${cx}" y="${cy + 5}" font-size="13" font-weight="700" font-family="JetBrains Mono,monospace" fill="#2a1e08" text-anchor="middle">64</text>`;
+  s += `<path d="M${cx - 21} ${cy + 21}L${cx + 21} ${cy - 21}" stroke="#ff6b5b" stroke-width="4" stroke-linecap="round"/>`;
+  s += `<text x="${W / 2}" y="107" font-size="11.5" fill="#cfd8d2" text-anchor="middle">${t('rl.crawLbl')}</text>`;
+  return s + '</svg>';
+}
+function ruleItems() {
+  const it = (k, svg) => `<div class="rl-item"><h4>${t('rl.' + k + '.h')}</h4>${svg}<p>${t('rl.' + k, { c: pname(0), o: pname(1) })}</p></div>`;
+  const I = RL_INIT();
+  const blockP = rlPos({ 24: 2, 13: 5, 8: 3, 6: 5 }, { 9: 2, 12: 5, 17: 3, 19: 5 });
+  const hitP = rlPos({ 24: 2, 13: 5, 8: 3, 6: 5 }, { 1: 1, 9: 1, 12: 5, 17: 3, 19: 5 });
+  const enterP = rlPos({ 13: 4, 8: 3, 6: 5, 5: 2 }, { 19: 3, 21: 2, 22: 2, 23: 1, 12: 4, 17: 3 }, { gBar: 1 });
+  const offP = rlPos({ 6: 3, 5: 3, 4: 3, 3: 2, 2: 2 }, { 19: 3, 20: 3, 21: 2, 22: 2, 24: 1 }, { gOff: 2, bOff: 4 });
+  const winP = rlPos({}, { 3: 1, 19: 4, 20: 3, 21: 3, 22: 2, 23: 2 }, { gOff: 15 });
+  const cubeP = rlPos({ 13: 3, 8: 3, 6: 4, 5: 2, 4: 2, 3: 1 }, { 1: 2, 12: 3, 17: 3, 19: 4, 20: 3 });
+  return [
+    it('setup', rulesSVG(I, { nums: true })),
+    it('dir', rulesSVG(null, { homes: true, track: true })),
+    it('start', rulesSVG(I, { dice: [[2, true, G.LX + 3], [5, false, G.RX + 3]] })),
+    it('dice', rulesSVG(I, { dice: [[3], [1]], moves: [[0, 8, 5], [0, 6, 5]] })),
+    it('dbl', rulesSVG(I, { dice: [[6], [6]], moves: [[0, 24, 18], [0, 24, 18], [0, 13, 7], [0, 13, 7]] })),
+    it('block', rulesSVG(blockP, { dice: [[4], [2]], moves: [[0, 13, 9, 'ng'], [0, 13, 11]] })),
+    it('hit', rulesSVG(hitP, { dice: [[4], [1]], moves: [[1, 16, 25, 'hit'], [0, 13, 9]] })),
+    it('enter', rulesSVG(enterP, { dice: [[5], [3]], moves: [[0, 25, 20], [0, 25, 22, 'ng']] })),
+    it('off', rulesSVG(offP, { dice: [[6], [4]], moves: [[0, 6, 0], [0, 4, 0]] })),
+    it('win', rulesSVG(winP, { marks: [[3, 'ng']] })),
+    it('cube', rulesSVG(cubeP, { cube: [2, G.RX + 3, true] })),
+    it('match', rlMatchSVG()),
+  ].join('');
+}
+function openRules() { selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
+function renderRules() { $('#rulesBody').innerHTML = ruleItems(); }
+$('#btnRules').onclick = () => openRules();
+$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
+
 // ====================================================================== lessons
 let LESSONS = null;
 const lessonsReady = fetch('lessons.json').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
@@ -1705,10 +1830,11 @@ let introIdx = 0;
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  const inst = on => ['#lessonOverlay', '#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
-  if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); openPuzzles(); }
-  else { hideOverlay('#puzzleOverlay'); openLessons(); }
+  if (b.dataset.v === 'rules') { hideOverlay('#lessonOverlay'); hideOverlay('#puzzleOverlay'); openRules(); }
+  else if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); hideOverlay('#rulesOverlay'); openPuzzles(); }
+  else { hideOverlay('#puzzleOverlay'); hideOverlay('#rulesOverlay'); openLessons(); }
   setTimeout(() => inst(false), 150);
 }));
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
@@ -2007,7 +2133,9 @@ $('#langSel').onchange = e => {
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
+  if ($('#rulesOverlay').classList.contains('show')) renderRules();
 };
+if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
 if (hadSave) { view = settings.mode === 'ai' ? humanSide : 0; cur = latestIdx(); updateCommit(); }
 if (loadFromHash()) { /* shared match opened */ }
 else if (!hadSave) { match = newMatch(null, settings.matchLen, settings.cube); updateCommit(); render(); renderInfo(); openNewDialog(); }
