@@ -154,7 +154,40 @@
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大全' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<img src="../images/atlas/p-${img}.webp?v=1" alt="" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg;--d:${2.6 + (i % 5) * .5}s;--dl:${-i * .37}s">`).join('');
-    $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => openBoard(b.dataset.g));
+    $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
+    startProps();
+  }
+  /* floating pieces: bob + sway, random hops/spins, follow the pointer / phone tilt a little (JS, so it runs on every browser) */
+  let propRaf = 0, px = 0, py = 0, tx = 0, ty = 0;
+  addEventListener('pointermove', e => { tx = e.clientX / innerWidth - .5; ty = e.clientY / innerHeight - .5; }, { passive: true });
+  addEventListener('deviceorientation', e => { if (e.gamma != null) { tx = Math.max(-.5, Math.min(.5, e.gamma / 60)); ty = Math.max(-.5, Math.min(.5, (e.beta - 40) / 80)); } }, { passive: true });
+  function hop(el, big) { el._hop = performance.now(); el._big = !!big; }
+  function startProps() {
+    cancelAnimationFrame(propRaf);
+    const els = [...$('props').querySelectorAll('img')];
+    els.forEach((el, i) => { el._ph = i * 1.7; el._sp = .7 + (i % 5) * .12; el._r = parseFloat(el.style.getPropertyValue('--r')) || 0; el._z = .4 + (i % 4) * .2; });
+    let nextHop = performance.now() + 1200;
+    (function step(now) {
+      propRaf = requestAnimationFrame(step);
+      if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
+      px += (tx - px) * .06; py += (ty - py) * .06;
+      if (now > nextHop) { hop(els[Math.random() * els.length | 0]); nextHop = now + 900 + Math.random() * 1400; }
+      const t = now / 1000;
+      els.forEach(el => {
+        let y = Math.sin(t * el._sp + el._ph) * 10, r = el._r + Math.sin(t * el._sp * .8 + el._ph) * 7, sc = 1, sy = 1;
+        if (el._hop) {
+          const k = (now - el._hop) / (el._big ? 650 : 900);
+          if (k >= 1) el._hop = 0;
+          else {
+            y -= Math.sin(k * Math.PI) * (el._big ? 46 : 34);
+            r += (el._big ? 360 : 360 * (el._ph % 2 > 1 ? 1 : -1)) * (1 - Math.pow(1 - k, 3)) % 360;
+            if (k < .12) { sy = 1 - k * 2; sc = 1 + k; } else if (k > .88) { sy = 1 - (1 - k) * 1.6; }
+          }
+        }
+        const ox = -px * 26 * el._z, oy = -py * 18 * el._z;
+        el.style.transform = `translate(calc(-50% + ${ox.toFixed(1)}px), calc(-50% + ${(y + oy).toFixed(1)}px)) rotate(${r.toFixed(1)}deg) scale(${sc.toFixed(3)}, ${(sc * sy).toFixed(3)})`;
+      });
+    })(performance.now());
   }
   function renderHome() {
     renderHero();
