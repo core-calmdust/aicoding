@@ -476,6 +476,128 @@ body .rv-view button{font-size:13.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+
+/* ---------------------------------------------------------------- learning: tabs, rules tutorial, lessons, openings, puzzles */
+.ls-desc{font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7}
+.ls-tabs button{font-size:13px;padding:9px 2px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.rules-offer{display:flex;align-items:center;gap:10px;margin:-6px 0 14px;padding:10px 12px;border-radius:12px;border:1px solid rgba(226,194,117,.5);background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.15));font-size:13px;line-height:1.5}
+.rules-offer span{flex:1;min-width:0}
+.rules-offer button{flex:none;padding:7px 12px;border-radius:9px;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;font-weight:700;font-size:12.5px}
+.mini-svg{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.mb-bg{fill:#155238;stroke:rgba(201,169,97,.45);stroke-width:1}
+.mb-guide{stroke:rgba(0,0,0,.3);stroke-width:1.3;stroke-dasharray:2 4;stroke-linecap:round}
+.mb-edge{stroke-width:4.2;stroke-linecap:round}
+.mb-edge.p0{stroke:#f6c2b2}.mb-edge.p1{stroke:#bcdaf6}.mb-edge.p2{stroke:#e9e2c8}
+.mb-edge.last.p0{stroke:var(--p0)}.mb-edge.last.p1{stroke:var(--p1)}
+.mb-dot{fill:#e2c275}
+.mb-box.o0{fill:url(#g0)}.mb-box.o1{fill:url(#g1)}.mb-box.o2{fill:rgba(233,226,200,.18)}
+.mb-box.o0,.mb-box.o1{fill:var(--p0d)}.mb-box.o1{fill:var(--p1d)}
+.mb-box.nb{animation:fadein .35s ease both}
+.mvn{font-family:'JetBrains Mono',monospace;font-size:.92em}
+.mb-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;text-anchor:middle;dominant-baseline:central;fill:#fff3d0}
+.mb-num.long{fill:#ffb3a7}.mb-num.loop{fill:#b8e3ff}.mb-num.short{fill:#d8e6dc}
+.mb-cap3{fill:rgba(226,194,117,.12);stroke:rgba(226,194,117,.7);stroke-width:1.2;stroke-dasharray:3 3}
+.mb-hl{stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-dasharray:3 5;filter:drop-shadow(0 0 3px rgba(226,194,117,.9))}
+.mb-bad{stroke:var(--red);stroke-width:5;stroke-linecap:round}
+.mb-safe{stroke:#7fd6a4;stroke-width:3;stroke-linecap:round;stroke-dasharray:2 4;opacity:.9}
+.mb-hit{stroke:transparent;stroke-width:16;stroke-linecap:round;cursor:pointer}
+.mb-hit.hov{stroke:rgba(255,183,162,.55);stroke-width:5;stroke-dasharray:5 3}
+figure.mini{margin:12px auto 14px;max-width:min(300px,80%);text-align:center}
+figure.mini figcaption{font-size:13px;color:var(--muted);line-height:1.65;margin-top:6px;text-align:left}
+.ru-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
+.ru-steps button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px}
+.ru-steps button.ok{border-color:rgba(111,211,160,.6);color:#8fe3b8}
+.ru-steps button.cur{background:var(--panel2);color:var(--accent);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
+.ru-body p{margin-bottom:8px}
+.ru-board{max-width:min(320px,86%);margin:10px auto 8px}
+.ru-task{font-size:14.5px;line-height:1.7;min-height:52px;text-align:center}
+.ru-q{color:var(--text)}
+.ru-msg{margin-top:6px;font-size:14px;color:var(--muted)}
+.ru-msg.ok{color:#8fe3b8}.ru-msg.ng{color:#ff9b90}
+.ru-again{margin-top:8px;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.ru-sizes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+.ru-sizes figure{text-align:center}
+.ru-sizes figcaption{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
+.ru-sizes figcaption b{color:var(--text);font-family:'JetBrains Mono',monospace}
+.ru-finish{display:flex;flex-direction:column;gap:10px;margin:14px 0 4px}
+.safeline{stroke:#7fd6a4;stroke-width:8;stroke-linecap:round;stroke-dasharray:3 12;opacity:.85;pointer-events:none}
+.trapline{stroke:#ff8b7d;stroke-width:5;stroke-linecap:round;stroke-dasharray:2 10;opacity:.65;pointer-events:none}
+.optline{stroke:var(--accent);stroke-width:9;stroke-linecap:round;stroke-dasharray:4 12;opacity:.9;pointer-events:none}
+.aidnum circle{fill:rgba(10,16,14,.55);stroke:rgba(226,194,117,.6);stroke-width:2}
+.aidnum.long circle{stroke:#ff9b8a}.aidnum.loop circle{stroke:#8cc8ff}
+.aidnum text{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;fill:#fff3d0;text-anchor:middle;dominant-baseline:central}
+.ls-course{grid-column:1 / -1;margin:10px 0 2px;display:flex;flex-direction:column;gap:2px}
+.ls-course b{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass)}
+.ls-course small{font-size:12px;color:var(--dim);line-height:1.6}
+.ru-item{border-color:rgba(226,194,117,.45)!important}
+.ldots i.mid{background:#f2c060}
+.pts{display:inline-block;font-family:'JetBrains Mono',monospace;font-weight:700;padding:1px 8px;border-radius:7px;margin-right:4px;border:1px solid}
+.pts.ok{color:#8fe3b8;border-color:rgba(111,211,160,.5)}.pts.mid{color:#ffd29a;border-color:rgba(242,192,96,.5)}.pts.ng{color:#ff9b90;border-color:rgba(255,107,91,.5)}
+.ld-score{font-family:'Shippori Mincho B1',serif;font-size:46px;font-weight:800;margin:4px 0 8px;text-align:center}
+.ld-score small{font-size:18px;color:var(--dim)}
+.ld-score.ok{color:#8fe3b8}.ld-score.ng{color:#ffb3aa}
+.ls-grad{margin-top:10px;color:var(--accent);line-height:1.7}
+.lesson-fb .tip{color:#c9d6cf;font-size:.93em}
+.lesson-fb small{font-size:.9em;color:var(--dim)}
+.ls-size{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--brass);border:1px solid var(--brass2);border-radius:6px;padding:0 6px;margin-right:4px;vertical-align:2px}
+.op-seq{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);margin-top:4px;line-height:1.9;word-break:break-word}
+.op-seq b{color:var(--accent)}
+.op-seq button{font:inherit;color:inherit;padding:1px 3px;border-radius:5px}
+.op-seq button:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.op-seq button.cur{background:rgba(201,169,97,.2);color:var(--accent)}
+.op-seq button.ext{opacity:.6}
+.op-seq button.crit{box-shadow:inset 0 -2px 0 #f2c060}
+.op-nav{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap}
+.op-nav button{font-size:13px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.op-nav button:hover{border-color:var(--brass2);color:var(--text)}
+.op-opt{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;margin-left:6px;cursor:pointer}
+.op-opt input{accent-color:var(--brass)}
+.op-info{font-size:14px;line-height:1.8;color:var(--text);margin:8px 0 6px;padding:8px 10px;border-left:3px solid var(--brass);background:rgba(201,169,97,.07);border-radius:0 8px 8px 0}
+.lesson-fb p{margin:6px 0}
+.op-book{display:grid;gap:12px;margin-top:14px}
+.op-book .ob{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);cursor:pointer;transition:border-color .2s,background .2s}
+.op-book .ob:hover{border-color:rgba(201,169,97,.55);background:rgba(201,169,97,.05)}
+.ob-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.op-book .nm{font-weight:700;color:var(--accent);font-size:16px;letter-spacing:.03em;flex:1;min-width:0}
+.ob-ok{color:#8fe3b8;font-weight:700}
+.op-book .mv{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);margin:8px 0 4px;word-break:break-word;line-height:1.9}
+.op-book .mv i{font-style:normal;font-size:10px;color:var(--dim);margin:0 2px 0 4px}
+.ob-info{font-size:14px;line-height:1.8;color:#d6dfda}
+.op-dr{display:flex;gap:6px;margin:6px 0 2px;flex-wrap:wrap}
+.op-dr button{font-size:12px;padding:5px 10px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.op-dr button:hover{border-color:var(--brass2);color:var(--text)}
+.st-pg{display:flex;align-items:center;gap:10px}
+.st-pg > span{flex:0 1 auto;min-width:0}
+.st-pg button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--accent);font-size:18px;line-height:1;flex:none}
+.st-pg button:disabled{opacity:.3;pointer-events:none}
+.st-pg small{font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-left:auto;flex:none}
+.op-lines{display:block;font-size:11.5px;color:var(--dim);margin-top:5px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.op-credit{font-size:11.5px;color:var(--dim);line-height:1.65;margin-top:6px}
+.lesson-item .tx{overflow:hidden}
+.lesson-list{grid-template-columns:minmax(0,1fr)}
+.lesson-item{min-width:0}
+.pz-total{font-size:12.5px;color:var(--dim);margin:0 0 2px}
+.pz-bar{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:6px;overflow:hidden}
+.pz-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),#8fe3b8)}
+.pz-catdesc{font-size:14px;color:var(--muted);line-height:1.75;margin:-8px 0 12px}
+.pz-lv{margin-bottom:14px}
+.pz-lvh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;font-size:14px}
+.pz-lvh span{font-size:12px;color:var(--dim)}.pz-lvh span.clear{color:#8fe3b8}
+.lesson-item .no{font-size:18px}
+@media (max-width: 520px){
+  .ls-tabs button{font-size:12px;padding:8px 1px}
+  .ru-sizes{gap:6px}
+  .pz-grid{grid-template-columns:repeat(6,1fr);gap:6px}
+  .pz-grid button{padding:10px 0;font-size:13px}
+}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  #lessonOverlay .modal:has(> #rulesView:not(.hidden)){width:min(720px, calc(100vw - 64px))}
+  #puzzleOverlay .lesson-list > .pz-total{grid-column:1 / -1}
+  #puzzleOverlay .pz-grid{grid-template-columns:repeat(9, 1fr)}
+}
+html[lang=ar] :is(.ls-desc, .rules-offer, .ru-task, figure.mini figcaption, .op-info, .ob-info, .pz-catdesc, .ls-course, .ru-body, .pz-total){direction:rtl;text-align:right}
+html[lang=ar] .ru-task{text-align:center}
+html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-radius:8px 0 0 8px}
 </style>
 </head>
 <body>
@@ -586,6 +708,7 @@ body .rv-view button{font-size:13.5px}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
+    <div class="rules-offer hidden" id="rulesOffer"><span data-i18n="ru.offer"></span><button id="btnRulesOffer" data-i18n="ru.offerBtn"></button></div>
     <p class="rules" data-i18n="ng.rules"></p>
     <div class="field">
       <label data-i18n="ng.mode"></label>
@@ -598,7 +721,7 @@ body .rv-view button{font-size:13.5px}
       </div>
     </div>
     <div class="field hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
-    <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc"></p></div>
+    <div class="field hidden" id="fPuzzleInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="pz.desc2"></p></div>
     <div class="field" id="fSize">
       <label data-i18n="ng.size"></label>
       <div class="seg" id="segSize"><button data-v="3">3 × 3</button><button data-v="4">4 × 4</button><button data-v="5">5 × 5</button></div>
@@ -633,9 +756,9 @@ body .rv-view button{font-size:13.5px}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="ls.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <h2 id="lsListTitle" data-i18n="ls.title"></h2>
+      <p id="lsListDesc" class="ls-desc"></p>
       <div class="lesson-list" id="lessonList"></div>
       <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
     </div>
@@ -644,6 +767,10 @@ body .rv-view button{font-size:13.5px}
       <h2 id="liTitle" style="margin-top:4px"></h2>
       <div class="lesson-intro" id="liBody"></div>
       <div class="modal-actions"><button class="mbtn" id="btnLessonBack" data-i18n="ls.back"></button><button class="mbtn go" id="btnLessonStart" data-i18n="ls.start"></button></div>
+    </div>
+    <div id="rulesView" class="hidden">
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div id="rulesBody"></div>
     </div>
     <div id="lessonDoneView" class="hidden">
       <div class="result-big" id="ldTitle"></div>
@@ -657,15 +784,15 @@ body .rv-view button{font-size:13.5px}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
+      <p class="ls-desc" data-i18n="pz.desc2"></p>
       <div class="lesson-list" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
       <h2 id="pzLevelTitle"></h2>
-      <div class="pz-grid" id="pzGrid"></div>
+      <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
   </div>
@@ -710,8 +837,9 @@ body .rv-view button{font-size:13.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261019d4"></script>
-<script src="engine.js"></script>
+<script src="i18n.js?v=20261019e"></script>
+<script src="engine.js?v=20261019e"></script>
+<script src="learn.js?v=20261019e"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -782,13 +910,14 @@ function save() {
 
 // ====================================================================== names
 function playerName(i) {
-  if (lesson || puzzle) return i === 0 ? t('you') : t('ai');
+  if (lesson || puzzle) return learnPlayerName(i);
   if (settings.mode === 'ai') return i === game.human ? t('you') : 'AI ' + t('lv')[settings.level];
   if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2];
   return i === 0 ? t('pA') : t('pB');
 }
 // person icon for human players, robot icon for AI players (2-player: both people, AI vs AI: both robots)
 function playerKind(i) {
+  if (lesson && (lesson.study || lesson.drill)) return lesson.drill && i === lesson.color ? 'Person' : lesson.drill ? 'Robot' : 'Person';
   if (lesson || puzzle) return i === 0 ? 'Person' : 'Robot';
   if (settings.mode === 'ai') return i === game.human ? 'Person' : 'Robot';
   return settings.mode === 'watch' ? 'Robot' : 'Person';
@@ -827,7 +956,7 @@ function edgeName(e) {
 }
 
 // ====================================================================== workers
-function makeWorker(onmsg) { const w = new Worker('engine.js'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261019e'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
 let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
 function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
 function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
@@ -914,6 +1043,7 @@ function renderBoard(anim) {
   if ((lesson || puzzle) && !S.over) for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) { const r = Math.floor(b / game.n), c = b % game.n; el('rect', { x: M + c * U + 14, y: M + r * U + 14, width: U - 28, height: U - 28, rx: 6, class: 'cap3' }, gFx); }
   if (hintEdge >= 0 && !p.drawn[hintEdge]) { const [x1, y1, x2, y2] = edgeXY(hintEdge); el('line', { x1, y1, x2, y2, class: 'hintline' }, gFx); }
   if (badEdge >= 0 && !p.drawn[badEdge]) { const [x1, y1, x2, y2] = edgeXY(badEdge); el('line', { x1, y1, x2, y2, class: 'badline' }, gFx); }
+  if (lesson) drawAids();
   if (viewPly !== null) drawReviewOverlay();
   document.body.classList.toggle('viewing', viewPly !== null);
   $('#board').classList.toggle('no-anim', !settings.anim);
@@ -1160,6 +1290,7 @@ function segSync() {
   $('#btnStart').textContent = m === 'lesson' ? t('ls.title') : m === 'puzzle' ? t('pz.title') : t('start');
 }
 function openNew() {
+  if (typeof rulesOfferSync === 'function') rulesOfferSync();
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, size: settings.size, order: settings.order, level: settings.level, level2: settings.level2, eval: settings.eval, anim: settings.anim };
   segSync(); $('#newOverlay').classList.add('show');
 }
@@ -1198,233 +1329,6 @@ function restoreGame() {
   refresh(false); next();
 }
 function finalFromValue(v) { const rem = S.G.B - S.p.filled; return [S.scores[0] + (rem + v) / 2, S.scores[1] + (rem - v) / 2]; }
-
-// ====================================================================== lessons
-let lessonData = null;
-const lessonsReady = fetch('lessons.json').then(r => r.json()).then(d => (lessonData = d)).catch(e => { console.warn(e); return null; });
-function lessonProgress() { try { return JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) { return {}; } }
-let introIdx = 0;
-function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-async function openLessons() {
-  await lessonsReady; selTab('lesson');
-  if (!lessonData) { toast(t('ls.fail')); return; }
-  const prog = lessonProgress();
-  $('#lessonList').innerHTML = lessonData.steps.map((s, i) => {
-    const pr = prog[i];
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('ls.s' + (i + 1) + '.t')}</b><small>${t('ls.s' + (i + 1) + '.d')}</small></span><span class="st ${pr >= 2 ? 'clear' : ''}">${pr === undefined ? t('ls.notyet') : pr >= 2 ? t('ls.clear') + ' ' + pr + '/3' : pr + '/3'}</span></button>`;
-  }).join('');
-  $('#lessonList').querySelectorAll('button').forEach(b => b.onclick = () => openIntro(+b.dataset.i));
-  showLessonView('lessonListView');
-  $('#lessonOverlay').classList.add('show');
-}
-function openIntro(i) {
-  introIdx = i;
-  $('#liStep').textContent = 'STEP ' + (i + 1);
-  $('#liTitle').textContent = t('ls.s' + (i + 1) + '.t');
-  $('#liBody').innerHTML = t('ls.s' + (i + 1) + '.body');
-  showLessonView('lessonIntroView');
-  $('#lessonOverlay').classList.add('show');
-}
-$('#btnLessonClose').onclick = () => $('#lessonOverlay').classList.remove('show');
-$('#btnLessonBack').onclick = () => openLessons();
-$('#btnLessonStart').onclick = () => { $('#lessonOverlay').classList.remove('show'); startLesson(introIdx); };
-$('#btnLessonQuit2').onclick = () => { $('#lessonOverlay').classList.remove('show'); endLesson(); };
-$('#btnLessonRetry').onclick = () => { $('#lessonOverlay').classList.remove('show'); startLesson(lesson ? lesson.i : introIdx); };
-$('#btnLessonNextStep').onclick = () => { const i = lesson ? lesson.i + 1 : 0; if (i < lessonData.steps.length) openIntro(i); else { $('#lessonOverlay').classList.remove('show'); endLesson(); } };
-function startLesson(i) {
-  endPuzzle(true);
-  enterSetup(null, 4);
-  lesson = { i, k: 0, results: [], answered: false };
-  document.body.classList.add('in-lesson');
-  loadLessonProblem();
-}
-function loadLessonProblem() {
-  const pr = lessonData.steps[lesson.i].problems[lesson.k];
-  lesson.pr = pr; lesson.answered = false; lesson.hinted = false;
-  hintEdge = -1; badEdge = -1; chainCount = 0;
-  game = { n: pr.n, moves: [], human: 0, setup: { edges: pr.edges, owners: pr.owners } };
-  builtFor = '';
-  refresh(false);
-  renderLessonCard();
-  $('#lsFb').innerHTML = '';
-}
-function renderLessonCard() {
-  const s = lesson.i + 1;
-  $('#lsStep').textContent = t('ls.stepq', { s, i: lesson.k + 1 });
-  $('#lsTitle').textContent = t('ls.s' + s + '.t');
-  $('#lsPrompt').textContent = t('ls.s' + s + '.q');
-  $('#lsDots').innerHTML = [0, 1, 2].map(j => `<i class="${lesson.results[j] === true ? 'ok' : lesson.results[j] === false ? 'ng' : ''} ${j === lesson.k ? 'cur' : ''}"></i>`).join('');
-  $('#lsNext').textContent = !lesson.answered ? t('ls.next') : lesson.k < 2 ? t('ls.next') : t('ls.result');
-  $('#lsNext').disabled = !lesson.answered;
-  $('#lsHint').disabled = lesson.answered;
-}
-function lessonAnswer(e) {
-  const pr = lesson.pr, vals = new Map(pr.values), v = vals.get(e), best = pr.values[0][1];
-  const ok = v === best;
-  lesson.answered = true; lesson.results[lesson.k] = ok;
-  applyMove(e, true);
-  const fin = finalFromValueAt(pr, v), fb = finalFromValueAt(pr, best);
-  if (!ok) { hintEdge = pr.best; badEdge = -1; renderBoard(false); playWrong(); }
-  else coach(t('ls.ok'), 'gold', 1200);
-  const s = lesson.i + 1;
-  $('#lsFb').innerHTML = `<b class="${ok ? 'ok' : 'ng'}">${t(ok ? 'ls.ok' : 'ls.ng')}</b> ${t('ls.outcome', { a: fin[0], b: fin[1] })}${ok ? '' : '<br>' + t('ls.bestIs', { a: fb[0], b: fb[1] })}<br>${t('ls.s' + s + '.tip')}`;
-  renderLessonCard();
-}
-function finalFromValueAt(pr, v) { const sc = [0, 0]; let filled = 0; pr.owners.forEach(o => { if (o >= 0) { sc[o]++; filled++; } }); const rem = pr.n * pr.n - filled; return [sc[0] + (rem + v) / 2, sc[1] + (rem - v) / 2]; }
-$('#lsHint').onclick = () => { if (!lesson || lesson.answered) return; lesson.hinted = true; $('#lsFb').innerHTML = t('ls.s' + (lesson.i + 1) + '.hint'); };
-$('#lsNext').onclick = () => {
-  if (!lesson || !lesson.answered) return;
-  if (lesson.k < 2) { lesson.k++; loadLessonProblem(); return; }
-  const n = lesson.results.filter(x => x).length;
-  const prog = lessonProgress(); prog[lesson.i] = Math.max(prog[lesson.i] || 0, n);
-  try { localStorage.setItem(LSTORE, JSON.stringify(prog)); } catch (e) {}
-  $('#ldTitle').textContent = n >= 2 ? t('ls.stepClear') : t('ls.almost');
-  $('#ldSub').innerHTML = t('ls.score', { n }) + (n >= 2 ? '' : t('ls.need'));
-  $('#btnLessonNextStep').classList.toggle('hidden', lesson.i + 1 >= lessonData.steps.length);
-  playChime(n >= 2 ? 1 : -1);
-  showLessonView('lessonDoneView'); $('#lessonOverlay').classList.add('show');
-};
-$('#lsQuit').onclick = () => endLesson();
-function endLesson(silent) {
-  if (!lesson) return;
-  lesson = null; document.body.classList.remove('in-lesson');
-  if (!silent) restoreGame();
-}
-
-// ====================================================================== puzzles
-let puzzleData = null;
-const puzzlesReady = fetch('puzzles.json').then(r => r.json()).then(d => (puzzleData = d)).catch(e => { console.warn(e); return null; });
-function puzzleProgress() { try { return JSON.parse(localStorage.getItem(PSTORE) || '{}'); } catch (e) { return {}; } }
-let pzLevelIdx = 0;
-async function openPuzzles() {
-  await puzzlesReady; selTab('puzzle');
-  if (!puzzleData) { toast(t('pz.fail2')); return; }
-  const prog = puzzleProgress();
-  const dl = dailyPick(), di = dailyInfo();
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.level', { n: dl.li + 1 })} · ${t('pz.lvdesc')[dl.li + 1]} · ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + puzzleData.levels.map((lv, i) => {
-    const solved = lv.puzzles.filter((_, k) => prog[i + '-' + k]).length;
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.level', { n: i + 1 })}</b><small>${t('pz.lvdesc')[i + 1]}</small></span><span class="st ${solved === lv.puzzles.length ? 'clear' : ''}">${t('pz.solvedCount', { n: solved, t: lv.puzzles.length })}</span></button>`;
-  }).join('');
-  $('#pzLevels').querySelectorAll('button').forEach(b => b.onclick = () => {
-    if (b.dataset.daily) { const d = dailyPick(); $('#puzzleOverlay').classList.remove('show'); startPuzzle(d.li, d.k, d.date); }
-    else openPzGrid(+b.dataset.i);
-  });
-  $('#pzListView').classList.remove('hidden'); $('#pzGridView').classList.add('hidden');
-  $('#puzzleOverlay').classList.add('show');
-}
-function openPzGrid(i) {
-  pzLevelIdx = i;
-  const prog = puzzleProgress();
-  $('#pzLevelTitle').textContent = t('pz.level', { n: i + 1 }) + ' · ' + t('pz.lvdesc')[i + 1];
-  $('#pzGrid').innerHTML = puzzleData.levels[i].puzzles.map((_, k) => `<button data-k="${k}" class="${prog[i + '-' + k] ? 'solved' : ''}">${k + 1}</button>`).join('');
-  $('#pzGrid').querySelectorAll('button').forEach(b => b.onclick = () => { $('#puzzleOverlay').classList.remove('show'); startPuzzle(i, +b.dataset.k); });
-  $('#pzListView').classList.add('hidden'); $('#pzGridView').classList.remove('hidden');
-}
-$('#pzClose').onclick = () => $('#puzzleOverlay').classList.remove('show');
-$('#pzBack').onclick = () => openPuzzles();
-function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
-// switch tabs without the fade so the two lists feel like one screen
-function swapOverlay(from, to, open) {
-  const a = $(from), b = $(to);
-  a.classList.add('instant'); b.classList.add('instant');
-  a.classList.remove('show'); open();
-  requestAnimationFrame(() => requestAnimationFrame(() => { a.classList.remove('instant'); b.classList.remove('instant'); }));
-}
-document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) swapOverlay('#lessonOverlay', '#puzzleOverlay', openPuzzles);
-  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) swapOverlay('#puzzleOverlay', '#lessonOverlay', openLessons);
-}));
-$('#btnPuzzle').onclick = openPuzzles;
-$('#btnLesson').onclick = openLessons;
-function startPuzzle(li, k, daily) {
-  endLesson(true);
-  const pz = puzzleData.levels[li].puzzles[k];
-  enterSetup({ edges: pz.edges, owners: pz.owners }, pz.n);
-  puzzle = { li, k, pz, state: 'play', waiting: false, first: true, daily: daily || null, hint: false };
-  document.body.classList.add('in-puzzle');
-  refresh(false);
-  renderPuzzleCard(t('pz.start'));
-}
-function renderPuzzleCard(status) {
-  const P = puzzle;
-  $('#pzStep').textContent = (P.daily ? `★ ${t('daily.title')} ${P.daily.slice(5).replace('-', '/')} · ` : '') + t('pz.level', { n: P.li + 1 }) + ' · ' + t('pz.num', { k: P.k + 1 });
-  $('#pzTitle').textContent = t('pz.title');
-  $('#pzGoal').innerHTML = t('pz.goal', { a: P.pz.target[0], b: P.pz.target[1] });
-  if (status !== undefined) $('#pzStatus').innerHTML = status;
-  const lv = puzzleData.levels[P.li];
-  $('#pzNext').disabled = P.k + 1 >= lv.puzzles.length && P.li + 1 >= puzzleData.levels.length;
-}
-function puzzleFail(e, v, bestE) {
-  const P = puzzle; P.state = 'fail';
-  const fin = finalFromValue(v);
-  hintEdge = bestE; badEdge = e; renderBoard(false); playWrong();
-  renderPuzzleCard(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: edgeName(e), a: fin[0], b: fin[1] })}`);
-}
-async function puzzleHumanMove(e) {
-  const P = puzzle; if (P.state !== 'play' || P.waiting) return;
-  let v, best, bestE;
-  if (P.first) { const vals = new Map(P.pz.values); v = vals.get(e); best = P.pz.values[0][1]; bestE = P.pz.best; }
-  else {
-    P.waiting = true; renderInfo();
-    const tok = busy;
-    const r = await askAna('solve', 8000);
-    if (tok !== busy || puzzle !== P) return;
-    P.waiting = false;
-    if (!r.list) { v = 0; best = 0; }
-    else { const m = new Map(r.list.map(x => [x.m, x.v])); v = m.get(e); best = Math.max(...r.list.map(x => x.v)); bestE = r.list.find(x => x.v === best).m; }
-  }
-  if (v < best) { puzzleFail(e, v, bestE); return; }
-  P.first = false;
-  applyMove(e, true);
-  if (S.over) return puzzleDone();
-  renderPuzzleCard(`<b class="ok">${t('pz.good')}</b>`);
-  puzzleAfterMove();
-}
-function puzzleAfterMove() {
-  const P = puzzle; if (!P) return;
-  if (S.over) return puzzleDone();
-  if (P.state === 'answer') return answerStep();
-  if (S.turn === 1) { renderPuzzleCard(t('pz.opp')); aiTurn(); }
-  else if (!P.first) renderPuzzleCard(`<b class="ok">${t('pz.good')}</b> ${t('yourTurn')}`);
-}
-function puzzleDone() {
-  const P = puzzle; if (!P) return;
-  if (P.state === 'answer') { renderPuzzleCard(t('pz.answerDone') + '<br>' + t('pz.final', { a: S.scores[0], b: S.scores[1] })); P.state = 'done'; return; }
-  P.state = 'solved';
-  const prog = puzzleProgress(); prog[P.li + '-' + P.k] = 1;
-  try { localStorage.setItem(PSTORE, JSON.stringify(prog)); } catch (e) {}
-  if (P.daily) dailySolved(P.daily, P.hint);
-  playChime(1); coach(t('pz.solved'), 'gold', 1800);
-  renderPuzzleCard(`<b class="ok">${t('pz.solved')}</b> ${t('pz.final', { a: S.scores[0], b: S.scores[1] })}` + (P.daily ? `<br>★ ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
-}
-function answerStep() {
-  const P = puzzle; if (!P || P.state !== 'answer') return;
-  if (S.over) return puzzleDone();
-  const tok = busy;
-  if (game.moves.length === 0) { setTimeout(() => { if (tok !== busy) return; applyMove(P.pz.best, true); answerStep(); }, 500); return; }
-  aiPending = true; renderInfo();
-  askAI(8).then(r => { if (tok !== busy) return; setTimeout(() => { if (tok !== busy) return; aiPending = false; applyMove(r.move, true); answerStep(); }, 420); });
-}
-$('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hint; startPuzzle(puzzle.li, puzzle.k, puzzle.daily); puzzle.hint = h; } };
-$('#pzAnswer').onclick = () => {
-  if (!puzzle) return;
-  const P = puzzle; startPuzzle(P.li, P.k, P.daily); puzzle.state = 'answer'; puzzle.hint = true;
-  hintEdge = puzzle.pz.best; renderBoard(false);
-  renderPuzzleCard(t('pz.showing')); answerStep();
-};
-$('#pzHint').onclick = () => { if (!puzzle) return; puzzle.hint = true; renderPuzzleCard(t('pz.hintText', { t: t('tag.' + puzzle.pz.tag) })); };
-$('#pzNext').onclick = () => {
-  if (!puzzle) return; const P = puzzle, lv = puzzleData.levels[P.li];
-  if (P.k + 1 < lv.puzzles.length) startPuzzle(P.li, P.k + 1);
-  else if (P.li + 1 < puzzleData.levels.length) startPuzzle(P.li + 1, 0);
-};
-$('#pzQuit').onclick = () => endPuzzle();
-function endPuzzle(silent) {
-  if (!puzzle) return;
-  puzzle = null; document.body.classList.remove('in-puzzle');
-  if (!silent) restoreGame();
-}
 
 // ====================================================================== post-game review
 let rv = null;        // { key, n, items[], mover[], sc[][], done, total, running, ws[] }
@@ -1699,36 +1603,6 @@ $('#pasteOk').onclick = () => {
   openLoaded(d, ply);
 };
 
-// ====================================================================== daily puzzle
-const DAILY_STORE = 'dots-daily-v1';
-let daily = { last: '', streak: 0, best: 0, days: {} };
-try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
-const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-// Mon–Tue 3×3, Wed–Thu 4×4, Fri–Sun 5×5; the first day of each pair takes the easier half of the set, Sunday the hardest third
-function dailyPick() {
-  if (!puzzleData || puzzleData.levels.length < 3) return null;
-  const now = new Date(), date = ymd(now);
-  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
-  const wd = (now.getDay() + 6) % 7;   // Mon = 0 … Sun = 6
-  const li = wd <= 1 ? 0 : wd <= 3 ? 1 : 2;
-  const cnt = puzzleData.levels[li].puzzles.length, half = Math.ceil(cnt / 2);
-  const [lo, hi] = wd === 6 ? [Math.floor(cnt * 2 / 3), cnt] : wd % 2 === 0 ? [0, half] : [half - 1, cnt];
-  let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15;
-  return { date, li, k: lo + h % (hi - lo), wd };
-}
-function dailyInfo() {
-  const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
-  const alive = daily.last === today || daily.last === ymd(y);
-  return { streak: alive ? daily.streak : 0, best: daily.best || 0, today: !!daily.days[today] };
-}
-function dailySolved(date, hinted) {
-  if (daily.days[date]) return;
-  const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
-  daily.streak = daily.last === ymd(y) ? daily.streak + 1 : 1;
-  daily.last = date; daily.best = Math.max(daily.best || 0, daily.streak); daily.days[date] = hinted ? 'h' : 1;
-  try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
-}
-
 // clicking the dimmed area outside a dialog does the same as its close button
 function dismissOverlay(o) {
   const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose' };
@@ -1764,12 +1638,12 @@ $('#langSel').onchange = e => {
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderBoard(false); renderInfo(); renderReview();
   if ($('#newOverlay').classList.contains('show')) segSync();
-  if (lesson) { renderLessonCard(); $('#lsFb').innerHTML = ''; }
-  if (puzzle) renderPuzzleCard(t('pz.start'));
-  if ($('#lessonOverlay').classList.contains('show') && !$('#lessonListView').classList.contains('hidden')) openLessons();
-  if ($('#lessonOverlay').classList.contains('show') && !$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx);
-  if ($('#puzzleOverlay').classList.contains('show')) openPuzzles();
+  rulesOfferSync();
+  learnLangChanged();
 };
+learnInit();
+function rulesOfferSync() { let n = 0; try { n = Object.keys(JSON.parse(localStorage.getItem('dots-rules-v1') || '{}')).length; } catch (e) {} $('#rulesOffer').classList.toggle('hidden', n >= 7); }
+rulesOfferSync();
 refresh(false);
 if (loadFromHash()) { /* a shared game opens in 2-player mode */ }
 else if (hadSave && game.moves.length && !S.over) { toast(t('saved'), 1400); next(); }

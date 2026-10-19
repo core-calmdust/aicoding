@@ -42,7 +42,10 @@ function geom(R, C) {
     perms.push(p); inv.push(q);
   }
   const NS = perms.length;
-  const rnd = xorshift(0x9e3779b9 ^ (R * 131 + C * 7));
+  // Zobrist keys from a non-linear generator (splitmix32). xorshift is linear over GF(2): all its outputs lie in a
+  // 32-dimensional space, so XOR hashes of different edge sets collided and corrupted the transposition table.
+  let sm = (0x9e3779b9 ^ (R * 131 + C * 7)) >>> 0;
+  const rnd = () => { sm = (sm + 0x9e3779b9) >>> 0; let z = sm; z = Math.imul(z ^ (z >>> 16), 0x85ebca6b); z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35); return (z ^ (z >>> 16)) | 0; };
   const z1 = new Int32Array(E), z2 = new Int32Array(E);
   for (let e = 0; e < E; e++) { z1[e] = rnd(); z2[e] = rnd(); }
   const ZS1 = new Int32Array(NS * E), ZS2 = new Int32Array(NS * E);
