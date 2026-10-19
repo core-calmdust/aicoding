@@ -342,6 +342,7 @@ body.night .node.cleared{background:linear-gradient(180deg,var(--surface),color-
 
 /* ---------- game ---------- */
 #game.on{display:grid;grid-template-columns:var(--bs) minmax(250px,310px);grid-template-areas:"bar side" "board side";grid-template-rows:auto auto;gap:12px 24px;justify-content:center;align-items:start}
+body:not(.compact) #game.on{min-height:calc(100vh - var(--hh) - env(safe-area-inset-top) - 32px);min-height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - 32px);align-content:center}
 .gbar{grid-area:bar;display:flex;align-items:center;gap:6px;min-width:0}
 .gbar .ib{background:var(--chip);box-shadow:0 2px 8px rgba(90,60,120,.08)}
 .gt{font-weight:900;font-size:16px;white-space:nowrap;overflow:hidden;min-width:0;display:flex;align-items:center;gap:6px;background:var(--chip);border-radius:99px;padding:5px 12px 5px 8px;box-shadow:0 2px 8px rgba(90,60,120,.08)}
