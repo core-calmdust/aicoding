@@ -161,7 +161,29 @@ class Pos {
 }
 
 // ---------------------------------------------------------------- evaluation (side to move's view)
+// learned evaluation (nine men's morris): 71 inputs (own / opponent pieces per point, pieces in hand, flying, placing) -> H ReLU -> 1
+let NET = null;
+function setNet(o) {
+  if (!o) { NET = null; return; }
+  const H = o.H, W1 = new Float32Array(71 * H);
+  for (let i = 0; i < 71; i++) for (let k = 0; k < H; k++) W1[i * H + k] = o.W1[i][k];
+  NET = { H, W1, b1: Float32Array.from(o.b1), W2: Float32Array.from(o.W2), b2: o.b2, scale: o.scale || 200, acc: new Float32Array(H) };
+}
+function netEval(pos) {
+  const N = NET, H = N.H, W1 = N.W1, acc = N.acc, b = pos.b, p = pos.side, o = 3 - p;
+  acc.set(N.b1);
+  const add = r => { const off = r * H; for (let k = 0; k < H; k++) acc[k] += W1[off + k]; };
+  for (let i = 0; i < 24; i++) { const v = b[i]; if (v === p) add(i); else if (v) add(24 + i); }
+  add(48 + pos.hand[p]); add(58 + pos.hand[o]);
+  if (!pos.hand[p] && pos.cnt[p] === 3) add(68);
+  if (!pos.hand[o] && pos.cnt[o] === 3) add(69);
+  if (pos.hand[p] || pos.hand[o]) add(70);
+  let out = N.b2; for (let k = 0; k < H; k++) { const a = acc[k]; if (a > 0) out += a * N.W2[k]; }
+  const v = Math.round(out * N.scale);
+  return v > 20000 ? 20000 : v < -20000 ? -20000 : v;
+}
 function evaluate(pos) {
+  if (NET && pos.G.name === 'nine') return netEval(pos);
   const G = pos.G, b = pos.b, p = pos.side, o = 3 - p, ms = G.mills;
   let s = 100 * ((pos.cnt[p] + pos.hand[p]) - (pos.cnt[o] + pos.hand[o]));
   const placing = pos.hand[1] > 0 || pos.hand[2] > 0;
@@ -214,6 +236,42 @@ function evaluate(pos) {
   return s;
 }
 
+// ---------------------------------------------------------------- endgame databases (nine men's morris, moving phase)
+// Solved by retrograde analysis (tools/mdb.c). Class m-o: side to move has m pieces, the opponent o.
+// Value byte: 0 draw, 1..127 the side to move wins in v plies, 128+k it loses in k plies.
+const EGDB = {};      // 'm-o' -> { dense: Uint8Array } | { idx: Uint32Array, val: Uint8Array }
+let egdbState = 0;    // 0 not loaded, 1 loading, 2 ready
+const CBN = []; for (let n = 0; n <= 24; n++) { CBN[n] = []; CBN[n][0] = 1; for (let k = 1; k <= n; k++) CBN[n][k] = CBN[n - 1][k - 1] + (k <= n - 1 ? CBN[n - 1][k] : 0); }
+function setEGDB(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'MDB1') return false;
+  let o = 4;
+  while (o + 8 <= u8.length) {
+    const m = u8[o], op = u8[o + 1], type = u8[o + 2], n = dv.getUint32(o + 4, true); o += 8;
+    if (type === 0) { EGDB[m + '-' + op] = { dense: u8.subarray(o, o + n) }; o += n; }
+    else { const idx = new Uint32Array(n); for (let i = 0; i < n; i++) idx[i] = dv.getUint32(o + i * 4, true); o += n * 4; EGDB[m + '-' + op] = { idx, val: u8.subarray(o, o + n) }; o += n; }
+  }
+  egdbState = 2; return true;
+}
+// raw value (see above) for the side to move, or -1 when the position is not covered
+function egdbProbe(pos) {
+  if (egdbState !== 2 || pos.G.name !== 'nine' || pos.hand[1] || pos.hand[2]) return -1;
+  const p = pos.side, m = pos.cnt[p], o = pos.cnt[3 - p], T = EGDB[m + '-' + o];
+  if (!T) return -1;
+  const b = pos.b; let ra = 0, rb = 0, ia = 0, ib = 0, j = 0;
+  for (let q = 0; q < 24; q++) {
+    const v = b[q];
+    if (v === p) { ia++; if (q >= ia) ra += CBN[q][ia]; }
+    else { if (v) { ib++; if (j >= ib) rb += CBN[j][ib]; } j++; }
+  }
+  const id = ra * CBN[24 - m][o] + rb;
+  if (T.dense) return T.dense[id];
+  let lo = 0, hi = T.idx.length - 1;
+  while (lo <= hi) { const mid = (lo + hi) >> 1, x = T.idx[mid]; if (x === id) return T.val[mid]; if (x < id) lo = mid + 1; else hi = mid - 1; }
+  return 0;
+}
+const egdbScore = (v, ply) => v === 0 ? 0 : v < 128 ? WIN - ply - v : -(WIN - ply - (v - 128));
+
 // ---------------------------------------------------------------- search
 const TT_BITS = 19, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
 const MAXPLY = 96;
@@ -257,6 +315,7 @@ class Engine {
     this.nodes++;
     const p = pos.side;
     if (pos.cnt[p] + pos.hand[p] < 3) return -(WIN - ply);
+    if (egdbState === 2 && !this.mate && !pos.hand[1] && !pos.hand[2]) { const dv = egdbProbe(pos); if (dv >= 0) return egdbScore(dv, ply); }
     const moves = this.buf[ply], n = pos.gen(moves);
     if (n === 0) return pos.cnt[1] + pos.cnt[2] === pos.G.n ? 0 : -(WIN - ply);
     let best = evaluate(pos);
@@ -287,6 +346,7 @@ class Engine {
       const ma = -(WIN - ply), mb = WIN - ply - 1;
       if (ma > alpha) { alpha = ma; if (alpha >= beta) return alpha; }
       if (mb < beta) { beta = mb; if (alpha >= beta) return beta; }
+      if (egdbState === 2 && !this.mate && !pos.hand[1] && !pos.hand[2]) { const dv = egdbProbe(pos); if (dv >= 0) return egdbScore(dv, ply); }
     }
     if (depth <= 0 || ply >= MAXPLY) return this.mate ? this.mateLeaf(pos, ply) : this.qsearch(pos, alpha, beta, ply, 6);
     const idx = pos.h1 & TT_MASK; let ttm = -1;
@@ -533,12 +593,22 @@ function mill(variant, start, moves, n, defend) {
   });
 }
 
-const API = { mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
+const API = { setNet, setEGDB, egdbProbe, egdbReady: () => egdbState === 2, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.MorrisEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
+  const EGDB_URL = '';   // endgame databases: not shipped yet (set to 'mdb.bin.gz?v=1' to enable)
+  // the endgame databases are fetched on demand, the first time a game gets near the end of the moving phase
+  const wantDB = m => {
+    if (!EGDB_URL || egdbState || m.variant !== 'nine' || typeof fetch !== 'function' || typeof DecompressionStream !== 'function') return;
+    try { const { pos } = replay(m.variant, m.start, m.moves); if (pos.placing() || pos.cnt[1] + pos.cnt[2] > 12) return; } catch (e) { return; }
+    egdbState = 1;
+    fetch(EGDB_URL).then(r => { if (!r.ok) throw 0; return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); })
+      .then(b => { if (!setEGDB(b)) egdbState = 0; }).catch(() => { egdbState = 0; });
+  };
   self.onmessage = e => {
     const m = e.data;
+    if (m.type === 'think' || m.type === 'analyze') wantDB(m);
     try {
       if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.variant, m.start, m.moves, m.level) });
       else if (m.type === 'analyze') {
