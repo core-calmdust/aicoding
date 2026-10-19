@@ -134,6 +134,7 @@ a.snd.home{text-decoration:none}
 .pdisc{width:18px;height:18px;border-radius:50%;flex:none;display:inline-block;vertical-align:middle}
 .pdisc.p0{background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 35%,var(--gold3) 85%)}
 .pdisc.p1{background:radial-gradient(circle at 35% 30%,var(--onyx1),var(--onyx2) 40%,var(--onyx3) 85%);box-shadow:inset 0 0 0 1.5px rgba(205,210,220,.6)}
+.player .name .ns{display:none}
 .player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player .row{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:2px}
 .player .count{font-family:'Shippori Mincho B1',serif;font-size:32px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
@@ -343,6 +344,10 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 .paste-ta:focus{outline:none;border-color:var(--brass2)}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.03em}
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+/* phone landscape: jump between the board and the info panels below it */
+.scroll-jump{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:4px;z-index:30;padding:4px 12px;border-radius:999px;border:1px solid rgba(201,169,97,.55);background:rgba(12,20,18,.88);color:var(--accent);font-size:13px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+body.flat-geo .scroll-jump{display:block}
+body.flat-geo:is(.in-lesson,.in-puzzle) .scroll-jump{display:none}
 /* landscape tip */
 .lt-modal{width:min(360px,100%);text-align:center}
 html .lt-modal h2{text-align:center;margin-bottom:6px}
@@ -411,6 +416,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:5px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand players ctrl" "board board board" "ls ls ls" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
   .side, .side-in{display:contents}
   .board-area{grid-area:board;justify-self:center}
+  .frame{touch-action:pan-y}
   .brand{grid-area:brand;flex-direction:row;align-items:center;gap:8px;height:34px;padding:0 2px}
   .brand-l{min-width:0;flex:none}
   .brand h1{font-size:15px;letter-spacing:.02em;overflow:visible;flex:none}
@@ -446,6 +452,25 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .graph{height:56px;margin-top:6px}
   .info-line{display:none}
   .lesson-prompt{font-size:14px}.lesson-fb,.pz-status{font-size:13.5px}
+  .player .name .nl{display:none}
+  .player .name .ns{display:inline}
+  /* lessons / puzzles: the problem card becomes a slim strip in the top row, so the problem text and the whole board are visible together */
+  body:is(.in-lesson,.in-puzzle) .app{grid-template-areas:"brand ls ls" "board board board" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
+  body:is(.in-lesson,.in-puzzle) .players{display:none}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{display:grid;grid-area:ls;align-self:start;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;grid-template-areas:"lh a1 a2" "pr pr pr" "ch ch ch" "fb fb fb";column-gap:6px;align-items:center;padding:5px 8px 5px 10px;max-height:calc(var(--vh) * .36);overflow-y:auto;scrollbar-width:thin;border-radius:10px}
+  :is(.lesson-card,.puzzle-card) .lh{grid-area:lh}
+  :is(.lesson-card,.puzzle-card) .lt{font-size:11px}
+  :is(.lesson-card,.puzzle-card) h3{display:none}
+  body:is(.in-lesson,.in-puzzle) .brand-l{display:none}
+  .lesson-card.answered .lesson-prompt{display:none}
+  :is(.lesson-card,.puzzle-card) :is(.choices,.lesson-fb,.pz-status):empty{display:none}
+  .lesson-card .lesson-prompt, .puzzle-card .pz-goal{grid-area:pr;font-size:14px;line-height:1.45;margin:2px 0 0;padding:2px 8px}
+  .lesson-card .choices{grid-area:ch;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+  .lesson-card .choices button{font-size:14px;padding:5px 10px;flex:1 1 auto}
+  .lesson-card .lesson-fb, .puzzle-card .pz-status{grid-area:fb;font-size:14px;line-height:1.55;margin-top:4px;min-height:0}
+  :is(.lesson-card,.puzzle-card) .lesson-actions{grid-area:a1;flex-direction:row;gap:4px;margin:0}
+  .puzzle-card .lesson-actions + .lesson-actions{grid-area:a2;margin-top:0}
+  :is(.lesson-card,.puzzle-card) .lesson-actions button{flex:none;padding:5px 9px;font-size:12px;border-radius:8px;min-width:0}
 }
 /* forced landscape (CSS-rotated app on a portrait phone): same rules as phone landscape */
 @media (pointer: coarse){
@@ -455,6 +480,8 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:5px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand players ctrl" "board board board" "ls ls ls" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
   html.rot .side, html.rot .side-in{display:contents}
   html.rot .board-area{grid-area:board;justify-self:center}
+  html.rot .frame{touch-action:none}
+  html.rot body{touch-action:none}
   html.rot .brand{grid-area:brand;flex-direction:row;align-items:center;gap:8px;height:34px;padding:0 2px}
   html.rot .brand-l{min-width:0;flex:none}
   html.rot .brand h1{font-size:15px;letter-spacing:.02em;overflow:visible;flex:none}
@@ -490,6 +517,25 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html.rot .graph{height:56px;margin-top:6px}
   html.rot .info-line{display:none}
   html.rot .lesson-prompt{font-size:14px}html.rot .lesson-fb, html.rot .pz-status{font-size:13.5px}
+  html.rot .player .name .nl{display:none}
+  html.rot .player .name .ns{display:inline}
+  /* lessons / puzzles: the problem card becomes a slim strip in the top row, so the problem text and the whole board are visible together */
+  html.rot body:is(.in-lesson,.in-puzzle) .app{grid-template-areas:"brand ls ls" "board board board" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
+  html.rot body:is(.in-lesson,.in-puzzle) .players{display:none}
+  html.rot body.in-lesson .lesson-card, html.rot body.in-puzzle .puzzle-card{display:grid;grid-area:ls;align-self:start;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;grid-template-areas:"lh a1 a2" "pr pr pr" "ch ch ch" "fb fb fb";column-gap:6px;align-items:center;padding:5px 8px 5px 10px;max-height:calc(var(--vh) * .36);overflow-y:auto;scrollbar-width:thin;border-radius:10px}
+  html.rot :is(.lesson-card,.puzzle-card) .lh{grid-area:lh}
+  html.rot :is(.lesson-card,.puzzle-card) .lt{font-size:11px}
+  html.rot :is(.lesson-card,.puzzle-card) h3{display:none}
+  html.rot body:is(.in-lesson,.in-puzzle) .brand-l{display:none}
+  html.rot .lesson-card.answered .lesson-prompt{display:none}
+  html.rot :is(.lesson-card,.puzzle-card) :is(.choices,.lesson-fb,.pz-status):empty{display:none}
+  html.rot .lesson-card .lesson-prompt, html.rot .puzzle-card .pz-goal{grid-area:pr;font-size:14px;line-height:1.45;margin:2px 0 0;padding:2px 8px}
+  html.rot .lesson-card .choices{grid-area:ch;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+  html.rot .lesson-card .choices button{font-size:14px;padding:5px 10px;flex:1 1 auto}
+  html.rot .lesson-card .lesson-fb, html.rot .puzzle-card .pz-status{grid-area:fb;font-size:14px;line-height:1.55;margin-top:4px;min-height:0}
+  html.rot :is(.lesson-card,.puzzle-card) .lesson-actions{grid-area:a1;flex-direction:row;gap:4px;margin:0}
+  html.rot .puzzle-card .lesson-actions + .lesson-actions{grid-area:a2;margin-top:0}
+  html.rot :is(.lesson-card,.puzzle-card) .lesson-actions button{flex:none;padding:5px 9px;font-size:12px;border-radius:8px;min-width:0}
 }
 @media (min-height: 561px){
 @container (min-width: 420px){
@@ -781,6 +827,7 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
     </div>
   </div>
 </div>
+<button id="scrollJump" class="scroll-jump" type="button"></button>
 <!-- one-time landscape tip (phones) -->
 <div class="overlay" id="landTipOverlay">
   <div class="modal lt-modal">

@@ -99,6 +99,7 @@ function matchOver() {
 }
 function isAI(s) { if (lesson || puzzle) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && s !== humanSide); }
 function levelFor(s) { return settings.mode === 'watch' ? (s === 0 ? settings.level : settings.level2) : settings.level; }
+const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 function playerName(s) {
   if (puzzle || lesson) return s === (lesson || puzzle).side ? t('you') : '';
   if (settings.mode === 'pvp') return '';
@@ -193,14 +194,28 @@ const SFX = {
 const G = { W: 15.85, H: 12, LX: 0.5, BX: 6.5, B: 1.2, RX: 7.7, RE: 13.7, TX: 14.05, TW: 1.3, TOP: 0.5, BOT: 11.5, MID: 6, C: 0.94, PL: 4.6, FLAT: false };
 // phone landscape uses a flatter board (shorter points, stacks compress earlier) so it can span the full width;
 // its height (in board units) is fitted to the space left under the slim top row
-function setGeom(flat, h) {
-  G.FLAT = flat; G.H = flat ? h : 12; G.BOT = G.H - 0.5; G.MID = G.H / 2; G.PL = (G.MID - G.TOP) * 0.836;
-  if (flat) document.documentElement.style.setProperty('--gh', h.toFixed(3)); else document.documentElement.style.removeProperty('--gh');
+function setGeom(flat, h, u) {
+  G.FLAT = flat; document.body.classList.toggle('flat-geo', flat); G.H = flat ? h : 12; G.BOT = G.H - 0.5; G.MID = G.H / 2; G.PL = (G.MID - G.TOP) * 0.836;
+  const st = document.documentElement.style;
+  if (flat) { st.setProperty('--gh', h.toFixed(3)); if (u) { st.setProperty('--u', u.toFixed(2) + 'px'); st.setProperty('--fw', (u * 15.85).toFixed(1) + 'px'); st.setProperty('--fh', (u * h).toFixed(1) + 'px'); } }
+  else for (const k of ['--gh', '--u', '--fw', '--fh']) st.removeProperty(k);
 }
-function flatH() {
+// flat geometry: the board spans the width; its height (board units) fits the space under the top row, which may be
+// a taller lesson / puzzle strip — then the board also gets narrower (u) so it still fits without scrolling
+function flatFit() {
   const w = ROT ? innerHeight : innerWidth, hgt = ROT ? innerWidth : innerHeight;
-  const u = Math.min((w - 12) / 15.85, 60), avail = hgt - 34 - 4 - 5 - 6;
-  return Math.max(6.4, Math.min(10, avail / u));
+  let top = 34;
+  const app = document.querySelector('.app');
+  if (app && typeof lrect === 'function') {
+    const a0 = lrect(app).top;
+    for (const sel of ['.brand', '.players', '.controls', '#lessonCard', '#puzzleCard']) {
+      const el = document.querySelector(sel);
+      if (el && el.offsetParent && getComputedStyle(el).display !== 'none') { const r = lrect(el); if (r.height) top = Math.max(top, r.top - a0 + r.height); }
+    }
+  }
+  const avail = hgt - top - 4 - 5 - 6;
+  const u = Math.min((w - 12) / 15.85, avail / 6.4, 60);
+  return { h: Math.max(6.4, Math.min(10, avail / u)), u };
 }
 const frameEl = $('#frame'), ckLayer = $('#ckLayer'), dstLayer = $('#dstLayer'), diceLayer = $('#diceLayer'), glowLayer = $('#glowLayer'), lblLayer = $('#lblLayer'), cubeEl = $('#cube'), arrowsEl = $('#arrows'), bbtns = $('#bbtns');
 const uPx = () => frameEl.clientWidth / G.W;
@@ -213,7 +228,10 @@ function slotX(vp) {
   return G.RX + (vp - 19) + 0.5;
 }
 function stackStep(n) { const avail = G.FLAT ? G.MID - G.TOP - 0.12 : 5 * G.C; return n <= 1 ? G.C : Math.min(G.C, (avail - G.C) / (n - 1)); }
+// flat board: how many checkers of a stack are drawn (the rest sit under the bottom one; the top shows the count)
+function stackCap() { return G.FLAT ? Math.max(2, Math.floor((G.MID - G.TOP - 0.12 - G.C) / (G.C * 0.7)) + 1) : 99; }
 function slotXY(vp, k, n) {
+  const cap = stackCap(); if (n > cap) { k = Math.max(0, k - (n - cap)); n = cap; }
   const st = stackStep(n);
   if (vp >= 13) return [slotX(vp), G.TOP + G.C / 2 + k * st];
   return [slotX(vp), G.BOT - G.C / 2 - k * st];
@@ -317,7 +335,7 @@ function renderCheckers(p, opts) {
         el.dataset.s = s; el.dataset.p = pt; el.dataset.k = k;
         el.style.left = U(x); el.style.top = U(y);
         if (k === n - 1) {
-          if (n > 5 || (pt === 25 && n > 1)) el.innerHTML = `<b>${n}</b>`;
+          if (n > Math.min(5, pt === 25 ? 99 : stackCap()) || (pt === 25 && n > 1)) el.innerHTML = `<b>${n}</b>`;
           if (movable.has(s * 100 + pt)) el.classList.add('movable');
           if (opts.sel && opts.sel.s === s && opts.sel.p === pt) el.classList.add('sel');
           if (last.has(s * 100 + pt)) el.classList.add('last');
@@ -657,6 +675,40 @@ const endDrag = e => {
 };
 frameEl.addEventListener('pointerup', endDrag);
 frameEl.addEventListener('pointercancel', e => { if (drag) { drag = null; render(); } });
+// Phone landscape: the board lets vertical swipes scroll the page (touch-action: pan-y), except while a checker is
+// being dragged — then the first touchmove is cancelled so the drag keeps the gesture.
+frameEl.addEventListener('touchmove', e => { if (drag && e.cancelable) e.preventDefault(); }, { passive: false });
+// Rotated page (CSS-rotated body): native scrolling cannot follow the rotated axis, so swipes are turned into
+// scrolling of the nearest scrollable element (or the page) in the page's own frame, with a little momentum.
+(() => {
+  let sc = null, last = null, vy = 0, moved = false, raf = 0, start = null;
+  const scroller = el => {
+    for (; el && el !== document.body; el = el.parentElement) {
+      const cs = getComputedStyle(el);
+      if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) return el;
+    }
+    return document.body;
+  };
+  addEventListener('touchstart', e => {
+    cancelAnimationFrame(raf);
+    if (!ROT || e.touches.length !== 1) { sc = null; return; }
+    const t = e.touches[0]; sc = scroller(e.target); last = lp(t); start = last; vy = 0; moved = false;
+  }, { passive: true, capture: true });
+  addEventListener('touchmove', e => {
+    if (!ROT || !sc || e.touches.length !== 1) return;
+    if (drag) { sc = null; return; }                       // a checker drag owns this gesture
+    const p = lp(e.touches[0]), dy = p[1] - last[1];
+    if (!moved) { const tx = Math.abs(p[0] - start[0]), ty = Math.abs(p[1] - start[1]); if (ty < 6 || ty < tx) return; moved = true; }
+    if (e.cancelable) e.preventDefault();
+    sc.scrollTop -= dy; vy = 0.8 * vy + 0.2 * dy; last = p;
+  }, { passive: false, capture: true });
+  addEventListener('touchend', () => {
+    if (!ROT || !sc || !moved) { sc = null; return; }
+    const el = sc; sc = null;
+    const step = () => { if (Math.abs(vy) < 0.4) return; el.scrollTop -= vy; vy *= 0.94; raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }, { capture: true });
+})();
 
 // ====================================================================== on-board buttons
 function setButtons(list, side, own) {
@@ -974,7 +1026,10 @@ function renderInfo() {
   const sc = gm.start;
   for (const s of [0, 1]) {
     const nm = playerName(s);
-    $('#name' + s).textContent = nm ? nm + ' · ' + pname(s) : pname(s);
+    const full = nm ? nm + ' · ' + pname(s) : pname(s);
+    const short = (lesson || puzzle) ? (nm || pname(s)) : settings.mode === 'pvp' ? pname(s) : isAI(s) ? `AI Lv${levelFor(s)}` : t('you');
+    $('#name' + s).innerHTML = `<span class="nl">${esc(full)}</span><span class="ns">${esc(short)}</span>`;
+    $('#pl' + s).title = full;
     $('#pip' + s).textContent = BG.pips(st.pos, s);
     $('#score' + s).innerHTML = match.len ? `${sc[s]}<small>/${match.len}</small>` : (match.games.length > 1 || st.over ? `${scoreAfterShown(g, a)[s]}<small> ${t('pt')}</small>` : '');
     const el = $('#pl' + s);
@@ -1265,9 +1320,9 @@ const mqLandPhone = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) an
 let geomReady = false;
 // flat board in any phone-landscape layout (physical landscape or the rotated page)
 function updateGeom() {
-  const flat = ROT || mqLandPhone.matches, h = flat ? flatH() : 12;
-  if (flat === G.FLAT && Math.abs(h - G.H) < 0.05 && geomReady) return;
-  setGeom(flat, h);
+  const flat = ROT || mqLandPhone.matches, f = flat ? flatFit() : { h: 12, u: 0 };
+  if (flat === G.FLAT && Math.abs(f.h - G.H) < 0.05 && Math.abs(f.u - (G.U || 0)) < 0.3 && geomReady) return;
+  G.U = f.u; setGeom(flat, f.h, f.u);
   if (geomReady) { try { drawBoardSvg(); render(); } catch (e) {} }
 }
 function applyLand() {
@@ -1277,6 +1332,7 @@ function applyLand() {
 }
 (mqLandPhone.addEventListener ? mqLandPhone.addEventListener('change', updateGeom) : mqLandPhone.addListener(updateGeom));
 addEventListener('resize', () => { if (G.FLAT || mqLandPhone.matches) updateGeom(); });
+if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (G.FLAT) requestAnimationFrame(updateGeom); }); for (const sel of ['#lessonCard', '#puzzleCard', '.brand', '.players']) { const el = document.querySelector(sel); if (el) ro.observe(el); } }
 async function setLand(on) {
   landOn = on; try { localStorage.setItem(LAND_STORE, on ? '1' : '0'); } catch (e) {}
   if (on) {
@@ -1303,6 +1359,25 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 // (the rotated body itself scrolls vertically in its own frame; only sideways shifts are undone)
 for (const el of [document.documentElement, document.body]) el.addEventListener('scroll', () => { if (!ROT) return; if (el.scrollLeft) el.scrollLeft = 0; if (el === document.documentElement && el.scrollTop) el.scrollTop = 0; });
 applyLand();
+// ---- phone landscape: "▼ Info" / "▲ Board" jump button (the panels sit below the full-width board)
+(() => {
+  const btn = $('#scrollJump');
+  const scroller = () => ROT ? document.body : document.scrollingElement;
+  const atTop = () => scroller().scrollTop < 60;
+  const upd = () => {
+    btn.textContent = atTop() ? '▼ ' + t('land.info') : '▲ ' + t('land.board');
+    // in the rotated page, fixed elements live inside the (scrolling) rotated body: keep the button at its bottom edge
+    if (ROT) { const b = document.body; btn.style.bottom = 'auto'; btn.style.top = (b.scrollTop + b.clientHeight - btn.offsetHeight - 4) + 'px'; }
+    else { btn.style.top = ''; btn.style.bottom = ''; }
+  };
+  btn.onclick = () => {
+    const sc = scroller();
+    if (atTop()) { const tgt = document.querySelector('.hint-card.show, .review-card.show') || $('#evalCard'); const top = lrect(tgt).top - lrect(document.querySelector('.app')).top - 8; sc.scrollTo({ top, behavior: 'smooth' }); }
+    else sc.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  addEventListener('scroll', upd, { passive: true }); document.body.addEventListener('scroll', upd, { passive: true });
+  setInterval(upd, 1000); upd();
+})();
 // ---- one-time tip for phone users in portrait: landscape play is available (queued behind any open dialog)
 const LAND_TIP = STORE + '-landtip';
 function landTipWanted() { return !landOn && mqCoarse.matches && mqPortrait.matches; }   // shown on every visit in portrait (once per page load)
@@ -1673,8 +1748,8 @@ function setupProblem(p, side, dice) {
 // shownState() for special modes uses turn.pos; the cube/scores come from the dummy match
 function problemPoints(n, rank) { if (n <= 1 || rank === 0) return 20; return Math.max(0, Math.round(20 * (n - 1 - rank) / (n - 1))); }
 function miniBoardSVG(p, side, opts) {   // always drawn with the standard (tall) geometry
-  const flat = G.FLAT, fh = G.H; if (flat) setGeom(false);
-  try { return miniBoardSVG0(p, side, opts); } finally { if (flat) setGeom(true, fh); }
+  const flat = G.FLAT, fh = G.H, fu = G.U; if (flat) setGeom(false);
+  try { return miniBoardSVG0(p, side, opts); } finally { if (flat) setGeom(true, fh, fu); }
 }
 function miniBoardSVG0(p, side, opts) {
   opts = opts || {};
@@ -1938,6 +2013,7 @@ function lessonSubmit(tt) {
 }
 function renderLessonFb() {
   const P = lessonProblem(), s = LESSONS.steps[lesson.step], F = lesson.fb;
+  $('#lessonCard').classList.toggle('answered', !!F);
   if (!F) { $('#lsFb').innerHTML = ''; return; }
   const lbl = F.pts === 20 ? 'fb.perfect' : F.pts >= 16 ? 'fb.good' : F.pts >= 10 ? 'fb.ng' : 'fb.bad';
   let h = `<span class="pts ${F.pts >= 16 ? 'ok' : F.pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: F.pts })}</span> <b class="${F.pts >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `;
