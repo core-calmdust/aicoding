@@ -1,21 +1,17 @@
-// Backgammon V2 — physically simulated dice (rigid bodies via cannon-es, drawn on a canvas in 3D)
+// Backgammon V2 — dice throws drawn in 3D on a canvas
 //
-// plan():   simulates the whole throw up front (fixed 1/120 s steps) until the dice come to rest, rejects throws that end
-//           cocked, stacked or off the board, then relabels each die's faces (a rotation of the standard die, so
-//           opposite faces still sum to 7 and the chirality is kept) so that the face that physically ended on top
-//           shows the rolled number. The recorded motion itself is never altered.
-// draw():   renders one recorded instant with a perspective camera from above: shaded faces with pips, and a soft
-//           shadow that is the projection of the cube onto the board from a fixed light.
+// plan():   lays out the whole throw before it is shown: each die drops from the hand, makes three bounces of decreasing
+//           height under constant gravity while tumbling, rolls over its edges, tips over and settles (see choreo()).
+//           The resting orientation is fixed first; the faces are then labelled (a rotation of the standard die, so
+//           opposite faces still sum to 7 and the chirality is kept) so the rolled number ends on top.
+// draw():   renders one instant with a camera above each die (so a die in the air looks bigger, and a resting die looks
+//           exactly like the flat dice of the page): shaded faces with pips, and a soft shadow that is the projection of
+//           the cube onto the board from a fixed light.
 // Units are board units (the page's --u); x to the right, y down the screen, z up out of the board.
 (function (root) {
   'use strict';
-  const C = root.CANNON;
   const A = 0.82, H = A / 2;                // die edge (matches .die in the CSS)
   const DT = 1 / 120;
-  const T = Object.assign({ g: 60, vx0: 6, vx1: 9.5, vy: 0.8, vyd: 0.22, off0: 0.25, off1: 0.45, ox0: 0.5, ox1: 0.9, w0: 6.2, w1: 14.3, wside: 0.4, wroll: 0.7, fr: 0.32, re: 0.42, ld: 0.06, ad: 0.12 }, root.DICE3D_TUNE || {});
-  // Gravity in board units / s^2. At this board's scale real gravity would be ~260; 60 is the same physics seen at about
-  // half speed (gravity, throw speed and spin are scaled together), so a throw lasts ~0.9–1.3 s and stays readable.
-  const GRAV = T.g;
 
   // ---- small vector / matrix helpers (3x3 row-major)
   const mul = (m, v) => [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[3] * v[0] + m[4] * v[1] + m[5] * v[2], m[6] * v[0] + m[7] * v[1] + m[8] * v[2]];
@@ -41,112 +37,150 @@
   const FACE_OF = v => FACES.find(f => f.v === v);
   const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 
-  // ---- physics
-  function randQuat(rnd) {   // uniform random orientation
-    const u1 = rnd(), u2 = rnd() * 2 * Math.PI, u3 = rnd() * 2 * Math.PI, a = Math.sqrt(1 - u1), b = Math.sqrt(u1);
-    return [a * Math.sin(u2), a * Math.cos(u2), b * Math.sin(u3), b * Math.cos(u3)];
+  // ---- quaternions [x, y, z, w]
+  const qmul = (a, b) => [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+    a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
+  const qaxis = (ax, ang) => { const s = Math.sin(ang / 2); return [ax[0] * s, ax[1] * s, ax[2] * s, Math.cos(ang / 2)]; };
+  const QP = Math.PI / 2;
+  // height of a cube's centre above the floor when it is turned by phi about a horizontal axis parallel to two faces
+  const support = phi => H * (Math.abs(Math.cos(phi)) + Math.abs(Math.sin(phi)));
+  // distance the centre travels while a cube rolls over its edges from phi = 0 to phi (continuous, A per quarter turn)
+  const rollDist = phi => { const q = phi / QP, k = Math.floor(q), f = (q - k) * QP; return k * A + H * (Math.sin(f) - Math.cos(f)) + H; };
+
+  // ---- one die's throw (choreographed, but every part follows simple mechanics):
+  //  * the lowest point of the die follows parabolas under one constant gravity: a drop from the hand, then exactly three
+  //    bounces whose heights fall by a constant ratio (h, r·h, r²·h) — so their durations go with √h;
+  //  * the centre sits on top of that lowest point (support height of the tilted cube), so the die never sinks into the felt;
+  //  * it tumbles steadily about the horizontal axis across its path; each impact slows the spin and the forward speed;
+  //  * after the last bounce it rolls over its edges — centre travel tied to the turned angle, no sliding — slows down,
+  //    tips over one last time (slow over the top, falling flat), and rocks back a little before resting.
+  // The resting orientation is fixed in advance and the turned angle is counted back from it, so the motion is continuous.
+  function choreo(o) {
+    const g = o.g, r = o.r, d = o.d, k = [-d[1], d[0], 0];          // k = z × d: turning about k rolls the top towards d
+    // drop from the hand: lowest point from z0 with upward speed vz0 until it touches the floor
+    const T0 = (o.vz0 + Math.sqrt(o.vz0 * o.vz0 + 2 * g * o.z0)) / g;
+    const hs = [o.h, o.h * r, o.h * r * r], vs = hs.map(h => Math.sqrt(2 * g * h)), Ts = vs.map(v => 2 * v / g);
+    const tImp = [T0, T0 + Ts[0], T0 + Ts[0] + Ts[1], T0 + Ts[0] + Ts[1] + Ts[2]];
+    const us = [o.u0, o.u0 * o.fu, o.u0 * o.fu * o.fu, o.u0 * Math.pow(o.fu, 3)];      // forward speed per flight
+    const ws = [o.w0, o.w0 * o.fw, o.w0 * o.fw * o.fw, o.w0 * Math.pow(o.fw, 3)];      // spin per flight
+    const tA = tImp[3];
+    // forward distance and turned angle at the end of each flight
+    const sAt = [0], thAt = [0];
+    const segs = [[0, T0], [T0, tImp[1]], [tImp[1], tImp[2]], [tImp[2], tImp[3]]];
+    segs.forEach(([a, b], i) => { sAt.push(sAt[i] + us[i] * (b - a)); thAt.push(thAt[i] + ws[i] * (b - a)); });
+    // on the floor: roll the rest of the current quarter (plus o.extra quarters) at the speed left after the last impact,
+    // then the final tip, slow over the top and falling flat
+    const wIn = ws[3] * o.fw, rem = o.rem, tRem = rem / wIn;
+    const wTip = wIn * 0.85, c = 0.3, tTip = QP * (1 + c) / wTip;
+    const Theta = thAt[4] + rem + QP;                                 // the angle at which the die lies flat for good
+    const tFlat = tA + tRem + tTip, tRock = 0.14, tEnd = tFlat + tRock;
+    const phiAt = t => {                                               // turned angle relative to the final orientation (≤ 0)
+      let th;
+      if (t <= tA) { let i = 0; while (i < 3 && t > segs[i][1]) i++; th = thAt[i] + ws[i] * (Math.max(segs[i][0], t) - segs[i][0]); }
+      else if (t <= tA + tRem) th = thAt[4] + wIn * (t - tA);
+      else { const s = Math.min(1, (t - tA - tRem) / tTip); th = thAt[4] + rem + QP * (s - c * Math.sin(2 * Math.PI * s) / (2 * Math.PI)); }
+      return th - Theta;
+    };
+    const phiA = phiAt(tA), sA = sAt[4];
+    const fwd = t => {                                                // distance along the path
+      if (t <= tA) { let i = 0; while (i < 3 && t > segs[i][1]) i++; return sAt[i] + us[i] * (t - segs[i][0]); }
+      return sA + rollDist(phiAt(Math.min(t, tFlat)) + 8 * QP) - rollDist(phiA + 8 * QP);
+    };
+    const sFlat = fwd(tFlat);
+    const low = t => {                                                // height of the lowest point
+      if (t < 0) return o.z0 + o.vz0 * t - g * t * t / 2;
+      if (t <= T0) return o.z0 + o.vz0 * t - g * t * t / 2;
+      for (let i = 0; i < 3; i++) if (t <= tImp[i + 1]) { const u = t - tImp[i]; return Math.max(0, vs[i] * u - g * u * u / 2); }
+      return 0;
+    };
+    // small wobble about the path direction and a slight turn about the vertical, both dying out before the die lands for the last time
+    const env = t => t >= tA ? 0 : Math.pow(1 - Math.max(0, t) / tA, 2);
+    const wob = t => o.wob * env(t) * Math.sin(2 * Math.PI * 2.2 * t + o.ph);
+    const yawW = t => o.yawW * env(t);
+    const Qf = qaxis([0, 0, 1], Math.atan2(d[1], d[0]) + o.yaw0);     // final orientation: lying flat, faces along the path
+    const at = t => {
+      let s, z, q;
+      if (t < tFlat) {
+        const phi = phiAt(t), w = wob(t);
+        s = t < 0 ? us[0] * t : fwd(t);
+        z = low(t) + support(phi) * (Math.abs(Math.cos(w)) + Math.abs(Math.sin(w)));
+        q = qmul(qaxis([0, 0, 1], yawW(t)), qmul(qaxis([d[0], d[1], 0], w), qmul(qaxis(k, phi), Qf)));
+      } else {                                                        // rocking back on the rear edge, twice, smaller each time
+        const u = Math.min(t, tEnd) - tFlat;
+        const rho = u < 0.08 ? 0.085 * Math.sin(Math.PI * u / 0.08) : 0.03 * Math.max(0, Math.sin(Math.PI * (u - 0.08) / 0.06));
+        s = sFlat - H + H * Math.cos(rho) - H * Math.sin(rho); z = H * Math.sin(rho) + H * Math.cos(rho);
+        q = qmul(qaxis(k, -rho), Qf);
+      }
+      const lat = o.curve * s * s;                                    // a slight curve
+      return [o.x0 + d[0] * s - d[1] * lat, o.y0 + d[1] * s + d[0] * lat, z, q];
+    };
+    const impacts = [[T0, Math.sqrt(o.vz0 * o.vz0 + 2 * g * o.z0)], ...vs.map((v, i) => [tImp[i + 1], v * r ** 0.5]), [tFlat, 1.2]];
+    return { at, tEnd, Qf, impacts, sEnd: sFlat };
   }
-  // one throw of the dice in `items` (all in the same half) — returns the recording and its quality
-  function simulate(items, rnd) {
-    const world = new C.World({ gravity: new C.Vec3(0, 0, -GRAV) });
-    world.broadphase = new C.NaiveBroadphase();
-    world.solver.iterations = 20;
-    world.allowSleep = false;
-    const mFloor = new C.Material('floor'), mWall = new C.Material('wall'), mDie = new C.Material('die');
-    world.addContactMaterial(new C.ContactMaterial(mFloor, mDie, { friction: T.fr, restitution: T.re }));   // felt
-    world.addContactMaterial(new C.ContactMaterial(mWall, mDie, { friction: 0.2, restitution: 0.55 }));     // wooden rim / bar
-    world.addContactMaterial(new C.ContactMaterial(mDie, mDie, { friction: 0.18, restitution: 0.5 }));
-    const floor = new C.Body({ mass: 0, material: mFloor, shape: new C.Plane() });
-    world.addBody(floor);
-    const it0 = items[0], hx0 = it0.hx0, hx1 = it0.hx1, dir = it0.dir;
-    const wl = new C.Body({ mass: 0, material: mWall, shape: new C.Plane() });      // normal +x at hx0
-    wl.quaternion.setFromEuler(0, Math.PI / 2, 0); wl.position.set(hx0, 0, 0); world.addBody(wl);
-    const wr = new C.Body({ mass: 0, material: mWall, shape: new C.Plane() });      // normal −x at hx1
-    wr.quaternion.setFromEuler(0, -Math.PI / 2, 0); wr.position.set(hx1, 0, 0); world.addBody(wr);
-    const outer = dir > 0 ? hx1 : hx0;
-    const spread = rnd() < 0.5 ? -1 : 1;
-    const hand = { y: (rnd() - 0.5) * 0.6, vx: T.vx0 + rnd() * (T.vx1 - T.vx0), vy: (rnd() - 0.5) * T.vy, z: 1.1 + rnd() * 0.9 };   // one throwing hand for both dice
-    const bodies = items.map((it, i) => {
-      const b = new C.Body({ mass: 1, material: mDie, shape: new C.Box(new C.Vec3(H, H, H)), linearDamping: T.ld, angularDamping: T.ad });
-      const off = items.length > 1 ? (i ? 1 : -1) * spread * (T.off0 + rnd() * (T.off1 - T.off0)) : 0;
-      const offx = items.length > 1 ? (i ? 1 : 0) * (T.ox0 + rnd() * (T.ox1 - T.ox0)) : 0;
-      b.position.set(outer - dir * (H + 0.08 + rnd() * 0.3 + offx), hand.y + off, hand.z + rnd() * 0.25);
-      const q = randQuat(rnd); b.quaternion.set(q[0], q[1], q[2], q[3]);
-      b.velocity.set(-dir * hand.vx * (0.92 + rnd() * 0.16), hand.vy + (rnd() - 0.5) * T.vyd, -1 + rnd() * 2.2);
-      const wx = (rnd() - 0.5) * T.wside, wy = -dir * (0.5 + rnd()) * T.wroll + (rnd() - 0.5) * T.wside, wz = (rnd() - 0.5) * T.wside, wn = Math.hypot(wx, wy, wz) || 1, w = T.w0 + rnd() * (T.w1 - T.w0);
-      b.angularVelocity.set(wx / wn * w, wy / wn * w, wz / wn * w);
-      b.impacts = [];
-      b.addEventListener('collide', e => {
-        const v = Math.abs(e.contact.getImpactVelocityAlongNormal());
-        if (v > 1.2) b.impacts.push([world.time, v]);
-      });
-      world.addBody(b);
-      return b;
-    });
-    const n = bodies.length, MAXT = 3.2, frames = [];
-    let still = 0, steps = 0;
-    const rec = () => { const f = new Float32Array(n * 7); bodies.forEach((b, i) => { f.set([b.position.x, b.position.y, b.position.z, b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w], i * 7); }); frames.push(f); };
-    rec();
-    while (steps * DT < MAXT) {
-      world.step(DT); steps++; rec();
-      const calm = bodies.every(b => b.velocity.length() < 0.05 && b.angularVelocity.length() < 0.2 && b.position.z < H + 0.03);
-      still = calm ? still + 1 : 0;
-      if (still >= 12) break;   // 0.1 s at rest
-    }
-    const rested = still >= 12;
-    const end = frames.length - 1;
-    const last = frames[end];
-    const rest = bodies.map((b, i) => {
-      const o = i * 7, m = qmat(last[o + 3], last[o + 4], last[o + 5], last[o + 6]);
-      // which body axis points up, and how well
-      let best = 0, axis = null;
-      for (let k = 0; k < 3; k++) { const c = m[6 + k]; if (Math.abs(c) > Math.abs(best)) { best = c; axis = k; } }
-      const up = [0, 0, 0]; up[axis] = Math.sign(best);
-      return { x: last[o], y: last[o + 1], z: last[o + 2], flat: Math.abs(best) > 0.996, up, m };
-    });
-    return { frames, rest, rested, dur: end * DT, impacts: bodies.map(b => b.impacts), dir, hx0, hx1 };
-  }
-  // Is the recording usable once moved by dy along the board (which is a symmetry of the simulation: there are no walls
-  // along y)? Returns the shift or null.
-  function accept(rec, yMid, yMin, yMax, band) {
-    if (!rec.rested || rec.dur < 0.85 || rec.dur > 1.9) return null;
-    if (!rec.rest.every(r => r.flat && r.z < H + 0.03)) return null;
-    if (rec.rest.length === 2) {
-      const [a, b] = rec.rest;
-      if (Math.hypot(a.x - b.x, a.y - b.y) < A * 1.02) return null;
-      if (Math.abs(a.y - b.y) > band * 2) return null;
-    }
-    const my = rec.rest.reduce((s, r) => s + r.y, 0) / rec.rest.length;
-    const dy = yMid - my;
-    const n = rec.rest.length, R = A * 0.62;
-    for (const f of rec.frames) for (let i = 0; i < n; i++) { const y = f[i * 7 + 1] + dy; if (y < yMin + R || y > yMax - R) return null; }
-    return dy;
-  }
-  // throw the dice of one half until a good recording comes up (capped), then shift it and relabel the faces
+  // the dice of one half: parameters drawn at random (same throw for both, with small differences), retried until the
+  // paths stay on the board, end in the half and never overlap
   function planGroup(items, opt, rnd) {
-    let best = null, dy = null, tries = 0;
-    for (; tries < 40; tries++) {
-      const rec = simulate(items, rnd);
-      const s = accept(rec, opt.yMid + (rnd() - 0.5) * 0.2, opt.yMin, opt.yMax, opt.band);
-      if (s !== null) { best = rec; dy = s; break; }
+    const R = (a, b) => a + rnd() * (b - a);
+    for (let tries = 0; tries < 60; tries++) {
+      const it0 = items[0], dir = it0.dir, outer = dir > 0 ? it0.hx1 : it0.hx0, halfW = it0.hx1 - it0.hx0;
+      const ang = R(-0.2, 0.2), side = rnd() < 0.5 ? -1 : 1;
+      const base = { g: 95, r: 0.45, h: R(0.75, 0.9), z0: R(0.9, 1.15), vz0: R(0.3, 0.7), u0: R(3.0, 3.5), fu: 0.88, w0: R(14.5, 17.5), fw: 0.82 };
+      const dice = items.map((it, i) => {
+        const delay = i ? R(0.06, 0.12) : 0, lane = items.length > 1 ? (i ? 1 : -1) * side * R(0.6, 0.75) : 0;
+        const a = ang + R(-0.06, 0.06), d = [-dir * Math.cos(a), -dir * Math.sin(a)];
+        const p = Object.assign({}, base, {
+          d, x0: outer - dir * R(0.35, 0.55) - d[1] * lane * 0, y0: lane, h: base.h * R(0.9, 1.1), u0: base.u0 * R(0.93, 1.07), w0: base.w0 * R(0.88, 1.12),
+          rem: R(0.25, 1.25), wob: R(0.12, 0.25), ph: R(0, 6.3), yawW: R(-0.35, 0.35), yaw0: 0, curve: R(-0.03, 0.03) });
+        const c = choreo(p);
+        return { it, delay, c, at: t => c.at(t - delay), end: delay + c.tEnd };
+      });
+      const dur = Math.max(...dice.map(x => x.end));
+      if (dur < 1.05 || dur > 1.45) continue;
+      const n = Math.ceil(dur / DT) + 1, frames = [];
+      for (let f = 0; f < n; f++) {
+        const t = f * DT, fr = new Float32Array(dice.length * 7);
+        dice.forEach((x, i) => { const [px, py, pz, q] = x.at(Math.min(t, x.end)); fr.set([px, py, pz, q[0], q[1], q[2], q[3]], i * 7); });
+        frames.push(fr);
+      }
+      // place the group: centre the resting dice on yMid (a sideways shift changes nothing in the motion)
+      const last = frames[n - 1], m = dice.length;
+      let my = 0; for (let i = 0; i < m; i++) my += last[i * 7 + 1]; my /= m;
+      const dy = opt.yMid + R(-0.1, 0.1) - my;
+      let ok = true;
+      for (const f of frames) for (let i = 0; i < m && ok; i++) {
+        f[i * 7 + 1] += dy;
+        const x = f[i * 7], y = f[i * 7 + 1];
+        if (y < opt.yMin + A * 0.62 || y > opt.yMax - A * 0.62) ok = false;
+        if (x < it0.hx0 + H - 1e-6 || x > it0.hx1 - H + 1e-6) { if (f[i * 7 + 2] < H * 1.5) ok = false; }   // only in the air may it pass the rim
+      }
+      if (!ok) continue;
+      // rest: inside the half, in the band, apart
+      const rest = dice.map((x, i) => ({ x: last[i * 7], y: last[i * 7 + 1] }));
+      if (rest.some(p => p.x < it0.hx0 + A * 0.7 || p.x > it0.hx1 - A * 0.7 || Math.abs(p.y - opt.yMid) > opt.band)) continue;
+      // never overlapping: the centres always stay further apart than the diagonal of a die
+      if (m === 2) {
+        let bad = false;
+        for (const f of frames) { const dd = Math.hypot(f[0] - f[7], f[1] - f[8]); if (dd < A * 1.42) { bad = true; break; } }
+        if (bad) continue;
+      }
+      const out = dice.map((x, i) => {
+        const mf = qmat(...x.c.Qf);
+        const up = [0, 0, 0]; let best = 0, axis = 0;
+        for (let kx = 0; kx < 3; kx++) if (Math.abs(mf[6 + kx]) > Math.abs(best)) { best = mf[6 + kx]; axis = kx; }
+        up[axis] = Math.sign(best);
+        const target = FACE_OF(x.it.v).n, cands = ROTS.filter(Rm => { const p = mul(Rm, target); return p[0] === up[0] && p[1] === up[1] && p[2] === up[2]; });
+        const Rm = cands[Math.floor(rnd() * cands.length)];
+        const top = mul(mm(mf, Rm), FACE_OF(x.it.v).u);
+        return { v: x.it.v, side: x.it.side, R: Rm, rest: { x: rest[i].x, y: rest[i].y, yaw: Math.atan2(top[1], top[0]) },
+          impacts: x.c.impacts.map(([t, v]) => [t + x.delay, v]) };
+      });
+      return { frames, dice: out, dur, tries: tries + 1 };
     }
-    if (!best) return null;
-    const n = items.length;
-    for (const f of best.frames) for (let i = 0; i < n; i++) f[i * 7 + 1] += dy;
-    const dice = items.map((it, i) => {
-      const r = best.rest[i];
-      // a cube rotation R with R·n(value) = the body axis that ended up on top: draw the die with orientation M·R
-      const target = FACE_OF(it.v).n, cands = ROTS.filter(R => { const p = mul(R, target); return p[0] === r.up[0] && p[1] === r.up[1] && p[2] === r.up[2]; });
-      const R = cands[Math.floor(rnd() * cands.length)];
-      const mv = mm(r.m, R), top = mul(mv, FACE_OF(it.v).u);
-      return { v: it.v, side: it.side, R, rest: { x: r.x, y: r.y + dy, yaw: Math.atan2(top[1], top[0]) }, impacts: best.impacts[i] };
-    });
-    return { frames: best.frames, dice, dur: best.dur, tries: tries + 1 };
+    return null;
   }
   // spec: { dice: [{ v, side, hx0, hx1, dir }], yMid, yMin, yMax, band }. Dice of the same half share one world.
   function plan(spec, rnd) {
     rnd = rnd || Math.random;
-    if (!C) return null;
     const groups = new Map();
     spec.dice.forEach((d, i) => { const k = d.hx0 + ':' + d.hx1; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(Object.assign({ i }, d)); });
     const parts = [];
@@ -170,8 +204,8 @@
   }
 
   // ---- drawing
-  const LIGHT = (() => { const l = [-0.12, -0.22, 1]; const n = Math.hypot(...l); return l.map(v => v / n); })();   // towards the light
-  const CAM_D = 40;                        // camera height above the top face of a resting die (weak perspective)
+  const LIGHT = (() => { const l = [-0.14, -0.3, 1]; const n = Math.hypot(...l); return l.map(v => v / n); })();   // towards the light
+  const CAM_D = 7;                         // camera height above the top face of a resting die: a die 1 unit up looks ~17 % bigger
   const COLORS = [
     { face: [239, 228, 204], edge: [196, 182, 150], pip: '#4a1512' },   // side 0: ivory, red-brown pips
     { face: [40, 43, 49], edge: [16, 17, 20], pip: '#ead9a8' }];        // side 1: black, gold pips
@@ -186,13 +220,13 @@
   function rrect(ctx, r) {   // rounded unit square
     ctx.beginPath(); ctx.moveTo(r, 0); ctx.arcTo(1, 0, 1, 1, r); ctx.arcTo(1, 1, 0, 1, r); ctx.arcTo(0, 1, 0, 0, r); ctx.arcTo(0, 0, 1, 0, r); ctx.closePath();
   }
-  // ctx: canvas 2D context; k: device pixels per board unit; cams: camera x,y per die (centre of its half)
+  // ctx: canvas 2D context; k: device pixels per board unit; list: [{ d, t }]
   function draw(ctx, k, list) {
     const proj = (p, cam) => { const f = CAM_D / (CAM_D - (p[2] - A)); return [cam[0] + (p[0] - cam[0]) * f, cam[1] + (p[1] - cam[1]) * f]; };
     const W = ctx.canvas.width;
     // shadows first (all on the board)
-    for (const { d, t, cam } of list) {
-      const { p, m } = pose(d, t), pts = [];
+    for (const { d, t } of list) {
+      const { p, m } = pose(d, t), pts = [], cam = [p[0], p[1]];
       for (const sx of [-H, H]) for (const sy of [-H, H]) for (const sz of [-H, H]) {
         const c = mul(m, [sx, sy, sz]), w = [p[0] + c[0], p[1] + c[1], p[2] + c[2]], s = w[2] / LIGHT[2];
         pts.push(proj([w[0] - LIGHT[0] * s, w[1] - LIGHT[1] * s, 0], cam));
@@ -208,7 +242,8 @@
     }
     // dice, lowest first
     const items = list.map(o => Object.assign({ ps: pose(o.d, o.t) }, o)).sort((a, b) => a.ps.p[2] - b.ps.p[2]);
-    for (const { d, cam, ps } of items) {
+    for (const { d, ps } of items) {
+      const cam = [ps.p[0], ps.p[1]];
       const { p, m } = ps, col = COLORS[d.side];
       const camP = [cam[0], cam[1], CAM_D + A];
       // silhouette in the edge colour (gives the rounded edges something to sit on)
@@ -247,5 +282,5 @@
     for (const F of FACES) { const n = mul(m, F.n); if (n[2] > best) { best = n[2]; v = F.v; } }
     return v;
   }
-  root.Dice3D = { plan, draw, pose, topValue, DT, A, ready: !!C, _sim: simulate };
+  root.Dice3D = { plan, draw, pose, topValue, DT, A, ready: true, _choreo: choreo };
 })(typeof window !== 'undefined' ? window : globalThis);

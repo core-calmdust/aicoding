@@ -409,9 +409,9 @@ function restFor(s, dice) {
   if (!r || r.opening || reviewing || !isLatest() || r.s !== s || r.dice[0] !== dice[0] || r.dice[1] !== dice[1] || dice[0] === dice[1]) return null;
   return r.pos;
 }
-// dice roll: a real rigid-body simulation (dice3d.js / cannon-es). The whole throw is simulated first, until both dice
-// rest; the faces of each die are then relabelled (a rotation of the standard die) so that the face that physically
-// ended on top shows the rolled number, and the recording is played back as it is, drawn in 3D on a canvas.
+// dice roll (dice3d.js): the whole throw is laid out first — a drop from the hand, three bounces of decreasing height
+// under constant gravity while tumbling, then rolling over the edges, a last tip and a little rock — with the faces
+// labelled so the rolled number ends on top; it is then played back, drawn in 3D on a canvas.
 // Non-doubles stay where they came to rest; doubles slide together into the four-dice row afterwards.
 // Tapping anywhere skips to the result; nothing is animated when animations are off in the settings.
 let rollSkip = false, rollAnimating = false, dblFlashUntil = 0;
@@ -425,8 +425,7 @@ async function rollAnim(s, dice, opening) {
     : [Object.assign({ v: dice[0], side: s }, half(s)), Object.assign({ v: dice[1], side: s }, half(s))];
   const plan = Dice3D.plan({ dice: specDice, yMid: G.MID, yMin: G.TOP, yMax: G.BOT, band: Math.max(0.7, G.MID - G.TOP - G.PL + 0.15) });
   if (!plan) return;
-  const cams = specDice.map(d => [(d.hx0 + d.hx1) / 2, G.MID]);
-  // impact sounds straight from the simulation
+  // a knock at every impact, louder for harder ones
   const hits = plan.dice.flatMap(d => d.impacts).sort((a, b) => a[0] - b[0]);
   const sfx = []; for (const [t, v] of hits) if (!sfx.length || t - sfx[sfx.length - 1][0] > 0.07) sfx.push([t, Math.min(1, v / 6)]);
   let si = 0;
@@ -444,7 +443,7 @@ async function rollAnim(s, dice, opening) {
       const k = uPx() * Math.min(2, window.devicePixelRatio || 1), W = Math.round(G.W * k), Hh = Math.round(G.H * k);
       if (cv.width !== W || cv.height !== Hh) { cv.width = W; cv.height = Hh; cv.style.width = U(G.W); cv.style.height = U(G.H); }
       else ctx.clearRect(0, 0, W, Hh);
-      Dice3D.draw(ctx, k, plan.dice.map((d, i) => ({ d, t, cam: cams[i] })));
+      Dice3D.draw(ctx, k, plan.dice.map(d => ({ d, t })));
       while (si < sfx.length && sfx[si][0] <= t) { if (si < 6) SFX.land(sfx[si][1]); si++; }
       await new Promise(r => requestAnimationFrame(r));
     }
