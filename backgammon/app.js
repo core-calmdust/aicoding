@@ -191,10 +191,16 @@ const SFX = {
 
 // ====================================================================== board geometry (units)
 const G = { W: 15.85, H: 12, LX: 0.5, BX: 6.5, B: 1.2, RX: 7.7, RE: 13.7, TX: 14.05, TW: 1.3, TOP: 0.5, BOT: 11.5, MID: 6, C: 0.94, PL: 4.6, FLAT: false };
-// phone landscape uses a flatter board (shorter points, stacks compress earlier) so it can use more of the width
-const FLAT_H = 9.2;
-function setGeom(flat) {
-  G.FLAT = flat; G.H = flat ? FLAT_H : 12; G.BOT = G.H - 0.5; G.MID = G.H / 2; G.PL = (G.MID - G.TOP) * 0.836;
+// phone landscape uses a flatter board (shorter points, stacks compress earlier) so it can span the full width;
+// its height (in board units) is fitted to the space left under the slim top row
+function setGeom(flat, h) {
+  G.FLAT = flat; G.H = flat ? h : 12; G.BOT = G.H - 0.5; G.MID = G.H / 2; G.PL = (G.MID - G.TOP) * 0.836;
+  if (flat) document.documentElement.style.setProperty('--gh', h.toFixed(3)); else document.documentElement.style.removeProperty('--gh');
+}
+function flatH() {
+  const w = ROT ? innerHeight : innerWidth, hgt = ROT ? innerWidth : innerHeight;
+  const u = Math.min((w - 12) / 15.85, 60), avail = hgt - 34 - 4 - 5 - 6;
+  return Math.max(6.4, Math.min(10, avail / u));
 }
 const frameEl = $('#frame'), ckLayer = $('#ckLayer'), dstLayer = $('#dstLayer'), diceLayer = $('#diceLayer'), glowLayer = $('#glowLayer'), lblLayer = $('#lblLayer'), cubeEl = $('#cube'), arrowsEl = $('#arrows'), bbtns = $('#bbtns');
 const uPx = () => frameEl.clientWidth / G.W;
@@ -218,7 +224,8 @@ function barXY(s, k, n) {
 }
 function offXY(s, k) {
   const x = G.TX + G.TW / 2;
-  return s === view ? [x, G.BOT - 0.17 - k * 0.28 - 0.25] : [x, G.TOP + 0.17 + k * 0.28];
+  const st = Math.min(0.28, (G.MID - G.TOP - 0.55) / 15);
+  return s === view ? [x, G.BOT - 0.17 - k * st - 0.25] : [x, G.TOP + 0.17 + k * st];
 }
 // checker position of the k-th checker (0 = bottom of the stack) of side s on its point p, with n checkers there
 function ckXY(s, p, k, n) { if (p === 25) return barXY(s, k, n); return slotXY(toV(s, p), k, n); }
@@ -1258,9 +1265,9 @@ const mqLandPhone = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) an
 let geomReady = false;
 // flat board in any phone-landscape layout (physical landscape or the rotated page)
 function updateGeom() {
-  const flat = ROT || mqLandPhone.matches;
-  if (flat === G.FLAT && geomReady) return;
-  setGeom(flat);
+  const flat = ROT || mqLandPhone.matches, h = flat ? flatH() : 12;
+  if (flat === G.FLAT && Math.abs(h - G.H) < 0.05 && geomReady) return;
+  setGeom(flat, h);
   if (geomReady) { try { drawBoardSvg(); render(); } catch (e) {} }
 }
 function applyLand() {
@@ -1269,6 +1276,7 @@ function applyLand() {
   $('#btnLand').classList.toggle('on', landOn);
 }
 (mqLandPhone.addEventListener ? mqLandPhone.addEventListener('change', updateGeom) : mqLandPhone.addListener(updateGeom));
+addEventListener('resize', () => { if (G.FLAT || mqLandPhone.matches) updateGeom(); });
 async function setLand(on) {
   landOn = on; try { localStorage.setItem(LAND_STORE, on ? '1' : '0'); } catch (e) {}
   if (on) {
@@ -1665,8 +1673,8 @@ function setupProblem(p, side, dice) {
 // shownState() for special modes uses turn.pos; the cube/scores come from the dummy match
 function problemPoints(n, rank) { if (n <= 1 || rank === 0) return 20; return Math.max(0, Math.round(20 * (n - 1 - rank) / (n - 1))); }
 function miniBoardSVG(p, side, opts) {   // always drawn with the standard (tall) geometry
-  const flat = G.FLAT; if (flat) setGeom(false);
-  try { return miniBoardSVG0(p, side, opts); } finally { if (flat) setGeom(true); }
+  const flat = G.FLAT, fh = G.H; if (flat) setGeom(false);
+  try { return miniBoardSVG0(p, side, opts); } finally { if (flat) setGeom(true, fh); }
 }
 function miniBoardSVG0(p, side, opts) {
   opts = opts || {};
@@ -1733,6 +1741,7 @@ $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : intr
 function startLesson(step) {
   hideOverlay('#lessonOverlay');
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle'); $('#toast').classList.remove('show');
+  if (G.FLAT) { scrollTo(0, 0); document.body.scrollTop = 0; }   // landscape: keep the board in view (the card is below)
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false;
   lesson = { step, i: 0, results: [], answered: false, side: 0 };
   document.body.classList.add('in-lesson');
@@ -1881,6 +1890,7 @@ $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson'); $('#toast').classList.remove('show');
+  if (G.FLAT) { scrollTo(0, 0); document.body.scrollTop = 0; }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false;
   const P = PUZZLES.levels[L].puzzles[j];
   puzzle = { L, j, P, side: P.side, state: 'play', daily: daily || null, hinted: false };

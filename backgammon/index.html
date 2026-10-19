@@ -393,27 +393,30 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html:not(.rot) .toast{font-size:13px;padding:10px 16px}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
-  /* phone landscape: flat board on the left at full height, a compact column on the right (header, players, menu), panels below (page scrolls) */
-  :root{--gh:9.2;--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 186px) / 15.85, 60px)}
+  /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
+  :root{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html,body{height:auto;overflow-x:hidden;overflow-y:auto}
-  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:center;gap:6px 10px;padding:6px max(8px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));grid-template-columns:var(--fw) minmax(150px, 190px);grid-template-rows:auto auto auto 1fr;grid-template-areas:"board brand" "board players" "board ctrl" "board ." "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:5px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand players ctrl" "board board board" "ls ls ls" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
   .side, .side-in{display:contents}
-  .board-area{grid-area:board;align-self:start}
-  .brand{grid-area:brand;flex-direction:column;align-items:stretch;gap:5px;height:auto;padding:0}
-  .brand-l{min-width:0}
-  .brand h1{font-size:15px;letter-spacing:.02em}
+  .board-area{grid-area:board;justify-self:center}
+  .brand{grid-area:brand;flex-direction:row;align-items:center;gap:8px;height:34px;padding:0 2px}
+  .brand-l{min-width:0;flex:none}
+  .brand h1{font-size:15px;letter-spacing:.02em;overflow:visible;flex:none}
   .brand h1 small{display:none}
   .brand a.series{display:none}
-  .brand-r{gap:4px;justify-content:space-between;flex-wrap:wrap}
-  #langSel{max-width:none;flex:1 1 60px;min-width:0}
-  .players{grid-area:players;grid-template-columns:1fr;gap:4px;padding:5px}
-  .player{padding:4px 7px;border-radius:8px}
-  .player .name{font-size:10.5px}
-  .player .count{font-size:16px}
-  .player .count small{font-size:9px}
-  .player .status{font-size:10px;min-height:0}
-  .controls{grid-area:ctrl;display:grid;grid-template-columns:repeat(3, 1fr);gap:4px;padding:5px}
-  .btn{flex-direction:column;justify-content:center;gap:1px;padding:5px 1px;font-size:9px;border-radius:8px}
+  .brand-r{gap:4px;flex-wrap:nowrap}
+  #langSel{max-width:74px}
+  .players{grid-area:players;grid-template-columns:repeat(2, minmax(0,1fr));gap:5px;padding:0;background:none;border:none;box-shadow:none;height:34px}
+  .player{display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:8px;height:34px;border:1px solid var(--line)}
+  .player .top{flex:1 1 auto;min-width:0;gap:6px}
+  .player .name{font-size:11px}
+  .player .row{margin:0;flex:none;gap:6px}
+  .player .count{font-size:17px;line-height:1}
+  .player .count small{display:none}
+  .player .score{font-size:11px}
+  .player .status{display:none}
+  .controls{grid-area:ctrl;display:flex;gap:4px;padding:0;background:none;border:none;box-shadow:none;height:34px}
+  .btn{flex:none;width:38px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
   .btn span{display:none}
   .btn svg{width:17px;height:17px}
   .lesson-card,.puzzle-card{grid-area:ls;flex:none;overflow:visible}
@@ -431,36 +434,33 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   .graph{height:56px;margin-top:6px}
   .info-line{display:none}
   .lesson-prompt{font-size:14px}.lesson-fb,.pz-status{font-size:13.5px}
-  /* lessons / puzzles: the lesson card takes the right column (a little wider), next to the board */
-  body:is(.in-lesson,.in-puzzle){--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 250px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
-  body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:var(--fw) minmax(200px, 1fr);grid-template-areas:"board brand" "board ls" "board ls" "board ls" "hint hint" "ev ev" "rv rv" "kf kf"}
-  body:is(.in-lesson,.in-puzzle) .players{display:none}
-  body:is(.in-lesson,.in-puzzle) :is(#lsHint,#lsNext,#lsQuit,#pzHint,#pzRetry,#pzAnswer,#pzNext,#pzList,#pzQuit){font-size:11.5px;padding-left:3px;padding-right:3px;letter-spacing:0}
-  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{align-self:stretch;max-height:calc(var(--vh) - 84px);overflow-y:auto;scrollbar-width:thin;padding:8px 10px}
 }
 /* forced landscape (CSS-rotated app on a portrait phone): same rules as phone landscape */
 @media (pointer: coarse){
-  /* phone landscape: flat board on the left at full height, a compact column on the right (header, players, menu), panels below (page scrolls) */
-  html.rot{--gh:9.2;--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 186px) / 15.85, 60px)}
+  /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
+  html.rot{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html.rot body{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
-  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:center;gap:6px 10px;padding:6px max(8px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));grid-template-columns:var(--fw) minmax(150px, 190px);grid-template-rows:auto auto auto 1fr;grid-template-areas:"board brand" "board players" "board ctrl" "board ." "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:5px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand players ctrl" "board board board" "ls ls ls" "hint hint hint" "ev ev ev" "rv rv rv" "kf kf kf"}
   html.rot .side, html.rot .side-in{display:contents}
-  html.rot .board-area{grid-area:board;align-self:start}
-  html.rot .brand{grid-area:brand;flex-direction:column;align-items:stretch;gap:5px;height:auto;padding:0}
-  html.rot .brand-l{min-width:0}
-  html.rot .brand h1{font-size:15px;letter-spacing:.02em}
+  html.rot .board-area{grid-area:board;justify-self:center}
+  html.rot .brand{grid-area:brand;flex-direction:row;align-items:center;gap:8px;height:34px;padding:0 2px}
+  html.rot .brand-l{min-width:0;flex:none}
+  html.rot .brand h1{font-size:15px;letter-spacing:.02em;overflow:visible;flex:none}
   html.rot .brand h1 small{display:none}
   html.rot .brand a.series{display:none}
-  html.rot .brand-r{gap:4px;justify-content:space-between;flex-wrap:wrap}
-  html.rot #langSel{max-width:none;flex:1 1 60px;min-width:0}
-  html.rot .players{grid-area:players;grid-template-columns:1fr;gap:4px;padding:5px}
-  html.rot .player{padding:4px 7px;border-radius:8px}
-  html.rot .player .name{font-size:10.5px}
-  html.rot .player .count{font-size:16px}
-  html.rot .player .count small{font-size:9px}
-  html.rot .player .status{font-size:10px;min-height:0}
-  html.rot .controls{grid-area:ctrl;display:grid;grid-template-columns:repeat(3, 1fr);gap:4px;padding:5px}
-  html.rot .btn{flex-direction:column;justify-content:center;gap:1px;padding:5px 1px;font-size:9px;border-radius:8px}
+  html.rot .brand-r{gap:4px;flex-wrap:nowrap}
+  html.rot #langSel{max-width:74px}
+  html.rot .players{grid-area:players;grid-template-columns:repeat(2, minmax(0,1fr));gap:5px;padding:0;background:none;border:none;box-shadow:none;height:34px}
+  html.rot .player{display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:8px;height:34px;border:1px solid var(--line)}
+  html.rot .player .top{flex:1 1 auto;min-width:0;gap:6px}
+  html.rot .player .name{font-size:11px}
+  html.rot .player .row{margin:0;flex:none;gap:6px}
+  html.rot .player .count{font-size:17px;line-height:1}
+  html.rot .player .count small{display:none}
+  html.rot .player .score{font-size:11px}
+  html.rot .player .status{display:none}
+  html.rot .controls{grid-area:ctrl;display:flex;gap:4px;padding:0;background:none;border:none;box-shadow:none;height:34px}
+  html.rot .btn{flex:none;width:38px;height:34px;flex-direction:row;justify-content:center;gap:0;padding:0;font-size:9px;border-radius:8px}
   html.rot .btn span{display:none}
   html.rot .btn svg{width:17px;height:17px}
   html.rot .lesson-card, html.rot .puzzle-card{grid-area:ls;flex:none;overflow:visible}
@@ -478,12 +478,6 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html.rot .graph{height:56px;margin-top:6px}
   html.rot .info-line{display:none}
   html.rot .lesson-prompt{font-size:14px}html.rot .lesson-fb, html.rot .pz-status{font-size:13.5px}
-  /* lessons / puzzles: the lesson card takes the right column (a little wider), next to the board */
-  html.rot body:is(.in-lesson,.in-puzzle){--u:min((var(--vh) - 12px) / var(--gh), (var(--vw) - 250px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
-  html.rot body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:var(--fw) minmax(200px, 1fr);grid-template-areas:"board brand" "board ls" "board ls" "board ls" "hint hint" "ev ev" "rv rv" "kf kf"}
-  html.rot body:is(.in-lesson,.in-puzzle) .players{display:none}
-  html.rot body:is(.in-lesson,.in-puzzle) :is(#lsHint,#lsNext,#lsQuit,#pzHint,#pzRetry,#pzAnswer,#pzNext,#pzList,#pzQuit){font-size:11.5px;padding-left:3px;padding-right:3px;letter-spacing:0}
-  html.rot body.in-lesson .lesson-card, html.rot body.in-puzzle .puzzle-card{align-self:stretch;max-height:calc(var(--vh) - 84px);overflow-y:auto;scrollbar-width:thin;padding:8px 10px}
 }
 @media (min-height: 561px){
 @container (min-width: 420px){
