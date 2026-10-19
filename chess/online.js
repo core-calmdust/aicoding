@@ -1,7 +1,8 @@
 // Online play for Chess (ported from the Shogi page): lobby, Elo rating, rating-based matchmaking, rooms, chat, spectating.
 // Moves are UCI strings (e2e4, e7e8q), stored in games/<gid>/moves as one space-separated string.
 // Game record: w = White's uid (moves first), b = Black's uid; wn/bn names, wr/br ratings, mw/mb clock (ms left), t = time of the last move.
-// Backend: Firebase (anonymous auth + Realtime Database) when window.FIREBASE_CONFIG is set,
+// Google sign-in (anonymous account upgraded / switched) and cloud sync of local progress (sync/<uid>), as on the Dots & Boxes page.
+// Backend: Firebase (anonymous / Google auth + Realtime Database) when window.FIREBASE_CONFIG is set,
 // or an in-browser mock (localStorage, shared between tabs) with ?mock=1 for testing.
 (function () {
   'use strict';
@@ -111,55 +112,158 @@
     };
   }
 
+  // ---------------------------------------------------------------- auth
+  // mock Google: one fake Google account per browser profile (localStorage); a tab is "signed in" through sessionStorage
+  const MOCK_G = 'chess-mock-gacct', MOCK_UID = 'chess-mock-uid', MOCK_SIGNED = 'chess-mock-gsigned';
+  const mockAcc = () => { try { return JSON.parse(localStorage.getItem(MOCK_G) || 'null'); } catch (e) { return null; } };
+  let authUser = null;     // real Firebase user
+
   async function init() {
     if (ready) return ready;
     ready = (async () => {
       if (MOCK) {
-        db = mockDB();
-        uid = sessionStorage.getItem('chess-mock-uid') || ('u' + Math.random().toString(36).slice(2, 10));
-        sessionStorage.setItem('chess-mock-uid', uid);
+        db = db || mockDB();
+        uid = sessionStorage.getItem(MOCK_UID) || ('u' + Math.random().toString(36).slice(2, 10));
+        sessionStorage.setItem(MOCK_UID, uid);
       } else {
+        if (!CFG) throw new Error('not-configured');
         const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
-        await loadScript(base + 'firebase-app-compat.js');
-        await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
+        if (!window.firebase || !firebase.auth || !firebase.database) {
+          await loadScript(base + 'firebase-app-compat.js');
+          await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
+        }
         if (!firebase.apps.some(a => a.name === '[DEFAULT]')) firebase.initializeApp(CFG);   // the shared-account app ('atlas') may already exist
-        const cred = await firebase.auth().signInAnonymously();
-        uid = cred.user.uid;
-        db = firebaseDB();
+        const auth = firebase.auth();
+        // keep an existing session (Google or anonymous); only create an anonymous one if there is none
+        const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
+        try { await auth.getRedirectResult(); } catch (e) { console.warn(e); }
+        authUser = auth.currentUser || cur || (await auth.signInAnonymously()).user;
+        uid = authUser.uid;
+        db = db || firebaseDB();
       }
-      profile = await db.get('players/' + uid);
-      if (profile && typeof profile.rating !== 'number') profile = Object.assign({ games: 0, wins: 0, losses: 0, draws: 0 }, profile, { name: cleanName(profile.name), rating: INITIAL });
-      if (profile && profile.rating === INITIAL && !profile.games) await db.update('players/' + uid, profile);
-      if (!profile) {
-        profile = { name: defaultName(), rating: INITIAL, games: 0, wins: 0, losses: 0, draws: 0 };
-        await db.set('players/' + uid, profile);
-      }
+      await loadProfile();
       return { uid, profile };
     })();
     ready.catch(() => { ready = null; });
     return ready;
   }
-  function defaultName() { try { const n = localStorage.getItem('chess-online-name'); if (n) return n; } catch (e) {} return 'Player' + Math.floor(1000 + Math.random() * 9000); }
-  const cleanName = s => String(s || '').replace(/[<>&"']/g, '').trim().slice(0, 16) || defaultName();
+  async function loadProfile(serverName) {
+    profile = await db.get('players/' + uid);
+    if (!profile || typeof profile.rating !== 'number' || typeof profile.name !== 'string' || !profile.name) {
+      profile = Object.assign({ games: 0, wins: 0, losses: 0, draws: 0 }, profile || {}, { name: cleanName(profile && profile.name), rating: profile && typeof profile.rating === 'number' ? profile.rating : INITIAL });
+      await db.set('players/' + uid, profile);
+    }
+    // a fresh / this device's player takes the name chosen on this device; an existing account switched to keeps its own name
+    const ln = localName();
+    if (serverName) { try { localStorage.setItem(NAME_KEY, profile.name); } catch (e) {} }
+    else if (ln && ln !== profile.name) { profile.name = ln; await db.update('players/' + uid, { name: ln }); }
+    db.set('profiles/' + uid, { n: profile.name }).catch(() => {});
+  }
+  const NAME_KEY = 'chess-online-name';
+  function localName() { try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; } }
+  function defaultName() { const n = localName(); if (n) return n; const d = 'Player' + Math.floor(1000 + Math.random() * 9000); try { localStorage.setItem(NAME_KEY, d); } catch (e) {} return d; }
+  const cleanName = s => String(s || '').replace(/[\u0000-\u001f\u007f<>&"']/g, '').replace(/\s+/g, ' ').trim().slice(0, 16) || defaultName();
 
   async function setName(name) {
-    name = cleanName(name); profile.name = name; if (presOn) db.update('presence/' + uid, { name });
-    try { localStorage.setItem('chess-online-name', name); } catch (e) {}
+    name = cleanName(name);
+    try { localStorage.setItem(NAME_KEY, name); } catch (e) {}
+    if (!profile) return name;
+    profile.name = name; if (presOn) db.update('presence/' + uid, { name });
     await db.update('players/' + uid, { name });
+    db.set('profiles/' + uid, { n: name }).catch(() => {});
     return name;
   }
 
+  // the linked Google account of this session (null: anonymous / not signed in)
+  function account() {
+    if (MOCK) { if (sessionStorage.getItem(MOCK_SIGNED) !== '1') return null; const a = mockAcc(); return a ? { email: a.email, name: a.name } : null; }
+    try { const u = window.firebase && firebase.auth && firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; }
+  }
+  // drop this session's live records (before switching account / signing out)
+  async function dropLive() {
+    try { await leave(); } catch (e) {}
+    clearInterval(matchTimer);
+    if (presOn) { db.cancelDisconnect('presence/' + uid); await db.remove('presence/' + uid).catch(() => {}); presOn = false; }
+  }
+  // keep the record with more rated games when an anonymous player switches to an existing Google account
+  async function carryPlayer(old) {
+    const cur = await db.get('players/' + uid);
+    if (old && (!cur || (old.games || 0) > (cur.games || 0))) await db.set('players/' + uid, Object.assign({}, old, { last: null }));
+  }
+  // sign in with Google: the anonymous account is upgraded (same uid) when possible, otherwise this session switches to
+  // the existing Google account (its uid); returns { uid, linked, switched }
+  async function google() {
+    await init();
+    if (MOCK) {
+      const a = mockAcc();
+      if (a && a.uid !== uid) {                       // credential already in use → switch
+        const old = profile; await dropLive();
+        await db.remove('players/' + uid).catch(() => {});
+        uid = a.uid; sessionStorage.setItem(MOCK_UID, uid); sessionStorage.setItem(MOCK_SIGNED, '1');
+        await carryPlayer(old); await loadProfile(true); emitAuth();
+        return { uid, linked: false, switched: true };
+      }
+      localStorage.setItem(MOCK_G, JSON.stringify({ uid, email: 'player@example.com', name: 'Mock Player' }));
+      sessionStorage.setItem(MOCK_SIGNED, '1'); emitAuth();
+      return { uid, linked: true, switched: false };
+    }
+    const auth = firebase.auth(), prov = new firebase.auth.GoogleAuthProvider();
+    prov.setCustomParameters({ prompt: 'select_account' });
+    const u = auth.currentUser;
+    try {
+      const r = u && u.isAnonymous ? await u.linkWithPopup(prov) : await auth.signInWithPopup(prov);
+      const switched = r.user.uid !== uid;
+      if (switched) { await dropLive(); uid = r.user.uid; await loadProfile(true); }
+      authUser = r.user; emitAuth();
+      return { uid, linked: !switched, switched };
+    } catch (e) {
+      if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+        const cred = e.credential || firebase.auth.GoogleAuthProvider.credentialFromError(e);
+        const old = profile; await dropLive();
+        await db.remove('players/' + uid).catch(() => {});
+        await db.remove('profiles/' + uid).catch(() => {});
+        const r = await auth.signInWithCredential(cred);
+        authUser = r.user; uid = r.user.uid;
+        await carryPlayer(old); await loadProfile(true); emitAuth();
+        return { uid, linked: false, switched: true };
+      }
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+        await (u && u.isAnonymous ? u.linkWithRedirect(prov) : auth.signInWithRedirect(prov));
+      }
+      throw e;
+    }
+  }
+  // sign out of Google: back to a fresh anonymous player on this device
+  async function logout() {
+    await init();
+    await dropLive();
+    if (MOCK) { sessionStorage.removeItem(MOCK_SIGNED); sessionStorage.removeItem(MOCK_UID); }
+    else { await firebase.auth().signOut(); authUser = null; }
+    ready = null; uid = null; profile = null;
+    await init(); emitAuth();
+  }
+  const authListeners = new Set();
+  function emitAuth() { authListeners.forEach(f => { try { f(account()); } catch (e) { console.warn(e); } }); }
+  const onAuth = f => { authListeners.add(f); return () => authListeners.delete(f); };
+
+  // cloud sync of local progress: sync/<uid> = { d: JSON string, t: time }
+  async function pull() { await init(); return db.get('sync/' + uid); }
+  async function push(d) { await init(); return db.set('sync/' + uid, { d, t: db.now() }); }
+
   // ---------------------------------------------------------------- presence (who is online and what they are doing)
-  let presOn = false, presState = 'idle';
+  let presOn = false, presState = 'idle', presBeat = false;
   async function setPresence(st, extra) {
-    if (!db || !uid) return;
+    if (!db || !uid || !profile) return;
     presState = st || presState;
     const v = Object.assign({ name: profile.name, rating: profile.rating, st: presState, t: db.stamp() }, extra || {});
     await db.set('presence/' + uid, v);
     if (!presOn) {
       db.onDisconnectRemove('presence/' + uid); presOn = true;
-      if (db.onReconnect) db.onReconnect(() => setPresence().catch(() => {}));
-      setInterval(() => { if (presOn) db.update('presence/' + uid, { t: db.stamp() }).catch(() => {}); }, PRES_BEAT);   // heartbeat
+      if (!presBeat) {      // once per page (after a Google switch / sign-out presence is written again for the new uid)
+        presBeat = true;
+        if (db.onReconnect) db.onReconnect(() => { if (presOn) setPresence().catch(() => {}); });
+        setInterval(() => { if (presOn) db.update('presence/' + uid, { t: db.stamp() }).catch(() => {}); }, PRES_BEAT);   // heartbeat
+      }
     }
   }
   // entries whose owner stopped beating (crashed tab, lost disconnect handler) are not shown
@@ -516,6 +620,7 @@
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
     setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat, roomGameOf, spectate, watchCount,
     watchGame, sendMove, moveCount, UCI_RE, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
-    get uid() { return uid; }, get profile() { return profile; }, now: () => (db ? db.now() : Date.now()),
+    cleanName, defaultName, localName, account, google, logout, onAuth, pull, push, configured: !!CFG,
+    get uid() { return uid; }, get profile() { return profile; }, get ready() { return !!(db && uid && profile); }, now: () => (db ? db.now() : Date.now()),
   };
 })();

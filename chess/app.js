@@ -1774,7 +1774,7 @@ function olRender(view) {
       <div class="ol-sub">${t('ol.joinKey')}</div>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
       </div></div>`;
-    $('#olName').onchange = async e => { try { e.target.value = await Online.setName(e.target.value); dockRender(); } catch (_) {} };
+    $('#olName').onchange = async e => { try { e.target.value = await Online.setName(e.target.value); syncTouch(); dockRender(); } catch (_) {} };
     $('#olAuto').onclick = olStartSearch;
     olWatchRooms();
     const cr = $('#olCreate'); if (cr) cr.onclick = olCreateRoom;
@@ -2048,7 +2048,7 @@ async function finishOnline(g) {
   $('#resultSub').innerHTML = olEsc(whyTxt(true)) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) }) + '<br>' + (r.rated ? `<span class="rt-res">R ${r.old} → <b>${r.now}</b> (${rtD(diff)})</span>` : olEsc(t('ol.unrated')));
   showOverlay('#resultOverlay');
   playChime(score >= 0.5); if (score === 1) confetti();
-  dockRender();
+  dockRender(); syncTouch();
 }
 // side-panel name: "you" tag + name (cut with … when long) + rating (always visible)
 function olPName(el, p) {
@@ -2085,6 +2085,7 @@ document.addEventListener('click', e => {
 const dock = { on: false, open: false, players: [], rooms: [], lobby: [], rank: [], unsub: [] };
 const OL_ST = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', room: 'ol.st.room', play: 'ol.st.play', watch: 'ol.st.watch' };
 function dockRender() {
+  if (window.ChessSync) accRender();     // (defined further down; not before the page script has run)
   if (!dock.on) return;
   const me = Online.profile;
   $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
@@ -2118,7 +2119,7 @@ $('#dkMe').addEventListener('click', e => {
   const inp = $('#dkMe .dk-input'); inp.focus(); inp.select();
   const done = async ok => {
     if (!dock.editing) return; dock.editing = false;
-    if (ok) { try { const n = await Online.setName(inp.value); toast(t('ol.renamed', { n }), 1400); const f = $('#olName'); if (f) f.value = n; } catch (_) {} }
+    if (ok) { try { const n = await Online.setName(inp.value); syncTouch(); toast(t('ol.renamed', { n }), 1400); const f = $('#olName'); if (f) f.value = n; } catch (_) {} }
     dockRender();
   };
   inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') done(true); else if (ev.key === 'Escape') done(false); });
@@ -2137,7 +2138,7 @@ $('#dock').addEventListener('click', e => { const b = e.target.closest('.dk-join
 // phone tabs
 function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online'); $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.t === v)); if (v === 'online') dockStart(); }
 $('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
-if (olOn()) setTimeout(dockStart, 800); else document.body.classList.add('no-online');
+if (!olOn()) document.body.classList.add('no-online');   // the dock connects after a moment (see the Google link section)
 $('#langSel').addEventListener('change', () => { olRoomTick(); dockRender(); chatRender(); if ($('#onlineOverlay').classList.contains('show')) olRender(); });
 
 // ---- after a room game: either player may ask for a rematch (the other has Online.REMATCH_MS to answer); otherwise the guest
@@ -2309,6 +2310,233 @@ document.addEventListener('keydown', e => {
   e.preventDefault(); chatOpen(true);
 });
 if (olOn()) setInterval(() => { if (dock.on) chatStart(); }, 1000);
+// a different account (Google switch / sign-out) is a different "me"
+if (olOn()) Online.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null; } chatStart(); });
+
+// ====================================================================== Google link (ported from Dots & Boxes): account box in the dock / online tab
+const GLOGO = '<svg class="glogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
+{ const s = $('#pfGoogle .glogo-slot'); if (s) s.outerHTML = GLOGO; }
+const olOk = () => {};
+// Google sign-in errors in words the user can act on
+function authErrText(e) {
+  const c = (e && (e.code || e.message)) || '';
+  if (/unauthorized-domain/.test(c)) return t('err.domain', { d: location.hostname });
+  if (/operation-not-allowed|admin-restricted-operation/.test(c)) return t('err.provider');
+  if (/referer|referrer|API_KEY_HTTP_REFERRER_BLOCKED|requests-from-referer/i.test(c)) return t('err.referrer', { d: location.origin });
+  if (/api-key-not-valid|invalid-api-key/.test(c)) return t('err.apikey');
+  if (/network-request-failed|load https/.test(c)) return t('err.network');
+  if (/popup-blocked/.test(c)) return t('err.popup');
+  if (/not-configured/.test(c)) return t('ol.setup');
+  if (/configuration-not-found/.test(c)) return t('err.config');
+  return t('sync.err') + (c ? ' (' + c + ')' : '');
+}
+const authCancelled = e => e && /popup-closed-by-user|cancelled-popup-request|user-cancelled/.test(e.code || '');
+function mtabIfPhone() { if (olCoarse()) mtab('online'); }
+function accRender() {
+  if (!olOn()) return;
+  const acc = Online.account(), box = $('#dkAcc'), g = $('#dkG');
+  const gh = acc ? `${GLOGO}<span>✓ ${olEsc(acc.email || acc.name)}</span>` : `${GLOGO}<span>${olEsc(t('sync.link'))}</span>`;
+  if (g.dataset.h !== gh) { g.dataset.h = gh; g.innerHTML = gh; }
+  g.classList.toggle('on', !!acc); g.title = acc ? t('sync.on', { e: acc.email || acc.name }) : t('sync.desc');
+  const h = acc
+    ? `<p class="ol-note">${olEsc(t('sync.on', { e: acc.email || acc.name }))}${acc.name && acc.email ? '<br><small>' + olEsc(acc.name) + '</small>' : ''}</p><p class="ol-note small" id="accLast">${olEsc(syncLastText())}</p><div class="ol-acts"><button class="dk-btn" id="accNow">${olEsc(t('sync.now'))}</button><button class="dk-btn warn" id="accOut">${olEsc(t('sync.logout'))}</button></div>`
+    : `<p class="ol-note">${olEsc(t('sync.desc'))}</p><div class="ol-acts"><button class="dk-btn gbtn" id="accIn">${GLOGO}${olEsc(t('sync.google'))}</button></div>`;
+  if (box.dataset.h === h) return;
+  box.dataset.h = h; box.innerHTML = h;
+  const a = $('#accIn'); if (a) a.onclick = () => googleLink();
+  const n = $('#accNow'); if (n) n.onclick = () => syncNow(false);
+  const o = $('#accOut'); if (o) o.onclick = () => olConfirm(t('sync.logoutQ'), t('sync.logout'), async () => {
+    if (olLive()) olResignLeave();
+    await syncPush(); try { await Online.logout(); } catch (e) { console.warn(e); }
+    olAfterAuth(); toast(t('sync.out'), 1800);
+  });
+}
+$('#dkG').onclick = e => { e.stopPropagation(); if (Online.account()) { dockToggle(true); mtabIfPhone(); } else googleLink(); };
+// after a Google switch / sign-out: this page is a different player now (presence, dock, open dialog)
+function olAfterAuth() {
+  if (dock.on) Online.setPresence(net && net.spectate ? 'watch' : 'idle', { room: null }).catch(() => {});
+  dock.rank = []; if (dock.on) Online.topPlayers(10).then(l => { dock.rank = l; dockRender(); }).catch(() => {});
+  if ($('#onlineOverlay').classList.contains('show') && (olView === 'menu' || olView === 'room' || olView === 'search')) olRender('menu');
+  dockRender();
+}
+let gBusy = false;
+async function googleLink() {
+  if (!olOn() || gBusy) return false;
+  if (olLive()) { toast(t('sync.notNow'), 2000); return false; }
+  gBusy = true;
+  try {
+    const r = await Online.google();
+    await syncNow(true);
+    toast(r.switched ? t('sync.switched') : t('sync.linked'), 2200);
+    dockStart(); olAfterAuth();
+    return true;
+  } catch (e) {
+    if (!authCancelled(e)) { console.warn(e); olConfirm(authErrText(e), 'OK', olOk); }
+    return false;
+  } finally { gBusy = false; dockRender(); }
+}
+
+// ====================================================================== cloud sync of local progress (sync/<uid> = {d, t}), as on the Dots & Boxes page
+// d = JSON of a snapshot: ls lessons {id: {best, clear}}, pz puzzles {key: stars}, op openings {id: {best, pass}}, ru rules seen,
+// dy daily puzzle {last, streak, best, days{date: 1 | 'h'}}, rd rated games vs the AI {r, n, w, l, d, hist, pl},
+// set settings (+ setT), nm online name (+ nmT), rt online rating (+ rtT; the server record itself is carried by Online.google()).
+// Not synced: the game on the board, a live online game (chess-online-live), room / time-control choices, mock data.
+// Merge: progress is united (best = max, clear / pass = or, stars = max), daily days united and the streak recomputed,
+// rated record: the one with the newer last game (else more games), settings / name: newest change wins.
+const ChessSync = (() => {
+  const META = 'chess-sync-meta', RU_KEY = 'aicoding-chess-rules-seen';
+  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'coach', 'level', 'level2', 'color', 'lang'];
+  const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+  const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };
+  const setOf = () => { const o = {}; SET_KEYS.forEach(k => { if (settings[k] !== undefined) o[k] = settings[k]; }); o.lang = LANG; return o; };
+  // the current local state; a value that changed since the last snapshot gets the current time
+  function snapshot(now) {
+    now = now || Date.now();
+    let m = get(META, null);
+    const fresh = !m; m = m || {};
+    const set = setOf();
+    const nm = (Online.profile && Online.profile.name) || Online.localName() || '';
+    const rt = Online.profile ? Online.profile.rating : null;
+    const stamp = (key, val) => { const h = JSON.stringify(val); if (m[key + 'H'] !== h) { m[key + 'H'] = h; m[key + 'T'] = fresh ? 1 : now; } return m[key + 'T'] || 1; };
+    let ru = false; try { ru = !!localStorage.getItem(RU_KEY); } catch (e) {}
+    const d = {
+      v: 1,
+      ls: get(LS_STORE, {}), pz: get(PZ_STORE, {}), op: get(OP_STORE, {}), ru,
+      dy: get(DAILY_STORE, { last: '', streak: 0, best: 0, days: {} }),
+      rd: get(RT_STORE, null),
+      set, setT: stamp('set', set), nm, nmT: stamp('nm', nm), rt, rtT: stamp('rt', rt),
+    };
+    put(META, m);
+    return d;
+  }
+  function mergeRec(a, b) {        // {id: {best, clear | pass}}
+    const o = Object.assign({}, a || {});
+    for (const k in (b || {})) {
+      const x = o[k], y = b[k];
+      if (!x || typeof x !== 'object') { o[k] = y; continue; }
+      if (!y || typeof y !== 'object') continue;
+      const z = Object.assign({}, x, y, { best: Math.max(+x.best || 0, +y.best || 0) });
+      if ('clear' in x || 'clear' in y) z.clear = !!(x.clear || y.clear);
+      if ('pass' in x || 'pass' in y) z.pass = !!(x.pass || y.pass);
+      o[k] = z;
+    }
+    return o;
+  }
+  function mergeStars(a, b) { const o = Object.assign({}, a || {}); for (const k in (b || {})) o[k] = Math.max(starVal(o[k]), starVal(b[k])); return o; }
+  function mergeDaily(a, b) {
+    a = a || {}; b = b || {};
+    const days = Object.assign({}, a.days || {});
+    for (const k in (b.days || {})) days[k] = days[k] === 1 || b.days[k] === 1 ? 1 : (days[k] || b.days[k]);
+    const last = [a.last || '', b.last || '', ...Object.keys(days)].sort().pop() || '';
+    let streak = 0;
+    if (last) { for (let d = last; days[d]; d = prevDay(d)) streak++; }
+    if (a.last === last) streak = Math.max(streak, a.streak || 0);
+    if (b.last === last) streak = Math.max(streak, b.streak || 0);
+    return { last, streak, best: Math.max(a.best || 0, b.best || 0, streak), days };
+  }
+  const rdTime = x => { const h = x && Array.isArray(x.hist) ? x.hist : []; const l = h[h.length - 1]; return (l && +l.t) || 0; };
+  const rdGames = x => (x && (+x.n || 0)) || 0;
+  function mergeRated(a, b) {
+    if (!a || typeof a.r !== 'number') return b && typeof b.r === 'number' ? b : (a || null);
+    if (!b || typeof b.r !== 'number') return a;
+    const ta = rdTime(a), tb = rdTime(b);
+    if (ta || tb) return tb > ta ? b : a;
+    return rdGames(b) > rdGames(a) ? b : a;
+  }
+  const newer = (a, b, key) => ((b[key + 'T'] || 0) > (a[key + 'T'] || 0) ? b : a);
+  function merge(L, C) {
+    if (!C) return L; if (!L) return C;
+    const s = newer(L, C, 'set'), n = newer(L, C, 'nm'), r = newer(L, C, 'rt');
+    return {
+      v: 1,
+      ls: mergeRec(L.ls, C.ls), pz: mergeStars(L.pz, C.pz), op: mergeRec(L.op, C.op), ru: !!(L.ru || C.ru),
+      dy: mergeDaily(L.dy, C.dy), rd: mergeRated(L.rd, C.rd),
+      set: Object.assign({}, s.set), setT: s.setT || 0,
+      nm: n.nm || L.nm || C.nm || '', nmT: n.nmT || 0,
+      rt: r.rt != null ? r.rt : (L.rt != null ? L.rt : C.rt), rtT: r.rtT || 0,
+    };
+  }
+  // write a merged snapshot back to this device
+  function apply(d) {
+    put(LS_STORE, d.ls || {}); put(PZ_STORE, d.pz || {}); put(OP_STORE, d.op || {});
+    if (d.ru) { try { localStorage.setItem(RU_KEY, '1'); } catch (e) {} }
+    if (d.dy) { put(DAILY_STORE, d.dy); daily.last = d.dy.last || ''; daily.streak = d.dy.streak || 0; daily.best = d.dy.best || 0; daily.days = Object.assign({}, d.dy.days || {}); }
+    if (d.rd) put(RT_STORE, d.rd);
+    const m = get(META, null) || {};
+    const langWas = LANG;
+    if (d.set) {
+      SET_KEYS.forEach(k => { if (k !== 'lang' && d.set[k] !== undefined) settings[k] = d.set[k]; });
+      let lang = d.set.lang && SUPPORTED.includes(d.set.lang) ? d.set.lang : LANG;
+      m.setH = JSON.stringify(Object.assign(setOf(), { lang })); m.setT = d.setT || 1;
+      if (lang !== langWas) { const sel = $('#langSel'); sel.value = lang; sel.dispatchEvent(new Event('change')); }
+      applySkin();
+    }
+    if (d.nm) { m.nmH = JSON.stringify(d.nm); m.nmT = d.nmT || 1; if (Online.ready && Online.profile.name !== d.nm) Online.setName(d.nm).then(() => dockRender()).catch(() => {}); else { try { localStorage.setItem('chess-online-name', d.nm); } catch (e) {} } }
+    m.rtH = JSON.stringify(d.rt); m.rtT = d.rtT || 1;
+    put(META, m);
+    save(); renderInfo();
+  }
+  return { snapshot, merge, apply, mergeDaily, mergeRated };
+})();
+window.ChessSync = ChessSync;
+let syncing = false, lastPushed = '', syncLast = 0;
+const signedIn = () => !!(olOn() && Online.ready && Online.account());
+const syncStrip = d => JSON.stringify(Object.assign({}, d, { t: undefined }));
+function syncLastText() { return syncLast ? t('sync.last', { t: new Date(syncLast).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' }) }) : ''; }
+async function syncPush() {
+  if (!signedIn()) return;
+  const d = ChessSync.snapshot(), s = syncStrip(d);
+  try { await Online.push(JSON.stringify(d)); lastPushed = s; syncLast = Date.now(); } catch (e) { console.warn(e); }
+}
+async function syncNow(quiet) {
+  if (!signedIn() || syncing) return;
+  syncing = true;
+  try {
+    const local = ChessSync.snapshot();
+    const c = await Online.pull();
+    let merged = local;
+    if (c && c.d) { try { merged = ChessSync.merge(local, JSON.parse(c.d)); } catch (e) { console.warn(e); } }
+    ChessSync.apply(merged);
+    syncing = false;
+    await syncPush();
+    if (!quiet) toast(t('sync.done'), 1400);
+  } catch (e) { console.warn(e); if (!quiet) olConfirm(authErrText(e), 'OK', olOk); }
+  syncing = false;
+  accRender();
+}
+// local changes are pushed a few seconds later (polling keeps the rest of the page untouched)
+let syncT = 0;
+function syncTouch() { clearTimeout(syncT); syncT = setTimeout(() => { if (signedIn() && !syncing && syncStrip(ChessSync.snapshot()) !== lastPushed) syncPush(); }, 3000); }
+if (olOn()) {
+  setInterval(syncTouch, 20000);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) syncPush(); else if (signedIn()) syncNow(true); });
+  Online.onAuth(() => dockRender());
+}
+
+// ====================================================================== first visit: online name + optional Google link (only while online play is available)
+const PF_KEY = 'chess-profile-asked';
+const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
+const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
+function pfOpen() { $('#pfName').value = Online.localName() || Online.defaultName(); showOverlay('#profOverlay'); }
+async function pfSaveName() {
+  const n = Online.cleanName($('#pfName').value);
+  try { localStorage.setItem('chess-online-name', n); } catch (e) {}
+  if (Online.ready) { try { await Online.setName(n); } catch (e) { console.warn(e); } }
+  const f = $('#olName'); if (f) f.value = n;
+  syncTouch(); dockRender();
+}
+$('#pfLater').onclick = () => { pfDone(); pfSaveName(); hideOverlay('#profOverlay'); };
+$('#pfGoogle').onclick = async () => { pfDone(); await pfSaveName(); hideOverlay('#profOverlay'); await Online.init().catch(e => { olConfirm(authErrText(e), 'OK', olOk); }); if (Online.ready) googleLink(); };
+$('#pfName').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('#pfLater').click(); else if (e.key === 'Escape') { e.preventDefault(); $('#pfLater').click(); } });
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#profOverlay').classList.contains('show')) { e.stopImmediatePropagation(); $('#pfLater').click(); } }, true);
+// shown once, only while nothing else is on screen (no dialog, no lesson / puzzle, no online game)
+const pfTimer = setInterval(() => {
+  if (!olOn() || pfAsked()) { clearInterval(pfTimer); return; }
+  if (document.hidden || document.querySelector('.overlay.show') || lesson || puzzle || net || document.body.classList.contains('mtab-online')) return;
+  clearInterval(pfTimer); pfOpen();
+}, 1200);
+if (olOn()) { accRender(); setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800); }
 
 // ====================================================================== boot
 const hadSave = load();
@@ -2345,7 +2573,7 @@ if (olRoomQ) {
 window.__ch = { get net() { return net; }, get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, statusAt, posAt, newGame, sanOf, tryMove, onSquare, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, commit };
 
 function dismissOverlay(o) {
-  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', onlineOverlay: '#olClose' };
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', onlineOverlay: '#olClose', profOverlay: '#pfLater' };
   if (o.id === 'lessonOverlay') { const done = $('#lessonDoneView'); if (done && !done.classList.contains('hidden')) $('#btnLessonQuit2').click(); else $('#btnLessonClose').click(); return; }
   const b = OUTSIDE[o.id] && $(OUTSIDE[o.id]); if (b) b.click(); else o.classList.remove('show');
 }

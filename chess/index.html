@@ -699,7 +699,26 @@ body.in-watch #btnResign{display:none!important}
 .dk-btn:hover{border-color:var(--brass2)}
 .dk-btn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent;font-weight:700}
 .dk-btn.tg{width:34px;padding:6px 0;color:var(--muted)}
-.dock-panel{display:grid;grid-template-columns:1.1fr 1fr .9fr 1.4fr;gap:18px;padding:0 18px}
+.dock-panel{display:grid;grid-template-columns:1.1fr 1fr .9fr 1.4fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pl ro rk ch" "pl ro acc ch";gap:10px 18px;padding:0 18px}
+.dock-panel .dk-pl{grid-area:pl}.dock-panel .dk-ro{grid-area:ro}.dock-panel .dk-rk{grid-area:rk}.dock-panel .dk-acc{grid-area:acc}.dock-panel .dk-chat{grid-area:ch}
+.dk-acc{overflow-y:auto!important}
+.dk-acc .ol-note{margin:0}
+.dk-acc .ol-note.small{margin-top:4px}
+.dk-acc .ol-acts{flex-wrap:wrap;margin-top:8px}
+.dk-acc .ol-acts .dk-btn{flex:1 1 auto}
+/* Google link: dock button, account box, first-visit profile dialog */
+.dk-g{display:inline-flex;align-items:center;gap:6px;max-width:230px;overflow:hidden}
+.dk-g span{overflow:hidden;text-overflow:ellipsis}
+.dk-g.on{border-color:rgba(127,214,164,.5);color:#8fe3b8}
+.glogo{width:18px;height:18px;flex:none;vertical-align:-4px;background:#fff;border-radius:50%;padding:2px}
+.gbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.pf-lbl{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin:14px 0 6px}
+.pf-input{width:100%;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:9px 12px;font:inherit;font-size:16px}
+.syncbox{margin-top:16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2)}
+.syncbox b{font-size:14px;color:var(--accent)}
+.syncbox p{font-size:13px;color:var(--muted);line-height:1.7;margin-top:4px}
+html[lang=ar] :is(.syncbox, .pf-lbl, .dk-acc){direction:rtl;text-align:right}
+html[lang=ar] .pf-input{direction:rtl}
 body.dock-open .dock-panel{padding:4px 18px 16px}
 .dock-panel section{min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .dock-panel h4{font-size:12px;color:var(--muted);letter-spacing:.1em;font-weight:500;margin:4px 0 8px}
@@ -747,13 +766,12 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body:not(.dock-open) .chat-form input,body:not(.dock-open) .chat-form button{height:32px}
 }
 @media not all and (pointer: coarse){ @media (max-width: 1279px){
-  .dock-panel{grid-template-columns:1fr 1fr 1.3fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pl ro ch" "rk ro ch"}
-  .dock-panel .dk-pl{grid-area:pl}.dock-panel .dk-ro{grid-area:ro}.dock-panel .dk-rk{grid-area:rk}.dock-panel .dk-chat{grid-area:ch}
+  .dock-panel{grid-template-columns:1fr 1fr 1.3fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pl ro ch" "acc rk ch"}
 } }
 @media not all and (pointer: coarse){ @media (max-width: 900px){
-  .dock-panel{grid-template-columns:1fr 1.2fr;grid-template-areas:"pl ch" "ro ch";gap:12px}
+  .dock-panel{grid-template-columns:1fr 1.2fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pl ch" "ro ch" "acc ch";gap:8px 12px}
   .dock-panel .dk-rk{display:none}
-  .dk-stat,.dk-tc{display:none}
+  .dk-stat,.dk-tc,.dk-g span{display:none}
 } }
 @media (pointer: coarse){
   body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#0f0c09;border-top:1px solid var(--line)}
@@ -774,6 +792,9 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body.mtab-online .dock-panel .ol-list{max-height:none}
   body.mtab-online .dock-panel .dk-chat{order:1}
   body.mtab-online .dock-panel .dk-rk{order:2}
+  body.mtab-online .dock-panel .dk-acc{order:-1;overflow:visible!important}
+  body.mtab-online .dock-bar .dk-g{display:none}
+  body.mtab-online .dk-acc .ol-acts .dk-btn{padding:10px}
   body.mtab-online .chat-list{max-height:min(46vh, 340px);min-height:120px;flex:none}
   body.mtab-online .chat-form .dk-btn{flex:none;order:0;padding:0 16px}
   .chat-form input{font-size:16px;height:44px}
@@ -1089,6 +1110,17 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     <div class="modal-actions"><button class="mbtn" onclick="document.getElementById('rtConfirm').classList.remove('show')" data-i18n="close"></button><button class="mbtn go" id="rtConfirmYes"></button></div>
   </div>
 </div>
+<!-- first visit: online name + optional Google link (online play available only) -->
+<div class="overlay" id="profOverlay">
+  <div class="modal" style="width:min(460px,100%)">
+    <h2 data-i18n="pf.title"></h2>
+    <p class="ol-note" data-i18n="pf.desc"></p>
+    <label class="pf-lbl" for="pfName" data-i18n="pf.name"></label>
+    <input id="pfName" class="pf-input" maxlength="16" autocomplete="nickname" spellcheck="false">
+    <div class="syncbox"><b data-i18n="sync.title"></b><p data-i18n="pf.gdesc"></p></div>
+    <div class="modal-actions"><button class="mbtn" id="pfLater" data-i18n="pf.later"></button><button class="mbtn go gbtn" id="pfGoogle"><span class="glogo-slot"></span><span data-i18n="sync.google"></span></button></div>
+  </div>
+</div>
 <div class="overlay" id="resumeOverlay">
   <div class="modal" style="width:min(480px,100%)">
     <h2 data-i18n="rs.title"></h2>
@@ -1124,6 +1156,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     <span class="dk-stat" id="dkStat"></span>
     <span class="dk-sp"></span>
     <span class="dk-me" id="dkMe"></span>
+    <button id="dkG" class="dk-btn dk-g" type="button"></button>
     <div class="ol-tc dk-tc" id="dkTc"></div>
     <button id="dkAuto" class="dk-btn go" data-i18n="ol.auto"></button>
     <button id="dkMyRoom" class="dk-btn dk-myroom hidden"></button>
@@ -1134,6 +1167,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     <section class="dk-pl"><h4 data-i18n="ol.players"></h4><div class="ol-list" id="dkPlayers"></div></section>
     <section class="dk-ro"><h4 data-i18n="ol.rooms"></h4><div class="ol-list" id="dkRooms"></div></section>
     <section class="dk-rk"><h4 data-i18n="ol.ranking"></h4><div class="ol-list" id="dkRank"></div></section>
+    <section class="dk-acc"><h4 data-i18n="sync.title"></h4><div id="dkAcc"></div></section>
     <section class="dk-chat"><h4 id="dkChatHead"><span data-i18n="ol.chat"></span></h4><div class="chat-list" id="dkChat" role="log" aria-live="polite"></div><form class="chat-form" id="dkChatForm" autocomplete="off"><input id="dkChatIn" maxlength="100" enterkeyhint="send" autocomplete="off"><button type="submit" class="dk-btn go" id="dkChatSend"></button></form></section>
   </div>
 </div>
@@ -1143,13 +1177,14 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n.js?v=20261020st"></script>
 <script src="i18n_basics.js?v=20261019ol"></script>
 <script src="i18n_coach.js?v=20261019nm"></script>
+<script src="i18n_sync.js?v=20261020gs"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="engine.js?v=20261019g"></script>
-<script src="firebase-config.js?v=20261019fb"></script>
-<script src="online.js?v=20261020fa"></script>
+<script src="firebase-config.js?v=20261020gs"></script>
+<script src="online.js?v=20261020gs"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=1"></script>
-<script src="app.js?v=20261020pl"></script>
+<script src="app.js?v=20261020gs"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=1" defer></script>
