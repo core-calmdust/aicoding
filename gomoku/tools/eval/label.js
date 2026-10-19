@@ -9,7 +9,8 @@ const games = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim
 // deterministic list of positions: every 3rd ply from 6, non-trivial
 let seed = 12345; const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
 const todo = [];
-games.forEach((g, gi) => { for (let k = 6 + (gi % 3); k < g.moves.length - 1; k += 3) todo.push([gi, k]); });
+const ONLY = process.env.ONLY || '';
+games.forEach((g, gi) => { if (ONLY && g.rule !== ONLY) return; for (let k = 6 + (gi % 3); k < g.moves.length - 1; k += 3) todo.push([gi, k]); });
 for (let i = todo.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [todo[i], todo[j]] = [todo[j], todo[i]]; }
 const OUT = `/home/claude/work/eval/labels_${PART}.jsonl`;
 const done = new Set(); try { for (const l of fs.readFileSync(OUT, 'utf8').split('\n')) if (l) { const o = JSON.parse(l); done.add(o.g + ':' + o.k); } } catch (e) {}

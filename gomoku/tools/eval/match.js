@@ -25,8 +25,18 @@ function play(open, newBlack) {
     if (pos.ply >= 225) return 0;
   }
 }
+// balanced openings: Rapfi-labelled positions at ply 6-14 with |eval| <= 120
+const all = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l));
+const OPENS = [];
+for (const f of fs.readdirSync('/home/claude/work/eval').filter(f => /^labels_\d+\.jsonl$/.test(f))) for (const l of fs.readFileSync('/home/claude/work/eval/' + f, 'utf8').split('\n')) {
+  if (!l) continue; let o; try { o = JSON.parse(l); } catch (e) { continue; }
+  const g = all[o.g], ev = String(o.ev); if ((RULE === 'renju') !== (g.rule === 'renju') || (RULE !== 'renju' && g.rule !== RULE)) continue;
+  if (ev.includes('M') || Math.abs(+ev) > 120 || o.k < 6 || o.k > 14) continue;
+  OPENS.push(g.moves.slice(0, o.k));
+}
+console.log('openings', OPENS.length);
 for (let k = 0; k < PAIRS; k++) {
-  const g = games[Math.floor(rnd() * games.length)], n = 4 + Math.floor(rnd() * 3), open = g.moves.slice(0, n);
+  const open = OPENS[Math.floor(rnd() * OPENS.length)];
   for (const nb of [true, false]) {
     const w = play(open, nb);
     if (!w) sc.draw++; else if ((w === 1) === nb) sc.new++; else sc.old++;
