@@ -1648,7 +1648,7 @@ function openHelp() {
 /* ================= layout ================= */
 function layout() {
   const vw = innerWidth, vh = innerHeight, hh = $('.top').offsetHeight || 54;
-  const wideBs = Math.min(vh - hh - 16 - 62, vw - 310 - 24 - 40, 640);
+  const wideBs = Math.min(vh - hh - 16 - 62, vw - 360 - 24 - 40, 740);
   const compact = vw < 760 || wideBs < 400;
   document.body.classList.toggle('compact', compact);
   let bs, kh = 54, gg = 8, tp = 5;
@@ -1658,7 +1658,7 @@ function layout() {
     bs = Math.min(vw - 20, vh - fixed, 560);
     const free = vh - fixed - bs;
     if (free > 0) { const add = Math.min(free * .45, 22); kh += add; tp = 5 + Math.min(4, (free - add) * .1); gg = 8 + Math.min(6, (free - add) * .08); }
-  } else bs = wideBs;
+  } else { bs = wideBs; kh = Math.round(Math.max(54, Math.min(70, bs / 10.5))); }
   bs = Math.max(240, Math.floor(bs / 9) * 9);
   const r = document.documentElement.style;
   r.setProperty('--gg', gg + 'px'); r.setProperty('--tp', tp + 'px'); r.setProperty('--bs', bs + 'px'); r.setProperty('--kh', kh + 'px');
