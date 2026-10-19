@@ -38,3 +38,5 @@ Lv8 を1手目から完全プレイにする。オフラインで「AIが直面�
 - ブラウザ: /home/claude/work/pw/c4lv8.js PORT (python3 -m http.server 8793 を aicoding で起動) → エラー0。
   index.html: Worker 作成時に book/tree を同期 post するよう修正 (従来は最初のジョブより後に届いていた)
 - 18:13 side1 D=11 R=3 実行中 (CPU は dots エージェントと共有で遅い)
+- 21:42 サーバ再起動後に再開。side1 D=11 R=3 を cache_s1.bin (41k件) から再開
+- 22:25 side1 D=11 R=3 完了 72,800ノード。最終 tree.bin = s0_d10_r2 + s1_d11_r3 を配置
