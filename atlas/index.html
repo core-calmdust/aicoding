@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#fff4dc">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --cream:#fff6e2; --paper:#fffdf7; --ink:#2b3044; --ink2:#6a7088; --line:#efe3c8;
@@ -35,8 +35,8 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.86);backdro
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:0}
 .brand img{flex:none;width:48px;height:48px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.08))}
 .brand .wm{display:flex;flex-direction:column;line-height:1;min-width:0}
-.brand .wm b{font-family:var(--round);font-weight:700;font-size:21px;letter-spacing:.01em;white-space:nowrap}
-.brand .wm b span:nth-child(5n+1){color:var(--coral)}.brand .wm b span:nth-child(5n+2){color:var(--sun2)}.brand .wm b span:nth-child(5n+3){color:var(--mint2)}.brand .wm b span:nth-child(5n+4){color:var(--sky2)}.brand .wm b span:nth-child(5n){color:var(--grape2)}
+.brand .wm b{font-family:'Dela Gothic One',var(--round);font-weight:400;font-size:21px;letter-spacing:.02em;white-space:nowrap;color:#111}
+
 .brand .wm small{font-size:11.5px;font-weight:700;color:var(--ink2);margin-top:4px;letter-spacing:.08em;white-space:nowrap}
 .hd .sp{flex:1}
 .coin{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--line);border-radius:99px;padding:4px 12px 4px 5px;font-family:var(--round);font-weight:700;font-size:17px;box-shadow:0 2px 0 var(--line);white-space:nowrap}
@@ -92,25 +92,34 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bar{height:10px;border-radius:99px;background:#efe8d6;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:99px;background:var(--c,var(--mint));transition:width .6s}
 
-/* ---------- home hero: sky + title + boards on a wooden table ---------- */
-.hero{position:relative;margin-top:6px;border-radius:32px;overflow:hidden;height:300px;box-shadow:0 6px 0 #c58b4c,0 22px 40px -22px rgba(80,40,0,.6)}
-.hero .sky{position:absolute;inset:0;background:linear-gradient(#5cc8ff 0%,#9be0ff 55%,#d9f4ff 78%)}
-.hero .cl{position:absolute;background:#fff;border-radius:99px;opacity:.95;animation:drift 38s linear infinite}
-.hero .cl::before,.hero .cl::after{content:'';position:absolute;background:#fff;border-radius:50%}
-.hero .c1{width:120px;height:34px;top:40px;left:8%}.hero .c1::before{width:56px;height:56px;left:18px;top:-28px}.hero .c1::after{width:40px;height:40px;left:62px;top:-18px}
-.hero .c2{width:90px;height:26px;top:96px;left:62%;animation-duration:52s}.hero .c2::before{width:42px;height:42px;left:14px;top:-22px}.hero .c2::after{width:30px;height:30px;left:48px;top:-14px}
-.hero .c3{width:140px;height:38px;top:28px;left:80%;animation-duration:64s}.hero .c3::before{width:60px;height:60px;left:24px;top:-30px}.hero .c3::after{width:44px;height:44px;left:74px;top:-20px}
-@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-120vw)}}
-.hero .ht{position:absolute;left:0;right:0;top:26px;display:flex;align-items:center;justify-content:center;gap:16px;z-index:2}
-.hero .hl{width:92px;height:92px;filter:drop-shadow(0 6px 0 rgba(0,40,80,.18))}
-.hero .big{font-family:var(--round);font-weight:700;font-size:46px;line-height:1;letter-spacing:.02em;-webkit-text-stroke:9px #fff;paint-order:stroke fill;filter:drop-shadow(0 5px 0 rgba(0,60,120,.25))}
-.hero .big span:nth-child(5n+1){color:var(--coral)}.hero .big span:nth-child(5n+2){color:var(--sun2)}.hero .big span:nth-child(5n+3){color:var(--mint2)}.hero .big span:nth-child(5n+4){color:var(--sky2)}.hero .big span:nth-child(5n){color:var(--grape2)}
-.hero .hs{font-family:var(--round);font-weight:700;font-size:15px;letter-spacing:.22em;color:#fff;margin-top:8px;text-shadow:0 2px 0 rgba(0,60,120,.3)}
-.hero .shelf{position:absolute;left:0;right:0;bottom:0;height:116px;background:linear-gradient(#e2a865,#c98b52 30%,#b37540);box-shadow:inset 0 6px 0 rgba(255,255,255,.25)}
-.hero .shelf::before{content:'';position:absolute;inset:0;opacity:.25;background:repeating-linear-gradient(90deg,transparent 0 60px,rgba(90,50,10,.25) 60px 62px)}
-.hero .shelf img{position:absolute;bottom:34px;width:150px;filter:drop-shadow(0 10px 6px rgba(60,30,0,.35));animation:bob 4s ease-in-out infinite;cursor:pointer}
-@keyframes bob{50%{transform:translateY(-6px)}}
-@media (max-width:760px){.hero{height:230px;border-radius:24px}.hero .big{font-size:28px;-webkit-text-stroke:6px #fff}.hero .hl{width:60px;height:60px}.hero .hs{font-size:11px}.hero .ht{top:22px}.hero .shelf{height:86px}.hero .shelf img{width:104px;bottom:26px}}
+/* ---------- home hero: white stage, black & white title, floating toy pieces ---------- */
+.hero{position:relative;margin-top:6px;border-radius:32px;overflow:hidden;height:420px;background:#fff;
+  box-shadow:0 2px 0 rgba(0,0,0,.06),0 24px 40px -26px rgba(60,40,10,.45);display:grid;place-items:center}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 45%,#fff 40%,#f3f3f1 100%)}
+.props{position:absolute;inset:0}
+.props img{position:absolute;width:var(--w);left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));
+  animation:float var(--d) ease-in-out infinite alternate;animation-delay:var(--dl);will-change:transform;cursor:pointer;transition:filter .2s}
+.props img:hover{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
+@keyframes float{from{transform:translate(-50%,-50%) rotate(var(--r)) translateY(0)}to{transform:translate(-50%,-50%) rotate(calc(var(--r) + 6deg)) translateY(-12px)}}
+.ttl{position:relative;z-index:2;margin:0;display:inline-flex;flex-direction:column;align-items:flex-start;gap:6px;background:#fff;padding:16px 22px 18px;border:5px solid #111;box-shadow:10px 10px 0 #111;color:#111;font-weight:400}
+.ttl .ruby{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:13px;letter-spacing:.32em;padding-inline-start:4px}
+.ttl .l1{display:flex;align-items:center;gap:12px}
+.ttl .no{font-family:'Dela Gothic One','Zen Maru Gothic',sans-serif;font-size:26px;line-height:1;letter-spacing:.04em;background:#111;color:#fff;padding:8px 10px 10px;border-radius:4px;align-self:flex-end;margin-bottom:6px}
+.ttl .main{font-family:'Dela Gothic One','Zen Maru Gothic',sans-serif;font-size:76px;line-height:1;letter-spacing:.02em;white-space:nowrap}
+.ttl .l2{display:flex;align-items:center;gap:12px;width:100%;border-top:4px solid #111;padding-top:10px}
+.ttl .chk{flex:none;width:96px;height:24px;background:conic-gradient(#111 25%,#fff 0 50%,#111 0 75%,#fff 0) 0 0/24px 24px;border:3px solid #111}
+.ttl .en{font-family:'Fredoka',sans-serif;font-weight:700;font-size:17px;letter-spacing:.34em;white-space:nowrap;flex:1}
+.ttl .cnt{flex:none;display:flex;align-items:baseline;gap:4px;background:#111;color:#fff;padding:2px 10px 4px;border-radius:4px}
+.ttl .cnt b{font-family:'Dela Gothic One',sans-serif;font-size:26px;line-height:1}
+.ttl .cnt small{font-family:'Fredoka',sans-serif;font-weight:700;font-size:11px;letter-spacing:.14em}
+[dir=rtl] .ttl{box-shadow:-10px 10px 0 #111}
+@media (max-width:760px){
+  .hero{height:330px;border-radius:24px}
+  .ttl{padding:10px 14px 12px;border-width:4px;box-shadow:6px 6px 0 #111;gap:4px}
+  .ttl{max-width:calc(100% - 30px)}.ttl .main{font-size:clamp(26px,8.6vw,40px)}.ttl .no{font-size:14px;padding:5px 6px 6px;margin-bottom:3px}
+  .ttl .ruby{font-size:10px}.ttl .chk{width:56px;height:16px;background-size:16px 16px;border-width:2px}
+  .ttl .en{font-size:8.5px;letter-spacing:.12em}.ttl .l2{gap:7px}.ttl .cnt b{font-size:16px}.ttl .cnt small{font-size:9px}
+}
 
 /* ---------- home: updated row + icon grid ---------- */
 .updrow{display:flex;gap:16px;overflow-x:auto;padding:30px 4px 16px;margin-top:-18px;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -376,9 +385,12 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   <!-- HOME -->
   <section class="pg" id="pg-home">
     <div class="hero" id="hero">
-      <div class="sky"><i class="cl c1"></i><i class="cl c2"></i><i class="cl c3"></i></div>
-      <div class="ht"><img src="logo.svg" alt="" class="hl"><div><div class="big" id="heroT"></div><div class="hs" id="heroS"></div></div></div>
-      <div class="shelf" id="heroShelf"></div>
+      <div class="props" id="props" aria-hidden="true"></div>
+      <h1 class="ttl" id="ttl">
+        <span class="ruby" id="tRuby"></span>
+        <span class="l1"><span class="no" id="tNo"></span><span class="main" id="tMain"></span></span>
+        <span class="l2"><span class="chk" aria-hidden="true"></span><span class="en" id="tEn"></span><span class="cnt"><b id="tCnt"></b><small>GAMES</small></span></span>
+      </h1>
     </div>
     <h2 class="h" id="hUpd"></h2>
     <div class="updrow" id="updRow"></div>

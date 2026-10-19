@@ -6,6 +6,7 @@
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../table3d.js"></script>
+<script src="../icons3d.js"></script>
 <script>
 (function () {
   const id = new URLSearchParams(location.search).get('id') || 'reversi', S = 640;
@@ -22,11 +23,12 @@
   // shadow catcher only (transparent floor)
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: .28 }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-  const g = Table3D.MODELS[id](); scene.add(g);
-  g.rotation.y = -0.42;
+  const q = new URLSearchParams(location.search), kind = q.get('kind') || 'icon';
+  const g = kind === 'piece' ? Icons3D.PIECES[id]() : (Icons3D.ICONS[id] || Table3D.MODELS[id])(); scene.add(g);
+  g.rotation.y = kind === 'piece' ? (+q.get('ry') || -0.5) : -0.62;
   // fit: bounding sphere
   const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), r = box.getBoundingSphere(new THREE.Sphere()).radius;
-  const cam = new THREE.PerspectiveCamera(26, 1, .1, 200);
+  const cam = new THREE.PerspectiveCamera(24, 1, .1, 200);
   const dist = r / Math.sin(13 * Math.PI / 180) * .84;
   cam.position.set(c.x + dist * .05, c.y + dist * .62, c.z + dist * .78); cam.lookAt(c.x, c.y - r * .04, c.z);
   R.render(scene, cam);

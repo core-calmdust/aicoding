@@ -10,6 +10,7 @@
 | `../shared/atlas-firebase-config.js` | 共通アカウント用Firebase設定（未設定＝「準備中」、`?mock=1` でテスト） |
 | `../shared/atlas-database.rules.json` | 上記のRealtime Databaseルール |
 | `art.js` | アイコン・背景・フレーム（全部SVGで生成） |
+| `icons3d.js` | デフォルメした3Dのコマとアイコン用シーン（`tools/icons.html` で `images/atlas/*.webp` に書き出す。`<id>.webp`＝ゲームアイコン、`p-<name>.webp`＝タイトル画面に浮かぶコマ） |
 | `table3d.js` | 3D盤（three.js r128）。全ゲームの盤モデルと、表示/対局のカメラ |
 | `games/<id>.js` | 3D盤で遊べるゲームのアダプタ（いまは reversi） |
 | `i18n.js` / `app.js` / `index.html` | ポータル画面（10言語） |

@@ -111,11 +111,24 @@
     // when the name changes, fill it in from Google if empty
     AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
   }
+  // floating toy pieces around the title: [piece image, game, x%, y%, width px, rotation]
+  const PROPS = [['die', 'backgammon', 9, 22, 92, -12], ['shogi', 'shogi', 22, 14, 84, 8], ['knightB', 'chess', 6, 70, 96, 0], ['disc', 'reversi', 20, 84, 104, -6],
+    ['stoneB', 'gomoku', 33, 92, 70, 0], ['c4', 'connect4', 92, 20, 92, 14], ['gem', 'mancala', 78, 10, 64, 0], ['tile', 'sudoku', 95, 64, 80, 10],
+    ['checker', 'morris', 80, 88, 92, -8], ['knight', 'chess', 66, 92, 86, 6], ['stoneW', 'gomoku', 45, 8, 60, 0], ['gem2', 'mancala', 60, 6, 54, 0],
+    ['shogi2', 'shogi', 3, 45, 70, -14], ['pawn', 'chess', 97, 42, 64, 0], ['bgChecker', 'backgammon', 50, 95, 72, 0]];
+  function renderHero() {
+    const ja = lang === 'ja', phone = innerWidth < 760;
+    $('tRuby').textContent = ja ? 'せかいの ぼどげ たいぜん' : (lang === 'en' ? '世界のボドゲ大全' : 'WORLD BOARD GAME ATLAS');
+    $('tNo').textContent = ja ? '世界の' : ''; $('tNo').hidden = !ja;
+    const main = ja ? 'ボドゲ大全' : t('title');
+    $('tMain').textContent = main; $('tMain').style.fontSize = ja ? '' : `min(${phone ? 34 : 64}px, ${Math.round((phone ? 300 : 700) / Math.max(6, main.length * .62))}px)`;
+    $('tEn').textContent = 'WORLD BOARD GAME ATLAS';
+    $('tCnt').textContent = A_.GAMES.length;
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<img src="../images/atlas/p-${img}.webp?v=1" alt="" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg;--d:${2.6 + (i % 5) * .5}s;--dl:${-i * .37}s">`).join('');
+    $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => openBoard(b.dataset.g));
+  }
   function renderHome() {
-    $('heroT').innerHTML = [...t('title')].map(c => `<span>${esc(c)}</span>`).join(''); $('heroS').textContent = t('sub').toUpperCase();
-    const shelf = A_.byUpdate().filter(g => R3.has(g.id)).slice(0, 7), n = shelf.length;
-    $('heroShelf').innerHTML = shelf.map((g, i) => `<img src="${artSrc(g)}" alt="" data-g="${g.id}" style="left:calc(${(i + .5) / n * 100}% - ${innerWidth < 760 ? 52 : 75}px);animation-delay:${-i * .6}s">`).join('');
-    $('heroShelf').querySelectorAll('[data-g]').forEach(b => b.onclick = () => openBoard(b.dataset.g));
+    renderHero();
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
     const seen = new Set(), ups = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1]));
     $('updRow').innerHTML = ups.map(u => { const g = A_.GAMES.find(x => x.id === u[1]);
