@@ -164,7 +164,8 @@ html[dir=rtl] .back svg,html[dir=rtl] .flip svg{transform:scaleX(-1)}
 @media (max-width:420px){.htabs button{flex-direction:column;gap:2px;font-size:12px;padding:7px 4px}}
 .hpanel{display:none}
 .hpanel.on{display:block;animation:pop .3s}
-.hpanel.daily.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.hpanel.daily.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:stretch}
+@media (min-width:861px){.hpanel.daily .dcol > #dailyExtra{flex:1}}
 @media (max-width:860px){.hpanel.daily.on{grid-template-columns:1fr}}
 
 .home{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:18px;align-items:start}
