@@ -12,6 +12,9 @@ const DIFFS = ['e', 'm', 'h'];
 const DTIER = { e: 1, m: 2, h: 3 };
 const THEMES = ['forest', 'harbor', 'sweets', 'sea', 'garden', 'festival', 'autumn', 'snow', 'stars', 'castle', 'cloudranch', 'park', 'iceberg', 'desert', 'toytown', 'library', 'rain', 'jungle', 'bakery', 'moon'];
 const NT = THEMES.length, NCOL = NT * 50;
+// display order: easiest → hardest (data/progress keys keep the original theme index)
+const ORDER = [0, 1, 2, 3, 4, 10, 11, 5, 12, 6, 7, 13, 14, 8, 15, 16, 17, 9, 18, 19];
+const TNO = ti => ORDER.indexOf(ti) + 1;
 const VTYPES = ['x', 'hyper', 'jigsaw', 'oddeven', 'killer', 'ineq', 'antiknight', 'kropki', 'thermo', 'arrow'];
 const VCOL = { x: ['#ffd9e6', '#e6dcff'], hyper: ['#d6ecff', '#e0fff1'], jigsaw: ['#fff1c9', '#ffd9cc'], oddeven: ['#ffe3cc', '#d9e9ff'], killer: ['#e8dcff', '#ffd6e6'], ineq: ['#dff4ff', '#ffe6d6'], antiknight: ['#e6f0d8', '#fff0cc'], kropki: ['#fff', '#e3e6ff'], thermo: ['#ffe0dc', '#fff2d0'], arrow: ['#dcf5ec', '#e4e0ff'] };
 const URL_SELF = 'https://core-calmdust.github.io/aicoding/sudoku/';
@@ -403,9 +406,9 @@ function renderHome() {
   const tot = totalCleared();
   $('#colBar').style.width = (tot / NCOL * 100) + '%';
   $('#colCount').textContent = tot + ' / ' + NCOL;
-  $('#themes').innerHTML = THEMES.map((k, i) => {
+  $('#themes').innerHTML = ORDER.map(i => { const k = THEMES[i];
     const n = themeCleared(i), lvs = [...new Set(PZ.themes[i].map(s => +s[81]))];
-    return `<button class="tcard ${n === 50 ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(k, 320, 200)}<span class="no">${i + 1}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(t('th.' + i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n * 2}%"></i></span>${n}/50</span></div></button>`;
+    return `<button class="tcard ${n === 50 ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(k, 320, 200)}<span class="no">${TNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(t('th.' + i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n * 2}%"></i></span>${n}/50</span></div></button>`;
   }).join('');
   $$('#themes .tcard').forEach(b => b.onclick = () => { SFX.tap(); go('t/' + (+b.dataset.t + 1)); });
   // variants
@@ -486,7 +489,7 @@ function openTheme(ti, stage) {
   curTheme = ti; show('theme');
   setScene(THEMES[ti], '', THEMES[ti]);
   const n = themeCleared(ti);
-  $('#tlName').textContent = (ti + 1) + '. ' + t('th.' + ti);
+  $('#tlName').textContent = TNO(ti) + '. ' + t('th.' + ti);
   $('#tlProg').innerHTML = `${n}/50 · ${STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${themeStars(ti)}/150`;
   const lvs = [...new Set(PZ.themes[ti].map(s => +s[81]))];
   const legend = `<div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
@@ -1192,7 +1195,7 @@ function catalog() {
   [[1, 2], [10, 3]].forEach(([n, ti]) => add('daily', 'tri' + n, triDays >= n, ti, 'cal', t('a.tri', { n }), t('a.tri.d', { n }), [triDays, n]));
   const tot = totalCleared();
   [[50, 1], [100, 2], [250, 3], [500, 3], [1000, 4]].forEach(([n, ti]) => add('col', 'tot' + n, tot >= n, ti, String(n), n === NCOL ? t('a.master') : t('a.tot', { n }), t('a.tot.d', { n }), [tot, n]));
-  for (let i = 0; i < NT; i++) {
+  for (const i of ORDER) {
     const c = themeCleared(i), s = themeStars(i);
     [[10, 1], [25, 2], [50, 3]].forEach(([n, ti]) => add('theme' + i, 'th' + i + '.' + n, c >= n, ti, String(n), t('a.th', { t: t('th.' + i), n }), t('a.th.d', { n }), [c, n]));
     add('theme' + i, 'th' + i + '.p', s >= 150, 4, 'star', t('a.thp', { t: t('th.' + i) }), t('a.thp.d'), [s, 150]);
@@ -1277,7 +1280,7 @@ function openAch() {
     h += `<div class="big ${m.got ? '' : 'lock'}">${badge(4, 'crown')}<div><b>${esc(t('a.master'))}</b><small>${esc(t('a.master.d'))}</small><div class="col-total" style="margin:8px 0 0"><div class="bar"><i style="width:${tot / NCOL * 100}%"></i></div><b class="num">${tot}/${NCOL}</b></div></div></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.total'))}</h4><div class="agrid">${by('col').map(cell).join('')}</div></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.themes'))}</h4>`;
-    for (let i = 0; i < NT; i++) {
+    for (const i of ORDER) {
       const a = by('theme' + i);
       h += `<div class="trow"><div class="tp">${BG.svg(THEMES[i], 160, 100)}</div><div class="tn"><b>${esc(t('th.' + i))}</b><small>${themeCleared(i)}/50 · ★${themeStars(i)}/150</small></div><div class="mb">${a.map(x => `<span title="${esc(x.name + ' — ' + x.desc)}" class="${x.got ? '' : 'lock'}">${badge(x.tier, x.icon)}</span>`).join('')}</div></div>`;
     }
@@ -1376,7 +1379,7 @@ async function renderRank() {
   let ctl = '';
   if (rkTab === 'daily') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(fmtDate(rkDate, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }))}</b><button class="ib flip" data-nav="1" ${rkDate >= today() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="chips">${DIFFS.map(d => `<button data-d="${d}" class="${d === rkDiff ? 'on' : ''}">${esc(t('d.' + d))}</button>`).join('')}</div>`;
   if (rkTab === 'month') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1" ${rkMonth <= FIRST_DAY.slice(0, 7) ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(fmtMonth(rkMonth))}</b><button class="ib flip" data-nav="1" ${rkMonth >= thisMonth() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><p class="note" style="margin:-4px 0 10px;text-align:center">${esc(t('rk.month.note'))}</p>`;
-  if (rkTab === 'col') ctl = `<div class="rkctl"><select id="rkSel" class="rksel"><optgroup label="${esc(t('ht.col'))}">${THEMES.map((_, i) => `<option value="c${i}" ${rkSet === 'c' + i ? 'selected' : ''}>${i + 1}. ${esc(t('th.' + i))}</option>`).join('')}</optgroup>${PV ? `<optgroup label="${esc(t('ht.var'))}">${PV.sets.map(s => `<option value="v${s.type}" ${rkSet === 'v' + s.type ? 'selected' : ''}>${esc(t('vt.' + s.type))}</option>`).join('')}</optgroup>` : ''}</select></div>`;
+  if (rkTab === 'col') ctl = `<div class="rkctl"><select id="rkSel" class="rksel"><optgroup label="${esc(t('ht.col'))}">${ORDER.map(i => `<option value="c${i}" ${rkSet === 'c' + i ? 'selected' : ''}>${TNO(i)}. ${esc(t('th.' + i))}</option>`).join('')}</optgroup>${PV ? `<optgroup label="${esc(t('ht.var'))}">${PV.sets.map(s => `<option value="v${s.type}" ${rkSet === 'v' + s.type ? 'selected' : ''}>${esc(t('vt.' + s.type))}</option>`).join('')}</optgroup>` : ''}</select></div>`;
   body.innerHTML = ctl + `<div id="rkList"><div class="rkmsg">${esc(t('rk.loading'))}</div></div>`;
   body.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
     const n = +b.dataset.nav;
