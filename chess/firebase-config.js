@@ -2,7 +2,8 @@
 //
 // Online play needs its own Firebase project (separate from Shogi / Reversi), e.g. "chess-multiplay":
 //   1. https://console.firebase.google.com → Add project → name it "chess-multiplay" (Google Analytics not needed; the free Spark plan is enough).
-//   2. Build → Authentication → Get started → Sign-in method → enable "Anonymous".
+//   2. Build → Authentication → Get started → Sign-in method → enable "Anonymous" and "Google" (Google sign-in + cloud sync);
+//      Authentication → Settings → Authorized domains → add core-calmdust.github.io.
 //   3. Build → Realtime Database → Create database (any location) → start in locked mode,
 //      then open the "Rules" tab, paste the contents of chess/database.rules.json and Publish.
 //   4. Project settings (gear) → General → Your apps → Web (</>) → register an app (no Hosting needed)
