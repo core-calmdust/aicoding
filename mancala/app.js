@@ -1543,16 +1543,20 @@ $('#btnRot').onclick = async () => {
 if (window.__EMBED) document.querySelectorAll('a.home, a.series').forEach(a => { a.target = '_top'; });
 renderRotBtn();
 
-// one-time tip for phone users: landscape mode exists (shown after the first dialog closes, never over another one)
-const ROTTIP_KEY = 'aicoding-mancala-rottip';
-function maybeRotTip() {
-  setTimeout(() => {
-    let seen = true; try { seen = localStorage.getItem(ROTTIP_KEY) === '1'; } catch (e) {}
-    if (seen || window.__EMBED || rotOn() || !matchMedia('(pointer: coarse)').matches || window.innerWidth > window.innerHeight) return;
-    if (document.querySelector('.overlay.show')) return;
-    try { localStorage.setItem(ROTTIP_KEY, '1'); } catch (e) {}
+// tip for phone users: landscape mode exists. Shown on every visit in portrait while the option is off,
+// queued until no dialog is open (new-game dialog, resumed game, lesson / puzzle, animations)
+let rotTipDone = false;
+function rotTipEligible() { return !window.__EMBED && !window.__ROTWRAP && !rotOn() && matchMedia('(pointer: coarse)').matches; }
+function maybeRotTip() { /* kept for the dialog handlers; the queue below does the work */ }
+function startRotTip() {
+  if (!rotTipEligible()) return;
+  const iv = setInterval(() => {
+    if (rotTipDone || !rotTipEligible()) { clearInterval(iv); return; }
+    if (window.innerWidth > window.innerHeight) return;                       // held sideways: wait
+    if (document.querySelector('.overlay.show') || lesson || puzzle || animating || document.hidden) return;
+    clearInterval(iv); rotTipDone = true;
     $('#rotTipOverlay').classList.add('show');
-  }, 450);
+  }, 700);
 }
 $('#rotTipYes').onclick = () => { $('#rotTipOverlay').classList.remove('show'); if (!rotOn()) $('#btnRot').click(); };
 $('#rotTipNo').onclick = () => {
@@ -1571,6 +1575,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 try { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (_) {} } } catch (e) {}
 applyI18n();
 applyBg();
+startRotTip();
 if (!P.length) recompute();
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
