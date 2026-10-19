@@ -34,7 +34,7 @@ static void decide(const Pos*P,int*mv,int*val){
   }
   for(int i=0;i<7 && best<0;i++){ int c=ORDER[i]; if(!canplay(P,c)) continue; if(movege(P,c,s)) best=c; }
   if(best<0){ fprintf(stderr,"no move?\n"); save(); exit(3);}  // cannot happen
-  *mv=best; *val = strong ? s : 100+s;
+  *mv=best; *val = strong ? s : 100+(s>0)-(s<0);
   hput(k, mir?6-best:best, *val); newsolved++;
   if(time(0)-LASTSAVE >= 600) save();
   if(time(0)-T0 >= MAXSEC) timeout_hit=1;

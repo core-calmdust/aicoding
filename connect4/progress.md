@@ -32,3 +32,9 @@ Lv8 を1手目から完全プレイにする。オフラインで「AIが直面�
 - バグ修正: 弱解モード(ply<8)で負け局面のとき movege(-1) が全手 false → 降順しきい値で最遅負けを厳密に求めるよう変更
 - 検証: src/verify.js でログ → src/vrun.sh results.txt logs... (C 弱解・再開可能; 勝ち手なら局面解は省略)
 - 17:35 計画変更: side0 D=10 R=2 → side1 D=11 R=3 → (余裕あれば) side0 D=12 R=2 の順に実行 (チェーンは src/run_gen2.sh を順に)。gen は SIGTERM で保存して終了するよう修正
+- 18:10 side0 D=10 R=2 完了: 16,634ノード (2156秒)。暫定 tree.bin (side0 d10 r2 + side1 d9 r1, 21.7KB) を配置済み
+  エンコード: node src/encode.js t/s0_d10_r2.txt 10 t/s1_d11_r3.txt 11 /home/claude/aicoding/connect4/tree.bin 2 3  (末尾2引数=各sideの根の最大ply)
+- 暫定木で rand 100局: Lv8 全勝 (先手50/後手50), 探索手の最大 572ms
+- ブラウザ: /home/claude/work/pw/c4lv8.js PORT (python3 -m http.server 8793 を aicoding で起動) → エラー0。
+  index.html: Worker 作成時に book/tree を同期 post するよう修正 (従来は最初のジョブより後に届いていた)
+- 18:13 side1 D=11 R=3 実行中 (CPU は dots エージェントと共有で遅い)

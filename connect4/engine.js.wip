@@ -440,8 +440,17 @@ function decodeTree(buf) {
     }
     take(mv);
   }
-  D = DD[0]; left = cnt[0]; dfs();
-  D = DD[1]; left = cnt[1]; for (let r = 0; r < 7; r++) { put(r); dfs(); take(r); }
+  // roots: every position of ply side, side+2, ... <= RR[side] (column order), as in the generator
+  const RR = [u8[14], u8[15]];
+  const roots = t => {
+    if (n === t) { dfs(); return; }
+    for (let c = 0; c < 7; c++) { if (hgt[c] >= 6 || wins(c)) continue; put(c); roots(t); take(c); }
+  };
+  for (let sd = 0; sd < 2; sd++) {
+    D = DD[sd]; left = cnt[sd];
+    for (let r = sd; r <= Math.max(sd, RR[sd]); r += 2) roots(r);
+    if (left !== 0) throw new Error('tree: record count');
+  }
   return map;
 }
 function treeKey(str) {
