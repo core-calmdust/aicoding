@@ -221,6 +221,13 @@ body.in-lesson .review-card{display:none!important}
 .rv-sum .h{font-size:12.5px;color:var(--muted)}
 .rv-chips{display:flex;gap:4px;justify-content:flex-end}.rv-chips span{min-width:26px;text-align:center;border-radius:6px;font-size:13px;font-weight:700;padding:2px 5px;color:#0b1110}
 .rv-chips .best{background:#6fd3a0}.rv-chips .good{background:#9fc7ff}.rv-chips .dubious{background:#f2c060}.rv-chips .bad{background:#ff6b5b}
+.rv-ex{border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.07);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:14.5px;line-height:1.6;color:var(--text)}
+.rv-ex-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.rv-ex p{margin:2px 0}.rv-ex .bm{color:#f0b54a}.rv-ex .ft{color:var(--muted);font-size:13px}
+.rv-ex .wr{color:var(--muted);font-size:13.5px}.rv-ex .pv{font-size:13.5px;overflow-wrap:anywhere}.rv-ex .pv .h{color:var(--muted);font-size:12.5px;margin-right:4px}
+.rv-ex .tag{font-size:12.5px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b1110;flex:none;background:#8fe3b8}.rv-ex .tag.good{background:#9fc7ff}.rv-ex .tag.dubious{background:#f2c060}.rv-ex .tag.bad{background:#ff6b5b}
+.rv-pvbtn{margin-top:6px;font-size:13px;padding:5px 12px;border-radius:7px;border:1px solid rgba(201,169,97,.5);background:rgba(0,0,0,.2);color:var(--accent)}
+.rv-pvbtn:hover{background:rgba(201,169,97,.15)}
 .rv-list{display:grid;gap:3px;margin-top:10px;max-height:220px;overflow-y:auto}
 .rv-list button{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;font-size:14.5px;color:var(--text);text-align:left}
 .rv-list button:hover,.rv-list button.cur{background:rgba(201,169,97,.14);color:var(--text)}
@@ -908,7 +915,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261019rk2"></script>
+<script src="i18n.js?v=20261019ex"></script>
 <script src="engine.js?v=20261019n3"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
@@ -1356,9 +1363,16 @@ function drawArrows() {
           a += `<line x1="${fx + ux * 20}" y1="${fy + uy * 20}" x2="${tx - ux * 22}" y2="${ty - uy * 22}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" marker-end="url(#ah)"/>`; }
         return a + `<text x="${tx}" y="${ty + 44}" font-size="24" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.7)" stroke-width="5" paint-order="stroke">${label}</text>`;
       };
-      const q = qOfDrop(r.drop);
+      const q = qOfDrop(r.drop), ra = game.info[cur].ra;
+      if (rvPvShow && ra && ra.pv && ra.pv.length) {
+        // the engine's line from here, numbered: mover's moves gold, replies light blue
+        const pp = posAt(cur); const P0 = P;
+        ra.pv.forEach((u, k) => { P = pp; try { html += arrow(u, k % 2 ? 'rgba(120,190,255,.85)' : 'rgba(226,150,30,.92)', k ? 9 : 14, String(k + 1)); } catch (e) {} pp.doMove(pp.fromUsi(u)); pp.sp = 0; });
+        P = P0;
+      } else {
       if (r.best !== r.played) html += arrow(r.best, 'rgba(226,150,30,.92)', 14, t('rv.bestLbl'));
       html += arrow(r.played, q === 'bad' || q === 'dubious' ? 'rgba(255,90,80,.85)' : 'rgba(40,110,190,.8)', 10, t('q.' + q));
+      }
     }
   }
   arrowsEl.innerHTML = html;
@@ -2154,6 +2168,29 @@ function rvLoss(i) {
   const best = winRate(a.s), mine = winRate(-b.s);
   return { drop: Math.max(0, best - mine), best: a.bm, played: game.moves[i - 1] };
 }
+// review: explain the move at the current position (what the best move was, win-rate difference, engine line)
+let rvPvShow = false;
+function rvFeat(sf, u) {
+  const p = new E.Position(); p.setSfen(sf); const m = p.fromUsi(u), f = [];
+  if (E.isDrop(m)) f.push(t('rv.f.drop'));
+  else { if (p.board[E.mTo(m)]) f.push(t('rv.f.cap')); if (u.endsWith('+')) f.push(t('rv.f.prom')); }
+  p.doMove(m); if (p.inCheck()) f.push(t('rv.f.check'));
+  return !f.length ? '' : (LANG === 'ja' || LANG === 'zh') ? '（' + f.join('・') + '）' : ' (' + f.join(', ') + ')';
+}
+function rvExplainHtml() {
+  if (!game.rv || cur >= game.moves.length) return '';
+  const r = rvLoss(cur + 1); if (!r) return '';
+  const sf = posAt(cur).sfen(), q = qOfDrop(r.drop), a = game.info[cur].ra, b = game.info[cur + 1].ra;
+  const pct = v => Math.round(v * 100) + '%';
+  const wrB = winRate(a.s), wrP = winRate(-b.s);
+  const pv = (a.pv && a.pv.length && a.pv[0] === r.best ? a.pv : [r.best]);
+  let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${t('rv.ex.move', { n: cur + 1 })} <b>${kan1(sf, r.played)}</b></span><span class="tag ${q}">${t('q.' + q)}</span></div>`;
+  if (r.best === r.played) h += `<p>${t('rv.ex.same')}</p>`;
+  else h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p><p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
+  h += `<p class="pv"><span class="h">${t('rv.ex.pv')}</span> ${lineKanji(sf, pv).join(' ')}</p>`;
+  h += `<button class="rv-pvbtn" id="rvPvBtn">${t(rvPvShow ? 'rv.ex.hidePv' : 'rv.ex.showPv')}</button></div>`;
+  return h;
+}
 function sideName(c) { return settings.mode === 'ai' ? (c === game.human ? t('you') : 'AI') : cname(c); }
 function renderReview() {
   const card = $('#reviewCard');
@@ -2173,14 +2210,14 @@ function renderReview() {
     }
     const names = kifList();
     const row = c => { const x = st[c]; return `<span>${c ? '☖' : '☗'} ${sideName(c)}</span><span><b>${x.n ? Math.round(x.ok / x.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: x.n ? (x.drop / x.n * 100).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${x.c.best}</span><span class="good">${x.c.good}</span><span class="dubious">${x.c.dubious}</span><span class="bad">${x.c.bad}</span></span>`; };
-    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
+    html = rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
     bad.sort((a, b) => b.drop - a.drop);
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${names[x.i - 1]} → ${kan1(posAt(x.i - 1).sfen(), x.best)}</span><span class="ls">−${Math.round(x.drop * 100)}%</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
   }
   $('#rvBody').innerHTML = html;
 }
-$('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#rvBody').addEventListener('click', e => { if (e.target.closest('#rvPvBtn')) { rvPvShow = !rvPvShow; renderReview(); drawArrows(); return; } const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
