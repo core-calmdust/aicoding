@@ -370,7 +370,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
   .lesson-card{order:-2}
   .controls{order:0;padding:8px;gap:5px}
   #evalCard{order:1}
-  .kifu-card{order:2;flex:none;min-height:110px}
+  .review-card{order:2}
+  .kifu-card{order:3;flex:none;min-height:110px}
   .kifu{max-height:none;overflow:visible}
   .info-line{display:none}
   .card{padding:10px 12px}
@@ -1454,7 +1455,7 @@ function renderKifu() {
   k.innerHTML = html;
   const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
 }
-$('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (!b) return; if (game && game.rv && !rvOpen) { rvOpen = true; } viewAt(+b.dataset.i); renderReview(); });
 (() => {
   const g = $('#graph'); let dragging = false;
   const go = x => { const r = g.getBoundingClientRect(), n = Math.max(game.moves.length + 1, 40); const i = Math.max(0, Math.min(game.moves.length, Math.round((x - r.left) / r.width * (n - 1)))); if (i !== cur) viewAt(i); };
