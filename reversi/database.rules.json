@@ -35,12 +35,24 @@
         "$slot": {
           ".write": "auth != null && newData.exists()",
           ".validate": "$slot.matches(/^(1[0-9]|[0-9])$/) && newData.hasChildren(['n', 'uid', 'name', 'text', 't']) && newData.child('uid').val() === auth.uid",
-          "n": { ".validate": "newData.isNumber() && newData.val() >= 1" },
-          "uid": { ".validate": "newData.isString()" },
-          "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
-          "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100" },
-          "t": { ".validate": "newData.isNumber() && newData.val() <= now" },
-          "$other": { ".validate": false }
+          "n": {
+            ".validate": "newData.isNumber() && newData.val() >= 1"
+          },
+          "uid": {
+            ".validate": "newData.isString()"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now"
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       }
     },
@@ -57,6 +69,20 @@
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "profiles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['n']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 16"
+      }
+    },
+    "sync": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['d', 't']) && newData.child('d').isString() && newData.child('d').val().length <= 400000 && newData.child('t').isNumber()"
       }
     }
   }
