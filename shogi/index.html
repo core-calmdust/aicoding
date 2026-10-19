@@ -1102,6 +1102,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
 
 <script src="i18n.js?v=20261020st"></script>
 <script src="rules-i18n.js?v=20261019ru"></script>
+<script src="../shared/rulesoffer.js?v=1"></script>
 <script src="engine.js?v=20261019q16"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="../shared/pzbook.js?v=2"></script>
@@ -2804,7 +2805,7 @@ async function openLessons() {
   await lessonsReady; await tsumeReady; await openReady; if (!LESSONS) return;
   lessonView('list'); showOverlay('#lessonOverlay');
   $('#lessonList').className = 'lesson-list';
-  if (lsTab === 'rules') { segSel('segLs', 'rules'); ShogiRules.open(); return; }
+  if (lsTab === 'rules') { segSel('segLs', 'rules'); ShogiRules.open(); if (window.__rulesOffer) window.__rulesOffer.mark(); return; }
   if (lsTab === 'tsume') { openTsumeList(); return; }
   if (lsTab === 'open') { openOpenList(); return; }
   segSel('segLs', 'lesson');
@@ -2952,6 +2953,8 @@ $('#btnLessonBack').onclick = () => { if (openChoiceIdx >= 0) lsTab = 'open'; op
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLesson').onclick = () => { lsTab = 'lesson'; openLessons(); };
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
+// first-time banner in the new-game dialog → illustrated rules (the Rules tab of the lesson dialog)
+if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitLesson(); };
 $('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lesson && lesson.exam) startExam(); else if (lesson && lesson.opening) startOpening(lesson.gi); else startLesson(lesson ? lesson.gi : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = Math.min(LESSONS.grades.length - 1, (lesson ? lesson.gi : introIdx) + 1); openIntro(n); };

@@ -2400,3 +2400,6 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 window.addEventListener('resize', () => renderFx());
+
+// first-time banner in the new-game dialog → illustrated rules
+if (window.RulesOffer) RulesOffer.init({ game: 'chess', lang: () => LANG, open: () => openRules('move'), watch: '#rulesOverlay' });

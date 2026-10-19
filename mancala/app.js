@@ -1620,3 +1620,6 @@ requestAnimationFrame(() => {
 });
 // test hooks
 window.__mancala = { get game() { return game; }, get cur() { return cur; }, get P() { return P; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, onPit, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get animating() { return animating; }, get thinking() { return thinking; }, startPuzzle, startLesson, viewAt };
+
+// first-time banner in the new-game dialog → illustrated rules
+if (window.RulesOffer) RulesOffer.init({ game: 'mancala', lang: () => LANG, open: () => openRules(game.rules), watch: '#rulesOverlay' });
