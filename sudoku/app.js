@@ -130,6 +130,7 @@ function badge(tier, center, cls = '') {
 const STAR = on => `<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" fill="${on ? '#ffc93c' : '#e7e0ee'}" stroke="${on ? '#e8a20f' : '#d8d0e2'}" stroke-width="1.3" stroke-linejoin="round"/></svg>`;
 const FLAME = '<svg viewBox="0 0 24 24"><path d="M12 2c4 4.5 7 7.5 7 12a7 7 0 0 1-14 0c0-3.2 2-5.5 3.2-6.6.1 2.1 1.1 3.3 2.3 3.6C10.5 8 10.5 5.3 12 2z" fill="#ff8a4c"/><path d="M12 12c1.8 1.8 3 3 3 5a3 3 0 0 1-6 0c0-1.3.8-2.4 1.4-2.9.2.9.6 1.4 1.1 1.5-.1-1.3 0-2.4.5-3.6z" fill="#ffd36b"/></svg>';
 const CROWN = '<svg viewBox="0 0 24 24"><path d="M3 9l4 3.5L12 5l5 7.5L21 9l-1.8 10H4.8z" fill="#ffcd4d" stroke="#d4920f" stroke-width="1.3" stroke-linejoin="round"/><circle cx="12" cy="5" r="1.6" fill="#ff8fb6"/><circle cx="3" cy="9" r="1.3" fill="#8fc4ff"/><circle cx="21" cy="9" r="1.3" fill="#8fc4ff"/></svg>';
+const GLOGO = '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
 const PENCIL = '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 const lvChip = lv => `<span class="lvchip lv${lv}">${esc(t('lv.' + lv))}</span>`;
 const LVCOL = { 1: '#f2a066', 2: '#76a2e2', 3: '#e3ad1f', 4: '#b468d6' };
@@ -318,7 +319,7 @@ function route() {
   if (p[0] === 'd' && /^\d{4}-\d\d-\d\d$/.test(p[1]) && DIFFS.includes(p[2]) && p[1] >= FIRST_DAY && p[1] <= today()) return openGame({ kind: 'd', date: p[1], d: p[2] });
   if (p[0] === 'c' && +p[1] >= 1 && +p[1] <= 10 && +p[2] >= 1 && +p[2] <= 50) return openGame({ kind: 'c', ti: +p[1] - 1, pi: +p[2] - 1 });
   if (p[0] === 'x' && PV && vset(+p[1] - 1) && +p[2] >= 1 && +p[2] <= vsetLen(+p[1] - 1)) return openGame({ kind: 'x', si: +p[1] - 1, pi: +p[2] - 1 });
-  if (p[0] === 't' && +p[1] >= 1 && +p[1] <= 10) return openTheme(+p[1] - 1);
+  if (p[0] === 't' && +p[1] >= 1 && +p[1] <= 10) return openTheme(+p[1] - 1, p[2] === 'm' ? 'map' : '');
   if (p[0] === 'v' && PV && vset(+p[1] - 1)) return openVset(+p[1] - 1);
   openHome();
 }
@@ -416,6 +417,33 @@ function renderHome() {
     $$('#vsets .tcard').forEach(b => b.onclick = () => { SFX.tap(); go('v/' + (+b.dataset.v + 1)); });
   }
   loadMyRanks();
+  renderDailyExtra();
+}
+/* daily panel: today's mini ranking + goals close to completion */
+let dxDiff = 'e';
+async function renderDailyExtra() {
+  const host = $('#dailyExtra'); if (!host) return;
+  const goals = catalog().filter(a => !a.got && a.prog && a.prog[1] > 0 && a.group !== 'month' && a.group !== 'rank')
+    .map(a => Object.assign({ r: Math.min(1, a.prog[0] / a.prog[1]) }, a)).sort((x, y) => y.r - x.r || x.prog[1] - y.prog[1]).slice(0, 3);
+  const goalsH = `<div class="dx"><h3>${badge(1, 'star').replace('<svg', '<svg style="width:22px;height:22px"')}${esc(t('dx.goals'))}</h3>${goals.map(a => `<div class="goal">${badge(a.tier, a.icon)}<div class="gt2"><b>${esc(a.name)}</b><div class="bar"><i style="width:${(a.r * 100).toFixed(1)}%"></i></div></div><small>${Math.min(a.prog[0], a.prog[1])}/${a.prog[1]}</small></div>`).join('')}</div>`;
+  const chips = `<div class="chips">${DIFFS.map(d => `<button data-d="${d}" class="${d === dxDiff ? 'on' : ''}">${esc(t('d.' + d))}</button>`).join('')}</div>`;
+  const rankHead = `<h3>${badge(3, 'podium').replace('<svg', '<svg style="width:22px;height:22px"')}${esc(t('dx.rank'))}${chips}</h3>`;
+  host.innerHTML = `<div class="dx" id="dxRank">${rankHead}<div class="rkmsg" style="padding:10px">${esc(t('rk.loading'))}</div></div>` + goalsH;
+  host.querySelectorAll('#dxRank [data-d]').forEach(b => b.onclick = () => { dxDiff = b.dataset.d; SFX.tap(); renderDailyExtra(); });
+  const box = $('#dxRank');
+  const body = html => { box.innerHTML = rankHead + html; box.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { dxDiff = b.dataset.d; SFX.tap(); renderDailyExtra(); }); };
+  if (!ON || !ON.available) { body(`<p class="note">${esc(t('rk.prep'))}</p>`); return; }
+  if (!DB.prof.name) { body(`<p class="note">${esc(t('dx.noname'))}</p>`); return; }
+  try {
+    const td = today(), d = dxDiff;
+    const [rows, mine] = await Promise.all([ON.topDaily(td, d, 3), ON.myDaily(td, d)]);
+    if (d !== dxDiff || screen !== 'home') return;
+    rows.sort((a, b) => a.t - b.t);
+    let h = rows.length ? '<ol class="mini">' + rows.map((r, k) => `<li class="${r.uid === ON.uid ? 'me' : ''}"><span class="no">${miniMedal(3 - k)}</span>${avatar(r.i, 30)}<span class="nm">${esc(r.n)}</span><span class="vl">${fmtTime(r.t)}</span></li>`).join('') + '</ol>' : `<p class="note">${esc(t('rk.empty'))}</p>`;
+    h += `<p class="note">${mine ? esc(t('dx.mine', { n: fmtN(mine.rank), t: fmtTime(mine.me.t) })) : esc(t('dx.notyet', { d: t('d.' + d) }))} <a href="#" id="dxMore">${esc(t('dx.more'))}</a></p>`;
+    body(h);
+    const m = $('#dxMore'); if (m) m.onclick = e => { e.preventDefault(); rkTab = 'daily'; rkDiff = d; rkDate = td; openRank(); };
+  } catch (e) { body(`<p class="note">${esc(t('rk.err'))}</p>`); }
 }
 function renderCal() {
   const [y, m] = calMonth.split('-').map(Number);
@@ -449,21 +477,37 @@ function openDay(ds) {
 
 /* ================= theme map ================= */
 let curTheme = 0;
-function openTheme(ti) {
+function openTheme(ti, stage) {
   curTheme = ti; show('theme');
   setScene(THEMES[ti], '', THEMES[ti]);
   const n = themeCleared(ti);
   $('#tlName').textContent = (ti + 1) + '. ' + t('th.' + ti);
   $('#tlProg').innerHTML = `${n}/50 · ${STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${themeStars(ti)}/150`;
   const lvs = [...new Set(PZ.themes[ti].map(s => +s[81]))];
-  $('#tlIntro').innerHTML = `<div class="intro"><div class="ban">${BG.svg(THEMES[ti], 320, 200, '', curTod())}</div><dl>
-    <dt>${esc(t('ti.theme'))}</dt><dd>${esc(t('thd.' + ti))}</dd>
-    <dt>${esc(t('ti.level'))}</dt><dd>${lvs.map(lvChip).join(' ')} <span class="note" style="margin:0">${esc(t('thl.' + ti))}</span></dd>
-    <dt>${esc(t('ti.score'))}</dt><dd class="num">${fmtN(themeScore(ti))}</dd></dl>
-    <div class="story">${esc(t('ths.' + ti))}</div>${startRow('c', ti)}</div>`;
-  wireStart();
-  $('#tlBody').innerHTML = `<div class="mapwrap"><div class="map" id="map"></div></div><div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
-  drawMap(ti, false);
+  const legend = `<div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
+  if (stage !== 'map') {
+    // stage 1: overview box
+    const st = startTarget('c', ti);
+    const lab = st.k < 0 ? t('st.mapall') : st.cont ? t('st.cont', { n: st.k + 1 }) : t('st.start');
+    $('#tlIntro').innerHTML = `<div class="intro"><div class="ban" id="tlBan" title="${esc(t('st.map'))}">${BG.svg(THEMES[ti], 320, 200, '', curTod())}<span class="mapcue"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg>${esc(t('st.map'))}</span></div><dl>
+      <dt>${esc(t('ti.theme'))}</dt><dd>${esc(t('thd.' + ti))}</dd>
+      <dt>${esc(t('ti.level'))}</dt><dd>${lvs.map(lvChip).join(' ')} <span class="note" style="margin:0">${esc(t('thl.' + ti))}</span></dd>
+      <dt>${esc(t('ti.score'))}</dt><dd class="num">${fmtN(themeScore(ti))}</dd></dl>
+      <div class="story">${esc(t('ths.' + ti))}</div>
+      <div class="startrow"><button class="btn xl" id="stGo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button><button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button></div></div>`;
+    $('#tlBody').innerHTML = '';
+    const toMap = () => { SFX.tap(); go('t/' + (ti + 1) + '/m'); };
+    $('#stGo').onclick = toMap; $('#stMap').onclick = toMap; $('#tlBan').onclick = toMap;
+    $('#tlBack').onclick = () => go('');
+    return;
+  }
+  // stage 2: map, scrolled to the current position
+  const st = startTarget('c', ti);
+  $('#tlIntro').innerHTML = '';
+  $('#tlBody').innerHTML = `<div class="mapwrap"><div class="map" id="map"></div></div>${legend}${st.k >= 0 ? `<div class="mapgo"><button class="btn xl" id="mapPlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(t('st.play', { n: st.k + 1 }))}</button></div>` : ''}`;
+  const mp = $('#mapPlay'); if (mp) mp.onclick = () => { SFX.tap(); go('c/' + (ti + 1) + '/' + (st.k + 1)); };
+  $('#tlBack').onclick = () => go('t/' + (ti + 1));
+  drawMap(ti, true, st.k);
 }
 /* intro start button: はじめる / つづきから */
 function startTarget(kind, ix) {
@@ -477,13 +521,13 @@ function startTarget(kind, ix) {
 function startRow(kind, ix) {
   const st = startTarget(kind, ix);
   const lab = st.k < 0 ? t('tl.allclear') : st.cont ? t('st.cont', { n: st.k + 1 }) : t('st.start');
-  return `<div class="startrow"><button class="btn big" id="stGo" data-to="${st.k < 0 ? '' : (kind === 'c' ? 'c/' : 'x/') + (ix + 1) + '/' + (st.k + 1)}" ${st.k < 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${kind === 'c' ? `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>` : ''}</div>`;
+  return `<div class="startrow"><button class="btn xl" id="stGo" data-to="${st.k < 0 ? '' : (kind === 'c' ? 'c/' : 'x/') + (ix + 1) + '/' + (st.k + 1)}" ${st.k < 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${kind === 'c' ? `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>` : ''}</div>`;
 }
 function wireStart() {
   const g = $('#stGo'); if (g) g.onclick = () => { if (g.dataset.to) { SFX.tap(); go(g.dataset.to); } };
   const m = $('#stMap'); if (m) m.onclick = () => { const nx = $('#map .node.next') || $('#map .node'); if (nx) nx.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
 }
-function drawMap(ti, scrollToNext) {
+function drawMap(ti, scrollToNext, focusK) {
   const host = $('#map'); if (!host) return;
   const W = Math.max(280, host.clientWidth), step = 92, N = 50, top = 90, bottom = 70;
   const H = top + bottom + (N - 1) * step;
@@ -528,7 +572,7 @@ function drawMap(ti, scrollToNext) {
   host.innerHTML = html;
   host.querySelectorAll('.node').forEach(b => b.onclick = () => { SFX.tap(); go('c/' + (ti + 1) + '/' + (+b.dataset.p + 1)); });
   if (scrollToNext) {
-    const k = next >= 0 ? next : 0;
+    const k = focusK != null && focusK >= 0 ? focusK : next >= 0 ? next : 0;
     requestAnimationFrame(() => {
       const rect = host.getBoundingClientRect();
       const yAbs = rect.top + scrollY + pts[k][1];
@@ -576,6 +620,7 @@ function miniBoard(type, big) {
 let curVset = 0;
 function openVset(si) {
   curVset = si; show('theme');
+  $('#tlBack').onclick = () => go('');
   setScene('wonder', '', 'wonder');
   const s = vset(si), L = vsetLen(si), n = vsetCleared(si);
   $('#tlName').textContent = t('vt.' + s.type);
@@ -1036,12 +1081,12 @@ function showResult(rec, o) {
     next = nd ? `<button class="btn" data-a="next" data-to="d/${G.date}/${nd}">${esc(t('res.nextd', { d: t('d.' + nd) }))}</button>` : `<button class="btn" data-a="home">${esc(t('res.home'))}</button>`;
   } else if (kind === 'c') {
     const np = nextUncleared(G.ti, G.pi);
-    next = np >= 0 ? `<button class="btn" data-a="next" data-to="c/${G.ti + 1}/${np + 1}">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="next" data-to="t/${G.ti + 1}">${esc(t('res.map'))}</button>`;
+    next = np >= 0 ? `<button class="btn" data-a="next" data-to="c/${G.ti + 1}/${np + 1}">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="next" data-to="t/${G.ti + 1}/m">${esc(t('res.map'))}</button>`;
   } else {
     const np = nextVar(G.si, G.pi);
     next = np >= 0 ? `<button class="btn" data-a="next" data-to="x/${G.si + 1}/${np + 1}">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="next" data-to="v/${G.si + 1}">${esc(t('res.list'))}</button>`;
   }
-  const backTo = kind === 'd' ? '' : kind === 'c' ? 't/' + (G.ti + 1) : 'v/' + (G.si + 1);
+  const backTo = kind === 'd' ? '' : kind === 'c' ? 't/' + (G.ti + 1) + '/m' : 'v/' + (G.si + 1);
   h += `<div class="ract"><button class="btn ghost" data-a="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>${esc(t('share'))}</button>${next}</div>`;
   h += `<div class="ract" style="margin-top:12px"><button class="btn ghost sm" data-a="back" data-to="${backTo}">${esc(kind === 'd' ? t('res.cal') : kind === 'c' ? t('res.map') : t('res.list'))}</button>${DB.pts >= GACHA_COST ? `<button class="btn ghost sm" data-a="gacha">${esc(t('ga.btn'))}</button>` : ''}<button class="btn ghost sm" data-a="view">${esc(t('res.view'))}</button></div>`;
   $('#resBody').innerHTML = h;
@@ -1239,8 +1284,16 @@ function openName(first) {
     <input id="nmIn" maxlength="12" autocomplete="nickname" placeholder="${esc(t('nm.ph'))}" value="${esc(DB.prof.name)}">
     <div class="cnt"><span id="nmCnt">0</span>/12</div>
     <p class="note">${esc(t('nm.note'))}</p>
-    <button class="btn" id="nmOk" style="width:100%;margin-top:8px">${esc(first ? t('nm.start') : t('nm.save'))}</button>`;
+    <button class="btn" id="nmOk" style="width:100%;margin-top:8px">${esc(first ? t('nm.start') : t('nm.save'))}</button>
+    ${first && ON && ON.available && !ON.mock ? `<div class="syncbox" style="text-align:start;margin-top:16px"><b>${esc(t('nm.g.title'))}</b><p>${esc(t('nm.g.desc'))}</p><button class="btn gbtn" id="nmG">${GLOGO}${esc(t('sync.google'))}</button></div>` : ''}`;
   const inp = $('#nmIn'), ok = $('#nmOk');
+  const g = $('#nmG'); if (g) g.onclick = async () => {
+    try {
+      await ON.google(myRankPaths()); await syncNow(true);
+      if (DB.prof.name) { $('#mName').dataset.lock = ''; closeModals(); toast(esc(t('nm.g.welcome', { n: DB.prof.name })), 'msg'); if (screen === 'home') renderHome(); }
+      else { toast(esc(t('nm.g.linked')), 'msg'); g.closest('.syncbox').hidden = true; }
+    } catch (e) { if (!(e && /popup-closed|cancelled-popup/.test(e.code || ''))) toast(esc(t('sync.err')), 'msg'); }
+  };
   const upd = () => { const v = inp.value.trim(); $('#nmCnt').textContent = [...v].length; ok.disabled = !v || [...v].length > 12; };
   inp.oninput = upd; upd();
   $$('#nameBody .picks button').forEach(b => b.onclick = () => { pick = +b.dataset.id; $$('#nameBody .picks button').forEach(x => x.classList.toggle('on', x === b)); $('#nmHero').innerHTML = iconSvg(pick); SFX.tap(); });
@@ -1500,7 +1553,7 @@ async function googleLogin() {
 function syncSection() {
   if (!ON || !ON.available || ON.mock) return '';
   const acc = signedIn() ? ON.account() : null;
-  return `<div class="syncbox"><b>${esc(t('sync.title'))}</b><p>${esc(acc ? t('sync.on', { e: acc.email || acc.name }) : t('sync.desc'))}</p>
+  return `<div class="syncbox"><b>${esc(t('sync.title'))}</b><p>${esc(acc ? t('sync.on', { e: acc.email || acc.name }) : t('sync.desc') + ' ' + t('sync.more'))}</p>
     ${acc ? `<div class="sbtns"><button class="btn sm" id="syNow">${esc(t('sync.now'))}</button><button class="btn sm ghost" id="syOut">${esc(t('sync.logout'))}</button></div>`
       : `<button class="btn gbtn" id="syIn"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>${esc(t('sync.google'))}</button>`}</div>`;
 }
@@ -1609,8 +1662,7 @@ $('#tAuto').onclick = autoNotes;
 $('#tHint').onclick = onHint;
 $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
-$('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (G.ti + 1)); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
-$('#tlBack').onclick = () => go('');
+$('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (G.ti + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
 $$('#htabs button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
 $('#logo').onclick = () => go('');
 $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); };

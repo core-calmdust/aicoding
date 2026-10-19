@@ -250,14 +250,41 @@ body.night .day.all3{background:linear-gradient(160deg,#4a4026,#3d3420)}
 .vcard .pic svg{position:static;width:62%;height:auto}
 
 /* ---------- theme map ---------- */
+.dcol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.dx h3{margin:0 0 10px;font-size:15px;font-weight:900;display:flex;align-items:center;gap:8px}
+.dx h3 .chips{margin:0 0 0 auto}
+.dx + .dx{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.mini{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.mini li{display:flex;align-items:center;gap:10px;font-size:14px;padding:5px 8px;border-radius:12px;background:var(--surface2)}
+.mini li.me{box-shadow:inset 0 0 0 2px var(--acc)}
+.mini .no{width:22px;text-align:center;font-family:var(--num);font-weight:700;color:var(--ink2)}
+.mini .no svg{width:20px;height:20px;display:block}
+.mini .nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini .vl{font-family:var(--num);font-weight:700}
+.mini .av{width:30px;height:30px}
+.goal{display:flex;align-items:center;gap:10px;padding:6px 4px}
+.goal svg{width:40px;height:40px;flex:none}
+.goal .gt2{flex:1;min-width:0}
+.goal b{display:block;font-size:13.5px}
+.goal .bar{height:8px;margin-top:4px}
+.goal small{font-family:var(--num);font-size:12px;color:var(--ink2);white-space:nowrap}
+.dx .note{margin-top:4px}
+/* theme intro (stage 1) */
+.ban{cursor:pointer}
+.ban .mapcue{position:absolute;inset:auto 8px 8px auto;background:rgba(255,255,255,.92);color:#43385a;border-radius:99px;padding:4px 10px;font-size:12px;font-weight:900;display:flex;gap:4px;align-items:center}
+.ban .mapcue svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2}
+.maphead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.mapgo{position:sticky;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:5;margin-top:-70px;padding-bottom:6px;pointer-events:none}
+.mapgo .btn{pointer-events:auto}
+
 .tl-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .tl-head h2{margin:0;font-size:22px;font-weight:900}
 .tl-head .pg{font-family:var(--num);font-weight:700;color:var(--ink2);margin-inline-start:auto}
 .intro{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start;margin-bottom:16px}
 @media (max-width:620px){.intro{grid-template-columns:1fr}}
 .intro .ban{border-radius:18px;overflow:hidden;aspect-ratio:16/10;position:relative}
-.intro .ban svg{position:absolute;inset:0;width:100%;height:100%}
-.intro .ban svg *{animation:none!important}
+.intro .ban > svg{position:absolute;inset:0;width:100%;height:100%}
+.intro .ban > svg *{animation:none!important}
 .intro dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:13px;align-items:baseline}
 .intro dt{font-weight:900;color:var(--ink2);font-size:11.5px;white-space:nowrap}
 .intro dd{margin:0;line-height:1.65}
@@ -294,7 +321,7 @@ body.night .node.cleared{background:linear-gradient(180deg,var(--surface),color-
 .pz.cleared .n{color:var(--acc)}
 .pz .ip{position:absolute;top:4px;inset-inline-end:5px;width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px var(--surface)}
 .startrow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;grid-column:1/-1;margin-top:4px}
-.btn.big{font-size:17px;padding:13px 30px;min-width:220px}
+.btn.xl{font-size:17px;padding:13px 30px;min-width:220px}
 .rulebox{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;background:var(--surface2);border-radius:18px;padding:12px;margin-bottom:16px}
 @media (max-width:560px){.rulebox{grid-template-columns:110px 1fr}}
 .rulebox svg{width:100%;height:auto;display:block}
@@ -641,9 +668,48 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
   .card{padding:14px;border-radius:22px}
   .dbtn{padding:12px 4px 10px}.dbtn .md{width:40px;height:40px}.dbtn .lb{font-size:14px}
   .top .snd{display:none}
-  .top .home{width:40px;height:40px;background:var(--chip);border-radius:12px}.top .home svg{width:25px;height:25px;stroke-width:2.2}
+  .top .homebtn{width:40px;height:40px;background:var(--chip);border-radius:12px}.top .homebtn svg{width:25px;height:25px;stroke-width:2.2}
 }
 @media (max-width:370px){.series{display:none}.top{gap:0}}
+@media (min-width:861px){
+  .intro{grid-template-columns:300px 1fr;gap:22px}
+  .intro dl{font-size:16px;gap:10px 14px}
+  .intro dt{font-size:13.5px}
+  .intro .story{font-size:16px;line-height:1.9;padding:14px 18px}
+  .intro .note{font-size:13px!important}
+  .rulebox{grid-template-columns:200px 1fr;padding:16px 18px}
+  .rulebox p{font-size:16px;line-height:1.85}
+  .rulebox b{font-size:17px}
+  /* wider, larger dialogs on PC */
+  .sheet{width:min(860px,92vw)}
+  .sheet.wide{width:min(1080px,94vw)}
+  .sheet .sh h3{font-size:21px}
+  .sheet .sb{font-size:15px}
+  .tabs.seg .tab{font-size:15px;padding:10px 6px}
+  #setBody{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}
+  #setBody > .set:first-child,#setBody .syncbox,#setBody .danger{grid-column:1/-1}
+  .set .lbl b{font-size:16px}
+  .set .lbl small{font-size:13px}
+  .help-s{columns:2;column-gap:36px}
+  .help-s h4{break-after:avoid;font-size:17px}
+  .help-s p,.help-s li{font-size:15.5px;line-height:1.85}
+  .help-s ul,.help-s p,.help-s .flickdemo{break-inside:avoid}
+  #ruleBody{columns:1}
+  .agrid{grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:12px}
+  .ach svg{width:68px;height:68px}
+  .ach b{font-size:13.5px}
+  .ach small{font-size:11.5px}
+  .agrp h4{font-size:16px}
+  .mrow .mn,.trow .tn b{font-size:15.5px}
+  .mrow .mn small,.trow .tn small{font-size:12.5px}
+  .mrow .mb svg{width:48px;height:48px}
+  .trow .mb svg{width:42px;height:42px}
+  .big b{font-size:19px}.big small{font-size:14px}
+  .stat small{font-size:13px}.stat b{font-size:26px}
+  .tbl{font-size:15px}
+  .rk li{padding:9px 14px 9px 10px}.rk .nm{font-size:16px}.rk .vl{font-size:18px}.rk .av{width:42px;height:42px}
+  .zk{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+}
 </style>
 </head>
 <body data-th="de">
@@ -660,7 +726,7 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
     <button class="ib" id="btnSet" data-i18n-title="set.title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <button class="ib snd" id="btnSound" data-i18n-title="set.sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off" d="M16 9l6 6M22 9l-6 6"/></svg></button>
     <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
-    <a href="../" class="ib home" data-i18n-title="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
+    <a href="../" class="ib homebtn" data-i18n-title="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
   </header>
 
   <main id="main">
@@ -672,11 +738,14 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
         <button data-p="var"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><circle cx="17" cy="7" r="4"/><path d="M7 13l4 8H3z"/><rect x="13" y="13" width="8" height="8" rx="2" transform="rotate(10 17 17)"/></svg><span data-i18n="ht.var">変わり種</span></button>
       </nav>
       <div class="hpanel daily" data-p="daily">
+        <div class="dcol">
           <div class="card today">
             <h2><svg class="ttl-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#ffcd4d"/><g stroke="#ffb020" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span data-i18n="today">今日の数独</span></h2>
             <div class="date"><span id="todayDate"></span><span class="streak" id="streak"></span></div>
             <div class="diffs" id="todayDiffs"></div>
           </div>
+          <div class="card" id="dailyExtra"></div>
+        </div>
           <div class="card">
             <div class="cal-h">
               <button class="ib flip" id="calPrev" aria-label="prev"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
@@ -766,9 +835,9 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
 <script src="bg.js?v=2"></script>
 <script src="icons.js?v=1"></script>
 <script src="i18n.js?v=2"></script>
-<script src="i18n2.js?v=2"></script>
+<script src="i18n2.js?v=3"></script>
 <script src="firebase-config.js?v=2"></script>
 <script src="online.js?v=2"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
