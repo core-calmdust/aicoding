@@ -1191,6 +1191,8 @@ function showStudy(anim) {
   if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--brass)">${t('op.studyEnd')}</b>`;
   fb += `<br><button class="op-play" id="lsPlayHere">${t('op.playHere')}</button>`;
   $('#lsPrompt').innerHTML = `<div class="ls-goal"><span>${pr}</span></div>`; $('#lsFb').innerHTML = fb;
+  // keep the card from shrinking while stepping through the line (a shorter note would pull the page up on phones)
+  { const c = $('#lessonCard'); c.style.minHeight = ''; const h = c.offsetHeight; lesson.cardMin = Math.max(lesson.cardMin || 0, h); c.style.minHeight = lesson.cardMin + 'px'; }
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
   $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next'); $('#lsNext').disabled = false;
   stSync();
@@ -1221,7 +1223,7 @@ function stSync() {
   if (!nav || !au) return;
   document.body.classList.toggle('in-study', on);
   au.classList.toggle('hidden', !on);
-  if (!on) { document.body.classList.remove('st-end'); if (stTimer) { clearInterval(stTimer); stTimer = 0; } return; }
+  if (!on) { document.body.classList.remove('st-end'); const lc = document.getElementById('lessonCard'); if (lc) lc.style.minHeight = ''; if (stTimer) { clearInterval(stTimer); stTimer = 0; } return; }
   const N = lesson.g.study.steps.length, i = lesson.i, q = k => nav.querySelector('[data-sn="' + k + '"]');
   document.body.classList.toggle('st-end', i >= N);
   document.getElementById('stPos').textContent = i + ' / ' + N;
