@@ -243,6 +243,7 @@
   const cell = (c, r) => [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)];   // c: 0 = left column on screen, r: 0 = top row
 
   /* ---------- 駒台: one pedestal — square top plate, waisted column, stepped square base on the floor ---------- */
+  let colMat = null;
   function komadai(mat, KH) {
     const TT = T(), g = new TT.Group();
     g.add(mesh(RB(2.5, .26, 3.1, .05, 2), mat, 0, KH - .13, 0));                                   // top plate
@@ -251,7 +252,9 @@
     const H = KH - .26 - .56, pts = [];
     for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
     const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
-    const c = mesh(col, mat, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
+    // the lathe wraps the texture round the column: use a soft, low-contrast grain there so it doesn't band
+    const cm = colMat || (colMat = M({ map: X.wood('komadaiCol', '#d6a462', '#c69350', 256, 256, .6), roughness: .55, bumpScale: .001 }));
+    const c = mesh(col, cm, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
     return g;
   }
   /* ---------- MODELS.shogi: board + the opening position ---------- */
