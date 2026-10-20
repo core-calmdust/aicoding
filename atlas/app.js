@@ -562,6 +562,12 @@
   }
   // progress may change in another tab (a game) — re-read when coming back
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !session) { W = A_.load(); refresh(); render(page); welcome(); } });
+  /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
+  (function idle() {
+    const st = document.createElement('style'); st.textContent = 'html.atlas-idle *,html.atlas-idle *::before,html.atlas-idle *::after{animation-play-state:paused!important}'; document.head.appendChild(st);
+    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on); document.querySelectorAll('svg').forEach(s => { try { on ? s.pauseAnimations() : s.unpauseAnimations(); } catch (e) {} }); };
+    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
+  })();
 
   applyLang(); refresh();
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
