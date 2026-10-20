@@ -91,6 +91,7 @@ const CSS = `
   .rt-msg{font-size:16.5px}
   .rt-again{font-size:14px;padding:7px 14px}
   .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
+}
 .rt-intro{display:grid;gap:12px;text-align:start}
 .rt-intro-hero{display:flex;align-items:center;gap:16px}
 .rt-intro-hero img{flex:none;width:112px;height:112px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
@@ -112,8 +113,9 @@ html[lang=ar] .rt-intro{direction:rtl}
 html[lang=ar] .rt-body,html[lang=ar] .rt h2.rt-title{direction:rtl;text-align:right}
 html[lang=ar] .rt-task{direction:rtl}
 `;
+function injectCss() { if (!document.getElementById('rtCss')) { const st = document.createElement('style'); st.id = 'rtCss'; st.textContent = CSS; document.head.appendChild(st); } }
 function create(o) {
-  if (!document.getElementById('rtCss')) { const st = document.createElement('style'); st.id = 'rtCss'; st.textContent = CSS; document.head.appendChild(st); }
+  injectCss();
   const mount = () => typeof o.mount === 'string' ? document.querySelector(o.mount) : o.mount;
   const L = () => { const l = o.lang ? o.lang() : 'ja'; return S[l] ? l : 'en'; };
   const tx = (k, v) => { let s = S[L()][k]; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x]); return s; };
@@ -217,6 +219,7 @@ function create(o) {
 // RuleTour.intro({ img: '../images/atlas/chess.webp', origin, players, time, history, win, culture, lang }) -> HTML for a page's html.
 // Texts are HTML (escape user text yourself); pass already-translated strings.
 function intro(o) {
+  injectCss();
   const l = IL[o.lang] ? o.lang : 'en', T = IL[l];
   const fact = (k, v) => v ? `<span><small>${T[k]}</small>${v}</span>` : '';
   const sec = (cls, ico, k, v) => v ? `<div class="rt-intro-sec ${cls}"><i>${ico}</i><b>${T[k]}</b><p>${v}</p></div>` : '';
