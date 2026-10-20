@@ -74,3 +74,6 @@ html.atlas-skin [class*=ticker],html.atlas-skin .dock-bar{background:rgba(255,25
 html.atlas-skin a.snd.home{background:#fff!important;border:2px solid #ead9b6!important}
 html.atlas-skin .mt-strip{background:rgba(255,253,247,.96)!important;color:var(--text)!important;border-top:2px solid #ead9b6}
 html.atlas-skin .mt-strip *{color:inherit}
+html.atlas-skin .modal p,html.atlas-skin .modal .lesson-intro,html.atlas-skin .modal li{color:#3f4560!important}
+html.atlas-skin .atlas-guide .pic{width:84px;height:84px}
+@media (max-width:520px){html.atlas-skin .atlas-guide .pic{width:60px;height:60px}}
