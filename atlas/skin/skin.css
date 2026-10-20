@@ -1,0 +1,76 @@
+/* =====================================================================
+   World Board Game Atlas — portal skin for the full games (?skin=atlas)
+   Loaded on top of a game's own stylesheet: the game keeps every feature,
+   the board is drawn by the 3D table behind the page, text becomes speech
+   bubbles from the guide character, and the panels take the portal look.
+   ===================================================================== */
+html.atlas-skin{
+  --bg:#f6ead2; --bg2:#fff8ea; --panel:#fffdf7; --panel2:#fbf3e2; --line:#ead9b6;
+  --text:#2b3044; --muted:#6a7088; --dim:#9aa0b2;
+  --accent:#e09a00; --red:#e04848; --good:#1ea36c;
+  --brass:#c48a3a; --brass2:#9a6a2a;
+}
+html.atlas-skin body{background:transparent!important;color:var(--text);font-family:'Zen Maru Gothic','Fredoka','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif}
+#atlasGL{position:fixed;inset:0;z-index:0;pointer-events:none;background:#c98b52}
+#atlasGL canvas{display:block;width:100%!important;height:100%!important}
+html.atlas-skin .app{position:relative;z-index:1}
+
+/* the DOM board stays (clicks, hints, lesson marks) but is see-through: the 3D board shows below */
+html.atlas-skin .frame{background:transparent!important;box-shadow:none!important}
+html.atlas-skin .frame::before{display:none}
+html.atlas-skin .coords{color:rgba(255,246,226,.75);text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html.atlas-skin .board{background:transparent!important;box-shadow:none!important}
+html.atlas-skin .board::after{display:none}
+html.atlas-skin .cell{border-color:transparent!important}
+html.atlas-skin .star{display:none}
+html.atlas-skin .disc-wrap{opacity:0!important}
+html.atlas-skin .cell.legal::before{background:rgba(255,226,122,.55)!important;box-shadow:0 0 10px rgba(255,226,122,.6)}
+html.atlas-skin .last-mark{background:#ff5d5d;box-shadow:0 0 8px rgba(255,93,93,.9)}
+
+/* panels → portal cards */
+html.atlas-skin .card{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:22px!important;box-shadow:0 14px 30px -18px rgba(80,40,0,.55)!important;color:var(--text)}
+html.atlas-skin .side button{color:var(--text)}
+html.atlas-skin .brand h1,html.atlas-skin .brand .series{color:#fff;text-shadow:0 2px 0 rgba(90,50,10,.35)}
+html.atlas-skin .brand .snd,html.atlas-skin #langSel{background:#fff!important;color:var(--text)!important;border:2px solid var(--line)!important;border-radius:99px!important}
+html.atlas-skin .lesson-actions button,html.atlas-skin .side .btn,html.atlas-skin .mbtn{border-radius:99px!important}
+html.atlas-skin button.go,html.atlas-skin .lesson-actions .go{background:#ff5d5d!important;color:#fff!important;box-shadow:0 4px 0 #d93c3c!important;border:0!important;font-weight:900}
+html.atlas-skin .modal,html.atlas-skin .overlay .box,html.atlas-skin .dlg{background:#fffdf7!important;color:var(--text)!important;border-radius:26px!important}
+
+/* ---- guide character + speech bubbles ---- */
+.atlas-guide{display:flex;gap:10px;align-items:flex-end}
+.atlas-guide .pic{flex:none;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#ffe9b0);box-shadow:0 3px 0 rgba(0,0,0,.08);display:grid;place-items:center;overflow:hidden;animation:gBob 2.8s ease-in-out infinite}
+.atlas-guide .pic img{width:120%;height:120%;object-fit:contain;transform:translateY(8%)}
+@keyframes gBob{50%{transform:translateY(-3px)}}
+.atlas-guide .bub{position:relative;flex:1;min-width:0;background:#fff;border:2px solid #f0e2c4;border-radius:20px;padding:10px 14px;box-shadow:0 4px 0 #f0e2c4}
+.atlas-guide .bub::before{content:'';position:absolute;left:-11px;bottom:14px;border:9px solid transparent;border-right-color:#f0e2c4}
+.atlas-guide .bub::after{content:'';position:absolute;left:-7px;bottom:15px;border:8px solid transparent;border-right-color:#fff}
+[dir=rtl] .atlas-guide .bub::before,[dir=rtl] .atlas-guide .bub::after{left:auto;right:-11px;border-right-color:transparent;border-left-color:#f0e2c4}
+html.atlas-skin .lesson-prompt,html.atlas-skin .lesson-fb,html.atlas-skin .pz-goal,html.atlas-skin .pz-status{color:var(--text)!important;background:none!important;border:0!important;margin:0!important;padding:0!important}
+html.atlas-skin .lesson-fb:empty,html.atlas-skin .pz-status:empty{display:none}
+html.atlas-skin .lesson-fb{margin-top:8px!important;color:#4a5068!important}
+.atlas-guide .bub.typing::after{animation:none}
+
+/* coach line and toast → small bubbles over the board */
+html.atlas-skin .coach{background:#fff!important;color:var(--text)!important;border:2px solid #f0e2c4!important;border-radius:18px!important;box-shadow:0 4px 0 #f0e2c4;padding:8px 14px 8px 46px!important;font-size:14px!important;white-space:normal!important;max-width:min(460px,90%)}
+html.atlas-skin .coach::before{content:'';position:absolute;left:6px;top:50%;width:34px;height:34px;margin-top:-17px;border-radius:50%;background:var(--atlas-guide) center/120% no-repeat,radial-gradient(circle at 40% 35%,#fff,#ffe9b0)}
+html.atlas-skin .toast{background:#2b3044!important;color:#fff!important;border-radius:99px!important}
+
+/* home button back to the portal */
+.atlas-home{position:fixed;z-index:30;top:max(10px,env(safe-area-inset-top));left:10px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:99px;background:#fff;border:2px solid #ead9b6;box-shadow:0 3px 0 #ead9b6;color:#2b3044;font:900 13px 'Zen Maru Gothic',sans-serif;text-decoration:none}
+.atlas-home svg{width:18px;height:18px}
+@media (max-width:520px){.atlas-home span{display:none}.atlas-home{padding:7px}}
+
+/* online dock (lobby + chat at the bottom) in portal colours — shared with the 2D version, so it's cross-play */
+html.atlas-skin .dock{background:rgba(255,253,247,.96)!important;border-top:2px solid #ead9b6!important;color:var(--text)!important;box-shadow:0 -8px 24px -16px rgba(80,40,0,.5)}
+html.atlas-skin .dock *{color:inherit}
+html.atlas-skin .dock input{background:#fff!important;border:2px solid #ead9b6!important;color:var(--text)!important;border-radius:99px!important}
+html.atlas-skin .dock button{border-radius:99px!important}
+html.atlas-skin .dock .go,html.atlas-skin .dock button.go{background:#ff5d5d!important;color:#fff!important}
+html.atlas-skin .mtabs{background:#fffdf7!important;border-top:2px solid #ead9b6!important}
+html.atlas-skin .mtabs button{color:#6a7088!important;font-weight:900}
+html.atlas-skin .mtabs button.sel{color:#d93c3c!important}
+html.atlas-skin .mtabs button.sel::after{background:#ff5d5d!important}
+html.atlas-skin [class*=ticker],html.atlas-skin .dock-bar{background:rgba(255,253,247,.96)!important;color:var(--text)!important}
+html.atlas-skin a.snd.home{background:#fff!important;border:2px solid #ead9b6!important}
+html.atlas-skin .mt-strip{background:rgba(255,253,247,.96)!important;color:var(--text)!important;border-top:2px solid #ead9b6}
+html.atlas-skin .mt-strip *{color:inherit}

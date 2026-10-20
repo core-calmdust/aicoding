@@ -171,7 +171,7 @@
     (function step(now) {
       propRaf = requestAnimationFrame(step);
       if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
-      if (now - lastP < 1000 / 60 - 2) return;   // 60 fps cap
+      if (now - lastP < (document.hasFocus() ? 1000 / 60 : 100) - 2) return;   // 60 fps cap, 10 fps when the window isn't focused
       lastP = now;
       if ($('bv').classList.contains('on')) return;   // hidden behind the 3D board
       px += (tx - px) * .06; py += (ty - py) * .06;
@@ -344,8 +344,17 @@
     Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - card.getBoundingClientRect().top + 4);
   }
   addEventListener('resize', () => fitStage());
+  // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
+  const FULL_SKIN = { reversi: true };
   function startPlay() {
     const g = bvGame, ad = Atlas3D[g.id];
+    if (FULL_SKIN[g.id]) {
+      const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1;
+      pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+      $('bv').classList.add('playing'); Table3D.play(true);
+      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas'; }, 450);
+      return;
+    }
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1;
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     $('bv').classList.add('playing'); $('endc').classList.remove('on'); fitStage();

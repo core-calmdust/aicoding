@@ -307,7 +307,7 @@
   };
 
   /* ---------- scene ---------- */
-  let zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
+  let alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   function mount(container) {
     el = container;
@@ -469,10 +469,15 @@
   }
   // frame cap: at most 60 fps (120 Hz phones/monitors would otherwise render twice as often for nothing)
   const FRAME_MS = 1000 / 60; let lastT = 0;
+  // pause completely while the tab is hidden; tick slowly (10 fps) while the window isn't focused
+  let rafId = 0, blurred = false;
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
+  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; });
   function loop(now = performance.now()) {
-    requestAnimationFrame(loop);
-    if (document.hidden || !el.offsetParent) return;
-    if (now - lastT < FRAME_MS - 2) return;
+    if (document.hidden) { rafId = 0; return; }
+    rafId = requestAnimationFrame(loop);
+    if (!el.offsetParent && !alignFn) return;
+    if (now - lastT < (blurred ? 100 : FRAME_MS) - 2) return;
     lastT = now;
     camK += (camTo - camK) * .07; zoom += (zoomTo - zoom) * .18;
     if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * .14; frame(); } else if (inset !== insetTo) { inset = insetTo; frame(); }
@@ -482,6 +487,16 @@
       const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .15; vel = 0;
     }
     root.rotation.y = yaw;
+    if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
+      const r = alignFn(); if (r && r.w > 10) {
+        const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
+        cam.aspect = W / H; const th = Math.tan(cam.fov * Math.PI / 360);
+        const h = half * H / (r.h * th);   // field half-size → half the DOM board height
+        cam.position.set(0, top + h, 0.0001); cam.up.set(0, 0, -1); cam.lookAt(0, top, 0);
+        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2), W, H); cam.updateProjectionMatrix();
+        R.render(scene, cam); return;
+      }
+    }
     const q = camPose(0), r2 = camPose(1), k = camK;
     const py = q[1] + (r2[1] - q[1]) * k, pz = q[2] + (r2[2] - q[2]) * k, d = Math.hypot(py, pz), a = Math.atan2(py, pz) + tilt;
     cam.position.set(0, d * Math.sin(a), d * Math.cos(a));
@@ -489,6 +504,8 @@
     cam.lookAt(0, .4, 0);   // the canvas itself is kept clear of the info card (app.js fitStage)
     R.render(scene, cam);
   }
+  // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
+  function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
 })();
