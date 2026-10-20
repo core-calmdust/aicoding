@@ -1175,7 +1175,7 @@ let gameOverReason = '';
 let lowEnergyWarningPlayed;
 let screenShake = { intensity: 0, duration: 0 };
 let grayscaleAnimation = { progress: 0, duration: 1.0, isActive: false };
-let mutekiAnim = { life: 0, maxLife: 0 }; // ★ 追加: MUTEKIアニメーション専用のタイマー
+let mutekiAnim = { life: 0, maxLife: 0 }; let mutekiTextBottom = 0; // ★ 追加: MUTEKIアニメーション専用のタイマー
 let chainCount = 0;
 let chainEffectPending = false;
 let chainComboAnim = { life: 0, maxLife: 60 }; // ★ 追加: コンボアニメーション専用のタイマー
@@ -2773,7 +2773,8 @@ function update(timestamp) {
         updateInstructions();
 
         // ★ ここから追加 ★
-        if (mutekiAnim.life > 0) {
+        mutekiTextBottom = 0;
+    if (mutekiAnim.life > 0) {
             mutekiAnim.life -= 60 * dt_sec; // フレームレートに依存しないようにdt_secで減算
             if (mutekiAnim.life < 0) mutekiAnim.life = 0;
         }
@@ -5039,8 +5040,11 @@ function draw() {
         const lifeProgress = 1 - (mutekiAnim.life / mutekiAnim.maxLife);
         const chars = "!?#$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let displayText = "";
-        const mainTextY = HUD_H / 2 + 30;
+        // 画面中央に表示。WARNINGやステージ表示が出ている間はその下へずらして重ならないように
+        const centerBusy = (boss && boss.state === 'enter') || effects.some(e => e.type === 'stageClear');
+        const mainTextY = HUD_H / 2 + (IS_MOBILE ? 12 : 8) + (centerBusy ? (IS_MOBILE ? 96 : 76) : 0);
         const subTextY = mainTextY + (IS_MOBILE ? 36 : 25);
+        mutekiTextBottom = subTextY;
         const transitionStart = 0.25;
         const transitionEnd = 0.75;
 
@@ -5199,7 +5203,7 @@ function draw() {
             renderCtx.font = `700 ${IS_MOBILE ? 28 : 22}px ${config.fontFamily}`;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = e.color;
-                renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2 + (IS_MOBILE ? 112 : 90), HUD_W - 24);
+                renderCtx.fillText(e.text, HUD_W / 2, Math.max(HUD_H / 2 + (IS_MOBILE ? 112 : 90), mutekiTextBottom + (IS_MOBILE ? 52 : 40)), HUD_W - 24); // MUTEKI表示の下
             }, e.color);
             renderCtx.restore();
         } else if (e.type === 'comboFadeOut' && isEffectsEnabled) {
@@ -5550,12 +5554,45 @@ function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; ret
 let simRealLast = null;
 let simAcc = 0;
 let simTime = 0;
+// PC: HUDの2Dキャンバスを3D画面に重ねて描き、画面を1枚にする（2枚の合成待ちをなくして表示遅延を減らす）
+const HUD_IN_GL = !IS_MOBILE && gl3dOK;
+let hudTex = null, hudScene = null, hudCam = null, hudInGlOn = true;
+if (HUD_IN_GL) {
+    hudTex = new THREE.CanvasTexture(canvas);
+    hudTex.colorSpace = THREE.SRGBColorSpace;
+    hudTex.generateMipmaps = false; hudTex.minFilter = THREE.LinearFilter; hudTex.magFilter = THREE.LinearFilter;
+    hudScene = new THREE.Scene();
+    hudCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    hudScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: hudTex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false })));
+    canvas.style.opacity = '0'; // 2Dキャンバスは描画用（表示は3D側で）
+}
+function renderHudOverlay() {
+    hudTex.needsUpdate = true;
+    const ac = renderer.autoClear;
+    renderer.autoClear = false;
+    renderer.setRenderTarget(null);
+    renderer.render(hudScene, hudCam);
+    renderer.autoClear = ac;
+}
+// ゲームパッドは毎フレーム読む（自機移動用）
+function gpDir() {
+    let l = false, r = false, slow = false;
+    const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (const gp of gps) {
+        if (!gp) continue;
+        l = l || gp.buttons[14]?.pressed || gp.axes[0] < -0.5;
+        r = r || gp.buttons[15]?.pressed || gp.axes[0] > 0.5;
+        slow = slow || gp.buttons[0]?.pressed || gp.buttons[1]?.pressed;
+    }
+    return { l, r, slow };
+}
 // PCの自機移動: 固定60Hzの計算を待たず、毎フレーム実時間で動かす（当たり判定・弾の位置も描画と一致）
 function movePlayerRT(ms) {
     if (gameState !== 'playing' || ms <= 0) return;
-    const kl = keyState['ArrowLeft'] || input.left, kr = keyState['ArrowRight'] || input.right;
+    const g = gpDir();
+    const kl = keyState['ArrowLeft'] || g.l, kr = keyState['ArrowRight'] || g.r;
     if (kl === kr) return;
-    const slow = keyState['ShiftLeft'] || keyState['ShiftRight'] || keyState['KeyZ'] || input.slow;
+    const slow = keyState['ShiftLeft'] || keyState['ShiftRight'] || keyState['KeyZ'] || g.slow;
     const sp = config.playerSpeed * (slow ? config.playerSlowModeMultiplier : 1) * (player.invincibleTimer > 0 ? 1.1 : 1);
     player.x = Math.max(0, Math.min(config.canvasWidth, player.x + (kr ? 1 : -1) * sp * ms / 1000));
 }
@@ -5585,6 +5622,12 @@ function gameLoop(timestamp) {
         simAlpha = Math.min(1, simAcc / SIM_STEP);
     }
     draw();
+    if (HUD_IN_GL) {
+        // 最高画質で動いている間だけHUDを3D画面に重ねる（解像度が下がったらHUDがぼやけないよう従来の2枚表示に戻す）
+        const on = quality >= Q_MAX - 0.01;
+        if (on !== hudInGlOn) { hudInGlOn = on; canvas.style.opacity = on ? '0' : '1'; }
+        if (on) renderHudOverlay();
+    }
     requestAnimationFrame(gameLoop);
 }
 
