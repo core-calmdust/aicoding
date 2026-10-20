@@ -35,6 +35,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
+/* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar */
+html.hb-on{--top:0px;--vh:calc(100vh - var(--hb-h))}
+@supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
 html,body{height:100%;overflow:hidden}
 body{
   background:
@@ -196,6 +199,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .brand-r{display:flex;align-items:center;gap:10px}
 .snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
 .snd:hover{color:var(--text)}
+.hb-disc{display:inline-block;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#0a0a0a);box-shadow:0 0 0 1px rgba(255,255,255,.2)}.hb-disc.w{background:radial-gradient(circle at 35% 30%,#fff,#cfcfcf)}
 a.snd.home{text-decoration:none}
 .snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .snd .off-x{display:none}
@@ -507,7 +511,7 @@ body.in-online #evalCard, body.in-online #btnHint, body.in-online #btnAnalyze, b
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px - 62px);--board:calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1400px) / 1.105)}
+  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--board:calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1400px) / 1.105)}
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#16211e,#0f1715);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.4)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
@@ -1300,6 +1304,8 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=2"></script>
+<script src="../shared/headerbar.js?v=1"></script>
+<script src="../shared/tick.js?v=1"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020gs"></script>
 <script>
@@ -1674,6 +1680,17 @@ function playerName(color) {
   if (rated && settings.mode === 'ai') return color === humanColor ? t('you') + ' · R' + rated.my : 'AI ' + rtLvName(rated.lv) + ' · R' + rated.or;
   return color === humanColor ? t('you') : 'AI ' + LV(settings.level);
 }
+// header bar (PC): whose turn, disc count, evaluation, move number
+function hbInfo(p, b, w, ev) {
+  if (typeof HB === 'undefined' || !HB || !HB.on) return;
+  const turn = p.toMove === 0 ? t('hb.over') : t('hb.turn', { c: cname(p.toMove) });
+  let h = `<span class="hb-chip"><i class="hb-disc ${p.toMove === WHITE ? 'w' : 'b'}"></i><b>${turn}</b></span>`;
+  h += `<span class="hb-chip"><i class="hb-disc b"></i><b>${b}</b> – <b>${w}</b><i class="hb-disc w"></i></span>`;
+  if (settings.eval && ev != null && !document.body.classList.contains('rated-live')) h += `<span class="hb-chip">${escHb($('#evalText').textContent)}</span>`;
+  h += `<span class="hb-chip">${escHb(t('hb.move', { n: cur }))}</span>`;
+  HB.setInfo(h);
+}
+const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function renderInfo() {
   const p = positions[cur];
   const [b, w] = counts(p.cells);
@@ -1697,6 +1714,7 @@ function renderInfo() {
   }
   renderGraph();
   renderKifu();
+  hbInfo(p, b, w, ev);
   // buttons
   // rated game: the undo button becomes "resign"; no hint / analysis / evaluation while it is going
   const rtG = rtGame(), rl = rtLive();
@@ -3920,6 +3938,9 @@ else if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lan
 else { try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {} }
 applyI18n();
 if (window.RulesOffer) RulesOffer.init({ game: 'reversi', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
+// PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(), lang: () => LANG }) : null;
+if (HB) HB.onChange(() => renderInfo());
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();

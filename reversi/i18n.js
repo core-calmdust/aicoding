@@ -645,3 +645,19 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+// PC header bar
+(() => {
+const S = {
+  ja: { 'hb.turn': '{c}の番', 'hb.over': '終局', 'hb.move': '{n}手目' },
+  en: { 'hb.turn': '{c} to move', 'hb.over': 'Game over', 'hb.move': 'Move {n}' },
+  zh: { 'hb.turn': '{c}方落子', 'hb.over': '终局', 'hb.move': '第{n}手' },
+  ko: { 'hb.turn': '{c} 차례', 'hb.over': '종국', 'hb.move': '{n}수째' },
+  es: { 'hb.turn': 'Juegan {c}', 'hb.over': 'Fin de la partida', 'hb.move': 'Jugada {n}' },
+  fr: { 'hb.turn': 'Aux {c} de jouer', 'hb.over': 'Partie terminée', 'hb.move': 'Coup {n}' },
+  pt: { 'hb.turn': 'Vez das {c}', 'hb.over': 'Fim de jogo', 'hb.move': 'Lance {n}' },
+  de: { 'hb.turn': '{c} am Zug', 'hb.over': 'Partie beendet', 'hb.move': 'Zug {n}' },
+  hi: { 'hb.turn': '{c} की बारी', 'hb.over': 'खेल समाप्त', 'hb.move': 'चाल {n}' },
+  ar: { 'hb.turn': 'دور {c}', 'hb.over': 'انتهت المباراة', 'hb.move': 'النقلة {n}' },
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();

@@ -28,6 +28,20 @@ const S = {
   hi: { tier: ['नौसिखिया', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ', 'उस्ताद'], stage: 'स्टेज {n}', next: 'अगला', cont: 'जारी रखें', lock: 'स्टेज {p} में {n} और हल करने पर खुलेगा', locked: 'अभी बंद है', unlocked: 'स्टेज {n} खुल गया!', stageClear: 'स्टेज {n} पूरा!', complete: 'पूरा', medal: ['कांस्य पदक', 'रजत पदक', 'स्वर्ण पदक'], medalHow: 'सभी ★★★ पर स्वर्ण', stars: '★ {a}/{b}', got: '★{n} मिले', best: 'सर्वश्रेष्ठ ★{n}', left: 'इस स्टेज में {n} बाकी', allDone: 'सब हल हो गए!' },
   ar: { tier: ['مبتدئ', 'ناشئ', 'متوسط', 'متقدم', 'خبير', 'أستاذ'], stage: 'المرحلة {n}', next: 'التالي', cont: 'متابعة', lock: 'حُلّ {n} أخرى في المرحلة {p} لفتحها', locked: 'غير مفتوحة بعد', unlocked: 'فُتحت المرحلة {n}!', stageClear: 'اكتملت المرحلة {n}!', complete: 'مكتمل', medal: ['ميدالية برونزية', 'ميدالية فضية', 'ميدالية ذهبية'], medalHow: 'كل الألغاز ★★★ للذهبية', stars: '★ {a}/{b}', got: 'حصلت على ★{n}', best: 'الأفضل ★{n}', left: 'بقي {n} في هذه المرحلة', allDone: 'حُلّت جميعها!' },
 };
+// v2: keep playing up to the puzzle's move count; obvious blunders are flagged at once
+const S2 = {
+  ja: { movesLeft: 'あと{n}手', blunder: '明らかなミスです。', outOfMoves: '{n}手以内に達成できませんでした。', retry: 'もう一度挑戦' },
+  en: { movesLeft: '{n} moves left', blunder: 'That is a clear mistake.', outOfMoves: 'Not achieved within {n} moves.', retry: 'Try again' },
+  zh: { movesLeft: '还剩{n}手', blunder: '这是明显的失误。', outOfMoves: '未能在{n}手内达成。', retry: '再试一次' },
+  ko: { movesLeft: '{n}수 남음', blunder: '명백한 실수입니다.', outOfMoves: '{n}수 안에 달성하지 못했습니다.', retry: '다시 도전' },
+  es: { movesLeft: 'Quedan {n} jugadas', blunder: 'Es un error claro.', outOfMoves: 'No se logró en {n} jugadas.', retry: 'Reintentar' },
+  fr: { movesLeft: 'Encore {n} coups', blunder: 'C’est une erreur nette.', outOfMoves: 'Objectif non atteint en {n} coups.', retry: 'Réessayer' },
+  pt: { movesLeft: 'Faltam {n} lances', blunder: 'É um erro claro.', outOfMoves: 'Não alcançado em {n} lances.', retry: 'Tentar de novo' },
+  de: { movesLeft: 'Noch {n} Züge', blunder: 'Das ist ein klarer Fehler.', outOfMoves: 'In {n} Zügen nicht geschafft.', retry: 'Nochmal' },
+  hi: { movesLeft: '{n} चालें बाकी', blunder: 'यह साफ़ गलती है।', outOfMoves: '{n} चालों में लक्ष्य पूरा नहीं हुआ।', retry: 'फिर कोशिश करें' },
+  ar: { movesLeft: 'تبقّى {n} نقلات', blunder: 'هذه نقلة خاطئة بوضوح.', outOfMoves: 'لم يتحقق الهدف خلال {n} نقلات.', retry: 'أعد المحاولة' },
+};
+for (const k in S2) Object.assign(S[k], S2[k]);
 let L = 'ja';
 const tx = (k, v) => { let x = (S[L] || S.en)[k]; if (typeof x === 'string' && v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
