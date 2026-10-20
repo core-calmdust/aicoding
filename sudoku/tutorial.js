@@ -3,7 +3,7 @@
    ("👉 …") that has to be solved before going on. open('daily' | 'speed', core). */
 (function () {
 'use strict';
-let C = null, kind = 'daily', step = 0, steps = [], doneStep = {};
+let C = null, kind = 'daily', step = 0, steps = [], doneStep = {}, autoT = 0;
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const t = (k, p) => C.t(k, p);
@@ -154,6 +154,7 @@ function ensure() {
   };
 }
 function draw() {
+  clearTimeout(autoT);
   const s = steps[step], last = step === steps.length - 1;
   $('#tuTitle').textContent = t(kind === 'speed' ? 'tu.s.title' : 'tu.d.title');
   $('#tuDots').innerHTML = steps.map((_, k) => `<i class="${k === step ? 'on' : k < step ? 'past' : ''}"></i>`).join('');
@@ -163,7 +164,11 @@ function draw() {
   tk.className = 'ttask' + (s.task ? '' : ' none') + (doneStep[step] ? ' ok' : '');
   tk.innerHTML = s.task ? (doneStep[step] ? '🎉 ' + esc(t('tu.ok')) : '👉 ' + esc(t(s.task))) : '';
   const st = $('#tuStage'); st.innerHTML = '';
-  s.stage(st, () => { doneStep[step] = true; C.SFX.unit(); C.vib(12); tk.className = 'ttask ok'; tk.innerHTML = '🎉 ' + esc(t('tu.ok')); $('#tuMas').innerHTML = mascot('yay', s.speed || kind === 'speed'); $('#tuNext').classList.add('glow'); }, () => { tk.className = 'ttask miss'; tk.innerHTML = '🤔 ' + esc(t('tu.miss')); $('#tuMas').innerHTML = mascot('wow', s.speed || kind === 'speed'); });
+  s.stage(st, () => { doneStep[step] = true; C.SFX.unit(); C.vib(12); tk.className = 'ttask ok'; tk.innerHTML = '🎉 ' + esc(t('tu.ok')); $('#tuMas').innerHTML = mascot('yay', s.speed || kind === 'speed'); $('#tuNext').classList.add('glow');
+    if (kind === 'speed') {                      // speed tutorial: move on by itself after a correct answer
+      const at = step; clearTimeout(autoT);
+      autoT = setTimeout(() => { if (step === at && $('#mTut').classList.contains('on')) { if (step < steps.length - 1) { step++; draw(); } } }, s.task === 'tu.task.all' ? 2400 : 1400);
+    } }, () => { tk.className = 'ttask miss'; tk.innerHTML = '🤔 ' + esc(t('tu.miss')); $('#tuMas').innerHTML = mascot('wow', s.speed || kind === 'speed'); });
   $('#tuPrev').textContent = t('tu.prev'); $('#tuPrev').style.visibility = step ? 'visible' : 'hidden';
   const nx = $('#tuNext'); nx.textContent = last ? t(kind === 'speed' ? 'tu.s.end' : 'tu.d.end') : t('tu.next'); nx.classList.toggle('glow', !s.task || !!doneStep[step]); nx.classList.toggle('wait', !!s.task && !doneStep[step]);
   $('#mTut .sb').scrollTop = 0;
