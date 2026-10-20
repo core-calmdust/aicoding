@@ -51,9 +51,9 @@ body.hb-on{padding-top:${H}px}
 .hb .hb-icons{flex:none;display:flex;align-items:center;gap:6px}
 .hb .hb-icons .brand-r{display:flex;align-items:center;gap:6px;margin:0}
 /* portal version: the portal's own top bar hosts title, info and menu */
-.atlas-top .hb-title h1{margin:0 0 0 6px;font-family:'RocknRoll One','Zen Maru Gothic',sans-serif;font-weight:400;font-size:17px;color:#2b3044;letter-spacing:.02em;white-space:nowrap;text-shadow:none}
+.atlas-top .hb-title h1{margin:0;font-family:'RocknRoll One','Zen Maru Gothic',sans-serif;font-weight:400;font-size:20px;line-height:1.1;color:#111;letter-spacing:.03em;white-space:nowrap;text-shadow:none}
 .atlas-top .hb-title h1 small{display:none}
-.atlas-top .hb-title{flex:none;display:flex;align-items:center;padding-left:12px;margin-left:2px;border-left:2px solid #efe3c8}
+.atlas-top .hb-title{flex:none;display:flex;align-items:center;align-self:center;height:30px;padding-left:12px;margin-left:2px;border-left:2px solid #e3d3ad}
 .atlas-top .hb-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap;font:700 13px 'Zen Maru Gothic',sans-serif;color:#6a7088}
 .atlas-top .hb-info b{color:#2b3044}
 .atlas-top .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:#fff;border:2px solid #efe3c8}
@@ -63,7 +63,8 @@ html.atlas-skin .atlas-top .hb-menu > *{flex:none!important;display:inline-flex;
 html.atlas-skin .atlas-top .hb-menu > * svg{width:17px!important;height:17px!important;margin:0!important}
 html.atlas-skin .atlas-top .hb-menu > * span{margin:0!important}
 @media (max-width: 1280px){html.atlas-skin .atlas-top .hb-menu > * span{display:none}html.atlas-skin .atlas-top .hb-menu > *{padding:0 11px!important}}
-@media (max-width: 1500px){body.hb-atlas .atlas-brand span{display:none}}
+@media (max-width: 1500px){body.hb-atlas .atlas-brand small{display:none}}
+@media (max-width: 1100px){body.hb-atlas .atlas-top .hb-info{display:none}}
 html[dir=rtl] .hb, html[lang=ar] .hb{direction:rtl}
 html[lang=ar] .hb .hb-menu{padding:0 0 0 14px;border-right:0;border-left:1px solid var(--line, rgba(255,255,255,.12))}
 @media (max-width: 1180px){.hb .hb-menu > * span{display:none}.hb .hb-menu > *{padding:0 10px!important}}
