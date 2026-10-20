@@ -335,7 +335,19 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .op-book .mv i{font-style:normal;font-size:10px;color:var(--dim);margin-right:2px}
 .ob-info p{font-size:14px;line-height:1.85;color:#d6dfda;margin:6px 0 0}
 .ob-info .tg{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#1a1408;background:var(--brass);border-radius:5px;padding:1px 7px;margin-right:8px;vertical-align:1px}
-.op-book .op-dr{margin:0}
+.op-book .ob{display:flex;flex-direction:column}
+.op-book .op-dr{margin:10px 0 0;margin-top:auto;padding-top:10px}
+.ob-aim{font-size:15px;line-height:1.65;color:#e4ebe6;margin:4px 0 0}
+.op-lead{font-size:15.5px!important;color:#e4ebe6!important;margin-bottom:6px!important}
+.op-more{margin:2px 0 4px;font-size:13px;color:var(--muted)}
+.op-more summary{cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--brass);list-style:none;padding:2px 0}
+.op-more summary::-webkit-details-marker{display:none}
+.op-more summary::before{content:'?';display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--brass2);font-size:11.5px;font-weight:700}
+.op-more[open] summary{margin-bottom:8px}
+.op-more p{font-size:13.5px!important}
+.op-aim{font-size:15px;line-height:1.7;color:var(--accent);margin:4px 0 2px;font-weight:600}
+.op-cm .ob-info p:first-child{margin-top:4px}
+.op-formed b{color:var(--accent)}
 .op-book .ob{cursor:pointer;transition:border-color .2s,background .2s}
 .op-book .ob:hover{border-color:rgba(201,169,97,.55);background:rgba(201,169,97,.05)}
 .op-info-s p{font-size:13px}
@@ -718,6 +730,13 @@ body.in-lesson .controls{display:none}
   #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
+}
+
+/* PC: opening steps spread across the browser width, cards in 2-3 columns */
+@media (min-width: 1000px) and (min-height: 561px){
+  #lessonOverlay .modal:has(> #lessonIntroView.op-intro:not(.hidden)){width:min(1500px, 94vw)}
+  .op-intro .op-book{grid-template-columns:repeat(auto-fill, minmax(400px, 1fr));gap:14px}
+  .op-intro h2{margin-bottom:6px}
 }
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
@@ -1246,7 +1265,7 @@ html[lang=ar] .pf-input{direction:rtl}
   </div>
 </div>
 
-<script src="i18n.js?v=20261020gs"></script>
+<script src="i18n.js?v=20261020op2"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=2"></script>
@@ -2190,7 +2209,7 @@ function progressOf(id) {   // migrate old "correct count" progress to points
 function saveLessonProgress() { try { localStorage.setItem(LESSON_STORE, JSON.stringify(lessonProgress)); } catch (e) {} }
 let lessonSrc = 'lesson';      // 'lesson' | 'open'
 let openData = null;
-async function loadOpenings() { if (!openData) { try { openData = await fetch('openings.json').then(r => r.json()); } catch (e) { openData = { sets: [] }; } } return openData; }
+async function loadOpenings() { if (!openData) { try { openData = await fetch('openings.json?v=20261020op').then(r => r.json()); } catch (e) { openData = { sets: [] }; } } return openData; }
 const curSets = () => lessonSrc === 'open' ? (openData ? openData.sets : []) : (lessonData ? lessonData.lessons : []);
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
@@ -2308,6 +2327,13 @@ function opInfoHtml(txt) {
   const parts = String(txt).split(/(?=【)|(?=\[[\p{L}\p{M}]{1,16}\])/u).map(x => x.trim()).filter(Boolean);
   return parts.map(p => { const m = p.match(/^(?:【([^】]+)】|\[([\p{L}\p{M}]{1,16})\])\s*(.*)$/su); return m ? `<p><span class="tg">${m[1] || m[2]}</span>${m[3]}</p>` : `<p>${p}</p>`; }).join('');
 }
+function opInfoParts(ln) {
+  const sp = s => String(s || '').split(/(?=【)|(?=\[[\p{L}\p{M}]{1,16}\])/u).map(x => x.trim()).filter(Boolean);
+  const ja = sp(ln.info && ln.info.ja), cur = sp(PT(ln.info));
+  const isOrg = i => ja.length === cur.length && /^【由来】/.test(ja[i] || '');
+  return { origin: cur.filter((p, i) => isOrg(i)).join(' '), rest: cur.filter((p, i) => !isOrg(i)).join(' ') };
+}
+function opAimHtml(ln) { return ln.aim ? `<div class="op-aim">${PT(ln.aim)}</div>` : ''; }
 function fitOpLines() {
   const fits = el => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width <= el.getBoundingClientRect().width - 1; };
   document.querySelectorAll('#lessonList .op-lines').forEach(el => {
@@ -2342,8 +2368,11 @@ function openIntro(i) {
   introIdx = i; const l = curSets()[i];
   const x = LT(l);
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
-  $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '')
-    + (l.kind === 'opening' ? `<p class="note" style="margin-top:10px">${t('op.drillNote')}</p><div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><div class="ob-h"><span class="nm">${PT(n.name)}</span><span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div><div class="mv">${n.moves.match(/../g).map((m, i) => `<i>${i + 1}</i>${m}`).join(' ')}</div>${n.info ? `<div class="ob-info">${opInfoHtml(PT(n.info))}</div>` : ''}</div>`).join('')}</div>` : '');
+  $('#lessonIntroView').classList.toggle('op-intro', l.kind === 'opening');
+  if (l.kind === 'opening') {   // keep the overview light: one lead line, cards with name / moves / one concept line; the long texts live in the lesson itself
+    $('#liBody').innerHTML = `<p class="op-lead">${x.short}</p><details class="op-more"><summary>${t('op.more')}</summary>${x.intro.map(p => `<p>${p}</p>`).join('')}${x.note ? `<p class="note">${x.note}</p>` : ''}<p class="note">${t('op.drillNote')}</p></details>`
+      + `<div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><div class="ob-h"><span class="nm">${PT(n.name)}</span></div><div class="mv">${n.moves.match(/../g).map((m, i) => `<i>${i + 1}</i>${m}`).join(' ')}</div>${n.aim ? `<div class="ob-aim">${PT(n.aim)}</div>` : ''}<span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div>`).join('')}</div>`;
+  } else $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '');
   showLessonView('intro');
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
@@ -2743,7 +2772,7 @@ function studyRender() {
   $('#lsDots').innerHTML = '';
   $('#lsPrompt').innerHTML = `<div class="op-seq"><button data-sply="0" class="${cur === 0 ? 'cur' : ''}">${t('op.start')}</button> ${seq.map((m, i) => `<button data-sply="${i + 1}" class="${cur === i + 1 ? 'cur' : ''}">${i + 1}.${m}</button>`).join(' ')}</div>`
     + `<div class="op-nav"><button data-snav="first">⏮</button><button data-snav="prev">◀</button><button data-snav="play">${L.timer ? '⏸ ' + t('op.pause') : '▶ ' + t('op.replay')}</button><button data-snav="next">▶</button><button data-snav="last">⏭</button><span class="pos">${cur === 0 ? t('op.start') : t('op.navAt', { n: cur })}</span></div>`;
-  $('#lsFb').innerHTML = (L.ln.info ? `<div class="ob-info op-info-s">${opInfoHtml(PT(L.ln.info))}</div>` : '')
+  $('#lsFb').innerHTML = opAimHtml(L.ln) + (L.ln.info ? `<div class="ob-info op-info-s">${opInfoHtml(PT(L.ln.info))}</div>` : '')
     + `<div class="op-dr" style="margin-top:10px"><button data-sdr="1">● ${t('op.drillB')}</button><button data-sdr="2">○ ${t('op.drillW')}</button></div>`;
   $('#lsHint').textContent = t('ls.back'); $('#lsHint').disabled = false; $('#lsHint').style.opacity = 1;
   $('#lsNext').style.display = 'none';
@@ -2814,7 +2843,11 @@ function drillRender() {
   else $('#lsPrompt').innerHTML = (positions[positions.length - 1].toMove === L.color && !L.answered ? t('op.drillTurn', { c: `<b>${cname(L.color)}</b>`, n: L.k + 1 }) : t('op.drillWait')) + `<div class="op-seq">${shown}</div>`;
   let fb = '';
   if (L.lastMiss) fb = `<b class="ng">${t('fb.ng')}</b> ${t('op.drillMiss', { m: sqName(L.lastMiss.sq), a: sqName(L.lastMiss.want) })}`;
-  if (L.done) fb = (L.miss === 0 && L.mine ? `<b class="ok">${t('op.drillPerfect')}</b>` : '') + (L.ln.info ? `<div class="op-info"><b>${PT(L.ln.name)}</b><div class="ob-info">${opInfoHtml(PT(L.ln.info))}</div></div>` : '');
+  // commentary: concept + name origin while the line is being played; the detailed aim / evaluation once the defining (last) move is on the board
+  const ip = L.ln.info ? opInfoParts(L.ln) : { origin: '', rest: '' };
+  if (!L.done) fb += `<div class="op-info op-cm">${opAimHtml(L.ln)}${ip.origin ? `<div class="ob-info">${opInfoHtml(ip.origin)}</div>` : ''}</div>`;
+  if (L.done) fb = (L.miss === 0 && L.mine ? `<b class="ok">${t('op.drillPerfect')}</b> ` : '') + `<span class="op-formed">${t('op.formed', { name: `<b>${PT(L.ln.name)}</b>` })}</span>`
+    + (L.ln.info ? `<div class="op-info op-cm">${opAimHtml(L.ln)}<div class="ob-info">${opInfoHtml(ip.rest)}${ip.origin ? opInfoHtml(ip.origin) : ''}</div></div>` : '');
   $('#lsFb').innerHTML = fb;
   $('#lsNext').textContent = t('op.drillAgain');
   $('#lsNext').disabled = !L.done; $('#lsNext').style.opacity = L.done ? 1 : .4;
