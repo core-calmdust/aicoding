@@ -4309,45 +4309,33 @@ function makeShipModel() {
         const geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
         geo.rotateX(-Math.PI / 2); geo.translate(0, y0, 0); return geo;
     };
-    // 鋭い機首の胴体＋左右に上下2枚ずつ大きな装甲ポッド（後ろから見るとX字にクロス）
-    const boxTo = (grp, w, h, d, x, y, z, mat, edges = true, ry = 0) => { const geo = new THREE.BoxGeometry(w, h, d); if (ry) geo.rotateY(ry); geo.translate(x, y, z); const m = new THREE.Mesh(geo, mat); grp.add(m); if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); return m; };
-    const box = (w, h, d, x, y, z, mat, edges = true, ry = 0) => boxTo(g, w, h, d, x, y, z, mat, edges, ry);
-    // 胴体: 長く尖った機首と、角ばった装甲の重なり
-    const nose = new THREE.ConeGeometry(4.2, 32, 4); nose.rotateX(-Math.PI / 2); nose.rotateZ(Math.PI / 4); nose.scale(1, 0.62, 1); nose.translate(0, 1.5, -22);
+    // 指定どおりの基本形（全長44）
+    //  機首: 全長の4割の長さの鋭い四角錐 / 胴体: 残りの長さの箱
+    //  ポッド: 全長の6割の平たい長方形を、胴体の左右後方に上下2枚ずつ、後ろから見て上下に35度ずつ開く
+    //  噴射口: 2つ、ポッドの後端と同じ位置
+    const LEN = 44, NOSE = LEN * 0.4, BODY = LEN - NOSE, Z0 = -LEN / 2, ZR = LEN / 2;
+    const nose = new THREE.ConeGeometry(3, NOSE, 4); nose.rotateY(Math.PI / 4); nose.rotateX(-Math.PI / 2); nose.translate(0, 1, Z0 + NOSE / 2);
     add(nose, plate);
-    box(6, 4.2, 20, 0, 1, 2, armor);
-    box(4.2, 1.6, 26, 0, 3.4, -6, plate);        // 背中の装甲板
-    box(3, 1.2, 10, 0, 4.8, -10, armor);         // 背の稜線
-    const canopy = new THREE.OctahedronGeometry(1.7, 0); canopy.scale(1, 0.6, 3); canopy.translate(0, 4.4, -8);
-    add(canopy, glowC, false);
-    box(0.6, 0.6, 16, -3.6, 2.2, -2, glowC, false);
-    box(0.6, 0.6, 16, 3.6, 2.2, -2, glowC, false);
-    // 上下に開く4つの大きな装甲ポッド
-    const pod = (sx, up) => {
+    const body = new THREE.BoxGeometry(4.2, 4.2, BODY); body.translate(0, 1, Z0 + NOSE + BODY / 2);
+    add(body, armor);
+    const PL = LEN * 0.6, PW = 10, PT = 2, ANG = 35 * Math.PI / 180;
+    [-1, 1].forEach(sx => [1, -1].forEach(up => {
         const pg = new THREE.Group();
-        const L = up ? 26 : 22, W = up ? 9.5 : 8, z0 = up ? 4 : 7;
-        boxTo(pg, W, 3, L, sx * W / 2, 0, z0, armor);
-        boxTo(pg, W * 0.7, 1.2, L * 0.75, sx * W * 0.45, 2.1, z0 - 1, plate);
-        // 前端は斜めに切り落とす
-        const cut = new THREE.Mesh(slab([[0, z0 - L / 2], [sx * W, z0 - L / 2 + 5], [sx * W, z0 - L / 2], [0, z0 - L / 2 - 4]], -1.5, 3), plate); pg.add(cut);
-        boxTo(pg, 0.6, 0.6, L * 0.8, sx * (W - 0.6), 1.8, z0, glowC, false); // 外側の発光ライン
-        boxTo(pg, 1.6, 1.6, 2, sx * (W - 1.5), 0, z0 - L / 2 - 1, glowP, false); // 前の灯
-        pg.position.set(sx * 3, 1, 0);
-        pg.rotation.set(0, sx * -0.08, sx * (up ? 0.6 : -0.6), 'YXZ'); // わずかに後退角
+        const geo = new THREE.BoxGeometry(PW, PT, PL); geo.translate(sx * PW / 2, 0, ZR - PL / 2);
+        const m = new THREE.Mesh(geo, armor); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); pg.add(m);
+        pg.position.set(sx * 2.1, 1, 0);
+        pg.rotation.z = sx * up * ANG;
         g.add(pg);
-    };
-    [-1, 1].forEach(sx => { pod(sx, true); pod(sx, false); });
-    // 後ろの2つの噴射口
+    }));
     [-1, 1].forEach(sx => {
-        const eng = new THREE.CylinderGeometry(2.2, 2.8, 6, 8); eng.rotateX(Math.PI / 2); eng.translate(sx * 2.2, 1, 13);
-        add(eng, armor);
-        const noz = new THREE.CylinderGeometry(1.8, 1.8, 1, 8); noz.rotateX(Math.PI / 2); noz.translate(sx * 2.2, 1, 16.3);
+        const noz = new THREE.CylinderGeometry(1.6, 1.6, 1.2, 8); noz.rotateX(Math.PI / 2); noz.translate(sx * 1.2, 1, ZR + 0.6);
         add(noz, glowC, false);
     });
-    const core = new THREE.Mesh(new THREE.OctahedronGeometry(1.2), new THREE.MeshBasicMaterial({ color: 0xffffff })); core.position.set(0, 2.4, 11); g.add(core); g.userData.core = core;
+    const core = new THREE.Object3D(); g.add(core); g.userData.core = core;
     // 後方のワイヤーの輪（ゆっくり回す）
     const ring = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusGeometry(11, 0.01, 2, 6)), shipWireMat);
     ring.rotation.x = Math.PI / 2; ring.position.set(0, 1.5, 6);
+    ring.visible = false; // 指定にないので非表示
     g.add(ring); g.userData.ring = ring; g.userData.glowC = glowC;
     return g;
 }
@@ -5500,8 +5488,8 @@ function render3D() {
         // エンジン
         if (playerVisible) {
                         const flick = 0.8 + Math.random() * 0.4;
-            [-2.2, 2.2].forEach(off => { // 後ろの2つの噴射口
-                const ex = px + off * VS * Math.cos(shipBank), ez = pz + 16.5 * VS;
+            [-1.2, 1.2].forEach(off => { // 後ろの2つの噴射口
+                const ex = px + off * VS * Math.cos(shipBank), ez = pz + 22.5 * VS;
                 glow.add(ex, 12, ez, themeCur.player, 16 * flick * VS, 1.3);
                 if (efx) trails.add(ex, 11, ez + 34 * flick * VS, ex, 11, ez, 6 * VS, themeCur.player, 0.9);
             });
