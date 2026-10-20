@@ -92,6 +92,9 @@ function init(o) {
     rulesBtn.querySelector('span').textContent = RULES[l] || RULES.en; rulesBtn.title = RULES_T[l] || RULES_T.en;
   }
   relabel();
+  // the game may set its language after init (URL / saved setting): follow <html lang> and re-check once loaded
+  new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  setTimeout(relabel, 0); window.addEventListener('load', relabel);
   // common menu order
   if (controls && o.order) {
     const list = o.order.map(x => $(x)).filter(x => x && x.parentNode === controls);
