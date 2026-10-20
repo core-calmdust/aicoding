@@ -19,6 +19,50 @@
   let W = A_.load(), P = A_.allProgress(), ACH = A_.achievements(P, W), C = A_.coins(W, ACH);
   function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
 
+  /* ---------- sound effects: synthesized with WebAudio (no files), one shared AudioContext ---------- */
+  const SFX = (() => {
+    let on = A_.sfxOn ? A_.sfxOn() : true, nb = null;
+    const ac = () => { try { const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); return C; } catch (e) { return null; } };
+    addEventListener('pointerdown', () => { if (on) ac(); }, { capture: true, passive: true });
+    // only play when audio is running (or is being resumed by this very tap) — never queue sounds for later
+    const ready = () => { if (!on) return null; const C = window.__atlasAC || (navigator.userActivation && navigator.userActivation.isActive ? ac() : null); if (!C) return null;
+      if (C.state === 'running') return C; if (C.state === 'suspended' && navigator.userActivation && navigator.userActivation.isActive) { C.resume(); return C; } return null; };
+    const noise = C => { if (nb) return nb; const n = C.sampleRate; nb = C.createBuffer(1, n, n); const d = nb.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; return nb; };
+    function tone(C, t, f0, f1, dur, type = 'sine', vol = .12, att = .006) {
+      const o = C.createOscillator(), g = C.createGain(); o.type = type;
+      o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur * .8);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(C.destination); o.start(t); o.stop(t + dur + .05);
+    }
+    function hiss(C, t, dur, f0, f1, vol = .08, q = 1.3, type = 'bandpass') {
+      const s = C.createBufferSource(), bf = C.createBiquadFilter(), g = C.createGain(); s.buffer = noise(C); bf.type = type; bf.Q.value = q;
+      bf.frequency.setValueAtTime(f0, t); bf.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * .45); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      s.connect(bf).connect(g).connect(C.destination); s.start(t); s.stop(t + dur + .05);
+    }
+    const at = (ms, fn) => { const C = ready(); if (C) try { fn(C, C.currentTime + .01 + ms / 1000); } catch (e) {} };
+    return {
+      get on() { return on; },
+      set(v) { on = !!v; try { localStorage.setItem('atlas-sfx', on ? '1' : '0'); } catch (e) {} if (on) ac(); },
+      sync() { if (A_.sfxOn) on = A_.sfxOn(); },
+      boing: (ms = 0) => at(ms, (C, t) => { tone(C, t, 150, 520, .26, 'triangle', .16); tone(C, t + .015, 300, 1040, .2, 'sine', .04); }),   // squash → spring up
+      whoosh: (ms = 0, d = .2) => at(ms, (C, t) => hiss(C, t, d, 420, 2400, .07)),                                                          // one spin
+      tok: (ms = 0) => at(ms, (C, t) => { tone(C, t, 520, 260, .08, 'sine', .1, .002); }),                                                  // landing / roulette tick
+      pop: (ms = 0) => at(ms, (C, t) => { tone(C, t, 880, 120, .14, 'sine', .24, .002); hiss(C, t, .22, 2600, 300, .14, .7, 'lowpass'); }),   // the icon bursts
+      shimmer: (ms = 0) => at(ms, (C, t) => [1568, 2093, 2637, 3136, 2349, 2794, 3520, 4186].forEach((f, i) => tone(C, t + i * .04, f, 0, .38, 'sine', .03, .003))),
+      chime: (ms = 0) => at(ms, (C, t) => [[784, 0], [988, .08], [1175, .16], [1568, .26]].forEach(([f, d]) => tone(C, t + d, f, 0, .7, 'sine', .06, .01))),   // the board is here
+      coin: (ms = 0) => at(ms, (C, t) => { tone(C, t, 1319, 0, .09, 'square', .025, .002); tone(C, t + .07, 1976, 0, .3, 'square', .025, .002); }),
+      fanfare: (ms = 0) => at(ms, (C, t) => [[523, 0], [659, .1], [784, .2], [1047, .32]].forEach(([f, d]) => { tone(C, t + d, f, 0, .45, 'triangle', .09); tone(C, t + d, f * 2, 0, .3, 'sine', .02); })),
+    };
+  })();
+  const SPK = '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor"/>';
+  function sfxIcon() {
+    const b = $('sfxBtn'); if (!b) return; SFX.sync();
+    b.innerHTML = `<svg viewBox="0 0 24 24">${SPK}${SFX.on ? '<path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
+    b.setAttribute('aria-pressed', SFX.on); b.classList.toggle('off', !SFX.on); b.setAttribute('aria-label', t(SFX.on ? 'sfx.on' : 'sfx.off')); b.title = t(SFX.on ? 'sfx.on' : 'sfx.off');
+  }
+  $('sfxBtn').onclick = () => { SFX.set(!SFX.on); sfxIcon(); toast(t(SFX.on ? 'sfx.on' : 'sfx.off')); if (SFX.on) SFX.coin(); };
+
   /* ---------- tabs ---------- */
   const ICO = {
     home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/>',
@@ -58,8 +102,8 @@
     const r = 22, c = 2 * Math.PI * r;
     return `<span class="ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/><circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/></svg>${pct}%</span>`;
   }
-  function gameCard(g, withUpd) {
-    const r = P[g.id], u = A_.UPDATES.find(x => x[1] === g.id);
+  function gameCard(g) {
+    const r = P[g.id];
     const rows = [];
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
@@ -71,7 +115,7 @@
       <div class="top">${g3(g)}
         <div style="min-width:0"><h4>${esc(gname(g))}</h4><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      ${withUpd && u ? `<div class="upd"><time>${fmtDate(u[0])}</time>${esc(utx(u))}</div>` : ''}
+      <p class="about">${esc(t('about.' + g.id))}</p>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 4).map(tagHtml).join('')}</div>
       <div class="ft"><small style="font-weight:700;color:var(--ink2);font-size:12px">${extra.join(' · ') || (r.touched ? '' : t('pg.none'))}</small><span class="btn sm">${t('play')}</span></div>
     </a>`;
@@ -100,7 +144,7 @@
     let el = document.getElementById('acc'); if (!el) { el = document.createElement('div'); el.id = 'acc'; el.className = 'acc'; host.after(el); }
     const s = AtlasAccount.state();
     if (!s.available) { el.innerHTML = `<span>🔒 ${t('acc.soon')}</span>`; el.title = t('acc.note'); return; }
-    if (!s.user) { el.innerHTML = `<button class="gbtn" id="accIn">${GLOGO}${t('acc.in')}</button><span>${t('acc.note')}</span>`; $('accIn').onclick = () => AtlasAccount.signIn(); return; }
+    if (!s.user) { el.innerHTML = `<button class="gbtn" id="accIn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; $('accIn').onclick = () => AtlasAccount.signIn(); return; }
     const when = s.last ? new Date(s.last).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) : '';
     el.innerHTML = `${s.user.photo ? `<img src="${esc(s.user.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(s.user.email || s.user.name)}</span>
       <span class="${s.err ? '' : 'ok'}">${s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when}</span><button class="btn sm ghost" id="accOut">${t('acc.out')}</button>`;
@@ -222,12 +266,91 @@
     $('updRow').innerHTML = ups.map(u => { const g = A_.GAMES.find(x => x.id === u[1]);
       return `<button class="ut" data-g="${g.id}" style="--c:${g.color}"><span class="pan"><span class="new">${A_.badges(g).slice(0, 1).map(badgeHtml).join('')}</span><span class="dt">${fmtDate(u[0])}</span>${artImg(g)}</span>
         <span class="tx"><b>${esc(gname(g))}</b><p>${esc(utx(u))}</p></span></button>`; }).join('');
-    $('iconGrid').innerHTML = A_.byUpdate().map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
+    updNav();
+    document.querySelectorAll('#updRow [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
+    renderFilter(); renderGrid();
+    renderProfile(); renderToday();
+  }
+
+  /* home game list: category chips + search (the chip is remembered per viewer) */
+  let gCat = 'all', gQ = '';
+  try { gCat = localStorage.getItem('atlas-cat') || 'all'; } catch (e) {}
+  if (gCat !== 'all' && !(A_.CATS || []).includes(gCat)) gCat = 'all';
+  // lower-case, full-width → half-width, katakana → hiragana: 「りばーし」 finds リバーシ
+  const norm = s => String(s).normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[\s・·\-_.]/g, '');
+  const hay = g => norm([g.id, ...Object.values(g.name), ...g.tags, ...g.tags.map(k => t('tag.' + k)), ...g.tags.map(k => I.en['tag.' + k] || ''), t('cat.' + g.cat)].join('|'));
+  function visibleGames() {
+    const q = norm(gQ.trim());
+    return A_.byUpdate().filter(g => (gCat === 'all' || g.cat === gCat) && (!q || hay(g).includes(q)));
+  }
+  const SRCH = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
+  function renderFilter() {
+    const cats = ['all', ...(A_.CATS || [])];
+    $('catChips').innerHTML = cats.map(k => { const n = k === 'all' ? A_.GAMES.length : A_.GAMES.filter(g => g.cat === k).length;
+      return `<button type="button" class="chip cat" data-k="${k}" aria-pressed="${gCat === k}">${esc(t('cat.' + k))} <em>${n}</em></button>`; }).join('');
+    $('catChips').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
+      $('catChips').querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); renderGrid(); });
+    const s = $('gSearch'); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
+    s.oninput = () => { gQ = s.value; renderGrid(); };
+    $('gSearchIc').innerHTML = SRCH;
+  }
+  // the random tile: an isometric die with "?" faces on a thick base, drawn like the 3D game icons
+  const RND_SVG = `<svg class="dieic" viewBox="0 0 200 200" aria-hidden="true">
+    <g stroke-linejoin="round" stroke-width="10">
+      <path d="M16 122 100 166 100 184 16 140Z" fill="#7552e0" stroke="#7552e0"/><path d="M100 166 184 122 184 140 100 184Z" fill="#5a3cc4" stroke="#5a3cc4"/>
+      <path d="M100 78 184 122 100 166 16 122Z" fill="#a98bff" stroke="#a98bff"/></g>
+    <g fill="#fff" opacity=".35"><circle cx="46" cy="122" r="4"/><circle cx="154" cy="122" r="4"/><circle cx="100" cy="94" r="4"/><circle cx="100" cy="150" r="4"/></g>
+    <ellipse cx="100" cy="131" rx="56" ry="22" fill="#3a2390" opacity=".28"/>
+    <g class="cube" stroke-linejoin="round" stroke-width="7">
+      <path d="M48 54 100 80 100 136 48 110Z" fill="#f3eeff" stroke="#f3eeff"/><path d="M100 80 152 54 152 110 100 136Z" fill="#dcd0ff" stroke="#dcd0ff"/>
+      <path d="M100 28 152 54 100 80 48 54Z" fill="#fff" stroke="#fff"/>
+      <g transform="matrix(.52 .26 0 .56 48 54)"><text x="50" y="80" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="78" fill="#ff5d5d">?</text></g>
+      <g transform="matrix(.52 -.26 0 .56 100 80)"><text x="50" y="80" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="78" fill="#36b4ff">?</text></g>
+      <g transform="matrix(.52 -.26 .52 .26 48 54)" fill="#ffc928"><circle cx="26" cy="26" r="10"/><circle cx="50" cy="50" r="10"/><circle cx="74" cy="74" r="10"/></g>
+    </g></svg>`;
+  function renderGrid() {
+    const list = visibleGames();
+    const rnd = list.length ? `<button type="button" class="ic rnd" id="rndTile" style="--c:#8d6bff" aria-label="${esc(t('rnd.n'))}"><span class="art">${RND_SVG}<img class="rimg" alt="" decoding="async" hidden></span>
+      <span class="lab"><span class="n">${esc(t('rnd.n'))}</span><span class="pr"><i style="width:100%"></i></span></span></button>` : '';
+    $('iconGrid').innerHTML = rnd + list.map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
         <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
-    updNav();
-    document.querySelectorAll('#updRow [data-g], #iconGrid [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
-    renderProfile();
+    $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');
+    $('iconGrid').querySelectorAll('[data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
+    if ($('rndTile')) $('rndTile').onclick = () => rollRandom(list);
+  }
+  // random: the die hops, a quick roulette of the visible games' icons, then the picked one flies to the board
+  let rolling = false;
+  function rollRandom(list) {
+    if (rolling || flying || !list.length) return;
+    rolling = true;
+    const tile = $('rndTile'), img = tile.querySelector('.rimg'), pick = list[Math.random() * list.length | 0];
+    const pi = list.indexOf(pick), seq = [];
+    for (let i = 0; i < 9; i++) seq.push(list[(pi + 1 + i) % list.length]);   // cycles round and stops on the pick
+    seq.push(pick);
+    tile.classList.add('roll'); SFX.boing();
+    let k = 0, delay = 300;
+    const stepR = () => {
+      const g = seq[k];
+      img.src = artSrc(g); img.hidden = false; tile.style.setProperty('--c', g.color); tile.classList.add('show');
+      img.animate && img.animate([{ transform: 'translateY(-10px) scale(.86)' }, { transform: 'none' }], { duration: 120, easing: 'ease-out' });
+      SFX.tok();
+      if (++k < seq.length) { delay = 45 + k * k * 2.6; setTimeout(stepR, delay); }
+      else { tile.querySelector('.n').textContent = gname(pick); setTimeout(() => { rolling = false; flyOpen(pick.id, img); }, 260); }
+    };
+    setTimeout(stepR, 280);
+  }
+  // today's game: one per day (the same for everybody), with a short history; tap → its chabudai view
+  function todayGame() { const d = Math.floor(Date.parse(A_.ymd(Date.now())) / 864e5), n = A_.GAMES.length; return A_.GAMES[((d * 3) % n + n) % n]; }
+  function renderToday() {
+    const g = todayGame(), el = $('today');
+    el.style.setProperty('--c', g.color);
+    el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
+      <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
+        <b>${esc(gname(g))}</b><span class="hs">${esc(t('hist.' + g.id))}</span>
+        <span class="ft"><span class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 3).map(tagHtml).join('')}</span><span class="btn sm">${esc(t('today.go'))} ▶</span></span></span>`;
+    el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
+    el.onclick = () => flyOpen(g.id, el.querySelector('.pan img'));
   }
 
   /* ---------- 3D board viewer ---------- */
@@ -255,6 +378,8 @@
     wrap.appendChild(fly); document.body.appendChild(wrap); img.style.visibility = 'hidden';
     const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sc = Math.min(W * .55, 280) / Math.max(r.width, 1);
     const T1 = 560;
+    // sounds follow the phases below: squash → leap (boing), two spins (whoosh ×2), landing (tok)
+    SFX.boing(40); SFX.whoosh(110, .19); SFX.whoosh(290, .19); SFX.tok(515);
     wrap.animate([
       { transform: 'translate(0,0) scale(1)' },
       { transform: 'translate(0,8px) scale(1.06)', offset: .14 },
@@ -278,6 +403,7 @@
       wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 1, transform: `translate(${dx}px, ${dy + 6}px) scale(${sc * 1.12},${sc * .86})`, offset: .35 }, { opacity: 1, transform: `translate(${dx}px, ${dy - 6}px) scale(${sc * 1.3})`, offset: .7 }, { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(${sc * .2})` }], { duration: 230, easing: 'ease-in', fill: 'forwards' })
         .onfinish = () => { wrap.remove(); img.style.visibility = ''; flying = false; };
       magic(cx, cy, 0, Math.min(W * .55, 280), -110);
+      SFX.pop(140); SFX.shimmer(190); SFX.chime(420);   // swell & pop → smoke / sparkle burst → the board appears (reveal at 400 ms)
       setTimeout(() => window.Table3D && Table3D.reveal(), 400);   // after the icon has gone and the smoke is at its fullest
     };
     setTimeout(() => {
@@ -501,21 +627,20 @@
 
   function renderProfile() {
     const touched = A_.GAMES.filter(g => P[g.id].touched).length, done = ACH.filter(a => a.done).length;
+    const s = Math.max(1, W.login.streak || 1), pos = ((s - 1) % 7) + 1, lv = 1 + Math.floor(done / 3);
+    // compact card: avatar + level, name, coins / awards / games, and a small login-streak line
     $('prof').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
-      <button class="av" id="avBtn" aria-label="${t('pf.edit')}">${avatar(92)}</button>
-      <div style="flex:1;min-width:0"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
-      <div class="stats"><div class="stat"><b>${C.balance.toLocaleString()}</b><span>${t('pf.coins')}</span></div><div class="stat"><b>${done}<small style="font-size:12px;color:var(--ink2)">/${ACH.length}</small></b><span>${t('pf.ach')}</span></div><div class="stat"><b>${touched}<small style="font-size:12px;color:var(--ink2)">/${A_.GAMES.length}</small></b><span>${t('pf.games')}</span></div></div></div>`;
+      <div class="pr1"><button class="av" id="avBtn" aria-label="${t('pf.edit')}">${avatar(64)}<span class="lv">Lv.${lv}</span></button>
+      <div class="who"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
+      <div class="stats"><span class="coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span><span class="st" title="${esc(t('pf.ach'))}">🏆 ${done}<small>/${ACH.length}</small></span><span class="st" title="${esc(t('pf.games'))}">🎲 ${touched}<small>/${A_.GAMES.length}</small></span></div></div></div>
+      <div class="strk" title="${esc(t('login.week'))}"><span>🔥 ${esc(t('login.day', { n: s }))}</span><span class="wk">${[1, 2, 3, 4, 5, 6, 7].map(d => `<i class="${d <= pos ? 'on' : ''}${d === 7 ? ' big' : ''}"></i>`).join('')}</span></div>`;
     $('avBtn').onclick = () => go('dress');
     renderAcc();
     $('nameIn').onchange = e => { W.name = e.target.value.trim(); A_.save(W); };
-    const s = W.login.streak, pos = ((s - 1) % 7) + 1;
-    $('login').innerHTML = `<div class="h3"><span>${t('login.h')}</span><span class="coin" style="font-size:14px"><i>¢</i>+${A_.TIER_COINS ? 30 : 30}</span></div>
-      <div class="week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<div class="${d <= pos ? 'on' : ''} ${d === 7 ? 'big' : ''}">${d === 7 ? '+150' : d}</div>`).join('')}</div>
-      <small>${t('login.day', { n: s })} · ${t('login.week')}</small>`;
   }
   /* ---------- GAMES ---------- */
   function renderGames() {
-    $('hAll').textContent = t('games.h'); $('allGames').innerHTML = A_.byUpdate().map(g => gameCard(g, true)).join('');
+    $('hAll').textContent = t('games.h'); $('allGames').innerHTML = A_.byUpdate().map(g => gameCard(g)).join('');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }
 
@@ -617,13 +742,14 @@
   }
 
   /* ---------- overlay / toast / confetti ---------- */
-  function openSheet(html) { $('sheet').innerHTML = html; $('ov').classList.add('on'); }
-  function closeSheet() { $('ov').classList.remove('on'); }
+  let sheetClose = null;
+  function openSheet(html, cls = '', onClose = null) { $('sheet').className = 'sheet' + (cls ? ' ' + cls : ''); $('sheet').innerHTML = html; $('ov').classList.add('on'); sheetClose = onClose; }
+  function closeSheet() { $('ov').classList.remove('on'); const f = sheetClose; sheetClose = null; if (f) f(); }
   $('ov').addEventListener('click', e => { if (e.target === $('ov')) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('ov').classList.contains('on')) closeSheet(); });
   let toastT = 0;
   function toast(s) { const el = $('toast'); el.textContent = s; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
-  function bumpCoins() { const p = $('coinPill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
+  function bumpCoins(el) { const p = el || $('coinPill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
   function confetti(n) {
     const cv = $('confetti'), g = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
     const cols = ['#ff5d5d', '#ffc928', '#3ccf91', '#36b4ff', '#8d6bff', '#ff7fbe'];
@@ -636,19 +762,69 @@
     })();
   }
 
-  /* ---------- welcome: login bonus + new achievements ---------- */
+  /* ---------- welcome: login bonus (character popup) + new achievements ---------- */
   function welcome() {
     const lb = A_.claimLogin(W);
     const fresh = ACH.filter(a => a.done && !W.seen[a.id]);
     refresh();
-    if (!lb && !fresh.length) return;
-    const total = (lb ? lb.amt : 0) + fresh.reduce((s, a) => s + A_.TIER_COINS[a.tier], 0);
-    const show = fresh.slice(0, 6);
-    openSheet(`${lb ? `<h3>${t('login.h')}</h3><p style="font-weight:900;margin:-6px 0 12px">${t('login.day', { n: lb.streak })}</p>` : ''}
-      ${fresh.length ? `<h3>${t('ach.got')}</h3><div class="newach">${show.map(achHtml).join('')}${fresh.length > show.length ? `<div class="gnote" style="text-align:center">+${fresh.length - show.length}</div>` : ''}</div>` : ''}
+    if (lb) return loginPop(lb, () => { if (fresh.length) achSheet(fresh); });
+    if (fresh.length) achSheet(fresh);
+  }
+  function achSheet(fresh) {
+    const total = fresh.reduce((s, a) => s + A_.TIER_COINS[a.tier], 0), show = fresh.slice(0, 6);
+    openSheet(`<h3>${t('ach.got')}</h3><div class="newach">${show.map(achHtml).join('')}${fresh.length > show.length ? `<div class="gnote" style="text-align:center">+${fresh.length - show.length}</div>` : ''}</div>
       <div class="total"><i></i>+${total.toLocaleString()}</div><button class="btn sun" id="take">${t('ach.take')}</button>`);
     $('take').onclick = () => { fresh.forEach(a => { W.seen[a.id] = 1; }); A_.save(W); closeSheet(); bumpCoins(); confetti(90); render(page); };
-    if (fresh.length) confetti(70);
+    confetti(70);
+  }
+  // the guide characters take turns (one per day) handing over the bonus
+  const GUIDES = ['shogi', 'knight', 'disc', 'tile', 'stone', 'dot', 'plop', 'gem', 'dice', 'owl', 'crab', 'gold'];
+  const showCoins = n => { $('coinN').textContent = n.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = n.toLocaleString(); }); };
+  function loginPop(lb, after) {
+    const day = Math.floor(Date.parse(A_.ymd(Date.now())) / 864e5), gid = GUIDES[day % GUIDES.length];
+    const info = window.Icons3D && Icons3D.MON_INFO && Icons3D.MON_INFO[gid], who = info ? (lang === 'ja' ? info.ja : info.en) : '';
+    const pos = ((lb.streak - 1) % 7) + 1, from = C.balance - lb.amt;
+    showCoins(from);   // the counter rises as the coins land
+    let taken = false;
+    const take = () => {
+      if (taken) return; taken = true;
+      const src = $('lbAmt') ? $('lbAmt').querySelector('i').getBoundingClientRect() : null;
+      $('ov').classList.remove('on'); sheetClose = null;
+      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); after && after(); });
+      confetti(90);
+    };
+    openSheet(`<div class="lbp">
+        <div class="lb-sky"><span class="rays"></span><img class="lb-ch" src="../images/atlas/g-${gid}.webp?v=1" alt="">
+          <div class="lb-bub">${who ? `<b>${esc(who)}</b>` : ''}<span>${esc(t('lb.say'))}</span></div></div>
+        <h3>${esc(t('login.h'))}</h3>
+        <div class="lb-week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="${d < pos ? 'on' : d === pos ? 'on now' : ''}${d === 7 ? ' big' : ''}">${d === 7 ? '★' : d}</span>`).join('')}</div>
+        <div class="lb-st">🔥 ${esc(t('login.day', { n: lb.streak }))} · ${esc(t('lb.week'))}</div>
+        <div class="total" id="lbAmt"><i></i>+${lb.amt.toLocaleString()}</div>
+        <button class="btn sun big" id="lbTake">${esc(t('ach.take'))}</button></div>`, 'lbs', take);
+    $('lbTake').onclick = take;
+    SFX.fanfare(250);
+    setTimeout(() => { if (!taken) confetti(40); }, 420);
+  }
+  // coins burst out of the popup and fly into the coin counter (header pill, or the hero's pill on phones)
+  function flyCoins(src, from, to, done) {
+    const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().bottom > 0;
+    const tgtEl = [$('coinPill'), document.querySelector('.heroCoin'), document.querySelector('#prof .coin')].find(vis);
+    const tr = tgtEl ? tgtEl.querySelector('i').getBoundingClientRect() : { left: innerWidth - 60, top: 20, width: 24, height: 24 };
+    const sx = src ? src.left + src.width / 2 : innerWidth / 2, sy = src ? src.top + src.height / 2 : innerHeight / 2;
+    const tx = tr.left + tr.width / 2, ty = tr.top + tr.height / 2, N = 12;
+    let landed = 0;
+    for (let i = 0; i < N; i++) {
+      const c = document.createElement('i'); c.className = 'flycoin'; c.style.left = sx + 'px'; c.style.top = sy + 'px'; document.body.appendChild(c);
+      const a = Math.random() * Math.PI * 2, r = 50 + Math.random() * 70, bx = Math.cos(a) * r, by = Math.sin(a) * r - 30;
+      const an = c.animate([
+        { transform: 'translate(-50%,-50%) scale(.3)', opacity: 0 },
+        { transform: `translate(calc(-50% + ${bx}px), calc(-50% + ${by}px)) scale(1.15) rotateY(180deg)`, opacity: 1, offset: .3 },
+        { transform: `translate(calc(-50% + ${(bx + tx - sx) * .5}px), calc(-50% + ${Math.min(by, ty - sy) - 60}px)) scale(1) rotateY(360deg)`, offset: .65 },
+        { transform: `translate(calc(-50% + ${tx - sx}px), calc(-50% + ${ty - sy}px)) scale(.6) rotateY(540deg)`, opacity: 1 },
+      ], { duration: 820, delay: i * 55, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'both' });
+      an.onfinish = () => { c.remove(); landed++; showCoins(Math.round(from + (to - from) * landed / N)); SFX.coin(); bumpCoins(tgtEl);
+        if (landed === N) { showCoins(to); done && done(); } };
+    }
   }
 
   /* ---------- language apply ---------- */
@@ -678,6 +854,7 @@
   $('langSel').onchange = e => { lang = e.target.value; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); };
 
   function render(k) {
+    sfxIcon();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'ach') renderAch();
     else if (k === 'shop') renderShop(); else if (k === 'gacha') renderGacha(); else if (k === 'dress') renderDress();
   }

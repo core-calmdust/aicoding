@@ -19,28 +19,32 @@
   /* ---------------- registry ---------------- */
   // tags: ai online rated daily lessons puzzles openings variants netrank mobile
   const GAMES = [
-    { id: 'shogi', store: ['shogi-kaya-', 'shogi-rated-v1', 'shogi-online-name'], href: 'shogi/', color: '#e8a33d', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 613, ls: 14 },
+    { id: 'shogi', cat: 'chess', store: ['shogi-kaya-', 'shogi-rated-v1', 'shogi-online-name'], href: 'shogi/', color: '#e8a33d', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 613, ls: 14 },
       name: N('将棋', 'Shogi', '将棋', '쇼기', 'Shogi', 'Shogi', 'Shogi', 'Shogi', 'शोगी', 'شوغي') },
-    { id: 'chess', store: ['aicoding-chess', 'chess-online-name'], href: 'chess/', color: '#5a6b8c', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 445, ls: 20 },
+    { id: 'chess', cat: 'chess', store: ['aicoding-chess', 'chess-online-name'], href: 'chess/', color: '#5a6b8c', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 445, ls: 20 },
       name: N('チェス', 'Chess', '国际象棋', '체스', 'Ajedrez', 'Échecs', 'Xadrez', 'Schach', 'शतरंज', 'الشطرنج') },
-    { id: 'reversi', store: ['reversi-emerald-', 'reversi-rated-v1', 'reversi-online-name'], href: 'reversi/', color: '#22aa74', released: '2026-10-17', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 170, ls: 9 },
+    { id: 'reversi', cat: 'line', store: ['reversi-emerald-', 'reversi-rated-v1', 'reversi-online-name'], href: 'reversi/', color: '#22aa74', released: '2026-10-17', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 170, ls: 9 },
       name: N('リバーシ', 'Reversi', '黑白棋', '리버시', 'Reversi', 'Reversi', 'Reversi', 'Reversi', 'रिवर्सी', 'ريفيرسي') },
-    { id: 'sudoku', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', premium: 1, tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 1300 },
+    { id: 'sudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', premium: 1, tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 1300 },
       name: N('まいにち数独', 'Daily Sudoku', '每日数独', '매일 스도쿠', 'Sudoku Diario', 'Sudoku du jour', 'Sudoku Diário', 'Tägliches Sudoku', 'रोज़ का सुडोकू', 'سودوكو كل يوم') },
-    { id: 'gomoku', store: ['aicoding-gomoku', 'gomoku-online-name'], href: 'gomoku/', color: '#c48a4a', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 12 },
+    { id: 'gomoku', cat: 'line', store: ['aicoding-gomoku', 'gomoku-online-name'], href: 'gomoku/', color: '#c48a4a', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 12 },
       name: N('五目並べ・連珠', 'Gomoku & Renju', '五子棋・连珠', '오목・렌주', 'Gomoku y Renju', 'Gomoku et Renju', 'Gomoku e Renju', 'Gomoku & Renju', 'गोमोकु और रेंजू', 'غوموكو ورينجو') },
-    { id: 'dots', store: ['dots-puzzles-', 'dots-lessons-', 'dots-openings-', 'dots-daily-', 'dots-rated-v1', 'dots-rules-', 'dots-online-name'], href: 'dots/', color: '#4cc3ff', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 450, ls: 15 },
+    { id: 'dots', cat: 'line', store: ['dots-puzzles-', 'dots-lessons-', 'dots-openings-', 'dots-daily-', 'dots-rated-v1', 'dots-rules-', 'dots-online-name'], href: 'dots/', color: '#4cc3ff', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 450, ls: 15 },
       name: N('ドット・アンド・ボックス', 'Dots and Boxes', '点格棋', '도트 앤 박스', 'Puntos y cajas', 'Pipopipette', 'Pontinhos', 'Käsekästchen', 'डॉट्स एंड बॉक्सेज़', 'النقاط والمربعات') },
-    { id: 'connect4', store: ['aicoding-connect4-v2', 'c4-rated-v1'], href: 'connect4/', color: '#ff6b6b', released: '2026-10-18', premium: 1, tags: ['ai', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 45, ls: 5 },
+    { id: 'connect4', cat: 'line', store: ['aicoding-connect4-v2', 'c4-rated-v1'], href: 'connect4/', color: '#ff6b6b', released: '2026-10-18', premium: 1, tags: ['ai', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 45, ls: 5 },
       name: N('コネクトフォー', 'Connect Four', '四子棋', '커넥트 포', 'Conecta 4', 'Puissance 4', 'Lig 4', 'Vier gewinnt', 'कनेक्ट फ़ोर', 'أربعة في صف') },
-    { id: 'mancala', store: ['aicoding-mancala-v1'], href: 'mancala/', color: '#b98663', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 100, ls: 6 },
+    { id: 'mancala', cat: 'race', store: ['aicoding-mancala-v1'], href: 'mancala/', color: '#b98663', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 100, ls: 6 },
       name: N('マンカラ', 'Mancala', '播棋', '만칼라', 'Mancala', 'Mancala', 'Mancala', 'Mancala', 'मंकाला', 'مانكالا') },
-    { id: 'backgammon', store: ['aicoding-backgammon-v2'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 16, ls: 7 },
+    { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 16, ls: 7 },
       name: N('バックギャモン', 'Backgammon', '西洋双陆棋', '백개먼', 'Backgammon', 'Backgammon', 'Gamão', 'Backgammon', 'बैकगैमन', 'طاولة الزهر') },
-    { id: 'morris', store: ['aicoding-morris'], href: 'morris/', color: '#7552e0', released: '2026-10-18', premium: 1, tags: ['ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 600, ls: 21 },
+    { id: 'morris', cat: 'line', store: ['aicoding-morris'], href: 'morris/', color: '#7552e0', released: '2026-10-18', premium: 1, tags: ['ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 600, ls: 21 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة') },
   ];
   GAMES.forEach(g => { g.icon = 'images/icons/' + g.id + '.svg'; });
+  // cat: home-grid category chip — chess (shogi/chess-like) · line (line-up & territory) · race (dice race & sowing) · puzzle
+  const CATS = ['chess', 'line', 'race', 'puzzle'];
+  // sound effects on/off for every page of the series (localStorage 'atlas-sfx': '0' = off)
+  const sfxOn = () => { try { return localStorage.getItem('atlas-sfx') !== '0'; } catch (e) { return true; } };
   // store: localStorage key prefixes that belong to the game. The shared account (shared/atlas-account.js)
   // syncs every key starting with one of them, plus each game's '-rules-seen' flag — so a new game only
   // has to list its prefixes here. Keys holding an in-progress game or device settings sync too (newest wins).
@@ -256,7 +260,7 @@
   }
   function buy(W, id, price) { if (W.owned.includes(id)) return false; W.owned.push(id); W.spent += price; save(W); return true; }
 
-  window.Atlas = { LANGS, GAMES, UPDATES, updText, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, byUpdate, recordPlay, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
+  window.Atlas = { LANGS, GAMES, CATS, sfxOn, UPDATES, updText, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, byUpdate, recordPlay, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
 })();
 
 /* =====================================================================
@@ -275,7 +279,7 @@
   const doneIds = () => { try { return A.achievements().filter(a => a.done); } catch (e) { return []; } };
   let I18N = window.ATLAS_I18N, loading = null;
   const needText = () => I18N ? Promise.resolve() : (loading || (loading = new Promise(res => {
-    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=3', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
+    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=5', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
   })));
   const lang = () => { const l = (document.documentElement.lang || localStorage.getItem('aicoding-lang') || 'ja').slice(0, 2); return A.LANGS && A.LANGS.includes(l) ? l : (l in (I18N || {}) ? l : 'en'); };
   const tr = (k, v) => { const L = I18N || {}, l = lang(); let s = (L[l] && L[l][k]) ?? (L.en && L.en[k]) ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
@@ -308,6 +312,7 @@
   }
   function chime() {   // a soft two-note chime; skipped silently where audio isn't allowed yet
     try {
+      if (A.sfxOn && !A.sfxOn()) return;
       const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state !== 'running') return;
       [[784, 0], [1175, .11]].forEach(([f, d]) => { const o = C.createOscillator(), g = C.createGain(), t = C.currentTime + d; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.08, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .5); o.connect(g).connect(C.destination); o.start(t); o.stop(t + .55); });
     } catch (e) {}
