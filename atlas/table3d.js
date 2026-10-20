@@ -351,7 +351,7 @@
     morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .84 },
     day:     { sky: ['#8fd0ff', '#e6f6ff'], sun: 0xffffff, sunI: 1.25, sunPos: [-8, 18, -6], hemi: [0xf4f8ff, 0x6a5038, .55], lamp: 0, exp: .86 },
     evening: { sky: ['#ff7a3c', '#ffc27a'], sun: 0xff8a3c, sunI: 1.35, sunPos: [-18, 5, -10], hemi: [0xffb070, 0x4a2010, .42], lamp: .6, exp: .82 },
-    night:   { sky: ['#0b1230', '#24335e'], sun: 0x8fa4ff, sunI: .08, sunPos: [-14, 10, -12], hemi: [0x3a4a80, 0x140c06, .12], lamp: 1.7, exp: .78 },
+    night:   { sky: ['#0b1230', '#24335e'], sun: 0xffe2b8, sunI: .55, sunPos: [-6, 18, 4], hemi: [0xffe6c8, 0x3a2614, .42], lamp: 2.4, exp: .9 },   // ceiling light on
   };
 
   // rounded box: a subdivided box whose edges are bent onto quarter-circles (exact normals, box UVs kept, so wood maps stay straight)
@@ -553,7 +553,7 @@
   // the floor texture as an image + its size in world units, for a page background that matches the 3D floor
   function floorImage(kind) { return kind === 'tatami' ? { img: tatamiTex().map.image, w: TAT_W, h: TAT_L } : { img: woodTop('tblR5', '#c08446', '#6a3e1c').image, w: 40, h: 40 }; }
   function buildRoom(scene, plain) {
-    const TT = T(), mode = timeOfDay(new Date().getHours()), L = LOOK[mode];
+    const TT = T(), mode = plain ? 'day' : timeOfDay(new Date().getHours()), L = LOOK[mode];   // the games themselves are always lit like daytime
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
     if (plain && localFloor) {   // skin pages: the floor is the page's own CSS background; the canvas only carries the board and its shadow
@@ -657,7 +657,7 @@
       const sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
       const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
       // tinted by the hour (see LOOK): reflections and ambient follow morning / day / evening / night
-      const Lk = LOOK[timeOfDay(new Date().getHours())], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
+      const Lk = LOOK[opts.plain ? 'day' : timeOfDay(new Date().getHours())], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
       for (let i = 0; i < pos.count; i++) { const y = Math.max(0, pos.getY(i) / 30), k = (.06 + .3 * y) * amt; c.setRGB(tint.r * k, tint.g * k, tint.b * k); col.push(c.r, c.g, c.b); }
       sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
       [[-8, 16, 6, 12, 7, 1.6], [10, 10, -6, 8, 6, .8], [0, 6, 18, 18, 4, .4]].forEach(([x, y, z, w, h, k]) => {
