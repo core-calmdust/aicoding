@@ -159,7 +159,7 @@ class Pos {
     this.pat = [null, new Uint16Array(SIZE), new Uint16Array(SIZE)];  // four direction patterns packed in nibbles
     this.CB = this.renju ? COMB_R : COMB_N;
     this.sc = [null, new Int32Array(SIZE), new Int32Array(SIZE)];
-    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std']; this.nn = NNI[this.renju ? 'renju' : 'std'];
+    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std']; this.nn = this.renju ? NNI.renju : this.rule === 'standard' ? NNI.std : null;   // freestyle keeps the linear evaluation (the net did not beat it there)
     this.cb = [null, new Int16Array(SIZE).fill(-1), new Int16Array(SIZE).fill(-1)];
     this.tA = [0, 0, 0]; this.tB = [0, 0, 0];   // learned sums: colour c as side to move / as opponent
     this.pk = new Int16Array(SIZE).fill(-1); this.tP = [0, 0, 0];   // cell class pairs, sums for black / white to move
@@ -932,12 +932,14 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     // renju: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails
     Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=3').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('renju', w, b); }).catch(() => {}),
+    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_std.bin.gz?v=1').then(r => r.ok ? gunzip(r) : null)])
+      .then(([w, b]) => { if (w && b) setNN('std', w, b); }).catch(() => {}),
   ]);
   self.onmessage = async e => {
     await ready;
     const m = e.data;
     try {
-      if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, learnedStd: !!LW.std });
+      if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, nnStd: !!NNI.std, learnedStd: !!LW.std });
       else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.rule, m.moves, m.level, m.start) });
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
