@@ -263,7 +263,7 @@
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, SG = T3.shogi, L = TXT[ctx.lang] || TXT.en;
     const board = T3.MODELS.shogi(true); board.scale.setScalar(SC); T3.show('shogi', board); T3.play(true);
-    if (T3.fit) T3.fit({ w: 10.4 * SC, d: 11.6 * SC, y: board.userData.top * SC, pitch: 1.53 });   // close-up on the playing field
+    if (T3.fit) T3.fit({ w: 11.6 * SC, d: 10.6 * SC, y: board.userData.top * SC, pitch: 1.2 });   // close-up on the playing field
     const Y = board.userData.top, CW = SG.CW, CH = SG.CH, FW = SG.FW, FH = SG.FH;
     const marks = new TH.Group(); board.add(marks);
     let pcs = {}, hand = [], step = 0, stopped = false, busy = false, played = false, timers = [];
