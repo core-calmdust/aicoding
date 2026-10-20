@@ -414,3 +414,14 @@ body.scompact .skey .kd{top:4px;inset-inline-start:5px;font-size:11px;padding:2p
 @keyframes boom{0%{background:#ffd36b}40%{background:#ff8a3d;transform:scale(1.08)}100%{}}
 /* swap */
 .scell.swp{transition:transform .4s cubic-bezier(.4,1.3,.5,1);z-index:2;box-shadow:0 6px 16px rgba(60,40,90,.2)}
+/* tutorial on phones: never squeeze the board or let the bubble overlap it */
+.sheet.tut .tstage,.sheet.tut .tsay{flex-shrink:0}
+.sheet.tut .tbody{overflow-y:auto}
+@media (max-width:560px){
+  .tgims{grid-template-columns:repeat(2,1fr);gap:6px}
+  .tgims .sgline{padding:6px 8px;gap:8px}
+  .tgims .sgline small{display:none}
+  .tgims .sgline b{font-size:13px}
+  .tgims .gi{width:30px;height:30px}.tgims .gi svg{width:22px;height:22px}
+  .sheet.tut .tbody{gap:12px}
+}
