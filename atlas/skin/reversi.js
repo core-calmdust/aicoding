@@ -131,6 +131,23 @@
     if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(fit)).observe(boardDom);
     setTimeout(fit, 200); setTimeout(fit, 1200);
   })();
+  /* ---------- opened from the portal with a level / side: set up the new-game dialog and start right away ---------- */
+  (function autoStart() {
+    const q = new URLSearchParams(location.search), lv = +q.get('lv'), side = +q.get('side');
+    if (!lv && !side) return;
+    let tries = 0;
+    const go = () => {
+      if (typeof openNew !== 'function' || typeof draft !== 'object' || !document.getElementById('btnStart')) { if (++tries < 40) setTimeout(go, 150); return; }
+      try {
+        openNew(); draft.mode = 'ai';
+        if (lv >= 1 && lv <= 10) draft.level = lv;
+        if (side === 1 || side === 2) draft.color = side;
+        segSync(); document.getElementById('btnStart').click();
+      } catch (e) {}
+      q.delete('lv'); q.delete('side'); history.replaceState(null, '', location.pathname + '?' + q.toString() + location.hash);   // a reload doesn't restart
+    };
+    setTimeout(go, 400);
+  })();
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   const TITLE = { ja: '世界のボドゲ大全', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة' };

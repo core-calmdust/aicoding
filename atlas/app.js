@@ -194,6 +194,18 @@
     })(performance.now());
   }
   (window.requestIdleCallback || (f => setTimeout(f, 1200)))(() => { if (!glOK) initGL(); });
+  // ‹ › buttons page the recent-updates row (one card step; hidden at either end)
+  function updNav() {
+    const row = $('updRow'), pv = $('updPrev'), nx = $('updNext'); if (!row || !pv) return;
+    const rtl = getComputedStyle(row).direction === 'rtl';
+    const step = () => { const c = row.querySelector('.ut'); return c ? c.offsetWidth + 16 : row.clientWidth * .8; };
+    const sync = () => { const max = row.scrollWidth - row.clientWidth - 2, x = Math.abs(row.scrollLeft); pv.hidden = x < 10; nx.hidden = x >= max - 8; };
+    pv.onclick = () => row.scrollBy({ left: (rtl ? 1 : -1) * step(), behavior: 'smooth' });
+    nx.onclick = () => row.scrollBy({ left: (rtl ? -1 : 1) * step(), behavior: 'smooth' });
+    row.onscroll = () => requestAnimationFrame(sync);
+    if (!updNav.ro && window.ResizeObserver) { updNav.ro = new ResizeObserver(() => sync()); updNav.ro.observe(row); }
+    sync(); setTimeout(sync, 300);
+  }
   function renderHome() {
     renderHero();
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
@@ -204,6 +216,7 @@
     $('iconGrid').innerHTML = A_.byUpdate().map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
         <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
+    updNav();
     document.querySelectorAll('#updRow [data-g], #iconGrid [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     renderProfile();
   }
@@ -329,11 +342,16 @@
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${ad ? `<div class="opts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}</option>`).join('')}</select></label>
-        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' ? '' : t('bv.soon')}</div>`}
+      </div><div class="R">${ad ? `<div class="opts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
+        ${ad.levelInfo ? `<div class="lvinfo" id="bvLvInfo"></div>` : ''}${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' ? '' : t('bv.soon')}</div>`}
       <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${window.AtlasRules && AtlasRules[id] ? `<button class="btn ghost" id="bvRules">📖 ${t('bv.rules')}</button>` : ''}<a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div></div></div>`;
     if (ad) $('bvStart').onclick = startPlay;
     if ($('bvRules')) $('bvRules').onclick = startRules;
+    if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
+      const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
+        $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
+      $('bvLv').onchange = show; show();
+    }
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close'));
@@ -354,7 +372,7 @@
       const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1;
       pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       $('bv').classList.add('playing'); Table3D.play(true);
-      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas'; }, 450);
+      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (lv ? '&lv=' + lv : '') + '&side=' + side; }, 450);
       return;
     }
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1;

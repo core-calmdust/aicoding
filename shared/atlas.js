@@ -48,14 +48,14 @@
   /* ---------------- changelog (newest first) ---------------- */
   // Add a line whenever a game gets a visible update. ja / en; other languages fall back to en.
   const UPDATES = [
-    ['2026-10-20', 'backgammon', 'サイコロが転がるアニメーションと、スマホ横画面の新レイアウト', 'Tumbling dice animation and a new landscape layout on phones'],
-    ['2026-10-20', 'gomoku', '標準・自由ルールのAIが棋譜から学習した評価で強くなりました', 'Standard & freestyle AI now uses an evaluation learned from real games'],
-    ['2026-10-20', 'dots', '5×5のLv9・Lv10が大幅に強化（終盤の完全読み）', '5×5 Lv9/Lv10 much stronger with an exact endgame solver'],
+    ['2026-10-20', 'reversi', 'ポータルの3D盤でレッスン・定石・詰め・オンライン対戦まで全部遊べるように。キャラが案内するルール説明も', 'Lessons, openings, puzzles and online play on the portal\'s 3D board, plus a rules tour told by a character'],
+    ['2026-10-20', 'gomoku', 'AIが15級〜五段の20段階に。レートも級・段位で表示、連珠の評価も強化', '20 AI ranks from 15-kyu to 5-dan, ratings shown as kyu/dan, stronger renju evaluation'],
+    ['2026-10-20', 'shogi', 'Googleログインで進捗をクラウド同期。レート戦の予備選（3戦でレート決定）', 'Google sign-in with cloud sync, and placement games for rated play'],
+    ['2026-10-20', 'chess', 'Googleログインで進捗をクラウド同期。定跡解説の自動再生', 'Google sign-in with cloud sync, and autoplay for opening studies'],
+    ['2026-10-20', 'morris', 'オンライン対戦が登場（レート戦・ルーム・チャット・観戦）', 'Online play: rated matchmaking, rooms, chat and spectating'],
+    ['2026-10-20', 'backgammon', '2つのサイコロがそれぞれ別々に転がるように。図解ルールも追加', 'The two dice now roll independently; illustrated rules added'],
+    ['2026-10-20', 'dots', '5×5のLv9・Lv10が大幅に強化（終盤の完全読み）。オンライン対戦に対応', '5×5 Lv9/Lv10 much stronger with an exact solver; online play'],
     ['2026-10-20', 'connect4', 'AIとのレート戦が登場。Lv8は1手目から完全プレイ', 'Rated games vs AI; Lv8 now plays perfectly from move 1'],
-    ['2026-10-20', 'morris', 'AIとのレート戦と、定跡解説の自動再生', 'Rated games vs AI and autoplay for opening studies'],
-    ['2026-10-20', 'reversi', '図解ルールと「はじめての方へ」の案内を追加', 'Illustrated rules and a first-time guide'],
-    ['2026-10-20', 'shogi', 'レート戦の予備選（3戦でレート決定）', 'Placement games: your rating is set in 3 games'],
-    ['2026-10-20', 'chess', 'レート戦の予備選と、定跡解説の自動再生', 'Placement games and autoplay for opening studies'],
     ['2026-10-19', 'sudoku', '変わり種数独に5ルール追加、ランキングとキャラガチャ', '5 new variant rules, rankings and a character gacha'],
     ['2026-10-19', 'mancala', 'スマホではメニューを盤の上に配置', 'Menu moved above the board on phones'],
   ];
