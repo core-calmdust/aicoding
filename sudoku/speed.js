@@ -10,7 +10,10 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const t = (k, p) => C.t(k, p);
 const DK = [30, 60, 90];
 const DT = { 30: 1, 60: 2, 90: 3 };                    // medal tier (bronze / silver / gold)
-const NCAT = 25, NST = 20, NALL = NCAT * NST;
+// course layout comes from speed_puzzles.json (v2: 入門 5×10, 初級 5×10, 中級 3×10, 上級 5×20, 達人 5×20)
+const catLen = ci => (DATA ? DATA.cats[ci].st.length : 0);
+const nAll = () => (DATA ? DATA.cats.reduce((a, c) => a + c.st.length, 0) : 0);
+const cname = ci => t(DATA.cats[ci].nk), cdesc = ci => t(DATA.cats[ci].dk);
 const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f'];
 const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df']];
 const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8' };
@@ -48,21 +51,23 @@ const SHOE = '<svg viewBox="0 0 64 64"><path d="M8 44c0-8 4-14 8-18l6 4 6-10c6 2
 function S() {
   const D = C.DB;
   const s = D.sp = D.sp && typeof D.sp === 'object' ? D.sp : {};
-  s.d = s.d || {}; s.c = s.c || {}; s.ach = s.ach || {}; s.rw = s.rw || {};
+  s.d = s.d || {}; s.cc = s.cc || {};          // course records (v2 layout; the old v1 records in s.c are not used)
+  s.ach = s.ach || {}; s.rw = s.rw || {};
   s.sc = Object.assign({ tot: 0, m: {} }, s.sc || {});
   s.st = Object.assign({ solved: 0, runs: 0, combo: 0, flash: 0, gs: {}, time: 0 }, s.st || {});
   return s;
 }
-const rec = (ci, pi) => S().c[ci + '.' + pi];
-const catClears = ci => { let n = 0; for (let p = 0; p < NST; p++) if (rec(ci, p)) n++; return n; };
-const catStars = ci => { let n = 0; for (let p = 0; p < NST; p++) { const r = rec(ci, p); if (r) n += r.s; } return n; };
+const rec = (ci, pi) => S().cc[ci + '.' + pi];
+const catClears = ci => { let n = 0; for (let p = 0; p < catLen(ci); p++) if (rec(ci, p)) n++; return n; };
+const catStars = ci => { let n = 0; for (let p = 0; p < catLen(ci); p++) { const r = rec(ci, p); if (r) n += r.s; } return n; };
 const tierCats = tr => DATA ? DATA.cats.map((c, i) => (c.tier === tr ? i : -1)).filter(i => i >= 0) : [];
 const tierClears = tr => tierCats(tr).reduce((a, ci) => a + catClears(ci), 0);
+const tierLen = tr => tierCats(tr).reduce((a, ci) => a + catLen(ci), 0);
 const TIER_NEED = 40;
 const tierOpen = tr => true;   // every difficulty is open: stage 1 of each category can be played right away
 const stageOpen = (ci, pi) => DEBUG && /unlock/.test(location.search) || tierOpen(DATA.cats[ci].tier) && (pi === 0 || !!rec(ci, pi - 1) || !!rec(ci, pi));
-const totalClears = () => Object.keys(S().c).length;
-const totalStars = () => Object.values(S().c).reduce((a, r) => a + (r.s || 0), 0);
+const totalClears = () => Object.keys(S().cc).length;
+const totalStars = () => Object.values(S().cc).reduce((a, r) => a + (r.s || 0), 0);
 const dayRec = (ds, d) => (S().d[ds] || {})[d];
 function addPts(n) {
   if (n <= 0) return;
@@ -114,11 +119,11 @@ function catalog() {
   [[3, 1, 'sk3'], [7, 2, 'sk7'], [30, 3, 'sk30'], [100, 4, 'sk100']].forEach(([n, ti, id]) => add('daily', id, sk.best >= n, ti, 'flame', t('sa.sk', { n }), t('sa.sk.d', { n }), [sk.best, n]));
   [[30, 6, 9], [60, 11, 16], [90, 14, 20]].forEach(([d, a, b]) => { const v = best(d); add('daily', 'best' + d + 'a', v >= a, 2, String(a), t('sa.best', { s: d, n: a }), t('sa.best.d', { s: d, n: a }), [v, a]); add('daily', 'best' + d + 'b', v >= b, 3, String(b), t('sa.best', { s: d, n: b }), t('sa.best.d', { s: d, n: b }), [v, b]); });
   const cc = totalClears(), st = totalStars();
-  [[20, 1, 'cc20'], [100, 2, 'cc100'], [250, 3, 'cc250'], [500, 4, 'cc500']].forEach(([n, ti, id]) => add('col', id, cc >= n, ti, String(n), n === NALL ? t('sa.ccall') : t('sa.cc', { n }), t('sa.cc.d', { n }), [cc, n]));
-  [[150, 1, 'st150'], [600, 2, 'st600'], [1500, 4, 'st1500']].forEach(([n, ti, id]) => add('col', id, st >= n, ti, 'star', t('sa.st', { n }), t('sa.st.d', { n }), [st, n]));
-  for (let tr = 0; tr < 5; tr++) { const c = tierClears(tr); add('col', 'tier' + tr, c >= 100, Math.min(4, tr + 1), 'map', t('sa.tier', { t: t('sp.tier.' + tr) }), t('sa.tier.d', { t: t('sp.tier.' + tr) }), [c, 100]); }
-  if (DATA) GORDER.forEach(g => { const ci = DATA.cats.findIndex(c => c.g === g); const c = ci >= 0 ? catClears(ci) : 0; add('col', 'gc.' + g, c >= NST, 3, 'puzzle', t('sa.gc', { g: t('g.' + g) }), t('sa.gc.d', { g: t('g.' + g) }), [c, NST]); });
-  add('col', 'perfcat', DATA && DATA.cats.some((_, ci) => catStars(ci) >= NST * 3), 3, 'heart', t('sa.perfcat'), t('sa.perfcat.d'));
+  [[20, 1, 'cc20'], [100, 2, 'cc100'], [200, 3, 'cc250'], [nAll() || 330, 4, 'cc500']].forEach(([n, ti, id]) => add('col', id, cc >= n, ti, String(n), n === nAll() ? t('sa.ccall') : t('sa.cc', { n }), t('sa.cc.d', { n }), [cc, n]));
+  [[100, 1, 'st150'], [400, 2, 'st600'], [nAll() * 3 || 990, 4, 'st1500']].forEach(([n, ti, id]) => add('col', id, st >= n, ti, 'star', t('sa.st', { n }), t('sa.st.d', { n }), [st, n]));
+  for (let tr = 0; tr < 5; tr++) { const c = tierClears(tr), L = tierLen(tr) || 1; add('col', 'tier' + tr, c >= L, Math.min(4, tr + 1), 'map', t('sa.tier', { t: t('sp.tier.' + tr) }), t('sa.tier.d', { t: t('sp.tier.' + tr) }), [c, L]); }
+  if (DATA) GORDER.forEach(g => { const ci = DATA.cats.findIndex(c => c.g === g); const c = ci >= 0 ? catClears(ci) : 0; add('col', 'gc.' + g, ci >= 0 && c >= catLen(ci), 3, 'puzzle', t('sa.gc', { g: t('g.' + g) }), t('sa.gc.d', { g: t('g.' + g) }), [c, ci >= 0 ? catLen(ci) : 10]); });
+  add('col', 'perfcat', DATA && DATA.cats.some((_, ci) => catStars(ci) >= catLen(ci) * 3), 3, 'heart', t('sa.perfcat'), t('sa.perfcat.d'));
   [[50, 1, 'sv50'], [500, 2, 'sv500'], [2000, 3, 'sv2000'], [5000, 4, 'sv5000']].forEach(([n, ti, id]) => add('chal', id, s.st.solved >= n, ti, 'check', t('sa.sv', { n }), t('sa.sv.d', { n }), [s.st.solved, n]));
   [[10, 2, 'combo10'], [30, 3, 'combo30']].forEach(([n, ti, id]) => add('chal', id, s.st.combo >= n, ti, 'flame', t('sa.combo', { n }), t('sa.combo.d', { n }), [s.st.combo, n]));
   add('chal', 'flash', s.st.flash >= 1, 3, 'clock', t('sa.flash'), t('sa.flash.d'));
@@ -224,13 +229,13 @@ function catPic(ci) {
 function colCard() {
   if (!DATA) return '';
   const cc = totalClears();
-  let h = `<h2>${SHOE.replace('<svg', '<svg class="ttl-ico"')}<span>${esc(t('sp.col'))}</span><span class="sub">${esc(t('sp.col.sub'))}</span></h2><div class="col-total"><div class="bar"><i style="width:${cc / NALL * 100}%"></i></div><b class="num">${cc} / ${NALL}</b></div>`;
+  let h = `<h2>${SHOE.replace('<svg', '<svg class="ttl-ico"')}<span>${esc(t('sp.col'))}</span><span class="sub">${esc(t('sp.col.sub'))}</span></h2><div class="col-total"><div class="bar"><i style="width:${cc / (nAll() || 1) * 100}%"></i></div><b class="num">${cc} / ${nAll()}</b></div>`;
   for (let tr = 0; tr < 5; tr++) {
-    const open = tierOpen(tr), need = tr ? Math.max(0, TIER_NEED - tierClears(tr - 1)) : 0;
-    h += `<div class="stier" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/100</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
+    const open = tierOpen(tr), need = 0;
+    h += `<div class="stier" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
     for (const ci of tierCats(tr)) {
       const n = catClears(ci), c = DATA.cats[ci];
-      h += `<button class="tcard scard ${n === NST ? 'full' : ''} ${open ? '' : 'locked'}" data-sc="${ci}">${catPic(ci)}<span class="crown">${C.CROWN}</span><div class="tx"><span class="nm">${esc(t('sc.n.' + ci))}</span><span class="lv">${c.kind === 'g' ? `<span class="gchip" style="--gc:${GCOL[c.g]}">${esc(t('g.' + c.g))}</span>` : `<span class="gchip std">${esc(t('sp.kind.' + c.kind))}</span>`}</span><span class="pg"><span class="bar"><i style="width:${n / NST * 100}%"></i></span>${n}/${NST}</span></div></button>`;
+      h += `<button class="tcard scard ${n === catLen(ci) ? 'full' : ''} ${open ? '' : 'locked'}" data-sc="${ci}">${catPic(ci)}<span class="crown">${C.CROWN}</span><div class="tx"><span class="nm">${esc(cname(ci))}</span><span class="lv">${c.kind === 'g' ? `<span class="gchip" style="--gc:${GCOL[c.g]}">${esc(t('g.' + c.g))}</span>` : `<span class="gchip std">${esc(t('sp.kind.' + (c.kind === 'combo' ? 'mix' : c.kind)))}</span>`}</span><span class="pg"><span class="bar"><i style="width:${n / catLen(ci) * 100}%"></i></span>${n}/${catLen(ci)}</span></div></button>`;
     }
     h += '</div></div>';
   }
@@ -262,12 +267,12 @@ function openCat(ci) {
   curCat = ci; C.show('theme'); $('#theme').classList.remove('ovw');
   C.setScene(spdBg(), '', 'spd');
   const c = DATA.cats[ci], n = catClears(ci);
-  $('#tlName').textContent = t('sc.n.' + ci);
-  $('#tlProg').innerHTML = `${n}/${NST} · ${C.STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${catStars(ci)}/${NST * 3}`;
+  $('#tlName').textContent = cname(ci);
+  $('#tlProg').innerHTML = `${n}/${catLen(ci)} · ${C.STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${catStars(ci)}/${catLen(ci) * 3}`;
   $('#tlBack').onclick = () => C.goHome('col');
   const gl = c.kind === 'g' ? [c.g] : Array.isArray(c.pool) ? c.pool : c.pool ? GORDER : [];
-  const next = (() => { for (let p = 0; p < NST; p++) if (!rec(ci, p) && stageOpen(ci, p)) return p; return -1; })();
-  $('#tlIntro').innerHTML = `<div class="rulebox scatbox" style="--tc:${TIERCOL[c.tier]}">${catPic(ci)}<div><b>${esc(t('sp.tier.' + c.tier))} · ${esc(t('sc.n.' + ci))}</b><p>${esc(t('sc.d.' + ci))}</p>${gl.length ? `<div class="sgl mini">${gl.map(g => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span></div>`).join('')}</div>` : ''}</div></div>
+  const next = (() => { for (let p = 0; p < catLen(ci); p++) if (!rec(ci, p) && stageOpen(ci, p)) return p; return -1; })();
+  $('#tlIntro').innerHTML = `<div class="rulebox scatbox" style="--tc:${TIERCOL[c.tier]}">${catPic(ci)}<div><b>${esc(t('sp.tier.' + c.tier))} · ${esc(cname(ci))}</b><p>${esc(cdesc(ci))}</p>${gl.length ? `<div class="sgl mini">${gl.map(g => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span></div>`).join('')}</div>` : ''}</div></div>
     <div class="startrow"><button class="btn xl" id="stGo" ${next < 0 ? 'disabled' : ''}>${PLAY}${esc(next < 0 ? t('tl.allclear') : n ? t('st.cont', { n: next + 1 }) : t('st.start'))}</button></div>`;
   $('#stGo').onclick = () => { if (next >= 0) { C.SFX.tap(); C.go('s/c/' + (ci + 1) + '/' + (next + 1)); } };
   $('#tlBody').innerHTML = `<div class="plist sstages">${c.st.map((s, pi) => {
@@ -304,11 +309,14 @@ function buildScreen() {
   $('#sPause').onclick = () => setPaused(!R || !R.paused);
   const fl = document.createElement('div'); fl.className = 'flick sflick'; fl.id = 'sFlick'; document.body.appendChild(fl);
 }
+// key shuffle: only the on-screen keys work (no keyboard digits/arrows, no flick)
+const keysOnly = () => !!(R && R.gims && R.gims.some(g => g.id === 'shuffle'));
+function nudgeKeys() { const k = $('#sKeys'); k.classList.remove('nudge'); void k.offsetWidth; k.classList.add('nudge'); C.SFX.err(); }
 const keyOrder = () => (R && R.keyOrder) || [1, 2, 3, 4];
 function drawKeys(animate) {
   const host = $('#sKeys'), order = keyOrder();
   const before = {}; if (animate) host.querySelectorAll('.skey').forEach(k => before[k.dataset.d] = k.getBoundingClientRect());
-  host.innerHTML = order.map(d => `<button class="key skey" data-d="${d}"><span class="n">${glyph(d)}</span></button>`).join('');
+  host.innerHTML = order.map(d => `<button class="key skey ${R && R.fruit ? 'fk' : ''}" data-d="${d}">${R && R.fruit ? `<em class="kd">${d}</em>` : ''}<span class="n">${glyph(d)}</span></button>`).join('');
   host.querySelectorAll('.skey').forEach(k => {
     k.addEventListener('pointerdown', e => { e.preventDefault(); keyPress(+k.dataset.d); });
     k.addEventListener('click', e => { if (e.detail === 0) keyPress(+k.dataset.d); });
@@ -321,7 +329,7 @@ function stageSpec(ci, pi) { return DATA.cats[ci].st[pi]; }
 function title() {
   if (!R) return '';
   if (R.mode === 'd') return C.miniMedal(DT[R.d]) + `<span>${esc(t('sp.dn', { s: R.d }))}${R.ranked ? '' : ' · ' + esc(t('sp.practice'))}</span>`;
-  return `<span class="tchip" style="background:${TIERCOL[DATA.cats[R.ci].tier]}">${esc(t('sp.tier.' + DATA.cats[R.ci].tier))}</span><span>${esc(t('sc.n.' + R.ci))} #${R.pi + 1}</span>`;
+  return `<span class="tchip" style="background:${TIERCOL[DATA.cats[R.ci].tier]}">${esc(t('sp.tier.' + DATA.cats[R.ci].tier))}</span><span>${esc(cname(R.ci))} #${R.pi + 1}</span>`;
 }
 function openGame(o) {
   if (!DATA) return;
@@ -424,20 +432,27 @@ const GIM = {
     },
     stop() { R.mz.fill(0); renderMz(); },
   },
-  spin: {
-    start(g) { g.st.a = 0; g.st.dir = 1; g.st.sw = 6000; $('#sBoard').classList.add('spinning'); },
+  spin: {   // the board turns a quarter at a time (full size; it only overlaps its surroundings while turning)
+    start(g) { g.st.a = 0; g.st.from = 0; g.st.to = 0; g.st.t = 1; g.st.next = 1400; $('#sBoard').classList.add('spinning'); },
     tick(g, dt) {
-      const per = [22000, 14000, 9000][g.s - 1];
-      if (g.s >= 3) { g.st.sw -= dt; if (g.st.sw <= 0) { g.st.dir *= -1; g.st.sw = 4000 + R.rng() * 4000; } }
-      g.st.a += g.st.dir * dt / per * 360;
-      $('#sBoard').style.transform = `rotate(${g.st.a.toFixed(2)}deg) scale(var(--spinsc,.8))`;
+      const gap = [5200, 3800, 2800][g.s - 1], dur = [900, 750, 620][g.s - 1];
+      if (g.st.t < 1) {
+        g.st.t = Math.min(1, g.st.t + dt / dur);
+        const e = g.st.t < .5 ? 2 * g.st.t * g.st.t : 1 - Math.pow(-2 * g.st.t + 2, 2) / 2;
+        g.st.a = g.st.from + (g.st.to - g.st.from) * e;
+        $('#sBoard').style.transform = `rotate(${g.st.a.toFixed(2)}deg)`;
+        $('#sBoard').classList.toggle('turning', g.st.t < 1);
+        return;
+      }
+      g.st.next -= dt;
+      if (g.st.next <= 0) { g.st.next = gap; g.st.from = g.st.a; g.st.to = g.st.a + (g.s >= 3 && R.rng() < .4 ? -90 : 90) * (g.s >= 2 && R.rng() < .25 ? 2 : 1); g.st.t = 0; C.SFX.note(); }
     },
-    stop() { const b = $('#sBoard'); b.style.transform = ''; b.classList.remove('spinning'); },
+    stop() { const b = $('#sBoard'); b.style.transform = ''; b.classList.remove('spinning', 'turning'); },
   },
   spot: {
-    start(g) { g.st.ph = R.rng() * 6.28; $('#sBoard').classList.add('spot'); g.st.r = [34, 27, 21][g.s - 1]; },
+    start(g) { g.st.ph = R.rng() * 6.28; $('#sBoard').classList.add('spot'); g.st.r = [50, 43, 37][g.s - 1]; },
     tick(g, dt) {
-      g.st.ph += dt / [5200, 4200, 3400][g.s - 1];
+      g.st.ph += dt / [2300, 1900, 1600][g.s - 1];
       const x = 50 + Math.sin(g.st.ph * 1.3) * 32, y = 50 + Math.sin(g.st.ph * .9 + 1.2) * 32;
       const sp = $('#sSpot'); sp.style.setProperty('--sx', x.toFixed(1) + '%'); sp.style.setProperty('--sy', y.toFixed(1) + '%'); sp.style.setProperty('--sr', g.st.r + '%');
     },
@@ -484,7 +499,7 @@ function tickGims(dt) { for (const g of R.gims) GIM[g.id].tick(g, dt); }
 function showBan() {
   const ban = $('#sBan');
   ban.innerHTML = R.gims.map(g => `<div class="sbn" style="--gc:${GCOL[g.id]}">${gic(g.id)}<span><b>${esc(t('g.' + g.id))}${g.s > 1 ? ` <em>${'★'.repeat(g.s)}</em>` : ''}</b><small>${esc(t('g.' + g.id + '.d'))}</small></span></div>`).join('');
-  ban.classList.remove('min'); ban.classList.add('on');
+  ban.classList.remove('min'); ban.classList.add('on'); ban.classList.toggle('many', R.gims.length > 3);
   clearTimeout(ban._t); ban._t = setTimeout(() => ban.classList.add('min'), 2200);
 }
 function hideBan() { const ban = $('#sBan'); ban.classList.remove('on', 'min'); }
@@ -576,7 +591,7 @@ function boardDown(e) {
   const i = +c.dataset.i;
   if (R.ice[i] > 0) { R.sel = i; hitIce(i); return; }
   R.sel = i; render(); C.SFX.tap();
-  fl = { i, x: e.clientX, y: e.clientY, shown: false, d: 0, id: e.pointerId, can: !R.grid[i] && C.DB.set.flick };
+  fl = { i, x: e.clientX, y: e.clientY, shown: false, d: 0, id: e.pointerId, can: !R.grid[i] && C.DB.set.flick && !keysOnly() };
   try { $('#sBoard').setPointerCapture(e.pointerId); } catch (_) {}
   if (fl.can) fl.timer = setTimeout(() => { if (fl && !fl.shown) showFlick(); }, 300);
 }
@@ -732,9 +747,9 @@ function finish(win, quitted, silent) {
       stars = 1 + (share >= .25 ? 1 : 0) + (share >= .25 && !R.mist ? 1 : 0);
       const base = R.st.p.reduce((a, _, j) => a + LVP[R.st.lv[j]] + SE.parseG(R.st.g[j]).length * 8, 0);
       const sc = Math.round(base * starMul[stars]);
-      const k = R.ci + '.' + R.pi, prev = s.c[k];
+      const k = R.ci + '.' + R.pi, prev = s.cc[k];
       const used = Math.round(R.limit - left);
-      if (!prev) { s.c[k] = { s: stars, t: used, sc }; earned = sc; }
+      if (!prev) { s.cc[k] = { s: stars, t: used, sc }; earned = sc; }
       else { earned = Math.max(0, sc - (prev.sc || 0)); prev.sc = Math.max(prev.sc || 0, sc); prev.s = Math.max(prev.s, stars); if (used < prev.t) { prev.t = used; newBest = true; } }
       addPts(earned);
     }
@@ -776,7 +791,7 @@ function showResult(o) {
   } else {
     const st = g.st;
     h += o.win ? `<div class="rstars">${[1, 2, 3].map(k => C.STAR(k <= o.stars)).join('')}</div>` : `<div class="sresbig">${SHOE}</div>`;
-    h += `<h3>${esc(o.win ? t('res.clear') : t('sp.res.fail', { n: g.goal - g.solved }))}</h3><div class="rs">${esc(t('sc.n.' + g.ci))} #${g.pi + 1} · ${esc(t('sp.kt', { k: st.k, s: st.t }))}</div>`;
+    h += `<h3>${esc(o.win ? t('res.clear') : t('sp.res.fail', { n: g.goal - g.solved }))}</h3><div class="rs">${esc(cname(g.ci))} #${g.pi + 1} · ${esc(t('sp.kt', { k: st.k, s: st.t }))}</div>`;
     h += `<div class="rgrid"><div><small>${esc(t('sp.leftT'))}</small><b>${(Math.max(0, g.left) / 1000).toFixed(1)}</b>${o.newBest ? `<span class="best">${esc(t('res.best'))}</span>` : ''}</div><div><small>${esc(t('res.mist'))}</small><b>${g.mist}</b></div><div><small>${esc(t('sp.maxcombo'))}</small><b>${g.maxCombo}</b></div></div>`;
     if (o.win && o.stars < 3) h += `<p class="note" style="text-align:center">${esc(t('sp.stars.note'))}</p>`;
   }
@@ -788,14 +803,12 @@ function showResult(o) {
     const r = dayRec(g.date, g.d) || {}, left = LIMIT_TRIES - (r.a || 0);
     main = `<button class="btn" data-a="retry">${esc(left > 0 ? t('sp.retry.n', { n: left }) : t('sp.retry.p'))}</button>`;
   } else {
-    const np = g.pi + 1 < NST && stageOpen(g.ci, g.pi + 1) ? g.pi + 1 : -1;
+    const np = g.pi + 1 < catLen(g.ci) && stageOpen(g.ci, g.pi + 1) ? g.pi + 1 : -1;
     main = o.win && np >= 0 ? `<button class="btn" data-a="next">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="retry">${esc(t('sp.retry'))}</button>`;
   }
   // big main button, then [back home / list] [share] (+ retry after a clear, gacha) below it
   h += `<div class="ract smain">${main}</div>`;
-  h += `<div class="ract ssub"><button class="btn ghost" data-a="back"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>${esc(g.mode === 'd' ? t('sp.home') : t('res.list'))}</button><button class="btn ghost" data-a="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>${esc(t('share'))}</button></div>`;
-  const extra = (g.mode === 'c' && o.win && /data-a="next"/.test(main) ? `<button class="btn ghost sm" data-a="retry">${esc(t('sp.retry'))}</button>` : '') + (C.DB.pts >= C.GACHA_COST ? `<button class="btn ghost sm" data-a="gacha">${esc(t('ga.btn'))}</button>` : '');
-  if (extra) h += `<div class="ract" style="margin-top:10px">${extra}</div>`;
+  h += `<div class="ract ssub"><button class="btn ghost" data-a="back">${g.mode === 'd' ? '<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>' : '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>'}${esc(g.mode === 'd' ? t('sp.home') : t('res.list'))}</button><button class="btn ghost" data-a="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>${esc(t('share'))}</button></div>`;
   $('#resBody').innerHTML = h;
   $('#resBody').querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
     const a = b.dataset.a; C.SFX.tap();
@@ -811,7 +824,7 @@ function showResult(o) {
 async function share(o) {
   const g = R;
   const s = g.mode === 'd' ? `${t('sp.title')} ${C.fmtDate(g.date, { month: 'numeric', day: 'numeric' })} ⚡${t('sp.dn', { s: g.d })} ${t('sp.cnt', { n: g.solved })}${g.solved >= g.goal ? ' ' + { 1: '🥉', 2: '🥈', 3: '🥇' }[DT[g.d]] : ''}${lastRank ? ' 🏆#' + lastRank : ''}`
-    : `${t('sp.title')} ${t('sc.n.' + g.ci)} #${g.pi + 1} ${o.win ? '⭐'.repeat(o.stars) : '💨'}`;
+    : `${t('sp.title')} ${cname(g.ci)} #${g.pi + 1} ${o.win ? '⭐'.repeat(o.stars) : '💨'}`;
   const text = s + '\n' + C.speedUrlAbs;
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); C.toast(esc(t('copied')), 'msg'); } catch (e) { prompt('', text); }
@@ -838,7 +851,7 @@ function openAch() {
   } else {
     const s = S(), days = Object.keys(s.d);
     const runs = days.reduce((a, ds) => a + DK.reduce((b, d) => b + ((s.d[ds][d] || {}).a || 0), 0), 0);
-    h += `<div class="stats"><div class="stat"><small>${esc(t('sp.st.solved'))}</small><b>${C.fmtN(s.st.solved)}</b></div><div class="stat"><small>${esc(t('sp.st.runs'))}</small><b>${runs}</b></div><div class="stat"><small>${esc(t('sp.col'))}</small><b>${totalClears()}</b><em>/${NALL}</em></div><div class="stat"><small>★</small><b>${totalStars()}</b><em>/${NALL * 3}</em></div><div class="stat"><small>${esc(t('sp.maxcombo'))}</small><b>${s.st.combo}</b></div><div class="stat"><small>${esc(t('prof.total'))}</small><b>${C.fmtN(s.sc.tot)}</b></div><div class="stat"><small>${esc(t('st.time'))}</small><b>${C.fmtTime(s.st.time)}</b></div></div>`;
+    h += `<div class="stats"><div class="stat"><small>${esc(t('sp.st.solved'))}</small><b>${C.fmtN(s.st.solved)}</b></div><div class="stat"><small>${esc(t('sp.st.runs'))}</small><b>${runs}</b></div><div class="stat"><small>${esc(t('sp.col'))}</small><b>${totalClears()}</b><em>/${nAll()}</em></div><div class="stat"><small>★</small><b>${totalStars()}</b><em>/${nAll() * 3}</em></div><div class="stat"><small>${esc(t('sp.maxcombo'))}</small><b>${s.st.combo}</b></div><div class="stat"><small>${esc(t('prof.total'))}</small><b>${C.fmtN(s.sc.tot)}</b></div><div class="stat"><small>${esc(t('st.time'))}</small><b>${C.fmtTime(s.st.time)}</b></div></div>`;
     h += `<table class="tbl"><tr><th></th><th>${esc(t('sp.st.days'))}</th><th>${esc(t('sp.st.bestc'))}</th><th>${esc(t('sp.st.avgc'))}</th><th>${esc(t('sp.st.medals'))}</th></tr>${DK.map(d => { const rs = days.map(ds => s.d[ds][d]).filter(r => r && r.c != null); const n = rs.length; return `<tr><td>${C.miniMedal(DT[d]).replace('<svg', '<svg style="width:16px;height:16px;vertical-align:-3px;margin-inline-end:4px"')}${esc(t('sp.dn', { s: d }))}</td><td>${n}</td><td>${n ? Math.max(...rs.map(r => r.c)) : '—'}</td><td>${n ? (rs.reduce((a, r) => a + r.c, 0) / n).toFixed(1) : '—'}</td><td>${rs.filter(r => r.m).length}</td></tr>`; }).join('')}</table>`;
   }
   $('#achBody').innerHTML = h;
@@ -896,8 +909,9 @@ function key(e) {
   if (k === 'Escape' || k === 'p' || k === 'P') { setPaused(!R.paused); return true; }
   if (R.paused) return false;
   const m = /^(?:Digit|Numpad)([1-4])$/.exec(e.code);
-  if (m) { e.preventDefault(); keyPress(+m[1]); return true; }
+  if (m) { e.preventDefault(); if (keysOnly()) nudgeKeys(); else keyPress(+m[1]); return true; }
   const mv = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[k];
+  if (mv && keysOnly()) { e.preventDefault(); nudgeKeys(); return true; }
   if (mv) { e.preventDefault(); const s = R.sel < 0 ? 0 : R.sel, r = ((s >> 2) + mv[0] + 4) % 4, c = ((s & 3) + mv[1] + 4) % 4; select(r * 4 + c); return true; }
   return false;
 }
@@ -917,9 +931,9 @@ addEventListener('resize', () => { if (C && built) layout(); });
 function route(p) {
   if (!DATA) return false;
   if (p[0] === 's' && p[1] === 'd' && DK.includes(+p[2])) { openGame({ mode: 'd', d: +p[2], date: C.today() }); return true; }
-  if (p[0] === 's' && p[1] === 'c' && +p[2] >= 1 && +p[2] <= NCAT) {
+  if (p[0] === 's' && p[1] === 'c' && +p[2] >= 1 && +p[2] <= DATA.cats.length) {
     const ci = +p[2] - 1;
-    if (p[3] && +p[3] >= 1 && +p[3] <= NST) { if (stageOpen(ci, +p[3] - 1)) { openGame({ mode: 'c', ci, pi: +p[3] - 1 }); return true; } }
+    if (p[3] && +p[3] >= 1 && +p[3] <= catLen(ci)) { if (stageOpen(ci, +p[3] - 1)) { openGame({ mode: 'c', ci, pi: +p[3] - 1 }); return true; } }
     openCat(ci); return true;
   }
   return false;
@@ -934,7 +948,7 @@ function merge(out, o) {
     if (!x) a.d[ds][d] = y;
     else { const bx = x.c != null ? dScore(x.c, x.t) : -1, by = y.c != null ? dScore(y.c, y.t) : -1; a.d[ds][d] = Object.assign({}, by > bx ? y : x, { a: Math.max(x.a || 0, y.a || 0), m: x.m || y.m }); }
   }
-  a.c = a.c || {}; for (const k in (b.c || {})) { const x = a.c[k], y = b.c[k]; a.c[k] = !x ? y : { s: Math.max(x.s, y.s), sc: Math.max(x.sc || 0, y.sc || 0), t: Math.min(x.t, y.t) }; }
+  a.cc = a.cc || {}; for (const k in (b.cc || {})) { const x = a.cc[k], y = b.cc[k]; a.cc[k] = !x ? y : { s: Math.max(x.s, y.s), sc: Math.max(x.sc || 0, y.sc || 0), t: Math.min(x.t, y.t) }; }
   a.ach = a.ach || {}; for (const k in (b.ach || {})) a.ach[k] = Math.max(a.ach[k] || 0, b.ach[k]);
   a.rw = Object.assign({}, b.rw || {}, a.rw || {});
   const as = a.sc = a.sc || { tot: 0, m: {} }, bs = b.sc || { tot: 0, m: {} };
@@ -959,7 +973,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=1';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=2';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },

@@ -27,7 +27,7 @@
       name: N('リバーシ', 'Reversi', '黑白棋', '리버시', 'Reversi', 'Reversi', 'Reversi', 'Reversi', 'रिवर्सी', 'ريفيرسي') },
     { id: 'sudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', premium: 1, tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 1300 },
       name: N('まいにち数独', 'Daily Sudoku', '每日数独', '매일 스도쿠', 'Sudoku Diario', 'Sudoku du jour', 'Sudoku Diário', 'Tägliches Sudoku', 'रोज़ का सुडोकू', 'سودوكو كل يوم') },
-    { id: 'speedsudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'speed-sudoku/', color: '#ff7a3d', released: '2026-10-21', premium: 1, tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 500 },
+    { id: 'speedsudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'speed-sudoku/', color: '#ff7a3d', released: '2026-10-21', premium: 1, tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 330 },
       name: N('すぴーど数独', 'Speed Sudoku', '速度数独', '스피드 스도쿠', 'Sudoku Veloz', 'Sudoku Express', 'Sudoku Veloz', 'Speed-Sudoku', 'स्पीड सुडोकू', 'سودوكو السرعة') },
     { id: 'gomoku', cat: 'line', store: ['aicoding-gomoku', 'gomoku-online-name'], href: 'gomoku/', color: '#c48a4a', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 12 },
       name: N('五目並べ・連珠', 'Gomoku & Renju', '五子棋・连珠', '오목・렌주', 'Gomoku y Renju', 'Gomoku et Renju', 'Gomoku e Renju', 'Gomoku & Renju', 'गोमोकु और रेंजू', 'غوموكو ورينجو') },

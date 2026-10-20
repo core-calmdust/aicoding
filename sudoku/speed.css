@@ -124,7 +124,7 @@ body.night .sgrid .thick{stroke:color-mix(in srgb,var(--acc) 55%,#cfc6ff)}
 .ssel.on{opacity:1}
 .sboard.spot .ssel{box-shadow:inset 0 0 0 4px #ffd36b,0 0 16px rgba(255,211,107,.6)}
 /* spotlight */
-.sspot{position:absolute;inset:0;z-index:3;pointer-events:none;display:none;background:radial-gradient(var(--sr,30%) var(--sr,30%) at var(--sx,50%) var(--sy,50%),transparent 70%,rgba(18,14,46,.985) 100%)}
+.sspot{position:absolute;inset:0;z-index:3;pointer-events:none;display:none;background:radial-gradient(var(--sr,30%) var(--sr,30%) at var(--sx,50%) var(--sy,50%),transparent 72%,rgba(18,14,46,.86) 100%)}
 .sboard.spot .sspot{display:block}
 .sboard.spot .sgrid .thin{stroke:rgba(255,255,255,.32)}
 .sboard.spot .sgrid .thick{stroke:rgba(255,236,170,.75)}
@@ -394,3 +394,15 @@ body.scompact #spd .skey .n{font-size:34px}
   .trw .th{width:170px}.trw.ic span{width:84px;height:84px}
   .sheet.tut .sf .btn{font-size:17px;padding:12px 28px}
 }
+
+.sboard.turning{z-index:6}
+/* fruit keys: big fruit, its number small in the top-left corner */
+#spd .skey.fk .n{width:100%;height:100%;display:grid;place-items:center}
+#spd .skey.fk .fr{width:72%;height:72%;max-width:120px;max-height:120px}
+body.scompact #spd .skey.fk .fr{width:78%;height:78%}
+.skey .kd{position:absolute;top:8px;inset-inline-start:10px;font-style:normal;font-family:var(--num);font-weight:700;font-size:15px;line-height:1;color:var(--ink2);background:var(--surface2);border-radius:8px;padding:3px 6px}
+body.scompact .skey .kd{top:4px;inset-inline-start:5px;font-size:11px;padding:2px 4px}
+.sgban.on.min.many{flex-wrap:nowrap;gap:3px}
+.sgban.min.many .sbn{padding:4px;gap:0}
+.sgban.min.many .sbn span{display:none}
+.skeys.nudge{animation:shake .35s}
