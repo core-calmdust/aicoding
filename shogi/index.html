@@ -1049,7 +1049,7 @@ html[lang=ar] .pf-input{direction:rtl}
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
     </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
-    <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0</div>
+    <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0<br><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
   </div>
 </div>
 
@@ -1327,10 +1327,23 @@ function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => {
 // ====================================================================== sound
 let actx = null;
 function ctx() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return actx; }
+// recorded piece sound (notanomori.net, CC BY 3.0 — see sounds/README.md); the synthesized click below is the fallback until it is loaded
+let komaBuf = null, komaLoading = false;
+function loadKoma(a) {
+  if (komaBuf || komaLoading) return; komaLoading = true;
+  fetch('sounds/koma.wav?v=1').then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej))).then(b => { komaBuf = b; }).catch(() => { komaLoading = false; });
+}
+addEventListener('pointerdown', () => { const a = ctx(); if (a) loadKoma(a); }, { once: true, capture: true });
 function playPiece(strong) {
   if (!settings.sound) return;
   const a = ctx(); if (!a) return;
   if (a.state === 'suspended') a.resume();
+  loadKoma(a);
+  if (komaBuf) {
+    const n = a.createBufferSource(), g = a.createGain();
+    n.buffer = komaBuf; n.playbackRate.value = strong ? 0.94 : 0.98 + Math.random() * 0.06; g.gain.value = strong ? 1.0 : 0.8;
+    n.connect(g).connect(a.destination); n.start(); return;
+  }
   const t0 = a.currentTime;
   const n = a.createBufferSource(), len = Math.floor(a.sampleRate * 0.05), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 6);
@@ -2906,16 +2919,16 @@ $('#lessonList').onclick = e => {
 };
 // ---- opening story: diagram of the study line's final position + history / famous players
 const OP_TXT = {
-  ja: { 'op.hist': '歴史・エピソード', 'op.who': 'この戦型を好む棋士', 'op.figEnd': '解説手順の最後（{n}手目）の局面' },
-  en: { 'op.hist': 'History', 'op.who': 'Who plays it', 'op.figEnd': 'Position after the study line ({n} moves)' },
-  zh: { 'op.hist': '历史与轶事', 'op.who': '喜爱此战型的棋手', 'op.figEnd': '解说手顺最后（第{n}手）的局面' },
-  ko: { 'op.hist': '역사·에피소드', 'op.who': '이 전형을 즐겨 두는 기사', 'op.figEnd': '해설 수순 마지막({n}수째) 국면' },
-  es: { 'op.hist': 'Historia', 'op.who': 'Quién la juega', 'op.figEnd': 'Posición tras la línea de estudio ({n} jugadas)' },
-  fr: { 'op.hist': 'Histoire', 'op.who': 'Qui la joue', 'op.figEnd': 'Position après la ligne d’étude ({n} coups)' },
-  pt: { 'op.hist': 'História', 'op.who': 'Quem a joga', 'op.figEnd': 'Posição após a linha de estudo ({n} lances)' },
-  de: { 'op.hist': 'Geschichte', 'op.who': 'Wer sie spielt', 'op.figEnd': 'Stellung nach der Lernvariante ({n} Züge)' },
-  hi: { 'op.hist': 'इतिहास', 'op.who': 'कौन खेलता है', 'op.figEnd': 'अध्ययन लाइन के बाद की स्थिति ({n} चालें)' },
-  ar: { 'op.hist': 'التاريخ', 'op.who': 'من يلعبها', 'op.figEnd': 'الوضع بعد خط الدراسة ({n} نقلة)' },
+  ja: { 'sndCredit': '駒音:', 'op.hist': '歴史・エピソード', 'op.who': 'この戦型を好む棋士', 'op.figEnd': '解説手順の最後（{n}手目）の局面' },
+  en: { 'sndCredit': 'Piece sound:', 'op.hist': 'History', 'op.who': 'Who plays it', 'op.figEnd': 'Position after the study line ({n} moves)' },
+  zh: { 'sndCredit': '棋子音效:', 'op.hist': '历史与轶事', 'op.who': '喜爱此战型的棋手', 'op.figEnd': '解说手顺最后（第{n}手）的局面' },
+  ko: { 'sndCredit': '말 소리:', 'op.hist': '역사·에피소드', 'op.who': '이 전형을 즐겨 두는 기사', 'op.figEnd': '해설 수순 마지막({n}수째) 국면' },
+  es: { 'sndCredit': 'Sonido de piezas:', 'op.hist': 'Historia', 'op.who': 'Quién la juega', 'op.figEnd': 'Posición tras la línea de estudio ({n} jugadas)' },
+  fr: { 'sndCredit': 'Son des pièces :', 'op.hist': 'Histoire', 'op.who': 'Qui la joue', 'op.figEnd': 'Position après la ligne d’étude ({n} coups)' },
+  pt: { 'sndCredit': 'Som das peças:', 'op.hist': 'História', 'op.who': 'Quem a joga', 'op.figEnd': 'Posição após a linha de estudo ({n} lances)' },
+  de: { 'sndCredit': 'Steingeräusch:', 'op.hist': 'Geschichte', 'op.who': 'Wer sie spielt', 'op.figEnd': 'Stellung nach der Lernvariante ({n} Züge)' },
+  hi: { 'sndCredit': 'मोहरे की आवाज़:', 'op.hist': 'इतिहास', 'op.who': 'कौन खेलता है', 'op.figEnd': 'अध्ययन लाइन के बाद की स्थिति ({n} चालें)' },
+  ar: { 'sndCredit': 'صوت القطع:', 'op.hist': 'التاريخ', 'op.who': 'من يلعبها', 'op.figEnd': 'الوضع بعد خط الدراسة ({n} نقلة)' },
 };
 for (const l in OP_TXT) Object.assign(I18N[l] || (I18N[l] = {}), OP_TXT[l]);
 function opStory(g) {
