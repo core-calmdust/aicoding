@@ -171,7 +171,7 @@ function ensure() {
   if ($('#mTut')) return;
   const m = document.createElement('div');
   m.className = 'modal'; m.id = 'mTut';
-  m.innerHTML = `<div class="sheet tut"><div class="sh"><h3 id="tuTitle"></h3><div class="tdots" id="tuDots"></div><button class="ib x" data-close><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="sb tbody"><div class="tsay"><div class="tm" id="tuMas"></div><div class="tbub"><p id="tuSay"></p><div class="ttask" id="tuTask"></div></div></div><div class="tstage" id="tuStage"></div></div><div class="sf"><button class="btn ghost" id="tuPrev"></button><button class="btn" id="tuNext"></button></div></div>`;
+  m.innerHTML = `<div class="sheet tut"><div class="sh"><h3 id="tuTitle"></h3><div class="tdots" id="tuDots"></div><button class="ib x" data-close><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="sb tbody"><div class="tstage" id="tuStage"></div><div class="tsay"><div class="tm" id="tuMas"></div><div class="tbub"><p id="tuSay"></p><div class="ttask" id="tuTask"></div></div></div></div><div class="sf"><button class="btn ghost" id="tuPrev"></button><button class="btn" id="tuNext"></button></div></div>`;
   document.body.appendChild(m);
   m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) C.closeModals(); });
   $('#tuPrev').onclick = () => { if (step > 0) { step--; C.SFX.tap(); draw(); } };

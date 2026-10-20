@@ -361,3 +361,36 @@ body.scompact #spd .skey .n{font-size:34px}
 .tbd .tc.b{touch-action:none}
 .tpad button.press{transform:translateY(3px);box-shadow:0 0 0 var(--keyedge)}
 .spen.sbon{color:#2fa860;inset-inline-end:auto;inset-inline-start:calc(100% - 150px)}
+/* tutorial layout v2: picture / board on top, mascot + speech bubble below, no empty space */
+.sheet.tut{height:auto;max-height:calc(100dvh - 32px)}
+.sheet.tut .tbody{gap:16px;padding-top:6px}
+.sheet.tut .tstage{min-height:0;justify-content:center}
+.sheet.tut .tsay{align-items:center}
+@media (min-width:861px){
+  .sheet.tut{width:min(1040px,92vw)}
+  .sheet.tut .sh h3{font-size:23px}
+  .sheet.tut .tbody{padding:6px 32px 20px;gap:20px}
+  .tsay .tm,.tmas{width:132px;height:132px}
+  .tbub{padding:16px 22px;border-radius:24px}
+  .tbub::before{top:50%;margin-top:-9px}.tbub::after{top:50%;margin-top:-7px}
+  .tbub p{font-size:21px;line-height:1.7}
+  .ttask{font-size:17px;padding:8px 14px;margin-top:10px}
+  .tbd.n9 .tc{width:44px;height:44px;font-size:23px}
+  .tbd.n4 .tc{width:88px;height:88px;font-size:44px}
+  .tbd.mini .tc{width:40px;height:40px;font-size:20px}
+  .tpad{width:min(100%,600px);gap:8px}
+  .tpad button{height:56px;font-size:26px;border-radius:14px}
+  .tpad.n4{width:min(100%,420px)}.tpad.n4 button{height:72px;font-size:34px}
+  .ttools{max-width:640px;gap:8px}
+  .ttool{padding:10px 14px}.ttool i{width:44px;height:44px}.ttool i svg{width:26px;height:26px}
+  .ttool b{font-size:18px}.ttool small{font-size:15px}
+  .tpic.sq{width:180px;height:180px}
+  .tcover{max-width:620px}
+  .tmedals svg{width:76px;height:76px}.tmedals b{font-size:16px}.tmedals small{font-size:14px}
+  .tgims .sgline b{font-size:16.5px}.tgims .sgline small{font-size:14.5px}
+  .tspeedad{max-width:640px;padding:18px}.tspeedad b{font-size:20px}.tspeedad p{font-size:16px}
+  .tstages span{min-width:84px;padding:10px 14px}.tstages b{font-size:22px}.tstages small{font-size:13.5px}
+  .tbarpic{max-width:560px}.tbarpic b{font-size:30px}
+  .trw .th{width:170px}.trw.ic span{width:84px;height:84px}
+  .sheet.tut .sf .btn{font-size:17px;padding:12px 28px}
+}
