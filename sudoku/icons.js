@@ -123,6 +123,15 @@ const FMT = { // N: p+s ; R: a+p+s ; SR/SSR: a+s
   ar: [(p, s) => `${s} ${p}`, (a, p, s) => `${s} ${p} ${a}`, (a, s) => `${s} ${a}`],
 };
 
+/* ---------- speed reward characters ---------- */
+const SPX = [
+  [0, 11, 'net', '#d9f5c9', '#9fe0b4', 1], [2, 5, 'paint', '#efe2ff', '#c7a8ff', 2], [6, 3, 'swirl', '#d7f1fc', '#8fd3f5', 3], [7, 6, 'spot', '#3a3478', '#6a5cc8', 1],
+  [8, 0, 'fruit', '#ffe2ec', '#ffb3c9', 1], [11, 7, 'tophat', '#d6f5e2', '#8fdcb0', 2], [15, 8, 'sparkle', '#ece8ff', '#c9c2f5', 4], [14, 3, 'icecrown', '#e6f6ff', '#a6d8ff', 1],
+  [1, 1, 'headband', '#e0f8ea', '#9fe0bd', 1], [9, 2, 'goggles', '#dceeff', '#9cc8ff', 2], [18, 9, 'helmet', '#f0e2ff', '#c39bff', 3], [17, 5, 'champion', '#ffe9c2', '#ffb3d6', 1],
+  [5, 2, 'watch', '#fff0d6', '#ffc98a', 3], [8, 11, 'bronze', '#ffeede', '#f5c79e', 1], [3, 8, 'gold', '#fff6c8', '#ffd96b', 1], [13, 10, 'flame', '#ffe6d6', '#ff9f7a', 2],
+  [19, 0, 'sneak', '#ffe6f2', '#ffb0d0', 1], [21, 4, 'wind', '#fff0dc', '#ffc58a', 2], [12, 9, 'nums', '#dcecff', '#a6c8ff', 3], [20, 2, 'bolt', '#fffbd6', '#ffe36b', 1],
+];
+
 /* ---------- id → traits ---------- */
 const TR = [];
 (function () {
@@ -132,6 +141,8 @@ const TR = [];
   for (let m = 0; m < 25; m++) { const sp = (m * 9 + 4) % 22; TR.push({ r: 'SSR', sp, pal: (m * 7 + 2) % 12, acc: -1, bg: m % 5, ttl: m % 8, cos: m % 3, ex: (m * 3) % 5 }); }
   const urSp = [18, 17, 0, 5, 14];
   for (let u = 0; u < 5; u++) TR.push({ r: 'UR', sp: urSp[u], pal: -1, acc: -1, bg: u, ur: u, ex: 0 });
+  // すぴーど数独 rewards (not in the gacha): [species, palette, prop, bg1, bg2, expression]
+  SPX.forEach((x, k) => TR.push({ r: 'SP', sp: x[0], pal: x[1], prop: x[2], c1: x[3], c2: x[4], ex: x[5], k }));
 })();
 
 function info(id) {
@@ -139,6 +150,7 @@ function info(id) {
   return {
     id, rarity: t.r, species: id === 498 ? 'phoenix' : SPECIES[t.sp],
     name: lang => {
+      if (t.r === 'SP') { const I = (typeof window !== 'undefined' && window.I18N) || {}, key = 'spi.' + t.k; return (I[lang] && I[lang][key]) || (I.en && I.en[key]) || (I.ja && I.ja[key]) || 'SP'; }
       const L = FMT[lang] ? lang : 'en', F = FMT[L], s = word('sp', L, t.sp);
       if (t.r === 'UR') return word('ur', L, t.ur);
       if (t.r === 'N') return F[0](word('pal', L, t.pal), s);
@@ -407,6 +419,48 @@ function buildStd(id, still) {
   return `${defs ? '<defs>' + defs + '</defs>' : ''}${bg}${pre}${charLayer(A, P, fc, acc)}${post}${frame}`;
 }
 
+/* ---------- speed reward builder ---------- */
+const medalP = (y, fill, rim, rib) => `<g>${p(`M43 ${y - 12}L47 ${y}L53 ${y}L57 ${y - 12}L52 ${y - 12}L50 ${y - 6}L48 ${y - 12}Z`, rib, ' stroke="#fff" stroke-width=".8"')}${c(50, y + 5, 7.2, fill, ` stroke="${rim}" stroke-width="1.6"`)}<path d="${star5(50, y + 5, 3.6)}" fill="#fff" opacity=".9"/></g>`;
+const boltP = (x, y, s) => `<path transform="translate(${f(x)} ${f(y)}) scale(${s})" d="M2-12-7 2h6l-2 10 9-14H0z" fill="#ffd23d" stroke="#e08a12" stroke-width="1.2" stroke-linejoin="round"/>`;
+function spProp(t, A, P, still) {
+  const ty = A.ty, ny = A.ny, hw = A.hw;
+  const band = (col, y = ty + 9) => p(`M${f(50 - hw + 1)} ${f(y + 3)}Q50 ${f(y - 5)} ${f(50 + hw - 1)} ${f(y + 3)}L${f(50 + hw - 1.5)} ${f(y + 9)}Q50 ${f(y + 1)} ${f(50 - hw + 1.5)} ${f(y + 9)}Z`, col, ` stroke="${P.ln}" stroke-width="1.4"`);
+  switch (t.prop) {
+    case 'net': return { front: ln('M74 98L90 46', '#b07a4a', 3) + c(91, 33, 11, '#fff', ' fill-opacity=".55" stroke="#8a8aa8" stroke-width="1.8"') + ln('M82 30h18M85 24l12 12M84 39l13-13M91 22v22', '#b9b9cf', .9) + `<g transform="translate(91 34) scale(.42)">${e(0, 2, 7, 6.5, '#ff6b6b')}${c(0, -5, 3.6, '#43385a')}${c(-2.6, 1, 1.6, '#7a2a3a')}${c(2.6, 3, 1.4, '#7a2a3a')}</g>` };
+    case 'paint': return { front: `<g transform="translate(50 ${ty + 1}) rotate(-10)" stroke="${P.ln}" stroke-width="1.6">${c(0, -7.5, 2.2, '#7a5cff')}${e(0, 0, 19, 6.8, '#7a5cff')}</g>` + p('M8 92Q6 80 18 80Q30 80 28 90Q26 96 20 94Q16 92 14 96Q10 99 8 92Z', '#fff4e0', ' stroke="#c99a5a" stroke-width="1.4"') + c(14, 85, 2.4, '#ff6b9a') + c(20, 84, 2.4, '#4fb6ff') + c(25, 88, 2.2, '#ffd23d') + c(18, 90, 2, '#7ad67a') };
+    case 'swirl': return { front: ln('M86 98V66', '#fff', 3) + c(86, 56, 11, '#ff8fb6', ' stroke="#fff" stroke-width="1.5"') + ln('M86 56m-7 0a7 7 0 1 1 7 7a4.5 4.5 0 1 1-4.5-4.5a2.4 2.4 0 1 1 2.4 2.4', '#fff', 2.2) };
+    case 'spot': return { back: p('M38 -4L62 -4L92 100L8 100Z', '#fff8c8', ' opacity=".35"'), front: twk(16, 30, 3.6, '#fff6c9', still, 1.8, .2) + twk(84, 22, 3, '#fff', still, 2.2, .7) + twk(80, 70, 2.6, '#ffe58a', still, 1.6, 1.1) };
+    case 'fruit': return { front: `<g transform="translate(50 ${f(ty - 3)}) scale(.62)">${p('M0-7c7-4 14 1 13 9-1 8-7 14-13 16-6-2-12-8-13-16-1-8 6-13 13-9z', '#ff5a6e', ` stroke="${P.ln}" stroke-width="2"`)}${p('M-7-11c3 1 4 3 7 4 3-1 4-3 7-4-1 4-4 6-7 6s-6-2-7-6z', '#4fbf6a')}${c(-4, 1, 1.2, '#ffe08a')}${c(3, 0, 1.2, '#ffe08a')}${c(0, 6, 1.2, '#ffe08a')}</g>` };
+    case 'tophat': return { front: `<g transform="translate(50 ${ty + 2})" stroke="${P.ln}" stroke-width="1.5">${e(0, 0, 17, 4.5, '#3a3150')}<rect x="-10" y="-20" width="20" height="20" rx="3" fill="#3a3150"/><rect x="-10" y="-7" width="20" height="4" fill="#ff6b9a"/></g>` + `<g transform="translate(80 86) rotate(14)">${['#fff', '#fff', '#fff'].map((col, k) => `<rect x="-6" y="-9" width="12" height="17" rx="2" fill="${col}" stroke="#c8bfe0" stroke-width="1" transform="rotate(${-20 + k * 20} 0 8)"/>`).join('')}<text x="0" y="3" font-size="9" font-family="Fredoka,Arial" font-weight="700" fill="#ff5a7a" text-anchor="middle" transform="rotate(20 0 8)">4</text></g>` };
+    case 'sparkle': return { front: [[14, 24, 4], [86, 20, 3.4], [88, 66, 3], [12, 70, 2.6], [70, 10, 2.4]].map(([x, y, z], k) => twk(x, y, z, k % 2 ? '#fff' : '#e8e2ff', still, 1.6 + k * .3, k * .4)).join('') };
+    case 'icecrown': return { front: `<g transform="translate(50 ${ty + 2})">${p('M-14 0L-15-12L-7-6L0-16L7-6L15-12L14 0Z', '#dff4ff', ' stroke="#5aa8e8" stroke-width="1.4" stroke-linejoin="round"')}${c(0, -6, 2.4, '#8fd3ff')}</g>` + ln('M14 30l6 6M14 36l6-6M17 29v8M84 70l6 6M84 76l6-6M87 69v8', '#fff', 1.4) };
+    case 'headband': return { front: band('#ff5a6e') + ln(`M${f(50 - hw + 3)} ${f(ty + 13)}Q50 ${f(ty + 6)} ${f(50 + hw - 3)} ${f(ty + 13)}`, '#fff', 1.6) + p(`M${f(50 + hw - 2)} ${f(ty + 12)}l10 -3l-3 7z`, '#ff5a6e', ` stroke="${P.ln}" stroke-width="1.2"`) };
+    case 'goggles': return { front: band('#4f6bd8', ty + 6) + `<g stroke="${P.ln}" stroke-width="1.4">${c(41, ty + 11, 6.5, '#bfe8ff')}${c(59, ty + 11, 6.5, '#bfe8ff')}</g>` + c(39, ty + 9, 1.8, '#fff') + c(57, ty + 9, 1.8, '#fff') };
+    case 'helmet': return { front: p(`M${f(50 - hw - 1)} ${f(ty + 16)}Q${f(50 - hw)} ${f(ty - 10)} 50 ${f(ty - 11)}Q${f(50 + hw)} ${f(ty - 10)} ${f(50 + hw + 1)} ${f(ty + 16)}Z`, '#ff5a6e', ` stroke="${P.ln}" stroke-width="1.6"`) + p(`M${f(50 - hw)} ${f(ty + 12)}H${f(50 + hw)}V${f(ty + 17)}H${f(50 - hw)}Z`, '#fff', ` stroke="${P.ln}" stroke-width="1.2"`) + ln(`M50 ${f(ty - 10)}V${f(ty + 12)}`, '#fff', 3.2) + boltP(64, ty, .55) };
+    case 'champion': return { back: p('M14 106Q16 74 50 74Q84 74 86 106Z', '#ff8fc7', ' stroke="#d05a9a" stroke-width="1.6"') + boltP(18, 86, .7) + boltP(82, 86, .7), front: medalP(ny + 2, '#ffd23d', '#d4920f', '#ff5a7a') };
+    case 'watch': return { front: `<g transform="translate(80 84)">${c(0, 0, 10, '#fff', ' stroke="#ff8a3d" stroke-width="2.4"')}<rect x="-2.5" y="-15" width="5" height="4" rx="1.4" fill="#ff8a3d"/>${ln('M0 0V-6M0 0l4 2', '#43385a', 1.6)}${c(0, 0, 1.4, '#43385a')}</g>` };
+    case 'bronze': return { front: medalP(ny + 2, '#e8a56a', '#a95f2e', '#5aa0e6') };
+    case 'gold': return { front: medalP(ny + 2, '#ffd23d', '#d4920f', '#e85d75') + twk(68, ny + 2, 2.6, '#fff', still, 1.6, .3) };
+    case 'flame': return { front: band('#ff7a3d') + `<path transform="translate(50 ${f(ty - 1)})" d="M0-14c4 4 7 7 7 11a7 7 0 0 1-14 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3 0-5 2-8z" fill="#ff8a4c" stroke="${P.ln}" stroke-width="1.2"/><path transform="translate(50 ${f(ty - 1)})" d="M0-4c1.8 1.8 3 3 3 5a3 3 0 0 1-6 0c0-1.3.8-2.4 1.4-2.9z" fill="#ffd36b"/>` };
+    case 'sneak': return { back: ln('M2 60h14M0 70h12M4 80h12', '#fff', 3, ' opacity=".8"'), front: `<g transform="translate(78 92) scale(.5)">${SHOE_P}</g>` + `<g transform="translate(20 92) scale(.5) scale(-1 1)">${SHOE_P}</g>` };
+    case 'wind': return { back: ln('M0 46h20M0 56h14M2 66h18', '#fff', 3, ' opacity=".85"'), front: p(`M30 ${ny - 3}Q50 ${ny + 6} 70 ${ny - 3}L71 ${ny + 3}Q50 ${ny + 12} 29 ${ny + 3}Z`, '#ff5a6e', ` stroke="${P.ln}" stroke-width="1.4"`) + p(`M31 ${ny + 1}Q14 ${ny - 2} 4 ${ny - 10}L6 ${ny - 2}Q16 ${ny + 6} 30 ${ny + 5}Z`, '#ff5a6e', ` stroke="${P.ln}" stroke-width="1.2"`) };
+    case 'nums': return { front: [[16, 28, 1, '#ff8fb6'], [80, 38, 2, '#ffd23d'], [86, 64, 3, '#8fd3ff'], [14, 66, 4, '#9fe0b4']].map(([x, y, n, col]) => `<g>${c(x, y, 7, col, ' stroke="#fff" stroke-width="1.5"')}<text x="${x}" y="${y + 3.4}" font-size="10" font-family="Fredoka,Arial" font-weight="700" fill="#fff" text-anchor="middle">${n}</text>${still ? '' : `<animateTransform attributeName="transform" type="translate" values="0 0;0 -2.5;0 0" dur="${1.4 + n * .2}s" repeatCount="indefinite"/>`}</g>`).join('') };
+    case 'bolt': return { front: boltP(84, 26, 1) + boltP(16, 70, .7) };
+  }
+  return {};
+}
+const SHOE_P = '<path d="M-20 4c0-8 4-14 8-18l6 4 6-10c6 2 10 8 14 12 6 2 12 4 12 10v4h-46z" fill="#ff8f6b" stroke="#c45a3a" stroke-width="2"/><path d="M-20 8h46v4a4 4 0 0 1-4 4h-38a4 4 0 0 1-4-4z" fill="#fff" stroke="#c45a3a" stroke-width="2"/>';
+function buildSP(id, still) {
+  const t = TR[id], P = PAL[t.pal];
+  const A = species(t.sp, P, { hat: 1 });
+  const pr = spProp(t, A, P, still);
+  const defs = `<linearGradient id="@@g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${t.c1}"/><stop offset="1" stop-color="${t.c2}"/></linearGradient><linearGradient id="@@o" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb84d"/><stop offset=".5" stop-color="#ff6b8a"/><stop offset="1" stop-color="#a77be0"/></linearGradient><clipPath id="@@k"><rect x="4" y="4" width="92" height="92" rx="20"/></clipPath>`;
+  let bg = `<rect width="100" height="100" rx="24" fill="url(#@@g)"/>` + c(50, 54, 38, '#fff', ' opacity=".28"');
+  for (let k = 0; k < 6; k++) { const y = 14 + k * 14; bg += ln(`M${4 + (k % 3) * 4} ${y}h${10 + (k * 7) % 12}`, '#fff', 2.2, ' opacity=".6"'); }
+  const frame = `<rect x="3" y="3" width="94" height="94" rx="21" fill="none" stroke="url(#@@o)" stroke-width="4.4"/>` + `<g transform="translate(86 14)">${c(0, 0, 8.5, '#fff', ' stroke="#ff8a3d" stroke-width="1.6"')}${boltP(0, .5, .62)}</g>`;
+  return `<defs>${defs}</defs>${bg}<g clip-path="url(#@@k)">${pr.back || ''}${charLayer(A, P, face(A, t.ex), pr.front || '')}</g>${frame}`;
+}
+
 /* ---------- UR compositions ---------- */
 const HOLO = ['#ff7eb6', '#ffd36e', '#8cffc1', '#7ed8ff', '#b78cff', '#ff7eb6'];
 function urCommon(still, rng, cfg) {
@@ -544,6 +598,9 @@ function buildSil(id) {
     else if (t.ur === 3) { const w = 'M32 74Q10 76 2 60Q8 60 10 56Q2 52 2 42Q10 46 14 44Q8 36 10 26Q18 38 24 40Q24 32 28 26Q34 42 38 56Z'; A = species(5, P, { extraBack: p(w, '#000') + p(mirror(w), '#000'), hat: 1 }); }
     else A = species(t.sp, P, { hat: 1 });
     extra = crown(50, A.ty + 2, .95, '#000', '#000');
+  } else if (t.r === 'SP') {
+    const P = PAL[t.pal]; A = species(t.sp, P, { hat: 1 });
+    extra = (spProp(t, A, P, true).front || '').replace(/<text[^>]*>[^<]*<\/text>/g, '');
   } else {
     const P = PAL[t.pal]; A = species(t.sp, P, { hat: 1 });
     if (t.acc >= 0) extra = accessory(t.acc, A, '#000', P);
@@ -557,11 +614,12 @@ function buildSil(id) {
 /* ---------- public API ---------- */
 const cache = new Map(), scache = new Map();
 const byR = {}; for (const r of RARITIES) byR[r] = Array.from({ length: CNT[r] }, (_, i) => START[r] + i);
+byR.SP = Array.from({ length: SPX.length }, (_, i) => 500 + i);   // speed rewards (never drawn from the gacha)
 function svg(id, opts = {}) {
   id = id | 0; if (!TR[id]) return '';
   const still = !!opts.still, key = id * 2 + (still ? 1 : 0);
   let s = cache.get(key);
-  if (!s) { s = TR[id].r === 'UR' ? buildUR(TR[id].ur, still) : buildStd(id, still); cache.set(key, s); }
+  if (!s) { s = TR[id].r === 'UR' ? buildUR(TR[id].ur, still) : TR[id].r === 'SP' ? buildSP(id, still) : buildStd(id, still); cache.set(key, s); }
   const uid = String(opts.uid || ('si' + id)).replace(/[^\w-]/g, '_');
   return svgOpen(opts.size || 96) + s.split('@@').join(uid) + '</svg>';
 }
@@ -571,7 +629,7 @@ function silhouette(id, opts = {}) {
   return svgOpen(opts.size || 96) + s + '</svg>';
 }
 const API = {
-  COUNT: 500, RARITIES: RARITIES.slice(), LANGS,
+  COUNT: 500, COUNT_ALL: 500 + SPX.length, RARITIES: RARITIES.slice(), LANGS,
   info, svg, silhouette,
   byRarity: r => (byR[r] || []).slice(),
   _traits: id => TR[id] && Object.assign({}, TR[id]),

@@ -132,6 +132,15 @@ window.SudokuOnline = {
   async logout() { if (MOCK) return; await firebase.auth().signOut(); ready = null; uid = null; await init(); },
   async pull() { await init(); return db.get('sync/' + uid); },
   async push(d) { await init(); return db.set('sync/' + uid, { d, t: Date.now() }); },
+  // すぴーど数独 daily: up to 3 ranked attempts a day; the best one stays (s never goes down)
+  async putSpeedDaily(date, d, v) {
+    await init();
+    const path = `spd/d/${date}/${d}/${uid}`, old = await db.get(path);
+    const a = (old && old.a || 0) + 1; if (a > 3) return false;
+    const best = old && old.s >= v.s ? old : v;
+    await db.set(path, { n: clean(v.n), i: v.i | 0, s: Math.round(best.s), c: best.c | 0, t: Math.round(best.t || 0), a });
+    return true;
+  },
   async myScore(path) { await init(); const me = await db.get(`${path}/${uid}`); if (!me) return null; return { me, rank: 1 + await db.better(path, 's', me.s, false) }; },
 };
 })();

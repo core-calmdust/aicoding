@@ -2,6 +2,10 @@
 (function () {
 'use strict';
 const E = window.SudokuEngine, BG = window.SudokuBG, ON = window.SudokuOnline;
+const BASE = window.SUDOKU_BASE || '';            // '' in sudoku/, '../sudoku/' in speed-sudoku/
+const MODE = window.SUDOKU_MODE || 'daily';       // 'daily' = まいにち数独, 'speed' = すぴーど数独 (stand-alone)
+const SPDX = window.SudokuSpeed || null, TUT = window.SudokuTutorial || null;
+let SPD = null;                                  // speed module, once its data has loaded
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -18,6 +22,8 @@ const TNO = ti => ORDER.indexOf(ti) + 1;
 const VTYPES = ['x', 'hyper', 'jigsaw', 'oddeven', 'killer', 'ineq', 'antiknight', 'kropki', 'thermo', 'arrow'];
 const VCOL = { x: ['#ffd9e6', '#e6dcff'], hyper: ['#d6ecff', '#e0fff1'], jigsaw: ['#fff1c9', '#ffd9cc'], oddeven: ['#ffe3cc', '#d9e9ff'], killer: ['#e8dcff', '#ffd6e6'], ineq: ['#dff4ff', '#ffe6d6'], antiknight: ['#e6f0d8', '#fff0cc'], kropki: ['#fff', '#e3e6ff'], thermo: ['#ffe0dc', '#fff2d0'], arrow: ['#dcf5ec', '#e4e0ff'] };
 const URL_SELF = 'https://core-calmdust.github.io/aicoding/sudoku/';
+const URL_SPEED = 'https://core-calmdust.github.io/aicoding/speed-sudoku/';
+const FIRST_SPEED = '2026-10-21';
 const GACHA_COST = 2500, GACHA10_COST = 22500, STARTER_PTS = 2500;
 const RATES = [['UR', .005], ['SSR', .025], ['SR', .09], ['R', .28], ['N', .6]];
 const DUP_REFUND = { N: 200, R: 350, SR: 700, SSR: 1200, UR: 2500 };
@@ -68,7 +74,7 @@ function applyI18n() {
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
-  document.title = t('title') + ' — ' + t('meta.sub');
+  document.title = MODE === 'speed' ? t('sp.title') + ' — ' + t('sp.meta') : t('title') + ' — ' + t('meta.sub');
   $('#langSel').value = LANG;
   $('#kbHelp').innerHTML = t('kb.help');
 }
@@ -291,9 +297,17 @@ function setScene(name, variant, th) {
 const refreshScene = () => setScene(scene[0], scene[1], scene[2]);
 const homeVariant = () => { const h = new Date().getHours(); return h >= 11 ? 'm' : 'e'; };
 // home background: any collection theme cleared 50/50 can be used
-const hbOK = k => { const i = THEMES.indexOf(k); return i >= 0 && PZ && themeCleared(i) === 50; };
-function homeScene() { const k = DB.set.homeBg; if (k && hbOK(k)) setScene(k, '', k); else setScene('daily', homeVariant(), 'de'); }
-function setHomeBg(k) { DB.set.homeBg = k; persist(); SFX.tap(); toast(esc(t('hb.done', { t: k ? t('th.' + THEMES.indexOf(k)) : t('hb.def') }))); }
+const isSpBg = k => !!(SPD && SPD.bgs.includes(k));
+const hbOK = k => { if (isSpBg(k)) return SPD.bgOwned(k); const i = THEMES.indexOf(k); return i >= 0 && PZ && themeCleared(i) === 50; };
+const hbKey = () => (MODE === 'speed' ? 'homeBgS' : 'homeBg');
+const bgName = k => (!k ? (MODE === 'speed' ? t('sbg.speedway') : t('hb.def')) : isSpBg(k) ? t('sbg.' + k) : t('th.' + THEMES.indexOf(k)));
+function homeScene() {
+  const k = DB.set[hbKey()];
+  if (k && hbOK(k)) setScene(k, '', isSpBg(k) ? 'spd' : k);
+  else if (MODE === 'speed') setScene('speedway', '', 'spd');
+  else setScene('daily', homeVariant(), 'de');
+}
+function setHomeBg(k) { DB.set[hbKey()] = k; persist(); SFX.tap(); toast(esc(t('hb.done', { t: bgName(k) }))); }
 
 /* ================= modals (with back-button support) ================= */
 function openModal(id) {
@@ -320,14 +334,16 @@ $$('.modal').forEach(m => {
 let screen = 'home', calMonth = null;
 function show(id) {
   if (screen === 'game' && id !== 'game') leaveGame();
+  if (screen === 'spd' && id !== 'spd' && SPD) SPD.leave();
   screen = id;
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === id));
-  $('#main').classList.toggle('gm', id === 'game');
+  $('#main').classList.toggle('gm', id === 'game' || id === 'spd');
   scrollTo(0, 0);
 }
 function route() {
   const p = location.hash.replace(/^#/, '').split('/');
   if ($('.modal.on')) $$('.modal.on').forEach(m => m.classList.remove('on'));
+  if (p[0] === 's' && SPD && SPD.route(p)) return;
   if (p[0] === 'd' && /^\d{4}-\d\d-\d\d$/.test(p[1]) && DIFFS.includes(p[2]) && p[1] >= FIRST_DAY && p[1] <= today()) return openGame({ kind: 'd', date: p[1], d: p[2] });
   if (p[0] === 'c' && +p[1] >= 1 && +p[1] <= NT && +p[2] >= 1 && +p[2] <= 50) return openGame({ kind: 'c', ti: +p[1] - 1, pi: +p[2] - 1 });
   if (p[0] === 'x' && PV && vset(+p[1] - 1) && +p[2] >= 1 && +p[2] <= vsetLen(+p[1] - 1)) return openGame({ kind: 'x', si: +p[1] - 1, pi: +p[2] - 1 });
@@ -342,6 +358,8 @@ function go(h) {
   }
   if (location.hash === '#' + h || (!h && !location.hash)) route(); else location.hash = h;
 }
+/* back to the home screen on a given tab (speed screens go to the すぴーど tab inside まいにち数独) */
+function goHome(tab) { DB[MODE === 'speed' ? 'homeTabS' : 'homeTab'] = MODE === 'speed' ? tab : (SPD ? 'spd' : 'daily'); persist(); go(''); }
 
 /* ================= home ================= */
 function openHome() {
@@ -349,7 +367,8 @@ function openHome() {
   homeScene();
   renderHome();
   if (!DB.prof.name) setTimeout(() => openName(true), 350);
-  else checkMonthAwards();
+  else if (MODE !== 'speed') checkMonthAwards();
+  if (DB.prof.name && !DB.seenTut && TUT) { DB.seenTut = 1; persist(); setTimeout(() => openHelp(), 500); }
 }
 function dailyStatus(date, d) { return { r: (DB.daily[date] || {})[d], sv: DB.saves['d/' + date + '/' + d] }; }
 function diffButtons(date, host) {
@@ -370,8 +389,8 @@ function renderProfile() {
     <div style="min-width:0"><div class="pn"><b>${esc(p.name || t('prof.guest'))}</b><button id="pEdit" title="${esc(t('prof.edit'))}">${PENCIL}</button></div>
       <div class="ptitle">${ic >= 0 ? rarChip(iconInfo(ic).rarity) + '<span>' + esc(iconName(ic)) + '</span>' : esc(t('prof.noicon'))}</div></div>
     <div class="pstats">
-      <div class="pstat"><small>${esc(t('prof.month', { m: fmtMonth(ym) }))}</small><b>${fmtN(monthScore(ym))}</b></div>
-      <div class="pstat"><small>${esc(t('prof.total'))}</small><b>${fmtN(DB.sc.tot)}</b></div>
+      <div class="pstat"><small>${esc(t('prof.month', { m: fmtMonth(ym) }))}</small><b>${fmtN(MODE === 'speed' && SPD ? SPD.monthPts(ym) : monthScore(ym))}</b></div>
+      <div class="pstat"><small>${esc(t('prof.total'))}</small><b>${fmtN(MODE === 'speed' && SPD ? SPD.totalPts() : DB.sc.tot)}</b></div>
       <div class="pstat"><small>${esc(t('prof.rank'))}</small><b>${rk}</b>${myRanks.tot ? `<em>${esc(t('prof.totrank', { n: fmtN(myRanks.tot) }))}</em>` : ''}</div>
     </div>
     <div class="pact"><span class="pts" title="${esc(t('pts.title'))}">${COIN}${fmtN(DB.pts)}</span><button class="btn sm" id="pGacha">${esc(t('ga.btn'))}</button><button class="btn sm ghost" id="pRank">${esc(t('rk.title'))}</button></div>
@@ -379,10 +398,11 @@ function renderProfile() {
   $('#pAv').onclick = () => { SFX.tap(); openZukan(); };
   $('#pEdit').onclick = () => { SFX.tap(); openName(false); };
   $('#pGacha').onclick = () => { SFX.tap(); openGacha(); };
-  $('#pRank').onclick = () => { SFX.tap(); openRank(); };
+  $('#pRank').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openRank(); else openRank(); };
 }
 async function loadMyRanks() {
   if (!ON || !ON.available || !DB.prof.name) return;
+  if (MODE === 'speed') { if (SPD) { myRanks = await SPD.myRanks(); if (screen === 'home') renderProfile(); } return; }
   try {
     const [m, tot] = await Promise.all([ON.myScore('month/' + thisMonth()), ON.myScore('total')]);
     myRanks = { m: m && m.rank, tot: tot && tot.rank };
@@ -391,12 +411,16 @@ async function loadMyRanks() {
 }
 function setHomeTab(p) {
   if (p === 'var' && (!PV || !E.setVariant)) p = 'daily';
-  DB.homeTab = p; persist();
+  if (p === 'spd' && !SPD) p = 'daily';
+  if (MODE === 'speed') { if (p !== 'col') p = 'daily'; DB.homeTabS = p; } else DB.homeTab = p;
+  persist();
   $$('#htabs button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
   $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === p));
 }
 function renderHome() {
   renderProfile();
+  if (MODE === 'speed') { setHomeTab(DB.homeTabS || 'daily'); if (SPD) SPD.renderHome(); loadMyRanks(); return; }
+  const st = $('#htabs [data-p=spd]'); if (st) st.hidden = !SPD;
   $('#htabs [data-p=var]').hidden = !PV || !E.setVariant;
   setHomeTab(DB.homeTab);
   const td = today();
@@ -430,6 +454,7 @@ function renderHome() {
   }
   loadMyRanks();
   renderDailyExtra();
+  if (SPD) SPD.renderHome();
 }
 /* daily panel: today's mini ranking + goals close to completion */
 let dxDiff = 'e';
@@ -781,7 +806,7 @@ function openGame(o) {
   $('#board').classList.remove('paused', 'done');
   drawOverlay(spec);
   layout(); render(); startTimer();
-  if (!DB.seenHelp) { DB.seenHelp = 1; persist(); setTimeout(() => openHelp(), 400); }
+  if (!DB.seenHelp && !DB.seenTut) { DB.seenHelp = 1; DB.seenTut = 1; persist(); setTimeout(() => openHelp(), 400); }
   else if (spec && !DB.seenRule[spec.type]) { DB.seenRule[spec.type] = 1; persist(); setTimeout(() => openRule(spec.type), 400); }
 }
 function leaveGame() { if (G && !G.done) saveGame(); stopTimer(); closeHint(); hideFlick(); }
@@ -1187,7 +1212,7 @@ function allRecords() {
   for (const k in DB.vcol) a.push(Object.assign({ kind: 'x', key: k }, DB.vcol[k]));
   return a;
 }
-const ownedCount = () => Object.keys(DB.icons).length;
+const ownedCount = () => Object.keys(DB.icons).filter(id => +id < 500).length;   // gacha characters only (500+ are speed rewards)
 function catalog() {
   const recs = allRecords(), dRecs = recs.filter(r => r.kind === 'd');
   const out = [];
@@ -1509,21 +1534,21 @@ function closeReveal() {
 
 /* ================= zukan (icon collection) ================= */
 let zkMode = 'mine', zkRar = 'all', zkSel = -1;
-const RORD = ['UR', 'SSR', 'SR', 'R', 'N'];
+const RORD = ['SP', 'UR', 'SSR', 'SR', 'R', 'N'];
 function openZukan() {
   if (!IC) return;
   $('#zkTabs').innerHTML = [['mine', 'zk.mine'], ['book', 'zk.book']].map(([k, l]) => `<button class="tab ${k === zkMode ? 'on' : ''}" data-k="${k}">${esc(t(l))}</button>`).join('');
   $$('#zkTabs .tab').forEach(b => b.onclick = () => { zkMode = b.dataset.k; SFX.tap(); openZukan(); });
-  let ids = zkRar === 'all' ? [...Array(IC.COUNT).keys()] : IC.byRarity(zkRar);
+  let ids = zkRar === 'all' ? [...Array(IC.COUNT_ALL || IC.COUNT).keys()] : IC.byRarity(zkRar);
   const total = ids.length, own = ids.filter(id => DB.icons[id]).length;
   if (zkMode === 'mine') ids = ids.filter(id => DB.icons[id]).sort((x, y) => RORD.indexOf(iconInfo(x).rarity) - RORD.indexOf(iconInfo(y).rarity) || x - y);
   if (zkSel < 0 || !DB.icons[zkSel]) zkSel = DB.prof.icon;
   const det = zkSel >= 0 && DB.icons[zkSel] ? `<div class="zdet"><div class="ic">${iconSvg(zkSel)}</div><div style="min-width:0">${rarChip(iconInfo(zkSel).rarity)} <small>No.${String(zkSel + 1).padStart(3, '0')} · ×${DB.icons[zkSel]}</small><b>${esc(iconName(zkSel))}</b>${zkSel === DB.prof.icon ? `<span class="note">${esc(t('zk.current'))}</span>` : `<button class="btn sm" id="zkSet">${esc(t('zk.set'))}</button>`}</div></div>` : '';
-  const chips = `<div class="chips">${['all', ...RORD].map(r => `<button data-r="${r}" class="${r === zkRar ? 'on' : ''}">${r === 'all' ? esc(t('zk.all')) : r}</button>`).join('')}</div>`;
+  const chips = `<div class="chips">${['all', ...RORD.filter(r => r !== 'SP' || IC.byRarity('SP').length)].map(r => `<button data-r="${r}" class="${r === zkRar ? 'on' : ''}">${r === 'all' ? esc(t('zk.all')) : r}</button>`).join('')}</div>`;
   const top = `<div class="zk-top"><div class="bar"><i style="width:${own / total * 100}%"></i></div><b>${zkMode === 'mine' ? esc(t('zk.owned', { n: own, m: total })) : own + '/' + total}</b></div>`;
   const grid = ids.length ? `<div class="zk">${ids.map(id => DB.icons[id] ? `<button data-id="${id}" class="${id === DB.prof.icon ? 'eq' : ''}" title="${esc(iconName(id))}">${iconSvg(id, { still: true })}${DB.icons[id] > 1 ? `<span class="cnt">×${DB.icons[id]}</span>` : ''}</button>` : `<button disabled title="No.${id + 1}">${IC.silhouette(id)}</button>`).join('')}</div>`
     : `<div class="rkmsg">${esc(t('zk.none'))}<br><button class="btn sm" id="zkGa" style="margin-top:10px">${esc(t('ga.btn'))}</button></div>`;
-  $('#zkBody').innerHTML = det + (zkMode === 'book' ? `<p class="note" style="margin:0 0 8px">${esc(t('zk.booknote'))}</p>` : '') + chips + top + grid;
+  $('#zkBody').innerHTML = det + (zkMode === 'book' ? `<p class="note" style="margin:0 0 8px">${esc(t('zk.booknote'))}${IC.byRarity('SP').length ? ' ' + esc(t('zk.spnote')) : ''}</p>` : '') + chips + top + grid;
   $$('#zkBody .chips [data-r]').forEach(b => b.onclick = () => { zkRar = b.dataset.r; SFX.tap(); openZukan(); });
   $$('#zkBody .zk button[data-id]').forEach(b => b.onclick = () => { zkSel = +b.dataset.id; SFX.tap(); openZukan(); $('#zkBody').scrollTop = 0; });
   const set = $('#zkSet'); if (set) set.onclick = () => { DB.prof.icon = zkSel; persist(); SFX.pop(); if (ON && ON.available && DB.prof.name) ON.profile({ n: DB.prof.name, i: zkSel }).catch(() => {}); toast(esc(t('zk.set.done')), 'msg'); openZukan(); if (screen === 'home') renderProfile(); };
@@ -1559,7 +1584,8 @@ function mergeDB(L, C) {
   out.saves = Object.assign({}, o.saves || {}, out.saves || {});
   out.play = Math.max(out.play || 0, o.play || 0);
   if (!out.prof || !out.prof.name) out.prof = o.prof;
-  out.seenHelp = out.seenHelp || o.seenHelp; out.seenRule = Object.assign({}, o.seenRule || {}, out.seenRule || {});
+  out.seenHelp = out.seenHelp || o.seenHelp; out.seenTut = out.seenTut || o.seenTut; out.seenRule = Object.assign({}, o.seenRule || {}, out.seenRule || {});
+  if (SPDX) SPDX.merge(out, o);   // すぴーど数独 records
   return out;
 }
 async function syncNow(quiet) {
@@ -1585,6 +1611,7 @@ async function syncNow(quiet) {
 function myRankPaths() {
   const p = ['profiles', 'total', ...Object.keys(DB.sc.m).map(ym => 'month/' + ym), ...THEMES.map((_, i) => 'col/' + i), ...VTYPES.map(v => 'var/' + v)];
   for (const ds in DB.daily) for (const d of DIFFS) if (DB.daily[ds][d] && !DB.daily[ds][d].late) p.push('daily/' + ds + '/' + d);
+  if (SPD) p.push(...SPD.rankPaths());
   return p;
 }
 async function googleLogin() {
@@ -1616,11 +1643,15 @@ function wireSync() {
 }
 
 /* ================= settings / help ================= */
+function hbList() {
+  const th = ORDER.map(i => THEMES[i]), sp = SPD ? SPD.bgs.filter(k => k !== 'speedway') : [];
+  return MODE === 'speed' ? ['', ...sp, ...th] : ['', ...th, ...(SPD ? ['speedway', ...sp] : [])];
+}
 function openSettings() {
   const items = [['check', 'set.check'], ['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
   const tods = ['auto', 'day', 'eve', 'night'];
   $('#setBody').innerHTML = `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
-    + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}</small></span><div class="hbgrid">${['', ...ORDER.map(i => THEMES[i])].map(k => { const ok = !k || hbOK(k), on = (DB.set.homeBg || '') === k && ok || (!k && DB.set.homeBg && !hbOK(DB.set.homeBg)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(k ? t('th.' + THEMES.indexOf(k)) + (ok ? '' : ' · ' + t('hb.lock')) : t('hb.def'))}">${BG.svg(k || 'daily', 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(k ? t('th.' + THEMES.indexOf(k)) : t('hb.def'))}</span></button>`; }).join('')}</div></div>`
+    + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}${SPD ? ' ' + esc(t('hb.spdesc')) : ''}</small></span><div class="hbgrid">${hbList().map(k => { const ok = !k || hbOK(k), cur = DB.set[hbKey()] || '', on = cur === k && ok || (!k && cur && !hbOK(cur)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(bgName(k) + (ok ? '' : ' · ' + (isSpBg(k) ? SPD.bgCond(k) : t('hb.lock'))))}">${BG.svg(k || (MODE === 'speed' ? 'speedway' : 'daily'), 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(bgName(k))}</span></button>`; }).join('')}</div></div>`
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
     + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
   $$('#todSeg button').forEach(b => b.onclick = () => { DB.set.tod = b.dataset.k; persist(); $$('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); applyTod(); SFX.tap(); });
@@ -1640,6 +1671,7 @@ function applyTod() {
   if (screen === 'theme' && $('#map')) drawMap(curTheme, false);
 }
 function openHelp() {
+  if (TUT) { TUT.open(MODE === 'speed' || (screen === 'spd') ? 'speed' : 'daily', CORE); return; }
   const demo = `<svg viewBox="0 0 120 120"><rect x="38" y="38" width="44" height="44" rx="8" fill="#fff" stroke="var(--acc)" stroke-width="3"/>${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => { const [x, y] = FPOS[d]; return `<circle cx="${60 + x * 38}" cy="${60 + y * 38}" r="14" fill="${d === 3 ? 'var(--acc)' : '#fff'}" stroke="#e6dcef"/><text x="${60 + x * 38}" y="${60 + y * 38}" dy=".36em" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="15" fill="${d === 3 ? '#fff' : 'var(--acc)'}">${d}</text>`; }).join('')}<path d="M60 60L90 30" stroke="var(--acc)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 5"/></svg>`;
   $('#helpBody').innerHTML = t('help.html', { demo: `<div class="flickdemo">${demo}<p>${t('help.flick')}</p></div>` }) + t('help.more', { cost: fmtN(GACHA_COST) });
   openModal('mHelp');
@@ -1677,6 +1709,7 @@ addEventListener('resize', () => {
 addEventListener('keydown', e => {
   if ($('.modal.on')) { if (e.key === 'Escape' && !$('.modal.on').dataset.lock) closeModals(); return; }
   if ($('#greveal').classList.contains('on')) { if (e.key === 'Escape' || e.key === 'Enter') { const ok = $('#grOk'); if (ok) ok.click(); else $('#greveal').click(); } return; }
+  if (screen === 'spd' && SPD) { if (!(e.target.closest && e.target.closest('select,input'))) SPD.key(e); return; }
   if (screen !== 'game' || !G) return;
   if (e.target.closest && e.target.closest('select,input')) return;
   const k = e.key, mod = e.ctrlKey || e.metaKey;
@@ -1719,9 +1752,8 @@ $('#gResume').onclick = () => setPaused(false);
 $('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (G.ti + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
 $$('#htabs button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
 $('#logo').onclick = () => go('');
-$('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); };
-$('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); };
-$('#btnAch').onclick = () => { SFX.tap(); openAch(); };
+if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); }; $('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); }; }
+$('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
 $('#btnSet').onclick = () => { SFX.tap(); openSettings(); };
 $('#btnHelp').onclick = () => { SFX.tap(); openHelp(); };
 $('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; persist(); applySettings(); SFX.tap(); };
@@ -1741,14 +1773,29 @@ let lastDay = today();
 setInterval(() => { const td = today(); if (td !== lastDay) { lastDay = td; if (screen === 'home') renderHome(); } applyTod(); }, 30000);
 
 if (DEBUG) window.__sudoku = { get G() { return G; }, DB: () => DB, catalog, setValue, addPts: n => { DB.pts += n; persist(); } };
+/* ================= shared core for speed.js / tutorial.js ================= */
+const CORE = {
+  get DB() { return DB; }, get LANG() { return LANG; }, get screen() { return screen; },
+  MODE, BASE, ON, IC, BG, E, GACHA_COST, FIRST_SPEED,
+  speedUrl: MODE === 'speed' ? './' : '../speed-sudoku/', speedUrlAbs: URL_SPEED, selfUrl: MODE === 'speed' ? '../sudoku/' : './',
+  t, esc, fmtN, fmtTime, fmtDate, fmtMonth, locale, today, thisMonth, addDays, addMonths, persist, toast, confetti, SFX, vib,
+  medal, miniMedal, badge, STAR, COIN, CROWN, FLAME, avatar, iconSvg, iconName, iconInfo, rarChip,
+  setScene, show, go, goHome, openModal, closeModals, openName, openGacha, openZukan, curTod,
+  tutorial: k => { if (TUT) TUT.open(k, CORE); },
+  refreshHome: () => { if (screen === 'home') renderHome(); },
+};
+window.__sudokuCore = DEBUG ? CORE : undefined;
+
 /* ================= boot ================= */
 document.body.insertAdjacentHTML('afterbegin', SPRITE);
 applyI18n(); applySettings(); buildBoard(); layout(); lastTod = curTod();
 Promise.all([
-  fetch('puzzles.json?v=2').then(r => r.json()),
-  fetch('puzzles_variants.json?v=2').then(r => (r.ok ? r.json() : null)).catch(() => null),
-]).then(([j, v]) => {
+  fetch(BASE + 'puzzles.json?v=2').then(r => r.json()),
+  fetch(BASE + 'puzzles_variants.json?v=2').then(r => (r.ok ? r.json() : null)).catch(() => null),
+  SPDX ? SPDX.init(CORE) : Promise.resolve(false),
+]).then(([j, v, sp]) => {
   PZ = j; PV = v && v.sets && E.setVariant ? v : null;
+  SPD = sp ? SPDX : null;
   syncAch(false); persist();
   if (ON && ON.available && DB.prof.name) ON.profile({ n: DB.prof.name, i: Math.max(0, DB.prof.icon) }).catch(() => {});
   route();

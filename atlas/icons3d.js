@@ -218,6 +218,15 @@
       g.add(at(pen, 1.6, .8, 1.1, .2, 0, .9));
       return g;
     },
+    speedsudoku() {
+      const g = new T.Group(), cols = ['#ffffff', '#ffe2cc', '#ffffff', '#fff3c4'], nums = [1, '', 3, 2];
+      for (let i = 0; i < 4; i++) { const x = (i % 2 - .5) * 1.15, z = ((i / 2 | 0) - .5) * 1.15; g.add(at(nums[i] ? numTile(nums[i], 1.05, cols[i]) : rbox(1.05, .5, 1.05, .18, C(parseInt(cols[i].slice(1), 16))), x, 0, z)); }
+      g.add(at(numTile(4, 1.15, '#ff7a3d', '#ffffff'), -.25, 1.6, -.1, .35, .3, -.2));
+      const sh = new T.Shape(); [[.35, 1.25], [-.5, -.05], [-.02, -.05], [-.3, -1.25], [.55, .18], [.07, .18]].forEach(([x, y], k) => (k ? sh.lineTo(x, y) : sh.moveTo(x, y))); sh.closePath();
+      const bolt = mesh(new T.ExtrudeGeometry(sh, { depth: .28, bevelEnabled: true, bevelThickness: .08, bevelSize: .07, bevelSegments: 4 }), gloss(0xffcd3c));
+      g.add(at(bolt, 1.35, 1.25, .7, 0, -.5, -.15));
+      return g;
+    },
   };
 
   /* ---------- collectible creatures ("Atlas Mon") — original board-game spirits ----------

@@ -11,7 +11,7 @@
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".validate": "newData.hasChildren(['n', 'i']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 500"
+        ".validate": "newData.hasChildren(['n', 'i']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 1000"
       }
     },
     "daily": {
@@ -19,7 +19,9 @@
         ".validate": "$date.matches(/^20[0-9][0-9]-[01][0-9]-[0-3][0-9]$/)",
         "$d": {
           ".read": "auth != null",
-          ".indexOn": ["t"],
+          ".indexOn": [
+            "t"
+          ],
           ".validate": "$d === 'e' || $d === 'm' || $d === 'h'",
           "$uid": {
             ".write": "auth != null && auth.uid === $uid && (!data.exists() || !newData.exists())",
@@ -31,7 +33,9 @@
     "month": {
       "$ym": {
         ".read": "auth != null",
-        ".indexOn": ["s"],
+        ".indexOn": [
+          "s"
+        ],
         ".validate": "$ym.matches(/^20[0-9][0-9]-[01][0-9]$/)",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
@@ -41,7 +45,9 @@
     },
     "total": {
       ".read": "auth != null",
-      ".indexOn": ["s"],
+      ".indexOn": [
+        "s"
+      ],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length <= 12 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 100000000"
@@ -50,7 +56,9 @@
     "col": {
       "$set": {
         ".read": "auth != null",
-        ".indexOn": ["s"],
+        ".indexOn": [
+          "s"
+        ],
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length <= 12 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 100000"
@@ -60,10 +68,63 @@
     "var": {
       "$set": {
         ".read": "auth != null",
-        ".indexOn": ["s"],
+        ".indexOn": [
+          "s"
+        ],
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length <= 12 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 100000"
+        }
+      }
+    },
+    "spd": {
+      "d": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9][0-9]-[01][0-9]-[0-3][0-9]$/)",
+          "$d": {
+            ".read": "auth != null",
+            ".indexOn": [
+              "s"
+            ],
+            ".validate": "$d === '30' || $d === '60' || $d === '90'",
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid",
+              ".validate": "newData.hasChildren(['n', 'i', 's', 'c', 't', 'a']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 1000 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 30000000 && newData.child('c').isNumber() && newData.child('c').val() >= 0 && newData.child('c').val() <= 300 && newData.child('t').isNumber() && newData.child('a').isNumber() && newData.child('a').val() >= 1 && newData.child('a').val() <= 3 && (!data.exists() ? newData.child('a').val() === 1 : (newData.child('a').val() === data.child('a').val() + 1 && newData.child('s').val() >= data.child('s').val()))"
+            }
+          }
+        }
+      },
+      "m": {
+        "$ym": {
+          ".read": "auth != null",
+          ".indexOn": [
+            "s"
+          ],
+          ".validate": "$ym.matches(/^20[0-9][0-9]-[01][0-9]$/)",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 1000 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000"
+          }
+        }
+      },
+      "t": {
+        ".read": "auth != null",
+        ".indexOn": [
+          "s"
+        ],
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 1000 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 100000000"
+        }
+      },
+      "c": {
+        ".read": "auth != null",
+        ".indexOn": [
+          "s"
+        ],
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['n', 'i', 's', 'c']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 1000 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1500 && newData.child('c').isNumber() && newData.child('c').val() >= 0 && newData.child('c').val() <= 500"
         }
       }
     }
