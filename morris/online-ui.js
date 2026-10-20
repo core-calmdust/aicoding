@@ -344,6 +344,7 @@ function olClockTick() {
     const side = p === P1 ? 'b' : 'w', moving = live && tm === p && !net.pending;
     const k = ON.clockOf(g, side, moving, now), el = $('#clk' + p);
     el.textContent = olClock(k.left); el.classList.toggle('low', moving && k.left < 10000); el.classList.toggle('ol-move', moving);
+    if (moving && !net.spectate && p === net.me && window.CountTick) CountTick.feed(k.left, 'ol' + moves.length);   // time signal on my own clock
   }
   if (live && !net.spectate && tm && tm !== net.me && !net.claiming) {
     const opp = net.me === P1 ? g.w : g.b, k = ON.clockOf(g, net.me === P1 ? 'w' : 'b', true, now);
