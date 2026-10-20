@@ -44,16 +44,6 @@ const S = {
 };
 const CSS = `
 .rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
-/* PC: big board and big text — size the mini board with var(--rt-bw) */
-@media (hover: hover) and (pointer: fine) and (min-width: 820px){
-  .rt{--rt-bw:clamp(340px, calc(100vh - 420px), 600px)}
-  .rt-steps button{width:36px;height:36px;font-size:14px}
-  .rt h2.rt-title{font-size:25px;margin-bottom:10px}
-  .rt-body{font-size:16.5px;line-height:1.8}
-  .rt-task{font-size:18px;min-height:60px}
-  .rt-msg{font-size:16.5px}
-  .rt-again{font-size:14px;padding:7px 14px}
-  .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
 }
 .rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
@@ -79,6 +69,16 @@ const CSS = `
 .rt-nav button:disabled{opacity:.35;cursor:default}
 @keyframes rtPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
 .rt-msg.ok{animation:rtPop .3s cubic-bezier(.2,1.6,.4,1)}
+/* PC: big board and big text — size the mini board with var(--rt-bw) */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  .rt{--rt-bw:clamp(340px, calc(100vh - 420px), 600px)}
+  .rt-steps button{width:36px;height:36px;font-size:14px}
+  .rt h2.rt-title{font-size:25px;margin-bottom:10px}
+  .rt-body{font-size:16.5px;line-height:1.8}
+  .rt-task{font-size:18px;min-height:60px}
+  .rt-msg{font-size:16.5px}
+  .rt-again{font-size:14px;padding:7px 14px}
+  .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
 html[lang=ar] .rt-body,html[lang=ar] .rt h2.rt-title{direction:rtl;text-align:right}
 html[lang=ar] .rt-task{direction:rtl}
 `;

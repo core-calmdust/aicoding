@@ -169,9 +169,9 @@ const PAGES = [
     },
   }),
 ];
-const CSS = `.rt-chess{display:block;width:min(320px,100%);height:auto;max-width:100%;cursor:pointer;touch-action:manipulation;border-radius:6px;box-shadow:0 10px 26px rgba(0,0,0,.45)}
-.rt-chess .rtc-co{font:700 9px 'JetBrains Mono',monospace;pointer-events:none}
-@media (max-height: 700px){.rt-chess{width:min(260px,100%)}}`;
+// the board is sized with --rt-bw (shared/ruletour.js; the chess page adjusts it for short phones and the wide PC layout)
+const CSS = `.rt-chess{display:block;width:var(--rt-bw, 320px);height:auto;max-width:100%;cursor:pointer;touch-action:manipulation;border-radius:6px;box-shadow:0 10px 26px rgba(0,0,0,.45)}
+.rt-chess .rtc-co{font:700 9px 'JetBrains Mono',monospace;pointer-events:none}`;
 const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 let tour = null;
 function make() {

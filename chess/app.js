@@ -113,6 +113,8 @@ function load() {
     if (Array.isArray(d.moves) && validMoves(d.moves)) {
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null;
+      // a rated game restored on page load: its clock stays stopped (no time signal) until the next move is played
+      if (rgame && !rgame.over) rgame.hold = true;
       cur = moves.length; gameOverShown = statusAt(cur).over; return true;
     }
   } catch (e) {}
@@ -577,6 +579,7 @@ function coachMove(idx, m) {
 }
 function playMove(m) {
   coachMove(cur, m);
+  if (rtLive() && rgame.hold) { rgame.hold = false; rgame.t = Date.now(); }   // first move after a restore: the clocks start now
   if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (now - rgame.t)) + RT_CLOCK.inc; rgame.t = now; }
   moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false;
   evals.length = moves.length; hintList = null;
@@ -693,11 +696,14 @@ $('#btnRules').onclick = () => openRules('move');
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  const inst = on => ['#lessonOverlay', '#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
-  if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
-  if (b.dataset.v === 'lesson') { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
-  if (b.dataset.v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
+  const v = b.dataset.v;
+  if (v !== 'rules' && $('#rulesOverlay').classList.contains('show')) { if (window.ChessRules) ChessRules.stop(); $('#rulesOverlay').classList.remove('show'); }
+  if (v === 'rules' && !$('#rulesOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show'); openRules('move'); }
+  if (v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
+  if (v === 'lesson') { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
+  if (v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
   setTimeout(() => inst(false), 150);
 }));
 $('#btnResume').onclick = resumeHere;
@@ -783,7 +789,7 @@ function ruleItems(tab) {
 }
 let rulesTab = 'move';
 // the rules dialog is the hands-on tutorial of rules.js (shared/ruletour.js); the old illustrated tabs are kept below as a fallback
-function openRules(tab) { showOverlay('#rulesOverlay'); if (window.ChessRules) { ChessRules.open(0); return; } rulesTab = RULE_TABS.includes(tab) ? tab : 'move'; renderRules(); }
+function openRules(tab) { selTab('rules'); showOverlay('#rulesOverlay'); if (window.ChessRules) { ChessRules.open(0); return; } rulesTab = RULE_TABS.includes(tab) ? tab : 'move'; renderRules(); }
 function renderRules() {
   if (window.ChessRules) { ChessRules.render(); return; }
   $('#rulesTabs').innerHTML = RULE_TABS.map(r => `<button data-r="${r}" class="${r === rulesTab ? 'sel' : ''}">${t('rl.tab.' + r)}</button>`).join('');
@@ -864,13 +870,13 @@ function statusAtRaw(i) { const keep = rgame; rgame = null; try { return statusA
 function rtClockLeft(c) {   // c: 0 white, 1 black
   if (!rgame || !rgame.ct) return 0;
   let v = rgame.ct[c];
-  if (rtLive() && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
+  if (rtLive() && !rgame.hold && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
   return Math.max(0, v);
 }
 function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
 let rtTickPly = -1;
 setInterval(() => {
-  if (!rtLive()) return;
+  if (!rtLive() || rgame.hold) return;
   const c = toMoveAt(moves.length) - 1, left = rtClockLeft(c);
   const el = $('#count' + (c + 1)); if (el) el.textContent = fmtClock(left);
   // time signal: only for my own clock while it is running (a new countdown each move)

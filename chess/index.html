@@ -310,12 +310,38 @@ a.snd.home{text-decoration:none}
 
 /* rules page */
 #rulesOverlay .modal{width:min(620px,100%);height:min(800px,calc(100dvh - 32px));display:flex;flex-direction:column}
+/* the tab views (rules / lessons / openings / puzzles) share one size so switching tabs never resizes the dialog */
+#lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){width:min(620px,100%);height:min(800px,calc(100dvh - 32px))}
 #rulesOverlay #rulesBody{flex:1;min-height:0}
 #rulesOverlay #rulesBody > .rt{min-height:100%;display:flex;flex-direction:column}
 #rulesOverlay #rulesBody .rt-nav{margin-top:auto;padding-top:14px}
 #rulesOverlay #rulesTabs,#rulesOverlay .modal-actions{display:none}
-#rulesOverlay .modal > h2{margin-bottom:10px}
-@media (max-width: 520px), (max-height: 560px){#rulesOverlay .modal{height:calc(100dvh - 20px)}}
+@media (max-width: 520px), (max-height: 560px){#rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:calc(100dvh - 20px)}}
+@media (max-height: 700px){#rulesBody .rt{--rt-bw:min(260px, 86vw)}}
+/* PC: rules / lessons / openings / puzzles are one dialog with tabs — the same fixed size on every tab.
+   The rules tutorial uses the width: big board on the left, text and task on the right. */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 561px){
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){width:min(1080px, calc(100vw - 64px));height:min(820px, calc(100vh - 32px));max-height:none}
+  #rulesOverlay #rulesBody .rt{--rt-bw:clamp(340px, calc(100vh - 330px), 560px);display:grid;grid-template-columns:var(--rt-bw) minmax(0, 1fr);grid-template-rows:auto auto auto 1fr auto;grid-template-areas:"steps steps" "board title" "board body" "board task" "nav nav";column-gap:36px;align-content:start}
+  #rulesOverlay #rulesBody .rt > .rt-steps{grid-area:steps;margin:0 0 16px}
+  #rulesOverlay #rulesBody .rt > .rt-board{grid-area:board;margin:0;align-self:start}
+  #rulesOverlay #rulesBody .rt > h2.rt-title{grid-area:title;text-align:left;margin-top:4px}
+  #rulesOverlay #rulesBody .rt > .rt-body{grid-area:body}
+  #rulesOverlay #rulesBody .rt > .rt-task{grid-area:task;text-align:left;margin-top:10px}
+  #rulesOverlay #rulesBody .rt > .rt-nav{grid-area:nav;margin-top:auto;padding-top:16px;max-width:720px;width:100%;justify-self:center}
+  #rulesOverlay #rulesBody .rt:not(:has(> .rt-board)){display:flex;flex-direction:column;max-width:640px;margin:0 auto}
+  #rulesOverlay #rulesBody .rt:not(:has(> .rt-board)) > h2.rt-title{text-align:center}
+  #rulesOverlay #rulesBody .rt-html{grid-column:2}
+  /* big text (shared/ruletour.js puts its PC sizes before the base rules, so they lose; restate them here) */
+  #rulesOverlay #rulesBody .rt-steps button{width:36px;height:36px;font-size:14px}
+  #rulesOverlay #rulesBody .rt h2.rt-title{font-size:25px;margin-bottom:10px}
+  #rulesOverlay #rulesBody .rt-body{font-size:16.5px;line-height:1.8}
+  #rulesOverlay #rulesBody .rt-task{font-size:18px;min-height:60px}
+  #rulesOverlay #rulesBody .rt-msg{font-size:16.5px}
+  #rulesOverlay #rulesBody .rt-again{font-size:14px;padding:7px 14px}
+  #rulesOverlay #rulesBody :is(.rt-nav, .rt-finish) button{font-size:16px;padding:12px 14px}
+  html[lang=ar] #rulesOverlay #rulesBody .rt > :is(h2.rt-title, .rt-task){text-align:right}
+}
 .hb-pd{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
 .hb-pd.p1{background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 35%,var(--gold3) 85%)}
 .hb-pd.p2{background:radial-gradient(circle at 35% 30%,var(--plat1),var(--plat2) 35%,var(--plat3) 85%);box-shadow:0 0 0 1px rgba(255,255,255,.25)}
@@ -1057,9 +1083,9 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <!-- rules -->
 <div class="overlay" id="rulesOverlay">
   <div class="modal">
-    <h2 data-i18n="rl.title"></h2>
+    <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
     <div class="seg" id="rulesTabs"></div>
-    <div id="rulesBody" style="margin-top:14px"></div>
+    <div id="rulesBody"></div>
     <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
   </div>
 </div>
@@ -1068,7 +1094,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 id="lsListTitle" data-i18n="ls.title"></h2>
       <p id="lsListDesc" style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
       <div class="lesson-list" id="lessonList"></div>
@@ -1092,7 +1118,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <div class="overlay" id="puzzleOverlay">
   <div class="modal">
     <div id="pzListView">
-      <div class="seg ls-tabs"><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="pz.title"></h2>
       <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
       <div class="lesson-list" id="pzLevels"></div>
@@ -1193,7 +1219,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261020st"></script>
+<script src="i18n.js?v=20261021r"></script>
 <script src="i18n_basics.js?v=20261019ol"></script>
 <script src="i18n_coach.js?v=20261019nm"></script>
 <script src="i18n_sync.js?v=20261020gs"></script>
@@ -1205,10 +1231,10 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/headerbar.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=2"></script>
+<script src="../shared/ruletour.js?v=3"></script>
 <script src="i18n_v2.js?v=20261021a"></script>
-<script src="app.js?v=20261021a"></script>
-<script src="rules.js?v=20261021a"></script>
+<script src="app.js?v=20261021r"></script>
+<script src="rules.js?v=20261021b"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5a" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=2" defer></script>
