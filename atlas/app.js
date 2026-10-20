@@ -331,8 +331,9 @@
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       </div><div class="R">${ad ? `<div class="opts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' ? '' : t('bv.soon')}</div>`}
-      <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div></div></div>`;
+      <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${window.AtlasRules && AtlasRules[id] ? `<button class="btn ghost" id="bvRules">📖 ${t('bv.rules')}</button>` : ''}<a class="btn ghost sm" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div></div></div>`;
     if (ad) $('bvStart').onclick = startPlay;
+    if ($('bvRules')) $('bvRules').onclick = startRules;
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close'));
@@ -341,6 +342,7 @@
   function fitStage() {   // the board is framed above the info card (the canvas itself stays full-screen: no seams)
     if (!glOK) return;
     const card = $('bvi'), playing = $('bv').classList.contains('playing');
+    if ($('bv').classList.contains('rules')) { const p = $('bv').querySelector('.rgd'); Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0); return; }
     Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - card.getBoundingClientRect().top + 4);
   }
   addEventListener('resize', () => fitStage());
@@ -372,7 +374,16 @@
       } });
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
-  function stopSession() { if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; }
+  function stopSession() { if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+  // character-guided rules on the 3D table (atlas/rules/<id>.js)
+  function startRules() {
+    const g = bvGame; stopSession();
+    $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
+    session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
+      onStart: () => { stopSession(); startPlay(); } });
+    if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
+    fitStage();
+  }
   function closeBoard() { stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
   $('bvQuit').onclick = () => openBoard(bvGame.id);

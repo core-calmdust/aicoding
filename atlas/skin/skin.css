@@ -104,3 +104,24 @@ html.atlas-skin .brand{display:none!important}
 .atlas-lpop button[aria-selected=true]{background:#ffc928;box-shadow:0 3px 0 #e09a00}
 @media (max-width:760px){.atlas-top{height:56px}.atlas-brand img{width:38px;height:38px}.atlas-brand b{font-size:16px}.atlas-brand small{font-size:9.5px}.atlas-coin{display:none}.atlas-lbtn{width:40px;padding:0;justify-content:center}.atlas-lbtn b{display:none}.atlas-lpop{top:54px;right:16px}html.atlas-skin .app{padding-top:64px!important}}
 .atlas-home{display:none!important}
+
+/* ---- guide: the bubble keeps the card's width, the guide stands below it in one footer row with every button ---- */
+html.atlas-skin .atlas-guide{display:block}
+html.atlas-skin .atlas-guide .bub{margin-bottom:12px}
+html.atlas-skin .atlas-guide .bub::before{left:34px;bottom:-12px;border:10px solid transparent;border-top-color:#f0e2c4;border-bottom:0}
+html.atlas-skin .atlas-guide .bub::after{left:36px;bottom:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
+html.atlas-skin [dir=rtl] .atlas-guide .bub::before,html.atlas-skin [dir=rtl] .atlas-guide .bub::after{left:auto;right:34px;border-left-color:transparent}
+.atlas-foot{display:flex;align-items:center;gap:10px;margin-top:4px}
+.atlas-foot .pic{flex:none;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#ffe9b0);box-shadow:0 3px 0 rgba(0,0,0,.08);display:grid;place-items:center;overflow:hidden;animation:gBob 2.8s ease-in-out infinite}
+.atlas-foot .pic img{width:120%;height:120%;object-fit:contain;transform:translateY(8%)}
+.atlas-btns{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:6px}
+.atlas-btns button{flex:1 1 auto;min-width:0;padding:9px 10px!important;font-size:13px!important;white-space:nowrap;border-radius:99px!important}
+html.atlas-skin .atlas-guide .op-nav{flex-wrap:wrap;gap:4px}
+html.atlas-skin .atlas-guide .op-nav button{flex:1 1 0;min-width:34px;padding:6px 4px;white-space:nowrap}
+html.atlas-skin .atlas-guide .op-nav .pos{flex-basis:100%}
+html.atlas-skin .atlas-guide .op-dr{flex-wrap:wrap}
+html.atlas-skin .atlas-guide .op-dr button{flex:1 1 auto;white-space:nowrap}
+@media (max-width:520px){.atlas-foot .pic{width:60px;height:60px}}
+.atlas-btns button{background:#fff;border:2px solid #ead9b6;color:var(--text);font-weight:900;box-shadow:0 3px 0 #ead9b6;cursor:pointer}
+.atlas-btns button:disabled{opacity:.45}
+.atlas-btns button.go{background:#ff5d5d;color:#fff;border-color:transparent;box-shadow:0 3px 0 #d93c3c}

@@ -59,8 +59,14 @@
     const pic = document.createElement('div'); pic.className = 'pic'; pic.appendChild(guide.cloneNode());
     pic.firstChild.onerror = function () { this.onerror = null; this.src = GUIDE_FALLBACK; };
     const bub = document.createElement('div'); bub.className = 'bub';
-    first.parentNode.insertBefore(wrap, first); wrap.append(pic, bub);
+    // the bubble sits where the text was; the guide stands below it, in one footer row with all the card's buttons
+    first.parentNode.insertBefore(wrap, first); wrap.append(bub);
     ids.forEach(id => { const e = document.getElementById(id); if (e) bub.appendChild(e); });
+    const card = wrap.closest('.card'), rows = card ? [...card.querySelectorAll(':scope > .lesson-actions')] : [];
+    const foot = document.createElement('div'); foot.className = 'atlas-foot';
+    const btns = document.createElement('div'); btns.className = 'atlas-btns';
+    rows.forEach(r => { [...r.children].forEach(b => btns.appendChild(b)); r.remove(); });
+    foot.append(pic, btns); (card || wrap).appendChild(foot);
     // a little pop whenever the guide says something new
     new MutationObserver(() => { if (!bub.animate) return; bub.animate([{ transform: 'scale(.96)' }, { transform: 'scale(1.02)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' }); pic.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 300 }); })
       .observe(bub, { childList: true, characterData: true, subtree: true });
