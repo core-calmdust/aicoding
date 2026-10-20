@@ -139,7 +139,13 @@ function tone(a, t0, f0, f1, dur, vol, type) {
   o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
 }
 // a stone on a wooden board: a sharp click and a short woody body
-function sStone() { if (!settings.sound) return; const a = ctx(); if (!a) return; const t0 = a.currentTime; noise(a, t0, 0.022, 0.55, 3200, 1.6); tone(a, t0, 520, 210, 0.07, 0.22, 'triangle'); noise(a, t0 + 0.004, 0.06, 0.18, 900, 2.2); }
+// recorded stone sound (効果音ラボ, see sounds/README.md); the synthesized click is the fallback until it is decoded
+let stoneBuf = null, stoneLoading = false;
+function loadStone(a) { if (stoneBuf || stoneLoading) return; stoneLoading = true; fetch('sounds/stone.wav?v=1').then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej))).then(b => { stoneBuf = b; }).catch(() => { stoneLoading = false; }); }
+addEventListener('pointerdown', () => { const a = ctx(); if (a) loadStone(a); }, { once: true, capture: true });
+function sStone() { if (!settings.sound) return; const a = ctx(); if (!a) return; loadStone(a);
+  if (stoneBuf) { const n = a.createBufferSource(), g = a.createGain(); n.buffer = stoneBuf; n.playbackRate.value = 0.97 + Math.random() * 0.06; g.gain.value = 0.9; n.connect(g).connect(a.destination); n.start(); return; }
+  const t0 = a.currentTime; noise(a, t0, 0.022, 0.55, 3200, 1.6); tone(a, t0, 520, 210, 0.07, 0.22, 'triangle'); noise(a, t0 + 0.004, 0.06, 0.18, 900, 2.2); }
 function sThreat() { if (!settings.sound) return; const a = ctx(); if (!a) return; const t0 = a.currentTime + 0.06; tone(a, t0, 880, 0, 0.22, 0.06, 'triangle'); tone(a, t0 + 0.07, 1174.7, 0, 0.26, 0.05, 'triangle'); }
 function playChime(win) {
   if (!settings.sound) return; const a = ctx(); if (!a) return;
