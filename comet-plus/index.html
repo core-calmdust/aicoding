@@ -4309,27 +4309,49 @@ function makeShipModel() {
         const geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
         geo.rotateX(-Math.PI / 2); geo.translate(0, y0, 0); return geo;
     };
-    // 指定どおりの基本形（全長44）
-    //  機首: 全長の4割の長さの鋭い四角錐 / 胴体: 残りの長さの箱
-    //  ポッド: 全長の6割の平たい長方形を、胴体の左右後方に上下2枚ずつ、後ろから見て上下に35度ずつ開く
-    //  噴射口: 2つ、ポッドの後端と同じ位置
-    const LEN = 44, NOSE = LEN * 0.4, BODY = LEN - NOSE, Z0 = -LEN / 2, ZR = LEN / 2;
-    const nose = new THREE.ConeGeometry(3, NOSE, 4); nose.rotateY(Math.PI / 4); nose.rotateX(-Math.PI / 2); nose.translate(0, 1, Z0 + NOSE / 2);
-    add(nose, plate);
-    const body = new THREE.BoxGeometry(4.2, 4.2, BODY); body.translate(0, 1, Z0 + NOSE + BODY / 2);
-    add(body, armor);
-    const PL = LEN * 0.6, PW = 10, PT = 2, ANG = 35 * Math.PI / 180;
-    [-1, 1].forEach(sx => [1, -1].forEach(up => {
-        const pg = new THREE.Group();
-        const geo = new THREE.BoxGeometry(PW, PT, PL); geo.translate(sx * PW / 2, 0, ZR - PL / 2);
-        const m = new THREE.Mesh(geo, armor); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); pg.add(m);
-        pg.position.set(sx * 2.1, 1, 0);
-        pg.rotation.z = sx * up * ANG;
-        g.add(pg);
-    }));
+    // ユーザー設定画のとおり: メインユニット（長い機首スパイク＋前方へ伸びる2本の刃）、左右のウィングポッド、後部の推進ユニット
+    // 色: ガンメタルの装甲 / やや明るい装甲板 / シアンの発光パネル / ピンクのアクセント
+    armor.color.setHex(0x3a4658); plate.color.setHex(0x5d7089);
+    const pink = new THREE.MeshBasicMaterial({ color: 0xff7a9a });
+    const box = (w, h, d, x, y, z, mat, edges = true) => { const geo = new THREE.BoxGeometry(w, h, d); geo.translate(x, y, z); return add(geo, mat, edges); };
+    const hexBar = (rTop, rBot, len, flatY, x, y, z, mat, ry = 0) => { // 六角断面の柱（前後方向）
+        const geo = new THREE.CylinderGeometry(rTop, rBot, len, 6); geo.rotateY(Math.PI / 6); geo.rotateX(Math.PI / 2); geo.scale(1, flatY, 1); if (ry) geo.rotateY(ry); geo.translate(x, y, z); return add(geo, mat);
+    };
+    const spike = (r, len, flatY, x, y, z, dir, mat, sides = 6) => { // 尖った先端（dir=-1で前向き、1で後ろ向き）
+        const geo = new THREE.ConeGeometry(r, len, sides); geo.rotateY(Math.PI / sides); geo.rotateX(dir < 0 ? -Math.PI / 2 : Math.PI / 2); geo.scale(1, flatY, 1); geo.translate(x, y, z); return add(geo, mat);
+    };
+    // メインユニット
+    hexBar(3.4, 4.4, 20, 0.5, 0, 1, 2, armor);            // 胴体
+    spike(3.4, 26, 0.42, 0, 1, -21, -1, armor);           // 長い機首スパイク
+    hexBar(1.8, 2.2, 14, 0.55, 0, 2.6, -4, plate);        // 背中の装甲
+    spike(1.8, 12, 0.55, 0, 2.6, -17, -1, plate);
+    [-1, 1].forEach(sx => {                                // 前方へ伸びる左右の刃
+        hexBar(1.5, 2.2, 10, 0.5, sx * 3.6, 0.6, -6, plate);
+        spike(1.5, 16, 0.5, sx * 3.6, 0.6, -19, -1, plate);
+        box(0.8, 0.5, 4, sx * 2.2, 3.1, 4.5, pink, false);   // ピンクのアクセント
+    });
+    box(2.4, 0.6, 7, 0, 3.3, -3, glowC, false);            // 背中のシアンの発光パネル
+    spike(1.2, 12, 0.6, 0, -0.8, 19, 1, armor, 4);        // 推進ユニット下から後ろへ伸びる尾
+    // 推進ユニット（六角の筒＋噴射口）
+    hexBar(3.4, 3.0, 7, 0.85, 0, 1, 13.5, plate);
+    const nozRing = new THREE.TorusGeometry(2.6, 0.5, 4, 6); nozRing.translate(0, 1, 17.1);
+    add(nozRing, armor);
+    const nozzle = new THREE.CircleGeometry(2.3, 12); nozzle.translate(0, 1, 17.2);
+    add(nozzle, glowC, false);
+    // ウィングポッド（六角断面で前後が尖った長いポッド）＋胴体とつなぐ支柱
     [-1, 1].forEach(sx => {
-        const noz = new THREE.CylinderGeometry(1.6, 1.6, 1.2, 8); noz.rotateX(Math.PI / 2); noz.translate(sx * 1.2, 1, ZR + 0.6);
-        add(noz, glowC, false);
+        const pod = new THREE.Group();
+        const pa = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); pod.add(m); return m; };
+        let gg = new THREE.CylinderGeometry(3.8, 3.8, 20, 6); gg.rotateY(Math.PI / 6); gg.rotateX(Math.PI / 2); gg.scale(0.85, 0.8, 1); gg.translate(0, 0, 1); pa(gg, armor);
+        gg = new THREE.ConeGeometry(3.8, 17, 6); gg.rotateY(Math.PI / 6); gg.rotateX(-Math.PI / 2); gg.scale(0.85, 0.8, 1); gg.translate(0, 0, -17.5); pa(gg, armor);
+        gg = new THREE.ConeGeometry(3.8, 6, 6); gg.rotateY(Math.PI / 6); gg.rotateX(Math.PI / 2); gg.scale(0.85, 0.8, 1); gg.translate(0, 0, 14); pa(gg, armor);
+        gg = new THREE.BoxGeometry(3.4, 1, 14); gg.translate(0, 3.1, -1); pa(gg, plate);                 // 上面の装甲板
+        const pk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 3.2), pink); pk.position.set(0, 3.7, -7); pod.add(pk);
+        const cy = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 10), glowC); cy.position.set(sx * 3.3, 0.4, 0); pod.add(cy); // 外側のシアンのライン
+        pod.position.set(sx * 11, 0.6, 1);
+        pod.rotation.y = -sx * 0.05; // 前側をわずかに外へ
+        g.add(pod);
+        box(4.6, 1.6, 4, sx * 6.6, 1, 4, armor);              // 支柱
     });
     const core = new THREE.Object3D(); g.add(core); g.userData.core = core;
     // 後方のワイヤーの輪（ゆっくり回す）
@@ -5488,10 +5510,10 @@ function render3D() {
         // エンジン
         if (playerVisible) {
                         const flick = 0.8 + Math.random() * 0.4;
-            [-1.2, 1.2].forEach(off => { // 後ろの2つの噴射口
-                const ex = px + off * VS * Math.cos(shipBank), ez = pz + 22.5 * VS;
-                glow.add(ex, 12, ez, themeCur.player, 16 * flick * VS, 1.3);
-                if (efx) trails.add(ex, 11, ez + 34 * flick * VS, ex, 11, ez, 6 * VS, themeCur.player, 0.9);
+            [0].forEach(off => { // 推進ユニットの噴射口
+                const ex = px + off * VS * Math.cos(shipBank), ez = pz + 17.5 * VS;
+                glow.add(ex, 12, ez, themeCur.player, 24 * flick * VS, 1.5);
+                if (efx) trails.add(ex, 11, ez + 46 * flick * VS, ex, 11, ez, 9 * VS, themeCur.player, 1.0);
             });
             // 当たり判定とスローマーカー
             // 当たり判定の円だけを、色を回して表示
