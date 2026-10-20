@@ -97,9 +97,9 @@ const expect = (lv, g) => BASE_T[lv] + parseG(g).reduce((a, x) => a + GEXTRA[x.i
 
 /* ---------- daily: 30 / 60 / 90 seconds ---------- */
 const DAILY = {
-  30: { sec: 30, goal: 3, every: 4, start: 3, lv: k => (k < 3 ? 1 : 2), str: () => 1, ng: 1 },
-  60: { sec: 60, goal: 6, every: 3, start: 2, lv: k => (k < 2 ? 1 : k < 5 ? 2 : 3), str: k => (k < 6 ? 1 : 2), ng: 2 },
-  90: { sec: 90, goal: 8, every: 3, start: 2, lv: k => (k < 2 ? 2 : k < 9 ? 3 : 4), str: k => (k < 5 ? 2 : 3), ng: 3 },
+  30: { sec: 30, goal: 4, every: 4, start: 3, lv: k => (k < 3 ? 1 : 2), str: () => 1, ng: 1 },
+  60: { sec: 60, goal: 8, every: 3, start: 2, lv: k => (k < 2 ? 1 : k < 5 ? 2 : 3), str: k => (k < 6 ? 1 : 2), ng: 2 },
+  90: { sec: 90, goal: 10, every: 3, start: 2, lv: k => (k < 2 ? 2 : k < 9 ? 3 : 4), str: k => (k < 5 ? 2 : 3), ng: 3 },
 };
 const DKEYS = [30, 60, 90];
 const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };

@@ -360,3 +360,4 @@ body.scompact #spd .skey .n{font-size:34px}
 .tflick{z-index:60}
 .tbd .tc.b{touch-action:none}
 .tpad button.press{transform:translateY(3px);box-shadow:0 0 0 var(--keyedge)}
+.spen.sbon{color:#2fa860;inset-inline-end:auto;inset-inline-start:calc(100% - 150px)}

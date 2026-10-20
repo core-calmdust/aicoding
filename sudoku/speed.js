@@ -15,7 +15,7 @@ const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f'];
 const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df']];
 const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8' };
 const GORDER = SE.GIMMICKS;
-const PENALTY = 2000, FREEZE = 380, LIMIT_TRIES = 3;
+const BONUS = 5000, PENALTY = 2000, FREEZE = 380, LIMIT_TRIES = 3;
 const DEBUG = new URLSearchParams(location.search).has('debug');
 
 /* ================= art ================= */
@@ -291,7 +291,7 @@ function buildScreen() {
   const sec = document.createElement('section');
   sec.className = 'screen'; sec.id = 'spd';
   sec.innerHTML = `<div class="sgbar"><button class="ib flip" id="sBack" title=""><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div class="gt" id="sTitle"></div><div class="gstat"><span class="pill scount" id="sCount"></span><span class="pill mist z" id="sMist"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg><span class="num" id="sMistN">0</span></span><button class="ib spause" id="sPause"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg></button></div></div>
-    <div class="stimer" id="sTimer"><div class="sbar"><i id="sBarI"></i></div><b class="sclock num" id="sClock">0.0</b><span class="spen" id="sPen"></span></div>
+    <div class="stimer" id="sTimer"><div class="sbar"><i id="sBarI"></i></div><b class="sclock num" id="sClock">0.0</b><span class="spen" id="sPen"></span><span class="spen sbon" id="sBon"></span></div>
     <div class="sbw" id="sBw"><div class="sgban" id="sBan"></div><div class="sboard" id="sBoard"></div><div class="scov" id="sCov"></div><div class="scombo" id="sCombo"></div></div>
     <div class="sside"><div class="skeys" id="sKeys"></div><div class="sinfo" id="sInfo"></div><div class="help shelp" id="sKb"></div></div>`;
   $('#main').appendChild(sec);
@@ -523,7 +523,7 @@ function render() {
   renderClock();
 }
 function renderClock() {
-  const left = Math.max(0, R.left), pct = left / R.limit * 100;
+  const left = Math.max(0, R.left), pct = Math.min(100, left / R.limit * 100);
   $('#sBarI').style.width = pct.toFixed(2) + '%';
   $('#sClock').textContent = (left / 1000).toFixed(1);
   $('#sTimer').classList.toggle('low', left < 5000 && R.state === 'play');
@@ -609,7 +609,7 @@ function briefing() {
   const goal = R.mode === 'd' ? t('sp.brief.d', { s: R.d, n: R.goal }) : t('sp.brief.c', { k: R.goal, s: R.limit / 1000 });
   const r = R.mode === 'd' ? dayRec(R.date, R.d) : rec(R.ci, R.pi);
   const sub = R.mode === 'd' ? (R.ranked ? t('sp.tries', { n: LIMIT_TRIES - ((r && r.a) || 0), m: LIMIT_TRIES }) : t('sp.practice.d')) : (r ? t('sp.brief.best', { s: [1, 2, 3].map(q => (q <= r.s ? '★' : '☆')).join('') }) : '');
-  cov.innerHTML = `<div class="sbrief"><div class="sbig">${R.mode === 'd' ? WATCH(R.d, ['#e0905a', '#7d93b8', '#e0a91c'][DT[R.d] - 1]) : SHOE}</div><b>${esc(goal)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${gl ? `<div class="sgl">${gl}</div>` : `<p class="sstd">${esc(t('sp.brief.std'))}</p>`}<p class="srule">${esc(t('sp.brief.rule', { n: PENALTY / 1000 }))}</p><button class="btn xl" id="sGo">${PLAY}${esc(t('sp.start'))}</button></div>`;
+  cov.innerHTML = `<div class="sbrief"><div class="sbig">${R.mode === 'd' ? WATCH(R.d, ['#e0905a', '#7d93b8', '#e0a91c'][DT[R.d] - 1]) : SHOE}</div><b>${esc(goal)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${gl ? `<div class="sgl">${gl}</div>` : `<p class="sstd">${esc(t('sp.brief.std'))}</p>`}<p class="srule">${esc(t('sp.brief.rule', { n: PENALTY / 1000 }))}${R.mode === 'd' ? ' ' + esc(t('sp.bonus', { n: BONUS / 1000 })) : ''}</p><button class="btn xl" id="sGo">${PLAY}${esc(t('sp.start'))}</button></div>`;
   cov.className = 'scov on';
   $('#sGo').onclick = () => countdown();
   $('#sBoard').classList.add('hide');
@@ -650,6 +650,7 @@ function solved() {
   const pp = puzPts(R.P.lv, R.P.g, R.combo); R.pts += pp;
   if (dtm <= 2500 && R.P.lv >= 2) s.st.flash = (s.st.flash || 0) + 1;
   R.tlast = R.elapsed; R.ptimes.push(Math.round(dtm));
+  if (R.mode === 'd') { R.left += BONUS; const bn = $('#sBon'); bn.textContent = '+' + BONUS / 1000; bn.classList.remove('on'); void bn.offsetWidth; bn.classList.add('on'); }   // daily: every solve adds time
   stopGims(); hideBan();
   R.freeze = FREEZE; R.state = 'clear';
   const b = $('#sBoard'); b.classList.remove('cleared'); void b.offsetWidth; b.classList.add('cleared');
