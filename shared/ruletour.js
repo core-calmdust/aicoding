@@ -20,6 +20,7 @@
 //       { id: 'info', title: …, body: …, html: () => '<figure>…</figure>' },   // a page without a task (read only)
 //     ],
 //   });
+// title / body / task / html are inserted as HTML (not escaped): escape any user-supplied text yourself.
 //   tour.open(i)  tour.render()  tour.stop()  tour.page  tour.visible()
 //
 // api (inside setup): board, ok(msg), ng(msg, {reset=true, delay=2400}), say(msg, cls), done(), reset(),
