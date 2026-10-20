@@ -256,3 +256,90 @@
 
   window.Atlas = { LANGS, GAMES, UPDATES, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, byUpdate, recordPlay, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
 })();
+
+/* =====================================================================
+   Achievement banners (Steam-style) on every page that loads this file —
+   the games and the portal. Progress is read from localStorage as the
+   games write it; anything newly completed slides in at the corner.
+   The first run only records what is already done (no flood of old ones).
+   ===================================================================== */
+(function () {
+  'use strict';
+  const A = window.Atlas; if (!A || typeof document === 'undefined') return;
+  const QUIET = /\/atlas\/(index\.html)?$/.test(location.pathname);
+  const SEEN = 'atlas-ach-seen', BASE = (document.currentScript && document.currentScript.src) || location.href;
+  const getSeen = () => { try { return JSON.parse(localStorage.getItem(SEEN) || 'null'); } catch (e) { return null; } };
+  const setSeen = a => { try { localStorage.setItem(SEEN, JSON.stringify(a)); } catch (e) {} };
+  const doneIds = () => { try { return A.achievements().filter(a => a.done); } catch (e) { return []; } };
+  let I18N = window.ATLAS_I18N, loading = null;
+  const needText = () => I18N ? Promise.resolve() : (loading || (loading = new Promise(res => {
+    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=3', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
+  })));
+  const lang = () => { const l = (document.documentElement.lang || localStorage.getItem('aicoding-lang') || 'ja').slice(0, 2); return A.LANGS && A.LANGS.includes(l) ? l : (l in (I18N || {}) ? l : 'en'); };
+  const tr = (k, v) => { const L = I18N || {}, l = lang(); let s = (L[l] && L[l][k]) ?? (L.en && L.en[k]) ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
+  const MEDAL = [['#e8a46a', '#b8703a'], ['#e3e8f0', '#9aa6b8'], ['#ffd84d', '#d79a1c'], ['#c9f1ff', '#7f8cff']];
+  const medal = tier => { const c = MEDAL[tier] || MEDAL[0]; return `<svg viewBox="0 0 46 46" width="46" height="46"><path d="M14 2h7l4 14h-7zM32 2h-7l-4 14h7z" fill="${tier === 3 ? '#a17cff' : '#ff6b6b'}"/><circle cx="23" cy="28" r="15" fill="${c[1]}"/><circle cx="23" cy="27" r="13" fill="${c[0]}"/><path d="M23 19l2.4 5l5.4.6-4 3.7 1.1 5.3-4.9-2.7-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z" fill="#fff" opacity=".85"/></svg>`; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const UNLOCK = { ja: '実績解除！', en: 'Achievement unlocked!', zh: '成就解锁！', ko: '업적 달성!', es: '¡Logro desbloqueado!', fr: 'Succès débloqué !', pt: 'Conquista desbloqueada!', de: 'Erfolg freigeschaltet!', hi: 'उपलब्धि अनलॉक!', ar: 'تم فتح إنجاز!' };
+
+  let host = null, queue = [], showing = false;
+  function css() {
+    const st = document.createElement('style');
+    st.textContent = `.atlas-ach{position:fixed;z-index:2147483000;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;pointer-events:none;font-family:'Zen Maru Gothic','Fredoka','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif}
+.atlas-ach .b{pointer-events:auto;display:flex;align-items:center;gap:12px;width:min(360px,calc(100vw - 32px));padding:10px 14px 10px 10px;border-radius:20px;background:#fffdf7;border:2px solid #fff;box-shadow:0 5px 0 #efe3c8,0 18px 34px -14px rgba(60,30,0,.55);color:#2b3044;text-decoration:none;transform:translateX(120%);opacity:0;transition:transform .5s cubic-bezier(.3,1.35,.5,1),opacity .3s;overflow:hidden;position:relative}
+.atlas-ach .b.on{transform:none;opacity:1}
+.atlas-ach .b.out{transform:translateX(120%);opacity:0;transition:transform .35s ease-in,opacity .35s}
+.atlas-ach .b::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.85) 45%,transparent 60%);transform:translateX(-120%);animation:atlasShine 1.1s .45s ease-out forwards;pointer-events:none}
+@keyframes atlasShine{to{transform:translateX(120%)}}
+.atlas-ach .md{flex:none;width:46px;height:46px;animation:atlasPop .6s .25s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes atlasPop{from{transform:scale(.3) rotate(-30deg)}to{transform:none}}
+.atlas-ach .tx{flex:1;min-width:0;line-height:1.3}
+.atlas-ach .k{font-size:11px;font-weight:900;letter-spacing:.08em;color:#e09a00}
+.atlas-ach .n{font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atlas-ach .g{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#6a7088;font-weight:700}
+.atlas-ach .g img{width:16px;height:16px;border-radius:4px}
+.atlas-ach .c{flex:none;display:flex;align-items:center;gap:4px;font:700 15px 'Fredoka',sans-serif;color:#a66a00;background:#fff3c4;border-radius:99px;padding:4px 10px 4px 5px}
+.atlas-ach .c i{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
+[dir=rtl] .atlas-ach{right:auto;left:max(16px,env(safe-area-inset-left))}[dir=rtl] .atlas-ach .b{transform:translateX(-120%)}[dir=rtl] .atlas-ach .b.on{transform:none}
+@media (max-width:600px){.atlas-ach{right:50%;bottom:auto;top:max(10px,env(safe-area-inset-top));transform:translateX(50%)}.atlas-ach .b{transform:translateY(-140%)}.atlas-ach .b.out{transform:translateY(-140%)}}`;
+    document.head.appendChild(st);
+  }
+  function chime() {   // a soft two-note chime; skipped silently where audio isn't allowed yet
+    try {
+      const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state !== 'running') return;
+      [[784, 0], [1175, .11]].forEach(([f, d]) => { const o = C.createOscillator(), g = C.createGain(), t = C.currentTime + d; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.08, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .5); o.connect(g).connect(C.destination); o.start(t); o.stop(t + .55); });
+    } catch (e) {}
+  }
+  addEventListener('pointerdown', () => { try { const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); } catch (e) {} }, { once: true, capture: true });
+  function next() {
+    if (showing || !queue.length) return;
+    showing = true;
+    const a = queue.shift();
+    needText().then(() => {
+      if (!host) { css(); host = document.createElement('div'); host.className = 'atlas-ach'; document.body.appendChild(host); }
+      const g = a.gid && A.GAMES.find(x => x.id === a.gid), l = lang();
+      const portal = new URL('../atlas/#ach', BASE).href;
+      const b = document.createElement('a'); b.className = 'b'; b.href = portal; b.setAttribute('role', 'status');
+      b.innerHTML = `<span class="md">${medal(a.tier)}</span><span class="tx"><span class="k">${UNLOCK[l] || UNLOCK.en}</span><div class="n">${esc(tr('a.' + a.key, { n: a.n != null ? a.n.toLocaleString() : '' }))}</div>${g ? `<span class="g"><img src="${new URL('../' + g.icon, BASE).href}" alt="">${esc(g.name[l] || g.name.en)}</span>` : ''}</span><span class="c"><i></i>+${A.TIER_COINS[a.tier]}</span>`;
+      host.appendChild(b); chime();
+      requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('on')));
+      const hide = () => { b.classList.add('out'); setTimeout(() => { b.remove(); showing = false; next(); }, 380); };
+      const tm = setTimeout(hide, 4600); b.onmouseenter = () => clearTimeout(tm);
+      b.onmouseleave = () => setTimeout(hide, 1200);
+    });
+  }
+  function check() {
+    if (document.hidden) return;
+    const done = doneIds(), seen = getSeen();
+    if (!seen) { setSeen(done.map(a => a.id)); return; }          // first run on this device: just remember
+    const S = new Set(seen), fresh = done.filter(a => !S.has(a.id));
+    if (!fresh.length) return;
+    fresh.forEach(a => S.add(a.id)); setSeen([...S]);
+    if (QUIET) return;                                              // the portal shows its own "new achievements" sheet
+    fresh.sort((x, y) => y.tier - x.tier).slice(0, 4).forEach(a => queue.push(a));
+    next();
+  }
+  window.AtlasAchievements = { check };
+  const start = () => { check(); setInterval(check, 2500); addEventListener('storage', e => { if (!e.key || e.key !== SEEN) setTimeout(check, 50); }); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(check, 300); }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 800)); else setTimeout(start, 800);
+})();
