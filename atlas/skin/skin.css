@@ -145,3 +145,9 @@ html.atlas-shogi .hand .hname{color:#5a3412!important;font-weight:900}
 html.atlas-shogi .hslot .cnt{background:#2b3044!important;color:#fff!important}
 html.atlas-shogi .sq.last{background:rgba(255,200,90,.35)!important}
 html.atlas-shogi .sq.sel{background:rgba(90,170,110,.4)!important}
+/* the 3D board is wider than the DOM grid (its wooden margin): keep the komadai clear of it */
+html.atlas-shogi .board-area{gap:calc(var(--cw)*.62)!important}
+html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightness(1.08) contrast(1.05)}
+html.atlas-shogi.atlas-sk-ink .pc.atlas3d .k img{filter:brightness(.62) contrast(1.15) saturate(.8)}
+html.atlas-shogi.atlas-sk-grain .pc.atlas3d .k img{filter:sepia(.25) saturate(1.2) brightness(.95)}
+html.atlas-shogi #segPieces{flex-wrap:wrap}

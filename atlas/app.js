@@ -376,6 +376,7 @@
     const card = $('bvi'), playing = $('bv').classList.contains('playing');
     if ($('bv').classList.contains('rules')) { const p = $('bv').querySelector('.rgd'); Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0); return; }
     Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - card.getBoundingClientRect().top + 4);
+    $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - card.getBoundingClientRect().top) + 'px');
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
@@ -427,6 +428,29 @@
   $('bvClose').onclick = closeBoard;
   $('bvQuit').onclick = () => openBoard(bvGame.id);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
+  // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
+  function stepBoard(d) {
+    const bv = $('bv'); if (!bv.classList.contains('on') || bv.classList.contains('playing') || bv.classList.contains('rules') || !bvGame) return;
+    const list = A_.byUpdate(), i = list.findIndex(g => g.id === bvGame.id); if (i < 0) return;
+    const g = list[(i + d + list.length) % list.length];
+    openBoard(g.id, true);
+  }
+  $('bvPrev').onclick = () => stepBoard(-1); $('bvNext').onclick = () => stepBoard(1);
+  document.addEventListener('keydown', e => {
+    if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || $('ov').classList.contains('on')) return;
+    if (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;
+    const rtl = document.documentElement.dir === 'rtl', d = (e.key === 'ArrowRight') !== rtl ? 1 : -1;
+    if ($('bv').classList.contains('on') && !$('bv').classList.contains('playing')) { e.preventDefault(); stepBoard(d); }
+  });
+  (function swipe() {   // a quick horizontal flick (a slow drag still spins the board)
+    let s0 = null;
+    $('bv').addEventListener('pointerdown', e => { if (e.target.closest('select,button,a,input')) return; s0 = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId }; }, true);
+    $('bv').addEventListener('pointerup', e => {
+      if (!s0 || e.pointerId !== s0.id) return; const dx = e.clientX - s0.x, dy = e.clientY - s0.y, dt = performance.now() - s0.t; s0 = null;
+      if (dt < 650 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8) { const rtl = document.documentElement.dir === 'rtl'; stepBoard((dx < 0) !== rtl ? 1 : -1); }
+    }, true);
+    $('bv').addEventListener('pointercancel', () => { s0 = null; }, true);
+  })();
 
   function renderProfile() {
     const touched = A_.GAMES.filter(g => P[g.id].touched).length, done = ACH.filter(a => a.done).length;

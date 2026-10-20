@@ -17,7 +17,7 @@
   function init(o) {
     const T3 = window.Table3D;
     const host = document.createElement('div'); host.id = 'atlasGL'; document.body.prepend(host);
-    try { T3.mount(host, { plain: true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); if (window.AtlasLoading) AtlasLoading.hide(); return null; }
+    try { T3.mount(host, { plain: o.floor || true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); if (window.AtlasLoading) AtlasLoading.hide(); return null; }
     const boardDom = o.board, GUIDE = o.guide, GUIDE_FALLBACK = o.guideFallback || o.guide;
 
   /* ---------- guide character: lesson / puzzle text as speech bubbles ---------- */

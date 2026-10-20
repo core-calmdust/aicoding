@@ -19,7 +19,7 @@
     board: boardDom,
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-shogi.webp', guideFallback: '../images/atlas/shogi.webp',
-    bubbles: [['lsPrompt', 'lsFb']],
+    bubbles: [['lsPrompt', 'lsFb']], floor: 'tatami',
     skip: 'sq|\\.pc|hslot|hand|coords|arrows|\\.mark|frame',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof dlg !== 'object' || !document.getElementById('btnStart')) return null;
@@ -39,9 +39,32 @@
   document.documentElement.classList.add('atlas-shogi');
   const orig = window.pieceEl;
   let IMG = null;
+  // the portal's raised-lacquer pieces are the default; the game's own piece sets stay selectable
+  const PCK = 'atlas-shogi-pc';
+  let mine = true; try { mine = localStorage.getItem(PCK) !== '0'; } catch (e) {}
+  const LBL = { ja: '盛り上げ（立体）', en: 'Raised lacquer 3D', zh: '漆雕（立体）', ko: '옻칠 입체', es: 'Laca en relieve 3D', fr: 'Laque en relief 3D', pt: 'Laca em relevo 3D', de: 'Lack-Relief 3D', hi: 'उभरी लाह 3D', ar: 'ورنيش بارز ثلاثي' };
+  const seg = document.getElementById('segPieces');
+  if (seg) {
+    const b = document.createElement('button'); b.dataset.v = 'atlas3d'; seg.prepend(b);
+    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; b.textContent = LBL[l] || LBL.en; };
+    paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
+    seg.addEventListener('click', e => {
+      const t = e.target.closest('button'); if (!t) return;
+      mine = t.dataset.v === 'atlas3d'; try { localStorage.setItem(PCK, mine ? '1' : '0'); } catch (x) {}
+      if (mine) { e.stopImmediatePropagation(); look(); try { renderBoard(false); renderHands(); } catch (x) {} }
+    }, true);
+  }
+  function look() {   // selection mark, board tone and piece tone follow the game's skin setting
+    if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
+    let sk = 'classic'; try { sk = settings.skin || 'classic'; } catch (e) {}
+    if (board.userData.setTone) board.userData.setTone(sk);
+    ['metal', 'ink', 'grain'].forEach(k => document.documentElement.classList.toggle('atlas-sk-' + k, sk === k));
+  }
+  if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
+  setTimeout(look, 0);
   window.pieceEl = function (code, promoted) {
     const el = orig(code, promoted);
-    if (!IMG) return el;
+    if (!IMG || !mine) return el;
     try {
       const tp = E.typeOf(code), col = E.colorOf(code), up = (col === 1) !== flip;
       const src = IMG['k' + tp + (tp === 8 && col === 1 ? 'o' : '')]; if (!src) return el;

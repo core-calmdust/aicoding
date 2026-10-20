@@ -116,14 +116,14 @@
   // board top: straight-grained kaya with the black lacquer lines (太刀盛り) and four stars
   function boardTop() {
     const PX = 100;
-    return canvasTex('shogiTop', BW * PX | 0, BD * PX | 0, (c, W, H) => {
+    return canvasTex('shogiTop3', BW * PX | 0, BD * PX | 0, (c, W, H) => {
       const N = makeNoise(5), img = c.createImageData(W, H), d = img.data;
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const u = x / W, v = y / H;
         const r = (u * 34 + N(u * 1.5, v * 2.2, 3) * 1.8 + N(u * 12, v * 30, 2) * .05) % 1;
         const late = Math.exp(-Math.pow((r - .85) / .05, 2)) * .55 + Math.exp(-Math.pow((r - .85) / .18, 2)) * .25;
         const t = .16 + late * .45 + (N(u * 3, v * 260, 1) - .5) * .12 + (N(u * 2, v * 2, 2) - .5) * .18, i = (y * W + x) * 4;
-        d[i] = 238 - t * 70; d[i + 1] = 196 - t * 80; d[i + 2] = 122 - t * 80; d[i + 3] = 255;
+        d[i] = 208 - t * 66; d[i + 1] = 150 - t * 62; d[i + 2] = 78 - t * 46; d[i + 3] = 255;
       }
       c.putImageData(img, 0, 0);
       const ox = MARGIN * PX, oy = MARGIN * PX, cw = CW * PX, ch = CH * PX;
@@ -156,7 +156,7 @@
         const r = Math.sqrt(dx * dx + dy * dy) * 60 + N(u * 4, v * 4, 3) * 3 + N(u * 40, v * 40, 1) * .2;
         const f = r % 1, late = Math.exp(-Math.pow((f - .8) / .08, 2));
         const t = .2 + late * .35 + (N(u * 2, v * 2, 2) - .5) * .2, i = (y * W + x) * 4;
-        d[i] = 226 - t * 70; d[i + 1] = 178 - t * 75; d[i + 2] = 98 - t * 60; d[i + 3] = 255;
+        d[i] = 212 - t * 70; d[i + 1] = 158 - t * 70; d[i + 2] = 82 - t * 55; d[i + 3] = 255;
       }
       c.putImageData(img, 0, 0);
     });
@@ -218,9 +218,9 @@
   }
   function board(o = {}) {
     const g = new (T().Group)(), TT = T();
-    const kaya = M({ map: X.wood('kayaSide', '#e3b56c', '#b07a35', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
-    const endF = M({ map: endGrain('kayaEndF', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
-    const endS = M({ map: endGrain('kayaEndS', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
+    const kaya = M({ map: X.wood('kayaSide2', '#d4a057', '#9c6628', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
+    const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
+    const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
     const top = new TT.MeshPhysicalMaterial({ map: boardTop(), bumpMap: boardBump(), bumpScale: .006, roughness: .42, clearcoat: .45, clearcoatRoughness: .3 });
     top.map.anisotropy = 8;
     const bottom = M({ color: 0x8a5a2a, roughness: .7 });
@@ -231,6 +231,12 @@
       const lm = M({ map: X.wood('kayaLeg', '#e0b06a', '#a87232', 256, 256, 2), roughness: .5, bumpScale: .002 });
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.position.set(sx * (BW / 2 - 1.15), 0, sz * (BD / 2 - 1.2)); g.add(l); });
     }
+    // board colour (the game's "board & piece skin"): a tint over the kaya
+    const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
+    const base0 = tinted.map(m => m.color.clone());
+    const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, metal: 0xb4bcc6, ink: 0x5e5046 };
+    g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
+    g.userData.setTone('classic');
     g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH;
     return g;
   }

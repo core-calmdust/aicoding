@@ -509,11 +509,56 @@
       if (mode === 'night') place('gold', 1.3, 7.2, 9.4 + .2, -15.9 + 1.2, 0, g);
     }
   }
+  /* ---------- realistic tatami: woven igusa rush (fine strands along the long side, crossed by the warp every few mm),
+     slight colour drift between strands, sun-faded yellow-green, and a dark green cloth border (heri) on the long sides ---------- */
+  const TAT_W = 27, TAT_L = 54;
+  let tatamiCache = null;
+  function tatamiTex() {
+    if (tatamiCache) return tatamiCache;
+    const W = 1024, H = 2048, N = makeNoise(21), HERI = 54;
+    const draw = (bump) => canvasTex('tatami3' + (bump ? 'b' : ''), W, H, (c) => {
+      const img = c.createImageData(W, H), d = img.data;
+      const strandW = 4.2, warp = 19;   // px: one rush strand, warp spacing
+      for (let x = 0; x < W; x++) {
+        const sid = Math.floor(x / strandW), sh = (N(sid * .37, 3.1, 1) - .5), cx = (x % strandW) / strandW;
+        const round = Math.sin(cx * Math.PI);                    // each strand is a little cylinder
+        for (let y = 0; y < H; y++) {
+          const i = (y * W + x) * 4;
+          if (x < HERI || x >= W - HERI) {   // heri: woven cotton, dark green with a faint twill
+            const tw = ((x + y) % 6 < 3 ? 1 : 0) * 6 + N(x / 6, y / 6, 1) * 8, edge = Math.min(Math.abs(x - HERI), Math.abs(x - (W - HERI))) < 3 ? -18 : 0;
+            if (bump) { d[i] = d[i + 1] = d[i + 2] = 150 + tw * 3; } else { d[i] = 38 + tw + edge; d[i + 1] = 56 + tw + edge; d[i + 2] = 36 + tw * .6 + edge; }
+            d[i + 3] = 255; continue;
+          }
+          const wy = (y % warp) / warp, under = Math.exp(-Math.pow((wy - .5) / .06, 2));   // where the warp thread presses the strand down
+          const fib = N(x * .9, y * .012, 2), len = N(sid * .5, y / 180, 2);
+          let t = .5 + sh * .5 + (len - .5) * .5 + (fib - .5) * .25;
+          if (bump) { const v = 70 + round * 150 - under * 90 + (fib - .5) * 30; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, v)); }
+          else {
+            const shade = .86 + round * .16 - under * .1;
+            const r = (196 + t * 30) * shade, g2 = (186 + t * 26) * shade, b = (118 + t * 18) * shade;   // faded straw-green
+            d[i] = r; d[i + 1] = g2; d[i + 2] = b;
+            if (under > .6) { d[i] *= .93; d[i + 1] *= .93; d[i + 2] *= .9; }   // the warp thread itself (darker cotton)
+          }
+          d[i + 3] = 255;
+        }
+      }
+      c.putImageData(img, 0, 0);
+      if (!bump) { const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(0,0,0,.18)'); g.addColorStop(.08, 'rgba(0,0,0,0)'); g.addColorStop(.92, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.18)'); c.fillStyle = g; c.fillRect(HERI, 0, W - 2 * HERI, H); }
+    });
+    const map = draw(false), bump = draw(true); bump.encoding = T().LinearEncoding;
+    map.anisotropy = bump.anisotropy = 8;
+    return (tatamiCache = { map, bump });
+  }
   function buildRoom(scene, plain) {
     const TT = T(), mode = timeOfDay(new Date().getHours()), L = LOOK[mode];
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
-    if (plain) {   // play screen of the full games: just a wide wooden tabletop, no room edges
+    if (plain === 'tatami') {   // shogi: the board stands on tatami
+      const TA = tatamiTex(), mat = M({ map: TA.map, roughness: .78, sheen: new TT.Color(0x3a3a24), bumpScale: .006 });
+      mat.bumpMap = TA.bump;
+      // mats laid long side vertical; the board stands across the joint of two of them
+      for (const sx of [-4, -2, 0, 2, 4]) for (const sz of [-1, 0, 1]) { const m = new TT.Mesh(new TT.PlaneGeometry(TAT_W, TAT_L), mat); m.rotation.x = -Math.PI / 2; m.position.set(sx * TAT_W / 2 + 10, 0, sz * TAT_L + (Math.abs(sx) % 4 === 2 ? 14 : -6)); m.receiveShadow = true; g.add(m); }
+    } else if (plain) {   // play screen of the full games: just a wide wooden tabletop, no room edges
       const tm = M({ map: woodTop('tblR5', '#c08446', '#6a3e1c'), roughness: .62, clearcoat: .12, clearcoatRoughness: .55, bumpScale: .003 });
       const t = new TT.Mesh(new TT.PlaneGeometry(40, 40), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
     } else {
@@ -588,7 +633,7 @@
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); scene.add(lamp);
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 32, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); scene.add(shade); }
     if (R) R.toneMappingExposure = L.exp * (plain ? .8 : 1);
-    scene.background = new TT.Color(plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
+    scene.background = new TT.Color(plain === 'tatami' ? '#6f6a40' : plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
     roomMode = mode;
   }
   function mount(container, opts = {}) {
@@ -616,7 +661,7 @@
       const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
       envOK = true;
     } catch (e) {}
-    buildRoom(scene, !!opts.plain);
+    buildRoom(scene, opts.plain || false);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
