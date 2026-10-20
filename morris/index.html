@@ -560,6 +560,28 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   #newOverlay .rulecards{gap:14px}
   #newOverlay .modal-actions{max-width:560px;justify-self:end;width:100%}
 }
+/* PC: rules tutorial with a big board + big text; the tabbed dialogs (rules / lessons / openings / puzzles) share one fixed size */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(100vh - 20px));height:min(880px, calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
+  #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
+  #rulesOverlay .modal{padding:16px 28px 18px}
+  #rulesOverlay .ls-tabs{margin-bottom:10px}
+  #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
+  #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;flex:1;min-height:0;display:flex;flex-direction:column}
+  #rulesOverlay #rulesBody .rt{flex:1;min-height:0}
+  /* two columns: explanation + task on the left, a big board on the right (sized from --rt-bw, kept inside the dialog) */
+  #rulesBody .rt{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:32px;grid-template-areas:"steps steps" "title fig" "body fig" "task fig" "nav nav"}
+  #rulesBody .rt-steps{grid-area:steps}
+  #rulesBody .rt h2.rt-title{grid-area:title;text-align:left;align-self:end}
+  #rulesBody .rt-body{grid-area:body}
+  #rulesBody .rt-task{grid-area:task;text-align:left}
+  #rulesBody .rt-board, #rulesBody .rt-html, #rulesBody .rt-finish{grid-area:fig;align-self:center;margin:4px 0}
+  #rulesBody .rt-finish{width:340px}
+  #rulesBody .rt-nav{grid-area:nav}
+  html[lang=ar] #rulesBody .rt h2.rt-title, html[lang=ar] #rulesBody .rt-task{text-align:right}
+  .rt-board svg.tour, .rt-html .tour-pic svg{width:min(calc(var(--rt-bw) + 60px), calc(100vh - 330px), 560px);width:min(calc(var(--rt-bw) + 60px), calc(100dvh - 330px), 560px)}
+}
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 .navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
@@ -887,14 +909,14 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021hb"></script>
+<script src="i18n.js?v=20261021rt2"></script>
 <script src="i18n_more.js?v=20261020rt"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/headerbar.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=2"></script>
+<script src="../shared/ruletour.js?v=3"></script>
 <script src="engine.js?v=20261019n"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
 <script src="firebase-config.js?v=20261020a"></script>
@@ -976,6 +998,7 @@ let reviewing = false;
 let evals = [];          // evals[i] = evaluation after i moves (first player's view)
 let busyToken = 0;
 let lesson = null, puzzle = null;
+let rtHold = false;   // a rated game restored on page load: its clock stays stopped (no beeps) until the first move is played
 let rgame = null;   // rated game vs the AI: { id, lv, or, my, tag, ct: [ms, ms], t, over, done }
 let gameOverShown = false;
 let sel = null;          // human input in progress: { from, to, stage: 'pick' | 'remove', cands }
@@ -995,7 +1018,7 @@ function load() {
       setVariant(d.rule || settings.rule); startSpec = null;
       if (!validMoves(d.moves)) { setVariant(settings.rule); return false; }
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
-      rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) rgame.t = Date.now();
+      rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) { rgame.t = Date.now(); rtHold = true; }   // restored on load: the clock waits for the first move
       cur = moves.length; gameOverShown = statusAt(cur).over;
       return true;
     }
@@ -1495,6 +1518,7 @@ function commit(m) {
 function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
   rgame = null;
+  rtHold = false;
   if (rated) { settings.rule = 'nine'; rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() }); }
   setVariant(settings.rule); startSpec = null; drawLines();
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
@@ -1504,6 +1528,7 @@ function newGame(rated) {
   afterPosition();
 }
 function playMove(m) {
+  if (rtHold) { rtHold = false; if (rgame) rgame.t = Date.now(); }   // first move after a reload: no time was charged while held
   if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (now - rgame.t)) + RT_CLOCK.inc; rgame.t = now; }
   moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false;
   evals.length = moves.length;
@@ -1909,12 +1934,13 @@ function rtLive() { return !!(rgame && !rgame.over && !statusAtRaw(moves.length)
 function rtClockLeft(c) {   // c: 0 first player, 1 second
   if (!rgame || !rgame.ct) return 0;
   let v = rgame.ct[c];
-  if (rtLive() && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
+  if (rtLive() && !rtHold && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
   return Math.max(0, v);
 }
 function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
 setInterval(() => {
   if (!rtLive()) return;
+  if (rtHold) { rgame.t = Date.now(); return; }
   const c = toMoveAt(moves.length) - 1, left = rtClockLeft(c), el = $('#clk' + (c + 1));
   if (el) { el.textContent = fmtClock(left); el.classList.toggle('low', left < 30000); }
   if (window.CountTick) { if (c + 1 === humanColor) CountTick.feed(left, 'rt' + moves.length); }

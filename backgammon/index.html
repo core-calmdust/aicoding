@@ -589,6 +589,28 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   #newOverlay .modal{width:min(560px,100%)}
   #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
 }
+/* PC: rules tutorial with a big board + big text; the tabbed dialogs (rules / lessons / puzzles) share one fixed size */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(var(--vh) - 20px));max-height:calc(var(--vh) - 20px)}
+  #rulesOverlay .modal{padding:16px 28px 18px;display:flex;flex-direction:column}
+  #rulesBody{flex:1;min-height:0;display:flex;flex-direction:column}
+  #rulesBody > .rt{flex:1;min-height:0}
+  #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
+  #rulesOverlay .ls-tabs{margin-bottom:12px}
+  /* two columns on PC: explanation + task on the left, a big board on the right (board 15.85 × 12, sized from --rt-bw) */
+  #rulesBody .rt{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:28px;grid-template-areas:"steps steps" "title fig" "body fig" "task fig" "nav nav"}
+  #rulesBody .rt-steps{grid-area:steps}
+  #rulesBody .rt h2.rt-title{grid-area:title;text-align:left;align-self:end}
+  #rulesBody .rt-body{grid-area:body}
+  #rulesBody .rt-task{grid-area:task;text-align:left}
+  #rulesBody .rt-board, #rulesBody .rt-html, #rulesBody .rt-finish{grid-area:fig;align-self:center;margin:4px 0}
+  #rulesBody .rt-finish{width:340px}
+  #rulesBody .rt-nav{grid-area:nav}
+  html[lang=ar] #rulesBody .rt h2.rt-title, html[lang=ar] #rulesBody .rt-task{text-align:right}
+  #rulesBody .rt-board svg{width:min(calc(var(--rt-bw) + 160px), calc((var(--vh) - 250px) * 1.32), 600px)}
+  #rulesBody .rt-html svg{width:min(calc(var(--rt-bw) + 100px), calc((var(--vh) - 250px) * 1.2), 540px)}
+}
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
@@ -881,11 +903,11 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   </div>
 </div>
 
-<script src="i18n.js?v=20261021rt"></script>
+<script src="i18n.js?v=20261021rt2"></script>
 <script src="bg.js"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/headerbar.js?v=2"></script>
-<script src="../shared/ruletour.js?v=2"></script>
+<script src="../shared/ruletour.js?v=3"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="dice3d.js"></script>
 <script src="app.js?v=20261021rt"></script>
