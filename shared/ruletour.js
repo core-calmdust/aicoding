@@ -21,6 +21,8 @@
 //     ],
 //   });
 // title / body / task / html are inserted as HTML (not escaped): escape any user-supplied text yourself.
+// Mini boards: size them with the CSS variable --rt-bw (set on .rt: ~320px on phones, up to 600px on PC) so every game
+// shows a big, easy-to-click board on PC and the same text sizes.
 //   tour.open(i)  tour.render()  tour.stop()  tour.page  tour.visible()
 //
 // api (inside setup): board, ok(msg), ng(msg, {reset=true, delay=2400}), say(msg, cls), done(), reset(),
@@ -41,7 +43,18 @@ const S = {
   ar: { prev: 'السابق', next: 'التالي', close: 'إغلاق', again: 'أعد المحاولة', watch: 'شاهد أولاً…', play: 'العب مباراة', lessons: 'إلى الدروس', finT: 'أنت جاهز للعب!', finB: 'هذه كل القواعد. جرّب أولاً مباراة ضد ذكاء اصطناعي سهل. النصائح والاستراتيجية في الدروس.', step: 'الخطوة {n}', ok: 'صحيح!', ng: 'ليس تماماً' },
 };
 const CSS = `
-.rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90}
+.rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
+/* PC: big board and big text — size the mini board with var(--rt-bw) */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  .rt{--rt-bw:clamp(340px, calc(100vh - 420px), 600px)}
+  .rt-steps button{width:36px;height:36px;font-size:14px}
+  .rt h2.rt-title{font-size:25px;margin-bottom:10px}
+  .rt-body{font-size:16.5px;line-height:1.8}
+  .rt-task{font-size:18px;min-height:60px}
+  .rt-msg{font-size:16.5px}
+  .rt-again{font-size:14px;padding:7px 14px}
+  .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
+}
 .rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
