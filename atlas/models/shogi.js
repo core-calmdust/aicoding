@@ -252,7 +252,7 @@
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // in the toy room the tall board would hide the room: a little smaller than life
-    g.scale.setScalar(.66);
+    g.scale.setScalar(.86);   // about the reversi board's size on the chabudai
     return g;
   };
 

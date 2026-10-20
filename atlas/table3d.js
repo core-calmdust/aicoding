@@ -711,11 +711,15 @@
   function camPose(k) {
     const a = cam.aspect || 1, th = Math.tan(cam.fov * Math.PI / 360);
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
-    const needW = (k ? 6.0 : 6.5) / (th * a), needH = (k ? 7.0 : 6.8) / th;
+    const fw = fitTo ? fitTo.w / 2 : 6.0, fd = fitTo ? fitTo.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
+    const needW = (k ? fw : 6.5) / (th * a), needH = (k ? fd : 6.8) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k));   // zoom applies to the showcase view only
-    const pitch = .52 + k * .82;                       // view: low 3/4 so the room shows · play: nearly top-down
+    const pitch = .52 + k * ((fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
+  // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
+  let fitTo = null;
+  function fit(o) { fitTo = o || null; }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
   // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
   const ease = { outBack: k => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2), out3: k => 1 - Math.pow(1 - k, 3), in2: k => k * k };
@@ -732,7 +736,7 @@
   function take(id) { const p = prepared[id]; delete prepared[id]; return p; }
   function show(id, model, opts = {}) {
     if (!R) return null;
-    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1;
+    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; fitTo = null;
     if (cur) { const old = cur; root.remove(old); dispose(old); }
     const pre = !model && take(id);
     const g = model || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
@@ -808,8 +812,9 @@
     rafId = requestAnimationFrame(loop);
     if (!el.offsetParent && !alignFn) return;
     if (now - lastT < (blurred ? 100 : FRAME_MS) - 2) return;
-    lastT = now;
-    camK += (camTo - camK) * .07; zoom += (zoomTo - zoom) * .18;
+    const dt = Math.min(250, now - (lastT || now)); lastT = now;
+    const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
+    camK += (camTo - camK) * ez(.07); zoom += (zoomTo - zoom) * ez(.18);
     if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * .14; frame(); } else if (inset !== insetTo) { inset = insetTo; frame(); }
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
@@ -836,11 +841,11 @@
     const py = q[1] + (r2[1] - q[1]) * k, pz = q[2] + (r2[2] - q[2]) * k, d = Math.hypot(py, pz), a = Math.atan2(py, pz) + tilt;
     cam.position.set(0, d * Math.sin(a), d * Math.cos(a));
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
-    cam.lookAt(0, .4, 0);   // the canvas itself is kept clear of the info card (app.js fitStage)
+    { const ly = fitTo ? .4 + (fitTo.y - .4) * camK : .4; cam.position.y += ly - .4; cam.lookAt(0, ly, 0); }   // the canvas itself is kept clear of the info card (app.js fitStage)
     R.render(scene, cam);
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
