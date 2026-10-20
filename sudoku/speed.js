@@ -59,7 +59,7 @@ const catStars = ci => { let n = 0; for (let p = 0; p < NST; p++) { const r = re
 const tierCats = tr => DATA ? DATA.cats.map((c, i) => (c.tier === tr ? i : -1)).filter(i => i >= 0) : [];
 const tierClears = tr => tierCats(tr).reduce((a, ci) => a + catClears(ci), 0);
 const TIER_NEED = 40;
-const tierOpen = tr => DEBUG && /unlock/.test(location.search) || tr === 0 || tierClears(tr - 1) >= TIER_NEED;
+const tierOpen = tr => true;   // every difficulty is open: stage 1 of each category can be played right away
 const stageOpen = (ci, pi) => DEBUG && /unlock/.test(location.search) || tierOpen(DATA.cats[ci].tier) && (pi === 0 || !!rec(ci, pi - 1) || !!rec(ci, pi));
 const totalClears = () => Object.keys(S().c).length;
 const totalStars = () => Object.values(S().c).reduce((a, r) => a + (r.s || 0), 0);
