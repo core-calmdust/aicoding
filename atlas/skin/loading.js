@@ -2,7 +2,7 @@
 (function () {
   const W = { ja: 'よみこみちゅう', en: 'Loading', zh: '加载中', ko: '불러오는 중', es: 'Cargando', fr: 'Chargement', pt: 'Carregando', de: 'Lädt', hi: 'लोड हो रहा है', ar: 'جارٍ التحميل' };
   let el = null, t0 = 0;
-  const MIN = 1000;   // it's cute — keep it on screen for at least a second
+  const MIN = 600;   // it's cute — keep it on screen a little while
   function show(lang) {
     if (el) return el;
     let l = lang; try { l = l || localStorage.getItem('aicoding-lang'); } catch (e) {}
