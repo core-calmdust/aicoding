@@ -16,7 +16,7 @@ const nAll = () => (DATA ? DATA.cats.reduce((a, c) => a + c.st.length, 0) : 0);
 const cname = ci => t(DATA.cats[ci].nk), cdesc = ci => t(DATA.cats[ci].dk);
 const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f'];
 const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df']];
-const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8' };
+const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8', bomb: '#ff8a3d', swap: '#e05aa8' };
 const GORDER = SE.GIMMICKS;
 const BONUS = 5000, PENALTY = 2000, FREEZE = 380, LIMIT_TRIES = 3;
 const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -32,6 +32,8 @@ const GICON = {
   ghost: '<svg viewBox="0 0 32 32"><path d="M6 28V14a10 10 0 0 1 20 0v14l-3.3-2.5L19.3 28 16 25.5 12.7 28l-3.4-2.5z" fill="#eef0ff" stroke="#8a93c8" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12.5" cy="15" r="1.8" fill="#43385a"/><circle cx="19.5" cy="15" r="1.8" fill="#43385a"/><ellipse cx="16" cy="20" rx="2" ry="1.4" fill="#ff9fb8"/></svg>',
   ice: '<svg viewBox="0 0 32 32"><path d="M6 10l10-6 10 6v12l-10 6-10-6z" fill="#cfeaff" stroke="#5aa8e8" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 10l10 6 10-6M16 16v12" fill="none" stroke="#8fc8f2" stroke-width="1.4"/><path d="M10 9l3 2M19 21l3-2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M13 19l2 2-1 3" fill="none" stroke="#5aa8e8" stroke-width="1.1" stroke-linecap="round"/></svg>',
 };
+GICON.bomb = '<svg viewBox="0 0 32 32"><circle cx="14" cy="19" r="10" fill="#43385a"/><circle cx="10.5" cy="15.5" r="3" fill="#fff" opacity=".35"/><path d="M20 11l3-3" stroke="#43385a" stroke-width="3.2" stroke-linecap="round"/><path d="M23 8q2-3 5-2" fill="none" stroke="#c9a073" stroke-width="1.8" stroke-linecap="round"/><path d="M27.5 3.5l.8 1.9 2-.3-1.4 1.5 1 1.8-1.9-.7-1.3 1.6v-2l-1.9-.7 1.9-.7z" fill="#ffcd3c"/><circle cx="11" cy="20" r="1.4" fill="#fff"/><circle cx="17" cy="20" r="1.4" fill="#fff"/><path d="M12.5 23.5q1.5 1.2 3 0" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>';
+GICON.swap = '<svg viewBox="0 0 32 32"><rect x="3" y="5" width="26" height="9" rx="3" fill="#ffd6ec"/><rect x="3" y="18" width="26" height="9" rx="3" fill="#ffe9c9"/><path d="M9 14v4M23 14v4" stroke="#fff" stroke-width="2"/><path d="M8 12.5l-2.5-3M8 12.5l2.5-3M24 19.5l-2.5 3M24 19.5l2.5 3" stroke="#e05aa8" stroke-width="2.2" stroke-linecap="round"/><path d="M8 9.5V12.5M24 19.5V22.5" stroke="#e05aa8" stroke-width="2.2" stroke-linecap="round"/><text x="17" y="12.3" font-family="Fredoka,Arial" font-weight="700" font-size="7" fill="#c0407a" text-anchor="middle">1 2</text><text x="15" y="25.3" font-family="Fredoka,Arial" font-weight="700" font-size="7" fill="#c07a30" text-anchor="middle">3 4</text></svg>';
 const gic = (id, cls = 'gi') => `<i class="${cls}" style="--gc:${GCOL[id]}">${GICON[id]}</i>`;
 // digits as fruits: strawberry, lemon, grapes, melon
 const FRUIT = [
@@ -57,7 +59,8 @@ function S() {
   s.st = Object.assign({ solved: 0, runs: 0, combo: 0, flash: 0, gs: {}, time: 0 }, s.st || {});
   return s;
 }
-const rec = (ci, pi) => S().cc[ci + '.' + pi];
+const rkey = (ci, pi) => DATA.cats[ci].nk + '.' + pi;   // stable across layout changes
+const rec = (ci, pi) => S().cc[rkey(ci, pi)];
 const catClears = ci => { let n = 0; for (let p = 0; p < catLen(ci); p++) if (rec(ci, p)) n++; return n; };
 const catStars = ci => { let n = 0; for (let p = 0; p < catLen(ci); p++) { const r = rec(ci, p); if (r) n += r.s; } return n; };
 const tierCats = tr => DATA ? DATA.cats.map((c, i) => (c.tier === tr ? i : -1)).filter(i => i >= 0) : [];
@@ -66,8 +69,9 @@ const tierLen = tr => tierCats(tr).reduce((a, ci) => a + catLen(ci), 0);
 const TIER_NEED = 40;
 const tierOpen = tr => true;   // every difficulty is open: stage 1 of each category can be played right away
 const stageOpen = (ci, pi) => DEBUG && /unlock/.test(location.search) || tierOpen(DATA.cats[ci].tier) && (pi === 0 || !!rec(ci, pi - 1) || !!rec(ci, pi));
-const totalClears = () => Object.keys(S().cc).length;
-const totalStars = () => Object.values(S().cc).reduce((a, r) => a + (r.s || 0), 0);
+const ccv = () => Object.entries(S().cc).filter(([k]) => k.startsWith('s')).map(([, v]) => v);   // v2 keys start with the course id
+const totalClears = () => ccv().length;
+const totalStars = () => ccv().reduce((a, r) => a + (r.s || 0), 0);
 const dayRec = (ds, d) => (S().d[ds] || {})[d];
 function addPts(n) {
   if (n <= 0) return;
@@ -480,6 +484,52 @@ const GIM = {
     },
     stop() { cells.forEach(c => c.classList.remove('gh')); },
   },
+  bomb: {   // a bomb on an empty cell: fill it before the fuse burns down, or lose 3 seconds
+    start(g) { g.st.wait = 700; g.st.at = -1; },
+    tick(g, dt) {
+      const fuse = [6500, 5000, 3800][g.s - 1];
+      if (g.st.at >= 0 && R.grid[g.st.at]) { cells[g.st.at].classList.remove('bomb'); g.st.at = -1; g.st.wait = 600; C.SFX.unit(); }
+      if (g.st.at < 0) {
+        g.st.wait -= dt; if (g.st.wait > 0) return;
+        const empties = [...Array(16).keys()].filter(i => !R.grid[i] && !R.ice[i]);
+        if (!empties.length) return;
+        g.st.at = empties[(R.rng() * empties.length) | 0]; g.st.left = fuse;
+        cells[g.st.at].classList.add('bomb'); C.SFX.note();
+      }
+      g.st.left -= dt;
+      cells[g.st.at].style.setProperty('--fuse', Math.max(0, g.st.left / fuse).toFixed(3));
+      if (g.st.left <= 0) {
+        const el = cells[g.st.at]; el.classList.remove('bomb'); el.classList.remove('boom'); void el.offsetWidth; el.classList.add('boom'); setTimeout(() => el.classList.remove('boom'), 600);
+        R.left -= 3000; R.combo = 0; R.missThis = true;
+        const pen = $('#sPen'); pen.textContent = '-3'; pen.classList.remove('on'); void pen.offsetWidth; pen.classList.add('on');
+        C.SFX.rumble(); C.vib([40, 30, 40]); g.st.at = -1; g.st.wait = 900; render();
+        if (R.left <= 0) timeUp();
+      }
+    },
+    stop(g) { cells.forEach(c => c.classList.remove('bomb')); },
+  },
+  swap: {   // two rows (or, from ★2, columns) of the same band trade places — the puzzle stays valid
+    start(g) { g.st.next = [5200, 4000, 3000][g.s - 1] * .7; g.st.busy = false; },
+    tick(g, dt) {
+      if (g.st.busy) return;
+      g.st.next -= dt; if (g.st.next > 0) return;
+      g.st.next = [5200, 4000, 3000][g.s - 1];
+      const col = g.s >= 2 && R.rng() < .5, band = R.rng() < .5 ? 0 : 2, a = band, b = band + 1;
+      const idx = (k, j) => (col ? j * 4 + k : k * 4 + j);           // k = line number, j = position along it
+      g.st.busy = true;
+      for (let j = 0; j < 4; j++) { cells[idx(a, j)].style.transform = col ? 'translateX(100%)' : 'translateY(100%)'; cells[idx(b, j)].style.transform = col ? 'translateX(-100%)' : 'translateY(-100%)'; cells[idx(a, j)].classList.add('swp'); cells[idx(b, j)].classList.add('swp'); }
+      C.SFX.note();
+      setTimeout(() => {
+        if (!R || R.done) return;
+        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt];
+        for (let j = 0; j < 4; j++) { const x = idx(a, j), y = idx(b, j); for (const A of arrs) [A[x], A[y]] = [A[y], A[x]]; }
+        if (R.sel >= 0) { const r = R.sel >> 2, c = R.sel & 3, k = col ? c : r; if (k === a || k === b) R.sel = col ? r * 4 + (k === a ? b : a) : (k === a ? b : a) * 4 + c; }
+        for (let j = 0; j < 4; j++) for (const i of [idx(a, j), idx(b, j)]) { cells[i].classList.remove('swp'); cells[i].style.transform = ''; const gh = R.ghostAt[i] === -1; cells[i].classList.toggle('gh', gh && !!R.user[i]); }
+        renderMz(); render(); g.st.busy = false;
+      }, 420);
+    },
+    stop() { cells.forEach(c => { c.style.transform = ''; c.classList.remove('swp'); }); },
+  },
   ice: {
     start(g) {
       const empties = [...Array(16).keys()].filter(i => !R.grid[i]);
@@ -747,7 +797,7 @@ function finish(win, quitted, silent) {
       stars = 1 + (share >= .25 ? 1 : 0) + (share >= .25 && !R.mist ? 1 : 0);
       const base = R.st.p.reduce((a, _, j) => a + LVP[R.st.lv[j]] + SE.parseG(R.st.g[j]).length * 8, 0);
       const sc = Math.round(base * starMul[stars]);
-      const k = R.ci + '.' + R.pi, prev = s.cc[k];
+      const k = rkey(R.ci, R.pi), prev = s.cc[k];
       const used = Math.round(R.limit - left);
       if (!prev) { s.cc[k] = { s: stars, t: used, sc }; earned = sc; }
       else { earned = Math.max(0, sc - (prev.sc || 0)); prev.sc = Math.max(prev.sc || 0, sc); prev.s = Math.max(prev.s, stars); if (used < prev.t) { prev.t = used; newBest = true; } }
@@ -973,7 +1023,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=2';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=3';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },

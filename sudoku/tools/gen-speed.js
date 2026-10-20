@@ -2,16 +2,16 @@
 /* すぴーど数独 — builds the curated course collection (v2).
    入門 5 courses × 10 stages (standard rules)
    初級 5 × 10 (one special rule each: bug / mosaic / spin / spot / fruit)
-   中級 3 × 10 (one special rule each: shuffle / ghost / ice)
+   中級 5 × 10 (one special rule each: shuffle / ghost / ice / bomb / swap)
    上級 5 × 20 (2–4 special rules at once)
-   達人 5 × 20 (5 to all 8 special rules at once)
+   達人 5 × 20 (5 to all 10 special rules at once)
    Each stage is "solve K puzzles within T seconds"; the hurdle rises stage by stage.
    usage: node sudoku/tools/gen-speed.js  →  sudoku/speed_puzzles.json */
 'use strict';
 const fs = require('fs'), path = require('path');
 const E = require('../speed-engine.js');
 
-const A4 = ['bug', 'mosaic', 'spin', 'spot'], B4 = ['fruit', 'shuffle', 'ghost', 'ice'], ALLG = A4.concat(B4);
+const A4 = ['bug', 'mosaic', 'spin', 'spot'], B4 = ['fruit', 'shuffle', 'ghost', 'ice'], ALLG = A4.concat(B4, ['bomb', 'swap']);
 // n / d: i18n keys of the course name and description
 const CATS = [
   { tier: 0, kind: 'std', nk: 'sc.n.0', dk: 'sc.d.0', lv: [1, 1], k: [1, 4], sl: [3.0, 2.0] },
@@ -20,10 +20,10 @@ const CATS = [
   { tier: 0, kind: 'std', nk: 'sc.n.6', dk: 'sc.d.6', lv: [2, 3], k: [3, 7], sl: [2.2, 1.65] },
   { tier: 0, kind: 'std', nk: 'sc.n.9', dk: 'sc.d.9', lv: [3, 4], k: [2, 6], sl: [2.1, 1.6] },
   ...['bug', 'mosaic', 'spin', 'spot', 'fruit'].map((g, i) => ({ tier: 1, kind: 'g', g, nk: 'sc.n.' + (10 + i), dk: 'sc.d.' + (10 + i), lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
-  ...['shuffle', 'ghost', 'ice'].map((g, i) => ({ tier: 2, kind: 'g', g, nk: 'sc.n.' + (15 + i), dk: 'sc.d.' + (15 + i), lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
-  ...[['u0', A4], ['u1', B4], ['u2', ['mosaic', 'spot', 'ghost', 'spin']], ['u3', ['bug', 'ice', 'shuffle', 'fruit']], ['u4', ALLG]].map(([id, pool]) =>
+  ...['shuffle', 'ghost', 'ice', 'bomb', 'swap'].map((g, i) => ({ tier: 2, kind: 'g', g, nk: i < 3 ? 'sc.n.' + (15 + i) : 'sk.n.' + g, dk: i < 3 ? 'sc.d.' + (15 + i) : 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
+  ...[['u0', A4], ['u1', B4.concat(['swap'])], ['u2', ['mosaic', 'spot', 'ghost', 'spin']], ['u3', ['bug', 'ice', 'shuffle', 'fruit', 'bomb']], ['u4', ALLG]].map(([id, pool]) =>
     ({ tier: 3, kind: 'combo', pool, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: [2, 6], sl: [2.2, 1.6], str: [1, 2], gn: [2, 4] })),
-  ...[['m0', [5, 6], [1, 2]], ['m1', [5, 7], [1, 2]], ['m2', [6, 8], [1, 3]], ['m3', [5, 8], [1, 2], [3, 8]], ['m4', [6, 8], [2, 3]]].map(([id, gn, str, k]) =>
+  ...[['m0', [5, 6], [1, 2]], ['m1', [5, 8], [1, 2]], ['m2', [6, 10], [1, 3]], ['m3', [5, 9], [1, 2], [3, 8]], ['m4', [7, 10], [2, 3]]].map(([id, gn, str, k]) =>
     ({ tier: 4, kind: 'combo', pool: ALLG, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: k || [2, 5], sl: [2.1, 1.55], str, gn })),
 ];
 
