@@ -5719,6 +5719,8 @@ function togglePureFullScreen() {
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('pure'); });
 function toggleFullScreen() {
     const e = document.getElementById('fullscreen-root');
+    // 画面のみモード中にFを押したら、説明ありのフルスクリーンに切り替える
+    if (document.fullscreenElement && document.body.classList.contains('pure')) { document.body.classList.remove('pure'); updateScale(); return; }
     if (!document.fullscreenElement) {
         e.requestFullscreen().catch(err => {
             alert(`フルスクリーンモードにできませんでした: ${err.message}`);
