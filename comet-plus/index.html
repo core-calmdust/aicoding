@@ -4144,7 +4144,7 @@ let kickRingLife = 0;
 // ---------------------------------
 const field = new THREE.Group();
 scene.add(field);
-const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H + TOP_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.62, depthWrite: false }));
+const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H + TOP_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.8, depthWrite: false }));
 fieldGlass.rotation.x = -Math.PI / 2;
 fieldGlass.position.y = -8;
 fieldGlass.position.z = -TOP_EXT / 2;
