@@ -147,6 +147,14 @@
   const WHO = {
     ja: ['はじめての人に', 'ルールを覚えた人に', 'ルールを覚えた人に', '慣れてきた人に', '慣れてきた人に', '強い人に', '強い人に', '上級者でも手ごわい', '上級者でも手ごわい', '最強レベル'],
     en: ['for first-timers', 'once you know the rules', 'once you know the rules', 'getting the hang of it', 'getting the hang of it', 'for strong players', 'for strong players', 'tough even for experts', 'tough even for experts', 'the very strongest'],
+    zh: ["适合初次玩", "适合刚学会规则", "适合刚学会规则", "适合渐渐上手", "适合渐渐上手", "适合高手", "适合高手", "高手也觉得难缠", "高手也觉得难缠", "最强等级"],
+    ko: ["처음 하는 사람에게", "규칙을 익힌 사람에게", "규칙을 익힌 사람에게", "익숙해진 사람에게", "익숙해진 사람에게", "강한 사람에게", "강한 사람에게", "고수도 버거운", "고수도 버거운", "최강 레벨"],
+    es: ["para principiantes", "si ya sabes las reglas", "si ya sabes las reglas", "si ya le vas pillando el truco", "si ya le vas pillando el truco", "para jugadores fuertes", "para jugadores fuertes", "difícil incluso para expertos", "difícil incluso para expertos", "el más fuerte"],
+    fr: ["pour débuter", "si tu connais les règles", "si tu connais les règles", "si tu prends le coup de main", "si tu prends le coup de main", "pour les bons joueurs", "pour les bons joueurs", "coriace même pour les experts", "coriace même pour les experts", "le plus fort"],
+    pt: ["para iniciantes", "para quem já sabe as regras", "para quem já sabe as regras", "para quem está pegando o jeito", "para quem está pegando o jeito", "para jogadores fortes", "para jogadores fortes", "difícil até para experts", "difícil até para experts", "o mais forte"],
+    de: ["für Einsteiger", "wenn du die Regeln kennst", "wenn du die Regeln kennst", "wenn du den Dreh raus hast", "wenn du den Dreh raus hast", "für starke Spieler", "für starke Spieler", "selbst für Profis knifflig", "selbst für Profis knifflig", "die stärkste Stufe"],
+    hi: ["पहली बार खेलने वालों के लिए", "नियम सीख चुके लोगों के लिए", "नियम सीख चुके लोगों के लिए", "जिन्हें आदत हो रही है उनके लिए", "जिन्हें आदत हो रही है उनके लिए", "मज़बूत खिलाड़ियों के लिए", "मज़बूत खिलाड़ियों के लिए", "विशेषज्ञों के लिए भी कठिन", "विशेषज्ञों के लिए भी कठिन", "सबसे मज़बूत स्तर"],
+    ar: ["لمن يلعب أول مرة", "لمن تعلّم القواعد", "لمن تعلّم القواعد", "لمن بدأ يعتاد اللعب", "لمن بدأ يعتاد اللعب", "للاعبين الأقوياء", "للاعبين الأقوياء", "صعب حتى على الخبراء", "صعب حتى على الخبراء", "أقوى مستوى"],
   };
   function levelInfo(n, lang) {
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;

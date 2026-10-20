@@ -2,7 +2,7 @@
    World Board Game Atlas — collectible items (avatar icons, backgrounds,
    frames) drawn as inline SVG. Everything is generated from small tables,
    so adding an item = adding one line to a list below.
-     AtlasArt.items          [{ id, kind:'icon'|'bg'|'frame', rar:0..4, name:{ja,en} }]
+     AtlasArt.items          [{ id, kind:'icon'|'bg'|'frame', rar:0..4, name:{ja,en,zh,ko,es,fr,pt,de,hi,ar} }]
      AtlasArt.byId(id)
      AtlasArt.svg(id)        SVG markup for the item alone
      AtlasArt.avatar({icon,bg,frame}, size)  composed avatar
@@ -165,6 +165,44 @@
     items.push({ id: 'b' + String(i + 1).padStart(3, '0'), kind: 'bg', rar: o.r, d: o, name: { ja: c[2] + 'の' + pn[0], en: c[3] + ' ' + pn[1] } });
   });
   Object.keys(FRAME).forEach(k => items.push({ id: 'f-' + k, kind: 'frame', rar: FRAME[k].r, d: { k }, name: { ja: FRAME[k].n[0], en: FRAME[k].n[1] } }));
+  /* ---------- item names in the other 8 languages (ja / en are built above) ---------- */
+  // per language: critters, accessories, bg patterns, bg colours, frames (same key order as the tables above), and how they combine
+  const CRK = Object.keys(CRIT_NAME), ACK = Object.keys(ACC_NAME).slice(1), BPK = Object.keys(BG_NAME), BCK = Object.keys(BGCOL), FRK = Object.keys(FRAME);
+  const NAMES = {
+    zh: { cr: '小猫|小熊|兔兔|青蛙|企鹅|猫头鹰|狐狸|熊猫|小鸡|机器人|幽灵|史莱姆|章鱼|小龙', ac: '叶子|蝴蝶结|眼镜|黑白棋子|围棋子|骰子|王将|骑士|王冠|光环|星星|奖牌',
+      bp: '纯色|圆点|条纹|格子|棋盘格|波浪|星空|爱心|六边形|双陆棋|樱花|渐变', bc: '奶油|薄荷|天空|玫瑰|丁香|夜晚|晚霞|木纹|金色', fr: '无|白色|珊瑚|天空|薄荷|糖果|棋盘|彩虹|月桂冠|金色|阿特拉斯',
+      icon: (c, a) => a + c, bg: (p, c) => c + p },
+    ko: { cr: '고양이|곰|토끼|개구리|펭귄|부엉이|여우|판다|병아리|로봇|유령|슬라임|문어|드래곤', ac: '나뭇잎|리본|안경|리버시 돌|바둑돌|주사위|왕장|나이트|왕관|천사 링|별|메달',
+      bp: '무지|도트|스트라이프|체크|바둑판|물결|별하늘|하트|헥스|백개먼|벚꽃|그라데이션', bc: '크림|민트|하늘|로즈|라일락|밤|노을|나뭇결|골드', fr: '없음|화이트|코랄|스카이|민트|캔디|체크|무지개|월계관|골드|아틀라스',
+      icon: (c, a) => a + ' ' + c, bg: (p, c) => c + ' ' + p },
+    es: { cr: 'Gato|Oso|Conejito|Rana|Pingüino|Búho|Zorro|Panda|Pollito|Robot|Fantasma|Slime|Pulpo|Dragón', ac: 'con hoja|con lazo|con gafas|con ficha|con piedra de go|con dado|con rey de shogi|con caballo|con corona|con aureola|con estrella|con medalla',
+      bp: 'Liso|Lunares|Rayas|Cuadros|Tablero de go|Olas|Estrellas|Corazones|Hexágonos|Backgammon|Sakura|Degradado', bc: 'crema|menta|cielo|rosa|lila|noche|atardecer|madera|oro', fr: 'Ninguno|Blanco|Coral|Cielo|Menta|Caramelo|Cuadros|Arcoíris|Laurel|Oro|Atlas',
+      icon: (c, a) => c + ' ' + a, bg: (p, c) => p + ' color ' + c },
+    fr: { cr: 'Chat|Ours|Lapin|Grenouille|Pingouin|Hibou|Renard|Panda|Poussin|Robot|Fantôme|Slime|Pieuvre|Dragon', ac: 'à la feuille|au nœud|à lunettes|au pion|à la pierre de go|au dé|au roi de shogi|au cavalier|à la couronne|à l’auréole|à l’étoile|à la médaille',
+      bp: 'Uni|Pois|Rayures|Damier|Goban|Vagues|Étoiles|Cœurs|Hexagones|Backgammon|Sakura|Dégradé', bc: 'crème|menthe|ciel|rose|lilas|nuit|couchant|bois|or', fr: 'Aucun|Blanc|Corail|Ciel|Menthe|Bonbon|Damier|Arc-en-ciel|Laurier|Or|Atlas',
+      icon: (c, a) => c + ' ' + a, bg: (p, c) => p + ' ' + c },
+    pt: { cr: 'Gato|Urso|Coelhinho|Sapo|Pinguim|Coruja|Raposa|Panda|Pintinho|Robô|Fantasma|Slime|Polvo|Dragão', ac: 'com folha|com laço|com óculos|com peça|com pedra de go|com dado|com rei de shogi|com cavalo|com coroa|com auréola|com estrela|com medalha',
+      bp: 'Liso|Bolinhas|Listras|Xadrez|Goban|Ondas|Estrelas|Corações|Hexágonos|Gamão|Sakura|Degradê', bc: 'creme|menta|céu|rosa|lilás|noite|pôr do sol|madeira|ouro', fr: 'Nenhuma|Branca|Coral|Céu|Menta|Doce|Xadrez|Arco-íris|Louros|Ouro|Atlas',
+      icon: (c, a) => c + ' ' + a, bg: (p, c) => p + ' cor de ' + c },
+    de: { cr: 'Katze|Bär|Häschen|Frosch|Pinguin|Eule|Fuchs|Panda|Küken|Roboter|Gespenst|Schleimi|Krake|Drache', ac: 'mit Blatt|mit Schleife|mit Brille|mit Spielstein|mit Go-Stein|mit Würfel|mit Shogi-König|mit Springer|mit Krone|mit Heiligenschein|mit Stern|mit Medaille',
+      bp: 'Uni|Punkte|Streifen|Karo|Goban|Wellen|Sterne|Herzen|Waben|Backgammon|Sakura|Verlauf', bc: 'Creme|Minz|Himmel|Rosé|Flieder|Nacht|Abendrot|Holz|Gold', fr: 'Keiner|Weiß|Koralle|Himmel|Minze|Bonbon|Karo|Regenbogen|Lorbeer|Gold|Atlas',
+      icon: (c, a) => c + ' ' + a, bg: (p, c) => c + '-' + p },
+    hi: { cr: 'बिल्ली|भालू|खरगोश|मेंढक|पेंगुइन|उल्लू|लोमड़ी|पांडा|चूज़ा|रोबोट|भूत|स्लाइम|ऑक्टोपस|ड्रैगन', ac: 'पत्ती|रिबन|चश्मे|गोटी|गो-पत्थर|पासे|शोगी राजा|घोड़े|मुकुट|प्रभामंडल|सितारे|मेडल',
+      bp: 'सादा|बिंदियाँ|धारियाँ|चेकर|गो बोर्ड|लहरें|तारे|दिल|षट्कोण|बैकगैमन|साकुरा|ग्रेडिएंट', bc: 'क्रीम|मिंट|आसमानी|गुलाबी|बकाइनी|रात|शाम|लकड़ी|सुनहरा', fr: 'कोई नहीं|सफ़ेद|कोरल|आसमानी|पुदीना|कैंडी|चेकर|इंद्रधनुष|लॉरेल|सुनहरा|एटलस',
+      icon: (c, a, k) => a + (k === 'cat' || k === 'fox' ? ' वाली ' : ' वाला ') + c, bg: (p, c) => p + ' (' + c + ')' },
+    ar: { cr: 'قطة|دب|أرنب|ضفدع|بطريق|بومة|ثعلب|باندا|كتكوت|روبوت|شبح|سلايم|أخطبوط|تنين', ac: 'الورقة|الشريطة|النظارة|القطعة|حجر الغو|النرد|ملك الشوغي|الحصان|التاج|الهالة|النجمة|الميدالية',
+      bp: 'سادة|نقاط|خطوط|مربعات|رقعة غو|أمواج|نجوم|قلوب|سداسيات|طاولة الزهر|ساكورا|تدرّج', bc: 'الكريم|النعناع|السماء|الورد|الليلك|الليل|الغروب|الخشب|الذهب', fr: 'بلا|أبيض|مرجاني|سماوي|نعناعي|حلوى|مربعات|قوس قزح|إكليل غار|ذهبي|أطلس',
+      icon: (c, a) => c + ' ب' + a, bg: (p, c) => p + ' بلون ' + c },
+  };
+  Object.keys(NAMES).forEach(l => {
+    const N = NAMES[l], tab = (keys, s) => Object.fromEntries(s.split('|').map((v, i) => [keys[i], v]));
+    const cr = tab(CRK, N.cr), ac = tab(ACK, N.ac), bp = tab(BPK, N.bp), bc = tab(BCK, N.bc), fr = tab(FRK, N.fr);
+    items.forEach(it => {
+      const d = it.d;
+      it.name[l] = it.kind === 'icon' ? (d.ac === 'none' ? cr[d.cr] : N.icon(cr[d.cr], ac[d.ac], d.cr))
+        : it.kind === 'bg' ? N.bg(bp[d.p], bc[d.c]) : fr[d.k];
+    });
+  });
   const map = Object.fromEntries(items.map(it => [it.id, it]));
 
   // starter set everyone owns

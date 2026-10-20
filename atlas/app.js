@@ -12,6 +12,7 @@
   const t = (k, v) => { let s = (I[lang] && I[lang][k]) ?? I.en[k] ?? I.ja[k] ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
   const gname = g => g.name[lang] || g.name.en;
   const iname = it => it.name[lang] || it.name.en;
+  const utx = u => window.Atlas && Atlas.updText ? Atlas.updText(u, lang) : (lang === 'ja' ? u[2] : u[3]);   // changelog line in the current language
   const fmtDate = d => { try { return new Date(d + 'T00:00:00').toLocaleDateString(lang, { month: 'short', day: 'numeric' }); } catch (e) { return d; } };
 
   /* ---------- state ---------- */
@@ -70,7 +71,7 @@
       <div class="top">${g3(g)}
         <div style="min-width:0"><h4>${esc(gname(g))}</h4><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      ${withUpd && u ? `<div class="upd"><time>${fmtDate(u[0])}</time>${esc(lang === 'ja' ? u[2] : u[3])}</div>` : ''}
+      ${withUpd && u ? `<div class="upd"><time>${fmtDate(u[0])}</time>${esc(utx(u))}</div>` : ''}
       <div class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 4).map(tagHtml).join('')}</div>
       <div class="ft"><small style="font-weight:700;color:var(--ink2);font-size:12px">${extra.join(' · ') || (r.touched ? '' : t('pg.none'))}</small><span class="btn sm">${t('play')}</span></div>
     </a>`;
@@ -212,7 +213,7 @@
     const seen = new Set(), ups = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1]));
     $('updRow').innerHTML = ups.map(u => { const g = A_.GAMES.find(x => x.id === u[1]);
       return `<button class="ut" data-g="${g.id}" style="--c:${g.color}"><span class="pan"><span class="new">${A_.badges(g).slice(0, 1).map(badgeHtml).join('')}</span><span class="dt">${fmtDate(u[0])}</span>${artImg(g)}</span>
-        <span class="tx"><b>${esc(gname(g))}</b><p>${esc(lang === 'ja' ? u[2] : u[3])}</p></span></button>`; }).join('');
+        <span class="tx"><b>${esc(gname(g))}</b><p>${esc(utx(u))}</p></span></button>`; }).join('');
     $('iconGrid').innerHTML = A_.byUpdate().map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
         <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
