@@ -26,7 +26,7 @@
 // The FIRST page of every tour is an intro page built with RuleTour.intro(...) (history / how to win / culture).
 //   tour.open(i)  tour.render()  tour.stop()  tour.page  tour.visible()
 //
-// api (inside setup): board, ok(msg), ng(msg, {reset=true, delay=2400}), say(msg, cls), done(), reset(),
+// api (inside setup): board, ok(msg, {next, delay}) — ✓ then auto-advance to the next page after ~1.8 s, next(delay), ng(msg, {reset=true, delay=2400}), say(msg, cls), done(), reset(),
 //   alive() (false once the page changed), sleep(ms) (resolves only while alive), timer(fn, ms), watch() (shows "watch…"),
 //   setTask(html)
 (function () {
@@ -161,7 +161,15 @@ function create(o) {
       say(msg, cls) { st.msg = msg || ''; st.cls = cls || ''; drawTask(); },
       setTask(html) { st.extra = html || ''; drawTask(); },
       watch() { st.msg = esc(tx('watch')); st.cls = ''; drawTask(); },
-      ok(msg) { if (!alive()) return; st.done = true; st.msg = msg || esc(tx('ok')); st.cls = 'ok'; mark(P.id); drawTask(); if (o.sound) o.sound('ok'); },
+      // correct: mark, show ✓, then move on to the next page automatically (common spec).
+      // opt.next === false keeps the page (e.g. an animation still has to play: call api.next() when it is done);
+      // opt.delay changes the wait (default 1800 ms, or o.nextDelay).
+      ok(msg, opt) {
+        if (!alive()) return; opt = opt || {};
+        st.done = true; st.msg = msg || esc(tx('ok')); st.cls = 'ok'; mark(P.id); drawTask(); if (o.sound) o.sound('ok');
+        if (opt.next !== false && o.autoNext !== false) api.next(opt.delay);
+      },
+      next(delay) { api.timer(() => go(tour.page + 1), delay == null ? (o.nextDelay || 1800) : delay); },
       done() { if (!alive()) return; st.done = true; mark(P.id); drawTask(); },
       ng(msg, opt) {
         if (!alive()) return; opt = opt || {};
