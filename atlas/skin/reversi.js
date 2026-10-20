@@ -16,7 +16,7 @@
 
   /* ---------- 3D table behind the page ---------- */
   const host = document.createElement('div'); host.id = 'atlasGL'; document.body.prepend(host);
-  try { T3.mount(host, { plain: true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); return; }
+  try { T3.mount(host, { plain: true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); if (window.AtlasLoading) AtlasLoading.hide(); return; }
   const board = T3.MODELS.reversi(true), S = board.userData.S, Y = board.userData.top;
   T3.show('reversi', board);
   const boardDom = document.getElementById('board');
@@ -131,10 +131,12 @@
     if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(fit)).observe(boardDom);
     setTimeout(fit, 200); setTimeout(fit, 1200);
   })();
+  // the board is drawn and the game is set up → lift the "loading" overlay (after a couple of rendered frames)
+  function ready() { const f = () => { if (window.AtlasLoading) AtlasLoading.hide(); }; requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(f, 350))); }
   /* ---------- opened from the portal with a level / side: set up the new-game dialog and start right away ---------- */
   (function autoStart() {
     const q = new URLSearchParams(location.search), lv = +q.get('lv'), side = +q.get('side');
-    if (!lv && !side) return;
+    if (!lv && !side) { ready(); return; }
     let tries = 0;
     const go = () => {
       if (typeof openNew !== 'function' || typeof draft !== 'object' || !document.getElementById('btnStart')) { if (++tries < 40) setTimeout(go, 150); return; }
@@ -144,6 +146,7 @@
         if (side === 1 || side === 2) draft.color = side;
         segSync(); document.getElementById('btnStart').click();
       } catch (e) {}
+      ready();
       q.delete('lv'); q.delete('side'); history.replaceState(null, '', location.pathname + '?' + q.toString() + location.hash);   // a reload doesn't restart
     };
     setTimeout(go, 400);

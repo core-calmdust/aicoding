@@ -1,0 +1,23 @@
+/* "よみこみちゅう" — shared by the portal (leaving for a game) and the skinned game page (until the 3D board is up) */
+.atlas-load{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;align-content:center;gap:18px;background:#fff6e2 radial-gradient(circle at 2px 2px,rgba(224,154,0,.16) 1.6px,transparent 2px) 0 0/22px 22px;transition:opacity .45s ease;animation:alIn .25s ease both;font-family:'Zen Maru Gothic','Fredoka',system-ui,sans-serif}
+.atlas-load.out{opacity:0;pointer-events:none}
+.atlas-load .stage{position:relative;width:120px;height:120px;perspective:400px}
+.atlas-load .dk{position:absolute;left:30px;bottom:26px;width:60px;height:60px;transform-style:preserve-3d;animation:alHop .9s cubic-bezier(.4,0,.6,1) infinite}
+.atlas-load .dk i{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;box-shadow:inset 0 -6px 0 rgba(0,0,0,.18)}
+.atlas-load .dk i:first-child{background:radial-gradient(circle at 38% 32%,#5a5f70,#16171b 60%)}
+.atlas-load .dk i:last-child{background:radial-gradient(circle at 38% 32%,#fff,#e9e3d3 65%);transform:rotateY(180deg)}
+.atlas-load .dk i b{position:absolute;left:14px;top:22px;width:32px;height:12px;backface-visibility:hidden}
+.atlas-load .dk i b::before,.atlas-load .dk i b::after{content:'';position:absolute;top:0;width:7px;height:9px;border-radius:50%;background:#fff;animation:alBlink 2.4s infinite}
+.atlas-load .dk i b::before{left:2px}.atlas-load .dk i b::after{right:2px}
+.atlas-load .sh{position:absolute;left:34px;bottom:12px;width:52px;height:12px;border-radius:50%;background:rgba(120,70,0,.18);animation:alShadow .9s cubic-bezier(.4,0,.6,1) infinite}
+.atlas-load .tx{display:flex;gap:1px;font-weight:900;font-size:22px;color:#2b3044;letter-spacing:.06em}
+.atlas-load .tx span{display:inline-block;animation:alWave 1.2s ease-in-out infinite}
+.atlas-load .dots{display:flex;gap:8px}
+.atlas-load .dots i{width:10px;height:10px;border-radius:50%;background:#ffc928;animation:alDot 1.2s ease-in-out infinite}
+.atlas-load .dots i:nth-child(2){background:#ff7fbe;animation-delay:.15s}.atlas-load .dots i:nth-child(3){background:#36b4ff;animation-delay:.3s}
+@keyframes alHop{0%,100%{transform:translateY(0) rotateY(0) scale(1.12,.86)}12%{transform:translateY(-6px) rotateY(0) scale(.94,1.08)}50%{transform:translateY(-48px) rotateY(180deg) scale(1)}88%{transform:translateY(-6px) rotateY(360deg) scale(.96,1.05)}}
+@keyframes alShadow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.55);opacity:.45}}
+@keyframes alWave{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+@keyframes alDot{0%,100%{transform:scale(.6);opacity:.5}50%{transform:scale(1);opacity:1}}
+@keyframes alBlink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes alIn{from{opacity:0}}

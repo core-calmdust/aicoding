@@ -372,7 +372,8 @@
       const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1;
       pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       $('bv').classList.add('playing'); Table3D.play(true);
-      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (lv ? '&lv=' + lv : '') + '&side=' + side; }, 450);
+      if (window.AtlasLoading) setTimeout(() => AtlasLoading.show(lang), 120);
+      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (lv ? '&lv=' + lv : '') + '&side=' + side; }, 420);
       return;
     }
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1;
@@ -393,6 +394,7 @@
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
   function stopSession() { if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+  addEventListener('pageshow', e => { if (e.persisted && window.AtlasLoading) AtlasLoading.hide(); });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   function startRules() {
     const g = bvGame; stopSession();
