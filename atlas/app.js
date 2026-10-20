@@ -361,6 +361,8 @@
       setMode(mode);
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
+    // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
+    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const tg = $('bvi').querySelector('.tags'); if (tg) { $('bvRules').classList.add('sm'); tg.appendChild($('bvRules')); } }
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
       const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
         $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
