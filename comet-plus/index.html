@@ -4310,8 +4310,8 @@ function makeShipModel() {
         geo.rotateX(-Math.PI / 2); geo.translate(0, y0, 0); return geo;
     };
     // ユーザー設定画のとおり: メインユニット（長い機首＋前へ伸びる刃）、左右のウィングポッド、後部の推進ユニット
-    armor.color.setHex(0x34404f); plate.color.setHex(0x55677d);
-    const dark = new StdMat({ color: 0x232b36, emissive: 0x0a0e14, emissiveIntensity: 0.4, flatShading: true, metalness: 0.6, roughness: 0.4 });
+    armor.color.setHex(0x45607a); plate.color.setHex(0x6f8ca6); // 設定画に合わせた明るめのスチールブルー
+    const dark = new StdMat({ color: 0x2a3645, emissive: 0x0a0e14, emissiveIntensity: 0.4, flatShading: true, metalness: 0.6, roughness: 0.4 });
     const pink = new THREE.MeshBasicMaterial({ color: 0xff7a9a });
     // 断面（六角形など）をz方向に並べてつないだ立体。st: [z, 幅, 高さ, 上下オフセット, 左右オフセット]
     const loft = (st, n = 6, rot = Math.PI / 6) => {
@@ -4334,18 +4334,15 @@ function makeShipModel() {
     part(loft([[-18, 1.6, 0.8, 2.2], [-12, 3, 1.4, 2.6], [-2, 4.6, 1.8, 3], [10, 4.6, 1.8, 3.2], [15, 3.2, 1.4, 3]]), plate);                                        // 背中の装甲（尾根）
     part(loft([[-35, 2.4, 1.3, 0.9, 1.4], [-32.5, 3.4, 2, 1, 1.7], [-26, 3.8, 2.3, 1, 2], [-18, 4.2, 2.6, 1.1, 2.4], [-6, 4.4, 2.8, 1.2, 3], [4, 4, 2.6, 1.2, 3.4]]), plate);   // 機首を作る右のパーツ（2つのパーツで先端を構成）
     part(loft(mir([[-35, 2.4, 1.3, 0.9, 1.4], [-32.5, 3.4, 2, 1, 1.7], [-26, 3.8, 2.3, 1, 2], [-18, 4.2, 2.6, 1.1, 2.4], [-6, 4.4, 2.8, 1.2, 3], [4, 4, 2.6, 1.2, 3.4]])), plate);   // 機首を作る左のパーツ
-    box(0.6, 0.5, 18, 0, 2.1, -23, glowC, false); // 2つのパーツの合わせ目の光
+    box(0.6, 0.5, 18, 0, 2.1, -23, dark, false); // 2つのパーツの合わせ目
     [-1, 1].forEach(sx => {
         part(loft([[-20, 1.8, 1.1, -0.4, sx * 6.6], [-12, 2.8, 1.6, -0.2, sx * 7.2], [-1, 3.6, 2.4, 0, sx * 7.4], [8, 3.6, 2.8, 0.3, sx * 7.2], [12, 2.6, 2.2, 0.3, sx * 6.8]]), armor); // 外側の刃（肩）
         part(loft([[-4, 0.4, 0.4, 2.2, sx * 4.2], [2, 3, 2.4, 2.4, sx * 4.4], [12, 3.6, 2.8, 2.4, sx * 4.4], [16, 2.4, 2, 2.2, sx * 4]]), dark);                          // 肩の厚い装甲
         box(0.7, 0.5, 5, sx * 2.6, 3.9, 6, pink, false);                                                                                                               // ピンクのアクセント
         box(1.4, 0.5, 2.2, sx * 4.4, 3.7, 9.5, pink, false);
-        box(0.5, 0.5, 9, sx * 6.2, 1.6, -6, glowC, false);                                                                                                            // 刃の付け根のシアン
+        box(0.5, 0.5, 6, sx * 6.2, 1.6, 2, glowC, false);                                                                                                            // 刃の付け根のシアン
     });
-    // 背中のシアンの発光パネル（前向きの矢じり形）と前面の吸気口の光
-    { const sh = new THREE.Shape(); sh.moveTo(0, -9); sh.lineTo(2.2, -3); sh.lineTo(1.4, 3); sh.lineTo(-1.4, 3); sh.lineTo(-2.2, -3); sh.lineTo(0, -9);
-      const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.5, bevelEnabled: false }); geo.rotateX(-Math.PI / 2); geo.translate(0, 4.15, -4); part(geo, glowC, g, false); }
-    box(3.4, 1.2, 1.2, 0, 1.2, -13.5, glowC, false);
+    // 中心のシアンのパネルは当たり判定の点滅ドットと重なるので置かない
 
     // ---- 後部: 左右2枚の羽と、その間から噴射する推進ユニット ----
     [-1, 1].forEach(sx => {
@@ -4369,13 +4366,13 @@ function makeShipModel() {
     [-1, 1].forEach(sx => {
         const pod = new THREE.Group();
         part(loft([[-25, 2.8, 2.2, 0.5], [-22, 4.2, 3.2, 0.4], [-10, 5.8, 4.6, 0], [4, 7.6, 5.8, 0], [12, 8.4, 6.2, -0.2], [17, 6.4, 4.6, -0.4]]), armor, pod);          // 本体（先端は尖らせず面取り、後ろが太い）
-        part(loft([[-21, 2.2, 0.8, 2.6], [-14, 4, 1.2, 3.2], [-2, 5.2, 1.4, 3.4], [9, 5.2, 1.4, 3.4], [13, 3.6, 1, 3.1]]), plate, pod);                            // 上面の装甲板
-        part(loft([[-15, 1, 1.8, 0, sx * 3.6], [-8, 1.6, 3, 0, sx * 4], [6, 1.8, 3.6, 0, sx * 4.2], [12, 1.4, 3, -0.2, sx * 3.8]]), dark, pod);                  // 外側の張り出し
-        part(loft([[-6, 0.3, 0.3, -2.8], [2, 4, 1.4, -3.2], [12, 4.4, 1.4, -3], [15, 3, 1, -2.6]]), dark, pod);                                                   // 下面の装甲
-        box(3, 0.45, 3.4, 0, 4.2, -11, pink, false, pod);                                                                                                         // ピンクのパネル
-        box(2.4, 0.45, 1.6, 0, 4.15, -6.8, pink, false, pod);
-        box(0.5, 2, 9, sx * 4.9, 0.4, 1, glowC, false, pod);                                                                                                       // 外側のシアンの光
-        box(0.5, 1.2, 5, -sx * 3.9, 0.6, -4, glowC, false, pod);                                                                                                   // 内側のシアンの光
+        part(loft([[-21, 1.2, 0.6, 2.4], [-12, 2.4, 1, 2.9], [0, 4, 1.4, 3.3], [10, 6, 1.6, 3.5], [14.5, 4.6, 1.2, 3.2]]), plate, pod);                            // 上面の装甲板
+        part(loft([[-15, 0.5, 0.8, 0, sx * 3.3], [-6, 1, 1.8, 0, sx * 3.9], [6, 2.2, 4, 0, sx * 4.4], [13, 2, 3.6, -0.2, sx * 4.2]]), dark, pod);                  // 外側の張り出し
+        part(loft([[-6, 0.3, 0.3, -2.6], [2, 3, 1, -3], [12, 5.4, 1.8, -3.1], [16, 3.6, 1.2, -2.7]]), dark, pod);                                                   // 下面の装甲
+        box(1.8, 0.45, 3.6, -sx * 1.2, 4.3, 3, pink, false, pod);                                                                                                 // ピンクのパネル（設定画どおり内側の中ほど）
+        box(1, 0.45, 1.4, -sx * 1.4, 4.3, 6.4, pink, false, pod);
+        box(0.4, 0.4, 3.6, -sx * 2.8, 4.05, -6, dark, false, pod);                                                                                                // パネルの溝
+        box(0.4, 0.4, 5, sx * 2.6, 4.05, 6, dark, false, pod);                                                                                                   // 内側のシアンの光
         pod.position.set(sx * 13.5, 0.4, 3);
         pod.scale.set(1.15, 1.12, 1.05); // 設定画に合わせて大きめ
         pod.rotation.y = sx * 0.17; // 前を中心へすぼめ、後ろへ広がる
