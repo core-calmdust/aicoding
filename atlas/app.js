@@ -363,7 +363,7 @@
     if ($('bvRules')) $('bvRules').onclick = startRules;
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
       const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
-        $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
+        $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
       $('bvLv').onchange = show; show();
     }
     fitStage();

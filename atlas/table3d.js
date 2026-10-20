@@ -361,7 +361,7 @@
     r = Math.max(.001, Math.min(r, Math.min(w, h, d) / 2 - .0005));
     const key = [w, h, d, r, m].map(v => +(+v).toFixed(3)).join(',');
     if (rbCache[key]) return rbCache[key];
-    const TT = T(), n = 2 * m + 1, g = new TT.BoxGeometry(1, 1, 1, n, n, n), P = g.attributes.position, N = g.attributes.normal;
+    const TT = T(), n = 2 * m + 1, g = new TT.BoxGeometry(1, 1, 1, n, n, n), P = g.attributes.position, N = g.attributes.normal, UV = g.attributes.uv;
     const H = [w / 2, h / 2, d / 2], I = H.map(x => x - r);
     const remap = (u, k) => {   // u in [-.5,.5] on the unit grid → corner bands get m steps each, the middle one step
       const i = Math.round((u + .5) * n);
@@ -376,8 +376,14 @@
       let dx = v[0] - q[0], dy = v[1] - q[1], dz = v[2] - q[2], L = Math.hypot(dx, dy, dz);
       if (L < 1e-6) { dx = N.getX(i); dy = N.getY(i); dz = N.getZ(i); L = 1; }
       dx /= L; dy /= L; dz /= L;
-      P.setXYZ(i, q[0] + dx * r, q[1] + dy * r, q[2] + dz * r); N.setXYZ(i, dx, dy, dz);
+      // UVs follow the real position on the face (so a wood map isn't squeezed into the rounded edges)
+      const fx = N.getX(i), fy = N.getY(i), fz = N.getZ(i), px = q[0] + dx * r, py = q[1] + dy * r, pz = q[2] + dz * r;
+      const pl = Math.abs(fx) > .5 ? (fx > 0 ? ['z', 'y', -1, -1] : ['z', 'y', 1, -1]) : Math.abs(fy) > .5 ? (fy > 0 ? ['x', 'z', 1, 1] : ['x', 'z', 1, -1]) : (fz > 0 ? ['x', 'y', 1, -1] : ['x', 'y', -1, -1]);
+      const C = { x: px / w, y: py / h, z: pz / d };
+      UV.setXY(i, .5 + pl[2] * C[pl[0]], .5 - pl[3] * C[pl[1]]);
+      P.setXYZ(i, px, py, pz); N.setXYZ(i, dx, dy, dz);
     }
+    UV.needsUpdate = true;
     P.needsUpdate = N.needsUpdate = true; g.computeBoundingSphere();
     return (rbCache[key] = g);
   }
