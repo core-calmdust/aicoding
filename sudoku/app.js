@@ -1671,7 +1671,8 @@ function applyTod() {
   if (screen === 'theme' && $('#map')) drawMap(curTheme, false);
 }
 function openHelp() {
-  if (TUT) { TUT.open(MODE === 'speed' || (screen === 'spd') ? 'speed' : 'daily', CORE); return; }
+  // ? on the すぴーど tab of the home screen (or in a speed game) opens the speed tutorial
+  if (TUT) { TUT.open(MODE === 'speed' || screen === 'spd' || (screen === 'home' && DB.homeTab === 'spd') ? 'speed' : 'daily', CORE); return; }
   const demo = `<svg viewBox="0 0 120 120"><rect x="38" y="38" width="44" height="44" rx="8" fill="#fff" stroke="var(--acc)" stroke-width="3"/>${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => { const [x, y] = FPOS[d]; return `<circle cx="${60 + x * 38}" cy="${60 + y * 38}" r="14" fill="${d === 3 ? 'var(--acc)' : '#fff'}" stroke="#e6dcef"/><text x="${60 + x * 38}" y="${60 + y * 38}" dy=".36em" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="15" fill="${d === 3 ? '#fff' : 'var(--acc)'}">${d}</text>`; }).join('')}<path d="M60 60L90 30" stroke="var(--acc)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 5"/></svg>`;
   $('#helpBody').innerHTML = t('help.html', { demo: `<div class="flickdemo">${demo}<p>${t('help.flick')}</p></div>` }) + t('help.more', { cost: fmtN(GACHA_COST) });
   openModal('mHelp');

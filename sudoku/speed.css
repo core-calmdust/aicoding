@@ -306,6 +306,7 @@ body.night .ttask.miss{background:#4a2433;color:#ffb3c4}
 .tpad.n4{grid-template-columns:repeat(4,1fr);width:min(100%,300px)}
 .tpad button{height:44px;border-radius:12px;background:var(--surface);box-shadow:0 3px 0 var(--keyedge),0 4px 10px rgba(90,60,120,.08);font-family:var(--num);font-weight:600;font-size:20px;color:var(--vmix)}
 .tpad.n4 button{height:56px;font-size:26px}
+.tpad.off{visibility:hidden;pointer-events:none}
 .tpad button:active{transform:translateY(3px);box-shadow:0 0 0 var(--keyedge)}
 .tpair{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center}
 .tpic.sq{width:130px;height:130px;flex:none}
@@ -428,3 +429,7 @@ body.scompact .skey .kd{top:4px;inset-inline-start:5px;font-size:11px;padding:2p
   .tgims .gi{width:30px;height:30px}.tgims .gi svg{width:22px;height:22px}
   .sheet.tut .tbody{gap:12px}
 }
+
+/* tutorial: one fixed dialog size for every step (the box never grows / shrinks between pages) */
+#mTut .sheet{height:min(92dvh,760px)!important;max-height:none}
+@media (hover:hover) and (pointer:fine) and (min-width:820px){#mTut .sheet{height:min(94dvh,900px)!important}}

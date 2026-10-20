@@ -44,7 +44,8 @@ function miniBoard(host, o) {
       h += `<span class="${cls}" data-i="${i}">${grid[i] || (o.blanks.includes(i) && !o.done ? '?' : '')}</span>`;
     }
     h += '</div>';
-    if (!o.done) h += `<div class="tpad n${N}">${[...Array(N).keys()].map(k => `<button data-d="${k + 1}">${k + 1}</button>`).join('')}</div>`;
+    // the key pad stays in place (hidden once solved) so the stage never changes size
+    h += `<div class="tpad n${N}${o.done ? ' off' : ''}"${o.done ? ' aria-hidden="true"' : ''}>${[...Array(N).keys()].map(k => `<button data-d="${k + 1}">${k + 1}</button>`).join('')}</div>`;
     host.innerHTML = h;
     host.querySelectorAll('.tc.b').forEach(el => el.addEventListener('pointerdown', e => flickStart(e, +el.dataset.i)));
     host.querySelectorAll('.tpad button').forEach(b => b.onclick = () => put(+b.dataset.d));
