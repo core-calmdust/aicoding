@@ -25,8 +25,8 @@
     const boardDom = o.board, GUIDE = o.guide, GUIDE_FALLBACK = o.guideFallback || o.guide;
     let unitPx = 40;
     // a 3D look: the board leans back a little; the DOM board gets the same CSS perspective, so clicks and marks still match
-    const TILT = o.tilt ?? 24, PERSP = o.persp ?? 2.6;
-    document.documentElement.classList.add('atlas-tilt');
+    const TILT = o.tilt ?? 0, PERSP = o.persp ?? 2.6;   // 0 = straight down (a tilt looked odd)
+    if (TILT) document.documentElement.classList.add('atlas-tilt');
     // the board's own (untransformed) box inside the holder — the DOM board is tilted with a CSS 3D transform below
     const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const placeHost = () => {   // the canvas covers the board with a margin for the bezel / legs and the shadow
