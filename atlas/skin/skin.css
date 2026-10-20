@@ -159,3 +159,6 @@ html.atlas-shogi #segPieces{flex-wrap:wrap}
 /* the 3D canvas sits next to the board and scrolls with it; the floor is the page background */
 #atlasGL.local{position:absolute;inset:auto;z-index:-1;background:transparent;pointer-events:none}
 html.atlas-skin body{background:transparent!important}
+/* tilted 3D look: the DOM board leans back with the 3D board; its flat coordinate labels would not line up, so hide them */
+html.atlas-tilt #board{transform-origin:50% 50%;will-change:transform}
+html.atlas-tilt .coords{display:none!important}

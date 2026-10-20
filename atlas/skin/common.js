@@ -24,10 +24,16 @@
     try { T3.mount(host, { plain: o.floor || true, local: true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); if (window.AtlasLoading) AtlasLoading.hide(); return null; }
     const boardDom = o.board, GUIDE = o.guide, GUIDE_FALLBACK = o.guideFallback || o.guide;
     let unitPx = 40;
+    // a 3D look: the board leans back a little; the DOM board gets the same CSS perspective, so clicks and marks still match
+    const TILT = o.tilt ?? 24, PERSP = o.persp ?? 2.6;
+    document.documentElement.classList.add('atlas-tilt');
+    // the board's own (untransformed) box inside the holder — the DOM board is tilted with a CSS 3D transform below
+    const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const placeHost = () => {   // the canvas covers the board with a margin for the bezel / legs and the shadow
-      const r = boardDom.getBoundingClientRect(), h = holder.getBoundingClientRect(); if (!r.width) return;
-      const m = Math.round(Math.max(r.width, r.height) * .26);
-      Object.assign(host.style, { left: (r.left - h.left - m) + 'px', top: (r.top - h.top - m) + 'px', width: (r.width + 2 * m) + 'px', height: (r.height + 2 * m) + 'px' });
+      const b = box(), r = { width: b.w, height: b.h }; if (!b.w) return;
+      const m = Math.round(Math.max(b.w, b.h) * .3);
+      Object.assign(host.style, { left: (b.x - m) + 'px', top: (b.y - m) + 'px', width: (b.w + 2 * m) + 'px', height: (b.h + 2 * m) + 'px' });
+      boardDom.style.transform = TILT ? `perspective(${Math.round(b.h * PERSP)}px) rotateX(${TILT}deg)` : '';
       if (o.units) unitPx = r.height / o.units;
       paintFloor();
     };
@@ -46,7 +52,7 @@
     }
     const alignTo = (units, top) => {
       o.units = units; placeHost();
-      T3.align(() => { const r = boardDom.getBoundingClientRect(), h = host.getBoundingClientRect(); return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height }; }, units, top);
+      T3.align(() => { const b = box(); return { x: b.x - host.offsetLeft, y: b.y - host.offsetTop, w: b.w, h: b.h, tilt: TILT, persp: b.h * PERSP }; }, units, top);
       addEventListener('resize', () => requestAnimationFrame(placeHost));
       if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeHost)).observe(boardDom);
       setTimeout(placeHost, 300); setTimeout(placeHost, 1200);

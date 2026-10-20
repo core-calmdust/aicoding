@@ -827,18 +827,15 @@
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
       const r = alignFn(); if (r && r.w > 10) {
         const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
-        if (cam.fov !== ALIGN_FOV) cam.fov = ALIGN_FOV;   // a wider lens than the showcase: the board's sides show a little (perspective), the field still lands on the DOM rect
-        cam.aspect = W / H; const th = Math.tan(cam.fov * Math.PI / 360);
-        const h = half * H / (r.h * th);   // field half-size → half the DOM board height
-        // the lens sits above a point in front of the board, still looking straight down: the field stays a true rectangle
-        // (so it lands exactly on the DOM board) while the board's near face and edges show in perspective
-        const zs = half * ALIGN_SHIFT, offY = zs / (h * th) * (H / 2);
-        cam.position.set(0, top + h, zs); cam.up.set(0, 0, -1); cam.lookAt(0, top, zs - 0.0001);
-        // render on demand: the skin's board is still most of the time — only when it moved / resized or something is animating
+        // match the DOM board's CSS transform: perspective(P px) rotateX(tilt) about its centre = a pinhole camera P px in front
+        // of the board centre, the field leaning back by `tilt`; the principal point is moved onto the board centre
+        const unit = r.h / ((alignSize || 8.4)), P = r.persp || r.h * 3, tl = (r.tilt || 0) * Math.PI / 180, D = P / unit;
+        cam.fov = 2 * Math.atan(H / 2 / P) * 180 / Math.PI; cam.aspect = W / H;
+        cam.position.set(0, top + D * Math.cos(tl), D * Math.sin(tl)); cam.up.set(0, Math.sin(tl), -Math.cos(tl)); cam.lookAt(0, top, 0);
         const key = r.x.toFixed(1) + ',' + r.y.toFixed(1) + ',' + r.w.toFixed(1) + ',' + r.h.toFixed(1) + ',' + W + ',' + H;
         if (key === lastKey && now > kickUntil && !dirty) return;
-        lastKey = key; if (now > kickUntil) dirty = false;   // one last frame after the animation window, however slow the device
-        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2 + offY), W, H); cam.updateProjectionMatrix();
+        lastKey = key; if (now > kickUntil) dirty = false;
+        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2), W, H); cam.updateProjectionMatrix();
         R.render(scene, cam); return;
       }
     }
