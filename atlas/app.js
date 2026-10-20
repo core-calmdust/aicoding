@@ -367,6 +367,8 @@
       const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
       const more = document.createElement('div'); more.className = 'more';
       [...L.querySelectorAll(':scope > .tags, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
+      { const pg = more.querySelector('.pgl'), rg = L.querySelector('.row .ring');   // the % ring sits right of the progress bars
+        if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); } }
       // the level hint folds away with them (wrapped so its height can animate)
       const lvi = $('bvLvInfo'), D = [more];
       if (lvi) { const w = document.createElement('div'); w.className = 'more lvw'; lvi.before(w); w.appendChild(lvi); D.push(w); }
@@ -396,7 +398,7 @@
       grab.onclick = () => to(fold);
     }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
-    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rg = $('bvi').querySelector('.row .ring'); if (rg) { $('bvRules').classList.add('ph'); rg.after($('bvRules')); } }   // phones: right of the progress ring
+    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones: right of the progress ring
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
       const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
         $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };

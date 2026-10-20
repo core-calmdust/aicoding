@@ -485,7 +485,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .bvi .L .tags{gap:8px}
   .bvi .L .pgl{gap:10px 12px}
 }
-.bvnav{position:absolute;z-index:3;top:calc((100% - var(--bvcard,0px)) / 2);transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(255,253,247,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 6px 16px -8px rgba(80,40,0,.55);display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:opacity .25s,background .2s}
+.bvnav{position:absolute;z-index:3;top:max(calc((100% - var(--bvcard,0px)) / 2), calc(env(safe-area-inset-top) + 112px));transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(255,253,247,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 6px 16px -8px rgba(80,40,0,.55);display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:opacity .25s,background .2s}
 .bvnav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 .bvnav:hover{background:rgba(255,253,247,.9)}.bvnav:active{transform:translateY(-50%) scale(.92)}
 .bvnav.prev{left:max(12px,env(safe-area-inset-left))}.bvnav.next{right:max(12px,env(safe-area-inset-right))}
@@ -500,14 +500,19 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 @media (max-width:819px){
   .bvi .grab{display:flex;justify-content:center;margin:-8px 0 6px;padding:2px 0 6px;cursor:pointer}
   .bvi .grab i{width:44px;height:5px;border-radius:99px;background:#e6d9bd}
-  .bvi .more{overflow:hidden;display:flex;flex-direction:column;gap:12px;will-change:height}
-  .bvi .more.lvw{flex-basis:100%;gap:0}
+  .bvi .L{gap:0!important}
+  .bvi .more{overflow:hidden;display:flex;flex-direction:column;gap:14px;will-change:height}
+  .bvi .more > :first-child{margin-top:14px!important}
+  .bvi .R{margin-top:14px}
+  .bvi .more.lvw{flex-basis:100%;gap:0;margin-top:-14px!important}
   .bvi .more > *{margin:0!important}
   .bvi.fold .L{gap:0}
   .bvi.fold .mnote{min-height:46px!important}
 }
 @media (max-width:819px){
-  .bvi .row .ring{margin-left:auto}
+  .bvi .rulesb.ph{margin-left:auto!important}
+  .bvi .pgrow{display:flex;align-items:center;gap:14px}.bvi .pgrow .pgl{flex:1;min-width:0;margin:0!important}.bvi .pgrow .ring{margin:0!important}
+  .bvi .cols{gap:14px!important}
   .bvi .rulesb.ph{margin-left:0;height:47px;transform:translateY(-1.5px);padding:0 11px;gap:3px}
   .bvi .rulesb.ph span{font-size:15px}.bvi .rulesb.ph b{font-size:12.5px}
   .bvi .row h3{font-size:clamp(17px,5.4vw,22px)}
@@ -619,6 +624,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/shogi.js?v=1"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=47"></script>
+<script src="app.js?v=51"></script>
 </body>
 </html>
