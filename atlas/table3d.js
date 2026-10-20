@@ -549,11 +549,16 @@
     map.anisotropy = bump.anisotropy = 8;
     return (tatamiCache = { map, bump });
   }
+  let localFloor = false;
+  // the floor texture as an image + its size in world units, for a page background that matches the 3D floor
+  function floorImage(kind) { return kind === 'tatami' ? { img: tatamiTex().map.image, w: TAT_W, h: TAT_L } : { img: woodTop('tblR5', '#c08446', '#6a3e1c').image, w: 40, h: 40 }; }
   function buildRoom(scene, plain) {
     const TT = T(), mode = timeOfDay(new Date().getHours()), L = LOOK[mode];
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
-    if (plain === 'tatami') {   // shogi: the board stands on tatami
+    if (plain && localFloor) {   // skin pages: the floor is the page's own CSS background; the canvas only carries the board and its shadow
+      const sc = new TT.Mesh(new TT.PlaneGeometry(200, 200), new TT.ShadowMaterial({ opacity: .32 })); sc.rotation.x = -Math.PI / 2; sc.receiveShadow = true; g.add(sc);
+    } else if (plain === 'tatami') {   // shogi: the board stands on tatami
       const TA = tatamiTex(), mat = M({ map: TA.map, roughness: .78, sheen: new TT.Color(0x3a3a24), bumpScale: .006 });
       mat.bumpMap = TA.bump;
       // mats laid long side vertical; the board stands across the joint of two of them
@@ -633,7 +638,7 @@
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); scene.add(lamp);
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 32, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); scene.add(shade); }
     if (R) R.toneMappingExposure = L.exp * (plain ? .8 : 1);
-    scene.background = new TT.Color(plain === 'tatami' ? '#6f6a40' : plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
+    scene.background = plain && localFloor ? null : new TT.Color(plain === 'tatami' ? '#6f6a40' : plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
     roomMode = mode;
   }
   function mount(container, opts = {}) {
@@ -661,7 +666,7 @@
       const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
       envOK = true;
     } catch (e) {}
-    buildRoom(scene, opts.plain || false);
+    localFloor = !!opts.local; buildRoom(scene, opts.plain || false);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
@@ -830,5 +835,5 @@
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R };
+  window.Table3D = { align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

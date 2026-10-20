@@ -33,7 +33,7 @@
   });
   if (!skin) return;
   T3.show('shogi', board, { still: true });
-  T3.align(() => { const r = boardDom.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }, FH, Y);
+  skin.alignTo(FH, Y);
 
   /* ---------- pieces: renders of the 3D pieces ---------- */
   document.documentElement.classList.add('atlas-shogi');

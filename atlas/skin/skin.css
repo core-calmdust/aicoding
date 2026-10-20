@@ -156,3 +156,6 @@ html.atlas-shogi #segPieces{flex-wrap:wrap}
   html.atlas-skin:not(.atlas-shogi){--board:calc(min(100vw - 24px, var(--vh) - 200px, 900px) / 1.17)!important}
   html.atlas-skin:not(.atlas-shogi) .frame{margin-top:calc(var(--board) * .045)!important;margin-bottom:calc(var(--board) * .045)!important}
 }
+/* the 3D canvas sits next to the board and scrolls with it; the floor is the page background */
+#atlasGL.local{position:absolute;inset:auto;z-index:-1;background:transparent;pointer-events:none}
+html.atlas-skin body{background:transparent!important}

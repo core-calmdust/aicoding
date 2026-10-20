@@ -30,7 +30,7 @@
   });
   if (!skin) return;
   T3.show('reversi', board, { still: true });
-  T3.align(() => { const r = boardDom.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }, S, Y);
+  skin.alignTo(S, Y);
 
   /* ---------- 3D discs mirrored from the page's setDisc() ---------- */
   const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });

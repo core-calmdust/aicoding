@@ -16,9 +16,41 @@
   const BASE = '../atlas/';
   function init(o) {
     const T3 = window.Table3D;
-    const host = document.createElement('div'); host.id = 'atlasGL'; document.body.prepend(host);
-    try { T3.mount(host, { plain: o.floor || true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); if (window.AtlasLoading) AtlasLoading.hide(); return null; }
+    // the canvas lives next to the board and scrolls with it (no per-frame re-alignment while the page scrolls, so no flicker);
+    // the floor beyond it is the page background, painted from the same texture
+    const holder = o.board.parentElement, host = document.createElement('div'); host.id = 'atlasGL'; host.className = 'local';
+    holder.style.isolation = 'isolate'; if (getComputedStyle(holder).position === 'static') holder.style.position = 'relative';
+    holder.prepend(host);
+    try { T3.mount(host, { plain: o.floor || true, local: true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); if (window.AtlasLoading) AtlasLoading.hide(); return null; }
     const boardDom = o.board, GUIDE = o.guide, GUIDE_FALLBACK = o.guideFallback || o.guide;
+    let unitPx = 40;
+    const placeHost = () => {   // the canvas covers the board with a margin for the bezel / legs and the shadow
+      const r = boardDom.getBoundingClientRect(), h = holder.getBoundingClientRect(); if (!r.width) return;
+      const m = Math.round(Math.max(r.width, r.height) * .26);
+      Object.assign(host.style, { left: (r.left - h.left - m) + 'px', top: (r.top - h.top - m) + 'px', width: (r.width + 2 * m) + 'px', height: (r.height + 2 * m) + 'px' });
+      if (o.units) unitPx = r.height / o.units;
+      paintFloor();
+    };
+    let floorURL = null;
+    function paintFloor() {
+      try {
+        const F = T3.floorImage(o.floor === 'tatami' ? 'tatami' : 'wood'); if (!F) return;
+        if (!floorURL) floorURL = F.img.toDataURL('image/jpeg', .86);
+        const de = document.documentElement.style;
+        de.setProperty('background-image', `linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL}")`);
+        de.setProperty('background-size', `auto, ${Math.round(F.w * unitPx)}px ${Math.round(F.h * unitPx)}px`);
+        de.setProperty('background-repeat', 'repeat'); de.setProperty('background-attachment', 'scroll');
+        const r = boardDom.getBoundingClientRect();   // the tile grid is centred on the board, like the 3D floor
+        de.setProperty('background-position', `0 0, ${Math.round(r.left + scrollX + r.width / 2 - F.w * unitPx / 2)}px ${Math.round(r.top + scrollY + r.height / 2 - F.h * unitPx / 2)}px`);
+      } catch (e) {}
+    }
+    const alignTo = (units, top) => {
+      o.units = units; placeHost();
+      T3.align(() => { const r = boardDom.getBoundingClientRect(), h = host.getBoundingClientRect(); return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height }; }, units, top);
+      addEventListener('resize', () => requestAnimationFrame(placeHost));
+      if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeHost)).observe(boardDom);
+      setTimeout(placeHost, 300); setTimeout(placeHost, 1200);
+    };
 
   /* ---------- guide character: lesson / puzzle text as speech bubbles ---------- */
   const guide = new Image(); guide.src = GUIDE; guide.onerror = () => { guide.src = GUIDE_FALLBACK; };
@@ -148,7 +180,7 @@
     const coins = () => { try { const A = window.Atlas; if (!A) return; const W = A.load(); bar.querySelector('.coinN').textContent = A.coins(W, A.achievements(A.allProgress(), W)).balance.toLocaleString(); } catch (e) {} };
     setTimeout(coins, 300); document.addEventListener('visibilitychange', () => { if (!document.hidden) coins(); });
     document.querySelectorAll('a.snd.home, .brand a.series').forEach(a => { a.href = BASE; });
-    return { T3, ready };
+    return { T3, ready, alignTo };
   }
   window.AtlasSkin = { init };
 })();
