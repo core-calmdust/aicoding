@@ -449,8 +449,12 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .lvinfo .meter i:nth-child(1){height:8px}.bvi .lvinfo .meter i:nth-child(2){height:10px}.bvi .lvinfo .meter i:nth-child(3){height:12px}.bvi .lvinfo .meter i:nth-child(4){height:14px}.bvi .lvinfo .meter i:nth-child(5){height:16px}.bvi .lvinfo .meter i:nth-child(6){height:18px}.bvi .lvinfo .meter i:nth-child(7){height:20px}.bvi .lvinfo .meter i:nth-child(8){height:22px}.bvi .lvinfo .meter i:nth-child(9){height:24px}.bvi .lvinfo .meter i:nth-child(10){height:26px}
 
 /* board-viewer card: title + rules button, the two selects on one row, Start and 2D side by side */
-.bvi .tl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.bvi .rulesb{padding:6px 14px;font-size:14px;box-shadow:0 3px 0 var(--line)}
+.bvi .rulesb{flex:none;margin-left:auto;width:52px;height:52px;border-radius:50%;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);display:grid;place-content:center;justify-items:center;gap:0;cursor:pointer;color:var(--ink);padding:0;line-height:1.05}
+.bvi .rulesb span{font-size:17px}.bvi .rulesb b{font-size:10px;font-weight:900;white-space:nowrap}
+.bvi .rulesb:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.bvi .rulesb + .ring{margin-left:0}
+[dir=rtl] .bvi .rulesb{margin-left:0;margin-right:auto}[dir=rtl] .bvi .rulesb + .ring{margin-right:0}
+@media (min-width:900px){.bvi .rulesb{width:64px;height:64px}.bvi .rulesb span{font-size:20px}.bvi .rulesb b{font-size:11.5px}}
 .bvi .opts{flex-wrap:wrap}
 .bvi .opts label{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .bvi .opts label select{flex:1;min-width:0}
@@ -559,6 +563,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="icons3d.js?v=1"></script>
 <script src="games/reversi.js?v=4"></script>
 <script src="rules/reversi.js?v=3"></script>
-<script src="app.js?v=32"></script>
+<script src="app.js?v=33"></script>
 </body>
 </html>
