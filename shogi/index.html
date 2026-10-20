@@ -371,6 +371,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 /* ---------------------------------------------------------------- list dialog: fixed size across tabs, larger text */
 #lessonOverlay .modal{height:calc(var(--vh) - 32px)}
 @media (min-width: 760px){ #lessonOverlay .modal{height:min(900px, calc(var(--vh) - 32px))} }
+/* PC: a wider lesson dialog (all tabs, so its size does not change between tabs) */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){ #lessonOverlay .modal{width:min(1000px, calc(100vw - 64px))} }
 #lessonOverlay .modal:has(> #lessonDoneView:not(.hidden)){height:auto}
 #segLs button{font-size:15px;padding:10px 4px}
 #lessonOverlay h2{font-size:25px}
@@ -1187,7 +1189,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
 <script src="i18n.js?v=20261021hb"></script>
-<script src="rules-i18n.js?v=20261021rt"></script>
+<script src="rules-i18n.js?v=20261021ri"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="engine.js?v=20261021v2"></script>
@@ -1195,7 +1197,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=2"></script>
+<script src="../shared/ruletour.js?v=4"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
 <script src="online.js?v=20261020gt"></script>
 <script>
@@ -2296,9 +2298,12 @@ function clockInit() {
   const c = CLOCKS[game.rated ? RT_CLOCK : settings.clock || 0];
   game.clock = c && settings.mode !== 'watch' ? { main: [c.main, c.main], byo: c.byo, left: [c.main, c.main], byoLeft: c.byo, t0: Date.now(), ply: 0 } : null;
 }
-const clockActive = side => game && game.clock && !game.over && !reviewing && !lesson && !edit && cur === game.moves.length && (settings.mode === 'pvp' || (settings.mode === 'ai' && side === game.human));
+// clock.hold: a game restored when the page opens (or brought back after a lesson) was not started by the player just now —
+// its clock stays still (and silent) until the next move is played, then counts normally (cleared in clockOnMove)
+const clockActive = side => game && game.clock && !game.clock.hold && !game.over && !reviewing && !lesson && !edit && cur === game.moves.length && (settings.mode === 'pvp' || (settings.mode === 'ai' && side === game.human));
 function clockOnMove(side) {
   const c = game && game.clock; if (!c) return;
+  if (c.hold) { delete c.hold; c.byoLeft = c.byo; c.t0 = Date.now(); return; }
   if (clockActive(side)) {
     let el = (Date.now() - c.t0) / 1000;
     if (c.left[side] > 0) { const use = Math.min(el, c.left[side]); c.left[side] -= use; el -= use; }
@@ -2805,11 +2810,14 @@ function bookMove() {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261018ol').then(r => r.json()).then(d => (LESSONS = d)).catch(e => console.warn('lessons unavailable', e));
+// grades flagged rules:true (the finer rules moved out of the rules tutorial) are kept apart from the 段級 ladder (exam, next step):
+// they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
+const lessonsReady = fetch('lessons.json?v=20261021rx').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
 let lsTab = 'lesson';
+const gradeAt = i => i < 0 ? LESSONS.rules[-i - 1] : LESSONS.grades[i];
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
@@ -2939,7 +2947,8 @@ async function openLessons() {
   lessonView('list'); showOverlay('#lessonOverlay');
   $('#lessonList').className = 'lesson-list';
   if (lsTab !== 'rules' && window.ShogiRules && ShogiRules.stop) ShogiRules.stop();   // pending tutorial timers must not redraw another tab
-  if (lsTab === 'rules') { segSel('segLs', 'rules'); ShogiRules.open(); if (window.__rulesOffer) window.__rulesOffer.mark(); return; }
+  if (lsTab === 'rules') { segSel('segLs', 'rules'); ShogiRules.open(0);   // every entry starts at the intro page
+ if (window.__rulesOffer) window.__rulesOffer.mark(); return; }
   if (lsTab === 'tsume') { openTsumeList(); return; }
   if (lsTab === 'open') { openOpenList(); return; }
   segSel('segLs', 'lesson');
@@ -2951,7 +2960,12 @@ async function openLessons() {
   }).join('');
   const ex = exprog ? `<span class="st clear">${t('ex.best', { g: L(LESSONS.grades[exprog.best].grade) })}</span>` : `<span class="st">${t('ls.new')}</span>`;
   const exam = `<button class="lesson-item" data-exam="1" style="border-color:rgba(201,169,97,.55)"><span class="no" style="font-size:13px">${t('ex.tag')}</span><span class="tx"><b>${t('ex.title')}</b><small>${t('ex.desc', { n: EXAM_N })}</small></span>${ex}</button>`;
-  $('#lessonList').innerHTML = exam + list + (LESSONS.credit ? `<p class="ls-credit">${L(LESSONS.credit)}</p>` : '');
+  const rx = (LESSONS.rules || []).map((g, j) => {
+    const pr = lprog[g.id], i = -j - 1;
+    const st = pr && pr.pass ? `<span class="st clear">✓ ${t('ls.clear')}<br>${t('ls.pts', { p: pr.best })}</span>` : pr ? `<span class="st">${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
+    return `<p class="ls-gh">${L(g.head)}</p><button class="lesson-item" data-i="${i}"><span class="no" style="font-size:13px">${L(g.grade)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
+  }).join('');
+  $('#lessonList').innerHTML = exam + list + rx + (LESSONS.credit ? `<p class="ls-credit">${L(LESSONS.credit)}</p>` : '');
 }
 function lessonView(v) { ['list', 'grid', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
 $('#lessonList').onclick = e => {
@@ -3132,8 +3146,8 @@ $('#lsPlayHere').onclick = () => {
 };
 function openIntro(i) {
   openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
-  introIdx = i; const g = LESSONS.grades[i];
-  $('#liStep').textContent = `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
+  introIdx = i; const g = gradeAt(i);
+  $('#liStep').textContent = i < 0 ? L(g.head) : `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
   $('#liTitle').textContent = L(g.title);
   $('#liBody').innerHTML = (g.intro[LANG] || g.intro.en || g.intro.ja).map(p => `<p>${p}</p>`).join('') + (L(g.note) ? `<p class="note">${L(g.note)}</p>` : '');
   lessonView('intro');
@@ -3143,7 +3157,7 @@ $('#btnLessonBack').onclick = () => { if (openChoiceIdx >= 0) lsTab = 'open'; op
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLesson').onclick = () => { lsTab = 'lesson'; openLessons(); };
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
-// first-time banner in the new-game dialog → illustrated rules (the Rules tab of the lesson dialog)
+// first-time banner in the new-game dialog → the rules tutorial (the Rules tab of the lesson dialog)
 if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > tsume > resign) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnTsume', '#btnResign'], rules: () => { lsTab = 'rules'; openLessons(); }, lang: () => LANG }) : null;
@@ -3151,7 +3165,7 @@ if (HB) HB.onChange(() => { if (game) renderInfo(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitLesson(); };
 $('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lesson && lesson.exam) startExam(); else if (lesson && lesson.opening) startOpening(lesson.gi); else startLesson(lesson ? lesson.gi : introIdx); };
-$('#btnLessonNextStep').onclick = () => { const n = Math.min(LESSONS.grades.length - 1, (lesson ? lesson.gi : introIdx) + 1); openIntro(n); };
+$('#btnLessonNextStep').onclick = () => { const n = Math.max(0, Math.min(LESSONS.grades.length - 1, (lesson ? lesson.gi : introIdx) + 1)); openIntro(n); };
 
 const PTS = 20, HINT_PEN = 4, PASS_RATE = 0.75;
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -3193,12 +3207,12 @@ function examResult() {
 }
 function startLesson(gi) {
   busyToken++; cancelAI(); cancelAna();
-  const g = LESSONS.grades[gi];
+  const g = gradeAt(gi);
   if (!g.problems.length) { toast('—'); return; }
   // like the reversi lessons: mostly standard problems plus one or two "exception" problems
   const std = shuffle(g.problems.filter(p => !p.trap)), trap = shuffle(g.problems.filter(p => p.trap));
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
-  const probs = shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);
+  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);   // the rules lesson: every problem, in order
   lesson = { gi, g, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
@@ -3253,13 +3267,13 @@ function renderLesson0() {
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   } else {
-    $('#lsStep').textContent = `STEP ${lesson.gi + 1} ・ ${L(g.grade)} ・ ${lesson.k + 1}/${lesson.probs.length}`;
+    $('#lsStep').textContent = `${lesson.gi < 0 ? L(g.head) : `STEP ${lesson.gi + 1} ・ ${L(g.grade)}`} ・ ${lesson.k + 1}/${lesson.probs.length}`;
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   }
   const side = pr.sfen.split(' ')[1] === 'w' ? 1 : 0;
   const tag = pr.kind === 'tsume' ? t('mateIn', { n: pr.n }) : '';
-  $('#lsPrompt').innerHTML = `${tag ? `<span class="tag">${tag}</span>` : ''}<b>${cname(side)}</b> — ${L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<br><span style="font-size:12px;color:var(--dim)">${t('ts.conv')}</span>` : ''}`;
+  $('#lsPrompt').innerHTML = `${tag ? `<span class="tag">${tag}</span>` : ''}<b>${cname(side)}</b> — ${L(pr.q) || L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<br><span style="font-size:12px;color:var(--dim)">${t('ts.conv')}</span>` : ''}`;
   $('#lsFb').innerHTML = lesson.fbHtml || '';
   if (lesson.retry) { $('#lsHint').textContent = t('ts.retry'); $('#lsHint').disabled = false; $('#lsNext').textContent = t('ls.answer'); $('#lsQuit').textContent = t('ls.quit'); return; }
   $('#lsHint').textContent = lesson.answered ? t('ls.answer') : t('ls.hint');
@@ -3498,7 +3512,7 @@ function finishLesson() {
   let best = null; LESSONS.grades.forEach(x => { if (lprog[x.id] && lprog[x.id].pass) best = x; });
   $('#ldRank').textContent = best ? t('ls.progress', { g: L(best.grade) }) : '';
   $('#ldRank').classList.toggle('hidden', !best);
-  $('#btnLessonNextStep').classList.toggle('hidden', lesson.gi >= LESSONS.grades.length - 1);
+  $('#btnLessonNextStep').classList.toggle('hidden', lesson.gi < 0 || lesson.gi >= LESSONS.grades.length - 1);
   lessonView('done'); showOverlay('#lessonOverlay');
 }
 // leave a lesson and restore the previous game
@@ -3508,7 +3522,7 @@ function exitLesson(silent) {
   if (!lesson) return;
   lesson = null; document.body.classList.remove('in-lesson'); stSync();
   if (silent) return;
-  if (saved) { game = saved; cur = game.moves.length; reviewing = false; flip = settings.mode === 'ai' && game.human === 1; refresh(false); }
+  if (saved) { game = saved; if (game.clock && !game.rated) { game.clock.hold = true; game.clock.t0 = Date.now(); } cur = game.moves.length; reviewing = false; flip = settings.mode === 'ai' && game.human === 1; refresh(false); }
   else newGame();
 }
 
@@ -4178,7 +4192,7 @@ applyI18n();
   applyI18n();
   applyLook();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
-  if (had && game.clock && !(game.rated && !game.over)) game.clock.t0 = Date.now();   // rated: the clock keeps running across a reload
+  if (had && game.clock && !(game.rated && !game.over)) { game.clock.t0 = Date.now(); game.clock.hold = true; }   // rated: the clock keeps running across a reload; otherwise it waits for the first move
   if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
   else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); openNewDialog(); }
   const q = new URLSearchParams(location.search);
@@ -4225,7 +4239,7 @@ function olRestoreLocal(sv) {
   if (!sv || !sv.game) { newGame(); return; }
   settings.mode = sv.mode; game = sv.game; cur = game.moves.length; reviewing = false; hintMoves = null; sel = null;
   flip = settings.mode === 'ai' && game.human === 1;
-  if (game.clock) game.clock.t0 = Date.now();
+  if (game.clock) { game.clock.t0 = Date.now(); if (!game.rated) game.clock.hold = true; }
   refresh(false);
 }
 // ====================================================================== online extras (same code in shogi / reversi)
@@ -4439,7 +4453,7 @@ document.addEventListener('keydown', e => {
 });
 if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStart(); }, 1000);
 </script>
-<script src="rules.js?v=20261021rt"></script>
+<script src="rules.js?v=20261021ri"></script>
 <script src="opclass.js?v=1"></script>
 <!-- World Board Game Atlas portal skin: shogi/?skin=atlas — 3D board, guide speech bubbles, portal look (all features kept) -->
 <script>

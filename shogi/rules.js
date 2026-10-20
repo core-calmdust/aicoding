@@ -10,6 +10,7 @@ let uid = 0;
 const TO = 9, NY = 10, NK = 11, NG = 12, UM = 13, RY = 14;
 for (const l in RU_TXT) Object.assign(I18N[l] || (I18N[l] = {}), RU_TXT[l]);
 for (const l in RT_TXT) Object.assign(I18N[l] || (I18N[l] = {}), RT_TXT[l]);
+for (const l in RI_TXT) Object.assign(I18N[l] || (I18N[l] = {}), RI_TXT[l]);
 
 // ---------------------------------------------------------------- drawing helpers
 function pc(tp, col) { const f0 = flip; flip = false; try { return pieceEl(tp | (col ? WF : 0)).outerHTML; } finally { flip = f0; } }
@@ -73,7 +74,9 @@ const CSS = `
 .rtb .rc.can{cursor:pointer}
 .rtb .rc.from{background:linear-gradient(170deg,#bcd9ea,#a6c8de);box-shadow:inset 0 0 0 2px #3c7fb0}
 .rtb .rc.tg::after{content:"";position:absolute;inset:5%;border:3px solid rgba(29,138,87,.9);border-radius:12%;z-index:3;pointer-events:none}
-.rtb .rc.star .rl{color:#b8231a;font-size:calc(var(--cw)*.55)}
+.rtb .rc.rstar .rl{color:#b8231a;font-size:calc(var(--cw)*.55)}
+.rtb .rc > *{pointer-events:none}
+.rtb .rc{touch-action:manipulation}
 .rtb .rc .pc{pointer-events:none}
 .rt-hand{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--line);min-width:calc(var(--cw) + 20px)}
 .rt-hand small{font-size:13px;color:var(--muted);white-space:nowrap}
@@ -95,21 +98,62 @@ const CSS = `
 .rt-pinfo h4{margin:0 0 2px;font-size:14.5px;color:var(--text)}
 html[lang=ar] .rt-pinfo{direction:rtl;text-align:right}
 .rt-wins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin:6px 0 12px}
-.rt-wins .ru-win{display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.5}
+.rt-wins .ru-win{display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.5;padding:8px 12px}
+.rt-wins .ru-win p{font-size:15px;line-height:1.5}.rt-wins .ru-win p b{font-size:16px}
 .rt-wins .ic{flex:none;width:44px;height:44px;display:grid;place-items:center;color:var(--accent)}
 .rt-wins .ic svg{width:40px;height:40px}
 .rt-draw{font-size:13.5px;line-height:1.7;color:var(--muted)}
 html[lang=ar] .rt-wins,html[lang=ar] .rt-draw{direction:rtl}
 @media (max-width: 520px){ .rt-wins{grid-template-columns:minmax(0,1fr)} }
+/* PC: text on the left, a big board on the right (uses the wide dialog); the board area is measured by cwFit */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #lessonOverlay .modal:has(#lessonList.rt-host){display:flex;flex-direction:column}
+  #lessonListView:has(> .rt-host){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  #lessonListView > #lessonList.rt-host{flex:1 1 auto;min-height:0}
+  #lessonList.rt-host .rt:has(> .rt-board){height:100%;display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.35fr);grid-template-rows:auto auto minmax(0,max-content) auto 1fr auto;column-gap:30px;
+    grid-template-areas:"steps steps" "title board" "body board" "task board" ". board" "nav nav"}
+  #lessonList.rt-host .rt:has(> .rt-board) > .rt-steps{grid-area:steps}
+  #lessonList.rt-host .rt:has(> .rt-board) > .rt-title{grid-area:title;text-align:left;margin-top:8px}
+  #lessonList.rt-host .rt:has(> .rt-board) > .rt-body{grid-area:body;min-height:0;overflow-y:auto}
+  #lessonList.rt-host .rt:has(> .rt-board) > .rt-task{grid-area:task;text-align:left;margin-top:14px}
+  #lessonList.rt-host .rt:has(> .rt-board) > .rt-board{grid-area:board;min-height:0;overflow-x:hidden;overflow-y:auto;margin:6px 0 0;align-items:flex-start}
+  #lessonList.rt-host .rt:has(> .rt-board) > .rt-nav{grid-area:nav}
+  html[lang=ar] #lessonList.rt-host .rt:has(> .rt-board) > .rt-title,html[lang=ar] #lessonList.rt-host .rt:has(> .rt-board) > .rt-task{text-align:right}
+  .rt-pinfo{font-size:15.5px}.rt-pinfo h4{font-size:17px}
+  .rt-hand small{font-size:15px}
+  .rt-promo button{font-size:15px}
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (max-height: 760px){
+  .rt h2.rt-title{margin-bottom:4px!important}.rt-steps{margin-bottom:6px!important}.rt-html{margin:4px 0!important}.rt-nav{margin-top:8px!important}.rt-intro{gap:6px;grid-template-columns:repeat(3,minmax(0,1fr))!important}.rt-intro-sec.hist{grid-column:auto!important}.rt-intro-hero img{width:64px!important;height:64px!important}.rt-intro-sec{padding:8px 12px}.rt-intro-sec p{font-size:14px!important;line-height:1.45}.rt-intro-facts span{padding:4px 12px!important}
+  .rt-wins{gap:6px 12px;margin:2px 0 8px}.rt-wins .ru-win{padding:4px 10px}.rt-wins .ic{width:36px;height:36px}.rt-wins .ic svg{width:32px;height:32px}
+  .rt-wins .ru-win p{font-size:14px}.rt-wins .ru-win p b{font-size:15px}
+}
 `;
 if (!document.getElementById('sgRtCss')) { const st = document.createElement('style'); st.id = 'sgRtCss'; st.textContent = CSS; document.head.appendChild(st); }
 
 const host = () => $('#lessonList');
-// cell size: as large as fits the dialog width and (PC) height
-function cwFit(cols, rows, extraW) {
-  const L = host(), W = (L && L.clientWidth) || 320, m = $('#lessonOverlay .modal'), H = m ? m.clientHeight : innerHeight;
+const wide = () => matchMedia('(hover: hover) and (pointer: fine) and (min-width: 820px)').matches;
+// cell size: as large as fits. PC: the measured board area on the right (extraH = rows of buttons / text above or below
+// the board), capped by --rt-bw; phones: the dialog width (and height) as before
+function cwFit(cols, rows, extraW, extraH, el) {
+  const L = host();
+  if (el && wide() && el.clientHeight > 80) {
+    const bw = Math.min(el.clientWidth, parseFloat(getComputedStyle(L.querySelector('.rt') || L).getPropertyValue('--rt-bw')) || 600);
+    const byW = (bw - 8 - (extraW || 0)) / cols, byH = (el.clientHeight - 12 - (extraH || 0)) / (rows * 1.1 + .1);
+    return Math.max(26, Math.min(84, Math.floor(Math.min(byW, byH) * (el._k || 1)) - 1));
+  }
+  const W = (L && L.clientWidth) || 320, m = $('#lessonOverlay .modal'), H = m ? m.clientHeight : innerHeight;
   const byW = (W - 8 - (extraW || 0)) / cols, byH = (H - 470) / (rows * 1.1 + .6);
   return Math.max(24, Math.min(56, Math.floor(Math.min(byW, Math.max(30, byH))) - 1));
+}
+// PC: the board area has a fixed height; if the drawing (board + hand / promotion buttons / piece text) overflows it,
+// shrink the cells once or twice (el._k) — the area keeps its size, so 'Next' never moves out of view
+function overflowFix(el) {
+  if (!wide() || !el.clientHeight) return false;
+  const over = el.scrollHeight - el.clientHeight;
+  if (over <= 2 || (el._n = (el._n || 0) + 1) > 3) { el._n = 0; return false; }
+  el._k = (el._k || 1) * Math.max(.6, (el.clientHeight - 6) / el.scrollHeight);
+  return true;
 }
 const sqXY = s => [s % 9, (s / 9) | 0];
 const pcHtml = code => { const f0 = flip; flip = false; try { return pieceEl(code).outerHTML; } finally { flip = f0; } };
@@ -123,7 +167,7 @@ function play(api, o) {
   const targets = () => !sel ? [] : legal().filter(m => sel.hand ? E.isDrop(m) && E.dropType(m) === sel.hand : !E.isDrop(m) && E.mFrom(m) === sel.sq);
   function draw() {
     if (!api.alive()) return;
-    const cw = cwFit(w, h, o.hand ? 110 : 0), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
+    const cw = cwFit(w, h, o.hand ? 110 : 0, o.zone ? 84 : 0, api.board), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
     let cells = '';
     for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
       const s = y * 9 + x, p = pos.board[s], cls = ['rc'];
@@ -132,7 +176,7 @@ function play(api, o) {
       if (sel && sel.sq === s) cls.push('from');
       if (tset.has(s)) cls.push(p ? 'tg' : 'tgd');
       if ((p && E.colorOf(p) === 0) || tset.has(s) || (sel && sel.hand && !p)) cls.push('can');
-      if (o.star && o.star.includes(s) && !p) cls.push('star');
+      if (o.star && o.star.includes(s) && !p) cls.push('rstar');   // not 'star': that is the main board's dot marker (position:absolute)
       let inner = p ? pcHtml(p) : '';
       if (tset.has(s) && !p) inner += '<i class="rd"></i>';
       if (o.star && o.star.includes(s) && !p) inner += '<b class="rl">★</b>';
@@ -147,6 +191,7 @@ function play(api, o) {
     }
     const pr = promo ? `<div class="rt-promo" style="--cw:${cw}px;--ch:${ch}px">${promo.map((m, i) => `<button type="button" data-pr="${i}"><span class="rh" style="display:block">${pcHtml(pos.board[E.mFrom(m)] + (E.mPromo(m) ? 8 : 0))}</span>${t(E.mPromo(m) ? 'promote.yes' : 'promote.no')}</button>`).join('')}</div>` : '';
     api.board.innerHTML = `<div class="rt-wrap"><div class="ru-row">${hd}${bd}</div>${pr}</div>`;
+    if (overflowFix(api.board)) draw();
   }
   function doMove(m) {
     sel = null; promo = null;
@@ -190,6 +235,7 @@ const winIcons = () => {
   return `<div class="rt-wins">${ic.map((s, i) => `<div class="ru-win"><div class="ic">${s}</div><p>${t('ru.win.' + (i + 1)).replace(/<\/b>\s*[:：]\s*/, '</b><br>')}</p></div>`).join('')}</div><p class="rt-draw">${t('rt.end.draw')}</p>`;
 };
 const PAGES = [
+  { id: 'intro', title: () => t('ri.t'), body: () => '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/shogi.webp', origin: t('ri.origin'), players: t('ri.players'), time: t('ri.time'), history: t('ri.hist'), win: t('ri.win'), culture: t('ri.cult') }) },
   { id: 'move', title: () => t('rt.move.t'), body: () => `<p>${t('rt.move.b')}</p>`, task: () => t('rt.move.task'),
     setup(api) {
       const star = sqAt(5, 4);
@@ -202,11 +248,12 @@ const PAGES = [
       const seen = pcSeen = new Set(); let cur = -1;
       const draw = () => {
         if (!api.alive()) return;
-        const cw = cwFit(5, 5, 0), Wd = (host() && host().clientWidth) || 320, sc = Math.max(22, Math.min(40, Math.floor((Wd - 8) / 8 - 18)));
+        const cw = cwFit(5, 5, 0, 290, api.board), Wd = (host() && host().clientWidth) || 320, sc = Math.max(22, Math.min(40, Math.floor((Wd - 8) / 8 - 18)));
         const P0 = cur >= 0 ? PIECES[cur] : null;
         const bd = P0 ? board(moves(P0[0], 5), cw) : board({ c: 5, r: 5, p: [] }, cw);
         const info = P0 ? `<div class="rt-pinfo"><h4>${t('ru.' + P0[1] + '.t')}</h4>${t('ru.' + P0[1] + '.b')}</div>` : '';
         api.board.innerHTML = `<div class="rt-wrap"><div class="rt-pcs" style="--cw:${sc}px">${PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px;display:block">${pc(tp, 0)}</span></button>`).join('')}</div>${bd}${info}</div>`;
+        if (overflowFix(api.board)) draw();
       };
       api.board.onclick = e => {
         const b = e.target.closest('[data-pi]'); if (!b || !api.alive()) return;
