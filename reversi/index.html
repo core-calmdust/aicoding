@@ -1553,10 +1553,16 @@ function tone(a, t, f, dur, vol, type, out) {
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g).connect(out); o.start(t); o.stop(t + dur + 0.05);
 }
-function sfxCorrect(delay = 0.16) {   // bright two-note "ding-ding" (E6 -> A6) with a soft octave shimmer
+function sfxCorrect(delay = 0.16) {   // quiz-show "ピ〜ンポ〜ン": two ringing bell tones, high then a major third lower, long decays
   const a = sctx(); if (!a) return; const out = sfxOut(a), t = a.currentTime + delay;
-  tone(a, t, 1318.5, 0.35, 0.16, 'sine', out); tone(a, t, 2637, 0.2, 0.025, 'sine', out);
-  tone(a, t + 0.11, 1760, 0.6, 0.18, 'sine', out); tone(a, t + 0.11, 3520, 0.3, 0.03, 'sine', out);
+  const bell = (t0, f, dur, vol) => {
+    tone(a, t0, f, dur, vol, 'sine', out);                 // fundamental
+    tone(a, t0, f * 2, dur * 0.55, vol * 0.22, 'sine', out);  // octave
+    tone(a, t0, f * 3, dur * 0.3, vol * 0.08, 'sine', out);   // twelfth
+    tone(a, t0, f * 4.2, dur * 0.12, vol * 0.05, 'sine', out); // metallic strike
+  };
+  bell(t, 987.77, 1.0, 0.2);          // ピ〜ン (B5)
+  bell(t + 0.32, 783.99, 1.6, 0.22);  // ポ〜ン (G5)
 }
 function sfxClose(delay = 0.16) {      // "almost": one mellow note
   const a = sctx(); if (!a) return; const out = sfxOut(a), t = a.currentTime + delay;
