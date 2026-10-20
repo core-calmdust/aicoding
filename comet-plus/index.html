@@ -4301,7 +4301,7 @@ function makeShipModel() {
     const plate = new StdMat({ color: 0x7a86a4, emissive: 0x182030, emissiveIntensity: 0.4, flatShading: true, metalness: 0.5, roughness: 0.3 });
     const glowC = new THREE.MeshBasicMaterial({ color: 0x5ff6ff });
     const glowP = new THREE.MeshBasicMaterial({ color: 0xff4fa8 });
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16 }); // ポリゴン主体なので縁取りは控えめ
     const add = (geo, mat, edges = true) => { const m = new THREE.Mesh(geo, mat); g.add(m); if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); return m; };
     // 平面の多角形（x, 前後z）を厚みのある板にする
     const slab = (pts, y0, th) => {
@@ -4309,25 +4309,31 @@ function makeShipModel() {
         const geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
         geo.rotateX(-Math.PI / 2); geo.translate(0, y0, 0); return geo;
     };
-    // 双胴のフォーク型: 前へ長く伸びる2本の装甲アーム、前寄りの連結バー、後部の厚い装甲ブロックと、間に光るコア
-    const box = (w, h, d, x, y, z, mat, edges = true, ry = 0) => { const geo = new THREE.BoxGeometry(w, h, d); if (ry) geo.rotateY(ry); geo.translate(x, y, z); return add(geo, mat, edges); };
+    // 双胴のフォーク型: 前へ伸びる2本の装甲アーム（先はややすぼまる）、後部の翼のような装甲、間に光るコア
+    const boxTo = (grp, w, h, d, x, y, z, mat, edges = true, ry = 0) => { const geo = new THREE.BoxGeometry(w, h, d); if (ry) geo.rotateY(ry); geo.translate(x, y, z); const m = new THREE.Mesh(geo, mat); grp.add(m); if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); return m; };
+    const box = (w, h, d, x, y, z, mat, edges = true, ry = 0) => boxTo(g, w, h, d, x, y, z, mat, edges, ry);
     [-1, 1].forEach(sx => {
-        const X = sx * 8;
-        // アーム本体（縦に2枚のフィンが並ぶ形）
-        box(2.6, 7, 30, X - sx * 1.7, 2, -8, armor);
-        box(2.6, 6, 27, X + sx * 1.5, 1.5, -6.5, armor);
-        // 先端の斜めカット
-        const tip = new THREE.ConeGeometry(2.4, 7, 4); tip.rotateX(-Math.PI / 2); tip.rotateZ(Math.PI / 4); tip.scale(1, 1.4, 1); tip.translate(X - sx * 1.7, 2.5, -26);
-        add(tip, plate);
-        // 表面の明るい装甲板と段差
-        box(1.6, 1.2, 12, X - sx * 1.7, 6, -14, plate);
-        box(1.6, 1.2, 8, X + sx * 1.5, 5, -4, plate);
-        // 内側の発光ライン
-        box(0.6, 0.6, 22, X - sx * 3.2, 3, -9, glowC, false);
-        // 後部の厚い装甲ブロック（外側へ張り出す）
-        box(7, 8, 11, X + sx * 1.5, 0.5, 9, armor, true, sx * -0.12);
-        box(4, 2, 8, X + sx * 2.5, 5, 9.5, plate, true, sx * -0.12);
-        box(1.6, 1.6, 2, X + sx * 4.6, 0.5, 3.4, glowP, false); // 前向きの小さな灯
+        const arm = new THREE.Group();
+        // アーム本体（縦に2枚のフィン）
+        boxTo(arm, 2.6, 7, 30, -sx * 1.7, 2, -8, armor);
+        boxTo(arm, 2.6, 6, 27, sx * 1.5, 1.5, -6.5, armor);
+        const tip = new THREE.ConeGeometry(2.4, 7, 4); tip.rotateX(-Math.PI / 2); tip.rotateZ(Math.PI / 4); tip.scale(1, 1.4, 1); tip.translate(-sx * 1.7, 2.5, -26);
+        const tm = new THREE.Mesh(tip, plate); arm.add(tm);
+        boxTo(arm, 1.6, 1.2, 12, -sx * 1.7, 6, -14, plate);
+        boxTo(arm, 1.6, 1.2, 8, sx * 1.5, 5, -4, plate);
+        boxTo(arm, 0.6, 0.6, 22, -sx * 3.2, 3, -9, glowC, false);
+        arm.position.set(sx * 8, 0, 0);
+        arm.rotation.y = sx * 0.09; // 頭の方をすぼめる
+        g.add(arm);
+        // 後部の厚い装甲ブロック
+        box(7, 8, 11, sx * 9.5, 0.5, 9, armor, true, sx * -0.12);
+        box(4, 2, 8, sx * 10.5, 5, 9.5, plate, true, sx * -0.12);
+        // 翼のように左右へ張り出す後部装甲（噴射口のサイド）
+        const wingPts = [[sx * 12, 3], [sx * 25, 11], [sx * 26, 17], [sx * 12, 16]];
+        const wm = new THREE.Mesh(slab(wingPts, -1.5, 3), armor); wm.add(new THREE.LineSegments(new THREE.EdgesGeometry(wm.geometry, 20), edgeMat)); g.add(wm);
+        const wp = new THREE.Mesh(slab([[sx * 14, 6], [sx * 23, 11.5], [sx * 23.5, 15], [sx * 14, 14.5]], 1.5, 1.4), plate); g.add(wp);
+        box(14, 0.7, 0.7, sx * 18.5, 1.8, 7, glowC, false, -sx * Math.atan2(8, 13)); // 前縁の発光ライン
+        box(1.8, 1.8, 3, sx * 25.5, 0, 15, glowP, false); // 翼端の灯
     });
     // 前寄りの連結バーと、後ろの連結フレーム
     box(13, 2.4, 3, 0, 5.5, -16, plate);
