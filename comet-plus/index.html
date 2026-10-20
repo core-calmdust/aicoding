@@ -4295,97 +4295,87 @@ function lineGeo(pairs) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); return g;
 }
 function makeShipModel() {
-    // 角ばった装甲ブロックを十字（X字）にクロスさせた機体。暗い装甲＋発光ライン＋ワイヤーの縁取り
+    // ユーザー設定画（上面図）の輪郭をそのまま3D化。座標は上面図のピクセル(x,y)で指定 → ワールドへ変換
     const g = new THREE.Group();
-    const armor = new StdMat({ color: 0x3a4258, emissive: 0x101828, emissiveIntensity: 0.4, flatShading: true, metalness: 0.6, roughness: 0.35 });
-    const plate = new StdMat({ color: 0x7a86a4, emissive: 0x182030, emissiveIntensity: 0.4, flatShading: true, metalness: 0.5, roughness: 0.3 });
-    const glowC = new THREE.MeshBasicMaterial({ color: 0x5ff6ff });
-    const glowP = new THREE.MeshBasicMaterial({ color: 0xff4fa8 });
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16 }); // ポリゴン主体なので縁取りは控えめ
-    const add = (geo, mat, edges = true) => { const m = new THREE.Mesh(geo, mat); g.add(m); if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat)); return m; };
-    // 平面の多角形（x, 前後z）を厚みのある板にする
-    const slab = (pts, y0, th) => {
-        const sh = new THREE.Shape(); pts.forEach(([x, z], k) => (k ? sh.lineTo(x, -z) : sh.moveTo(x, -z)));
-        const geo = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
-        geo.rotateX(-Math.PI / 2); geo.translate(0, y0, 0); return geo;
+    const K = 0.18, PX = (x) => (x - 142) * K, PZ = (y) => (y - 226) * K;
+    const mk = (c, e = 0x0a1018) => { const m = new StdMat({ color: c, emissive: e, emissiveIntensity: 0.6, flatShading: true, metalness: 0.45, roughness: 0.38 }); m.side = THREE.DoubleSide; return m; };
+    const steel = mk(0x86b2cc, 0x22384a);   // 明るいスチールブルー（機首・ポッド前半）
+    const armor = mk(0x5d8199, 0x162634);   // 中間色
+    const navy = mk(0x2c3a4c, 0x0e1622);              // 濃紺（機首の刃・後ろの羽）
+    const gun = mk(0x4a525e, 0x12161c);               // ガンメタ（ポッド後半）
+    const glowC = new THREE.MeshBasicMaterial({ color: 0x5ff6ff, side: THREE.DoubleSide });
+    const pink = new THREE.MeshBasicMaterial({ color: 0xf2a0b4, side: THREE.DoubleSide });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x0c1218, transparent: true, opacity: 0.4 }); // 設定画の黒い輪郭線
+    const part = (geo, mat, grp = g, edges = true) => { const m = new THREE.Mesh(geo, mat); grp.add(m); if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 18), edgeMat)); return m; };
+    // 多角形の内側へのオフセット
+    const inset = (pts, d) => {
+        let a = 0; pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; });
+        const sgn = a > 0 ? 1 : -1, n = pts.length;
+        return pts.map((p, i) => {
+            const p0 = pts[(i - 1 + n) % n], p1 = pts[(i + 1) % n];
+            const nrm = (u, v) => { const dx = v[0] - u[0], dz = v[1] - u[1], l = Math.hypot(dx, dz) || 1; return [-dz / l * sgn, dx / l * sgn]; };
+            const n1 = nrm(p0, p), n2 = nrm(p, p1); let bx = n1[0] + n2[0], bz = n1[1] + n2[1]; const bl = Math.hypot(bx, bz) || 1; bx /= bl; bz /= bl;
+            const c = Math.max(0.45, bx * n1[0] + bz * n1[1]);
+            return [p[0] + bx * d / c, p[1] + bz * d / c];
+        });
     };
-    // ユーザー設定画のとおり: メインユニット（長い機首＋前へ伸びる刃）、左右のウィングポッド、後部の推進ユニット
-    armor.color.setHex(0x45607a); plate.color.setHex(0x6f8ca6); // 設定画に合わせた明るめのスチールブルー
-    const dark = new StdMat({ color: 0x2a3645, emissive: 0x0a0e14, emissiveIntensity: 0.4, flatShading: true, metalness: 0.6, roughness: 0.4 });
-    const pink = new THREE.MeshBasicMaterial({ color: 0xff7a9a });
-    // 断面（六角形など）をz方向に並べてつないだ立体。st: [z, 幅, 高さ, 上下オフセット, 左右オフセット]
-    const loft = (st, n = 6, rot = Math.PI / 6) => {
-        const rings = st.map(([z, w, h, yo = 0, xo = 0]) => { const r = []; for (let k = 0; k < n; k++) { const a = rot + k * Math.PI * 2 / n; r.push([xo + Math.cos(a) * w / 2, yo + Math.sin(a) * h / 2, z]); } return r; });
-        const p = [];
-        for (let i = 0; i < rings.length - 1; i++) for (let k = 0; k < n; k++) {
-            const a0 = rings[i][k], a1 = rings[i][(k + 1) % n], b0 = rings[i + 1][k], b1 = rings[i + 1][(k + 1) % n];
-            p.push(...a0, ...b0, ...b1, ...a0, ...b1, ...a1);
-        }
-        const cap = (r, rev) => { const c = r.reduce((m, v) => [m[0] + v[0] / n, m[1] + v[1] / n, m[2] + v[2] / n], [0, 0, 0]); for (let k = 0; k < n; k++) { const v0 = r[k], v1 = r[(k + 1) % n]; rev ? p.push(...c, ...v1, ...v0) : p.push(...c, ...v0, ...v1); } };
-        cap(rings[0], false); cap(rings[rings.length - 1], true);
-        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); geo.computeVertexNormals(); return geo;
+    // 上面図の輪郭から、面取りした装甲ブロックを作る（下面・中段・上面の3層）
+    const slab = (px, { top = 2, bot = -2, mid = 0, it = 1, ib = 1, mir = false, topF = null } = {}) => {
+        let pts = px.map(([x, y]) => [mir ? -PX(x) : PX(x), PZ(y)]);
+        const T = (z) => (topF ? topF(z) : top);
+        const r0 = inset(pts, ib).map(([x, z]) => [x, bot, z]), r1 = pts.map(([x, z]) => [x, mid, z]), r2 = inset(pts, it).map(([x, z]) => [x, mid + T(z) - mid, z]);
+        r2.forEach((v, i) => { v[1] = T(pts[i][1]); });
+        const P = [], n = pts.length;
+        const quad = (a, b) => { for (let i = 0; i < n; i++) { const j = (i + 1) % n; P.push(...a[i], ...b[i], ...b[j], ...a[i], ...b[j], ...a[j]); } };
+        quad(r0, r1); quad(r1, r2);
+        const cap = (r) => { const tri = THREE.ShapeUtils.triangulateShape(r.map(v => new THREE.Vector2(v[0], v[2])), []); tri.forEach(t => t.forEach(k => P.push(...r[k]))); };
+        cap(r0); cap(r2);
+        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.computeVertexNormals(); return geo;
     };
-    const part = (geo, mat, grp = g, edges = true) => { const m = new THREE.Mesh(geo, mat); grp.add(m); if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 12), edgeMat)); return m; };
-    const box = (w, h, d, x, y, z, mat, edges = true, grp = g) => { const geo = new THREE.BoxGeometry(w, h, d); geo.translate(x, y, z); return part(geo, mat, grp, edges); };
-    const mir = (st) => st.map(([z, w, h, yo = 0, xo = 0]) => [z, w, h, yo, -xo]);
+    const both = (px, mat, o = {}, grp = g, edges = true) => { part(slab(px, o), mat, grp, edges); part(slab(px, { ...o, mir: true }), mat, grp, edges); };
+    const lerpTop = (y0, h0, y1, h1) => (z) => { const t = Math.min(1, Math.max(0, (z - PZ(y0)) / (PZ(y1) - PZ(y0)))); return h0 + (h1 - h0) * t; };
 
-    // ---- メインユニット ----
-    part(loft([[-22, 3, 1.4, 0.8], [-14, 5.2, 2.4, 1], [-2, 7.6, 3.4, 1.1], [8, 9.6, 4.4, 1.2], [13, 10, 4.4, 1.2], [16, 8, 3.8, 1.1]]), armor);      // 胴体（前は細く、後ろへ広がる）
-    part(loft([[-18, 1.6, 0.8, 2.2], [-12, 3, 1.4, 2.6], [-2, 4.6, 1.8, 3], [10, 4.6, 1.8, 3.2], [15, 3.2, 1.4, 3]]), plate);                                        // 背中の装甲（尾根）
-    part(loft([[-35, 2.4, 1.3, 0.9, 1.4], [-32.5, 3.4, 2, 1, 1.7], [-26, 3.8, 2.3, 1, 2], [-18, 4.2, 2.6, 1.1, 2.4], [-6, 4.4, 2.8, 1.2, 3], [4, 4, 2.6, 1.2, 3.4]]), plate);   // 機首を作る右のパーツ（2つのパーツで先端を構成）
-    part(loft(mir([[-35, 2.4, 1.3, 0.9, 1.4], [-32.5, 3.4, 2, 1, 1.7], [-26, 3.8, 2.3, 1, 2], [-18, 4.2, 2.6, 1.1, 2.4], [-6, 4.4, 2.8, 1.2, 3], [4, 4, 2.6, 1.2, 3.4]])), plate);   // 機首を作る左のパーツ
-    box(0.6, 0.5, 18, 0, 2.1, -23, dark, false); // 2つのパーツの合わせ目
-    [-1, 1].forEach(sx => {
-        part(loft([[-20, 1.8, 1.1, -0.4, sx * 6.6], [-12, 2.8, 1.6, -0.2, sx * 7.2], [-1, 3.6, 2.4, 0, sx * 7.4], [8, 3.6, 2.8, 0.3, sx * 7.2], [12, 2.6, 2.2, 0.3, sx * 6.8]]), armor); // 外側の刃（肩）
-        part(loft([[-4, 0.4, 0.4, 2.2, sx * 4.2], [2, 3, 2.4, 2.4, sx * 4.4], [12, 3.6, 2.8, 2.4, sx * 4.4], [16, 2.4, 2, 2.2, sx * 4]]), dark);                          // 肩の厚い装甲
-        box(0.7, 0.5, 5, sx * 2.6, 3.9, 6, pink, false);                                                                                                               // ピンクのアクセント
-        box(1.4, 0.5, 2.2, sx * 4.4, 3.7, 9.5, pink, false);
-        box(0.5, 0.5, 6, sx * 6.2, 1.6, 2, glowC, false);                                                                                                            // 刃の付け根のシアン
-    });
-    // 中心のシアンのパネルは当たり判定の点滅ドットと重なるので置かない
+    // ---- メインユニット: 左右2つのパーツで機首を構成（明るい装甲板＋外側の濃紺の刃）----
+    both([[141, 28], [142, 64], [142, 252], [118, 252], [116, 200], [120, 140], [127, 92], [136, 52]], steel, { bot: -1.6, it: 0.5, ib: 0.5, topF: lerpTop(28, 0.8, 250, 3.6) });
+    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
+    part(slab([[142, 60], [143.5, 60], [143.5, 250], [140.5, 250], [140.5, 60]], { bot: 0, top: 3.75, it: 0, ib: 0 }), navy, g, false); // 2つのパーツの合わせ目（暗い溝）
+    // 胴体中央の厚い装甲（肩）
+    both([[142, 168], [154, 164], [172, 172], [182, 200], [180, 248], [170, 272], [142, 272]], armor, { bot: -2.6, top: 2.8, it: 1.2, ib: 1.2 });
+    both([[160, 196], [176, 202], [176, 236], [162, 240]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });              // 肩の上の濃いパネル
+    both([[150, 254], [168, 252], [170, 272], [150, 274]], steel, { bot: 0, top: 3.2, it: 0.4, ib: 0.2 });              // 推進ユニット手前の装甲
 
-    // ---- 後部: 左右2枚の羽と、その間から噴射する推進ユニット ----
-    [-1, 1].forEach(sx => {
-        const fin = new THREE.Group();
-        part(loft([[6, 0.4, 0.6, 1.4], [12, 2, 6.4, 1.8], [20, 2.2, 7, 2.2], [26, 1.4, 5, 2.6], [28.5, 0.9, 2.4, 2.8]], 6, 0), armor, fin);   // 縦長の羽
-        part(loft([[10, 0.3, 0.3, 4.6], [16, 1.2, 1.6, 5], [24, 1.2, 1.4, 5.2], [27, 0.3, 0.3, 5.2]], 6, 0), plate, fin);                   // 羽の上の縁
-        box(0.4, 3.2, 8, sx * 1.15, 1.8, 18, glowC, false, fin);                                                                             // 内側の光
-        box(0.4, 0.8, 3, 0, 5.4, 24, pink, false, fin);
-        fin.position.set(sx * 4.2, 0, 0);
-        fin.rotation.z = sx * -0.22; // 少し外側へ開く
-        g.add(fin);
-    });
-    // 推進ユニット（羽の間）: 時計回りにぐるぐる回る
-    const prop = new THREE.Group(); prop.position.set(0, 1.7, 0); g.add(prop); g.userData.prop = prop;
-    part(loft([[10, 5.4, 5.4], [16, 6, 6], [21, 5.2, 5.2], [22.5, 4.4, 4.4]], 8, Math.PI / 8), dark, prop);
-    for (let k = 0; k < 4; k++) { const v = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 9), k % 2 ? plate : armor); const a = k * Math.PI / 2; v.position.set(Math.cos(a) * 3, Math.sin(a) * 3, 16); v.rotation.z = a; prop.add(v); } // 回っているのが分かる羽根
-    const nozRing = new THREE.TorusGeometry(2.1, 0.45, 4, 8); nozRing.translate(0, 0, 22.6); part(nozRing, plate, prop, false);
-    const nozzle = new THREE.CircleGeometry(1.9, 16); nozzle.translate(0, 0, 22.7); part(nozzle, glowC, prop, false);
+    // ---- 後ろの2枚の羽（間から噴射）----
+    both([[110, 274], [127, 274], [132, 300], [132, 390], [127, 384], [119, 352], [111, 312]], navy, { bot: -1.8, it: 0.45, ib: 0.45, topF: lerpTop(274, 2.6, 390, 1.0) });
+    both([[114, 286], [124, 286], [128, 340], [122, 334]], steel, { bot: 0, top: 2.75, it: 0.3, ib: 0.1 });              // 羽の明るい縁
 
-    // ---- ウィングポッド（前が長く尖った縦長の刃。装甲板を重ねる）----
+    // ---- 推進ユニット（羽の間）: 時計回りにぐるぐる回る ----
+    const prop = new THREE.Group(); prop.position.set(0, 0.6, 0); g.add(prop); g.userData.prop = prop;
+    { const R = 3.1, z0 = PZ(262), z1 = PZ(302), n = 8; const P = [];
+      const rings = [[z0, R * 0.85], [z0 + 1.6, R], [z1 - 1.4, R], [z1, R * 0.78]].map(([z, r]) => { const a = []; for (let k = 0; k < n; k++) { const t = Math.PI / 8 + k * Math.PI * 2 / n; a.push([Math.cos(t) * r, Math.sin(t) * r, z]); } return a; });
+      for (let i = 0; i < rings.length - 1; i++) for (let k = 0; k < n; k++) { const j = (k + 1) % n, a = rings[i], b = rings[i + 1]; P.push(...a[k], ...b[k], ...b[j], ...a[k], ...b[j], ...a[j]); }
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.computeVertexNormals(); part(geo, gun, prop);
+      for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; const v = new THREE.Mesh(new THREE.BoxGeometry(1, 0.9, 5.2), k % 2 ? steel : armor); v.position.set(Math.cos(a) * 3.1, Math.sin(a) * 3.1, (z0 + z1) / 2); v.rotation.z = a; prop.add(v); } // 回転が分かる突起
+      const nr = new THREE.TorusGeometry(2.3, 0.4, 4, 8); nr.translate(0, 0, z1); part(nr, navy, prop, false);
+      const nz = new THREE.CircleGeometry(2.0, 16); nz.translate(0, 0, z1 + 0.05); part(nz, glowC, prop, false); }
+
+    // ---- ウィングポッド: 前は細く（面取り）、後ろへ向かって太く広がる ----
+    const podOut = [[96, 136], [104, 142], [106, 200], [104, 248], [93, 282], [84, 302], [78, 324], [66, 348], [53, 358], [48, 371], [42, 366], [36, 356], [32, 332], [30, 310], [32, 290], [38, 262], [48, 238], [60, 210], [74, 180], [86, 156]];
+    both(podOut, steel, { bot: -2.8, mid: -0.2, it: 1.5, ib: 1.2, topF: lerpTop(140, 2.4, 300, 3.6) });
+    both([[92, 278], [84, 302], [78, 324], [66, 348], [53, 358], [44, 360], [38, 350], [34, 330], [33, 310], [36, 292], [40, 280]], gun, { bot: 0, mid: 0, it: 1.0, ib: 0.6, topF: lerpTop(278, 3.9, 360, 3.4) }); // 後半のガンメタ装甲
+    both([[96, 150], [100, 156], [100, 214], [92, 232], [80, 232], [86, 196]], armor, { bot: 0, top: 3.3, it: 0.5, ib: 0.2 });   // 前半の装甲板
+    both([[60, 214], [74, 186], [80, 198], [70, 236], [56, 244]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });             // 外側の濃いパネル
+    both([[92, 222], [102, 226], [101, 242], [90, 240]], pink, { bot: 0, top: 3.75, it: 0.15, ib: 0 }, g, false);            // 内側のピンク
+    both([[40, 246], [47, 244], [42, 278], [35, 278]], glowC, { bot: 0, top: 3.8, it: 0.1, ib: 0 }, g, false);               // 外側のシアンの光
+    both([[60, 300], [70, 298], [66, 330], [56, 332]], navy, { bot: 0, top: 4.1, it: 0.3, ib: 0.1 });                        // 後半の溝パネル
+    // ポッドと胴体をつなぐ関節
     [-1, 1].forEach(sx => {
-        const pod = new THREE.Group();
-        part(loft([[-25, 2.8, 2.2, 0.5], [-22, 4.2, 3.2, 0.4], [-10, 5.8, 4.6, 0], [4, 7.6, 5.8, 0], [12, 8.4, 6.2, -0.2], [17, 6.4, 4.6, -0.4]]), armor, pod);          // 本体（先端は尖らせず面取り、後ろが太い）
-        part(loft([[-21, 1.2, 0.6, 2.4], [-12, 2.4, 1, 2.9], [0, 4, 1.4, 3.3], [10, 6, 1.6, 3.5], [14.5, 4.6, 1.2, 3.2]]), plate, pod);                            // 上面の装甲板
-        part(loft([[-15, 0.5, 0.8, 0, sx * 3.3], [-6, 1, 1.8, 0, sx * 3.9], [6, 2.2, 4, 0, sx * 4.4], [13, 2, 3.6, -0.2, sx * 4.2]]), dark, pod);                  // 外側の張り出し
-        part(loft([[-6, 0.3, 0.3, -2.6], [2, 3, 1, -3], [12, 5.4, 1.8, -3.1], [16, 3.6, 1.2, -2.7]]), dark, pod);                                                   // 下面の装甲
-        box(1.8, 0.45, 3.6, -sx * 1.2, 4.3, 3, pink, false, pod);                                                                                                 // ピンクのパネル（設定画どおり内側の中ほど）
-        box(1, 0.45, 1.4, -sx * 1.4, 4.3, 6.4, pink, false, pod);
-        box(0.4, 0.4, 3.6, -sx * 2.8, 4.05, -6, dark, false, pod);                                                                                                // パネルの溝
-        box(0.4, 0.4, 5, sx * 2.6, 4.05, 6, dark, false, pod);                                                                                                   // 内側のシアンの光
-        pod.position.set(sx * 13.5, 0.4, 3);
-        pod.scale.set(1.15, 1.12, 1.05); // 設定画に合わせて大きめ
-        pod.rotation.y = sx * 0.17; // 前を中心へすぼめ、後ろへ広がる
-        g.add(pod);
-        box(7, 1.6, 5, sx * 9.5, 0.8, 8, dark);                                                                                                                   // 支柱
-        box(6, 1, 2, sx * 9.5, 2, 8, plate);
+        const j = new THREE.CylinderGeometry(1.4, 1.4, 4.2, 8); j.rotateZ(Math.PI / 2); j.translate(sx * PX(103) * -1 * -1, 0.4, PZ(262)); part(j, gun);
+        const j2 = new THREE.CylinderGeometry(0.9, 0.9, 1.2, 8); j2.rotateZ(Math.PI / 2); j2.translate(sx * -PX(110), 1.6, PZ(178)); part(j2, navy);
     });
+
     const core = new THREE.Object3D(); g.add(core); g.userData.core = core;
-    // 後方のワイヤーの輪（ゆっくり回す）
     const ring = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusGeometry(11, 0.01, 2, 6)), shipWireMat);
-    ring.rotation.x = Math.PI / 2; ring.position.set(0, 1.5, 6);
-    ring.visible = false; // 指定にないので非表示
-    g.add(ring); g.userData.ring = ring; g.userData.glowC = glowC;
+    ring.visible = false; g.add(ring); g.userData.ring = ring; g.userData.glowC = glowC;
     return g;
 }
 const shipModel = makeShipModel();
@@ -5538,7 +5528,7 @@ function render3D() {
         if (playerVisible) {
                         const flick = 0.8 + Math.random() * 0.4;
             [0].forEach(off => { // 推進ユニットの噴射口（2枚の羽の間）
-                const ex = px + off * VS * Math.cos(shipBank), ez = pz + 23 * VS;
+                const ex = px + off * VS * Math.cos(shipBank), ez = pz + 14 * VS;
                 glow.add(ex, 12, ez, themeCur.player, 24 * flick * VS, 1.5);
                 if (efx) trails.add(ex, 11, ez + 46 * flick * VS, ex, 11, ez, 9 * VS, themeCur.player, 1.0);
             });
