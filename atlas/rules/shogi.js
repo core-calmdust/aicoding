@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const GUIDE = '../images/atlas/g-shogi.webp';
-  const SC = .66;                              // the legged board is life-size: a little smaller, like the showcase one
+  const SC = .8;                               // the legged board is life-size: a little smaller, like the showcase one
   const FU = 1, KY = 2, KE = 3, GI = 4, KA = 5, HI = 6, KI = 7, OU = 8, NG = 12, UM = 13;
   const BASE = { 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 6 };   // promoted → original (when captured)
   const INIT = (() => {
@@ -297,14 +297,14 @@
       const m = new TH.Mesh(new TH.BoxGeometry(CW * .92, .02, CH * .92), new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false }));
       const [x, z] = SG.cell(c, r); m.position.set(x, Y + .012, z); m.userData.pulse = pulse; marks.add(m); return m;
     }
-    function ring(x, z, y) { const m = new TH.Mesh(new TH.CylinderGeometry(.2, .2, .02, 24), new TH.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: .8, toneMapped: false })); m.position.set(x, y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
+    function ring(x, z, y) { const m = new TH.Mesh(new TH.CylinderGeometry(.2, .2, .02, 24), new TH.MeshBasicMaterial({ color: 0xffa21a, transparent: true, opacity: .8, toneMapped: false })); m.position.set(x, y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
     const ringAt = (c, r) => { const [x, z] = SG.cell(c, r); return ring(x, z, Y); };
     function cross(c, r) { const g = new TH.Group(), mat = new TH.MeshBasicMaterial({ color: 0xff3b3b, toneMapped: false }); [1, -1].forEach(s => { const b = new TH.Mesh(new TH.BoxGeometry(.66, .03, .09), mat); b.rotation.y = s * Math.PI / 4; g.add(b); }); const [x, z] = SG.cell(c, r); g.position.set(x, Y + .5, z); marks.add(g); return g; }
     function ghost(t, c, r, gote) {
       const g = mk(t, gote); g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.material = o.material.map(x => { const y = x.clone(); y.transparent = true; y.opacity = .45; y.depthWrite = false; return y; }); } });
       const [x, z] = SG.cell(c, r); g.position.set(x, Y, z); marks.add(g); return g;
     }
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); marks.children.forEach(m => { if (m.userData.pulse) { if (m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .35 + k * .45; } }); requestAnimationFrame(pulse); })();
+    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); marks.children.forEach(m => { if (m.userData.pulse) { if (m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .4 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) p.position.y = Y + .08 + .28 * k; }); requestAnimationFrame(pulse); })();
     const empties = () => { const o = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (!pcs[key(c, r)]) o.push([c, r]); return o; };
     const targets = st => !st.act ? [] : st.act.to === 'empty' ? empties() : st.act.to;
     const selPiece = st => st.sel === 'hand' ? hand[0] : st.sel ? pcs[key(...st.sel)] : null;
@@ -366,20 +366,20 @@
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
       const cnt = setBoard(st);
       later(() => {
-        if (st.zone) for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) tile(c, r, 0xff5a4a, .2);
-        (st.blue || []).forEach(([c, r]) => tile(c, r, 0x4aa8ff, .38));
-        (st.glow || []).forEach(([c, r]) => tile(c, r, 0xffe27a, .5, true));
+        if (st.zone) for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) tile(c, r, 0xff4a3a, .3);
+        (st.blue || []).forEach(([c, r]) => tile(c, r, 0x1f7dff, .42));
+        (st.glow || []).forEach(([c, r]) => { tile(c, r, 0xffa21a, .6, true); const p = pcs[key(c, r)]; if (p) p.userData.bob = true; });
         (st.bad || []).forEach(([c, r]) => tile(c, r, 0xff4040, .3));
         (st.xs || []).forEach(([c, r]) => cross(c, r));
         if (st.ghost) ghost(...st.ghost);
         const sp = selPiece(st);
         if (sp) {   // the piece to move: lifted a little, with a glowing ring under it
-          if (st.sel === 'hand') { const m = tile(0, 0, 0xffe27a, .55, true); m.position.set(sp.position.x, KH + .012, sp.position.z); }
-          else tile(...st.sel, 0xffe27a, .55, true);
-          const y0 = sp.position.y; anim(240, k => { sp.position.y = y0 + .22 * io(k); });
+          if (st.sel === 'hand') { const m = tile(0, 0, 0x2fd17a, .6, true); m.position.set(sp.position.x, KH + .012, sp.position.z); }
+          else tile(...st.sel, 0x2fd17a, .6, true);
+          const y0 = st.sel === 'hand' ? KH : Y; anim(240, k => { sp.position.y = y0 + .22 * io(k); });
         }
         targets(st).forEach(([c, r]) => { if (pcs[key(c, r)]) tile(c, r, 0xff7a3a, .6, true); else ringAt(c, r); });
-      }, 260 + cnt * 16);
+      }, 420 + cnt * 16);
       say(L.s[step].say); buttons();
     }
     function cellOf(e) {
