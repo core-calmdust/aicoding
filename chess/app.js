@@ -367,13 +367,37 @@ function renderInfo() {
   if (!ev && cur > 0 && evals[cur - 1]) ev = evals[cur - 1];
   $('#evalText').textContent = evalText(ev);
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
-  renderGraph(); renderKifu();
+  renderGraph(); renderKifu(); hbInfo(pos, st, ev);
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnFlip').classList.toggle('on', !!settings.flip);
   renderReview();
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+}
+// PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
+let HB = null;   // set at boot (shared/headerbar.js)
+const hbEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let hbOpenKey = '', hbOpenName = '';
+function hbOpening() {
+  if (startFen || lesson || puzzle || !OPEN || !cur) return '';
+  const key = moves.slice(0, cur).join(',');
+  if (key === hbOpenKey) return hbOpenName;
+  hbOpenKey = key; hbOpenName = '';
+  const u = ucisOf(moves.slice(0, cur)).join(' ') + ' ';
+  let best = null;
+  for (const g of OPEN.sets) if (u.startsWith(g.prefix + ' ') && (!best || g.prefix.length > best.prefix.length)) best = g;
+  if (best) hbOpenName = LL(best.title);
+  return hbOpenName;
+}
+function hbInfo(pos, st, ev) {
+  if (!HB || !HB.on) return;
+  const tm = sideP(pos);
+  let h = `<span class="hb-chip"><i class="hb-pd p${st.over ? (st.winner || tm) : tm}"></i><b>${hbEsc(st.over ? (st.winner ? t('ev.won', { c: pname(st.winner) }) : t('res.draw')) : t('hb.turn', { c: pname(tm) }))}</b>${!st.over && pos.inCheck() ? ' · ' + hbEsc(t('hb.check')) : ''}</span>`;
+  h += `<span class="hb-chip">${hbEsc(t('hb.move', { n: pos.full }))}</span>`;
+  if (settings.eval && ev && !rtLive() && settings.mode !== 'online' && !lesson && !puzzle) h += `<span class="hb-chip">${hbEsc(evalText(ev))}</span>`;
+  const op = hbOpening(); if (op) h += `<span class="hb-chip">${hbEsc(op)}</span>`;
+  HB.setInfo(h);
 }
 function evalAt(i) { const st = statusAt(i); if (st.over) return st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0; return evals[i] ? evals[i].s : null; }
 function renderGraph() {
@@ -758,13 +782,15 @@ function ruleItems(tab) {
   ].join('');
 }
 let rulesTab = 'move';
-function openRules(tab) { rulesTab = RULE_TABS.includes(tab) ? tab : 'move'; renderRules(); showOverlay('#rulesOverlay'); }
+// the rules dialog is the hands-on tutorial of rules.js (shared/ruletour.js); the old illustrated tabs are kept below as a fallback
+function openRules(tab) { showOverlay('#rulesOverlay'); if (window.ChessRules) { ChessRules.open(0); return; } rulesTab = RULE_TABS.includes(tab) ? tab : 'move'; renderRules(); }
 function renderRules() {
+  if (window.ChessRules) { ChessRules.render(); return; }
   $('#rulesTabs').innerHTML = RULE_TABS.map(r => `<button data-r="${r}" class="${r === rulesTab ? 'sel' : ''}">${t('rl.tab.' + r)}</button>`).join('');
   $('#rulesBody').innerHTML = `<p class="rl-lead">${t('rl.lead.' + rulesTab)}</p><div class="rl-grid">${ruleItems(rulesTab)}</div>`;
 }
 $('#rulesTabs').onclick = e => { const b = e.target.closest('button[data-r]'); if (b) { rulesTab = b.dataset.r; renderRules(); } };
-$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
+$('#rulesClose').onclick = () => { if (window.ChessRules) ChessRules.stop(); hideOverlay('#rulesOverlay'); };
 
 // ---------------------------------------------------------------- new game dialog
 let draft = {};
@@ -842,10 +868,13 @@ function rtClockLeft(c) {   // c: 0 white, 1 black
   return Math.max(0, v);
 }
 function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
+let rtTickPly = -1;
 setInterval(() => {
   if (!rtLive()) return;
   const c = toMoveAt(moves.length) - 1, left = rtClockLeft(c);
   const el = $('#count' + (c + 1)); if (el) el.textContent = fmtClock(left);
+  // time signal: only for my own clock while it is running (a new countdown each move)
+  if (window.CountTick) { if (rtTickPly !== moves.length) { rtTickPly = moves.length; CountTick.reset('rt'); } if (c + 1 === humanColor) CountTick.feed(left, 'rt'); }
   if (left <= 0) { rgame.over = { over: true, winner: c ? P1 : P2, why: 'time' }; busyToken++; cancelWorker('ai'); thinking = 0; save(); update(false); onGameEnd(rgame.over); }
 }, 250);
 // the result of a finished rated game is applied once (the game id is kept in the history, so a reload never counts twice)
@@ -1331,7 +1360,7 @@ function startPuzzle(L, j, daily) {
     enterSpecial(P.fen);
     update(false); renderPuzzleCard(); pzStatus(t('pz.tStart'));
     const Pz = puzzle;
-    setTimeout(() => { if (puzzle !== Pz) return; playMove2(posAt(0).pos.fromUci(P.line[0])); setTimeout(() => { if (puzzle !== Pz) return; Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay()); }, moveDur()); }, 450);
+    setTimeout(() => { if (puzzle !== Pz) return; playMove2(posAt(0).pos.fromUci(P.line[0])); setTimeout(() => { if (puzzle !== Pz) return; Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay()); pzPrefetch(Pz); }, moveDur()); }, 450);
     return;
   }
   puzzle = { L, j, P, me: P.fen.split(' ')[1] === 'b' ? P2 : P1, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
@@ -1341,19 +1370,87 @@ function startPuzzle(L, j, daily) {
 }
 const THEMES = ['mateIn1', 'mateIn2', 'mateIn3', 'fork', 'pin', 'skewer', 'discoveredAttack', 'doubleCheck', 'sacrifice', 'deflection', 'attraction', 'hangingPiece', 'trappedPiece', 'backRankMate', 'smotheredMate', 'promotion', 'xRayAttack', 'intermezzo', 'quietMove', 'clearance', 'interference', 'capturingDefender', 'zugzwang', 'exposedKing', 'defensiveMove', 'endgame'];
 function themeText(P) { return (P.th || []).filter(x => THEMES.includes(x)).map(x => t('th.' + x)).join(' · '); }
+// ---------------------------------------------------------------- puzzles v2 (common spec): keep playing up to the puzzle's move count
+// Mate in N (N >= 2): a move that does not force mate is not failed at once — the defender answers with the engine's best
+//   defence and you may play on until the N moves are used ("N moves left" in the status). Mating earlier (or with another
+//   line inside the count) is a solution. Obvious mistakes are flagged at once (blunder + failed):
+//     - after the move the opponent can mate in one,
+//     - the move stalemates (a draw),
+//     - after the move the attacker no longer has the material to mate at all (lone king, king + one minor piece).
+// Tactics (best line, 2+ own moves): a move other than the main line may continue only while it keeps the advantage the
+//   puzzle aims at (engine values, from the mover's side; best = value of the best move before the move, mine = value after it):
+//     keep  : best is a mate and mine is still a mate or >= +6.00, otherwise mine >= +2.00 and mine >= best - max(1.50, 40% of best)
+//             -> the opponent answers with the engine's best reply; finishing the count while still keeping it solves the
+//                puzzle as ★★ (not the main line), mating on the way solves it too.
+//     lost  : below that -> failed (the answer is shown).
+//     blunder: the opponent can now force mate, or mine <= -1.50 and at least 4.00 below best (material given away for
+//             nothing) -> "clear mistake" + failed.
+// Puzzles with a single own move (mate in 1, one-move tactics) are judged at once as before.
+const pzAnswerSan = Pz => { const p0 = posAt(0).pos, u = Pz.line ? Pz.P.line[1] : Pz.P.answer; if (Pz.line) { const q = E.replay(startFen, [p0.fromUci(Pz.P.line[0])]).pos; return q.san(q.fromUci(u)); } return p0.san(p0.fromUci(u)); };
+function pzAnswerWas(Pz) { try { return ' ' + t('pz2.answerWas', { b: pzAnswerSan(Pz) }); } catch (e) { return ''; } }
+function pzRewindFail(Pz, m, best, html) {   // take the last move back, show it in red (and the right move in gold)
+  moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--; Pz.busy = false; Pz.state = 'fail'; Pz.failed = true;
+  lessonMarks = [];
+  if (best) lessonMarks.push({ arrow: [mFrom(best), mTo(best)], cls: '' }, { at: mTo(best), cls: 'ok' });
+  lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' });
+  update(false); playChime(false); pzStatus(html); renderPuzzleCard();
+}
+function pzOutOfMoves(Pz) {
+  Pz.state = 'fail'; Pz.failed = true; Pz.busy = false; playChime(false);
+  pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}${pzAnswerWas(Pz)}`); renderPuzzleCard();
+}
+const pzAna = () => request('ana', { type: 'analyze', moves: moves.slice(0, cur), time: 900 });
+function pzPrefetch(Pz) { if (Pz.line && Pz.n > 1 && Pz.state === 'play') Pz.pre = pzAna(); }
+const topOf = r => { let b = null; for (const e of (r && r.list) || []) if (!b || e.v > b.v) b = e; return b; };
 async function linePuzzleMove(m) {
-  const Pz = puzzle, P = Pz.P, { pos } = posAt(cur), exp = pos.fromUci(P.line[Pz.k]), last = Pz.k === P.line.length - 1, ms = pos.san(m), es = pos.san(exp);
+  const Pz = puzzle, P = Pz.P, { pos } = posAt(cur), exp = Pz.off ? 0 : pos.fromUci(P.line[Pz.k]), ms = pos.san(m), es = exp ? pos.san(exp) : '';
+  const pre = Pz.pre; Pz.pre = null;
   Pz.busy = true; lessonMarks = [];
   playMove2(m); Pz.used++;
-  const st = statusAt(cur), ok = m === exp || (last && st.over && st.winner === Pz.me);
+  const st = statusAt(cur), last = Pz.used >= Pz.n;
   renderPuzzleCard();
-  if (!ok) {
-    Pz.state = 'fail'; Pz.failed = true;
+  if (st.over && st.winner === Pz.me) { setTimeout(() => puzzleSolved(), moveDur() + 300); return; }
+  if (m !== exp && Pz.n === 1) {   // one-move puzzle: judged at once
     await sleep(moveDur() + 400); if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--; Pz.busy = false;
-    lessonMarks = [{ arrow: [mFrom(exp), mTo(exp)], cls: '' }, { at: mTo(exp), cls: 'ok' }, { arrow: [mFrom(m), mTo(m)], cls: 'ng' }];
-    update(false); playChime(false);
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failLine', { m: ms, b: es })}`); renderPuzzleCard(); return;
+    pzRewindFail(Pz, m, exp, `<b class="ng">${t('pz.fail')}</b> ${t('pz.failLine', { m: ms, b: es })}`); return;
+  }
+  if (m !== exp) {
+    // off the main line: judge with the engine
+    const tok = busyToken; pzStatus(t('pz.checking'));
+    const before = (pre && await pre) || null;
+    if (puzzle !== Pz || tok !== busyToken) return;
+    let bestV = topOf(before) ? topOf(before).v : null;
+    if (bestV === null) { const b2 = await request('ana', { type: 'analyze', moves: moves.slice(0, cur - 1), time: 900 }); if (puzzle !== Pz) return; bestV = topOf(b2) ? topOf(b2).v : 300; }
+    const after = st.over ? null : await pzAna();
+    if (puzzle !== Pz || tok !== busyToken) return;
+    const opp = topOf(after), mine = st.over ? 0 : opp ? -opp.v : 0;
+    let verdict;
+    if (opp && opp.v > MATET) verdict = 'mated';
+    else if (mine <= -150 && mine <= bestV - 400) verdict = 'loses';
+    else if (bestV > MATET) verdict = mine > MATET || mine >= 600 ? 'keep' : 'lost';
+    else verdict = mine >= 200 && mine >= bestV - Math.max(150, bestV * 0.4) ? 'keep' : 'lost';
+    if (verdict === 'mated' || verdict === 'loses') {
+      await sleep(250); if (puzzle !== Pz) return;
+      pzRewindFail(Pz, m, exp, `<b class="ng">${PZBook.t('blunder')}</b> ${t(verdict === 'mated' ? 'pz2.tMated' : 'pz2.tLoses', { m: ms })}${pzAnswerWas(Pz)}`); return;
+    }
+    if (verdict === 'lost') {
+      await sleep(250); if (puzzle !== Pz) return;
+      if (exp) pzRewindFail(Pz, m, exp, `<b class="ng">${t('pz.fail')}</b> ${t('pz2.tLost', { m: ms, b: es })}`);
+      else pzRewindFail(Pz, m, 0, `<b class="ng">${t('pz.fail')}</b> ${t('pz2.tLost', { m: ms, b: '—' })}${pzAnswerWas(Pz)}`);
+      return;
+    }
+    // keeps the advantage: play on with the engine's replies
+    Pz.off = true; Pz.failed = true;
+    if (last) { setTimeout(() => puzzleSolved(), moveDur() + 200); return; }
+    pzStatus(t('pz2.tCont', { m: ms }));
+    await sleep(moveDur() + 350); if (puzzle !== Pz) return;
+    if (!opp) { puzzleSolved(); return; }
+    playMove2(opp.m);
+    await sleep(moveDur()); if (puzzle !== Pz) return;
+    if (statusAt(cur).over) { pzOutOfMoves(Pz); return; }
+    Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
+    pzStatus(PZBook.t('movesLeft', { n: Pz.n - Pz.used })); pzPrefetch(Pz);
+    return;
   }
   if (last) { setTimeout(() => puzzleSolved(), moveDur() + 300); return; }
   pzStatus(t('pz.tGood'));
@@ -1361,7 +1458,7 @@ async function linePuzzleMove(m) {
   playMove2(posAt(cur).pos.fromUci(P.line[Pz.k + 1])); Pz.k += 2;
   await sleep(moveDur()); if (puzzle !== Pz) return;
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(t('pz.tYourMove', { n: Pz.n - Pz.used }));
+  pzStatus(t('pz.tYourMove', { n: Pz.n - Pz.used })); pzPrefetch(Pz);
 }
 function renderPuzzleCard() {
   const Pz = puzzle, L = PUZZLES.levels[Pz.L]; PZBook.setLang(LANG);
@@ -1378,36 +1475,62 @@ function mateReq(n, defend) { return request('ai', { type: 'mate', moves: moves.
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
+// mate puzzles: is the move an obvious mistake? (see the rules above) -> reason html, or '' to play on
+async function pzMateBlunder(Pz, ms) {
+  const st = statusAt(cur);
+  if (st.over) return st.draw ? (st.why === 'stalemate' ? t('rl.stale.h') + ' — ' : '') + t('res.draw') : '';
+  if (!canMate(Pz.me)) return t('pz2.noMate', { m: ms });
+  const ol = await mateReq(1);   // the opponent is to move: can they mate at once?
+  if (puzzle !== Pz) return '';
+  const mm = ol && ol.find(x => x.need === 1);
+  return mm ? t('pz2.mateThreat', { m: ms, r: posAt(cur).pos.san(mm.m) }) : '';
+}
+// the defender's reply: longest resistance; if the proof search gives up (big trees after a stray move), the engine's move
+async function pzDefend(left) {
+  const dl = await mateReq(left, true);
+  if (dl && dl.length) return pickDefence(dl);
+  if (dl && !dl.length) return 0;
+  const r = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 7 });
+  return r && r.move || 0;
+}
 async function puzzleMove(m) {
   if (puzzle.line) return linePuzzleMove(m);
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   const left = Pz.n - Pz.used, tok = busyToken, { pos } = posAt(cur), ms = pos.san(m);
   pzStatus(t('pz.checking'));
-  const list = await mateReq(left);
-  if (!list || puzzle !== Pz || tok !== busyToken) return;
+  const list = (await mateReq(left)) || [];   // null = the proof search gave up: treated as "no forced mate known"
+  if (puzzle !== Pz || tok !== busyToken) return;
   playMove2(m); Pz.used++; renderPuzzleCard();
   if (statusAt(cur).winner === Pz.me) { setTimeout(() => puzzleSolved(), moveDur() + 300); return; }
   const e = list.find(x => x.m === m);
-  if (!e || !e.need || e.need > left) {
-    const good = list.filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
-    Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
+  const good = list.filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
+  const stray = !e || !e.need || e.need > left;
+  if (stray && Pz.n === 1) {   // mate in one: judged at once
     await sleep(moveDur() + 400); if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    if (good[0]) lessonMarks.push({ arrow: [mFrom(good[0].m), mTo(good[0].m)], cls: '' }, { at: mTo(good[0].m), cls: 'ok' });
-    lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' });
-    update(false); playChime(false);
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ms, b: good.length ? pos.san(good[0].m) : '—', n: Pz.n })}`);
-    renderPuzzleCard(); return;
+    pzRewindFail(Pz, m, good[0] && good[0].m, `<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ms, b: good.length ? pos.san(good[0].m) : '—', n: Pz.n })}`);
+    return;
   }
-  pzStatus(t('pz.good'));
-  const dl = await mateReq(Pz.n - Pz.used, true);
-  if (!dl || puzzle !== Pz || tok !== busyToken) return;
+  if (stray) {
+    const why = await pzMateBlunder(Pz, ms);
+    if (puzzle !== Pz || tok !== busyToken) return;
+    if (why) {
+      await sleep(moveDur() + 300); if (puzzle !== Pz) return;
+      pzRewindFail(Pz, m, good[0] && good[0].m, `<b class="ng">${PZBook.t('blunder')}</b> ${why}${good[0] ? ' ' + t('pz2.answerWas', { b: pos.san(good[0].m) }) : pzAnswerWas(Pz)}`);
+      return;
+    }
+    Pz.failed = true; Pz.strayed = true;
+    if (Pz.used >= Pz.n) { await sleep(moveDur() + 200); if (puzzle === Pz) pzOutOfMoves(Pz); return; }
+    pzStatus(t('pz2.cont', { m: ms }) + ' ' + PZBook.t('movesLeft', { n: Pz.n - Pz.used }));
+  } else pzStatus(t('pz.good'));
+  const r = await pzDefend(Pz.n - Pz.used);
+  if (puzzle !== Pz || tok !== busyToken) return;
   await sleep(moveDur() + 300); if (puzzle !== Pz) return;
-  if (!dl.length) { puzzleSolved(); return; }
-  const r = pickDefence(dl); playMove2(r);
+  if (!r) { if (statusAt(cur).winner === Pz.me) puzzleSolved(); else pzOutOfMoves(Pz); return; }
+  playMove2(r);
   await sleep(moveDur()); if (puzzle !== Pz) return;
+  if (statusAt(cur).over) { pzOutOfMoves(Pz); return; }
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(t('pz.yourMove', { n: Pz.n - Pz.used }));
+  pzStatus(Pz.strayed ? PZBook.t('movesLeft', { n: Pz.n - Pz.used }) : t('pz.yourMove', { n: Pz.n - Pz.used }));
 }
 function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
 function puzzleSolved() {
@@ -1421,7 +1544,7 @@ function puzzleSolved() {
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
   PZBook.setLang(LANG);
   const th = Pz.line ? themeText(Pz.P) : '';
-  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${Pz.line ? t('pz.tSolved', { r: Pz.P.r }) : t('pz.solvedSub', { n: Pz.used })}` + (th ? `<br><small style="color:var(--dim)">${t('pz.theme')}: ${th}</small>` : '') + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }));
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${Pz.line ? (Pz.off ? t('pz2.tKept') + ' ' : '') + t('pz.tSolved', { r: Pz.P.r }) : t('pz.solvedSub', { n: Pz.used })}` + (th ? `<br><small style="color:var(--dim)">${t('pz.theme')}: ${th}</small>` : '') + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }));
   playChime(true); confetti(); if (ev.length) setTimeout(confetti, 600); renderPuzzleCard();
 }
 $('#pzRetry').onclick = () => { if (puzzle) { const { hinted: h, failed: f, answered: a } = puzzle; startPuzzle(puzzle.L, puzzle.j, puzzle.daily); Object.assign(puzzle, { hinted: h, failed: f || puzzle.state !== 'play', answered: a }); } };
@@ -1434,6 +1557,7 @@ $('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzle
 $('#pzQuit').onclick = () => quitSpecial();
 $('#pzHint').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.state !== 'play' || Pz.busy) return;
+  if (Pz.line && Pz.off) { const pre = Pz.pre || (Pz.pre = pzAna()), r = await pre; if (puzzle !== Pz || !topOf(r)) return; Pz.hinted = true; lessonMarks = [{ at: mFrom(topOf(r).m), cls: 'ok' }]; renderFx(); pzStatus(t('pz.hintText')); return; }
   if (Pz.line) { Pz.hinted = true; const m = posAt(cur).pos.fromUci(Pz.P.line[Pz.k]); lessonMarks = [{ at: mFrom(m), cls: 'ok' }]; renderFx(); pzStatus(t('pz.hintText')); return; }
   const left = Pz.n - Pz.used, list = await mateReq(left); if (puzzle !== Pz || !list) return;
   Pz.hinted = true;
@@ -1442,7 +1566,7 @@ $('#pzHint').onclick = async () => {
 };
 $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.busy) return;
-  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.answered = true; lessonMarks = []; hintList = null;
+  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.answered = true; Pz.off = false; Pz.strayed = false; lessonMarks = []; hintList = null;
   moves = []; cur = 0; Pz.used = 0; update(false); renderPuzzleCard(); pzStatus(t('pz.showing'));
   if (Pz.line) {
     for (let k = 0; k < Pz.P.line.length; k++) { await sleep(k ? 700 : 300); if (puzzle !== Pz) return; playMove2(posAt(cur).pos.fromUci(Pz.P.line[k])); if (k & 1) Pz.used++; renderPuzzleCard(); }
@@ -1990,6 +2114,8 @@ function olClocks() {
     const el = $('#count' + p), txt = fmtClock(Math.max(0, k.left));
     if (el.textContent !== txt) el.textContent = txt;
     el.classList.toggle('ol-clk', true); el.classList.toggle('ol-move', !!k.moving); el.classList.toggle('ol-low', !!k.moving && k.left <= 20000);
+    // time signal: my own clock while it runs (not when watching); a new countdown every time it starts again
+    if (window.CountTick && !net.spectate && p === net.me) { if (k.moving) CountTick.feed(k.left, 'ol'); else CountTick.reset('ol'); }
     const h = $('#hand' + p), lbl = '+' + Math.round(tc.inc / 1000) + 's';
     if (h.textContent !== lbl) h.textContent = lbl;
   }
@@ -2552,12 +2678,19 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n(); orient(); drawSquares();
+// PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+if (HB) HB.onChange(() => renderInfo());
+openReady.then(() => { if (HB && HB.on) renderInfo(); });
+// time-signal beeps (last 5 seconds) follow the sound setting
+if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); renderBoard(false);
   if ($('#newOverlay').classList.contains('show')) segSync();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
+  if (HB) HB.relabel();
   if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
