@@ -23,6 +23,7 @@
 // title / body / task / html are inserted as HTML (not escaped): escape any user-supplied text yourself.
 // Mini boards: size them with the CSS variable --rt-bw (set on .rt: ~320px on phones, up to 600px on PC) so every game
 // shows a big, easy-to-click board on PC and the same text sizes.
+// The FIRST page of every tour is an intro page built with RuleTour.intro(...) (history / how to win / culture).
 //   tour.open(i)  tour.render()  tour.stop()  tour.page  tour.visible()
 //
 // api (inside setup): board, ok(msg), ng(msg, {reset=true, delay=2400}), say(msg, cls), done(), reset(),
@@ -41,6 +42,18 @@ const S = {
   de: { prev: 'Zurück', next: 'Weiter', close: 'Schließen', again: 'Nochmal', watch: 'Erst zuschauen…', play: 'Eine Partie spielen', lessons: 'Zu den Lektionen', finT: 'Jetzt kannst du spielen!', finB: 'Das sind alle Regeln. Probiere zuerst eine Partie gegen eine leichte KI. Tipps und Strategie gibt es in den Lektionen.', step: 'Schritt {n}', ok: 'Richtig!', ng: 'Nicht ganz' },
   hi: { prev: 'पीछे', next: 'आगे', close: 'बंद करें', again: 'फिर से', watch: 'पहले देखिए…', play: 'एक खेल खेलें', lessons: 'पाठों पर जाएँ', finT: 'अब आप खेल सकते हैं!', finB: 'नियम बस इतने ही हैं। पहले आसान AI के साथ खेलकर देखें। तरकीबें और रणनीति पाठों में हैं।', step: 'चरण {n}', ok: 'सही!', ng: 'सही नहीं' },
   ar: { prev: 'السابق', next: 'التالي', close: 'إغلاق', again: 'أعد المحاولة', watch: 'شاهد أولاً…', play: 'العب مباراة', lessons: 'إلى الدروس', finT: 'أنت جاهز للعب!', finB: 'هذه كل القواعد. جرّب أولاً مباراة ضد ذكاء اصطناعي سهل. النصائح والاستراتيجية في الدروس.', step: 'الخطوة {n}', ok: 'صحيح!', ng: 'ليس تماماً' },
+};
+const IL = {
+  ja: { hist: '歴史', win: '勝ち方', cult: '文化', origin: '発祥', players: '人数', time: '1局の目安' },
+  en: { hist: 'History', win: 'How to win', cult: 'Culture', origin: 'Origin', players: 'Players', time: 'Game length' },
+  zh: { hist: '历史', win: '胜利条件', cult: '文化', origin: '起源', players: '人数', time: '一局时长' },
+  ko: { hist: '역사', win: '승리 조건', cult: '문화', origin: '기원', players: '인원', time: '한 판 시간' },
+  es: { hist: 'Historia', win: 'Cómo ganar', cult: 'Cultura', origin: 'Origen', players: 'Jugadores', time: 'Duración' },
+  fr: { hist: 'Histoire', win: 'Comment gagner', cult: 'Culture', origin: 'Origine', players: 'Joueurs', time: 'Durée' },
+  pt: { hist: 'História', win: 'Como vencer', cult: 'Cultura', origin: 'Origem', players: 'Jogadores', time: 'Duração' },
+  de: { hist: 'Geschichte', win: 'So gewinnt man', cult: 'Kultur', origin: 'Herkunft', players: 'Spieler', time: 'Spieldauer' },
+  hi: { hist: 'इतिहास', win: 'जीत कैसे', cult: 'संस्कृति', origin: 'उद्गम', players: 'खिलाड़ी', time: 'खेल की अवधि' },
+  ar: { hist: 'التاريخ', win: 'طريقة الفوز', cult: 'الثقافة', origin: 'الأصل', players: 'اللاعبون', time: 'مدة اللعب' },
 };
 const CSS = `
 .rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
@@ -78,6 +91,24 @@ const CSS = `
   .rt-msg{font-size:16.5px}
   .rt-again{font-size:14px;padding:7px 14px}
   .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
+.rt-intro{display:grid;gap:12px;text-align:start}
+.rt-intro-hero{display:flex;align-items:center;gap:16px}
+.rt-intro-hero img{flex:none;width:112px;height:112px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+.rt-intro-facts{display:flex;flex-wrap:wrap;gap:8px}
+.rt-intro-facts span{display:inline-flex;flex-direction:column;gap:1px;padding:7px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line,rgba(255,255,255,.12));font-size:14px;color:var(--text,#eee)}
+.rt-intro-facts small{font-size:11px;color:var(--muted,#9aa);letter-spacing:.04em}
+.rt-intro-sec{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--line,rgba(255,255,255,.1))}
+.rt-intro-sec i{font-style:normal;font-size:22px;line-height:1.3;grid-row:span 2}
+.rt-intro-sec b{font-size:14px;color:var(--accent,#e2c275);letter-spacing:.04em}
+.rt-intro-sec p{margin:0;font-size:14px;line-height:1.75;color:var(--text,#eee)}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  .rt-intro{grid-template-columns:1fr 1fr;gap:14px}
+  .rt-intro-hero,.rt-intro-sec.hist{grid-column:1 / -1}
+  .rt-intro-hero img{width:150px;height:150px}
+  .rt-intro-facts span{font-size:16px;padding:8px 14px}.rt-intro-facts small{font-size:12px}
+  .rt-intro-sec b{font-size:15.5px}.rt-intro-sec p{font-size:16px}
+}
+html[lang=ar] .rt-intro{direction:rtl}
 html[lang=ar] .rt-body,html[lang=ar] .rt h2.rt-title{direction:rtl;text-align:right}
 html[lang=ar] .rt-task{direction:rtl}
 `;
@@ -174,5 +205,15 @@ function create(o) {
   });
   return tour;
 }
-window.RuleTour = { create, S };
+// Intro page (common spec: the first page of every rules tutorial introduces the game — history, how to win, culture).
+// RuleTour.intro({ img: '../images/atlas/chess.webp', origin, players, time, history, win, culture, lang }) -> HTML for a page's html.
+// Texts are HTML (escape user text yourself); pass already-translated strings.
+function intro(o) {
+  const l = IL[o.lang] ? o.lang : 'en', T = IL[l];
+  const fact = (k, v) => v ? `<span><small>${T[k]}</small>${v}</span>` : '';
+  const sec = (cls, ico, k, v) => v ? `<div class="rt-intro-sec ${cls}"><i>${ico}</i><b>${T[k]}</b><p>${v}</p></div>` : '';
+  return `<div class="rt-intro"><div class="rt-intro-hero">${o.img ? `<img src="${o.img}" alt="">` : ''}<div class="rt-intro-facts">${fact('origin', o.origin)}${fact('players', o.players)}${fact('time', o.time)}</div></div>` +
+    sec('hist', '📜', 'hist', o.history) + sec('win', '🏆', 'win', o.win) + sec('cult', '🌏', 'cult', o.culture) + '</div>';
+}
+window.RuleTour = { create, intro, S, IL };
 })();
