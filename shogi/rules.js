@@ -222,5 +222,17 @@ document.addEventListener('keydown', e => {
 let rzT = 0;
 addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (active() && page >= 0) openPage(page); }, 150); });
 
-window.ShogiRules = { open: openList, list: openList, page: openPage, count: PAGES.length, pages: PAGES.map(p => p.id) };
+
+// ---------------------------------------------------------------- opening-story diagram: full 9x9 board from an SFEN, marked squares ("47" = file 4, rank 7), pieces in hand
+function opDiagram(sfen, marks, cw) {
+  const [bd, , hd] = sfen.split(' '), M = { p: FU, l: KY, n: KE, s: GI, b: KA, r: HI, g: KI, k: OU }, ps = [];
+  bd.split('/').forEach((row, y) => { let x = 0, pro = 0; for (const ch of row) { if (ch === '+') { pro = 8; continue; } if (/\d/.test(ch)) { x += +ch; continue; } const lc = ch.toLowerCase(); ps.push([x, y, M[lc] + (M[lc] === KI || M[lc] === OU ? 0 : pro), ch === lc ? 1 : 0]); x++; pro = 0; } });
+  const tt = {}; (marks || []).forEach(m => { tt[(9 - +m[0]) + ',' + (+m[1] - 1)] = 'sel'; });
+  const hands = [[], []];
+  if (hd && hd !== '-') { let n = 0; for (const ch of hd) { if (/\d/.test(ch)) { n = n * 10 + +ch; continue; } const lc = ch.toLowerCase(); for (let i = 0; i < (n || 1); i++) hands[ch === lc ? 1 : 0].push(M[lc]); n = 0; } }
+  const hw = Math.round(cw * .8), hrow = (c, sym) => `<div class="op-hand"><b>${sym}</b>${hands[c].length ? hands[c].map(tp => `<span class="rh" style="--cw:${hw}px;--ch:${Math.round(hw * 1.1)}px">${pc(tp, c)}</span>`).join('') : '<i>—</i>'}</div>`;
+  const files = `<div class="op-files" style="--cw:${cw}px">${[9, 8, 7, 6, 5, 4, 3, 2, 1].map(n => `<span>${n}</span>`).join('')}</div>`;
+  return `<div class="op-diag">${hrow(1, '☖')}${files}${board({ c: 9, r: 9, p: ps, t: tt, rk: rankLbl(9) }, cw)}${hrow(0, '☗')}</div>`;
+}
+window.ShogiRules = { diagram: opDiagram, open: openList, list: openList, page: openPage, count: PAGES.length, pages: PAGES.map(p => p.id) };
 })();

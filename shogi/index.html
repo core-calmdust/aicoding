@@ -440,6 +440,21 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ru-hand small{font-size:14px;color:var(--muted);white-space:nowrap}
 .ru-row{display:flex;align-items:center;justify-content:center;gap:14px;direction:ltr}
 .ru-row.sm .ru-hand{flex-direction:row;padding:6px}.ru-row.sm small{display:none}
+.op-story{display:flex;gap:22px;align-items:flex-start;margin:18px 0 6px;padding:16px;border:1px solid rgba(201,162,92,.22);border-radius:14px;background:rgba(255,255,255,.025)}
+.op-fig{margin:0;flex:0 0 auto;direction:ltr}
+.op-fig figcaption{font-size:13.5px;color:var(--muted);line-height:1.6;margin-top:8px;max-width:340px}
+.op-tx{flex:1;min-width:0}
+.op-tx h4{margin:0 0 6px;font-size:15px;color:var(--brass,#c9a25c);letter-spacing:.06em}
+.op-tx h4:not(:first-child){margin-top:16px}
+.op-tx p{margin:0;font-size:15.5px;line-height:1.85}
+.op-diag{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.op-files{display:grid;grid-template-columns:repeat(9,var(--cw));gap:1px;padding:0 2px;font-size:11px;color:var(--muted);text-align:center}
+.op-hand{display:flex;align-items:center;gap:3px;min-height:26px;font-size:13px;color:var(--muted)}
+.op-hand b{font-weight:400;margin-right:4px}
+.op-hand .rh{display:inline-block;position:relative;width:var(--cw);height:var(--ch)}
+.op-hand i{font-style:normal;opacity:.6}
+@media (max-width:760px){.op-story{flex-direction:column;align-items:center;gap:14px;padding:12px}.op-fig figcaption{max-width:none}}
+html[lang=ar] :is(.op-tx, .op-fig figcaption){direction:rtl}
 .ru-fig{margin:0 0 14px;direction:ltr}
 .ru-fig figcaption{text-align:center;font-size:15.5px;color:var(--muted);margin-top:10px;line-height:1.6}
 .ru-pm{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
@@ -2837,7 +2852,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261018ol').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261020st').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
@@ -2889,6 +2904,33 @@ $('#lessonList').onclick = e => {
   if (b.dataset.t !== undefined) { hideOverlay('#lessonOverlay'); startTsume(+b.dataset.t); }
   else openIntro(+b.dataset.i);
 };
+// ---- opening story: diagram of the study line's final position + history / famous players
+const OP_TXT = {
+  ja: { 'op.hist': '歴史・エピソード', 'op.who': 'この戦型を好む棋士', 'op.figEnd': '解説手順の最後（{n}手目）の局面' },
+  en: { 'op.hist': 'History', 'op.who': 'Who plays it', 'op.figEnd': 'Position after the study line ({n} moves)' },
+  zh: { 'op.hist': '历史与轶事', 'op.who': '喜爱此战型的棋手', 'op.figEnd': '解说手顺最后（第{n}手）的局面' },
+  ko: { 'op.hist': '역사·에피소드', 'op.who': '이 전형을 즐겨 두는 기사', 'op.figEnd': '해설 수순 마지막({n}수째) 국면' },
+  es: { 'op.hist': 'Historia', 'op.who': 'Quién la juega', 'op.figEnd': 'Posición tras la línea de estudio ({n} jugadas)' },
+  fr: { 'op.hist': 'Histoire', 'op.who': 'Qui la joue', 'op.figEnd': 'Position après la ligne d’étude ({n} coups)' },
+  pt: { 'op.hist': 'História', 'op.who': 'Quem a joga', 'op.figEnd': 'Posição após a linha de estudo ({n} lances)' },
+  de: { 'op.hist': 'Geschichte', 'op.who': 'Wer sie spielt', 'op.figEnd': 'Stellung nach der Lernvariante ({n} Züge)' },
+  hi: { 'op.hist': 'इतिहास', 'op.who': 'कौन खेलता है', 'op.figEnd': 'अध्ययन लाइन के बाद की स्थिति ({n} चालें)' },
+  ar: { 'op.hist': 'التاريخ', 'op.who': 'من يلعبها', 'op.figEnd': 'الوضع بعد خط الدراسة ({n} نقلة)' },
+};
+for (const l in OP_TXT) Object.assign(I18N[l] || (I18N[l] = {}), OP_TXT[l]);
+function opStory(g) {
+  const sy = g.story, st = g.study; if (!sy) return '';
+  let fig = '';
+  if (st && window.ShogiRules && ShogiRules.diagram) {
+    const p = new E.Position(); p.setSfen(st.start);
+    try { for (const s of st.steps) { p.doMove(p.fromUsi(s[0])); p.sp = 0; } } catch (e) {}
+    const w = Math.min(($('#liBody').clientWidth || 360), 900), two = w >= 680;
+    const cw = Math.max(18, Math.min(34, Math.floor(((two ? w * .46 : w) - 72) / 9)));
+    fig = `<figure class="op-fig">${ShogiRules.diagram(p.sfen(), sy.marks, cw)}<figcaption>${sy.cap ? L(sy.cap) : t('op.figEnd', { n: st.steps.length })}</figcaption></figure>`;
+  }
+  const tx = `<div class="op-tx"><h4>${t('op.hist')}</h4><p>${L(sy.hist)}</p>${sy.who ? `<h4>${t('op.who')}</h4><p>${L(sy.who)}</p>` : ''}</div>`;
+  return `<div class="op-story">${fig}${tx}</div>`;
+}
 let introIdx = 0;
 let openChoiceIdx = -1;
 function openOpeningChoice(oi) {
@@ -2898,7 +2940,7 @@ function openOpeningChoice(oi) {
   const intro = st && st.intro ? (st.intro[LANG] || st.intro.en || st.intro.ja) : [L(g.short)];
   $('#liBody').innerHTML = intro.map(p => `<p>${p}</p>`).join('') +
     `<div class="op-choice">${st ? `<button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: st.steps.length })}</small></span></button>` : ''}` +
-    `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button></div>`;
+    `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button></div>` + opStory(g);
   $('#btnLessonStart').classList.add('hidden');
   lessonView('intro');
 }
@@ -4287,7 +4329,7 @@ document.addEventListener('keydown', e => {
 });
 if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStart(); }, 1000);
 </script>
-<script src="rules.js?v=20261019ru"></script>
+<script src="rules.js?v=20261020st"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=3" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=2" defer></script>
