@@ -1113,6 +1113,7 @@ function takeHit() {
 }
 function activateHyper() {
     hyperT = HYPER_TIME;
+    energy = Math.min(config.energyTotal, energy + config.energyTotal * 0.5); // 通常アイテムと同じだけ回復
     if (tutorial) tutorial.hyper = (tutorial.hyper || 0) + 1;
     effects = effects.filter(e => e.type !== 'hyperMsg');
     effects.push({ type: 'hyperMsg', text: 'HYPER!!  SCORE ×3', life: 120, maxLife: 120 });
