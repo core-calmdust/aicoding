@@ -806,6 +806,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
   addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; });
   let lastKey = '', kickUntil = 0, dirty = true;
+  const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
   function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; }
   function loop(now = performance.now()) {
     if (document.hidden) { rafId = 0; return; }
@@ -826,14 +827,18 @@
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
       const r = alignFn(); if (r && r.w > 10) {
         const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
+        if (cam.fov !== ALIGN_FOV) cam.fov = ALIGN_FOV;   // a wider lens than the showcase: the board's sides show a little (perspective), the field still lands on the DOM rect
         cam.aspect = W / H; const th = Math.tan(cam.fov * Math.PI / 360);
         const h = half * H / (r.h * th);   // field half-size → half the DOM board height
-        cam.position.set(0, top + h, 0.0001); cam.up.set(0, 0, -1); cam.lookAt(0, top, 0);
+        // the lens sits above a point in front of the board, still looking straight down: the field stays a true rectangle
+        // (so it lands exactly on the DOM board) while the board's near face and edges show in perspective
+        const zs = half * ALIGN_SHIFT, offY = zs / (h * th) * (H / 2);
+        cam.position.set(0, top + h, zs); cam.up.set(0, 0, -1); cam.lookAt(0, top, zs - 0.0001);
         // render on demand: the skin's board is still most of the time — only when it moved / resized or something is animating
         const key = r.x.toFixed(1) + ',' + r.y.toFixed(1) + ',' + r.w.toFixed(1) + ',' + r.h.toFixed(1) + ',' + W + ',' + H;
         if (key === lastKey && now > kickUntil && !dirty) return;
         lastKey = key; if (now > kickUntil) dirty = false;   // one last frame after the animation window, however slow the device
-        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2), W, H); cam.updateProjectionMatrix();
+        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2 + offY), W, H); cam.updateProjectionMatrix();
         R.render(scene, cam); return;
       }
     }

@@ -268,7 +268,7 @@
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
     const KH = g.userData.top, sw = M({ map: X.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
-    [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
+    [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
     return g;

@@ -273,7 +273,7 @@
     const key = (c, r) => c + ',' + r;
 
     /* ---------- piece stands (駒台): yours at the bottom right, the opponent's at the top left ---------- */
-    const KH = board.userData.top, STAND = [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }];
+    const KH = board.userData.top, STAND = [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }];
     const wood = T3.M({ map: T3.wood('kayaLeg', '#e0b06a', '#a87232', 256, 256, 2), roughness: .5, bumpScale: .002 });
     STAND.forEach(s => { const k = SG.komadai(wood, KH); k.position.set(s.x, 0, s.z); board.add(k); });
     const slot = i => [STAND[0].x + (i % 2 ? .55 : -.55), STAND[0].z - .85 + (i >> 1) * 1.05];
