@@ -458,7 +458,7 @@ class AudioHandler {
         if (!e) {
             const d = this.ctx.createDelay(2), g = this.ctx.createGain();
             d.delayTime.value = t; g.gain.value = fb;
-            d.connect(g).connect(d); d.connect(this.masterGain);
+            d.connect(g).connect(d); d.connect(this.bgmBus || this.masterGain);
             e = this._echo[key] = d;
         }
         return e;
@@ -513,6 +513,9 @@ class AudioHandler {
         }
 
         this.stopBgm();
+        // BGMは専用の音量ノードにまとめる（止めるときはこれごと消して、鳴り残りを出さない）
+        this.bgmBus = this.ctx.createGain();
+        this.bgmBus.connect(this.masterGain);
         this.bgmPlaying = true;
         this.current16th = 0;
         this.seq4MelodyIndex = 0;
@@ -522,7 +525,7 @@ class AudioHandler {
     }
 
     scheduleBGM() {
-        if (!this.bgmPlaying) {
+        if (!this.bgmPlaying || !this.bgmBus) {
             return;
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
@@ -541,13 +544,13 @@ class AudioHandler {
             osc.frequency.exponentialRampToValueAtTime(40, time + 0.15);
             gain.gain.setValueAtTime(1.0, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-            osc.connect(gain).connect(this.masterGain);
+            osc.connect(gain).connect(this.bgmBus);
             const bufSize = this.ctx.sampleRate * 0.05;
             const buf = this.getNoise();
             noise.buffer = buf;
             noiseGain.gain.setValueAtTime(0.3, time);
             noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.02);
-            noise.connect(noiseGain).connect(this.masterGain);
+            noise.connect(noiseGain).connect(this.bgmBus);
             osc.start(time);
             osc.stop(time + 0.2);
             noise.start(time);
@@ -569,7 +572,7 @@ class AudioHandler {
             const decayTime = open ? 0.3 : 0.05;
             gain.gain.setValueAtTime(open ? 0.3 : 0.2, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + decayTime);
-            noise.connect(filter).connect(panner).connect(gain).connect(this.masterGain);
+            noise.connect(filter).connect(panner).connect(gain).connect(this.bgmBus);
             noise.start(time);
             noise.stop(time + decayTime + 0.05);
             this.bgmOscillators.push(noise, filter, panner, gain);
@@ -586,7 +589,7 @@ class AudioHandler {
             const gain = this.ctx.createGain();
             gain.gain.setValueAtTime(0.8, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-            noise.connect(filter).connect(gain).connect(this.masterGain);
+            noise.connect(filter).connect(gain).connect(this.bgmBus);
             noise.start(time);
             noise.stop(time + 0.1);
             this.bgmOscillators.push(noise, filter, gain);
@@ -612,7 +615,7 @@ class AudioHandler {
             oscL.connect(pannerL).connect(filter);
             pannerR.pan.value = 0.8;
             oscR.connect(pannerR).connect(filter);
-            filter.connect(gain).connect(this.masterGain);
+            filter.connect(gain).connect(this.bgmBus);
             oscL.start(time);
             oscL.stop(time + sixteenth);
             oscR.start(time);
@@ -629,7 +632,7 @@ class AudioHandler {
             gain.gain.setValueAtTime(0.3, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
+            gain.connect(this.bgmBus);
             gain.connect(this.echoBus(sixteenth * 3, 0.5)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + 0.1);
@@ -661,7 +664,7 @@ class AudioHandler {
             gain.gain.linearRampToValueAtTime(0, time + sixteenth * 128);
             oscL.connect(pannerL).connect(filter);
             oscR.connect(pannerR).connect(filter);
-            filter.connect(gain).connect(this.masterGain);
+            filter.connect(gain).connect(this.bgmBus);
             oscL.start(time);
             oscL.stop(time + sixteenth * 128);
             oscR.start(time);
@@ -677,7 +680,7 @@ class AudioHandler {
             osc.frequency.value = note;
             gain.gain.setValueAtTime(0.45, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 1.5);
-            osc.connect(panner).connect(gain).connect(this.masterGain);
+            osc.connect(panner).connect(gain).connect(this.bgmBus);
             osc.start(time);
             osc.stop(time + sixteenth * 1.5);
             this.bgmOscillators.push(osc, panner, gain);
@@ -692,7 +695,7 @@ class AudioHandler {
             gain.gain.setValueAtTime(0.4, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 2);
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
+            gain.connect(this.bgmBus);
             gain.connect(this.echoBus(sixteenth * 4, 0.5)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + sixteenth * 2);
@@ -708,7 +711,7 @@ class AudioHandler {
             gain.gain.setValueAtTime(0.35, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 3.5);
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
+            gain.connect(this.bgmBus);
             gain.connect(this.echoBus(sixteenth * 3, 0.4)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + sixteenth * 3.5);
@@ -724,7 +727,7 @@ class AudioHandler {
             gain.gain.setValueAtTime(0.4, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + sixteenth * 4);
             osc.connect(panner).connect(gain);
-            gain.connect(this.masterGain);
+            gain.connect(this.bgmBus);
             gain.connect(this.echoBus(sixteenth * 6, 0.4)); // 共有のエコー（音ごとに作ると処理が溜まって音が割れる）
             osc.start(time);
             osc.stop(time + sixteenth * 4);
@@ -810,6 +813,12 @@ class AudioHandler {
 
     stopBgm() {
         this.bgmPlaying = false;
+        if (this.bgmBus) { // BGMだけを素早くフェードアウトして切り離す（効果音はそのまま）
+            const bus = this.bgmBus, t = this.ctx.currentTime;
+            try { bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(bus.gain.value, t); bus.gain.linearRampToValueAtTime(0, t + 0.05); } catch (e) {}
+            setTimeout(() => { try { bus.disconnect(); } catch (e) {} }, 200);
+            this.bgmBus = null;
+        }
         this.bgmOscillators.forEach(o => {
             try {
                 o.disconnect();
