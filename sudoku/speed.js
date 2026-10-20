@@ -782,16 +782,19 @@ function showResult(o) {
   if (o.earned) h += `<div class="rscore"><small>${esc(t('res.score'))}</small><span class="sc">+${C.fmtN(o.earned)}</span><span class="pt">${C.COIN}+${C.fmtN(o.earned)}</span></div>`;
   if (g.mode === 'd' && g.ranked && C.ON && C.ON.available && C.DB.prof.name) h += `<div class="rrank" id="sResRank">${lastRank ? t('res.rank', { n: `<b>${C.fmtN(lastRank)}</b>` }) : esc(t('res.ranking'))}</div>`;
   if (o.fresh.length) h += `<div class="rnew">${o.fresh.slice(0, 5).map((a, k) => `<div class="na" style="animation-delay:${.3 + k * .12}s">${C.badge(a.tier, a.icon)}<span><b>${esc(t('res.newach'))} ${esc(a.name)}</b><small>${esc(a.desc)}${a.rw ? ' 🎁 ' + esc(a.rw.bg ? t('sbg.' + a.rw.bg) : C.iconName(a.rw.ic)) : ''}</small></span></div>`).join('')}</div>`;
-  let next = '';
+  let main = '';
   if (g.mode === 'd') {
     const r = dayRec(g.date, g.d) || {}, left = LIMIT_TRIES - (r.a || 0);
-    next = `<button class="btn" data-a="retry">${esc(left > 0 ? t('sp.retry.n', { n: left }) : t('sp.retry.p'))}</button>`;
+    main = `<button class="btn" data-a="retry">${esc(left > 0 ? t('sp.retry.n', { n: left }) : t('sp.retry.p'))}</button>`;
   } else {
     const np = g.pi + 1 < NST && stageOpen(g.ci, g.pi + 1) ? g.pi + 1 : -1;
-    next = o.win && np >= 0 ? `<button class="btn" data-a="next">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="retry">${esc(t('sp.retry'))}</button>`;
+    main = o.win && np >= 0 ? `<button class="btn" data-a="next">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="retry">${esc(t('sp.retry'))}</button>`;
   }
-  h += `<div class="ract"><button class="btn ghost" data-a="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>${esc(t('share'))}</button>${next}</div>`;
-  h += `<div class="ract" style="margin-top:12px"><button class="btn ghost sm" data-a="back">${esc(g.mode === 'd' ? t('res.home') : t('res.list'))}</button>${g.mode === 'c' && o.win ? `<button class="btn ghost sm" data-a="retry">${esc(t('sp.retry'))}</button>` : ''}${C.DB.pts >= C.GACHA_COST ? `<button class="btn ghost sm" data-a="gacha">${esc(t('ga.btn'))}</button>` : ''}</div>`;
+  // big main button, then [back home / list] [share] (+ retry after a clear, gacha) below it
+  h += `<div class="ract smain">${main}</div>`;
+  h += `<div class="ract ssub"><button class="btn ghost" data-a="back"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>${esc(g.mode === 'd' ? t('sp.home') : t('res.list'))}</button><button class="btn ghost" data-a="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>${esc(t('share'))}</button></div>`;
+  const extra = (g.mode === 'c' && o.win && /data-a="next"/.test(main) ? `<button class="btn ghost sm" data-a="retry">${esc(t('sp.retry'))}</button>` : '') + (C.DB.pts >= C.GACHA_COST ? `<button class="btn ghost sm" data-a="gacha">${esc(t('ga.btn'))}</button>` : '');
+  if (extra) h += `<div class="ract" style="margin-top:10px">${extra}</div>`;
   $('#resBody').innerHTML = h;
   $('#resBody').querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
     const a = b.dataset.a; C.SFX.tap();

@@ -354,3 +354,9 @@ body.scompact #spd .skey .n{font-size:34px}
 .shelp kbd{font-family:var(--num);background:var(--surface);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 4px;font-size:11px}
 .sibling span{text-align:start;align-items:flex-start}
 @media (max-width:560px){.sheet.tut .sh h3{font-size:15px}.tdots{gap:3px}.tdots i{width:6px;height:6px}.tdots i.on{width:14px}}
+.ract.smain .btn{width:min(100%,380px);font-size:20px;padding:16px 24px}
+.ract.ssub{margin-top:12px}
+.ract.ssub .btn{flex:1;max-width:182px}
+.tflick{z-index:60}
+.tbd .tc.b{touch-action:none}
+.tpad button.press{transform:translateY(3px);box-shadow:0 0 0 var(--keyedge)}

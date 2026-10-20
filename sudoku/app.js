@@ -150,7 +150,7 @@ const rarChip = r => `<span class="rar ${r}">${r}</span>`;
 const IC = window.SudokuIcons || null;
 let uidSeq = 0;
 function iconSvg(id, opts = {}) {
-  if (IC && id >= 0 && id < IC.COUNT) return IC.svg(id, Object.assign({ uid: 'u' + (++uidSeq) }, opts));
+  if (IC && id >= 0 && id < (IC.COUNT_ALL || IC.COUNT)) return IC.svg(id, Object.assign({ uid: 'u' + (++uidSeq) }, opts));
   return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ffe0ea"/><circle cx="50" cy="56" r="28" fill="#fff"/><circle cx="40" cy="54" r="3.5" fill="#43385a"/><circle cx="60" cy="54" r="3.5" fill="#43385a"/><path d="M45 63q5 4 10 0" stroke="#43385a" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="33" cy="62" rx="5" ry="3" fill="#ffb3c6"/><ellipse cx="67" cy="62" rx="5" ry="3" fill="#ffb3c6"/></svg>`;
 }
 const iconInfo = id => (IC && id >= 0 ? IC.info(id) : { id, rarity: 'N', name: () => '' });

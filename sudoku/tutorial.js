@@ -46,7 +46,7 @@ function miniBoard(host, o) {
     h += '</div>';
     if (!o.done) h += `<div class="tpad n${N}">${[...Array(N).keys()].map(k => `<button data-d="${k + 1}">${k + 1}</button>`).join('')}</div>`;
     host.innerHTML = h;
-    host.querySelectorAll('.tc.b').forEach(el => el.onclick = () => { sel = +el.dataset.i; C.SFX.tap(); draw(); });
+    host.querySelectorAll('.tc.b').forEach(el => el.addEventListener('pointerdown', e => flickStart(e, +el.dataset.i)));
     host.querySelectorAll('.tpad button').forEach(b => b.onclick = () => put(+b.dataset.d));
   };
   const put = d => {
@@ -63,9 +63,38 @@ function miniBoard(host, o) {
       o.onMiss && o.onMiss();
     }
   };
+  // flick: hold a blank cell and swipe toward the number (4×4: ↖1 ↗2 ↙3 ↘4, 9×9: the 3×3 key layout)
+  const POS = N === 4 ? { 1: [-1, -1], 2: [1, -1], 3: [-1, 1], 4: [1, 1] } : { 1: [-1, -1], 2: [0, -1], 3: [1, -1], 4: [-1, 0], 5: [0, 0], 6: [1, 0], 7: [-1, 1], 8: [0, 1], 9: [1, 1] };
+  const dirOf = (dx, dy, long) => {
+    if (Math.hypot(dx, dy) < 14) return N === 9 && long ? 5 : 0;
+    if (N === 4) return dy < 0 ? (dx < 0 ? 1 : 2) : (dx < 0 ? 3 : 4);
+    const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+    return { 0: 6, 1: 9, 2: 8, 3: 7, 4: 4, '-4': 4, '-1': 3, '-2': 2, '-3': 1 }[a];
+  };
+  let fl = null;
+  const F = () => { let el = document.getElementById('tuFlick'); if (!el) { el = document.createElement('div'); el.id = 'tuFlick'; el.className = 'flick sflick tflick'; document.body.appendChild(el); } return el; };
+  const show = () => {
+    if (!fl || fl.shown) return; fl.shown = true;
+    const r = host.querySelector(`[data-i="${fl.i}"]`).getBoundingClientRect(), gap = N === 4 ? 46 : 52;
+    const el = F(); el.innerHTML = Object.entries(POS).map(([d, [x, y]]) => `<i data-d="${d}" style="left:${90 + x * gap}px;top:${90 + y * gap}px">${d}</i>`).join('');
+    el.style.left = Math.max(90, Math.min(innerWidth - 90, r.left + r.width / 2)) + 'px'; el.style.top = Math.max(90, Math.min(innerHeight - 90, r.top + r.height / 2)) + 'px'; el.classList.add('on'); C.vib(5);
+  };
+  const hide = () => { const el = document.getElementById('tuFlick'); if (el) el.classList.remove('on'); if (fl) clearTimeout(fl.t); fl = null; };
+  function flickStart(e, i) {
+    if (o.done) return;
+    e.preventDefault(); sel = i; C.SFX.tap(); draw();
+    fl = { i, x: e.clientX, y: e.clientY, id: e.pointerId, shown: false, d: 0, long: false };
+    fl.t = setTimeout(() => { if (fl && !fl.shown) { fl.long = true; show(); } }, 320);
+    const mv = ev => { if (!fl || ev.pointerId !== fl.id) return; const dx = ev.clientX - fl.x, dy = ev.clientY - fl.y; if (!fl.shown && Math.hypot(dx, dy) > 12) { clearTimeout(fl.t); show(); } if (fl.shown) { const d = dirOf(dx, dy, fl.long); if (d !== fl.d) { fl.d = d; document.querySelectorAll('#tuFlick i').forEach(x => x.classList.toggle('on', +x.dataset.d === d)); } } };
+    const up = ev => { if (!fl || ev.pointerId !== fl.id) return; removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); const f = fl; hide(); if (f.shown && f.d) put(f.d); };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  }
+  const move = k => { if (o.done) return; const left = o.blanks.filter(i => !grid[i]); if (left.length < 2) return; sel = left[(left.indexOf(sel) + k + left.length) % left.length]; C.SFX.tap(); draw(); };
   draw();
-  return { put };
+  board = { put: d => { if (!o.done && d >= 1 && d <= N) { const b = host.querySelector(`.tpad button[data-d="${d}"]`); if (b) { b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 110); } put(d); } }, move };
+  return board;
 }
+let board = null;
 /* static pictures for the explanation steps */
 const IMG = {
   flick: () => { const pos = { 1: [-1, -1], 2: [0, -1], 3: [1, -1], 4: [-1, 0], 5: [0, 0], 6: [1, 0], 7: [-1, 1], 8: [0, 1], 9: [1, 1] }; return `<svg viewBox="0 0 120 120" class="tpic sq"><rect x="38" y="38" width="44" height="44" rx="8" fill="#fff" stroke="var(--acc)" stroke-width="3"/>${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => { const [x, y] = pos[d]; return `<circle cx="${60 + x * 38}" cy="${60 + y * 38}" r="14" fill="${d === 3 ? 'var(--acc)' : '#fff'}" stroke="#e6dcef"/><text x="${60 + x * 38}" y="${60 + y * 38}" dy=".36em" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="15" fill="${d === 3 ? '#fff' : 'var(--acc)'}">${d}</text>`; }).join('')}<path d="M60 60L90 30" stroke="var(--acc)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 5"/><g class="tfinger"><circle cx="60" cy="60" r="7" fill="#ffd9c4" stroke="#e8a98a" stroke-width="2"/></g></svg>`; },
@@ -154,7 +183,7 @@ function ensure() {
   };
 }
 function draw() {
-  clearTimeout(autoT);
+  clearTimeout(autoT); board = null;
   const s = steps[step], last = step === steps.length - 1;
   $('#tuTitle').textContent = t(kind === 'speed' ? 'tu.s.title' : 'tu.d.title');
   $('#tuDots').innerHTML = steps.map((_, k) => `<i class="${k === step ? 'on' : k < step ? 'past' : ''}"></i>`).join('');
@@ -188,5 +217,16 @@ function open(k, core) {
   if (document.querySelector('.modal.on')) { C.closeModals(); setTimeout(() => { C.openModal('mTut'); draw(); }, 80); }
   else { C.openModal('mTut'); draw(); }
 }
+/* keyboard: ← → pages, number keys enter digits, ↑ ↓ / Tab switch between empty cells */
+addEventListener('keydown', e => {
+  const m = document.getElementById('mTut'); if (!m || !m.classList.contains('on')) return;
+  if (e.target.closest && e.target.closest('input,select,textarea')) return;
+  const rtl = document.documentElement.dir === 'rtl';
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); e.stopImmediatePropagation(); ((e.key === 'ArrowRight') !== rtl ? $('#tuNext') : $('#tuPrev')).click(); return; }
+  if (e.key === 'Enter') { e.preventDefault(); $('#tuNext').click(); return; }
+  const dm = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+  if (dm && board) { e.preventDefault(); board.put(+dm[1]); return; }
+  if (board && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Tab')) { e.preventDefault(); board.move(e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey) ? -1 : 1); }
+}, true);
 window.SudokuTutorial = { open, mascot };
 })();
