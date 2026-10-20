@@ -1089,12 +1089,14 @@ const ruleTour = window.RuleTour ? RuleTour.create({
   mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG,
   close: () => $('#rulesOverlay').classList.remove('show'),
   play: () => { $('#rulesOverlay').classList.remove('show'); openNewDialog(); },
-  lessons: () => { $('#rulesOverlay').classList.remove('show'); openLessons(); },
+  lessons: () => tabSwitch(() => { $('#rulesOverlay').classList.remove('show'); openLessons(); }),
   sound: k => (k === 'ok' ? sExtra() : sWrong()),
   pages: RT_PAGES,
 }) : null;
 // r: open at the page of that rule variant (from the new-game dialog); the menu / first-time banner start at step 1
+// the rules are the first tab of the lessons dialog (ルール / レッスン / パズル)
 function openRules(r) {
+  selTab('rules'); $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show');
   $('#rulesOverlay').classList.add('show');
   if (ruleTour) ruleTour.open(r && RT_START[r] !== undefined ? RT_START[r] : 0);
 }
@@ -1126,13 +1128,20 @@ function enterSetup(b, side, rules) {
   resetSeeds(); layout(); update();
 }
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+// switch between the tab overlays without the fade, so it looks like one dialog
+function tabSwitch(fn) {
+  const inst = on => ['#lessonOverlay', '#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on));
+  inst(true); fn(); setTimeout(() => inst(false), 150);
+}
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
-  inst(true);
-  if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
-  if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
-  setTimeout(() => inst(false), 150);
+  const v = b.dataset.v, shown = { rules: '#rulesOverlay', lesson: '#lessonOverlay', puzzle: '#puzzleOverlay' }[v];
+  if (!shown || ($(shown).classList.contains('show') && !(v === 'lesson' && $('#lessonListView').classList.contains('hidden')))) return;
+  tabSwitch(() => {
+    if (v !== 'rules' && ruleTour) ruleTour.stop();
+    Object.values({ rules: '#rulesOverlay', lesson: '#lessonOverlay', puzzle: '#puzzleOverlay' }).forEach(x => { if (x !== shown) $(x).classList.remove('show'); });
+    if (v === 'rules') openRules(); else if (v === 'puzzle') openPuzzles(); else openLessons();
+  });
 }));
 
 // ====================================================================== lessons
