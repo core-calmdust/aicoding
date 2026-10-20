@@ -151,3 +151,8 @@ html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightne
 html.atlas-shogi.atlas-sk-ink .pc.atlas3d .k img{filter:brightness(.62) contrast(1.15) saturate(.8)}
 html.atlas-shogi.atlas-sk-grain .pc.atlas3d .k img{filter:sepia(.25) saturate(1.2) brightness(.95)}
 html.atlas-shogi #segPieces{flex-wrap:wrap}
+/* phones (reversi): the 3D bezel is a little larger than the page's board frame — shrink the board a bit and keep clear space above / below */
+@media (max-width:760px){
+  html.atlas-skin:not(.atlas-shogi){--board:calc(min(100vw - 24px, var(--vh) - 200px, 900px) / 1.17)!important}
+  html.atlas-skin:not(.atlas-shogi) .frame{margin-top:calc(var(--board) * .045)!important;margin-bottom:calc(var(--board) * .045)!important}
+}
