@@ -351,7 +351,7 @@
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
     if (plain) {   // play screen of the full games: just a wide wooden tabletop, no room edges
-      const tm = M({ map: woodTop('tblR3', '#a96e38', '#4e2709'), roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .003 });
+      const tm = M({ map: woodTop('tblR5', '#c08446', '#6a3e1c'), roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .003 });
       const t = new TT.Mesh(new TT.PlaneGeometry(40, 40), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
     } else {
     // tatami
@@ -423,7 +423,7 @@
     const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); scene.add(lamp);
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 32, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); scene.add(shade); }
-    if (R) R.toneMappingExposure = L.exp;
+    if (R) R.toneMappingExposure = L.exp * (plain ? .8 : 1);
     scene.background = new TT.Color(plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
     roomMode = mode;
   }
