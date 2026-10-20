@@ -114,6 +114,7 @@ function tabClick(v) {
 const hE = (R, C, r, c) => r * C + c, vE = (R, C, r, c) => (R + 1) * C + r * (C + 1) + c;
 function boxEdges(R, C, r, c) { return [hE(R, C, r, c), hE(R, C, r + 1, c), vE(R, C, r, c), vE(R, C, r, c + 1)]; }
 const RULES = [
+  { id: 'intro', intro: true },   // page 1: what the game is (history / how to win / culture) — common spec, RuleTour.intro
   { id: 1, R: 2, C: 2, anim: [[0, 0], [11, 1], [4, 0], [1, 1], [9, 0]], task: 'any' },
   { id: 2, R: 2, C: 2, setup: [0, 2, 6, 11, 4], task: 'complete' },
   { id: 3, R: 1, C: 3, setup: [0, 1, 2, 3, 4, 5, 6], task: 'chain', need: 3 },
@@ -143,8 +144,12 @@ function rulesRender(keepState) {
   if (!keepState) rulesPageInit();
   const done = lsGet(RSTORE, {});
   let h = `<div class="ru-steps">${RULES.map((x, j) => `<button data-ru="${j}" class="${j === RU.i ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${j + 1}">${j + 1}</button>`).join('')}</div>`;
-  h += `<h2>${escH(t('ru.p' + P.id + '.t'))}</h2><div class="lesson-intro ru-body">${t('ru.p' + P.id + '.b')}</div>`;
-  if (P.sizes) {
+  if (P.intro) h += `<h2>${escH(t('intro.t'))}</h2>`;
+  else h += `<h2>${escH(t('ru.p' + P.id + '.t'))}</h2><div class="lesson-intro ru-body">${t('ru.p' + P.id + '.b')}</div>`;
+  if (P.intro) {
+    h += window.RuleTour ? `<div class="ru-intro">${RuleTour.intro({ lang: LANG, img: '../images/atlas/dots.webp', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') })}</div>`
+      : `<div class="lesson-intro ru-body"><p>${t('intro.hist')}</p><p>${t('intro.win')}</p><p>${t('intro.cult')}</p></div>`;
+  } else if (P.sizes) {
     h += `<div class="ru-sizes">${[3, 4, 5].map(k => `<figure>${miniSVG({ R: k, C: k })}<figcaption><b>${k} × ${k}</b><br>${escH(t('ru.size', { d: (k + 1) * (k + 1), e: 2 * k * (k + 1), b: k * k }))}</figcaption></figure>`).join('')}</div>`;
   } else if (P.finish) {
     h += `<div class="ru-finish"><button class="mbtn go" id="ruPlay">${escH(t('ru.play'))}</button><button class="mbtn go" id="ruLessons">${escH(t('ru.toLessons'))}</button></div>`;
@@ -154,7 +159,13 @@ function rulesRender(keepState) {
   h += `<div class="modal-actions"><button class="mbtn" id="ruPrev" ${RU.i === 0 ? 'disabled' : ''}>${escH(t('ru.prev'))}</button><button class="mbtn" id="ruClose">${escH(t('close'))}</button><button class="mbtn go" id="ruNext" ${RU.i === n - 1 ? 'disabled' : ''}>${escH(t('ru.next'))}</button></div>`;
   $('#rulesBody').innerHTML = h;
   if (P.R) { rulesDraw(); if (P.anim) rulesAnim(); else rulesTaskText(); }
-  if (P.sizes || P.finish) rulesMark(P.id);
+  if (P.intro || P.sizes || P.finish) rulesMark(P.id);
+}
+// correct answer: ✓ is shown, then the next page opens by itself after ~1.8 s (common spec, same as RuleTour api.ok).
+// Called only after the page's own animation has finished; any page change / close / retry clears the timer (rulesStop).
+function rulesAutoNext(st, ms) {
+  const R0 = RU; clearTimeout(RU.timer);
+  RU.timer = setTimeout(() => { if (RU === R0 && RU.st === st && RU.i < RULES.length - 1 && !$('#rulesView').classList.contains('hidden')) { RU.i++; rulesRender(); } }, ms || 1800);
 }
 function rulesMark(id) { const d = lsGet(RSTORE, {}); if (!d[id]) { d[id] = 1; lsSet(RSTORE, d); const b = document.querySelector(`.ru-steps button[data-ru="${RU.i}"]`); if (b) b.classList.add('ok'); } }
 function rulesDraw() {
@@ -191,7 +202,7 @@ async function rulesAnim() {
   st.wait = false;
   if (P.task === 'end') {   // finished game: show the final count, then offer replay
     st.done = true; st.msg = t('ru.p5.ok', { a: Object.values(st.own).filter(o => o === 0).length, b: Object.values(st.own).filter(o => o === 1).length }); st.msgCls = 'ok';
-    rulesMark(P.id); rulesDraw(); rulesTaskText(); return;
+    rulesMark(P.id); rulesDraw(); rulesTaskText(); rulesAutoNext(st, 2600); return;
   }
   // the task starts from a fresh copy of the end position
   rulesDraw(); rulesTaskText();
@@ -245,6 +256,7 @@ function rulesClick(e) {
     }
   }
   rulesDraw(); rulesTaskText();
+  if (st.done) rulesAutoNext(st);
 }
 function rulesWire() {
   $('#rulesBody').addEventListener('click', e => {
@@ -258,6 +270,15 @@ function rulesWire() {
     else if (b.id === 'ruPlay') { closeLessonOverlay(); endLesson(true); endPuzzle(true); savedGame = null; Object.assign(settings, { mode: 'ai', size: 3, order: 0, level: 1 }); newGame(); }
     else if (b.id === 'ruLessons') openLessons();
   });
+  // ← → page through the rules (reversed for Arabic / RTL), only while the rules view is visible and not while typing
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    if (!RU || !$('#lessonOverlay').classList.contains('show') || $('#rulesView').classList.contains('hidden')) return;
+    const tg = e.target; if (tg && (/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName) || tg.isContentEditable)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const d = (e.key === 'ArrowRight' ? 1 : -1) * (document.documentElement.lang === 'ar' ? -1 : 1), i = RU.i + d;
+    if (i >= 0 && i < RULES.length) { RU.i = i; rulesRender(); }
+  }, true);
   // hover preview on the mini board
   $('#rulesBody').addEventListener('pointerover', e => { const h = e.target.closest('.mb-hit'); if (h) h.classList.add('hov'); });
   $('#rulesBody').addEventListener('pointerout', e => { const h = e.target.closest('.mb-hit'); if (h) h.classList.remove('hov'); });

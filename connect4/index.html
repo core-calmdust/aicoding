@@ -777,12 +777,12 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021rt"></script>
+<script src="i18n.js?v=20261021rt3"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/pzbook.js?v=2"></script>
-<script src="../shared/headerbar.js?v=2"></script>
-<script src="../shared/ruletour.js?v=5"></script>
+<script src="../shared/headerbar.js?v=3"></script>
+<script src="../shared/ruletour.js?v=6"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1411,7 +1411,10 @@ const tourWinPage = (id, cols) => tourPage(id, cols, { play(api, S, c) {
   else { S.busy = true; S.draw(); api.ng(t('ru.ng4')); }
 } });
 function tourToMove(g) { let n = 0; for (const c of g) n += c.length; return n & 1 ? P2 : P1; }
+// page 1: what the game is (history / how to win / culture), read only — common spec
+const introPage = img => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img, origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const RULE_PAGES = [
+  introPage('../images/atlas/connect4.webp'),
   tourPage('drop', ['', '', '1', '12', '2', '', ''], { hl: 3, play(api, S, c) {
     if (c !== 3) { api.ng(t('ru.drop.ng'), { reset: false }); return; }
     S.drop0(c, P1); S.done = true; S.marks = [[3, 2, 'ok']]; S.draw(); api.ok(t('ru.drop.ok'));
@@ -1451,7 +1454,8 @@ const ruleTour = RuleTour.create({
   sound: k => { if (k === 'ok') playChime(true); else playTick(); },
   pages: RULE_PAGES,
 });
-function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); ruleTour.open(ruleTour.page); }
+let rulesOpened = false;   // the first opening of a session starts at the intro page
+function openRules(page) { selTab('rules'); showOverlay('#rulesOverlay'); ruleTour.open(page != null ? page : rulesOpened ? ruleTour.page : 0); rulesOpened = true; }
 function renderRules() { ruleTour.render(); }
 new MutationObserver(() => { if (!$('#rulesOverlay').classList.contains('show')) ruleTour.stop(); }).observe($('#rulesOverlay'), { attributes: true, attributeFilter: ['class'] });
 $('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
@@ -2072,7 +2076,7 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
-const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' }) : null;
+const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' }) : null;
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());

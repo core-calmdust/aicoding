@@ -2089,6 +2089,8 @@ const RT_PAGES = [
       };
     } },
 ].map(P => Object.assign({ title: () => esc(rtx(P.id + '.t')), body: () => `<p>${rtx(P.id + '.b')}</p>`, task: () => esc(rtx(P.id + '.task')) }, P));
+// page 1: what the game is (history / how to win / culture), read only — common spec
+if (window.RuleTour) RT_PAGES.unshift({ id: 'intro', title: () => esc(t('intro.t')), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/backgammon.webp', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const rulesTour = window.RuleTour ? RuleTour.create({
   mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG, pages: RT_PAGES,
   close: () => hideOverlay('#rulesOverlay'),
@@ -2097,7 +2099,7 @@ const rulesTour = window.RuleTour ? RuleTour.create({
   sound: k => SFX.chime(k === 'ok'),
 }) : null;
 let rulesOpened = false;
-function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); if (rulesTour) { if (!rulesOpened) rulesTour.open(0); else rulesTour.open(rulesTour.page); } rulesOpened = true; }
+function openRules(page) { selTab('rules'); showOverlay('#rulesOverlay'); if (rulesTour) rulesTour.open(page != null ? page : rulesOpened ? rulesTour.page : 0); rulesOpened = true; }
 function renderRules() { if (rulesTour) rulesTour.render(); }
 $('#btnRules').onclick = () => openRules();
 $('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay('#rulesOverlay'); };
@@ -2455,7 +2457,7 @@ if (window.PZBook) PZBook.setLang(LANG);
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { try { if (match) renderInfo(); } catch (e) {} });
-if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
+if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' });
 if (hadSave) { view = settings.mode === 'ai' ? humanSide : 0; cur = latestIdx(); updateCommit(); }
 if (loadFromHash()) { /* shared match opened */ }
 else if (!hadSave) { match = newMatch(null, settings.matchLen, settings.cube); updateCommit(); render(); renderInfo(); openNewDialog(); }

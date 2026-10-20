@@ -1137,3 +1137,98 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+
+// rules tutorial: intro page (history / how to win / culture) — RuleTour.intro
+(() => { const X = {
+"ja": {
+"intro.t": "バックギャモンってどんなゲーム？",
+"intro.origin": "西アジア（古代）",
+"intro.players": "2人",
+"intro.time": "1ゲーム10〜20分",
+"intro.hist": "サイコロを振ってコマを進める「すごろく」の仲間で、起源は古代の西アジアにさかのぼるとされる、世界でもっとも古いボードゲームの系統のひとつです。日本にも古く「盤双六」として伝わりました。点数を倍にする「ダブリングキューブ」は20世紀になってから加わったものです。",
+"intro.win": "自分の<b>15個のチェッカーを全部ゴールに上げた（ベアオフした）</b>ほうが勝ち。相手が1個も上げていなければ「ギャモン」で2倍の勝ちになります。",
+"intro.cult": "中東や地中海沿岸では「タブラ」「ナルド」などの名前でカフェや家庭で日常的に遊ばれています。運と実力の両方が問われるゲームとして世界選手権などの大会も開かれ、日本にもプロや愛好家の団体があります。"
+},
+"en": {
+"intro.t": "What is backgammon?",
+"intro.origin": "Western Asia (ancient)",
+"intro.players": "2",
+"intro.time": "10–20 min per game",
+"intro.hist": "A race game played with dice, backgammon belongs to one of the oldest families of board games, thought to go back to ancient Western Asia. An ancestor even reached old Japan as “ban-sugoroku”. The doubling cube, which raises the stakes, was only added in the 20th century.",
+"intro.win": "The first player to <b>bear off all 15 checkers</b> wins. If the loser has borne off none, it is a “gammon” and counts double.",
+"intro.cult": "Around the Middle East and the Mediterranean it is an everyday café and family game under names like “tavla” and “nard”. Mixing luck and skill, it has international tournaments including a world championship, and clubs of players worldwide."
+},
+"zh": {
+"intro.t": "双陆棋是什么样的游戏？",
+"intro.origin": "西亚（古代）",
+"intro.players": "2人",
+"intro.time": "每局10〜20分钟",
+"intro.hist": "掷骰子走棋的竞速游戏，属于世界上最古老的棋盘游戏家族之一，一般认为起源于古代西亚。它的远亲在古代也传到了中国和日本，称为“双陆”。用来加倍分数的“加倍骰”是20世纪才加入的。",
+"intro.win": "先把<b>自己的15枚棋子全部移出棋盘（离盘）</b>的一方获胜。若对方一枚都没移出，就是“全胜（gammon）”，分数加倍。",
+"intro.cult": "在中东和地中海沿岸，人们以“塔弗拉”“纳尔德”等名称在咖啡馆和家中日常对弈。运气与实力并重，有世界锦标赛等国际比赛，世界各地也有许多爱好者团体。"
+},
+"ko": {
+"intro.t": "백개먼은 어떤 게임?",
+"intro.origin": "서아시아 (고대)",
+"intro.players": "2명",
+"intro.time": "한 게임 10~20분",
+"intro.hist": "주사위를 굴려 말을 나아가게 하는 경주 게임으로, 고대 서아시아에서 시작되었다고 여겨지는 세계에서 가장 오래된 보드게임 계통 중 하나입니다. 동아시아에도 옛날 “쌍륙”으로 전해졌습니다. 점수를 두 배로 하는 “더블링 큐브”는 20세기에 더해졌습니다.",
+"intro.win": "<b>자기 체커 15개를 모두 판 밖으로 빼낸(베어오프)</b> 쪽이 승리. 상대가 하나도 빼내지 못했다면 “개먼”으로 2배 승리입니다.",
+"intro.cult": "중동과 지중해 연안에서는 “타블라”, “나르드” 등의 이름으로 카페와 가정에서 일상적으로 즐깁니다. 운과 실력이 함께 필요한 게임으로 세계선수권 같은 대회도 열립니다."
+},
+"es": {
+"intro.t": "¿Qué es el backgammon?",
+"intro.origin": "Asia occidental (antigüedad)",
+"intro.players": "2",
+"intro.time": "10–20 min por partida",
+"intro.hist": "Es un juego de carreras con dados que pertenece a una de las familias de juegos de tablero más antiguas, que se cree que se remonta al antiguo Asia occidental. El cubo doblador, que sube la apuesta, se añadió en el siglo XX.",
+"intro.win": "Gana quien <b>saque primero sus 15 fichas del tablero</b>. Si el rival no ha sacado ninguna, es un “gammon” y vale el doble.",
+"intro.cult": "En Oriente Medio y el Mediterráneo se juega a diario en cafés y casas con nombres como “tavla” o “nard”. Combina suerte y habilidad, y tiene torneos internacionales, incluido un campeonato mundial."
+},
+"fr": {
+"intro.t": "Qu’est-ce que le backgammon ?",
+"intro.origin": "Asie occidentale (Antiquité)",
+"intro.players": "2",
+"intro.time": "10–20 min par partie",
+"intro.hist": "Jeu de course aux dés, le backgammon appartient à l’une des plus anciennes familles de jeux de plateau, qui remonterait à l’Asie occidentale antique. En France, on connaît aussi son cousin le trictrac. Le videau, qui double l’enjeu, n’a été ajouté qu’au XXe siècle.",
+"intro.win": "Le premier à <b>sortir ses 15 pions</b> gagne. Si le perdant n’en a sorti aucun, c’est un « gammon » qui compte double.",
+"intro.cult": "Au Moyen-Orient et autour de la Méditerranée, on y joue tous les jours au café et en famille, sous des noms comme « tavla » ou « nard ». Mêlant chance et habileté, il a des tournois internationaux dont un championnat du monde."
+},
+"pt": {
+"intro.t": "O que é o gamão?",
+"intro.origin": "Ásia Ocidental (Antiguidade)",
+"intro.players": "2",
+"intro.time": "10–20 min por partida",
+"intro.hist": "Jogo de corrida com dados, o gamão pertence a uma das famílias de jogos de tabuleiro mais antigas, que se acredita remontar à antiga Ásia Ocidental. O cubo de dobra, que aumenta a aposta, só foi acrescentado no século XX.",
+"intro.win": "Vence quem <b>retirar primeiro as suas 15 peças</b> do tabuleiro. Se o perdedor não retirou nenhuma, é um “gammon” e vale o dobro.",
+"intro.cult": "No Oriente Médio e no Mediterrâneo é jogado diariamente em cafés e em casa, com nomes como “tavla” e “nard”. Misturando sorte e habilidade, tem torneios internacionais, incluindo um campeonato mundial."
+},
+"de": {
+"intro.t": "Was ist Backgammon?",
+"intro.origin": "Westasien (Antike)",
+"intro.players": "2",
+"intro.time": "10–20 Min. pro Spiel",
+"intro.hist": "Backgammon ist ein Würfel-Wettlaufspiel und gehört zu einer der ältesten Brettspielfamilien, die vermutlich ins antike Westasien zurückreicht. In Europa war es lange als „Puff“ oder „Tric-Trac“ bekannt. Der Dopplerwürfel, der den Einsatz erhöht, kam erst im 20. Jahrhundert hinzu.",
+"intro.win": "Wer zuerst <b>alle 15 Steine hinauswürfelt</b>, gewinnt. Hat der Verlierer noch keinen Stein hinausgebracht, ist es ein „Gammon“ und zählt doppelt.",
+"intro.cult": "Im Nahen Osten und am Mittelmeer wird es täglich im Café und zu Hause gespielt, unter Namen wie „Tavla“ oder „Nard“. Glück und Können zugleich: Es gibt internationale Turniere bis hin zur Weltmeisterschaft."
+},
+"hi": {
+"intro.t": "बैकगैमन कैसा खेल है?",
+"intro.origin": "पश्चिम एशिया (प्राचीन)",
+"intro.players": "2",
+"intro.time": "एक खेल 10–20 मिनट",
+"intro.hist": "पासे फेंककर गोटियाँ आगे बढ़ाने वाला यह दौड़ का खेल दुनिया के सबसे पुराने बोर्ड-खेल परिवारों में से एक है, जिसकी जड़ें प्राचीन पश्चिम एशिया में मानी जाती हैं। दाँव दुगुना करने वाला “डबलिंग क्यूब” 20वीं सदी में जुड़ा।",
+"intro.win": "जो पहले <b>अपनी सभी 15 गोटियाँ बोर्ड से बाहर (बेयर-ऑफ़)</b> कर दे, वह जीतता है। अगर हारने वाले ने एक भी गोटी बाहर नहीं की, तो “गैमन” — दुगुने अंक।",
+"intro.cult": "मध्य-पूर्व और भूमध्य सागर के इलाकों में इसे “तावला”, “नर्द” जैसे नामों से कैफ़े और घरों में रोज़ खेला जाता है। किस्मत और कौशल दोनों वाले इस खेल की विश्व चैंपियनशिप जैसी अंतरराष्ट्रीय प्रतियोगिताएँ भी होती हैं।"
+},
+"ar": {
+"intro.t": "ما هي لعبة الطاولة؟",
+"intro.origin": "غرب آسيا (قديماً)",
+"intro.players": "2",
+"intro.time": "10–20 دقيقة للعبة",
+"intro.hist": "الطاولة لعبة سباق بالنرد تنتمي إلى واحدة من أقدم عائلات ألعاب الطاولة، ويُعتقد أن أصلها يعود إلى غرب آسيا القديم. أما مكعب المضاعفة الذي يرفع الرهان فقد أُضيف في القرن العشرين.",
+"intro.win": "يفوز من <b>يُخرج قطعه الخمس عشرة كلها</b> أولاً. وإذا لم يُخرج الخاسر أي قطعة فهي «غامون» وتُحتسب مضاعفة.",
+"intro.cult": "في الشرق الأوسط وحوض المتوسط تُلعب يومياً في المقاهي والبيوت بأسماء مثل «طاولة الزهر» و«النرد». تجمع بين الحظ والمهارة، ولها بطولات دولية منها بطولة العالم."
+}
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();

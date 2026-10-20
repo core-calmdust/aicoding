@@ -1527,3 +1527,98 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+
+// rules tutorial: intro page (history / how to win / culture) — RuleTour.intro
+(() => { const X = {
+"ja": {
+"intro.t": "コネクトフォーってどんなゲーム？",
+"intro.origin": "アメリカ（1970年代）",
+"intro.players": "2人",
+"intro.time": "5〜10分",
+"intro.hist": "縦に立てた盤の上からコマを落として並べるゲームで、1970年代にアメリカで商品として発売され、世界中に広まりました。1980年代末にはコンピュータの研究で、双方が最善を尽くせば先手が勝てることが証明されています。",
+"intro.win": "自分のコマを<b>縦・横・斜めのどれかに4つ</b>並べたら勝ち。42マスがすべて埋まってもどちらも4つ並ばなければ<b>引き分け</b>です。",
+"intro.cult": "ルールが簡単で1局が短いので、家族や友だちと遊ぶ定番のゲームとして親しまれています。国によって「フォー・イン・ア・ロウ」「四目並べ」などさまざまな名前で呼ばれ、AIや探索アルゴリズムの教材としてもよく使われます。"
+},
+"en": {
+"intro.t": "What is Connect Four?",
+"intro.origin": "USA (1970s)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "Discs are dropped into an upright grid to make lines. The game was sold commercially in the USA in the 1970s and spread around the world. In the late 1980s computer research proved that the first player can force a win with perfect play.",
+"intro.win": "Line up <b>four of your discs across, up and down, or diagonally</b> to win. If all 42 cells fill up with no line of four, the game is a <b>draw</b>.",
+"intro.cult": "Simple rules and short games have made it a family classic. It goes by many names, such as “Four in a Row”, and it is a popular example for teaching AI and search algorithms."
+},
+"zh": {
+"intro.t": "四子棋是什么样的游戏？",
+"intro.origin": "美国（20世纪70年代）",
+"intro.players": "2人",
+"intro.time": "5〜10分钟",
+"intro.hist": "从竖立的棋盘上方投下棋子连成一线的游戏。20世纪70年代在美国作为商品发售，随后风靡全球。80年代末，计算机研究证明：双方都下出最佳着法时，先手必胜。",
+"intro.win": "把自己的棋子<b>横、竖或斜着连成4个</b>就获胜。42格全部填满仍无人连成4个则为<b>和棋</b>。",
+"intro.cult": "规则简单、一局很短，是家庭和朋友间的经典游戏。各地叫法不同，如“四连棋”“Four in a Row”等，也常被用作人工智能和搜索算法的教学例子。"
+},
+"ko": {
+"intro.t": "커넥트 포는 어떤 게임?",
+"intro.origin": "미국 (1970년대)",
+"intro.players": "2명",
+"intro.time": "5~10분",
+"intro.hist": "세워 둔 판 위에서 말을 떨어뜨려 줄을 만드는 게임으로, 1970년대 미국에서 상품으로 발매되어 전 세계로 퍼졌습니다. 1980년대 말에는 컴퓨터 연구로 양쪽이 최선을 다하면 선수가 이긴다는 것이 증명되었습니다.",
+"intro.win": "자기 말을 <b>가로·세로·대각선 중 하나로 4개</b> 놓으면 승리. 42칸이 모두 차도 4개가 이어지지 않으면 <b>무승부</b>입니다.",
+"intro.cult": "규칙이 쉽고 한 판이 짧아 가족·친구와 즐기는 대표적인 게임입니다. 나라마다 “Four in a Row” 등 다양한 이름으로 불리며, AI와 탐색 알고리즘의 교재로도 자주 쓰입니다."
+},
+"es": {
+"intro.t": "¿Qué es Conecta 4?",
+"intro.origin": "EE. UU. (años 70)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "Se dejan caer fichas en una rejilla vertical para formar líneas. Se vendió en EE. UU. en los años 70 y se extendió por todo el mundo. A finales de los 80, la investigación con ordenadores demostró que el primer jugador gana si juega perfectamente.",
+"intro.win": "Gana quien alinee <b>cuatro fichas en horizontal, vertical o diagonal</b>. Si se llenan las 42 casillas sin ninguna línea de cuatro, es <b>empate</b>.",
+"intro.cult": "Sus reglas sencillas y partidas cortas lo han convertido en un clásico familiar. Recibe muchos nombres, como “cuatro en raya”, y es un ejemplo habitual para enseñar IA y algoritmos de búsqueda."
+},
+"fr": {
+"intro.t": "Qu’est-ce que le Puissance 4 ?",
+"intro.origin": "États-Unis (années 1970)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "On fait tomber des pions dans une grille verticale pour former des lignes. Le jeu a été commercialisé aux États-Unis dans les années 1970 et s’est répandu dans le monde entier. À la fin des années 1980, des recherches informatiques ont prouvé que le premier joueur gagne s’il joue parfaitement.",
+"intro.win": "Alignez <b>quatre pions horizontalement, verticalement ou en diagonale</b> pour gagner. Si les 42 cases sont remplies sans alignement de quatre, c’est un <b>match nul</b>.",
+"intro.cult": "Règles simples et parties courtes en font un classique familial. Il porte de nombreux noms, comme « Four in a Row », et sert souvent d’exemple pour enseigner l’IA et les algorithmes de recherche."
+},
+"pt": {
+"intro.t": "O que é o Lig 4?",
+"intro.origin": "EUA (anos 1970)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "Peças são soltas numa grade vertical para formar linhas. O jogo foi vendido nos EUA nos anos 1970 e se espalhou pelo mundo. No fim dos anos 1980, pesquisas com computador provaram que o primeiro jogador vence se jogar perfeitamente.",
+"intro.win": "Alinhe <b>quatro peças na horizontal, vertical ou diagonal</b> para vencer. Se as 42 casas se encherem sem nenhuma linha de quatro, é <b>empate</b>.",
+"intro.cult": "Regras simples e partidas curtas o tornaram um clássico de família. Tem muitos nomes, como “Four in a Row”, e é um exemplo comum no ensino de IA e de algoritmos de busca."
+},
+"de": {
+"intro.t": "Was ist Vier gewinnt?",
+"intro.origin": "USA (1970er)",
+"intro.players": "2",
+"intro.time": "5–10 Min.",
+"intro.hist": "Steine werden in ein senkrechtes Gitter geworfen, um Reihen zu bilden. Das Spiel kam in den 1970er-Jahren in den USA in den Handel und verbreitete sich weltweit. Ende der 1980er-Jahre bewiesen Computerforschungen, dass der Anziehende bei perfektem Spiel gewinnt.",
+"intro.win": "Wer <b>vier eigene Steine waagerecht, senkrecht oder diagonal</b> in eine Reihe bringt, gewinnt. Sind alle 42 Felder voll ohne Viererreihe, ist es <b>unentschieden</b>.",
+"intro.cult": "Einfache Regeln und kurze Partien machen es zum Familienklassiker. Es hat viele Namen, etwa „Four in a Row“, und dient oft als Beispiel im Unterricht über KI und Suchalgorithmen."
+},
+"hi": {
+"intro.t": "कनेक्ट फ़ोर कैसा खेल है?",
+"intro.origin": "अमेरिका (1970 का दशक)",
+"intro.players": "2",
+"intro.time": "5–10 मिनट",
+"intro.hist": "खड़े ग्रिड में ऊपर से गोटियाँ गिराकर कतार बनाई जाती है। यह खेल 1970 के दशक में अमेरिका में बिकना शुरू हुआ और दुनिया भर में फैल गया। 1980 के दशक के अंत में कंप्यूटर शोध से सिद्ध हुआ कि सही खेलने पर पहला खिलाड़ी जीत सकता है।",
+"intro.win": "अपनी <b>चार गोटियाँ आड़ी, खड़ी या तिरछी</b> कतार में लगाइए — जीत आपकी। अगर सभी 42 खाने भर जाएँ और किसी की चार की कतार न बने तो <b>ड्रॉ</b>।",
+"intro.cult": "आसान नियम और छोटे खेल के कारण यह परिवारों का पसंदीदा खेल है। इसे “Four in a Row” जैसे कई नामों से जाना जाता है, और AI व खोज एल्गोरिद्म सिखाने में अक्सर इसका उदाहरण दिया जाता है।"
+},
+"ar": {
+"intro.t": "ما هي لعبة أربعة في صف؟",
+"intro.origin": "الولايات المتحدة (السبعينيات)",
+"intro.players": "2",
+"intro.time": "5–10 دقائق",
+"intro.hist": "تُسقَط الأقراص في شبكة قائمة لتكوين صفوف. طُرحت اللعبة تجارياً في الولايات المتحدة في السبعينيات وانتشرت في أنحاء العالم. وفي أواخر الثمانينيات أثبتت أبحاث الحاسوب أن اللاعب الأول يفوز إذا لعب بإتقان.",
+"intro.win": "اصنع <b>صفاً من أربعة أقراص أفقياً أو عمودياً أو قطرياً</b> لتفوز. إذا امتلأت الخانات الـ42 دون صف من أربعة فهي <b>تعادل</b>.",
+"intro.cult": "قواعدها البسيطة ومبارياتها القصيرة جعلتها لعبة عائلية كلاسيكية. تُعرف بأسماء كثيرة مثل «Four in a Row»، وكثيراً ما تُستخدم مثالاً لتعليم الذكاء الاصطناعي وخوارزميات البحث."
+}
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();

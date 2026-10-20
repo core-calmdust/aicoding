@@ -311,3 +311,98 @@ const X = {
 };
 for (const l in X) if (I18N[l]) Object.assign(I18N[l], X[l]);
 })();
+
+// rules tutorial: intro page (history / how to win / culture) — RuleTour.intro
+(() => { const X = {
+"ja": {
+"intro.t": "ドット＆ボックスってどんなゲーム？",
+"intro.origin": "フランス（19世紀）",
+"intro.players": "2人",
+"intro.time": "5〜10分",
+"intro.hist": "点を並べた紙と鉛筆があれば遊べるゲームで、19世紀の末にフランスの数学者エドゥアール・リュカが紹介したのが記録に残る始まりとされています。その後、世界中で学校の休み時間などに遊ばれるようになりました。",
+"intro.win": "交互に線を1本ずつ引き、箱の4本目を引いたらその箱は自分のもの（もう1本引けます）。すべての線が引かれたとき、<b>箱を多く取っていたほうが勝ち</b>です。",
+"intro.cult": "日本では「陣取りゲーム」などの名前でノートの隅で遊ばれてきました。シンプルですが奥が深く、数学の「組合せゲーム理論」の研究対象として専門書も書かれています。"
+},
+"en": {
+"intro.t": "What is Dots and Boxes?",
+"intro.origin": "France (19th century)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "All you need is a sheet of dots and a pencil. The earliest record is usually traced to the French mathematician Édouard Lucas, who described it in the late 19th century. Since then it has been played by schoolchildren all over the world.",
+"intro.win": "Players draw one line at a time; drawing the fourth side of a box claims it (and you draw again). When every line is drawn, the player with <b>more boxes wins</b>.",
+"intro.cult": "It is a classic pencil-and-paper game, doodled in the margins of notebooks in many countries. Simple yet deep, it is studied in mathematics as part of combinatorial game theory, with whole books written about it."
+},
+"zh": {
+"intro.t": "点格棋是什么样的游戏？",
+"intro.origin": "法国（19世纪）",
+"intro.players": "2人",
+"intro.time": "5〜10分钟",
+"intro.hist": "只要一张画满点的纸和一支笔就能玩。一般认为最早的记录来自19世纪末法国数学家爱德华·卢卡斯的介绍。此后，它成为世界各地学生课间常玩的游戏。",
+"intro.win": "双方轮流画一条线，画上格子第4条边的人得到这个格子（并再画一条）。所有线画完时，<b>格子多的一方获胜</b>。",
+"intro.cult": "这是一种经典的纸笔游戏，许多国家的孩子都在笔记本角落玩过。规则简单却很深奥，是数学“组合博弈论”的研究对象，还有专门的著作。"
+},
+"ko": {
+"intro.t": "도트 앤 박스는 어떤 게임?",
+"intro.origin": "프랑스 (19세기)",
+"intro.players": "2명",
+"intro.time": "5~10분",
+"intro.hist": "점을 찍은 종이와 연필만 있으면 할 수 있는 게임으로, 19세기 말 프랑스 수학자 에두아르 뤼카가 소개한 것이 기록상 처음으로 여겨집니다. 그 뒤 전 세계 학교의 쉬는 시간에 즐기는 게임이 되었습니다.",
+"intro.win": "번갈아 선을 하나씩 긋고, 상자의 4번째 변을 그으면 그 상자를 얻습니다(한 번 더 그을 수 있음). 모든 선이 그어졌을 때 <b>상자를 더 많이 얻은 쪽이 승리</b>입니다.",
+"intro.cult": "공책 귀퉁이에서 즐기는 대표적인 종이·연필 게임입니다. 단순하지만 깊이가 있어 수학의 “조합 게임 이론” 연구 대상이 되었고 전문 서적도 있습니다."
+},
+"es": {
+"intro.t": "¿Qué es Timbiriche (puntos y cajas)?",
+"intro.origin": "Francia (siglo XIX)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "Solo hace falta una hoja con puntos y un lápiz. El registro más antiguo suele atribuirse al matemático francés Édouard Lucas, que lo describió a finales del siglo XIX. Desde entonces lo juegan escolares de todo el mundo.",
+"intro.win": "Se traza una línea por turno; quien dibuja el cuarto lado de una caja se la queda (y vuelve a jugar). Cuando están todas las líneas, gana quien tenga <b>más cajas</b>.",
+"intro.cult": "Es un clásico de papel y lápiz que se juega en los márgenes de los cuadernos en muchos países, con nombres como “timbiriche”. Sencillo pero profundo, se estudia en la teoría de juegos combinatorios y hay libros enteros sobre él."
+},
+"fr": {
+"intro.t": "Qu’est-ce que le jeu des petits carrés ?",
+"intro.origin": "France (XIXe siècle)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "Il suffit d’une feuille de points et d’un crayon. La plus ancienne trace connue est généralement attribuée au mathématicien français Édouard Lucas, qui l’a décrit à la fin du XIXe siècle. Depuis, des écoliers du monde entier y jouent.",
+"intro.win": "On trace un trait à la fois ; celui qui ferme le quatrième côté d’un carré le prend (et rejoue). Quand tous les traits sont tracés, celui qui a <b>le plus de carrés gagne</b>.",
+"intro.cult": "C’est un classique papier-crayon, joué dans la marge des cahiers dans de nombreux pays. Simple mais profond, il est étudié en théorie des jeux combinatoires, et des livres entiers lui sont consacrés."
+},
+"pt": {
+"intro.t": "O que é o jogo dos pontinhos?",
+"intro.origin": "França (século XIX)",
+"intro.players": "2",
+"intro.time": "5–10 min",
+"intro.hist": "Basta uma folha com pontos e um lápis. O registro mais antigo costuma ser atribuído ao matemático francês Édouard Lucas, que o descreveu no fim do século XIX. Desde então é jogado por estudantes no mundo todo.",
+"intro.win": "Cada um traça uma linha por vez; quem fecha o quarto lado de um quadrado fica com ele (e joga de novo). Quando todas as linhas estão traçadas, vence quem tiver <b>mais quadrados</b>.",
+"intro.cult": "É um clássico de papel e lápis, jogado nas margens dos cadernos em muitos países. Simples mas profundo, é estudado na teoria dos jogos combinatórios, com livros inteiros sobre ele."
+},
+"de": {
+"intro.t": "Was ist Käsekästchen?",
+"intro.origin": "Frankreich (19. Jh.)",
+"intro.players": "2",
+"intro.time": "5–10 Min.",
+"intro.hist": "Man braucht nur ein Blatt mit Punkten und einen Stift. Die älteste bekannte Beschreibung wird meist dem französischen Mathematiker Édouard Lucas zugeschrieben, Ende des 19. Jahrhunderts. Seitdem spielen es Schulkinder in aller Welt.",
+"intro.win": "Abwechselnd zieht man einen Strich; wer die vierte Seite eines Kästchens schließt, bekommt es (und zieht noch einmal). Sind alle Striche gezogen, gewinnt, wer <b>mehr Kästchen</b> hat.",
+"intro.cult": "Ein Klassiker für Papier und Bleistift, oft auf Karopapier am Heftrand gespielt. Einfach, aber tief: Es wird in der kombinatorischen Spieltheorie erforscht, und es gibt ganze Bücher darüber."
+},
+"hi": {
+"intro.t": "डॉट्स ऐंड बॉक्सेज़ कैसा खेल है?",
+"intro.origin": "फ़्रांस (19वीं सदी)",
+"intro.players": "2",
+"intro.time": "5–10 मिनट",
+"intro.hist": "बस बिंदुओं वाला एक कागज़ और पेंसिल चाहिए। इसका सबसे पुराना ज्ञात उल्लेख आम तौर पर फ़्रांसीसी गणितज्ञ एदुआर्द लूका से जोड़ा जाता है, जिन्होंने 19वीं सदी के अंत में इसका वर्णन किया। तब से दुनिया भर के स्कूली बच्चे इसे खेलते हैं।",
+"intro.win": "बारी-बारी से एक रेखा खींचिए; जो किसी डिब्बे की चौथी भुजा खींचे, डिब्बा उसका (और वह फिर खेलता है)। सारी रेखाएँ खिंच जाने पर <b>ज़्यादा डिब्बों वाला जीतता है</b>।",
+"intro.cult": "यह कागज़-पेंसिल का क्लासिक खेल है, जो कई देशों में कॉपियों के किनारे खेला जाता है। सरल पर गहरा होने के कारण गणित के “संयोजी खेल सिद्धांत” में इसका अध्ययन होता है और इस पर पूरी किताबें लिखी गई हैं।"
+},
+"ar": {
+"intro.t": "ما هي لعبة النقاط والمربعات؟",
+"intro.origin": "فرنسا (القرن التاسع عشر)",
+"intro.players": "2",
+"intro.time": "5–10 دقائق",
+"intro.hist": "كل ما تحتاجه ورقة نقاط وقلم. يُنسب أقدم وصف معروف لها عادةً إلى الرياضي الفرنسي إدوار لوكا في أواخر القرن التاسع عشر. ومنذ ذلك الحين يلعبها التلاميذ في أنحاء العالم.",
+"intro.win": "يرسم كل لاعب خطاً واحداً في دوره؛ ومن يرسم الضلع الرابع لمربع يأخذه (ويلعب مرة أخرى). عندما تُرسم كل الخطوط يفوز صاحب <b>العدد الأكبر من المربعات</b>.",
+"intro.cult": "إنها لعبة ورق وقلم كلاسيكية تُلعب على هوامش الدفاتر في بلدان كثيرة. بسيطة لكنها عميقة، وتُدرس في نظرية الألعاب التوافقية، وأُلّفت عنها كتب كاملة."
+}
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
