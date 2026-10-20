@@ -19,9 +19,9 @@
     outer: r => { const H = r.height * (S + 1.1) / S; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // bezel to bezel
     guide: '../images/atlas/g-disc.webp', guideFallback: '../images/atlas/reversi.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
-    start(lv, side) {
+    start(lv, side, mode) {
       if (typeof openNew !== 'function' || typeof draft !== 'object' || !document.getElementById('btnStart')) return null;
-      openNew(); draft.mode = 'ai';
+      openNew(); draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (lv >= 1 && lv <= 10) draft.level = lv;
       if (side === 1 || side === 2) draft.color = side;
       segSync(); document.getElementById('btnStart').click();

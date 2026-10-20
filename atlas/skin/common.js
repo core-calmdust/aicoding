@@ -109,14 +109,14 @@
   }   // let fonts, the side column fit and the first frames settle
   /* ---------- opened from the portal with a level / side: start right away ---------- */
   (function autoStart() {
-    const q = new URLSearchParams(location.search), lv = +q.get('lv'), side = +q.get('side');
-    if ((!lv && !side) || !o.start) { ready(false); return; }
+    const q = new URLSearchParams(location.search), lv = +q.get('lv'), side = +q.get('side'), mode = q.get('mode') || 'ai';
+    if ((!lv && !side && mode === 'ai') || !o.start) { ready(false); return; }
     let tries = 0;
     const go = () => {
-      let ok = false; try { ok = o.start(lv, side); } catch (e) { ok = true; }
+      let ok = false; try { ok = o.start(lv, side, mode); } catch (e) { ok = true; }
       if (ok === null && ++tries < 40) return setTimeout(go, 150);   // the page isn't ready yet
       ready(true);
-      q.delete('lv'); q.delete('side'); history.replaceState(null, '', location.pathname + '?' + q.toString() + location.hash);   // a reload doesn't restart
+      q.delete('lv'); q.delete('side'); q.delete('mode'); history.replaceState(null, '', location.pathname + '?' + q.toString() + location.hash);   // a reload doesn't restart
     };
     setTimeout(go, 400);
   })();
