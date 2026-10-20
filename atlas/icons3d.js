@@ -273,6 +273,18 @@
   }
   // ellipsoid surface addressed by offsets in model units (u across, v up) — keeps face spacing even on any head
   const ell = (c, R) => (u, v) => sph(c, R, Math.asin(Math.max(-1, Math.min(1, u / R[0]))), Math.asin(Math.max(-1, Math.min(1, v / R[1]))));
+  // front of a marshmallow cube sq(…, c, S, e): exact superellipsoid surface point + normal at offsets (u, v) from its centre
+  const sqs = (c, S, e) => (u, v) => {
+    const a = S[0] / 2, b = S[1] / 2, d = S[2] / 2, k = 2 / e, X = Math.min(Math.abs(u) / a, .999), Y = Math.min(Math.abs(v) / b, .999);
+    const t = Math.max(1e-4, 1 - Math.pow(X, k) - Math.pow(Y, k)), Z = Math.pow(t, e / 2);
+    return { p: V3(c.x + u, c.y + v, c.z + d * Z), n: V3(Math.sign(u) * Math.pow(X, k - 1) / a, Math.sign(v) * Math.pow(Y, k - 1) / b, Math.pow(Z, k - 1) / d).normalize() };
+  };
+  // a decal that hugs a curved surface: a spherical cap with the surface's local curvature (measured from surf), apex at the origin
+  function hugDecal(surf, u, v, w, h, mat, lift = .004) {
+    const n0 = surf(u - w * .4, v), n1 = surf(u + w * .4, v), ang = Math.acos(Math.min(1, n0.n.dot(n1.n))), Rc = ang > .01 ? n0.p.distanceTo(n1.p) / ang : 50;
+    const geo = new T.SphereGeometry(Rc, 16, 10, Math.PI / 2 - w / Rc / 2, w / Rc, Math.PI / 2 - h / Rc / 2, h / Rc); geo.translate(0, 0, -Rc);
+    const m = mesh(geo, mat); noShadow(m); return { m, s: surf(u, v), lift };
+  }
   const flat = (x0, y0, z0) => (u, v) => ({ p: V3(x0 + u, y0 + v, z0), n: V3(0, 0, 1) });
   // put o on a surface point, local +z along the normal
   function stick(g, o, s, lift = 0) { o.position.copy(s.p).addScaledVector(s.n, lift); o.lookAt(o.position.clone().add(s.n)); g.add(o); return o; }
@@ -282,8 +294,8 @@
   // black bead eye with one small white catchlight
   function bead(r) {
     const e = new T.Group();
-    const b = mesh(new T.SphereGeometry(r, 28, 18), M({ color: 0x17141d, roughness: .2 })); b.scale.set(.92, 1.08, .55); e.add(b);
-    const h = mesh(new T.SphereGeometry(r * .3, 14, 10), M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1 })); h.position.set(-r * .3, r * .38, r * .48); e.add(h);
+    const b = mesh(new T.SphereGeometry(r, 28, 18), M({ color: 0x17141d, roughness: .2 })); b.scale.set(.92, 1.08, .45); e.add(b);
+    const h = mesh(new T.SphereGeometry(r * .3, 14, 10), M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1 })); h.scale.z = .35; h.position.set(-r * .3, r * .36, r * .37); e.add(h);
     e.userData.eye = true; return noShadow(e);
   }
   function arc(r, tube, mat, ang = Math.PI) { const m = mesh(new T.TorusGeometry(r, tube, 10, 28, ang), mat); m.rotation.z = (Math.PI - ang) / 2; return noShadow(grp(m)); }
@@ -296,26 +308,26 @@
     [-1, 1].forEach(s => {
       const p = surf(s * gap, v);
       if (kind === 'bead') eyes.push(stick(g, bead(er), p, -er * .12));
-      else if (kind === 'happy') { const a = arc(er * 1.05, er * .22, ink, Math.PI * .9); stick(g, a, p, .004); a.translateY(-er * .4); }
+      else if (kind === 'happy') { const a = arc(er * 1.05, er * .22, ink, Math.PI * .9); stick(g, a, surf(s * gap, v - er * .4), -.002); }
       else if (kind === 'sleepy') {
         const e = new T.Group(), a = arc(er * 1.05, er * .2, ink, Math.PI * .9); a.rotation.z = Math.PI; e.add(a);
         [.5, -.15].forEach(t => { const d = [s * Math.cos(t), Math.sin(t)], L = er * .5, l = mesh(new T.CylinderGeometry(er * .09, er * .12, L, 6), ink); l.rotation.z = Math.atan2(-d[0], d[1]); l.position.set(s * er * 1.0 + d[0] * L * .45, er * .12 + d[1] * L * .45, 0); e.add(l); });
-        stick(g, noShadow(e), p, .004); e.translateY(er * .35);
+        stick(g, noShadow(e), surf(s * gap, v + er * .5), -.002);
       }
     });
     if (o.blush !== false) {
       const bm = M({ map: blushTex(), transparent: true, depthWrite: false, roughness: .9, bump: false, polygonOffset: true, polygonOffsetFactor: -2 });
-      [-1, 1].forEach(s => { const b = mesh(new T.PlaneGeometry(er * 2.6, er * 1.7), bm); noShadow(b); stick(g, b, surf(s * (gap + (o.bx ?? er * 1.1)), v - (o.by ?? er * 1.5)), .012); });
+      [-1, 1].forEach(s => { const d = hugDecal(surf, s * (gap + (o.bx ?? er * 1.1)), v - (o.by ?? er * 1.5), er * 2.6, er * 1.7, bm); stick(g, d.m, d.s, d.lift); });
     }
     const ms = o.msurf || surf, mv = o.msurf ? (o.mv || 0) : v - (o.my ?? er * 1.9), mx = o.mx || 0, mk = o.mouth || 'smile', mw = o.mw || er * .7;
-    if (mk === 'smile') { const m = arc(mw, lw, ink, Math.PI * .8); stick(g, m, ms(mx, mv), .004); m.rotateZ(Math.PI); m.translateY(-mw * .6); }
-    else if (mk === 'w') [-1, 1].forEach(s => { const m = arc(mw * .5, lw, ink, Math.PI * .95); stick(g, m, ms(mx + s * mw * .5, mv), .004); m.rotateZ(Math.PI); m.translateY(-mw * .3); });
+    if (mk === 'smile') { const m = arc(mw, lw, ink, Math.PI * .8); stick(g, m, ms(mx, mv + mw * .6), 0); m.rotateZ(Math.PI); }
+    else if (mk === 'w') [-1, 1].forEach(s => { const m = arc(mw * .5, lw, ink, Math.PI * .95); stick(g, m, ms(mx + s * mw * .5, mv + mw * .3), 0); m.rotateZ(Math.PI); });
     else if (mk === 'open' || mk === 'o') {
       const m = new T.Group(), mo = mesh(new T.SphereGeometry(mw, 28, 16, 0, Math.PI * 2, mk === 'o' ? 0 : Math.PI / 2, mk === 'o' ? Math.PI : Math.PI / 2), M({ color: 0x5c1f2c, roughness: .6 }));
       mo.scale.set(1, mk === 'o' ? .8 : 1, 1); m.add(mo);
       const tg = mesh(new T.SphereGeometry(mw * .55, 20, 12), M({ color: 0xff8a9e, roughness: .6 })); tg.scale.set(1.1, .6, .4); tg.position.set(0, -mw * (mk === 'o' ? .45 : .62), mw * .16); m.add(tg);
       m.children.forEach(c => { c.scale.z *= .32; }); tg.scale.z = .2;
-      stick(g, noShadow(m), ms(mx, mv), .002); if (mk === 'open') m.translateY(mw * .4);
+      stick(g, noShadow(m), ms(mx, mk === 'open' ? mv + mw * .4 : mv), .002);
     }
     return eyes;
   }
@@ -352,7 +364,7 @@
     blob(g, soft(0xffd65a, { rough: .5, sheenK: .5 }), [0, .74, .4], .1);                        // bell
     const hc = V3(0, 1.62, 0), HS = [1.66, 1.42, 1.42];
     sq(g, Wm, [hc.x, hc.y, hc.z], HS, .36);                                                      // head = a soft die
-    const eyes = face(g, flat(0, 1.6, .7), { er: .12, gap: .34, mouth: 'open', mw: .1, my: .3 });
+    const eyes = face(g, sqs(hc, HS, .36), { er: .12, gap: .3, v: -.02, mouth: 'open', mw: .1, my: .3 });
     blob(g, soft(INK, { rough: .45, rim: .05 }), [0, 1.44, .72], [.08, .055, .04]);              // nose
     [-1, 1].forEach(s => blob(g, ear, [s * .86, 1.42, 0], [.2, .46, .36], [0, 0, s * (s > 0 ? .28 : .16)]));   // floppy ears
     blob(g, red, [0, 2.33, -.05], [.16, .05, .16]);                                               // top face = 1
@@ -380,7 +392,7 @@
         const e = mesh(new T.ConeGeometry(.3, .72, 32), F); e.position.set(s * .5, 2.12, -.1); e.rotation.set(-.1, 0, -s * .36); e.scale.z = .55; g.add(e);
         const ei = mesh(new T.ConeGeometry(.17, .46, 24), pink); ei.position.set(s * .48, 2.06, -.04); ei.rotation.set(-.1, 0, -s * .36); ei.scale.z = .4; g.add(ei);
       });
-      const eyes = face(g, ell(hc, HR), { er: .1, gap: .33, v: .1, mouth: 'w', mw: .12, my: .34, by: .1, bx: .14 });
+      const eyes = face(g, ell(hc, HR), { er: .1, gap: .28, v: .1, mouth: 'w', mw: .12, my: .34, by: .1, bx: .14 });
       blob(g, soft(INK, { rough: .45, rim: .05 }), [0, 1.36, .78], [.075, .055, .05]);              // nose
       const hat = shogiPiece('王', .46); hat.position.set(.04, 2.42, -.12); hat.rotation.set(-.08, 0, -.12); g.add(hat);
       blob(g, F, [.6, .7, -.4], [.3, .52, .3], [.4, 0, -.85]);                                    // big puffy tail
@@ -398,7 +410,7 @@
       const sc = V3(0, 1.3, .48), SR = [.34, .32, .34];
       blob(g, sn, [sc.x, sc.y, sc.z], SR);                                                         // snout
       [-1, 1].forEach(s => blob(g, soft(0xc9a0b8, { rough: .6 }), [s * .14, 1.42, .82], [.03, .04, .015]));
-      const eyes = face(g, ell(hc, HR), { er: .11, gap: .32, v: .2, eyes: 'happy', mouth: 'open', msurf: ell(sc, SR), mv: -.08, mw: .09, by: .14, bx: .16 });
+      const eyes = face(g, ell(hc, HR), { er: .11, gap: .27, v: .2, eyes: 'happy', mouth: 'open', msurf: ell(sc, SR), mv: -.08, mw: .09, by: .14, bx: .16 });
       [-1, 1].forEach(s => { const e = mesh(new T.ConeGeometry(.16, .42, 24), Wm); e.position.set(s * .42, 2.24, -.12); e.rotation.z = -s * .42; e.scale.z = .6; g.add(e); });
       [[-.06, 2.3, .22, .22], [-.04, 2.38, -.1, .27], [-.18, 2.22, -.4, .28], [-.3, 1.96, -.56, .27], [-.42, 1.62, -.56, .24], [-.5, 1.3, -.44, .2], [.1, 2.2, .44, .16], [-.14, 2.2, .44, .17], [-.56, 1.98, -.2, .2], [-.66, 1.62, -.16, .19], [-.66, 1.28, -.1, .15]].forEach(([x, y, z, r]) => blob(g, mane, [x, y, z], r));   // cloud mane
       [[0, .9, -.5, .18], [0, .72, -.66, .16], [0, .52, -.7, .13]].forEach(([x, y, z, r]) => blob(g, mane, [x, y, z], r));   // tail
@@ -413,7 +425,7 @@
       sh.position.set(0, .2, -.3); sh.rotation.x = -.1; g.add(sh);
       const hc = V3(0, 1.22, .5), HR = [.74, .66, .64];
       blob(g, skin, [hc.x, hc.y, hc.z], HR);
-      const eyes = face(g, ell(hc, HR), { er: .11, gap: .3, v: .06, mouth: 'open', mw: .1, my: .3 });
+      const eyes = face(g, ell(hc, HR), { er: .11, gap: .25, v: .06, mouth: 'open', mw: .1, my: .3, bx: .12 });
       const sprout = new T.Group(); blob(sprout, soft(0x57c86a), [-.1, .08, 0], [.13, .05, .08], [0, 0, .5]); blob(sprout, soft(0x57c86a), [.1, .1, 0], [.13, .05, .08], [0, 0, -.5]);
       const st = mesh(new T.CylinderGeometry(.022, .028, .14, 8), soft(0x4aa85a)); sprout.add(st); sprout.position.set(.05, 1.92, .5); sprout.rotation.z = -.15; g.add(sprout);
       [[-.66, .14, .32], [.66, .14, .32], [-.58, .14, -.78], [.58, .14, -.78]].forEach(p => blob(g, skin, p, [.22, .15, .25]));
@@ -436,8 +448,9 @@
       const glow = M({ color: 0x40e8ff, emissive: 0x30dcff, emissiveIntensity: 1.6 }), eyes = [];
       [-1, 1].forEach(s => { const e = arc(.11, .045, glow, Math.PI * .9); e.position.set(s * .25, 1.47, .672); g.add(e); });   // ^ ^ glowing eyes
       const bm = M({ map: blushTex(), transparent: true, depthWrite: false, roughness: .9, bump: false });
-      [-1, 1].forEach(s => { const b = mesh(new T.PlaneGeometry(.26, .17), bm); b.position.set(s * .5, 1.14, .645); noShadow(b); g.add(b); });
-      const m = arc(.06, .022, inkM(), Math.PI * .8); m.rotation.z = Math.PI; m.position.set(0, 1.12, .646); g.add(m);
+      const hs = sqs(hc, HS, .38);
+      [-1, 1].forEach(s => { const d = hugDecal(hs, s * .5, -.34, .26, .17, bm); stick(g, d.m, d.s, d.lift); });
+      const m = arc(.06, .022, inkM(), Math.PI * .8); stick(g, m, hs(0, -.32), 0); m.rotateZ(Math.PI);
       [-1, 1].forEach(s => { const b = mesh(new T.CylinderGeometry(.16, .16, .12, 28), Wc); b.rotation.z = Math.PI / 2; b.position.set(s * .8, 1.5, 0); g.add(b); blob(g, pink, [s * .87, 1.5, 0], [.05, .09, .09]); });   // ear bolts
       const ant = mesh(new T.CylinderGeometry(.035, .035, .3, 10), Wc); ant.position.set(0, 2.2, 0); g.add(ant); blob(g, pink, [0, 2.4, 0], .11);
       blob(g, Y, [-.56, .62, .1], [.13, .22, .13], [0, 0, -.5]); blob(g, Y, [.58, .86, .12], [.13, .22, .13], [0, 0, 2.3]);   // one arm waving
@@ -453,7 +466,7 @@
       const fc = V3(0, 1.02, .26), FR = [.78, .76, .68];
       blob(g, Wt, [fc.x, fc.y, fc.z], FR);
       [-1, 1].forEach(s => blob(g, B, [s * .2, 1.66, .5], [.3, .2, .2]));                         // widow's peak
-      const eyes = face(g, ell(fc, FR), { er: .11, gap: .27, v: .24, mouth: 'none', by: .17, bx: .14 });
+      const eyes = face(g, ell(fc, FR), { er: .11, gap: .24, v: .24, mouth: 'none', by: .17, bx: .13 });
       blob(g, O, [0, 1.06, .92], [.12, .07, .1]);                                                   // beak
       [-1, 1].forEach(s => blob(g, B, [s * .92, .82, .05], [.13, .34, .26], [0, 0, s * (s > 0 ? .9 : .45)]));   // flippers (one waving)
       [-1, 1].forEach(s => blob(g, O, [s * .3, .06, .45], [.17, .08, .22]));
@@ -465,7 +478,7 @@
     dot() {
       const g = new T.Group(), Y = soft(0xffd95a, { under: 0xffa0a0, uk: .45, sheen: 0xfff3c0, sheenK: .3 }), O = soft(0xffa140, { under: 0xff7a6a }), red = soft(0xff6b7a, { under: 0xd85a9a }), dotM = soft(0x434a72, { rough: .6, rim: .1 });
       sq(g, Y, [0, .82, 0], [1.6, 1.56, 1.36], .34);
-      const eyes = face(g, flat(0, 1.12, .68), { er: .13, gap: .36, eyes: 'happy', mouth: 'open', mw: .13, my: .28 });
+      const eyes = face(g, sqs(V3(0, .82, 0), [1.6, 1.56, 1.36], .34), { er: .13, gap: .32, v: .3, eyes: 'happy', mouth: 'open', mw: .13, my: .28 });
       blob(g, O, [0, .98, .7], [.11, .065, .09]);                                                   // tiny beak
       const box = mesh(new T.PlaneGeometry(.5, .36), decal('mon-dbox', 160, 116, (c, W, H) => {
         c.clearRect(0, 0, W, H); const P = (i, j) => [24 + i * 56, 22 + j * 72]; c.fillStyle = 'rgba(255,140,150,.35)'; c.fillRect(24, 22, 56, 72);
@@ -487,7 +500,7 @@
       const hc = V3(0, 1.36, 0), HR = [.8, .7, .7];
       blob(g, Wm, [hc.x, hc.y, hc.z], HR);
       [-1, 1].forEach(s => { blob(g, Wm, [s * .3, 2.12, -.1], [.17, .46, .14], [0, 0, -s * .18]); blob(g, soft(0xffb6c8), [s * .3, 2.1, -.01], [.09, .32, .06], [0, 0, -s * .18]); });
-      const eyes = face(g, ell(hc, HR), { er: .1, gap: .3, v: .04, mouth: 'open', mw: .09, my: .26 });
+      const eyes = face(g, ell(hc, HR), { er: .1, gap: .26, v: .04, mouth: 'open', mw: .09, my: .26, bx: .12 });
       const c = puck(.34, .16, R, .5); c.rotation.set(Math.PI / 2 - .15, 0, .1); c.position.set(0, .56, .36); g.add(c);   // hugging a connect-four counter
       const rim = mesh(new T.TorusGeometry(.21, .03, 10, 36), R); rim.position.set(0, .58, .53); rim.rotation.set(-.15, 0, 0); g.add(rim);
       [-1, 1].forEach(s => blob(g, Bl, [s * .3, .64, .5], [.12, .1, .14]));                       // paws on the counter
@@ -503,7 +516,7 @@
       [0xff7f8e, 0x6cb8ff, 0xffd34f, 0x6edc9e, 0xb39cff, 0xff9fd0, 0x6cb8ff].forEach((c, i) => { const a = i / 6 * Math.PI * 2 + .3, r = i === 6 ? 0 : (i % 2 ? .34 : .22); blob(g, soft(c, { rough: .45, rim: .3, glow: .1 }), [Math.cos(a) * r, 1.15 + (i === 6) * .05, Math.sin(a) * r - .35], .13); });
       const hc = V3(0, .98, .55), HR = [.72, .64, .6];
       blob(g, skin, [hc.x, hc.y, hc.z], HR);
-      const eyes = face(g, ell(hc, HR), { er: .11, gap: .28, v: .06, eyes: 'happy', mouth: 'smile', mw: .09, my: .26 });
+      const eyes = face(g, ell(hc, HR), { er: .11, gap: .24, v: .06, eyes: 'happy', mouth: 'smile', mw: .09, my: .26, bx: .12 });
       [-1, 1].forEach(s => { const an = mesh(new T.CylinderGeometry(.025, .03, .4, 8), dark); an.position.set(s * .24, 1.72, .5); an.rotation.z = -s * .45; g.add(an); blob(g, soft(s > 0 ? 0xff7f8e : 0x6cb8ff, { rough: .45, rim: .3, glow: .1 }), [s * .34, 1.92, .5], .1); });
       for (let i = 0; i < 3; i++) [-1, 1].forEach(s => blob(g, dark, [s * .8, .12, .2 - i * .4], [.16, .08, .1]));
       g.userData.head = [1.1, .98, .3]; return alive(g, eyes);
@@ -524,9 +537,9 @@
       const belly = mesh(new T.SphereGeometry(1, 32, 24, Math.PI / 2 - .5, 1.0, Math.PI / 2 + .02, .82), bellyM);
       belly.scale.set(BR[0] * 1.005, BR[1] * 1.005, BR[2] * 1.005); belly.position.copy(bc); noShadow(belly); g.add(belly);
       const fc = V3(0, 1.36, .48), FR = [.62, .42, .4];
-      [-1, 1].forEach(s => blob(g, lav, [s * .3, 1.36, .5], [.36, .34, .34]));                    // face discs
-      const eyes = face(g, ell(V3(0, 1.36, .58), [.66, .36, .36]), { er: .12, gap: .3, v: .02, eyes: 'sleepy', mouth: 'none', by: .2, bx: .12 });
-      blob(g, O, [0, 1.2, .88], [.08, .1, .07]);                                                     // beak
+      [-1, 1].forEach(s => blob(g, lav, [s * .3, 1.38, .6], [.34, .32, .3]));                    // face discs
+      const eyes = face(g, (u, v) => { const s = Math.sign(u) || 1; return ell(V3(s * .3, 1.38, .6), [.34, .32, .3])(u - s * .3, v); }, { er: .12, gap: .3, v: .08, eyes: 'sleepy', mouth: 'none', by: .17, bx: .03 });
+      blob(g, O, [0, 1.2, .93], [.08, .1, .07]);                                                     // beak
       [-1, 1].forEach(s => { blob(g, P, [s * .52, 1.92, -.05], [.16, .26, .14], [0, 0, -s * .5]); });   // ear tufts
       [-1, 1].forEach(s => blob(g, soft(0x9a80f0, { under: 0xff9fcf }), [s * .94, .96, 0], [.14, .4, .32], [0, 0, s * .3]));
       [-1, 1].forEach(s => blob(g, O, [s * .3, .06, .42], [.15, .07, .2]));
