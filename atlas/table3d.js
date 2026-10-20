@@ -52,6 +52,32 @@
       g.putImageData(img, 0, 0);
     });
   }
+  // flat-sawn tabletop: a log cut by a plane gives cathedral arches; sharp latewood lines, fibre streaks, pores
+  function woodTop(key, base, dark, W = 2048, H = 2048) {
+    return canvasTex(key, W, H, (g) => {
+      const N = makeNoise(77), A = hex(base), B = hex(dark), img = g.createImageData(W, H), d = img.data;
+      const freq = 26;
+      for (let y = 0; y < H; y++) {
+        const v = y / H - .5;
+        for (let x = 0; x < W; x++) {
+          const u = x / W;
+          // mostly straight grain with long gentle waves, and a soft cathedral arch through the middle
+          const cath = Math.sqrt(v * v + Math.pow(.09 + (u - .55) * .12, 2)) * 1.0;
+          const wob = (N(u * 1.3, v * 2.4, 3) - .5) * .09 + (N(u * 6, v * 9, 2) - .5) * .012;
+          const r = Math.abs(v) * .35 + cath * .65 + wob;
+          const f = (r * freq) % 1;
+          const late = Math.exp(-Math.pow((f - .78) / .07, 2)) + .35 * Math.exp(-Math.pow((f - .78) / .2, 2));   // soft latewood band
+          const fibre = N(u * 5, y * .55, 2), fine = N(u * 40, y * 2.2, 1);
+          let t = .2 + late * .42 + (fibre - .5) * .32 + (fine - .5) * .12 + (N(u * 1.5, v * 1.5, 2) - .5) * .22;
+          if (late > .4 && N(u * 300, y * 1.4, 1) > .78) t += .14;                   // open pores in the latewood
+          t = Math.max(0, Math.min(1, t));
+          const i = (y * W + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      }
+      g.putImageData(img, 0, 0);
+    });
+  }
   // planked wood (table): several boards, each with its own tone, long fibres and flame figure, thin dark seams
   function planks(key, base, dark, n = 4, W = 1024) {
     return canvasTex(key, W, W, (g) => {
@@ -325,8 +351,8 @@
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
     if (plain) {   // play screen of the full games: just a wide wooden tabletop, no room edges
-      const tm = M({ map: wood('tblP', '#b8763e', '#8a5226', 2048, 2048, 1.6), roughness: .42, clearcoat: .4, clearcoatRoughness: .35, bumpScale: .004 });
-      const t = new TT.Mesh(new TT.PlaneGeometry(90, 90), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
+      const tm = M({ map: woodTop('tblR3', '#a96e38', '#4e2709'), roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .003 });
+      const t = new TT.Mesh(new TT.PlaneGeometry(40, 40), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
     } else {
     // tatami
     const tatami = canvasTex('tatami', 512, 1024, (c, W, H) => {

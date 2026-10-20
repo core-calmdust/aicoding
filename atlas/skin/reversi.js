@@ -68,7 +68,7 @@
     rows.forEach(r => { [...r.children].forEach(b => btns.appendChild(b)); r.remove(); });
     foot.append(pic, btns); (card || wrap).appendChild(foot);
     // a little pop whenever the guide says something new
-    new MutationObserver(() => { if (!bub.animate) return; bub.animate([{ transform: 'scale(.96)' }, { transform: 'scale(1.02)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' }); pic.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 300 }); })
+    new MutationObserver(() => { if (!bub.animate) return; if (!pic.getAnimations || !pic.getAnimations().some(x => x.id === 'talk')) { const an = pic.animate([{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px) scale(1.05,.95)' }, { transform: 'translateY(0) scale(1)' }], { duration: 320 }); an.id = 'talk'; } })
       .observe(bub, { childList: true, characterData: true, subtree: true });
   }
   bubble(['lsPrompt', 'lsFb']);
@@ -115,6 +115,22 @@
     }
   })();
 
+  /* ---------- side column = exactly the height of the 3D board (bezel to bezel); info line inside the kifu card ---------- */
+  (function sideFit() {
+    const side = document.querySelector('.side'), kc = document.querySelector('.kifu-card'), info = document.getElementById('infoLine');
+    if (kc && info) kc.appendChild(info);
+    if (!side) return;
+    const fit = () => {
+      side.style.top = ''; side.style.height = ''; side.style.maxHeight = '';
+      const r = boardDom.getBoundingClientRect(), s = side.getBoundingClientRect();
+      if (!r.width || s.left < r.right - 4 || getComputedStyle(side).display === 'contents') return;   // only when the column sits beside the board
+      const H = r.height * (S + 1.1) / S, top = r.top + r.height / 2 - H / 2;
+      side.style.position = 'relative'; side.style.top = (top - s.top) + 'px'; side.style.height = H + 'px'; side.style.maxHeight = 'none';
+    };
+    addEventListener('resize', () => requestAnimationFrame(fit));
+    if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(fit)).observe(boardDom);
+    setTimeout(fit, 200); setTimeout(fit, 1200);
+  })();
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   const TITLE = { ja: '世界のボドゲ大全', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة' };
