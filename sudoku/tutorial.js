@@ -223,7 +223,7 @@ addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input,select,textarea')) return;
   const rtl = document.documentElement.dir === 'rtl';
   if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); e.stopImmediatePropagation(); ((e.key === 'ArrowRight') !== rtl ? $('#tuNext') : $('#tuPrev')).click(); return; }
-  if (e.key === 'Enter') { e.preventDefault(); $('#tuNext').click(); return; }
+  if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') { e.preventDefault(); e.stopImmediatePropagation(); $('#tuNext').click(); return; }
   const dm = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
   if (dm && board) { e.preventDefault(); board.put(+dm[1]); return; }
   if (board && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Tab')) { e.preventDefault(); board.move(e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey) ? -1 : 1); }
