@@ -698,6 +698,7 @@
       if (opts.hold) { revealFn = go; setTimeout(go, 1500); } else go();   // hold: wait for reveal() (the moment the icon vanishes)
       return g;
     }
+    if (opts.still) { root.add(c); return g; }   // no entrance animation (skin pages: the board is simply there)
     if (!opts.intro) { land(); return g; }
     // intro: the icon spins one turn while it grows and rises, then pops
     const ic = new (T().Group)(); ic.add(opts.intro); root.add(ic); spin = false; yaw = 0;

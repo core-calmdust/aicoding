@@ -14,6 +14,6 @@
     (document.body || document.documentElement).appendChild(el);
     return el;
   }
-  function hide() { if (!el) return; const e = el; el = null; setTimeout(() => { e.classList.add('out'); setTimeout(() => e.remove(), 500); }, Math.max(0, MIN - (performance.now() - t0))); }
+  function hide() { document.documentElement.classList.add('atlas-ready'); if (!el) return; const e = el; el = null; setTimeout(() => { e.classList.add('out'); setTimeout(() => e.remove(), 500); }, Math.max(0, MIN - (performance.now() - t0))); }
   window.AtlasLoading = { show, hide };
 })();

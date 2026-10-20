@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<link rel="stylesheet" href="../atlas/skin/loading.css?v=1"><script src="../atlas/skin/loading.js?v=2"><\/script><script>AtlasLoading.show()<\/script><style>html.atlas-skin body{background:#fff6e2}</style>'); }</script>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=3"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d1412">
@@ -4442,7 +4442,7 @@ accRender();
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=23')).then(() => load('../atlas/skin/reversi.js?v=9'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=24')).then(() => load('../atlas/skin/reversi.js?v=11'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

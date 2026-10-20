@@ -1,5 +1,5 @@
 /* "よみこみちゅう" — shared by the portal (leaving for a game) and the skinned game page (until the 3D board is up) */
-.atlas-load{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;align-content:center;gap:18px;background:#fff6e2 radial-gradient(circle at 2px 2px,rgba(224,154,0,.16) 1.6px,transparent 2px) 0 0/22px 22px;transition:opacity .45s ease;animation:alIn .25s ease both;font-family:'Zen Maru Gothic','Fredoka',system-ui,sans-serif}
+.atlas-load{visibility:visible;position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;align-content:center;gap:18px;background:#fff6e2 radial-gradient(circle at 2px 2px,rgba(224,154,0,.16) 1.6px,transparent 2px) 0 0/22px 22px;transition:opacity .45s ease;animation:alIn .25s ease both;font-family:'Zen Maru Gothic','Fredoka',system-ui,sans-serif}
 .atlas-load.out{opacity:0;pointer-events:none}
 .atlas-load .stage{position:relative;width:120px;height:120px;perspective:400px}
 .atlas-load .dk{position:absolute;left:30px;bottom:26px;width:60px;height:60px;transform-style:preserve-3d;animation:alHop .9s cubic-bezier(.4,0,.6,1) infinite}

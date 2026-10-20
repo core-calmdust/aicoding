@@ -371,8 +371,7 @@
     if (FULL_SKIN[g.id]) {
       const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1;
       pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
-      $('bv').classList.add('playing'); Table3D.play(true);
-      if (window.AtlasLoading) setTimeout(() => AtlasLoading.show(lang), 120);
+      if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (lv ? '&lv=' + lv : '') + '&side=' + side; }, 420);
       return;
     }
@@ -394,7 +393,13 @@
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
   function stopSession() { if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
-  addEventListener('pageshow', e => { if (e.persisted && window.AtlasLoading) AtlasLoading.hide(); });
+  // back from a game (page restored from the back-forward cache): drop the loading screen and the "playing" state,
+  // so the board viewer shows its info card again instead of a bare board with only the × button
+  addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    if (window.AtlasLoading) AtlasLoading.hide();
+    if (bvGame && $('bv').classList.contains('on')) { stopSession(); openBoard(bvGame.id); }
+  });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   function startRules() {
     const g = bvGame; stopSession();
