@@ -242,6 +242,18 @@
   }
   const cell = (c, r) => [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)];   // c: 0 = left column on screen, r: 0 = top row
 
+  /* ---------- 駒台: one pedestal — square top plate, waisted column, stepped square base on the floor ---------- */
+  function komadai(mat, KH) {
+    const TT = T(), g = new TT.Group();
+    g.add(mesh(RB(2.5, .26, 3.1, .05, 2), mat, 0, KH - .13, 0));                                   // top plate
+    g.add(mesh(RB(2.3, .32, 2.7, .08, 2), mat, 0, .16, 0));                                        // base
+    g.add(mesh(RB(1.5, .24, 1.8, .06, 2), mat, 0, .32 + .12, 0));                                   // step
+    const H = KH - .26 - .56, pts = [];
+    for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
+    const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
+    const c = mesh(col, mat, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
+    return g;
+  }
   /* ---------- MODELS.shogi: board + the opening position ---------- */
   X.MODELS.shogi = function (live, o) {
     const g = board(o), Y = g.userData.top;
@@ -253,10 +265,7 @@
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
     const KH = g.userData.top, sw = M({ map: X.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
-    [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }].forEach(st => {
-      g.add(mesh(RB(2.5, .32, 3.1, .05, 2), sw, st.x, KH - .16, st.z));
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(mesh(new (T().CylinderGeometry)(.13, .17, KH - .32, 12), sw, st.x + a * .95, (KH - .32) / 2, st.z + b * 1.2)));
-    });
+    [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
     return g;
@@ -291,5 +300,5 @@
     }));
   }
 
-  X.shogi = { piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH };
+  X.shogi = { komadai, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH };
 })();
