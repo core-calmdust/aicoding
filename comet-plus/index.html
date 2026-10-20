@@ -531,7 +531,7 @@ class AudioHandler {
         this.bgmBus = this.ctx.createGain();
         this.bgmBus.connect(this.masterGain);
         this.bgmPlaying = true;
-        this.current16th = 0; this.bgmStageL = null;
+        this.current16th = 0;
         this.seq4MelodyIndex = 0;
         this.seq5MelodyIndex = 0;
         this.hiHatPanIndex = 0;
@@ -544,9 +544,7 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStageNow = ((stage - 1) % 6) + 1;
-        if (this.bgmStageL == null) this.bgmStageL = bgmStageNow;
-        let bgmStage = this.bgmStageL; // 段階の切り替えは小節の頭でだけ行う（途中から入るとフレーズがずれる）
+        const bgmStage = ((stage - 1) % 6) + 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -755,10 +753,9 @@ class AudioHandler {
         while (this.barQ && this.barQ.length && this.barQ[0] <= nowA) { this.barQ.shift(); this.barTrigger = true; }
         // 処理が大きく止まって予約が遅れたときは、遅れた分を鳴らさずに飛ばす（まとめて鳴ってリズムが崩れるのを防ぐ）
         while (this.nextNoteTime < this.ctx.currentTime - 0.03) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
-        while (this.nextNoteTime < this.ctx.currentTime + 0.3) { // 先読みを長めに（一瞬処理が重くなっても音が途切れない）
+        while (this.nextNoteTime < this.ctx.currentTime + 0.1) { // 先読みは元の0.1秒（長くするとステージ切り替えでパートの入りが遅れる）
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
-            if (noteInMeasure === 0) bgmStage = this.bgmStageL = bgmStageNow;
             if (noteInMeasure === 0) {
                 (this.barQ = this.barQ || []).push(this.nextNoteTime);
             }
@@ -813,7 +810,6 @@ class AudioHandler {
             }
             if (bgmStage >= 4) {
                 if (beatInLoop % 8 === 0) {
-                    this.seq4MelodyIndex = Math.floor(beatInLoop / 8) % this.seq4Melody.length; // ループ位置から決める（途中から入ってもずれない）
                     const degree = this.seq4Melody[this.seq4MelodyIndex];
                     const note = rootNote * 16 * Math.pow(2, degree / 12);
                     createSequence4(this.nextNoteTime, note);
@@ -822,7 +818,6 @@ class AudioHandler {
             }
             if (bgmStage >= 5) {
                 if (beatInLoop % 4 === 0) {
-                    this.seq5MelodyIndex = Math.floor(beatInLoop / 4) % this.seq5Melody.length;
                     const degree = this.seq5Melody[this.seq5MelodyIndex];
                     if (degree !== null) {
                         const note = rootNote * 8 * Math.pow(2, degree / 12);
