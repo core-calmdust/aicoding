@@ -536,6 +536,16 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   #newOverlay .ng-col > .field:first-child{margin-top:0}
   #newOverlay .checks{grid-template-columns:1fr 1fr}
 }
+/* PC with a short window (e.g. 1280×720): tighter spacing so "Next" stays visible without scrolling */
+@media (min-width: 900px) and (min-height: 561px) and (max-height: 800px) and (pointer: fine){
+  #rulesOverlay .modal{padding-top:12px;padding-bottom:12px}
+  #rulesOverlay .ls-tabs{margin-bottom:8px}
+  #rulesOverlay .rt-steps{margin-bottom:6px}
+  #rulesOverlay .rt h2.rt-title{margin-bottom:4px}
+  #rulesOverlay .rt-board{margin:6px auto 4px}
+  #rulesOverlay .rt-task{min-height:48px}
+  #rulesOverlay .rt-nav{margin-top:8px}
+}
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 .navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
