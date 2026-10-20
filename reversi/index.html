@@ -741,13 +741,29 @@ body.in-lesson .controls{display:none}
 
 /* rules page */
 #rulesOverlay .modal{width:min(900px,100%)}
-#rulesOverlay .rt-board svg{max-width:100%}
+#rulesOverlay .rt-board svg{max-width:100%;width:min(var(--rtw),100%)}
 #rulesOverlay .rt{max-width:640px;margin:0 auto}
+/* PC: big mini board (sized from --rt-bw of shared/ruletour.js) and big text; the dialog uses the screen width and a
+   fixed height (same size for every tab) that fits 1280×720 without scrolling (text sizes come from ruletour.js). */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  /* two columns (text | board) so the big board fits the height; pages without a board stay one column */
+  #rulesOverlay .rt{max-width:none}
+  /* side-by-side layout leaves more height for the board: a little larger than ruletour's single-column --rt-bw */
+  #rulesOverlay .rt:has(> .rt-board){--rt-bw:clamp(340px, calc(100vh - 300px), 600px);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:40px}
+  #rulesOverlay .rt:has(> .rt-board) > *{grid-column:1}
+  #rulesOverlay .rt:has(> .rt-board) > :is(.rt-steps, .rt-nav){grid-column:1 / -1}
+  #rulesOverlay .rt:has(> .rt-board) > .rt-board{grid-column:2;grid-row:2 / 5;align-self:start;margin:4px 0 0}
+  #rulesOverlay .rt:has(> .rt-board) > :is(.rt-title, .rt-task){text-align:start}
+  #rulesOverlay .rt:has(> .rt-board) > .rt-task{margin-top:6px}
+  #rulesOverlay .rt:not(:has(> .rt-board)){max-width:760px;margin:0 auto}
+  #rulesOverlay .rt-board svg{width:calc(var(--rt-bw) * var(--rtk))}
+}
 
 /* PC: use the browser width for the lesson / puzzle / opening dialogs (phones keep the single-column layout) */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
   #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal, #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #rulesOverlay .modal{height:min(880px, calc(100vh - 32px));height:min(880px, calc(100dvh - 32px))}
   #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
@@ -1300,7 +1316,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/headerbar.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=2"></script>
+<script src="../shared/ruletour.js?v=4"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020gs"></script>
 <script>
@@ -1350,6 +1366,9 @@ let lesson = null;          // active lesson session
 let puzzle = null;          // active puzzle session
 let rated = null;           // rated game vs the AI: {id, lv, or, my, tag, done?, res?} (only meaningful in 'ai' mode)
 let clock = null;           // game clock of an offline game (see "game clock" below)
+// a game restored on page load: its clock (and the time signal) stays stopped until the first move is played
+// (games started from the new-game dialog run as before; a rated game still going keeps counting through a reload)
+let clockHold = false;
 
 function load() {
   try {
@@ -1362,7 +1381,7 @@ function load() {
       rated = d.rated && d.rated.id ? d.rated : null;
       clock = d.clock && d.clock.left ? d.clock : null;
       // a running clock is paused by a reload, except in a rated game still going (wall time keeps counting)
-      if (clock && clock.t0 && !(rated && !rated.done && settings.mode === 'ai' && !clock.lost)) clock.t0 = 0;
+      if (clock && !(rated && !rated.done && settings.mode === 'ai' && !clock.lost)) { clock.t0 = 0; clockHold = true; }
       cur = positions.length - 1;
       return true;
     }
@@ -2007,10 +2026,11 @@ const RT_CLOCK = 2;            // rated games: 10 min + 30 s byoyomi (CLOCKS[2])
 function clockInit() {
   const c = CLOCKS[rated ? RT_CLOCK : settings.mode === 'ai' || settings.mode === 'pvp' ? settings.clock || 0 : 0];
   clock = c ? { main: c.main, byo: c.byo, left: [0, c.main, c.main], used: 0, t0: 0, lost: 0 } : null;
+  clockHold = false;
 }
 function clockReset() { if (clock) { clock.used = 0; clock.t0 = 0; clock.lost = 0; } }   // undo / continue from here: a fresh turn
 function clockRuns(color) {
-  const c = clock; if (!c || c.lost || lesson || puzzle || net) return false;
+  const c = clock; if (!c || c.lost || lesson || puzzle || net || clockHold) return false;
   if (settings.mode !== 'pvp' && settings.mode !== 'ai') return false;
   const L = positions[positions.length - 1];
   if (!L || L.toMove !== color || (settings.mode === 'ai' && color !== humanColor)) return false;
@@ -2031,7 +2051,7 @@ function clockOnMove(color) {
   const c = clock; if (!c) return;
   clockSync();
   c.left[color] = Math.max(0, c.left[color] - clockUsed());
-  c.used = 0; c.t0 = 0;
+  c.used = 0; c.t0 = 0; clockHold = false;
 }
 function clockTimeUp(color) {
   const c = clock; c.lost = color; c.left[color] = 0; c.used = 0; c.t0 = 0;
@@ -2376,7 +2396,8 @@ function rtDraw(api, cells, o, onSq) {
   const [r0, c0, h, w] = o.crop || [0, 0, 8, 8], u = 26, cp = o.coords ? 14 : 0, pad = 4;
   api.board.innerHTML = rlSVG(cells, o);
   const svg = api.board.firstElementChild;
-  svg.style.cssText = `width:min(${Math.round(w * 40 + 30)}px,100%);height:auto;display:block;${onSq ? 'cursor:pointer' : ''}`;
+  // --rtw: phone width (unchanged); --rtk: share of --rt-bw on PC (a full 8×8 board with coordinates = 1, crops smaller)
+  svg.style.cssText = `--rtw:${Math.round(w * 40 + 30)}px;--rtk:${(svg.viewBox.baseVal.width / (8 * u + pad * 2 + 14)).toFixed(3)};height:auto;display:block;${onSq ? 'cursor:pointer' : ''}`;
   svg.onclick = e => {
     if (!onSq) return;
     const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, k = vb.width / r.width;
