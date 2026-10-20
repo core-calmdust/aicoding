@@ -220,96 +220,298 @@
     },
   };
 
-  /* ---------- collectible creatures ("Atlas Mon") — original board-game spirits ---------- */
-  // shared cute parts: big glossy eyes, blush, tiny feet. Everything faces +z (towards the camera).
-  function eyes(g, x, y, z, r = .2, gap = .32, look = 0) {
-    const W = C(0xffffff, { roughness: .2 }), K = C(0x1d1b26, { roughness: .15 }), H = M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: .6 });
-    [-1, 1].forEach(s => {
-      const e = ball(r, W); e.scale.set(.85, 1.08, .5); e.position.set(x + s * gap, y, z); g.add(e);
-      const p = ball(r * .66, K); p.scale.set(.9, 1.05, .45); p.position.set(x + s * gap + look, y - r * .05, z + r * .2); g.add(p);
-      const h = ball(r * .22, H); h.position.set(x + s * gap + look - r * .22, y + r * .32, z + r * .42); g.add(h);
-    });
+  /* ---------- collectible creatures ("Atlas Mon") — original board-game spirits ----------
+     MONS[id]()  one creature → images/atlas/m-<id>.webp (avatar, tools/icons.html?kind=mon)
+                              and images/atlas/g-<id>.webp (3/4 bust for the speech-bubble guide, &shot=bust)
+     Chibi proportions: big round head, small body, nub limbs, big glossy eyes; everything faces +z.
+     g.userData.head = [centreY, radius] of the head, used by the bust camera. */
+  const V3 = (x, y, z) => new T.Vector3(x, y, z);
+  const vinyl = (hex, o) => C(hex, Object.assign({ roughness: .36, clearcoat: .55, clearcoatRoughness: .3 }, o || {}));
+  // point + outward normal on an ellipsoid (centre c, radii R) at yaw (around y, 0 = +z) and pitch
+  function sph(c, R, yaw, pitch) {
+    R = Array.isArray(R) ? R : [R, R, R];
+    const d = V3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+    return { p: V3(c.x + d.x * R[0], c.y + d.y * R[1], c.z + d.z * R[2]), n: V3(d.x / R[0], d.y / R[1], d.z / R[2]).normalize() };
   }
-  function blush(g, x, y, z, gap = .55) { const m = C(0xff7fa8, { roughness: .6, transparent: true, opacity: .7 }); [-1, 1].forEach(s => { const b = ball(.1, m); b.scale.set(1.5, .7, .3); b.position.set(x + s * gap, y, z); g.add(b); }); }
-  function smile(g, x, y, z, w = .14) { const m = mesh(new T.TorusGeometry(w, .028, 8, 20, Math.PI), C(0x1d1b26)); m.rotation.z = Math.PI; m.position.set(x, y, z); g.add(m); }
-  function feet(g, mat, y = 0, gap = .38, z = .1) { [-1, 1].forEach(s => { const f = ball(.2, mat); f.scale.set(1, .6, 1.3); f.position.set(s * gap, y + .1, z); g.add(f); }); }
+  const flat = (x0, y0, z0) => (u, v) => ({ p: V3(x0 + u, y0 + v, z0), n: V3(0, 0, 1) });
+  // put o on a surface point, local +z along the normal
+  function stick(g, o, s, lift = 0) { o.position.copy(s.p).addScaledVector(s.n, lift); o.lookAt(o.position.clone().add(s.n)); g.add(o); return o; }
+  const INK = 0x231f2e;
+  function eye(r, iris) {
+    const e = new T.Group(), H = M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: .85, roughness: .3 });
+    const b = ball(r, C(INK, { roughness: .1, clearcoat: 1, clearcoatRoughness: .05 })); b.scale.set(.8, 1, .34); e.add(b);
+    const ir = ball(r * .56, C(iris, { roughness: .2, emissive: iris, emissiveIntensity: .12 })); ir.scale.set(.86, .66, .3); ir.position.set(0, -r * .4, r * .2); e.add(ir);
+    const h1 = ball(r * .3, H); h1.scale.set(1, 1.1, .35); h1.position.set(-r * .26, r * .36, r * .27); e.add(h1);
+    const h2 = ball(r * .13, H); h2.scale.z = .35; h2.position.set(r * .3, -r * .16, r * .32); e.add(h2);
+    return e;
+  }
+  // eyes + blush + mouth on a surface function surf(u, v) → {p, n}
+  function face(g, surf, o = {}) {
+    const er = o.eye || .22, u = o.gap || .36, v = o.v || 0, iris = o.iris || 0x4a7dff;
+    if (!o.noEyes) [-1, 1].forEach(s => stick(g, eye(er, iris), surf(s * u, v), o.lift || 0));
+    const bm = C(0xff7d9c, { roughness: .7, transparent: true, opacity: .75 });
+    [-1, 1].forEach(s => { const b = ball(er * .55, bm); b.scale.set(1.4, .72, .25); stick(g, b, surf(s * (u + (o.bx ?? er * 1.25)), v - (o.by ?? er * 1.25)), 0); });
+    const mv = v - (o.my ?? er * 1.35), mk = o.mouth || 'smile', ink = C(INK, { roughness: .4 });
+    if (mk === 'smile' || mk === 'w') {
+      (mk === 'w' ? [-1, 1] : [0]).forEach(s => {
+        const w = (o.mw || er * .42) * (mk === 'w' ? .62 : 1);
+        const m = mesh(new T.TorusGeometry(w, er * .085, 8, 20, Math.PI), ink);
+        stick(g, m, surf(s * w, mv), 0); m.rotateZ(Math.PI);
+      });
+    } else if (mk === 'open') {
+      const m = ball(er * .42, C(0x8a2a3a, { roughness: .5 })); m.scale.set(1.15, .8, .3); stick(g, m, surf(0, mv), 0);
+      const t = ball(er * .22, C(0xff8fa8, { roughness: .5 })); t.scale.z = .3; stick(g, t, surf(0, mv - er * .12), .02);
+    }
+  }
+  function nubs(g, mat, pts, r = .2, sy = .6, sz = 1.25) { pts.forEach(([x, y, z]) => { const f = ball(r, mat); f.scale.set(1, sy, sz); f.position.set(x, y, z); g.add(f); }); }
+  function decal(key, w, h, draw) { return M({ map: X.canvasTex(key, w, h, draw), transparent: true, roughness: .45, bump: false }); }
+  // a curved patch of an ellipsoid (centre c, radii R) facing +z, textured with mat (planar-ish UVs)
+  function patch(c, R, phiW, thC, thW, mat) {
+    const m = mesh(new T.SphereGeometry(1, 32, 24, Math.PI / 2 - phiW / 2, phiW, thC - thW / 2, thW), mat);
+    m.scale.set(R[0], R[1], R[2]); m.position.copy(c); m.castShadow = false; return m;
+  }
+  function crown(mat, gemMat, s = 1) {
+    const g = new T.Group(), base = mesh(new T.CylinderGeometry(.42, .38, .26, 28, 1, true), mat); base.position.y = .13; g.add(base);
+    const rim = mesh(new T.TorusGeometry(.4, .05, 8, 32), mat); rim.rotation.x = Math.PI / 2; g.add(rim);
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + Math.PI / 2; const t = ball(.1, mat); t.position.set(Math.cos(a) * .4, .34, Math.sin(a) * .4); g.add(t); const sp = mesh(new T.ConeGeometry(.1, .2, 12), mat); sp.position.set(Math.cos(a) * .4, .22, Math.sin(a) * .4); g.add(sp); }
+    const gm = ball(.09, gemMat); gm.scale.z = .5; gm.position.set(0, .13, .41); g.add(gm);
+    g.scale.setScalar(s); return g;
+  }
+
+  // dice puppy (backgammon); gold = the rare golden variant
+  function dicepup(gold) {
+    const g = new T.Group();
+    const Wm = gold ? C(0xffc93a, { roughness: .22, metalness: .35, clearcoat: 1, clearcoatRoughness: .1, emissive: 0x5a3a00, emissiveIntensity: .25 }) : vinyl(0xfdfcf8);
+    const pip = gold ? C(0xd8203a, { roughness: .15, clearcoat: 1 }) : C(0x2b3044, { roughness: .3 }), red = C(0xe63b3b, { roughness: .3, clearcoat: .8 });
+    const ear = gold ? C(0xe08a1e, { roughness: .3, clearcoat: .8 }) : vinyl(0x3a4260);
+    g.add(at(rbox(1.0, .78, .9, .3, Wm), 0, .14, 0));                                         // body
+    const col = mesh(new T.TorusGeometry(.42, .09, 10, 32), gold ? C(0x3a6bff, { roughness: .3 }) : red); col.rotation.x = Math.PI / 2; col.position.y = .92; g.add(col);
+    const bell = ball(.12, C(0xffd23a, { roughness: .2, metalness: .3 })); bell.position.set(0, .82, .5); g.add(bell);
+    g.add(at(rbox(1.72, 1.5, 1.5, .4, Wm), 0, .9, 0));                                         // head (a die)
+    face(g, flat(0, 1.6, .755), { eye: .27, gap: .37, iris: gold ? 0xff7a00 : 0x3a8bff, mouth: 'open', bx: .26, by: .3 });
+    const nose = ball(.09, C(INK, { roughness: .2 })); nose.scale.set(1.3, .9, .6); nose.position.set(0, 1.36, .78); g.add(nose);
+    [-1, 1].forEach(s => { const e = rbox(.86, .18, .66, .2, ear); e.position.set(s * 1.07, 1.72, .06); e.rotation.z = s * (Math.PI / 2 + .3); g.add(e); });   // floppy ears
+    const one = ball(.2, red); one.scale.y = .3; one.position.set(0, 2.4, 0); g.add(one);    // top face = 1
+    [[-.35, -.35], [0, 0], [.35, .35]].forEach(([a, b]) => [-1, 1].forEach(s => { const p = ball(.11, pip); p.scale.x = .3; p.position.set(s * .865, 1.65 + b * .9, a * .9); g.add(p); }));
+    nubs(g, Wm, [[-.32, .12, .38], [.32, .12, .38], [-.32, .12, -.3], [.32, .12, -.3]], .2, .6, 1.1);
+    const tail = ball(.14, Wm); tail.scale.set(1, 1, 1.6); tail.position.set(0, .7, -.55); tail.rotation.x = -.7; g.add(tail);
+    if (gold) {
+      const cr = crown(C(0xfff1a8, { roughness: .2, metalness: .4, clearcoat: 1, emissive: 0x6a5000, emissiveIntensity: .3 }), C(0x37c6ff, { roughness: .1, clearcoat: 1 }), .82);
+      cr.position.set(0, 2.36, 0); cr.rotation.set(-.08, 0, .14); g.add(cr);
+      [[1.05, 2.4, .4, .16], [-1.1, 1.0, .5, .12], [.95, .5, .5, .1]].forEach(([x, y, z, r]) => { const sp = mesh(new T.OctahedronGeometry(r, 0), M({ color: 0xfff6c0, emissive: 0xffe680, emissiveIntensity: .9 })); sp.scale.set(.5, 1.4, .5); sp.position.set(x, y, z); g.add(sp); const sp2 = sp.clone(); sp2.rotation.z = Math.PI / 2; g.add(sp2); });
+      one.visible = false;
+    }
+    g.userData.head = [1.65, .82, .1]; return g;
+  }
 
   const MONS = {
-    // ダイスン: a die puppy — its spots are the pips
-    dice() {
-      const g = new T.Group(), Wm = C(0xffffff, { roughness: .32 }), red = C(0xe63b3b, { roughness: .3 }), K = C(0x2b3044, { roughness: .3 });
-      g.add(at(rbox(1.6, 1.5, 1.4, .42, Wm), 0, .25, 0));
-      eyes(g, 0, 1.12, .7, .2, .3); blush(g, 0, .86, .7, .52); smile(g, 0, .86, .72, .1);
-      [[-.86, 1.62, 0, .6], [.86, 1.62, 0, -.6]].forEach(([x, y, z, r]) => { const ear = rbox(.42, .16, .7, .12, red); ear.position.set(x, y - .25, z); ear.rotation.z = r * 1.6; g.add(ear); });
-      [[-.5, .55], [.5, .55], [0, .4]].forEach(([x, y]) => { const p = ball(.11, K); p.scale.z = .35; p.position.set(x * 1.2, y + .1, -.71); g.add(p); });
-      [[.81, 1.0, .3], [.81, .6, -.3]].forEach(([x, y, z]) => { const p = ball(.11, K); p.scale.x = .35; p.position.set(x, y, z); g.add(p); });
-      const top = ball(.17, red); top.scale.y = .35; top.position.set(0, 1.76, 0); g.add(top);
-      feet(g, Wm, 0, .45, .3);
-      const tail = ball(.16, Wm); tail.position.set(0, .7, -.82); g.add(tail);
-      return g;
-    },
-    // リバモン: a reversi-disc turtle, shell half black / half white
-    disc() {
-      const g = new T.Group(), skin = C(0x7ed957, { roughness: .45 }), B = C(0x17181d, { roughness: .25 }), Wt = C(0xf6f3ea, { roughness: .28 });
-      const lo = puck(1.05, .32, B, .5), hi = puck(1.05, .32, Wt, .5); hi.position.y = .32; const shell = grp(lo, hi); shell.position.y = .38; shell.rotation.x = -.18; g.add(shell);
-      const dome = ball(.86, Wt, .45); dome.position.y = 1.02; dome.rotation.x = -.18; g.add(dome);
-      const head = ball(.52, skin); head.position.set(0, .86, .98); g.add(head);
-      eyes(g, 0, .98, 1.38, .15, .22); blush(g, 0, .78, 1.35, .32); smile(g, 0, .76, 1.47, .08);
-      [[-.72, .55], [.72, .55], [-.6, -.62], [.6, -.62]].forEach(([x, z]) => { const l = ball(.24, skin); l.scale.set(1, .6, 1.1); l.position.set(x, .2, z); g.add(l); });
-      const tl = ball(.14, skin); tl.position.set(0, .3, -1.08); g.add(tl);
-      return g;
-    },
-    // ショウギツネ: a fox spirit wearing a shogi-piece hood (王)
+    // ショウギツネ: a fox spirit wearing a shogi piece as a hat
     shogi() {
-      const g = new T.Group(), fur = C(0xff9b4a, { roughness: .5 }), cream = C(0xfff2dc, { roughness: .55 });
-      const body = ball(.78, fur, .95); body.position.y = .72; g.add(body);
-      const belly = ball(.52, cream, .9); belly.position.set(0, .62, .42); belly.scale.z = .55; g.add(belly);
-      const head = ball(.72, fur, .92); head.position.set(0, 1.62, .1); g.add(head);
-      const muz = ball(.36, cream, .7); muz.position.set(0, 1.46, .66); g.add(muz);
-      const nose = ball(.08, C(0x1d1b26)); nose.position.set(0, 1.56, 1.0); g.add(nose);
-      eyes(g, 0, 1.78, .66, .17, .3); blush(g, 0, 1.5, .62, .5);
-      [-1, 1].forEach(s => { const e = mesh(new T.ConeGeometry(.24, .6, 16), fur); e.position.set(s * .42, 2.3, 0); e.rotation.z = -s * .35; g.add(e); const ei = mesh(new T.ConeGeometry(.12, .32, 12), cream); ei.position.set(s * .42, 2.26, .1); ei.rotation.z = -s * .35; g.add(ei); });
-      const hood = shogiPiece('王', .78); hood.position.set(0, 2.32, -.34); hood.rotation.x = -.35; g.add(hood);
-      const tail = ball(.42, fur, 1.3); tail.position.set(.62, .72, -.62); tail.rotation.z = -.6; g.add(tail); const tt = ball(.22, cream); tt.position.set(.88, 1.12, -.72); g.add(tt);
-      feet(g, fur, 0, .36, .3);
-      return g;
+      const g = new T.Group(), fur = vinyl(0xff9a44), cream = vinyl(0xfff3df), dark = C(0x6a3a1c, { roughness: .5 });
+      const body = ball(.6, fur, .95); body.position.y = .6; g.add(body);
+      const bel = ball(.42, cream, .95); bel.scale.z = .6; bel.position.set(0, .56, .32); g.add(bel);
+      const hc = V3(0, 1.55, 0), HR = [.86, .78, .8];
+      const head = ball(1, fur); head.scale.set(...HR); head.position.copy(hc); g.add(head);
+      const mz = ball(.4, cream); mz.scale.set(1.25, .72, .9); mz.position.set(0, 1.3, .52); g.add(mz);
+      const nose = ball(.09, C(INK, { roughness: .2 })); nose.scale.set(1.3, .9, .7); nose.position.set(0, 1.42, .88); g.add(nose);
+      face(g, (u, v) => sph(hc, HR, u, v), { eye: .21, gap: .4, v: .18, iris: 0xffb020, mouth: 'w', my: .42, bx: .2, by: .26 });
+      [-1, 1].forEach(s => {
+        const e = mesh(new T.ConeGeometry(.3, .7, 20), fur); e.position.set(s * .52, 2.2, -.08); e.rotation.z = -s * .42; g.add(e);
+        const ei = mesh(new T.ConeGeometry(.16, .42, 16), cream); ei.position.set(s * .5, 2.16, .06); ei.rotation.z = -s * .42; g.add(ei);
+        const tip = mesh(new T.ConeGeometry(.12, .2, 12), dark); tip.position.set(s * .64, 2.5, -.08); tip.rotation.z = -s * .42; g.add(tip);
+      });
+      const hat = shogiPiece('王', .62); hat.position.set(.05, 2.55, -.18); hat.rotation.set(-.12, 0, -.12); g.add(hat);
+      const tail = ball(.42, fur, 1.35); tail.position.set(.62, .78, -.48); tail.rotation.z = -.7; g.add(tail);
+      const tt = ball(.24, cream); tt.position.set(.92, 1.18, -.56); g.add(tt);
+      nubs(g, fur, [[-.28, .08, .3], [.28, .08, .3]], .2);
+      nubs(g, fur, [[-.5, .62, .3], [.5, .62, .3]], .15, 1.1, 1);
+      g.userData.head = [1.62, .86, .05]; return g;
     },
-    // ナイトン: a chubby knight-piece pony
+    // ナイトン: a chubby knight-piece pony on its chess base
     knight() {
-      const g = new T.Group(), Wm = C(0xe9e3d6, { roughness: .32 }), mane = C(0x8d6bff, { roughness: .4 });
-      g.add(puck(.82, .32, C(0x2b3044, { roughness: .3 }), .5));
-      const body = ball(.68, Wm, .9); body.position.y = .82; g.add(body);
-      const head = ball(.66, Wm); head.scale.set(1, .95, 1.2); head.position.set(0, 1.62, .22); g.add(head);
-      const snout = ball(.42, Wm); snout.scale.set(1.05, .82, 1); snout.position.set(0, 1.42, .78); g.add(snout);
-      [-1, 1].forEach(s => { const n = ball(.05, C(0x8a7f6a)); n.position.set(s * .14, 1.46, 1.18); g.add(n); });
-      eyes(g, 0, 1.82, .78, .16, .3); blush(g, 0, 1.56, .72, .5);
-      [-1, 1].forEach(s => { const e = mesh(new T.ConeGeometry(.15, .38, 12), Wm); e.position.set(s * .3, 2.32, .02); e.rotation.z = -s * .2; g.add(e); });
-      for (let i = 0; i < 5; i++) { const m = ball(.2 - i * .015, mane); m.position.set(0, 2.24 - i * .24, -.28 - i * .12); g.add(m); }
-      return g;
+      const g = new T.Group(), Wm = vinyl(0xf3eee2), mane = vinyl(0x8d6bff), snoutM = vinyl(0xffe2d0);
+      g.add(puck(.82, .3, C(0x3a4766, { roughness: .3, clearcoat: .6 }), .5));
+      const ring = mesh(new T.TorusGeometry(.62, .05, 8, 40), C(0xffd25a, { roughness: .25, metalness: .3 })); ring.rotation.x = Math.PI / 2; ring.position.y = .31; g.add(ring);
+      const body = ball(.55, Wm, .95); body.position.y = .82; g.add(body);
+      const hc = V3(0, 1.7, -.05), HR = [.78, .74, .74];
+      const head = ball(1, Wm); head.scale.set(...HR); head.position.copy(hc); g.add(head);
+      const sn = ball(.44, snoutM); sn.scale.set(1.1, .8, .9); sn.position.set(0, 1.38, .5); g.add(sn);
+      [-1, 1].forEach(s => { const n = ball(.06, C(0xc07a6a)); n.scale.z = .5; n.position.set(s * .15, 1.42, .89); g.add(n); });
+      face(g, (u, v) => sph(hc, HR, u, v), { eye: .21, gap: .38, v: .26, iris: 0x8d6bff, mouth: 'none', bx: .16, by: .24 });
+      const sm = mesh(new T.TorusGeometry(.1, .02, 8, 20, Math.PI), C(INK)); sm.rotation.z = Math.PI; sm.position.set(0, 1.27, .89); g.add(sm);
+      [-1, 1].forEach(s => { const e = mesh(new T.ConeGeometry(.17, .42, 16), Wm); e.position.set(s * .36, 2.38, -.12); e.rotation.z = -s * .3; g.add(e); const ei = mesh(new T.ConeGeometry(.09, .26, 12), snoutM); ei.position.set(s * .35, 2.36, -.04); ei.rotation.z = -s * .3; g.add(ei); });
+      [[0, 2.42, .12, .2, .5], [0, 2.44, -.2, .24, .2], [0, 2.26, -.52, .24, -.4], [0, 1.96, -.72, .22, -.9], [0, 1.6, -.78, .2, -1.2]].forEach(([x, y, z, r, a]) => { const m = ball(r, mane); m.scale.set(.55, 1.25, .9); m.rotation.x = a; m.position.set(x, y, z); g.add(m); });
+      const fl = ball(.14, mane); fl.scale.set(1.2, .7, .8); fl.position.set(.06, 2.3, .42); fl.rotation.z = -.4; g.add(fl);
+      nubs(g, Wm, [[-.24, .36, .38], [.24, .36, .38]], .17, .7, 1.1);
+      g.userData.head = [1.68, .8, .05]; return g;
     },
-    // ゴイシペン: a go-stone penguin (black stone body, white stone belly)
+    // リバガメ: a turtle whose shell is a reversi disc (black underside, white top)
+    disc() {
+      const g = new T.Group(), skin = vinyl(0x86dc5e), B = C(0x17181d, { roughness: .22, clearcoat: 1 }), Wt = C(0xf6f3ea, { roughness: .25, clearcoat: 1 });
+      const sh = new T.Group(), lo = puck(.98, .3, B, .5), hi = puck(.98, .3, Wt, .5); hi.position.y = .3; sh.add(lo, hi);
+      const dome = ball(.8, Wt, .4); dome.position.y = .58; sh.add(dome);
+      sh.position.set(0, .26, -.28); sh.rotation.x = -.12; g.add(sh);
+      const hc = V3(0, 1.28, .62), HR = [.7, .66, .66];
+      const head = ball(1, skin); head.scale.set(...HR); head.position.copy(hc); g.add(head);
+      face(g, (u, v) => sph(hc, HR, u, v), { eye: .2, gap: .42, v: .08, iris: 0x1fae5a, mouth: 'open', bx: .18, by: .24 });
+      const leaf = ball(.16, C(0x3ccf6e, { roughness: .4 })); leaf.scale.set(.5, .2, 1); leaf.position.set(.08, 1.98, .55); leaf.rotation.set(.3, .5, .4); g.add(leaf);
+      const stem = mesh(new T.CylinderGeometry(.025, .03, .16, 8), C(0x3a9d4a)); stem.position.set(0, 1.94, .6); g.add(stem);
+      nubs(g, skin, [[-.72, .16, .38], [.72, .16, .38], [-.62, .16, -.78], [.62, .16, -.78]], .24, .6, 1.1);
+      const tl = ball(.13, skin); tl.position.set(0, .3, -1.3); g.add(tl);
+      g.userData.head = [1.3, .74, .62]; return g;
+    },
+    // スウニャン: a number-tile kitten with a pencil tail
+    tile() {
+      const g = new T.Group(), Wm = vinyl(0xfffdf9), pink = vinyl(0xff8fc7), inner = C(0xffc4dd, { roughness: .5 });
+      g.add(at(rbox(1.0, .78, .82, .3, pink), 0, .12, 0));                                     // body tile
+      const num = mesh(new T.PlaneGeometry(.5, .5), decal('mon-num3', 128, 128, (c, W) => { c.clearRect(0, 0, W, W); c.fillStyle = '#ffffff'; c.font = '700 110px Fredoka, "Arial Rounded MT Bold", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('3', W / 2, W / 2 + 8); }));
+      num.position.set(0, .48, .418); g.add(num);
+      g.add(at(rbox(1.66, 1.38, 1.36, .44, Wm), 0, .86, 0));                                    // head tile
+      face(g, flat(0, 1.55, .685), { eye: .26, gap: .36, iris: 0xff4fa0, mouth: 'w', my: .3, bx: .25, by: .3 });
+      const nose = ball(.07, C(0xff6fae, { roughness: .3 })); nose.scale.set(1.3, .9, .6); nose.position.set(0, 1.27, .7); g.add(nose);
+      [-1, 1].forEach(s => {
+        const e = mesh(new T.ConeGeometry(.36, .56, 4), Wm); e.position.set(s * .56, 2.44, 0); e.rotation.set(0, Math.PI / 4, -s * .18); g.add(e);
+        const ei = mesh(new T.ConeGeometry(.2, .34, 4), inner); ei.position.set(s * .56, 2.38, .14); ei.rotation.set(0, Math.PI / 4, -s * .18); g.add(ei);
+        [.06, -.08].forEach((dy, k) => { const w = mesh(new T.CylinderGeometry(.015, .015, .4, 6), C(0xd9c9d2)); w.rotation.z = Math.PI / 2 + s * (k ? -.12 : .12); w.position.set(s * .98, 1.25 + dy, .5); g.add(w); });
+      });
+      const tm = mesh(new T.PlaneGeometry(.42, .42), decal('mon-num7', 128, 128, (c, W) => { c.clearRect(0, 0, W, W); c.fillStyle = '#ff6fae'; c.font = '700 110px Fredoka, "Arial Rounded MT Bold", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('7', W / 2, W / 2 + 8); }));
+      tm.rotation.x = -Math.PI / 2; tm.position.set(0, 2.245, -.05); g.add(tm);
+      const pen = grp(at(mesh(new T.CylinderGeometry(.11, .11, 1.1, 6), vinyl(0xffc928)), 0, 0, 0), at(mesh(new T.ConeGeometry(.11, .26, 6), C(0xf2d2a0)), 0, -.68, 0), at(mesh(new T.ConeGeometry(.04, .1, 8), C(0x3a3040)), 0, -.78, 0), at(mesh(new T.CylinderGeometry(.115, .115, .2, 16), pink), 0, .64, 0));
+      pen.position.set(.62, .78, -.6); pen.rotation.set(-.5, 0, -.7); g.add(pen);
+      nubs(g, Wm, [[-.3, .1, .36], [.3, .1, .36]], .18);
+      g.userData.head = [1.6, .8, .1]; return g;
+    },
+    // ゴイシペン: a go-stone penguin — glossy black stone body, white stone beret
     stone() {
-      const g = new T.Group(), B = C(0x1a1b22, { roughness: .16 }), Wt = C(0xfbfaf4, { roughness: .2 }), beak = C(0xffb21e, { roughness: .4 });
-      const body = ball(.9, B, .95); body.position.y = .92; g.add(body);
-      const belly = ball(.66, Wt, .95); belly.scale.z = .6; belly.position.set(0, .86, .44); g.add(belly);
-      eyes(g, 0, 1.32, .78, .17, .27); blush(g, 0, 1.06, .78, .44);
-      const bk = mesh(new T.ConeGeometry(.12, .28, 16), beak); bk.rotation.x = Math.PI / 2; bk.position.set(0, 1.12, .98); g.add(bk);
-      [-1, 1].forEach(s => { const w = ball(.3, B); w.scale.set(.35, 1, .7); w.position.set(s * .9, .88, 0); w.rotation.z = s * .4; g.add(w); });
-      feet(g, beak, 0, .3, .4);
-      const hat = puck(.42, .18, Wt, .5); hat.position.set(.08, 1.78, 0); hat.rotation.z = -.2; g.add(hat);
-      return g;
+      const g = new T.Group(), B = C(0x1a1b24, { roughness: .14, clearcoat: 1, clearcoatRoughness: .08 }), Wt = vinyl(0xfbfaf4), beak = vinyl(0xffb21e);
+      const bc = V3(0, 1.0, 0), BR = [.98, .95, .9];
+      const body = ball(1, B); body.scale.set(...BR); body.position.copy(bc); g.add(body);
+      const fc = V3(0, 1.05, .3), FR = [.8, .8, .66];
+      const fm = ball(1, Wt); fm.scale.set(...FR); fm.position.copy(fc); g.add(fm);
+      const cap = ball(.5, B); cap.scale.set(.9, .5, .6); cap.position.set(0, 1.78, .52); g.add(cap);   // the black "widow's peak"
+      face(g, (u, v) => sph(fc, FR, u, v), { eye: .22, gap: .34, v: .38, iris: 0x4a8bff, mouth: 'none', bx: .2, by: .25 });
+      const bk = ball(.15, beak); bk.scale.set(1.3, .7, 1); bk.position.set(0, 1.13, .98); g.add(bk);
+      [-1, 1].forEach(s => { const w = ball(.34, B); w.scale.set(.32, .95, .7); w.position.set(s * .95, .9, .05); w.rotation.z = s * .5; g.add(w); });
+      nubs(g, beak, [[-.32, .08, .45], [.32, .08, .45]], .2, .5, 1.3);
+      const hat = goStone(false, .95); hat.position.set(.12, 1.83, -.1); hat.rotation.set(-.15, 0, -.22); g.add(hat);
+      const tuft = ball(.07, Wt); tuft.position.set(.16, 2.13, -.1); g.add(tuft);
+      g.userData.head = [1.35, .95, .25]; return g;
     },
-    // マンカラビ: a gem beetle — mancala gems on its back
+    // ハコピヨ: a dots-and-boxes chick — a square box with a drawn line for a crest
+    dot() {
+      const g = new T.Group(), Y = vinyl(0xffd84a), O = vinyl(0xff9a2a), red = C(0xff5d5d, { roughness: .3, clearcoat: .8 }), blue = C(0x36b4ff, { roughness: .3, clearcoat: .8 }), pinM = C(0x2b3044, { roughness: .25, clearcoat: .8 });
+      g.add(at(rbox(1.7, 1.75, 1.5, .5, Y), 0, .2, 0));
+      face(g, flat(0, 1.42, .755), { eye: .27, gap: .38, iris: 0x2b6bff, mouth: 'none', bx: .24, by: .3 });
+      const bk = mesh(new T.ConeGeometry(.15, .26, 4), O); bk.rotation.set(Math.PI / 2, 0, Math.PI / 4); bk.position.set(0, 1.08, .86); g.add(bk);
+      const panel = mesh(new T.PlaneGeometry(.72, .5), decal('mon-dots', 256, 180, (c, W, H) => {
+        c.clearRect(0, 0, W, H); c.fillStyle = '#fff7d8'; c.beginPath(); c.roundRect ? c.roundRect(4, 4, W - 8, H - 8, 30) : c.rect(4, 4, W - 8, H - 8); c.fill();
+        const P = (i, j) => [48 + i * 80, 40 + j * 100]; c.lineCap = 'round'; c.lineWidth = 14;
+        c.fillStyle = '#ffc2c2'; c.fillRect(48, 40, 80, 100);
+        [[0, 0, 1, 0, '#ff5d5d'], [0, 0, 0, 1, '#ff5d5d'], [1, 0, 1, 1, '#ff5d5d'], [0, 1, 1, 1, '#ff5d5d'], [1, 0, 2, 0, '#36b4ff']].forEach(([a, b, x, y, col]) => { c.strokeStyle = col; c.beginPath(); c.moveTo(...P(a, b)); c.lineTo(...P(x, y)); c.stroke(); });
+        c.fillStyle = '#2b3044'; for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) { const [x, y] = P(i, j); c.beginPath(); c.arc(x, y, 12, 0, 7); c.fill(); }
+      }));
+      panel.position.set(0, .56, .757); g.add(panel);
+      const crest = rbox(.86, .2, .22, .1, red); crest.position.set(0, 1.94, 0); g.add(crest);
+      [-1, 1].forEach(s => { const p = ball(.15, pinM); p.position.set(s * .5, 2.05, 0); g.add(p); });
+      const bl = rbox(.5, .16, .18, .08, blue); bl.position.set(-.5, 2.02, -.28); bl.rotation.y = Math.PI / 2; g.add(bl);
+      [-1, 1].forEach(s => { const w = ball(.3, Y); w.scale.set(.35, .8, .8); w.position.set(s * .88, .95, 0); w.rotation.z = s * .5; g.add(w); });
+      nubs(g, O, [[-.36, .1, .5], [.36, .1, .5]], .18, .5, 1.3);
+      g.userData.head = [1.3, .95, .1]; return g;
+    },
+    // ポトンウサ: a connect-four bunny — a yellow disc face with red disc ears, plopping into place
+    plop() {
+      const g = new T.Group(), Y = C(0xffc928, { roughness: .24, clearcoat: 1 }), R = C(0xff4545, { roughness: .24, clearcoat: 1 }), Bl = C(0x2f78ff, { roughness: .28, clearcoat: .8 });
+      const body = ball(.55, Bl, .95); body.position.y = .58; g.add(body);
+      [[-.22, .7], [.22, .45]].forEach(([x, y], i) => { const h = puck(.13, .06, i ? R : Y, .5); h.rotation.x = Math.PI / 2; h.position.set(x, y, .5); g.add(h); });
+      const head = puck(.88, .62, Y, .48); head.rotation.x = Math.PI / 2; head.position.set(0, 1.62, -.31); g.add(head);
+      const rim = mesh(new T.TorusGeometry(.7, .045, 10, 48), Y); rim.position.set(0, 1.62, .33); g.add(rim);
+      face(g, flat(0, 1.66, .335), { eye: .26, gap: .34, iris: 0xff4545, mouth: 'open', bx: .22, by: .28 });
+      [-1, 1].forEach(s => {
+        const e = new T.Group(); const d = puck(.3, .2, R, .5); d.rotation.x = Math.PI / 2; d.scale.set(1, 1, 1.9); e.add(d);
+        const di = puck(.17, .2, C(0xffb3b3, { roughness: .4 }), .5); di.rotation.x = Math.PI / 2; di.scale.set(1, 1, 1.75); di.position.z = .02; e.add(di);
+        e.position.set(s * .42, 2.62, 0); e.rotation.z = -s * .22; g.add(e);
+      });
+      const tl = ball(.16, vinyl(0xffffff)); tl.position.set(0, .5, -.55); g.add(tl);
+      nubs(g, Bl, [[-.26, .08, .3], [.26, .08, .3]], .19);
+      nubs(g, Bl, [[-.56, .7, .2], [.56, .7, .2]], .14, 1.1, 1);
+      const drop = c4disc(0xff4545, .42); drop.position.set(1.02, 2.65, .1); drop.rotation.set(Math.PI / 2, 0, .4); g.add(drop);
+      g.userData.head = [1.75, .92, 0]; return g;
+    },
+    // マンカラビ: a gem beetle — its shell is a wooden mancala pit full of gems
     gem() {
-      const g = new T.Group(), shell = C(0xb37540, { roughness: .45 }), dark = C(0x5e3a1a, { roughness: .6 });
-      const b = ball(.95, shell, .62); b.position.y = .62; g.add(b);
-      const head = ball(.5, dark, .9); head.position.set(0, .72, .86); g.add(head);
-      eyes(g, 0, .86, 1.24, .16, .22); blush(g, 0, .66, 1.24, .34);
-      [0xff5d5d, 0x36b4ff, 0xffc928, 0x3ccf91, 0x8d6bff].forEach((c, i) => { const a = i / 5 * Math.PI * 2; g.add(at(gem(c, .62), Math.cos(a) * .5, .86, Math.sin(a) * .5 - .1)); });
-      [-1, 1].forEach(s => { const an = mesh(new T.CylinderGeometry(.03, .03, .5, 8), dark); an.position.set(s * .2, 1.3, 1.0); an.rotation.z = -s * .4; g.add(an); const tip = ball(.08, C(0xffc928, { roughness: .2 })); tip.position.set(s * .32, 1.52, 1.0); g.add(tip); });
-      for (let i = 0; i < 3; i++) [-1, 1].forEach(s => { const l = ball(.12, dark); l.scale.set(1.6, .5, .6); l.position.set(s * .86, .16, .4 - i * .4); g.add(l); });
-      return g;
+      const g = new T.Group(), wood = M({ map: X.wood('mon-gw', '#b97842', '#7a4a20'), roughness: .45, clearcoat: .5 }), skin = vinyl(0xe9a85e), dark = C(0x5e3a1a, { roughness: .5 });
+      const shell = ball(.95, wood, .5); shell.position.set(0, .6, -.35); g.add(shell);
+      const pit = mesh(new T.CylinderGeometry(.66, .55, .12, 32), C(0x5a3416, { roughness: .8 })); pit.position.set(0, 1.05, -.35); g.add(pit);
+      [0xff5d5d, 0x36b4ff, 0xffc928, 0x3ccf91, 0x8d6bff, 0xff7fbe].forEach((c, i) => { const a = i / 6 * Math.PI * 2 + .3, r = i % 2 ? .38 : .24; g.add(at(gem(c, .58), Math.cos(a) * r, .95 + (i % 3) * .05, Math.sin(a) * r - .35, i * .4, i, 0)); });
+      g.add(at(gem(0xffc928, .7), 0, 1.12, -.4, .4, .3, 0));
+      const hc = V3(0, .86, .72), HR = [.68, .62, .58];
+      const head = ball(1, skin); head.scale.set(...HR); head.position.copy(hc); g.add(head);
+      face(g, (u, v) => sph(hc, HR, u, v), { eye: .21, gap: .4, v: .12, iris: 0x2a9d5f, mouth: 'smile', bx: .18, by: .24 });
+      [-1, 1].forEach(s => { const an = mesh(new T.CylinderGeometry(.03, .035, .5, 8), dark); an.position.set(s * .26, 1.6, .66); an.rotation.z = -s * .45; g.add(an); g.add(at(gem(s > 0 ? 0xff5d5d : 0x36b4ff, .4), s * .38, 1.74, .66)); });
+      for (let i = 0; i < 3; i++) [-1, 1].forEach(s => { const l = ball(.12, dark); l.scale.set(1.5, .5, .7); l.position.set(s * .86, .14, .25 - i * .42); g.add(l); });
+      g.userData.head = [1.0, .74, .55]; return g;
     },
+    // ダイスン: a die puppy — its spots are the pips
+    dice() { return dicepup(false); },
+    // モリフク: a mill owl — the morris board is drawn on its belly
+    owl() {
+      const g = new T.Group(), P = vinyl(0x7552e0), lav = vinyl(0xd9ccff), cream = C(0xfff3dc, { roughness: .5 }), beak = vinyl(0xffb21e);
+      const bc = V3(0, 1.02, 0), BR = [.98, 1.0, .9];
+      const body = ball(1, P); body.scale.set(...BR); body.position.copy(bc); g.add(body);
+      const belly = patch(V3(0, 1.02, .005), [.985, 1.005, .905], 1.45, Math.PI / 2 + .45, 1.0, decal('mon-mill', 256, 256, (c, W) => {
+        c.clearRect(0, 0, W, W); c.fillStyle = '#fff1d8'; c.beginPath(); c.ellipse(W / 2, W / 2, W / 2 - 6, W / 2 - 6, 0, 0, 7); c.fill();
+        c.strokeStyle = '#4a2e8a'; c.lineWidth = 9; c.lineJoin = 'round'; c.strokeRect(58, 58, W - 116, W - 116); c.strokeRect(100, 100, W - 200, W - 200);
+        c.beginPath(); c.moveTo(W / 2, 58); c.lineTo(W / 2, 100); c.moveTo(W / 2, W - 58); c.lineTo(W / 2, W - 100); c.moveTo(58, W / 2); c.lineTo(100, W / 2); c.moveTo(W - 58, W / 2); c.lineTo(W - 100, W / 2); c.stroke();
+        [[58, 58, '#ffffff'], [W / 2, 58, '#ffffff'], [W - 58, 58, '#ffffff'], [100, W - 100, '#4a2e8a'], [W - 58, W / 2, '#4a2e8a']].forEach(([x, y, f]) => { c.fillStyle = f; c.strokeStyle = '#4a2e8a'; c.lineWidth = 5; c.beginPath(); c.arc(x, y, 17, 0, 7); c.fill(); c.stroke(); });
+      }));
+      g.add(belly);
+      [-1, 1].forEach(s => { const d = ball(.42, lav); d.scale.set(1, .95, .45); d.position.set(s * .34, 1.5, .6); g.add(d); });
+      face(g, (u, v) => ({ p: V3(u, 1.5 + v, .79 - Math.abs(Math.abs(u) - .34) * .4), n: V3(0, 0, 1) }), { eye: .26, gap: .34, iris: 0xffb21e, mouth: 'none', bx: .26, by: .28 });
+      const bk = mesh(new T.ConeGeometry(.1, .22, 12), beak); bk.rotation.x = Math.PI; bk.position.set(0, 1.27, .9); g.add(bk);
+      [-1, 1].forEach(s => { const t = mesh(new T.ConeGeometry(.2, .52, 16), P); t.position.set(s * .58, 2.02, -.05); t.rotation.z = -s * .5; g.add(t); });
+      [-1, 1].forEach(s => { const w = ball(.4, vinyl(0x5e3fc4)); w.scale.set(.3, .95, .75); w.position.set(s * .96, .98, -.02); w.rotation.z = s * .35; g.add(w); });
+      nubs(g, beak, [[-.3, .06, .45], [.3, .06, .45]], .17, .5, 1.2);
+      g.userData.head = [1.4, .95, .2]; return g;
+    },
+    // チェッカニ: a checkers crab — a stacked "king" checker shell with a crown
+    crab() {
+      const g = new T.Group(), R = C(0xe94040, { roughness: .28, clearcoat: 1 }), Rd = C(0xc72f30, { roughness: .3, clearcoat: .8 }), Wt = vinyl(0xffffff);
+      const s1 = checker(0xe94040, 1.45); s1.position.y = .24; g.add(s1);
+      const s2 = checker(0xe94040, 1.45); s2.position.y = .66; g.add(s2);
+      const sep = mesh(new T.TorusGeometry(.86, .035, 8, 48), C(0x8a1c22)); sep.rotation.x = Math.PI / 2; sep.position.y = .64; g.add(sep);
+      const cr = crown(C(0xffd23a, { roughness: .2, metalness: .3, clearcoat: 1 }), C(0x36b4ff, { roughness: .1, clearcoat: 1 }), .8); cr.position.set(0, 1.0, -.1); cr.scale.setScalar(.95); g.add(cr);
+      [-1, 1].forEach(s => {
+        const st = mesh(new T.CylinderGeometry(.07, .09, .55, 12), R); st.position.set(s * .48, 1.3, .48); st.rotation.z = -s * .25; g.add(st);
+        const ec = V3(s * .6, 1.66, .52); const eb = ball(.32, Wt); eb.position.copy(ec); g.add(eb);
+        stick(g, eye(.25, 0xff4545), sph(ec, .32, 0, .05), -.04);
+      });
+      const fc = V3(0, .66, 0), FR = [.88, .5, .88];
+      face(g, (u, v) => sph(fc, FR, u, v), { noEyes: true, eye: .2, gap: .3, v: .1, mouth: 'open', bx: .12, by: .1, my: .2 });
+      [-1, 1].forEach(s => {
+        const arm = ball(.14, Rd); arm.scale.set(1.8, .8, .8); arm.position.set(s * 1.0, .62, .25); g.add(arm);
+        const cl = ball(.3, R); cl.scale.set(1, .85, .85); cl.position.set(s * 1.25, .82, .35); g.add(cl);
+        const cu = ball(.18, R); cu.scale.set(.8, 1.1, .8); cu.position.set(s * 1.36, 1.12, .38); cu.rotation.z = s * .5; g.add(cu);
+        for (let i = 0; i < 3; i++) { const l = ball(.1, Rd); l.scale.set(2.2, .55, .7); l.position.set(s * .98, .12, -.1 - i * .3); l.rotation.y = s * (.2 + i * .25); g.add(l); }
+      });
+      g.userData.head = [1.15, .95, .3]; return g;
+    },
+    // キンダイスン: the rare golden die puppy
+    gold() { return dicepup(true); },
+  };
+  // names / game / one-liners / rarity (N < R < SR < SSR < UR) for the portal gacha and the in-game guide
+  const MON_INFO = {
+    shogi:  { ja: 'ショウギツネ', en: 'Shogitsune', game: 'shogi', rar: 'SR', desc_ja: '王将の駒をかぶった狐の精。先を読むのが大好き。', desc_en: 'A fox spirit wearing a king piece as a hat. Loves reading ahead.' },
+    knight: { ja: 'ナイトン', en: 'Knighton', game: 'chess', rar: 'SR', desc_ja: '台座ごとぴょんと跳ねるナイトの子馬。L字に歩く。', desc_en: 'A knight-piece pony that hops on its own base — always in an L.' },
+    disc:   { ja: 'リバガメ', en: 'Flipturtle', game: 'reversi', rar: 'R', desc_ja: '石の甲羅は裏が黒。ひっくり返ると気分も変わる。', desc_en: 'Its disc shell is black underneath; flip it and its mood flips too.' },
+    tile:   { ja: 'スウニャン', en: 'Numeow', game: 'sudoku', rar: 'R', desc_ja: '数字マスの子猫。鉛筆のしっぽでメモをとる。', desc_en: 'A number-tile kitten that takes pencil notes with its tail.' },
+    stone:  { ja: 'ゴイシペン', en: 'Stoneguin', game: 'gomoku', rar: 'R', desc_ja: 'つやつや黒石のペンギン。五つ並ぶと踊りだす。', desc_en: 'A glossy black-stone penguin. Dances when five line up.' },
+    dot:    { ja: 'ハコピヨ', en: 'Boxchick', game: 'dots', rar: 'N', desc_ja: '線を引いて箱を作るのが得意なひよこ。とさかは一本線。', desc_en: 'A chick that loves closing boxes; its crest is a drawn line.' },
+    plop:   { ja: 'ポトンウサ', en: 'Plopbun', game: 'connect4', rar: 'N', desc_ja: '円盤の顔のうさぎ。ポトンと落ちて四つそろえる。', desc_en: 'A disc-faced bunny that plops down to make four in a row.' },
+    gem:    { ja: 'マンカラビ', en: 'Gembeetle', game: 'mancala', rar: 'R', desc_ja: '背中のくぼみに宝石の種をためこむ甲虫。', desc_en: 'A beetle that hoards gem seeds in the pit on its back.' },
+    dice:   { ja: 'ダイスン', en: 'Dicepup', game: 'backgammon', rar: 'N', desc_ja: 'サイコロの子犬。ぶち模様はぜんぶ目の数。', desc_en: 'A dice puppy — every spot on it is a pip.' },
+    owl:    { ja: 'モリフク', en: 'Millowl', game: 'morris', rar: 'R', desc_ja: 'おなかにミル盤の模様があるフクロウ。三つ並べを見張る。', desc_en: 'An owl with a mill board on its belly, watching for three in a row.' },
+    crab:   { ja: 'チェッカニ', en: 'Checkrab', game: 'checkers', rar: 'SR', desc_ja: '二段重ねのキング駒を背負ったカニ。王冠が自慢。', desc_en: 'A crab carrying a stacked king checker. Very proud of its crown.' },
+    gold:   { ja: 'キンダイスン', en: 'Goldpup', game: 'atlas', rar: 'UR', desc_ja: 'めったに出会えない金色のダイスン。ふると幸運が出る。', desc_en: 'A rare golden Dicepup. Shake it and luck comes out.' },
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
@@ -327,5 +529,5 @@
       return g;
     };
   });
-  window.Icons3D = { PIECES, ICONS: FIX, MONS };
+  window.Icons3D = { PIECES, ICONS: FIX, MONS, MON_INFO };
 })();
