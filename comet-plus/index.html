@@ -531,7 +531,7 @@ class AudioHandler {
         this.bgmBus = this.ctx.createGain();
         this.bgmBus.connect(this.masterGain);
         this.bgmPlaying = true;
-        this.current16th = 0;
+        this.current16th = 0; this.bgmStageL = null;
         this.seq4MelodyIndex = 0;
         this.seq5MelodyIndex = 0;
         this.hiHatPanIndex = 0;
@@ -544,7 +544,9 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStage = ((stage - 1) % 6) + 1;
+        const bgmStageNow = ((stage - 1) % 6) + 1;
+        if (this.bgmStageL == null) this.bgmStageL = bgmStageNow;
+        let bgmStage = this.bgmStageL; // 段階の切り替えは小節の頭でだけ行う（途中から入るとフレーズがずれる）
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -751,9 +753,12 @@ class AudioHandler {
         const nowA = this.ctx.currentTime + (this.ctx.outputLatency || 0) * 0.5;
         while (this.kickQ && this.kickQ.length && this.kickQ[0] <= nowA) { this.kickQ.shift(); visualBeat = 1.0; }
         while (this.barQ && this.barQ.length && this.barQ[0] <= nowA) { this.barQ.shift(); this.barTrigger = true; }
+        // 処理が大きく止まって予約が遅れたときは、遅れた分を鳴らさずに飛ばす（まとめて鳴ってリズムが崩れるのを防ぐ）
+        while (this.nextNoteTime < this.ctx.currentTime - 0.03) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
         while (this.nextNoteTime < this.ctx.currentTime + 0.3) { // 先読みを長めに（一瞬処理が重くなっても音が途切れない）
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
+            if (noteInMeasure === 0) bgmStage = this.bgmStageL = bgmStageNow;
             if (noteInMeasure === 0) {
                 (this.barQ = this.barQ || []).push(this.nextNoteTime);
             }
@@ -808,6 +813,7 @@ class AudioHandler {
             }
             if (bgmStage >= 4) {
                 if (beatInLoop % 8 === 0) {
+                    this.seq4MelodyIndex = Math.floor(beatInLoop / 8) % this.seq4Melody.length; // ループ位置から決める（途中から入ってもずれない）
                     const degree = this.seq4Melody[this.seq4MelodyIndex];
                     const note = rootNote * 16 * Math.pow(2, degree / 12);
                     createSequence4(this.nextNoteTime, note);
@@ -816,6 +822,7 @@ class AudioHandler {
             }
             if (bgmStage >= 5) {
                 if (beatInLoop % 4 === 0) {
+                    this.seq5MelodyIndex = Math.floor(beatInLoop / 4) % this.seq5Melody.length;
                     const degree = this.seq5Melody[this.seq5MelodyIndex];
                     if (degree !== null) {
                         const note = rootNote * 8 * Math.pow(2, degree / 12);
@@ -4286,6 +4293,7 @@ const playerGroup = new THREE.Group();
 const shipPivot = new THREE.Group();
 // 自機: ポリゴンの胴体・エンジン・翼端フィン ＋ ワイヤーフレームの翼と骨組み
 const shipWireMat = new THREE.LineBasicMaterial({ color: 0x7ffcff, transparent: true, opacity: 0.95 });
+const shipCageMat = new THREE.LineBasicMaterial({ color: 0x7ffcff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
 function triGeo(tris) {
     const p = []; tris.forEach(t => t.forEach(v => p.push(...v)));
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.computeVertexNormals(); return g;
@@ -4332,20 +4340,32 @@ function makeShipModel() {
         cap(r0); cap(r2);
         const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.computeVertexNormals(); return geo;
     };
-    const both = (px, mat, o = {}, grp = g, edges = true) => { part(slab(px, o), mat, grp, edges); part(slab(px, { ...o, mir: true }), mat, grp, edges); };
+    // ワイヤーフレームの外殻: ポリゴンを少し膨らませた形をワイヤーで重ねる（Rez風に、実体とワイヤーを絡める）
+    const cage = (geo, grp, s) => {
+        geo.computeBoundingBox(); const c = new THREE.Vector3(); geo.boundingBox.getCenter(c);
+        const w = geo.clone(); w.translate(-c.x, -c.y, -c.z); w.scale(s, s * 1.5, s); w.translate(c.x, c.y + 0.8, c.z);
+        grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(w, 15), shipCageMat));
+    };
+    const both = (px, mat, o = {}, grp = g, edges = true) => {
+        [false, true].forEach(m => {
+            const geo = slab(px, { ...o, mir: m }); const mesh = part(geo, mat, grp, edges && !o.neon);
+            if (o.neon) mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 18), shipWireMat)); // 縁を発光ラインに
+            if (o.cage) cage(geo, grp, o.cage);
+        });
+    };
     const lerpTop = (y0, h0, y1, h1) => (z) => { const t = Math.min(1, Math.max(0, (z - PZ(y0)) / (PZ(y1) - PZ(y0)))); return h0 + (h1 - h0) * t; };
 
     // ---- メインユニット: 左右2つのパーツで機首を構成（明るい装甲板＋外側の濃紺の刃）----
-    both([[141, 28], [142, 64], [142, 252], [118, 252], [116, 200], [120, 140], [127, 92], [136, 52]], steel, { bot: -1.6, it: 0.5, ib: 0.5, topF: lerpTop(28, 0.8, 250, 3.6) });
-    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
+    both([[141, 28], [142, 64], [142, 252], [118, 252], [116, 200], [120, 140], [127, 92], [136, 52]], steel, { cage: 1.08, bot: -1.6, it: 0.5, ib: 0.5, topF: lerpTop(28, 0.8, 250, 3.6) });
+    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { neon: true, bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
     part(slab([[142, 60], [143.5, 60], [143.5, 250], [140.5, 250], [140.5, 60]], { bot: 0, top: 3.75, it: 0, ib: 0 }), navy, g, false); // 2つのパーツの合わせ目（暗い溝）
     // 胴体中央の厚い装甲（肩）
-    both([[142, 168], [154, 164], [172, 172], [182, 200], [180, 248], [170, 272], [142, 272]], armor, { bot: -2.6, top: 2.8, it: 1.2, ib: 1.2 });
+    both([[142, 168], [154, 164], [172, 172], [182, 200], [180, 248], [170, 272], [142, 272]], armor, { cage: 1.1, bot: -2.6, top: 2.8, it: 1.2, ib: 1.2 });
     both([[160, 196], [176, 202], [176, 236], [162, 240]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });              // 肩の上の濃いパネル
     both([[150, 254], [168, 252], [170, 272], [150, 274]], steel, { bot: 0, top: 3.2, it: 0.4, ib: 0.2 });              // 推進ユニット手前の装甲
 
     // ---- 後ろの2枚の羽（間から噴射）----
-    both([[110, 274], [127, 274], [132, 300], [132, 390], [127, 384], [119, 352], [111, 312]], navy, { bot: -1.8, it: 0.45, ib: 0.45, topF: lerpTop(274, 2.6, 390, 1.0) });
+    both([[110, 274], [127, 274], [132, 300], [132, 390], [127, 384], [119, 352], [111, 312]], navy, { neon: true, cage: 1.12, bot: -1.8, it: 0.45, ib: 0.45, topF: lerpTop(274, 2.6, 390, 1.0) });
     both([[114, 286], [124, 286], [128, 340], [122, 334]], steel, { bot: 0, top: 2.75, it: 0.3, ib: 0.1 });              // 羽の明るい縁
 
     // ---- 推進ユニット（羽の間）: 時計回りにぐるぐる回る ----
@@ -4360,7 +4380,7 @@ function makeShipModel() {
 
     // ---- ウィングポッド: 前は細く（面取り）、後ろへ向かって太く広がる ----
     const podOut = [[96, 136], [104, 142], [106, 200], [104, 248], [93, 282], [84, 302], [78, 324], [66, 348], [53, 358], [48, 371], [42, 366], [36, 356], [32, 332], [30, 310], [32, 290], [38, 262], [48, 238], [60, 210], [74, 180], [86, 156]];
-    both(podOut, steel, { bot: -2.8, mid: -0.2, it: 1.5, ib: 1.2, topF: lerpTop(140, 2.4, 300, 3.6) });
+    both(podOut, steel, { cage: 1.07, bot: -2.8, mid: -0.2, it: 1.5, ib: 1.2, topF: lerpTop(140, 2.4, 300, 3.6) });
     both([[92, 278], [84, 302], [78, 324], [66, 348], [53, 358], [44, 360], [38, 350], [34, 330], [33, 310], [36, 292], [40, 280]], gun, { bot: 0, mid: 0, it: 1.0, ib: 0.6, topF: lerpTop(278, 3.9, 360, 3.4) }); // 後半のガンメタ装甲
     both([[96, 150], [100, 156], [100, 214], [92, 232], [80, 232], [86, 196]], armor, { bot: 0, top: 3.3, it: 0.5, ib: 0.2 });   // 前半の装甲板
     both([[60, 214], [74, 186], [80, 198], [70, 236], [56, 244]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });             // 外側の濃いパネル
@@ -5512,7 +5532,9 @@ function render3D() {
         shipBank += (bankTarget - shipBank) * Math.min(1, dt * 10);
         playerGroup.position.set(px, 12 + Math.sin(rTime * 4) * 2, pz);
         shipPivot.rotation.z = shipBank;
-        shipModel.userData.ring.rotation.z = rTime * 1.4; if (shipModel.userData.prop) shipModel.userData.prop.rotation.z = -rTime * 3.2; // 推進ユニットを時計回りに回す shipWireMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.45); shipModel.userData.glowC.color.copy(themeCur.player).lerp(COL_WHITE, 0.25); shipModel.userData.core.scale.setScalar(1 + visualBeat * 0.35 + Math.sin(rTime * 9) * 0.06);
+        shipModel.userData.ring.rotation.z = rTime * 1.4; if (shipModel.userData.prop) shipModel.userData.prop.rotation.z = -rTime * 3.2; // 推進ユニットを時計回りに回す
+        shipWireMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.45); shipModel.userData.glowC.color.copy(themeCur.player).lerp(COL_WHITE, 0.25); shipModel.userData.core.scale.setScalar(1 + visualBeat * 0.35 + Math.sin(rTime * 9) * 0.06);
+        shipCageMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.3); shipCageMat.opacity = 0.2 + visualBeat * 0.35; // ワイヤーの外殻は拍に合わせて光る
         shipPivot.rotation.x = -0.12;
         playerGroup.scale.setScalar(VS * (1 + visualBeat * 0.18));
 
