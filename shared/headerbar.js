@@ -57,14 +57,13 @@ body.hb-on{padding-top:${H}px}
 .atlas-top .hb-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap;font:700 13px 'Zen Maru Gothic',sans-serif;color:#6a7088}
 .atlas-top .hb-info b{color:#2b3044}
 .atlas-top .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:#fff;border:2px solid #efe3c8}
-body.hb-atlas .atlas-top .sp{display:none}
 html.atlas-skin .atlas-top .hb-menu{flex:none;display:flex!important;align-items:center;gap:6px;margin:0 6px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;width:auto!important;height:auto!important}
 html.atlas-skin .atlas-top .hb-menu > *{flex:none!important;display:inline-flex;flex-direction:row!important;align-items:center;justify-content:center;min-width:0!important;line-height:1!important;width:auto!important;height:40px!important;margin:0!important;padding:0 13px!important;border-radius:99px!important;font-size:13.5px!important;gap:6px;white-space:nowrap}
 html.atlas-skin .atlas-top .hb-menu > * svg{width:17px!important;height:17px!important;margin:0!important}
 html.atlas-skin .atlas-top .hb-menu > * span{margin:0!important}
 @media (max-width: 1280px){html.atlas-skin .atlas-top .hb-menu > * span{display:none}html.atlas-skin .atlas-top .hb-menu > *{padding:0 11px!important}}
-@media (max-width: 1500px){body.hb-atlas .atlas-brand small{display:none}}
-@media (max-width: 1100px){body.hb-atlas .atlas-top .hb-info{display:none}}
+body.hb-atlas .atlas-top .hb-info{display:none!important}   /* portal: title only, no game info */
+body.hb-atlas .atlas-top .sp{display:block!important;flex:1}
 html[dir=rtl] .hb, html[lang=ar] .hb{direction:rtl}
 html[lang=ar] .hb .hb-menu{padding:0 0 0 14px;border-right:0;border-left:1px solid var(--line, rgba(255,255,255,.12))}
 @media (max-width: 1180px){.hb .hb-menu > * span{display:none}.hb .hb-menu > *{padding:0 10px!important}}
