@@ -361,6 +361,24 @@
       setMode(mode);
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
+    // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
+    if (matchMedia('(max-width: 819px)').matches) {
+      const card = $('bvi'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
+      let fold = false; try { fold = localStorage.getItem('atlas-bv-fold') === '1'; } catch (e) {}
+      const set = (v, anim) => {
+        const h0 = card.offsetHeight; fold = v; card.classList.toggle('fold', v); try { localStorage.setItem('atlas-bv-fold', v ? '1' : '0'); } catch (e) {}
+        const h1 = card.offsetHeight;
+        if (anim && card.animate && h0 !== h1) card.animate([{ clipPath: `inset(${Math.max(0, h1 - h0)}px 0 0 0 round 26px)`, transform: `translateX(-50%) translateY(${h1 > h0 ? 0 : h0 - h1}px)` }, { clipPath: 'inset(0 0 0 0 round 26px)', transform: 'translateX(-50%)' }], { duration: 320, easing: 'cubic-bezier(.3,1.2,.5,1)' });
+        fitStage();
+      };
+      set(fold, false);
+      let y0 = null, t0 = 0;
+      card.addEventListener('touchstart', e => { const r = card.getBoundingClientRect(), y = e.touches[0].clientY; y0 = y - r.top < 90 ? y : null; t0 = performance.now(); }, { passive: true });
+      card.addEventListener('touchmove', e => { if (y0 !== null && Math.abs(e.touches[0].clientY - y0) > 8) e.preventDefault(); }, { passive: false });
+      card.addEventListener('touchend', e => { if (y0 === null) return; const dy = e.changedTouches[0].clientY - y0; y0 = null;
+        if (dy > 28 && !fold) set(true, true); else if (dy < -28 && fold) set(false, true); }, { passive: true });
+      grab.onclick = () => set(!fold, true);
+    }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const tg = $('bvi').querySelector('.tags'); if (tg) { $('bvRules').classList.add('sm'); tg.appendChild($('bvRules')); } }
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?

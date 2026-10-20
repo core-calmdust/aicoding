@@ -496,6 +496,14 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .rulesb.sm{height:30px;padding:0 12px;margin-left:auto;transform:none;box-shadow:0 2px 0 var(--line);gap:4px;background:var(--sun);border-color:var(--sun2);color:#5a3a00}
 .bvi .rulesb.sm span{font-size:14px}.bvi .rulesb.sm b{font-size:12.5px}
 [dir=rtl] .bvi .rulesb.sm{margin-left:0;margin-right:auto}
+.bvi .grab{display:none}
+@media (max-width:819px){
+  .bvi .grab{display:flex;justify-content:center;margin:-8px 0 6px;padding:2px 0 6px;cursor:pointer}
+  .bvi .grab i{width:44px;height:5px;border-radius:99px;background:#e6d9bd}
+  .bvi.fold .tags > :not(.rulesb),.bvi.fold .pgl{display:none!important}
+  .bvi.fold .tags{margin:0!important;justify-content:flex-end}
+  .bvi.fold .L{gap:8px}
+}
 </style>
 </head>
 <body>
@@ -602,6 +610,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/shogi.js?v=1"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=41"></script>
+<script src="app.js?v=42"></script>
 </body>
 </html>
