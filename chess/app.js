@@ -94,6 +94,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
+  try { accRender(); } catch (e) {}   // the Google chip / account box are built in JS
 }
 let humanColor = P1;
 let reviewing = false;
