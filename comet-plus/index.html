@@ -67,6 +67,7 @@
             justify-content: center;
             align-items: center;
         }
+        body:not(.mobile) #game-wrapper { transform: scale(var(--scale-factor, 1)); transform-origin: center; }
         #fullscreen-root:fullscreen #game-wrapper {
             transform: scale(var(--scale-factor, 1));
             transform-origin: center;
@@ -968,7 +969,9 @@ class AudioHandler {
 // ゲームのメインロジック
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas'); // HUDオーバーレイ
-const HUD_SCALE = Math.min(window.devicePixelRatio || 1, 1.5);
+// PCはブラウザの大きさに合わせてゲーム画面を拡大表示する。拡大してもぼやけないよう描画解像度も合わせる
+const PC_FIT = IS_MOBILE ? 1 : Math.max(1, Math.min((innerWidth - 20) / 1087, (innerHeight - 20) / 720));
+const HUD_SCALE = Math.min((window.devicePixelRatio || 1) * PC_FIT, 2);
 const HUD_W = IS_MOBILE ? 600 : config.canvasWidth; // PC 16:9 / スマホは表示幅600（フィールドは780で画面いっぱいに）
 const HUD_H = IS_MOBILE ? Math.round(1067 * MOB_K) : 600; // 表示の高さ（フィールドの奥行きとは別）
 const TITLE_S = IS_MOBILE ? 1.3 : 1, TITLE_PIV = 380; // スマホはタイトル画面を拡大
@@ -3110,7 +3113,7 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 // =================================================================================
 const W = config.canvasWidth, H = config.canvasHeight; // フィールド
 const VH = HUD_H; // ビューポートの高さ
-const PR = Math.min(window.devicePixelRatio || 1, IS_MOBILE ? 0.7 : 1.25); // スマホは描画解像度を抑える
+const PR = IS_MOBILE ? Math.min(window.devicePixelRatio || 1, 0.7) : Math.min((window.devicePixelRatio || 1) * PC_FIT, 1.25 * PC_FIT, 2); // スマホは描画解像度を抑える
 const VW = HUD_W;
 const toX = x => x - W / 2;
 const toZ = y => y - H / 2;
@@ -3580,7 +3583,7 @@ function updateMotifs(dt, ws, now) {
     // ステージ変更の検出
     if (currentThemeIndex !== lastThemeIdx) {
         const next = motifs[MOTIF_FOR_THEME[currentThemeIndex % MOTIF_FOR_THEME.length]];
-        const animate = lastThemeIdx !== -1 && gameState === 'playing';
+        const animate = lastThemeIdx !== -1 && (gameState === 'playing' || gameState === 'title');
         lastThemeIdx = currentThemeIndex;
         if (next !== motifCur) {
             if (motifOld) motifOld.group.visible = false;
@@ -4469,7 +4472,9 @@ function render3D() {
 
     // タイトル用ハブ
     const showHub = gameState === 'title' || gameState === 'confirmReset' || gameState === 'difficulty';
-    titleHub.visible = titleHubInner.visible = kickRing.visible = showHub;
+    updateTitleDemo(dt, showHub);
+    titleHub.visible = titleHubInner.visible = showHub && titleDemo.idx < 0;
+    kickRing.visible = showHub;
     orbitRings.forEach(o => { o.ring.visible = showHub; });
     field.visible = !showHub; // タイトルではフィールド枠を見せない
     if (showHub) {
@@ -4836,6 +4841,57 @@ function render3D() {
     }
 }
 
+
+// ---------------------------------
+// タイトルのデモ: 今のハブ＋各ボスとそのステージのテーマをランダムに切り替えて見せる
+// ---------------------------------
+const titleDemo = { idx: -2, t: 0, group: null, cache: {} };
+const DEMO_SPAN = 9; // 秒
+function buildDemo(idx) {
+    if (titleDemo.cache[idx]) return titleDemo.cache[idx];
+    const grp = new THREE.Group();
+    const obj = BOSS_BUILDERS[idx]();
+    grp.add(obj);
+    (obj.userData.extra || []).forEach(e => { scene.remove(e); grp.add(e); });
+    grp.visible = false;
+    scene.add(grp);
+    return (titleDemo.cache[idx] = { grp, obj });
+}
+function updateTitleDemo(dt, showHub) {
+    if (!showHub) {
+        if (titleDemo.group) titleDemo.group.visible = false;
+        titleDemo.idx = -2; // 次にタイトルへ来たら選び直す
+        return;
+    }
+    titleDemo.t += dt;
+    if (titleDemo.idx === -2 || titleDemo.t > DEMO_SPAN) {
+        let n;
+        do { n = Math.floor(Math.random() * (BOSS_BUILDERS.length + 1)) - 1; } while (n === titleDemo.idx);
+        titleDemo.idx = n; titleDemo.t = 0;
+        if (titleDemo.group) titleDemo.group.visible = false;
+        titleDemo.group = null;
+        // そのボスが出るステージのテーマ（ボスk番目は 3(k+1) 面）。ハブは1面のテーマ
+        const ti = n < 0 ? 0 : (3 * n + 2) % themes.length;
+        if (ti !== currentThemeIndex) { currentThemeIndex = ti; applyThemeStyles(themes[ti]); }
+        if (n >= 0) { titleDemo.group = buildDemo(n).grp; titleDemo.group.visible = true; }
+    }
+    if (titleDemo.idx < 0 || !titleDemo.group) return;
+    const d = titleDemo.cache[titleDemo.idx], t = rTime, k3 = Math.floor(t / 3) % 3;
+    // アニメ用の仮のボス状態（ゲーム座標の中心＝グループの原点）
+    const fb = { x: W / 2, y: H / 2, t: t * 60, alpha: 1, spin: t * 2, d: 140, open: Math.max(0, Math.sin(t * 1.5)), doors: Math.sin(t * 2) > 0 ? 1 : 0,
+        charge: (Math.sin(t * 1.2) + 1) / 2, phase: k3, mode: '', telegraph: false, state: 'fight',
+        hist: [0, 1, 2, 3, 4].map(i => ({ x: W / 2 + Math.sin(t * 2 - i * 0.3) * 30, y: H / 2 - i * 4 })),
+        segs: Array.from({ length: 8 }, (_, k) => ({ x: W / 2 + Math.sin(t * 2.4 - (k + 1) * 0.55) * 46, y: H / 2 - (k + 1) * 30 })) };
+    try { d.obj.userData.anim(d.obj, fb, t); } catch (e) {}
+    d.obj.position.set(0, 0, 0);
+    (d.obj.userData.extra || []).forEach(e => { if (e.userData.lift === undefined && e.geometry && e.geometry.type === 'PlaneGeometry') e.visible = false; });
+    const g = titleDemo.group, b = visualBeat;
+    g.position.copy(titleHub.position).add(new THREE.Vector3(0, 140, 0));
+    g.rotation.y += dt * 0.45;
+    g.rotation.x = Math.sin(t * 0.6) * 0.18;
+    const appear = Math.min(1, titleDemo.t * 1.6), fade = Math.min(1, (DEMO_SPAN - titleDemo.t) * 2);
+    g.scale.setScalar((IS_MOBILE ? 3.4 : 3.0) * (0.6 + 0.4 * Math.min(appear, fade)) * (1 + b * 0.08));
+}
 
 // =================================================================================
 // ▼▼▼ HUD（2Dオーバーレイ）▼▼▼
@@ -5674,6 +5730,10 @@ function updateScale() {
             const scaleY = r.clientHeight / effectiveHeight;
             const scale = Math.min(scaleX, scaleY);
             w.style.setProperty('--scale-factor', scale);
+        } else if (!IS_MOBILE) {
+            // 通常表示でもブラウザいっぱいに拡大（全体が収まる最大の倍率）
+            const scale = Math.min(window.innerWidth / (w.offsetWidth + 24), window.innerHeight / (w.offsetHeight + 24));
+            w.style.setProperty('--scale-factor', Math.max(0.3, scale));
         } else {
             w.style.removeProperty('--scale-factor');
         }
@@ -5692,6 +5752,10 @@ window.addEventListener('resize', () => {
     // 次のフレームでupdateScaleを実行するようにリクエスト
     resizeRequest = requestAnimationFrame(updateScale);
 });
+updateScale(); // 起動時にも合わせる
+if (document.fonts) document.fonts.ready.then(updateScale);
+window.addEventListener('load', updateScale);
+setTimeout(updateScale, 1500);
 
 document.getElementById('langSel').addEventListener('change', e => {
     LANG = e.target.value;
