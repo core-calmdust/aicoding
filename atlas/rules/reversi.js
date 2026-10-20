@@ -80,6 +80,27 @@
     { cells: INIT, last: true },
   ];
 
+  /* ---------- little sounds: wooden "tok" when a disc lands, a click per flip, and a chirpy voice while the guide talks ---------- */
+  const SFX = (() => {
+    let on = true; try { on = localStorage.getItem('atlas-sfx') !== '0'; } catch (e) {}
+    const ac = () => { try { const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); return C; } catch (e) { return null; } };
+    let noiseBuf = null;
+    const noise = C => { if (noiseBuf) return noiseBuf; const b = C.createBuffer(1, C.sampleRate * .08, C.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); return (noiseBuf = b); };
+    function tok(vol = 1, pitch = 1) {   // disc on felt-on-wood: a filtered knock + a low body thump
+      const C = on && ac(); if (!C) return; const t = C.currentTime;
+      const n = C.createBufferSource(); n.buffer = noise(C); const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1900 * pitch; bp.Q.value = 1.4;
+      const g = C.createGain(); g.gain.setValueAtTime(.55 * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + .07); n.connect(bp).connect(g).connect(C.destination); n.start(t);
+      const o = C.createOscillator(), og = C.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(190 * pitch, t); o.frequency.exponentialRampToValueAtTime(90 * pitch, t + .09);
+      og.gain.setValueAtTime(.35 * vol, t); og.gain.exponentialRampToValueAtTime(.001, t + .12); o.connect(og).connect(C.destination); o.start(t); o.stop(t + .14);
+    }
+    function blip() {   // one syllable of the guide's voice
+      const C = on && ac(); if (!C) return; const t = C.currentTime, f = 560 + Math.random() * 260;
+      const o = C.createOscillator(), g = C.createGain(), lp = C.createBiquadFilter(); o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random() < .5 ? 1.25 : .82), t + .05);
+      lp.type = 'lowpass'; lp.frequency.value = 2400; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + .008); g.gain.exponentialRampToValueAtTime(.001, t + .06);
+      o.connect(lp).connect(g).connect(C.destination); o.start(t); o.stop(t + .07);
+    }
+    return { tok, blip, get on() { return on; }, toggle() { on = !on; try { localStorage.setItem('atlas-sfx', on ? '1' : '0'); } catch (e) {} if (on) ac(); return on; } };
+  })();
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, L = TXT[ctx.lang] || TXT.en;
     const board = T3.MODELS.reversi(true); T3.show('reversi', board); T3.play(true);
@@ -98,10 +119,10 @@
       const [x, z] = P(q); outer.position.set(x, Y + .1, z); inner.rotation.x = color === 1 ? Math.PI : 0;
       board.add(outer); return (discs[q] = { outer, inner, color });
     }
-    function drop(q, color, delay = 0, h = 2.2) { const d = makeDisc(q, color); d.outer.visible = false; later(() => { d.outer.visible = true; anim(280, k => { d.outer.position.y = Y + .1 + (1 - k) * (1 - k) * h; }); }, delay); }
+    function drop(q, color, delay = 0, h = 2.2, snd = false) { const d = makeDisc(q, color); d.outer.visible = false; later(() => { d.outer.visible = true; anim(280, k => { d.outer.position.y = Y + .1 + (1 - k) * (1 - k) * h; }, () => { if (snd) SFX.tok(1, 1); }); }, delay); }
     function flip(q, color, delay) {
       const d = discs[q]; d.color = color; const from = d.inner.rotation.x, to = color === 1 ? Math.PI : 0;
-      later(() => anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + .1 + Math.sin(k * Math.PI) * .8; }), delay);
+      later(() => anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + .1 + Math.sin(k * Math.PI) * .8; }, () => SFX.tok(.45, 1.35 + Math.random() * .15)), delay);
     }
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); }
     function tile(q, color, op = .5, h = .02) { const m = new TH.Mesh(new TH.BoxGeometry(cs * .92, h, cs * .92), new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false })); const [x, z] = P(q); m.position.set(x, Y + .012, z); marks.add(m); return m; }
@@ -119,7 +140,7 @@
     /* ---------- guide panel ---------- */
     const el = document.createElement('div'); el.className = 'rgd';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GUIDE}" alt=""></div><div class="bub"><div class="nm">${L.name}<span class="pg"></span></div><div class="tx"></div><div class="cnt"></div></div></div>
-      <div class="rgd-act"><button type="button" class="btn ghost sm" data-a="back">◀ ${L.back}</button><span class="dots"></span><button type="button" class="btn big" data-a="next">${L.next} ▶</button></div>`;
+      <div class="rgd-act"><button type="button" class="btn ghost sm" data-a="back">◀ ${L.back}</button><button type="button" class="sfx" data-a="sfx" aria-label="Sound"></button><span class="dots"></span><button type="button" class="btn big" data-a="next">${L.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     $('.dots').innerHTML = STEPS.map(() => '<i></i>').join('');
@@ -128,8 +149,8 @@
       const tx = $('.tx'); tx.innerHTML = html; clearInterval(typeT);
       const nodes = []; (function walk(n) { n.childNodes.forEach(c => { if (c.nodeType === 3) nodes.push([c, c.textContent]); else walk(c); }); })(tx);
       nodes.forEach(([n]) => { n.textContent = ''; });
-      let ni = 0, ci = 0;
-      typeT = setInterval(() => { if (stopped) return clearInterval(typeT); for (let k = 0; k < 2; k++) { if (ni >= nodes.length) return clearInterval(typeT); const [n, s] = nodes[ni]; n.textContent = s.slice(0, ++ci); if (ci >= s.length) { ni++; ci = 0; } } }, 24);
+      let ni = 0, ci = 0, said = 0;
+      typeT = setInterval(() => { if (stopped) return clearInterval(typeT); for (let k = 0; k < 2; k++) { if (ni >= nodes.length) return clearInterval(typeT); const [n, s] = nodes[ni]; n.textContent = s.slice(0, ++ci); const ch = s[ci - 1]; if (ch && !/[\s、。！？!?,.：:（）()「」]/.test(ch) && (said++ % 3 === 0)) SFX.blip(); if (ci >= s.length) { ni++; ci = 0; } } }, 24);
       tx.onclick = () => { clearInterval(typeT); nodes.forEach(([n, s]) => { n.textContent = s; }); };
       const pic = $('.pic'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
     }
@@ -172,12 +193,14 @@
       if (!ok.includes(q)) return;
       const fl = flipsOf(cells, q, 1); busy = true; played = true; clearMarks();
       cells[q] = 1; fl.forEach(s => { cells[s] = 1; });
-      drop(q, 1);
+      drop(q, 1, 0, 2.2, true);
       fl.sort((a, b) => Math.hypot((a & 7) - c, (a >> 3) - r) - Math.hypot((b & 7) - c, (b >> 3) - r)).forEach((s, i) => flip(s, 1, 240 + i * 90));
       later(() => { busy = false; if (L.s[step].done) say(L.s[step].done); buttons(); if (!st.play) played = false; }, 400 + fl.length * 90 + 400);
     }
     $('[data-a=next]').onclick = () => { if (STEPS[step].last) ctx.onStart(); else go(step + 1); };
     $('[data-a=back]').onclick = () => go(step - 1);
+    const sfxBtn = $('[data-a=sfx]'), paintSfx = () => { sfxBtn.classList.toggle('off', !SFX.on); sfxBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/>${SFX.on ? '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>' : '<path d="M16 9l6 6M22 9l-6 6"/>'}</svg>`; };
+    sfxBtn.onclick = () => { SFX.toggle(); paintSfx(); }; paintSfx();
     ctx.el.addEventListener('click', onClick);
     // keyboard: Space / → next, ← back (the next button's rules apply: an interactive step waits for the move)
     const onKey = e => {
