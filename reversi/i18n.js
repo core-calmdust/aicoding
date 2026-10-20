@@ -628,3 +628,20 @@ ar: {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+
+// 詰めオセロ navigation row (short labels on the buttons; the full names are the tooltips)
+(function () {
+const S = {
+  ja: { 'pz.prev': '前の問題', 'pz.prevT': '前の問題', 'pz.nextS': '次の問題', 'pz.listS': '問題一覧' },
+  en: { 'pz.prev': 'Previous', 'pz.prevT': 'Previous puzzle', 'pz.nextS': 'Next', 'pz.listS': 'List' },
+  zh: { 'pz.prev': '上一题', 'pz.prevT': '上一题', 'pz.nextS': '下一题', 'pz.listS': '题目列表' },
+  ko: { 'pz.prev': '이전 문제', 'pz.prevT': '이전 문제', 'pz.nextS': '다음 문제', 'pz.listS': '문제 목록' },
+  es: { 'pz.prev': 'Anterior', 'pz.prevT': 'Problema anterior', 'pz.nextS': 'Siguiente', 'pz.listS': 'Lista' },
+  fr: { 'pz.prev': 'Précédent', 'pz.prevT': 'Problème précédent', 'pz.nextS': 'Suivant', 'pz.listS': 'Liste' },
+  pt: { 'pz.prev': 'Anterior', 'pz.prevT': 'Problema anterior', 'pz.nextS': 'Próximo', 'pz.listS': 'Lista' },
+  de: { 'pz.prev': 'Zurück', 'pz.prevT': 'Vorherige Aufgabe', 'pz.nextS': 'Weiter', 'pz.listS': 'Übersicht' },
+  hi: { 'pz.prev': 'पिछली', 'pz.prevT': 'पिछली पहेली', 'pz.nextS': 'अगली', 'pz.listS': 'सूची' },
+  ar: { 'pz.prev': 'السابق', 'pz.prevT': 'اللغز السابق', 'pz.nextS': 'التالي', 'pz.listS': 'القائمة' },
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();
