@@ -500,9 +500,18 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 @media (max-width:819px){
   .bvi .grab{display:flex;justify-content:center;margin:-8px 0 6px;padding:2px 0 6px;cursor:pointer}
   .bvi .grab i{width:44px;height:5px;border-radius:99px;background:#e6d9bd}
-  .bvi.fold .tags > :not(.rulesb),.bvi.fold .pgl{display:none!important}
-  .bvi.fold .tags{margin:0!important;justify-content:flex-end}
-  .bvi.fold .L{gap:8px}
+  .bvi .more{overflow:hidden;display:flex;flex-direction:column;gap:12px;will-change:height}
+  .bvi .more.lvw{flex-basis:100%;gap:0}
+  .bvi .more > *{margin:0!important}
+  .bvi.fold .L{gap:0}
+  .bvi.fold .mnote{min-height:46px!important}
+}
+@media (max-width:819px){
+  .bvi .row .ring{margin-left:auto}
+  .bvi .rulesb.ph{margin-left:0;height:47px;transform:translateY(-1.5px);padding:0 11px;gap:3px}
+  .bvi .rulesb.ph span{font-size:15px}.bvi .rulesb.ph b{font-size:12.5px}
+  .bvi .row h3{font-size:clamp(17px,5.4vw,22px)}
+  .bvi .row .bd{flex-wrap:nowrap;gap:4px}.bvi .row .bd .badge{height:20px;font-size:10.5px;padding:0 7px;white-space:nowrap}
 }
 </style>
 </head>
@@ -610,6 +619,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/shogi.js?v=1"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=42"></script>
+<script src="app.js?v=47"></script>
 </body>
 </html>

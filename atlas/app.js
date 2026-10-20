@@ -363,28 +363,45 @@
     if ($('bvRules')) $('bvRules').onclick = startRules;
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
     if (matchMedia('(max-width: 819px)').matches) {
-      const card = $('bvi'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
-      let fold = false; try { fold = localStorage.getItem('atlas-bv-fold') === '1'; } catch (e) {}
-      const set = (v, anim) => {
-        const h0 = card.offsetHeight; fold = v; card.classList.toggle('fold', v); try { localStorage.setItem('atlas-bv-fold', v ? '1' : '0'); } catch (e) {}
-        const h1 = card.offsetHeight;
-        if (anim && card.animate && h0 !== h1) card.animate([{ clipPath: `inset(${Math.max(0, h1 - h0)}px 0 0 0 round 26px)`, transform: `translateX(-50%) translateY(${h1 > h0 ? 0 : h0 - h1}px)` }, { clipPath: 'inset(0 0 0 0 round 26px)', transform: 'translateX(-50%)' }], { duration: 320, easing: 'cubic-bezier(.3,1.2,.5,1)' });
-        fitStage();
+      // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
+      const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
+      const more = document.createElement('div'); more.className = 'more';
+      [...L.querySelectorAll(':scope > .tags, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
+      // the level hint folds away with them (wrapped so its height can animate)
+      const lvi = $('bvLvInfo'), D = [more];
+      if (lvi) { const w = document.createElement('div'); w.className = 'more lvw'; lvi.before(w); w.appendChild(lvi); D.push(w); }
+      let fold = true; try { fold = localStorage.getItem('atlas-bv-fold2') !== '0'; } catch (e) {}   // folded by default
+      const fullOf = el => { const h = el.style.height; el.style.height = 'auto'; const v = el.scrollHeight; el.style.height = h; return v; };
+      let Hs = [];
+      const apply = k => D.forEach((el, i) => { el.style.height = Math.max(0, Hs[i] * k) + 'px'; el.style.opacity = Math.max(0, Math.min(1, k * 1.4)); });
+      const to = (open, anim = true) => {
+        fold = !open; try { localStorage.setItem('atlas-bv-fold2', fold ? '1' : '0'); } catch (e) {}
+        Hs = D.map(fullOf);
+        D.forEach(el => { el.style.transition = anim ? 'height .32s cubic-bezier(.3,1.25,.5,1), opacity .25s' : 'none'; });
+        if (open && !anim) D.forEach(el => { el.style.height = 'auto'; el.style.opacity = 1; }); else apply(open ? 1 : 0);
+        card.classList.toggle('fold', fold);
+        setTimeout(() => { if (!fold) D.forEach(el => { el.style.transition = 'none'; el.style.height = 'auto'; }); fitStage(); }, anim ? 340 : 0);
       };
-      set(fold, false);
-      let y0 = null, t0 = 0;
-      card.addEventListener('touchstart', e => { const r = card.getBoundingClientRect(), y = e.touches[0].clientY; y0 = y - r.top < 90 ? y : null; t0 = performance.now(); }, { passive: true });
-      card.addEventListener('touchmove', e => { if (y0 !== null && Math.abs(e.touches[0].clientY - y0) > 8) e.preventDefault(); }, { passive: false });
-      card.addEventListener('touchend', e => { if (y0 === null) return; const dy = e.changedTouches[0].clientY - y0; y0 = null;
-        if (dy > 28 && !fold) set(true, true); else if (dy < -28 && fold) set(false, true); }, { passive: true });
-      grab.onclick = () => set(!fold, true);
+      to(!fold, false);
+      let y0 = null, k0 = 0, H = 1, last = 0, lt = 0, vy = 0, kNow = 0;
+      card.addEventListener('touchstart', e => { const r = card.getBoundingClientRect(), y = e.touches[0].clientY; if (y - r.top > 110) { y0 = null; return; }
+        y0 = y; Hs = D.map(fullOf); H = Hs.reduce((a, b) => a + b, 0) || 1; k0 = fold ? 0 : 1; kNow = k0; last = y; lt = performance.now(); vy = 0;
+        D.forEach(el => { el.style.transition = 'none'; }); apply(k0); }, { passive: true });
+      card.addEventListener('touchmove', e => { if (y0 === null) return; const y = e.touches[0].clientY, now = performance.now();
+        vy = (y - last) / Math.max(1, now - lt); last = y; lt = now;
+        let k = k0 + (y0 - y) / H; if (k > 1) k = 1 + (k - 1) * .25; if (k < 0) k *= .25;   // rubber band past the ends
+        kNow = k; apply(k); if (Math.abs(y - y0) > 6) e.preventDefault(); }, { passive: false });
+      card.addEventListener('touchend', () => { if (y0 === null) return; y0 = null;
+        to(vy < -.3 ? true : vy > .3 ? false : kNow > .5); }, { passive: true });
+      grab.onclick = () => to(fold);
     }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
-    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const tg = $('bvi').querySelector('.tags'); if (tg) { $('bvRules').classList.add('sm'); tg.appendChild($('bvRules')); } }
+    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rg = $('bvi').querySelector('.row .ring'); if (rg) { $('bvRules').classList.add('ph'); rg.after($('bvRules')); } }   // phones: right of the progress ring
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
       const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
         $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
       $('bvLv').onchange = show; show();
+      if ($('bvi').classList.contains('fold')) { const w = $('bvLvInfo').parentNode; if (w.classList.contains('lvw')) w.style.height = '0px'; }
     }
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
