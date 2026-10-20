@@ -642,6 +642,19 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .pt{grid-template-columns:1fr;justify-items:center;text-align:center;padding:4px 2px;row-gap:1px}.pt .ic{grid-row:auto;font-size:15px}.pt .ic .cn{width:18px;height:18px;font-size:9px}.pt b{font-size:13.5px}.pt b small{font-size:10px}.pt em{font-size:9.5px;max-width:100%}
   .lgh small{display:none}.lgd{gap:3px}.lgd .d i{width:17px;height:17px}.lgd .d small{font-size:8.5px}}
 .prof .pf-l .bgfill{filter:saturate(1.15)}.prof .pf-l{background:linear-gradient(160deg,#ffe9b8,#ffd0de)}
+/* rules tour on PC: bigger bubble, text and nav row */
+@media (min-width:900px){
+  .rgd{width:min(1000px,calc(100% - 48px));gap:14px;bottom:calc(20px + env(safe-area-inset-bottom))}
+  .rgd .pic{width:136px;height:136px}
+  .rgd .bub{padding:16px 22px 18px;border-radius:26px}
+  .rgd .nm{font-size:15px;margin-bottom:6px}.rgd .pg{font-size:14px}
+  .rgd .tx{font-size:21px;line-height:1.8;min-height:3.6em}
+  .rgd-act{padding:8px;gap:14px}
+  .rgd-act .btn{font-size:18px;padding:14px 24px}
+  .rgd-act .btn.big{min-width:210px;font-size:20px}
+  .rgd-act .sfx{width:52px;height:52px}.rgd-act .sfx svg{width:24px;height:24px}
+  .rgd-act .dots{gap:8px}.rgd-act .dots i{width:11px;height:11px}.rgd-act .dots i.on{width:28px}
+}
 </style>
 </head>
 <body>
@@ -748,9 +761,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="games/reversi.js?v=7"></script>
 <script src="games/shogi.js?v=1"></script>
 <script src="rules/reversi.js?v=6"></script>
-<script src="rules/shogi.js?v=12"></script>
+<script src="rules/shogi.js?v=13"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=57"></script>
+<script src="app.js?v=58"></script>
 </body>
 </html>
