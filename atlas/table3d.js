@@ -346,12 +346,133 @@
     night:   { sky: ['#0b1230', '#24335e'], sun: 0x8fa4ff, sunI: .08, sunPos: [-14, 10, -12], hemi: [0x3a4a80, 0x140c06, .12], lamp: 1.7, exp: .78 },
   };
 
+  /* ---------- toy-room props: toy chest, brick castle, retro TV game, and the Atlas Mon living in the room ---------- */
+  const roomTicks = [];
+  function decorate(g, FLOOR, mode) {
+    const TT = T(), F = FLOOR;
+    roomTicks.length = 0;
+    const box = (w, h, d, mat, x, y, z, ry = 0, par = g) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; par.add(m); return m; };
+    const rbox = (w, h, d, r, mat) => {   // rounded box (toys are never sharp)
+      const sh = new TT.Shape(), x = -w / 2 + r, y = -h / 2 + r, W = w - 2 * r, H = h - 2 * r;
+      sh.moveTo(x, y - r); sh.lineTo(x + W, y - r); sh.quadraticCurveTo(x + W + r, y - r, x + W + r, y); sh.lineTo(x + W + r, y + H); sh.quadraticCurveTo(x + W + r, y + H + r, x + W, y + H + r);
+      sh.lineTo(x, y + H + r); sh.quadraticCurveTo(x - r, y + H + r, x - r, y + H); sh.lineTo(x - r, y); sh.quadraticCurveTo(x - r, y - r, x, y - r);
+      const geo = new TT.ExtrudeGeometry(sh, { depth: d - 2 * r, bevelEnabled: true, bevelThickness: r, bevelSize: r * .9, bevelSegments: 4, curveSegments: 6 }); geo.translate(0, 0, -(d - 2 * r) / 2);
+      const m = new TT.Mesh(geo, mat); m.castShadow = m.receiveShadow = true; return m;
+    };
+    const plastic = c => M({ color: c, roughness: .32, clearcoat: .5, clearcoatRoughness: .25 });
+
+    // --- brick castle (toy building bricks): bricks with studs, built layer by layer ---
+    const U = .8, BH = .96 * U * 1.2;
+    const castle = new TT.Group(); castle.position.set(13.2, F, -13.6); castle.rotation.y = -.55; castle.scale.setScalar(.72); g.add(castle);
+    const studG = new TT.CylinderGeometry(.24, .24, .2, 18), studs = {};
+    const brick = (cx, cz, layer, w, d, col, h = 1) => {   // cx,cz in studs; w,d in studs
+      const mat = studs[col] || (studs[col] = { mat: plastic(col), pos: [] });
+      const m = new TT.Mesh(new TT.BoxGeometry(w * U - .03, BH * h - .02, d * U - .03), mat.mat);
+      m.position.set((cx + w / 2) * U, (layer + h / 2) * BH, (cz + d / 2) * U); m.castShadow = m.receiveShadow = true; castle.add(m);
+      for (let i = 0; i < w; i++) for (let j = 0; j < d; j++) mat.pos.push([(cx + i + .5) * U, (layer + h) * BH + .1, (cz + j + .5) * U]);
+    };
+    const plate = new TT.Mesh(new TT.BoxGeometry(10 * U, .3, 8 * U), plastic(0x3fae5a)); plate.position.set(4 * U, .15, 3 * U); plate.receiveShadow = true; castle.add(plate);
+    const C = [0xe8463c, 0xffd23f, 0x2f7fe0, 0xf6f2e8];
+    // walls: a little gatehouse with two towers
+    for (let L = 0; L < 4; L++) {
+      const c1 = C[L % 2 ? 3 : 0], c2 = C[L % 2 ? 0 : 3], y = L + .3 / BH;
+      brick(1, 1, y, 2, 2, c1); brick(7, 1, y, 2, 2, c1);                 // towers
+      if (L < 3) { brick(3, 1, y, L === 0 || L === 1 ? 1 : 4, 1, c2); if (L < 2) brick(6, 1, y, 1, 1, c2); }   // front wall with a door gap
+      brick(3, 2, y, 4, 1, C[1]);                                       // back wall
+    }
+    brick(1, 1, 4 + .3 / BH, 2, 2, C[2]); brick(7, 1, 4 + .3 / BH, 2, 2, C[2]);
+    [[1.5, 1.5], [7.5, 1.5]].forEach(([x, z]) => { const roof = new TT.Mesh(new TT.ConeGeometry(1.25, 1.6, 4), plastic(0x2f7fe0)); roof.rotation.y = Math.PI / 4; roof.position.set((x + .5) * U, (5 + .3 / BH) * BH + .8, (z + .5) * U); roof.castShadow = true; castle.add(roof); });
+    const pole = new TT.Mesh(new TT.CylinderGeometry(.05, .05, 1.6, 8), plastic(0x555555)); pole.position.set(2 * U, 6.6 * BH, 2 * U); castle.add(pole);
+    const flag = new TT.Mesh(new TT.PlaneGeometry(.9, .55), M({ color: 0xff5d5d, roughness: .7, side: TT.DoubleSide })); flag.position.set(2 * U + .46, 6.6 * BH + .5, 2 * U); castle.add(flag);
+    roomTicks.push(t => { flag.rotation.y = Math.sin(t * 3) * .25; });
+    // a brick tree beside the gate
+    brick(0, 5, .3 / BH, 1, 1, 0x8a5a2b); brick(0, 5, 1 + .3 / BH, 1, 1, 0x8a5a2b);
+    const leaves = new TT.Mesh(new TT.SphereGeometry(.85, 18, 12), plastic(0x2fbf62)); leaves.position.set(.5 * U, 2 * BH + .9, 5.5 * U); leaves.castShadow = true; castle.add(leaves);
+    Object.values(studs).forEach(({ mat, pos }) => { const im = new TT.InstancedMesh(studG, mat, pos.length), o = new TT.Object3D(); pos.forEach((p, i) => { o.position.set(...p); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); im.castShadow = true; castle.add(im); });
+
+    // --- toy chest with the lid open, toys spilling out ---
+    const chest = new TT.Group(); chest.position.set(-12.6, F, -11.6); chest.rotation.y = .45; g.add(chest);
+    const cw = wood('chest', '#c98a4b', '#8c5426', 512, 512, 1.1), chestM = M({ map: cw, roughness: .55, bumpScale: .004 });
+    const paint = M({ color: 0x3fa0ff, roughness: .45 }), paint2 = M({ color: 0xff6b6b, roughness: .45 });
+    const CW = 6.2, CH = 3.4, CD = 3.8, th = .3;
+    box(CW, th, CD, chestM, 0, th / 2, 0, 0, chest);
+    box(CW, CH, th, chestM, 0, CH / 2, CD / 2 - th / 2, 0, chest); box(CW, CH, th, chestM, 0, CH / 2, -CD / 2 + th / 2, 0, chest);
+    box(th, CH, CD, chestM, -CW / 2 + th / 2, CH / 2, 0, 0, chest); box(th, CH, CD, chestM, CW / 2 - th / 2, CH / 2, 0, 0, chest);
+    box(CW + .06, .5, CD + .06, paint, 0, CH - .55, 0, 0, chest).castShadow = false;                  // painted band
+    [[-CW / 2, CD / 2], [CW / 2, CD / 2]].forEach(([x, z]) => box(.5, CH + .1, .5, paint2, x, CH / 2, z, 0, chest));   // corner posts
+    const star = canvasTex('chestStar', 128, 128, (c, W) => { c.fillStyle = '#ffd23f'; c.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 24 : 54, a = -Math.PI / 2 + i * Math.PI / 5; c.lineTo(W / 2 + Math.cos(a) * r, W / 2 + Math.sin(a) * r); } c.fill(); });
+    const st = new TT.Mesh(new TT.PlaneGeometry(1.5, 1.5), new TT.MeshStandardMaterial({ map: star, transparent: true, roughness: .5 })); st.position.set(0, CH * .42, CD / 2 + .01); chest.add(st);
+    const lid = new TT.Group(); lid.position.set(0, CH, -CD / 2); lid.rotation.x = -1.95; chest.add(lid);
+    box(CW + .1, th, CD + .1, chestM, 0, 0, CD / 2, 0, lid); box(CW + .12, .32, .4, paint, 0, .05, CD, 0, lid);
+    // stuff inside (peeking over the rim)
+    const ballS = (r, c, x, y, z, par = chest) => { const m = new TT.Mesh(new TT.SphereGeometry(r, 28, 18), plastic(c)); m.position.set(x, y, z); m.castShadow = true; par.add(m); return m; };
+    ballS(.9, 0xff8fc7, -1.6, CH - .3, -.3); ballS(.7, 0x3ccf91, 1.9, CH - .4, .6);
+    const blk = (c, x, y, z, r) => { const b = rbox(1, 1, 1, .12, plastic(c)); b.position.set(x, y, z); b.rotation.set(r, r * 1.7, r * .5); chest.add(b); return b; };
+    blk(0xffd23f, .2, CH - .1, -.9, .3); blk(0x36b4ff, 1, CH + .1, -.6, .8);
+    // spilled toys on the floor
+    blk(0xe8463c, -.6, .5, CD / 2 + 1.4, .2).position.y = .5; blk(0xffd23f, 1.2, .5, CD / 2 + 1, 1.1).position.y = .5;
+    ballS(.55, 0x8d6bff, 2.6, .55, CD / 2 + 1.8);
+
+    // --- retro TV game: a CRT on a low cabinet, a console and a corded pad on the floor ---
+    const tv = new TT.Group(); tv.position.set(-1.5, F, -15.2); tv.scale.setScalar(.78); g.add(tv);
+    const cab = M({ map: wood('cab', '#a86c3a', '#6e4220', 512, 512, 1.2), roughness: .5, bumpScale: .004 });
+    box(9, 1.8, 3.2, cab, 0, .9, 0, 0, tv);
+    [-2.2, 2.2].forEach(x => { const d = box(4.1, 1.2, .08, M({ color: 0x7a4a24, roughness: .5 }), x, .9, 1.62, 0, tv); d.castShadow = false; });
+    const tvBody = rbox(5.2, 4.2, 3.6, .55, plastic(0xece6d8)); tvBody.position.set(-.8, 1.8 + 2.1, 0); tv.add(tvBody);
+    const scr = canvasTex('tvscreen', 320, 240, (c, W, H) => {
+      c.fillStyle = '#16204a'; c.fillRect(0, 0, W, H);
+      const px = 10; c.fillStyle = '#1b8a43'; c.fillRect(80, 40, 160, 160);
+      c.fillStyle = '#0d4f25'; for (let i = 0; i <= 8; i++) { c.fillRect(80 + i * 20 - 1, 40, 2, 160); c.fillRect(80, 40 + i * 20 - 1, 160, 2); }
+      [[3, 3, 1], [4, 4, 1], [3, 4, 0], [4, 3, 0], [2, 3, 0], [5, 4, 1]].forEach(([x, y, b]) => { c.fillStyle = b ? '#fff' : '#111'; c.fillRect(84 + x * 20, 44 + y * 20, 12, 12); });
+      c.fillStyle = '#ffd23f'; c.font = 'bold 20px monospace'; c.textAlign = 'center'; c.fillText('PRESS START', W / 2, 228); c.fillStyle = '#ff7fbe'; c.fillText('ATLAS', W / 2, 26);
+      c.fillStyle = 'rgba(0,0,0,.25)'; for (let y = 0; y < H; y += 3) c.fillRect(0, y, W, 1);
+    });
+    const screen = new TT.Mesh(new TT.PlaneGeometry(3.7, 2.8), new TT.MeshBasicMaterial({ map: scr, toneMapped: false }));
+    screen.position.set(-1.25, 1.8 + 2.15, 1.82); tv.add(screen);
+    const bezel = new TT.Mesh(new TT.PlaneGeometry(4.1, 3.2), M({ color: 0x2b3044, roughness: .4 })); bezel.position.set(-1.25, 1.8 + 2.15, 1.81); tv.add(bezel);
+    [0, 1].forEach(i => { const k = new TT.Mesh(new TT.CylinderGeometry(.2, .2, .2, 20), plastic(i ? 0xff5d5d : 0x6a7088)); k.rotation.x = Math.PI / 2; k.position.set(1.15, 1.8 + 2.8 - i * .7, 1.82); tv.add(k); });
+    const ant = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 2.4, 8), plastic(0x9aa0b2)); ant.position.set(-.3, 1.8 + 4.2 + 1, -.3); ant.rotation.z = .5; tv.add(ant);
+    const ant2 = ant.clone(); ant2.rotation.z = -.4; ant2.position.x = -1.4; tv.add(ant2);
+    roomTicks.push(t => { scr.offset.y = (Math.floor(t * 8) % 2) * .002; });
+    const con = rbox(2.4, .6, 1.8, .2, plastic(0x9aa0b2)); con.position.set(2.4, 1.8 + .3, .4); tv.add(con);
+    const slot = box(1.4, .08, .5, M({ color: 0x2b3044, roughness: .6 }), 2.4, 1.8 + .62, .3, 0, tv); slot.castShadow = false;
+    const cart = rbox(1.2, .9, .3, .08, plastic(0xff5d5d)); cart.position.set(2.4, 1.8 + 1, .3); tv.add(cart);
+    // gamepad on the floor, cable running to the console
+    const pad = new TT.Group(); pad.position.set(4.8, F + .18, -10.8); pad.rotation.y = -.35; g.add(pad);
+    const pb = rbox(2, .35, 1, .16, plastic(0xece6d8)); pad.add(pb);
+    const dp = box(.5, .12, .16, plastic(0x2b3044), -.55, .2, 0, 0, pad); box(.16, .12, .5, plastic(0x2b3044), -.55, .2, 0, 0, pad); dp.castShadow = false;
+    [[.45, .1, 0xff5d5d], [.75, -.12, 0x36b4ff]].forEach(([x, z, c]) => { const b = new TT.Mesh(new TT.CylinderGeometry(.14, .14, .14, 16), plastic(c)); b.position.set(x, .2, z); pad.add(b); });
+    const curve = new TT.CatmullRomCurve3([new TT.Vector3(4.2, F + .2, -11.2), new TT.Vector3(3.2, F + .05, -12.6), new TT.Vector3(1.6, F + .05, -13.2), new TT.Vector3(1.2, F + 1.6, -13.9), new TT.Vector3(.9, F + 1.9, -14.4)]);
+    const cable = new TT.Mesh(new TT.TubeGeometry(curve, 40, .05, 6), M({ color: 0x2b3044, roughness: .6 })); g.add(cable);
+
+    // --- the Atlas Mon live here ---
+    const MON = window.Icons3D && Icons3D.MONS;
+    if (MON) {
+      const place = (id, h, x, y, z, ry, par = g) => {
+        if (!MON[id]) return; let m; try { m = MON[id](); } catch (e) { return; }
+        const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
+        const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
+        m.traverse(o => { if (o.isMesh) o.castShadow = true; });
+        if (m.userData.tick) roomTicks.push(t => m.userData.tick(t));
+        return w;
+      };
+      place('plop', 2.2, -.4, CH - .9, .2, .1, chest);                 // peeking out of the toy chest
+      place('tile', 2.6, -16.2, F, -6.5, .9);                         // robot by the chest
+      place('knight', 2.6, 10.6, F, -9.4, -.6);                        // guarding the castle gate
+      place('dot', 1.0, 2.4, 4 * BH + .3 + .02, 1.2, 0, castle);  // up on the castle wall
+      place('disc', 2.0, 3.4, F, -11.4, -.3);                         // playing the TV game
+      place('owl', 1.9, -.8, 1.8 + 4.2 + .05, 0, .2, tv);              // dozing on the TV
+      place('stone', 2.3, -15.2, F, 4.5, 1.1);                        // on the left of the table
+      place('crab', 1.6, 15.4, F, 3.6, -1.2);                         // on the right
+      if (mode === 'night') place('gold', 1.3, 7.2, 9.4 + .2, -15.9 + 1.2, 0, g);
+    }
+  }
   function buildRoom(scene, plain) {
     const TT = T(), mode = timeOfDay(new Date().getHours()), L = LOOK[mode];
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
     if (plain) {   // play screen of the full games: just a wide wooden tabletop, no room edges
-      const tm = M({ map: woodTop('tblR5', '#c08446', '#6a3e1c'), roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .003 });
+      const tm = M({ map: woodTop('tblR5', '#c08446', '#6a3e1c'), roughness: .62, clearcoat: .12, clearcoatRoughness: .55, bumpScale: .003 });
       const t = new TT.Mesh(new TT.PlaneGeometry(40, 40), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
     } else {
     // tatami
@@ -414,10 +535,11 @@
     const cush = (x, z, r, c) => { const m = new TT.Mesh(new TT.BoxGeometry(6, .9, 6, 6, 1, 6), M({ color: c, roughness: .8 })); const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) p.setY(i, y * (1.2 - .5 * (Math.abs(p.getX(i)) + Math.abs(p.getZ(i))) / 6)); } m.geometry.computeVertexNormals(); m.position.set(x, FLOOR + .45, z); m.rotation.y = r; m.receiveShadow = true; m.castShadow = true; g.add(m); };
     cush(0, 13, .1, 0xd94a4a); cush(-13, 2, -.4, 0x3b6fd1);
     const ball = new TT.Mesh(new TT.SphereGeometry(1.1, 32, 20), M({ color: 0xffc928, roughness: .3 })); ball.position.set(14, FLOOR + 1.1, 9); ball.castShadow = true; g.add(ball);
+      decorate(g, FLOOR, mode);
     }
     // lights of the hour
     scene.add(new TT.HemisphereLight(L.hemi[0], L.hemi[1], L.hemi[2]));
-    const key = new TT.DirectionalLight(L.sun, L.sunI); key.position.set(...L.sunPos); key.castShadow = true;
+    const key = new TT.DirectionalLight(L.sun, L.sunI * (plain ? .7 : 1)); key.position.set(...L.sunPos); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
@@ -599,6 +721,7 @@
       const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .15; vel = 0;
     }
     root.rotation.y = yaw;
+    if (roomTicks.length && !alignFn) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
       const r = alignFn(); if (r && r.w > 10) {
         const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
