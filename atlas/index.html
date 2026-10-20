@@ -522,6 +522,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .rgd{grid-template-columns:minmax(0,1fr)}
 .rgd-act{min-width:0}.rgd-act .dots{min-width:0;overflow:hidden}
 @media (max-width:600px){.rgd-act{gap:6px}.rgd-act .btn{padding-left:12px;padding-right:12px}.rgd-act .btn.big{font-size:15px}.rgd-act .dots{gap:4px}.rgd .nm{font-size:11px}}
+@media (max-width:600px){
+  .rgd-act:has([data-a=again]) .dots,.rgd-act:has([data-a=again]) .sfx{display:none}
+  .rgd-act:has([data-a=again]) .btn{flex:1 1 auto;min-width:0;padding-left:8px;padding-right:8px;font-size:14px;white-space:nowrap}
+  .rgd-act:has([data-a=again]) .btn.big{flex:1.3 1 auto}
+}
 </style>
 </head>
 <body>
@@ -628,6 +633,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/shogi.js?v=1"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=54"></script>
+<script src="app.js?v=55"></script>
 </body>
 </html>
