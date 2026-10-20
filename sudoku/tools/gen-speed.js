@@ -3,8 +3,8 @@
    入門 5 courses × 10 stages (standard rules)
    初級 5 × 10 (one special rule each: bug / mosaic / spin / spot / fruit)
    中級 5 × 10 (one special rule each: shuffle / ghost / ice / bomb / swap)
-   上級 5 × 20 (2–4 special rules at once)
-   達人 5 × 20 (5 to all 10 special rules at once)
+   上級 5 × 20 (2 special rules at once, sometimes 3 near the end)
+   達人 5 × 20 (2–3 rules at once at full strength; the last course up to 4)
    Each stage is "solve K puzzles within T seconds"; the hurdle rises stage by stage.
    usage: node sudoku/tools/gen-speed.js  →  sudoku/speed_puzzles.json */
 'use strict';
@@ -22,8 +22,8 @@ const CATS = [
   ...['bug', 'mosaic', 'spin', 'spot', 'fruit'].map((g, i) => ({ tier: 1, kind: 'g', g, nk: 'sc.n.' + (10 + i), dk: 'sc.d.' + (10 + i), lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
   ...['shuffle', 'ghost', 'ice', 'bomb', 'swap'].map((g, i) => ({ tier: 2, kind: 'g', g, nk: i < 3 ? 'sc.n.' + (15 + i) : 'sk.n.' + g, dk: i < 3 ? 'sc.d.' + (15 + i) : 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
   ...[['u0', A4], ['u1', B4.concat(['swap'])], ['u2', ['mosaic', 'spot', 'ghost', 'spin']], ['u3', ['bug', 'ice', 'shuffle', 'fruit', 'bomb']], ['u4', ALLG]].map(([id, pool]) =>
-    ({ tier: 3, kind: 'combo', pool, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: [2, 6], sl: [2.2, 1.6], str: [1, 2], gn: [2, 4] })),
-  ...[['m0', [5, 6], [1, 2]], ['m1', [5, 8], [1, 2]], ['m2', [6, 10], [1, 3]], ['m3', [5, 9], [1, 2], [3, 8]], ['m4', [7, 10], [2, 3]]].map(([id, gn, str, k]) =>
+    ({ tier: 3, kind: 'combo', pool, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: [2, 6], sl: [2.2, 1.6], str: [1, 2], gn: [2, 2.6] })),
+  ...[['m0', [2, 3], [1, 2]], ['m1', [2, 3], [2, 3]], ['m2', [3, 3], [1, 3]], ['m3', [2, 3], [1, 2], [3, 8]], ['m4', [3, 4], [2, 3]]].map(([id, gn, str, k]) =>
     ({ tier: 4, kind: 'combo', pool: ALLG, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: k || [2, 5], sl: [2.1, 1.55], str, gn })),
 ];
 
@@ -51,7 +51,7 @@ CATS.forEach((C, ci) => {
       else if (C.kind === 'combo') {
         const lo = C.gn[0], hi = Math.min(C.gn[1], C.pool.length);
         const want = Math.round(lerp(lo, hi, x) + (rng() - .5) * .9);
-        const n = Math.min(hi, Math.max(lo, want));
+        const n = Math.min(Math.ceil(hi), Math.max(lo, want));
         const pick = E.shuffle(C.pool.slice(), rng).slice(0, n);
         pick.sort((a, b) => ALLG.indexOf(a) - ALLG.indexOf(b));
         g = pick.map(id => id + Math.max(1, Math.min(3, str - (rng() < .3 ? 1 : 0)))).join('+');

@@ -1023,7 +1023,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=3';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=4';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },
