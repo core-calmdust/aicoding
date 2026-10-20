@@ -36,6 +36,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
+/* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar, so no title row above the side panel */
+html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
+@supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
 html,body{height:100%;overflow:hidden}
 body{
   background:
@@ -213,7 +216,7 @@ a.snd.home{text-decoration:none}
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono',monospace}
 
 /* ---------------------------------------------------------------- modal */
-.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay{position:fixed;inset:0;z-index:62;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
@@ -223,7 +226,15 @@ a.snd.home{text-decoration:none}
 .ls-tabs{margin-bottom:16px}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 /* rules page */
-#rulesOverlay .modal{width:min(900px,100%)}
+/* hands-on rules tour (shared/ruletour.js) */
+.rt-mini{display:block;width:min(330px,100%);height:auto;cursor:pointer;touch-action:manipulation}
+.rt-mini.off{cursor:default}
+.rt-mini .rt-col:hover{fill:rgba(226,194,117,.12)}
+.rt-mini.off .rt-col:hover{fill:transparent}
+.rt-mini .rt-new{animation:rtFall .38s cubic-bezier(.55,0,1,.55)}
+@keyframes rtFall{from{transform:translateY(var(--fy))}to{transform:none}}
+@media (min-width: 900px) and (pointer: fine){.rt-mini{width:min(380px,100%)}}
+html[lang=ar] #rulesOverlay .rt-body{direction:rtl;text-align:right}
 .rl-lead{font-size:14.5px;line-height:1.8;color:#d6e2dc;margin:-6px 0 14px}
 .rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width: 620px){.rl-grid{grid-template-columns:1fr}}
@@ -275,6 +286,8 @@ body.in-lesson .lesson-card{display:block}
 body.in-puzzle .puzzle-card{display:block}
 body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line, body.in-lesson .controls,
 body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, body.in-puzzle .controls{display:none!important}
+body.hb-on .controls.hb-menu{display:flex!important}
+.hb-disc{display:inline-block;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 34% 28%,var(--gold1),var(--gold2) 30%,var(--gold3) 75%);box-shadow:0 0 0 1px rgba(255,255,255,.18)}.hb-disc.p2{background:radial-gradient(circle at 34% 28%,#fff,var(--ruby2) 30%,var(--ruby3) 75%)}
 .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .lt{font-size:12px;color:var(--brass);letter-spacing:.12em}
 .lesson-card h3,.puzzle-card h3{font-family:'Shippori Mincho B1',serif;font-size:20px;margin:4px 0 8px;letter-spacing:.06em}
@@ -439,7 +452,8 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* PC: use the browser width for the lesson / puzzle / opening dialogs (phones keep the single-column layout) */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
-  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal, #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #rulesOverlay .modal{height:min(760px, calc(100dvh - 64px))}
   #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
@@ -671,9 +685,8 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="rulesOverlay">
   <div class="modal">
     <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-    <h2 data-i18n="rl.title"></h2>
     <div id="rulesBody"></div>
-    <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
+    <button id="rulesClose" hidden></button>
   </div>
 </div>
 
@@ -754,9 +767,12 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261020r"></script>
+<script src="i18n.js?v=20261021hb"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=2"></script>
+<script src="../shared/pzbook.js?v=2"></script>
+<script src="../shared/headerbar.js?v=1"></script>
+<script src="../shared/ruletour.js?v=1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1124,7 +1140,19 @@ function renderInfo() {
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur, m: moves.length });
   renderReview();
+  hbInfo(shown, st, tm, ev);
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+}
+// PC header bar: whose turn, move number, evaluation (hidden in rated games and when the evaluation is off)
+const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function hbInfo(shown, st, tm, ev) {
+  if (typeof HB === 'undefined' || !HB || !HB.on) return;
+  const over = !!st.winner || st.draw;
+  let h = `<span class="hb-chip">${over ? (st.winner ? `<i class="hb-disc p${st.winner}"></i><b>${escHb(t('ev.won', { c: pname(st.winner) }))}</b>` : `<b>${escHb(t('res.draw'))}</b>`) : `<i class="hb-disc p${tm}"></i><b>${escHb(t('hb.turn', { c: pname(tm) }))}</b>${thinking ? ' · ' + escHb(t('thinking')) : ''}`}</span>`;
+  h += `<span class="hb-chip">${escHb(t('hb.move', { n: shown.length + (over ? 0 : 1) }))}</span>`;
+  if (puzzle) h += `<span class="hb-chip">${escHb(t('pz.winIn', { n: puzzle.n }))} · <b>${escHb(pzt('movesLeft', { n: Math.max(0, puzzle.n - puzzle.used) }))}</b></span>`;
+  else if (!lesson && settings.eval && !over && ev && !document.body.classList.contains('rated-live') && !(window.rtLive && rtLive())) h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb(evalText(ev))}</b></span>`;
+  HB.setInfo(h);
 }
 function evalAt(i) {
   const st = statusOf(moves.slice(0, i));
@@ -1327,45 +1355,95 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   if (b.dataset.v === 'lesson' && !$('#lessonOverlay').classList.contains('show')) { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
   setTimeout(() => inst(false), 150);
 }));
-// ---------------------------------------------------------------- rules (illustrated)
-// small board picture. rows: 6 strings (top → bottom) of '.', '1' (gold), '2' (silver)
-// o.line = [[c,r],[c,r]] winning line, o.rings = {'c,r': 'ring'|'dash'}, o.drop = [col, row, player], o.xcol = col, o.col = highlighted col
-function miniSVG(rows, o) {
+// ---------------------------------------------------------------- rules: hands-on tour (shared/ruletour.js)
+// Only what is needed to play: gravity, turns, four across / up / diagonal, blocking a three, full columns, draw.
+// Strategy (centre column, double threats, odd/even threats…) is left to the lessons.
+// mini board: g = 7 columns, each an array of players bottom → top
+function tourSVG(g, o) {
   o = o || {};
-  const u = 26, pad = 7, top = 30, W = 7 * u + pad * 2, H = top + 6 * u + pad;
-  const X = c => pad + (c + 0.5) * u, Y = r => top + (r + 0.5) * u;
-  const disc = (x, y, p, extra) => `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.5" ${extra || ''}/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="${p === 1 ? 'rgba(94,71,32,.45)' : 'rgba(60,66,75,.4)'}" stroke-width="1.2" ${extra || ''}/>`;
-  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect x="1" y="${top - 6}" width="${W - 2}" height="${H - top + 5}" rx="8" fill="#14100c" stroke="rgba(201,169,97,.45)"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="4" fill="#17573f"/>`;
-  if (o.col !== undefined) s += `<rect x="${pad + o.col * u + 1}" y="${top - 4}" width="${u - 2}" height="${6 * u + 6}" rx="5" fill="rgba(226,194,117,.18)" stroke="rgba(226,194,117,.7)" stroke-width="1.2"/>`;
-  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) {
-    const p = +rows[r][c] || 0;
-    s += p ? disc(X(c), Y(r), p) : `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="#06100c" stroke="rgba(201,169,97,.4)" stroke-width="1"/>`;
-  }
-  if (o.line) { const [[a, b], [c, d]] = o.line; s += `<line x1="${X(a)}" y1="${Y(b)}" x2="${X(c)}" y2="${Y(d)}" stroke="#fff3cf" stroke-width="5" stroke-linecap="round" opacity=".75"/>`; }
-  for (const k in o.rings || {}) { const [c, r] = k.split(',').map(Number), v = o.rings[k]; s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.42}" fill="none" stroke="${v === 'dash' ? 'rgba(255,255,255,.9)' : '#e2c275'}" stroke-width="2.2" ${v === 'dash' ? 'stroke-dasharray="4 3"' : ''}/>`; }
-  if (o.drop) {
-    const [c, r, p] = o.drop, x = X(c), y0 = 13, y1 = Y(r) - u * 0.5;
-    s += `<circle cx="${x}" cy="${Y(r)}" r="${u * 0.42}" fill="none" stroke="#e2c275" stroke-width="2.2" stroke-dasharray="4 3"/>`;
-    s += `<path d="M${x},${y0 + 13}L${x},${y1}M${x - 5},${y1 - 6}L${x},${y1}L${x + 5},${y1 - 6}" stroke="#ffe9a8" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    s += disc(x, y0, p, '');
-  }
-  if (o.xcol !== undefined) { const x = X(o.xcol), y = 13; s += `<path d="M${x - 6},${y - 6}L${x + 6},${y + 6}M${x + 6},${y - 6}L${x - 6},${y + 6}" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round"/>`; }
+  const u = 44, pad = 10, top = 16, W = 7 * u + pad * 2, H = top + 6 * u + pad + 18;
+  const X = c => pad + (c + 0.5) * u, Y = r => top + (5 - r + 0.5) * u;
+  const disc = (c, r, p, cls) => { const x = X(c), y = Y(r); return `<g class="${cls || ''}" ${cls === 'rt-new' ? `style="--fy:${-(y - top + u / 2)}px"` : ''}><circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="${p === 1 ? 'rgba(94,71,32,.45)' : 'rgba(60,66,75,.4)'}" stroke-width="1.3"/></g>`; };
+  let s = `<svg class="rt-mini${o.off ? ' off' : ''}" viewBox="0 0 ${W} ${H}" role="img"><rect x="1" y="${top - 6}" width="${W - 2}" height="${6 * u + pad + 7}" rx="10" fill="#14100c" stroke="rgba(201,169,97,.45)"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="5" fill="#17573f"/>`;
+  if (o.hl !== undefined) s += `<rect x="${pad + o.hl * u + 2}" y="${top + 1}" width="${u - 4}" height="${6 * u - 2}" rx="7" fill="rgba(226,194,117,.16)" stroke="rgba(226,194,117,.8)" stroke-width="1.5"><animate attributeName="opacity" values="1;.45;1" dur="1.6s" repeatCount="indefinite"/></rect>`;
+  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="#06100c" stroke="rgba(201,169,97,.4)" stroke-width="1"/>`;
+  for (let c = 0; c < 7; c++) for (let r = 0; r < g[c].length; r++) s += disc(c, r, g[c][r], o.drop && o.drop[0] === c && o.drop[1] === r ? 'rt-new' : '');
+  if (o.line) { const a = o.line[0], b = o.line[o.line.length - 1]; s += `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="#fff3cf" stroke-width="6" stroke-linecap="round" opacity=".8"/>`; }
+  for (const m of o.marks || []) s += `<circle cx="${X(m[0])}" cy="${Y(m[1])}" r="${u * 0.43}" fill="none" stroke="${m[2] === 'ng' ? '#ff6b5b' : '#e2c275'}" stroke-width="2.6" ${m[2] === 'dash' ? 'stroke-dasharray="5 4"' : ''}/>`;
+  for (let c = 0; c < 7; c++) s += `<text x="${X(c)}" y="${H - 5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" fill="rgba(226,194,117,.6)">${colName(c)}</text>`;
+  for (let c = 0; c < 7; c++) s += `<rect class="rt-col" data-c="${c}" x="${pad + c * u}" y="0" width="${u}" height="${H}" fill="transparent"/>`;
   return s + '</svg>';
 }
-function ruleItems() {
-  const v = { a: t('p1'), b: t('p2') };
-  const it = (h, svg, p) => `<div class="rl-item"><h4>${t(h, v)}</h4>${svg}<p>${t(p, v)}</p></div>`;
-  return [
-    it('rl.board.h', miniSVG(['.......', '.......', '.......', '...1...', '..21...', '..112.2'], {}), 'rl.board'),
-    it('rl.drop.h', miniSVG(['.......', '.......', '.......', '.......', '...2...', '..211..'], { drop: [3, 3, 1] }), 'rl.drop'),
-    it('rl.win.h', miniSVG(['.......', '.......', '....1..', '...12..', '..122..', '.1211.2'], { line: [[1, 5], [4, 2]] }), 'rl.win'),
-    it('rl.full.h', miniSVG(['...2...', '...1...', '...2...', '...1...', '...2...', '..211..'], { xcol: 3 }), 'rl.full'),
-    it('rl.draw.h', miniSVG(['1122112', '2211221', '1122112', '2211221', '1122112', '2211221'], {}), 'rl.draw'),
-    it('rl.tips.h', miniSVG(['.......', '.......', '.......', '.......', '...11..', '..222.1'], { col: 3, rings: { '1,5': 'dash', '5,5': 'dash' } }), 'rl.tips'),
-  ].join('');
+const tourGrid = cols => cols.map(x => [...x].map(Number));
+const tourCopy = g => g.map(c => c.slice());
+// a page where the player drops discs; play(api, g, c) handles one move and returns nothing
+function tourPage(id, cols, opt) {
+  return {
+    id, title: () => t('ru.' + id + '.t'), body: () => t('ru.' + id + '.b', { a: pname(P1), b: pname(P2) }), task: () => t('ru.' + id + '.task', { a: pname(P1), b: pname(P2) }),
+    setup(api) {
+      const S = { g: tourGrid(cols), drop: null, line: null, marks: [], busy: false, done: false, n: 0 };
+      const draw = () => { api.board.innerHTML = tourSVG(S.g, { hl: S.done ? undefined : opt.hl, drop: S.drop, line: S.line, marks: S.marks, off: S.busy || S.done }); };
+      S.drop0 = (c, p) => { const r = S.g[c].length; S.g[c].push(p); S.drop = [c, r]; draw(); playDrop(r); return r; };
+      S.draw = draw;
+      draw();
+      api.board.onclick = e => {
+        const b = e.target.closest('.rt-col'); if (!b || S.busy || S.done) return;
+        const c = +b.dataset.c; ctx();
+        if (S.g[c].length >= ROWS) { api.ng(t('ru.full.ng'), { reset: false }); return; }
+        opt.play(api, S, c);
+      };
+    },
+  };
 }
-function openRules() { selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
-function renderRules() { $('#rulesBody').innerHTML = `<p class="rl-lead">${t('rl.lead')}</p><div class="rl-grid">${ruleItems()}</div>`; }
+const tourWinPage = (id, cols) => tourPage(id, cols, { play(api, S, c) {
+  const p = tourToMove(S.g), r = S.drop0(c, p), line = lineThrough(S.g, c, r, p);
+  if (line) { S.line = line; S.done = true; S.draw(); api.ok(t('ru.' + id + '.ok')); }
+  else { S.busy = true; S.draw(); api.ng(t('ru.ng4')); }
+} });
+function tourToMove(g) { let n = 0; for (const c of g) n += c.length; return n & 1 ? P2 : P1; }
+const RULE_PAGES = [
+  tourPage('drop', ['', '', '1', '12', '2', '', ''], { hl: 3, play(api, S, c) {
+    if (c !== 3) { api.ng(t('ru.drop.ng'), { reset: false }); return; }
+    S.drop0(c, P1); S.done = true; S.marks = [[3, 2, 'ok']]; S.draw(); api.ok(t('ru.drop.ok'));
+  } }),
+  tourPage('turn', ['', '', '', '', '', '', ''], { play(api, S, c) {
+    S.drop0(c, P1); S.n++; S.busy = true; S.draw();
+    api.timer(() => {
+      const opts = [c, c - 1, c + 1, 3, 2, 4].filter(x => x >= 0 && x < 7 && S.g[x].length < ROWS);
+      S.drop0(opts[Math.floor(Math.random() * Math.min(3, opts.length))], P2);
+      S.busy = false;
+      if (S.n >= 3) { S.done = true; S.draw(); api.ok(t('ru.turn.ok', { b: pname(P2) })); } else S.draw();
+    }, 520);
+  } }),
+  tourWinPage('h', ['', '1', '12', '12', '', '', '2']),
+  tourWinPage('v', ['', '', '111', '22', '2', '', '']),
+  tourWinPage('d', ['1', '21', '211', '121', '22', '2', '']),
+  tourPage('blk', ['', '', '2', '21', '21', '1', ''], { play(api, S, c) {
+    S.drop0(c, P1);
+    if (c === 1) { S.done = true; S.marks = [[1, 0, 'ok']]; S.draw(); api.ok(t('ru.blk.ok', { b: pname(P2) })); return; }
+    S.busy = true; S.draw();
+    api.timer(() => { const r = S.drop0(1, P2); S.line = lineThrough(S.g, 1, r, P2); S.draw(); api.ng(t('ru.blk.ng', { b: pname(P2) })); }, 520);
+  } }),
+  tourPage('full', ['', '1', '2', '121212', '', '', ''], { hl: 3, play(api, S, c) {
+    S.drop0(c, P1); S.done = true; S.draw(); api.ok(t('ru.full.ok'));
+  } }),
+  tourPage('draw', ['212121', '212121', '121212', '12121', '212121', '212121', '121212'], { hl: 3, play(api, S, c) {
+    const r = S.drop0(c, P2);
+    S.done = true; S.draw();
+    if (!lineThrough(S.g, c, r, P2)) api.ok(t('ru.draw.ok'));
+  } }),
+];
+const ruleTour = RuleTour.create({
+  mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG,
+  close: () => hideOverlay('#rulesOverlay'),
+  play: () => { hideOverlay('#rulesOverlay'); rsOpen(); },
+  lessons: () => { hideOverlay('#rulesOverlay'); openLessons(); },
+  sound: k => { if (k === 'ok') playChime(true); else playTick(); },
+  pages: RULE_PAGES,
+});
+function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); ruleTour.open(ruleTour.page); }
+function renderRules() { ruleTour.render(); }
+new MutationObserver(() => { if (!$('#rulesOverlay').classList.contains('show')) ruleTour.stop(); }).observe($('#rulesOverlay'), { attributes: true, attributeFilter: ['class'] });
 $('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
 $('#btnResume').onclick = resumeHere;
 $('#btnLatest').onclick = () => viewAt(moves.length);
@@ -1594,7 +1672,7 @@ function startPuzzle(L, j, daily) {
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0;
   const P = PUZZLES.levels[L].puzzles[j];
-  puzzle = { L, j, P, me: toMoveOf(P.moves), n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false };
+  puzzle = { L, j, P, me: toMoveOf(P.moves), n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, off: null };
   document.body.classList.add('in-puzzle');
   moves = P.moves; cur = moves.length; reviewing = false; hintList = null; lessonMarks = [];
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
@@ -1607,7 +1685,7 @@ function renderPuzzleCard() {
   $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
   $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.L + 1 >= PUZZLES.levels.length);
-  $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.busy;
+  $('#pzHint').disabled = Pz.state !== 'play' || !!Pz.off; $('#pzAnswer').disabled = Pz.busy;
   renderInfo();
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
@@ -1618,6 +1696,73 @@ const byPref = list => list.slice().sort((a, b) => PREF.indexOf(a.c) - PREF.inde
 function pickAttack(list, left) { let best = null; for (const e of byPref(list)) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.c; }
 function pickDefence(list) { let best = null; for (const e of byPref(list)) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { c: e.c, v }; } return best.c; }
 function mateHints(list, m, left) { const k = m.length >> 1; return list.filter(e => e.need && e.need <= left).map(e => ({ c: e.c, kind: 'exact', v: 22 - e.need - k })); }
+// ---- puzzles v2 (common spec): a move off the solution does not fail at once — the defender answers with its best
+// defence and the player keeps going until the puzzle's move count is used up (then "not achieved within N moves").
+// Connecting four within the count is a success at any time.
+// "Obvious mistake" (flagged at once, puzzle failed):
+//   (a) a four could be made right now and the move does not make it;
+//   (b) after the move the defender can connect four at once (incl. not blocking the defender's immediate threat);
+//   (c) after the move the four cannot be made within the remaining moves even if the defender helped
+//       (exhaustive search with both sides' moves free) — the goal is visibly out of reach.
+// A move that only loses to perfect defence is not "obvious" (with an exact defender every off-solution move is that),
+// so it is played out to the end of the count.
+const pzt = (k, v) => { if (window.PZBook) { PZBook.setLang(LANG); return PZBook.t(k, v); } return k; };
+function immWins(g, p) { const out = []; for (let c = 0; c < COLS; c++) { if (g[c].length >= ROWS) continue; g[c].push(p); if (lineThrough(g, c, g[c].length - 1, p)) out.push(c); g[c].pop(); } return out; }
+// can p (to move) make four within d own moves when the other side cooperates?
+function helpWin(g, p, d) {
+  if (immWins(g, p).length) return true;
+  if (d <= 1) return false;
+  const q = p === P1 ? P2 : P1;
+  for (let c = 0; c < COLS; c++) {
+    if (g[c].length >= ROWS) continue;
+    g[c].push(p);
+    for (let c2 = 0; c2 < COLS; c2++) {
+      if (g[c2].length >= ROWS) continue;
+      g[c2].push(q);
+      const won = lineThrough(g, c2, g[c2].length - 1, q), ok = !won && helpWin(g, p, d - 1);
+      g[c2].pop();
+      if (ok) { g[c].pop(); return true; }
+    }
+    g[c].pop();
+  }
+  return false;
+}
+function pzBlunder(before, c, left, me) {
+  const g0 = gridOf(before);
+  if (immWins(g0, me).length) return true;                                 // (a)
+  const g = gridOf(before + (c + 1)), op = me === P1 ? P2 : P1;
+  if (immWins(g, op).length) return true;                                  // (b)
+  if (left - 1 < 1) return false;                                          // last move: judged as "out of moves", not a blunder
+  for (let r = 0; r < COLS; r++) {                                         // (c): some defender reply leaves the goal reachable?
+    if (g[r].length >= ROWS) continue;
+    g[r].push(op); const ok = helpWin(g, me, left - 1); g[r].pop();
+    if (ok) return false;
+  }
+  return true;
+}
+async function pzFail(Pz, before, c, list, left, head) {
+  const good = list.filter(x => x.need && x.need <= left).map(x => x.c);
+  Pz.state = 'fail'; Pz.busy = false;
+  await new Promise(r => setTimeout(r, dropDelay()));
+  if (puzzle !== Pz) return;
+  moves = before; cur = moves.length;
+  hintList = mateHints(list, before, left); const g0 = gridOf(before);
+  lessonMarks = good.map(gc => ({ c: gc, r: g0[gc].length, cls: 'ok' })).concat([{ c, r: g0[c].length, cls: 'ng' }]);
+  update(false); playChime(false);
+  pzStatus(`<b class="ng">${head}</b> ${t('pz.failWhy', { m: colName(c), b: good.map(colName).join(' / '), n: Pz.n })}<br><span style="font-size:12px;color:var(--dim)">${t('pz.labels')}</span>`);
+  renderPuzzleCard();
+}
+// defender's reply: its own four if it has one, else the most stubborn reply (keeps the four furthest away)
+async function pzDefend(Pz, tok) {
+  const left = Pz.n - Pz.used;
+  const dl = await mateReq(moves, Math.max(1, left), true);
+  if (!dl || puzzle !== Pz || tok !== busyToken) return false;
+  await new Promise(r => setTimeout(r, Math.max(0, dropDelay() + 150)));
+  if (puzzle !== Pz) return false;
+  const own = immWins(gridOf(moves), toMoveOf(moves));
+  playMove2(own.length ? own[0] : pickDefence(dl));
+  return true;
+}
 async function puzzleMove(c) {
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   const before = moves.slice(0, cur), left = Pz.n - Pz.used;
@@ -1629,31 +1774,26 @@ async function puzzleMove(c) {
   pzStatus(t('pz.checking'));
   const list = await mateReq(before, left);
   if (!list || puzzle !== Pz || tok !== busyToken) return;
-  const e = list.find(x => x.c === c);
-  if (!e || !e.need || e.need > left) {
-    // failure: show the correct move(s)
-    const good = list.filter(x => x.need && x.need <= left).map(x => x.c);
-    Pz.state = 'fail'; Pz.busy = false;
-    await new Promise(r => setTimeout(r, dropDelay()));
-    if (puzzle !== Pz) return;
-    moves = before; cur = moves.length;
-    hintList = mateHints(list, before, left); const g0 = gridOf(before);
-    lessonMarks = good.map(gc => ({ c: gc, r: g0[gc].length, cls: 'ok' })).concat([{ c, r: g0[c].length, cls: 'ng' }]);
-    update(false); playChime(false);
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: colName(c), b: good.map(colName).join(' / '), n: Pz.n })}<br><span style="font-size:12px;color:var(--dim)">${t('pz.labels')}</span>`);
-    renderPuzzleCard();
+  const e = list.find(x => x.c === c), onTrack = e && e.need && e.need <= left;
+  if (!onTrack) {
+    if (pzBlunder(before, c, left, Pz.me)) { const o = Pz.off || { before, c, list, left }; await pzFail(Pz, o.before, o.c, o.list, o.left, pzt('blunder')); return; }
+    if (!Pz.off) Pz.off = { before, c, list, left };   // first move off the solution: shown if the count runs out
+  }
+  if (Pz.used >= Pz.n) {   // count used up without four
+    const o = Pz.off || { before, c, list, left };
+    await pzFail(Pz, o.before, o.c, o.list, o.left, pzt('outOfMoves', { n: Pz.n }));
     return;
   }
-  pzStatus(t('pz.good'));
-  // opponent's best defence (delays the four as long as possible)
-  const dl = await mateReq(moves, Pz.n - Pz.used, true);
-  if (!dl || puzzle !== Pz || tok !== busyToken) return;
-  await new Promise(r => setTimeout(r, Math.max(0, dropDelay() + 150)));
-  if (puzzle !== Pz) return;
-  playMove2(pickDefence(dl));
+  pzStatus(onTrack ? t('pz.good') : t('pz.checking'));
+  if (!await pzDefend(Pz, tok)) return;
+  if (statusOf(moves).winner) {   // the defender connected four (only reachable after an off-solution move)
+    const o = Pz.off; await new Promise(r => setTimeout(r, dropDelay())); if (puzzle !== Pz) return;
+    await pzFail(Pz, o.before, o.c, o.list, o.left, pzt('blunder')); return;
+  }
+  if (gameOver(moves)) { const o = Pz.off; await pzFail(Pz, o.before, o.c, o.list, o.left, pzt('outOfMoves', { n: Pz.n })); return; }
   Pz.busy = false;
   renderPuzzleCard();
-  pzStatus(t('pz.yourMove', { n: Pz.n - Pz.used }));
+  pzStatus(Pz.off ? pzt('movesLeft', { n: Pz.n - Pz.used }) : t('pz.yourMove', { n: Pz.n - Pz.used }));
 }
 function playMove2(c) { moves = moves.slice(0, cur) + (c + 1); cur = moves.length; hintList = null; update(true); }
 function puzzleSolved() {
@@ -1661,7 +1801,7 @@ function puzzleSolved() {
   Pz.state = 'solved'; Pz.busy = false;
   const pr = pzProgress(); pr[`${Pz.L}-${Pz.j}`] = true;
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
-  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
+  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || !!Pz.off);   // solved after leaving the solution counts like a hinted solve
   pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.used })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
   playChime(true); confetti(); renderPuzzleCard();
 }
@@ -1684,7 +1824,7 @@ $('#pzHint').onclick = async () => {
 };
 $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.busy) return;
-  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; lessonMarks = []; hintList = null;
+  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.off = null; lessonMarks = []; hintList = null;
   moves = Pz.P.moves; cur = moves.length; Pz.used = 0; update(false); renderPuzzleCard();
   pzStatus(t('pz.showing'));
   let m = moves;
@@ -1923,6 +2063,9 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
 const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' }) : null;
+// PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+if (HB) HB.onChange(() => renderInfo());
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
@@ -1931,6 +2074,7 @@ $('#langSel').onchange = e => {
   if (lesson) { renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if (rulesOffer) rulesOffer.sync();
+  if (HB) HB.relabel();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }

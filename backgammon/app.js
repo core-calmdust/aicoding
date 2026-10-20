@@ -647,6 +647,7 @@ async function doStep(st, animate) {
   const i = turn.left.indexOf(legal.die); turn.left.splice(i, 1);
   selected = null;
   render(); renderInfo();
+  if (puzzle && puzzle.state === 'play') pzAfterStep();
   return true;
 }
 async function doPath(path, animateFirst) {
@@ -663,6 +664,7 @@ function undoStep() {
   for (const s of turn.steps) { BG.apply(q, turn.side, s.from, s.to); turn.left.splice(turn.left.indexOf(s.die), 1); }
   turn.pos = q; selected = null; SFX.tick();
   render(); renderInfo();
+  if (puzzle && puzzle.state === 'play') pzAfterStep();
   return true;
 }
 function commitTurn() {
@@ -1153,6 +1155,19 @@ function renderInfo() {
   const fair = over ? `seed ${match.seed}` : `SHA-256 ${commitHash}…`;
   $('#infoLine').textContent = `${mt} · ${mode} · ${match.cube ? t('info.cube') : t('info.nocube')} · ${fair}`;
   $('#infoLine').title = over ? t('fair.seed') : t('fair.commit');
+  hbInfo(st, g, ev);
+}
+// PC header bar: whose turn + dice, pip counts, win chance (only when the evaluation display is on), match score
+var HB = null;
+function hbInfo(st, g, ev) {
+  if (!HB || !HB.on) return;
+  const toMove = turn && isLatest() ? turn.side : st.over ? -1 : st.turn;
+  let h = st.over ? `<span class="hb-chip"><i class="hb-disc p${st.winner}"></i><b>${esc(pname(st.winner))} ${esc(t('st.win', { n: st.points }))}</b></span>`
+    : toMove >= 0 ? `<span class="hb-chip"><i class="hb-disc p${toMove}"></i><b>${esc(t('hb.turn', { c: pname(toMove) }))}</b>${turn && isLatest() ? ' ' + turn.dice.map(d => `<i class="hb-die p${turn.side}">${d}</i>`).join('') : ''}</span>` : '';
+  h += `<span class="hb-chip"><i class="hb-disc p0"></i><b>${BG.pips(st.pos, 0)}</b> – <b>${BG.pips(st.pos, 1)}</b><i class="hb-disc p1"></i> ${esc(t('pips'))}</span>`;
+  if (settings.eval && !lesson && !puzzle && ev) h += `<span class="hb-chip">${esc(evalText(ev, st))}</span>`;
+  if (match.len && !lesson && !puzzle) h += `<span class="hb-chip">${esc(t('info.match', { n: match.len }))} <b>${match.games[g].start[0]}–${match.games[g].start[1]}</b></span>`;
+  HB.setInfo(h);
 }
 function scoreAfterShown(g, a) {
   const st = stateAt(g, a), s = match.games[g].start.slice();
@@ -1875,9 +1890,9 @@ function rlPos(g, b, o) {
 }
 const RL_INIT = () => rlPos({ 24: 2, 13: 5, 8: 3, 6: 5 }, { 1: 2, 12: 5, 17: 3, 19: 5 });
 function rulesSVG(p, o) {
-  const flat = G.FLAT, fh = G.H; if (flat) setGeom(false);
+  const flat = G.FLAT, fh = G.H, fu = G.U; if (flat) setGeom(false);
   const v0 = view; view = 0;
-  try { return rulesSVG0(p, o || {}); } finally { view = v0; if (flat) setGeom(true, fh); }
+  try { return rulesSVG0(p, o || {}); } finally { view = v0; if (flat) setGeom(true, fh, fu); }
 }
 function rlDie(x, y, n, dark, sz) {
   const S = 20, z = (sz || 0.8) * S, x0 = x * S - z / 2, y0 = y * S - z / 2, r = z * 0.09;
@@ -1944,6 +1959,7 @@ function rulesSVG0(p, o) {
   }
   // dice: [[n, dark, x?]]
   (o.dice || []).forEach((d, i, a) => { const x = d[2] !== undefined ? d[2] : G.RX + 3 + (i - (a.length - 1) / 2) * 0.95; s += rlDie(x, G.MID, d[0], d[1]); });
+  if (o.extra) s += o.extra(S);
   if (o.cube) { const x = o.cube[1], z = 0.86 * S; s += `<rect x="${x * S - z / 2}" y="${G.MID * S - z / 2}" width="${z}" height="${z}" rx="${z * .16}" fill="#e2c275" stroke="${o.cube[2] ? '#fff3cf' : '#8e7440'}" stroke-width="${o.cube[2] ? 2.2 : 1}"/><text x="${x * S}" y="${G.MID * S + 4}" font-size="11" font-weight="700" font-family="JetBrains Mono,monospace" fill="#2a1e08" text-anchor="middle">${o.cube[0]}</text>`; }
   return s + '</svg>';
 }
@@ -1960,34 +1976,131 @@ function rlMatchSVG() {
   s += `<text x="${W / 2}" y="107" font-size="11.5" fill="#cfd8d2" text-anchor="middle">${t('rl.crawLbl')}</text>`;
   return s + '</svg>';
 }
-function ruleItems() {
-  const it = (k, svg) => `<div class="rl-item"><h4>${t('rl.' + k + '.h')}</h4>${svg}<p>${t('rl.' + k, { c: pname(0), o: pname(1) })}</p></div>`;
-  const I = RL_INIT();
-  const blockP = rlPos({ 24: 2, 13: 5, 8: 3, 6: 5 }, { 9: 2, 12: 5, 17: 3, 19: 5 });
-  const hitP = rlPos({ 24: 2, 13: 5, 8: 3, 6: 5 }, { 1: 1, 9: 1, 12: 5, 17: 3, 19: 5 });
-  const enterP = rlPos({ 13: 4, 8: 3, 6: 5, 5: 2 }, { 19: 3, 21: 2, 22: 2, 23: 1, 12: 4, 17: 3 }, { gBar: 1 });
-  const offP = rlPos({ 6: 3, 5: 3, 4: 3, 3: 2, 2: 2 }, { 19: 3, 20: 3, 21: 2, 22: 2, 24: 1 }, { gOff: 2, bOff: 4 });
-  const winP = rlPos({}, { 3: 1, 19: 4, 20: 3, 21: 3, 22: 2, 23: 2 }, { gOff: 15 });
-  const cubeP = rlPos({ 13: 3, 8: 3, 6: 4, 5: 2, 4: 2, 3: 1 }, { 1: 2, 12: 3, 17: 3, 19: 4, 20: 3 });
-  return [
-    it('setup', rulesSVG(I, { nums: true })),
-    it('dir', rulesSVG(null, { homes: true, track: true })),
-    it('start', rulesSVG(I, { dice: [[2, true, G.LX + 3], [5, false, G.RX + 3]] })),
-    it('dice', rulesSVG(I, { dice: [[3], [1]], moves: [[0, 8, 5], [0, 6, 5]] })),
-    it('dbl', rulesSVG(I, { dice: [[6], [6]], moves: [[0, 24, 18], [0, 24, 18], [0, 13, 7], [0, 13, 7]] })),
-    it('block', rulesSVG(blockP, { dice: [[4], [2]], moves: [[0, 13, 9, 'ng'], [0, 13, 11]] })),
-    it('hit', rulesSVG(hitP, { dice: [[4], [1]], moves: [[1, 16, 25, 'hit'], [0, 13, 9]] })),
-    it('enter', rulesSVG(enterP, { dice: [[5], [3]], moves: [[0, 25, 20], [0, 25, 22, 'ng']] })),
-    it('off', rulesSVG(offP, { dice: [[6], [4]], moves: [[0, 6, 0], [0, 4, 0]] })),
-    it('win', rulesSVG(winP, { marks: [[3, 'ng']] })),
-    it('cube', rulesSVG(cubeP, { cube: [2, G.RX + 3, true] })),
-    it('match', rlMatchSVG()),
-  ].join('');
+// ---- hands-on rules tutorial (shared/ruletour.js): small boards where the player really moves the checkers.
+// Only what is needed to play; tactics / cube strategy are in the lessons.
+const RT_X = 7.1;   // bar centre (board units), where the cube sits
+function rtStd(fn) { const flat = G.FLAT, fh = G.H, fu = G.U; if (flat) setGeom(false); try { return fn(); } finally { if (flat) setGeom(true, fh, fu); } }
+function rtUnits(e, svg) { const r = lrect(svg), [x, y] = lp(e); return [(x - r.left) / r.width * 15.85, (y - r.top) / r.height * 12]; }
+function rtHit(e, svg) { const [ux, uy] = rtUnits(e, svg); return rtStd(() => hitPoint(ux, uy)); }
+const rtx = k => t('rt.' + k, { c: pname(0), o: pname(1) });
+// a tiny interactive turn for gold (side 0, view 0): tap a checker, then one of the marked points
+function rtGame(api, cfg) {
+  const dice = cfg.dice, st = { pos: cfg.pos.slice(), dice, left: dice[0] === dice[1] ? [dice[0], dice[0], dice[0], dice[0]] : dice.slice(), used: 0, sel: null, hits: 0, fin: false };
+  let svg = null;
+  const steps = () => {
+    if (!st.left.length) return [];
+    let a = BG.legalSteps(st.pos, 0, st.left, st.dice, st.used);
+    if (cfg.order) a = a.filter(x => x.die === st.left[0]);
+    return a;
+  };
+  const from = p => steps().filter(x => x.from === p);
+  const marks = S => {
+    let h = '';
+    if (st.sel !== null) {
+      const n = st.pos[st.sel], [x, y] = ckXY(0, st.sel, n - 1, n);
+      h += `<circle cx="${x * S}" cy="${y * S}" r="${0.56 * S}" fill="none" stroke="#fff3cf" stroke-width="2.4"/>`;
+      for (const s of from(st.sel)) {
+        if (s.to === 0) { h += `<rect x="${(G.TX + 0.05) * S}" y="${(G.MID + 0.1) * S}" width="${(G.TW - 0.1) * S}" height="${(G.BOT - G.MID - 0.15) * S}" rx="3" fill="rgba(226,194,117,.25)" stroke="#e2c275" stroke-width="2" stroke-dasharray="4 3"/>`; continue; }
+        const m = st.pos[s.to], [dx, dy] = ckXY(0, s.to, m, m + 1), hit = st.pos[26 + 25 - s.to] === 1;
+        h += `<circle cx="${dx * S}" cy="${dy * S}" r="${0.42 * S}" fill="${hit ? 'rgba(255,107,91,.25)' : 'rgba(226,194,117,.22)'}" stroke="${hit ? '#ff9b90' : '#ffe6a0'}" stroke-width="2" stroke-dasharray="4 3"/>`;
+      }
+    } else if (!st.fin) {
+      const fr = new Set(steps().map(x => x.from));
+      for (const p of fr) { const n = st.pos[p], [x, y] = ckXY(0, p, n - 1, n); h += `<circle cx="${x * S}" cy="${y * S}" r="${0.5 * S}" fill="none" stroke="rgba(255,243,207,.55)" stroke-width="1.6" stroke-dasharray="3 3"/>`; }
+    }
+    return h;
+  };
+  const draw = () => {
+    api.board.innerHTML = rulesSVG(st.pos, Object.assign({ nums: true, dice: st.left.map(d => [d]), extra: marks }, cfg.svg || {}));
+    svg = api.board.querySelector('svg');
+    if (!st.fin) api.setTask(st.left.length ? `<div class="rt-msg">${esc(t('rt.left', { d: st.left.join(' · ') }))}</div>` : '');
+  };
+  const finish = () => { st.fin = true; st.sel = null; draw(); api.setTask(''); cfg.end(st); };
+  api.board.onclick = e => {
+    if (st.fin || !api.alive()) return;
+    const p = rtHit(e, svg); if (p < 0) return;
+    ctx();
+    if (st.sel !== null) {
+      const mv = from(st.sel).find(x => x.to === p);
+      if (mv) {
+        const code = BG.apply(st.pos, 0, mv.from, mv.to);
+        if (BG.mvHit(code)) { st.hits++; SFX.hit(); } else if (mv.to === 0) SFX.off(); else SFX.clack();
+        st.left.splice(st.left.indexOf(mv.die), 1); st.used++;
+        st.sel = mv.to > 0 && from(mv.to).length ? mv.to : null;
+        if (cfg.step) cfg.step(st, mv, code);
+        if (!steps().length) { finish(); return; }
+        api.say(''); draw(); return;
+      }
+    }
+    if (p > 0 && st.pos[p] && from(p).length) { st.sel = st.sel === p ? null : p; api.say(''); draw(); return; }
+    // why not?
+    if (st.pos[25] && p !== 25 && st.pos[p]) api.ng(esc(rtx('barFirst')), { reset: false });
+    else if (st.sel !== null && p > 0 && p < 25 && st.pos[26 + 25 - p] >= 2) api.ng(esc(rtx('blocked')), { reset: false });
+    else if (p > 0 && st.pos[p]) api.ng(esc(rtx('cant')), { reset: false });
+  };
+  draw();
+  return st;
 }
-function openRules() { selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
-function renderRules() { $('#rulesBody').innerHTML = ruleItems(); }
+const RT_PAGES = [
+  { id: 'board', setup(api) {
+      api.board.innerHTML = rulesSVG(RL_INIT(), { nums: true, track: true });
+      const svg = api.board.querySelector('svg');
+      api.board.onclick = e => {
+        const p = rtHit(e, svg); if (p < 0) return;
+        if (p >= 1 && p <= 6) { api.board.innerHTML = rulesSVG(RL_INIT(), { nums: true, track: true, homes: true }); api.ok(esc(rtx('board.ok'))); api.board.onclick = null; }
+        else api.ng(esc(rtx('board.ng')), { reset: false });
+      };
+    } },
+  { id: 'move', setup(api) {
+      rtGame(api, { pos: RL_INIT(), dice: [3, 5], order: true, end: () => api.ok(esc(rtx('move.ok'))) });
+    } },
+  { id: 'dbl', setup(api) {
+      rtGame(api, { pos: RL_INIT(), dice: [6, 6], end: () => api.ok(esc(rtx('dbl.ok'))) });
+    } },
+  { id: 'block', setup(api) {
+      rtGame(api, { pos: rlPos({ 13: 2, 6: 5, 8: 3, 24: 2 }, { 9: 2, 7: 2, 12: 3, 17: 3, 19: 3 }), dice: [4, 6], end: () => api.ok(esc(rtx('block.ok'))) });
+    } },
+  { id: 'hit', setup(api) {
+      rtGame(api, { pos: rlPos({ 13: 4, 8: 3, 6: 5, 24: 2, 4: 1 }, { 9: 1, 12: 5, 17: 3, 19: 4, 20: 2 }), dice: [4, 1],
+        end: st => st.hits ? api.ok(esc(rtx('hit.ok'))) : api.ng(esc(rtx('hit.ng'))) });
+    } },
+  { id: 'enter', setup(api) {
+      rtGame(api, { pos: rlPos({ 13: 4, 8: 3, 6: 5, 5: 2 }, { 19: 3, 21: 2, 22: 2, 23: 1, 12: 4, 17: 3 }, { gBar: 1 }), dice: [5, 3],
+        end: st => st.pos[25] ? api.ng(esc(rtx('enter.ng'))) : api.ok(esc(rtx('enter.ok'))) });
+    } },
+  { id: 'off', setup(api) {
+      const P = rlPos({ 6: 3, 5: 3, 4: 3, 3: 2, 2: 2 }, { 19: 3, 20: 3, 21: 2, 22: 2, 24: 1 }, { gOff: 2, bOff: 4 });
+      rtGame(api, { pos: P, dice: [6, 4], end: st => st.pos[0] - P[0] >= 2 ? api.ok(esc(rtx('off.ok'))) : api.ng(esc(rtx('off.ng'))) });
+    } },
+  { id: 'win', setup(api) {
+      const P = rlPos({ 3: 1, 1: 1 }, { 9: 2, 12: 3, 17: 4, 19: 3, 20: 3 }, { gOff: 13 });
+      rtGame(api, { pos: P, dice: [3, 1], end: st => st.pos[0] === 15 ? api.ok(esc(rtx('win.ok'))) : api.ng(esc(rtx('win.ng'))) });
+    } },
+  { id: 'cube', setup(api) {
+      const P = rlPos({ 13: 3, 8: 3, 6: 4, 5: 2, 4: 2, 3: 1 }, { 1: 2, 12: 3, 17: 3, 19: 4, 20: 3 });
+      let done = false;
+      const draw = () => { api.board.innerHTML = rulesSVG(P, done ? { cube: [2, G.LX + 3, true] } : { cube: [64, RT_X, false] }); };
+      draw();
+      api.board.onclick = e => {
+        if (done) return;
+        const [ux, uy] = rtUnits(e, api.board.querySelector('svg'));
+        if (Math.abs(ux - RT_X) < 0.9 && Math.abs(uy - 6) < 0.9) { done = true; SFX.cube(); draw(); api.ok(esc(rtx('cube.ok'))); }
+        else api.ng(esc(rtx('cube.ng')), { reset: false });
+      };
+    } },
+].map(P => Object.assign({ title: () => esc(rtx(P.id + '.t')), body: () => `<p>${rtx(P.id + '.b')}</p>`, task: () => esc(rtx(P.id + '.task')) }, P));
+const rulesTour = window.RuleTour ? RuleTour.create({
+  mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG, pages: RT_PAGES,
+  close: () => hideOverlay('#rulesOverlay'),
+  play: () => { hideOverlay('#rulesOverlay'); openNewDialog(); },
+  lessons: () => { hideOverlay('#rulesOverlay'); openLessons(); },
+  sound: k => SFX.chime(k === 'ok'),
+}) : null;
+let rulesOpened = false;
+function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); if (rulesTour) { if (!rulesOpened) rulesTour.open(0); else rulesTour.open(rulesTour.page); } rulesOpened = true; }
+function renderRules() { if (rulesTour) rulesTour.render(); }
 $('#btnRules').onclick = () => openRules();
-$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
+$('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay('#rulesOverlay'); };
 
 // ====================================================================== lessons
 let LESSONS = null;
@@ -2192,7 +2305,7 @@ function startPuzzle(L, j, daily) {
   puzzle = { L, j, P, side: P.side, state: 'play', daily: daily || null, hinted: false };
   document.body.classList.add('in-puzzle');
   setupProblem(decPos(P.pos), P.side, P.dice);
-  render(); renderInfo(); renderPuzzleCard(); pzStatus(t('pz.start'));
+  render(); renderInfo(); renderPuzzleCard(); pzAfterStep();
 }
 function renderPuzzleCard() {
   const Pz = puzzle;
@@ -2206,6 +2319,37 @@ function renderPuzzleCard() {
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function pzPlays() { const P = puzzle.P, p = decPos(P.pos); return P.plays.map(([m, e]) => { const d = decMoves(p, P.side, m); return { moves: d.moves, key: BG.key(d.pos), e }; }); }
 function pzTable(plays, mine) { return `<div class="plays-table">${plays.slice(0, 5).map((x, i) => `<div class="${i === 0 ? 'best' : ''} ${i === mine ? 'mine' : ''}"><span>${i + 1}</span><span>${BG.notation(x.moves)}</span><span>${fmtE(x.e)}</span></div>`).join('')}</div>`; }
+// ---- puzzles v2 (common spec): a puzzle is one play (all the dice of the roll). The player keeps moving checkers
+// until the whole play is made (status shows the dice still to play) and it is judged on "Confirm" as before.
+// OBVIOUS MISTAKE (flagged at once, mid-play): a checker move after which none of the stored candidate plays (the
+// engine's top plays for this roll, up to six) can be reached any more — however the rest of the roll is played,
+// the result is worse than all of them. Illegal uses of the dice cannot happen: the board only offers legal steps.
+// A play that is finished and confirmed but not (close to) the best is a normal fail (★★ after retry, as before).
+function pzReach(q, left, used) {   // final positions reachable from a part-played turn
+  const out = new Set(), seen = new Set(), side = turn.side, dice = turn.dice;
+  const rec = (q, left, used) => {
+    const k = BG.key(q) + left.join(''); if (seen.has(k)) return; seen.add(k);
+    const st = BG.legalSteps(q, side, left, dice, used);
+    if (!st.length) { out.add(BG.key(q)); return; }
+    for (const x of st) { const r = q.slice(); BG.apply(r, side, x.from, x.to); const i = left.indexOf(x.die); rec(r, left.slice(0, i).concat(left.slice(i + 1)), used + 1); }
+  };
+  rec(q, left, used);
+  return out;
+}
+function pzAfterStep() {
+  const Pz = puzzle; if (!Pz || !turn || Pz.state !== 'play') return;
+  const plays = pzPlays(), reach = pzReach(turn.pos, turn.left, turn.steps.length);
+  if (turn.steps.length && !plays.some(x => reach.has(x.key))) {   // obvious mistake: fail now
+    Pz.state = 'fail'; turn.locked = true; SFX.chime(false);
+    const steps = turn.steps.map(s => s.code);
+    turn.pos = turn.start.slice(); turn.steps = []; turn.left = [];
+    extraArrows = [{ side: Pz.side, start: turn.start, moves: plays[0].moves, cls: 'hint' }, { side: Pz.side, start: turn.start, moves: steps, cls: 'bad' }];
+    pzStatus(`<b class="ng">${PZBook.t('blunder')}</b> ${t('pz.failWhy', { m: mvb(BG.notation(plays[0].moves)), l: '>' + (plays[0].e - plays[plays.length - 1].e).toFixed(3) })}` + pzTable(plays, -1));
+    render(); renderPuzzleCard(); return;
+  }
+  const n = BG.maxUse(turn.pos, turn.side, turn.left);
+  pzStatus(t('pz.start') + (n ? ` <b>${PZBook.t('movesLeft', { n })}</b>` : ''));
+}
 function puzzleSubmit(tt) {
   const Pz = puzzle, plays = pzPlays(), k = BG.key(tt.pos);
   const mine = plays.findIndex(x => x.key === k);
@@ -2304,7 +2448,13 @@ $('#langSel').onchange = e => {
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
+  if (window.PZBook) PZBook.setLang(LANG);
+  if (HB) HB.relabel();
 };
+if (window.PZBook) PZBook.setLang(LANG);
+// PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+if (HB) HB.onChange(() => { try { if (match) renderInfo(); } catch (e) {} });
 if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
 if (hadSave) { view = settings.mode === 'ai' ? humanSide : 0; cur = latestIdx(); updateCommit(); }
 if (loadFromHash()) { /* shared match opened */ }

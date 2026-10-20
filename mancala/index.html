@@ -32,6 +32,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
+/* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar */
+html.hb-on{--vh:calc(100vh - var(--hb-h))}
+@supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
 html,body{height:100%;overflow:hidden}
 body{
   background:
@@ -291,7 +294,17 @@ a.snd.home{text-decoration:none}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.03em}
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 /* rules page */
-#rulesOverlay .modal{width:min(900px,100%)}
+#rulesOverlay .modal{width:min(720px,100%);min-height:min(700px, calc(100dvh - 32px))}
+#rulesOverlay .rules-tabs,#rulesOverlay .modal > .modal-actions{display:none}
+#rulesOverlay .modal > h2{margin-bottom:10px}
+#rulesOverlay .rt{max-width:600px;margin:0 auto}
+.rt-board svg{width:min(470px,100%);height:auto;display:block;cursor:pointer}
+.rt-board svg.busy{cursor:default}
+.rt-vars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rt-vars div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(0,0,0,.18);font-size:13.5px;line-height:1.6}
+.rt-vars b{display:block;color:var(--accent);font-size:14.5px}
+@media (max-width:520px){.rt-vars{grid-template-columns:1fr}}
+html[lang=ar] .rt-vars{direction:rtl;text-align:right}
 .rules-tabs{flex-wrap:wrap}
 .rules-tabs button{flex:1 0 18%}
 .rl-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:4px 0 8px}
@@ -486,7 +499,18 @@ bdi{unicode-bidi:isolate}
   .puzzle-card > .lesson-actions:last-child{grid-row:3 / span 2;align-self:start}
   .lesson-card h3,.puzzle-card h3{margin:2px 0 6px}
   .lesson-fb,.pz-status{min-height:0}
+  /* header bar on: the title row and the menu row move into the bar, so the board gets that height */
+  /* the bottom row keeps the old menu row's height too, so lesson / puzzle cards have room and the board size does not change between modes */
+  html.hb-on{--C2:calc(var(--C) + var(--tb) + 12px);--u:min((100vw - 64px) / 9.7, (var(--vh) - 24px - 2 * var(--plate) - 16px - 12px - var(--C2)) / 4.2, 132px)}
+  html.hb-on .app{grid-template-rows:auto var(--C2);grid-template-areas:"board board board board board board" "eval eval eval kifu kifu kifu"}
+  html.hb-on .app:has(.review-card.show){grid-template-areas:"board board board board board board" "eval eval rv rv kifu kifu"}
+  html.hb-on body.in-lesson .lesson-card, html.hb-on body.in-puzzle .puzzle-card{grid-area:2 / 1 / 3 / 7;align-self:stretch}
+  html.hb-on .info-line{display:none}
 }
+.hb .pdisc{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
+.hb .hb-chip.hb-turn b{color:var(--accent)}
+.hb .hb-info .hb-chip{flex:none}.hb .hb-info .hb-chip.hb-ev{flex:0 1 auto;min-width:0}
+@media (max-width:1500px){.hb .hb-info .hb-rule{display:none}}@media (max-width:1300px){.hb .hb-info .hb-mv{display:none}}@media (max-width:1100px){.hb .hb-info .hb-ev{display:none}}
 /* ================================================================ black luxe (after the original Luxe Mancala) */
 :root{--bg:#0c0c0d; --panel:#151516; --panel2:#1d1d1f; --line:#2a2a2d; --text:#f3eee6; --muted:#a49e95; --dim:#6e6962; --brass:#c9a961; --brass2:#8a7448; --accent:#e3c27a}
 body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparent 62%),linear-gradient(180deg,#131314,#09090a)!important}
@@ -883,7 +907,7 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
   </div>
 </div>
 
-<script src="i18n.js?v=20261018rot"></script>
+<script src="i18n.js?v=20261021rt"></script>
 <script src="engine.js"></script>
 <script>
 // "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
@@ -907,7 +931,7 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/rulesoffer.js?v=1"><\/script><script src="app.js?v=20261020ro"><\/script>');
+  } else document.write('<script src="../shared/rulesoffer.js?v=1"><\/script><script src="../shared/headerbar.js?v=1"><\/script><script src="../shared/ruletour.js?v=1"><\/script><script src="../shared/pzbook.js?v=2"><\/script><script src="app.js?v=20261021hb"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

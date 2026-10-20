@@ -306,6 +306,8 @@ function olClockTick() {
     const k = ON.clockOf(g, side, moving, now), el = $('#status' + i);
     const last = S && S.log[S.log.length - 1], again = live && last && last.k > 0 && last.pl === i && st === i;
     el.innerHTML = `<span class="ol-clk${moving ? ' ol-move' : ''}${moving && k.left < 10000 ? ' ol-low' : ''}">⏱ ${fmtClock(k.left)}</span>${again ? ' · ' + olEsc(t('again')) : ''}`;
+    // time signal: my own clock beeps over its last 5 seconds while it runs (common spec, shared/tick.js)
+    if (window.CountTick && !net.spectate && i === net.me) { if (moving) CountTick.feed(k.left, 'ol'); else CountTick.reset('ol'); }
   }
   if (live && !net.spectate && st >= 0 && st !== net.me && !net.claiming) {
     const opp = net.me === 0 ? g.w : g.b, k = ON.clockOf(g, net.me === 0 ? 'w' : 'b', true, now);

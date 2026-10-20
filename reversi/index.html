@@ -38,6 +38,8 @@
 /* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar */
 html.hb-on{--top:0px;--vh:calc(100vh - var(--hb-h))}
 @supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
+/* dialogs cover the header bar (z-index 60) so they are never hidden under it */
+html.hb-on .overlay{z-index:65}
 html,body{height:100%;overflow:hidden}
 body{
   background:
@@ -237,7 +239,9 @@ a.snd.home{text-decoration:none}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
 
-.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.controls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.controls .btn{min-width:0}
+.controls .btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .btn{
   display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;
   background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);
@@ -737,17 +741,8 @@ body.in-lesson .controls{display:none}
 
 /* rules page */
 #rulesOverlay .modal{width:min(900px,100%)}
-.rl-lead{font-size:14.5px;line-height:1.8;color:#d6dfd9;margin:-6px 0 14px}
-.rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-@media (max-width: 620px){.rl-grid{grid-template-columns:1fr}}
-.rl-item{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);padding:10px 12px}
-.rl-item h4{font-size:13.5px;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
-.rl-item p{font-size:13px;line-height:1.7;color:#d6dfd9}
-.rl-item p b{color:var(--accent)}
-.rl-item svg{display:block;width:min(210px,100%);height:auto;margin:6px auto}
-.rl-pair{display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 0}
-.rl-pair svg{width:calc(50% - 14px);max-width:200px;margin:0}
-.rl-to{color:var(--accent);font-size:18px;flex:none}
+#rulesOverlay .rt-board svg{max-width:100%}
+#rulesOverlay .rt{max-width:640px;margin:0 auto}
 
 /* PC: use the browser width for the lesson / puzzle / opening dialogs (phones keep the single-column layout) */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
@@ -1191,9 +1186,8 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="overlay" id="rulesOverlay">
   <div class="modal">
     <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-    <h2 data-i18n="rl.title"></h2>
     <div id="rulesBody"></div>
-    <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
+    <button class="hidden" id="rulesClose" type="button" aria-hidden="true" tabindex="-1"></button>
   </div>
 </div>
 
@@ -1300,12 +1294,13 @@ html[lang=ar] .pf-input{direction:rtl}
   </div>
 </div>
 
-<script src="i18n.js?v=20261020pz"></script>
+<script src="i18n.js?v=20261021rt"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=2"></script>
 <script src="../shared/headerbar.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
+<script src="../shared/ruletour.js?v=1"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020gs"></script>
 <script>
@@ -2050,7 +2045,7 @@ function clockTick() {
   if (net || settings.mode === 'online') return;   // the online clocks are drawn by netTick()
   const c = clock, show = !!c && !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp');
   document.body.classList.toggle('has-clk', show);
-  if (!show) { olClkOff($('#clkBlack')); olClkOff($('#clkWhite')); return; }
+  if (!show) { CountTick.reset(); olClkOff($('#clkBlack')); olClkOff($('#clkWhite')); return; }
   const side = clockSync();
   for (const color of [BLACK, WHITE]) {
     const el = $(color === BLACK ? '#clkBlack' : '#clkWhite');
@@ -2061,6 +2056,8 @@ function clockTick() {
       if (left <= 0 && byo <= 0) { clockTimeUp(color); return; }
     }
     if (c.lost === color) { left = 0; byo = 0; }
+    // time signal (shared/tick.js): last 5 s of the byoyomi of the side to move (main time only when there is no byoyomi)
+    if (side === color) CountTick.feed(left > 0 ? (c.byo ? 0 : left * 1000) : byo * 1000, 'loc' + color); else CountTick.reset('loc' + color);
     olClk(el, { main: left * 1000, byo: left > 0 ? null : byo * 1000, moving: side === color || c.lost === color }, side === color);
   }
 }
@@ -2365,45 +2362,120 @@ function rlSVG(cells, o) {
   }
   return s + '</svg>';
 }
-// before -> after (black plays sq): the played disc and the flipped discs are marked
-function rlPair(cells, sq, o) {
-  const fl = flipsOf(cells, sq, BLACK), after = cells.slice(); fl.forEach(q => (after[q] = BLACK)); after[sq] = BLACK;
-  const m1 = { [sq]: 'ring' }; fl.forEach(q => (m1[q] = 'flip'));
-  const m2 = { [sq]: 'new' };
-  return `<div class="rl-pair">${rlSVG(cells, { crop: o.crop, marks: m1, arrows: o.arrows })}<span class="rl-to">${document.documentElement.dir === 'rtl' ? '←' : '→'}</span>${rlSVG(after, { crop: o.crop, marks: m2 })}</div>`;
-}
+// ---- hands-on rules tutorial (shared/ruletour.js): place discs on small boards; strategy (corners, mobility…) is left to the lessons
 const RL = {
-  flip: rlPos(['........', '........', '........', '..BWWW..', '........', '........', '........', '........']),
-  multi: rlPos(['........', '...B....', '...W....', '....WB..', '..WW....', '.B......', '........', '........']),
+  flip: rlPos(['........', '........', '........', '..BWWW..', '...B....', '........', '........', '........']),
+  multi: rlPos(['........', '...B....', '...W....', '....WB..', '.BWW.W..', '.B......', '........', '........']),
   no: rlPos(['........', '.BW.W...', '........', '..BWW...', '........', '...WW...', '........', '........']),
   pass: rlPos(['........', '...W....', '...W.W..', '..WWW.W.', '...WBW.B', '.B.BBBBB', '..BBBBBB', '..BBBBBB']),
-  end: rlPos(['BBBBBBBW', 'BBWWWBBW', 'BBBBBBBW', 'BBBBWWBW', 'BWBBWBBW', 'BBWWWWWW', 'BBBWWWBW', 'WWWWWWBW']),
+  end: rlPos(['BBBBBBBW', 'BBWWWBBW', 'BBBBBBBW', 'BBBBWWBW', 'BWBBWBBW', 'BBWWWWWW', 'BBBWWWBW', 'WWWW.WBW']),
 };
-function rlItems() {
-  const it = (k, svg) => `<div class="rl-item"><h4>${t('rl.' + k + '.h')}</h4>${svg}<p>${t('rl.' + k)}</p></div>`;
-  const start = initialCells(), ms = {};
-  legalMoves(start, BLACK).forEach(q => (ms[q] = 'ring'));
-  const noM = {}; legalMoves(RL.no, BLACK).forEach(q => (noM[q] = 'ring'));
-  for (const n of ['f2', 'c6', 'f6']) noM[rlSq(n)] = 'x';
-  const tips = new Array(64).fill(0), tm = {};
-  for (const n of ['a1', 'h1', 'a8', 'h8']) tm[rlSq(n)] = 'good';
-  for (const n of ['b2', 'g2', 'b7', 'g7']) tm[rlSq(n)] = 'bad';
-  for (const n of ['b1', 'a2', 'g1', 'h2', 'a7', 'b8', 'h7', 'g8']) tm[rlSq(n)] = 'warn';
-  const [eb, ew] = counts(RL.end);
-  return [
-    it('board', rlSVG(start, { coords: true })),
-    it('legal', rlSVG(start, { marks: ms })),
-    it('flip', rlPair(RL.flip, rlSq('g4'), { crop: [2, 1, 3, 7] })),
-    it('multi', rlPair(RL.multi, rlSq('d4'), { crop: [0, 0, 7, 7] })),
-    it('no', rlSVG(RL.no, { crop: [0, 0, 7, 8], marks: noM })),
-    it('pass', rlSVG(RL.pass, {})),
-    it('end', rlSVG(RL.end, { foot: [eb, ew] })),
-    it('tips', rlSVG(tips, { marks: tm })),
-  ].join('');
+// draw a (cropped) board into the tour and call onSq(square) on a click / tap
+function rtDraw(api, cells, o, onSq) {
+  o = o || {};
+  const [r0, c0, h, w] = o.crop || [0, 0, 8, 8], u = 26, cp = o.coords ? 14 : 0, pad = 4;
+  api.board.innerHTML = rlSVG(cells, o);
+  const svg = api.board.firstElementChild;
+  svg.style.cssText = `width:min(${Math.round(w * 40 + 30)}px,100%);height:auto;display:block;${onSq ? 'cursor:pointer' : ''}`;
+  svg.onclick = e => {
+    if (!onSq) return;
+    const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, k = vb.width / r.width;
+    const x = (e.clientX - r.left) * k - pad - cp, y = (e.clientY - r.top) * k - pad - cp;
+    const c = c0 + Math.floor(x / u), rr = r0 + Math.floor(y / u);
+    if (c < c0 || c >= c0 + w || rr < r0 || rr >= r0 + h) return;
+    onSq(rr * 8 + c);
+  };
 }
-function renderRules() { $('#rulesBody').innerHTML = `<p class="rl-lead">${t('rl.lead')}</p><div class="rl-grid">${rlItems()}</div>`; }
-function openRules() { selTab('rules'); renderRules(); showOverlay('#rulesOverlay'); }
-$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
+function rtPlay(cells, sq, color) { const fl = flipsOf(cells, sq, color), d = cells.slice(); fl.forEach(q => (d[q] = color)); d[sq] = color; return { d, fl }; }
+function rtAfter(api, cells, sq, o) {   // show the move: new disc + flipped discs marked
+  const { d, fl } = rtPlay(cells, sq, BLACK), m = { [sq]: 'new' }; fl.forEach(q => (m[q] = 'flip'));
+  playPlace(fl.length); rtDraw(api, d, Object.assign({}, o, { marks: m }), null); return { d, fl };
+}
+// a click on a square where nothing is sandwiched: ✕ on it, the board stays
+function rtCant(api, cells, o, sq, again) { const m = Object.assign({}, o.marks || {}, { [sq]: 'x' }); rtDraw(api, cells, Object.assign({}, o, { marks: m }), again); api.ng(t('ru.ng.cant'), { reset: false }); }
+const RT_PAGES = [
+  { id: 'start', title: () => t('rl.board.h'), body: () => `<p>${t('rl.board')}</p><p>${t('rl.legal')}</p>`, task: () => t('ru.t.start'),
+    setup(api) {
+      const c = initialCells(), m = {}; legalMoves(c, BLACK).forEach(q => (m[q] = 'ring'));
+      const o = { marks: m, coords: true };
+      const click = sq => {
+        if (api.state.done || c[sq]) return;
+        if (!flipsOf(c, sq, BLACK).length) return rtCant(api, c, o, sq, click);
+        const { fl } = rtAfter(api, c, sq, { coords: true }); api.ok(t('ru.ok.flip', { n: fl.length }));
+      };
+      rtDraw(api, c, o, click);
+    } },
+  { id: 'flip', title: () => t('rl.flip.h'), body: () => `<p>${t('rl.flip')}</p>`, task: () => t('ru.t.flip'),
+    setup(api) {
+      const c = RL.flip, o = { crop: [1, 1, 5, 7] };
+      const click = sq => {
+        if (api.state.done || c[sq]) return;
+        const n = flipsOf(c, sq, BLACK).length;
+        if (!n) return rtCant(api, c, o, sq, click);
+        rtAfter(api, c, sq, o);
+        if (n >= 3) api.ok(t('ru.ok.flip', { n })); else api.ng(t('ru.ng.few', { n }));
+      };
+      rtDraw(api, c, o, click);
+    } },
+  { id: 'multi', title: () => t('rl.multi.h'), body: () => `<p>${t('rl.multi')}</p>`, task: () => t('ru.t.multi'),
+    setup(api) {
+      const c = RL.multi, o = { crop: [0, 0, 7, 7] };
+      const click = sq => {
+        if (api.state.done || c[sq]) return;
+        const n = flipsOf(c, sq, BLACK).length;
+        if (!n) return rtCant(api, c, o, sq, click);
+        rtAfter(api, c, sq, o);
+        if (sq === rlSq('d4')) api.ok(t('ru.ok.flip', { n })); else api.ng(t('ru.ng.one'));
+      };
+      rtDraw(api, c, o, click);
+    } },
+  { id: 'no', title: () => t('rl.no.h'), body: () => `<p>${t('rl.no')}</p>`, task: () => t('ru.t.no'),
+    setup(api) {
+      const c = RL.no, want = legalMoves(c, BLACK), got = new Set();
+      const o = () => { const m = {}; got.forEach(q => (m[q] = 'good')); return { crop: [0, 0, 7, 8], marks: m }; };
+      const click = sq => {
+        if (api.state.done || c[sq] || got.has(sq)) return;
+        if (!want.includes(sq)) return rtCant(api, c, o(), sq, click);
+        got.add(sq); rtDraw(api, c, o(), click); playPlace(0);
+        if (got.size >= want.length) api.ok(t('ru.ok.no')); else api.say(t('ru.no.found', { n: got.size }), 'ok');
+      };
+      rtDraw(api, c, o(), click);
+    } },
+  { id: 'pass', title: () => t('rl.pass.h'), body: () => `<p>${t('rl.pass')}</p>`, task: () => t('ru.t.pass'),
+    setup(api) {
+      const c = RL.pass, o = {};
+      api.say(t('ru.pass.say'));
+      const click = sq => {
+        if (api.state.done || c[sq]) return;
+        if (!flipsOf(c, sq, BLACK).length) return rtCant(api, c, o, sq, click);
+        rtAfter(api, c, sq, o); api.ok(t('ru.ok.pass'));
+      };
+      rtDraw(api, c, o, click);
+    } },
+  { id: 'end', title: () => t('rl.end.h'), body: () => `<p>${t('rl.end')}</p>`, task: () => t('ru.t.end'),
+    setup(api) {
+      const c = RL.end, o = { foot: counts(c) };
+      const click = sq => {
+        if (api.state.done || c[sq]) return;
+        if (!flipsOf(c, sq, BLACK).length) return rtCant(api, c, o, sq, click);
+        const { d, fl } = rtPlay(c, sq, BLACK), [b, w] = counts(d), m = { [sq]: 'new' }; fl.forEach(q => (m[q] = 'flip'));
+        playPlace(fl.length); rtDraw(api, d, { marks: m, foot: [b, w] }, null);
+        api.ok(t('ru.ok.end', { b, w }));
+      };
+      rtDraw(api, c, o, click);
+    } },
+];
+const ruleTour = window.RuleTour ? RuleTour.create({
+  mount: '#rulesBody', store: 'reversi-rules-v2', lang: () => LANG,
+  close: () => hideOverlay('#rulesOverlay'),
+  play: () => { hideOverlay('#rulesOverlay'); openNew(); },
+  lessons: () => { hideOverlay('#rulesOverlay'); openLessons(); },
+  sound: k => (k === 'ok' ? sfxCorrect(0.05) : sfxWrong(0.05)),
+  pages: RT_PAGES,
+}) : null;
+function renderRules() { if (ruleTour) ruleTour.render(); }
+function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); if (ruleTour) ruleTour.open(0); }
+$('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); hideOverlay('#rulesOverlay'); };
 async function openOpenings() {
   const d = await loadOpenings();
   lessonSrc = 'open'; selTab('open');
@@ -3035,10 +3107,10 @@ function startPuzzle(li, k, daily) {
 function resetPuzzleBoard() {
   const pz = puzzle.pz;
   positions = [{ cells: pz.cells.split('').map(Number), toMove: pz.toMove, last: -1, mover: 0, evalB: null }];
-  cur = 0; reviewing = false; puzzle.state = 'play'; puzzle.busy = false;   // hinted / failed / answered stay for the stars
+  cur = 0; reviewing = false; puzzle.state = 'play'; puzzle.busy = false; puzzle.offWhy = null;   // hinted / failed / answered stay for the stars
   $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show');
   clearMarks(); clearHints();
-  renderBoard(null); renderPuzzleCard(); pzStatus(t('pz.start'));
+  renderBoard(null); renderPuzzleCard(); pzStatus(t('pz.start') + pzLeftLine());
 }
 function renderPuzzleCard() {
   const P = puzzle, lv = puzzleData.levels[P.li];
@@ -3062,6 +3134,37 @@ function pzButtons() {
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function themeLine() { const tg = (puzzle.pz.tags || []); return tg.length ? `<br><span style="color:var(--accent)">${t('pz.theme')} ${tg.map(x => t('pz.tag.' + x)).join(' / ')}</span>` : ''; }
+// Puzzle v2 (common spec): a move that misses the goal no longer ends the puzzle at once. The opponent keeps answering with
+// its exact best reply and the player plays on until the game ends (the puzzle's move count = its empty squares, pz.e);
+// the goal is then checked on the final position (pzFinish). Only an OBVIOUS mistake fails on the spot:
+//   (1) the goal can no longer be reached even if the opponent helped (cooperative exact search: no line of play by both
+//       sides reaches it), or
+//   (2) in a corner-trap puzzle (tag 'corner'): the move newly gives the opponent a corner and taking that corner is the
+//       opponent's exact best reply.
+// (A move that reaches the goal is never a blunder, so the "X/C square is correct" puzzles are safe.) With a perfect
+// defence a missed goal cannot be recovered later, so playing on is for seeing why; the stars count it as a failure (★★ at best).
+const PZ_CORNERS = [0, 7, 56, 63];
+function pzFinal(cells, me) {   // final score of a finished game for `me` (empties go to the winner)
+  const [b, w] = counts(cells), mine = me === BLACK ? b - w : w - b, empty = 64 - b - w;
+  return mine > 0 ? mine + empty : mine < 0 ? mine - empty : 0;
+}
+// can `goal` still be reached if both sides cooperate? true / false / null (search budget used up: unknown → not a blunder)
+function pzCoopReach(cells, side, me, goal) {
+  let nodes = 0; const fail = new Set();
+  const rec = (c, s) => {
+    if (++nodes > 200000) throw 0;
+    let ms = legalMoves(c, s);
+    if (!ms.length) { s = 3 - s; ms = legalMoves(c, s); if (!ms.length) return meets(goal, pzFinal(c, me)); }
+    const key = c.join('') + s; if (fail.has(key)) return false;
+    const ch = ms.map(m => { const fl = flipsOf(c, m, s), d = c.slice(); fl.forEach(q => (d[q] = s)); d[m] = s; return [fl.length, d]; });
+    ch.sort((a, b) => s === me ? b[0] - a[0] : a[0] - b[0]);
+    for (const [, d] of ch) if (rec(d, 3 - s)) return true;
+    fail.add(key); return false;
+  };
+  try { return rec(cells, side); } catch (e) { return null; }
+}
+const pzLeft = () => { const [b, w] = counts(positions[cur].cells); return 64 - b - w; };
+function pzLeftLine(bare) { PZBook.setLang(LANG); const n = PZBook.t('movesLeft', { n: pzLeft() }); return bare ? `<b>${n}</b>` : ` <span style="color:var(--dim)">· ${n}</span>`; }
 async function puzzleMove(sq) {
   const P = puzzle; if (!P || P.state !== 'play' || P.busy) return;
   const p = positions[cur]; if (p.toMove !== P.me || !flipsOf(p.cells, sq, P.me).length) return;
@@ -3070,15 +3173,39 @@ async function puzzleMove(sq) {
   if (token !== busyToken || puzzle !== P) return;
   const mine = (list.find(x => x.move === sq) || { score: -99 }).score;
   const best = Math.max(...list.map(x => x.score));
+  const before = p.cells.slice();
   const a = applyMove(sq); playPlace(a.flips.length); renderBoard(a); renderInfo();
   if (!meets(P.goal, mine)) {
-    P.state = 'failed'; P.busy = false; P.failed = true;
     const bestMoves = list.filter(x => x.score === best).map(x => sqName(x.move)).join(t('join'));
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: sqName(sq), v: fmtS(mine, 'exact'), b: bestMoves })}` + themeLine());
-    renderBoard(null); pzButtons(); sfxWrong();
+    // already off the solution: keep the first explanation (which move missed the goal)
+    const why = P.offWhy || t('pz.failWhy', { m: sqName(sq), v: fmtS(mine, 'exact'), b: bestMoves });
+    const q = positions[cur], opp = 3 - P.me;
+    let blunder = false;
+    if (q.toMove) blunder = pzCoopReach(q.cells.slice(), q.toMove, P.me, P.goal) === false;
+    if (!blunder && q.toMove === opp && (P.pz.tags || []).includes('corner')) {
+      const had = new Set(legalMoves(before, opp).filter(m => PZ_CORNERS.includes(m)));
+      const gift = legalMoves(q.cells, opp).filter(m => PZ_CORNERS.includes(m) && !had.has(m));
+      if (gift.length) {
+        const ol = await exactScores(q.cells.slice(), opp);
+        if (token !== busyToken || puzzle !== P) return;
+        const ob = Math.max(...ol.map(x => x.score));
+        blunder = ol.some(x => x.score === ob && gift.includes(x.move));
+      }
+    }
+    P.failed = true;
+    if (!blunder && !q.toMove) { P.offWhy = why; P.busy = false; pzFinish(); return; }   // the game ended: out of moves
+    if (blunder) {
+      P.state = 'failed'; P.busy = false; PZBook.setLang(LANG);
+      pzStatus(`<b class="ng">${t('pz.fail')}</b> ${blunder ? '<b class="ng">' + PZBook.t('blunder') + '</b> ' : ''}${why}` + themeLine());
+      renderBoard(null); pzButtons(); sfxWrong();
+      return;
+    }
+    P.offWhy = why;   // shown at the end if the goal is missed
+    pzStatus(pzLeftLine(true)); pzButtons();
+    await pzContinue(token);
     return;
   }
-  pzStatus(t('pz.good')); pzButtons(); if (positions[cur].toMove) sfxCorrect();
+  pzStatus(t('pz.good') + (positions[cur].toMove ? pzLeftLine() : '')); pzButtons(); if (positions[cur].toMove) sfxCorrect();
   await pzContinue(token);
 }
 async function pzContinue(token) {
@@ -3086,7 +3213,7 @@ async function pzContinue(token) {
   while (true) {
     const p = positions[cur];
     if (p.toMove === 0) { pzFinish(); return; }
-    if (p.toMove === P.me) { P.busy = false; renderBoard(null); pzButtons(); if (positions.length > 1 && positions[cur].mover === P.me) pzStatus(t('pz.passAgain')); return; }
+    if (p.toMove === P.me) { P.busy = false; renderBoard(null); pzButtons(); if (positions.length > 1 && positions[cur].mover === P.me) pzStatus(t('pz.passAgain') + pzLeftLine()); else if (P.offWhy) pzStatus(pzLeftLine(true)); return; }
     // opponent: perfect defence (maximise its own result)
     const list = await exactScores(p.cells.slice(), p.toMove);
     if (token !== busyToken || puzzle !== P) return;
@@ -3112,7 +3239,8 @@ function pzFinish() {
     pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.result', { b, w })}` + themeLine() + (P.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: P.k, events: ev }));
     playChime(true); confetti(); if (ev.length) setTimeout(confetti, 600);
   } else {
-    P.state = 'failed'; P.failed = true; pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.result', { b, w })}`); sfxWrong();
+    PZBook.setLang(LANG);
+    P.state = 'failed'; P.failed = true; pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: P.pz.e })} ${t('pz.result', { b, w })}` + (P.offWhy ? '<br>' + P.offWhy : '') + themeLine()); sfxWrong();
   }
   renderPuzzleCard(); renderBoard(null);
 }
@@ -3773,6 +3901,8 @@ function netTick() {
     const k = Online.clockOf(g, c === BLACK ? 'b' : 'w', c === p.toMove && !net.pending, now);
     setStatus(c, '', c === p.toMove && c !== net.me);
     olClk($(c === BLACK ? '#clkBlack' : '#clkWhite'), k, c === p.toMove);
+    // time signal: only my own clock while it is my move (spectators hear nothing)
+    if (!net.spectate && c === net.me && c === p.toMove && !net.pending) CountTick.feed(k.byo !== null ? k.byo : (Online.tcOf(g).byo ? 0 : k.main), 'net'); else if (c === net.me) CountTick.reset('net');
   }
   // the opponent ran out of time (with a little grace for latency): claim the win
   if (!net.spectate && p.toMove !== net.me && !net.pending && !net.claiming && Online.clockOf(g, p.toMove === BLACK ? 'b' : 'w', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).finally(() => { if (net) net.claiming = false; }); }
@@ -3941,6 +4071,7 @@ if (window.RulesOffer) RulesOffer.init({ game: 'reversi', lang: () => LANG, open
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(), lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
+if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();

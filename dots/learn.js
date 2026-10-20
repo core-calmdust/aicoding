@@ -806,9 +806,10 @@ async function startPuzzle(cat, j, daily, keep) {
   const pz = decodePz(d.levels[lv][k]);
   pz.best = pz.values.reduce((a, b) => b[1] > a[1] ? b : a)[0];
   enterSetup({ edges: pz.edges, owners: pz.owners }, pz.n);
-  puzzle = Object.assign({ cat, j, lv, k, pz, state: 'play', waiting: false, first: true, daily: daily || null, hinted: false, failed: false, answered: false }, keep || {});
+  puzzle = Object.assign({ cat, j, lv, k, pz, state: 'play', waiting: false, first: true, dev: null, total: 0, daily: daily || null, hinted: false, failed: false, answered: false }, keep || {});
   document.body.classList.add('in-puzzle');
   refresh(false);
+  puzzle.total = S.p.undrawn;
   renderPuzzleCard(t('pz.start'));
 }
 function renderPuzzleCard(status) {
@@ -822,42 +823,79 @@ function renderPuzzleCard(status) {
   $('#pzNext').disabled = !!P.daily || P.j + 1 >= n || !PZBook.isOpen(pzRecs(C), P.j + 1);
   $('#pzHint').disabled = P.state !== 'play';
 }
-function puzzleFail(e, v, bestE) {
+function puzzleFail(e, v, bestE, why) {
   const P = puzzle; P.state = 'fail'; P.failed = true;
   const fin = finalFromValue(v);
   hintEdge = bestE; badEdge = e; renderBoard(false); playWrong();
-  renderPuzzleCard(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ltr(edgeName(e)), a: fin[0], b: fin[1] })}`);
+  PZBook.setLang(LANG);
+  renderPuzzleCard(`<b class="ng">${why ? escH(PZBook.t('blunder')) : t('pz.fail')}</b> ${why ? t('pz.bl.' + why) + ' ' : ''}${t('pz.failWhy', { m: ltr(edgeName(e)), a: fin[0], b: fin[1] })}`);
+  renderInfo();
 }
+// Puzzle v2 (common spec): a wrong line does not end the puzzle at once. The opponent (exact solver, Lv8) keeps answering
+// and the puzzle is played to the end of the game — its "move count" is every line left on the board — and then the final
+// score is judged against the target. Reaching it anyway counts as solved, with ★★ (as after a retry).
+// An OBVIOUS mistake fails at once (shown with PZBook 'blunder'):
+//   take — a box with three sides was there to take and taking was (one of) the solver's best moves, but the line drawn
+//          completes no box. Declining on purpose (the double-dealing move that leaves the last two boxes of a chain)
+//          is not flagged when it is a best move, since only moves worse than the best can be mistakes.
+//   give — nothing to take, the line drawn hands boxes over (draws a box's third side) while a safe line existed and a
+//          safe line was the solver's best move.
+// Any other move worse than the best only marks the puzzle as off the solution line (P.dev) and play goes on.
+function pzBlunderKind(p, e, vals, best) {
+  if (p.completes(e) > 0) return '';
+  const caps = p.legal().filter(f => p.completes(f) > 0);
+  if (caps.length) return caps.some(f => vals.get(f) === best) ? 'take' : '';
+  if (p.gives(e) > 0 && safeEdges(p).some(f => vals.get(f) === best)) return 'give';
+  return '';
+}
+// could this move be an obvious mistake at all? (after leaving the line, the solver is only asked for those)
+function pzBlunderCand(p, e) { return p.completes(e) === 0 && (p.hasCapture() || (p.gives(e) > 0 && safeEdges(p).length > 0)); }
 async function puzzleHumanMove(e) {
   const P = puzzle; if (P.state !== 'play' || P.waiting) return;
-  let v, best, bestE;
-  if (P.first) { const vals = new Map(P.pz.values); v = vals.get(e); best = Math.max(...P.pz.values.map(x => x[1])); bestE = P.pz.best; }
-  else {
+  const p = S.p;
+  let vals = null;
+  if (P.first) vals = new Map(P.pz.values);
+  else if (!P.dev || pzBlunderCand(p, e)) {
     P.waiting = true; renderInfo();
     const tok = busy;
     const r = await askAna('solve', 8000);
     if (tok !== busy || puzzle !== P) return;
     P.waiting = false;
-    if (!r.list) { v = 0; best = 0; }
-    else { const m = new Map(r.list.map(x => [x.m, x.v])); v = m.get(e); best = Math.max(...r.list.map(x => x.v)); bestE = r.list.find(x => x.v === best).m; }
+    if (r.list) vals = new Map(r.list.map(x => [x.m, x.v]));
   }
-  if (v < best) { puzzleFail(e, v, bestE); return; }
+  if (vals && vals.has(e)) {
+    let best = -Infinity, bestE = -1; for (const [m, v] of vals) if (v > best) { best = v; bestE = m; }
+    if (P.first) bestE = P.pz.best;
+    const v = vals.get(e);
+    if (v < best) {
+      const why = pzBlunderKind(p, e, vals, best);
+      if (why) { puzzleFail(e, v, bestE, why); return; }
+      if (!P.dev) { P.dev = { e, best: bestE }; P.failed = true; }
+    }
+  }
   P.first = false;
   applyMove(e, true);
   if (S.over) return puzzleDone();
-  renderPuzzleCard(`<b class="ok">${t('pz.good')}</b>`);
+  renderPuzzleCard(P.dev ? pzDevText() : `<b class="ok">${t('pz.good')}</b>`);
   puzzleAfterMove();
 }
+function pzDevText(extra) { PZBook.setLang(LANG); return `${t('pz.dev')} <b>${escH(PZBook.t('movesLeft', { n: S.p.undrawn }))}</b>` + (extra ? ' ' + extra : ''); }
 function puzzleAfterMove() {
   const P = puzzle; if (!P) return;
   if (S.over) return puzzleDone();
   if (P.state === 'answer') return answerStep();
-  if (S.turn === 1) { renderPuzzleCard(t('pz.opp')); aiTurn(); }
-  else if (!P.first) renderPuzzleCard(`<b class="ok">${t('pz.good')}</b> ${t('yourTurn')}`);
+  if (S.turn === 1) { renderPuzzleCard(P.dev ? pzDevText(t('pz.opp')) : t('pz.opp')); aiTurn(); }
+  else if (!P.first) renderPuzzleCard(P.dev ? pzDevText(t('yourTurn')) : `<b class="ok">${t('pz.good')}</b> ${t('yourTurn')}`);
 }
 function puzzleDone() {
   const P = puzzle; if (!P) return;
   if (P.state === 'answer') { renderPuzzleCard(t('pz.answerDone') + '<br>' + t('pz.final', { a: S.scores[0], b: S.scores[1] })); P.state = 'done'; return; }
+  if (S.scores[0] < P.pz.target[0]) {   // the whole game was played and the target score was not reached
+    P.state = 'fail'; P.failed = true; playWrong(); PZBook.setLang(LANG);
+    const d = P.dev ? ' ' + t('pz.devWas', { m: ltr(edgeNameN(P.pz.n, P.dev.e)), b: ltr(edgeNameN(P.pz.n, P.dev.best)) }) : '';
+    renderPuzzleCard(`<b class="ng">${t('pz.fail')}</b> ${escH(PZBook.t('outOfMoves', { n: P.total }))} ${t('pz.final', { a: S.scores[0], b: S.scores[1] })}${d}`);
+    renderInfo(); return;
+  }
   P.state = 'solved';
   const C = pzC(P.cat), prog = pzProg(), key = pzKey(P.cat, P.lv, P.k), stars = PZBook.starsFor(P);
   const before = pzRecs(C, prog);
@@ -868,6 +906,7 @@ function puzzleDone() {
   playChime(1); coach(t('pz.solved'), 'gold', 1800);
   confettiL(); if (ev.length) setTimeout(confettiL, 650);
   renderPuzzleCard(`<b class="ok">${t('pz.solved')}</b> ${t('pz.final', { a: S.scores[0], b: S.scores[1] })}` + (P.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: P.j, events: ev }));
+  renderInfo();
 }
 function answerStep() {
   const P = puzzle; if (!P || P.state !== 'answer') return;

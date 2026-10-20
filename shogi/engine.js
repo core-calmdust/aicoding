@@ -1281,6 +1281,28 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       self.postMessage({ type: 'result', id: d.id, move: res.move ? pos.toUsi(res.move) : null, score: res.score, depth: res.depth, pv: (res.pv || []).map(m => pos.toUsi(m)), nodes: res.nodes, time: res.time });
       return;
     }
+    if (d.type === 'tsumeDefend') {
+      // tsume v2: the defender's reply after an attacker's check that may be off the solution. mate = true when mate in
+      // d.remain plies is still forced (reply = the longest defence, drops last as in tsumeReply); false when some reply
+      // escapes (reply = that escape, a non-drop if there is one)
+      setup(d);
+      const replies = pos.legalMoves(true);
+      let esc = null, best = null, bestLen = -1, bestDrop = true;
+      for (const m of replies) {
+        const drop = isDrop(m);
+        if (esc && drop) continue;            // already escaping: only look for a non-drop escape
+        pos.doMove(m);
+        const r = d.remain > 1 ? solveMate(pos, d.remain - 1, 400000) : null;
+        pos.undoMove();
+        if (!r) { if (!esc || !drop) esc = m; if (!drop) break; continue; }
+        if (esc) continue;
+        const len = r.mate < 0 ? d.remain : r.mate;
+        if (len > bestLen || (len === bestLen && bestDrop && !drop)) { best = m; bestLen = len; bestDrop = drop; }
+      }
+      const rep = esc || best || replies[0];
+      self.postMessage({ type: 'tsume', id: d.id, reply: rep ? pos.toUsi(rep) : null, mate: !esc });
+      return;
+    }
     if (d.type === 'tsumeReply') {
       // defender to move after the attacker's move; find the longest defence, or report that mate is gone
       setup(d);

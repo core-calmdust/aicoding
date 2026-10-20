@@ -139,3 +139,19 @@ const GS = {
 };
 for (const l in GS) Object.assign(I18N[l] || (I18N[l] = {}), GS[l]);
 }
+// PC header bar (shared/headerbar.js) + tsume v2
+(() => {
+const S = {
+  ja: { 'hb.name': '将棋', 'hb.turn': '{c}の番', 'hb.over': '終局', 'hb.move': '{n}手目', 'hb.eval': '評価値', 'ts.notCheck': '王手ではありません。詰将棋は毎手王手をかけます。', 'ts.escaped': '玉に逃げられ、残りの手数では詰まなくなりました。', 'ts.offline': '正解手順とは違いますが、まだ詰むかもしれません。続けてください。', 'ts.altSolved': '正解手順とは別の手順で詰みました（別解）。' },
+  en: { 'hb.name': 'Shogi', 'hb.turn': '{c} to move', 'hb.over': 'Game over', 'hb.move': 'Move {n}', 'hb.eval': 'Eval', 'ts.notCheck': 'Not a check. In tsume every move must be a check.', 'ts.escaped': 'The king escaped: mate is no longer possible in the moves left.', 'ts.offline': 'Not the intended line, but mate may still be possible. Keep going.', 'ts.altSolved': 'Mated by another line (alternative solution).' },
+  zh: { 'hb.name': '将棋', 'hb.turn': '{c}走棋', 'hb.over': '终局', 'hb.move': '第{n}手', 'hb.eval': '评估值', 'ts.notCheck': '这不是将军。诘将棋每一步都必须将军。', 'ts.escaped': '玉逃脱了，剩余手数内已无法将死。', 'ts.offline': '这不是正解手顺，但也许还能将死。请继续。', 'ts.altSolved': '以正解以外的手顺将死（别解）。' },
+  ko: { 'hb.name': '쇼기', 'hb.turn': '{c} 차례', 'hb.over': '종국', 'hb.move': '{n}수째', 'hb.eval': '평가치', 'ts.notCheck': '장군이 아닙니다. 츠메쇼기는 매 수 장군을 불러야 합니다.', 'ts.escaped': '옥이 도망쳐서 남은 수 안에 외통이 불가능해졌습니다.', 'ts.offline': '정해 수순과 다르지만 아직 외통일 수 있습니다. 계속하세요.', 'ts.altSolved': '다른 수순으로 외통(별해).' },
+  es: { 'hb.name': 'Shogi', 'hb.turn': 'Juega {c}', 'hb.over': 'Fin de la partida', 'hb.move': 'Jugada {n}', 'hb.eval': 'Evaluación', 'ts.notCheck': 'No es jaque. En tsume cada jugada debe dar jaque.', 'ts.escaped': 'El rey escapó: ya no hay mate en las jugadas restantes.', 'ts.offline': 'No es la línea prevista, pero quizá aún haya mate. Sigue.', 'ts.altSolved': 'Mate por otra línea (solución alternativa).' },
+  fr: { 'hb.name': 'Shogi', 'hb.turn': 'Au tour de {c}', 'hb.over': 'Partie terminée', 'hb.move': 'Coup {n}', 'hb.eval': 'Éval.', 'ts.notCheck': 'Ce n’est pas un échec. En tsume, chaque coup doit donner échec.', 'ts.escaped': 'Le roi s’est échappé : plus de mat possible dans les coups restants.', 'ts.offline': 'Ce n’est pas la ligne prévue, mais le mat est peut-être encore possible. Continuez.', 'ts.altSolved': 'Mat par une autre ligne (solution alternative).' },
+  pt: { 'hb.name': 'Shogi', 'hb.turn': 'Vez de {c}', 'hb.over': 'Fim de jogo', 'hb.move': 'Lance {n}', 'hb.eval': 'Avaliação', 'ts.notCheck': 'Não é xeque. No tsume todo lance deve dar xeque.', 'ts.escaped': 'O rei escapou: não há mais mate nos lances restantes.', 'ts.offline': 'Não é a linha prevista, mas talvez ainda haja mate. Continue.', 'ts.altSolved': 'Mate por outra linha (solução alternativa).' },
+  de: { 'hb.name': 'Shogi', 'hb.turn': '{c} am Zug', 'hb.over': 'Partie beendet', 'hb.move': 'Zug {n}', 'hb.eval': 'Bewertung', 'ts.notCheck': 'Kein Schach. Im Tsume muss jeder Zug Schach geben.', 'ts.escaped': 'Der König ist entkommen: in den restlichen Zügen ist kein Matt mehr möglich.', 'ts.offline': 'Nicht die vorgesehene Folge, aber vielleicht noch Matt. Weiter.', 'ts.altSolved': 'Matt auf anderem Weg (Nebenlösung).' },
+  hi: { 'hb.name': 'शोगी', 'hb.turn': '{c} की बारी', 'hb.over': 'खेल समाप्त', 'hb.move': 'चाल {n}', 'hb.eval': 'मूल्यांकन', 'ts.notCheck': 'यह शह नहीं है। त्सुमे में हर चाल शह होनी चाहिए।', 'ts.escaped': 'राजा बच निकला: बची चालों में अब मात संभव नहीं।', 'ts.offline': 'यह तय क्रम नहीं है, पर शायद अब भी मात हो सके। जारी रखें।', 'ts.altSolved': 'दूसरे क्रम से मात (वैकल्पिक हल)।' },
+  ar: { 'hb.name': 'شوغي', 'hb.turn': 'دور {c}', 'hb.over': 'انتهت المباراة', 'hb.move': 'النقلة {n}', 'hb.eval': 'التقييم', 'ts.notCheck': 'ليست كشًّا. في التسومي يجب أن تكون كل نقلة كشًّا.', 'ts.escaped': 'هرب الملك: لم يعد المات ممكنًا في النقلات المتبقية.', 'ts.offline': 'ليست الخطة المقصودة، لكن قد يظل المات ممكنًا. تابع.', 'ts.altSolved': 'مات بخطة أخرى (حل بديل).' },
+};
+for (const l in S) Object.assign(I18N[l] || (I18N[l] = {}), S[l]);
+})();

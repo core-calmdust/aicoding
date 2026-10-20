@@ -1,16 +1,15 @@
 'use strict';
-// Shogi — "Rules" tab of the lesson dialog: illustrated beginner rules (cards → detail pages, ← → to turn pages).
-// Diagrams are small boards drawn with the game's own pieceEl(), so they follow the chosen piece set.
-// Texts for all 10 languages live in RU_TXT (rules-i18n.js) and are merged into I18N.
+// Shogi — "Rules" tab of the lesson dialog: a hands-on step tutorial (shared/ruletour.js, common spec).
+// Each step is a short text plus a small board where the player actually moves / captures / promotes / drops / mates,
+// using the game's own engine (legal moves) and pieceEl() (follows the chosen piece set). Only what is needed to play;
+// tactics, openings and the finer rules (sennichite details, entering king, handicaps) are left to the lessons.
+// Texts: RT_TXT (and the piece texts of RU_TXT) in rules-i18n.js, merged into I18N.
 (() => {
 const DIR = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0], NW: [-1, -1], NE: [1, -1], SW: [-1, 1], SE: [1, 1] };
-const STORE = 'shogi-kaya-rules-v1';
-let seen = {}; try { seen = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) {}
-let page = -1;            // -1 = card list
 let uid = 0;
 const TO = 9, NY = 10, NK = 11, NG = 12, UM = 13, RY = 14;
-
 for (const l in RU_TXT) Object.assign(I18N[l] || (I18N[l] = {}), RU_TXT[l]);
+for (const l in RT_TXT) Object.assign(I18N[l] || (I18N[l] = {}), RT_TXT[l]);
 
 // ---------------------------------------------------------------- drawing helpers
 function pc(tp, col) { const f0 = flip; flip = false; try { return pieceEl(tp | (col ? WF : 0)).outerHTML; } finally { flip = f0; } }
@@ -66,162 +65,232 @@ function sfenRows(sfen) {
 function strips(cw) {   // pawn / lance / knight: the ranks they may not reach unpromoted
   return board({ c: 3, r: 4, rk: rankLbl(4), p: [[0, 3, FU, 0], [1, 3, KY, 0], [2, 3, KE, 0]], t: { '0,0': 'bad', '1,0': 'bad', '2,0': 'bad', '2,1': 'bad' }, x: [[0, 0], [1, 0], [2, 0], [2, 1]] }, cw);
 }
-const legend = () => `<div class="ru-leg"><span><i class="rd"></i>${t('ru.legStep')}</span><span><i class="rd ln"></i><i class="lg-ln"></i>${t('ru.legLine')}</span></div>`;
-function piecePage(tp, pro) {
-  return {
-    u: pro ? 13 : 6.5, uN: pro ? 11.3 : 6.5, v: 5.9, vN: pro ? 6.6 : 5.9,
-    fig: cw => {
-      const a = `<div class="ru-pm"><div class="ru-pc">${board(moves(tp, 5), cw)}</div>`;
-      const b = pro ? `<div class="ru-arrow"><span>${t('ru.promote')}</span><svg viewBox="0 0 40 20"><path d="M2 10H32M24 3L34 10L24 17" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ru-pc pro"><small class="ru-pl">${t('ru.promote')}</small>${board(moves(pro, 5), cw)}</div>`
-        : `<div class="ru-nopro">${t('ru.noPromo')}</div>`;
-      return fig(a + b + '</div>', legend() + (tp === KE ? `<div class="ru-leg"><span><svg class="lg-kn" viewBox="0 0 24 14"><path d="M2 12Q10 -2 22 6" fill="none" stroke="#3fbf86" stroke-width="2.6" stroke-dasharray="4 3"/></svg>${t('ru.legJump')}</span></div>` : ''));
-    },
+
+// ---------------------------------------------------------------- interactive mini board
+const CSS = `
+.rt-host{display:block!important}
+.rtb .rc{cursor:default}
+.rtb .rc.can{cursor:pointer}
+.rtb .rc.from{background:linear-gradient(170deg,#bcd9ea,#a6c8de);box-shadow:inset 0 0 0 2px #3c7fb0}
+.rtb .rc.tg::after{content:"";position:absolute;inset:5%;border:3px solid rgba(29,138,87,.9);border-radius:12%;z-index:3;pointer-events:none}
+.rtb .rc.star .rl{color:#b8231a;font-size:calc(var(--cw)*.55)}
+.rtb .rc .pc{pointer-events:none}
+.rt-hand{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--line);min-width:calc(var(--cw) + 20px)}
+.rt-hand small{font-size:13px;color:var(--muted);white-space:nowrap}
+.rt-hand button{position:relative;width:var(--cw);height:var(--ch);border-radius:6px;padding:0}
+.rt-hand button.sel{background:rgba(246,220,138,.25);box-shadow:0 0 0 2px rgba(226,194,117,.8)}
+.rt-hand button b{position:absolute;right:-4px;bottom:-4px;z-index:3;font:700 11px 'JetBrains Mono',monospace;background:rgba(0,0,0,.75);color:#fff;border-radius:8px;padding:0 4px}
+.rt-hand i{font-style:normal;color:var(--dim);font-size:13px}
+.rt-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;direction:ltr}
+.rt-promo{display:flex;gap:10px;justify-content:center}
+.rt-promo button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:1px solid rgba(201,169,97,.55);background:rgba(201,169,97,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.rt-promo button .rh{width:var(--cw);height:var(--ch)}
+.rt-pcs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:100%}
+.rt-pcs button{position:relative;width:calc(var(--cw)*.9 + 10px);height:calc(var(--cw)*.99 + 10px);border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.22);padding:5px;cursor:pointer}
+.rt-pcs button .rh{width:100%;height:100%}
+.rt-pcs button.seen{border-color:rgba(111,211,160,.6)}
+.rt-pcs button.cur{background:rgba(201,169,97,.2);box-shadow:0 0 0 2px rgba(201,169,97,.7)}
+.rt-pinfo{font-size:13.5px;line-height:1.65;color:var(--muted);max-width:440px;text-align:left}
+.rt-pinfo b{color:var(--accent)}
+.rt-pinfo h4{margin:0 0 2px;font-size:14.5px;color:var(--text)}
+html[lang=ar] .rt-pinfo{direction:rtl;text-align:right}
+.rt-wins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin:6px 0 12px}
+.rt-wins .ru-win{display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.5}
+.rt-wins .ic{flex:none;width:44px;height:44px;display:grid;place-items:center;color:var(--accent)}
+.rt-wins .ic svg{width:40px;height:40px}
+.rt-draw{font-size:13.5px;line-height:1.7;color:var(--muted)}
+html[lang=ar] .rt-wins,html[lang=ar] .rt-draw{direction:rtl}
+@media (max-width: 520px){ .rt-wins{grid-template-columns:minmax(0,1fr)} }
+`;
+if (!document.getElementById('sgRtCss')) { const st = document.createElement('style'); st.id = 'sgRtCss'; st.textContent = CSS; document.head.appendChild(st); }
+
+const host = () => $('#lessonList');
+// cell size: as large as fits the dialog width and (PC) height
+function cwFit(cols, rows, extraW) {
+  const L = host(), W = (L && L.clientWidth) || 320, m = $('#lessonOverlay .modal'), H = m ? m.clientHeight : innerHeight;
+  const byW = (W - 8 - (extraW || 0)) / cols, byH = (H - 470) / (rows * 1.1 + .6);
+  return Math.max(24, Math.min(56, Math.floor(Math.min(byW, Math.max(30, byH))) - 1));
+}
+const sqXY = s => [s % 9, (s / 9) | 0];
+const pcHtml = code => { const f0 = flip; flip = false; try { return pieceEl(code).outerHTML; } finally { flip = f0; } };
+// o: { sfen, v: [x0, y0, w, h] window of the 9x9 board, star: [squares], zone, bad: {sq: 1}, x: {sq: 1}, hand: true,
+//      onMove(m, pos, api) → true if handled, onTap(sq) for taps on non-target squares while a hand piece is selected }
+function play(api, o) {
+  const pos = new E.Position(); pos.setSfen(o.sfen);
+  const [x0, y0, w, h] = o.v;
+  let sel = null, promo = null, locked = false;
+  const legal = () => pos.legalMoves(true);
+  const targets = () => !sel ? [] : legal().filter(m => sel.hand ? E.isDrop(m) && E.dropType(m) === sel.hand : !E.isDrop(m) && E.mFrom(m) === sel.sq);
+  function draw() {
+    if (!api.alive()) return;
+    const cw = cwFit(w, h, o.hand ? 110 : 0), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
+    let cells = '';
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
+      const s = y * 9 + x, p = pos.board[s], cls = ['rc'];
+      if (o.zone && y < 3) cls.push('zone');
+      if ((o.bad && o.bad[s]) || (s === pos.king[0] && pos.side === 0 && pos.inCheck())) cls.push('bad');
+      if (sel && sel.sq === s) cls.push('from');
+      if (tset.has(s)) cls.push(p ? 'tg' : 'tgd');
+      if ((p && E.colorOf(p) === 0) || tset.has(s) || (sel && sel.hand && !p)) cls.push('can');
+      if (o.star && o.star.includes(s) && !p) cls.push('star');
+      let inner = p ? pcHtml(p) : '';
+      if (tset.has(s) && !p) inner += '<i class="rd"></i>';
+      if (o.star && o.star.includes(s) && !p) inner += '<b class="rl">★</b>';
+      if (o.x && o.x[s] && !p) inner += '<i class="rx"></i>';
+      cells += `<div class="${cls.join(' ')}" data-s="${s}">${inner}</div>`;
+    }
+    const bd = `<div class="rb rtb" style="--cw:${cw}px;--ch:${ch}px;--c:${w};--r:${h}">${cells}</div>`;
+    let hd = '';
+    if (o.hand) {
+      const list = [HI, KA, KI, GI, KE, KY, FU].filter(tp => pos.hand[tp]);
+      hd = `<div class="rt-hand" style="--cw:${cw}px;--ch:${ch}px"><small>${t('ru.hand')}</small>${list.length ? list.map(tp => `<button type="button" data-h="${tp}" class="${sel && sel.hand === tp ? 'sel' : ''}"><span class="rh" style="--cw:${cw}px;--ch:${ch}px;display:block">${pcHtml(tp)}</span>${pos.hand[tp] > 1 ? `<b>${pos.hand[tp]}</b>` : ''}</button>`).join('') : '<i>—</i>'}</div>`;
+    }
+    const pr = promo ? `<div class="rt-promo" style="--cw:${cw}px;--ch:${ch}px">${promo.map((m, i) => `<button type="button" data-pr="${i}"><span class="rh" style="display:block">${pcHtml(pos.board[E.mFrom(m)] + (E.mPromo(m) ? 8 : 0))}</span>${t(E.mPromo(m) ? 'promote.yes' : 'promote.no')}</button>`).join('')}</div>` : '';
+    api.board.innerHTML = `<div class="rt-wrap"><div class="ru-row">${hd}${bd}</div>${pr}</div>`;
+  }
+  function doMove(m) {
+    sel = null; promo = null;
+    if (o.onMove && o.onMove(m, pos, api, ctl) === false) { draw(); return; }
+    pos.doMove(m); pos.sp = 0; playPiece(false); draw();
+    if (o.after) o.after(m, pos, api, ctl);
+  }
+  api.board.onclick = e => {
+    if (locked || !api.alive()) return;
+    const pb = e.target.closest('[data-pr]'); if (pb && promo) { doMove(promo[+pb.dataset.pr]); return; }
+    const hb = e.target.closest('[data-h]');
+    if (hb) { const tp = +hb.dataset.h; sel = sel && sel.hand === tp ? null : { hand: tp }; promo = null; draw(); return; }
+    const c = e.target.closest('[data-s]'); if (!c) return;
+    const s = +c.dataset.s, p = pos.board[s];
+    if (sel) {
+      const ms = targets().filter(m => E.mTo(m) === s);
+      if (ms.length === 2) { promo = ms.sort((a, b) => E.mPromo(b) - E.mPromo(a)); draw(); return; }
+      if (ms.length === 1) { doMove(ms[0]); return; }
+      if (sel.hand && !p && o.onTap) { o.onTap(s, sel.hand, pos, api, ctl); return; }
+    }
+    promo = null;
+    sel = p && E.colorOf(p) === 0 ? (sel && sel.sq === s ? null : { sq: s }) : null; draw();
   };
+  const ctl = { pos, draw, lock(v) { locked = v !== false; }, sel(v) { sel = v; draw(); } };
+  draw();
+  return ctl;
 }
+const sqAt = (file, rank) => (rank - 1) * 9 + (9 - file);
 
-// ---------------------------------------------------------------- pages
-const zoneT = (c, rows) => { const o = {}; for (let y = 0; y < rows; y++) for (let x = 0; x < c; x++) o[x + ',' + y] = 'zone'; return o; };
-const PAGES = [
-  { sec: 'goal', id: 'goal', u: 5, v: 4, fig: cw => fig(board({ c: 5, r: 4, p: [[2, 0, OU, 1], [2, 1, KI, 0], [2, 2, FU, 0]], x: [[1, 0], [3, 0], [1, 1], [3, 1]], t: { '2,1': 'sel', '1,0': 'bad', '3,0': 'bad', '1,1': 'bad', '3,1': 'bad' }, ln: [[2, 2, 2, 1, 'sup']] }, cw), t('ru.goal.cap')), lesson: 3 },
-  { sec: 'setup', id: 'setup', u: 9, v: 10.2, fig: cw => {
-    const rows = sfenRows(HANDI[0]), p = []; rows.forEach((r, y) => r.forEach((q, x) => { if (q) p.push([x, y, q[0], q[1]]); }));
-    return fig(`<div class="ru-side g">△ ${t('white')}</div>` + board({ c: 9, r: 9, p, t: zoneT(9, 3) }, cw) + `<div class="ru-side">▲ ${t('black')}</div>`, t('ru.zone.cap'));
-  } },
-  { sec: 'moves', id: 'ou', ...piecePage(OU, 0) },
-  { sec: 'moves', id: 'hi', ...piecePage(HI, RY) },
-  { sec: 'moves', id: 'ka', ...piecePage(KA, UM) },
-  { sec: 'moves', id: 'ki', ...piecePage(KI, 0) },
-  { sec: 'moves', id: 'gi', ...piecePage(GI, NG) },
-  { sec: 'moves', id: 'ke', ...piecePage(KE, NK) },
-  { sec: 'moves', id: 'ky', ...piecePage(KY, NY) },
-  { sec: 'moves', id: 'fu', ...piecePage(FU, TO), lesson: 0 },
-  { sec: 'promo', id: 'zone', u: 9, v: 7.4, fig: cw => {
-    const pairs = [[HI, RY], [KA, UM], [GI, NG], [KE, NK], [KY, NY], [FU, TO]], sc = Math.round(cw * .78);
-    return fig(board({ c: 9, r: 5, rk: rankLbl(5), t: { ...zoneT(9, 3), '5,3': 'sel', '1,3': 'sel' }, p: [[5, 3, GI, 0], [1, 3, FU, 0], [3, 0, KI, 1], [6, 1, FU, 1]], g: [[5, 2, NG, 0], [1, 2, TO, 0]], ln: [[5, 3, 5, 2], [1, 3, 1, 2]] }, cw), t('ru.zone.cap')) +
-      fig(`<div class="ru-pairs">${pairs.map(([a, b]) => `<div class="ru-pair"><div class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px">${pc(a, 0)}</div><span>›</span><div class="rh pro" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px">${pc(b, 0)}</div></div>`).join('')}</div>`, t('ru.flip.cap'));
-  } },
-  { sec: 'promo', id: 'forced', u: 4.5, v: 4.6, fig: cw => fig(strips(cw), t('ru.forced.cap')) },
-  { sec: 'hand', id: 'cap', u: 7.5, v: 4.2, fig: cw => fig(`<div class="ru-row">${board({ c: 5, r: 4, p: [[2, 3, GI, 0], [1, 2, UM, 1], [3, 0, KI, 1], [0, 3, FU, 0]], t: { '2,3': 'sel', '1,2': 'bad' }, ln: [[2, 3, 1, 2]] }, cw)}${hand([KA], cw, t('ru.hand'), 1)}</div>`, t('ru.cap.cap')), lesson: 1 },
-  { sec: 'hand', id: 'drop', u: 7.5, v: 5.2, fig: cw => {
-    const occ = { '1,1': [FU, 1], '3,0': [GI, 1], '0,4': [FU, 0], '4,3': [KY, 0], '2,4': [OU, 0] }, p = [], d = [];
-    for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) { const o = occ[x + ',' + y]; if (o) p.push([x, y, o[0], o[1]]); else if (!(x === 2 && y === 2)) d.push([x, y]); }
-    return fig(`<div class="ru-row">${hand([KI], cw, t('ru.hand'), 1)}${board({ c: 5, r: 5, p, d, g: [[2, 2, KI, 0]], t: { '2,2': 'sel' } }, cw)}</div>`, t('ru.drop.cap'));
-  } },
-  { sec: 'foul', id: 'nifu', u: 7.5, v: 5.2, fig: cw => {
-    const p = [[0, 3, FU, 0], [1, 3, FU, 0], [3, 3, FU, 0], [2, 1, TO, 0], [4, 1, FU, 1]], tt = {}, d = [], x = [];
-    for (let y = 0; y < 5; y++) for (let c = 0; c < 5; c++) { if (p.some(q => q[0] === c && q[1] === y)) continue; if (c === 0 || c === 1 || c === 3) { tt[c + ',' + y] = 'bad'; if (y === 0) x.push([c, y]); } else if (y > 0 || c === 2) d.push([c, y]); }
-    return fig(`<div class="ru-row">${hand([FU], cw, t('ru.hand'), 1)}${board({ c: 5, r: 5, p, d, x, t: tt }, cw)}</div>`, t('ru.nifu.cap'));
-  } },
-  { sec: 'foul', id: 'uchifu', u: 6.5, v: 4.2, fig: cw => fig(`<div class="ru-row">${hand([FU], cw, t('ru.hand'), 1)}${board({ c: 4, r: 4, p: [[3, 0, OU, 1], [2, 0, KE, 1], [2, 1, GI, 1], [3, 3, KY, 0]], g: [[3, 1, FU, 0]], x: [[3, 1]], t: { '3,1': 'bad' }, ln: [[3, 3, 3, 1, 'sup']] }, cw)}</div>`, t('ru.uchifu.cap')) },
-  { sec: 'foul', id: 'dead', u: 6, v: 4.6, fig: cw => fig(`<div class="ru-row">${hand([FU, KY, KE], Math.round(cw * .8), t('ru.hand'))}${strips(cw)}</div>`, t('ru.dead.cap')) },
-  { sec: 'foul', id: 'other', u: 5, v: 5.2, fig: cw => fig(board({ c: 5, r: 5, p: [[2, 0, HI, 1], [2, 4, OU, 0], [0, 4, KY, 0], [4, 3, GI, 0]], ln: [[2, 0, 2, 4, 'chk']], x: [[2, 3]], d: [[1, 3], [3, 3], [1, 4], [3, 4]], t: { '2,4': 'bad', '2,3': 'bad' } }, cw), t('ru.other.cap')), lesson: 2 },
-  { sec: 'draw', id: 'sen', u: 13, v: 3.6, fig: cw => {
-    const s = { c: 3, r: 3, p: [[1, 0, OU, 1], [1, 2, HI, 0], [0, 1, KI, 1]], t: {} }, b = board(s, cw);
-    return fig(`<div class="ru-rep">${[1, 2, 3, 4].map(i => `<div><span class="ru-n">${i}</span>${b}</div>`).join('<b>=</b>')}</div>`, t('ru.sen.cap'));
-  } },
-  { sec: 'draw', id: 'jishogi', u: 9, v: 11, fig: cw => {
-    const p = [[4, 1, OU, 0], [3, 1, KI, 0], [5, 2, GI, 0], [2, 2, TO, 0], [6, 1, UM, 0], [4, 7, OU, 1], [5, 7, KI, 1], [3, 6, GI, 1], [6, 6, FU, 1], [2, 7, RY, 1]];
-    const tt = { ...zoneT(9, 3) }; for (let y = 6; y < 9; y++) for (let x = 0; x < 9; x++) tt[x + ',' + y] = 'zone2';
-    const sc = Math.round(cw * .8);
-    const chips = (list, n) => `<div class="ru-chip">${list.map(tp => `<div class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px">${pc(tp, 0)}</div>`).join('')}<b>${t('ru.pts', { n })}</b></div>`;
-    return fig(board({ c: 9, r: 9, p, t: tt }, cw), '') + `<div class="ru-chips">${chips([HI, KA], 5)}${chips([KI, GI, KE, KY, FU], 1)}</div>`;
-  }, wide: 1 },
-  { sec: 'win', id: 'win', u: 8, v: 6, fig: cw => {
-    const sz = Math.max(30, Math.min(56, Math.round(cw * 1.1)));
-    const ic = [
-      `<div class="rh" style="--cw:${sz}px;--ch:${Math.round(sz * 1.1)}px">${pc(OU, 1)}<i class="rx"></i></div>`,
-      `<svg viewBox="0 0 48 48"><path d="M10 40V8" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M12 9c8-4 13 4 24 0v17c-11 4-16-4-24 0z" fill="#efe5d2"/></svg>`,
-      `<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="16" fill="none" stroke="currentColor" stroke-width="3.4"/><path d="M24 26V16M24 26l7 5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M19 5h10" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>`,
-      `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="#ff7a6a" stroke-width="3.6"/><path d="M16 16L32 32M32 16L16 32" stroke="#ff7a6a" stroke-width="3.6" stroke-linecap="round"/></svg>`,
-    ];
-    return `<div class="ru-wins" style="--sz:${sz}px">${ic.map((s, i) => `<div class="ru-win"><div class="ic">${s}</div><p>${t('ru.win.' + (i + 1)).replace(/<\/b>\s*[:：]\s*/, '</b>')}</p></div>`).join('')}</div>`;
-  }, wide: 1, lesson: 3 },
-  { sec: 'handi', id: 'handi', u: 13, v: 15, fig: cw => {
-    const base = sfenRows(HANDI[0]), names = t('handi');
-    const rows = [1, 2, 3, 4, 5, 6].map(i => {
-      const r = sfenRows(HANDI[i]), p = [], tt = {};
-      for (let y = 0; y < 2; y++) for (let x = 0; x < 9; x++) { if (r[y][x]) p.push([x, y, r[y][x][0], 1]); else if (base[y][x]) tt[x + ',' + y] = 'gone'; }
-      return `<div class="ru-hrow"><b>${Array.isArray(names) ? names[i] : ''}</b>${board({ c: 9, r: 2, p, t: tt }, cw)}</div>`;
-    }).join('');
-    return fig(`<div class="ru-handi">${rows}</div>`, t('ru.handi.cap'));
-  } },
-];
-const SECS = [...new Set(PAGES.map(p => p.sec))];
-const THUMB = {
-  goal: () => board({ c: 5, r: 4, p: [[2, 0, OU, 1], [2, 1, KI, 0], [2, 2, FU, 0]], x: [[1, 0], [3, 0], [1, 1], [3, 1]], t: { '2,1': 'sel', '1,0': 'bad', '3,0': 'bad', '1,1': 'bad', '3,1': 'bad' } }, 19),
-  setup: () => { const p = []; sfenRows(HANDI[0]).forEach((r, y) => r.forEach((q, x) => { if (q) p.push([x, y, q[0], q[1]]); })); return board({ c: 9, r: 9, p, t: zoneT(9, 3) }, 10); },
-  moves: () => board(moves(HI, 5), 17),
-  promo: () => `<div class="ru-pair big"><div class="rh" style="--cw:34px;--ch:37px">${pc(HI, 0)}</div><span>›</span><div class="rh pro" style="--cw:34px;--ch:37px">${pc(RY, 0)}</div></div>`,
-  hand: () => `<div class="ru-row sm">${hand([KI, GI, FU], 24, t('ru.hand'), 1)}</div>`,
-  foul: () => board({ c: 4, r: 4, p: [[3, 0, OU, 1], [2, 0, KE, 1], [2, 1, GI, 1], [3, 3, KY, 0]], g: [[3, 1, FU, 0]], x: [[3, 1]], t: { '3,1': 'bad' } }, 19),
-  draw: () => `<svg class="ru-ico" viewBox="0 0 64 64"><path d="M50 32a18 18 0 1 1-6-13.4" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M46 8l-1 12 12-1" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="32" y="39" text-anchor="middle" font-size="20" font-weight="700" fill="currentColor" font-family="'JetBrains Mono',monospace">×4</text></svg>`,
-  win: () => `<div class="rh" style="--cw:40px;--ch:44px">${pc(OU, 1)}<i class="rx"></i></div>`,
-  handi: () => { const r = sfenRows(HANDI[3]), base = sfenRows(HANDI[0]), p = [], tt = {}; for (let y = 0; y < 2; y++) for (let x = 0; x < 9; x++) { if (r[y][x]) p.push([x, y, r[y][x][0], 1]); else if (base[y][x]) tt[x + ',' + y] = 'gone'; } return board({ c: 9, r: 2, p, t: tt }, 10); },
+// ---------------------------------------------------------------- the steps
+let pcSeen = new Set();
+const PIECES = [[OU, 'ou'], [HI, 'hi'], [KA, 'ka'], [KI, 'ki'], [GI, 'gi'], [KE, 'ke'], [KY, 'ky'], [FU, 'fu']];
+const winIcons = () => {
+  const sz = 40;
+  const ic = [
+    `<div class="rh" style="--cw:${sz}px;--ch:${Math.round(sz * 1.1)}px">${pc(OU, 1)}<i class="rx"></i></div>`,
+    `<svg viewBox="0 0 48 48"><path d="M10 40V8" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M12 9c8-4 13 4 24 0v17c-11 4-16-4-24 0z" fill="#efe5d2"/></svg>`,
+    `<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="16" fill="none" stroke="currentColor" stroke-width="3.4"/><path d="M24 26V16M24 26l7 5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M19 5h10" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>`,
+    `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="#ff7a6a" stroke-width="3.6"/><path d="M16 16L32 32M32 16L16 32" stroke="#ff7a6a" stroke-width="3.6" stroke-linecap="round"/></svg>`,
+  ];
+  return `<div class="rt-wins">${ic.map((s, i) => `<div class="ru-win"><div class="ic">${s}</div><p>${t('ru.win.' + (i + 1)).replace(/<\/b>\s*[:：]\s*/, '</b><br>')}</p></div>`).join('')}</div><p class="rt-draw">${t('rt.end.draw')}</p>`;
 };
+const PAGES = [
+  { id: 'move', title: () => t('rt.move.t'), body: () => `<p>${t('rt.move.b')}</p>`, task: () => t('rt.move.task'),
+    setup(api) {
+      const star = sqAt(5, 4);
+      play(api, { sfen: '9/9/9/9/9/9/9/4R4/9 b - 1', v: [2, 3, 5, 5], star: [star],
+        onMove(m) { if (E.mTo(m) !== star) { api.ng(t('rt.move.ng'), { delay: 1600 }); return true; } },
+        after(m, pos, a, c) { if (E.mTo(m) === star) { c.lock(); api.ok(t('rt.move.ok')); } } });
+    } },
+  { id: 'pieces', title: () => t('rt.pc.t'), body: () => `<p>${t('rt.pc.b')}</p>`, task: () => t('rt.pc.task', { k: pcSeen.size }),
+    setup(api) {
+      const seen = pcSeen = new Set(); let cur = -1;
+      const draw = () => {
+        if (!api.alive()) return;
+        const cw = cwFit(5, 5, 0), Wd = (host() && host().clientWidth) || 320, sc = Math.max(22, Math.min(40, Math.floor((Wd - 8) / 8 - 18)));
+        const P0 = cur >= 0 ? PIECES[cur] : null;
+        const bd = P0 ? board(moves(P0[0], 5), cw) : board({ c: 5, r: 5, p: [] }, cw);
+        const info = P0 ? `<div class="rt-pinfo"><h4>${t('ru.' + P0[1] + '.t')}</h4>${t('ru.' + P0[1] + '.b')}</div>` : '';
+        api.board.innerHTML = `<div class="rt-wrap"><div class="rt-pcs" style="--cw:${sc}px">${PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px;display:block">${pc(tp, 0)}</span></button>`).join('')}</div>${bd}${info}</div>`;
+      };
+      api.board.onclick = e => {
+        const b = e.target.closest('[data-pi]'); if (!b || !api.alive()) return;
+        cur = +b.dataset.pi; seen.add(cur); playPiece(false); draw();
+        if (!api.state.done) { if (seen.size >= PIECES.length) api.ok(t('rt.pc.ok')); else api.say(''); }
+      };
+      draw();
+    } },
+  { id: 'capture', title: () => t('rt.cap.t'), body: () => `<p>${t('rt.cap.b')}</p>`, task: () => t('rt.cap.task'),
+    setup(api) {
+      const tgt = sqAt(4, 6);
+      play(api, { sfen: '9/9/9/3g5/9/5b3/4S4/9/9 b - 1', v: [2, 3, 5, 5], hand: true,
+        onMove(m) { if (E.mTo(m) !== tgt) { api.ng(t('rt.cap.ng'), { delay: 1600 }); return true; } },
+        after(m, pos, a, c) { if (E.mTo(m) === tgt) { c.lock(); api.ok(t('rt.cap.ok')); } } });
+    } },
+  { id: 'promote', title: () => t('rt.pro.t'), body: () => `<p>${t('rt.pro.b')}</p>`, task: () => t('rt.pro.task'),
+    setup(api) {
+      play(api, { sfen: '5k3/9/9/4P4/9/9/9/9/9 b - 1', v: [2, 0, 5, 5], zone: true,
+        onMove(m) { if (!E.mPromo(m)) { api.ng(t('rt.pro.ng'), { delay: 1800 }); return true; } },
+        after(m, pos, a, c) { if (E.mPromo(m)) { c.lock(); api.ok(t('rt.pro.ok')); } } });
+    } },
+  { id: 'drop', title: () => t('rt.drop.t'), body: () => `<p>${t('rt.drop.b')}</p>`, task: () => t('rt.drop.task'),
+    setup(api) {
+      const star = sqAt(6, 5);
+      play(api, { sfen: '9/9/9/2p1s4/9/4P4/9/9/9 b G 1', v: [2, 2, 5, 5], hand: true, star: [star],
+        onMove(m) { if (!E.isDrop(m) || E.mTo(m) !== star) { api.ng(t('rt.drop.ng'), { delay: 1600 }); return true; } },
+        after(m, pos, a, c) { if (E.isDrop(m) && E.mTo(m) === star) { c.lock(); api.ok(t('rt.drop.ok')); } } });
+    } },
+  { id: 'mate', title: () => t('rt.mate.t'), body: () => `<p>${t('rt.mate.b')}</p>`, task: () => t('rt.mate.task'),
+    setup(api) {
+      play(api, { sfen: '4k4/9/4P4/9/9/9/9/9/9 b G 1', v: [2, 0, 5, 4], hand: true,
+        after(m, pos, a, c) {
+          const chk = pos.inCheck(), mate = chk && !pos.legalMoves(false).length;
+          c.lock();
+          if (mate) api.ok(t('rt.mate.ok')); else api.ng(t(chk ? 'rt.mate.ng' : 'rt.mate.nochk'), { delay: 2000 });
+        } });
+    } },
+  { id: 'evade', title: () => t('rt.evade.t'), body: () => `<p>${t('rt.evade.b')}</p>`, task: () => t('rt.evade.task'),
+    setup(api) {
+      play(api, { sfen: '9/9/9/9/4r4/5S3/9/3GK4/9 b P 1', v: [2, 3, 5, 6], hand: true,
+        onMove(m, pos) {
+          const how = E.isDrop(m) ? 'block' : E.typeOf(pos.board[E.mFrom(m)]) === OU ? 'flee' : pos.board[E.mTo(m)] ? 'cap' : 'block';
+          api._how = how;
+        },
+        after(m, pos, a, c) { c.lock(); api.ok(t('rt.evade.ok', { how: t('rt.how.' + api._how) })); } });
+    } },
+  { id: 'foul', title: () => t('rt.foul.t'), body: () => `<p>${t('rt.foul.b')}</p>`, task: () => t('rt.foul.task'),
+    setup(api) {
+      const bad = {}, x = {};
+      for (let y = 0; y < 5; y++) { bad[y * 9 + 2] = 1; bad[y * 9 + 4] = 1; }
+      for (let c = 2; c < 7; c++) x[c] = 1;
+      const ctl = play(api, { sfen: '9/5p3/9/9/2P1P4/9/9/9/9 b P 1', v: [2, 0, 5, 5], hand: true, bad, x,
+        onMove(m) { if (!E.isDrop(m)) { api.say(esc(t('rt.foul.task')), ''); return true; } },
+        onTap(s) { const col = s % 9, row = (s / 9) | 0; api.ng(t(col === 2 || col === 4 ? 'rt.foul.nifu' : row === 0 ? 'rt.foul.dead' : 'rt.foul.nifu'), { reset: false }); },
+        after(m, pos, a, c) { if (E.isDrop(m)) { c.lock(); api.ok(t('rt.foul.ok')); } } });
+      ctl.sel({ hand: FU });
+    } },
+  { id: 'end', title: () => t('rt.end.t'), body: () => `<p>${t('rt.end.b')}</p>`, html: () => winIcons() },
+];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// ---------------------------------------------------------------- list / detail
-function cwFor(P) {
-  const L = $('#lessonList'), W = L.clientWidth || 320, wide = W >= 640;
-  const m = $('#lessonOverlay .modal'), mh = m ? m.clientHeight : innerHeight;
-  const fw = (wide ? W * .58 : W) - 8, fh = wide ? mh - 270 : Math.min(innerHeight * .44, mh - 330);
-  const u = wide ? P.u : P.uN || P.u, v = wide ? P.v : P.vN || P.v;
-  return Math.max(14, Math.min(60, Math.floor(Math.min(fw / u, Math.max(120, fh) / (v * 1.1)) - 1)));
+let tour = null;
+function ensure() {
+  if (tour || !window.RuleTour) return tour;
+  tour = RuleTour.create({
+    mount: '#lessonList', store: 'shogi-rules-tour-v1', lang: () => LANG,
+    close: () => hideOverlay('#lessonOverlay'),
+    play: () => { hideOverlay('#lessonOverlay'); if (lesson) exitLesson(true); openNewDialog(); },
+    lessons: () => { lsTab = 'lesson'; openLessons(); },
+    sound: k => { if (k === 'ok') playChime(true); },
+    pages: PAGES,
+  });
+  return tour;
 }
-function openList() {
-  page = -1;
-  $('#lsListTitle').textContent = t('ru.title'); $('#lsListDesc').textContent = t('ru.desc');
-  const L = $('#lessonList'); L.className = 'lesson-list ru-cards';
-  L.innerHTML = SECS.map((s, i) => {
-    const pages = PAGES.filter(p => p.sec === s), done = pages.every(p => seen[p.id]);
-    return `<button class="ru-card" data-ru="${PAGES.findIndex(p => p.sec === s)}"><span class="ru-th">${THUMB[s]()}</span><span class="ru-ct"><b><i>${i + 1}</i>${t('ru.s.' + s)}</b><small>${t('ru.s.' + s + '.d')}</small></span>${done ? '<span class="ru-ok">✓</span>' : ''}</button>`;
-  }).join('');
-  L.scrollTop = 0;
+function openTour(i) {
+  $('#lsListTitle').textContent = ''; $('#lsListDesc').textContent = '';
+  const L = host(); L.className = 'rt-host';
+  const T = ensure(); if (!T) return;
+  T.open(typeof i === 'number' ? i : T.page || 0);
 }
-function openPage(i) {
-  page = Math.max(0, Math.min(PAGES.length - 1, i));
-  const P = PAGES[page], si = SECS.indexOf(P.sec), inSec = PAGES.filter(p => p.sec === P.sec), k = inSec.indexOf(P);
-  seen[P.id] = 1; try { localStorage.setItem(STORE, JSON.stringify(seen)); } catch (e) {}
-  $('#lsListTitle').textContent = t('ru.s.' + P.sec) + (inSec.length > 1 ? ` ${k + 1}/${inSec.length}` : '');
-  $('#lsListDesc').textContent = '';
-  const L = $('#lessonList'); L.className = 'lesson-list ru-detail';
-  L.innerHTML = '<div class="ru-main"><div class="ru-figs"></div><div class="ru-txt"></div></div>';
-  let cw = cwFor(P);
-  const body = t('ru.' + P.id + '.b').split('<br>').map(x => `<p>${x}</p>`).join('');
-  const les = P.lesson !== undefined && LESSONS && LESSONS.grades[P.lesson] ? `<button class="ru-try" data-try="${P.lesson}">✎ ${t('ru.try', { n: L_(LESSONS.grades[P.lesson].title) })}</button>` : '';
-  const dots = PAGES.map((p, j) => `<button data-ru="${j}" class="${j === page ? 'cur' : ''}${seen[p.id] ? ' ok' : ''}${j && PAGES[j - 1].sec !== p.sec ? ' gap' : ''}" aria-label="${j + 1}"></button>`).join('');
-  L.innerHTML = `<div class="ru-dots">${dots}<span class="ru-keys">${t('ru.keys')}</span></div><div class="ru-main${P.wide ? ' wide' : ''}"><div class="ru-figs">${P.fig(cw)}</div><div class="ru-txt"><h3>${t('ru.' + P.id + '.t')}</h3><div class="ru-body">${body}</div>${les}</div></div>` +
-    `<div class="ru-nav"><button class="ru-list">☰ ${t('ls.list')}</button><button class="ru-prev" ${page ? '' : 'disabled'}>${t('ru.prev')}</button>` +
-    (page < PAGES.length - 1 ? `<button class="ru-next go">${t('ru.next')}</button>` : `<button class="ru-tolessons go">${t('ru.toLessons')}</button>`) + `</div>` +
-    '';
-  L.scrollTop = 0; const m = $('#lessonOverlay .modal'); if (m) m.scrollTop = 0;
-  // PC: the page should fit the fixed-size dialog without scrolling — shrink the diagram until it does
-  const F = L.querySelector('.ru-figs'), T = L.querySelector('.ru-txt');
-  if (m && L.clientWidth >= 640) for (let k = 0; k < 16 && m.scrollHeight > m.clientHeight + 1 && cw > 16 && F.offsetHeight >= T.offsetHeight; k++) { cw -= 2; F.innerHTML = P.fig(cw); }
-  void si;
-}
-const L_ = o => (o && (o[LANG] || o.en || o.ja)) || '';
-function active() { const o = $('#lessonOverlay'); return o.classList.contains('show') && !$('#lessonListView').classList.contains('hidden') && lsTab === 'rules'; }
-
-$('#lessonList').addEventListener('click', e => {
-  if (lsTab !== 'rules') return;
-  const b = e.target.closest('button'); if (!b) return;
-  e.stopImmediatePropagation();
-  if (b.dataset.ru !== undefined) openPage(+b.dataset.ru);
-  else if (b.classList.contains('ru-list')) openList();
-  else if (b.classList.contains('ru-prev')) openPage(page - 1);
-  else if (b.classList.contains('ru-next')) openPage(page + 1);
-  else if (b.classList.contains('ru-tolessons')) { lsTab = 'lesson'; openLessons(); }
-  else if (b.dataset.try !== undefined) openIntro(+b.dataset.try);
-}, true);
-document.addEventListener('keydown', e => {
-  if (e.metaKey || e.ctrlKey || e.altKey || !active() || page < 0) return;
-  const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT')) return;
-  if (e.key === 'ArrowLeft' && page > 0) { e.preventDefault(); openPage(page - 1); }
-  else if (e.key === 'ArrowRight' && page < PAGES.length - 1) { e.preventDefault(); openPage(page + 1); }
-});
+const active = () => $('#lessonOverlay').classList.contains('show') && !$('#lessonListView').classList.contains('hidden') && lsTab === 'rules' && tour && tour.visible();
 let rzT = 0;
-addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (active() && page >= 0) openPage(page); }, 150); });
-
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (active()) tour.render(); }, 150); });
+$('#langSel').addEventListener('change', () => { if (active()) setTimeout(() => tour.render(), 0); });
 
 // ---------------------------------------------------------------- opening-story diagram: full 9x9 board from an SFEN, marked squares ("47" = file 4, rank 7), pieces in hand
 function opDiagram(sfen, marks, cw) {
@@ -234,5 +303,5 @@ function opDiagram(sfen, marks, cw) {
   const files = `<div class="op-files" style="--cw:${cw}px">${[9, 8, 7, 6, 5, 4, 3, 2, 1].map(n => `<span>${n}</span>`).join('')}</div>`;
   return `<div class="op-diag">${hrow(1, '☖')}${files}${board({ c: 9, r: 9, p: ps, t: tt, rk: rankLbl(9) }, cw)}${hrow(0, '☗')}</div>`;
 }
-window.ShogiRules = { diagram: opDiagram, open: openList, list: openList, page: openPage, count: PAGES.length, pages: PAGES.map(p => p.id) };
+window.ShogiRules = { diagram: opDiagram, open: openTour, list: openTour, page: openTour, get count() { return PAGES.length; }, pages: PAGES.map(p => p.id), tour: () => ensure(), stop() { if (tour) tour.stop(); } };
 })();

@@ -295,3 +295,19 @@ ar: {
 };
 for (const l in X) if (I18N[l]) Object.assign(I18N[l], X[l]);
 })();
+// common spec v2: PC header bar + puzzles that go on after a wrong line
+(() => {
+const X = {
+  ja: { 'hb.over': '終局', 'pz.dev': '正解の手順から外れました。最後まで指して目標に届けば正解（★2）です。', 'pz.devWas': '最初に外れた手は {m}（正解は {b}）でした。', 'pz.bl.take': '取れる箱があるのに取りませんでした。', 'pz.bl.give': '安全な線があるのに箱を渡しました。' },
+  en: { 'hb.over': 'Game over', 'pz.dev': 'You left the solution line. Play on: reaching the target at the end still counts (★2).', 'pz.devWas': 'Your first wrong move was {m} (best: {b}).', 'pz.bl.take': 'A box was there to take, and you did not take it.', 'pz.bl.give': 'You handed over boxes while a safe line was available.' },
+  zh: { 'hb.over': '终局', 'pz.dev': '已偏离正解手顺。继续下到最后，达到目标仍算正解（★2）。', 'pz.devWas': '第一次偏离的一手是 {m}（正解 {b}）。', 'pz.bl.take': '有能占的格子却没有占。', 'pz.bl.give': '明明有安全线，却把格子送给了对手。' },
+  ko: { 'hb.over': '종국', 'pz.dev': '정답 수순에서 벗어났습니다. 끝까지 두어 목표에 닿으면 정답(★2)입니다.', 'pz.devWas': '처음 벗어난 수는 {m}(정답 {b})였습니다.', 'pz.bl.take': '가져갈 수 있는 상자가 있는데 가져가지 않았습니다.', 'pz.bl.give': '안전한 선이 있는데 상자를 내주었습니다.' },
+  es: { 'hb.over': 'Fin de la partida', 'pz.dev': 'Te saliste de la solución. Sigue jugando: si alcanzas el objetivo al final, cuenta (★2).', 'pz.devWas': 'Tu primera jugada errónea fue {m} (la mejor: {b}).', 'pz.bl.take': 'Había una caja para tomar y no la tomaste.', 'pz.bl.give': 'Entregaste cajas habiendo una línea segura.' },
+  fr: { 'hb.over': 'Partie terminée', 'pz.dev': 'Vous avez quitté la solution. Continuez : atteindre l’objectif à la fin compte quand même (★2).', 'pz.devWas': 'Votre premier coup erroné : {m} (le meilleur : {b}).', 'pz.bl.take': 'Une boîte était à prendre et vous ne l’avez pas prise.', 'pz.bl.give': 'Vous avez donné des boîtes alors qu’un trait sûr existait.' },
+  pt: { 'hb.over': 'Fim de jogo', 'pz.dev': 'Você saiu da solução. Continue: atingir o objetivo no fim ainda conta (★2).', 'pz.devWas': 'Seu primeiro lance errado foi {m} (o melhor: {b}).', 'pz.bl.take': 'Havia uma caixa para pegar e você não pegou.', 'pz.bl.give': 'Você entregou caixas havendo uma linha segura.' },
+  de: { 'hb.over': 'Partie beendet', 'pz.dev': 'Du hast die Lösung verlassen. Spiel weiter: Erreichst du am Ende das Ziel, zählt es (★2).', 'pz.devWas': 'Dein erster Fehlzug war {m} (am besten: {b}).', 'pz.bl.take': 'Ein Kästchen war zu nehmen, und du hast es nicht genommen.', 'pz.bl.give': 'Du hast Kästchen verschenkt, obwohl es eine sichere Linie gab.' },
+  hi: { 'hb.over': 'खेल समाप्त', 'pz.dev': 'आप सही क्रम से हट गए। अंत तक खेलें: लक्ष्य तक पहुँचे तो फिर भी सही (★2)।', 'pz.devWas': 'आपकी पहली गलत चाल {m} थी (सबसे अच्छी: {b})।', 'pz.bl.take': 'लेने लायक बॉक्स था, पर आपने नहीं लिया।', 'pz.bl.give': 'सुरक्षित रेखा होते हुए भी आपने बॉक्स दे दिए।' },
+  ar: { 'hb.over': 'انتهت المباراة', 'pz.dev': 'خرجت عن خط الحل. تابع اللعب: إن بلغت الهدف في النهاية يُحتسب حلًّا (★2).', 'pz.devWas': 'أول نقلة خاطئة كانت {m} (الأفضل: {b}).', 'pz.bl.take': 'كان هناك مربع يمكن أخذه ولم تأخذه.', 'pz.bl.give': 'سلّمت مربعات مع وجود خط آمن.' },
+};
+for (const l in X) if (I18N[l]) Object.assign(I18N[l], X[l]);
+})();

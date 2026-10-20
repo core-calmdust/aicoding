@@ -32,6 +32,15 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
+/* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar */
+html.hb-on{--top:0px;--vh:calc(100vh - var(--hb-h))}
+@supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
+html.hb-on .side > .brand{display:none}
+/* dialogs cover the header bar (z-index 60) so they are never hidden under it */
+html.hb-on .overlay{z-index:65}
+#lessonListView:has(> .rt-host) > .modal-actions,#lessonListView:has(> .rt-host) > #lsListDesc{display:none}
+#lessonListView:has(> .rt-host) > #lsListTitle:empty{display:none}
+.hb-info .hb-chip[hidden]{display:none!important}
 html,body{height:100%;overflow:hidden}
 body{
   background:radial-gradient(1200px 700px at 30% -10%, #34230f 0%, transparent 60%),radial-gradient(900px 600px at 110% 110%, #281a0d 0%, transparent 60%),var(--bg);
@@ -185,7 +194,9 @@ html[lang=ar] bdi{unicode-bidi:isolate;direction:ltr}
 .graph{touch-action:none;user-select:none;margin-top:10px;width:100%;height:clamp(40px,calc(var(--vh)*.09),90px);display:block;cursor:pointer}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.controls{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.controls .btn{min-width:0}
+.controls .btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
@@ -665,7 +676,7 @@ body.in-online #evalCard .navbar{margin-top:0}
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px - 62px);--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
+  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))} }
   @media (max-width: 700px) and (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} body:not(.no-online) .app{padding-bottom:124px} }
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#24180f,#150e09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
@@ -1175,13 +1186,16 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261020gs"></script>
-<script src="rules-i18n.js?v=20261019ru"></script>
+<script src="i18n.js?v=20261021hb"></script>
+<script src="rules-i18n.js?v=20261021rt"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=1"></script>
-<script src="engine.js?v=20261019q16"></script>
+<script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="../shared/pzbook.js?v=2"></script>
+<script src="../shared/headerbar.js?v=1"></script>
+<script src="../shared/tick.js?v=1"></script>
+<script src="../shared/ruletour.js?v=1"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
 <script src="online.js?v=20261020gt"></script>
 <script>
@@ -1249,6 +1263,8 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
   $('#langSel').value = LANG;
+  // portal version (?skin=atlas): the h1 is shown next to the portal logo — use the plain game name of the language
+  if (document.documentElement.classList.contains('atlas-skin')) { const h = document.querySelector('.brand-l h1') || document.querySelector('.hb-title h1'); const tn = h && [...h.childNodes].find(n => n.nodeType === 3); if (tn) tn.textContent = t('hb.name'); }
   try { accRender(); } catch (e) {}   // the Google chip / account box are built in JS, not via data-i18n
 }
 const $ = s => document.querySelector(s);
@@ -1302,7 +1318,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261019q16');
+  const w = new Worker('engine.js?v=20261021v2');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1667,6 +1683,25 @@ function playerName(c) {
 const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('mated') : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(Math.round(v));
 const winRate = v => 1 / (1 + Math.exp(-v / 600));
 function evAt(i) { for (let k = i; k >= 0 && k >= i - 1; k--) if (game.info[k] && game.info[k].ev != null) return game.info[k].ev; return null; }
+// header bar (PC): whose turn, move number, evaluation (not during rated / online games), clock of the side to move
+var HB = null;
+const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function hbInfo() {
+  if (!HB || !HB.on || !game) return;
+  if (lesson) { HB.setInfo(`<span class="hb-chip"><b>${escHb($('#lsTitle').textContent || '')}</b></span>`); return; }
+  let h = `<span class="hb-chip"><b>${escHb(game.over ? t('hb.over') : t('hb.turn', { c: (P.side ? '☖' : '☗') + cname(P.side) }))}</b></span>`;
+  h += `<span class="hb-chip">${escHb(t('hb.move', { n: cur }))}</span>`;
+  const noEval = rtLive() || (settings.mode === 'online' && net && !net.done && !net.spectate);
+  if (settings.eval && !noEval && evAt(cur) != null) h += `<span class="hb-chip">${escHb(t('hb.eval'))} <b>${escHb($('#evalText').textContent)}</b></span>`;
+  h += `<span class="hb-chip" id="hbClk" hidden></span>`;
+  HB.setInfo(h); hbClock();
+}
+// the clock chip follows the clock of the side to move (updated by clockTick / netTick)
+function hbClock() {
+  const el = document.getElementById('hbClk'); if (!el || !game) return;
+  const c = $(P.side ? '#clkWhite' : '#clkBlack'), txt = c && c.classList.contains('on') && !game.over ? c.textContent.trim() : '';
+  el.hidden = !txt; if (txt && el.dataset.v !== txt) { el.dataset.v = txt; el.innerHTML = `⏱ <b>${escHb(txt)}</b>`; }
+}
 function renderInfo() {
   try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (ShogiStrategy.localName ? ShogiStrategy.localName(c, LANG) : (LANG === 'ja' ? c.ja : c.en)) : ''; } catch (e) {}
   olPName($('#nameBlack'), 0); olPName($('#nameWhite'), 1);
@@ -1695,6 +1730,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.remove('show');
   if (reviewing) $('#reviewText').textContent = t('review.label', { n: cur });
+  hbInfo();
 }
 function renderGraph() {
   const svg = $('#graph'); const W = 300, H = 74, n = Math.max(game.moves.length + 1, 40);
@@ -2087,7 +2123,7 @@ $('#btnCopy').onclick = () => {
   if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : game.over.reason === 'time' ? '切れ負け' : game.over.reason === 'abandon' ? '中断' : '千日手'}\n`;
   navigator.clipboard.writeText(s).then(() => toast(t('copied')), () => toast('copy failed'));
 };
-$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
+$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (HB) HB.relabel(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
 // ====================================================================== rated games against the AI (local Elo, kept apart from the online rating)
@@ -2275,7 +2311,7 @@ function clockTick() {
   const c = game && game.clock;
   for (const side of [0, 1]) {
     const el = $(side ? '#clkWhite' : '#clkBlack');
-    if (!c || lesson || edit) { el.classList.remove('on'); continue; }
+    if (!c || lesson || edit) { el.classList.remove('on'); CountTick.reset('loc' + side); continue; }
     el.classList.add('on');
     let main = c.left[side], byo = c.byo;
     if (P && P.side === side && clockActive(side)) {
@@ -2288,7 +2324,10 @@ function clockTick() {
     }
     el.textContent = main > 0 ? `${fmtClock(main)}  +${c.byo}s` : `${t('clk.byoLbl')} ${Math.max(0, Math.ceil(byo))}s`;
     el.classList.toggle('low', main <= 0 && byo <= 10);
+    // time signal (shared/tick.js): the last 5 s of the byoyomi of the side to move (vs AI: only the player's own clock runs)
+    if (P && P.side === side && clockActive(side) && main <= 0) CountTick.feed(byo * 1000, 'loc' + side); else CountTick.reset('loc' + side);
   }
+  hbClock();
 }
 setInterval(clockTick, 250);
 
@@ -2899,6 +2938,7 @@ async function openLessons() {
   await lessonsReady; await tsumeReady; await openReady; if (!LESSONS) return;
   lessonView('list'); showOverlay('#lessonOverlay');
   $('#lessonList').className = 'lesson-list';
+  if (lsTab !== 'rules' && window.ShogiRules && ShogiRules.stop) ShogiRules.stop();   // pending tutorial timers must not redraw another tab
   if (lsTab === 'rules') { segSel('segLs', 'rules'); ShogiRules.open(); if (window.__rulesOffer) window.__rulesOffer.mark(); return; }
   if (lsTab === 'tsume') { openTsumeList(); return; }
   if (lsTab === 'open') { openOpenList(); return; }
@@ -3105,6 +3145,10 @@ $('#btnLesson').onclick = () => { lsTab = 'lesson'; openLessons(); };
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
 // first-time banner in the new-game dialog → illustrated rules (the Rules tab of the lesson dialog)
 if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
+// PC header bar: title left, menu (new > undo > hint > rules > lessons > tsume > resign) + icons right, game info in between
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnTsume', '#btnResign'], rules: () => { lsTab = 'rules'; openLessons(); }, lang: () => LANG }) : null;
+if (HB) HB.onChange(() => { if (game) renderInfo(); });
+if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitLesson(); };
 $('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lesson && lesson.exam) startExam(); else if (lesson && lesson.opening) startOpening(lesson.gi); else startLesson(lesson ? lesson.gi : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = Math.min(LESSONS.grades.length - 1, (lesson ? lesson.gi : introIdx) + 1); openIntro(n); };
@@ -3162,7 +3206,7 @@ function startLesson(gi) {
 }
 function loadProblem() {
   const pr = lesson.probs[lesson.k];
-  lesson.cur = pr; lesson.retry = null; lesson.missed = false; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = '';
+  lesson.cur = pr; lesson.retry = null; lesson.missed = false; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = ''; lesson.offline = false; lesson.dev = 0;
   lessonGame(pr.sfen, []);
   renderLesson();
 }
@@ -3185,7 +3229,7 @@ function keepBoardPos(fn) {
   const d = el.getBoundingClientRect().top - y0;
   if (Math.abs(d) > 1 && document.documentElement.scrollHeight > innerHeight + 4) window.scrollBy(0, d);
 }
-function renderLesson() { keepBoardPos(renderLesson0); stSync(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
+function renderLesson() { keepBoardPos(renderLesson0); stSync(); hbInfo(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
 function renderLesson0() {
   if (lesson.study) { showStudy(); return; }
   $('#lsDots').classList.remove('exam');
@@ -3219,7 +3263,7 @@ function renderLesson0() {
   $('#lsFb').innerHTML = lesson.fbHtml || '';
   if (lesson.retry) { $('#lsHint').textContent = t('ts.retry'); $('#lsHint').disabled = false; $('#lsNext').textContent = t('ls.answer'); $('#lsQuit').textContent = t('ls.quit'); return; }
   $('#lsHint').textContent = lesson.answered ? t('ls.answer') : t('ls.hint');
-  $('#lsHint').disabled = (lesson.answered && lesson.shownAnswer) || (!lesson.answered && lesson.hintShown);
+  $('#lsHint').disabled = (lesson.answered && lesson.shownAnswer) || (!lesson.answered && (lesson.hintShown || !!lesson.offline));   // off the solution line there is no hint move
   $('#lsNext').textContent = lesson.answered ? (!lesson.endless && lesson.k >= lesson.probs.length - 1 ? t('ls.finish') : t('ls.next')) : t('ls.answer');
   $('#lsQuit').textContent = t('ls.quit');
 }
@@ -3247,27 +3291,43 @@ async function lessonMove(m) {
   lessonGame(pr.sfen, moves); playPiece(false);
   const pen = lesson.hintShown ? HINT_PEN : 0;
   if (pr.kind === 'tsume') {
+    // tsume v2 (common spec): a check that leaves the solution does not fail at once — the defender answers (longest
+    // defence while mate is still forced, otherwise an escape) and the player may keep checking until the problem's
+    // move count is used up. Mating within the count (any line, 別解 included) solves the problem.
+    // "Obvious mistake" (fails at once, PZBook 'blunder'):
+    //   1. a move that is not a check (tsume requires a check on every attacking move);
+    //   2. the defender's reply leaves the attacker without a single checking move — the chase is over at once.
+    // A 1-move problem is judged at once as before.
     const K = Math.ceil(pr.n / 2);
-    const fail = why => {
+    PZBook.setLang(LANG);
+    const fail = (why, blunder) => {
+      if (lesson.offline) lesson.played = pr.sol.slice(0, lesson.dev);   // the answer is shown from where the line was left
+      if (blunder) why = `<b class="ng">${PZBook.t('blunder')}</b> ${why}`;
       // tsume mode: don't reveal the answer — offer a retry or the answer
       if (lesson.endless) { lesson.retry = { why }; lesson.missed = true; lesson.waiting = false; lesson.fbHtml = `<b class="ng">${t('ts.wrong')}</b> ${why}`; renderLesson(); return; }
       lessonScored(Math.max(0, Math.round(PTS / 2 * lesson.atkOk / K) - pen), { why, partial: lesson.atkOk, K });
     };
     const p = posAt(moves.length);
-    if (!p.inCheck()) return fail(t('ls.notCheck'));
-    if (!p.legalMoves(false).length) return lessonScored(Math.max(0, PTS - pen), { solved: true });
+    if (!p.inCheck()) return fail(t('ts.notCheck'), pr.n > 1);
+    if (!p.legalMoves(false).length) return lessonScored(Math.max(0, PTS - pen), { solved: true, alt: !!lesson.offline });
+    const remain = pr.n - moves.length;
+    if (remain <= 0) return fail(pr.n === 1 ? t('ls.notMate') : PZBook.t('outOfMoves', { n: pr.n }));
+    const onLine = !lesson.offline && moves.every((u, i) => u === pr.sol[i]);
+    if (!onLine && !lesson.offline) { lesson.offline = true; lesson.dev = moves.length - 1; }
     // composed problems (u): unique solution, and the stored line already holds the defender's longest non-futile
     // defence, so the reply comes from the line (an engine call could prefer a futile interposition)
-    const res = pr.u ? (moves.every((u, i) => u === pr.sol[i]) && pr.sol[moves.length] ? { reply: pr.sol[moves.length] } : null)
-      : await aiCall({ type: 'tsumeReply', sfen: pr.sfen, moves, remain: pr.n - moves.length });
+    const res = onLine && pr.u && pr.sol[moves.length] ? { reply: pr.sol[moves.length], mate: true }
+      : await aiCall({ type: 'tsumeDefend', sfen: pr.sfen, moves, remain });
     if (!lesson || lesson.cur !== pr) return;
     if (!res || !res.reply) return fail(t('ls.notMate'));
-    lesson.atkOk++;
+    if (onLine && res.mate) lesson.atkOk++;
     lesson.played = [...moves, res.reply];
     await sleep(350); if (!lesson || lesson.cur !== pr) return;
     lessonGame(pr.sfen, lesson.played); playPiece(false);
+    const q = posAt(lesson.played.length), left = pr.n - lesson.played.length;
+    if (!q.legalMoves(true).some(m => { q.doMove(m); const c = q.inCheck(); q.undoMove(); return c; })) { return fail(t('ts.escaped'), true); }
     lesson.waiting = true;
-    lesson.fbHtml = `<b class="ok">${t('ls.continue')}</b>`;
+    lesson.fbHtml = `<b class="${res.mate ? 'ok' : ''}">${res.mate && !lesson.offline ? t('ls.continue') : t('ts.offline')}</b> <span class="ts-left">${PZBook.t('movesLeft', { n: left })}</span>`;
     renderLesson();
     return;
   }
@@ -3325,6 +3385,7 @@ function lessonScored(pts, info) {
   let html = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b>`;
   if (lesson.hintShown && !lesson.shownAnswer) html += ` <span style="font-size:11.5px">(${t('ls.hintPen', { n: HINT_PEN })})</span>`;
   if (pr.kind === 'tsume') {
+    if (info.solved && info.alt) html += ` ${t('ts.altSolved')}`;
     if (!info.solved) html += ` ${info.why || ''}${info.K ? ` <span style="font-size:12px">${t('ls.partial', { k: info.partial, n: info.K })}</span>` : ''}<br>${t('ls.answerIs', { m: lineKanji(pr.sfen, sol.slice(0, lesson.played.length + 1)).pop() })}`;
   } else if (info.usi) {
     if (!pr.accept.includes(info.usi)) html += `<br>${t('ls.bestIs', { m: pr.accept.map(u => kan1(pr.sfen, u)).join('・') })}`;
@@ -3373,7 +3434,7 @@ async function playSolution() {
 $('#lsHint').onclick = () => {
   if (!lesson) return;
   if (lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(); } return; }
-  if (lesson.retry) { const pr = lesson.cur; lesson.retry = null; lesson.played = []; lesson.atkOk = 0; lesson.fbHtml = ''; lessonGame(pr.sfen, []); lesson.waiting = true; renderLesson(); return; }
+  if (lesson.retry) { const pr = lesson.cur; lesson.retry = null; lesson.played = []; lesson.atkOk = 0; lesson.offline = false; lesson.dev = 0; lesson.fbHtml = ''; lessonGame(pr.sfen, []); lesson.waiting = true; renderLesson(); return; }
   if (lesson.answered) { playSolution(); return; }
   lesson.hintShown = true;
   const pr = lesson.cur, sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
@@ -3750,7 +3811,10 @@ function netTick() {
     const el = $(c ? '#clkWhite' : '#clkBlack');
     const k = Online.clockOf(g, c ? 'w' : 'b', c === side && !net.pending, now);
     olClk(el, k, c === side);
+    // time signal: only my own clock while it is my move (spectators hear nothing)
+    if (!net.spectate && c === net.me && c === side && !net.pending) CountTick.feed(k.byo !== null ? k.byo : (byo ? 0 : k.main), 'net'); else if (c === net.me) CountTick.reset('net');
   }
+  hbClock();
   // the opponent ran out of time (with a little grace for latency): claim the win
   if (!net.spectate && side !== net.me && !net.pending && !net.claiming && Online.clockOf(g, side ? 'w' : 'b', true, now).left < -Online.GRACE) { net.claiming = true; Online.claimTimeout(net.gid, net.opp).catch(() => {}).finally(() => { if (net) net.claiming = false; }); }
 }
@@ -4375,7 +4439,7 @@ document.addEventListener('keydown', e => {
 });
 if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStart(); }, 1000);
 </script>
-<script src="rules.js?v=20261020st"></script>
+<script src="rules.js?v=20261021rt"></script>
 <script src="opclass.js?v=1"></script>
 <!-- World Board Game Atlas portal skin: shogi/?skin=atlas — 3D board, guide speech bubbles, portal look (all features kept) -->
 <script>
