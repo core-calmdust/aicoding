@@ -814,6 +814,9 @@ class AudioHandler {
             } catch (e) {}
         });
         this.bgmOscillators = [];
+        // 共有エコーの残響も止める（残すとゲームオーバー後もパッドの音が尾を引いて鳴り続ける）
+        Object.values(this._echo || {}).forEach(d => { try { d.disconnect(); } catch (e) {} });
+        this._echo = {};
     }
 
     playSound(type) {
