@@ -249,7 +249,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .endc .sc{font-family:var(--round);font-weight:700;font-size:20px;color:var(--ink2)}
 /* ---------- home: compact profile (one update-card wide) + today's game ---------- */
 .toprow{display:grid;grid-template-columns:503px minmax(0,1fr);gap:16px;margin-top:18px}   /* the gap sits under the centre of the 2nd update card (330 + 16 + 165 − 8) */
-.prof{position:relative;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-radius:28px}
+.prof{position:relative;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-radius:28px;border:0!important;box-shadow:0 6px 0 #e9dcc0,0 14px 28px -14px rgba(120,80,20,.4)!important}   /* same solid edge as Today's game, so both read the same size */
 .prof .bgfill{position:absolute;inset:0;opacity:.9}
 .prof .bgfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,253,247,.15) 0%,rgba(255,253,247,.93) 38%)}
 [dir=rtl] .prof .bgfill::after{background:linear-gradient(270deg,rgba(255,253,247,.15) 0%,rgba(255,253,247,.93) 38%)}
