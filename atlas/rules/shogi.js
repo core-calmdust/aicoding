@@ -425,11 +425,11 @@
       if (e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); const nx = $('[data-a=next]'); if (nx.disabled || (e.key === 'ArrowRight' && STEPS[step].last)) return; nx.click(); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); if (step) go(step - 1); }
     };
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
     requestAnimationFrame(() => el.classList.add('on'));
     later(() => go(0), 350);
     return {
-      stop() { stopped = true; clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey); el.remove(); },
+      stop() { stopped = true; clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
       panel: el,
       _debug: { cell: (c, r) => { const [x, z] = SG.cell(c, r); return [x * SC, z * SC, Y * SC]; } },
     };

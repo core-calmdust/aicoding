@@ -213,15 +213,15 @@
     // keyboard: Space / → next, ← back (the next button's rules apply: an interactive step waits for the move)
     const onKey = e => {
       if (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;
-      if (document.activeElement && el.contains(document.activeElement)) document.activeElement.blur();   // no double-press via the focused button
-      if (e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); const nx = $('[data-a=next]'); if (nx.disabled || (e.key === 'ArrowRight' && STEPS[step].last)) return; nx.click(); }
+      if (document.activeElement && document.activeElement !== document.body && (e.key === 'Enter' || e.key === ' ')) document.activeElement.blur();   // Enter/Space must not re-press a focused button (e.g. the Rules button → restart)
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.stopPropagation(); e.preventDefault(); const nx = $('[data-a=next]'); if (nx.disabled || (e.key === 'ArrowRight' && STEPS[step].last)) return; nx.click(); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); if (step) go(step - 1); }
     };
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
     requestAnimationFrame(() => el.classList.add('on'));
     later(() => go(0), 350);
     return {
-      stop() { stopped = true; clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey); el.remove(); },
+      stop() { stopped = true; clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
       panel: el,
     };
   }

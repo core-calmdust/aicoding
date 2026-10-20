@@ -204,6 +204,7 @@ function create(o) {
     if (!visible() || e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
     const rtl = document.documentElement.lang === 'ar';
+    if (e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); if (document.activeElement) document.activeElement.blur(); go(tour.page + 1); return; }   // Enter = next (not a re-press of the button that opened the rules)
     if (e.key === 'ArrowRight') { e.preventDefault(); e.stopImmediatePropagation(); go(tour.page + (rtl ? -1 : 1)); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopImmediatePropagation(); go(tour.page + (rtl ? 1 : -1)); }
   }, true);
