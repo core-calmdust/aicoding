@@ -70,6 +70,7 @@
   "rt.class5": "Nivel 1.er dan",
   "rt.class6": "Nivel 3.er dan",
   "rt.class7": "Nivel 5.º dan",
+  "tab.rules": "Reglas",
   "tab.open": "Aperturas",
   "tab.puzzle": "Problemas",
   "ls.desc": "¿Eres nuevo? Empieza con «Gomoku desde cero»: cinco en línea, bloquear y el cuatro-tres. Luego «Reglas del renju» enseña las jugadas prohibidas de las negras y «Técnicas para ganar» trata los ataques con cuatros y las defensas clave (20 puntos por problema, 75 para aprobar).",
@@ -224,7 +225,7 @@
   "pzl.vcf": "{n} jugadas solo con cuatros · {k} problemas",
   "pzl.vct": "{n} jugadas con treses y cuatros · {k} problemas",
   "pzl.forbid": "{n} jugadas con puntos prohibidos · {k} problemas",
-  "rl.title": "Reglas ilustradas",
+  "rl.title": "Reglas",
   "rl.tab.basic": "Básicas",
   "rl.tab.renju": "Prohibidas",
   "rl.tab.terms": "Términos",
@@ -385,5 +386,6 @@
   "ru.open.b": "<p>En renju las tres primeras jugadas van cerca del centro: la 1.ª en el <b>punto central</b>, la 2.ª justo al lado y la 3.ª a no más de dos líneas del centro.</p>",
   "ru.open.task1": "Jugada 1: pon una negra en el punto central",
   "ru.open.task3": "Jugada 3: pon una negra a no más de dos líneas del centro (zona punteada)",
-  "ru.open.ok": "Ya tienes una apertura de renju."
+  "ru.open.ok": "Ya tienes una apertura de renju.",
+  "btn.rules.title": "Aprender las reglas"
 }

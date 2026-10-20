@@ -70,6 +70,7 @@
   "rt.class5": "Niveau 1. Dan",
   "rt.class6": "Niveau 3. Dan",
   "rt.class7": "Niveau 5. Dan",
+  "tab.rules": "Regeln",
   "tab.open": "Eröffnungen",
   "tab.puzzle": "Aufgaben",
   "ls.desc": "Neu im Spiel? Beginne mit „Gomoku von null“: fünf in einer Reihe, Blockieren und die Vier-Drei. Danach erklärt „Renju-Regeln“ die verbotenen Züge von Schwarz, und „Gewinntechniken“ behandelt Angriffe mit Vieren und wichtige Verteidigungen (20 Punkte pro Aufgabe, 75 zum Bestehen).",
@@ -224,7 +225,7 @@
   "pzl.vcf": "{n} Züge nur mit Vieren · {k} Aufgaben",
   "pzl.vct": "{n} Züge mit Dreien und Vieren · {k} Aufgaben",
   "pzl.forbid": "{n} Züge mit verbotenen Punkten · {k} Aufgaben",
-  "rl.title": "Regeln mit Bildern",
+  "rl.title": "Regeln",
   "rl.tab.basic": "Grundlagen",
   "rl.tab.renju": "Verboten",
   "rl.tab.terms": "Begriffe",
@@ -385,5 +386,6 @@
   "ru.open.b": "<p>Im Renju werden die ersten drei Züge nahe der Mitte gespielt: Zug 1 auf den <b>Mittelpunkt</b>, Zug 2 direkt daneben, Zug 3 höchstens zwei Linien von der Mitte entfernt.</p>",
   "ru.open.task1": "Zug 1: Setze Schwarz auf den Mittelpunkt",
   "ru.open.task3": "Zug 3: Setze Schwarz höchstens zwei Linien von der Mitte (gepunkteter Bereich)",
-  "ru.open.ok": "Das ist eine Renju-Eröffnung."
+  "ru.open.ok": "Das ist eine Renju-Eröffnung.",
+  "btn.rules.title": "Regeln lernen"
 }

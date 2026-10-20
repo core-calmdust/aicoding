@@ -70,6 +70,7 @@
   "rt.class5": "Nível 1º dan",
   "rt.class6": "Nível 3º dan",
   "rt.class7": "Nível 5º dan",
+  "tab.rules": "Regras",
   "tab.open": "Aberturas",
   "tab.puzzle": "Problemas",
   "ls.desc": "É novo no jogo? Comece por \"Gomoku do zero\": cinco em linha, bloqueio e o quatro-três. Depois, \"Regras do renju\" ensina os lances proibidos das pretas e \"Técnicas para vencer\" trata de ataques com quatros e defesas-chave (20 pontos por problema, 75 para passar).",
@@ -224,7 +225,7 @@
   "pzl.vcf": "{n} lances só com quatros · {k} problemas",
   "pzl.vct": "{n} lances com três e quatros · {k} problemas",
   "pzl.forbid": "{n} lances usando pontos proibidos · {k} problemas",
-  "rl.title": "Regras ilustradas",
+  "rl.title": "Regras",
   "rl.tab.basic": "Básico",
   "rl.tab.renju": "Proibidos",
   "rl.tab.terms": "Termos",
@@ -385,5 +386,6 @@
   "ru.open.b": "<p>No renju os três primeiros lances são feitos perto do centro: o 1.º no <b>ponto central</b>, o 2.º logo ao lado e o 3.º a no máximo duas linhas do centro.</p>",
   "ru.open.task1": "Lance 1: jogue as pretas no ponto central",
   "ru.open.task3": "Lance 3: jogue as pretas a no máximo duas linhas do centro (área pontilhada)",
-  "ru.open.ok": "Pronto, uma abertura de renju."
+  "ru.open.ok": "Pronto, uma abertura de renju.",
+  "btn.rules.title": "Aprender as regras"
 }

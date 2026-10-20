@@ -70,6 +70,7 @@
   "rt.class5": "1 dan level",
   "rt.class6": "3 dan level",
   "rt.class7": "5 dan level",
+  "tab.rules": "Rules",
   "tab.open": "Openings",
   "tab.puzzle": "Problems",
   "ls.desc": "New to the game? Start with \"Gomoku from zero\": five in a row, blocking, and the four-three. Then \"Renju rules\" teaches Black's forbidden moves and \"Winning techniques\" covers attacks with fours and key defences (20 points per problem, 75 to pass).",
@@ -224,7 +225,7 @@
   "pzl.vcf": "{n} moves with fours only · {k} problems",
   "pzl.vct": "{n} moves with threes and fours · {k} problems",
   "pzl.forbid": "{n} moves using forbidden points · {k} problems",
-  "rl.title": "Illustrated rules",
+  "rl.title": "Rules",
   "rl.tab.basic": "Basics",
   "rl.tab.renju": "Forbidden",
   "rl.tab.terms": "Terms",
@@ -385,5 +386,6 @@
   "ru.open.b": "<p>In Renju the first three moves are played near the centre: move 1 on the <b>centre point</b>, move 2 right next to it, move 3 within two lines of the centre.</p>",
   "ru.open.task1": "Move 1: play Black on the centre point",
   "ru.open.task3": "Move 3: play Black within two lines of the centre (the dotted area)",
-  "ru.open.ok": "That is a Renju opening shape."
+  "ru.open.ok": "That is a Renju opening shape.",
+  "btn.rules.title": "Learn the rules"
 }

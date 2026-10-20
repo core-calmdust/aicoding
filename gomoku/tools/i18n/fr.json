@@ -70,6 +70,7 @@
   "rt.class5": "Niveau 1er dan",
   "rt.class6": "Niveau 3e dan",
   "rt.class7": "Niveau 5e dan",
+  "tab.rules": "Règles",
   "tab.open": "Ouvertures",
   "tab.puzzle": "Problèmes",
   "ls.desc": "Vous débutez ? Commencez par « Le gomoku de zéro » : cinq en ligne, bloquer, et le quatre-trois. Puis « Règles du renju » présente les coups interdits de Noir et « Techniques gagnantes » couvre les attaques par quatre et les défenses clés (20 points par problème, 75 pour réussir).",
@@ -224,7 +225,7 @@
   "pzl.vcf": "{n} coups, uniquement par quatre · {k} problèmes",
   "pzl.vct": "{n} coups par trois et quatre · {k} problèmes",
   "pzl.forbid": "{n} coups avec points interdits · {k} problèmes",
-  "rl.title": "Règles illustrées",
+  "rl.title": "Règles",
   "rl.tab.basic": "Bases",
   "rl.tab.renju": "Interdits",
   "rl.tab.terms": "Termes",
@@ -385,5 +386,6 @@
   "ru.open.b": "<p>Au renju, les trois premiers coups se jouent près du centre : le 1er sur le <b>point central</b>, le 2e juste à côté, le 3e à deux lignes au plus du centre.</p>",
   "ru.open.task1": "Coup 1 : jouez Noir sur le point central",
   "ru.open.task3": "Coup 3 : jouez Noir à deux lignes au plus du centre (zone pointillée)",
-  "ru.open.ok": "Voilà une ouverture de renju."
+  "ru.open.ok": "Voilà une ouverture de renju.",
+  "btn.rules.title": "Apprendre les règles"
 }

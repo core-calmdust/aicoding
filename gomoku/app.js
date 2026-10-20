@@ -92,6 +92,8 @@ function load() {
     if (Array.isArray(d.moves) && validMoves(d.moves, r)) {
       rule = r; moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null;
+      // restored on page load (not started by the player): the clock stays stopped until the next move is played
+      if (rgame && !rgame.over) rgame.paused = true;
       cur = moves.length; gameOverShown = statusAt(cur).over; return true;
     }
   } catch (e) {}
@@ -474,7 +476,7 @@ function coachResolve(idx, list) {
 }
 function playMove(m) {
   coachMove(cur, m);
-  if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (now - rgame.t)) + RT_CLOCK.inc; rgame.t = now; }
+  if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (rgame.paused ? 0 : now - rgame.t)) + RT_CLOCK.inc; rgame.paused = false; rgame.t = now; }
   moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false;
   evals.length = moves.length; hintList = null;
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
@@ -588,11 +590,14 @@ $('#btnNum').onclick = () => { settings.num = !settings.num; save(); renderBoard
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
 $('#btnRules').onclick = () => openRules('basic');
+// tabs of the one study dialog (rules > lessons > openings > puzzles); switching is instant so the dialog does not flicker
+const inst = on => ['#rulesOverlay', '#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
 function selTab(v) { document.querySelectorAll('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const inst = on => ['#lessonOverlay', '#puzzleOverlay'].forEach(x => $(x).classList.toggle('instant', on));
   inst(true);
+  if (b.dataset.v !== 'rules' && $('#rulesOverlay').classList.contains('show')) { if (rulesTour) rulesTour.stop(); $('#rulesOverlay').classList.remove('show'); }
+  if (b.dataset.v === 'rules' && !$('#rulesOverlay').classList.contains('show')) openRules('basic');
   if (b.dataset.v === 'puzzle' && !$('#puzzleOverlay').classList.contains('show')) { $('#lessonOverlay').classList.remove('show'); openPuzzles(); }
   if (b.dataset.v === 'lesson') { $('#puzzleOverlay').classList.remove('show'); openLessons(); }
   if (b.dataset.v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
@@ -819,7 +824,7 @@ function rulesTourGet() {
     mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG, pages: RU_PAGES,
     close: () => hideOverlay('#rulesOverlay'),
     play: () => { hideOverlay('#rulesOverlay'); openNewDialog(); },
-    lessons: () => { hideOverlay('#rulesOverlay'); openLessons(); },
+    lessons: () => { inst(true); hideOverlay('#rulesOverlay'); openLessons().then(() => setTimeout(() => inst(false), 150)); },
     sound: k => { if (!settings.sound) return; const a = ctx(); if (!a) return; if (k === 'ok') sThreat(); else tone(a, a.currentTime, 220, 0, 0.18, 0.05, 'sine'); },
   });
   return rulesTour;
@@ -828,7 +833,13 @@ function rulesTourGet() {
 function openRules(tab) {
   const T = rulesTourGet(); if (!T) return;
   const i = tab === 'renju' ? RU_PAGES.findIndex(p => p.id === 'f33') : tab === 'open' ? RU_PAGES.findIndex(p => p.id === 'open') : 0;
+  selTab('rules');
+  // the rules are the first tab of the lessons dialog: replace whichever tab is showing
+  const swap = ['#lessonOverlay', '#puzzleOverlay'].some(x => $(x).classList.contains('show'));
+  if (swap) inst(true);
+  ['#lessonOverlay', '#puzzleOverlay'].forEach(hideOverlay);
   showOverlay('#rulesOverlay'); T.open(i);
+  if (swap) setTimeout(() => inst(false), 150);
 }
 function renderRules() { if (rulesTour) rulesTour.render(); }
 $('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay('#rulesOverlay'); };
@@ -913,12 +924,13 @@ function statusAtRaw(i) { const keep = rgame; rgame = null; try { return statusA
 function rtClockLeft(c) {   // c: 0 black, 1 white
   if (!rgame || !rgame.ct) return 0;
   let v = rgame.ct[c];
-  if (rtLive() && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
+  if (rtLive() && !rgame.paused && toMoveAt(moves.length) - 1 === c) v -= Date.now() - rgame.t;
   return Math.max(0, v);
 }
 function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
 setInterval(() => {
   if (!rtLive()) return;
+  if (rgame.paused) { if (window.CountTick) CountTick.reset('rt'); return; }   // restored on load: stopped until the first move
   const c = toMoveAt(moves.length) - 1, left = rtClockLeft(c);
   const el = $('#count' + (c + 1)); if (el) el.textContent = fmtClock(left);
   // time signal (shared/tick.js): the player's own clock, while it is running (their turn)
