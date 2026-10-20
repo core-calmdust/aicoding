@@ -348,8 +348,14 @@
       <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div></div></div>`;
     if (ad) $('bvStart').onclick = startPlay;
     if ($('bvMode')) {   // AI / rated / two players: only the AI game has a level and a side to pick
+      // the card keeps the AI-game height: the note of the other modes fills the space the level / side rows take
+      let midH = 0;
       const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-        $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai'; $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note'); fitStage(); };
+        if (!midH) { $('bvOpts').hidden = false; midH = $('bvOpts').offsetHeight; }
+        $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai'; $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
+        $('bvMNote').style.minHeight = midH ? midH + 'px' : ''; fitStage(); };
+      if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
+      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; midH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
       $('bvMode').onclick = e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); };
       setMode(mode);
     }

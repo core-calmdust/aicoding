@@ -115,7 +115,7 @@
     function makeDisc(q, color) {
       const g = new TH.Group(), top = T3.bevelDisc(.42, .1, W), bot = T3.bevelDisc(.42, .1, B);
       top.position.y = .1; g.add(bot, top); g.position.y = -.1;
-      const inner = new TH.Group(); inner.add(g); const outer = new TH.Group(); outer.add(inner);
+      const inner = new TH.Group(); inner.add(g); const outer = new TH.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -.098; outer.add(ao);
       const [x, z] = P(q); outer.position.set(x, Y + .1, z); inner.rotation.x = color === 1 ? Math.PI : 0;
       board.add(outer); return (discs[q] = { outer, inner, color });
     }

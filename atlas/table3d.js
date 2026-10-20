@@ -164,6 +164,13 @@
     return mesh(new (T().LatheGeometry)(pts, 40), mat);
   }
   function stone(r, mat) { const m = mesh(new (T().SphereGeometry)(r, 32, 16), mat); m.scale.y = .42; return m; }
+  // soft contact shadow (ambient occlusion) under a piece, so it sits on the surface instead of floating
+  function contact(r, k = .55) {
+    const TT = T(), tex = canvasTex('aoDisc', 128, 128, (c, W) => { const g = c.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W / 2); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(.55, 'rgba(0,0,0,.75)'); g.addColorStop(.78, 'rgba(0,0,0,.25)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, W, W); });
+    tex.encoding = TT.LinearEncoding;
+    const m = new TT.Mesh(new TT.PlaneGeometry(r * 2.5, r * 2.5), new TT.MeshBasicMaterial({ map: tex, transparent: true, opacity: k, depthWrite: false, color: 0x000000 }));
+    m.rotation.x = -Math.PI / 2; m.renderOrder = 1; m.userData.contact = true; return m;
+  }
   const cellPos = (n, size, i) => -size / 2 + size / n * (i + .5);
 
   /* ---------- board builders ---------- */
@@ -195,7 +202,8 @@
         const i = +k, x = cellPos(8, S, i % 8), z = cellPos(8, S, i / 8 | 0);
         const d = new (T().Group)();
         const a = bevelDisc(.44, .1, pos[k] ? B : W), b = bevelDisc(.44, .1, pos[k] ? W : B);
-        b.position.y = .1; d.add(a, b); d.position.set(x, .56, z); g.add(d);
+        b.position.y = .1; d.add(a, b); d.position.set(x, .425, z); g.add(d);   // resting on the felt
+        const sh = contact(.44); sh.position.set(x, .424, z); g.add(sh);
       }
       return g;
     },
@@ -771,5 +779,5 @@
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, ok: () => !!R };
+  window.Table3D = { align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R };
 })();
