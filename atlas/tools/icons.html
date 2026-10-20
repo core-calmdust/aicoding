@@ -30,10 +30,18 @@
   const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), r = box.getBoundingSphere(new THREE.Sphere()).radius;
   // icons: orthographic, isometric-ish (≈32° down) so the square base reads as a clean diamond
   let cam;
-  if (kind === 'piece' || kind === 'mon') {
+  if (kind === 'mon' && q.get('shot') === 'bust') {
+    // speech-bubble guide portrait: 3/4 view, camera close on the head (userData.head = [y, r] in model space)
+    g.rotation.y = +q.get('ry') || .78; g.updateMatrixWorld(true);
+    const hd = g.userData.head || [c.y, r * .5, 0], hp = g.localToWorld(new THREE.Vector3(0, hd[0], hd[2] || 0)), hr = hd[1] * g.scale.y;
+    cam = new THREE.PerspectiveCamera(26, 1, .1, 200);
+    const fit = hr * 1.5, dist = fit / Math.tan(13 * Math.PI / 180);
+    cam.position.set(hp.x + dist * .06, hp.y + dist * .16, hp.z + dist * .985); cam.lookAt(hp.x, hp.y - hr * .22, hp.z);
+    floor.visible = false;
+  } else if (kind === 'piece' || kind === 'mon') {
     cam = new THREE.PerspectiveCamera(24, 1, .1, 200);
     const dist = r / Math.sin(13 * Math.PI / 180) * .84;
-    cam.position.set(c.x + dist * .05, c.y + dist * .62, c.z + dist * .78); cam.lookAt(c.x, c.y - r * .04, c.z);
+    if (kind === "mon") { cam.position.set(c.x + dist * .04, c.y + dist * .3, c.z + dist * .95); cam.lookAt(c.x, c.y, c.z); } else { cam.position.set(c.x + dist * .05, c.y + dist * .62, c.z + dist * .78); cam.lookAt(c.x, c.y - r * .04, c.z); }
   } else {
     cam = new THREE.OrthographicCamera(-r, r, r, -r, .1, 200);
     const el = 35.26 * Math.PI / 180;   // true isometric
