@@ -16,7 +16,7 @@
 
   /* ---------- 3D table behind the page ---------- */
   const host = document.createElement('div'); host.id = 'atlasGL'; document.body.prepend(host);
-  try { T3.mount(host); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); return; }
+  try { T3.mount(host, { plain: true }); } catch (e) { document.documentElement.classList.remove('atlas-skin'); host.remove(); return; }
   const board = T3.MODELS.reversi(true), S = board.userData.S, Y = board.userData.top;
   T3.show('reversi', board);
   const boardDom = document.getElementById('board');

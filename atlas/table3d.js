@@ -320,10 +320,14 @@
     night:   { sky: ['#0b1230', '#24335e'], sun: 0x8fa4ff, sunI: .08, sunPos: [-14, 10, -12], hemi: [0x3a4a80, 0x140c06, .12], lamp: 1.7, exp: .78 },
   };
 
-  function buildRoom(scene) {
+  function buildRoom(scene, plain) {
     const TT = T(), mode = timeOfDay(new Date().getHours()), L = LOOK[mode];
     const g = new TT.Group(); scene.add(g);
     const FLOOR = -3.4;
+    if (plain) {   // play screen of the full games: just a wide wooden tabletop, no room edges
+      const tm = M({ map: wood('tblP', '#b8763e', '#8a5226', 2048, 2048, 1.6), roughness: .42, clearcoat: .4, clearcoatRoughness: .35, bumpScale: .004 });
+      const t = new TT.Mesh(new TT.PlaneGeometry(90, 90), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
+    } else {
     // tatami
     const tatami = canvasTex('tatami', 512, 1024, (c, W, H) => {
       const N = makeNoise(9), img = c.createImageData(W, H), d = img.data;
@@ -384,6 +388,7 @@
     const cush = (x, z, r, c) => { const m = new TT.Mesh(new TT.BoxGeometry(6, .9, 6, 6, 1, 6), M({ color: c, roughness: .8 })); const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) p.setY(i, y * (1.2 - .5 * (Math.abs(p.getX(i)) + Math.abs(p.getZ(i))) / 6)); } m.geometry.computeVertexNormals(); m.position.set(x, FLOOR + .45, z); m.rotation.y = r; m.receiveShadow = true; m.castShadow = true; g.add(m); };
     cush(0, 13, .1, 0xd94a4a); cush(-13, 2, -.4, 0x3b6fd1);
     const ball = new TT.Mesh(new TT.SphereGeometry(1.1, 32, 20), M({ color: 0xffc928, roughness: .3 })); ball.position.set(14, FLOOR + 1.1, 9); ball.castShadow = true; g.add(ball);
+    }
     // lights of the hour
     scene.add(new TT.HemisphereLight(L.hemi[0], L.hemi[1], L.hemi[2]));
     const key = new TT.DirectionalLight(L.sun, L.sunI); key.position.set(...L.sunPos); key.castShadow = true;
@@ -393,10 +398,10 @@
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); scene.add(lamp);
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 32, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); scene.add(shade); }
     if (R) R.toneMappingExposure = L.exp;
-    scene.background = new TT.Color(L.sky[1]).convertSRGBToLinear();
+    scene.background = new TT.Color(plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
     roomMode = mode;
   }
-  function mount(container) {
+  function mount(container, opts = {}) {
     el = container;
     R = new (T().WebGLRenderer)({ antialias: true, alpha: true });
     R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -421,7 +426,7 @@
       const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
       envOK = true;
     } catch (e) {}
-    buildRoom(scene);
+    buildRoom(scene, !!opts.plain);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
