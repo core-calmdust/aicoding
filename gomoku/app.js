@@ -284,6 +284,19 @@ function playerName(p) {
   return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
 }
 function stonesOf(pos, c) { let n = 0; for (let m = 0; m < 225; m++) if (pos.at(m) === c) n++; return n; }
+// PC header bar (shared/headerbar.js): turn, move number, evaluation (not in rated / online games, not when switched off), rule
+let HB = null;   // set at start-up (end of this file)
+const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function hbInfo(st, tm, ev) {
+  if (!HB || !HB.on) return;
+  const dot = c => `<span class="pdisc p${c}" style="width:12px;height:12px;flex:none"></span>`;
+  let h = st.over ? `<span class="hb-chip">${st.winner ? dot(st.winner) : ''}<b>${escHb(t('hb.over'))}</b></span>` : `<span class="hb-chip">${dot(tm)}<b>${escHb(t('hb.turn', { c: pname(tm) }))}</b></span>`;
+  if (cur || !st.over) h += `<span class="hb-chip">${escHb(t('hb.move', { n: cur + (st.over ? 0 : 1) }))}</span>`;
+  if (puzzle) h += `<span class="hb-chip">${escHb(pzT('movesLeft', { n: Math.max(0, pzLeft(puzzle)) }))}</span>`;
+  else if (!lesson && settings.eval && !rtLive() && settings.mode !== 'online' && ev) h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb(evalText(ev))}</b></span>`;
+  h += `<span class="hb-chip">${escHb(t('rule.' + rule))}</span>`;
+  HB.setInfo(h);
+}
 function renderInfo() {
   const pos = posAt(cur), st = statusAt(cur), tm = pos.side;
   for (const p of [P1, P2]) {
@@ -310,7 +323,7 @@ function renderInfo() {
   if (!ev && cur > 0 && evals[cur - 1]) ev = evals[cur - 1];
   $('#evalText').textContent = evalText(ev);
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
-  renderGraph(); renderKifu();
+  renderGraph(); renderKifu(); hbInfo(st, tm, ev);
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -391,6 +404,8 @@ function onPoint(m) {
   const pos = posAt(cur);
   if (pos.at(m)) { if (pend >= 0) { pend = -1; renderFx(); } return; }
   if (!pos.isLegal(m)) {
+    // puzzle: a forbidden point for black is an obvious mistake (puzzle v2)
+    if (puzzle && puzzle.state === 'play' && pos.side === P1 && pos.openingOk(E.M2I[m]) && pos.forbidden(m)) { pend = -1; pzFailBlunder(puzzle, m, 'forbid', pos.forbidden(m)); return; }
     const why = illegalReason(pos, m);
     if (why) { toast(why, 2400); if (pos.side === P1 && pos.forbidden(m)) { lessonMarksFlash(m); } }
     pend = -1; renderFx(); return;
@@ -650,42 +665,173 @@ function miniBoard(o) {
   for (const nm in lab) { const m = P(nm); if ((o.b || []).includes(nm) || (o.w || []).includes(nm)) continue; s += `<text x="${X(m)}" y="${Y(m) + 4}" font-size="12" font-weight="800" text-anchor="middle" font-family="JetBrains Mono,monospace" fill="#b42318">${lab[nm]}</text>`; }
   return s + '</svg>';
 }
-// ---------------------------------------------------------------- illustrated rules
-const RULE_TABS = ['basic', 'renju', 'terms', 'open'];
-const RD = {
-  board: { b: ['h8', 'j9', 'g10'], w: ['h9', 'i7'], n: { h8: 1, h9: 2, i7: 4, j9: 3, g10: 5 } },
-  five: { b: ['e5', 'f6', 'g7', 'h8', 'i9'], w: ['e6', 'f7', 'h7', 'j8'], line: ['e5', 'i9'] },
-  rules3: { b: ['d8', 'e8', 'f8', 'g8', 'h8', 'i8'], w: ['c8', 'e7', 'f7'], line: ['d8', 'i8'] },
-  draw: { full: true, b: [], w: [] },
-  f33: { b: ['g8', 'i8', 'h9', 'h10'], w: [], x: ['h8'] },
-  f44: { b: ['e8', 'f8', 'g8', 'h9', 'h10', 'h11'], w: ['d8', 'h12'], x: ['h8'] },
-  fol: { b: ['c8', 'd8', 'e8', 'g8', 'h8'], w: [], x: ['f8'] },
-  f43: { b: ['e8', 'f8', 'g8', 'h9', 'h10'], w: ['d8'], o: ['h8'] },
-  fivePrio: { b: ['d8', 'e8', 'f8', 'g8', 'h9', 'h10', 'h11'], w: ['c8', 'h12'], o: ['h8'] },
-  four: { b: ['e8', 'f8', 'g8', 'h8'], w: ['d8'], o: ['i8'] },
-  sfour: { b: ['e8', 'f8', 'g8', 'h8'], w: [], o: ['d8', 'i8'] },
-  three: { b: ['f8', 'g8', 'h8'], w: [], o: ['e8', 'i8'], d: ['d8', 'j8'] },
-  split: { b: ['f8', 'h8', 'i8'], w: [], o: ['g8'], d: ['e8', 'j8'] },
-  w33: { b: [], w: ['g8', 'i8', 'h9', 'h10'], o: ['h8'] },
-  open: { b: ['h8', 'i9'], w: ['h9'], n: { h8: 1, h9: 2, i9: 3 }, d: ['f6', 'g6', 'h6', 'i6', 'j6', 'f7', 'g7', 'h7', 'i7', 'j7', 'f8', 'g8', 'i8', 'j8', 'f9', 'g9', 'j9', 'f10', 'g10', 'h10', 'i10', 'j10'] },
-  direct: { b: ['h8'], w: ['h9'], n: { h8: 1, h9: 2 }, crop: [4, 4, 7, 7] },
-  indirect: { b: ['h8'], w: ['i9'], n: { h8: 1, i9: 2 }, crop: [4, 4, 7, 7] },
-};
-function ruleItems(tab) {
-  const it = (h, d, p) => `<div class="rl-item"><h4>${t(h)}</h4>${d ? miniBoard(RD[d]) : ''}<p>${t(p)}</p></div>`;
-  if (tab === 'basic') return [it('rl.board.h', 'board', 'rl.board'), it('rl.five.h', 'five', 'rl.five'), it('rl.rules3.h', 'rules3', 'rl.rules3'), it('rl.draw.h', null, 'rl.draw')].join('');
-  if (tab === 'renju') return [it('rl.f33.h', 'f33', 'rl.f33'), it('rl.f44.h', 'f44', 'rl.f44'), it('rl.fol.h', 'fol', 'rl.fol'), it('rl.f43.h', 'f43', 'rl.f43'), it('rl.prio.h', 'fivePrio', 'rl.prio'), it('rl.white.h', 'w33', 'rl.white')].join('');
-  if (tab === 'terms') return [it('rl.four.h', 'four', 'rl.four'), it('rl.sfour.h', 'sfour', 'rl.sfour'), it('rl.three.h', 'three', 'rl.three'), it('rl.split.h', 'split', 'rl.split')].join('');
-  return [it('rl.open.h', 'open', 'rl.open'), it('rl.direct.h', 'direct', 'rl.direct'), it('rl.indirect.h', 'indirect', 'rl.indirect'), it('rl.pro.h', null, 'rl.pro')].join('');
+// ---------------------------------------------------------------- rules: hands-on step-by-step tutorial (shared/ruletour.js)
+// Only what is needed to play: placing stones, five in a row, blocking a four, threes, freestyle vs standard (overline),
+// the renju forbidden moves for black (3-3, 4-4, overline; 4-3 is allowed) and the renju opening. Tactics -> lessons.
+// Each page builds a small board from the engine (rules, forbidden points, five detection all come from E.Pos).
+function ruPos(r, b, w, side, fresh) {
+  const p = new E.Pos(r);
+  for (const m of toCells(b)) { if (p.side !== P1) p.pass(); p.make(m); }
+  for (const m of toCells(w)) { if (p.side !== P2) p.pass(); p.make(m); }
+  if (p.side !== (side || P1)) p.pass();
+  p.fresh = !!fresh;
+  return p;
 }
-let rulesTab = 'basic';
-function openRules(tab) { rulesTab = RULE_TABS.includes(tab) ? tab : 'basic'; renderRules(); showOverlay('#rulesOverlay'); }
-function renderRules() {
-  $('#rulesTabs').innerHTML = RULE_TABS.map(r => `<button data-r="${r}" class="${r === rulesTab ? 'sel' : ''}">${t('rl.tab.' + r)}</button>`).join('');
-  $('#rulesBody').innerHTML = `<p class="rl-lead">${t('rl.lead.' + rulesTab)}</p><div class="rl-grid">${ruleItems(rulesTab)}</div>`;
+// small interactive board: o = { rule, b, w, side, fresh, crop, onPlay(m, B) }; B.play(m) puts a stone for the side to move
+function ruBoard(api, o) {
+  const pos = ruPos(o.rule, o.b, o.w, o.side, o.fresh), crop = o.crop || [3, 3, 9, 9];
+  const B = { pos, x: [], o: [], d: [], lock: false, n: {} };
+  const stones = c => { const out = []; for (let m = 0; m < 225; m++) if (pos.at(m) === c) out.push(m); return out; };
+  B.draw = () => {
+    if (!api.alive()) return;
+    const st = pos.status(), n = {}; for (const k in B.n) n[sqName(+k)] = B.n[k];
+    api.board.innerHTML = miniBoard({ b: stones(P1).map(sqName), w: stones(P2).map(sqName), x: B.x, o: B.o, d: B.d, crop, line: st.over && st.line ? [st.line[0], st.line[st.line.length - 1]] : null, n });
+    const svg = api.board.querySelector('svg'); if (svg) svg.setAttribute('dir', 'ltr');
+  };
+  B.play = m => { pos.make(m); sStone(); B.draw(); };
+  B.undo = () => { pos.unmake(); B.draw(); };
+  api.board.onclick = e => {
+    const svg = api.board.querySelector('svg'); if (!svg || B.lock) return;
+    const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, k = vb.width / r.width;
+    const x = (e.clientX - r.left) * k, y = (e.clientY - r.top) * k, u = 22, pad = 16;
+    const c = Math.round((x - pad) / u), rr = Math.round((y - pad) / u);
+    if (c < 0 || c >= crop[2] || rr < 0 || rr >= crop[3] || Math.hypot((x - pad) / u - c, (y - pad) / u - rr) > 0.6) return;
+    const m = (crop[1] + crop[3] - 1 - rr) * N + crop[0] + c;
+    if (pos.at(m)) return;
+    o.onPlay(m, B);
+  };
+  B.draw();
+  return B;
 }
-$('#rulesTabs').onclick = e => { const b = e.target.closest('button[data-r]'); if (b) { rulesTab = b.dataset.r; renderRules(); } };
-$('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
+const ruFive = (pos, c) => { const out = []; for (let m = 0; m < 225; m++) if (!pos.at(m) && pos.cls[c][E.M2I[m]] === E.C.FIVE) out.push(m); return out; };
+const RU_PAGES = [
+  { id: 'place', title: () => t('ru.place.t'), body: () => t('ru.place.b'), task: () => t('ru.place.task'),
+    setup(api) {
+      let k = 0;
+      ruBoard(api, { rule: 'free', b: '', w: '', side: P1, onPlay(m, B) {
+        B.play(m); k++; B.lock = true;
+        // white answers next to the black stone
+        api.timer(() => {
+          const near = []; for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) { const c = cx(m) + dx, r = cy(m) + dy; if (c >= 3 && c <= 11 && r >= 3 && r <= 11 && !B.pos.at(r * N + c)) near.push(r * N + c); }
+          if (near.length) B.play(near[Math.floor(Math.random() * near.length)]);
+          B.lock = false;
+          if (k >= 2) { B.lock = true; api.ok(t('ru.place.ok')); }
+        }, 450);
+      } });
+    } },
+  { id: 'five', title: () => t('ru.five.t'), body: () => t('ru.five.b'), task: () => t('ru.five.task'),
+    setup(api) {
+      ruBoard(api, { rule: 'free', b: 'f6 g7 h8 i9', w: 'e5 g6 i8 h10', side: P1, onPlay(m, B) {
+        B.lock = true; B.play(m);
+        if (B.pos.status().winner === P1) api.ok(t('ru.five.ok')); else api.ng(t('ru.five.ng'));
+      } });
+    } },
+  { id: 'block', title: () => t('ru.block.t'), body: () => t('ru.block.b'), task: () => t('ru.block.task'),
+    setup(api) {
+      ruBoard(api, { rule: 'free', b: 'e9 g8 h7 f7', w: 'f9 g9 h9 i9', side: P1, onPlay(m, B) {
+        B.lock = true; B.play(m);
+        const f = ruFive(B.pos, P2);
+        if (!f.length) { api.ok(t('ru.block.ok')); return; }
+        api.timer(() => { B.play(f[0]); api.ng(t('ru.block.ng')); }, 450);
+      } });
+    } },
+  { id: 'three', title: () => t('ru.three.t'), body: () => t('ru.three.b'), task: () => t('ru.three.task'),
+    setup(api) {
+      ruBoard(api, { rule: 'free', b: 'f8 g8 h8', w: 'g7 h9 f9', side: P1, onPlay(m, B) {
+        B.lock = true; B.play(m);
+        const f = ruFive(B.pos, P1);
+        if (f.length < 2) { api.ng(t('ru.three.ng')); return; }
+        B.o = f.map(sqName); B.draw(); api.ok(t('ru.three.ok'));
+        // white blocks one end, black makes five at the other
+        api.timer(() => { B.o = []; B.play(f[0]); api.timer(() => B.play(f[1]), 650); }, 900);
+      } });
+    } },
+  { id: 'overline', title: () => t('ru.ol.t'), body: () => t('ru.ol.b'), task: () => t('ru.ol.task'),
+    setup(api) {
+      ruBoard(api, { rule: 'standard', b: 'd8 f8 g8 h8 i8', w: 'f7 g9 h7 e9', side: P1, onPlay(m, B) {
+        B.lock = true; B.play(m);
+        if (B.pos.status().winner === P1) { api.ok(t('ru.ol.ok')); return; }
+        let six = false; for (let d = 0; d < 4 && !six; d++) { const [dx, dy] = [[1, 0], [0, 1], [1, 1], [1, -1]][d]; let n = 1; for (const s of [1, -1]) { let c = cx(m) + s * dx, r = cy(m) + s * dy; while (c >= 0 && c < N && r >= 0 && r < N && B.pos.at(r * N + c) === P1) { n++; c += s * dx; r += s * dy; } } six = n >= 6; }
+        api.ng(t(six ? 'ru.ol.ng6' : 'ru.ol.ng'), { delay: six ? 3600 : 2400 });
+      } });
+    } },
+  { id: 'f33', title: () => t('ru.f33.t'), body: () => t('ru.f33.b'), task: () => t('ru.f33.task'),
+    setup(api) {
+      ruBoard(api, { rule: 'renju', b: 'g8 i8 h9 h10', w: 'j10 e7 k8', side: P1, onPlay(m, B) {
+        B.lock = true;
+        if (B.pos.forbidden(m)) { B.x = [sqName(m)]; B.draw(); api.ok(t('ru.f33.ok')); }
+        else { B.play(m); api.ng(t('ru.f33.ng')); }
+      } });
+    } },
+  { id: 'f44', title: () => t('ru.f44.t'), body: () => t('ru.f44.b'), task: () => t('ru.f44.task'),
+    setup(api) {
+      const found = new Set();
+      ruBoard(api, { rule: 'renju', b: 'e8 f8 g8 h9 h10 h11 d4 e4 f4 h4 i4', w: 'd8 h12 c4 j4 k10 e11', side: P1, crop: [2, 3, 9, 9], onPlay(m, B) {
+        const f = B.pos.forbidden(m);
+        if (f) {
+          if (found.has(m)) return;
+          found.add(m); B.x = [...found].map(sqName); B.draw();
+          if (found.size >= 2) { B.lock = true; api.ok(t('ru.f44.ok')); } else api.say(t('ru.f44.found', { k: t('fb.k' + f) }), 'ok');
+        } else { B.lock = true; B.play(m); api.timer(() => { B.undo(); B.lock = false; api.say(t('ru.f44.ng'), 'ng'); }, 700); }
+      } });
+    } },
+  { id: 'f43', title: () => t('ru.f43.t'), body: () => t('ru.f43.b'), task: () => t('ru.f43.task'),
+    setup(api) {
+      ruBoard(api, { rule: 'renju', b: 'e8 f8 g8 h9 h10', w: 'd8 i11 g9 j9 f10', side: P1, onPlay(m, B) {
+        B.lock = true; B.play(m);
+        const f = ruFive(B.pos, P1);
+        let three = false; if (f.length === 1) for (let q = 0; q < 225 && !three; q++) if (!B.pos.at(q) && B.pos.cls[P1][E.M2I[q]] === E.C.F4 && !B.pos.forbidden(q)) three = true;
+        if (f.length !== 1 || !three) { api.ng(t('ru.f43.ng')); return; }
+        api.ok(t('ru.f43.ok'));
+        // white blocks the four; black turns the three into a straight four; white blocks one end; black makes five
+        const step = () => {
+          if (B.pos.status().over) return;
+          const side = B.pos.side, f5 = ruFive(B.pos, side), fo = ruFive(B.pos, 3 - side);
+          let q = f5.length ? f5[0] : fo.length ? fo[0] : -1;
+          if (q < 0) for (let k = 0; k < 225; k++) if (!B.pos.at(k) && B.pos.cls[side][E.M2I[k]] === E.C.F4 && !B.pos.forbidden(k)) { q = k; break; }
+          if (q < 0) return;
+          B.play(q); api.timer(step, 650);
+        };
+        api.timer(step, 900);
+      } });
+    } },
+  { id: 'open', title: () => t('ru.open.t'), body: () => t('ru.open.b'), task: () => ruOpenStep ? t('ru.open.task3') : t('ru.open.task1'),
+    setup(api) {
+      ruOpenStep = 0; api.say('');
+      ruBoard(api, { rule: 'renju', b: '', w: '', side: P1, fresh: true, onPlay(m, B) {
+        if (!B.pos.isLegal(m)) { api.say(t('ill.open' + Math.min(B.pos.ply, 2)), 'ng'); return; }
+        B.lock = true; B.d = []; B.play(m); B.n[m] = B.pos.ply;
+        if (B.pos.ply === 1) {
+          api.say('');
+          api.timer(() => {
+            const w = 8 * N + 7 + (Math.random() < 0.5 ? 0 : 1); B.play(w); B.n[w] = 2;
+            for (let q = 0; q < 225; q++) if (!B.pos.at(q) && B.pos.isLegal(q)) B.d.push(sqName(q));
+            B.draw(); ruOpenStep = 1; B.lock = false; api.say('');
+          }, 500);
+        } else { B.draw(); api.ok(t('ru.open.ok')); }
+      } });
+    } },
+];
+let ruOpenStep = 0, rulesTour = null;
+function rulesTourGet() {
+  if (rulesTour || !window.RuleTour) return rulesTour;
+  rulesTour = RuleTour.create({
+    mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG, pages: RU_PAGES,
+    close: () => hideOverlay('#rulesOverlay'),
+    play: () => { hideOverlay('#rulesOverlay'); openNewDialog(); },
+    lessons: () => { hideOverlay('#rulesOverlay'); openLessons(); },
+    sound: k => { if (!settings.sound) return; const a = ctx(); if (!a) return; if (k === 'ok') sThreat(); else tone(a, a.currentTime, 220, 0, 0.18, 0.05, 'sine'); },
+  });
+  return rulesTour;
+}
+// tab (old entry points): 'renju' opens the forbidden-move pages, 'open' the renju opening, anything else the first page
+function openRules(tab) {
+  const T = rulesTourGet(); if (!T) return;
+  const i = tab === 'renju' ? RU_PAGES.findIndex(p => p.id === 'f33') : tab === 'open' ? RU_PAGES.findIndex(p => p.id === 'open') : 0;
+  showOverlay('#rulesOverlay'); T.open(i);
+}
+function renderRules() { if (rulesTour) rulesTour.render(); }
+$('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay('#rulesOverlay'); };
 
 // ---------------------------------------------------------------- new game dialog
 let draft = {};
@@ -775,6 +921,8 @@ setInterval(() => {
   if (!rtLive()) return;
   const c = toMoveAt(moves.length) - 1, left = rtClockLeft(c);
   const el = $('#count' + (c + 1)); if (el) el.textContent = fmtClock(left);
+  // time signal (shared/tick.js): the player's own clock, while it is running (their turn)
+  if (window.CountTick) { if (c + 1 === humanColor) CountTick.feed(left, 'rt'); else CountTick.reset('rt'); }
   if (left <= 0) { rgame.over = { over: true, winner: c ? P1 : P2, why: 'time' }; busyToken++; cancelWorker('ai'); thinking = 0; save(); update(false); onGameEnd(rgame.over); }
 }, 250);
 // the result of a finished rated game is applied once (the game id is kept in the history, so a reload never counts twice)
@@ -1199,7 +1347,7 @@ function startPuzzle(c, l, j, daily) {
   document.body.classList.add('in-puzzle');
   enterSpecial(sp, 'renju');
   if (P.last) lessonMarks = [{ at: sqOf(P.last), cls: 'last' }];
-  update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
+  update(false); renderPuzzleCard(); pzStatus(pzPlayStatus(puzzle));
 }
 const pzLeft = Pz => Pz.n - 2 * Pz.used;
 function renderPuzzleCard() {
@@ -1219,37 +1367,88 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 999 : e.need; if (!best || v > best.v) best = { m: e.m, v }; } return best && best.m; }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
+// ---- puzzle v2: a wrong (but sensible) move does not end the puzzle at once — the defender answers with its best reply and the
+// player keeps going until the puzzle's move count is used up (then: failed). Reaching the goal within the count = solved.
+// "Obvious mistakes" end the puzzle at once (pzBlunder):
+//   - a forbidden point for black (renju)                                  -> 'forbid'  (checked in onPoint, the move cannot be played)
+//   - the opponent has a five threat and the move neither blocks it nor makes five  -> 'opp' (the opponent wins on the next move)
+//   - VCF puzzles: a move that is not a four (VCF = fours on every move)    -> 'four'
+//   - other puzzles (VCT / forbidden-point attacks): a move that is neither a four nor a three (it gives the defender a free move,
+//     and the puzzle's win counts only forcing moves)                      -> 'threat'
+// 1-move puzzles are judged at once as before.
+const pzFiveCells = (pos, c) => { const out = []; for (let q = 0; q < 225; q++) if (!pos.at(q) && pos.cls[c][E.M2I[q]] === E.C.FIVE) out.push(q); return out; };
+const pzHasWinCell = (pos, c) => { for (let q = 0; q < 225; q++) if (!pos.at(q) && pos.cls[c][E.M2I[q]] === E.C.F4 && !(c === P1 && pos.renju && pos.forbidden(q))) return true; return false; };
+function pzBlunder(Pz, m) {
+  if (Pz.n <= 1) return '';
+  const pos = posAt(cur), me = pos.side, op = 3 - me;
+  if (pos.cls[me][E.M2I[m]] === E.C.FIVE) return '';
+  const of = pzFiveCells(pos, op);
+  if (of.length) return of.includes(m) ? '' : 'opp';
+  pos.make(m);
+  const four = pzFiveCells(pos, me).length > 0, three = !four && pzHasWinCell(pos, me);
+  pos.unmake();
+  if (PUZZLES.cats[Pz.c].id === 'vcf') return four ? '' : 'four';
+  return four || three ? '' : 'threat';
+}
+function pzCanAttack(Pz) {
+  const pos = posAt(cur);
+  for (let q = 0; q < 225; q++) if (!pos.at(q) && pos.isLegal(q) && !pzBlunder(Pz, q)) return true;
+  return false;
+}
+function pzFailBlunder(Pz, m, why, k) {
+  Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
+  lessonMarks = [{ at: m, cls: 'ng' }];
+  update(false); playChime(false);
+  pzStatus(`<b class="ng">${pzT('blunder')}</b> ${t('pz.bl.' + why, { k: k ? t('fb.k' + k) : '' })}`);
+  renderPuzzleCard();
+}
+function pzFailOut(Pz) {
+  Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
+  const pv = toCells(Pz.P.pv || Pz.P.a);
+  update(false); playChime(false);
+  pzStatus(`<b class="ng">${t('pz.fail')}</b> ${pzT('outOfMoves', { n: Pz.n })}` + (pv.length ? ' ' + t('pz.outAns', { b: `<b>${sqName(pv[0])}</b>` }) : ''));
+  renderPuzzleCard();
+}
+const pzT = (k, v) => window.PZBook ? (PZBook.setLang(LANG), PZBook.t(k, v)) : k;
+const pzPlayStatus = Pz => `${t('pz.start')} <b>${pzT('movesLeft', { n: Math.max(1, pzLeft(Pz)) })}</b>`;
 async function puzzleMove(m) {
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   const left = pzLeft(Pz), tok = busyToken, ms = sqName(m);
+  const bl = pzBlunder(Pz, m);
+  if (bl) { pzFailBlunder(Pz, m, bl); return; }
   pzStatus(t('pz.checking'));
   const list = await solveReq(left);
   if (!list || puzzle !== Pz || tok !== busyToken) return;
   const e = list.find(x => x.m === m);
   playMove2(m); Pz.used++; renderPuzzleCard();
   if (statusAt(cur).winner === Pz.me) { setTimeout(() => puzzleSolved(), moveDur() + 300); return; }
-  if (!e || !e.need || e.need > left) {
-    const good = list.filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
-    Pz.state = 'fail'; Pz.busy = false;
+  const good = e && e.need && e.need <= left;
+  if (Pz.n <= 1 && !good) {      // 1-move puzzles: judged at once (as before)
+    const best = list.filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
+    Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
     await sleep(moveDur() + 450); if (puzzle !== Pz) return;
     moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    for (const g of good.slice(0, 3)) lessonMarks.push({ at: g.m, cls: 'ok' });
+    for (const g of best.slice(0, 3)) lessonMarks.push({ at: g.m, cls: 'ok' });
     lessonMarks.push({ at: m, cls: 'ng' });
     update(false); playChime(false);
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ms, b: good.length ? sqName(good[0].m) : '—', n: left })}`);
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ms, b: best.length ? sqName(best[0].m) : '—', n: left })}`);
     renderPuzzleCard(); return;
   }
-  if (e.need === 1) { setTimeout(() => puzzleSolved(true), moveDur() + 250); return; }
-  pzStatus(t('pz.good'));
-  const dl = await solveReq(left - 2, true);
+  if (good && e.need === 1) { setTimeout(() => puzzleSolved(true), moveDur() + 250); return; }
+  if (!good) Pz.off = true;     // off the solution: keep playing to the move count
+  if (pzLeft(Pz) < 1) { await sleep(moveDur() + 350); if (puzzle === Pz) pzFailOut(Pz); return; }
+  const dl = await solveReq(Math.max(1, left - 2), true);
   if (!dl || puzzle !== Pz || tok !== busyToken) return;
   await sleep(moveDur() + 350); if (puzzle !== Pz) return;
   const r = pickDefence(dl);
-  if (r === null || r === undefined) { puzzleSolved(true); return; }
+  if (r === null || r === undefined) { if (good) puzzleSolved(true); else pzFailOut(Pz); return; }
   playMove2(r);
   await sleep(moveDur()); if (puzzle !== Pz) return;
+  if (statusAt(cur).over) { pzFailOut(Pz); return; }
+  // off the solution and no forcing move left at all (every move would be an obvious mistake): the goal can no longer be reached
+  if (Pz.off && !pzCanAttack(Pz)) { await sleep(350); if (puzzle === Pz) pzFailOut(Pz); return; }
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(t('pz.yourMove', { n: pzLeft(Pz) }));
+  pzStatus(pzPlayStatus(Pz));
 }
 // after the settling move: play out the finish (block, straight four, ... five)
 async function finishLine(Pz) {
@@ -1269,7 +1468,7 @@ function puzzleSolved(finish) {
   Pz.state = 'solved'; Pz.busy = false;
   const pr = pzProgress(); pr[pzKey(Pz.c, Pz.l, Pz.j)] = true;
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
-  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
+  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || Pz.off);   // solved after leaving the solution line: counted like a hinted solve
   pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.n })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
   playChime(true); confetti(); renderPuzzleCard();
   if (finish) finishLine(Pz);
@@ -1878,6 +2077,8 @@ function olClocks() {
     const el = $('#count' + p), txt = fmtClock(Math.max(0, k.left));
     if (el.textContent !== txt) el.textContent = txt;
     el.classList.toggle('ol-clk', true); el.classList.toggle('ol-move', !!k.moving); el.classList.toggle('ol-low', !!k.moving && k.left <= 20000);
+    // time signal (shared/tick.js): only my own clock while it runs (not for spectators)
+    if (window.CountTick && !net.spectate && p === net.me) { if (k.moving && live) CountTick.feed(k.left, 'ol'); else CountTick.reset('ol'); }
     const h = $('#hand' + p), lbl = '+' + Math.round(tc.inc / 1000) + 's';
     if (h.textContent !== lbl) h.textContent = lbl;
   }
@@ -2216,6 +2417,7 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) segSync();
   if ($('#lessonOverlay').classList.contains('show') && openChoiceIdx >= 0 && !$('#lessonIntroView').classList.contains('hidden')) openOpeningChoice(openChoiceIdx);
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
+  if (HB) HB.relabel();
   if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
@@ -2295,3 +2497,8 @@ window.addEventListener('resize', () => renderFx());
 
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'gomoku', lang: () => LANG, open: () => openRules('basic'), watch: '#rulesOverlay' });
+// PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+if (HB) HB.onChange(() => renderInfo());
+if (window.CountTick) CountTick.setMuted(() => !settings.sound);
+renderInfo();
