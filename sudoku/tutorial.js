@@ -194,9 +194,9 @@ function draw() {
   tk.innerHTML = s.task ? (doneStep[step] ? '🎉 ' + esc(t('tu.ok')) : '👉 ' + esc(t(s.task))) : '';
   const st = $('#tuStage'); st.innerHTML = '';
   s.stage(st, () => { doneStep[step] = true; C.SFX.unit(); C.vib(12); tk.className = 'ttask ok'; tk.innerHTML = '🎉 ' + esc(t('tu.ok')); $('#tuMas').innerHTML = mascot('yay', s.speed || kind === 'speed'); $('#tuNext').classList.add('glow');
-    if (kind === 'speed') {                      // speed tutorial: move on by itself after a correct answer
+    {                                            // move on by itself after a correct answer (both tutorials)
       const at = step; clearTimeout(autoT);
-      autoT = setTimeout(() => { if (step === at && $('#mTut').classList.contains('on')) { if (step < steps.length - 1) { step++; draw(); } } }, s.task === 'tu.task.all' ? 2400 : 1400);
+      autoT = setTimeout(() => { if (step === at && $('#mTut').classList.contains('on')) { if (step < steps.length - 1) { step++; draw(); } } }, s.task === 'tu.task.all' ? 2400 : 1600);
     } }, () => { tk.className = 'ttask miss'; tk.innerHTML = '🤔 ' + esc(t('tu.miss')); $('#tuMas').innerHTML = mascot('wow', s.speed || kind === 'speed'); });
   $('#tuPrev').textContent = t('tu.prev'); $('#tuPrev').style.visibility = step ? 'visible' : 'hidden';
   const nx = $('#tuNext'); nx.textContent = last ? t(kind === 'speed' ? 'tu.s.end' : 'tu.d.end') : t('tu.next'); nx.classList.toggle('glow', !s.task || !!doneStep[step]); nx.classList.toggle('wait', !!s.task && !doneStep[step]);

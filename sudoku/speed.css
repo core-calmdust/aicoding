@@ -253,6 +253,7 @@ body.night .sbig2{background:linear-gradient(135deg,#4a3824,#4a2a3e 60%,#283a5a)
 
 /* ---------- tutorial (すうぴょん) ---------- */
 .sheet.tut{width:min(640px,100%);height:min(88dvh,760px)}
+@media (hover:hover) and (pointer:fine) and (min-width:820px){.sheet.tut{width:min(860px,100%);height:min(94dvh,960px)}}
 .sheet.tut .sh h3{font-size:17px}
 .tdots{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:45%}
 .tdots i{width:8px;height:8px;border-radius:99px;background:color-mix(in srgb,var(--ink3) 35%,transparent);transition:width .25s,background .25s}
@@ -284,8 +285,10 @@ body.night .ttask.miss{background:#4a2433;color:#ffb3c4}
 .tstage{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:120px}
 .tbd{display:grid;grid-template-columns:repeat(var(--n),1fr);background:var(--cellbg);border-radius:14px;overflow:hidden;box-shadow:var(--shadow),0 0 0 4px rgba(255,255,255,.7);direction:ltr}
 .tbd .tc{display:grid;place-items:center;font-family:var(--num);font-weight:600;border-right:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--ink);transition:background .15s}
-.tbd.n9 .tc{width:min(30px,8.6vw);height:min(30px,8.6vw);font-size:min(16px,4.6vw)}
-.tbd.n4 .tc{width:min(60px,17vw);height:min(60px,17vw);font-size:min(30px,8vw)}
+.tbd.n9{--tc:max(26px,min(52px,9.4vw,calc((88dvh - 440px) / 9)))}
+.tbd.n9 .tc{width:var(--tc);height:var(--tc);font-size:calc(var(--tc) * .56)}
+@media (hover:hover) and (pointer:fine) and (min-width:820px){.tbd.n9{--tc:max(30px,min(54px,calc((94dvh - 440px) / 9)))}}
+.tbd.n4 .tc{width:min(76px,19vw);height:min(76px,19vw);font-size:min(38px,9.4vw)}
 .tbd .tc:nth-child(9n),.tbd.n4 .tc:nth-child(4n){border-right:0}
 .tbd .tc.br{border-right:3px solid color-mix(in srgb,var(--acc) 55%,#5a4a70)}
 .tbd .tc.bb{border-bottom:3px solid color-mix(in srgb,var(--acc) 55%,#5a4a70)}
@@ -298,7 +301,7 @@ body.night .ttask.miss{background:#4a2433;color:#ffb3c4}
 .tbd .tc.pop{animation:cpop .3s}
 .tbd.win{box-shadow:var(--shadow),0 0 0 4px #fff,0 0 30px color-mix(in srgb,var(--acc) 60%,transparent)}
 .tbd.mini .tc{width:28px;height:28px;font-size:15px}
-.tpad{display:grid;gap:6px;width:min(100%,420px);direction:ltr}
+.tpad{display:grid;gap:6px;width:min(100%,480px);direction:ltr}
 .tpad.n9{grid-template-columns:repeat(9,1fr)}
 .tpad.n4{grid-template-columns:repeat(4,1fr);width:min(100%,300px)}
 .tpad button{height:44px;border-radius:12px;background:var(--surface);box-shadow:0 3px 0 var(--keyedge),0 4px 10px rgba(90,60,120,.08);font-family:var(--num);font-weight:600;font-size:20px;color:var(--vmix)}

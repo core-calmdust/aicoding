@@ -98,7 +98,7 @@ const CSS = `
 .rt-intro-facts{display:flex;flex-wrap:wrap;gap:8px}
 .rt-intro-facts span{display:inline-flex;flex-direction:column;gap:1px;padding:7px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line,rgba(255,255,255,.12));font-size:14px;color:var(--text,#eee)}
 .rt-intro-facts small{font-size:11px;color:var(--muted,#9aa);letter-spacing:.04em}
-.rt-intro-sec{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--line,rgba(255,255,255,.1))}
+.rt-intro-sec{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;align-content:start;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--line,rgba(255,255,255,.1))}
 .rt-intro-sec i{font-style:normal;font-size:22px;line-height:1.3;grid-row:span 2}
 .rt-intro-sec b{font-size:14px;color:var(--accent,#e2c275);letter-spacing:.04em}
 .rt-intro-sec p{margin:0;font-size:14px;line-height:1.75;color:var(--text,#eee)}
