@@ -13,7 +13,7 @@ const eng = new E.Engine();
   let r = new Rapfi(); await r.start('renju', 100000); r.setNodes(NODES); let rule = null;
   let n = 0;
   while (true) {
-    const g = games[Math.floor(rnd() * games.length)]; if (g.moves.length < 10) continue; if (process.env.ONLY && g.rule !== process.env.ONLY) continue;
+    const g = games[Math.floor(rnd() * games.length)]; if (g.moves.length < 10) continue; if (process.env.ONLY && (process.env.ONLY === 'std' ? g.rule === 'renju' : g.rule !== process.env.ONLY)) continue;
     const k = 6 + Math.floor(rnd() * (g.moves.length - 8));
     const pos = E.setup(g.rule, { b: [], w: [] }); for (const m of g.moves.slice(0, k)) pos.make(m);
     const mv = g.moves.slice(0, k), extra = 1 + Math.floor(rnd() * 3);

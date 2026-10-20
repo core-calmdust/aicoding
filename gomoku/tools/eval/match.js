@@ -9,7 +9,7 @@ if (WF !== 'none') { const W = JSON.parse(fs.readFileSync(WF || `/home/claude/wo
 const games = fs.readFileSync('/home/claude/work/eval/games.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(g => (RULE === 'renju') === (g.rule === 'renju'));
 let seed = +process.env.SEED || 99; const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
 if (process.env.NN) E.setNN(G, fs.readFileSync('/home/claude/aicoding/gomoku/nn.wasm'), fs.readFileSync(process.env.NN));
-const eOld = new E.Engine(), eNew = new E.Engine(); eOld.learned = false; eOld.useNN = false; eNew.learned = true;
+const eOld = new E.Engine(), eNew = new E.Engine(); eOld.learned = !!process.env.OLDLEARNED; eOld.useNN = false; eNew.learned = true;
 let sc = { new: 0, old: 0, draw: 0 };
 function play(open, newBlack) {
   const pos = E.setup(RULE, { b: [], w: [] });
