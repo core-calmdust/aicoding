@@ -252,14 +252,11 @@ body.night .sbig2{background:linear-gradient(135deg,#4a3824,#4a2a3e 60%,#283a5a)
 .sibling i{font-style:normal;font-size:24px;color:var(--ink3)}
 
 /* ---------- tutorial (すうぴょん) ---------- */
-.sheet.tut{width:min(640px,100%);height:min(88dvh,760px)}
-@media (hover:hover) and (pointer:fine) and (min-width:820px){.sheet.tut{width:min(860px,100%);height:min(94dvh,960px)}}
 .sheet.tut .sh h3{font-size:17px}
 .tdots{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:45%}
 .tdots i{width:8px;height:8px;border-radius:99px;background:color-mix(in srgb,var(--ink3) 35%,transparent);transition:width .25s,background .25s}
 .tdots i.past{background:color-mix(in srgb,var(--acc) 50%,transparent)}
 .tdots i.on{width:22px;background:var(--acc)}
-.tbody{display:flex;flex-direction:column;gap:14px}
 .tsay{display:flex;gap:10px;align-items:flex-start}
 .tsay .tm{width:92px;flex:none}
 .tmas{width:92px;height:92px;display:block;animation:bob 1.6s ease-in-out infinite alternate}
@@ -282,13 +279,8 @@ body.night .ttask.ok{background:#24452f;color:#9fe6b8}
 .ttask.miss{color:#c0405a;background:#ffe6ec}
 body.night .ttask.miss{background:#4a2433;color:#ffb3c4}
 .ttask.nudge{animation:shake .35s}
-.tstage{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:120px}
 .tbd{display:grid;grid-template-columns:repeat(var(--n),1fr);background:var(--cellbg);border-radius:14px;overflow:hidden;box-shadow:var(--shadow),0 0 0 4px rgba(255,255,255,.7);direction:ltr}
 .tbd .tc{display:grid;place-items:center;font-family:var(--num);font-weight:600;border-right:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--ink);transition:background .15s}
-.tbd.n9{--tc:max(26px,min(52px,9.4vw,calc((88dvh - 440px) / 9)))}
-.tbd.n9 .tc{width:var(--tc);height:var(--tc);font-size:calc(var(--tc) * .56)}
-@media (hover:hover) and (pointer:fine) and (min-width:820px){.tbd.n9{--tc:max(30px,min(54px,calc((94dvh - 440px) / 9)))}}
-.tbd.n4 .tc{width:min(76px,19vw);height:min(76px,19vw);font-size:min(38px,9.4vw)}
 .tbd .tc:nth-child(9n),.tbd.n4 .tc:nth-child(4n){border-right:0}
 .tbd .tc.br{border-right:3px solid color-mix(in srgb,var(--acc) 55%,#5a4a70)}
 .tbd .tc.bb{border-bottom:3px solid color-mix(in srgb,var(--acc) 55%,#5a4a70)}
@@ -301,11 +293,7 @@ body.night .ttask.miss{background:#4a2433;color:#ffb3c4}
 .tbd .tc.pop{animation:cpop .3s}
 .tbd.win{box-shadow:var(--shadow),0 0 0 4px #fff,0 0 30px color-mix(in srgb,var(--acc) 60%,transparent)}
 .tbd.mini .tc{width:28px;height:28px;font-size:15px}
-.tpad{display:grid;gap:6px;width:min(100%,480px);direction:ltr}
 .tpad.n9{grid-template-columns:repeat(9,1fr)}
-.tpad.n4{grid-template-columns:repeat(4,1fr);width:min(100%,300px)}
-.tpad button{height:44px;border-radius:12px;background:var(--surface);box-shadow:0 3px 0 var(--keyedge),0 4px 10px rgba(90,60,120,.08);font-family:var(--num);font-weight:600;font-size:20px;color:var(--vmix)}
-.tpad.n4 button{height:56px;font-size:26px}
 .tpad.off{visibility:hidden;pointer-events:none}
 .tpad button:active{transform:translateY(3px);box-shadow:0 0 0 var(--keyedge)}
 .tpair{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center}
@@ -351,7 +339,6 @@ body.night .tspeedad{background:linear-gradient(135deg,#4a3824,#4a2a3e);color:va
 #tuNext.glow{animation:tglow 1.2s ease-in-out infinite alternate}
 @keyframes tglow{to{box-shadow:0 4px 0 color-mix(in srgb,var(--acc) 68%,#000),0 0 0 6px color-mix(in srgb,var(--acc) 25%,transparent)}}
 @media (max-width:560px){.tsay .tm,.tmas{width:70px;height:70px}.tbub p{font-size:14px}}
-@media (min-width:861px){.sheet.tut{width:min(720px,92vw)}.tbub p{font-size:16.5px}.ttool b{font-size:15.5px}.ttool small{font-size:13.5px}}
 #spd .skey .n{font-size:46px}
 body.scompact #spd .skey .n{font-size:34px}
 .shelp{font-size:12px;color:var(--ink2);line-height:1.7;background:var(--chip);border-radius:14px;padding:8px 12px}
@@ -430,6 +417,45 @@ body.scompact .skey .kd{top:4px;inset-inline-start:5px;font-size:11px;padding:2p
   .sheet.tut .tbody{gap:12px}
 }
 
-/* tutorial: one fixed dialog size for every step (the box never grows / shrinks between pages) */
-#mTut .sheet{height:min(92dvh,760px)!important;max-height:none}
-@media (hover:hover) and (pointer:fine) and (min-width:820px){#mTut .sheet{height:min(94dvh,900px)!important}}
+
+/* ---------- tutorial layout (fixed box · big text · big board) ---------- */
+#mTut .sheet.tut{width:min(640px,100%);height:min(92dvh,800px)!important;max-height:none!important;display:flex;flex-direction:column}
+#mTut .sheet.tut .sh h3{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (max-width:560px){#mTut .sheet.tut .sh h3{font-size:16px}}
+#mTut .tbody{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:hidden;padding-bottom:12px}
+/* the stage takes all the room left; boards size themselves from it (container units) */
+#mTut .tstage{flex:1;min-height:0;container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:hidden}
+#mTut .tstage > *{--t9:min(calc((100cqw - 10px) / 9), calc((100cqh - 74px) / 9), 66px);--t4:min(calc((100cqw - 10px) / 4), calc((100cqh - 92px) / 4), 116px)}
+#mTut .tbd.n9 .tc{width:var(--t9);height:var(--t9);font-size:calc(var(--t9) * .56)}
+#mTut .tbd.n4 .tc{width:var(--t4);height:var(--t4);font-size:calc(var(--t4) * .5)}
+#mTut .tbd.mini .tc{width:28px!important;height:28px!important;font-size:15px!important}
+#mTut .tpad{display:grid;gap:6px;direction:ltr;flex:none}
+#mTut .tpad.n9{width:calc(var(--t9) * 9);grid-template-columns:repeat(9,1fr)}
+#mTut .tpad.n4{width:calc(var(--t4) * 4);grid-template-columns:repeat(4,1fr)}
+#mTut .tpad button{height:min(54px,max(40px,calc(var(--t9) * 1.05)));border-radius:12px;background:var(--surface);box-shadow:0 3px 0 var(--keyedge),0 4px 10px rgba(90,60,120,.08);font-family:var(--num);font-weight:600;font-size:22px;color:var(--vmix)}
+#mTut .tpad.n4 button{height:60px;font-size:28px}
+/* pictures / lists scroll inside the stage if they ever need more room */
+#mTut .tstage:not(:has(.tbd:not(.mini))){overflow-y:auto;justify-content:safe center}
+#mTut .tsay{flex:none}
+#mTut .tbub{flex:1;min-width:0}
+#mTut .tbub p{font-size:16.5px;line-height:1.75}
+#mTut .ttask{font-size:14.5px}
+/* PC: board on the left, すうぴょん and the speech bubble on the right */
+@media (hover:hover) and (pointer:fine) and (min-width:820px){
+  #mTut .sheet.tut{width:min(1080px,94vw);height:min(92dvh,860px)!important}
+  #mTut .sheet.tut .sh h3{font-size:22px}
+  #mTut .tbody{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:28px;align-items:stretch;padding:8px 28px 16px}
+  #mTut .tstage > *{--t9:min(calc((100cqw - 10px) / 9), calc((100cqh - 82px) / 9), 68px)}
+  #mTut .tsay{flex-direction:column;align-items:center;justify-content:center;gap:6px}
+  #mTut .tsay .tm,#mTut .tmas{width:150px;height:150px}
+  #mTut .tbub{flex:none;width:100%;padding:18px 20px}
+  #mTut .tbub::before{inset-inline-start:calc(50% - 10px);top:-12px;border:10px solid transparent;border-bottom-color:color-mix(in srgb,var(--acc) 22%,var(--line));border-top:0}
+  #mTut .tbub::after{inset-inline-start:calc(50% - 8px);top:-8px;border:8px solid transparent;border-bottom-color:var(--surface);border-top:0}
+  #mTut .tbub p{font-size:20px;line-height:1.8}
+  #mTut .ttask{font-size:16.5px;margin-top:12px;padding:8px 12px}
+  #mTut .ttool b{font-size:16px}#mTut .ttool small{font-size:14px}
+  #mTut .tpad button{font-size:26px}
+  #mTut .tmedals svg{width:84px;height:84px}#mTut .tmedals b{font-size:16px}#mTut .tmedals small{font-size:13.5px}
+  #mTut .ttools{max-width:560px}#mTut .ttool{padding:11px 14px}#mTut .ttool i{width:44px;height:44px}
+  #mTut .tpic.sq{width:170px;height:170px}
+}
