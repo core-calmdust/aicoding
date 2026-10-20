@@ -5832,8 +5832,7 @@ function draw() {
             for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; renderCtx[v ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * HR, sy + Math.sin(a) * HR); }
             renderCtx.closePath();
             renderCtx.lineWidth = 1.6;
-            const bonusSlot = k >= maxShields && !on; // EASYのボーナスシールド枠（SPを集めている間は点滅）
-            renderCtx.strokeStyle = on ? '#7dffd0' : bonusSlot && shields >= maxShields ? (Math.floor(frameCount / 20) % 2 ? '#ffe27a' : 'rgba(255,226,122,0.15)') : 'rgba(255,255,255,0.35)';
+            renderCtx.strokeStyle = on ? '#7dffd0' : 'rgba(255,255,255,0.35)';
             if (on) {
                 renderCtx.fillStyle = 'rgba(125,255,208,' + (0.45 + visualBeat * 0.35) + ')';
                 drawWithGlow(renderCtx, () => { renderCtx.fill(); renderCtx.stroke(); }, '#7dffd0');
@@ -6143,13 +6142,15 @@ function draw() {
             else renderCtx.fillText(d.id.toLowerCase(), cx + 5, y);
             // シールドのアイコン
             for (let k = 0; k < 2; k++) {
-                const hx = cx + 196 + k * 26, hy = y - 8, on = k < d.shields;
+                const hx = cx + 196 + k * 26, hy = y - 8, on = k < d.shields, bonus = !on && k < (d.cap || 0); // EASYのボーナスシールドは点滅
+                const blink = Math.floor(performance.now() / 350) % 2;
                 renderCtx.beginPath();
                 for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; renderCtx[v ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * 10, hy + Math.sin(a) * 10); }
                 renderCtx.closePath();
                 renderCtx.lineWidth = 1.5;
-                renderCtx.strokeStyle = on ? (sel ? '#7dffd0' : 'rgba(125,255,208,0.5)') : 'rgba(255,255,255,0.18)';
+                renderCtx.strokeStyle = on ? (sel ? '#7dffd0' : 'rgba(125,255,208,0.5)') : bonus ? (blink ? (sel ? '#ffe27a' : 'rgba(255,226,122,0.5)') : 'rgba(255,226,122,0.12)') : 'rgba(255,255,255,0.18)';
                 if (on) { renderCtx.fillStyle = sel ? 'rgba(125,255,208,0.55)' : 'rgba(125,255,208,0.2)'; renderCtx.fill(); }
+                if (bonus && blink) { renderCtx.fillStyle = sel ? 'rgba(255,226,122,0.35)' : 'rgba(255,226,122,0.12)'; renderCtx.fill(); }
                 renderCtx.stroke();
             }
             if (hasLS) renderCtx.letterSpacing = LS('2px');
