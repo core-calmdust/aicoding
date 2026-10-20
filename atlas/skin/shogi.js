@@ -58,6 +58,7 @@
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
     let sk = 'classic'; try { sk = settings.skin || 'classic'; } catch (e) {}
     if (board.userData.setTone) board.userData.setTone(sk);
+    if (T3.kick) T3.kick(400);
     ['metal', 'ink', 'grain'].forEach(k => document.documentElement.classList.toggle('atlas-sk-' + k, sk === k));
   }
   if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }

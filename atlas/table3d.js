@@ -632,10 +632,10 @@
     // lights of the hour
     scene.add(new TT.HemisphereLight(L.hemi[0], L.hemi[1], L.hemi[2]));
     const key = new TT.DirectionalLight(L.sun, L.sunI * (plain ? .7 : 1)); key.position.set(...L.sunPos); key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
+    key.shadow.mapSize.setScalar(matchMedia('(pointer: coarse)').matches ? 1024 : 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
-    if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); scene.add(lamp);
+    if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = false;   // a point-light shadow is 6 extra shadow passes per frame scene.add(lamp);
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 32, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); scene.add(shade); }
     if (R) R.toneMappingExposure = L.exp * (plain ? .8 : 1);
     scene.background = plain && localFloor ? null : new TT.Color(plain === 'tatami' ? '#6f6a40' : plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
@@ -644,7 +644,8 @@
   function mount(container, opts = {}) {
     el = container;
     R = new (T().WebGLRenderer)({ antialias: true, alpha: true });
-    R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    const coarse = matchMedia('(pointer: coarse)').matches;
+    R.setPixelRatio(Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1));   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x
     R.shadowMap.enabled = true; R.shadowMap.type = T().PCFSoftShadowMap;
     R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .78;
     container.appendChild(R.domElement);
@@ -704,7 +705,7 @@
   function resize() {
     if (!R) return;
     const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
-    cw = w; ch = h; R.setSize(w, h, false); frame();
+    cw = w; ch = h; R.setSize(w, h, false); frame(); kick(300);
   }
   // camera distance keeps a ~11-unit board in frame for any aspect ratio
   function camPose(k) {
@@ -800,6 +801,8 @@
   let rafId = 0, blurred = false;
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
   addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; });
+  let lastKey = '', kickUntil = 0, dirty = true;
+  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; }
   function loop(now = performance.now()) {
     if (document.hidden) { rafId = 0; return; }
     rafId = requestAnimationFrame(loop);
@@ -821,6 +824,10 @@
         cam.aspect = W / H; const th = Math.tan(cam.fov * Math.PI / 360);
         const h = half * H / (r.h * th);   // field half-size → half the DOM board height
         cam.position.set(0, top + h, 0.0001); cam.up.set(0, 0, -1); cam.lookAt(0, top, 0);
+        // render on demand: the skin's board is still most of the time — only when it moved / resized or something is animating
+        const key = r.x.toFixed(1) + ',' + r.y.toFixed(1) + ',' + r.w.toFixed(1) + ',' + r.h.toFixed(1) + ',' + W + ',' + H;
+        if (key === lastKey && now > kickUntil && !dirty) return;
+        lastKey = key; if (now > kickUntil) dirty = false;   // one last frame after the animation window, however slow the device
         cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2), W, H); cam.updateProjectionMatrix();
         R.render(scene, cam); return;
       }
@@ -835,5 +842,5 @@
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
-  window.Table3D = { align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
