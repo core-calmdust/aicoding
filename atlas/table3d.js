@@ -307,8 +307,95 @@
   };
 
   /* ---------- scene ---------- */
-  let alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
+  let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
+
+  /* ---------- the toy room: a chabudai (low round table) on tatami, walls, a window, toy shelves ----------
+     Lighting follows the local time like the Sudoku backgrounds: morning / day / evening / night. */
+  function timeOfDay(h) { return h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night'; }
+  const LOOK = {
+    morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .9 },
+    day:     { sky: ['#8fd0ff', '#e6f6ff'], sun: 0xffffff, sunI: 1.25, sunPos: [-8, 18, -6], hemi: [0xf4f8ff, 0x6a5038, .55], lamp: 0, exp: .95 },
+    evening: { sky: ['#ff7a3c', '#ffc27a'], sun: 0xff8a3c, sunI: 1.35, sunPos: [-18, 5, -10], hemi: [0xffb070, 0x4a2010, .42], lamp: .6, exp: .82 },
+    night:   { sky: ['#0b1230', '#24335e'], sun: 0x8fa4ff, sunI: .08, sunPos: [-14, 10, -12], hemi: [0x3a4a80, 0x140c06, .12], lamp: 1.7, exp: .78 },
+  };
+
+  function buildRoom(scene) {
+    const TT = T(), mode = timeOfDay(new Date().getHours()), L = LOOK[mode];
+    const g = new TT.Group(); scene.add(g);
+    const FLOOR = -3.4;
+    // tatami
+    const tatami = canvasTex('tatami', 512, 1024, (c, W, H) => {
+      const N = makeNoise(9), img = c.createImageData(W, H), d = img.data;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const weave = (y % 6 < 3 ? 8 : -6) + (N(x / 3, y / 40, 2) - .5) * 26 + (N(x / 80, y / 80, 2) - .5) * 14, i = (y * W + x) * 4;
+        d[i] = 196 + weave; d[i + 1] = 190 + weave; d[i + 2] = 132 + weave * .6; d[i + 3] = 255;
+      }
+      c.putImageData(img, 0, 0);
+      c.fillStyle = '#5a6a44'; c.fillRect(0, 0, 14, H); c.fillRect(W - 14, 0, 14, H);              // heri (cloth borders)
+      c.fillStyle = 'rgba(255,255,255,.12)'; for (let y = 0; y < H; y += 14) c.fillRect(0, y, 14, 2), c.fillRect(W - 14, y, 14, 2);
+      c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, W, 3); c.fillRect(0, H - 3, W, 3);
+    });
+    tatami.wrapS = tatami.wrapT = TT.RepeatWrapping; tatami.repeat.set(6, 3);
+    const floor = new TT.Mesh(new TT.PlaneGeometry(60, 60), M({ map: tatami, roughness: .85, bumpScale: .01 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR; floor.receiveShadow = true; g.add(floor);
+    // walls: warm plaster above a wooden wainscot
+    const plaster = canvasTex('plaster', 512, 512, (c, W) => { const N = makeNoise(4), img = c.createImageData(W, W), d = img.data; for (let i = 0; i < W * W; i++) { const x = i % W, y = i / W | 0, k = (N(x / 18, y / 18, 3) - .5) * 16; d[i * 4] = 246 + k; d[i * 4 + 1] = 236 + k; d[i * 4 + 2] = 214 + k; d[i * 4 + 3] = 255; } c.putImageData(img, 0, 0); });
+    plaster.wrapS = plaster.wrapT = TT.RepeatWrapping; plaster.repeat.set(3, 2);
+    const wallM = M({ map: plaster, roughness: .95, bumpScale: .004 }), wain = M({ map: wood('wain', '#b9814a', '#7a4a22', 512, 512, 1.4), roughness: .6, bumpScale: .004 });
+    const wall = (w, x, z, ry) => {
+      const wg = new TT.Group(); wg.position.set(x, FLOOR, z); wg.rotation.y = ry; g.add(wg);
+      const p = new TT.Mesh(new TT.PlaneGeometry(w, 22), wallM); p.position.y = 11; p.receiveShadow = true; wg.add(p);
+      const wb = new TT.Mesh(new TT.BoxGeometry(w, 3.2, .3), wain); wb.position.set(0, 1.6, .15); wb.receiveShadow = true; wg.add(wb);
+      const rail = new TT.Mesh(new TT.BoxGeometry(w, .25, .45), wain); rail.position.set(0, 3.3, .2); wg.add(rail);
+      return wg;
+    };
+    const back = wall(44, 0, -17, 0); wall(44, -20, 0, Math.PI / 2); wall(44, 20, 0, -Math.PI / 2);
+    // window with the sky of the hour
+    const sky = canvasTex('sky-' + mode, 256, 256, (c, W) => {
+      const gr = c.createLinearGradient(0, 0, 0, W); gr.addColorStop(0, L.sky[0]); gr.addColorStop(1, L.sky[1]); c.fillStyle = gr; c.fillRect(0, 0, W, W);
+      if (mode === 'night') { c.fillStyle = '#fff'; for (let i = 0; i < 60; i++) { c.globalAlpha = Math.random() * .8 + .2; c.fillRect(Math.random() * W, Math.random() * W * .8, 1.6, 1.6); } c.globalAlpha = 1; c.fillStyle = '#fff6d0'; c.beginPath(); c.arc(W * .72, W * .26, 16, 0, 7); c.fill(); }
+      if (mode === 'evening') { c.fillStyle = 'rgba(255,240,200,.9)'; c.beginPath(); c.arc(W * .3, W * .78, 30, 0, 7); c.fill(); }
+      if (mode === 'day' || mode === 'morning') { c.fillStyle = 'rgba(255,255,255,.9)'; [[.25, .3, 40], [.62, .45, 30], [.8, .22, 24]].forEach(([x, y, r]) => { c.beginPath(); c.arc(W * x, W * y, r, 0, 7); c.arc(W * x + r, W * y + 6, r * .8, 0, 7); c.arc(W * x - r, W * y + 8, r * .7, 0, 7); c.fill(); }); }
+    });
+    const win = new TT.Mesh(new TT.PlaneGeometry(12, 8), new TT.MeshBasicMaterial({ map: sky, toneMapped: false }));
+    win.position.set(-7, 10.5, .02); back.add(win);
+    const frameM = M({ color: 0xf6efe0, roughness: .5 });
+    [[0, 4.1, 12.8, .5], [0, -4.1, 12.8, .5], [-6.2, 0, .5, 8.6], [6.2, 0, .5, 8.6], [0, 0, .25, 8], [0, 0, 12, .25]].forEach(([x, y, w, h]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, .4), frameM); m.position.set(-7 + x, 10.5 + y, .2); back.add(m); });
+    const sill = new TT.Mesh(new TT.BoxGeometry(13.6, .35, 1.2), frameM); sill.position.set(-7, 6.25, .5); back.add(sill);
+    // toy shelf on the back wall, with blocks, balls and board-game boxes
+    const shelfM = M({ map: wood('shelf', '#d8a46a', '#a06a3a', 512, 512, 1.2), roughness: .55 });
+    [5.4, 9.4].forEach(y => { const s = new TT.Mesh(new TT.BoxGeometry(14, .4, 2.4), shelfM); s.position.set(10, y, 1.2); s.castShadow = s.receiveShadow = true; back.add(s); });
+    [[3.2], [16.8]].forEach(([x]) => { const s = new TT.Mesh(new TT.BoxGeometry(.4, 8.6, 2.4), shelfM); s.position.set(x, 7.6, 1.2); back.add(s); });
+    const toy = (geo, col, x, y, z, ry = 0) => { const m = new TT.Mesh(geo, M({ color: col, roughness: .35 })); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; back.add(m); };
+    const blk = new TT.BoxGeometry(1, 1, 1);
+    toy(blk, 0xff5d5d, 5, 6.1, 1.4, .3); toy(blk, 0x36b4ff, 6.2, 6.1, 1.2, -.2); toy(blk, 0xffc928, 5.6, 7.1, 1.3, .6);
+    toy(new TT.SphereGeometry(.7, 24, 16), 0x3ccf91, 8.2, 6.3, 1.4); toy(new TT.SphereGeometry(.5, 24, 16), 0x8d6bff, 9.4, 6.1, 1.0);
+    [[11.5, 0xe8a33d], [12.9, 0x5a6b8c], [14.3, 0x22aa74], [15.6, 0xff6b6b]].forEach(([x, c], i) => toy(new TT.BoxGeometry(1.1, 3, 2), c, x, 7.1, 1.2, i % 2 ? .05 : -.04));   // game boxes
+    toy(new TT.BoxGeometry(5, .7, 2.2), 0xc48a4a, 7.5, 9.95, 1.2); toy(new TT.BoxGeometry(4.4, .7, 2), 0x2a6fe8, 7.6, 10.65, 1.2, .08);
+    toy(new TT.ConeGeometry(.6, 1.4, 20), 0xff8fc7, 12.5, 10.3, 1.3); toy(new TT.CylinderGeometry(.8, .8, .5, 24), 0xffd23f, 14.5, 9.85, 1.3);
+    // chabudai: a low round table, the game board sits on it (its top is y = 0)
+    const top = M({ map: wood('chabu2', '#b8763e', '#8a5226', 1024, 1024, .8), roughness: .38, clearcoat: .55, clearcoatRoughness: .3, bumpScale: .004 });
+    const disk = new TT.Mesh(new TT.CylinderGeometry(9.2, 9.2, .55, 72), top); disk.position.y = -.275; disk.castShadow = disk.receiveShadow = true; g.add(disk);
+    const lip = new TT.Mesh(new TT.TorusGeometry(9.2, .14, 10, 72), top); lip.rotation.x = Math.PI / 2; lip.position.y = -.02; g.add(lip);
+    const apron = new TT.Mesh(new TT.CylinderGeometry(8.4, 8.4, .5, 64, 1, true), M({ color: 0x5a3018, roughness: .6 })); apron.position.y = -.8; g.add(apron);
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => { const l = new TT.Mesh(new TT.BoxGeometry(.8, -FLOOR - .5, .8), M({ color: 0x5a3018, roughness: .6 })); l.position.set(sx * 5.6, (FLOOR - .5) / 2, sz * 5.6); l.castShadow = true; g.add(l); });
+    // zabuton (floor cushions) and a few toys on the tatami
+    const cush = (x, z, r, c) => { const m = new TT.Mesh(new TT.BoxGeometry(6, .9, 6, 6, 1, 6), M({ color: c, roughness: .8 })); const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) p.setY(i, y * (1.2 - .5 * (Math.abs(p.getX(i)) + Math.abs(p.getZ(i))) / 6)); } m.geometry.computeVertexNormals(); m.position.set(x, FLOOR + .45, z); m.rotation.y = r; m.receiveShadow = true; m.castShadow = true; g.add(m); };
+    cush(0, 13, .1, 0xd94a4a); cush(-13, 2, -.4, 0x3b6fd1);
+    const ball = new TT.Mesh(new TT.SphereGeometry(1.1, 32, 20), M({ color: 0xffc928, roughness: .3 })); ball.position.set(14, FLOOR + 1.1, 9); ball.castShadow = true; g.add(ball);
+    // lights of the hour
+    scene.add(new TT.HemisphereLight(L.hemi[0], L.hemi[1], L.hemi[2]));
+    const key = new TT.DirectionalLight(L.sun, L.sunI); key.position.set(...L.sunPos); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
+    scene.add(key);
+    const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
+    if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); scene.add(lamp);
+      const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 32, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); scene.add(shade); }
+    if (R) R.toneMappingExposure = L.exp;
+    scene.background = new TT.Color(L.sky[1]).convertSRGBToLinear();
+    roomMode = mode;
+  }
   function mount(container) {
     el = container;
     R = new (T().WebGLRenderer)({ antialias: true, alpha: true });
@@ -323,24 +410,18 @@
       const env = new (T().Scene)(), TT = T();
       const sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
       const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
-      for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 30; c.setRGB(.05 + .26 * Math.max(0, y), .04 + .22 * Math.max(0, y), .03 + .16 * Math.max(0, y)); col.push(c.r, c.g, c.b); }
+      // tinted by the hour (see LOOK): reflections and ambient follow morning / day / evening / night
+      const Lk = LOOK[timeOfDay(new Date().getHours())], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
+      for (let i = 0; i < pos.count; i++) { const y = Math.max(0, pos.getY(i) / 30), k = (.06 + .3 * y) * amt; c.setRGB(tint.r * k, tint.g * k, tint.b * k); col.push(c.r, c.g, c.b); }
       sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
       [[-8, 16, 6, 12, 7, 1.6], [10, 10, -6, 8, 6, .8], [0, 6, 18, 18, 4, .4]].forEach(([x, y, z, w, h, k]) => {
-        const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: new TT.Color(k, k * .95, k * .86), side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p);
+        const kk = k * Math.min(1.2, Lk.sunI + (Lk.lamp ? .25 : 0)), lc = Lk.lamp > 1 ? new TT.Color(0xffc98a).convertSRGBToLinear() : sunC;
+        const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: new TT.Color(lc.r * kk, lc.g * kk, lc.b * kk), side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p);
       });
       const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
       envOK = true;
     } catch (e) {}
-    scene.add(new (T().HemisphereLight)(0xfff1dc, 0x3a2614, .3));
-    const key = new (T().DirectionalLight)(0xfff0d8, 1.0); key.position.set(-6, 14, 8); key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
-    scene.add(key);
-    const rim = new (T().DirectionalLight)(0xbfd8ff, .3); rim.position.set(8, 6, -10); scene.add(rim);
-    const tw = planks('tablePl3', '#d6995a', '#94582c', 1); tw.wrapS = tw.wrapT = T().RepeatWrapping; tw.repeat.set(7, 10);
-    tw.repeat.set(26, 36);
-    scene.fog = new (T().Fog)(0xb57a45, 45, 130);
-    const table = new (T().Mesh)(new (T().CircleGeometry)(300, 64), M({ map: tw, roughness: .5, clearcoat: .35, clearcoatRoughness: .4, bumpScale: .004 }));
-    table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
+    buildRoom(scene);
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
@@ -386,7 +467,7 @@
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const needW = (k ? 6.0 : 6.5) / (th * a), needH = (k ? 7.0 : 6.8) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k));   // zoom applies to the showcase view only
-    const pitch = .78 + k * .55;                       // view: 3/4 · play: nearly top-down
+    const pitch = .52 + k * .82;                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,

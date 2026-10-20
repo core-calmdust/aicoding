@@ -12,7 +12,7 @@
   'use strict';
   const THREE = window.THREE, T3 = window.Table3D;
   if (!THREE || !T3 || typeof window.setDisc !== 'function') return;
-  const BASE = '../atlas/', GUIDE = '../images/atlas/g-reversi.webp', GUIDE_FALLBACK = '../images/atlas/reversi.webp';
+  const BASE = '../atlas/', GUIDE = '../images/atlas/g-disc.webp', GUIDE_FALLBACK = '../images/atlas/reversi.webp';
 
   /* ---------- 3D table behind the page ---------- */
   const host = document.createElement('div'); host.id = 'atlasGL'; document.body.prepend(host);
