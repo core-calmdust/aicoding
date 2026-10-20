@@ -252,7 +252,7 @@
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
-    const KH = 2.3, sw = M({ map: X.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
+    const KH = g.userData.top, sw = M({ map: X.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
     [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }].forEach(st => {
       g.add(mesh(RB(2.5, .32, 3.1, .05, 2), sw, st.x, KH - .16, st.z));
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(mesh(new (T().CylinderGeometry)(.13, .17, KH - .32, 12), sw, st.x + a * .95, (KH - .32) / 2, st.z + b * 1.2)));

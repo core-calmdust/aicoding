@@ -273,7 +273,7 @@
     const key = (c, r) => c + ',' + r;
 
     /* ---------- piece stands (駒台): yours at the bottom right, the opponent's at the top left ---------- */
-    const KH = 2.3, STAND = [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }];
+    const KH = board.userData.top, STAND = [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }];
     const wood = T3.M({ map: T3.wood('kayaLeg', '#e0b06a', '#a87232', 256, 256, 2), roughness: .5, bumpScale: .002 });
     STAND.forEach(s => {
       const top = T3.mesh(T3.RB(2.5, .32, 3.1, .05, 2), wood, s.x, KH - .16, s.z); board.add(top);
