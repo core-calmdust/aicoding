@@ -49,17 +49,10 @@
   "fb.k2": "4-4",
   "fb.k3": "sobrelinha",
   "lvd": [
-    "",
-    "às vezes não vê quatros e três",
-    "1 lance, às vezes descuidada",
-    "2 lances",
-    "3 lances",
-    "4 lances",
-    "6 lances, busca de ameaças em 3",
-    "8 lances, ameaças em 5",
-    "≈1,3 s, ameaças em 7",
-    "≈2 s, ameaças em 9",
-    "≈3,5 s, ameaças em 11"
+    "Iniciação: às vezes não vê quatros e três",
+    "Iniciante: calcula alguns lances",
+    "Intermediário: resolve ataques com quatros e três",
+    "Dan: cálculo profundo e avaliação (pensa mais)"
   ],
   "rv.note": "Erro grave = um lance que transforma uma vitória em derrota (ou em empate), ou que perde muito. Imprecisão = uma perda menor, mas clara. Os números no tabuleiro são a avaliação da IA para jogar ali (+ = bom para quem joga, V = vitória forçada). O anel branco marca o lance jogado.",
   "paste.desc": "Cole uma partida (ex.: h8 h9 i9 … ou 1.h8 2.h9 …) ou uma URL compartilhada. Ela abre no modo dois jogadores, para você continuar de qualquer lance.",
@@ -325,5 +318,18 @@
   "rx.m.block3": "um lance que bloqueia o três do adversário",
   "rx.m.quiet": "um lance tranquilo que prepara o próximo ataque ou defesa",
   "rv.ex.wr": "Chance de vitória (estimativa): {a} com o melhor lance → {b} com o lance jogado",
-  "op.auto": "Reprodução automática / parar (Espaço)"
+  "op.auto": "Reprodução automática / parar (Espaço)",
+  "lv.kyu": "{n} kyu",
+  "lv.dan1": "1 dan",
+  "lv.dan2": "2 dan",
+  "lv.dan3": "3 dan",
+  "lv.dan4": "4 dan",
+  "lv.dan5": "5 dan",
+  "lv.dan6": "6 dan",
+  "lv.dan7": "7 dan",
+  "lv.dan8": "8 dan",
+  "lv.dan9": "9 dan",
+  "rt.rank": "≈ {r}",
+  "rt.below": "abaixo de 15 kyu",
+  "res.vsr": "contra a IA {name}"
 }

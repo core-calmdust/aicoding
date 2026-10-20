@@ -49,17 +49,10 @@
   "fb.k2": "4-4",
   "fb.k3": "overline",
   "lvd": [
-    "",
-    "rate parfois des quatre et des trois",
-    "1 coup, parfois distraite",
-    "2 coups",
-    "3 coups",
-    "4 coups",
-    "6 coups, menaces sur 3 coups",
-    "8 coups, menaces sur 5 coups",
-    "≈1,3 s, menaces sur 7 coups",
-    "≈2 s, menaces sur 9 coups",
-    "≈3,5 s, menaces sur 11 coups"
+    "Initiation : rate parfois des quatre et des trois",
+    "Débutant : calcule quelques coups",
+    "Intermédiaire : résout les attaques par quatre et trois",
+    "Dan : calcul profond et jugement (réfléchit plus longtemps)"
   ],
   "rv.note": "Erreur = coup qui transforme une victoire en défaite (ou en nulle), ou qui perd beaucoup. Imprécision = perte plus petite mais nette. Les nombres sur le plateau sont l'évaluation de l'IA pour chaque point (+ = bon pour le camp au trait, V = victoire forcée). L'anneau blanc marque le coup joué.",
   "paste.desc": "Collez une partie (p. ex. h8 h9 i9 … ou 1.h8 2.h9 …) ou une URL partagée. Elle s'ouvre en mode deux joueurs, pour reprendre à n'importe quel coup.",
@@ -325,5 +318,18 @@
   "rx.m.block3": "un coup qui bloque le trois adverse",
   "rx.m.quiet": "un coup tranquille qui prépare l'attaque ou la défense suivante",
   "rv.ex.wr": "Chances de gain (estimation) : {a} avec le meilleur coup → {b} avec le coup joué",
-  "op.auto": "Lecture auto / arrêt (Espace)"
+  "op.auto": "Lecture auto / arrêt (Espace)",
+  "lv.kyu": "{n} kyu",
+  "lv.dan1": "1 dan",
+  "lv.dan2": "2 dan",
+  "lv.dan3": "3 dan",
+  "lv.dan4": "4 dan",
+  "lv.dan5": "5 dan",
+  "lv.dan6": "6 dan",
+  "lv.dan7": "7 dan",
+  "lv.dan8": "8 dan",
+  "lv.dan9": "9 dan",
+  "rt.rank": "≈ {r}",
+  "rt.below": "sous 15 kyu",
+  "res.vsr": "contre l'IA {name}"
 }

@@ -794,17 +794,29 @@ const now = typeof performance !== 'undefined' ? () => performance.now() : () =>
 
 // ---------------------------------------------------------------- levels
 // d: max depth, ms: time, noise: random value added to root choices, blunder: chance to ignore a threat / play a weak move
+// 20 steps labelled 15級 … 1級, 初段 … 五段. The weak ones search shallowly with noise and the occasional blunder; from 6級 on
+// the search gets a node budget (so the strength does not depend on the device), the top ones also a time cap.
 const LEVELS = [null,
-  { d: 1, ms: 200, noise: 900, blunder: 0.35 },
-  { d: 1, ms: 250, noise: 450, blunder: 0.18 },
-  { d: 2, ms: 300, noise: 260, blunder: 0.08 },
-  { d: 3, ms: 350, noise: 150, blunder: 0.03 },
-  { d: 4, ms: 400, noise: 80 },
-  { d: 6, ms: 500, vct: 3, defend: 1 },
-  { d: 8, ms: 800, vct: 5, defend: 1 },
-  { d: 12, ms: 1300, vct: 7, defend: 3 },
-  { d: 16, ms: 2200, vct: 9, defend: 5 },
-  { d: 24, ms: 3500, vct: 11, defend: 7 },
+  { d: 1, ms: 150, noise: 1100, blunder: 0.40 },   // 15級
+  { d: 1, ms: 150, noise: 800, blunder: 0.30 },    // 14級
+  { d: 1, ms: 200, noise: 550, blunder: 0.22 },    // 13級
+  { d: 2, ms: 200, noise: 380, blunder: 0.15 },    // 12級
+  { d: 2, ms: 250, noise: 260, blunder: 0.10 },    // 11級
+  { d: 3, ms: 250, noise: 180, blunder: 0.06 },    // 10級
+  { d: 3, ms: 300, noise: 120, blunder: 0.03 },    // 9級
+  { d: 4, ms: 300, noise: 80, blunder: 0.015 },    // 8級
+  { d: 4, ms: 350, noise: 45 },                    // 7級
+  { nodes: 2500, vct: 3, defend: 1 },              // 6級
+  { nodes: 5000, vct: 3, defend: 1 },              // 5級
+  { nodes: 9000, vct: 5, defend: 1 },              // 4級
+  { nodes: 15000, vct: 5, defend: 3 },             // 3級
+  { nodes: 24000, vct: 7, defend: 3 },             // 2級
+  { nodes: 38000, vct: 7, defend: 5 },             // 1級
+  { nodes: 60000, vct: 9, defend: 5 },             // 初段
+  { nodes: 95000, vct: 9, defend: 5 },             // 二段
+  { nodes: 130000, vct: 11, defend: 7, ms: 7000, vctNodes: 250000 }, // 三段
+  { nodes: 190000, vct: 11, defend: 7, ms: 8000, vctNodes: 300000 }, // 四段
+  { nodes: 280000, vct: 13, defend: 9, ms: 10000, vctNodes: 400000 }, // 五段
 ];
 let ENG = null; const eng = () => ENG || (ENG = new Engine());
 function gauss(r) { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
@@ -835,7 +847,7 @@ function openingMove(pos, level, rand) {
   // ply 2: black chooses the opening (strong levels pick the known black wins 花月 / 浦月)
   const w = mv[1], dx = w % N - 7, dy = Math.floor(w / N) - 7, direct = !dx || !dy;
   let rel;
-  if (level >= 7) rel = direct ? [1, 1] : [1, -1];
+  if (level >= 14) rel = direct ? [1, 1] : [1, -1];
   else {
     const goodD = [[0, 2], [1, 2], [1, 1], [1, 0], [2, 0], [0, -1], [1, -1], [2, -1], [2, 1]], goodI = [[2, 1], [2, 0], [2, -1], [1, 0], [1, -1], [1, -2], [0, -1], [0, -2], [-1, -1]];
     const L = direct ? goodD : goodI; rel = L[Math.floor(rand() * L.length)];
@@ -865,13 +877,13 @@ function think(rule, moves, level, start, rand) {
       const pick = list.filter(i => pos.cls[me][i] !== C_FIVE).slice(0, 8);
       if (pick.length && !fiveCells(pos, me).length) return { move: I2M[pick[Math.floor(rand() * pick.length)]] };
     }
-    const r = E.rootList(pos, L.ms, null, 10 + level);
+    const r = E.rootList(pos, L.ms, null, 10 + Math.min(10, level));
     const vals = r.list.length ? r.list : pos.legal().map(m => ({ m, v: 0 }));
     let best = null, bv = -Infinity;
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best };
   }
-  const r = E.best(pos, { ms: L.ms, depth: L.d, vct: L.vct, defend: L.defend });
+  const r = E.best(pos, { ms: L.ms || 60000, nodes: L.nodes, depth: L.d, vct: L.vct, defend: L.defend, vctNodes: L.vctNodes });
   if (r.i < 0) { const lg = pos.legal(); return { move: lg.length ? lg[0] : -1 }; }
   return { move: I2M[r.i], v: r.v, depth: r.depth };
 }

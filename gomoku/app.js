@@ -48,13 +48,17 @@ const sanOf = i => sqName(moves[i]);
 
 // ====================================================================== state
 const STORE = 'aicoding-gomoku';
-const settings = { coach: true, mode: 'ai', rule: 'renju', color: 1, level: 4, level2: 4, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, forbid: true, num: false, confirm: null, lang: '', skin: 'classic' };
+const settings = { coach: true, lvv: 2, mode: 'ai', rule: 'renju', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, forbid: true, num: false, confirm: null, lang: '', skin: 'classic' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
+// AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
+const LV_MAX = 20, LV_OLD = [0, 1, 3, 5, 7, 9, 11, 13, 15, 17, 20];   // old Lv.1-10 (saved settings / rated history) -> step
+const lvMig = v => typeof v === 'number' && v >= 1 ? LV_OLD[Math.min(10, Math.round(v))] : 6;
+const lvClamp = v => typeof v === 'number' && v >= 1 && v <= LV_MAX ? Math.round(v) : 6;
+const LV = i => i <= 15 ? t('lv.kyu', { n: 16 - i }) : t('lv.dan' + (i - 15)), LVD = i => t('lvd')[i <= 3 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
 const $ = s => document.querySelector(s);
 const coarse = () => matchMedia('(pointer: coarse)').matches;
 const confirmOn = () => settings.confirm === null ? coarse() : !!settings.confirm;
@@ -80,6 +84,8 @@ function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (settings.lvv !== 2) { settings.level = lvMig(settings.level); settings.level2 = lvMig(settings.level2); settings.lvv = 2; if (d.rated && d.rated.lv) d.rated.lv = lvMig(d.rated.lv); }
+    settings.level = lvClamp(settings.level); settings.level2 = lvClamp(settings.level2);
     if (settings.mode === 'online') settings.mode = 'ai';
     if (!E.RULES.includes(settings.rule)) settings.rule = 'renju';
     const r = E.RULES.includes(d.rule) ? d.rule : settings.rule;
@@ -100,7 +106,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261020n3'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261020lv'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -304,7 +310,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnNum').classList.toggle('on', !!settings.num);
   renderReview(); renderBrandSub();
-  const mode = settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : settings.mode === 'online' ? t('ol.title') : t('ng.pvp');
+  const mode = settings.mode === 'ai' ? 'AI ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : settings.mode === 'online' ? t('ol.title') : t('ng.pvp');
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${t('rule.' + rule)}  ·  ${mode}  ·  ← → ${t('info.browse')}`;
 }
 function evalAt(i) { const st = statusAt(i); if (st.over) return st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0; return evals[i] ? evals[i].s : null; }
@@ -503,7 +509,7 @@ function onGameEnd(st) {
   if (rgame) {
     const rx = rtSettle(st);
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
-  } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
+  } else if (settings.mode === 'ai') sub += '<br>' + t('res.vsr', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
   const mk = settings.mode === 'ai' && !rgame ? mistakeProblems() : [];
   $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
@@ -586,8 +592,8 @@ $('#btnAgain').onclick = () => {
 function recordText() {
   const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*';
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  const bn = net && net.game ? String(net.game.wn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P1 ? 'You' : 'AI Lv.' + settings.level) : 'Black';
-  const wn = net && net.game ? String(net.game.bn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P2 ? 'You' : 'AI Lv.' + settings.level) : 'White';
+  const bn = net && net.game ? String(net.game.wn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P1 ? 'You' : 'AI ' + LV(settings.level)) : 'Black';
+  const wn = net && net.game ? String(net.game.bn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P2 ? 'You' : 'AI ' + LV(settings.level)) : 'White';
   let s = ''; for (let i = 0; i < moves.length; i++) s += (i ? ' ' : '') + (i + 1) + '.' + sanOf(i);
   return `[Event "World Board Game Atlas — Gomoku"]\n[Date "${date}"]\n[Rule "${rule}"]\n[Black "${bn}"]\n[White "${wn}"]\n[Result "${res}"]\n\n${s} ${res}`;
 }
@@ -677,7 +683,7 @@ $('#rulesClose').onclick = () => hideOverlay('#rulesOverlay');
 
 // ---------------------------------------------------------------- new game dialog
 let draft = {};
-function levelLabelHTML(v) { return `Lv.${v} ${LV(v)}<small>${LVD(v)}</small>`; }
+function levelLabelHTML(v) { return `${LV(v)}<small>${LVD(v)}</small>`; }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
   document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
@@ -727,23 +733,25 @@ $('#btnStart').onclick = () => {
 // (mostly close, sometimes clearly stronger or weaker). Renju rules, 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 600, 850, 1050, 1250, 1450, 1650, 1850, 2000, 2150, 2250];
+// rating of each step on a kyu / dan scale (100 points per kyu: 15級 = 400-499 … 1級 = 1800-1899, then 200 per dan)
+const RT_LV = [0, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2400, 2600, 2800];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
   if (!Array.isArray(s.hist)) s.hist = [];
+  if (s.k !== 2) { s.hist.forEach(h => { h.lv = lvMig(h.lv); }); s.k = 2; if (s.hist.length) rtStore(s); }   // history from the 10-level days
   return s;
 }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
 const RT_CLASS = [800, 1100, 1400, 1700, 2000, 2300];
-function rtRank(r) { let k = 0; while (k < RT_CLASS.length && r >= RT_CLASS[k]) k++; return t('rt.class' + (k + 1)); }
+function rtRank(r) { const k = r < 400 ? t('rt.below') : r < 1900 ? t('lv.kyu', { n: 15 - Math.floor((r - 400) / 100) }) : t('lv.dan' + Math.min(9, 1 + Math.floor((r - 1900) / 200))); return t('rt.rank', { r: k }); }
 const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
-const rtLvName = lv => `Lv.${lv} ${LV(lv)}`;
+const rtLvName = lv => LV(lv);
 function rtPick(r) {
   { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x]).slice(1)); }
   const u = Math.random(), v = Math.random();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
-  let lv = 1; for (let i = 1; i <= 10; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
+  let lv = 1; for (let i = 1; i <= LV_MAX; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
   const diff = RT_LV[lv] - r;
   return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
