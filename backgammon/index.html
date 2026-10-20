@@ -592,6 +592,13 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   html:not(.rot) .side-in > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
 }
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+/* PC: header icon set (sound / language / home) one size larger; phones unchanged */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
+}
 </style>
 </head>
 <body>

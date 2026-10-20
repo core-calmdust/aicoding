@@ -638,6 +638,14 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
 #btnRot.hintpulse::after{content:"";position:absolute;inset:-5px;border-radius:10px;border:2px solid var(--accent);animation:rtPulse 1.1s ease-out infinite;pointer-events:none}
 @keyframes rtPulse{0%{opacity:1;transform:scale(.9)}100%{opacity:0;transform:scale(1.5)}}
 @media (prefers-reduced-motion: reduce){.rt-dev{animation:none;transform:rotate(90deg)}#btnRot.hintpulse::after{animation:none;opacity:.9}}
+/* PC: header icon set (sound / language / home) one size larger; phones unchanged */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
+  #infoLine{margin-right:226px}
+}
 </style>
 </head>
 <body>

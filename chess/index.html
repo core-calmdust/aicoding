@@ -818,6 +818,13 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body:not(.no-online) .mtabs{height:calc(42px + env(safe-area-inset-bottom))}
   body.mtab-online .dock{bottom:max(calc(42px + env(safe-area-inset-bottom)), var(--kb, 0px))}
 }
+/* PC: header icon set (sound / language / home) one size larger; phones unchanged */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
+}
 </style>
 </head>
 <body>

@@ -604,6 +604,13 @@ figure.mini figcaption{font-size:13px;color:var(--muted);line-height:1.65;margin
 html[lang=ar] :is(.ls-desc, .rules-offer, .ru-task, figure.mini figcaption, .op-info, .ob-info, .pz-catdesc, .ls-course, .ru-body, .pz-total){direction:rtl;text-align:right}
 html[lang=ar] .ru-task{text-align:center}
 html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-radius:8px 0 0 8px}
+/* PC: header icon set (sound / language / home) one size larger; phones unchanged */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
+}
 </style>
 <link rel="stylesheet" href="online.css?v=20261019c">
 </head>

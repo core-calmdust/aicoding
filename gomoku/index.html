@@ -801,6 +801,13 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .coach.show{opacity:1;transform:translate(-50%,0)}
 .coach.q-best{border-color:#6fd3a0;color:#b8f0d2}.coach.q-good{border-color:#9fc7ff;color:#d3e5ff}.coach.q-dubious{border-color:#f2c060;color:#ffe2a6}.coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
 body.in-online .coach,body.in-online #btnMistakes{display:none!important}
+/* PC: header icon set (sound / language / home) one size larger; phones unchanged */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
+}
 </style>
 </head>
 <body>

@@ -590,6 +590,13 @@ body .info-line{font-size:12.5px}
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
+/* PC: header icon set (sound / language / home) one size larger; phones unchanged */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
+}
 </style>
 <link rel="stylesheet" href="online.css?v=20261020a">
 </head>
