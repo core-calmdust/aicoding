@@ -298,7 +298,7 @@
       const m = new TH.Mesh(new TH.BoxGeometry(CW * .92, .02, CH * .92), new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false }));
       const [x, z] = SG.cell(c, r); m.position.set(x, Y + .012, z); m.userData.pulse = pulse; marks.add(m); return m;
     }
-    function ring(x, z, y) { const m = new TH.Mesh(new TH.CylinderGeometry(.2, .2, .02, 24), new TH.MeshBasicMaterial({ color: 0xffa21a, transparent: true, opacity: .8, toneMapped: false })); m.position.set(x, y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
+    function ring(x, z, y) { const m = new TH.Mesh(new TH.CylinderGeometry(.2, .2, .02, 24), new TH.MeshBasicMaterial({ color: 0xd8321c, transparent: true, opacity: .85, toneMapped: false })); m.position.set(x, y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
     const ringAt = (c, r) => { const [x, z] = SG.cell(c, r); return ring(x, z, Y); };
     function cross(c, r) { const g = new TH.Group(), mat = new TH.MeshBasicMaterial({ color: 0xff3b3b, toneMapped: false }); [1, -1].forEach(s => { const b = new TH.Mesh(new TH.BoxGeometry(.66, .03, .09), mat); b.rotation.y = s * Math.PI / 4; g.add(b); }); const [x, z] = SG.cell(c, r); g.position.set(x, Y + .5, z); marks.add(g); return g; }
     function ghost(t, c, r, gote) {
@@ -368,8 +368,8 @@
       const cnt = setBoard(st);
       later(() => {
         if (st.zone) for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) tile(c, r, 0xff4a3a, .3);
-        (st.blue || []).forEach(([c, r]) => tile(c, r, 0x1f7dff, .42));
-        (st.glow || []).forEach(([c, r]) => { tile(c, r, 0xffa21a, .6, true); const p = pcs[key(c, r)]; if (p) p.userData.bob = true; });
+        (st.blue || []).forEach(([c, r]) => tile(c, r, 0x1f6fe8, .5));
+        (st.glow || []).forEach(([c, r]) => { tile(c, r, 0xe0501e, .5, true); const p = pcs[key(c, r)]; if (p) p.userData.bob = true; });
         (st.bad || []).forEach(([c, r]) => tile(c, r, 0xff4040, .3));
         (st.xs || []).forEach(([c, r]) => cross(c, r));
         if (st.ghost) ghost(...st.ghost);
@@ -379,7 +379,7 @@
           else tile(...st.sel, 0x2fd17a, .6, true);
           const y0 = st.sel === 'hand' ? KH : Y; anim(240, k => { sp.position.y = y0 + .22 * io(k); });
         }
-        targets(st).forEach(([c, r]) => { if (pcs[key(c, r)]) tile(c, r, 0xff7a3a, .6, true); else ringAt(c, r); });
+        targets(st).forEach(([c, r]) => { if (pcs[key(c, r)]) tile(c, r, 0xd8321c, .5, true); else ringAt(c, r); });
       }, 420 + cnt * 16);
       say(L.s[step].say); buttons();
     }

@@ -221,7 +221,7 @@
     const kaya = M({ map: X.wood('kayaSide2', '#d4a057', '#9c6628', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
-    const top = new TT.MeshPhysicalMaterial({ map: boardTop(), bumpMap: boardBump(), bumpScale: .006, roughness: .42, clearcoat: .45, clearcoatRoughness: .3 });
+    const top = new TT.MeshPhysicalMaterial({ map: boardTop(), bumpMap: boardBump(), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
     const bottom = M({ color: 0x8a5a2a, roughness: .7 });
     const base = o.legs === false ? 0 : LEG;
@@ -251,8 +251,14 @@
     back.forEach((t, c) => { put(t, c, 0, true); put(t, c, 8, false); });
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
+    // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
+    const KH = 2.3, sw = M({ map: X.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
+    [{ x: FW / 2 + 1.95, z: 2.7 }, { x: -FW / 2 - 1.95, z: -2.7 }].forEach(st => {
+      g.add(mesh(RB(2.5, .32, 3.1, .05, 2), sw, st.x, KH - .16, st.z));
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(mesh(new (T().CylinderGeometry)(.13, .17, KH - .32, 12), sw, st.x + a * .95, (KH - .32) / 2, st.z + b * 1.2)));
+    });
     // in the toy room the tall board would hide the room: a little smaller than life
-    g.scale.setScalar(.86);   // about the reversi board's size on the chabudai
+    g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
     return g;
   };
 

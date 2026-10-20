@@ -348,8 +348,8 @@
      Lighting follows the local time like the Sudoku backgrounds: morning / day / evening / night. */
   function timeOfDay(h) { return h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night'; }
   const LOOK = {
-    morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .9 },
-    day:     { sky: ['#8fd0ff', '#e6f6ff'], sun: 0xffffff, sunI: 1.25, sunPos: [-8, 18, -6], hemi: [0xf4f8ff, 0x6a5038, .55], lamp: 0, exp: .95 },
+    morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .84 },
+    day:     { sky: ['#8fd0ff', '#e6f6ff'], sun: 0xffffff, sunI: 1.25, sunPos: [-8, 18, -6], hemi: [0xf4f8ff, 0x6a5038, .55], lamp: 0, exp: .86 },
     evening: { sky: ['#ff7a3c', '#ffc27a'], sun: 0xff8a3c, sunI: 1.35, sunPos: [-18, 5, -10], hemi: [0xffb070, 0x4a2010, .42], lamp: .6, exp: .82 },
     night:   { sky: ['#0b1230', '#24335e'], sun: 0x8fa4ff, sunI: .08, sunPos: [-14, 10, -12], hemi: [0x3a4a80, 0x140c06, .12], lamp: 1.7, exp: .78 },
   };
@@ -618,7 +618,7 @@
     toy(RB(5, .7, 2.2), 0xc48a4a, 7.5, 9.95, 1.2); toy(RB(4.4, .7, 2), 0x2a6fe8, 7.6, 10.65, 1.2, .08);
     toy(new TT.ConeGeometry(.6, 1.4, 20), 0xff8fc7, 12.5, 10.3, 1.3); toy(new TT.CylinderGeometry(.8, .8, .5, 24), 0xffd23f, 14.5, 9.85, 1.3);
     // chabudai: a low round table, the game board sits on it (its top is y = 0)
-    const top = M({ map: wood('chabu2', '#b8763e', '#8a5226', 1024, 1024, .8), roughness: .38, clearcoat: .55, clearcoatRoughness: .3, bumpScale: .004 });
+    const top = M({ map: wood('chabu2', '#b8763e', '#8a5226', 1024, 1024, .8), roughness: .5, clearcoat: .25, clearcoatRoughness: .45, bumpScale: .004 });
     const disk = new TT.Mesh(new TT.CylinderGeometry(9.2, 9.2, .55, 72), top); disk.position.y = -.275; disk.castShadow = disk.receiveShadow = true; g.add(disk);
     const lip = new TT.Mesh(new TT.TorusGeometry(9.2, .14, 10, 72), top); lip.rotation.x = Math.PI / 2; lip.position.y = -.02; g.add(lip);
     const apron = new TT.Mesh(new TT.CylinderGeometry(8.4, 8.4, .5, 64, 1, true), M({ color: 0x5a3018, roughness: .6 })); apron.position.y = -.8; g.add(apron);
