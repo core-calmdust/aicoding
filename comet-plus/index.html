@@ -3734,6 +3734,7 @@ const buildingMatB = new THREE.LineBasicMaterial({ color: 0xff7a3c, transparent:
 // ワイヤーフレームの一部の面を、窓ガラスのように半透明のポリゴンにする（暗めにゆっくり明暗）
 const glassMats = [0, 1, 2].map(() => new THREE.MeshBasicMaterial({ color: 0x6040ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
 const _glassGeo = new THREE.PlaneGeometry(1, 1);
+const ringGlassMat = new THREE.MeshBasicMaterial({ color: 0x6040ff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 function addGlass(obj, w, d, h, step, count) {
     const floors = Math.max(1, Math.floor(h / step));
     for (let n = 0; n < count; n++) {
@@ -3749,11 +3750,17 @@ function addGlass(obj, w, d, h, step, count) {
         obj.add(m);
     }
 }
+function quadGlass(quads) { // [[a,b,c,d], ...] の四角形を半透明ポリゴンに
+    const p = [];
+    quads.forEach(([a, b, c, d]) => p.push(...a, ...b, ...c, ...a, ...c, ...d));
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); return g;
+}
 function updateGlass(t) {
     glassMats.forEach((m, i) => {
-        m.color.copy(themeCur.grid).lerp(themeCur.comet, i * 0.35);
-        m.opacity = 0.08 + 0.32 * Math.max(0, Math.sin(t * 0.7 + i * 2.1)) + visualBeat * 0.08;
+        m.color.copy(themeCur.grid).lerp(themeCur.comet, i * 0.35).lerp(COL_WHITE, 0.12);
+        m.opacity = 0.14 + 0.42 * Math.max(0, Math.sin(t * 0.7 + i * 2.1)) + visualBeat * 0.1;
     });
+    ringGlassMat.color.copy(glassMats[1].color); ringGlassMat.opacity = glassMats[1].opacity * 0.35;
 }
 const buildingFillMat = new THREE.MeshBasicMaterial({ color: 0x3a3070, transparent: true, opacity: 0.045, depthWrite: false });
 // ---------------------------------
@@ -3819,18 +3826,18 @@ makeMotif('city', 90, i => {
         const w = rand(60, 160), d = rand(60, 160), h = rand(80, 330);
         geo = towerGeometry(w, d, h, rand(22, 40));
         if (Math.random() < 0.5) { fill = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), buildingFillMat); fill.position.y = h / 2; }
-        else if (Math.random() < 0.4) glass = { w, d, h, st: rand(22, 40) };
+        else if (Math.random() < 0.55) glass = { w, d, h, st: rand(22, 40) };
     } else if (Math.random() < 0.25) {
         geo = spireGeometry(rand(50, 90), rand(700, 1300));
     } else {
         const w = rand(70, 200), d = rand(70, 200), h = rand(300, 1000), st = rand(25, 45), tp = Math.random() < 0.3 ? rand(0.4, 0.8) : 1;
         geo = towerGeometry(w, d, h, st, tp);
-        if (tp === 1 && Math.random() < 0.45) glass = { w, d, h, st };
+        if (tp === 1 && Math.random() < 0.65) glass = { w, d, h, st };
     }
     const obj = new THREE.Group();
     obj.add(new THREE.LineSegments(geo, Math.random() < 0.18 ? motifMatB : motifMatA));
     if (fill) obj.add(fill);
-    if (glass) addGlass(obj, glass.w, glass.d, glass.h, glass.st, 2 + Math.floor(Math.random() * 5));
+    if (glass) addGlass(obj, glass.w, glass.d, glass.h, glass.st, 3 + Math.floor(Math.random() * 6));
     return { obj, under };
 }, (it, z) => {
     it.obj.position.set(it.under ? rand(-700, 700) : sideX(), FLOOR_Y, z);
@@ -3838,7 +3845,18 @@ makeMotif('city', 90, i => {
 
 // 1: 鉄塔の森
 makeMotif('pylons', 70, i => {
-    const obj = new THREE.LineSegments(spireGeometry(rand(40, 110), i < 20 ? rand(200, 340) : rand(600, 1500)), Math.random() < 0.25 ? motifMatB : motifMatA);
+    const sr = rand(40, 110), shh = i < 20 ? rand(200, 340) : rand(600, 1500);
+    const obj = new THREE.LineSegments(spireGeometry(sr, shh), Math.random() < 0.25 ? motifMatB : motifMatA);
+    if (Math.random() < 0.55) { // 鉄塔の段の一部をガラス面に
+        const qs = [];
+        for (let n = 0; n < 2 + Math.floor(Math.random() * 4); n++) {
+            const side = Math.floor(Math.random() * 4), lv = Math.floor(Math.random() * 7);
+            const a0 = (side / 4) * Math.PI * 2 + Math.PI / 4, a1 = ((side + 1) / 4) * Math.PI * 2 + Math.PI / 4, t0 = lv / 8, t1 = (lv + 1) / 8;
+            const P = (a, t) => [Math.cos(a) * sr * (1 - t), shh * t, Math.sin(a) * sr * (1 - t)];
+            qs.push([P(a0, t0), P(a1, t0), P(a1, t1), P(a0, t1)]);
+        }
+        obj.add(new THREE.Mesh(quadGlass(qs), glassMats[i % 3]));
+    }
     return { obj, under: i < 20 };
 }, (it, z) => {
     it.obj.position.set(it.under ? rand(-700, 700) : sideX(), FLOOR_Y, z);
@@ -3859,6 +3877,15 @@ const ringGeos = [3, 4, 6, 8].map(n => {
 });
 makeMotif('rings', 26, i => {
     const obj = new THREE.LineSegments(ringGeos[i % ringGeos.length], i % 3 === 0 ? motifMatB : motifMatA);
+    if (Math.random() < 0.4) { // 枠の帯のいくつかをガラス面に（リングは巨大なので控えめ）
+        const n = [3, 4, 6, 8][i % 4], qs = [];
+        for (let k = 0; k < n; k++) {
+            if (Math.random() > 0.3) continue;
+            const a0 = (k / n) * Math.PI * 2, a1 = ((k + 1) / n) * Math.PI * 2;
+            qs.push([[Math.cos(a0), Math.sin(a0), 0], [Math.cos(a1), Math.sin(a1), 0], [Math.cos(a1) * 0.93, Math.sin(a1) * 0.93, 0], [Math.cos(a0) * 0.93, Math.sin(a0) * 0.93, 0]]);
+        }
+        if (qs.length) obj.add(new THREE.Mesh(quadGlass(qs), ringGlassMat));
+    }
     obj.scale.setScalar(rand(900, 1300));
     return { obj, spin: rand(-0.4, 0.4) };
 }, (it, z) => {
@@ -3871,7 +3898,7 @@ const crystalGeos = crystalSolids.map(g => new THREE.EdgesGeometry(g));
 makeMotif('crystals', 70, i => {
     const obj = new THREE.LineSegments(crystalGeos[i % 4], Math.random() < 0.3 ? motifMatB : motifMatA);
     obj.scale.setScalar(i < 25 ? rand(30, 90) : rand(90, 260));
-    if (i >= 25 && Math.random() < 0.3) obj.add(new THREE.Mesh(crystalSolids[i % 4], glassMats[i % 3])); // 一部をガラスのようなポリゴンに
+    if (Math.random() < 0.45) obj.add(new THREE.Mesh(crystalSolids[i % 4], glassMats[i % 3])); // 一部をガラスのようなポリゴンに
     return { obj, under: i < 25, spin: rand(0.2, 1.2), bob: rand(0, 6) };
 }, (it, z) => {
     if (it.under) it.obj.position.set(rand(-650, 650), rand(FLOOR_Y + 80, -120), z);
@@ -3892,10 +3919,20 @@ function terrainGeometry(w, d, seg, amp, seed) {
         const h = (Math.sin(x * 0.011 + seed) * Math.cos(z * 0.009 + seed * 2) + Math.sin(x * 0.023 + z * 0.017 + seed) * 0.5 + 0.6) * amp * edge;
         pos.setY(k, Math.max(0, h));
     }
+    terrainGeometry.last = g; // ガラス面用に元の面も残す
     return new THREE.WireframeGeometry(g);
+}
+function terrainGlass(g, frac) { // 地形の一部のマス目をガラス面に
+    const pos = g.attributes.position, idx = g.index, p = [];
+    for (let k = 0; k < idx.count; k += 6) {
+        if (Math.random() > frac) continue;
+        for (let j = 0; j < 6; j++) { const v = idx.getX(k + j); p.push(pos.getX(v), pos.getY(v) + 1, pos.getZ(v)); }
+    }
+    const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); return out;
 }
 makeMotif('terrain', 8, i => {
     const obj = new THREE.LineSegments(terrainGeometry(1400, 875, 22, rand(260, 520), rand(0, 10)), i % 2 ? motifMatA : motifMatB);
+    obj.add(new THREE.Mesh(terrainGlass(terrainGeometry.last, 0.12), glassMats[i % 3]));
     return { obj, side: i % 2 ? 1 : -1 };
 }, (it, z) => {
     it.obj.position.set(it.side * 1250, FLOOR_Y, z);
@@ -3908,7 +3945,7 @@ makeMotif('pillars', 84, i => {
     const h = i < 36 ? rand(60, 320) : rand(300, 1100);
     const obj = new THREE.Group();
     obj.add(new THREE.LineSegments(towerGeometry(46, 46, h, 9999), motifMatA));
-    if (i >= 36 && Math.random() < 0.35) addGlass(obj, 46, 46, h, h / Math.max(2, Math.round(h / 120)), 1 + Math.floor(Math.random() * 3));
+    if (Math.random() < 0.5) addGlass(obj, 46, 46, h, h / Math.max(2, Math.round(h / 120)), 1 + Math.floor(Math.random() * 3));
     const cap = new THREE.Mesh(new THREE.BoxGeometry(46, 6, 46), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }));
     cap.position.y = h;
     obj.add(cap);
