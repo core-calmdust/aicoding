@@ -1137,7 +1137,7 @@ function gainShield() {
         effects = effects.filter(e => e.type !== 'shieldMsg');
         if (spBonus >= SP_FOR_BONUS) {
             spBonus = 0; shields = shieldCap();
-            effects.push({ type: 'shieldMsg', text: 'SHIELD ' + shields + '!!', color: '#7dffd0', life: 110, maxLife: 110 });
+            effects.push({ type: 'shieldMsg', text: 'BONUS SHIELD GET!!', color: '#7dffd0', life: 110, maxLife: 110 });
             audioHandler.playSound('waveClear');
         } else {
             effects.push({ type: 'shieldMsg', text: T('hud.sp2', { n: SP_FOR_BONUS - spBonus }), color: '#ffe27a', life: 90, maxLife: 90 });
