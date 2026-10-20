@@ -194,7 +194,15 @@
       });
     })(performance.now());
   }
-  (window.requestIdleCallback || (f => setTimeout(f, 1200)))(() => { if (!glOK) initGL(); });
+  // after load, in idle time: start the 3D table, then build every board ahead of time (one per idle slice),
+  // so tapping an icon never has to build a board while the fly / smoke / sparkle effects are playing
+  const idle = window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 2500 })) : (f => setTimeout(f, 300));
+  idle(() => {
+    if (!glOK) initGL(); if (!glOK) return;
+    const q = A_.byUpdate().map(g => g.id);
+    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
+    setTimeout(next, 400);
+  });
   // ‹ › buttons page the recent-updates row (one card step; hidden at either end)
   function updNav() {
     const row = $('updRow'), pv = $('updPrev'), nx = $('updNext'); if (!row || !pv) return;
@@ -372,7 +380,7 @@
       // the level hint folds away with them (wrapped so its height can animate)
       const lvi = $('bvLvInfo'), D = [more];
       if (lvi) { const w = document.createElement('div'); w.className = 'more lvw'; lvi.before(w); w.appendChild(lvi); D.push(w); }
-      let fold = true; try { fold = localStorage.getItem('atlas-bv-fold2') !== '0'; } catch (e) {}   // folded by default
+      let fold = true;   // always opens folded
       const fullOf = el => { const h = el.style.height; el.style.height = 'auto'; const v = el.scrollHeight; el.style.height = h; return v; };
       let Hs = [];
       const apply = k => D.forEach((el, i) => { el.style.height = Math.max(0, Hs[i] * k) + 'px'; el.style.opacity = Math.max(0, Math.min(1, k * 1.4)); });

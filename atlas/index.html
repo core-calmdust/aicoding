@@ -504,7 +504,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .bvi .more{overflow:hidden;display:flex;flex-direction:column;gap:14px;will-change:height}
   .bvi .more > :first-child{margin-top:14px!important}
   .bvi .R{margin-top:14px}
-  .bvi .more.lvw{flex-basis:100%;gap:0;margin-top:-14px!important}
+  .bvi .more.lvw{flex-basis:100%;gap:0}
+  .bvi .opts{row-gap:0!important}
   .bvi .more > *{margin:0!important}
   .bvi.fold .L{gap:0}
   .bvi.fold .mnote{min-height:46px!important}
@@ -518,6 +519,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .bvi .row h3{font-size:clamp(17px,5.4vw,22px)}
   .bvi .row .bd{flex-wrap:nowrap;gap:4px}.bvi .row .bd .badge{height:20px;font-size:10.5px;padding:0 7px;white-space:nowrap}
 }
+.rgd{grid-template-columns:minmax(0,1fr)}
+.rgd-act{min-width:0}.rgd-act .dots{min-width:0;overflow:hidden}
+@media (max-width:600px){.rgd-act{gap:6px}.rgd-act .btn{padding-left:12px;padding-right:12px}.rgd-act .btn.big{font-size:15px}.rgd-act .dots{gap:4px}.rgd .nm{font-size:11px}}
 </style>
 </head>
 <body>
@@ -624,6 +628,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/shogi.js?v=1"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=51"></script>
+<script src="app.js?v=54"></script>
 </body>
 </html>
