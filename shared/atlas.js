@@ -302,9 +302,11 @@
   const cleanName = (n, max) => String(n || '').replace(/[\u0000-\u001f\u007f<>&"']/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 16);
   const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   // apps: also the JSON save files of the sudoku / SameGame apps — only from the portal (never while that app is open)
-  function shareName(name, apps) {
-    name = cleanName(name); if (!name) return;
-    NAME_GAMES.forEach(g => { if (lsGet(g + '-online-name') !== name) lsSet(g + '-online-name', name); });
+  const TAG = '＠PORTAL';   // online games entered from the portal (3D skin) show the player as "name＠PORTAL"
+  const untag = n => String(n || '').replace(/[＠@]PORTAL$/i, '');
+  function shareName(name, apps, here) {
+    name = cleanName(untag(name)); if (!name) return;
+    NAME_GAMES.forEach(g => { const v = g === here && /[?&]skin=atlas/.test(location.search) ? cleanName(name, 16 - TAG.length) + TAG : name; if (lsGet(g + '-online-name') !== v) lsSet(g + '-online-name', v); });
     if (!apps) return;
     const n12 = name.slice(0, 12);
     const sd = J('mainichi-sudoku-v1'); if (sd && typeof sd === 'object') { sd.prof = sd.prof || {}; if (sd.prof.name !== n12) { sd.prof.name = n12; lsSet('mainichi-sudoku-v1', JSON.stringify(sd)); } }
@@ -315,12 +317,13 @@
     const here = (location.pathname.match(/\/([a-z0-9-]+)\/(?:index\.html)?$/) || [])[1];
     if (!here || here === 'atlas' || !NAME_GAMES.includes(here)) return;
     const W0 = J(KEY) || {}, start = cleanName(W0.name);
-    if (start) shareName(start);
+    if (start) shareName(start, false, here);
     const key = here + '-online-name', seen = lsGet(key);
     const back = () => {
-      const now = cleanName(lsGet(key)); if (!now || now === seen) return;
+      if (lsGet(key) === seen) return;
+      const now = cleanName(untag(lsGet(key))); if (!now) return;
       const d = J(KEY) || {}; if (d.name === now) return;
-      d.name = now; lsSet(KEY, JSON.stringify(d)); shareName(now);
+      d.name = now; lsSet(KEY, JSON.stringify(d)); shareName(now, false, here);
     };
     addEventListener('pagehide', back); document.addEventListener('visibilitychange', () => { if (document.hidden) back(); });
   })();
