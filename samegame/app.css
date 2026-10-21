@@ -855,7 +855,26 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
   .gfoot .btn{flex:1;min-height:46px}
   .gtrack{margin-top:10px}
 }
+/* compact one-row tabs (segmented) */
+.htabs{grid-template-columns:repeat(3,1fr);gap:4px!important;padding:4px;background:var(--card);border-radius:999px;box-shadow:none}
+.htabs button,.htabs button.on{flex-direction:row!important;min-height:0;padding:9px 6px!important;font-size:15px!important;gap:6px!important;border:0!important;box-shadow:none!important;border-radius:999px!important;transform:none!important;background:transparent}
+.htabs button svg{width:20px!important;height:20px!important}
+body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([data-skin="mid"]) .htabs button{border-radius:0!important}
 /* ===== phone: compact, quick-select layouts ===== */
+@media (max-width:860px){
+  .dacts .dact{display:block!important;position:relative;padding:10px!important}
+  .dact .daic{float:left;margin-right:8px}
+  .dact .dat{min-height:40px;padding-right:30px;display:flex}
+  .dact .dabtm{display:block!important;clear:both;padding-top:8px}
+  .dact .dabtm [data-da]{display:flex;width:100%;min-height:42px!important;font-size:15px!important}
+  .dact .dabtm [data-rank]{display:none!important}
+  .dact .dabtm .qbtn{position:absolute;top:8px;right:8px;width:28px!important;height:28px;min-height:28px!important;font-size:13px;padding:0;min-width:0}
+  /* calendar: full width on phones */
+  .dbox #dCal{width:100%;box-sizing:border-box}
+  .calw,.calg{width:100%}
+  .calg span{height:auto;aspect-ratio:1}
+}
+
 @media (max-width:860px){
   .hpanel.daily{row-gap:34px!important;display:flex!important;flex-direction:column}
   .dbox{display:contents!important}
