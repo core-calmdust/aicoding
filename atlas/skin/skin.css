@@ -163,3 +163,40 @@ html.atlas-skin body{background:transparent!important}
 /* tilted 3D look: the DOM board leans back with the 3D board; its flat coordinate labels would not line up, so hide them */
 html.atlas-tilt #board{transform-origin:50% 50%;will-change:transform}
 html.atlas-tilt .coords{display:none!important}
+
+/* ===== chess skin: the luxury lacquered board — the DOM frame is the 3D board's outer edge (9.7 × 9.7 squares) ===== */
+html.atlas-chess,html.atlas-chess body{--cell:min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 9.7, (100vw - var(--pad) * 2 - var(--gap) - 340px) / 9.7, 128px)!important;--fw:calc(var(--cell) * 9.7)!important;--fh:calc(var(--cell) * 9.7)!important}
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){html.atlas-chess,html.atlas-chess body{--cell:min((100vw - 20px) / 9.7, (var(--vh) - 300px) / 9.7, 110px)!important}}
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){html.atlas-chess,html.atlas-chess body{--cell:min((var(--vh) - 20px) / 9.7, (100vw - 300px) / 9.7, 130px)!important}}
+html.atlas-chess .frame{width:var(--fw)!important;height:var(--fh)!important;padding:calc(var(--cell) * .85)!important;background:transparent!important;box-shadow:none!important;border:0!important}
+html.atlas-chess .frame::before,html.atlas-chess .frame::after,html.atlas-chess .board::after{display:none!important}
+html.atlas-chess .board{background:transparent!important;box-shadow:none!important}
+html.atlas-chess .squares rect{fill:transparent!important}
+html.atlas-chess .squares text.on-l{fill:rgba(90,80,66,.75)!important}html.atlas-chess .squares text.on-d{fill:rgba(250,244,230,.8)!important}
+/* captured pieces and player names lie on the frame */
+html.atlas-chess .reserve{left:calc(var(--cell) * .85)!important;right:calc(var(--cell) * .85)!important}
+html.atlas-chess .reserve .who{color:rgba(255,250,240,.92)!important;text-shadow:0 1px 2px rgba(0,0,0,.55);font-weight:700}
+html.atlas-chess .reserve.turn .who{color:#ffe3a0!important}
+html.atlas-chess .reserve .adv{color:rgba(255,250,240,.9)!important;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+/* 3/4 sprites of the 3D pieces (1 × 1.6 squares; the base stands on the square's centre) */
+html.atlas-chess .pc img.a3d{position:absolute;left:0;bottom:0;width:100%;height:160%;display:block;pointer-events:none;filter:drop-shadow(0 calc(var(--cell) * .05) calc(var(--cell) * .04) rgba(0,0,0,.5))}
+html.atlas-chess img.a3d.rf{display:none}
+html.atlas-chess .pc img.a3d.rf{display:block;transform-origin:50% 68.75%;transform:scaleY(-1);opacity:.42;filter:none;-webkit-mask-image:linear-gradient(to top,#000 24%,transparent 66%);mask-image:linear-gradient(to top,#000 24%,transparent 66%)}
+html.atlas-chess .pc.drag img.a3d.rf{display:none}
+html.atlas-chess .pc.drag img.a3d{filter:drop-shadow(0 calc(var(--cell) * .16) calc(var(--cell) * .1) rgba(0,0,0,.45))}
+html.atlas-chess .pieces:has(.pc.drag){z-index:25}
+html.atlas-chess .reserve .cp{position:relative;overflow:visible}
+html.atlas-chess .reserve .cp img.a3d{position:absolute;left:0;bottom:0;width:100%;height:160%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+html.atlas-chess .promo{background:rgba(255,253,247,.97)!important;border:2px solid #ead9b6!important;border-radius:16px!important;box-shadow:0 16px 40px rgba(60,30,0,.45)!important}
+html.atlas-chess .promo button{position:relative;overflow:hidden}
+html.atlas-chess .promo button img.a3d{position:absolute;left:19%;bottom:3%;width:62%;height:99%}
+html.atlas-chess .promo button:hover{background:rgba(255,201,40,.25)!important}
+html.atlas-chess .hl.last{background:rgba(255,206,90,.42)!important}
+html.atlas-chess .hl.sel{background:rgba(120,210,140,.42)!important;box-shadow:inset 0 0 0 3px rgba(120,210,140,.9)!important}
+html.atlas-chess .dot::before{background:rgba(40,120,60,.55)!important}
+html.atlas-chess .dot.cap::before{background:transparent!important;box-shadow:inset 0 0 0 calc(var(--cell) * .07) rgba(40,120,60,.6)!important}
+html.atlas-chess #segSkin{flex-wrap:wrap}
+/* the lacquer catches the light: a soft window reflection across the board */
+html.atlas-chess .frame::before{display:block!important;content:'';position:absolute;inset:0;border-radius:6px;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(118deg,rgba(255,255,255,0) 16%,rgba(255,255,255,.13) 31%,rgba(255,255,255,.04) 38%,rgba(255,255,255,0) 44%,rgba(255,255,255,0) 63%,rgba(255,255,255,.07) 71%,rgba(255,255,255,0) 79%)}
+html.atlas-chess .star{display:flex!important}
+html.atlas-chess .star,html.atlas-chess .dot,html.atlas-chess .fxsvg{z-index:12!important}html.atlas-chess .hintlbl{z-index:13!important}
