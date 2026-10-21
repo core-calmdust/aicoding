@@ -1037,8 +1037,8 @@ html[lang=ar] .pf-input{direction:rtl}
     <div class="card controls">
       <button class="btn" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 3 7 6v14h10V6z"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
-      <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnResign" data-i18n-title="btn.resign.title"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="btn.resign"></span></button>
+      <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnTsume" data-i18n-title="btn.tsume.title"><svg viewBox="0 0 24 24"><path d="M12 3 7 6v6c0 4 2.5 7 5 9 2.5-2 5-5 5-9V6z"/><path d="M10 12h4M12 10v4"/></svg><span data-i18n="btn.tsume"></span></button>
     </div>
@@ -3290,7 +3290,7 @@ $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons
 // first-time banner in the new-game dialog → the rules tutorial (the Rules tab of the lesson dialog)
 if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > tsume > resign) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnTsume', '#btnResign'], rules: () => { lsTab = 'rules'; openLessons(); }, lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnTsume'], rules: () => { lsTab = 'rules'; openLessons(); }, lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { if (game) renderInfo(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitLesson(); };
