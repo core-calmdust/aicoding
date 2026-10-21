@@ -566,5 +566,5 @@
   }
 
   window.AtlasRules = window.AtlasRules || {};
-  window.AtlasRules.backgammon = { start };
+  window.AtlasRules.backgammon = { start, SFX };   // SFX: shared with the table play (atlas/games/backgammon.js)
 })();
