@@ -740,23 +740,49 @@ body.in-lesson .controls{display:none}
 }
 
 /* rules page */
-#rulesOverlay .modal{width:min(900px,100%)}
-#rulesOverlay .rt-board svg{max-width:100%;width:min(var(--rtw),100%)}
-#rulesOverlay .rt{max-width:640px;margin:0 auto}
-/* PC: big mini board (sized from --rt-bw of shared/ruletour.js) and big text; the dialog uses the screen width and a
-   fixed height (same size for every tab) that fits 1280×720 without scrolling (text sizes come from ruletour.js). */
-@media (hover: hover) and (pointer: fine) and (min-width: 820px){
-  /* two columns (text | board) so the big board fits the height; pages without a board stay one column */
-  #rulesOverlay .rt{max-width:none}
-  /* side-by-side layout leaves more height for the board: a little larger than ruletour's single-column --rt-bw */
-  #rulesOverlay .rt:has(> .rt-board){--rt-bw:clamp(340px, calc(100vh - 300px), 600px);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:40px}
-  #rulesOverlay .rt:has(> .rt-board) > *{grid-column:1}
-  #rulesOverlay .rt:has(> .rt-board) > :is(.rt-steps, .rt-nav){grid-column:1 / -1}
-  #rulesOverlay .rt:has(> .rt-board) > .rt-board{grid-column:2;grid-row:2 / 5;align-self:start;margin:4px 0 0}
-  #rulesOverlay .rt:has(> .rt-board) > :is(.rt-title, .rt-task){text-align:start}
-  #rulesOverlay .rt:has(> .rt-board) > .rt-task{margin-top:6px}
-  #rulesOverlay .rt:not(:has(> .rt-board)){max-width:760px;margin:0 auto}
-  #rulesOverlay .rt-board svg{width:calc(var(--rt-bw) * var(--rtk))}
+/* The dialog has a fixed height; tabs and step dots on top and the 前へ / 閉じる / 次へ bar at the bottom never move.
+   Only the middle (.rt-main, wrapped by rtWrap()) changes per step: it scrolls internally if a text is long, and
+   rtFit() sizes the board (--rt-s = width of a full 8×8 board with coordinates; crops use --rtk of it) to the space left. */
+#rulesOverlay{padding-bottom:max(16px, env(safe-area-inset-bottom));padding-top:max(16px, env(safe-area-inset-top))}
+#rulesOverlay .modal{width:min(900px,100%);height:100%;max-height:none;display:flex;flex-direction:column;overflow:hidden}
+#rulesOverlay .modal > .ls-tabs{flex:none}
+#rulesBody{flex:1;min-height:0;display:flex;flex-direction:column}
+#rulesOverlay .rt{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:none;margin:0}
+#rulesOverlay .rt-steps{flex:none}
+#rulesOverlay .rt-main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;padding:0 2px}
+#rulesOverlay .rt-main:not(:has(> .rt-board)) > :first-child{margin-top:auto}
+#rulesOverlay .rt-main:not(:has(> .rt-board)) > :last-child{margin-bottom:auto}
+#rulesOverlay .rt-main:not(:has(> .rt-board)) > *{width:100%;max-width:820px;margin-inline:auto}
+#rulesOverlay .rt-nav{flex:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+#rulesOverlay .rt-board{flex:none}
+#rulesOverlay .rt-board svg{max-width:none;width:calc(var(--rt-s, 320px) * var(--rtk))}
+/* text | board side by side (PC, landscape phones): set by rtFit() when the middle area is wide */
+#rulesOverlay .rt-main.rt-side{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr;column-gap:40px;align-content:stretch}
+#rulesOverlay .rt-main.rt-side > *{grid-column:1}
+#rulesOverlay .rt-main.rt-side > .rt-title{grid-row:1;text-align:start}
+#rulesOverlay .rt-main.rt-side > .rt-body{grid-row:2}
+#rulesOverlay .rt-main.rt-side > .rt-task{grid-row:3;text-align:start;margin-top:6px}
+#rulesOverlay .rt-main.rt-side > .rt-board{grid-column:2;grid-row:1 / 5;align-self:center;margin:0}
+@media (max-width: 520px), (max-height: 560px){
+  #rulesOverlay{padding-bottom:max(10px, env(safe-area-inset-bottom));padding-top:max(10px, env(safe-area-inset-top))}
+  #rulesOverlay .modal{padding:14px 14px 12px}
+  #rulesOverlay .modal > .ls-tabs{margin-bottom:10px}
+  #rulesOverlay .rt-steps{margin:0 0 8px}
+  #rulesOverlay .rt h2.rt-title{font-size:17px;margin-bottom:4px}
+  #rulesOverlay .rt-body{font-size:13.5px;line-height:1.65}
+  #rulesOverlay .rt-body p{margin-bottom:5px}
+  #rulesOverlay .rt-task{font-size:14px;line-height:1.6;min-height:0}
+  #rulesOverlay .rt-board{margin:6px auto}
+  #rulesOverlay .rt-nav{margin-top:8px;padding-top:8px}
+  #rulesOverlay .rt-nav button{padding:9px 10px}
+  #rulesOverlay .rt-main.rt-side{column-gap:20px}
+}
+@media (max-height: 560px){
+  #rulesOverlay .modal > .ls-tabs{margin-bottom:6px}
+  #rulesOverlay .modal > .ls-tabs button{padding-top:5px;padding-bottom:5px}
+  #rulesOverlay .rt-steps{gap:4px;margin-bottom:6px}
+  #rulesOverlay .rt-steps button{width:26px;height:26px;font-size:11px}
+  #rulesOverlay .rt-nav button{padding:7px 10px}
 }
 
 /* PC: use the browser width for the lesson / puzzle / opening dialogs (phones keep the single-column layout) */
@@ -2558,6 +2584,38 @@ const ruleTour = window.RuleTour ? RuleTour.create({
   sound: k => (k === 'ok' ? sfxCorrect(0.05) : sfxWrong(0.05)),
   pages: RT_PAGES,
 }) : null;
+// fixed layout: steps on top, nav bar at the bottom, everything else in .rt-main (the only part that may scroll)
+function rtWrap() {
+  const rt = $('#rulesBody > .rt'); if (!rt || rt.querySelector(':scope > .rt-main')) return;
+  const main = document.createElement('div'); main.className = 'rt-main';
+  [...rt.children].filter(c => !c.matches('.rt-steps, .rt-nav')).forEach(c => main.appendChild(c));
+  rt.insertBefore(main, rt.querySelector(':scope > .rt-nav'));
+  rtFit();
+}
+// board as large as the middle area allows (side by side when it is wide, else below the text)
+function rtFit() {
+  const main = $('#rulesBody .rt-main'); if (!main) return;
+  const board = main.querySelector(':scope > .rt-board'), svg = board && board.querySelector('svg');
+  const W = main.clientWidth, H = main.clientHeight;
+  main.classList.toggle('rt-side', !!svg && W >= 560 && W > H * 1.15);
+  if (!svg) return;
+  const vb = svg.viewBox.baseVal, k = parseFloat(svg.style.getPropertyValue('--rtk')) || 1, ar = vb.height / vb.width;
+  const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 820px)').matches;
+  let aw, ah;
+  main.style.setProperty('--rt-s', '0px');
+  if (main.classList.contains('rt-side')) {
+    aw = W * (pc ? 0.58 : 0.5); ah = H - 4;
+  } else {
+    const kids = [...main.children], top = kids[0].getBoundingClientRect().top - parseFloat(getComputedStyle(kids[0]).marginTop);
+    const last = kids[kids.length - 1], bot = last.getBoundingClientRect().bottom + parseFloat(getComputedStyle(last).marginBottom);
+    aw = W - 4; ah = H - (bot - top) - 30;   // 30: room for the ✓ / ✗ line under the task
+  }
+  const s = Math.max(Math.min(pc ? 640 : 560, aw / k, ah / (k * ar)), 190 / k);
+  main.style.setProperty('--rt-s', Math.floor(s) + 'px');
+}
+new MutationObserver(rtWrap).observe($('#rulesBody'), { childList: true });
+window.addEventListener('resize', () => { if ($('#rulesOverlay').classList.contains('show')) rtFit(); });
+if (document.fonts) document.fonts.ready.then(rtFit);
 function renderRules() { if (ruleTour) ruleTour.render(); }
 function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); if (ruleTour) ruleTour.open(0); }
 $('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); hideOverlay('#rulesOverlay'); };
