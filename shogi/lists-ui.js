@@ -57,12 +57,12 @@ function board(sfen, o) {
 }
 const plain = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const bar = (p, ok) => `<span class="lx-bar${ok ? ' ok' : ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p || 0)) * 100)}%"></i></span>`;
-// o = {attr, board, no, st:{text, cls}, title, small, sub, desc, badge, p (0..1), done}
+// o = {attr, cls, board, no, st:{text, cls}, title, small, sub, desc, moves, badge, p (0..1), done}
 function card(o) {
-  return `<button class="lesson-item lx-card${o.done ? ' done' : ''}${o.wide ? ' wide' : ''}" ${o.attr}><span class="lx-th">${o.board}</span><span class="lx-tx">` +
+  return `<button class="lesson-item lx-card${o.cls ? ' ' + o.cls : ''}${o.done ? ' done' : ''}${o.wide ? ' wide' : ''}" ${o.attr}><span class="lx-th">${o.board}</span><span class="lx-tx">` +
     `<span class="lx-top"><span class="lx-no">${o.no || ''}</span>${o.badge || ''}<span class="lx-st ${(o.st && o.st.cls) || ''}">${(o.st && o.st.text) || ''}</span></span>` +
     `<b class="lx-t">${o.title}${o.small ? `<small>${o.small}</small>` : ''}</b>${o.sub ? `<span class="lx-sub">${o.sub}</span>` : ''}` +
-    `${o.desc ? `<span class="lx-desc">${o.desc}</span>` : ''}${bar(o.p, o.done)}</span></button>`;
+    `${o.desc ? `<span class="lx-desc">${o.desc}</span>` : ''}${o.moves ? `<span class="lx-mv"><bdi dir="ltr">${o.moves}</bdi></span>` : ''}${bar(o.p, o.done)}</span></button>`;
 }
 // icon chip: one shogi piece (kanji on a pentagon)
 const icon = k => `<svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0 -5.4L3.9 -3.6L4.7 5.2H-4.7L-3.9 -3.6Z" fill="#f6e3b4" stroke="#7a5524" stroke-width=".4"/><text y="2.9" font-size="6.6" text-anchor="middle" font-family="'Shippori Mincho B1','Noto Serif JP',serif" font-weight="700" fill="#2a1a0a">${k}</text></svg>`;
@@ -78,7 +78,7 @@ function render(kind, cats, opt) {
   const c = cats.find(x => x.key === cur), cnt = x => x.items ? [x.items.filter(y => y.done).length, x.items.length] : [x.n || 0, x.m || 0];
   const [n, m] = cnt(c);
   list.innerHTML = `<div class="lx">` + (opt.top || '') +
-    (cats.length > 1 ? `<div class="lx-tabs" role="tablist">${cats.map(x => { const [k, M] = cnt(x); return `<button role="tab" data-lx="${x.key}" class="${x.key === cur ? 'sel' : ''}" aria-selected="${x.key === cur}"><span class="ic">${x.icon}</span><span class="nm"><bdi>${x.tab}</bdi></span><span class="ct${M && k === M ? ' ok' : ''}">${M ? k + '/' + M : ''}</span></button>`; }).join('')}</div>` : '') +
+    (cats.length > 1 ? `<div class="lx-tabs${cats.length > 5 ? ' many' : ''}" role="tablist">${cats.map(x => { const [k, M] = cnt(x); return `<button role="tab" data-lx="${x.key}" class="${x.key === cur ? 'sel' : ''}" aria-selected="${x.key === cur}"><span class="ic">${x.icon}</span><span class="nm"><bdi>${x.tab}</bdi></span><span class="ct${M && k === M ? ' ok' : ''}">${M ? k + '/' + M : ''}</span></button>`; }).join('')}</div>` : '') +
     `<div class="lx-banner"><span class="ic">${c.icon}</span><span class="tx"><b>${c.name}</b><small>${c.desc}</small></span><span class="pg"><small>${opt.prog ? opt.prog(n, m) : n + ' / ' + m}</small>${bar(m ? n / m : 0, true)}</span></div>` +
     `<div class="lx-grid">${c.items ? c.items.map(x => x.html).join('') : `<p class="lx-wait">${opt.wait || '…'}</p>`}</div>${opt.foot || ''}</div>`;
   list.querySelectorAll('[data-lx]').forEach(b => b.onclick = e => { e.stopPropagation(); tab(kind, b.dataset.lx); if (opt.onTab) opt.onTab(b.dataset.lx); else render(kind, cats, opt); list.scrollTop = 0; });
@@ -127,9 +127,19 @@ const CSS = `
 .lx-desc{font-size:12.5px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #lessonList .lx-card .lx-bar{margin-top:auto;height:4px}
 .lx-side{flex:0 1 auto;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;padding:1px 7px;border-radius:999px;border:1px solid var(--line)}
+.lx-mv{font-size:12px;color:var(--muted);line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Shippori Mincho B1','Noto Serif JP',serif;letter-spacing:.02em}
+#lessonOverlay #lessonList .lx-card.op .lx-sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lx-ico{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.17em;margin-inline-end:3px}
+@media (min-width:561px){
+  .lx-tabs.many button{display:grid;grid-template-columns:auto auto;column-gap:7px;row-gap:0;justify-content:center;align-items:center;text-align:start;padding:6px 6px}
+  .lx-tabs.many button .ic{grid-row:1/3}
+  .lx-tabs.many button .nm{line-height:1.25}
+  .lx-tabs.many button .ct{grid-column:2;line-height:1.2}
+}
 .lx-credit{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.6}
 .lx-wait{color:var(--dim);font-size:14px;padding:18px 4px;grid-column:1/-1}
 html[lang=ar] .lx{direction:rtl}
+html[lang=ar] .lx-mv{direction:ltr;text-align:right}
 html[lang=ar] .lx-tabs .ct, html[lang=ar] .lx-banner .pg small{direction:ltr;unicode-bidi:isolate}
 @media (max-width:560px){
   .lx-tabs{grid-auto-columns:minmax(64px,1fr)}
@@ -185,7 +195,7 @@ function lessons(h) {
     const pr = h.prog(g.id), p0 = (g.problems || [])[0];
     const st = pr && pr.pass ? { text: '✓ ' + h.t('ls.clear'), cls: 'ok' } : pr ? { text: h.t('ls.bestPts', { p: pr.best }) } : { text: h.t('ls.new'), cls: 'new' };
     const intro = g.intro ? (g.intro[h.lang()] || g.intro.en || g.intro.ja || []) : [];
-    c.items.push({ done: !!(pr && pr.pass), html: card({ attr: `data-i="${i}"`, board: p0 ? board(p0.sfen, { flip: p0.sfen.split(' ')[1] === 'w' }) : '', no: `<bdi>${h.L(g.grade)}</bdi>`, st, title: h.L(g.title), sub: h.L(g.short), desc: plain(intro.join(' ')), p: pr ? pr.best / 100 : 0, done: !!(pr && pr.pass) }) });
+    c.items.push({ done: !!(pr && pr.pass), html: card({ attr: `data-i="${i}"`, board: p0 ? board(p0.sfen, { flip: p0.sfen.split(' ')[1] === 'w', hands: (p0.sfen.split(' ')[2] || '-') !== '-' }) : '', no: `<bdi>${h.L(g.grade)}</bdi>`, st, title: h.L(g.title), sub: h.L(g.short), desc: plain(intro.join(' ')), p: pr ? pr.best / 100 : 0, done: !!(pr && pr.pass) }) });
   };
   h.grades.forEach((g, i) => { const c = cats.find(x => x.ids.includes(g.id)) || cats[cats.length - 2]; add(c, g, i); });
   (h.rules || []).forEach((g, j) => add(cats[cats.length - 1], g, -j - 1));

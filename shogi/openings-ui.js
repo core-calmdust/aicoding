@@ -69,6 +69,7 @@ async function findId(id) {
   await ensureAll();
   return H.open().sets.findIndex(g => g.id === id);
 }
+const BOOK = '<svg class="lx-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4.2C6.6 3 4.4 2.6 1.8 2.9v9.4c2.6-.3 4.8.1 6.2 1.3 1.4-1.2 3.6-1.6 6.2-1.3V2.9C11.6 2.6 9.4 3 8 4.2zm0 0v9.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 const hasPractice = g => !!(g.problems && g.problems.length >= 5);
 const isDone = (id, prac) => { const pr = H.prog()[id]; return prac === false ? !!studied[id] : !!(pr && pr.pass); };
 // final position of the study line (cached) for the card's mini board
@@ -80,15 +81,30 @@ function finalSfen(g) {
   try { for (const s of st.steps) { p.doMove(p.fromUsi(s[0])); p.sp = 0; } } catch (e) {}
   return (endSfen[g.id] = p.sfen());
 }
+// first moves of the study line in the page's notation (☗7六歩 ☖3四歩 … / ☗P-76 ☖P-34 …), cached per language
+const lineTxt = {};
+function lineOf(g) {
+  const k = g.id + ':' + H.lang(); if (lineTxt[k] !== undefined) return lineTxt[k];
+  const st = g.study, E = window.ShogiEngine; let out = '';
+  if (st && E && typeof window.kifName === 'function') {
+    try {
+      const p = new E.Position(); p.setSfen(st.start); let prev = -1; const a = [];
+      for (const s of st.steps.slice(0, 10)) { const m = p.fromUsi(s[0]); a.push((p.side ? '☖' : '☗') + window.kifName(p, m, prev)); prev = E.mTo(m); p.doMove(m); p.sp = 0; }
+      out = a.join(' ') + (st.steps.length > 10 ? ' …' : '');
+    } catch (e) { out = ''; }
+  }
+  return (lineTxt[k] = out);
+}
 function item(g, i) {
   const pr = H.prog()[g.id], L = H.L, t = H.t, prac = hasPractice(g), done = isDone(g.id, prac);
-  const st = !prac ? (done ? { text: '✓ ' + tx('studied'), cls: 'ok' } : { text: '📖 ' + tx('studyOnly'), cls: 'so' })
+  const st = !prac ? (done ? { text: '✓ ' + tx('studied'), cls: 'ok' } : { text: BOOK + tx('studyOnly'), cls: 'so' })
     : pr ? (pr.pass ? { text: '✓ ' + t('ls.bestPts', { p: pr.best }), cls: 'ok' } : { text: t('ls.bestPts', { p: pr.best }) }) : { text: t('ls.new'), cls: 'new' };
   const sy = g.story || {}, cat = catOf(g);
   const board = window.ShogiLX ? ShogiLX.board(finalSfen(g), { marks: sy.marks, crop: cat === 'castle' ? 'marks' : null, hands: cat === 'handi' ? false : false }) : '';
   const badge = g.kind ? `<span class="lx-side">${tx('k.' + g.kind)}</span>` : g.side ? `<span class="lx-side">${g.side === 'w' ? '☖' : '☗'} ${tx(g.side === 'w' ? 'gote' : 'sente')}</span>` : '';
-  const intro = g.study && g.study.intro ? (g.study.intro[H.lang()] || g.study.intro.en || g.study.intro.ja || []) : [];
-  return { done, html: ShogiLX.card({ attr: `data-o="${i}"`, board, no: `<bdi>${L(g.label)}</bdi>`, badge, st, title: L(g.title), sub: L(g.short), desc: ShogiLX.plain(intro.join(' ')), p: prac ? (pr ? pr.best / 100 : 0) : done ? 1 : 0, done }) };
+  // light card: label · side · state / name / aim (one line) / the opening moves — the full story is on the choice dialog
+  const ln = lineOf(g);
+  return { done, html: ShogiLX.card({ attr: `data-o="${i}"`, cls: 'op', board, no: `<bdi>${L(g.label)}</bdi>`, badge, st, title: L(g.title), sub: L(g.short), moves: ln, p: prac ? (pr ? pr.best / 100 : 0) : done ? 1 : 0, done }) };
 }
 // render the openings list into #lessonList for the current tab (category files load on demand)
 async function render() {

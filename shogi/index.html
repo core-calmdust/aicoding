@@ -1223,8 +1223,8 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
-<script src="lists-ui.js?v=20261021pz"></script>
-<script src="openings-ui.js?v=20261021rk"></script>
+<script src="lists-ui.js?v=20261022lx"></script>
+<script src="openings-ui.js?v=20261022lx"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -3077,7 +3077,7 @@ async function openLessons() {
   // graphic list (lists-ui.js): rank-band tabs → banner → cards with the first problem's position; the rank test sits on top
   const ex = exprog ? { text: '✓ ' + t('ex.best', { g: L(LESSONS.grades[exprog.best].grade) }), cls: 'ok' } : { text: t('ls.new'), cls: 'new' };
   const exSf = ((LESSONS.grades[LESSONS.grades.length - 2] || LESSONS.grades[0]).problems[0] || {}).sfen || 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
-  const exam = ShogiLX.card({ attr: 'data-exam="1"', wide: true, board: ShogiLX.board(exSf, { flip: exSf.split(' ')[1] === 'w' }), no: t('ex.tag'), st: ex, title: t('ex.title'), desc: t('ex.desc', { n: EXAM_N }), p: exprog ? 1 : 0, done: !!exprog });
+  const exam = ShogiLX.card({ attr: 'data-exam="1"', wide: true, board: ShogiLX.board(exSf, { flip: exSf.split(' ')[1] === 'w', hands: (exSf.split(' ')[2] || '-') !== '-' }), no: t('ex.tag'), st: ex, title: t('ex.title'), desc: t('ex.desc', { n: EXAM_N }), p: exprog ? 1 : 0, done: !!exprog });
   ShogiLX.lessons({ lang: () => LANG, L, t, grades: LESSONS.grades, rules: LESSONS.rules || [], prog: id => lprog[id], top: `<div class="lx-grid" style="margin-bottom:12px">${exam}</div>`, foot: LESSONS.credit ? `<p class="lx-credit">${L(LESSONS.credit)}</p>` : '' });
 }
 function lessonView(v) { ['list', 'grid', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
