@@ -16,7 +16,8 @@ function t(k, v) {
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
   return x;
 }
-const pname = s => t('ng.' + ((settings.ck && settings.ck[s]) || (s ? 'black' : 'gold')));
+let CKV = null;               // online: the colours as shown (my own colour on my side), else settings.ck
+const pname = s => t('ng.' + (((CKV || settings.ck) && (CKV || settings.ck)[s]) || (s ? 'black' : 'gold')));
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
 const mvb = s => `<bdi class="mv">${s}</bdi>`;
 function applyI18n() {
@@ -98,12 +99,13 @@ function matchOver() {
   if (!match.len) return false;
   const s = scoreAfter(g); return s[0] >= match.len || s[1] >= match.len;
 }
-function isAI(s) { if (lesson || puzzle) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && s !== humanSide); }
+function isAI(s) { if (lesson || puzzle) return false; if (settings.mode === 'online') return !(window.olMine && olMine(s)); return settings.mode === 'watch' || (settings.mode === 'ai' && s !== humanSide); }
 function levelFor(s) { return settings.mode === 'watch' ? (s === 0 ? settings.level : settings.level2) : settings.level; }
 const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 function playerName(s) {
   if (puzzle || lesson) return s === (lesson || puzzle).side ? t('you') : '';
   if (settings.mode === 'pvp') return '';
+  if (settings.mode === 'online') return window.olPlayerName ? olPlayerName(s) : '';
   if (settings.mode === 'watch') return `AI ${LV(levelFor(s))}`;
   return s === humanSide ? t('you') : `AI ${LV(settings.level)}`;
 }
@@ -112,6 +114,7 @@ function playerName(s) {
 function save() {
   try {
     const d = JSON.parse(localStorage.getItem(STORE) || '{}');
+    if (settings.mode === 'online') { d.settings = Object.assign({}, settings, { mode: window.olSavedMode ? olSavedMode() : 'ai' }); localStorage.setItem(STORE, JSON.stringify(d)); return; }   // an online match is not kept as the local game
     d.settings = settings;
     if (!lesson && !puzzle && match) d.match = { seed: match.seed, len: match.len, cube: match.cube, games: match.games.map(gm => ({ k: BG.encodeGame(gm.actions), start: gm.start, crawford: gm.crawford })), humanSide };
     localStorage.setItem(STORE, JSON.stringify(d));
@@ -215,7 +218,7 @@ function flatFit() {
       if (el && el.offsetParent && getComputedStyle(el).display !== 'none') { const r = lrect(el); if (r.height) top = Math.max(top, r.top - a0 + r.height); }
     }
   }
-  const avail = hgt - top - 4 - 5 - 6;
+  const avail = hgt - top - 4 - 5 - 6 - (window.olTabH ? olTabH() : 0);
   const u = Math.min((w - 12) / 15.85, avail / 6.4, 60);
   return { h: Math.max(6.4, Math.min(10, avail / u)), u };
 }
@@ -566,19 +569,19 @@ async function startTurn(side, dice, opts) {
   selected = null; hintData = null; previewPlay = null;
   turn.plays = BG.genPlays(turn.start, side, dice[0], dice[1]);
   render(); renderInfo();
-  const tok = busyToken;
+  const tok = busyToken, my = turn;
   if (lesson || puzzle) return;
   if (turn.plays.length === 1 && turn.plays[0].moves.length === 0) {
     toast(t('nomove'), 1500); turn.locked = true;
-    await sleep(1500); if (tok !== busyToken || !turn) return;
+    await sleep(1500); if (tok !== busyToken || !turn || turn !== my) return;
     commitTurn(); return;
   }
   if (settings.forced && turn.plays.length === 1 && !isAI(side)) {
     turn.locked = true; renderButtons();
     toast(t('forced'), 900);
-    await sleep(500); if (tok !== busyToken || !turn) return;
+    await sleep(500); if (tok !== busyToken || !turn || turn !== my) return;
     await playMovesAnimated(turn.plays[0].moves);
-    if (tok !== busyToken || !turn) return;
+    if (tok !== busyToken || !turn || turn !== my) return;
     turn.locked = false;
     commitTurn(); return;
   }
@@ -641,7 +644,7 @@ function commitTurn() {
   if (puzzle) { puzzleSubmit(turn); return; }
   const tt = turn; turn = null; selected = null;
   pushAction({ t: 'r', d: tt.dice, m: moves });
-  if (settings.coach && !isAI(tt.side) && settings.mode !== 'watch' && tt.plays.length > 1) coachRate(tt, moves);
+  if (settings.coach && !isAI(tt.side) && settings.mode !== 'watch' && settings.mode !== 'online' && tt.plays.length > 1) coachRate(tt, moves);
 }
 // ---- pointer interaction
 // ---- forced landscape: when the page is CSS-rotated 90deg, map screen coordinates into the page's own frame
@@ -774,7 +777,7 @@ function renderButtons() {
   if (reviewing || !isLatest()) { setButtons([]); return; }
   const [g] = curGA(); const st = stateAt(g, match.games[g].actions.length);
   if (st.over) {
-    if (settings.mode === 'watch' || matchOver()) { setButtons([]); return; }
+    if (settings.mode === 'watch' || settings.mode === 'online' || matchOver()) { setButtons([]); return; }
     setButtons([{ id: 'next', label: match.len ? t('bb.nextGame') : t('bb.again'), cls: 'go', fn: nextGame }], view);
     return;
   }
@@ -786,6 +789,7 @@ function renderButtons() {
     setButtons(b, turn.side); return;
   }
   if (thinking >= 0 || busyRolling) { setButtons([]); return; }
+  if (settings.mode === 'online' && window.olCanAct && !olCanAct()) { setButtons([]); return; }
   if (st.offered) {
     if (isAI(st.turn)) { setButtons([]); return; }
     setButtons([{ id: 'take', label: t('bb.take'), cls: 'go', fn: () => cubeAnswer(true) }, { id: 'pass', label: t('bb.pass'), cls: 'red', fn: () => cubeAnswer(false) }], st.turn, true);
@@ -803,6 +807,7 @@ function renderButtons() {
 // ====================================================================== game flow
 let busyRolling = false;
 function pushAction(a) {
+  if (settings.mode === 'online' && window.olPush) { olPush(a); return; }
   const [g] = curGA();
   match.games[g].actions.push(a);
   cur = latestIdx(); reviewing = false;
@@ -816,6 +821,7 @@ function afterAction() {
   drive();
 }
 async function drive() {
+  if (settings.mode === 'online') { if (window.olDrive) olDrive(); else renderButtons(); return; }
   const tok = ++busyToken;
   if (!match || lesson || puzzle || reviewing || !isLatest()) { renderButtons(); return; }
   const [g] = curGA(); const gm = match.games[g];
@@ -914,6 +920,7 @@ async function doRoll(g, opening) {
 }
 function humanRoll() {
   if (!match || turn || busyRolling) return;
+  if (settings.mode === 'online') { if (window.olRoll) olRoll(); return; }
   const [g] = curGA(); const st = stateAt(g, match.games[g].actions.length);
   if (st.over || st.offered || isAI(st.turn) || st.nRolls === 0) return;
   hintData = null;
@@ -930,7 +937,7 @@ function cubeAnswer(take) {
   const [g] = curGA(); const st = stateAt(g, match.games[g].actions.length);
   if (!st.offered || isAI(st.turn)) return;
   SFX.cube();
-  if (settings.coach && settings.mode !== 'watch') coachCube(g, st, take);
+  if (settings.coach && settings.mode !== 'watch' && settings.mode !== 'online') coachCube(g, st, take);
   pushAction({ t: take ? 'k' : 'p' });
 }
 function onGameOver(g) {
@@ -998,7 +1005,7 @@ function canUndo() {
   if (!match || settings.mode === 'watch') return false;
   if (lesson || puzzle) return !!(turn && turn.steps.length);
   if (turn && turn.steps.length && canInteract()) return true;
-  if (reviewing) return false;
+  if (reviewing || settings.mode === 'online') return false;
   const [g] = curGA(); const acts = match.games[g].actions;
   if (settings.mode === 'pvp') return acts.length > 0;
   // vs AI: some action by the human in this game
@@ -1017,7 +1024,7 @@ function lastHumanAction(g) {
 function undo() {
   if (!canUndo()) return;
   if (turn && turn.steps.length && canInteract()) { undoStep(); return; }
-  if (lesson || puzzle) return;
+  if (lesson || puzzle || settings.mode === 'online') return;
   busyToken++; cancelWorker('ai'); thinking = -1;
   const [g] = curGA(); const acts = match.games[g].actions;
   let i = settings.mode === 'pvp' ? acts.length - 1 : lastHumanAction(g);
@@ -1045,7 +1052,7 @@ function viewAt(i) {
   if (!reviewing) { if (turn) { renderButtons(); maybeHint(); } else drive(); }
 }
 function resumeHere() {
-  if (!reviewing) return;
+  if (!reviewing || settings.mode === 'online') return;
   const [g, a] = curGA();
   match.games = match.games.slice(0, g + 1);
   match.games[g].actions = match.games[g].actions.slice(0, a);
@@ -1062,7 +1069,7 @@ function statusText(st) {
   if (lesson) return `${$('#lsStep').textContent} · ${$('#lsTitle').textContent}`;
   if (puzzle) return $('#pzStep').textContent;
   if (!match) return '';
-  const name = s => isAI(s) ? `AI Lv${levelFor(s)}` : settings.mode === 'pvp' ? pname(s) : t('you');
+  const name = s => settings.mode === 'online' && window.olShortName ? olShortName(s) : isAI(s) ? `AI Lv${levelFor(s)}` : settings.mode === 'pvp' ? pname(s) : t('you');
   if (st.over) return `${name(st.winner)} ${t('st.win', { n: st.points })}`;
   let last = '';
   if (st.lastMoves && st.lastSide >= 0) last = `${name(st.lastSide)}: ${st.lastMoves.length ? BG.notation(st.lastMoves) : t('nomove')}`;
@@ -1073,6 +1080,7 @@ function statusText(st) {
   else if (turn && !isAI(turn.side)) now = !legalNow().length && !turn.steps.length ? t('nomove') : settings.mode === 'pvp' ? `${pname(turn.side)}: ${t('sb.yourTurn')}` : t('sb.yourTurn');
   else if (!turn && !busyRolling && !isAI(st.turn)) now = settings.mode === 'pvp' ? `${pname(st.turn)}: ${t('sb.roll')}` : t('sb.roll');
   else if (!turn && isAI(st.turn)) now = t('sb.aiThinking');
+  if (settings.mode === 'online' && isLatest() && window.olStatusNow && !(turn && !isAI(turn.side))) { const o = olStatusNow(); if (o != null) now = o; }
   return [last, now].filter(Boolean).join(' · ');
 }
 function renderStatusBox(st) { const el = $('#statusBox'); if (!el || (!match && !lesson && !puzzle)) return; const txt = statusText(st || shownState()); if (el.textContent !== txt) { el.textContent = txt; el.title = txt; } }
@@ -1085,7 +1093,7 @@ function renderInfo() {
   for (const s of [0, 1]) {
     const nm = playerName(s);
     const full = nm ? nm + ' · ' + pname(s) : pname(s);
-    const short = (lesson || puzzle) ? (nm || pname(s)) : settings.mode === 'pvp' ? pname(s) : isAI(s) ? `AI Lv${levelFor(s)}` : t('you');
+    const short = (lesson || puzzle) ? (nm || pname(s)) : settings.mode === 'online' && window.olShortName ? olShortName(s) : settings.mode === 'pvp' ? pname(s) : isAI(s) ? `AI Lv${levelFor(s)}` : t('you');
     $('#name' + s).innerHTML = `<span class="nl">${esc(full)}</span><span class="ns">${esc(short)}</span>`;
     $('#pl' + s).title = full;
     $('#pip' + s).textContent = BG.pips(st.pos, s);
@@ -1121,6 +1129,7 @@ function renderInfo() {
   $('#plInfo').textContent = $('#infoLine').textContent; $('#plInfo').title = $('#infoLine').title;
   $('#plMeta').textContent = match.len ? `${t('info.match', { n: match.len })} ${gm.start[0]}–${gm.start[1]}` : '';
   hbInfo(st, g, ev);
+  if (window.olAfterInfo) olAfterInfo();
 }
 // PC header bar: whose turn + dice, pip counts, win chance (only when the evaluation display is on), match score
 var HB = null;
@@ -1225,6 +1234,7 @@ function toast(msg, ms = 1500) { const el = $('#toast'); el.textContent = msg; e
 let evalQueueBusy = false;
 async function analyzeCurrent() {
   if (!match || lesson || puzzle || !settings.eval) return;
+  if (settings.mode === 'online' && window.olLiveNow && olLiveNow()) return;   // no evaluation while an online match is live
   // evaluate every state of the match that is missing (cheap static net evaluations), current first
   if (evalQueueBusy) { evalQueueBusy = 'again'; return; }
   evalQueueBusy = true;
@@ -1257,6 +1267,7 @@ async function analyzeCurrent() {
 }
 function hintKey() { if (!turn) return ''; return BG.key(turn.start) + '|' + turn.side + '|' + turn.dice.join(''); }
 async function maybeHint() {
+  if (settings.mode === 'online') { hintData = null; renderHintCard(); return; }
   if (!settings.hint || lesson || puzzle || !match || reviewing) { renderHintCard(); return; }
   const [g] = curGA(); const st = stateAt(g, match.games[g].actions.length);
   if (turn && !isAI(turn.side)) {
@@ -1406,7 +1417,7 @@ function pcFit() {
   document.documentElement.style.setProperty('--rowh', rowH + 'px');
   const reserve = side ? 0 : rowH + 18;
   const availW = w - 48 - (side ? Math.min(440, Math.max(360, w * 0.3)) + 24 : 0);
-  const availH = hgt - hb - 14 - 16 - reserve;
+  const availH = hgt - hb - 14 - 16 - reserve - (window.olDockH ? olDockH() : 0);
   const hMin = side ? 8.4 : 7.2;
   let u = Math.min(availW / 15.85, 100), h = availH / u;
   if (h < hMin) { u = availH / hMin; h = hMin; }
@@ -1560,7 +1571,7 @@ function skinSync() {
 }
 $('#skinRow').onclick = e => { const b = e.target.closest('button[data-skin]'); if (!b) return; settings.skin = b.dataset.skin; save(); applySkinNow(); skinSync(); };
 function applySkinNow() { if (window.BGTheme) BGTheme.applySkin(settings.skin); drawBoardSvg(); try { render(); } catch (e) {} }
-function applyCk() { if (window.BGTheme) { settings.ck = BGTheme.fixPair(settings.ck[0], settings.ck[1]); BGTheme.applyCheckers(settings.ck); } }
+function applyCk() { if (window.BGTheme) { settings.ck = BGTheme.fixPair(settings.ck[0], settings.ck[1]); BGTheme.applyCheckers(CKV || settings.ck); } }
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: 0, ck: (settings.ck || ['gold', 'black']).slice(), level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
   $('#optCube').checked = settings.cube; $('#optEval').checked = settings.eval; $('#optForced').checked = settings.forced;
@@ -1840,6 +1851,7 @@ $('#btnCopy').onclick = async () => {
 function rsInProgress() { if (lesson || puzzle || !match) return false; const g = match.games.length - 1, gm = match.games[g]; return !matchOver() && (gm.actions.length > 0 || g > 0) && !(match.len === 0 && stateAt(g, gm.actions.length).over); }
 function rsViewing() { return !lesson && !puzzle && reviewing; }
 function rsOpen() {
+  if (settings.mode === 'online') { viewAt(latestIdx()); return; }
   if (!rsInProgress() && !rsViewing()) { openNewDialog(); return; }
   $('#rsText').textContent = rsViewing() ? t('rs.viewing') : t('rs.playing');
   showOverlay('#resumeOverlay');

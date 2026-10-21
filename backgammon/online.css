@@ -1,0 +1,278 @@
+/* Backgammon — online play, dock / phone tab, profile dialog, Google sync (same design as Nine Men's Morris / Checkers) */
+.hidden{display:none!important}
+.ol-only{display:none!important}
+body.in-online .ol-only{display:flex!important}
+body.in-online #btnUndo, body.in-online #btnHint{display:none!important}
+body.in-watch #btnResign{display:none!important}
+body.in-online #btnAnalyze{visibility:hidden}
+body.in-online.ol-done #btnAnalyze{visibility:visible}
+.clk.ol-move{color:var(--accent)}
+.ol-clk{font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:-.01em;color:var(--muted)}
+.ol-clk.ol-move{color:var(--accent);font-weight:700}
+.ol-clk.ol-low{color:var(--red);animation:clkPulse 1s ease-in-out infinite}
+@keyframes clkPulse{50%{opacity:.55}}
+.ol-note{font-size:13px;color:var(--muted);line-height:1.7}
+.ol-note.small{font-size:12px;color:var(--dim);margin-top:10px}
+.ol-setup{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:6px 4px 2px}
+.ol-setup-ic{font-size:44px;line-height:1;color:var(--brass)}
+.ol-setup .ol-note:first-of-type{font-size:15px;color:var(--text)}
+.ol-me{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.ol-me input,.ol-join input,.pf-input{flex:1;min-width:0;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:9px 12px;font:inherit;font-size:16px}
+.ol-r{display:flex;flex-direction:column;align-items:flex-end;font-size:12px;color:var(--muted)}
+.ol-r b{font-size:20px;color:var(--accent);font-family:'JetBrains Mono',monospace}
+.ol-r small{font-size:11px;color:var(--dim)}
+.ol-acts{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.ol-acts .mbtn{flex:1}
+.ol-join{display:flex;gap:10px;margin-top:10px}
+.ol-join input{text-transform:uppercase;letter-spacing:.2em;font-family:'JetBrains Mono',monospace}
+.ol-join input::placeholder{letter-spacing:normal;text-transform:none;font-family:inherit}
+.ol-join .mbtn{flex:none;padding:10px 18px}
+.ol-sub{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:16px 0 6px}
+.ol-list{display:grid;gap:3px;max-height:200px;overflow-y:auto}
+.ol-list > div{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.2)}
+.ol-list > div.me{box-shadow:inset 0 0 0 1px rgba(201,169,97,.5)}
+.ol-list > div > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ol-list b{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:500}
+.ol-list small{color:var(--dim)}
+.ol-list small.st{font-size:10.5px;padding:1px 6px;border-radius:5px;margin-inline-start:6px;background:rgba(255,255,255,.06);color:var(--muted)}
+.ol-list small.st-play{color:#f2c060}.ol-list small.st-lobby{color:#8fe3b8}.ol-list small.st-room{color:#9fc7ff}.ol-list small.st-watch{color:#d4b0ff}
+.ol-list > div.ingame{background:rgba(0,0,0,.12)}
+.ol-list small.ol-ing{color:#f2c060;white-space:nowrap}
+.ol-rk,.ol-tc{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.ol-rk button,.ol-tc button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border-radius:7px;color:var(--muted);font-size:13px;line-height:1.25}
+.ol-rk button small,.ol-tc button small{font-size:10.5px;color:var(--dim);text-align:center}
+.ol-rk button:hover,.ol-tc button:hover{color:var(--text)}
+.ol-rk button.sel,.ol-tc button.sel{background:rgba(201,169,97,.2);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(201,169,97,.55);font-weight:700}
+.ol-rk button.sel small,.ol-tc button.sel small{color:var(--text);font-weight:400}
+.ol-rooms{max-height:150px}
+.ol-myroom{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:1px solid rgba(201,169,97,.45);background:rgba(201,169,97,.08);margin:0 0 6px}
+.ol-myroom .ol-mcode{font-family:'JetBrains Mono',monospace;font-size:20px;letter-spacing:.18em;color:var(--accent)}
+.ol-myroom small{font-size:12px;color:var(--muted)}
+.mbtn.warn,.dk-btn.warn{border-color:rgba(214,110,90,.7)!important;color:#f0a492!important}
+.ol-lock{font-size:13px;padding:3px 12px;border-radius:999px;background:rgba(201,169,97,.12);color:var(--accent);border:1px solid rgba(201,169,97,.4)}
+.ol-tcbox{margin:0 0 12px}
+.ol-tcl{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 6px}
+.ol-tcinfo{color:var(--accent)!important}
+.ol-wait{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0;text-align:center}
+.ol-wait small{font-size:12px;color:var(--dim);line-height:1.6}
+.ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent);direction:ltr}
+.ol-spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(201,169,97,.2);border-top-color:var(--accent);animation:olspin 1s linear infinite}
+@keyframes olspin{to{transform:rotate(360deg)}}
+@media (min-width: 760px){
+  #onlineOverlay .modal{width:min(880px,94vw);padding:26px 30px}
+  .ol-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 30px;align-items:start}
+  .ol-grid .ol-col > :first-child{margin-top:0}
+  .ol-grid .ol-rooms{max-height:240px}
+}
+#segMode button{flex:1 0 auto}
+@media (max-width: 520px){#segMode button[data-v=online]{grid-column:1 / -1}}
+/* spectating / game info card, rematch box, rating change */
+.ol-watch{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 12px;border-color:rgba(143,227,184,.55);background:linear-gradient(180deg,rgba(143,227,184,.10),rgba(143,227,184,.03)),var(--panel)}
+.ol-watch .wl{font-weight:700;color:#8fe3b8;font-size:14px;white-space:nowrap}
+.ol-watch .wi{flex:1 1 60px;font-size:12.5px;color:var(--muted);min-width:0}
+.ol-watch button{min-height:32px;padding:4px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-size:12.5px}
+.ol-watch button:hover{border-color:var(--brass2)}
+.ol-watch.pl{padding:5px 12px;border-color:var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel))}
+.ol-again{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:rgba(201,169,97,.1);border:1px solid rgba(201,169,97,.45);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;font-size:14px;line-height:1.6;text-align:center}
+.ol-again > span{flex:1 1 100%}
+.ol-again b.cd{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--accent);margin:0 2px}
+.ol-again .mbtn{min-height:44px;min-width:110px;flex:0 1 auto}
+.ol-again.muted{background:rgba(0,0,0,.2);border-color:var(--line);color:var(--muted)}
+.ol-rchg{margin-top:6px;font-size:14px;color:var(--muted)}
+.ol-rchg b{color:var(--accent);font-family:'JetBrains Mono',monospace}
+.ol-rchg .up{color:#8fe3b8}.ol-rchg .dn{color:#f0a492}
+#btnAgain:disabled{opacity:.45;cursor:default}
+/* profile dialog / Google */
+.pf-lbl{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin:14px 0 6px}
+.pf-input{width:100%}
+.syncbox{margin-top:16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2)}
+.syncbox b{font-size:14px;color:var(--accent)}
+.syncbox p{font-size:13px;color:var(--muted);line-height:1.7;margin-top:4px}
+.glogo{width:18px;height:18px;flex:none;vertical-align:-4px;background:#fff;border-radius:50%;padding:2px}
+.gbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+/* dock (PC: bar at the bottom) / tab bar (phones) */
+.dock,.mtabs,.mt-strip{display:none}
+.dock-bar{display:flex;align-items:center;gap:10px;height:46px;padding:0 18px;cursor:pointer;flex:none;min-width:0}
+.dk-dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);flex:none}
+.dk-title{font-size:13px;letter-spacing:.08em;white-space:nowrap;font-weight:700}
+.dk-stat{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dk-sp{flex:1}
+.dk-me{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.dk-me b{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:500}
+.dk-name{color:var(--text);padding:3px 8px;border-radius:7px;border:1px dashed rgba(201,169,97,.45);background:rgba(0,0,0,.2)}
+.dk-name span{color:var(--dim);font-size:11px;margin-inline-start:4px}
+.dk-name:hover{border-color:var(--accent)}
+.dk-input{width:150px;border-radius:7px;border:1px solid var(--brass2);background:rgba(0,0,0,.35);color:var(--text);padding:5px 8px;font:inherit;font-size:14px;margin-inline-end:6px}
+.dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
+.dk-btn:hover{border-color:var(--brass2)}
+.dk-btn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent;font-weight:700}
+.dk-btn.tg{width:34px;padding:6px 0;color:var(--muted)}
+.dk-g{display:inline-flex;align-items:center;gap:6px;max-width:230px;overflow:hidden}
+.dk-g span{overflow:hidden;text-overflow:ellipsis}
+.dk-g.on{border-color:rgba(127,214,164,.5);color:#8fe3b8}
+.dk-myroom{color:var(--accent);border-color:rgba(201,169,97,.5)!important}
+.dock-panel{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pl ro rk ch" "pl ro acc ch";gap:10px 18px;padding:0 18px}
+.dock-panel .dk-pl{grid-area:pl}.dock-panel .dk-ro{grid-area:ro}.dock-panel .dk-rk{grid-area:rk}.dock-panel .dk-acc{grid-area:acc}.dock-panel .dk-chat{grid-area:ch}
+.dock-panel section{min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.dock-panel h4{font-size:12px;color:var(--muted);letter-spacing:.1em;font-weight:500;margin:4px 0 8px}
+.dock-panel .ol-list{max-height:none;flex:1;overflow-y:auto;align-content:start;grid-auto-rows:min-content}
+.dk-acc{overflow-y:auto!important}
+.dk-join,.dk-watch{flex:none;font-size:11.5px;padding:3px 10px;border-radius:7px;border:1px solid rgba(201,169,97,.5);background:rgba(201,169,97,.12);color:var(--accent)}
+.dk-watch{border-color:rgba(143,227,184,.55);background:rgba(143,227,184,.12);color:#8fe3b8}
+.dk-join:disabled,.dk-watch:disabled{opacity:.55;pointer-events:none}
+@media not all and (pointer: coarse){
+  /* the board area leaves room for the dock (46px bar + 62px chat strip) */
+  html.ol-dock{--vh:calc(100vh - 108px)}
+  @supports (height:100dvh){html.ol-dock{--vh:calc(100dvh - 108px)}}
+  html.ol-dock.hb-on{--vh:calc(100vh - var(--hb-h) - 108px)}
+  @supports (height:100dvh){html.ol-dock.hb-on{--vh:calc(100dvh - var(--hb-h) - 108px)}}
+  html.pcw.ol-dock body:not(.no-online) .app{padding-bottom:124px}
+  html.pcw.ol-dock.ol-soon body:not(.no-online) .app{padding-bottom:62px}
+  body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#14211d,#08100d);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
+  .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
+  body.dock-open .dock-panel{height:min(46vh,380px);padding:4px 18px 16px}
+  /* folded: compact chat strip — a few recent lines + input */
+  body:not(.dock-open) .dock-panel{display:block;padding:0 18px 8px}
+  body:not(.dock-open) .dock-panel > section:not(.dk-chat){display:none}
+  body:not(.dock-open) .dock-panel .dk-chat{flex-direction:row;align-items:stretch;gap:14px;height:100%;border-top:1px solid rgba(255,255,255,.05);padding-top:4px}
+  body:not(.dock-open) .dk-chat h4{display:none}
+  body:not(.dock-open) .chat-list{min-height:0;height:100%;gap:0}
+  body:not(.dock-open) .cm{font-size:12px;line-height:1.4;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
+  body:not(.dock-open) .chat-list .ol-note{font-size:11.5px;padding:2px 6px;margin:0}
+  body:not(.dock-open) .chat-list .ol-note br{display:none}
+  body:not(.dock-open) .chat-form{margin-top:0;width:min(420px,42%);align-self:center}
+  body:not(.dock-open) .chat-form input,body:not(.dock-open) .chat-form button{height:32px}
+}
+@media not all and (pointer: coarse){ @media (max-width: 1100px){
+  .dock-panel{grid-template-columns:1fr 1fr 1.3fr;grid-template-areas:"pl ro ch" "acc ro ch"}
+  .dock-panel .dk-rk{display:none}
+  .dk-stat{display:none}
+} }
+@media not all and (pointer: coarse){ @media (max-width: 760px){
+  .dk-title,.dk-g span{display:none}
+  .dock-bar{gap:6px;padding:0 10px}
+  .dock-panel{grid-template-columns:1fr 1.2fr;grid-template-areas:"ro ch" "acc ch"}
+  .dock-panel .dk-pl{display:none}
+} }
+@media (pointer: coarse){
+  html.ol-dock{--vh:calc(100vh - 50px - env(safe-area-inset-bottom))}
+  @supports (height:100lvh){html.ol-dock{--vh:calc(100lvh - 50px - env(safe-area-inset-bottom))}}   /* lvh: the board keeps its (large) size while the address bar slides during a scroll */
+  body:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+  body.mtab-online .dock-panel .dk-chat{order:-2}
+  body.mtab-online .chat-list{max-height:min(46vh, 340px);min-height:120px;flex:none}
+  body.mtab-online .chat-form .dk-btn{flex:none;padding:0 16px}
+  .chat-form input{font-size:16px;height:44px}
+  .chat-form button{height:44px;min-width:72px}
+  .dk-unread{min-height:36px;padding:4px 12px}
+  .mt-strip div{font-size:12px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+  .mt-strip b{color:var(--accent);font-weight:600;margin-inline-end:6px}
+  .mt-strip .me b{color:#8fe3b8}
+  .mt-strip .empty{color:var(--dim)}
+  body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#08100d;border-top:1px solid var(--line)}
+  .mtabs button{flex:1;font-size:13px;color:var(--muted);letter-spacing:.06em}
+  .mtabs button.sel{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+  .mtabs em{font-style:normal;font-size:11px;color:var(--good);margin-inline-start:4px}
+  body.mtab-online{overflow:hidden}
+  body.mtab-online .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;top:0;bottom:max(calc(50px + env(safe-area-inset-bottom)), var(--kb, 0px));z-index:44;background:var(--bg);overflow-y:auto}
+  body.mtab-online .dock-bar{flex-wrap:wrap;height:auto;padding:14px 14px 6px;gap:8px;cursor:default}
+  body.mtab-online .dk-sp,body.mtab-online .dk-btn.tg{display:none}
+  body.mtab-online .dk-stat{width:100%;order:3;white-space:normal}
+  body.mtab-online .dk-me{width:100%;order:4;flex-wrap:wrap}
+  body.mtab-online .dock-bar .dk-btn{order:6;flex:1;padding:10px}
+  body.mtab-online .dock-bar .dk-g{display:none}
+  body.mtab-online .dock-panel{display:flex;flex-direction:column;padding:8px 14px 20px;gap:14px}
+  body.mtab-online .dock-panel .dk-acc{order:-1}
+  body.mtab-online .dock-panel .ol-list{max-height:none}
+  .dk-input{font-size:16px}
+}
+/* Arabic: text right-to-left, the board stays left-to-right */
+html[lang=ar] :is(.ol-note, .syncbox, .pf-lbl, .ol-sub, .ol-tcl, .ol-watch, .ol-again, .dock-panel, .dk-me, .ol-list, #olcText){direction:rtl}
+html[lang=ar] :is(.ol-note, .syncbox, .pf-lbl, .ol-sub, .ol-tcl, #olcText){text-align:right}
+html[lang=ar] .pf-input,html[lang=ar] .ol-me input{direction:rtl}
+/* public chat */
+.dk-unread{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid rgba(111,211,160,.6);background:rgba(111,211,160,.15);color:#8fe3b8;white-space:nowrap;flex:none;min-height:28px}
+.dk-unread b{font-family:'JetBrains Mono',monospace;margin-inline-start:3px}
+.mt-chat{color:#8fe3b8!important}
+.chat-list{flex:1;min-height:60px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 4px 2px 0;display:flex;flex-direction:column;gap:2px}
+.cm{font-size:13px;line-height:1.5;padding:3px 6px;border-radius:6px;overflow-wrap:anywhere;color:var(--text)}
+.cm:hover{background:rgba(255,255,255,.04)}
+.cm b{color:var(--accent);font-weight:600;margin-inline-end:6px}
+.cm.me b{color:#8fe3b8}
+.cm time{color:var(--dim);font-size:10.5px;margin-inline-start:6px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.chat-form{display:flex;gap:6px;margin-top:8px;flex:none}
+.chat-form input{flex:1;min-width:0;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:0 10px;font:inherit;font-size:14px}
+.chat-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(201,169,97,.25)}
+.chat-form button{height:36px;min-width:64px;padding:0 14px}
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+  /* phone portrait: tab bar + two chat lines at the bottom */
+  body:not(.no-online) .app{padding-bottom:calc(102px + env(safe-area-inset-bottom))}
+  body:not(.no-online):not(.mtab-online) .mt-strip{display:flex;flex-direction:column;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));height:40px;z-index:45;padding:0 14px;background:#0c1714;border-top:1px solid var(--line);cursor:pointer;overflow:hidden}
+}
+html[lang=ar] :is(.dk-chat, .mt-strip){direction:rtl}
+/* resignation offers (in the game card) */
+.ol-offer{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:6px 0 2px;font-size:13px;color:var(--text)}
+.ol-offer span{flex:1 1 140px}
+.ol-offer button.go{background:linear-gradient(180deg,#e6cd8c,#b39249);color:#1b150a;border-color:transparent;font-weight:700}
+/* online rating history */
+.ol-hist{display:grid;gap:6px}
+.ol-spark{width:100%;height:34px;display:block}
+.ol-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.6}
+.ol-spark line{stroke:rgba(255,255,255,.18);stroke-dasharray:3 3}
+.ol-hrows{display:grid;gap:3px;max-height:150px;overflow-y:auto}
+.ol-hrows > div{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 10px;border-radius:8px;background:rgba(0,0,0,.2)}
+.ol-hrows > div > span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-hrows i{font-style:normal;font-weight:700;width:1.6em;text-align:center}
+.ol-hrows .w i{color:#8fe3b8}.ol-hrows .l i{color:#f0a492}.ol-hrows .d i{color:var(--muted)}
+.ol-hrows b{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--accent)}
+.ol-hrows small{color:var(--dim);font-family:'JetBrains Mono',monospace}
+.ol-hrows span small{font-family:inherit}
+/* online play not configured yet: only the bar with "coming soon" */
+.dk-soon{display:none}
+body.ol-soon .dk-soon{display:inline-block}
+body.ol-soon .dock-panel,body.ol-soon .mt-strip{display:none!important}
+body.ol-soon .dock-bar > :is(.dk-me,.dk-g,.dk-myroom,#dkRoom,#dkAuto,.tg,.dk-unread){display:none!important}
+body.ol-soon .dk-dot{background:var(--dim);box-shadow:none}
+@media not all and (pointer: coarse){
+  html.ol-dock.ol-soon{--vh:calc(100vh - 46px)}
+  @supports (height:100dvh){html.ol-dock.ol-soon{--vh:calc(100dvh - 46px)}}
+  html.ol-dock.ol-soon.hb-on{--vh:calc(100vh - var(--hb-h) - 46px)}
+  @supports (height:100dvh){html.ol-dock.ol-soon.hb-on{--vh:calc(100dvh - var(--hb-h) - 46px)}}
+}
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+  body.ol-soon:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+}
+html[lang=ar] :is(.ol-hist, .ol-offer){direction:rtl}
+/* backgammon: clocks in the player cards, the match strip in the players card, the resign dialog, room options */
+.player .ol-clk{position:absolute;right:12px;bottom:8px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.player .ol-clk:empty{display:none}
+.player .ol-clk.ol-move{color:var(--accent);font-weight:700}
+.player .ol-clk.ol-low{color:var(--red);animation:clkPulse 1s ease-in-out infinite}
+.card.players .ol-watch{border:1px solid rgba(143,227,184,.4);border-radius:10px;margin:0 0 8px}
+.card.players .ol-watch.pl{border-color:var(--line);background:rgba(0,0,0,.18)}
+.ol-rsbtns{display:grid;gap:8px;margin-top:12px}
+.ol-rsbtns .mbtn{width:100%}
+.ol-cubeopt{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.ol-cubeopt input{width:16px;height:16px;accent-color:var(--brass)}
+.ol-fair{margin-top:14px!important}
+#segMode button[data-v=online]{white-space:nowrap}
+html.pcw .card.players .ol-watch{margin:0 0 6px;padding:4px 10px}
+html[lang=ar] :is(.ol-rsbtns, #olrText, .ol-cubeopt){direction:rtl}
+/* phone landscape (physical or the rotated page): the clocks sit in the slim player chips; a slimmer tab bar */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  .card.players .ol-watch{display:none!important}
+  .player .ol-clk{position:static;font-size:11px;flex:none}
+  html.ol-dock{--vh:calc(100vh - 36px - env(safe-area-inset-bottom))}
+  body:not(.no-online) .mtabs{height:calc(36px + env(safe-area-inset-bottom))}
+  body:not(.no-online) .app{padding-bottom:calc(44px + env(safe-area-inset-bottom))}
+}
+html.rot .card.players .ol-watch{display:none!important}
+html.rot .player .ol-clk{position:static;font-size:11px;flex:none}
+html.rot body:not(.no-online) .mtabs{height:36px}
+html.rot body:not(.no-online) .mt-strip{display:none!important}
+html.rot body:not(.no-online) .app{padding-bottom:44px}
+/* no evaluation while an online match is live (the record navigation stays) */
+#evalCard.ol-noeval :is(.evalrow,.evalbar,.graph){display:none!important}
+#evalCard.ol-noeval::before{content:attr(data-olnote);display:block;font-size:12.5px;color:var(--dim);line-height:1.6;padding:2px 0 8px}
+html.pcw #evalCard.ol-noeval{justify-content:space-between}
+body.in-online #evalCard.hidden{display:block!important}
+body.in-online #evalCard.hidden:not(.ol-noeval) :is(.evalrow,.evalbar,.graph){display:none!important}

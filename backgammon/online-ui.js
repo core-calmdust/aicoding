@@ -1,0 +1,1107 @@
+/* Backgammon — online play UI (lobby dialog, PC dock / phone tab, online matches on the board with commit–reveal dice, cube,
+   resignation offers, result & rematch, spectating), first-visit profile dialog, Google link and cloud sync of local progress.
+   Same design as the other 世界のボドゲ大全 games (Nine Men's Morris / Checkers). Loaded after app.js / op.js and uses their globals
+   (match, cur, turn, view, settings, render, renderInfo, startTurn, rollAnim, animStep, toast, t, …). Backend: online.js (BgOnline). */
+'use strict';
+const ON = window.BgOnline;
+const olOn = () => !!(ON && ON.available);
+const olEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const GLOGO = '<svg class="glogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
+const fmtClock = ms => { ms = Math.max(0, ms); const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const olClock = ms => fmtClock(Math.max(0, ms));
+const tcText = (v, short) => { const c = ON.FORMATS[v] || ON.FORMATS[ON.DEF_V]; return t(short ? 'ol.tcShort' : 'ol.tcFmt', { m: c.main / 60000, s: ON.DELAY / 1000 }); };
+const varName = v => t('olf.' + (ON.VARIANTS.includes(v) ? v : ON.DEF_V));
+const fmtFull = (v, cube) => varName(v) + (v === 'g1' ? ' · ' + t(cube ? 'ol.cube' : 'ol.nocube') : '');
+const showOv = id => $(id).classList.add('show');
+const hideOv = id => $(id).classList.remove('show');
+const isShown = id => $(id).classList.contains('show');
+
+// ====================================================================== markup (injected so index.html stays small)
+document.body.insertAdjacentHTML('beforeend', `
+<div class="overlay" id="onlineOverlay"><div class="modal"><h2 data-i18n="ol.title"></h2><div id="olBody"></div>
+  <div class="modal-actions"><button class="mbtn" id="olClose" data-i18n="close"></button></div></div></div>
+<div class="overlay" id="profOverlay"><div class="modal" style="width:min(460px,100%)">
+  <h2 data-i18n="pf.title"></h2>
+  <p class="ol-note" data-i18n="pf.desc"></p>
+  <label class="pf-lbl" for="pfName" data-i18n="pf.name"></label>
+  <input id="pfName" class="pf-input" maxlength="16" autocomplete="nickname" spellcheck="false">
+  <div class="syncbox" id="pfG"><b data-i18n="sync.title"></b><p data-i18n="pf.gdesc"></p></div>
+  <div class="modal-actions"><button class="mbtn" id="pfLater" data-i18n="pf.later"></button><button class="mbtn go gbtn" id="pfGoogle">${GLOGO}<span data-i18n="sync.google"></span></button></div>
+</div></div>
+<div class="overlay" id="olConfirm"><div class="modal" style="width:min(420px,100%)"><p id="olcText" class="ol-note" style="font-size:15px;color:var(--text)"></p>
+  <div class="modal-actions"><button class="mbtn" id="olcNo" data-i18n="close"></button><button class="mbtn go" id="olcYes"></button></div></div></div>
+<div class="overlay" id="olResignOv"><div class="modal" style="width:min(440px,100%)"><h2 data-i18n="ol.resign"></h2><p id="olrText" class="ol-note"></p>
+  <div class="ol-rsbtns" id="olrBtns"></div>
+  <div class="modal-actions"><button class="mbtn" id="olrClose" data-i18n="close"></button></div></div></div>
+<div class="dock" id="dock">
+  <div class="dock-bar">
+    <span class="dk-dot"></span><span class="dk-title" data-i18n="ol.title"></span><button id="dkUnread" class="dk-unread hidden" type="button">💬<b>0</b></button><span class="dk-stat" id="dkStat"></span><span class="dk-sp"></span>
+    <button class="dk-btn dk-soon" id="dkSoon" data-i18n="ol.soonMore"></button>
+    <span class="dk-me" id="dkMe"></span>
+    <button class="dk-btn dk-g" id="dkG"></button>
+    <button class="dk-btn dk-myroom hidden" id="dkMyRoom"></button>
+    <button class="dk-btn" id="dkRoom" data-i18n="ol.makeRoom"></button>
+    <button class="dk-btn go" id="dkAuto" data-i18n="ol.find"></button>
+    <button class="dk-btn tg" id="dkToggle" aria-label="toggle">▲</button>
+  </div>
+  <div class="dock-panel">
+    <section class="dk-pl"><h4 data-i18n="ol.online"></h4><div class="ol-list" id="dkPlayers"></div></section>
+    <section class="dk-ro"><h4 data-i18n="ol.rooms"></h4><div class="ol-list ol-rooms" id="dkRooms"></div></section>
+    <section class="dk-rk"><h4 data-i18n="ol.rank"></h4><div class="ol-list" id="dkRank"></div></section>
+    <section class="dk-acc"><h4 data-i18n="sync.title"></h4><div id="dkAcc"></div></section>
+    <section class="dk-chat"><h4 id="dkChatHead"><span data-i18n="ol.chat"></span></h4><div class="chat-list" id="dkChat" role="log" aria-live="polite"></div><form class="chat-form" id="dkChatForm" autocomplete="off"><input id="dkChatIn" maxlength="100" enterkeyhint="send" autocomplete="off"><button type="submit" class="dk-btn go" id="dkChatSend"></button></form></section>
+  </div>
+</div>
+<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
+<div class="mt-strip" id="mtStrip" role="button"></div>`);
+$('.card.players').insertAdjacentHTML('afterbegin', '<div class="ol-watch hidden" id="olWatch" aria-live="polite"></div>');
+for (const s of [0, 1]) $('#pl' + s).insertAdjacentHTML('beforeend', `<span class="ol-clk" id="clk${s}"></span>`);
+$('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="ol.resign"></span></button>`);
+$('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
+$('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
+// the new-game dialog: "online" shows a short description (colours and board design stay: they are your own view) and opens the online dialog
+{ const _segSync = segSync; segSync = function () { _segSync(); olSegSync(); }; }
+{ const _ckSync = ckSync; ckSync = function () { _ckSync(); if (draft && draft.mode === 'online') document.querySelectorAll('#ckRows .ckrow').forEach(r => { r.querySelector('.ckl').textContent = +r.dataset.s ? t('ol.opp') : t('you'); }); }; }
+function olSegSync() {
+  const on = draft.mode === 'online';
+  ['#fLevel', '#fLevel2', '#fMatch', '#fDisplay', '#fSeed'].forEach(s => { const e = $(s); if (e && on) e.classList.add('hidden'); });
+  if (!on) return;
+  $('#fInfo').classList.remove('hidden'); $('#fInfoText').textContent = olOn() ? t('ol.ngDesc') : t('ol.setup1') + ' ' + t('ol.setup2');
+  $('#btnStart').textContent = t('ol.open');
+  ckSync();
+}
+$('#btnStart').addEventListener('click', e => {
+  if (draft.mode !== 'online') return;
+  e.stopImmediatePropagation(); hideOv('#newOverlay');
+  settings.ck = draft.ck.slice(); applyCk(); save(); if (net) olApplyColours(); drawBoardSvg(); try { render(); renderInfo(); } catch (_) {}
+  openOnline();
+}, true);
+if (!olOn()) { document.body.classList.add('ol-soon'); document.documentElement.classList.add('ol-soon'); }
+document.documentElement.classList.add('ol-dock');
+applyI18n();
+// PC: the board leaves room for the dock (bar + folded chat strip)
+window.olDockH = () => (matchMedia('(pointer: coarse)').matches || document.body.classList.contains('no-online') ? 0 : olOn() ? 108 : 46);
+window.olTabH = () => { const m = document.getElementById('mtabs'); return m && getComputedStyle(m).display !== 'none' ? (ROT ? m.getBoundingClientRect().width : m.getBoundingClientRect().height) : 0; };
+try { updateGeom(); } catch (e) {}
+
+// ====================================================================== confirm dialog
+let olcFn = null;
+function olConfirm(text, yes, fn) { $('#olcText').textContent = text; $('#olcYes').textContent = yes; $('#olcYes').classList.toggle('hidden', !fn); olcFn = fn; showOv('#olConfirm'); }
+$('#olcNo').onclick = () => { olcFn = null; hideOv('#olConfirm'); };
+$('#olcYes').onclick = () => { const f = olcFn; olcFn = null; hideOv('#olConfirm'); f && f(); };
+// leaving a live online match first = resigning it (after a confirmation)
+function olGate(fn) {
+  if (olLive()) { olConfirm(t('ol.leaveQ'), t('ol.resign'), () => { olResignNow(); fn(); }); return false; }
+  fn(); return true;
+}
+
+// Google sign-in errors in words the user can act on
+function authErrText(e) {
+  const c = (e && (e.code || e.message)) || '';
+  if (/unauthorized-domain/.test(c)) return t('err.domain', { d: location.hostname });
+  if (/operation-not-allowed|admin-restricted-operation/.test(c)) return t('err.provider');
+  if (/referer|referrer|API_KEY_HTTP_REFERRER_BLOCKED|requests-from-referer/i.test(c)) return t('err.referrer', { d: location.origin });
+  if (/api-key-not-valid|invalid-api-key/.test(c)) return t('err.apikey');
+  if (/network-request-failed|load https/.test(c)) return t('err.network');
+  if (/popup-blocked/.test(c)) return t('err.popup');
+  if (/not-configured/.test(c)) return t('ol.setup1');
+  if (/configuration-not-found/.test(c)) return t('err.config');
+  return t('sync.err') + (c ? ' (' + c + ')' : '');
+}
+const authCancelled = e => e && /popup-closed-by-user|cancelled-popup-request|user-cancelled/.test(e.code || '');
+
+// ====================================================================== online dialog
+let olView = 'menu', olRoomsList = [], olRoomsUnsub = null, olStatus = null;
+const OL_V_KEY = 'backgammon-online-v', OL_RV_KEY = 'backgammon-online-rv', OL_CUBE_KEY = 'backgammon-online-cube';
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
+function olV() { const v = lsGet(OL_V_KEY); return ON.RATED.includes(v) ? v : ON.DEF_V; }
+function olRV() { const v = lsGet(OL_RV_KEY); return ON.VARIANTS.includes(v) ? v : 'm5'; }
+const olCube = () => lsGet(OL_CUBE_KEY) !== '0';
+function olVarSeg(list, cur, attr) {
+  return `<div class="ol-tc" role="radiogroup">` + list.map(v => `<button type="button" role="radio" data-${attr}="${v}" class="${v === cur ? 'sel' : ''}" aria-checked="${v === cur}"><b>${olEsc(varName(v))}</b><small>${olEsc(attr === 'ov' && v === 'g1' ? t('ol.nocube') + ' · ' + tcText(v, true) : tcText(v, true))}</small></button>`).join('') + '</div>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.ol-tc button[data-ov], .ol-tc button[data-orv]'); if (!b) return;
+  const rated = !!b.dataset.ov, v = rated ? b.dataset.ov : b.dataset.orv;
+  lsSet(rated ? OL_V_KEY : OL_RV_KEY, v);
+  b.parentNode.querySelectorAll('button').forEach(x => { const s = x === b; x.classList.toggle('sel', s); x.setAttribute('aria-checked', s); });
+});
+const OL_ST = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', play: 'ol.st.play', room: 'ol.st.room', watch: 'ol.st.watch' };
+function olRoomRows(list) {
+  const me = ON.uid;
+  if (!list.length) return `<div class="ol-note small">${t('ol.noRooms')}</div>`;
+  return list.map(r => `<div class="${r.host === me ? 'me' : ''}${r.game ? ' ingame' : ''}"><span>${olEsc(r.name)} <small>R${r.rating ?? ''} · ${olEsc(fmtFull(r.v, r.cube !== false))}</small>${r.game ? ` <small class="ol-ing">${t('ol.st.play')}</small>` : ''}</span>${r.host === me || r.guest === me ? '' : r.game ? `<button class="dk-watch" data-code="${olEsc(r.id)}">${t('ol.watch')}</button>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('');
+}
+async function olJoin(code, btn) {
+  if (olLive()) { olGate(() => olJoin(code)); return; }
+  if (btn) btn.disabled = true;
+  let gid = null; try { gid = await ON.joinRoom(code); } catch (e) { console.warn(e); }
+  if (btn) btn.disabled = false;
+  if (gid) { hideOv('#onlineOverlay'); startOnlineGame(gid); return; }
+  // a room with a match in progress: watch it
+  let wg = null; try { wg = await ON.roomGameOf(code); } catch (e) { console.warn(e); }
+  if (wg) { hideOv('#onlineOverlay'); startOnlineGame(wg, true); return; }
+  toast(t('ol.noRoom'), 2200);
+}
+async function openOnline(joinCode) {
+  showOv('#onlineOverlay');
+  if (!olOn()) { olRender('setup'); return; }
+  if (!ON.ready) olRender('loading');
+  try { await ON.init(); } catch (e) { console.warn(e); olErr = e; olRender('error'); return; }
+  if (!olRoomsUnsub) olRoomsUnsub = ON.watchRooms(l => { olRoomsList = l; if (isShown('#onlineOverlay') && olView === 'menu') { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(l); } });
+  dockStart();
+  if (joinCode) { olRender('menu'); olJoin(joinCode); return; }
+  olRender(ON.room && olView === 'room' ? 'room' : olView === 'search' ? 'search' : 'menu');
+}
+let olErr = null;
+// rating history: sparkline of the last 30 rated matches + the latest 10 results
+function olHistHtml() {
+  const h = ON.history(); if (!h.length) return '';
+  const sp = h.slice(-30), pts = [sp[0].r - (sp[0].d || 0)].concat(sp.map(x => x.r));
+  let html = `<div class="ol-sub">${t('ol.hist')}</div><div class="ol-hist">`;
+  if (pts.length >= 2) {
+    const lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 300, H = 34, y = v => (H - 3 - (v - lo) / (hi - lo) * (H - 6)).toFixed(1);
+    html += `<svg class="ol-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${y(pts[0])}" y2="${y(pts[0])}" vector-effect="non-scaling-stroke"/><polyline vector-effect="non-scaling-stroke" points="${pts.map((v, i) => (i / (pts.length - 1) * W).toFixed(1) + ',' + y(v)).join(' ')}"/></svg>`;
+  }
+  html += '<div class="ol-hrows">' + h.slice(-10).reverse().map(x => { const c = x.s === 1 ? 'w' : x.s === 0 ? 'l' : 'd'; return `<div class="${c}"><i>${t('ol.res' + c.toUpperCase())}</i><span>${olEsc(x.o || '?')} <small>R${x.or} · ${olEsc(varName(x.v))}</small></span><b>${x.d >= 0 ? '+' : '−'}${Math.abs(x.d)}</b><small>${x.r}</small></div>`; }).join('') + '</div></div>';
+  return html;
+}
+function olRender(v) {
+  if (v) olView = v;
+  const B = $('#olBody');
+  if (olView === 'setup') { B.innerHTML = `<div class="ol-setup"><div class="ol-setup-ic">⌛</div><p class="ol-note">${t('ol.setup1')}</p><p class="ol-note small">${t('ol.setup2')}</p></div>`; return; }
+  if (olView === 'loading') { B.innerHTML = `<div class="ol-wait"><div class="ol-spin"></div><small>${t('ol.connecting')}</small></div>`; return; }
+  if (olView === 'error') { B.innerHTML = `<p class="ol-note">${olEsc(t('ol.error'))}</p><p class="ol-note small">${olEsc(authErrText(olErr))}</p><div class="ol-acts"><button class="mbtn go" id="olRetry">${t('ol.retry')}</button></div>`; $('#olRetry').onclick = () => openOnline(); return; }
+  const P = ON.profile;
+  if (olView === 'menu') {
+    const R = ON.room;
+    B.innerHTML = `<div class="ol-grid"><div class="ol-col">
+      <div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(P.name)}" aria-label="${olEsc(t('pf.name'))}"><div class="ol-r"><small>${t('ol.rating')}</small><b>${P.rating}</b><small>${t('ol.record2', { w: P.wins || 0, l: P.losses || 0 })}</small></div></div>
+      <div class="ol-tcbox"><div class="ol-tcl">${t('ol.ratedFmt')} · ${t('ol.tc')}</div>${olVarSeg(ON.RATED, olV(), 'ov')}</div>
+      <div class="ol-acts"><button class="mbtn go" id="olFind">${t('ol.find')}</button></div>
+      <p class="ol-note small" style="margin-top:6px">${t('ol.findDesc')}</p>
+      <div class="ol-sub">${t('ol.privTitle')}</div>
+      ${R ? `<div class="ol-myroom"><span>${t('ol.myRoom')}</span><span class="ol-mcode">${R.code}</span><small>${R.game ? t('ol.st.play') : t('ol.roomLeft', { t: olClock(R.left) })}</small><button class="dk-btn" id="olShowRoom">${t('ol.showRoom')}</button></div>` : ''}
+      <div class="ol-tcbox"><div class="ol-tcl">${t('ol.roomFmt')}</div>${olVarSeg(ON.VARIANTS, olRV(), 'orv')}<label class="ol-cubeopt"><input type="checkbox" id="olCubeOpt"${olCube() ? ' checked' : ''}><span>${t('ol.cubeOpt')}</span></label></div>
+      <div class="ol-rk" role="radiogroup"><button type="button" data-rk="open" class="${olRk() === 'open' ? 'sel' : ''}"><b>${t('ol.openRoom')}</b><small>${t('ol.openDesc')}</small></button><button type="button" data-rk="key" class="${olRk() === 'key' ? 'sel' : ''}"><b>${t('ol.keyRoom')}</b><small>${t('ol.keyDesc')}</small></button></div>
+      <div class="ol-acts"><button class="mbtn" id="olMake">${t('ol.makeRoom')}</button></div>
+      <div class="ol-join"><input id="olCode" maxlength="8" placeholder="${olEsc(t('ol.codePh'))}" autocomplete="off"><button class="mbtn" id="olJoinBtn">${t('ol.join')}</button></div>
+    </div><div class="ol-col">
+      <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRoomsList)}</div>
+      ${olHistHtml()}
+      <div class="ol-sub">${t('ol.rank')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
+      <p class="ol-note small ol-fair">🎲 ${t('ol.fair')}</p>
+    </div></div>`;
+    $('#olName').onchange = async e => { try { e.target.value = await ON.setName(e.target.value); syncNameTouched(); dockRender(); } catch (_) {} };
+    $('#olFind').onclick = olStartSearch;
+    $('#olMake').onclick = olMakeRoom;
+    $('#olCubeOpt').onchange = e => lsSet(OL_CUBE_KEY, e.target.checked ? '1' : '0');
+    B.querySelectorAll('[data-rk]').forEach(b => b.onclick = () => { olSetRk(b.dataset.rk); B.querySelectorAll('[data-rk]').forEach(x => x.classList.toggle('sel', x === b)); });
+    const sr = $('#olShowRoom'); if (sr) sr.onclick = () => { ON.extendRoom().catch(() => {}); olRender('room'); };
+    $('#olJoinBtn').onclick = () => { const c = $('#olCode').value.trim(); if (c) olJoin(c, $('#olJoinBtn')); };
+    $('#olCode').onkeydown = e => { if (e.key === 'Enter') $('#olJoinBtn').click(); };
+    $('#olRooms').onclick = e => { const b = e.target.closest('[data-code]'); if (b) olJoin(b.dataset.code, b); };
+    ON.topPlayers(10).then(list => { const el = $('#olRank'); if (el) el.innerHTML = rankRows(list); }).catch(() => {});
+    return;
+  }
+  if (olView === 'search') {
+    const s = olStatus || {}, v = s.v || olV();
+    B.innerHTML = `<div class="ol-wait"><div class="ol-spin"></div><b>${t('ol.searching')}</b><small class="ol-tcinfo">${olEsc(varName(v))} · ${olEsc(tcText(v))}</small><small>${t('ol.searchInfo', { w: s.same || 0, r: s.window || 100 })}</small></div><div class="ol-acts"><button class="mbtn" id="olCancel">${t('ol.cancel')}</button></div>`;
+    $('#olCancel').onclick = async () => { await ON.leaveLobby(); olRender('menu'); dockRender(); };
+    return;
+  }
+  if (olView === 'room') {
+    const R = ON.room; if (!R) { olRender('menu'); return; }
+    const url = olRoomUrl(R.code);
+    B.innerHTML = `<div class="ol-wait"><span class="ol-lock">${t(R.priv ? 'ol.keyRoom' : 'ol.openRoom')}</span><small>${t('ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${R.code}</div><small class="ol-tcinfo">${olEsc(fmtFull(R.v, R.cube))} · ${olEsc(tcText(R.v))}</small><small>${t(R.priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
+      <div class="ol-acts ol-racts"><button class="mbtn go" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button></div>`;
+    $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; } await navigator.clipboard.writeText(url); toast(t('ol.copied'), 1400); } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); } };
+    $('#olCloseRoom').onclick = async () => { try { await ON.closeRoom(); } catch (e) { console.warn(e); } olRender('menu'); };
+  }
+}
+const olRoomUrl = code => location.origin + location.pathname + '?room=' + code + (ON.mock ? '&mock=1' : '');
+const OL_RK = 'backgammon-online-rk';
+function olRk() { return lsGet(OL_RK) === 'key' ? 'key' : 'open'; }
+function olSetRk(v) { lsSet(OL_RK, v); }
+const rankRows = list => list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
+function olLeftText() { const r = olOn() && ON.room; return r ? (r.game ? t('ol.st.play') : t('ol.roomLeft', { t: olClock(r.left) })) : ''; }
+async function olStartSearch() {
+  if (olLive()) { olGate(olStartSearch); return; }
+  showOv('#onlineOverlay');
+  if (!olOn()) { olRender('setup'); return; }
+  try { await ON.init(); } catch (e) { olErr = e; olRender('error'); return; }
+  olStatus = { v: olV() }; olRender('search'); dockRender();
+  try {
+    await ON.enterLobby({ v: olV(), onMatched: gid => { hideOv('#onlineOverlay'); olView = 'menu'; startOnlineGame(gid); }, onStatus: s => { olStatus = s; if (olView === 'search' && isShown('#onlineOverlay')) olRender(); } });
+  } catch (e) { console.warn(e); olErr = e; olRender('error'); }
+}
+async function olMakeRoom() {
+  try { await ON.createRoom({ onMatched: olRoomMatched, onExpired: () => toast(t('ol.roomExpired'), 2600), priv: olRk() === 'key', v: olRV(), cube: olCube() }); olRender('room'); dockRender(); }
+  catch (e) { console.warn(e); toast(t('ol.error'), 2000); }
+}
+function olRoomMatched(gid) {
+  if (net && (net.gid === gid || net.mid === gid)) return;
+  hideOv('#onlineOverlay'); startOnlineGame(gid);
+}
+$('#olClose').onclick = async () => { hideOv('#onlineOverlay'); if (olOn() && ON.ready) { try { await ON.leaveLobby(); } catch (e) {} if (olView === 'search') olView = 'menu'; dockRender(); } };
+setInterval(() => {
+  if (!olOn() || !ON.ready) return;
+  const el = document.querySelector('#olBody .ol-left'); if (el) el.textContent = olLeftText();
+  const r = ON.room, chip = $('#dkMyRoom');
+  chip.classList.toggle('hidden', !r); if (r) chip.textContent = t('ol.myRoom') + ' ' + r.code + ' · ' + (r.game ? t('ol.st.play') : olClock(r.left));
+  $('#dkRoom').textContent = r ? t('ol.closeRoom') : t('ol.makeRoom'); $('#dkRoom').classList.toggle('warn', !!r);
+}, 1000);
+if (olOn()) ON.onRoom((ev) => {
+  if ((ev === 'closed' || ev === 'expired' || ev === 'gone') && isShown('#onlineOverlay') && olView === 'room') olRender('menu');
+  if (ev === 'reopen') toast(t('ol.pReopen'), 2600);
+  dockRender();
+});
+
+// ====================================================================== an online match on the board
+// net = { gid (current game), mid (match id), spec, me (side 0 / 1, -1 = spectator), recs (game records of the match, the last = current),
+//         game, R (ON.replay of game), unsub, wUnsub, busy / again (sync loop), done, rolled (roll animated: "game:action"), rollSent,
+//         sending, saved (the local game to come back to), result, watchers, shownEnd }
+let net = null;
+const OL_LIVE_P = 'backgammon-online-live:';           // + uid (one live match per player, also with several tabs)
+const olLiveKey = () => OL_LIVE_P + (ON.uid || '');
+function olLive() { return !!(net && !net.spec && !net.done && net.game && !ON.matchOverG(net.game)); }
+function olClearLive() { try { localStorage.removeItem(olLiveKey()); } catch (e) {} }
+function olMarkLive() { if (net && !net.spec) { try { localStorage.setItem(olLiveKey(), JSON.stringify({ uid: ON.uid, gid: net.gid, mid: net.mid })); } catch (e) {} } }
+// hooks used by app.js
+window.olMine = s => !!(net && !net.spec && s === net.me);
+window.olSavedMode = () => (net && net.saved ? net.saved.mode : 'ai');
+window.olLiveNow = () => olLive();
+function olShortName(s) { const g = net && net.game; return g ? ((s ? g.wn : g.bn) || '?') : '?'; }
+window.olShortName = olShortName;
+window.olPlayerName = s => {
+  const g = net && net.game; if (!g) return '…';
+  const r = s ? g.wr : g.br;
+  return olShortName(s) + (typeof r === 'number' ? ' (' + r + ')' : '') + (!net.spec && s === net.me ? ' · ' + t('you') : '');
+};
+// my preferred colours: mine (settings.ck[0]) on my side, the other one on the opponent's side
+function olApplyColours() {
+  if (!net) { CKV = null; applyCk(); return; }
+  const me = net.spec ? 0 : net.me, ck = settings.ck || ['gold', 'black'];
+  CKV = me === 1 ? [ck[1], ck[0]] : ck.slice();
+  if (window.BGTheme) BGTheme.applyCheckers(CKV);
+}
+const encA = acts => BG.encodeGame(acts);
+function olBuildMatch() {
+  const recs = net.recs, r0 = recs[0] || net.game;
+  match = { seed: 'online', len: r0.ml || 0, cube: !!r0.cube, games: recs.map(r => ({ actions: ON.replay(r).actions, start: (Array.isArray(r.sc) ? r.sc : [0, 0]).slice(), crawford: !!r.cr })) };
+  cur = latestIdx(); reviewing = false; turn = null; selected = null; busyRolling = false; thinking = -1;
+  evals = new Map(); gameOverShown = new Set(); hintData = null; previewPlay = null; extraArrows = [];
+  view = net.spec ? 0 : net.me;
+}
+function startOnlineGame(gid, spec) {
+  if (net && (net.gid === gid || net.mid === gid) && !!net.spec === !!spec) return;
+  const saved = net ? net.saved : { match, cur, view, humanSide, evals, gameOverShown, mode: settings.mode };
+  if (net) olDetach(true);
+  if (lesson || puzzle) exitSpecial();
+  ['#onlineOverlay', '#resultOverlay', '#newOverlay', '#resumeOverlay', '#lessonOverlay', '#puzzleOverlay', '#olConfirm', '#profOverlay', '#rulesOverlay', '#olResignOv'].forEach(hideOv);
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1;
+  if (typeof rvCancel === 'function') rvCancel();
+  rv = null; rvOpen = false;
+  net = { gid, mid: gid, spec: !!spec, me: -1, recs: [], game: null, R: null, done: false, saved, rolled: '', rollSent: '' };
+  settings.mode = 'online';
+  match = null; turn = null;
+  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec); document.body.classList.remove('ol-done');
+  olLoad(gid, !!spec);
+  mtab('game'); dockRender();
+}
+// load a game (and the earlier games of its match), then follow it
+async function olLoad(gid, spec) {
+  const n = net;
+  let g = null;
+  try { g = await ON.getGame(gid); } catch (e) { console.warn(e); }
+  if (net !== n) return;
+  if (!g) { toast(t('ol.gone'), 2200); olDetach(); return; }
+  // spectators of a room follow the match to its current game
+  for (let k = 0; spec && g && g.nx && k < 40; k++) { const nx = await ON.getGame(g.nx).catch(() => null); if (!nx || net !== n) break; gid = g.nx; g = nx; }
+  const recs = [g];
+  for (let p = g.pv, k = 0; p && k < 40; k++) { const r = await ON.getGame(p).catch(() => null); if (!r || net !== n) break; recs.unshift(r); p = r.pv; }
+  if (net !== n) return;
+  n.recs = recs; n.gid = gid; n.mid = g.mid || recs[0].mid || gid; n.game = g; n.R = ON.replay(g);
+  if (!n.spec) { n.me = ON.sideNo(g, ON.uid); if (n.me < 0) { n.spec = true; document.body.classList.add('in-watch'); } }
+  olApplyColours(); olBuildMatch(); olMarkLive();
+  render(); renderInfo(); olWatchRender();
+  olFollow(gid);
+  n.wUnsub = ON.watchCount(n.mid, c => { if (net === n) { n.watchers = c; olWatchRender(); } });
+}
+function olFollow(gid) {
+  const n = net; if (!n) return;
+  n.unsub && n.unsub(true);
+  n.gid = gid;
+  n.unsub = n.spec ? ON.spectate(gid, g => onNetGame(gid, g), n.mid) : ON.watchGame(gid, g => onNetGame(gid, g));
+}
+// stop following the online match; the local game comes back (keepMode: another online match follows)
+function olDetach(keepMode) {
+  if (!net) return;
+  const n = net; net = null;
+  n.unsub && n.unsub(); n.wUnsub && n.wUnsub();
+  if (!n.spec && (n.done || !n.game || ON.matchOverG(n.game))) olClearLive();
+  document.body.classList.remove('in-online', 'in-watch', 'ol-done');
+  hideOv('#resultOverlay'); hideOv('#olResignOv'); $('#olRes').classList.add('hidden');
+  if (olOn() && ON.ready) { const r = ON.room; ON.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
+  CKV = null; applyCk();
+  if (keepMode) return;
+  const s = n.saved;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; busyRolling = false; turn = null; selected = null; hintData = null;
+  settings.mode = s.mode === 'online' ? 'pvp' : s.mode;
+  match = s.match; cur = s.cur; view = s.view; humanSide = s.humanSide; evals = s.evals; gameOverShown = s.gameOverShown;
+  if (!match) match = newMatch(null, settings.matchLen, settings.cube);
+  reviewing = cur !== latestIdx();
+  updateCommit(); drawBoardSvg(); render(); renderInfo(); olWatchRender(); dockRender(); analyzeCurrent();
+  if (!reviewing) drive();
+}
+function olResignNow() {
+  if (!olLive()) return;
+  const n = net, gid = n.gid, g = n.game;
+  ON.resign(gid).then(() => ON.applyResult(n.mid, Object.assign({}, g, { status: 'resign', loser: ON.uid }), 0)).then(r => olRecord(r, Object.assign({}, g, { status: 'resign', loser: ON.uid }), 0)).catch(e => console.warn(e));
+  olClearLive();
+  olDetach();
+}
+function onNetGame(gid, g) {
+  const n = net;
+  if (!n || n.gid !== gid) return;
+  if (!g) return;                                     // (a next game's record can appear a moment after its id)
+  n.game = g; n.recs[n.recs.length - 1] = g;
+  if (!n.spec && n.me < 0) n.me = ON.sideNo(g, ON.uid);
+  n.R = ON.replay(g);
+  if (n.sending && n.R.actions.length > n.sendLen) n.sending = false;
+  if (!n.R.ok && !n.warned) { n.warned = true; toast(t('ol.illegal'), 2500); console.warn('online record rejected:', n.R.bad); }
+  olAuto();
+  if (!match) return;
+  olSync();
+  renderInfo(); olWatchRender(); olResRender(); olResignRender();
+}
+// bring the board in line with the record: animate new actions of the other player, then act for the phase in play
+async function olSync() {
+  const n = net; if (!n || !match) return;
+  if (n.busy) { n.again = true; return; }
+  n.busy = true;
+  try {
+    do {
+      n.again = false;
+      const R = n.R; if (!R) break;
+      const gi = match.games.length - 1, loc = match.games[gi].actions, rem = R.actions;
+      if (rem.length >= loc.length && encA(rem.slice(0, loc.length)) === encA(loc)) {
+        for (let i = loc.length; i < rem.length; i++) { await olApplyRemote(rem[i], gi); if (net !== n) return; }
+      } else if (n.sending && rem.length < loc.length && encA(loc.slice(0, rem.length)) === encA(rem)) { /* my action is on its way */ }
+      else { n.rebuilds = (n.rebuilds || 0) + 1; busyToken++; match.games[gi].actions = rem.slice(); const was = isLatest(); turn = null; busyRolling = false; if (was || !reviewing) { cur = latestIdx(); reviewing = false; } render(); renderInfo(); }
+      await olStep();
+      if (net !== n) return;
+    } while (n.again);
+  } catch (e) { console.warn(e); } finally { if (net === n) n.busy = false; }
+}
+window.olDrive = () => { if (net) olSync(); else renderButtons(); };
+// the actor of action a at the state before it
+function olActor(st, a) { return a.t === 'r' && st.nRolls === 0 ? (a.d[0] > a.d[1] ? 0 : 1) : st.turn; }
+async function olApplyRemote(a, gi) {
+  const n = net, gm = match.games[gi], st = stateAt(gi, gm.actions.length), s = olActor(st, a);
+  const live = isLatest() && !reviewing;
+  if (a.t === 'r') {
+    const key = gi + ':' + gm.actions.length;
+    if (live) {
+      if (n.rolled !== key) { n.rolled = key; await olRollAnim(s, a.d, st.nRolls === 0); if (net !== n) return; }
+      await olAnimMoves(s, a.d, a.m, gi);
+      if (net !== n) return;
+    }
+  } else if (a.t === 'd') { SFX.cube(); toast(t('toast.doubles', { c: olShortName(s), n: st.cube * 2 }), 1600); }
+  else if (a.t === 'k' || a.t === 'p') { SFX.cube(); toast(t(a.t === 'k' ? 'toast.takes' : 'toast.passes', { c: olShortName(s) }), 1600); }
+  else if (a.t === 'x') toast(t('ol.rsDone', { p: olShortName(1 - a.w), n: a.n * st.cube }), 2200);
+  turn = null;
+  const wasLatest = isLatest();
+  gm.actions.push(a);
+  if (wasLatest) { cur = latestIdx(); reviewing = false; }
+  render(); renderInfo();
+}
+// the dice thrown on the board (the opening roll shows one die for each side)
+async function olRollAnim(s, dice, opening) {
+  busyRolling = true; renderButtons();
+  if (document.hidden) SFX.dice(); else await rollAnim(s, dice, opening);
+  if (opening && net) {
+    const rp = restPose && restPose.opening ? restPose.pos : null;
+    diceLayer.innerHTML = rp ? rp.map((r, i) => dieHTML(i, dice[i], r.x, r.y, false, 0, r.yaw)).join('')
+      : dieHTML(0, dice[0], 0 === view ? G.RX + 3 : G.LX + 3, G.MID) + dieHTML(1, dice[1], 1 === view ? G.RX + 3 : G.LX + 3, G.MID);
+    toast(t('toast.opening', { c: olShortName(s), a: dice[0], b: dice[1] }), 1300);
+    await sleep(anim() ? 1100 : 400);
+  }
+  busyRolling = false;
+}
+// the other player's turn: their dice stay on the board until their checkers move (shown like the AI's moves)
+function olWaitTurn(s, dice) {
+  const st = curState();
+  turn = { side: s, dice, left: dice[0] === dice[1] ? [dice[0], dice[0], dice[0], dice[0]] : dice.slice(), steps: [], pos: st.pos.slice(), start: st.pos.slice(), locked: true, ai: true };
+  turn.plays = [];
+  render(); renderInfo();
+}
+async function olAnimMoves(s, dice, moves, gi) {
+  const n = net;
+  if (!turn || turn.side !== s) olWaitTurn(s, dice);
+  if (!moves.length) { toast(t('toast.dance', { c: olShortName(s) }), 1100); await sleep(anim() ? 1000 : 300); }
+  for (const c of moves) {
+    if (net !== n || !turn) return;
+    const from = BG.mvFrom(c), to = BG.mvTo(c);
+    const q = document.hidden ? (() => { const r = turn.pos.slice(); BG.apply(r, s, from, to); return r; })() : await animStep(turn.pos, s, from, to);
+    if (net !== n || !turn) return;
+    turn.pos = q; turn.steps.push({ code: c, from, to, die: dieFor(from, to) });
+    const i = turn.left.indexOf(turn.steps[turn.steps.length - 1].die); if (i >= 0) turn.left.splice(i, 1); else turn.left.pop();
+    render();
+    await sleep(anim() ? 120 : 10);
+  }
+  await sleep(anim() ? 200 : 20);
+}
+// chains and reveals are written at once, whatever the board is busy with (animations, a hidden tab): the other player must never wait for them
+function olAuto() {
+  const n = net; if (!n || n.spec || !n.game || !n.R || n.game.status !== 'play' || n.me < 0) return;
+  const R = n.R, me = n.me, ph = R.phase;
+  const once = (k, fn) => { const o = n.sent || {}; if (o.k === k && Date.now() - o.t < 3000) return; n.sent = { k, t: Date.now() }; fn().catch(e => console.warn(e)); };
+  if (ph === 'commit' && R.need.includes(me)) once(n.gid + ':c', () => ON.commit(n.gid));
+  if ((ph === 'open' && R.need.includes(me)) || (ph === 'reveal' && R.actor === me)) once(n.gid + ':r' + R.idx, () => ON.reveal(n.gid));
+}
+// act for the phase in play: the roll animation, my turn
+async function olStep() {
+  const n = net, g = n.game, R = n.R; if (!g || !R) return;
+  const gi = match.games.length - 1;
+  if (match.games[gi].actions.length !== R.actions.length) return;      // not in step (my action is on its way)
+  if (g.status !== 'play') { await olGameEnd(); return; }
+  const me = n.spec ? -1 : n.me, ph = R.phase, key = gi + ':' + R.actions.length;
+  if (ph === 'roll' && n.rollSent === key && Date.now() - (n.rollT || 0) > 5000) n.rollSent = '';   // the roll did not reach the record: allow it again
+  if (ph !== 'roll' || R.mover !== me) n.rollSent = n.rollSent && n.rollSent === key && ph === 'reveal' ? n.rollSent : '';
+  busyRolling = !!n.rollSent;
+  if (!isLatest() || reviewing) { renderButtons(); return; }
+  if (ph === 'move') {
+    if (n.rolled !== key) { n.rolled = key; n.rollSent = ''; await olRollAnim(R.mover, R.dice, R.st.nRolls === 0); if (net !== n || n.game !== g) return; }
+    if (!turn) {
+      if (R.mover === me) { startTurn(me, R.dice.slice()); }
+      else olWaitTurn(R.mover, R.dice.slice());
+    }
+    renderButtons(); renderInfo();
+    return;
+  }
+  if (turn && turn.ai) { turn = null; render(); }
+  renderButtons(); renderInfo();
+  if (ph === 'roll' && R.mover === me && !n.rollSent && settings.autoRoll && !BG.cubeAvailable(R.st, ON.cubeCtx(g, R.st, me), me)) {
+    const k = key; await sleep(anim() ? 380 : 60);
+    if (net === n && n.R && n.R.phase === 'roll' && gi + ':' + n.R.actions.length === k && !n.rollSent && isLatest()) olRoll();
+  }
+}
+window.olCanAct = () => {
+  const n = net; if (!n) return true;
+  if (n.spec || n.sending || !n.game || n.game.status !== 'play' || !n.R) return false;
+  const gi = match.games.length - 1;
+  return match.games[gi].actions.length === n.R.actions.length && (n.R.phase === 'roll' || n.R.phase === 'take') && n.R.actor === n.me && !n.rollSent;
+};
+window.olRoll = olRoll;
+function olRoll() {
+  const n = net; if (!n || !olCanAct() || n.R.phase !== 'roll') return;
+  const gi = match.games.length - 1, key = gi + ':' + n.R.actions.length;
+  n.rollSent = key; n.rollT = Date.now(); busyRolling = true; hintData = null; renderButtons(); renderInfo();
+  ON.reveal(n.gid).then(r => { if (net !== n) return; if (!r.committed && n.rollSent === key) { n.rollSent = ''; busyRolling = false; olSync(); } })
+    .catch(e => { console.warn(e); if (net === n) { n.rollSent = ''; busyRolling = false; toast(t('ol.error'), 2000); olSync(); } });
+}
+// an action of mine (my move after the dice, double, take / pass): shown at once, sent as a transaction
+window.olPush = a => {
+  const n = net; if (!n || n.spec) return;
+  const gi = match.games.length - 1, len = match.games[gi].actions.length;
+  if (!n.R || n.R.actions.length !== len) { olSync(); return; }
+  match.games[gi].actions.push(a);
+  cur = latestIdx(); reviewing = false; hintData = null; previewPlay = null; extraArrows = [];
+  n.sending = true; n.sendLen = len; n.sendOk = 0;
+  render(); renderInfo();
+  ON.act(n.gid, len, encA([a])).then(ok => {
+    if (net !== n) return;
+    if (ok) { n.sendOk = Date.now(); if (n.R && n.R.actions.length > len) n.sending = false; else return; }   // done when the record shows it
+    n.sending = false;
+    if (!ok) { toast(t('ol.moveFail'), 1800); match.games[gi].actions = (n.R ? n.R.actions : []).slice(); cur = latestIdx(); turn = null; render(); renderInfo(); }
+    olSync();
+  }).catch(err => { console.warn(err); if (net === n) { n.sending = false; toast(t('ol.error'), 2000); match.games[gi].actions = (n.R ? n.R.actions : []).slice(); cur = latestIdx(); turn = null; render(); renderInfo(); olSync(); } });
+};
+// status text (phone landscape header / status box)
+window.olStatusNow = () => {
+  const n = net; if (!n || !n.R || !n.game) return null;
+  const R = n.R, g = n.game, me = n.spec ? -1 : n.me;
+  if (g.status !== 'play') return null;
+  if (R.phase === 'commit' || R.phase === 'open') return t('ol.prep');
+  if (R.phase === 'reveal' || n.rollSent) return t('ol.rolling');
+  const who = R.actor;
+  if (who === me) return R.phase === 'take' ? t('st.offer') : R.phase === 'roll' ? t('sb.roll') : t('sb.yourTurn');
+  return t('ol.waitP', { p: olShortName(who) });
+};
+// ---------------------------------------------------------------- clocks, timeout / abandonment claims
+function olClockTick() {
+  const n = net;
+  if (!n || !n.game || settings.mode !== 'online') { for (const s of [0, 1]) { const el = $('#clk' + s); if (el && el.textContent) { el.textContent = ''; el.className = 'ol-clk'; } } return; }
+  const g = n.game, R = n.R, live = g.status === 'play' && !n.done && R, now = ON.now();
+  for (const s of [0, 1]) {
+    const running = !!(live && R.actor === s && !(s === n.me && n.sending));
+    const k = ON.clockOf(g, s, running, now), el = $('#clk' + s);
+    const txt = olClock(k.main) + (running && k.delay > 0 ? ' +' + Math.ceil(k.delay / 1000) : '');
+    if (el.textContent !== txt) el.textContent = txt;
+    el.classList.toggle('ol-move', running); el.classList.toggle('ol-low', running && k.delay <= 0 && k.left < 15000);
+    if (running && !n.spec && s === n.me && k.delay <= 0 && window.CountTick) CountTick.feed(k.left, 'ol' + n.gid + ':' + (R.actions.length));
+  }
+  if (live && !n.spec && !n.claiming) {
+    const opp = n.me === 0 ? g.w : g.b, os = 1 - n.me;
+    if (R.actor === os && ON.clockOf(g, os, true, now).left < -ON.GRACE) { n.claiming = true; ON.claimTimeout(n.gid, opp).catch(() => {}).finally(() => { n.claiming = false; }); }
+    else if (R.need.includes(os) && !R.need.includes(n.me) && now - (g.t || now) > ON.ABANDON_MS && (!n.abChk || now - n.abChk > 5000)) {
+      n.abChk = now; n.claiming = true;
+      ON.claimAbandon(n.gid, opp).catch(() => {}).finally(() => { n.claiming = false; });
+    }
+  }
+}
+setInterval(olClockTick, 250);
+setInterval(() => { if (net && net.sending && net.sendOk && Date.now() - net.sendOk > 4000) { net.sending = false; olSync(); } if (net && net.R && net.game && net.game.status === 'play' && ['commit', 'open', 'reveal'].includes(net.R.phase)) olAuto(); }, 1500);
+if (window.CountTick) { CountTick.setMuted(() => !settings.sound); }
+window.olAfterInfo = () => {
+  const n = net;
+  $('#btnResign').disabled = !olLive();
+  if (settings.mode !== 'online' || !n) { $('#evalCard').classList.remove('ol-noeval'); return; }
+  olClockTick();
+  const g = n.game; if (!g) return;
+  const sc = g.ml ? ` · ${t('info.match', { n: g.ml })}${g.cr ? ' · ' + t('info.crawford') : ''}` : '';
+  const txt = `${t(g.rated ? 'ol.rated' : 'ol.friendly')} · ${fmtFull(g.f, g.cube)}${sc} · ${tcText(g.f)}`;
+  $('#infoLine').textContent = txt; $('#infoLine').title = t('ol.fair');
+  $('#plInfo').textContent = txt; $('#plInfo').title = t('ol.fair');
+  $('#evalCard').classList.toggle('ol-noeval', olLive()); $('#evalCard').dataset.olnote = t('ol.noEval');
+};
+function olWatchRender() {
+  const el = $('#olWatch');
+  if (!net || !net.game) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  const g = net.game, w = net.watchers || 0;
+  el.classList.remove('hidden'); el.classList.toggle('pl', !net.spec);
+  if (net.spec) el.innerHTML = `<span class="wl">${t('ol.watching')}</span><span class="wi">${olEsc(g.bn)} vs ${olEsc(g.wn)} · ${olEsc(fmtFull(g.f, g.cube))} · ${t('ol.watchers', { n: w })}</span><button id="olWatchStop">${t('ol.watchStop')}</button>`;
+  else el.innerHTML = `<span class="wi">${w ? t('ol.watchers', { n: w }) : ''}</span>${net.done ? `<button id="olWatchStop">${t('ol.leaveGame')}</button>` : ''}`;
+  el.classList.toggle('hidden', !net.spec && !net.done && !w && !(g.ro && g.ro.by && g.status === 'play'));
+  const b = $('#olWatchStop'); if (b) b.onclick = () => olDetach();
+  olResignRender();
+}
+// ---------------------------------------------------------------- resignation: offer this game (single / gammon / backgammon) or forfeit the match
+function olResignRender() {
+  const n = net, box = $('#olWatch'); if (!box) return;
+  const old = box.querySelector('.ol-offer'); if (old) old.remove();
+  const g = n && n.game; if (!g || g.status !== 'play' || !g.ro || !g.ro.by || n.done) return;
+  const mine = g.ro.by === ON.uid, cube = n.R && n.R.st ? n.R.st.cube : 1, pts = g.ro.n * cube, by = ON.sideNo(g, g.ro.by);
+  const d = document.createElement('div'); d.className = 'ol-offer';
+  d.innerHTML = n.spec ? `<span>${t('ol.rsW', { p: olShortName(by), n: pts })}</span>` : mine ? `<span>${t('ol.rsSent', { n: pts })}</span>`
+    : `<span>${t('ol.rsGot', { n: pts })}</span><button class="go" id="olRsYes">${t('ol.accept')}</button><button id="olRsNo">${t('ol.decline')}</button>`;
+  box.appendChild(d); box.classList.remove('hidden');
+  const y = $('#olRsYes'); if (y) y.onclick = () => ON.answerResign(n.gid, true).catch(e => console.warn(e));
+  const no = $('#olRsNo'); if (no) no.onclick = () => ON.answerResign(n.gid, false).catch(e => console.warn(e));
+  if (!mine && !n.spec && n.rsToast !== n.gid + ':' + g.ro.n) { n.rsToast = n.gid + ':' + g.ro.n; toast(t('ol.rsGot', { n: pts }), 2600); }
+}
+function olOpenResign() {
+  const n = net; if (!olLive()) return;
+  const g = n.game, R = n.R, cube = R && R.st ? R.st.cube : 1, canOffer = g.status === 'play' && R && R.phase !== 'commit' && !(g.ro && g.ro.by) && (g.cube || g.ml);
+  $('#olrText').textContent = canOffer ? t('ol.rsText', { c: cube }) : t('ol.resignQ');
+  $('#olrBtns').innerHTML = (canOffer ? [1, 2, 3].map(k => `<button class="mbtn" data-rs="${k}">${t('ol.rs' + k, { n: k * cube })}</button>`).join('') : '')
+    + `<button class="mbtn warn" data-rs="m">${t(g.ml ? 'ol.rsMatch' : 'ol.resign')}</button>`;
+  showOv('#olResignOv');
+}
+$('#olrBtns').onclick = e => {
+  const b = e.target.closest('[data-rs]'); if (!b || !net) return;
+  hideOv('#olResignOv');
+  const v = b.dataset.rs, n = net;
+  if (v === 'm') { ON.resign(n.gid).catch(err => { console.warn(err); toast(t('ol.error'), 2000); }); return; }
+  ON.offerResign(n.gid, +v).then(r => { if (r && r.committed) toast(t('ol.rsSent', { n: +v * (n.R && n.R.st ? n.R.st.cube : 1) }), 1800); }).catch(err => console.warn(err));
+};
+$('#olrClose').onclick = () => hideOv('#olResignOv');
+$('#btnResign').onclick = () => olOpenResign();
+// ---------------------------------------------------------------- the end of a game / the match
+function olWhy(g, me) {
+  const loserNo = g.loser ? ON.sideNo(g, g.loser) : -1, p = loserNo >= 0 ? olShortName(loserNo) : '';
+  if (g.status === 'resign') return g.loser === ON.uid ? t('ol.youResigned') : me >= 0 ? t('ol.oppResigned') : t('ol.wResign', { p });
+  if (g.status === 'timeout') return g.loser === ON.uid ? t('ol.youTimeout') : me >= 0 ? t('ol.oppTimeout') : t('ol.wTime', { p });
+  if (g.status === 'abandon') return g.loser === ON.uid ? t('ol.youAbandon') : me >= 0 ? t('ol.oppAbandon') : t('ol.wAbandon', { p });
+  return t({ drop: 'res.drop', resign: 'res.resign', bg: 'res.bg', gammon: 'res.gammon' }[g.why] || 'res.single');
+}
+async function olGameEnd() {
+  const n = net, g = n.game;
+  turn = null; busyRolling = false; renderButtons();
+  if (ON.matchOverG(g)) { await finishOnline(g); return; }
+  // one game of the match is over: show it, then go on with the next game
+  if (n.shownEnd !== n.gid) {
+    n.shownEnd = n.gid;
+    const sc = Array.isArray(g.after) ? g.after : [0, 0];
+    SFX.chime(n.spec || g.win === n.me);
+    toast(t('ol.gameEnd', { p: olShortName(g.win), n: g.pts || 1, k: olWhy(g, n.spec ? -1 : n.me), a: sc[0], b: sc[1] }), 3200);
+    if (!n.spec) ON.nextGame(n.gid).catch(e => console.warn(e));
+  }
+  if (g.nx && n.nextFor !== n.gid) {
+    n.nextFor = n.gid;
+    const from = n.gid, nx = g.nx;
+    await sleep(2600);
+    if (net !== n || n.gid !== from) return;
+    let rec = null;
+    for (let k = 0; k < 20 && !rec; k++) { rec = await ON.getGame(nx).catch(() => null); if (!rec) await sleep(500); if (net !== n) return; }
+    if (!rec) { if (!n.spec) ON.nextGame(from).catch(() => {}); n.nextFor = ''; return; }
+    n.recs.push(rec); n.game = rec; n.R = ON.replay(rec);
+    match.games.push({ actions: [], start: (Array.isArray(rec.sc) ? rec.sc : [0, 0]).slice(), crawford: !!rec.cr });
+    cur = latestIdx(); reviewing = false; turn = null; restPose = null; diceLayer.innerHTML = '';
+    if (rec.cr) setTimeout(() => toast(t('toast.crawford'), 1800), 300);
+    olMarkLive(); olFollow(nx);
+    render(); renderInfo();
+    n.again = true;
+  }
+}
+async function finishOnline(g) {
+  const n = net; if (!n || n.done) return;
+  n.done = true; n.sending = false; selected = null; document.body.classList.add('ol-done');
+  if (!n.spec) olClearLive();
+  const winner = ON.winnerOf(g), me = n.spec ? -1 : n.me;
+  n.result = { winner, why: olWhy(g, me), rating: null };
+  if (me >= 0) {
+    const score = winner === me ? 1 : 0;
+    try { n.result.rating = await ON.applyResult(n.mid, g, score); olRecord(n.result.rating, g, score); } catch (e) { console.warn(e); }
+    syncTouch();
+  }
+  if (net !== n) return;
+  setTimeout(() => { if (net === n) olShowResult(); }, g.status === 'over' ? 900 : 250);
+  renderInfo(); olWatchRender(); dockRender();
+  analyzeCurrent();
+}
+// a local summary of my rated online matches (for the portal's achievements): { n, w, r, hist: [{ id, t, s, r }] }
+const OL_REC = 'aicoding-backgammon-v2-online';
+function olRecord(rt, g, score) {
+  if (!rt || !g || !g.rated) return;
+  try {
+    const d = JSON.parse(localStorage.getItem(OL_REC) || 'null') || { n: 0, w: 0, r: ON.INITIAL, hist: [] };
+    const id = g.mid || ''; if ((d.hist || []).some(h => h.id === id)) return;
+    d.n = (d.n || 0) + 1; d.w = (d.w || 0) + (score === 1 ? 1 : 0); d.r = rt.now;
+    d.hist = (d.hist || []).concat([{ id, t: Date.now(), s: score, r: rt.now }]).slice(-100);
+    localStorage.setItem(OL_REC, JSON.stringify(d));
+  } catch (e) {}
+}
+function olShowResult() {
+  const n = net, g = n.game, R = n.result, me = n.spec ? -1 : n.me, sc = Array.isArray(g.after) ? g.after : Array.isArray(g.sc) ? g.sc : [0, 0];
+  $('#resultDisc').innerHTML = R.winner != null ? `<span class="pdisc p${R.winner}"></span>` : '';
+  $('#resultTitle').textContent = me < 0 ? t('ol.pWin', { p: olShortName(R.winner) }) : R.winner === me ? t('ol.win') : t('ol.lose');
+  let sub = olEsc((R.why ? R.why + ' · ' : '') + `${olShortName(0)} vs ${olShortName(1)} · ${fmtFull(g.f, g.cube)}`);
+  if (g.ml) sub += '<br>' + olEsc(t('res.score', { a: sc[0], b: sc[1], n: g.ml, c0: olShortName(0), c1: olShortName(1) }));
+  if (R.rating && R.rating.rated) sub += `<div class="ol-rchg">${t('ol.rating')} ${R.rating.old} → <b>${R.rating.now}</b> <span class="${R.rating.now >= R.rating.old ? 'up' : 'dn'}">(${R.rating.now >= R.rating.old ? '+' : ''}${R.rating.now - R.rating.old})</span></div>`;
+  $('#resultSub').innerHTML = sub;
+  if (me >= 0) { SFX.chime(R.winner === me); if (R.winner === me) confetti(); }
+  olResRender();
+  showOv('#resultOverlay');
+}
+// rematch area in the result dialog (room games) / "find another" (rated)
+function olResRender() {
+  const box = $('#olRes'), again = $('#btnAgain');
+  if (!net || !net.done || !net.game) { box.classList.add('hidden'); return; }
+  const g = net.game, me = ON.uid;
+  box.classList.remove('hidden');
+  if (net.spec) { box.innerHTML = ''; box.dataset.h = ''; box.classList.add('hidden'); again.textContent = t('ol.leaveGame'); again.disabled = false; return; }
+  if (!g.room || g.rated) { box.innerHTML = ''; box.dataset.h = ''; box.classList.add('hidden'); again.textContent = t('ol.findAgain'); again.disabled = false; return; }
+  let h = '';
+  again.disabled = false; again.textContent = t('ol.rematch');
+  if (g.next || g.post === 'again') h = `<span>${t('ol.pAgain')}</span>`, again.disabled = true;
+  else if (g.post) h = `<span>${t(g.post === 'no' ? 'ol.pNo' : g.post === 'timeout' ? 'ol.pTimeout' : g.post === 'host' ? 'ol.pHost' : 'ol.pLeft')}</span>`, again.disabled = true;
+  else if (g.again && g.again.by === me) { h = `<span>${t('ol.reqSent')} <b class="cd">${Math.max(0, Math.ceil((ON.REMATCH_MS - (ON.now() - g.again.t)) / 1000))}</b></span>`; again.disabled = true; }
+  else if (g.again) { h = `<span>${t('ol.reqGot')}</span><button class="mbtn go" id="olAccept">${t('ol.accept')}</button><button class="mbtn" id="olDecline">${t('ol.decline')}</button>`; again.textContent = t('ol.accept'); }
+  box.className = 'ol-res ol-again' + (g.post && g.post !== 'again' ? ' muted' : '');
+  if (!h) box.classList.add('hidden');
+  if (box.dataset.h === h) return;
+  box.dataset.h = h; box.innerHTML = h;
+  const a = $('#olAccept'); if (a) a.onclick = () => ON.answerRematch(net.gid, true).catch(e => console.warn(e));
+  const d = $('#olDecline'); if (d) d.onclick = () => ON.answerRematch(net.gid, false).catch(e => console.warn(e));
+}
+setInterval(() => {
+  const n = net;
+  if (n && n.done && n.game && n.game.next && !n.spec && n.nextMatch !== n.game.next) {   // the rematch is ready (room games)
+    const nx = n.game.next; n.nextMatch = nx;
+    setTimeout(() => { if (net === n) { olDetach(true); startOnlineGame2(nx, n.saved); } }, 400);
+  }
+  if (n && n.done && n.game && n.game.again && !n.game.post && isShown('#resultOverlay')) { olResRender(); if (ON.now() - n.game.again.t > ON.REMATCH_MS + 1500) ON.expireRematch(n.gid).catch(() => {}); }
+}, 1000);
+function startOnlineGame2(gid, saved) { startOnlineGame(gid); if (net) net.saved = saved; }
+$('#btnAgain').addEventListener('click', e => {
+  if (!net) return;
+  e.stopImmediatePropagation();
+  const g = net.game;
+  if (!net.done) { hideOv('#resultOverlay'); return; }
+  if (net.spec) { hideOv('#resultOverlay'); olDetach(); return; }
+  if (g && g.room && !g.rated) { if (g.again && g.again.by !== ON.uid) ON.answerRematch(net.gid, true).catch(err => console.warn(err)); else ON.requestRematch(net.gid).catch(err => console.warn(err)); return; }
+  hideOv('#resultOverlay'); olDetach(); olStartSearch();
+}, true);
+// leaving a live online match (new game, lessons, puzzles, loading a record) = resigning it, after a confirmation
+function olGuard(sel) {
+  const b = $(sel); if (!b) return;
+  b.addEventListener('click', e => {
+    if (!net) return;
+    if (olLive()) { e.stopImmediatePropagation(); e.preventDefault(); olConfirm(t('ol.leaveQ'), t('ol.resign'), () => { olResignNow(); b.click(); }); return; }
+    if (sel !== '#btnNew' || net.spec || net.done) olDetach();
+  }, true);
+}
+['#btnNew', '#btnLesson', '#btnPuzzle', '#btnStart', '#pasteOk'].forEach(olGuard);
+// a reload during an online match rejoins it; a match that ended while this page was away (timeout, abandonment) still gets its result
+async function olResume() {
+  let s = null;
+  try {
+    if (!Object.keys(localStorage).some(k => k.startsWith(OL_LIVE_P))) return;      // no live match on this device: do not connect yet
+    await ON.init();
+    try { s = JSON.parse(localStorage.getItem(olLiveKey()) || 'null'); } catch (e) {}
+    if (!s || !s.gid) return;
+    if (s.uid !== ON.uid) return;
+    let g = await ON.getGame(s.gid), gid = s.gid;
+    for (let k = 0; g && g.nx && k < 40; k++) { const nx = await ON.getGame(g.nx); if (!nx) break; gid = g.nx; g = nx; }
+    const me = g ? ON.sideNo(g, ON.uid) : -1;
+    if (!g || me < 0) { olClearLive(); return; }
+    if (ON.matchOverG(g)) {
+      olClearLive();
+      const w = ON.winnerOf(g), r = await ON.applyResult(g.mid || s.mid || gid, g, w === me ? 1 : 0);
+      olRecord(r, g, w === me ? 1 : 0);
+      toast(t('ol.endedAway', { r: w === me ? t('ol.win') : t('ol.lose') }) + (r && r.rated && r.now !== r.old ? ` · R ${r.old} → ${r.now}` : ''), 4000);
+      return;
+    }
+    startOnlineGame(gid);
+  } catch (e) { console.warn(e); }
+}
+
+// ====================================================================== dock (PC: bar at the bottom) / phone: "online" tab
+const dock = { on: false, open: false, players: [], rooms: [], lobby: [], rank: [], editing: false };
+function dockRender() {
+  if (!olOn()) { $('#dkStat').textContent = t('ol.soon'); return; }
+  accRender();
+  if (!dock.on) return;
+  const me = ON.profile;
+  $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
+  $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
+  if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎ ${t('ol.rename')}</span></button> <b>R ${me.rating}</b>` + (net && net.spec ? ` · ${t('ol.st.watch')}` : olLive() ? ` · ${t('ol.st.play')}` : olView === 'search' && isShown('#onlineOverlay') ? ` · ${t('ol.st.lobby')}` : '') : '';
+  $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
+  $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
+  $('#dkRank').innerHTML = rankRows(dock.rank);
+}
+async function dockStart() {
+  if (dock.on || !olOn()) return;
+  try { await ON.init(); } catch (e) { console.warn(e); olErr = e; $('#dkStat').textContent = t('ol.error') + ' — ' + authErrText(e); return; }
+  if (dock.on) return;
+  dock.on = true;
+  ON.setPresence(net && net.spec ? 'watch' : olLive() ? 'play' : 'idle').catch(() => {});
+  ON.watchPresence(l => { dock.players = l; dockRender(); });
+  ON.watchRooms(l => { dock.rooms = l; dockRender(); });
+  ON.watchLobby(l => { dock.lobby = l; dockRender(); });
+  const rk = () => ON.topPlayers(10).then(l => { dock.rank = l; dockRender(); }).catch(() => {});
+  rk(); setInterval(rk, 60000);
+  dockRender();
+}
+function dockToggle(open) { dock.open = open ?? !dock.open; document.body.classList.toggle('dock-open', dock.open); $('#dkToggle').textContent = dock.open ? '▼' : '▲'; }
+$('#dkToggle').onclick = () => dockToggle();
+$('#dock .dock-bar').addEventListener('click', e => { if (!olOn()) { openOnline(); return; } if (!e.target.closest('button') && !e.target.closest('input')) dockToggle(); });
+$('#dkMe').addEventListener('click', e => {
+  const b = e.target.closest('.dk-name'); if (!b || !ON.profile) return;
+  e.stopPropagation(); dock.editing = true;
+  $('#dkMe').innerHTML = `<input class="dk-input" maxlength="16" value="${olEsc(ON.profile.name)}" aria-label="${olEsc(t('pf.name'))}"><button class="dk-btn dk-ok">${t('ol.save')}</button>`;
+  const inp = $('#dkMe .dk-input'); inp.focus(); inp.select();
+  const done = async ok => {
+    if (!dock.editing) return; dock.editing = false;
+    if (ok) { try { const n = await ON.setName(inp.value); syncNameTouched(); toast(t('ol.renamed', { n }), 1400); const f = $('#olName'); if (f) f.value = n; } catch (_) {} }
+    dockRender();
+  };
+  $('#dkMe .dk-ok').onclick = ev => { ev.stopPropagation(); done(true); };
+  inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') done(true); else if (ev.key === 'Escape') done(false); });
+  inp.addEventListener('blur', () => setTimeout(() => { if (dock.editing && document.activeElement !== $('#dkMe .dk-ok')) done(true); }, 150));
+});
+$('#dkAuto').onclick = () => olStartSearch();
+$('#dkSoon').onclick = e => { e.stopPropagation(); openOnline(); };
+$('#dkRoom').onclick = async () => { if (olOn() && ON.room) { try { await ON.closeRoom(); } catch (e) { console.warn(e); } dockRender(); return; } await openOnline(); if (ON.ready) olMakeRoom(); };
+$('#dkMyRoom').onclick = async () => { await openOnline(); if (ON.room) { ON.extendRoom().catch(() => {}); olRender('room'); } };
+$('#dock').addEventListener('click', e => { const b = e.target.closest('.dk-join, .dk-watch'); if (b && b.dataset.code) olJoin(b.dataset.code, b); });
+$('#dkG').onclick = e => { e.stopPropagation(); if (ON.account()) { dockToggle(true); mtabIfPhone(); } else googleLink(); };
+function mtab(v) {
+  if (v === 'online' && !olOn()) { openOnline(); return; }
+  document.body.classList.toggle('mtab-online', v === 'online'); $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.t === v)); if (v === 'online') dockStart();
+}
+function mtabIfPhone() { if (matchMedia('(pointer: coarse)').matches) mtab('online'); }
+$('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
+
+// ====================================================================== Google link (account box in the dock / online tab)
+function accRender() {
+  if (!olOn()) return;
+  const acc = ON.account(), box = $('#dkAcc'), g = $('#dkG');
+  g.innerHTML = acc ? `${GLOGO}<span>✓ ${olEsc(acc.email || acc.name)}</span>` : `${GLOGO}<span>${t('sync.link')}</span>`;
+  g.classList.toggle('on', !!acc); g.title = acc ? t('sync.on', { e: acc.email || acc.name }) : t('sync.desc');
+  box.innerHTML = acc
+    ? `<p class="ol-note">${olEsc(t('sync.on', { e: acc.email || acc.name }))}${acc.name && acc.email ? '<br><small>' + olEsc(acc.name) + '</small>' : ''}</p><p class="ol-note small" id="accLast">${olEsc(syncLastText())}</p><div class="ol-acts"><button class="dk-btn" id="accNow">${t('sync.now')}</button><button class="dk-btn warn" id="accOut">${t('sync.logout')}</button></div>`
+    : `<p class="ol-note">${olEsc(t('sync.desc'))}</p><div class="ol-acts"><button class="dk-btn gbtn" id="accIn">${GLOGO}${t('sync.google')}</button></div>`;
+  const a = $('#accIn'); if (a) a.onclick = () => googleLink();
+  const n = $('#accNow'); if (n) n.onclick = () => syncNow(false);
+  const o = $('#accOut'); if (o) o.onclick = () => olConfirm(t('sync.logoutQ'), t('sync.logout'), async () => {
+    if (olLive()) olResignNow();
+    await syncPush(); try { await ON.logout(); } catch (e) { console.warn(e); }
+    toast(t('sync.out'), 1800); dockRender();
+  });
+}
+let gBusy = false;
+async function googleLink() {
+  if (!olOn() || gBusy) return false;
+  if (olLive()) { toast(t('sync.notNow'), 2000); return false; }
+  gBusy = true;
+  try {
+    const r = await ON.google();
+    await syncNow(true);
+    toast(r.switched ? t('sync.switched') : t('sync.linked'), 2200);
+    dockStart(); dockRender();
+    return true;
+  } catch (e) {
+    if (!authCancelled(e)) { console.warn(e); olConfirm(authErrText(e), 'OK', null); }
+    return false;
+  } finally { gBusy = false; dockRender(); }
+}
+
+// ====================================================================== public chat: one room for everyone online in this game
+// (latest ON.CHAT_N messages, no private messages). PC: dock (strip when folded, panel when open) / phone: online tab + 2-line strip
+const chat = { list: [], seen: -1, unsub: null };
+const olCoarse = () => matchMedia('(pointer: coarse)').matches;
+function chatVisible() { return document.body.classList.contains('mtab-online') || !olCoarse(); }
+function chatShown() { return dock.on && !document.body.classList.contains('no-online') && (!olCoarse() || document.body.classList.contains('mtab-online')); }
+function chatStart() {
+  if (chat.unsub || !olOn() || !ON.ready) return;
+  chat.unsub = ON.watchChat(l => {
+    const top = l.length ? l[l.length - 1].n : 0;
+    chat.list = l;
+    if (chat.seen < 0 || chatVisible()) chat.seen = top;      // history present on arrival is not "unread"
+    chatRender();
+  });
+}
+function chatTime(ts) { if (typeof ts !== 'number') return ''; const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function chatRender() {
+  const el = $('#dkChat'), inp = $('#dkChatIn'); if (!el || !olOn()) return;
+  if (inp && inp.dataset.l !== LANG) { inp.dataset.l = LANG; inp.placeholder = matchMedia('(hover: hover) and (pointer: fine)').matches ? t('ol.chatPh') : t('ol.chatPh').split(' · ')[0]; inp.setAttribute('aria-label', t('ol.chat')); $('#dkChatSend').textContent = t('ol.chatSend'); $('#dkChatHead').title = t('ol.chatNote'); }
+  const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  const h = chat.list.length ? chat.list.map(m => `<div class="cm${m.me ? ' me' : ''}"><b>${olEsc(m.name)}</b><span>${olEsc(m.text)}</span><time>${chatTime(m.t)}</time></div>`).join('')
+    : `<div class="ol-note small">${olEsc(t('ol.chatEmpty'))} <br>${olEsc(t('ol.chatNote'))}</div>`;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; if (bottom || chat.toBottom) el.scrollTop = el.scrollHeight; chat.toBottom = false; }
+  const n = chat.list.filter(m => m.n > chat.seen && !m.me).length, badge = $('#dkUnread'), mt = $('#mtChat');
+  badge.classList.toggle('hidden', !n); badge.querySelector('b').textContent = n > 9 ? '9+' : String(n);
+  const last = chat.list[chat.list.length - 1]; badge.title = last ? last.name + ': ' + last.text : '';
+  if (mt) mt.textContent = n ? '💬' + (n > 9 ? '9+' : n) : '';
+  const st = $('#mtStrip');
+  if (st) { const hs = chat.list.length ? chat.list.slice(-2).map(m => `<div class="${m.me ? 'me' : ''}"><b>${olEsc(m.name)}</b> ${olEsc(m.text)}</div>`).join('') : `<div class="empty">💬 ${olEsc(t('ol.chat'))} · ${olEsc(t('ol.chatEmpty'))}</div>`; if (st.dataset.h !== hs) { st.dataset.h = hs; st.innerHTML = hs; } }
+}
+function chatSeen() { if (chatVisible() && chat.list.length) { const top = chat.list[chat.list.length - 1].n; if (top !== chat.seen) { chat.seen = top; chatRender(); } } }
+new MutationObserver(chatSeen).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+function chatOpen(focus) {
+  if (olCoarse()) { if (!document.body.classList.contains('mtab-online')) mtab('online'); }
+  else if (!dock.open) dockToggle(true);
+  chatStart();
+  const el = $('#dkChat'); chat.toBottom = true; el.scrollTop = el.scrollHeight;
+  if (focus) { const inp = $('#dkChatIn'); inp.focus({ preventScroll: true }); chatKeep(); }
+  else if (olCoarse()) $('#dkChatForm').scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+// phones: keep the input above the on-screen keyboard
+function chatKeep() {
+  if (!olCoarse()) return;
+  const vv = window.visualViewport;
+  document.body.style.setProperty('--kb', vv ? Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)) + 'px' : '0px');
+  setTimeout(() => { if (document.activeElement === $('#dkChatIn')) $('#dkChatForm').scrollIntoView({ block: 'end' }); }, 250);
+}
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (document.activeElement === $('#dkChatIn')) chatKeep(); else document.body.style.setProperty('--kb', '0px'); });
+async function chatSend() {
+  const inp = $('#dkChatIn'), v = inp.value;
+  if (!v.trim()) return false;
+  if (!ON.ready) { try { await ON.init(); } catch (e) { toast(t('ol.error'), 1600); return false; } }
+  const r = await ON.sendChat(v);
+  if (r.ok) { inp.value = ''; chat.toBottom = true; return true; }
+  toast(t(r.why === 'rate' ? 'ol.chatWait' : 'ol.error'), 1600);
+  return false;
+}
+$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); const inp = $('#dkChatIn'); if (!inp.value.trim()) { inp.value = ''; inp.blur(); if (!olCoarse()) dockToggle(false); return; } chatSend(); if (olCoarse()) inp.focus({ preventScroll: true }); });
+$('#dkChatIn').addEventListener('keydown', e => {
+  e.stopPropagation();                        // typing never reaches the board / record shortcuts
+  if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }
+  if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  if (!e.target.value.trim() && !olCoarse()) { e.target.blur(); dockToggle(false); return; }   // empty: fold the online box away again
+  chatSend(); if (!olCoarse()) e.target.blur();
+});
+$('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
+$('#dkChatIn').addEventListener('blur', () => document.body.style.setProperty('--kb', '0px'));
+$('#dkChatForm').addEventListener('click', e => e.stopPropagation());
+$('#mtStrip').addEventListener('click', () => chatOpen(true));
+$('#dkUnread').addEventListener('click', e => { e.stopPropagation(); chatOpen(!olCoarse()); });
+// Enter anywhere (not in a field, no dialog open, no board button to press) = type in the chat
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  const tg = e.target; if (tg && tg.closest && tg.closest('input,textarea,select,button,[contenteditable="true"]')) return;
+  if (document.querySelector('.overlay.show') || !chatShown() || lesson || puzzle) return;
+  if ($('#bb-confirm') || $('#bb-roll') || $('#bb-next') || $('#bb-take')) return;
+  e.preventDefault(); chatOpen(true);
+}, true);
+if (olOn()) { setInterval(() => { if (dock.on) chatStart(); }, 1000); chatRender(); }
+if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null; } chatStart(); });
+
+// ====================================================================== cloud sync of local progress (sync/<uid> = {d, t}; k = the dice key)
+// d = JSON of a snapshot: ls lessons, pz puzzles {id: stars}, op openings {id: {best, pass}}, dy daily {last, streak, best, days},
+// on online summary {n, w, r, hist[]}, set settings (+ setT), nm name (+ nmT), rt online rating (+ rtT).
+// Merge: progress keys are united (best / stars max, clear / pass or), daily days united and the streak recomputed,
+// the online summary: the record with the newest match, history united; settings / name: newest wins.
+const BgSync = (() => {
+  const META = 'backgammon-sync-meta';
+  const SET_KEYS = ['sound', 'eval', 'anim', 'forced', 'autoRoll', 'coach', 'hint', 'level', 'level2', 'matchLen', 'cube', 'ck', 'skin', 'lang'];
+  const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+  const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymdOf(d); };
+  function meta() { return get(META, null); }
+  function snapshot(now) {
+    now = now || Date.now();
+    let m = meta();
+    const fresh = !m; m = m || {};
+    const set = {}; SET_KEYS.forEach(k => { if (settings[k] !== undefined) set[k] = settings[k]; });
+    set.lang = LANG;
+    const nm = (ON && ON.profile && ON.profile.name) || (ON && ON.localName()) || '';
+    const rt = ON && ON.profile ? ON.profile.rating : null;
+    const stamp = (key, val) => { const h = JSON.stringify(val); if (m[key + 'H'] !== h) { m[key + 'H'] = h; m[key + 'T'] = fresh ? 1 : now; } return m[key + 'T'] || 1; };
+    const d = {
+      v: 1, ls: get(LS_STORE, {}), pz: get(PZ_STORE, {}), op: get(OP_STORE, {}),
+      dy: get(DAILY_STORE, { last: '', streak: 0, best: 0, days: {} }), on: get(OL_REC, null),
+      set, setT: stamp('set', set), nm, nmT: stamp('nm', nm), rt, rtT: stamp('rt', rt),
+    };
+    put(META, m);
+    return d;
+  }
+  const num = x => (x === true ? 3 : +x || 0);
+  function mergeVal(a, b) {
+    if (a === undefined || a === null) return b; if (b === undefined || b === null) return a;
+    if (typeof a === 'object' && typeof b === 'object') { const o = Object.assign({}, a); for (const k in b) o[k] = k in o ? mergeVal(o[k], b[k]) : b[k]; return o; }
+    if (typeof a === 'boolean' && typeof b === 'boolean') return a || b;
+    return num(b) > num(a) ? b : a;
+  }
+  function unite(a, b) { const o = Object.assign({}, a || {}); for (const k in (b || {})) o[k] = k in o ? mergeVal(o[k], b[k]) : b[k]; return o; }
+  function mergeDaily(a, b) {
+    a = a || {}; b = b || {};
+    const days = Object.assign({}, a.days || {});
+    for (const k in (b.days || {})) days[k] = days[k] === 1 || b.days[k] === 1 ? 1 : (days[k] || b.days[k]);
+    const last = [a.last || '', b.last || '', ...Object.keys(days)].sort().pop() || '';
+    let streak = 0;
+    if (last) { for (let d = last; days[d]; d = prevDay(d)) streak++; }
+    if (a.last === last) streak = Math.max(streak, a.streak || 0);
+    if (b.last === last) streak = Math.max(streak, b.streak || 0);
+    return { last, streak, best: Math.max(a.best || 0, b.best || 0, streak), days };
+  }
+  const lastT = x => { const h = x && Array.isArray(x.hist) ? x.hist : []; return h.length ? +h[h.length - 1].t || 0 : 0; };
+  function mergeOn(a, b) {
+    if (!a) return b || null; if (!b) return a;
+    const base = lastT(b) > lastT(a) ? b : a, seen = new Set(), hist = [];
+    for (const h of [...(a.hist || []), ...(b.hist || [])]) if (h && !seen.has(h.id)) { seen.add(h.id); hist.push(h); }
+    hist.sort((x, y) => (x.t || 0) - (y.t || 0));
+    return Object.assign({}, base, { n: Math.max(base.n || 0, hist.length), w: Math.max(base.w || 0, hist.filter(h => h.s === 1).length), hist: hist.slice(-100) });
+  }
+  const newer = (a, b, key) => ((b[key + 'T'] || 0) > (a[key + 'T'] || 0) ? b : a);
+  function merge(L, C) {
+    if (!C) return L; if (!L) return C;
+    const s = newer(L, C, 'set'), n = newer(L, C, 'nm'), r = newer(L, C, 'rt');
+    return {
+      v: 1, ls: unite(L.ls, C.ls), pz: unite(L.pz, C.pz), op: unite(L.op, C.op), dy: mergeDaily(L.dy, C.dy), on: mergeOn(L.on, C.on),
+      set: Object.assign({}, s.set), setT: s.setT || 0,
+      nm: n.nm || L.nm || C.nm || '', nmT: n.nmT || 0,
+      rt: r.rt != null ? r.rt : (L.rt != null ? L.rt : C.rt), rtT: r.rtT || 0,
+    };
+  }
+  function apply(d) {
+    put(LS_STORE, d.ls || {}); put(PZ_STORE, d.pz || {}); put(OP_STORE, d.op || {});
+    if (d.dy) { put(DAILY_STORE, d.dy); Object.assign(daily, { last: '', streak: 0, best: 0, days: {} }, d.dy); }
+    if (d.on) put(OL_REC, d.on);
+    const m = meta() || {};
+    const langWas = LANG;
+    if (d.set) {
+      SET_KEYS.forEach(k => { if (k !== 'lang' && d.set[k] !== undefined) settings[k] = d.set[k]; });
+      if (d.set.lang && SUPPORTED.includes(d.set.lang)) { LANG = d.set.lang; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (e) {} }
+      const set = {}; SET_KEYS.forEach(k => { if (settings[k] !== undefined) set[k] = settings[k]; }); set.lang = LANG;
+      m.setH = JSON.stringify(set); m.setT = d.setT || 1;
+      applyCk(); if (net) olApplyColours(); if (window.BGTheme) { settings.skin = BGTheme.skinId(settings.skin); BGTheme.applySkin(settings.skin); } drawBoardSvg();
+    }
+    if (d.nm) { m.nmH = JSON.stringify(d.nm); m.nmT = d.nmT || 1; if (ON && ON.ready && ON.profile.name !== d.nm) ON.setName(d.nm).catch(() => {}); else { try { localStorage.setItem('backgammon-online-name', d.nm); } catch (e) {} } }
+    m.rtH = JSON.stringify(d.rt); m.rtT = d.rtT || 1;
+    put(META, m);
+    save();
+    if (LANG !== langWas) olLangChanged(true);
+    try { render(); renderInfo(); } catch (e) {}
+  }
+  return { snapshot, merge, apply, mergeDaily, mergeOn };
+})();
+window.BgSync = BgSync;
+let syncing = false, lastPushed = '', syncLast = 0;
+const signedIn = () => !!(olOn() && ON.ready && ON.account());
+const strip = d => JSON.stringify(Object.assign({}, d, { t: undefined }));
+function syncLastText() { return syncLast ? t('sync.last', { t: new Date(syncLast).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' }) }) : ''; }
+async function syncPush() {
+  if (!signedIn()) return;
+  const d = BgSync.snapshot(), s = strip(d);
+  try { await ON.push(JSON.stringify(d)); lastPushed = s; syncLast = Date.now(); } catch (e) { console.warn(e); }
+}
+async function syncNow(quiet) {
+  if (!signedIn() || syncing) return;
+  syncing = true;
+  try {
+    const local = BgSync.snapshot();
+    const c = await ON.pull();
+    let merged = local;
+    if (c && c.d) { try { merged = BgSync.merge(local, JSON.parse(c.d)); } catch (e) { console.warn(e); } }
+    BgSync.apply(merged);
+    syncing = false;
+    await syncPush();
+    if (!quiet) toast(t('sync.done'), 1400);
+  } catch (e) { console.warn(e); if (!quiet) olConfirm(authErrText(e), 'OK', null); }
+  syncing = false;
+  accRender();
+}
+let syncT = 0;
+function syncTouch() { clearTimeout(syncT); syncT = setTimeout(() => { if (signedIn() && !syncing && strip(BgSync.snapshot()) !== lastPushed) syncPush(); }, 3000); }
+function syncNameTouched() { syncTouch(); }
+setInterval(syncTouch, 20000);
+document.addEventListener('visibilitychange', () => { if (document.hidden) syncPush(); else if (signedIn()) syncNow(true); });
+if (olOn()) ON.onAuth(() => { dockRender(); });
+
+// ====================================================================== first visit: profile name + optional Google link
+const PF_KEY = 'backgammon-profile-asked';
+const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
+const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
+function pfOpen() { $('#pfName').value = ON.localName() || ON.defaultName(); showOv('#profOverlay'); }
+async function pfSaveName() {
+  const n = ON.cleanName($('#pfName').value);
+  try { localStorage.setItem('backgammon-online-name', n); } catch (e) {}
+  if (ON.ready) { try { await ON.setName(n); } catch (e) { console.warn(e); } }
+  syncNameTouched(); dockRender();
+}
+$('#pfLater').onclick = () => { pfDone(); pfSaveName(); hideOv('#profOverlay'); };
+$('#pfGoogle').onclick = async () => { pfDone(); await pfSaveName(); hideOv('#profOverlay'); await ON.init().catch(e => { olConfirm(authErrText(e), 'OK', null); }); if (ON.ready) googleLink(); };
+$('#pfName').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('#pfLater').click(); });
+// shown once, only while nothing else is on screen (no dialog, no lesson / puzzle)
+const pfTimer = setInterval(() => {
+  if (!olOn() || pfAsked()) { clearInterval(pfTimer); return; }
+  if (document.hidden || document.querySelector('.overlay.show') || lesson || puzzle || olLive()) return;
+  clearInterval(pfTimer); pfOpen();
+}, 1200);
+
+// ====================================================================== misc wiring
+document.querySelectorAll('#onlineOverlay, #profOverlay, #olConfirm, #olResignOv').forEach(o => {
+  let down = false;
+  o.addEventListener('pointerdown', e => { down = e.target === o; });
+  o.addEventListener('click', e => { if (e.target !== o || !down) return; down = false; ({ onlineOverlay: '#olClose', profOverlay: '#pfLater', olConfirm: '#olcNo', olResignOv: '#olrClose' })[o.id] && $(({ onlineOverlay: '#olClose', profOverlay: '#pfLater', olConfirm: '#olcNo', olResignOv: '#olrClose' })[o.id]).click(); });
+});
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  for (const [id, b] of [['#olConfirm', '#olcNo'], ['#olResignOv', '#olrClose'], ['#onlineOverlay', '#olClose'], ['#profOverlay', '#pfLater']]) if (isShown(id)) { e.stopImmediatePropagation(); $(b).click(); return; }
+}, true);
+function olLangChanged(full) {
+  if (full) applyI18n();
+  applyI18n(); chatRender(); if (isShown('#newOverlay')) olSegSync(); dockRender(); olWatchRender(); olResRender();
+  if (isShown('#onlineOverlay')) olRender();
+  if (net && net.done && isShown('#resultOverlay')) olShowResult();
+  try { render(); renderInfo(); } catch (e) {}
+}
+$('#langSel').addEventListener('change', () => olLangChanged());
+// boot: ?room=CODE joins (or watches) a room; a live match is resumed; the dock connects after a moment
+if (olOn()) {
+  const q = new URLSearchParams(location.search), code = q.get('room');
+  if (code) {
+    try { const u = new URL(location.href); u.searchParams.delete('room'); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) {}
+    hideOv('#newOverlay'); openOnline(code);
+  } else olResume();
+  accRender();
+  setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800);
+} else dockRender();
+try { renderInfo(); } catch (e) {}
