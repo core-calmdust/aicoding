@@ -1020,22 +1020,67 @@ function exitSpecial() {
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-async function openLessons() {
+// small flat board picture for list cards (no gradients / ids, so any number can be on a page)
+function thumbSvg(b, w, o) {
+  o = o || {};
+  const P = x => typeof x === 'number' ? x : sqOf(x), B = toCells(b).map(P), W = toCells(w).map(P), all = B.concat(W);
+  let c0, r0, n;
+  if (o.crop) [c0, r0, n] = o.crop;
+  else {
+    let a = 14, bb = 0, c = 14, d = 0;
+    for (const m of all) { a = Math.min(a, cx(m)); bb = Math.max(bb, cx(m)); c = Math.min(c, cy(m)); d = Math.max(d, cy(m)); }
+    if (!all.length) { a = 5; bb = 9; c = 5; d = 9; }
+    n = Math.min(15, Math.max(o.min || 7, bb - a + 3, d - c + 3));
+    c0 = Math.max(0, Math.min(15 - n, Math.round((a + bb) / 2 - (n - 1) / 2))); r0 = Math.max(0, Math.min(15 - n, Math.round((c + d) / 2 - (n - 1) / 2)));
+  }
+  const u = 10, pad = 7, S = (n - 1) * u + pad * 2, X = m => pad + (cx(m) - c0) * u, Y = m => pad + (r0 + n - 1 - cy(m)) * u;
+  let h = `<svg viewBox="0 0 ${S} ${S}" aria-hidden="true"><rect width="${S}" height="${S}" rx="6" fill="#d9a95c"/><path d="`;
+  for (let k = 0; k < n; k++) { const p = pad + k * u; h += `M${p} 0V${S}M0 ${p}H${S}`; }
+  h += `" stroke="#6b4a22" stroke-width=".7" opacity=".55"/>`;
+  if (7 >= c0 && 7 < c0 + n && 7 >= r0 && 7 < r0 + n) h += `<circle cx="${pad + (7 - c0) * u}" cy="${pad + (r0 + n - 1 - 7) * u}" r="1.6" fill="#6b4a22"/>`;
+  const lab = o.n || {};
+  for (const [L, col] of [[B, 1], [W, 2]]) for (const m of L) {
+    if (cx(m) < c0 || cx(m) >= c0 + n || cy(m) < r0 || cy(m) >= r0 + n) continue;
+    h += `<circle cx="${X(m)}" cy="${Y(m)}" r="4.6" fill="${col === 1 ? '#15130f' : '#f4efe4'}" stroke="${col === 1 ? '#000' : '#8f8676'}" stroke-width=".6"/>`;
+    const l = lab[sqName(m)]; if (l !== undefined) h += `<text x="${X(m)}" y="${Y(m) + 2.3}" font-size="6.4" font-weight="700" text-anchor="middle" font-family="JetBrains Mono,monospace" fill="${col === 1 ? '#f2ede4' : '#1b1712'}">${l}</text>`;
+  }
+  if (o.mark !== undefined) { const m = P(o.mark); h += `<circle cx="${X(m)}" cy="${Y(m)}" r="5.6" fill="none" stroke="#e8463a" stroke-width="1.3"/>`; }
+  return h + '</svg>';
+}
+const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+let lsCourseSel = '', opKindSel = 'direct';
+const LS_ICON = { basics: '①', renju: '✕', tactics: '⚔' };
+async function openLessons(course) {
   await lessonsReady; selTab('lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
   if (!LESSONS) { toast(t('ls.fail')); return; }
-  const pr = lsProgress();
-  let course = '', no = 0;
-  $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
-    const r = pr[s.id], c = s.course;
-    let head = '';
-    if (c !== course) { course = c; no = 0; head = `<p class="ls-course"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></p>`; }
+  const pr = lsProgress(), courses = [...new Set(LESSONS.steps.map(s => s.course))];
+  const stat = c => { const st = LESSONS.steps.filter(s => s.course === c); return { n: st.length, ok: st.filter(s => pr[s.id] && pr[s.id].clear).length }; };
+  if (course) lsCourseSel = course;
+  if (!courses.includes(lsCourseSel)) lsCourseSel = courses.find(c => { const q = stat(c); return q.ok < q.n; }) || courses[0];
+  const c = lsCourseSel, q = stat(c);
+  let no = 0;
+  const cards = LESSONS.steps.map((s, i) => {
+    if (s.course !== c) return '';
     no++;
-    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${no}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="lst ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+    const r = pr[s.id], P0 = s.problems[0] || {}, d = s.diagram;
+    const th = d ? thumbSvg(d.b || [], d.w || [], { n: d.n }) : thumbSvg(P0.b, P0.w);
+    const st = r ? (r.clear ? `<span class="lx-st ok">✓ ${t('ls.clear')}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
+    return `<button class="lx-card${r && r.clear ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${th}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">STEP ${no}</span>${st}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
+      `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.clear ? 'ok' : '')}</span></button>`;
   }).join('');
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k] || '●'}</span><span class="nm">${t('course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner"><span class="ic">${LS_ICON[c] || '●'}</span><span class="tx"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></span><span class="pg">${t('ls.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
-$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.o !== undefined) openOpeningChoice(+b.dataset.o); else openIntro(+b.dataset.i); };
+$('#lessonList').onclick = e => {
+  const tb = e.target.closest('[data-course],[data-kind]'); if (tb) { if (tb.dataset.course) openLessons(tb.dataset.course); else openOpenings(tb.dataset.kind); return; }
+  const b = e.target.closest('.lx-card'); if (!b) return; if (b.dataset.o !== undefined) openOpeningChoice(+b.dataset.o); else openIntro(+b.dataset.i);
+};
 function openIntro(i) {
   introIdx = i; const s = LESSONS.steps[i]; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   $('#liStep').textContent = t('course.' + s.course) + ' · STEP ' + stepNo(i);
@@ -1043,7 +1088,7 @@ function openIntro(i) {
   $('#liBody').innerHTML = (s.diagram ? `<div class="mini">${miniBoard(s.diagram)}</div>` : '') + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
-$('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons();
+$('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons(LESSONS.steps[introIdx] && LESSONS.steps[introIdx].course);
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
@@ -1172,7 +1217,7 @@ $('#lsNext').onclick = () => {
 };
 $('#lsQuit').onclick = () => quitSpecial();
 // back to the list the lesson / opening was chosen from (the board keeps the current lesson until another is picked)
-$('#lsList').onclick = () => { if (!lesson) return; if (lesson.virt && lesson.virt.id === 'mk') openLessons(); else if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.virt && lesson.virt.id === 'mk') openLessons(); else if (lesson.study || lesson.virt) openOpenings(OPEN.sets[lesson.gi] && OPEN.sets[lesson.gi].kind); else openLessons(LESSONS.steps[lesson.step].course); };
 $('#btnLessonPlay').onclick = () => {
   hideOverlay('#lessonOverlay'); savedGame = null; exitSpecial();
   Object.assign(settings, { mode: 'ai', color: P1, level: 1, rule: 'free' });
@@ -1188,19 +1233,32 @@ function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{
 const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
 const opName = g => LANG === 'ja' ? g.kanji : LANG === 'zh' ? g.zh || g.kanji : LANG === 'ko' ? g.ko || g.name : g.name;
 const opEval = g => `<span class="op-ev ${g.ev}">${t('ev.' + g.ev + 'x')}</span>`;
-async function openOpenings() {
+async function openOpenings(kind) {
   await openReady; selTab('open');
   if (!OPEN) { toast(t('ls.fail')); return; }
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
-  const pr = opProg();
-  let head = '';
-  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
-    const r = pr[g.id];
-    let h = ''; if (g.kind !== head) { head = g.kind; h = `<p class="ls-course"><b>${t('op.grp.' + g.kind)}</b><small>${t('op.grp.' + g.kind + '.sub')}</small></p>`; }
-    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${g.kind === 'direct' ? 'D' : 'I'}${g.no}</span><span class="tx"><b>${opName(g)}${LANG === 'ja' ? `<small style="display:inline;margin-left:6px">${g.kana}</small>` : LANG !== 'zh' ? ` <small style="display:inline;color:var(--dim)">${g.kanji}</small>` : ''} ${opEval(g)}</b><small>${t('op.third', { m: g.line.split(' ')[2] })}</small></span><span class="lst ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
-  }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('op.credit')}</p>`;
+  if (kind) opKindSel = kind;
+  const pr = opProg(), kinds = ['direct', 'indirect'], K = opKindSel;
+  const stat = k => { const g = OPEN.sets.filter(x => x.kind === k); return { n: g.length, ok: g.filter(x => pr[x.id] && pr[x.id].pass).length }; };
+  const q = stat(K);
+  const cards = OPEN.sets.map((g, i) => {
+    if (g.kind !== K) return '';
+    const r = pr[g.id], L = g.line.split(' ');
+    const th = thumbSvg([L[0], L[2]], [L[1]], { crop: [5, 5, 5], n: { [L[0]]: 1, [L[1]]: 2, [L[2]]: 3 } });
+    const st = r ? (r.pass ? `<span class="lx-st ok">✓ ${t('u.pt', { n: r.best })}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
+    const sub = LANG === 'ja' ? g.kana : LANG === 'zh' ? '' : g.kanji;
+    return `<button class="lx-card op${r && r.pass ? ' clear' : ''}" data-o="${i}"><span class="lx-th">${th}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">${g.kind === 'direct' ? 'D' : 'I'}${g.no}</span>${opEval(g)}${st}</span><b class="lx-t">${opName(g)}${sub ? `<small>${sub}</small>` : ''}</b>` +
+      `<span class="lx-desc">${t('op.d.' + g.id)}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass ? 'ok' : '')}</span></button>`;
+  }).join('');
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${kinds.map(k => { const z = stat(k); return `<button data-kind="${k}" class="${k === K ? 'sel' : ''}"><span class="ic op">${opIcon(k)}</span><span class="nm">${t('op.tab.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner"><span class="ic op">${opIcon(K)}</span><span class="tx"><b>${t('op.grp.' + K)}</b><small>${t('op.grp.' + K + '.sub')}</small></span><span class="pg">${t('ls.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div><p class="lx-credit">${t('op.credit')}</p></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
+// tab icon: the first two stones (black centre + white direct / indirect)
+function opIcon(k) { return thumbSvg(['h8'], [k === 'direct' ? 'h9' : 'i9'], { crop: [6, 6, 3] }); }
 function openOpeningChoice(i) {
   openChoiceIdx = i; const g = OPEN.sets[i], L = g.line.split(' ');
   $('#liStep').textContent = t('op.title') + ' · ' + t('op.grp.' + g.kind) + ' ' + g.no;
@@ -1314,21 +1372,33 @@ const puzzlesReady = fetch('puzzles.json?v=20261019a').then(r => r.json()).then(
 let pzCat = 0, pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 const pzKey = (c, l, j) => PUZZLES.cats[c].id + '-' + PUZZLES.cats[c].levels[l].n + '-' + j;
+// records: key -> stars 1..3 (old saves stored true = solved, read as ★3)
+const starVal = v => v === true ? 3 : +v || 0;
+const pzRecs = (c, l, pr) => { pr = pr || pzProgress(); return PUZZLES.cats[c].levels[l].puzzles.map((_, j) => starVal(pr[pzKey(c, l, j)])); };
+const pzTier = n => Math.min(5, Math.max(0, (n - 1) >> 1));
+// title (称号) from the stars of all puzzles: 15級 … 五段 (the same scale as the AI levels)
+function pzStarsAll(pr) { let n = 0; for (const k in pr) n += starVal(pr[k]); return n; }
+function pzRankOf(st) { const M = PUZZLES.total * 3, i = Math.min(20, 1 + Math.floor(19 * Math.sqrt(Math.min(1, st / M)))); return { i, next: i >= 20 ? 0 : Math.ceil(M * Math.pow(i / 19, 2)) }; }
+function pzRankHtml(pr) {
+  const st = pzStarsAll(pr), M = PUZZLES.total * 3, R = pzRankOf(st), prev = R.i <= 1 ? 0 : Math.ceil(M * Math.pow((R.i - 1) / 19, 2));
+  const p = R.next ? (st - prev) / Math.max(1, R.next - prev) : 1;
+  return `<div class="pz-rank"><span class="rk-badge"><small>${t('pz.rank')}</small><b>${LV(R.i)}</b></span><span class="rk-tx"><span class="rk-st">${PZBook.STAR(true)}<b>${st}</b><small>/${M}</small></span>` +
+    `<span class="lx-bar"><i style="width:${Math.round(p * 100)}%"></i></span><small>${R.next ? t('pz.rankNext', { n: R.next - st }) : t('pz.rankTop')}</small></span></div>`;
+}
 function pzLevelsHtml(c, pr, dl, di) {
   const C = PUZZLES.cats[c];
-  return (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pzc.' + PUZZLES.cats[dl.c].id)} · ${t('pz.winIn', { n: PUZZLES.cats[dl.c].levels[dl.l].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="lst ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
+  return pzRankHtml(pr) + (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pzc.' + PUZZLES.cats[dl.c].id)} · ${t('pz.winIn', { n: PUZZLES.cats[dl.c].levels[dl.l].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="lst ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
     `<p class="ls-course"><b>${t('pzc.' + C.id)}</b><small>${t('pzc.' + C.id + '.sub')}</small></p>` +
-    C.levels.map((L, i) => {
-      const solved = L.puzzles.filter((_, j) => pr[pzKey(c, i, j)]).length;
-      return `<button class="lesson-item" data-i="${i}"><span class="no">${L.n}</span><span class="tx"><b>${t('pz.winIn', { n: L.n })}</b><small>${t('pzl.' + C.id, { n: L.n, k: L.puzzles.length })}</small></span><span class="lst ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
-    }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit', { n: PUZZLES.total })}</p>`;
+    C.levels.map((L, i) => PZBook.card({ i, no: L.n, name: t('pz.winIn', { n: L.n }), sub: t('pzl.' + C.id, { n: L.n, k: L.puzzles.length }), recs: pzRecs(c, i, pr), tier: pzTier(L.n) })).join('') +
+    `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit', { n: PUZZLES.total })}</p>`;
 }
 async function openPuzzles(cat) {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
   if (cat !== undefined) pzCat = cat;
+  PZBook.setLang(LANG);
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
-  $('#pzCats').innerHTML = PUZZLES.cats.map((C, i) => `<button data-c="${i}" class="${i === pzCat ? 'sel' : ''}">${t('pzc.' + C.id)}</button>`).join('');
+  $('#pzCats').innerHTML = PUZZLES.cats.map((C, i) => { const tot = C.levels.reduce((x, L) => x + L.puzzles.length, 0), dn = C.levels.reduce((x, L, l) => x + pzRecs(i, l, pr).filter(v => v).length, 0); return `<button data-c="${i}" class="${i === pzCat ? 'sel' : ''}">${t('pzc.' + C.id)}<small class="ct${dn === tot ? ' ok' : ''}">${dn}/${tot}</small></button>`; }).join('');
   const box = $('#pzLevels');
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
   // keep the box the size of the tallest category so switching categories does not resize the dialog
@@ -1339,15 +1409,18 @@ async function openPuzzles(cat) {
   if (hMax) box.style.minHeight = hMax + 'px';
 }
 $('#pzCats').onclick = e => { const b = e.target.closest('button[data-c]'); if (b) openPuzzles(+b.dataset.c); };
-$('#pzLevels').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.c, dl.l, dl.j, dl.date); } else openPzGrid(+b.dataset.i); };
+$('#pzLevels').onclick = e => { const d = e.target.closest('[data-daily]'); if (d) { const dl = dailyPick(); if (dl) startPuzzle(dl.c, dl.l, dl.j, dl.date); return; } const b = e.target.closest('.pb-card'); if (b) openPzGrid(+b.dataset.i); };
 function pzName(c, l) { return t('pzc.' + PUZZLES.cats[c].id) + ' · ' + t('pz.winIn', { n: PUZZLES.cats[c].levels[l].n }); }
-function openPzGrid(i) {
-  pzLevel = i; const pr = pzProgress(), L = PUZZLES.cats[pzCat].levels[i];
+function openPzGrid(i, cur) {
+  pzLevel = i; const L = PUZZLES.cats[pzCat].levels[i]; PZBook.setLang(LANG);
   $('#pzLevelTitle').textContent = pzName(pzCat, i);
-  $('#pzGrid').innerHTML = L.puzzles.map((_, j) => `<button data-j="${j}" class="${pr[pzKey(pzCat, i, j)] ? 'solved' : ''}">${j + 1}</button>`).join('');
+  const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(pzCat, i), cur });
+  // each tile shows the position (a small board) under its number and stars
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; el.insertAdjacentHTML('afterbegin', `<span class="th">${thumbSvg(P.b, P.w)}</span>`); el.classList.toggle('wt', P.side === 2); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
+  const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
-$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzCat, pzLevel, +b.dataset.j); };
+$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (!b) return; if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; } startPuzzle(pzCat, pzLevel, +b.dataset.j); };
 $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(c, l, j, daily) {
@@ -1355,7 +1428,7 @@ function startPuzzle(c, l, j, daily) {
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   const P = PUZZLES.cats[c].levels[l].puzzles[j];
   const sp = spOf(P);
-  puzzle = { c, l, j, P, me: sp.side, n: PUZZLES.cats[c].levels[l].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false };
+  puzzle = { c, l, j, P, me: sp.side, n: PUZZLES.cats[c].levels[l].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(sp, 'renju');
   if (P.last) lessonMarks = [{ at: sqOf(P.last), cls: 'last' }];
@@ -1364,12 +1437,13 @@ function startPuzzle(c, l, j, daily) {
 const pzLeft = Pz => Pz.n - 2 * Pz.used;
 function renderPuzzleCard() {
   const Pz = puzzle, L = PUZZLES.cats[Pz.c].levels[Pz.l], att = (Pz.n + 1) >> 1;
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pzc.' + PUZZLES.cats[Pz.c].id)} · No.${Pz.j + 1}`;
+  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pzc.' + PUZZLES.cats[Pz.c].id)} · ${pzT('stage', { n: Math.floor(Pz.j / 10) + 1 })} · No.${Pz.j + 1}`;
+  { const r = starVal(pzProgress()[pzKey(Pz.c, Pz.l, Pz.j)]); $('#pzBest').innerHTML = !Pz.daily && r ? [1, 2, 3].map(k => PZBook.STAR(k <= r)).join('') : ''; }
   $('#pzTitle').textContent = t('pz.winIn', { n: Pz.n });
   $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: att }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
   const C = PUZZLES.cats[Pz.c];
-  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.l + 1 >= C.levels.length);
+  $('#pzNext').disabled = !!Pz.daily || Pz.j + 1 >= L.puzzles.length || !PZBook.isOpen(pzRecs(Pz.c, Pz.l), Pz.j + 1);
   $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.busy;
   renderInfo();
 }
@@ -1478,16 +1552,22 @@ async function finishLine(Pz) {
 function puzzleSolved(finish) {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(); pr[pzKey(Pz.c, Pz.l, Pz.j)] = true;
+  // ★★★ first try without a hint / ★★ after a hint, a failed try or leaving the solution line / ★ after seeing the answer
+  const stars = PZBook.starsFor({ hinted: Pz.hinted || Pz.off, failed: Pz.failed, answered: Pz.answered });
+  const pr = pzProgress(), k = pzKey(Pz.c, Pz.l, Pz.j), before = pzRecs(Pz.c, Pz.l, pr), rk0 = pzRankOf(pzStarsAll(pr)).i;
+  pr[k] = Math.max(starVal(pr[k]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
+  const after = pzRecs(Pz.c, Pz.l, pr), ev = PZBook.events(before, after, Pz.j), rk1 = pzRankOf(pzStarsAll(pr)).i;
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || Pz.off);   // solved after leaving the solution line: counted like a hinted solve
-  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.n })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
-  playChime(true); confetti(); renderPuzzleCard();
+  PZBook.setLang(LANG);
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.n })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') +
+    PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }) + (rk1 > rk0 ? `<span class="pb-ev rk">🎖 ${t('pz.rankUp', { r: LV(rk1) })}</span>` : ''));
+  playChime(true); confetti(); if (ev.length || rk1 > rk0) setTimeout(confetti, 900); renderPuzzleCard();
   if (finish) finishLine(Pz);
 }
-$('#pzRetry').onclick = () => { if (puzzle) { const h = puzzle.hinted; startPuzzle(puzzle.c, puzzle.l, puzzle.j, puzzle.daily); puzzle.hinted = h; } };
-$('#pzNext').onclick = () => { if (!puzzle) return; let { c, l, j } = puzzle; j++; if (j >= PUZZLES.cats[c].levels[l].puzzles.length) { l++; j = 0; } if (l < PUZZLES.cats[c].levels.length) startPuzzle(c, l, j); };
-$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else { pzCat = puzzle.c; openPzGrid(puzzle.l); } };
+$('#pzRetry').onclick = () => { if (puzzle) { const o = puzzle; startPuzzle(o.c, o.l, o.j, o.daily); Object.assign(puzzle, { hinted: o.hinted || o.off, failed: o.failed || o.state === 'fail', answered: o.answered }); } };
+$('#pzNext').onclick = () => { if (!puzzle || puzzle.daily) return; const { c, l, j } = puzzle; if (j + 1 < PUZZLES.cats[c].levels[l].puzzles.length && PZBook.isOpen(pzRecs(c, l), j + 1)) startPuzzle(c, l, j + 1); };
+$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else { pzCat = puzzle.c; openPzGrid(puzzle.l, puzzle.j); } };
 $('#pzQuit').onclick = () => quitSpecial();
 $('#pzHint').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.state !== 'play' || Pz.busy) return;
@@ -1502,7 +1582,7 @@ $('#pzHint').onclick = async () => {
 };
 $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.busy) return;
-  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; lessonMarks = []; hintList = null;
+  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.answered = true; lessonMarks = []; hintList = null;
   moves = []; cur = 0; Pz.used = 0; update(false); renderPuzzleCard(); pzStatus(t('pz.showing'));
   const pv = toCells(Pz.P.pv || Pz.P.a);
   for (let k = 0; k < pv.length; k++) {
