@@ -68,6 +68,8 @@ html[dir=rtl] .hb, html[lang=ar] .hb{direction:rtl}
 html[lang=ar] .hb .hb-menu{padding:0 0 0 14px;border-right:0;border-left:1px solid var(--line, rgba(255,255,255,.12))}
 @media (max-width: 1180px){.hb .hb-menu > * span{display:none}.hb .hb-menu > *{padding:0 10px!important}}
 @media (max-width: 960px){.hb .hb-title .brand-l .series{display:none}}
+/* PC: the game-over dialog is wide enough for its buttons on one line each (all games) */
+@media ${MQ}{#resultOverlay .modal{width:min(640px, calc(100vw - 64px))}#resultOverlay .modal-actions .mbtn,#resultOverlay .modal-actions button{white-space:nowrap}}
 `;
 const $ = s => typeof s === 'string' ? document.querySelector(s) : s;
 function init(o) {
