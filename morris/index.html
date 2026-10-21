@@ -245,7 +245,8 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 .graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.controls{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}   /* 対局 待った 投了 ヒント ルール レッスン パズル: one row */
+body.in-online .controls{grid-template-columns:repeat(8,1fr)}   /* + 引き分け提案 (online) */
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
@@ -505,8 +506,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .player .count small{font-size:10px;margin-left:3px}
   .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
   .card{padding:10px 12px}
-  .controls{padding:8px;gap:5px}
-  .btn{flex-direction:column;justify-content:center;padding:7px 2px;gap:3px;font-size:10.5px}
+  .controls{padding:7px;gap:4px}
+  .btn{flex-direction:column;justify-content:center;padding:7px 0;gap:3px;font-size:10px;letter-spacing:0}
   .btn svg{width:17px;height:17px}
   .graph{height:72px;margin-top:8px}
   .kifu-card{flex:none;min-height:96px}
@@ -818,6 +819,7 @@ body .info-line{font-size:12.5px}
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnResign"></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnRules" data-i18n-title="btn.rules.title"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span data-i18n="btn.rules"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
@@ -997,6 +999,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
+<script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=13"></script>
 <script src="engine.js?v=20261019n"></script>
@@ -1030,6 +1033,7 @@ function posAt(i) {
 function statusAt(i) {
   if (settings.mode === 'online' && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
+  if (resignOver && resignOver.mv === moves && i === moves.length && !lesson && !puzzle) return resignOver;
   const { pos, hashes } = posAt(i), st = pos.status();
   if (st === -1) return { over: true, winner: 3 - pos.side, why: pos.cnt[pos.side] + pos.hand[pos.side] < 3 ? 'count' : 'block' };
   if (st === 2) return { over: true, winner: 0, draw: true, why: pos.cnt[1] + pos.cnt[2] === G.n && !pos.placing() ? 'full' : 'quiet' };
@@ -1072,6 +1076,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
+  { const b = $('#btnResign'); b.innerHTML = Resign.icon + '<span>' + Resign.label(LANG) + '</span>'; b.title = Resign.label(LANG); }
   renderBrand();
 }
 function renderBrand() { const tt = t('title.' + gv); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub.' + gv); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
@@ -1081,6 +1086,7 @@ let evals = [];          // evals[i] = evaluation after i moves (first player's 
 let busyToken = 0;
 let lesson = null, puzzle = null;
 let rtHold = false;   // a rated game restored on page load: its clock stays stopped (no beeps) until the first move is played
+let resignOver = null;   // a local game ended by 投了: { over, winner, loser, why: 'resign', mv } (mv: the moves array it belongs to)
 let rgame = null;   // rated game vs the AI: { id, lv, or, my, tag, ct: [ms, ms], t, over, done }
 let gameOverShown = false;
 let sel = null;          // human input in progress: { from, to, stage: 'pick' | 'remove', cands }
@@ -1101,6 +1107,7 @@ function load() {
       if (!validMoves(d.moves)) { setVariant(settings.rule); return false; }
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) { rgame.t = Date.now(); rtHold = true; }   // restored on load: the clock waits for the first move
+      resignOver = d.resign && d.resign.loser ? { over: true, winner: d.resign.winner, loser: d.resign.loser, why: 'resign', mv: moves } : null;
       cur = moves.length; gameOverShown = statusAt(cur).over;
       return true;
     }
@@ -1110,7 +1117,7 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resign: resignOver && resignOver.mv === moves ? { winner: resignOver.winner, loser: resignOver.loser } : null })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
@@ -1441,6 +1448,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = rtLive() || settings.mode === 'online';
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1673,7 +1681,7 @@ function onGameEnd(st) {
   if (youWin || (settings.mode === 'pvp' && st.winner)) confetti();
   $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
   $('#resultTitle').textContent = st.draw ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: pname(st.winner) });
-  let sub = t('res.why.' + st.why) + '<br>' + t('res.sub', { n: moves.length });
+  let sub = (st.why === 'resign' ? (settings.mode === 'pvp' ? t('ol.wResign', { p: pname(st.loser) }) : t('ol.youResigned')) : t('res.why.' + st.why)) + '<br>' + t('res.sub', { n: moves.length });
   if (rgame) {
     const rx = rtSettle(st);
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
@@ -1681,8 +1689,32 @@ function onGameEnd(st) {
   $('#resultSub').innerHTML = sub;
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
+// 投了 (common spec, shared/resign.js): after 対局 and 待った; asks 投了しますか？ and only はい ends the game as a loss.
+// vs AI (incl. rated): the human resigns; 2 players on one device: the side to move resigns; online: online-ui.js sends the resignation.
+function canResign() {
+  if (settings.mode === 'online') return typeof olLive === 'function' && olLive();
+  return !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !statusAt(moves.length).over;
+}
+function resignNow() {
+  if (!canResign() || settings.mode === 'online') return;
+  busyToken++; cancelWorker('ai'); thinking = 0; animating = false; sel = null; hintList = null;
+  cur = moves.length; reviewing = false; gameOverShown = false;
+  const loser = settings.mode === 'ai' ? humanColor : toMoveAt(moves.length), st = { over: true, winner: loser === P1 ? P2 : P1, loser, why: 'resign' };
+  if (rgame) rgame.over = st; else resignOver = Object.assign(st, { mv: moves });
+  save(); update(false);
+  onGameEnd(st);
+}
+$('#btnResign').onclick = () => {
+  if (!canResign()) return;
+  Resign.confirm({ lang: LANG }).then(ok => {
+    if (!ok || !canResign()) return;
+    if (settings.mode === 'online') { if (window.olResignGame) olResignGame(); }
+    else resignNow();
+  });
+};
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
+  if (resignOver && resignOver.mv === moves) return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
@@ -2994,7 +3026,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 // time signal: the last 5 seconds of my own clock beep once per second (rated games vs the AI, online games)
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
@@ -3091,7 +3123,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
-<script src="online-ui.js?v=20261021en"></script>
+<script src="online-ui.js?v=20261021rsg"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5n" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=3" defer></script>

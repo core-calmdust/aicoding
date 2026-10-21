@@ -5,7 +5,7 @@
  * localStorage 'dots-rated-v1' (synced): { r, n, w, l, d, hist: [{ id, t, sz, lv, or, s, d, r, why }] }
  *   r: current rating (start 1000), n: rated games, w/l/d: wins/losses/draws,
  *   hist: last 100 games, oldest first — id: game id, t: time (ms), sz: board size, lv: AI level, or: AI rating,
- *   s: score (1 / 0.5 / 0), d: rating change, r: rating after the game, why: 'end' | 'abandon'
+ *   s: score (1 / 0.5 / 0), d: rating change, r: rating after the game, why: 'end' | 'abandon' | 'resign'
  * localStorage 'dots-rated-cur-v1' (this device only): the rated game on the board { id, n, human, lv, or, my, tag, done? }
  */
 (function () {
@@ -60,6 +60,7 @@ function rtSettle(s, why) {
 }
 function rtSettleBoard() {
   if (!rtGame() || RT.done || !SF || !SF.over) return RT && RT.done;
+  if (SF.resigned >= 0) return rtSettle(SF.resigned === game.human ? 0 : 1, 'resign');   // 投了
   const me = SF.scores[game.human] - SF.scores[1 - game.human];
   return rtSettle(me > 0 ? 1 : me < 0 ? 0 : 0.5, 'end');
 }
@@ -124,7 +125,7 @@ showResult = function () {
   if (!rtGame() || !SF || !SF.over || !$('#resultOverlay').classList.contains('show')) return;
   const x = rtSettleBoard(); if (!x) return;
   const sub = $('#resultSub');
-  sub.innerHTML = esc(t('res.vs', { name: t('lv')[RT.lv], lv: RT.lv, n: game.n })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
+  sub.innerHTML = (SF.resigned >= 0 ? esc(t('ol.youResigned')) + ' · ' : '') + esc(t('res.vs', { name: t('lv')[RT.lv], lv: RT.lv, n: game.n })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
   renderInfo();
 };
 segSync = function () {
