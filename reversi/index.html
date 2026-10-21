@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<script>try { document.documentElement.dataset.bd = localStorage.getItem('reversi-board-design') || 'classic'; } catch (e) {}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23111'/%3E%3Ccircle cx='40' cy='40' r='13' fill='%23eee'/%3E%3C/svg%3E">
 <meta property="og:title" content="Reversi V4 — 強くて美しいブラウザリバーシ">
 <meta property="og:description" content="学習済みパターン評価と終盤完全読みを備えた10段階AI。登録不要でスマホでも遊べます。">
@@ -1088,6 +1089,92 @@ html[lang=ar] .pf-input{direction:rtl}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* ---------------------------------------------------------------- new-game dialog: phone = one column in the classic order, PC = two columns */
+#newOverlay .ng-cols{display:flex;flex-direction:column}
+#newOverlay .ng-col{display:contents}
+#newOverlay .ng-play > .field:first-child{order:1}
+#fRatedInfo, #fPuzzleInfo, #fOnlineInfo, #fLessonInfo{order:2}
+#fColor{order:3} #fClock{order:4} #fLevel{order:5} #fLevel2{order:6} #fDisplay{order:7} #fDesign{order:8}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  /* left: strength / clock / display, right: mode / colour / board design */
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));padding:20px 28px 18px}
+  #newOverlay .modal h2{margin-bottom:12px}
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col{display:block}
+  #newOverlay .modal-actions{margin-top:8px}
+  #newOverlay .credit{margin-top:10px}
+}
+/* board design picker (live mini boards) */
+.bdrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.bdrow button svg{display:block;width:100%;height:auto;border-radius:5px}
+.bdrow button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center}
+.bdrow button:hover{border-color:var(--brass2, rgba(201,169,97,.6));color:var(--text)}
+.bdrow button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.1)}
+.bd-note{display:none;font-size:12px;color:var(--dim);line-height:1.6;margin:0}
+.bdrow button span{letter-spacing:0}
+@media (max-width: 520px){ .bdrow{gap:4px} .bdrow button{padding:4px 3px 5px;font-size:10px} }
+html.atlas-skin #bdRow{display:none}
+html.atlas-skin .bd-note{display:block}
+
+/* ---------------------------------------------------------------- 2D board designs (html[data-bd]); the 3D portal skin keeps its own look */
+/* b. deep blue: sapphire board with depth and a vignette, fine light grid */
+html:not(.atlas-skin)[data-bd=navy]{--felt:#1c4790;--felt2:#13336f;--felt3:#0a1d48;--grid:rgba(186,212,255,.2)}
+html:not(.atlas-skin)[data-bd=navy] .frame{background:linear-gradient(145deg,#15213d 0%,#0a1124 55%,#141f3b 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(140,175,235,.28),inset 0 1px 0 rgba(255,255,255,.07)}
+html:not(.atlas-skin)[data-bd=navy] .frame::before{border-color:rgba(150,185,240,.42)}
+html:not(.atlas-skin)[data-bd=navy] .board{background:radial-gradient(ellipse at 50% 32%,rgba(130,180,255,.2),transparent 62%),radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 62%,var(--felt3) 100%);box-shadow:inset 0 0 60px rgba(0,6,24,.75),inset 0 0 0 1px rgba(160,195,255,.15)}
+html:not(.atlas-skin)[data-bd=navy] .board::after{opacity:.12}
+html:not(.atlas-skin)[data-bd=navy] .coords{color:rgba(170,198,250,.62)}
+html:not(.atlas-skin)[data-bd=navy] .star{background:rgba(196,218,255,.5)}
+html:not(.atlas-skin)[data-bd=navy] .cell.legal::before{background:rgba(2,8,26,.5)}
+html:not(.atlas-skin)[data-bd=navy] .board.turn-white .cell.legal::before{background:rgba(235,242,255,.42)}
+html:not(.atlas-skin)[data-bd=navy] .last-mark{background:#ffb648;box-shadow:0 0 7px rgba(255,182,72,.9)}
+
+/* c. electro: matte charcoal board, thin grid, a faint glow ring, flat teal vs off-white discs that glow */
+html:not(.atlas-skin)[data-bd=neon]{--grid:rgba(0,0,0,.62)}
+html:not(.atlas-skin)[data-bd=neon] .frame{border-radius:22px;background:radial-gradient(130% 130% at 50% 50%,#26292c 0%,#17191b 60%,#101113 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06),0 0 0 3px #0c0d0e,0 0 0 5px rgba(46,230,170,.22),0 0 26px rgba(46,230,170,.2)}
+html:not(.atlas-skin)[data-bd=neon] .frame::before{border:1px solid transparent;border-radius:10px;background:conic-gradient(from 200deg,rgba(46,230,170,0) 0deg,rgba(46,230,170,.75) 70deg,rgba(46,230,170,.15) 160deg,rgba(46,230,170,0) 220deg) border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(46,230,170,.7))}
+html:not(.atlas-skin)[data-bd=neon] .board{background:radial-gradient(circle at 50% 50%,transparent 0 40%,rgba(46,230,170,.09) 41%,rgba(46,230,170,.02) 44%,transparent 46%),linear-gradient(160deg,#35383b 0%,#2b2e31 50%,#25272a 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.35)}
+html:not(.atlas-skin)[data-bd=neon] .board::after{opacity:.1}
+html:not(.atlas-skin)[data-bd=neon] .coords{color:rgba(150,235,206,.55)}
+html:not(.atlas-skin)[data-bd=neon] .star{background:#0d0e0f}
+html:not(.atlas-skin)[data-bd=neon] .face.b{background:radial-gradient(circle at 50% 42%,#4be6bb 0%,#28c495 62%,#1fa47d 100%);box-shadow:0 0 12px rgba(46,230,170,.5),inset 0 -2px 4px rgba(0,60,40,.35),inset 0 2px 2px rgba(255,255,255,.25)}
+html:not(.atlas-skin)[data-bd=neon] .face.w{background:radial-gradient(circle at 50% 42%,#f6f6f2 0%,#dfe0db 70%,#c9cac5 100%);box-shadow:0 0 10px rgba(255,255,255,.22),inset 0 -2px 4px rgba(0,0,0,.18)}
+html:not(.atlas-skin)[data-bd=neon] .board.turn-black .ghost{background:radial-gradient(circle,#4be6bb,#1fa47d)}
+html:not(.atlas-skin)[data-bd=neon] .board.turn-white .ghost{background:radial-gradient(circle,#f6f6f2,#c9cac5)}
+html:not(.atlas-skin)[data-bd=neon] .cell.legal::before{width:30%;height:30%;background:rgba(46,230,170,.18);border:2px solid rgba(70,240,190,.85);box-shadow:0 0 9px rgba(46,230,170,.75)}
+html:not(.atlas-skin)[data-bd=neon] .board.turn-white .cell.legal::before{background:rgba(255,255,255,.12);border-color:rgba(245,245,240,.85);box-shadow:0 0 9px rgba(255,255,255,.55)}
+html:not(.atlas-skin)[data-bd=neon] .last-mark{width:58%;height:58%;background:transparent;border:2px solid rgba(255,255,255,.95);box-shadow:0 0 10px rgba(46,230,170,.95),inset 0 0 6px rgba(46,230,170,.8)}
+html:not(.atlas-skin)[data-bd=neon] .pdisc.b, html:not(.atlas-skin)[data-bd=neon] .hb-disc:not(.w){background:radial-gradient(circle at 50% 42%,#4be6bb,#1fa47d);box-shadow:0 0 6px rgba(46,230,170,.6)}
+html:not(.atlas-skin)[data-bd=neon] .pdisc.w, html:not(.atlas-skin)[data-bd=neon] .hb-disc.w{background:radial-gradient(circle at 50% 42%,#f6f6f2,#c9cac5)}
+
+/* d / e. leather boards: grained leather, round recessed holes instead of a grid, thick cylinder discs with a gold band */
+html:not(.atlas-skin)[data-bd=ivory]{--lea:#ece5d3;--lea2:#e0d7c1;--pipe:#2e2822;--hole-rim:rgba(255,255,255,.55);--crd:rgba(70,58,44,.6)}
+html:not(.atlas-skin)[data-bd=noir]{--lea:#232323;--lea2:#171717;--pipe:#4a4a4a;--hole-rim:rgba(255,255,255,.1);--crd:rgba(222,210,186,.5)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .frame{border-radius:8px;background:radial-gradient(ellipse at 40% 30%,var(--lea) 0%,var(--lea2) 100%);box-shadow:0 34px 70px -28px rgba(0,0,0,.85),0 0 0 2px var(--pipe),0 6px 0 -1px var(--pipe),inset 0 1px 0 rgba(255,255,255,.18)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .frame::before{inset:5px;border-radius:5px;border:1px dashed rgba(0,0,0,.22)}
+html:not(.atlas-skin)[data-bd=noir] .frame::before{border-color:rgba(255,255,255,.13)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .frame::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .4 0 0 0 -1.6 1.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+html:not(.atlas-skin)[data-bd=noir] .frame::after{mix-blend-mode:screen;opacity:.16}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .board{overflow:visible;background:transparent;box-shadow:none;z-index:1}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .board::after{display:none}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .cell{border:0}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .star{display:none}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .cell::after{content:"";position:absolute;width:62%;height:62%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 30%,#000 0%,#060606 55%,#141414 100%);box-shadow:inset 0 calc(var(--cell)*.05) calc(var(--cell)*.07) rgba(0,0,0,.95),0 1px 0 var(--hole-rim)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .cell.legal::before{z-index:1;width:20%;height:20%;background:#121212;box-shadow:0 0 0 2px rgba(214,178,94,.95),0 0 6px rgba(214,178,94,.6)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .board.turn-white .cell.legal::before{background:#f4efe2}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .coords{color:var(--crd)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .disc-wrap{width:66%;height:66%;margin-top:calc(var(--cell)*-.12)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .ghost{width:64%;height:64%}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .face.b{background:radial-gradient(ellipse at 38% 28%,#5a5a5a 0%,#1a1a1a 30%,#050505 75%,#000 100%);
+  box-shadow:0 calc(var(--cell)*.04) 0 #1a1a1a,0 calc(var(--cell)*.075) 0 #0c0c0c,0 calc(var(--cell)*.09) 0 #f0d58a,0 calc(var(--cell)*.125) 0 #c99f42,0 calc(var(--cell)*.145) 0 #7d5d1c,0 calc(var(--cell)*.17) calc(var(--cell)*.06) rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 1px rgba(255,255,255,.25)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .face.w{background:radial-gradient(ellipse at 38% 28%,#fffdf7 0%,#f3eee1 40%,#e2dac6 100%);
+  box-shadow:0 calc(var(--cell)*.04) 0 #ddd4bf,0 calc(var(--cell)*.075) 0 #c9bea4,0 calc(var(--cell)*.09) 0 #f0d58a,0 calc(var(--cell)*.125) 0 #c99f42,0 calc(var(--cell)*.145) 0 #7d5d1c,0 calc(var(--cell)*.17) calc(var(--cell)*.06) rgba(0,0,0,.45),inset 0 1px 1px rgba(255,255,255,.9)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .last-mark{width:16%;height:16%;margin-top:calc(var(--cell)*-.1);background:#d8362a;box-shadow:0 0 0 1.5px rgba(255,255,255,.7),0 0 6px rgba(216,54,42,.8)}
+html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .hint{margin-top:calc(var(--cell)*-.1)}
+html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
 </style>
 </head>
 <body>
@@ -1195,6 +1282,36 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
+    <div class="ng-cols"><div class="ng-col ng-set">
+    <div class="field" id="fLevel">
+      <label id="levelLabel"></label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="10" step="1" id="levelRange">
+        <div class="level-name" id="levelName"></div>
+      </div>
+    </div>
+    <div class="field hidden" id="fLevel2">
+      <label data-i18n="ng.levelW"></label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="10" step="1" id="levelRange2">
+        <div class="level-name" id="levelName2"></div>
+      </div>
+    </div>
+    <div class="field" id="fClock">
+      <label data-i18n="ng.clock"></label>
+      <div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div>
+    </div>
+    <div class="field" id="fDisplay">
+      <label data-i18n="ng.display"></label>
+      <div class="checks">
+        <label><input type="checkbox" id="optLegal"><span data-i18n="opt.legal"></span></label>
+        <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
+        <label><input type="checkbox" id="optEval"><span data-i18n="opt.eval"></span></label>
+        <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
+        <label><input type="checkbox" id="optCoach"><span data-i18n="opt.coach"></span></label>
+      </div>
+    </div>
+    </div><div class="ng-col ng-play">
     <div class="field">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
@@ -1219,34 +1336,12 @@ html[lang=ar] .pf-input{direction:rtl}
         <button data-v="0" data-i18n="ng.random"></button>
       </div>
     </div>
-    <div class="field" id="fClock">
-      <label data-i18n="ng.clock"></label>
-      <div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div>
+    <div class="field" id="fDesign">
+      <label data-i18n="bd.title"></label>
+      <div class="bdrow" id="bdRow"></div>
+      <p class="bd-note" data-i18n="bd.note3d"></p>
     </div>
-    <div class="field" id="fLevel">
-      <label id="levelLabel"></label>
-      <div class="level-wrap">
-        <input type="range" min="1" max="10" step="1" id="levelRange">
-        <div class="level-name" id="levelName"></div>
-      </div>
-    </div>
-    <div class="field hidden" id="fLevel2">
-      <label data-i18n="ng.levelW"></label>
-      <div class="level-wrap">
-        <input type="range" min="1" max="10" step="1" id="levelRange2">
-        <div class="level-name" id="levelName2"></div>
-      </div>
-    </div>
-    <div class="field">
-      <label data-i18n="ng.display"></label>
-      <div class="checks">
-        <label><input type="checkbox" id="optLegal"><span data-i18n="opt.legal"></span></label>
-        <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
-        <label><input type="checkbox" id="optEval"><span data-i18n="opt.eval"></span></label>
-        <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
-        <label><input type="checkbox" id="optCoach"><span data-i18n="opt.coach"></span></label>
-      </div>
-    </div>
+    </div></div>
     <div class="modal-actions">
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
@@ -1409,7 +1504,7 @@ html[lang=ar] .pf-input{direction:rtl}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021lx4"></script>
+<script src="i18n.js?v=20261021bd1"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
@@ -2332,7 +2427,7 @@ function openNew() {
   if (rated && settings.mode === 'ai') draft.mode = 'rated';
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last;
   $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach;
-  segSync(); showOverlay('#newOverlay');
+  segSync(); bdPicker(); showOverlay('#newOverlay');
 }
 $('#btnNew').onclick = () => (lesson || puzzle || net) ? openNew() : rsOpen();
 $('#btnCancelNew').onclick = () => {
@@ -2438,20 +2533,54 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 const rlPos = rows => rows.join('').split('').map(ch => ch === 'B' ? BLACK : ch === 'W' ? WHITE : 0);
 const rlSq = n => 'abcdefgh'.indexOf(n[0]) + (+n.slice(1) - 1) * 8;
 // small board picture. o.crop = [r0, c0, h, w], o.marks = {sq: 'ring'|'x'|'new'|'flip'|'good'|'bad'|'warn'}, o.arrows = [[fromSq, toSq]], o.coords, o.foot = [black, white]
+// ---------------------------------------------------------------- 2D board designs (CSS: html[data-bd]; mini boards: BD_PAL)
+const BD_KEYS = ['classic', 'navy', 'neon', 'ivory', 'noir'], BD_STORE = 'reversi-board-design';
+const BD_BAND = { band: '#d4ae55', band2: '#8f6c22' };
+const BD_PAL = {
+  classic: { rim: '#155238', rimS: 'rgba(201,169,97,.55)', bg: '#1d6b4c', grid: 'rgba(0,0,0,.4)', star: 'rgba(0,0,0,.55)', b: ['#121413', '#000'], w: ['#ecebe5', '#9a9c95'], crd: '#8fa39a' },
+  navy: { rim: '#0c1530', rimS: 'rgba(150,185,240,.55)', bg: '#173d80', vig: ['#2a5bb0', '#0a1d48'], grid: 'rgba(186,212,255,.3)', star: 'rgba(196,218,255,.6)', b: ['#121413', '#000'], w: ['#ecebe5', '#9a9c95'], crd: '#9fb6e0' },
+  neon: { rim: '#17191b', rimS: 'rgba(46,230,170,.65)', bg: '#2e3134', ring: 'rgba(46,230,170,.16)', grid: 'rgba(0,0,0,.65)', star: '#0d0e0f', b: ['#2fd0a0', '#1fa47d'], w: ['#ecece7', '#b9bab5'], flat: 1, crd: '#8fdcc2' },
+  ivory: Object.assign({ rim: '#e2dac6', rimS: '#2e2822', bg: '#ebe4d1', holes: 1, b: ['#141414', '#0b0b0b'], w: ['#f6f1e4', '#d8cfb9'], crd: '#6b5d4a' }, BD_BAND),
+  noir: Object.assign({ rim: '#1b1b1b', rimS: '#4a4a4a', bg: '#222', holes: 1, b: ['#161616', '#050505'], w: ['#f6f1e4', '#d8cfb9'], crd: '#c9bda4' }, BD_BAND),
+};
+let BD = 'classic';
+const bdOn = () => !document.documentElement.classList.contains('atlas-skin');   // the 3D portal skin keeps its own look
+const bdPal = k => BD_PAL[k || (bdOn() ? BD : 'classic')] || BD_PAL.classic;
+function bdApply(k, keep) {
+  BD = BD_KEYS.includes(k) ? k : 'classic'; settings.bd = BD;
+  document.documentElement.dataset.bd = BD;
+  if (!keep) { try { localStorage.setItem(BD_STORE, BD); } catch (e) {} }
+}
+try { const v = localStorage.getItem(BD_STORE); bdApply(BD_KEYS.includes(v) ? v : 'classic', true); } catch (e) { bdApply('classic', true); }
+function bdPicker() {
+  const el = $('#bdRow'); if (!el) return;
+  const cells = (positions[cur] && positions[cur].cells) || START_CELLS();
+  el.innerHTML = BD_KEYS.map(k => `<button type="button" data-bd="${k}" class="${k === BD ? 'sel' : ''}" aria-pressed="${k === BD}">${rlSVG(cells, { bd: k, mini: 1 })}<span>${t('bd.' + k)}</span></button>`).join('');
+}
+function START_CELLS() { const c = new Array(64).fill(0); c[27] = c[36] = 2; c[28] = c[35] = 1; return c; }
+$('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; bdApply(b.dataset.bd); bdPicker(); });
+
 function rlSVG(cells, o) {
   o = o || {};
+  const P = bdPal(o.bd);
   const [r0, c0, h, w] = o.crop || [0, 0, 8, 8], u = 26, cp = o.coords ? 14 : 0, pad = 4;
   const W = w * u + pad * 2 + cp, H = h * u + pad * 2 + cp + (o.foot ? 26 : 0);
   const X = c => pad + cp + (c - c0) * u, Y = r => pad + cp + (r - r0) * u;
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
-  s += `<rect x="${X(c0) - 2}" y="${Y(r0) - 2}" width="${w * u + 4}" height="${h * u + 4}" rx="5" fill="#155238" stroke="rgba(201,169,97,.55)"/>`;
-  s += `<rect x="${X(c0)}" y="${Y(r0)}" width="${w * u}" height="${h * u}" fill="#1d6b4c"/>`;
-  for (let i = 0; i <= w; i++) s += `<line x1="${X(c0 + i)}" y1="${Y(r0)}" x2="${X(c0 + i)}" y2="${Y(r0 + h)}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
-  for (let i = 0; i <= h; i++) s += `<line x1="${X(c0)}" y1="${Y(r0 + i)}" x2="${X(c0 + w)}" y2="${Y(r0 + i)}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
-  for (const [r, c] of [[2, 2], [2, 6], [6, 2], [6, 6]]) if (r > r0 && r < r0 + h && c > c0 && c < c0 + w) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="2.2" fill="rgba(0,0,0,.55)"/>`;
+  s += `<rect x="${X(c0) - 2}" y="${Y(r0) - 2}" width="${w * u + 4}" height="${h * u + 4}" rx="5" fill="${P.rim}" stroke="${P.rimS}"${P.holes ? ' stroke-width="1.6"' : ''}/>`;
+  s += `<rect x="${X(c0)}" y="${Y(r0)}" width="${w * u}" height="${h * u}" fill="${P.bg}"/>`;
+  if (P.vig) s += `<defs><radialGradient id="bdvig" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="${P.vig[0]}"/><stop offset="1" stop-color="${P.vig[1]}"/></radialGradient></defs><rect x="${X(c0)}" y="${Y(r0)}" width="${w * u}" height="${h * u}" fill="url(#bdvig)"/>`;
+  if (P.ring) s += `<circle cx="${X(4)}" cy="${Y(4)}" r="${u * 3.3}" fill="none" stroke="${P.ring}" stroke-width="${u * .12}"/>`;
+  if (P.holes) {
+    for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) s += `<circle cx="${X(c) + u / 2}" cy="${Y(r) + u / 2 + .6}" r="${u * .31}" fill="${P.rimS === '#2e2822' ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.1)'}"/><circle cx="${X(c) + u / 2}" cy="${Y(r) + u / 2}" r="${u * .31}" fill="#030303"/>`;
+  } else {
+    for (let i = 0; i <= w; i++) s += `<line x1="${X(c0 + i)}" y1="${Y(r0)}" x2="${X(c0 + i)}" y2="${Y(r0 + h)}" stroke="${P.grid}" stroke-width="1"/>`;
+    for (let i = 0; i <= h; i++) s += `<line x1="${X(c0)}" y1="${Y(r0 + i)}" x2="${X(c0 + w)}" y2="${Y(r0 + i)}" stroke="${P.grid}" stroke-width="1"/>`;
+    for (const [r, c] of [[2, 2], [2, 6], [6, 2], [6, 6]]) if (r > r0 && r < r0 + h && c > c0 && c < c0 + w) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="2.2" fill="${P.star}"/>`;
+  }
   if (o.coords) {
-    for (let c = c0; c < c0 + w; c++) s += `<text x="${X(c) + u / 2}" y="${pad + 9}" font-size="9.5" text-anchor="middle" fill="#8fa39a" font-family="JetBrains Mono,monospace">${'abcdefgh'[c]}</text>`;
-    for (let r = r0; r < r0 + h; r++) s += `<text x="${pad + 5}" y="${Y(r) + u / 2 + 3.5}" font-size="9.5" text-anchor="middle" fill="#8fa39a" font-family="JetBrains Mono,monospace">${r + 1}</text>`;
+    for (let c = c0; c < c0 + w; c++) s += `<text x="${X(c) + u / 2}" y="${pad + 9}" font-size="9.5" text-anchor="middle" fill="${P.crd}" font-family="JetBrains Mono,monospace">${'abcdefgh'[c]}</text>`;
+    for (let r = r0; r < r0 + h; r++) s += `<text x="${pad + 5}" y="${Y(r) + u / 2 + 3.5}" font-size="9.5" text-anchor="middle" fill="${P.crd}" font-family="JetBrains Mono,monospace">${r + 1}</text>`;
   }
   const mk = o.marks || {};
   const cx = q => X(q & 7) + u / 2, cy = q => Y(q >> 3) + u / 2;
@@ -2461,8 +2590,12 @@ function rlSVG(cells, o) {
     if (m === 'good') s += `<circle cx="${x}" cy="${y}" r="${u * 0.22}" fill="none" stroke="#5a4515" stroke-width="2"/>`;
     if (m === 'bad') s += `<path d="M${x - 5},${y - 5}L${x + 5},${y + 5}M${x + 5},${y - 5}L${x - 5},${y + 5}" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
     if (v) {
-      s += v === BLACK ? `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="#121413" stroke="#000" stroke-width="1"/><circle cx="${x - 3}" cy="${y - 3.5}" r="3" fill="rgba(255,255,255,.16)"/>`
-        : `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="#ecebe5" stroke="#9a9c95" stroke-width="1"/><circle cx="${x - 3}" cy="${y - 3.5}" r="3" fill="rgba(255,255,255,.8)"/>`;
+      const D = v === BLACK ? P.b : P.w;
+      if (P.holes) {   // thick cylinder seen from slightly above: gold band, side, polished top
+        const R = u * 0.33, ty = y - 2.2;
+        s += `<circle cx="${x}" cy="${ty + 4.4}" r="${R}" fill="${P.band2}"/><circle cx="${x}" cy="${ty + 3.4}" r="${R}" fill="${P.band}"/><circle cx="${x}" cy="${ty + 1.8}" r="${R}" fill="${D[1]}"/><circle cx="${x}" cy="${ty}" r="${R}" fill="${D[0]}"/><circle cx="${x - 2.6}" cy="${ty - 2.8}" r="2.4" fill="rgba(255,255,255,${v === BLACK ? .22 : .85})"/>`;
+      } else if (P.flat) s += `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${D[0]}" stroke="${D[1]}" stroke-width="1"/>`;
+      else s += `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${D[0]}" stroke="${D[1]}" stroke-width="1"/><circle cx="${x - 3}" cy="${y - 3.5}" r="3" fill="rgba(255,255,255,${v === BLACK ? .16 : .8})"/>`;
     }
     if (m === 'ring') s += `<circle cx="${x}" cy="${y}" r="${u * 0.3}" fill="rgba(226,194,117,.18)" stroke="#e2c275" stroke-width="2" stroke-dasharray="3.5 2.5"/>`;
     else if (m === 'new') s += `<circle cx="${x}" cy="${y}" r="${u * 0.46}" fill="none" stroke="#e2c275" stroke-width="2.4"/>`;

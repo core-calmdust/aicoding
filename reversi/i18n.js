@@ -710,3 +710,19 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+// v4.2: 2D board designs (new-game dialog picker)
+(function () {
+const S = {
+ja: { "bd.title": "盤のデザイン", "bd.classic": "クラシック", "bd.navy": "ディープ\u200bブルー", "bd.neon": "エレクトロ", "bd.ivory": "アイボリー\u200bレザー", "bd.noir": "ブラック\u200bレザー", "bd.note3d": "3D表示では盤のデザインは変わりません（2D表示用の設定です）。" },
+en: { "bd.title": "Board design", "bd.classic": "Classic", "bd.navy": "Deep Blue", "bd.neon": "Electro", "bd.ivory": "Ivory Leather", "bd.noir": "Black Leather", "bd.note3d": "Board designs apply to the 2D board only; the 3D view keeps its own look." },
+zh: { "bd.title": "棋盘设计", "bd.classic": "经典", "bd.navy": "深蓝", "bd.neon": "电子", "bd.ivory": "象牙皮革", "bd.noir": "黑色皮革", "bd.note3d": "棋盘设计仅适用于2D棋盘，3D显示保持原样。" },
+ko: { "bd.title": "보드 디자인", "bd.classic": "클래식", "bd.navy": "딥 블루", "bd.neon": "일렉트로", "bd.ivory": "아이보리 가죽", "bd.noir": "블랙 가죽", "bd.note3d": "보드 디자인은 2D 보드에만 적용되며 3D 표시는 그대로입니다." },
+es: { "bd.title": "Diseño del tablero", "bd.classic": "Clásico", "bd.navy": "Azul profundo", "bd.neon": "Electro", "bd.ivory": "Cuero marfil", "bd.noir": "Cuero negro", "bd.note3d": "Los diseños solo se aplican al tablero 2D; la vista 3D mantiene su aspecto." },
+fr: { "bd.title": "Style du plateau", "bd.classic": "Classique", "bd.navy": "Bleu profond", "bd.neon": "Électro", "bd.ivory": "Cuir ivoire", "bd.noir": "Cuir noir", "bd.note3d": "Les styles ne s'appliquent qu'au plateau 2D ; la vue 3D garde son apparence." },
+pt: { "bd.title": "Design do tabuleiro", "bd.classic": "Clássico", "bd.navy": "Azul profundo", "bd.neon": "Eletro", "bd.ivory": "Couro marfim", "bd.noir": "Couro preto", "bd.note3d": "Os designs valem só para o tabuleiro 2D; a vista 3D mantém o visual próprio." },
+de: { "bd.title": "Brettdesign", "bd.classic": "Klassisch", "bd.navy": "Tiefblau", "bd.neon": "Elektro", "bd.ivory": "Elfenbein-Leder", "bd.noir": "Schwarzes Leder", "bd.note3d": "Brettdesigns gelten nur für das 2D-Brett; die 3D-Ansicht behält ihr Aussehen." },
+hi: { "bd.title": "बोर्ड डिज़ाइन", "bd.classic": "क्लासिक", "bd.navy": "गहरा नीला", "bd.neon": "इलेक्ट्रो", "bd.ivory": "आइवरी लेदर", "bd.noir": "काला लेदर", "bd.note3d": "बोर्ड डिज़ाइन सिर्फ़ 2D बोर्ड पर लागू होते हैं; 3D दृश्य वैसा ही रहता है।" },
+ar: { "bd.title": "تصميم اللوحة", "bd.classic": "كلاسيكي", "bd.navy": "أزرق عميق", "bd.neon": "إلكترو", "bd.ivory": "جلد عاجي", "bd.noir": "جلد أسود", "bd.note3d": "تنطبق التصاميم على اللوحة ثنائية الأبعاد فقط، ويحتفظ العرض ثلاثي الأبعاد بمظهره." }
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();
