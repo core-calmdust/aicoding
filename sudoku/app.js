@@ -21,7 +21,9 @@ const ORDER = [0, 1, 2, 3, 4, 10, 11, 5, 12, 6, 7, 13, 14, 8, 15, 16, 17, 9, 18,
 const TNO = ti => ORDER.indexOf(ti) + 1;
 // each theme is split into two collections of 25 (alternate puzzles: even → part 0, odd → part 1)
 const CSZ = 25, NC = NT * 2;
-const CORDER = ORDER.flatMap(ti => [ti * 2, ti * 2 + 1]);
+// display order: by difficulty; twins and similar-looking scenes are never next to each other
+// (checked for neighbours at distance 1, 2 = phone grid row below, 5 = PC grid row below)
+const CORDER = 'forest harbor2 sweets forest2 harbor sweets2 garden sea2 park2 cloudranch sea iceberg2 garden2 cloudranch2 festival iceberg park festival2 autumn2 snow desert2 autumn snow2 stars desert toytown stars2 rain toytown2 library jungle castle2 library2 bakery rain2 moon jungle2 bakery2 castle moon2'.split(' ').map(k => THEMES.indexOf(k.replace(/2$/, '')) * 2 + (/2$/.test(k) ? 1 : 0));
 const CNO = ci => CORDER.indexOf(ci) + 1;
 const cPi = (ci, k) => k * 2 + (ci & 1);                 // theme puzzle index of collection ci, local k
 const cOf = (ti, pi) => ti * 2 + (pi & 1);                // collection of a theme puzzle
