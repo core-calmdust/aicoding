@@ -658,18 +658,30 @@ function bookMoves(uciSeq) { if (!BOOK) buildBook(); const s = BOOK.get(uciSeq.j
 
 // ---------------------------------------------------------------- levels
 const LEVELS = {
-  1: { d: 1, noise: 220, blunder: 0.25 },
-  2: { d: 1, noise: 110, blunder: 0.1 },
-  3: { d: 2, noise: 65 },
-  4: { d: 3, noise: 38 },
-  5: { d: 4, noise: 22, book: true },
+  1: { d: 1, noise: 400, blunder: 0.5 },
+  2: { d: 1, noise: 300, blunder: 0.35 },
+  3: { d: 1, noise: 220, blunder: 0.25 },
+  4: { d: 1, noise: 160, blunder: 0.17 },
+  5: { d: 1, noise: 110, blunder: 0.1 },
+  6: { d: 2, noise: 100, blunder: 0.05 },
+  7: { d: 2, noise: 80 },
+  8: { d: 2, noise: 65 },
+  9: { d: 3, noise: 50 },
+  10: { d: 3, noise: 38 },
+  11: { d: 4, noise: 30, book: true },
+  12: { d: 4, noise: 22, book: true },
   // wnodes / ms: limits for the WebAssembly engine; d / ms are also used by the JS fallback
-  6: { d: 4, ms: 150, wnodes: 1500, book: true },
-  7: { d: 64, ms: 300, wnodes: 8000, book: true },
-  8: { d: 64, ms: 500, book: true },
-  9: { d: 64, ms: 1500, book: true },
-  10: { d: 64, ms: 4000, book: true },
+  13: { d: 3, ms: 100, wnodes: 600, book: true },
+  14: { d: 4, ms: 150, wnodes: 1500, book: true },
+  15: { d: 5, ms: 220, wnodes: 3500, book: true },
+  16: { d: 64, ms: 300, wnodes: 8000, book: true },
+  17: { d: 64, ms: 400, wnodes: 25000, book: true },
+  18: { d: 64, ms: 500, book: true },
+  19: { d: 64, ms: 1500, book: true },
+  20: { d: 64, ms: 4000, book: true },
 };
+// saved settings / records from the 10-level era map onto these levels
+const OLD_LEVEL = [0, 3, 5, 8, 10, 12, 14, 16, 18, 19, 20];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
 // ---------------------------------------------------------------- helpers for the page / worker
@@ -686,7 +698,7 @@ const kindOf = v => Math.abs(v) > MATET ? 'mate' : 'cp';
 function think(fen, moves, level, rand) {
   rand = rand || Math.random;
   const { pos, hashes } = replay(fen, moves);
-  const L = LEVELS[level] || LEVELS[5];
+  const L = LEVELS[level] || LEVELS[12];
   const all = pos.legal(); if (!all.length) return { move: 0 };
   if (L.book && !fen) {
     const bk = bookMoves(uciSeq(moves));
@@ -729,7 +741,7 @@ function perft(pos, d) {
   return c;
 }
 
-const API = { P, N, B, R, Q, K, MATE, MATET, START, Pos, Engine, evaluate, replay, think, analyze, mate, perft, LEVELS, sqName, sqOf, mFrom, mTo, mPromo, mFlag, kindOf, uciSeq, bookMoves };
+const API = { P, N, B, R, Q, K, MATE, MATET, START, Pos, Engine, evaluate, replay, think, analyze, mate, perft, LEVELS, OLD_LEVEL, sqName, sqOf, mFrom, mTo, mPromo, mFlag, kindOf, uciSeq, bookMoves };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.ChessEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
@@ -782,7 +794,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   }
   function wThink(fen, moves, level, rand) {
     rand = rand || Math.random;
-    const L = LEVELS[level] || LEVELS[5];
+    const L = LEVELS[level] || LEVELS[12];
     const jpos = replay(fen, moves).pos;
     if (!jpos.legal().length) return { move: 0 };
     if (L.book && !fen) {

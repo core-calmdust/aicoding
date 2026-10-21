@@ -80,13 +80,21 @@ function hanging(pos, color) {
 
 // ====================================================================== state
 const STORE = 'aicoding-chess';
-const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', coach: true };
+const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', coach: true };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
+const LV = i => t('lv')[i];
+// level description: how the AI plays + its rating on this site's scale (RT_LV)
+function LVD(i) {
+  const L = E.LEVELS[i] || {}, nf = n => n.toLocaleString(LANG === 'ar' || LANG === 'hi' ? 'en' : LANG);
+  const how = L.blunder >= 0.1 ? t('lvd.blunder') : L.noise !== undefined ? t('lvd.ply', { n: L.d }) : L.wnodes ? t('lvd.nodes', { n: nf(L.wnodes) }) : t('lvd.sec', { n: (L.ms / 1000).toLocaleString(LANG === 'ar' || LANG === 'hi' ? 'en' : LANG) });
+  return how + ' · ' + t('lvd.r', { r: RT_LV[i] });
+}
+// settings / records saved in the 10-level era (no lvv) map onto the 20 levels
+const lvMap = v => (v >= 1 && v <= 10 ? E.OLD_LEVEL[v | 0] : v) || 12;
 const $ = s => document.querySelector(s);
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
@@ -109,6 +117,8 @@ function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (!d) return false;
     Object.assign(settings, d.settings || {});
+    const oldLv = !d.settings || d.settings.lvv !== 2;
+    if (oldLv) { settings.level = lvMap(settings.level); settings.level2 = lvMap(settings.level2); settings.lvv = 2; if (d.rated && d.rated.lv) d.rated.lv = lvMap(d.rated.lv); }
     if (settings.mode === 'online') settings.mode = 'ai';
     if (Array.isArray(d.moves) && validMoves(d.moves)) {
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
@@ -129,7 +139,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019g'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261021L'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -595,7 +605,13 @@ async function maybeAI(tok) {
   const p = toMoveAt(cur); if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now();
-  const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p) });
+  let res = null;
+  if (settings.mode === 'ai' && !rgame && settings.style && !startFen) {
+    await openReady;
+    const u = styleMove(E.uciSeq(moves.slice(0, cur)));
+    if (u) { const pos = E.replay(null, moves.slice(0, cur)).pos; res = { move: pos.fromUci(u), book: true }; }
+  }
+  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? 650 : 350) - (Date.now() - t0);
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -810,6 +826,8 @@ function segSync() {
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
+  $('#fStyle').classList.toggle('hidden', m !== 'ai');
+  styleFill();
   $('#fDisplay').classList.toggle('hidden', !game);
   $('#fInfo').classList.toggle('hidden', game || m === 'rated');
   $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : ol ? t('ol.desc') : '';
@@ -819,12 +837,13 @@ function segSync() {
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog() {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : net ? 'online' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : net ? 'online' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, style: settings.style || '' };
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optCoach').checked = settings.coach;
   segSync(); showOverlay('#newOverlay');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
-$('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
+$('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; const d = styleDef(draft.style); if (d && draft.color !== (d.side === 'w' ? P2 : P1)) draft.style = ''; segSync(); } };
+$('#styleSel').onchange = e => { draft.style = e.target.value; const d = styleDef(draft.style); if (d) draft.color = d.side === 'w' ? P2 : P1; segSync(); };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -835,20 +854,71 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   exitSpecial();
   if (draft.mode === 'rated') { rtStart(); return; }
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, coach: $('#optCoach').checked, flip: false });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, style: draft.mode === 'ai' ? draft.style || '' : settings.style, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, coach: $('#optCoach').checked, flip: false });
   newGame();
 };
+
+// ====================================================================== the AI's opening (new-game dialog)
+// The AI follows the chosen opening while the game stays in it: the main line(s) first, then the moves strong players chose
+// in that opening's positions (openings.json problems, weighted by frequency). Out of the opening, it plays normally.
+const STYLE_X = [
+  { id: 'qg', side: 'w', lines: ['d2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3', 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3', 'd2d4 d7d5 c2c4 d5c4 g1f3 g8f6 e2e3 e7e6 f1c4 c7c5 e1g1', 'd2d4 g8f6 c2c4 e7e6 g1f3 d7d5 b1c3'] },
+  { id: 'scotch', side: 'w', lines: ['e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5', 'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 f8c5 c1e3 d8f6 c2c3'] },
+  { id: 'kgambit', side: 'w', lines: ['e2e4 e7e5 f2f4 e5f4 g1f3 g7g5 h2h4 g5g4 f3e5', 'e2e4 e7e5 f2f4 e5f4 g1f3 d7d6 d2d4 g7g5 h2h4', 'e2e4 e7e5 f2f4 d7d5 e4d5 e5f4 g1f3', 'e2e4 e7e5 f2f4 f8c5 g1f3 d7d6 c2c3'] },
+  { id: 'vienna', side: 'w', lines: ['e2e4 e7e5 b1c3 g8f6 f2f4 d7d5 f4e5 f6e4 g1f3', 'e2e4 e7e5 b1c3 b8c6 g2g3 g7g6 f1g2 f8g7 d2d3', 'e2e4 e7e5 b1c3 f8c5 g1f3 d7d6 d2d4'] },
+  { id: 'reti', side: 'w', lines: ['g1f3 d7d5 c2c4 e7e6 g2g3 g8f6 f1g2 f8e7 e1g1 e8g8', 'g1f3 d7d5 c2c4 d5d4 e2e3 b8c6 e3d4', 'g1f3 g8f6 c2c4 g7g6 g2g3 f8g7 f1g2 e8g8 e1g1', 'g1f3 c7c5 c2c4 b8c6 b1c3'] },
+  { id: 'open', side: 'b', lines: ['e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6 d2d3 d7d6', 'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7', 'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6', 'e2e4 e7e5 b1c3 g8f6', 'e2e4 e7e5 f2f4 e5f4'] },
+  { id: 'petrov', side: 'b', lines: ['e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 d2d4 d6d5 f1d3 b8c6', 'e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 f1d3 d7d5 f3e5', 'e2e4 e7e5 g1f3 g8f6 b1c3 b8c6'] },
+  { id: 'pirc', side: 'b', lines: ['e2e4 d7d6 d2d4 g8f6 b1c3 g7g6 g1f3 f8g7 f1e2 e8g8 e1g1 c7c6', 'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6 f2f4 f8g7 g1f3 e8g8', 'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6 c1e3 c7c6'] },
+  { id: 'alekhine', side: 'b', lines: ['e2e4 g8f6 e4e5 f6d5 d2d4 d7d6 g1f3 c8g4 f1e2 e7e6 e1g1 f8e7', 'e2e4 g8f6 b1c3 d7d5 e4d5 f6d5', 'e2e4 g8f6 d2d3 e7e5'] },
+  { id: 'dutch', side: 'b', lines: ['d2d4 f7f5 g2g3 g8f6 f1g2 e7e6 g1f3 f8e7 e1g1 e8g8 c2c4 d7d6', 'd2d4 f7f5 c2c4 g8f6 b1c3 e7e6', 'd2d4 f7f5 g1f3 g8f6 g2g3 g7g6', 'd2d4 f7f5 c1g5 g7g6', 'g1f3 f7f5', 'c2c4 f7f5'] },
+  { id: 'grunfeld', side: 'b', lines: ['d2d4 g8f6 c2c4 g7g6 b1c3 d7d5 c4d5 f6d5 e2e4 d5c3 b2c3 f8g7 g1f3 c7c5', 'd2d4 g8f6 c2c4 g7g6 g1f3 f8g7 g2g3 d7d5', 'd2d4 g8f6 c2c4 g7g6 b1c3 d7d5 g1f3 f8g7', 'd2d4 g8f6 g1f3 g7g6'] },
+  { id: 'qga', side: 'b', lines: ['d2d4 d7d5 c2c4 d5c4 g1f3 g8f6 e2e3 e7e6 f1c4 c7c5 e1g1 a7a6', 'd2d4 d7d5 c2c4 d5c4 e2e4 e7e5 g1f3 e5d4', 'd2d4 d7d5 c2c4 d5c4 e2e3 e7e5'] },
+];
+function styleDefs() {
+  const out = [];
+  if (OPEN) OPEN.sets.forEach(g => out.push({ key: 'o:' + g.id, side: g.side, name: LL(g.title), lines: [g.study.steps.map(x => x[0]), g.prefix.split(' ')], probs: g.problems || [] }));
+  STYLE_X.forEach(x => out.push({ key: 'x:' + x.id, side: x.side, name: t('style.x.' + x.id), lines: x.lines.map(l => l.split(' ')), probs: [] }));
+  return out;
+}
+function styleDef(key) { return key ? styleDefs().find(d => d.key === key) || null : null; }
+function styleFill() {
+  const sel = $('#styleSel'); if (!sel) return;
+  const defs = styleDefs(), grp = side => defs.filter(d => d.side === side).sort((a, b) => a.name.localeCompare(b.name, LANG)).map(d => `<option value="${d.key}">${d.name}</option>`).join('');
+  sel.innerHTML = `<option value="">${t('style.auto')}</option><optgroup label="${t('style.grpW')}">${grp('w')}</optgroup><optgroup label="${t('style.grpB')}">${grp('b')}</optgroup>`;
+  if (draft.style && !defs.some(d => d.key === draft.style)) { if (OPEN) draft.style = ''; else { sel.insertAdjacentHTML('beforeend', `<option value="${draft.style}">…</option>`); } }
+  sel.value = draft.style || '';
+}
+// the AI's next move from the chosen opening, or '' (ucis: the game so far)
+function styleMove(ucis) {
+  const d = styleDef(settings.style); if (!d || ucis.length >= 40) return '';
+  const aiSide = ucis.length % 2 ? 'b' : 'w'; if (aiSide !== d.side) return '';
+  const nexts = [];
+  for (const L of d.lines) if (L.length > ucis.length && ucis.every((u, i) => L[i] === u)) nexts.push(L[ucis.length]);
+  const pos = E.Pos.fromFEN(E.START); for (const u of ucis) pos.make(pos.fromUci(u));
+  const ok = u => !!pos.fromUci(u);
+  const line = nexts.filter(ok);
+  if (line.length) return line[Math.floor(Math.random() * line.length)];
+  const key = pos.fen().split(' ').slice(0, 4).join(' ');
+  const pr = d.probs.find(p => p.fen.split(' ').slice(0, 4).join(' ') === key);
+  if (pr && pr.cand && pr.cand.length) {
+    const c = pr.cand.filter(x => ok(x[0])), tot = c.reduce((a, x) => a + x[1], 0);
+    let r = Math.random() * tot; for (const x of c) { r -= x[1]; if (r <= 0) return x[0]; }
+  }
+  return '';
+}
 
 // ====================================================================== rated games against the AI (local Elo)
 // Each AI level has a rating measured against Stockfish's UCI_Elo scale (MODEL_CARD.md); the opponent is picked around the
 // player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 700, 1000, 1450, 1700, 1900, 2200, 2450, 3000, 3050, 3100];
+const RT_LV = [0, 400, 550, 700, 850, 1000, 1150, 1300, 1450, 1600, 1700, 1800, 1900, 2050, 2250, 2350, 2450, 2700, 3000, 3050, 3100];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
   if (!Array.isArray(s.hist)) s.hist = [];
+  if (s.lvv !== 2) { s.hist.forEach(h => { h.lv = lvMap(h.lv); }); s.lvv = 2; }
   return s;
 }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
@@ -860,7 +930,7 @@ function rtPick(r) {
   { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x]).slice(1)); }
   const u = Math.random(), v = Math.random();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
-  let lv = 1; for (let i = 1; i <= 10; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
+  let lv = 1; for (let i = 1; i < RT_LV.length; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
   const diff = RT_LV[lv] - r;
   return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
@@ -1147,7 +1217,7 @@ $('#lsQuit').onclick = () => quitSpecial();
 $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
 $('#btnLessonPlay').onclick = () => {
   hideOverlay('#lessonOverlay'); savedGame = null; exitSpecial();
-  Object.assign(settings, { mode: 'ai', color: P1, level: 1 });
+  Object.assign(settings, { mode: 'ai', color: P1, level: 3, style: '' });
   newGame();
 };
 function drillMove(m) {
@@ -1496,7 +1566,7 @@ async function pzDefend(left) {
   const dl = await mateReq(left, true);
   if (dl && dl.length) return pickDefence(dl);
   if (dl && !dl.length) return 0;
-  const r = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 7 });
+  const r = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 16 });
   return r && r.move || 0;
 }
 async function puzzleMove(m) {
@@ -2518,7 +2588,7 @@ async function googleLink() {
 // rated record: the one with the newer last game (else more games), settings / name: newest change wins.
 const ChessSync = (() => {
   const META = 'chess-sync-meta', RU_KEY = 'aicoding-chess-rules-seen';
-  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'coach', 'level', 'level2', 'color', 'lang'];
+  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'coach', 'level', 'level2', 'lvv', 'style', 'color', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };
@@ -2600,6 +2670,7 @@ const ChessSync = (() => {
     const langWas = LANG;
     if (d.set) {
       SET_KEYS.forEach(k => { if (k !== 'lang' && d.set[k] !== undefined) settings[k] = d.set[k]; });
+      if (d.set.lvv !== 2) { settings.level = lvMap(settings.level); settings.level2 = lvMap(settings.level2); settings.lvv = 2; }
       let lang = d.set.lang && SUPPORTED.includes(d.set.lang) ? d.set.lang : LANG;
       m.setH = JSON.stringify(Object.assign(setOf(), { lang })); m.setT = d.setT || 1;
       if (lang !== langWas) { const sel = $('#langSel'); sel.value = lang; sel.dispatchEvent(new Event('change')); }
