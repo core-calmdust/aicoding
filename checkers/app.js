@@ -829,14 +829,18 @@ function miniSVG(spec, o) {
   const fl = !!o.flip, P = i => { const [r, c] = E.RC[i]; return fl ? [7 - r, 7 - c] : [r, c]; };
   const u = 30, pad = 6, W = 8 * u + pad * 2, X = i => pad + (P(i)[1] + 0.5) * u, Y = i => pad + (P(i)[0] + 0.5) * u;
   const BP = BD_PAL[o.bd || settings.bd] || BD_PAL.classic, PP = PC_PAL[o.pcs || settings.pcs] || PC_PAL.ebony;
-  let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="#1a1410" stroke="rgba(201,169,97,.5)"/>`;
+  // o.crop = [r0, r1, c0, c1] (board rows / columns, see cropOf): only that part is shown, enlarged, in a square frame;
+  // a side on the board's real edge keeps the frame, a cut side fades out so the board visibly goes on (pieces outside are left out)
+  const cr = Array.isArray(o.crop) ? o.crop : null, inC = i => { if (!cr) return true; const [r, c] = E.RC[i]; return r >= cr[0] && r <= cr[1] && c >= cr[2] && c <= cr[3]; };
+  let s = cr ? '' : `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
+  s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="#1a1410" stroke="rgba(201,169,97,.5)"/>`;
   for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) s += `<rect x="${pad + c * u}" y="${pad + r * u}" width="${u}" height="${u}" fill="${(r + c) & 1 ? BP[0] : BP[1]}"/>`;
   if (o.nums) for (let i = 0; i < 32; i++) s += `<text x="${X(i) - u * 0.42}" y="${Y(i) - u * 0.24}" font-size="${u * 0.24}" fill="rgba(255,246,220,.5)" font-family="JetBrains Mono,monospace">${i + 1}</text>`;
   if (o.last != null && o.last >= 0) s += `<rect x="${X(o.last) - u / 2}" y="${Y(o.last) - u / 2}" width="${u}" height="${u}" fill="rgba(255,222,130,.28)"/>`;
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="4.5" fill="rgba(255,236,170,.9)"/>`;
   const b = spec && spec.b ? spec.b : '';
   for (let i = 0; i < 32; i++) {
-    const ch = b[i]; if (!ch || ch === '.') continue;
+    const ch = b[i]; if (!ch || ch === '.' || !inC(i)) continue;
     const p1 = ch === 'b' || ch === 'B', king = ch === 'B' || ch === 'W', x = X(i), y = Y(i), r = u * 0.38;
     s += `<circle cx="${x}" cy="${y}" r="${r}" fill="${PP[p1 ? 0 : 1][0]}" stroke="${PP[p1 ? 0 : 1][1]}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="${r * 0.68}" fill="none" stroke="${p1 ? 'rgba(255,220,200,.22)' : 'rgba(120,100,60,.35)'}" stroke-width="1.2"/>`;
     if (king) s += `<path transform="translate(${x - r * 0.6},${y - r * 0.6}) scale(${r * 1.2 / 24})" d="M3 18 4.5 7l5 4.5L12 5l2.5 6.5 5-4.5L21 18z" fill="#f2d27a" stroke="#7a5a1c" stroke-width="1.4" stroke-linejoin="round"/>`;
@@ -855,7 +859,43 @@ function miniSVG(spec, o) {
     s += `<path d="M${pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join('L')}M${ex - ux * h - uy * h},${ey - uy * h + ux * h}L${ex},${ey}L${ex - ux * h + uy * h},${ey - uy * h - ux * h}" stroke="#ffe9a8" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   if (o.click) for (let i = 0; i < 32; i++) s += `<rect data-p="${i}" x="${X(i) - u / 2}" y="${Y(i) - u / 2}" width="${u}" height="${u}" fill="transparent"/>`;
-  return s + '</svg>';
+  if (!cr) return s + '</svg>';
+  // cropped: the shown rows / columns on screen (flipped boards turn the box round too)
+  const [r0, r1, c0, c1] = fl ? [7 - cr[1], 7 - cr[0], 7 - cr[3], 7 - cr[2]] : cr, FADE = .6 * u, id = 'ckc' + (++CROP_UID);
+  const eT = r0 === 0, eB = r1 === 7, eL = c0 === 0, eR = c1 === 7;
+  const x0 = eL ? 0 : pad + c0 * u - FADE, x1 = eR ? W : pad + (c1 + 1) * u + FADE, y0 = eT ? 0 : pad + r0 * u - FADE, y1 = eB ? W : pad + (r1 + 1) * u + FADE;
+  const k = 100 / Math.max(x1 - x0, y1 - y0), bw = (x1 - x0) * k, bh = (y1 - y0) * k, ox = (100 - bw) / 2, oy = (100 - bh) / 2, f = FADE * k * .9, n = v => +v.toFixed(2);
+  const stops = (len, s0, s1) => `<stop offset="0" stop-color="#fff" stop-opacity="${s0 ? 1 : 0}"/><stop offset="${n(s0 ? 0 : f / len)}" stop-color="#fff"/><stop offset="${n(s1 ? 1 : 1 - f / len)}" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="${s1 ? 1 : 0}"/>`;
+  return `<svg class="${o.cls || 'mini'} crop" viewBox="0 0 100 100"><defs>` +
+    `<linearGradient id="${id}h" gradientUnits="userSpaceOnUse" x1="${n(ox)}" y1="0" x2="${n(ox + bw)}" y2="0">${stops(bw, eL, eR)}</linearGradient>` +
+    `<linearGradient id="${id}v" gradientUnits="userSpaceOnUse" x1="0" y1="${n(oy)}" x2="0" y2="${n(oy + bh)}">${stops(bh, eT, eB)}</linearGradient>` +
+    `<mask id="${id}H"><rect width="100" height="100" fill="url(#${id}h)"/></mask><mask id="${id}V"><rect width="100" height="100" fill="url(#${id}v)"/></mask></defs>` +
+    `<g mask="url(#${id}V)"><g mask="url(#${id}H)"><svg x="${n(ox)}" y="${n(oy)}" width="${n(bw)}" height="${n(bh)}" viewBox="${n(x0)} ${n(y0)} ${n(x1 - x0)} ${n(y1 - y0)}">${s}</svg></g></g></svg>`;
+}
+// ---- crop for the list thumbnails: an 8x8 board shrunk to ~90px makes the pieces tiny, so a position with few pieces
+// (endgame lessons / puzzles) shows only the part around them: the pieces (+ the diagram's marks and arrows) and one square around,
+// at least 5x5, square or one square longer, taken to the board's edge when only one square would be left; still 7 or more → whole board.
+// The answer of a puzzle is never used (that would be a hint).
+var CROP_UID = 0;
+// hand-tuned crops: 'pz:<theme id>:<index>' | 'ls:<step id>' → [c0, r0, c1, r1] (columns / rows 0-7 from the top-left as Black sees it), or false = whole board
+// (a puzzle / lesson problem / diagram can also carry its own .crop)
+const CROP = {};
+function cropOf(spec, extra, key, data) {
+  const m = CROP[key] !== undefined ? CROP[key] : data && data.crop !== undefined ? data.crop : null;
+  if (m === false) return null;
+  if (Array.isArray(m) && m.length === 4) { const [a, b, c, d] = m.map(Number); return [Math.min(b, d), Math.max(b, d), Math.min(a, c), Math.max(a, c)]; }
+  const S = []; for (let i = 0; i < 32; i++) if (spec.b[i] && spec.b[i] !== '.') S.push(i);
+  for (const i of extra || []) if (i >= 0 && i < 32) S.push(i);
+  if (!S.length) return null;
+  const rs = S.map(i => E.RC[i][0]), cs = S.map(i => E.RC[i][1]);
+  let r0 = Math.max(0, Math.min(...rs) - 1), r1 = Math.min(7, Math.max(...rs) + 1), c0 = Math.max(0, Math.min(...cs) - 1), c1 = Math.min(7, Math.max(...cs) + 1);
+  const grow = (a, b, len) => { while (b - a + 1 < len) { if (b < 7 && (a <= 0 || 7 - b <= a)) b++; else a--; } return [a, b]; };
+  const snap = () => { if (r0 === 1) r0 = 0; if (r1 === 6) r1 = 7; if (c0 === 1) c0 = 0; if (c1 === 6) c1 = 7; };
+  [r0, r1] = grow(r0, r1, 5); [c0, c1] = grow(c0, c1, 5); snap();
+  const Wd = c1 - c0 + 1, Ht = r1 - r0 + 1;
+  if (Wd < Ht - 1) [c0, c1] = grow(c0, c1, Ht - 1); else if (Ht < Wd - 1) [r0, r1] = grow(r0, r1, Wd - 1);
+  snap();
+  return Math.max(c1 - c0, r1 - r0) + 1 >= 7 ? null : [r0, r1, c0, c1];
 }
 // position spec from lists of square numbers (1..32): men / kings
 function specOf(o) {
@@ -1136,14 +1176,16 @@ const lsIcon = k => `<span class="ic sv">${LS_ICON[k] || '●'}</span>`;
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
 const lxSt = (r, okTxt) => r ? (r[okTxt ? 'pass' : 'clear'] ? `<span class="lx-st ok">✓ ${okTxt ? '' : t('ls.clear') + ' '}${t('u.pt', { n: r.best })}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
-function diagSVG(d, cls) {
+function diagSVG(d, cls, crop) {
   const marks = {}; for (const [n, k] of d.marks || []) marks[n - 1] = k;
-  return miniSVG(specOf(d), { cls, marks, arrows: (d.arrows || []).map(a => a.map(x => x - 1)), flip: !!d.flip });
+  return miniSVG(specOf(d), { cls, marks, arrows: (d.arrows || []).map(a => a.map(x => x - 1)), flip: !!d.flip, crop });
 }
 function lessonThumb(s) {
-  if (s.diagram) return diagSVG(s.diagram, 'lxb');
-  const P = s.problems[0]; return P && P.s ? miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 }) : '';
+  const d = s.diagram;
+  if (d) { const sp = specOf(d), ex = (d.marks || []).map(m => m[0] - 1).concat(...(d.arrows || []).map(a => a.map(x => x - 1))); return diagSVG(d, 'lxb', cropOf(sp, ex, 'ls:' + s.id, d)); }
+  const P = s.problems[0]; return P && P.s ? miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1, crop: cropOf(P.s, null, 'ls:' + s.id, P) }) : '';
 }
+const pzThumbSVG = (T, j, P) => miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1, crop: cropOf(P.s, null, 'pz:' + T.id + ':' + j, P) });
 const lsCourseSel = {};
 async function openLessons(v, course) {
   const d = await lessonsReady; selTab('lesson');
@@ -1492,7 +1534,7 @@ const PZ_TSVG = {
   emen: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/>',
 };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
-function pzThumbOf(T, j, date) { const P = pzAt(T, j < 0 ? T.puzzles.length - 1 : j, date); return P && P.s ? { board: miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 }), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
+function pzThumbOf(T, j, date) { if (j < 0) j = T.puzzles.length - 1; const P = pzAt(T, j, date); return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
 async function openPuzzles() {
   const d = await puzzlesReady; selTab('puzzle');
   if (!d) { toast(t('ls.fail')); return; }
@@ -1524,7 +1566,7 @@ function openPzGrid(i, cur) {
   PZBook.setLang(LANG);
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(L), name: t('pz.th.' + L.id), desc: t('pz.th.' + L.id + '.sub'), chips: [t('pz.grp' + L.grp), PZBook.t('count', { n: L.puzzles.length })], tier: themeTier(L) });
   $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(L), cur });
-  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzAt(L, +el.dataset.j); if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 })}</span>`); });
+  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzAt(L, +el.dataset.j); if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${pzThumbSVG(L, +el.dataset.j, P)}</span>`); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
 $('#pzGrid').onclick = e => {
