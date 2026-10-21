@@ -210,7 +210,9 @@ section{padding:56px 0}
 .gx-more{display:none}
 .gx-more[hidden]{display:none!important}
 #games{scroll-margin-top:12px}
-.gx-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:18px 24px;flex-wrap:wrap;margin-top:22px}
+.gx-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:18px 24px;flex-wrap:nowrap;margin-top:22px}
+.gx-foot .gx-facts{flex:1 1 auto;min-width:0}
+.gx-foot .gx-play{flex:none;margin-left:auto}   /* the figures on the left, the play button on the right of the last row */
 .gx-facts{display:flex;flex-wrap:wrap;gap:12px 26px}
 .gx-facts:empty{display:none}
 .gx-facts div{display:flex;flex-direction:column-reverse}
@@ -282,7 +284,7 @@ section{padding:56px 0}
   .gx-more{display:inline-flex;align-items:center;gap:5px;margin-top:2px;padding:6px 0;font:inherit;font-size:13px;color:var(--cyan);background:none;border:0;cursor:pointer}
   .gx-more::after{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
   .gx-panel.open .gx-more::after{transform:translateY(1px) rotate(-135deg)}
-  .gx-foot{margin-top:10px;gap:14px}
+  .gx-foot{margin-top:10px;gap:14px;flex-wrap:wrap}
   .gx-panel.open .gx-foot{margin-top:16px}
   .gx-facts{gap:10px 22px}
   .gx-facts dd{font-size:17px}
