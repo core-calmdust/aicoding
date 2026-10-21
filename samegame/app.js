@@ -915,7 +915,7 @@ function tutorial(kind, done) {
   const pages = TUT[kind]; let i = 0;
   const show = () => {
     const k = pages[i], last = i === pages.length - 1;
-    const body = modal(`<div class="tut"><div class="tstep">${pages.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
+    const body = modal(`<div class="tut">${ttag(kind === 'action' ? 'tu.atitle' : 'tu.title', (i + 1) + ' / ' + pages.length)}<div class="tstep">${pages.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
       <div class="tpanel"><div class="tmas">${A.mascot(k === 'try' ? 'smile' : i % 2 ? 'wow' : 'smile')}</div><div class="balloon"><b>${esc(t(k === 'try' ? 'tu.try' : k + '.h'))}</b><p>${esc(t(k === 'try' ? 'tu.try.d' : k))}</p></div></div>
       ${k === 'try' ? '<div class="tboard" id="tBoard"></div><div class="tmsg" id="tMsg"></div>' : `<div class="tdemo">${tutDemo(k)}<p class="dcap">${k === 'tu.b1' ? esc(t('tu.b1.c')) : ''}</p></div>`}
       <div class="mbtns"><button class="btn" id="tPrev" ${i ? '' : 'disabled'}>${esc(t('u.prev'))}</button><button class="btn red" id="tNext" ${k === 'try' ? 'hidden' : ''}>${esc(t(last ? 'u.start' : 'u.next'))}</button></div></div>`, 'mtut');
@@ -927,6 +927,8 @@ function tutorial(kind, done) {
   show();
   tutorial.key = e => { if ($('#modal').hidden || !$('.tut')) return; if (e.key === 'ArrowRight' && !$('#tNext').hidden) $('#tNext').click(); if (e.key === 'ArrowLeft' && !$('#tPrev').disabled) $('#tPrev').click(); };
 }
+const TUT_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".18"/><path d="M9.4 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1 .8-1 1.5v.6M12 16.9v.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+const ttag = (k, sub) => `<div class="ttl"><span class="ttag">${TUT_ICON}<b>${esc(t(k))}</b></span>${sub ? `<span class="tsub">${esc(sub)}</span>` : ''}</div>`;
 /* ---- animated demo: a hand taps a mini board, using the real rules ---- */
 const HAND = '<svg viewBox="0 0 40 46" class="hand"><path d="M14 3c2.6 0 4 2 4 4.4V20l1.6-.6c2-.7 4 .4 4.6 2.2l.3 1 1.7-.5c2-.6 3.9.6 4.4 2.4l.3 1 1.2-.3c2.2-.5 4 1 4.2 3.2.5 5.5-.2 9.8-2.3 13.2-1.4 2.2-3.7 3.4-6.3 3.4H17.6c-2.4 0-4.6-1.2-5.9-3.2L4 31.2c-1.4-2-.9-4.7 1-6 1.8-1.2 4.2-.8 5.6.9l-.6.1V7.4C10 5 11.4 3 14 3z" fill="#fff" stroke="#000" stroke-width="2.6" stroke-linejoin="round"/><path d="M18 20v9M24 23v6M30 25.5v4" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1043,7 +1045,7 @@ function tutTry(body, ok) {
 }
 function maybeThemeTip(th, force) {
   if (th === 'cl' || (!force && DB.tut['th_' + th])) return; DB.tut['th_' + th] = 1; save();
-  modal(`<div class="tut"><div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('th.' + th))}</b><p>${esc(t('th.' + th + '.r'))}</p></div></div><div class="tdemo">${tutDemo('th_' + th)}</div><div class="mbtns"><button class="btn red" id="tOk">OK!</button></div></div>`, 'mtut mtip');
+  modal(`<div class="tut">${ttag('tu.rule', t('th.' + th))}<div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('th.' + th))}</b><p>${esc(t('th.' + th + '.r'))}</p></div></div><div class="tdemo">${tutDemo('th_' + th)}</div><div class="mbtns"><button class="btn red" id="tOk">OK!</button></div></div>`, 'mtut mtip');
   startDemos($('#modalBody'));
   $('#tOk').onclick = () => { $('#modal').hidden = true; };
 }

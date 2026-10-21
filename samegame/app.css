@@ -773,6 +773,24 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
   .mtip .mbtns{margin-top:20px}.mtip .mbtns .btn{min-width:260px}
 }
 body[data-skin="mid"] .tut .tdemo,body[data-skin="mid"] .tut .tboard{border-radius:28px}
+
+/* tutorial / rule title + background graphics */
+body[data-skin="mid"] .tstep i{border:0;border-radius:999px;background:var(--mute);height:8px}
+body[data-skin="mid"] .tstep i.on{background:var(--red)}
+.ttl{grid-area:ttl;display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.ttag{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:var(--on);border:var(--line);padding:6px 18px 6px 10px;transform:rotate(-2deg)}
+.ttag svg{width:28px;height:28px;color:var(--on)}
+.ttag b{font-family:var(--f-sfx);font-size:24px;letter-spacing:.06em;line-height:1}
+.tsub{font-weight:700;font-size:15px;color:var(--sub)}
+.modal.mtut .mbox{background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%220%200%20240%20240%22%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%22118%22%20fill%3D%22%23E8B83A%22%20opacity%3D%22.3%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%2256%22%20fill%3D%22%23FFFAF0%22%20opacity%3D%22.55%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22260%22%20height%3D%22130%22%20viewBox%3D%220%200%20260%20130%22%3E%3Cpath%20d%3D%22M0%20130a130%20130%200%200%201%20260%200z%22%20fill%3D%22%232E6F8E%22%20opacity%3D%22.2%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22170%22%20height%3D%22170%22%20viewBox%3D%220%200%20170%20170%22%3E%3Cpath%20d%3D%22M0%200a170%20170%200%200%201%20170%20170H0z%22%20fill%3D%22%23D9622B%22%20opacity%3D%22.22%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%220%200%20240%20240%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%239CC5C0%22%20stroke-width%3D%2211%22%20opacity%3D%22.55%22%3E%3Cpath%20d%3D%22M0%20170A170%20170%200%200%200%20170%200%22/%3E%3Cpath%20d%3D%22M0%20225A225%20225%200%200%200%20225%200%22/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2260%22%20height%3D%2252%22%20viewBox%3D%220%200%2060%2052%22%3E%3Cpath%20d%3D%22M30%200l30%2052H0z%22%20fill%3D%22%23D98C7A%22%20opacity%3D%22.4%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22190%22%20height%3D%2220%22%20viewBox%3D%220%200%20190%2020%22%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%2210%22%20r%3D%228%22%20fill%3D%22%237A8B3A%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%2252%22%20cy%3D%2210%22%20r%3D%228%22%20fill%3D%22%237A8B3A%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%2294%22%20cy%3D%2210%22%20r%3D%228%22%20fill%3D%22%237A8B3A%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22136%22%20cy%3D%2210%22%20r%3D%228%22%20fill%3D%22%237A8B3A%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22178%22%20cy%3D%2210%22%20r%3D%228%22%20fill%3D%22%237A8B3A%22%20opacity%3D%22.35%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cpath%20d%3D%22M3%203l24%2024M27%203L3%2027%22%20stroke%3D%22%232F2A26%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.14%22/%3E%3C/svg%3E"),var(--card);background-position:right -70px top -90px,right 30px bottom 0,left bottom,left top,right 260px top 22px,center bottom 14px,right 40px center;background-size:240px 240px,260px 130px,170px 170px,240px 240px,60px 52px,190px 20px,30px 30px;background-repeat:no-repeat}
+.mtip .ttag{background:var(--blue)}
+body[data-skin="mid"] .ttag{border:0;border-radius:999px;transform:none;box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--on) 35%,transparent)}
+@media (min-width:1000px){
+  .tut{grid-template-areas:"ttl step" "text demo" "btn btn"!important}
+  .mtip .tut{grid-template-areas:"ttl ttl" "text demo" "btn btn"!important}
+  .tut .tstep{justify-content:flex-end;align-self:center;margin:0 0 14px!important}
+  .ttag b{font-size:28px}
+}
 @media (min-width:1400px){ .hpanel.daily{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"p p c" "b f c"} }
 
 @media (min-width:1200px){

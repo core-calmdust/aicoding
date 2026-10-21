@@ -537,3 +537,8 @@ window.SAME_I18N.ar = {
   };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
 })();
+
+(function () {
+  const A = { ja: ['あそびかた', 'アクションのあそびかた', 'ルール説明'], en: ['How to play', 'Action guide', 'Rules'], zh: ['玩法', '动作模式玩法', '规则说明'], ko: ['플레이 방법', '액션 플레이 방법', '규칙 설명'], es: ['Cómo jugar', 'Guía de acción', 'Reglas'], fr: ['Comment jouer', 'Guide action', 'Règles'], pt: ['Como jogar', 'Guia de ação', 'Regras'], de: ['So wird gespielt', 'Action-Anleitung', 'Regeln'], hi: ['कैसे खेलें', 'एक्शन गाइड', 'नियम'], ar: ['طريقة اللعب', 'دليل الحركة', 'القواعد'] };
+  for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'tu.title': A[l][0], 'tu.atitle': A[l][1], 'tu.rule': A[l][2] });
+})();
