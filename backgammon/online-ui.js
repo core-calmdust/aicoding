@@ -683,6 +683,7 @@ function olShowResult() {
   let sub = olEsc((R.why ? R.why + ' · ' : '') + `${olShortName(0)} vs ${olShortName(1)} · ${fmtFull(g.f, g.cube)}`);
   if (g.ml) sub += '<br>' + olEsc(t('res.score', { a: sc[0], b: sc[1], n: g.ml, c0: olShortName(0), c1: olShortName(1) }));
   if (R.rating && R.rating.rated) sub += `<div class="ol-rchg">${t('ol.rating')} ${R.rating.old} → <b>${R.rating.now}</b> <span class="${R.rating.now >= R.rating.old ? 'up' : 'dn'}">(${R.rating.now >= R.rating.old ? '+' : ''}${R.rating.now - R.rating.old})</span></div>`;
+  else if (R.rating && R.rating.note && ON.secMsg) sub += `<div class="ol-rchg">${olEsc(ON.secMsg(R.rating.note))}</div>`;
   $('#resultSub').innerHTML = sub;
   if (me >= 0) { SFX.chime(R.winner === me); if (R.winner === me) confetti(); }
   olResRender();
