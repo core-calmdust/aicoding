@@ -56,6 +56,17 @@ const IL = {
   ar: { hist: 'التاريخ', win: 'طريقة الفوز', cult: 'الثقافة', origin: 'الأصل', players: 'اللاعبون', time: 'مدة اللعب' },
 };
 const CSS = `
+/* layout (common spec): step numbers on top, the page in the middle, Back / Close / Next fixed at the bottom of the dialog.
+   The dialog holding the tour becomes a fixed-height flex column; only the middle part scrolls when a page is long. */
+.modal:has(.rt){display:flex;flex-direction:column;overflow:hidden;height:min(900px, calc(100vh - 32px));height:min(900px, calc(100dvh - 32px));max-height:none}
+@media (max-width: 520px), (max-height: 560px){.modal:has(.rt){height:calc(100vh - 20px);height:calc(100dvh - 20px)}}
+.modal:has(.rt) > :has(.rt), .modal:has(.rt) > :has(.rt) > :has(.rt){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.modal:has(.rt) > :not(:has(.rt)){flex:none}
+.rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.rt-steps{flex:none}
+.rt-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:safe center;padding:0 2px}
+.rt-main > *{flex:none}
+.rt > .rt-nav{flex:none;margin-top:0;padding-top:12px;border-top:1px solid var(--line,rgba(255,255,255,.1))}
 .rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
 .rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
@@ -141,7 +152,7 @@ function create(o) {
     stop();
     const m = mount(); if (!m) return;
     const P = pages[tour.page], n = pages.length, done = get();
-    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div>`;
+    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main">`;
     if (P.finish) {
       h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${esc(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
         (o.play ? `<button type="button" class="go" data-rt-act="play">${esc(tx('play'))}</button>` : '') +
@@ -151,7 +162,7 @@ function create(o) {
       if (P.html) h += `<div class="rt-html">${val(P.html)}</div>`;
       if (P.setup) h += `<div class="rt-board"></div><div class="rt-task"></div>`;
     }
-    h += `<div class="rt-nav"><button type="button" data-rt-act="prev" ${tour.page === 0 ? 'disabled' : ''}>${esc(tx('prev'))}</button><button type="button" data-rt-act="close">${esc(tx('close'))}</button><button type="button" class="go" data-rt-act="next" ${tour.page === n - 1 ? 'disabled' : ''}>${esc(tx('next'))}</button></div></div>`;
+    h += `</div><div class="rt-nav"><button type="button" data-rt-act="prev" ${tour.page === 0 ? 'disabled' : ''}>${esc(tx('prev'))}</button><button type="button" data-rt-act="close">${esc(tx('close'))}</button><button type="button" class="go" data-rt-act="next" ${tour.page === n - 1 ? 'disabled' : ''}>${esc(tx('next'))}</button></div></div>`;
     m.innerHTML = h;
     if (P.finish || !P.setup) mark(P.id);
     if (P.setup) start();
@@ -194,7 +205,22 @@ function create(o) {
     };
     drawTask();
     try { P.setup(api); } catch (e) { console.error(e); }
+    fit(); requestAnimationFrame(fit);
   }
+  // keep the whole page visible above the fixed buttons: if the middle part overflows, shrink the mini board (--rt-bw) to fit
+  function fit() {
+    const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main'), bd = main && main.querySelector('.rt-board');
+    if (!bd || !main.clientHeight) return;
+    rt.style.removeProperty('--rt-bw');
+    for (let k = 0; k < 3; k++) {
+      const over = main.scrollHeight - main.clientHeight; if (over <= 1) break;
+      const el = bd.firstElementChild || bd, w = el.getBoundingClientRect().width, h = el.getBoundingClientRect().height || w;
+      if (!w) break;
+      rt.style.setProperty('--rt-bw', Math.max(220, Math.floor(w - (over + 2) * w / h)) + 'px');
+    }
+  }
+  let fitT = 0; const fitSoon = () => { clearTimeout(fitT); fitT = setTimeout(fit, 30); };
+  window.addEventListener('resize', fitSoon);
   function go(i) { if (i < 0 || i >= pages.length) return; tour.page = i; render(); }
   function onClick(e) {
     const m = mount(); if (!m || !m.contains(e.target)) return;
@@ -221,7 +247,7 @@ function create(o) {
   Object.assign(tour, {
     open(i) { tour.page = Math.max(0, Math.min(pages.length - 1, i | 0)); render(); },
     render() { if (visible()) { const P = pages[tour.page]; if (P && P.setup && P.relabel) { P.relabel(); return; } render(); } },
-    stop, visible, pages, mark, t: tx,
+    stop, visible, pages, mark, t: tx, fit,
     progress() { const d = get(); return { done: pages.filter(p => d[p.id]).length, total: pages.length }; },
   });
   return tour;

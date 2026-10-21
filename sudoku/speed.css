@@ -117,6 +117,19 @@ body.night .spic{filter:brightness(.82) saturate(.9)}
   #home .scard .pg{font-size:11.5px}
   .scard .tx .lv{display:none}
   .scard .crown{width:20px;height:20px;top:3px;inset-inline-end:4px}
+  /* まいにち数独's コレクション / 変わり種 cards get the same compact rows on phones */
+  .themes:not(.scats){gap:8px}
+  .themes:not(.scats) .tcard{flex-direction:row;align-items:center;border-radius:16px;min-height:66px}
+  .themes:not(.scats) .tcard .pic{width:58px;aspect-ratio:1;flex-shrink:0;margin:6px 0 6px 6px;border-radius:12px}
+  [dir=rtl] .themes:not(.scats) .tcard .pic{margin:6px 6px 6px 0}
+  .themes:not(.scats) .tcard:not(.vcard) .pic svg{width:auto;height:100%;left:50%;right:auto;transform:translateX(-50%)}
+  .themes:not(.scats) .vcard .pic svg{width:74%}
+  .themes:not(.scats) .tcard .no{top:auto;bottom:2px;inset-inline-start:auto;inset-inline-end:2px;font-size:10px;padding:0 5px}
+  .themes:not(.scats) .tcard .tx{flex:1;min-width:0;padding:6px 8px 6px 9px;gap:3px}
+  #home .themes:not(.scats) .tcard .tx .nm{font-size:13.5px;line-height:1.25}
+  #home .themes:not(.scats) .tcard .pg{font-size:11.5px}
+  .themes:not(.scats) .tcard .tx .lv{display:none}
+  .themes:not(.scats) .tcard .crown{width:20px;height:20px;top:3px;inset-inline-end:4px}
 }
 .sstages .sst{gap:2px;padding:6px 2px}
 .sst .kt{font-family:var(--num);font-size:clamp(9px,1.25vw,11.5px);font-weight:600;color:var(--ink2);white-space:nowrap}
@@ -250,6 +263,14 @@ body.night .scell.fpeek .v{background:#1f4a46}
 .sstar.got{animation:sgot .38s ease-out forwards}
 @keyframes stw{to{filter:brightness(1.25)}}
 @keyframes sgot{to{transform:scale(1.8) rotate(40deg);opacity:0}}
+.smiss{position:absolute;width:34%;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:6;animation:smiss 1.3s ease-out forwards}
+.smiss i{width:42%;aspect-ratio:1;filter:grayscale(1) brightness(.85);opacity:.8;animation:sfall 1.3s ease-in forwards}
+.smiss i svg{width:100%;height:100%;display:block}
+.smiss b{font-family:var(--num);font-weight:700;font-size:calc(var(--sbs) * .1);line-height:1.2;color:#fff;background:#ff4d6d;border-radius:99px;padding:.08em .5em;box-shadow:0 0 0 3px #fff,0 6px 14px rgba(180,30,60,.35);white-space:nowrap}
+@keyframes smiss{0%{transform:scale(.4);opacity:0}15%{transform:scale(1.25);opacity:1}30%{transform:scale(1)}75%{opacity:1}100%{transform:translateY(-30%);opacity:0}}
+@keyframes sfall{to{transform:translateY(60%) rotate(140deg);opacity:0}}
+.stimer.hurt{animation:shake .4s}
+.stimer.hurt .sclock{color:#ff4d6d}
 /* power cut */
 .sdark{position:absolute;inset:0;z-index:4;pointer-events:none;background:#14112b;opacity:0;transition:opacity .25s}
 .sdark.on{opacity:.97;animation:flick .5s steps(1)}
@@ -587,3 +608,6 @@ body.scompact .skey .kd{top:4px;inset-inline-start:5px;font-size:11px;padding:2p
   #mTut .ttools{max-width:560px}#mTut .ttool{padding:11px 14px}#mTut .ttool i{width:44px;height:44px}
   #mTut .tpic.sq{width:170px;height:170px}
 }
+
+/* phones: the すうどく daily tab skips the 今日のすぴーど数独 card (too much at once; it stays on PC) */
+@media (max-width:860px){.hpanel[data-m=su] #spdToday{display:none}}

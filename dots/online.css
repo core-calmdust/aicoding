@@ -152,7 +152,7 @@ body.in-online .player .status{height:auto;min-height:15px;font-size:12px}
 } }
 @media (pointer: coarse){
   html.ol-dock{--vh:calc(100vh - 50px - env(safe-area-inset-bottom))}
-  @supports (height:100dvh){html.ol-dock{--vh:calc(100dvh - 50px - env(safe-area-inset-bottom))}}
+  @supports (height:100lvh){html.ol-dock{--vh:calc(100lvh - 50px - env(safe-area-inset-bottom))}}   /* lvh: the board keeps its (large) size while the address bar slides during a scroll */
   body:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
   body.mtab-online .dock-panel .dk-chat{order:-2}
   body.mtab-online .chat-list{max-height:min(46vh, 340px);min-height:120px;flex:none}

@@ -183,7 +183,7 @@ function playTick() { if (!settings.sound) return; const a = ctx(); if (!a) retu
 
 // ====================================================================== board
 const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), sqEl = $('#squares');
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 let flipped = false;
 function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'online' ? !!(net && net.me === P2) : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!settings.flip; }
@@ -2540,7 +2540,8 @@ async function chatSend() {
   toast(t(r.why === 'rate' ? 'ol.chatWait' : 'ol.error'), 1600);
   return false;
 }
-$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); chatSend(); if (olCoarse()) $('#dkChatIn').focus({ preventScroll: true }); });
+// Enter on an empty chat field closes the online box (PC) / leaves the field (phone)
+$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); const inp = $('#dkChatIn'); if (!inp.value.trim()) { inp.value = ''; inp.blur(); if (!olCoarse()) dockToggle(false); return; } chatSend(); if (olCoarse()) inp.focus({ preventScroll: true }); });
 $('#dkChatIn').addEventListener('keydown', e => {
   e.stopPropagation();                        // typing never reaches the board / record shortcuts
   if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }

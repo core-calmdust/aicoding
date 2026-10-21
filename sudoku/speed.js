@@ -117,13 +117,16 @@ const starMul = { 1: 1, 2: 1.3, 3: 1.6 };
 const dScore = (c, tlast) => c * 100000 + (99999 - Math.min(99999, Math.round(tlast || 0)));
 
 /* ================= rewards (backgrounds & speed-only characters) ================= */
-const BGS = ['speedway', 'clocktown', 'skyrail', 'rocketbase', 'neoncity', 'rainbowrun'];
-const SPI = n => 500 + n;                                // speed character icons 500…519 (icons.js)
+const BGS = ['speedway', 'clocktown', 'skyrail', 'rocketbase', 'cloudtrack', 'beachrun', 'neoncity', 'rainbowrun'];
+const SPI = n => 500 + n;                                // speed character icons 500…536 (icons.js)
 // achievement id → reward
 const REWARD = {
-  'tier0': { bg: 'clocktown' }, 'med50': { bg: 'skyrail' }, 'cc250': { bg: 'rocketbase' }, 'sk7': { bg: 'neoncity' }, 'cc500': { bg: 'rainbowrun' },
+  // every difficulty cleared → its own background
+  'tier0': { bg: 'clocktown' }, 'tier1': { bg: 'skyrail' }, 'tier2': { bg: 'rocketbase' }, 'tier5': { bg: 'cloudtrack' }, 'tier6': { bg: 'beachrun' }, 'tier3': { bg: 'neoncity' }, 'tier4': { bg: 'rainbowrun' },
+  // every special-rule course cleared → a character
   'gc.bug': { ic: SPI(0) }, 'gc.mosaic': { ic: SPI(1) }, 'gc.spin': { ic: SPI(2) }, 'gc.spot': { ic: SPI(3) }, 'gc.fruit': { ic: SPI(4) }, 'gc.shuffle': { ic: SPI(5) }, 'gc.ghost': { ic: SPI(6) }, 'gc.ice': { ic: SPI(7) },
-  'tier1': { ic: SPI(8) }, 'tier2': { ic: SPI(9) }, 'tier3': { ic: SPI(10) }, 'tier4': { ic: SPI(11) },
+  ...Object.fromEntries(['bomb', 'swap', 'cloud', 'calc', 'card', 'mole', 'upside', 'balloon', 'dark', 'sway', 'paint', 'order', 'peep', 'star', 'rev', 'dice', 'sleepy'].map((g, k) => ['gc.' + g, { ic: SPI(20 + k) }])),
+  'med50': { ic: SPI(8) }, 'sk7': { ic: SPI(9) }, 'cc250': { ic: SPI(10) }, 'cc500': { ic: SPI(11) },
   'first': { ic: SPI(12) }, 'med10': { ic: SPI(13) }, 'gold30': { ic: SPI(14) }, 'sk30': { ic: SPI(15) },
   'sv500': { ic: SPI(16) }, 'sv2000': { ic: SPI(17) }, 'combo30': { ic: SPI(18) }, 'flash': { ic: SPI(19) },
 };
@@ -716,7 +719,7 @@ const GIM = {
       if (g.st.next <= 0) {
         g.st.next = [5600, 4800, 4100][g.s - 1] * (.85 + R.rng() * .3);
         const el = document.createElement('div'); el.className = 'sstar'; el.innerHTML = GICON.star;
-        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2900, 2400, 1950][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
+        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2300, 1900, 1550][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
         if (!ltr) el.classList.add('rtl');
         el.addEventListener('pointerdown', e => {
           e.stopPropagation(); e.preventDefault(); if (!R || R.state !== 'play' || st.got) return;
@@ -731,6 +734,11 @@ const GIM = {
         st.t += dt / st.dur;
         if (st.t >= 1) {   // missed it: −5 seconds
           st.el.remove();
+          const fx = document.createElement('div'); fx.className = 'smiss';
+          fx.innerHTML = `<i>${GICON.star}</i><b>${esc(t('sp.starmiss'))}</b>`;
+          fx.style.left = Math.max(4, Math.min(66, st.x1 < 0 ? 4 : 66)) + '%'; fx.style.top = Math.max(6, Math.min(70, st.y1)) + '%';
+          $('#sFloat').appendChild(fx); setTimeout(() => fx.remove(), 1300);
+          const tm = $('#sTimer'); tm.classList.remove('hurt'); void tm.offsetWidth; tm.classList.add('hurt'); setTimeout(() => tm.classList.remove('hurt'), 600);
           R.left -= 5000; R.combo = 0; R.missThis = true;
           const pen = $('#sPen'); pen.textContent = '-5'; pen.classList.remove('on'); void pen.offsetWidth; pen.classList.add('on');
           C.SFX.err(); C.vib([30, 30, 30]); render();

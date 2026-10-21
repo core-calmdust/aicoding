@@ -223,6 +223,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .kifu span.q-bad{box-shadow:inset 0 -2px 0 #ff8b7d}.kifu span.q-dubious{box-shadow:inset 0 -2px 0 #f2c060}
 /* post-game review */
 .review-card{display:none}
+#rvBody > .cr-box:first-child{margin:0 0 12px}
+/* the review card scrolls; its height shows the 振り返り解説 box (--rvh, set in renderReview), the numbers below it scroll into view */
+.review-card.show:not(.slim){flex:none!important;min-height:0!important;max-height:var(--rvh, 260px)!important;overflow-y:auto!important}
+@media (min-width: 900px) and (min-height: 561px){body.reviewing .graph{height:40px}}
 .review-card.show{display:block;flex:1.4 1 0;min-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
 .rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
@@ -372,6 +376,11 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   .controls{order:-4}
   #progCard{order:1}
   .review-card{order:1}
+  /* reviewing on a phone: a compact 形勢 bar with the ◀ ▶ navigation right under the board, then the review */
+  body.reviewing #progCard{order:0;padding:8px 12px}
+  body.reviewing #progCard .graph{display:none}
+  body.reviewing #progCard .evline{margin-top:4px}
+  body.reviewing #progCard .navbar{margin-top:6px}
   .review-card.show{flex:none;min-height:0;max-height:none;overflow:visible}
   .kifu-card{order:2}
   .info-line{display:none}
@@ -619,7 +628,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
 </style>
-<link rel="stylesheet" href="online.css?v=20261021H">
+<link rel="stylesheet" href="online.css?v=20261021v">
 </head>
 <body>
 <div class="app">
@@ -864,10 +873,10 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/pzbook.js?v=2"></script><!-- learn-ui -->
 <script src="../shared/headerbar.js?v=3"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=8"></script><!-- only RuleTour.intro() for the rules intro page -->
+<script src="../shared/ruletour.js?v=9"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261021lx2"><!-- learn-ui -->
 <script src="engine.js?v=20261020d5"></script>
-<script src="learn.js?v=20261021lx"></script>
+<script src="learn.js?v=rm1"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
 <script src="firebase-config.js?v=20261019o"></script>
 <script src="online.js?v=20261020gh"></script>
@@ -1481,9 +1490,11 @@ function renderReview() {
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i}" class="${viewPly === x.i ? 'cur' : ''}"><span class="tag ${x.j.q}">${t('q.' + x.j.q)}</span><span class="mv">${x.i + 1}. <i class="p${rv.mover[x.i]}"></i>${edgeName(game.moves[x.i])} → ${edgeName(x.j.it.bestMove)}</span><span class="ls">${approxMark(x.j)}−${fmtLoss(x.j)}</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
     html += `<div class="rv-note">${t('rv.note')}${approx ? ' ' + t('rv.approx') : ''}</div>`;
-    if (typeof rvCoach === 'function') html += rvCoach();   /* learn-ui: 振り返り解説 */
+    if (typeof rvCoach === 'function') html = rvCoach() + html;   /* learn-ui: 振り返り解説 — first, above the numbers */
   }
+  const keepTop = card.scrollTop;
   $('#rvBody').innerHTML = html;
+  { const cb = $('#rvBody > .cr-box'); if (cb) card.style.setProperty('--rvh', Math.round(cb.getBoundingClientRect().bottom - card.getBoundingClientRect().top + card.scrollTop + 14) + 'px'); else card.style.removeProperty('--rvh'); card.scrollTop = keepTop; }
   if (viewPly !== null) {
     const i = viewPly, L = SF.log[i], j = !hasRv || rv.running ? null : rvJudge(i);
     let txt = `${t('rv.viewing', { n: i + 1 })} · ${shortName(L.pl)} ${edgeName(L.e)}`;
@@ -1726,7 +1737,7 @@ document.querySelector('#rsCancel').onclick = () => document.querySelector('#res
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
 </script>
-<script src="online-ui.js?v=20261021H"></script>
+<script src="online-ui.js?v=20261021enH"></script>
 <script src="rated.js?v=20261020pl"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5d" defer></script>

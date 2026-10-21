@@ -23,7 +23,7 @@ const TNO = ti => ORDER.indexOf(ti) + 1;
 const CSZ = 25, NC = NT * 2;
 // display order: by difficulty; twins and similar-looking scenes are never next to each other
 // (checked for neighbours at distance 1, 2 = phone grid row below, 5 = PC grid row below)
-const CORDER = 'forest harbor2 sweets forest2 harbor sweets2 garden sea2 park2 cloudranch sea iceberg2 garden2 cloudranch2 festival iceberg park festival2 autumn2 snow desert2 autumn snow2 stars desert toytown stars2 rain toytown2 library jungle castle2 library2 bakery rain2 moon jungle2 bakery2 castle moon2'.split(' ').map(k => THEMES.indexOf(k.replace(/2$/, '')) * 2 + (/2$/.test(k) ? 1 : 0));
+const CORDER = 'forest harbor sweets forest2 harbor2 sweets2 sea garden park sea2 cloudranch2 garden2 park2 cloudranch festival iceberg2 snow autumn festival2 iceberg desert autumn2 snow2 desert2 toytown library stars toytown2 library2 stars2 rain2 jungle bakery rain castle2 bakery2 moon castle jungle2 moon2'.split(' ').map(k => THEMES.indexOf(k.replace(/2$/, '')) * 2 + (/2$/.test(k) ? 1 : 0));
 const CNO = ci => CORDER.indexOf(ci) + 1;
 const cPi = (ci, k) => k * 2 + (ci & 1);                 // theme puzzle index of collection ci, local k
 const cOf = (ti, pi) => ti * 2 + (pi & 1);                // collection of a theme puzzle
@@ -206,6 +206,8 @@ const cRec = (ci, k) => colRec(ci >> 1, cPi(ci, k));
 const cCleared = ci => { let n = 0; for (let k = 0; k < CSZ; k++) if (cRec(ci, k)) n++; return n; };
 const cStars = ci => { let n = 0; for (let k = 0; k < CSZ; k++) { const r = cRec(ci, k); if (r) n += r.s; } return n; };
 const cScore = ci => { let n = 0; for (let k = 0; k < CSZ; k++) { const r = cRec(ci, k); if (r) n += r.sc || 0; } return n; };
+// difficulty groups of the collection list: [level, from, to) as positions in CORDER (the order already rises in difficulty)
+const CTIERS = [[1, 0, 6], [2, 6, 18], [3, 18, 27], [4, 27, 40]];
 const cLvs = ci => [...new Set([...Array(CSZ).keys()].map(k => +PZ.themes[ci >> 1][cPi(ci, k)][81]))];
 const ciOfKey = k => { for (let ci = 0; ci < NC; ci++) if (cKey(ci) === k) return ci; return -1; };
 const vsetLen = si => (vset(si) ? vset(si).puzzles.length : 0);
@@ -271,7 +273,7 @@ function toast(html, cls = '') {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3200);
 }
 function confetti(n = 140, gold) {
-  if (!DB.set.motion || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!DB.set.motion || false /* site rule: animations are never skipped for the OS reduce-motion setting */) return;
   const cv = $('#fx'), ctx = cv.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1);
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const cols = gold ? ['#ffd36b', '#fff2b8', '#ffb347', '#ffe9f5', '#c39bff'] : ['#ff8fb6', '#ffd36b', '#8fe3b0', '#8fc4ff', '#c39bff', '#ff9f7a'];
@@ -321,13 +323,14 @@ const homeVariant = () => { const h = new Date().getHours(); return h >= 11 ? 'm
 // home background: any collection theme cleared 50/50 can be used
 const isSpBg = k => !!(SPD && SPD.bgs.includes(k));
 const hbOK = k => { if (isSpBg(k)) return SPD.bgOwned(k); const ci = ciOfKey(k); return ci >= 0 && PZ && cCleared(ci) === CSZ; };
-const hbKey = () => (MODE === 'speed' ? 'homeBgS' : 'homeBg');
+const hbKey = () => (MODE === 'speed' || gmode() === 'sp' ? 'homeBgS' : 'homeBg');
 const bgName = k => (!k ? (MODE === 'speed' ? t('sbg.speedway') : t('hb.def')) : isSpBg(k) ? t('sbg.' + k) : cName(ciOfKey(k)));
 const gmode = () => (MODE === 'speed' ? 'sp' : SPD && DB.gm === 'sp' ? 'sp' : 'su');
 function homeScene() {
   if (MODE !== 'speed' && gmode() === 'sp') { const k = DB.set.homeBgS; setScene(k && isSpBg(k) && SPD.bgOwned(k) ? k : 'speedway', '', 'spd'); return; }
   const k = DB.set[hbKey()];
-  if (k && hbOK(k)) setScene(k, '', isSpBg(k) ? 'spd' : k.replace(/2$/, ''));
+  // home buttons: すぴーど = blue, すうどく = orange, whatever background is picked
+  if (k && hbOK(k)) setScene(k, '', MODE === 'speed' ? 'spd' : 'de');
   else if (MODE === 'speed') setScene('speedway', '', 'spd');
   else setScene('daily', homeVariant(), 'de');
 }
@@ -498,11 +501,22 @@ function renderHome() {
   const tot = totalCleared();
   $('#colBar').style.width = (tot / NCOL * 100) + '%';
   $('#colCount').textContent = tot + ' / ' + NCOL;
-  $('#themes').innerHTML = CORDER.map(i => {
+  // grouped by difficulty like すぴーど's course book, with a sticky jump bar
+  const card = i => {
     const n = cCleared(i), lvs = cLvs(i);
     return `<button class="tcard ${n === CSZ ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(cKey(i), 320, 200)}<span class="no">${CNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(cName(i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n / CSZ * 100}%"></i></span>${n}/${CSZ}</span></div></button>`;
-  }).join('');
+  };
+  const groups = CTIERS.map(([lv, a, b]) => ({ lv, ids: CORDER.slice(a, b) })).map(g => Object.assign(g, { n: g.ids.reduce((x, i) => x + cCleared(i), 0), L: g.ids.length * CSZ }));
+  const tc = $('#themes'); tc.className = 'ctiers';
+  tc.innerHTML = `<div class="stjump">${groups.map(g => `<button data-tj="${g.lv}" style="--tc:${LVCOL[g.lv]}" class="${g.n >= g.L ? 'done' : ''}"><b>${esc(t('lv.' + g.lv))}</b><small class="num">${g.n}/${g.L}</small></button>`).join('')}</div>`
+    + groups.map(g => `<div class="stier" id="ctier${g.lv}" style="--tc:${LVCOL[g.lv]}"><div class="sth"><b>${esc(t('lv.' + g.lv))}</b><small>${esc(t('ct.d.' + g.lv))}</small><em>${g.n}/${g.L}</em></div><div class="themes">${g.ids.map(card).join('')}</div></div>`).join('');
   $$('#themes .tcard').forEach(b => b.onclick = () => { SFX.tap(); go('t/' + (+b.dataset.t + 1)); });
+  $$('#themes [data-tj]').forEach(b => b.onclick = () => {
+    const el = $('#ctier' + b.dataset.tj), bar = $('#themes .stjump'); if (!el) return; SFX.tap();
+    const tabs = $('#htabs'); document.documentElement.style.setProperty('--htH', (tabs ? tabs.offsetHeight : 0) + 'px');
+    const top = parseFloat(getComputedStyle(bar).top) || 0;
+    scrollTo({ top: scrollY + el.getBoundingClientRect().top - (top + bar.offsetHeight + 10), behavior: 'smooth' });
+  });
   // variants
   const vc = $('#vsets').closest('.card');
   vc.hidden = !PV || !E.setVariant;
