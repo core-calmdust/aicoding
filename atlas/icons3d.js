@@ -211,11 +211,11 @@
       return g;
     },
     checkers() {
-      const g = boardChunk(3, 3.6, gridMat('ck', '#e3cfa2', '#e3cfa2', 3, { check: '#2f5a45' }), M({ map: X.wood('ickw', '#7a4a2a', '#4a2a12') }));
+      const g = boardChunk(3, 3.6, gridMat('ck2', '#f4f1ea', '#f4f1ea', 3, { check: '#1d1d20' }), M({ map: X.wood('ickw', '#7a4a2a', '#4a2a12') }));
       const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
-      g.add(at(checker(0xf3ead8, .72), p(0), .5, p(1))); g.add(at(checker(0x3a2a24, .72), p(2), .5, p(1))); g.add(at(checker(0x3a2a24, .72), p(1), .5, p(2)));
-      // the crowned king: two stacked dark checkers with a gold crown, jumping
-      const k = new T.Group(); k.add(at(checker(0x3a2a24, 1), 0, 0, 0)); k.add(at(checker(0x3a2a24, 1), 0, .3, 0));
+      g.add(at(checker(0xf6f2ea, .72), p(0), .5, p(1))); g.add(at(checker(0xc8202a, .72), p(2), .5, p(1))); g.add(at(checker(0xc8202a, .72), p(1), .5, p(2)));
+      // the crowned king: two stacked red checkers with a gold crown, jumping
+      const k = new T.Group(); k.add(at(checker(0xc8202a, 1), 0, 0, 0)); k.add(at(checker(0xc8202a, 1), 0, .3, 0));
       const gold = gloss(0xf2c94c), band = mesh(new T.CylinderGeometry(.3, .32, .14, 32, 1, true), gold); band.position.y = .66; k.add(band);
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = mesh(new T.ConeGeometry(.075, .2, 12), gold); c.position.set(Math.cos(a) * .3, .82, Math.sin(a) * .3); k.add(c); }
       k.scale.setScalar(1.45); g.add(at(k, .3, 2.0, -.3, .45, 0, -.3));
