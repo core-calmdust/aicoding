@@ -372,6 +372,37 @@
       bolt.scale.setScalar(1.3); bolt.position.set(-S / 2 - 1.3, 1.6, S / 2 - .6); bolt.rotation.set(0, .5, -.15); g.add(bolt);
       return g;
     },
+    samegame() {   // a cream tray of chunky mid-century blocks (each colour with its own pattern), a few popping up
+      const TT = T(), g = new TT.Group(), NX = 7, NZ = 6, cs = 1.12, SX = NX * cs, SZ = NZ * cs;
+      const tray = mesh(RB(SX + 1, .6, SZ + 1, .3, 3), M({ color: 0xf2eadb, roughness: .4, clearcoat: .3 }), 0, .3, 0); g.add(tray);
+      const well = mesh(RB(SX + .2, .2, SZ + .2, .12, 2), M({ color: 0x5e4b6b, roughness: .7 }), 0, .62, 0); g.add(well);
+      const COL = ['#e8b83a', '#2e6f8e', '#d9622b', '#7a8b3a', '#d98c7a'];
+      const pat = k => canvasTex('sgp' + k, 128, 128, (c, W) => {
+        c.fillStyle = COL[k]; c.fillRect(0, 0, W, W); c.fillStyle = c.strokeStyle = 'rgba(242,234,219,.85)'; c.lineWidth = 10;
+        if (k === 0) { c.beginPath(); c.arc(W / 2, W / 2, 26, 0, 7); c.fill(); }                                              // mustard: dot
+        else if (k === 1) { for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(24, 34 + i * 30); c.lineTo(104, 34 + i * 30); c.stroke(); } }   // teal: stripes
+        else if (k === 2) { c.beginPath(); c.moveTo(W / 2, 28); c.lineTo(100, 96); c.lineTo(28, 96); c.closePath(); c.fill(); }   // orange: triangle
+        else if (k === 3) { c.beginPath(); c.moveTo(W / 2, 26); c.lineTo(102, W / 2); c.lineTo(W / 2, 102); c.lineTo(26, W / 2); c.closePath(); c.fill(); }   // olive: diamond
+        else { c.beginPath(); c.arc(W / 2, W / 2, 34, 0, 7); c.stroke(); c.beginPath(); c.arc(W / 2, W / 2, 12, 0, 7); c.fill(); }   // salmon: ring
+      });
+      const mats = COL.map((hex, k) => { const sd = M({ color: parseInt(hex.slice(1), 16), roughness: .45, clearcoat: .35 }); return [sd, sd, M({ map: pat(k), roughness: .45, clearcoat: .35 }), sd, sd, sd]; });
+      const B = '1102340' + '1132344' + '0222314' + '3324011' + '4310021' + '4413002', H = .62;   // rows back → front (colour index)
+      const pos = (x, z) => [(x - (NX - 1) / 2) * cs, ((z) - (NZ - 1) / 2) * cs];
+      const empty = new Set([[2, 0], [3, 0], [3, 1]].map(([x, z]) => z * NX + x));
+      for (let i = 0; i < NX * NZ; i++) {
+        if (empty.has(i)) continue;
+        const [x, z] = pos(i % NX, i / NX | 0);
+        g.add(mesh(RB(cs - .14, H, cs - .14, .14, 2), mats[+B[i]], x, .72 + H / 2, z));
+      }
+      // the popped group flies up, tumbling
+      [[2, 0, 1.9, .5], [3, 0, 2.8, -.6], [3, 1, 2.2, .9]].forEach(([cx, cz, y, r], k) => {
+        const [x, z] = pos(cx, cz), b = mesh(RB(cs - .14, H, cs - .14, .14, 2), mats[2], x + (k - 1) * .35, y, z - .3);
+        b.scale.setScalar(.85 - k * .08); b.rotation.set(r, r * .7, -r * .5); g.add(b);
+      });
+      // POP! sparkle: a few cream confetti dots around the flying blocks
+      [[-.6, 3.4, -2.6], [.9, 3.6, -3.0], [1.3, 2.6, -1.6], [-.9, 2.5, -1.5]].forEach(([x, y, z]) => g.add(mesh(new TT.SphereGeometry(.13, 12, 8), M({ color: 0xe8b83a, roughness: .4 }), x, y, z)));
+      return g;
+    },
   };
 
   /* ---------- scene ---------- */

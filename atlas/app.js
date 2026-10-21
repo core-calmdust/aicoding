@@ -92,8 +92,8 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === "speedsudoku" || g.id === "checkers" ? 3 : 2}` : `../${g.icon}`;
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame']);   // images/atlas/<id>.webp exists
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === "speedsudoku" || g.id === "checkers" ? 3 : g.id === "samegame" ? 1 : 2}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -480,7 +480,7 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div><div class="mnote" id="bvMNote"></div>` : ''}${ad ? `<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
-        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}${ad.levelInfo ? `<div class="lvinfo" id="bvLvInfo"></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' ? '' : t('bv.soon')}</div>`}
+        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}${ad.levelInfo ? `<div class="lvinfo" id="bvLvInfo"></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
       <div class="act">${ad ? `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>` : `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`}</div></div></div>`;
     if (ad) $('bvStart').onclick = startPlay;
     if ($('bvMode')) {   // AI / rated / two players: only the AI game has a level and a side to pick

@@ -238,6 +238,28 @@
       g.add(at(bolt, 1.35, 1.25, .7, 0, -.5, -.15));
       return g;
     },
+    samegame() {   // a 3×3 patch of patterned mid-century blocks; an orange pair pops up
+      const g0 = new T.Group();
+      const COL = ['#e8b83a', '#2e6f8e', '#d9622b', '#7a8b3a', '#d98c7a'];
+      const blk = k => {
+        const tex = X.canvasTex('ic-sg' + k, 256, 256, (c, W) => {
+          c.fillStyle = COL[k]; c.fillRect(0, 0, W, W); c.fillStyle = c.strokeStyle = 'rgba(242,234,219,.9)'; c.lineWidth = 20; const m = W / 2;
+          if (k === 0) { c.beginPath(); c.arc(m, m, 52, 0, 7); c.fill(); }
+          else if (k === 1) for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(48, 68 + i * 60); c.lineTo(208, 68 + i * 60); c.stroke(); }
+          else if (k === 2) { c.beginPath(); c.moveTo(m, 56); c.lineTo(200, 192); c.lineTo(56, 192); c.closePath(); c.fill(); }
+          else if (k === 3) { c.beginPath(); c.moveTo(m, 52); c.lineTo(204, m); c.lineTo(m, 204); c.lineTo(52, m); c.closePath(); c.fill(); }
+          else { c.beginPath(); c.arc(m, m, 66, 0, 7); c.stroke(); c.beginPath(); c.arc(m, m, 24, 0, 7); c.fill(); }
+        });
+        const b = rbox(1, .6, 1, .18, C(parseInt(COL[k].slice(1), 16), { roughness: .35 }));
+        const top = mesh(new T.PlaneGeometry(.8, .8), M({ map: tex, roughness: .45 })); top.rotation.x = -Math.PI / 2; top.position.y = .605;
+        return grp(b, top);
+      };
+      const B = [0, 1, 1, 3, -1, 1, 3, 4, 0];
+      for (let i = 0; i < 9; i++) { if (B[i] < 0) continue; const x = (i % 3 - 1) * 1.12, z = ((i / 3 | 0) - 1) * 1.12; g0.add(at(blk(B[i]), x, 0, z)); }
+      g0.add(at(blk(2), -.15, 1.55, -.05, .4, .35, -.25));
+      const b2 = blk(2); b2.scale.setScalar(.75); g0.add(at(b2, .95, 2.35, -.5, -.5, .6, .4));
+      return g0;
+    },
   };
 
   /* ---------- collectible creatures ("Atlas Mon") — original board-game spirits ----------
@@ -613,7 +635,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9] };
+  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {
