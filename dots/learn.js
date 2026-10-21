@@ -125,6 +125,7 @@ const RULES = [
 ];
 let RU = null;   // {i, st: {by, own, turn, score, done, wait}}
 async function openRules(i) {
+  if (RU) RU.shown = null;   // no slide when the dialog opens
   await textReady(); lessonSrc = 'rules'; selTabL('rules');
   RU = { i: i || 0 };
   showLView('rulesView'); $('#lessonOverlay').classList.add('show');
@@ -166,6 +167,10 @@ function rulesRender(keepState) {
   rulesLayout();
   if (P.R) { rulesDraw(); if (P.anim) rulesAnim(); else rulesTaskText(); }
   if (P.intro || P.sizes || P.finish) rulesMark(P.id);
+  // slide the new page in from the side it is heading to (common rules-tour motion; mirrored in ar)
+  const d = RU.shown == null ? 0 : Math.sign(RU.i - RU.shown); RU.shown = RU.i;
+  const mn = d && $('#rulesBody .ru-main');
+  if (mn && mn.animate) mn.animate([{ transform: `translateX(${d * (document.documentElement.lang === 'ar' ? -1 : 1) * 55}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 280, easing: 'cubic-bezier(.22,.7,.25,1)' });
 }
 // correct answer: ✓ is shown, then the next page opens by itself after ~1.8 s (common spec, same as RuleTour api.ok).
 // Called only after the page's own animation has finished; any page change / close / retry clears the timer (rulesStop).

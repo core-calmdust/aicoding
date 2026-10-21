@@ -202,7 +202,12 @@ function draw() {
   $('#tuPrev').textContent = t('tu.prev'); $('#tuPrev').style.visibility = step ? 'visible' : 'hidden';
   const nx = $('#tuNext'); nx.textContent = last ? t(kind === 'speed' ? 'tu.s.end' : 'tu.d.end') : t('tu.next'); nx.classList.toggle('glow', !s.task || !!doneStep[step]); nx.classList.toggle('wait', !!s.task && !doneStep[step]);
   $('#mTut .sb').scrollTop = 0;
+  // slide the new step in from the side it is heading to (common rules-tour motion; mirrored in RTL)
+  const d = shownStep == null || shownKind !== kind ? 0 : Math.sign(step - shownStep); shownStep = step; shownKind = kind;
+  const sb = d && $('#mTut .tbody');
+  if (sb && sb.animate) sb.animate([{ transform: `translateX(${d * (document.documentElement.dir === 'rtl' ? -1 : 1) * 55}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 280, easing: 'cubic-bezier(.22,.7,.25,1)' });
 }
+let shownStep = null, shownKind = null;
 function finish() {
   C.closeModals();
   if (kind === 'speed' && C.screen !== 'spd' && C.MODE === 'speed') setTimeout(() => C.toast(esc(t('tu.s.go')), 'msg'), 300);
@@ -210,6 +215,7 @@ function finish() {
 function open(k, core) {
   C = core || C; if (!C) return;
   kind = k === 'speed' ? 'speed' : 'daily';
+  shownStep = null;
   steps = kind === 'speed' ? speedSteps() : dailySteps();
   step = 0; doneStep = {};
   ensure();

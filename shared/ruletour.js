@@ -65,6 +65,7 @@ const CSS = `
 .modal:has(.rt) > :has(.rt), .modal:has(.rt) > :has(.rt) > :has(.rt){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .modal:has(.rt) > :not(:has(.rt)){flex:none}
 .rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.rt{position:relative}.rt.rt-sliding{overflow:hidden}
 .rt-steps{flex:none}
 .rt-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:safe center;padding:0 2px}
 .rt-main > *{flex:none}
@@ -275,7 +276,24 @@ function create(o) {
     }
   }
   let lyT = 0; window.addEventListener('resize', () => { clearTimeout(lyT); lyT = setTimeout(fit, 60); });
-  function go(i) { if (i < 0 || i >= pages.length) return; tour.page = i; render(); }
+  // page change with a slide: the old page slides out, the new one slides in from the side it is heading to (mirrored in ar).
+  // from = the finger's current offset (px) when the change comes from a swipe, so the motion continues from there.
+  function go(i, from) {
+    if (i < 0 || i >= pages.length) return;
+    const d = Math.sign(i - tour.page), m = mount(), old = d && m && visible() ? m.querySelector('.rt-main') : null;
+    let ghost = null, W = 0;
+    if (old) { W = old.clientWidth; ghost = old.cloneNode(true); ghost.style.cssText += `;position:absolute;left:${old.offsetLeft}px;top:${old.offsetTop}px;width:${old.offsetWidth}px;height:${old.offsetHeight}px;margin:0;pointer-events:none`; }
+    tour.page = i; render();
+    if (!ghost) return;
+    const rt = m.querySelector('.rt'), main = m.querySelector('.rt-main'); if (!rt || !main) return;
+    const sx = d * (document.documentElement.lang === 'ar' ? -1 : 1), f = from || 0, gap = W + 24;
+    rt.classList.add('rt-sliding'); rt.appendChild(ghost);
+    const opt = { duration: f ? 220 : 280, easing: 'cubic-bezier(.22,.7,.25,1)' };
+    const a = ghost.animate([{ transform: `translateX(${f}px)`, opacity: 1 }, { transform: `translateX(${-sx * gap}px)`, opacity: .4 }], opt);
+    main.animate([{ transform: `translateX(${sx * gap + f}px)` }, { transform: 'none' }], opt);
+    const end = () => { ghost.remove(); rt.classList.remove('rt-sliding'); };
+    a.onfinish = end; a.oncancel = end;
+  }
   function onClick(e) {
     const m = mount(); if (!m || !m.contains(e.target)) return;
     const b = e.target.closest('[data-rt],[data-rt-act]'); if (!b || !m.contains(b)) return;
@@ -302,21 +320,35 @@ function create(o) {
     if (e.key === 'ArrowRight') { e.preventDefault(); e.stopImmediatePropagation(); go(tour.page + (rtl ? -1 : 1)); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopImmediatePropagation(); go(tour.page + (rtl ? 1 : -1)); }
   }, true);
-  // phones: swipe left = next, right = prev (reversed in ar). Swipes starting on the board / buttons are ignored so moves still work.
+  // phones: swipe left = next, right = prev (reversed in ar). The page follows the finger and slides on (go) or springs back.
+  // Swipes starting on the board / buttons are ignored so moves still work.
   let sw = null;
+  const swMain = () => { const m = mount(); return m && m.querySelector('.rt-main'); };
+  const swTarget = dx => tour.page + ((dx < 0) !== (document.documentElement.lang === 'ar') ? 1 : -1);
   document.addEventListener('touchstart', e => {
     sw = null; const m = mount();
     if (e.touches.length > 1 || !m || !m.contains(e.target) || !visible()) return;
     if (e.target.closest('.rt-board, input, textarea, select, [data-noswipe]')) return;
-    const t = e.touches[0]; sw = { x: t.clientX, y: t.clientY, t: Date.now() };
+    const t = e.touches[0]; sw = { x: t.clientX, y: t.clientY, t: Date.now(), on: false, dx: 0 };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!sw || e.touches.length > 1) return;
+    const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    if (!sw.on) { if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { sw = null; return; } if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.6) return; sw.on = true; }
+    const ok = swTarget(dx) >= 0 && swTarget(dx) < pages.length, mn = swMain(); if (!mn) return;
+    sw.dx = ok ? dx : dx * .25;   // no page that way: rubber band
+    mn.style.transform = `translateX(${sw.dx}px)`;
   }, { passive: true });
   document.addEventListener('touchend', e => {
-    if (!sw) return; const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Date.now() - sw.t; sw = null;
-    if (dt > 900 || Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
-    const rtl = document.documentElement.lang === 'ar';
-    go(tour.page + ((dx < 0) !== rtl ? 1 : -1));
+    if (!sw) return; const s0 = sw; sw = null;
+    const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = Date.now() - s0.t, mn = swMain();
+    if (mn) mn.style.transform = '';
+    const W = mn ? mn.clientWidth : 360, j = swTarget(dx), can = j >= 0 && j < pages.length;
+    const flick = dt < 900 && Math.abs(dx) >= 56 && Math.abs(dx) >= Math.abs(dy) * 1.6;
+    if (can && (flick || (s0.on && Math.abs(dx) > W * .3))) { go(j, s0.on ? s0.dx : 0); return; }
+    if (s0.on && mn && s0.dx) mn.animate([{ transform: `translateX(${s0.dx}px)` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.22,.7,.25,1)' });
   }, { passive: true });
-  document.addEventListener('touchcancel', () => { sw = null; }, { passive: true });
+  document.addEventListener('touchcancel', () => { const mn = sw && sw.on && swMain(); if (mn) mn.style.transform = ''; sw = null; }, { passive: true });
   Object.assign(tour, {
     open(i) { tour.page = Math.max(0, Math.min(pages.length - 1, i | 0)); render(); },
     render() { if (visible()) { const P = pages[tour.page]; if (P && P.setup && P.relabel) { P.relabel(); return; } render(); } },
