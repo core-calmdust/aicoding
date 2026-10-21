@@ -483,7 +483,7 @@ body[data-skin="mid"] .dthumb.ficon{border-radius:22px;border:0!important}
 .bext .fbar i{background:var(--blue)}
 .ftxt.minus{color:var(--red);font-size:30px;top:6%}
 body[data-skin="mid"] .blitzi{border:0;border-radius:14px}body[data-skin="mid"] .blv{border-radius:999px}body[data-skin="mid"] .fever,body[data-skin="mid"] .risew{border:0;border-radius:14px}
-#dBlitz .dbody,#dFree .fhead{margin-top:20px}
+#dBlitz .dbody,#dFree .fhead{margin-top:2px}
 /* daily difficulties */
 .dhead{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
 .dhead h3{font-family:var(--f-head);font-weight:400;font-size:21.6px;margin:2px 0 4px}.dhead p{margin:0;font-size:15.8px;line-height:1.55;max-width:46em}
