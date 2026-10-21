@@ -6,10 +6,12 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..'), CHESS = path.join(ROOT, '..', 'chess');
 global.window = {};
 require(path.join(CHESS, 'i18n.js'));
-for (const f of ['i18n_basics.js', 'i18n_coach.js']) { try { require(path.join(CHESS, f)); } catch (e) {} }
+for (const f of ['i18n_basics.js', 'i18n_coach.js', 'i18n_sync.js']) { try { require(path.join(CHESS, f)); } catch (e) {} }
 const C = window.I18N;
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const SHARED = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n', 'shared-keys.json'), 'utf8'));
+// Google link / cloud sync / first-visit profile strings (chess/i18n_sync.js) are taken as a whole
+for (const k of Object.keys(C.ja || {})) if (/^(pf|sync|err)\./.test(k) && !SHARED.includes(k)) SHARED.push(k);
 const out = {};
 for (const L of LANGS) {
   const o = {};

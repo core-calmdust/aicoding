@@ -2,7 +2,8 @@
 //
 // Online play needs its own Firebase project (separate from the other games), e.g. "gomoku-multiplay":
 //   1. https://console.firebase.google.com → Add project → name it "gomoku-multiplay" (Google Analytics not needed; the free Spark plan is enough).
-//   2. Build → Authentication → Get started → Sign-in method → enable "Anonymous".
+//   2. Build → Authentication → Get started → Sign-in method → enable "Anonymous" and "Google"
+//      (Authentication → Settings → Authorized domains: add the domain the site is served from, e.g. <user>.github.io).
 //   3. Build → Realtime Database → Create database (any location) → start in locked mode,
 //      then open the "Rules" tab, paste the contents of gomoku/database.rules.json and Publish.
 //   4. Project settings (gear) → General → Your apps → Web (</>) → register an app (no Hosting needed)
