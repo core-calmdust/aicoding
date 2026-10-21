@@ -259,7 +259,10 @@
     const board = T3.MODELS.backgammon(true, { look: 'marq' }); T3.show('backgammon', board); T3.play(true);
     const g = BG.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;   // shown at about the other boards' size (the camera stays below the room's lamp)
     board.scale.setScalar(SC);
-    if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: Y * SC, pitch: 1.18 });   // the whole case, large, seen a little from the player's side
+    const FR = BG.frameOn ? BG.frameOn(board, T3, { SC, Y, g, rotate: false, legacy: true }) : null;   // the whole case, large, seen a little from the player's side (not turned: the guide's words say left / right / top / bottom)
+    if (!FR && T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: Y * SC, pitch: 1.18 });
+    const prj = (x, y, z) => { if (!FR) return T3.project(x * SC, z * SC, y * SC); const v = FR.toCur(x, y, z); return T3.project(v.x, v.z, v.y); };
+    const curXYZ = (x, y, z) => { if (!FR) return [x * SC, z * SC, y * SC]; const v = FR.toCur(x, y, z); return [v.x, v.z, v.y]; };
     // the wide case needs a high camera on phones: the room's ceiling lamp (night) would hang in front of it — hidden during the tour
     const hidden = [];
     try { let sc = board; while (sc.parent) sc = sc.parent; sc.children.forEach(o => { if (o.isMesh && o.position.y > 10 && o.material && o.material.isMeshBasicMaterial && o.visible) { o.visible = false; hidden.push(o); } }); } catch (e) {}
@@ -369,7 +372,7 @@
     document.body.appendChild(arrowEl);
     const arrow = { _v: false, sc: 1, get visible() { return this._v; }, set visible(v) { this._v = v; arrowEl.style.display = v ? '' : 'none'; },
       scale: { setScalar: k => { arrow.sc = k; } },
-      position: { set: (x, y, z) => { const q = T3.project(x * SC, z * SC, y * SC); arrowEl.style.transform = `translate(${(q.x - 26).toFixed(1)}px,${(q.y - 62).toFixed(1)}px) scale(${arrow.sc})`; } } };
+      position: { set: (x, y, z) => { const q = prj(x, y, z); arrowEl.style.transform = `translate(${(q.x - 26).toFixed(1)}px,${(q.y - 62).toFixed(1)}px) scale(${arrow.sc})`; } } };
     const arrowAt = { x: 0, y: 0, z: 0 };
     const numTex = {};
     function numSprite(n) {
@@ -450,7 +453,7 @@
     function showHand() {
       if (stopped || busy || (phase !== 'pick' && phase !== 'dest')) return;
       const t = handTarget(); if (!t) return;
-      const q = T3.project(t[0] * SC, t[1] * SC, t[2] * SC);
+      const q = prj(t[0], t[2], t[1]);
       hand = document.createElement('div'); hand.className = 'bgt-hand';
       hand.innerHTML = '<svg viewBox="0 0 48 60" width="48" height="60"><circle cx="16" cy="6" r="5" fill="none" stroke="#ff4d4d" stroke-width="3" opacity=".8"/><path d="M12 8c0-3 2-5 4-5s4 2 4 5v17l2-1c2-1 4 0 4 2l1-1c2-1 4 0 4 2l1-1c2-1 5 0 5 3v12c0 8-6 14-14 14h-3c-5 0-8-3-10-7l-6-11c-1-2 0-4 2-5s4 0 5 2l2 3z" fill="#fff" stroke="#2b3044" stroke-width="2.6" stroke-linejoin="round"/></svg>';
       Object.assign(hand.style, { position: 'fixed', left: (q.x - 16) + 'px', top: (q.y - 4) + 'px', zIndex: 9999, pointerEvents: 'none', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,.35))', opacity: 0 });
@@ -523,8 +526,8 @@
     }
     // which point / bar / tray was tapped (board units → gold's numbering)
     function hitOf(e) {
-      const p = T3.pick(e, Y * SC); if (!p) return null;
-      const ux = p.x / SC + W2, uy = p.z / SC + H2;
+      const p0 = T3.pick(e, Y * SC); if (!p0) return null;
+      const p = FR ? FR.toBoard(p0) : { x: p0.x / SC, z: p0.z / SC }, ux = p.x + W2, uy = p.z + H2;
       if (ux >= g.TX - .15 && ux <= g.TX + g.TW + .3) return 'off';
       if (ux >= g.BX && ux < g.RX) return 'bar';
       if (uy < g.TOP - .3 || uy > g.BOT + .3) return null;
@@ -559,9 +562,9 @@
     requestAnimationFrame(() => el.classList.add('on'));
     later(() => go(0), 350);
     return {
-      stop() { stopped = true; clearTimeout(idleT); hideHand(); arrowEl.remove(); hidden.forEach(o => { o.visible = true; }); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
+      stop() { stopped = true; if (FR) FR.stop(); clearTimeout(idleT); hideHand(); arrowEl.remove(); hidden.forEach(o => { o.visible = true; }); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
       panel: el,
-      _debug: { pt: (p, side = 0) => { const [x, z] = landXZ(side, p); return [x * SC, z * SC, Y * SC]; }, ck: () => cur ? [cur.m.position.x * SC, cur.m.position.z * SC, Y * SC] : null, act: () => { const a = act(); if (!a) return null; const P = pathOf(a); return { from: a.from, dest: P[P.length - 1], phase }; }, step: () => step },
+      _debug: { pt: (p, side = 0) => { const [x, z] = landXZ(side, p); return curXYZ(x, Y, z); }, ck: () => cur ? curXYZ(cur.m.position.x, Y, cur.m.position.z) : null, act: () => { const a = act(); if (!a) return null; const P = pathOf(a); return { from: a.from, dest: P[P.length - 1], phase }; }, step: () => step },
     };
   }
 

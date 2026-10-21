@@ -52,14 +52,14 @@
     const board = T3.MODELS.backgammon(true, { look }); T3.show('backgammon', board); T3.play(true);
     const g = M3.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;
     board.scale.setScalar(SC);
-    if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: Y * SC, pitch: 1.18 });   // the whole case, large (same framing as the rules tour)
+    const FR = M3.frameOn(board, T3, { SC, Y, g });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
     let pos = null, T = null, sel = null, dests = null, worker = null, jid = 0, seed = '', stream = null, nRoll = 0, busy = false;
     const jobs = new Map();
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const sleep = ms => new Promise(r => later(r, ms));
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else { if (done) done(); T3.kick(200); } })(t0); };
     const animP = (dur, f) => new Promise(r => anim(dur, f, r));
     const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     const locOf = (s, p) => p === 25 ? 'bar' : p === 0 ? 'off' : s ? 25 - p : p;   // engine point of side s → view location (your numbering)
@@ -70,7 +70,7 @@
       if (c.at === 'off') { const st = Math.min(.28, (g.MID - g.TOP - .55) / 15), uy = c.side ? g.TOP + .17 + c.k * st + .125 : g.BOT - .17 - c.k * st - .125; return { x: g.TX + g.TW / 2 - W2, y: Y + M3.CK_R, z: uy - H2, edge: true }; }
       const [x, z] = M3.stackXZ(c.at, c.k, c.n, g); return { x, y: Y, z, edge: false };
     }
-    function place(c, p) { p = p || spot(c); c.m.position.set(p.x, p.y, p.z + (p.edge ? -M3.CK_H / 2 : 0)); c.m.rotation.set(p.edge ? Math.PI / 2 : 0, 0, 0); }
+    function place(c, p) { T3.kick(200); p = p || spot(c); c.m.position.set(p.x, p.y, p.z + (p.edge ? -M3.CK_H / 2 : 0)); c.m.rotation.set(p.edge ? Math.PI / 2 : 0, 0, 0); }
     function mk(side) { const m = M3.checker(CID[side]); const sh = T3.contact(.47, .45); sh.position.y = .002; sh.userData.contact = true; m.add(sh); board.add(m); return m; }
     function restack() { const grp = {}; cks.forEach(c => { const key = c.side + ':' + c.at; (grp[key] = grp[key] || []).push(c); }); Object.values(grp).forEach(a => a.forEach((c, i) => { c.k = i; c.n = a.length; })); }
     const shadow = c => c.m.children.forEach(ch => { if (ch.userData.contact) ch.visible = c.at !== 'off'; });
@@ -112,7 +112,7 @@
 
     /* ---------- dice ---------- */
     const halfX = side => (side ? g.LX + 3 : g.RX + 3) - W2;   // you roll in the right half, the AI in the left
-    function clearDice() { dice.forEach(d => board.remove(d)); dice = []; }
+    function clearDice() { dice.forEach(d => board.remove(d)); dice = []; T3.kick(200); }
     function diceSpots(n, side) { const dbl = n === 4, xs = dbl ? [-1.38, -.46, .46, 1.38] : [-.55, .55]; return xs.map((x, i) => ({ x: halfX(side) + x, z: dbl ? 0 : (i ? .25 : -.2), y: Y + (dbl ? .35 : .4) })); }
     function makeDie(id, v, size, yaw) { const d = M3.die(id, size); M3.dieRot(d, v, yaw); d.userData.v = v; board.add(d); dice.push(d); return d; }
     function throwDice(specs) {   // [{id, v, x, y, z, size, dir}] — thrown in from the side, tumbling, two bounces, then at rest
@@ -123,7 +123,7 @@
         const e = ends[i], kk = Math.min(1, k * 1.05 + i * .02), r = 1 - io(kk), hop = Math.abs(Math.sin(kk * Math.PI * 2.5)) * (1 - kk) * 1.6;
         d.position.set(e.p.x + r * 3.2 * specs[i].dir, e.p.y + hop, e.p.z + r * (i % 2 ? .8 : -.9));
         d.rotation.set(e.r.x + r * spin[i][0], e.r.y + r * spin[i][1], e.r.z + r * spin[i][2], 'YXZ');
-      })).then(() => { ds.forEach((d, i) => { d.position.copy(ends[i].p); d.rotation.copy(ends[i].r); }); SFX.tok(.6, 1.8); });
+      })).then(() => { ds.forEach((d, i) => { d.position.copy(ends[i].p); d.rotation.copy(ends[i].r); }); T3.kick(200); SFX.tok(.6, 1.8); });
     }
     function rollFor(side, v) {   // a turn's roll: two dice in the roller's colour (doubles: four)
       const vals = v[0] === v[1] ? [v[0], v[0], v[0], v[0]] : v, sp = diceSpots(vals.length, side);
@@ -144,10 +144,10 @@
     function glowPt(vp, color, op) {
       const top = vp >= 13, m = new TH.Mesh(triGeo, new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false, side: TH.DoubleSide }));
       m.rotation.x = -Math.PI / 2; if (top) m.rotation.z = Math.PI;
-      m.position.set(M3.slotX(vp, g) - W2, Y + .006, (top ? g.TOP : g.BOT) - H2); marks.add(m); return m;
+      m.position.set(M3.slotX(vp, g) - W2, Y + .006, (top ? g.TOP : g.BOT) - H2); marks.add(m); T3.kick(200); return m;
     }
-    function ring(x, y, z, color) { const m = new TH.Mesh(ringGeo, new TH.MeshBasicMaterial({ color, transparent: true, opacity: .95, toneMapped: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); marks.add(m); return m; }
-    function trayGlow() { const h = g.MID - g.TOP - .15, m = new TH.Mesh(new TH.PlaneGeometry(g.TW - .1, h), new TH.MeshBasicMaterial({ color: 0x2fd17a, transparent: true, opacity: .45, toneMapped: false, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(g.TX + g.TW / 2 - W2, Y + .006, g.MID + .1 + h / 2 - H2); marks.add(m); }
+    function ring(x, y, z, color) { const m = new TH.Mesh(ringGeo, new TH.MeshBasicMaterial({ color, transparent: true, opacity: .95, toneMapped: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); marks.add(m); T3.kick(200); return m; }
+    function trayGlow() { const h = g.MID - g.TOP - .15, m = new TH.Mesh(new TH.PlaneGeometry(g.TW - .1, h), new TH.MeshBasicMaterial({ color: 0x2fd17a, transparent: true, opacity: .45, toneMapped: false, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(g.TX + g.TW / 2 - W2, Y + .006, g.MID + .1 + h / 2 - H2); marks.add(m); T3.kick(200); }
     const numTex = {};
     function numSprite(n) {
       if (!numTex[n]) { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill(); x.lineWidth = 9; x.strokeStyle = '#1f9d5a'; x.stroke(); x.fillStyle = '#2b3044'; x.font = '900 74px Fredoka, "Zen Maru Gothic", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), 64, 70); numTex[n] = new TH.CanvasTexture(c); numTex[n].encoding = TH.sRGBEncoding; }
@@ -185,7 +185,7 @@
         const pips = path.reduce((a, s) => a + s.die, 0), at = locOf(0, to), [x, z] = landXZ(0, at);
         if (to === 0) trayGlow(); else glowPt(at, 0x2fd17a, .42);
         popIn(ring(x, Y + .03, z, path.some(s => s.hit) ? 0xff5d5d : 0x2fd17a), 1);
-        const sp = numSprite(pips); sp.position.set(x, Y + .8, z); marks.add(sp); popIn(sp, .62);
+        const sp = numSprite(pips); sp.position.set(x, Y + .8, z); marks.add(sp); popIn(sp, .62); T3.kick(200);
       }
       say(L.tapDest);
     }
@@ -283,24 +283,38 @@
       return true;
     }
 
-    /* ---------- HUD: you · message / buttons · AI ---------- */
+    /* ---------- HUD: you · buttons · AI (one line); messages in a speech bubble next to it ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .bgk{width:18px;height:18px;border-radius:50%;display:inline-block;box-shadow:0 1px 2px rgba(0,0,0,.35)}.hud .bgb{padding:8px 16px;font-size:15px;box-shadow:0 3px 0 var(--coral2)}.hud .bgb.go{font-size:16px;padding:9px 20px}.hud .bgb.ghost2{background:#fff;color:var(--ink2,#555);box-shadow:0 3px 0 #d9d2bf;border:2px solid #eee4cf}.hud .hm.bgm{display:flex;align-items:center;gap:6px;white-space:normal;line-height:1.25}@media (max-width:560px){.hud .bgb{padding:7px 11px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 13px}.hud .hm.bgm{font-size:11.5px}}';
+    css.textContent = '.hud .bgk{width:18px;height:18px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 1px 2px rgba(0,0,0,.35)}.hud .bgm{display:flex;align-items:center;gap:6px;flex:none}.hud .bgb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}.hud .bgb.go{font-size:16px;padding:9px 20px}.hud .bgb.ghost2{background:#fff;color:var(--ink2,#555);box-shadow:0 3px 0 #d9d2bf;border:2px solid #eee4cf}'
+      + '.bgbub{position:absolute;z-index:3;left:50%;transform:translateX(-50%);max-width:min(340px,calc(100% - 40px));padding:8px 16px;border-radius:16px;background:#fffdf7;border:2px solid #fff;box-shadow:0 8px 20px -10px rgba(80,40,0,.55);font-weight:900;font-size:14px;color:var(--ink2,#4a4f66);text-align:center;line-height:1.35;pointer-events:none;opacity:0;transition:opacity .2s}.bgbub.on{opacity:1}'
+      + '.bgbub::after{content:"";position:absolute;left:50%;margin-left:-8px;border:8px solid transparent}.bgbub.up::after{top:100%;border-top-color:#fffdf7}.bgbub.dn::after{bottom:100%;border-bottom-color:#fffdf7}'
+      + '@media (max-width:560px){.hud .bgb{padding:7px 10px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 12px}.hud .bgm{gap:5px}.bgbub{font-size:13px;padding:7px 13px}}';
     document.head.appendChild(css);
+    const host = ctx.el.parentNode || document.body, bub = document.createElement('div'); bub.className = 'bgbub'; host.appendChild(bub);
+    function placeBub() {   // above the bar when it sits at the bottom (phones), below it when it is at the top (PC)
+      if (stopped) return;
+      const h = document.getElementById('hud'); if (!h || !bub.textContent) { bub.classList.remove('on'); return; }
+      const t0 = h.offsetTop, hh = h.offsetHeight, H = host.clientHeight, up = t0 + hh / 2 > H / 2;   // layout box (the bar slides in with a transform)
+      bub.classList.toggle('up', up); bub.classList.toggle('dn', !up);
+      bub.style.top = up ? '' : (t0 + hh + 12) + 'px'; bub.style.bottom = up ? (H - t0 + 12) + 'px' : '';
+      bub.classList.add('on');
+    }
+    const placeLater = () => { placeBub(); later(placeBub, 520); };
+    addEventListener('resize', placeLater);
     function say(m) { msg = m || ''; hud(); }
     function hud() {
       if (stopped) return;
       const P = T ? T.pos : pos, pips = s => P && window.BG ? BG.pips(P, s) : 167;
       const side = s => `<span class="hs ${toMove === s ? 'on' : ''}"><i class="bgk" style="background:${DOT[CID[s]] || DOT.gold}"></i>${s ? L.ai : L.you}<b>${pips(s)}</b></span>`;
-      let mid = msg;
-      if (phase === 'roll') mid = `<button type="button" class="btn bgb go" data-bgt="roll">🎲 ${L.roll}</button>`;
+      const b = []; let m = msg;
+      if (phase === 'roll') { b.push(`<button type="button" class="btn bgb go" data-bgt="roll">🎲 ${L.roll}</button>`); m = ''; }
       else if (phase === 'move' && T && !busy) {
-        const done = !legalNow().length, b = [];
+        const done = !legalNow().length;
         if (T.steps.length) b.push(`<button type="button" class="btn bgb ghost2" data-bgt="undo">↶ ${L.undo}</button>`);
-        if (done) b.push(`<button type="button" class="btn bgb go" data-bgt="ok">✓ ${L.ok}</button>`);
-        mid = (done ? '' : `<span>${msg}</span>`) + b.join('');
+        if (done) { b.push(`<button type="button" class="btn bgb go" data-bgt="ok">✓ ${L.ok}</button>`); m = ''; }
       }
-      ctx.hud(`${side(0)}<span class="hm bgm">${mid}</span>${side(1)}`);
+      ctx.hud(`${side(0)}${b.length ? `<span class="bgm">${b.join('')}</span>` : ''}${side(1)}`);
+      if (bub.innerHTML !== m) { bub.innerHTML = m; placeLater(); }
     }
     function onHud(e) {
       const b = e.target.closest && e.target.closest('[data-bgt]'); if (!b || stopped) return;
@@ -312,8 +326,8 @@
 
     /* ---------- taps on the board ---------- */
     function hitOf(e) {   // which point / bar / tray was tapped → your engine numbering (25 bar, 0 tray)
-      const p = T3.pick(e, Y * SC); if (!p) return null;
-      const ux = p.x / SC + W2, uy = p.z / SC + H2;
+      const p0 = T3.pick(e, Y * SC); if (!p0) return null;
+      const p = FR.toBoard(p0), ux = p.x + W2, uy = p.z + H2;
       if (uy < g.TOP - .5 || uy > g.BOT + .5) return null;
       if (ux >= g.TX - .15 && ux <= g.TX + g.TW + .3) return 0;
       if (ux >= g.BX && ux < g.RX) return 25;
@@ -336,7 +350,7 @@
 
     /* ---------- go ---------- */
     setBoard();
-    const cube = M3.cube(64); cube.position.set(g.BX + g.B / 2 - W2, M3.FY + M3.RH + .43, 0); cube.rotation.y = .1; board.add(cube);   // decoration: no doubling in table play
+    const cube = M3.cube(64); cube.position.set(g.BX + g.B / 2 - W2, M3.FY + M3.RH + .43, 0); cube.rotation.y = .1; board.add(cube); T3.kick(400);   // decoration: no doubling in table play
     say('');
     (async () => {
       try { await loadBG(); } catch (e) { say('…'); return; }
@@ -361,11 +375,11 @@
       stop() {
         stopped = true; timers.forEach(clearTimeout); timers = [];
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true);
-        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove();
+        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); removeEventListener('resize', placeLater); FR.stop();
       },
-      _debug: { st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
-        pt: p => { const at = locOf(0, p), c = topOf(0, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(0, at); return T3.project(x * SC, z * SC, Y * SC); },
-        dst: p => { const [x, z] = landXZ(0, locOf(0, p)); return T3.project(x * SC, z * SC, Y * SC); } },
+      _debug: { hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
+        pt: p => { const at = locOf(0, p), c = topOf(0, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(0, at); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); },
+        dst: p => { const [x, z] = landXZ(0, locOf(0, p)); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); } },
     };
     window.__bgTable = api;   // (tests)
     return api;

@@ -534,5 +534,39 @@
     }));
   }
 
-  X.backgammon = { board, checker, die, dieRot, dieG, dieGTop, dieGPose, cube, sprites, geom, slotX, stackXZ, toWorld, FY, RH, CKL, DIE, CK_R, CK_H };
+  /* ---------- table framing: on a portrait screen the case is turned 90° (clockwise, like the game's own
+     landscape mode: your side on the left, the tray at the bottom) so its long side runs down the screen ---------- */
+  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
+  function frameOn(board, T3, o) {
+    const TT = T(), g = o.g, SC = o.SC;
+    let rot = null;
+    const aspect = () => { const d = T3._dbg && T3._dbg(); if (d && d.aspect) return d.aspect; const c = T3.renderer && T3.renderer() && T3.renderer().domElement; return c && c.clientHeight ? c.clientWidth / c.clientHeight : innerWidth / innerHeight; };
+    function apply() {
+      const r = o.rotate !== false && aspect() < .8;
+      if (r === rot) return; rot = r;
+      board.rotation.y = r ? -Math.PI / 2 : 0;
+      if (o.legacy) { if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: o.Y * SC, pitch: 1.18 }); }
+      else {   // as large as the screen allows; the screen bands kept for the HUD / buttons (top, bottom) stay free
+        const bw = r ? g.H + .3 : g.W + .6, bd = r ? g.W + .4 : g.H + .35, top = r ? .07 : .05, bot = r ? .17 : 0, dT = bd * SC / (1 - top - bot);
+        board.position.z = (top - bot) / 2 * dT;
+        if (T3.fit) T3.fit({ w: bw * SC, d: dT, y: o.Y * SC, pitch: r ? 1.4 : 1.2 });
+      }
+      board.updateMatrix(); board.updateMatrixWorld(true);
+      T3.kick(600); if (o.onChange) o.onChange(r);
+    }
+    apply();
+    const onR = () => { apply(); setTimeout(apply, 350); };
+    addEventListener('resize', onR);
+    const ts = [300, 800, 1600].map(ms => setTimeout(apply, ms));   // the canvas aspect settles after the play / rules layout
+    const inv = new TT.Matrix4();
+    return {
+      get rot() { return rot; },
+      check: apply,
+      toBoard(p) { board.updateMatrix(); inv.copy(board.matrix).invert(); const v = new TT.Vector3(p.x, o.Y * SC, p.z).applyMatrix4(inv); return { x: v.x, z: v.z }; },
+      toCur(x, y, z) { board.updateMatrix(); return new TT.Vector3(x, y, z).applyMatrix4(board.matrix); },
+      stop() { removeEventListener('resize', onR); ts.forEach(clearTimeout); },
+    };
+  }
+
+  X.backgammon = { board, frameOn, checker, die, dieRot, dieG, dieGTop, dieGPose, cube, sprites, geom, slotX, stackXZ, toWorld, FY, RH, CKL, DIE, CK_R, CK_H };
 })();
