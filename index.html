@@ -126,6 +126,21 @@ section{padding:56px 0}
 #games .sec-head{align-items:center}
 .sec-head .sec-sub{font-size:clamp(15px,1.6vw,18px);font-weight:700;color:var(--muted);margin-top:6px;letter-spacing:.04em}
 
+/* 世界のボドゲ大全: one big box for the series, like NEORETRO */
+.atl{
+  position:relative;border-radius:28px;padding:clamp(22px,4vw,44px);overflow:hidden;isolation:isolate;
+  background:linear-gradient(180deg, rgba(30,26,18,.88), rgba(10,12,16,.94));
+  border:1px solid rgba(242,207,122,.3);
+  box-shadow:0 0 0 1px rgba(48,230,255,.06) inset, 0 40px 120px -40px rgba(242,207,122,.28);
+}
+.atl::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background:conic-gradient(from 90deg at 1px 1px, transparent 90deg, rgba(242,207,122,.07) 0) 0 0/44px 44px;
+  mask-image:radial-gradient(120% 80% at 50% 0, #000 30%, transparent 75%);-webkit-mask-image:radial-gradient(120% 80% at 50% 0, #000 30%, transparent 75%)}
+.atl::after{content:"";position:absolute;inset:-40% -20% auto auto;width:60%;height:70%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side, rgba(242,207,122,.14), transparent);filter:blur(10px)}
+.atl > .sec-head{margin-top:0}
+.atl > .sec-head > div{min-width:0;max-width:100%}
+@media (max-width:560px){.atl{padding:18px 14px 20px;border-radius:22px}}
+@media (max-width:420px){.atl .atlas-logo .wm b{font-size:15px}}
 /* NEORETRO */
 .neo{
   position:relative;border-radius:28px;padding:clamp(22px,4vw,44px);overflow:hidden;
@@ -531,6 +546,7 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
 
 <section id="games">
   <div class="wrap">
+   <div class="atl">
     <div class="sec-head reveal">
       <div>
         <div class="k en">BOARD &amp; PUZZLE</div>
@@ -575,6 +591,7 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
     </div>
     <!-- Crawler-readable index of every game (name + description), generated from GAMES. -->
     <ul class="gx-index" id="gx-index" aria-hidden="true"></ul>
+   </div>
   </div>
 </section>
 
