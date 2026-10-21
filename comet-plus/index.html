@@ -1865,7 +1865,7 @@ function updatePlayingState(dt_sec) {
     // Energy Management (STARTRAIL MODEではスキップ)
     if (gameMode !== 'STARTRAIL MODE') {
         const baseEnergyMultiplier = 0.9;
-        const energyDecreaseRate = Math.pow(1.08, stage - 1); // ステージごとの増え方は控えめに（以前は1.12倍ずつ）
+        const energyDecreaseRate = Math.pow(1.10, stage - 1); // ステージごとに1.10倍ずつ（1.12は厳しく、1.08はぬるい）
         energy -= baseEnergyMultiplier * energyDecreaseRate * 60 * dt_sec;
 
         const energyThreshold = config.energyTotal / 3;
