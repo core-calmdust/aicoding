@@ -7,7 +7,7 @@
 'use strict';
 const CATS = ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'];
 const FILES = { beg: 1, mid: 1, adv: 1, sp: 1, new: 1, castle: 1 };   // categories with an extra data file
-const VER = '20261021op';
+const VER = '20261021rk';
 const ICON = { beg: '初', mid: '中', adv: '上', sp: '奇', new: '新', castle: '囲', handi: '駒' };
 const TXT = {
   ja: { 'k.furi': "振り飛車の囲い", 'k.ibi': "居飛車の囲い", 'k.aifuri': "相振りの囲い", 't.beg': '初級', 't.mid': '中級', 't.adv': '上級', 't.sp': '特殊', 't.new': '流行', 't.castle': '囲い', 't.handi': '駒落ち', studied: '解説済み', sente: "先手の戦法", gote: "後手の戦法", prog: '{n} / {m} 完了', beg: '初心者向け', mid: '中級者向け', adv: '上級者向け', sp: '特殊な戦法', new: '最近の流行', castle: '囲い', handi: '駒落ち',
