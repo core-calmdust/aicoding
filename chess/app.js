@@ -1090,6 +1090,61 @@ function lxCard(o) {
     `<b class="lx-t">${o.title}${o.small ? `<small>${o.small}</small>` : ''}</b>${o.sub ? `<span class="lx-sub">${o.sub}</span>` : ''}` +
     `<span class="lx-desc">${o.desc}</span>${lxBar(o.p, o.done)}</span></button>`;
 }
+// (pieces use viewBox "0,0,100,100" so lxBoard's zoom leaves them alone — the size comes from the scale below)
+// lesson cards that teach how a piece moves get a move icon (5×5 cut-out, the piece drawn large, moves as arrows / dots)
+// instead of a position diagram. Board squares a1..e5. Keyed by lesson id; lessons not listed keep the mini board.
+// pc: pieces, big: the piece to enlarge, ar: arrows [from,to,'dash'?], lp: bent arrow through points, dot: move dots,
+// tint: highlighted squares, bad: attacked squares (red), good: safe square (green), x: capture targets (red ring), ghost: faded piece (promotion)
+const LX_MOVE_ICON = {
+  b_rook: { pc: { c3: 'R' }, big: 'c3', ar: [['c3', 'c5'], ['c3', 'c1'], ['c3', 'a3'], ['c3', 'e3']] },
+  b_bishop: { pc: { c3: 'B' }, big: 'c3', ar: [['c3', 'a5'], ['c3', 'e5'], ['c3', 'a1'], ['c3', 'e1']] },
+  b_queen: { pc: { c3: 'Q' }, big: 'c3', ar: [['c3', 'c5'], ['c3', 'c1'], ['c3', 'a3'], ['c3', 'e3'], ['c3', 'a5'], ['c3', 'e5'], ['c3', 'a1'], ['c3', 'e1']] },
+  b_king: { pc: { c3: 'K' }, big: 'c3', k: 1.95, tint: ['b2', 'c2', 'd2', 'b3', 'd3', 'b4', 'c4', 'd4'], dot: ['b2', 'c2', 'd2', 'b3', 'd3', 'b4', 'c4', 'd4'] },
+  b_knight: { pc: { c3: 'N' }, big: 'c3', dot: ['b1', 'd1', 'a2', 'e2', 'a4', 'e4', 'b5'], lp: ['c3', 'c5', 'd5'], tint: ['d5'] },
+  b_pawn: { pc: { c2: 'P', b3: 'p', d3: 'p' }, big: 'c2', k: 2, ar: [['c2', 'c4']], x: ['b3', 'd3'] },
+  b_capture: { pc: { c2: 'R', c5: 'n' }, big: 'c2', k: 2.1, ar: [['c2', 'c5']], x: ['c5'] },
+  b_safety: { pc: { b4: 'b', d2: 'R' }, big: 'd2', k: 2.1, bad: ['a5', 'c5', 'a3', 'c3', 'd2', 'e1'], ar: [['d2', 'd4']], good: ['d4'] },
+  b_special: { pc: { b2: 'K', e2: 'R', b4: 'P' }, big: '', ghost: { b5: 'Q' }, ar: [['b4', 'b5']], lp2: [['b2', 'd2', -1], ['e2', 'c2', 1]] },
+};
+function lxMoveIcon(o) {
+  const n = 5, u = 41.6, W = u * n + 8, A = 'rgba(255,214,110,1)', OUT = 'rgba(28,18,8,.75)';
+  const XY = q => [4 + (q.charCodeAt(0) - 97) * u + u / 2, 4 + (n - 1 - (q.charCodeAt(1) - 49)) * u + u / 2];
+  let s = `<svg viewBox="0 0 ${W} ${W}"><rect width="${W}" height="${W}" rx="6" fill="#1a130d" stroke="rgba(201,169,97,.5)"/>`;
+  for (let r = 0; r < n; r++) for (let f = 0; f < n; f++) s += `<rect x="${4 + f * u}" y="${4 + (n - 1 - r) * u}" width="${u}" height="${u}" fill="${(r + f) & 1 ? '#e3cfa8' : '#9c7349'}"/>`;
+  const sq = (q, fill) => { const [x, y] = XY(q); return `<rect x="${x - u / 2}" y="${y - u / 2}" width="${u}" height="${u}" fill="${fill}"/>`; };
+  for (const q of o.tint || []) s += sq(q, 'rgba(255,205,90,.42)');
+  for (const q of o.bad || []) s += sq(q, 'rgba(235,70,50,.5)');
+  for (const q of o.good || []) s += sq(q, 'rgba(90,200,140,.6)');
+  const piece = (q, ch, k, extra) => { if (q[1] === '5') k = Math.min(k, 1.2); const [x, y] = XY(q), w = u * k, p = ' PNBRQK'.indexOf(ch.toUpperCase()) | (ch === ch.toLowerCase() ? 8 : 0); return `<svg x="${x - w / 2}" y="${y - w / 2 - (k > 1.6 ? w * .05 : 0)}" width="${w}" height="${w}" viewBox="0,0,100,100" class="${p & 8 ? 'pb' : 'pw'}"${extra || ''}><use href="#s${PT[p & 7]}"/></svg>`; };
+  // arrow: dark outline under a bright stroke, filled head; dashed = optional first-move step
+  const head = (x, y, ux, uy, h) => `M${x},${y}L${x - ux * h - uy * h * .62},${y - uy * h + ux * h * .62}L${x - ux * h + uy * h * .62},${y - uy * h - ux * h * .62}Z`;
+  const arrow = (pts, dash, fromBig, stop) => {
+    const P = pts.map(XY), [x0, y0] = P[0], [x1, y1] = P[1], L0 = Math.hypot(x1 - x0, y1 - y0), off = fromBig ? u * .62 : u * .3;
+    P[0] = [x0 + (x1 - x0) / L0 * off, y0 + (y1 - y0) / L0 * off];
+    const [ax, ay] = P[P.length - 2], [bx, by] = P[P.length - 1], L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
+    const ext = stop ? -u * .5 : u * .12, tip = [bx + ux * ext, by + uy * ext], end = [tip[0] - ux * 12, tip[1] - uy * 12];
+    const d = 'M' + P.slice(0, -1).map(p => p.join(',')).join('L') + 'L' + end.join(',');
+    const da = dash ? ' stroke-dasharray="9 7"' : '';
+    return `<path d="${d}" stroke="${OUT}" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"${da}/><path d="${head(tip[0], tip[1], ux, uy, 19)}" fill="${A}" stroke="${OUT}" stroke-width="3.5" stroke-linejoin="round"/>` +
+      `<path d="${d}" stroke="${A}" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"${da}/>`;
+  };
+  // castling: two arcs on the same rank (king above, rook below)
+  const arc = (a, b, side) => {
+    const [x0, y0] = XY(a), [x1, y1] = XY(b), dir = Math.sign(x1 - x0), sx = x0 + dir * u * .3, ex = x1 - dir * u * .05, cy = y0 + side * u * .78, ey = y0 + side * u * .28;
+    const ux = dir * .55, uy = -side * .83, tip = [ex, ey], end = [ex - ux * 10, ey - uy * 10];
+    const d = `M${sx},${y0 + side * u * .28}C${sx},${cy} ${ex},${cy} ${end[0]},${end[1]}`;
+    return `<path d="${d}" stroke="${OUT}" stroke-width="12" fill="none" stroke-linecap="round"/><path d="${head(tip[0], tip[1], ux, uy, 18)}" fill="${A}" stroke="${OUT}" stroke-width="3.5" stroke-linejoin="round"/><path d="${d}" stroke="${A}" stroke-width="7" fill="none" stroke-linecap="round"/>`;
+  };
+  for (const q in o.ghost || {}) s += piece(q, o.ghost[q], 1.5, ' opacity=".6"') + (() => { const [x, y] = XY(q); return `<circle cx="${x}" cy="${y}" r="${u * .47}" fill="none" stroke="${A}" stroke-width="3.5" stroke-dasharray="6 5"/>`; })();
+  for (const q in o.pc) if (q !== o.big) s += piece(q, o.pc[q], 1.5);
+  for (const q of o.x || []) { const [x, y] = XY(q); s += `<circle cx="${x}" cy="${y}" r="${u * .46}" fill="none" stroke="${OUT}" stroke-width="8"/><circle cx="${x}" cy="${y}" r="${u * .46}" fill="none" stroke="#ff6b5b" stroke-width="4.5"/>`; }
+  for (const q of o.dot || []) { const [x, y] = XY(q); s += `<circle cx="${x}" cy="${y}" r="${u * .2}" fill="${A}" stroke="${OUT}" stroke-width="3.5"/>`; }
+  for (const [a, b, side] of o.lp2 || []) s += arc(a, b, side);
+  for (const [a, b, dash] of o.ar || []) s += arrow([a, b], !!dash, a === o.big, (o.x || []).includes(b));
+  if (o.lp) s += arrow(o.lp, false, true);
+  if (o.big) s += piece(o.big, o.pc[o.big], o.k || 2.5);
+  return s + '</svg>';
+}
 const LX_ICON = { basics: lxPiece('P'), tactics: lxPiece('N'), e4: lxPiece('K'), d4: lxPiece('Q'), other: lxPiece('N') };
 async function openLessons() {
   await lessonsReady; selTab('lesson');
@@ -1103,7 +1158,7 @@ async function openLessons() {
     const drill = s.kind === 'drill', max = drill ? s.stages.length * 3 : 100;
     const score = r ? (drill ? '★' + r.best + '/' + max : t('u.pt', { n: r.best })) : '';
     const d = s.diagram || { fen: (s.stages || s.problems)[0].fen };
-    const board = miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] });
+    const board = LX_MOVE_ICON[s.id] ? lxMoveIcon(LX_MOVE_ICON[s.id]) : miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] });
     const st = r ? (r.clear ? { text: '✓ ' + t('ls.clear'), cls: 'ok' } : { text: score }) : { text: t('ls.notyet'), cls: 'new' };
     c.items.push({ done: !!(r && r.clear), html: lxCard({ attr: `data-i="${i}"`, board, no: 'STEP ' + (c.items.length + 1), st, title: t('ls.' + s.id + '.title'), sub: t('ls.' + s.id + '.sub'), desc: lxPlain(t('ls.' + s.id + '.intro')), p: r ? r.best / max : 0, done: !!(r && r.clear) }) });
   });
