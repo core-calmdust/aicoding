@@ -184,7 +184,7 @@ function notation(moves) {
     }
     let s = ptName(f) + '/';
     // keep the intermediate hit point visible
-    if (hits.length && hits[0] !== t) s += hits.map(h => ptName(h) + '*').join('/') + '/' + ptName(t) + (hits.includes(t) ? '*' : '');
+    if (hits.length && hits[0] !== t) s += hits.filter(h => h !== t).map(h => ptName(h) + '*').join('/') + '/' + ptName(t) + (hits.includes(t) ? '*' : '');
     else s += ptName(t) + (hits.length ? '*' : '');
     parts.push(s);
   }

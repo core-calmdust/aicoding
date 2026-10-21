@@ -1,5 +1,5 @@
 // Backgammon V2 — AI / analysis worker
-importScripts('bg.js?v=20261021bp', 'explain.js?v=20261021bp');
+importScripts('bg.js?v=20261021op', 'explain.js?v=20261021op');
 let ready = null;
 async function init() {
   try {

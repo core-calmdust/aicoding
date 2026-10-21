@@ -140,7 +140,7 @@ function load() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261021bp');
+  const w = new Worker('engine.js?v=20261021op');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; w.jobs.delete(m.id); if (m.error) console.warn(m.error); j.resolve(m); };
   w.onerror = e => console.warn('worker error', e.message);
@@ -636,6 +636,7 @@ function commitTurn() {
   // safety: the result must be one of the legal plays
   const k = BG.key(turn.pos);
   if (!turn.plays.some(x => BG.key(x.pos) === k)) { console.warn('illegal play rejected'); return; }
+  if (lesson && lesson.op) { if (window.OPH) OPH.submit(turn); return; }
   if (lesson) { lessonSubmit(turn); return; }
   if (puzzle) { puzzleSubmit(turn); return; }
   const tt = turn; turn = null; selected = null;
@@ -1896,8 +1897,10 @@ let savedGame = null;
 function stashGame() { if (!lesson && !puzzle && match) savedGame = { match, cur, view, humanSide, evals, gameOverShown }; }
 function exitSpecial() {
   if (!lesson && !puzzle) return;
+  if (lesson && lesson.op && window.OPH) OPH.stop();
   lesson = null; puzzle = null; marks = []; extraArrows = []; previewPlay = null; turn = null;
-  document.body.classList.remove('in-lesson', 'in-puzzle');
+  document.body.classList.remove('in-lesson', 'in-puzzle', 'in-study', 'st-end');
+  $('#lessonCard').style.minHeight = ''; $('#lsHint').style.display = ''; $('#lsNext').style.display = ''; $('#lsNext').style.opacity = ''; $('#lsAuto').classList.add('hidden');
   busyToken++; cancelWorker('ai'); cancelWorker('ana');
   if (savedGame) { ({ match, cur, view, humanSide, evals, gameOverShown } = savedGame); savedGame = null; }
   if (!match) match = newMatch(null, settings.matchLen, settings.cube);
@@ -2205,6 +2208,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   inst(true);
   if (b.dataset.v === 'rules') { hideOverlay('#lessonOverlay'); hideOverlay('#puzzleOverlay'); openRules(); }
   else if (b.dataset.v === 'puzzle') { hideOverlay('#lessonOverlay'); hideOverlay('#rulesOverlay'); openPuzzles(); }
+  else if (b.dataset.v === 'open' && window.OPH) { hideOverlay('#puzzleOverlay'); hideOverlay('#rulesOverlay'); OPH.open(); }
   else { hideOverlay('#puzzleOverlay'); hideOverlay('#rulesOverlay'); openLessons(); }
   setTimeout(() => inst(false), 150);
 }));
@@ -2247,6 +2251,7 @@ async function openLessons(course) {
       `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass ? 'ok' : '')}</span></button>`;
   }).join('');
   $('#lsDesc').textContent = t('ls.desc2', { n: LESSONS.steps.length });
+  $('#lsH2').textContent = t('ls.title'); $('#lessonList').dataset.mode = 'ls'; if (window.OPH) OPH.leave();
   $('#lessonList').innerHTML = `<div class="lx">` +
     `<div class="lx-tabs${courses.length > 3 ? ' many' : ''}">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k]}</span><span class="nm">${t('lx.c.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
     `<div class="lx-banner"><span class="ic">${LS_ICON[c]}</span><span class="tx"><b>${t('lx.c.' + c)}</b><small>${t('lx.c.' + c + '.d')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
@@ -2254,10 +2259,12 @@ async function openLessons(course) {
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 $('#lessonList').onclick = e => {
+  if ($('#lessonList').dataset.mode === 'op') { if (window.OPH) OPH.list(e); return; }
   const tb = e.target.closest('[data-course]'); if (tb) { openLessons(tb.dataset.course); return; }
   const b = e.target.closest('.lx-card'); if (b) openIntro(+b.dataset.i);
 };
 function openIntro(i) {
+  if (window.OPH) OPH.leave();
   introIdx = i; const s = LESSONS.steps[i];
   $('#liStep').textContent = 'STEP ' + (i + 1);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
@@ -2269,9 +2276,9 @@ function openIntro(i) {
   $('#liBody').innerHTML = body;
   showLessonView('lessonIntroView');
 }
-$('#btnLessonBack').onclick = () => openLessons(LESSONS.steps[introIdx] && lsCourseOf(LESSONS.steps[introIdx].id));
+$('#btnLessonBack').onclick = () => (window.OPH && OPH.isItem()) ? OPH.back() : openLessons(LESSONS.steps[introIdx] && lsCourseOf(LESSONS.steps[introIdx].id));
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
-$('#btnLessonStart').onclick = () => startLesson(introIdx);
+$('#btnLessonStart').onclick = () => (window.OPH && OPH.isItem()) ? OPH.start() : startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
 $('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
@@ -2285,6 +2292,7 @@ function lsFigHTML(f, cap) {
 }
 function startLesson(step) {
   hideOverlay('#lessonOverlay');
+  if (lesson && lesson.op) exitSpecial();
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle'); $('#toast').classList.remove('show');
   if (G.FLAT) { scrollTo(0, 0); document.body.scrollTop = 0; }   // landscape: keep the board in view (the card is below)
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false;
@@ -2393,6 +2401,7 @@ function whyText(P, bestN) {
   return t('ls.' + s.id + '.why', { m: mvb(bestN) }) + ' ' + tagText(P);
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.op) { OPH.hint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
   const P = lessonProblem(), s = LESSONS.steps[lesson.step];
@@ -2405,6 +2414,7 @@ $('#lsHint').onclick = () => {
   }
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.op) { OPH.next(); return; }
   if (!lesson || !lesson.answered) return;
   const s = LESSONS.steps[lesson.step];
   lesson.fb = null; extraArrows = []; marks = [];
@@ -2420,7 +2430,7 @@ $('#lsNext').onclick = () => {
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
-$('#lsList').onclick = () => { if (!lesson) return; const id = LESSONS.steps[lesson.step].id; openLessons(lsCourseOf(id)); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.op) { OPH.toList(); return; } const id = LESSONS.steps[lesson.step].id; openLessons(lsCourseOf(id)); };
 
 // ====================================================================== puzzles
 let PUZZLES = null;
@@ -2500,6 +2510,7 @@ $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(ci, j, daily, keep) {
   hideOverlay('#puzzleOverlay');
+  if (lesson && lesson.op) exitSpecial();
   stashGame(); lesson = null; document.body.classList.remove('in-lesson'); $('#toast').classList.remove('show');
   if (G.FLAT && !PCW) { scrollTo(0, 0); document.body.scrollTop = 0; }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false;
@@ -2691,9 +2702,11 @@ $('#langSel').onchange = e => {
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   render(); renderInfo();
   if ($('#newOverlay').classList.contains('show')) segSync();
-  if (lesson) { renderLessonCard(); renderLessonFb(); }
+  if (lesson && lesson.op) { if (window.OPH) OPH.relang(); }
+  else if (lesson) { renderLessonCard(); renderLessonFb(); }
   if (puzzle) renderPuzzleCard();
-  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
+  if (window.OPH && (OPH.isList() || OPH.isItem())) { if (!(lesson && lesson.op)) OPH.relang(); }
+  else if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzCat); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (window.PZBook) PZBook.setLang(LANG);
