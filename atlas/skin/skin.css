@@ -200,3 +200,19 @@ html.atlas-chess #segSkin{flex-wrap:wrap}
 html.atlas-chess .frame::before{display:block!important;content:'';position:absolute;inset:0;border-radius:6px;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(118deg,rgba(255,255,255,0) 16%,rgba(255,255,255,.13) 31%,rgba(255,255,255,.04) 38%,rgba(255,255,255,0) 44%,rgba(255,255,255,0) 63%,rgba(255,255,255,.07) 71%,rgba(255,255,255,0) 79%)}
 html.atlas-chess .star{display:flex!important}
 html.atlas-chess .star,html.atlas-chess .dot,html.atlas-chess .fxsvg{z-index:12!important}html.atlas-chess .hintlbl{z-index:13!important}
+
+/* dialogs: the games' dark-theme panels (black at low alpha) → light portal tones (lists, tabs, banners, cards) */
+html.atlas-skin .modal :is(.lx-card,.lx-tabs button,.lesson-item,.op-book .ob,.rt-card,.ru-hand,.ru-pair,.ru-chip,.ru-win,.syncbox,.ed-pal button,.ed-tools button,.ed-hands button,.ol-list > div,.st-nav button,.lesson-actions button:not(.go)){background:#f8f0e0!important;border-color:var(--line)!important}
+html.atlas-skin .modal :is(.lx-card,.lesson-item,.op-book .ob):hover{background:#fff6e3!important;border-color:rgba(196,138,58,.55)!important}
+html.atlas-skin .modal .lx-card.done{background:linear-gradient(120deg,#e4f4ea,#f8f0e0 60%)!important;border-color:rgba(30,163,108,.35)!important}
+html.atlas-skin .modal .lx-tabs button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c2)!important;border-color:var(--brass)!important}
+html.atlas-skin .modal .lx-banner{background:linear-gradient(120deg,#fbefd4,#f6ecda 70%)!important;border-color:rgba(196,138,58,.35)!important}
+html.atlas-skin .modal .lx-bar{background:rgba(120,90,40,.14)!important}
+
+/* hints that "light up" a piece / square / hand slot: a bright pulsing glow that reads on the wooden 3D boards */
+@keyframes atlasGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.85),0 0 14px 4px rgba(255,196,40,.85)}50%{box-shadow:0 0 0 2px rgba(255,255,255,.95),0 0 26px 10px rgba(255,196,40,.95)}}
+html.atlas-skin .mark.best{border:4px solid #ffcf3a!important;background:rgba(255,214,70,.32);border-radius:14%;animation:atlasGlow 1.1s ease-in-out infinite;z-index:6}
+html.atlas-shogi .hslot.hint{background:rgba(255,214,70,.5)!important;border-radius:10px;animation:atlasGlow 1.1s ease-in-out infinite}
+html.atlas-skin .modal .pb-card{background:linear-gradient(120deg,color-mix(in srgb,var(--c2) 26%,#fff),#f8f0e0 60%)!important}
+html.atlas-skin .modal .pb-stage{background:linear-gradient(180deg,color-mix(in srgb,var(--c2) 18%,#fff),#f8f0e0)!important}
+html.atlas-skin .modal .pb-tile:not(.done){background:#f8f0e0!important}
