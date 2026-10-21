@@ -2865,10 +2865,31 @@ const gradeAt = i => i < 0 ? LESSONS.rules[-i - 1] : LESSONS.grades[i];
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
 let TSUME = null;
-const tsumeReady = fetch('tsume.json?v=20261019tc').then(r => r.json()).then(d => {
+// replaced problems (tools/fun.js + tools/tsume/refresh_fun.js): set.old[newId] = the problem that was in that slot
+// before. A player who already has a record for the old problem keeps seeing it (stars / counts stay as they were);
+// everyone else gets the new one. The choice is pinned once the slot is played. Daily puzzles up to TS_SWITCH keep the old one.
+const TS_SWITCH = '2026-10-21', TPIN = 'shogi-kaya-tsume-pin';
+let tpin = {};
+try { tpin = JSON.parse(localStorage.getItem(TPIN) || '{}') || {}; } catch (e) {}
+function tsPick(g, p) {
+  const o = g.old && g.old[p.id]; if (!o) return p;
+  const v = tpin[g.id + ':' + p.id];
+  return v === 'o' ? o : v === 'n' ? p : tstars[o.id] ? o : p;
+}
+function tsResolve() { if (TSUME) for (const g of TSUME.sets) if (g.base) g.problems = g.base.map(p => tsPick(g, p)); }
+function tsPin(g, k, pr) {
+  const p = g.base && g.base[k]; if (!p || !g.old || !g.old[p.id]) return;
+  const key = g.id + ':' + p.id, v = pr === p ? 'n' : 'o';
+  if (tpin[key] !== v) { tpin[key] = v; try { localStorage.setItem(TPIN, JSON.stringify(tpin)); } catch (e) {} tsResolve(); }
+}
+// the daily puzzle of a date: the old problem of a replaced slot up to TS_SWITCH, the current one after it
+function tsDailyProb(si, k, date) { const g = TSUME.sets[si], p = (g.base || g.problems)[k], o = g.old && g.old[p.id]; return o && date <= TS_SWITCH ? o : p; }
+const tsumeReady = fetch('tsume.json?v=20261021fun').then(r => r.json()).then(d => {
   // PZBook: problems in each set go from easy to hard (stable by difficulty d); progress is stored per problem id
+  // (a replacement keeps the d of its slot, so the order never changes)
   for (const g of d.sets) g.problems = g.problems.map((p, i) => [p, i]).sort((a, b) => ((a[0].d || 0) - (b[0].d || 0)) || a[1] - b[1]).map(x => x[0]);
-  TSUME = d;
+  for (const g of d.sets) if (g.old) g.base = g.problems;
+  TSUME = d; tsResolve();
 }).catch(() => {});
 const TSTORE = 'shogi-kaya-tsume-v1';
 let tsolved = {};
@@ -2944,7 +2965,7 @@ function openTsumeList() {
   let cur = ShogiLX.tab('tsume'); if (!cats.includes(cur)) cur = cats[0];
   const md = d => d.slice(5).replace('-', '/');
   const daily = [true, false].map(easy => { const dl = dailyPick(easy), di = dailyInfo(easy); if (!dl) return null;
-    return { key: easy ? '2' : '1', board: tsThumb(S[dl.si].problems[dl.k]), title: (easy ? '☆ ' : '★ ') + t(easy ? 'daily.titleEasy' : 'daily.title'), date: md(dl.date),
+    return { key: easy ? '2' : '1', board: tsThumb(tsDailyProb(dl.si, dl.k, dl.date)), title: (easy ? '☆ ' : '★ ') + t(easy ? 'daily.titleEasy' : 'daily.title'), date: md(dl.date),
       sub: `${L(S[dl.si].title)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}`, done: di.today, go: t('daily.go') }; }).filter(Boolean);
   const cont = PZBook.resume(S.map((g, i) => ({ key: i, recs: tsRecs(g), cat: tsGrp(g) })), TS_LAST);
   list.innerHTML = PZBook.home({
@@ -2981,7 +3002,9 @@ $('#btnTsGridBack').onclick = () => { lsTab = 'tsume'; openLessons(); };
 function startTsume(si, k, dailyDate, dailyEasy) {
   busyToken++; cancelAI(); cancelAna();
   const g = TSUME.sets[si];
-  lesson = { endless: true, si, g, probs: g.problems, k: k || 0, results: [], pts: [], waiting: false, daily: dailyDate || null, dailyEasy: !!dailyEasy };
+  let probs = g.problems;
+  if (dailyDate) { probs = probs.slice(); probs[k || 0] = tsDailyProb(si, k || 0, dailyDate); }
+  lesson = { endless: true, si, g, probs, k: k || 0, results: [], pts: [], waiting: false, daily: dailyDate || null, dailyEasy: !!dailyEasy };
   if (!dailyDate) PZBook.lastSet(TS_LAST, si);
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
@@ -3307,6 +3330,7 @@ function startLesson(gi) {
 }
 function loadProblem() {
   const pr = lesson.probs[lesson.k];
+  if (lesson.endless && lesson.g) tsPin(lesson.g, lesson.k, pr);   // a replaced slot keeps the version played here
   lesson.cur = pr; lesson.retry = null; lesson.missed = false; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = ''; lesson.offline = false; lesson.dev = 0;
   lessonGame(pr.sfen, []);
   renderLesson();
@@ -3481,7 +3505,7 @@ function lessonScored(pts, info) {
     const after = tsRecs(lesson.g), ev = PZBook.events(before, after, lesson.k);
     PZBook.setLang(LANG); book = PZBook.solved({ stars, recs: after, j: lesson.k, events: ev });
   }
-  if (lesson.daily && lesson.k === 0 && info.solved) { dailySolved(lesson.daily, lesson.hintShown || lesson.missed, lesson.dailyEasy); lesson.dailyMsg = true; }
+  if (lesson.daily && info.solved) { dailySolved(lesson.daily, lesson.hintShown || lesson.missed, lesson.dailyEasy); lesson.dailyMsg = true; }
   const sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
   let html = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b>`;
   if (lesson.hintShown && !lesson.shownAnswer) html += ` <span style="font-size:11.5px">(${t('ls.hintPen', { n: HINT_PEN })})</span>`;
@@ -4189,7 +4213,7 @@ const ShogiSync = (() => {
   function apply(d) {
     lprog = d.ls || {}; put(LSTORE, lprog);
     oprog = d.op || {}; put(OSTORE, oprog);
-    tstars = d.ts || {}; put(TSTORE2, tstars);
+    tstars = d.ts || {}; put(TSTORE2, tstars); tsResolve();
     if (d.ex) { exprog = d.ex; put(ESTORE, exprog); }
     put(RU_STORE, d.ru || {});
     if (d.dy) { daily = Object.assign({ last: '', streak: 0, best: 0, days: {} }, d.dy); put(DAILY_STORE, daily); }
