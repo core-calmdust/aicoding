@@ -2346,13 +2346,15 @@ async function finishOnline(g) {
     return;
   }
   const score = !winner ? 0.5 : winner === net.me ? 1 : 0, gid = net.gid;
+  // my own view of a game that ended on the board (null: the board is not finished here → the end is disputed, no rating change)
+  const own = bst.over ? (!(bst.winner || 0) ? 0.5 : bst.winner === net.me ? 1 : 0) : null;
   let r = { old: Online.profile.rating, now: Online.profile.rating, rated: !!g.rated };
-  try { r = await Online.applyResult(gid, g, score); } catch (e) { console.warn(e); }
+  try { r = await Online.applyResult(gid, g, score, own); } catch (e) { console.warn(e); }
   if (!net || net.gid !== gid) return;
   $('#resultDisc').innerHTML = winner ? `<div class="pdisc p${winner}"></div>` : '';
   $('#resultTitle').textContent = t(score === 1 ? 'res.youWin' : score === 0 ? 'ol.lose' : 'res.draw');
   const diff = r.now - r.old;
-  $('#resultSub').innerHTML = olEsc(whyTxt(true)) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) }) + '<br>' + (r.rated ? `<span class="rt-res">R ${r.old} → <b>${r.now}</b> (${rtD(diff)})</span>` : olEsc(t('ol.unrated')));
+  $('#resultSub').innerHTML = olEsc(whyTxt(true)) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) }) + '<br>' + (r.rated ? `<span class="rt-res">R ${r.old} → <b>${r.now}</b> (${rtD(diff)})</span>` : olEsc(r.note ? Online.secMsg(r.note) : t('ol.unrated')));
   showOverlay('#resultOverlay');
   playChime(score >= 0.5); if (score === 1) confetti();
   dockRender(); syncTouch();

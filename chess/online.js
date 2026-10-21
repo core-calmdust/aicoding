@@ -31,6 +31,11 @@
     return { main: Math.max(0, m - el), left: m - el, moving: true };
   }
   let db = null, uid = null, profile = null, ready = null;
+  // anti-tamper protocol (shared/onlinesec.js): 'secure' once the new rules are published, else exactly the old behaviour
+  const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: {},
+    decorate: typeof secDecorate === 'function' ? (...a) => secDecorate(...a) : null,
+    onProfile: p => { profile = p; if (presOn) db.update('presence/' + uid, { rating: p.rating }).catch(() => {}); } }) : null;
+  const secure = () => !!(SEC && SEC.secure());
 
   // ---------------------------------------------------------------- backend adapters
   function loadScript(src) { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); })); }  // shared with shared/atlas-account.js
@@ -133,6 +138,7 @@
           await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
         }
         if (!firebase.apps.some(a => a.name === '[DEFAULT]')) firebase.initializeApp(CFG);   // the shared-account app ('atlas') may already exist
+        if (window.OnlineSec) await OnlineSec.appCheck(firebase.app(), window.FIREBASE_APPCHECK_SITE_KEY, FB_VER);
         const auth = firebase.auth();
         // keep an existing session (Google or anonymous); only create an anonymous one if there is none
         const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
@@ -142,6 +148,7 @@
         db = db || firebaseDB();
       }
       await loadProfile();
+      if (SEC) await SEC.init();
       return { uid, profile };
     })();
     ready.catch(() => { ready = null; });
@@ -186,10 +193,14 @@
     if (presOn) { db.cancelDisconnect('presence/' + uid); await db.remove('presence/' + uid).catch(() => {}); presOn = false; }
   }
   // keep the record with more rated games when an anonymous player switches to an existing Google account
-  async function carryPlayer(old) {
+  // secure: through a private snapshot (xfer) taken by the old uid before the switch (x = OnlineSec.xferOut result)
+  async function carryPlayer(old, x) {
     const cur = await db.get('players/' + uid);
-    if (old && (!cur || (old.games || 0) > (cur.games || 0))) await db.set('players/' + uid, Object.assign({}, old, { last: null }));
+    if (!old || (cur && (old.games || 0) <= (cur.games || 0))) return;
+    if (x) { try { await OnlineSec.xferIn(db, uid, x); } catch (e) { console.warn(e); } return; }
+    if (!secure()) await db.set('players/' + uid, Object.assign({}, old, { last: null }));
   }
+  const xferOut = async () => { if (!secure()) return null; try { return await OnlineSec.xferOut(db, uid); } catch (e) { console.warn(e); return null; } };
   // sign in with Google: the anonymous account is upgraded (same uid) when possible, otherwise this session switches to
   // the existing Google account (its uid); returns { uid, linked, switched }
   async function google() {
@@ -198,9 +209,10 @@
       const a = mockAcc();
       if (a && a.uid !== uid) {                       // credential already in use → switch
         const old = profile; await dropLive();
+        const x = await xferOut();
         await db.remove('players/' + uid).catch(() => {});
         uid = a.uid; sessionStorage.setItem(MOCK_UID, uid); sessionStorage.setItem(MOCK_SIGNED, '1');
-        await carryPlayer(old); await loadProfile(true); emitAuth();
+        await carryPlayer(old, x); await loadProfile(true); emitAuth();
         return { uid, linked: false, switched: true };
       }
       localStorage.setItem(MOCK_G, JSON.stringify({ uid, email: 'player@example.com', name: 'Mock Player' }));
@@ -220,11 +232,12 @@
       if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
         const cred = e.credential || firebase.auth.GoogleAuthProvider.credentialFromError(e);
         const old = profile; await dropLive();
+        const x = await xferOut();
         await db.remove('players/' + uid).catch(() => {});
         await db.remove('profiles/' + uid).catch(() => {});
         const r = await auth.signInWithCredential(cred);
         authUser = r.user; uid = r.user.uid;
-        await carryPlayer(old); await loadProfile(true); emitAuth();
+        await carryPlayer(old, x); await loadProfile(true); emitAuth();
         return { uid, linked: false, switched: true };
       }
       if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
@@ -302,6 +315,7 @@
     const since = db.now();
     tc = TC[tc] ? tc : DEF_TC;
     lobbyState = { since, onMatched, onStatus, tc };
+    await secPrepare(lobbyState);
     await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), game: null });
     db.onDisconnectRemove('lobby/' + uid);
     lobbyUnsub = db.on('lobby', v => {
@@ -313,8 +327,21 @@
     matchTimer = setInterval(tryMatch, 2000);
     setTimeout(tryMatch, 600);
   }
+  // secure protocol: an unsettled rated game blocks matching until it is settled (retried while searching); fresh stored rating
+  async function secPrepare(st) {
+    if (!secure()) return;
+    try { const p = await db.get('players/' + uid); if (p && typeof p.rating === 'number') profile.rating = p.rating; } catch (e) {}
+    st.blocked = !(await SEC.resolve().catch(() => false));
+    if (st.blocked) OnlineSec.notice('open', 6000);
+  }
+  const skip = new Map();     // candidates that still have an unsettled rated game (re-checked after a while)
   async function tryMatch() {
     const st = lobbyState; if (!st || !st.list || st.busy) return;
+    if (st.blocked) {
+      st.busy = true;
+      try { if (db.now() - (st.lastTry || 0) > 10000) { st.lastTry = db.now(); if (await SEC.resolve().catch(() => false)) { st.blocked = false; const p = await db.get('players/' + uid); if (p) { profile.rating = p.rating; await db.update('lobby/' + uid, { rating: p.rating }); } } } } finally { st.busy = false; }
+      if (st.blocked) return;
+    }
     const now = db.now(), myWait = now - st.since;
     const others = st.list.filter(x => !x.me && !x.game && typeof x.rating === 'number');
     // same time control first; once both have waited CROSS_WAIT, nearer controls, then farther ones; closest rating within each
@@ -325,20 +352,27 @@
       if (dist && (myWait < CROSS_WAIT || oWait < CROSS_WAIT)) continue;
       const w = windowFor(Math.max(myWait, oWait));
       const d = Math.abs(o.rating - profile.rating), key = dist * 1e6 + d;
-      if (d <= w && (!best || key < best.key)) best = { ...o, d, key };
+      if (d <= w && (!best || key < best.key) && !(skip.get(o.id) > now)) best = { ...o, d, key };
     }
     st.onStatus && st.onStatus({ waiting: others.length, same: others.filter(o => o.tc === st.tc).length, window: windowFor(myWait), wait: myWait, tc: st.tc, crossIn: Math.max(0, CROSS_WAIT - myWait) });
     if (!best || uid > best.id) return;        // the smaller uid starts the game so both sides do not create one
     st.busy = true;
     try {
+      if (secure()) {        // the rules want both players' stored ratings and no unsettled rated game on either side
+        if (await SEC.blocked(best.id)) { skip.set(best.id, now + 30000); return; }
+        const [pm, po] = await Promise.all([db.get('players/' + uid), db.get('players/' + best.id)]);
+        if (!pm || !po) return;
+        profile.rating = pm.rating; best.rating = po.rating;
+      }
       const gid = db.push('games');
       const black = Math.random() < 0.5 ? uid : best.id, white = black === uid ? best.id : uid;
       const names = { [uid]: profile.name, [best.id]: best.name }, rates = { [uid]: profile.rating, [best.id]: best.rating };
-      await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: true, ...tcFields(tcMerge(st.tc, best.tc)), created: db.stamp(), t: db.stamp() });
+      const rec = { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: true, ...tcFields(tcMerge(st.tc, best.tc)), created: db.stamp(), t: db.stamp() };
+      await (SEC ? SEC.createRated(gid, rec) : db.set('games/' + gid, rec));
       const r = await db.txn('lobby/' + best.id, cur => { if (cur === null) return null; if (cur.game) return; cur.game = gid; return cur; });
       if (r.committed && r.value && r.value.game === gid) await db.update('lobby/' + uid, { game: gid });
-      else await db.remove('games/' + gid);
-    } finally { if (lobbyState === st) st.busy = false; }
+      else { await db.remove('games/' + gid); if (secure()) SEC.resolve().catch(() => {}); }   // the link points at nothing now: cleared
+    } catch (e) { console.warn(e); skip.set(best.id, db.now() + 15000); } finally { if (lobbyState === st) st.busy = false; }
   }
 
   // ---------------------------------------------------------------- rooms (unrated): open = listed under rooms, priv (closed) = joined only with the code (the key)
@@ -542,7 +576,7 @@
   // ---------------------------------------------------------------- games
   const UCI_RE = /^[a-h][1-8][a-h][1-8][qrbn]?$/;
   const moveCount = s => (s ? String(s).split(' ').filter(Boolean).length : 0);
-  function watchGame(gid, cb) { setPresence('play', { room: null }); return db.on('games/' + gid, cb); }
+  function watchGame(gid, cb) { setPresence('play', { room: null }); if (SEC) SEC.join(gid); return db.on('games/' + gid, cb); }
   // the sender is the side to move: subtract the time since the last move from its clock, then add the increment (Fischer).
   // false = its flag has already fallen (the move is refused and the opponent may claim the win)
   function chargeClock(g) {
@@ -558,7 +592,7 @@
       if (g === null) return null;
       if (g.status !== 'play' || moveCount(g.moves) !== n) return;
       if (sideOf(g, uid) !== (n % 2 ? 'b' : 'w')) return;       // not my turn
-      g.moves = g.moves ? g.moves + ' ' + uci : uci; if (!chargeClock(g)) return; g.t = db.stamp(); return g;
+      g.moves = g.moves ? g.moves + ' ' + uci : uci; if (!chargeClock(g)) return; g.t = db.stamp(), g.lm = uid; return g;
     });
     return r.committed;
   }
@@ -569,7 +603,14 @@
   const markOver = (gid, win, reason, n) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || moveCount(g.moves) !== n) return; g.status = 'over'; g.win = win; g.reason = reason; return g; });
 
   // apply the rating change for my side once per game. score: 1 / .5 / 0
-  async function applyResult(gid, game, score) {
+  // own: my own view of a game that ended on the board (null = not finished here → disputed). Secure protocol: OnlineSec settles
+  // the linked game (both reports must agree; resign / timeout / abandon / agreed draw are decided by the record itself).
+  async function applyResult(gid, game, score, own) {
+    if (secure()) {
+      const r = await SEC.settle(gid, game, game && game.status === 'over' ? (own === undefined ? (typeof secOwn === 'function' ? secOwn(game, score) : score) : own) : score);
+      if (r.rated) profile = (await db.get('players/' + uid)) || profile;
+      return r;
+    }
     const opp = game.b === uid ? game.wr : game.br;
     let out = { old: profile.rating, now: profile.rating, rated: !!game.rated };
     const r = await db.txn('players/' + uid, p => {
@@ -593,7 +634,7 @@
   // ---------------------------------------------------------------- public chat (everyone online in this game; no private messages)
   // A ring of CHAT_N slots: chat/seq counts messages (transaction), message n goes to chat/msgs/<n % CHAT_N>, overwriting the oldest,
   // so the database never holds more than the latest CHAT_N messages.
-  const CHAT_N = 20, CHAT_LEN = 100, CHAT_GAP = 2000;
+  const CHAT_N = 20, CHAT_LEN = 100, CHAT_GAP = 3000;
   let chatLast = 0;
   const chatClean = s => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_LEN).trim();
   function watchChat(cb) {
@@ -609,7 +650,9 @@
     try {
       const r = await db.txn('chat/seq', n => (typeof n === 'number' ? n : 0) + 1);
       if (!r.committed || typeof r.value !== 'number') return { ok: false, why: 'error' };
-      await db.set('chat/msgs/' + (r.value % CHAT_N), { n: r.value, uid, name: profile.name, text, t: db.stamp() });
+      const msg = { n: r.value, uid, name: profile.name, text, t: db.stamp() };
+      if (secure()) await db.update('/', { ['chat/msgs/' + (r.value % CHAT_N)]: msg, ['chatLast/' + uid]: db.stamp() });
+      else await db.set('chat/msgs/' + (r.value % CHAT_N), msg);
       return { ok: true };
     } catch (e) { console.warn(e); return { ok: false, why: 'error' }; }
   }
@@ -622,5 +665,6 @@
     watchGame, sendMove, moveCount, UCI_RE, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     cleanName, defaultName, localName, account, google, logout, onAuth, pull, push, configured: !!CFG,
     get uid() { return uid; }, get profile() { return profile; }, get ready() { return !!(db && uid && profile); }, now: () => (db ? db.now() : Date.now()),
+    get secure() { return secure(); }, secMsg: k => (window.OnlineSec ? OnlineSec.msg(k) : ''),
   };
 })();
