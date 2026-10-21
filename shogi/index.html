@@ -1062,7 +1062,7 @@ html[lang=ar] .pf-input{direction:rtl}
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="1kanji_3d" data-i18n="pc.ryoko"></button><button data-v="intl" data-i18n="pc.intl"></button></div></div>
+    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="1kanji_3d" data-i18n="pc.ryoko"></button><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="intl" data-i18n="pc.intl"></button><button data-v="intl0" data-i18n="pc.intl0"></button></div></div>
     <div class="pc-credit" id="pcCredit"></div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
     </div></div>
@@ -1188,7 +1188,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261021hb"></script>
+<script src="i18n.js?v=20261021lv"></script>
 <script src="rules-i18n.js?v=20261021ri"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
@@ -1217,10 +1217,11 @@ const MV = {
 };
 const PCODE = ['', 'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'OU', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY'];
 const PIECE_SETS = { orangain: 'orangain (CC BY-SA 3.0)', '2kanji_3d': 'Little-Mage & orangain (CC BY-SA 3.0)', '1kanji_3d': 'Little-Mage & CouchTomato87 (CC BY 4.0)' };
+for (const [l, v] of Object.entries({"ja": "英語（動きなし）", "en": "English (plain)", "zh": "英文（无走法）", "ko": "영어(이동 표시 없음)", "es": "Inglés (sin movimientos)", "fr": "Anglais (sans déplacements)", "pt": "Inglês (sem movimentos)", "de": "Englisch (ohne Züge)", "hi": "अंग्रेज़ी (बिना चालें)", "ar": "إنجليزي (بدون الحركات)"})) (I18N[l] || (I18N[l] = {}))['pc.intl0'] = v;   // letters without movement marks
 const EN_LETTER = ['', 'P', 'L', 'N', 'S', 'B', 'R', 'G', 'K', '+P', '+L', '+N', '+S', '+B', '+R'];
 const MV_ANG = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
-function intlSvg(tp, kanji) {
-  const m = MV[tp] || {}, col = tp > 8 ? '#b8231a' : 'currentColor';
+function intlSvg(tp, kanji, plain) {
+  const m = plain ? {} : MV[tp] || {}, col = tp > 8 ? '#b8231a' : 'currentColor';
   let g = '';
   for (const d of m.s || []) { const [x, y] = MV_POS[d]; g += `<circle cx="${x}" cy="${y}" r="4.6" fill="${col}"/>`; }
   for (const d of m.l || []) { const [x, y] = MV_POS[d]; g += `<path d="M0 -7 L5.5 4 L-5.5 4 Z" fill="${col}" transform="translate(${x} ${y}) rotate(${MV_ANG[d]})"/>`; }
@@ -1243,7 +1244,8 @@ const HANDI = [
 // AI strength steps, labelled by Shogi Club 24 rank (入門, 初心, 15級 … 1級, 初段, 二段; measured against Gikou, see MODEL_CARD.md):
 // shallow search with randomness for the weakest, then a node budget (linear eval for 12–9級, NNUE from 8級), so the strength
 // does not depend on the device; the top two also stop at a time cap
-const LEVELS = [{ depth: 1, noise: 40, greedy: 1 }, { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
+const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },   // 入門: 2-ply so it sees simple recaptures, but picks loosely among moves up to ~1 pawn worse
+  { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
   { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
   { nodes: 5000 }, { nodes: 10000 }, { nodes: 18000 }, { nodes: 35000 }, { nodes: 67000 }, { nodes: 130000 }, { nodes: 250000 }, { nodes: 470000 },
   { nodes: 900000, time: 12000 }, { nodes: 1700000, time: 15000 }];
@@ -1254,7 +1256,7 @@ const lvClamp = v => typeof v === 'number' && v >= 0 && v < LEVELS.length ? Math
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: 'one', skin: 'classic' };
+const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
@@ -1469,7 +1471,7 @@ function pieceEl(code, promoted) {
     const up = (col === 1) !== flip, code = tp === OU ? (col ? 'OU' : 'GY') : PCODE[tp];
     k.innerHTML = `<img src="pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=2" alt="" draggable="false">`;
   } else if (settings.pieces === 'two') { const w = tp === OU ? (col ? '王将' : '玉将') : KANJI2[tp]; k.innerHTML = `<span class="two">${w[0]}<br>${w[1]}</span>`; }
-  else if (settings.pieces === 'intl') { el.classList.add('has-intl'); k.innerHTML = intlSvg(tp, one); }
+  else if (settings.pieces === 'intl' || settings.pieces === 'intl0') { el.classList.add('has-intl'); k.innerHTML = intlSvg(tp, one, settings.pieces === 'intl0'); }
   else k.textContent = one;
   el.appendChild(k);
   return el;
@@ -1978,6 +1980,7 @@ async function schedule() {
 }
 function showResult() {
   const o = game.over; if (!o) return;
+  if (lesson || game.lessonGame || edit) return;   // never over a lesson / tsume / editor (a finished earlier game must not pop up)
   game.resultShown = true; save();
   let title;
   if (o.winner < 0) title = t('res.draw');
@@ -2856,7 +2859,7 @@ function dailyPick(easy) {
     const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
     const si = [...(day % 2 ? ['c5', 'p5'] : ['c3', 'p3'])].map(id => TSUME.sets.findIndex(x => x.id === id)).find(i => i >= 0);
     if (si === undefined) return null;
-    let h = (day * 2246822519 + 374761393) >>> 0; h ^= h >>> 13; h = Math.imul(h, 3266489917) >>> 0; h ^= h >>> 16;
+    let h = (day * 2246822519 + 374761393) >>> 0; h = (h ^ (h >>> 13)) >>> 0; h = Math.imul(h, 3266489917) >>> 0; h = (h ^ (h >>> 16)) >>> 0;   // >>> 0: XOR gives a signed int (negative index bug)
     return { date, si, k: h % TSUME.sets[si].problems.length, easy: true };
   }
   // composed: Mon-Tue 5, Wed-Thu 7, Sat 9-11, Sun 13+; Fri practical 7 (each falls back to the practical sets)
@@ -2864,7 +2867,7 @@ function dailyPick(easy) {
   const si = TSUME.sets.findIndex(x => x.id === want[0]) >= 0 ? TSUME.sets.findIndex(x => x.id === want[0]) : TSUME.sets.findIndex(x => want.includes(x.id));
   if (si < 0) return null;
   const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
-  let h = day * 2654435761 >>> 0; h ^= h >>> 15;
+  let h = day * 2654435761 >>> 0; h = (h ^ (h >>> 15)) >>> 0;
   return { date, si, k: h % TSUME.sets[si].problems.length };
 }
 function dailyInfo(easy) {
@@ -3225,7 +3228,7 @@ function loadProblem() {
   renderLesson();
 }
 function lessonGame(sfen, moves) {
-  rtForfeit();
+  rtForfeit(); hideOverlay('#resultOverlay');
   const keep = game && !game.lessonGame ? game : (lesson && lesson.savedGame) || null;
   if (lesson && !lesson.savedGame && keep) lesson.savedGame = keep;
   game = newRecord(sfen, 0); game.lessonGame = true; game.moves = moves.slice(); game.info = moves.map(() => ({})).concat([{}]);
@@ -3522,7 +3525,8 @@ function exitLesson(silent) {
   if (!lesson) return;
   lesson = null; document.body.classList.remove('in-lesson'); stSync();
   if (silent) return;
-  if (saved) { game = saved; if (game.clock && !game.rated) { game.clock.hold = true; game.clock.t0 = Date.now(); } cur = game.moves.length; reviewing = false; flip = settings.mode === 'ai' && game.human === 1; refresh(false); }
+  hideOverlay('#resultOverlay');
+  if (saved) { game = saved; if (game.over) game.resultShown = true; if (game.clock && !game.rated) { game.clock.hold = true; game.clock.t0 = Date.now(); } cur = game.moves.length; reviewing = false; flip = settings.mode === 'ai' && game.human === 1; refresh(false); }
   else newGame();
 }
 
