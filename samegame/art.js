@@ -97,6 +97,46 @@ function rays(fill, n = 16) {
   let p = ''; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, b = a + Math.PI / n; p += `M50 50L${(50 + Math.cos(a) * 80).toFixed(1)} ${(50 + Math.sin(a) * 80).toFixed(1)}L${(50 + Math.cos(b) * 80).toFixed(1)} ${(50 + Math.sin(b) * 80).toFixed(1)}z`; }
   return `<path d="${p}" fill="${fill}"/>`;
 }
+/* ---- mid-century rendering: flat shapes, no black outlines, muted colors, geometric backgrounds ---- */
+let STYLE = 'pop';
+const MIDC = { '#E4202A': '#D9622B', '#1B4FCB': '#2E6F8E', '#FFD400': '#E8B83A', '#19A35B': '#7A8B3A', '#FF4FA0': '#D98C7A', '#7B3FD0': '#5E4B6B',
+  '#5BD3E8': '#9CC5C0', '#5B8FD8': '#5F8FA6', '#7DA4B8': '#8AA7B5', '#8AA3B8': '#94A7AE', '#FF8A00': '#E08A3C', '#222': '#3B3530', '#1d1d2b': '#2F2A26',
+  '#F2F2F2': '#F3EBDD', '#B8C4CC': '#B9B3A6', '#C99A2E': '#C2923C', '#FFC21A': '#E8B83A', '#FFD9B8': '#EFC9A8', '#BFE9FF': '#CFE3E0', '#FF9ECB': '#E8B0A2',
+  '#FFF3C4': '#F3EBDD', '#000': '#2F2A26', '#fff': '#FFFAF0', '#FF7A6E': '#E89A72' };
+const mc = c => MIDC[c] || MIDC[c && c.toUpperCase()] || c;
+function midify(svg) {
+  return svg.replace(/<(path|circle|ellipse|rect|text|g)\b([^>]*?)(\/?)>/g, (m, tag, a, close) => {
+    if (/fill="url\(#bd/.test(a)) return close ? '' : m;
+    const fm = a.match(/fill="([^"]+)"/), fill = fm ? fm[1] : null;
+    if (tag !== 'text' && (fill === 'none' || (!fill && /stroke=/.test(a)))) {
+      a = a.replace(/stroke="#000"/, 'stroke="#2F2A26"').replace(/stroke-width="([\d.]+)"/, (_, w) => `stroke-width="${Math.max(1.6, w * .65).toFixed(1)}"`);
+      if (!/stroke=/.test(a)) a += ' stroke="#2F2A26" stroke-width="2.2" stroke-linecap="round"';
+    } else {
+      a = a.replace(/stroke="[^"]*"/, 'stroke="none"');
+      if (fill) a = a.replace(/fill="([^"]+)"/, (_, f) => `fill="${mc(f)}"`);
+    }
+    return `<${tag}${a}${close}>`;
+  });
+}
+function midBack(id, bg, r, c) {
+  let b = mc(bg); if (b === mc(c)) b = b === '#9CC5C0' ? '#E8B83A' : '#9CC5C0';
+  const L = 'rgba(255,250,240,.32)', D = 'rgba(47,42,38,.12)';
+  const m = [
+    `<circle cx="84" cy="16" r="34" fill="${L}"/>`,
+    `<path d="M0 100a50 50 0 0 1 100 0z" fill="${L}"/>`,
+    `<path d="M0 0h100L0 100z" fill="${L}"/>`,
+    `<rect y="58" width="100" height="22" fill="${L}"/><rect y="84" width="100" height="6" fill="${L}"/>`,
+    [0, 1, 2].map(i => [0, 1, 2].map(j => `<circle cx="${20 + i * 30}" cy="${20 + j * 30}" r="5" fill="${L}"/>`).join('')).join(''),
+    `<g fill="none" stroke="${L}" stroke-width="7"><circle cx="0" cy="100" r="40"/><circle cx="0" cy="100" r="62"/><circle cx="0" cy="100" r="84"/></g>`,
+    `<path d="M50 50L0 20V0h30zM50 50l50-30V0H70z" fill="${L}"/>`,
+    `<path d="M10 80q40-70 80 0q-40-30-80 0z" fill="${L}"/>`,
+  ][id % 8];
+  let s = `<rect width="100" height="100" fill="${r === 4 ? '#E8B83A' : b}"/>${m}`;
+  if (r >= 2) s += `<g fill="#FFFAF0" opacity=".85"><path d="M14 18l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>${r >= 3 ? '<path d="M86 78l1.6 4.4 4.4 1.6-4.4 1.6L86 90l-1.6-4.4L80 84l4.4-1.6z"/>' : ''}</g>`;
+  if (r >= 3) s += `<rect x="4" y="4" width="92" height="92" rx="10" fill="none" stroke="${r === 4 ? '#D9622B' : '#E8B83A'}" stroke-width="3"/>`;
+  return s;
+}
+function setStyle(st) { STYLE = st; }
 const RAR = id => id >= 96 ? 4 : [0, 0, 0, 1, 1, 2, 2, 3][id % 8]; // 0 N,1 R,2 SR,3 SSR,4 UR
 const RNAME = ['N', 'R', 'SR', 'SSR', 'UR'];
 const UR_SUB = ['shark', 'girl', 'robot', 'octo'];
@@ -115,6 +155,7 @@ function charSVG(id, opt = {}) {
   if (r >= 3) extra += `<path d="M33 10l4-7 4 7 8 1-6 5 2 8-8-4-8 4 2-8-6-5z" fill="#FFD400" ${S2}/>`.replace('M33 10', 'M42 9');
   if (id >= 96) extra += `<g transform="translate(58 72) rotate(-10)"><path d="M0 8 6 0l4 6 7-6 2 8 9-3-4 8 8 3-9 3 4 8-9-3-2 8-7-6-4 6-6-8-8 2 3-8-6-4 7-3z" fill="#FFD400" ${S2}/><text x="14" y="20" text-anchor="middle" font-family="Bangers,Impact,sans-serif" font-size="9" fill="${K}">WOW</text></g>`;
   const sg = v === 3 && sub !== 'robot' && sub !== 'diver' && sub !== 'hammer' ? sunglasses(sub) : '';
+  if ((opt.style || STYLE) === 'mid') return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="${opt.cls || 'chr'} mid">${midBack(id, bg, r, c)}${midify(`<g>${body(sub, c)}</g>${sg}${extra}`)}</svg>`;
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="${opt.cls || 'chr'}">${back}<g>${body(sub, c)}</g>${sg}${extra}<rect x="1.5" y="1.5" width="97" height="97" fill="none" stroke="${K}" stroke-width="3"/></svg>`;
 }
 function sunglasses(sub) {
@@ -140,7 +181,8 @@ const BGS = [
 /* ---------------- mascot & UI bits ---------------- */
 const mascot = (mood = 'smile') => {
   const mouth = mood === 'wow' ? `<ellipse cx="74" cy="64" rx="7" ry="6" fill="${K}"/>` : `<path d="M60 63q13 8 27-2" fill="none" ${S}/><path d="M64 65l2.5 4 2.5-3.2 2.5 3.6 2.5-3.4 2.5 3.4 2.5-3.8 2.5 3" fill="${W}" ${S2}/>`;
-  return `<svg viewBox="0 0 100 100" class="mascot"><path d="M15 60 3 45l4 16-4 15z" fill="#5B8FD8" ${S}/>${dots('M13 60C22 37 62 30 88 51c5 4 4 13-3 17-25 14-62 11-72-8z', '#5B8FD8')}<path d="M45 39 55 15l10 25z" fill="#5B8FD8" ${S}/><path d="M32 70c20 7 40 4 53-2-6 8-27 13-48 9z" fill="${W}" ${S2}/>${eye(72, 50, 6, 1)}${mouth}<path d="M53 50v8M57 49v9" ${S2}/></svg>`;
+  const inner = `<path d="M15 60 3 45l4 16-4 15z" fill="#5B8FD8" ${S}/>${dots('M13 60C22 37 62 30 88 51c5 4 4 13-3 17-25 14-62 11-72-8z', '#5B8FD8')}<path d="M45 39 55 15l10 25z" fill="#5B8FD8" ${S}/><path d="M32 70c20 7 40 4 53-2-6 8-27 13-48 9z" fill="${W}" ${S2}/>${eye(72, 50, 6, 1)}${mouth}<path d="M53 50v8M57 49v9" ${S2}/>`;
+  return `<svg viewBox="0 0 100 100" class="mascot">${STYLE === 'mid' ? midify(inner) : inner}</svg>`;
 };
 // comic burst behind a word
 function burst(n = 12, r1 = 46, r2 = 32, fill = '#FFD400') {
@@ -180,5 +222,6 @@ const THEME_ICON = {
   pt: `<svg viewBox="0 0 40 40"><use href="#emPaint" x="3" y="3" width="34" height="34"/></svg>`,
   mx: `<svg viewBox="0 0 40 40"><rect x="4" y="4" width="15" height="15" fill="${BC[4]}" ${S2}/><rect x="21" y="21" width="15" height="15" fill="${BC[3]}" ${S2}/><use href="#emBomb" x="20" y="2" width="17" height="17"/><use href="#emRock" x="3" y="21" width="17" height="17"/></svg>`,
 };
-window.SameArt = { BC, BC_LT, syncPalette, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N: 100, SUBJ };
+const themeIcon = th => STYLE === 'mid' ? midify(THEME_ICON[th] || '').replace(/#E4202A|#1B4FCB|#FFD400|#19A35B|#FF4FA0/g, c => mc(c)) : THEME_ICON[th];
+window.SameArt = { BC, BC_LT, syncPalette, setStyle, themeIcon, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N: 100, SUBJ };
 })();

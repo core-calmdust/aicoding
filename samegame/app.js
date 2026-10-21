@@ -176,12 +176,12 @@ async function pushScores() {
 /* ============================================================ HOME ============================================================ */
 let homeTab = 'daily', themeOpen = null;
 function updateCoins() { $$('.coinv').forEach(e => e.textContent = fmt(DB.coin)); }
-const SKINS = ['pop', 'vintage', 'riso', 'night', 'swiss', 'wa', 'mid', 'pixel'];
+const SKINS = ['mid', 'vintage', 'pop', 'riso', 'night', 'swiss', 'wa', 'pixel'];
 const SKIN_FONTS = { swiss: 'Archivo+Black', wa: 'Shippori+Mincho+B1:wght@600;800', mid: 'Josefin+Sans:wght@600;700', pixel: 'DotGothic16' };
 function applySkin() {
   const q = new URLSearchParams(location.search).get('skin');
-  const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'pop');
-  document.body.dataset.skin = sk; A.syncPalette(); setBg(); setWords();
+  const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'mid');
+  document.body.dataset.skin = sk; A.setStyle(sk === 'mid' ? 'mid' : 'pop'); A.syncPalette(); setBg(); setWords();
   if (SKIN_FONTS[sk] && !document.getElementById('font-' + sk)) { const l = document.createElement('link'); l.id = 'font-' + sk; l.rel = 'stylesheet'; l.href = `https://fonts.googleapis.com/css2?family=${SKIN_FONTS[sk]}&display=swap`; document.head.appendChild(l); }
 }
 function setBg() { const b = A.BGS.find(x => x.id === DB.bg) || A.BGS[0]; $('#bg').style.background = b.css(); document.body.dataset.bg = b.id; }
@@ -219,7 +219,7 @@ function renderDaily() {
   $('#dPuzzle').innerHTML = `<div class="ptag">${esc(t('d.puzzle'))}<i>${esc(d.slice(5).replace('-', '/'))}</i></div>
     <div class="dbody"><div class="dthumb">${miniBoard(cfg.board)}</div>
     <div class="dinfo"><h3>${esc(t('d.puzzle.h'))}</h3><p>${esc(t('d.puzzle.d'))}</p>
-    <div class="chips"><span class="chip">${A.THEME_ICON[cfg.g || 'cl']}${esc(gname)}</span><span class="chip">10×14 · 4${esc(t('u.colors'))}</span></div>
+    <div class="chips"><span class="chip">${A.themeIcon(cfg.g || 'cl')}${esc(gname)}</span><span class="chip">10×14 · 4${esc(t('u.colors'))}</span></div>
     <div class="dbest"><span>${esc(t('d.best'))}</span><b>${r.p.left >= 0 ? fmt(r.p.s) : '—'}</b>${md ? `<i class="medal m${md}"></i>` : ''}</div></div></div>
     <div class="dbtns"><button class="btn big red" id="dPlay">${A.ICON.play}${esc(t(r.p.left >= 0 ? 'd.again' : 'd.play'))}</button><button class="btn" data-rank="p">${A.ICON.rank}${esc(t('rk.title'))}</button></div>
     <p class="note">${esc(t('d.medals'))}</p>`;
@@ -273,7 +273,7 @@ function renderThemes() {
   THEMES.forEach((th, i) => {
     const recs = stRec(th), done = recs.filter(v => v).length, stars = recs.reduce((a, b) => a + b, 0), comp = done === 50;
     html += `<button class="tcard ${comp ? 'comp' : ''}" data-th="${th}" style="--tc:${THEME_COL[i]}">
-      <span class="tic">${A.THEME_ICON[th]}</span>
+      <span class="tic">${A.themeIcon(th)}</span>
       <span class="tt"><b>${esc(t('th.' + th))}</b><small>${esc(t('th.' + th + '.d'))}</small>
       <span class="bar"><i style="width:${done * 2}%"></i></span>
       <span class="tmeta"><em>${done}/50</em><em class="st">★ ${stars}/150</em><span class="medals">${[0, 1, 2, 3, 4].map(s => `<i class="medal m${stMedal(recs, s)}"></i>`).join('')}</span></span></span>
@@ -286,7 +286,7 @@ function renderTheme(th) {
   const el = $('#stagePanel'), recs = stRec(th), ti = THEMES.indexOf(th);
   let next = recs.findIndex((v, j) => !v && stageOpen(recs, j));
   let html = `<div class="thead" style="--tc:${THEME_COL[ti]}"><button class="btn sm" id="thBack">${A.ICON.back}${esc(t('u.list'))}</button>
-    <span class="tic">${A.THEME_ICON[th]}</span><div><h2>${esc(t('th.' + th))}</h2><p>${esc(t('th.' + th + '.r'))}</p>${th !== 'cl' ? `<button class="btn sm" id="thRule">${A.ICON.play}${esc(t('st.demo'))}</button>` : ''}</div>
+    <span class="tic">${A.themeIcon(th)}</span><div><h2>${esc(t('th.' + th))}</h2><p>${esc(t('th.' + th + '.r'))}</p>${th !== 'cl' ? `<button class="btn sm" id="thRule">${A.ICON.play}${esc(t('st.demo'))}</button>` : ''}</div>
     <div class="ring" style="--p:${recs.filter(v => v).length * 2}"><b>${recs.filter(v => v).length}</b><small>/50</small></div></div>`;
   html += '<div class="stgs">';
   for (let s = 0; s < 5; s++) {
@@ -738,13 +738,13 @@ function quitGame() {
 /* ---------------- confetti (halftone dots + stars) ---------------- */
 function confetti(times = 1) {
   const cv = $('#fx'), ctx = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
-  const P = []; const cols = A.BC.concat(['#000', '#fff']);
+  const P = []; const ink = getComputedStyle(document.body).getPropertyValue('--ink').trim() || '#000', cols = A.BC.concat([ink, '#fff']);
   for (let k = 0; k < times; k++) for (let i = 0; i < 90; i++) P.push({ x: innerWidth * (.2 + Math.random() * .6), y: innerHeight * .6, vx: (Math.random() - .5) * 14, vy: -8 - Math.random() * 12 - k * 3, r: 4 + Math.random() * 7, c: cols[(Math.random() * cols.length) | 0], s: Math.random() < .3, a: Math.random() * 6, d: k * 400 });
   const t0 = performance.now();
   (function f(now) {
     const el = now - t0; ctx.clearRect(0, 0, cv.width, cv.height); let live = 0;
     for (const p of P) { if (el < p.d) { live++; continue; } p.vy += .45; p.x += p.vx; p.y += p.vy; p.a += .1; if (p.y < cv.height + 20) live++;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.strokeStyle = ink; ctx.lineWidth = 2;
       if (p.s) { ctx.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? p.r * .45 : p.r; ctx.lineTo(Math.cos(i * Math.PI / 5) * r, Math.sin(i * Math.PI / 5) * r); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
       else { ctx.beginPath(); ctx.arc(0, 0, p.r * .6, 0, 7); ctx.fill(); ctx.stroke(); }
       ctx.restore(); }

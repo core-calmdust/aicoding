@@ -607,6 +607,17 @@ body[data-skin="mid"] .sfx em{border:0;border-radius:999px;padding:2px 8px 0}
 body[data-skin="mid"] .burstbox,body[data-skin="mid"] .gpanel{background:var(--sky);border-radius:14px}
 body[data-skin="mid"] .acard.red{background:var(--red)}body[data-skin="mid"] .acard.blue{background:var(--blue)}
 body[data-skin="mid"] .result,body[data-skin="mid"] .mbox{background:var(--card)}
+body[data-skin="mid"] :is(.sechead h2,.mh,.gi,.bk,.cc,.gpanel,.bgi,.bgp,.skin,.sw4,.dbd,.tboard .db,.locked,.goalchk,.rstats span,.tmas,.balloon,.calsum .stk,.rcoin,.dpts span,.darrows b){border:0!important;border-radius:14px}
+body[data-skin="mid"] .sechead h2,body[data-skin="mid"] .mh{background:var(--card);padding:6px 16px 2px}
+body[data-skin="mid"] .gi,body[data-skin="mid"] .bk,body[data-skin="mid"] .cc{overflow:hidden}
+body[data-skin="mid"] .gi .rr,body[data-skin="mid"] .bk i,body[data-skin="mid"] .gi .new,body[data-skin="mid"] .gi .dup{border:0;border-radius:999px;padding:1px 7px;top:4px;left:4px}
+body[data-skin="mid"] .gi .new,body[data-skin="mid"] .gi .dup{top:auto;left:auto;bottom:4px;right:4px}
+body[data-skin="mid"] .balloon::before{display:none}
+body[data-skin="mid"] .medal{border:0}body[data-skin="mid"] .tries i{border:0}
+body[data-skin="mid"] .ev{border:0;border-radius:999px}
+body[data-skin="mid"] .tic{background:var(--paper);background-image:none}
+body[data-skin="mid"] .tile:not(.done):not(.next){background:var(--paper)}
+body[data-skin="mid"] .mis{background:var(--card)}body[data-skin="mid"] .mtier .mis,body[data-skin="mid"] .stg .tile{border-radius:14px}
 
 /* H: Pixel */
 body[data-skin="pixel"]{
