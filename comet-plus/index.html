@@ -872,7 +872,11 @@ class AudioHandler {
                 setTimeout(() => this.createSound(1046, 0.2, 'sine', 0.8, 0.6, now + 0.3), 300);
                 break;
             case 'start':
-                [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.4, now + i * 0.08));
+                [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.75, now + i * 0.08));
+                break;
+            case 'menu': // タイトル・難易度選択のカーソル音（グレイズ音と同じ形で大きめ）
+                this.createSound(880, 0.1, 'triangle', 0.8, 1.0, now, {endFreq: 1200});
+                this.createSound(1760, 0.06, 'sine', 0.8, 0.35, now, {endFreq: 2400});
                 break;
             case 'glaze':
                 this.createSound(880, 0.1, 'triangle', 0.8, 0.5, now, {endFreq: 1200});
@@ -3293,14 +3297,14 @@ function update(timestamp) {
                     pendingMode = titleMenuItems[titleMenuIndex];
                     diffMenuIndex = difficultyIndex;
                     gameState = 'difficulty';
-                    audioHandler.playSound('glaze');
+                    audioHandler.playSound('menu');
                 }
             }
         } else if (gameState === 'difficulty') {
             frameCount++;
-            if (input.upTrigger) { diffMenuIndex = (diffMenuIndex + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('glaze'); }
-            if (input.downTrigger) { diffMenuIndex = (diffMenuIndex + 1) % DIFFS.length; audioHandler.playSound('glaze'); }
-            if (tapDiffSel !== null) { diffMenuIndex = tapDiffSel; audioHandler.playSound('glaze'); }
+            if (input.upTrigger) { diffMenuIndex = (diffMenuIndex + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('menu'); }
+            if (input.downTrigger) { diffMenuIndex = (diffMenuIndex + 1) % DIFFS.length; audioHandler.playSound('menu'); }
+            if (tapDiffSel !== null) { diffMenuIndex = tapDiffSel; audioHandler.playSound('menu'); }
             if (input.titleTrigger) {
                 gameState = 'title';
             } else if (input.replayTrigger) {
