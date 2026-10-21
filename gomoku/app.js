@@ -35,6 +35,7 @@ const stCache = new Map();
 function statusAt(i) {
   if (net && net.over && i === moves.length && !lesson && !puzzle) return net.over;
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
+  if (resigned && i === moves.length && !lesson && !puzzle && resigned.k === rsKey()) return { over: true, winner: 3 - resigned.by, why: 'resign' };
   const k = keyOf(i); if (stCache.has(k)) return stCache.get(k);
   const pos = posAt(i);
   let st = pos.status();
@@ -48,6 +49,10 @@ const sanOf = i => sqName(moves[i]);
 
 // ====================================================================== state
 const STORE = 'aicoding-gomoku';
+// a casual game ended by 投了 (vs AI / two players): { k: rule + moves at that point, by: colour that resigned }
+// (rated games keep it in rgame.over, online games on the server). Any new move clears it.
+let resigned = null;
+const rsKey = () => rule + '|' + moves.join(',');
 const settings = { coach: true, lvv: 2, mode: 'ai', rule: 'renju', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, forbid: true, num: false, confirm: null, lang: '', skin: 'classic' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
@@ -66,6 +71,7 @@ function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  const rsb = document.getElementById('btnResign'); if (rsb && window.Resign) { rsb.querySelector('span').textContent = rsb.title = Resign.label(LANG); }
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
   renderBrandSub();
@@ -93,6 +99,7 @@ function load() {
     if (Array.isArray(d.moves) && validMoves(d.moves, r)) {
       rule = r; moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null;
+      resigned = d.resigned && d.resigned.k ? d.resigned : null;
       // restored on page load (not started by the player): the clock stays stopped until the next move is played
       if (rgame && !rgame.over) rgame.paused = true;
       cur = moves.length; gameOverShown = statusAt(cur).over; return true;
@@ -103,7 +110,7 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resigned })); } catch (e) {}
 }
 
 // ====================================================================== workers
@@ -319,7 +326,7 @@ function renderInfo() {
     $('#status' + p).textContent = s;
   }
   if (settings.mode === 'online' && !lesson && !puzzle) olClocks(); else olClocksOff();
-  $('#btnResign').disabled = !olLive();
+  $('#btnResign').disabled = !canResign();
   $('#evalCard').classList.toggle('hidden', !settings.eval && !rtLive() && settings.mode !== 'online');
   document.body.classList.toggle('rated-live', rtLive()); $('#evalCard').dataset.rtnote = t('rt.noEval');
   let ev = st.over ? { s: st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0, kind: 'final', side: st.winner } : evals[cur];
@@ -434,7 +441,7 @@ function newGame(rated) {
   startPos = null;
   setRule(rated ? 'renju' : settings.rule);
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
-  rgame = null; coachQ = new Map(); coachPend = null;
+  rgame = null; resigned = null; coachQ = new Map(); coachPend = null;
   if (rated) { humanColor = Math.random() < 0.5 ? P1 : P2; rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() }); }
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; pend = -1;
   hideOverlay('#resultOverlay');
@@ -478,7 +485,7 @@ function coachResolve(idx, list) {
 function playMove(m) {
   coachMove(cur, m);
   if (rtLive()) { const side = toMoveAt(moves.length) - 1, now = Date.now(); rgame.ct[side] = Math.max(0, rgame.ct[side] - (rgame.paused ? 0 : now - rgame.t)) + RT_CLOCK.inc; rgame.paused = false; rgame.t = now; }
-  moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false;
+  moves = moves.slice(0, cur); moves.push(m); cur = moves.length; reviewing = false; resigned = null;
   evals.length = moves.length; hintList = null;
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
   update(true); save();
@@ -529,7 +536,7 @@ function onGameEnd(st) {
   if (youWin || (settings.mode === 'pvp' && st.winner)) confetti();
   $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
   $('#resultTitle').textContent = st.draw ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: pname(st.winner) });
-  let sub = t('res.why.' + st.why) + '<br>' + t('res.sub', { n: moves.length });
+  let sub = (st.why === 'resign' ? t(settings.mode === 'ai' ? 'ol.youResigned' : 'ol.wResign') : t('res.why.' + st.why)) + '<br>' + t('res.sub', { n: moves.length });
   if (rgame) {
     const rx = rtSettle(st);
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
@@ -538,6 +545,28 @@ function onGameEnd(st) {
   const mk = settings.mode === 'ai' && !rgame ? mistakeProblems() : [];
   $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
   setTimeout(() => showOverlay('#resultOverlay'), 900);
+}
+// ---------------------------------------------------------------- resign (common spec, shared/resign.js)
+// The 投了 button sits after 対局 / 待った and asks 「投了しますか？」 (はい / いいえ); はい ends the game as your loss
+// (two players on one device: the side to move resigns). Online games resign on the server as before.
+function canResign() {
+  if (lesson || puzzle) return false;
+  if (settings.mode === 'online' || net) return olLive();
+  if (settings.mode === 'watch') return false;
+  if (rgame) return rtLive();
+  return moves.length > 0 && !gameOver(moves.length);
+}
+function resignGame() {
+  if (!canResign()) return;
+  Resign.confirm({ lang: LANG }).then(ok => {
+    if (!ok || !canResign()) return;
+    if (net) { Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); return; }   // the result comes back through finishOnline()
+    busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
+    const by = settings.mode === 'pvp' ? toMoveAt(moves.length) : humanColor, st = { over: true, winner: 3 - by, why: 'resign' };
+    if (rgame) rgame.over = st; else resigned = { k: rsKey(), by };
+    cur = moves.length; reviewing = false; hintList = null; gameOverShown = false;
+    update(false); save(); onGameEnd(st);
+  });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -2271,7 +2300,7 @@ function olPName(el, p) {
   el.classList.add('pn'); el.title = (you ? t('you') + ' · ' : '') + nm + ' (' + r + ') · ' + pname(p);
   if (el.innerHTML !== h) el.innerHTML = h;
 }
-$('#btnResign').onclick = () => { if (olLive()) olConfirm(t('confirm.resign'), t('resign.yes'), () => { if (olLive()) Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
+$('#btnResign').onclick = () => resignGame();
 $('#btnOnline').onclick = () => openOnline();
 // a small yes / no dialog (shared with the rated-game confirmation)
 function olConfirm(text, yes, fn) {
@@ -2851,7 +2880,7 @@ window.addEventListener('resize', () => renderFx());
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'gomoku', lang: () => LANG, open: () => openRules('basic'), watch: '#rulesOverlay' });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 renderInfo();

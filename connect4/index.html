@@ -193,7 +193,7 @@ a.snd.home{text-decoration:none}
 .graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.controls{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}   /* 対局 待った 投了 ヒント レッスン パズル ルール: one row */
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
@@ -427,8 +427,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .player .count small{display:none}
   .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
   .card{padding:10px 12px}
-  .controls{padding:8px;gap:6px}
-  .btn{flex-direction:column;justify-content:center;padding:7px 2px;gap:3px;font-size:11px}
+  .controls{padding:7px;gap:4px}
+  .btn{flex-direction:column;justify-content:center;padding:7px 0;gap:3px;font-size:10px;letter-spacing:0}
   .btn svg{width:17px;height:17px}
   .graph{height:72px;margin-top:8px}
   .kifu-card{flex:none;min-height:96px}
@@ -845,6 +845,7 @@ body .info-line{font-size:12.5px}
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnResign"></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
@@ -1007,6 +1008,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=4"></script>
+<script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=13"></script>
 <script>
 'use strict';
@@ -1029,6 +1031,7 @@ function lineThrough(g, c, r, p) {
 }
 // status of a move sequence: {winner, line, draw}
 function statusOf(moves) {
+  if (resigned && moves === resigned.mv && !lesson && !puzzle) return { winner: resigned.loser === P1 ? P2 : P1, resign: true, loser: resigned.loser };   // 投了
   if (!moves.length) return { winner: 0 };
   const g = gridOf(moves), c = moves.charCodeAt(moves.length - 1) - 49, r = g[c].length - 1, p = g[c][r];
   const line = lineThrough(g, c, r, p);
@@ -1067,6 +1070,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
+  { const b = $('#btnResign'); b.innerHTML = Resign.icon + '<span>' + Resign.label(LANG) + '</span>'; b.title = Resign.label(LANG); }
 }
 let humanColor = P1;
 let moves = '';          // full game record (digits 1-7)
@@ -1076,6 +1080,7 @@ let evals = [];          // evals[i] = evaluation of position after i moves (fir
 let busyToken = 0;
 let lesson = null, puzzle = null;
 let gameOverShown = false;
+let resigned = null;     // the game on the board ended by 投了: { loser, mv } (mv: the record it belongs to)
 
 function load() {
   try {
@@ -1086,6 +1091,7 @@ function load() {
       // validate
       const g = Array(7).fill(0); for (const ch of d.moves) { if (++g[+ch - 1] > 6) return false; }
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
+      resigned = d.resigned === P1 || d.resigned === P2 ? { loser: d.resigned, mv: moves } : null;
       cur = moves.length; gameOverShown = !!statusOf(moves).winner || moves.length === 42;
       return true;
     }
@@ -1094,7 +1100,7 @@ function load() {
 }
 function save() {
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1) })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), resigned: resigned && resigned.mv === moves ? resigned.loser : 0 })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
@@ -1383,6 +1389,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
@@ -1452,7 +1459,7 @@ function update(anim) { renderBoard(anim); renderInfo(); }
 function newGame() {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
-  moves = ''; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false;
+  moves = ''; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; resigned = null;
   hideOverlay('#resultOverlay');
   update(false); save();
   afterPosition();
@@ -1532,13 +1539,32 @@ function onGameEnd(st) {
   if (youWin || (settings.mode === 'pvp' && st.winner)) confetti();
   $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
   $('#resultTitle').textContent = st.draw ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: pname(st.winner) });
-  let sub = st.draw ? t('res.drawSub') : t('res.sub', { n: moves.length });
+  let sub = st.resign ? resignText(st) + '<br>' + t('res.sub', { n: moves.length }) : st.draw ? t('res.drawSub') : t('res.sub', { n: moves.length });
   if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
+// 投了 (common spec, shared/resign.js): after 対局 and 待った; asks 投了しますか？ and only はい ends the game as a loss.
+// vs AI (incl. rated): the human resigns; 2 players on one device: the side to move resigns.
+const RS_TXT = {
+  ja: ['投了しました', '{c}が投了しました'], en: ['You resigned', '{c} resigned'], zh: ['你认输了', '{c}认输了'], ko: ['기권했습니다', '{c} 기권'],
+  es: ['Te rendiste', '{c} se rindió'], fr: ['Vous avez abandonné', '{c} a abandonné'], pt: ['Você desistiu', '{c} desistiu'],
+  de: ['Du hast aufgegeben', '{c} hat aufgegeben'], hi: ['आपने हार मानी', '{c} ने हार मानी'], ar: ['لقد استسلمت', 'استسلم {c}'],
+};
+function resignText(st) { const x = RS_TXT[LANG] || RS_TXT.en; return settings.mode === 'pvp' ? x[1].replace('{c}', pname(st.loser)) : x[0]; }
+function canResign() { return !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !gameOver(moves); }
+function resignNow() {
+  if (!canResign()) return;
+  busyToken++; cancelWorker('ai'); thinking = 0; hintList = null;
+  cur = moves.length; reviewing = false; gameOverShown = false;
+  resigned = { loser: settings.mode === 'ai' ? humanColor : toMoveOf(moves), mv: moves };
+  update(false); save();
+  onGameEnd(statusOf(moves));
+}
+$('#btnResign').onclick = () => { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignNow(); }); };
 function canUndo() {
   if (lesson || puzzle) return false;
+  if (resigned && resigned.mv === moves) return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveOf(moves.slice(0, i)) === humanColor) return true; return false; }
   return false;
@@ -2567,7 +2593,7 @@ function loadText(v) {
   if (!r) { toast(t('paste.invalid'), 2200); return false; }
   const ck = replayCheck(r.str);
   if (!ck.ok) { toast(t('paste.bad', { n: ck.at }), 2500); return false; }
-  openLoaded(r.str, r.n); toast(t('paste.loaded', { n: ck.n }), 1800);
+  resigned = null; openLoaded(r.str, r.n); toast(t('paste.loaded', { n: ck.n }), 1800);
   return true;
 }
 function loadFromHash() {
@@ -2627,7 +2653,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' }) : null;
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
@@ -2714,10 +2740,10 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 </script>
-<script src="rated.js?v=20261020pl"></script><!-- レーティング戦 -->
+<script src="rated.js?v=20261021rsg"></script><!-- レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=3" defer></script>
-<script src="../shared/atlas-account.js?v=3" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
+<script src="../shared/atlas-account.js?v=4" defer></script>
 </body>
 </html>

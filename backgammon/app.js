@@ -27,6 +27,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
+  const rb = document.querySelector('#btnResign span'); if (rb && window.Resign) { rb.textContent = Resign.label(LANG); rb.parentNode.title = Resign.label(LANG); }
 }
 
 // ====================================================================== settings / state
@@ -1001,6 +1002,33 @@ let pendingSeed = '';
 function updateCommit() { commitHash = match ? BG.sha256('bg2|' + match.seed).slice(0, 16) : ''; }
 
 // ====================================================================== undo / navigation
+// ====================================================================== resign (common 投了 button)
+// Resigning ends the current game as a loss: vs AI you lose, in a 2-player game the side to move resigns. The winner
+// gets the game's value: a single game, or the gammon / backgammon when it is already obvious (the winner is bearing
+// off and the loser has borne off nothing), times the cube. In a match the next game then follows as usual.
+function canResign() {
+  if (settings.mode === 'online') return !!(window.olLive && olLive());
+  if (!match || lesson || puzzle || settings.mode === 'watch') return false;
+  const g = match.games.length - 1;
+  return !stateAt(g, match.games[g].actions.length).over;
+}
+function resignValue(st, w) {
+  const p = st.pos, l = 1 - w;
+  return p[l * 26] === 0 && p[w * 26] > 0 && BG.allHome(p, w) ? BG.winKind(p, w) : 1;
+}
+function resignGame() {
+  if (!canResign() || settings.mode === 'online') return;
+  const g = match.games.length - 1, st = stateAt(g, match.games[g].actions.length);
+  const toMove = turn ? turn.side : st.turn >= 0 ? st.turn : view;
+  const loser = settings.mode === 'ai' ? humanSide : toMove, w = 1 - loser;
+  busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false; stopPlay();
+  turn = null; selected = null; hintData = null; previewPlay = null; extraArrows = [];
+  cur = latestIdx(); reviewing = false;
+  pushAction({ t: 'x', w, n: resignValue(st, w) });
+}
+function resignClick() { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignGame(); }); }
+$('#btnResign').innerHTML = Resign.icon + '<span></span>';
+$('#btnResign').onclick = () => resignClick();
 function canUndo() {
   if (!match || settings.mode === 'watch') return false;
   if (lesson || puzzle) return !!(turn && turn.steps.length);
@@ -1117,6 +1145,7 @@ function renderInfo() {
   $('#evalFill').style.width = (ev ? ev.p * 100 : 50) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = !canUndo();
+  $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); renderHintCard();
@@ -2744,7 +2773,7 @@ $('#langSel').onchange = e => {
 };
 if (window.PZBook) PZBook.setLang(LANG);
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { try { updateGeom(); if (match) renderInfo(); } catch (e) {} });
 updateGeom();
 if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' });

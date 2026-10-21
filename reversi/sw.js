@@ -1,6 +1,6 @@
 // Offline support (bump CACHE when data files change): page and scripts are network-first (so updates arrive), large data files cache-first.
-const CACHE = 'reversi-v4-38c';
-const CORE = ['./', 'index.html', 'i18n.js', 'engine.js', 'online.js', 'firebase-config.js', 'manifest.webmanifest', 'icon-192.png', '../shared/pzbook.js', '../shared/rulesoffer.js', '../shared/headerbar.js', '../shared/tick.js', '../shared/ruletour.js'];
+const CACHE = 'reversi-v4-39';
+const CORE = ['./', 'index.html', 'i18n.js', 'engine.js', 'online.js', 'firebase-config.js', 'manifest.webmanifest', 'icon-192.png', '../shared/pzbook.js', '../shared/rulesoffer.js', '../shared/headerbar.js', '../shared/tick.js', '../shared/ruletour.js', '../shared/resign.js'];
 const DATA = ['weights.bin.gz', 'weights.json', 'book.json', 'lessons.json', 'puzzles.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.concat(DATA))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

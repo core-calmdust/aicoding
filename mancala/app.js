@@ -20,6 +20,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
   $('#langSel').value = LANG;
+  { const rb = $('#btnResign span'); if (rb) { rb.textContent = Resign.label(LANG); rb.parentNode.title = Resign.label(LANG); } }
   document.title = t('meta.title');
   document.querySelectorAll('#segSeeds button').forEach(b => { b.textContent = t('ng.seedsN', { n: b.dataset.v }); });
 }
@@ -51,6 +52,17 @@ function recompute() {
 }
 const shownPos = () => P[cur];
 const isOver = i => P[i === undefined ? cur : i].over;
+// resignation (common 投了 button): game.resigned = side that resigned; the game then ends at its last move
+const resignedNow = () => !lesson && !puzzle && game.resigned != null;
+const RSG_T = {
+  ja: { you: 'あなたが投了しました', p: '{c}が投了しました' }, en: { you: 'You resigned', p: '{c} resigned' },
+  zh: { you: '你认输了', p: '{c}认输' }, ko: { you: '기권했습니다', p: '{c} 기권' },
+  es: { you: 'Te has rendido', p: '{c} se rindió' }, fr: { you: 'Vous avez abandonné', p: '{c} abandonne' },
+  pt: { you: 'Você desistiu', p: '{c} desistiu' }, de: { you: 'Du hast aufgegeben', p: '{c} gibt auf' },
+  hi: { you: 'आपने हार मान ली', p: '{c} ने हार मान ली' }, ar: { you: 'لقد استسلمت', p: 'استسلم {c}' },
+};
+function resignText() { const L = RSG_T[LANG] || RSG_T.en, s = game.resigned; return settings.mode === 'ai' && s === game.human ? L.you : L.p.replace('{c}', shortName(s)); }
+function resignWinText() { const w = 1 - game.resigned; return settings.mode === 'ai' ? (w === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(w) }); }
 
 function load() {
   try {
@@ -59,10 +71,10 @@ function load() {
     Object.assign(settings, d.settings || {});
     if (!E.RULES[settings.rules]) settings.rules = 'kalah';
     if (d.game && E.RULES[d.game.rules] && [4, 6].includes(d.game.seeds) && Array.isArray(d.game.moves)) {
-      game = { rules: d.game.rules, seeds: d.game.seeds, moves: d.game.moves.filter(x => x >= 0 && x <= 5), human: d.game.human ? 1 : 0, setup: null };
+      game = { rules: d.game.rules, seeds: d.game.seeds, moves: d.game.moves.filter(x => x >= 0 && x <= 5), human: d.game.human ? 1 : 0, setup: null, resigned: d.game.resigned === 0 || d.game.resigned === 1 ? d.game.resigned : null };
       evals = Array.isArray(d.evals) ? d.evals : [];
       recompute(); cur = game.moves.length;
-      gameOverShown = isOver();
+      gameOverShown = isOver() || game.resigned != null;
       return true;
     }
   } catch (e) {}
@@ -70,7 +82,7 @@ function load() {
 }
 function save() {
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, game: { rules: game.rules, seeds: game.seeds, moves: game.moves, human: game.human }, evals: evals.slice(0, game.moves.length + 1) })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, game: { rules: game.rules, seeds: game.seeds, moves: game.moves, human: game.human, resigned: game.resigned != null ? game.resigned : null }, evals: evals.slice(0, game.moves.length + 1) })); } catch (e) {}
 }
 
 // ====================================================================== workers
@@ -551,7 +563,7 @@ function canHumanPlay() {
   const p = shownPos(); if (!p || p.over || animating) return false;
   if (lesson) return !lesson.answered && p.side === 0;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && p.side === 0;
-  if (reviewing) return false;
+  if (reviewing || resignedNow()) return false;
   return !isAISide(p.side) && thinking < 0;
 }
 function sideName(s) {
@@ -579,11 +591,13 @@ function renderPlates(b) {
     $('#name' + w).textContent = sideName(s) + (settings.mode === 'pvp' || lesson || puzzle ? '' : ' · ' + t(s === 0 ? 'p0' : 'p1'));
     const sc = $('#score' + w), v = String(b[E.storeOf(s)]);
     if (sc.textContent !== v) { sc.textContent = v; pl.classList.remove('bump'); void pl.offsetWidth; pl.classList.add('bump'); }
-    const active = !p.over && p.side === s && !animating;
-    pl.classList.toggle('active', !p.over && p.side === s);
+    const done = p.over || (resignedNow() && cur === game.moves.length);
+    const active = !done && p.side === s && !animating;
+    pl.classList.toggle('active', !done && p.side === s);
     pl.classList.toggle('thinking', thinking === s);
     let st = '';
     if (thinking === s) st = t('thinking');
+    else if (resignedNow() && cur === game.moves.length) st = s === game.resigned ? Resign.label(LANG) : t('st.win');
     else if (p.over) { const a = p.b[E.storeOf(s)], o = p.b[E.storeOf(1 - s)]; st = a > o ? t('st.win') : a === o ? t('st.draw') : ''; }
     else if (active && cur > 0 && P[cur].mv && P[cur].mv.extra && P[cur].mv.side === s) st = t('st.again');
     else if (active) st = t('st.turn');
@@ -598,7 +612,8 @@ function renderTurnLabel() {
   renderStoreLabels();
   const p = shownPos(), el = $('#turnLbl');
   let txt = '';
-  if (p.over) { const a = p.b[6], o = p.b[13]; txt = a === o ? t('res.draw') : (settings.mode === 'ai' && !lesson && !puzzle) ? ((a > o ? 0 : 1) === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(a > o ? 0 : 1) }); }
+  if (resignedNow() && cur === game.moves.length) txt = resignWinText();
+  else if (p.over) { const a = p.b[6], o = p.b[13]; txt = a === o ? t('res.draw') : (settings.mode === 'ai' && !lesson && !puzzle) ? ((a > o ? 0 : 1) === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(a > o ? 0 : 1) }); }
   else if (thinking >= 0) txt = t('turn.thinking');
   else if (lesson || puzzle) txt = p.side === 0 ? t('turn.you') : t('turn.opp');
   else if (settings.mode === 'ai') txt = p.side === game.human ? t('turn.you') : t('turn.ai');
@@ -634,6 +649,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? sq(ev.v) : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = !canUndo();
+  $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnHint').disabled = settings.mode === 'watch';
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -710,7 +726,7 @@ function newGame() {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay();
   rvCancel(); rv = null; rvOpen = false;
   const human = settings.color === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
-  game = { rules: settings.rules, seeds: settings.seeds, moves: [], human, setup: null };
+  game = { rules: settings.rules, seeds: settings.seeds, moves: [], human, setup: null, resigned: null };
   recompute(); cur = 0; reviewing = false; evals = []; anaLists = []; gameOverShown = false; fxMarks = [];
   $('#resultOverlay').classList.remove('show');
   resetSeeds(); layout(); update(); save();
@@ -744,7 +760,7 @@ function onPit(i) {
 // play move k from the shown position (truncating any future), animate it, then continue the game
 async function playMove(k, opts) {
   const from = shownPos(), idx = cur;
-  game.moves = game.moves.slice(0, cur); game.moves.push(k);
+  game.moves = game.moves.slice(0, cur); game.moves.push(k); game.resigned = null;
   evals.length = Math.min(evals.length, cur + 1); anaLists.length = Math.min(anaLists.length, cur + 1);
   if (rv && !(opts && opts.keepRv)) { rvCancel(); rv = null; rvOpen = false; }
   recompute(); reviewing = false;
@@ -762,6 +778,7 @@ function afterPosition() {
   const p = shownPos();
   if (p.over) { if (!lesson && !puzzle && cur === game.moves.length) setTimeout(() => { if (tok === busyToken) onGameEnd(); }, 350); return; }
   if (lesson || puzzle) return;
+  if (resignedNow()) { if (reviewing) analyzeCurrent(tok); return; }
   if (!reviewing && isAISide(p.side)) maybeAI(tok);
   else analyzeCurrent(tok);
 }
@@ -817,6 +834,27 @@ function onGameEnd() {
   $('#resultSub').innerHTML = sub;
   setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
 }
+function canResign() {
+  if (lesson || puzzle || settings.mode === 'watch' || !P.length || resignedNow()) return false;
+  return !P[game.moves.length].over;
+}
+// 投了: vs AI you lose; in a 2-player game the side to move resigns
+function resignGame() {
+  if (!canResign()) return;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay();
+  game.resigned = settings.mode === 'ai' ? game.human : P[game.moves.length].side;
+  cur = game.moves.length; reviewing = false; fxMarks = []; gameOverShown = true;
+  update(); save();
+  const aiWin = settings.mode === 'ai';
+  sChime(aiWin ? -1 : 1);
+  if (!aiWin) confetti();
+  $('#resultTitle').textContent = resignWinText();
+  const b = shownPos().b; $('#res0').textContent = b[6]; $('#res1').textContent = b[13];
+  let sub = `${resignText()}<br>${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${t('info.moves', { n: game.moves.length })}`;
+  if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
+  $('#resultSub').innerHTML = sub;
+  setTimeout(() => $('#resultOverlay').classList.add('show'), 300);
+}
 function canUndo() {
   if (lesson || puzzle || settings.mode === 'watch' || !P.length) return false;
   if (settings.mode === 'pvp') return cur > 0;
@@ -828,7 +866,7 @@ function undo() {
   busyToken++; cancelWorker('ai'); thinking = -1; stopAnim(); stopPlay();
   let i = cur - 1;
   if (settings.mode === 'ai') while (i > 0 && P[i].side !== game.human) i--;
-  game.moves = game.moves.slice(0, i); recompute(); cur = i; reviewing = false; gameOverShown = false; fxMarks = [];
+  game.moves = game.moves.slice(0, i); game.resigned = null; recompute(); cur = i; reviewing = false; gameOverShown = false; fxMarks = [];
   evals.length = Math.min(evals.length, i + 1); anaLists.length = Math.min(anaLists.length, i + 1);
   $('#resultOverlay').classList.remove('show');
   update(); save(); afterPosition();
@@ -843,7 +881,7 @@ function viewAt(i) {
 }
 function resumeHere() {
   if (!reviewing) return;
-  game.moves = game.moves.slice(0, cur); recompute(); reviewing = false; gameOverShown = false;
+  game.moves = game.moves.slice(0, cur); game.resigned = null; recompute(); reviewing = false; gameOverShown = false;
   evals.length = Math.min(evals.length, cur + 1);
   update(); save(); afterPosition();
 }
@@ -862,6 +900,7 @@ function confetti() {
 // ====================================================================== controls
 $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
+$('#btnResign').onclick = () => { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignGame(); }); };
 $('#btnHint').onclick = () => {
   settings.hint = !settings.hint; save();
   if (settings.hint) { if (!anaLists[cur]) analyzeCurrent(busyToken); else renderFx(); }
@@ -1121,7 +1160,7 @@ function exitSpecial() {
   document.body.classList.remove('in-lesson', 'in-puzzle');
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); stopAnim(); thinking = -1;
   if (savedGame) { game = savedGame.game; recompute(); cur = savedGame.cur; evals = savedGame.evals; anaLists = savedGame.anaLists; savedGame = null; }
-  reviewing = cur !== game.moves.length; gameOverShown = isOver(game.moves.length);
+  reviewing = cur !== game.moves.length; gameOverShown = isOver(game.moves.length) || game.resigned != null;
 }
 function quitSpecial() { exitSpecial(); layout(); update(); afterPosition(); }
 function enterSetup(b, side, rules) {
@@ -1872,7 +1911,7 @@ function openLoaded(d) {
   game = { rules: d.rules, seeds: d.seeds, moves: d.moves.slice(), human: 0, setup: null };
   recompute(); evals = []; anaLists = []; fxMarks = [];
   cur = d.n === undefined || isNaN(d.n) ? game.moves.length : Math.max(0, Math.min(game.moves.length, d.n));
-  reviewing = cur !== game.moves.length; gameOverShown = isOver(game.moves.length);
+  reviewing = cur !== game.moves.length; gameOverShown = isOver(game.moves.length) || game.resigned != null;
   resetSeeds(); layout(); update(); save(); afterPosition();
 }
 function loadText(v) {
@@ -2023,10 +2062,11 @@ const hadSave = load();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 try { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (_) {} } } catch (e) {}
+$('#btnResign').innerHTML = Resign.icon + '<span></span>';
 applyI18n();
 if (window.PZBook) PZBook.setLang(LANG);
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { setTimeout(layout, 30); renderInfo(); });
 applyBg();
 startRotTip();

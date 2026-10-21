@@ -15,3 +15,5 @@ window.ATLAS_FIREBASE_CONFIG = {
   messagingSenderId: "457113450734",
   appId: "1:457113450734:web:4f6a0b1bece3e942191bff",
 };
+// App Check (reCAPTCHA v3) for the shared account project — null = skipped (see <game>/firebase-config.js for the steps).
+window.ATLAS_APPCHECK_SITE_KEY = null;

@@ -47,7 +47,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 <div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.side-in').insertAdjacentHTML('afterbegin', '<div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>');
-$('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="ol.resign"></span></button>`);
+// #btnResign (投了) is in the main menu (common spec); its confirmation is shared/resign.js and it calls olResignGame() below
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
 $('#segMode [data-v=online]').onclick = () => { draft.mode = 'online'; segSync(); olSegSync(); };
 $('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
@@ -395,7 +395,7 @@ $('#btnAgain').addEventListener('click', e => {
   if (g && g.room && !g.rated) { if (g.again && g.again.by !== ON.uid) ON.answerRematch(net.gid, true).catch(err => console.warn(err)); else ON.requestRematch(net.gid).catch(err => console.warn(err)); return; }
   hideOv('#resultOverlay'); olDetach(); olStartSearch();
 }, true);
-$('#btnResign').onclick = () => { if (olLive()) olConfirm(t('ol.resignQ'), t('ol.resign'), () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
+window.olResignGame = () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); };
 // leaving a live online game (new game, lessons, puzzles, loading a record) = resigning it, after a confirmation
 function olGuard(sel) {
   const b = $(sel); if (!b) return;

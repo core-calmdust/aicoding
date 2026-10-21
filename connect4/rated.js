@@ -5,7 +5,7 @@
  * localStorage 'c4-rated-v1': { r, n, w, l, d, hist: [{ id, t, lv, or, s, d, r, why }] }
  *   r: current rating (start 1000), n: rated games, w/l/d: wins/losses/draws,
  *   hist: last 100 games, oldest first — id: game id, t: time (ms), lv: AI level, or: AI rating,
- *   s: score (1 / 0.5 / 0), d: rating change, r: rating after the game, why: 'end' | 'abandon'
+ *   s: score (1 / 0.5 / 0), d: rating change, r: rating after the game, why: 'end' | 'abandon' | 'resign'
  * localStorage 'c4-rated-cur-v1' (this device only): the rated game on the board { id, human, lv, or, my, tag, done? }
  */
 (function () {
@@ -70,7 +70,7 @@ function rtSettle(s, why) {
 function rtSettleBoard() {
   if (!rtGame() || RT.done || !gameOver(moves)) return RT && RT.done;
   const st = statusOf(moves);
-  return rtSettle(st.winner === RT.human ? 1 : st.winner ? 0 : 0.5, 'end');
+  return rtSettle(st.winner === RT.human ? 1 : st.winner ? 0 : 0.5, st.resign ? 'resign' : 'end');
 }
 function rtForfeit() {
   if (!rtLive()) return null;
@@ -174,7 +174,7 @@ onGameEnd = function (st) {
   _onGameEnd.apply(this, arguments);
   if (was || !rtGame()) return;
   const x = rtSettleBoard(); if (!x) return;
-  $('#resultSub').innerHTML = esc(t('res.vs', { name: LV(RT.lv), lv: RT.lv })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
+  $('#resultSub').innerHTML = (st && st.resign ? esc(resignText(st)) + '<br>' : '') + esc(t('res.vs', { name: LV(RT.lv), lv: RT.lv })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
   renderInfo();
 };
 segSync = function () {

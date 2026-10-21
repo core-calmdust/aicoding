@@ -190,7 +190,7 @@ a.snd.home{text-decoration:none}
 .navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
 .navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding:10px}
+.controls{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;padding:10px}
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -198,8 +198,8 @@ a.snd.home{text-decoration:none}
 .btn.on{color:var(--accent);border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.08)}
 .btn:disabled{opacity:.35;cursor:default}
 .btn.primary{color:var(--text)}
-/* narrow side panel (PC): six menu buttons as two rows of three, icon beside the label */
-@container (max-width: 440px){ html:not(.rot) .controls{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px} html:not(.rot) .controls .btn{flex-direction:row;justify-content:center;gap:6px;padding:7px 6px} }
+/* narrow side panel (PC): seven menu buttons as two rows of four, icon beside the label */
+@container (max-width: 440px){ html:not(.rot) .controls{grid-template-columns:repeat(4,1fr);gap:6px;padding:8px} html:not(.rot) .controls .btn{flex-direction:row;justify-content:center;gap:6px;padding:7px 6px} }
 .kifu-card{flex:1;min-height:92px;display:flex;flex-direction:column}
 .hint-card.show{flex:0 1 auto;min-height:min(150px, 15vh);overflow:hidden;flex-direction:column}
 @media (max-height: 800px) and (pointer: fine){ .side-in:has(.hint-card.show) .graph, .side-in:has(.review-card.show) .graph{height:30px} }
@@ -523,6 +523,9 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   html:not(.rot) .card{padding:10px 12px}
   html:not(.rot) .controls{padding:8px;gap:6px}
   html:not(.rot) .btn{padding:7px 2px;gap:3px;font-size:11px}
+  html:not(.rot) .controls{gap:4px}
+  html:not(.rot) .controls .btn{padding:7px 1px;font-size:9.5px;letter-spacing:-.02em}
+  html[lang=fr]:not(.rot) #btnResign span{font-size:8.5px;letter-spacing:-.04em}
   html:not(.rot) .btn svg{width:17px;height:17px}
   html:not(.rot) .graph{height:64px}
   html:not(.rot) .kifu-card{flex:none;min-height:96px}
@@ -708,7 +711,8 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   #newOverlay .modal{width:min(980px, calc(100vw - 64px));max-height:calc(var(--vh) - 24px)}
   #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
   #newOverlay .ng-col > .field:first-child{margin-top:0}
-  #newOverlay .ng-cols > .ng-col:first-child{order:2}  /* PC: strength / format / options on the left, mode / colours / board on the right */
+  #newOverlay .ng-cols > .ng-col:first-child{order:2}  /* PC: strength / format / options on the left, colours / board on the right (mode spans the top row) */
+  #newOverlay #fMode{margin-bottom:6px}
   #newOverlay .skinrow{grid-template-columns:repeat(4, minmax(0, 1fr))}
   @media (max-height: 800px){ #rulesBody .rt-intro{gap:8px} #rulesBody .rt-intro-sec{font-size:14px;line-height:1.65;padding-top:10px;padding-bottom:10px} }
   #newOverlay .modal{padding:20px 28px 18px}
@@ -1038,6 +1042,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnResign"><span></span></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg><span data-i18n="btn.puzzle"></span></button>
@@ -1064,8 +1069,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
-    <div class="ng-cols"><div class="ng-col">
-    <div class="field">
+    <div class="field" id="fMode">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
         <button data-v="ai" data-i18n="ng.ai"></button>
@@ -1075,6 +1079,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
         <button data-v="puzzle" data-i18n="ng.puzzle"></button>
       </div>
     </div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fColor">
       <label data-i18n="ng.ck"></label>
@@ -1238,25 +1243,26 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="firebase-config.js?v=20261021ol"></script>
 <script src="online.js?v=20261021ol"></script>
 <script src="explain.js?v=20261021pz"></script>
+<script src="../shared/resign.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/ruletour.js?v=13"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
-<script src="app.js?v=20261021fz"></script>
+<script src="app.js?v=20261021rsg"></script>
 <script src="op.js?v=20261021op"></script>
-<script src="online-ui.js?v=20261021ol"></script>
+<script src="online-ui.js?v=20261021rsg"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=18'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=19'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=45')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/backgammon.js?v=2')).then(() => load('../atlas/skin/backgammon.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=45')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/backgammon.js?v=3')).then(() => load('../atlas/skin/backgammon.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

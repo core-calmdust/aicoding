@@ -82,7 +82,8 @@
   const oCk = BGTheme.applyCheckers;
   /* ---------- sprites of the 3D pieces as CSS images ---------- */
   let SPR = null;
-  const ckPair = () => { try { return settings.ck || ['gold', 'black']; } catch (e) { return ['gold', 'black']; } };
+  let shownPair = null;   // the colours the game last applied (online: as shown, mine on my side), or a live preview from the dialog
+  const ckPair = () => { if (shownPair) return shownPair; try { return (typeof CKV !== 'undefined' && CKV) || settings.ck || ['gold', 'black']; } catch (e) { return ['gold', 'black']; } };
   const TXT = { gold: '#4a3414', black: '#efe6cf', white: '#3a3630', red: '#fff1e0' };
   function paintSprites() {
     if (!SPR) return;
@@ -110,7 +111,7 @@
   // a new board drawing (skin, colours, the board's height) → the 3D board follows
   const oDraw = window.drawBoardSvg;
   if (typeof oDraw === 'function') window.drawBoardSvg = function () { const r = oDraw.apply(this, arguments); try { look(); } catch (e) {} return r; };
-  BGTheme.applyCheckers = function (pair) { if (mine) dieColours(true); const r = oCk.apply(this, arguments); try { paintSprites(); } catch (e) {} return r; };
+  BGTheme.applyCheckers = function (pair) { if (pair && pair.length === 2) shownPair = pair.slice(); if (mine) dieColours(true); const r = oCk.apply(this, arguments); try { paintSprites(); } catch (e) {} return r; };
   // a moving checker is lifted off the board: its shadow drops away and grows, then it is set down
   const oStep = window.animStep;
   if (typeof oStep === 'function') window.animStep = function (p, s, from, to) {
@@ -127,6 +128,32 @@
     } catch (e) {}
     return oStep.apply(this, arguments);
   };
+
+  /* ---------- rolling dice: the game's throw physics (dice3d.js) drives the 3D dice of the set ----------
+     (its own canvas drawing is skipped); when the dice come to rest the page shows its resting dice — the renders of the same dice */
+  const D3 = window.Dice3D;
+  if (D3 && typeof D3.draw === 'function' && typeof D3.pose === 'function') {
+    const oD3 = D3.draw, rolling = []; let hideT = 0;
+    const hideRoll = () => { rolling.forEach(m => { m.visible = false; }); T3.kick(120); };
+    D3.draw = function (ctx, k, list) {
+      if (!mine || !SPR) return oD3.apply(this, arguments);
+      try {
+        const H = geoH(), W = 15.85, top = board.userData.top, pair = ckPair();
+        list.forEach(({ d, t }, i) => {
+          const id = BG3.CKL[pair[d.side]] ? pair[d.side] : 'gold';
+          let m = rolling[i]; if (!m || m.userData.die !== id) { if (m) holder.remove(m); m = rolling[i] = BG3.dieG(id, .82); holder.add(m); }
+          const ps = D3.pose(d, t); m.visible = true;
+          m.position.set(ps.p[0] - W / 2, top + ps.p[2], ps.p[1] - H / 2); BG3.dieGPose(m, ps.m);
+        });
+        for (let i = list.length; i < rolling.length; i++) rolling[i].visible = false;
+        T3.kick(150); clearTimeout(hideT); hideT = setTimeout(hideRoll, 250);   // no new frame → the page's resting dice have taken over
+      } catch (e) { return oD3.apply(this, arguments); }
+    };
+  }
+  // the checker colours follow the new-game dialog live while it is open (and fall back to the game's colours when it closes)
+  const ckRows = document.getElementById('ckRows'), newOv = document.getElementById('newOverlay');
+  if (ckRows) ckRows.addEventListener('click', () => setTimeout(() => { try { if (draft && draft.ck) { shownPair = draft.ck.slice(); paintSprites(); } } catch (e) {} }, 0));
+  if (newOv) new MutationObserver(() => { if (!newOv.classList.contains('show')) { try { shownPair = null; applyCk(); } catch (e) {} } }).observe(newOv, { attributes: true, attributeFilter: ['class'] });
 
   /* ---------- the two 3D looks in the board-design row (new-game dialog) ---------- */
   const LBL = {
