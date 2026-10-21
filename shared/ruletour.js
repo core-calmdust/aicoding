@@ -77,7 +77,7 @@ const CSS = `
 @media (max-width: 420px){.rt-steps{gap:3px;flex-wrap:nowrap}.rt-steps button{flex:0 1 26px;width:auto;height:auto;aspect-ratio:1;min-width:0;font-size:11px}}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
 .rt-steps button.cur{background:var(--panel2,#1f2a2a);color:var(--accent,#e2c275);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
-.rt h2.rt-title{margin:0 0 8px;font-size:19px;text-align:center}
+.rt h2.rt-title{margin:0 0 8px;font-size:19px;line-height:1.3;text-align:center}
 .rt-body{font-size:14px;line-height:1.75;color:var(--text,#eee)}
 .rt-body p{margin:0 0 8px}.rt-body b{color:var(--accent,#e2c275)}
 .rt-board{display:flex;justify-content:center;margin:10px auto 8px;max-width:100%;touch-action:manipulation;user-select:none;-webkit-user-select:none}
