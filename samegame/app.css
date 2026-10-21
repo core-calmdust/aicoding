@@ -864,6 +864,16 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
 .htabs button,.htabs button.on{flex-direction:row!important;min-height:0;padding:9px 6px!important;font-size:15px!important;gap:6px!important;border:0!important;box-shadow:none!important;border-radius:999px!important;transform:none!important;background:transparent}
 .htabs button svg{width:20px!important;height:20px!important}
 body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([data-skin="mid"]) .htabs button{border-radius:0!important}
+/* tabs never wrap; header icons stay on one line on phones */
+.htabs button span{white-space:nowrap}
+@media (max-width:600px){
+  .htabs button,.htabs button.on{font-size:13.5px!important;gap:4px!important;padding:9px 2px!important;letter-spacing:0}
+  .htabs button svg{width:17px!important;height:17px!important;flex:none}
+  .top .icons{flex-wrap:nowrap;gap:3px;justify-content:space-between}
+  .top .ib{width:30px;height:30px;flex:none}.top .ib svg{width:17px;height:17px}
+  #langSel{width:64px;min-width:0;flex:none;font-size:11.5px}
+}
+@media (max-width:360px){.htabs button svg{display:none}.htabs button,.htabs button.on{font-size:13px!important}}
 /* ===== phone: compact, quick-select layouts ===== */
 @media (max-width:860px){
   .dacts .dact{display:block!important;position:relative;padding:10px!important}
