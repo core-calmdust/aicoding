@@ -1,0 +1,24 @@
+== nirensei  maxloss 0.8
+ 1B Q16  lead    0.0 loss 0.0 pol#4 best Q16  | Q16:-0.1 D4:-0.2 D16:-0.1 Q4:-0.2
+ 2W D4   lead   -0.1 loss 0.0 pol#1 best D4   | D4:-0.1 D16:-0.1 Q4:-0.1
+ 3B Q4   lead    0.0 loss 0.0 pol#1 best D16  | D16:0.0 Q4:0.0 C3:-0.2
+ 4W D16  lead    0.0 loss 0.0 pol#1 best D16  | D16:0.0 D17:0.1 C16:0.1
+ 5B C6   lead   -0.1 loss 0.1 pol#5 best C3   | C3:-0.0 C17:0.0 F17:-0.0
+ 6W F3   lead    0.1 loss 0.3 pol#4 best R17  | R17:-0.1 C5:-0.2 R3:-0.1 F3:-0.1 F4:-0.1
+ 7B C9   lead   -0.6 loss 0.8 pol#99 best C17  | C17:0.2 C14:0.0 C4:-0.2 F17:-0.1
+ 8W R6   lead   -0.4 loss 0.3 pol#8 best R17  | R17:-0.7 R3:-0.7 O3:-0.6
+ 9B R5   lead   -0.3 loss 0.0 pol#1 best R5   | R5:-0.3 F17:-0.3 R8:-0.5
+10W Q6   lead   -0.3 loss 0.0 pol#1 best Q6   | Q6:-0.3 R17:-0.3
+11B O4   lead   -0.3 loss 0.0 pol#1 best O4   | O4:-0.3
+12W R17  lead   -0.3 loss 0.1 pol#1 best R17  | R17:-0.3 Q10:-0.4 R10:-0.4 R14:0.0
+13B Q17  lead   -0.2 loss 0.1 pol#1 best Q17  | Q17:-0.3 R16:-0.2
+14W R16  lead   -0.2 loss 0.0 pol#1 best R16  | R16:-0.3
+15B R14  lead   -0.3 loss 0.0 pol#1 best R14  | R14:-0.2 Q15:-0.5 R15:-0.4
+16W R15  lead   -0.4 loss 0.0 pol#1 best R15  | R15:-0.3 S14:-0.2
+17B Q15  lead   -0.3 loss 0.0 pol#1 best Q15  | Q15:-0.4
+18W S14  lead   -0.3 loss 0.0 pol#1 best S14  | S14:-0.3
+19B R13  lead   -0.3 loss 0.0 pol#1 best R13  | R13:-0.3 R18:-0.3 F17:-0.5 D17:-0.5
+20W S13  lead   -0.2 loss 0.0 pol#1 best S13  | S13:-0.3
+21B R12  lead   -0.2 loss 0.0 pol#1 best R12  | R12:-0.2 R11:-0.4
+22W M3   lead   -0.2 loss 0.1 pol#1 best M3   | M3:-0.3 F17:-0.3 J17:-0.3
+23B F17  lead   -0.3 loss 0.3 pol#1 best F17  | F17:-0.3 M4:0.0 N6:-0.1 D17:-0.2 N5:-0.3

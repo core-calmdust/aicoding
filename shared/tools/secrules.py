@@ -48,6 +48,11 @@ GAMES = {
     'morris': dict(first='b', alt=True, tckey='tc', tcs={'nine': (300000, 0, 5000), 'twelve': (360000, 0, 5000), 'six': (180000, 0, 3000)},
                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                    variant=('v', ['six', 'nine', 'twelve'])),
+    # Go: v = board size; moves are 2 characters each (pass '__'); no draw offers (komi 6.5 online); the game ends by two passes
+    # and is settled as status 'over' with win / why 'score' / pts / dead (both clients count; the res reports must agree)
+    'go': dict(first='b', alt=True, tckey='tc', tcs={'9': (300000, 0, 5000), '13': (600000, 0, 10000), '19': (1200000, 0, 15000)},
+               legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=3000, bg=False,
+               variant=('v', ['9', '13', '19'])),
     'dots': dict(first='b', alt=False, tckey='tc', tcs={'s3': (60000, 0, 3000), 's4': (120000, 0, 3000), 's5': (180000, 0, 3000)},
                  legacy_byo=None, free=0, imm=['tc', 'n'], draw=False, abandon=False, hist=False, moves_max=400, bg=False),
     'backgammon': dict(first=None, alt=False, tckey='f', tcs={'g1': (180000, 0, 0), 'm3': (360000, 0, 0), 'm5': (600000, 0, 0), 'm7': (840000, 0, 0)},

@@ -1,0 +1,6 @@
+<html><body style="margin:0;background:#222;display:flex;flex-wrap:wrap;gap:6px">
+<script src="/go/themes.js?x=2"></script>
+<script>
+for (const id of GoTheme.BOARD_IDS) { const im = new Image(); im.src = GoTheme.boardTex(id, 512); im.style.width='340px'; document.body.appendChild(im); }
+for (const s of GoTheme.STONE_IDS) for (const c of [1,2]) { const im = new Image(); im.src = GoTheme.stoneImg(s, c, 1); im.style.width='120px'; im.style.background='#d9a85a'; document.body.appendChild(im); }
+</script></body></html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-go') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'kaya'; document.documentElement.dataset.st = S.st || 'classic'; } catch (e) {}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0c0f16">
+<meta name="description" content="本格囲碁。KataGo系の学習ネットを使った20段階のAI（15級〜五段）、5〜19路盤、日本ルール・中国ルール、置き碁、形勢判断と振り返り解説、レッスン・定石解説・詰碁500問、オンライン対戦。">
+<title>Go</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e1b469'/%3E%3Cpath d='M12 20h40M12 32h40M12 44h40M20 12v40M32 12v40M44 12v40' stroke='%232a1c0e' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23141414'/%3E%3Ccircle cx='44' cy='20' r='9' fill='%23f4f1ea' stroke='%23999'/%3E%3C/svg%3E">
+<meta property="og:title" content="囲碁 — 5〜19路・20段階AI・詰碁500問">
+<meta property="og:description" content="強いAI、置き碁、形勢判断、振り返り解説、レッスン・定石解説・詰碁、オンライン対戦。登録不要でスマホでも遊べます。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://core-calmdust.github.io/aicoding/go/">
+<meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/go.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e15; --bg2:#121726; --panel:#151b2b; --panel2:#1c2438; --line:#2b3550;
+  --text:#eef0f5; --muted:#a6afc4; --dim:#6f7a94;
+  --brass:#d6b26a; --brass2:#8f7646;
+  --accent:#e9c77e; --red:#ff6b5b; --good:#7fd6a4; --shu:#e0553d;
+  --vh: 100vh;
+  --ttop: 58px;
+  --pad: clamp(24px, 6vmin, 90px);
+  --gap: clamp(22px, 3vw, 46px);
+  --bs: min(var(--vh) - var(--pad) * 2 - 64px - var(--ttop), 100vw - var(--pad) * 2 - var(--gap) - 350px, 1040px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (height:100lvh){:root{--vh:100lvh}}
+html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
+@supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
+@media not all and (pointer: coarse){
+  html.hb-on.ol-dock{--vh:calc(100vh - 108px - var(--hb-h))}
+  @supports (height:100dvh){html.hb-on.ol-dock{--vh:calc(100dvh - 108px - var(--hb-h))}}
+}
+.hb-chip .pdisc{width:14px;height:14px}
+.hb-chip small{color:var(--dim);font-size:11.5px}
+.hb .hb-info .hb-chip{flex:none}
+@media (max-width: 1500px){.hb .hb-info .hb-chip.opt{display:none}}
+@media (max-width: 1300px){.hb .hb-info .hb-chip.cnt{display:none}}
+html,body{height:100%;overflow:hidden}
+body{
+  background:
+    radial-gradient(1100px 700px at 25% -10%, #1d2740 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #1a1f33 0%, transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+.app{height:var(--vh);display:grid;grid-template-columns:auto minmax(330px, 520px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:calc(var(--pad) + var(--ttop)) var(--pad) var(--pad)}
+/* ---------------------------------------------------------------- board */
+.board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:10px}
+.frame{position:relative;width:var(--bs);height:var(--bs);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.goban{position:absolute;inset:0;border-radius:6px;background-color:var(--bd-base,#ddb062);background-size:100% 100%;
+  box-shadow:0 2px 0 rgba(255,255,255,.12) inset,0 calc(var(--bs) * .012) 0 var(--bd-edge1,#b98444),0 calc(var(--bs) * .02) 0 var(--bd-edge2,#8a5d2b),0 30px 60px -20px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.35)}
+.goban.crop{border-radius:4px}
+.bsvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;display:block}
+.bsvg .gl{stroke:var(--bd-line);stroke-linecap:square}
+.bsvg .gstar{fill:var(--bd-star)}
+.bsvg .gco{fill:var(--bd-coord);font-family:'JetBrains Mono',monospace;font-weight:500;text-anchor:middle;dominant-baseline:central}
+.bsvg.can{cursor:pointer}
+.bsvg .st{pointer-events:none}
+.bsvg .st.new{animation:stIn .22s cubic-bezier(.2,1.4,.4,1)}
+@keyframes stIn{0%{transform:scale(1.25);opacity:.4}100%{transform:none;opacity:1}}
+.bsvg .st.gone{animation:stOut .45s ease-in forwards}
+@keyframes stOut{0%{opacity:1;transform:none}40%{opacity:1;filter:brightness(1.4)}100%{opacity:0;transform:scale(.4)}}
+.bsvg .st.dead{opacity:.45}
+.bsvg .ghost{opacity:.5;pointer-events:none}
+.bsvg .lm{fill:none;stroke-width:.075}
+.bsvg .mnum{font-family:'JetBrains Mono',monospace;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.bsvg .terr{pointer-events:none}
+.bsvg .own{pointer-events:none}
+.bsvg .hint circle.hc{stroke-width:.05}
+.bsvg .hint text{font-family:'JetBrains Mono',monospace;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.bsvg .mk-ok{fill:none;stroke:#3fd28a;stroke-width:.09}
+.bsvg .mk-ng{fill:none;stroke:#ff5b4a;stroke-width:.09}
+.bsvg .mk-x{stroke:#ff5b4a;stroke-width:.1;stroke-linecap:round}
+.bsvg .mk-tri{fill:none;stroke:var(--accent);stroke-width:.07}
+.bsvg .mk-sq{fill:rgba(233,199,126,.55)}
+.bsvg .mk-dash{fill:none;stroke:rgba(255,255,255,.9);stroke-width:.07;stroke-dasharray:.12 .1}
+.bsvg .ko{fill:none;stroke:rgba(255,255,255,.85);stroke-width:.06;stroke-dasharray:.1 .08}
+.bsvg .arrow{stroke:#ffe9a8;stroke-width:.08;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;background:rgba(10,13,22,.9);backdrop-filter:blur(6px);border:1px solid rgba(214,178,106,.45);color:var(--text);padding:14px 26px;border-radius:12px;font-weight:700;letter-spacing:.06em;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.toast.big{font-family:'Shippori Mincho B1',serif;font-size:30px;letter-spacing:.2em;padding:12px 34px;color:var(--accent)}
+.playbar{width:var(--bs);max-width:100%;display:flex;align-items:center;gap:10px;min-height:42px}
+.playbar .pb-turn{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playbar .pb-turn b{color:var(--text)}
+.pbtn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-weight:700;font-size:13.5px;white-space:nowrap}
+.pbtn:hover:not(:disabled){border-color:var(--brass2)}
+.pbtn:disabled{opacity:.35;cursor:default}
+.pbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4c);color:#1b150a;border-color:transparent}
+.pbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.confirm-tip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:15;font-size:12px;color:#1b150a;background:rgba(233,199,126,.95);border-radius:999px;padding:4px 12px;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+.confirm-tip.show{opacity:1}
+/* ---------------------------------------------------------------- side */
+.side{grid-area:side;width:100%;height:calc(var(--bs) + 52px);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size;position:relative}
+.side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+.side > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px)}
+.kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
+.kifu-card .kifu{flex:1;min-height:0;max-height:none}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.brand h1{--tl:17;font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:clamp(15px, calc((100cqw - 190px) / (var(--tl) * .66)), 28px);letter-spacing:.06em;white-space:nowrap;min-width:0;flex:1 1 auto;overflow:hidden}
+.brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
+.brand a{font-size:12px;color:var(--dim);text-decoration:none;white-space:nowrap}
+.brand-r{display:flex;align-items:center;gap:8px;flex:none}
+.brand-l{display:flex;flex-direction:column;min-width:0}
+.brand a.series{font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
+.brand:has(.brand-l){align-items:flex-end}
+#langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px;cursor:pointer}
+.snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
+.snd:hover{color:var(--text)}
+a.snd.home{text-decoration:none}
+.snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.snd .off-x{display:none}
+.snd.on{color:var(--accent);border-color:rgba(214,178,106,.5)}
+.snd:not(.on) .on-w{display:none}
+.snd:not(.on) .off-x{display:inline}
+.brand h1.to-board{cursor:pointer}
+@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+  .side > .brand{justify-content:flex-end}
+  .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--bs);max-width:none}
+  .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--bs) / 22), 30px)}
+}
+@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+  .brand-r{gap:10px}
+  .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
+  .brand-r .snd svg{width:20px;height:20px}
+  .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px}
+}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player{position:relative;border-radius:12px;padding:12px;background:rgba(0,0,0,.18);border:1px solid transparent;transition:border-color .25s, background .25s;min-width:0}
+.player.active{border-color:rgba(214,178,106,.6);background:rgba(214,178,106,.07)}
+.player.won{border-color:rgba(127,214,164,.7);background:rgba(127,214,164,.08)}
+.player .top{display:flex;align-items:center;gap:8px;min-width:0}
+.player .clk{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--muted);padding:1px 7px;border-radius:7px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.player .clk:empty{display:none}
+.player.active .clk{color:var(--accent);border-color:rgba(214,178,106,.6)}
+.player .clk.low{color:#ff9b90;border-color:rgba(255,107,91,.6)}
+.player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player .count{font-family:'Shippori Mincho B1',serif;font-size:30px;font-weight:800;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.player .count small{font-size:12px;color:var(--dim);font-family:'Zen Kaku Gothic New';font-weight:500;margin-left:6px;letter-spacing:.05em}
+.player .status{font-size:11px;color:var(--dim);height:15px;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player.thinking .status{color:var(--accent)}
+.player.thinking .pdisc{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(214,178,106,.25)}}
+.pdisc{width:20px;height:20px;border-radius:50%;flex:none;display:inline-block}
+.pdisc.p1{background:radial-gradient(circle at 35% 30%,#6a6a6c,#262628 40%,#000 95%);box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.pdisc.p2{background:radial-gradient(circle at 35% 30%,#fff,#f2efe7 45%,#bdb6a6 98%);box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.rt-card{margin-top:10px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.rt-lbl{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.rt-r{font-family:'JetBrains Mono',monospace;font-size:21px;color:var(--brass);font-weight:700}
+.rt-rank{font-size:12.5px;color:var(--text)}
+.rt-prov{font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.rt-rec{font-size:12.5px;color:var(--muted);margin-top:3px}
+.rt-spark{display:block;width:100%;height:34px;margin-top:8px}
+.rt-spark polyline{fill:none;stroke:var(--brass);stroke-width:1.5}
+.rt-spark line{stroke:var(--line);stroke-dasharray:3 3}
+.rt-lbl2{font-size:11.5px;color:var(--dim);margin:7px 0 5px}
+.rt-hist{display:flex;flex-wrap:wrap;gap:4px}
+.rt-chip{font-size:11px;line-height:1.5;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:inline-flex;gap:4px;font-family:'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap}
+.rt-chip i{font-style:normal}
+.rt-chip.w i,.rt-chip.w b{color:#8fe3b8}.rt-chip.l i,.rt-chip.l b{color:#ff9b90}
+.rt-res{font-family:'JetBrains Mono',monospace}
+body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated-live #evalCard .graph{display:none}
+.evalrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.evalrow .label{font-size:13.5px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+.evalrow .val{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:14.5px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evalbar{position:relative;height:10px;border-radius:6px;background:linear-gradient(90deg,#f2efe7,#cfc8b8);overflow:hidden}
+.evalbar .fill{position:absolute;inset:0 auto 0 0;width:50%;background:linear-gradient(90deg,#3a3a3c,#111);transition:width .5s ease}
+.evalbar .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(214,178,106,.8)}
+.graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
+.graph .zero{stroke:rgba(214,178,106,.35);stroke-dasharray:2 3}
+.graph .cur{stroke:var(--accent);stroke-width:1}
+.controls{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
+.btn.on{color:var(--accent);border-color:rgba(214,178,106,.6);background:rgba(214,178,106,.08)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.primary{color:var(--text)}
+.kifu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.kifu-head .label{font-size:13.5px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+.kifu-head button{font-size:12.5px;color:var(--dim);padding:2px 6px;border-radius:5px}
+.kifu-head button:hover{color:var(--text)}
+.kifu-head .kb{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
+.kifu{display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:4px;max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:13px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.kifu button{padding:4px 6px;border-radius:5px;color:var(--muted);display:flex;align-items:center;justify-content:flex-start;gap:5px;white-space:nowrap;overflow:hidden}
+.kifu button em{font-style:normal;color:var(--dim);font-size:.85em;min-width:1.8em;text-align:right}
+.kifu button i{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.kifu button i.p1{background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.kifu button i.p2{background:#f2efe7}
+.kifu button:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.kifu button.cur{background:rgba(214,178,106,.16);color:var(--accent)}
+.kifu button.q-bad{box-shadow:inset 0 -2px 0 #ff6b5b}
+.kifu button.q-dub{box-shadow:inset 0 -2px 0 #f2c060}
+.kifu .empty{grid-column:1/-1;color:var(--dim);font-family:'Zen Kaku Gothic New';font-size:12px;padding:6px 0}
+.info-line{font-size:12.5px;color:var(--dim);text-align:center;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace}
+.count-card{display:none}
+body.counting .count-card{display:block}
+.count-card h3{font-family:'Shippori Mincho B1',serif;font-size:18px;color:var(--brass);margin-bottom:6px}
+.count-card p{font-size:13.5px;line-height:1.7;color:var(--text)}
+.count-card .cnt-res{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:8px 0;font-size:13.5px;align-items:center}
+.count-card .cnt-res b{font-family:'JetBrains Mono',monospace}
+.count-card .cnt-big{font-family:'Shippori Mincho B1',serif;font-size:22px;font-weight:800;margin:6px 0}
+.count-card .lesson-actions{margin-top:8px}
+/* ---------------------------------------------------------------- modal */
+.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(5,7,12,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px;height:100vh;height:100dvh;bottom:auto}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{width:min(460px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#1c2438,#121828);border:1px solid rgba(214,178,106,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.overlay.show .modal{transform:none}
+.overlay.instant,.overlay.instant .modal{transition:none!important}
+.ls-tabs{margin-bottom:16px}
+.ls-tabs button{font-size:13.5px;padding:9px 4px}
+@media (max-width: 520px), (max-height: 560px){
+  .overlay{padding:10px}
+  .modal{padding:18px 16px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);border-radius:14px}
+  .modal h2{font-size:19px;margin-bottom:12px}
+  .ls-tabs{margin-bottom:12px}
+}
+.modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.12em;margin-bottom:18px}
+.field{margin-bottom:16px}
+.field > label{display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px}
+.seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 4px;border-radius:7px;font-size:13px;color:var(--muted);transition:background .2s,color .2s;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(214,178,106,.45)}
+#segMode{flex-wrap:wrap}
+#segMode button{flex:1 0 30%}
+@media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
+.seg.sizes{flex-wrap:wrap}
+.seg.sizes button{flex:1 0 15%;font-family:'JetBrains Mono',monospace}
+.seg.sizes select{flex:1 0 22%;background:transparent;color:var(--muted);border:0;font:inherit;font-size:13px;border-radius:7px;padding:6px 2px}
+.seg.sizes select.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(214,178,106,.45)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.numin{display:flex;align-items:center;gap:6px}
+.numin input{width:100%;min-width:0;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.28);color:var(--text);padding:8px 10px;font:inherit;font-family:'JetBrains Mono',monospace;font-size:14px}
+.numin select{width:100%;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.28);color:var(--text);padding:8px 8px;font:inherit;font-size:13.5px}
+.level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
+.level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
+.level-name{font-weight:700;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
+.level-name small{font-weight:400;font-size:11px;color:var(--dim)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.checks input{accent-color:var(--brass);width:16px;height:16px}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+.mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.06em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
+.mbtn:hover{color:var(--text)}
+.mbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4c);color:#1b150a;border-color:transparent}
+.mbtn.go:hover{filter:brightness(1.07)}
+.result-big{font-family:'Shippori Mincho B1',serif;font-size:32px;font-weight:800;text-align:center;letter-spacing:.08em;margin:4px 0 10px}
+.result-disc{display:flex;justify-content:center;margin:6px 0 4px}
+.result-disc .pdisc{width:46px;height:46px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.result-sub{text-align:center;color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.75}
+.hidden{display:none!important}
+body.rv-on #evalCard.hidden{display:block!important}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
+@keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
+/* rules (shared/ruletour.js) */
+#rulesOverlay .modal{width:min(900px,100%);height:min(880px, calc(100vh - 32px));height:min(880px, calc(100dvh - 32px));display:flex;flex-direction:column}
+#rulesOverlay .modal > h2, #rulesOverlay .modal > .modal-actions{display:none}
+#rulesOverlay #rulesBody{flex:1;min-height:0}
+#rulesOverlay #rulesBody > div{max-width:640px;width:100%;margin:0 auto}
+@media (max-height: 560px) and (orientation: landscape){ #rulesOverlay .modal{padding:10px 18px} #rulesOverlay .ls-tabs{margin-bottom:6px} #rulesOverlay .ls-tabs button{padding-top:5px;padding-bottom:5px} #rulesOverlay #rulesBody > div{max-width:none} }
+.rt-board svg.tour [data-p]{cursor:pointer}
+.rt-html .tour-pic{display:flex;justify-content:center}
+.rt-html .tour-pic svg{width:min(260px, 64vw);height:auto}
+/* lessons & puzzles */
+.lesson-card,.puzzle-card{display:none}
+.st-nav{display:none;align-items:center;justify-content:center;gap:6px;direction:ltr}
+.st-nav button{width:42px;height:36px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0}
+.st-nav button:disabled{opacity:.35;pointer-events:none}
+.st-nav svg,#lsAuto svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st-nav .st-auto,#lsAuto{color:var(--accent);border-color:rgba(214,178,106,.55)}
+.st-nav .st-auto{width:54px}
+.st-nav .st-auto.on,#lsAuto.on{background:rgba(214,178,106,.2)}
+.st-nav .i-pause,#lsAuto .i-pause{display:none}
+.st-nav .on .i-pause,#lsAuto.on .i-pause{display:block}.st-nav .on .i-play,#lsAuto.on .i-play{display:none}
+.st-pos{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--dim);min-width:58px;text-align:center;white-space:nowrap}
+.lesson-actions #lsAuto{flex:0 0 46px;padding:0;display:flex;align-items:center;justify-content:center}
+.lesson-actions #lsAuto.hidden{display:none}
+body.in-lesson .lesson-card{display:block}
+body.in-puzzle .puzzle-card{display:block}
+body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line, body.in-lesson .controls, body.in-lesson .playbar,
+body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, body.in-puzzle .controls, body.in-puzzle .playbar{display:none!important}
+body.in-lesson .count-card, body.in-puzzle .count-card{display:none!important}
+.lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lt{font-size:13px;color:var(--brass);letter-spacing:.12em}
+.lesson-card h3,.puzzle-card h3{font-family:'Shippori Mincho B1',serif;font-size:22px;margin:4px 0 8px;letter-spacing:.06em}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
+.dots i.ok{background:#6fd3a0}.dots i.mid{background:#f2c060}.dots i.ng{background:#ff6b5b}.dots i.cur{box-shadow:0 0 0 2px var(--accent)}
+.lesson-prompt{font-size:16px;line-height:1.75}
+.ls-goal,.pz-goal{margin-bottom:8px;padding:8px 10px;border-radius:9px;background:rgba(233,199,126,.08);border:1px solid rgba(233,199,126,.28);color:var(--text);display:flex;align-items:center;gap:8px}
+.pz-goal{font-size:16.5px;font-weight:700}
+.lesson-fb,.pz-status{margin-top:10px;font-size:15px;line-height:1.85;color:var(--muted);min-height:44px}
+.lesson-fb b.ok,.pz-status b.ok{color:#8fe3b8}.lesson-fb b.ng,.pz-status b.ng{color:#ff9b90}
+.pts{display:inline-block;font-family:'JetBrains Mono',monospace;font-weight:700;padding:1px 8px;border-radius:7px;margin-right:4px;border:1px solid}
+.pts.ok{color:#8fe3b8;border-color:rgba(111,211,160,.5)}.pts.mid{color:#ffd29a;border-color:rgba(242,192,96,.5)}.pts.ng{color:#ff9b90;border-color:rgba(255,107,91,.5)}
+.ld-score{font-family:'Shippori Mincho B1',serif;font-size:46px;font-weight:800;margin:6px 0}
+.ld-score.ok{color:#8fe3b8}.ld-score.ng{color:#ff9b90}
+.ld-score small{font-size:18px;color:var(--dim)}
+.lesson-actions{display:flex;gap:8px;margin-top:12px}
+.lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
+.lesson-actions button:hover:not(:disabled){color:var(--text)}
+.lesson-actions button:disabled{opacity:.35}
+.lesson-actions button.go{background:linear-gradient(180deg,#e2c27c,#b08f4c);color:#1b150a;border-color:transparent}
+.lesson-list{display:grid;gap:8px}
+.ls-grad{margin-top:12px;font-size:14px;line-height:1.7;color:var(--text)}
+.op-choice{display:grid;gap:8px;margin-top:14px}
+.op-play{margin-top:10px;font-size:12.5px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text)}
+.op-play:hover{border-color:var(--brass2)}
+.op-vars{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.op-vars button{font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid rgba(214,178,106,.45);background:rgba(214,178,106,.08);color:var(--accent)}
+.op-vars button.sel{background:rgba(214,178,106,.25);color:var(--text)}
+.op-eval{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);margin-inline-start:8px}
+.study-bar{display:block;height:4px;width:140px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.study-bar > span{display:block;height:100%;background:var(--brass)}
+.lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
+.lesson-item:hover{border-color:var(--brass2)}
+.lesson-item .no{font-family:'Shippori Mincho B1',serif;font-size:20px;color:var(--brass);width:28px;text-align:center;flex:none}
+.lesson-item .tx{flex:1;min-width:0}
+.lesson-item .tx b{display:block;font-size:14px}
+.lesson-item .tx small{display:block;font-size:12px;color:var(--dim);line-height:1.5}
+.lesson-intro p{font-size:15.5px;line-height:1.9;color:#dfe3ec;margin-bottom:10px}
+.lesson-intro p b{color:var(--accent)}
+.lesson-intro .note{font-size:14px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
+.mini{display:block;margin:4px auto 12px;width:min(260px,72%);height:auto}
+.var-tabs{margin:-6px 0 16px}.var-tabs button{font-size:12.5px;padding:7px 4px}
+.daily{border-color:rgba(233,199,126,.55)!important;background:linear-gradient(90deg,rgba(214,178,106,.16),rgba(0,0,0,.2))!important}
+/* review */
+.review-card{display:none}
+:where(.review-card.show){flex:1.6 1 0;min-height:96px}
+.review-card.show{display:block;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.review-card.show:has(.cr-box){flex:none!important;min-height:0!important;max-height:var(--rvh, 260px)!important;overflow-y:auto!important}
+body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
+.rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
+.rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
+.cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(214,178,106,.35);background:rgba(214,178,106,.06)}
+.cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
+.cr-box p{font-size:13.5px;line-height:1.7;color:var(--text);margin:0 0 4px}
+.cr-mv .tag{font-size:12px;font-weight:700;margin-inline-start:4px}.cr-mv .tag.bad{color:#ff8b7d}.cr-mv .tag.dubious{color:#f2c060}.cr-mv .tag.best{color:#8fe3b8}
+.cr-turn{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(255,139,125,.15);color:#ff8b7d;border:1px solid rgba(255,139,125,.4)}
+.cr-box p.cr-tip{color:#e9dcb4}.cr-box p.cr-more{color:var(--dim);font-size:12px;margin-top:6px}
+.cr-see{margin-top:4px;padding:4px 12px;border-radius:999px;border:1px solid rgba(214,178,106,.5);background:transparent;color:var(--brass);font:inherit;font-size:12px;cursor:pointer}
+html[lang=ar] .cr-box{direction:rtl;text-align:right}
+.rv-list{display:grid;gap:6px;margin-top:10px}
+.rv-list button{display:flex;gap:8px;align-items:center;text-align:left;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font-size:14px;width:100%}
+.rv-list button:hover{border-color:var(--brass2)}
+.rv-list button.cur{border-color:var(--accent);background:rgba(214,178,106,.12)}
+.rv-list .tag{font-size:13px;font-weight:700;flex:none}
+.rv-list .tag.bad{color:#ff8b7d}.rv-list .tag.dubious{color:#f2c060}
+.rv-list .mv{font-family:'JetBrains Mono',monospace;flex:1;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
+.rv-list .mv i{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.rv-list .mv i.p1{background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.35)}.rv-list .mv i.p2{background:#f2efe7}
+.rv-list .ls{color:var(--dim);font-size:13px;white-space:nowrap}
+.rv-note{font-size:13.5px;margin-top:8px;line-height:1.65}
+.paste-ta{width:100%;min-height:110px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
+.paste-ta:focus{outline:none;border-color:var(--brass2)}
+#resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
+#resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
+.navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.navbar button:hover{color:var(--text);border-color:rgba(214,178,106,.5)}
+.navbar button:disabled{opacity:.35;pointer-events:none}
+.navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
+.navbar button.playing{color:var(--accent);border-color:rgba(214,178,106,.6)}
+/* lesson / opening list cards (same layout as Gomoku / Checkers) */
+.lesson-list:has(> .lx){display:block}
+.lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
+.lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0}
+.lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:rgba(214,178,106,.14);color:var(--brass);overflow:hidden}
+.lx-tabs .ic svg, .lx-banner .ic svg{width:100%;height:100%;display:block;margin:0}
+.lx-tabs button .ic.sv, .lx-banner .ic.sv{background:none;padding:0}
+.lx-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.lx-tabs button .ct.ok{color:#8fe3b8}
+.lx-tabs button:hover{border-color:var(--brass2)}
+.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(214,178,106,.2),rgba(214,178,106,.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(214,178,106,.28);background:linear-gradient(120deg,rgba(214,178,106,.14),rgba(0,0,0,.18) 70%)}
+.lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#1a140c;background:linear-gradient(140deg,#ecd496,#ad8c45);overflow:hidden}
+.lx-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-banner .tx b{font-family:'Shippori Mincho B1',serif;font-size:17px;color:var(--brass)}
+.lx-banner .tx small{font-size:12px;color:var(--muted);line-height:1.6}
+.lx-banner .pg{flex:none;width:120px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);text-align:right}
+.lx-bar{display:block;height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.lx-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--brass))}
+.lx-bar.ok i{background:linear-gradient(90deg,#2f7d5a,#6fd3a0)}
+.lx-grid{display:grid;gap:10px}
+.lx-card{display:flex;gap:12px;align-items:stretch;text-align:left;width:100%;padding:10px 12px 10px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--text);transition:transform .15s,border-color .2s;cursor:pointer;min-width:0}
+.lx-card:hover, .lx-card:focus-visible{transform:translateY(-1px);border-color:var(--brass2);outline:none}
+.lx-card.clear{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
+.lx-th{flex:none;width:92px;align-self:center}.lx-th svg{display:block;width:100%;height:auto;margin:0;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.lx-th svg.crop{box-shadow:none;border-radius:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+.lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lx-no{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brass)}
+.lx-bd{font-size:10.5px;line-height:1.5;padding:0 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.lx-bd.b1{color:#8fe3b8;border-color:rgba(111,211,160,.45)}.lx-bd.b2{color:#f2d07a;border-color:rgba(242,192,96,.45)}.lx-bd.b3{color:#ffab9e;border-color:rgba(255,139,125,.5)}
+.lx-st{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}.lx-st.ok{color:#8fe3b8;font-weight:700}.lx-st.new{color:var(--dim)}
+.lx-t{font-size:15px}
+.lx-sub{font-size:12px;color:var(--brass);opacity:.9}
+.lx-desc{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lx-card .lx-bar{margin-top:auto;height:4px}
+.lx-credit{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.6}
+html[lang=ar] :is(.lx-card, .lx-banner .tx, .lx-tx){text-align:right}
+html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
+@media (max-width:560px){
+  .lx-tabs{grid-auto-flow:row;grid-template-columns:repeat(4,1fr)}
+  .lx-tabs button{flex-direction:column;gap:2px;padding:7px 4px;font-size:11.5px}.lx-tabs button .ic{width:22px;height:22px}
+  .lx-banner{padding:10px 12px;gap:6px 10px;flex-wrap:wrap}.lx-banner .ic{width:36px;height:36px}.lx-banner .tx{flex:1 1 calc(100% - 50px)}.lx-banner .pg{width:100%;flex-direction:row;align-items:center;gap:8px;text-align:left}.lx-banner .pg .lx-bar{flex:1}
+  .lx-th{width:76px}
+}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ .lx-grid{grid-template-columns:repeat(2,minmax(0,1fr))} .lx-desc{-webkit-line-clamp:3} .lx-th{width:100px} }
+#pzGrid .pb-tile{aspect-ratio:1;padding:0;overflow:hidden;justify-content:flex-end;gap:0}
+#pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
+#pzGrid .pb-tile .th svg{width:100%;height:100%}
+#pzGrid .pb-tile .n{position:absolute;top:3px;left:4px;z-index:1;font-size:11px;padding:0 4px;border-radius:5px;background:rgba(10,13,22,.8);color:#fff;line-height:1.45}
+#pzGrid .pb-tile .s, #pzGrid .pb-tile .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
+#pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
+.pbh-bd > svg.crop, .pbh-daily .th > svg.crop, #pzGrid .pb-tile .th svg.crop{box-shadow:none;border-radius:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
+  #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal, #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
+  #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(100vh - 20px));height:min(880px, calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
+  #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
+  #rulesOverlay .modal{padding:16px 28px 18px}
+  #rulesOverlay .ls-tabs{margin-bottom:10px}
+  #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
+  #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
+  #rulesOverlay #rulesBody .rt{flex:1;min-height:0}
+  #rulesBody .rt-main > h2.rt-title{text-align:center;align-self:stretch}
+  #rulesBody .rt-main > .rt-body{text-align:left}
+  #rulesBody .rt-finish{width:340px;align-self:center;align-items:center}
+  html[lang=ar] #rulesBody .rt-main > .rt-body{text-align:right}
+  .rt-html .tour-pic svg{width:min(var(--rt-bw), 560px)}
+}
+/* new-game dialog: phone = one column, PC = mode on top, two columns below */
+#newOverlay .ng-cols{display:flex;flex-direction:column}
+#newOverlay .ng-col{display:contents}
+#fMode{order:1} #fRatedInfo, #fInfo{order:2} #fSize{order:3} #fRule{order:4} #fColor{order:5} #fLevel{order:6} #fLevel2{order:7} #fDisplay{order:8} #fDesign{order:9} #fStones{order:10}
+#newOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:.02em;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#newOverlay #btnCancelNew, #newOverlay #btnStart{flex:1 1 0}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));padding:20px 28px 18px}
+  #newOverlay .modal h2{margin-bottom:12px}
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col{display:block}
+  #newOverlay .modal-actions{margin-top:8px}
+  #newOverlay #segMode{display:flex;flex-wrap:nowrap}
+  #newOverlay #segMode button{flex:1 1 0;min-width:0;white-space:nowrap}
+}
+.bdrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.bdrow button img,.bdrow button svg{display:block;width:100%;height:auto;aspect-ratio:1;border-radius:5px;object-fit:cover}
+.bdrow button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center}
+.bdrow button:hover{border-color:rgba(214,178,106,.6);color:var(--text)}
+.bdrow button.sel{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 1px rgba(214,178,106,.45);background:rgba(214,178,106,.1)}
+@media (max-width: 520px){ .bdrow{gap:4px} .bdrow button{padding:4px 3px 5px;font-size:10px} }
+/* Arabic */
+html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .lesson-card h3, .puzzle-card h3, .result-sub, .rv-note, .field > label, .level-name, .result-big, #rsText, .count-card){direction:rtl;text-align:right}
+html[lang=ar] :is(.result-sub, .result-big){text-align:center}
+html[lang=ar] *{letter-spacing:0 !important}
+html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .result-big){font-family:'Noto Sans Devanagari','Noto Sans Arabic','Zen Kaku Gothic New',sans-serif}
+/* ---------------------------------------------------------------- phones */
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+  :root{--bs:min(100vw - 16px, var(--vh) - 250px, 760px)}
+  html,body{overflow-x:hidden;overflow-y:auto;height:auto}
+  .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 8px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
+  :root{--ttop:0px}
+  .side > .brand{position:static;width:var(--bs);max-width:100%;flex:none}
+  .side, .side-in{display:contents}
+  .side-in > *{width:var(--bs);max-width:100%;flex:none}
+  .brand{order:-5;height:28px;align-items:center}
+  .brand h1{font-size:clamp(14px, calc((100vw - 200px) / (var(--tl) * .64)), 19px);letter-spacing:.03em}
+  .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
+  .brand-r{gap:6px}
+  .brand a.series{display:none}
+  .players{order:-2;padding:8px;gap:8px}
+  .board-area{order:-1;flex:none;gap:6px}
+  .lesson-card,.puzzle-card,.count-card{order:0}
+  body.in-study .st-nav{display:flex}
+  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
+  .controls{order:-4}
+  #evalCard{order:1}
+  .review-card{order:2}
+  .kifu-card{order:4}
+  body.rv-on #evalCard{padding:8px 12px}
+  body.rv-on #evalCard .graph{display:none}
+  body.rv-on #evalCard .navbar{margin-top:6px}
+  .info-line{display:none}
+  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player .count{font-size:22px;margin-top:0;line-height:1}
+  .player .clk{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
+  .player:has(.clk:not(:empty)) .status{visibility:hidden}
+  .player .count small{display:none}
+  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .name{min-width:0}
+  .card{padding:10px 12px}
+  .controls{padding:8px;gap:5px}
+  .btn{flex-direction:column;justify-content:center;padding:7px 1px;gap:3px;font-size:10px;letter-spacing:-.02em}
+  .controls .btn span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:9.5px;letter-spacing:-.04em}
+  .btn svg{width:17px;height:17px}
+  .graph{height:72px;margin-top:8px}
+  .kifu-card{flex:none;min-height:96px}
+  .kifu-card .kifu{max-height:none;overflow:visible}
+  .review-card.show{flex:none;overflow:visible}
+  .playbar{min-height:40px}
+}
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  :root{--bs:min(var(--vh) - 66px, 100vw - 320px, 900px)}
+  .app{padding:8px max(14px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left));gap:16px;grid-template-columns:auto minmax(220px, 360px)}
+  .side{max-height:calc(var(--vh) - 16px);height:calc(var(--vh) - 16px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;display:flex;flex-direction:column;gap:8px}
+  .side::-webkit-scrollbar{display:none}
+  :root{--ttop:0px}
+  .side > .brand{position:static}
+  .side-in{gap:8px;height:auto;flex:none}
+  .kifu-card{flex:none;min-height:110px}
+  .review-card.show{flex:none;overflow:visible}
+  .brand{align-items:center}
+  .brand a.series{display:none}
+  .brand h1{font-size:clamp(13px, calc((100vw - var(--bs) - 230px) / (var(--tl) * .64)), 16px)}
+  .card{padding:8px 10px;border-radius:12px}
+  .players{display:flex;gap:6px;padding:6px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player .count{font-size:18px;margin:0;line-height:1}
+  .player .count small{display:none}
+  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .graph{height:56px;margin-top:6px}
+  .controls{gap:5px;padding:6px}
+  .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
+  .btn span{display:none}
+  .btn svg{width:16px;height:16px}
+  .info-line{display:none}
+  .playbar{min-height:34px}
+  .pbtn{padding:6px 12px}
+}
+@media (min-height: 561px){
+@container (min-width: 420px){
+  #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
+  #evalCard .graph{flex:1;height:auto;min-height:50px}
+  .kifu-card{flex:1 1 0}
+  .side-in:has(.review-card.show) #evalCard{flex:.55 1 0;min-height:156px}
+  .side-in:has(.review-card.show) #evalCard .graph{min-height:40px}
+  .side-in:has(.review-card.show) .kifu-card{flex:.5 1 0;min-height:92px}
+  .side-in > .review-card.show{flex:3 1 0;min-height:200px}
+  .player .count{font-size:clamp(30px, 4.2cqw, 46px)}
+}
+}
+</style>
+<link rel="stylesheet" href="online.css?v=1">
+</head>
+<body>
+<div class="app">
+  <div class="board-area">
+    <div class="frame" id="frame">
+      <div class="goban" id="goban"><svg class="bsvg" id="bsvg"></svg></div>
+      <div class="toast" id="toast"></div>
+      <div class="confirm-tip" id="confirmTip"></div>
+    </div>
+    <div class="playbar" id="playbar">
+      <span class="pb-turn" id="pbTurn"></span>
+      <button class="pbtn" id="btnPass"><svg viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></svg><span data-i18n="pass"></span></button>
+    </div>
+    <div class="st-nav" id="stNav" dir="ltr"><button data-sn="first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button><button data-sn="prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button><button data-sn="auto" class="st-auto"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button data-sn="next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button><button data-sn="last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button><span class="st-pos" id="stPos"></span></div>
+  </div>
+
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back"><span id="brandTitle">Go</span><small id="brandSub"></small></h1></div>
+      <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+    </div>
+    <div class="side-in">
+
+    <div class="card lesson-card" id="lessonCard">
+      <div class="lh"><span class="lt" id="lsStep"></span><div class="dots" id="lsDots"></div></div>
+      <h3 id="lsTitle"></h3>
+      <div class="lesson-prompt" id="lsPrompt"></div>
+      <div class="lesson-fb" id="lsFb"></div>
+      <div class="lesson-actions">
+        <button id="lsHint" data-i18n="ls.hint"></button>
+        <button id="lsAuto" class="ls-auto hidden"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+        <button id="lsNext" class="go"></button>
+        <button id="lsList" data-i18n="ls.list"></button>
+        <button id="lsQuit" data-i18n="ls.quit"></button>
+      </div>
+    </div>
+    <div class="card puzzle-card" id="puzzleCard">
+      <div class="lh"><span class="lt" id="pzStep"></span><div class="dots" id="pzDots"></div></div>
+      <h3 id="pzTitle"></h3>
+      <div class="pz-goal" id="pzGoal"></div>
+      <div class="pz-status" id="pzStatus"></div>
+      <div class="lesson-actions">
+        <button id="pzHint" data-i18n="ls.hint"></button>
+        <button id="pzRetry" data-i18n="pz.retry"></button>
+        <button id="pzAnswer" data-i18n="pz.answer"></button>
+      </div>
+      <div class="lesson-actions">
+        <button id="pzNext" class="go" data-i18n="pz.next"></button>
+        <button id="pzList" data-i18n="pz.list"></button>
+        <button id="pzQuit" data-i18n="ls.quit"></button>
+      </div>
+    </div>
+
+    <div class="card players">
+      <div class="player" id="pl1">
+        <div class="top"><div class="pdisc p1"></div><div class="name" id="name1"></div><span class="clk" id="clk1"></span></div>
+        <div class="count"><span id="count1">0</span><small id="hand1"></small></div>
+        <div class="status" id="status1"></div>
+      </div>
+      <div class="player" id="pl2">
+        <div class="top"><div class="pdisc p2"></div><div class="name" id="name2"></div><span class="clk" id="clk2"></span></div>
+        <div class="count"><span id="count2">0</span><small id="hand2"></small></div>
+        <div class="status" id="status2"></div>
+      </div>
+    </div>
+
+    <div class="card count-card" id="countCard">
+      <h3 data-i18n="cnt.title"></h3>
+      <p id="cntText"></p>
+      <div id="cntRes"></div>
+      <div class="lesson-actions"><button id="cntResume" data-i18n="cnt.resume"></button><button id="cntOk" class="go" data-i18n="cnt.ok"></button></div>
+    </div>
+
+    <div class="card" id="evalCard">
+      <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
+      <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
+      <svg class="graph" id="graph" viewBox="0 0 300 74" preserveAspectRatio="none"></svg>
+      <div class="navbar" id="navBar">
+        <button data-n="first" data-i18n-title="nav.first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button>
+        <button data-n="prev" data-i18n-title="nav.prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button>
+        <button data-n="play" id="navPlay" data-i18n-title="nav.play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+        <button data-n="next" data-i18n-title="nav.next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button>
+        <button data-n="last" data-i18n-title="nav.last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="card controls">
+      <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
+      <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span></span></button>
+      <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
+      <button class="btn" id="btnRules" data-i18n-title="btn.rules.title"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span data-i18n="btn.rules"></span></button>
+      <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
+      <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
+    </div>
+
+    <div class="card review-card" id="reviewCard">
+      <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
+      <div id="rvBody"></div>
+    </div>
+    <div class="card kifu-card">
+      <div class="kifu-head"><span class="label" data-i18n="kifu"></span><span class="kb"><button id="btnTerr" data-i18n="terr.btn" data-i18n-title="terr.title"></button><button id="btnAnalyze" data-i18n="rv.btn" data-i18n-title="rv.btn.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="sgf" data-i18n-title="copy.title"></button></span></div>
+      <div class="kifu" id="kifu"></div>
+    </div>
+    <div class="info-line" id="infoLine"></div>
+  </div></aside>
+</div>
+
+<!-- new game -->
+<div class="overlay" id="newOverlay">
+  <div class="modal">
+    <h2 data-i18n="ng.title"></h2>
+    <div class="field" id="fMode">
+      <label data-i18n="ng.mode"></label>
+      <div class="seg" id="segMode">
+        <button data-v="ai" data-i18n="ng.ai"></button>
+        <button data-v="rated" data-i18n="ng.rated"></button>
+        <button data-v="pvp" data-i18n="ng.pvp"></button>
+        <button data-v="watch" data-i18n="ng.watch"></button>
+        <button data-v="lesson" data-i18n="ng.lesson"></button>
+        <button data-v="puzzle" data-i18n="ng.puzzle"></button>
+      </div>
+    </div>
+    <div class="ng-cols"><div class="ng-col ng-set">
+    <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
+    <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
+    <div class="field" id="fSize">
+      <label data-i18n="ng.size"></label>
+      <div class="seg sizes" id="segSize"></div>
+    </div>
+    <div class="field" id="fRule">
+      <div class="row2">
+        <div><label style="display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px" data-i18n="ng.rule"></label><div class="numin"><select id="selRule"><option value="jp" data-i18n="rule.jp"></option><option value="cn" data-i18n="rule.cn"></option></select></div></div>
+        <div><label style="display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px" data-i18n="ng.handi"></label><div class="numin"><select id="selHandi"></select></div></div>
+      </div>
+      <div class="row2" style="margin-top:10px">
+        <div><label style="display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px" data-i18n="ng.komi"></label><div class="numin"><select id="selKomi"></select></div></div>
+        <div><label style="display:block;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px" data-i18n="ng.confirm"></label><div class="numin"><select id="selTap"><option value="auto" data-i18n="tap.auto"></option><option value="one" data-i18n="tap.one"></option><option value="two" data-i18n="tap.two"></option></select></div></div>
+      </div>
+    </div>
+    <div class="field" id="fColor">
+      <label data-i18n="ng.color"></label>
+      <div class="seg" id="segColor">
+        <button data-v="1" data-i18n="ng.black"></button>
+        <button data-v="2" data-i18n="ng.white"></button>
+        <button data-v="0" data-i18n="ng.random"></button>
+      </div>
+    </div>
+    <div class="field" id="fLevel">
+      <label id="levelLabel"></label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="20" step="1" id="levelRange">
+        <div class="level-name" id="levelName"></div>
+      </div>
+    </div>
+    <div class="field hidden" id="fLevel2">
+      <label data-i18n="ng.level2"></label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="20" step="1" id="levelRange2">
+        <div class="level-name" id="levelName2"></div>
+      </div>
+    </div>
+    <div class="field" id="fDisplay">
+      <label data-i18n="ng.display"></label>
+      <div class="checks">
+        <label><input type="checkbox" id="optEval"><span data-i18n="opt.eval"></span></label>
+        <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
+        <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
+        <label><input type="checkbox" id="optCoord"><span data-i18n="opt.coord"></span></label>
+        <label><input type="checkbox" id="optNum"><span data-i18n="opt.num"></span></label>
+        <label><input type="checkbox" id="optAtari"><span data-i18n="opt.atari"></span></label>
+      </div>
+    </div>
+    </div><div class="ng-col ng-play">
+    <div class="field" id="fDesign">
+      <label data-i18n="bd.title"></label>
+      <div class="bdrow" id="bdRow"></div>
+    </div>
+    <div class="field" id="fStones">
+      <label data-i18n="st.title"></label>
+      <div class="bdrow" id="stRow"></div>
+    </div>
+    </div></div>
+    <div class="modal-actions">
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
+      <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="rtConfirm">
+  <div class="modal" style="width:min(480px,100%)">
+    <h2 id="rtConfirmHead" data-i18n="ng.rated"></h2>
+    <p id="rtConfirmText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
+    <div class="modal-actions"><button class="mbtn" onclick="document.getElementById('rtConfirm').classList.remove('show')" data-i18n="close"></button><button class="mbtn go" id="rtConfirmYes"></button></div>
+  </div>
+</div>
+<div class="overlay" id="rulesOverlay">
+  <div class="modal">
+    <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+    <h2 data-i18n="rl.title"></h2>
+    <div id="rulesBody" style="margin-top:14px"></div>
+    <p class="lx-credit"><span data-i18n="credit.ai"></span> <a href="MODEL_CARD.md" target="_blank" rel="noopener">MODEL_CARD</a></p>
+    <div class="modal-actions"><button class="mbtn" id="rulesClose" data-i18n="close"></button></div>
+  </div>
+</div>
+<div class="overlay" id="lessonOverlay">
+  <div class="modal">
+    <div id="lessonListView">
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <h2 id="lsListTitle" data-i18n="ls.title"></h2>
+      <p id="lsListDesc" style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
+      <div class="lesson-list" id="lessonList"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
+    </div>
+    <div id="lessonIntroView" class="hidden">
+      <div class="lt" id="liStep"></div>
+      <h2 id="liTitle" style="margin-top:4px"></h2>
+      <div class="lesson-intro" id="liBody"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonBack" data-i18n="ls.back"></button><button class="mbtn go" id="btnLessonStart" data-i18n="ls.start"></button></div>
+    </div>
+    <div id="lessonDoneView" class="hidden">
+      <div class="result-big" id="ldTitle"></div>
+      <div class="result-sub" id="ldSub" style="font-size:14px"></div>
+      <div class="modal-actions"><button class="mbtn" id="btnLessonQuit2" data-i18n="ls.toGame"></button><button class="mbtn" id="btnLessonRetry" data-i18n="ls.retry"></button><button class="mbtn go" id="btnLessonNextStep" data-i18n="ls.nextStep"></button></div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="puzzleOverlay">
+  <div class="modal">
+    <div id="pzListView">
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div class="pz-home" id="pzLevels"></div>
+      <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
+    </div>
+    <div id="pzGridView" class="hidden">
+      <div id="pzLevelHead"></div>
+      <div id="pzGrid"></div>
+      <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="resultOverlay">
+  <div class="modal">
+    <div class="result-disc" id="resultDisc"></div>
+    <div class="result-big" id="resultTitle"></div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="modal-actions">
+      <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
+      <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
+      <button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="resumeOverlay">
+  <div class="modal" style="width:min(480px,100%)">
+    <h2 data-i18n="rs.title"></h2>
+    <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
+    <div class="modal-actions" style="flex-wrap:wrap">
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="pasteOverlay">
+  <div class="modal">
+    <h2 data-i18n="paste.title"></h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px" data-i18n="paste.desc"></p>
+    <textarea class="paste-ta" id="pasteText" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="(;GM[1]FF[4]SZ[19];B[pd];W[dp]...) / https://...#g=..."></textarea>
+    <div class="modal-actions"><button class="mbtn" id="pasteCancel" data-i18n="close"></button><button class="mbtn" id="pasteFile" data-i18n="paste.file"></button><button class="mbtn go" id="pasteOk" data-i18n="paste.load"></button></div>
+    <input type="file" id="pasteInput" accept=".sgf,text/plain" class="hidden">
+  </div>
+</div>
+
+<script src="i18n.js?v=1"></script>
+<script src="../shared/pzbook.js?v=4"></script>
+<script src="../shared/placement.js?v=1"></script>
+<script src="../shared/rulesoffer.js?v=6"></script>
+<script src="../shared/headerbar.js?v=4"></script>
+<script src="../shared/tick.js?v=1"></script>
+<script src="../shared/ruletour.js?v=23"></script>
+<script src="rules.js?v=1"></script>
+<script src="themes.js?v=1"></script>
+<script src="firebase-config.js?v=1"></script>
+<script src="../shared/onlinesec.js?v=1"></script>
+<script src="online.js?v=1"></script>
+<script src="../shared/resign.js?v=1"></script>
+<script src="app.js?v=1"></script>
+<script src="learn.js?v=1"></script>
+<script src="online-ui.js?v=1"></script>
+<script src="../shared/atlas.js?v=5n" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
+<script src="../shared/atlas-account.js?v=4" defer></script>
+</body>
+</html>

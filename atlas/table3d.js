@@ -256,6 +256,16 @@
       });
       return g;
     },
+    go() {   // 19-line kaya goban (thick, like a legged board) with an opening position
+      const g = new (T().Group)(), S = 9.4, P = 34;
+      const top = M({ map: grid('go', '#dfaa58', '#2a1a0a', 19, 19, { points: true, pad: P, lw: 2, woodBase: '#c68c42', stars: [[3, 3], [9, 3], [15, 3], [3, 9], [9, 9], [15, 9], [3, 15], [9, 15], [15, 15]] }) });
+      g.add(slab(S, 1.6, S, top, M({ map: wood('gos', '#d39c52', '#9a6426') })));
+      const W = M({ color: 0xf7f5ef, roughness: .25 }), B = M({ color: 0x1a1b20, roughness: .2 }), step = (S - 2 * S * P / 1024) / 18;
+      [[15, 3, 1], [3, 15, 0], [15, 16, 1], [3, 3, 0], [16, 13, 1], [2, 5, 0], [13, 2, 1], [5, 16, 0], [9, 15, 1], [16, 6, 0], [15, 7, 1], [2, 9, 0]].forEach(([x, y, b]) => {
+        const s = stone(.24, b ? B : W); s.position.set(-S / 2 + S * P / 1024 + x * step, 1.7, -S / 2 + S * P / 1024 + y * step); g.add(s);
+      });
+      return g;
+    },
     dots() {
       const g = new (T().Group)(), S = 8, n = 5;
       g.add(slab(9, .3, 9, M({ color: 0xfdfaf2, roughness: .9 }), M({ color: 0xe6e0d0 })));

@@ -158,6 +158,14 @@
       g.add(at(goStone(true, 1.15), p(3) + .1, 1.9, p(0) - .1, .5, 0, -.3));
       return g;
     },
+    go() {
+      // 5 lines of a kaya board: a white stone in atari, the capturing black stone dropping onto its last liberty
+      const g = boardChunk(5, 3.8, gridMat('go', '#d9a14e', '#2a1a0a', 5, { points: true, lw: 7 }), M({ map: X.wood('icgo', '#c8904a', '#7e5222') }), null, .7);
+      const st = 3.3 * 4 / 5 / 4, p = i => -st * 2 + st * i, S = .64;
+      [[2, 2, 0], [1, 2, 1], [2, 1, 1], [3, 2, 1], [1, 3, 0], [3, 3, 0], [3, 1, 0], [0, 1, 1]].forEach(([x, z, b]) => g.add(at(goStone(!!b, S), p(x), .7, p(z))));
+      g.add(at(goStone(true, .95), p(2), 2.75, p(3), .35, 0, -.2));
+      return g;
+    },
     dots() {
       const g = boardChunk(3, 3.6, M({ color: 0xfffdf6, roughness: .9 }), C(0xe8e1cf));
       const p = i => -1.2 + 1.2 * i, red = gloss(0xff5d5d), blue = gloss(0x36b4ff);

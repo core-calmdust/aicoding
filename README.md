@@ -33,6 +33,7 @@ Classic board games and puzzles from around the world, each with a serious AI, s
 | [Chess](https://core-calmdust.github.io/aicoding/chess/) 🌐 | Chess & Shogi | 20 levels (≈ Elo 3000 at the top) | 20 steps | 445 | NNUE trained on Lichess evaluated positions, beginner course, 12 opening studies, PGN/FEN ([model card](chess/MODEL_CARD.md)) |
 | [Checkers](https://core-calmdust.github.io/aicoding/checkers/) 🌐 | Chess & Shogi | 20 levels (15 kyu – 5 dan) | 13 steps | 500 | Learned evaluation + endgame database (WebAssembly), 19 openings ([model card](checkers/MODEL_CARD.md)) |
 | [Reversi V4](https://core-calmdust.github.io/aicoding/reversi/) 🌐 | Line-up & Territory | 20 levels | 9 steps | 1,000 | Pattern evaluation from 48M positions, exact solving of the last 20 squares, 85 named openings, rated online play ([model card](reversi/MODEL_CARD.md)) |
+| [Go](https://core-calmdust.github.io/aicoding/go/) 🌐 | Line-up & Territory | 20 levels (15 kyu – 5 dan) | 30 steps | 500 | KataGo-family neural network + MCTS in WebAssembly, 5×5–19×19, Japanese/Chinese rules, handicap, joseki & fuseki studies ([model card](go/MODEL_CARD.md)) |
 | [Gomoku & Renju](https://core-calmdust.github.io/aicoding/gomoku/) 🌐 | Line-up & Territory | 20 levels (15 kyu – 5 dan) | 12 steps | 500 | Renju / standard / freestyle rules with exact forbidden-move checks, small neural evaluation (WebAssembly), 26 openings ([model card](gomoku/MODEL_CARD.md)) |
 | [Dots and Boxes](https://core-calmdust.github.io/aicoding/dots/) 🌐 | Line-up & Territory | 10 levels | 15 steps | 450 | Perfect play on 3×3 and 4×4, WebAssembly solver for 5×5 endgames, solver-verified openings |
 | [Nine Men's Morris](https://core-calmdust.github.io/aicoding/morris/) 🌐 | Line-up & Territory | 10 levels | 21 steps | 600 | Nine / Twelve / Six rule sets, learned evaluation, 6 opening studies ([model card](morris/MODEL_CARD.md)) |
@@ -62,7 +63,7 @@ atlas/              World Board Game Atlas portal (3D table, achievements, shop,
 shared/             Common modules for the board games
                       headerbar.js (PC header bar) · ruletour.js (rules tutorial) · pzbook.js (puzzle collections)
                       tick.js (byoyomi beeps) · placement.js (rating placement) · rulesoffer.js · atlas*.js (portal account / progress)
-shogi/ chess/ checkers/ reversi/ gomoku/ dots/ morris/ connect4/ mancala/ backgammon/
+shogi/ chess/ checkers/ go/ reversi/ gomoku/ dots/ morris/ connect4/ mancala/ backgammon/
                     Board games (each: index.html, engine, i18n, lessons, puzzles, MODEL_CARD.md where a learned model is used)
 sudoku/ speed-sudoku/ samegame/   Puzzle games
 comet/ comet-plus/  NEORETRO ARCADES (plus single-file games at the top level: pong.html, danmaku-inv.html)
