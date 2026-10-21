@@ -873,10 +873,10 @@
   }
   // frame cap: at most 60 fps (120 Hz phones/monitors would otherwise render twice as often for nothing)
   const FRAME_MS = 1000 / 60; let lastT = 0;
-  // pause completely while the tab is hidden; tick slowly (10 fps) while the window isn't focused
+  // pause completely while the tab is hidden or the window isn't focused
   let rafId = 0, blurred = false;
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
-  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; });
+  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; if (typeof kick === 'function') kick(300); });
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
   let lastKey = '', kickUntil = 0, dirty = true, lastDraw = 0, idleTick = 0;
@@ -887,7 +887,8 @@
     if (document.hidden) { rafId = 0; return; }
     rafId = requestAnimationFrame(loop);
     if (!el.offsetParent && !alignFn) return;
-    if (now - lastT < (blurred ? 100 : FRAME_MS) - 2) return;
+    if (blurred) { lastT = now; return; }   // window not focused: no rendering at all (resumes on focus)
+    if (now - lastT < FRAME_MS - 2) return;
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {

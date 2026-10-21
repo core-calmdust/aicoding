@@ -228,7 +228,7 @@
     (function step(now) {
       propRaf = requestAnimationFrame(step);
       if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
-      if (now - lastP < (document.hasFocus() ? 1000 / 60 : 100) - 2) return;   // 60 fps cap, 10 fps when the window isn't focused
+      if (!document.hasFocus() || now - lastP < 1000 / 60 - 2) return;   // 60 fps cap; stopped while the window isn't focused
       lastP = now;
       if ($('bv').classList.contains('on')) return;   // hidden behind the 3D board
       px += (tx - px) * .06; py += (ty - py) * .06;
@@ -498,7 +498,7 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div><div class="mnote" id="bvMNote"></div>` : ''}${ad ? `<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
-        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}${ad.levelInfo ? `<div class="lvinfo" id="bvLvInfo"></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
+        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
@@ -575,7 +575,7 @@
         const max = ad.levels, cur = +sel.value;
         const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
           const n = +o.value, x = ad.levelInfo ? ad.levelInfo(n, lang) : null;
-          return `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${esc(x ? x.name : '')}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small>${esc(x.who)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
+          return `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${esc(x ? x.name : '')}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
         const close = () => { sh.classList.remove('on'); setTimeout(() => sh.remove(), 220); };
         sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
