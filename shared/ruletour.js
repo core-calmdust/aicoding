@@ -74,8 +74,6 @@ const CSS = `
 .rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
 @media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:6px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
-/* phones: compact type so the page text fits without scrolling (common spec) */
-@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:8px}}
 @media (max-width: 420px){.rt-steps{gap:3px;flex-wrap:nowrap}.rt-steps button{flex:0 1 26px;width:auto;height:auto;aspect-ratio:1;min-width:0;font-size:11px}}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
 .rt-steps button.cur{background:var(--panel2,#1f2a2a);color:var(--accent,#e2c275);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
@@ -95,6 +93,8 @@ const CSS = `
 .rt-msg.ok{color:var(--rt-ok)}.rt-msg.ng{color:var(--rt-ng)}
 .rt-msg.ok::before{content:'✓ '}.rt-msg.ng::before{content:'✗ '}
 .rt-again{flex:none;white-space:nowrap;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);cursor:pointer;font-family:inherit}
+/* phones: compact type so the page text fits without scrolling (common spec) */
+@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:8px}}
 /* board pages (common spec): the mini board has ONE fixed size for a given window size — the same on every page and
    before / after answering. layout() computes it from the space of .rt-main only (never from the page's text):
    --rt-bw × --rt-bh is the board box; the game draws its board to fill it (an svg is stretched to the box, its viewBox
@@ -112,6 +112,7 @@ const CSS = `
 .rt-col .rt-main.has-board > .rt-side{display:contents}
 .rt-col .rt-main.has-board .rt-text{grid-row:1}
 .rt-col .rt-main.has-board > .rt-board{grid-row:2}
+.rt-wide .rt-main.has-board{overflow:visible}.rt-wide .rt-main.has-board > .rt-board{margin-inline:calc(-1 * var(--rt-bx,0px))}
 .rt-col .rt-main.has-board .rt-task{grid-row:3;overflow-y:auto;overscroll-behavior:contain}
 .rt-row .rt-main.has-board{grid-template-columns:minmax(0,1fr) var(--rt-bw);grid-template-rows:minmax(0,1fr);column-gap:var(--rt-cgap,24px)}
 .rt-row .rt-main.has-board > .rt-side{display:flex;flex-direction:column;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
@@ -271,7 +272,7 @@ function create(o) {
     if (!main) return false;
     const b = box(main, val(o.aspect), textNeed);
     if (!b) return false;
-    rt.classList.toggle('rt-row', b.row); rt.classList.toggle('rt-col', !b.row);
+    rt.classList.toggle('rt-row', b.row); rt.classList.toggle('rt-col', !b.row); rt.classList.toggle('rt-wide', !!b.wide);
     for (const k in b.vars) rt.style.setProperty(k, b.vars[k]);
     more(main.querySelector('.rt-text'));
     return true;
@@ -391,9 +392,17 @@ function box(main, aspect, need) {
   const row = fit(Math.min(W - tw - cgap, W * .66), H);
   const isRow = W - row[0] - cgap >= tw * .9 && row[0] * row[1] > col[0] * col[1] * 1.05;   // room for the text column
   let [bw, bh] = isRow ? row : col;
+  // phones, wide boards (backgammon …): use the full width so the points are easy to tap, even if the page text then scrolls a little
+  // (out to the dialog's edges: --rt-bx is how far the board reaches past the text column on each side)
+  let bx = 0;
+  if (!pc && !isRow && ar >= 1.2) {
+    const dlg = main.closest('.modal') || main.parentElement, mr = main.getBoundingClientRect(), dr = dlg.getBoundingClientRect();
+    bx = Math.max(0, Math.min(24, Math.floor(Math.min(mr.left - dr.left, dr.right - mr.right) - 6)));
+    const fh = H - th - Math.min(tmin, 84) - 2 * gap; [bw, bh] = fit(W + 2 * bx, Math.max(bh, fh));
+  }
   const cap = pc ? 640 : 560; if (Math.max(bw, bh) > cap) { const k = cap / Math.max(bw, bh); bw *= k; bh *= k; }
   bw = Math.floor(bw); bh = Math.floor(bh);
-  return { row: isRow, bw, bh, vars: { '--rt-bw': bw + 'px', '--rt-bh': bh + 'px', '--rt-th': th + 'px', '--rt-gap': gap + 'px', '--rt-cgap': cgap + 'px' } };
+  return { row: isRow, bw, bh, wide: bx > 0, vars: { '--rt-bx': bx + 'px', '--rt-bw': bw + 'px', '--rt-bh': bh + 'px', '--rt-th': th + 'px', '--rt-gap': gap + 'px', '--rt-cgap': cgap + 'px' } };
 }
 // a text area that scrolls fades out at the bottom while there is more to read
 function more(el) {
