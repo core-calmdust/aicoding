@@ -103,3 +103,9 @@ for (const l in X) if (I[l]) Object.assign(I[l], X[l]);
 }
 };
 for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
+// graphic lesson / opening lists
+(() => { const X = {
+ja: { 'lx.cleared': '{a}/{b} 合格' }, en: { 'lx.cleared': '{a}/{b} passed' }, zh: { 'lx.cleared': '{a}/{b} 已通过' }, ko: { 'lx.cleared': '{a}/{b} 통과' }, es: { 'lx.cleared': '{a}/{b} superadas' },
+fr: { 'lx.cleared': '{a}/{b} réussies' }, pt: { 'lx.cleared': '{a}/{b} aprovadas' }, de: { 'lx.cleared': '{a}/{b} bestanden' }, hi: { 'lx.cleared': '{a}/{b} पास' }, ar: { 'lx.cleared': '{a}/{b} ناجحة' },
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();

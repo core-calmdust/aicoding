@@ -406,3 +406,17 @@ for (const l in X) if (I18N[l]) Object.assign(I18N[l], X[l]);
 }
 };
 for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
+// graphic lesson / opening lists
+(() => { const X = {
+ja: { 'lx.cleared': '{a}/{b} 合格', 'lx.op.basic.sub': '序盤の目的・長鎖ルール・鏡うつしの罠・2つ残し。手順を覚える前に読んでおきたい考え方です。' },
+en: { 'lx.cleared': '{a}/{b} passed', 'lx.op.basic.sub': 'The aim of the opening, the long chain rule, the mirror trap and double-dealing: ideas to read before learning the lines.' },
+zh: { 'lx.cleared': '{a}/{b} 已通过', 'lx.op.basic.sub': '开局的目的、长链规则、镜像的陷阱、留两格。记手顺之前先读一读的思路。' },
+ko: { 'lx.cleared': '{a}/{b} 통과', 'lx.op.basic.sub': '초반의 목적, 긴 사슬 규칙, 거울 따라 두기의 함정, 두 칸 남기기. 수순을 외우기 전에 읽어 둘 개념입니다.' },
+es: { 'lx.cleared': '{a}/{b} superadas', 'lx.op.basic.sub': 'El objetivo de la apertura, la regla de la cadena larga, la trampa del espejo y el doble reparto: ideas para leer antes de las líneas.' },
+fr: { 'lx.cleared': '{a}/{b} réussies', 'lx.op.basic.sub': 'Le but de l’ouverture, la règle des longues chaînes, le piège du miroir et le double abandon : à lire avant les lignes.' },
+pt: { 'lx.cleared': '{a}/{b} aprovadas', 'lx.op.basic.sub': 'O objetivo da abertura, a regra da cadeia longa, a armadilha do espelho e o duplo corte: ideias para ler antes das linhas.' },
+de: { 'lx.cleared': '{a}/{b} bestanden', 'lx.op.basic.sub': 'Ziel der Eröffnung, Lange-Ketten-Regel, Spiegelfalle und Doppelabgabe: Ideen, die man vor den Linien lesen sollte.' },
+hi: { 'lx.cleared': '{a}/{b} पास', 'lx.op.basic.sub': 'शुरुआत का लक्ष्य, लंबी श्रृंखला का नियम, दर्पण का जाल और दो खाने छोड़ना: चालें सीखने से पहले पढ़ने लायक विचार।' },
+ar: { 'lx.cleared': '{a}/{b} ناجحة', 'lx.op.basic.sub': 'هدف الافتتاح، قاعدة السلسلة الطويلة، فخّ المرآة وترك مربعين: أفكار تُقرأ قبل تعلّم الخطوط.' },
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();

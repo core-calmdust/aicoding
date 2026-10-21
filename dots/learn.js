@@ -297,20 +297,46 @@ function lessonProg() {
   return out;
 }
 function stepNoL(i) { const c = L2.steps[i].course; let k = 0; for (let j = 0; j <= i; j++) if (L2.steps[j].course === c) k++; return k; }
-async function openLessons() {
+// lesson list (same layout as Gomoku): a tab per course, a banner, cards with a board picture and a short explanation
+const LS_ICON = { basic: '①', mid: '②', adv: '③', exam: '🎓' };
+const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+const lxState = (r, okKey) => r ? (r.clear ? `<span class="lx-st ok">✓ ${escH(t(okKey || 'ls.clear'))} ${escH(t('u.pt', { n: r.best }))}</span>` : `<span class="lx-st">${escH(t('u.pt', { n: r.best }))}</span>`) : `<span class="lx-st new">${escH(t('ls.notyet'))}</span>`;
+// small board picture of a lesson: its first (easiest) position with the best move(s) in gold
+function lessonThumb(s) {
+  if (s._th) return s._th;
+  const ex = decodeProblem(s.problems[0]), best = Math.max(...ex.values.map(x => x[1]));
+  return (s._th = miniSVG(figFromProblem(ex, { hl: ex.values.filter(x => x[1] === best).map(x => x[0]).slice(0, 3) })));
+}
+// one-line gist for the card: the step's tip, or the first paragraph of its explanation
+function lessonGist(s) { const L = I18N[LANG] || {}, k = 'ls.' + s.id + '.tip'; return plainText(L[k] !== undefined ? t(k) : tA('ls.' + s.id + '.body')[0]); }
+let lsCourseSel = '';
+async function openLessons(course) {
   await Promise.all([lessonsLoad(), textReady()]); lessonSrc = 'lesson'; selTabL('lesson');
   if (!L2) { toast(t('ls.fail')); return; }
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').innerHTML = t('ls.desc2'); $('#lessonList').classList.remove('op-list');
-  const prog = lessonProg(); let course = '';
+  const prog = lessonProg(), courses = [...new Set(L2.steps.map(s => s.course))];
   const ruDone = Object.keys(lsGet(RSTORE, {})).length;
-  let h = `<button class="lesson-item ru-item" data-rules="1"><span class="no">📖</span><span class="tx"><b>${escH(t('ru.title'))}</b><small>${escH(t('ru.short'))}</small></span><span class="st ${ruDone >= RULES.length ? 'clear' : ''}">${ruDone >= RULES.length ? '✓' : ruDone + '/' + RULES.length}</span></button>`;
+  const stat = c => { const st = L2.steps.filter(s => s.course === c); return { n: st.length, ok: st.filter(s => prog[s.id] && prog[s.id].clear).length }; };
+  if (course) lsCourseSel = course;
+  if (!courses.includes(lsCourseSel)) lsCourseSel = courses.find(c => { const q = stat(c); return q.ok < q.n; }) || courses[0];
+  const c = lsCourseSel, q = stat(c);
+  let cards = '';
+  // the rules tutorial sits at the head of the first course
+  if (c === courses[0]) cards += `<button class="lx-card wide${ruDone >= RULES.length ? ' clear' : ''}" data-rules="1"><span class="lx-th ico">📖</span><span class="lx-tx">` +
+    `<span class="lx-top"><span class="lx-no">START</span><span class="lx-st${ruDone >= RULES.length ? ' ok' : ''}">${ruDone >= RULES.length ? '✓' : ruDone + '/' + RULES.length}</span></span><b class="lx-t">${escH(t('ru.title'))}</b><span class="lx-desc">${escH(t('ru.short'))}</span>${lxBar(ruDone / RULES.length, ruDone >= RULES.length ? 'ok' : '')}</span></button>`;
+  let no = 0;
   L2.steps.forEach((s, i) => {
-    if (s.course !== course) { course = s.course; h += `<p class="ls-course"><b>${escH(t('course.' + course))}</b><small>${escH(t('course.' + course + '.sub'))}</small></p>`; }
-    const pr = prog[s.id];
-    const st = pr ? `<span class="st ${pr.clear ? 'clear' : ''}">${pr.clear ? t('ls.clear') + ' ✓ ' : ''}${t('u.pt', { n: pr.best })}</span>` : `<span class="st">${t('ls.notyet')}</span>`;
-    h += `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${escH(t('ls.' + s.id + '.t'))}</b><small>${escH(t('ls.' + s.id + '.d'))}</small></span>${st}</button>`;
+    if (s.course !== c) return; no++;
+    const r = prog[s.id];
+    cards += `<button class="lx-card${r && r.clear ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${lessonThumb(s)}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">STEP ${i + 1}</span>${lxState(r)}</span><b class="lx-t">${escH(t('ls.' + s.id + '.t'))}</b><small class="lx-sub">${escH(t('ls.' + s.id + '.d'))}</small>` +
+      `<span class="lx-desc">${escH(lessonGist(s))}</span>${lxBar(r ? r.best / 100 : 0, r && r.clear ? 'ok' : '')}</span></button>`;
   });
-  $('#lessonList').innerHTML = h;
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k] || '●'}</span><span class="nm">${escH(t('course.' + k))}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner"><span class="ic">${LS_ICON[c] || '●'}</span><span class="tx"><b>${escH(t('course.' + c))}</b><small>${escH(t('course.' + c + '.sub'))}</small></span><span class="pg">${escH(t('lx.cleared', { a: q.ok, b: q.n }))}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div></div>`;
   showLView('lessonListView'); $('#lessonOverlay').classList.add('show');
 }
 let introI = 0;
@@ -497,6 +523,13 @@ const opStars = k => '★'.repeat(k) + '<i>' + '★'.repeat(3 - k) + '</i>';
 // highlight move names (b2– a3| …) inside a plain text
 const hlMoves = s => escH(s).replace(/(^|[^a-z0-9])([a-f][1-6][–|])/g, (_, p, m) => p + `<bdi dir="ltr" class="mvn hm">${m}</bdi>`);
 const sentences = s => String(s).split(/(?<=[。！？!?।])\s*|(?<=\.)\s+/).map(x => x.trim()).filter(Boolean);
+// small board of a line: the first moves (up to 6) with the last one highlighted
+function lineThumb(s, l) {
+  if (l._th) return l._th;
+  const L = { s, moves: decE(l.moves) }, k = Math.min(6, l.drill || 6, L.moves.length), ps = opPos(L, k);
+  const num = {}; return (l._th = miniSVG({ R: s.n, C: s.n, by: ps.by, own: ps.own, last: k ? L.moves[k - 1] : -1, num }));
+}
+const opIcon = v => v === 'basic' ? '💡' : miniSVG({ R: OPN.sets[v].n, C: OPN.sets[v].n, by: {} });
 async function openOpenings(tab) {
   await Promise.all([openLoad(), textReady()]); lessonSrc = 'open'; selTabL('open');
   if (!OPN) { toast(t('ls.fail')); return; }
@@ -504,24 +537,27 @@ async function openOpenings(tab) {
   if (opTab !== 'basic' && !OPN.sets[opTab]) opTab = 'basic';
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').innerHTML = t('op.desc2');
   const prog = openProg();
-  let h = `<div class="seg op-sub" role="tablist">` + [['basic', t('op.tab.basic')], ...OPN.sets.map((s, i) => [i, s.n + ' × ' + s.n])].map(([v, nm]) => `<button data-opt="${v}" class="${String(v) === String(opTab) ? 'sel' : ''}" role="tab">${escH(nm)}</button>`).join('') + `</div>`;
-  if (opTab === 'basic') h += opBasicHtml();
-  else {
-    const si = +opTab, s = OPN.sets[si], done = s.lines.filter(l => prog[s.id + ':' + l.id]).length;
-    h += `<div class="op-head"><p class="op-lead">${t('op.' + s.id + '.short')}</p><span class="op-cnt ${done === s.lines.length ? 'clear' : ''}">${t('op.drilled', { n: done, t: s.lines.length })}</span>`
-      + `<details class="op-about"><summary>${escH(t('op.h.about', { n: s.n }))}</summary>${tA('op.' + s.id + '.intro').map(x => `<p>${x}</p>`).join('')}</details></div>`;
-    h += s.lines.map((l, li) => {
+  const stat = si => { const s = OPN.sets[si]; return { n: s.lines.length, ok: s.lines.filter(l => prog[s.id + ':' + l.id]).length }; };
+  const tabs = [['basic', t('op.tab.basic')], ...OPN.sets.map((s, i) => [i, s.n + ' × ' + s.n])];
+  let h = `<div class="lx"><div class="lx-tabs" role="tablist">` + tabs.map(([v, nm]) => { const z = v === 'basic' ? null : stat(v); return `<button data-opt="${v}" class="${String(v) === String(opTab) ? 'sel' : ''}" role="tab"><span class="ic${v === 'basic' ? '' : ' sv'}">${opIcon(v)}</span><span class="nm">${escH(nm)}</span>${z ? `<span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span>` : ''}</button>`; }).join('') + `</div>`;
+  if (opTab === 'basic') {
+    h += `<div class="lx-banner"><span class="ic">💡</span><span class="tx"><b>${escH(t('op.tab.basic'))}</b><small>${escH(t('lx.op.basic.sub'))}</small></span></div>`;
+    h += `<div class="lesson-list op-list">${opBasicHtml()}</div>`;
+  } else {
+    const si = +opTab, s = OPN.sets[si], z = stat(si);
+    h += `<div class="lx-banner"><span class="ic sv">${opIcon(si)}</span><span class="tx"><b>${escH(t('op.' + s.id + '.t'))}</b><small>${t('op.' + s.id + '.short')}</small></span><span class="pg">${escH(t('op.drilled', { n: z.ok, t: z.n }))}${lxBar(z.ok / z.n, 'ok')}</span></div>`;
+    h += `<details class="op-about lx-about"><summary>${escH(t('op.h.about', { n: s.n }))}</summary>${tA('op.' + s.id + '.intro').map(x => `<p>${x}</p>`).join('')}</details>`;
+    h += `<div class="lx-grid">` + s.lines.map((l, li) => {
       const lv = opLevel(s, l), ok = prog[s.id + ':' + l.id];
-      return `<div class="op-card${ok ? ' done' : ''}" data-oc="${li}" tabindex="0" role="button">`
-        + `<div class="oc-top"><span class="oc-no">${li + 1}</span><b class="oc-nm">${escH(t('op.L.' + l.id))}</b>${ok ? `<span class="oc-ok" title="${escH(t('op.done'))}">✓</span>` : ''}</div>`
-        + `<p class="oc-sum">${hlMoves(t('op.S.' + l.id))}</p>`
-        + `<div class="oc-meta"><span class="oc-badge lv${lv}">${opStars(lv)} ${escH(t('op.lv')[lv])}</span><span class="oc-badge sd">${escH(t('op.side.' + (l.side === -1 ? 'both' : l.side || 0)))}</span><span class="oc-mv">${escH(t('op.moves', { n: l.drill }))}</span></div>`
-        + `<div class="oc-btns">${opSides(l).map(c => `<button data-li="${li}" data-c="${c}">${c === 0 ? '● ' + escH(t('op.drillF')) : '○ ' + escH(t('op.drillS'))}</button>`).join('')}<span class="oc-open">${escH(t('op.open'))} ›</span></div></div>`;
-    }).join('');
+      return `<div class="lx-card op-card${ok ? ' clear done' : ''}" data-oc="${li}" tabindex="0" role="button"><span class="lx-th">${lineThumb(s, l)}</span><span class="lx-tx">`
+        + `<span class="lx-top"><span class="lx-no">No.${li + 1}</span><span class="lx-bd b${lv}">${opStars(lv)} ${escH(t('op.lv')[lv])}</span><span class="lx-bd">${escH(t('op.side.' + (l.side === -1 ? 'both' : l.side || 0)))}</span>${ok ? `<span class="lx-st ok">✓ ${escH(t('op.done'))}</span>` : `<span class="lx-st new">${escH(t('op.moves', { n: l.drill }))}</span>`}</span>`
+        + `<b class="lx-t">${escH(t('op.L.' + l.id))}</b><span class="lx-desc">${hlMoves(t('op.S.' + l.id))}</span>`
+        + `<span class="lx-acts oc-btns">${opSides(l).map(c => `<button data-li="${li}" data-c="${c}">${c === 0 ? '● ' + escH(t('op.drillF')) : '○ ' + escH(t('op.drillS'))}</button>`).join('')}<span class="oc-open">${escH(t('op.open'))} ›</span></span></span></div>`;
+    }).join('') + `</div>`;
   }
-  h += `<p class="op-credit">${t('op.credit')}</p>`;
+  h += `<p class="op-credit lx-credit">${t('op.credit')}</p></div>`;
   $('#lessonList').innerHTML = h;
-  $('#lessonList').classList.add('op-list');
+  $('#lessonList').classList.remove('op-list');
   showLView('lessonListView'); $('#lessonOverlay').classList.add('show');
 }
 // 基本の考え方: short sections with a heading, a few short paragraphs and (some) a small figure
@@ -814,6 +850,12 @@ async function openPzCat(id, cur) {
   pzCat = id; PZBook.setLang(LANG);
   $('#pzLevelTitle').textContent = t('pc.' + id + '.t');
   $('#pzGrid').innerHTML = `<p class="pz-catdesc">${t('pc.' + id + '.long')} <span class="pz-ord">${escH(t('pz.orderNote'))}</span></p>` + PZBook.grid({ recs: pzRecs(C), cur });
+  // each tile shows its position (a small board) under the number and stars
+  const D = await pzCatLoad(id), ord = pzOrder(C);
+  if (D && pzCat === id) $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => {
+    const o = ord[+el.dataset.j], q = o && D.levels[o[0]] && D.levels[o[0]][o[1]]; if (!q) return;
+    try { el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(figFromProblem(decodePz(q)))}</span>`); } catch (e) {}
+  });
   $('#pzListView').classList.add('hidden'); $('#pzGridView').classList.remove('hidden');
   $('#puzzleOverlay').classList.add('show');
   const m = $('#puzzleOverlay .modal'); m.scrollTop = 0;
@@ -1065,8 +1107,9 @@ function learnInit() {
     const st = e.target.closest('[data-opt]'); if (st) { openOpenings(st.dataset.opt === 'basic' ? 'basic' : +st.dataset.opt); return; }
     const dr = e.target.closest('.op-card button[data-li]'); if (dr) { startDrill(+opTab, +dr.dataset.li, +dr.dataset.c); return; }
     const oc = e.target.closest('.op-card'); if (oc) { openOpDetail(+opTab, +oc.dataset.oc); return; }
-    const b = e.target.closest('.lesson-item'); if (!b) return;
-    if (b.dataset.rules) openRules(0); else openIntroL(+b.dataset.i);
+    const cb = e.target.closest('[data-course]'); if (cb) { openLessons(cb.dataset.course); return; }
+    const b = e.target.closest('.lx-card, .lesson-item'); if (!b) return;
+    if (b.dataset.rules) openRules(0); else if (b.dataset.i !== undefined) openIntroL(+b.dataset.i);
   });
   $('#lessonList').addEventListener('keydown', e => { const oc = e.target.closest && e.target.closest('.op-card'); if (oc && e.target === oc && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openOpDetail(+opTab, +oc.dataset.oc); } });
   $('#opDetailView').addEventListener('click', e => {
@@ -1088,7 +1131,7 @@ function learnInit() {
     if (lesson && lesson.study && !document.querySelector('.overlay.show')) { e.preventDefault(); studyNav(k); }
   });
   $('#btnLessonClose').onclick = () => closeLessonOverlay();
-  $('#btnLessonBack').onclick = () => { $('#btnLessonStart').classList.remove('hidden'); lessonSrc === 'open' ? openOpenings() : openLessons(); };
+  $('#btnLessonBack').onclick = () => { $('#btnLessonStart').classList.remove('hidden'); lessonSrc === 'open' ? openOpenings() : openLessons(L2 && L2.steps[introI] && L2.steps[introI].course); };
   $('#btnLessonStart').onclick = () => { closeLessonOverlay(); startLessonL(introI); };
   $('#btnLessonQuit2').onclick = () => { closeLessonOverlay(); endLesson(); };
   $('#btnLessonRetry').onclick = () => { closeLessonOverlay(); startLessonL(lesson ? lesson.i : introI); };
@@ -1104,7 +1147,7 @@ function learnInit() {
   $('#lsHint').onclick = lessonHint;
   $('#lsNext').onclick = lessonNext;
   $('#lsQuit').onclick = () => endLesson();
-  $('#lsList').onclick = () => { const L = lesson; endLesson(); if (L && (L.study || L.drill)) openOpenings(L.si); else if (L) openLessons().then(() => { if (L2 && L.i !== undefined) { const b = $(`#lessonList .lesson-item[data-i="${L.i}"]`); if (b) b.scrollIntoView({ block: 'center' }); } }); };
+  $('#lsList').onclick = () => { const L = lesson; endLesson(); if (L && (L.study || L.drill)) openOpenings(L.si); else if (L) openLessons(L2 && L.i !== undefined && L2.steps[L.i] ? L2.steps[L.i].course : undefined).then(() => { if (L2 && L.i !== undefined) { const b = $(`#lessonList .lx-card[data-i="${L.i}"]`); if (b) b.scrollIntoView({ block: 'center' }); } }); };
   rulesWire();
   // puzzles
   $('#pzLevels').addEventListener('click', e => {

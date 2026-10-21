@@ -546,6 +546,70 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 }
 }
 
+/* lesson / opening list (same layout as Gomoku): tabs per category, a banner, cards with a board picture and a short explanation */
+.lesson-list:has(> .lx){display:block}
+.lx .daily{margin:0 0 12px}
+.lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
+.lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0}
+.lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(201,169,97,.14);color:var(--brass);overflow:hidden}
+.lx-tabs .ic svg, .lx-banner .ic svg{width:100%;height:100%;display:block;margin:0}
+.lx-tabs button .ic.sv, .lx-banner .ic.sv{background:none;padding:0}
+.lx-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.lx-tabs button .ct.ok{color:#8fe3b8}
+.lx-tabs button:hover{border-color:var(--brass2)}
+.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(201,169,97,.2),rgba(201,169,97,.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(201,169,97,.28);background:linear-gradient(120deg,rgba(201,169,97,.14),rgba(0,0,0,.18) 70%)}
+.lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#1a140c;background:linear-gradient(140deg,#e9cf8e,#a8873f);overflow:hidden}
+.lx-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-banner .tx b{font-family:'Shippori Mincho B1',serif;font-size:17px;color:var(--brass)}
+.lx-banner .tx small{font-size:12px;color:var(--muted);line-height:1.6}
+.lx-banner .pg{flex:none;width:120px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);text-align:right}
+.lx-bar{display:block;height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.lx-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--brass))}
+.lx-bar.ok i{background:linear-gradient(90deg,#2f7d5a,#6fd3a0)}
+.lx-grid{display:grid;gap:10px}
+.lx-card{display:flex;gap:12px;align-items:stretch;text-align:left;width:100%;padding:10px 12px 10px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--text);transition:transform .15s,border-color .2s;cursor:pointer;min-width:0}
+.lx-card:hover, .lx-card:focus-visible{transform:translateY(-1px);border-color:var(--brass2);outline:none}
+.lx-card.clear{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
+.lx-card.wide{grid-column:1 / -1}
+.lx-th{flex:none;width:88px;align-self:center}.lx-th svg{display:block;width:100%;height:auto;margin:0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.lx-th.ico{display:grid;place-items:center;aspect-ratio:1;border-radius:12px;font-size:34px;background:linear-gradient(140deg,rgba(201,169,97,.25),rgba(0,0,0,.2));border:1px solid rgba(201,169,97,.3)}
+.lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lx-no{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brass)}
+.lx-bd{font-size:10.5px;line-height:1.5;padding:0 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.lx-bd.b1{color:#8fe3b8;border-color:rgba(111,211,160,.45)}.lx-bd.b2{color:#f2d07a;border-color:rgba(242,192,96,.45)}.lx-bd.b3{color:#ffab9e;border-color:rgba(255,139,125,.5)}
+.lx-st{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}.lx-st.ok{color:#8fe3b8;font-weight:700}.lx-st.new{color:var(--dim)}
+.lx-t{font-size:15px}.lx-t small{font-size:11.5px;color:var(--dim);font-weight:400;margin-left:6px}
+.lx-sub{font-size:12px;color:var(--brass);opacity:.9}
+.lx-desc{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lx-card .lx-bar{margin-top:auto;height:4px}
+.lx-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.lx-acts button{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted)}
+.lx-acts button:hover{border-color:var(--brass2);color:var(--text)}
+.lx-credit{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.6}
+html[lang=ar] :is(.lx-card, .lx-banner .tx, .lx-tx){text-align:right}
+html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
+html[lang=ar] .lx-banner .pg{text-align:left}
+@media (max-width:560px){
+  .lx-tabs button{flex-direction:column;gap:2px;padding:7px 4px;font-size:11.5px}.lx-tabs button .ic{width:22px;height:22px}
+  .lx-tabs button .nm{max-width:100%}
+  .lx-banner{padding:10px 12px;gap:6px 10px;flex-wrap:wrap}.lx-banner .ic{width:36px;height:36px;font-size:18px}.lx-banner .tx{flex:1 1 calc(100% - 50px)}.lx-banner .pg{width:100%;flex-direction:row;align-items:center;gap:8px;text-align:left}.lx-banner .pg .lx-bar{flex:1}
+  .lx-th{width:72px}
+}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  .lx-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lx-desc{-webkit-line-clamp:3}
+  .lx-th{width:96px}
+}
+.lx-tabs .ic .pdisc{width:18px;height:18px}.lx-banner .ic .pdisc{width:28px;height:28px}
+#pzGrid .pb-tile{aspect-ratio:1;padding:0;overflow:hidden;justify-content:flex-end;gap:0}
+#pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
+#pzGrid .pb-tile .th svg{width:100%;height:100%}
+#pzGrid .pb-tile .n{position:absolute;top:3px;left:4px;z-index:1;font-size:11px;padding:0 4px;border-radius:5px;background:rgba(10,12,18,.8);color:#fff;line-height:1.45}
+#pzGrid .pb-tile .s, #pzGrid .pb-tile .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
+#pzGrid .pb-tile.done .th{opacity:1}
+#pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
 /* PC: use the browser width for the lesson / puzzle dialogs (phones keep the single-column layout) */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
@@ -914,7 +978,7 @@ body .info-line{font-size:12.5px}
 </div>
 
 <script src="i18n.js?v=20261021rt2"></script>
-<script src="i18n_more.js?v=20261021rt3"></script>
+<script src="i18n_more.js?v=20261021lx"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
@@ -2046,23 +2110,49 @@ function exitSpecial() {
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-async function openLessons(v) {
+// lesson list (same layout as Gomoku): rule tabs, then a tab per course, a banner, cards with a board picture and a short explanation
+const LS_ICON = { basics: '①', tactics: '⚔', sx: '⑥', tw: '⑫' };
+const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+const lxSt = (r, okTxt) => r ? (r[okTxt ? 'pass' : 'clear'] ? `<span class="lx-st ok">✓ ${okTxt ? '' : t('ls.clear') + ' '}${t('u.pt', { n: r.best })}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
+// small board of a lesson: its diagram, or the first problem's position
+function lessonThumb(s, v) {
+  const d = s.diagram, dv = d && (d.v || (v === 'nine' ? 'nine' : null));
+  if (d && dv) return miniSVG(dv, bOf(dv, d.p1 || [], d.p2 || []), { cls: 'lxb', marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom(dv).index[n], k])), arrows: (d.arrows || []).map(a => nm(dv, ...a)), mills: (d.mills || []).map(a => nm(dv, ...a)) });
+  const P = s.problems[0]; return P && P.s ? miniSVG(v, specToB(P.s), { cls: 'lxb' }) : '';
+}
+const lsCourseSel = {};
+async function openLessons(v, course) {
   if (v) lsVar = v;
   const d = await loadLs(lsVar); selTab('lesson');
   if (!d) { toast(t('ls.fail')); return; }
   LESSONS = d; varTabs('#lsVarTabs', lsVar); $('#lsVarTabs').classList.remove('hidden');
   openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t(lsVar === 'nine' ? 'ls.desc' : 'ls.desc.' + lsVar);
-  const pr = lsProgress(); let course = '';
-  $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
-    const r = pr[lsKey(s.id)], c = s.course || 'tactics';
-    let head = ''; if (c !== course) { course = c; head = `<p class="ls-course"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></p>`; }
-    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${stepNo(i)}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+  const pr = lsProgress(), cOf = s => s.course || 'tactics', courses = [...new Set(LESSONS.steps.map(cOf))];
+  const stat = c => { const st = LESSONS.steps.filter(s => cOf(s) === c); return { n: st.length, ok: st.filter(s => { const r = pr[lsKey(s.id)]; return r && r.clear; }).length }; };
+  if (course) lsCourseSel[lsVar] = course;
+  let c = lsCourseSel[lsVar];
+  if (!courses.includes(c)) c = lsCourseSel[lsVar] = courses.find(k => { const q = stat(k); return q.ok < q.n; }) || courses[0];
+  const q = stat(c);
+  const cards = LESSONS.steps.map((s, i) => {
+    if (cOf(s) !== c) return '';
+    const r = pr[lsKey(s.id)];
+    return `<button class="lx-card${r && r.clear ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${lessonThumb(s, lsVar)}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">STEP ${stepNo(i)}</span>${lxSt(r)}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
+      `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.clear ? 'ok' : '')}</span></button>`;
   }).join('');
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k] || '●'}</span><span class="nm">${t('course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner"><span class="ic">${LS_ICON[c] || '●'}</span><span class="tx"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 $('#lsVarTabs').onclick = e => { const b = e.target.closest('button[data-r]'); if (b) openLessons(b.dataset.r); };
-$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item[data-i]'); if (b) openIntro(+b.dataset.i); };
+$('#lessonList').onclick = e => {
+  const tb = e.target.closest('[data-course],[data-grp]'); if (tb) { if (tb.dataset.course) openLessons(null, tb.dataset.course); else openOpenings(tb.dataset.grp); return; }
+  const b = e.target.closest('.lx-card[data-i]'); if (b) openIntro(+b.dataset.i);
+};
 function specToB(spec) { const b = {}; for (let i = 0; i < spec.b.length; i++) if (spec.b[i] !== '0') b[i] = +spec.b[i]; return b; }
 function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
 function openIntro(i) {
@@ -2074,7 +2164,7 @@ function openIntro(i) {
   $('#liBody').innerHTML = (d && dv ? miniSVG(dv, bOf(dv, d.p1 || [], d.p2 || []), { marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom(dv).index[n], k])), arrows: (d.arrows || []).map(a => nm(dv, ...a)), mills: (d.mills || []).map(a => nm(dv, ...a)) }) : '') + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
-$('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons();
+$('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings(OPEN.sets[openChoiceIdx] && OPEN.sets[openChoiceIdx].grp) : openLessons(null, LESSONS.steps[introIdx] && (LESSONS.steps[introIdx].course || 'tactics'));
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
@@ -2217,7 +2307,7 @@ $('#lsNext').onclick = () => {
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
-$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.virt) openOpenings(); else openLessons(); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.virt) openOpenings(); else openLessons(null, LESSONS && LESSONS.steps[lesson.step] && (LESSONS.steps[lesson.step].course || 'tactics')); };
 
 // ====================================================================== openings (engine-researched placement lines)
 let OPEN = null, openChoiceIdx = -1;
@@ -2226,19 +2316,34 @@ const openReady = fetch('openings.json?v=20261019b').then(r => r.json()).then(d 
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 const LL = o => o ? (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
-async function openOpenings() {
+let opGrpSel = 'w';
+// card picture: the first plies of the study line, the opening's own move ringed
+function opThumb(g) {
+  const k = Math.max(g.show || 2, 3), pre = g.study.line.slice(0, k), key = g.study.line[(g.show || 2) - 1];
+  return miniSVG('nine', lineBoard(pre), { cls: 'lxb', marks: key !== undefined ? { [mTo(key)]: 'ring' } : {} });
+}
+async function openOpenings(grp) {
   await openReady; selTab('open');
   if (!OPEN) { toast(t('ls.fail')); return; }
   $('#lsVarTabs').classList.add('hidden'); $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
-  const pr = opProg(); let head = '';
-  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
-    const r = pr[g.id], grp = g.grp || 'w';
-    let h = ''; if (grp !== head) { head = grp; h = `<p class="ls-course"><b>${t('op.grp.' + grp)}</b><small>${t('op.grp.' + grp + '.sub')}</small></p>`; }
-    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${LL(g.label)}</span><span class="tx"><b>${LL(g.title)}</b><small>${LL(g.short)}</small></span><span class="st ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
-  }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('op.credit')}</p>`;
+  const pr = opProg(), grps = [...new Set(OPEN.sets.map(g => g.grp || 'w'))];
+  if (grp) opGrpSel = grp; if (!grps.includes(opGrpSel)) opGrpSel = grps[0];
+  const G0 = opGrpSel, stat = k => { const L = OPEN.sets.filter(g => (g.grp || 'w') === k); return { n: L.length, ok: L.filter(g => pr[g.id] && pr[g.id].pass).length }; }, q = stat(G0);
+  const icon = k => `<span class="pdisc p${k === 'b' ? 2 : 1}"></span>`;
+  const cards = OPEN.sets.map((g, i) => {
+    if ((g.grp || 'w') !== G0) return '';
+    const r = pr[g.id];
+    return `<button class="lx-card${r && r.pass ? ' clear' : ''}" data-o="${i}"><span class="lx-th">${opThumb(g)}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">${LL(g.label)}</span><span class="lx-bd ${g.side === 2 ? 'b2' : 'b1'}">${t(g.side === 2 ? 'op.forBlack' : 'op.forWhite')}</span>${lxSt(r, true)}</span>` +
+      `<b class="lx-t">${LL(g.title)}</b><small class="lx-sub">${LL(g.short)}</small><span class="lx-desc">${plainText((LL(g.intro) || [])[0])}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass ? 'ok' : '')}</span></button>`;
+  }).join('');
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${grps.map(k => { const z = stat(k); return `<button data-grp="${k}" class="${k === G0 ? 'sel' : ''}"><span class="ic">${icon(k)}</span><span class="nm">${t('op.grp.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner"><span class="ic">${icon(G0)}</span><span class="tx"><b>${t('op.grp.' + G0)}</b><small>${t('op.grp.' + G0 + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div><p class="lx-credit">${t('op.credit')}</p></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
-$('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item[data-o]'); if (b) openOpeningChoice(+b.dataset.o); });
+$('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lx-card[data-o]'); if (b) openOpeningChoice(+b.dataset.o); });
 function lineBoard(line) { const { pos } = E.replay('nine', null, line); const b = {}; for (let i = 0; i < pos.b.length; i++) if (pos.b[i]) b[i] = pos.b[i]; return b; }
 function openOpeningChoice(i) {
   openChoiceIdx = i; const g = OPEN.sets[i], pre = g.study.line.slice(0, g.show || 2), last = pre[pre.length - 1];
@@ -2376,6 +2481,8 @@ function openPzGrid(i, cur) {
   PZBook.setLang(LANG);
   $('#pzLevelTitle').textContent = (pzVar === 'nine' ? '' : t('rule.' + pzVar) + ' · ') + t('pz.th.' + L.id) + ' — ' + t('pz.th.' + L.id + '.sub');
   $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(pzVar, L), cur });
+  // each tile shows its position (a small board) under the number and stars
+  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(pzVar, specToB(P.s), { cls: 'lxb' })}</span>`); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
 $('#pzGrid').onclick = e => {
@@ -2800,7 +2907,7 @@ $('#langSel').onchange = e => {
   if (HB) HB.relabel();
   if (lesson) renderLessonCard();
   if (puzzle) renderPuzzleCard();
-  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
+  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) ($('#lsVarTabs').classList.contains('hidden') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }

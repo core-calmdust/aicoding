@@ -1622,3 +1622,17 @@ for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 }
 };
 for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
+// lesson list: course tabs / banner (graphic list layout)
+(() => { const X = {
+ja: { 'lx.course.basic': '基本', 'lx.course.basic.sub': '中央・3つ並び・相手の脅威。まずはここから。', 'lx.course.adv': '応用', 'lx.course.adv.sub': '奇数段・偶数段の理論とダブルスレット。勝ち切るための考え方。', 'lx.cleared': '{a}/{b} クリア' },
+en: { 'lx.course.basic': 'Basics', 'lx.course.basic.sub': 'The centre, three in a row and your opponent\'s threats. Start here.', 'lx.course.adv': 'Advanced', 'lx.course.adv.sub': 'Odd / even threats and double threats: how to actually win.', 'lx.cleared': '{a}/{b} cleared' },
+zh: { 'lx.course.basic': '基础', 'lx.course.basic.sub': '中央、三连与对手的威胁。从这里开始。', 'lx.course.adv': '进阶', 'lx.course.adv.sub': '奇数行・偶数行理论与双重威胁，赢下来的思路。', 'lx.cleared': '{a}/{b} 已通关' },
+ko: { 'lx.course.basic': '기본', 'lx.course.basic.sub': '중앙, 3개 잇기, 상대의 위협. 여기서부터 시작하세요.', 'lx.course.adv': '응용', 'lx.course.adv.sub': '홀수 단・짝수 단 이론과 더블 스레트. 끝까지 이기는 사고방식.', 'lx.cleared': '{a}/{b} 클리어' },
+es: { 'lx.course.basic': 'Básico', 'lx.course.basic.sub': 'El centro, tres en línea y las amenazas del rival. Empieza aquí.', 'lx.course.adv': 'Avanzado', 'lx.course.adv.sub': 'Amenazas pares / impares y amenazas dobles: cómo ganar de verdad.', 'lx.cleared': '{a}/{b} superadas' },
+fr: { 'lx.course.basic': 'Bases', 'lx.course.basic.sub': 'Le centre, trois alignés et les menaces adverses. Commencez ici.', 'lx.course.adv': 'Avancé', 'lx.course.adv.sub': 'Menaces paires / impaires et doubles menaces : comment gagner vraiment.', 'lx.cleared': '{a}/{b} réussies' },
+pt: { 'lx.course.basic': 'Básico', 'lx.course.basic.sub': 'O centro, três em linha e as ameaças do adversário. Comece aqui.', 'lx.course.adv': 'Avançado', 'lx.course.adv.sub': 'Ameaças pares / ímpares e ameaças duplas: como vencer de fato.', 'lx.cleared': '{a}/{b} concluídas' },
+de: { 'lx.course.basic': 'Grundlagen', 'lx.course.basic.sub': 'Die Mitte, drei in einer Reihe und die Drohungen des Gegners. Hier beginnen.', 'lx.course.adv': 'Fortgeschritten', 'lx.course.adv.sub': 'Gerade / ungerade Drohungen und Doppeldrohungen: so gewinnt man wirklich.', 'lx.cleared': '{a}/{b} geschafft' },
+hi: { 'lx.course.basic': 'बुनियादी', 'lx.course.basic.sub': 'बीच का स्तंभ, तीन एक पंक्ति में और प्रतिद्वंद्वी के ख़तरे। यहीं से शुरू करें।', 'lx.course.adv': 'उन्नत', 'lx.course.adv.sub': 'सम / विषम पंक्ति का सिद्धांत और दोहरा ख़तरा: जीत पक्की करने का तरीका।', 'lx.cleared': '{a}/{b} पूरे' },
+ar: { 'lx.course.basic': 'الأساسيات', 'lx.course.basic.sub': 'الوسط، ثلاثة في صف، وتهديدات الخصم. ابدأ من هنا.', 'lx.course.adv': 'متقدّم', 'lx.course.adv.sub': 'نظرية الصفوف الفردية والزوجية والتهديد المزدوج: كيف تحسم الفوز.', 'lx.cleared': '{a}/{b} مكتملة' },
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
