@@ -433,13 +433,13 @@ function trackHTML() {
   const k = G.kind; if (!['daily', 'stage', 'free'].includes(k)) return '';
   const tot = G.init.reduce((a, c) => a + c.length, 0);
   let marks = '';
-  if (k === 'daily') { const [b, sv] = diffOf(G.dk).md; marks = `<div class="gmd">${[[b, 1], [sv, 2], [0, 3]].map(([n, m]) => `<span data-n="${n}"><i class="medal m${m}"></i>${n ? '≤' + n : '0'}</span>`).join('')}</div>`; }
+  if (k === 'daily') { const [b, sv] = diffOf(G.dk).md; marks = (G.bonus ? `<div class="gclock"><span>${esc(t('db.clock'))}</span><b id="gClock">0:00</b></div>` : '') + `<div class="gmd">${[[b, 1], [sv, 2], [0, 3]].map(([n, m]) => `<span data-n="${n}"><i class="medal m${m}"></i>${n ? '≤' + n : '0'}</span>`).join('')}</div>`; }
   return `<div class="gtrack"><div class="gtl"><span>${esc(t('gt.goal'))}</span><b id="gtLeft"></b></div><div class="gtb"><i id="gtFill"></i></div>${marks}</div>`;
 }
 function renderInfo() {
   const k = G.kind, types = new Set(); G.board.forEach(c => c.forEach(v => types.add(E.typ(v))));
   if (G.gim) { if (G.gim.has('bomb')) types.add(E.T.BOMB); if (G.gim.has('rock')) types.add(E.T.ROCK); if (G.gim.has('ice')) types.add(E.T.ICE); if (G.gim.has('wild')) types.add(E.T.WILD); }
-  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.medals2') : k === 'free' ? t('th.cl.r') : (NEW_MODES.includes(G.mode) ? [1, 2, 3].map(i => t('a.' + G.mode + '.t' + i)).join(' ／ ') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2')) ;
+  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.medals2') + (G.bonus ? ' ' + t('db.rule') : '') : k === 'free' ? t('th.cl.r') : (NEW_MODES.includes(G.mode) ? [1, 2, 3].map(i => t('a.' + G.mode + '.t' + i)).join(' ／ ') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2')) ;
   if (k === 'mission') rule = goalText(G.mis) + '。' + t('r.mstar', { a: fmt(G.mis.s2), b: fmt(G.mis.s3) });
   if (G.mode === 'dive') types.add(E.T.PEARL);
   const TY = [[E.T.ICE2, E.mk(1, E.T.ICE2), 'ih'], [E.T.ROW, E.mk(0, E.T.ROW), 'ln'], [E.T.COL, E.mk(1, E.T.COL), 'dr'], [E.T.PRISM, E.mk(2, E.T.PRISM), 'pr'], [E.T.HID, E.mk(0, E.T.HID), 'hd'], [E.T.CHAM, E.mk(3, E.T.CHAM), 'ch'], [E.T.PEARL, E.mk(0, E.T.PEARL), 'pearl'], [E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
@@ -470,7 +470,7 @@ function startStage(th, j) {
 }
 function startDaily(k = 'm') {
   const d = today(), cfg = dailyCfg(d, k);
-  newGame({ kind: 'daily', date: d, dk: k, board: cfg.board, undoable: true });
+  newGame({ kind: 'daily', date: d, dk: k, board: cfg.board, undoable: true, bonus: d >= DBONUS_FROM, t0: Date.now(), undoN: 0 });
   startPlay(t('d.puzzle'), t('dl.' + k) + ' · ' + d.slice(5).replace('-', '/') + (cfg.g ? ' · ' + t('th.' + cfg.g) : ''));
 }
 function startFree() {
@@ -765,6 +765,22 @@ function spawnInk() {
   b.appendChild(ink); noise(.15, .08); setTimeout(() => { if (ink.isConnected) { ink.classList.add('gone'); setTimeout(() => ink.remove(), 300); } }, 7000);
 }
 // ---- endings
+/* daily puzzle bonuses (from 2026-10-23): undo −5% each (max −50%), no-undo +10%, time bonus up to +30% */
+const DBONUS_FROM = '2026-10-23';
+const DTIME = { e: 60, m: 150, h: 300 }; // par seconds per difficulty: at par +15%, 0s → +30%, 2×par or slower → 0
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function dailyBonus() {
+  if (!G.bonus) return null;
+  const base = G.score, sec = Math.max(0, (Date.now() - G.t0) / 1000), par = DTIME[G.dk] || 150, n = G.undoN || 0;
+  const undo = -Math.round(base * Math.min(.5, n * .05)), noUndo = n ? 0 : Math.round(base * .1);
+  const tp = Math.max(0, Math.min(30, 30 * (1 - sec / (par * 2)))), time = Math.round(base * tp / 100);
+  return { base, sec, n, undo, noUndo, time, tp: Math.round(tp), total: base + undo + noUndo + time };
+}
+function bonusTable(B) {
+  const row = (l, v, cls = '') => `<li class="${cls}"><span>${esc(l)}</span><b>${v >= 0 ? '+' : '−'}${fmt(Math.abs(v))}</b></li>`;
+  return `<ul class="rbonus"><li><span>${esc(t('db.base'))}</span><b>${fmt(B.base)}</b></li>${B.n ? row(t('db.undo', { n: B.n }), B.undo, 'neg') : row(t('db.noundo'), B.noUndo, 'pos')}${row(t('db.time', { t: mmss(B.sec), p: B.tp }), B.time, B.time ? 'pos' : '')}</ul>`;
+}
+setInterval(() => { const c = document.getElementById('gClock'); if (c && G && G.kind === 'daily' && G.bonus && !G.over) c.textContent = mmss((Date.now() - G.t0) / 1000) + (G.undoN ? `  ·  ${t('g.undo')}×${G.undoN}` : ''); }, 500);
 function finishPuzzle(perfect) {
   G.over = true;
   const left = E.count(G.board);
@@ -792,13 +808,13 @@ function finishPuzzle(perfect) {
       html = resultCard(t('r.stuck'), `<p>${esc(t('r.stuck.d', { n: left }))}</p>`, [['undo', t('g.undo'), 'red'], ['retry', t('r.retry')], ['list', t('u.list')]], 'fail');
     }
   } else if (k === 'daily') {
-    const D = diffOf(G.dk), rr = dlRec(G.date)[D.key], md = medalFor(left, G.dk), best = G.score > rr.s;
-    if (best) { rr.s = G.score; }
+    const D = diffOf(G.dk), rr = dlRec(G.date)[D.key], md = medalFor(left, G.dk), B = dailyBonus(), final = B ? B.total : G.score, best = final > rr.s;
+    if (best) { rr.s = final; }
     if (rr.left < 0 || left < rr.left) rr.left = left;
     rr.md = Math.max(rr.md, md);
-    coins = addCoin(G.score / 25 * D.sc);
-    if (best && ON && ON.available && DB.name) ON.putDaily(G.date, D.key, { n: DB.name, i: DB.icon, s: G.score }).catch(() => {});
-    html = resultCard(perfect ? 'PERFECT!' : t('r.end'), `<div class="rscore">${fmt(G.score)}</div><p>${esc(t('r.left', { n: left }))}</p>${md ? `<div class="rmedal"><i class="medal big m${md}"></i>${esc(t('md.' + md))}</div>` : `<p class="note">${esc(t('d.medals2'))}</p>`}${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}${nameNudge()}`,
+    coins = addCoin(final / 25 * D.sc);
+    if (best && ON && ON.available && DB.name) ON.putDaily(G.date, D.key, { n: DB.name, i: DB.icon, s: final }).catch(() => {});
+    html = resultCard(perfect ? 'PERFECT!' : t('r.end'), `<div class="rscore">${fmt(final)}</div>${B ? bonusTable(B) : ''}<p>${esc(t('r.left', { n: left }))}</p>${md ? `<div class="rmedal"><i class="medal big m${md}"></i>${esc(t('md.' + md))}</div>` : `<p class="note">${esc(t('d.medals2'))}</p>`}${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}${nameNudge()}`,
       [['retry', t('r.retry'), 'red'], ['undo', t('g.undo')], ['home', t('u.home')], ['rank', t('rk.title')]], perfect ? '' : 'plain');
   } else if (k === 'free') {
     const best = G.score > (DB.free[G.fk] || 0); if (best) DB.free[G.fk] = G.score;
@@ -897,11 +913,12 @@ function restart() {
   if (!G || G.busy) return;
   if (G.action) { if (G.kind === 'dblitz') return; if (!G.over && !restart.ok) return ask(t('q.restart'), [[t('q.keep'), 'red'], [t('g.restart'), '', () => { restart.ok = 1; restart(); restart.ok = 0; }]]); const o = { kind: G.kind, m: G.mode, k: G.k0 || G.k, t: G.tTotal, g: [...G.gim], mis: G.mis, tipped: 1 }; return startAction(o); }
   if (G.kind === 'stage') { const th = G.th, j = G.j, hinted = G.hinted; startStage(th, j); G.retried = true; G.hinted = hinted; return; }
+  if (G.kind === 'daily') { G.t0 = Date.now(); G.undoN = 0; G.undone = false; }
   G.board = E.clone(G.init); G.score = 0; G.hist = []; G.over = false; G.pi = 0; $('#gameMsg').hidden = true; buildBoard(); G.els.forEach((c, x) => c.forEach((d, y) => d._v = G.board[x][y])); hud(); tone(440, .08, 'triangle', .05, .7);
 }
 function undo() {
   if (!G || !G.hist.length || G.busy) return;
-  const h = G.hist.pop(); G.board = h.b; G.score = h.s; G.pi = h.pi; G.undone = true; G.over = false; $('#gameMsg').hidden = true;
+  const h = G.hist.pop(); G.board = h.b; G.score = h.s; G.pi = h.pi; G.undone = true; G.undoN = (G.undoN || 0) + 1; G.over = false; $('#gameMsg').hidden = true;
   buildBoard(); G.els.forEach((c, x) => c.forEach((d, y) => d._v = G.board[x][y])); hud(); tone(520, .06, 'triangle', .05, .8);
 }
 function hint() {

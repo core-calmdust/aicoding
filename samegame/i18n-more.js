@@ -794,3 +794,21 @@ window.SAME_I18N.ar = {
   const PAT = ['dots', 'stripe', 'check', 'grid', 'wave', 'zigzag', 'tri', 'ring', 'plaid', 'stars'];
   for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => D[k] = A[l][i]); PAT.forEach((p, i) => D['bgp.' + p] = P[l][0][i]); P[l][1].forEach((c, i) => D['bgc.' + i] = c); }
 })();
+
+/* daily puzzle bonuses: undo penalty, no-undo bonus, time bonus */
+(function () {
+  const K = ['db.base', 'db.undo', 'db.noundo', 'db.time', 'db.clock', 'db.rule'];
+  const A = {
+    ja: ['基本スコア', '待った {n}回', '待ったなしボーナス', 'タイム {t}（+{p}%）', 'タイム', '待った1回ごとに−5%、待ったなしで+10%、早く解くほど最大+30%のボーナス。'],
+    en: ['Base score', 'Undo ×{n}', 'No-undo bonus', 'Time {t} (+{p}%)', 'Time', 'Each undo −5%, no undo +10%, and up to +30% for a fast finish.'],
+    zh: ['基础分', '悔棋 {n}次', '无悔棋奖励', '用时 {t}（+{p}%）', '用时', '每次悔棋−5%，不悔棋+10%，越快完成奖励越多，最高+30%。'],
+    ko: ['기본 점수', '무르기 {n}회', '무르기 없음 보너스', '타임 {t} (+{p}%)', '타임', '무르기 1회마다 −5%, 무르기 없으면 +10%, 빨리 풀수록 최대 +30% 보너스.'],
+    es: ['Puntuación base', 'Deshacer ×{n}', 'Bonus sin deshacer', 'Tiempo {t} (+{p}%)', 'Tiempo', 'Cada deshacer −5%, sin deshacer +10% y hasta +30% por terminar rápido.'],
+    fr: ['Score de base', 'Annuler ×{n}', 'Bonus sans annulation', 'Temps {t} (+{p}%)', 'Temps', 'Chaque annulation −5 %, sans annulation +10 %, et jusqu’à +30 % pour un temps rapide.'],
+    pt: ['Pontuação base', 'Desfazer ×{n}', 'Bônus sem desfazer', 'Tempo {t} (+{p}%)', 'Tempo', 'Cada desfazer −5%, sem desfazer +10% e até +30% por terminar rápido.'],
+    de: ['Grundpunkte', 'Rückgängig ×{n}', 'Bonus ohne Rückgängig', 'Zeit {t} (+{p}%)', 'Zeit', 'Jedes Rückgängig −5 %, ohne Rückgängig +10 % und bis zu +30 % für ein schnelles Ende.'],
+    hi: ['मूल स्कोर', 'अनडू ×{n}', 'बिना अनडू बोनस', 'समय {t} (+{p}%)', 'समय', 'हर अनडू पर −5%, बिना अनडू +10%, और जल्दी पूरा करने पर +30% तक बोनस।'],
+    ar: ['النتيجة الأساسية', 'تراجع ×{n}', 'مكافأة بلا تراجع', 'الوقت {t} (+{p}%)', 'الوقت', 'كل تراجع −5%، وبلا تراجع +10%، وحتى +30% لإنهاء سريع.'],
+  };
+  for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => D[k] = A[l][i]); }
+})();
