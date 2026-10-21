@@ -648,8 +648,8 @@ const GIM = {
     start(g) { g.st.next = 500; g.st.b = []; },
     tick(g, dt) {
       g.st.next -= dt;
-      if (g.st.next <= 0 && g.st.b.length < [1, 2, 2][g.s - 1]) {
-        g.st.next = [3200, 2600, 2100][g.s - 1];
+      if (g.st.next <= 0 && g.st.b.length < [2, 3, 4][g.s - 1]) {
+        g.st.next = [1800, 1350, 1000][g.s - 1];
         const el = document.createElement('div'); el.className = 'sballoon';
         el.innerHTML = BALLOON(['#ff6f91', '#ffb340', '#5ec2ff', '#8bd56a', '#b48cff'][(R.rng() * 5) | 0]);
         const b = { el, x: R.rng() * 76, y: 104, v: 140 / [5600, 4600, 3800][g.s - 1] * (.8 + R.rng() * .4), ph: R.rng() * 6 };
@@ -1338,7 +1338,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=8';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=9';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },

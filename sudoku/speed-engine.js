@@ -111,7 +111,7 @@ const GIMMICKS = ['bug', 'mosaic', 'spin', 'spot', 'fruit', 'shuffle', 'ghost', 
 const CLASH = [['fruit', 'calc'], ['fruit', 'dice'], ['calc', 'dice'], ['card', 'mosaic'], ['spin', 'sway'], ['shuffle', 'rev'], ['order', 'bomb'], ['spot', 'dark'], ['dark', 'sleepy'], ['spot', 'sleepy'], ['spot', 'peep'], ['dark', 'peep']];
 const clash = (a, b) => CLASH.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 const GEXTRA = { bug: s => 1.2 + s * .8, mosaic: s => .6 + s * .7, spin: s => 1.2 + s * .8, spot: s => 1.2 + s, fruit: s => 1.2 + s * .8, shuffle: s => 1 + s * .7, ghost: s => .8 + s * .8, ice: s => .8 + s, bomb: s => .8 + s * .6, swap: s => 1 + s * .8, cloud: s => 1 + s * .8, calc: s => .8 + s * .8, card: s => 1.2 + s * .9, mole: s => 1 + s * .8, upside: s => .6 + s * .6,
-  balloon: s => 1.4 + s * .9, dark: s => .9 + s * .8, sway: s => .6 + s * .5, paint: s => 1 + s * .8, order: s => 1.4 + s * 1, peep: s => .9 + s * .8, star: s => .9 + s * .6, rev: s => 1.3 + s * 1, dice: s => .8 + s * .7, sleepy: s => .6 + s * .6 };
+  balloon: s => 1 + s * .8, dark: s => .9 + s * .8, sway: s => .6 + s * .5, paint: s => 1 + s * .8, order: s => 1.4 + s * 1, peep: s => .9 + s * .8, star: s => .9 + s * .6, rev: s => 1.3 + s * 1, dice: s => .8 + s * .7, sleepy: s => .6 + s * .6 };
 const BASE_T = { 1: 5, 2: 7, 3: 9, 4: 12 };
 // g: '' | 'bug2' | 'spin1+mosaic2'
 const parseG = g => (g ? g.split('+').map(x => ({ id: x.replace(/\d/g, ''), s: +x.replace(/\D/g, '') || 1 })) : []);
