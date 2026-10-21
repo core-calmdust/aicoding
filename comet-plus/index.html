@@ -3495,12 +3495,18 @@ if (gl3dOK) {
                 const mat3 toY = mat3(0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312);
                 const mat3 toR = mat3(1.0, 1.0, 1.0, 0.956, -0.272, -1.106, 0.621, -0.647, 1.703);
                 vec3 yiq = toY * c.rgb;
-                float h = amt * (0.75 + 0.12 * sin(t * 2.0)); // 色相を回す（ゆっくり揺らぐ）
+                float h = amt * (0.32 + 0.1 * sin(t * 2.0)); // 色相は控えめに回す（ステージの色を残す）
                 float cs = cos(h), sn = sin(h);
-                yiq.yz = mat2(cs, sn, -sn, cs) * yiq.yz * (1.0 + 0.35 * amt); // 彩度も少し上げる
+                yiq.yz = mat2(cs, sn, -sn, cs) * yiq.yz * (1.0 + 0.15 * amt);
                 vec3 g = toR * yiq;
-                float vig = 1.0 - amt * 0.25 * smoothstep(0.35, 0.85, length(vUv - 0.5)); // 周辺を少し絞る
-                gl_FragColor = vec4(mix(c.rgb, g * vig * (1.0 + 0.08 * amt), clamp(amt, 0.0, 1.0)), c.a);
+                // ネオン感: 暗部は深い紫へ沈め、光っている所だけを強く・白熱させる
+                float l = dot(g, vec3(0.299, 0.587, 0.114));
+                vec3 sh = vec3(0.13, 0.03, 0.28);
+                g = mix(sh * (0.08 + l * 2.0) + g * 0.4, g, smoothstep(0.08, 0.45, l));
+                g = pow(max(g, 0.0), vec3(1.3)) * 1.45;
+                g += smoothstep(0.5, 1.0, l) * vec3(0.32, 0.12, 0.42) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
+                float vig = 1.0 - amt * 0.3 * smoothstep(0.35, 0.85, length(vUv - 0.5));
+                gl_FragColor = vec4(mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0)), c.a);
             }`
     });
     hyperGrade.enabled = false;
@@ -5698,7 +5704,7 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260);
+        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) + hyperK * 0.25; // ハイパー中は光をにじませてネオン感を出す
         hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
         if (hyperK < 0.002) hyperK = 0;
         hyperGrade.enabled = hyperK > 0;
