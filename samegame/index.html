@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Dela+Gothic+One&family=Jost:wght@500;600;700;800&family=Kaisei+Decol:wght@500;700&family=Murecho:wght@400;500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=22">
+<link rel="stylesheet" href="app.css?v=30">
 </head>
 <body data-skin="mid">
 <div id="bg"></div>
@@ -59,15 +59,16 @@
         <div class="gtitle"><b id="gTitle"></b><small id="gTitleSub"></small></div>
         <div class="gscore"><small data-i18n="u.score">スコア</small><b id="gScore">0</b></div>
         <div class="gsub" id="gSub"></div>
+        <div class="blitzi" id="blitzInfo" hidden></div>
       </div>
       <div class="gmeters">
         <div class="fever" id="fever" hidden><span class="flab">FEVER</span><span class="fbar"><i id="feverBar"></i></span><b id="comboV"></b></div>
-        <div class="blitzi" id="blitzInfo" hidden></div>
         <div class="risew" id="riseWrap" hidden><span class="flab">RISE</span><span class="fbar"><i id="riseBar"></i></span></div>
       </div>
       <div id="boardWrap"><div id="board"></div><div id="preview" hidden></div><div id="gameMsg" hidden></div></div>
       <div class="gtrackw" id="gTrack"></div>
       <div class="ginfo" id="gInfo"></div>
+      <div class="gorder" id="gOrder" hidden></div>
       <div class="gfoot" id="gfoot">
         <button class="btn" id="gUndo"><span data-i18n="g.undo">待った</span></button>
         <button class="btn" id="gRestart"><span data-i18n="g.restart">やりなおし</span></button>
@@ -84,9 +85,9 @@
 <script src="engine.js?v=21"></script>
 <script src="art.js?v=21"></script>
 <script src="i18n.js?v=3"></script>
-<script src="i18n-more.js?v=23"></script>
+<script src="i18n-more.js?v=26"></script>
 <script src="../sudoku/firebase-config.js"></script>
-<script src="online.js?v=5"></script>
-<script src="app.js?v=23"></script>
+<script src="online.js?v=25"></script>
+<script src="app.js?v=28"></script>
 </body>
 </html>

@@ -65,7 +65,7 @@ window.SameOnline = {
   async putDaily(date, k, v) {
     await init();
     const path = `same/d/${date}/${k}/${uid}`, old = await db.get(path);
-    if (k !== 'b') { if (old && old.s >= v.s) return false; await db.set(path, { n: clean(v.n), i: v.i | 0, s: Math.round(v.s) }); return true; }
+    if (k === 'p' || k === 'pe' || k === 'ph') { if (old && old.s >= v.s) return false; await db.set(path, { n: clean(v.n), i: v.i | 0, s: Math.round(v.s) }); return true; }
     const a = (old && old.a || 0) + 1; if (a > 3) return false;
     await db.set(path, { n: clean(v.n), i: v.i | 0, s: Math.round(old && old.s > v.s ? old.s : v.s), a });
     return true;

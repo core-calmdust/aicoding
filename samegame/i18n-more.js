@@ -571,3 +571,53 @@ window.SAME_I18N.ar = {
   const P = { ja: ['真珠', '一番下の段に着くと回収。タップできない'], en: ['Pearl', 'Collected on the bottom row. Cannot be tapped'], zh: ['珍珠', '到达最底行即回收，无法点击'], ko: ['진주', '맨 아랫줄에 닿으면 회수. 탭할 수 없음'], es: ['Perla', 'Se recoge en la fila de abajo. No se puede tocar'], fr: ['Perle', 'Récupérée sur la rangée du bas. Impossible à toucher'], pt: ['Pérola', 'Coletada na fileira de baixo. Não pode ser tocada'], de: ['Perle', 'Wird in der untersten Reihe eingesammelt. Nicht antippbar'], hi: ['मोती', 'सबसे नीचे की पंक्ति पर इकट्ठा। टैप नहीं होता'], ar: ['لؤلؤة', 'تُجمع في الصف السفلي. لا يمكن نقرها'] };
   for (const l in P) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'th.pearl': P[l][0], 'th.pearl.d': P[l][1] });
 })();
+
+(function () {
+  const A = {
+    ja: ['つづける', 'ホームにもどる', 'やめる', 'ゲームをやめてホームにもどりますか？', '最初からやりなおしますか？', '連続 ×{n}', '光っている色を3個以上まとめて消そう', 'もう真珠を落とせない！', 'キャンセル'],
+    en: ['Keep playing', 'Back to home', 'Quit', 'Quit this game and go home?', 'Start over from the beginning?', 'Streak ×{n}', 'Clear 3+ of the highlighted color', 'No way to drop the pearls!', 'Cancel'],
+    zh: ['继续', '返回主页', '退出', '要退出游戏回到主页吗？', '要从头重来吗？', '连续 ×{n}', '把高亮的颜色3个以上一起消除', '珍珠已经落不下去了！', '取消'],
+    ko: ['계속하기', '홈으로', '그만두기', '게임을 그만두고 홈으로 갈까요?', '처음부터 다시 할까요?', '연속 ×{n}', '빛나는 색을 3개 이상 한꺼번에 지우세요', '더 이상 진주를 떨어뜨릴 수 없어요!', '취소'],
+    es: ['Seguir', 'Volver al inicio', 'Salir', '¿Salir de la partida y volver al inicio?', '¿Empezar de nuevo?', 'Racha ×{n}', 'Limpia 3+ del color resaltado', '¡Ya no se pueden bajar las perlas!', 'Cancelar'],
+    fr: ['Continuer', "Retour à l'accueil", 'Quitter', 'Quitter la partie et revenir à l’accueil ?', 'Recommencer depuis le début ?', 'Série ×{n}', 'Videz 3+ de la couleur en surbrillance', 'Impossible de faire descendre les perles !', 'Annuler'],
+    pt: ['Continuar', 'Voltar ao início', 'Sair', 'Sair do jogo e voltar ao início?', 'Recomeçar do início?', 'Sequência ×{n}', 'Limpe 3+ da cor destacada', 'Não dá mais para descer as pérolas!', 'Cancelar'],
+    de: ['Weiterspielen', 'Zur Startseite', 'Beenden', 'Spiel beenden und zur Startseite?', 'Von vorn beginnen?', 'Serie ×{n}', 'Räume 3+ der hervorgehobenen Farbe ab', 'Die Perlen kommen nicht mehr runter!', 'Abbrechen'],
+    hi: ['जारी रखें', 'होम पर जाएँ', 'छोड़ें', 'खेल छोड़कर होम पर जाएँ?', 'शुरू से फिर खेलें?', 'लगातार ×{n}', 'चमकते रंग के 3+ एक साथ साफ़ करें', 'अब मोती नीचे नहीं जा सकते!', 'रद्द करें'],
+    ar: ['متابعة', 'العودة للرئيسية', 'إنهاء', 'إنهاء اللعبة والعودة للرئيسية؟', 'البدء من جديد؟', 'تتابع ×{n}', 'أزل 3+ من اللون المضيء', 'لم يعد بالإمكان إنزال اللآلئ!', 'إلغاء'],
+  };
+  const K = ['q.keep', 'q.home', 'q.quitb', 'q.quit', 'q.restart', 'a.order.stk', 'a.order.h', 'a.dive.stuck', 'q.cancel'];
+  for (const l in A) { const o = {}; K.forEach((k, i) => o[k] = A[l][i]); window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, o); }
+  // DIVE rule line about getting stuck
+  const D = { ja: '真珠の下をもう掘れなくなったら詰みで終了', en: 'If no move can dig under any pearl, the game ends', zh: '若无法再挖到任何珍珠下方，游戏结束', ko: '어떤 진주 아래도 더 팔 수 없으면 종료', es: 'Si ningún movimiento puede excavar bajo una perla, se acaba', fr: 'Si plus aucun coup ne peut creuser sous une perle, la partie s’arrête', pt: 'Se nenhum movimento cavar sob uma pérola, o jogo acaba', de: 'Kann kein Zug mehr unter eine Perle graben, ist das Spiel vorbei', hi: 'अगर किसी मोती के नीचे खुदाई न हो सके तो खेल ख़त्म', ar: 'إذا لم يعد بالإمكان الحفر تحت أي لؤلؤة تنتهي اللعبة' };
+  for (const l in D) window.SAME_I18N[l]['a.dive.t3'] = D[l];
+})();
+
+(function () {
+  const A = { ja: ['デイリーアクション', '各1日3回', 'BLITZ・オーダー・フューズ・ダイブ。全員が同じ盤で、いちばん良いスコアがランキングに残ります。', 'デイリー'],
+    en: ['Daily action', '3 tries each', 'BLITZ, Order, Fuse and Dive. Everyone plays the same board; your best score goes on the ranking.', 'Daily'],
+    zh: ['每日动作', '各每天3次', 'BLITZ・订单・引线・潜水。所有人同一盘面，最佳分数计入排行榜。', '每日'],
+    ko: ['데일리 액션', '각 하루 3번', 'BLITZ・오더・퓨즈・다이브. 모두 같은 판으로, 최고 점수가 랭킹에 남아요.', '데일리'],
+    es: ['Acción diaria', '3 intentos cada una', 'BLITZ, Pedido, Mecha y Buceo. Todos juegan el mismo tablero; tu mejor puntuación entra en el ranking.', 'Diario'],
+    fr: ['Action du jour', '3 essais chacun', 'BLITZ, Commande, Mèche et Plongée. Même plateau pour tous ; votre meilleur score entre au classement.', 'Du jour'],
+    pt: ['Ação diária', '3 tentativas cada', 'BLITZ, Pedido, Pavio e Mergulho. Todos jogam o mesmo tabuleiro; sua melhor pontuação vai para o ranking.', 'Diário'],
+    de: ['Tages-Action', 'je 3 Versuche', 'BLITZ, Bestellung, Lunte und Tauchgang. Alle spielen dasselbe Brett; dein bestes Ergebnis kommt in die Rangliste.', 'Täglich'],
+    hi: ['दैनिक एक्शन', 'हर एक 3 बार', 'BLITZ, ऑर्डर, फ़्यूज़ और डाइव। सबका एक ही बोर्ड; सबसे अच्छा स्कोर रैंकिंग में।', 'दैनिक'],
+    ar: ['حركة يومية', '3 محاولات لكل منها', 'BLITZ والطلب والفتيل والغوص. الجميع على اللوحة نفسها؛ أفضل نتيجة تدخل الترتيب.', 'يومي'] };
+  for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'd.act': A[l][0], 'd.act.n': A[l][1], 'd.act.d': A[l][2], 'd.daily': A[l][3] });
+})();
+
+(function () {
+  const A = {
+    ja: ['閉じる', '消すと上から補充。大きく消すと時間が延びる（8個+1秒／12個+2秒／18個+3秒、合計+20秒まで）', '20秒ごとにLVアップ：色が1つ増え、時計が15%速くなる', 'ミスタップ−1秒、詰まってシャッフル−3秒。コンボ・FEVERで稼ごう', '下から列がせり上がり、だんだん速くなる', '空いた列は左に詰まる。てっぺんを越えたらおしまい', '時間制限なし。どれだけ長く生きのこれるか'],
+    en: ['Close', 'Cleared spaces refill from the top. Big clears add time (8:+1s / 12:+2s / 18:+3s, up to +20s)', 'Every 20s the level rises: one more color and a 15% faster clock', 'Mis-tap −1s, stuck shuffle −3s. Score big with combos and FEVER', 'Rows push up from below, faster and faster', 'Empty columns slide left. Go over the top and it is over', 'No time limit — how long can you survive?'],
+    zh: ['关闭', '消除后从上方补充。大块消除延长时间（8个+1秒／12个+2秒／18个+3秒，合计最多+20秒）', '每20秒升级：颜色+1，时钟加快15%', '误点−1秒，卡住重排−3秒。用连击和FEVER得分', '方块从下方一行行升起，越来越快', '空列会向左靠拢。超过顶端即结束', '没有时间限制，看你能坚持多久'],
+    ko: ['닫기', '지우면 위에서 보충. 크게 지우면 시간 연장(8개+1초／12개+2초／18개+3초, 합계 +20초까지)', '20초마다 LV업: 색 +1, 시계 15% 빨라짐', '잘못 탭 −1초, 막혀서 섞기 −3초. 콤보와 FEVER로 점수를', '아래에서 줄이 올라오고 점점 빨라져요', '빈 열은 왼쪽으로 붙어요. 꼭대기를 넘으면 끝', '시간 제한 없음. 얼마나 오래 버틸까'],
+    es: ['Cerrar', 'Los huecos se rellenan desde arriba. Grupos grandes suman tiempo (8:+1 s / 12:+2 s / 18:+3 s, hasta +20 s)', 'Cada 20 s sube el nivel: un color más y reloj 15% más rápido', 'Toque fallido −1 s, barajar al atascarse −3 s. Puntúa con combos y FEVER', 'Las filas suben desde abajo, cada vez más rápido', 'Las columnas vacías se desplazan a la izquierda. Si pasa del tope, se acaba', 'Sin límite de tiempo: ¿cuánto aguantas?'],
+    fr: ['Fermer', 'Les cases se remplissent par le haut. Les gros groupes ajoutent du temps (8 : +1 s / 12 : +2 s / 18 : +3 s, max +20 s)', 'Toutes les 20 s, niveau supérieur : une couleur de plus, horloge 15 % plus rapide', 'Erreur −1 s, mélange bloqué −3 s. Marquez avec combos et FEVER', 'Les rangées montent par le bas, de plus en plus vite', 'Les colonnes vides glissent à gauche. Dépasser le haut, c’est fini', 'Pas de limite de temps : combien de temps tiendrez-vous ?'],
+    pt: ['Fechar', 'Os espaços são reabastecidos por cima. Grupos grandes dão tempo (8:+1 s / 12:+2 s / 18:+3 s, até +20 s)', 'A cada 20 s o nível sobe: mais uma cor e relógio 15% mais rápido', 'Toque errado −1 s, embaralhar travado −3 s. Pontue com combos e FEVER', 'Fileiras sobem de baixo, cada vez mais rápido', 'Colunas vazias deslizam para a esquerda. Passou do topo, acabou', 'Sem limite de tempo: quanto você aguenta?'],
+    de: ['Schließen', 'Lücken füllen sich von oben. Große Gruppen bringen Zeit (8: +1 s / 12: +2 s / 18: +3 s, max. +20 s)', 'Alle 20 s steigt das Level: eine Farbe mehr, Uhr 15 % schneller', 'Fehltipp −1 s, Mischen bei Stillstand −3 s. Punkte mit Combos und FEVER', 'Reihen schieben sich von unten hoch, immer schneller', 'Leere Spalten rücken nach links. Über den Rand hinaus – vorbei', 'Kein Zeitlimit – wie lange hältst du durch?'],
+    hi: ['बंद करें', 'खाली जगह ऊपर से भरती है। बड़े समूह से समय बढ़ता है (8:+1 से./12:+2 से./18:+3 से., कुल +20 से. तक)', 'हर 20 सेकंड में लेवल: एक रंग और, घड़ी 15% तेज़', 'गलत टैप −1 से., अटकने पर फेंटना −3 से.। कॉम्बो और FEVER से अंक', 'नीचे से पंक्तियाँ ऊपर आती हैं, तेज़ होती जाती हैं', 'खाली कॉलम बाईं ओर खिसकते हैं। ऊपर पार हुआ तो ख़त्म', 'कोई समय सीमा नहीं — कितनी देर टिकोगे?'],
+    ar: ['إغلاق', 'تمتلئ الفراغات من الأعلى. المجموعات الكبيرة تضيف وقتًا (8: +1 ث / 12: +2 ث / 18: +3 ث، حتى +20 ث)', 'كل 20 ثانية يرتفع المستوى: لون إضافي وساعة أسرع 15%', 'نقرة خاطئة −1 ث، خلط عند التوقف −3 ث. سجّل بالكومبو وFEVER', 'تصعد الصفوف من الأسفل بسرعة متزايدة', 'تنزاح الأعمدة الفارغة يسارًا. تجاوز القمة يعني النهاية', 'بلا حد زمني — كم ستصمد؟'],
+  };
+  for (const l in A) { const v = A[l]; window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'u.close': v[0], 'a.blitz.t1': v[1], 'a.blitz.t2': v[2], 'a.blitz.t3': v[3], 'a.rise.t1': v[4], 'a.rise.t2': v[5], 'a.rise.t3': v[6] }); }
+})();

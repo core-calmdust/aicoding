@@ -137,10 +137,10 @@
             ".indexOn": [
               "s"
             ],
-            ".validate": "$k === 'p' || $k === 'pe' || $k === 'ph' || $k === 'b'",
+            ".validate": "$k === 'p' || $k === 'pe' || $k === 'ph' || $k === 'b' || $k === 'o' || $k === 'f' || $k === 'v'",
             "$uid": {
               ".write": "auth != null && auth.uid === $uid",
-              ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 100 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 10000000 && ($k !== 'b' ? (!data.exists() || newData.child('s').val() >= data.child('s').val()) : (newData.child('a').isNumber() && newData.child('a').val() >= 1 && newData.child('a').val() <= 3 && (!data.exists() ? newData.child('a').val() === 1 : (newData.child('a').val() === data.child('a').val() + 1 && newData.child('s').val() >= data.child('s').val()))))"
+              ".validate": "newData.hasChildren(['n', 'i', 's']) && newData.child('n').isString() && newData.child('n').val().length >= 1 && newData.child('n').val().length <= 12 && newData.child('i').isNumber() && newData.child('i').val() >= 0 && newData.child('i').val() < 100 && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 10000000 && (($k === 'p' || $k === 'pe' || $k === 'ph') ? (!data.exists() || newData.child('s').val() >= data.child('s').val()) : (newData.child('a').isNumber() && newData.child('a').val() >= 1 && newData.child('a').val() <= 3 && (!data.exists() ? newData.child('a').val() === 1 : (newData.child('a').val() === data.child('a').val() + 1 && newData.child('s').val() >= data.child('s').val()))))"
             }
           }
         }
