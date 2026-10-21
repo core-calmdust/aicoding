@@ -263,7 +263,7 @@
     }
     function tile(n, color, op = .5, y = .005) { const m = new TH.Mesh(new TH.CircleGeometry(c * .55, 32), basic(color, op)); m.rotation.x = -Math.PI / 2; const [x, z] = xz(n); m.position.set(x, Y + y, z); marks.add(m); return m; }
     function bar(list, color, op = .45) {   // a rounded band under a line of stones (a four, a three)
-      const [x0, z0] = xz(list[0]), [x1, z1] = xz(list[list.length - 1]), L = Math.hypot(x1 - x0, z1 - z0) + c * .96, w = c * .96, r = w / 2, sh = new TH.Shape();
+      const [x0, z0] = xz(list[0]), [x1, z1] = xz(list[list.length - 1]), w = c * 1.32, L = Math.hypot(x1 - x0, z1 - z0) + w, r = w / 2, sh = new TH.Shape();
       sh.moveTo(-L / 2 + r, -r); sh.lineTo(L / 2 - r, -r); sh.absarc(L / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2); sh.lineTo(-L / 2 + r, r); sh.absarc(-L / 2 + r, 0, r, Math.PI / 2, Math.PI * 1.5);
       const m = new TH.Mesh(new TH.ShapeGeometry(sh, 16), basic(color, op)); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(z1 - z0, x1 - x0);
       m.position.set((x0 + x1) / 2, Y + .004, (z0 + z1) / 2); marks.add(m); return m;
