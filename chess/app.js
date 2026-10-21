@@ -1036,20 +1036,42 @@ function exitSpecial() {
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+// lesson / opening lists: category sub-tabs + board-thumbnail cards
+const LX_STORE = STORE + '-lxtab';
+function lxTab(kind, v) { try { const o = JSON.parse(localStorage.getItem(LX_STORE) || '{}'); if (v === undefined) return o[kind]; o[kind] = v; localStorage.setItem(LX_STORE, JSON.stringify(o)); } catch (e) { } }
+// cats: [{key, tab, name, desc, items:[{html, done}]}]
+function lxRender(kind, cats, foot) {
+  let cur = lxTab(kind);
+  if (!cats.some(c => c.key === cur)) cur = (cats.find(c => c.items.some(x => !x.done)) || cats[0]).key;
+  const list = $('#lessonList'); list.classList.add('lx-on');
+  const c = cats.find(x => x.key === cur), n = c.items.filter(x => x.done).length, m = c.items.length;
+  list.innerHTML = `<div class="lx">` +
+    (cats.length > 1 ? `<div class="lx-tabs" role="tablist">${cats.map(x => `<button role="tab" data-lx="${x.key}" class="${x.key === cur ? 'sel' : ''}"><bdi>${x.tab}</bdi><em>${x.items.filter(y => y.done).length}/${x.items.length}</em></button>`).join('')}</div>` : '') +
+    `<div class="lx-head"><div class="lx-ht"><b>${c.name}</b><p>${c.desc}</p></div><div class="lx-pr"><span class="lx-bar"><i style="width:${m ? Math.round(n / m * 100) : 0}%"></i></span><small>${t('lx.prog', { n, m })}</small></div></div>` +
+    `<div class="lx-grid">${c.items.map(x => x.html).join('')}</div>${foot || ''}</div>`;
+  list.querySelectorAll('[data-lx]').forEach(b => b.onclick = () => { lxTab(kind, b.dataset.lx); lxRender(kind, cats, foot); list.scrollTop = 0; });
+}
+// thumbnails: zoom each piece a little so it stays readable at small sizes
+const lxBoard = svg => svg.replace(/viewBox="0 0 100 100"/g, 'viewBox="8 6 84 84"');
+function lxCard(attr, board, no, title, sub, st, done, badge) {
+  return `<button class="lesson-item lx-card${done ? ' done' : ''}" ${attr}><span class="lx-thumb">${lxBoard(board)}${no ? `<span class="lx-no">${no}</span>` : ''}${done ? '<span class="lx-ok">✓</span>' : ''}</span>` +
+    `<span class="lx-body"><b>${title}</b><span class="lx-sub">${sub}</span><span class="lx-foot">${badge || ''}<span class="st ${done ? 'clear' : ''}">${st}</span></span></span></button>`;
+}
 async function openLessons() {
   await lessonsReady; selTab('lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
   if (!LESSONS) { toast(t('ls.fail')); return; }
-  const pr = lsProgress();
-  let course = '', no = 0;
-  $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
-    const r = pr[s.id], c = s.course || 'tactics';
-    let head = '';
-    if (c !== course) { course = c; no = 0; head = `<p class="ls-course"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></p>`; }
-    no++;
+  const pr = lsProgress(), cats = [];
+  LESSONS.steps.forEach((s, i) => {
+    const r = pr[s.id], key = s.course || 'tactics';
+    let c = cats.find(x => x.key === key);
+    if (!c) cats.push(c = { key, tab: t('course.' + key), name: t('course.' + key), desc: t('course.' + key + '.sub'), items: [] });
     const score = r ? (s.kind === 'drill' ? '★' + r.best + '/' + s.stages.length * 3 : t('u.pt', { n: r.best })) : '';
-    return head + `<button class="lesson-item" data-i="${i}"><span class="no">${no}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + score : t('ls.notyet')}</span></button>`;
-  }).join('');
+    const d = s.diagram || { fen: (s.stages || s.problems)[0].fen };
+    const board = miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] });
+    c.items.push({ done: !!(r && r.clear), html: lxCard(`data-i="${i}"`, board, c.items.length + 1, t('ls.' + s.id + '.title'), t('ls.' + s.id + '.sub'), r ? (r.clear ? t('ls.clear') + ' ' : '') + score : t('ls.notyet'), r && r.clear) });
+  });
+  lxRender('lesson', cats);
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 $('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (!b) return; if (b.dataset.o !== undefined) openOpeningChoice(+b.dataset.o); else openIntro(+b.dataset.i); };
@@ -1248,14 +1270,18 @@ async function openOpenings() {
   await openReady; selTab('open');
   if (!OPEN) { toast(t('ls.fail')); return; }
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
-  const pr = opProg();
-  let head = '';
-  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
-    const r = pr[g.id], first = g.prefix.split(' ')[0];
-    const grp = first === 'e2e4' ? 'e4' : first === 'd2d4' ? 'd4' : 'other';
-    let h = ''; if (grp !== head) { head = grp; h = `<p class="ls-course"><b>${t('op.grp.' + grp)}</b></p>`; }
-    return h + `<button class="lesson-item" data-o="${i}"><span class="no op">${LL(g.label)}</span><span class="tx"><b>${LL(g.title)}</b><small>${LL(g.short)}</small></span><span class="st ${r && r.pass ? 'clear' : ''}">${r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
-  }).join('') + `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${LL(OPEN.credit)}</p>`;
+  const pr = opProg(), cats = [];
+  OPEN.sets.forEach((g, i) => {
+    const r = pr[g.id], pre = g.prefix.split(' '), first = pre[0], last = pre[pre.length - 1];
+    const key = first === 'e2e4' ? 'e4' : first === 'd2d4' ? 'd4' : 'other';
+    let c = cats.find(x => x.key === key);
+    if (!c) cats.push(c = { key, tab: t('lx.tab.' + key), name: t('op.grp.' + key), desc: t('lx.grp.' + key + '.d'), items: [] });
+    const board = miniBoard(lineAfter(pre), { arrows: [[last.slice(0, 2), last.slice(2, 4)]] });
+    const badge = `<span class="lx-side ${g.side}"><i></i>${t(g.side === 'w' ? 'op.forWhite' : 'op.forBlack')}</span>`;
+    c.items.push({ done: !!(r && r.pass), html: lxCard(`data-o="${i}"`, board, '', LL(g.title), LL(g.short), r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet'), r && r.pass, badge) });
+  });
+  const order = ['e4', 'd4', 'other']; cats.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+  lxRender('open', cats, `<p class="lx-credit">${LL(OPEN.credit)}</p>`);
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 function lineAfter(uciList) { const pos = E.Pos.fromFEN(E.START); const pcs = {}; for (const u of uciList) pos.make(pos.fromUci(u)); for (let q = 0; q < 128; q++) { if (q & 0x88) { q += 7; continue; } const p = pos.b[q]; if (p) pcs[E.sqName(q)] = ' PNBRQK'[p & 7][p & 8 ? 'toLowerCase' : 'toUpperCase'](); } return pcs; }
