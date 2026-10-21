@@ -1150,25 +1150,63 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 // ====================================================================== lessons
 let introIdx = 0;
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-async function openLessons() {
+// lesson / puzzle lists: course tabs, a banner, cards with a board picture and a short explanation (same layout as gomoku)
+// flat mini board for list cards (no gradients / ids, so any number can be on a page): the count in each pit, tinted by its size
+function mThumb(c, marks) {
+  let s = `<svg viewBox="0 0 ${MB.W} ${MB.H}" aria-hidden="true"><rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="18" fill="#2a1d14" stroke="#6b4a2a" stroke-width="3"/>`;
+  for (let i = 0; i < 14; i++) {
+    const [x, y] = mbXY(i), n = c[i], st = isStore(i), mk = marks && marks[i];
+    s += st ? `<rect x="${x - 24}" y="${y - 64}" width="48" height="128" rx="24" fill="#0d0a08"/>` : `<circle cx="${x}" cy="${y}" r="25" fill="#0d0a08"/>`;
+    if (n) s += st ? `<rect x="${x - 24}" y="${y - 64}" width="48" height="128" rx="24" fill="#c8384f" opacity="${Math.min(.55, .12 + n * .015).toFixed(2)}"/>` : `<circle cx="${x}" cy="${y}" r="25" fill="#c8384f" opacity="${Math.min(.6, .14 + n * .06).toFixed(2)}"/>`;
+    s += `<text x="${x}" y="${y + 12}" fill="${n ? '#fff3d6' : 'rgba(251,236,203,.3)'}" font-family="JetBrains Mono,monospace" font-size="${st ? 32 : 32}" font-weight="700" text-anchor="middle">${n}</text>`;
+    if (mk) { const col = mk === 'cap' ? '#ff7a6a' : mk === 'relay' ? '#7fc8ff' : mk === 'src' ? '#ffffff' : '#e2c275'; s += st ? `<rect x="${x - 28}" y="${y - 68}" width="56" height="136" rx="28" fill="none" stroke="${col}" stroke-width="5"/>` : `<circle cx="${x}" cy="${y}" r="29" fill="none" stroke="${col}" stroke-width="5"/>`; }
+  }
+  return s + '</svg>';
+}
+const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+// lessons in two courses: the three basic moves, then playing to win
+const LS_COURSES = { basic: ['sow', 'extra', 'capture'], tactics: ['defend', 'chain', 'endgame'] };
+const LS_ICON = { basic: '①', tactics: '⚔' };
+const lsCourseOf = id => Object.keys(LS_COURSES).find(c => LS_COURSES[c].includes(id)) || 'basic';
+let lsCourseSel = '';
+async function openLessons(course) {
   await lessonsReady; selTab('lesson');
   if (!LESSONS) { toast(t('ls.fail')); return; }
-  const pr = lsProgress();
-  $('#lessonList').innerHTML = LESSONS.steps.map((s, i) => {
-    const r = pr[s.id];
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('ls.' + s.id + '.title')}</b><small>${t('ls.' + s.id + '.sub')}</small></span><span class="st ${r && r.clear ? 'clear' : ''}">${r ? (r.clear ? t('ls.clear') + ' ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet')}</span></button>`;
+  const pr = lsProgress(), courses = Object.keys(LS_COURSES);
+  const stat = c => { const st = LESSONS.steps.filter(s => lsCourseOf(s.id) === c); return { n: st.length, ok: st.filter(s => pr[s.id] && pr[s.id].clear).length }; };
+  if (course) lsCourseSel = course;
+  if (!courses.includes(lsCourseSel)) lsCourseSel = courses.find(c => { const q = stat(c); return q.ok < q.n; }) || courses[0];
+  const c = lsCourseSel, q = stat(c);
+  const cards = LESSONS.steps.map((s, i) => {
+    if (lsCourseOf(s.id) !== c) return '';
+    const r = pr[s.id], d = LESSON_D[s.id];
+    const th = d ? mThumb(d[0], d[1]) : mThumb(s.problems[0].b);
+    const st = r ? (r.clear ? `<span class="lx-st ok">✓ ${t('ls.clear')}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
+    return `<button class="lx-card${r && r.clear ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${th}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">STEP ${i + 1}</span>${st}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
+      `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.clear ? 'ok' : '')}</span></button>`;
   }).join('');
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k]}</span><span class="nm">${t('lx.c.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner"><span class="ic">${LS_ICON[c]}</span><span class="tx"><b>${t('lx.c.' + c)}</b><small>${t('lx.c.' + c + '.d')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div></div>`;
   showLessonView('lessonListView'); $('#lessonOverlay').classList.add('show');
 }
-$('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); };
-const LESSON_DIAG = {
-  sow: () => miniBoard(B0([2, 1, 3, 0, 2, 1], [2, 1, 3, 0, 2, 2], 3, 4), { 2: 'src', 5: 'land' }, [2, 3, 4, 5]),
-  extra: () => miniBoard(B0([1, 4, 2, 0, 2, 1], [2, 1, 3, 1, 2, 2], 4, 4), { 5: 'src', 6: 'land' }, [5, 6]),
-  capture: () => miniBoard(B0([0, 2, 1, 0, 3, 1], [2, 1, 0, 5, 2, 1], 4, 6), { 1: 'src', 3: 'land', 9: 'cap' }, [1, 2, 3], { capArrow: [9, 6] }),
-  defend: () => miniBoard(B0([1, 2, 6, 1, 0, 2], [2, 0, 1, 0, 2, 3], 6, 6), { 2: 'cap', 7: 'src', 10: 'land' }, null),
-  chain: () => miniBoard(B0([3, 0, 2, 3, 2, 1], [2, 1, 1, 2, 3, 2], 5, 6), { 5: 'src', 6: 'land' }, [5, 6]),
-  endgame: () => miniBoard(B0([0, 0, 2, 0, 1, 1], [1, 0, 0, 2, 0, 0], 21, 21), { 6: 'land', 13: 'land' }, null),
+$('#lessonList').onclick = e => {
+  const tb = e.target.closest('[data-course]'); if (tb) { openLessons(tb.dataset.course); return; }
+  const b = e.target.closest('.lx-card'); if (b) openIntro(+b.dataset.i);
 };
+// [counts, marks, path, opt] of each lesson's picture (intro page and list card)
+const LESSON_D = {
+  sow: [B0([2, 1, 3, 0, 2, 1], [2, 1, 3, 0, 2, 2], 3, 4), { 2: 'src', 5: 'land' }, [2, 3, 4, 5]],
+  extra: [B0([1, 4, 2, 0, 2, 1], [2, 1, 3, 1, 2, 2], 4, 4), { 5: 'src', 6: 'land' }, [5, 6]],
+  capture: [B0([0, 2, 1, 0, 3, 1], [2, 1, 0, 5, 2, 1], 4, 6), { 1: 'src', 3: 'land', 9: 'cap' }, [1, 2, 3], { capArrow: [9, 6] }],
+  defend: [B0([1, 2, 6, 1, 0, 2], [2, 0, 1, 0, 2, 3], 6, 6), { 2: 'cap', 7: 'src', 10: 'land' }, null],
+  chain: [B0([3, 0, 2, 3, 2, 1], [2, 1, 1, 2, 3, 2], 5, 6), { 5: 'src', 6: 'land' }, [5, 6]],
+  endgame: [B0([0, 0, 2, 0, 1, 1], [1, 0, 0, 2, 0, 0], 21, 21), { 6: 'land', 13: 'land' }, null],
+};
+const LESSON_DIAG = {}; for (const k in LESSON_D) LESSON_DIAG[k] = () => miniBoard(...LESSON_D[k]);
 function openIntro(i) {
   introIdx = i; const s = LESSONS.steps[i];
   $('#liStep').textContent = 'STEP ' + (i + 1);
@@ -1176,7 +1214,7 @@ function openIntro(i) {
   $('#liBody').innerHTML = (LESSON_DIAG[s.id] ? LESSON_DIAG[s.id]() : '') + t('ls.' + s.id + '.intro') + `<p class="note">${t('ls.scoring')}</p>`;
   showLessonView('lessonIntroView');
 }
-$('#btnLessonBack').onclick = () => openLessons();
+$('#btnLessonBack').onclick = () => openLessons(LESSONS.steps[introIdx] && lsCourseOf(LESSONS.steps[introIdx].id));
 $('#btnLessonClose').onclick = () => $('#lessonOverlay').classList.remove('show');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { $('#lessonOverlay').classList.remove('show'); quitSpecial(); };
@@ -1268,7 +1306,7 @@ $('#lsNext').onclick = () => {
   if (pass) { confetti(); sChime(1); }
 };
 $('#lsQuit').onclick = () => quitSpecial();
-$('#lsToList').onclick = () => openLessons();
+$('#lsToList').onclick = () => openLessons(lesson ? lsCourseOf(LESSONS.steps[lesson.step].id) : undefined);
 $('#pzToList').onclick = () => openPuzzles();
 
 // ====================================================================== puzzles
@@ -1278,20 +1316,26 @@ async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.' + PUZZLES.levels[dl.L].id)} · ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
-    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length;
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.' + L.id)}</b><small>${t('pz.' + L.id + '.d')}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
+  const daily = dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.' + PUZZLES.levels[dl.L].id)} · ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '';
+  const cards = PUZZLES.levels.map((L, i) => {
+    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length, all = solved === L.puzzles.length, P0 = L.puzzles[0];
+    const ns = L.puzzles.map(p => pzN(p)), lo = Math.min(...ns), hi = Math.max(...ns);
+    return `<button class="lx-card pz${all ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${mThumb(P0.b, { [P0.best]: 'src' })}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">LEVEL ${i + 1}</span><span class="lx-st${all ? ' ok' : solved ? '' : ' new'}">${all ? '✓ ' : ''}${t('lx.solved', { a: solved, b: L.puzzles.length })}</span></span>` +
+      `<b class="lx-t">${t('pz.' + L.id)}</b><small class="lx-sub">${t('rule.' + P0.rules)} · ${t('lx.moves', { n: lo === hi ? lo : lo + '–' + hi })}</small><span class="lx-desc">${t('pz.' + L.id + '.d')}</span>${lxBar(solved / L.puzzles.length, all ? 'ok' : '')}</span></button>`;
   }).join('');
+  $('#pzLevels').innerHTML = `<div class="lx">${daily}<div class="lx-grid">${cards}</div></div>`;
   showPzView('pzListView'); $('#puzzleOverlay').classList.add('show');
 }
 $('#pzLevels').onclick = e => {
-  const b = e.target.closest('.lesson-item'); if (!b) return;
+  const b = e.target.closest('.lesson-item, .lx-card'); if (!b) return;
   if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
 };
 function openPzGrid(i) {
   pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
   $('#pzLevelTitle').textContent = `${i + 1}. ${t('pz.' + L.id)}`;
-  $('#pzGrid').innerHTML = L.puzzles.map((_, j) => `<button data-j="${j}" class="${pr[`${i}-${j}`] ? 'solved' : ''}">${j + 1}</button>`).join('');
+  // each tile shows the position (a small board) with its number
+  $('#pzGrid').innerHTML = L.puzzles.map((P, j) => `<button data-j="${j}" class="th${pr[`${i}-${j}`] ? ' solved' : ''}"><span class="tth">${mThumb(P.b)}</span><span class="tn">${j + 1}</span></button>`).join('');
   showPzView('pzGridView'); $('#puzzleOverlay').classList.add('show');
 }
 $('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzLevel, +b.dataset.j); };

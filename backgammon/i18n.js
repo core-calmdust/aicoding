@@ -1232,3 +1232,19 @@ for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 }
 };
 for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
+// lesson / puzzle list cards (course tabs, banner, progress)
+(function () {
+const S = {
+  ja: { 'lx.c.basic': '動かし方と攻防', 'lx.c.basic.d': 'ダイスの使い方・ヒット・ポイント作り・安全な運び方。', 'lx.c.home': 'ゴールとキューブ', 'lx.c.home.d': 'ベアオフ・レースの数え方・ダブリングキューブの判断。', 'lx.cleared': '{a}/{b} 合格', 'lx.solved': '{a}/{b} 正解' },
+  en: { 'lx.c.basic': 'Moving and fighting', 'lx.c.basic.d': 'Using the dice, hitting, making points and moving safely.', 'lx.c.home': 'Home stretch & cube', 'lx.c.home.d': 'Bearing off, counting the race and doubling cube decisions.', 'lx.cleared': '{a}/{b} passed', 'lx.solved': '{a}/{b} solved' },
+  zh: { 'lx.c.basic': '走法与攻防', 'lx.c.basic.d': '骰子的用法、打子、做点与安全推进。', 'lx.c.home': '收官与加倍骰', 'lx.c.home.d': '移出棋子、计算竞速、加倍骰的判断。', 'lx.cleared': '{a}/{b} 合格', 'lx.solved': '{a}/{b} 已解' },
+  ko: { 'lx.c.basic': '이동과 공방', 'lx.c.basic.d': '주사위 쓰는 법·히트·포인트 만들기·안전한 이동.', 'lx.c.home': '골인과 큐브', 'lx.c.home.d': '베어오프·레이스 계산·더블링 큐브 판단.', 'lx.cleared': '{a}/{b} 합격', 'lx.solved': '{a}/{b} 정답' },
+  es: { 'lx.c.basic': 'Mover y combatir', 'lx.c.basic.d': 'Usar los dados, golpear, hacer puntos y mover con seguridad.', 'lx.c.home': 'Recta final y cubo', 'lx.c.home.d': 'Sacar fichas, contar la carrera y decisiones con el cubo.', 'lx.cleared': '{a}/{b} aprobadas', 'lx.solved': '{a}/{b} resueltos' },
+  fr: { 'lx.c.basic': 'Déplacer et combattre', 'lx.c.basic.d': 'Utiliser les dés, frapper, faire des cases et avancer en sécurité.', 'lx.c.home': 'Sortie et videau', 'lx.c.home.d': 'Sortir ses dames, compter la course et décisions de videau.', 'lx.cleared': '{a}/{b} réussies', 'lx.solved': '{a}/{b} résolus' },
+  pt: { 'lx.c.basic': 'Mover e lutar', 'lx.c.basic.d': 'Usar os dados, acertar, fazer pontos e mover com segurança.', 'lx.c.home': 'Reta final e cubo', 'lx.c.home.d': 'Retirar peças, contar a corrida e decisões do cubo.', 'lx.cleared': '{a}/{b} aprovadas', 'lx.solved': '{a}/{b} resolvidos' },
+  de: { 'lx.c.basic': 'Ziehen und kämpfen', 'lx.c.basic.d': 'Würfel nutzen, schlagen, Punkte bauen und sicher ziehen.', 'lx.c.home': 'Zielgerade & Doppler', 'lx.c.home.d': 'Auswürfeln, das Rennen zählen und Entscheidungen mit dem Doppler.', 'lx.cleared': '{a}/{b} bestanden', 'lx.solved': '{a}/{b} gelöst' },
+  hi: { 'lx.c.basic': 'चलना और भिड़ना', 'lx.c.basic.d': 'पासों का उपयोग, हिट, पॉइंट बनाना और सुरक्षित चलना।', 'lx.c.home': 'आख़िरी दौर और क्यूब', 'lx.c.home.d': 'बेयर-ऑफ़, रेस की गिनती और डबलिंग क्यूब के फ़ैसले।', 'lx.cleared': '{a}/{b} पास', 'lx.solved': '{a}/{b} हल' },
+  ar: { 'lx.c.basic': 'التحريك والقتال', 'lx.c.basic.d': 'استخدام النرد والضرب وبناء النقاط والتحرك بأمان.', 'lx.c.home': 'المرحلة الأخيرة والمكعب', 'lx.c.home.d': 'إخراج القطع وحساب السباق وقرارات مكعب المضاعفة.', 'lx.cleared': '{a}/{b} ناجحة', 'lx.solved': '{a}/{b} محلولة' },
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();

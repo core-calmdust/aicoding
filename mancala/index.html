@@ -673,6 +673,58 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
   #infoLine{margin-right:226px}
 }
+/* lesson / puzzle lists: tabs per course, a banner, cards with a board picture and a short explanation (same layout as gomoku) */
+.lesson-list:has(> .lx){display:block}
+.lx .daily{margin:0 0 12px}
+.lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
+.lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0}
+.lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(201,169,97,.14);color:var(--brass)}
+.lx-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.lx-tabs button .ct.ok{color:#8fe3b8}
+.lx-tabs button:hover{border-color:var(--brass2)}
+.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(201,169,97,.2),rgba(201,169,97,.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(201,169,97,.28);background:linear-gradient(120deg,rgba(201,169,97,.14),rgba(0,0,0,.18) 70%)}
+.lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#1a140c;background:linear-gradient(140deg,#e9cf8e,#a8873f)}
+.lx-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-banner .tx b{font-family:'Shippori Mincho B1',serif;font-size:17px;color:var(--brass)}
+.lx-banner .tx small{font-size:12px;color:var(--muted);line-height:1.6}
+.lx-banner .pg{flex:none;width:120px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);text-align:right}
+.lx-bar{display:block;height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.lx-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--brass))}
+.lx-bar.ok i{background:linear-gradient(90deg,#2f7d5a,#6fd3a0)}
+.lx-grid{display:grid;gap:10px}
+.lx-card{display:flex;gap:12px;align-items:stretch;text-align:left;width:100%;padding:10px 12px 10px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--text);transition:transform .15s,border-color .2s}
+.lx-card:hover{transform:translateY(-1px);border-color:var(--brass2)}
+.lx-card.clear{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
+.lx-th{flex:none;width:136px;align-self:center}.lx-th svg{display:block;width:100%;height:auto;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-top{display:flex;align-items:center;gap:6px}
+.lx-no{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brass)}
+.lx-st{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}.lx-st.ok{color:#8fe3b8;font-weight:700}.lx-st.new{color:var(--dim)}
+.lx-t{font-size:15px}
+.lx-sub{font-size:12px;color:var(--brass);opacity:.9}
+.lx-desc{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lx-card .lx-bar{margin-top:auto;height:4px}
+html[lang=ar] .lx-card, html[lang=ar] .lx-banner .tx{direction:rtl;text-align:right}
+html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
+@media (max-width:560px){
+  .lx-tabs button{flex-direction:column;gap:2px;padding:7px 4px;font-size:11.5px}.lx-tabs button .ic{width:22px;height:22px}
+  .lx-tabs button .nm{max-width:100%}
+  .lx-banner{padding:10px 12px;gap:6px 10px;flex-wrap:wrap}.lx-banner .ic{width:36px;height:36px;font-size:18px}.lx-banner .tx{flex:1 1 calc(100% - 50px)}.lx-banner .pg{width:100%;flex-direction:row;align-items:center;gap:8px;text-align:left}.lx-banner .pg .lx-bar{flex:1}
+  .lx-th{width:118px}
+}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  .lx-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lx-desc{-webkit-line-clamp:3}
+  .lx-th{width:150px}
+}
+/* puzzle tiles: the position under the number */
+.pz-grid button.th{position:relative;padding:4px 4px 3px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pz-grid button.th .tth{display:block;width:100%}.pz-grid button.th .tth svg{display:block;width:100%;height:auto;border-radius:5px;opacity:.9}
+.pz-grid button.th .tn{font-size:12px;line-height:1.3}
+.pz-grid button.th.solved .tth svg{opacity:1}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #puzzleOverlay .pz-grid{grid-template-columns:repeat(5, 1fr)} }
+@media (max-width:560px){ .pz-grid:has(> .th){grid-template-columns:repeat(3,1fr)} }
 </style>
 </head>
 <body>
@@ -909,7 +961,7 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021ri"></script>
+<script src="i18n.js?v=20261021lx"></script>
 <script src="engine.js"></script>
 <script>
 // "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
@@ -933,7 +985,7 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/rulesoffer.js?v=3"><\/script><script src="../shared/headerbar.js?v=3"><\/script><script src="../shared/ruletour.js?v=8"><\/script><script src="../shared/pzbook.js?v=2"><\/script><script src="app.js?v=20261021ri"><\/script>');
+  } else document.write('<script src="../shared/rulesoffer.js?v=3"><\/script><script src="../shared/headerbar.js?v=3"><\/script><script src="../shared/ruletour.js?v=8"><\/script><script src="../shared/pzbook.js?v=2"><\/script><script src="app.js?v=20261021lx"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

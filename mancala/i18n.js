@@ -939,3 +939,19 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+// lesson / puzzle list cards (course tabs, banner, progress)
+(function () {
+const S = {
+  ja: { 'lx.c.basic': '基本の3手', 'lx.c.basic.d': 'まき方・もう一回・横取り。マンカラの土台になる3つの動き。', 'lx.c.tactics': '勝つための技', 'lx.c.tactics.d': '守り・連続手・終盤の数え方で、実戦の勝ち方を身につける。', 'lx.cleared': '{a}/{b} 合格', 'lx.solved': '{a}/{b} 正解', 'lx.moves': '{n}手' },
+  en: { 'lx.c.basic': 'The 3 basic moves', 'lx.c.basic.d': 'Sowing, extra turns and captures — the three moves everything else is built on.', 'lx.c.tactics': 'Winning technique', 'lx.c.tactics.d': 'Defending, chaining extra turns and counting the endgame to win real games.', 'lx.cleared': '{a}/{b} passed', 'lx.solved': '{a}/{b} solved', 'lx.moves': '{n} moves' },
+  zh: { 'lx.c.basic': '三个基本动作', 'lx.c.basic.d': '播种、再走一次、吃子——曼卡拉一切的基础。', 'lx.c.tactics': '取胜技巧', 'lx.c.tactics.d': '防守、连续再走与残局计数，学会实战中的取胜方法。', 'lx.cleared': '{a}/{b} 合格', 'lx.solved': '{a}/{b} 已解', 'lx.moves': '{n}步' },
+  ko: { 'lx.c.basic': '기본 3동작', 'lx.c.basic.d': '씨 뿌리기·한 번 더·가로채기. 만칼라의 토대가 되는 세 가지 동작.', 'lx.c.tactics': '이기는 기술', 'lx.c.tactics.d': '수비·연속 수·종반 계산으로 실전에서 이기는 법을 익힙니다.', 'lx.cleared': '{a}/{b} 합격', 'lx.solved': '{a}/{b} 정답', 'lx.moves': '{n}수' },
+  es: { 'lx.c.basic': 'Los 3 movimientos básicos', 'lx.c.basic.d': 'Sembrar, turno extra y captura: la base de todo lo demás.', 'lx.c.tactics': 'Técnica para ganar', 'lx.c.tactics.d': 'Defender, encadenar turnos extra y contar el final para ganar partidas reales.', 'lx.cleared': '{a}/{b} aprobadas', 'lx.solved': '{a}/{b} resueltos', 'lx.moves': '{n} jugadas' },
+  fr: { 'lx.c.basic': 'Les 3 coups de base', 'lx.c.basic.d': 'Semer, rejouer et capturer : les trois coups sur lesquels tout repose.', 'lx.c.tactics': 'Technique pour gagner', 'lx.c.tactics.d': 'Défendre, enchaîner les tours bonus et compter la finale pour gagner de vraies parties.', 'lx.cleared': '{a}/{b} réussies', 'lx.solved': '{a}/{b} résolus', 'lx.moves': '{n} coups' },
+  pt: { 'lx.c.basic': 'Os 3 lances básicos', 'lx.c.basic.d': 'Semear, jogar de novo e capturar: a base de todo o resto.', 'lx.c.tactics': 'Técnica para vencer', 'lx.c.tactics.d': 'Defender, encadear jogadas extras e contar o final para vencer partidas reais.', 'lx.cleared': '{a}/{b} aprovadas', 'lx.solved': '{a}/{b} resolvidos', 'lx.moves': '{n} lances' },
+  de: { 'lx.c.basic': 'Die 3 Grundzüge', 'lx.c.basic.d': 'Säen, Extrazug und Schlagen – die drei Züge, auf denen alles aufbaut.', 'lx.c.tactics': 'Gewinntechnik', 'lx.c.tactics.d': 'Verteidigen, Extrazüge verketten und das Endspiel zählen, um echte Partien zu gewinnen.', 'lx.cleared': '{a}/{b} bestanden', 'lx.solved': '{a}/{b} gelöst', 'lx.moves': '{n} Züge' },
+  hi: { 'lx.c.basic': '3 बुनियादी चालें', 'lx.c.basic.d': 'बोना, एक और बारी और कब्ज़ा — मंकाला की नींव ये तीन चालें हैं।', 'lx.c.tactics': 'जीतने की तकनीक', 'lx.c.tactics.d': 'बचाव, लगातार बारियाँ और अंत की गिनती से असली खेल जीतना सीखें।', 'lx.cleared': '{a}/{b} पास', 'lx.solved': '{a}/{b} हल', 'lx.moves': '{n} चालें' },
+  ar: { 'lx.c.basic': 'الحركات الأساسية الثلاث', 'lx.c.basic.d': 'البذر والدور الإضافي والأسر: الأساس الذي تُبنى عليه اللعبة كلها.', 'lx.c.tactics': 'تقنيات الفوز', 'lx.c.tactics.d': 'الدفاع وتسلسل الأدوار الإضافية وعدّ النهاية للفوز في المباريات الحقيقية.', 'lx.cleared': '{a}/{b} ناجحة', 'lx.solved': '{a}/{b} محلولة', 'lx.moves': '{n} نقلات' },
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();
