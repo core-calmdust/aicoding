@@ -32,14 +32,18 @@
     hi: { roll: 'पासा फेंकें', undo: 'वापस', ok: 'पक्का', tapCk: 'चमकती गोटी छुएँ', tapDest: 'जगह छुएँ', noMove: 'कोई चाल नहीं', aiNoMove: 'AI चल नहीं सकता', youFirst: 'आप पहले!', aiFirst: 'AI पहले', k1: 'सिंगल (1 अंक)', k2: 'गैमन (2 अंक)', k3: 'बैकगैमन (3 अंक)' },
     ar: { roll: 'ارمِ النرد', undo: 'تراجع', ok: 'تأكيد', tapCk: 'المس قطعة مضيئة', tapDest: 'المس الوجهة', noMove: 'لا توجد نقلة', aiNoMove: 'الذكاء لا يستطيع التحرك', youFirst: 'أنت تبدأ!', aiFirst: 'الذكاء يبدأ', k1: 'فوز عادي (1)', k2: 'غامون (2)', k3: 'باكغامون (3)' },
   };
+  const CN = { ja: { gold: '金', black: '黒', white: '白', red: '赤' }, en: { gold: 'Gold', black: 'Black', white: 'White', red: 'Red' }, zh: { gold: '金', black: '黑', white: '白', red: '红' }, ko: { gold: '금', black: '검정', white: '흰색', red: '빨강' },
+    es: { gold: 'Oro', black: 'Negro', white: 'Blanco', red: 'Rojo' }, fr: { gold: 'Or', black: 'Noir', white: 'Blanc', red: 'Rouge' }, pt: { gold: 'Ouro', black: 'Preto', white: 'Branco', red: 'Vermelho' }, de: { gold: 'Gold', black: 'Schwarz', white: 'Weiß', red: 'Rot' } };
+  const PV = { ja: { turnC: '{c}の番', firstC: '{c}が先攻！', winC: '{c}の勝ち', noMoveC: '{c}は動かせません' }, en: { turnC: "{c}'s turn", firstC: '{c} goes first!', winC: '{c} wins', noMoveC: '{c} cannot move' },
+    zh: { turnC: '轮到{c}', firstC: '{c}先走！', winC: '{c}获胜', noMoveC: '{c}无法移动' }, ko: { turnC: '{c} 차례', firstC: '{c}이(가) 먼저!', winC: '{c} 승리', noMoveC: '{c}은(는) 움직일 수 없어요' } };
   const DOT = { gold: 'radial-gradient(circle,#e9dfc8 52%,#d8b25e 56%)', black: 'radial-gradient(circle,#1c1c1f 52%,#d6d8dc 56%)', white: 'radial-gradient(circle,#f5f2ea 52%,#c9ccd2 56%)', red: 'radial-gradient(circle,#a8141d 52%,#d8b25e 56%)' };
   const NOSFX = { tok() {}, rattle() {}, blip() {}, chime() {} };
 
   function tableStart(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, M3 = T3.backgammon, t = ctx.t;
-    const L = Object.assign({}, TX.en, TX[ctx.lang] || {}, { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') });
+    const L = Object.assign({}, TX.en, TX[ctx.lang] || {}, PV.en, PV[ctx.lang] || {}, { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') });
     const SFX = (window.AtlasRules && AtlasRules.backgammon && AtlasRules.backgammon.SFX) || NOSFX;
-    const level = Math.max(1, Math.min(10, +ctx.level || 6));
+    const level = Math.max(1, Math.min(10, +ctx.level || 6)), PVP = ctx.mode === 'pvp';   // pvp: two players on this device (no AI)
     // the game's saved look and checker colours (backgammon/app.js settings, the skin's board-design choice)
     let look = 'marq', ck = ['gold', 'black'];
     try {
@@ -47,14 +51,15 @@
       look = v === 'scarlet' ? 'scarlet' : v === 'marq' ? 'marq' : st.skin === 'scarlet' ? 'scarlet' : 'marq';
       if (st.ck && M3.CKL[st.ck[0]] && M3.CKL[st.ck[1]] && st.ck[0] !== st.ck[1]) ck = st.ck.slice();
     } catch (e) {}
-    const CID = ctx.side === 2 ? [ck[1], ck[0]] : [ck[0], ck[1]];   // engine side 0 = you (bottom, 24 → 1), side 1 = the AI
+    const CID = ctx.side === 2 && !PVP ? [ck[1], ck[0]] : [ck[0], ck[1]];
+    const cname = s => (CN[ctx.lang] || CN.en)[CID[s]] || CID[s], pname = s => PVP ? cname(s) : s ? L.ai : L.you;   // engine side 0 = you (bottom, 24 → 1), side 1 = the AI
 
     const board = T3.MODELS.backgammon(true, { look }); T3.show('backgammon', board); T3.play(true);
     const g = M3.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;
     board.scale.setScalar(SC);
     const bvEl = ctx.el.parentNode;
     let turned = false, colUI = false;
-    const FR = M3.frameOn(board, T3, { SC, Y, g, left: 86, right: 92, onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
+    const FR = M3.frameOn(board, T3, { SC, Y, g, left: 6, right: 92, onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
       setTimeout(() => { if (!stopped) { hud(); placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
@@ -150,7 +155,7 @@
       m.position.set(M3.slotX(vp, g) - W2, Y + .006, (top ? g.TOP : g.BOT) - H2); marks.add(m); T3.kick(200); return m;
     }
     function ring(x, y, z, color) { const m = new TH.Mesh(ringGeo, new TH.MeshBasicMaterial({ color, transparent: true, opacity: .95, toneMapped: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); marks.add(m); T3.kick(200); return m; }
-    function trayGlow() { const h = g.MID - g.TOP - .15, m = new TH.Mesh(new TH.PlaneGeometry(g.TW - .1, h), new TH.MeshBasicMaterial({ color: 0x2fd17a, transparent: true, opacity: .45, toneMapped: false, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(g.TX + g.TW / 2 - W2, Y + .006, g.MID + .1 + h / 2 - H2); marks.add(m); T3.kick(200); }
+    function trayGlow(side = 0) { const h = g.MID - g.TOP - .15, m = new TH.Mesh(new TH.PlaneGeometry(g.TW - .1, h), new TH.MeshBasicMaterial({ color: 0x2fd17a, transparent: true, opacity: .45, toneMapped: false, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(g.TX + g.TW / 2 - W2, Y + .006, (side ? g.TOP + .05 : g.MID + .1) + h / 2 - H2); marks.add(m); T3.kick(200); }
     const numTex = {};
     function numSprite(n) {
       if (!numTex[n]) { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill(); x.lineWidth = 9; x.strokeStyle = '#1f9d5a'; x.stroke(); x.fillStyle = '#2b3044'; x.font = '900 74px Fredoka, "Zen Maru Gothic", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), 64, 70); numTex[n] = new TH.CanvasTexture(c); numTex[n].encoding = TH.sRGBEncoding; }
@@ -161,12 +166,12 @@
     function drop() { if (!lifted) return; const c = lifted; lifted = null; if (!stopped && c.m.parent) place(c); T3.kick(120); }
 
     /* ---------- your turn ---------- */
-    const legalNow = () => T ? BG.legalSteps(T.pos, 0, T.left, T.dice, T.steps.length) : [];
+    const legalNow = () => T ? BG.legalSteps(T.pos, T.side, T.left, T.dice, T.steps.length) : [];
     function destsFrom(from) {   // the game's own search (backgammon/app.js destsFrom): dest → steps, shortest, most hits
       const res = new Map();
       const dfs = (q, left, used, pt, path) => {
-        for (const x of BG.legalSteps(q, 0, left, T.dice, used).filter(y => y.from === pt)) {
-          const r = q.slice(), code = BG.apply(r, 0, x.from, x.to), np = path.concat([{ from: x.from, to: x.to, die: x.die, hit: BG.mvHit(code) }]);
+        for (const x of BG.legalSteps(q, T.side, left, T.dice, used).filter(y => y.from === pt)) {
+          const r = q.slice(), code = BG.apply(r, T.side, x.from, x.to), np = path.concat([{ from: x.from, to: x.to, die: x.die, hit: BG.mvHit(code) }]);
           const prev = res.get(x.to), hits = np.filter(y => y.hit).length;
           if (!prev || np.length < prev.length || (np.length === prev.length && hits > prev.filter(y => y.hit).length)) res.set(x.to, np);
           if (x.to !== 0) { const i = left.indexOf(x.die); dfs(r, left.slice(0, i).concat(left.slice(i + 1)), used + 1, x.to, np); }
@@ -178,15 +183,15 @@
     function showSources() {   // a gold ring under the top checker of every point you may move from
       drop(); clearMarks(); sel = null; dests = null;
       const srcs = [...new Set(legalNow().map(x => x.from))];
-      srcs.forEach(p => { const c = topOf(0, locOf(0, p)); if (c) popIn(ring(c.m.position.x, c.m.position.y + M3.CK_H + .02, c.m.position.z, 0xffc928), 1); });
+      srcs.forEach(p => { const c = topOf(T.side, locOf(T.side, p)); if (c) popIn(ring(c.m.position.x, c.m.position.y + M3.CK_H + .02, c.m.position.z, 0xffc928), 1); });
       return srcs;
     }
     function select(p) {
       showSources(); sel = p; dests = destsFrom(p);
-      const c = topOf(0, locOf(0, p)); if (c) { lifted = c; const y0 = c.m.position.y; anim(160, k => { c.m.position.y = y0 + (Y + .4 - y0) * io(k); }); SFX.tok(.6, 1.6); }
+      const c = topOf(T.side, locOf(T.side, p)); if (c) { lifted = c; const y0 = c.m.position.y; anim(160, k => { c.m.position.y = y0 + (Y + .4 - y0) * io(k); }); SFX.tok(.6, 1.6); }
       for (const [to, path] of dests) {
-        const pips = path.reduce((a, s) => a + s.die, 0), at = locOf(0, to), [x, z] = landXZ(0, at);
-        if (to === 0) trayGlow(); else glowPt(at, 0x2fd17a, .42);
+        const pips = path.reduce((a, s) => a + s.die, 0), at = locOf(T.side, to), [x, z] = landXZ(T.side, at);
+        if (to === 0) trayGlow(T.side); else glowPt(at, 0x2fd17a, .42);
         popIn(ring(x, Y + .03, z, path.some(s => s.hit) ? 0xff5d5d : 0x2fd17a), 1);
         const sp = numSprite(pips); sp.position.set(x, Y + .8, z); marks.add(sp); popIn(sp, .62); T3.kick(200);
       }
@@ -196,8 +201,8 @@
       busy = true; drop(); clearMarks(); say('');
       for (const st of path) {
         if (stopped || !T) return;
-        await stepAnim(0, st.from, st.to, true);
-        const q = T.pos.slice(), code = BG.apply(q, 0, st.from, st.to);
+        await stepAnim(T.side, st.from, st.to, true);
+        const q = T.pos.slice(), code = BG.apply(q, T.side, st.from, st.to);
         T.pos = q; T.steps.push({ code, die: st.die, from: st.from, to: st.to, hit: BG.mvHit(code) });
         T.left.splice(T.left.indexOf(st.die), 1); dimDice(T.left);
       }
@@ -213,28 +218,28 @@
       if (!T || busy || !T.steps.length) return;
       busy = true; drop(); clearMarks(); say('');
       const st = T.steps.pop();
-      const c = topOf(0, locOf(0, st.to)); if (c) await moveTo(c, locOf(0, st.from), null, true);
-      if (st.hit) { const v = topOf(1, 'bar'); if (v) await moveTo(v, locOf(0, st.to), null, true); }
+      const me = T.side, c = topOf(me, locOf(me, st.to)); if (c) await moveTo(c, locOf(me, st.from), null, true);
+      if (st.hit) { const v = topOf(1 - me, 'bar'); if (v) await moveTo(v, locOf(me, st.to), null, true); }
       const q = T.start.slice(); T.left = T.dice[0] === T.dice[1] ? [T.dice[0], T.dice[0], T.dice[0], T.dice[0]] : T.dice.slice();
-      for (const s of T.steps) { BG.apply(q, 0, s.from, s.to); T.left.splice(T.left.indexOf(s.die), 1); }
+      for (const s of T.steps) { BG.apply(q, me, s.from, s.to); T.left.splice(T.left.indexOf(s.die), 1); }
       T.pos = q; dimDice(T.left); busy = false; afterStep();
     }
     function commit() {
       if (!T || busy || legalNow().length) return;
       if (!T.plays.some(x => BG.key(x.pos) === BG.key(T.pos))) return;   // safety: must be one of the legal plays
-      pos = T.pos; T = null; clearMarks(); SFX.tok(.5, 1.5);
-      if (!checkEnd()) aiTurn();
+      const me = T.side; pos = T.pos; T = null; clearMarks(); SFX.tok(.5, 1.5);
+      if (!checkEnd()) nextTurn(1 - me);
     }
-    function beginMove(d) {
-      toMove = 0; T = { dice: d, left: d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice(), steps: [], pos: pos.slice(), start: pos.slice(), plays: BG.genPlays(pos, 0, d[0], d[1]) };
-      if (T.plays.length === 1 && !T.plays[0].moves.length) { T = null; say(L.noMove); later(() => { dimDice([]); aiTurn(); }, 1700); return; }
+    function beginMove(d, side = 0) {   // a human's move (side 1 too in a two-player game): the engine in that side's own numbering
+      toMove = side; T = { side, dice: d, left: d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice(), steps: [], pos: pos.slice(), start: pos.slice(), plays: BG.genPlays(pos, side, d[0], d[1]) };
+      if (T.plays.length === 1 && !T.plays[0].moves.length) { T = null; say(PVP ? L.noMoveC.replace('{c}', cname(side)) : L.noMove); later(() => { dimDice([]); nextTurn(1 - side); }, 1700); return; }
       phase = 'move'; afterStep();
     }
     async function humanRoll() {
       if (phase !== 'roll' || stopped) return;
       phase = 'anim'; say('');
-      const d = nextRoll(); await rollFor(0, d); if (stopped) return;
-      beginMove(d);
+      const side = toMove === 1 ? 1 : 0, d = nextRoll(); await rollFor(side, d); if (stopped) return;
+      beginMove(d, side);
     }
 
     /* ---------- the AI's turn (the game's worker, same level) ---------- */
@@ -274,13 +279,15 @@
       if (stopped || checkEnd()) return;
       await sleep(250); yourTurn();
     }
-    function yourTurn() { if (stopped) return; toMove = 0; phase = 'roll'; say(''); }
+    function yourTurn(side = 0) { if (stopped) return; toMove = side; phase = 'roll'; say(PVP ? L.turnC.replace('{c}', cname(side)) : ''); }
+    function nextTurn(side) { if (PVP) yourTurn(side); else if (side === 1) aiTurn(); else yourTurn(0); }
 
     /* ---------- the end ---------- */
     function checkEnd() {
       const w = BG.winner(pos); if (w < 0) return false;
       over = true; phase = 'over'; toMove = -1; clearMarks();
       const kind = BG.winKind(pos, w), kt = L['k' + Math.min(3, kind)];
+      if (PVP) { const t = L.winC.replace('{c}', cname(w)) + ' · ' + kt; say(t); SFX.chime(); ctx.onEnd({ win: false, draw: false, level, score: t, pvp: true }); return true; }
       say((w === 0 ? L.win : L.lose) + ' · ' + kt); SFX.chime();
       ctx.onEnd({ win: w === 0, draw: false, level, score: kt });
       return true;
@@ -292,16 +299,16 @@
       + '.bgbub{position:absolute;z-index:3;left:50%;transform:translateX(-50%);max-width:min(340px,calc(100% - 40px));padding:8px 16px;border-radius:16px;background:#fffdf7;border:2px solid #fff;box-shadow:0 8px 20px -10px rgba(80,40,0,.55);font-weight:900;font-size:14px;color:var(--ink2,#4a4f66);text-align:center;line-height:1.35;pointer-events:none;opacity:0;transition:opacity .2s}.bgbub.on{opacity:1}'
       + '.bgbub::after{content:"";position:absolute;left:50%;margin-left:-8px;border:8px solid transparent}.bgbub.up::after{top:100%;border-top-color:#fffdf7}.bgbub.dn::after{bottom:100%;border-bottom-color:#fffdf7}'
       // the turned page (portrait phone, board sideways): bar along the left edge, buttons in the corners, all read in landscape
-      // landscape views: the HUD is a slim column at the landscape left (the hint just above it); × (top) and やめる (bottom) on one line at the right
+      // landscape views: everything in one slim column at the landscape right — やめる at the top, the HUD (the hint just above it) below; nothing on the left
       + '.bv.land .hud,.bv.playing.land .hud,.bv.bgwide .hud,.bv.playing.bgwide .hud{flex-direction:column;gap:6px;padding:7px 5px;border-radius:24px;max-width:none}'
       + '.hud .hs.col{flex-direction:column;gap:1px;padding:5px 7px;font-size:10.5px;line-height:1.1}.hud .hs.col b{font-size:17px;min-width:0}.hud .hs.col .r{display:flex;align-items:center;gap:4px}.hud .hs.col .bgk{width:14px;height:14px}'
       + '.hud .bgb.bgun{background:#36b4ff;color:#fff;box-shadow:0 3px 0 #1f86c4;border:0}.hud .bgb.bgok{background:#1ea36c;color:#fff;box-shadow:0 3px 0 #13764d;border:0}.hud .bgb svg{display:block}.hud .bgb.ic{opacity:1!important}'
       + '.hud .bgm.col{flex-direction:column;gap:7px}.hud .bgb.ic.ic{width:46px;height:46px;padding:0;border-radius:50%;font-size:21px}'
-      + '.bv.land .hud,.bv.playing.land .hud{left:50%;top:calc(8px + env(safe-area-inset-top));bottom:auto;right:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}'
-      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px - env(safe-area-inset-right));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,0)}'   // (where the × was: × is hidden in a game)
+      + '.bv.land .hud,.bv.playing.land .hud{left:calc(50% - 22px);top:calc(100% - 8px - env(safe-area-inset-bottom));bottom:auto;right:auto;transform-origin:0 0;transform:rotate(90deg) translate(-100%,-50%)}'
+      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px - env(safe-area-inset-right));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,0)}'
       + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px - env(safe-area-inset-right));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,0)}'
       + '.bv.land .bgbub{right:auto;bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%)}'
-      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:50%;bottom:auto;right:auto;left:calc(8px + env(safe-area-inset-left));transform:translateY(-50%)}'
+      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:calc(50% + 22px);bottom:auto;left:auto;right:calc(8px + env(safe-area-inset-right));transform:translateY(-50%)}'
       + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));bottom:auto;transform:translateX(50%)}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));transform:translateX(50%)}'
       + '.bv.bgwide .bgbub{right:auto;top:auto;transform:translateX(-50%)}.bv.land .bgbub,.bv.bgwide .bgbub{font-size:12px;padding:6px 9px;border-radius:12px;width:max-content;max-width:120px}'
       + '.bv.land .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 40px)}.bv.land .endc h3{white-space:nowrap}.bv.land .endc.on{animation:bgpopL .4s cubic-bezier(.3,1.5,.5,1)}@keyframes bgpopL{from{transform:translate(-50%,-50%) rotate(90deg) scale(.7);opacity:0}}'
@@ -337,14 +344,15 @@
       if (stopped) return;
       const P = T ? T.pos : pos, pips = s => P && window.BG ? BG.pips(P, s) : 167;
       const dot = s => `<i class="bgk" style="background:${DOT[CID[s]] || DOT.gold}"></i>`;
-      const side = s => colUI ? `<span class="hs col ${toMove === s ? 'on' : ''}">${s ? L.ai : L.you}<span class="r">${dot(s)}<b>${pips(s)}</b></span></span>`
-        : `<span class="hs ${toMove === s ? 'on' : ''}">${dot(s)}${s ? L.ai : L.you}<b>${pips(s)}</b></span>`;
+      const side = s => colUI ? `<span class="hs col ${toMove === s ? 'on' : ''}">${pname(s)}<span class="r">${dot(s)}<b>${pips(s)}</b></span></span>`
+        : `<span class="hs ${toMove === s ? 'on' : ''}">${dot(s)}${pname(s)}<b>${pips(s)}</b></span>`;
       // clear, high-contrast icons (font glyphs like ↶ ✓ render thin / pale on phones)
       const ICU = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
       const ICK = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
       const btn = (a, cls, ic, lb) => colUI ? `<button type="button" class="btn bgb ic ${cls}" data-bgt="${a}" title="${lb}" aria-label="${lb}">${ic}</button>` : `<button type="button" class="btn bgb ${cls}" data-bgt="${a}">${ic} ${lb}</button>`;
       const b = []; let m = msg;
-      if (phase === 'roll') { b.push(btn('roll', 'go', '🎲', L.roll)); m = ''; }
+      if (PVP && toMove >= 0 && (m === L.tapCk || m === L.tapDest)) m = `<b>${cname(toMove)}</b> · ${m}`;   // two players: whose move it is
+      if (phase === 'roll') { b.push(btn('roll', 'go', '🎲', L.roll)); if (!PVP) m = ''; }
       else if (phase === 'move' && T && !busy) {
         const done = !legalNow().length;
         if (T.steps.length) b.push(btn('undo', 'bgun', colUI ? ICU : '↶', L.undo));
@@ -377,7 +385,7 @@
       if (stopped || T3.wasDrag()) return;
       if (phase === 'roll') { humanRoll(); return; }   // tapping the board rolls too
       if (phase !== 'move' || busy || !T) return;
-      const q = hitOf(e);
+      const q0 = hitOf(e), q = q0 === null || q0 === 0 || q0 === 25 || !T.side ? q0 : 25 - q0;   // (side 1: its own numbering)
       if (sel !== null && q !== null && dests && dests.has(q)) { doPath(dests.get(q)); return; }
       const srcs = new Set(legalNow().map(x => x.from));
       if (q !== null && q !== 0 && srcs.has(q) && q !== sel) select(q);
@@ -392,7 +400,7 @@
     (async () => {
       try { await loadBG(); } catch (e) { say('…'); return; }
       if (stopped) return;
-      ask({ type: 'eval', pos: Array.from(BG.initial()), side: 0 });   // starts the worker now: nets + bear-off database load while you roll
+      if (!PVP) ask({ type: 'eval', pos: Array.from(BG.initial()), side: 0 });   // starts the worker now: nets + bear-off database load while you roll
       pos = BG.initial(); seed = BG.randomSeed(); stream = new BG.DiceStream(seed, 0); hud();
       await sleep(900 + 30 * 14);
       // the opening roll: one die each; the higher one starts and plays both
@@ -400,12 +408,12 @@
       await throwDice([{ id: CID[0], v: d[0], x: halfX(0), y: Y + .4, z: 0, size: .8, dir: 1 }, { id: CID[1], v: d[1], x: halfX(1), y: Y + .4, z: 0, size: .8, dir: -1 }]);
       if (stopped) return;
       const s = d[0] > d[1] ? 0 : 1; toMove = s;
-      say(`${s ? L.aiFirst : L.youFirst} ${d[0]}–${d[1]}`);
+      say(`${PVP ? L.firstC.replace('{c}', cname(s)) : s ? L.aiFirst : L.youFirst} ${d[0]}–${d[1]}`);
       await sleep(1300); if (stopped) return;
       const sp = diceSpots(2, s), p0 = dice.map(o => o.position.clone());   // both dice slide over to the starter
       await animP(380, k => dice.forEach((o, i) => { o.position.set(p0[i].x + (sp[i].x - p0[i].x) * io(k), p0[i].y + Math.sin(k * Math.PI) * .5, p0[i].z + (sp[i].z - p0[i].z) * io(k)); }));
       if (stopped) return;
-      if (s === 0) { say(''); beginMove(d); } else aiTurn(d);
+      if (s === 0 || PVP) { say(''); beginMove(d, s); } else aiTurn(d);
     })();
 
     const api = {
@@ -414,9 +422,9 @@
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true);
         if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); if (bvEl) bvEl.classList.remove('land', 'bgwide'); removeEventListener('resize', placeLater); FR.stop();
       },
-      _debug: { hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
-        pt: p => { const at = locOf(0, p), c = topOf(0, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(0, at); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); },
-        dst: p => { const [x, z] = landXZ(0, locOf(0, p)); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); } },
+      _debug: { hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { side: T.side, left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
+        pt: p => { const sd = T ? T.side : 0, at = locOf(sd, p), c = topOf(sd, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(sd, at); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); },
+        dst: p => { const sd = T ? T.side : 0, [x, z] = landXZ(sd, locOf(sd, p)); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); } },
     };
     window.__bgTable = api;   // (tests)
     return api;
@@ -440,5 +448,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], who: Wh[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai'], levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
+  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
 })();
