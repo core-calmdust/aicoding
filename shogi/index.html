@@ -1644,6 +1644,7 @@ function askPromotion(s, cands) {
   setTimeout(() => document.addEventListener('click', function off(e) { if (!box.contains(e.target)) { box.remove(); if (promoPending === box) promoPending = null; document.removeEventListener('click', off); } }), 0);
 }
 function drawArrows() {
+  { const hb = $('#btnHint'); if (hb) hb.classList.toggle('on', (typeof hintBusy !== 'undefined' && hintBusy) || !!(hintMoves && game && hintMoves.ply === cur)); }   // the hint button shows ON while its arrows are on the board
   let html = '<defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs>';
   if (hintMoves && hintMoves.ply === cur && !reviewing) {
     hintMoves.list.forEach((h, i) => {
@@ -2061,14 +2062,18 @@ $('#btnUndo').onclick = () => {
   refresh(false);
 };
 function sideAt0() { return game.start.split(' ')[1] === 'w' ? 1 : 0; }
+var hintTok = 0, hintBusy = false;   // var: drawArrows may run before this line
 $('#btnHint').onclick = async () => {
   if (!game || game.over || settings.mode === 'online' || rtLive()) return;
-  const idx = cur, token = busyToken;
-  $('#btnHint').classList.add('on');
+  // second press: hide the hint (and stop a running hint search)
+  if (hintBusy || (hintMoves && hintMoves.ply === cur)) { hintTok++; if (hintBusy) cancelAna(); hintBusy = false; hintMoves = null; drawArrows(); return; }
+  const idx = cur, token = busyToken, ht = ++hintTok;
+  hintBusy = true; $('#btnHint').classList.add('on');
   const res = await anaCall({ type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: 3 } }, (m) => {
-    if (cur === idx && m.list) { hintMoves = { ply: idx, list: m.list.slice(0, 3) }; drawArrows(); }
+    if (cur === idx && ht === hintTok && m.list) { hintMoves = { ply: idx, list: m.list.slice(0, 3) }; drawArrows(); }
   });
-  $('#btnHint').classList.remove('on');
+  if (ht !== hintTok) return;
+  hintBusy = false; $('#btnHint').classList.remove('on');
   if (!res || cur !== idx) return;
   hintMoves = { ply: idx, list: res.list.slice(0, 3) };
   drawArrows();
