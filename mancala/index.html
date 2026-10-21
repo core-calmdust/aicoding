@@ -318,40 +318,23 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal{width:min(720px,100%);height:min(760px, calc(100dvh - 32px))}
 #rulesOverlay .rt{max-width:640px;margin:0 auto}
 /* rules layout: the dialog keeps its fixed size; tabs and step dots on top and 前へ／閉じる／次へ (.rt-nav) at the bottom never
-   move. The page fills .rt-main between them: the board scales to the space left and only the text scrolls when it is
-   too long (.rt-text is made by rtLayout() in app.js). */
+   move. The page fills .rt-main between them; shared/ruletour.js gives the board one fixed size (same on every page). */
 #rulesOverlay .modal{display:flex;flex-direction:column;overflow:hidden;padding-bottom:max(14px, env(safe-area-inset-bottom))}
 #rulesOverlay .ls-tabs{flex:none}
 #rulesBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
-#rulesBody > .rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%;--rt-ar:2.448}
-#rulesBody .rt-steps{flex:none}
-#rulesBody .rt-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
-#rulesBody .rt-main > *, #rulesBody .rt-text > *{flex:none}
-#rulesBody .rt-main:not(.has-board) > :first-child{margin-top:auto}
-#rulesBody .rt-main:not(.has-board) > :last-child{margin-bottom:auto}
+#rulesBody > .rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%}
 #rulesBody .rt-nav{flex:none;margin-top:10px;padding-top:12px;border-top:1px solid rgba(201,169,97,.18)}
-/* title, text, board, task in one column; the board takes the height that is left */
-#rulesBody .rt-text{display:contents}
-#rulesBody .rt-title{order:1}#rulesBody .rt-body{order:2}#rulesBody .rt-html{order:3}#rulesBody .rt-board{order:4}#rulesBody .rt-task{order:5}
-#rulesBody .rt-main.has-board > .rt-board{flex:1 1 0;min-height:120px;max-height:420px;container-type:size;margin:8px 0;align-items:center}
-#rulesBody .rt-main.has-board > .rt-board svg{width:min(100cqw, 100cqh * var(--rt-ar));max-width:none}
-#rulesBody .rt-main.has-board .rt-task{min-height:3.4em}
-/* phone held sideways (or the turned view): text | board */
+/* phone held sideways (or the turned view) */
 @media (orientation: landscape) and (max-height: 560px){
   #rulesOverlay .modal{width:min(900px, 100%)}
   #rulesOverlay .rt{max-width:none}
   #rulesOverlay .ls-tabs{margin-bottom:6px}
   #rulesOverlay .ls-tabs button{padding-top:5px;padding-bottom:5px}
-  #rulesBody .rt-main.has-board{flex-direction:row;gap:22px;overflow:hidden}
-  #rulesBody .rt-main.has-board > .rt-text{display:flex;flex-direction:column;flex:1 1 0;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-  #rulesBody .rt-main.has-board :is(.rt-title, .rt-task){text-align:start}
-  #rulesBody .rt-main.has-board > .rt-board{flex:1.25 1 0;min-width:0;min-height:0;max-height:none;height:100%;margin:0}
   #rulesBody .rt-steps{gap:4px;margin-bottom:6px}
   #rulesBody .rt-steps button{width:26px;height:26px;font-size:11px}
   #rulesBody .rt-nav{margin-top:6px;padding-top:6px}
   #rulesBody .rt-nav button{padding:7px 10px}
 }
-/* the mancala board is wide: size it from --rt-bw (shared/ruletour.js) and let it use the dialog width */
 .rt-board svg{width:min(calc(var(--rt-bw) * 1.45), 100%);height:auto;display:block;cursor:pointer}
 .rt-board svg.busy{cursor:default}
 .rt-vars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -463,7 +446,6 @@ bdi{unicode-bidi:isolate}
   #lessonOverlay .modal{width:min(860px, calc(100vw - 64px))}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal{width:min(1000px, calc(100vw - 64px));height:min(880px, calc(100dvh - 32px))}
   #rulesOverlay .rt{max-width:880px}
-  #rulesBody .rt-main.has-board > .rt-board{max-height:none}
   .rt-vars div{font-size:15.5px}
   .rt-vars b{font-size:16.5px}
   #lessonOverlay .lesson-list, #puzzleOverlay .lesson-list{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
@@ -1086,7 +1068,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=12"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021px1"><\/script>');
+  } else document.write('<script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=13"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021px1rb"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

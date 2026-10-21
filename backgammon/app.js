@@ -2062,7 +2062,8 @@ function rlMatchSVG() {
 // Only what is needed to play; tactics / cube strategy are in the lessons.
 const RT_X = 7.1;   // bar centre (board units), where the cube sits
 function rtStd(fn) { const flat = G.FLAT, fh = G.H, fu = G.U; if (flat) setGeom(false); try { return fn(); } finally { if (flat) setGeom(true, fh, fu); } }
-function rtUnits(e, svg) { const r = lrect(svg), [x, y] = lp(e); return [(x - r.left) / r.width * 15.85, (y - r.top) / r.height * 12]; }
+// board units under a tap; the svg fills the fixed board box (shared/ruletour.js), so allow for letterboxing
+function rtUnits(e, svg) { const r = lrect(svg), [x, y] = lp(e), k = Math.min(r.width / 15.85, r.height / 12); return [(x - r.left - (r.width - 15.85 * k) / 2) / k, (y - r.top - (r.height - 12 * k) / 2) / k]; }
 function rtHit(e, svg) { const [ux, uy] = rtUnits(e, svg); return rtStd(() => hitPoint(ux, uy)); }
 const rtx = k => t('rt.' + k, { c: t('ng.gold'), o: t('ng.black') });   // the rules pictures keep gold / black
 // a tiny interactive turn for gold (side 0, view 0): tap a checker, then one of the marked points
@@ -2174,7 +2175,7 @@ const RT_PAGES = [
 // page 1: what the game is (history / how to win / culture), read only — common spec
 if (window.RuleTour) RT_PAGES.unshift({ id: 'intro', title: () => esc(t('intro.t')), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/backgammon.webp', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const rulesTour = window.RuleTour ? RuleTour.create({
-  mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG, pages: RT_PAGES,
+  mount: '#rulesBody', store: STORE + '-rules-v2', lang: () => LANG, pages: RT_PAGES, aspect: 15.85 / 12,
   close: () => hideOverlay('#rulesOverlay'),
   play: () => { hideOverlay('#rulesOverlay'); openNewDialog(); },
   lessons: () => { hideOverlay('#rulesOverlay'); openLessons(); },

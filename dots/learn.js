@@ -148,7 +148,7 @@ function rulesRender(keepState) {
   const steps = `<div class="ru-steps">${RULES.map((x, j) => `<button data-ru="${j}" class="${j === RU.i ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${j + 1}">${j + 1}</button>`).join('')}</div>`;
   const ar = P.R ? ((P.C || P.R) * MU + 2 * MM) / (P.R * MU + 2 * MM) : 1;
   let h = steps + `<div class="ru-main${P.R ? ' has-board' : ''}${P.finish ? ' is-fin' : ''}" style="--ru-ar:${ar.toFixed(4)}">`;
-  if (P.R) h += '<div class="ru-text">';   // board pages: title / text / task beside (PC, sideways) or around (phones) the board
+  if (P.R) h += '<div class="ru-side"><div class="ru-text">';   // board pages: title / text (scrolls by itself), then the fixed-size board and the task
   if (P.intro) h += `<h2>${escH(t('intro.t'))}</h2>`;
   else h += `<h2>${escH(t('ru.p' + P.id + '.t'))}</h2><div class="lesson-intro ru-body">${t('ru.p' + P.id + '.b')}</div>`;
   if (P.intro) {
@@ -159,10 +159,11 @@ function rulesRender(keepState) {
   } else if (P.finish) {
     h += `<div class="ru-finish"><button class="mbtn go" id="ruPlay">${escH(t('ru.play'))}</button><button class="mbtn go" id="ruLessons">${escH(t('ru.toLessons'))}</button></div>`;
   } else {
-    h += `<div class="ru-task" id="ruTask"></div></div><div class="ru-board" id="ruBoard"></div>`;
+    h += `</div><div class="ru-task" id="ruTask"></div></div><div class="ru-board" id="ruBoard"></div>`;
   }
   h += `</div><div class="modal-actions ru-nav"><button class="mbtn" id="ruPrev" ${RU.i === 0 ? 'disabled' : ''}>${escH(t('ru.prev'))}</button><button class="mbtn" id="ruClose">${escH(t('close'))}</button><button class="mbtn go" id="ruNext" ${RU.i === n - 1 ? 'disabled' : ''}>${escH(t('ru.next'))}</button></div>`;
   $('#rulesBody').innerHTML = h;
+  rulesLayout();
   if (P.R) { rulesDraw(); if (P.anim) rulesAnim(); else rulesTaskText(); }
   if (P.intro || P.sizes || P.finish) rulesMark(P.id);
 }
@@ -180,19 +181,27 @@ function rulesDraw() {
   const num = {}; if (st.plus) for (const b of st.plus) num[b] = '+1';
   $('#ruBoard').innerHTML = miniSVG({ R: P.R, C: P.C, by: st.by, own: st.own, hl: st.hl, bad: st.bad, cap3, last: st.last, click: !st.done && !st.wait, num, newBox: st.newBox });
 }
-function rulesTaskText(extra) {
-  const P = RULES[RU.i], st = RU.st;
-  let h = `<span class="ru-q">👉 ${t('ru.p' + P.id + '.task')}</span>`;
-  if (st.msg) h += `<div class="ru-msg ${st.msgCls || ''}">${st.msg}</div>`;
+// the ✓/✗ line and the 「もう一度」 button always keep their space (common spec), so answering never moves anything
+function rulesTaskText(note) {
+  const P = RULES[RU.i], st = RU.st, msg = st.msg || note || '';
+  let h = `<span class="ru-q">👉 ${t('ru.p' + P.id + '.task')}</span><div class="ru-fb"><div class="ru-msg ${st.msg ? st.msgCls || '' : msg ? '' : 'is-empty'}" aria-live="polite">${msg || '&nbsp;'}</div>`;
   if (st.done) h += `<button class="ru-again" id="ruAgain">↺ ${escH(t('ru.again'))}</button>`;
-  $('#ruTask').innerHTML = h + (extra || '');
-  const g = st.msg && $('#ruTask .ru-msg'); if (g) g.scrollIntoView({ block: 'nearest' });   // a ✓ / ✗ below the fold comes into view
+  $('#ruTask').innerHTML = h + '</div>';
 }
+// one fixed board size for every page (shared/ruletour.js RuleTour.box): computed from the dialog only, never from the text
+function rulesLayout() {
+  const body = $('#rulesBody'), main = body && body.querySelector('.ru-main'), b = main && window.RuleTour && RuleTour.box && RuleTour.box(main, 1);
+  if (!b) return;
+  body.classList.toggle('rt-row', b.row); body.classList.toggle('rt-col', !b.row);
+  for (const k in b.vars) body.style.setProperty(k, b.vars[k]);
+  if (RuleTour.more) RuleTour.more(main.querySelector('.ru-text'));
+}
+{ let rzT = 0; addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (RU && !$('#rulesView').classList.contains('hidden')) rulesLayout(); }, 60); }); }
 // play a scripted sequence on the mini board, then hand over to the task
 async function rulesAnim() {
   const P = RULES[RU.i], st = RU.st, my = RU, gen = RU.gen, G = E.geom(P.R, P.C);
   const gone = () => RU !== my || RU.gen !== gen || RULES[RU.i] !== P || RU.st !== st;
-  st.wait = true; rulesDraw(); rulesTaskText(`<div class="ru-msg">${escH(t('ru.watch'))}</div>`);
+  st.wait = true; rulesDraw(); rulesTaskText(escH(t('ru.watch')));
   await sleepV(500);
   for (const [e, pl] of P.anim) {
     if (gone()) return;

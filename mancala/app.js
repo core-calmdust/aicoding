@@ -1020,7 +1020,7 @@ function rtDraw(api, c, marks, opt) {
 // the pit (0-5) under a click on the mini board, or -1
 function rtPitAt(api, e) {
   const svg = api.board.querySelector('svg'); if (!svg) return -1;
-  const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * MB.W / r.width, y = (e.clientY - r.top) * MB.H / r.height;
+  const [x, y] = RuleTour.svgPoint(svg, e);   // viewBox coordinates (the svg is stretched to the fixed board box)
   for (let i = 0; i < 6; i++) { const [px, py] = mbXY(i); if (Math.hypot(x - px, y - py) < 32) return i; }
   return -1;
 }
@@ -1089,36 +1089,8 @@ const RT_PAGES = [
 ];
 // the new-game dialog's "?" opens the page of that rule variant directly (by page id)
 const RT_START = { kalah: 'sow', easy: 'variants', basic: 'capB', sunka: 'relay' };
-// rules layout (common spec): step dots on top, 前へ／閉じる／次へ (.rt-nav) pinned at the bottom of the fixed-height dialog,
-// the page in .rt-main between them. On board pages the title / text / task go into .rt-text so that, side by side
-// (PC, phone held sideways), only the text scrolls and the board keeps its place. Runs right after each render (before paint).
-function rtLayout(sel) {
-  const m = document.querySelector(sel); if (!m) return;
-  const fix = () => {
-    const rt = m.querySelector(':scope > .rt'), nav = rt && rt.querySelector(':scope > .rt-nav'); if (!nav || rt.dataset.lay) return;
-    rt.dataset.lay = '1';
-    let main = rt.querySelector(':scope > .rt-main');
-    if (!main) {   // older shared/ruletour.js without .rt-main
-      main = document.createElement('div'); main.className = 'rt-main';
-      [...rt.children].filter(c => !c.matches('.rt-steps, .rt-nav')).forEach(c => main.appendChild(c));
-      rt.insertBefore(main, nav);
-    }
-    const board = main.querySelector(':scope > .rt-board');
-    if (board) {
-      const text = document.createElement('div'); text.className = 'rt-text';
-      [...main.children].filter(c => c !== board).forEach(c => text.appendChild(c));
-      main.prepend(text); main.classList.add('has-board');
-    }
-    main.classList.toggle('is-fin', !!main.querySelector('.rt-finish'));
-    // a ✓ / ✗ message below the fold is scrolled into view
-    const task = main.querySelector('.rt-task');
-    if (task) new MutationObserver(() => { const g = task.querySelector('.rt-msg'); if (g) g.scrollIntoView({ block: 'nearest' }); }).observe(task, { childList: true });
-  };
-  new MutationObserver(fix).observe(m, { childList: true }); fix();
-}
-rtLayout('#rulesBody');
 const ruleTour = window.RuleTour ? RuleTour.create({
-  mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG,
+  mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG, aspect: MB.W / MB.H,
   close: () => $('#rulesOverlay').classList.remove('show'),
   play: () => { $('#rulesOverlay').classList.remove('show'); openNewDialog(); },
   lessons: () => tabSwitch(() => { $('#rulesOverlay').classList.remove('show'); openLessons(); }),

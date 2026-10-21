@@ -333,14 +333,14 @@ body.rv-on #evalCard.hidden{display:block!important}   /* the ◀ ▶ navigation
 #rulesOverlay .modal{height:min(880px, calc(100vh - 32px));height:min(880px, calc(100dvh - 32px));display:flex;flex-direction:column}
 #rulesOverlay .modal > h2, #rulesOverlay .modal > .modal-actions{display:none}
 #rulesOverlay #rulesBody{flex:1;min-height:0}
-#rulesOverlay #rulesBody > div{max-width:640px;margin:0 auto}
-.rt-board svg.tour{width:min(300px, 78vw);height:auto;display:block}
+#rulesOverlay #rulesBody > div{max-width:640px;width:100%;margin:0 auto}
+/* phones held sideways: compact tabs so the board keeps a useful (fixed) size */
+@media (max-height: 560px) and (orientation: landscape){ #rulesOverlay .modal{padding:10px 18px} #rulesOverlay .ls-tabs, #rulesOverlay #rulesTabs{margin-bottom:6px} #rulesOverlay .ls-tabs button, #rulesOverlay #rulesTabs button{padding-top:5px;padding-bottom:5px} #rulesOverlay #rulesBody > div{max-width:none} }
 .rt-board svg.tour [data-p]{cursor:pointer}
 .rt-board svg.tour .pop{animation:tourPop .28s cubic-bezier(.2,1.5,.4,1)}
 @keyframes tourPop{0%{opacity:0}100%{opacity:1}}
 .rt-html .tour-pic{display:flex;justify-content:center}
 .rt-html .tour-pic svg{width:min(240px, 64vw);height:auto}
-@media (max-width: 520px), (max-height: 700px){ .rt-board svg.tour{width:min(250px, 70vw)} }
 .rl-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:4px 0 8px}
 .rl-head b{font-family:'Shippori Mincho B1',serif;font-size:20px;letter-spacing:.06em}
 .rl-head .lvl{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.5);color:var(--accent)}
@@ -660,7 +660,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #rulesBody .rt-main > .rt-body{text-align:left}
   #rulesBody .rt-finish{width:340px;align-self:center;align-items:center}
   html[lang=ar] #rulesBody .rt-main > .rt-body{text-align:right}
-  .rt-board svg.tour, .rt-html .tour-pic svg{width:min(var(--rt-bw), 560px)}
+  .rt-html .tour-pic svg{width:min(var(--rt-bw), 560px)}
 }
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
@@ -1097,7 +1097,7 @@ html[data-pcs=mono]{--eb1:#5c5c5c;--eb2:#262626;--eb3:#121212;--eb4:#000;--iv1:#
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=12"></script>
+<script src="../shared/ruletour.js?v=13"></script>
 <script src="engine.js?v=2"></script>
 <script src="firebase-config.js?v=2"></script>
 <script src="online.js?v=1"></script>

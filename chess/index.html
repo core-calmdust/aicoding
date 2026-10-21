@@ -322,32 +322,19 @@ a.snd.home{text-decoration:none}
 #rulesOverlay #rulesBody .rt-nav{margin-top:auto;padding-top:14px}
 #rulesOverlay #rulesTabs,#rulesOverlay .modal-actions{display:none}
 @media (max-width: 520px), (max-height: 560px){#rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:calc(100dvh - 20px)}}
-@media (max-height: 700px){#rulesBody .rt{--rt-bw:min(260px, 86vw)}}
 /* PC: rules / lessons / openings / puzzles are one dialog with tabs — the same fixed size on every tab.
-   The rules tutorial uses the width: big board on the left, text and task on the right. */
+   The rules tutorial uses the width: text and task beside a big board (shared/ruletour.js, fixed board size). */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 561px){
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){width:min(1080px, calc(100vw - 64px));height:min(820px, calc(100vh - 32px));max-height:none}
-  #rulesOverlay #rulesBody .rt{--rt-bw:clamp(340px, calc(100vh - 330px), 560px);display:grid;grid-template-columns:var(--rt-bw) minmax(0, 1fr);grid-template-rows:auto auto auto 1fr auto;grid-template-areas:"steps steps" "board title" "board body" "board task" "nav nav";column-gap:36px;align-content:start}
-  #rulesOverlay #rulesBody .rt > .rt-steps{grid-area:steps;margin:0 0 16px}
-  #rulesOverlay #rulesBody .rt > .rt-board{grid-area:board;margin:0;align-self:start}
-  #rulesOverlay #rulesBody .rt > h2.rt-title{grid-area:title;text-align:left;margin-top:4px}
-  #rulesOverlay #rulesBody .rt > .rt-body{grid-area:body}
-  #rulesOverlay #rulesBody .rt > .rt-task{grid-area:task;text-align:left;margin-top:10px}
-  #rulesOverlay #rulesBody .rt > .rt-nav{grid-area:nav;margin-top:auto;padding-top:16px;max-width:720px;width:100%;justify-self:center}
-  #rulesOverlay #rulesBody .rt:not(:has(> .rt-board)){display:flex;flex-direction:column;max-width:none;margin:0}
-  #rulesOverlay #rulesBody .rt:not(:has(> .rt-board)) > .rt-nav{align-self:center}
-  #rulesOverlay #rulesBody{overflow-y:auto}
-  #rulesOverlay #rulesBody .rt:not(:has(> .rt-board)) > h2.rt-title{text-align:center}
-  #rulesOverlay #rulesBody .rt-html{grid-column:2}
+  #rulesOverlay #rulesBody .rt-main:not(.has-board) > h2.rt-title{text-align:center}
   /* big text (shared/ruletour.js puts its PC sizes before the base rules, so they lose; restate them here) */
   #rulesOverlay #rulesBody .rt-steps button{width:36px;height:36px;font-size:14px}
   #rulesOverlay #rulesBody .rt h2.rt-title{font-size:25px;margin-bottom:10px}
   #rulesOverlay #rulesBody .rt-body{font-size:16.5px;line-height:1.8}
-  #rulesOverlay #rulesBody .rt-task{font-size:18px;min-height:60px}
+  #rulesOverlay #rulesBody .rt-task{font-size:18px}
   #rulesOverlay #rulesBody .rt-msg{font-size:16.5px}
   #rulesOverlay #rulesBody .rt-again{font-size:14px;padding:7px 14px}
   #rulesOverlay #rulesBody :is(.rt-nav, .rt-finish) button{font-size:16px;padding:12px 14px}
-  html[lang=ar] #rulesOverlay #rulesBody .rt > :is(h2.rt-title, .rt-task){text-align:right}
 }
 .hb-pd{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
 .hb-pd.p1{background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 35%,var(--gold3) 85%)}
@@ -1301,11 +1288,11 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=12"></script>
+<script src="../shared/ruletour.js?v=13"></script>
 <script src="i18n_v2.js?v=20261021ri"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="app.js?v=pz4"></script>
-<script src="rules.js?v=20261021ri"></script>
+<script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

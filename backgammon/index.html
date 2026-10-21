@@ -328,7 +328,7 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .mini{display:block;margin:2px auto 12px;width:min(340px,90%);height:auto}
 /* rules page */
 #rulesOverlay .modal{width:min(900px,100%)}
-#rulesBody .rt-board svg{display:block;width:min(560px,100%);height:auto;cursor:pointer;border-radius:8px}
+#rulesBody .rt-board svg{display:block;cursor:pointer;border-radius:8px}
 #rulesBody .rt-html svg{display:block;width:min(460px,100%);height:auto;margin:0 auto}
 #rulesBody .rt-board.rt-dim svg{cursor:default}
 .rl-lead{font-size:14.5px;line-height:1.8;color:#cfd8d2;margin:-4px 0 14px}
@@ -626,16 +626,6 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   #newOverlay .skinrow button{padding:4px 4px 3px;gap:2px}
   #newOverlay #segMode{flex-wrap:nowrap}
   #newOverlay #segMode button{flex:1 1 0}
-  /* two columns on PC for the board pages: title + text + task on the left, a big board on the right (board 15.85 × 12) */
-  #rulesBody .rt-main:has(> .rt-board, > .rt-html):not(:has(.rt-intro)){display:grid;grid-template-columns:minmax(0, 1fr) auto;grid-template-rows:auto auto 1fr;column-gap:28px;grid-template-areas:"title fig" "body fig" "task fig";align-content:center}
-  #rulesBody .rt-main > h2.rt-title{grid-area:title;text-align:left;align-self:end}
-  #rulesBody .rt-main:is(:not(:has(> .rt-board, > .rt-html)), :has(.rt-intro)) > h2.rt-title{text-align:center;align-self:center}
-  #rulesBody .rt-main:has(.rt-intro) > .rt-html{margin:0}
-  #rulesBody .rt-main > .rt-body{grid-area:body}
-  #rulesBody .rt-main > .rt-task{grid-area:task;text-align:left}
-  #rulesBody .rt-main > :is(.rt-board, .rt-html){grid-area:fig;align-self:center;margin:4px 0}
-  html[lang=ar] #rulesBody .rt-main > :is(h2.rt-title, .rt-task){text-align:right}
-  #rulesBody .rt-board svg{width:min(560px, calc((var(--vh) - 280px) * 1.3))}
   #rulesBody .rt-html svg{width:min(520px, calc((var(--vh) - 280px) * 1.2))}
 }
 .brand-l{display:flex;flex-direction:column;min-width:0}
@@ -1150,11 +1140,11 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="explain.js?v=20261021pz"></script>
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
-<script src="../shared/ruletour.js?v=12"></script>
+<script src="../shared/ruletour.js?v=13"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021pz"></script>
-<script src="app.js?v=20261021pz"></script>
+<script src="app.js?v=20261021pzrb"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5i" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=3" defer></script>

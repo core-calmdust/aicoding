@@ -63,8 +63,8 @@ function board(api, o) {
   api.board.onclick = e => {
     if (B.lock || !api.alive() || api.state.done) return;
     const svg = api.board.querySelector('svg'); if (!svg) return;
-    const r = svg.getBoundingClientRect(), k = r.width / (W + 4);
-    const f = Math.floor((e.clientX - r.left) / k / SQ - 2 / SQ), y = Math.floor((e.clientY - r.top) / k / SQ - 2 / SQ);
+    const [vx, vy] = RuleTour.svgPoint(svg, e);   // viewBox coordinates (the svg fills the fixed board box)
+    const f = Math.floor(vx / SQ), y = Math.floor(vy / SQ);
     if (f < 0 || f > 7 || y < 0 || y > 7) return;
     const s = (7 - y) * 16 + f, p = B.pos.b[s];
     if (p && !(p & 8)) {    // own piece: select it

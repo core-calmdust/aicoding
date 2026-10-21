@@ -698,8 +698,7 @@ function ruBoard(api, o) {
   B.undo = () => { pos.unmake(); B.draw(); };
   api.board.onclick = e => {
     const svg = api.board.querySelector('svg'); if (!svg || B.lock) return;
-    const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, k = vb.width / r.width;
-    const x = (e.clientX - r.left) * k, y = (e.clientY - r.top) * k, u = 22, pad = 16;
+    const [x, y] = RuleTour.svgPoint(svg, e), u = 22, pad = 16;   // viewBox coordinates (the svg fills the fixed board box)
     const c = Math.round((x - pad) / u), rr = Math.round((y - pad) / u);
     if (c < 0 || c >= crop[2] || rr < 0 || rr >= crop[3] || Math.hypot((x - pad) / u - c, (y - pad) / u - rr) > 0.6) return;
     const m = (crop[1] + crop[3] - 1 - rr) * N + crop[0] + c;

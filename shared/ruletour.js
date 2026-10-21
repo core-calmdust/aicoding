@@ -21,8 +21,10 @@
 //     ],
 //   });
 // title / body / task / html are inserted as HTML (not escaped): escape any user-supplied text yourself.
-// Mini boards: size them with the CSS variable --rt-bw (set on .rt: ~320px on phones, up to 600px on PC) so every game
-// shows a big, easy-to-click board on PC and the same text sizes.
+// Mini boards (common spec): the board has ONE fixed size per window size — the same on every page and before / after
+// answering. RuleTour computes the board box (--rt-bw × --rt-bh on .rt) from the dialog only; pass aspect: w / h of the
+// board (default 1). An svg put directly into api.board is stretched to the box (keep a viewBox; use
+// RuleTour.svgPoint(svg, e) for click coordinates). Other boards size themselves from api.board.clientWidth / Height.
 // The FIRST page of every tour is an intro page built with RuleTour.intro(...) (history / how to win / culture).
 //   tour.open(i)  tour.render()  tour.stop()  tour.page  tour.visible()
 //
@@ -70,6 +72,8 @@ const CSS = `
 .rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
 .rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
+@media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:6px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
+@media (max-width: 420px){.rt-steps{gap:3px;flex-wrap:nowrap}.rt-steps button{flex:0 1 26px;width:auto;height:auto;aspect-ratio:1;min-width:0;font-size:11px}}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
 .rt-steps button.cur{background:var(--panel2,#1f2a2a);color:var(--accent,#e2c275);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
 .rt h2.rt-title{margin:0 0 8px;font-size:19px;text-align:center}
@@ -77,14 +81,41 @@ const CSS = `
 .rt-body p{margin:0 0 8px}.rt-body b{color:var(--accent,#e2c275)}
 .rt-board{display:flex;justify-content:center;margin:10px auto 8px;max-width:100%;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .rt-board > *{max-width:100%}
-.rt-task{font-size:14.5px;line-height:1.7;min-height:52px;text-align:center}
+.rt-task{font-size:14.5px;line-height:1.7;text-align:center}
 .rt-q{color:var(--text,#eee)}
-.rt-msg{margin-top:6px;font-size:14px;line-height:1.5;min-height:3em;color:var(--muted,#9aa)}
+/* the ✓/✗ line and the 「もう一度」 button share one row that always keeps its space */
+.rt-fb{display:flex;align-items:flex-start;justify-content:center;gap:10px;margin-top:6px}
+.rt-msg{font-size:14px;line-height:1.5;min-height:3em;color:var(--muted,#9aa)}
+.rt-fb > .rt-msg{flex:0 1 auto;min-width:0}
 .rt-msg.is-empty{visibility:hidden}
-.rt-again.is-idle{visibility:hidden}
+.rt-again.is-idle{display:none}
 .rt-msg.ok{color:var(--rt-ok)}.rt-msg.ng{color:var(--rt-ng)}
 .rt-msg.ok::before{content:'✓ '}.rt-msg.ng::before{content:'✗ '}
-.rt-again{margin-top:8px;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);cursor:pointer;font-family:inherit}
+.rt-again{flex:none;white-space:nowrap;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);cursor:pointer;font-family:inherit}
+/* board pages (common spec): the mini board has ONE fixed size for a given window size — the same on every page and
+   before / after answering. layout() computes it from the space of .rt-main only (never from the page's text):
+   --rt-bw × --rt-bh is the board box; the game draws its board to fill it (an svg is stretched to the box, its viewBox
+   keeps the proportions). Long texts scroll inside .rt-text instead of shrinking the board.
+   .rt-col (phones upright): text (fixed height, scrolls) / board / task (fixed height) — the board never moves.
+   .rt-row (PC, phones sideways): text + task (.rt-side) on one side, the board on the other, as big as the height allows. */
+.rt-main.has-board{display:grid;overflow:hidden;justify-content:stretch;align-content:stretch;gap:var(--rt-gap,8px)}
+.rt-main.has-board .rt-text{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.rt-main.has-board .rt-text > :last-child{margin-bottom:0}
+.rt-main.has-board .rt-text.rt-more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+.rt-main.has-board > .rt-board{width:var(--rt-bw);height:var(--rt-bh);max-width:none;margin:0;justify-self:center;align-self:center;align-items:center;overflow:visible}
+.rt-main.has-board > .rt-board > svg{width:100%;height:100%;max-width:none;max-height:none;display:block}
+.rt-main.has-board .rt-task{min-height:0}
+.rt-col .rt-main.has-board{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) var(--rt-bh) var(--rt-th)}
+.rt-col .rt-main.has-board > .rt-side{display:contents}
+.rt-col .rt-main.has-board .rt-text{grid-row:1}
+.rt-col .rt-main.has-board > .rt-board{grid-row:2}
+.rt-col .rt-main.has-board .rt-task{grid-row:3;overflow-y:auto;overscroll-behavior:contain}
+.rt-row .rt-main.has-board{grid-template-columns:minmax(0,1fr) var(--rt-bw);grid-template-rows:minmax(0,1fr);column-gap:var(--rt-cgap,24px)}
+.rt-row .rt-main.has-board > .rt-side{display:flex;flex-direction:column;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
+.rt-row .rt-main.has-board .rt-text{flex:0 1 auto;min-height:min(84px, 40%)}
+.rt-row .rt-main.has-board .rt-task{flex:none;text-align:start;margin-top:8px}
+.rt-row .rt-main.has-board .rt-task .rt-fb{justify-content:flex-start}
+.rt-row .rt-main.has-board .rt-text > h2.rt-title{text-align:start}
 .rt-html{margin:10px 0}
 .rt-finish{display:flex;flex-direction:column;gap:10px;margin:14px auto 4px;max-width:340px}
 .rt-finish .rt-fin-ico{font-size:44px;text-align:center;line-height:1}
@@ -100,7 +131,7 @@ const CSS = `
   .rt-steps button{width:36px;height:36px;font-size:14px}
   .rt h2.rt-title{font-size:25px;margin-bottom:10px}
   .rt-body{font-size:16.5px;line-height:1.8}
-  .rt-task{font-size:18px;min-height:60px}
+  .rt-task{font-size:18px}
   .rt-msg{font-size:16.5px}
   .rt-again{font-size:14px;padding:7px 14px}
   .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
@@ -135,6 +166,7 @@ const CSS = `
 html[lang=ar] .rt-intro{direction:rtl}
 html[lang=ar] .rt-body,html[lang=ar] .rt h2.rt-title{direction:rtl;text-align:right}
 html[lang=ar] .rt-task{direction:rtl}
+html[lang=ar] .rt-row .rt-main.has-board .rt-task, html[lang=ar] .rt-row .rt-main.has-board .rt-text > h2.rt-title{text-align:right}
 `;
 function injectCss() { if (!document.getElementById('rtCss')) { const st = document.createElement('style'); st.id = 'rtCss'; st.textContent = CSS; document.head.appendChild(st); } }
 function create(o) {
@@ -154,18 +186,23 @@ function create(o) {
     stop();
     const m = mount(); if (!m) return;
     const P = pages[tour.page], n = pages.length, done = get();
-    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main">`;
+    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main${P.setup ? ' has-board' : ''}">`;
     if (P.finish) {
       h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${esc(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
         (o.play ? `<button type="button" class="go" data-rt-act="play">${esc(tx('play'))}</button>` : '') +
         (o.lessons ? `<button type="button" class="go" data-rt-act="lessons">${esc(tx('lessons'))}</button>` : '') + `</div>`;
     } else {
-      h += `<h2 class="rt-title">${val(P.title)}</h2><div class="rt-body">${val(P.body) || ''}</div>`;
-      if (P.html) h += `<div class="rt-html">${val(P.html)}</div>`;
-      if (P.setup) h += `<div class="rt-board"></div><div class="rt-task"></div>`;
+      const tx0 = `<h2 class="rt-title">${val(P.title)}</h2><div class="rt-body">${val(P.body) || ''}</div>` + (P.html ? `<div class="rt-html">${val(P.html)}</div>` : '');
+      // board pages: title / text in .rt-text (scrolls by itself), then the fixed-size board and the task (see layout())
+      h += P.setup ? `<div class="rt-side"><div class="rt-text">${tx0}</div><div class="rt-task"></div></div><div class="rt-board"></div>` : tx0;
     }
     h += `</div><div class="rt-nav"><button type="button" data-rt-act="prev" ${tour.page === 0 ? 'disabled' : ''}>${esc(tx('prev'))}</button><button type="button" data-rt-act="close">${esc(tx('close'))}</button><button type="button" class="go" data-rt-act="next" ${tour.page === n - 1 ? 'disabled' : ''}>${esc(tx('next'))}</button></div></div>`;
     m.innerHTML = h;
+    if (!layout() && P.setup) {   // the dialog is not laid out yet (still hidden): draw again once it has its size
+      const my = gen; let k = 0;
+      const again = () => { if (gen !== my + 1 && gen !== my) return; const mm = mount(), mn = mm && mm.querySelector('.rt-main'); if (mn && mn.clientWidth > 40 && mn.clientHeight > 40) render(); else if (++k < 60) requestAnimationFrame(again); };
+      requestAnimationFrame(again);
+    }
     if (P.finish || !P.setup) mark(P.id);
     if (P.setup) start(); else { fit(); requestAnimationFrame(fit); }   // read-only pictures are fitted too
   }
@@ -179,8 +216,8 @@ function create(o) {
       const q = val(P.task);
       // the ✓/✗ line and the 「もう一度」 button always keep their space (empty / hidden until used),
       // so a message never pushes the board around or makes it shrink
-      task.innerHTML = (q ? `<span class="rt-q">👉 ${q}</span>` : '') + `<div class="rt-msg ${st.msg ? st.cls : 'is-empty'}" aria-live="polite">${st.msg || '&nbsp;'}</div>` + st.extra +
-        `<button type="button" class="rt-again${st.done ? '' : ' is-idle'}" data-rt-act="again"${st.done ? '' : ' tabindex="-1" aria-hidden="true" disabled'}>↺ ${esc(tx('again'))}</button>`;
+      task.innerHTML = (q ? `<span class="rt-q">👉 ${q}</span>` : '') + st.extra + `<div class="rt-fb"><div class="rt-msg ${st.msg ? st.cls : 'is-empty'}" aria-live="polite">${st.msg || '&nbsp;'}</div>` +
+        `<button type="button" class="rt-again${st.done ? '' : ' is-idle'}" data-rt-act="again"${st.done ? '' : ' tabindex="-1" aria-hidden="true" disabled'}>↺ ${esc(tx('again'))}</button></div>`;
     };
     board.innerHTML = '';
     const api = {
@@ -209,13 +246,27 @@ function create(o) {
     };
     drawTask();
     try { P.setup(api); } catch (e) { console.error(e); }
-    fit(); requestAnimationFrame(fit);
+    const tt = m.querySelector('.rt-text'); requestAnimationFrame(() => more(tt));
   }
-  // keep the whole page visible above the fixed buttons: if the middle part overflows, shrink the mini board (--rt-bw) to fit
+  // fixed board size (common spec): computed from the size of .rt-main only, so it is the same on every page and does not
+  // change when a ✓/✗ message appears; only a window resize / rotation changes it
+  function layout() {
+    const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main');
+    if (!main) return false;
+    const b = box(main, val(o.aspect));
+    if (!b) return false;
+    rt.classList.toggle('rt-row', b.row); rt.classList.toggle('rt-col', !b.row);
+    for (const k in b.vars) rt.style.setProperty(k, b.vars[k]);
+    more(main.querySelector('.rt-text'));
+    return true;
+  }
+  // read-only pages with a picture (no task): if the page overflows, shrink the picture (--rt-bw) so it fits without scrolling
   function fit() {
-    const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main'), bd = main && (main.querySelector('.rt-board') || main.querySelector('.rt-html .tour-pic'));   // boards and read-only pictures
+    const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main');
+    if (!main || main.classList.contains('has-board')) { layout(); return; }
+    const bd = main.querySelector('.rt-html .tour-pic');
+    layout();
     if (!bd || !main.clientHeight) return;
-    rt.style.removeProperty('--rt-bw');
     for (let k = 0; k < 3; k++) {
       const over = main.scrollHeight - main.clientHeight; if (over <= 1) break;
       const el = bd.firstElementChild || bd, w = el.getBoundingClientRect().width, h = el.getBoundingClientRect().height || w;
@@ -223,8 +274,7 @@ function create(o) {
       rt.style.setProperty('--rt-bw', Math.max(220, Math.floor(w - (over + 2) * w / h)) + 'px');
     }
   }
-  let fitT = 0; const fitSoon = () => { clearTimeout(fitT); fitT = setTimeout(fit, 30); };
-  window.addEventListener('resize', fitSoon);
+  let lyT = 0; window.addEventListener('resize', () => { clearTimeout(lyT); lyT = setTimeout(fit, 60); });
   function go(i) { if (i < 0 || i >= pages.length) return; tour.page = i; render(); }
   function onClick(e) {
     const m = mount(); if (!m || !m.contains(e.target)) return;
@@ -255,10 +305,42 @@ function create(o) {
   Object.assign(tour, {
     open(i) { tour.page = Math.max(0, Math.min(pages.length - 1, i | 0)); render(); },
     render() { if (visible()) { const P = pages[tour.page]; if (P && P.setup && P.relabel) { P.relabel(); return; } render(); } },
-    stop, visible, pages, mark, t: tx, fit,
+    stop, visible, pages, mark, t: tx, fit, layout,
     progress() { const d = get(); return { done: pages.filter(p => d[p.id]).length, total: pages.length }; },
   });
   return tour;
+}
+// The fixed board box for a rules page: main = the element between the step dots and the nav bar (its size must not
+// depend on the page's content), aspect = board width / height (default 1). Returns { row, bw, bh, vars } or null.
+const PCQ = '(hover: hover) and (pointer: fine) and (min-width: 820px)';
+function box(main, aspect) {
+  const cs = getComputedStyle(main);
+  const W = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  if (W < 40 || H < 40) return null;
+  const ar = +aspect > 0 ? +aspect : 1, pc = matchMedia(PCQ).matches, short = innerHeight < 700;
+  const fit = (w, h) => { w = Math.max(60, w); h = Math.max(60, h); return w / h > ar ? [h * ar, h] : [w, w / ar]; };
+  const tk = main.querySelector('.rt-task, .ru-task'), fs = tk ? parseFloat(getComputedStyle(tk).fontSize) || 14.5 : 14.5;   // same on every board page
+  const gap = pc ? 12 : 8, th = Math.max(pc ? 126 : 98, Math.round(fs * 6.7)), tmin = pc ? 150 : short ? 84 : 104;   // task area (2 lines + ✓/✗ 2 lines) / smallest text area (column)
+  const cgap = pc ? 40 : 20, tw = pc ? 360 : 230;                                        // side by side: gap / smallest text column
+  const col = fit(W, H - th - tmin - 2 * gap);
+  const row = fit(Math.min(W - tw - cgap, W * .66), H);
+  const isRow = W - row[0] - cgap >= tw * .9 && row[0] * row[1] > col[0] * col[1] * 1.05;   // room for the text column
+  let [bw, bh] = isRow ? row : col;
+  const cap = pc ? 640 : 560; if (Math.max(bw, bh) > cap) { const k = cap / Math.max(bw, bh); bw *= k; bh *= k; }
+  bw = Math.floor(bw); bh = Math.floor(bh);
+  return { row: isRow, bw, bh, vars: { '--rt-bw': bw + 'px', '--rt-bh': bh + 'px', '--rt-th': th + 'px', '--rt-gap': gap + 'px', '--rt-cgap': cgap + 'px' } };
+}
+// a text area that scrolls fades out at the bottom while there is more to read
+function more(el) {
+  if (!el) return;
+  const upd = () => el.classList.toggle('rt-more', el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+  upd(); el.onscroll = upd;
+}
+// a pointer event on a mini-board svg → viewBox coordinates (correct even when the svg is letterboxed in the board box)
+function svgPoint(svg, e) {
+  const ctm = svg.getScreenCTM(); if (!ctm) return [0, 0];
+  const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+  return [p.x, p.y];
 }
 // Intro page (common spec: the first page of every rules tutorial introduces the game — history, how to win, culture).
 // RuleTour.intro({ img: '../images/atlas/chess.webp', origin, players, time, history, win, culture, lang }) -> HTML for a page's html.
@@ -271,5 +353,5 @@ function intro(o) {
   return `<div class="rt-intro"><div class="rt-intro-hero">${o.img ? `<img src="${o.img}" alt="">` : ''}<div class="rt-intro-facts">${fact('origin', o.origin)}${fact('players', o.players)}${fact('time', o.time)}</div></div>` +
     sec('hist', '📜', 'hist', o.history) + sec('win', '🏆', 'win', o.win) + sec('cult', '🌏', 'cult', o.culture) + '</div>';
 }
-window.RuleTour = { create, intro, S, IL };
+window.RuleTour = { create, intro, box, more, svgPoint, PCQ, S, IL };
 })();

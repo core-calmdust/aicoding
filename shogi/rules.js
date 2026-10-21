@@ -69,7 +69,13 @@ function strips(cw) {   // pawn / lance / knight: the ranks they may not reach u
 
 // ---------------------------------------------------------------- interactive mini board
 const CSS = `
-.rt-host{display:block!important}
+.rt-host{display:flex!important;flex-direction:column}
+/* the tutorial fills the dialog: step dots on top, nav at the bottom, one fixed board size (shared/ruletour.js) */
+#lessonOverlay .modal:has(#lessonList.rt-host){display:flex;flex-direction:column}
+#lessonListView:has(> .rt-host){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+#lessonListView > #lessonList.rt-host{flex:1 1 auto;min-height:0}
+#lessonList.rt-host > .rt{flex:1 1 auto;min-height:0}
+#lessonList.rt-host .rt-board{overflow:hidden}
 .rtb .rc{cursor:default}
 .rtb .rc.can{cursor:pointer}
 .rtb .rc.from{background:linear-gradient(170deg,#bcd9ea,#a6c8de);box-shadow:inset 0 0 0 2px #3c7fb0}
@@ -105,24 +111,7 @@ html[lang=ar] .rt-pinfo{direction:rtl;text-align:right}
 .rt-draw{font-size:13.5px;line-height:1.7;color:var(--muted)}
 html[lang=ar] .rt-wins,html[lang=ar] .rt-draw{direction:rtl}
 @media (max-width: 520px){ .rt-wins{grid-template-columns:minmax(0,1fr)} }
-/* PC: text on the left, a big board on the right (uses the wide dialog); the board area is measured by cwFit */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
-  #lessonOverlay .modal:has(#lessonList.rt-host){display:flex;flex-direction:column}
-  #lessonListView:has(> .rt-host){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
-  #lessonListView > #lessonList.rt-host{flex:1 1 auto;min-height:0}
-  #lessonList.rt-host .rt:has(> .rt-board){height:100%;display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.35fr);grid-template-rows:auto auto minmax(0,max-content) auto 1fr auto;column-gap:30px;
-    grid-template-areas:"steps steps" "title board" "body board" "task board" ". board" "nav nav"}
-  #lessonList.rt-host .rt:has(> .rt-board) > .rt-steps{grid-area:steps}
-  #lessonList.rt-host .rt:has(> .rt-board) > .rt-title{grid-area:title;text-align:left;margin-top:8px}
-  #lessonList.rt-host .rt:has(> .rt-board) > .rt-body{grid-area:body;min-height:0;overflow-y:auto}
-  #lessonList.rt-host .rt:has(> .rt-board) > .rt-task{grid-area:task;text-align:left;margin-top:14px}
-  #lessonList.rt-host .rt:has(> .rt-board) > .rt-board{grid-area:board;min-height:0;overflow-x:hidden;overflow-y:auto;margin:6px 0 0;align-items:flex-start}
-  #lessonList.rt-host .rt:has(> .rt-board) > .rt-nav{grid-area:nav}
-  /* pages without a board (page 1 etc.): same footer position as the board pages — nav pinned to the bottom, content centred in the space above */
-  #lessonList.rt-host .rt:not(:has(> .rt-board)){height:100%;display:flex;flex-direction:column}
-  #lessonList.rt-host .rt:not(:has(> .rt-board)) > .rt-title{margin-top:auto}
-  #lessonList.rt-host .rt:not(:has(> .rt-board)) > .rt-nav{margin-top:auto}
-  html[lang=ar] #lessonList.rt-host .rt:has(> .rt-board) > .rt-title,html[lang=ar] #lessonList.rt-host .rt:has(> .rt-board) > .rt-task{text-align:right}
   .rt-pinfo{font-size:15.5px}.rt-pinfo h4{font-size:17px}
   .rt-hand small{font-size:15px}
   .rt-promo button{font-size:15px}
@@ -137,26 +126,23 @@ if (!document.getElementById('sgRtCss')) { const st = document.createElement('st
 
 const host = () => $('#lessonList');
 const wide = () => matchMedia('(hover: hover) and (pointer: fine) and (min-width: 820px)').matches;
-// cell size: as large as fits. PC: the measured board area on the right (extraH = rows of buttons / text above or below
-// the board), capped by --rt-bw; phones: the dialog width (and height) as before
+// cell size: as large as fits in the board box. The box has one fixed size on every page (shared/ruletour.js), so the
+// cells only change with the drawing (board window, hand / promotion buttons / piece text: extraW / extraH)
 function cwFit(cols, rows, extraW, extraH, el) {
-  const L = host();
-  if (el && wide() && el.clientHeight > 80) {
-    const bw = Math.min(el.clientWidth, parseFloat(getComputedStyle(L.querySelector('.rt') || L).getPropertyValue('--rt-bw')) || 600);
-    const byW = (bw - 8 - (extraW || 0)) / cols, byH = (el.clientHeight - 12 - (extraH || 0)) / (rows * 1.1 + .1);
-    return Math.max(26, Math.min(84, Math.floor(Math.min(byW, byH) * (el._k || 1)) - 1));
+  if (el && el.clientWidth > 60 && el.clientHeight > 60) {
+    const byW = (el.clientWidth - 8 - (extraW || 0)) / cols, byH = (el.clientHeight - 8 - (extraH || 0)) / (rows * 1.1 + .1);
+    return Math.max(18, Math.min(84, Math.floor(Math.min(byW, byH) * (el._k || 1)) - 1));
   }
-  const W = (L && L.clientWidth) || 320, m = $('#lessonOverlay .modal'), H = m ? m.clientHeight : innerHeight;
-  const byW = (W - 8 - (extraW || 0)) / cols, byH = (H - 470) / (rows * 1.1 + .6);
-  return Math.max(24, Math.min(56, Math.floor(Math.min(byW, Math.max(30, byH))) - 1));
+  const L = host(), W = (L && L.clientWidth) || 320;
+  return Math.max(24, Math.min(56, Math.floor((W - 8 - (extraW || 0)) / cols) - 1));
 }
-// PC: the board area has a fixed height; if the drawing (board + hand / promotion buttons / piece text) overflows it,
-// shrink the cells once or twice (el._k) — the area keeps its size, so 'Next' never moves out of view
+// if the drawing (board + hand / promotion buttons / piece text) still overflows the box, shrink the cells once or
+// twice (el._k) — the box keeps its size, so nothing else on the page moves
 function overflowFix(el) {
-  if (!wide() || !el.clientHeight) return false;
-  const over = el.scrollHeight - el.clientHeight;
+  if (!el.clientHeight) return false;
+  const over = Math.max(el.scrollHeight - el.clientHeight, el.scrollWidth - el.clientWidth);
   if (over <= 2 || (el._n = (el._n || 0) + 1) > 3) { el._n = 0; return false; }
-  el._k = (el._k || 1) * Math.max(.6, (el.clientHeight - 6) / el.scrollHeight);
+  el._k = (el._k || 1) * Math.max(.6, Math.min((el.clientHeight - 6) / el.scrollHeight, (el.clientWidth - 6) / el.scrollWidth));
   return true;
 }
 const sqXY = s => [s % 9, (s / 9) | 0];

@@ -313,6 +313,7 @@ a.snd.home{text-decoration:none}
 /* rules page */
 #rulesOverlay .rt-board svg{display:block;width:var(--rt-bw);max-width:100%;height:auto;cursor:pointer}
 #rulesOverlay .rt-body p{margin:0 0 6px}
+@media (max-height: 560px) and (orientation: landscape){ #rulesOverlay .modal{width:min(900px, 100%)} }
 /* the rules / lessons / openings / puzzles tabs share one dialog size, so switching tabs never resizes it */
 #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){width:min(560px,100%);height:calc(100vh - 32px);height:calc(100dvh - 32px)}
 /* list views fill the fixed-size dialog; the Close button sits at the bottom */
@@ -614,8 +615,6 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   #rulesOverlay .ls-tabs{margin-bottom:8px}
   #rulesOverlay .rt-steps{margin-bottom:6px}
   #rulesOverlay .rt h2.rt-title{margin-bottom:4px}
-  #rulesOverlay .rt-board{margin:6px auto 4px}
-  #rulesOverlay .rt-task{min-height:48px}
   #rulesOverlay .rt-nav{margin-top:8px}
 }
 
@@ -1267,10 +1266,10 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/ruletour.js?v=12"></script>
+<script src="../shared/ruletour.js?v=13"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=pz4"></script>
+<script src="app.js?v=pz4rb"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5i" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=3" defer></script>
