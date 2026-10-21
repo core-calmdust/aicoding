@@ -1441,10 +1441,30 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
+// Puzzles replaced on 2026-10-21 (fun score, tools/refresh_fun.js): PUZZLES.old[themeId-j] keeps the previous puzzle of the slot.
+// A player who already had a record for the slot when this set first loaded keeps the old puzzle (the list is frozen then,
+// so solving the new puzzle later does not switch it back); daily puzzles dated up to PUZZLES.cut keep the old puzzle too.
+let pzOldSet = null;
+function pzOldKeys() {
+  if (pzOldSet) return pzOldSet;
+  const old = (PUZZLES && PUZZLES.old) || {}, key = STORE + '-pz-old-' + (PUZZLES && PUZZLES.cut || '');
+  let s = null; try { s = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+  if (!Array.isArray(s)) {
+    const pr = pzProgress(); s = Object.keys(old).filter(k => pr[k] !== undefined);
+    try { if (Object.keys(old).length) localStorage.setItem(key, JSON.stringify(s)); } catch (e) {}
+  }
+  return (pzOldSet = new Set(s));
+}
+function pzAt(T, j, date) {
+  const P = T.puzzles[j], o = PUZZLES && PUZZLES.old && PUZZLES.old[pzKey(T.id, j)];
+  if (!o) return P;
+  if (date && PUZZLES.cut && date <= PUZZLES.cut) return o;
+  return pzOldKeys().has(pzKey(T.id, j)) ? o : P;
+}
 function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
 function themeTier(T) { const n = T.puzzles.reduce((a, P) => a + (P.n || 1), 0) / Math.max(1, T.puzzles.length); return Math.max(0, Math.min(5, Math.round((n - 1) * 1.2))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
@@ -1456,7 +1476,7 @@ const PZ_TSVG = {
   emen: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/>',
 };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
-function pzThumbOf(T, j) { const P = T.puzzles[j < 0 ? T.puzzles.length - 1 : j]; return P && P.s ? { board: miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 }), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
+function pzThumbOf(T, j, date) { const P = pzAt(T, j < 0 ? T.puzzles.length - 1 : j, date); return P && P.s ? { board: miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 }), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
 async function openPuzzles() {
   const d = await puzzlesReady; selTab('puzzle');
   if (!d) { toast(t('ls.fail')); return; }
@@ -1469,7 +1489,7 @@ async function openPuzzles() {
   box.innerHTML = PZBook.home({
     title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pz.th.' + Ts[+cont.key].id) },
-    daily: dl ? [{ key: '1', board: pzThumbOf(Ts[dl.L], dl.j).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+    daily: dl ? [{ key: '1', board: pzThumbOf(Ts[dl.L], dl.j, dl.date).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
       sub: `${t('pz.th.' + Ts[dl.L].id)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
     cats: cats.map(g => { const r = idx.filter(i => Ts[i].grp === g).map(i => pzRecs(Ts[i], pr)).flat(); return { key: g, icon: PZBook.icon(PZ_GIC[g]), name: t('pz.grp' + g), done: r.filter(x => x > 0).length, total: r.length }; }),
     cur, catDesc: t('pz.grp' + cur + 'Sub'),
@@ -1488,7 +1508,7 @@ function openPzGrid(i, cur) {
   PZBook.setLang(LANG);
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(L), name: t('pz.th.' + L.id), desc: t('pz.th.' + L.id + '.sub'), chips: [t('pz.grp' + L.grp), PZBook.t('count', { n: L.puzzles.length })], tier: themeTier(L) });
   $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(L), cur });
-  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 })}</span>`); });
+  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzAt(L, +el.dataset.j); if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 })}</span>`); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
 $('#pzGrid').onclick = e => {
@@ -1502,7 +1522,7 @@ const leadOf = (pos, p) => pos.count(p) - pos.count(3 - p);
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const T = PUZZLES.themes[L], P = T.puzzles[j];
+  const T = PUZZLES.themes[L], P = pzAt(T, j, daily);
   const g = P.g || T.g || 0;
   if (!daily) PZBook.lastSet(PZ_LAST, L);
   puzzle = { L, j, P, T, goal: g ? 'gain' : 'win', g, me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
@@ -1522,7 +1542,13 @@ function renderPuzzleCard() {
   renderInfo();
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
-function mateReq(n, defend) { return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n, defend: !!defend, goal: puzzle ? puzzle.g : 0, base: puzzle ? puzzle.base : 0 }).then(r => r && r.list); }
+// engine.c puzzle() measures the attacker's gain from the lead of the position searched (defend = 0), so pass the gain
+// still missing against the puzzle start (at least 1) when the lead has changed on the way (e.g. after a sacrifice)
+function mateReq(n, defend) {
+  let goal = puzzle ? puzzle.g : 0;
+  if (goal && !defend) goal = Math.max(1, goal - (leadOf(posAt(cur).pos, puzzle.me) - puzzle.base));
+  return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n, defend: !!defend, goal, base: puzzle ? puzzle.base : 0 }).then(r => r && r.list);
+}
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 99 : e.need < 0 ? 50 : e.need; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need > 0 && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
