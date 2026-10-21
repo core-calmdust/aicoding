@@ -1249,7 +1249,7 @@ let currentThemeIndex;
 let energy;
 let nextItemScore;
 let itemLagPeak = 0, itemLagT = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
-const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を1回流れる時間」待って元の間隔へ
+const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
 // 隕石が画面の上から下まで流れる秒数（ステージが進んで隕石が速くなるほど短い）
 function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY()); }
 let nextSpecialItemScore;
@@ -2007,7 +2007,7 @@ function updatePlayingState(dt_sec) {
         // 大きなチェイン（CHAIN_LAG_LINE以上）の後は、戻るまでにタイムラグを入れる（すぐ戻ると出過ぎるため）
         const clear = player.invincibleTimer <= 0 && !items.some(it => it.type !== 'hyper');
         if (!clear) { itemLagPeak = Math.max(itemLagPeak, chainCount); itemLagT = -1; }
-        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() : 0; // 切れた瞬間にラグを決める（隕石が画面を1回流れる時間）
+        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * 0.9 : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間）
         if (clear && itemLagT > 0) itemLagT -= dt_sec;
         const settled = clear && itemLagT <= 0;
         if (settled) itemLagPeak = 0;
