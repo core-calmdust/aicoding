@@ -4055,7 +4055,7 @@ if (olOn()) Online.onAuth(olAuthChanged);
 // settings / name / rating: newest wins. Not synced: the game in progress, live online game, room choices, mock data.
 const ShogiSync = (() => {
   const META = 'shogi-sync-meta', RU_STORE = 'shogi-kaya-rules-v1';
-  const SET_KEYS = ['color', 'level', 'level2', 'handicap', 'legal', 'last', 'eval', 'coach', 'sound', 'pieces', 'skin', 'lang'];
+  const SET_KEYS = ['color', 'level', 'level2', 'handicap', 'legal', 'last', 'eval', 'coach', 'sound', 'pieces', 'skin', 'cstyle', 'cstyle2', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };
