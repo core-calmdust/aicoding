@@ -536,15 +536,15 @@
 
   /* ---------- table framing: on a portrait screen the view is a landscape one turned 90° (clockwise, like the
      game's own landscape mode: hold the phone sideways, your side at the bottom) so the long case fills the screen ---------- */
-  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing), side (px of the HUD column at the right of a landscape view), onChange(mode) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
+  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing), left / right (px of the side columns of a landscape view), onChange(mode) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
   function frameOn(board, T3, o) {
     const TT = T(), g = o.g, SC = o.SC;
-    let rot = null;
+    let rot = null, F = null, mode0 = 'norm', fixT = 0, fixN = 0, lastFr = -1, dead = false;
     const aspect = () => { const c = T3.renderer && T3.renderer() && T3.renderer().domElement; return c && c.clientHeight ? c.clientWidth / c.clientHeight : innerWidth / innerHeight; };   // the whole canvas (the play view has no inset; the showcase inset is still easing out at start)
     function apply() {
       const a = aspect(), r = o.rotate !== false && a < .8, cv = T3.renderer && T3.renderer() && T3.renderer().domElement, cs = cv && cv.clientWidth ? Math.min(cv.clientWidth, cv.clientHeight) : Math.min(innerWidth, innerHeight), short = cs;
       // 'turn': portrait screen held sideways · 'wide': a short landscape screen (phone) · 'norm'
-      const mode = r ? 'turn' : o.side && a > 1.3 && short < 560 ? 'wide' : 'norm', key = mode + ':' + a.toFixed(3);
+      const mode = r ? 'turn' : (o.left || o.right) && a > 1.3 && short < 560 ? 'wide' : 'norm', key = mode + ':' + a.toFixed(3);
       if (key === rot) return; rot = key;
       if (o.legacy) { if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: o.Y * SC, pitch: 1.18 }); }
       else if (mode === 'norm') {   // as large as the screen allows; a band at the top is kept for the HUD
@@ -554,12 +554,35 @@
       } else {   // a landscape view (turn: the camera rolls 90°, a true landscape on the portrait screen): the case uses the full landscape
         // height and is shifted left of the HUD column (o.side px) at the landscape right
         const long = cv && cv.clientWidth ? Math.max(cv.clientWidth, cv.clientHeight) : Math.max(innerWidth, innerHeight), aL = a < 1 ? 1 / a : a;
-        const rf = Math.min(.35, o.side / long), bw = g.W + 1.1, bd = g.H + .5, wT = bw * SC / (1 - rf), dT = bd * SC, vis = Math.max(wT, dT * aL);
-        board.position.set(-Math.min(rf / 2 * vis, Math.max(0, (vis - bw * SC) / 2)), 0, 0);
-        if (T3.fit) T3.fit(r ? { w: dT, d: wT, y: o.Y * SC, pitch: 1.25, roll: 1 } : { w: wT, d: dT, y: o.Y * SC, pitch: 1.25 });
+        // a first guess between the two side columns (o.left / o.right px); fix() then measures the drawn case and centres it exactly
+        const lf = (o.left || 0) / long, rf = (o.right || 0) / long, bw = g.W + 1.1, bd = g.H + .5, wT = bw * SC / Math.max(.4, 1 - lf - rf), dT = bd * SC, vis = Math.max(wT, dT * aL);
+        board.position.set((lf - rf) / 2 * vis, 0, 0);
+        F = r ? { w: dT, d: wT, y: o.Y * SC, pitch: 1.3, roll: 1 } : { w: wT, d: dT, y: o.Y * SC, pitch: 1.3 };
+        if (T3.fit) T3.fit(F);
       }
       board.updateMatrix(); board.updateMatrixWorld(true);
-      T3.kick(600); if (o.onChange) o.onChange(mode);
+      T3.kick(600); mode0 = mode; if (o.onChange) o.onChange(mode);
+      clearTimeout(fixT); fixN = 0; lastFr = -1; if (mode !== 'norm' && !o.legacy) fixT = setTimeout(fix, 300);
+    }
+    // landscape views: project the case's corners and move / zoom until it sits centred between the side columns, as large as fits
+    function fix() {
+      if (dead || !F) return;
+      const R = T3.renderer && T3.renderer(), d = T3._dbg && T3._dbg(), fr = R && R.info ? R.info.render.frame : 0;
+      if (!R || (d && d.camK < .995) || fr === lastFr) { fixT = setTimeout(fix, 250); return; }   // a fresh frame of the settled camera
+      const cr = R.domElement.getBoundingClientRect(), turn = mode0 === 'turn', LW = turn ? cr.height : cr.width, LH = turn ? cr.width : cr.height;
+      const ex = g.W / 2 + .45, ez = g.H / 2 + .35; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      [[-ex, -ez], [ex, -ez], [-ex, ez], [ex, ez]].forEach(([x, z]) => {
+        const v = new TT.Vector3(x, o.Y, z); board.updateMatrix(); v.applyMatrix4(board.matrix);
+        const q = T3.project(v.x, v.z, v.y), X = turn ? q.y - cr.top : q.x - cr.left, Y = turn ? cr.right - q.x : q.y - cr.top;
+        x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+      });
+      const m = 4, aw = LW - (o.left || 0) - (o.right || 0), ah = LH - 2 * m, f = Math.max((x1 - x0) / aw, (y1 - y0) / ah);
+      const dx = ((o.left || 0) + aw / 2) - (x0 + x1) / 2, dy = LH / 2 - (y0 + y1) / 2;
+      if (Math.abs(dx) < 1.5 && Math.abs(dy) < 1.5 && Math.abs(f - 1) < .012) return;
+      board.position.x += dx / ((x1 - x0) / (2 * ex * SC)); board.position.z += dy / ((y1 - y0) / (2 * ez * SC));
+      F.w *= f; F.d *= f; if (T3.fit) T3.fit(F);
+      board.updateMatrix(); board.updateMatrixWorld(true); T3.kick(600);
+      lastFr = fr; if (++fixN < 14) fixT = setTimeout(fix, 250);
     }
     apply();
     const onR = () => { apply(); setTimeout(apply, 350); };
@@ -571,7 +594,7 @@
       check: apply,
       toBoard(p) { board.updateMatrix(); inv.copy(board.matrix).invert(); const v = new TT.Vector3(p.x, o.Y * SC, p.z).applyMatrix4(inv); return { x: v.x, z: v.z }; },
       toCur(x, y, z) { board.updateMatrix(); return new TT.Vector3(x, y, z).applyMatrix4(board.matrix); },
-      stop() { removeEventListener('resize', onR); if (window.visualViewport) visualViewport.removeEventListener('resize', onR); ts.forEach(clearTimeout); },
+      stop() { dead = true; clearTimeout(fixT); removeEventListener('resize', onR); if (window.visualViewport) visualViewport.removeEventListener('resize', onR); ts.forEach(clearTimeout); },
     };
   }
 

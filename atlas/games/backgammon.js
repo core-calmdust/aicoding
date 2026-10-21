@@ -54,7 +54,7 @@
     board.scale.setScalar(SC);
     const bvEl = ctx.el.parentNode;
     let turned = false, colUI = false;
-    const FR = M3.frameOn(board, T3, { SC, Y, g, side: 86, onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
+    const FR = M3.frameOn(board, T3, { SC, Y, g, left: 86, right: 92, onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
       setTimeout(() => { if (!stopped) { hud(); placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
@@ -292,16 +292,16 @@
       + '.bgbub{position:absolute;z-index:3;left:50%;transform:translateX(-50%);max-width:min(340px,calc(100% - 40px));padding:8px 16px;border-radius:16px;background:#fffdf7;border:2px solid #fff;box-shadow:0 8px 20px -10px rgba(80,40,0,.55);font-weight:900;font-size:14px;color:var(--ink2,#4a4f66);text-align:center;line-height:1.35;pointer-events:none;opacity:0;transition:opacity .2s}.bgbub.on{opacity:1}'
       + '.bgbub::after{content:"";position:absolute;left:50%;margin-left:-8px;border:8px solid transparent}.bgbub.up::after{top:100%;border-top-color:#fffdf7}.bgbub.dn::after{bottom:100%;border-bottom-color:#fffdf7}'
       // the turned page (portrait phone, board sideways): bar along the left edge, buttons in the corners, all read in landscape
-      // landscape views: the HUD is a slim column at the landscape right (beside the tray), × above it and やめる below it in the corners
+      // landscape views: the HUD is a slim column at the landscape left (the hint just above it); × (top) and やめる (bottom) on one line at the right
       + '.bv.land .hud,.bv.playing.land .hud,.bv.bgwide .hud,.bv.playing.bgwide .hud{flex-direction:column;gap:6px;padding:7px 5px;border-radius:24px;max-width:none}'
       + '.hud .hs.col{flex-direction:column;gap:1px;padding:5px 7px;font-size:10.5px;line-height:1.1}.hud .hs.col b{font-size:17px;min-width:0}.hud .hs.col .r{display:flex;align-items:center;gap:4px}.hud .hs.col .bgk{width:14px;height:14px}'
       + '.hud .bgm.col{flex-direction:column;gap:7px}.hud .bgb.ic.ic{width:46px;height:46px;padding:0;border-radius:50%;font-size:21px}'
-      + '.bv.land .hud,.bv.playing.land .hud{left:calc(50% - 20px);top:calc(100% - 8px - env(safe-area-inset-bottom));bottom:auto;right:auto;transform-origin:0 0;transform:rotate(90deg) translate(-100%,-50%)}'
-      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(8px + env(safe-area-inset-left));right:auto;top:calc(100% - 8px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-100%,-100%)}'
-      + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px);right:auto;top:calc(100% - 8px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-100%,0)}'
+      + '.bv.land .hud,.bv.playing.land .hud{left:50%;top:calc(8px + env(safe-area-inset-top));bottom:auto;right:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}'
+      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(8px + env(safe-area-inset-left));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%)}'
+      + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px - env(safe-area-inset-right));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,0)}'
       + '.bv.land .bgbub{right:auto;bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%)}'
-      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:calc(50% + 20px);bottom:auto;left:auto;right:calc(8px + env(safe-area-inset-right));transform:translateY(-50%)}'
-      + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(8px + env(safe-area-inset-right));top:auto;bottom:calc(8px + env(safe-area-inset-bottom))}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;right:calc(8px + env(safe-area-inset-right));left:auto}'
+      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:50%;bottom:auto;right:auto;left:calc(8px + env(safe-area-inset-left));transform:translateY(-50%)}'
+      + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:auto;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(50%)}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));transform:translateX(50%)}'
       + '.bv.bgwide .bgbub{right:auto;top:auto;transform:translateX(-50%)}.bv.land .bgbub,.bv.bgwide .bgbub{font-size:12px;padding:6px 9px;border-radius:12px;width:max-content;max-width:120px}'
       + '.bv.land .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 40px)}.bv.land .endc h3{white-space:nowrap}.bv.land .endc.on{animation:bgpopL .4s cubic-bezier(.3,1.5,.5,1)}@keyframes bgpopL{from{transform:translate(-50%,-50%) rotate(90deg) scale(.7);opacity:0}}'
       + '@media (max-width:560px){.hud .bgb{padding:7px 10px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 12px}.hud .bgm{gap:5px}.bgbub{font-size:13px;padding:7px 13px}}';
@@ -315,10 +315,10 @@
         bub.classList.remove('dn', 'lt'); bub.classList.add('up', 'on'); bub.style.maxWidth = '';
         const r = h.getBoundingClientRect(), hr = host.getBoundingClientRect(), bw = bub.offsetWidth;
         if (turned) {   // landscape up = screen right; the column's centre line = its screen y centre
-          const c = Math.min(r.top + r.height / 2 - hr.top, hr.height - 6 - bw / 2);
+          const c = Math.max(6 + bw / 2, Math.min(r.top + r.height / 2 - hr.top, hr.height - 6 - bw / 2));
           bub.style.left = (r.right - hr.left + 10) + 'px'; bub.style.top = c + 'px'; bub.style.bottom = '';
         } else {
-          const c = Math.min(r.left + r.width / 2 - hr.left, hr.width - 6 - bw / 2);
+          const c = Math.max(6 + bw / 2, Math.min(r.left + r.width / 2 - hr.left, hr.width - 6 - bw / 2));
           bub.style.left = c + 'px'; bub.style.top = ''; bub.style.bottom = (hr.bottom - r.top + 10) + 'px';
         }
         return;
