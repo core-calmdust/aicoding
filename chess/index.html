@@ -1298,7 +1298,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="firebase-config.js?v=20261020gs"></script>
 <script src="online.js?v=20261020gt"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=3"></script>
+<script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=11"></script>
@@ -1315,12 +1315,12 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=42')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/chess.js?v=2')).then(() => load('../atlas/skin/chess.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=43')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/chess.js?v=2')).then(() => load('../atlas/skin/chess.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5g" defer></script>
+<script src="../shared/atlas.js?v=5h" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=2" defer></script>
 <script src="../shared/atlas-account.js?v=1" defer></script>
 </body>

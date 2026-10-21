@@ -331,6 +331,18 @@
       [[0, 0, W], [3, 1, B], [6, 0, W], [2, 2, B], [4, 3, W], [5, 5, B], [3, 6, W], [1, 3, B]].forEach(([x, y, m]) => { const d = bevelDisc(.4, .22, m); d.position.set(p(x) - .02, .62, p(y)); g.add(d); });
       return g;
     },
+    checkers() {   // English draughts: cream / green squares, ebony and ivory men, one crowned king
+      const g = new (T().Group)(), S = 8.4;
+      const top = M({ map: canvasTex('ck', 512, 512, (c, W) => { const s = W / 8; for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { c.fillStyle = (x + y) % 2 ? '#2f5a3f' : '#e6d3a8'; c.fillRect(x * s, y * s, s, s); } }), roughness: .4 });
+      g.add(slab(9.6, .5, 9.6, M({ map: wood('ckb', '#5a3a22', '#2e1d10') }), M({ map: wood('ckb', '#5a3a22', '#2e1d10') })));
+      const inner = slab(S, .06, S, top); inner.position.y = .5; g.add(inner);
+      const W = M({ color: 0xf1e6cf, roughness: .3 }), B = M({ color: 0x2a201c, roughness: .3 });
+      const put = (x, y, m, king) => { for (let h = 0; h < (king ? 2 : 1); h++) { const d = bevelDisc(.36, .2, m); d.position.set(cellPos(8, S, x), .58 + h * .22, cellPos(8, S, y)); g.add(d); } };
+      [[1, 0], [3, 0], [7, 0], [0, 1], [2, 1], [6, 1], [1, 2], [5, 2], [4, 3]].forEach(([x, y]) => put(x, y, B));
+      [[3, 4], [0, 5], [6, 5], [1, 6], [5, 6], [7, 6], [0, 7], [2, 7], [6, 7]].forEach(([x, y]) => put(x, y, W));
+      put(5, 4, W, true);
+      return g;
+    },
     sudoku() {
       const g = new (T().Group)();
       const top = M({ map: grid('sd', '#fffdf6', '#2b3044', 9, 9, { lw: 3, after: (c, W) => { c.lineWidth = 9; for (let i = 0; i <= 3; i++) { c.beginPath(); c.moveTo(i * W / 3, 0); c.lineTo(i * W / 3, W); c.moveTo(0, i * W / 3); c.lineTo(W, i * W / 3); c.stroke(); } c.fillStyle = '#2b3044'; c.font = '700 70px Fredoka, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; const d = '530070000600195000098000060800060003400803001700020006060000280000419005000080079'; for (let i = 0; i < 81; i++) if (d[i] !== '0') c.fillText(d[i], (i % 9 + .5) * W / 9, ((i / 9 | 0) + .55) * W / 9); } }), roughness: .9 });

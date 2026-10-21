@@ -210,6 +210,17 @@
       g.add(at(checker(0xf3ead8, .95), p(420), 1.8, p(70) + .2, .5, 0, -.35));   // completing the mill
       return g;
     },
+    checkers() {
+      const g = boardChunk(3, 3.6, gridMat('ck', '#e3cfa2', '#e3cfa2', 3, { check: '#2f5a45' }), M({ map: X.wood('ickw', '#7a4a2a', '#4a2a12') }));
+      const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
+      g.add(at(checker(0xf3ead8, .72), p(0), .5, p(1))); g.add(at(checker(0x3a2a24, .72), p(2), .5, p(1))); g.add(at(checker(0x3a2a24, .72), p(1), .5, p(2)));
+      // the crowned king: two stacked dark checkers with a gold crown, jumping
+      const k = new T.Group(); k.add(at(checker(0x3a2a24, 1), 0, 0, 0)); k.add(at(checker(0x3a2a24, 1), 0, .3, 0));
+      const gold = gloss(0xf2c94c), band = mesh(new T.CylinderGeometry(.3, .32, .14, 32, 1, true), gold); band.position.y = .66; k.add(band);
+      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = mesh(new T.ConeGeometry(.075, .2, 12), gold); c.position.set(Math.cos(a) * .3, .82, Math.sin(a) * .3); k.add(c); }
+      k.scale.setScalar(1.45); g.add(at(k, .3, 2.0, -.3, .45, 0, -.3));
+      return g;
+    },
     sudoku() {
       const g = new T.Group(), cols = ['#ffffff', '#ffffff', '#fff3c4', '#ffffff', '#ffd6e8', '#ffffff', '#d8f0ff', '#ffffff', '#ffffff'], nums = [5, 3, '', 6, '', 9, '', 1, 8];
       for (let i = 0; i < 9; i++) { const x = (i % 3 - 1) * 1.1, z = ((i / 3 | 0) - 1) * 1.1; g.add(at(nums[i] ? numTile(nums[i], 1, cols[i]) : rbox(1, .5, 1, .18, C(parseInt(cols[i].slice(1), 16))), x, 0, z)); }
