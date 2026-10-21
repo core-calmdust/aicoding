@@ -2436,13 +2436,30 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.op) { OPH.toList(
 let PUZZLES = null;
 // puzzles v3: categories (tabs / cards) of stages of 10 (shared PZBook: stars, medals, unlocks). Each puzzle has an id;
 // the 16 original puzzles keep their old progress keys ("L-j") as ids. Progress: PZ_STORE {id: stars (1–3) | true (old = 3)}.
-const puzzlesReady = fetch('puzzles.json?v=20261021pz').then(r => r.json()).then(d => {
+const puzzlesReady = fetch('puzzles.json?v=20261021fz').then(r => r.json()).then(d => {
   if (!d.cats && d.levels) d.cats = [{ id: 'mix', puzzles: d.levels.flatMap((L, i) => L.puzzles.map((P, j) => Object.assign({ id: i + '-' + j }, P))) }];
   return (PUZZLES = d);
 }).catch(() => null);
 let pzCat = 0;
 const pzcName = id => id === 'mix' ? t('btn.puzzle') : t('pzc.' + id), pzcText = (id, k) => id === 'mix' ? '' : t('pzc.' + id + k);
 const pzStars = v => v === true ? 3 : (+v || 0);
+// Puzzles replaced on 2026-10-21 (fun refresh, tools/refresh_fun.js) keep their id; the previous content is in
+// PUZZLES.old[id]. A player who already had a record for the id when this version first ran keeps the old puzzle
+// (snapshot in PZ_KEEP), and dailies up to PUZZLES.cut keep theirs; everyone else gets the new one.
+const PZ_KEEP = STORE + '-pz-keep';
+function pzKeep() {
+  if (!PUZZLES || !PUZZLES.old || !PUZZLES.cut) return [];
+  let s = null; try { s = JSON.parse(localStorage.getItem(PZ_KEEP) || 'null'); } catch (e) {}
+  if (!s || s.cut !== PUZZLES.cut) {
+    const pr = pzProgress(); s = { cut: PUZZLES.cut, ids: Object.keys(PUZZLES.old).filter(id => pr[id] !== undefined && pr[id] !== null) };
+    try { localStorage.setItem(PZ_KEEP, JSON.stringify(s)); } catch (e) {}
+  }
+  return s.ids;
+}
+function pzAt(ci, j, daily) {
+  const P = PUZZLES.cats[ci].puzzles[j], o = P && PUZZLES.old && PUZZLES.old[P.id];
+  return o && ((daily && daily <= PUZZLES.cut) || pzKeep().includes(P.id)) ? o : P;
+}
 function pzRecs(C, pr) { pr = pr || pzProgress(); return C.puzzles.map(P => pzStars(pr[P.id])); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 // collection layout (same as Reversi's): hero with overall progress + continue, daily card, group tabs, theme cards with a board, stage grid
@@ -2476,11 +2493,11 @@ async function openPuzzles() {
   box.innerHTML = PZBook.home({
     title: t('pz.title'), lead: t('pz.desc'), all: cats.map((_, i) => recsOf(i)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: pzcName(cats[cont.key].id) },
-    daily: dl ? [{ key: '1', board: pzThumb(cats[dl.c].puzzles[dl.j]), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+    daily: dl ? [{ key: '1', board: pzThumb(pzAt(dl.c, dl.j, dl.date)), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
       sub: `${pzcName(cats[dl.c].id)} · ${PZBook.t('stage', { n: Math.floor(dl.j / PZBook.STAGE) + 1 })} · No.${dl.j + 1} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
     cats: groups.length > 1 ? groups.map(([g, ii]) => { const r = ii.map(recsOf).flat(); return { key: g, icon: pzSvg(g), name: t('pzg.' + g), done: r.filter(x => x > 0).length, total: r.length }; }) : [],
     cur, catDesc: groups.length > 1 ? t('pzg.' + cur + '.d') : '',
-    cards: shown.map(i => { const C = cats[i], r = recsOf(i), j = PZBook.nextIndex(r), P = C.puzzles[j >= 0 ? j : r.length - 1];
+    cards: shown.map(i => { const C = cats[i], r = recsOf(i), j = PZBook.nextIndex(r), P = pzAt(i, j >= 0 ? j : r.length - 1);
       return { key: String(i), board: P ? pzThumb(P) : '', badge: pzSvg(C.id), name: pzcName(C.id), desc: pzcText(C.id, '.d'), recs: r, diff: PZ_DIFF[C.id] || 3, c: PZ_HUE[C.id] }; }),
   });
   PZBook.bindHome(box, {
@@ -2497,7 +2514,7 @@ function openPzGrid(i, cur) {
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzSvg(C.id), name: pzcName(C.id), desc: pzcText(C.id, '.long'), chips: [t('pzg.' + pzGroupOf(C.id)), PZBook.t('count', { n: C.puzzles.length })], diff: PZ_DIFF[C.id] || 3, c: PZ_HUE[C.id] });
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(C), cur });
   // each tile shows its position (a small board) under the number and stars
-  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = C.puzzles[+el.dataset.j]; if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${pzThumb(P)}</span>`); el.classList.add('hasth'); });
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzAt(i, +el.dataset.j); if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${pzThumb(P)}</span>`); el.classList.add('hasth'); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
   const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
@@ -2514,7 +2531,8 @@ function startPuzzle(ci, j, daily, keep) {
   stashGame(); lesson = null; document.body.classList.remove('in-lesson'); $('#toast').classList.remove('show');
   if (G.FLAT && !PCW) { scrollTo(0, 0); document.body.scrollTop = 0; }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false;
-  const P = PUZZLES.cats[ci].puzzles[j];
+  pzKeep();   // take the keep-old snapshot before this play can add a record
+  const P = pzAt(ci, j, daily);
   if (!daily) PZBook.lastSet(PZ_LAST, ci);
   puzzle = Object.assign({ ci, j, P, side: P.side, state: 'play', daily: daily || null, hinted: false, failed: false, answered: false, cubeQ: P.kind === 'cube' ? P.q : null, posOverride: null }, keep || {});
   document.body.classList.add('in-puzzle');
