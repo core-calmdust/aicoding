@@ -1131,7 +1131,7 @@ const SP_FOR_BONUS = 5;
 // スマホのアイテム取得判定: 自機の見た目（大きく表示している機体の輪郭）にアイテムが触れたら取得
 // 機体の輪郭は 幅±20・前35・後ろ29（モデル単位）を表示倍率VSで拡大した長方形として扱う
 function shipTouches(x, y, r) {
-    const k = IS_MOBILE ? 0.85 : 1; // スマホはひと回り小さめ
+    const k = IS_MOBILE ? 0.72 : 1; // スマホは小さめ
     const hw = 20 * VS * k, front = 35 * VS * k, back = 29 * VS * k;
     const dx = Math.max(0, Math.abs(x - player.x) - hw);
     const dy = y < player.y ? Math.max(0, player.y - front - y) : Math.max(0, y - (player.y + back));
