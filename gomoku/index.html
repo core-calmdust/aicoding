@@ -1074,24 +1074,6 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
     <div class="ng-cols"><div class="ng-col">
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
-    <div class="field" id="fRule">
-      <label data-i18n="ng.rule"></label>
-      <div class="seg" id="segRule">
-        <button data-v="renju" data-i18n="rule.renju"></button>
-        <button data-v="standard" data-i18n="rule.standard"></button>
-        <button data-v="free" data-i18n="rule.free"></button>
-      </div>
-      <p class="rule-note" id="ruleNote"></p>
-    </div>
-    <div class="field" id="fColor">
-      <label data-i18n="ng.color"></label>
-      <div class="seg" id="segColor">
-        <button data-v="1" data-i18n="ng.first"></button>
-        <button data-v="2" data-i18n="ng.second"></button>
-        <button data-v="0" data-i18n="ng.random"></button>
-      </div>
-    </div>
-    </div><div class="ng-col">
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
@@ -1106,6 +1088,15 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
         <div class="level-name" id="levelName2"></div>
       </div>
     </div>
+    <div class="field" id="fRule">
+      <label data-i18n="ng.rule"></label>
+      <div class="seg" id="segRule">
+        <button data-v="renju" data-i18n="rule.renju"></button>
+        <button data-v="standard" data-i18n="rule.standard"></button>
+        <button data-v="free" data-i18n="rule.free"></button>
+      </div>
+      <p class="rule-note" id="ruleNote"></p>
+    </div>
     <div class="field" id="fDisplay">
       <label data-i18n="ng.display"></label>
       <div class="checks">
@@ -1117,6 +1108,15 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
         <label><input type="checkbox" id="optForbid"><span data-i18n="opt.forbid"></span></label>
         <label><input type="checkbox" id="optNum"><span data-i18n="opt.num"></span></label>
         <label><input type="checkbox" id="optConfirm"><span data-i18n="opt.confirm"></span></label>
+      </div>
+    </div>
+    </div><div class="ng-col">
+    <div class="field" id="fColor">
+      <label data-i18n="ng.color"></label>
+      <div class="seg" id="segColor">
+        <button data-v="1" data-i18n="ng.first"></button>
+        <button data-v="2" data-i18n="ng.second"></button>
+        <button data-v="0" data-i18n="ng.random"></button>
       </div>
     </div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
