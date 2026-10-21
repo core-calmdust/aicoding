@@ -1110,7 +1110,7 @@ $('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); $('#rulesOverl
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
 const lessonsReady = fetch('lessons.json?v=20261021L3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
-const puzzlesReady = fetch('puzzles.json?v=20261021P5').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261021fun').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1391,6 +1391,27 @@ function pzMigrate() {
     if (ch) localStorage.setItem(PZ_STORE, JSON.stringify(pr));
   } catch (e) {}
 }
+// 2026-10-21 fun refresh (tools/fun.js, tools/refresh_fun.js): low-scoring puzzles were replaced; the previous one is
+// in PUZZLES.old["<theme>-<j>"]. A player who had already played a slot (a record when this version first loads, or a
+// solve of the old puzzle later, e.g. a daily up to PUZZLES.cut) keeps the old puzzle there; dailies up to the cut stay old.
+const PZ_OLDK = STORE + '-pzold';
+let pzOldSet = null;
+function pzOldKeys() {
+  if (pzOldSet) return pzOldSet;
+  let d = null; try { d = JSON.parse(localStorage.getItem(PZ_OLDK) || 'null'); } catch (e) {}
+  if (!d || !Array.isArray(d.keys)) {
+    pzMigrate(); const pr = pzProgress();
+    d = { keys: Object.keys((PUZZLES && PUZZLES.old) || {}).filter(k => starVal(pr[k]) > 0) };
+    try { localStorage.setItem(PZ_OLDK, JSON.stringify(d)); } catch (e) {}
+  }
+  return (pzOldSet = new Set(d.keys));
+}
+function pzOldMark(k) { const s = pzOldKeys(); if (s.has(k)) return; s.add(k); try { localStorage.setItem(PZ_OLDK, JSON.stringify({ keys: [...s] })); } catch (e) {} }
+function pzGet(T, j, date) {
+  const k = pzKey(T, j), o = PUZZLES.old && PUZZLES.old[k];
+  if (o && ((date && date <= PUZZLES.cut) || pzOldKeys().has(k))) return o;
+  return T.puzzles[j];
+}
 const pzRecs = (T, pr) => { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T, j)])); };
 // titles (称号) from the stars of all puzzles
 const PZ_RANKS = 12;
@@ -1456,11 +1477,11 @@ async function openPuzzles(rule, cat) {
   box.innerHTML = PZBook.home({
     title: t('pz.title') + ' · ' + t('rule.' + R), lead: t('pz.desc'), all: mine.map(T => pzRecs(T, pr)), heroExtra: rk,
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pz.' + THEMES[cont.key].id) },
-    daily: dl ? [{ key: '1', board: mThumb(THEMES[dl.L].puzzles[dl.j].b), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
-      sub: `${t('pz.' + THEMES[dl.L].id)} · ${t('pz.diff')} ${pzDiff(THEMES[dl.L].puzzles[dl.j])}/5 · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
+    daily: dl ? [{ key: '1', board: mThumb(pzGet(THEMES[dl.L], dl.j, dl.date).b), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+      sub: `${t('pz.' + THEMES[dl.L].id)} · ${t('pz.diff')} ${pzDiff(pzGet(THEMES[dl.L], dl.j, dl.date))}/5 · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
     cats: cats.map(i => { const C = PUZZLES.cats[i], [a, b] = cnt(C.themes); return { key: i, icon: pzSvg(C.id), name: t('pzc.' + C.id), done: a, total: b }; }),
     cur: ci, catDesc: t('pzc.' + PUZZLES.cats[ci].id + '.d'),
-    cards: PUZZLES.cats[ci].themes.map(T => { const r = pzRecs(T, pr), j = PZBook.nextIndex(r), P = T.puzzles[j >= 0 ? j : r.length - 1];
+    cards: PUZZLES.cats[ci].themes.map(T => { const r = pzRecs(T, pr), j = PZBook.nextIndex(r), P = pzGet(T, j >= 0 ? j : r.length - 1);
       return { key: T.gi, badge: pzBadge(T), name: t('pz.' + T.id), desc: (pzSeeds(P) === 6 ? t('ng.seedsN', { n: 6 }) + ' · ' : '') + t('pz.' + T.id + '.d'), recs: r, diff: pzDiffAvg(T), c: pzColor(T), tier: themeTier(T), board: mThumb(P.b, { [P.best]: 'src' }), bdCls: 'mc' }; }),
   });
   PZBook.bindHome(box, {
@@ -1479,7 +1500,7 @@ function openPzGrid(i, cur) {
     chips: [t('rule.' + T.rules) + (pzSeeds(T.puzzles[0]) === 6 ? ' · ' + t('ng.seedsN', { n: 6 }) : ''), t('pzc.' + PUZZLES.cats[T.ci].id), PZBook.t('count', { n: T.puzzles.length }), t('pz.diff') + ' ' + (d0 === d1 ? d0 : d0 + '–' + d1)] });
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(T), cur });
   // each tile shows the position (a small board) under its number and stars, and the difficulty
-  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = T.puzzles[+el.dataset.j]; el.insertAdjacentHTML('afterbegin', `<span class="th">${mThumb(P.b)}</span>`); el.insertAdjacentHTML('beforeend', `<span class="df">${'●'.repeat(pzDiff(P))}</span>`); });
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzGet(T, +el.dataset.j); el.insertAdjacentHTML('afterbegin', `<span class="th">${mThumb(P.b)}</span>`); el.insertAdjacentHTML('beforeend', `<span class="df">${'●'.repeat(pzDiff(P))}</span>`); });
   showPzView('pzGridView'); $('#puzzleOverlay').classList.add('show');
   const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
@@ -1491,7 +1512,7 @@ function startPuzzle(L, j, daily, keep) {
   pzIndex();
   if (!daily && THEMES[L]) PZBook.lastSet(PZ_LAST + '-' + THEMES[L].rules, L);
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const T = THEMES[L], pz = T.puzzles[j];
+  const T = THEMES[L], pz = pzGet(T, j, daily);
   puzzle = { L, j, T, P: pz, state: 'play', busy: false, daily: daily || null, hinted: false, failed: false, answered: false, N: pzN(pz), used: 0, slip: null };
   if (keep) { puzzle.hinted = keep.hinted; puzzle.failed = keep.failed; puzzle.answered = keep.answered; }
   document.body.classList.add('in-puzzle');
@@ -1695,6 +1716,7 @@ function puzzleSolved(msg) {
   const pr = pzProgress(), key = pzKey(Z.T, Z.j), stars = PZBook.starsFor(Z), before = pzRecs(Z.T, pr), rk0 = pzRankOf(pzStarsAll(pr)).i;
   pr[key] = Math.max(starVal(pr[key]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
+  if (PUZZLES.old && PUZZLES.old[key] === Z.P) pzOldMark(key);   // solved the pre-refresh puzzle: keep it for this slot
   const after = pzRecs(Z.T, pr), ev = PZBook.events(before, after, Z.j), rk1 = pzRankOf(pzStarsAll(pr)).i;
   if (Z.daily) dailySolved(Z.daily, Z.hinted);
   const extra = Z.P.kind === 'turn' ? pzLineText(Z.P) : '';
