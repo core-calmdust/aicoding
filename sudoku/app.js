@@ -869,7 +869,7 @@ function render() {
   $('#tUndo').disabled = !G.hist.length || G.done;
   const mi = $('#gMist'); mi.hidden = !s.check; mi.classList.toggle('z', !G.mist); $('#gMistN').textContent = G.mist;
   $('#gTime').hidden = !s.timer; $('#gClock').textContent = fmtTime(G.time);
-  const hn = $('#hintN'); hn.hidden = !G.hints; hn.textContent = G.hints;
+  const hn = $('#hintN'), hl = hintLeft(); hn.hidden = false; hn.textContent = hl > 0 ? hl : '+'; hn.title = hl > 0 ? t('hint.left', { n: hl }) : t('hint.paid', { n: fmtN(HINT_COST) });
   const ab = $('#autoN'); ab.textContent = DB.autoLeft > 0 ? DB.autoLeft : '+'; ab.title = DB.autoLeft > 0 ? t('auto.left', { n: DB.autoLeft }) : t('auto.paid', { n: AUTO_COST });
 }
 function flash(i, cls, ms = 400) { const el = cellEls[i]; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
@@ -916,6 +916,9 @@ function redo() {
   sel = h[0].i; SFX.tap(); render(); saveGame();
 }
 const AUTO_COST = 500;
+// hints: 3 free per day across all modes, then HINT_COST points each (the "wrong numbers" check is free)
+const HINT_FREE = 3, HINT_COST = 500;
+const hintLeft = () => { const h = DB.hd; return h && h.d === today() ? Math.max(0, HINT_FREE - h.n) : HINT_FREE; };
 function autoNotes() {
   if (!G || G.done || paused) return;
   const g = G.grid.map((v, i) => (v === G.sol[i] ? v : 0));
@@ -1048,6 +1051,19 @@ function onHint() {
   if (hintState && hintState.place) return applyHint();
   closeHint();
   const wrong = []; for (let i = 0; i < 81; i++) if (G.grid[i] && !G.puz[i] && G.grid[i] !== G.sol[i]) wrong.push(i);
+  if (!wrong.length) {
+    const gk = G.grid.join('');
+    if (G.hintPaid !== gk) { // re-opening the same hint on an unchanged board is free
+      if (hintLeft() <= 0) {
+        if (DB.pts < HINT_COST) { toast(esc(t('hint.nopts', { n: fmtN(HINT_COST) })), 'msg'); return; }
+        if (!confirm(t('hint.buy', { n: fmtN(HINT_COST), p: fmtN(DB.pts) }))) return;
+        DB.pts -= HINT_COST;
+      } else {
+        const td = today(); DB.hd = DB.hd && DB.hd.d === td ? { d: td, n: DB.hd.n + 1 } : { d: td, n: 1 };
+      }
+      G.hintPaid = gk; persist();
+    }
+  }
   G.hints++; SFX.hint();
   let html;
   if (wrong.length) {

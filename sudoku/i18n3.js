@@ -521,4 +521,14 @@ add('ar', {
   'x.dots': 'الجارتان بنقطة بيضاء متتاليتان، وبلا نقطة ليستا متتاليتين أبدًا. هذه العلاقات تحذف المرشحات المستحيلة.',
   'x.arrowSum': 'يجب أن تساوي الدائرة مجموع سهمها، لذا تُحذف المرشحات التي لا يتحقق معها هذا المجموع.'
 });
+add("ja", {"hint.left": "今日の無料ヒント 残り{n}回", "hint.paid": "{n}ポイントで1回分使えます", "hint.nopts": "今日の無料ヒント（1日3回）を使い切りました（{n}ポイントで1回使えます）", "hint.buy": "今日の無料ヒント（1日3回）を使い切りました。{n}ポイントでヒントを1回使いますか？（所持 {p}pt）"});
+add("en", {"hint.left": "Free hints today: {n} left", "hint.paid": "{n} points per hint", "hint.nopts": "You have used today's 3 free hints ({n} points buys one more)", "hint.buy": "You have used today's 3 free hints. Use one for {n} points? (you have {p} pt)"});
+add("zh", {"hint.left": "今日免费提示 剩余{n}次", "hint.paid": "{n}积分可使用1次", "hint.nopts": "今天的3次免费提示已用完（{n}积分可使用1次）", "hint.buy": "今天的3次免费提示已用完。要花{n}积分使用1次提示吗？（持有 {p}pt）"});
+add("ko", {"hint.left": "오늘 무료 힌트 {n}회 남음", "hint.paid": "{n}포인트로 1회 사용", "hint.nopts": "오늘의 무료 힌트(하루 3회)를 다 썼어요 ({n}포인트로 1회 사용 가능)", "hint.buy": "오늘의 무료 힌트(하루 3회)를 다 썼어요. {n}포인트로 힌트를 1회 사용할까요? (보유 {p}pt)"});
+add("es", {"hint.left": "Pistas gratis hoy: quedan {n}", "hint.paid": "{n} puntos por pista", "hint.nopts": "Ya usaste las 3 pistas gratis de hoy ({n} puntos por una más)", "hint.buy": "Ya usaste las 3 pistas gratis de hoy. ¿Usar una por {n} puntos? (tienes {p} pt)"});
+add("fr", {"hint.left": "Indices gratuits aujourd'hui : {n} restants", "hint.paid": "{n} points par indice", "hint.nopts": "Vous avez utilisé les 3 indices gratuits du jour ({n} points pour un de plus)", "hint.buy": "Vous avez utilisé les 3 indices gratuits du jour. En utiliser un pour {n} points ? (vous avez {p} pt)"});
+add("pt", {"hint.left": "Dicas grátis hoje: restam {n}", "hint.paid": "{n} pontos por dica", "hint.nopts": "Você usou as 3 dicas grátis de hoje ({n} pontos por mais uma)", "hint.buy": "Você usou as 3 dicas grátis de hoje. Usar uma por {n} pontos? (você tem {p} pt)"});
+add("de", {"hint.left": "Gratis-Tipps heute: noch {n}", "hint.paid": "{n} Punkte pro Tipp", "hint.nopts": "Die 3 Gratis-Tipps für heute sind aufgebraucht ({n} Punkte für einen weiteren)", "hint.buy": "Die 3 Gratis-Tipps für heute sind aufgebraucht. Einen Tipp für {n} Punkte nutzen? (du hast {p} pt)"});
+add("hi", {"hint.left": "आज के मुफ़्त संकेत: {n} बाकी", "hint.paid": "हर संकेत {n} पॉइंट", "hint.nopts": "आज के 3 मुफ़्त संकेत खत्म हो गए ({n} पॉइंट में एक और)", "hint.buy": "आज के 3 मुफ़्त संकेत खत्म हो गए। {n} पॉइंट में एक संकेत लें? (आपके पास {p} pt)"});
+add("ar", {"hint.left": "التلميحات المجانية اليوم: بقي {n}", "hint.paid": "{n} نقطة لكل تلميح", "hint.nopts": "استخدمت التلميحات المجانية الثلاثة لليوم ({n} نقطة لتلميح إضافي)", "hint.buy": "استخدمت التلميحات المجانية الثلاثة لليوم. هل تستخدم تلميحًا مقابل {n} نقطة؟ (لديك {p} نقطة)"});
 })(window.I18N);
