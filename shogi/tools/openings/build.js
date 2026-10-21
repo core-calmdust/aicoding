@@ -50,7 +50,7 @@ for (const cat of CATS) {
     for (const m of (e.story && e.story.marks) || []) if (!/^[1-9][1-9]$/.test(m)) warn.push(`${e.id}: bad mark ${m}`);
     const pr = cat === 'castle' || e.noPractice ? [] : (probs[e.id] || []);
     const g = { id: e.id, cat, ord: e.ord || k + 10, label: e.label, title: e.title, short: e.short, study: { start, steps, notes, intro }, problems: pr, story: e.story };
-    if (e.side) g.side = e.side;
+    if (e.kind) g.kind = e.kind; else if (e.side) g.side = e.side;
     out.push(g);
     (index[cat] = index[cat] || []).push([e.id, pr.length >= 5 ? 1 : 0]);
     report.push(`${cat}\t${e.id}\t${steps.length} plies\t${pr.length} problems`);

@@ -37,7 +37,7 @@ function board(sfen, o) {
   const mk = new Set((o.marks || []).map(String));
   let s = `<svg class="sh-mini" viewBox="0 0 ${vw.toFixed(1)} ${vh.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
   s += `<rect x="0" y="${hw}" width="${vw.toFixed(1)}" height="${(H * C + pad * 2).toFixed(1)}" rx="1.6" fill="#d9b46a"/>`;
-  for (const m of mk) { const f = +m[0], r = +m[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#e0703a" fill-opacity=".55"/>`; }
+  for (const m of mk) { const f = +m[0], r = +m[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#d4542a" fill-opacity=".85"/>`; }
   if (o.last) { const f = +o.last[0], r = +o.last[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#f2d27a" fill-opacity=".8"/>`; }
   let ln = '';
   for (let i = 0; i <= W; i++) ln += `M${(pad + i * C).toFixed(1)} ${pad + hw}V${(pad + hw + H * C).toFixed(1)}`;
@@ -47,7 +47,7 @@ function board(sfen, o) {
     if (p.f < f0 || p.f > f1 || p.r < r0 || p.r > r1) continue;
     const cx = X(p.f) + C / 2, cy = Y(p.r) + C / 2, pr = p.t[0] === '+';
     const g = `<path d="M0 -4.6L3.3 -3.1L4 4.4H-4L-3.3 -3.1Z" fill="#f6e3b4" stroke="#7a5524" stroke-width=".35"/><text y="2.55" font-size="6.4" text-anchor="middle" font-family="'Shippori Mincho B1','Noto Serif JP',serif" font-weight="700" fill="${pr ? '#b3261e' : '#2a1a0a'}">${p.t === 'k' && p.w ? '王' : KJ[p.t]}</text>`;
-    s += `<g transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})${p.w !== fl ? ' rotate(180)' : ''}">${g}</g>`;
+    s += `<g transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})${p.w !== fl ? ' rotate(180)' : ''}${mk.size ? ' scale(.86)' : ''}">${g}</g>`;
   }
   if (o.hands) {
     const hd = hand0(sfen), row = (c, y, anchorEnd) => { const txt = hd[c].map(([k, n]) => k + (n > 1 ? n : '')).join(''); return txt ? `<text x="${anchorEnd ? vw - 1 : 1}" y="${y}" font-size="5.6" text-anchor="${anchorEnd ? 'end' : 'start'}" font-family="'Shippori Mincho B1',serif" font-weight="700" fill="#e9d9b5">${c ? '☖' : '☗'}${txt}</text>` : ''; };
@@ -111,7 +111,8 @@ const CSS = `
 .lx-bar{display:block;height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
 .lx-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--brass))}
 .lx-bar.ok i{background:linear-gradient(90deg,#2f7d5a,#6fd3a0)}
-.lx-grid{display:grid;gap:10px}
+.lx-grid{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+#lessonOverlay #lessonList .lx-card{min-width:0}
 #lessonOverlay #lessonList .lx-card{display:flex;gap:12px;align-items:stretch;text-align:start;width:100%;padding:10px 12px 10px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--text);transition:transform .15s,border-color .2s}
 #lessonOverlay #lessonList .lx-card:hover{transform:translateY(-1px);border-color:var(--brass2)}
 #lessonOverlay #lessonList .lx-card.done{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
@@ -125,7 +126,7 @@ const CSS = `
 .lx-sub{font-size:13px;color:var(--brass);opacity:.92;line-height:1.5}
 .lx-desc{font-size:12.5px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #lessonList .lx-card .lx-bar{margin-top:auto;height:4px}
-.lx-side{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;padding:1px 7px;border-radius:999px;border:1px solid var(--line)}
+.lx-side{flex:0 1 auto;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;padding:1px 7px;border-radius:999px;border:1px solid var(--line)}
 .lx-credit{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.6}
 .lx-wait{color:var(--dim);font-size:14px;padding:18px 4px;grid-column:1/-1}
 html[lang=ar] .lx{direction:rtl}

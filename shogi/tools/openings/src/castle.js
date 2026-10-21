@@ -6,7 +6,7 @@ const VSFURI = '76歩 34歩 26歩 44歩 48銀 42飛 68玉 62玉 78玉 72玉';
 const KWALK = T('玉を飛車と反対側へ移動します。囲いは「飛車から遠く、玉の近くに金銀」が基本です。', 'The king walks away from the rook. The basic rule of castles: king far from its own rook, with golds and silvers close by.', '把玉移向飞车的另一侧。围的基本是“离飞车远，金银靠近玉”。', '왕을 비차의 반대쪽으로 옮깁니다. 성의 기본은 ‘비차에서 멀리, 왕 가까이에 금은’입니다.', 'El rey se aleja de la torre. Regla básica de los castillos: rey lejos de su torre y con oros y platas cerca.', 'Le roi s’éloigne de la tour. Règle de base des châteaux : roi loin de sa tour, ors et argents tout près.', 'O rei se afasta da torre. Regra básica dos castelos: rei longe da própria torre, com ouros e pratas por perto.', 'Der König wandert weg vom Turm. Grundregel der Burgen: König fern vom eigenen Turm, Gold und Silber in der Nähe.', 'राजा हाथी से दूर जाता है। किलों का मूल नियम: राजा अपने हाथी से दूर, सोना-चाँदी पास।', 'يبتعد الملك عن الرخ. القاعدة الأساسية للقلاع: الملك بعيد عن رخه والذهب والفضة قريبان منه.');
 module.exports = [
 {
-  id: 'c_mino', ord: 1, side: 'b',
+  id: 'c_mino', ord: 1, kind: 'furi',
   label: T('美濃', 'Mino', '美浓', '미노', 'Mino', 'Mino', 'Mino', 'Mino', 'मीनो', 'مينو'),
   title: T('美濃囲い', 'Mino Castle', '美浓围', '미노 성(미노가코이)', 'Castillo Mino', 'Château Mino', 'Castelo Mino', 'Mino-Burg', 'मीनो किला', 'قلعة مينو'),
   short: T('振り飛車の代表的な囲い。少ない手数で組めて横からの攻めに強い', 'The classic Ranging Rook castle: quick to build and strong against attacks from the side', '振飞车的代表性围。用少量手数就能组成，对横向进攻很强', '후리비샤의 대표적인 성. 적은 수로 짤 수 있고 옆에서의 공격에 강하다', 'El castillo clásico de la torre desplazada: rápido de montar y fuerte contra ataques laterales', 'Le château classique de la tour mobile : vite construit et solide contre les attaques latérales', 'O castelo clássico da torre móvel: rápido de montar e forte contra ataques laterais', 'Die klassische Schwenkturm-Burg: schnell gebaut und stark gegen Seitenangriffe', 'घूमते हाथी का क्लासिक किला: जल्दी बनता है और बग़ल के हमलों में मज़बूत', 'القلعة الكلاسيكية للرخ المتنقل: سريعة البناء وقوية ضد الهجمات الجانبية'),
@@ -29,7 +29,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_takamino', ord: 2, side: 'b',
+  id: 'c_takamino', ord: 2, kind: 'furi',
   label: T('高美濃', 'High M.', '高美浓', '다카미노', 'Mino a.', 'Mino h.', 'Mino a.', 'Hohe M.', 'ऊँचा', 'العالية'),
   title: T('高美濃囲い', 'High Mino Castle', '高美浓围', '다카미노 성', 'Castillo Mino alto', 'Château Mino haut', 'Castelo Mino alto', 'Hohe Mino-Burg', 'ऊँचा मीनो किला', 'قلعة مينو العالية'),
   short: T('美濃囲いの金を4七に上げ、上からの攻めにも強くした形', 'The Mino castle with its gold raised to 4g, stronger against attacks from above', '把美浓围的金上到4七，对上方进攻也更强的形', '미노 성의 금을 4g로 올려 위에서의 공격에도 강해진 형태', 'El castillo Mino con el oro subido a 4g, más fuerte contra ataques desde arriba', 'Le château Mino avec l’or monté en 4g, plus solide contre les attaques par le haut', 'O castelo Mino com o ouro subido a 4g, mais forte contra ataques por cima', 'Die Mino-Burg mit dem Gold auf 4g, stärker gegen Angriffe von oben', 'मीनो किला जिसका सोना 4g पर चढ़ा है, ऊपर के हमलों में ज़्यादा मज़बूत', 'قلعة مينو بذهب مرفوع إلى 4g، أقوى ضد الهجمات من الأعلى'),
@@ -51,7 +51,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_ginkan', ord: 3, side: 'b',
+  id: 'c_ginkan', ord: 3, kind: 'furi',
   label: T('銀冠', 'Silver C.', '银冠', '긴칸무리', 'Corona', 'Couronne', 'Coroa', 'S.-Krone', 'मुकुट', 'التاج'),
   title: T('銀冠', 'Silver Crown', '银冠', '긴칸무리(은관)', 'Corona de plata', 'Couronne d’argent', 'Coroa de prata', 'Silberkrone', 'रजत मुकुट', 'التاج الفضي'),
   short: T('玉の頭に銀をかぶせた美濃囲いの最終形。上部に厚く終盤に強い', 'The final form of the Mino: a silver “crown” on the king’s head, thick on top and strong in the endgame', '在玉头上盖上银的美浓围最终形。上部厚实，终盘很强', '왕의 머리에 은을 씌운 미노 성의 최종형. 위쪽이 두텁고 종반에 강하다', 'La forma final del Mino: una «corona» de plata sobre el rey, gruesa arriba y fuerte en el final', 'La forme finale du Mino : une « couronne » d’argent sur la tête du roi, épaisse en haut et forte en finale', 'A forma final do Mino: uma “coroa” de prata sobre o rei, grossa em cima e forte no final', 'Die Endform der Mino: eine Silber-„Krone“ auf dem Königskopf, oben dick und stark im Endspiel', 'मीनो का अंतिम रूप: राजा के सिर पर रजत “मुकुट”, ऊपर मोटा और अंत खेल में मज़बूत', 'الشكل النهائي لمينو: «تاج» فضي فوق رأس الملك، سميك من الأعلى وقوي في النهاية'),
@@ -73,7 +73,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_furiana', ord: 4, side: 'b',
+  id: 'c_furiana', ord: 4, kind: 'furi',
   label: T('振穴', 'R.Anag.', '振穴', '후리아나', 'Anag. TD', 'Anag. TM', 'Anag. TM', 'S-Anag.', 'घू. अना', 'أناغوما م'),
   title: T('振り飛車穴熊', 'Ranging Rook Anaguma', '振飞车穴熊', '후리비샤 아나구마', 'Anaguma de torre desplazada', 'Anaguma de tour mobile', 'Anaguma de torre móvel', 'Schwenkturm-Anaguma', 'घूमते हाथी का अनागुमा', 'أناغوما الرخ المتنقل'),
   short: T('玉を隅の1九に潜らせ、金銀でふたをする最も堅い囲い', 'The king burrows into the corner (1i) and golds and silvers seal it — the sturdiest castle', '把玉钻进角落1九，用金银封住的最坚固的围', '왕을 구석 1i로 들여보내고 금은으로 뚜껑을 덮는 가장 단단한 성', 'El rey se mete en la esquina (1i) y oros y platas lo sellan: el castillo más sólido', 'Le roi s’enfonce dans le coin (1i) et ors et argents le scellent : le château le plus solide', 'O rei se enterra no canto (1i) e ouros e pratas o selam: o castelo mais sólido', 'Der König verkriecht sich in der Ecke (1i), Gold und Silber versiegeln sie – die festeste Burg', 'राजा कोने (1i) में घुसता है और सोना-चाँदी उसे बंद कर देते हैं — सबसे मज़बूत किला', 'يختبئ الملك في الزاوية (1i) ويغلقها الذهب والفضة: أمتن قلعة'),
@@ -95,7 +95,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_ibiana', ord: 5, side: 'b',
+  id: 'c_ibiana', ord: 5, kind: 'ibi',
   label: T('居穴', 'S.Anag.', '居穴', '이비아나', 'Anag. TE', 'Anag. TS', 'Anag. TE', 'St-Anag.', 'स्थि. अना', 'أناغوما ث'),
   title: T('居飛車穴熊', 'Static Rook Anaguma', '居飞车穴熊', '이비샤 아나구마', 'Anaguma de torre estática', 'Anaguma de tour statique', 'Anaguma de torre estática', 'Standturm-Anaguma', 'स्थिर हाथी का अनागुमा', 'أناغوما الرخ الثابت'),
   short: T('対振り飛車で、居飛車の玉を9九に潜らせる最強クラスの囲い', 'Against Ranging Rook, the Static Rook king burrows into 9i — one of the strongest castles', '对振飞车时，把居飞车的玉钻进9九的最强级别的围', '대 후리비샤에서 이비샤의 왕을 9i로 들여보내는 최강급 성', 'Contra la torre desplazada, el rey de la torre estática se mete en 9i: de los castillos más fuertes', 'Contre la tour mobile, le roi de la tour statique s’enfonce en 9i : l’un des châteaux les plus forts', 'Contra a torre móvel, o rei da torre estática se enterra em 9i: um dos castelos mais fortes', 'Gegen Schwenkturm verkriecht sich der Standturm-König auf 9i – eine der stärksten Burgen', 'घूमते हाथी के ख़िलाफ़ स्थिर हाथी का राजा 9i में घुसता है — सबसे मज़बूत किलों में से एक', 'ضد الرخ المتنقل يختبئ ملك الرخ الثابت في 9i: من أقوى القلاع'),
@@ -118,7 +118,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_funa', ord: 6, side: 'b',
+  id: 'c_funa', ord: 6, kind: 'ibi',
   label: T('舟囲', 'Boat', '舟围', '후나', 'Barco', 'Bateau', 'Barco', 'Boot', 'नाव', 'القارب'),
   title: T('舟囲い', 'Boat Castle', '舟围', '후나가코이(배 성)', 'Castillo barco', 'Château bateau', 'Castelo barco', 'Bootsburg', 'नाव किला', 'قلعة القارب'),
   short: T('対振り飛車の急戦用の囲い。わずかな手数で組める', 'A castle for fast attacks against Ranging Rook, built in very few moves', '对振飞车急战用的围，用很少的手数就能组成', '대 후리비샤 급전용 성. 적은 수로 짤 수 있다', 'Un castillo para ataques rápidos contra la torre desplazada, montado en muy pocas jugadas', 'Un château pour les attaques rapides contre la tour mobile, construit en très peu de coups', 'Um castelo para ataques rápidos contra a torre móvel, montado em poucos lances', 'Eine Burg für Schnellangriffe gegen Schwenkturm, in sehr wenigen Zügen gebaut', 'घूमते हाथी के ख़िलाफ़ तेज़ हमलों का किला, बहुत कम चालों में बनता है', 'قلعة للهجمات السريعة ضد الرخ المتنقل تُبنى بنقلات قليلة جدًا'),
@@ -140,7 +140,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_hidarimino', ord: 7, side: 'b',
+  id: 'c_hidarimino', ord: 7, kind: 'ibi',
   label: T('左美濃', 'Left M.', '左美浓', '왼미노', 'Mino izq', 'Mino g.', 'Mino esq', 'Linke M.', 'बायाँ', 'اليسرى'),
   title: T('左美濃', 'Left Mino', '左美浓', '왼쪽 미노', 'Mino izquierdo', 'Mino gauche', 'Mino esquerdo', 'Linke Mino', 'बायाँ मीनो', 'مينو اليسرى'),
   short: T('美濃囲いを左右反転させた居飛車の囲い。急戦にも持久戦にも対応', 'The Mino castle mirrored for Static Rook — fits both fast and slow games', '把美浓围左右翻转的居飞车围，急战和持久战都能应对', '미노 성을 좌우 반전한 이비샤의 성. 급전에도 지구전에도 대응', 'El castillo Mino en espejo para la torre estática: sirve en partidas rápidas y lentas', 'Le château Mino en miroir pour la tour statique : convient aux parties rapides comme lentes', 'O castelo Mino espelhado para a torre estática: serve em jogos rápidos e lentos', 'Die gespiegelte Mino-Burg für den Standturm – passt zu schnellen wie ruhigen Partien', 'स्थिर हाथी के लिए उलटा मीनो किला — तेज़ और धीमे दोनों खेलों में ठीक', 'قلعة مينو معكوسة للرخ الثابت: تناسب اللعب السريع والبطيء'),
@@ -162,7 +162,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_yagura', ord: 8, side: 'b',
+  id: 'c_yagura', ord: 8, kind: 'ibi',
   label: T('矢倉', 'Yagura', '矢仓', '야구라', 'Yagura', 'Yagura', 'Yagura', 'Yagura', 'यागुरा', 'ياغورا'),
   title: T('矢倉囲い（金矢倉）', 'Yagura Castle (Gold Yagura)', '矢仓围（金矢仓）', '야구라 성(금야구라)', 'Castillo Yagura (Yagura de oro)', 'Château Yagura (Yagura d’or)', 'Castelo Yagura (Yagura de ouro)', 'Yagura-Burg (Gold-Yagura)', 'यागुरा किला (सोना यागुरा)', 'قلعة ياغورا (ياغورا الذهب)'),
   short: T('金銀3枚で玉を上下から固める、相居飛車の代表的な囲い', 'Three generals guard the king from above and the side — the classic Static Rook castle', '用金银三枚从上下固守玉，相居飞车的代表性围', '금은 3개로 왕을 위아래에서 굳히는 상이비샤의 대표적인 성', 'Tres generales protegen al rey por arriba y por el lado: el castillo clásico de torre estática', 'Trois généraux protègent le roi par le haut et le côté : le château classique à tour statique', 'Três generais protegem o rei por cima e pelo lado: o castelo clássico de torre estática', 'Drei Generäle schützen den König von oben und seitlich – die klassische Standturm-Burg', 'तीन सेनापति राजा को ऊपर और बग़ल से बचाते हैं — क्लासिक स्थिर हाथी किला', 'ثلاثة قادة يحمون الملك من الأعلى والجانب: القلعة الكلاسيكية للرخ الثابت'),
@@ -186,7 +186,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_kinmusou', ord: 9, side: 'b',
+  id: 'c_kinmusou', ord: 9, kind: 'aifuri',
   label: T('金無双', 'Kinmusō', '金无双', '긴무소', 'Kinmusō', 'Kinmusō', 'Kinmusō', 'Kinmusō', 'किनमुसो', 'كينموسو'),
   title: T('金無双', 'Kinmusō (Twin Golds)', '金无双', '긴무소', 'Kinmusō (oros gemelos)', 'Kinmusō (ors jumeaux)', 'Kinmusō (ouros gêmeos)', 'Kinmusō (Zwillingsgolde)', 'किनमुसो (जुड़वाँ सोने)', 'كينموسو (الذهبان التوأمان)'),
   short: T('2枚の金を横に並べる、相振り飛車の代表的な囲い', 'Two golds side by side — a typical castle in Double Ranging Rook', '两枚金横向并排，相振飞车的代表性围', '금 2개를 옆으로 나란히 세우는 아이후리비샤의 대표적인 성', 'Dos oros lado a lado: un castillo típico de la doble torre desplazada', 'Deux ors côte à côte : un château typique de la double tour mobile', 'Dois ouros lado a lado: um castelo típico da dupla torre móvel', 'Zwei Golde nebeneinander – eine typische Burg im doppelten Schwenkturm', 'दो सोने साथ-साथ — दोहरे घूमते हाथी का आम किला', 'ذهبان متجاوران: قلعة نموذجية في الرخ المتنقل المزدوج'),
@@ -208,7 +208,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_elmo', ord: 10, side: 'b',
+  id: 'c_elmo', ord: 10, kind: 'ibi',
   label: T('エルモ', 'elmo', 'elmo', '에루모', 'elmo', 'elmo', 'elmo', 'elmo', 'elmo', 'elmo'),
   title: T('エルモ囲い', 'elmo Castle', 'elmo围', '에루모 성', 'Castillo elmo', 'Château elmo', 'Castelo elmo', 'elmo-Burg', 'elmo किला', 'قلعة elmo'),
   short: T('玉の下に金を入れた、ソフト発の対振り飛車用の囲い', 'An engine-born anti-Ranging-Rook castle with a gold tucked under the king', '在玉下方放金的、源自软件的对振飞车用围', '왕 아래에 금을 넣은, 소프트에서 나온 대 후리비샤용 성', 'Un castillo antitorre desplazada nacido de un motor, con un oro bajo el rey', 'Un château anti-tour mobile né d’un moteur, avec un or sous le roi', 'Um castelo contra a torre móvel nascido de uma engine, com um ouro sob o rei', 'Eine aus einer Engine stammende Burg gegen Schwenkturm mit Gold unter dem König', 'इंजन से जन्मा घूमते हाथी विरोधी किला, राजा के नीचे सोना', 'قلعة ضد الرخ المتنقل وُلدت من محرك، بذهب تحت الملك'),
@@ -230,7 +230,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_millennium', ord: 11, side: 'b',
+  id: 'c_millennium', ord: 11, kind: 'ibi',
   label: T('ミレニ', 'Millen.', '千禧', '밀레니엄', 'Milenio', 'Millén.', 'Milênio', 'Millen.', 'मिलेनियम', 'الألفية'),
   title: T('ミレニアム囲い（トーチカ）', 'Millennium Castle (Tochka)', '千禧围（碉堡）', '밀레니엄 성(토치카)', 'Castillo Milenio (Tochka)', 'Château Millénium (Tochka)', 'Castelo Milênio (Tochka)', 'Millennium-Burg (Totschka)', 'मिलेनियम किला (तोचका)', 'قلعة الألفية (توتشكا)'),
   short: T('玉を8九に置き、金銀と桂・角で固める居飛車の囲い', 'A Static Rook castle with the king on 8i, fortified by golds, silver, knight and bishop', '把玉放在8九，用金银和桂、角加固的居飞车围', '왕을 8i에 두고 금은과 계마·각으로 굳히는 이비샤의 성', 'Un castillo de torre estática con el rey en 8i, reforzado por oros, plata, caballo y alfil', 'Un château à tour statique, roi en 8i, fortifié par ors, argent, cavalier et fou', 'Um castelo de torre estática com o rei em 8i, reforçado por ouros, prata, cavalo e bispo', 'Eine Standturm-Burg mit König auf 8i, befestigt durch Golde, Silber, Springer und Läufer', 'स्थिर हाथी का किला: राजा 8i पर, सोने, रजत, घोड़े और ऊँट से मज़बूत', 'قلعة للرخ الثابت بالملك في 8i، يحصنها الذهب والفضة والحصان والفيل'),
@@ -253,7 +253,7 @@ module.exports = [
   },
 },
 {
-  id: 'c_nakazumai', ord: 12, side: 'b',
+  id: 'c_nakazumai', ord: 12, kind: 'ibi',
   label: T('中住', 'Central', '中住', '나카즈마', 'Central', 'Central', 'Central', 'Zentral', 'केंद्र', 'مركزي'),
   title: T('中住まい', 'Central House (Nakazumai)', '中住居', '나카즈마이', 'Casa central (Nakazumai)', 'Maison centrale (Nakazumai)', 'Casa central (Nakazumai)', 'Zentralhaus (Nakazumai)', 'केंद्रीय घर (नाकाज़ुमाई)', 'البيت المركزي (ناكازوماي)'),
   short: T('玉を5八の中央に置き、左右に金を配する。飛車が横から来る戦型向き', 'King in the centre on 5h with golds on both sides — suited to openings where rooks attack sideways', '玉放在中央5八，左右配金，适合飞车从横向攻来的战型', '왕을 중앙 5h에 두고 좌우에 금을 배치. 비차가 옆에서 오는 전형에 적합', 'Rey en el centro (5h) con oros a ambos lados: ideal cuando las torres atacan de lado', 'Roi au centre (5h), ors de chaque côté : adapté aux ouvertures où les tours attaquent de côté', 'Rei no centro (5h) com ouros dos dois lados: ideal quando as torres atacam de lado', 'König in der Mitte auf 5h, Golde zu beiden Seiten – passend, wenn Türme seitlich angreifen', 'राजा केंद्र 5h पर, दोनों ओर सोने — जब हाथी बग़ल से हमला करें तब उपयुक्त', 'الملك في المركز (5h) والذهب على الجانبين: مناسب حين تهاجم الرخاخ جانبيًا'),
