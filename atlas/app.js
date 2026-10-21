@@ -714,13 +714,18 @@
   }
   function renderGacha() {
     if (!gacha3()) $('machine').innerHTML = MACHINE;
-    const R = A_.GACHA;
-    $('gpanel').innerHTML = `<div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><h3>${t('g.h')}</h3><span class="coin mob"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
-      <div class="gbtns"><button class="btn sky" id="g1" ${C.balance < R.one || busy ? 'disabled' : ''}>${t('g.one')}<small><span class="price"><i></i>${R.one}</span></small></button>
-      <button class="btn" id="g10" ${C.balance < R.ten || busy ? 'disabled' : ''}>${t('g.ten')}<small><span class="price"><i></i>${R.ten}</span></small></button></div>
-      <div class="gnote">★ ${t('g.tenNote')}<br>★ ${t('g.dup')}</div>
-      <div><div class="gnote" style="margin-bottom:6px">${t('g.rates')}</div><div class="rates">${R.rates.map((p, i) => `<span class="r${i}" style="${i === 4 ? 'background:linear-gradient(135deg,#ff7fbe,#ffb21e)' : ''}">${ART.RAR[i]} ${(p * 100).toFixed(1)}%</span>`).join('')}</div></div>
-      <div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div>`;
+    const R = A_.GACHA, own = W.owned.length, all = ART.items.length, pct = Math.round(own / all * 100);
+    const capIco = '<svg class="gico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="#fff"/><path d="M3 16a13 13 0 0 0 26 0z" fill="#ff6b6b"/><path d="M3 16h26" stroke="#d93c3c" stroke-width="2.4"/><ellipse cx="11" cy="9.5" rx="4" ry="2.2" fill="#fff" opacity=".9" transform="rotate(-25 11 9.5)"/><circle cx="16" cy="16" r="13" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="1.5"/></svg>';
+    const pb = (id, cls, label, cost, badge) => { const short = C.balance < cost;
+      return `<button class="btn gbig ${cls}${short ? ' short' : ''}" id="${id}" ${short || busy ? 'disabled' : ''}>${badge ? `<em class="gbadge">${t('g.badge')}</em>` : ''}<span class="gl">${t(label)}</span><span class="price"><i></i>${cost.toLocaleString()}</span>${short ? `<span class="gneed">${t('g.need', { n: (cost - C.balance).toLocaleString() })}</span>` : ''}</button>`; };
+    $('gpanel').innerHTML = `<div class="ghead">${capIco}<h3>${t('g.h')}</h3></div>
+      <div class="gwallet"><span>${t('g.have')}</span><b class="price"><i></i><span class="coinM">${C.balance.toLocaleString()}</span></b></div>
+      <div class="gbtns">${pb('g1', 'sky', 'g.one', R.one)}${pb('g10', '', 'g.ten', R.ten, true)}</div>
+      <div class="gsec"><div class="gst">${t('g.rates')}</div><div class="rates">${R.rates.map((p, i) => `<span class="r${i}"><i></i><b>${ART.RAR[i]}</b>${(p * 100).toFixed(1)}%</span>`).join('')}</div></div>
+      <div class="gsec"><div class="gst">${t('g.coll')}<span class="gcnt">${own} / ${all}</span></div><div class="gbar"><i style="width:${Math.max(2, pct)}%"></i></div>
+        <button type="button" class="glink" id="gDress">${t('g.toDress')} <span aria-hidden="true">›</span></button></div>
+      <p class="gfoot">★ ${t('g.dup')}</p>`;
+    $('gDress').onclick = () => go('dress');
     $('g1').onclick = () => doPull(1); $('g10').onclick = () => doPull(10);
   }
   let busy = false;

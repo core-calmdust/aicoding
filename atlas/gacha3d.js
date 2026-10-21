@@ -53,7 +53,8 @@
     // feet
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const f = K.blob(root, cream, [sx * (HW - .3), .2, sz * (F - .3)], [.26, .24, .26]); f.castShadow = true; });
     // white polka dots on the sides
-    [-1, 1].forEach(s => [[.5, .55], [-.25, 1.15], [.35, 1.45], [-.45, .45]].forEach(([z, y]) => { const d = K.blob(up, cream, [s * (HW - .02), y, z], [.03, .1, .1]); noSh(d); }));
+    // kept inside the flat part of the side (the rounded corners start ~.4 from the front/back edges), slightly sunk into the surface
+    [-1, 1].forEach(s => [[.22, .62], [-.2, 1.02], [.2, 1.32], [-.24, .5]].forEach(([z, y]) => { const d = K.blob(up, cream, [s * (HW - .035), y, z], [.045, .09, .09]); noSh(d); }));
     // dome (glass) + capsules inside
     const glassM = (back) => new T.ShaderMaterial({
       transparent: true, depthWrite: false, side: back ? T.BackSide : T.FrontSide,
@@ -65,8 +66,11 @@
     const hlM = new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .62, depthWrite: false });
     const hl = new T.Mesh(new T.SphereGeometry(DR * 1.004, 16, 8, Math.PI * 1.62, Math.PI * .2, Math.PI * .2, Math.PI * .22), hlM); hl.position.copy(DC); hl.renderOrder = 4; up.add(hl);
     const hl2 = new T.Mesh(new T.SphereGeometry(DR * 1.004, 8, 6, Math.PI * .28, Math.PI * .07, Math.PI * .5, Math.PI * .1), hlM); hl2.position.copy(DC); hl2.renderOrder = 4; up.add(hl2);
-    const lid = puck(.66, .28, red, .55); lid.position.y = DC.y + DR - .2; up.add(lid);
-    K.blob(up, cream, [0, lid.position.y + .4, 0], .17);
+    // lid: its base sits where the glass is .6 wide, so it hugs the dome (no gap); a soft ring hides the glass/collar joint
+    const LR = .6, lid = puck(LR + .04, .3, red, .55); lid.position.y = DC.y + Math.sqrt(DR * DR - LR * LR) - .06; up.add(lid);
+    const lidRing = mesh(new T.TorusGeometry(LR + .02, .05, 12, 48), cream); lidRing.rotation.x = Math.PI / 2; lidRing.position.y = lid.position.y + .03; up.add(lidRing);
+    K.blob(up, cream, [0, lid.position.y + .38, 0], .16);
+    const sy = 2.26 - DC.y, seam = mesh(new T.TorusGeometry(Math.sqrt(DR * DR - sy * sy), .07, 14, 64), cream); seam.rotation.x = Math.PI / 2; seam.position.y = 2.25; up.add(seam);
     // front: ATLAS plate, knob, coin slot, outlet hood
     // name plate: a smooth rounded slab built facing +z (no rotated rbox: its corner radius collapsed the shape), text decal glued to its flat face
     const PW = 1.34, PH = .44, PR = .2, PD = .07, PB = .035, ps = new T.Shape();
@@ -98,14 +102,14 @@
     const hz = new T.Box3().setFromObject(hood).max.z;
     const mouth = K.blob(up, ink, [0, .28, hz - .1], [.22, .2, .1]); noSh(mouth);
     // chute (half-pipe) and tray on the floor
-    const A = V(0, LIFT + .2, hz - .04), B = V(0, .36, hz + .92);
+    const A = V(0, LIFT + .2, hz - .04), B = V(0, .38, hz + .62);
     const L = A.distanceTo(B) + .1, pg = new T.CylinderGeometry(.31, .31, L, 24, 1, true, -Math.PI / 2, Math.PI); pg.rotateX(Math.PI / 2);
     const chuteM = soft(0xfff3dc, { under: 0xffd8c8, uk: .35 }); chuteM.side = T.DoubleSide;
     const chute = new T.Group(), cp = mesh(pg, chuteM); chute.add(cp);
     [-1, 1].forEach(sx => { const lip = mesh(new T.CylinderGeometry(.045, .045, L, 10), cream); lip.rotation.x = Math.PI / 2; lip.position.x = sx * .31; chute.add(lip); });
     chute.position.copy(A).add(B).multiplyScalar(.5); chute.position.y += .02; chute.rotation.x = Math.atan2(A.y - B.y, B.z - A.z); root.add(chute);
     [-1, 1].forEach(sx => { const leg = mesh(new T.CylinderGeometry(.04, .05, B.y, 10), cream); leg.position.set(sx * .26, B.y / 2 - .1, B.z - .12); root.add(leg); });
-    const TZ = hz + 1.42, prof = [[0, .02], [.5, .02], [.6, .1], [.62, .3], [.58, .36], [.52, .32], [.48, .12], [0, .09]].map(([r, y]) => new T.Vector2(r, y));
+    const TZ = hz + 1.1, prof = [[0, .02], [.5, .02], [.6, .1], [.62, .3], [.58, .36], [.52, .32], [.48, .12], [0, .09]].map(([r, y]) => new T.Vector2(r, y));
     const tm = soft(0xff9f6b, { under: 0xff7f8f, uk: .4 }); tm.side = T.DoubleSide;
     const tray = mesh(new T.LatheGeometry(prof, 40), tm); tray.position.set(0, 0, TZ); root.add(tray);
     const P = { F, hz, A, B, TZ, REST: V(0, .09 + CR, TZ), MOUTH: V(0, LIFT + .28, hz - .12) };
@@ -128,13 +132,27 @@
     const $u = s => ui.querySelector(s);
     const scene = new T.Scene(), cam = new T.PerspectiveCamera(30, 1, .1, 100);
     scene.add(new T.HemisphereLight(0xfff6e8, 0x8a6a50, .78));
-    const key = new T.DirectionalLight(0xffffff, 1.05); key.position.set(-5, 11, 8); key.castShadow = true;
-    const sm = coarse ? 512 : 1024; key.shadow.mapSize.set(sm, sm); Object.assign(key.shadow.camera, { left: -5, right: 5, top: 6, bottom: -4, near: 1, far: 30 }); key.shadow.bias = -.0008; key.shadow.radius = 4;
+    // key light from high above (a soft spotlight feel): short, round contact shadows instead of a long one to the side
+    const key = new T.DirectionalLight(0xffffff, 1.0); key.position.set(-1.6, 12, 3.2); key.castShadow = true;
+    const sm = coarse ? 512 : 1024; key.shadow.mapSize.set(sm, sm); Object.assign(key.shadow.camera, { left: -4, right: 4, top: 5, bottom: -4, near: 2, far: 20 }); key.shadow.bias = -.0008; key.shadow.radius = 6;
     scene.add(key);
+    const fill = new T.DirectionalLight(0xffe8f0, .35); fill.position.set(4, 5, 9); scene.add(fill);
     const rim = new T.DirectionalLight(0xcfe6ff, .5); rim.position.set(7, 4, -7); scene.add(rim);
     const glow = new T.PointLight(0xffffff, 0, 3.2, 1.6); scene.add(glow);
-    const floor = new T.Mesh(new T.PlaneGeometry(30, 30), new T.ShadowMaterial({ opacity: .2 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
     const M = build(); scene.add(M.root);
+    /* the hero's stage: a soft round toy-shop pedestal (marshmallow top, gold piping, pastel studs) under a faint spotlight pool */
+    const stage = new T.Group(); scene.add(stage);
+    const SC = V(0, 0, 1.15), SR = 2.45;
+    const ped = puck(SR, .5, soft(0xffc9b8, { under: 0xff9fb4, uk: .55, rough: .9 }), .4); ped.position.set(SC.x, -.5, SC.z); ped.scale.z = .92; ped.castShadow = false; stage.add(ped);
+    const top = puck(SR - .12, .06, soft(0xffe7d2, { under: 0xffd2c0, uk: .3, rough: .95 }), .5); top.position.set(SC.x, -.04, SC.z); top.scale.z = .92; top.castShadow = false; stage.add(top);
+    const pip = mesh(new T.TorusGeometry(SR - .02, .06, 12, 96), soft(0xffcf5a, { under: 0xff9a50, uk: .4, sheen: 0xfff2b0, sheenK: .6, rough: .6 })); pip.rotation.x = Math.PI / 2; pip.scale.y = .92; pip.position.set(SC.x, -.02, SC.z); pip.castShadow = false; stage.add(pip);
+    for (let i = 0; i < 20; i++) { const a = i / 20 * Math.PI * 2; const d = K.blob(stage, soft(PAST[i % PAST.length], { rough: .6 }), [SC.x + Math.cos(a) * (SR + .01), -.27, SC.z + Math.sin(a) * (SR + .01) * .92], [.08, .08, .08]); noSh(d); }
+    const pool = new T.Mesh(new T.CircleGeometry(SR - .14, 64), new T.MeshBasicMaterial({ transparent: true, depthWrite: false, opacity: .28, map: (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.6, 'rgba(255,250,235,.5)'); gr.addColorStop(1, 'rgba(255,250,235,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t; })() }));
+    pool.rotation.x = -Math.PI / 2; pool.position.set(SC.x, -.005, SC.z - .3); pool.scale.y = .92; stage.add(pool);
+    const floor = new T.Mesh(new T.CircleGeometry(SR - .14, 64), new T.ShadowMaterial({ opacity: .16 })); floor.rotation.x = -Math.PI / 2; floor.position.set(SC.x, .002, SC.z); floor.scale.y = .92; floor.receiveShadow = true; scene.add(floor);
+    // soft contact blot under the cabinet and the tray (reads as "standing on it" even where the shadow map is blurry)
+    const blot = (w, d, z, o) => { const m = new T.Mesh(new T.CircleGeometry(1, 48), new T.MeshBasicMaterial({ color: 0x8a5a40, transparent: true, opacity: o, depthWrite: false, map: pool.material.map })); m.rotation.x = -Math.PI / 2; m.scale.set(w, d, 1); m.position.set(0, .004, z); scene.add(m); };
+    blot(1.55, 1.2, 0, .2); blot(.85, .75, M.P.TZ, .16);
     const P = M.P;
 
     /* dome capsules: tiny verlet sim (gravity, dome wall, floor, ball-ball) */
@@ -233,7 +251,7 @@
       if (name === 'tray') { tgt = P.REST.clone().add(V(0, .5, -.25)); r = 1.25; dir = V(.55, .45, 1); }
       else if (name === 'pile') { tgt = V(0, .55, P.TZ + .25); r = 2.7; dir = V(.22, .7, 1); }
       else if (name === 'cap') { tgt = i.clone().add(V(0, .3, 0)); r = .9; dir = V(.1, .55, 1); }
-      else { tgt = V(0, 2.3, .95); r = 3.0; dir = V(.2, .26, 1); }
+      else { tgt = V(0, 2.45, .95); r = 3.3; dir = V(.1, .28, 1); }
       return { t: tgt, p: tgt.clone().addScaledVector(dir.normalize(), r / Math.sin(f)) };
     }
     let curView = 'idle';
@@ -426,8 +444,8 @@
             else { s.p.addScaledVector(n, d); const vn = s.v.dot(n); if (vn * (out ? 1 : -1) < 0) s.v.addScaledVector(n, -1.6 * vn); }
           }
           if (s.p.z < BODYZ) { s.p.z = BODYZ; s.v.z = Math.abs(s.v.z) * .5; }
-          const lim = 2.3; if (Math.abs(s.p.x) > lim) { s.p.x = Math.sign(s.p.x) * lim; s.v.x *= -.5; }
-          if (s.p.z > P.TZ + 1.7) { s.p.z = P.TZ + 1.7; s.v.z *= -.5; }
+          const lim = 2.2; if (Math.abs(s.p.x) > lim) { s.p.x = Math.sign(s.p.x) * lim; s.v.x *= -.5; }
+          if (s.p.z > P.TZ + 1.45) { s.p.z = P.TZ + 1.45; s.v.z *= -.5; }
         });
         const L = st.filter(s => s.live);
         for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {   // bump into each other
