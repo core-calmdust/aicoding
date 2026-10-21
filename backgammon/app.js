@@ -140,7 +140,7 @@ function load() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js');
+  const w = new Worker('engine.js?v=20261021bp');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; w.jobs.delete(m.id); if (m.error) console.warn(m.error); j.resolve(m); };
   w.onerror = e => console.warn('worker error', e.message);
