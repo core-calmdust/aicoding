@@ -39,7 +39,7 @@
       name: N('マンカラ', 'Mancala', '播棋', '만칼라', 'Mancala', 'Mancala', 'Mancala', 'Mancala', 'मंकाला', 'مانكالا') },
     { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 16, ls: 7 },
       name: N('バックギャモン', 'Backgammon', '西洋双陆棋', '백개먼', 'Backgammon', 'Backgammon', 'Gamão', 'Backgammon', 'बैकगैमन', 'طاولة الزهر') },
-    { id: 'morris', cat: 'line', store: ['aicoding-morris'], href: 'morris/', color: '#7552e0', released: '2026-10-18', premium: 1, tags: ['ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 600, ls: 21 },
+    { id: 'morris', cat: 'line', store: ['aicoding-morris'], href: 'morris/', color: '#7552e0', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 600, ls: 21 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة') },
   ];
   GAMES.forEach(g => { g.icon = 'images/icons/' + (g.id === 'speedsudoku' ? 'speed-sudoku' : g.id) + '.svg'; });
