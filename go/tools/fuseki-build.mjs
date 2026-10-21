@@ -6,6 +6,7 @@ import { CATS, SETS as S1 } from './fuseki-text-basic.mjs';
 import { SETS as S2 } from './fuseki-text-small.mjs';
 import { SETS as S3 } from './fuseki-text-handi.mjs';
 const L = JSON.parse(fs.readFileSync(new URL('./data/fuseki-lines.json', import.meta.url)));
+Object.assign(L, JSON.parse(fs.readFileSync(new URL("./data/fuseki-vars.json", import.meta.url))));
 const V = +(process.env.VISITS || 150);
 const tx = p => ({ ja: p[0], en: p[1] });
 const sets = [], report = [];

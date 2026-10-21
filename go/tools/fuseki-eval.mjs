@@ -19,8 +19,7 @@ export async function node(n, komi, hc, moves, visits = 160) {
   const spec = mkspec(n, hc), mv = norm(moves, n);
   const a = analyze(E, spec, mv, komi, visits);
   const turn = R.replay(spec, mv).pos.turn, sg = turn === 1 ? 1 : -1;
-  const pol = policy(E, spec, mv, komi, 2);
-  const pr = {}; pol.list.slice(0, 12).forEach((e, i) => pr[R.coord(e.m, n)] = [i + 1, Math.round(e.p * 100)]);
+  const pr = {}; a.list.slice().sort((x, y) => y.p - x.p).slice(0, 12).forEach((e, i) => pr[R.coord(e.m, n)] = [i + 1, Math.round(e.p * 100)]);
   const r = { v: visits, turn, lead: Math.round(a.lead * sg * 100) / 100,
     top: a.list.slice(0, 10).map(e => [R.coord(e.m, n), Math.round(e.lead * sg * 100) / 100, e.n]), pol: pr };
   cache[key] = r; dirty++; if (dirty >= 5) save();

@@ -2,6 +2,7 @@
 import fs from 'fs';
 import { R, mkspec } from './fuseki-eval.mjs';
 const L = JSON.parse(fs.readFileSync(new URL('./data/fuseki-lines.json', import.meta.url)));
+Object.assign(L, JSON.parse(fs.readFileSync(new URL("./data/fuseki-vars.json", import.meta.url))));
 for (const id of process.argv.slice(2)) {
   const [n, komi, hc, s] = L[id]; const mv = s.split(/\s+/);
   const spec = mkspec(n, hc); let p = R.Pos.from(spec); const num = {};

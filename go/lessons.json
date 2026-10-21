@@ -466,11 +466,13 @@
      "line": [
       "E2",
       "D1",
-      "E1"
+      "E1",
+      "C1",
+      "B1"
      ],
      "why": {
-      "ja": "<bdi>E2</bdi>からアタリすると白は一線の<bdi>D1</bdi>へしか逃げられず、<bdi>E1</bdi>（または<bdi>C1</bdi>）で取れます。",
-      "en": "Atari from <bdi>E2</bdi> forces White down to <bdi>D1</bdi> on the edge, and <bdi>E1</bdi> captures."
+      "ja": "<bdi>E2</bdi>からアタリすると白は一線の<bdi>D1</bdi>へしか逃げられず、<bdi>E1</bdi>とアタリを続けて一線で取れます。",
+      "en": "Atari from <bdi>E2</bdi> forces White down to <bdi>D1</bdi> on the edge, and <bdi>E1</bdi> keeps it in atari until it is captured on the edge."
      },
      "ng": {
       "ja": "<bdi>D1</bdi>からアタリすると白は<bdi>E2</bdi>へ広い方に逃げてしまいます。",
@@ -489,11 +491,13 @@
      "line": [
       "B2",
       "C1",
-      "B1"
+      "B1",
+      "D1",
+      "E1"
      ],
      "why": {
-      "ja": "白<bdi>B2</bdi>なら黒は一線の<bdi>C1</bdi>へ逃げるしかなく、<bdi>B1</bdi>で取れます。",
-      "en": "White <bdi>B2</bdi> leaves Black only <bdi>C1</bdi> on the edge, and <bdi>B1</bdi> captures."
+      "ja": "白<bdi>B2</bdi>なら黒は一線の<bdi>C1</bdi>へ逃げるしかなく、<bdi>B1</bdi>とアタリを続けて取れます。",
+      "en": "White <bdi>B2</bdi> leaves Black only <bdi>C1</bdi> on the edge; <bdi>B1</bdi> keeps up the atari and Black is captured."
      },
      "ng": {
       "ja": "<bdi>C1</bdi>からアタリすると黒は<bdi>B2</bdi>と逃げ、ダメが3つになります。端の方へ追い込みましょう。",
@@ -514,7 +518,11 @@
       "F3",
       "G3",
       "F2",
-      "G2"
+      "G2",
+      "F1",
+      "E1",
+      "G1",
+      "H1"
      ],
      "why": {
       "ja": "<bdi>E4</bdi>からアタリすると白は<bdi>F3</bdi>へ逃げますが、そこは黒<bdi>F4</bdi>のそば。<bdi>G3</bdi>で追えば端に追い詰めて取れます。",
@@ -537,11 +545,13 @@
      "line": [
       "C2",
       "D1",
-      "E1"
+      "C1",
+      "E1",
+      "F1"
      ],
      "why": {
-      "ja": "白<bdi>C2</bdi>なら黒は<bdi>D1</bdi>へ逃げるしかなく、<bdi>E1</bdi>で取れます。白<bdi>E2</bdi>がいる方へ追い込む形です。",
-      "en": "White <bdi>C2</bdi> leaves only <bdi>D1</bdi>, and <bdi>E1</bdi> captures — Black is driven toward white <bdi>E2</bdi>."
+      "ja": "白<bdi>C2</bdi>なら黒は<bdi>D1</bdi>へ逃げるしかなく、<bdi>C1</bdi>とアタリを続ければ、白<bdi>E2</bdi>がいるので逃げ場がありません。",
+      "en": "White <bdi>C2</bdi> leaves only <bdi>D1</bdi>; after <bdi>C1</bdi> Black runs into white <bdi>E2</bdi> and has nowhere to go."
      },
      "ng": {
       "ja": "<bdi>D1</bdi>からだと黒は<bdi>C2</bdi>へ逃げてダメが増えます。",
@@ -562,7 +572,11 @@
       "C6",
       "D6",
       "B6",
-      "B7"
+      "B7",
+      "A6",
+      "A7",
+      "A5",
+      "A4"
      ],
      "why": {
       "ja": "<bdi>B5</bdi>からアタリすると白は<bdi>C6</bdi>へ逃げますが、上には黒<bdi>C7</bdi>が待っています。<bdi>D6</bdi>と追えば取れます。",
@@ -869,7 +883,9 @@
      "line": [
       "G1",
       "D1",
-      "H1"
+      "H1",
+      "B1",
+      "E1"
      ],
      "why": {
       "ja": "白のダメは<bdi>B1</bdi>・<bdi>D1</bdi>・<bdi>E1</bdi>、黒は<bdi>E1</bdi>・<bdi>G1</bdi>・<bdi>H1</bdi>。<bdi>E1</bdi>は内ダメなので、黒の外ダメ<bdi>G1</bdi>・<bdi>H1</bdi>から詰めれば白が勝ちます。",
@@ -899,7 +915,9 @@
      "line": [
       "G9",
       "D9",
-      "H9"
+      "H9",
+      "B9",
+      "E9"
      ],
      "why": {
       "ja": "外ダメの<bdi>G9</bdi>・<bdi>H9</bdi>から詰めれば、白は内ダメしか残らず黒が勝ちます。",
