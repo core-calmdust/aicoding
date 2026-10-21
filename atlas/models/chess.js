@@ -347,7 +347,7 @@
     const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460 };
     let curSet = 'lux';
     g.userData.setSet = name => {
-      if (!SETS[name] || name === curSet) return; curSet = name;
+      if (!SETS[name] || (name === curSet && topMat.map === topMaps[name])) return; curSet = name;   // topMat is shared by every board: another board may have left a different set on it
       if (!topMaps[name]) { topMaps[name] = boardTop(name); topMaps[name].anisotropy = 8; }
       topMat.map = topMaps[name]; side.map = sideTex(name); bottom.color.set(SETS[name].side).convertSRGBToLinear();
       topMat.needsUpdate = side.needsUpdate = true;
