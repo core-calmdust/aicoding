@@ -79,7 +79,9 @@ const CSS = `
 .rt-board > *{max-width:100%}
 .rt-task{font-size:14.5px;line-height:1.7;min-height:52px;text-align:center}
 .rt-q{color:var(--text,#eee)}
-.rt-msg{margin-top:6px;font-size:14px;color:var(--muted,#9aa)}
+.rt-msg{margin-top:6px;font-size:14px;line-height:1.5;min-height:3em;color:var(--muted,#9aa)}
+.rt-msg.is-empty{visibility:hidden}
+.rt-again.is-idle{visibility:hidden}
 .rt-msg.ok{color:var(--rt-ok)}.rt-msg.ng{color:var(--rt-ng)}
 .rt-msg.ok::before{content:'✓ '}.rt-msg.ng::before{content:'✗ '}
 .rt-again{margin-top:8px;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);cursor:pointer;font-family:inherit}
@@ -175,8 +177,10 @@ function create(o) {
     const drawTask = () => {
       if (!alive()) return;
       const q = val(P.task);
-      task.innerHTML = (q ? `<span class="rt-q">👉 ${q}</span>` : '') + (st.msg ? `<div class="rt-msg ${st.cls}">${st.msg}</div>` : '') + st.extra +
-        (st.done ? `<button type="button" class="rt-again" data-rt-act="again">↺ ${esc(tx('again'))}</button>` : '');
+      // the ✓/✗ line and the 「もう一度」 button always keep their space (empty / hidden until used),
+      // so a message never pushes the board around or makes it shrink
+      task.innerHTML = (q ? `<span class="rt-q">👉 ${q}</span>` : '') + `<div class="rt-msg ${st.msg ? st.cls : 'is-empty'}" aria-live="polite">${st.msg || '&nbsp;'}</div>` + st.extra +
+        `<button type="button" class="rt-again${st.done ? '' : ' is-idle'}" data-rt-act="again"${st.done ? '' : ' tabindex="-1" aria-hidden="true" disabled'}>↺ ${esc(tx('again'))}</button>`;
     };
     board.innerHTML = '';
     const api = {
