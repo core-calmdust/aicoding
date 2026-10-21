@@ -711,7 +711,8 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   #newOverlay .modal{width:min(980px, calc(100vw - 64px));max-height:calc(var(--vh) - 24px)}
   #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
   #newOverlay .ng-col > .field:first-child{margin-top:0}
-  #newOverlay .ng-cols > .ng-col:first-child{order:2}  /* PC: strength / format / options on the left, mode / colours / board on the right */
+  #newOverlay .ng-cols > .ng-col:first-child{order:2}  /* PC: strength / format / options on the left, colours / board on the right (mode spans the top row) */
+  #newOverlay #fMode{margin-bottom:6px}
   #newOverlay .skinrow{grid-template-columns:repeat(4, minmax(0, 1fr))}
   @media (max-height: 800px){ #rulesBody .rt-intro{gap:8px} #rulesBody .rt-intro-sec{font-size:14px;line-height:1.65;padding-top:10px;padding-bottom:10px} }
   #newOverlay .modal{padding:20px 28px 18px}
@@ -1068,8 +1069,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
-    <div class="ng-cols"><div class="ng-col">
-    <div class="field">
+    <div class="field" id="fMode">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
         <button data-v="ai" data-i18n="ng.ai"></button>
@@ -1079,6 +1079,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
         <button data-v="puzzle" data-i18n="ng.puzzle"></button>
       </div>
     </div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fColor">
       <label data-i18n="ng.ck"></label>
