@@ -12,7 +12,7 @@ const fmt = n => Math.round(n).toLocaleString('en-US');
 
 /* ---------------- save data ---------------- */
 const DEF = () => ({ v: 1, coin: 0, life: 0, mon: {}, name: '', icon: 0, own: { 0: 1 }, bg: 'dots', bgOwn: ['dots'],
-  set: { snd: 1, anim: 1, emb: 1, lang: '' }, st: {}, dl: {}, act: { blitz: 0, rise: 0, mis: {} }, free: {},
+  set: { snd: 1, anim: 1, emb: 1, lang: '', skin: '' }, st: {}, dl: {}, act: { blitz: 0, rise: 0, mis: {} }, free: {},
   stats: { pops: 0, blocks: 0, big: 0, combo: 0, perfect: 0, hero: 0, fever: 0, games: 0, gacha: 0, days: 0 }, ach: {}, tut: {}, login: '' });
 function load() {
   let d; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { d = null; }
@@ -176,6 +176,12 @@ async function pushScores() {
 /* ============================================================ HOME ============================================================ */
 let homeTab = 'daily', themeOpen = null;
 function updateCoins() { $$('.coinv').forEach(e => e.textContent = fmt(DB.coin)); }
+const SKINS = ['pop', 'vintage', 'riso', 'night'];
+function applySkin() {
+  const q = new URLSearchParams(location.search).get('skin');
+  const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'pop');
+  document.body.dataset.skin = sk; A.syncPalette(); setBg();
+}
 function setBg() { const b = A.BGS.find(x => x.id === DB.bg) || A.BGS[0]; $('#bg').style.background = b.css(); }
 function profCard() {
   const lv = Math.floor(Math.sqrt(DB.life / 50)) + 1;
@@ -197,8 +203,8 @@ function miniBoard(b, cls = 'mini') {
   const w = b.length, h = Math.max(...b.map(c => c.length));
   let s = `<svg viewBox="0 0 ${w * 10} ${h * 10}" class="${cls}">`;
   b.forEach((c, x) => c.forEach((v, y) => {
-    const ty = E.typ(v), fill = ty === E.T.ROCK ? '#9a9a9a' : ty === E.T.WILD ? '#fff' : A.BC[E.col(v)];
-    s += `<rect x="${x * 10 + .5}" y="${(h - 1 - y) * 10 + .5}" width="9" height="9" fill="${fill}" stroke="#000" stroke-width="1"/>`;
+    const ty = E.typ(v), fill = ty === E.T.ROCK ? '#a8a8a8' : ty === E.T.WILD ? '#fff' : A.BC[E.col(v)];
+    s += `<rect x="${x * 10 + .5}" y="${(h - 1 - y) * 10 + .5}" width="9" height="9" style="fill:${fill};stroke:var(--ink)" stroke-width="1"/>`;
     if (ty === E.T.ICE) s += `<rect x="${x * 10 + 2}" y="${(h - 1 - y) * 10 + 2}" width="6" height="6" fill="#BFE9FF" opacity=".8"/>`;
     if (ty === E.T.BOMB) s += `<circle cx="${x * 10 + 5}" cy="${(h - 1 - y) * 10 + 5}" r="2.6" fill="#000"/>`;
   }));
@@ -217,7 +223,7 @@ function renderDaily() {
     <p class="note">${esc(t('d.medals'))}</p>`;
   const left = 3 - r.b.a;
   $('#dBlitz').innerHTML = `<div class="ptag blue">${esc(t('d.blitz'))}<i>60s</i></div>
-    <div class="dbody"><div class="dthumb burstbox">${A.burst(12, 46, 30, '#FFD400')}<b>60</b></div>
+    <div class="dbody"><div class="dthumb burstbox">${A.burst(12, 46, 30, 'var(--yel)')}<b>60</b></div>
     <div class="dinfo"><h3>${esc(t('d.blitz.h'))}</h3><p>${esc(t('d.blitz.d'))}</p>
     <div class="dbest"><span>${esc(t('d.best'))}</span><b>${r.b.a ? fmt(r.b.s) : '—'}</b></div>
     <div class="tries">${[0, 1, 2].map(i => `<i class="${i < r.b.a ? 'used' : ''}"></i>`).join('')}<span>${esc(t('d.tries', { n: left }))}</span></div></div></div>
@@ -258,7 +264,7 @@ function renderFree() {
   $$('[data-k]', $('#dFree')).forEach(b => b.onclick = () => { freeK = +b.dataset.k; renderFree(); });
   $('#fPlay').onclick = startFree;
 }
-const THEME_COL = ['#19A35B', '#5BD3E8', '#9a9a9a', '#6A93F2', '#E4202A', '#FFD400', '#FF4FA0', '#7B3FD0'];
+const THEME_COL = ['#19A35B', '#5BD3E8', 'var(--mute)', '#6A93F2', 'var(--red)', 'var(--yel)', '#FF4FA0', '#7B3FD0'];
 function renderThemes() {
   const el = $('#stagePanel');
   let html = `<div class="sechead"><h2>${esc(t('st.h'))}</h2><p>${esc(t('st.d'))}</p></div><div class="tgrid">`;
@@ -278,8 +284,9 @@ function renderTheme(th) {
   const el = $('#stagePanel'), recs = stRec(th), ti = THEMES.indexOf(th);
   let next = recs.findIndex((v, j) => !v && stageOpen(recs, j));
   let html = `<div class="thead" style="--tc:${THEME_COL[ti]}"><button class="btn sm" id="thBack">${A.ICON.back}${esc(t('u.list'))}</button>
-    <span class="tic">${A.THEME_ICON[th]}</span><div><h2>${esc(t('th.' + th))}</h2><p>${esc(t('th.' + th + '.r'))}</p></div>
+    <span class="tic">${A.THEME_ICON[th]}</span><div><h2>${esc(t('th.' + th))}</h2><p>${esc(t('th.' + th + '.r'))}</p>${th !== 'cl' ? `<button class="btn sm" id="thRule">${A.ICON.play}${esc(t('st.demo'))}</button>` : ''}</div>
     <div class="ring" style="--p:${recs.filter(v => v).length * 2}"><b>${recs.filter(v => v).length}</b><small>/50</small></div></div>`;
+  html += '<div class="stgs">';
   for (let s = 0; s < 5; s++) {
     const open = stageOpen(recs, s * PER), md = stMedal(recs, s), cl = recs.slice(s * PER, s * PER + PER).filter(v => v).length;
     const need = s ? Math.max(0, UNLOCK - recs.slice((s - 1) * PER, s * PER).filter(v => v).length) : 0;
@@ -292,14 +299,16 @@ function renderTheme(th) {
     }
     html += '</section>';
   }
+  html += '</div>';
   el.innerHTML = html;
   $('#thBack').onclick = () => { themeOpen = null; renderThemes(); };
+  const tr = $('#thRule'); if (tr) tr.onclick = () => maybeThemeTip(th, true);
   $$('.tile', el).forEach(b => b.onclick = () => startStage(th, +b.dataset.j));
 }
 function renderAction() {
   const el = $('#actPanel');
   let html = `<div class="acards">
-    <div class="card acard red"><div class="ptag">BLITZ</div><div class="abig">${A.burst(14, 47, 31, '#FFD400')}<b>60</b></div><h3>${esc(t('a.blitz'))}</h3><p>${esc(t('a.blitz.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></div><button class="btn big yel" id="aBlitz">${A.ICON.play}${esc(t('d.play'))}</button></div>
+    <div class="card acard red"><div class="ptag">BLITZ</div><div class="abig">${A.burst(14, 47, 31, 'var(--yel)')}<b>60</b></div><h3>${esc(t('a.blitz'))}</h3><p>${esc(t('a.blitz.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></div><button class="btn big yel" id="aBlitz">${A.ICON.play}${esc(t('d.play'))}</button></div>
     <div class="card acard blue"><div class="ptag yel">RISE</div><div class="abig rise"><i></i><i></i><i></i><i></i></div><h3>${esc(t('a.rise'))}</h3><p>${esc(t('a.rise.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.rise ? fmt(DB.act.rise) : '—'}</b></div><button class="btn big yel" id="aRise">${A.ICON.play}${esc(t('d.play'))}</button></div>
   </div><div class="sechead"><h2>${esc(t('m.h'))}</h2><p>${esc(t('m.d'))}</p></div>`;
   for (let tier = 0; tier < 3; tier++) {
@@ -341,8 +350,9 @@ function paintEl(d, v) {
 }
 function cellSize() {
   const wrap = $('#boardWrap'), r = wrap.getBoundingClientRect();
-  const availW = r.width - 12, availH = Math.max(200, window.innerHeight - r.top - ($('#gfoot').offsetHeight || 60) - 18);
-  return Math.max(18, Math.min(64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
+  const wide = matchMedia('(min-width:1000px)').matches;
+  const availW = r.width - 16, availH = Math.max(200, window.innerHeight - r.top - (wide ? 30 : ($('#gfoot').offsetHeight || 60) + 18));
+  return Math.max(18, Math.min(wide ? 84 : 64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
 }
 const pos = (x, y) => `translate(${x * G.cs}px, ${(G.rows - 1 - y) * G.cs}px)`;
 function buildBoard() {
@@ -366,9 +376,23 @@ function hud() {
   const fv = $('#fever'); fv.hidden = !G.action; $('#riseWrap').hidden = G.mode !== 'rise';
   if (G.action) { $('#feverBar').style.width = (G.feverT > 0 ? G.feverT / FEVER_T * 100 : G.fever / FEVER_MAX * 100) + '%'; fv.classList.toggle('on', G.feverT > 0); $('#comboV').textContent = G.combo > 1 ? 'x' + G.combo : ''; }
 }
+function renderInfo() {
+  const k = G.kind, types = new Set(); G.board.forEach(c => c.forEach(v => types.add(E.typ(v))));
+  if (G.gim) { if (G.gim.has('bomb')) types.add(E.T.BOMB); if (G.gim.has('rock')) types.add(E.T.ROCK); if (G.gim.has('ice')) types.add(E.T.ICE); if (G.gim.has('wild')) types.add(E.T.WILD); }
+  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.puzzle.d') + ' ' + t('d.medals') : k === 'free' ? t('th.cl.r') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2') ;
+  if (k === 'mission') rule = goalText(G.mis) + '。' + t('r.mstar', { a: fmt(G.mis.s2), b: fmt(G.mis.s3) });
+  const TY = [[E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
+  const leg = TY.filter(([ty]) => types.has(ty)).map(([, v, th]) => { const d = mkEl(v); return `<li><span class="lg">${d.outerHTML}</span><span><b>${esc(t('th.' + th))}</b><br>${esc(t('th.' + th + '.d'))}</span></li>`; }).join('')
+    + (G.gim && G.gim.has('hero') ? `<li><span class="lg">${A.mascot('wow')}</span><span><b>${esc(t('g.hero'))}</b><br>${esc(t('tu.a4.h'))} +3s</span></li>` : '')
+    + (G.gim && G.gim.has('ink') ? `<li><span class="lg" style="background:#111;border:2px solid #000"></span><span><b>${esc(t('g.ink'))}</b><br>${esc(t('tu.a4'))}</span></li>` : '');
+  const best = k === 'stage' ? '★'.repeat(DB.st[stKey(G.th, G.j)] || 0) || '—' : k === 'daily' ? (dlRec(G.date).p.left >= 0 ? fmt(dlRec(G.date).p.s) : '—') : k === 'free' ? (DB.free[G.fk] ? fmt(DB.free[G.fk]) : '—') : k === 'dblitz' ? fmt(dlRec(G.date).b.s || 0) : k === 'mission' ? '★'.repeat(DB.act.mis[G.mis.id] || 0) || '—' : fmt(DB.act[G.mode === 'rise' ? 'rise' : 'blitz'] || 0);
+  $('#gInfo').innerHTML = `<h4>${esc(t('gi.rule'))}</h4><p style="margin:0 0 10px">${esc(rule)}</p>${leg ? `<h4>${esc(t('gi.blocks'))}</h4><ul>${leg}</ul>` : ''}
+    <div class="best"><span>${esc(t('d.best'))}</span><b>${best}</b></div>${G.undoable ? `<div class="keys"><kbd>Ctrl</kbd>+<kbd>Z</kbd> ${esc(t('g.undo'))}${k === 'stage' ? `　<kbd>H</kbd> ${esc(t('g.hint'))}` : ''}</div>` : ''}`;
+}
 function startPlay(title, sub) {
   showScreen('play');
   $('#gTitle').textContent = title; $('#gTitleSub').textContent = sub || '';
+  renderInfo();
   $('#gameMsg').innerHTML = ''; $('#gameMsg').hidden = true;
   requestAnimationFrame(() => { buildBoard(); hud(); });
 }
@@ -420,7 +444,7 @@ function countdown(done) {
   const step = () => {
     if (!G) return;
     if (i >= seq.length) { m.hidden = true; m.innerHTML = ''; G.busy = false; done(); return; }
-    m.innerHTML = `<div class="cd">${A.burst(12, 46, 32, i === 3 ? '#E4202A' : '#FFD400')}<b>${seq[i]}</b></div>`;
+    m.innerHTML = `<div class="cd">${A.burst(12, 46, 32, i === 3 ? 'var(--red)' : 'var(--yel)')}<b>${seq[i]}</b></div>`;
     tone(i === 3 ? 880 : 440, .12, 'square', .07); i++; setTimeout(step, i === 4 ? 500 : 650);
   };
   step();
@@ -532,7 +556,7 @@ function sfx(word, cx, cy, n, pts, color) {
   const b = boardEl(), w = document.createElement('div');
   const size = Math.min(2.2, .9 + n / 14);
   w.className = 'sfx'; w.style.left = (cx + .5) * G.cs + 'px'; w.style.top = (G.rows - 1 - cy + .5) * G.cs + 'px'; w.style.setProperty('--s', size); w.style.setProperty('--r', ((Math.random() * 24) - 12) + 'deg');
-  w.innerHTML = `${A.burst(10 + (n >> 2), 48, 33, n >= 9 ? '#FFD400' : A.BC_LT[color] || '#FFD400')}<b>${word}</b><em>+${fmt(pts)}</em>`;
+  w.innerHTML = `${A.burst(10 + (n >> 2), 48, 33, n >= 9 ? 'var(--yel)' : A.BC_LT[color] || 'var(--yel)')}<b>${word}</b><em>+${fmt(pts)}</em>`;
   b.appendChild(w); setTimeout(() => w.remove(), 900);
 }
 // ---- action loop
@@ -578,7 +602,7 @@ function spawnHero() {
   h.onpointerdown = e => { e.stopPropagation(); if (G.over) return; h.classList.add('got'); SND.hero(); G.heroN++; DB.stats.hero++; G.score += 300; if (G.timed) G.tLeft += 3; floatText(G.timed ? '+3s +300' : '+300', 'time'); const r = h.getBoundingClientRect(), br = boardEl().getBoundingClientRect(); sfxAt('WHAAM!', r.left - br.left + r.width / 2, r.top - br.top + r.height / 2); setTimeout(() => h.remove(), 250); hud(); };
   $('#boardWrap').appendChild(h); setTimeout(() => h.remove(), dur + 50);
 }
-function sfxAt(word, px, py) { const w = document.createElement('div'); w.className = 'sfx'; w.style.left = px + 'px'; w.style.top = py + 'px'; w.style.setProperty('--s', 1.5); w.style.setProperty('--r', '-8deg'); w.innerHTML = `${A.burst(14, 48, 33, '#E4202A')}<b style="color:#fff">${word}</b>`; boardEl().appendChild(w); setTimeout(() => w.remove(), 900); }
+function sfxAt(word, px, py) { const w = document.createElement('div'); w.className = 'sfx'; w.style.left = px + 'px'; w.style.top = py + 'px'; w.style.setProperty('--s', 1.5); w.style.setProperty('--r', '-8deg'); w.innerHTML = `${A.burst(14, 48, 33, 'var(--red)')}<b style="color:#fff">${word}</b>`; boardEl().appendChild(w); setTimeout(() => w.remove(), 900); }
 function spawnInk() {
   const b = boardEl(), s = Math.round(G.cs * (3 + G.rnd() * 1.5));
   const ink = document.createElement('button'); ink.className = 'ink'; ink.style.width = ink.style.height = s + 'px';
@@ -661,7 +685,7 @@ const starRow = n => `<div class="rstars">${[0, 1, 2].map(i => `<i class="${i < 
 const coinLine = n => n ? `<div class="rcoin">${A.ICON.coin}+${fmt(n)}</div>` : '';
 const nameNudge = () => (ON && ON.available && !DB.name) ? `<button class="nudge" data-act="name">${esc(t('r.nudge'))}</button>` : '';
 function resultCard(head, body, btns, cls = '') {
-  return `<div class="result ${cls}"><div class="rhead">${A.burst(14, 48, 36, cls === 'fail' ? '#9a9a9a' : '#FFD400')}<b>${esc(head)}</b></div>${body}<div class="rbtns">${btns.filter(Boolean).map(([a, l, c]) => `<button class="btn ${c || ''}" data-act="${a}">${esc(l)}</button>`).join('')}</div></div>`;
+  return `<div class="result ${cls}"><div class="rhead">${A.burst(14, 48, 36, cls === 'fail' ? 'var(--mute)' : 'var(--yel)')}<b>${esc(head)}</b></div>${body}<div class="rbtns">${btns.filter(Boolean).map(([a, l, c]) => `<button class="btn ${c || ''}" data-act="${a}">${esc(l)}</button>`).join('')}</div></div>`;
 }
 function showResult(html) {
   const m = $('#gameMsg'); m.innerHTML = html; m.hidden = false;
@@ -763,7 +787,7 @@ function openGacha(tab = 'g') {
   $$('[data-tab]', body).forEach(b => b.onclick = () => openGacha(b.dataset.tab));
   const gb = $('#gaBody');
   if (tab === 'g') {
-    gb.innerHTML = `<div class="gmach"><div class="gpanel">${A.burst(16, 48, 36, '#FFD400')}<div class="gcaps">${[0, 1, 2, 3, 4].map(i => `<i style="--c:${A.BC[i]}"></i>`).join('')}</div><b class="gword">POP-CHA!</b></div>
+    gb.innerHTML = `<div class="gmach"><div class="gpanel">${A.burst(16, 48, 36, 'var(--yel)')}<div class="gcaps">${[0, 1, 2, 3, 4].map(i => `<i style="--c:${A.BC[i]}"></i>`).join('')}</div><b class="gword">POP-CHA!</b></div>
       <div class="gcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
       <div class="gbtns"><button class="btn big red" id="g1" ${DB.coin < 100 ? 'disabled' : ''}>${esc(t('ga.one'))}<small>${A.ICON.coin}100</small></button><button class="btn big blue" id="g10" ${DB.coin < 900 ? 'disabled' : ''}>${esc(t('ga.ten'))}<small>${A.ICON.coin}900</small></button></div>
       <p class="note">${esc(t('ga.rate'))}</p><p class="note">${esc(t('ga.dup'))}</p></div><div id="gaRes"></div>`;
@@ -783,7 +807,7 @@ function pull(n) {
   DB.coin += refund; save(); updateCoins();
   const best = Math.max(...res.map(A.RAR));
   const el = $('#gaRes');
-  el.innerHTML = `<div class="gres r${best}"><div class="gopen">${A.burst(18, 48, 34, best >= 3 ? '#E4202A' : '#FFD400')}<b>${best >= 4 ? 'WHAAM!!' : best >= 3 ? 'KA-POW!' : best >= 2 ? 'ZAP!' : 'POP!'}</b></div>
+  el.innerHTML = `<div class="gres r${best}"><div class="gopen">${A.burst(18, 48, 34, best >= 3 ? 'var(--red)' : 'var(--yel)')}<b>${best >= 4 ? 'WHAAM!!' : best >= 3 ? 'KA-POW!' : best >= 2 ? 'ZAP!' : 'POP!'}</b></div>
     <div class="gitems n${n}">${items.map((it, i) => `<div class="gi r${A.RAR(it.id)}" style="--i:${i}">${A.charSVG(it.id)}<span class="rr">${A.RNAME[A.RAR(it.id)]}</span>${it.dup ? `<span class="dup">+${REFUND[A.RAR(it.id)]}</span>` : '<span class="new">NEW</span>'}</div>`).join('')}</div>
     ${refund ? `<p class="note">${esc(t('ga.refund', { n: refund }))}</p>` : ''}</div>`;
   SND.fan(); if (best >= 3) setTimeout(() => confetti(1), 400);
@@ -815,9 +839,12 @@ async function openRank(tab = 'p') {
 // --- settings
 function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}
+  const cur = document.body.dataset.skin;
+  const skinPick = `<h3 class="mh3">${esc(t('set.skin'))}</h3><div class="skins">${SKINS.map(k => `<button class="skin ${k === cur ? 'on' : ''}" data-skin="${k}"><span class="sw4" data-s="${k}"><i></i><i></i><i></i><i></i></span><b>${esc(t('skin.' + k))}</b></button>`).join('')}</div>`;
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${skinPick}${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('set.tut'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
   $$('[data-k]', body).forEach(c => c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; save(); sndIcon(); });
+  $$('[data-skin]', body).forEach(b => b.onclick = () => { DB.set.skin = b.dataset.skin; save(); applySkin(); renderHome(); openSettings(); });
   $('#setTut').onclick = () => { closeModal(); tutorial('basic'); };
   $('#setReset').onclick = () => { if (confirm(t('set.reset.q'))) { localStorage.removeItem(KEY); location.reload(); } };
 }
@@ -834,27 +861,114 @@ function tutorial(kind, done) {
     const k = pages[i], last = i === pages.length - 1;
     const body = modal(`<div class="tut"><div class="tstep">${pages.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
       <div class="tpanel"><div class="tmas">${A.mascot(k === 'try' ? 'smile' : i % 2 ? 'wow' : 'smile')}</div><div class="balloon"><b>${esc(t(k === 'try' ? 'tu.try' : k + '.h'))}</b><p>${esc(t(k === 'try' ? 'tu.try.d' : k))}</p></div></div>
-      ${k === 'try' ? '<div class="tboard" id="tBoard"></div><div class="tmsg" id="tMsg"></div>' : `<div class="tdemo">${tutDemo(k)}</div>`}
+      ${k === 'try' ? '<div class="tboard" id="tBoard"></div><div class="tmsg" id="tMsg"></div>' : `<div class="tdemo">${tutDemo(k)}<p class="dcap">${k === 'tu.b1' ? esc(t('tu.b1.c')) : ''}</p></div>`}
       <div class="mbtns"><button class="btn" id="tPrev" ${i ? '' : 'disabled'}>${esc(t('u.prev'))}</button><button class="btn red" id="tNext" ${k === 'try' ? 'hidden' : ''}>${esc(t(last ? 'u.start' : 'u.next'))}</button></div></div>`, 'mtut');
     $('#tPrev').onclick = () => { i--; show(); };
     $('#tNext').onclick = () => { if (last) { closeModal(); done && done(); } else { i++; show(); } };
     if (k === 'try') tutTry(body, () => { $('#tNext').hidden = false; $('#tNext').textContent = t('u.start'); });
+    startDemos(body);
   };
   show();
   tutorial.key = e => { if ($('#modal').hidden || !$('.tut')) return; if (e.key === 'ArrowRight' && !$('#tNext').hidden) $('#tNext').click(); if (e.key === 'ArrowLeft' && !$('#tPrev').disabled) $('#tPrev').click(); };
 }
-function tutDemo(k) {
-  const blk = (c, ex = '') => `<span class="db c${c} ${ex}"><svg><use href="#em${c}"/></svg></span>`;
-  if (k === 'tu.b1') return `<div class="drow">${blk(0, 'hl')}${blk(0, 'hl')}${blk(1)}</div><div class="drow">${blk(2)}${blk(0, 'hl')}${blk(1)}</div><div class="dcap">${esc(t('tu.b1.c'))}</div>`;
-  if (k === 'tu.b2') return `<div class="dpts"><span>2 → 0</span><span>3 → 1</span><span>5 → 9</span><span>10 → 64</span><span>20 → 324</span></div>`;
-  if (k === 'tu.b3') return `<div class="dgrav"><div>${blk(1)}${blk(3)}</div><b>↓</b><div>${blk(1)}</div><b>←</b></div>`;
-  if (k === 'tu.b4') return `<div class="dperf">${A.burst(14, 48, 34, '#FFD400')}<b>+1000</b></div>`;
-  if (k === 'tu.a1') return `<div class="dpts"><span>60s</span><span>7+ → +1s</span><span>10+ → +2s</span><span>15+ → +3s</span></div>`;
-  if (k === 'tu.a2') return `<div class="dpts"><span>COMBO x2</span><span>x3</span><span>x5</span><span>MAX ×3.0</span></div>`;
-  if (k === 'tu.a3') return `<div class="dfever"><span class="fbar"><i></i></span><b>FEVER!</b></div>`;
-  if (k === 'tu.a4') return `<div class="dhero">${A.mascot('wow')}<b>+3s</b></div>`;
-  return '';
+/* ---- animated demo: a hand taps a mini board, using the real rules ---- */
+const HAND = '<svg viewBox="0 0 40 46" class="hand"><path d="M14 3c2.6 0 4 2 4 4.4V20l1.6-.6c2-.7 4 .4 4.6 2.2l.3 1 1.7-.5c2-.6 3.9.6 4.4 2.4l.3 1 1.2-.3c2.2-.5 4 1 4.2 3.2.5 5.5-.2 9.8-2.3 13.2-1.4 2.2-3.7 3.4-6.3 3.4H17.6c-2.4 0-4.6-1.2-5.9-3.2L4 31.2c-1.4-2-.9-4.7 1-6 1.8-1.2 4.2-.8 5.6.9l-.6.1V7.4C10 5 11.4 3 14 3z" fill="#fff" stroke="#000" stroke-width="2.6" stroke-linejoin="round"/><path d="M18 20v9M24 23v6M30 25.5v4" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// cfg: { board, min, keep, refill(k colors), steps:[[x,y]|'big'|'any'|fn], before(ctx), after(ctx,i,r), loopWait }
+function demo(host, cfg) {
+  const token = {}; host._demo = token;
+  const alive = () => host._demo === token && host.isConnected;
+  const cs = matchMedia('(max-width:600px)').matches ? 38 : 48;
+  const run = async () => {
+    while (alive()) {
+      let b = E.clone(cfg.board), rows = cfg.rows || Math.max(...b.map(c => c.length)), cols = b.length;
+      const rnd = E.rng(7);
+      host.innerHTML = `<div class="dstage"><div class="dbd" style="width:${cols * cs}px;height:${rows * cs}px;--cs:${cs}px"></div>${cfg.hud || ''}<div class="dhand">${HAND}</div></div>`;
+      const bd = host.querySelector('.dbd'), hand = host.querySelector('.dhand');
+      const P = (x, y) => `translate(${x * cs}px, ${(rows - 1 - y) * cs}px)`;
+      let els = b.map((c, x) => c.map((v, y) => { const d = mkEl(v); d.style.transform = P(x, y); bd.appendChild(d); return d; }));
+      const ctx = { host, bd, hand, cs, rows, get b() { return b; }, P, sfx: (w, x, y, n, pts, col) => demoSfx(bd, w, x, y, n, pts, col, rows, cs), combo: 0 };
+      hand.style.transform = `translate(${cols * cs * .5}px, ${rows * cs + 30}px)`;
+      if (cfg.before) cfg.before(ctx);
+      await sleep(700);
+      for (let i = 0; i < cfg.steps.length && alive(); i++) {
+        let st = cfg.steps[i];
+        if (typeof st === 'function') { await st(ctx); continue; }
+        if (st === 'big' || st === 'any') { const gs = E.groups(b, cfg.fever && ctx.fever ? 1 : cfg.min || 2); if (!gs.length) break; gs.sort((p, q) => q.cells.length - p.cells.length); st = (st === 'big' ? gs[0] : gs[(rnd() * gs.length) | 0]).cells[0]; }
+        const [x, y] = st;
+        // move the hand over the cell, press
+        const bdr = bd.getBoundingClientRect(), hr = host.querySelector('.dstage').getBoundingClientRect();
+        const tx = bdr.left - hr.left + (x + .55) * cs - 12, ty = bdr.top - hr.top + (rows - 1 - y + .5) * cs - 4;
+        hand.style.transform = `translate(${tx}px, ${ty}px)`; await sleep(cfg.fast ? 380 : 650); if (!alive()) return;
+        hand.classList.add('press'); await sleep(140); hand.classList.remove('press');
+        const min = cfg.fever && ctx.fever ? 1 : cfg.min || 2;
+        let g = E.group(b, x, y);
+        if (g.length < min) { const d = els[x][y]; d.classList.remove('nope'); void d.offsetWidth; d.classList.add('nope'); ctx.sfx('NOPE', x, y, 2, null, 0); if (cfg.after) cfg.after(ctx, i, null); await sleep(900); continue; }
+        const r = E.remove(b, g, { min, keep: cfg.keep });
+        r.removed.forEach(([rx, ry, , why]) => { const d = els[rx][ry]; d.style.setProperty('--d', (Math.abs(rx - x) + Math.abs(ry - y)) * 30 + 'ms'); d.classList.add(why === 'b' ? 'blast' : why === 'r' ? 'crumble' : 'pop'); setTimeout(() => d.remove(), 600); });
+        const word = r.removed.some(q => q[3] === 'b') ? 'KA-BOOM!' : (WORDS.find(w => r.n >= w[0]) || WORDS[4])[1];
+        ctx.combo++; const pts = cfg.pts ? cfg.pts(r, ctx) : r.score;
+        ctx.sfx(word, x, y, r.n, pts, r.color);
+        const ne = r.board.map(c => new Array(c.length)); r.moves.forEach(({ from, to }) => { ne[to[0]][to[1]] = els[from[0]][from[1]]; });
+        b = r.board; els = ne;
+        b.forEach((c, gx) => c.forEach((vv, gy) => { const d = els[gx][gy]; if (d._v !== undefined && d._v !== vv) { paintEl(d, vv); d.classList.add('flash'); } d._v = vv; }));
+        await sleep(cfg.fast ? 160 : 320);
+        els.forEach((c, gx) => c.forEach((d, gy) => { d.style.transform = P(gx, gy); }));
+        if (cfg.refill) { b.forEach((c, gx) => { let k = 0; while (c.length < rows) { const v = (rnd() * cfg.refill) | 0; c.push(v); const yy = c.length - 1, d = mkEl(v); d._v = v; d.style.transform = `translate(${gx * cs}px, ${-(++k) * cs}px)`; bd.appendChild(d); els[gx].push(d); requestAnimationFrame(() => requestAnimationFrame(() => { d.style.transform = P(gx, yy); })); } }); }
+        if (cfg.after) cfg.after(ctx, i, r);
+        await sleep(cfg.fast ? 260 : 560);
+      }
+      if (!alive()) return;
+      if (cfg.end) await cfg.end(ctx, b);
+      await sleep(cfg.loopWait || 1400);
+    }
+  };
+  // mark existing values so repaint detection works
+  setTimeout(run, 30);
 }
+function demoSfx(bd, word, x, y, n, pts, color, rows, cs) {
+  const w = document.createElement('div'); const size = Math.min(1.6, .75 + n / 14);
+  w.className = 'sfx'; w.style.left = (x + .5) * cs + 'px'; w.style.top = (rows - 1 - y + .5) * cs + 'px'; w.style.setProperty('--s', size); w.style.setProperty('--r', ((Math.random() * 20) - 10) + 'deg');
+  w.innerHTML = `${A.burst(10 + (n >> 2), 48, 33, word === 'NOPE' ? 'var(--mute)' : n >= 9 ? 'var(--yel)' : A.BC_LT[color] || 'var(--yel)')}<b>${word}</b>${pts != null ? `<em>+${fmt(pts)}</em>` : ''}`;
+  bd.appendChild(w); setTimeout(() => w.remove(), 900);
+}
+const R_ = E.mk(0, E.T.ROCK), W_ = E.mk(0, E.T.WILD), IC = c => E.mk(c, E.T.ICE), BM = c => E.mk(c, E.T.BOMB), PT = c => E.mk(c, E.T.PAINT);
+const DEMOS = {
+  'tu.b1': { board: [[2, 0, 1], [0, 0, 2], [1, 2, 1], [2, 1, 2]], steps: [[1, 0]] },
+  'tu.b2': { board: [[0, 0, 0, 1], [0, 1, 1, 2], [0, 2, 2, 1], [3, 3, 1, 2]], steps: [[3, 0], [0, 0]] },
+  'tu.b3': { board: [[3, 3, 1], [0, 0, 0], [2, 1, 2]], steps: [[0, 0], [1, 0]], before: c => arrows(c) },
+  'tu.b4': { board: [[0, 1, 1], [0, 1, 0], [2, 2, 0], [2, 1, 1]], steps: [[0, 0], [3, 1], [0, 0], [1, 0], [0, 0]], end: async c => { c.sfx('+1000', 1.5, 1, 20, null, 2); await sleep(400); } },
+  // action
+  'tu.a1': { board: [[0, 0, 1, 2], [0, 0, 1, 1], [0, 2, 2, 1], [3, 0, 3, 2], [1, 1, 3, 3]], keep: true, refill: 4, rows: 4, steps: ['big', 'big', 'big'], pts: r => r.n * (r.n + 1) * 5,
+    hud: '<div class="dhud"><span class="dtime"><i></i></span><b class="dsec">60</b></div>', before: c => { const t = c.host.querySelector('.dtime i'); t.style.transition = 'none'; t.style.width = '100%'; requestAnimationFrame(() => { t.style.transition = 'width 4s linear'; t.style.width = '62%'; }); },
+    after: (c, i, r) => { if (r && r.n >= 7) { c.sfx('+1s', 2, 3, 6, null, 2); } c.host.querySelector('.dsec').textContent = 60 - (i + 1) * 3; } },
+  'tu.a2': { board: [[0, 1, 2, 3], [1, 2, 3, 0], [0, 1, 2, 3], [2, 3, 0, 1], [3, 0, 1, 2]], keep: true, refill: 3, rows: 4, fast: true, steps: ['big', 'big', 'big', 'big', 'big'],
+    hud: '<div class="dhud"><b class="dcombo">COMBO</b></div>', pts: (r, c) => Math.round(r.n * (r.n + 1) * 5 * (1 + (c.combo - 1) * .2)),
+    after: (c) => { const e = c.host.querySelector('.dcombo'); e.textContent = c.combo > 1 ? 'COMBO x' + c.combo : 'COMBO'; e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump'); } },
+  'tu.a3': { board: [[0, 1, 2, 0], [1, 2, 0, 1], [2, 0, 1, 2], [0, 1, 2, 0], [1, 2, 0, 1]], keep: true, refill: 3, rows: 4, fast: true, fever: true,
+    hud: '<div class="dhud"><span class="dfev"><i></i></span><b class="dfevw">FEVER</b></div>',
+    steps: [async c => { const i = c.host.querySelector('.dfev i'); i.style.width = '0%'; await sleep(200); i.style.width = '100%'; await sleep(900); c.fever = 1; c.host.querySelector('.dstage').classList.add('fev'); c.host.querySelector('.dfevw').textContent = 'FEVER!'; }, 'any', 'any', 'any', 'any'],
+    end: async c => { c.fever = 0; c.host.querySelector('.dstage').classList.remove('fev'); } },
+  'tu.a4': { board: [[0, 1, 2], [1, 2, 0], [2, 0, 1], [0, 1, 2], [1, 2, 0]], keep: true, rows: 3, steps: [async c => {
+      const h = document.createElement('div'); h.className = 'dhero'; h.innerHTML = `<span class="cape"></span>${A.mascot('wow')}`; c.host.querySelector('.dstage').appendChild(h);
+      await sleep(900); const hr = h.getBoundingClientRect(), sr = c.host.querySelector('.dstage').getBoundingClientRect();
+      c.hand.style.transform = `translate(${hr.left - sr.left + 30}px, ${hr.top - sr.top + 20}px)`; await sleep(380);
+      c.hand.classList.add('press'); await sleep(140); c.hand.classList.remove('press'); h.classList.add('got');
+      const w = document.createElement('div'); w.className = 'sfx'; w.style.left = (hr.left - sr.left + 48) + 'px'; w.style.top = (hr.top - sr.top + 30) + 'px'; w.style.setProperty('--s', 1.4); w.style.setProperty('--r', '-8deg'); w.innerHTML = `${A.burst(14, 48, 33, 'var(--red)')}<b style="color:#fff">WHAAM!</b><em>+3s</em>`; c.host.querySelector('.dstage').appendChild(w);
+      await sleep(900); h.remove(); w.remove();
+    }] },
+  // gimmick tips
+  th_tr: { board: [[0, 0, 1], [2, 1, 1], [2, 2, 0]], min: 3, steps: [[0, 0], [1, 1]] },
+  th_rk: { board: [[0, 0, 2], [R_, 1, 2], [1, 1, 0]], steps: [[0, 0]], before: c => {} },
+  th_ic: { board: [[0, 0, 1], [IC(2), 2, 1], [2, 1, 1]], steps: [[0, 0], [0, 0]] },
+  th_bm: { board: [[0, 0, 1], [BM(0), 2, 1], [2, 1, 2], [1, 2, 1]], steps: [[0, 0]] },
+  th_wd: { board: [[0, W_, 0], [1, 1, 2], [2, 0, 2]], steps: [[0, 0]] },
+  th_pt: { board: [[0, 0, 1], [PT(0), 1, 2], [1, 2, 1], [2, 1, 2]], steps: [[0, 0], 'big'] },
+  th_mx: { board: [[0, 0, 1, 2], [BM(0), R_, 1, 2], [1, 2, IC(1), 1], [2, W_, 2, 1]], steps: [[0, 0], 'big', 'big'] },
+};
+function arrows(c) { const a = document.createElement('div'); a.className = 'darrows'; a.innerHTML = '<b>↓</b><b>←</b>'; c.host.querySelector('.dstage').appendChild(a); }
+function tutDemo(k) { return DEMOS[k] ? `<div class="demo" data-demo="${k}"></div>` : ''; }
+function startDemos(root) { $$('.demo', root).forEach(el => demo(el, DEMOS[el.dataset.demo])); }
 function tutTry(body, ok) {
   // fixed 4×4 board that can be cleared: columns bottom-up
   let b = [[0, 0, 1, 1], [2, 0, 1, 2], [2, 2, 3, 3], [1, 1, 3, 3]];
@@ -871,9 +985,10 @@ function tutTry(body, ok) {
   };
   draw();
 }
-function maybeThemeTip(th) {
-  if (DB.tut['th_' + th] || th === 'cl') return; DB.tut['th_' + th] = 1; save();
-  modal(`<div class="tut"><div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('th.' + th))}</b><p>${esc(t('th.' + th + '.r'))}</p></div></div><div class="tdemo"><span class="tic big">${A.THEME_ICON[th]}</span></div><div class="mbtns"><button class="btn red" id="tOk">OK!</button></div></div>`, 'mtut');
+function maybeThemeTip(th, force) {
+  if (th === 'cl' || (!force && DB.tut['th_' + th])) return; DB.tut['th_' + th] = 1; save();
+  modal(`<div class="tut"><div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('th.' + th))}</b><p>${esc(t('th.' + th + '.r'))}</p></div></div><div class="tdemo">${tutDemo('th_' + th)}</div><div class="mbtns"><button class="btn red" id="tOk">OK!</button></div></div>`, 'mtut');
+  startDemos($('#modalBody'));
   $('#tOk').onclick = () => { $('#modal').hidden = true; };
 }
 
@@ -906,12 +1021,12 @@ function bind() {
   addEventListener('keydown', e => {
     if (tutorial.key) tutorial.key(e);
     if (e.key === 'Escape' && !$('#modal').hidden) closeModal();
-    if (!$('#play').hidden && G) { if ((e.key === 'z' && (e.ctrlKey || e.metaKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); } }
+    if (!$('#play').hidden && G) { if ((e.key === 'z' && (e.ctrlKey || e.metaKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); } if (e.key === 'h' && !e.ctrlKey && !e.metaKey) hint(); }
   });
   document.addEventListener('visibilitychange', () => { if (G && G.action) { if (document.hidden) G.paused = true; else { G.paused = false; G.last = performance.now(); } } });
 }
 async function boot() {
-  bind(); applyI18n(); setBg(); sndIcon();
+  bind(); applyI18n(); applySkin(); sndIcon();
   try { STG = await (await fetch('stages.json?v=1')).json(); } catch (e) { STG = null; }
   showScreen('home'); renderHome();
   if (!DB.tut.basic) { DB.tut.basic = 1; save(); setTimeout(() => tutorial('basic'), 400); }

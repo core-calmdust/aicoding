@@ -1,6 +1,9 @@
 /* さめが〜め POP! — texts (zh / ko / es / fr / pt / de / hi / ar). Base: i18n.js */
 window.SAME_I18N = window.SAME_I18N || {};
 window.SAME_I18N.zh = {
+'gi.rule': '规则', 'gi.blocks': '特殊方块',
+'st.demo': '看看怎么玩',
+'set.skin': '配色', 'skin.pop': '经典POP', 'skin.vintage': '复古', 'skin.riso': '孔版印刷', 'skin.night': '夜间POP',
   'title.doc': "SameGame POP! — 波普风消除方块", series: "世界桌游大全", title: "SameGame", home: "主页", help: "玩法",
   'ht.daily': "每日", 'ht.stage': "关卡", 'ht.action': "动作",
   'pf.edit': "个人资料", 'pf.guest': "游客", 'pf.streak': "天连续", 'pf.name': "昵称（显示在排行榜）", 'pf.ph': "最多12个字符", 'pf.note': "设置昵称即可参加排行榜。", 'pf.icon': "头像（扭蛋可获得更多）",
@@ -58,6 +61,9 @@ window.SAME_I18N.zh = {
   'tu.a4.h': "抓住英雄", 'tu.a4': "点击飞过的英雄可获得+3秒和300分。有墨水飞来时，点击擦掉吧。",
 };
 window.SAME_I18N.ko = {
+'gi.rule': '규칙', 'gi.blocks': '특수 블록',
+'st.demo': '움직임 보기',
+'set.skin': '색 테마', 'skin.pop': '클래식 POP', 'skin.vintage': '빈티지', 'skin.riso': '리소그래프', 'skin.night': '나이트 POP',
   'title.doc': "SameGame POP! — 팝아트 블록 지우기", series: "세계 보드게임 대전", title: "SameGame", home: "홈", help: "플레이 방법",
   'ht.daily': "데일리", 'ht.stage': "스테이지", 'ht.action': "액션",
   'pf.edit': "프로필", 'pf.guest': "게스트", 'pf.streak': "일 연속", 'pf.name': "닉네임 (랭킹에 표시)", 'pf.ph': "최대 12자", 'pf.note': "닉네임을 정하면 랭킹에 참가할 수 있어요.", 'pf.icon': "아이콘 (가챠로 늘어나요)",
@@ -115,6 +121,9 @@ window.SAME_I18N.ko = {
   'tu.a4.h': "히어로를 잡아라", 'tu.a4': "가끔 날아오는 히어로를 탭하면 +3초와 300점. 잉크가 날아오면 탭해서 닦아내요.",
 };
 window.SAME_I18N.es = {
+'gi.rule': 'Reglas', 'gi.blocks': 'Bloques especiales',
+'st.demo': 'Ver cómo funciona',
+'set.skin': 'Colores', 'skin.pop': 'POP clásico', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografía', 'skin.night': 'POP nocturno',
   'title.doc': "SameGame POP! — despeja bloques al estilo pop art", series: "Atlas mundial de juegos de mesa", title: "SameGame", home: "Inicio", help: "Cómo jugar",
   'ht.daily': "Diario", 'ht.stage': "Niveles", 'ht.action': "Acción",
   'pf.edit': "Perfil", 'pf.guest': "Invitado", 'pf.streak': "días seguidos", 'pf.name': "Apodo (se muestra en el ranking)", 'pf.ph': "Hasta 12 caracteres", 'pf.note': "Elige un apodo para entrar en el ranking.", 'pf.icon': "Icono (consigue más en el gacha)",
@@ -172,6 +181,9 @@ window.SAME_I18N.es = {
   'tu.a4.h': "Atrapa al héroe", 'tu.a4': "Toca al héroe que pasa volando para +3 segundos y 300 puntos. ¿Manchas de tinta? Tócalas para quitarlas.",
 };
 window.SAME_I18N.fr = {
+'gi.rule': 'Règles', 'gi.blocks': 'Blocs spéciaux',
+'st.demo': 'Voir comment ça marche',
+'set.skin': 'Couleurs', 'skin.pop': 'POP classique', 'skin.vintage': 'Vintage', 'skin.riso': 'Risographie', 'skin.night': 'POP de nuit',
   'title.doc': "SameGame POP! — casse-blocs façon pop art", series: "Atlas mondial des jeux de société", title: "SameGame", home: "Accueil", help: "Comment jouer",
   'ht.daily': "Quotidien", 'ht.stage': "Niveaux", 'ht.action': "Action",
   'pf.edit': "Profil", 'pf.guest': "Invité", 'pf.streak': "jours d'affilée", 'pf.name': "Pseudo (affiché dans le classement)", 'pf.ph': "12 caractères max.", 'pf.note': "Choisis un pseudo pour rejoindre le classement.", 'pf.icon': "Icône (plus d'icônes via le gacha)",
@@ -229,6 +241,9 @@ window.SAME_I18N.fr = {
   'tu.a4.h': "Attrape le héros", 'tu.a4': "Touche le héros qui passe pour +3 secondes et 300 points. Des taches d'encre ? Touche-les pour les enlever.",
 };
 window.SAME_I18N.pt = {
+'gi.rule': 'Regras', 'gi.blocks': 'Blocos especiais',
+'st.demo': 'Ver como funciona',
+'set.skin': 'Cores', 'skin.pop': 'POP clássico', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografia', 'skin.night': 'POP noturno',
   'title.doc': "SameGame POP! — limpe blocos em estilo pop art", series: "Atlas mundial de jogos de tabuleiro", title: "SameGame", home: "Início", help: "Como jogar",
   'ht.daily': "Diário", 'ht.stage': "Fases", 'ht.action': "Ação",
   'pf.edit': "Perfil", 'pf.guest': "Convidado", 'pf.streak': "dias seguidos", 'pf.name': "Apelido (aparece no ranking)", 'pf.ph': "Até 12 caracteres", 'pf.note': "Escolha um apelido para entrar no ranking.", 'pf.icon': "Ícone (ganhe mais no gacha)",
@@ -286,6 +301,9 @@ window.SAME_I18N.pt = {
   'tu.a4.h': "Pegue o herói", 'tu.a4': "Toque no herói que passa voando para +3 segundos e 300 pontos. Manchas de nanquim? Toque para limpá-las.",
 };
 window.SAME_I18N.de = {
+'gi.rule': 'Regeln', 'gi.blocks': 'Spezialblöcke',
+'st.demo': 'So funktioniert es',
+'set.skin': 'Farbschema', 'skin.pop': 'Klassik-POP', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografie', 'skin.night': 'Nacht-POP',
   'title.doc': "SameGame POP! — Blöcke abräumen im Pop-Art-Stil", series: "Weltatlas der Brettspiele", title: "SameGame", home: "Start", help: "Anleitung",
   'ht.daily': "Täglich", 'ht.stage': "Level", 'ht.action': "Action",
   'pf.edit': "Profil", 'pf.guest': "Gast", 'pf.streak': "Tage in Folge", 'pf.name': "Spitzname (in der Rangliste sichtbar)", 'pf.ph': "Bis zu 12 Zeichen", 'pf.note': "Wähle einen Spitznamen, um an der Rangliste teilzunehmen.", 'pf.icon': "Symbol (mehr per Gacha)",
@@ -343,6 +361,9 @@ window.SAME_I18N.de = {
   'tu.a4.h': "Fang den Helden", 'tu.a4': "Tippe den vorbeifliegenden Helden an für +3 Sekunden und 300 Punkte. Tintenkleckse? Einfach wegtippen!",
 };
 window.SAME_I18N.hi = {
+'gi.rule': 'नियम', 'gi.blocks': 'विशेष ब्लॉक',
+'st.demo': 'कैसे काम करता है देखें',
+'set.skin': 'रंग थीम', 'skin.pop': 'क्लासिक POP', 'skin.vintage': 'विंटेज', 'skin.riso': 'रिसोग्राफ़', 'skin.night': 'नाइट POP',
   'title.doc': "SameGame POP! — पॉप-आर्ट ब्लॉक क्लियरिंग", series: "विश्व बोर्ड गेम एटलस", title: "SameGame", home: "होम", help: "कैसे खेलें",
   'ht.daily': "डेली", 'ht.stage': "स्टेज", 'ht.action': "एक्शन",
   'pf.edit': "प्रोफ़ाइल", 'pf.guest': "मेहमान", 'pf.streak': "दिन लगातार", 'pf.name': "निकनेम (रैंकिंग में दिखेगा)", 'pf.ph': "12 अक्षरों तक", 'pf.note': "रैंकिंग में शामिल होने के लिए निकनेम चुनें।", 'pf.icon': "आइकन (गाचा से और पाएँ)",
@@ -400,6 +421,9 @@ window.SAME_I18N.hi = {
   'tu.a4.h': "हीरो को पकड़ें", 'tu.a4': "उड़ते हीरो पर टैप करें: +3 सेकंड और 300 अंक। स्याही के धब्बे? टैप करके हटाएँ।",
 };
 window.SAME_I18N.ar = {
+'gi.rule': 'القواعد', 'gi.blocks': 'كتل خاصة',
+'st.demo': 'شاهد طريقة اللعب',
+'set.skin': 'الألوان', 'skin.pop': 'POP كلاسيكي', 'skin.vintage': 'عتيق', 'skin.riso': 'ريزوغراف', 'skin.night': 'POP ليلي',
   'title.doc': "SameGame POP! — إزالة المكعبات بأسلوب البوب آرت", series: "أطلس ألعاب الطاولة العالمي", title: "SameGame", home: "الرئيسية", help: "طريقة اللعب",
   'ht.daily': "يومي", 'ht.stage': "المراحل", 'ht.action': "أكشن",
   'pf.edit': "الملف الشخصي", 'pf.guest': "ضيف", 'pf.streak': "أيام متتالية", 'pf.name': "الاسم المستعار (يظهر في الترتيب)", 'pf.ph': "حتى 12 حرفًا", 'pf.note': "اختر اسمًا مستعارًا للانضمام إلى الترتيب.", 'pf.icon': "الأيقونة (احصل على المزيد من الغاتشا)",

@@ -1,6 +1,13 @@
 /* さめが〜め POP! — texts (ja / en). Other languages: i18n-more.js */
 window.SAME_I18N = window.SAME_I18N || {};
 window.SAME_I18N.ja = {
+  'gi.rule': 'ルール', 'gi.blocks': 'しかけブロック',
+  'st.demo': 'ルールの動きを見る',
+  'set.skin': '配色',
+  'skin.pop': 'クラシックPOP',
+  'skin.vintage': 'ヴィンテージ',
+  'skin.riso': 'リソグラフ',
+  'skin.night': 'ナイトPOP',
   'title.doc': 'さめが〜め POP! — ポップアートのさめがめ', series: '世界のボドゲ大全', title: 'さめが〜め', home: 'ホーム', help: 'あそびかた',
   'ht.daily': 'デイリー', 'ht.stage': 'ステージ', 'ht.action': 'アクション',
   'pf.edit': 'プロフィール', 'pf.guest': 'ゲスト', 'pf.streak': '日連続', 'pf.name': 'ニックネーム（ランキングに表示）', 'pf.ph': '12文字まで', 'pf.note': 'ニックネームを決めるとランキングに参加できます。', 'pf.icon': 'アイコン（ガチャで増えます）',
@@ -58,6 +65,13 @@ window.SAME_I18N.ja = {
   'tu.a4.h': 'ヒーローをキャッチ', 'tu.a4': 'ときどき飛んでくるヒーローをタップすると +3秒と300点。インクが飛んできたらタップでふき取ろう。',
 };
 window.SAME_I18N.en = {
+  'gi.rule': 'Rules', 'gi.blocks': 'Special blocks',
+  'st.demo': 'Watch how it works',
+  'set.skin': 'Color theme',
+  'skin.pop': 'Classic POP',
+  'skin.vintage': 'Vintage',
+  'skin.riso': 'Risograph',
+  'skin.night': 'Night POP',
   'title.doc': 'SameGame POP! — pop-art tile clearing', series: 'World Board Game Atlas', title: 'SameGame', home: 'Home', help: 'How to play',
   'ht.daily': 'Daily', 'ht.stage': 'Stages', 'ht.action': 'Action',
   'pf.edit': 'Profile', 'pf.guest': 'Guest', 'pf.streak': 'day streak', 'pf.name': 'Nickname (shown in rankings)', 'pf.ph': 'Up to 12 characters', 'pf.note': 'Set a nickname to join the rankings.', 'pf.icon': 'Icon (get more from the gacha)',

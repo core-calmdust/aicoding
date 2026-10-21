@@ -8,6 +8,14 @@ const S2 = `stroke="${K}" stroke-width="2.4" stroke-linejoin="round" stroke-line
 // block colors (index = game color)
 const BC = ['#E4202A', '#1B4FCB', '#FFD400', '#19A35B', '#FF4FA0', '#7B3FD0'];
 const BC_LT = ['#FF7A6E', '#6A93F2', '#FFF07A', '#6FDB9B', '#FF9ECB', '#B18AF0'];
+// read the current skin's block colors (--c0..--c5) into BC / BC_LT (in place)
+function syncPalette() {
+  const cs = getComputedStyle(document.body);
+  for (let i = 0; i < 6; i++) {
+    const v = cs.getPropertyValue('--c' + i).trim(); if (!v) continue; BC[i] = v;
+    const m = v.match(/^#([0-9a-f]{6})$/i); if (m) { const n = parseInt(m[1], 16), mix = c => Math.round(c + (255 - c) * .45); BC_LT[i] = '#' + [n >> 16, (n >> 8) & 255, n & 255].map(c => mix(c).toString(16).padStart(2, '0')).join(''); }
+  }
+}
 // white emblems drawn in a 24×24 box
 const EMB = [
   '<path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2l-5.9 3.2 1.3-6.5-4.9-4.6 6.6-.8z"/>',            // star
@@ -119,7 +127,7 @@ function sunglasses(sub) {
 // each returns a CSS background value
 const enc = s => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
 const BGS = [
-  { id: 'dots', c: '#FFF3C4', css: () => `radial-gradient(circle, rgba(228,32,42,.20) 1.6px, transparent 1.9px) 0 0/12px 12px, #FFF3C4` },
+  { id: 'dots', c: '#FFF3C4', css: () => `radial-gradient(circle, color-mix(in srgb, var(--red) 20%, transparent) 1.6px, transparent 1.9px) 0 0/12px 12px, var(--paper)` },
   { id: 'rays', c: '#FFD400', css: () => enc(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">${rays('#FFE45A', 24)}</svg>`) + ' center/cover, #FFD400' },
   { id: 'blue', c: '#5BD3E8', css: () => `radial-gradient(circle, rgba(27,79,203,.28) 2px, transparent 2.4px) 0 0/10px 10px, #8FE2F0` },
   { id: 'pink', c: '#FF9ECB', css: () => `radial-gradient(circle, rgba(255,255,255,.55) 2.4px, transparent 2.8px) 0 0/11px 11px, #FF7FBA` },
@@ -137,7 +145,7 @@ const mascot = (mood = 'smile') => {
 // comic burst behind a word
 function burst(n = 12, r1 = 46, r2 = 32, fill = '#FFD400') {
   let p = ''; for (let i = 0; i < n * 2; i++) { const a = i / (n * 2) * Math.PI * 2, r = i % 2 ? r2 : r1 * (0.9 + ((i * 7) % 5) / 25); p += (i ? 'L' : 'M') + (50 + Math.cos(a) * r).toFixed(1) + ' ' + (50 + Math.sin(a) * r * .8).toFixed(1); }
-  return `<svg viewBox="0 0 100 100" class="burst" preserveAspectRatio="none"><path d="${p}z" fill="${fill}" stroke="${K}" stroke-width="3" stroke-linejoin="round"/></svg>`;
+  return `<svg viewBox="0 0 100 100" class="burst" preserveAspectRatio="none"><path d="${p}z" style="fill:${fill};stroke:var(--ink,#000)" stroke-width="3" stroke-linejoin="round"/></svg>`;
 }
 const ICON = {
   daily: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 12.5l1.1 2.2 2.4.3-1.7 1.6.4 2.4-2.2-1.2-2.2 1.2.4-2.4-1.7-1.6 2.4-.3z" fill="currentColor"/></svg>',
@@ -172,5 +180,5 @@ const THEME_ICON = {
   pt: `<svg viewBox="0 0 40 40"><use href="#emPaint" x="3" y="3" width="34" height="34"/></svg>`,
   mx: `<svg viewBox="0 0 40 40"><rect x="4" y="4" width="15" height="15" fill="${BC[4]}" ${S2}/><rect x="21" y="21" width="15" height="15" fill="${BC[3]}" ${S2}/><use href="#emBomb" x="20" y="2" width="17" height="17"/><use href="#emRock" x="3" y="21" width="17" height="17"/></svg>`,
 };
-window.SameArt = { BC, BC_LT, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N: 100, SUBJ };
+window.SameArt = { BC, BC_LT, syncPalette, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N: 100, SUBJ };
 })();

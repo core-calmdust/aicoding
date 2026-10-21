@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=1">
+<link rel="stylesheet" href="app.css?v=2">
 </head>
 <body>
 <div id="bg"></div>
@@ -44,14 +44,10 @@
       <div class="card prof" id="profCard"></div>
       <nav class="htabs" id="htabs"></nav>
       <div class="hpanel daily" data-p="daily">
-        <div class="dcol">
-          <div class="card panel dcard" id="dPuzzle"></div>
-          <div class="card panel dcard blitzc" id="dBlitz"></div>
-        </div>
-        <div class="dcol">
-          <div class="card panel" id="dCal"></div>
-          <div class="card panel" id="dFree"></div>
-        </div>
+        <div class="card panel dcard" id="dPuzzle"></div>
+        <div class="card panel dcard blitzc" id="dBlitz"></div>
+        <div class="card panel" id="dCal"></div>
+        <div class="card panel" id="dFree"></div>
       </div>
       <div class="hpanel" data-p="stage" hidden><div id="stagePanel"></div></div>
       <div class="hpanel" data-p="action" hidden><div id="actPanel"></div></div>
@@ -69,6 +65,7 @@
         <div class="risew" id="riseWrap" hidden><span class="flab">RISE</span><span class="fbar"><i id="riseBar"></i></span></div>
       </div>
       <div id="boardWrap"><div id="board"></div><div id="preview" hidden></div><div id="gameMsg" hidden></div></div>
+      <div class="ginfo" id="gInfo"></div>
       <div class="gfoot" id="gfoot">
         <button class="btn" id="gUndo"><span data-i18n="g.undo">待った</span></button>
         <button class="btn" id="gHint"><span data-i18n="g.hint">ヒント</span></button>
@@ -82,11 +79,11 @@
 <div id="toast"></div>
 
 <script src="engine.js?v=1"></script>
-<script src="art.js?v=1"></script>
-<script src="i18n.js?v=1"></script>
-<script src="i18n-more.js?v=1"></script>
+<script src="art.js?v=2"></script>
+<script src="i18n.js?v=2"></script>
+<script src="i18n-more.js?v=2"></script>
 <script src="../sudoku/firebase-config.js"></script>
 <script src="online.js?v=1"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
