@@ -54,6 +54,16 @@
       shimmer: (ms = 0) => at(ms, (C, t) => [1568, 2093, 2637, 3136, 2349, 2794, 3520, 4186].forEach((f, i) => tone(C, t + i * .04, f, 0, .38, 'sine', .03, .003))),
       chime: (ms = 0) => at(ms, (C, t) => [[784, 0], [988, .08], [1175, .16], [1568, .26]].forEach(([f, d]) => tone(C, t + d, f, 0, .7, 'sine', .06, .01))),   // the board is here
       coin: (ms = 0) => at(ms, (C, t) => { tone(C, t, 1319, 0, .09, 'square', .025, .002); tone(C, t + .07, 1976, 0, .3, 'square', .025, .002); }),
+      // end of a game on the table: a bright victory jingle with a sparkle, a soft falling "aww" for a loss, two even notes for a draw
+      win: (ms = 0) => at(ms, (C, t) => {
+        [[523, 0, .16], [659, .12, .16], [784, .24, .16], [1047, .36, .5], [988, .62, .14], [1047, .76, .7]].forEach(([f, d, l]) => { tone(C, t + d, f, 0, l + .25, 'triangle', .1); tone(C, t + d, f * 2, 0, l, 'sine', .025); tone(C, t + d, f / 2, 0, l + .2, 'sine', .04); });
+        [2093, 2637, 3136, 4186, 3520, 4699].forEach((f, i) => tone(C, t + .9 + i * .05, f, 0, .45, 'sine', .022, .003));
+      }),
+      lose: (ms = 0) => at(ms, (C, t) => {
+        [[392, 0], [370, .26], [349, .52]].forEach(([f, d]) => { tone(C, t + d, f, f * .985, .34, 'triangle', .08); tone(C, t + d, f / 2, 0, .4, 'sine', .035); });
+        tone(C, t + .8, 330, 196, 1.0, 'triangle', .08); tone(C, t + .8, 165, 98, 1.1, 'sine', .04);   // the last note sags down
+      }),
+      draw: (ms = 0) => at(ms, (C, t) => { [[523, 0], [659, .18]].forEach(([f, d]) => tone(C, t + d, f, 0, .5, 'triangle', .08)); tone(C, t + .4, 587, 0, .7, 'sine', .05); }),
       fanfare: (ms = 0) => at(ms, (C, t) => [[523, 0], [659, .1], [784, .2], [1047, .32]].forEach(([f, d]) => { tone(C, t + d, f, 0, .45, 'triangle', .09); tone(C, t + d, f * 2, 0, .3, 'sine', .02); })),
     };
   })();
@@ -618,6 +628,7 @@
           $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.pvp ? '' : `<div class="gnote">Lv.${res.level}</div>`}
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${t('bv.again')}</button></div>`;
           $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
+          try { SFX[res.draw ? 'draw' : res.win || res.pvp ? 'win' : 'lose'](); } catch (e) {}   // (respects the sound setting)
           $('eAgain').onclick = () => { stopSession(); Table3D.show(g.id); setTimeout(() => startPlay(lastKind), 50); };
           $('eBack').onclick = () => openBoard(g.id);
           welcome();
