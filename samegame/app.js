@@ -176,13 +176,15 @@ async function pushScores() {
 /* ============================================================ HOME ============================================================ */
 let homeTab = 'daily', themeOpen = null;
 function updateCoins() { $$('.coinv').forEach(e => e.textContent = fmt(DB.coin)); }
-const SKINS = ['pop', 'vintage', 'riso', 'night'];
+const SKINS = ['pop', 'vintage', 'riso', 'night', 'swiss', 'wa', 'mid', 'pixel'];
+const SKIN_FONTS = { swiss: 'Archivo+Black', wa: 'Shippori+Mincho+B1:wght@600;800', mid: 'Josefin+Sans:wght@600;700', pixel: 'DotGothic16' };
 function applySkin() {
   const q = new URLSearchParams(location.search).get('skin');
   const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'pop');
-  document.body.dataset.skin = sk; A.syncPalette(); setBg();
+  document.body.dataset.skin = sk; A.syncPalette(); setBg(); setWords();
+  if (SKIN_FONTS[sk] && !document.getElementById('font-' + sk)) { const l = document.createElement('link'); l.id = 'font-' + sk; l.rel = 'stylesheet'; l.href = `https://fonts.googleapis.com/css2?family=${SKIN_FONTS[sk]}&display=swap`; document.head.appendChild(l); }
 }
-function setBg() { const b = A.BGS.find(x => x.id === DB.bg) || A.BGS[0]; $('#bg').style.background = b.css(); }
+function setBg() { const b = A.BGS.find(x => x.id === DB.bg) || A.BGS[0]; $('#bg').style.background = b.css(); document.body.dataset.bg = b.id; }
 function profCard() {
   const lv = Math.floor(Math.sqrt(DB.life / 50)) + 1;
   $('#profCard').innerHTML = `<button class="pic" id="pfEdit" aria-label="${esc(t('pf.edit'))}">${A.charSVG(DB.icon)}</button>
@@ -474,7 +476,13 @@ function onHover(ev) {
 }
 function clearHover() { if (G && G.els) G.els.forEach(c => c.forEach(d => d.classList.remove('hl', 'hint'))); $('#preview').hidden = true; }
 // ---- the move
-const WORDS = [[13, 'WHAAM!'], [9, 'BAM!'], [6, 'POW!'], [4, 'ZAP!'], [0, 'POP!']];
+const WORDS_BY = {
+  wa: [[13, 'ドドン！'], [9, 'ドン！'], [6, 'バン！'], [4, 'パン！'], [0, 'ポン']],
+  pixel: [[13, 'EXCELLENT!'], [9, 'GREAT!'], [6, 'NICE!'], [4, 'GOOD!'], [0, 'OK']],
+};
+const WORDS_POP = [[13, 'WHAAM!'], [9, 'BAM!'], [6, 'POW!'], [4, 'ZAP!'], [0, 'POP!']];
+const WORDS = WORDS_POP.slice();
+function setWords() { const w = WORDS_BY[document.body.dataset.skin] || WORDS_POP; WORDS.splice(0, WORDS.length, ...w); }
 function play(x, y) {
   const v = G.board[x][y], ty = E.typ(v);
   let min = G.min; if (G.feverT > 0) min = 1;

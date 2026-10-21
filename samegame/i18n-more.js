@@ -1,6 +1,7 @@
 /* さめが〜め POP! — texts (zh / ko / es / fr / pt / de / hi / ar). Base: i18n.js */
 window.SAME_I18N = window.SAME_I18N || {};
 window.SAME_I18N.zh = {
+'skin.swiss': '瑞士极简', 'skin.wa': '和风摩登', 'skin.mid': '中世纪现代', 'skin.pixel': '像素',
 'gi.rule': '规则', 'gi.blocks': '特殊方块',
 'st.demo': '看看怎么玩',
 'set.skin': '配色', 'skin.pop': '经典POP', 'skin.vintage': '复古', 'skin.riso': '孔版印刷', 'skin.night': '夜间POP',
@@ -61,6 +62,7 @@ window.SAME_I18N.zh = {
   'tu.a4.h': "抓住英雄", 'tu.a4': "点击飞过的英雄可获得+3秒和300分。有墨水飞来时，点击擦掉吧。",
 };
 window.SAME_I18N.ko = {
+'skin.swiss': '스위스 미니멀', 'skin.wa': '일본 모던', 'skin.mid': '미드센추리', 'skin.pixel': '픽셀',
 'gi.rule': '규칙', 'gi.blocks': '특수 블록',
 'st.demo': '움직임 보기',
 'set.skin': '색 테마', 'skin.pop': '클래식 POP', 'skin.vintage': '빈티지', 'skin.riso': '리소그래프', 'skin.night': '나이트 POP',
@@ -121,6 +123,7 @@ window.SAME_I18N.ko = {
   'tu.a4.h': "히어로를 잡아라", 'tu.a4': "가끔 날아오는 히어로를 탭하면 +3초와 300점. 잉크가 날아오면 탭해서 닦아내요.",
 };
 window.SAME_I18N.es = {
+'skin.swiss': 'Suizo minimal', 'skin.wa': 'Japonés moderno', 'skin.mid': 'Mid-century', 'skin.pixel': 'Píxel',
 'gi.rule': 'Reglas', 'gi.blocks': 'Bloques especiales',
 'st.demo': 'Ver cómo funciona',
 'set.skin': 'Colores', 'skin.pop': 'POP clásico', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografía', 'skin.night': 'POP nocturno',
@@ -181,6 +184,7 @@ window.SAME_I18N.es = {
   'tu.a4.h': "Atrapa al héroe", 'tu.a4': "Toca al héroe que pasa volando para +3 segundos y 300 puntos. ¿Manchas de tinta? Tócalas para quitarlas.",
 };
 window.SAME_I18N.fr = {
+'skin.swiss': 'Suisse minimal', 'skin.wa': 'Japon moderne', 'skin.mid': 'Mid-century', 'skin.pixel': 'Pixel',
 'gi.rule': 'Règles', 'gi.blocks': 'Blocs spéciaux',
 'st.demo': 'Voir comment ça marche',
 'set.skin': 'Couleurs', 'skin.pop': 'POP classique', 'skin.vintage': 'Vintage', 'skin.riso': 'Risographie', 'skin.night': 'POP de nuit',
@@ -241,6 +245,7 @@ window.SAME_I18N.fr = {
   'tu.a4.h': "Attrape le héros", 'tu.a4': "Touche le héros qui passe pour +3 secondes et 300 points. Des taches d'encre ? Touche-les pour les enlever.",
 };
 window.SAME_I18N.pt = {
+'skin.swiss': 'Suíço minimalista', 'skin.wa': 'Japonês moderno', 'skin.mid': 'Mid-century', 'skin.pixel': 'Pixel',
 'gi.rule': 'Regras', 'gi.blocks': 'Blocos especiais',
 'st.demo': 'Ver como funciona',
 'set.skin': 'Cores', 'skin.pop': 'POP clássico', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografia', 'skin.night': 'POP noturno',
@@ -301,6 +306,7 @@ window.SAME_I18N.pt = {
   'tu.a4.h': "Pegue o herói", 'tu.a4': "Toque no herói que passa voando para +3 segundos e 300 pontos. Manchas de nanquim? Toque para limpá-las.",
 };
 window.SAME_I18N.de = {
+'skin.swiss': 'Schweizer Stil', 'skin.wa': 'Japan modern', 'skin.mid': 'Mid-Century', 'skin.pixel': 'Pixel',
 'gi.rule': 'Regeln', 'gi.blocks': 'Spezialblöcke',
 'st.demo': 'So funktioniert es',
 'set.skin': 'Farbschema', 'skin.pop': 'Klassik-POP', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografie', 'skin.night': 'Nacht-POP',
@@ -361,6 +367,7 @@ window.SAME_I18N.de = {
   'tu.a4.h': "Fang den Helden", 'tu.a4': "Tippe den vorbeifliegenden Helden an für +3 Sekunden und 300 Punkte. Tintenkleckse? Einfach wegtippen!",
 };
 window.SAME_I18N.hi = {
+'skin.swiss': 'स्विस मिनिमल', 'skin.wa': 'जापानी मॉडर्न', 'skin.mid': 'मिड-सेंचुरी', 'skin.pixel': 'पिक्सेल',
 'gi.rule': 'नियम', 'gi.blocks': 'विशेष ब्लॉक',
 'st.demo': 'कैसे काम करता है देखें',
 'set.skin': 'रंग थीम', 'skin.pop': 'क्लासिक POP', 'skin.vintage': 'विंटेज', 'skin.riso': 'रिसोग्राफ़', 'skin.night': 'नाइट POP',
@@ -421,6 +428,7 @@ window.SAME_I18N.hi = {
   'tu.a4.h': "हीरो को पकड़ें", 'tu.a4': "उड़ते हीरो पर टैप करें: +3 सेकंड और 300 अंक। स्याही के धब्बे? टैप करके हटाएँ।",
 };
 window.SAME_I18N.ar = {
+'skin.swiss': 'سويسري بسيط', 'skin.wa': 'ياباني حديث', 'skin.mid': 'منتصف القرن', 'skin.pixel': 'بكسل',
 'gi.rule': 'القواعد', 'gi.blocks': 'كتل خاصة',
 'st.demo': 'شاهد طريقة اللعب',
 'set.skin': 'الألوان', 'skin.pop': 'POP كلاسيكي', 'skin.vintage': 'عتيق', 'skin.riso': 'ريزوغراف', 'skin.night': 'POP ليلي',

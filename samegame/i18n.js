@@ -1,6 +1,7 @@
 /* さめが〜め POP! — texts (ja / en). Other languages: i18n-more.js */
 window.SAME_I18N = window.SAME_I18N || {};
 window.SAME_I18N.ja = {
+  'skin.swiss': 'スイス・ミニマル', 'skin.wa': '和モダン', 'skin.mid': 'ミッドセンチュリー', 'skin.pixel': 'ドット絵',
   'gi.rule': 'ルール', 'gi.blocks': 'しかけブロック',
   'st.demo': 'ルールの動きを見る',
   'set.skin': '配色',
@@ -65,6 +66,7 @@ window.SAME_I18N.ja = {
   'tu.a4.h': 'ヒーローをキャッチ', 'tu.a4': 'ときどき飛んでくるヒーローをタップすると +3秒と300点。インクが飛んできたらタップでふき取ろう。',
 };
 window.SAME_I18N.en = {
+  'skin.swiss': 'Swiss minimal', 'skin.wa': 'Japanese modern', 'skin.mid': 'Mid-century', 'skin.pixel': 'Pixel',
   'gi.rule': 'Rules', 'gi.blocks': 'Special blocks',
   'st.demo': 'Watch how it works',
   'set.skin': 'Color theme',
