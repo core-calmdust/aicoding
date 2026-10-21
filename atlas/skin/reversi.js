@@ -22,7 +22,7 @@
     start(lv, side, mode) {
       if (typeof openNew !== 'function' || typeof draft !== 'object' || !document.getElementById('btnStart')) return null;
       openNew(); draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
-      if (lv >= 1 && lv <= 10) draft.level = lv;
+      if (lv >= 1 && lv <= 20) draft.level = lv;
       if (side === 1 || side === 2) draft.color = side;
       segSync(); document.getElementById('btnStart').click();
       return true;

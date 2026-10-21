@@ -13,7 +13,7 @@
 <script>try { document.documentElement.dataset.bd = localStorage.getItem('reversi-board-design') || 'classic'; } catch (e) {}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23111'/%3E%3Ccircle cx='40' cy='40' r='13' fill='%23eee'/%3E%3C/svg%3E">
 <meta property="og:title" content="Reversi V4 — 強くて美しいブラウザリバーシ">
-<meta property="og:description" content="学習済みパターン評価と終盤完全読みを備えた10段階AI。登録不要でスマホでも遊べます。">
+<meta property="og:description" content="学習済みパターン評価と終盤完全読みを備えた20段階AI、詰めオセロ1000問。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://core-calmdust.github.io/aicoding/reversi/">
 <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/reversi_v4.webp">
@@ -869,6 +869,87 @@ html[lang=ar] .lx :is(p, .tx){text-align:start}
 #pzGrid .pb-tile.done .th{opacity:1}
 #pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #pzGrid .pb-tile.hasth .n{font-size:11.5px} }
+/* puzzle collection (v3, 1000 puzzles): hero with overall progress, daily card, category tabs, theme cards with a board */
+.pzx{display:flex;flex-direction:column;gap:12px}
+.pzx-hero{position:relative;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:18px;overflow:hidden;
+  border:1px solid rgba(201,169,97,.32);background:radial-gradient(120% 140% at 0% 0%,rgba(29,107,76,.55),transparent 60%),linear-gradient(120deg,rgba(201,169,97,.16),rgba(0,0,0,.25) 70%)}
+.pzx-hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:220px;height:220px;border-radius:50%;opacity:.1;pointer-events:none;
+  background:repeating-conic-gradient(from 45deg,#fff 0 25%,transparent 0 50%) 0 0/44px 44px;mask:radial-gradient(closest-side,#000 40%,transparent)}
+.pzx-hero .pb-ring{width:84px;height:84px;background:radial-gradient(closest-side,#132019 79%,transparent 81%),conic-gradient(#f2c060 calc(var(--p)*360deg),rgba(255,255,255,.09) 0)}
+.pzx-hero .pb-ring b{font-size:22px}.pzx-hero .pb-ring small{font-size:11px}
+.pzx-hs{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;z-index:1}
+.pzx-title{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.1em;color:var(--text)}
+.pzx-title small{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--brass);margin-inline-start:8px;padding:2px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.4);vertical-align:3px}
+.pzx-lead{font-size:12px;color:var(--muted);line-height:1.6}
+.pzx-stats{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.pzx-stats .pb-st{font-size:14px;font-weight:700}.pzx-stats .pb-st .pb-star{width:15px;height:15px}
+.pzx-md{display:inline-flex;align-items:center;gap:3px}.pzx-md .pb-medal{width:17px;height:17px}
+.pzx-hero .pb-cont{z-index:1;max-width:220px;text-align:center;line-height:1.35}
+.pzx-hero .pb-cont small{display:block;font-weight:500;font-size:11px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pzx-daily{display:flex;align-items:center;gap:14px;width:100%;text-align:start;padding:10px 14px 10px 10px;border-radius:14px;color:var(--text);
+  border:1px solid rgba(242,192,96,.45);background:linear-gradient(110deg,rgba(242,192,96,.18),rgba(0,0,0,.2) 55%);transition:transform .15s,border-color .2s}
+.pzx-daily:hover{transform:translateY(-1px);border-color:#f2c060}
+.pzx-daily .th{flex:none;width:62px}.pzx-daily .th > svg{display:block;width:100%;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.pzx-daily .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pzx-daily .tx b{font-size:15px}.pzx-daily .tx b span{color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:12px;margin-inline-start:6px}
+.pzx-daily .tx small{font-size:12px;color:var(--muted)}
+.pzx-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f4d98f,#d4a84a)}
+.pzx-daily .go.ok{color:#8fe3b8;background:rgba(111,211,160,.12);border:1px solid rgba(111,211,160,.4)}
+.pzx .lx-tabs{margin:2px 0 0}
+.pzx .lx-tabs button .ic{background:none;color:var(--brass);padding:3px}
+.pzx .lx-tabs button .ic svg, .pzx-ic svg, .pzx-ghead .ic svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pzx-cat{font-size:12px;color:var(--muted);line-height:1.6;margin:-2px 2px 0}
+.pzx-cards{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.pzx-card{position:relative;display:flex;gap:12px;align-items:stretch;text-align:start;width:100%;padding:10px 12px 10px 10px;border-radius:15px;color:var(--text);overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--c) 32%,var(--line));background:linear-gradient(125deg,color-mix(in srgb,var(--c2) 34%,transparent),rgba(0,0,0,.24) 62%);transition:transform .15s,border-color .2s,box-shadow .2s}
+.pzx-card:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.pzx-card.full{border-color:rgba(242,192,96,.7);box-shadow:0 0 0 1px rgba(242,192,96,.25),0 6px 22px rgba(242,192,96,.12)}
+.pzx-th{flex:none;width:84px;align-self:center}
+.pzx-bd{position:relative;display:block;width:100%}
+.pzx-bd > svg{display:block;width:100%;height:auto;border-radius:7px;box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.pzx-ic{position:absolute;inset:auto -6px -6px auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;padding:5px;color:#0b0f16;
+  background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+.pzx-ic > svg{width:100%;height:100%}
+.pzx-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#0d0d0d 70%);box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
+.pzx-tm.w{background:radial-gradient(circle at 35% 30%,#fff,#d8d4c8 70%)}
+.pzx-ghead .chips .pzx-diff{margin-inline-start:4px}.pzx-ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:15px;line-height:1}
+.pzx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pzx-top{display:flex;align-items:center;gap:8px;min-width:0}
+.pzx-nm{font-size:15px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pzx-diff{margin-inline-start:auto;flex:none;display:inline-flex;align-items:center;gap:2px}
+.pzx-diff i{width:6px;height:11px;border-radius:2px;background:rgba(255,255,255,.12)}.pzx-diff i.on{background:var(--c)}
+.pzx-desc{font-size:12px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pzx-prog{display:flex;align-items:center;gap:8px;margin-top:auto;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.pzx-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pzx-meta .pb-medals .pb-medal{width:14px;height:14px}.pzx-meta .pb-pip{width:8px;height:8px}
+.pzx-card .pb-full{top:7px;inset-inline-end:10px;right:auto}
+.pzx-card.full .pzx-diff{visibility:hidden}
+.pzx-ghead{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.pzx-ghead .ic{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;padding:9px;color:#0b0f16;background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.pzx-ghead .ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:22px}
+.pzx-ghead .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pzx-ghead h2{margin:0;font-size:20px}
+.pzx-ghead small{font-size:12px;color:var(--muted);line-height:1.55}
+.pzx-ghead .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pzx-chip{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--c)}
+html[lang=ar] .pzx, html[lang=ar] .pzx-ghead{direction:rtl}
+html[lang=ar] .pzx :is(.pb-ring, .pzx-prog, .pzx-stats .pb-st, .pzx-title small){direction:ltr;unicode-bidi:isolate}
+@media (max-width:560px){
+  .pzx-hero{padding:12px 12px;gap:10px 12px;flex-wrap:wrap}.pzx-hero .pb-ring{width:66px;height:66px}.pzx-hero .pb-ring b{font-size:18px}
+  .pzx-title{font-size:19px}.pzx-lead{display:none}.pzx-hs{flex:1 1 calc(100% - 82px)}
+  .pzx-hero .pb-cont{flex:1 1 100%;max-width:none;padding:9px 12px}
+  .pzx-th{width:72px}.pzx-nm{font-size:14px}
+  #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:calc(100vh - 32px);height:calc(100dvh - 32px)}
+}
+@media (min-width: 640px){ .pzx-cards{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  .pzx-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pzx-card{flex-direction:column;align-items:stretch;padding:12px}
+  .pzx-th{width:100%;display:flex;justify-content:center;padding:6px 0 4px;border-radius:10px;background:radial-gradient(closest-side,rgba(0,0,0,.28),transparent)}
+  .pzx-bd{width:132px}
+  .pzx-ic{width:34px;height:34px}
+  .pzx-desc{min-height:3.1em}
+}
 /* PC: opening steps spread across the browser width, cards in 2-3 columns */
 @media (min-width: 1000px) and (min-height: 561px){
   #lessonOverlay .modal:has(> #lessonIntroView.op-intro:not(.hidden)){width:min(1500px, 94vw)}
@@ -1286,14 +1367,14 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
-        <input type="range" min="1" max="10" step="1" id="levelRange">
+        <input type="range" min="1" max="20" step="1" id="levelRange">
         <div class="level-name" id="levelName"></div>
       </div>
     </div>
     <div class="field hidden" id="fLevel2">
       <label data-i18n="ng.levelW"></label>
       <div class="level-wrap">
-        <input type="range" min="1" max="10" step="1" id="levelRange2">
+        <input type="range" min="1" max="20" step="1" id="levelRange2">
         <div class="level-name" id="levelName2"></div>
       </div>
     </div>
@@ -1379,13 +1460,11 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
   <div class="modal">
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div class="pzx" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
+      <div class="pzx-ghead" id="pzLevelHead"></div>
       <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
@@ -1504,7 +1583,7 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021bd1"></script>
+<script src="i18n.js?v=20261021rv2"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
@@ -1536,7 +1615,7 @@ function counts(cells) { let b = 0, w = 0; for (const v of cells) { if (v === 1)
 
 // ====================================================================== state
 const STORE = 'reversi-emerald-v1';
-const settings = { mode: 'ai', color: 1, clock: 0, level: 6, level2: 6, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: false, lang: '' };
+const settings = { mode: 'ai', color: 1, clock: 0, level: 14, level2: 14, lvV: 2, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: false, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return SUPPORTED.find(l => n.startsWith(l)) || 'en'; }
 let LANG = detectLang();
@@ -1564,11 +1643,22 @@ let clock = null;           // game clock of an offline game (see "game clock" b
 // (games started from the new-game dialog run as before; a rated game still going keeps counting through a reload)
 let clockHold = false;
 
+// v4.1: 10 AI levels became 20. Old level n is the same engine setting as new level LV_OLD2NEW[n].
+const LV_OLD2NEW = [0, 4, 7, 9, 11, 13, 14, 16, 17, 19, 20], LV_MAX = 20;
+const lvMig = n => LV_OLD2NEW[Math.max(1, Math.min(10, Math.round(+n) || 6))];
+function migrateLevels(st) {   // st: a settings object (saved game / synced settings) from before the 20-level ladder
+  if (!st || st.lvV === 2) return st;
+  if (st.level != null) st.level = lvMig(st.level);
+  if (st.level2 != null) st.level2 = lvMig(st.level2);
+  st.lvV = 2; return st;
+}
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
-    Object.assign(settings, d.settings || {});
+    const oldLv = !(d.settings && d.settings.lvV === 2);
+    Object.assign(settings, migrateLevels(Object.assign({}, d.settings || {})));
+    if (oldLv && d.rated && d.rated.lv && !d.rated.lvV) { d.rated.lv = lvMig(d.rated.lv); d.rated.lvV = 2; }
     if (d.positions && d.positions.length) {
       positions = d.positions.map(p => ({ ...p, cells: p.cells.split('').map(Number) }));
       humanColor = d.humanColor || 1;
@@ -1615,7 +1705,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() => null).then(b => (book = b));
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js');
+  const w = new Worker('engine.js?v=41');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1647,10 +1737,10 @@ function think(cells, toMove, level, onProgress) {
     aiWorker.postMessage({ type: 'think', id: aiJob.id, cells, toMove, opts: { level } });
   });
 }
-// ---------------------------------------------------------------- parallel root search (levels 8-10)
+// ---------------------------------------------------------------- parallel root search (levels 17-20)
 // Root moves are split across several workers (no shared memory): the first move is searched with a full window,
 // the rest with a null window around the current best, re-searching on fail-high.
-const PAR_LEVELS = { 8: { exact: 18, time: 1500 }, 9: { exact: 19, time: 3000 }, 10: { exact: 20, time: 5000 } };
+const PAR_LEVELS = { 17: { exact: 18, time: 1500 }, 18: { exact: 18, time: 2200 }, 19: { exact: 19, time: 3000 }, 20: { exact: 20, time: 5000 } };   // same as engine.js LEVELS
 const NPAR = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1));
 let pool = null;
 function makePool() {
@@ -2281,11 +2371,12 @@ setInterval(clockTick, 250);
 // Each AI level has a fixed rating (ladder in MODEL_CARD.md); the opponent is picked around the player's rating
 // (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'reversi-rated-v1', RT_START = 1000;
-const RT_LV = [0, 400, 650, 850, 1000, 1150, 1300, 1450, 1600, 1700, 1800];   // index = level 1..10
+const RT_LV = [0, 50, 210, 310, 400, 530, 690, 780, 870, 960, 1030, 1150, 1260, 1340, 1440, 1530, 1590, 1630, 1690, 1780, 1810];   // index = level 1..20: 50 + 0.77 × the measured level Elo (MODEL_CARD.md), so the old 10 levels keep roughly their old ratings
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
   if (!Array.isArray(s.hist)) s.hist = [];
+  if (!s.lvV) { s.hist.forEach(h => { if (h.lv) h.lv = lvMig(h.lv); }); s.lvV = 2; if (s.n || s.hist.length) rtStore(s); }   // 10 → 20 levels
   return s;
 }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
@@ -2297,7 +2388,7 @@ function rtPick(r, rnd = Math.random) {
   const u = rnd(), v = rnd();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100;
   const target = r + off;
-  let lv = 1; for (let i = 2; i <= 10; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
+  let lv = 1; for (let i = 2; i <= LV_MAX; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
   const diff = RT_LV[lv] - r;
   return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
@@ -3390,32 +3481,107 @@ if (!pzProgress._v) {
 }
 const starVal = x => x === true ? 3 : x === 'h' ? 2 : (+x || 0);
 const PT = o => (o && (o[LANG] || o.en || o.ja)) || '';
-async function loadPuzzles() { if (!puzzleData) { try { puzzleData = await fetch('puzzles.json').then(r => r.json()); } catch (e) { puzzleData = { levels: [] }; } } return puzzleData; }
+async function loadPuzzles() { if (!puzzleData) { try { puzzleData = await fetch('puzzles.json?v=3').then(r => r.json()); } catch (e) { puzzleData = { levels: [] }; } } return puzzleData; }
 function pzKey(li, i) { return puzzleData.levels[li].id + ':' + i; }
 function pzRecs(li) { const lv = puzzleData.levels[li]; return lv.puzzles.map((_, k) => starVal(pzProgress[lv.id + ':' + k])); }
 // card colour from the theme's average difficulty (D = solver difficulty score in puzzles.json)
 function themeTier(lv) { const d = lv.puzzles.reduce((a, P) => a + (P.D || 0), 0) / Math.max(1, lv.puzzles.length); return Math.max(0, Math.min(5, Math.floor((d - 12) / 6))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+// difficulty in 5 steps from the solver score D (≈ 7 … 55)
+const pzDiff = D => Math.max(1, Math.min(5, Math.ceil(((D || 0) - 6) / 10)));
+const pzDiffAvg = lv => pzDiff(lv.puzzles.reduce((a, P) => a + (P.D || 0), 0) / Math.max(1, lv.puzzles.length));
+const pzPips = n => `<span class="pzx-diff" title="${t('pz.diff')} ${n}/5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
+// v3 collection: levels carry a category (level / theme / unique) and an icon key; the original 170 keep their ids and order
+const PZ_CATS = ['level', 'theme', 'unique'], PZ_LAST = 'reversi-pz-last';
+const PZI = {
+  level: '<path d="M3 20h5v-5h5v-5h5V5h3"/>', theme: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="7.5" r="1.4"/>', unique: '<path d="M12 3l2.2 6.3L20.5 11l-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-1.7z"/>',
+  parityOk: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7.5 12h.01M12 12h.01M16.5 12h.01" stroke-width="3.4"/>',
+  parity: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 12h.01M15 12h.01" stroke-width="3.4"/><path d="M4 20 20 4"/>',
+  pass: '<path d="M4 6l6 6-6 6M12 6l6 6-6 6"/>', greedy: '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2 19 19M19 5l-2.8 2.8M7.8 16.2 5 19"/>',
+  corner: '<path d="M4 20V4h16"/><circle cx="9" cy="9" r="2.6"/><path d="M14 14l6 6M20 14l-6 6"/>', xc: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8l8 8M16 8l-8 8"/>',
+  quiet: '<path d="M20 4C11 4 6 9 5 20M5 20c7 0 12-5 13-12M9.5 15H14"/>', edge: '<path d="M3 20h18"/><circle cx="7" cy="14.5" r="2.6"/><circle cx="17" cy="14.5" r="2.6"/><path d="M12 4v7M9.5 8.5 12 11l2.5-2.5"/>',
+  block: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', draw: '<circle cx="12" cy="12" r="9"/><path d="M8 10h8M8 14h8"/>',
+  margin: '<path d="M5 20V12M11 20V5M17 20v-9M2 20h20"/>', surprise: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6.5M12 16.8v.2"/>',
+  only: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12h.01" stroke-width="3.4"/>', comeback: '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+  wipe: '<path d="M4 19h16M7 15l4-9M11 15l4-9M15 15l3-7"/>', sym: '<path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
+  close: '<path d="M5 21V4h13l-2.5 4L18 12H5"/>', gem: '<path d="M6 3h12l3.5 6L12 21 2.5 9zM2.5 9h19M9 3l3 6 3-6M12 9v12"/>',
+};
+const pzSvg = k => `<svg viewBox="0 0 24 24">${PZI[k] || PZI.theme}</svg>`;
+const pzCat = lv => lv.cat || (lv.id === 'p6' ? 'unique' : 'level');
+function pzIconOf(li) { const lv = puzzleData.levels[li]; if (lv.icon && lv.icon !== 'lv') return pzSvg(lv.icon); const n = puzzleData.levels.filter((x, i) => i <= li && pzCat(x) === 'level' && (!x.icon || x.icon === 'lv')).length; return `<b class="gl">${n}</b>`; }
+// colours: the level course warms up with difficulty (PZBook tiers); every theme / special set has a hue of its own
+const PZ_HUE = { parityOk: ['#6fd3a0', '#2f7d5a'], parity: ['#a6dd6c', '#4d7a26'], pass: ['#5ec6d8', '#2a6f7f'], greedy: ['#ff8fa8', '#9a3f57'], corner: ['#f2c060', '#8e6a26'],
+  xc: ['#ff9f6b', '#9a4f2a'], quiet: ['#9fb8ff', '#3f5299'], edge: ['#73d9c6', '#26786b'], block: ['#c0a0ff', '#5b3f99'], draw: ['#cfd6e6', '#56607e'], margin: ['#ffd36b', '#8e7426'],
+  surprise: ['#ff7ad0', '#8f2a6f'], only: ['#ff7a6b', '#8a322a'], comeback: ['#7be8a8', '#2a8550'], wipe: ['#6bc8ff', '#2a5c8f'], sym: ['#d9b0ff', '#6b3f8f'], close: ['#ffb36b', '#8f5a2a'], gem: ['#f2c060', '#8e6a26'] };
+function pzColor(li) { const lv = puzzleData.levels[li], h = PZ_HUE[lv.icon]; if (h) return `--c:${h[0]};--c2:${h[1]}`; const T = PZBook.TIERS[themeTier(lv)]; return `--c:${T.c};--c2:${T.c2}`; }
+// the position shown on a card: the next puzzle to play there (or the last one once all are cleared)
+function pzShowIdx(li) { const r = pzRecs(li), j = PZBook.nextIndex(r); return j >= 0 ? j : r.length - 1; }
+function pzMedals() { const m = [0, 0, 0, 0]; puzzleData.levels.forEach((lv, li) => PZBook.stageInfo(pzRecs(li)).forEach(s => m[s.medal]++)); return m; }
+function pzCardHTML(li) {
+  const lv = puzzleData.levels[li], recs = pzRecs(li), tt = PZBook.totals(recs), full = tt.done === tt.total && tt.total > 0;
+  const si = PZBook.stageInfo(recs), medals = si.map(x => x.medal ? PZBook.MEDAL(x.medal) : `<i class="pb-pip${x.done ? ' part' : ''}"></i>`).join('');
+  const P = lv.puzzles[pzShowIdx(li)];
+  return `<button class="pzx-card${full ? ' full' : ''}" data-i="${li}" style="${pzColor(li)}"><span class="pzx-th"><span class="pzx-bd">${P ? rlSVG(P.cells.split('').map(Number)) + `<i class="pzx-tm${P.toMove === WHITE ? ' w' : ''}"></i>` : ''}<span class="pzx-ic">${pzIconOf(li)}</span></span></span>` +
+    `<span class="pzx-tx"><span class="pzx-top"><b class="pzx-nm">${esc(PT(lv.name))}</b>${pzPips(pzDiffAvg(lv))}</span><span class="pzx-desc">${esc(PT(lv.desc))}</span>` +
+    `<span class="pzx-prog"><span class="pb-bar"><i style="width:${tt.total ? tt.done * 100 / tt.total : 0}%"></i></span><span>${tt.done}/${tt.total}</span></span>` +
+    `<span class="pzx-meta"><span class="pb-medals">${medals}</span><span class="pb-st">${PZBook.STAR(true)}${tt.stars}/${tt.total * 3}</span></span></span>` +
+    (full ? `<span class="pb-full"><svg class="pb-crown" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>${esc(PZBook.t('complete'))}</span>` : '') + `</button>`;
+}
+// where "continue" goes: the last theme played, else the first theme with something left (same category first)
+function pzResume() {
+  let last = -1; try { last = +(localStorage.getItem(PZ_LAST) ?? -1); } catch (e) {}
+  const L = puzzleData.levels, ok = li => li >= 0 && li < L.length && PZBook.nextIndex(pzRecs(li)) >= 0;
+  if (ok(last)) return [last, PZBook.nextIndex(pzRecs(last))];
+  const cat = last >= 0 && last < L.length ? pzCat(L[last]) : 'level';
+  const order = L.map((_, i) => i).sort((a, b) => (pzCat(L[a]) !== cat) - (pzCat(L[b]) !== cat));
+  for (const li of order) if (ok(li)) return [li, PZBook.nextIndex(pzRecs(li))];
+  return null;
+}
 async function openPuzzles() {
   const d = await loadPuzzles(); selTab('puzzle');
   PZBook.setLang(LANG);
+  const box = $('#pzLevels');
+  if (!d.levels.length) { box.innerHTML = `<p style="color:var(--dim)">${t('ls.fail')}</p>`; showPzView('pzListView'); showOverlay('#puzzleOverlay'); return; }
+  const all = d.levels.map((_, i) => pzRecs(i)).flat(), tt = PZBook.totals(all), md = pzMedals(), cont = pzResume();
+  let cur = lxTab('pzcat'); if (!PZ_CATS.includes(cur)) cur = 'level';
   const dl = dailyPick(), di = dailyInfo();
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${PT(d.levels[dl.li].name)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') +
-    d.levels.map((lv, i) => PZBook.card({ i, no: i + 1, name: PT(lv.name), sub: PT(lv.desc), recs: pzRecs(i), tier: themeTier(lv) })).join('') || `<p style="color:var(--dim)">${t('ls.fail')}</p>`;
+  let h = `<div class="pzx-hero"><span class="pb-ring" style="--p:${tt.total ? tt.done / tt.total : 0}"><b>${tt.done}</b><small>/${tt.total}</small></span>` +
+    `<span class="pzx-hs"><b class="pzx-title">${t('pz.title')}<small>${t('pz.count', { n: tt.total })}</small></b><span class="pzx-lead">${t('pz.desc')}</span>` +
+    `<span class="pzx-stats"><span class="pb-st">${PZBook.STAR(true)}${tt.stars}<small style="color:var(--muted);font-weight:400">/${tt.total * 3}</small></span>` +
+    `<span class="pzx-md" title="${esc(PZBook.t('medal')[2])}">${PZBook.MEDAL(3)}${md[3]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[1])}">${PZBook.MEDAL(2)}${md[2]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[0])}">${PZBook.MEDAL(1)}${md[1]}</span></span></span>` +
+    (cont ? `<button class="pb-cont" data-cont="${cont[0]}:${cont[1]}">${esc(PZBook.t('cont'))} ▶ <b>No.${cont[1] + 1}</b><small>${esc(PT(d.levels[cont[0]].name))}</small></button>` : `<span class="pb-alldone">${esc(PZBook.t('allDone'))}</span>`) + `</div>`;
+  if (dl) {
+    const P = d.levels[dl.li].puzzles[dl.k];
+    h += `<button class="pzx-daily" data-daily="1"><span class="th">${rlSVG(P.cells.split('').map(Number))}</span><span class="tx"><b>★ ${t('daily.title')}<span>${dl.date.slice(5).replace('-', '/')}</span></b>` +
+      `<small>${esc(PT(d.levels[dl.li].name))} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="go${di.today ? ' ok' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>`;
+  }
+  const idx = c => d.levels.map((lv, i) => pzCat(lv) === c ? i : -1).filter(i => i >= 0);
+  h += `<div class="lx-tabs" role="tablist">${PZ_CATS.map(c => { const ii = idx(c), r = ii.map(i => pzRecs(i)).flat(), k = r.filter(x => x > 0).length;
+    return `<button role="tab" data-cat="${c}" class="${c === cur ? 'sel' : ''}"><span class="ic">${pzSvg(c)}</span><span class="nm">${t('pz.cat.' + c)}</span><span class="ct${k === r.length ? ' ok' : ''}">${k}/${r.length}</span></button>`; }).join('')}</div>`;
+  h += `<p class="pzx-cat">${t('pz.cat.' + cur + '.d')}</p><div class="pzx-cards">${idx(cur).map(pzCardHTML).join('')}</div>`;
+  box.innerHTML = h;
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
 let pzLevelIdx = 0;
 function openPuzzleLevel(li, cur) {
   pzLevelIdx = li; const lv = puzzleData.levels[li];
   PZBook.setLang(LANG);
-  $('#pzLevelTitle').textContent = PT(lv.name);
+  const df = pzDiffAvg(lv), es = lv.puzzles.map(P => P.e), e0 = Math.min(...es), e1 = Math.max(...es);
+  const hd = $('#pzLevelHead'); hd.setAttribute('style', pzColor(li));
+  hd.innerHTML = `<span class="ic">${pzIconOf(li)}</span><span class="tx"><h2 id="pzLevelTitle">${esc(PT(lv.name))}</h2><small>${esc(PT(lv.desc))}</small>` +
+    `<span class="chips"><span class="pzx-chip">${t('pz.cat.' + pzCat(lv))}</span><span class="pzx-chip">${t('pz.emp', { a: e0 === e1 ? e0 : e0 + (LANG === 'ja' || LANG === 'zh' ? '〜' : '–') + e1 })}</span>${pzPips(df)}</span></span>`;
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(li), cur });
   // each tile shows the position to solve (a small board) under its number and stars; the number badge has the colour to move
   g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = lv.puzzles[+el.dataset.j]; if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${rlSVG(P.cells.split('').map(Number))}</span>`); el.classList.add('hasth'); el.classList.toggle('wt', P.toMove === WHITE); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
   const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
-$('#pzLevels').addEventListener('click', e => { const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#puzzleOverlay'); startPuzzle(dl.li, dl.k, dl.date); } else openPuzzleLevel(+b.dataset.i); });
+$('#pzLevels').addEventListener('click', e => {
+  const tb = e.target.closest('[data-cat]'); if (tb) { lxTab('pzcat', tb.dataset.cat); openPuzzles(); return; }
+  const cb = e.target.closest('[data-cont]'); if (cb) { const [li, j] = cb.dataset.cont.split(':').map(Number); hideOverlay('#puzzleOverlay'); startPuzzle(li, j); return; }
+  const b = e.target.closest('.pzx-daily, .pzx-card'); if (!b) return;
+  if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#puzzleOverlay'); startPuzzle(dl.li, dl.k, dl.date); } else openPuzzleLevel(+b.dataset.i);
+});
 $('#pzGrid').addEventListener('click', e => {
   const b = e.target.closest('button[data-j]'); if (!b) return;
   if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
@@ -3447,6 +3613,7 @@ function startPuzzle(li, k, daily) {
   if (!puzzle && !savedGame) savedGame = { positions, cur, reviewing };
   const pz = puzzleData.levels[li].puzzles[k];
   puzzle = { li, k, pz, me: pz.toMove, goal: pz.goal, state: 'play', busy: false, hinted: false, failed: false, answered: false, daily: daily || null };
+  if (!daily) { try { localStorage.setItem(PZ_LAST, String(li)); } catch (e) {} }
   document.body.classList.add('in-puzzle');
   hideOverlay('#resultOverlay');
   resetPuzzleBoard();
@@ -3462,7 +3629,7 @@ function resetPuzzleBoard() {
 function renderPuzzleCard() {
   const P = puzzle, lv = puzzleData.levels[P.li];
   const best = starVal(pzProgress[pzKey(P.li, P.k)]);
-  $('#pzStep').textContent = (P.daily ? `★ ${t('daily.title')} · ${P.daily.slice(5).replace('-', '/')} · ` : '') + `${PT(lv.name)} · ${PZBook.t('stage', { n: Math.floor(P.k / PZBook.STAGE) + 1 })} · No.${P.k + 1}` + (best ? '  ' + '★'.repeat(best) : '');
+  $('#pzStep').textContent = (P.daily ? `★ ${t('daily.title')} · ${P.daily.slice(5).replace('-', '/')} · ` : '') + `${PT(lv.name)} · ${PZBook.t('stage', { n: Math.floor(P.k / PZBook.STAGE) + 1 })} · No.${P.k + 1} · ${t('pz.diff')} ${'●'.repeat(pzDiff(P.pz.D))}${'○'.repeat(5 - pzDiff(P.pz.D))}` + (best ? '  ' + '★'.repeat(best) : '');
   $('#pzTitle').textContent = t('pz.title');
   $('#pzGoal').textContent = goalText(P.goal, P.me);
   pzButtons();
@@ -4775,7 +4942,7 @@ if (olOn()) Online.onAuth(() => {
 // settings / name: newest change wins. Not synced: the game in progress, live online game / room data, export format, mock data.
 const RvSync = (() => {
   const META = 'reversi-sync-meta', RULES_KEY = 'aicoding-reversi-rules-seen';
-  const SET_KEYS = ['level', 'level2', 'clock', 'legal', 'last', 'eval', 'anim', 'sound', 'coach', 'lang'];
+  const SET_KEYS = ['level', 'level2', 'lvV', 'clock', 'legal', 'last', 'eval', 'anim', 'sound', 'coach', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };
@@ -4857,6 +5024,7 @@ const RvSync = (() => {
     const m = meta() || {};
     let lang = null;
     if (d.set) {
+      d.set = migrateLevels(Object.assign({}, d.set));
       SET_KEYS.forEach(k => { if (k !== 'lang' && d.set[k] !== undefined) settings[k] = d.set[k]; });
       if (d.set.lang && SUPPORTED.includes(d.set.lang) && d.set.lang !== LANG) lang = d.set.lang;
       const set = setOf(); if (lang) set.lang = lang;
@@ -4943,7 +5111,7 @@ accRender();
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=42')).then(() => load('../atlas/skin/common.js?v=7')).then(() => load('../atlas/skin/reversi.js?v=17'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=42')).then(() => load('../atlas/skin/common.js?v=7')).then(() => load('../atlas/skin/reversi.js?v=18'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

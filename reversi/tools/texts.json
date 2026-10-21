@@ -1,0 +1,532 @@
+{
+"p7": {
+"icon": "lv",
+"name": {
+"ja": "名人（空き15〜16）",
+"en": "Master (15–16 empties)",
+"zh": "名人（空15〜16格）",
+"ko": "명인 (빈칸 15〜16)",
+"es": "Maestro (15–16 vacías)",
+"fr": "Maître (15–16 cases vides)",
+"pt": "Mestre (15–16 vazias)",
+"de": "Meister (15–16 leer)",
+"hi": "उस्ताद (15–16 ख़ाली)",
+"ar": "أستاذ (15–16 خانة فارغة)"
+},
+"desc": {
+"ja": "長い終盤を最後まで読み切る。一手のゆるみも許されない。",
+"en": "A long endgame read out to the end — no slack allowed.",
+"zh": "把漫长的残局算到最后，一步也不能松。",
+"ko": "긴 종반을 끝까지 읽어낸다. 한 수의 방심도 허락되지 않는다.",
+"es": "Un final largo leído hasta el fondo: no hay margen para relajarse.",
+"fr": "Une longue finale à calculer jusqu'au bout : aucun relâchement permis.",
+"pt": "Um final longo lido até o fim — sem espaço para descuido.",
+"de": "Ein langes Endspiel bis zum Schluss durchrechnen – kein Nachlassen erlaubt.",
+"hi": "लंबे एंडगेम को अंत तक पढ़ें — ज़रा-सी ढील भी नहीं चलेगी।",
+"ar": "نهاية طويلة تُحسب حتى آخرها، ولا مجال لأي تهاون."
+}
+},
+"p8": {
+"icon": "lv",
+"name": {
+"ja": "超名人（空き17〜18）",
+"en": "Grandmaster (17–18 empties)",
+"zh": "超名人（空17〜18格）",
+"ko": "초명인 (빈칸 17〜18)",
+"es": "Gran maestro (17–18 vacías)",
+"fr": "Grand maître (17–18 cases vides)",
+"pt": "Grão-mestre (17–18 vazias)",
+"de": "Großmeister (17–18 leer)",
+"hi": "महाउस्ताद (17–18 ख़ाली)",
+"ar": "أستاذ كبير (17–18 خانة فارغة)"
+},
+"desc": {
+"ja": "AIの完全読みの限界に近い長さ。じっくり腰をすえて。",
+"en": "Close to the limit of the AI's perfect reading. Take your time.",
+"zh": "接近AI完全计算极限的长度，请沉下心来。",
+"ko": "AI 완전 읽기의 한계에 가까운 길이. 차분히 임하자.",
+"es": "Casi en el límite de la lectura perfecta de la IA. Tómate tu tiempo.",
+"fr": "Presque à la limite de la lecture parfaite de l'IA. Prenez votre temps.",
+"pt": "Perto do limite da leitura perfeita da IA. Vá com calma.",
+"de": "Nahe an der Grenze der perfekten KI-Rechnung. Nimm dir Zeit.",
+"hi": "AI की परफ़ेक्ट गणना की सीमा के क़रीब। आराम से सोचें।",
+"ar": "قريب من حدود القراءة المثالية للذكاء الاصطناعي. خذ وقتك."
+}
+},
+"t-parity": {
+"tag": "parityOk",
+"icon": "parityOk",
+"name": {
+"ja": "偶数理論",
+"en": "Parity",
+"zh": "奇偶理论",
+"ko": "짝수 이론",
+"es": "Paridad",
+"fr": "Parité",
+"pt": "Paridade",
+"de": "Parität",
+"hi": "पैरिटी (सम-विषम)",
+"ar": "التكافؤ"
+},
+"desc": {
+"ja": "空きが奇数のかたまりに打って、最後の一手を自分のものにする。",
+"en": "Play into the odd-sized empty regions so the last move in each is yours.",
+"zh": "下在空格为奇数的区域，把每块的最后一手留给自己。",
+"ko": "빈칸이 홀수인 덩어리에 두어 마지막 한 수를 내 것으로.",
+"es": "Juega en las zonas vacías impares para que la última jugada de cada una sea tuya.",
+"fr": "Jouez dans les zones vides impaires pour avoir le dernier coup de chacune.",
+"pt": "Jogue nas regiões vazias ímpares para que o último lance de cada uma seja seu.",
+"de": "Spiele in die ungeraden Leerbereiche, damit dir dort jeweils der letzte Zug gehört.",
+"hi": "विषम आकार वाले ख़ाली हिस्सों में चलें, ताकि हर हिस्से की आख़िरी चाल आपकी हो।",
+"ar": "العب في المناطق الفارغة ذات العدد الفردي لتكون النقلة الأخيرة في كل منها لك."
+}
+},
+"t-parityx": {
+"tag": "parity",
+"icon": "parity",
+"name": {
+"ja": "偶数理論の例外",
+"en": "Parity exceptions",
+"zh": "奇偶理论的例外",
+"ko": "짝수 이론의 예외",
+"es": "Excepciones de paridad",
+"fr": "Exceptions à la parité",
+"pt": "Exceções à paridade",
+"de": "Ausnahmen der Parität",
+"hi": "पैरिटी के अपवाद",
+"ar": "استثناءات التكافؤ"
+},
+"desc": {
+"ja": "あえて偶数のかたまりに打つのが正解。理論より読みが勝つ。",
+"en": "Here the even region is right: reading beats the rule of thumb.",
+"zh": "偏偏要下在偶数区域，计算胜过理论。",
+"ko": "일부러 짝수 덩어리에 두는 것이 정답. 이론보다 수읽기.",
+"es": "Aquí lo correcto es la zona par: el cálculo vence a la regla.",
+"fr": "Ici, c'est la zone paire qui gagne : le calcul bat la règle.",
+"pt": "Aqui a região par é a certa: o cálculo vence a regra.",
+"de": "Hier ist der gerade Bereich richtig: Rechnen schlägt die Faustregel.",
+"hi": "यहाँ सम हिस्से में चलना सही है: नियम से ज़्यादा गणना काम आती है।",
+"ar": "هنا الصواب في المنطقة الزوجية: الحساب يتفوق على القاعدة."
+}
+},
+"t-pass": {
+"tag": "pass",
+"icon": "pass",
+"name": {
+"ja": "連打・パス",
+"en": "Passes & double moves",
+"zh": "跳过与连下",
+"ko": "연타·패스",
+"es": "Pases y jugadas dobles",
+"fr": "Passes et coups doubles",
+"pt": "Passes e lances duplos",
+"de": "Passen & Doppelzüge",
+"hi": "पास और लगातार चालें",
+"ar": "التمرير والنقلات المتتالية"
+},
+"desc": {
+"ja": "相手をパスさせて2手続けて打つ。手番の得を生かそう。",
+"en": "Make your opponent pass and move twice in a row.",
+"zh": "让对手无处可下，自己连下两手。",
+"ko": "상대를 패스시키고 두 수를 연달아 둔다.",
+"es": "Haz que el rival pase y juega dos veces seguidas.",
+"fr": "Forcez l'adversaire à passer et jouez deux fois de suite.",
+"pt": "Faça o adversário passar e jogue duas vezes seguidas.",
+"de": "Zwinge den Gegner zum Passen und ziehe zweimal hintereinander.",
+"hi": "विरोधी को पास करवाएँ और लगातार दो चालें चलें।",
+"ar": "اجبر خصمك على التمرير والعب مرتين متتاليتين."
+}
+},
+"t-greedy": {
+"tag": "greedy",
+"icon": "greedy",
+"name": {
+"ja": "最大返しの罠",
+"en": "The big-flip trap",
+"zh": "多翻的陷阱",
+"ko": "최대 뒤집기의 함정",
+"es": "La trampa del gran volteo",
+"fr": "Le piège du gros retournement",
+"pt": "A armadilha da grande virada",
+"de": "Die Viel-Wenden-Falle",
+"hi": "ज़्यादा पलटने का जाल",
+"ar": "فخ القلب الأكبر"
+},
+"desc": {
+"ja": "一番たくさん返す手は不正解。目先の石数に惑わされない。",
+"en": "The move that flips the most is wrong — don't be fooled by the count.",
+"zh": "翻得最多的着法不对，别被眼前的子数迷惑。",
+"ko": "가장 많이 뒤집는 수는 오답. 눈앞의 돌 수에 속지 말자.",
+"es": "La jugada que más voltea es incorrecta: no te dejes engañar.",
+"fr": "Le coup qui retourne le plus est faux : ne vous laissez pas tromper.",
+"pt": "O lance que mais vira está errado — não se iluda com a contagem.",
+"de": "Der Zug mit den meisten Wendungen ist falsch – lass dich nicht täuschen.",
+"hi": "सबसे ज़्यादा पलटने वाली चाल ग़लत है — गिनती से धोखा न खाएँ।",
+"ar": "النقلة التي تقلب أكثر الأحجار خاطئة؛ لا يخدعك العدد."
+}
+},
+"t-corner": {
+"tag": "corner",
+"icon": "corner",
+"name": {
+"ja": "隅の罠",
+"en": "Corner traps",
+"zh": "角的陷阱",
+"ko": "모서리의 함정",
+"es": "Trampas de esquina",
+"fr": "Pièges de coin",
+"pt": "Armadilhas de canto",
+"de": "Eckfallen",
+"hi": "कोने का जाल",
+"ar": "فخاخ الزاوية"
+},
+"desc": {
+"ja": "取れる隅を取ると負け。隅より大事なものがある。",
+"en": "Taking the available corner loses — something matters more.",
+"zh": "占了能占的角反而输，有比角更重要的东西。",
+"ko": "잡을 수 있는 모서리를 잡으면 진다. 모서리보다 중요한 것이 있다.",
+"es": "Tomar la esquina disponible pierde: hay algo más importante.",
+"fr": "Prendre le coin disponible perd : il y a plus important.",
+"pt": "Tomar o canto disponível perde — há algo mais importante.",
+"de": "Die freie Ecke zu nehmen verliert – etwas anderes zählt mehr.",
+"hi": "मिलने वाला कोना लेना हार है — कुछ और ज़्यादा ज़रूरी है।",
+"ar": "أخذ الزاوية المتاحة يخسر؛ هناك ما هو أهم منها."
+}
+},
+"t-xc": {
+"tag": "xc",
+"icon": "xc",
+"name": {
+"ja": "X打ち・C打ち",
+"en": "X- and C-squares",
+"zh": "X位与C位",
+"ko": "X·C 두기",
+"es": "Casillas X y C",
+"fr": "Cases X et C",
+"pt": "Casas X e C",
+"de": "X- und C-Felder",
+"hi": "X और C ख़ाने",
+"ar": "مربعات X وC"
+},
+"desc": {
+"ja": "ふだんは悪手のX・Cマス（空き隅の隣）が唯一の正解。",
+"en": "The usually bad X/C square next to an empty corner is the only answer.",
+"zh": "平时是恶手的X、C位（空角旁）成了唯一正解。",
+"ko": "평소엔 악수인 X·C 칸(빈 모서리 옆)이 유일한 정답.",
+"es": "La casilla X/C junto a una esquina vacía, normalmente mala, es la única respuesta.",
+"fr": "La case X/C près d'un coin vide, d'habitude mauvaise, est la seule réponse.",
+"pt": "A casa X/C ao lado de um canto vazio, normalmente ruim, é a única resposta.",
+"de": "Das sonst schlechte X/C-Feld neben einer freien Ecke ist die einzige Lösung.",
+"hi": "ख़ाली कोने के पास का X/C ख़ाना, जो आमतौर पर ख़राब है, यहाँ अकेला सही जवाब है।",
+"ar": "مربع X/C المجاور لزاوية فارغة، السيئ عادةً، هو الحل الوحيد."
+}
+},
+"t-quiet": {
+"tag": "quiet",
+"icon": "quiet",
+"name": {
+"ja": "少なく返す手",
+"en": "Quiet moves",
+"zh": "少翻的着法",
+"ko": "적게 뒤집는 수",
+"es": "Jugadas tranquilas",
+"fr": "Coups calmes",
+"pt": "Lances silenciosos",
+"de": "Leise Züge",
+"hi": "शांत चालें",
+"ar": "النقلات الهادئة"
+},
+"desc": {
+"ja": "返す石が一番少ない静かな一手が正解。",
+"en": "The quiet move that flips the fewest discs is correct.",
+"zh": "翻子最少的安静一手才是正解。",
+"ko": "뒤집는 돌이 가장 적은 조용한 한 수가 정답.",
+"es": "La jugada tranquila que menos fichas voltea es la correcta.",
+"fr": "Le coup calme qui retourne le moins de pions est le bon.",
+"pt": "O lance silencioso que vira menos peças é o correto.",
+"de": "Der leise Zug, der am wenigsten Steine wendet, ist richtig.",
+"hi": "सबसे कम गोटियाँ पलटने वाली शांत चाल सही है।",
+"ar": "النقلة الهادئة التي تقلب أقل عدد من الأحجار هي الصحيحة."
+}
+},
+"t-edge": {
+"tag": "edge",
+"icon": "edge",
+"name": {
+"ja": "辺の攻防",
+"en": "Edge battles",
+"zh": "边的攻防",
+"ko": "변의 공방",
+"es": "Lucha en los bordes",
+"fr": "Batailles de bord",
+"pt": "Batalhas na borda",
+"de": "Randkämpfe",
+"hi": "किनारे की लड़ाई",
+"ar": "معارك الحافة"
+},
+"desc": {
+"ja": "辺のどこに打つかで勝負が決まる。正解は辺の一手。",
+"en": "Where you play on the edge decides the game — the answer is on an edge.",
+"zh": "下在边上的哪一格决定胜负，正解是边上的一手。",
+"ko": "변의 어디에 두느냐로 승부가 갈린다. 정답은 변의 한 수.",
+"es": "Dónde juegas en el borde decide la partida: la respuesta está en un borde.",
+"fr": "L'endroit où l'on joue sur le bord décide de tout : la réponse est sur un bord.",
+"pt": "Onde você joga na borda decide a partida — a resposta está numa borda.",
+"de": "Wo du am Rand spielst, entscheidet – die Lösung liegt am Rand.",
+"hi": "किनारे पर कहाँ चलते हैं, यही फ़ैसला करता है — जवाब किनारे पर है।",
+"ar": "مكان لعبك على الحافة يحسم المباراة، والحل على الحافة."
+}
+},
+"t-block": {
+"tag": "block",
+"icon": "block",
+"name": {
+"ja": "着手封じ",
+"en": "Mobility squeeze",
+"zh": "封锁行动力",
+"ko": "착수 봉쇄",
+"es": "Ahogar la movilidad",
+"fr": "Étouffer la mobilité",
+"pt": "Sufocar a mobilidade",
+"de": "Zugzwang-Druck",
+"hi": "चालें रोकना",
+"ar": "خنق الحركة"
+},
+"desc": {
+"ja": "相手の打てる場所を最も少なくする一手が正解。",
+"en": "The answer leaves your opponent the fewest legal moves.",
+"zh": "让对手可下之处最少的一手就是正解。",
+"ko": "상대가 둘 수 있는 곳을 가장 적게 만드는 한 수가 정답.",
+"es": "La respuesta deja al rival con el menor número de jugadas.",
+"fr": "La réponse laisse à l'adversaire le moins de coups possibles.",
+"pt": "A resposta deixa o adversário com o menor número de lances.",
+"de": "Die Lösung lässt dem Gegner die wenigsten Züge.",
+"hi": "सही चाल विरोधी के पास सबसे कम चालें छोड़ती है।",
+"ar": "الحل يترك لخصمك أقل عدد من النقلات الممكنة."
+}
+},
+"t-draw": {
+"tag": "draw",
+"icon": "draw",
+"name": {
+"ja": "引き分けに持ち込め",
+"en": "Save the draw",
+"zh": "争取和棋",
+"ko": "무승부로 끌고 가라",
+"es": "Salva las tablas",
+"fr": "Sauvez la nulle",
+"pt": "Salve o empate",
+"de": "Rette das Remis",
+"hi": "ड्रॉ बचाएँ",
+"ar": "انقذ التعادل"
+},
+"desc": {
+"ja": "勝ちはない。でも引き分けにできる手がただ一つある。",
+"en": "There is no win — but exactly one move still draws.",
+"zh": "赢不了，但有唯一一手能和棋。",
+"ko": "이길 수는 없다. 하지만 비길 수 있는 수가 딱 하나 있다.",
+"es": "No hay victoria, pero una única jugada aún empata.",
+"fr": "Pas de victoire possible, mais un seul coup sauve la nulle.",
+"pt": "Não há vitória, mas um único lance ainda empata.",
+"de": "Kein Sieg möglich – aber genau ein Zug hält das Remis.",
+"hi": "जीत नहीं है — पर ठीक एक चाल ड्रॉ बचाती है।",
+"ar": "لا فوز ممكن، لكن نقلة واحدة فقط تنقذ التعادل."
+}
+},
+"t-margin": {
+"tag": "margin",
+"icon": "margin",
+"name": {
+"ja": "最善の石差",
+"en": "Best margin",
+"zh": "最佳子差",
+"ko": "최선의 돌 차이",
+"es": "El mejor margen",
+"fr": "Le meilleur écart",
+"pt": "A melhor margem",
+"de": "Bester Vorsprung",
+"hi": "सबसे बड़ा अंतर",
+"ar": "أفضل فارق"
+},
+"desc": {
+"ja": "勝つ手はいくつもある。最大の石差で勝てる一手はどれ？",
+"en": "Several moves win. Which one wins by the most?",
+"zh": "能赢的着法有好几个，哪一手赢得最多？",
+"ko": "이기는 수는 여럿. 가장 큰 차이로 이기는 한 수는?",
+"es": "Varias jugadas ganan. ¿Cuál gana por más?",
+"fr": "Plusieurs coups gagnent. Lequel gagne avec le plus d'écart ?",
+"pt": "Vários lances vencem. Qual vence pela maior margem?",
+"de": "Mehrere Züge gewinnen. Welcher gewinnt am höchsten?",
+"hi": "कई चालें जीतती हैं। सबसे बड़े अंतर से कौन-सी?",
+"ar": "عدة نقلات تفوز. أيها يفوز بأكبر فارق؟"
+}
+},
+"u-surprise": {
+"tag": "surprise",
+"icon": "surprise",
+"name": {
+"ja": "意外な一手",
+"en": "Surprising moves",
+"zh": "意外的一手",
+"ko": "의외의 한 수",
+"es": "Jugadas sorprendentes",
+"fr": "Coups surprenants",
+"pt": "Lances surpreendentes",
+"de": "Überraschende Züge",
+"hi": "चौंकाने वाली चालें",
+"ar": "نقلات مفاجئة"
+},
+"desc": {
+"ja": "ぱっと見では悪そうな手が唯一の正解（AIの浅読みでは下位の手）。",
+"en": "A move that looks bad at first glance is the only answer (a shallow AI ranks it low).",
+"zh": "乍看很差的一手是唯一正解（AI浅算时排名靠后）。",
+"ko": "언뜻 나빠 보이는 수가 유일한 정답(AI 얕은 읽기에선 하위 수).",
+"es": "Una jugada que parece mala a primera vista es la única respuesta (una IA superficial la valora mal).",
+"fr": "Un coup qui semble mauvais au premier regard est la seule réponse (une IA superficielle le classe mal).",
+"pt": "Um lance que parece ruim à primeira vista é a única resposta (uma IA rasa o classifica mal).",
+"de": "Ein Zug, der auf den ersten Blick schlecht aussieht, ist die einzige Lösung (eine flache KI stuft ihn niedrig ein).",
+"hi": "पहली नज़र में ख़राब लगने वाली चाल ही अकेला जवाब है (उथली AI उसे नीचे रखती है)।",
+"ar": "نقلة تبدو سيئة للوهلة الأولى هي الحل الوحيد (ذكاء اصطناعي سطحي يضعها في مرتبة متأخرة)."
+}
+},
+"u-only": {
+"tag": "only",
+"icon": "only",
+"name": {
+"ja": "唯一の勝ち筋",
+"en": "The only way out",
+"zh": "唯一的胜路",
+"ko": "유일한 승리의 길",
+"es": "La única salida",
+"fr": "La seule issue",
+"pt": "A única saída",
+"de": "Der einzige Ausweg",
+"hi": "जीत का अकेला रास्ता",
+"ar": "المخرج الوحيد"
+},
+"desc": {
+"ja": "打てる手は6つ以上。勝てるのはただ一つで、ほかは全部負け。",
+"en": "Six or more legal moves — one wins, every other one loses.",
+"zh": "可下之处六个以上，只有一手能赢，其余全输。",
+"ko": "둘 곳은 6개 이상. 이기는 수는 하나뿐, 나머지는 전부 진다.",
+"es": "Seis o más jugadas legales: una gana y todas las demás pierden.",
+"fr": "Six coups légaux ou plus : un seul gagne, tous les autres perdent.",
+"pt": "Seis ou mais lances legais: um vence, todos os outros perdem.",
+"de": "Sechs oder mehr Züge – einer gewinnt, alle anderen verlieren.",
+"hi": "छह या ज़्यादा वैध चालें — एक जीतती है, बाकी सब हारती हैं।",
+"ar": "ست نقلات ممكنة أو أكثر؛ واحدة تفوز وكل الباقي يخسر."
+}
+},
+"u-comeback": {
+"tag": "comeback",
+"icon": "comeback",
+"name": {
+"ja": "大逆転",
+"en": "Comebacks",
+"zh": "大逆转",
+"ko": "대역전",
+"es": "Remontadas",
+"fr": "Retournements",
+"pt": "Viradas",
+"de": "Aufholjagden",
+"hi": "शानदार वापसी",
+"ar": "قلب الطاولة"
+},
+"desc": {
+"ja": "盤上の石は3割以下。そこから逆転勝ちする手順を見つけよう。",
+"en": "You hold 30% of the discs or fewer — find the winning comeback.",
+"zh": "盘上己方棋子不到三成，找出逆转取胜的手顺。",
+"ko": "판 위 내 돌은 3할 이하. 거기서 역전승하는 수순을 찾자.",
+"es": "Tienes el 30 % de las fichas o menos: encuentra la remontada ganadora.",
+"fr": "Vous avez 30 % des pions ou moins : trouvez le retournement gagnant.",
+"pt": "Você tem 30% das peças ou menos — encontre a virada vencedora.",
+"de": "Du hast höchstens 30 % der Steine – finde die siegreiche Wende.",
+"hi": "आपके पास 30% या कम गोटियाँ हैं — जीत वाली वापसी खोजें।",
+"ar": "تملك 30٪ من الأحجار أو أقل؛ اعثر على طريق العودة والفوز."
+}
+},
+"u-wipe": {
+"tag": "wipe",
+"icon": "wipe",
+"name": {
+"ja": "全滅させよ",
+"en": "Wipe-outs",
+"zh": "全歼",
+"ko": "전멸시켜라",
+"es": "Barridas",
+"fr": "Anéantissements",
+"pt": "Varridas",
+"de": "Komplett auslöschen",
+"hi": "सफ़ाया",
+"ar": "الإبادة"
+},
+"desc": {
+"ja": "相手の石を一つ残らずひっくり返そう（64対0）。",
+"en": "Flip every last enemy disc (64–0).",
+"zh": "把对手的子一个不剩地全部翻过来（64比0）。",
+"ko": "상대 돌을 하나도 남김없이 뒤집자(64대0).",
+"es": "Voltea hasta la última ficha rival (64–0).",
+"fr": "Retournez jusqu'au dernier pion adverse (64–0).",
+"pt": "Vire até a última peça adversária (64–0).",
+"de": "Wende jeden einzelnen gegnerischen Stein (64:0).",
+"hi": "विरोधी की आख़िरी गोटी तक पलट दें (64–0)।",
+"ar": "اقلب كل أحجار الخصم حتى آخرها (64–0)."
+}
+},
+"u-sym": {
+"tag": "sym",
+"icon": "sym",
+"name": {
+"ja": "対称形",
+"en": "Symmetric shapes",
+"zh": "对称形",
+"ko": "대칭형",
+"es": "Formas simétricas",
+"fr": "Formes symétriques",
+"pt": "Formas simétricas",
+"de": "Symmetrische Formen",
+"hi": "सममित आकृतियाँ",
+"ar": "أشكال متناظرة"
+},
+"desc": {
+"ja": "空きマスが左右・上下・斜めに対称な形。形は対称でも正解はただ一つ。",
+"en": "The empty squares form a symmetric shape — yet there is only one right move.",
+"zh": "空格呈左右、上下或斜向对称。形状对称，正解却只有一个。",
+"ko": "빈칸이 좌우·상하·대각으로 대칭인 형태. 모양은 대칭이어도 정답은 하나.",
+"es": "Las casillas vacías forman una figura simétrica, pero solo hay una jugada correcta.",
+"fr": "Les cases vides forment une figure symétrique, mais il n'y a qu'un seul bon coup.",
+"pt": "As casas vazias formam uma figura simétrica — mas só há um lance certo.",
+"de": "Die leeren Felder sind symmetrisch angeordnet – und doch gibt es nur einen richtigen Zug.",
+"hi": "ख़ाली ख़ाने सममित आकार बनाते हैं — फिर भी सही चाल सिर्फ़ एक है।",
+"ar": "المربعات الفارغة تشكل شكلًا متناظرًا، ومع ذلك هناك نقلة صحيحة واحدة فقط."
+}
+},
+"u-close": {
+"tag": "close",
+"icon": "close",
+"name": {
+"ja": "僅差の勝負",
+"en": "Photo finishes",
+"zh": "微差胜负",
+"ko": "근소한 승부",
+"es": "Finales ajustados",
+"fr": "Arrivées serrées",
+"pt": "Finais apertados",
+"de": "Knappe Entscheidungen",
+"hi": "कांटे की टक्कर",
+"ar": "نهايات متقاربة"
+},
+"desc": {
+"ja": "最善でも2石差の勝ち。1石もむだにできない。",
+"en": "Even the best line wins by just 2 discs — not one disc to spare.",
+"zh": "最佳也只赢2子，一子也不能浪费。",
+"ko": "최선이라도 2돌 차 승리. 한 돌도 낭비할 수 없다.",
+"es": "Incluso la mejor línea gana solo por 2 fichas: no sobra ninguna.",
+"fr": "Même la meilleure ligne ne gagne que de 2 pions : aucun à gaspiller.",
+"pt": "Mesmo a melhor linha vence por só 2 peças — nenhuma pode sobrar.",
+"de": "Selbst die beste Folge gewinnt nur mit 2 Steinen – keiner darf verschenkt werden.",
+"hi": "सबसे अच्छी लाइन भी सिर्फ़ 2 गोटियों से जीतती है — एक भी बर्बाद नहीं।",
+"ar": "حتى أفضل خط يفوز بحجرين فقط؛ لا مجال لإهدار حجر واحد."
+}
+}
+}

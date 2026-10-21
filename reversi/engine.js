@@ -720,19 +720,33 @@ function orderRoot(moves, prev) {
   return moves.slice().sort((a, b) => (prev.get(b) ?? -1e9) - (prev.get(a) ?? -1e9));
 }
 
+// 20 strength levels (v4.1). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
+// mpc: Multi-ProbCut + opening book; time: soft time per move in ms (levels 17-20 also split the root over several workers in the page).
+// The old 10 levels are the same settings as new 4, 7, 9 (≈ old 3), 11, 13, 14, 16, 17, 19, 20. Measured Elo of each level: MODEL_CARD.md.
 const LEVELS = [
   null,
-  { depth: 1, exact: 4, noise: 900 },     // 1
-  { depth: 2, exact: 6, noise: 450 },     // 2
-  { depth: 3, exact: 8, noise: 220 },     // 3
-  { depth: 4, exact: 10, noise: 110 },    // 4
-  { depth: 6, exact: 12, noise: 40 },     // 5
-  { depth: 8, exact: 14, noise: 0 },      // 6
-  { depth: 10, exact: 16, time: 1000 },   // 7
-  { depth: 60, exact: 18, time: 1500 },   // 8
-  { depth: 60, exact: 19, time: 3000 },   // 9
-  { depth: 60, exact: 20, time: 5000 },   // 10
+  { depth: 1, exact: 2, noise: 4000 },              // 1  almost random
+  { depth: 1, exact: 3, noise: 1800 },              // 2
+  { depth: 1, exact: 3, noise: 1300 },              // 3
+  { depth: 1, exact: 4, noise: 900 },               // 4  (old Lv.1)
+  { depth: 1, exact: 4, noise: 450 },               // 5
+  { depth: 2, exact: 5, noise: 650 },               // 6
+  { depth: 2, exact: 6, noise: 450 },               // 7  (old Lv.2)
+  { depth: 2, exact: 6, noise: 200 },               // 8
+  { depth: 3, exact: 7, noise: 320 },               // 9  (≈ old Lv.3)
+  { depth: 4, exact: 9, noise: 400 },               // 10
+  { depth: 4, exact: 10, noise: 110 },              // 11 (old Lv.4)
+  { depth: 5, exact: 11, noise: 70 },               // 12
+  { depth: 6, exact: 12, noise: 40 },               // 13 (old Lv.5)
+  { depth: 8, exact: 14 },                          // 14 (old Lv.6)
+  { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
+  { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
+  { depth: 60, exact: 18, time: 1500, mpc: 1 },     // 17 (old Lv.8)
+  { depth: 60, exact: 18, time: 2200, mpc: 1 },     // 18
+  { depth: 60, exact: 19, time: 3000, mpc: 1 },     // 19 (old Lv.9)
+  { depth: 60, exact: 20, time: 5000, mpc: 1 },     // 20 (old Lv.10)
 ];
+const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
 // ------------------------------------------------------------ opening book (self-generated)
 let BOOK = null;
@@ -767,15 +781,15 @@ function toBits(cells, toMove) {
 }
 
 function think(cells, toMove, opts, onProgress) {
-  const lv = LEVELS[opts.level] || LEVELS[7];
-  MPC.on = (opts.level || 7) >= 7; // keep the weaker levels as plain full-width searches
+  const lv = opts.cfg || LEVELS[opts.level] || LEVELS[DEF_LEVEL];
+  MPC.on = !!lv.mpc; // keep the weaker levels as plain full-width searches
   const pos = toBits(cells, toMove);
   const [pl, ph, ol, oh] = pos;
   const moves = legalList(pl, ph, ol, oh);
   const t0 = Date.now();
   nodes = 0; aborted = false;
   if (moves.length === 0) return { move: -1, score: 0, depth: 0, nodes: 0, ms: 0 };
-  if ((opts.level || 7) >= 7 && !opts.noBook) {
+  if (lv.mpc && !opts.noBook) {
     const bk = bookLookup(pl, ph, ol, oh);
     if (bk && bk.length) {
       const top = bk[0].score, margin = opts.bookMargin ?? 0.8;
@@ -926,7 +940,7 @@ const API = {
   think, analyze, searchMove, setWeights, setBook, bookLookup, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
-  TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, SCALE,
+  TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, NLEVELS, SCALE,
   genMovesList: legalList,
 };
 root.ReversiEngine = API;

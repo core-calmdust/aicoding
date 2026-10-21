@@ -23,7 +23,7 @@
       name: N('将棋', 'Shogi', '将棋', '쇼기', 'Shogi', 'Shogi', 'Shogi', 'Shogi', 'शोगी', 'شوغي') },
     { id: 'chess', cat: 'chess', store: ['aicoding-chess', 'chess-online-name'], href: 'chess/', color: '#5a6b8c', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 445, ls: 20 },
       name: N('チェス', 'Chess', '国际象棋', '체스', 'Ajedrez', 'Échecs', 'Xadrez', 'Schach', 'शतरंज', 'الشطرنج') },
-    { id: 'reversi', cat: 'line', store: ['reversi-emerald-', 'reversi-rated-v1', 'reversi-online-name'], href: 'reversi/', color: '#22aa74', released: '2026-10-17', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 170, ls: 9 },
+    { id: 'reversi', cat: 'line', store: ['reversi-emerald-', 'reversi-rated-v1', 'reversi-online-name'], href: 'reversi/', color: '#22aa74', released: '2026-10-17', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 1000, ls: 9 },
       name: N('リバーシ', 'Reversi', '黑白棋', '리버시', 'Reversi', 'Reversi', 'Reversi', 'Reversi', 'रिवर्सी', 'ريفيرسي') },
     { id: 'sudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', premium: 1, tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1300 },
       name: N('まいにち数独', 'Daily Sudoku', '每日数独', '매일 스도쿠', 'Sudoku Diario', 'Sudoku du jour', 'Sudoku Diário', 'Tägliches Sudoku', 'रोज़ का सुडोकू', 'سودوكو كل يوم') },
