@@ -60,7 +60,9 @@
 
   /* ---------- guide character: lesson / puzzle text as speech bubbles ---------- */
   const guide = new Image(); guide.src = GUIDE; guide.onerror = () => { guide.src = GUIDE_FALLBACK; };
-  document.documentElement.style.setProperty('--atlas-guide', `url("${GUIDE}"), url("${GUIDE_FALLBACK}")`);
+  // absolute URLs: a relative url() in a custom property resolves against skin.css (atlas/skin/), not the page
+  const abs = u => new URL(u, location.href).href;
+  document.documentElement.style.setProperty('--atlas-guide', `url("${abs(GUIDE)}"), url("${abs(GUIDE_FALLBACK)}")`);
   function bubble(ids) {
     const first = document.getElementById(ids[0]); if (!first || first.closest('.atlas-guide')) return;
     const wrap = document.createElement('div'); wrap.className = 'atlas-guide';
