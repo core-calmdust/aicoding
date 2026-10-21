@@ -116,7 +116,8 @@
   // board top: straight-grained kaya with the black lacquer lines (太刀盛り) and four stars
   // n: squares per side (9; 5 for 5五将棋 — no stars)
   function boardTop(n = 9) {
-    const PX = 100, BW = n * CW + MARGIN * 2, BD = n * CH + MARGIN * 2;
+    const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
+    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
     return canvasTex(n === 9 ? 'shogiTop3' : 'shogiTop3-' + n, BW * PX | 0, BD * PX | 0, (c, W, H) => {
       const N = makeNoise(5), img = c.createImageData(W, H), d = img.data;
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -127,7 +128,7 @@
         d[i] = 208 - t * 66; d[i + 1] = 150 - t * 62; d[i + 2] = 78 - t * 46; d[i + 3] = 255;
       }
       c.putImageData(img, 0, 0);
-      const ox = MARGIN * PX, oy = MARGIN * PX, cw = CW * PX, ch = CH * PX;
+      const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = 'rgba(20,10,4,.92)'; c.lineCap = 'square';
       for (let i = 0; i <= n; i++) {
         c.lineWidth = i === 0 || i === n ? 3.4 : 2.2;
@@ -140,10 +141,11 @@
   }
   // the lines are raised lacquer too: a bump map with the grid
   function boardBump(n = 9) {
-    const PX = 100, BW = n * CW + MARGIN * 2, BD = n * CH + MARGIN * 2;
+    const MG = n === 9 ? MARGIN : MARGIN * n / 9;
+    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
     return canvasTex(n === 9 ? 'shogiTopB' : 'shogiTopB-' + n, BW * PX | 0, BD * PX | 0, (c, W, H) => {
       c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
-      const ox = MARGIN * PX, oy = MARGIN * PX, cw = CW * PX, ch = CH * PX;
+      const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 2;
       for (let i = 0; i <= n; i++) { c.lineWidth = i === 0 || i === n ? 3.4 : 2.2; c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke(); c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); }
     });
@@ -220,7 +222,7 @@
   function board(o = {}) {
     const g = new (T().Group)(), TT = T();
     // o.n = 5: the 5五将棋 board — same squares, a smaller block (thickness and legs scaled with it)
-    const n = o.n === 5 ? 5 : 9, k = n === 9 ? 1 : .62, FW = n * CW, FH = n * CH, BW = FW + MARGIN * 2, BD = FH + MARGIN * 2, THICK = 2.6 * k;
+    const n = o.n === 5 ? 5 : 9, MG = n === 9 ? MARGIN : MARGIN * n / 9, k = n === 9 ? 1 : .62, FW = n * CW, FH = n * CH, BW = FW + MG * 2, BD = FH + MG * 2, THICK = 2.6 * k;
     const kaya = M({ map: X.wood('kayaSide2', '#d4a057', '#9c6628', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
