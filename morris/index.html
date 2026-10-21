@@ -656,20 +656,11 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
   #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;flex:1;min-height:0;display:flex;flex-direction:column}
   #rulesOverlay #rulesBody .rt{flex:1;min-height:0}
-  /* two columns: explanation + task on the left, a big board on the right (sized from --rt-bw, kept inside the dialog) */
-  #rulesBody .rt{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:32px;grid-template-areas:"steps steps" "title fig" "body fig" "task fig" "nav nav"}
-  #rulesBody .rt-steps{grid-area:steps}
-  #rulesBody .rt h2.rt-title{grid-area:title;text-align:left;align-self:end}
-  #rulesBody .rt-body{grid-area:body}
-  #rulesBody .rt-task{grid-area:task;text-align:left}
-  #rulesBody .rt-board, #rulesBody .rt-html, #rulesBody .rt-finish{grid-area:fig;align-self:center;margin:4px 0}
-  /* the intro page (no board) uses the whole width */
-  #rulesBody .rt:has(.rt-intro){display:flex;flex-direction:column}
-  #rulesBody .rt:has(.rt-intro) > h2.rt-title{text-align:center;align-self:center;width:100%}
-  #rulesBody .rt:has(.rt-intro) > .rt-nav{margin-top:auto}
-  #rulesBody .rt-finish{width:340px}
-  #rulesBody .rt-nav{grid-area:nav}
-  html[lang=ar] #rulesBody .rt h2.rt-title, html[lang=ar] #rulesBody .rt-task{text-align:right}
+  /* one column (shared/ruletour.js v10 layout): title centered, the explanation left-aligned, the board below */
+  #rulesBody .rt-main > h2.rt-title{text-align:center;align-self:stretch}
+  #rulesBody .rt-main > .rt-body{text-align:left}
+  #rulesBody .rt-finish{width:340px;align-self:center;align-items:center}
+  html[lang=ar] #rulesBody .rt-main > .rt-body{text-align:right}
   .rt-board svg.tour, .rt-html .tour-pic svg{width:min(calc(var(--rt-bw) + 60px), calc(100vh - 330px), 560px);width:min(calc(var(--rt-bw) + 60px), calc(100dvh - 330px), 560px)}
 }
 
