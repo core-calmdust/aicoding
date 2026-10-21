@@ -206,6 +206,8 @@ const cRec = (ci, k) => colRec(ci >> 1, cPi(ci, k));
 const cCleared = ci => { let n = 0; for (let k = 0; k < CSZ; k++) if (cRec(ci, k)) n++; return n; };
 const cStars = ci => { let n = 0; for (let k = 0; k < CSZ; k++) { const r = cRec(ci, k); if (r) n += r.s; } return n; };
 const cScore = ci => { let n = 0; for (let k = 0; k < CSZ; k++) { const r = cRec(ci, k); if (r) n += r.sc || 0; } return n; };
+// difficulty groups of the collection list: [level, from, to) as positions in CORDER (the order already rises in difficulty)
+const CTIERS = [[1, 0, 6], [2, 6, 18], [3, 18, 27], [4, 27, 40]];
 const cLvs = ci => [...new Set([...Array(CSZ).keys()].map(k => +PZ.themes[ci >> 1][cPi(ci, k)][81]))];
 const ciOfKey = k => { for (let ci = 0; ci < NC; ci++) if (cKey(ci) === k) return ci; return -1; };
 const vsetLen = si => (vset(si) ? vset(si).puzzles.length : 0);
@@ -499,11 +501,22 @@ function renderHome() {
   const tot = totalCleared();
   $('#colBar').style.width = (tot / NCOL * 100) + '%';
   $('#colCount').textContent = tot + ' / ' + NCOL;
-  $('#themes').innerHTML = CORDER.map(i => {
+  // grouped by difficulty like すぴーど's course book, with a sticky jump bar
+  const card = i => {
     const n = cCleared(i), lvs = cLvs(i);
     return `<button class="tcard ${n === CSZ ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(cKey(i), 320, 200)}<span class="no">${CNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(cName(i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n / CSZ * 100}%"></i></span>${n}/${CSZ}</span></div></button>`;
-  }).join('');
+  };
+  const groups = CTIERS.map(([lv, a, b]) => ({ lv, ids: CORDER.slice(a, b) })).map(g => Object.assign(g, { n: g.ids.reduce((x, i) => x + cCleared(i), 0), L: g.ids.length * CSZ }));
+  const tc = $('#themes'); tc.className = 'ctiers';
+  tc.innerHTML = `<div class="stjump">${groups.map(g => `<button data-tj="${g.lv}" style="--tc:${LVCOL[g.lv]}" class="${g.n >= g.L ? 'done' : ''}"><b>${esc(t('lv.' + g.lv))}</b><small class="num">${g.n}/${g.L}</small></button>`).join('')}</div>`
+    + groups.map(g => `<div class="stier" id="ctier${g.lv}" style="--tc:${LVCOL[g.lv]}"><div class="sth"><b>${esc(t('lv.' + g.lv))}</b><small>${esc(t('ct.d.' + g.lv))}</small><em>${g.n}/${g.L}</em></div><div class="themes">${g.ids.map(card).join('')}</div></div>`).join('');
   $$('#themes .tcard').forEach(b => b.onclick = () => { SFX.tap(); go('t/' + (+b.dataset.t + 1)); });
+  $$('#themes [data-tj]').forEach(b => b.onclick = () => {
+    const el = $('#ctier' + b.dataset.tj), bar = $('#themes .stjump'); if (!el) return; SFX.tap();
+    const tabs = $('#htabs'); document.documentElement.style.setProperty('--htH', (tabs ? tabs.offsetHeight : 0) + 'px');
+    const top = parseFloat(getComputedStyle(bar).top) || 0;
+    scrollTo({ top: scrollY + el.getBoundingClientRect().top - (top + bar.offsetHeight + 10), behavior: 'smooth' });
+  });
   // variants
   const vc = $('#vsets').closest('.card');
   vc.hidden = !PV || !E.setVariant;
