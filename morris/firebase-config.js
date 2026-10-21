@@ -28,3 +28,8 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "710955569268",
   appId: "1:710955569268:web:ac9f8f2ce0637c31ebc121"
 };
+// App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
+// Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
+// Setup: create the key for core-calmdust.github.io, register it in Firebase console → App Check → this web app, publish the page
+// with the key, then turn on enforcement for Realtime Database (local testing: ?appcheckdebug=1 on localhost prints a debug token).
+window.FIREBASE_APPCHECK_SITE_KEY = null;
