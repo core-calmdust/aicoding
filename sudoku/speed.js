@@ -116,6 +116,11 @@ const LVP = { 1: 10, 2: 14, 3: 18, 4: 24 };
 const puzPts = (lv, g, combo) => Math.round((LVP[lv] + SE.parseG(g).length * 8) * (1 + .1 * Math.min(combo, 10)));
 const starMul = { 1: 1, 2: 1.3, 3: 1.6 };
 const dScore = (c, tlast) => c * 100000 + (99999 - Math.min(99999, Math.round(tlast || 0)));
+/* from 2026-10-22 the daily ranking goes by score (points incl. combos), ties → who finished sooner.
+   Stored as SOFF + pts·1000 + time part, so it always beats the old count-based values (Firebase only lets s go up). */
+const SCORE_DAY = '2026-10-22', SOFF = 10000000;
+const dBest = (ds, r) => (!r || r.c == null ? -1 : ds >= SCORE_DAY ? SOFF + Math.min(19999, r.p || 0) * 1000 + (999 - Math.min(999, Math.round((r.t || 0) / 100))) : dScore(r.c, r.t));
+const dval = r => (r.s >= SOFF ? C.fmtN(Math.floor((r.s - SOFF) / 1000)) + ' pt' : t('sp.cnt', { n: r.c }));   // what a ranking row shows
 
 /* ================= rewards (backgrounds & speed-only characters) ================= */
 const BGS = ['speedway', 'clocktown', 'skyrail', 'rocketbase', 'cloudtrack', 'beachrun', 'neoncity', 'rainbowrun'];
@@ -227,8 +232,8 @@ async function extraCard(host) {
     const [rows, mine] = await Promise.all([ON.topScore(`spd/d/${td}/${d}`, 3), ON.myScore(`spd/d/${td}/${d}`)]);
     if (d !== dxDiff) return;
     rows.sort((a, b) => b.s - a.s);
-    let h = rows.length ? '<ol class="mini">' + rows.map((r, k) => `<li class="${r.uid === ON.uid ? 'me' : ''}"><span class="no">${C.miniMedal(3 - k)}</span>${C.avatar(r.i, 30)}<span class="nm">${esc(r.n)}</span><span class="vl">${esc(t('sp.cnt', { n: r.c }))}</span></li>`).join('') + '</ol>' : `<p class="note">${esc(t('rk.empty'))}</p>`;
-    h += `<p class="note">${mine ? esc(t('sp.dx.mine', { n: C.fmtN(mine.rank), c: mine.me.c })) : esc(t('sp.dx.notyet', { d: t('sp.dn', { s: dsec(d) }) }))} <a href="#" class="sdxMore">${esc(t('dx.more'))}</a></p>`;
+    let h = rows.length ? '<ol class="mini">' + rows.map((r, k) => `<li class="${r.uid === ON.uid ? 'me' : ''}"><span class="no">${C.miniMedal(3 - k)}</span>${C.avatar(r.i, 30)}<span class="nm">${esc(r.n)}</span><span class="vl">${esc(dval(r))}</span></li>`).join('') + '</ol>' : `<p class="note">${esc(t('rk.empty'))}</p>`;
+    h += `<p class="note">${mine ? esc(t('sp.dx.mine', { n: C.fmtN(mine.rank), c: dval(mine.me) })) : esc(t('sp.dx.notyet', { d: t('sp.dn', { s: dsec(d) }) }))} <a href="#" class="sdxMore">${esc(t('dx.more'))}</a></p>`;
     body(h);
     const m = host.querySelector('.sdxMore'); if (m) m.onclick = e => { e.preventDefault(); rkTab = 'daily'; rkDiff = d; rkDate = td; openRank(); };
   } catch (e) { body(`<p class="note">${esc(t('rk.err'))}</p>`); }
@@ -1101,7 +1106,7 @@ function finish(win, quitted, silent) {
   if (R.mode === 'd') {
     if (R.ranked) {
       const day = s.d[R.date] = s.d[R.date] || {}, r = day[R.d] = day[R.d] || { a: 1 };
-      const sc = dScore(R.solved, R.tlast), prev = r.c != null ? dScore(r.c, r.t) : -1;
+      const sc = dBest(R.date, { c: R.solved, t: R.tlast, p: R.pts }), prev = dBest(R.date, r);
       if (sc > prev) { newBest = r.c != null; r.c = R.solved; r.t = Math.round(R.tlast); r.p = R.pts; }
       if (R.solved >= R.goal && !r.m) { r.m = 1; medal = true; }
       earned = R.pts; addPts(earned);
@@ -1140,7 +1145,7 @@ async function submit() {
     if (g.mode === 'c') jobs.push(ON.putScore('spd/c', Object.assign({ s: totalStars(), c: totalClears() }, me)));
     if (g.mode === 'd' && g.ranked && ON.putSpeedDaily) {
       const r = dayRec(g.date, g.d);
-      jobs.push(ON.putSpeedDaily(g.date, g.d, Object.assign({ s: dScore(r.c, r.t), c: r.c, t: r.t, a: r.a }, me)));
+      jobs.push(ON.putSpeedDaily(g.date, g.d, Object.assign({ s: dBest(g.date, r), c: r.c, t: r.t, a: r.a }, me)));
     }
     await Promise.all(jobs);
     if (g.mode === 'd' && g.ranked) { const m = await ON.myScore(`spd/d/${g.date}/${g.d}`); lastRank = m && m.rank; const el = $('#sResRank'); if (el && m) el.innerHTML = t('res.rank', { n: `<b>${C.fmtN(m.rank)}</b>` }); }
@@ -1189,7 +1194,7 @@ function showResult(o) {
 }
 async function share(o) {
   const g = R;
-  const s = g.mode === 'd' ? `${t('sp.title')} ${C.fmtDate(g.date, { month: 'numeric', day: 'numeric' })} ⚡${t('sp.dn', { s: dsec(g.d, g.date) })} ${t('sp.cnt', { n: g.solved })}${g.solved >= g.goal ? ' ' + { 1: '🥉', 2: '🥈', 3: '🥇' }[DT[g.d]] : ''}${lastRank ? ' 🏆#' + lastRank : ''}`
+  const s = g.mode === 'd' ? `${t('sp.title')} ${C.fmtDate(g.date, { month: 'numeric', day: 'numeric' })} ⚡${t('sp.dn', { s: dsec(g.d, g.date) })} ${t('sp.cnt', { n: g.solved })} ${C.fmtN(g.pts)}pt${g.solved >= g.goal ? ' ' + { 1: '🥉', 2: '🥈', 3: '🥇' }[DT[g.d]] : ''}${lastRank ? ' 🏆#' + lastRank : ''}`
     : `${t('sp.title')} ${cname(g.ci)} #${g.pi + 1} ${o.win ? '⭐'.repeat(o.stars) : '💨'}`;
   const text = s + '\n' + C.speedUrlAbs;
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
@@ -1257,7 +1262,7 @@ async function renderRank() {
     if (key !== rkTab + rkDate + rkDiff + rkMonth || !$('#mRank').classList.contains('on')) return;
     rows.sort((a, b) => b.s - a.s);
     if (!rows.length) { list.innerHTML = `<div class="rkmsg">${C.badge(1, 'podium')}${esc(t('rk.empty'))}</div>`; return; }
-    const fmt = r => rkTab === 'daily' ? esc(t('sp.cnt', { n: r.c })) : rkTab === 'col' ? '★' + C.fmtN(r.s) : C.fmtN(r.s);
+    const fmt = r => rkTab === 'daily' ? esc(dval(r)) : rkTab === 'col' ? '★' + C.fmtN(r.s) : C.fmtN(r.s);
     const sub = r => rkTab === 'daily' ? esc(t('sp.rk.sub', { a: r.a || 1 })) : rkTab === 'col' && r.c != null ? esc(t('sp.rk.subc', { n: r.c })) : '';
     const no = k => (k < 3 ? C.miniMedal(3 - k) : k + 1);
     let h = '<ol class="rk">' + rows.map((r, k) => `<li class="${r.uid === ON.uid ? 'me' : ''}"><span class="no">${no(k)}</span>${C.avatar(r.i, 36)}<span class="nm">${esc(r.n)}<small>${sub(r)}</small></span><span class="vl">${fmt(r)}</span></li>`).join('');
@@ -1312,7 +1317,7 @@ function merge(out, o) {
   a.d = a.d || {}; for (const ds in (b.d || {})) for (const d in b.d[ds]) {
     const x = (a.d[ds] = a.d[ds] || {})[d], y = b.d[ds][d];
     if (!x) a.d[ds][d] = y;
-    else { const bx = x.c != null ? dScore(x.c, x.t) : -1, by = y.c != null ? dScore(y.c, y.t) : -1; a.d[ds][d] = Object.assign({}, by > bx ? y : x, { a: Math.max(x.a || 0, y.a || 0), m: x.m || y.m }); }
+    else { const bx = dBest(ds, x), by = dBest(ds, y); a.d[ds][d] = Object.assign({}, by > bx ? y : x, { a: Math.max(x.a || 0, y.a || 0), m: x.m || y.m }); }
   }
   a.cc = a.cc || {}; for (const k in (b.cc || {})) { const x = a.cc[k], y = b.cc[k]; a.cc[k] = !x ? y : { s: Math.max(x.s, y.s), sc: Math.max(x.sc || 0, y.sc || 0), t: Math.min(x.t, y.t) }; }
   a.ach = a.ach || {}; for (const k in (b.ach || {})) a.ach[k] = Math.max(a.ach[k] || 0, b.ach[k]);
