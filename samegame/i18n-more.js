@@ -662,3 +662,8 @@ window.SAME_I18N.ar = {
   const M = ['blitz', 'order', 'fuse', 'dive'];
   for (const l in A) M.forEach((m, i) => window.SAME_I18N[l]['a.' + m + '.s'] = A[l][i]);
 })();
+
+(function () {
+  const A = { ja: 'BLITZ・ORDER・FUSE・DIVE。全員が同じ盤で、いちばん良いスコアがランキングに残ります。', zh: 'BLITZ・ORDER・FUSE・DIVE。所有人同一盘面，最佳分数计入排行榜。', ko: 'BLITZ・ORDER・FUSE・DIVE. 모두 같은 판으로, 최고 점수가 랭킹에 남아요.' };
+  for (const l in A) window.SAME_I18N[l]['d.act.d'] = A[l];
+})();

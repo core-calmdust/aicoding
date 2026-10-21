@@ -255,7 +255,7 @@ function renderDaily() {
         <div class="dlb"><button class="btn ${D.k === 'e' ? 'blue' : D.k === 'm' ? 'red' : 'dark'}" data-dl="${D.k}">${A.ICON.play}${esc(t(played ? 'd.again' : 'd.play'))}</button><button class="btn sm" data-rank="${D.key}">${A.ICON.rank}</button></div></div>`; }).join('')}</div>
     <p class="note">${esc(t('d.medals2'))}</p>`;
   $('#dBlitz').innerHTML = `<div class="ptag blue">${esc(t('d.act'))}</div>
-    <p class="sub dasub">${esc(t('d.act.d'))}（${esc(t('d.act.n'))}）</p>
+    <p class="sub dasub">${esc(t('d.act.d')).replace(/(。|\. )/, '$1<br>')}（${esc(t('d.act.n'))}）</p>
     <div class="dacts">${DACT.map(([m, k]) => { const rr = r[k], left = 3 - rr.a;
       return `<div class="dact m-${m}"><span class="daic">${miniModeIcon(m)}</span><span class="dat"><b>${m === 'blitz' ? 'BLITZ' : esc(t('a.' + m))}</b><small class="dadesc">${esc(t('a.' + m + '.s'))}</small><span class="dbest"><span>${esc(t('d.best'))}</span><b>${rr.a ? fmt(rr.s) : '—'}</b></span></span>
         <span class="dabtm"><span class="tries">${[0, 1, 2].map(i => `<i class="${i < rr.a ? 'used' : ''}"></i>`).join('')}<em>${esc(t('d.tries', { n: left }))}</em></span><button class="btn" data-da="${m}" ${left <= 0 ? 'disabled' : ''}>${A.ICON.play}${esc(t(left > 0 ? 'd.play' : 'd.done'))}</button><button class="btn sm" data-rank="${k}">${A.ICON.rank}</button><button class="btn sm qbtn" data-rule="${m}" aria-label="${esc(t('tu.rule'))}">?</button></span></div>`; }).join('')}</div>`;

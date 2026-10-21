@@ -865,17 +865,20 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
 .htabs button svg{width:20px!important;height:20px!important}
 body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([data-skin="mid"]) .htabs button{border-radius:0!important}
 .hpanel[hidden],.hpanel.daily[hidden]{display:none!important}
-/* PC: daily action box fills the same height as free play */
+/* PC: daily action tiles — icon left, info center, wide play button */
 @media (min-width:861px){
   #dBlitz .dacts{flex:1;grid-auto-rows:1fr;align-content:stretch}
-  #dBlitz .dact{grid-template-rows:auto 1fr;align-items:stretch}
-  .dat{flex-direction:column;align-items:flex-start!important;justify-content:flex-start;gap:2px!important}
-  .dat .dbest{position:absolute;top:12px;right:12px}
-  .dact{position:relative}
-  .dadesc{font-size:13px;font-weight:600;color:var(--sub);line-height:1.45;margin-top:4px}
-  .dat>b{padding-right:96px}
-  .dabtm [data-da]{white-space:nowrap;padding:4px 18px!important}
-  .dabtm{align-self:end}
+  #dBlitz .dact{position:relative;display:grid!important;grid-template-columns:84px minmax(0,1fr)!important;grid-template-rows:1fr auto!important;grid-template-areas:"ic t" "b b"!important;gap:0 16px!important;padding:14px 16px!important;align-items:center}
+  .dact .daic{grid-area:ic;width:76px!important;height:76px!important;border-radius:20px;align-self:center}
+  .dact .daic svg{width:62px;height:62px}.dact .mm60{font-size:32px}
+  .dact .dat{grid-area:t;display:flex;flex-direction:column;align-items:flex-start!important;gap:2px!important}
+  .dat>b{font-size:20px;padding:0!important}
+  .dadesc{font-size:13.5px;font-weight:600;color:var(--sub);line-height:1.45}
+  .dat .dbest{position:static!important;margin-top:4px!important;display:flex;align-items:center;gap:8px}.dat .dbest b{font-size:24px}
+  .dabtm{grid-area:b;display:flex;align-items:center;gap:8px;margin-top:10px;align-self:end}
+  .dabtm .tries{margin:0 6px 0 0!important}
+  .dabtm [data-da]{flex:1;min-height:46px!important;font-size:16px!important;white-space:nowrap}
+  .dabtm .btn.sm{width:44px!important;min-height:44px!important}
   .dabtm .tries em{display:none}
 }
 @media (max-width:860px){.dadesc,.dabtm .tries em{display:none}}
@@ -888,6 +891,11 @@ body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([
 @keyframes shock{0%{transform:scale(.2);opacity:1}100%{transform:scale(22);opacity:0;border-width:2px}}
 .sfx.boomword{z-index:30;animation:boomword 1.45s cubic-bezier(.2,1.5,.4,1) forwards}
 @keyframes boomword{0%{scale:.1;opacity:0}18%{scale:1.15;opacity:1}70%{scale:1;opacity:1}100%{scale:1.1;opacity:0}}
+/* PC: every tab's content starts at the same distance below the tabs as the daily box */
+@media (min-width:861px){
+  .hpanel[data-p="action"] .acards{margin-top:0!important}
+  #stagePanel>.sechead:first-child{margin-top:-25px}
+}
 /* free play options: spread across the full box width */
 #dFree .frow{display:grid;grid-template-columns:56px repeat(var(--n,3),1fr);align-items:center;gap:6px;margin-bottom:8px}
 #dFree .frow .chipb{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 4px;background:var(--paper);border-radius:999px;box-shadow:none;border:0}
