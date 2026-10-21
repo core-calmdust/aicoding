@@ -577,6 +577,10 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   #rulesBody .rt-body{grid-area:body}
   #rulesBody .rt-task{grid-area:task;text-align:left}
   #rulesBody .rt-board, #rulesBody .rt-html, #rulesBody .rt-finish{grid-area:fig;align-self:center;margin:4px 0}
+  /* the intro page (no board) uses the whole width */
+  #rulesBody .rt:has(.rt-intro){display:flex;flex-direction:column}
+  #rulesBody .rt:has(.rt-intro) > h2.rt-title{text-align:center;align-self:center;width:100%}
+  #rulesBody .rt:has(.rt-intro) > .rt-nav{margin-top:auto}
   #rulesBody .rt-finish{width:340px}
   #rulesBody .rt-nav{grid-area:nav}
   html[lang=ar] #rulesBody .rt h2.rt-title, html[lang=ar] #rulesBody .rt-task{text-align:right}
@@ -916,7 +920,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/headerbar.js?v=3"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=6"></script>
+<script src="../shared/ruletour.js?v=7"></script>
 <script src="engine.js?v=20261019n"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
 <script src="firebase-config.js?v=20261020a"></script>

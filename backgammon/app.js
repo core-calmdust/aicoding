@@ -2436,6 +2436,8 @@ function dailySolved(date, hinted) {
 updateGeom(); geomReady = true;
 drawBoardSvg();
 const hadSave = load();
+// a game that was already finished when the page was saved: don't show its result (win condition) again on every visit
+try { if (hadSave && match) match.games.forEach((gm, g) => { if (stateAt(g, gm.actions.length).over) gameOverShown.add(g + ':' + gm.actions.length); }); } catch (e) {}
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 try { const q = new URLSearchParams(location.search).get('lang'); if (q && SUPPORTED.includes(q)) LANG = q; } catch (e) {}

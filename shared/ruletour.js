@@ -103,11 +103,18 @@ const CSS = `
 .rt-intro-sec b{font-size:14px;color:var(--accent,#e2c275);letter-spacing:.04em}
 .rt-intro-sec p{margin:0;font-size:14px;line-height:1.75;color:var(--text,#eee)}
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
-  .rt-intro{grid-template-columns:1fr 1fr;gap:14px}
-  .rt-intro-hero,.rt-intro-sec.hist{grid-column:1 / -1}
-  .rt-intro-hero img{width:150px;height:150px}
-  .rt-intro-facts span{font-size:16px;padding:8px 14px}.rt-intro-facts small{font-size:12px}
-  .rt-intro-sec b{font-size:15.5px}.rt-intro-sec p{font-size:16px}
+  /* PC: use the width — a compact hero row, then history / how to win / culture side by side */
+  .rt-intro{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .rt-intro-hero{grid-column:1 / -1;justify-content:center;gap:22px}
+  .rt-intro-hero img{width:132px;height:132px}
+  .rt-intro-facts span{font-size:16.5px;padding:9px 16px}.rt-intro-facts small{font-size:12.5px}
+  .rt-intro-sec{grid-template-columns:1fr;gap:6px;padding:16px 18px}
+  .rt-intro-sec i{grid-row:auto;font-size:28px;line-height:1}
+  .rt-intro-sec b{font-size:17px}.rt-intro-sec p{font-size:16px;line-height:1.8}
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (max-height: 820px){
+  .rt-intro{gap:12px}.rt-intro-hero img{width:92px;height:92px}
+  .rt-intro-sec{padding:12px 16px;gap:4px}.rt-intro-sec i{font-size:24px}.rt-intro-sec p{font-size:15.5px;line-height:1.7}
 }
 html[lang=ar] .rt-intro{direction:rtl}
 html[lang=ar] .rt-body,html[lang=ar] .rt h2.rt-title{direction:rtl;text-align:right}
