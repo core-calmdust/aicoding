@@ -280,6 +280,7 @@ const SFX = {
   ach: () => [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, .2, 'sine', .05, i * .07)),
   rumble: () => [140, 160, 150, 170, 155].forEach((f, i) => tone(f, .12, 'triangle', .06, i * .1)),
   pop: () => { tone(600, .06, 'sine', .07); tone(1200, .12, 'sine', .05, .05); },
+  beep: last => tone(last ? 1760 : 1320, last ? .14 : .08, 'square', .03),   // すぴーど: last-5-seconds countdown
   rare: () => [784, 988, 1175, 1568, 1976, 2349].forEach((f, i) => tone(f, .35, 'triangle', .06, i * .07)),
 };
 const vib = ms => { if (DB.set.vib && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} };
