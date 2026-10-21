@@ -632,7 +632,7 @@
     const s = Math.max(1, W.login.streak || 1), pos = ((s - 1) % 7) + 1, lv = 1 + Math.floor(done / 3);
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
     const tile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
-    $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}" id="avBtn" aria-label="${t('pf.edit')}">${avatar(104)}<span class="lv">Lv.${lv}</span></button></div>
+    $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}" id="avBtn" aria-label="${t('pf.edit')}">${ART.avatar(W.av, 104, { clear: true })}<span class="lv">Lv.${lv}</span></button></div>
       <div class="pf-r"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
       <div class="ptiles">${tile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${tile('🏆', done, ACH.length, t('pf.ach'))}${tile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
       <div class="lgw"><div class="lgh"><b>🔥 ${esc(t('login.day', { n: s }))}</b><small>${esc(t('login.week'))}</small></div>
@@ -778,8 +778,8 @@
   function renderDress() {
     $('hDress').textContent = t('dress.h');
     $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
-    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, 150, { pop: true })}</button>
-      <div style="text-align:center"><b style="font-size:20px">${esc(W.name || t('pf.player'))}</b><div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div></div>`;
+    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, 150, { pop: true, clear: true })}</button>
+      <div class="dname"><b>${esc(W.name || t('pf.player'))}</b><div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div></div>`;
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     const slot = dKind;

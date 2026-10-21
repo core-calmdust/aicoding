@@ -257,7 +257,7 @@
     const f = bgFill(b), cid = U('c'), pid = U('c'), fu = U('f');
     const ch = ic ? `<image class="av-ch" href="${avUrl(ic.id)}" x="6" y="9" width="88" height="88"/>` : '';
     return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" class="av-svg" aria-hidden="true" style="overflow:visible"><defs>${f.p}<clipPath id="${cid}"><circle cx="50" cy="50" r="46"/></clipPath>${o.pop ? `<clipPath id="${pid}"><circle cx="50" cy="50" r="41"/><rect x="-40" y="-80" width="180" height="130"/></clipPath>` : ''}</defs>
-<g clip-path="url(#${cid})"><rect width="100" height="100" fill="${f.fill}"/>${o.pop ? '' : ch}</g>${fr.d.k === 'none' ? '<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="2"/>' : frameImg(fr.d.k)}${o.pop ? `<g clip-path="url(#${pid})">${ch}</g>` : ''}</svg>`;
+<g clip-path="url(#${cid})">${o.clear ? '' : `<rect width="100" height="100" fill="${f.fill}"/>`}${o.pop ? '' : ch}</g>${fr.d.k === 'none' ? '<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="2"/>' : frameImg(fr.d.k)}${o.pop ? `<g clip-path="url(#${pid})">${ch}</g>` : ''}</svg>`;
   }
   function bgDataUri(id) {   // CSS background value for a profile card
     const it = map[id] || map.b001;
