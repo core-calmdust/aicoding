@@ -588,7 +588,6 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
   .pz-grid{grid-template-columns:repeat(10, 1fr)}
-  #newOverlay .modal{width:min(560px,100%)}
   #rulesOverlay .modal{width:min(1080px, calc(100vw - 64px))}
 }
 /* PC: rules tutorial with a big board + big text; the tabbed dialogs (rules / lessons / puzzles) share one fixed size */
@@ -600,22 +599,28 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   #rulesBody > .rt{flex:1;min-height:0}
   #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
   #rulesOverlay .ls-tabs{margin-bottom:12px}
-  /* two columns on PC: explanation + task on the left, a big board on the right (board 15.85 × 12, sized from --rt-bw) */
-  #rulesBody .rt{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:28px;grid-template-areas:"steps steps" "title fig" "body fig" "task fig" "nav nav"}
-  #rulesBody .rt-steps{grid-area:steps}
-  #rulesBody .rt h2.rt-title{grid-area:title;text-align:left;align-self:end}
-  #rulesBody .rt-body{grid-area:body}
-  #rulesBody .rt-task{grid-area:task;text-align:left}
-  #rulesBody .rt-board, #rulesBody .rt-html, #rulesBody .rt-finish{grid-area:fig;align-self:center;margin:4px 0}
-  /* the intro page (no board) uses the whole width */
-  #rulesBody .rt:has(.rt-intro){display:flex;flex-direction:column}
-  #rulesBody .rt:has(.rt-intro) > h2.rt-title{text-align:center;align-self:center;width:100%}
-  #rulesBody .rt:has(.rt-intro) > .rt-nav{margin-top:auto}
-  #rulesBody .rt-finish{width:340px}
-  #rulesBody .rt-nav{grid-area:nav}
-  html[lang=ar] #rulesBody .rt h2.rt-title, html[lang=ar] #rulesBody .rt-task{text-align:right}
-  #rulesBody .rt-board svg{width:min(calc(var(--rt-bw) + 160px), calc((var(--vh) - 250px) * 1.32), 600px)}
-  #rulesBody .rt-html svg{width:min(calc(var(--rt-bw) + 100px), calc((var(--vh) - 250px) * 1.2), 540px)}
+  /* new-game dialog: wide, two columns (mode / colours / board | strength / format / options / seed) */
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));max-height:calc(var(--vh) - 24px)}
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col > .field:first-child{margin-top:0}
+  #newOverlay .skinrow{grid-template-columns:repeat(4, minmax(0, 1fr))}
+  @media (max-height: 800px){ #rulesBody .rt-intro{gap:8px} #rulesBody .rt-intro-sec{font-size:14px;line-height:1.65;padding-top:10px;padding-bottom:10px} }
+  #newOverlay .modal{padding:20px 28px 18px}
+  #newOverlay .modal h2{margin-bottom:12px}
+  #newOverlay .modal-actions{margin-top:10px}
+  #newOverlay #segMode{flex-wrap:nowrap}
+  #newOverlay #segMode button{flex:1 1 0}
+  /* two columns on PC for the board pages: title + text + task on the left, a big board on the right (board 15.85 × 12) */
+  #rulesBody .rt-main:has(> .rt-board, > .rt-html):not(:has(.rt-intro)){display:grid;grid-template-columns:minmax(0, 1fr) auto;grid-template-rows:auto auto 1fr;column-gap:28px;grid-template-areas:"title fig" "body fig" "task fig";align-content:center}
+  #rulesBody .rt-main > h2.rt-title{grid-area:title;text-align:left;align-self:end}
+  #rulesBody .rt-main:is(:not(:has(> .rt-board, > .rt-html)), :has(.rt-intro)) > h2.rt-title{text-align:center;align-self:center}
+  #rulesBody .rt-main:has(.rt-intro) > .rt-html{margin:0}
+  #rulesBody .rt-main > .rt-body{grid-area:body}
+  #rulesBody .rt-main > .rt-task{grid-area:task;text-align:left}
+  #rulesBody .rt-main > :is(.rt-board, .rt-html){grid-area:fig;align-self:center;margin:4px 0}
+  html[lang=ar] #rulesBody .rt-main > :is(h2.rt-title, .rt-task){text-align:right}
+  #rulesBody .rt-board svg{width:min(560px, calc((var(--vh) - 280px) * 1.3))}
+  #rulesBody .rt-html svg{width:min(520px, calc((var(--vh) - 280px) * 1.2))}
 }
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
@@ -944,6 +949,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
@@ -966,6 +972,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
       <label data-i18n="ng.skin"></label>
       <div class="skinrow" id="skinRow"></div>
     </div>
+    </div><div class="ng-col">
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
@@ -1005,6 +1012,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
       <div class="seedrow"><input id="seedInput" maxlength="24" spellcheck="false" autocomplete="off" autocapitalize="off" data-i18n-ph="ng.seedPh"></div>
       <div class="small-note" data-i18n="ng.seedNote"></div>
     </div>
+    </div></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
