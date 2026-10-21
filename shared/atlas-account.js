@@ -139,6 +139,18 @@
       push: async (patch) => { const a = all(); a[user.uid] = Object.assign(a[user.uid] || {}, patch); LS.set(K, JSON.stringify(a)); },
     };
   }
+  // App Check (reCAPTCHA v3) for the shared account project: window.ATLAS_APPCHECK_SITE_KEY (null = skipped). On localhost,
+  // ?appcheckdebug=1 (or localStorage 'appcheck-debug' = a registered debug token) uses a debug token instead.
+  async function appCheck(app, base) {
+    const key = window.ATLAS_APPCHECK_SITE_KEY;
+    if (!key || app.__appCheck) return;
+    try {
+      await loadScript(base + 'firebase-app-check-compat.js');
+      if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) { let tok = null; try { tok = localStorage.getItem('appcheck-debug'); } catch (e) {} if (tok || /[?&]appcheckdebug\b/.test(location.search)) self.FIREBASE_APPCHECK_DEBUG_TOKEN = tok || true; }
+      app.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(key), true);
+      app.__appCheck = true;
+    } catch (e) { console.warn('App Check', e); }
+  }
   function fbBackend() {
     let auth, db;
     const init = async () => {
@@ -148,6 +160,7 @@
       await loadScript(base + 'firebase-app-compat.js');
       await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
       app = firebase.apps.find(a => a.name === 'atlas') || firebase.initializeApp(CFG, 'atlas');
+      await appCheck(app, base);
       auth = app.auth(); db = app.database();
     };
     return {
