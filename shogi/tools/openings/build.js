@@ -20,6 +20,8 @@ if (furi) {
   furi.title = { ja: '四間飛車（対抗形）', en: 'Fourth-File Rook (vs Static Rook)', zh: '四间飞车（对抗形）', ko: '시켄비샤(대항형)', es: 'Torre en 4.ª columna (contra torre estática)', fr: 'Tour en 4e colonne (contre tour statique)', pt: 'Torre na 4.ª coluna (contra torre estática)', de: 'Turm auf der 4. Linie (gegen Standturm)', hi: 'चौथी पंक्ति का हाथी (स्थिर हाथी के विरुद्ध)', ar: 'رخ العمود الرابع (ضد الرخ الثابت)' };
   furi.short = { ja: '飛車を4筋に振り、美濃囲いで固めて受けから反撃する振り飛車の基本', en: 'Swing the rook to the 4th file, castle in Mino, absorb and counter — the classic Ranging Rook', zh: '把飞车移到4筋，用美浓围守住，先防守后反击的振飞车基本', ko: '비차를 4줄로 옮기고 미노 성으로 굳혀 받은 뒤 반격하는 후리비샤의 기본', es: 'Torre a la 4.ª columna, castillo Mino, aguantar y contraatacar: la torre desplazada clásica', fr: 'Tour en 4e colonne, château Mino, encaisser puis contrer : la tour mobile classique', pt: 'Torre na 4.ª coluna, castelo Mino, defender e contra-atacar: a torre móvel clássica', de: 'Turm auf die 4. Linie, Mino-Burg, abwehren und kontern – der klassische Schwenkturm', hi: 'हाथी चौथी पंक्ति पर, मीनो किला, बचाव फिर पलटवार — क्लासिक घूमता हाथी', ar: 'الرخ إلى العمود الرابع وقلعة مينو، ثم الصد والهجوم المضاد: الرخ المتنقل الكلاسيكي' };
 }
+// new sets take their problems from R3000+ games (the core six from R3500+)
+for (const [l, s] of Object.entries(core.credit || {})) if (!s.includes('R3000')) core.credit[l] = s.replace('R3500', /^(ja|zh)$/.test(l) ? 'R3000〜3500' : 'R3000–3500');
 const index = {};
 for (const g of core.sets) if (g.cat && g.cat !== 'handi') (index[g.cat] = index[g.cat] || []).push([g.id, g.problems && g.problems.length >= 5 ? 1 : 0]);
 const ids = new Set(core.sets.map(g => g.id));

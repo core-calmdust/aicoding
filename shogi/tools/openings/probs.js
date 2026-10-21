@@ -39,7 +39,7 @@ function match(p, C) {
 const entries = [];
 for (const c of CATS) {
   const f = path.join(__dirname, 'src', c + '.js'); if (!fs.existsSync(f)) continue;
-  for (const e of require(f)) if (e.pat && !e.noPractice) entries.push({ id: e.id, C: [compile(e.pat, false)].concat(e.mirror ? [compile(e.pat, true)] : []) });
+  for (const e of require(f)) if (e.pat && !e.noPractice) entries.push({ id: e.id, maxPly: e.maxPly || 99, C: [compile(e.pat, false)].concat(e.mirror ? [compile(e.pat, true)] : []) });
 }
 const pos = new E.Position();
 const keyOf = p => p.sfen().replace(/ \d+$/, '');
@@ -52,7 +52,7 @@ for (const f of files) for (const ln of fs.readFileSync(f, 'utf8').split('\n')) 
   for (let k = 0; k < mv.length; k++) {
     if (k >= 12) {
       let key = null;
-      for (const e of entries) if (e.C.some(C => match(pos, C))) {
+      for (const e of entries) if (k < e.maxPly && e.C.some(C => match(pos, C))) {
         key = key || keyOf(pos);
         const S = stat[e.id] || (stat[e.id] = {}), s = S[key] || (S[key] = {}), x = s[mv[k]] || (s[mv[k]] = [0, 0]);
         x[0]++; x[1] += res === 'd' ? .5 : ((res === 'b') === (pos.side === 0) ? 1 : 0);
