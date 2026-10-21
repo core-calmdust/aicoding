@@ -138,12 +138,13 @@ function worker(kind, onmsg) {
   if (!W[kind]) {
     const w = new Worker('variants/worker.js?v=' + V);
     w.onmessage = onmsg;
-    w.onerror = e => { console.warn('variant worker error', e.message); const id = wId[kind]; kill(kind); onmsg({ data: { type: 'result', id, error: true, list: [] } }); };
+    // (a worker terminated while it was still loading reports an error too: only the current one counts)
+    w.onerror = e => { if (W[kind] !== w) return; console.warn('variant worker error', e.message); const id = wId[kind]; kill(kind); onmsg({ data: { type: 'result', id, error: true, score: 0, list: [] } }); };
     W[kind] = w;
   }
   return W[kind];
 }
-function kill(kind) { if (W[kind]) { W[kind].terminate(); delete W[kind]; } }
+function kill(kind) { if (W[kind]) { const w = W[kind]; delete W[kind]; w.onmessage = null; w.terminate(); } }
 // aiCall / anaCall: returns the variant worker (and tags the message) when the current game is a variant
 function wk(msg, kind, onmsg, id) {
   if (!game || !game.variant || lesson) return null;
@@ -187,7 +188,10 @@ body.variant #btnEdit,body.variant #btnAnalyze,body.variant #btnShare,body.varia
 #btnVRules{display:none}
 body.variant #btnVRules{display:inline-block}
 /* rules of the variants */
-#vrOverlay .modal{width:min(720px,100%)}
+#vrOverlay .modal{width:min(880px,100%);display:flex;flex-direction:column}
+#vrOverlay .vr-body{flex:1 1 auto;min-height:0;overflow-y:auto}
+#vrOverlay .modal-actions{flex:none;margin-top:14px}
+@media (min-width: 760px) and (min-height: 600px){ #vrOverlay .modal{height:min(680px, calc(var(--vh) - 32px))} }
 #vrOverlay .vr-tabs{margin-bottom:14px}
 #vrOverlay .vr-body{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:start}
 #vrOverlay ol{margin:0;padding-inline-start:20px;font-size:14px;line-height:1.75;color:#d8cdbb}

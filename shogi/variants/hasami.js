@@ -137,7 +137,13 @@ class HasamiPos {
     const b = this.board, us = this.side;
     const cap = this.hand[us * 8 + FU] - this.hand[(us ^ 1) * 8 + FU];
     let s = cap * 1000 / 10;
-    let threatUs = 0, threatThem = 0;
+    let threatUs = 0, threatThem = 0, mob = 0;
+    if (HasamiPos.MOB) for (let x = 0; x < 81; x++) {   // mobility: pieces with room to move are harder to trap and threaten more
+      const p = b[x]; if (!p) continue;
+      let k = 0; for (let d = 0; d < 4; d++) { let y = NB4[x * 4 + d]; while (y >= 0 && !b[y]) { k++; y = NB4[y * 4 + d]; } }
+      mob += colorOf(p) === us ? k : -k;
+    }
+    s += mob * HasamiPos.MOB;
     // a piece with an enemy on one side and an empty square on the other, where an enemy can arrive in one move
     for (let x = 0; x < 81; x++) {
       const p = b[x]; if (!p) continue;
@@ -165,6 +171,7 @@ class HasamiPos {
   toUsi(m) { const f = m & 127, t = (m >> 7) & 127, sq = s => (9 - (s % 9)) + 'abcdefghi'[(s / 9) | 0]; return sq(f) + sq(t); }
   fromUsi(u) { const sq = (a, b) => 'abcdefghi'.indexOf(b) * 9 + (9 - +a); return sq(u[0], u[1]) | (sq(u[2], u[3]) << 7); }
 }
+HasamiPos.MOB = 0;
 HasamiPos.START = START; HasamiPos.WIN_DIFF = WIN_DIFF; HasamiPos.MAX_PLY = MAX_PLY;
 G.HasamiShogi = HasamiPos;
 })(typeof self !== 'undefined' ? self : this);

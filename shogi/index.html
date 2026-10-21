@@ -2020,7 +2020,7 @@ async function schedule() {
     // human to move: background analysis for evaluation / coaching
     if ((settings.eval || settings.coach) && !rtLive()) {
       const res = await anaCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 900 } });
-      if (!res || token !== busyToken || cur !== idx) return;
+      if (!res || res.error || token !== busyToken || cur !== idx) return;
       game.info[idx].best = res.score; game.info[idx].bm = res.move; game.info[idx].bpv = (res.pv || []).slice(0, 5);
       if (game.info[idx].ev == null || settings.mode !== 'ai') game.info[idx].ev = side === 0 ? res.score : -res.score;
       renderInfo(); save();
@@ -4602,7 +4602,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=45')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/shogi.js?v=18')).then(() => load('../atlas/skin/shogi.js?v=6'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=45')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/shogi.js?v=19')).then(() => load('../atlas/skin/shogi.js?v=7'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

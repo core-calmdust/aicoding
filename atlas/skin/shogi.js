@@ -13,7 +13,7 @@
   const THREE = window.THREE, T3 = window.Table3D;
   if (!THREE || !T3 || !T3.shogi || !window.AtlasSkin || typeof window.pieceEl !== 'function') return;
   const SG = T3.shogi, boardDom = document.getElementById('board');
-  const board = T3.MODELS.shogi(true), FH = board.userData.S, Y = board.userData.top, OUT = board.userData.outer;
+  let board = T3.MODELS.shogi(true), FH = board.userData.S, Y = board.userData.top, OUT = board.userData.outer;
 
   const skin = AtlasSkin.init({
     board: boardDom,
@@ -25,6 +25,7 @@
       if (typeof openNewDialog !== 'function' || typeof dlg !== 'object' || !document.getElementById('btnStart')) return null;
       openNewDialog();
       dlg.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
+      { const vq = new URLSearchParams(location.search).get('variant'); if (vq && 'variant' in dlg && dlg.mode !== 'rated') dlg.variant = vq === 'mini' || vq === 'hasami' ? vq : ''; }
       if (side === 1 || side === 2) dlg.color = side - 1;
       const rng = document.getElementById('rngLevel'); if (rng && lv >= 1) rng.value = Math.min(18, lv - 1);
       updDialog(); document.getElementById('btnStart').click();
@@ -34,6 +35,17 @@
   if (!skin) return;
   T3.show('shogi', board, { still: true });
   skin.alignTo(FH, Y);
+  // 5五将棋 (shogi/variants/): the page switches its board to 5×5 → a 5×5 kaya board, the camera fitted to it again
+  let boardN = 9;
+  function setBoard(n) {
+    if (n === boardN) return; boardN = n;
+    board = T3.MODELS.shogi(true, { n }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
+    T3.show('shogi', board, { still: true }); skin.alignTo(FH, Y);
+    try { look(); } catch (e) {}
+    if (T3.kick) T3.kick(600);
+  }
+  document.addEventListener('shogi-geom', e => { try { setBoard(e.detail && e.detail.n === 5 ? 5 : 9); } catch (x) { console.warn(x); } });
+  { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(5); }
 
   /* ---------- pieces: renders of the 3D pieces ---------- */
   document.documentElement.classList.add('atlas-shogi');

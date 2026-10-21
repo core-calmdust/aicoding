@@ -114,9 +114,10 @@
     c.putImageData(img, 0, 0);
   }
   // board top: straight-grained kaya with the black lacquer lines (太刀盛り) and four stars
-  function boardTop() {
-    const PX = 100;
-    return canvasTex('shogiTop3', BW * PX | 0, BD * PX | 0, (c, W, H) => {
+  // n: squares per side (9; 5 for 5五将棋 — no stars)
+  function boardTop(n = 9) {
+    const PX = 100, BW = n * CW + MARGIN * 2, BD = n * CH + MARGIN * 2;
+    return canvasTex(n === 9 ? 'shogiTop3' : 'shogiTop3-' + n, BW * PX | 0, BD * PX | 0, (c, W, H) => {
       const N = makeNoise(5), img = c.createImageData(W, H), d = img.data;
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const u = x / W, v = y / H;
@@ -128,23 +129,23 @@
       c.putImageData(img, 0, 0);
       const ox = MARGIN * PX, oy = MARGIN * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = 'rgba(20,10,4,.92)'; c.lineCap = 'square';
-      for (let i = 0; i <= 9; i++) {
-        c.lineWidth = i === 0 || i === 9 ? 3.4 : 2.2;
-        c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + 9 * ch); c.stroke();
-        c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + 9 * cw, oy + i * ch); c.stroke();
+      for (let i = 0; i <= n; i++) {
+        c.lineWidth = i === 0 || i === n ? 3.4 : 2.2;
+        c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke();
+        c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke();
       }
       c.fillStyle = 'rgba(20,10,4,.95)';
-      [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
+      if (n === 9) [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
     });
   }
   // the lines are raised lacquer too: a bump map with the grid
-  function boardBump() {
-    const PX = 100;
-    return canvasTex('shogiTopB', BW * PX | 0, BD * PX | 0, (c, W, H) => {
+  function boardBump(n = 9) {
+    const PX = 100, BW = n * CW + MARGIN * 2, BD = n * CH + MARGIN * 2;
+    return canvasTex(n === 9 ? 'shogiTopB' : 'shogiTopB-' + n, BW * PX | 0, BD * PX | 0, (c, W, H) => {
       c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
       const ox = MARGIN * PX, oy = MARGIN * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 2;
-      for (let i = 0; i <= 9; i++) { c.lineWidth = i === 0 || i === 9 ? 3.4 : 2.2; c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + 9 * ch); c.stroke(); c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + 9 * cw, oy + i * ch); c.stroke(); }
+      for (let i = 0; i <= n; i++) { c.lineWidth = i === 0 || i === n ? 3.4 : 2.2; c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke(); c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); }
     });
   }
   // the sides of the block show end grain: tight growth rings arching across the face (like the photo of a real 榧 board)
@@ -218,18 +219,20 @@
   }
   function board(o = {}) {
     const g = new (T().Group)(), TT = T();
+    // o.n = 5: the 5五将棋 board — same squares, a smaller block (thickness and legs scaled with it)
+    const n = o.n === 5 ? 5 : 9, k = n === 9 ? 1 : .62, FW = n * CW, FH = n * CH, BW = FW + MARGIN * 2, BD = FH + MARGIN * 2, THICK = 2.6 * k;
     const kaya = M({ map: X.wood('kayaSide2', '#d4a057', '#9c6628', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
-    const top = new TT.MeshPhysicalMaterial({ map: boardTop(), bumpMap: boardBump(), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
+    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n), bumpMap: boardBump(n), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
     const bottom = M({ color: 0x8a5a2a, roughness: .7 });
-    const base = o.legs === false ? 0 : LEG;
+    const base = o.legs === false ? 0 : LEG * k;
     const block = new TT.Mesh(RB(BW, THICK, BD, .05, 2), [endS, endS, top, bottom, endF, endF]);
     block.position.y = base + THICK / 2; block.castShadow = block.receiveShadow = true; g.add(block);
     if (o.legs !== false) {
       const lm = M({ map: X.wood('kayaLeg', '#e0b06a', '#a87232', 256, 256, 2), roughness: .5, bumpScale: .002 });
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.position.set(sx * (BW / 2 - 1.15), 0, sz * (BD / 2 - 1.2)); g.add(l); });
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.scale.setScalar(k); l.position.set(sx * (BW / 2 - 1.15 * k), 0, sz * (BD / 2 - 1.2 * k)); g.add(l); });
     }
     // board colour (the game's "board & piece skin"): a tint over the kaya
     const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
@@ -237,7 +240,7 @@
     const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, metal: 0xb4bcc6, ink: 0x5e5046 };
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
-    g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH;
+    g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n;
     return g;
   }
   const cell = (c, r) => [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)];   // c: 0 = left column on screen, r: 0 = top row
