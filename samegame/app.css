@@ -585,6 +585,16 @@ body[data-skin="mid"] .dact{border:0;border-radius:18px}body[data-skin="mid"] .d
   .mgacha #gaBody>.note{grid-column:1/-1}
 }
 #htabs{margin-bottom:44px}
+.lbt{margin-top:16px;background:var(--paper);border-radius:18px;padding:12px 14px}
+.lbth{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}.lbth b{font-family:var(--f-head);font-size:15px}.lbth span{font-size:12.5px;font-weight:700;color:var(--sub)}
+.lbtr{display:flex;align-items:center}
+.lbl{flex:1;min-width:4px;height:4px;border-radius:2px;background:var(--mute);margin:0 1px 18px}
+.lbd{display:flex;flex-direction:column;align-items:center;gap:3px;flex:none}
+.lbd i{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px;background:var(--card);color:var(--sub);border:2px solid var(--mute)}
+.lbd small{font-size:11px;font-weight:700;color:var(--sub)}
+.lbd.got i{background:var(--red);border-color:var(--red);color:var(--on)}
+.lbd.nx i{border-color:var(--text);color:var(--text);animation:nextp 1.2s ease-in-out infinite}
+.lbd.big i{width:36px;height:36px;background:var(--yel);border-color:var(--yel);color:#2b2522}.lbd.big.got i{background:var(--red);border-color:var(--red);color:var(--on)}
 /* daily difficulties */
 .dhead{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
 .dhead h3{font-family:var(--f-head);font-weight:400;font-size:21.6px;margin:2px 0 4px}.dhead p{margin:0;font-size:15.8px;line-height:1.55;max-width:46em}

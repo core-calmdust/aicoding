@@ -274,7 +274,7 @@ function renderCal() {
   }
   $('#dCal').innerHTML = `<div class="calh"><button class="ib sm" id="calP">${A.ICON.back}</button><b>${y}.${pad(m + 1)}</b><button class="ib sm flip" id="calN" ${calOff >= 0 ? 'disabled' : ''}>${A.ICON.back}</button></div>
     <div class="calw">${[0, 1, 2, 3, 4, 5, 6].map(i => `<i>${esc(t('wd.' + i))}</i>`).join('')}</div><div class="calg">${cells}</div>
-    <div class="calsum"><span><i class="medal m3"></i>×${gold}</span><span>${esc(t('cal.played', { n: played }))}</span><span class="stk">${esc(t('cal.streak', { n: streak() }))}</span></div>`;
+    <div class="calsum"><span><i class="medal m3"></i>×${gold}</span><span>${esc(t('cal.played', { n: played }))}</span><span class="stk">${esc(t('cal.streak', { n: streak() }))}</span></div>${lbTrack()}`;
   $('#calP').onclick = () => { calOff--; renderCal(); };
   $('#calN').onclick = () => { if (calOff < 0) { calOff++; renderCal(); } };
 }
@@ -1143,6 +1143,13 @@ function maybeThemeTip(th, force) {
 
 /* ---------------- login bonus ---------------- */
 const LB = [30, 40, 50, 70, 90, 120, 300];
+function lbTrack() {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const alive = DB.login === today() || DB.login === ymd(y), got = DB.login === today();
+  const done = alive ? (((DB.lbs || 0) - 1) % 7 + 1) * (got ? 1 : 0) + (got ? 0 : (DB.lbs || 0) % 7) : 0;
+  const next = got ? (done % 7) : done;
+  return `<div class="lbt"><div class="lbth"><b>${esc(t('lb.title'))}</b><span>${esc(t('lb.next', { n: LB[next] }))}</span></div><div class="lbtr">${LB.map((c, i) => `<span class="lbd ${i < done ? 'got' : ''} ${i === next && !got ? 'nx' : ''} ${i === 6 ? 'big' : ''}"><i>${i < done ? '✓' : i + 1}</i><small>${c}</small></span>`).join('<b class="lbl"></b>')}</div></div>`;
+}
 function loginBonus() {
   const d = today(); if (DB.login === d) return;
   const y = new Date(); y.setDate(y.getDate() - 1);

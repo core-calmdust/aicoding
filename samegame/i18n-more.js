@@ -640,3 +640,8 @@ window.SAME_I18N.ar = {
   const K = ['lb.title', 'lb.day', 'lb.streak', 'lb.msg', 'lb.get', 'sync.google', 'sync.on', 'sync.title', 'sync.desc', 'sync.on2', 'sync.now', 'sync.logout', 'sync.logout.q', 'sync.done', 'sync.err', 'sync.out', 'pf.name'];
   for (const l in A) { const o = {}; K.forEach((k, i) => o[k] = A[l][i]); Object.assign(window.SAME_I18N[l], o); }
 })();
+
+(function () {
+  const A = { ja: '次は {n} コイン', en: 'Next: {n} coins', zh: '下次 {n} 金币', ko: '다음 {n}코인', es: 'Siguiente: {n} monedas', fr: 'Suivant : {n} pièces', pt: 'Próximo: {n} moedas', de: 'Nächster: {n} Münzen', hi: 'अगला: {n} सिक्के', ar: 'التالي: {n} عملة' };
+  for (const l in A) window.SAME_I18N[l]['lb.next'] = A[l];
+})();
