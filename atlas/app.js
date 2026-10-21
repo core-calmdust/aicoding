@@ -468,7 +468,7 @@
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
     // scheduled first so it also runs if anything below fails
-    [60, 420, 900].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
+    [60, 600, 1000].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
     if (window.ResizeObserver && !window.__bvRO) { window.__bvRO = new ResizeObserver(() => fitStage()); window.__bvRO.observe($('bvi')); }
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
@@ -790,10 +790,18 @@
 
   /* ---------- DRESS ---------- */
   let dKind = 'icon';
+  // the dress-up character as an HTML image over the SVG frame: CSS animations on SVG <image> don't run on iOS Safari.
+  // The wrapper keeps the same clip as the SVG's pop clip (the frame's circle + everything above its middle).
+  function popChar(av, S) {
+    const it = ART.byId(av.icon) || ART.byId(ART.DEFAULT_ICON); if (!it) return '';
+    const k = S / 100, f = v => (v * k).toFixed(1);
+    const clip = `M${f(-46)} ${f(-89)}H${f(134)}V${f(41)}H${f(85)}A${f(41)} ${f(41)} 0 0 1 ${f(3)} ${f(41)}H${f(-46)}Z`;
+    return `<span class="av-cw" style="position:absolute;left:${f(6)}px;top:${f(9)}px;width:${f(88)}px;height:${f(88)}px;clip-path:path('${clip}');-webkit-clip-path:path('${clip}');pointer-events:none"><img class="av-ch" src="${ART.avUrl(it.id)}" alt="" draggable="false" style="display:block;width:100%;height:100%"></span>`;
+  }
   function renderDress() {
     $('hDress').textContent = t('dress.h');
     $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
-    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, 150, { pop: true, clear: true })}</button>
+    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, 150, { pop: true, clear: true, noChar: true })}${popChar(W.av, 150)}</button>
       <div class="dname"><b>${esc(W.name || t('pf.player'))}</b><div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div></div>`;
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
@@ -803,7 +811,9 @@
       const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
       return itemCard(it, own ? (on ? `<span class="btn sm mint">${t('dress.on')}</span>` : `<button class="btn sm sky" data-wear="${it.id}">${t('dress.wear')}</button>`) : '', (own ? '' : 'locked ') + (on ? 'sel' : ''));
     }).join('');
-    $('dItems').querySelectorAll('[data-wear]').forEach(b => b.onclick = () => { W.av[slot] = b.dataset.wear; A_.save(W); renderDress(); if (slot === 'icon') pokeAvatar(true); });
+    // tap an owned item's picture (the whole card) to wear it — the button stays as a label
+    $('dItems').querySelectorAll('.item').forEach(c => { const id = c.dataset.id; if (!W.owned.includes(id) || W.av[slot] === id) return;
+      c.classList.add('wearable'); c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
     $('dprev').querySelector('.poke').onclick = () => pokeAvatar();
   }
   // tap the character in the dress-up preview: it reacts with a random little animation (+ hearts / stars / notes popping out)

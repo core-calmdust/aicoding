@@ -857,7 +857,7 @@
   function reveal() { const f = revealFn; revealFn = null; if (f) f(); }
   let lampShade = null;
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
-    if (o && o.glide) glide = { t0: performance.now(), dur: o.glide, k0: camK, i0: inset, i1: insetTo };
+    if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
@@ -890,9 +890,9 @@
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
-      const k = Math.min(1, (now - glide.t0) / glide.dur), e = 1 - Math.pow(1 - k, 3);   // quick out, soft landing
-      camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; frame();
-      if (k >= 1) { camK = camTo; inset = glide.i1; glide = null; }
+      glide.t += Math.min(dt, 34); const k = Math.min(1, glide.t / glide.dur), e = 1 - Math.pow(1 - k, 3);   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
+      camK = glide.k0 + (camTo - glide.k0) * e; inset += (insetTo - inset) * ez(.22); frame();   // the framing follows smoothly even if the card changes size meanwhile
+      if (k >= 1) { camK = camTo; glide = null; }
     } else camK += (camTo - camK) * ez(.07);
     zoom += (zoomTo - zoom) * ez(.18);
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
