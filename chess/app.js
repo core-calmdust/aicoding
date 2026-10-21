@@ -1422,12 +1422,21 @@ function openingAnswer(P, m, pos) {
 
 // ====================================================================== puzzles: mate in N
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261019g').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261021f').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 // progress: { "level-index": stars 0..3 } (old saves stored true = solved, read as ★3)
 const pzKey = (i, j) => `${i}-${j}`;
 const starVal = x => x === true ? 3 : (+x || 0);
-function pzRecs(i, pr) { pr = pr || pzProgress(); return PUZZLES.levels[i].puzzles.map((_, j) => starVal(pr[pzKey(i, j)])); }
+// puzzles replaced on 2026-10-21 (fun refresh, tools/refresh_fun.js): PUZZLES.old["L-j"] keeps the previous puzzle of the slot.
+// A player who already has a record for the slot (stars under "L-j") keeps the old puzzle; records of the new one go to "L-j~2".
+// The daily puzzle keeps the old one for dates up to PUZZLES.cut.
+function pzSlot(i, j, pr, date) {
+  const k = pzKey(i, j), o = PUZZLES.old && PUZZLES.old[k];
+  if (!o) return { P: PUZZLES.levels[i].puzzles[j], rk: k };
+  pr = pr || pzProgress();
+  return pr[k] != null || (date && date <= PUZZLES.cut) ? { P: o, rk: k } : { P: PUZZLES.levels[i].puzzles[j], rk: k + '~2' };
+}
+function pzRecs(i, pr) { pr = pr || pzProgress(); return PUZZLES.levels[i].puzzles.map((_, j) => starVal(pr[pzSlot(i, j, pr).rk])); }
 // card colour from difficulty: mate length (1..4) or the tactics rating band
 function themeTier(L) { if (L.kind === 'line') { const m = (L.band[0] + L.band[1]) / 2; return Math.max(0, Math.min(5, Math.floor((m - 700) / 300))); } return Math.max(0, Math.min(5, Math.round(((L.n || 1) - 1) * 1.4))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
@@ -1436,7 +1445,7 @@ const PZ_LAST = STORE + '-pz-last';
 const pzKind = i => PUZZLES.levels[i].kind === 'line' ? 'tac' : 'mate';
 const pzShowJ = i => { const r = pzRecs(i), j = PZBook.nextIndex(r); return j >= 0 ? j : r.length - 1; };
 const pzBadge = i => `<b class="gl">${pzNo(i)}</b>`;
-function pzThumbOf(i, j) { const P = PUZZLES.levels[i].puzzles[j]; if (!P) return { board: '', tm: '' }; const th = pzThumb(P); return { board: th.svg, tm: th.black ? 'b' : 'w' }; }
+function pzThumbOf(i, j, date) { const P = PUZZLES.levels[i].puzzles[j] && pzSlot(i, j, null, date).P; if (!P) return { board: '', tm: '' }; const th = pzThumb(P); return { board: th.svg, tm: th.black ? 'b' : 'w' }; }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
@@ -1448,7 +1457,7 @@ async function openPuzzles() {
   box.innerHTML = PZBook.home({
     title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(i, pr)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: pzName(cont.key) },
-    daily: dl ? [{ key: '1', board: pzThumbOf(dl.L, dl.j).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+    daily: dl ? [{ key: '1', board: pzThumbOf(dl.L, dl.j, dl.date).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
       sub: `${pzName(dl.L)} · ${Ls[dl.L].kind === 'line' ? pzSub(dl.L) : t('pz.winIn', { n: Ls[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
     cats: cats.map(k => { const r = idx.filter(i => pzKind(i) === k).map(i => pzRecs(i, pr)).flat(); return { key: k, icon: PZBook.icon(k === 'mate' ? 'crown' : 'bolt'), name: t(k === 'mate' ? 'pz.mateHead' : 'pz.tacHead'), done: r.filter(x => x > 0).length, total: r.length }; }),
     cur, catDesc: t(cur === 'mate' ? 'pz.mateHeadSub' : 'pz.tacHeadSub'),
@@ -1471,7 +1480,8 @@ function openPzGrid(i, cur) {
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(i), name: pzName(i), desc: pzSub(i), chips: [t(L.kind === 'line' ? 'pz.tacHead' : 'pz.mateHead'), PZBook.t('count', { n: L.puzzles.length })], tier: themeTier(L) });
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(i), cur });
   // each tile shows the position to solve (a small board, seen from the solver's side) under its number and stars
-  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (!P) return; const th = pzThumb(P); el.insertAdjacentHTML('afterbegin', `<span class="th">${th.svg}</span>`); el.classList.toggle('wt', !th.black); el.classList.add('hasth'); });
+  const pr = pzProgress();
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j] && pzSlot(i, +el.dataset.j, pr).P; if (!P) return; const th = pzThumb(P); el.insertAdjacentHTML('afterbegin', `<span class="th">${th.svg}</span>`); el.classList.toggle('wt', !th.black); el.classList.add('hasth'); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
   const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
@@ -1493,12 +1503,12 @@ $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const P = PUZZLES.levels[L].puzzles[j];
+  const { P, rk } = pzSlot(L, j, null, daily);
   if (!daily) PZBook.lastSet(PZ_LAST, L);
   if (P.line) {
     // tactics: the opponent's last move is shown first, then you play the solution line
     const me = P.fen.split(' ')[1] === 'b' ? P1 : P2;
-    puzzle = { L, j, P, me, n: P.line.length >> 1, line: true, k: 1, state: 'play', busy: true, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
+    puzzle = { L, j, P, rk, me, n: P.line.length >> 1, line: true, k: 1, state: 'play', busy: true, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
     document.body.classList.add('in-puzzle');
     enterSpecial(P.fen);
     update(false); renderPuzzleCard(); pzStatus(t('pz.tStart'));
@@ -1506,7 +1516,7 @@ function startPuzzle(L, j, daily) {
     setTimeout(() => { if (puzzle !== Pz) return; playMove2(posAt(0).pos.fromUci(P.line[0])); setTimeout(() => { if (puzzle !== Pz) return; Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay()); pzPrefetch(Pz); }, moveDur()); }, 450);
     return;
   }
-  puzzle = { L, j, P, me: P.fen.split(' ')[1] === 'b' ? P2 : P1, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
+  puzzle = { L, j, P, rk, me: P.fen.split(' ')[1] === 'b' ? P2 : P1, n: PUZZLES.levels[L].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.fen);
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
@@ -1679,7 +1689,7 @@ function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(), k = pzKey(Pz.L, Pz.j), stars = PZBook.starsFor(Pz);
+  const pr = pzProgress(), k = Pz.rk || pzKey(Pz.L, Pz.j), stars = PZBook.starsFor(Pz);
   const before = pzRecs(Pz.L, pr);
   pr[k] = Math.max(starVal(pr[k]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
@@ -2853,7 +2863,7 @@ if (olRoomQ) {
   try { const u = new URL(location.href); u.searchParams.delete('room'); if (/room=/.test(u.hash)) u.hash = ''; history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) {}
   openOnline(olRoomQ);
 }
-window.__ch = { get net() { return net; }, get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, statusAt, posAt, newGame, sanOf, tryMove, onSquare, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, commit };
+window.__ch = { get net() { return net; }, get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, statusAt, posAt, newGame, sanOf, tryMove, onSquare, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, openPuzzles, openPzGrid, pzSlot, lessonsReady, puzzlesReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, commit };
 
 function dismissOverlay(o) {
   const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose', onlineOverlay: '#olClose', profOverlay: '#pfLater' };
