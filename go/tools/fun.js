@@ -30,7 +30,7 @@
 const path = require('path');
 const R = require(path.join(__dirname, '..', 'rules.js'));
 const T = require(path.join(__dirname, '..', 'tsumego.js'));
-const PASS = -1;
+const PASS = -1, EX = { exact: true };
 
 const toIdx = (v, n) => typeof v === 'number' ? v : R.parseCoord(v, n);
 function norm(P) {
@@ -46,14 +46,14 @@ function funScore(P0, opt) {
   const zero = (why, info) => ({ fun: 0, sound: false, why, parts: {}, info: info || {} });
   const pos0 = R.Pos.from(P.s), G = pos0.turn, O = 3 - G;
   for (let i = 0; i < n * n; i++) if (pos0.b[i] && pos0.group(i).libs === 0) return zero('illegal');
-  if (T.reached(P, pos0)) return zero('reached');
+  if (T.reached(P, pos0, EX)) return zero('reached');
   // ---- soundness
-  const root = T.solve(P, [], P.n + 1, false);
+  const root = T.solve(P, [], P.n + 1, false, EX);
   const win = root.filter(e => e.need > 0 && e.need <= P.n);
   if (win.length !== 1 || win[0].need !== P.n) return zero(win.length > 1 ? 'multi' : 'nosol', { win: win.length });
   if (win[0].m !== P.answer) return zero('answer');
   const C = T._ctx(P); C.load([]);
-  if (C.ld ? C.ldWin(C.O) : !T.solve(P, [PASS], P.n + 2, true).some(e => e.need === 0)) return zero('settled');
+  if (C.ld ? C.ldWin(C.O) : !T.solve(P, [PASS], P.n + 2, true, EX).some(e => e.need === 0)) return zero('settled');
   const line = P.line.length ? P.line : T.mainLine(P, P.n);
   let pos = pos0; const caps = { G: 0, O: 0 }, steps = [];
   for (let k = 0; k < line.length; k++) {
@@ -65,7 +65,7 @@ function funScore(P0, opt) {
   }
   if (line[0] !== P.answer) return zero('line0');
   if (steps.filter(s => s.att).length !== P.n) return zero('linelen');
-  if (!T.reached(P, pos)) return zero('notreached');
+  if (!T.reached(P, pos, EX)) return zero('notreached');
 
   // ---- net: local prior of the answer and of the wrong moves
   const regionSet = new Set(P.region);
@@ -116,7 +116,7 @@ function funScore(P0, opt) {
     let sc = 0, cnt = 0, sacMid = 0, forced = 0;
     for (let k = 2; k < line.length; k += 2) {
       const left = P.n - k / 2;
-      const l = T.solve(P, line.slice(0, k), left, false), good = l.filter(e => e.need > 0 && e.need <= left);
+      const l = T.solve(P, line.slice(0, k), left, false, EX), good = l.filter(e => e.need > 0 && e.need <= left);
       const cand = l.length;
       if (cand <= 1) { forced++; continue; }
       cnt++; sc += good.length === 1 ? 1 : good.length === 2 ? 0.6 : 0.3;

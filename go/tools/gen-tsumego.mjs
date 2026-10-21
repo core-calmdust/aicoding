@@ -20,6 +20,7 @@ const DIR = path.dirname(new URL(import.meta.url).pathname);
 const OUT = path.join(DIR, 'data', 'tsumego');
 fs.mkdirSync(OUT, { recursive: true });
 const co = (i, n) => R.coord(i, n);
+T.nodeLimit = 4e5;   // candidates whose exact reading needs more are dropped (keeps the puzzles fast on phones too)
 
 // shape colours: 2 = the side that is "outside" (attacker / racing player), 1 = the defender; player = shape colour of G
 function specOf(b, n, player) { let s = ''; for (let i = 0; i < n * n; i++) s += b[i] === 0 ? '.' : b[i] === player ? 'b' : 'w'; return { n, stones: s, turn: 1 }; }

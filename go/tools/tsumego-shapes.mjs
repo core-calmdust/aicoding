@@ -9,6 +9,7 @@ const DIR = path.dirname(new URL(import.meta.url).pathname);
 export const R = require(path.join(DIR, '..', 'rules.js'));
 export const T = require(path.join(DIR, '..', 'tsumego.js'));
 export const PASS = -1;
+export const EX = { exact: true };
 
 // deterministic RNG
 export function rng(seed) { let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
@@ -171,7 +172,7 @@ export function viewFor(pts, n, minSz = 7) {
 export function classify(P, maxN) {
   const C = T._ctx(P); C.load([]);
   if (C.R()) return { why: 'reached' };
-  const list = T.solve(P, [], maxN, false);
+  const list = T.solve(P, [], maxN, false, EX);
   const win = list.filter(e => e.need > 0);
   if (!win.length) return { why: 'nosol' };
   const mn = Math.min(...win.map(e => e.need)), best = win.filter(e => e.need === mn);
@@ -182,7 +183,7 @@ export function classify(P, maxN) {
 export function unsettled(P, nMax) {
   const C = T._ctx(P); C.load([]);
   if (C.ld) { const B = C.B; return !C.ldWin(C.O); }
-  const l = T.solve(P, [PASS], nMax + 2, true);
+  const l = T.solve(P, [PASS], nMax + 2, true, EX);
   return l.some(e => e.need === 0);
 }
 // main line + checks: no passes before the end, no ko, reached at the end
@@ -192,7 +193,7 @@ export function lineOf(P, n) {
   if (line.some(m => m === PASS)) return null;
   let p = R.Pos.from(P.s);
   for (const m of line) { const r = p.tryPlay(m); if (!r) return null; p = r.pos; if (p.ko >= 0) return null; }
-  if (!T.reached(P, p)) return null;
+  if (!T.reached(P, p, EX)) return null;
   const att = line.filter((_, k) => k % 2 === 0).length;
   if (att !== n) return null;
   return line;

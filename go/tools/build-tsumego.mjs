@@ -40,13 +40,14 @@ export async function build() {
   console.log('candidates', cands.length);
   const cacheF = path.join(DATA, 'fun-cache.json');
   const cache = fs.existsSync(cacheF) ? JSON.parse(fs.readFileSync(cacheF, 'utf8')) : {};
+  T.nodeLimit = 2e6;
   const L = await import('./golib.mjs'); const E = await L.load('light');
   const net = { policy: (s, m) => L.policy(E, s, m, 7, 2).list, own: (s, m) => L.ownership(E, s, m, 7) };
   let done = 0; const t0 = Date.now();
   for (const c of cands) {
     const k = key(c);
     if (!cache[k]) {
-      const r = funScore(c, { net });
+      let r; try { r = funScore(c, { net }); } catch (e) { if (!e.abort) throw e; r = { fun: 0, sound: false, why: 'slow', info: {} }; }
       cache[k] = { fun: r.fun, sound: r.sound, why: r.why, diff: r.info.diff, netAgree: r.info.netAgree, pAns: r.info.pAns };
       if (++done % 25 === 0) { fs.writeFileSync(cacheF, JSON.stringify(cache)); console.log(`fun ${done} (${((Date.now() - t0) / 1000).toFixed(0)} s)`); }
     }

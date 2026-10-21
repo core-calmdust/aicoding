@@ -532,7 +532,7 @@ function lineIndex(C, P, moves) {
 // run f() for one candidate; on a timeout / node limit unwind the board and return `dflt`
 function guarded(C, f, dflt) {
   const B = C.B, depth = B.undo.length;
-  try { return f(); } catch (e) { if (e !== ABORT) throw e; while (B.undo.length > depth) B.back(); C.aborted++; return dflt; }
+  try { return f(); } catch (e) { if (e !== ABORT || !C.dl) throw e;   // exact mode: the caller handles the node limit while (B.undo.length > depth) B.back(); C.aborted++; return dflt; }
 }
 function solve(P, moves, left, defend, opts) {
   const exact = !!(opts && opts.exact);
