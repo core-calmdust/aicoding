@@ -270,7 +270,7 @@
             cx.imageSmoothingEnabled = false; cx.drawImage(off, 0, 0, bw, bh, 0, 0, bw * block, bh * block);
             if (drop > 0 && block > 1.5) for (var y = 0; y < bh; y++) for (var x = 0; x < bw; x++) if (seed[(x * 31 + y * 17) & 4095] < drop) cx.clearRect(x * block, y * block, block, block);
         }
-        var T_IN = 260, T_HOLD = 300, T_OUT = 260, t0 = 0, phase = 'in', outAt = 0, done = false;
+        var T_IN = 260, T_HOLD = 1000, T_OUT = 260, t0 = 0, phase = 'in', outAt = 0, done = false;
         var ease = function (k) { return 1 - Math.pow(1 - k, 2); };
         function frame(now) {
             if (!t0) t0 = now;
