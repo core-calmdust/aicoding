@@ -786,6 +786,7 @@
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
+  //   o.roll: the camera is rolled 90° (screen up = world −x): o.w then runs along the screen height, o.d along its width
   let fitTo = null;
   function fit(o) { fitTo = o || null; }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
@@ -926,7 +927,7 @@
     const py = q[1] + (r2[1] - q[1]) * k, pz = q[2] + (r2[2] - q[2]) * k, d = Math.hypot(py, pz), a = Math.atan2(py, pz) + tilt;
     cam.position.set(0, d * Math.sin(a), d * Math.cos(a));
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
-    { const ly = fitTo ? .4 + (fitTo.y - .4) * camK : .4; cam.position.y += ly - .4; cam.lookAt(0, ly, 0); }   // the canvas itself is kept clear of the info card (app.js fitStage)
+    { const ly = fitTo ? .4 + (fitTo.y - .4) * camK : .4; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     R.render(scene, cam);
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units

@@ -534,25 +534,32 @@
     }));
   }
 
-  /* ---------- table framing: on a portrait screen the case is turned 90° (clockwise, like the game's own
-     landscape mode: your side on the left, the tray at the bottom) so its long side runs down the screen ---------- */
-  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
+  /* ---------- table framing: on a portrait screen the view is a landscape one turned 90° (clockwise, like the
+     game's own landscape mode: hold the phone sideways, your side at the bottom) so the long case fills the screen ---------- */
+  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing), side (px of HUD strip in a landscape view), onChange(mode) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
   function frameOn(board, T3, o) {
     const TT = T(), g = o.g, SC = o.SC;
     let rot = null;
-    const aspect = () => { const d = T3._dbg && T3._dbg(); if (d && d.aspect) return d.aspect; const c = T3.renderer && T3.renderer() && T3.renderer().domElement; return c && c.clientHeight ? c.clientWidth / c.clientHeight : innerWidth / innerHeight; };
+    const aspect = () => { const c = T3.renderer && T3.renderer() && T3.renderer().domElement; return c && c.clientHeight ? c.clientWidth / c.clientHeight : innerWidth / innerHeight; };   // the whole canvas (the play view has no inset; the showcase inset is still easing out at start)
     function apply() {
-      const r = o.rotate !== false && aspect() < .8;
-      if (r === rot) return; rot = r;
-      board.rotation.y = r ? -Math.PI / 2 : 0;
+      const a = aspect(), r = o.rotate !== false && a < .8, long = Math.max(innerWidth, innerHeight), short = Math.min(innerWidth, innerHeight);
+      // 'turn': portrait screen held sideways · 'wide': a short landscape screen (phone) · 'norm'
+      const mode = r ? 'turn' : o.side && a > 1.3 && short < 560 ? 'wide' : 'norm', key = mode + ':' + a.toFixed(2);
+      if (key === rot) return; rot = key;
       if (o.legacy) { if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: o.Y * SC, pitch: 1.18 }); }
-      else {   // as large as the screen allows; the screen bands kept for the HUD / buttons (top, bottom) stay free
-        const bw = r ? g.H + .3 : g.W + .6, bd = r ? g.W + .4 : g.H + .35, top = r ? .07 : .05, bot = r ? .17 : 0, dT = bd * SC / (1 - top - bot);
-        board.position.z = (top - bot) / 2 * dT;
-        if (T3.fit) T3.fit({ w: bw * SC, d: dT, y: o.Y * SC, pitch: r ? 1.4 : 1.2 });
+      else if (mode === 'norm') {   // as large as the screen allows; a band at the top is kept for the HUD
+        const bw = g.W + 1.1, bd = g.H + .9, top = .05, dT = bd * SC / (1 - top);   // the case incl. its rails (+ perspective)
+        board.position.set(0, 0, top / 2 * dT);
+        if (T3.fit) T3.fit({ w: bw * SC, d: dT, y: o.Y * SC, pitch: 1.2 });
+      } else {   // a landscape view (turn: the camera rolls 90°, a true landscape on the portrait screen) — the case fills the
+        // height, shifted left; the HUD sits in the free strip at the (landscape) bottom right (o.side px)
+        const aL = a < 1 ? 1 / a : a, rf = Math.min(.4, o.side / long), bw = g.W + 1.3, bd = g.H + .7;   // the case incl. its rails (+ perspective)
+        const wT = bw * SC / (1 - rf), dT = bd * SC / .96, vis = Math.max(wT, dT * aL);
+        board.position.set(-Math.min(rf / 2 * vis, Math.max(0, (vis - bw * SC) / 2)), 0, 0);
+        if (T3.fit) T3.fit(r ? { w: dT, d: wT, y: o.Y * SC, pitch: 1.25, roll: 1 } : { w: wT, d: dT, y: o.Y * SC, pitch: 1.25 });
       }
       board.updateMatrix(); board.updateMatrixWorld(true);
-      T3.kick(600); if (o.onChange) o.onChange(r);
+      T3.kick(600); if (o.onChange) o.onChange(mode);
     }
     apply();
     const onR = () => { apply(); setTimeout(apply, 350); };
@@ -560,7 +567,7 @@
     const ts = [300, 800, 1600].map(ms => setTimeout(apply, ms));   // the canvas aspect settles after the play / rules layout
     const inv = new TT.Matrix4();
     return {
-      get rot() { return rot; },
+      get mode() { return String(rot).split(':')[0]; },
       check: apply,
       toBoard(p) { board.updateMatrix(); inv.copy(board.matrix).invert(); const v = new TT.Vector3(p.x, o.Y * SC, p.z).applyMatrix4(inv); return { x: v.x, z: v.z }; },
       toCur(x, y, z) { board.updateMatrix(); return new TT.Vector3(x, y, z).applyMatrix4(board.matrix); },

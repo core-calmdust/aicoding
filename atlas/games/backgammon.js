@@ -52,7 +52,10 @@
     const board = T3.MODELS.backgammon(true, { look }); T3.show('backgammon', board); T3.play(true);
     const g = M3.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;
     board.scale.setScalar(SC);
-    const FR = M3.frameOn(board, T3, { SC, Y, g });   // the whole case, large; turned 90° on a portrait phone
+    const bvEl = ctx.el.parentNode;
+    let turned = false;
+    const FR = M3.frameOn(board, T3, { SC, Y, g, side: 280, onChange: m => { turned = m === 'turn'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
+      setTimeout(() => { if (!stopped) { placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
     let pos = null, T = null, sel = null, dests = null, worker = null, jid = 0, seed = '', stream = null, nRoll = 0, busy = false;
@@ -288,12 +291,20 @@
     css.textContent = '.hud .bgk{width:18px;height:18px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 1px 2px rgba(0,0,0,.35)}.hud .bgm{display:flex;align-items:center;gap:6px;flex:none}.hud .bgb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}.hud .bgb.go{font-size:16px;padding:9px 20px}.hud .bgb.ghost2{background:#fff;color:var(--ink2,#555);box-shadow:0 3px 0 #d9d2bf;border:2px solid #eee4cf}'
       + '.bgbub{position:absolute;z-index:3;left:50%;transform:translateX(-50%);max-width:min(340px,calc(100% - 40px));padding:8px 16px;border-radius:16px;background:#fffdf7;border:2px solid #fff;box-shadow:0 8px 20px -10px rgba(80,40,0,.55);font-weight:900;font-size:14px;color:var(--ink2,#4a4f66);text-align:center;line-height:1.35;pointer-events:none;opacity:0;transition:opacity .2s}.bgbub.on{opacity:1}'
       + '.bgbub::after{content:"";position:absolute;left:50%;margin-left:-8px;border:8px solid transparent}.bgbub.up::after{top:100%;border-top-color:#fffdf7}.bgbub.dn::after{bottom:100%;border-bottom-color:#fffdf7}'
+      // the turned page (portrait phone, board sideways): bar along the left edge, buttons in the corners, all read in landscape
+      + '.bv.land .hud,.bv.playing.land .hud{top:calc(100% - 14px - env(safe-area-inset-bottom));bottom:auto;left:calc(10px + env(safe-area-inset-left));right:auto;transform-origin:0 0;transform:rotate(90deg) translate(-100%,-100%);max-width:none}'
+      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 12px);right:auto;top:calc(14px + env(safe-area-inset-top));transform-origin:0 0;transform:rotate(90deg)}'
+      + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 12px);right:auto;top:calc(100% - 14px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-100%,0)}'
+      + '.bv.land .bgbub{left:calc(78px + env(safe-area-inset-left));top:calc(100% - 14px - env(safe-area-inset-bottom));bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(-100%,-100%)}.bv.land .bgbub::after,.bv.bgwide .bgbub::after{left:auto;right:40px}'
+      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));left:auto;right:calc(12px + env(safe-area-inset-right));transform:none;max-width:none}.bv.bgwide .bgbub{left:auto;right:calc(14px + env(safe-area-inset-right));top:auto;bottom:calc(76px + env(safe-area-inset-bottom));transform:none}'
+      + '.bv.land .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 40px)}.bv.land .endc h3{white-space:nowrap}.bv.land .endc.on{animation:bgpopL .4s cubic-bezier(.3,1.5,.5,1)}@keyframes bgpopL{from{transform:translate(-50%,-50%) rotate(90deg) scale(.7);opacity:0}}'
       + '@media (max-width:560px){.hud .bgb{padding:7px 10px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 12px}.hud .bgm{gap:5px}.bgbub{font-size:13px;padding:7px 13px}}';
     document.head.appendChild(css);
     const host = ctx.el.parentNode || document.body, bub = document.createElement('div'); bub.className = 'bgbub'; host.appendChild(bub);
     function placeBub() {   // above the bar when it sits at the bottom (phones), below it when it is at the top (PC)
       if (stopped) return;
       const h = document.getElementById('hud'); if (!h || !bub.textContent) { bub.classList.remove('on'); return; }
+      if (turned || (bvEl && bvEl.classList.contains('bgwide'))) { bub.style.top = bub.style.bottom = ''; bub.classList.add('up', 'on'); bub.classList.remove('dn'); return; }   // CSS places it next to the turned bar
       const t0 = h.offsetTop, hh = h.offsetHeight, H = host.clientHeight, up = t0 + hh / 2 > H / 2;   // layout box (the bar slides in with a transform)
       bub.classList.toggle('up', up); bub.classList.toggle('dn', !up);
       bub.style.top = up ? '' : (t0 + hh + 12) + 'px'; bub.style.bottom = up ? (H - t0 + 12) + 'px' : '';
@@ -375,7 +386,7 @@
       stop() {
         stopped = true; timers.forEach(clearTimeout); timers = [];
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true);
-        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); removeEventListener('resize', placeLater); FR.stop();
+        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); if (bvEl) bvEl.classList.remove('land', 'bgwide'); removeEventListener('resize', placeLater); FR.stop();
       },
       _debug: { hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
         pt: p => { const at = locOf(0, p), c = topOf(0, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(0, at); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); },
