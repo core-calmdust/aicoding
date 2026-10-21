@@ -17,6 +17,7 @@
 
   /* ---------- state ---------- */
   let W = A_.load(), P = A_.allProgress(), ACH = A_.achievements(P, W), C = A_.coins(W, ACH);
+  if (W.name && A_.shareName) A_.shareName(W.name, true);   // the portal name is the player name in every game
   function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
 
   /* ---------- sound effects: synthesized with WebAudio (no files), one shared AudioContext ---------- */
@@ -155,7 +156,7 @@
     AtlasAccount.on(() => renderAcc());
     window.addEventListener('atlas-synced', () => { W = A_.load(); refresh(); if (!session) render(page); });
     // when the name changes, fill it in from Google if empty
-    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
+    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
   }
   // floating toy pieces around the title: [piece image, game, x%, y%, width px, rotation]
   const PROPS = [['die', 'backgammon', 9, 22, 92, -12], ['shogi', 'shogi', 22, 14, 84, 8], ['knightB', 'chess', 6, 70, 96, 0], ['disc', 'reversi', 20, 84, 104, -6],
@@ -639,7 +640,7 @@
       <div class="accw"></div></div>`;
     $('avBtn').onclick = () => go('dress');
     renderAcc();
-    $('nameIn').onchange = e => { W.name = e.target.value.trim(); A_.save(W); };
+    $('nameIn').onchange = e => { W.name = e.target.value.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); };   // the same name in every game
   }
   /* ---------- GAMES ---------- */
   function renderGames() {

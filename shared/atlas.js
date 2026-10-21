@@ -293,7 +293,38 @@
   }
   function buy(W, id, price) { if (W.owned.includes(id)) return false; W.owned.push(id); W.spent += price; save(W); return true; }
 
-  window.Atlas = { LANGS, GAMES, CATS, sfxOn, UPDATES, updText, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, byUpdate, recordPlay, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
+
+  /* ---------------- one player name for every game ----------------
+     The portal's profile name is used as the player name in all games: the online games' name keys
+     ('<id>-online-name', pushed to their server when the online panel starts) and the daily-ranking
+     names of Daily Sudoku / Speed Sudoku / SameGame POP!. A name changed inside a game comes back to the portal. */
+  const NAME_GAMES = ['shogi', 'chess', 'reversi', 'checkers', 'gomoku', 'dots', 'morris'];
+  const cleanName = (n, max) => String(n || '').replace(/[\u0000-\u001f\u007f<>&"']/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 16);
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  // apps: also the JSON save files of the sudoku / SameGame apps — only from the portal (never while that app is open)
+  function shareName(name, apps) {
+    name = cleanName(name); if (!name) return;
+    NAME_GAMES.forEach(g => { if (lsGet(g + '-online-name') !== name) lsSet(g + '-online-name', name); });
+    if (!apps) return;
+    const n12 = name.slice(0, 12);
+    const sd = J('mainichi-sudoku-v1'); if (sd && typeof sd === 'object') { sd.prof = sd.prof || {}; if (sd.prof.name !== n12) { sd.prof.name = n12; lsSet('mainichi-sudoku-v1', JSON.stringify(sd)); } }
+    const sg = J('samegame-pop-v1'); if (sg && typeof sg === 'object' && sg.name !== n12) { sg.name = n12; lsSet('samegame-pop-v1', JSON.stringify(sg)); }
+  }
+  // on a game page: take the portal name now; when the player renames themselves in this game, keep it for the portal too
+  (function () {
+    const here = (location.pathname.match(/\/([a-z0-9-]+)\/(?:index\.html)?$/) || [])[1];
+    if (!here || here === 'atlas' || !NAME_GAMES.includes(here)) return;
+    const W0 = J(KEY) || {}, start = cleanName(W0.name);
+    if (start) shareName(start);
+    const key = here + '-online-name', seen = lsGet(key);
+    const back = () => {
+      const now = cleanName(lsGet(key)); if (!now || now === seen) return;
+      const d = J(KEY) || {}; if (d.name === now) return;
+      d.name = now; lsSet(KEY, JSON.stringify(d)); shareName(now);
+    };
+    addEventListener('pagehide', back); document.addEventListener('visibilitychange', () => { if (document.hidden) back(); });
+  })();
+  window.Atlas = { LANGS, GAMES, CATS, sfxOn, UPDATES, updText, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, byUpdate, recordPlay, shareName, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
 })();
 
 /* =====================================================================
