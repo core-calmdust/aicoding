@@ -749,12 +749,15 @@ class AudioHandler {
             this.bgmOscillators.push(osc, panner, gain);
         };
         // 予約済みのキック・小節頭が実際に鳴った時に演出を出す
-        const nowA = this.ctx.currentTime + (this.ctx.outputLatency || 0) * 0.5;
+        // 予約した音が実際に耳に届くのは currentTime から出力遅延ぶん後。スマホは遅延が大きいので、その分だけ演出を遅らせる
+        // （以前は逆に早めていたため、遅延の大きいスマホで演出が音より先に出ていた）
+        const outLat = (this.ctx.outputLatency || this.ctx.baseLatency || 0);
+        const nowA = this.ctx.currentTime - Math.max(0, outLat - 0.016);
         while (this.kickQ && this.kickQ.length && this.kickQ[0] <= nowA) { this.kickQ.shift(); visualBeat = 1.0; }
         while (this.barQ && this.barQ.length && this.barQ[0] <= nowA) { this.barQ.shift(); this.barTrigger = true; }
         // 処理が大きく止まって予約が遅れたときは、遅れた分を鳴らさずに飛ばす（まとめて鳴ってリズムが崩れるのを防ぐ）
-        while (this.nextNoteTime < this.ctx.currentTime - 0.03) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
-        while (this.nextNoteTime < this.ctx.currentTime + 0.1) { // 先読みは元の0.1秒（長くするとステージ切り替えでパートの入りが遅れる）
+        while (this.nextNoteTime < this.ctx.currentTime - 0.06) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
+        while (this.nextNoteTime < this.ctx.currentTime + (IS_MOBILE ? 0.2 : 0.1)) { // 先読み: PCは0.1秒。スマホは処理落ちで予約が間に合わず音が飛ぶので0.2秒
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
             if (noteInMeasure === 0) {
@@ -5347,7 +5350,9 @@ function spawnLink(tx, ty) {
 }
 
 const debris = [];
+let loadLv = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
 function spawnBurst(x, y, color, count, opts = {}) {
+    if (loadLv >= 1) count = Math.ceil(count * (loadLv >= 2 ? 0.35 : 0.6)); // 重い時は破片を減らす
     if (!isEffectsEnabled) count = Math.ceil(count / 3);
     for (let i = 0; i < count; i++) {
         const a = Math.random() * Math.PI * 2;
@@ -5601,6 +5606,13 @@ function render3D() {
         }
     });
 
+    // スマホ: 画面のオブジェクトが一定数を超えたら描画を軽くする（後半ステージの処理落ち対策）
+    if (IS_MOBILE) {
+        const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + debris.length * 0.2 + (monsters ? monsters.length * 2 : 0);
+        if (loadLv < 2 && load > 280) loadLv = 2; else if (loadLv < 1 && load > 170) loadLv = 1;
+        else if (loadLv === 2 && load < 230) loadLv = 1; else if (loadLv === 1 && load < 130) loadLv = 0;
+        if (bloom) bloom.enabled = loadLv < 2; // 重い時はブルームを切る
+    }
     // 彗星（数が増えるほど光を控えめに）
     const cometDensityK = 1 / (1 + comets.length / 220);
     const stageSpeedMod = 1 + (stage - 1) * 0.08;
@@ -5612,8 +5624,8 @@ function render3D() {
         const rot = rTime * 3 + c._r;
         const s = c.radius * 1.7 * VS * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
-        cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
-        glow.add(x, y, z, color, 13 + visualBeat * 6, 0.3 * cometDensityK);
+        if (loadLv < 2) cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
+        glow.add(x, y, z, color, (13 + visualBeat * 6) * (loadLv >= 1 ? 0.75 : 1), 0.3 * cometDensityK * (loadLv >= 1 ? 1.4 : 1)); // 重い時は光を小さく（描画面積を減らす）
         if (efx && !IS_MOBILE) { // スマホは彗星の尾を省略
             let vx, vy;
             if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod; }
@@ -5699,9 +5711,9 @@ function render3D() {
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * (IS_MOBILE ? 1.3 : 1) * pulse;
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
-            glow.add(x, y, z, c, eb.radius * 13, 1.25);     // 色のハロー
-            glow.add(x, y + 2, z, COL_WHITE, eb.radius * 5, 2.2);   // 白い芯
-            if (efx) {
+            glow.add(x, y, z, c, eb.radius * (loadLv >= 2 ? 9 : 13), 1.25);     // 色のハロー
+            if (loadLv < 1) glow.add(x, y + 2, z, COL_WHITE, eb.radius * 5, 2.2);   // 白い芯
+            if (efx && loadLv < 1) {
                 const sp = Math.hypot(eb.vx, eb.vy) || 1;
                 trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
             }
@@ -5728,7 +5740,7 @@ function render3D() {
         const sz = g.big ? 9 : 6;
         gemBodies.add(x, y, z, sz, sz * 1.5, sz, 0, rTime * 5 + k, 0, c);
         glow.add(x, y, z, c, sz * 6, 0.9);
-        if (isEffectsEnabled && Math.hypot(g.vx, g.vy) > 60) {
+        if (isEffectsEnabled && loadLv < 1 && Math.hypot(g.vx, g.vy) > 60) {
             const sp = Math.hypot(g.vx, g.vy);
             trails.add(x - g.vx / sp * 26, y, z - g.vy / sp * 26, x, y, z, 6, c, 0.7);
         }
