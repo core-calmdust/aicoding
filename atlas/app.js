@@ -502,7 +502,8 @@
       const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
         if (!midH) { $('bvOpts').hidden = false; midH = $('bvOpts').offsetHeight; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
-        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
+        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
+        $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
         $('bvMNote').style.minHeight = midH ? midH + 'px' : ''; fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
       window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; midH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
@@ -611,11 +612,12 @@
     $('bv').classList.add('playing'); $('endc').classList.remove('on'); fitStage();
     session = ad.start({ el: $('gl'), Table3D, lang, t, level, side, mode: pmode, hud: h => { $('hud').innerHTML = h; },
       onEnd: res => {
-        A_.recordPlay(W, g.id, res); refresh();
+        if (!res.pvp) A_.recordPlay(W, g.id, res); refresh();   // two players on one device: no win / loss for the player's record
         setTimeout(() => {
-          $('endc').innerHTML = `<h3>${res.win ? '🎉 ' : ''}${esc(t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose'))}</h3>${res.score ? `<div class="sc">${esc(res.score)}</div>` : ''}<div class="gnote">Lv.${res.level}</div>
+          const head = res.pvp ? (res.draw ? t('res.draw') : '🎉 ' + (res.winnerText || res.score || '')) : (res.win ? '🎉 ' : '') + t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose');
+          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.pvp ? '' : `<div class="gnote">Lv.${res.level}</div>`}
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${t('bv.again')}</button></div>`;
-          $('endc').classList.add('on'); if (res.win) confetti(120);
+          $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
           $('eAgain').onclick = () => { stopSession(); Table3D.show(g.id); setTimeout(() => startPlay(lastKind), 50); };
           $('eBack').onclick = () => openBoard(g.id);
           welcome();

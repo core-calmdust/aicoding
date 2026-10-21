@@ -35,6 +35,14 @@
     hi: { check: 'शह!', mate: 'शह-मात', stale: 'स्टेलमेट', fifty: '50 चाल नियम', rep: 'तीन बार दोहराव', material: 'अपर्याप्त मोहरे', promo: 'प्रमोट करें' },
     ar: { check: 'كش!', mate: 'كش مات', stale: 'جمود (تعادل)', fifty: 'قاعدة الخمسين نقلة', rep: 'تكرار ثلاثي', material: 'قطع غير كافية', promo: 'ترقية إلى' },
   };
+  // two players on one device (ctx.mode 'pvp'): the colours' names, whose turn, who won
+  const PV = {
+    ja: { n: ['白', '黒'], turn: '{p}の番', win: '{p}の勝ち' }, en: { n: ['White', 'Black'], turn: '{p} to move', win: '{p} wins' },
+    zh: { n: ['白方', '黑方'], turn: '轮到{p}', win: '{p}胜' }, ko: { n: ['백', '흑'], turn: '{p} 차례', win: '{p} 승리' },
+    es: { n: ['Blancas', 'Negras'], turn: 'Juegan {p}', win: 'Ganan {p}' }, fr: { n: ['Blancs', 'Noirs'], turn: 'Trait aux {p}', win: 'Victoire des {p}' },
+    pt: { n: ['Brancas', 'Pretas'], turn: 'Vez das {p}', win: 'Vitória das {p}' }, de: { n: ['Weiß', 'Schwarz'], turn: '{p} am Zug', win: '{p} gewinnt' },
+    hi: { n: ['सफ़ेद', 'काला'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['الأبيض', 'الأسود'], turn: 'دور {p}', win: 'فوز {p}' },
+  };
   const TYPES = ' PNBRQK', VAL = [0, 1, 3, 3, 5, 9, 0];
   const GLYPH = { w: { Q: '♕', R: '♖', B: '♗', N: '♘' }, b: { Q: '♛', R: '♜', B: '♝', N: '♞' } };
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -77,8 +85,9 @@
     if (board.userData.setTone) board.userData.setTone('classic');
     const Y = board.userData.top;
     if (T3.fit) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, from the player's side
-    const human = ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = White, 1 = Black; the player's side is at the bottom
-    const hcol = human ? 'b' : 'w';
+    const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both colours are tapped in turn, White at the bottom, no AI
+    const human = pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = White, 1 = Black; the player's side is at the bottom
+    const mover = () => pvp && pos ? pos.side : human, mcol = () => mover() ? 'b' : 'w';   // the side whose taps count now
     // 0x88 square ↔ screen cell (f: 0 = left column, r: 0 = top row)
     const scr = sq => { const f = sq & 7, r = sq >> 4; return flip ? [7 - f, r] : [f, 7 - r]; };
     const xz = sq => CS.cell(...scr(sq));
@@ -191,7 +200,7 @@
     function material(c) { let s = 0; for (let sq = 0; sq < 120; sq++) { if (sq & 0x88) continue; const p = pos.b[sq]; if (p && ((p & 8) ? 1 : 0) === c) s += VAL[p & 7]; } return s; }
     function hud(msg) {
       const d = pos ? material(0) - material(1) : 0;
-      const side = c => { const adv = c ? -d : d; return `<span class="hs ${pos && pos.side === c && !over ? 'on' : ''}"><i class="dk ${c ? 'b' : 'w'}"></i>${c === human ? L.you : L.ai}<b>${adv > 0 ? '+' + adv : ''}</b></span>`; };
+      const side = c => { const adv = c ? -d : d; return `<span class="hs ${pos && pos.side === c && !over ? 'on' : ''}"><i class="dk ${c ? 'b' : 'w'}"></i>${pvp ? PX.n[c] : c === human ? L.you : L.ai}<b>${adv > 0 ? '+' + adv : ''}</b></span>`; };
       ctx.hud(`${side(0)}<span class="hm">${msg || ''}</span>${side(1)}`);
     }
     function showMarks() {
@@ -244,8 +253,9 @@
       if (stopped) return;
       const st = status(); legal = st.legal || [];
       if (st.over) return end(st);
-      if (pos.side === human) {
-        hud(pos.inCheck() ? X.check : L.turn);
+      if (pvp || pos.side === human) {
+        const tn = pvp ? PX.turn.replace('{p}', PX.n[pos.side]) : L.turn;
+        hud(pos.inCheck() ? (pvp ? X.check + ' ' + tn : X.check) : tn);
         if (!imgs && legal.some(m => (m >> 14) & 7)) loadImgs();   // a promotion is possible: get the piece pictures ready
         return;
       }
@@ -253,13 +263,13 @@
     }
     function end(st) {
       over = true; busy = false; clear(mv);
-      const win = !st.draw && st.winner === human;
-      hud(st.draw ? L.draw : win ? L.win : L.lose);
+      const win = !pvp && !st.draw && st.winner === human, wt = pvp && !st.draw ? PX.win.replace('{p}', PX.n[st.winner]) : '';
+      hud(st.draw ? L.draw : pvp ? wt : win ? L.win : L.lose);
       if (st.why === 'mate') {   // the mated king lies down
         const ks = pos.ksq[pos.side], k = pcs[ks], [x, z] = xz(ks), [ox, oz] = xz(pos.ksq[pos.side ^ 1]);
         if (k) later(() => topple(k, x - ox || .3, z - oz || .3, true), 380);
       }
-      later(() => ctx.onEnd({ win, draw: !!st.draw, level: ctx.level, score: X[st.why] }), st.why === 'mate' ? 900 : 300);
+      later(() => ctx.onEnd(pvp ? { win: false, draw: !!st.draw, level: ctx.level, score: X[st.why], pvp: true, winnerText: wt } : { win, draw: !!st.draw, level: ctx.level, score: X[st.why] }), st.why === 'mate' ? 900 : 300);
     }
 
     /* ---------- AI: the game's engine worker ---------- */
@@ -286,16 +296,16 @@
     function closePromo() { if (promoEl) { promoEl.remove(); promoEl = null; document.removeEventListener('pointerdown', outside, true); } }
     function outside(e) { if (promoEl && !promoEl.contains(e.target)) { closePromo(); deselect(); } }
     function askPromo(to, cands) {
-      css(); closePromo();
+      css(); closePromo(); const col = mcol();
       const [x, z] = xz(to), p = T3.project(x, z, Y), p2 = T3.project(x, z + 1, Y);
       const el = document.createElement('div'); el.className = 'chpromo';
-      el.innerHTML = `<div class="tl">${X.promo}</div><div class="rw">${['Q', 'R', 'B', 'N'].map(k => `<button type="button" data-k="${k}">${GLYPH[hcol][k]}</button>`).join('')}</div>`;
+      el.innerHTML = `<div class="tl">${X.promo}</div><div class="rw">${['Q', 'R', 'B', 'N'].map(k => `<button type="button" data-k="${k}">${GLYPH[col][k]}</button>`).join('')}</div>`;
       document.body.appendChild(el); promoEl = el;
       const w = el.offsetWidth, h = el.offsetHeight;
       const cx = Math.max(w / 2 + 8, Math.min(innerWidth - w / 2 - 8, p.x));
       let top = p2.y + 6; if (top + h > innerHeight - 8) top = Math.max(8, p.y - h - 30);
       el.style.left = cx + 'px'; el.style.top = top + 'px';
-      Promise.resolve(loadImgs()).then(im => { if (!im || el !== promoEl) return; el.querySelectorAll('button').forEach(b => { const src = im[hcol + b.dataset.k]; if (src) b.innerHTML = `<img src="${src}" alt="${b.dataset.k}">`; }); });
+      Promise.resolve(loadImgs()).then(im => { if (!im || el !== promoEl) return; el.querySelectorAll('button').forEach(b => { const src = im[col + b.dataset.k]; if (src) b.innerHTML = `<img src="${src}" alt="${b.dataset.k}">`; }); });
       el.addEventListener('click', e => {
         e.stopPropagation();
         const b = e.target.closest('button'); if (!b) return;
@@ -311,7 +321,7 @@
       return f < 0 || f > 7 || r < 0 || r > 7 ? -1 : sqAt(f, r);
     }
     function onClick(e) {
-      if (over || busy || !pos || pos.side !== human || promoEl || T3.wasDrag()) return;
+      if (over || busy || !pos || pos.side !== mover() || promoEl || T3.wasDrag()) return;
       const q = cellOf(e); if (q < 0) { deselect(); return; }
       if (sel >= 0) {
         const cands = legal.filter(m => (m & 127) === sel && ((m >> 7) & 127) === q);
@@ -320,7 +330,7 @@
       }
       const p = pos.b[q];
       if (q === sel) { deselect(); return; }
-      if (p && ((p & 8) ? 1 : 0) === human && legal.some(m => (m & 127) === q)) { select(q); return; }
+      if (p && ((p & 8) ? 1 : 0) === mover() && legal.some(m => (m & 127) === q)) { select(q); return; }
       deselect();
     }
     ctx.el.addEventListener('click', onClick);
@@ -334,12 +344,12 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; worker = new Worker(BASE + 'engine.js' + VER); begin(null); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); begin(null); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
       at: n => { const sq = (n.charCodeAt(0) - 97) + ((+n[1] - 1) << 4), [x, z] = xz(sq); return T3.project(x, z, Y); },
-      state: () => ({ moves: moves.length, side: pos && pos.side, human, over, busy, thinking, sel, promo: !!promoEl, check: !!(pos && pos.inCheck()), pieces: Object.keys(pcs).length }),
+      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel, promo: !!promoEl, check: !!(pos && pos.inCheck()), pieces: Object.keys(pcs).length }),
       board: () => { const o = {}; Object.entries(pcs).forEach(([sq, g]) => { o[E.sqName(+sq)] = (g.userData.color === 'w' ? g.userData.type : g.userData.type.toLowerCase()); }); return o; },
       setup: fen => begin(fen),
     };
@@ -370,5 +380,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], rating: RATING[n - 1], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.chess = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai'], levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.chess = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], levelInfo, start };   // table: start() plays on the chabudai itself
 })();

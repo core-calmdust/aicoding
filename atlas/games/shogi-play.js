@@ -32,6 +32,15 @@
     ar: { mate: 'كش مات في {n} نقلة', resign: 'استسلام عند النقلة {n}', sen: 'تكرار (سينّيتشيتي)', perp: 'كش دائم', decl: 'إعلان دخول الملك', max: 'تعادل عند النقلة 512', yes: 'رقِّ', no: 'أبقِ', check: 'كش!', ply: 'النقلة {n}', book: 'افتتاح' },
   };
 
+  // two players on one device (ctx.mode 'pvp'): the sides' names, whose turn, who won
+  const PV = {
+    ja: { n: ['先手', '後手'], turn: '{p}の番', win: '{p}の勝ち' }, en: { n: ['Sente', 'Gote'], turn: '{p} to move', win: '{p} wins' },
+    zh: { n: ['先手', '后手'], turn: '轮到{p}', win: '{p}胜' }, ko: { n: ['선수', '후수'], turn: '{p} 차례', win: '{p} 승리' },
+    es: { n: ['Sente', 'Gote'], turn: 'Turno de {p}', win: 'Gana {p}' }, fr: { n: ['Sente', 'Gote'], turn: 'Au tour de {p}', win: 'Victoire de {p}' },
+    pt: { n: ['Sente', 'Gote'], turn: 'Vez de {p}', win: 'Vitória de {p}' }, de: { n: ['Sente', 'Gote'], turn: '{p} am Zug', win: '{p} gewinnt' },
+    hi: { n: ['सेंते', 'गोते'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['سينتي', 'غوتي'], turn: 'دور {p}', win: 'فوز {p}' },
+  };
+
   /* ---------- the full game's engine, weights and book (loaded once, on the first game) ---------- */
   let loading = null;
   function load() {
@@ -77,7 +86,8 @@
     injectCss();
     const board = T3.MODELS.shogi(true); board.scale.setScalar(SC); T3.show('shogi', board);
     const Y = board.userData.top, KH = Y, CW = SG.CW, CH = SG.CH, FW = SG.FW, FH = SG.FH;
-    const hc = ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
+    const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both sides are tapped in turn (sente at the bottom), no AI
+    const hc = pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
     let E = null, P = null, moves = [], legal = [], sel = null, over = null, stopped = false, busy = true, worker = null, book = null, jobId = 0, popup = null, last = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
@@ -169,7 +179,7 @@
       if (!over && P.inCheck()) { const k = P.king[P.side]; if (k >= 0) tileAt(k, 0xff2a2a, .45); }
       if (sel) {
         if (sel.sq != null) tileAt(sel.sq, 0x2fd17a, .55);
-        else { const h = hand[0].find(h => h.t === sel.hand); if (h) { const m = new TH.Mesh(padGeo, mat(0x2fd17a, .6)); m.position.set(h.g.position.x, KH + .012, h.g.position.z); marks.add(m); } }
+        else { const h = hand[sel.who || 0].find(h => h.t === sel.hand); if (h) { const m = new TH.Mesh(padGeo, mat(0x2fd17a, .6)); m.position.set(h.g.position.x, KH + .012, h.g.position.z); marks.add(m); } }
         const seen = new Set();
         targets().forEach(m => { const to = E.mTo(m); if (seen.has(to)) return; seen.add(to);
           if (P.board[to]) tileAt(to, 0xd8321c, .5); else tileAt(to, 0xd8321c, .85, ringGeo); });
@@ -178,7 +188,8 @@
     }
     const targets = () => !sel ? [] : legal.filter(m => sel.sq != null ? !E.isDrop(m) && E.mFrom(m) === sel.sq : E.isDrop(m) && E.mFrom(m) - 80 === sel.hand);
     function lift(g, up, y0) { if (!g) return; const a = g.position.y, b = y0 + (up ? .25 : 0); anim(160, k => { g.position.y = a + (b - a) * io(k); }); }
-    function selPiece() { return !sel ? null : sel.sq != null ? pcs[sel.sq] : (hand[0].find(h => h.t === sel.hand) || {}).g; }
+    function selPiece() { return !sel ? null : sel.sq != null ? pcs[sel.sq] : (hand[sel.who || 0].find(h => h.t === sel.hand) || {}).g; }
+    const meWho = () => P && P.side !== hc ? 1 : 0;   // whose stand the side to move uses (pvp: gote's is the far one)
     function select(s) {
       const old = selPiece(); if (old) lift(old, false, sel.sq != null ? Y : KH);
       sel = s; const g = selPiece(); if (g) lift(g, true, s.sq != null ? Y : KH);
@@ -188,7 +199,7 @@
 
     /* ---------- hud ---------- */
     function hud(msg) {
-      const side = c => `<span class="hs ${P && P.side === c && !over ? 'on' : ''}"><i class="sgk">${c ? '☖' : '☗'}</i>${c === hc ? L.you : L.ai}</span>`;
+      const side = c => `<span class="hs ${P && P.side === c && !over ? 'on' : ''}"><i class="sgk">${c ? '☖' : '☗'}</i>${pvp ? PX.n[c] : c === hc ? L.you : L.ai}</span>`;
       ctx.hud(`${side(0)}<span class="hm">${msg || ''}</span>${side(1)}`);
     }
     const plyTag = () => fmt(S.ply, moves.length + 1);
@@ -258,17 +269,17 @@
     }
     function end(o) {
       over = o; busy = true; sel = null; closePopup(); drawMarks();
-      const win = o.winner === hc, draw = o.winner < 0;
+      const win = !pvp && o.winner === hc, draw = o.winner < 0, wt = pvp && !draw ? PX.win.replace('{p}', PX.n[o.winner]) : '';
       const sc = o.reason === 'mate' ? fmt(S.mate, o.ply) : o.reason === 'resign' ? fmt(S.resign, o.ply) : S[o.reason];
-      hud(`${draw ? L.draw : win ? L.win : L.lose} · ${sc}`);
+      hud(`${draw ? L.draw : pvp ? wt : win ? L.win : L.lose} · ${sc}`);
       if (o.reason === 'mate') { const k = P.king[o.winner ^ 1], g = pcs[k]; if (g) { const r0 = g.rotation.y; anim(700, k2 => { g.rotation.y = r0 + Math.sin(k2 * Math.PI * 7) * .16 * (1 - k2); }, () => { g.rotation.y = r0; }); } }
-      ctx.onEnd({ win, draw, level: ctx.level, score: sc });
+      ctx.onEnd(pvp ? { win: false, draw, level: ctx.level, score: sc, pvp: true, winnerText: wt } : { win, draw, level: ctx.level, score: sc });
     }
     function next() {
       if (stopped || over) return;
       const o = checkEnd(); if (o) return end(o);
       const chk = P.inCheck() ? S.check + ' ' : '';
-      if (P.side === hc) { legal = P.legalMoves(true); busy = false; hud(`${plyTag()} · ${chk}${L.turn}`); drawMarks(); return; }
+      if (pvp || P.side === hc) { legal = P.legalMoves(true); busy = false; hud(`${plyTag()} · ${chk}${pvp ? PX.turn.replace('{p}', PX.n[P.side]) : L.turn}`); drawMarks(); return; }
       busy = true; legal = []; hud(`${plyTag()} · ${chk}${L.think}`); drawMarks(); aiMove();
     }
     function bookMove() {
@@ -309,7 +320,8 @@
       const p0 = T3.pick(e, Y * SC); if (!p0) return null;
       const p = toBoard(p0), c = Math.floor((p.x + FW / 2) / CW), r = Math.floor((p.z + FH / 2) / CH);
       if (c >= 0 && c < 9 && r >= 0 && r < 9) return { sq: sqAt(c, r) };
-      for (const h of hand[0]) if (Math.abs(p.x - h.g.position.x) < .42 && Math.abs(p.z - h.g.position.z) < .5) return { hand: h.t };
+      const who = meWho();
+      for (const h of hand[who]) if (Math.abs(p.x - h.g.position.x) < .42 && Math.abs(p.z - h.g.position.z) < .5) return { hand: h.t, who };
       return null;
     }
     function tryMove(to) {
@@ -331,14 +343,14 @@
       const tile = tileAt(to, 0x2f8bd1, .55); tile.userData.promo = 1; T3.kick(150);
     }
     function onClick(e) {
-      if (busy || over || !P || P.side !== hc || T3.wasDrag()) return;
+      if (busy || over || !P || (!pvp && P.side !== hc) || T3.wasDrag()) return;
       if (popup) { deselect(); return; }
       const h = hit(e); if (!h) { deselect(); return; }
       if (h.sq != null && sel && tryMove(h.sq)) return;
       if (h.sq != null) { const code = P.board[h.sq];
-        if (code && code >> 4 === hc) { if (sel && sel.sq === h.sq) return deselect(); if (legal.some(m => !E.isDrop(m) && E.mFrom(m) === h.sq)) return select({ sq: h.sq }); }
+        if (code && code >> 4 === P.side) { if (sel && sel.sq === h.sq) return deselect(); if (legal.some(m => !E.isDrop(m) && E.mFrom(m) === h.sq)) return select({ sq: h.sq }); }
         return deselect(); }
-      if (h.hand != null) { if (sel && sel.hand === h.hand) return deselect(); if (legal.some(m => E.isDrop(m) && E.mFrom(m) - 80 === h.hand)) return select({ hand: h.hand }); return deselect(); }
+      if (h.hand != null) { if (sel && sel.hand === h.hand) return deselect(); if (legal.some(m => E.isDrop(m) && E.mFrom(m) - 80 === h.hand)) return select({ hand: h.hand, who: h.who }); return deselect(); }
     }
     let lastTall = null;
     function onResize() { closePopup(); layout(); if (lastTall !== tall) { lastTall = tall; if (P) { buildHands(); drawMarks(); } } }
@@ -351,7 +363,7 @@
       if (stopped) return;
       E = r.E; book = r.book; weights = r.weights;
       P = new E.Position(); P.setSfen(START);
-      worker = newWorker();
+      if (!pvp) worker = newWorker();
       buildBoard(true); buildHands();
       hud(plyTag());
       later(next, 80 + 40 * 14 + 400);
@@ -368,14 +380,14 @@
     // test hooks (Playwright): screen positions of squares / the player's hand pieces, and the state
     const dbg = {
       xy(sq) { const [x, z] = cellXZ(sq); return T3.project(x * SC + board.position.x, z * SC + board.position.z, Y * SC); },
-      handXY(ty) { const h = hand[0].find(h => h.t === ty); if (!h) return null; return T3.project(h.g.position.x * SC + board.position.x, h.g.position.z * SC + board.position.z, KH * SC); },
+      handXY(ty, who = 0) { const h = hand[who].find(h => h.t === ty); if (!h) return null; return T3.project(h.g.position.x * SC + board.position.x, h.g.position.z * SC + board.position.z, KH * SC); },
       sq: u => E.makeSq(+u[0], 'abcdefghi'.indexOf(u[1]) + 1),
       audit() {   // pieces on the board's plane that the engine does not know about (or the other way round)
         const out = []; board.children.forEach(g => { if (g.userData.ty == null || !g.visible) return; if (Object.values(pcs).includes(g) || hand.some(l => l.some(h => h.g === g)) || strays.includes(g) || flying.has(g)) return; out.push('orphan ' + g.userData.ty + '@' + g.position.x.toFixed(2) + ',' + g.position.z.toFixed(2)); });
         for (let sq = 0; sq < 81; sq++) { const code = P.board[sq], g = pcs[sq]; if (!!code !== !!g) out.push('mismatch ' + sq); else if (g && (g.userData.ty !== (code & 15) || g.userData.c !== code >> 4)) out.push('type ' + sq); }
         return out;
       },
-      state: () => ({ moves: moves.slice(), side: P && P.side, hc, busy, over, sfen: P && P.sfen(), legal: legal.map(m => P.toUsi(m)), popup: !!popup, tall, hand: P && Array.from(P.hand) }),
+      state: () => ({ moves: moves.slice(), side: P && P.side, hc, pvp, busy, over, sfen: P && P.sfen(), legal: legal.map(m => P.toUsi(m)), popup: !!popup, tall, hand: P && Array.from(P.hand) }),
     };
     window.__shogiTable = dbg;
     return api;
