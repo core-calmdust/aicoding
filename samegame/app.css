@@ -879,6 +879,15 @@ body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([
   .dabtm .tries em{display:none}
 }
 @media (max-width:860px){.dadesc,.dabtm .tries em{display:none}}
+.boomflash{position:fixed;inset:0;z-index:150;pointer-events:none;background:radial-gradient(circle,#fff 0,#FFE9A8 35%,rgba(232,184,58,.6) 60%,transparent 80%);animation:boomflash .85s ease-out forwards}
+@keyframes boomflash{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
+#play.bigshake{animation:bigshake .8s cubic-bezier(.36,.07,.19,.97)}
+@keyframes bigshake{10%{transform:translate(-14px,8px) rotate(-1.2deg)}20%{transform:translate(16px,-10px) rotate(1.4deg)}30%{transform:translate(-12px,-6px)}40%{transform:translate(10px,10px) rotate(-.8deg)}55%{transform:translate(-7px,4px)}70%{transform:translate(5px,-3px)}85%{transform:translate(-2px,2px)}}
+.shock{position:absolute;z-index:19;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:10px solid #E8B83A;pointer-events:none;animation:shock 1s cubic-bezier(.1,.7,.3,1) forwards}
+.shock:nth-of-type(2n){border-color:#D9622B}
+@keyframes shock{0%{transform:scale(.2);opacity:1}100%{transform:scale(22);opacity:0;border-width:2px}}
+.sfx.boomword{z-index:30;animation:boomword 1.45s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes boomword{0%{scale:.1;opacity:0}18%{scale:1.15;opacity:1}70%{scale:1;opacity:1}100%{scale:1.1;opacity:0}}
 /* free play options: spread across the full box width */
 #dFree .frow{display:grid;grid-template-columns:56px repeat(var(--n,3),1fr);align-items:center;gap:6px;margin-bottom:8px}
 #dFree .frow .chipb{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 4px;background:var(--paper);border-radius:999px;box-shadow:none;border:0}

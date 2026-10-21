@@ -710,7 +710,7 @@ function loop() {
     const flv = Math.min(4, 1 + Math.floor(G.elapsed / 25));
     if (flv > G.lv) { G.lv = flv; G.k = Math.min(6, G.k0 + flv - 1); floatText('LEVEL ' + flv + '!', 'fever'); SND.fever(); }
     const s2 = Math.ceil(G.fuse); if (G.fuse < 3 && s2 !== lastTick) { lastTick = s2; SND.tick(); }
-    if (G.fuse <= 0) { G.fuse = 0; hud(); return endAction(); }
+    if (G.fuse <= 0) { G.fuse = 0; hud(); return fuseBoom(); }
   }
   if (G.mode === 'rise') {
     G.riseT += dt; const every = Math.max(2.2, G.riseEvery - G.elapsed / 30);
@@ -791,6 +791,41 @@ function finishPuzzle(perfect) {
       [['new', t('r.new'), 'red'], ['undo', t('g.undo')], ['home', t('u.home')]], perfect ? '' : 'plain');
   }
   save(); showResult(html); hud();
+}
+// FUSE burn-out: big explosion before the result
+function fuseBoom() {
+  if (G.over || G.booming) return; G.booming = true; G.busy = true; stopLoop(); $$('.hero, .ink').forEach(e => e.remove());
+  const b = boardEl(), br = b.getBoundingClientRect(), cx = br.width / 2, cy = br.height / 2;
+  // sound: rumble + low boom + crackle
+  noise(1.1, .38); tone(55, .9, 'sine', .32, .35); tone(110, .55, 'sawtooth', .12, .4); setTimeout(() => noise(.5, .18), 220);
+  // flash + shake
+  const fl = document.createElement('div'); fl.className = 'boomflash'; document.body.appendChild(fl); setTimeout(() => fl.remove(), 900);
+  $('#play').classList.remove('bigshake'); void $('#play').offsetWidth; $('#play').classList.add('bigshake'); setTimeout(() => $('#play').classList.remove('bigshake'), 900);
+  // shockwave rings
+  for (let i = 0; i < 2; i++) { const r = document.createElement('div'); r.className = 'shock'; r.style.left = cx + 'px'; r.style.top = cy + 'px'; r.style.animationDelay = i * 140 + 'ms'; b.appendChild(r); setTimeout(() => r.remove(), 1200); }
+  // big KA-BOOM burst
+  const w = document.createElement('div'); w.className = 'sfx boomword'; w.style.left = cx + 'px'; w.style.top = cy + 'px'; w.style.setProperty('--s', Math.min(3.2, br.width / 140)); w.style.setProperty('--r', '-6deg');
+  w.innerHTML = `${A.burst(20, 49, 30, 'var(--red)')}<b style="color:#fff">KA-BOOM!</b>`; b.appendChild(w); setTimeout(() => w.remove(), 1500);
+  // blocks fly away from the center
+  G.els.forEach((col, x) => col.forEach((d, y) => {
+    const px = (x + .5) * G.cs - cx, py = (G.rows - 1 - y + .5) * G.cs - cy, dist = Math.hypot(px, py) || 1, f = 260 + Math.random() * 420;
+    const tx = px / dist * f + (Math.random() - .5) * 120, ty = py / dist * f - 120 - Math.random() * 160, rot = (Math.random() - .5) * 720;
+    d.style.transition = `transform ${.75 + Math.random() * .35}s cubic-bezier(.15,.6,.3,1) ${dist / 9}ms, opacity .9s ease-in ${200 + dist / 6}ms`;
+    requestAnimationFrame(() => { d.style.transform = pos(x, y) + ` translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${.6 + Math.random() * .6})`; d.style.opacity = '0'; });
+  }));
+  sparks(br.left + cx, br.top + cy);
+  setTimeout(() => { if (!G) return; G.booming = false; G.busy = false; endAction(); }, 1500);
+}
+function sparks(ox, oy) {
+  const cv = $('#fx'), ctx = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ['#E8B83A', '#D9622B', '#FFFAF0', '#F2CB57', '#2F2A26'], P = [];
+  for (let i = 0; i < 140; i++) { const a = Math.random() * Math.PI * 2, v = 6 + Math.random() * 16; P.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3, r: 2 + Math.random() * 5, c: cols[(Math.random() * cols.length) | 0], life: 40 + Math.random() * 40 }); }
+  let f = 0;
+  (function tick() {
+    ctx.clearRect(0, 0, cv.width, cv.height); f++; let live = 0;
+    for (const p of P) { if (f > p.life) continue; live++; p.vx *= .96; p.vy = p.vy * .96 + .35; p.x += p.vx; p.y += p.vy; ctx.globalAlpha = 1 - f / p.life; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1; if (live) requestAnimationFrame(tick); else ctx.clearRect(0, 0, cv.width, cv.height);
+  })();
 }
 function endAction() {
   if (G.over) return; G.over = true; stopLoop(); boardEl().classList.remove('fev', 'warn');
