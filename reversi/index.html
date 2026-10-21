@@ -240,7 +240,7 @@ a.snd.home{text-decoration:none}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
 
-.controls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.controls{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 .controls .btn{min-width:0}
 .controls .btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .btn{
@@ -695,8 +695,8 @@ body.in-lesson .controls{display:none}
   .player .count{font-size:26px;margin-top:0;line-height:1}
   .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
   .card{padding:10px 12px}
-  .controls{padding:8px;gap:6px}
-  .btn{flex-direction:column;justify-content:center;padding:7px 2px;gap:3px;font-size:11px;white-space:nowrap;letter-spacing:0}
+  .controls{padding:8px;gap:4px}
+  .btn{flex-direction:column;justify-content:center;padding:7px 1px;gap:3px;font-size:10px;white-space:nowrap;letter-spacing:0}
   .btn svg{width:17px;height:17px}
   .graph{height:72px;margin-top:8px}
   .kifu-card{flex:none;min-height:110px}
@@ -1326,6 +1326,7 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span></span></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/><circle cx="7.75" cy="7.75" r="2" fill="currentColor"/><circle cx="16.25" cy="16.25" r="2"/></svg><span data-i18n="btn.puzzle"></span></button>
@@ -1573,6 +1574,7 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
+<script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=13"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020gs"></script>
@@ -1610,6 +1612,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-html]').forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  const rsb = document.getElementById('btnResign'); if (rsb && window.Resign) { rsb.querySelector('span').textContent = rsb.title = Resign.label(LANG); }
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   try { accRender(); } catch (e) {}   // the Google chip / account box are built in JS
 }
@@ -1978,7 +1981,7 @@ function playerName(color) {
 // header bar (PC): whose turn, disc count, evaluation, move number
 function hbInfo(p, b, w, ev) {
   if (typeof HB === 'undefined' || !HB || !HB.on) return;
-  const turn = p.toMove === 0 ? t('hb.over') : t('hb.turn', { c: cname(p.toMove) });
+  const turn = p.toMove === 0 || (cur === positions.length - 1 && resignedBy()) ? t('hb.over') : t('hb.turn', { c: cname(p.toMove) });
   let h = `<span class="hb-chip"><i class="hb-disc ${p.toMove === WHITE ? 'w' : 'b'}"></i><b>${turn}</b></span>`;
   h += `<span class="hb-chip"><i class="hb-disc b"></i><b>${b}</b> – <b>${w}</b><i class="hb-disc w"></i></span>`;
   if (settings.eval && ev != null && !document.body.classList.contains('rated-live')) h += `<span class="hb-chip">${escHb($('#evalText').textContent)}</span>`;
@@ -2011,12 +2014,12 @@ function renderInfo() {
   renderKifu();
   hbInfo(p, b, w, ev);
   // buttons
-  // rated game: the undo button becomes "resign"; no hint / analysis / evaluation while it is going
+  // undo and resign are separate buttons (common spec): no undo in rated / online games; no hint / analysis / evaluation while a rated game is going
   const rtG = rtGame(), rl = rtLive();
   document.body.classList.toggle('rated-live', rl);
   $('#evalCard').dataset.rtnote = t('rt.noEval');
-  $('#btnUndo').disabled = settings.mode === 'online' ? !net || net.done || net.spectate : rtG ? !rl : settings.mode === 'watch' || !canUndo();
-  $('#btnUndo').querySelector('span').textContent = t((settings.mode === 'online' && net) || rtG ? 'ol.resign' : 'btn.undo');
+  $('#btnUndo').disabled = settings.mode === 'online' || !!net || rtG || settings.mode === 'watch' || !canUndo();
+  $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = rl; $('#btnAnalyze').disabled = rl;
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -2096,8 +2099,8 @@ let toastTimer = 0;
 function toast(msg, ms = 1400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 
 // ====================================================================== flow
-function isAITurnColor(c) { if (settings.mode === 'online') return false; if (rtGame() && rated.done) return false; if (clock && clock.lost && !lesson && !puzzle) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
-function isHumanTurn() { const p = positions[cur]; if (rtGame() && rated.done) return false; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; if (clock && clock.lost) return false; return p.toMove && !isAITurnColor(p.toMove); }
+function isAITurnColor(c) { if (settings.mode === 'online') return false; if (resignedBy() && !lesson && !puzzle) return false; if (rtGame() && rated.done) return false; if (clock && clock.lost && !lesson && !puzzle) return false; return settings.mode === 'watch' || (settings.mode === 'ai' && c !== humanColor); }
+function isHumanTurn() { const p = positions[cur]; if (rtGame() && rated.done) return false; if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && p.toMove === net.me && cur === positions.length - 1; if (puzzle) return !!p.toMove && p.toMove === puzzle.me && puzzle.state === 'play' && !puzzle.busy; if (lesson) return !!p.toMove && !lesson.answered && !lesson.animating && cur === positions.length - 1; if ((clock && clock.lost) || resignedBy()) return false; return p.toMove && !isAITurnColor(p.toMove); }
 function levelFor(c) { if (rated && settings.mode === 'ai') return rated.lv; return settings.mode === 'watch' ? (c === BLACK ? settings.level : settings.level2) : settings.level; }
 
 function newGame(r) {
@@ -2146,7 +2149,7 @@ function setStatus(color, text, thinking) {
 async function schedule(animInfo) {
   const token = ++busyToken;
   setStatus(BLACK, ''); setStatus(WHITE, '');
-  if (reviewing || lesson || puzzle || net || (clock && clock.lost)) return;
+  if (reviewing || lesson || puzzle || net || (clock && clock.lost) || resignedBy()) return;
   const p = positions[cur];
   if (animInfo && animInfo.passed) {
     toast(t('pass', { c: cname(animInfo.passer) })); playPass();
@@ -2275,15 +2278,17 @@ function showResult() {
   $('#resB').textContent = b; $('#resW').textContent = w;
   let title, sub = '';
   const rx = rtGame() ? rtSettleBoard() || rated.done : null;
-  const lost = clock && clock.lost, early = lost || (rx && rated.res === 'resign');   // decided by time / resignation, not by the disc count
+  // decided by time / resignation (the colour that lost), not by the disc count
+  const tl = clock && clock.lost, rs = resignedBy() || (rx && rated.res === 'resign' ? humanColor : 0);
+  const lost = tl || rs, why = t(tl ? 'res.time' : 'rt.resigned');
   if (settings.mode === 'ai') {
-    const me = lost ? (lost === humanColor ? -1 : 1) : early ? -1 : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
+    const me = lost ? (lost === humanColor ? -1 : 1) : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
     title = t(me > 0 ? 'res.youWin' : me < 0 ? 'res.aiWin' : 'res.draw');
-    sub = t('res.vs', { name: LV(lv), lv }) + (lost ? ' · ' + t('res.time') : early ? ' · ' + t('rt.resigned') : me ? ' · ' + t(me > 0 ? 'res.winBy' : 'res.lossBy', { n: Math.abs(me) }) : '');
+    sub = t('res.vs', { name: LV(lv), lv }) + (lost ? ' · ' + why : me ? ' · ' + t(me > 0 ? 'res.winBy' : 'res.lossBy', { n: Math.abs(me) }) : '');
     playChime(me >= 0);
   } else if (lost) {
     title = t(lost === WHITE ? 'res.bWin' : 'res.wWin');
-    sub = t('res.time') + ' (' + cname(lost) + ')';
+    sub = why + ' (' + cname(lost) + ')';
     playChime(true);
   } else {
     title = t(b > w ? 'res.bWin' : b < w ? 'res.wWin' : 'res.draw');
@@ -2293,7 +2298,7 @@ function showResult() {
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
   if (rx) $('#resultSub').innerHTML = esc(sub) + `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`}<br><small style="color:var(--muted)">${esc(t('rt.opp', { lv: rtLvName(rated.lv), r: rated.or }))}</small>`;
   countUp($('#resB'), b); countUp($('#resW'), w);
-  if (lost ? settings.mode === 'pvp' || lost !== humanColor : (settings.mode === 'ai' && !early && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
+  if (lost ? settings.mode === 'pvp' || lost !== humanColor : (settings.mode === 'ai' && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
   showOverlay('#resultOverlay');
 }
 
@@ -2311,7 +2316,7 @@ function clockInit() {
 }
 function clockReset() { if (clock) { clock.used = 0; clock.t0 = 0; clock.lost = 0; } }   // undo / continue from here: a fresh turn
 function clockRuns(color) {
-  const c = clock; if (!c || c.lost || lesson || puzzle || net || clockHold) return false;
+  const c = clock; if (!c || c.lost || lesson || puzzle || net || clockHold || resignedBy()) return false;
   if (settings.mode !== 'pvp' && settings.mode !== 'ai') return false;
   const L = positions[positions.length - 1];
   if (!L || L.toMove !== color || (settings.mode === 'ai' && color !== humanColor)) return false;
@@ -2389,7 +2394,7 @@ function rtPick(r, rnd = Math.random) {
   const diff = RT_LV[lv] - r;
   return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
-const rtOver = () => positions.length > 0 && (positions[positions.length - 1].toMove === 0 || !!(clock && clock.lost));
+const rtOver = () => positions.length > 0 && (positions[positions.length - 1].toMove === 0 || !!(clock && clock.lost) || !!resignedBy());
 function rtGame() { return !!(rated && settings.mode === 'ai' && !lesson && !puzzle && !net); }   // the board shows a rated game
 function rtLive() { return rtGame() && !rated.done && !rtOver(); }
 // apply a result once (the game id is kept in the history, so a reload never counts twice)
@@ -2411,6 +2416,7 @@ function rtSettle(s, why) {
 }
 function rtSettleBoard() {
   if (!rated || rated.done || !rtOver()) return null;
+  if (resignedBy()) { rated.res = 'resign'; return rtSettle(resignedBy() === humanColor ? 0 : 1, 'resign'); }
   if (clock && clock.lost) { rated.res = 'time'; return rtSettle(clock.lost === humanColor ? 0 : 1, 'time'); }
   const [b, w] = counts(positions[positions.length - 1].cells), me = humanColor === BLACK ? b - w : w - b;
   return rtSettle(me > 0 ? 1 : me < 0 ? 0 : 0.5, 'end');
@@ -2431,12 +2437,27 @@ function rtForfeit() {
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
 }
-function rtResign() {
-  if (!rtLive()) return;
-  rtConfirm(t('rt.resignQ'), t('ol.resign'), () => {
-    if (!rtLive()) return;
-    busyToken++; cancelAI(); cancelAna();
-    rated.res = 'resign'; rtSettle(0, 'resign');
+// ---- resign (common spec, shared/resign.js): the 投了 button sits after 対局 / 待った and asks 「投了しますか？」 (はい / いいえ)
+// The resigning colour is kept on the last position (positions[last].rs), so it is saved with the game and an undo drops it.
+function resignedBy() { const L = positions[positions.length - 1]; return (L && L.rs) || 0; }
+function canResign() {
+  if (lesson || puzzle) return false;
+  if (settings.mode === 'online' || net) return !!net && !net.done && !net.spectate && !!net.game && net.game.status === 'play';
+  if (settings.mode === 'watch') return false;
+  if (rtGame()) return rtLive();
+  const L = positions[positions.length - 1];
+  return positions.length > 1 && !!L.toMove && !(clock && clock.lost) && !resignedBy();
+}
+function resignGame() {
+  if (!canResign()) return;
+  Resign.confirm({ lang: LANG }).then(ok => {
+    if (!ok || !canResign()) return;
+    if (net) { Online.resign(net.gid); return; }   // the result comes back through finishOnline()
+    const L = positions[positions.length - 1];
+    busyToken++; cancelAI(); cancelAna(); clearHints();
+    L.rs = settings.mode === 'pvp' ? L.toMove : humanColor;   // two players on one device: the side to move resigns
+    clockSync();
+    if (rtGame() && !rated.done) { rated.res = 'resign'; rtSettle(0, 'resign'); }
     reviewing = false; cur = positions.length - 1; update(null);
     showResult();
   });
@@ -2557,7 +2578,8 @@ $('#btnStart').onclick = () => {
 };
 $('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); } else if (rtGame()) rtStart(); else openNew(); };
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
-$('#btnUndo').onclick = () => settings.mode === 'online' ? onlineResign() : rtGame() ? rtResign() : undo();
+$('#btnUndo').onclick = () => undo();
+$('#btnResign').onclick = () => resignGame();
 $('#btnHint').onclick = () => {
   if (rtLive()) return;
   settings.hint = !settings.hint; save();
@@ -4440,13 +4462,6 @@ async function finishOnline(g) {
   playChime(score >= 0.5); if (score === 1) confetti();
   showOverlay('#resultOverlay');
 }
-let resignArm = 0;
-function onlineResign() {
-  if (!net || net.done || net.spectate) return;
-  if (Date.now() - resignArm > 3000) { resignArm = Date.now(); toast(t('ol.resignConfirm'), 2500); return; }
-  resignArm = 0; Online.resign(net.gid);
-}
-
 // clicking the dimmed area outside a dialog does the same as its close button
 function dismissOverlay(o) {
   const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', exportOverlay: '#exportClose', onlineOverlay: '#olClose', profOverlay: '#pfLater', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose' };
@@ -4542,7 +4557,7 @@ function mtab(v) { document.body.classList.toggle('mtab-online', v === 'online')
 $('#mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mtab(b.dataset.t); });
 
 // "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
-function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0 && !(clock && clock.lost) && !(rtGame() && rated.done); }
+function rsInProgress() { return !lesson && !puzzle && !net && positions.length > 1 && positions[positions.length - 1].toMove !== 0 && !(clock && clock.lost) && !resignedBy() && !(rtGame() && rated.done); }
 function rsViewing() { return !lesson && !puzzle && !net && reviewing; }
 function rsOpen() {
   if (!rsInProgress() && !rsViewing()) { openNew(); return; }
@@ -4566,7 +4581,7 @@ else { try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.incl
 applyI18n();
 if (window.RulesOffer) RulesOffer.init({ game: 'reversi', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(), lang: () => LANG }) : null;
+const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(), lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
