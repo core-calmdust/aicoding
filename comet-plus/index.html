@@ -1131,7 +1131,7 @@ const SP_FOR_BONUS = 5;
 // スマホのアイテム取得判定: 自機の見た目（大きく表示している機体の輪郭）にアイテムが触れたら取得
 // 機体の輪郭は 幅±20・前35・後ろ29（モデル単位）を表示倍率VSで拡大した長方形として扱う
 function shipTouches(x, y, r) {
-    const k = IS_MOBILE ? 0.72 : 1; // スマホは小さめ
+    const k = IS_MOBILE ? 0.6 : 1; // スマホは小さめ
     const hw = 20 * VS * k, front = 35 * VS * k, back = 29 * VS * k;
     const dx = Math.max(0, Math.abs(x - player.x) - hw);
     const dy = y < player.y ? Math.max(0, player.y - front - y) : Math.max(0, y - (player.y + back));
@@ -1998,10 +1998,17 @@ function updatePlayingState(dt_sec) {
 
     // Energy Item Spawning (STARTRAIL MODEではスキップ)
     if (gameMode !== 'STARTRAIL MODE') {
-        const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
+        // チェイン中はアイテムの間隔を少し広げる（上限1.6倍）。チェインが切れたら元の間隔に戻す
+        // （以前は上限がなく、アイテムを大量に取ると次の出現が極端に先になって出なくなっていた）
+        const chaining = player.invincibleTimer > 0 && chainCount > 1;
+        const comboMultiplier = chaining ? Math.min(1.6, Math.pow(1.1, chainCount - 1)) : 1;
         const totalMultiplier = stageMultiplier * comboMultiplier;
         const currentNormalThreshold = config.energyItemScoreNormal * totalMultiplier;
         const currentSpecialThreshold = config.energyItemScoreSpecial * totalMultiplier;
+        if (!chaining) {
+            nextItemScore = Math.min(nextItemScore, score + currentNormalThreshold);
+            nextSpecialItemScore = Math.min(nextSpecialItemScore, score + currentSpecialThreshold);
+        }
 
         if (!hasSpawned5000PointItem && score >= 5000 * DIFFS[difficultyIndex].mult) {
             items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
