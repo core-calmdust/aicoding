@@ -246,6 +246,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // =================================================================================
@@ -1077,6 +1078,7 @@ let difficultyIndex = 1;
 // ハイパー: 10秒間、スコア3倍・自機1.1倍速。代わりに隕石と弾が1.25倍速、敵の弾が2倍
 let hyperT = 0, nextHyperScore = 0;
 const HYPER_TIME = 10;
+const HYPER_TEST_RATE = 1; // テスト時はここを上げると出現率が上がる
 const hyperOn = () => hyperT > 0;
 const HY = () => (hyperT > 0 ? 1.25 : 1);
 const scoreMul = () => Math.pow(1.1, stage - 1) * (tutorial ? 1 : DIFFS[difficultyIndex].mult) * (hyperT > 0 ? 3 : 1);
@@ -1116,6 +1118,7 @@ function takeHit() {
 function activateHyper() {
     hyperT = HYPER_TIME;
     energy = Math.min(config.energyTotal, energy + config.energyTotal * 0.5); // 通常アイテムと同じだけ回復
+    triggerInvincibility(90); // 通常アイテムと同じ無敵
     if (tutorial) tutorial.hyper = (tutorial.hyper || 0) + 1;
     effects = effects.filter(e => e.type !== 'hyperMsg');
     effects.push({ type: 'hyperMsg', text: 'HYPER!!  SCORE ×3', life: 120, maxLife: 120 });
@@ -1281,6 +1284,8 @@ const MODE_DESCRIPTIONS = [
     'Learn the Basics Step by Step'
 ];
 const RANDOM_CHARS = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+// 文字化け演出用の乱数: ゲーム内フレームで決まるので、一時停止中は文字が動かない
+const frameRand = (i) => { const v = Math.sin(frameCount * 12.9898 + i * 78.233) * 43758.5453; return v - Math.floor(v); };
 // ▲▲▲ 追加はここまで ▲▲▲
 
 function hexToRgba(hex, alpha) {
@@ -1424,7 +1429,7 @@ async function startGame(mode) {
     maxShields = shields = DIFFS[difficultyIndex].shields; spBonus = 0;
     nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult;
     nextSpecialItemScore = config.energyItemScoreSpecial * DIFFS[difficultyIndex].mult;
-    hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
+    hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
     distScoreAcc = 0;
     hurtTimer = 0;
     gameState = 'playing';
@@ -1864,7 +1869,7 @@ function updatePlayingState(dt_sec) {
     // Energy Management (STARTRAIL MODEではスキップ)
     if (gameMode !== 'STARTRAIL MODE') {
         const baseEnergyMultiplier = 0.9;
-        const energyDecreaseRate = Math.pow(1.08, stage - 1); // ステージごとの増え方は控えめに（以前は1.12倍ずつ）
+        const energyDecreaseRate = Math.pow(1.10, stage - 1); // ステージごとに1.10倍ずつ（1.12は厳しく、1.08はぬるい）
         energy -= baseEnergyMultiplier * energyDecreaseRate * 60 * dt_sec;
 
         const energyThreshold = config.energyTotal / 3;
@@ -1976,7 +1981,7 @@ function updatePlayingState(dt_sec) {
         if (hyperT > 0) { hyperT -= dt_sec; if (hyperT <= 0) { hyperT = 0; effects.push({ type: 'hyperMsg', text: 'HYPER END', life: 60, maxLife: 60, end: true }); } }
         while (score >= nextHyperScore) {
             if (hyperT <= 0 && !items.some(it => it.type === 'hyper')) items.push({ x: 60 + Math.random() * (config.canvasWidth - 120), y: -20 - TOP_EXT, type: 'hyper' });
-            nextHyperScore += config.energyItemScoreSpecial * 2.5 * Math.pow(1.1, stage - 1) * DIFFS[difficultyIndex].mult * (hyperT > 0 ? 3 : 1);
+            nextHyperScore += config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * Math.pow(1.1, stage - 1) * DIFFS[difficultyIndex].mult * (hyperT > 0 ? 3 : 1);
         }
     } else if (hyperT > 0) {
         hyperT = Math.max(0, hyperT - dt_sec);
@@ -3358,10 +3363,10 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
         // ★ 変更点: 文字列の直接連結をやめ、配列を使って高速化
         const textChars = [];
         for (let i = 0; i < comboText.length; i++) {
-            if (progress > (i / comboText.length) * 0.5 + (Math.random() * 0.1)) {
+            if (progress > (i / comboText.length) * 0.5 + (frameRand(i) * 0.1)) {
                 textChars.push(comboText[i]);
             } else {
-                textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+                textChars.push(chars[Math.floor(frameRand(i + 50) * chars.length)]);
             }
         }
         textToDraw = textChars.join('');
@@ -3376,7 +3381,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     const gradient = renderCtx.createLinearGradient(20, 0, 20 + textMetrics.width, 0);
     const numColors = 12;
     for (let i = 0; i < numColors; i++) {
-        const hue = (Date.now() / 15 + i * (360 / numColors)) % 360;
+        const hue = (rTime * 1000 / 15 + i * (360 / numColors)) % 360; // ゲーム内時間（停止中は止まる）
         gradient.addColorStop(Math.max(0, Math.min(1, i / (numColors - 1))), `hsl(${hue}, 100%, 70%)`);
     }
 
@@ -3450,7 +3455,7 @@ const _tmpC2 = new THREE.Color();
 const hsl = (h, s, l, target = _tmpC) => target.setHSL(((h % 360) + 360) % 360 / 360, s, l);
 
 let gl3dOK = true;
-let renderer, scene, camera, composer, bloom;
+let renderer, scene, camera, composer, bloom, hyperGrade, hyperK = 0;
 try {
     const glc = document.getElementById('glCanvas');
     let glctx = null;
@@ -3484,6 +3489,32 @@ if (gl3dOK) {
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
     { const bk = IS_MOBILE ? 0.4 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
+    // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
+    hyperGrade = new ShaderPass({
+        uniforms: { tDiffuse: { value: null }, amt: { value: 0 }, t: { value: 0 } },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float t; varying vec2 vUv;
+            void main(){
+                vec4 c = texture2D(tDiffuse, vUv);
+                const mat3 toY = mat3(0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312);
+                const mat3 toR = mat3(1.0, 1.0, 1.0, 0.956, -0.272, -1.106, 0.621, -0.647, 1.703);
+                vec3 yiq = toY * c.rgb;
+                float h = amt * (0.32 + 0.1 * sin(t * 2.0)); // 色相は控えめに回す（ステージの色を残す）
+                float cs = cos(h), sn = sin(h);
+                yiq.yz = mat2(cs, sn, -sn, cs) * yiq.yz * (1.0 + 0.08 * amt);
+                vec3 g = toR * yiq;
+                // ネオン感: 暗部は深い紫へ沈め、光っている所だけを強く・白熱させる
+                float l = dot(g, vec3(0.299, 0.587, 0.114));
+                vec3 sh = vec3(0.13, 0.03, 0.28);
+                g = mix(sh * (0.1 + l * 2.0) + g * 0.55, g, smoothstep(0.08, 0.4, l));
+                g = pow(max(g, 0.0), vec3(1.15)) * 1.1;
+                g += smoothstep(0.55, 1.0, l) * vec3(0.09, 0.035, 0.12) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
+                float vig = 1.0 - amt * 0.3 * smoothstep(0.35, 0.85, length(vUv - 0.5));
+                gl_FragColor = vec4(mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0)), c.a);
+            }`
+    });
+    hyperGrade.enabled = false;
+    composer.addPass(hyperGrade);
     composer.addPass(new OutputPass());
 }
 
@@ -3998,6 +4029,153 @@ for (let i = 0; i < 16; i++) {
 }
 let warpT = 99;
 
+// ---------------------------------
+// ハイパー中: ステージのモチーフに合わせたポリゴンが背景からムキッと生え、終わると砕けて散る
+// ---------------------------------
+const HP_N = IS_MOBILE ? 16 : 36;
+const hpSolidMat = new THREE.MeshBasicMaterial({ color: 0x8040ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); // 一部の面だけガラスのようなポリゴン
+const hpEdgeMat = new THREE.LineBasicMaterial({ color: 0xc0a0ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+// 砕けた時の短い線（まとめて1つのLineSegmentsで描く）
+const HP_LMAX = IS_MOBILE ? 500 : 1600;
+const hpBursts = []; // 砕けた瞬間の閃光
+const hpLineGeo = new THREE.BufferGeometry(); hpLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(HP_LMAX * 6), 3).setUsage(THREE.DynamicDrawUsage));
+const hpLineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+const hpLines = new THREE.LineSegments(hpLineGeo, hpLineMat); hpLines.frustumCulled = false; hpLines.renderOrder = 2; scene.add(hpLines);
+const hpGeo = (() => {
+    const NI = (g) => (g.index ? g.toNonIndexed() : g);
+    const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y + h / 2, z); return NI(g); };
+    const M = (list) => mergeGeometries(list.map(NI));
+    const LM = (list) => mergeGeometries(list); // 線どうしをまとめる
+    const tw = (w, d, h, st, tp = 1, x = 0, y = 0) => { const g = towerGeometry(w, d, h, st, tp); g.translate(x, y, 0); return g; }; // 背景のビルと同じ線の組み方
+    // 面の一部だけをガラスにする（四角形の単位で間引く）
+    const glass = (g, frac) => { const P = g.attributes.position, out = [];
+        for (let k = 0; k + 5 < P.count; k += 6) { if (Math.random() > frac) continue; for (let j = 0; j < 6; j++) out.push(P.getX(k + j), P.getY(k + j), P.getZ(k + j)); }
+        if (!out.length) for (let j = 0; j < 6 && j < P.count; j++) out.push(P.getX(j), P.getY(j), P.getZ(j));
+        const r = new THREE.BufferGeometry(); r.setAttribute('position', new THREE.Float32BufferAttribute(out, 3)); return r; };
+    const tri = (g, frac) => { const P = g.attributes.position, out = [];
+        for (let k = 0; k + 2 < P.count; k += 3) { if (Math.random() > frac) continue; for (let j = 0; j < 3; j++) out.push(P.getX(k + j), P.getY(k + j), P.getZ(k + j)); }
+        const r = new THREE.BufferGeometry(); r.setAttribute('position', new THREE.Float32BufferAttribute(out, 3)); return r; };
+    const city = [
+        { w: LM([tw(1, 1, 0.55, 0.05), tw(0.74, 0.74, 0.3, 0.05, 1, 0, 0.55), tw(0.46, 0.46, 0.15, 0.05, 1, 0, 0.85)]), s: M([box(1, 0.55, 1, 0, 0, 0), box(0.74, 0.3, 0.74, 0, 0.55, 0), box(0.46, 0.15, 0.46, 0, 0.85, 0)]) },
+        { w: tw(1, 1, 1, 0.045, 0.6), s: (() => { const g = new THREE.CylinderGeometry(0.42, 0.707, 1, 4, 6); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return NI(g); })(), tri: true },
+        { w: LM([tw(0.46, 0.62, 1, 0.05, 1, -0.27), tw(0.46, 0.62, 0.72, 0.05, 1, 0.27)]), s: M([box(0.46, 1, 0.62, -0.27, 0, 0), box(0.46, 0.72, 0.62, 0.27, 0, 0)]) },
+    ];
+    const pylons = [0, 1].map(() => { const c = new THREE.ConeGeometry(0.707, 1, 4, 8); c.rotateY(Math.PI / 4); c.translate(0, 0.5, 0); return { w: spireGeometry(0.707, 1), s: NI(c), tri: true }; });
+    const rings = [3, 4, 6, 8].map((n, i) => { const qs = []; for (let k = 0; k < n; k++) { const a0 = (k / n) * Math.PI * 2, a1 = ((k + 1) / n) * Math.PI * 2; qs.push([[Math.cos(a0), Math.sin(a0), 0], [Math.cos(a1), Math.sin(a1), 0], [Math.cos(a1) * 0.93, Math.sin(a1) * 0.93, 0], [Math.cos(a0) * 0.93, Math.sin(a0) * 0.93, 0]]); }
+        return { w: ringGeos[i], s: quadGlass(qs), tri: true, frac: 0.5 }; });
+    const crystals = [0, 1, 2].map(v => { const L = [], n = 3 + v;
+        for (let k = 0; k < n; k++) { const o = new THREE.OctahedronGeometry(0.5, 0); o.scale(0.42, 1.5 + (k % 2) * 0.6, 0.42); o.rotateZ((k - (n - 1) / 2) * 0.42); o.rotateY(k * 1.7); L.push(o); }
+        L.push(new THREE.IcosahedronGeometry(0.32, 0)); const g = M(L); return { w: new THREE.EdgesGeometry(g, 1), s: g, tri: true, frac: 0.4 }; });
+    const peak = (seed) => { const g = NI(new THREE.ConeGeometry(0.5, 1, 6, 3)); const P = g.attributes.position;
+        for (let k = 0; k < P.count; k++) { if (P.getY(k) > 0.49) continue; const x = P.getX(k), z = P.getZ(k), y = P.getY(k); const h = Math.sin(x * 37 + z * 23 + y * 11 + seed) * 0.07; P.setX(k, x + h); P.setZ(k, z + Math.cos(x * 19 + z * 31 + seed) * 0.06); }
+        g.translate(0, 0.5, 0); g.computeVertexNormals(); return g; };
+    const terrain = [peak(1), (() => { const a = peak(2); a.scale(0.7, 0.75, 0.7); a.translate(-0.32, 0, 0); const c = peak(4); c.scale(0.6, 0.6, 0.6); c.translate(0.36, 0, 0.05); return M([a, peak(3), c]); })()].map(g => ({ w: new THREE.WireframeGeometry(g), s: g, tri: true, frac: 0.18 }));
+    const pillars = [1, 2].map(n => { const L = [tw(1, 1, 1, 1 / n)]; return { w: LM(L), s: M([box(1, 1, 1, 0, 0, 0)]) }; });
+    const out = {};
+    Object.entries({ city, pylons, rings, crystals, terrain, pillars }).forEach(([k, arr]) => { out[k] = arr.map(v => ({ e: v.w, g: v.tri ? tri(v.s, v.frac || 0.3) : glass(v.s, v.frac || 0.4) })); });
+    return out;
+})();
+// 大きさと置き方: [幅の最小, 最大, 高さの最小, 最大, 全体を均等に伸ばすか]
+const HP_SIZE = { city: [90, 200, 420, 1150], pylons: [80, 150, 650, 1450], rings: [480, 760, 0, 0, true], crystals: [130, 300, 0, 0, true], terrain: [380, 760, 320, 820], pillars: [70, 90, 360, 1250] };
+const hpElems = [];
+for (let i = 0; i < HP_N; i++) {
+    const mesh = new THREE.Mesh(hpGeo.city[0].g, hpSolidMat), edge = new THREE.LineSegments(hpGeo.city[0].e, hpEdgeMat);
+    const g = new THREE.Group(); g.add(mesh, edge); g.visible = false; world.add(g);
+    hpElems.push({ g, mesh, edge, st: 'off', t: 0, delay: 0, w: 1, h: 1, kind: 'city', spin: 0 });
+}
+const hpFrags = [];
+let hpActive = false, hpLightK = 1;
+function hpPlace(el, z) {
+    const kind = (motifCur && HP_SIZE[motifCur.name]) ? motifCur.name : 'city', S = HP_SIZE[kind], V = hpGeo[kind][Math.floor(Math.random() * hpGeo[kind].length)];
+    el.kind = kind; el.mesh.geometry = V.g; el.edge.geometry = V.e;
+    el.w = rand(S[0], S[1]); el.h = S[4] ? el.w : rand(S[2], S[3]);
+    el.spin = 0; el.g.rotation.set(0, rand(0, 6.28), 0);
+    const under = Math.random() < 0.3;
+    if (kind === 'rings') { // トンネルのリングの間に、回る枠が現れる
+        el.g.position.set(rand(-60, 60), -280, z); el.g.rotation.set(0, 0, rand(0, 6.28)); el.spin = rand(-0.9, 0.9);
+    } else if (kind === 'crystals') {
+        if (under) el.g.position.set(rand(-650, 650), rand(FLOOR_Y + 80, -160), z); else el.g.position.set(sideX(), rand(FLOOR_Y + 220, 320), z);
+        el.g.rotation.set(rand(-0.4, 0.4), rand(0, 6.28), rand(-0.4, 0.4)); el.spin = rand(0.4, 1.2);
+    } else if (kind === 'terrain') {
+        el.g.position.set((Math.random() < 0.5 ? -1 : 1) * rand(760, 1500), FLOOR_Y, z);
+    } else if (kind === 'pillars') { // グリッドに揃えて立つ
+        const gx = Math.round(rand(-7, 7)) * 100;
+        if (under) { el.h *= 0.4; el.g.position.set(gx, FLOOR_Y, Math.round(z / 100) * 100); }
+        else el.g.position.set(Math.sign(gx || 1) * (700 + Math.round(rand(0, 9)) * 100), FLOOR_Y, Math.round(z / 100) * 100);
+        el.g.rotation.set(0, 0, 0);
+    } else { // 都市・鉄塔
+        if (under && kind === 'city') { el.h *= 0.35; el.g.position.set(rand(-700, 700), FLOOR_Y, z); }
+        else el.g.position.set(sideX(), FLOOR_Y, z);
+        if (kind === 'city') el.g.rotation.y = Math.round(rand(0, 3)) * Math.PI / 2 + rand(-0.15, 0.15);
+    }
+    el.st = 'grow'; el.t = 0; el.g.visible = true; el.g.scale.set(0.001, 0.001, 0.001);
+}
+function hpShatter(el) { // 砕けて短い線がばらまかれる
+    el.st = 'off'; el.g.visible = false;
+    const n = IS_MOBILE ? 22 : 44, p = el.g.position, fl = S_FLOAT(el);
+    for (let k = 0; k < n; k++) {
+        const fy = fl ? rand(-0.6, 0.6) * el.h : rand(0.05, 1) * el.h;
+        // 構造物の線がそのままバラけるように: 水平の線（階の輪）か縦の線（柱）が中心
+        const L = rand(25, 90), a = el.g.rotation.y + Math.round(rand(0, 3)) * Math.PI / 2 + rand(-0.15, 0.15), b = Math.random() < 0.3 ? Math.PI / 2 + rand(-0.2, 0.2) : rand(-0.12, 0.12);
+        hpFrags.push({ x: p.x + rand(-0.5, 0.5) * el.w, y: p.y + fy, z: p.z + rand(-0.5, 0.5) * el.w,
+            vx: rand(-200, 200), vy: rand(-60, 160), vz: rand(-200, 200),
+            dx: Math.cos(a) * Math.cos(b) * L, dy: Math.sin(b) * L, dz: Math.sin(a) * Math.cos(b) * L, sp: rand(-2.5, 2.5),
+            life: rand(1.0, 1.9), max: 1.9 });
+    }
+}
+const S_FLOAT = (el) => !!HP_SIZE[el.kind][4];
+function hyperPolyGlow(dt) { // 砕けた破片と閃光の光（glowはフレームごとに積み直すのでここで追加）
+    for (let i = hpBursts.length - 1; i >= 0; i--) { const b = hpBursts[i]; b.life -= dt; if (b.life <= 0) { hpBursts.splice(i, 1); continue; } const a = b.life / 0.35; glow.add(b.x, b.y, b.z, hpLineMat.color, b.r * (2.2 - a), a * 1.4); }
+}
+function updateHyperPolys(dt, ws) {
+    const on = hyperT > 0 && gameState === 'playing';
+    if (on && !hpActive) { // 生やす（少しずつ時間差で）
+        hpActive = true;
+        hpElems.forEach((el, i) => { hpPlace(el, WORLD_FAR + (i / HP_N) * (WORLD_SPAN * 0.85) + rand(-60, 60)); el.st = 'wait'; el.delay = rand(0, 0.7); el.g.visible = false; });
+    } else if (!on && hpActive) { // 砕けて散る（時間差で）
+        hpActive = false;
+        hpElems.forEach(el => { if (el.st !== 'off') { el.st = 'break'; el.delay = rand(0, 0.12); } }); // ほぼ一斉に、突然散り散りに
+    }
+    hpSolidMat.color.copy(themeCur.grid).lerp(themeCur.comet, 0.35).lerp(COL_WHITE, 0.1);
+    // 光量の調整: 線が密なモチーフ（山並み・リング）や、明るいテーマ色のステージではグローを抑える
+    const kindK = { terrain: 0.35, rings: 0.65, crystals: 0.85 }[hpElems[0].kind] || 1;
+    const lum = hpEdgeMat.color.r * 0.3 + hpEdgeMat.color.g * 0.59 + hpEdgeMat.color.b * 0.11;
+    hpLightK = kindK * Math.max(0.55, Math.min(1, 0.5 / Math.max(0.01, lum)));
+    hpSolidMat.opacity = (0.2 + 0.25 * Math.max(0, Math.sin(rTime * 1.4)) + visualBeat * 0.15) * hpLightK; // ガラス面はゆっくり明暗
+    hpEdgeMat.color.copy(themeCur.grid).lerp(COL_WHITE, 0.35);
+    hpEdgeMat.opacity = (0.65 + visualBeat * 0.35) * (0.4 + 0.6 * hpLightK);
+    hpElems.forEach(el => {
+        if (el.st === 'off') return;
+        el.g.position.z += ws * dt;
+        if (el.st === 'wait' || el.st === 'break') {
+            el.delay -= dt;
+            if (el.delay <= 0) { if (el.st === 'wait') { el.st = 'grow'; el.t = 0; el.g.visible = true; } else { hpShatter(el); return; } }
+        }
+        if (el.st === 'grow' || el.st === 'break') {
+            el.t = Math.min(1, el.t + dt / 0.42);
+            const x = el.t - 1, k = 1 + 2.6 * x * x * x + 1.6 * x * x; // 行き過ぎてから戻る（ムキッと）
+            const ky = Math.max(0.001, k), kw = S_FLOAT(el) ? ky : Math.max(0.001, 0.55 + 0.45 * k);
+            el.g.scale.set(el.w * kw, el.h * ky, el.w * kw);
+        }
+        if (el.spin) { if (el.kind === 'rings') el.g.rotation.z += el.spin * dt; else el.g.rotation.y += el.spin * dt; }
+        if (el.g.position.z > WORLD_NEAR && el.st === 'grow') hpPlace(el, el.g.position.z - WORLD_SPAN); // 奥でまた生える
+    });
+    const P = hpLineGeo.attributes.position.array; let m = 0;
+    for (let i = hpFrags.length - 1; i >= 0; i--) {
+        const f = hpFrags[i];
+        f.life -= dt; if (f.life <= 0) { hpFrags.splice(i, 1); continue; }
+        f.vx *= 1 - dt * 0.6; f.vz *= 1 - dt * 0.6; f.vy -= 60 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += (f.vz + ws) * dt;
+        const c = Math.cos(f.sp * dt), sn = Math.sin(f.sp * dt), dx = f.dx * c - f.dz * sn; f.dz = f.dx * sn + f.dz * c; f.dx = dx; // くるくる回る
+        if (m >= HP_LMAX) continue;
+        const k = Math.min(1, f.life / f.max * 1.6), o = m * 6; // 消える直前に縮む
+        P[o] = f.x - f.dx * k / 2; P[o + 1] = f.y - f.dy * k / 2; P[o + 2] = f.z - f.dz * k / 2;
+        P[o + 3] = f.x + f.dx * k / 2; P[o + 4] = f.y + f.dy * k / 2; P[o + 5] = f.z + f.dz * k / 2;
+        m++;
+    }
+    hpLineGeo.setDrawRange(0, m * 2); hpLineGeo.attributes.position.needsUpdate = m > 0;
+    hpLines.visible = m > 0;
+    hpLineMat.color.copy(hpEdgeMat.color).lerp(COL_WHITE, 0.3); hpLineMat.opacity = 0.5 + 0.5 * hpLightK;
+}
 function updateMotifs(dt, ws, now) {
     // ステージ変更の検出
     if (currentThemeIndex !== lastThemeIdx) {
@@ -4358,12 +4536,12 @@ function makeShipModel() {
 
     // ---- メインユニット: 左右2つのパーツで機首を構成（明るい装甲板＋外側の濃紺の刃）----
     both([[141, 28], [142, 64], [142, 252], [118, 252], [116, 200], [120, 140], [127, 92], [136, 52]], steel, { cage: 1.08, bot: -1.6, it: 0.5, ib: 0.5, topF: lerpTop(28, 0.8, 250, 3.6) });
-    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { neon: true, bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
+    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { neon: true, cage: 1.1, bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
     part(slab([[142, 60], [143.5, 60], [143.5, 250], [140.5, 250], [140.5, 60]], { bot: 0, top: 3.75, it: 0, ib: 0 }), navy, g, false); // 2つのパーツの合わせ目（暗い溝）
     // 胴体中央の厚い装甲（肩）
     both([[142, 168], [154, 164], [172, 172], [182, 200], [180, 248], [170, 272], [142, 272]], armor, { cage: 1.1, bot: -2.6, top: 2.8, it: 1.2, ib: 1.2 });
     both([[160, 196], [176, 202], [176, 236], [162, 240]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });              // 肩の上の濃いパネル
-    both([[150, 254], [168, 252], [170, 272], [150, 274]], steel, { bot: 0, top: 3.2, it: 0.4, ib: 0.2 });              // 推進ユニット手前の装甲
+    both([[150, 254], [168, 252], [170, 272], [150, 274]], steel, { cage: 1.15, bot: 0, top: 3.2, it: 0.4, ib: 0.2 });              // 推進ユニット手前の装甲
 
     // ---- 後ろの2枚の羽（間から噴射）----
     both([[110, 274], [127, 274], [132, 300], [132, 390], [127, 384], [119, 352], [111, 312]], navy, { neon: true, cage: 1.12, bot: -1.8, it: 0.45, ib: 0.45, topF: lerpTop(274, 2.6, 390, 1.0) });
@@ -4382,8 +4560,8 @@ function makeShipModel() {
     // ---- ウィングポッド: 前は細く（面取り）、後ろへ向かって太く広がる ----
     const podOut = [[96, 136], [104, 142], [106, 200], [104, 248], [93, 282], [84, 302], [78, 324], [66, 348], [53, 358], [48, 371], [42, 366], [36, 356], [32, 332], [30, 310], [32, 290], [38, 262], [48, 238], [60, 210], [74, 180], [86, 156]];
     both(podOut, steel, { cage: 1.07, bot: -2.8, mid: -0.2, it: 1.5, ib: 1.2, topF: lerpTop(140, 2.4, 300, 3.6) });
-    both([[92, 278], [84, 302], [78, 324], [66, 348], [53, 358], [44, 360], [38, 350], [34, 330], [33, 310], [36, 292], [40, 280]], gun, { bot: 0, mid: 0, it: 1.0, ib: 0.6, topF: lerpTop(278, 3.9, 360, 3.4) }); // 後半のガンメタ装甲
-    both([[96, 150], [100, 156], [100, 214], [92, 232], [80, 232], [86, 196]], armor, { bot: 0, top: 3.3, it: 0.5, ib: 0.2 });   // 前半の装甲板
+    both([[92, 278], [84, 302], [78, 324], [66, 348], [53, 358], [44, 360], [38, 350], [34, 330], [33, 310], [36, 292], [40, 280]], gun, { cage: 1.08, bot: 0, mid: 0, it: 1.0, ib: 0.6, topF: lerpTop(278, 3.9, 360, 3.4) }); // 後半のガンメタ装甲
+    both([[96, 150], [100, 156], [100, 214], [92, 232], [80, 232], [86, 196]], armor, { cage: 1.12, bot: 0, top: 3.3, it: 0.5, ib: 0.2 });   // 前半の装甲板
     both([[60, 214], [74, 186], [80, 198], [70, 236], [56, 244]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });             // 外側の濃いパネル
     both([[92, 222], [102, 226], [101, 242], [90, 240]], pink, { bot: 0, top: 3.75, it: 0.15, ib: 0 }, g, false);            // 内側のピンク
     both([[40, 246], [47, 244], [42, 278], [35, 278]], glowC, { bot: 0, top: 3.8, it: 0.1, ib: 0 }, g, false);               // 外側のシアンの光
@@ -4459,8 +4637,8 @@ const hyperPool = [];
 function makeHyperObj() {
     const g = new THREE.Group();
     const spin = new THREE.Group(); // 水平方向にくるくる回る部分
-    const bladeMat = new StdMat({ color: 0x6c7890, emissive: 0x18202e, emissiveIntensity: 0.6, flatShading: true, metalness: 0.5, roughness: 0.35 });
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x10161e, transparent: true, opacity: 0.6 });
+    const bladeMat = new THREE.MeshBasicMaterial({ color: 0x1a3a5c, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }); // 実体は薄く、ワイヤーが主役
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xe8fdff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0x6fe6ff });
     // 刃: 外向きの矢じり形。内側の面にシアンの光
     const sh = new THREE.Shape();
@@ -4468,11 +4646,16 @@ function makeHyperObj() {
     const bladeGeo = new THREE.ExtrudeGeometry(sh, { depth: 6, bevelEnabled: true, bevelThickness: 1.8, bevelSize: 1.2, bevelSegments: 1 });
     bladeGeo.translate(0, 0, -3); bladeGeo.rotateX(-Math.PI / 2);
     const bladeEdge = new THREE.EdgesGeometry(bladeGeo, 20);
+    const cageMat = new THREE.LineBasicMaterial({ color: 0x9ff0ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+    const cageMat2 = new THREE.LineBasicMaterial({ color: 0x6fc8ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false });
+    const bc = bladeGeo.clone(); bc.translate(-22, 0, 0); bc.scale(1.18, 1.6, 1.18); bc.translate(22, 0, 0); const bladeCage = new THREE.EdgesGeometry(bc, 15);
+    const bc2 = bladeGeo.clone(); bc2.translate(-22, 0, 0); bc2.scale(1.22, 2.1, 1.22); bc2.translate(22, 0, 0); const bladeCage2 = new THREE.WireframeGeometry(bc2);
     const gs = new THREE.Shape(); [[13.6, 8.6], [19.6, 0], [13.6, -8.6], [12.2, -7.6], [17.6, 0], [12.2, 7.6]].forEach(([x, y], k) => (k ? gs.lineTo(x, y) : gs.moveTo(x, y)));
     const stripGeo = new THREE.ExtrudeGeometry(gs, { depth: 5, bevelEnabled: false }); stripGeo.translate(0, 0, -2.5); stripGeo.rotateX(-Math.PI / 2); // 内側の光るライン
     for (let k = 0; k < 3; k++) {
         const bl = new THREE.Group();
         const m = new THREE.Mesh(bladeGeo, bladeMat); m.add(new THREE.LineSegments(bladeEdge, lineMat));
+        const wc = new THREE.LineSegments(bladeCage, cageMat); m.add(wc, new THREE.LineSegments(bladeCage2, cageMat2)); // ワイヤーの外殻（2重）
         const st = new THREE.Mesh(stripGeo, glowMat); m.position.x = st.position.x = 4; bl.add(m, st); // 刃どうしに隙間をあける
         bl.rotation.y = k * Math.PI * 2 / 3 + Math.PI / 2;
         spin.add(bl);
@@ -4484,6 +4667,7 @@ function makeHyperObj() {
     core.add(new THREE.LineSegments(new THREE.EdgesGeometry(coreGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
     const inner = new THREE.Mesh(new THREE.OctahedronGeometry(5.5, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
     core.add(inner);
+    const coreWire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(17, 0)), cageMat); // コアを包むワイヤー
     // 浮遊リング: 途切れ途切れの光の帯
     const ring = new THREE.Group();
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x8fdcff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -4493,8 +4677,17 @@ function makeHyperObj() {
         seg.position.set(Math.cos(a) * 34, 0, Math.sin(a) * 34); seg.rotation.y = -a + Math.PI / 2; ring.add(seg);
     }
     const tilt = new THREE.Group(); tilt.rotation.x = 0.45; // カメラ側に少し起こして形が見えるように
-    tilt.add(spin, core, ring); g.add(tilt);
-    g.userData = { spin, core, ring, glowMat, coreMat, ringMat };
+    // キラキラ: 周りで瞬く小さな光
+    const sparks = [], sparkGeo = new THREE.OctahedronGeometry(1, 0); sparkGeo.scale(0.5, 0.5, 2.6);
+    for (let k = 0; k < 16; k++) {
+        const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+        const sp = new THREE.Group(); const a1 = new THREE.Mesh(sparkGeo, sm), a2 = new THREE.Mesh(sparkGeo, sm); a2.rotation.y = Math.PI / 2; sp.add(a1, a2);
+        const a = Math.random() * Math.PI * 2, r = 8 + Math.random() * 36;
+        sp.position.set(Math.cos(a) * r, (Math.random() - 0.5) * 14, Math.sin(a) * r);
+        sp.userData = { ph: Math.random() * Math.PI * 2, sp: 4 + Math.random() * 6, mat: sm }; sparks.push(sp);
+    }
+    tilt.add(spin, core, ring, coreWire, ...sparks); g.add(tilt);
+    g.userData = { spin, core, ring, glowMat, coreMat, ringMat, coreWire, cageMat, cageMat2, sparks };
     g.visible = false;
     scene.add(g);
     return g;
@@ -5249,6 +5442,7 @@ function render3D() {
     floorGrid.position.z = (floorGrid.position.z + ws * dt) % 100;
     updateMotifs(dt, ws, now);
     updateSidePolys(dt, ws, rTime);
+    updateHyperPolys(frozen ? 0 : dt, ws);
     updateGlass(rTime);
     flows.forEach(f => {
         const t = rTime * f.speed + f.phase;
@@ -5336,6 +5530,7 @@ function render3D() {
 
     // ---- エンティティ ----
     glow.begin(); trails.begin(); cometBodies.begin(); cometWires.begin(); bulletBodies.begin(); debrisCubes.begin(); gemBodies.begin();
+    hyperPolyGlow(frozen ? 0 : dt);
 
     if (showHub) {
         const b = visualBeat, hueBase = rTime * 60;
@@ -5397,6 +5592,9 @@ function render3D() {
             hu.spin.rotation.y = rTime * 2.6;            // 水平にくるくる回る
             hu.ring.rotation.y = -rTime * 1.2;
             hu.core.rotation.set(rTime * 0.8, -rTime * 2, 0);
+            hu.coreWire.rotation.set(-rTime * 0.6, rTime * 1.1, rTime * 0.4);
+            hu.cageMat.opacity = 0.55 + visualBeat * 0.4; hu.cageMat2.opacity = 0.2 + pulse * 0.2;
+            hu.sparks.forEach(sp => { const t = Math.max(0, Math.sin(rTime * sp.userData.sp + sp.userData.ph)); const k = t * t * t; sp.scale.setScalar(0.3 + k * 2.2); sp.userData.mat.opacity = k; sp.rotation.y = rTime * 3; }); // 瞬き
             hu.glowMat.color.setHSL(0.53, 1, 0.6 + pulse * 0.25);
             hu.coreMat.opacity = 0.6 + pulse * 0.3;
             hu.ringMat.opacity = 0.35 + visualBeat * 0.4;
@@ -5453,7 +5651,7 @@ function render3D() {
         });
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
-            const c = eb.isGlazed ? COL_GLAZE : hsl(Date.now() / 10 + eb.y, 1, 0.72);
+            const c = eb.isGlazed ? COL_GLAZE : hsl(rTime * 100 + eb.y, 1, 0.72);
             const x = toX(ix(eb)), z = toZ(iy(eb)), y = 16;
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * (IS_MOBILE ? 1.3 : 1) * pulse;
@@ -5553,7 +5751,7 @@ function render3D() {
         shipPivot.rotation.z = shipBank;
         shipModel.userData.ring.rotation.z = rTime * 1.4; if (shipModel.userData.prop) shipModel.userData.prop.rotation.z = -rTime * 3.2; // 推進ユニットを時計回りに回す
         shipWireMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.45); shipModel.userData.glowC.color.copy(themeCur.player).lerp(COL_WHITE, 0.25); shipModel.userData.core.scale.setScalar(1 + visualBeat * 0.35 + Math.sin(rTime * 9) * 0.06);
-        shipCageMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.3); shipCageMat.opacity = 0.2 + visualBeat * 0.35; // ワイヤーの外殻は拍に合わせて光る
+        shipCageMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.3); shipCageMat.opacity = 0.36 + visualBeat * 0.35; // ワイヤーの外殻は拍に合わせて光る
         shipPivot.rotation.x = -0.12;
         playerGroup.scale.setScalar(VS * (1 + visualBeat * 0.18));
 
@@ -5659,7 +5857,11 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260);
+        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
+        hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
+        if (hyperK < 0.002) hyperK = 0;
+        hyperGrade.enabled = hyperK > 0;
+        hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ hyperGrade.uniforms.t.value = rTime;
         composer.render(dt);
     } else {
         renderer.render(scene, camera);
@@ -5754,16 +5956,7 @@ function draw() {
     }
 
     // ハイパーアイテムのラベルと、ハイパー中の残り時間
-    items.forEach(it => {
-        if (it.type !== 'hyper') return;
-        const sp = project(it.x, it.y, 30);
-        renderCtx.save();
-        renderCtx.textAlign = 'center';
-        renderCtx.font = `800 ${IS_MOBILE ? 18 : 13}px ${config.fontFamily}`;
-        renderCtx.fillStyle = frameCount % 8 < 4 ? '#ffd400' : '#ff2d55';
-        renderCtx.fillText('HYPER', sp.x, sp.y - (IS_MOBILE ? 46 : 30));
-        renderCtx.restore();
-    });
+    // （アイテム上のHYPERの文字は表示しない）
     if (hyperT > 0 && (gameState === 'playing' || gameState === 'paused')) {
         const ratio = hyperT / HYPER_TIME, col = frameCount % 10 < 5 ? '#ffd400' : '#ff2d55';
         const tx = IS_MOBILE ? HUD_W - 20 : HUD_W / 2, ty = IS_MOBILE ? 156 : HUD_H - 50, bw = IS_MOBILE ? 150 : 180;
@@ -5963,10 +6156,10 @@ function draw() {
             const transitionProgress = (lifeProgress - transitionStart) / (transitionEnd - transitionStart);
             const textChars = []; // 配列を使って高速化
             for (let i = 0; i < toText.length; i++) {
-                if (transitionProgress > (i / toText.length) + (Math.random() * 0.1)) {
+                if (transitionProgress > (i / toText.length) + (frameRand(i) * 0.1)) {
                     textChars.push(toText[i]);
                 } else {
-                    textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+                    textChars.push(chars[Math.floor(frameRand(i + 50) * chars.length)]);
                 }
             }
             displayText = textChars.join('');
