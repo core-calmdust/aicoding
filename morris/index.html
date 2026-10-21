@@ -309,7 +309,7 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 .hidden{display:none!important}
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
-@media (prefers-reduced-motion: reduce){.confetti{display:none}.pc.rmable::before{animation:none}}
+
 .rulecards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .rulecard{position:relative;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text);min-width:0}
 .rulecard:hover{border-color:var(--brass2)}
@@ -1167,7 +1167,7 @@ function playTick() { if (!settings.sound) return; const a = ctx(); if (!a) retu
 // ====================================================================== DOM / board
 const $ = s => document.querySelector(s);
 const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), linesEl = $('#lines');
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 const ptX = i => (G.pts[i][0] + 0.5) / G.size * 100, ptY = i => (G.pts[i][1] + 0.5) / G.size * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }

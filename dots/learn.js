@@ -988,7 +988,7 @@ function endPuzzle(silent) {
 const PZ_TAG = { take: 'take', double: 'decline', longchain: 'parity', loop: 'loop', sacrifice: 'sacrifice', hard: 'hard', count: 'order', plan: 'plan' };
 // two bursts of confetti over the board (puzzle solved; a second one for stage clear / medal / unlock / complete)
 function confettiL() {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (false /* site rule: animations are never skipped for the OS reduce-motion setting */) return;
   const cv = document.createElement('canvas'), dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight;
   cv.className = 'confetti-l'; cv.width = W * dpr; cv.height = H * dpr; document.body.appendChild(cv);
   const g = cv.getContext('2d'); g.scale(dpr, dpr);

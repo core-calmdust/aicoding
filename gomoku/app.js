@@ -159,7 +159,7 @@ function playTick() { if (!settings.sound) return; const a = ctx(); if (!a) retu
 
 // ====================================================================== board
 const boardEl = $('#board'), stonesEl = $('#stones'), fxEl = $('#fx'), gridEl = $('#grid');
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 const cx = m => m % N, cy = m => Math.floor(m / N);
 const px = m => (1 + cx(m)), py = m => (15 - cy(m));            // board units (16 per side)

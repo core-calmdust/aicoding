@@ -37,7 +37,7 @@ let busyToken = 0, thinking = -1, animating = false, gameOverShown = false;
 let lesson = null, puzzle = null, savedGame = null;
 let hoverPit = -1;
 let HB = null;   // PC header bar (shared/headerbar.js)
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim;            // seed-by-seed sowing (with reduced motion the gems step without flying arcs)
 const motionOn = () => settings.anim && !reduceMotion;
 

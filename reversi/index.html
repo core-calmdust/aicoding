@@ -444,7 +444,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 @keyframes fxglow{0%{box-shadow:0 0 0 0 rgba(226,194,117,.0)}30%{box-shadow:0 0 40px 6px rgba(226,194,117,.35)}100%{box-shadow:0 0 0 0 rgba(226,194,117,0)}}
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
-@media (prefers-reduced-motion: reduce){.fx-ring,.fx-spark,.confetti{display:none}.board.fx-glow{animation:none}}
+
 .ol-note{font-size:13px;color:var(--muted);line-height:1.7}
 .ol-note.small{font-size:12px;color:var(--dim);margin-top:10px}
 .ol-me{display:flex;gap:10px;align-items:center;margin-bottom:14px}
@@ -3782,7 +3782,7 @@ function dailySolved(date, hinted) {
 }
 
 // ====================================================================== effects
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 function moveFx(a) {
   if (!a || lesson) return;
   const corner = [0, 7, 56, 63].includes(a.sq);

@@ -287,7 +287,7 @@ html[lang=ar] :is(.rl-lead, .rl-item, #rulesOverlay h2){direction:rtl;text-align
 .hidden{display:none!important}
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
-@media (prefers-reduced-motion: reduce){.confetti{display:none}.winring{animation:none}}
+
 @media (pointer: coarse){.disc.ghost,.colhl{display:none}}
 
 /* lesson & puzzle */
@@ -1008,7 +1008,7 @@ function playTick() {
 // ====================================================================== DOM
 const $ = s => document.querySelector(s);
 const boardEl = $('#board'), discsEl = $('#discs'), fxEl = $('#fx'), hitsEl = $('#hits'), colhl = $('#colhl');
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const cellPx = () => boardEl.clientWidth / COLS;
 for (let c = 0; c < COLS; c++) {
   const b = document.createElement('button'); b.dataset.c = c; b.setAttribute('aria-label', 'column ' + colName(c));

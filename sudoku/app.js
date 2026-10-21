@@ -273,7 +273,7 @@ function toast(html, cls = '') {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3200);
 }
 function confetti(n = 140, gold) {
-  if (!DB.set.motion || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!DB.set.motion || false /* site rule: animations are never skipped for the OS reduce-motion setting */) return;
   const cv = $('#fx'), ctx = cv.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1);
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const cols = gold ? ['#ffd36b', '#fff2b8', '#ffb347', '#ffe9f5', '#c39bff'] : ['#ff8fb6', '#ffd36b', '#8fe3b0', '#8fc4ff', '#c39bff', '#ff9f7a'];
