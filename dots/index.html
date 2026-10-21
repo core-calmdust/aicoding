@@ -878,8 +878,9 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="engine.js?v=20261020d5"></script>
 <script src="learn.js?v=20261021fz"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
-<script src="firebase-config.js?v=20261019o"></script>
-<script src="online.js?v=20261020gh"></script>
+<script src="firebase-config.js?v=sec1"></script>
+<script src="../shared/onlinesec.js?v=1"></script>
+<script src="online.js?v=sec1"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -1766,11 +1767,11 @@ document.querySelector('#rsCancel').onclick = () => document.querySelector('#res
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
 </script>
-<script src="online-ui.js?v=20261021rsg"></script>
+<script src="online-ui.js?v=20261021rsgsec1"></script>
 <script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=3" defer></script>
-<script src="../shared/atlas-account.js?v=3" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
+<script src="../shared/atlas-account.js?v=4" defer></script>
 </body>
 </html>

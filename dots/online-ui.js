@@ -360,7 +360,7 @@ function olShowResult() {
   $('#resSw0').innerHTML = iconSvg(0); $('#resSw1').innerHTML = iconSvg(1);
   let sub = `${olShortName(0)} vs ${olShortName(1)} · ${g.n}×${g.n}`;
   if (R.why) sub = R.why + ' · ' + sub;
-  $('#resultSub').innerHTML = olEsc(sub) + (R.rating && R.rating.rated ? `<div class="ol-rchg">${t('ol.rating')} ${R.rating.old} → <b>${R.rating.now}</b> <span class="${R.rating.now >= R.rating.old ? 'up' : 'dn'}">(${R.rating.now >= R.rating.old ? '+' : ''}${R.rating.now - R.rating.old})</span></div>` : '');
+  $('#resultSub').innerHTML = olEsc(sub) + (R.rating && R.rating.rated ? `<div class="ol-rchg">${t('ol.rating')} ${R.rating.old} → <b>${R.rating.now}</b> <span class="${R.rating.now >= R.rating.old ? 'up' : 'dn'}">(${R.rating.now >= R.rating.old ? '+' : ''}${R.rating.now - R.rating.old})</span></div>` : R.rating && R.rating.note && ON.secMsg ? `<div class="ol-rchg">${olEsc(ON.secMsg(R.rating.note))}</div>` : '');
   if (me >= 0) playChime(R.winner < 0 ? 0 : R.winner === me ? 1 : -1);
   olResRender();
   showOv('#resultOverlay');
