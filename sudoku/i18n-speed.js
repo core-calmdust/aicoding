@@ -2609,4 +2609,14 @@ add('pt', {"ct.d.1": "Só sudokus fáceis — comece aqui", "ct.d.2": "Alguns pe
 add('de', {"ct.d.1": "Nur leichte Rätsel — fang hier an", "ct.d.2": "Manche brauchen etwas Nachdenken", "ct.d.3": "Vor allem knifflige Rätsel", "ct.d.4": "Die schwersten Rätsel für Profis"});
 add('hi', {"ct.d.1": "सिर्फ़ आसान पहेलियाँ — यहीं से शुरू करो", "ct.d.2": "कुछ पहेलियों में थोड़ा सोचना पड़ेगा", "ct.d.3": "ज़्यादातर चुनौती भरी पहेलियाँ", "ct.d.4": "सबसे कठिन, उस्ताद स्तर की पहेलियाँ"});
 add('ar', {"ct.d.1": "ألغاز سهلة فقط — ابدأ من هنا", "ct.d.2": "بعضها يحتاج إلى قليل من التفكير", "ct.d.3": "معظمها ألغاز صعبة", "ct.d.4": "الأصعب، بمستوى الخبراء"});
+add('ja', {"g.balloon.d": "ふうせんが下からふわふわ。タップでパンとわろう。わらずに逃がすと−5秒！"});
+add('en', {"g.balloon.d": "Balloons float up over the board — tap to pop them. Let one get away and lose 5 seconds!"});
+add('zh', {"g.balloon.d": "气球从下面飘上来，点一下就啪地戳破。让它飞走就−5秒！"});
+add('ko', {"g.balloon.d": "풍선이 아래에서 둥실둥실. 탭해서 펑 터뜨려요. 놓치면 −5초!"});
+add('es', {"g.balloon.d": "Suben globos por el tablero: tócalos para reventarlos. ¡Si se escapa uno, −5 s!"});
+add('fr', {"g.balloon.d": "Des ballons montent sur la grille — touche-les pour les éclater. S'il en file un : −5 s !"});
+add('pt', {"g.balloon.d": "Balões sobem pelo tabuleiro — toque para estourar. Se um escapar, −5 s!"});
+add('de', {"g.balloon.d": "Luftballons steigen übers Feld — tipp sie an, damit sie platzen. Entwischt einer: −5 s!"});
+add('hi', {"g.balloon.d": "गुब्बारे बोर्ड पर ऊपर उड़ते हैं — टैप करके फोड़ो। कोई छूट गया तो −5 सेकंड!"});
+add('ar', {"g.balloon.d": "بالونات تطفو فوق اللوحة — المسها لتفرقعها. وإن أفلت واحد تخسر 5 ثوانٍ!"});
 })(window.I18N = window.I18N || {});

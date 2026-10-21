@@ -644,12 +644,12 @@ const GIM = {
     tick(g, dt) { if (g.s < 3) return; g.st.next -= dt; if (g.st.next <= 0) { g.st.next = 2600; turn(g, false); C.SFX.note(); } },
     stop() { R.rot.fill(''); },
   },
-  balloon: {   // balloons drift up over the board — tap to pop
+  balloon: {   // balloons drift up over the board — tap to pop; one that floats away costs 5 seconds
     start(g) { g.st.next = 500; g.st.b = []; },
     tick(g, dt) {
       g.st.next -= dt;
-      if (g.st.next <= 0 && g.st.b.length < [2, 3, 4][g.s - 1]) {
-        g.st.next = [1800, 1350, 1000][g.s - 1];
+      if (g.st.next <= 0 && g.st.b.length < [1, 2, 2][g.s - 1]) {
+        g.st.next = [3200, 2600, 2100][g.s - 1];
         const el = document.createElement('div'); el.className = 'sballoon';
         el.innerHTML = BALLOON(['#ff6f91', '#ffb340', '#5ec2ff', '#8bd56a', '#b48cff'][(R.rng() * 5) | 0]);
         const b = { el, x: R.rng() * 76, y: 104, v: 140 / [5600, 4600, 3800][g.s - 1] * (.8 + R.rng() * .4), ph: R.rng() * 6 };
@@ -659,7 +659,7 @@ const GIM = {
       g.st.b = g.st.b.filter(b => {
         if (b.pop) return false;
         b.y -= b.v * dt; b.ph += dt / 700;
-        if (b.y < -40) { b.el.remove(); return false; }
+        if (b.y < -40) { b.el.remove(); missed(GICON.balloon, b.x, 6); return false; }   // floated away unpopped: −5 seconds
         b.el.style.left = (b.x + Math.sin(b.ph) * 2.5).toFixed(2) + '%'; b.el.style.top = b.y.toFixed(2) + '%';
         return true;
       });
@@ -732,19 +732,7 @@ const GIM = {
       g.st.s = g.st.s.filter(st => {
         if (st.got) return false;
         st.t += dt / st.dur;
-        if (st.t >= 1) {   // missed it: −5 seconds
-          st.el.remove();
-          const fx = document.createElement('div'); fx.className = 'smiss';
-          fx.innerHTML = `<i>${GICON.star}</i><b>${esc(t('sp.starmiss'))}</b>`;
-          fx.style.left = Math.max(4, Math.min(66, st.x1 < 0 ? 4 : 66)) + '%'; fx.style.top = Math.max(6, Math.min(70, st.y1)) + '%';
-          $('#sFloat').appendChild(fx); setTimeout(() => fx.remove(), 1300);
-          const tm = $('#sTimer'); tm.classList.remove('hurt'); void tm.offsetWidth; tm.classList.add('hurt'); setTimeout(() => tm.classList.remove('hurt'), 600);
-          R.left -= 5000; R.combo = 0; R.missThis = true;
-          const pen = $('#sPen'); pen.textContent = '-5'; pen.classList.remove('on'); void pen.offsetWidth; pen.classList.add('on');
-          C.SFX.err(); C.vib([30, 30, 30]); render();
-          if (R.left <= 0) timeUp();
-          return false;
-        }
+        if (st.t >= 1) { st.el.remove(); missed(GICON.star, st.x1 < 0 ? 4 : 66, st.y1); return false; }   // missed it: −5 seconds
         st.el.style.left = (st.x0 + (st.x1 - st.x0) * st.t).toFixed(2) + '%'; st.el.style.top = (st.y0 + (st.y1 - st.y0) * st.t).toFixed(2) + '%';
         return true;
       });
@@ -805,6 +793,18 @@ function turn(g, first) {
     R.rot[i] = R.rng() < (first && g.s < 2 ? .6 : .85) ? T[(R.rng() * T.length) | 0] : '';
   }
   render();
+}
+/* let a shooting star / balloon get away: −5 seconds with a big pop-up at (x%, y%) of the board */
+function missed(icon, x, y) {
+  const fx = document.createElement('div'); fx.className = 'smiss';
+  fx.innerHTML = `<i>${icon}</i><b>${esc(t('sp.starmiss'))}</b>`;
+  fx.style.left = Math.max(4, Math.min(66, x)) + '%'; fx.style.top = Math.max(6, Math.min(70, y)) + '%';
+  $('#sFloat').appendChild(fx); setTimeout(() => fx.remove(), 1300);
+  const tm = $('#sTimer'); tm.classList.remove('hurt'); void tm.offsetWidth; tm.classList.add('hurt'); setTimeout(() => tm.classList.remove('hurt'), 600);
+  R.left -= 5000; R.combo = 0; R.missThis = true;
+  const pen = $('#sPen'); pen.textContent = '-5'; pen.classList.remove('on'); void pen.offsetWidth; pen.classList.add('on');
+  C.SFX.err(); C.vib([30, 30, 30]); render();
+  if (R.left <= 0) timeUp();
 }
 function startGims() {
   for (const g of R.gims) { GIM[g.id].start(g); S().st.gs[g.id] = 1; }
@@ -1338,7 +1338,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=7';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=8';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },
