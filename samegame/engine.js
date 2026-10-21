@@ -7,13 +7,20 @@
      5 paint (ペンキ: recolors the 3×3 around it to the group's color) */
 (function (root) {
 'use strict';
-const T = { N: 0, ROCK: 1, ICE: 2, BOMB: 3, WILD: 4, PAINT: 5, PEARL: 6 };   // PEARL: DIVE mode treasure (never tapped, joined or blasted)
+const T = { N: 0, ROCK: 1, ICE: 2, BOMB: 3, WILD: 4, PAINT: 5, PEARL: 6,   // PEARL: DIVE mode treasure (never tapped, joined or blasted)
+  ICE2: 7,    // かたいこおり: needs two neighbour clears (→ ICE → normal)
+  ROW: 8,     // ヨコライン: clearing it also clears its whole row
+  COL: 9,     // タテライン: clearing it also clears its whole column
+  PRISM: 10,  // プリズム: clearing it also clears every block of that color
+  HID: 11,    // なぞ: color hidden; doesn't connect until a neighbour is cleared (then becomes normal)
+  CHAM: 12 }; // カメレオン: changes to the next color after every move
+const COLORED = new Set([0, 3, 5, 8, 9, 10, 12]);   // tappable & connecting types
 const col = v => v & 15, typ = v => v >> 4, mk = (c, t) => c | (t << 4);
 const clone = b => b.map(c => c.slice());
 const W = b => b.length;
 const at = (b, x, y) => (x >= 0 && x < b.length && y >= 0 && y < b[x].length) ? b[x][y] : -1;
-const tappable = v => { const t = typ(v); return v >= 0 && (t === T.N || t === T.BOMB || t === T.PAINT); };
-const joins = (v, c) => { if (v < 0) return false; const t = typ(v); return t === T.WILD || ((t === T.N || t === T.BOMB || t === T.PAINT) && col(v) === c); };
+const tappable = v => v >= 0 && COLORED.has(typ(v));
+const joins = (v, c) => { if (v < 0) return false; const t = typ(v); return t === T.WILD || (COLORED.has(t) && col(v) === c); };
 const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
 // connected group from (x,y); [] if not tappable
@@ -48,14 +55,16 @@ function remove(b, cells, opt = {}) {
   const mark = new Map(); // key -> why
   const key = (x, y) => x * 64 + y;
   cells.forEach(([x, y]) => mark.set(key(x, y), 'g'));
-  // bombs (chain)
-  const bq = cells.filter(([x, y]) => typ(b[x][y]) === T.BOMB);
+  // blasts (chain): bombs 3×3, rows, columns, prisms (all of a color)
+  const BL = new Set([T.BOMB, T.ROW, T.COL, T.PRISM]);
+  const bq = cells.filter(([x, y]) => BL.has(typ(b[x][y])));
+  const hit = (nx, ny, why) => { const v = at(b, nx, ny); if (v < 0 || mark.has(key(nx, ny)) || typ(v) === T.PEARL) return; mark.set(key(nx, ny), why); if (BL.has(typ(v))) bq.push([nx, ny]); };
   while (bq.length) {
-    const [bx, by] = bq.pop();
-    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
-      const nx = bx + dx, ny = by + dy, v = at(b, nx, ny); if (v < 0 || mark.has(key(nx, ny)) || typ(v) === T.PEARL) continue;
-      mark.set(key(nx, ny), 'b'); if (typ(v) === T.BOMB) bq.push([nx, ny]);
-    }
+    const [bx, by] = bq.pop(), t = typ(b[bx][by]);
+    if (t === T.BOMB) { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) hit(bx + dx, by + dy, 'b'); }
+    else if (t === T.ROW) { for (let x = 0; x < b.length; x++) hit(x, by, 'l'); }
+    else if (t === T.COL) { for (let y = 0; y < b[bx].length; y++) hit(bx, y, 'l'); }
+    else if (t === T.PRISM) { const pc = col(b[bx][by]); for (let x = 0; x < b.length; x++) for (let y = 0; y < b[x].length; y++) { const v = b[x][y]; if (COLORED.has(typ(v)) && col(v) === pc) hit(x, y, 'p'); } }
   }
   const nb = clone(b), thawed = [], painted = [];
   // neighbours of everything removed: rocks go, ice thaws
@@ -67,6 +76,8 @@ function remove(b, cells, opt = {}) {
       if (v < 0 || mark.has(kk)) continue;
       if (typ(v) === T.ROCK) mark.set(kk, 'r');
       else if (typ(v) === T.ICE && typ(nb[nx][ny]) === T.ICE) { nb[nx][ny] = mk(col(v), T.N); thawed.push([nx, ny]); }
+      else if (typ(v) === T.ICE2 && typ(nb[nx][ny]) === T.ICE2) { nb[nx][ny] = mk(col(v), T.ICE); thawed.push([nx, ny]); }
+      else if (typ(v) === T.HID && typ(nb[nx][ny]) === T.HID) { nb[nx][ny] = mk(col(v), T.N); thawed.push([nx, ny]); }
     }
   }
   // paint: recolor the 3×3 around each paint cell in the group
@@ -77,6 +88,9 @@ function remove(b, cells, opt = {}) {
       if (col(v) !== c0) { nb[nx][ny] = mk(c0, t); painted.push([nx, ny]); }
     }
   }
+  // chameleons shift to the next color
+  let K = opt.k || 0; if (!K) { for (const c of b) for (const v of c) { const t = typ(v); if (t !== T.ROCK && t !== T.WILD && t !== T.PEARL) K = Math.max(K, col(v) + 1); } K = Math.max(2, K); }
+  for (let x = 0; x < nb.length; x++) for (let y = 0; y < nb[x].length; y++) if (!mark.has(key(x, y)) && typ(nb[x][y]) === T.CHAM) { nb[x][y] = mk((col(nb[x][y]) + 1) % K, T.CHAM); painted.push([x, y]); }
   const removed = [];
   for (const [k, why] of mark) { const x = (k / 64) | 0, y = k % 64; removed.push([x, y, b[x][y], why]); }
   // gravity + column collapse; track moves of surviving cells
@@ -99,7 +113,7 @@ function hopeless(b, min) {
   let special = false; const cnt = [0, 0, 0, 0, 0, 0];
   for (const c of b) for (const v of c) {
     const t = typ(v);
-    if (t === T.WILD || t === T.PAINT || t === T.BOMB) special = true;
+    if (t === T.WILD || t === T.PAINT || t === T.BOMB || t === T.ROW || t === T.COL || t === T.PRISM || t === T.CHAM) special = true;
     else if (t !== T.ROCK) cnt[col(v)]++;
   }
   if (special) return false;
@@ -163,21 +177,26 @@ function randomBoard(w, h, k, rnd, sp = {}) {
   put(sp.bomb || 0, v => mk(col(v), T.BOMB));
   put(sp.wild || 0, () => mk(0, T.WILD));
   put(sp.paint || 0, v => mk(col(v), T.PAINT));
+  put(sp.ice2 || 0, v => mk(col(v), T.ICE2));
+  put(sp.row || 0, v => mk(col(v), T.ROW));
+  put(sp.colm || 0, v => mk(col(v), T.COL));
+  put(sp.prism || 0, v => mk(col(v), T.PRISM));
+  put(sp.hid || 0, v => mk(col(v), T.HID));
+  put(sp.cham || 0, v => mk(col(v), T.CHAM));
   return b;
 }
 // compact text form for json: rows top→bottom are not used; we store columns bottom-up, cell as base36 char pair? keep one char: 0-5 colors, a-f ice, g-l bomb, m-r paint, R rock, W wild
+const ALPH = { [T.ICE]: 'abcdef', [T.BOMB]: 'ghijkl', [T.PAINT]: 'mnopqr', [T.ICE2]: 'stuvwx', [T.ROW]: 'ABCDEF', [T.COL]: 'GHIJKL', [T.PRISM]: 'MNOQSU', [T.HID]: '!#$%&*', [T.CHAM]: '+-=:;@' };
 function enc(b) {
-  return b.map(c => c.map(v => { const t = typ(v), k = col(v); return t === T.ROCK ? 'R' : t === T.WILD ? 'W' : t === T.ICE ? 'abcdef'[k] : t === T.BOMB ? 'ghijkl'[k] : t === T.PAINT ? 'mnopqr'[k] : String(k); }).join('')).join('.');
+  return b.map(c => c.map(v => { const t = typ(v), k = col(v); return t === T.ROCK ? 'R' : t === T.WILD ? 'W' : t === T.PEARL ? 'P' : ALPH[t] ? ALPH[t][k] : String(k); }).join('')).join('.');
 }
 function dec(s) {
   return s.split('.').map(c => [...c].map(ch => {
-    if (ch === 'R') return mk(0, T.ROCK); if (ch === 'W') return mk(0, T.WILD);
-    let i = 'abcdef'.indexOf(ch); if (i >= 0) return mk(i, T.ICE);
-    i = 'ghijkl'.indexOf(ch); if (i >= 0) return mk(i, T.BOMB);
-    i = 'mnopqr'.indexOf(ch); if (i >= 0) return mk(i, T.PAINT);
+    if (ch === 'R') return mk(0, T.ROCK); if (ch === 'W') return mk(0, T.WILD); if (ch === 'P') return mk(0, T.PEARL);
+    for (const t in ALPH) { const i = ALPH[t].indexOf(ch); if (i >= 0) return mk(i, +t); }
     return +ch;
   }));
 }
-const api = { T, col, typ, mk, clone, at, tappable, group, groups, remove, points, count, dead, solve, playRate, greedyScore, rng, hashStr, randomBoard, enc, dec, hopeless };
+const api = { T, COLORED, col, typ, mk, clone, at, tappable, group, groups, remove, points, count, dead, solve, playRate, greedyScore, rng, hashStr, randomBoard, enc, dec, hopeless };
 if (typeof module !== 'undefined') module.exports = api; else root.SameEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -72,7 +72,8 @@ const SND = {
 
 /* ---------------- data: stages, themes, missions ---------------- */
 let STG = null;
-const THEMES = ['cl', 'tr', 'rk', 'ic', 'bm', 'wd', 'pt', 'mx'];
+const THEMES = ['cl', 'tr', 'rk', 'ic', 'bm', 'wd', 'pt', 'mx', 'ih', 'ln', 'dr', 'pr', 'hd', 'ch', 'ex'];
+const ST_TOTAL = THEMES.length * 50;
 const TIERS = ['t.0', 't.1', 't.2', 't.3', 't.4', 't.5'];
 const PER = 10, UNLOCK = 6;
 const stKey = (th, j) => th + '.' + j;
@@ -124,6 +125,7 @@ const MIS_TIER = ['mt.0', 'mt.1', 'mt.2'];
 
 /* ---------------- daily ---------------- */
 const DAILY_GIM = ['', 'rk', 'ic', 'bm', 'wd', 'pt', 'mx'];
+const DAILY_GIM2 = ['', 'rk', 'ic', 'bm', 'wd', 'pt', 'mx', 'ih', 'ln', 'dr', 'pr', 'hd', 'ch', 'ex'];
 // 3 difficulties a day: e (easy) / m (normal, key 'p' — the original daily) / h (hard)
 const DIFFS = [
   { k: 'e', key: 'pe', w: 8, h: 10, c: 3, sc: .5, md: [8, 3] },
@@ -132,9 +134,9 @@ const DIFFS = [
 ];
 const diffOf = k => DIFFS.find(x => x.k === k) || DIFFS[1];
 function dailyCfg(date, k = 'm') {
-  const D = diffOf(k), h0 = E.hashStr('same-' + date), g = DAILY_GIM[h0 % DAILY_GIM.length];
+  const D = diffOf(k), h0 = E.hashStr('same-' + date), GL = date >= '2026-10-22' ? DAILY_GIM2 : DAILY_GIM, g = GL[h0 % GL.length];
   const h = k === 'm' ? h0 : E.hashStr('same-' + date + '-' + k), r = E.rng(h);
-  const base = { '': {}, rk: { rock: 7 }, ic: { ice: 14 }, bm: { bomb: 6 }, wd: { wild: 4 }, pt: { paint: 5 }, mx: { rock: 3, bomb: 3, ice: 6 } }[g], sp = {};
+  const base = { '': {}, rk: { rock: 7 }, ic: { ice: 14 }, bm: { bomb: 6 }, wd: { wild: 4 }, pt: { paint: 5 }, mx: { rock: 3, bomb: 3, ice: 6 }, ih: { ice2: 10 }, ln: { row: 3 }, dr: { colm: 3 }, pr: { prism: 3 }, hd: { hid: 12 }, ch: { cham: 6 }, ex: { ice2: 4, row: 2, prism: 1, hid: 5, cham: 2 } }[g], sp = {};
   for (const x in base) sp[x] = Math.max(1, Math.round(base[x] * D.sc));
   return { g, board: E.randomBoard(D.w, D.h, D.c, r, sp), seed: h, D };
 }
@@ -143,7 +145,8 @@ const medalFor = (left, k = 'm') => { const [b, sv] = diffOf(k).md; return left 
 // daily action modes: ranking key + saved record key
 const DACT = [['blitz', 'b'], ['order', 'o'], ['fuse', 'f'], ['dive', 'v']];
 const dkOf = m => (DACT.find(x => x[0] === m) || DACT[0])[1];
-const DACT_CFG = { blitz: { k: 4, t: 60, g: ['hero', 'bomb'] }, order: { k: 4, t: 60, g: ['hero'] }, fuse: { k: 4, t: 60, g: ['bomb'] }, dive: { k: 4, t: 60, g: ['hero'] } };
+const NEWB = today() >= '2026-10-22' ? ['line', 'prism'] : [];
+const DACT_CFG = { blitz: { k: 4, t: 60, g: ['hero', 'bomb', ...NEWB] }, order: { k: 4, t: 60, g: ['hero', ...NEWB] }, fuse: { k: 4, t: 60, g: ['bomb'] }, dive: { k: 4, t: 60, g: ['hero'] } };
 const dayAct = r => DACT.some(([, k]) => r[k] && r[k].a > 0);
 const dayPlayed = r => !!r && (r.p.left >= 0 || (r.pe && r.pe.left >= 0) || (r.ph && r.ph.left >= 0) || dayAct(r));
 const dayGold = r => !!r && [r.pe, r.p, r.ph].some(x => x && x.md >= 3);
@@ -168,7 +171,7 @@ const ACH = [
   ['combo10', s => [s.combo, 10], 100], ['combo20', s => [s.combo, 20], 300], ['combo30', s => [s.combo, 30], 600],
   ['hero10', s => [s.hero, 10], 100], ['hero50', s => [s.hero, 50], 400],
   ['fever5', s => [s.fever, 5], 100], ['fever30', s => [s.fever, 30], 400],
-  ['st10', () => [Object.values(DB.st).filter(v => v).length, 10], 100], ['st100', () => [Object.values(DB.st).filter(v => v).length, 100], 400], ['st400', () => [Object.values(DB.st).filter(v => v).length, 400], 2000],
+  ['st10', () => [Object.values(DB.st).filter(v => v).length, 10], 100], ['st100', () => [Object.values(DB.st).filter(v => v).length, 100], 400], ['st400', () => [Object.values(DB.st).filter(v => v).length, ST_TOTAL], 3500],
   ['star3x50', () => [Object.values(DB.st).filter(v => v >= 3).length, 50], 400],
   ['theme1', () => [THEMES.filter(th => stRec(th).every(v => v)).length, 1], 500],
   ['mis10', () => [Object.values(DB.act.mis).filter(v => v).length, 10], 200], ['mis30', () => [Object.values(DB.act.mis).filter(v => v).length, 30], 800], ['mis3s', () => [Object.values(DB.act.mis).filter(v => v >= 3).length, 30], 1500],
@@ -203,11 +206,11 @@ function setBg() { const b = A.BGS.find(x => x.id === DB.bg) || A.BGS[0]; $('#bg
 function profCard() {
   const lv = Math.floor(Math.sqrt(DB.life / 50)) + 1;
   $('#profCard').innerHTML = `<button class="pic" id="pfEdit" aria-label="${esc(t('pf.edit'))}">${A.charSVG(DB.icon)}</button>
-    <div class="pinfo"><b class="pname">${esc(DB.name || t('pf.guest'))}</b><span class="plv">LV.${lv}</span></div>
-    <div class="pcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
+    <div class="pinfo"><b class="pname">${esc(DB.name || t('pf.guest'))}</b></div>
+    <div class="plc"><span class="plv">LV.${lv}</span><div class="pcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div></div>
     <div class="pstreak"><b>${streak()}</b><span>${esc(t('pf.streak'))}</span></div>
     <div class="pextra"><div class="plvbar"><span>LV.${lv} → ${lv + 1}</span><span class="bar"><i style="width:${Math.min(100, (DB.life - 50 * (lv - 1) ** 2) / (50 * lv ** 2 - 50 * (lv - 1) ** 2) * 100)}%"></i></span></div>
-      <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/400</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
+      <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/${ST_TOTAL}</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
       <li><span>${esc(t('bk.title'))}</span><b>${Object.keys(DB.own).length}<small>/100</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
       ${googleBox()}<div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
   $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha('g'), book: openBook, ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
@@ -237,7 +240,7 @@ function miniBoard(b, cls = 'mini') {
   const w = b.length, h = Math.max(...b.map(c => c.length));
   let s = `<svg viewBox="0 0 ${w * 10} ${h * 10}" class="${cls}">`;
   b.forEach((c, x) => c.forEach((v, y) => {
-    const ty = E.typ(v), fill = ty === E.T.ROCK ? '#a8a8a8' : ty === E.T.WILD ? '#fff' : A.BC[E.col(v)];
+    const ty = E.typ(v), fill = ty === E.T.HID ? '#8b8478' : ty === E.T.ROCK ? '#a8a8a8' : ty === E.T.WILD ? '#fff' : A.BC[E.col(v)];
     s += `<rect x="${x * 10 + .5}" y="${(h - 1 - y) * 10 + .5}" width="9" height="9" style="fill:${fill};stroke:var(--ink)" stroke-width="1"/>`;
     if (ty === E.T.ICE) s += `<rect x="${x * 10 + 2}" y="${(h - 1 - y) * 10 + 2}" width="6" height="6" fill="#BFE9FF" opacity=".8"/>`;
     if (ty === E.T.BOMB) s += `<circle cx="${x * 10 + 5}" cy="${(h - 1 - y) * 10 + 5}" r="2.6" fill="#000"/>`;
@@ -303,7 +306,7 @@ function renderFree() {
   $$('[data-o]', $('#dFree')).forEach(b => b.onclick = () => { freeO = b.dataset.o; renderFree(); });
   $('#fPlay').onclick = startFree;
 }
-const THEME_COL = ['#19A35B', '#5BD3E8', 'var(--mute)', '#6A93F2', 'var(--red)', 'var(--yel)', '#FF4FA0', '#7B3FD0'];
+const THEME_COL = ['#19A35B', '#5BD3E8', 'var(--mute)', '#6A93F2', 'var(--red)', 'var(--yel)', '#FF4FA0', '#7B3FD0', '#8FB8CC', '#D9622B', '#7A8B3A', '#B18AF0', '#8B8478', '#3E8C86', '#2F2A26'];
 function renderThemes() {
   const el = $('#stagePanel');
   let html = `<div class="sechead"><h2>${esc(t('st.h'))}</h2><p>${esc(t('st.d'))}</p></div><div class="tgrid">`;
@@ -360,7 +363,7 @@ function renderAction() {
     html += '</section>';
   }
   el.innerHTML = html;
-  $('#aBlitz').onclick = () => startAction({ kind: 'blitz', m: 'blitz', k: 4, t: 60, g: ['hero', 'bomb'] });
+  $('#aBlitz').onclick = () => startAction({ kind: 'blitz', m: 'blitz', k: 4, t: 60, g: ['hero', 'bomb', 'line', 'prism'] });
   $('#aRise').onclick = () => startAction({ kind: 'rise', m: 'rise', k: 4, t: 0, g: ['bomb'] });
   $$('[data-am]', el).forEach(b => b.onclick = () => { const m = b.dataset.am; startAction({ kind: m, m, k: m === 'order' ? 4 : 4, t: 60, g: m === 'fuse' ? ['bomb'] : ['hero'] }); });
   $$('.mis', el).forEach(b => b.onclick = () => { const m = MIS[+b.dataset.m]; startAction({ kind: 'mission', m: m.m, k: m.k, t: m.t, g: m.g, mis: m }); });
@@ -385,8 +388,10 @@ function mkEl(v) {
 }
 function paintEl(d, v) {
   const ty = E.typ(v), c = E.col(v);
-  d.className = 'blk ' + (ty === E.T.PEARL ? 'pearl' : ty === E.T.ROCK ? 'rock' : ty === E.T.WILD ? 'wild' : 'c' + c) + (ty === E.T.ICE ? ' ice' : '') + (ty === E.T.BOMB ? ' bomb' : '') + (ty === E.T.PAINT ? ' paint' : '');
-  const sym = ty === E.T.PEARL ? 'emPearl' : ty === E.T.ROCK ? 'emRock' : ty === E.T.WILD ? 'emWild' : ty === E.T.BOMB ? 'emBomb' : ty === E.T.PAINT ? 'emPaint' : 'em' + c;
+  const T = E.T, X = { [T.ICE]: ' ice', [T.ICE2]: ' ice ice2', [T.BOMB]: ' bomb', [T.PAINT]: ' paint', [T.ROW]: ' line row', [T.COL]: ' line colm', [T.PRISM]: ' prism', [T.CHAM]: ' cham' };
+  d.className = 'blk ' + (ty === T.PEARL ? 'pearl' : ty === T.ROCK ? 'rock' : ty === T.WILD ? 'wild' : ty === T.HID ? 'hid' : 'c' + c) + (X[ty] || '');
+  const S = { [T.PEARL]: 'emPearl', [T.ROCK]: 'emRock', [T.WILD]: 'emWild', [T.BOMB]: 'emBomb', [T.PAINT]: 'emPaint', [T.ROW]: 'emRow', [T.COL]: 'emCol', [T.PRISM]: 'emPrism', [T.HID]: 'emHid', [T.CHAM]: 'emCham' };
+  const sym = S[ty] || 'em' + c;
   d.innerHTML = `<svg><use href="#${sym}"/></svg>`;
 }
 function cellSize() {
@@ -437,7 +442,7 @@ function renderInfo() {
   let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.medals2') : k === 'free' ? t('th.cl.r') : (NEW_MODES.includes(G.mode) ? [1, 2, 3].map(i => t('a.' + G.mode + '.t' + i)).join(' ／ ') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2')) ;
   if (k === 'mission') rule = goalText(G.mis) + '。' + t('r.mstar', { a: fmt(G.mis.s2), b: fmt(G.mis.s3) });
   if (G.mode === 'dive') types.add(E.T.PEARL);
-  const TY = [[E.T.PEARL, E.mk(0, E.T.PEARL), 'pearl'], [E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
+  const TY = [[E.T.ICE2, E.mk(1, E.T.ICE2), 'ih'], [E.T.ROW, E.mk(0, E.T.ROW), 'ln'], [E.T.COL, E.mk(1, E.T.COL), 'dr'], [E.T.PRISM, E.mk(2, E.T.PRISM), 'pr'], [E.T.HID, E.mk(0, E.T.HID), 'hd'], [E.T.CHAM, E.mk(3, E.T.CHAM), 'ch'], [E.T.PEARL, E.mk(0, E.T.PEARL), 'pearl'], [E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
   const leg = TY.filter(([ty]) => types.has(ty)).map(([, v, th]) => { const d = mkEl(v); return `<li><span class="lg">${d.outerHTML}</span><span><b>${esc(t('th.' + th))}</b><br>${esc(t('th.' + th + '.d'))}</span></li>`; }).join('')
     + (G.gim && G.gim.has('hero') ? `<li><span class="lg">${A.mascot('wow')}</span><span><b>${esc(t('g.hero'))}</b><br>${esc(t('tu.a4.h'))} +3s</span></li>` : '')
     + (G.gim && G.gim.has('ink') ? `<li><span class="lg" style="background:#111;border:2px solid #000"></span><span><b>${esc(t('g.ink'))}</b><br>${esc(t('tu.a4'))}</span></li>` : '');
@@ -503,6 +508,8 @@ function randCell(k, rnd, gim, initial) {
   if (gim.has('rock') && r > .965) return E.mk(0, E.T.ROCK);
   if (gim.has('ice') && r > .91 && r <= .965) return E.mk(c, E.T.ICE);
   if (gim.has('wild') && r > .025 && r < .045) return E.mk(0, E.T.WILD);
+  if (gim.has('line') && r > .045 && r < .06) return E.mk(c, r < .0525 ? E.T.ROW : E.T.COL);
+  if (gim.has('prism') && r > .06 && r < .068) return E.mk(c, E.T.PRISM);
   return c;
 }
 function countdown(done) {
@@ -1123,7 +1130,7 @@ function demoSfx(bd, word, x, y, n, pts, color, rows, cs) {
   w.innerHTML = `${A.burst(10 + (n >> 2), 48, 33, word === 'NOPE' ? 'var(--mute)' : n >= 9 ? 'var(--yel)' : A.BC_LT[color] || 'var(--yel)')}<b>${word}</b>${pts != null ? `<em>+${fmt(pts)}</em>` : ''}`;
   bd.appendChild(w); setTimeout(() => w.remove(), 900);
 }
-const R_ = E.mk(0, E.T.ROCK), W_ = E.mk(0, E.T.WILD), IC = c => E.mk(c, E.T.ICE), BM = c => E.mk(c, E.T.BOMB), PT = c => E.mk(c, E.T.PAINT);
+const R_ = E.mk(0, E.T.ROCK), W_ = E.mk(0, E.T.WILD), IC = c => E.mk(c, E.T.ICE), BM = c => E.mk(c, E.T.BOMB), PT = c => E.mk(c, E.T.PAINT), I2 = c => E.mk(c, E.T.ICE2), RW = c => E.mk(c, E.T.ROW), CL = c => E.mk(c, E.T.COL), PR = c => E.mk(c, E.T.PRISM), HD = c => E.mk(c, E.T.HID), CH = c => E.mk(c, E.T.CHAM);
 const DEMOS = {
   'tu.b1': { board: [[2, 0, 1], [0, 0, 2], [1, 2, 1], [2, 1, 2]], steps: [[1, 0]] },
   'tu.b2': { board: [[0, 0, 0, 1], [0, 1, 1, 2], [0, 2, 2, 1], [3, 3, 1, 2]], steps: [[3, 0], [0, 0]] },
@@ -1156,6 +1163,13 @@ const DEMOS = {
   th_wd: { board: [[0, W_, 0], [1, 1, 2], [2, 0, 2]], steps: [[0, 0]] },
   th_pt: { board: [[0, 0, 1], [PT(0), 1, 2], [1, 2, 1], [2, 1, 2]], steps: [[0, 0], 'big'] },
   th_mx: { board: [[0, 0, 1, 2], [BM(0), R_, 1, 2], [1, 2, IC(1), 1], [2, W_, 2, 1]], steps: [[0, 0], 'big', 'big'] },
+  th_ih: { board: [[0, 0], [I2(1), 1], [0, 0]], steps: [[0, 0], [1, 0], [0, 0]] },
+  th_ln: { board: [[1, 2, 1], [RW(0), 0, 2], [0, 1, 2]], steps: [[1, 1]] },
+  th_dr: { board: [[0, 1, 2], [CL(0), 1, 2], [0, 2, 1]], steps: [[1, 0]] },
+  th_pr: { board: [[1, 0, 2], [PR(0), 0, 1], [2, 1, 0]], steps: [[1, 0]] },
+  th_hd: { board: [[0, 0, 1], [HD(2), 2, 1], [2, 1, 1]], steps: [[0, 0], [1, 0]] },
+  th_ch: { board: [[0, 0, 1], [CH(0), 1, 2], [1, 2, 2]], steps: [[2, 1], [1, 0]] },
+  th_ex: { board: [[0, 0, 1, 2], [RW(0), HD(1), 1, 2], [1, PR(2), 2, 1], [2, 0, CH(1), 1]], steps: [[0, 0], 'big', 'big'] },
 };
 function arrows(c) { const a = document.createElement('div'); a.className = 'darrows'; a.innerHTML = '<b>↓</b><b>←</b>'; c.host.querySelector('.dstage').appendChild(a); }
 function tutDemo(k) { return DEMOS[k] ? `<div class="demo" data-demo="${k}"></div>` : ''; }
@@ -1295,6 +1309,6 @@ async function boot() {
   loginBonus();
   if (ON && ON.available) ON.init().then(() => { if (acct()) { syncNow(true); profCard(); } }).catch(() => {});
 }
-window.SameApp = { get DB() { return DB; }, get G() { return G; }, startStage, startDaily, startAction, MIS };
+window.SameApp = { get DB() { return DB; }, get G() { return G; }, startStage, startDaily, startAction, MIS, play, maybeThemeTip };
 boot();
 })();

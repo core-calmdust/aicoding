@@ -31,6 +31,11 @@ ${EMB.map((p, i) => `<symbol id="em${i}" viewBox="0 0 24 24"><g fill="${W}" stro
 <symbol id="emBomb" viewBox="0 0 24 24"><circle cx="11" cy="14" r="7" fill="${K}"/><circle cx="8.6" cy="11.6" r="2" fill="${W}"/><path d="M15 8.5l2-2.5" stroke="${K}" stroke-width="2.4"/><path d="M18 3.5l.6 1.8 1.9.1-1.5 1.1.6 1.8-1.6-1-1.6 1 .6-1.8-1.5-1.1 1.9-.1z" fill="#FFD400" stroke="${K}" stroke-width="1"/></symbol>
 <symbol id="emPaint" viewBox="0 0 24 24"><path d="M5 9h12l-1.5 11h-9z" fill="${W}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/><path d="M5 9c0-2 3-3 6-3s6 1 6 3" fill="none" stroke="${K}" stroke-width="2"/><path d="M17 9c2.5 0 3 2 3 4.5 0 1.4-.7 2-1.3 2s-1.2-.6-1.2-2" fill="${W}" stroke="${K}" stroke-width="1.8"/></symbol>
 <symbol id="emPearl" viewBox="0 0 24 24"><path d="M3 15c2-7 16-7 18 0-3 4-15 4-18 0z" fill="#E6DCCB" stroke="#2F2A26" stroke-width="1.6"/><circle cx="12" cy="12.5" r="5.2" fill="#FFFAF0" stroke="#2F2A26" stroke-width="1.6"/><circle cx="10.3" cy="10.8" r="1.6" fill="#fff"/></symbol>
+<symbol id="emRow" viewBox="0 0 24 24"><path d="M2 12h20M2 12l5-5M2 12l5 5M22 12l-5-5M22 12l-5 5" fill="none" stroke="#FFFAF0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="emCol" viewBox="0 0 24 24"><path d="M12 2v20M12 2L7 7M12 2l5 5M12 22l-5-5M12 22l5-5" fill="none" stroke="#FFFAF0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="emPrism" viewBox="0 0 24 24"><path d="M12 2l9 10-9 10-9-10z" fill="#FFFAF0"/><path d="M12 2v20M3 12h18" stroke="#2F2A26" stroke-width="1" opacity=".25"/><path d="M12 6l5 6-5 6-5-6z" fill="none" stroke="#E8B83A" stroke-width="1.6"/></symbol>
+<symbol id="emHid" viewBox="0 0 24 24"><path d="M8.6 8.6a3.6 3.6 0 1 1 5 3.3c-1 .5-1.6 1.2-1.6 2.3v.8" fill="none" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="19.4" r="1.8" fill="#FFFAF0"/></symbol>
+<symbol id="emCham" viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 1-8 8 5.5 5.5 0 0 1 5.5-5.5A3.6 3.6 0 0 1 13 10a2 2 0 0 1-2 2" fill="none" stroke="#FFFAF0" stroke-width="2.8" stroke-linecap="round"/></symbol>
 <symbol id="emWild" viewBox="0 0 24 24"><path d="M3 17a9 9 0 0 1 18 0" fill="none" stroke="#E4202A" stroke-width="3"/><path d="M6 17a6 6 0 0 1 12 0" fill="none" stroke="#FFD400" stroke-width="3"/><path d="M9 17a3 3 0 0 1 6 0" fill="none" stroke="#1B4FCB" stroke-width="3"/></symbol>
 <pattern id="bdK" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.1" fill="${K}" opacity=".22"/></pattern>
 <pattern id="bdW" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.3" fill="${W}" opacity=".5"/></pattern>
@@ -222,6 +227,13 @@ const THEME_ICON = {
   wd: `<svg viewBox="0 0 40 40"><use href="#emWild" x="2" y="4" width="36" height="36"/></svg>`,
   pt: `<svg viewBox="0 0 40 40"><use href="#emPaint" x="3" y="3" width="34" height="34"/></svg>`,
   mx: `<svg viewBox="0 0 40 40"><rect x="4" y="4" width="15" height="15" fill="${BC[4]}" ${S2}/><rect x="21" y="21" width="15" height="15" fill="${BC[3]}" ${S2}/><use href="#emBomb" x="20" y="2" width="17" height="17"/><use href="#emRock" x="3" y="21" width="17" height="17"/></svg>`,
+  ih: `<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="6" fill="#8FB8CC"/><rect x="10" y="10" width="20" height="20" rx="4" fill="none" stroke="#FFFAF0" stroke-width="3"/><path d="M13 17l6 4-3 6M23 12l2 8 5 2" fill="none" stroke="#FFFAF0" stroke-width="2"/></svg>`,
+  ln: `<svg viewBox="0 0 40 40"><rect x="4" y="12" width="32" height="16" rx="5" fill="#D9622B"/><use href="#emRow" x="8" y="8" width="24" height="24"/></svg>`,
+  dr: `<svg viewBox="0 0 40 40"><rect x="12" y="4" width="16" height="32" rx="5" fill="#7A8B3A"/><use href="#emCol" x="8" y="8" width="24" height="24"/></svg>`,
+  pr: `<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="6" fill="#B18AF0"/><use href="#emPrism" x="9" y="9" width="22" height="22"/></svg>`,
+  hd: `<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="6" fill="#8B8478"/><use href="#emHid" x="9" y="9" width="22" height="22"/></svg>`,
+  ch: `<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="6" fill="#3E8C86"/><use href="#emCham" x="9" y="9" width="22" height="22"/></svg>`,
+  ex: `<svg viewBox="0 0 40 40"><rect x="4" y="4" width="15" height="15" rx="4" fill="#D9622B"/><rect x="21" y="4" width="15" height="15" rx="4" fill="#B18AF0"/><rect x="4" y="21" width="15" height="15" rx="4" fill="#3E8C86"/><rect x="21" y="21" width="15" height="15" rx="4" fill="#8B8478"/><use href="#emRow" x="6" y="6" width="11" height="11"/><use href="#emPrism" x="23" y="6" width="11" height="11"/><use href="#emCham" x="6" y="23" width="11" height="11"/><use href="#emHid" x="23" y="23" width="11" height="11"/></svg>`,
 };
 const themeIcon = th => STYLE === 'mid' ? midify(THEME_ICON[th] || '').replace(/#E4202A|#1B4FCB|#FFD400|#19A35B|#FF4FA0/g, c => mc(c)) : THEME_ICON[th];
 window.SameArt = { BC, BC_LT, syncPalette, setStyle, themeIcon, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N: 100, SUBJ };
