@@ -9,6 +9,7 @@
 //  - Theme cards show progress, stars and a crown when the whole theme is cleared.
 //  - The next puzzle to play is highlighted (NEXT) and a "continue" button jumps to it.
 // The host game keeps the records (puzzle -> stars) and calls the HTML builders below.
+// v3: home() / ghead() build the collection home of every game in the layout of 詰めオセロ (see "collection home" below).
 (function () {
 'use strict';
 const STAGE = 10, UNLOCK = 6;
@@ -42,6 +43,13 @@ const S2 = {
   ar: { movesLeft: 'تبقّى {n} نقلات', blunder: 'هذه نقلة خاطئة بوضوح.', outOfMoves: 'لم يتحقق الهدف خلال {n} نقلات.', retry: 'أعد المحاولة' },
 };
 for (const k in S2) Object.assign(S[k], S2[k]);
+// v3: collection home (hero, daily, category tabs, theme cards with a board)
+const S3 = {
+  ja: { count: '{n}問', diff: '難易度' }, en: { count: '{n} puzzles', diff: 'Difficulty' }, zh: { count: '{n}题', diff: '难度' }, ko: { count: '{n}문제', diff: '난이도' },
+  es: { count: '{n} problemas', diff: 'Dificultad' }, fr: { count: '{n} problèmes', diff: 'Difficulté' }, pt: { count: '{n} problemas', diff: 'Dificuldade' },
+  de: { count: '{n} Aufgaben', diff: 'Schwierigkeit' }, hi: { count: '{n} पहेलियाँ', diff: 'कठिनाई' }, ar: { count: '{n} لغزًا', diff: 'الصعوبة' },
+};
+for (const k in S3) Object.assign(S[k], S3[k]);
 let L = 'ja';
 const tx = (k, v) => { let x = (S[L] || S.en)[k]; if (typeof x === 'string' && v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -129,6 +137,82 @@ function solved(o) {   // o = { stars, recs (after), j, events }
   return h;
 }
 
+// ------------------------------------------------------------------ collection home (v3, the layout of 詰めオセロ)
+// hero (overall ring, title + count, lead, ★ and medals, continue) → daily card(s) → category tabs + one-line description →
+// theme cards (board thumbnail of a representative position with a badge, name, difficulty pips, 2-line description, progress, medals, ★).
+// Clicks are reported through bindHome(el, {cat, cont, daily, card}) with the keys given here.
+const tierC = o => { if (o.c) return `--c:${o.c[0]};--c2:${o.c[1]}`; const T = TIERS[Math.max(0, Math.min(TIERS.length - 1, o.tier || 0))]; return `--c:${T.c};--c2:${T.c2}`; };
+const diffOfTier = k => Math.max(1, Math.min(5, Math.ceil(((k || 0) + 1) * 5 / 6)));
+const pips = n => `<span class="pbh-diff" title="${esc(tx('diff'))} ${n}/5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
+const tmMark = tm => !tm ? '' : tm === 'b' || tm === 'w' ? `<i class="pbh-tm ${tm}"></i>` : `<i class="pbh-tm x">${tm}</i>`;
+function medalCount(all) { const m = [0, 0, 0, 0]; for (const r of all) stageInfo(r).forEach(s => m[s.medal]++); return m; }
+function homeCard(o) {
+  const recs = o.recs, tt = totals(recs), full = tt.done === tt.total && tt.total > 0;
+  const medals = stageInfo(recs).map(x => x.medal ? MEDAL(x.medal) : `<i class="pb-pip${x.done ? ' part' : ''}"></i>`).join('');
+  return `<button class="pbh-card${full ? ' full' : ''}" data-pbh-card="${esc(o.key)}" style="${tierC(o)}"><span class="pbh-th"><span class="pbh-bd${o.bdCls ? ' ' + o.bdCls : ''}">${o.board || ''}${tmMark(o.tm)}<span class="pbh-ic">${o.badge || ''}</span></span></span>` +
+    `<span class="pbh-tx"><span class="pbh-top"><b class="pbh-nm">${esc(o.name)}</b>${pips(o.diff || diffOfTier(o.tier))}</span><span class="pbh-desc">${esc(o.desc || '')}</span>` +
+    `<span class="pbh-prog"><span class="pb-bar"><i style="width:${tt.total ? tt.done * 100 / tt.total : 0}%"></i></span><span>${tt.done}/${tt.total}</span></span>` +
+    `<span class="pbh-meta"><span class="pb-medals">${medals}</span><span class="pb-st">${STAR(true)}${tt.stars}/${tt.total * 3}</span></span></span>` +
+    (full ? `<span class="pb-full">${CROWN}${esc(tx('complete'))}</span>` : '') + `</button>`;
+}
+function home(o) {
+  const all = (o.all || []).flat(), tt = totals(all), md = medalCount(o.all || []);
+  let h = `<div class="pbh"${o.style ? ` style="${o.style}"` : ''}>` + (o.pre || '');
+  h += `<div class="pbh-hero"><span class="pb-ring" style="--p:${tt.total ? tt.done / tt.total : 0}"><b>${tt.done}</b><small>/${tt.total}</small></span>` +
+    `<span class="pbh-hs"><b class="pbh-title">${esc(o.title)}<small>${esc(tx('count', { n: tt.total }))}</small></b>${o.lead ? `<span class="pbh-lead">${esc(o.lead)}</span>` : ''}` +
+    `<span class="pbh-stats"><span class="pb-st">${STAR(true)}${tt.stars}<small>/${tt.total * 3}</small></span>` +
+    [3, 2, 1].map(k => `<span class="pbh-md" title="${esc(tx('medal')[k - 1])}">${MEDAL(k)}${md[k]}</span>`).join('') + (o.heroExtra || '') + `</span></span>` +
+    (o.cont ? `<button class="pb-cont" data-pbh-cont="${esc(o.cont.key)}">${esc(tx('cont'))} ▶ <b>No.${o.cont.no}</b><small>${esc(o.cont.name || '')}</small></button>` : tt.total ? `<span class="pb-alldone">${CROWN}${esc(tx('allDone'))}</span>` : '') + `</div>`;
+  if (o.daily && o.daily.length) h += `<div class="pbh-dailies">` + o.daily.map(d => `<button class="pbh-daily" data-pbh-daily="${esc(d.key)}"><span class="th">${d.board || ''}</span><span class="tx"><b>${esc(d.title)}<span>${esc(d.date || '')}</span></b>` +
+    `<small>${esc(d.sub || '')}</small></span><span class="go${d.done ? ' ok' : ''}">${d.done ? '✓' : esc(d.go || '')}</span></button>`).join('') + `</div>`;
+  if (o.cats && o.cats.length > 1) h += `<div class="pbh-tabs" role="tablist">${o.cats.map(c => `<button role="tab" data-pbh-cat="${esc(c.key)}" class="${c.key === o.cur ? 'sel' : ''}" aria-selected="${c.key === o.cur}"><span class="ic">${c.icon || ''}</span><span class="nm">${esc(c.name)}</span><span class="ct${c.total && c.done === c.total ? ' ok' : ''}">${c.done}/${c.total}</span></button>`).join('')}</div>`;
+  if (o.catDesc) h += `<p class="pbh-cat">${esc(o.catDesc)}</p>`;
+  h += `<div class="pbh-cards">${(o.cards || []).map(homeCard).join('')}</div>` + (o.foot || '') + `</div>`;
+  return h;
+}
+function bindHome(el, on) {   // safe to call on every render; works next to other click handlers of the same element
+  el.__pbh = on;
+  if (!el.__pbhBound) {
+    el.__pbhBound = true;
+    el.addEventListener('click', e => {
+      const on = el.__pbh; if (!on || !e.target.closest('.pbh')) return;
+      let b;
+      if ((b = e.target.closest('[data-pbh-cat]'))) { if (on.cat) on.cat(b.dataset.pbhCat); return; }
+      if ((b = e.target.closest('[data-pbh-cont]'))) { if (on.cont) on.cont(b.dataset.pbhCont); return; }
+      if ((b = e.target.closest('[data-pbh-daily]'))) { if (on.daily) on.daily(b.dataset.pbhDaily); return; }
+      if ((b = e.target.closest('[data-pbh-card]'))) { if (on.card) on.card(b.dataset.pbhCard); }
+    });
+  }
+  const sb = el.querySelector('.pbh-tabs .sel'); if (sb) { const t = sb.parentNode; if (t.scrollWidth > t.clientWidth) t.scrollLeft = Math.max(0, sb.offsetLeft - (t.clientWidth - sb.offsetWidth) / 2); }
+}
+// header of a theme's stage grid: o = { badge, name, desc, chips: [text], diff | tier, c }
+function ghead(o) {
+  return `<div class="pbh-ghead" style="${tierC(o)}"><span class="ic">${o.badge || ''}</span><span class="tx"><h2>${esc(o.name)}</h2>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}` +
+    `<span class="chips">${(o.chips || []).filter(Boolean).map(c => `<span class="pbh-chip">${esc(c)}</span>`).join('')}${pips(o.diff || diffOfTier(o.tier))}</span></span></div>`;
+}
+// "continue": the theme played last (key saved with lastSet), else the first theme with something left, same category first.
+// list: [{key, recs, cat}] → {key, j} | null
+function lastGet(store) { try { return localStorage.getItem(store); } catch (e) { return null; } }
+function lastSet(store, key) { try { localStorage.setItem(store, String(key)); } catch (e) {} }
+function resume(list, store) {
+  const last = lastGet(store), L = list.find(x => String(x.key) === last);
+  if (L && nextIndex(L.recs) >= 0) return { key: L.key, j: nextIndex(L.recs) };
+  const cat = L ? L.cat : list.length ? list[0].cat : null;
+  const order = list.filter(x => x.cat === cat).concat(list.filter(x => x.cat !== cat));
+  for (const x of order) { const j = nextIndex(x.recs); if (j >= 0) return { key: x.key, j }; }
+  return null;
+}
+// small SVG icons for category tabs (stroke icons, 24×24)
+const ICONS = {
+  level: '<path d="M3 20h5v-5h5v-5h5V5h3"/>', theme: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="7.5" r="1.4"/>', unique: '<path d="M12 3l2.2 6.3L20.5 11l-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-1.7z"/>',
+  real: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/>', crown: '<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>', bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12h.01" stroke-width="3.4"/>', sprout: '<path d="M12 21v-9M12 12C12 7 8 5 4 5c0 5 3 7 8 7zM12 14c0-4 3-6 7-6 0 4-3 6-7 6z"/>',
+  four: '<circle cx="4.5" cy="12" r="2.2"/><circle cx="9.5" cy="12" r="2.2"/><circle cx="14.5" cy="12" r="2.2"/><circle cx="19.5" cy="12" r="2.2"/>', three: '<circle cx="6" cy="18" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M4 7h7M7.5 3.5v7"/>',
+  ban: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', grid: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>', mill: '<path d="M4 12h16"/><circle cx="4.5" cy="12" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="19.5" cy="12" r="2.6"/>',
+};
+const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] || ICONS.theme}</svg>`;
+
 const CSS = `
 .pb-list{display:grid;gap:10px}
 .pb-card{position:relative;display:flex;gap:12px;align-items:center;text-align:left;width:100%;padding:12px 14px;border-radius:14px;color:var(--text);
@@ -194,9 +278,105 @@ const CSS = `
 .pb-ev{display:flex;align-items:center;gap:6px;width:100%;font-weight:700;font-size:13px;color:#f2d07a;animation:pbPop .5s .3s both}
 .pb-ev.un{color:#9fe0ff}.pb-ev.cp{color:#f2c060}
 .pb-ev .pb-medal{width:26px;height:26px}
+/* collection home (v3) */
+.pbh{display:flex;flex-direction:column;gap:12px;--pbh-tint:rgba(201,169,97,.32)}
+.pbh-hero{position:relative;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:18px;overflow:hidden;
+  border:1px solid rgba(201,169,97,.32);background:radial-gradient(120% 140% at 0% 0%,var(--pbh-tint),transparent 60%),linear-gradient(120deg,rgba(201,169,97,.16),rgba(0,0,0,.25) 70%)}
+.pbh-hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:220px;height:220px;border-radius:50%;opacity:.1;pointer-events:none;
+  background:repeating-conic-gradient(from 45deg,#fff 0 25%,transparent 0 50%) 0 0/44px 44px;-webkit-mask:radial-gradient(closest-side,#000 40%,transparent);mask:radial-gradient(closest-side,#000 40%,transparent)}
+.pbh-hero .pb-ring{width:84px;height:84px;background:radial-gradient(closest-side,color-mix(in srgb,var(--panel,#101824) 70%,#000) 79%,transparent 81%),conic-gradient(#f2c060 calc(var(--p)*360deg),rgba(255,255,255,.09) 0)}
+.pbh-hero .pb-ring b{font-size:22px}.pbh-hero .pb-ring small{font-size:11px}
+.pbh-hs{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;z-index:1}
+.pbh-title{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.1em;color:var(--text)}
+.pbh-title small{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--brass);margin-inline-start:8px;padding:2px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.4);vertical-align:3px;white-space:nowrap}
+.pbh-lead{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pbh-stats{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.pbh-stats .pb-st{font-size:14px;font-weight:700}.pbh-stats .pb-st .pb-star{width:15px;height:15px}.pbh-stats .pb-st small{color:var(--muted);font-weight:400}
+.pbh-md{display:inline-flex;align-items:center;gap:3px}.pbh-md .pb-medal{width:17px;height:17px}
+.pbh-hero .pb-cont{z-index:1;max-width:220px;text-align:center;line-height:1.35}
+.pbh-hero .pb-cont small{display:block;font-weight:500;font-size:11px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbh-hero .pb-alldone{z-index:1}
+.pbh-dailies{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.pbh-daily{display:flex;align-items:center;gap:14px;width:100%;min-width:0;text-align:start;padding:10px 14px 10px 10px;border-radius:14px;color:var(--text);
+  border:1px solid rgba(242,192,96,.45);background:linear-gradient(110deg,rgba(242,192,96,.18),rgba(0,0,0,.2) 55%);transition:transform .15s,border-color .2s}
+.pbh-daily:hover{transform:translateY(-1px);border-color:#f2c060}
+.pbh-daily .th{flex:none;width:62px;display:grid;place-items:center}.pbh-daily .th > svg{display:block;width:100%;height:auto;max-height:66px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.pbh-daily .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pbh-daily .tx b{font-size:15px}.pbh-daily .tx b span{color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:12px;margin-inline-start:6px}
+.pbh-daily .tx small{font-size:12px;color:var(--muted)}
+.pbh-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f4d98f,#d4a84a)}
+.pbh-daily .go.ok{color:#8fe3b8;background:rgba(111,211,160,.12);border:1px solid rgba(111,211,160,.4)}
+.pbh-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:2px 0 0;overflow-x:auto;scrollbar-width:none}
+.pbh-tabs::-webkit-scrollbar{display:none}
+.pbh-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0;transition:border-color .2s,color .2s;-webkit-tap-highlight-color:transparent}
+.pbh-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbh-tabs button .ic{flex:none;width:26px;height:26px;display:grid;place-items:center;padding:3px;color:var(--brass)}
+.pbh-tabs button .ic svg, .pbh-ic svg, .pbh-ghead .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pbh-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.pbh-tabs button .ct.ok{color:#8fe3b8}
+.pbh-tabs button:hover{border-color:var(--brass2);color:var(--text)}
+.pbh-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(201,169,97,.2),rgba(201,169,97,.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.pbh-cat{font-size:12px;color:var(--muted);line-height:1.6;margin:-2px 2px 0}
+.pbh-cards{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);align-content:start}
+.pbh-card{position:relative;display:flex;gap:12px;align-items:stretch;text-align:start;width:100%;min-width:0;padding:10px 12px 10px 10px;border-radius:15px;color:var(--text);overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--c) 32%,var(--line));background:linear-gradient(125deg,color-mix(in srgb,var(--c2) 34%,transparent),rgba(0,0,0,.24) 62%);transition:transform .15s,border-color .2s,box-shadow .2s}
+.pbh-card:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.pbh-card.full{border-color:rgba(242,192,96,.7);box-shadow:0 0 0 1px rgba(242,192,96,.25),0 6px 22px rgba(242,192,96,.12)}
+.pbh-th{flex:none;width:84px;align-self:center;display:flex;justify-content:center}
+.pbh-bd{position:relative;display:block;width:100%}
+.pbh-bd > svg{display:block;width:100%;height:auto;max-height:96px;border-radius:7px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.pbh-ic{position:absolute;inset:auto -6px -6px auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;padding:5px;color:#0b0f16;
+  background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+.pbh-ic:empty{display:none}
+.pbh-ic .gl, .pbh-ghead .ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:15px;line-height:1;white-space:nowrap}
+.pbh-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#0d0d0d 70%);box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
+.pbh-tm.w{background:radial-gradient(circle at 35% 30%,#fff,#d8d4c8 70%)}
+.pbh-tm.x{width:auto;height:auto;background:none;box-shadow:none;display:flex}.pbh-tm.x > svg{width:18px;height:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.pbh-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pbh-top{display:flex;align-items:center;gap:8px;min-width:0}
+.pbh-nm{font-size:15px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbh-diff{margin-inline-start:auto;flex:none;display:inline-flex;align-items:center;gap:2px}
+.pbh-diff i{width:6px;height:11px;border-radius:2px;background:rgba(255,255,255,.12)}.pbh-diff i.on{background:var(--c)}
+.pbh-desc{font-size:12px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pbh-prog{display:flex;align-items:center;gap:8px;margin-top:auto;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.pbh-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pbh-meta .pb-medals{flex-wrap:wrap}.pbh-meta .pb-medals .pb-medal{width:14px;height:14px}.pbh-meta .pb-pip{width:8px;height:8px}
+.pbh-card .pb-full{top:7px;inset-inline-end:10px;right:auto}
+.pbh-card.full .pbh-diff{visibility:hidden}
+.pbh-ghead{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.pbh-ghead .ic{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;padding:9px;color:#0b0f16;background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.pbh-ghead .ic .gl{font-size:22px}
+.pbh-ghead .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pbh-ghead h2{margin:0;font-size:20px}
+.pbh-ghead small{font-size:12px;color:var(--muted);line-height:1.55}
+.pbh-ghead .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pbh-ghead .chips .pbh-diff{margin-inline-start:4px}
+.pbh-chip{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--c)}
+html[lang=ar] .pbh, html[lang=ar] .pbh-ghead{direction:rtl}
+html[lang=ar] .pbh :is(.pb-ring, .pbh-prog, .pbh-stats .pb-st, .pbh-tabs .ct, .pbh-bd){direction:ltr;unicode-bidi:isolate}
+@media (max-width:560px){
+  .pbh-hero{padding:12px;gap:10px 12px;flex-wrap:wrap}.pbh-hero .pb-ring{width:66px;height:66px}.pbh-hero .pb-ring b{font-size:18px}
+  .pbh-title{font-size:19px}.pbh-lead{display:none}.pbh-hs{flex:1 1 calc(100% - 82px)}
+  .pbh-hero .pb-cont{flex:1 1 100%;max-width:none;padding:9px 12px}
+  .pbh-tabs{grid-auto-columns:minmax(64px,1fr)}
+  .pbh-tabs button{flex-direction:column;gap:2px;padding:7px 4px;font-size:11.5px}
+  .pbh-tabs button .nm{max-width:100%}
+  .pbh-th{width:72px}.pbh-nm{font-size:14px}
+}
+@media (min-width:640px){ .pbh-cards{grid-template-columns:repeat(2,minmax(0,1fr))} .pbh-dailies:has(> :nth-child(2)){grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:900px) and (min-height:561px) and (pointer:fine){
+  .pbh-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pbh-card{flex-direction:column;align-items:stretch;padding:12px}
+  .pbh-th{width:100%;padding:6px 0 4px;border-radius:10px;background:radial-gradient(closest-side,rgba(0,0,0,.28),transparent)}
+  .pbh-bd{width:132px}
+  .pbh-bd.tall{width:116px}
+  .pbh-bd > svg{max-height:142px}
+  .pbh-ic{width:34px;height:34px}
+  .pbh-desc{min-height:3.1em}
+}
 `;
 function injectCSS() { if (document.getElementById('pbCss')) return; const st = document.createElement('style'); st.id = 'pbCss'; st.textContent = CSS; document.head.appendChild(st); }
 if (typeof document !== 'undefined') injectCSS();
 
-window.PZBook = { STAGE, UNLOCK, TIERS, setLang(l) { L = S[l] ? l : 'en'; }, t: tx, stages, stageInfo, isOpen, nextIndex, starsFor, totals, events, card, grid, solved, STAR, MEDAL };
+window.PZBook = { STAGE, UNLOCK, TIERS, setLang(l) { L = S[l] ? l : 'en'; }, t: tx, stages, stageInfo, isOpen, nextIndex, starsFor, totals, events, card, grid, solved, STAR, MEDAL,
+  home, bindHome, ghead, pips, diffOfTier, resume, lastGet, lastSet, icon, ICONS };
 })();

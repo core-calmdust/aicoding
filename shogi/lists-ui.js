@@ -31,17 +31,17 @@ function board(sfen, o) {
     const fs = o.marks.map(m => +m[0]), rs = o.marks.map(m => +m[1]);
     [f0, f1, r0, r1] = fit(fs.concat([Math.min(9, Math.max(...fs) + 1), Math.max(1, Math.min(...fs) - 1)]), rs.concat([Math.min(9, Math.max(...rs) + 1)]), 5, 4);
   }
-  const W = f1 - f0 + 1, H = r1 - r0 + 1, C = 10, pad = 1.2, hw = o.hands ? 7 : 0;
-  const vw = W * C + pad * 2, vh = H * C + pad * 2 + hw * 2;
-  const fl = !!o.flip, X = f => pad + (fl ? f - f0 : f1 - f) * C, Y = r => pad + hw + (fl ? r1 - r : r - r0) * C;
+  const W = f1 - f0 + 1, H = r1 - r0 + 1, C = 10, pad = 1.2, hw = o.hands ? 7 : 0, hb = o.hands === 'b';   // hands:'b' = only the attacker's (tsume: the defender holds the rest)
+  const vw = W * C + pad * 2, vh = H * C + pad * 2 + hw * (hb ? 1 : 2);
+  const top = hb ? 0 : hw, fl = !!o.flip, X = f => pad + (fl ? f - f0 : f1 - f) * C, Y = r => pad + top + (fl ? r1 - r : r - r0) * C;
   const mk = new Set((o.marks || []).map(String));
   let s = `<svg class="sh-mini" viewBox="0 0 ${vw.toFixed(1)} ${vh.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
-  s += `<rect x="0" y="${hw}" width="${vw.toFixed(1)}" height="${(H * C + pad * 2).toFixed(1)}" rx="1.6" fill="#d9b46a"/>`;
+  s += `<rect x="0" y="${top}" width="${vw.toFixed(1)}" height="${(H * C + pad * 2).toFixed(1)}" rx="1.6" fill="#d9b46a"/>`;
   for (const m of mk) { const f = +m[0], r = +m[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#d4542a" fill-opacity=".85"/>`; }
   if (o.last) { const f = +o.last[0], r = +o.last[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#f2d27a" fill-opacity=".8"/>`; }
   let ln = '';
-  for (let i = 0; i <= W; i++) ln += `M${(pad + i * C).toFixed(1)} ${pad + hw}V${(pad + hw + H * C).toFixed(1)}`;
-  for (let j = 0; j <= H; j++) ln += `M${pad} ${(pad + hw + j * C).toFixed(1)}H${(pad + W * C).toFixed(1)}`;
+  for (let i = 0; i <= W; i++) ln += `M${(pad + i * C).toFixed(1)} ${pad + top}V${(pad + top + H * C).toFixed(1)}`;
+  for (let j = 0; j <= H; j++) ln += `M${pad} ${(pad + top + j * C).toFixed(1)}H${(pad + W * C).toFixed(1)}`;
   s += `<path d="${ln}" stroke="#6b4a1c" stroke-width=".45" fill="none"/>`;
   for (const p of P) {
     if (p.f < f0 || p.f > f1 || p.r < r0 || p.r > r1) continue;
@@ -51,7 +51,7 @@ function board(sfen, o) {
   }
   if (o.hands) {
     const hd = hand0(sfen), row = (c, y, anchorEnd) => { const txt = hd[c].map(([k, n]) => k + (n > 1 ? n : '')).join(''); return txt ? `<text x="${anchorEnd ? vw - 1 : 1}" y="${y}" font-size="5.6" text-anchor="${anchorEnd ? 'end' : 'start'}" font-family="'Shippori Mincho B1',serif" font-weight="700" fill="#e9d9b5">${c ? '☖' : '☗'}${txt}</text>` : ''; };
-    s += row(fl ? 0 : 1, 5.4, false) + row(fl ? 1 : 0, vh - 1.4, true);
+    s += (hb ? '' : row(fl ? 0 : 1, 5.4, false)) + row(fl ? 1 : 0, vh - 1.4, !hb);
   }
   return s + '</svg>';
 }

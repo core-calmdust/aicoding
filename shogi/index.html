@@ -416,7 +416,10 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 #lessonOverlay .pb-sp,#lessonOverlay .pb-lk{font-size:13px}
 #lessonOverlay .pb-tile .n{font-size:18px}
 #lessonOverlay .pb-tile .s .pb-star{width:12px;height:12px}
-#tsGridTitle{font-size:22px}
+#lessonList.pz-home{display:block}
+#lessonListView.pzh > #lsListTitle, #lessonListView.pzh > #lsListDesc{display:none}
+#lessonOverlay .pbh-hero .pb-ring{width:84px;height:84px}#lessonOverlay .pbh-hero .pb-ring b{font-size:22px}
+@media (max-width:560px){ #lessonOverlay .pbh-hero .pb-ring{width:66px;height:66px}#lessonOverlay .pbh-hero .pb-ring b{font-size:18px} }
 #lessonOverlay .lesson-item .no[style]{font-size:15.5px!important}
 @media (max-width: 520px){ #lessonOverlay .pb-prog,#lessonOverlay .pb-st{font-size:12px} #lessonOverlay .lesson-item .no{width:50px} }
 /* ---------------------------------------------------------------- rules tab (rules.js) */
@@ -1093,7 +1096,7 @@ html[lang=ar] .pf-input{direction:rtl}
       <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
     </div>
     <div id="lessonGridView" class="hidden">
-      <h2 id="tsGridTitle" style="margin-bottom:12px"></h2>
+      <div id="tsGridHead"></div>
       <div id="tsGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="btnTsGridBack" data-i18n="ls.back"></button></div>
     </div>
@@ -1206,9 +1209,9 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
-<script src="lists-ui.js?v=20261021lx"></script>
+<script src="lists-ui.js?v=20261021pz"></script>
 <script src="openings-ui.js?v=20261021op"></script>
-<script src="../shared/pzbook.js?v=2"></script>
+<script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=10"></script>
@@ -2919,24 +2922,48 @@ function dailySolved(date, hinted, easy) {
   daily.last = date; daily.best = Math.max(daily.best || 0, daily.streak); daily.days[date] = hinted ? 'h' : 1;
   try { localStorage.setItem(easy ? DAILY_EASY_STORE : DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
 }
+// collection home (the layout of 詰めオセロ, PZBook.home): hero → two daily cards → category tabs → theme cards with the position
+const TS_LAST = 'shogi-kaya-tsume-last';
+const TS_CATI = { comp: 'level', theme: 'theme', prac: 'real' };
+const tsGrp = g => g.group || 'prac';
+const tsBadge = g => `<b class="gl">${tsNo(g)}</b>`;
+const tsTier = (g, i) => TS_TIER[g.id] !== undefined ? TS_TIER[g.id] : Math.min(5, i);
+// the position shown on a card: the next problem to play there (the last one once all are cleared)
+const tsShow = g => { const r = tsRecs(g), j = PZBook.nextIndex(r); return g.problems[j >= 0 ? j : r.length - 1]; };
+const tsThumb = P => P && P.sfen ? ShogiLX.board(P.sfen, { crop: 'auto', hands: 'b' }) : '';
 function openTsumeList() {
   segSel('segLs', 'tsume');
   $('#lsListTitle').textContent = t('ts.title'); $('#lsListDesc').textContent = t('ts.desc');
   if (!TSUME) { $('#lessonList').innerHTML = ''; return; }
-  const dItem = easy => { const dl = dailyPick(easy), di = dailyInfo(easy); return dl ? `<button class="lesson-item daily" data-daily="${easy ? 2 : 1}"><span class="no">${easy ? '☆' : '★'}</span><span class="tx"><b>${t(easy ? 'daily.titleEasy' : 'daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${L(TSUME.sets[dl.si].title)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : ''; };
   PZBook.setLang(LANG);
-  const card = (g, i) => PZBook.card({ i, no: tsNo(g), name: L(g.title), sub: L(g.short), recs: tsRecs(g), tier: TS_TIER[g.id] !== undefined ? TS_TIER[g.id] : Math.min(5, i) });
-  const grp = g => g.group || 'prac', multi = TSUME.sets.some(g => grp(g) !== 'prac');
-  $('#lessonList').innerHTML = dItem(true) + dItem(false) + (multi ? TS_GROUPS.map(k => {
-    const items = TSUME.sets.map((g, i) => grp(g) === k ? card(g, i) : '').join('');
-    return items ? `<p class="ls-gh">${t(TS_GKEY[k])}</p>` + items : '';
-  }).join('') : TSUME.sets.map(card).join(''));
+  const list = $('#lessonList'); list.className = 'lesson-list pz-home';
+  const S = TSUME.sets, cats = TS_GROUPS.filter(k => S.some(g => tsGrp(g) === k));
+  let cur = ShogiLX.tab('tsume'); if (!cats.includes(cur)) cur = cats[0];
+  const md = d => d.slice(5).replace('-', '/');
+  const daily = [true, false].map(easy => { const dl = dailyPick(easy), di = dailyInfo(easy); if (!dl) return null;
+    return { key: easy ? '2' : '1', board: tsThumb(S[dl.si].problems[dl.k]), title: (easy ? '☆ ' : '★ ') + t(easy ? 'daily.titleEasy' : 'daily.title'), date: md(dl.date),
+      sub: `${L(S[dl.si].title)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}`, done: di.today, go: t('daily.go') }; }).filter(Boolean);
+  const cont = PZBook.resume(S.map((g, i) => ({ key: i, recs: tsRecs(g), cat: tsGrp(g) })), TS_LAST);
+  list.innerHTML = PZBook.home({
+    title: t('ts.title'), lead: t('tsh.lead'), all: S.map(tsRecs), style: '--pbh-tint:rgba(176,122,58,.45)',
+    cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: L(S[cont.key].title) },
+    daily,
+    cats: cats.map(k => { const r = S.filter(g => tsGrp(g) === k).map(tsRecs).flat(); return { key: k, icon: PZBook.icon(TS_CATI[k]), name: t('tsh.cat.' + k), done: r.filter(x => x > 0).length, total: r.length }; }),
+    cur, catDesc: t('tsh.cat.' + cur + '.d'),
+    cards: S.map((g, i) => tsGrp(g) !== cur ? null : { key: i, board: tsThumb(tsShow(g)), bdCls: 'tall', badge: tsBadge(g), name: L(g.title), desc: L(g.short), recs: tsRecs(g), tier: tsTier(g, i) }).filter(Boolean),
+  });
+  PZBook.bindHome(list, {
+    cat: k => { ShogiLX.tab('tsume', k); openTsumeList(); list.scrollTop = 0; },
+    cont: v => { const [si, j] = v.split(':').map(Number); hideOverlay('#lessonOverlay'); startTsume(si, j); },
+    daily: v => { const dl = dailyPick(v === '2'); if (!dl) return; hideOverlay('#lessonOverlay'); startTsume(dl.si, dl.k, dl.date, dl.easy); },
+    card: v => openTsGrid(+v),
+  });
 }
 let tsGridSet = 0;
 function openTsGrid(si, cur) {
   tsGridSet = si; const g = TSUME.sets[si];
   PZBook.setLang(LANG);
-  $('#tsGridTitle').textContent = `${L(g.title)} — ${L(g.short)}`;
+  $('#tsGridHead').innerHTML = PZBook.ghead({ badge: tsBadge(g), name: L(g.title), desc: L(g.short), chips: [t('tsh.cat.' + tsGrp(g)), PZBook.t('count', { n: g.problems.length })], tier: tsTier(g, si) });
   $('#tsGrid').innerHTML = PZBook.grid({ recs: tsRecs(g), cur });
   if (window.ShogiLX) ShogiLX.tsThumbs($('#tsGrid'), g.problems);   // position thumbnails on the tiles
   lessonView('grid'); showOverlay('#lessonOverlay');
@@ -2952,6 +2979,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   busyToken++; cancelAI(); cancelAna();
   const g = TSUME.sets[si];
   lesson = { endless: true, si, g, probs: g.problems, k: k || 0, results: [], pts: [], waiting: false, daily: dailyDate || null, dailyEasy: !!dailyEasy };
+  if (!dailyDate) PZBook.lastSet(TS_LAST, si);
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
   loadProblem();
@@ -2981,6 +3009,7 @@ async function openLessons() {
   await lessonsReady; await tsumeReady; await openReady; if (!LESSONS) return;
   lessonView('list'); showOverlay('#lessonOverlay');
   $('#lessonList').className = 'lesson-list';
+  $('#lessonListView').classList.toggle('pzh', lsTab === 'tsume');
   if (lsTab !== 'rules' && window.ShogiRules && ShogiRules.stop) ShogiRules.stop();   // pending tutorial timers must not redraw another tab
   if (lsTab === 'rules') { segSel('segLs', 'rules'); ShogiRules.open(0);   // every entry starts at the intro page
  if (window.__rulesOffer) window.__rulesOffer.mark(); return; }
@@ -3018,6 +3047,30 @@ const OP_TXT = {
   ar: { 'sndCredit': 'صوت القطع:', 'op.hist': 'التاريخ', 'op.who': 'من يلعبها', 'op.figEnd': 'الوضع بعد خط الدراسة ({n} نقلة)' },
 };
 for (const l in OP_TXT) Object.assign(I18N[l] || (I18N[l] = {}), OP_TXT[l]);
+// tsume collection home (PZBook.home): lead, category tabs and their one-line descriptions
+const TSH_TXT = {
+  ja: { 'tsh.lead': 'コンピュータで作った創作詰将棋と、AIの対局から生まれた実戦詰将棋。玉方は残りの駒をすべて持ち、無駄合は手数に数えません。', 'tsh.cat.comp': '手数別', 'tsh.cat.theme': 'テーマ別', 'tsh.cat.prac': '実戦',
+    'tsh.cat.comp.d': '創作詰将棋を手数ごとに。正解は一通り（余詰なし）で持駒は余りません。3手詰から13手以上まで。', 'tsh.cat.theme.d': '捨て駒・不成・遠打ち・合駒など、手筋ごとに集めた創作詰将棋。', 'tsh.cat.prac.d': 'AIの自己対局から生まれた実戦の詰み。盤上の駒が多い本番さながらの局面です。' },
+  en: { 'tsh.lead': 'Computer-composed tsume and practical mates from the AI’s games. The defender holds every remaining piece; futile interpositions do not count.', 'tsh.cat.comp': 'By length', 'tsh.cat.theme': 'By theme', 'tsh.cat.prac': 'Practical',
+    'tsh.cat.comp.d': 'Composed problems by length — a single solution (no alternative mates) using up every piece in hand. From 3 to 13+ moves.', 'tsh.cat.theme.d': 'Composed problems grouped by tactic: sacrifices, non-promotion, long-range drops, interpositions and more.', 'tsh.cat.prac.d': 'Mates that came up in the AI’s own games — busy, game-like positions.' },
+  zh: { 'tsh.lead': '计算机创作的诘将棋，以及来自AI对局的实战诘将棋。守方持有其余全部棋子，无用合驹不计手数。', 'tsh.cat.comp': '按手数', 'tsh.cat.theme': '按主题', 'tsh.cat.prac': '实战',
+    'tsh.cat.comp.d': '按手数排列的创作诘将棋。正解唯一（无余诘），持驹不剩余。从3手诘到13手以上。', 'tsh.cat.theme.d': '按手筋汇集的创作诘将棋：弃子、不成、远打、合驹等。', 'tsh.cat.prac.d': '来自AI自我对局的实战诘杀，盘上棋子多，贴近实战。' },
+  ko: { 'tsh.lead': '컴퓨터로 만든 창작 츠메쇼기와 AI 대국에서 나온 실전 츠메쇼기. 수비 측은 남은 말을 모두 가지며, 쓸모없는 가로막기는 수에 세지 않습니다.', 'tsh.cat.comp': '수별', 'tsh.cat.theme': '테마별', 'tsh.cat.prac': '실전',
+    'tsh.cat.comp.d': '수별 창작 츠메쇼기. 정답은 하나(다른 외통 없음)이고 지닌 말이 남지 않습니다. 3수부터 13수 이상까지.', 'tsh.cat.theme.d': '버림수·불성·원타·가로막기 등 맥별로 모은 창작 츠메쇼기.', 'tsh.cat.prac.d': 'AI 자가 대국에서 나온 실전 외통. 말이 많은 실전 같은 국면입니다.' },
+  es: { 'tsh.lead': 'Tsume compuestos por ordenador y mates prácticos de las partidas de la IA. El defensor tiene todas las piezas restantes; las interposiciones inútiles no cuentan.', 'tsh.cat.comp': 'Por longitud', 'tsh.cat.theme': 'Por tema', 'tsh.cat.prac': 'Prácticos',
+    'tsh.cat.comp.d': 'Problemas compuestos por longitud: solución única (sin mates alternativos) que usa todas las piezas en mano. De 3 a más de 13 jugadas.', 'tsh.cat.theme.d': 'Problemas compuestos agrupados por táctica: sacrificios, no promoción, lanzamientos lejanos, interposiciones y más.', 'tsh.cat.prac.d': 'Mates surgidos en las partidas de la IA: posiciones cargadas, como en una partida real.' },
+  fr: { 'tsh.lead': 'Tsume composés par ordinateur et mats pratiques issus des parties de l’IA. Le défenseur détient toutes les pièces restantes ; les interpositions inutiles ne comptent pas.', 'tsh.cat.comp': 'Par longueur', 'tsh.cat.theme': 'Par thème', 'tsh.cat.prac': 'Pratiques',
+    'tsh.cat.comp.d': 'Problèmes composés par longueur : solution unique (sans mat alternatif) utilisant toutes les pièces en main. De 3 à plus de 13 coups.', 'tsh.cat.theme.d': 'Problèmes composés regroupés par tactique : sacrifices, non-promotion, parachutages lointains, interpositions…', 'tsh.cat.prac.d': 'Mats apparus dans les parties de l’IA : des positions chargées, comme en partie.' },
+  pt: { 'tsh.lead': 'Tsume compostos por computador e mates práticos das partidas da IA. O defensor tem todas as peças restantes; interposições inúteis não contam.', 'tsh.cat.comp': 'Por comprimento', 'tsh.cat.theme': 'Por tema', 'tsh.cat.prac': 'Práticos',
+    'tsh.cat.comp.d': 'Problemas compostos por comprimento: solução única (sem mates alternativos) que usa todas as peças na mão. De 3 a mais de 13 lances.', 'tsh.cat.theme.d': 'Problemas compostos agrupados por tática: sacrifícios, não promoção, drops distantes, interposições e mais.', 'tsh.cat.prac.d': 'Mates que surgiram nas partidas da IA: posições cheias, como numa partida real.' },
+  de: { 'tsh.lead': 'Vom Computer komponierte Tsume und Praxis-Matts aus Partien der KI. Der Verteidiger hält alle übrigen Steine; nutzlose Zwischensetzungen zählen nicht.', 'tsh.cat.comp': 'Nach Länge', 'tsh.cat.theme': 'Nach Thema', 'tsh.cat.prac': 'Praxis',
+    'tsh.cat.comp.d': 'Komponierte Aufgaben nach Länge: genau eine Lösung (keine Nebenlösung), alle Handsteine werden verbraucht. Von 3 bis über 13 Zügen.', 'tsh.cat.theme.d': 'Komponierte Aufgaben nach Taktik: Opfer, Nichtumwandlung, ferne Einsätze, Zwischensetzungen und mehr.', 'tsh.cat.prac.d': 'Matts aus den Partien der KI – volle, partienahe Stellungen.' },
+  hi: { 'tsh.lead': 'कंप्यूटर से रचित त्सुमे और AI के गेम से मिली व्यावहारिक मात। बचाव पक्ष के पास बाकी सभी मोहरे होते हैं; बेकार बीच-बचाव गिने नहीं जाते।', 'tsh.cat.comp': 'लंबाई अनुसार', 'tsh.cat.theme': 'थीम अनुसार', 'tsh.cat.prac': 'व्यावहारिक',
+    'tsh.cat.comp.d': 'लंबाई के अनुसार रचित पहेलियाँ — एक ही हल (कोई वैकल्पिक मात नहीं), हाथ के सभी मोहरे इस्तेमाल होते हैं। 3 से 13+ चालें।', 'tsh.cat.theme.d': 'चाल के प्रकार से समूहित रचित पहेलियाँ: बलिदान, प्रमोशन न करना, दूर का ड्रॉप, बीच-बचाव आदि।', 'tsh.cat.prac.d': 'AI के अपने गेम में आई मात — भरी हुई, असली गेम जैसी स्थितियाँ।' },
+  ar: { 'tsh.lead': 'تسومي مؤلفة بالحاسوب وكشّات عملية من مباريات الذكاء الاصطناعي. يملك المدافع كل القطع المتبقية، ولا تُحتسب الاعتراضات العقيمة.', 'tsh.cat.comp': 'حسب الطول', 'tsh.cat.theme': 'حسب الموضوع', 'tsh.cat.prac': 'عملية',
+    'tsh.cat.comp.d': 'مسائل مؤلفة حسب الطول: حل واحد (بلا كش مات بديل) يستخدم كل القطع في اليد. من 3 إلى أكثر من 13 نقلة.', 'tsh.cat.theme.d': 'مسائل مؤلفة مجمّعة حسب التكتيك: التضحية، عدم الترقية، الإسقاط البعيد، الاعتراض وغيرها.', 'tsh.cat.prac.d': 'كشّات ظهرت في مباريات الذكاء الاصطناعي: مواقف مزدحمة كما في اللعب الحقيقي.' },
+};
+for (const l in TSH_TXT) Object.assign(I18N[l] || (I18N[l] = {}), TSH_TXT[l]);
 // opening names / review notes for opclass.js (merged into I18N)
 const OPN_TXT = {"ja": {"opn.naka": "中飛車", "opn.shiken": "四間飛車", "opn.sanken": "三間飛車", "opn.mukai": "向かい飛車", "opn.aifuri": "相振り飛車", "opn.yoko": "横歩取り", "opn.kaku": "角換わり", "opn.aig": "相掛かり", "opn.yag": "矢倉", "opn.gangi": "雁木", "opn.riki": "相居飛車（力戦）", "opn.ibi": "居飛車", "opn.ana": "穴熊", "opn.mino": "美濃囲い", "opn.e.furi": "{s}が飛車を振り、{n}になりました。", "opn.e.aifuri": "互いに飛車を振り、相振り飛車になりました。", "opn.e.yoko": "{s}が飛車で横歩を取り、横歩取りになりました。", "opn.e.kaku": "角を交換して、角換わりになりました。", "opn.e.aig": "互いに飛車先の歩を伸ばす、相掛かりの出だしです。", "opn.e.yag": "{s}は角道を止めて金銀を盛り上げる、矢倉模様の出だしです。", "opn.e.gangi": "{s}は雁木の構えです。", "opn.e.ana": "{s}は穴熊に囲いました。", "opn.e.mino": "{s}は美濃囲いに組みました。", "opn.sum": "戦型", "opn.vs": "{a} 対 {b}", "opn.see": "定跡を見る"}, "en": {"opn.naka": "Central Rook", "opn.shiken": "Fourth-File Rook", "opn.sanken": "Third-File Rook", "opn.mukai": "Opposing Rook", "opn.aifuri": "Double Ranging Rook", "opn.yoko": "Side Pawn Capture", "opn.kaku": "Bishop Exchange", "opn.aig": "Double Wing Attack", "opn.yag": "Yagura", "opn.gangi": "Gangi", "opn.riki": "Static Rook (free-form)", "opn.ibi": "Static Rook", "opn.ana": "Anaguma", "opn.mino": "Mino castle", "opn.e.furi": "{s} swings the rook: this is a {n} game.", "opn.e.aifuri": "Both sides swing their rooks: Double Ranging Rook.", "opn.e.yoko": "{s}’s rook takes the side pawn: Side Pawn Capture.", "opn.e.kaku": "The bishops are exchanged: Bishop Exchange.", "opn.e.aig": "Both push their rook pawns: a Double Wing Attack opening.", "opn.e.yag": "{s} closes the bishop diagonal and builds up golds and silvers — a Yagura-style start.", "opn.e.gangi": "{s} sets up the Gangi formation.", "opn.e.ana": "{s} castles in Anaguma.", "opn.e.mino": "{s} builds the Mino castle.", "opn.sum": "Opening", "opn.vs": "{a} vs {b}", "opn.see": "Study this opening"}, "zh": {"opn.naka": "中飞车", "opn.shiken": "四间飞车", "opn.sanken": "三间飞车", "opn.mukai": "向飞车", "opn.aifuri": "相振飞车", "opn.yoko": "横步取", "opn.kaku": "角换", "opn.aig": "相挂", "opn.yag": "矢仓", "opn.gangi": "雁木", "opn.riki": "相居飞车（力战）", "opn.ibi": "居飞车", "opn.ana": "穴熊", "opn.mino": "美浓围", "opn.e.furi": "{s}移动飞车，形成{n}。", "opn.e.aifuri": "双方都移动飞车，形成相振飞车。", "opn.e.yoko": "{s}用飞车吃横步，形成横步取。", "opn.e.kaku": "双方交换角，形成角换。", "opn.e.aig": "双方互挺飞车前方的步，是相挂的开局。", "opn.e.yag": "{s}挡住角道、推进金银，是矢仓风格的开局。", "opn.e.gangi": "{s}摆出雁木阵形。", "opn.e.ana": "{s}构筑了穴熊。", "opn.e.mino": "{s}构筑了美浓围。", "opn.sum": "战型", "opn.vs": "{a} 对 {b}", "opn.see": "查看定式"}, "ko": {"opn.naka": "나카비샤", "opn.shiken": "시켄비샤", "opn.sanken": "산켄비샤", "opn.mukai": "무카이비샤", "opn.aifuri": "아이후리비샤", "opn.yoko": "횡보잡기", "opn.kaku": "각교환", "opn.aig": "아이가카리", "opn.yag": "야구라", "opn.gangi": "간기", "opn.riki": "상이비샤(역전)", "opn.ibi": "이비샤", "opn.ana": "아나구마", "opn.mino": "미노 성", "opn.e.furi": "{s}가 비차를 옮겨 {n}이 되었습니다.", "opn.e.aifuri": "서로 비차를 옮겨 아이후리비샤가 되었습니다.", "opn.e.yoko": "{s}가 비차로 횡보를 잡아 횡보잡기가 되었습니다.", "opn.e.kaku": "각을 교환해 각교환이 되었습니다.", "opn.e.aig": "서로 비차 앞의 보를 내미는 아이가카리 출발입니다.", "opn.e.yag": "{s}는 각길을 막고 금은을 쌓아 올리는 야구라 모양의 출발입니다.", "opn.e.gangi": "{s}는 간기 진형입니다.", "opn.e.ana": "{s}는 아나구마로 성을 쌓았습니다.", "opn.e.mino": "{s}는 미노 성을 쌓았습니다.", "opn.sum": "전형", "opn.vs": "{a} 대 {b}", "opn.see": "정석 보기"}, "es": {"opn.naka": "Torre central", "opn.shiken": "Torre en 4.ª columna", "opn.sanken": "Torre en 3.ª columna", "opn.mukai": "Torre opuesta", "opn.aifuri": "Doble torre desplazada", "opn.yoko": "Captura del peón lateral", "opn.kaku": "Cambio de alfiles", "opn.aig": "Doble ataque de ala", "opn.yag": "Yagura", "opn.gangi": "Gangi", "opn.riki": "Torre estática (libre)", "opn.ibi": "Torre estática", "opn.ana": "Anaguma", "opn.mino": "castillo Mino", "opn.e.furi": "{s} desplaza la torre: partida de {n}.", "opn.e.aifuri": "Ambos desplazan la torre: doble torre desplazada.", "opn.e.yoko": "La torre de {s} toma el peón lateral: captura del peón lateral.", "opn.e.kaku": "Se cambian los alfiles: cambio de alfiles.", "opn.e.aig": "Ambos avanzan el peón de la torre: apertura de doble ataque de ala.", "opn.e.yag": "{s} cierra la diagonal del alfil y sube oros y platas: un comienzo tipo Yagura.", "opn.e.gangi": "{s} adopta la formación Gangi.", "opn.e.ana": "{s} se enroca en Anaguma.", "opn.e.mino": "{s} construye el castillo Mino.", "opn.sum": "Apertura", "opn.vs": "{a} vs {b}", "opn.see": "Estudiar esta apertura"}, "fr": {"opn.naka": "Tour centrale", "opn.shiken": "Tour en 4e colonne", "opn.sanken": "Tour en 3e colonne", "opn.mukai": "Tour opposée", "opn.aifuri": "Double tour mobile", "opn.yoko": "Prise du pion latéral", "opn.kaku": "Échange des fous", "opn.aig": "Double attaque d’aile", "opn.yag": "Yagura", "opn.gangi": "Gangi", "opn.riki": "Tour statique (libre)", "opn.ibi": "Tour statique", "opn.ana": "Anaguma", "opn.mino": "château Mino", "opn.e.furi": "{s} déplace sa tour : partie de {n}.", "opn.e.aifuri": "Les deux camps déplacent leur tour : double tour mobile.", "opn.e.yoko": "La tour de {s} prend le pion latéral : prise du pion latéral.", "opn.e.kaku": "Les fous sont échangés : échange des fous.", "opn.e.aig": "Les deux poussent le pion de tour : ouverture de double attaque d’aile.", "opn.e.yag": "{s} ferme la diagonale du fou et monte ors et argents : un début façon Yagura.", "opn.e.gangi": "{s} adopte la formation Gangi.", "opn.e.ana": "{s} roque en Anaguma.", "opn.e.mino": "{s} construit le château Mino.", "opn.sum": "Ouverture", "opn.vs": "{a} contre {b}", "opn.see": "Étudier cette ouverture"}, "pt": {"opn.naka": "Torre central", "opn.shiken": "Torre na 4.ª coluna", "opn.sanken": "Torre na 3.ª coluna", "opn.mukai": "Torre oposta", "opn.aifuri": "Dupla torre móvel", "opn.yoko": "Captura do peão lateral", "opn.kaku": "Troca de bispos", "opn.aig": "Duplo ataque de ala", "opn.yag": "Yagura", "opn.gangi": "Gangi", "opn.riki": "Torre estática (livre)", "opn.ibi": "Torre estática", "opn.ana": "Anaguma", "opn.mino": "castelo Mino", "opn.e.furi": "{s} move a torre: partida de {n}.", "opn.e.aifuri": "Ambos movem a torre: dupla torre móvel.", "opn.e.yoko": "A torre de {s} toma o peão lateral: captura do peão lateral.", "opn.e.kaku": "Os bispos são trocados: troca de bispos.", "opn.e.aig": "Ambos avançam o peão da torre: abertura de duplo ataque de ala.", "opn.e.yag": "{s} fecha a diagonal do bispo e sobe ouros e pratas: um início estilo Yagura.", "opn.e.gangi": "{s} adota a formação Gangi.", "opn.e.ana": "{s} faz o castelo Anaguma.", "opn.e.mino": "{s} constrói o castelo Mino.", "opn.sum": "Abertura", "opn.vs": "{a} vs {b}", "opn.see": "Estudar esta abertura"}, "de": {"opn.naka": "Zentralturm", "opn.shiken": "Turm auf der 4. Linie", "opn.sanken": "Turm auf der 3. Linie", "opn.mukai": "Gegenturm", "opn.aifuri": "Doppelter Schwenkturm", "opn.yoko": "Seitenbauernraub", "opn.kaku": "Läufertausch", "opn.aig": "Doppelflügelangriff", "opn.yag": "Yagura", "opn.gangi": "Gangi", "opn.riki": "Statischer Turm (frei)", "opn.ibi": "Statischer Turm", "opn.ana": "Anaguma", "opn.mino": "Mino-Burg", "opn.e.furi": "{s} schwenkt den Turm: eine Partie mit {n}.", "opn.e.aifuri": "Beide schwenken den Turm: doppelter Schwenkturm.", "opn.e.yoko": "{s}s Turm schlägt den Seitenbauern: Seitenbauernraub.", "opn.e.kaku": "Die Läufer werden getauscht: Läufertausch.", "opn.e.aig": "Beide ziehen den Turmbauern vor: Doppelflügelangriff.", "opn.e.yag": "{s} schließt die Läuferdiagonale und baut Gold und Silber auf – ein Yagura-artiger Beginn.", "opn.e.gangi": "{s} wählt die Gangi-Aufstellung.", "opn.e.ana": "{s} baut ein Anaguma.", "opn.e.mino": "{s} baut die Mino-Burg.", "opn.sum": "Eröffnung", "opn.vs": "{a} gegen {b}", "opn.see": "Diese Eröffnung lernen"}, "hi": {"opn.naka": "मध्य हाथी", "opn.shiken": "चौथी पंक्ति का हाथी", "opn.sanken": "तीसरी पंक्ति का हाथी", "opn.mukai": "आमने-सामने हाथी", "opn.aifuri": "दोहरा घूमता हाथी", "opn.yoko": "बगल का प्यादा लेना", "opn.kaku": "ऊँट अदला-बदली", "opn.aig": "दोहरा पंख हमला", "opn.yag": "यागुरा", "opn.gangi": "गांगी", "opn.riki": "स्थिर हाथी (मुक्त)", "opn.ibi": "स्थिर हाथी", "opn.ana": "अनागुमा", "opn.mino": "मीनो किला", "opn.e.furi": "{s} ने हाथी घुमाया: यह {n} का खेल है।", "opn.e.aifuri": "दोनों ने हाथी घुमाए: दोहरा घूमता हाथी।", "opn.e.yoko": "{s} के हाथी ने बगल का प्यादा लिया: बगल का प्यादा लेना।", "opn.e.kaku": "ऊँटों की अदला-बदली हुई: ऊँट अदला-बदली।", "opn.e.aig": "दोनों ने हाथी के प्यादे बढ़ाए: दोहरा पंख हमला।", "opn.e.yag": "{s} ने ऊँट का विकर्ण बंद कर सोना-चाँदी आगे बढ़ाए — यागुरा जैसी शुरुआत।", "opn.e.gangi": "{s} ने गांगी बनावट अपनाई।", "opn.e.ana": "{s} ने अनागुमा किला बनाया।", "opn.e.mino": "{s} ने मीनो किला बनाया।", "opn.sum": "ओपनिंग", "opn.vs": "{a} बनाम {b}", "opn.see": "यह ओपनिंग सीखें"}, "ar": {"opn.naka": "الرخ المركزي", "opn.shiken": "رخ العمود الرابع", "opn.sanken": "رخ العمود الثالث", "opn.mukai": "الرخ المقابل", "opn.aifuri": "الرخ المتنقل المزدوج", "opn.yoko": "أخذ البيدق الجانبي", "opn.kaku": "تبادل الفيلة", "opn.aig": "هجوم الجناحين", "opn.yag": "ياغورا", "opn.gangi": "غانغي", "opn.riki": "رخ ثابت (حر)", "opn.ibi": "رخ ثابت", "opn.ana": "أناغوما", "opn.mino": "قلعة مينو", "opn.e.furi": "{s} ينقل الرخ: مباراة {n}.", "opn.e.aifuri": "ينقل الطرفان رخيهما: الرخ المتنقل المزدوج.", "opn.e.yoko": "رخ {s} يأخذ البيدق الجانبي: أخذ البيدق الجانبي.", "opn.e.kaku": "تُبادَل الفيلة: تبادل الفيلة.", "opn.e.aig": "يدفع الطرفان بيدق الرخ: افتتاح هجوم الجناحين.", "opn.e.yag": "{s} يغلق قطر الفيل ويرفع الذهب والفضة — بداية على طريقة ياغورا.", "opn.e.gangi": "{s} يتخذ ترتيب غانغي.", "opn.e.ana": "{s} يتحصن في أناغوما.", "opn.e.mino": "{s} يبني قلعة مينو.", "opn.sum": "الافتتاح", "opn.vs": "{a} ضد {b}", "opn.see": "ادرس هذا الافتتاح"}};
 for (const l in OPN_TXT) Object.assign(I18N[l] || (I18N[l] = {}), OPN_TXT[l]);
