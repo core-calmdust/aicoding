@@ -54,6 +54,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   background:linear-gradient(160deg,#3a2a19,#2a1d11);box-shadow:0 20px 40px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(201,169,97,.22);min-height:calc(var(--ch)*4.2)}
 .hand.top{align-self:start}
 .hand.bottom{align-self:end;flex-direction:column-reverse}
+/* portal 3D skin: the 3D board's rim is symmetric around the squares, but the DOM frame is wider on the right (rank numbers) — pull the sente komadai in so both komadai sit at the same distance from the board */
+@media (min-aspect-ratio: 1/1){ html.atlas-skin .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*0.16 - var(--fp))} }
 .hand .hname{font-size:calc(var(--cw)*0.16);color:rgba(226,194,117,.7);text-align:center;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hslot{touch-action:none;position:relative;height:var(--ch);width:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .hslot .cnt{position:absolute;right:2%;bottom:4%;z-index:3;font-family:'JetBrains Mono',monospace;font-size:calc(var(--cw)*0.2);color:#fff;background:rgba(0,0,0,.7);border-radius:9px;padding:0 5px;line-height:1.4}
