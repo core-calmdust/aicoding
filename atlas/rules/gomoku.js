@@ -255,11 +255,8 @@
     /* ---------- marks ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); }
-    function glow(n) {   // where to play: a pulsing ring and a soft disc on the point
-      const g = new TH.Group(), [x, z] = xz(n);
-      const disc = new TH.Mesh(new TH.CircleGeometry(c * .42, 32), basic(0xffc928, .45)); disc.rotation.x = -Math.PI / 2; disc.position.y = .004;
-      const ring = new TH.Mesh(new TH.TorusGeometry(c * .36, c * .05, 8, 40), basic(0xff9a1a, .95)); ring.rotation.x = Math.PI / 2; ring.position.y = .02;
-      g.add(disc, ring); g.position.set(x, Y, z); g.userData.pulse = true; g.userData.ring = ring; marks.add(g); return g;
+    function glow(n) {   // where to play: a vivid coral marker (glow, bold ring, ripple)
+      const g = GB.tapMark(c), [x, z] = xz(n); g.position.set(x, Y, z); marks.add(g); return g;
     }
     function tile(n, color, op = .5, y = .005) { const m = new TH.Mesh(new TH.CircleGeometry(c * .55, 32), basic(color, op)); m.rotation.x = -Math.PI / 2; const [x, z] = xz(n); m.position.set(x, Y + y, z); marks.add(m); return m; }
     function bar(list, color, op = .45) {   // a rounded band under a line of stones (a four, a three)
@@ -270,7 +267,7 @@
     }
     function cross(n) { const g = new TH.Group(), mat = basic(0xe0281a, 1); [1, -1].forEach(s => { const b = new TH.Mesh(new TH.BoxGeometry(c * .78, .03, c * .16), mat); b.rotation.y = s * Math.PI / 4; g.add(b); }); const [x, z] = xz(n); g.position.set(x, Y + .01, z); g.userData.pulse = true; marks.add(g); return g; }
     function winRing(n, i) { later(() => { const m = new TH.Mesh(new TH.TorusGeometry(c * .5, c * .055, 8, 40), basic(0xffd24a, .95)); m.rotation.x = Math.PI / 2; const [x, z] = xz(n); m.position.set(x, Y + .02, z); m.scale.setScalar(.01); marks.add(m); anim(300, k => m.scale.setScalar(.01 + k)); const g = st[n]; if (g) anim(380, k => { g.userData.s.position.y = Math.sin(k * Math.PI) * c * .35; }); SFX.pachi(1.3 + i * .08); }, i * 110); }
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; const s = .85 + k * .3; if (m.userData.ring) m.userData.ring.scale.set(s, s, s); else m.scale.set(s, 1, s); } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
+    (function pulse() { if (stopped) return; const now = performance.now(), k = .5 + .5 * Math.sin(now / 260); let any = false; marks.children.forEach(m => { if (m.userData.tap) { any = true; m.userData.tick(now); return; } if (m.userData.pulse) { any = true; const s = .85 + k * .3; if (m.userData.ring) m.userData.ring.scale.set(s, s, s); else m.scale.set(s, 1, s); } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
 
     /* ---------- the ghost finger: after ~6 s without a tap it taps the right point ---------- */
     function hideHand() { if (hand) { hand.remove(); hand = null; } }
@@ -338,7 +335,7 @@
     function onClick(e) {
       if (busy || T3.wasDrag() || e.target.closest('.rgd')) return;
       const S = STEPS[step], q = pickCell(e); if (!q || !S.act || !targets.length) return;
-      if (!targets.includes(q)) { SFX.buzz(); line(`<b class="tapl" style="color:#e0452b;font-size:1.04em">👉 ${L.nope}</b>`, true); marks.children.forEach(m => { if (m.userData.ring) anim(380, k => m.userData.ring.scale.setScalar(1.5 - .5 * k)); }); armIdle(); return; }
+      if (!targets.includes(q)) { SFX.buzz(); line(`<b class="tapl" style="color:#e0452b;font-size:1.04em">👉 ${L.nope}</b>`, true); marks.children.forEach(m => { if (m.userData.tap) anim(380, k => m.scale.setScalar(1.5 - .5 * k)); }); armIdle(); return; }
       clearTimeout(idleT); hideHand();
       const a = S.act, stepNow = step;
       if (a.forbid) {   // the forbidden point: the stone hovers, shakes and is taken back

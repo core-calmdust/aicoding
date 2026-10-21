@@ -86,29 +86,48 @@
       g.putImageData(img, 0, 0);
     });
   }
-  // kaya, flat / flame grain (板目) for the sides of the natural board: wavy rings rising like flames
-  function kayaFlame(key, W, H, seed) {
-    return canvas(key, W, H, (g) => {
-      const R = rnd(seed), img = g.createImageData(W, H), d = img.data;
-      const N1 = makeNoise(seed + 1), N2 = makeNoise(seed + 2), fib = grid(seed + 3, 300, 8, 1, 1), tn = grid(seed + 4, 10, 4, .7, 3);
-      const A = [236, 188, 92], B = [170, 100, 30], k = 8 + R() * 3, ox = R() * 10, asp = H / W;
-      for (let y = 0; y < H; y++) {
-        const v = y / H;
-        for (let x = 0; x < W; x++) {
-          const u = x / W;
-          // growth rings of a flat-sawn plank: broad wavy bands that sweep and bend like flames
-          const wv = (N1(u * 1.3 + ox, v * asp * 1.5 + ox, 4) - .5), s = (u * k + wv * k * .55 + (N2(u * 5 + ox, v * asp * 4, 2) - .5) * 1.2 + Math.pow(1 - v, 2) * 1.5) * 4;
-          const f = s - Math.floor(s), zone = Math.max(0, Math.abs(wv) * 3 - .3);   // rings crowd together where the grain bends: darker flames
-          const rk = .45 + ((Math.sin(Math.floor(s) * 12.9898 + seed) * 43758.5453) % 1 + 1) % 1 * .8;   // every ring a little different
-          const late = Math.exp(-Math.pow((f - .8) / .07, 2)) * (.55 + zone * .6) * rk + .25 * Math.exp(-Math.pow((f - .68) / .16, 2));
-          let t = .08 + late * .5 + zone * .12 + (fib(u, v) - .5) * .12 + (tn(u, v) - .5) * .22 + (R() - .5) * .04;
-          t = Math.max(0, Math.min(1, t));
-          const i = (y * W + x) * 4;
-          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+  // kaya sides of the natural board. Long faces: flat-sawn flame grain (板目) — nested flames rising from the base, many fine
+  // growth rings with sharp darker latewood, darker where the rings crowd. Short faces (end = true): end grain (木口) — arcs of rings
+  // around a pith below the face, faint rays. A second canvas holds roughness (G) for the chatoyant sheen bands.
+  function kayaSide(key, W, H, seed, end) {
+    if (cv[key]) return cv[key];
+    const R = rnd(seed), img = new ImageData(W, H), d = img.data, rough = new ImageData(W, H), q = rough.data;
+    const w1 = grid(seed + 1, 7, 4, .8, 3), w2 = grid(seed + 2, 28, 12, 1, 2), fib = grid(seed + 3, 420, 10, 1, 1), tn = grid(seed + 4, 9, 4, .7, 3), ch = grid(seed + 5, 40, 3, 1, 2);
+    const E = [240, 190, 92], Lw = [178, 104, 30], Dk = [128, 70, 18], asp = H / W;
+    const centres = [], nC = 2 + (R() * 2 | 0); for (let i = 0; i < nC; i++) centres.push((i + .3 + R() * .4) / nC);
+    const RINGS = end ? 44 : 36, px = .3 + R() * .4, py = 1.25 + R() * .5;
+    for (let y = 0; y < H; y++) {
+      const v = y / H;
+      for (let x = 0; x < W; x++) {
+        const u = x / W, wa = (w1(u, v) - .5), wb = (w2(u, v) - .5);
+        let f, crowd;
+        if (end) {   // rings around the pith (off the face, below), irregular widths
+          const dx = (u - px + wa * .08), dy = (v - py) * asp;
+          f = Math.sqrt(dx * dx + dy * dy) * 1.6 + wb * .03 + wa * .02; crowd = .25 + wa * .5;
+        } else {     // rounded flame tongues: a soft minimum of parabolas around each axis, narrowing upwards
+          const uu = u + wa * .12 + wb * .02;
+          let acc = 0; for (const c of centres) { const g2 = (uu - c) * (uu - c); acc += Math.exp(-g2 * 160); }
+          const g = Math.sqrt(Math.max(0, -Math.log(acc + 1e-6)) / 160);
+          f = g * g * 9 + g * .5 + (1 - v) * .42 * (1 + wa * .5) + wb * .03; crowd = Math.max(0, 1 - g * 5) * .55 + Math.max(0, wa) * .6;
         }
+        const s = f * RINGS * (1 + (tn(u * .7, v) - .5) * .25), ph = s - Math.floor(s), id = Math.floor(s);
+        const rk = .55 + (((Math.sin(id * 12.9898 + seed * 3.1) * 43758.5453) % 1 + 1) % 1) * .75;
+        // each ring: light earlywood darkening into latewood, then a sharp edge to the next year
+        const late = (Math.pow(ph, 4) * .9 + Math.exp(-Math.pow((ph - .93) / .035, 2)) * .6) * rk;
+        const ray = end ? Math.max(0, Math.sin((Math.atan2(v - py, u - px) * 90 + wb * 6)) - .97) * 6 : 0;
+        let t = .05 + late * (.44 + crowd * .32) + crowd * .24 + (fib(u, v) - .5) * .1 + (tn(u, v) - .5) * .26 + ray * .15 + (R() - .5) * .035;
+        t = Math.max(0, Math.min(1.3, t));
+        const i = (y * W + x) * 4, P = t <= 1 ? Lw : Dk, tt = t <= 1 ? t : (t - 1) / .3;
+        const A0 = t <= 1 ? E : Lw;
+        d[i] = A0[0] + (P[0] - A0[0]) * tt; d[i + 1] = A0[1] + (P[1] - A0[1]) * tt; d[i + 2] = A0[2] + (P[2] - A0[2]) * tt; d[i + 3] = 255;
+        // chatoyance: soft bands across the grain where the fibres catch the light, latewood a little duller
+        const sh = ch(u, v);
+        q[i] = 255; q[i + 1] = Math.max(0, Math.min(255, (.3 + (sh - .5) * .5 + late * .12) * 255)); q[i + 2] = 0; q[i + 3] = 255;
       }
-      g.putImageData(img, 0, 0);
-    });
+    }
+    const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').putImageData(img, 0, 0);
+    const r = document.createElement('canvas'); r.width = W; r.height = H; r.getContext('2d').putImageData(rough, 0, 0);
+    cv[key + 'R'] = r; return (cv[key] = c);
   }
 
   /* ---------- the playing surface: kaya + lacquer grid lines + star points ---------- */
@@ -122,7 +141,7 @@
     const span = n - 1 + 2 * margin;
     return canvas('gbTop' + n, 2048, 2048, (g, W) => {
       g.imageSmoothingQuality = 'high';
-      g.drawImage(kayaGrain('kayaTop', 2048, 2048, 11), 0, 0, W, W);
+      g.save(); g.translate(W, 0); g.rotate(Math.PI / 2); g.drawImage(kayaGrain('kayaTop', 2048, 2048, 11), 0, 0, W, W); g.restore();   // the grain runs left → right
       const c = W / span, p = i => (margin + i) * c;
       g.strokeStyle = 'rgba(20,13,6,.93)'; g.lineCap = 'square';
       for (let i = 0; i < n; i++) {
@@ -347,7 +366,11 @@
     o.top = M({ map: top, bump: false, roughness: .42, clearcoat: .2, clearcoatRoughness: .35 });
     o.top.bumpMap = bump; o.top.bumpScale = .0035;
     if (look === 'kaya') {
-      o.sides = [0, 1, 2, 3].map(s => M({ map: tex('gbFl' + s, kayaFlame('gbFl' + s, 1024, 320, 31 + s * 7)), bumpScale: .002, roughness: .42, clearcoat: .3, clearcoatRoughness: .35 }));
+      o.sides = [0, 1, 2, 3].map(s => {
+        const k = 'gbKs' + s, c = kayaSide(k, 1536, 480, 31 + s * 7, s % 2 === 1);   // front / back: flame grain; left / right: end grain
+        const m = M({ map: tex(k, c), bumpScale: .0025, roughness: 1, clearcoat: .45, clearcoatRoughness: .22 });
+        m.roughnessMap = tex(k + 'R', cv[k + 'R'], false); return m;
+      });
       o.leg = M({ map: tex('gbLegK', kayaGrain('gbLegK', 256, 512, 5, { ring: 5 }), true, true), bumpScale: .002, roughness: .4, clearcoat: .35, clearcoatRoughness: .3 });
       o.bottom = M({ color: 0xb98a46, roughness: .8 });
     } else {
@@ -529,7 +552,30 @@
     return g;
   }
 
-  X.goban = { board, stone, bowl, stoneGeo, stoneMat, stars, SH, _canvas: { art, artMR, kayaGrain, kayaFlame, topCanvas, shellCanvas, ringCanvas, sideGrainCanvas } };
+  // "tap here": a vivid coral marker that stands out on the golden kaya — a soft glow, a bold ring with a white inner line,
+  // a centre dot and a ripple that keeps spreading out. tick(time ms) animates it (call it while it is shown).
+  function tapMark(cell) {
+    const TT = T(), g = new TT.Group(), C = 0xff2e5b;
+    const mat = (o) => new TT.MeshBasicMaterial(Object.assign({ transparent: true, toneMapped: false, depthWrite: false }, o));
+    const glowT = X.canvasTex('gbTapGlow', 128, 128, (c, W) => { const gr = c.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W / 2); gr.addColorStop(0, 'rgba(255,80,110,1)'); gr.addColorStop(.45, 'rgba(255,60,95,.55)'); gr.addColorStop(1, 'rgba(255,60,95,0)'); c.fillStyle = gr; c.fillRect(0, 0, W, W); });
+    const flat = (geo, m, y) => { const k = new TT.Mesh(geo, m); k.rotation.x = -Math.PI / 2; k.position.y = y; k.renderOrder = 4; g.add(k); return k; };
+    const q = cell * 1.45;   // larger than a stone: it must jump out at a glance
+    const halo = flat(new TT.PlaneGeometry(q * 2.6, q * 2.6), mat({ map: glowT, opacity: .8 }), .003);
+    const ring = flat(new TT.RingGeometry(q * .4, q * .56, 56), mat({ color: C, opacity: 1 }), .012);
+    const inner = flat(new TT.RingGeometry(q * .35, q * .41, 56), mat({ color: 0xffffff, opacity: .95 }), .013);
+    const dot = flat(new TT.CircleGeometry(cell * .16, 24), mat({ color: C, opacity: 1 }), .013);
+    const ripple = flat(new TT.RingGeometry(q * .5, q * .6, 56), mat({ color: C, opacity: .85 }), .011);
+    g.userData.tick = t => {
+      const k = .5 + .5 * Math.sin(t / 230), r = (t % 1200) / 1200;
+      const s = .92 + k * .16; ring.scale.set(s, s, 1); inner.scale.set(s, s, 1); dot.scale.setScalar(.85 + k * .3);
+      halo.material.opacity = .45 + k * .45; halo.scale.setScalar(.9 + k * .25);
+      ripple.scale.set(1 + r * 1.3, 1 + r * 1.3, 1); ripple.material.opacity = .85 * (1 - r);
+    };
+    g.userData.tick(0); g.userData.tap = true;
+    return g;
+  }
+
+  X.goban = { board, stone, bowl, tapMark, stoneGeo, stoneMat, stars, SH, _canvas: { art, artMR, kayaGrain, kayaSide, topCanvas, shellCanvas, ringCanvas, sideGrainCanvas } };
 
   /* ---------- gomoku on the chabudai ---------- */
   const SHOW = [112, 127, 129, 126, 124, 114, 143, 96, 109, 157, 156, 142, 110, 111, 81, 139, 95, 123, 82, 65, 67];   // a renju game from the centre (cells: row * 15 + col, row 0 = bottom)

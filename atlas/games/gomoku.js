@@ -86,11 +86,11 @@
     }
     /* ---------- marks: the last move, black's forbidden points, the opening area, the winning five ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
-    const MAT = { last: basic(0xff3b2b, .95), forb: basic(0xe0301e, .85), area: basic(0xffc928, .3), ring: basic(0xffc928, .9), win: basic(0xffd24a, .9) };
+    const MAT = { last: basic(0xff3b2b, .95), forb: basic(0xe0301e, .85), area: basic(0xff2e5b, .16), ring: basic(0xffc928, .9), win: basic(0xffd24a, .9) };
     const GEO = { last: new TH.CylinderGeometry(c * .1, c * .1, .01, 24), bar: new TH.BoxGeometry(c * .42, .012, c * .07), area: new TH.PlaneGeometry(1, 1), ring: new TH.TorusGeometry(c * .3, c * .045, 8, 36), win: new TH.TorusGeometry(c * .5, c * .05, 8, 40) };
     GEO.ring.rotateX(Math.PI / 2); GEO.win.rotateX(Math.PI / 2); GEO.area.rotateX(-Math.PI / 2);
     const H = c * .47 * GB.SH * 2;   // stone height
-    let pulsing = [];
+    let pulsing = [], pulseOn = false;
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); pulsing = []; kick(); }
     function addMark(geo, mat, m, y) { const k = new TH.Mesh(geo, mat), [x, z] = xz(m); k.position.set(x, Y + y, z); k.renderOrder = 3; marks.add(k); return k; }
     function showMarks() {
@@ -102,11 +102,11 @@
       if (pos.renju && blackTurn) pos.forbiddenList().forEach(f => { [1, -1].forEach(sg => { const b = addMark(GEO.bar, MAT.forb, f.m, .01); b.rotation.y = sg * Math.PI / 4; }); });
       if (pos.renju && pos.fresh && pos.ply <= 2) {   // the renju opening: where the next stone may go
         const r = pos.ply, a = addMark(GEO.area, MAT.area, 112, .006); a.scale.set((2 * r + 1) * c, 1, (2 * r + 1) * c);
-        if (r === 0) { const g = addMark(GEO.ring, MAT.ring, 112, .02); pulsing.push(g); }
+        if (r === 0) { const g = GB.tapMark(c), [x, z] = xz(112); g.position.set(x, Y, z); marks.add(g); pulsing.push(g); }   // the first stone: here
       }
-      if (pulsing.length) pulse();
+      if (pulsing.length && !pulseOn) { pulseOn = true; pulse(); }
     }
-    function pulse() { if (stopped || !pulsing.length) return; const k = .5 + .5 * Math.sin(performance.now() / 260); pulsing.forEach(m => m.scale.set(.8 + k * .45, 1, .8 + k * .45)); kick(60); requestAnimationFrame(pulse); }
+    function pulse() { if (stopped || !pulsing.length) { pulseOn = false; return; } const now = performance.now(); pulsing.forEach(m => m.userData.tick(now)); kick(60); requestAnimationFrame(pulse); }
     function winLine(line) {
       line.forEach((m, i) => later(() => {
         const g = st[m]; if (g) anim(380, k => { g.children[1].position.y = Math.sin(k * Math.PI) * c * .35; });
