@@ -1204,6 +1204,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
+<script src="openings-ui.js?v=20261021op"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=3"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -2576,7 +2577,7 @@ function renderReview() {
   }
   $('#rvBody').innerHTML = html;
 }
-$('#rvBody').addEventListener('click', e => { const ob = e.target.closest('[data-opset]'); if (ob) { const oi = +ob.dataset.opset; lsTab = 'open'; showOverlay('#lessonOverlay'); Promise.resolve(openLessons()).then(() => openOpeningChoice(oi)); return; } if (e.target.closest('#rvPvBtn')) { rvPvShow = !rvPvShow; renderReview(); drawArrows(); return; } const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+$('#rvBody').addEventListener('click', e => { const ob = e.target.closest('[data-opset],[data-opid]'); if (ob) { const fi = ob.dataset.opid ? ShogiOpenUI.findId(ob.dataset.opid).then(i => i >= 0 ? i : OPEN.sets.findIndex(g => g.id === ob.dataset.opfb)) : Promise.resolve(+ob.dataset.opset); lsTab = 'open'; showOverlay('#lessonOverlay'); Promise.all([fi, openLessons()]).then(([oi]) => { if (oi >= 0) openOpeningChoice(oi); }); return; } if (e.target.closest('#rvPvBtn')) { rvPvShow = !rvPvShow; renderReview(); drawArrows(); return; } const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
@@ -2951,21 +2952,17 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261020st').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261021op').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
 function openOpenList() {
   segSel('segLs', 'open');
-  $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
+  $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = window.ShogiOpenUI ? ShogiOpenUI.tx('desc') : t('op.desc');
   if (!OPEN) { $('#lessonList').innerHTML = ''; return; }
-  $('#lessonList').innerHTML = OPEN.sets.map((g, i) => {
-    const pr = oprog[g.id];
-    const head = g.handi && !(OPEN.sets[i - 1] || {}).handi ? `<p class="ls-gh">${t('op.handiHead')}</p><p class="ls-note">${t('op.handiNote')}</p>` : '';
-    const st = pr ? `<span class="st ${pr.pass ? 'clear' : ''}">${pr.pass ? '✓ ' : ''}${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
-    return head + `<button class="lesson-item" data-o="${i}"><span class="no" style="font-size:13px">${L(g.label)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
-  }).join('') + `<p class="ls-credit">${L(OPEN.credit)}</p>`;
+  ShogiOpenUI.render();   // category tabs + entries of the current tab (openings-ui.js)
 }
+if (window.ShogiOpenUI) ShogiOpenUI.init({ open: () => OPEN, prog: () => oprog, lang: () => LANG, L: o => L(o), t: (k, o) => t(k, o) });
 function startOpening(oi) {
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   const g = OPEN.sets[oi];
@@ -3047,8 +3044,10 @@ function opSummary() {
     const a = c => `${c ? '☖' : '☗'}${S.ranging[c] ? t('opn.' + S.k) : t('opn.ibi')}${cs(c)}`;
     name = t('opn.vs', { a: a(0), b: a(1) });
   } else name = t('opn.' + S.k) + (S.s >= 0 && (S.k === 'yag' || S.k === 'gangi' || S.k === 'yoko') ? `（${opSide(S.s)}）` : '') + (S.k === 'aifuri' ? cs(0) + cs(1) : '');
-  const si = OPEN && OPEN.sets ? OPEN.sets.findIndex(g => g.id === S.set) : -1;
-  return `<div class="rv-opn"><span class="h">${t('opn.sum')}</span><b>${name}</b>${si >= 0 ? `<button class="rv-opbtn" data-opset="${si}">${t('opn.see')}</button>` : ''}</div>`;
+  const sid = ({ naka: 'gokigen', sanken: 'sanken', mukai: 'mukai', gangi: 'gangi', aifuri: 'aifuri' })[S.k] || S.set;
+  const si = OPEN && OPEN.sets ? OPEN.sets.findIndex(g => g.id === sid) : -1;
+  const btn = si >= 0 ? `data-opset="${si}"` : window.ShogiOpenUI && sid !== S.set ? `data-opid="${sid}" data-opfb="${S.set}"` : (OPEN && OPEN.sets.findIndex(g => g.id === S.set) >= 0 ? `data-opset="${OPEN.sets.findIndex(g => g.id === S.set)}"` : '');
+  return `<div class="rv-opn"><span class="h">${t('opn.sum')}</span><b>${name}</b>${btn ? `<button class="rv-opbtn" ${btn}>${t('opn.see')}</button>` : ''}</div>`;
 }
 
 function opStory(g) {
@@ -3067,13 +3066,14 @@ function opStory(g) {
 let introIdx = 0;
 let openChoiceIdx = -1;
 function openOpeningChoice(oi) {
-  openChoiceIdx = oi; const g = OPEN.sets[oi], st = g.study;
-  $('#liStep').textContent = g.handi ? t('op.handiHead') : t('op.title');
+  openChoiceIdx = oi; const g = OPEN.sets[oi], st = g.study, OX = window.ShogiOpenUI, prac = !OX || OX.hasPractice(g);
+  if (OX) OX.cat = OX.catOf(g);
+  $('#liStep').textContent = g.handi ? t('op.handiHead') : OX ? `${t('op.title')} ・ ${OX.tx(OX.catOf(g))}` : t('op.title');
   $('#liTitle').textContent = L(g.title);
   const intro = st && st.intro ? (st.intro[LANG] || st.intro.en || st.intro.ja) : [L(g.short)];
   $('#liBody').innerHTML = intro.map(p => `<p>${p}</p>`).join('') +
     `<div class="op-choice">${st ? `<button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: st.steps.length })}</small></span></button>` : ''}` +
-    `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button></div>` + opStory(g);
+    (prac ? `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button>` : '') + `</div>` + opStory(g);
   $('#btnLessonStart').classList.add('hidden');
   lessonView('intro');
 }
@@ -3106,10 +3106,11 @@ function showStudy() {
     pr = `<b style="font-size:16px"><bdi>${i}. ${lineKanji(st.start, st.steps.slice(0, i).map(s => s[0])).pop()}</bdi></b>` + (pct != null ? ` <span style="font-size:12px;color:var(--muted)">${t('op.pct', { p: pct })}</span>` : '');
     const note = st.notes && st.notes[i - 1]; fb = note ? (note[LANG] || note.en || note.ja) : '';
   }
-  if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${t('op.studyEnd')}</b>`;
+  const prac = !window.ShogiOpenUI || ShogiOpenUI.hasPractice(g);
+  if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${prac ? t('op.studyEnd') : ShogiOpenUI.tx('endNo')}</b>`;
   $('#lsPrompt').innerHTML = pr; $('#lsFb').innerHTML = fb;
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
-  $('#lsNext').textContent = i === N ? t('op.toPractice') : t('op.next');
+  $('#lsNext').textContent = i === N ? (prac ? t('op.toPractice') : ShogiOpenUI.tx('back')) : t('op.next');
   $('#lsQuit').textContent = t('ls.quit');
   $('#lsPlayHere').classList.remove('hidden'); $('#lsBackOp').classList.remove('hidden');
   stSync();
@@ -3493,7 +3494,7 @@ $('#lsHint').onclick = () => {
 $('#lsNext').onclick = () => {
   if (!lesson) return;
   if (lesson.retry) { const why = lesson.retry.why; lesson.retry = null; lesson.shownAnswer = true; lesson.played = []; lessonScored(0, { why, partial: 0, K: Math.ceil(lesson.cur.n / 2) }); playSolution(); return; }
-  if (lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(); playPiece(false); } else { const oi = lesson.gi; exitLesson(true); startOpening(oi); } return; }
+  if (lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(); playPiece(false); } else { const oi = lesson.gi; if (window.ShogiOpenUI && !ShogiOpenUI.hasPractice(lesson.g)) { $('#lsBackOp').click(); return; } exitLesson(true); startOpening(oi); } return; }
   if (!lesson.answered) { lesson.shownAnswer = true; lessonScored(0, { gaveUp: true }); playSolution(); return; }
   if (lesson.endless) {
     const n = lesson.k + 1, si = lesson.si;
