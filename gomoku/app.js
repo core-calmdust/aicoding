@@ -1007,6 +1007,14 @@ const lessonsReady = fetch('lessons.json?v=20261019a').then(r => r.json()).then(
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
+// puzzles replaced on 2026-10-21 (fun refresh, tools/refresh-fun.js; old content in puzzles.json `old`): a slot that already had a
+// record when this version first ran stays "pinned" to its old puzzle. The pin list is taken once from the records of that moment
+// (records made later are records of the new puzzles) and travels with the cloud save (`po`).
+const PZ_PIN = STORE + '-pz-old';
+const pzPinFrom = pr => { const o = {}; for (const k in (pr || {})) o[k] = 1; return o; };
+let pzPinned = null;
+try { pzPinned = JSON.parse(localStorage.getItem(PZ_PIN) || 'null'); } catch (e) {}
+if (!pzPinned || typeof pzPinned !== 'object') { pzPinned = pzPinFrom(pzProgress()); try { localStorage.setItem(PZ_PIN, JSON.stringify(pzPinned)); } catch (e) {} }
 let introIdx = 0, savedGame = null;
 function stashGame() { olDetach(); if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor, rule }; }
 function exitSpecial() {
@@ -1375,7 +1383,7 @@ function startPractice(gi) {
 // (moves of both sides up to and including the move that settles the game: a four-three, a four-four, a straight four,
 // or for white a three-three / a four whose blocking point is forbidden for black)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=20261019a').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261021f').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzCat = 0, pzLevel = 0;
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 const pzKey = (c, l, j) => PUZZLES.cats[c].id + '-' + PUZZLES.cats[c].levels[l].n + '-' + j;
@@ -1394,7 +1402,12 @@ function pzRankHtml(pr) {
 }
 // collection home (the layout of 詰めオセロ, PZBook.home): hero (with the title 称号) → daily → category tabs → level cards with the position
 const PZ_LAST = 'gomoku-pz-last', PZ_CIC = { intro: 'sprout', vcf: 'four', vct: 'three', forbid: 'ban' };
-function pzThumbOf(c, l, j) { const L = PUZZLES.cats[c].levels[l], P = L.puzzles[j < 0 ? L.puzzles.length - 1 : j]; return P ? { board: thumbSvg(P.b, P.w), tm: P.side === 2 ? 'w' : 'b' } : { board: '' }; }
+// the puzzle of a slot for this player (old content where pinned; a daily dated up to the refresh day keeps the old one too)
+function pzGet(c, l, j, date) {
+  const P = PUZZLES.cats[c].levels[l].puzzles[j], o = P && PUZZLES.old && PUZZLES.old[pzKey(c, l, j)];
+  return o && ((date && date <= (PUZZLES.cut || '')) || pzPinned[pzKey(c, l, j)]) ? o : P;
+}
+function pzThumbOf(c, l, j) { const L = PUZZLES.cats[c].levels[l], P = L.puzzles.length ? pzGet(c, l, j < 0 ? L.puzzles.length - 1 : j) : null; return P ? { board: thumbSvg(P.b, P.w), tm: P.side === 2 ? 'w' : 'b' } : { board: '' }; }
 function pzRankChip(pr) {
   const st = pzStarsAll(pr), R = pzRankOf(st);
   return `<span class="pz-rk" title="${R.next ? t('pz.rankNext', { n: R.next - st }) : t('pz.rankTop')}"><small>${t('pz.rank')}</small><b>${LV(R.i)}</b></span>`;
@@ -1432,7 +1445,7 @@ function openPzGrid(i, cur) {
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: `<b class="gl">${L.n}</b>`, name: pzName(pzCat, i), desc: t('pzl.' + PUZZLES.cats[pzCat].id, { n: L.n, k: L.puzzles.length }), chips: [t('pzc.' + PUZZLES.cats[pzCat].id), PZBook.t('count', { n: L.puzzles.length })], tier: pzTier(L.n) });
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(pzCat, i), cur });
   // each tile shows the position (a small board) under its number and stars
-  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; el.insertAdjacentHTML('afterbegin', `<span class="th">${thumbSvg(P.b, P.w)}</span>`); el.classList.toggle('wt', P.side === 2); });
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzGet(pzCat, i, +el.dataset.j); el.insertAdjacentHTML('afterbegin', `<span class="th">${thumbSvg(P.b, P.w)}</span>`); el.classList.toggle('wt', P.side === 2); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
   const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
@@ -1442,7 +1455,7 @@ $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 function startPuzzle(c, l, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const P = PUZZLES.cats[c].levels[l].puzzles[j];
+  const P = pzGet(c, l, j, daily);
   const sp = spOf(P);
   if (!daily) PZBook.lastSet(PZ_LAST, c + ':' + l);
   puzzle = { c, l, j, P, me: sp.side, n: PUZZLES.cats[c].levels[l].n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
@@ -2426,7 +2439,7 @@ const GomokuSync = (() => {
     let ru = false; try { ru = !!localStorage.getItem(RU_KEY); } catch (e) {}
     const d = {
       v: 1,
-      ls: get(LS_STORE, {}), pz: get(PZ_STORE, {}), op: get(OP_STORE, {}), ru, rs: get(RT_KEY, {}),
+      ls: get(LS_STORE, {}), pz: get(PZ_STORE, {}), po: pzPinned, op: get(OP_STORE, {}), ru, rs: get(RT_KEY, {}),
       dy: get(DAILY_STORE, { last: '', streak: 0, best: 0, days: {} }),
       rd: get(RT_STORE, null),
       set, setT: stamp('set', set), nm, nmT: stamp('nm', nm), rt, rtT: stamp('rt', rt),
@@ -2474,7 +2487,7 @@ const GomokuSync = (() => {
     const s = newer(L, C, 'set'), n = newer(L, C, 'nm'), r = newer(L, C, 'rt');
     return {
       v: 1,
-      ls: mergeRec(L.ls, C.ls), pz: mergeStars(L.pz, C.pz), op: mergeRec(L.op, C.op), ru: !!(L.ru || C.ru), rs: Object.assign({}, C.rs || {}, L.rs || {}),
+      ls: mergeRec(L.ls, C.ls), pz: mergeStars(L.pz, C.pz), po: Object.assign({}, L.po || pzPinFrom(L.pz), C.po || pzPinFrom(C.pz)), op: mergeRec(L.op, C.op), ru: !!(L.ru || C.ru), rs: Object.assign({}, C.rs || {}, L.rs || {}),
       dy: mergeDaily(L.dy, C.dy), rd: mergeRated(L.rd, C.rd),
       set: Object.assign({}, s.set), setT: s.setT || 0,
       nm: n.nm || L.nm || C.nm || '', nmT: n.nmT || 0,
@@ -2484,6 +2497,7 @@ const GomokuSync = (() => {
   // write a merged snapshot back to this device
   function apply(d) {
     put(LS_STORE, d.ls || {}); put(PZ_STORE, d.pz || {}); put(OP_STORE, d.op || {});
+    pzPinned = Object.assign({}, pzPinned, d.po || pzPinFrom(d.pz)); put(PZ_PIN, pzPinned);
     if (d.ru) { try { localStorage.setItem(RU_KEY, '1'); } catch (e) {} }
     if (d.rs) put(RT_KEY, d.rs);
     if (d.dy) { put(DAILY_STORE, d.dy); daily.last = d.dy.last || ''; daily.streak = d.dy.streak || 0; daily.best = d.dy.best || 0; daily.days = Object.assign({}, d.dy.days || {}); }
