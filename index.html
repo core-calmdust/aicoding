@@ -250,6 +250,14 @@ section{padding:56px 0}
 .gx-index{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 
 @media (max-width: 1080px) and (min-width: 761px){ .gx-panel{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)} .gx-info{padding:24px 26px 26px} }
+/* the panel keeps one size while browsing games (long descriptions are clamped, the rest scrolls inside the info column) */
+@media (min-width: 761px){
+  .gx-panel{height:clamp(400px, min(64vh, 520px), 520px)}
+  .gx-media{height:100%;max-height:none;aspect-ratio:auto}
+  .gx-media .shot{position:absolute;inset:0}
+  .gx-info{overflow-y:auto;scrollbar-width:thin}
+  .gx-desc{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+}
 @media (max-width: 760px){
   /* phone: compact panel (image, title, play; details on demand) + big wrapping icon grid right below */
   .gx-panel{grid-template-columns:1fr;border-radius:20px;scroll-margin-top:72px}
@@ -264,7 +272,8 @@ section{padding:56px 0}
   .gx-cat{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .gx-count{top:10px;right:10px}
   .gx-info{padding:14px 16px 16px;border-left:0}
-  .gx-info h3{font-size:21px;line-height:1.3}
+  .gx-info h3{font-size:21px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gx-panel:not(.open) .gx-desc{min-height:calc(1.7em * 2)}
   .gx-desc{margin-top:6px;font-size:13.5px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .gx-panel.open .gx-desc{display:block;-webkit-line-clamp:unset}
   .gx-info > .tags, .gx-facts{display:none}
