@@ -22,7 +22,7 @@ function load() {
   return d;
 }
 let DB = load();
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
+const save = () => { DB.mt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} if (window.__schedPush) window.__schedPush(); };
 
 /* ---------------- i18n ---------------- */
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
@@ -209,9 +209,15 @@ function profCard() {
     <div class="pextra"><div class="plvbar"><span>LV.${lv} → ${lv + 1}</span><span class="bar"><i style="width:${Math.min(100, (DB.life - 50 * (lv - 1) ** 2) / (50 * lv ** 2 - 50 * (lv - 1) ** 2) * 100)}%"></i></span></div>
       <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/400</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
       <li><span>${esc(t('bk.title'))}</span><b>${Object.keys(DB.own).length}<small>/100</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
-      <div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
+      <div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div>${googleBox()}</div>`;
   $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha('g'), book: openBook, ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
   $('#pfEdit').onclick = openProfile;
+  const pn = $('#profCard .pname'); pn.title = t('pf.name'); pn.onclick = () => {
+    const inp = document.createElement('input'); inp.className = 'pname pnin'; inp.maxLength = 12; inp.value = DB.name; inp.placeholder = t('pf.ph'); pn.replaceWith(inp); inp.focus(); inp.select();
+    let done = false; const fin = ok => { if (done) return; done = true; if (ok) { DB.name = inp.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); save(); pushScores(); } profCard(); };
+    inp.onkeydown = e => { if (e.key === 'Enter') fin(true); if (e.key === 'Escape') fin(false); }; inp.onblur = () => fin(true);
+  };
+  const gb = $('#pfGoogle'); if (gb) gb.onclick = googleLogin;
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-rule]'); if (b) { e.stopPropagation(); modeTip(b.dataset.rule); } });
 function renderHome() {
@@ -897,7 +903,7 @@ function openProfile() {
     <label class="fld"><span>${esc(t('pf.name'))}</span><input id="pfName" maxlength="12" value="${esc(DB.name)}" placeholder="${esc(t('pf.ph'))}"></label>
     <p class="note">${esc(t('pf.note'))}</p><h3 class="mh3">${esc(t('pf.icon'))}</h3>
     <div class="cgrid">${owned.map(id => `<button class="cc ${id === DB.icon ? 'on' : ''}" data-id="${id}">${A.charSVG(id)}</button>`).join('')}</div>
-    <div class="mbtns"><button class="btn red" id="pfSave">${esc(t('u.save'))}</button></div>`, 'mprof');
+    <div class="mbtns"><button class="btn red" id="pfSave">${esc(t('u.save'))}</button></div>`, 'mprof mwide');
   let pick = DB.icon;
   $$('.cc', body).forEach(b => b.onclick = () => { pick = +b.dataset.id; $$('.cc', body).forEach(x => x.classList.toggle('on', x === b)); });
   $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pick; save(); pushScores(); closeModal(); };
@@ -907,7 +913,7 @@ function openAch() {
   const rows = ACH.map(([id, f, rw]) => { const [v, g] = f(DB.stats), done = v >= g, got = DB.ach[id];
     return `<div class="ach ${got ? 'got' : done ? 'ready' : ''}"><span class="ai">${got ? '★' : done ? '!' : ''}</span><span class="at"><b>${esc(t('ach.' + id))}</b><span class="bar"><i style="width:${Math.min(100, v / g * 100)}%"></i></span><small>${fmt(Math.min(v, g))} / ${fmt(g)}</small></span>
       ${got ? `<span class="ag">${esc(t('ach.got'))}</span>` : `<button class="btn sm ${done ? 'red' : ''}" data-ach="${id}" ${done ? '' : 'disabled'}>${A.ICON.coin}${rw}</button>`}</div>`; }).join('');
-  const body = modal(`<h2 class="mh">${esc(t('ach.title'))}</h2><p class="note">${esc(t('ach.d'))}</p><div class="alist">${rows}</div>`);
+  const body = modal(`<h2 class="mh">${esc(t('ach.title'))}</h2><p class="note">${esc(t('ach.d'))}</p><div class="alist">${rows}</div>`, 'mwide');
   $$('[data-ach]', body).forEach(b => b.onclick = () => { const a = ACH.find(x => x[0] === b.dataset.ach); DB.ach[a[0]] = 1; addCoin(a[2]); SND.coin(); save(); openAch(); updateBadges(); });
 }
 // --- gacha + shop
@@ -921,7 +927,7 @@ function rollOne(guarantee) {
   return pool[(Math.random() * pool.length) | 0];
 }
 function openGacha(tab = 'g') {
-  const body = modal(`<div class="mtabs"><button class="${tab === 'g' ? 'on' : ''}" data-tab="g">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="${tab === 's' ? 'on' : ''}" data-tab="s">${A.ICON.shop}${esc(t('sh.title'))}</button></div><div id="gaBody"></div>`, 'mgacha');
+  const body = modal(`<div class="mtabs"><button class="${tab === 'g' ? 'on' : ''}" data-tab="g">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="${tab === 's' ? 'on' : ''}" data-tab="s">${A.ICON.shop}${esc(t('sh.title'))}</button></div><div id="gaBody"></div>`, 'mgacha mwide');
   $$('[data-tab]', body).forEach(b => b.onclick = () => openGacha(b.dataset.tab));
   const gb = $('#gaBody');
   if (tab === 'g') {
@@ -955,7 +961,7 @@ function pull(n) {
 function openBook() {
   const own = Object.keys(DB.own).length;
   const cells = []; for (let i = 0; i < 100; i++) { const o = DB.own[i]; cells.push(`<div class="bk ${o ? '' : 'no'} r${A.RAR(i)}" ${o ? `data-id="${i}"` : ''}>${o ? A.charSVG(i) : `<span>?</span>`}<i>${A.RNAME[A.RAR(i)]}</i>${o > 1 ? `<em>×${o}</em>` : ''}</div>`); }
-  modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: own }))}</p><div class="bar big"><i style="width:${own}%"></i></div><div class="bkgrid">${cells.join('')}</div>`);
+  modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: own }))}</p><div class="bar big"><i style="width:${own}%"></i></div><div class="bkgrid">${cells.join('')}</div>`, 'mwide');
 }
 // --- ranking
 async function openRank(tab = 'p') {
@@ -979,10 +985,13 @@ function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
   const cur = document.body.dataset.skin;
   const skinPick = `<h3 class="mh3">${esc(t('set.skin'))}</h3><div class="skins">${SKINS.map(k => `<button class="skin ${k === cur ? 'on' : ''}" data-skin="${k}"><span class="sw4" data-s="${k}"><i></i><i></i><i></i><i></i></span><b>${esc(t('skin.' + k))}</b></button>`).join('')}</div>`;
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${skinPick}${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${skinPick}${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}${syncSection()}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('set.tut'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
   $$('[data-k]', body).forEach(c => c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; save(); sndIcon(); });
   $$('[data-skin]', body).forEach(b => b.onclick = () => { DB.set.skin = b.dataset.skin; save(); applySkin(); renderHome(); openSettings(); });
+  const si = $('#syIn'); if (si) si.onclick = () => { closeModal(); googleLogin(); };
+  const sn = $('#syNow'); if (sn) sn.onclick = () => syncNow();
+  const so = $('#syOut'); if (so) so.onclick = () => ask(t('sync.logout.q'), [[t('q.cancel'), 'red'], [t('sync.logout'), '', async () => { await pushNow(); await ON.logout(); toast(t('sync.out')); renderHome(); }]]);
   $('#setTut').onclick = () => { closeModal(); tutorial('basic'); };
   $('#setReset').onclick = () => ask(t('set.reset.q'), [[t('q.cancel'), 'red'], [t('set.reset'), '', () => { localStorage.removeItem(KEY); location.reload(); }]]);
 }
@@ -1133,11 +1142,75 @@ function maybeThemeTip(th, force) {
 }
 
 /* ---------------- login bonus ---------------- */
+const LB = [30, 40, 50, 70, 90, 120, 300];
 function loginBonus() {
   const d = today(); if (DB.login === d) return;
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  DB.lbs = DB.login === ymd(y) ? (DB.lbs || 0) + 1 : 1;
   DB.login = d; DB.stats.days++; save();
-  const n = DB.stats.days % 7 === 0 ? 150 : 30;
-  setTimeout(() => { addCoin(n); SND.coin(); toast(t('login', { n, d: DB.stats.days })); }, 900);
+  const show = () => { if (!$('#modal').hidden) return setTimeout(show, 700); openLoginBonus(); };
+  setTimeout(show, 700);
+}
+function openLoginBonus() {
+  const day = ((DB.lbs || 1) - 1) % 7, n = LB[day];
+  const cells = LB.map((c, i) => `<div class="lbc ${i < day ? 'got' : i === day ? 'now' : ''}"><small>${esc(t('lb.day', { n: i + 1 }))}</small>${i === 6 ? '<b class="lbbig">★</b>' : ''}<span>${A.ICON.coin}${c}</span>${i < day ? '<i class="lbst">✓</i>' : ''}</div>`).join('');
+  modal(`<div class="tut">${ttag('lb.title', t('lb.streak', { n: DB.lbs || 1 }))}<div class="lbgrid">${cells}</div><p class="lbmsg">${esc(t('lb.msg', { n }))}</p><div class="mbtns"><button class="btn big red" id="lbGet">${A.ICON.coin}${esc(t('lb.get', { n }))}</button></div></div>`, 'mtut mtip mlb');
+  $('#lbGet').onclick = () => { addCoin(n); SND.coin(); const c = $('.lbc.now'); if (c) { c.classList.add('got'); c.insertAdjacentHTML('beforeend', '<i class="lbst">✓</i>'); } $('#lbGet').disabled = true; setTimeout(() => { $('#modal').hidden = true; renderHome(); }, 700); };
+}
+
+/* ---------------- Google sign-in + cloud sync ---------------- */
+const GICON = '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
+const acct = () => { try { return ON && ON.available && !ON.mock && ON.account ? ON.account() : null; } catch (e) { return null; } };
+function googleBox() {
+  if (!ON || !ON.available || ON.mock) return '';
+  const a = acct();
+  return a ? `<div class="gacc">${GICON}<span><b>${esc(t('sync.on'))}</b><small>${esc(a.email || a.name)}</small></span></div>` : `<button class="btn gbtn" id="pfGoogle">${GICON}${esc(t('sync.google'))}</button>`;
+}
+let pushT = 0, syncing = false;
+window.__schedPush = () => { if (!acct() || syncing) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 4000); };
+async function pushNow() { clearTimeout(pushT); if (!acct()) return; try { await ON.push(JSON.stringify(DB)); } catch (e) {} }
+function mergeDB(L, C) {
+  const newer = (C.mt || 0) > (L.mt || 0), out = JSON.parse(JSON.stringify(newer ? C : L)), o = newer ? L : C;
+  const mx = (a, b) => Math.max(a || 0, b || 0);
+  out.st = out.st || {}; for (const k in (o.st || {})) out.st[k] = mx(out.st[k], o.st[k]);
+  out.dl = out.dl || {}; for (const d in (o.dl || {})) { const a = out.dl[d] || (out.dl[d] = {}), b = o.dl[d];
+    for (const k in b) { const x = a[k], y = b[k]; if (!x) { a[k] = y; continue; }
+      if ('left' in y) a[k] = { s: mx(x.s, y.s), left: x.left < 0 ? y.left : y.left < 0 ? x.left : Math.min(x.left, y.left), md: mx(x.md, y.md) };
+      else a[k] = { s: mx(x.s, y.s), a: mx(x.a, y.a) }; } }
+  out.act = out.act || {}; for (const k in (o.act || {})) if (k !== 'mis') out.act[k] = mx(out.act[k], o.act[k]);
+  out.act.mis = out.act.mis || {}; for (const k in ((o.act || {}).mis || {})) out.act.mis[k] = mx(out.act.mis[k], o.act.mis[k]);
+  out.own = out.own || {}; for (const k in (o.own || {})) out.own[k] = mx(out.own[k], o.own[k]);
+  out.free = out.free || {}; for (const k in (o.free || {})) out.free[k] = mx(out.free[k], o.free[k]);
+  out.mon = out.mon || {}; for (const k in (o.mon || {})) out.mon[k] = mx(out.mon[k], o.mon[k]);
+  out.stats = out.stats || {}; for (const k in (o.stats || {})) out.stats[k] = mx(out.stats[k], o.stats[k]);
+  out.ach = Object.assign({}, o.ach || {}, out.ach || {}); out.tut = Object.assign({}, o.tut || {}, out.tut || {});
+  out.bgOwn = [...new Set([...(out.bgOwn || []), ...(o.bgOwn || [])])];
+  out.life = mx(out.life, o.life); if (!out.name) out.name = o.name || '';
+  return out;
+}
+async function syncNow(quiet) {
+  if (!acct() || syncing) return; syncing = true;
+  try {
+    const c = await ON.pull();
+    if (c && c.d) { const merged = mergeDB(DB, JSON.parse(c.d)); const base = DEF(); for (const k in base) if (merged[k] === undefined) merged[k] = base[k]; DB = merged; try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} }
+    syncing = false; await pushNow();
+    if (!quiet) toast(t('sync.done')); applySkin(); if (!$('#home').hidden) renderHome();
+  } catch (e) { if (!quiet) toast(t('sync.err')); }
+  syncing = false;
+}
+function myRankPaths() {
+  const p = ['same/t', ...Object.keys(DB.mon).map(ym => 'same/m/' + ym)];
+  for (const d in DB.dl) for (const k of ['pe', 'p', 'ph', 'b', 'o', 'f', 'v']) p.push(`same/d/${d}/${k}`);
+  return p;
+}
+async function googleLogin() {
+  try { await ON.google(myRankPaths()); await syncNow(); pushScores(); renderHome(); }
+  catch (e) { if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) return; toast(t('sync.err')); }
+}
+function syncSection() {
+  if (!ON || !ON.available || ON.mock) return '';
+  const a = acct();
+  return `<div class="syncbox"><h3 class="mh3">${esc(t('sync.title'))}</h3><p class="note">${esc(a ? t('sync.on2', { e: a.email || a.name }) : t('sync.desc'))}</p>${a ? `<div class="mbtns"><button class="btn" id="syNow">${esc(t('sync.now'))}</button><button class="btn" id="syOut">${esc(t('sync.logout'))}</button></div>` : `<div class="mbtns"><button class="btn gbtn" id="syIn">${GICON}${esc(t('sync.google'))}</button></div>`}</div>`;
 }
 
 /* ---------------- boot ---------------- */
@@ -1171,7 +1244,7 @@ async function boot() {
   showScreen('home'); renderHome();
   if (!DB.tut.basic) { DB.tut.basic = 1; save(); setTimeout(() => tutorial('basic'), 400); }
   loginBonus();
-  if (ON && ON.available) ON.init().catch(() => {});
+  if (ON && ON.available) ON.init().then(() => { if (acct()) { syncNow(true); profCard(); } }).catch(() => {});
 }
 window.SameApp = { get DB() { return DB; }, get G() { return G; }, startStage, startDaily, startAction, MIS };
 boot();

@@ -72,6 +72,30 @@ window.SameOnline = {
   },
   async putScore(path, v) { await init(); await db.set(`${path}/${uid}`, { n: clean(v.n), i: v.i | 0, s: Math.round(v.s) }); },
   async top(path, n = 50) { await init(); return db.top(path, n); },
+  account() { if (MOCK) return null; try { const u = firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; } },
+  get mock() { return MOCK; },
+  // Google sign-in: upgrades the anonymous account when possible; when the Google account already exists,
+  // this player's anonymous ranking entries (paths) are removed and the existing account is used.
+  async google(paths) {
+    if (MOCK) throw new Error('mock');
+    await init();
+    const auth = firebase.auth(), prov = new firebase.auth.GoogleAuthProvider();
+    prov.setCustomParameters({ prompt: 'select_account' });
+    const u = auth.currentUser;
+    try { const r = u && u.isAnonymous ? await u.linkWithPopup(prov) : await auth.signInWithPopup(prov); uid = r.user.uid; return { uid, linked: true }; }
+    catch (e) {
+      if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+        const cred = e.credential || firebase.auth.GoogleAuthProvider.credentialFromError(e);
+        await Promise.all((paths || []).map(p => db.set(p + '/' + uid, null).catch(() => {})));
+        const r = await auth.signInWithCredential(cred); uid = r.user.uid; return { uid, linked: false };
+      }
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') { await (u && u.isAnonymous ? u.linkWithRedirect(prov) : auth.signInWithRedirect(prov)); }
+      throw e;
+    }
+  },
+  async logout() { if (MOCK) return; await firebase.auth().signOut(); ready = null; uid = null; await init(); },
+  async pull() { await init(); return db.get('same/sync/' + uid); },
+  async push(d) { await init(); return db.set('same/sync/' + uid, { d, t: Date.now() }); },
   async mine(path) { await init(); const me = await db.get(`${path}/${uid}`); if (!me) return null; return { me, rank: 1 + await db.better(path, me.s) }; },
 };
 })();
