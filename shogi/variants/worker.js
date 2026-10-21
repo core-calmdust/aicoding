@@ -1,7 +1,7 @@
 'use strict';
 // Worker for the shogi variants: {type: 'think' | 'analyze', variant: 'mini' | 'hasami', sfen, moves, opts, id}
 // → progress messages {type: 'progress', id, depth, score, list?} and the result {type: 'result', id, move, score, depth, pv, nodes, time, list?}
-importScripts('search.js?v=20261021va', 'mini.js?v=20261021va', 'hasami.js?v=20261021va');
+importScripts('search.js?v=20261021vb', 'mini.js?v=20261021vb', 'hasami.js?v=20261021vb');
 self.onmessage = e => {
   const m = e.data; if (!m || (m.type !== 'think' && m.type !== 'analyze')) return;
   try {

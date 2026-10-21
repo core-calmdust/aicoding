@@ -1220,10 +1220,10 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/ruletour.js?v=13"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
 <script src="online.js?v=20261020gt"></script>
-<script src="variants/search.js?v=20261021va"></script>
-<script src="variants/mini.js?v=20261021va"></script>
-<script src="variants/hasami.js?v=20261021va"></script>
-<script src="variants/variants.js?v=20261021va"></script>
+<script src="variants/search.js?v=20261021vb"></script>
+<script src="variants/mini.js?v=20261021vb"></script>
+<script src="variants/hasami.js?v=20261021vb"></script>
+<script src="variants/variants.js?v=20261021vb"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -1645,7 +1645,7 @@ function onSquare(s, fromDrag) {
 function onHand(col, tp) {
   ctx();
   if (edit) { editHand(col, tp, -1); return; }
-  if (!canInteract() || col !== P.side) return;
+  if (!canInteract() || col !== P.side || P.variant === 'hasami') return;   // はさみ将棋: the stands only count captures
   if (sel && sel.hand === tp) { clearSel(); return; }
   sel = { hand: tp }; renderSelOnly();
 }

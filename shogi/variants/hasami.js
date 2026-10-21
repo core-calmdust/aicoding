@@ -171,7 +171,7 @@ class HasamiPos {
   toUsi(m) { const f = m & 127, t = (m >> 7) & 127, sq = s => (9 - (s % 9)) + 'abcdefghi'[(s / 9) | 0]; return sq(f) + sq(t); }
   fromUsi(u) { const sq = (a, b) => 'abcdefghi'.indexOf(b) * 9 + (9 - +a); return sq(u[0], u[1]) | (sq(u[2], u[3]) << 7); }
 }
-HasamiPos.MOB = 0;
+HasamiPos.MOB = 2;   // mobility weight (self-play: 2 beat 0 by 9–1 and 4 by 6–2)
 HasamiPos.START = START; HasamiPos.WIN_DIFF = WIN_DIFF; HasamiPos.MAX_PLY = MAX_PLY;
 G.HasamiShogi = HasamiPos;
 })(typeof self !== 'undefined' ? self : this);
