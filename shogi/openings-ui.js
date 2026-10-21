@@ -100,7 +100,7 @@ function item(g, i) {
   const st = !prac ? (done ? { text: '✓ ' + tx('studied'), cls: 'ok' } : { text: BOOK + tx('studyOnly'), cls: 'so' })
     : pr ? (pr.pass ? { text: '✓ ' + t('ls.bestPts', { p: pr.best }), cls: 'ok' } : { text: t('ls.bestPts', { p: pr.best }) }) : { text: t('ls.new'), cls: 'new' };
   const sy = g.story || {}, cat = catOf(g);
-  const board = window.ShogiLX ? ShogiLX.board(finalSfen(g), { marks: sy.marks, crop: cat === 'castle' ? 'marks' : null, hands: cat === 'handi' ? false : false }) : '';
+  const board = window.ShogiLX ? ShogiLX.board(finalSfen(g), { marks: sy.marks, crop: ShogiLX.cropFor('open:' + g.id, g, cat === 'castle' ? 'castle' : 'diff'), from: cat === 'handi' ? null : g.study && g.study.start, both: cat === 'handi', side: g.side }) : '';
   const badge = g.kind ? `<span class="lx-side">${tx('k.' + g.kind)}</span>` : g.side ? `<span class="lx-side">${g.side === 'w' ? '☖' : '☗'} ${tx(g.side === 'w' ? 'gote' : 'sente')}</span>` : '';
   // light card: label · side · state / name / aim (one line) / the opening moves — the full story is on the choice dialog
   const ln = lineOf(g);

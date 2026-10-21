@@ -15,44 +15,117 @@ function parse(sfen) {
   return out;
 }
 const hand0 = sfen => { const h = String(sfen || '').split(' ')[2] || '-'; const o = [[], []]; if (h === '-') return o; let n = 0; for (const ch of h) { if (/\d/.test(ch)) { n = n * 10 + +ch; continue; } const lc = ch.toLowerCase(); o[ch === lc ? 1 : 0].push([KJ[lc], n || 1]); n = 0; } return o; };
-// mini board SVG. o: {marks:["27",...], last:"27", crop:{f0,f1,r0,r1} | 'auto' | 'king', hands:true}
+// ---- crop: which part of the board a mini board shows (a 9x9 board shrunk to ~96px squashes the pieces)
+// squares are "fr" strings (file 1-9, rank 1-9) like the story marks ("28" = 2八)
+const sqOf = p => '' + p.f + p.r;
+const usiSq = s => /^[1-9][a-i]$/.test(s || '') ? s[0] + (s.charCodeAt(1) - 96) : null;
+const moveSqs = u => { u = String(u || ''); return (u[1] === '*' ? [usiSq(u.slice(2, 4))] : [usiSq(u.slice(0, 2)), usiSq(u.slice(2, 4))]).filter(Boolean); };
+const dist = (a, b) => Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
+const kingOf = (P, w) => { const k = P.find(p => p.t === 'k' && p.w === w); return k ? sqOf(k) : null; };
+const near = (s, d) => { const o = []; for (let i = -d; i <= d; i++) for (let j = -d; j <= d; j++) { const f = +s[0] + i, r = +s[1] + j; if (f >= 1 && f <= 9 && r >= 1 && r <= 9) o.push('' + f + r); } return o; };
+// bounding box of the squares → at least 4x4, snapped to an edge one square away, square or one square longer
+function shape(S) {
+  if (!S.length) return [1, 9, 1, 9];
+  const fs = S.map(s => +s[0]), rs = S.map(s => +s[1]);
+  let f0 = Math.min(...fs), f1 = Math.max(...fs), r0 = Math.min(...rs), r1 = Math.max(...rs);
+  const grow = (a, b, n) => { while (b - a + 1 < n) { if (b < 9 && (a <= 1 || 9 - b <= a - 1)) b++; else a--; } return [a, b]; };
+  const snap = () => { if (f0 === 2) f0 = 1; if (f1 === 8) f1 = 9; if (r0 === 2) r0 = 1; if (r1 === 8) r1 = 9; };
+  [f0, f1] = grow(f0, f1, 4); [r0, r1] = grow(r0, r1, 4); snap();
+  const W = f1 - f0 + 1, H = r1 - r0 + 1;
+  if (W < H - 1) [f0, f1] = grow(f0, f1, H - 1); else if (H < W - 1) [r0, r1] = grow(r0, r1, W - 1);
+  snap();
+  return [f0, f1, r0, r1];
+}
+// o.crop: [c0, r0, c1, r1] (files / ranks, any order) | 'tsume' ('auto') | 'castle' ('marks') | 'diff' (o.from = start SFEN) | 'lesson' (o.move = USI moves) | falsy = whole board
+// o.side: 'b' | 'w' — whose castle / opening; o.mate: lesson problem is a mate (the defender's king is the focus)
+function cropOf(P, sfen, o) {
+  const c = o.crop;
+  if (Array.isArray(c) && c.length === 4) { const [a, b, x, y] = c.map(Number); return [Math.max(1, Math.min(a, x)), Math.min(9, Math.max(a, x)), Math.max(1, Math.min(b, y)), Math.min(9, Math.max(b, y))]; }
+  if (!c || !P.length) return [1, 9, 1, 9];
+  const gote = (sfen.split(' ')[1] || 'b') === 'w', S = [], add = a => a && S.push(...a);
+  if (c === 'tsume' || c === 'auto') {   // the defender's king and every attacking piece on the board, 1 square around
+    const k = kingOf(P, !gote); if (k) add(near(k, 1));
+    let A = P.filter(p => p.w === gote);
+    // a position from a real game (many attackers): only the attackers near the king (never the solution squares — that would hint at the answer)
+    if (k && A.length > 10) A = A.filter(p => p.t !== 'k' && dist(sqOf(p), k) <= 3);
+    A.forEach(p => add(near(sqOf(p), 1)));
+  } else if (c === 'castle' || c === 'marks') {   // the king, the golds and silvers next to it, the castle squares
+    const w = o.side === 'w', k = kingOf(P, w);
+    if (k) { add(near(k, 1)); P.filter(p => p.w === w && /^\+?[gs]$|^\+[pln]$/.test(p.t) && dist(sqOf(p), k) <= 2).forEach(p => S.push(sqOf(p))); }
+    add((o.marks || []).map(String));
+  } else if (c === 'diff') {   // squares that changed from the start position, the castle squares and the side's king
+    const A = new Map(parse(o.from || 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1').map(p => [sqOf(p), p.t + p.w])), B = new Map(P.map(p => [sqOf(p), p.t + p.w]));
+    // only the side's own pieces other than pawns (the opponent's moves and the pawn pushes on both wings would cover the whole board);
+    // with o.both (handicap) both sides, so the missing pieces count too
+    const w = o.side === 'w' ? 'true' : 'false', own = v => !!v && !/^p/.test(v) && (o.both || v.endsWith(w));
+    for (const k of new Set([...A.keys(), ...B.keys()])) if (A.get(k) !== B.get(k) && (own(A.get(k)) || own(B.get(k)))) S.push(k);
+    add((o.marks || []).map(String));
+    const k = kingOf(P, o.side === 'w'); if (k) add(near(k, 1));
+  } else if (c === 'lesson') {   // the answer's squares and the king it is about
+    const mv = [].concat(o.move || []).flatMap(moveSqs); if (!mv.length) return [1, 9, 1, 9];
+    const to = moveSqs([].concat(o.move)[0]).slice(-1)[0];
+    add(mv); add(near(to, 1));
+    const ks = [kingOf(P, !gote), kingOf(P, gote)].filter(Boolean), k = o.mate ? ks[0] : ks.sort((a, b) => dist(a, to) - dist(b, to))[0];
+    if (k && (o.mate || dist(k, to) <= 3)) add(near(k, 1));
+    add((o.marks || []).map(String));
+  } else return [1, 9, 1, 9];
+  return shape(S);
+}
+// hand-tuned crops where the automatic one is not right: 'lesson:<grade id>' | 'open:<set id>' | 'tsume:<problem id>' → [c0, r0, c1, r1]
+// (a data entry can also carry its own crop: lesson grade / problem .crop, opening set .crop, tsume problem .crop)
+const CROP = {};
+const cropFor = (key, data, dflt) => CROP[key] || (data && Array.isArray(data.crop) ? data.crop : null) || dflt;
+let UID = 0;
+// mini board SVG in a square 100x100 frame (the part shown is centred).
+// o: {crop (see cropOf), marks:["27",...], last:"27", flip, hands: true | 'b' (only the attacker's: tsume)}
+// A side on the board's real edge gets a thick rim; a cut side fades out so the board visibly goes on.
 function board(sfen, o) {
   o = o || {};
-  const P = parse(sfen);
-  let f0 = 1, f1 = 9, r0 = 1, r1 = 9;
-  const fit = (fs, rs, w, h) => {   // bounding box of the given files/ranks, grown to at least w x h, clamped to the board
-    let a = Math.min(...fs), b = Math.max(...fs), c = Math.min(...rs), d = Math.max(...rs);
-    while (b - a + 1 < w) { if (a > 1 && (b >= 9 || (b - a) % 2)) a--; else b++; }
-    while (d - c + 1 < h) { if (c > 1 && (d >= 9 || (d - c) % 2)) c--; else d++; }
-    return [Math.max(1, a), Math.min(9, b), Math.max(1, c), Math.min(9, d)];
-  };
-  if (o.crop === 'auto' && P.length) [f0, f1, r0, r1] = fit(P.map(p => p.f), P.map(p => p.r), 5, 5);
-  else if (o.crop === 'marks' && o.marks && o.marks.length) {
-    const fs = o.marks.map(m => +m[0]), rs = o.marks.map(m => +m[1]);
-    [f0, f1, r0, r1] = fit(fs.concat([Math.min(9, Math.max(...fs) + 1), Math.max(1, Math.min(...fs) - 1)]), rs.concat([Math.min(9, Math.max(...rs) + 1)]), 5, 4);
-  }
-  const W = f1 - f0 + 1, H = r1 - r0 + 1, C = 10, pad = 1.2, hw = o.hands ? 7 : 0, hb = o.hands === 'b';   // hands:'b' = only the attacker's (tsume: the defender holds the rest)
-  const vw = W * C + pad * 2, vh = H * C + pad * 2 + hw * (hb ? 1 : 2);
-  const top = hb ? 0 : hw, fl = !!o.flip, X = f => pad + (fl ? f - f0 : f1 - f) * C, Y = r => pad + top + (fl ? r1 - r : r - r0) * C;
-  const mk = new Set((o.marks || []).map(String));
-  let s = `<svg class="sh-mini" viewBox="0 0 ${vw.toFixed(1)} ${vh.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
-  s += `<rect x="0" y="${top}" width="${vw.toFixed(1)}" height="${(H * C + pad * 2).toFixed(1)}" rx="1.6" fill="#d9b46a"/>`;
-  for (const m of mk) { const f = +m[0], r = +m[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#d4542a" fill-opacity=".85"/>`; }
-  if (o.last) { const f = +o.last[0], r = +o.last[1]; if (f >= f0 && f <= f1 && r >= r0 && r <= r1) s += `<rect x="${X(f)}" y="${Y(r)}" width="${C}" height="${C}" fill="#f2d27a" fill-opacity=".8"/>`; }
+  sfen = String(sfen || '');
+  const P = parse(sfen), [f0, f1, r0, r1] = cropOf(P, sfen, o);
+  const W = f1 - f0 + 1, H = r1 - r0 + 1, fl = !!o.flip, id = 'shm' + (++UID);
+  const eL = fl ? f0 === 1 : f1 === 9, eR = fl ? f1 === 9 : f0 === 1, eT = fl ? r1 === 9 : r0 === 1, eB = fl ? r0 === 1 : r1 === 9;
+  const RIM = .16, FADE = .6, xL = eL ? RIM : FADE, xR = eR ? RIM : FADE, yT = eT ? RIM : FADE, yB = eB ? RIM : FADE;
+  const hd = o.hands ? hand0(sfen) : [[], []], txt = c => hd[c].map(([k, n]) => k + (n > 1 ? n : '')).join('');
+  const tTop = o.hands && o.hands !== 'b' ? txt(fl ? 0 : 1) : '', tBot = o.hands ? txt(fl ? 1 : 0) : '', HR = .82;
+  const C = Math.min(100 / (W + xL + xR), 100 / (H + yT + yB + ((tTop ? 1 : 0) + (tBot ? 1 : 0)) * HR));
+  const bw = (W + xL + xR) * C, bh = (H + yT + yB) * C, th = bh + ((tTop ? 1 : 0) + (tBot ? 1 : 0)) * HR * C;
+  const ox = (100 - bw) / 2, oy = (100 - th) / 2 + (tTop ? HR * C : 0), gx = ox + xL * C, gy = oy + yT * C;
+  const n = v => +v.toFixed(2), X = f => gx + (fl ? f - f0 : f1 - f) * C, Y = r => gy + (fl ? r1 - r : r - r0) * C;
+  const mk = new Set((o.marks || []).map(String)), inC = (f, r) => f >= f0 && f <= f1 && r >= r0 && r <= r1;
+  const stops = (a, b, len, s0, s1) => `<stop offset="0" stop-color="#fff" stop-opacity="${s0 ? 1 : 0}"/><stop offset="${n(a / len)}" stop-color="#fff"/><stop offset="${n(1 - b / len)}" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="${s1 ? 1 : 0}"/>`;
+  let s = `<svg class="sh-mini" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>` +
+    `<linearGradient id="${id}h" gradientUnits="userSpaceOnUse" x1="${n(ox)}" y1="0" x2="${n(ox + bw)}" y2="0">${stops(xL * C * .9, xR * C * .9, bw, eL, eR)}</linearGradient>` +
+    `<linearGradient id="${id}v" gradientUnits="userSpaceOnUse" x1="0" y1="${n(oy)}" x2="0" y2="${n(oy + bh)}">${stops(yT * C * .9, yB * C * .9, bh, eT, eB)}</linearGradient>` +
+    `<mask id="${id}H"><rect x="0" y="0" width="100" height="100" fill="url(#${id}h)"/></mask><mask id="${id}V"><rect x="0" y="0" width="100" height="100" fill="url(#${id}v)"/></mask></defs>`;
+  s += `<g mask="url(#${id}V)"><g mask="url(#${id}H)"><rect x="${n(ox)}" y="${n(oy)}" width="${n(bw)}" height="${n(bh)}" rx="${eL && eR && eT && eB ? n(C * .18) : 0}" fill="#d9b46a"/>`;
+  for (const m of mk) { const f = +m[0], r = +m[1]; if (inC(f, r)) s += `<rect x="${n(X(f))}" y="${n(Y(r))}" width="${n(C)}" height="${n(C)}" fill="#d4542a" fill-opacity=".85"/>`; }
+  if (o.last) { const f = +o.last[0], r = +o.last[1]; if (inC(f, r)) s += `<rect x="${n(X(f))}" y="${n(Y(r))}" width="${n(C)}" height="${n(C)}" fill="#f2d27a" fill-opacity=".8"/>`; }
+  // grid: lines run on into the fade on a cut side and stop at the rim on a real edge
+  const ya = eT ? gy : oy, yb = eB ? gy + H * C : oy + bh, xa = eL ? gx : ox, xb = eR ? gx + W * C : ox + bw;
   let ln = '';
-  for (let i = 0; i <= W; i++) ln += `M${(pad + i * C).toFixed(1)} ${pad + top}V${(pad + top + H * C).toFixed(1)}`;
-  for (let j = 0; j <= H; j++) ln += `M${pad} ${(pad + top + j * C).toFixed(1)}H${(pad + W * C).toFixed(1)}`;
-  s += `<path d="${ln}" stroke="#6b4a1c" stroke-width=".45" fill="none"/>`;
+  for (let i = eL ? 1 : 0; i <= (eR ? W - 1 : W); i++) ln += `M${n(gx + i * C)} ${n(ya)}V${n(yb)}`;
+  for (let j = eT ? 1 : 0; j <= (eB ? H - 1 : H); j++) ln += `M${n(xa)} ${n(gy + j * C)}H${n(xb)}`;
+  s += `<path d="${ln}" stroke="#6b4a1c" stroke-width="${n(Math.max(.5, C * .045))}" fill="none"/>`;
+  // the board's real edges: a thick frame line
+  let ed = '';
+  if (eL) ed += `M${n(gx)} ${n(ya)}V${n(yb)}`; if (eR) ed += `M${n(gx + W * C)} ${n(ya)}V${n(yb)}`;
+  if (eT) ed += `M${n(xa)} ${n(gy)}H${n(xb)}`; if (eB) ed += `M${n(xa)} ${n(gy + H * C)}H${n(xb)}`;
+  if (ed) s += `<path d="${ed}" stroke="#5a3a12" stroke-width="${n(Math.max(1.1, C * .13))}" stroke-linecap="square" fill="none"/>`;
   for (const p of P) {
-    if (p.f < f0 || p.f > f1 || p.r < r0 || p.r > r1) continue;
+    if (!inC(p.f, p.r)) continue;
     const cx = X(p.f) + C / 2, cy = Y(p.r) + C / 2, pr = p.t[0] === '+';
     const g = `<path d="M0 -4.6L3.3 -3.1L4 4.4H-4L-3.3 -3.1Z" fill="#f6e3b4" stroke="#7a5524" stroke-width=".35"/><text y="2.55" font-size="6.4" text-anchor="middle" font-family="'Shippori Mincho B1','Noto Serif JP',serif" font-weight="700" fill="${pr ? '#b3261e' : '#2a1a0a'}">${p.t === 'k' && p.w ? '王' : KJ[p.t]}</text>`;
-    s += `<g transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})${p.w !== fl ? ' rotate(180)' : ''}${mk.size ? ' scale(.86)' : ''}">${g}</g>`;
+    s += `<g transform="translate(${n(cx)} ${n(cy)})${p.w !== fl ? ' rotate(180)' : ''} scale(${n(C / 10 * (mk.size ? .86 : 1))})">${g}</g>`;
   }
-  if (o.hands) {
-    const hd = hand0(sfen), row = (c, y, anchorEnd) => { const txt = hd[c].map(([k, n]) => k + (n > 1 ? n : '')).join(''); return txt ? `<text x="${anchorEnd ? vw - 1 : 1}" y="${y}" font-size="5.6" text-anchor="${anchorEnd ? 'end' : 'start'}" font-family="'Shippori Mincho B1',serif" font-weight="700" fill="#e9d9b5">${c ? '☖' : '☗'}${txt}</text>` : ''; };
-    s += (hb ? '' : row(fl ? 0 : 1, 5.4, false)) + row(fl ? 1 : 0, vh - 1.4, !hb);
-  }
+  s += '</g></g>';
+  // pieces in hand: one line above (the side at the top) / below (the side at the bottom), as large as the cells allow
+  const hrow = (c, t, y, end) => {
+    if (!t) return '';
+    const w = [...t].reduce((a, ch) => a + (/\d/.test(ch) ? .62 : 1), 1.05), fs = Math.min(C * .66, 10.5, bw / w);
+    return `<text x="${n(end ? ox + bw : ox)}" y="${n(y)}" font-size="${n(fs)}" text-anchor="${end ? 'end' : 'start'}" font-family="'Shippori Mincho B1',serif" font-weight="700" fill="#e9d9b5">${c ? '☖' : '☗'}${t}</text>`;
+  };
+  s += hrow(fl ? 0 : 1, tTop, oy - HR * C * .26, false) + hrow(fl ? 1 : 0, tBot, oy + bh + HR * C * .8, true);
   return s + '</svg>';
 }
 const plain = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -89,7 +162,7 @@ function render(kind, cats, opt) {
 function tsThumbs(grid, probs) {
   style();
   if (!grid) return;
-  grid.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = probs[+el.dataset.j]; if (!P || !P.sfen || el.querySelector('.th')) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${board(P.sfen, { crop: 'auto' })}</span>`); el.classList.add('hasth'); });
+  grid.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = probs[+el.dataset.j]; if (!P || !P.sfen || el.querySelector('.th')) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${board(P.sfen, { crop: cropFor('tsume:' + P.id, P, 'tsume'), move: P.sol })}</span>`); el.classList.add('hasth'); });
 }
 const CSS = `
 #lessonList.lx-on{display:block}
@@ -117,7 +190,7 @@ const CSS = `
 #lessonOverlay #lessonList .lx-card:hover{transform:translateY(-1px);border-color:var(--brass2)}
 #lessonOverlay #lessonList .lx-card.done{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
 #lessonOverlay #lessonList .lx-card.wide{grid-column:1/-1;border-color:rgba(201,169,97,.5)}
-.lx-th{flex:none;width:92px;align-self:center;display:grid;place-items:center}.lx-th > svg{display:block;width:100%;height:auto;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.lx-th{flex:none;width:92px;align-self:center;display:grid;place-items:center}.lx-th > svg{display:block;width:100%;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
 .lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .lx-top{display:flex;align-items:center;gap:8px;min-width:0}
 .lx-no{font-family:'Shippori Mincho B1',serif;font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--brass);white-space:nowrap}
@@ -155,7 +228,7 @@ html[lang=ar] .lx-tabs .ct, html[lang=ar] .lx-banner .pg small{direction:ltr;uni
 }
 #tsGrid .pb-tile.hasth{aspect-ratio:1;padding:0;overflow:hidden;justify-content:flex-end;gap:0}
 #tsGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.9}
-#tsGrid .pb-tile .th > svg{max-width:100%;max-height:100%;border-radius:3px}
+#tsGrid .pb-tile .th > svg{width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
 #tsGrid .pb-tile.hasth .n{position:absolute;top:3px;left:4px;z-index:1;font-size:10.5px;padding:0 4px;border-radius:5px;background:rgba(10,12,18,.82);color:#fff;line-height:1.45}
 #tsGrid .pb-tile.hasth .s, #tsGrid .pb-tile.hasth .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
 #tsGrid .pb-tile.done .th{opacity:1}
@@ -195,11 +268,11 @@ function lessons(h) {
     const pr = h.prog(g.id), p0 = (g.problems || [])[0];
     const st = pr && pr.pass ? { text: '✓ ' + h.t('ls.clear'), cls: 'ok' } : pr ? { text: h.t('ls.bestPts', { p: pr.best }) } : { text: h.t('ls.new'), cls: 'new' };
     const intro = g.intro ? (g.intro[h.lang()] || g.intro.en || g.intro.ja || []) : [];
-    c.items.push({ done: !!(pr && pr.pass), html: card({ attr: `data-i="${i}"`, board: p0 ? board(p0.sfen, { flip: p0.sfen.split(' ')[1] === 'w', hands: (p0.sfen.split(' ')[2] || '-') !== '-' }) : '', no: `<bdi>${h.L(g.grade)}</bdi>`, st, title: h.L(g.title), sub: h.L(g.short), desc: plain(intro.join(' ')), p: pr ? pr.best / 100 : 0, done: !!(pr && pr.pass) }) });
+    c.items.push({ done: !!(pr && pr.pass), html: card({ attr: `data-i="${i}"`, board: p0 ? board(p0.sfen, { flip: p0.sfen.split(' ')[1] === 'w', hands: (p0.sfen.split(' ')[2] || '-') !== '-', crop: cropFor('lesson:' + g.id, g.crop ? g : p0, 'lesson'), move: (p0.sol || p0.pv || []).slice(0, 1), mate: p0.kind === 'tsume' }) : '', no: `<bdi>${h.L(g.grade)}</bdi>`, st, title: h.L(g.title), sub: h.L(g.short), desc: plain(intro.join(' ')), p: pr ? pr.best / 100 : 0, done: !!(pr && pr.pass) }) });
   };
   h.grades.forEach((g, i) => { const c = cats.find(x => x.ids.includes(g.id)) || cats[cats.length - 2]; add(c, g, i); });
   (h.rules || []).forEach((g, j) => add(cats[cats.length - 1], g, -j - 1));
   return render('lesson', cats.filter(c => c.items.length), { top: h.top || '', foot: h.foot || '', prog: (n, m) => T('prog').replace('{n}', n).replace('{m}', m) });
 }
-window.ShogiLX = { lessons, board, card, render, plain, bar, icon, tab, tsThumbs, style, parse };
+window.ShogiLX = { lessons, board, cropFor, cropOf: (sfen, o) => cropOf(parse(sfen), String(sfen || ""), o || {}), CROP, card, render, plain, bar, icon, tab, tsThumbs, style, parse };
 })();

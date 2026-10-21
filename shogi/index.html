@@ -1223,8 +1223,8 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
-<script src="lists-ui.js?v=20261022lx"></script>
-<script src="openings-ui.js?v=20261022lx"></script>
+<script src="lists-ui.js?v=20261022cs"></script>
+<script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -2985,7 +2985,7 @@ const tsBadge = g => `<b class="gl">${tsNo(g)}</b>`;
 const tsTier = (g, i) => TS_TIER[g.id] !== undefined ? TS_TIER[g.id] : Math.min(5, i);
 // the position shown on a card: the next problem to play there (the last one once all are cleared)
 const tsShow = g => { const r = tsRecs(g), j = PZBook.nextIndex(r); return g.problems[j >= 0 ? j : r.length - 1]; };
-const tsThumb = P => P && P.sfen ? ShogiLX.board(P.sfen, { crop: 'auto', hands: 'b' }) : '';
+const tsThumb = P => P && P.sfen ? ShogiLX.board(P.sfen, { crop: ShogiLX.cropFor('tsume:' + P.id, P, 'tsume'), move: P.sol, hands: 'b' }) : '';
 function openTsumeList() {
   segSel('segLs', 'tsume');
   $('#lsListTitle').textContent = t('ts.title'); $('#lsListDesc').textContent = t('ts.desc');
