@@ -82,6 +82,12 @@ function makeTex(kind) {
       const v = f(x / N, y / N), c = Math.abs(v - .5), e = g2(x / N, y / N), i = (y * N + x) * 4;
       if (c < .04) put(i, 0, 0, 0, (1 - c / .04) * 130); else put(i, 255, 255, 255, Math.max(0, e - .7) * 90);
     }
+  } else if (kind === 'grain') {   // saddle leather: fine dense grain with tiny pores and a soft sheen
+    const f = fbm(40, 40, 2, 131), p = vnoise(110, 110, 137), sh = fbm(3, 3, 3, 139);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const v = f(x / N, y / N), c = Math.abs(v - .5), q = p(x / N, y / N), i = (y * N + x) * 4;
+      if (c < .03) put(i, 40, 18, 4, (1 - c / .03) * 110); else if (q < .2) put(i, 40, 18, 4, (.2 - q) * 420); else put(i, 255, 235, 200, Math.max(0, sh(x / N, y / N) - .45) * 120);
+    }
   } else if (kind === 'fine') {   // fine sand / felt speckle
     const f = vnoise(96, 96, 41);
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
@@ -184,6 +190,13 @@ const SKINS = {
     inlay: ['#d9c08a', '#9a7b44', '#cdb07a'], hinge: 'plate', studs: true, lbl: 'rgba(52,56,66,.82)', pip: 'rgba(20,24,32,.92)', lblsh: 'rgba(255,255,255,.55)',
     cube: ['#ffffff', '#e9e5dc', '#b9b2a4', '#222630'], ck: 'marble', ckol: 'rgba(0,0,0,.25)', hl: ['rgba(255,214,120,.98)', 'rgba(255,190,60,.75)'],
     mini: { frame: '#ddd8ce', felt: '#2d405a', a: '#f1ede4', b: '#171b22', tray: '#33465f', line: '#9a7b44' } },
+  camel: { frame: { t: 'grain', c: ['#9a5a28', '#7a4119', '#94552a'], tex: .75 }, field: { t: 'grain', c: ['#d6a46c', '#c48d55', '#a8703c'], tex: .45 },
+    ptA: ['#4e2a14', '#33190a'], ptB: ['#f5ead2', '#dfcfae'], pt: { tex: 'grain', texO: .3, line: 'rgba(255,240,205,.5)' },
+    bar: ['#4a2610', '#6b3a18', '#4a2610'], barTex: 'grain', tray: ['#2e1b10', '#3d2516', '#2e1b10'], trayTex: 'fine', trayFelt: true,
+    stitch: 'rgba(255,238,200,.72)', inlay: null, hinge: 'piano', studs: true, rivets: true, corners: true, gold: ['#f7dc95', '#c9963f', '#85601f'],
+    lbl: 'rgba(255,238,205,.9)', pip: 'rgba(255,248,232,.97)',
+    cube: ['#f6ead2', '#dccaa4', '#a8906a', '#3a1d0a'], ck: 'std', ckol: 'rgba(45,20,4,.5)', hl: ['rgba(255,252,240,.98)', 'rgba(255,236,190,.85)'],
+    mini: { frame: '#7a4520', felt: '#c48d55', a: '#f1e6cc', b: '#4a2814', tray: '#3b2416', line: '#d9b25e' } },
 };
 // old ids (earlier releases) -> nearest current skin
 const ALIAS = { tournament: 'emerald', luxe: 'scarlet', modern: 'midnight' };
@@ -209,8 +222,8 @@ function boardMarkup(id, g, P) {
     <linearGradient id="${P}gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".35" stop-color="#fff" stop-opacity=".02"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset=".62" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <linearGradient id="${P}in" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".06" stop-color="#000" stop-opacity="0"/><stop offset=".94" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>`;
   const ft = K.frame.t, frameTex = ft === 'wood' ? 'wood' : ft;
-  d += pat('t' + frameTex, frameTex, ft === 'marble' ? 520 : ft === 'leather' ? 150 : 420);
-  for (const k of ['leather', 'fine', 'woodV', 'marble', 'leaf', 'enamel', 'flecks', 'burl']) if (k !== frameTex) d += pat('t' + k, k, k === 'leather' ? 150 : k === 'fine' ? 140 : k === 'leaf' ? 230 : k === 'flecks' ? 200 : k === 'burl' ? 260 : 420);
+  d += pat('t' + frameTex, frameTex, ft === 'marble' ? 520 : ft === 'leather' ? 150 : ft === 'grain' ? 180 : 420);
+  for (const k of ['leather', 'fine', 'woodV', 'marble', 'leaf', 'enamel', 'flecks', 'burl', 'grain']) if (k !== frameTex) d += pat('t' + k, k, k === 'leather' ? 150 : k === 'fine' ? 140 : k === 'leaf' ? 230 : k === 'flecks' ? 200 : k === 'burl' ? 260 : k === 'grain' ? 180 : 420);
   let s = '';
   // ---- frame
   s += `<rect width="${w}" height="${h}" rx="28" fill="url(#${P}fr)"/>` + texRect('t' + frameTex, 0, 0, w, h, K.frame.tex, 28);
@@ -228,7 +241,7 @@ function boardMarkup(id, g, P) {
   const fieldBase = (x0) => {
     const X = x0 * S, W6 = 6 * S;
     let r = `<rect x="${X}" y="${fy0}" width="${W6}" height="${fh}" fill="url(#${P}fd)"/>`;
-    const ftx = K.field.t === 'felt' ? 'fine' : K.field.t === 'leather' ? 'leather' : K.field.t === 'rings' ? 'burl' : null;
+    const ftx = K.field.t === 'felt' ? 'fine' : K.field.t === 'leather' ? 'leather' : K.field.t === 'grain' ? 'grain' : K.field.t === 'rings' ? 'burl' : null;
     if (ftx && K.field.tex && K.field.t !== 'rings') r += texRect('t' + ftx, X, fy0, W6, fh, K.field.tex);
     return r;
   };
@@ -309,6 +322,11 @@ function boardMarkup(id, g, P) {
   if (K.inlay && K.band) s += `<rect x="${g.LX * S - 4}" y="${fy0 - 4}" width="${(g.RE - g.LX) * S + 8}" height="${fh + 8}" fill="none" stroke="url(#${P}au)" stroke-width="2.4"/><rect x="${tx0 - 4}" y="${fy0 - 4}" width="${tw + 8}" height="${fh + 8}" rx="12" fill="none" stroke="url(#${P}au)" stroke-width="2.4"/>`;
   const stud = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${P}au)" stroke="rgba(0,0,0,.45)" stroke-width="2"/><circle cx="${cx - r * .3}" cy="${cy - r * .35}" r="${r * .35}" fill="#fff" opacity=".45"/>`;
   if ((K.inlay && !K.band) || K.studs) for (const [cx, cy] of [[24, 24], [w - 24, 24], [24, h - 24], [w - 24, h - 24]]) s += stud(cx, cy, 9);
+  // brass rivets along the frame (saddle)
+  if (K.rivets) {
+    const riv = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="4.6" fill="url(#${P}au)" stroke="rgba(40,20,4,.55)" stroke-width="1.2"/><circle cx="${cx - 1.4}" cy="${cy - 1.6}" r="1.5" fill="#fff" opacity=".55"/>`;
+    for (let y = 120; y < h - 110; y += 118) s += riv(22, y) + riv(w - 22, y);
+  }
   // gold corner protectors
   if (K.corners) for (const [sx, sy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
     const ox = sx ? w : 0, oy = sy ? h : 0, fx = sx ? -1 : 1, fyy = sy ? -1 : 1, L = 74, Tk = 15;
