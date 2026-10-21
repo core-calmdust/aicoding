@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
   <defs>
-    <linearGradient id="samegame-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
-    <radialGradient id="samegame-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#8b5cff" stop-opacity=".30"/><stop offset=".6" stop-color="#8b5cff" stop-opacity=".04"/><stop offset="1" stop-color="#8b5cff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sgp-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="sgp-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#FFD400" stop-opacity=".34"/><stop offset=".6" stop-color="#E4202A" stop-opacity=".06"/><stop offset="1" stop-color="#E4202A" stop-opacity="0"/></radialGradient>
+    <pattern id="sgp-dot" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".9" fill="#fff" fill-opacity=".45"/></pattern>
   </defs>
-  <rect width="96" height="96" rx="22" fill="url(#samegame-bg)"/>
-  <rect width="96" height="96" rx="22" fill="url(#samegame-tint)"/>
+  <rect width="96" height="96" rx="22" fill="url(#sgp-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#sgp-tint)"/>
   <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
-  <g><rect x="20" y="20" width="16" height="16" rx="4" fill="#ff3fa4"/><rect x="22" y="22" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="40" y="20" width="16" height="16" rx="4" fill="#ff3fa4"/><rect x="42" y="22" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="60" y="20" width="16" height="16" rx="4" fill="#30e6ff"/><rect x="62" y="22" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="20" y="40" width="16" height="16" rx="4" fill="#8b5cff"/><rect x="22" y="42" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="40" y="40" width="16" height="16" rx="4" fill="#f2cf7a"/><rect x="42" y="42" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="60" y="40" width="16" height="16" rx="4" fill="#30e6ff"/><rect x="62" y="42" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="20" y="60" width="16" height="16" rx="4" fill="#8b5cff"/><rect x="22" y="62" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="40" y="60" width="16" height="16" rx="4" fill="#8b5cff"/><rect x="42" y="62" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/><rect x="60" y="60" width="16" height="16" rx="4" fill="#ff3fa4"/><rect x="62" y="62" width="12" height="4" rx="2" fill="#fff" fill-opacity=".28"/></g>
+  <g stroke="#000" stroke-width="2.6" stroke-linejoin="round">
+    <rect x="16" y="58" width="20" height="20" fill="#1B4FCB"/><rect x="36" y="58" width="20" height="20" fill="#E4202A"/><rect x="56" y="58" width="20" height="20" fill="#E4202A"/>
+    <rect x="16" y="38" width="20" height="20" fill="#FFD400"/><rect x="56" y="38" width="20" height="20" fill="#E4202A"/>
+  </g>
+  <g fill="url(#sgp-dot)"><rect x="17" y="59" width="18" height="18"/><rect x="37" y="59" width="18" height="18"/><rect x="57" y="59" width="18" height="18"/><rect x="17" y="39" width="18" height="18"/><rect x="57" y="39" width="18" height="18"/></g>
+  <path d="M50 10l5 9 9-6-1 10 11 0-8 7 9 6-11 2 4 10-10-5-4 10-4-10-10 5 3-10-11-2 9-6-8-7 11 0-1-10 9 6z" fill="#FFD400" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/>
+  <text x="50" y="35.5" text-anchor="middle" font-family="Bangers,Impact,'Arial Black',sans-serif" font-size="13" fill="#E4202A" stroke="#000" stroke-width=".8" transform="rotate(-8 50 32)">POP!</text>
 </svg>

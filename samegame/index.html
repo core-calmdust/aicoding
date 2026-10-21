@@ -1,45 +1,92 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>さめが〜め</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- canvas-confetti ライブラリを読み込み -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFD400">
+<title>さめが〜め POP!</title>
+<meta name="description" content="同じ色のブロックをまとめて消すさめがめを、ポップアートの世界で。日替わりのデイリーパズルとランキング、全消しを目指す400ステージ（いわ・こおり・ボム・にじ・ペンキ）、60秒BLITZやせりあがりのアクションモード、キャラのガチャも。">
+<meta property="og:title" content="さめが〜め POP!">
+<meta property="og:description" content="ポップアートのさめがめ。デイリーパズル、400ステージ、アクションモード、ランキング。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://core-calmdust.github.io/aicoding/samegame/">
+<meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/samegame.webp">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FFD400'/%3E%3Crect x='6' y='30' width='26' height='26' fill='%23E4202A' stroke='%23000' stroke-width='4'/%3E%3Crect x='32' y='30' width='26' height='26' fill='%23E4202A' stroke='%23000' stroke-width='4'/%3E%3Crect x='32' y='6' width='26' height='26' fill='%231B4FCB' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=1">
 </head>
 <body>
-    <h1>さめが〜め</h1>
-    
-    <div class="controls">
-        <div class="control-group">
-            <span>サイズ:</span>
-            <div id="size-selector"></div>
-        </div>
-        <div class="control-group">
-            <span>色数:</span>
-            <div id="color-selector"></div>
-        </div>
-        <button id="reset-button">リセット</button>
+<div id="bg"></div>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <a class="series" href="../" data-i18n="series">世界のボドゲ大全</a>
+      <button class="logo" id="logo" type="button" aria-label="さめが〜め POP!"><span class="lg1" data-i18n="title">さめが〜め</span><span class="lg2">POP!</span></button>
     </div>
-
-    <div class="info-panel">
-        <div class="score-box">
-            スコア: <span id="score">0</span>
-        </div>
-        <div class="preview-box">
-            獲得予定: <span id="preview-score">0</span>
-        </div>
+    <span class="sp"></span>
+    <div class="icons">
+      <button class="ib" id="btnGacha" data-i18n-title="ga.title"></button>
+      <button class="ib" id="btnBook" data-i18n-title="bk.title"></button>
+      <button class="ib" id="btnRank" data-i18n-title="rk.title"></button>
+      <button class="ib" id="btnAch" data-i18n-title="ach.title"><i class="dot"></i></button>
+      <button class="ib" id="btnHelp" data-i18n-title="help"></button>
+      <button class="ib" id="btnSet" data-i18n-title="set.title"></button>
+      <button class="ib snd" id="btnSound" data-i18n-title="set.snd"></button>
+      <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
+      <a href="../" class="ib" id="homeLink" data-i18n-title="home"></a>
     </div>
+  </header>
 
-    <div id="game-container">
-        <div id="game-board">
-            <!-- ブロックがここに挿入されます -->
+  <main>
+    <section class="screen" id="home">
+      <div class="card prof" id="profCard"></div>
+      <nav class="htabs" id="htabs"></nav>
+      <div class="hpanel daily" data-p="daily">
+        <div class="dcol">
+          <div class="card panel dcard" id="dPuzzle"></div>
+          <div class="card panel dcard blitzc" id="dBlitz"></div>
         </div>
-    </div>
-    
-    <!-- 花火を描画するためのCanvas -->
-    <canvas id="fireworks-canvas"></canvas>
+        <div class="dcol">
+          <div class="card panel" id="dCal"></div>
+          <div class="card panel" id="dFree"></div>
+        </div>
+      </div>
+      <div class="hpanel" data-p="stage" hidden><div id="stagePanel"></div></div>
+      <div class="hpanel" data-p="action" hidden><div id="actPanel"></div></div>
+    </section>
 
-    <script src="script.js"></script>
+    <section class="screen" id="play" hidden>
+      <div class="gbar">
+        <button class="ib" id="gBack" data-i18n-title="u.back"></button>
+        <div class="gtitle"><b id="gTitle"></b><small id="gTitleSub"></small></div>
+        <div class="gscore"><small data-i18n="u.score">スコア</small><b id="gScore">0</b></div>
+        <div class="gsub" id="gSub"></div>
+      </div>
+      <div class="gmeters">
+        <div class="fever" id="fever" hidden><span class="flab">FEVER</span><span class="fbar"><i id="feverBar"></i></span><b id="comboV"></b></div>
+        <div class="risew" id="riseWrap" hidden><span class="flab">RISE</span><span class="fbar"><i id="riseBar"></i></span></div>
+      </div>
+      <div id="boardWrap"><div id="board"></div><div id="preview" hidden></div><div id="gameMsg" hidden></div></div>
+      <div class="gfoot" id="gfoot">
+        <button class="btn" id="gUndo"><span data-i18n="g.undo">待った</span></button>
+        <button class="btn" id="gHint"><span data-i18n="g.hint">ヒント</span></button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal" hidden><div class="mbox"><button class="ib mx" id="modalX" aria-label="close">✕</button><div id="modalBody"></div></div></div>
+<canvas id="fx"></canvas>
+<div id="toast"></div>
+
+<script src="engine.js?v=1"></script>
+<script src="art.js?v=1"></script>
+<script src="i18n.js?v=1"></script>
+<script src="i18n-more.js?v=1"></script>
+<script src="../sudoku/firebase-config.js"></script>
+<script src="online.js?v=1"></script>
+<script src="app.js?v=1"></script>
 </body>
 </html>
