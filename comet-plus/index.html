@@ -3264,6 +3264,7 @@ function update(timestamp) {
             if (tapSel !== null) titleMenuIndex = tapSel;
 
             if (prevMenuIndex !== titleMenuIndex) {
+                audioHandler.playSound('menu'); // カーソル音
                 // メニューが変更されたので、エフェクトと説明タイマーを開始
                 effectTimer = EFFECT_DURATION;
                 descriptionTimer = DESCRIPTION_DISPLAY_DURATION;
