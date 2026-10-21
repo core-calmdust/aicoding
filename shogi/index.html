@@ -1541,6 +1541,7 @@ function renderHands() {
       const n = P.hand[col * 8 + tp]; if (!n) continue;
       const slot = document.createElement('div'); slot.className = 'hslot'; slot.dataset.tp = tp; slot.dataset.col = col;
       if (sel && sel.hand === tp && P.side === col) slot.classList.add('sel');
+      if (lesson && lesson.hintDrop && lesson.hintDrop.tp === tp && lesson.hintDrop.at === cur && P.side === col) slot.classList.add('hint');
       slot.appendChild(pieceEl(tp + (col ? WF : 0)));
       if (n > 1) { const c = document.createElement('div'); c.className = 'cnt'; c.textContent = n; slot.appendChild(c); }
       slot.addEventListener('click', e => { e.stopPropagation(); if (Date.now() - suppressClick < 300) return; onHand(col, tp); });
@@ -3489,8 +3490,7 @@ $('#lsHint').onclick = () => {
   setTimeout(() => {
     if (!lesson || lesson.cur !== pr) return;
     if (E.isDrop(m)) {
-      const tp = E.dropType(m); sel = { hand: tp }; renderSelOnly();
-      const sl = document.querySelector(`.hslot[data-tp="${tp}"][data-col="${P.side}"]`); if (sl) sl.classList.add('hint');
+      lesson.hintDrop = { tp: E.dropType(m), at: cur }; renderHands();   // the piece in hand only lights up (not picked up)
     } else { const mk = document.createElement('div'); mk.className = 'mark best'; sqEls[sqToDisp(E.mFrom(m))].appendChild(mk); }
   }, 0);
 };
