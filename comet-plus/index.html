@@ -1078,7 +1078,7 @@ let difficultyIndex = 1;
 // ハイパー: 10秒間、スコア3倍・自機1.1倍速。代わりに隕石と弾が1.25倍速、敵の弾が2倍
 let hyperT = 0, nextHyperScore = 0;
 const HYPER_TIME = 10;
-const HYPER_TEST_RATE = 10; // ★テスト用: ハイパーの出現率を一時的に10倍（公開前に1へ戻す）
+const HYPER_TEST_RATE = 1; // テスト時はここを上げると出現率が上がる
 const hyperOn = () => hyperT > 0;
 const HY = () => (hyperT > 0 ? 1.25 : 1);
 const scoreMul = () => Math.pow(1.1, stage - 1) * (tutorial ? 1 : DIFFS[difficultyIndex].mult) * (hyperT > 0 ? 3 : 1);
