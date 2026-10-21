@@ -1218,8 +1218,9 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=13"></script>
-<script src="firebase-config.js?v=20261018ol"></script>
-<script src="online.js?v=20261020gt"></script>
+<script src="firebase-config.js?v=sec1"></script>
+<script src="../shared/onlinesec.js?v=1"></script>
+<script src="online.js?v=sec1"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -3964,6 +3965,7 @@ function netMove(m) {
 async function finishOnline(g) {
   net.done = true;
   if (!net.spectate) olLiveClear();
+  const loc = game.over;      // the end as seen on my own board (null: not finished here)
   let winner, reason;
   if (g.status === 'resign' || g.status === 'timeout') { winner = (g.loser === g.b ? 0 : 1) ^ 1; reason = g.status === 'resign' ? 'resign' : 'time'; }
   else { winner = typeof g.win === 'number' ? g.win : game.over ? game.over.winner : -1; reason = g.reason || (game.over && game.over.reason) || 'mate'; }
@@ -3981,14 +3983,15 @@ async function finishOnline(g) {
   renderBoard(false); renderInfo(); save();
   const gid = net.gid;
   let r = { old: Online.profile.rating, now: Online.profile.rating, rated: !!g.rated };
-  try { r = await Online.applyResult(gid, g, score); syncTouch(); } catch (e) { console.warn(e); }
+  const own = loc ? (loc.winner < 0 ? 0.5 : loc.winner === net.me ? 1 : 0) : null;   // my own view of a game ended on the board
+  try { r = await Online.applyResult(gid, g, score, own); syncTouch(); } catch (e) { console.warn(e); }
   if (!net || net.gid !== gid) return;
   $('#resultTitle').textContent = t(score === 1 ? 'res.win' : score === 0 ? 'res.lose' : 'res.draw');
   const why = g.status === 'resign' ? t(g.loser === Online.uid ? 'ol.youResigned' : 'ol.oppResigned')
     : g.status === 'timeout' ? t(g.loser === Online.uid ? 'ol.youTimeout' : 'ol.oppTimeout')
     : reason === 'mate' ? t('res.mate', { n: game.moves.length }) : t('res.' + reason);
   const diff = r.now - r.old;
-  $('#resultSub').innerHTML = olEsc(why) + '<br>' + (r.rated ? `R ${r.old} → <b>${r.now}</b> (${diff >= 0 ? '+' : ''}${diff})` : olEsc(t('ol.unrated')));
+  $('#resultSub').innerHTML = olEsc(why) + '<br>' + (r.rated ? `R ${r.old} → <b>${r.now}</b> (${diff >= 0 ? '+' : ''}${diff})` : olEsc(r.note ? Online.secMsg(r.note) : t('ol.unrated')));
   showOverlay('#resultOverlay');
   playChime(score >= 0.5);
   dockRender();
@@ -4589,7 +4592,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=3" defer></script>
-<script src="../shared/atlas-account.js?v=3" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
+<script src="../shared/atlas-account.js?v=4" defer></script>
 </body>
 </html>
