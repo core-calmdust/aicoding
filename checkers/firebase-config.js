@@ -19,4 +19,12 @@
 //      then bump the ?v= of firebase-config.js in checkers/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, online play shows "coming soon" and Google sync is hidden (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBRVq3AaTlb2qqG4z2HV0ZKaGPvo2qpPFs",
+  authDomain: "checkers-multiplay.firebaseapp.com",
+  databaseURL: "https://checkers-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "checkers-multiplay",
+  storageBucket: "checkers-multiplay.firebasestorage.app",
+  messagingSenderId: "805719048665",
+  appId: "1:805719048665:web:ed58ed33f3e74f3b7719c8"
+};
