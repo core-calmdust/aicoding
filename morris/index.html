@@ -307,6 +307,7 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 .result-disc .pdisc{width:46px;height:46px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
 .result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px;line-height:1.7}
 .hidden{display:none!important}
+body.rv-on #evalCard.hidden{display:block!important}   /* the ◀ ▶ navigation stays while reviewing, even with the 形勢 display off */
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
 
@@ -423,6 +424,8 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .review-card{display:none}
 :where(.review-card.show){flex:1.6 1 0;min-height:96px}
 .review-card.show{display:block;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+/* the review card scrolls; its height shows the 振り返り解説 box (--rvh, set in renderReview) */
+.review-card.show:has(.cr-box){flex:none!important;min-height:0!important;max-height:var(--rvh, 260px)!important;overflow-y:auto!important}
 body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 .rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
 .rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
@@ -481,9 +484,13 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   body.in-study .st-nav{display:flex}
   body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
-  #evalCard{order:2}
-  .review-card{order:1}
+  /* phone order (site rule): board → 形勢＋ナビ → 振り返り → 棋譜 */
+  #evalCard{order:1}
+  .review-card{order:2}
   .kifu-card{order:4}
+  body.rv-on #evalCard{padding:8px 12px}
+  body.rv-on #evalCard .graph{display:none}
+  body.rv-on #evalCard .navbar{margin-top:6px}
   .info-line{order:5}
   .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:24px;margin-top:0;line-height:1}
@@ -989,7 +996,7 @@ body .info-line{font-size:12.5px}
 
 <script src="i18n.js?v=20261021rt2"></script>
 <script src="i18n_more.js?v=20261021lx"></script>
-<script src="i18n_coach.js?v=3"></script>
+<script src="i18n_coach.js?v=4"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
@@ -2776,20 +2783,20 @@ function rvCoach() {
     if (x.kind) h += `<p class="cr-tip">${t('cr.tip.' + x.kind)}</p>`;
     return h + `<p class="cr-more">${t('cr.nav')}</p></div>`;
   }
-  const all = [];
+  // the end of the game: a short summary (no long list — it made the card too tall on phones)
+  const sides = settings.mode === 'ai' ? [humanColor] : [P1, P2], all = [];
+  const st = {}; sides.forEach(p => (st[p] = { n: 0, ok: 0, bad: 0, dubious: 0 }));
   for (let i = 0; i < moves.length; i++) {
-    const j = rvJudge(i); if (!j || !j.q) continue;
-    const who = i & 1 ? P2 : P1;
-    if (settings.mode === 'ai' && who !== humanColor) continue;
-    all.push({ i, who, ...j });
+    const who = i & 1 ? P2 : P1; if (!st[who]) continue;
+    const j = rvJudge(i); if (!j) continue;
+    const x = st[who]; x.n++; if (j.ok) x.ok++; if (j.q) { x[j.q]++; all.push({ i, who, ...j }); }
   }
-  if (!all.length) return h + `<p>${t('cr.clean')}</p><p class="cr-more">${t('cr.nav')}</p></div>`;
-  const top = all.slice().sort((a, b) => b.loss - a.loss).slice(0, 3), turn = top[0].i;
-  for (const x of top.sort((a, b) => a.i - b.i)) {
-    const e = crExplain(x.i, x);
-    h += `<div class="cr-item"><p class="cr-mv">${x.i === turn && top.length > 1 ? `<span class="cr-turn">${t('cr.turn')}</span> ` : ''}<b>${t('cr.move', { n: x.i + 1, who: sideLabel(x.who), m: crName(x.m) })}</b> <span class="tag ${x.q}">${t('q.' + x.q)}</span></p><p>${e.txt}</p>${e.kind ? `<p class="cr-tip">${t('cr.tip.' + e.kind)}</p>` : ''}<button class="cr-see" data-i="${x.i}">${t('cr.see')}</button></div>`;
+  for (const p of sides) { const x = st[p]; h += `<p>${t('cr.sum', { who: sideLabel(p), p: x.n ? Math.round(x.ok / x.n * 100) : 0, b: x.bad, d: x.dubious })}</p>`; }
+  if (!all.length) h += `<p>${t('cr.clean')}</p>`;
+  else {
+    const top = all.slice().sort((a, b) => b.loss - a.loss)[0];
+    h += `<p class="cr-mv"><span class="cr-turn">${t('cr.turn')}</span> <b>${t('cr.move', { n: top.i + 1, who: sideLabel(top.who), m: crName(top.m) })}</b> <span class="tag ${top.q}">${t('q.' + top.q)}</span> <button class="cr-see" data-i="${top.i}">${t('cr.see')}</button></p>`;
   }
-  if (all.length > top.length) h += `<p class="cr-more">${t('cr.more', { n: all.length - top.length })}</p>`;
   return h + `<p class="cr-more">${t('cr.nav')}</p></div>`;
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
@@ -2798,6 +2805,7 @@ function renderReview() {
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
   card.classList.toggle('show', !!show);
+  document.body.classList.toggle('rv-on', !!show);
   if (!show) return;
   let html;
   if (rv.running) {
@@ -2809,13 +2817,15 @@ function renderReview() {
       const s = st[i & 1 ? P2 : P1]; s.n++; if (j.ok) s.ok++; if (j.q) { s[j.q]++; list.push({ i, ...j }); }
     }
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
-    html = rvCoach() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
+    html = rvCoach();   // the numbers are in the coach's short summary
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${x.i & 1 ? 2 : 1}"></i>${mvName(x.m)} → ${mvName(x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note" style="color:var(--dim);font-size:11px;line-height:1.6">${t('rv.note')}</div>`;
   }
+  const keepTop = card.scrollTop;
   $('#rvBody').innerHTML = html;
+  { const cb = $('#rvBody > .cr-box'); if (cb) card.style.setProperty('--rvh', Math.round(cb.getBoundingClientRect().bottom - card.getBoundingClientRect().top + card.scrollTop + 14) + 'px'); else card.style.removeProperty('--rvh'); card.scrollTop = keepTop; }
 }
 // on the board: the analysis of the viewed position, the move actually played and the best move
 function drawReviewFx(svg) {
