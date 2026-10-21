@@ -55,6 +55,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-html]').forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  { const b = document.getElementById('btnResign'); if (b && window.Resign) { b.innerHTML = Resign.icon + '<span></span>'; b.lastChild.textContent = Resign.label(LANG); b.title = Resign.label(LANG); } }
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
   renderBrand();
@@ -432,6 +433,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = rtLive() || settings.mode === 'online';
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -645,11 +647,25 @@ function aiMaybeOfferDraw(p) {
     olConfirmAny(t('dr.aiOffer'), t('dr.accept'), () => { if (aiGameLive()) endManually({ over: true, winner: 0, draw: true, why: 'agree' }); }, t('dr.decline'));
   }, 900);
 }
-// the player: resign / offer a draw (the AI accepts when it is not better)
-function playerResign() {
-  if (!aiGameLive()) return;
-  olConfirmAny(t('dr.resignQ'), t('dr.resign'), () => { if (aiGameLive()) endManually({ over: true, winner: humanColor === P1 ? P2 : P1, why: 'resign' }); });
+// 投了 (common spec, shared/resign.js): "投了しますか？" → はい ends the game as your loss
+// (vs the AI / rated: you lose; 2 players on one device: the side to move resigns; online: the existing resign is sent)
+function canResign() {
+  if (lesson || puzzle) return false;
+  if (settings.mode === 'online') return !!(window.olLive && olLive());
+  if (settings.mode === 'watch') return false;
+  if (rtLive()) return true;
+  return moves.length > 0 && !gameOver(moves.length);
 }
+function resignGame() {
+  if (!canResign()) return;
+  if (settings.mode === 'online') { if (window.olResignBtn) olResignBtn(); return; }
+  cur = moves.length; reviewing = false; animating = false; sel = null; hintList = null;
+  const loser = settings.mode === 'ai' ? humanColor : toMoveAt(moves.length);
+  endManually({ over: true, winner: loser === P1 ? P2 : P1, why: 'resign' });
+}
+function playerResign() { $('#btnResign').click(); }
+$('#btnResign').onclick = () => { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignGame(); }); };
+// the player: offer a draw (the AI accepts when it is not better)
 function playerDraw() {
   if (!aiGameLive()) return;
   if (cur - drawAsked < 6) { toast(t('dr.wait'), 1800); return; }
@@ -1960,7 +1976,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {

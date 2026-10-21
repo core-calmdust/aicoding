@@ -26,6 +26,7 @@ function posAt(i) {
 const sideP = pos => pos.side ? P2 : P1;
 function statusAt(i) {
   if (lesson && lesson.drill) return { over: false };
+  if (localOver && localOver.mv === moves && i === moves.length && !lesson && !puzzle && !net) return localOver;
   if (net && net.over && i === moves.length && !lesson && !puzzle) return net.over;
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
   const { pos, hashes, legal } = posAt(i);
@@ -84,6 +85,9 @@ const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
+// result reason for a resigned game (投了)
+{ const RW = { ja: '投了', en: 'Resignation', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मान ली', ar: 'استسلام' };
+  for (const l in RW) if (I18N[l] && I18N[l]['res.why.resign'] === undefined) I18N[l]['res.why.resign'] = RW[l]; }
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 const LV = i => t('lv')[i];
@@ -100,6 +104,7 @@ function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  { const b = document.getElementById('btnResign'); if (b && window.Resign) { b.innerHTML = Resign.icon + '<span></span>'; b.lastChild.textContent = Resign.label(LANG); b.title = Resign.label(LANG); } }
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
   try { accRender(); } catch (e) {}   // the Google chip / account box are built in JS
@@ -110,6 +115,7 @@ let evals = [];
 let busyToken = 0;
 let lesson = null, puzzle = null;
 let gameOverShown = false;
+let localOver = null;      // a resigned AI / 2-player game: { over, winner, why: 'resign', mv: the moves array it belongs to }
 let sel = null;            // { from }
 let thinking = 0, animating = false;
 function validMoves(list, fen) { try { E.replay(fen || null, list); return true; } catch (e) { return false; } }
@@ -125,6 +131,7 @@ function load() {
       rgame = d.rated && d.rated.id ? d.rated : null;
       // a rated game restored on page load: its clock stays stopped (no time signal) until the next move is played
       if (rgame && !rgame.over) rgame.hold = true;
+      localOver = d.resigned && d.resigned.winner ? { over: true, winner: d.resigned.winner, why: 'resign', mv: moves } : null;
       cur = moves.length; gameOverShown = statusAt(cur).over; return true;
     }
   } catch (e) {}
@@ -133,7 +140,7 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp', flip: false }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resigned: localOver && localOver.mv === moves ? { winner: localOver.winner } : null })); } catch (e) {}
 }
 
 // ====================================================================== workers
@@ -372,7 +379,7 @@ function renderInfo() {
     $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (pos.inCheck() ? ' · ' + t('st.check') : '') : '');
   }
   if (settings.mode === 'online' && !lesson && !puzzle) olClocks(); else olClocksOff();
-  $('#btnResign').disabled = !olLive();
+  $('#btnResign').disabled = !canResign();
   $('#evalCard').classList.toggle('hidden', !settings.eval && !rtLive() && settings.mode !== 'online');
   document.body.classList.toggle('rated-live', rtLive()); $('#evalCard').dataset.rtnote = t('rt.noEval');
   let ev = st.over ? { s: st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0, kind: 'final', side: st.winner } : evals[cur];
@@ -668,7 +675,7 @@ function undo() {
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
   let i = cur - 1;
   if (settings.mode === 'ai') { while (i > 0 && toMoveAt(i) !== humanColor) i--; }
-  moves = moves.slice(0, i); cur = i; reviewing = false; evals.length = i + 1; hintList = null; gameOverShown = false;
+  moves = moves.slice(0, i); cur = i; reviewing = false; evals.length = i + 1; hintList = null; gameOverShown = false; localOver = null;
   hideOverlay('#resultOverlay'); update(false); save(); afterPosition();
 }
 function viewAt(i) {
@@ -697,6 +704,25 @@ function confetti() {
 // ====================================================================== controls
 $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
+// 投了 (common spec, shared/resign.js): ends the game as your loss after "投了しますか？" → はい
+function canResign() {
+  if (lesson || puzzle) return false;
+  if (settings.mode === 'online') return olLive() && !!net.game && net.game.status === 'play';
+  if (settings.mode === 'watch') return false;
+  if (rtLive()) return true;
+  return moves.length > 0 && !gameOver(moves.length);
+}
+function resignGame() {
+  if (!canResign()) return;
+  if (settings.mode === 'online') { Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); return; }
+  busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
+  const loser = settings.mode === 'ai' ? humanColor : toMoveAt(moves.length);   // 2-player: the side to move resigns
+  const st = { over: true, winner: loser === P1 ? P2 : P1, why: 'resign' };
+  if (rgame && settings.mode === 'ai') rgame.over = st; else localOver = Object.assign({ mv: moves }, st);
+  cur = moves.length; reviewing = false; hintList = null; sel = null; closePromo();
+  save(); update(false); onGameEnd(statusAt(moves.length));
+}
+$('#btnResign').onclick = () => { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignGame(); }); };
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
   if (settings.mode === 'online') return;
@@ -2163,10 +2189,11 @@ setTimeout(async () => {
 }, 0);
 
 // the local game on the board (put back after spectating)
-function olSnap() { return { moves: moves.slice(), cur, evals: evals.slice(), humanColor, mode: settings.mode, rgame }; }
+function olSnap() { return { moves: moves.slice(), cur, evals: evals.slice(), humanColor, mode: settings.mode, rgame, rs: localOver && localOver.mv === moves ? localOver.winner : 0 }; }
 function olRestoreLocal(sv) {
   if (!sv || sv.mode === 'online') { newGame(); return; }
   settings.mode = sv.mode; moves = sv.moves; cur = sv.cur; evals = sv.evals; humanColor = sv.humanColor; rgame = sv.rgame || null;
+  localOver = sv.rs ? { over: true, winner: sv.rs, why: 'resign', mv: moves } : null;
   if (rgame && !rgame.over) rgame.t = Date.now();
   startFen = null; reviewing = cur !== moves.length; hintList = null; sel = null; gameOverShown = gameOver(moves.length);
   orient(); drawSquares(); shownKey = ''; syncPieces(new Int8Array(128)); update(false); save(); afterPosition();
@@ -2339,7 +2366,6 @@ function olPName(el, p) {
   el.classList.add('pn'); el.title = (you ? t('you') + ' · ' : '') + nm + ' (' + r + ') · ' + pname(p);
   if (el.innerHTML !== h) el.innerHTML = h;
 }
-$('#btnResign').onclick = () => { if (olLive()) olConfirm(t('confirm.resign'), t('resign.yes'), () => { if (olLive()) Online.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
 $('#btnOnline').onclick = () => openOnline();
 // a small yes / no dialog (shared with the rated-game confirmation)
 function olConfirm(text, yes, fn) {
@@ -2834,7 +2860,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n(); orient(); drawSquares();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 openReady.then(() => { if (HB && HB.on) renderInfo(); });
 // time-signal beeps (last 5 seconds) follow the sound setting

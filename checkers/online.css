@@ -2,10 +2,9 @@
 .hidden{display:none!important}
 .ol-only{display:none!important}
 body.in-online .ol-only{display:flex!important}
-body.ai-live #btnResign, body.ai-live #btnDraw{display:flex!important}
-body.in-online #btnUndo, body.in-online #btnHint, body.in-online #btnPaste{display:none!important}
-body.in-watch #btnResign, body.in-watch #btnDraw{display:none!important}
-body.in-watch .controls{grid-template-columns:repeat(4,1fr)}
+body.ai-live #btnDraw{display:flex!important}
+body.in-online #btnHint, body.in-online #btnPaste{display:none!important}
+body.in-watch #btnDraw{display:none!important}
 .clk.ol-move{color:var(--accent)}
 .ol-clk{font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:-.01em;color:var(--muted)}
 .ol-clk.ol-move{color:var(--accent);font-weight:700}

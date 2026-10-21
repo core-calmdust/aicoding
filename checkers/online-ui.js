@@ -49,7 +49,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 <div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.side-in').insertAdjacentHTML('afterbegin', '<div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>');
-$('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="ol.resign"></span></button><button class="btn ol-only" id="btnDraw"><svg viewBox="0 0 24 24"><path d="M7 12h10"/><path d="M5 8h14M5 16h14"/></svg><span data-i18n="ol.draw"></span></button>`);
+$('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnDraw"><svg viewBox="0 0 24 24"><path d="M7 12h10"/><path d="M5 8h14M5 16h14"/></svg><span data-i18n="ol.draw"></span></button>`);
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
 $('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
 // the new-game dialog: "online" shows a short description and opens the online dialog
@@ -364,7 +364,7 @@ function olAfterInfo() {
   olClockTick();
   const g = net.game;
   $('#infoLine').textContent = g ? `${varName(g.v)}  ·  ${t(g.rated ? 'ol.rated' : 'ol.friendly')}  ·  ${tcText(g.v)}  ·  ${t('info.moves', { n: moves.length })}` : '';
-  $('#btnResign').disabled = !olLive();
+  $('#btnResign').disabled = !canResign();
   $('#btnDraw').disabled = !olLive() || !!(g && g.offer && g.offer.by);
   olDrawRender();
 }
@@ -455,7 +455,8 @@ $('#btnAgain').addEventListener('click', e => {
   if (g && g.room && !g.rated) { if (g.again && g.again.by !== ON.uid) ON.answerRematch(net.gid, true).catch(err => console.warn(err)); else ON.requestRematch(net.gid).catch(err => console.warn(err)); return; }
   hideOv('#resultOverlay'); olDetach(); olStartSearch();
 }, true);
-$('#btnResign').onclick = () => { if (!olLive() && window.aiGameLive && aiGameLive()) { playerResign(); return; } if (olLive()) olConfirm(t('ol.resignQ'), t('ol.resign'), () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
+// 投了 in an online game (the button and the common 投了しますか？ dialog live in app.js / shared/resign.js)
+window.olResignBtn = () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); };
 $('#btnDraw').onclick = () => { if (!olLive() && window.aiGameLive && aiGameLive()) { playerDraw(); return; } if (olLive()) olConfirm(t('ol.drawQ'), t('ol.draw'), () => { if (olLive()) ON.offerDraw(net.gid).then(r => { if (r && r.committed) toast(t('ol.drawSent'), 1600); }).catch(e => console.warn(e)); }); };
 // leaving a live online game (new game, lessons, puzzles, loading a record) = resigning it, after a confirmation
 function olGuard(sel) {
