@@ -584,6 +584,7 @@ body[data-skin="mid"] .dact{border:0;border-radius:18px}body[data-skin="mid"] .d
   .mgacha .bggrid{grid-column:1/-1;grid-template-columns:repeat(4,1fr)}
   .mgacha #gaBody>.note{grid-column:1/-1}
 }
+#htabs{margin-bottom:44px}
 /* daily difficulties */
 .dhead{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
 .dhead h3{font-family:var(--f-head);font-weight:400;font-size:21.6px;margin:2px 0 4px}.dhead p{margin:0;font-size:15.8px;line-height:1.55;max-width:46em}
