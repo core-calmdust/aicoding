@@ -179,11 +179,16 @@ const unpack = s => ({ puzzle: E.parse(s.slice(0, 81).replace(/0/g, '.')), lv: +
 function dailyPuzzle(date, d) {
   const pool = PZ.daily[{ e: 'easy', m: 'medium', h: 'hard' }[d]];
   const idx = ((dayNum(date) * 37 + { e: 0, m: 51, h: 97 }[d]) % pool.length + pool.length) % pool.length;
-  const base = unpack(pool[idx]);
+  const kd = { e: 'easy', m: 'medium', h: 'hard' }[d], od = PZ.old && PZ.old['d.' + kd + '.' + idx];
+  const base = unpack(od && date <= PZ.cut ? od : pool[idx]); // dailies up to the refresh day keep their original puzzle
   const rng = E.mulberry32(E.hashStr('mainichi:' + date + ':' + d));
   return { puzzle: E.transform(base.puzzle, rng), lv: base.lv };
 }
-const colPuzzle = (ti, pi) => unpack(PZ.themes[ti][pi]);
+const colPuzzle = (ti, pi) => {
+  // puzzles replaced on 2026-10-21 (fun refresh): keep the old one for players who cleared it or have it in progress
+  const o = PZ.old && PZ.old['t.' + ti + '.' + pi];
+  return unpack(o && (DB.col[ti + '.' + pi] || DB.saves['c/' + (ti + 1) + '/' + (pi + 1)]) ? o : PZ.themes[ti][pi]);
+};
 const vset = si => PV && PV.sets[si];
 function varSpec(si, pi) {
   const s = vset(si), p = s.puzzles[pi], spec = { type: s.type };
@@ -1917,7 +1922,7 @@ window.__sudokuCore = DEBUG ? CORE : undefined;
 document.body.insertAdjacentHTML('afterbegin', SPRITE);
 applyI18n(); applySettings(); buildBoard(); layout(); lastTod = curTod();
 Promise.all([
-  fetch(BASE + 'puzzles.json?v=2').then(r => r.json()),
+  fetch(BASE + 'puzzles.json?v=3').then(r => r.json()),
   fetch(BASE + 'puzzles_variants.json?v=2').then(r => (r.ok ? r.json() : null)).catch(() => null),
   SPDX ? SPDX.init(CORE) : Promise.resolve(false),
 ]).then(([j, v, sp]) => {
