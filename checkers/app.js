@@ -39,7 +39,7 @@ const capCount = m => E.popc(mCap(m));
 
 // ====================================================================== state
 const STORE = 'aicoding-checkers';
-const settings = { mode: 'ai', rule: 'english', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '' };
+const settings = { mode: 'ai', rule: 'english', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '', bd: 'classic', pcs: 'ebony' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -165,7 +165,7 @@ function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + 
 const CROWN = '<svg viewBox="0 0 24 24"><path d="M3 18 4.5 7l5 4.5L12 5l2.5 6.5 5-4.5L21 18z" fill="#f2d27a" stroke="#7a5a1c" stroke-width="1.2" stroke-linejoin="round"/><path d="M3.5 20.5h17" stroke="#f2d27a" stroke-width="2" stroke-linecap="round"/></svg>';
 function drawLines() {
   boardEl.style.setProperty('--S', 8);
-  let s = `<defs><linearGradient id="sqDG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#335e49"/><stop offset="1" stop-color="#1f3f30"/></linearGradient><linearGradient id="sqLG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ddc9a0"/><stop offset="1" stop-color="#c6ae80"/></linearGradient></defs>`;
+  let s = `<defs><linearGradient id="sqDG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sqD1)"/><stop offset="1" style="stop-color:var(--sqD2)"/></linearGradient><linearGradient id="sqLG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sqL1)"/><stop offset="1" style="stop-color:var(--sqL2)"/></linearGradient></defs>`;
   for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) s += `<rect class="${(r + c) & 1 ? 'sqd' : 'sql'}" x="${c}" y="${r}" width="1.002" height="1.002"/>`;
   for (let i = 0; i < 32; i++) { const [r, c] = dRC(i); s += `<text class="num" x="${c + 0.07}" y="${r + 0.24}" font-size="0.2">${i + 1}</text>`; }
   linesEl.setAttribute('viewBox', '0 0 8 8');
@@ -741,12 +741,28 @@ document.addEventListener('keydown', e => {
 
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists)
 // spec: { b: 32 chars, side } ; o: { cls, marks: {sq: 'ring'|'ng'|'x'|'dash'}, arrows: [[squares...]], flip, click, sel, dest: [], last, nums }
+// ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
+const BD_KEYS = ['classic', 'tournament', 'walnut', 'marble', 'navy'], PC_KEYS = ['ebony', 'red', 'redwhite', 'mono'];
+const BD_PAL = { classic: ['#2c5440', '#d3be93'], tournament: ['#232120', '#b8322a'], walnut: ['#5c3a20', '#dcc08f'], marble: ['#5d6368', '#e4e1db'], navy: ['#1d3c72', '#c0cbdc'] };
+const PC_PAL = { ebony: [['#3b302b', '#0d0a09'], ['#efe5cf', '#8f8166']], red: [['#3b302b', '#0d0a09'], ['#d9473a', '#5a0f0a']], redwhite: [['#d9473a', '#5a0f0a'], ['#efe5cf', '#8f8166']], mono: [['#262626', '#000'], ['#f6f6f4', '#86867f']] };
+function designApply() {
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'classic';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'ebony';
+  document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
+}
+const DESIGN_SPEC = { b: 'bbbbbbbbbb.bb...w.....wwwwwwwwww', side: 1 };
+function designPickers() {
+  const r1 = $('#bdRow'), r2 = $('#pcRow'); if (!r1 || !r2) return;
+  r1.innerHTML = BD_KEYS.map(k => `<button type="button" data-bd="${k}" class="${k === settings.bd ? 'sel' : ''}" aria-pressed="${k === settings.bd}">${miniSVG(DESIGN_SPEC, { cls: 'bdm', bd: k })}<span>${escHb(t('bd.' + k))}</span></button>`).join('');
+  r2.innerHTML = PC_KEYS.map(k => `<button type="button" data-pcs="${k}" class="${k === settings.pcs ? 'sel' : ''}" aria-pressed="${k === settings.pcs}">${miniSVG(DESIGN_SPEC, { cls: 'bdm', pcs: k })}<span>${escHb(t('pcs.' + k))}</span></button>`).join('');
+}
 function miniSVG(spec, o) {
   o = o || {};
   const fl = !!o.flip, P = i => { const [r, c] = E.RC[i]; return fl ? [7 - r, 7 - c] : [r, c]; };
   const u = 30, pad = 6, W = 8 * u + pad * 2, X = i => pad + (P(i)[1] + 0.5) * u, Y = i => pad + (P(i)[0] + 0.5) * u;
+  const BP = BD_PAL[o.bd || settings.bd] || BD_PAL.classic, PP = PC_PAL[o.pcs || settings.pcs] || PC_PAL.ebony;
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="#1a1410" stroke="rgba(201,169,97,.5)"/>`;
-  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) s += `<rect x="${pad + c * u}" y="${pad + r * u}" width="${u}" height="${u}" fill="${(r + c) & 1 ? '#2c5440' : '#d3be93'}"/>`;
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) s += `<rect x="${pad + c * u}" y="${pad + r * u}" width="${u}" height="${u}" fill="${(r + c) & 1 ? BP[0] : BP[1]}"/>`;
   if (o.nums) for (let i = 0; i < 32; i++) s += `<text x="${X(i) - u * 0.42}" y="${Y(i) - u * 0.24}" font-size="${u * 0.24}" fill="rgba(255,246,220,.5)" font-family="JetBrains Mono,monospace">${i + 1}</text>`;
   if (o.last != null && o.last >= 0) s += `<rect x="${X(o.last) - u / 2}" y="${Y(o.last) - u / 2}" width="${u}" height="${u}" fill="rgba(255,222,130,.28)"/>`;
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="4.5" fill="rgba(255,236,170,.9)"/>`;
@@ -754,7 +770,7 @@ function miniSVG(spec, o) {
   for (let i = 0; i < 32; i++) {
     const ch = b[i]; if (!ch || ch === '.') continue;
     const p1 = ch === 'b' || ch === 'B', king = ch === 'B' || ch === 'W', x = X(i), y = Y(i), r = u * 0.38;
-    s += `<circle cx="${x}" cy="${y}" r="${r}" fill="${p1 ? '#3b302b' : '#efe5cf'}" stroke="${p1 ? '#0d0a09' : '#8f8166'}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="${r * 0.68}" fill="none" stroke="${p1 ? 'rgba(255,220,200,.22)' : 'rgba(120,100,60,.35)'}" stroke-width="1.2"/>`;
+    s += `<circle cx="${x}" cy="${y}" r="${r}" fill="${PP[p1 ? 0 : 1][0]}" stroke="${PP[p1 ? 0 : 1][1]}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="${r * 0.68}" fill="none" stroke="${p1 ? 'rgba(255,220,200,.22)' : 'rgba(120,100,60,.35)'}" stroke-width="1.2"/>`;
     if (king) s += `<path transform="translate(${x - r * 0.6},${y - r * 0.6}) scale(${r * 1.2 / 24})" d="M3 18 4.5 7l5 4.5L12 5l2.5 6.5 5-4.5L21 18z" fill="#f2d27a" stroke="#7a5a1c" stroke-width="1.4" stroke-linejoin="round"/>`;
   }
   if (o.sel != null && o.sel >= 0) s += `<circle cx="${X(o.sel)}" cy="${Y(o.sel)}" r="${u * 0.46}" fill="none" stroke="#ffe9a8" stroke-width="2.6"/>`;
@@ -895,8 +911,10 @@ function segSync() {
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
-  segSync(); showOverlay('#newOverlay');
+  segSync(); designPickers(); showOverlay('#newOverlay');
 }
+$('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
+$('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ngRulesHelp').onclick = () => openRules();
@@ -1378,26 +1396,45 @@ const starVal = x => x === true ? 3 : (+x || 0);
 function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
 function themeTier(T) { const n = T.puzzles.reduce((a, P) => a + (P.n || 1), 0) / Math.max(1, T.puzzles.length); return Math.max(0, Math.min(5, Math.round((n - 1) * 1.2))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+// collection home (the layout of 詰めオセロ, PZBook.home): hero → daily → tabs 勝ち / ショット / 終盤 → theme cards with the position
+const PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', PZ_GRPS = ['Win', 'Shot', 'End'], PZ_GIC = { Win: 'trophy', Shot: 'bolt', End: 'crown' };
+const PZ_TSVG = {
+  shot22: '<path d="M4 18 10 12l4 4 6-6"/><path d="M16 10h4v4"/><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/>',
+  ekings: '<path d="M3 9l4.5 3.5L12 6l4.5 6.5L21 9l-2 9H5z"/>',
+  emen: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/>',
+};
+const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
+function pzThumbOf(T, j) { const P = T.puzzles[j < 0 ? T.puzzles.length - 1 : j]; return P && P.s ? { board: miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 }), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
 async function openPuzzles() {
   const d = await puzzlesReady; selTab('puzzle');
   if (!d) { toast(t('ls.fail')); return; }
   PZBook.setLang(LANG);
-  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo(); let grp = '', no = 0;
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.th.' + PUZZLES.themes[dl.L].id)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.themes.map((L, i) => {
-    let h = ''; if (L.grp !== grp) { grp = L.grp; no = 0; h = `<p class="ls-course"><b>${t('pz.grp' + grp)}</b><small>${t('pz.grp' + grp + 'Sub')}</small></p>`; }
-    no++;
-    return h + PZBook.card({ i, no, name: t('pz.th.' + L.id), sub: t('pz.th.' + L.id + '.sub'), recs: pzRecs(L, pr), tier: themeTier(L) });
-  }).join('');
+  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo(), Ts = PUZZLES.themes, idx = Ts.map((_, i) => i);
+  const cats = PZ_GRPS.filter(g => Ts.some(T => T.grp === g));
+  let cur = ''; try { cur = localStorage.getItem(PZ_TAB) || ''; } catch (e) {} if (!cats.includes(cur)) cur = cats[0];
+  const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], pr), cat: Ts[i].grp })), PZ_LAST);
+  const box = $('#pzLevels');
+  box.innerHTML = PZBook.home({
+    title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
+    cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pz.th.' + Ts[+cont.key].id) },
+    daily: dl ? [{ key: '1', board: pzThumbOf(Ts[dl.L], dl.j).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+      sub: `${t('pz.th.' + Ts[dl.L].id)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
+    cats: cats.map(g => { const r = idx.filter(i => Ts[i].grp === g).map(i => pzRecs(Ts[i], pr)).flat(); return { key: g, icon: PZBook.icon(PZ_GIC[g]), name: t('pz.grp' + g), done: r.filter(x => x > 0).length, total: r.length }; }),
+    cur, catDesc: t('pz.grp' + cur + 'Sub'),
+    cards: idx.filter(i => Ts[i].grp === cur).map(i => { const T = Ts[i], r = pzRecs(T, pr); return Object.assign({ key: i, badge: pzBadge(T), name: t('pz.th.' + T.id), desc: t('pz.th.' + T.id + '.sub'), recs: r, tier: themeTier(T) }, pzThumbOf(T, PZBook.nextIndex(r))); }),
+  });
+  PZBook.bindHome(box, {
+    cat: k => { try { localStorage.setItem(PZ_TAB, k); } catch (e) {} openPuzzles(); },
+    cont: x => { const [i, j] = x.split(':'); startPuzzle(+i, +j); },
+    daily: () => { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); },
+    card: i => openPzGrid(+i),
+  });
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
-$('#pzLevels').onclick = e => {
-  const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return;
-  if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
-};
 function openPzGrid(i, cur) {
   pzLevel = i; const L = PUZZLES.themes[i];
   PZBook.setLang(LANG);
-  $('#pzLevelTitle').textContent = t('pz.th.' + L.id) + ' — ' + t('pz.th.' + L.id + '.sub');
+  $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(L), name: t('pz.th.' + L.id), desc: t('pz.th.' + L.id + '.sub'), chips: [t('pz.grp' + L.grp), PZBook.t('count', { n: L.puzzles.length })], tier: themeTier(L) });
   $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(L), cur });
   $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P1 })}</span>`); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
@@ -1415,6 +1452,7 @@ function startPuzzle(L, j, daily) {
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   const T = PUZZLES.themes[L], P = T.puzzles[j];
   const g = P.g || T.g || 0;
+  if (!daily) PZBook.lastSet(PZ_LAST, L);
   puzzle = { L, j, P, T, goal: g ? 'gain' : 'win', g, me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.s);
@@ -1837,6 +1875,7 @@ function dailySolved(date, hinted) {
 // ====================================================================== boot
 if (window.RulesOffer) RulesOffer.init({ game: 'checkers', lang: () => LANG, open: () => openRules(null, 0), watch: '#rulesOverlay' });
 const hadSave = load();
+designApply();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
@@ -1850,7 +1889,7 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); renderFx();
-  if ($('#newOverlay').classList.contains('show')) segSync();
+  if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
   if (lesson) { if (lesson.study) showStudy(false); else renderLessonCard(); }

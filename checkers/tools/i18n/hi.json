@@ -334,5 +334,16 @@
  "daily.streak": "लगातार {n} दिन",
  "daily.best": "सर्वश्रेष्ठ {n}",
  "daily.go": "हल करें",
- "rule.english": "मानक नियम (इंग्लिश ड्राफ़्ट्स)"
+ "rule.english": "मानक नियम (इंग्लिश ड्राफ़्ट्स)",
+ "bd.title": "बोर्ड डिज़ाइन",
+ "bd.classic": "क्लासिक",
+ "bd.tournament": "टूर्नामेंट",
+ "bd.walnut": "अखरोट",
+ "bd.marble": "संगमरमर",
+ "bd.navy": "नेवी",
+ "pcs.title": "गोटियाँ",
+ "pcs.ebony": "आबनूस और हाथीदांत",
+ "pcs.red": "काला और लाल",
+ "pcs.redwhite": "लाल और सफ़ेद",
+ "pcs.mono": "काला और सफ़ेद"
 }

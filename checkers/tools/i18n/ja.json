@@ -334,5 +334,16 @@
  "daily.streak": "連続{n}日",
  "daily.best": "最高{n}日",
  "daily.go": "挑戦",
- "rule.english": "標準ルール（イングリッシュ・ドラフツ）"
+ "rule.english": "標準ルール（イングリッシュ・ドラフツ）",
+ "bd.title": "盤のデザイン",
+ "bd.classic": "クラシック",
+ "bd.tournament": "トーナメント",
+ "bd.walnut": "木目",
+ "bd.marble": "大理石",
+ "bd.navy": "ネイビー",
+ "pcs.title": "駒の色",
+ "pcs.ebony": "黒檀と象牙",
+ "pcs.red": "黒と赤",
+ "pcs.redwhite": "赤と白",
+ "pcs.mono": "黒と白"
 }

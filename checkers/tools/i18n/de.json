@@ -334,5 +334,16 @@
  "daily.streak": "{n} Tage in Folge",
  "daily.best": "Rekord {n}",
  "daily.go": "Lösen",
- "rule.english": "Standardregeln (englisches Damespiel)"
+ "rule.english": "Standardregeln (englisches Damespiel)",
+ "bd.title": "Brettdesign",
+ "bd.classic": "Klassisch",
+ "bd.tournament": "Turnier",
+ "bd.walnut": "Nussbaum",
+ "bd.marble": "Marmor",
+ "bd.navy": "Marine",
+ "pcs.title": "Steine",
+ "pcs.ebony": "Ebenholz & Elfenbein",
+ "pcs.red": "Schwarz & Rot",
+ "pcs.redwhite": "Rot & Weiß",
+ "pcs.mono": "Schwarz & Weiß"
 }

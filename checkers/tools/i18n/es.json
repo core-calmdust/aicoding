@@ -334,5 +334,16 @@
  "daily.streak": "racha de {n} días",
  "daily.best": "récord {n}",
  "daily.go": "Resolver",
- "rule.english": "Reglas estándar (damas inglesas)"
+ "rule.english": "Reglas estándar (damas inglesas)",
+ "bd.title": "Diseño del tablero",
+ "bd.classic": "Clásico",
+ "bd.tournament": "Torneo",
+ "bd.walnut": "Nogal",
+ "bd.marble": "Mármol",
+ "bd.navy": "Marino",
+ "pcs.title": "Fichas",
+ "pcs.ebony": "Ébano y marfil",
+ "pcs.red": "Negro y rojo",
+ "pcs.redwhite": "Rojo y blanco",
+ "pcs.mono": "Blanco y negro"
 }

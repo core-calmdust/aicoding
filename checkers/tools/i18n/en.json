@@ -334,5 +334,16 @@
  "daily.streak": "{n}-day streak",
  "daily.best": "best {n} days",
  "daily.go": "Play",
- "rule.english": "Standard rules (English draughts)"
+ "rule.english": "Standard rules (English draughts)",
+ "bd.title": "Board design",
+ "bd.classic": "Classic",
+ "bd.tournament": "Tournament",
+ "bd.walnut": "Walnut",
+ "bd.marble": "Marble",
+ "bd.navy": "Navy",
+ "pcs.title": "Pieces",
+ "pcs.ebony": "Ebony & ivory",
+ "pcs.red": "Black & red",
+ "pcs.redwhite": "Red & white",
+ "pcs.mono": "Black & white"
 }

@@ -334,5 +334,16 @@
  "daily.streak": "série de {n} jours",
  "daily.best": "record {n}",
  "daily.go": "Résoudre",
- "rule.english": "Règles standard (dames anglaises)"
+ "rule.english": "Règles standard (dames anglaises)",
+ "bd.title": "Design du plateau",
+ "bd.classic": "Classique",
+ "bd.tournament": "Tournoi",
+ "bd.walnut": "Noyer",
+ "bd.marble": "Marbre",
+ "bd.navy": "Marine",
+ "pcs.title": "Pions",
+ "pcs.ebony": "Ébène et ivoire",
+ "pcs.red": "Noir et rouge",
+ "pcs.redwhite": "Rouge et blanc",
+ "pcs.mono": "Noir et blanc"
 }

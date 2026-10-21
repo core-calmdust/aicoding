@@ -334,5 +334,16 @@
  "daily.streak": "连续{n}天",
  "daily.best": "最佳{n}天",
  "daily.go": "挑战",
- "rule.english": "标准规则（英式跳棋）"
+ "rule.english": "标准规则（英式跳棋）",
+ "bd.title": "棋盘设计",
+ "bd.classic": "经典",
+ "bd.tournament": "比赛",
+ "bd.walnut": "胡桃木",
+ "bd.marble": "大理石",
+ "bd.navy": "海军蓝",
+ "pcs.title": "棋子颜色",
+ "pcs.ebony": "乌木与象牙",
+ "pcs.red": "黑与红",
+ "pcs.redwhite": "红与白",
+ "pcs.mono": "黑与白"
 }

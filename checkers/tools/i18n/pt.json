@@ -334,5 +334,16 @@
  "daily.streak": "{n} dias seguidos",
  "daily.best": "recorde {n}",
  "daily.go": "Resolver",
- "rule.english": "Regras padrão (damas inglesas)"
+ "rule.english": "Regras padrão (damas inglesas)",
+ "bd.title": "Design do tabuleiro",
+ "bd.classic": "Clássico",
+ "bd.tournament": "Torneio",
+ "bd.walnut": "Nogueira",
+ "bd.marble": "Mármore",
+ "bd.navy": "Marinho",
+ "pcs.title": "Peças",
+ "pcs.ebony": "Ébano e marfim",
+ "pcs.red": "Preto e vermelho",
+ "pcs.redwhite": "Vermelho e branco",
+ "pcs.mono": "Preto e branco"
 }

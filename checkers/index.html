@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-checkers') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'classic'; document.documentElement.dataset.pcs = S.pcs || 'ebony'; } catch (e) {}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0e16">
@@ -642,11 +643,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
   .pz-grid{grid-template-columns:repeat(10, 1fr)}
-  #newOverlay .modal{width:min(980px, calc(100vw - 64px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px;align-content:start;padding:28px 32px}
-  #newOverlay .modal > h2, #newOverlay .modal > .field:has(#segMode), #newOverlay #fRules, #newOverlay #fInfo, #newOverlay .modal-actions{grid-column:1 / -1}
-  #newOverlay #segMode{flex-wrap:nowrap}#newOverlay #segMode button{flex:1 1 0}
-  #newOverlay .rulecards{gap:14px}
-  #newOverlay .modal-actions{max-width:560px;justify-self:end;width:100%}
+  /* (new-game dialog: see 'new-game dialog' below) */
 }
 /* PC: rules tutorial with a big board + big text; the tabbed dialogs (rules / lessons / openings / puzzles) share one fixed size */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
@@ -776,6 +773,48 @@ body .info-line{font-size:12.5px}
 .mini .num,.lxb .num,.tour .num{display:none}
 .evalbar{background:linear-gradient(90deg,var(--iv3),var(--iv2))}
 .evalbar .fill{background:linear-gradient(90deg,#5a4a42,#2a211d)}
+
+/* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
+#newOverlay .ng-cols{display:flex;flex-direction:column}
+#newOverlay .ng-col{display:contents}
+#newOverlay .ng-play > .field:first-child{order:1}
+#fRatedInfo, #fInfo{order:2} #fRules{order:3} #fColor{order:4} #fLevel{order:5} #fLevel2{order:6} #fDisplay{order:7} #fDesign{order:8} #fPieces{order:9}
+#newOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:.02em;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#newOverlay #btnCancelNew{flex:0 1 auto;padding-left:18px;padding-right:18px}
+#newOverlay #btnStart{flex:1 1 auto}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  /* left: strength / display, right: mode / side / board and pieces */
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));padding:20px 28px 18px}
+  #newOverlay .modal h2{margin-bottom:12px}
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col{display:block}
+  #newOverlay .modal-actions{margin-top:8px}
+  #newOverlay #segMode{display:grid;grid-template-columns:repeat(12, minmax(0, 1fr))}
+  #newOverlay #segMode button{grid-column:span 3;min-width:0;white-space:normal;line-height:1.25}
+  #newOverlay #segMode button:nth-child(-n+3){grid-column:span 4}
+}
+/* board / piece design pickers (live mini boards) */
+.bdrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.bdrow.pcrow{grid-template-columns:repeat(5,minmax(0,1fr))}
+.bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.bdrow button svg{display:block;width:100%;height:auto;border-radius:5px}
+.bdrow button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;letter-spacing:0}
+.bdrow button:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.bdrow button.sel{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.1)}
+@media (max-width: 520px){ .bdrow{gap:4px} .bdrow button{padding:4px 3px 5px;font-size:10px} }
+/* board designs (html[data-bd]) and piece sets (html[data-pcs]) */
+:root{--sqD1:#335e49;--sqD2:#1f3f30;--sqL1:#ddc9a0;--sqL2:#c6ae80}
+html[data-bd=tournament]{--sqD1:#2e2b29;--sqD2:#161413;--sqL1:#c93a30;--sqL2:#9b2620}
+html[data-bd=walnut]{--sqD1:#6e4628;--sqD2:#472a15;--sqL1:#e6cc9e;--sqL2:#cdac76}
+html[data-bd=marble]{--sqD1:#6f767c;--sqD2:#4a5055;--sqL1:#efede8;--sqL2:#d3d0c9}
+html[data-bd=navy]{--sqD1:#24498a;--sqD2:#142c5a;--sqL1:#cfd8e6;--sqL2:#aab6cb}
+html[data-pcs=red]{--iv1:#ff9a88;--iv2:#d9473a;--iv3:#a6251b;--iv4:#5a0f0a}
+html[data-pcs=redwhite]{--eb1:#ff9a88;--eb2:#d9473a;--eb3:#a6251b;--eb4:#5a0f0a}
+html[data-pcs=mono]{--eb1:#5c5c5c;--eb2:#262626;--eb3:#121212;--eb4:#000;--iv1:#fff;--iv2:#f6f6f4;--iv3:#cfcfcb;--iv4:#86867f}
+.pdisc.p1{background:radial-gradient(circle at 35% 30%,var(--eb1),var(--eb2) 35%,var(--eb4) 90%)}
+.pdisc.p2{background:radial-gradient(circle at 35% 30%,var(--iv1),var(--iv2) 35%,var(--iv4) 95%)}
+/* player cards: the men / kings count goes on its own line so it never runs out of the card */
+.player .count small{display:block;margin:4px 0 0;font-size:12px;line-height:1.3;white-space:normal}
 </style>
 <link rel="stylesheet" href="online.css?v=1">
 </head>
@@ -891,6 +930,32 @@ body .info-line{font-size:12.5px}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
+    <div class="ng-cols"><div class="ng-col ng-set">
+    <div class="field" id="fLevel">
+      <label id="levelLabel"></label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="20" step="1" id="levelRange">
+        <div class="level-name" id="levelName"></div>
+      </div>
+    </div>
+    <div class="field hidden" id="fLevel2">
+      <label data-i18n="ng.level2"></label>
+      <div class="level-wrap">
+        <input type="range" min="1" max="20" step="1" id="levelRange2">
+        <div class="level-name" id="levelName2"></div>
+      </div>
+    </div>
+    <div class="field" id="fDisplay">
+      <label data-i18n="ng.display"></label>
+      <div class="checks">
+        <label><input type="checkbox" id="optEval"><span data-i18n="opt.eval"></span></label>
+        <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
+        <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
+        <label><input type="checkbox" id="optThreat"><span data-i18n="opt.threat"></span></label>
+        <label><input type="checkbox" id="optNum"><span data-i18n="opt.num"></span></label>
+      </div>
+    </div>
+    </div><div class="ng-col ng-play">
     <div class="field">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
@@ -916,30 +981,15 @@ body .info-line{font-size:12.5px}
         <button data-v="0" data-i18n="ng.random"></button>
       </div>
     </div>
-    <div class="field" id="fLevel">
-      <label id="levelLabel"></label>
-      <div class="level-wrap">
-        <input type="range" min="1" max="20" step="1" id="levelRange">
-        <div class="level-name" id="levelName"></div>
-      </div>
+    <div class="field" id="fDesign">
+      <label data-i18n="bd.title"></label>
+      <div class="bdrow" id="bdRow"></div>
     </div>
-    <div class="field hidden" id="fLevel2">
-      <label data-i18n="ng.level2"></label>
-      <div class="level-wrap">
-        <input type="range" min="1" max="20" step="1" id="levelRange2">
-        <div class="level-name" id="levelName2"></div>
-      </div>
+    <div class="field" id="fPieces">
+      <label data-i18n="pcs.title"></label>
+      <div class="bdrow pcrow" id="pcRow"></div>
     </div>
-    <div class="field" id="fDisplay">
-      <label data-i18n="ng.display"></label>
-      <div class="checks">
-        <label><input type="checkbox" id="optEval"><span data-i18n="opt.eval"></span></label>
-        <label><input type="checkbox" id="optLast"><span data-i18n="opt.last"></span></label>
-        <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
-        <label><input type="checkbox" id="optThreat"><span data-i18n="opt.threat"></span></label>
-        <label><input type="checkbox" id="optNum"><span data-i18n="opt.num"></span></label>
-      </div>
-    </div>
+    </div></div>
     <div class="modal-actions">
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
@@ -996,13 +1046,11 @@ body .info-line{font-size:12.5px}
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <div class="seg var-tabs hidden" id="pzVarTabs"></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p id="pzDesc" style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div class="pz-home" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
+      <div id="pzLevelHead"></div>
       <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
@@ -1044,9 +1092,9 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=1"></script>
+<script src="i18n.js?v=2"></script>
 <script src="i18n-online.js?v=1"></script>
-<script src="../shared/pzbook.js?v=2"></script>
+<script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
@@ -1055,7 +1103,7 @@ body .info-line{font-size:12.5px}
 <script src="engine.js?v=1"></script>
 <script src="firebase-config.js?v=2"></script>
 <script src="online.js?v=1"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 <script src="online-ui.js?v=1"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5i" defer></script>

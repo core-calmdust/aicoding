@@ -334,5 +334,16 @@
  "daily.streak": "{n} أيام متتالية",
  "daily.best": "الأفضل {n}",
  "daily.go": "حلّ",
- "rule.english": "القواعد القياسية (الداما الإنجليزية)"
+ "rule.english": "القواعد القياسية (الداما الإنجليزية)",
+ "bd.title": "تصميم الرقعة",
+ "bd.classic": "كلاسيكي",
+ "bd.tournament": "بطولة",
+ "bd.walnut": "جوز",
+ "bd.marble": "رخام",
+ "bd.navy": "كحلي",
+ "pcs.title": "القطع",
+ "pcs.ebony": "أبنوس وعاج",
+ "pcs.red": "أسود وأحمر",
+ "pcs.redwhite": "أحمر وأبيض",
+ "pcs.mono": "أسود وأبيض"
 }
