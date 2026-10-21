@@ -86,7 +86,16 @@ int main(int argc, char **argv) {
         }
       }
   // solve in order: fewer pieces first, then fewer men (crowning leads to a class with one man fewer)
-  for (int i = 0; i < NC; i++) solve(&C[i]);
+  // checkpoints: every solved class is saved to CKPT_DIR (env, default "egdb.d") and loaded instead of solved on a restart
+  const char *dir = getenv("CKPT_DIR") ? getenv("CKPT_DIR") : "egdb.d";
+  { char cmd[300]; snprintf(cmd, sizeof cmd, "mkdir -p %s", dir); if (system(cmd)) {} }
+  for (int i = 0; i < NC; i++) {
+    Cls *c = &C[i]; char fn[300]; snprintf(fn, sizeof fn, "%s/%d%d%d%d.bin", dir, c->bm, c->bk, c->wm, c->wk);
+    size_t len = ((size_t)c->n * 2 + 3) / 4; FILE *cf = fopen(fn, "rb");
+    if (cf) { c->v = malloc(len); size_t got = fread(c->v, 1, len, cf); fclose(cf); if (got == len) { fprintf(stderr, "class %d%d-%d%d  loaded\n", c->bm, c->bk, c->wm, c->wk); continue; } free(c->v); c->v = 0; }
+    solve(c);
+    char tmp[310]; snprintf(tmp, sizeof tmp, "%s.tmp", fn); cf = fopen(tmp, "wb"); fwrite(c->v, 1, len, cf); fclose(cf); rename(tmp, fn);
+  }
   // symmetry check: colour-flipped positions must have the same value
   if (!getenv("NOSYM")) { u64 bad = 0, tot = 0;
     for (int ci = 0; ci < NC; ci++) { Cls *c = &C[ci];
