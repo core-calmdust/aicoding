@@ -2276,7 +2276,8 @@ function updatePlayingState(dt_sec) {
         }
         const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
 
-        if (IS_MOBILE ? shipTouches(item.x, item.y, 20 * VS * 0.85) : dist < config.playerVisualSize + config.energyItemSize) {
+        if (item.type === 'hyper' ? shipTouches(item.x, item.y, 40 * VS * 0.95) // ハイパーはPC・スマホとも見た目（刃の先まで）どうしが触れたら取得
+            : IS_MOBILE ? shipTouches(item.x, item.y, 20 * VS * 0.85) : dist < config.playerVisualSize + config.energyItemSize) {
             if (tutorial) tutorial.items++;
             if (item.type === 'hyper') {
                 activateHyper();
