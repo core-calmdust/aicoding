@@ -186,8 +186,16 @@ function dailyPuzzle(date, d) {
 }
 const colPuzzle = (ti, pi) => {
   // puzzles replaced on 2026-10-21 (fun refresh): keep the old one for players who cleared it or have it in progress
+  // (records made before the refresh went live, or saves started before it, belong to the old puzzle)
   const o = PZ.old && PZ.old['t.' + ti + '.' + pi];
-  return unpack(o && (DB.col[ti + '.' + pi] || DB.saves['c/' + (ti + 1) + '/' + (pi + 1)]) ? o : PZ.themes[ti][pi]);
+  return unpack(o && usesOld(ti, pi) ? o : PZ.themes[ti][pi]);
+};
+const FUN_REFRESH = Date.UTC(2026, 9, 21, 10, 28); // when the 2026-10-21 refresh went live
+const usesOld = (ti, pi) => {
+  const r = DB.col[ti + '.' + pi], s = DB.saves['c/' + (ti + 1) + '/' + (pi + 1)];
+  if (r) return r.o === 1 || (r.o == null && (r.at || 0) < FUN_REFRESH);
+  if (s) return s.o === 1 || s.o == null;
+  return false;
 };
 const vset = si => PV && PV.sets[si];
 function varSpec(si, pi) {
@@ -872,6 +880,7 @@ function openGame(o) {
   const sol = E.solve(P.puzzle, 1).solution;
   const key = gameKey(o);
   G = Object.assign({}, o, { key, spec, lv: P.lv, puz: P.puzzle, sol, grid: P.puzzle.slice(), notes: new Array(81).fill(0), hist: [], redo: [], time: 0, mist: 0, hints: 0, done: false });
+  G.old = o.kind === 'c' && !!(PZ.old && PZ.old['t.' + o.ti + '.' + o.pi]) && usesOld(o.ti, o.pi);
   const sv = DB.saves[key];
   if (sv && sv.g && sv.g.length === 81) {
     G.grid = E.parse(sv.g); for (let i = 0; i < 81; i++) if (G.puz[i]) G.grid[i] = G.puz[i];
@@ -899,6 +908,7 @@ function saveGame() {
   const touched = G.grid.some((v, i) => v && !G.puz[i]) || G.notes.some(x => x);
   if (!touched && !G.time) return;
   DB.saves[G.key] = { g: E.stringify(G.grid), n: G.notes, t: Math.round(G.time), m: G.mist, h: G.hints };
+  if (G.kind === 'c' && PZ.old && PZ.old['t.' + G.ti + '.' + G.pi]) DB.saves[G.key].o = G.old ? 1 : 0;
   persist();
 }
 let lastTick = 0, saveTick = 0;
@@ -1228,6 +1238,7 @@ function finish() {
   delete DB.saves[G.key];
   const at = Date.now(), hr = new Date().getHours();
   const rec = { t: Math.round(G.time), m: G.mist, h: G.hints, lv: G.lv, at, hr };
+  if (G.kind === 'c' && PZ.old && PZ.old['t.' + G.ti + '.' + G.pi]) rec.o = G.old ? 1 : 0;
   let newBest = false, stars = 0, earned = 0;
   if (G.kind === 'd') {
     rec.late = G.date !== today();
