@@ -62,7 +62,7 @@ for (const st of steps) {
       if (inv) {
         let q = R.Pos.from(spec); for (const m of P.line) q = q.tryPlay(m === 'pass' ? -1 : pt(m, spec.n), 0, true).pos;
         const tgtAlive = c.tgt.filter(t => q.b[pt(t, spec.n)] === p0.b[pt(t, spec.n)]);
-        if (tgtAlive.length) {
+        if (tgtAlive.length === c.tgt.length) {
           const moverIsOrig = q.turn === spec.turn;
           const r = solveFirst(q.spec(), moverIsOrig ? c.goal : inv, tgtAlive, Object.assign({}, c, { depth: c.depth || 8 }));
           const bad = moverIsOrig ? !r.wins.length : r.wins.length;

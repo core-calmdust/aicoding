@@ -1,0 +1,3849 @@
+{
+ "version": 1,
+ "cats": [
+  {
+   "id": "hoshi",
+   "title": {
+    "ja": "星の定石",
+    "en": "4-4 point joseki"
+   },
+   "sub": {
+    "ja": "小ゲイマガカリへの受け・ハサミ・三々入り・両ガカリ",
+    "en": "Answers to the approach, pincers, 3-3 invasion, double approach"
+   }
+  },
+  {
+   "id": "komoku",
+   "title": {
+    "ja": "小目の定石",
+    "en": "3-4 point joseki"
+   },
+   "sub": {
+    "ja": "小ゲイマガカリへのハサミと受け、一間高ガカリ、大ゲイマガカリ",
+    "en": "Pincers and answers to the small knight approach, high and large knight approaches"
+   }
+  },
+  {
+   "id": "other",
+   "title": {
+    "ja": "三々・高目・目外し",
+    "en": "3-3, 5-4 and 5-3 points"
+   },
+   "sub": {
+    "ja": "三々への肩ツキ、高目・目外しへのカカリ",
+    "en": "Shoulder hit on the 3-3, approaches to the 5-4 and 5-3 points"
+   }
+  },
+  {
+   "id": "ai",
+   "title": {
+    "ja": "AI時代の定石・流行",
+    "en": "AI-era joseki and trends"
+   },
+   "sub": {
+    "ja": "コスミツケ・肩ツキ・三々入りの新型、AIが見直した旧定石",
+    "en": "Diagonal attachment, shoulder hits, new 3-3 lines, old joseki re-evaluated"
+   }
+  }
+ ],
+ "sets": [
+  {
+   "id": "hoshi_ikken",
+   "cat": "hoshi",
+   "ord": 1,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・一間受け",
+    "en": "Low approach, one-space jump"
+   },
+   "short": {
+    "ja": "星の最も基本的な受け方。三々スベリで白が隅に生き、黒は厚みを得る",
+    "en": "The most basic answer: White slides to the 3-3 and lives, Black gets thickness"
+   },
+   "story": {
+    "ja": "<p>星（4-4）に白が小ゲイマにカカってきたとき、黒が上辺に一間トビで受けるのが「一間受け」です。高い位置で受けるので、上辺と中央に向かって働きやすいのが特徴です。</p><p>星は隅の地を確定させない打ち方なので、白には三々にすべり込む手段が残ります。白が三々に入ったら、黒はカカリの石の側から押さえて外側を厚くするのが現代の標準です（昔はもう一方の上から押さえる型がよく打たれましたが、AIはやや損と見ています）。</p><p>結果は、白が隅で小さく生き、黒は右辺に向かう厚い壁と先手を得る「地と厚み」の分かれです。黒が右辺や中央を大事にしたい布石で選びます。</p>",
+    "en": "<p>When White approaches Black's 4-4 stone with a low knight's move, Black answers with a one-space jump on the top side. The high jump works well toward the top side and the centre.</p><p>A 4-4 stone never secures the corner, so White can still slide into the 3-3 point. When White does, the modern standard is to block from the side of the approaching stone and build thickness outside (the old block from the other side is still seen, but AI rates it slightly worse).</p><p>The result is a classic territory-versus-thickness trade: White lives small in the corner, Black gets a strong wall facing the right side and keeps sente. Choose it when the right side and the centre matter to you.</p>"
+   },
+   "level": 1,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "O16",
+    "R17",
+    "R16",
+    "S16",
+    "S15",
+    "S17",
+    "R15",
+    "P18"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。星へのカカリで最もよく打たれる手で、隅の地を減らしつつ右辺に足場を作ります。",
+     "en": "White approaches at <bdi>R14</bdi> with a low knight's move — the most common approach to a 4-4 stone. It reduces the corner and gains a foothold on the right side."
+    },
+    "2": {
+     "ja": "黒は<bdi>O16</bdi>と上辺に一間トビで受けます。高く構えて上辺と中央を重視する受け方です。より低い<bdi>O17</bdi>のケイマ受けや、受けずに他の大場に向かう手もAI時代にはよく打たれます。",
+     "en": "Black answers with a one-space jump at <bdi>O16</bdi>, a high shape that values the top side and the centre. The lower knight's move <bdi>O17</bdi>, or even ignoring the approach for a big point elsewhere, are also common in the AI era."
+    },
+    "3": {
+     "ja": "白は<bdi>R17</bdi>の三々にすべり込みます。<bdi>R14</bdi>の石と連絡しながら隅の地を取り、根拠（生きるための足場）を作る手です。安定を急がなければ<bdi>R11</bdi>の二間ビラキも定石です。",
+     "en": "White slides into the 3-3 point at <bdi>R17</bdi>, taking the corner while linking toward <bdi>R14</bdi> to build a base. If White is not in a hurry to settle, the two-space extension <bdi>R11</bdi> is also joseki."
+    },
+    "4": {
+     "ja": "黒は<bdi>R16</bdi>と、カカリの石がある側から押さえます。白の隅と<bdi>R14</bdi>を分断し、右辺に向かって厚みを築く現代の本手です。昔の定石の<bdi>Q17</bdi>（上からのオサエ）はAIの評価ではやや劣ります。",
+     "en": "Black blocks at <bdi>R16</bdi>, from the side of the approach stone. This separates the corner from <bdi>R14</bdi> and builds thickness toward the right side — the modern standard. The old block at <bdi>Q17</bdi> (from above) is rated slightly worse by AI."
+    },
+    "5": {
+     "ja": "白は<bdi>S16</bdi>と二線にハネて、隅の地を広げながら黒の形に圧力をかけます。",
+     "en": "White hanes at <bdi>S16</bdi> on the second line, widening the corner and putting pressure on Black's shape."
+    },
+    "6": {
+     "ja": "黒は<bdi>S15</bdi>とハネ返します。白の<bdi>R14</bdi>を隅から切り離し、外側をしっかり固める手です。",
+     "en": "Black hanes back at <bdi>S15</bdi>, cutting <bdi>R14</bdi> off from the corner and firming up the outside."
+    },
+    "7": {
+     "ja": "白は<bdi>S17</bdi>とツイで切断を防ぎます。ここを切られると隅の白が危なくなるので省けません。",
+     "en": "White connects at <bdi>S17</bdi>. If Black could cut here the corner group would be in trouble, so this cannot be omitted."
+    },
+    "8": {
+     "ja": "黒は<bdi>R15</bdi>とツイで壁を完成させます。<bdi>S14</bdi>とノビて<bdi>R14</bdi>をさらに攻める手もほぼ同等です。白の<bdi>R14</bdi>は孤立し、後で動き出すか捨て石にするかの石になります。",
+     "en": "Black connects at <bdi>R15</bdi>, completing the wall. Extending to <bdi>S14</bdi> to press <bdi>R14</bdi> even harder is about equal. White's <bdi>R14</bdi> is now isolated: a stone to revive later or to give up."
+    },
+    "9": {
+     "ja": "白は<bdi>P18</bdi>と二線をケイマにすべって眼形を広げ、隅で生きる形を整えます。黒は先手を得て、厚みを生かして右辺や他の大場に向かいます。互角の分かれです。",
+     "en": "White slides along the second line to <bdi>P18</bdi>, widening the eye space so the corner lives. Black keeps sente and turns to the right side or another big point with the thickness. An even result."
+    }
+   },
+   "vars": [
+    {
+     "at": 2,
+     "line": [
+      "R11"
+     ],
+     "title": {
+      "ja": "白の二間ビラキ（穏やかな型）",
+      "en": "White's two-space extension (calm)"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は三々に入らず<bdi>R11</bdi>と二間にヒラいて根拠を作ります。黒は手を抜いて大場に先行できますが、白の三々入りの手段は後に残ります。",
+       "en": "Instead of the 3-3, White makes a base with the two-space extension <bdi>R11</bdi>. Black can play elsewhere first, but the 3-3 invasion remains for later."
+      }
+     }
+    },
+    {
+     "at": 2,
+     "line": [
+      "P15",
+      "P16",
+      "S16"
+     ],
+     "title": {
+      "ja": "ノゾキから二線にすべる（AI流）",
+      "en": "Peep, then slide on the second line (AI style)"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は<bdi>P15</bdi>と一間トビの間をノゾキます。黒がツガないと<bdi>P16</bdi>の切りが残ります。",
+       "en": "White peeps at <bdi>P15</bdi> into the one-space jump; if Black ignores it, the cut at <bdi>P16</bdi> remains."
+      },
+      "2": {
+       "ja": "黒は<bdi>P16</bdi>とツイで形を守ります。これで黒の上辺は一本の強い石になりました。",
+       "en": "Black connects at <bdi>P16</bdi>. The top-side stones are now one strong unit."
+      },
+      "3": {
+       "ja": "白は<bdi>S16</bdi>と二線に入り、隅の地をえぐりつつ<bdi>R14</bdi>と連携して根拠を作ります。ノゾキと交換してから隅に入るのがAIの好む手順です。",
+       "en": "White enters at <bdi>S16</bdi> on the second line, eating into the corner and making a base with <bdi>R14</bdi>. Exchanging the peep first and then entering the corner is the order AI likes."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.1,
+    0,
+    0,
+    0,
+    0,
+    0.1,
+    -0.1,
+    -0.2
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R14"
+     ],
+     "good": [
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "O16"
+     ],
+     "good": [
+      "O17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R16"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "S15"
+     ],
+     "good": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "S14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hoshi_keima",
+   "cat": "hoshi",
+   "ord": 2,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・ケイマ受け",
+    "en": "Low approach, knight's-move response"
+   },
+   "short": {
+    "ja": "低く堅いケイマ受け。三々スベリに対してはやはりカカリ側から押さえる",
+    "en": "The low, solid knight's response; against the 3-3 slide Black again blocks on the approach side"
+   },
+   "story": {
+    "ja": "<p>カカリに対して<bdi>O17</bdi>の小ゲイマで受けるのが「ケイマ受け」。一間受けより低く、隅と上辺の地を重視した堅い受け方です。</p><p>それでも星の下の三々は空いているので、白は三々にすべって生きを図れます。黒はカカリの石の側から押さえて白を隅に閉じ込め、右辺に厚みを作ります。最後に<bdi>O18</bdi>と押さえて白の隅を小さく限定するのがケイマ受けならではの利点です。</p><p>白は隅で生き、黒は先手で厚く打てる分かれ。上辺の黒地を大きくまとめたい布石に向きます。</p>",
+    "en": "<p>Answering the approach with the small knight's move <bdi>O17</bdi> is lower and more territorial than the one-space jump: it values the corner and the top side.</p><p>The 3-3 point is still open, so White can slide in and live. Black blocks from the approach side, shutting White into the corner and building thickness toward the right side. The final block at <bdi>O18</bdi>, which keeps White's corner small, is the special benefit of the knight's response.</p><p>White lives in the corner, Black is thick. Good when Black wants a large framework on the top side.</p>"
+   },
+   "level": 1,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "O17",
+    "R17",
+    "R16",
+    "S16",
+    "S15",
+    "S17",
+    "R15",
+    "P18",
+    "O18"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>R14</bdi> with a low knight's move."
+    },
+    "2": {
+     "ja": "黒は<bdi>O17</bdi>のケイマで受けます。一間受け（<bdi>O16</bdi>）より低く、隅と上辺の地を固める受け方です。",
+     "en": "Black answers with the knight's move <bdi>O17</bdi>. It is lower than the one-space jump <bdi>O16</bdi> and firms up the corner and top side."
+    },
+    "3": {
+     "ja": "白は<bdi>R17</bdi>の三々にすべり込みます。AIは<bdi>R16</bdi>のツケ（「AI時代の定石」で紹介）をやや好みますが、この三々スベリも十分な定石です。<bdi>R11</bdi>の二間ビラキもあります。",
+     "en": "White slides into the 3-3 at <bdi>R17</bdi>. AI slightly prefers the attachment at <bdi>R16</bdi> (see the AI-era joseki), but this slide is perfectly good. The two-space extension <bdi>R11</bdi> is also possible."
+    },
+    "4": {
+     "ja": "黒は<bdi>R16</bdi>とカカリの側から押さえ、白の隅と<bdi>R14</bdi>を分断します。",
+     "en": "Black blocks at <bdi>R16</bdi> on the approach side, separating the corner from <bdi>R14</bdi>."
+    },
+    "5": {
+     "ja": "白は<bdi>S16</bdi>とハネて隅を広げます。",
+     "en": "White hanes at <bdi>S16</bdi> to widen the corner."
+    },
+    "6": {
+     "ja": "黒は<bdi>S15</bdi>とハネ返して<bdi>R14</bdi>を切り離します。",
+     "en": "Black hanes back at <bdi>S15</bdi>, cutting off <bdi>R14</bdi>."
+    },
+    "7": {
+     "ja": "白は<bdi>S17</bdi>とツギます。省くと<bdi>S17</bdi>から切られて隅が危険です。",
+     "en": "White connects at <bdi>S17</bdi>; without it Black would cut there and the corner would be in danger."
+    },
+    "8": {
+     "ja": "黒は<bdi>R15</bdi>とツイで壁を完成させます。これで黒の壁に弱点はありません。",
+     "en": "Black connects at <bdi>R15</bdi>. The wall now has no weaknesses."
+    },
+    "9": {
+     "ja": "白は<bdi>P18</bdi>と二線をすべって眼形を広げます。",
+     "en": "White slides along the second line to <bdi>P18</bdi> to widen the eye space."
+    },
+    "10": {
+     "ja": "黒は<bdi>O18</bdi>と押さえて白の侵入を止めます。<bdi>O17</bdi>がここで働くのがケイマ受けの良さです。白は後で<bdi>P17</bdi>と補強して生きますが、黒は上辺と右辺に厚く、全体では互角です。",
+     "en": "Black blocks at <bdi>O18</bdi> and stops the slide — here the stone at <bdi>O17</bdi> pays off. White will later reinforce with <bdi>P17</bdi> and live, while Black is thick on both sides. Even overall."
+    }
+   },
+   "vars": [
+    {
+     "at": 2,
+     "line": [
+      "R11"
+     ],
+     "title": {
+      "ja": "白の二間ビラキ",
+      "en": "White's two-space extension"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は<bdi>R11</bdi>と二間にヒラいて右辺に根拠を作る、最も穏やかな打ち方です。黒は先手で他に回れます。",
+       "en": "White makes a base with the two-space extension <bdi>R11</bdi> — the calmest choice. Black gets sente."
+      }
+     }
+    },
+    {
+     "at": 2,
+     "line": [
+      "R16",
+      "R17",
+      "S17",
+      "R15",
+      "S16",
+      "Q15",
+      "S15",
+      "R18",
+      "Q14"
+     ],
+     "title": {
+      "ja": "白のR16ツケ（AI流）",
+      "en": "White attaches at R16 (AI style)"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は三々ではなく<bdi>R16</bdi>に直接ツケます。AIが好む打ち方で、隅と右辺の両方を狙います。",
+       "en": "Instead of the 3-3, White attaches directly at <bdi>R16</bdi> — an AI favourite aiming at both the corner and the right side."
+      },
+      "2": {
+       "ja": "黒は<bdi>R17</bdi>と隅側から押さえて三々を守ります。",
+       "en": "Black blocks at <bdi>R17</bdi> from the corner side, protecting the 3-3."
+      },
+      "3": {
+       "ja": "白は<bdi>S17</bdi>とハネて隅に食い込みます。",
+       "en": "White hanes at <bdi>S17</bdi>, cutting into the corner."
+      },
+      "4": {
+       "ja": "黒は<bdi>R15</bdi>とアテます。白<bdi>R16</bdi>は残りのダメが一つです。",
+       "en": "Black plays atari at <bdi>R15</bdi>: the white stone at <bdi>R16</bdi> has only one liberty left."
+      },
+      "5": {
+       "ja": "白は<bdi>S16</bdi>とツイでアタリを逃げ、隅の石とつなげます。",
+       "en": "White connects at <bdi>S16</bdi>, escaping the atari and joining the corner stones."
+      },
+      "6": {
+       "ja": "黒は<bdi>Q15</bdi>とツイで<bdi>R15</bdi>を守ります。<bdi>R15</bdi>はダメが少なく、放置すると<bdi>S15</bdi>からアタリにされます。",
+       "en": "Black connects at <bdi>Q15</bdi> to protect <bdi>R15</bdi>, which is short of liberties and could be put in atari from <bdi>S15</bdi>."
+      },
+      "7": {
+       "ja": "白は<bdi>S15</bdi>と下にノビて右辺の<bdi>R14</bdi>に近づき、眼形を広げます。",
+       "en": "White extends down to <bdi>S15</bdi>, approaching <bdi>R14</bdi> and widening the eye space."
+      },
+      "8": {
+       "ja": "黒は<bdi>R18</bdi>とサガって白の<bdi>S18</bdi>からのハネを防ぎ、隅の地を確保します。手を抜く手も有力です。",
+       "en": "Black descends to <bdi>R18</bdi>, preventing White's hane at <bdi>S18</bdi> and securing the corner. Playing elsewhere is also strong."
+      },
+      "9": {
+       "ja": "白は<bdi>Q14</bdi>と押さえて黒の下への進出を止め、右辺を安定させます。白は右辺、黒は隅と上辺を得る分かれです。",
+       "en": "White blocks at <bdi>Q14</bdi>, stopping Black from coming down, and settles the right side. White gets the right side, Black the corner and top side."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.2,
+    0.1,
+    0,
+    0.2,
+    0.2,
+    0.1,
+    0,
+    -0.2,
+    0.1
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 1,
+     "ok": [
+      "O17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R16"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "S15"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "S14"
+     ]
+    },
+    {
+     "at": 9,
+     "ok": [
+      "O18"
+     ],
+     "good": [
+      "Q14",
+      "O14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hoshi_ikkentaka",
+   "cat": "hoshi",
+   "ord": 3,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・一間高バサミ",
+    "en": "Low approach, one-space high pincer"
+   },
+   "short": {
+    "ja": "ハサまれたら三々に入って隅で生きる、最も基本的なハサミの定石",
+    "en": "Pincered? Slide into the 3-3 and live — the basic pincer joseki"
+   },
+   "story": {
+    "ja": "<p>カカリの石に受けずに、逆にハサんで攻めるのが「ハサミ」です。<bdi>Q12</bdi>の一間高バサミは右辺の白を厳しく狙い、同時に右辺の黒の構えにもなります。</p><p>ハサまれた白は、<bdi>R17</bdi>の三々に入って隅で生きるのが代表的な対応です。白は隅の地を得て、カカリの<bdi>R14</bdi>は軽く見捨てます。黒は外側に厚い壁を築き、右辺の<bdi>Q12</bdi>とも協力して<bdi>R14</bdi>を取り込みます。</p><p>黒は「右辺の白を攻めたい」「右辺・中央を大きくしたい」ときに選びます。現代でもよく打たれる、互角の分かれです。</p>",
+    "en": "<p>Instead of answering the approach, Black can pincer it. The one-space high pincer at <bdi>Q12</bdi> attacks the white stone hard and also builds Black's position on the right side.</p><p>The standard reply is for White to slide into the 3-3 point and live in the corner, treating <bdi>R14</bdi> lightly. White gets the corner, Black builds a strong outer wall that works with <bdi>Q12</bdi> to swallow <bdi>R14</bdi>.</p><p>Choose the pincer when you want to attack, or when the right side and the centre are important. A common, even result in modern play.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "Q12",
+    "R17",
+    "R16",
+    "Q17",
+    "P16",
+    "S16",
+    "S15",
+    "S17",
+    "R15",
+    "O17"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>R14</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q12</bdi>と一間高バサミ。受けずに相手の石を挟んで攻め、右辺の構えも作る積極的な手です。AIは手を抜く手も好みますが、この高バサミも損はほとんどありません。",
+     "en": "Black pincers at <bdi>Q12</bdi>, one space away on the fourth line — an active move that attacks and builds the right side. AI also likes playing elsewhere, but this pincer loses almost nothing."
+    },
+    "3": {
+     "ja": "白は<bdi>R17</bdi>の三々に入ります。ハサまれた石を動かさず、隅で確実に生きる現代の標準的な対応です。",
+     "en": "White enters the 3-3 at <bdi>R17</bdi>. Rather than running with the pincered stone, White lives in the corner — the standard modern answer."
+    },
+    "4": {
+     "ja": "黒は<bdi>R16</bdi>とハサミの側から押さえます。白の隅と<bdi>R14</bdi>を分断し、外の壁と<bdi>Q12</bdi>が協力する向きです。",
+     "en": "Black blocks at <bdi>R16</bdi> on the pincer side. This separates the corner from <bdi>R14</bdi> and points the wall toward <bdi>Q12</bdi>."
+    },
+    "5": {
+     "ja": "白は<bdi>Q17</bdi>と上辺側にノビて、隅の眼形を広げます。",
+     "en": "White extends to <bdi>Q17</bdi> along the top, widening the corner's eye space."
+    },
+    "6": {
+     "ja": "黒は<bdi>P16</bdi>と一歩引いて四線に構えます。<bdi>P17</bdi>のハネより穏やかですが、形に弱点が残らず、AIが好む手です。",
+     "en": "Black draws back to <bdi>P16</bdi> on the fourth line. It is calmer than the hane at <bdi>P17</bdi>, but leaves no weaknesses — the move AI prefers."
+    },
+    "7": {
+     "ja": "白は<bdi>S16</bdi>と二線にハネて隅を広げます。",
+     "en": "White hanes at <bdi>S16</bdi> on the second line."
+    },
+    "8": {
+     "ja": "黒は<bdi>S15</bdi>とハネ返します。",
+     "en": "Black hanes back at <bdi>S15</bdi>."
+    },
+    "9": {
+     "ja": "白は<bdi>S17</bdi>とツギます。",
+     "en": "White connects at <bdi>S17</bdi>."
+    },
+    "10": {
+     "ja": "黒は<bdi>R15</bdi>とツイで壁を固めます。<bdi>R14</bdi>はハサミの<bdi>Q12</bdi>と壁に囲まれ、ほぼ動けません。",
+     "en": "Black connects at <bdi>R15</bdi>. <bdi>R14</bdi> is now trapped between the wall and the pincer <bdi>Q12</bdi>."
+    },
+    "11": {
+     "ja": "白は<bdi>O17</bdi>と三線を一間に開いて隅の生きを確かにします。黒は先手で厚く、白は隅の地を得た互角の分かれです。",
+     "en": "White jumps along the third line to <bdi>O17</bdi>, making the corner safely alive. Black has sente and thickness, White has the corner: even."
+    }
+   },
+   "vars": [
+    {
+     "at": 1,
+     "line": [
+      "R12",
+      "R17",
+      "R16",
+      "Q17",
+      "P16",
+      "S16",
+      "S15",
+      "S17",
+      "S14",
+      "O17"
+     ],
+     "title": {
+      "ja": "一間低バサミの場合",
+      "en": "The one-space low pincer"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は三線の<bdi>R12</bdi>にハサみます。より低く、右辺の地を意識したハサミです。",
+       "en": "Black pincers on the third line at <bdi>R12</bdi> — lower, with an eye on right-side territory."
+      },
+      "2": {
+       "ja": "白はやはり<bdi>R17</bdi>の三々に入ります。",
+       "en": "White again enters the 3-3 at <bdi>R17</bdi>."
+      },
+      "3": {
+       "ja": "黒は<bdi>R16</bdi>とハサミの側から押さえます。",
+       "en": "Black blocks at <bdi>R16</bdi> on the pincer side."
+      },
+      "4": {
+       "ja": "白は<bdi>Q17</bdi>とノビます。",
+       "en": "White extends to <bdi>Q17</bdi>."
+      },
+      "5": {
+       "ja": "黒は<bdi>P16</bdi>と構えます。",
+       "en": "Black draws back to <bdi>P16</bdi>."
+      },
+      "6": {
+       "ja": "白は<bdi>S16</bdi>とハネます。",
+       "en": "White hanes at <bdi>S16</bdi>."
+      },
+      "7": {
+       "ja": "黒は<bdi>S15</bdi>とハネ返します。",
+       "en": "Black hanes back at <bdi>S15</bdi>."
+      },
+      "8": {
+       "ja": "白は<bdi>S17</bdi>とツギます。",
+       "en": "White connects at <bdi>S17</bdi>."
+      },
+      "9": {
+       "ja": "黒は<bdi>S14</bdi>と二線をノビて、<bdi>R14</bdi>のダメを詰めます。",
+       "en": "Black extends down the second line to <bdi>S14</bdi>, taking a liberty from <bdi>R14</bdi>."
+      },
+      "10": {
+       "ja": "白は<bdi>O17</bdi>と開いて隅を生きます。",
+       "en": "White jumps to <bdi>O17</bdi> and lives in the corner."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.2,
+    -0.1,
+    -0.3,
+    -0.2,
+    -0.2,
+    -0.2,
+    -0.2,
+    -0.2,
+    -0.3,
+    -0.3
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 1,
+     "ok": [
+      "Q12"
+     ],
+     "good": [
+      "O17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R16"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "P16"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "S15"
+     ]
+    },
+    {
+     "at": 9,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "S14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hoshi_niken",
+   "cat": "hoshi",
+   "ord": 4,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・二間バサミ",
+    "en": "Low approach, two-space pincer"
+   },
+   "short": {
+    "ja": "少し離れた二間バサミ。三々入りの後の黒の締め方が一間バサミと変わる",
+    "en": "A looser pincer — after the 3-3, Black finishes differently from the one-space pincer"
+   },
+   "story": {
+    "ja": "<p><bdi>R11</bdi>の二間バサミは、一間バサミより一路離れた穏やかなハサミです。右辺に少し広く構えられる代わりに、白の<bdi>R14</bdi>には動く余地が残ります。</p><p>白はやはり三々に入って隅で生きます。違いは最後で、ハサミが遠いぶん黒は<bdi>S14</bdi>と二線をノビて<bdi>R14</bdi>のダメを詰め、しっかり取り込みにいきます。</p><p>ハサミの距離によって「後の締め方」が変わることを覚えましょう。どちらも黒は厚み、白は隅の地を得る互角の分かれです。</p>",
+    "en": "<p>The two-space pincer at <bdi>R11</bdi> is one line looser than the one-space pincer. Black claims a wider right side, but <bdi>R14</bdi> has a little more room to move.</p><p>White again lives in the 3-3. The difference comes at the end: since the pincer is further away, Black extends down the second line to <bdi>S14</bdi> to take a liberty from <bdi>R14</bdi> and really capture it.</p><p>Remember that the distance of the pincer changes how you finish. In both cases Black gets thickness and White the corner — even.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "R11",
+    "R17",
+    "R16",
+    "Q17",
+    "P16",
+    "S16",
+    "S15",
+    "S17",
+    "S14",
+    "O17"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>R14</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>R11</bdi>と三線に二間バサミ。白を攻めつつ、右辺に広く構えます。",
+     "en": "Black pincers two spaces away on the third line at <bdi>R11</bdi>, attacking while claiming a wide right side."
+    },
+    "3": {
+     "ja": "白は<bdi>R17</bdi>の三々に入って隅で生きる方針です。",
+     "en": "White enters the 3-3 at <bdi>R17</bdi>, planning to live in the corner."
+    },
+    "4": {
+     "ja": "黒は<bdi>R16</bdi>とハサミの側から押さえます。",
+     "en": "Black blocks at <bdi>R16</bdi> on the pincer side."
+    },
+    "5": {
+     "ja": "白は<bdi>Q17</bdi>とノビます。",
+     "en": "White extends to <bdi>Q17</bdi>."
+    },
+    "6": {
+     "ja": "黒は<bdi>P16</bdi>と構えて形を整えます。",
+     "en": "Black draws back to <bdi>P16</bdi>, keeping good shape."
+    },
+    "7": {
+     "ja": "白は<bdi>S16</bdi>とハネます。",
+     "en": "White hanes at <bdi>S16</bdi>."
+    },
+    "8": {
+     "ja": "黒は<bdi>S15</bdi>とハネ返します。",
+     "en": "Black hanes back at <bdi>S15</bdi>."
+    },
+    "9": {
+     "ja": "白は<bdi>S17</bdi>とツギます。",
+     "en": "White connects at <bdi>S17</bdi>."
+    },
+    "10": {
+     "ja": "黒は<bdi>S14</bdi>と二線をノビます。二間バサミは遠いので、ここで<bdi>R14</bdi>のダメを詰めて逃げ道をなくすのが大切です。<bdi>R15</bdi>とツグ手も打たれます。",
+     "en": "Black extends to <bdi>S14</bdi>. Because the pincer is further away, taking <bdi>R14</bdi>'s liberty here to cut off its escape matters. Connecting at <bdi>R15</bdi> is also played."
+    },
+    "11": {
+     "ja": "白は<bdi>O17</bdi>と開いて隅の生きを確保します。互角の分かれです。",
+     "en": "White jumps to <bdi>O17</bdi> and secures life. Even."
+    }
+   },
+   "vars": [
+    {
+     "at": 9,
+     "line": [
+      "R15",
+      "O17"
+     ],
+     "title": {
+      "ja": "R15とツグ型",
+      "en": "Connecting at R15"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>R15</bdi>と堅くツギます。壁は完璧ですが、<bdi>R14</bdi>はまだ少し動けます。",
+       "en": "Black connects solidly at <bdi>R15</bdi>. The wall is perfect, but <bdi>R14</bdi> still has a little life in it."
+      },
+      "2": {
+       "ja": "白は<bdi>O17</bdi>と開いて隅を生きます。",
+       "en": "White jumps to <bdi>O17</bdi> and lives."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.3,
+    -0.2,
+    -0.4,
+    -0.3,
+    -0.3,
+    -0.2,
+    -0.3,
+    -0.2,
+    -0.2,
+    -0.3
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 1,
+     "ok": [
+      "R11"
+     ],
+     "good": [
+      "O17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R16"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "P16"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "S15"
+     ]
+    },
+    {
+     "at": 9,
+     "ok": [
+      "S14"
+     ],
+     "good": [
+      "R15"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hoshi_sansan",
+   "cat": "hoshi",
+   "ord": 5,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "星への三々入り（基本形）",
+    "en": "3-3 invasion of the 4-4 (basics)"
+   },
+   "short": {
+    "ja": "AIが広めた早い三々入り。黒は押さえる向きを決め、外を厚くする",
+    "en": "The early 3-3 invasion made popular by AI: choose the blocking direction and build outside"
+   },
+   "story": {
+    "ja": "<p>星の下の三々に直接入る「三々入り」は、昔は「黒に厚みを与えるので序盤では早すぎる」とされていました。ところがAIは序盤の早い段階から三々に入り、今ではプロの碁でも日常的に見られます。</p><p>黒の最初の判断は「どちらから押さえるか」です。原則は、自分の石がある側や広い側に壁を向けること。この図では上から<bdi>Q17</bdi>と押さえ、白に右辺側をハわせて、黒は中央と上辺に厚みを作ります。</p><p>白は隅の地（約10目）と後手でも安心な生き、黒は先手と厚みを得ます。三々入りの基本形は必ず覚えておきましょう。</p>",
+    "en": "<p>Invading the 3-3 point directly under a 4-4 stone used to be called \"too early in the opening — it gives Black thickness\". AI changed that: it invades very early, and now it is everyday play among professionals.</p><p>Black's first decision is which side to block from. The rule: face the wall toward your own stones or the wider side. Here Black blocks from above at <bdi>Q17</bdi>, makes White crawl along the right side, and builds thickness facing the top and the centre.</p><p>White gets the corner (about 10 points) and secure life; Black gets sente and thickness. This basic shape is a must-know.</p>"
+   },
+   "level": 1,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R17",
+    "Q17",
+    "R16",
+    "R14",
+    "R15",
+    "Q15",
+    "S14"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R17</bdi>と三々に直接入ります。AI時代になって序盤から当たり前に打たれるようになった手です。",
+     "en": "White invades the 3-3 at <bdi>R17</bdi> directly — a move AI made a normal opening choice."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q17</bdi>と上から押さえます。押さえる向きは、壁を向けたい側（自分の石がある側・広い側）で決めます。<bdi>R16</bdi>から押さえるのも同じくらいの手です。",
+     "en": "Black blocks from above at <bdi>Q17</bdi>. Choose the direction by where you want the wall to face — toward your stones or the wider side. Blocking at <bdi>R16</bdi> is about equal."
+    },
+    "3": {
+     "ja": "白は<bdi>R16</bdi>とハイ、右辺側に眼形を広げます。",
+     "en": "White crawls to <bdi>R16</bdi>, widening the eye space toward the right side."
+    },
+    "4": {
+     "ja": "黒は<bdi>R14</bdi>と一間下を押さえ、白の進出を止めます。<bdi>R15</bdi>のハネ（下の変化）や<bdi>Q15</bdi>のノビも定石で、AIはどれもほぼ同じ評価です。",
+     "en": "Black blocks one space ahead at <bdi>R14</bdi>, stopping White's advance. The hane at <bdi>R15</bdi> (see variation) and the solid <bdi>Q15</bdi> are also joseki; AI rates them all about the same."
+    },
+    "5": {
+     "ja": "白は<bdi>R15</bdi>とオシて、黒の一間の間を突きます。",
+     "en": "White pushes at <bdi>R15</bdi> into the gap of Black's one-space shape."
+    },
+    "6": {
+     "ja": "黒は<bdi>Q15</bdi>とツイで切断を防ぎます。ここを省くと<bdi>Q15</bdi>に切られて<bdi>R14</bdi>が孤立します。",
+     "en": "Black connects at <bdi>Q15</bdi>. If omitted, White cuts here and <bdi>R14</bdi> is isolated."
+    },
+    "7": {
+     "ja": "白は<bdi>S14</bdi>と二線にハネて眼形を確保し、隅の生きを確かにします。黒は先手を得て厚みを生かした大場に向かいます。",
+     "en": "White hanes on the second line at <bdi>S14</bdi>, securing the eye space and life. Black has sente and turns to a big point that uses the thickness."
+    }
+   },
+   "vars": [
+    {
+     "at": 3,
+     "line": [
+      "R15",
+      "S15",
+      "R14",
+      "S14"
+     ],
+     "title": {
+      "ja": "ハネ・ハネ返しの型（古くからの定石）",
+      "en": "Hane and hane back (classic)"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>R15</bdi>とハネて白の頭を押さえます。",
+       "en": "Black hanes at <bdi>R15</bdi>, at the head of White's stones."
+      },
+      "2": {
+       "ja": "白は<bdi>S15</bdi>とハネ返します。",
+       "en": "White hanes back at <bdi>S15</bdi>."
+      },
+      "3": {
+       "ja": "黒は<bdi>R14</bdi>とノビて切りに備えます。",
+       "en": "Black extends to <bdi>R14</bdi>, guarding against the cut."
+      },
+      "4": {
+       "ja": "白は<bdi>S14</bdi>とノビて眼形を確保し、生きます。黒は先手で厚みを得ます。",
+       "en": "White extends to <bdi>S14</bdi> and secures life. Black keeps sente and thickness."
+      }
+     }
+    },
+    {
+     "at": 3,
+     "line": [
+      "Q15",
+      "S14"
+     ],
+     "title": {
+      "ja": "Q15のノビ（AIの本手）",
+      "en": "The solid extension Q15 (AI's honest move)"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>Q15</bdi>と堅くノビます。弱点がなく、後の手段も残さない本手です。",
+       "en": "Black extends solidly at <bdi>Q15</bdi> — no weaknesses and no aji left behind."
+      },
+      "2": {
+       "ja": "白は<bdi>S14</bdi>とケイマにすべって眼形を作り、生きます。",
+       "en": "White slides to <bdi>S14</bdi> with a knight's move and lives."
+      }
+     }
+    },
+    {
+     "at": 1,
+     "line": [
+      "R16",
+      "Q17",
+      "P16",
+      "O18"
+     ],
+     "title": {
+      "ja": "R16から押さえる型",
+      "en": "Blocking from R16"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>R16</bdi>と右辺側から押さえ、壁を上辺に向けます。",
+       "en": "Black blocks from the right side at <bdi>R16</bdi>, facing the wall toward the top side."
+      },
+      "2": {
+       "ja": "白は<bdi>Q17</bdi>と上辺側にハイます。",
+       "en": "White crawls along the top to <bdi>Q17</bdi>."
+      },
+      "3": {
+       "ja": "黒は<bdi>P16</bdi>と一歩引いて構えます。",
+       "en": "Black draws back to <bdi>P16</bdi>."
+      },
+      "4": {
+       "ja": "白は<bdi>O18</bdi>と二線をすべって生きます。黒は右辺に厚い壁を得ました。",
+       "en": "White slides along the second line to <bdi>O18</bdi> and lives. Black has a thick wall facing the right side."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.4,
+    -0.3,
+    -0.3,
+    -0.2,
+    -0.2,
+    -0.3,
+    -0.2
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "Q17"
+     ],
+     "good": [
+      "R16"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "R16"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R14"
+     ],
+     "good": [
+      "Q15"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "Q15"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hoshi_takagakari",
+   "cat": "hoshi",
+   "ord": 6,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "一間高ガカリ・下ツケ",
+    "en": "High approach, attach underneath"
+   },
+   "short": {
+    "ja": "高いカカリには下からツケて引き、隅の地と根拠を確保する",
+    "en": "Against the high approach, attach underneath and draw back — corner and base secured"
+   },
+   "story": {
+    "ja": "<p><bdi>Q14</bdi>の一間高ガカリは、小ゲイマガカリより中央寄りで、右辺の模様を消す働きが強いカカリです。その代わり隅への影響は弱く、三々にも入りにくくなります。</p><p>黒の代表的な対応は<bdi>R14</bdi>の下ツケから<bdi>R15</bdi>と引く「ツケヒキ」。隅の地を確実にしながら、白を右辺へ押しやります。その後、黒は上辺に<bdi>O16</bdi>と一間に構え、隅から上辺に根拠を広げます。</p><p>黒は堅い地、白は右辺の厚み、という分かれ。黒が地を大事にしたい布石で選びます。</p>",
+    "en": "<p>The one-space high approach at <bdi>Q14</bdi> is closer to the centre than the low approach: it is better at erasing a right-side framework, but weaker in the corner, and the 3-3 invasion is harder afterward.</p><p>Black's typical answer is the attach-and-draw-back: attach underneath at <bdi>R14</bdi>, then draw back to <bdi>R15</bdi>. This secures the corner while pushing White toward the right side. Then Black jumps to <bdi>O16</bdi> on the top side to widen the base.</p><p>Black gets solid territory, White thickness on the right. Choose it when Black values territory.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "Q14",
+    "R14",
+    "R13",
+    "R15",
+    "Q13",
+    "O16",
+    "M17"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>Q14</bdi>と一間高ガカリ。四線から中央寄りにカカり、右辺の黒の発展を抑えます。",
+     "en": "White approaches high at <bdi>Q14</bdi>, on the fourth line, limiting Black's development on the right side."
+    },
+    "2": {
+     "ja": "黒は<bdi>R14</bdi>と下にツケます。高いカカリの弱点である隅側の下を突き、白に形を決めさせる手です。AIは<bdi>O16</bdi>の一間受け（変化図）をわずかに好みますが、差は1目未満です。",
+     "en": "Black attaches underneath at <bdi>R14</bdi>, hitting the weak spot of a high approach and forcing White to decide its shape. AI slightly prefers the one-space jump <bdi>O16</bdi> (variation), but the difference is under a point."
+    },
+    "3": {
+     "ja": "白は<bdi>R13</bdi>とハネて右辺に地を作る構えを見せます。",
+     "en": "White hanes at <bdi>R13</bdi>, aiming to build on the right side."
+    },
+    "4": {
+     "ja": "黒は<bdi>R15</bdi>と引いて隅を固めます。これが「ツケヒキ」で、隅の地と根拠が確実になります。",
+     "en": "Black draws back to <bdi>R15</bdi>, firming up the corner. This attach-and-draw-back gives Black a sure corner and base."
+    },
+    "5": {
+     "ja": "白は<bdi>Q13</bdi>とツイで形を整えます。<bdi>Q13</bdi>を省くと黒に切られる弱点が残ります。",
+     "en": "White connects at <bdi>Q13</bdi>. Without it there is a cutting point."
+    },
+    "6": {
+     "ja": "黒は<bdi>O16</bdi>と上辺に一間トビで構え、隅から上辺にかけての根拠を広げます。",
+     "en": "Black jumps to <bdi>O16</bdi> on the top side, extending the base from the corner along the top."
+    },
+    "7": {
+     "ja": "白は<bdi>M17</bdi>と上辺に打ち込んで、黒の上辺の発展を制限しつつ左上の白と連携します。黒は隅の地、白は右辺の厚みと上辺の足場を得た分かれです。",
+     "en": "White plays <bdi>M17</bdi> on the top side, limiting Black's expansion and linking with the upper-left white corner. Black has the corner, White the right-side thickness and a foothold on top."
+    }
+   },
+   "vars": [
+    {
+     "at": 1,
+     "line": [
+      "O16"
+     ],
+     "title": {
+      "ja": "一間トビで受ける",
+      "en": "Answer with a one-space jump"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒はツケずに<bdi>O16</bdi>と一間に受けます。白に右辺で形を選ばせる、穏やかな受け方です。",
+       "en": "Instead of attaching, Black jumps to <bdi>O16</bdi> — a calm answer that leaves White to choose its right-side shape."
+      }
+     }
+    }
+   ],
+   "evals": [
+    0.3,
+    -0.3,
+    -0.3,
+    -0.2,
+    -0.3,
+    -0.1,
+    -0.2
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "Q14"
+     ],
+     "good": [
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "R14"
+     ],
+     "good": [
+      "O16",
+      "O17"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "R13"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R15"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "O16"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hoshi_ryogakari",
+   "cat": "hoshi",
+   "ord": 7,
+   "n": 19,
+   "label": {
+    "ja": "星",
+    "en": "4-4"
+   },
+   "title": {
+    "ja": "両ガカリ・ツケ",
+    "en": "Double approach, attach"
+   },
+   "short": {
+    "ja": "手を抜いて両ガカリされたら、片方にツケて形を決める",
+    "en": "Double approach after a tenuki: attach to one side and settle the shape"
+   },
+   "story": {
+    "ja": "<p>小ゲイマガカリに手を抜くと、白は反対側からもカカって「両ガカリ」にできます。隅の黒一子が挟み撃ちにされるので、黒は形を整える必要があります。</p><p>基本は「強い方（または自分が地にしたくない方）にツケる」。この図では右辺の<bdi>R14</bdi>に<bdi>Q14</bdi>とツケ、ハネ・ノビの後、白が隅の<bdi>R16</bdi>に入ってくるのを<bdi>R17</bdi>・<bdi>Q17</bdi>と受けて、黒は隅の地を確保します。</p><p>白は右辺と上辺にそれぞれ形を作り、黒は隅と中央の厚みを得ます。手抜きした代償は小さく、両ガカリは怖くないことがわかります。</p>",
+    "en": "<p>If Black ignores the low approach, White can approach from the other side as well — a double approach. The lone corner stone is squeezed from both sides, so Black must settle its shape.</p><p>The rule: attach to the stronger side (or the side you do not mind giving away). Here Black attaches to <bdi>R14</bdi> at <bdi>Q14</bdi>; after the hane and extension White slides into the corner at <bdi>R16</bdi>, and Black answers at <bdi>R17</bdi> and <bdi>Q17</bdi> to keep the corner.</p><p>White makes shapes on both sides, Black gets the corner and central thickness. The price of the tenuki is small — the double approach is nothing to fear.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3",
+     "C14"
+    ],
+    "aw": [
+     "D16",
+     "Q4",
+     "R14"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "O17",
+    "Q14",
+    "Q13",
+    "P14",
+    "R16",
+    "R17",
+    "R15",
+    "Q17",
+    "L17"
+   ],
+   "notes": {
+    "1": {
+     "ja": "黒が<bdi>R14</bdi>のカカリに手を抜いたので、白は<bdi>O17</bdi>と上辺からもカカって両ガカリにします。",
+     "en": "Black ignored the approach at <bdi>R14</bdi>, so White approaches from the top side as well at <bdi>O17</bdi> — a double approach."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q14</bdi>と右辺の白にツケます。ツケて相手を固めると同時に、自分の形も整えるのが両ガカリへの基本です。",
+     "en": "Black attaches to the right-side stone at <bdi>Q14</bdi>. Attaching settles your own shape while firming up one opponent stone — the basic answer to a double approach."
+    },
+    "3": {
+     "ja": "白は<bdi>Q13</bdi>とハネて右辺に形を作ります。",
+     "en": "White hanes at <bdi>Q13</bdi>, making shape on the right side."
+    },
+    "4": {
+     "ja": "黒は<bdi>P14</bdi>とノビて中央に頭を出します。",
+     "en": "Black extends to <bdi>P14</bdi>, heading for the centre."
+    },
+    "5": {
+     "ja": "白は<bdi>R16</bdi>と隅にツケて、右辺の石の根拠と隅の地を狙います。",
+     "en": "White attaches at <bdi>R16</bdi> in the corner, aiming for a base and corner territory."
+    },
+    "6": {
+     "ja": "黒は<bdi>R17</bdi>と隅側から押さえ、三々を守ります。",
+     "en": "Black blocks from the corner side at <bdi>R17</bdi>, protecting the 3-3."
+    },
+    "7": {
+     "ja": "白は<bdi>R15</bdi>とツイで右辺の石をつなげ、根拠を確保します。",
+     "en": "White connects at <bdi>R15</bdi>, joining the right-side stones and securing a base."
+    },
+    "8": {
+     "ja": "黒は<bdi>Q17</bdi>とツイで隅の地を確定させます。",
+     "en": "Black connects at <bdi>Q17</bdi>, confirming the corner territory."
+    },
+    "9": {
+     "ja": "白は<bdi>L17</bdi>と上辺の<bdi>O17</bdi>から二間にヒラいて、こちらも根拠を作ります。黒は隅と中央の厚み、白は二つの辺に安定した石を得た分かれです。",
+     "en": "White extends two spaces from <bdi>O17</bdi> to <bdi>L17</bdi>, giving that stone a base as well. Black has the corner and central thickness, White two settled groups."
+    }
+   },
+   "vars": [
+    {
+     "at": 1,
+     "line": [
+      "O16"
+     ],
+     "title": {
+      "ja": "一間トビで受ける",
+      "en": "Answer with a one-space jump"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>O16</bdi>と一間にトんで、上辺の白<bdi>O17</bdi>の頭を押さえます。中央への進出と上辺の白への圧力を兼ねた手で、AIは<bdi>Q14</bdi>のツケとほぼ同じ評価です。",
+       "en": "Black jumps to <bdi>O16</bdi>, capping the head of the top-side stone <bdi>O17</bdi>. It heads for the centre while pressing that stone; AI rates it about the same as the attachment at <bdi>Q14</bdi>."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.4,
+    -0.3,
+    -0.5,
+    -0.3,
+    -0.6,
+    -0.4,
+    -0.4,
+    -0.4,
+    -0.6
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "O17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "Q14"
+     ],
+     "good": [
+      "O16"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "P14"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "R17"
+     ],
+     "good": [
+      "R15"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "Q17"
+     ],
+     "good": [
+      "Q18"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "komoku_ikken",
+   "cat": "komoku",
+   "ord": 1,
+   "n": 19,
+   "label": {
+    "ja": "小目",
+    "en": "3-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・一間バサミ",
+    "en": "Small knight approach, one-space low pincer"
+   },
+   "short": {
+    "ja": "厳しい一間バサミ。白は小目の肩から形を作り、黒は隅と右辺を固める",
+    "en": "A severe pincer: White makes shape from the shoulder, Black secures corner and right side"
+   },
+   "story": {
+    "ja": "<p>小目（3-4）への<bdi>P17</bdi>の小ゲイマガカリは、最もよく打たれるカカリです。黒は受けるか、ハサむかを選びます。<bdi>N17</bdi>の一間バサミは最も厳しいハサミの一つで、白に楽に上辺で根拠を作らせません。</p><p>現代の白の代表的な対応は、<bdi>Q15</bdi>と小目の肩から打って黒を隅に押し込みながら外に出る手です。黒は<bdi>R15</bdi>・<bdi>S13</bdi>と低く構えて隅と右辺の根拠を確保します。</p><p>その後は白が<bdi>L17</bdi>でハサミの石を逆に挟むなど、戦いになりやすい定石です。黒は隅の地、白は中央への勢いを得ます。</p>",
+    "en": "<p>The small knight approach at <bdi>P17</bdi> is the most common approach to a 3-4 stone. Black can answer or pincer. The one-space low pincer at <bdi>N17</bdi> is one of the most severe, denying White an easy base on the top.</p><p>White's typical modern answer is <bdi>Q15</bdi>, on the shoulder of the 3-4 stone: it presses Black into the corner while heading out. Black stays low with <bdi>R15</bdi> and <bdi>S13</bdi>, securing the corner and a base on the right side.</p><p>Fighting often follows, e.g. White counter-pincering the pincer stone at <bdi>L17</bdi>. Black gets the corner, White momentum toward the centre.</p>"
+   },
+   "level": 3,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "P17",
+    "N17",
+    "Q15",
+    "R15",
+    "Q14",
+    "S13"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>P17</bdi>に小ゲイマガカリ。小目へのカカリで最もよく打たれる手です。",
+     "en": "White approaches at <bdi>P17</bdi> with a small knight's move — the most common approach to a 3-4 stone."
+    },
+    "2": {
+     "ja": "黒は<bdi>N17</bdi>と一間低バサミ。カカリの石の上辺への足場を奪う厳しいハサミです。受けるなら<bdi>Q14</bdi>のケイマ受けや<bdi>Q15</bdi>のコスミ（変化図）があります。",
+     "en": "Black pincers one space away at <bdi>N17</bdi>, taking away the approach stone's room on the top side. To answer quietly instead, see the knight's move <bdi>Q14</bdi> or the diagonal <bdi>Q15</bdi> (variations)."
+    },
+    "3": {
+     "ja": "白は<bdi>Q15</bdi>と黒の小目の肩に打ちます。黒を隅に押し込みつつ、自分は中央に出る現代の代表的な手です。昔は<bdi>P15</bdi>の一間トビもよく打たれました。",
+     "en": "White plays <bdi>Q15</bdi>, on the shoulder of the 3-4 stone — pressing Black into the corner while heading out. The modern standard; the one-space jump <bdi>P15</bdi> was the older choice."
+    },
+    "4": {
+     "ja": "黒は<bdi>R15</bdi>とノビて隅を守り、右辺に向かいます。",
+     "en": "Black extends to <bdi>R15</bdi>, defending the corner and heading for the right side."
+    },
+    "5": {
+     "ja": "白は<bdi>Q14</bdi>とノビて黒を低く抑えます。",
+     "en": "White extends to <bdi>Q14</bdi>, keeping Black low."
+    },
+    "6": {
+     "ja": "黒は<bdi>S13</bdi>と二線にケイマして根拠を確保します。低いですが眼形が豊富で、攻められる心配がありません。白は外に厚みを得て、次に<bdi>L17</bdi>でハサミの石を攻める手（変化図）が楽しみです。",
+     "en": "Black secures a base with the knight's move <bdi>S13</bdi> on the second line. Low, but rich in eye shape and safe. White has outside thickness and looks forward to attacking the pincer stone with <bdi>L17</bdi> (variation)."
+    }
+   },
+   "vars": [
+    {
+     "at": 1,
+     "line": [
+      "Q14"
+     ],
+     "title": {
+      "ja": "ケイマ受け（ハサまない場合）",
+      "en": "Knight's-move response (no pincer)"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>Q14</bdi>とケイマに受けます。隅の地を固める堅実な受けで、白は上辺にヒラくか手を抜きます。",
+       "en": "Black answers with the knight's move <bdi>Q14</bdi>, a solid move that secures the corner. White extends on the top side or plays elsewhere."
+      }
+     }
+    },
+    {
+     "at": 1,
+     "line": [
+      "Q15"
+     ],
+     "title": {
+      "ja": "コスミ（AIも好む受け）",
+      "en": "The diagonal (an answer AI likes)"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>Q15</bdi>とコスミます。白の肩を先に占め、隅を守りながら中央にも向かう手で、AIの評価も高い受けです。",
+       "en": "Black plays the diagonal <bdi>Q15</bdi>, taking the shoulder point first — defending the corner while facing the centre. AI rates it highly."
+      }
+     }
+    },
+    {
+     "at": 6,
+     "line": [
+      "L17",
+      "N15",
+      "L15"
+     ],
+     "title": {
+      "ja": "ハサミ返しからの戦い",
+      "en": "Counter-pincer and fight"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は<bdi>L17</bdi>とハサミの石を逆に挟みます。外の厚みを背景にした攻めです。",
+       "en": "White counter-pincers the pincer stone at <bdi>L17</bdi>, attacking with the backing of its thickness."
+      },
+      "2": {
+       "ja": "黒は<bdi>N15</bdi>と一間にトんで中央に逃げます。",
+       "en": "Black jumps out to <bdi>N15</bdi> toward the centre."
+      },
+      "3": {
+       "ja": "白も<bdi>L15</bdi>と並んでトビ、攻めを続けます。この後は中盤の戦いです。",
+       "en": "White jumps alongside to <bdi>L15</bdi>, continuing the attack. From here it is a middle-game fight."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.3,
+    -0.5,
+    -0.7,
+    -0.6,
+    -0.5
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "P17"
+     ],
+     "good": [
+      "P16"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "N17"
+     ],
+     "good": [
+      "Q15",
+      "Q14"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "Q15"
+     ],
+     "good": [
+      "P15"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "Q16"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "S13"
+     ],
+     "good": [
+      "R13"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "komoku_nikentaka",
+   "cat": "komoku",
+   "ord": 2,
+   "n": 19,
+   "label": {
+    "ja": "小目",
+    "en": "3-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・二間高バサミ",
+    "en": "Small knight approach, two-space high pincer"
+   },
+   "short": {
+    "ja": "白は一間トビから押して厚みを作り、ハサミの石を逆に攻める",
+    "en": "White jumps, pushes to build a wall, then attacks the pincer stone"
+   },
+   "story": {
+    "ja": "<p><bdi>M16</bdi>の二間高バサミは、ハサミの中でも穏やかで柔軟な手です。白はこの定石では「ハサまれた側」としての打ち方を学びます。</p><p>白は<bdi>P15</bdi>と一間にトんで中央に出ます。黒が<bdi>Q14</bdi>と右辺を守ると、白は<bdi>P14</bdi>・<bdi>P13</bdi>と押して外側に壁を築き、最後に<bdi>K16</bdi>とハサミの石を挟んで攻めに回ります。</p><p>黒は右辺に地を得ますが、上辺の<bdi>M16</bdi>が弱くなります。白は厚みを攻めに生かすのが狙いです。肩ツキによる現代的な対応は変化図とAIの章で紹介します。</p>",
+    "en": "<p>The two-space high pincer at <bdi>M16</bdi> is one of the calmer, more flexible pincers. Here you study how White handles being pincered.</p><p>White jumps out to <bdi>P15</bdi>. When Black protects the right side at <bdi>Q14</bdi>, White pushes at <bdi>P14</bdi> and <bdi>P13</bdi> to build an outer wall, and finally turns to attack the pincer stone with <bdi>K16</bdi>.</p><p>Black gets right-side territory, but <bdi>M16</bdi> becomes weak; White uses the wall to attack. The modern shoulder-hit answer is shown in a variation and in the AI chapter.</p>"
+   },
+   "level": 2,
+   "side": 2,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "P17",
+    "M16",
+    "P15",
+    "Q14",
+    "P14",
+    "Q13",
+    "P13",
+    "Q12",
+    "K16"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>P17</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>P17</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>M16</bdi>と二間高バサミ。四線の高いハサミで、上辺の模様も意識した柔軟な手です。",
+     "en": "Black pincers two spaces away on the fourth line at <bdi>M16</bdi> — a flexible pincer that also builds the top side."
+    },
+    "3": {
+     "ja": "白は<bdi>P15</bdi>と一間にトんで中央に出ます。ハサまれた石はまず頭を出して攻められない形にするのが基本です。AIは<bdi>Q15</bdi>の肩ツキ（変化図）を約1目好みます。",
+     "en": "White jumps out to <bdi>P15</bdi>. A pincered stone should first get its head out so it cannot be attacked. AI prefers the shoulder hit <bdi>Q15</bdi> (variation) by about a point."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q14</bdi>とケイマに構え、右辺への白の進出を止めて隅と右辺を守ります。",
+     "en": "Black plays the knight's move <bdi>Q14</bdi>, stopping White from coming down the right side and protecting corner and side."
+    },
+    "5": {
+     "ja": "白は<bdi>P14</bdi>とオシて外側に壁を作り始めます。",
+     "en": "White pushes at <bdi>P14</bdi>, starting to build an outer wall."
+    },
+    "6": {
+     "ja": "黒は<bdi>Q13</bdi>とノビて右辺の地を広げます。",
+     "en": "Black extends to <bdi>Q13</bdi>, enlarging the right side."
+    },
+    "7": {
+     "ja": "白は<bdi>P13</bdi>ともう一度オシて壁を高くします。",
+     "en": "White pushes once more at <bdi>P13</bdi>, making the wall taller."
+    },
+    "8": {
+     "ja": "黒は<bdi>Q12</bdi>とノビて右辺を確保します。",
+     "en": "Black extends to <bdi>Q12</bdi>, securing the right side."
+    },
+    "9": {
+     "ja": "白は<bdi>K16</bdi>とハサミの石を挟み返し、壁を背景に攻めに回ります。黒は右辺の地、白は厚みと攻めの主導権を得た分かれです。",
+     "en": "White counter-pincers at <bdi>K16</bdi>, attacking with the wall behind it. Black has the right side, White thickness and the initiative."
+    }
+   },
+   "vars": [
+    {
+     "at": 2,
+     "line": [
+      "Q15",
+      "R15",
+      "Q14",
+      "R13",
+      "K17"
+     ],
+     "title": {
+      "ja": "肩ツキで応じる（現代流）",
+      "en": "Answer with the shoulder hit (modern)"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は<bdi>Q15</bdi>と黒の小目の肩にツキます。現代では最も多い対応です。",
+       "en": "White hits the shoulder of the 3-4 stone at <bdi>Q15</bdi> — the most common modern answer."
+      },
+      "2": {
+       "ja": "黒は<bdi>R15</bdi>とノビます。",
+       "en": "Black extends to <bdi>R15</bdi>."
+      },
+      "3": {
+       "ja": "白は<bdi>Q14</bdi>とノビて黒を低く抑えます。",
+       "en": "White extends to <bdi>Q14</bdi>, keeping Black low."
+      },
+      "4": {
+       "ja": "黒は<bdi>R13</bdi>と構えて根拠を確保します。",
+       "en": "Black settles at <bdi>R13</bdi>, securing a base."
+      },
+      "5": {
+       "ja": "白は<bdi>K17</bdi>とハサミの石を挟みます。",
+       "en": "White pincers the pincer stone at <bdi>K17</bdi>."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.6,
+    0,
+    0.2,
+    0.1,
+    0.1,
+    0,
+    -0.1,
+    0
+   ],
+   "view": [
+    8,
+    0,
+    18,
+    10
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "P17"
+     ],
+     "good": [
+      "P16"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "P15"
+     ],
+     "good": [
+      "Q15"
+     ]
+    },
+    {
+     "at": 4,
+     "ok": [
+      "P14"
+     ],
+     "good": [
+      "R18",
+      "K17",
+      "K16"
+     ]
+    },
+    {
+     "at": 6,
+     "ok": [
+      "P13"
+     ],
+     "good": [
+      "K16",
+      "K17"
+     ]
+    },
+    {
+     "at": 8,
+     "ok": [
+      "K16"
+     ],
+     "good": [
+      "P12",
+      "J17",
+      "J16"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "komoku_ikkentaka",
+   "cat": "komoku",
+   "ord": 3,
+   "n": 19,
+   "label": {
+    "ja": "小目",
+    "en": "3-4"
+   },
+   "title": {
+    "ja": "小ゲイマガカリ・一間高バサミ",
+    "en": "Small knight approach, one-space high pincer"
+   },
+   "short": {
+    "ja": "近いハサミ。白がトんで押す間に、黒は右辺に大きな地を作る",
+    "en": "A close pincer: while White jumps and pushes, Black builds a big right side"
+   },
+   "story": {
+    "ja": "<p><bdi>N16</bdi>の一間高バサミは、ハサミの石がカカリに近いぶん厳しく、同時に白に利用されやすい手でもあります。</p><p>白は<bdi>P15</bdi>とトんで中央に出て、<bdi>P14</bdi>・<bdi>P13</bdi>・<bdi>P12</bdi>と押して厚みを作ります。黒は<bdi>Q14</bdi>から四線をノビて、右辺に大きな地を確保します。最後に白は<bdi>K16</bdi>とハサミの石を挟みます。</p><p>二間高バサミとよく似た進行ですが、押しが一本多くなるぶん黒の右辺は大きく、白の厚みも強くなります。黒は上辺の<bdi>N16</bdi>をうまくさばくことが課題です。</p>",
+    "en": "<p>The one-space high pincer at <bdi>N16</bdi> is close to the approach stone: severe, but also easy for White to lean on.</p><p>White jumps to <bdi>P15</bdi> and pushes at <bdi>P14</bdi>, <bdi>P13</bdi> and <bdi>P12</bdi> to build thickness, while Black extends along the fourth line from <bdi>Q14</bdi> and secures a big right side. Finally White counter-pincers at <bdi>K16</bdi>.</p><p>It resembles the two-space high pincer, but with one more push: Black's right side is bigger, and so is White's wall. Black must then handle <bdi>N16</bdi> skilfully.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "P17",
+    "N16",
+    "P15",
+    "Q14",
+    "P14",
+    "Q13",
+    "P13",
+    "Q12",
+    "P12",
+    "Q11",
+    "K16"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>P17</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>P17</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>N16</bdi>と一間高バサミ。近くて厳しいハサミです。",
+     "en": "Black pincers one space away on the fourth line at <bdi>N16</bdi> — close and severe."
+    },
+    "3": {
+     "ja": "白は<bdi>P15</bdi>と一間にトんで頭を出します。",
+     "en": "White jumps out to <bdi>P15</bdi>."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q14</bdi>とケイマに構えて右辺を守ります。",
+     "en": "Black plays the knight's move <bdi>Q14</bdi>, guarding the right side."
+    },
+    "5": {
+     "ja": "白は<bdi>P14</bdi>とオシます。",
+     "en": "White pushes at <bdi>P14</bdi>."
+    },
+    "6": {
+     "ja": "黒は<bdi>Q13</bdi>とノビます。押されたらノビるのが基本で、ここでハネると切られる弱点ができます。",
+     "en": "Black extends to <bdi>Q13</bdi>. When pushed, extend — a hane here would leave cutting points."
+    },
+    "7": {
+     "ja": "白は<bdi>P13</bdi>とオシて壁を伸ばします。",
+     "en": "White pushes at <bdi>P13</bdi>, extending the wall."
+    },
+    "8": {
+     "ja": "黒は<bdi>Q12</bdi>とノビます。",
+     "en": "Black extends to <bdi>Q12</bdi>."
+    },
+    "9": {
+     "ja": "白は<bdi>P12</bdi>ともう一本オシます。",
+     "en": "White pushes once more at <bdi>P12</bdi>."
+    },
+    "10": {
+     "ja": "黒は<bdi>Q11</bdi>とノビて右辺の地を大きく確保します。",
+     "en": "Black extends to <bdi>Q11</bdi>, securing a large right side."
+    },
+    "11": {
+     "ja": "白は<bdi>K16</bdi>とハサミの石を挟んで攻めに回ります。黒は大きな右辺、白は厚みと攻めの分かれです。",
+     "en": "White pincers the pincer stone at <bdi>K16</bdi>. Black has a big right side, White thickness and an attack."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.2,
+    -0.2,
+    -0.2,
+    -0.1,
+    -0.1,
+    -0.2,
+    -0.3,
+    -0.3,
+    -0.4,
+    -0.4,
+    -0.3
+   ],
+   "view": [
+    8,
+    0,
+    18,
+    10
+   ],
+   "problems": [
+    {
+     "at": 1,
+     "ok": [
+      "N16"
+     ],
+     "good": [
+      "Q15",
+      "Q14"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "Q14"
+     ],
+     "good": [
+      "R13"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "Q13"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "Q12"
+     ]
+    },
+    {
+     "at": 9,
+     "ok": [
+      "Q11"
+     ],
+     "good": [
+      "Q10"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "komoku_tsukehiki",
+   "cat": "komoku",
+   "ord": 4,
+   "n": 19,
+   "label": {
+    "ja": "小目",
+    "en": "3-4"
+   },
+   "title": {
+    "ja": "一間高ガカリ・ツケヒキ",
+    "en": "One-space high approach, attach and draw back"
+   },
+   "short": {
+    "ja": "小目の定石で最も基本的な形。黒は隅の地、白は上辺の形",
+    "en": "The most basic 3-4 joseki: Black the corner, White the top side"
+   },
+   "story": {
+    "ja": "<p>小目への<bdi>P16</bdi>の一間高ガカリに、下から<bdi>P17</bdi>とツケて、ハネられたら<bdi>Q17</bdi>と引く。これが「ツケヒキ定石」で、入門者が最初に覚える定石の一つです。</p><p>黒は手堅く隅の地を確保し、<bdi>R14</bdi>のヒラキで右辺にも根拠を作ります。白は上辺に形を作り、<bdi>K16</bdi>とヒラいて安定します。</p><p>お互いに無理のない、最も穏やかな分かれです。AIの時代になっても評価は変わらず、プロの碁でもよく見られます。</p>",
+    "en": "<p>Against the one-space high approach at <bdi>P16</bdi>, Black attaches underneath at <bdi>P17</bdi> and, when White hanes, draws back to <bdi>Q17</bdi>. This attach-and-draw-back is one of the first joseki every beginner learns.</p><p>Black secures the corner and makes a base on the right side with the extension <bdi>R14</bdi>. White builds shape on the top side and settles with <bdi>K16</bdi>.</p><p>A calm, reasonable result for both. Its evaluation did not change in the AI era, and professionals still play it often.</p>"
+   },
+   "level": 1,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "P16",
+    "P17",
+    "O17",
+    "Q17",
+    "O16",
+    "R14",
+    "K16"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>P16</bdi>と一間高ガカリ。四線から上辺に向かう、バランスの良いカカリです。",
+     "en": "White approaches one space high at <bdi>P16</bdi>, a balanced approach on the fourth line."
+    },
+    "2": {
+     "ja": "黒は<bdi>P17</bdi>と下にツケます。高いカカリの下の弱点を突き、隅を守る手です。",
+     "en": "Black attaches underneath at <bdi>P17</bdi>, hitting the weak spot under a high approach and protecting the corner."
+    },
+    "3": {
+     "ja": "白は<bdi>O17</bdi>とハネて上辺側を押さえます。",
+     "en": "White hanes at <bdi>O17</bdi>, blocking the top side."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q17</bdi>と引きます。これが「ヒキ」で、隅の地を確保しながら形に弱点を残しません。",
+     "en": "Black draws back to <bdi>Q17</bdi>. This keeps the corner and leaves no weaknesses."
+    },
+    "5": {
+     "ja": "白は<bdi>O16</bdi>とツイで切断を防ぎます。<bdi>O16</bdi>を省くと黒に<bdi>O16</bdi>から切られます。",
+     "en": "White connects at <bdi>O16</bdi>; without it Black could cut there."
+    },
+    "6": {
+     "ja": "黒は<bdi>R14</bdi>と右辺にヒラいて根拠を作ります。これで黒の隅は安心です。",
+     "en": "Black extends to <bdi>R14</bdi> on the right side, making a base. The corner is now safe."
+    },
+    "7": {
+     "ja": "白は<bdi>K16</bdi>と上辺にヒラいて形を完成させます。お互いに無理のない、穏やかな互角の分かれです。",
+     "en": "White extends to <bdi>K16</bdi> on the top side, completing its shape. A calm, even result."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.3,
+    -0.3,
+    -0.3,
+    -0.2,
+    -0.3,
+    -0.1,
+    -0.1
+   ],
+   "view": [
+    8,
+    0,
+    18,
+    10
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "P16"
+     ],
+     "good": [
+      "P17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "P17"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "O17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "R14"
+     ],
+     "good": [
+      "Q14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "komoku_tsukeosae",
+   "cat": "komoku",
+   "ord": 5,
+   "n": 19,
+   "label": {
+    "ja": "小目",
+    "en": "3-4"
+   },
+   "title": {
+    "ja": "一間高ガカリ・ツケからオサエ",
+    "en": "One-space high approach, attach then block"
+   },
+   "short": {
+    "ja": "ツケヒキの代わりにQ16と押さえ、右辺に高く構える型",
+    "en": "Instead of drawing back, block at Q16 and build high on the right side"
+   },
+   "story": {
+    "ja": "<p>ツケヒキ定石と同じく<bdi>P17</bdi>と下にツケ、白のハネに対して今度は<bdi>Q16</bdi>と押さえる型です。黒は白の右辺への進出を止め、右辺を大きく構えることを狙います。</p><p>代わりに白は<bdi>P18</bdi>とハネて黒の隅の石をアタリにし、黒は<bdi>Q17</bdi>とツイで受けます。白が<bdi>O16</bdi>と形を整えたら、黒は<bdi>Q13</bdi>と右辺に高くヒラき、白は<bdi>K16</bdi>と上辺にヒラいて分かれます。</p><p>ツケヒキより右辺を重視した打ち方です。右下に黒の味方がいるときに特に有力です。</p>",
+    "en": "<p>As in the attach-and-draw-back, Black attaches underneath at <bdi>P17</bdi>, but against White's hane Black now blocks at <bdi>Q16</bdi>. This stops White from coming toward the right side and aims at a large right-side position.</p><p>In return White hanes at <bdi>P18</bdi>, putting the corner stone in atari, and Black connects at <bdi>Q17</bdi>. After White tidies up with <bdi>O16</bdi>, Black extends high on the right side to <bdi>Q13</bdi> and White extends on the top with <bdi>K16</bdi>.</p><p>It values the right side more than the draw-back version — strongest when Black has friendly stones lower on the right.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "P16",
+    "P17",
+    "O17",
+    "Q16",
+    "P18",
+    "Q17",
+    "O16",
+    "Q13",
+    "K16"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>P16</bdi>と一間高ガカリ。",
+     "en": "White approaches one space high at <bdi>P16</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>P17</bdi>と下にツケます。",
+     "en": "Black attaches underneath at <bdi>P17</bdi>."
+    },
+    "3": {
+     "ja": "白は<bdi>O17</bdi>とハネます。",
+     "en": "White hanes at <bdi>O17</bdi>."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q16</bdi>と押さえます。<bdi>Q17</bdi>と引くツケヒキと違い、白の右辺側への進出を止めて右辺を重視する手です。なおAIは<bdi>Q17</bdi>のヒキを約1.5目好みます。右辺に味方がいないときはツケヒキが無難です。",
+     "en": "Black blocks at <bdi>Q16</bdi>. Unlike the draw-back at <bdi>Q17</bdi>, it stops White from heading toward the right side and values that side. Note that AI prefers the draw-back at <bdi>Q17</bdi> by about 1.5 points; without friendly stones on the right side, the attach-and-draw-back is the safer choice."
+    },
+    "5": {
+     "ja": "白は<bdi>P18</bdi>とハネて<bdi>P17</bdi>をアタリにします。",
+     "en": "White hanes at <bdi>P18</bdi>, putting <bdi>P17</bdi> in atari."
+    },
+    "6": {
+     "ja": "黒は<bdi>Q17</bdi>とツイでアタリを逃げます。",
+     "en": "Black connects at <bdi>Q17</bdi>, escaping the atari."
+    },
+    "7": {
+     "ja": "白は<bdi>O16</bdi>とツイで切断を防ぎ、形を整えます。",
+     "en": "White connects at <bdi>O16</bdi>, preventing the cut and tidying its shape."
+    },
+    "8": {
+     "ja": "黒は<bdi>Q13</bdi>と右辺に高くヒラきます。<bdi>Q16</bdi>の押さえを生かした、右辺重視の構えです。",
+     "en": "Black extends high on the right side to <bdi>Q13</bdi>, making use of the block at <bdi>Q16</bdi>."
+    },
+    "9": {
+     "ja": "白は<bdi>K16</bdi>と上辺にヒラいて安定します。黒は隅と右辺、白は上辺の互角の分かれです。",
+     "en": "White settles with the extension <bdi>K16</bdi> on the top side. Black the corner and right side, White the top: even."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.3,
+    -0.3,
+    -0.3,
+    -1.7,
+    -1.6,
+    -1.6,
+    -1.6,
+    -1.5,
+    -1.4
+   ],
+   "view": [
+    8,
+    0,
+    18,
+    10
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "P16"
+     ],
+     "good": [
+      "P17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "P17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "Q16"
+     ],
+     "good": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "Q13"
+     ],
+     "good": [
+      "Q14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "komoku_ogeima",
+   "cat": "komoku",
+   "ord": 6,
+   "n": 19,
+   "label": {
+    "ja": "小目",
+    "en": "3-4"
+   },
+   "title": {
+    "ja": "大ゲイマガカリ・コスミ",
+    "en": "Large knight approach, diagonal"
+   },
+   "short": {
+    "ja": "遠いカカリにはコスミで隅を固め、白の肩ツキには右辺をノビる",
+    "en": "Answer the distant approach with the diagonal; extend along the side against the shoulder hit"
+   },
+   "story": {
+    "ja": "<p><bdi>O17</bdi>の大ゲイマガカリは、小ゲイマガカリより一路遠く、軽いカカリです。黒は<bdi>Q17</bdi>とコスんで隅を固めるのが代表的な受け方です。</p><p>白は<bdi>Q15</bdi>と黒の肩にツいて右辺側の黒を低く抑え、黒は<bdi>R15</bdi>とノビて地を確保、白は<bdi>Q13</bdi>とヒラいて形を整えます。</p><p>黒は隅から右辺にかけての地、白は上辺と右辺に軽い形。<bdi>O16</bdi>の二間高ガカリにも同じ考え方で打てます（変化図）。</p>",
+    "en": "<p>The large knight approach at <bdi>O17</bdi> is one line further than the small knight approach — a light approach. Black's typical answer is the diagonal <bdi>Q17</bdi>, firming up the corner.</p><p>White hits the shoulder at <bdi>Q15</bdi> to keep Black low on the right; Black extends to <bdi>R15</bdi> for territory, and White settles with <bdi>Q13</bdi>.</p><p>Black gets territory from the corner to the right side, White light shapes on both sides. The two-space high approach <bdi>O16</bdi> is handled the same way (variation).</p>"
+   },
+   "level": 1,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "O17",
+    "Q17",
+    "Q15",
+    "R15",
+    "Q13"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>O17</bdi>に大ゲイマガカリ。遠く軽いカカリで、ハサまれても動きやすい手です。",
+     "en": "White approaches with a large knight's move at <bdi>O17</bdi> — distant and light, easy to handle even if pincered."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q17</bdi>とコスんで隅を固めます。三々の地を確保し、白を隅に入らせない手堅い受けです。",
+     "en": "Black plays the diagonal <bdi>Q17</bdi>, securing the corner and keeping White out."
+    },
+    "3": {
+     "ja": "白は<bdi>Q15</bdi>と黒の肩にツキ、黒を右辺で低く抑えつつ中央に向かいます。",
+     "en": "White hits the shoulder at <bdi>Q15</bdi>, keeping Black low on the right side while facing the centre."
+    },
+    "4": {
+     "ja": "黒は<bdi>R15</bdi>とノビて隅と右辺の地を確保します。",
+     "en": "Black extends to <bdi>R15</bdi>, securing the corner and right side."
+    },
+    "5": {
+     "ja": "白は<bdi>Q13</bdi>とトんで形を整えます。黒は確実な地、白は上下に軽い形を得て互角です。",
+     "en": "White jumps to <bdi>Q13</bdi>, completing its shape. Black has sure territory, White light shapes: even."
+    }
+   },
+   "vars": [
+    {
+     "at": 0,
+     "line": [
+      "O16",
+      "Q17",
+      "Q15",
+      "R15",
+      "Q13"
+     ],
+     "title": {
+      "ja": "二間高ガカリの場合",
+      "en": "The two-space high approach"
+     },
+     "notes": {
+      "1": {
+       "ja": "白は<bdi>O16</bdi>と二間高ガカリ。",
+       "en": "White approaches two spaces high at <bdi>O16</bdi>."
+      },
+      "2": {
+       "ja": "黒はやはり<bdi>Q17</bdi>とコスみます。",
+       "en": "Black again plays the diagonal <bdi>Q17</bdi>."
+      },
+      "3": {
+       "ja": "白は<bdi>Q15</bdi>と肩にツキます。",
+       "en": "White hits the shoulder at <bdi>Q15</bdi>."
+      },
+      "4": {
+       "ja": "黒は<bdi>R15</bdi>とノビます。",
+       "en": "Black extends to <bdi>R15</bdi>."
+      },
+      "5": {
+       "ja": "白は<bdi>Q13</bdi>と形を整えます。",
+       "en": "White settles at <bdi>Q13</bdi>."
+      }
+     }
+    }
+   ],
+   "evals": [
+    0.1,
+    0.1,
+    0,
+    0,
+    0
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "O17"
+     ],
+     "good": [
+      "P17",
+      "P16"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "Q15"
+     ],
+     "good": [
+      "L17",
+      "L16"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "S14"
+     ]
+    },
+    {
+     "at": 4,
+     "ok": [
+      "Q13"
+     ],
+     "good": [
+      "Q14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "other_33_kata",
+   "cat": "other",
+   "ord": 1,
+   "n": 19,
+   "label": {
+    "ja": "三々",
+    "en": "3-3"
+   },
+   "title": {
+    "ja": "三々・肩ツキ",
+    "en": "3-3 point, shoulder hit"
+   },
+   "short": {
+    "ja": "三々は一手で隅の地を確保する。肩ツキには三線をハって地を取る",
+    "en": "The 3-3 secures the corner in one move; against the shoulder hit, crawl and take territory"
+   },
+   "story": {
+    "ja": "<p>三々（3-3）は一手で隅の地を確保できる、最も地に辛い着点です。そのぶん位置が低く、外側から押さえ込まれやすいのが弱点です。</p><p>三々への代表的な対応が<bdi>Q16</bdi>の肩ツキ。白は三々を低く抑え、外側に厚みを作ろうとします。黒は<bdi>R16</bdi>・<bdi>R15</bdi>と三線をハって地を広げ、適当なところで<bdi>P18</bdi>と上辺側にも眼形を広げます。</p><p>黒は確実な隅の地、白は上辺と中央に向いた厚み。三々を打つときは「地を取る代わりに相手に厚みを与える」ことを意識しましょう。</p>",
+    "en": "<p>The 3-3 point secures the corner in a single move — the most territorial point. The price is that it is low and easily sealed in from outside.</p><p>The typical answer is the shoulder hit at <bdi>Q16</bdi>, pressing the 3-3 stone low while building outside thickness. Black crawls along the third line with <bdi>R16</bdi> and <bdi>R15</bdi>, then widens the eye space toward the top with <bdi>P18</bdi>.</p><p>Black has a sure corner, White thickness facing the top and the centre. When you play the 3-3, remember you are trading thickness for territory.</p>"
+   },
+   "level": 1,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R17",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "Q16",
+    "R16",
+    "Q15",
+    "R15",
+    "Q14",
+    "P18",
+    "R14"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>Q16</bdi>と三々の肩にツキます。三々を低く抑え、外側に厚みを作る代表的な手です。",
+     "en": "White hits the shoulder of the 3-3 stone at <bdi>Q16</bdi>, keeping it low and building outside thickness."
+    },
+    "2": {
+     "ja": "黒は<bdi>R16</bdi>とハイます。肩ツキにはまず三線をハって地を広げるのが基本です。",
+     "en": "Black crawls to <bdi>R16</bdi>. Against a shoulder hit, first crawl along the third line to widen the territory."
+    },
+    "3": {
+     "ja": "白は<bdi>Q15</bdi>とノビて壁を作ります。",
+     "en": "White extends to <bdi>Q15</bdi>, building a wall."
+    },
+    "4": {
+     "ja": "黒は<bdi>R15</bdi>ともう一本ハイます。",
+     "en": "Black crawls once more to <bdi>R15</bdi>."
+    },
+    "5": {
+     "ja": "白は<bdi>Q14</bdi>とノビて壁を伸ばします。",
+     "en": "White extends to <bdi>Q14</bdi>."
+    },
+    "6": {
+     "ja": "黒は<bdi>P18</bdi>と上辺側に眼形を広げます。三線をハい過ぎると白の壁を強くするだけなので、ここで向きを変えるのがコツです。",
+     "en": "Black widens the eye space toward the top at <bdi>P18</bdi>. Crawling too long only strengthens White's wall, so change direction here."
+    },
+    "7": {
+     "ja": "白は<bdi>R14</bdi>と押さえて黒の進出を止め、厚い壁を完成させます。黒は隅の地、白は厚みの分かれです。",
+     "en": "White blocks at <bdi>R14</bdi>, stopping Black and completing the wall. Black the corner, White thickness."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.1,
+    -0.1,
+    -0.1,
+    -0.1,
+    -0.3,
+    -0.1,
+    -0.2
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "Q16"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "R16"
+     ],
+     "good": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "Q15"
+     ],
+     "good": [
+      "Q14"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "Q17",
+      "P18"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "P18"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "other_taka_komoku",
+   "cat": "other",
+   "ord": 2,
+   "n": 19,
+   "label": {
+    "ja": "高目",
+    "en": "5-4"
+   },
+   "title": {
+    "ja": "高目・小目カカリ・ツケ",
+    "en": "5-4 point, 3-4 approach, attachment"
+   },
+   "short": {
+    "ja": "高目は外向きの石。小目カカリには三々からツケて隅を取り返す",
+    "en": "The 5-4 faces outward; against the 3-4 approach, attach at the 3-3 and take the corner back"
+   },
+   "story": {
+    "ja": "<p>高目（5-4）は隅の地よりも外側の勢力を重視した着点です。隅が空いているので、白は<bdi>R16</bdi>の小目に入ってきます。</p><p>黒の代表的な対応は<bdi>R17</bdi>と三々からツケて、白のハネに<bdi>Q17</bdi>と引く形。黒は隅の地を確保し、白は右辺に<bdi>S15</bdi>と形を整えます。</p><p>高目の黒は上辺と中央に向いた石なので、隅の地を少し得ながら外側の勢いも保つ、バランスの良い分かれです。</p>",
+    "en": "<p>The 5-4 point values outside influence more than corner territory. Because the corner is open, White comes in at the 3-4 point <bdi>R16</bdi>.</p><p>Black's typical answer is to attach at the 3-3 point <bdi>R17</bdi> and, after White's hane, draw back to <bdi>Q17</bdi>. Black takes the corner, White settles on the right side with <bdi>S15</bdi>.</p><p>The 5-4 stone faces the top and the centre, so Black gets some corner territory while keeping outside strength — a balanced result.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "P16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R16",
+    "R17",
+    "S17",
+    "Q17",
+    "S15"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R16</bdi>の小目にカカります。高目の下の空いた隅を狙う手です。",
+     "en": "White approaches at the 3-4 point <bdi>R16</bdi>, aiming at the open corner under the 5-4 stone."
+    },
+    "2": {
+     "ja": "黒は<bdi>R17</bdi>と三々からツケます。白の根拠を奪いながら、隅の地を取り返す手です。",
+     "en": "Black attaches at the 3-3 point <bdi>R17</bdi>, taking the corner back while denying White a base."
+    },
+    "3": {
+     "ja": "白は<bdi>S17</bdi>とハネて隅に食い込みます。",
+     "en": "White hanes at <bdi>S17</bdi>, cutting into the corner."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q17</bdi>と引いて、高目の石とつながりながら隅を守ります。",
+     "en": "Black draws back to <bdi>Q17</bdi>, connecting toward the 5-4 stone and guarding the corner."
+    },
+    "5": {
+     "ja": "白は<bdi>S15</bdi>と右辺に形を整え、眼形を確保します。黒は隅と上辺、白は右辺の分かれで、黒は先手で大場に向かえます。",
+     "en": "White settles on the right side with <bdi>S15</bdi>, securing eye shape. Black has the corner and top side, White the right side, and Black keeps sente."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.8,
+    -0.7,
+    -0.7,
+    -0.7,
+    -0.8
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R16"
+     ],
+     "good": [
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "R17"
+     ],
+     "good": [
+      "R15"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "S17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 4,
+     "ok": [
+      "S15"
+     ],
+     "good": [
+      "R14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "other_taka_33",
+   "cat": "other",
+   "ord": 3,
+   "n": 19,
+   "label": {
+    "ja": "高目",
+    "en": "5-4"
+   },
+   "title": {
+    "ja": "高目・三々入り",
+    "en": "5-4 point, 3-3 invasion"
+   },
+   "short": {
+    "ja": "三々に入られたら押さえて三線をハわせ、上辺に厚い壁を築く",
+    "en": "Against the 3-3 invasion, block and make White crawl; build a thick top-side wall"
+   },
+   "story": {
+    "ja": "<p>高目の下の三々は空いているので、白は<bdi>R17</bdi>と直接入ることもできます。</p><p>黒は<bdi>R15</bdi>と右辺側を押さえ、白に上辺の三線をハわせながら、自分は四線に厚い壁を作ります。三線と四線の押し合いでは、四線の側（黒）が厚みを得ます。</p><p>白は隅で小さく生き、黒は上辺から中央にかけて強い壁を築きます。高目を選んだ黒の狙いどおりの分かれです。</p>",
+    "en": "<p>The 3-3 point under a 5-4 stone is open, so White can invade there directly at <bdi>R17</bdi>.</p><p>Black blocks on the right side at <bdi>R15</bdi> and lets White crawl along the third line on the top, while Black builds a thick wall on the fourth line. In a third-line versus fourth-line race, the fourth-line side gets the thickness.</p><p>White lives small in the corner, Black gets a strong wall from the top side toward the centre — exactly what the 5-4 stone wanted.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "P16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R17",
+    "R15",
+    "Q16",
+    "Q15",
+    "P17",
+    "O16",
+    "O17",
+    "N16",
+    "N17",
+    "M16"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R17</bdi>と三々に入ります。",
+     "en": "White invades the 3-3 at <bdi>R17</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>R15</bdi>と右辺側を押さえ、白を上辺へ向かわせます。",
+     "en": "Black blocks the right side at <bdi>R15</bdi>, steering White toward the top side."
+    },
+    "3": {
+     "ja": "白は<bdi>Q16</bdi>と出て、黒の間を突きます。",
+     "en": "White pushes out at <bdi>Q16</bdi> between Black's stones."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q15</bdi>と押さえて白を中に出させません。",
+     "en": "Black blocks at <bdi>Q15</bdi>, keeping White from the centre."
+    },
+    "5": {
+     "ja": "白は<bdi>P17</bdi>と三線をハって眼形を広げます。",
+     "en": "White crawls along the third line to <bdi>P17</bdi>, widening its eye space."
+    },
+    "6": {
+     "ja": "黒は<bdi>O16</bdi>と四線を押さえます。",
+     "en": "Black blocks on the fourth line at <bdi>O16</bdi>."
+    },
+    "7": {
+     "ja": "白は<bdi>O17</bdi>とハイます。",
+     "en": "White crawls to <bdi>O17</bdi>."
+    },
+    "8": {
+     "ja": "黒は<bdi>N16</bdi>とさらに押さえます。",
+     "en": "Black keeps blocking at <bdi>N16</bdi>."
+    },
+    "9": {
+     "ja": "白は<bdi>N17</bdi>とハって生きを確実にします。",
+     "en": "White crawls to <bdi>N17</bdi> to make life certain."
+    },
+    "10": {
+     "ja": "黒は<bdi>M16</bdi>と押さえて壁を完成させます。白は隅に生き、黒は上辺に厚い壁を得ました。",
+     "en": "Black blocks at <bdi>M16</bdi>, completing the wall. White lives in the corner, Black has a thick wall on top."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.5,
+    -0.4,
+    -0.5,
+    -0.6,
+    -0.5,
+    -0.4,
+    -0.4,
+    -0.5,
+    -0.6,
+    -0.5
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 1,
+     "ok": [
+      "R15"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "Q15"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "O16"
+     ],
+     "good": [
+      "O17"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "N16"
+     ]
+    },
+    {
+     "at": 9,
+     "ok": [
+      "M16"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "other_hazushi_komoku",
+   "cat": "other",
+   "ord": 4,
+   "n": 19,
+   "label": {
+    "ja": "目外し",
+    "en": "5-3"
+   },
+   "title": {
+    "ja": "目外し・小目カカリ・肩ツキ",
+    "en": "5-3 point, 3-4 approach, shoulder hit"
+   },
+   "short": {
+    "ja": "目外しは上辺重視の石。小目カカリに肩ツキして白を右辺に低く抑える",
+    "en": "The 5-3 values the top side; shoulder-hit the 3-4 approach and keep White low"
+   },
+   "story": {
+    "ja": "<p>目外し（5-3）は上辺に向いた、少し変わった構えです。隅が空いているので、白は<bdi>R16</bdi>の小目にカカってきます。</p><p>黒は<bdi>Q15</bdi>と白の肩にツキ、白に右辺の三線をハわせながら自分は四線に壁を作ります。白は<bdi>R13</bdi>とトんで右辺に根拠を作ります。</p><p>黒は上辺と中央の厚み、白は隅から右辺の地。上辺を大きく使いたい布石で選ぶ形です。</p>",
+    "en": "<p>The 5-3 point is an unusual stone aimed at the top side. Since the corner is open, White approaches at the 3-4 point <bdi>R16</bdi>.</p><p>Black hits White's shoulder at <bdi>Q15</bdi>, making White crawl along the third line on the right while Black builds a fourth-line wall. White jumps to <bdi>R13</bdi> to make a base on the right side.</p><p>Black has thickness toward the top and the centre, White territory from the corner down the right side. Choose it when you want a big top side.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "P17",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R16",
+    "Q15",
+    "R15",
+    "Q14",
+    "R13"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R16</bdi>の小目にカカります。",
+     "en": "White approaches at the 3-4 point <bdi>R16</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q15</bdi>と白の肩にツキます。白を右辺で低く抑え、自分は中央に向かう手です。",
+     "en": "Black hits the shoulder at <bdi>Q15</bdi>, keeping White low on the right side while facing the centre."
+    },
+    "3": {
+     "ja": "白は<bdi>R15</bdi>とハイます。",
+     "en": "White crawls to <bdi>R15</bdi>."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q14</bdi>とノビて四線の壁を作ります。",
+     "en": "Black extends to <bdi>Q14</bdi>, building a fourth-line wall."
+    },
+    "5": {
+     "ja": "白は<bdi>R13</bdi>と三線をトんで右辺に根拠を作ります。黒は先手で上辺と中央に厚く、互角の分かれです。",
+     "en": "White jumps along the third line to <bdi>R13</bdi>, making a base on the right. Black has sente and thickness on top: even."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.8,
+    -0.8,
+    -0.7,
+    -0.8,
+    -0.7
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R16"
+     ],
+     "good": [
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "Q15"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "Q14"
+     ]
+    },
+    {
+     "at": 4,
+     "ok": [
+      "R13"
+     ],
+     "good": [
+      "R14",
+      "S13"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "other_hazushi_hoshi",
+   "cat": "other",
+   "ord": 5,
+   "n": 19,
+   "label": {
+    "ja": "目外し",
+    "en": "5-3"
+   },
+   "title": {
+    "ja": "目外し・星カカリ・ツケ",
+    "en": "5-3 point, 4-4 approach, attachment"
+   },
+   "short": {
+    "ja": "星のカカリには下からツケて隅を取り、白は右辺に形を作る",
+    "en": "Attach underneath the 4-4 approach to take the corner; White builds on the right side"
+   },
+   "story": {
+    "ja": "<p>目外しへのもう一つのカカリが<bdi>Q16</bdi>の星カカリです。高いカカリなので、黒は<bdi>Q17</bdi>と下からツケて隅の地を狙います。</p><p>白は<bdi>R16</bdi>と隅側に構え、黒が<bdi>R17</bdi>で隅を取ると、白は<bdi>S17</bdi>とハネて食い込み、右辺に形を作ります。黒は<bdi>P16</bdi>・<bdi>P14</bdi>と上辺から中央に頭を出します。</p><p>黒は隅と上辺、白は右辺に分かれる、少し難しい定石です。</p>",
+    "en": "<p>The other common approach to a 5-3 stone is the 4-4 approach at <bdi>Q16</bdi>. It is high, so Black attaches underneath at <bdi>Q17</bdi>, aiming at the corner.</p><p>White stands at <bdi>R16</bdi>; when Black takes the corner with <bdi>R17</bdi>, White hanes at <bdi>S17</bdi> and builds on the right side. Black heads out with <bdi>P16</bdi> and <bdi>P14</bdi>.</p><p>Black gets the corner and top side, White the right side — a slightly harder joseki.</p>"
+   },
+   "level": 3,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "P17",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "Q16",
+    "Q17",
+    "R16",
+    "R17",
+    "S17",
+    "P16",
+    "S15",
+    "P14",
+    "Q13"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>Q16</bdi>の星にカカります。高く、中央への働きを重視したカカリです。",
+     "en": "White approaches at the 4-4 point <bdi>Q16</bdi> — high, valuing the centre."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q17</bdi>と下にツケて隅の地を狙います。",
+     "en": "Black attaches underneath at <bdi>Q17</bdi>, aiming at the corner."
+    },
+    "3": {
+     "ja": "白は<bdi>R16</bdi>と隅側に構え、黒が隅を広く取るのを防ぎます。",
+     "en": "White stands at <bdi>R16</bdi>, preventing Black from taking a wide corner."
+    },
+    "4": {
+     "ja": "黒は<bdi>R17</bdi>と隅に入り、三々の地を確保します。",
+     "en": "Black takes the 3-3 at <bdi>R17</bdi>, securing the corner."
+    },
+    "5": {
+     "ja": "白は<bdi>S17</bdi>とハネて隅の黒を小さくします。",
+     "en": "White hanes at <bdi>S17</bdi>, keeping Black's corner small."
+    },
+    "6": {
+     "ja": "黒は<bdi>P16</bdi>と白の頭を押さえ、上辺を固めます。",
+     "en": "Black blocks at <bdi>P16</bdi> at the head of White's stones, firming up the top side."
+    },
+    "7": {
+     "ja": "白は<bdi>S15</bdi>と右辺に形を作って眼形を確保します。",
+     "en": "White makes shape on the right side at <bdi>S15</bdi>, securing eye space."
+    },
+    "8": {
+     "ja": "黒は<bdi>P14</bdi>とトんで中央に進出し、白の右辺の発展を制限します。",
+     "en": "Black jumps to <bdi>P14</bdi>, heading into the centre and limiting White's right side."
+    },
+    "9": {
+     "ja": "白は<bdi>Q13</bdi>と頭を出して右辺の石を安定させます。互角の分かれです。",
+     "en": "White pokes out at <bdi>Q13</bdi> and stabilises the right side. Even."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.2,
+    -0.5,
+    -0.5,
+    -0.4,
+    -0.5,
+    -0.7,
+    -0.7,
+    -0.6,
+    -0.7
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "Q16"
+     ],
+     "good": [
+      "R16",
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "Q17"
+     ],
+     "good": [
+      "P16"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R17"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "P16"
+     ],
+     "good": [
+      "S18"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "P14"
+     ],
+     "good": [
+      "Q15"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai_kosumitsuke",
+   "cat": "ai",
+   "ord": 1,
+   "n": 19,
+   "label": {
+    "ja": "AI",
+    "en": "AI"
+   },
+   "title": {
+    "ja": "小ゲイマガカリへのコスミツケ",
+    "en": "Diagonal attachment against the low approach"
+   },
+   "short": {
+    "ja": "AIが一気に広めた星の受け。カカリの石を固めてでも隅を守る",
+    "en": "The 4-4 answer AI made popular: firm up the approach stone, but keep the corner"
+   },
+   "story": {
+    "ja": "<p>昔は「相手を固めるので良くない」とされた<bdi>R15</bdi>のコスミツケが、AIの登場で一気に主流になりました。カカリの石の頭に触れながら、三々入りの手段を消して隅を確保する手です。</p><p>白が<bdi>Q14</bdi>と立つと、黒は<bdi>O16</bdi>と上辺に構えて根拠を広げます。白は上辺の<bdi>M17</bdi>で黒の発展を制限しますが、黒は<bdi>R10</bdi>と右辺の白をハサんで攻めに回れます。</p><p>「隅を確実にして、後から相手の弱い石を攻める」——AIらしい実利的な考え方を学べる定石です。</p>",
+    "en": "<p>The diagonal attachment at <bdi>R15</bdi> was long considered bad because it strengthens the opponent. AI made it mainstream: it touches the approach stone, kills the 3-3 invasion and secures the corner.</p><p>When White stands up at <bdi>Q14</bdi>, Black jumps to <bdi>O16</bdi> to widen the base. White limits the top side with <bdi>M17</bdi>, but Black turns to attack the right-side stones with the pincer <bdi>R10</bdi>.</p><p>Secure the corner first, attack the weak stones later — a very AI-like, practical way of thinking.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "R15",
+    "Q14",
+    "O16",
+    "M17",
+    "R10"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>R14</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>R15</bdi>とコスミツケ。カカリの石にツケながら三々を守る手で、AI以前は「相手を固める」と敬遠されていましたが、今では代表的な受けです。",
+     "en": "Black plays the diagonal attachment <bdi>R15</bdi>, touching the approach stone while guarding the 3-3. Before AI it was avoided as \"strengthening the opponent\"; now it is a standard answer."
+    },
+    "3": {
+     "ja": "白は<bdi>Q14</bdi>と立って中央に頭を出し、黒に押さえられないようにします。",
+     "en": "White stands up at <bdi>Q14</bdi>, getting its head out so Black cannot block it."
+    },
+    "4": {
+     "ja": "黒は<bdi>O16</bdi>と上辺に一間に構え、隅から上辺に根拠を広げます。",
+     "en": "Black jumps to <bdi>O16</bdi> on the top side, extending the base from the corner."
+    },
+    "5": {
+     "ja": "白は<bdi>M17</bdi>と上辺に打ち込み、黒の上辺の発展を制限します。",
+     "en": "White plays <bdi>M17</bdi> on the top side, limiting Black's expansion."
+    },
+    "6": {
+     "ja": "黒は<bdi>R10</bdi>と右辺の白二子をハサみ、根拠を奪って攻めに回ります。隅を固めておいたからこそできる攻めです。",
+     "en": "Black pincers the two white stones at <bdi>R10</bdi>, denying them a base. This attack works because Black secured the corner first."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.2,
+    -0.2,
+    -0.1,
+    -0.2,
+    -0.2,
+    -0.1
+   ],
+   "view": [
+    8,
+    0,
+    18,
+    10
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R14"
+     ],
+     "good": [
+      "R17"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "O17"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "Q14"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "O16"
+     ],
+     "good": [
+      "O17"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "R10"
+     ],
+     "good": [
+      "R11",
+      "Q11",
+      "N18",
+      "Q10"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai_keima_tsuke",
+   "cat": "ai",
+   "ord": 2,
+   "n": 19,
+   "label": {
+    "ja": "AI",
+    "en": "AI"
+   },
+   "title": {
+    "ja": "ケイマ受けにR16のツケ",
+    "en": "Attaching at R16 after the knight's response"
+   },
+   "short": {
+    "ja": "三々スベリの代わりに星の脇にツケる。白は右辺、黒は隅と上辺",
+    "en": "Attach next to the 4-4 instead of sliding: White gets the right side, Black corner and top"
+   },
+   "story": {
+    "ja": "<p>星の小ゲイマガカリ・ケイマ受けの後、昔は三々スベリや二間ビラキが定番でした。AIは<bdi>R16</bdi>と星のすぐ横にツケる手を好みます。</p><p>黒が<bdi>R17</bdi>と隅を守ると、白は<bdi>S17</bdi>とハネて隅に食い込み、黒の<bdi>R15</bdi>のアテにはツイで、<bdi>S15</bdi>と右辺の<bdi>R14</bdi>に近づいて根拠を作ります。最後は<bdi>Q14</bdi>と押さえて右辺を安定させます。</p><p>白は右辺に安定した形を作り、黒は隅と上辺を得る分かれ。白の立場で、ツケから根拠を作る手順を学びましょう。</p>",
+    "en": "<p>After the 4-4 low approach and the knight's response, the old standards were the 3-3 slide or the two-space extension. AI likes to attach right next to the 4-4 stone at <bdi>R16</bdi>.</p><p>When Black guards the corner with <bdi>R17</bdi>, White hanes at <bdi>S17</bdi> to cut in, connects after Black's atari at <bdi>R15</bdi>, and extends to <bdi>S15</bdi> toward <bdi>R14</bdi> to make a base. Finally <bdi>Q14</bdi> stabilises the right side.</p><p>White gets a settled right side, Black the corner and top side. Study the sequence from White's point of view.</p>"
+   },
+   "level": 2,
+   "side": 2,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "O17",
+    "R16",
+    "R17",
+    "S17",
+    "R15",
+    "S16",
+    "Q15",
+    "S15",
+    "R18",
+    "Q14"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>R14</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>O17</bdi>のケイマ受け。",
+     "en": "Black answers with the knight's move <bdi>O17</bdi>."
+    },
+    "3": {
+     "ja": "白は<bdi>R16</bdi>と星の横にツケます。三々スベリより右辺を重視する、AIが好む手です。",
+     "en": "White attaches next to the 4-4 stone at <bdi>R16</bdi> — more focused on the right side than the 3-3 slide; AI's favourite."
+    },
+    "4": {
+     "ja": "黒は<bdi>R17</bdi>と隅側から押さえて三々を守ります。",
+     "en": "Black blocks from the corner side at <bdi>R17</bdi>, protecting the 3-3."
+    },
+    "5": {
+     "ja": "白は<bdi>S17</bdi>とハネて隅に食い込みます。",
+     "en": "White hanes at <bdi>S17</bdi>, cutting into the corner."
+    },
+    "6": {
+     "ja": "黒は<bdi>R15</bdi>とアテます。白<bdi>R16</bdi>はダメが一つになりました。",
+     "en": "Black plays atari at <bdi>R15</bdi>; the white stone at <bdi>R16</bdi> has one liberty left."
+    },
+    "7": {
+     "ja": "白は<bdi>S16</bdi>とツイでアタリを逃げ、隅の石とつなげます。",
+     "en": "White connects at <bdi>S16</bdi>, escaping and joining the corner stones."
+    },
+    "8": {
+     "ja": "黒は<bdi>Q15</bdi>とツイで<bdi>R15</bdi>を守ります。",
+     "en": "Black connects at <bdi>Q15</bdi> to protect <bdi>R15</bdi>."
+    },
+    "9": {
+     "ja": "白は<bdi>S15</bdi>とノビて<bdi>R14</bdi>に近づき、眼形を広げます。",
+     "en": "White extends to <bdi>S15</bdi>, approaching <bdi>R14</bdi> and widening its eye space."
+    },
+    "10": {
+     "ja": "黒は<bdi>R18</bdi>とサガって隅を守ります。手を抜いて大場に回る手も有力です。",
+     "en": "Black descends to <bdi>R18</bdi> to guard the corner; playing elsewhere is also strong."
+    },
+    "11": {
+     "ja": "白は<bdi>Q14</bdi>と押さえて右辺を安定させます。白は右辺、黒は隅と上辺の分かれです。",
+     "en": "White blocks at <bdi>Q14</bdi> and stabilises the right side. White the right side, Black the corner and top."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.2,
+    -0.2,
+    -0.3,
+    -0.3,
+    -0.3,
+    -0.4,
+    -0.2,
+    -0.1,
+    -0.1,
+    -0.3,
+    -0.4
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R14"
+     ],
+     "good": [
+      "R17"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "R16"
+     ]
+    },
+    {
+     "at": 4,
+     "ok": [
+      "S17"
+     ]
+    },
+    {
+     "at": 6,
+     "ok": [
+      "S16"
+     ]
+    },
+    {
+     "at": 8,
+     "ok": [
+      "S15"
+     ],
+     "good": [
+      "Q17"
+     ]
+    },
+    {
+     "at": 10,
+     "ok": [
+      "Q14"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai_sansan",
+   "cat": "ai",
+   "ord": 3,
+   "n": 19,
+   "label": {
+    "ja": "AI",
+    "en": "AI"
+   },
+   "title": {
+    "ja": "三々入り・二段バネ",
+    "en": "3-3 invasion, double hane"
+   },
+   "short": {
+    "ja": "AI時代に定着した三々入りの戦い型。黒は隅を取り、白は右辺に形を作る",
+    "en": "A fighting 3-3 line established in the AI era: Black takes the corner, White builds on the right side"
+   },
+   "story": {
+    "ja": "<p>星への三々入りに、黒が<bdi>R15</bdi>とハネ、白のハネ返しにさらに<bdi>S14</bdi>とハネるのが「二段バネ」です。白は<bdi>R14</bdi>と切って戦いになりますが、AIの研究によって手順がほぼ決まった、現代の定石になりました。</p><p>黒は<bdi>Q15</bdi>とツイだ後、<bdi>S14</bdi>の一子を捨てて<bdi>S16</bdi>・<bdi>S17</bdi>と隅の白をしめつけ、隅の地を確保します。白は<bdi>S13</bdi>・<bdi>T14</bdi>で右辺に形を作り、隅の三子は軽く扱います。</p><p>手順中の手はほとんどがAIの第一候補で、評価はほぼ互角。黒は隅、白は右辺という分かれを、ダメの数を数えながら確認しましょう。</p>",
+    "en": "<p>Against the 3-3 invasion, Black hanes at <bdi>R15</bdi> and, after White hanes back, hanes again at <bdi>S14</bdi> — the double hane. White cuts at <bdi>R14</bdi> and a fight starts, but AI research has fixed the sequence and it is now modern joseki.</p><p>After connecting at <bdi>Q15</bdi>, Black gives up the stone at <bdi>S14</bdi> and squeezes the corner with <bdi>S16</bdi> and <bdi>S17</bdi>, securing the corner. White makes shape on the right side with <bdi>S13</bdi> and <bdi>T14</bdi> and treats the three corner stones lightly.</p><p>Almost every move is AI's first choice and the result is about even. Check the trade — Black the corner, White the right side — by counting liberties as you go.</p>"
+   },
+   "level": 3,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R17",
+    "Q17",
+    "R16",
+    "R15",
+    "S15",
+    "S14",
+    "R14",
+    "Q15",
+    "S13",
+    "S16",
+    "T14",
+    "S17",
+    "R18",
+    "S18"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R17</bdi>と三々に入ります。",
+     "en": "White invades the 3-3 at <bdi>R17</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>Q17</bdi>と上から押さえます。",
+     "en": "Black blocks from above at <bdi>Q17</bdi>."
+    },
+    "3": {
+     "ja": "白は<bdi>R16</bdi>とハイます。",
+     "en": "White crawls to <bdi>R16</bdi>."
+    },
+    "4": {
+     "ja": "黒は<bdi>R15</bdi>と白の頭をハネます。穏やかな<bdi>Q15</bdi>のノビと同じくらいの評価で、戦いを選ぶ手です。",
+     "en": "Black hanes at the head of White's stones at <bdi>R15</bdi>. It rates about the same as the calm <bdi>Q15</bdi>, but chooses a fight."
+    },
+    "5": {
+     "ja": "白は<bdi>S15</bdi>とハネ返します。",
+     "en": "White hanes back at <bdi>S15</bdi>."
+    },
+    "6": {
+     "ja": "黒は<bdi>S14</bdi>ともう一度ハネます。これが「二段バネ」。白の眼形を奪う強い手です。",
+     "en": "Black hanes again at <bdi>S14</bdi> — the double hane, a strong move that takes away White's eye space."
+    },
+    "7": {
+     "ja": "白は<bdi>R14</bdi>と切ります。黒<bdi>R15</bdi>はダメが<bdi>Q15</bdi>の一つだけになりました。",
+     "en": "White cuts at <bdi>R14</bdi>; the black stone at <bdi>R15</bdi> now has only one liberty, at <bdi>Q15</bdi>."
+    },
+    "8": {
+     "ja": "黒は<bdi>Q15</bdi>とツイでアタリを逃げます。",
+     "en": "Black connects at <bdi>Q15</bdi>, escaping the atari."
+    },
+    "9": {
+     "ja": "白は<bdi>S13</bdi>と黒<bdi>S14</bdi>をアタリにします。",
+     "en": "White puts <bdi>S14</bdi> in atari with <bdi>S13</bdi>."
+    },
+    "10": {
+     "ja": "黒は<bdi>S14</bdi>を助けずに<bdi>S16</bdi>とアテます。白<bdi>S15</bdi>がアタリになり、隅の白も締めつけられます。",
+     "en": "Instead of saving <bdi>S14</bdi>, Black plays atari at <bdi>S16</bdi>: <bdi>S15</bdi> is in atari and the corner stones are squeezed."
+    },
+    "11": {
+     "ja": "白は<bdi>T14</bdi>と黒<bdi>S14</bdi>を取って、<bdi>S15</bdi>をつなぎます。",
+     "en": "White captures <bdi>S14</bdi> with <bdi>T14</bdi>, saving <bdi>S15</bdi>."
+    },
+    "12": {
+     "ja": "黒は<bdi>S17</bdi>とアテて、隅の白三子（<bdi>R16</bdi>・<bdi>R17</bdi>）を締めつけます。",
+     "en": "Black plays atari at <bdi>S17</bdi>, squeezing the corner stones <bdi>R16</bdi> and <bdi>R17</bdi>."
+    },
+    "13": {
+     "ja": "白は<bdi>R18</bdi>とノビてアタリを逃げます。",
+     "en": "White extends to <bdi>R18</bdi>, escaping the atari."
+    },
+    "14": {
+     "ja": "黒は<bdi>S18</bdi>と押さえて隅を確保します。隅の白はダメが少なく、黒は隅の地、白は右辺の形と先手を得た互角の分かれです。",
+     "en": "Black blocks at <bdi>S18</bdi> and secures the corner. The white corner stones are short of liberties; Black has the corner, White the right-side shape and sente — even."
+    }
+   },
+   "vars": [],
+   "evals": [
+    -0.4,
+    -0.3,
+    -0.3,
+    -0.3,
+    -0.4,
+    -0.6,
+    -0.5,
+    -0.4,
+    -0.5,
+    -0.6,
+    -0.5,
+    -0.6,
+    -0.5,
+    -0.5
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 1,
+     "ok": [
+      "Q17"
+     ],
+     "good": [
+      "R16"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R15"
+     ],
+     "good": [
+      "Q15",
+      "R14"
+     ]
+    },
+    {
+     "at": 5,
+     "ok": [
+      "S14"
+     ],
+     "good": [
+      "R14"
+     ]
+    },
+    {
+     "at": 7,
+     "ok": [
+      "Q15"
+     ]
+    },
+    {
+     "at": 9,
+     "ok": [
+      "S16"
+     ]
+    },
+    {
+     "at": 11,
+     "ok": [
+      "S17"
+     ]
+    },
+    {
+     "at": 13,
+     "ok": [
+      "S18"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai_katatsuki",
+   "cat": "ai",
+   "ord": 4,
+   "n": 19,
+   "label": {
+    "ja": "AI",
+    "en": "AI"
+   },
+   "title": {
+    "ja": "小目のハサミに肩ツキ",
+    "en": "Shoulder hit against a 3-4 pincer"
+   },
+   "short": {
+    "ja": "ハサまれた石を動かさず、小目の肩にツいて逆に攻める現代流",
+    "en": "Don't run with the pincered stone: hit the 3-4 stone's shoulder and turn the tables"
+   },
+   "story": {
+    "ja": "<p>小目への小ゲイマガカリをハサまれたとき、昔は一間トビで逃げるのが普通でした。AI時代に急増したのが<bdi>Q15</bdi>の肩ツキです。</p><p>肩ツキで黒の小目を隅に押し込み、黒が<bdi>R15</bdi>・<bdi>R13</bdi>と低く生きる間に、白は外側に形を作ります。カカリの<bdi>P17</bdi>は軽く見て、最後に<bdi>K17</bdi>とハサミの石を挟み返して主導権を握ります。</p><p>「相手を低く生かして外を取る」考え方は、AIの打ち方の大きな特徴の一つです。</p>",
+    "en": "<p>When the small knight approach to a 3-4 stone is pincered, the old answer was to run with a one-space jump. In the AI era the shoulder hit at <bdi>Q15</bdi> became very common.</p><p>The shoulder hit pushes the 3-4 stone into the corner; while Black lives low with <bdi>R15</bdi> and <bdi>R13</bdi>, White builds outside. White treats <bdi>P17</bdi> lightly and finally counter-pincers the pincer stone at <bdi>K17</bdi>, taking the initiative.</p><p>Letting the opponent live low and taking the outside is one of the hallmarks of AI play.</p>"
+   },
+   "level": 2,
+   "side": 2,
+   "start": {
+    "n": 19,
+    "ab": [
+     "R16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "P17",
+    "M16",
+    "Q15",
+    "R15",
+    "Q14",
+    "R13",
+    "K17"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>P17</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>P17</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>M16</bdi>と二間高バサミ。",
+     "en": "Black pincers at <bdi>M16</bdi>, two spaces high."
+    },
+    "3": {
+     "ja": "白は<bdi>Q15</bdi>と黒の小目の肩にツキます。ハサまれた石を動かさず、黒の隅の石に働きかける現代の主流の手です。",
+     "en": "White hits the shoulder of the 3-4 stone at <bdi>Q15</bdi>. Instead of running with the pincered stone, it works on Black's corner stone — the modern mainstream."
+    },
+    "4": {
+     "ja": "黒は<bdi>R15</bdi>とノビて隅を守ります。",
+     "en": "Black extends to <bdi>R15</bdi> to defend the corner."
+    },
+    "5": {
+     "ja": "白は<bdi>Q14</bdi>とノビて黒を低く抑えます。",
+     "en": "White extends to <bdi>Q14</bdi>, keeping Black low."
+    },
+    "6": {
+     "ja": "黒は<bdi>R13</bdi>と構えて右辺の根拠を確保します。",
+     "en": "Black settles at <bdi>R13</bdi>, securing a base on the right side."
+    },
+    "7": {
+     "ja": "白は<bdi>K17</bdi>とハサミの石を挟み返します。外の厚みを生かした攻めで、カカリの<bdi>P17</bdi>は軽く扱います。",
+     "en": "White counter-pincers the pincer stone at <bdi>K17</bdi>, using the outside strength; <bdi>P17</bdi> is treated lightly."
+    }
+   },
+   "vars": [
+    {
+     "at": 1,
+     "line": [
+      "M17",
+      "Q15",
+      "R15",
+      "Q14",
+      "R13",
+      "J17"
+     ],
+     "title": {
+      "ja": "二間低バサミにも肩ツキ",
+      "en": "The same against the low two-space pincer"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>M17</bdi>と三線に二間バサミ。",
+       "en": "Black pincers two spaces away on the third line at <bdi>M17</bdi>."
+      },
+      "2": {
+       "ja": "白はやはり<bdi>Q15</bdi>と肩にツキます。",
+       "en": "White again hits the shoulder at <bdi>Q15</bdi>."
+      },
+      "3": {
+       "ja": "黒は<bdi>R15</bdi>とノビます。",
+       "en": "Black extends to <bdi>R15</bdi>."
+      },
+      "4": {
+       "ja": "白は<bdi>Q14</bdi>とノビます。",
+       "en": "White extends to <bdi>Q14</bdi>."
+      },
+      "5": {
+       "ja": "黒は<bdi>R13</bdi>と根拠を確保します。",
+       "en": "Black secures a base at <bdi>R13</bdi>."
+      },
+      "6": {
+       "ja": "白は<bdi>J17</bdi>とハサミの石を挟みます。",
+       "en": "White pincers the pincer stone at <bdi>J17</bdi>."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.6,
+    -0.6,
+    -0.5,
+    -0.6,
+    -0.6,
+    -0.7
+   ],
+   "view": [
+    7,
+    0,
+    18,
+    11
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "P17"
+     ],
+     "good": [
+      "P16"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "M16"
+     ],
+     "good": [
+      "Q15",
+      "Q14"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "Q15"
+     ]
+    },
+    {
+     "at": 4,
+     "ok": [
+      "Q14"
+     ]
+    },
+    {
+     "at": 6,
+     "ok": [
+      "K17"
+     ],
+     "good": [
+      "K16",
+      "Q13"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai_old_slide",
+   "cat": "ai",
+   "ord": 5,
+   "n": 19,
+   "label": {
+    "ja": "AI",
+    "en": "AI"
+   },
+   "title": {
+    "ja": "AIが見直した旧定石：三々スベリの上オサエ",
+    "en": "An old joseki AI re-evaluated: blocking the slide from above"
+   },
+   "short": {
+    "ja": "昔の教科書の定番も、AIの目では約2目損。何が変わったかを学ぶ",
+    "en": "A textbook classic that AI rates about 2 points worse — see what changed"
+   },
+   "story": {
+    "ja": "<p>星・小ゲイマガカリ・一間受けの後、白が<bdi>R17</bdi>に三々スベリしたら、黒は<bdi>Q17</bdi>と上から押さえ、白は<bdi>R11</bdi>にヒラく——これは長い間、入門書に必ず載っていた定石です。</p><p>しかしAIの評価では、<bdi>Q17</bdi>のオサエは約2目、白の<bdi>R11</bdi>のヒラキもさらに損とされます。黒は<bdi>R16</bdi>と下から押さえて白の隅と<bdi>R14</bdi>を分断する方が良く、白も<bdi>Q17</bdi>の後は<bdi>R16</bdi>と隅を固めるのが本手です。</p><p>定石は「絶対」ではなく、時代とともに評価が変わります。昔の形を知っておくと、相手が打ってきたときに正しく咎めることができます。</p>",
+    "en": "<p>After the 4-4 low approach and the one-space jump, White slides to the 3-3 at <bdi>R17</bdi>, Black blocks from above at <bdi>Q17</bdi>, and White extends to <bdi>R11</bdi> — for decades this was in every beginner's book.</p><p>AI, however, rates the block at <bdi>Q17</bdi> about 2 points worse, and White's <bdi>R11</bdi> worse still. Black should block from below at <bdi>R16</bdi>, separating the corner from <bdi>R14</bdi>; after <bdi>Q17</bdi>, White's honest move is <bdi>R16</bdi>, firming up the corner.</p><p>Joseki are not absolute — their evaluation changes over time. Knowing the old shapes helps you punish them when an opponent plays them.</p>"
+   },
+   "level": 2,
+   "side": 1,
+   "start": {
+    "n": 19,
+    "ab": [
+     "Q16",
+     "D4",
+     "F3"
+    ],
+    "aw": [
+     "D16",
+     "Q4"
+    ],
+    "turn": 2
+   },
+   "line": [
+    "R14",
+    "O16",
+    "R17",
+    "Q17",
+    "R11"
+   ],
+   "notes": {
+    "1": {
+     "ja": "白は<bdi>R14</bdi>に小ゲイマガカリ。",
+     "en": "White approaches at <bdi>R14</bdi>."
+    },
+    "2": {
+     "ja": "黒は<bdi>O16</bdi>と一間受け。",
+     "en": "Black answers with the one-space jump <bdi>O16</bdi>."
+    },
+    "3": {
+     "ja": "白は<bdi>R17</bdi>と三々にすべります。",
+     "en": "White slides into the 3-3 at <bdi>R17</bdi>."
+    },
+    "4": {
+     "ja": "黒は<bdi>Q17</bdi>と上から押さえます。これが昔の定石ですが、AIは約2目の損と評価します。白に隅と右辺の両方をつながれてしまい、黒の厚みが働きにくいためです。AIの推奨は<bdi>R16</bdi>（変化図）。",
+     "en": "Black blocks from above at <bdi>Q17</bdi>. This is the old joseki, but AI rates it about 2 points worse: White gets to connect the corner with the right side, and Black's thickness has little to work on. AI recommends <bdi>R16</bdi> (variation)."
+    },
+    "5": {
+     "ja": "白は<bdi>R11</bdi>とヒラくのが昔の定石の続き。しかしAIはこの手もさらに損とし、<bdi>R16</bdi>と隅を固める手を推奨します。黒が先に<bdi>R16</bdi>に打つと白の隅が狭くなるからです。",
+     "en": "White's extension to <bdi>R11</bdi> was the old continuation. AI rates it even worse and recommends <bdi>R16</bdi>, firming up the corner — if Black gets <bdi>R16</bdi> first, White's corner becomes cramped."
+    }
+   },
+   "vars": [
+    {
+     "at": 3,
+     "line": [
+      "R16",
+      "S16",
+      "S15",
+      "S17",
+      "R15",
+      "P18"
+     ],
+     "title": {
+      "ja": "AIの推奨：R16から押さえる",
+      "en": "AI's choice: block at R16"
+     },
+     "notes": {
+      "1": {
+       "ja": "黒は<bdi>R16</bdi>とカカリの側から押さえ、隅と<bdi>R14</bdi>を分断します。",
+       "en": "Black blocks on the approach side at <bdi>R16</bdi>, separating the corner from <bdi>R14</bdi>."
+      },
+      "2": {
+       "ja": "白は<bdi>S16</bdi>とハネます。",
+       "en": "White hanes at <bdi>S16</bdi>."
+      },
+      "3": {
+       "ja": "黒は<bdi>S15</bdi>とハネ返します。",
+       "en": "Black hanes back at <bdi>S15</bdi>."
+      },
+      "4": {
+       "ja": "白は<bdi>S17</bdi>とツギます。",
+       "en": "White connects at <bdi>S17</bdi>."
+      },
+      "5": {
+       "ja": "黒は<bdi>R15</bdi>とツイで厚い壁を作ります。",
+       "en": "Black connects at <bdi>R15</bdi>, building a thick wall."
+      },
+      "6": {
+       "ja": "白は<bdi>P18</bdi>と二線をすべって生きます。黒は先手で厚く、互角です。",
+       "en": "White slides along the second line to <bdi>P18</bdi> and lives. Black is thick with sente: even."
+      }
+     }
+    }
+   ],
+   "evals": [
+    -0.2,
+    -0.1,
+    0,
+    -2.1,
+    0.7
+   ],
+   "view": [
+    9,
+    0,
+    18,
+    9
+   ],
+   "problems": [
+    {
+     "at": 0,
+     "ok": [
+      "R14"
+     ]
+    },
+    {
+     "at": 1,
+     "ok": [
+      "O16"
+     ]
+    },
+    {
+     "at": 2,
+     "ok": [
+      "R17"
+     ]
+    },
+    {
+     "at": 3,
+     "ok": [
+      "R16"
+     ],
+     "note": "line move Q17 is the old joseki; AI move asked"
+    },
+    {
+     "at": 4,
+     "ok": [
+      "R16"
+     ],
+     "note": "line move R11 is the old joseki; AI move asked"
+    }
+   ]
+  }
+ ]
+}

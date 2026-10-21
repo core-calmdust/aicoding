@@ -106,9 +106,10 @@ async function main() {
     }
     // problems: ok must be the line move
     for (const pr of set.problems || []) {
-      if (!pr.ok.includes(set.line[pr.at])) console.log(`  !! problem at ${pr.at}: ok ${pr.ok} != line ${set.line[pr.at]}`);
+      if (!pr.ok.includes(set.line[pr.at]) && !pr.note) console.log(`  !! problem at ${pr.at}: ok ${pr.ok} != line ${set.line[pr.at]}`);
+      if (pr.at >= set.line.length) console.log(`  !! problem at ${pr.at}: beyond the line`);
       const turn = rows[pr.at] ? rows[pr.at].pre.turn : 0;
-      if (turn !== set.side) console.log(`  !! problem at ${pr.at}: not ${set.side}'s turn`);
+      if (turn !== set.side) console.log(`  .. problem at ${pr.at}: asks the opponent's move (colour ${turn})`);
     }
     const maxm = Math.max(...rows.map(r => r.loss));
     summary.push({ id: set.id, ja: set.title.ja, moves: set.line.length, maxMain: maxm, maxVar: maxv, probs: (set.problems || []).length });

@@ -532,7 +532,12 @@ function lineIndex(C, P, moves) {
 // run f() for one candidate; on a timeout / node limit unwind the board and return `dflt`
 function guarded(C, f, dflt) {
   const B = C.B, depth = B.undo.length;
-  try { return f(); } catch (e) { if (e !== ABORT || !C.dl) throw e;   // exact mode: the caller handles the node limit while (B.undo.length > depth) B.back(); C.aborted++; return dflt; }
+  try { return f(); }
+  catch (e) {
+    if (e !== ABORT || !C.dl) throw e;   // exact mode: the caller handles the node limit
+    while (B.undo.length > depth) B.back();
+    C.aborted++; return dflt;
+  }
 }
 function solve(P, moves, left, defend, opts) {
   const exact = !!(opts && opts.exact);
@@ -646,7 +651,7 @@ function mainLine(P, left) {
   return line;
 }
 
-const api = { solve, reached, mainLine, PASS, budget: 220, nodeLimit: Infinity, _ctx: ctxOf, _Board: Board };
+const api = { solve, reached, mainLine, PASS, budget: 150, nodeLimit: Infinity, _ctx: ctxOf, _Board: Board };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 root.GoTsumego = api;
 })(typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : globalThis);

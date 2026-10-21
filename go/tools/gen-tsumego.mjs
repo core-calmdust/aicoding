@@ -4,6 +4,8 @@
 //   node tools/gen-tsumego.mjs semeai <count> <seed>   capturing races (19x19 corners: inner group vs the ring around it)
 //   node tools/gen-tsumego.mjs tac    <games> <seed>   capture / ladder / net / snapback / tesuji / connect puzzles
 //                                                       harvested from light-net self-play games on 9x9 and 13x13
+//   node tools/gen-tsumego.mjs syn    <count> <seed>   dense tactical shapes near an edge of 9x9 (snapback / under the
+//                                                       stones / shortage of liberties; also capture / net / tesuji)
 //   node tools/gen-tsumego.mjs build                    fun score (tools/fun.js + the net) -> select -> go/puzzles.json
 //
 // Candidates go to tools/data/tsumego/<family>-<seed>.jsonl (one puzzle per line, puzzle JSON format + "th" theme guess).
@@ -80,7 +82,7 @@ function minimize(P, b0, player, rand) {
   for (let k = order.length - 1; k > 0; k--) { const j = Math.floor(rand() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
   let cur = P, tries = 0;
   for (const q of order) {
-    if (tries++ > 14) break;
+    if (tries++ > 10) break;
     const v = b[q]; b[q] = 0;
     let ok = false;
     if (legal(b, n)) {
@@ -238,9 +240,60 @@ function tacTheme(P, pos0, G) {
   return 'tesuji';
 }
 
+// ---- synthetic tactical shapes near an edge / corner of a 9x9 board (snapback, under the stones, shortage of liberties)
+function synShape(rand, n = 9) {
+  const b = new Uint8Array(n * n), I = (x, y) => y * n + x, nb = R.nbrs(n);
+  const x0 = rand() < 0.4 ? 0 : 1 + Math.floor(rand() * 3), W = 6, H = 4;
+  const inBox = q => { const x = q % n, y = Math.floor(q / n); return x >= x0 && x < x0 + W && y < H; };
+  // target: 2-4 stones on the first / second line
+  const ts = [I(x0 + 1 + Math.floor(rand() * (W - 2)), Math.floor(rand() * 2))];
+  const tl = 2 + Math.floor(rand() * 3);
+  for (let k = 1; k < tl; k++) { const q = ts[Math.floor(rand() * ts.length)], c = [0, 1, 2, 3].map(d => nb[q * 4 + d]).filter(r => r >= 0 && inBox(r) && Math.floor(r / n) < 3 && !ts.includes(r)); if (c.length) ts.push(c[Math.floor(rand() * c.length)]); }
+  for (const q of ts) b[q] = 1;
+  const libs = () => { const s = new Set(); for (const q of ts) for (let d = 0; d < 4; d++) { const r = nb[q * 4 + d]; if (r >= 0 && !b[r]) s.add(r); } return [...s]; };
+  const want = rand() < 0.7 ? 2 : 3;
+  let lb = libs(), guard = 0;
+  while (lb.length > want && guard++ < 30) { b[lb[Math.floor(rand() * lb.length)]] = 2; lb = libs(); }
+  // supporting stones of both colours next to existing stones inside the box
+  const extra = 3 + Math.floor(rand() * 7);
+  for (let k = 0; k < extra; k++) {
+    const st = []; for (let q = 0; q < n * n; q++) if (b[q] && inBox(q)) st.push(q);
+    const s = st[Math.floor(rand() * st.length)], c = [0, 1, 2, 3].map(d => nb[s * 4 + d]).filter(r => r >= 0 && inBox(r) && !b[r] && !libs().includes(r));
+    if (!c.length) continue;
+    b[c[Math.floor(rand() * c.length)]] = rand() < 0.55 ? 2 : 1;
+  }
+  const region = []; for (let q = 0; q < n * n; q++) { if (b[q]) continue; const x = q % n, y = Math.floor(q / n); if (x >= x0 - 1 && x <= x0 + W && y <= H) region.push(q); }
+  return { n, b, region, tgt: ts.slice().sort((a, c) => a - c) };
+}
+function genSyn(count, seed) {
+  const rand = rng(seed * 2654435761 + 11), n = 9, file = path.join(OUT, `syn-${seed}.jsonl`), seen = new Set();
+  const quota = {}, Q = { snapback: count, tesuji: Math.ceil(count / 2), capture: Math.ceil(count / 3), ladder: Math.ceil(count / 4) };
+  let made = 0, tries = 0; const t0 = Date.now();
+  while (made < count) {
+    tries++;
+    const sh = synShape(rand, n);
+    if (!legal(sh.b, n)) continue;
+    // natural look: every stone has a friend within 2, no own stones in atari at the start except the target's side
+    const pos = posOf(sh.b, n); let ok = true;
+    for (let i = 0; i < n * n && ok; i++) if (sh.b[i]) { let f = false; for (let j = 0; j < n * n; j++) if (j !== i && sh.b[j] === sh.b[i] && Math.max(Math.abs(i % n - j % n), Math.abs(Math.floor(i / n) - Math.floor(j / n))) <= 2) { f = true; break; } if (!f) ok = false; }
+    if (!ok) continue;
+    const key = Array.from(sh.b).join(''); if (seen.has(key)) continue; seen.add(key);
+    let P = { s: specOf(sh.b, n, 2), goal: 'capture', target: sh.tgt, region: sh.region };
+    try { P = check(P, 4, false); } catch (e) { if (e.abort) continue; throw e; }
+    if (!P) continue;
+    const th = tacTheme(P, pos, 1);
+    if ((quota[th] || 0) >= (Q[th] || 0)) continue;
+    quota[th] = (quota[th] || 0) + 1;
+    emit(file, P, { th, fam: 'syn' });
+    if (th === 'snapback') made++;
+    if (tries % 200 === 0 || th === 'snapback') console.log(`syn seed ${seed}: snapback ${made}/${count} ${JSON.stringify(quota)} (${tries} shapes, ${((Date.now() - t0) / 1000).toFixed(0)} s)`);
+  }
+}
+
 // ---- main
 const [cmd, a1, a2] = process.argv.slice(2);
 if (cmd === 'ld') genLD(+a1 || 50, +a2 || 1);
+else if (cmd === 'syn') genSyn(+a1 || 50, +a2 || 1);
 else if (cmd === 'semeai') genSemeai(+a1 || 50, +a2 || 1);
 else if (cmd === 'tac') await genTac(+a1 || 20, +a2 || 1);
 else if (cmd === 'build') { const { build } = await import('./build-tsumego.mjs'); await build(); }
