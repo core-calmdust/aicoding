@@ -110,7 +110,7 @@ html[lang=ar] .rt-pinfo{direction:rtl;text-align:right}
 .rt-wins .ic svg{width:40px;height:40px}
 .rt-draw{font-size:13.5px;line-height:1.7;color:var(--muted)}
 html[lang=ar] .rt-wins,html[lang=ar] .rt-draw{direction:rtl}
-@media (max-width: 520px){ .rt-wins{grid-template-columns:minmax(0,1fr)} }
+@media (max-width: 520px){ .rt-wins{grid-template-columns:minmax(0,1fr);gap:6px;margin:2px 0 6px}.rt-wins .ru-win{padding:5px 10px;gap:10px}.rt-wins .ic{width:32px;height:32px}.rt-wins .ic svg{width:28px;height:28px}.rt-wins .ru-win p{font-size:13.5px;line-height:1.4}.rt-wins .ru-win p b{font-size:14.5px}.rt-draw{font-size:13px;line-height:1.55} }
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
   .rt-pinfo{font-size:15.5px}.rt-pinfo h4{font-size:17px}
   .rt-hand small{font-size:15px}
@@ -222,7 +222,7 @@ const winIcons = () => {
     `<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="16" fill="none" stroke="currentColor" stroke-width="3.4"/><path d="M24 26V16M24 26l7 5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M19 5h10" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>`,
     `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="#ff7a6a" stroke-width="3.6"/><path d="M16 16L32 32M32 16L16 32" stroke="#ff7a6a" stroke-width="3.6" stroke-linecap="round"/></svg>`,
   ];
-  return `<div class="rt-wins">${ic.map((s, i) => `<div class="ru-win"><div class="ic">${s}</div><p>${t('ru.win.' + (i + 1)).replace(/<\/b>\s*[:：]\s*/, '</b><br>')}</p></div>`).join('')}</div><p class="rt-draw">${t('rt.end.draw')}</p>`;
+  return `<div class="rt-wins">${ic.map((s, i) => `<div class="ru-win"><div class="ic">${s}</div><p>${t('ru.win.' + (i + 1)).replace(/<\/b>\s*[:：]\s*/, '</b>')}</p></div>`).join('')}</div><p class="rt-draw">${t('rt.end.draw')}</p>`;
 };
 const PAGES = [
   { id: 'intro', title: () => t('ri.t'), body: () => '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/shogi.webp', origin: t('ri.origin'), players: t('ri.players'), time: t('ri.time'), history: t('ri.hist'), win: t('ri.win'), culture: t('ri.cult') }) },
