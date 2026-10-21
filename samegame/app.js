@@ -11,7 +11,7 @@ const today = () => ymd(new Date());
 const fmt = n => Math.round(n).toLocaleString('en-US');
 
 /* ---------------- save data ---------------- */
-const DEF = () => ({ v: 1, coin: 0, life: 0, mon: {}, name: '', icon: 0, own: { 0: 1 }, bg: 'dots', bgOwn: ['dots'],
+const DEF = () => ({ v: 1, coin: 0, life: 0, mon: {}, name: '', icon: 0, own: { 0: 1 }, bg: 'dots', bgOwn: ['dots'], stamps: {}, stEq: [],
   set: { snd: 1, anim: 1, emb: 1, lang: '', skin: '' }, st: {}, dl: {}, act: { blitz: 0, rise: 0, mis: {} }, free: {},
   stats: { pops: 0, blocks: 0, big: 0, combo: 0, perfect: 0, hero: 0, fever: 0, games: 0, gacha: 0, days: 0 }, ach: {}, tut: {}, login: '' });
 function load() {
@@ -178,7 +178,7 @@ const ACH = [
   ['daily7', () => [streak(), 7], 300], ['daily30', () => [streak(), 30], 1000],
   ['gold10', () => [Object.values(DB.dl).filter(dayGold).length, 10], 500],
   ['blitz10k', () => [DB.act.blitz, 10000], 300], ['rise10k', () => [DB.act.rise, 10000], 300],
-  ['col30', () => [Object.keys(DB.own).length, 30], 300], ['col100', () => [Object.keys(DB.own).length, 100], 3000],
+  ['col30', () => [colOwned(), 50], 300], ['col100', () => [colOwned(), 200], 3000], ['colall', () => [colOwned(), COL_TOTAL], 10000],
 ];
 const achDone = () => ACH.filter(([id, f]) => { const [v, g] = f(DB.stats); return v >= g && !DB.ach[id]; }).length;
 function updateBadges() { const n = achDone(); $('#btnAch .dot').style.display = n ? 'block' : 'none'; }
@@ -205,15 +205,15 @@ function applySkin() {
 function setBg() { const b = A.BGS.find(x => x.id === DB.bg) || A.BGS[0]; $('#bg').style.background = b.css(); document.body.dataset.bg = b.id; }
 function profCard() {
   const lv = Math.floor(Math.sqrt(DB.life / 50)) + 1;
-  $('#profCard').innerHTML = `<button class="pic" id="pfEdit" aria-label="${esc(t('pf.edit'))}">${A.charSVG(DB.icon)}</button>
+  $('#profCard').innerHTML = `<button class="pic" id="pfEdit" aria-label="${esc(t('pf.edit'))}">${picHTML()}</button>
     <div class="pinfo"><b class="pname">${esc(DB.name || t('pf.guest'))}</b></div>
     <div class="plc"><span class="plv">LV.${lv}</span><div class="pcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div></div>
     <div class="pstreak"><b>${streak()}</b><span>${esc(t('pf.streak'))}</span></div>
     <div class="pextra"><div class="plvbar"><span>LV.${lv} → ${lv + 1}</span><span class="bar"><i style="width:${Math.min(100, (DB.life - 50 * (lv - 1) ** 2) / (50 * lv ** 2 - 50 * (lv - 1) ** 2) * 100)}%"></i></span></div>
       <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/${ST_TOTAL}</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
-      <li><span>${esc(t('bk.title'))}</span><b>${Object.keys(DB.own).length}<small>/100</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
+      <li><span>${esc(t('bk.title'))}</span><b>${colOwned()}<small>/${COL_TOTAL}</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
       ${googleBox()}<div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
-  $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha('g'), book: openBook, ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
+  $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha(), book: openBook, ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
   $('#pfEdit').onclick = openProfile;
   const pn = $('#profCard .pname'); pn.title = t('pf.name'); pn.onclick = () => {
     const inp = document.createElement('input'); inp.className = 'pname pnin'; inp.maxLength = 12; inp.value = DB.name; inp.placeholder = t('pf.ph'); pn.replaceWith(inp); inp.focus(); inp.select();
@@ -955,17 +955,35 @@ function modal(html, cls = '') {
 }
 function closeModal() { if ($('#modal').classList.contains('mask') && ask.close) { ask.close(); return; } $('#modal').hidden = true; if (!$('#home').hidden) renderHome(); }
 // --- profile
-function openProfile() {
-  const owned = Object.keys(DB.own).map(Number).sort((a, b) => a - b);
+function openProfile(tab = 'i') {
+  const pend = openProfile.p || (openProfile.p = { icon: DB.icon, st: [...(DB.stEq || [])], bg: DB.bg, name: DB.name });
+  const ownedC = Object.keys(DB.own).map(Number).sort((a, b) => a - b);
+  const ownedS = Object.keys(DB.stamps || {}).map(Number).sort((a, b) => a - b);
+  const tabs = [['i', 'pf.icon2'], ['s', 'pf.stamp'], ['b', 'pf.bg']];
+  let grid = '';
+  if (tab === 'i') grid = `<div class="cgrid">${ownedC.map(id => `<button class="cc ${id === pend.icon ? 'on' : ''}" data-ic="${id}">${A.charSVG(id)}</button>`).join('')}</div>`;
+  else if (tab === 's') grid = `<p class="note">${esc(t('pf.stnote'))}</p>` + (ownedS.length ? `<div class="cgrid sgrid">${ownedS.map(id => { const k = pend.st.indexOf(id); return `<button class="cc st ${k >= 0 ? 'on' : ''}" data-st="${id}">${A.stampSVG(id)}${k >= 0 ? `<em>${k + 1}</em>` : ''}</button>`; }).join('')}</div>` : `<p class="note">${esc(t('pf.nost'))}</p>`);
+  else grid = `<div class="bggrid">${A.BGS.filter(b => DB.bgOwn.includes(b.id)).map(b => `<button class="bgi ${pend.bg === b.id ? 'on' : ''}" data-bg="${b.id}"><span class="bgp" style="background:${bgCss(b)}"></span><b>${esc(bgName(b))}</b></button>`).join('')}</div>`;
   const body = modal(`<h2 class="mh">${esc(t('pf.edit'))}</h2>
-    <label class="fld"><span>${esc(t('pf.name'))}</span><input id="pfName" maxlength="12" value="${esc(DB.name)}" placeholder="${esc(t('pf.ph'))}"></label>
-    <p class="note">${esc(t('pf.note'))}</p><h3 class="mh3">${esc(t('pf.icon'))}</h3>
-    <div class="cgrid">${owned.map(id => `<button class="cc ${id === DB.icon ? 'on' : ''}" data-id="${id}">${A.charSVG(id)}</button>`).join('')}</div>
+    <div class="pfhead"><div class="pic big">${picHTML(pend.icon, pend.st)}</div><div class="pfn"><label class="fld"><span>${esc(t('pf.name'))}</span><input id="pfName" maxlength="12" value="${esc(pend.name)}" placeholder="${esc(t('pf.ph'))}"></label><p class="note">${esc(t('pf.note'))}</p></div></div>
+    <div class="mtabs">${tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" data-ptab="${k}">${esc(t(l))}</button>`).join('')}</div>${grid}
     <div class="mbtns"><button class="btn red" id="pfSave">${esc(t('u.save'))}</button></div>`, 'mprof mwide');
-  let pick = DB.icon;
-  $$('.cc', body).forEach(b => b.onclick = () => { pick = +b.dataset.id; $$('.cc', body).forEach(x => x.classList.toggle('on', x === b)); });
-  $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pick; save(); pushScores(); closeModal(); };
+  const keepName = () => { pend.name = $('#pfName').value; };
+  $$('[data-ptab]', body).forEach(b => b.onclick = () => { keepName(); openProfile(b.dataset.ptab); });
+  $$('[data-ic]', body).forEach(b => b.onclick = () => { keepName(); pend.icon = +b.dataset.ic; openProfile('i'); });
+  $$('[data-st]', body).forEach(b => b.onclick = () => { keepName(); const id = +b.dataset.st, k = pend.st.indexOf(id); if (k >= 0) pend.st.splice(k, 1); else { if (pend.st.length >= 3) pend.st.shift(); pend.st.push(id); } openProfile('s'); });
+  $$('[data-bg]', body).forEach(b => b.onclick = () => { keepName(); pend.bg = b.dataset.bg; openProfile('b'); });
+  $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pend.icon; DB.stEq = pend.st; DB.bg = pend.bg; openProfile.p = null; save(); setBg(); pushScores(); closeModal(); };
+  $('#modalX').addEventListener('click', () => { openProfile.p = null; }, { once: true });
 }
+// profile picture: character + up to 3 stamps around it
+function picHTML(icon = DB.icon, st = DB.stEq || []) {
+  return `${A.charSVG(icon)}${st.slice(0, 3).map((id, i) => `<span class="pst sp${i}">${A.stampSVG(id)}</span>`).join('')}`;
+}
+const COL_TOTAL = A.CHAR_N + A.STAMP_N + A.BGS.length;
+const colOwned = () => Object.keys(DB.own).length + Object.keys(DB.stamps || {}).length + DB.bgOwn.filter(id => A.BGS.some(b => b.id === id)).length;
+const bgCss = b => b.css().replace(/"/g, '&quot;');
+function bgName(b) { return b.pat ? `${t('bgp.' + b.pat)} · ${t('bgc.' + b.pal)}` : t('bg.' + b.id); }
 // --- achievements
 function openAch() {
   const rows = ACH.map(([id, f, rw]) => { const [v, g] = f(DB.stats), done = v >= g, got = DB.ach[id];
@@ -974,52 +992,65 @@ function openAch() {
   const body = modal(`<h2 class="mh">${esc(t('ach.title'))}</h2><p class="note">${esc(t('ach.d'))}</p><div class="alist">${rows}</div>`, 'mwide');
   $$('[data-ach]', body).forEach(b => b.onclick = () => { const a = ACH.find(x => x[0] === b.dataset.ach); DB.ach[a[0]] = 1; addCoin(a[2]); SND.coin(); save(); openAch(); updateBadges(); });
 }
-// --- gacha + shop
+// --- gacha: characters (icons), stamps and backgrounds share one pool, drawn by rarity
 const RATE = [[4, .01], [3, .04], [2, .12], [1, .28], [0, .55]];
-const REFUND = [5, 15, 40, 100, 300];
+const G_COST = 300, G_COST10 = 2700;
+const REFUND = [10, 25, 60, 150, 500];
+const GPOOL = [[], [], [], [], []];
+for (let i = 0; i < A.CHAR_N; i++) GPOOL[A.RAR(i)].push({ t: 'c', id: i });
+for (let i = 0; i < A.STAMP_N; i++) GPOOL[A.stampRar(i)].push({ t: 's', id: i });
+A.BGS.forEach(b => { if (b.id !== 'dots') GPOOL[b.r || 0].push({ t: 'b', id: b.id }); });
+const itemRar = it => it.t === 'c' ? A.RAR(it.id) : it.t === 's' ? A.stampRar(it.id) : A.bgRar(it.id);
+const itemSVG = it => it.t === 'c' ? A.charSVG(it.id) : it.t === 's' ? `<span class="gst">${A.stampSVG(it.id)}</span>` : `<span class="gbg" style="background:${bgCss(A.BGS.find(b => b.id === it.id))}"></span>`;
+const hasItem = it => it.t === 'c' ? !!DB.own[it.id] : it.t === 's' ? !!(DB.stamps || {})[it.id] : DB.bgOwn.includes(it.id);
+function giveItem(it) {
+  if (it.t === 'c') DB.own[it.id] = (DB.own[it.id] || 0) + 1;
+  else if (it.t === 's') { DB.stamps = DB.stamps || {}; DB.stamps[it.id] = (DB.stamps[it.id] || 0) + 1; }
+  else if (!DB.bgOwn.includes(it.id)) DB.bgOwn.push(it.id);
+}
 function rollOne(guarantee) {
   let r = Math.random(), rar = 0;
   for (const [k, p] of RATE) { if (r < p) { rar = k; break; } r -= p; }
   if (guarantee && rar < 2) rar = 2;
-  const pool = []; for (let i = 0; i < 100; i++) if (A.RAR(i) === rar) pool.push(i);
-  return pool[(Math.random() * pool.length) | 0];
+  const pool = GPOOL[rar]; return pool[(Math.random() * pool.length) | 0];
 }
-function openGacha(tab = 'g') {
-  const body = modal(`<div class="mtabs"><button class="${tab === 'g' ? 'on' : ''}" data-tab="g">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="${tab === 's' ? 'on' : ''}" data-tab="s">${A.ICON.shop}${esc(t('sh.title'))}</button></div><div id="gaBody"></div>`, 'mgacha mwide');
-  $$('[data-tab]', body).forEach(b => b.onclick = () => openGacha(b.dataset.tab));
+function openGacha() {
+  const body = modal(`<h2 class="mh">${esc(t('ga.title'))}</h2><div id="gaBody"></div>`, 'mgacha mwide');
   const gb = $('#gaBody');
-  if (tab === 'g') {
-    gb.innerHTML = `<div class="gmach"><div class="gpanel">${A.burst(16, 48, 36, 'var(--yel)')}<div class="gcaps">${[0, 1, 2, 3, 4].map(i => `<i style="--c:${A.BC[i]}"></i>`).join('')}</div><b class="gword">POP-CHA!</b></div>
+  const cnt = k => GPOOL.flat().filter(x => x.t === k).length + (k === 'b' ? 1 : 0);
+  const own = { c: Object.keys(DB.own).length, s: Object.keys(DB.stamps || {}).length, b: DB.bgOwn.length };
+  gb.innerHTML = `<div class="gmach"><div class="gpanel">${A.burst(16, 48, 36, 'var(--yel)')}<div class="gcaps">${[0, 1, 2, 3, 4].map(i => `<i style="--c:${A.BC[i]}"></i>`).join('')}</div><b class="gword">POP-CHA!</b></div>
       <div class="gcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
-      <div class="gbtns"><button class="btn big red" id="g1" ${DB.coin < 100 ? 'disabled' : ''}>${esc(t('ga.one'))}<small>${A.ICON.coin}100</small></button><button class="btn big blue" id="g10" ${DB.coin < 900 ? 'disabled' : ''}>${esc(t('ga.ten'))}<small>${A.ICON.coin}900</small></button></div>
-      <p class="note">${esc(t('ga.rate'))}</p><p class="note">${esc(t('ga.dup'))}</p></div><div id="gaRes"></div>`;
-    $('#g1').onclick = () => pull(1); $('#g10').onclick = () => pull(10);
-  } else {
-    gb.innerHTML = `<p class="note">${esc(t('sh.d'))}</p><div class="bggrid">${A.BGS.map((b, i) => { const own = DB.bgOwn.includes(b.id), price = 200 + i * 100;
-      return `<div class="bgi ${DB.bg === b.id ? 'on' : ''}"><span class="bgp" style="background:${b.css()}"></span><b>${esc(t('bg.' + b.id))}</b>${own ? `<button class="btn sm ${DB.bg === b.id ? '' : 'blue'}" data-use="${b.id}" ${DB.bg === b.id ? 'disabled' : ''}>${esc(t(DB.bg === b.id ? 'sh.using' : 'sh.use'))}</button>` : `<button class="btn sm red" data-buy="${b.id}" data-p="${price}" ${DB.coin < price ? 'disabled' : ''}>${A.ICON.coin}${price}</button>`}</div>`; }).join('')}</div>`;
-    $$('[data-use]', gb).forEach(b => b.onclick = () => { DB.bg = b.dataset.use; save(); setBg(); openGacha('s'); });
-    $$('[data-buy]', gb).forEach(b => b.onclick = () => { const p = +b.dataset.p; if (DB.coin < p) return; DB.coin -= p; DB.bgOwn.push(b.dataset.buy); DB.bg = b.dataset.buy; save(); setBg(); SND.coin(); updateCoins(); openGacha('s'); });
-  }
+      <div class="gbtns"><button class="btn big red" id="g1" ${DB.coin < G_COST ? 'disabled' : ''}>${esc(t('ga.one'))}<small>${A.ICON.coin}${G_COST}</small></button><button class="btn big blue" id="g10" ${DB.coin < G_COST10 ? 'disabled' : ''}>${esc(t('ga.ten'))}<small>${A.ICON.coin}${fmt(G_COST10)}</small></button></div>
+      <div class="gkinds">${[['c', 'ga.kc'], ['s', 'ga.ks'], ['b', 'ga.kb']].map(([k, l]) => `<span><b>${esc(t(l))}</b>${own[k]} / ${cnt(k)}</span>`).join('')}</div>
+      <p class="note">${esc(t('ga.rate'))}</p><p class="note">${esc(t('ga.dup', { a: REFUND[0], b: REFUND[1], c: REFUND[2], d: REFUND[3], e: REFUND[4] }))}</p></div><div id="gaRes"></div>`;
+  $('#g1').onclick = () => pull(1); $('#g10').onclick = () => pull(10);
 }
 function pull(n) {
-  const cost = n === 10 ? 900 : 100; if (DB.coin < cost) return;
+  const cost = n === 10 ? G_COST10 : G_COST; if (DB.coin < cost) return;
   DB.coin -= cost; DB.stats.gacha += n;
   const res = []; for (let i = 0; i < n; i++) res.push(rollOne(n === 10 && i === 9));
-  let refund = 0; const items = res.map(id => { const dup = !!DB.own[id]; DB.own[id] = (DB.own[id] || 0) + 1; if (dup) refund += REFUND[A.RAR(id)]; return { id, dup }; });
+  let refund = 0; const items = res.map(it => { const dup = hasItem(it); giveItem(it); if (dup) refund += REFUND[itemRar(it)]; return Object.assign({ dup }, it); });
   DB.coin += refund; save(); updateCoins();
-  const best = Math.max(...res.map(A.RAR));
-  const el = $('#gaRes');
+  const best = Math.max(...res.map(itemRar));
+  const el = $('#gaRes'), kind = { c: 'ga.kc', s: 'ga.ks', b: 'ga.kb' };
   el.innerHTML = `<div class="gres r${best}"><div class="gopen">${A.burst(18, 48, 34, best >= 3 ? 'var(--red)' : 'var(--yel)')}<b>${best >= 4 ? 'WHAAM!!' : best >= 3 ? 'KA-POW!' : best >= 2 ? 'ZAP!' : 'POP!'}</b></div>
-    <div class="gitems n${n}">${items.map((it, i) => `<div class="gi r${A.RAR(it.id)}" style="--i:${i}">${A.charSVG(it.id)}<span class="rr">${A.RNAME[A.RAR(it.id)]}</span>${it.dup ? `<span class="dup">+${REFUND[A.RAR(it.id)]}</span>` : '<span class="new">NEW</span>'}</div>`).join('')}</div>
+    <div class="gitems n${n}">${items.map((it, i) => `<div class="gi r${itemRar(it)} k${it.t}" style="--i:${i}">${itemSVG(it)}<span class="gk">${esc(t(kind[it.t]))}</span><span class="rr">${A.RNAME[itemRar(it)]}</span>${it.dup ? `<span class="dup">+${REFUND[itemRar(it)]}</span>` : '<span class="new">NEW</span>'}</div>`).join('')}</div>
     ${refund ? `<p class="note">${esc(t('ga.refund', { n: refund }))}</p>` : ''}</div>`;
   SND.fan(); if (best >= 3) setTimeout(() => confetti(1), 400);
-  $('#g1').disabled = DB.coin < 100; $('#g10').disabled = DB.coin < 900;
+  $('#g1').disabled = DB.coin < G_COST; $('#g10').disabled = DB.coin < G_COST10;
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function openBook() {
-  const own = Object.keys(DB.own).length;
-  const cells = []; for (let i = 0; i < 100; i++) { const o = DB.own[i]; cells.push(`<div class="bk ${o ? '' : 'no'} r${A.RAR(i)}" ${o ? `data-id="${i}"` : ''}>${o ? A.charSVG(i) : `<span>?</span>`}<i>${A.RNAME[A.RAR(i)]}</i>${o > 1 ? `<em>×${o}</em>` : ''}</div>`); }
-  modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: own }))}</p><div class="bar big"><i style="width:${own}%"></i></div><div class="bkgrid">${cells.join('')}</div>`, 'mwide');
+function openBook(tab = 'c') {
+  const tabs = [['c', 'ga.kc', A.CHAR_N, Object.keys(DB.own).length], ['s', 'ga.ks', A.STAMP_N, Object.keys(DB.stamps || {}).length], ['b', 'ga.kb', A.BGS.length, DB.bgOwn.length]];
+  const cells = [];
+  if (tab === 'c') for (let i = 0; i < A.CHAR_N; i++) { const o = DB.own[i]; cells.push(`<div class="bk ${o ? '' : 'no'} r${A.RAR(i)}">${o ? A.charSVG(i) : `<span>?</span>`}<i>${A.RNAME[A.RAR(i)]}</i>${o > 1 ? `<em>×${o}</em>` : ''}</div>`); }
+  if (tab === 's') for (let i = 0; i < A.STAMP_N; i++) { const o = (DB.stamps || {})[i]; cells.push(`<div class="bk st ${o ? '' : 'no'} r${A.stampRar(i)}">${o ? A.stampSVG(i) : `<span>?</span>`}<i>${A.RNAME[A.stampRar(i)]}</i>${o > 1 ? `<em>×${o}</em>` : ''}</div>`); }
+  if (tab === 'b') A.BGS.forEach(b => { const o = DB.bgOwn.includes(b.id); cells.push(`<div class="bk bgk ${o ? '' : 'no'} r${b.r || 0}" ${o ? `title="${esc(bgName(b))}"` : ''}>${o ? `<span class="gbg" style="background:${bgCss(b)}"></span>` : `<span>?</span>`}<i>${A.RNAME[b.r || 0]}</i></div>`); });
+  const all = colOwned();
+  const body = modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: all, m: COL_TOTAL }))}</p><div class="bar big"><i style="width:${all / COL_TOTAL * 100}%"></i></div>
+    <div class="mtabs">${tabs.map(([k, l, n, o]) => `<button class="${k === tab ? 'on' : ''}" data-btab="${k}">${esc(t(l))} <small>${o}/${n}</small></button>`).join('')}</div><div class="bkgrid ${tab === 'b' ? 'bkbg' : ''}">${cells.join('')}</div>`, 'mwide');
+  $$('[data-btab]', body).forEach(b => b.onclick = () => openBook(b.dataset.btab));
 }
 // --- ranking
 async function openRank(tab = 'p') {
@@ -1258,6 +1289,7 @@ function mergeDB(L, C) {
   out.stats = out.stats || {}; for (const k in (o.stats || {})) out.stats[k] = mx(out.stats[k], o.stats[k]);
   out.ach = Object.assign({}, o.ach || {}, out.ach || {}); out.tut = Object.assign({}, o.tut || {}, out.tut || {});
   out.bgOwn = [...new Set([...(out.bgOwn || []), ...(o.bgOwn || [])])];
+  out.stamps = out.stamps || {}; for (const k in (o.stamps || {})) out.stamps[k] = mx(out.stamps[k], o.stamps[k]);
   out.life = mx(out.life, o.life); if (!out.name) out.name = o.name || '';
   return out;
 }
@@ -1294,7 +1326,7 @@ function bind() {
   // header icons
   const IC = { btnAch: 'trophy', btnGacha: 'gacha', btnBook: 'book', btnRank: 'rank', btnSet: 'gear', btnHelp: 'help', btnSound: 'sound', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, ic] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[ic]); }
-  $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha('g'); $('#btnBook').onclick = openBook; $('#btnRank').onclick = () => openRank('p');
+  $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha(); $('#btnBook').onclick = openBook; $('#btnRank').onclick = () => openRank('p');
   $('#btnSet').onclick = openSettings; $('#btnHelp').onclick = () => tutorial('basic');
   $('#btnSound').onclick = () => { DB.set.snd = DB.set.snd ? 0 : 1; save(); sndIcon(); if (DB.set.snd) SND.coin(); };
   $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else { homeTab = 'daily'; themeOpen = null; renderHome(); } };

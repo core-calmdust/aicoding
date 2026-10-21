@@ -763,3 +763,34 @@ window.SAME_I18N.ar = {
   };
   for (const l in G) { const D = window.SAME_I18N[l]; if (!D) continue; D['goal.orders'] = G[l][0]; D['goal.pearls'] = G[l][1]; D['g.line'] = G[l][2]; D['g.prism'] = D['th.pr']; D['g.ice2'] = D['th.ih']; D['g.hid'] = D['th.hd']; D['g.cham'] = D['th.ch']; }
 })();
+
+/* gacha v2: characters (icons), stamps and backgrounds */
+(function () {
+  const K = ['pf.icon2', 'pf.stamp', 'pf.bg', 'pf.stnote', 'pf.nost', 'ga.kc', 'ga.ks', 'ga.kb', 'ga.rate', 'ga.dup', 'bk.d', 'ach.col30', 'ach.col100', 'ach.colall', 'bg.gold', 'bg.galaxy'];
+  const A = {
+    ja: ['アイコン', 'スタンプ', '背景', 'キャラのまわりに3つまで貼れます（タップで付け外し）', 'スタンプはガチャで手に入ります', 'アイコン', 'スタンプ', '背景', 'N 55% ／ R 28% ／ SR 12% ／ SSR 4% ／ UR 1%。アイコン・スタンプ・背景がまとめて出ます。10回ガチャは10個目がSR以上。', 'かぶりはコインで戻ります（N{a}・R{b}・SR{c}・SSR{d}・UR{e}）。', '{n} / {m} 種あつめました', 'コレクション50種', 'コレクション200種', 'コレクション全種コンプリート', 'ゴールド', 'ギャラクシー'],
+    en: ['Icon', 'Stamps', 'Background', 'Put up to 3 around your character (tap to add/remove)', 'Get stamps from the gacha', 'Icons', 'Stamps', 'Backgrounds', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Icons, stamps and backgrounds share one pool. The 10th pull of a ×10 is SR or better.', 'Duplicates turn into coins (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'Collected {n} / {m}', 'Collect 50 items', 'Collect 200 items', 'Complete the whole collection', 'Gold', 'Galaxy'],
+    zh: ['头像', '贴纸', '背景', '最多可在角色周围贴3个（点按添加/移除）', '贴纸可从扭蛋获得', '头像', '贴纸', '背景', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%。头像、贴纸、背景同池抽取。10连的第10个必为SR以上。', '重复物品会返还金币（N{a}・R{b}・SR{c}・SSR{d}・UR{e}）。', '已收集 {n} / {m} 种', '收集50种', '收集200种', '全部收集完成', '黄金', '银河'],
+    ko: ['아이콘', '스탬프', '배경', '캐릭터 주위에 3개까지 붙일 수 있어요 (탭해서 붙이기/떼기)', '스탬프는 가챠로 얻어요', '아이콘', '스탬프', '배경', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. 아이콘·스탬프·배경이 함께 나와요. 10연 가챠의 10번째는 SR 이상.', '중복은 코인으로 돌아와요 (N{a}・R{b}・SR{c}・SSR{d}・UR{e}).', '{n} / {m}종 모았어요', '컬렉션 50종', '컬렉션 200종', '컬렉션 전부 컴플리트', '골드', '갤럭시'],
+    es: ['Icono', 'Sellos', 'Fondo', 'Pon hasta 3 alrededor de tu personaje (toca para añadir/quitar)', 'Consigue sellos en el gacha', 'Iconos', 'Sellos', 'Fondos', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Iconos, sellos y fondos comparten bolsa. La 10.ª tirada de ×10 es SR o mejor.', 'Los repetidos se convierten en monedas (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'Reunidos {n} / {m}', 'Reúne 50 objetos', 'Reúne 200 objetos', 'Completa toda la colección', 'Oro', 'Galaxia'],
+    fr: ['Icône', 'Stickers', 'Fond', 'Place jusqu’à 3 stickers autour de ton perso (touche pour ajouter/retirer)', 'Obtiens des stickers au gacha', 'Icônes', 'Stickers', 'Fonds', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Icônes, stickers et fonds dans un même tirage. Le 10e tirage d’un ×10 est SR ou mieux.', 'Les doublons sont rendus en pièces (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', '{n} / {m} collectés', 'Collectionne 50 objets', 'Collectionne 200 objets', 'Termine toute la collection', 'Or', 'Galaxie'],
+    pt: ['Ícone', 'Adesivos', 'Fundo', 'Coloque até 3 em volta do personagem (toque para pôr/tirar)', 'Ganhe adesivos no gacha', 'Ícones', 'Adesivos', 'Fundos', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Ícones, adesivos e fundos no mesmo sorteio. O 10º giro do ×10 é SR ou melhor.', 'Repetidos viram moedas (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'Coletados {n} / {m}', 'Colete 50 itens', 'Colete 200 itens', 'Complete toda a coleção', 'Ouro', 'Galáxia'],
+    de: ['Icon', 'Sticker', 'Hintergrund', 'Bis zu 3 rund um deine Figur (antippen zum Hinzufügen/Entfernen)', 'Sticker gibt es im Gacha', 'Icons', 'Sticker', 'Hintergründe', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Icons, Sticker und Hintergründe in einem Topf. Der 10. Zug eines ×10 ist SR oder besser.', 'Doppelte werden zu Münzen (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', '{n} / {m} gesammelt', '50 Objekte sammeln', '200 Objekte sammeln', 'Die ganze Sammlung vervollständigen', 'Gold', 'Galaxie'],
+    hi: ['आइकन', 'स्टैम्प', 'बैकग्राउंड', 'कैरेक्टर के आसपास 3 तक लगाएँ (टैप करके लगाएँ/हटाएँ)', 'स्टैम्प गाचा से मिलते हैं', 'आइकन', 'स्टैम्प', 'बैकग्राउंड', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%। आइकन, स्टैम्प और बैकग्राउंड एक ही पूल में। ×10 का 10वाँ SR या बेहतर।', 'डुप्लिकेट सिक्कों में बदलते हैं (N{a} · R{b} · SR{c} · SSR{d} · UR{e})।', '{n} / {m} इकट्ठा किए', '50 आइटम इकट्ठा करें', '200 आइटम इकट्ठा करें', 'पूरा कलेक्शन पूरा करें', 'गोल्ड', 'गैलेक्सी'],
+    ar: ['الأيقونة', 'الملصقات', 'الخلفية', 'ضع حتى 3 حول شخصيتك (انقر للإضافة/الإزالة)', 'احصل على الملصقات من الغاتشا', 'الأيقونات', 'الملصقات', 'الخلفيات', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. الأيقونات والملصقات والخلفيات في سحب واحد. السحبة العاشرة في ×10 هي SR أو أعلى.', 'المكرر يتحول إلى عملات (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'جمعت {n} / {m}', 'اجمع 50 عنصرًا', 'اجمع 200 عنصر', 'أكمل المجموعة كلها', 'ذهبي', 'مجرة'],
+  };
+  const P = { // pattern names, palette names
+    ja: [['ドット', 'ストライプ', 'チェック', 'グリッド', 'ウェーブ', 'ジグザグ', 'トライアングル', 'リング', 'タータン', 'スター'], ['ミント', 'ピーチ', 'レモン', 'ナイト']],
+    en: [['Dots', 'Stripes', 'Check', 'Grid', 'Waves', 'Zigzag', 'Triangles', 'Rings', 'Plaid', 'Stars'], ['Mint', 'Peach', 'Lemon', 'Night']],
+    zh: [['圆点', '条纹', '格子', '网格', '波浪', '锯齿', '三角', '圆环', '苏格兰格', '星星'], ['薄荷', '蜜桃', '柠檬', '夜晚']],
+    ko: [['도트', '스트라이프', '체크', '그리드', '웨이브', '지그재그', '트라이앵글', '링', '타탄', '스타'], ['민트', '피치', '레몬', '나이트']],
+    es: [['Lunares', 'Rayas', 'Cuadros', 'Rejilla', 'Ondas', 'Zigzag', 'Triángulos', 'Anillos', 'Tartán', 'Estrellas'], ['Menta', 'Melocotón', 'Limón', 'Noche']],
+    fr: [['Pois', 'Rayures', 'Damier', 'Grille', 'Vagues', 'Zigzag', 'Triangles', 'Anneaux', 'Tartan', 'Étoiles'], ['Menthe', 'Pêche', 'Citron', 'Nuit']],
+    pt: [['Bolinhas', 'Listras', 'Xadrez', 'Grade', 'Ondas', 'Zigue-zague', 'Triângulos', 'Anéis', 'Tartã', 'Estrelas'], ['Menta', 'Pêssego', 'Limão', 'Noite']],
+    de: [['Punkte', 'Streifen', 'Karo', 'Raster', 'Wellen', 'Zickzack', 'Dreiecke', 'Ringe', 'Schottenkaro', 'Sterne'], ['Minze', 'Pfirsich', 'Zitrone', 'Nacht']],
+    hi: [['डॉट्स', 'धारियाँ', 'चेक', 'ग्रिड', 'लहरें', 'ज़िगज़ैग', 'त्रिकोण', 'रिंग', 'प्लेड', 'तारे'], ['मिंट', 'पीच', 'नींबू', 'रात']],
+    ar: [['نقاط', 'خطوط', 'مربعات', 'شبكة', 'أمواج', 'متعرج', 'مثلثات', 'حلقات', 'ترتان', 'نجوم'], ['نعناع', 'خوخ', 'ليمون', 'ليل']],
+  };
+  const PAT = ['dots', 'stripe', 'check', 'grid', 'wave', 'zigzag', 'tri', 'ring', 'plaid', 'stars'];
+  for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => D[k] = A[l][i]); PAT.forEach((p, i) => D['bgp.' + p] = P[l][0][i]); P[l][1].forEach((c, i) => D['bgc.' + i] = c); }
+})();

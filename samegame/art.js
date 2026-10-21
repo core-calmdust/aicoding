@@ -143,14 +143,36 @@ function midBack(id, bg, r, c) {
   return s;
 }
 function setStyle(st) { STYLE = st; }
-const RAR = id => id >= 96 ? 4 : [0, 0, 0, 1, 1, 2, 2, 3][id % 8]; // 0 N,1 R,2 SR,3 SSR,4 UR
+// 0..95 subject×variant, 96..99 UR, 100..231 subject×accessory (11 accessories), 232..239 UR (gold + crown)
+const CHAR_N = 240;
+const ACC_R = [3, 1, 2, 1, 0, 0, 2, 0, 0, 0, 1];
+const RAR = id => id >= 232 || (id >= 96 && id < 100) ? 4 : id >= 100 ? ACC_R[((id - 100) / 12) | 0] : [0, 0, 0, 1, 1, 2, 2, 3][id % 8]; // 0 N,1 R,2 SR,3 SSR,4 UR
 const RNAME = ['N', 'R', 'SR', 'SSR', 'UR'];
 const UR_SUB = ['shark', 'girl', 'robot', 'octo'];
+const UR_SUB2 = ['whale', 'cat', 'diver', 'penguin', 'crab', 'squid', 'puffer', 'hammer'];
+const BGV2 = ['#9CC5C0', '#F6D8C4', '#F7E7A6', '#CFE3E0', '#E8B0A2', '#B9D3A0', '#C7B8E0', '#FFD9B8', '#A8C8E8', '#F3EBDD', '#FFB3C7'];
+// head accessories for ids 100..231 (drawn on top, pop style; midify flattens them)
+const ACCS = [
+  `<path d="M34 16l6-12 10 9 10-9 6 12z" fill="#FFD400" ${S2}/><circle cx="40" cy="4" r="2.4" fill="#E4202A"/><circle cx="60" cy="4" r="2.4" fill="#1B4FCB"/>`, // crown
+  `<g transform="translate(70 6)"><path d="M12 10 0 2v16zM12 10l12-8v16z" fill="#FF4FA0" ${S2}/><circle cx="12" cy="10" r="4" fill="#FF4FA0" ${S2}/></g>`, // bow
+  `<path d="M30 20h40v-4H60V2H40v14H30z" fill="${K}" ${S2}/><rect x="40" y="11" width="20" height="4" fill="#E4202A"/>`, // top hat
+  `<path d="M16 50c0-26 16-40 34-40s34 14 34 40" fill="none" stroke="${K}" stroke-width="5"/><rect x="8" y="44" width="12" height="20" rx="5" fill="#E4202A" ${S2}/><rect x="80" y="44" width="12" height="20" rx="5" fill="#E4202A" ${S2}/>`, // headphones
+  `<g transform="translate(72 4)">${[0, 72, 144, 216, 288].map(a => `<ellipse cx="${10 + Math.cos(a * Math.PI / 180) * 6}" cy="${10 + Math.sin(a * Math.PI / 180) * 6}" rx="5" ry="5" fill="#FF9ECB" ${S2}/>`).join('')}<circle cx="10" cy="10" r="4" fill="#FFD400" ${S2}/></g>`, // flower
+  `<path d="M38 22 50 0l12 22z" fill="#5BD3E8" ${S2}/><path d="M42 15h16M45 9h10" stroke="#FF4FA0" stroke-width="3"/><circle cx="50" cy="1" r="3" fill="#FFD400" ${S2}/>`, // party hat
+  `<ellipse cx="50" cy="7" rx="20" ry="5" fill="none" stroke="#FFD400" stroke-width="4"/><ellipse cx="50" cy="7" rx="20" ry="5" fill="none" stroke="${K}" stroke-width="1.2"/>`, // halo
+  `<path d="M28 20c0-12 10-18 22-18s22 6 22 18z" fill="#1B4FCB" ${S2}/><path d="M60 20h22c0 4-4 6-10 6H60z" fill="#1B4FCB" ${S2}/><circle cx="50" cy="3" r="2.5" fill="#FFD400"/>`, // cap
+  `<g transform="translate(4 4)"><path d="M0 4h26a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4H12l-6 6v-6H4a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="${W}" ${S2}/><path d="M11 20V9l9-2v11" fill="none" stroke="${K}" stroke-width="2"/><circle cx="9" cy="20" r="2.5" fill="${K}"/><circle cx="18" cy="18" r="2.5" fill="${K}"/></g>`, // music bubble
+  `<path d="M50 20V8" stroke="#19A35B" stroke-width="3"/><path d="M50 10C42 2 34 4 32 8c6 4 12 4 18 2zM50 8c6-8 14-8 18-4-4 6-12 6-18 4z" fill="#19A35B" ${S2}/>`, // sprout
+  `<path d="M28 22 22 2l16 14zM72 22l6-20-16 14z" fill="#E4202A" ${S2}/>`, // horns
+];
 function charSVG(id, opt = {}) {
-  id = Math.max(0, Math.min(99, id | 0));
-  let sub, v, c, bg, extra = '', r = RAR(id);
-  if (id >= 96) { sub = UR_SUB[id - 96]; v = 7; c = '#FFC21A'; bg = '#E4202A'; }
+  id = Math.max(0, Math.min(CHAR_N - 1, id | 0));
+  let sub, v, c, bg, extra = '', r = RAR(id), acc = -1;
+  if (id >= 232) { sub = UR_SUB2[id - 232]; v = 7; c = '#FFC21A'; bg = '#1B4FCB'; acc = 0; }
+  else if (id >= 100) { const k = id - 100; sub = SUBJ[k % 12]; acc = (k / 12) | 0; v = (acc * 3 + 1 + (k % 12)) % 7; c = PAL[sub][v]; bg = BGV2[(acc + k) % BGV2.length]; if (bg === c) bg = '#FFF3C4'; v = 9; }
+  else if (id >= 96) { sub = UR_SUB[id - 96]; v = 7; c = '#FFC21A'; bg = '#E4202A'; }
   else { sub = SUBJ[(id / 8) | 0]; v = id % 8; c = PAL[sub][v]; bg = BGV[v]; }
+  if (acc >= 0) extra += ACCS[acc];
   let back = `<rect width="100" height="100" fill="${bg}"/>`;
   if (r >= 2) back += rays(r >= 3 ? '#fff' : '#000', r >= 3 ? 18 : 14).replace('<path', `<path opacity="${r >= 3 ? .45 : .12}"`);
   back += `<rect width="100" height="100" fill="url(#${r === 4 ? 'bdW' : 'bdK'})" opacity=".8"/>`;
@@ -159,7 +181,7 @@ function charSVG(id, opt = {}) {
   if (v === 5) extra += `<g transform="translate(6 70) rotate(-12)"><rect width="34" height="16" rx="3" fill="${W}" ${S2}/><text x="17" y="12" text-anchor="middle" font-family="Bangers,Impact,sans-serif" font-size="12" fill="#E4202A">POP!</text></g>`;
   if (v === 6) extra += `<path d="M6 10l5 3-5 3M94 10l-5 3 5 3" fill="none" ${S2}/>`;
   if (r >= 3) extra += `<path d="M33 10l4-7 4 7 8 1-6 5 2 8-8-4-8 4 2-8-6-5z" fill="#FFD400" ${S2}/>`.replace('M33 10', 'M42 9');
-  if (id >= 96) extra += `<g transform="translate(58 72) rotate(-10)"><path d="M0 8 6 0l4 6 7-6 2 8 9-3-4 8 8 3-9 3 4 8-9-3-2 8-7-6-4 6-6-8-8 2 3-8-6-4 7-3z" fill="#FFD400" ${S2}/><text x="14" y="20" text-anchor="middle" font-family="Bangers,Impact,sans-serif" font-size="9" fill="${K}">WOW</text></g>`;
+  if (r === 4) extra += `<g transform="translate(58 72) rotate(-10)"><path d="M0 8 6 0l4 6 7-6 2 8 9-3-4 8 8 3-9 3 4 8-9-3-2 8-7-6-4 6-6-8-8 2 3-8-6-4 7-3z" fill="#FFD400" ${S2}/><text x="14" y="20" text-anchor="middle" font-family="Bangers,Impact,sans-serif" font-size="9" fill="${K}">WOW</text></g>`;
   const sg = v === 3 && sub !== 'robot' && sub !== 'diver' && sub !== 'hammer' ? sunglasses(sub) : '';
   if ((opt.style || STYLE) === 'mid') return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="${opt.cls || 'chr'} mid">${midBack(id, bg, r, c)}${midify(`<g>${body(sub, c)}</g>${sg}${extra}`)}</svg>`;
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="${opt.cls || 'chr'}">${back}<g>${body(sub, c)}</g>${sg}${extra}<rect x="1.5" y="1.5" width="97" height="97" fill="none" stroke="${K}" stroke-width="3"/></svg>`;
@@ -236,5 +258,67 @@ const THEME_ICON = {
   ex: `<svg viewBox="0 0 40 40"><rect x="4" y="4" width="15" height="15" rx="4" fill="#D9622B"/><rect x="21" y="4" width="15" height="15" rx="4" fill="#B18AF0"/><rect x="4" y="21" width="15" height="15" rx="4" fill="#3E8C86"/><rect x="21" y="21" width="15" height="15" rx="4" fill="#8B8478"/><use href="#emRow" x="6" y="6" width="11" height="11"/><use href="#emPrism" x="23" y="6" width="11" height="11"/><use href="#emCham" x="6" y="23" width="11" height="11"/><use href="#emHid" x="23" y="23" width="11" height="11"/></svg>`,
 };
 const themeIcon = th => STYLE === 'mid' ? midify(THEME_ICON[th] || '').replace(/#E4202A|#1B4FCB|#FFD400|#19A35B|#FF4FA0/g, c => mc(c)) : THEME_ICON[th];
-window.SameArt = { BC, BC_LT, syncPalette, setStyle, themeIcon, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N: 100, SUBJ };
+
+/* ---------------- stamps (stickers placed around the profile character) ---------------- */
+// 24 motifs × 5 colors = 120. rarity = motif base, gold color +1
+const ST_COL = ['#E4202A', '#1B4FCB', '#19A35B', '#FF4FA0', '#FFC21A'];
+const ST_TXT = ['POP!', 'WOW!', 'ZAP!', 'BAM!', 'GG', 'NICE!', 'YES!', '1st', '100'];
+const ST_SHAPE = [
+  c => `<path d="M24 4l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z" fill="${c}" ${S2}/>`, // star
+  c => `<path d="M24 42S6 31 6 18a9 9 0 0 1 18-4 9 9 0 0 1 18 4c0 13-18 24-18 24z" fill="${c}" ${S2}/>`, // heart
+  c => `<path d="M18 34V10l20-5v24" fill="none" stroke="${K}" stroke-width="3.4"/><circle cx="13" cy="34" r="6" fill="${c}" ${S2}/><circle cx="33" cy="29" r="6" fill="${c}" ${S2}/>`, // note
+  c => `<path d="M24 2c2 12 6 18 20 22-14 4-18 10-20 22-2-12-6-18-20-22 14-4 18-10 20-22z" fill="${c}" ${S2}/>`, // sparkle
+  c => `<path d="M24 4c8 11 14 19 14 26a14 14 0 0 1-28 0c0-7 6-15 14-26z" fill="${c}" ${S2}/><circle cx="19" cy="30" r="3" fill="${W}"/>`, // drop
+  c => `<path d="M28 2 10 26h12l-4 20 20-26H26z" fill="${c}" ${S2}/>`, // bolt
+  c => `${[0, 72, 144, 216, 288].map(a => `<circle cx="${24 + Math.cos(a * Math.PI / 180) * 11}" cy="${24 + Math.sin(a * Math.PI / 180) * 11}" r="9" fill="${c}" ${S2}/>`).join('')}<circle cx="24" cy="24" r="7" fill="#FFD400" ${S2}/>`, // flower
+  c => `<circle cx="20" cy="26" r="14" fill="${c}" opacity=".85" ${S2}/><circle cx="36" cy="12" r="7" fill="${c}" opacity=".85" ${S2}/><circle cx="15" cy="21" r="4" fill="${W}"/>`, // bubbles
+  c => `<path d="M6 24c8-12 22-14 32 0-10 14-24 12-32 0zM38 24l8-8v16z" fill="${c}" ${S2}/><circle cx="16" cy="22" r="2.5" fill="${K}"/>`, // fish
+  c => `<path d="M6 36 4 12l11 10 9-16 9 16 11-10-2 24z" fill="${c}" ${S2}/><rect x="6" y="36" width="36" height="6" fill="${c}" ${S2}/>`, // crown
+  c => `${[[24, 13], [13, 24], [35, 24], [24, 35]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="${c}" ${S2}/>`).join('')}<path d="M24 26l6 18" stroke="${K}" stroke-width="3"/>`, // clover
+  c => `<path d="M30 4a20 20 0 1 0 14 30A16 16 0 0 1 30 4z" fill="${c}" ${S2}/>`, // moon
+  c => `<circle cx="24" cy="24" r="10" fill="${c}" ${S2}/>${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<path d="M${(24 + Math.cos(a * Math.PI / 180) * 14).toFixed(1)} ${(24 + Math.sin(a * Math.PI / 180) * 14).toFixed(1)}L${(24 + Math.cos(a * Math.PI / 180) * 21).toFixed(1)} ${(24 + Math.sin(a * Math.PI / 180) * 21).toFixed(1)}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`).join('')}`, // sun
+  c => `<path d="M12 36a9 9 0 0 1 0-18 12 12 0 0 1 23-2 10 10 0 0 1 3 20z" fill="${c}" ${S2}/>`, // cloud
+  c => `<path d="M10 16h28l6 8-20 20L4 24z" fill="${c}" ${S2}/><path d="M10 16l14 28 14-28M4 24h40" fill="none" stroke="${W}" stroke-width="1.6" opacity=".7"/>`, // gem
+];
+const ST_BASE = [0, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1, 1, 0, 0, 2, 1, 1, 1, 1, 2, 2, 1, 3, 3];
+const STAMP_N = (ST_SHAPE.length + ST_TXT.length) * 5;
+const stampRar = id => Math.min(4, ST_BASE[(id / 5) | 0] + (id % 5 === 4 ? 1 : 0));
+function stampSVG(id) {
+  const m = (id / 5) | 0, c = ST_COL[id % 5];
+  let inner;
+  if (m < ST_SHAPE.length) inner = ST_SHAPE[m](c);
+  else { const tx = ST_TXT[m - ST_SHAPE.length]; inner = `${burstPath(c)}<text x="24" y="${tx.length > 3 ? 29 : 31}" text-anchor="middle" font-family="Bangers,Impact,sans-serif" font-size="${tx.length > 4 ? 13 : tx.length > 2 ? 15 : 19}" fill="${W}" stroke="${K}" stroke-width="1.4" paint-order="stroke">${tx}</text>`; }
+  return `<svg viewBox="0 0 48 48" class="stamp">${STYLE === 'mid' ? midify(inner) : inner}</svg>`;
+}
+function burstPath(fill) {
+  let p = ''; for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r = i % 2 ? 15 : 22; p += (i ? 'L' : 'M') + (24 + Math.cos(a) * r).toFixed(1) + ' ' + (24 + Math.sin(a) * r * .85).toFixed(1); }
+  return `<path d="${p}z" fill="${fill}" ${S2}/>`;
+}
+
+/* ---------------- more backgrounds (gacha): 10 patterns × 4 palettes + 2 specials ---------------- */
+const BPAL = [['#CFE3E0', '#2E6F8E'], ['#F6D8C4', '#D9622B'], ['#F7E7A6', '#7A8B3A'], ['#2B2F45', '#E8B83A']];
+const BPAT = ['dots', 'stripe', 'check', 'grid', 'wave', 'zigzag', 'tri', 'ring', 'plaid', 'stars'];
+const BPAT_R = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2];
+const hexA = (h, a) => h + Math.round(a * 255).toString(16).padStart(2, '0');
+function patCSS(pi, [b, a]) {
+  switch (BPAT[pi]) {
+    case 'dots': return `radial-gradient(circle, ${hexA(a, .35)} 2.4px, transparent 2.8px) 0 0/16px 16px, ${b}`;
+    case 'stripe': return `repeating-linear-gradient(-45deg, ${b} 0 16px, ${hexA(a, .16)} 16px 32px), ${b}`;
+    case 'check': return `conic-gradient(${hexA(a, .14)} 25%, transparent 0 50%, ${hexA(a, .14)} 0 75%, transparent 0) 0 0/40px 40px, ${b}`;
+    case 'grid': return `linear-gradient(${hexA(a, .18)} 2px, transparent 2px) 0 0/28px 28px, linear-gradient(90deg, ${hexA(a, .18)} 2px, transparent 2px) 0 0/28px 28px, ${b}`;
+    case 'wave': return enc(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><path d="M0 20q20-14 40 0t40 0" fill="none" stroke="${hexA(a, .35)}" stroke-width="4"/></svg>`) + ` 0 0/80px 40px, ${b}`;
+    case 'zigzag': return enc(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="24"><path d="M0 18l10-12 10 12 10-12 10 12" fill="none" stroke="${hexA(a, .32)}" stroke-width="4" stroke-linejoin="round"/></svg>`) + ` 0 0/40px 24px, ${b}`;
+    case 'tri': return enc(`<svg xmlns="http://www.w3.org/2000/svg" width="56" height="48"><path d="M14 8l12 20H2zM42 32l12 20H30z" fill="${hexA(a, .25)}"/></svg>`) + ` 0 0/56px 48px, ${b}`;
+    case 'ring': return `radial-gradient(circle, transparent 9px, ${hexA(a, .28)} 10px 13px, transparent 14px) 0 0/44px 44px, ${b}`;
+    case 'plaid': return `repeating-linear-gradient(0deg, ${hexA(a, .14)} 0 10px, transparent 10px 40px), repeating-linear-gradient(90deg, ${hexA(a, .14)} 0 10px, transparent 10px 40px), ${b}`;
+    case 'stars': return enc(`<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><path d="M15 6l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8zM45 34l2 4 4.5.6-3.3 3.1.8 4.5-4-2.1-4 2.1.8-4.5-3.3-3.1 4.5-.6z" fill="${hexA(a, .4)}"/></svg>`) + ` 0 0/60px 60px, ${b}`;
+  }
+}
+BPAT.forEach((p, pi) => BPAL.forEach((pal, ci) => BGS.push({ id: p + '-' + ci, c: pal[0], r: Math.min(4, BPAT_R[pi] + (ci === 3 ? 1 : 0)), pat: p, pal: ci, css: () => patCSS(pi, pal) })));
+BGS.push({ id: 'gold', c: '#E8B83A', r: 4, css: () => enc(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">${rays('#F4CF5C', 28)}</svg>`) + ' center/cover, #E8B83A' });
+BGS.push({ id: 'galaxy', c: '#1F2440', r: 4, css: () => `radial-gradient(circle at 20% 30%, rgba(255,255,255,.9) 1px, transparent 1.5px) 0 0/70px 70px, radial-gradient(circle at 60% 70%, rgba(232,184,58,.8) 1.4px, transparent 2px) 0 0/110px 110px, radial-gradient(ellipse at 30% 20%, #3B3F7A, transparent 60%), radial-gradient(ellipse at 80% 80%, #6B3F6E, transparent 55%), #1F2440` });
+// original 8: dots (starter), rays, blue, pink, stripe, city, sea, boom
+[0, 1, 0, 0, 1, 2, 2, 3].forEach((r, i) => BGS[i].r = r);
+const bgRar = id => { const b = BGS.find(x => x.id === id); return b ? b.r : 0; };
+window.SameArt = { BC, BC_LT, syncPalette, setStyle, themeIcon, SPRITE, charSVG, RAR, RNAME, BGS, mascot, burst, ICON, THEME_ICON, CHAR_N, SUBJ, STAMP_N, stampSVG, stampRar, bgRar, BPAT };
 })();
