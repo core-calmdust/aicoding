@@ -91,7 +91,9 @@ const CSS = `
 .rt-hand button b{position:absolute;right:-4px;bottom:-4px;z-index:3;font:700 11px 'JetBrains Mono',monospace;background:rgba(0,0,0,.75);color:#fff;border-radius:8px;padding:0 4px}
 .rt-hand i{font-style:normal;color:var(--dim);font-size:13px}
 .rt-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;direction:ltr}
-.rt-promo{display:flex;gap:10px;justify-content:center}
+.rt-wrap{position:relative}
+/* the 成る / 成らない choice floats over the board (no space is reserved under it, so the board can be bigger) */
+.rt-promo{display:flex;gap:10px;justify-content:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;padding:12px;border-radius:14px;background:var(--panel,#1c1712);border:1px solid rgba(201,169,97,.5);box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .rt-promo button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:1px solid rgba(201,169,97,.55);background:rgba(201,169,97,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
 .rt-promo button .rh{width:var(--cw);height:var(--ch)}
 .rt-pcs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:100%}
@@ -158,7 +160,7 @@ function play(api, o) {
   const targets = () => !sel ? [] : legal().filter(m => sel.hand ? E.isDrop(m) && E.dropType(m) === sel.hand : !E.isDrop(m) && E.mFrom(m) === sel.sq);
   function draw() {
     if (!api.alive()) return;
-    const cw = cwFit(w, h, o.hand ? 110 : 0, o.zone ? 84 : 0, api.board), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
+    const cw = cwFit(w, h, o.hand ? 110 : 0, 0, api.board), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
     let cells = '';
     for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
       const s = y * 9 + x, p = pos.board[s], cls = ['rc'];
@@ -321,7 +323,7 @@ function ensure() {
     lessons: () => { lsTab = 'lesson'; openLessons(); },
     sound: k => { if (k === 'ok') playChime(true); },
     pages: PAGES,
-    aspect: () => wide() ? 1 : 1.3,   // phones: the board window + hand is wider than tall, so use the full width (bigger squares)
+    aspect: () => wide() ? 1 : 'fill',   // phones: the board window + hand is wider than tall, so use the full width (bigger squares)
   });
   return tour;
 }

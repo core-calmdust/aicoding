@@ -388,7 +388,7 @@ function box(main, aspect, need) {
   const cs = getComputedStyle(main);
   const W = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   if (W < 40 || H < 40) return null;
-  const ar = +aspect > 0 ? +aspect : 1, pc = matchMedia(PCQ).matches, short = innerHeight < 700;
+  const fill = aspect === 'fill', ar = +aspect > 0 ? +aspect : 1, pc = matchMedia(PCQ).matches, short = innerHeight < 700;   // 'fill': the game draws into any box (phones: all the free space)
   const fit = (w, h) => { w = Math.max(60, w); h = Math.max(60, h); return w / h > ar ? [h * ar, h] : [w, w / ar]; };
   const tk = main.querySelector('.rt-task, .ru-task'), fs = tk ? parseFloat(getComputedStyle(tk).fontSize) || 14.5 : 14.5;   // same on every board page
   const gap = pc ? 12 : 8, th = pc ? Math.max(126, Math.round(fs * 6.7)) : Math.max(84, Math.round(fs * 6)), tmin = pc ? 150 : short ? 84 : 104;   // task area (2 lines + ✓/✗ 2 lines) / smallest text area (column)
@@ -403,10 +403,11 @@ function box(main, aspect, need) {
   // phones, wide boards (backgammon …): use the full width so the points are easy to tap, even if the page text then scrolls a little
   // (out to the dialog's edges: --rt-bx is how far the board reaches past the text column on each side)
   let bx = 0;
-  if (!pc && !isRow && ar >= 1.2) {
+  if (!pc && !isRow && (ar >= 1.2 || fill)) {
     const dlg = main.closest('.modal') || main.parentElement;   // widths only (positions move while a page slides)
     bx = Math.max(0, Math.min(24, Math.floor((dlg.clientWidth - main.clientWidth) / 2 - 6)));
-    const fh = H - th - tcol - 2 * gap; [bw, bh] = fit(W + 2 * bx, Math.max(bh, fh));   // still leaves room for the page text
+    const fh = H - th - tcol - 2 * gap;   // still leaves room for the page text
+    if (fill) { bw = W + 2 * bx; bh = Math.max(bh, Math.min(fh, bw * 1.25)); } else [bw, bh] = fit(W + 2 * bx, Math.max(bh, fh));
   }
   const cap = pc ? 640 : 560; if (Math.max(bw, bh) > cap) { const k = cap / Math.max(bw, bh); bw *= k; bh *= k; }
   bw = Math.floor(bw); bh = Math.floor(bh);
