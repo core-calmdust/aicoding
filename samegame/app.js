@@ -219,6 +219,11 @@ function profCard() {
   };
   const gb = $('#pfGoogle'); if (gb) gb.onclick = googleLogin;
 }
+document.addEventListener('click', e => {
+  if (!matchMedia('(max-width:860px)').matches) return;
+  const tile = e.target.closest('.dlv, .dact, .acard'); if (!tile || e.target.closest('button')) return;
+  const main = tile.querySelector('[data-dl], [data-da], #aBlitz, #aRise, [data-am]'); if (main && !main.disabled) main.click();
+});
 document.addEventListener('click', e => { const b = e.target.closest('[data-rule]'); if (b) { e.stopPropagation(); modeTip(b.dataset.rule); } });
 function renderHome() {
   profCard(); updateCoins(); updateBadges();

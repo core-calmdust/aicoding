@@ -609,6 +609,10 @@ body[data-skin="mid"] .dact{border:0;border-radius:18px}body[data-skin="mid"] .d
   .mtut .mbtns{position:sticky;bottom:0;z-index:5;margin:8px -14px 0;padding:10px 14px calc(12px + env(safe-area-inset-bottom));background:var(--card);box-shadow:0 -8px 16px -10px rgba(0,0,0,.25)}
   .mtut .mbtns .btn{flex:1;min-height:48px}
 }
+.qbtn{font-weight:800;font-size:17px;min-width:36px}
+.qc{position:absolute;top:12px;right:12px;z-index:2;width:38px;height:38px;border-radius:50%;border:0;background:color-mix(in srgb,var(--card) 85%,transparent);color:var(--text);font-weight:800;font-size:18px;display:grid;place-items:center;cursor:pointer;padding:0}
+.acard{position:relative}
+.mtipbox .abig.rise{width:120px;height:90px}
 /* daily difficulties */
 .dhead{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
 .dhead h3{font-family:var(--f-head);font-weight:400;font-size:21.6px;margin:2px 0 4px}.dhead p{margin:0;font-size:15.8px;line-height:1.55;max-width:46em}
@@ -839,6 +843,72 @@ body[data-skin="pixel"] .sfx b{color:var(--yel);-webkit-text-stroke:0;text-shado
 body[data-skin="pixel"] :is(.rhead b,.cd b,.gopen b,.burstbox b,.abig b,.gword){color:var(--yel);-webkit-text-stroke:0;text-shadow:3px 3px 0 var(--ink),-2px 0 0 var(--ink),0 -2px 0 var(--ink),2px 0 0 var(--ink),0 2px 0 var(--ink)}
 body[data-skin="pixel"] .burstbox,body[data-skin="pixel"] .gpanel{background:var(--ink);background-image:none}
 body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
+
+
+/* ===== phone: compact, quick-select layouts ===== */
+@media (max-width:860px){
+  .hpanel.daily{row-gap:34px!important;display:flex!important;flex-direction:column}
+  .dbox{display:contents!important}
+  .dbox #dPuzzle{order:1;background:var(--card);border-radius:22px;padding:26px 14px 14px!important;position:relative}
+  #dBlitz{order:2}#dFree{order:3}
+  .dbox #dCal{order:4;background:var(--card);border-radius:22px;padding:16px 14px!important;border:0!important;margin:0!important}
+  body:not([data-skin="mid"]) .dbox #dPuzzle,body:not([data-skin="mid"]) .dbox #dCal{border:var(--line)!important;border-radius:0;box-shadow:var(--shadow)}
+  .dbox{padding:26px 0 14px!important}
+  .dbox #dPuzzle{padding:0 14px}.dbox #dCal{padding:12px 14px 0}
+  .dhead{margin-bottom:10px}.dhead h3{font-size:17px}.dhead p{display:none}
+  /* puzzle difficulties: 3 tiles in a row */
+  .dlvs{grid-template-columns:repeat(3,1fr)!important;gap:8px}
+  .dlv{flex-direction:column!important;align-items:center!important;padding:8px 6px 10px;gap:4px;cursor:pointer}
+  .dic{width:56px!important;height:56px!important;margin:0 auto!important;padding:4px}
+  .dlt{align-items:center!important;text-align:center!important}
+  .dlt>b{font-size:15px}.dlt small{font-size:11px}
+  .dlt .dbest{flex-direction:column;gap:0;margin-top:2px}.dlt .dbest span{display:none}.dlt .dbest b{font-size:20px}
+  .dlb{flex-direction:row!important;width:100%;gap:4px}.dlb .btn:first-child{min-height:36px;font-size:13px;padding:2px 6px}.dlb .btn.sm{min-height:36px;width:36px;padding:0}
+  .dlb .btn svg{width:12px;height:12px}.dlb .btn:first-child{white-space:nowrap;gap:3px}
+  .dlb .btn.sm{display:none}
+  .dlt .dbest b:only-child,.dlt .dbest b{min-height:24px}
+  #dPuzzle>.note{font-size:12px;margin-top:8px}
+  /* calendar: smaller */
+  .calg span{height:34px;font-size:11px}.calh b{font-size:22px}
+  /* daily actions: 2x2 tiles */
+  #dBlitz{padding:26px 12px 14px!important}
+  .dasub{display:none}
+  .dacts{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .dact{grid-template-columns:40px minmax(0,1fr)!important;grid-template-areas:"ic t" "b b"!important;padding:8px!important;gap:6px 8px!important;cursor:pointer}
+  .daic{width:40px!important;height:40px!important}.daic svg{width:30px;height:30px}.mm60{font-size:18px}
+  .dat{flex-direction:column;align-items:flex-start!important;gap:0!important}.dat>b{font-size:14px}.dat .dbest span{display:none}.dat .dbest b{font-size:17px}
+  .dabtm{gap:4px!important;flex-wrap:nowrap}.dabtm .tries{display:none!important}
+  .dabtm [data-da]{flex:1;min-height:34px!important;padding:2px 6px!important;font-size:13px}.dabtm [data-da] svg{width:13px;height:13px}
+  .dabtm .btn.sm{width:32px!important;min-height:34px!important}
+  /* free play */
+  #dFree{padding:26px 14px 14px!important}#dFree .sub{display:none}
+  .fhead{gap:12px}.dthumb.ficon{width:64px!important;padding:6px}
+  /* stage themes: 2-column tiles */
+  .sechead{margin:0 0 12px}.sechead h2{font-size:20px}.sechead p{font-size:12.5px}
+  .tgrid{grid-template-columns:1fr 1fr!important;gap:10px}
+  .tcard{flex-direction:column;align-items:flex-start;gap:6px;padding:10px 10px 10px 16px}
+  .tcard .tic{width:44px;height:44px;margin:0}.tcard .tic svg{width:32px;height:32px}
+  .tt b{font-size:16px}.tt small{display:none}
+  .tmeta{gap:6px;font-size:11px}.tmeta .medals{display:none}
+  /* stage list: 5 per row, tighter */
+  .tiles{grid-template-columns:repeat(5,1fr)!important;gap:6px}
+  .stg,.mtier{padding:8px 10px 10px;margin-bottom:10px}
+  .thead{padding:10px;gap:8px;margin-bottom:14px}.thead p{display:none}.thead .btn.sm{margin-top:4px}
+  /* action modes: 2-column tiles */
+  .acards{grid-template-columns:1fr 1fr!important;gap:10px!important;margin:10px 0 22px!important}
+  .acards .acard{grid-column:auto!important;padding:24px 10px 10px!important;cursor:pointer}
+  .acards .acard:first-child{grid-column:1/-1!important}
+  .acard p{display:none}.acard h3{font-size:16px;margin:4px 0 2px}
+  .abig,.abig.mic{height:62px!important;width:100%!important;margin:0 auto!important;display:grid;place-items:center;overflow:visible}
+  .abig>*,.abig.mic>*{transform:scale(.6)}
+  .abig.rise{width:90px!important;transform:scale(.7)}
+  .abig.rise>*{transform:none}
+  .acards .acard:first-child .abig b{font-size:46px}
+  .acard .dbest{padding-top:2px!important}.acard .dbest b{font-size:18px}
+  .acard .btn.big{min-height:40px;font-size:15px;margin-top:6px}
+  .qc{top:8px;right:8px;width:30px;height:30px;font-size:15px}
+  .mlist{gap:6px}.mis{padding:6px 8px}.mtx b{font-size:13px}
+}
 
 /* ---------- PC / phone ---------- */
 @media (min-width:1000px){
