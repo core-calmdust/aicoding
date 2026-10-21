@@ -213,8 +213,8 @@ function profCard() {
       <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/${ST_TOTAL}</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
       <li><span>${esc(t('bk.title'))}</span><b>${colOwned()}<small>/${COL_TOTAL}</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
       ${googleBox()}<div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
-  $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha(), book: openBook, ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
-  $('#pfEdit').onclick = openProfile;
+  $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha(), book: () => openBook(), ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
+  $('#pfEdit').onclick = () => openProfile();
   const pn = $('#profCard .pname'); pn.title = t('pf.name'); pn.onclick = () => {
     const inp = document.createElement('input'); inp.className = 'pname pnin'; inp.maxLength = 12; inp.value = DB.name; inp.placeholder = t('pf.ph'); pn.replaceWith(inp); inp.focus(); inp.select();
     let done = false; const fin = ok => { if (done) return; done = true; if (ok) { DB.name = inp.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); save(); pushScores(); } profCard(); };
@@ -1066,7 +1066,7 @@ async function openRank(tab = 'p') {
     el.innerHTML = (DB.name ? '' : `<button class="nudge" id="rkName">${esc(t('r.nudge'))}</button>`) +
       (list.length ? `<ol class="rlist">${list.map((r, i) => `<li class="${r.uid === ON.uid ? 'me' : ''} p${i + 1}"><b class="rn">${i + 1}</b><span class="ri">${A.charSVG(r.i | 0)}</span><span class="rnm">${esc(r.n)}</span><b class="rs">${fmt(r.s)}</b></li>`).join('')}</ol>` : `<p class="note">${esc(t('rk.empty'))}</p>`) +
       (me && me.rank > 50 ? `<div class="rme">${esc(t('rk.me', { r: me.rank, s: fmt(me.me.s) }))}</div>` : '');
-    const nb = $('#rkName'); if (nb) nb.onclick = openProfile;
+    const nb = $('#rkName'); if (nb) nb.onclick = () => openProfile();
   } catch (e) { el.innerHTML = `<p class="note">${esc(t('rk.err'))}</p>`; }
 }
 // --- settings
@@ -1326,7 +1326,7 @@ function bind() {
   // header icons
   const IC = { btnAch: 'trophy', btnGacha: 'gacha', btnBook: 'book', btnRank: 'rank', btnSet: 'gear', btnHelp: 'help', btnSound: 'sound', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, ic] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[ic]); }
-  $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha(); $('#btnBook').onclick = openBook; $('#btnRank').onclick = () => openRank('p');
+  $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha(); $('#btnBook').onclick = () => openBook(); $('#btnRank').onclick = () => openRank('p');
   $('#btnSet').onclick = openSettings; $('#btnHelp').onclick = () => tutorial('basic');
   $('#btnSound').onclick = () => { DB.set.snd = DB.set.snd ? 0 : 1; save(); sndIcon(); if (DB.set.snd) SND.coin(); };
   $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else { homeTab = 'daily'; themeOpen = null; renderHome(); } };
