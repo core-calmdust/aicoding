@@ -17,4 +17,12 @@
 //      (make sure databaseURL is included), then bump the ?v= of firebase-config.js in gomoku/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, choosing online play shows "online play is being prepared" (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDBuCo6QFmRN1qtbmeIJso8ZPvIXSO9afI",
+  authDomain: "renju-multiplay.firebaseapp.com",
+  databaseURL: "https://renju-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "renju-multiplay",
+  storageBucket: "renju-multiplay.firebasestorage.app",
+  messagingSenderId: "59779125876",
+  appId: "1:59779125876:web:ba0a94b1e0a783746df721"
+};
