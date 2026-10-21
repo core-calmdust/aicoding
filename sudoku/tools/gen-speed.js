@@ -3,6 +3,7 @@
    入門 5 courses × 10 stages (standard rules)
    初級 5 × 10 (one special rule each: bug / mosaic / spin / spot / fruit)
    中級 5 × 10 (one special rule each: shuffle / ghost / ice / bomb / swap)
+   中級＋ 5 × 10 (one special rule each: cloud / calc / card / mole / upside) — tier 5, shown between 中級 and 上級
    上級 5 × 20 (2 special rules at once, sometimes 3 near the end)
    達人 5 × 20 (2–3 rules at once at full strength; the last course up to 4)
    Each stage is "solve K puzzles within T seconds"; the hurdle rises stage by stage.
@@ -25,6 +26,8 @@ const CATS = [
     ({ tier: 3, kind: 'combo', pool, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: [2, 6], sl: [2.2, 1.6], str: [1, 2], gn: [2, 2.6] })),
   ...[['m0', [2, 3], [1, 2]], ['m1', [2, 3], [2, 3]], ['m2', [3, 3], [1, 3]], ['m3', [2, 3], [1, 2], [3, 8]], ['m4', [3, 4], [2, 3]]].map(([id, gn, str, k]) =>
     ({ tier: 4, kind: 'combo', pool: ALLG, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: k || [2, 5], sl: [2.1, 1.55], str, gn })),
+  // appended last so every earlier course keeps exactly the same puzzles
+  ...['cloud', 'calc', 'card', 'mole', 'upside'].map(g => ({ tier: 5, kind: 'g', g, nk: 'sk.n.' + g, dk: 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
 ];
 
 const lerp = (a, b, x) => a + (b - a) * x;

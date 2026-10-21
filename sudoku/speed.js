@@ -14,9 +14,10 @@ const DT = { 30: 1, 60: 2, 90: 3 };                    // medal tier (bronze / s
 const catLen = ci => (DATA ? DATA.cats[ci].st.length : 0);
 const nAll = () => (DATA ? DATA.cats.reduce((a, c) => a + c.st.length, 0) : 0);
 const cname = ci => t(DATA.cats[ci].nk), cdesc = ci => t(DATA.cats[ci].dk);
-const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f'];
-const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df']];
-const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8', bomb: '#ff8a3d', swap: '#e05aa8' };
+const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f', '#f08a24'];
+const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df'], ['#fff0dc', '#ffdfb8']];
+const TORDER = [0, 1, 2, 5, 3, 4];                      // tier 5 (中級＋) was added later and sits between 中級 and 上級
+const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8', bomb: '#ff8a3d', swap: '#e05aa8', cloud: '#7fa8d8', calc: '#e8a21c', card: '#26a69a', mole: '#a9785a', upside: '#7b61ff' };
 const GORDER = SE.GIMMICKS;
 const BONUS = 5000, PENALTY = 2000, FREEZE = 380, LIMIT_TRIES = 3;
 const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -34,6 +35,12 @@ const GICON = {
 };
 GICON.bomb = '<svg viewBox="0 0 32 32"><circle cx="14" cy="19" r="10" fill="#43385a"/><circle cx="10.5" cy="15.5" r="3" fill="#fff" opacity=".35"/><path d="M20 11l3-3" stroke="#43385a" stroke-width="3.2" stroke-linecap="round"/><path d="M23 8q2-3 5-2" fill="none" stroke="#c9a073" stroke-width="1.8" stroke-linecap="round"/><path d="M27.5 3.5l.8 1.9 2-.3-1.4 1.5 1 1.8-1.9-.7-1.3 1.6v-2l-1.9-.7 1.9-.7z" fill="#ffcd3c"/><circle cx="11" cy="20" r="1.4" fill="#fff"/><circle cx="17" cy="20" r="1.4" fill="#fff"/><path d="M12.5 23.5q1.5 1.2 3 0" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>';
 GICON.swap = '<svg viewBox="0 0 32 32"><rect x="3" y="5" width="26" height="9" rx="3" fill="#ffd6ec"/><rect x="3" y="18" width="26" height="9" rx="3" fill="#ffe9c9"/><path d="M9 14v4M23 14v4" stroke="#fff" stroke-width="2"/><path d="M8 12.5l-2.5-3M8 12.5l2.5-3M24 19.5l-2.5 3M24 19.5l2.5 3" stroke="#e05aa8" stroke-width="2.2" stroke-linecap="round"/><path d="M8 9.5V12.5M24 19.5V22.5" stroke="#e05aa8" stroke-width="2.2" stroke-linecap="round"/><text x="17" y="12.3" font-family="Fredoka,Arial" font-weight="700" font-size="7" fill="#c0407a" text-anchor="middle">1 2</text><text x="15" y="25.3" font-family="Fredoka,Arial" font-weight="700" font-size="7" fill="#c07a30" text-anchor="middle">3 4</text></svg>';
+GICON.cloud = '<svg viewBox="0 0 32 32"><path d="M9 25a6 6 0 0 1-.7-12 8 8 0 0 1 15.5 1.4A5.4 5.4 0 0 1 23.4 25z" fill="#fff" stroke="#7fa8d8" stroke-width="1.7" stroke-linejoin="round"/><circle cx="13" cy="19" r="1.3" fill="#43385a"/><circle cx="19.5" cy="19" r="1.3" fill="#43385a"/><path d="M15.3 21.4q1 .9 2 0" stroke="#43385a" stroke-width="1.1" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="21.3" rx="1.4" ry=".8" fill="#ffc2d4"/><ellipse cx="21.5" cy="21.3" rx="1.4" ry=".8" fill="#ffc2d4"/></svg>';
+GICON.calc = '<svg viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="20" rx="5" fill="#fff4cc" stroke="#e8a21c" stroke-width="1.7"/><text x="16" y="20.3" font-family="Fredoka,Arial" font-weight="700" font-size="10.5" fill="#b8740c" text-anchor="middle">1+2</text></svg>';
+GICON.card = '<svg viewBox="0 0 32 32"><g transform="rotate(-12 11 17)"><rect x="4" y="7" width="14" height="20" rx="3" fill="#26a69a"/><rect x="6.2" y="9.2" width="9.6" height="15.6" rx="2" fill="none" stroke="#9fe3da" stroke-width="1.2"/><path d="M11 12.5l3 4.5-3 4.5-3-4.5z" fill="#9fe3da"/></g><g transform="rotate(10 21 15)"><rect x="14" y="5" width="14" height="20" rx="3" fill="#fff" stroke="#26a69a" stroke-width="1.7"/><text x="21" y="19.6" font-family="Fredoka,Arial" font-weight="700" font-size="11" fill="#1d7f75" text-anchor="middle">3</text></g></svg>';
+GICON.mole = '<svg viewBox="0 0 32 32"><ellipse cx="16" cy="26.5" rx="12.5" ry="3.6" fill="#6a4a32"/><path d="M7 26.5V17a9 9 0 0 1 18 0v9.5z" fill="#a9785a"/><ellipse cx="16" cy="21.5" rx="5.2" ry="3.7" fill="#efcfb2"/><circle cx="12.4" cy="15.6" r="1.4" fill="#2e1e14"/><circle cx="19.6" cy="15.6" r="1.4" fill="#2e1e14"/><ellipse cx="16" cy="19.2" rx="2.1" ry="1.5" fill="#ff8fa8"/><path d="M14.6 22.6q1.4 1 2.8 0" stroke="#2e1e14" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M5 27.5h4M23 27.5h4" stroke="#4a3222" stroke-width="1.3" stroke-linecap="round"/></svg>';
+GICON.upside = '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12.5" fill="#ece7ff"/><text x="16" y="21.5" font-family="Fredoka,Arial" font-weight="700" font-size="15" fill="#7b61ff" text-anchor="middle" transform="rotate(180 16 16.5)">2</text><path d="M26 9.5a12 12 0 0 0-6-5" fill="none" stroke="#7b61ff" stroke-width="2" stroke-linecap="round"/><path d="M26.8 5.8l-.6 3.9-3.8-.9" fill="none" stroke="#7b61ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CLOUD = '<svg viewBox="0 0 100 62"><g fill="#fff"><circle cx="30" cy="36" r="20"/><circle cx="52" cy="26" r="24"/><circle cx="74" cy="36" r="19"/><rect x="12" y="34" width="78" height="24" rx="12"/></g><circle cx="44" cy="39" r="2.4" fill="#43385a"/><circle cx="60" cy="39" r="2.4" fill="#43385a"/><path d="M49 44q3 2.4 6 0" stroke="#43385a" stroke-width="1.8" fill="none" stroke-linecap="round"/><ellipse cx="37" cy="45" rx="3.5" ry="2" fill="#ffc2d4"/><ellipse cx="67" cy="45" rx="3.5" ry="2" fill="#ffc2d4"/></svg>';
 const gic = (id, cls = 'gi') => `<i class="${cls}" style="--gc:${GCOL[id]}">${GICON[id]}</i>`;
 // digits as fruits: strawberry, lemon, grapes, melon
 const FRUIT = [
@@ -125,7 +132,7 @@ function catalog() {
   const cc = totalClears(), st = totalStars();
   [[20, 1, 'cc20'], [100, 2, 'cc100'], [200, 3, 'cc250'], [nAll() || 330, 4, 'cc500']].forEach(([n, ti, id]) => add('col', id, cc >= n, ti, String(n), n === nAll() ? t('sa.ccall') : t('sa.cc', { n }), t('sa.cc.d', { n }), [cc, n]));
   [[100, 1, 'st150'], [400, 2, 'st600'], [nAll() * 3 || 990, 4, 'st1500']].forEach(([n, ti, id]) => add('col', id, st >= n, ti, 'star', t('sa.st', { n }), t('sa.st.d', { n }), [st, n]));
-  for (let tr = 0; tr < 5; tr++) { const c = tierClears(tr), L = tierLen(tr) || 1; add('col', 'tier' + tr, c >= L, Math.min(4, tr + 1), 'map', t('sa.tier', { t: t('sp.tier.' + tr) }), t('sa.tier.d', { t: t('sp.tier.' + tr) }), [c, L]); }
+  for (const tr of TORDER) { const c = tierClears(tr), L = tierLen(tr) || 1; add('col', 'tier' + tr, c >= L, tr === 5 ? 3 : Math.min(4, tr + 1), 'map', t('sa.tier', { t: t('sp.tier.' + tr) }), t('sa.tier.d', { t: t('sp.tier.' + tr) }), [c, L]); }
   if (DATA) GORDER.forEach(g => { const ci = DATA.cats.findIndex(c => c.g === g); const c = ci >= 0 ? catClears(ci) : 0; add('col', 'gc.' + g, ci >= 0 && c >= catLen(ci), 3, 'puzzle', t('sa.gc', { g: t('g.' + g) }), t('sa.gc.d', { g: t('g.' + g) }), [c, ci >= 0 ? catLen(ci) : 10]); });
   add('col', 'perfcat', DATA && DATA.cats.some((_, ci) => catStars(ci) >= catLen(ci) * 3), 3, 'heart', t('sa.perfcat'), t('sa.perfcat.d'));
   [[50, 1, 'sv50'], [500, 2, 'sv500'], [2000, 3, 'sv2000'], [5000, 4, 'sv5000']].forEach(([n, ti, id]) => add('chal', id, s.st.solved >= n, ti, 'check', t('sa.sv', { n }), t('sa.sv.d', { n }), [s.st.solved, n]));
@@ -234,8 +241,8 @@ function colCard() {
   if (!DATA) return '';
   const cc = totalClears();
   let h = `<h2>${SHOE.replace('<svg', '<svg class="ttl-ico"')}<span>${esc(t('sp.col'))}</span><span class="sub">${esc(t('sp.col.sub'))}</span></h2><div class="col-total"><div class="bar"><i style="width:${cc / (nAll() || 1) * 100}%"></i></div><b class="num">${cc} / ${nAll()}</b></div>`;
-  h += `<div class="stjump">${[0, 1, 2, 3, 4].map(tr => `<button data-tj="${tr}" style="--tc:${TIERCOL[tr]}" class="${tierClears(tr) >= tierLen(tr) ? 'done' : ''}"><b>${esc(t('sp.tier.' + tr))}</b><small class="num">${tierClears(tr)}/${tierLen(tr)}</small></button>`).join('')}</div>`;
-  for (let tr = 0; tr < 5; tr++) {
+  h += `<div class="stjump">${TORDER.map(tr => `<button data-tj="${tr}" style="--tc:${TIERCOL[tr]}" class="${tierClears(tr) >= tierLen(tr) ? 'done' : ''}"><b>${esc(t('sp.tier.' + tr))}</b><small class="num">${tierClears(tr)}/${tierLen(tr)}</small></button>`).join('')}</div>`;
+  for (const tr of TORDER) {
     const open = tierOpen(tr), need = 0;
     h += `<div class="stier" id="stier${tr}" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
     for (const ci of tierCats(tr)) {
@@ -315,8 +322,8 @@ function buildScreen() {
     <div class="sside"><div class="skeys" id="sKeys"></div><div class="sinfo" id="sInfo"></div><div class="help shelp" id="sKb"></div></div>`;
   $('#main').appendChild(sec);
   const b = $('#sBoard');
-  for (let i = 0; i < 16; i++) { const el = document.createElement('div'); el.className = 'scell'; el.dataset.i = i; el.innerHTML = '<span class="v"></span><span class="ice"></span>'; cells[i] = el; b.appendChild(el); }
-  b.insertAdjacentHTML('beforeend', `<div class="sspot" id="sSpot"></div><svg class="sgrid" viewBox="0 0 400 400" preserveAspectRatio="none"><path d="M100 0V400M300 0V400M0 100H400M0 300H400" class="thin"/><path d="M200 0V400M0 200H400" class="thick"/></svg><div class="ssel" id="sSel"></div><div class="sbugs" id="sBugs"></div>`);
+  for (let i = 0; i < 16; i++) { const el = document.createElement('div'); el.className = 'scell'; el.dataset.i = i; el.innerHTML = '<span class="v"></span><span class="ice"></span><span class="ml">' + GICON.mole + '</span>'; cells[i] = el; b.appendChild(el); }
+  b.insertAdjacentHTML('beforeend', `<div class="sspot" id="sSpot"></div><svg class="sgrid" viewBox="0 0 400 400" preserveAspectRatio="none"><path d="M100 0V400M300 0V400M0 100H400M0 300H400" class="thin"/><path d="M200 0V400M0 200H400" class="thick"/></svg><div class="ssel" id="sSel"></div><div class="sbugs" id="sBugs"></div><div class="sclouds" id="sClouds"></div>`);
   b.addEventListener('pointerdown', boardDown); b.addEventListener('pointermove', boardMove); b.addEventListener('pointerup', boardUp); b.addEventListener('pointercancel', () => hideFlick());
   b.addEventListener('contextmenu', e => e.preventDefault());
   $('#sBack').onclick = () => quit();
@@ -382,13 +389,14 @@ function loadPuzzle(k, quiet) {
   const P = puzzleAt(k); if (!P) return false;
   R.k = k; R.P = P; R.grid = P.p.slice(); R.user = new Array(16).fill(0);
   R.ice = new Array(16).fill(0); R.mz = new Array(16).fill(0); R.ghostAt = new Array(16).fill(0);
+  R.mole = new Array(16).fill(0); R.card = new Array(16).fill(0); R.peek = new Array(16).fill(0); R.calc = new Array(16).fill(''); R.rot = new Array(16).fill('');
   R.fruit = null; R.keyOrder = [1, 2, 3, 4];
   R.sel = R.grid.indexOf(0);
   R.pStart = R.elapsed;
   R.gspec = SE.parseG(P.g);
   const b = $('#sBoard');
   b.className = 'sboard'; b.style.transform = '';
-  $('#sBugs').innerHTML = '';
+  $('#sBugs').innerHTML = ''; $('#sClouds').innerHTML = '';
   R.rng = SE.mulberry32(SE.hashStr('g:' + (R.date || R.ci + '.' + R.pi) + ':' + k));
   R.gims = R.gspec.map(g => ({ id: g.id, s: g.s, st: {} }));
   if (!quiet) startGims();
@@ -501,7 +509,7 @@ const GIM = {
       if (g.st.at >= 0 && R.grid[g.st.at]) { cells[g.st.at].classList.remove('bomb'); g.st.at = -1; g.st.wait = 600; C.SFX.unit(); }
       if (g.st.at < 0) {
         g.st.wait -= dt; if (g.st.wait > 0) return;
-        const empties = [...Array(16).keys()].filter(i => !R.grid[i] && !R.ice[i]);
+        const empties = [...Array(16).keys()].filter(i => !R.grid[i] && !R.ice[i] && !R.mole[i]);
         if (!empties.length) return;
         g.st.at = empties[(R.rng() * empties.length) | 0]; g.st.left = fuse;
         cells[g.st.at].classList.add('bomb'); C.SFX.note();
@@ -531,7 +539,7 @@ const GIM = {
       C.SFX.note();
       setTimeout(() => {
         if (!R || R.done) return;
-        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt];
+        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt, R.mole, R.card, R.peek, R.calc, R.rot];
         for (let j = 0; j < 4; j++) { const x = idx(a, j), y = idx(b, j); for (const A of arrs) [A[x], A[y]] = [A[y], A[x]]; }
         if (R.sel >= 0) { const r = R.sel >> 2, c = R.sel & 3, k = col ? c : r; if (k === a || k === b) R.sel = col ? r * 4 + (k === a ? b : a) : (k === a ? b : a) * 4 + c; }
         for (let j = 0; j < 4; j++) for (const i of [idx(a, j), idx(b, j)]) { cells[i].classList.remove('swp'); cells[i].style.transform = ''; const gh = R.ghostAt[i] === -1; cells[i].classList.toggle('gh', gh && !!R.user[i]); }
@@ -539,6 +547,74 @@ const GIM = {
       }, 420);
     },
     stop() { cells.forEach(c => { c.style.transform = ''; c.classList.remove('swp'); }); },
+  },
+  cloud: {   // fluffy clouds drift across and hide what is under them (pointer-events pass through)
+    start(g) {
+      const n = g.s >= 2 ? 2 : 1, host = $('#sClouds'); g.st.cl = [];
+      for (let k = 0; k < n; k++) {
+        const el = document.createElement('div'); el.className = 'scloud'; el.innerHTML = CLOUD; host.appendChild(el);
+        const c = { el, dir: k % 2 ? -1 : 1, w: [56, 60, 66][g.s - 1] };
+        spawn(c, true); g.st.cl.push(c);
+      }
+      function spawn(c, first) {
+        c.y = -6 + R.rng() * (100 - c.w * .62 + 6);
+        c.x = first ? (c.dir > 0 ? -c.w * .6 + R.rng() * 45 : 100 - c.w * .4 - R.rng() * 45) : (c.dir > 0 ? -c.w : 100);
+        c.v = (100 + c.w) / [9000, 7200, 5800][g.s - 1] * (.85 + R.rng() * .3);
+        c.el.style.width = c.w + '%'; c.el.style.top = c.y + '%';
+      }
+      g.st.spawn = spawn;
+    },
+    tick(g, dt) {
+      for (const c of g.st.cl) {
+        c.x += c.dir * c.v * dt;
+        if (c.dir > 0 ? c.x > 100 : c.x < -c.w) { c.dir = -c.dir; g.st.spawn(c, false); }
+        c.el.style.left = c.x.toFixed(2) + '%';
+      }
+    },
+    stop() { $('#sClouds').innerHTML = ''; },
+  },
+  calc: {   // given numbers become little sums — the answer is the number
+    start(g) {
+      const giv = SE.shuffle([...Array(16).keys()].filter(i => R.P.p[i]), R.rng);
+      giv.slice(0, Math.ceil(giv.length * [.45, .75, 1][g.s - 1])).forEach(i => (R.calc[i] = expr(R.P.p[i], g.s, R.rng)));
+      render();
+    },
+    tick() {}, stop() { R.calc.fill(''); },
+  },
+  card: {   // given numbers lie face down; tap a card to peek for a moment
+    start(g) {
+      const giv = SE.shuffle([...Array(16).keys()].filter(i => R.P.p[i]), R.rng);
+      giv.slice(0, Math.ceil(giv.length * [.5, .75, 1][g.s - 1])).forEach(i => (R.card[i] = 1));
+      g.st.show = [1700, 1250, 900][g.s - 1];
+      render();
+    },
+    tick(g, dt) {
+      let ch = false;
+      for (let i = 0; i < 16; i++) if (R.card[i] === 2) { R.peek[i] -= dt; if (R.peek[i] <= 0) { R.card[i] = 1; ch = true; } }
+      if (ch) render();
+    },
+    stop() { R.card.fill(0); },
+  },
+  mole: {   // moles pop out of empty cells and sit there — tap (or type into) one to bonk it away
+    start(g) { g.st.next = 900; },
+    tick(g, dt) {
+      let ch = false;
+      for (let i = 0; i < 16; i++) if (R.mole[i] > 0) { R.mole[i] -= dt; if (R.mole[i] <= 0) { R.mole[i] = 0; ch = true; } }
+      g.st.next -= dt;
+      if (g.st.next <= 0) {
+        g.st.next = [3300, 2600, 2000][g.s - 1];
+        const up = R.mole.filter(Boolean).length;
+        const free = [...Array(16).keys()].filter(i => !R.grid[i] && !R.ice[i] && !R.mole[i] && !cells[i].classList.contains('bomb'));
+        if (up < [1, 2, 2][g.s - 1] && free.length > 1) { const i = free[(R.rng() * free.length) | 0]; R.mole[i] = [2600, 3000, 3400][g.s - 1]; C.SFX.note(); ch = true; }
+      }
+      if (ch) render();
+    },
+    stop() { R.mole.fill(0); },
+  },
+  upside: {   // numbers are drawn turned sideways or upside down (★3: they keep turning)
+    start(g) { g.st.next = 2600; turn(g, true); },
+    tick(g, dt) { if (g.s < 3) return; g.st.next -= dt; if (g.st.next <= 0) { g.st.next = 2600; turn(g, false); C.SFX.note(); } },
+    stop() { R.rot.fill(''); },
   },
   ice: {
     start(g) {
@@ -549,6 +625,23 @@ const GIM = {
     tick() {}, stop() { R.ice.fill(0); },
   },
 };
+// a little sum (or difference / product) whose answer is d
+function expr(d, s, rng) {
+  const opts = [];
+  for (let a = 0; a <= d; a++) if (a && d - a) opts.push(a + '+' + (d - a));
+  for (let b = 1; b <= (s >= 2 ? 5 : 3); b++) opts.push((d + b) + '−' + b);
+  if (s >= 3) { if (d === 4) opts.push('2×2'); [2, 3].forEach(b => opts.push((d * b) + '÷' + b)); if (d === 1) opts.push('1×1'); }
+  return opts[(rng() * opts.length) | 0];
+}
+function turn(g, first) {
+  const T = g.s >= 3 ? ['rotate(90deg)', 'rotate(180deg)', 'rotate(270deg)', 'scaleX(-1)', 'rotate(180deg) scaleX(-1)'] : g.s >= 2 ? ['rotate(90deg)', 'rotate(180deg)', 'rotate(270deg)'] : ['rotate(180deg)', 'rotate(90deg)'];
+  for (let i = 0; i < 16; i++) {
+    const own = !R.P.p[i];
+    if (own && g.s < 2) { R.rot[i] = ''; continue; }                    // ★1: only the given numbers are turned
+    R.rot[i] = R.rng() < (first && g.s < 2 ? .6 : .85) ? T[(R.rng() * T.length) | 0] : '';
+  }
+  render();
+}
 function startGims() {
   for (const g of R.gims) { GIM[g.id].start(g); S().st.gs[g.id] = 1; }
   if (R.gims.length) showBan();
@@ -586,9 +679,16 @@ function render() {
     el.classList.toggle('frozen', R.ice[i] > 0);
     el.classList.toggle('crack', R.ice[i] === 1 && R.gims.some(g => g.id === 'ice' && g.s >= 2));
     if (!R.user[i] || R.ghostAt[i] !== -1) el.classList.remove('gh');
-    const want = v ? String(v) + (R.fruit ? 'f' + R.fruit.join('') : '') : '';
-    if (el.dataset.v !== want) { el.dataset.v = want; el.firstChild.innerHTML = v ? glyph(v) : ''; }
-    el.classList.toggle('hl', !!v && R.sel >= 0 && R.grid[R.sel] === v && i !== R.sel);
+    el.classList.toggle('mole', R.mole[i] > 0);
+    el.classList.toggle('fdown', R.card[i] === 1);
+    el.classList.toggle('fpeek', R.card[i] === 2);
+    const cx = given && R.calc[i] && !R.fruit ? R.calc[i] : '';
+    const want = v ? String(v) + (R.fruit ? 'f' + R.fruit.join('') : '') + cx : '';
+    if (el.dataset.v !== want) { el.dataset.v = want; el.firstChild.innerHTML = v ? (cx ? `<span class="cx${cx.length > 3 ? ' l' : ''}">${cx}</span>` : glyph(v)) : ''; }
+    const tf = v && !cx ? R.rot[i] : '';
+    if (el.firstChild.style.transform !== tf) el.firstChild.style.transform = tf;
+    const hidden = k => R.card[k] === 1 || !!R.calc[k] && !!R.P.p[k];   // don't give away face-down cards or sums by highlighting
+    el.classList.toggle('hl', !!v && R.sel >= 0 && R.grid[R.sel] === v && i !== R.sel && !hidden(i) && !hidden(R.sel));
   }
   const sl = $('#sSel');
   if (R.sel >= 0 && R.state === 'play') { sl.style.left = ((R.sel & 3) * 25) + '%'; sl.style.top = ((R.sel >> 2) * 25) + '%'; sl.classList.add('on'); } else sl.classList.remove('on');
@@ -613,6 +713,19 @@ function keyPress(d) {
   if (R.sel < 0 || R.grid[R.sel]) { const n = nextEmpty(R.sel < 0 ? -1 : R.sel); if (n < 0) return; R.sel = n; }
   put(R.sel, d);
 }
+function bonk(i) {
+  if (!R.mole[i]) return false;
+  R.mole[i] = 0; const el = cells[i];
+  el.classList.remove('bonk'); void el.offsetWidth; el.classList.add('bonk'); setTimeout(() => el.classList.remove('bonk'), 450);
+  C.SFX.pop(); C.vib(10); render();
+  return true;
+}
+function peekCard(i) {
+  if (R.card[i] !== 1) return false;
+  const g = R.gims.find(x => x.id === 'card');
+  R.card[i] = 2; R.peek[i] = g ? g.st.show : 1200; C.SFX.tap(); render();
+  return true;
+}
 function hitIce(i) {
   if (R.ice[i] <= 0) return false;
   R.ice[i]--; const el = cells[i];
@@ -623,7 +736,7 @@ function hitIce(i) {
 }
 function put(i, d) {
   if (R.grid[i] || R.P.p[i]) return;
-  if (hitIce(i)) return;
+  if (hitIce(i) || bonk(i)) return;
   if (d === R.P.s[i]) {
     R.grid[i] = d; R.user[i] = d; R.ghostAt[i] = R.elapsed || 1;
     const el = cells[i]; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
@@ -650,6 +763,8 @@ function boardDown(e) {
   e.preventDefault();
   const i = +c.dataset.i;
   if (R.ice[i] > 0) { R.sel = i; hitIce(i); return; }
+  if (R.mole[i]) { R.sel = i; bonk(i); return; }
+  if (R.card[i] === 1) { R.sel = i; peekCard(i); return; }
   R.sel = i; render(); C.SFX.tap();
   fl = { i, x: e.clientX, y: e.clientY, shown: false, d: 0, id: e.pointerId, can: !R.grid[i] && C.DB.set.flick && !keysOnly() };
   try { $('#sBoard').setPointerCapture(e.pointerId); } catch (_) {}
@@ -1044,7 +1159,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=4';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=5';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },

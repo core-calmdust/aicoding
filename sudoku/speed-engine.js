@@ -90,8 +90,13 @@ const dec = s => Array.from(s, Number);
    ice     こおり        some empty cells are frozen — tap to break the ice before you can write */
 //  bomb    ばくだん      a bomb sits on an empty cell — fill it before the fuse runs out or lose 3 seconds
 //  swap    いれかわり    two rows (or columns) of the same band trade places — your numbers move with them
-const GIMMICKS = ['bug', 'mosaic', 'spin', 'spot', 'fruit', 'shuffle', 'ghost', 'ice', 'bomb', 'swap'];
-const GEXTRA = { bug: s => 1.2 + s * .8, mosaic: s => .6 + s * .7, spin: s => 1.2 + s * .8, spot: s => 1.2 + s, fruit: s => 1.2 + s * .8, shuffle: s => 1 + s * .7, ghost: s => .8 + s * .8, ice: s => .8 + s, bomb: s => .8 + s * .6, swap: s => 1 + s * .8 };
+//  cloud   くもり        clouds drift across the board and hide the cells under them (you can still write there)
+//  calc    けいさん      some given numbers are shown as little sums (1+2, 5−1, 2×2 …)
+//  card    うらがえし    given numbers are face-down cards — tap one for a quick peek
+//  mole    もぐら        moles pop out of empty cells and block them — tap (or type) to bonk them away
+//  upside  さかさま      numbers are drawn turned sideways / upside down
+const GIMMICKS = ['bug', 'mosaic', 'spin', 'spot', 'fruit', 'shuffle', 'ghost', 'ice', 'bomb', 'swap', 'cloud', 'calc', 'card', 'mole', 'upside'];
+const GEXTRA = { bug: s => 1.2 + s * .8, mosaic: s => .6 + s * .7, spin: s => 1.2 + s * .8, spot: s => 1.2 + s, fruit: s => 1.2 + s * .8, shuffle: s => 1 + s * .7, ghost: s => .8 + s * .8, ice: s => .8 + s, bomb: s => .8 + s * .6, swap: s => 1 + s * .8, cloud: s => 1 + s * .8, calc: s => .8 + s * .8, card: s => 1.2 + s * .9, mole: s => 1 + s * .8, upside: s => .6 + s * .6 };
 const BASE_T = { 1: 5, 2: 7, 3: 9, 4: 12 };
 // g: '' | 'bug2' | 'spin1+mosaic2'
 const parseG = g => (g ? g.split('+').map(x => ({ id: x.replace(/\d/g, ''), s: +x.replace(/\D/g, '') || 1 })) : []);
@@ -107,7 +112,7 @@ const DKEYS = [30, 60, 90];
 const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
 /* the day's featured gimmicks (the same for everyone) */
 function dailyGimmicks(date, d) {
-  const L = date < '2026-10-22' ? GIMMICKS.slice(0, 8) : GIMMICKS;   // keep the launch day's dailies unchanged
+  const L = GIMMICKS.slice(0, date < '2026-10-22' ? 8 : 15);   // keep past days' dailies unchanged
   const rng = mulberry32(hashStr('spd-g:' + date));
   const order = shuffle(L.slice(), rng);
   const rot = (dayNum(date) % L.length + L.length) % L.length;
