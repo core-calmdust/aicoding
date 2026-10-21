@@ -599,10 +599,11 @@ bdi.mv{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace
   #rulesBody > .rt{flex:1;min-height:0}
   #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
   #rulesOverlay .ls-tabs{margin-bottom:12px}
-  /* new-game dialog: wide, two columns (mode / colours / board | strength / format / options / seed) */
+  /* new-game dialog: wide, two columns (strength / format / options / seed | mode / colours / board) */
   #newOverlay .modal{width:min(980px, calc(100vw - 64px));max-height:calc(var(--vh) - 24px)}
   #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
   #newOverlay .ng-col > .field:first-child{margin-top:0}
+  #newOverlay .ng-cols > .ng-col:first-child{order:2}  /* PC: strength / format / options on the left, mode / colours / board on the right */
   #newOverlay .skinrow{grid-template-columns:repeat(4, minmax(0, 1fr))}
   @media (max-height: 800px){ #rulesBody .rt-intro{gap:8px} #rulesBody .rt-intro-sec{font-size:14px;line-height:1.65;padding-top:10px;padding-bottom:10px} }
   #newOverlay .modal{padding:20px 28px 18px}
