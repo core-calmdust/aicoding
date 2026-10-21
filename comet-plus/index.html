@@ -6634,6 +6634,14 @@ function draw() {
     } else if (gameState === 'title') {
         const cx = HUD_W / 2;
         const hasLS = 'letterSpacing' in renderCtx;
+        // 最下部のコピーライト表記
+        renderCtx.save();
+        renderCtx.textAlign = 'center'; renderCtx.textBaseline = 'alphabetic';
+        renderCtx.font = `500 ${IS_MOBILE ? 13 : 11}px ${config.fontFamily}`;
+        if (hasLS) renderCtx.letterSpacing = '1.5px';
+        renderCtx.fillStyle = 'rgba(200,210,255,0.55)';
+        renderCtx.fillText('(C) 2026 Archetypes Inc. / CALMDUST', cx, HUD_H - (IS_MOBILE ? 14 : 10));
+        renderCtx.restore();
         renderCtx.save();
         renderCtx.translate(0, MENU_DY - 40); // 画面の上下中央に揃える
         if (IS_MOBILE) { renderCtx.translate(cx, TITLE_PIV); renderCtx.scale(TITLE_S, TITLE_S); renderCtx.translate(-cx, -TITLE_PIV); }
