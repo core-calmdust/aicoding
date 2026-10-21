@@ -338,6 +338,28 @@
       const pen = mesh(new (T().CylinderGeometry)(.12, .12, 5, 12), M({ color: 0xff8fc7 })); pen.rotation.z = Math.PI / 2; pen.rotation.y = .6; pen.position.set(3.6, .25, 3.4); g.add(pen);
       return g;
     },
+    speedsudoku() {   // a chunky 4×4 tray of number tiles, a stopwatch and a lightning bolt
+      const TT = T(), g = new TT.Group(), N = 4, cs = 1.7, S = N * cs;
+      const tray = mesh(RB(S + 1, .7, S + 1, .3, 3), M({ color: 0xfffaf2, roughness: .35, clearcoat: .4 }), 0, .35, 0); g.add(tray);
+      const well = mesh(RB(S + .2, .2, S + .2, .12, 2), M({ color: 0xffe2cc, roughness: .6 }), 0, .72, 0); g.add(well);
+      const grid = [1, 0, 3, 0, 0, 3, 0, 2, 3, 0, 2, 0, 0, 2, 0, 3], hot = { 2: '#ff7a3d', 9: '#ffcd3c' };
+      const face = (n, bg) => canvasTex('ssd' + n + bg, 128, 128, (c, W) => { c.fillStyle = bg; c.fillRect(0, 0, W, W); if (n) { c.fillStyle = bg === '#ffffff' ? '#2b3044' : '#fff'; c.font = '700 84px Fredoka, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(n, W / 2, W / 2 + 6); } });
+      for (let i = 0; i < N * N; i++) {
+        const x = (i % N - (N - 1) / 2) * cs, z = ((i / N | 0) - (N - 1) / 2) * cs, n = grid[i], bg = hot[i] || (n ? '#ffffff' : '#f3ead8');
+        const h = n ? .55 : .3, side = M({ color: parseInt(bg.slice(1), 16), roughness: .4, clearcoat: .3 });
+        const t = mesh(RB(cs - .2, h, cs - .2, .16, 2), [side, side, M({ map: face(n || '', bg), roughness: .4, clearcoat: .3 }), side, side, side], x, .82 + h / 2, z); g.add(t);
+      }
+      // stopwatch
+      const sw = new TT.Group(); sw.position.set(S / 2 + 1.6, 0, -S / 2 + .9); g.add(sw);
+      const body = mesh(new TT.CylinderGeometry(1.15, 1.15, .5, 40), M({ color: 0xff7a3d, roughness: .35, clearcoat: .5 }), 0, .25, 0); sw.add(body);
+      const dial = mesh(new TT.CylinderGeometry(.95, .95, .06, 40), M({ map: canvasTex('ssdDial', 256, 256, (c, W) => { c.fillStyle = '#fff'; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill(); c.strokeStyle = '#2b3044'; c.lineWidth = 8; for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; c.beginPath(); c.moveTo(W / 2 + Math.cos(a) * 100, W / 2 + Math.sin(a) * 100); c.lineTo(W / 2 + Math.cos(a) * 116, W / 2 + Math.sin(a) * 116); c.stroke(); } c.strokeStyle = '#ff5d5d'; c.lineWidth = 10; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 + 70, W / 2 - 60); c.stroke(); }), roughness: .4 }), 0, .53, 0); sw.add(dial);
+      const knob = mesh(new TT.CylinderGeometry(.18, .18, .45, 16), M({ color: 0xc7ccd6, metalness: .6, roughness: .3 }), 0, .25, -1.3); knob.rotation.x = Math.PI / 2; sw.add(knob);
+      // lightning bolt
+      const sh = new TT.Shape(); [[.35, 1.25], [-.5, -.05], [-.02, -.05], [-.3, -1.25], [.55, .18], [.07, .18]].forEach(([x, y], k) => (k ? sh.lineTo(x, y) : sh.moveTo(x, y))); sh.closePath();
+      const bolt = mesh(new TT.ExtrudeGeometry(sh, { depth: .3, bevelEnabled: true, bevelThickness: .08, bevelSize: .07, bevelSegments: 3 }), M({ color: 0xffcd3c, roughness: .3, clearcoat: .6 }));
+      bolt.scale.setScalar(1.3); bolt.position.set(-S / 2 - 1.3, 1.6, S / 2 - .6); bolt.rotation.set(0, .5, -.15); g.add(bolt);
+      return g;
+    },
   };
 
   /* ---------- scene ---------- */
