@@ -246,6 +246,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // =================================================================================
@@ -3450,7 +3451,7 @@ const _tmpC2 = new THREE.Color();
 const hsl = (h, s, l, target = _tmpC) => target.setHSL(((h % 360) + 360) % 360 / 360, s, l);
 
 let gl3dOK = true;
-let renderer, scene, camera, composer, bloom;
+let renderer, scene, camera, composer, bloom, hyperGrade, hyperK = 0;
 try {
     const glc = document.getElementById('glCanvas');
     let glctx = null;
@@ -3484,6 +3485,26 @@ if (gl3dOK) {
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
     { const bk = IS_MOBILE ? 0.4 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
+    // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
+    hyperGrade = new ShaderPass({
+        uniforms: { tDiffuse: { value: null }, amt: { value: 0 }, t: { value: 0 } },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float t; varying vec2 vUv;
+            void main(){
+                vec4 c = texture2D(tDiffuse, vUv);
+                const mat3 toY = mat3(0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312);
+                const mat3 toR = mat3(1.0, 1.0, 1.0, 0.956, -0.272, -1.106, 0.621, -0.647, 1.703);
+                vec3 yiq = toY * c.rgb;
+                float h = amt * (0.75 + 0.12 * sin(t * 2.0)); // 色相を回す（ゆっくり揺らぐ）
+                float cs = cos(h), sn = sin(h);
+                yiq.yz = mat2(cs, sn, -sn, cs) * yiq.yz * (1.0 + 0.35 * amt); // 彩度も少し上げる
+                vec3 g = toR * yiq;
+                float vig = 1.0 - amt * 0.25 * smoothstep(0.35, 0.85, length(vUv - 0.5)); // 周辺を少し絞る
+                gl_FragColor = vec4(mix(c.rgb, g * vig * (1.0 + 0.08 * amt), clamp(amt, 0.0, 1.0)), c.a);
+            }`
+    });
+    hyperGrade.enabled = false;
+    composer.addPass(hyperGrade);
     composer.addPass(new OutputPass());
 }
 
@@ -5678,6 +5699,10 @@ function render3D() {
     adaptQuality(now);
     if (efx) {
         bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260);
+        hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
+        if (hyperK < 0.002) hyperK = 0;
+        hyperGrade.enabled = hyperK > 0;
+        hyperGrade.uniforms.amt.value = hyperK; hyperGrade.uniforms.t.value = rTime;
         composer.render(dt);
     } else {
         renderer.render(scene, camera);
