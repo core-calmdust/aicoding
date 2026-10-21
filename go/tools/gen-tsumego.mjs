@@ -265,14 +265,41 @@ function synShape(rand, n = 9) {
   const region = []; for (let q = 0; q < n * n; q++) { if (b[q]) continue; const x = q % n, y = Math.floor(q / n); if (x >= x0 - 1 && x <= x0 + W && y <= H) region.push(q); }
   return { n, b, region, tgt: ts.slice().sort((a, c) => a - c) };
 }
+// constructive snapback: G throws in at t (its stone's only liberty is c), O captures at c and then has t as its only
+// liberty; random stones around make the other liberty unattractive or create shortage of liberties
+function snapShape(rand, n = 9) {
+  const b = new Uint8Array(n * n), I = (x, y) => y * n + x, nb = R.nbrs(n), N = q => [0, 1, 2, 3].map(d => nb[q * 4 + d]).filter(r => r >= 0);
+  const x0 = rand() < 0.4 ? 0 : 1 + Math.floor(rand() * 3), W = 6, H = 4;
+  const inBox = q => { const x = q % n, y = Math.floor(q / n); return x >= x0 && x < x0 + W && y < H; };
+  const t = I(x0 + 1 + Math.floor(rand() * (W - 2)), rand() < 0.75 ? 0 : 1);
+  const cs = N(t).filter(inBox), c = cs[Math.floor(rand() * cs.length)];
+  for (const q of N(t)) if (q !== c) b[q] = 1;
+  // connect the target stones around t (diagonal helpers) and grow it a little
+  const tg = () => { const p = posOf(b, n), s = new Set(); for (const q of N(t)) if (b[q] === 1) p.group(q).stones.forEach(x => s.add(x)); return [...s]; };
+  for (let k = 0; k < 3; k++) { const st = tg(); const cand = []; for (const s of st) for (const r of N(s)) if (!b[r] && r !== t && r !== c && inBox(r)) cand.push(r); if (cand.length && rand() < 0.6) b[cand[Math.floor(rand() * cand.length)]] = 1; }
+  for (const q of N(t)) if (b[q] === 1) for (const r of N(q)) if (!b[r] && r !== t && r !== c && N(r).filter(z => b[z] === 1).length >= 2 && rand() < 0.7) b[r] = 1;
+  // c's other neighbours and the target's other liberties -> G
+  for (const r of N(c)) if (!b[r] && r !== t) b[r] = 2;
+  for (const s of tg()) for (const r of N(s)) if (!b[r] && r !== t && r !== c) b[r] = 2;
+  // extra stones next to G stones (O attackers / G supporters)
+  const extra = 2 + Math.floor(rand() * 6);
+  for (let k = 0; k < extra; k++) {
+    const gs = []; for (let q = 0; q < n * n; q++) if (b[q] === 2) gs.push(q);
+    const s = gs[Math.floor(rand() * gs.length)], cand = N(s).filter(r => !b[r] && r !== t && r !== c && inBox(r));
+    if (cand.length) b[cand[Math.floor(rand() * cand.length)]] = rand() < 0.5 ? 1 : 2;
+  }
+  const region = []; for (let q = 0; q < n * n; q++) { if (b[q]) continue; const x = q % n, y = Math.floor(q / n); if (x >= x0 - 1 && x <= x0 + W && y <= H) region.push(q); }
+  const T0 = tg(); if (!T0.length) return null;
+  return { n, b, region, tgt: T0.sort((a, z) => a - z) };
+}
 function genSyn(count, seed) {
   const rand = rng(seed * 2654435761 + 11), n = 9, file = path.join(OUT, `syn-${seed}.jsonl`), seen = new Set();
   const quota = {}, Q = { snapback: count, tesuji: Math.ceil(count / 2), capture: Math.ceil(count / 3), ladder: Math.ceil(count / 4) };
   let made = 0, tries = 0; const t0 = Date.now();
   while (made < count) {
     tries++;
-    const sh = synShape(rand, n);
-    if (!legal(sh.b, n)) continue;
+    const sh = rand() < 0.6 ? snapShape(rand, n) : synShape(rand, n);
+    if (!sh || !legal(sh.b, n)) continue;
     // natural look: every stone has a friend within 2, no own stones in atari at the start except the target's side
     const pos = posOf(sh.b, n); let ok = true;
     for (let i = 0; i < n * n && ok; i++) if (sh.b[i]) { let f = false; for (let j = 0; j < n * n; j++) if (j !== i && sh.b[j] === sh.b[i] && Math.max(Math.abs(i % n - j % n), Math.abs(Math.floor(i / n) - Math.floor(j / n))) <= 2) { f = true; break; } if (!f) ok = false; }
