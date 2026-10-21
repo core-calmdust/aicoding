@@ -2282,7 +2282,7 @@ function dockRender() {
   $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
   const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"');
   if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && net.spectate ? ` · ${t('ol.st.watch')}` : net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
-  $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
+  $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="ost ost-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
   $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
   $('#dkRank').innerHTML = dock.rank.length ? dock.rank.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
 }
@@ -2702,12 +2702,14 @@ async function chatSend() {
   toast(t(r.why === 'rate' ? 'ol.chatWait' : 'ol.error'), 1600);
   return false;
 }
-$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); chatSend(); if (olCoarse()) $('#dkChatIn').focus({ preventScroll: true }); });
+// Enter on an empty chat field closes the online box (PC) / leaves the field (phone)
+$('#dkChatForm').addEventListener('submit', e => { e.preventDefault(); const inp = $('#dkChatIn'); if (!inp.value.trim()) { inp.value = ''; inp.blur(); if (!olCoarse()) dockToggle(false); return; } chatSend(); if (olCoarse()) inp.focus({ preventScroll: true }); });
 $('#dkChatIn').addEventListener('keydown', e => {
   e.stopPropagation();                        // typing never reaches the board / record shortcuts
   if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); return; }
   if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
   e.preventDefault();
+  if (!e.target.value.trim()) { e.target.value = ''; e.target.blur(); if (!olCoarse()) dockToggle(false); return; }   // empty: close the online box
   chatSend(); if (!olCoarse()) e.target.blur();   // back to the board: game keys work again
 });
 $('#dkChatIn').addEventListener('focus', () => { chatStart(); chatKeep(); });
