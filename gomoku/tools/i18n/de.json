@@ -420,5 +420,12 @@
   "pz.rank": "Titel",
   "pz.rankNext": "★{n} bis zum nächsten Titel",
   "pz.rankTop": "Höchster Titel!",
-  "pz.rankUp": "Neuer Titel! {r}"
+  "pz.rankUp": "Neuer Titel! {r}",
+  "ri.t": "Was ist Gomoku?",
+  "ri.origin": "Japan",
+  "ri.players": "2 Spieler",
+  "ri.time": "etwa 5 – 20 Min.",
+  "ri.hist": "„Fünf in einer Reihe“ mit Brett und Steinen des Go-Spiels ist in Japan seit langer Zeit beliebt. Weil Schwarz, der anfängt, einen zu großen Vorteil hat, entstand in Japan Anfang des 20. Jahrhunderts die Turnierform <b>Renju</b> mit verbotenen Zügen nur für Schwarz.",
+  "ri.win": "Du gewinnst, wenn du <b>als Erster fünf eigene Steine in eine Reihe</b> bringst — waagerecht, senkrecht oder diagonal. Je nach Regel gelten für sechs oder mehr in einer Reihe und für die verbotenen Züge von Schwarz besondere Bestimmungen.",
+  "ri.cult": "Man braucht nur ein Go-Brett und Steine, und die Regeln sind in einer Minute gelernt — so spielen es Kinder wie Erwachsene. Renju hat einen internationalen Verband und Weltmeisterschaften und ist außer in Japan auch in Ländern wie Russland und Estland verbreitet."
 }

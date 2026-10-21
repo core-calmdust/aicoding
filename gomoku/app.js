@@ -710,6 +710,8 @@ function ruBoard(api, o) {
 }
 const ruFive = (pos, c) => { const out = []; for (let m = 0; m < 225; m++) if (!pos.at(m) && pos.cls[c][E.M2I[m]] === E.C.FIVE) out.push(m); return out; };
 const RU_PAGES = [
+  // common spec: the first page introduces the game (history / how to win / culture); the plain rules entries open here
+  { id: 'intro', title: () => t('ri.t'), body: () => '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/gomoku.webp', origin: t('ri.origin'), players: t('ri.players'), time: t('ri.time'), history: t('ri.hist'), win: t('ri.win'), culture: t('ri.cult') }) },
   { id: 'place', title: () => t('ru.place.t'), body: () => t('ru.place.b'), task: () => t('ru.place.task'),
     setup(api) {
       let k = 0;
@@ -746,9 +748,9 @@ const RU_PAGES = [
         B.lock = true; B.play(m);
         const f = ruFive(B.pos, P1);
         if (f.length < 2) { api.ng(t('ru.three.ng')); return; }
-        B.o = f.map(sqName); B.draw(); api.ok(t('ru.three.ok'));
-        // white blocks one end, black makes five at the other
-        api.timer(() => { B.o = []; B.play(f[0]); api.timer(() => B.play(f[1]), 650); }, 900);
+        B.o = f.map(sqName); B.draw(); api.ok(t('ru.three.ok'), { next: false });
+        // white blocks one end, black makes five at the other; then on to the next page
+        api.timer(() => { B.o = []; B.play(f[0]); api.timer(() => { B.play(f[1]); api.next(); }, 650); }, 900);
       } });
     } },
   { id: 'overline', title: () => t('ru.ol.t'), body: () => t('ru.ol.b'), task: () => t('ru.ol.task'),
@@ -787,14 +789,14 @@ const RU_PAGES = [
         const f = ruFive(B.pos, P1);
         let three = false; if (f.length === 1) for (let q = 0; q < 225 && !three; q++) if (!B.pos.at(q) && B.pos.cls[P1][E.M2I[q]] === E.C.F4 && !B.pos.forbidden(q)) three = true;
         if (f.length !== 1 || !three) { api.ng(t('ru.f43.ng')); return; }
-        api.ok(t('ru.f43.ok'));
+        api.ok(t('ru.f43.ok'), { next: false });   // the replay below plays out first, then api.next()
         // white blocks the four; black turns the three into a straight four; white blocks one end; black makes five
         const step = () => {
-          if (B.pos.status().over) return;
+          if (B.pos.status().over) { api.next(); return; }
           const side = B.pos.side, f5 = ruFive(B.pos, side), fo = ruFive(B.pos, 3 - side);
           let q = f5.length ? f5[0] : fo.length ? fo[0] : -1;
           if (q < 0) for (let k = 0; k < 225; k++) if (!B.pos.at(k) && B.pos.cls[side][E.M2I[k]] === E.C.F4 && !B.pos.forbidden(k)) { q = k; break; }
-          if (q < 0) return;
+          if (q < 0) { api.next(); return; }
           B.play(q); api.timer(step, 650);
         };
         api.timer(step, 900);

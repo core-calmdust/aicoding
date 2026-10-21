@@ -1063,6 +1063,8 @@ function rtSowPage(id, title, body, task, b, rules, judge, opt) {
   } };
 }
 const RT_PAGES = [
+  // common spec: the first page introduces the game (history / how to win / culture); the menu / banner entries open here
+  { id: 'intro', title: () => t('ri.t'), body: () => '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/mancala.webp', origin: t('ri.origin'), players: t('ri.players'), time: t('ri.time'), history: t('ri.hist'), win: t('ri.win'), culture: t('ri.cult') }) },
   rtSowPage('sow', () => t('rl.sow.h'), () => `<p>${t('rl.sow')}</p>`, () => t('rt.sow.task'),
     B0([1, 2, 0, 1, 2, 9], [3, 1, 2, 2, 1, 3], 3, 4), 'kalah', () => true,
     { only: 5, onlyMsg: () => t('rt.sow.ng'), okMsg: () => t('rt.sow.ok') }),
@@ -1084,7 +1086,8 @@ const RT_PAGES = [
     B0([1, 0, 2, 0, 1, 2], [1, 0, 2, 0, 1, 3], 3, 4), 'sunka', tr => tr.extra || t('rt.relay.ng'),
     { okMsg: () => t('rt.relay.ok') }),
 ];
-const RT_START = { kalah: 0, easy: 4, basic: 5, sunka: 6 };
+// the new-game dialog's "?" opens the page of that rule variant directly (by page id)
+const RT_START = { kalah: 'sow', easy: 'variants', basic: 'capB', sunka: 'relay' };
 const ruleTour = window.RuleTour ? RuleTour.create({
   mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG,
   close: () => $('#rulesOverlay').classList.remove('show'),
@@ -1098,7 +1101,7 @@ const ruleTour = window.RuleTour ? RuleTour.create({
 function openRules(r) {
   selTab('rules'); $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show');
   $('#rulesOverlay').classList.add('show');
-  if (ruleTour) ruleTour.open(r && RT_START[r] !== undefined ? RT_START[r] : 0);
+  if (ruleTour) ruleTour.open(r && RT_START[r] ? Math.max(0, RT_PAGES.findIndex(p => p.id === RT_START[r])) : 0);
 }
 function renderRules() { if (ruleTour) ruleTour.render(); }
 $('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); $('#rulesOverlay').classList.remove('show'); };

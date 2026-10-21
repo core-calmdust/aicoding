@@ -1310,13 +1310,13 @@ html[lang=ar] .pf-input{direction:rtl}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021rt"></script>
+<script src="i18n.js?v=20261021ri"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
-<script src="../shared/headerbar.js?v=2"></script>
+<script src="../shared/headerbar.js?v=3"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=5"></script>
+<script src="../shared/ruletour.js?v=6"></script>
 <script src="firebase-config.js"></script>
 <script src="online.js?v=20261020gs"></script>
 <script>
@@ -2415,6 +2415,8 @@ function rtAfter(api, cells, sq, o) {   // show the move: new disc + flipped dis
 // a click on a square where nothing is sandwiched: ✕ on it, the board stays
 function rtCant(api, cells, o, sq, again) { const m = Object.assign({}, o.marks || {}, { [sq]: 'x' }); rtDraw(api, cells, Object.assign({}, o, { marks: m }), again); api.ng(t('ru.ng.cant'), { reset: false }); }
 const RT_PAGES = [
+  // common spec: the first page introduces the game (history / how to win / culture); every entry opens here
+  { id: 'intro', title: () => t('ri.t'), body: () => '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/reversi.webp', origin: t('ri.origin'), players: t('ri.players'), time: t('ri.time'), history: t('ri.hist'), win: t('ri.win'), culture: t('ri.cult') }) },
   { id: 'start', title: () => t('rl.board.h'), body: () => `<p>${t('rl.board')}</p><p>${t('rl.legal')}</p>`, task: () => t('ru.t.start'),
     setup(api) {
       const c = initialCells(), m = {}; legalMoves(c, BLACK).forEach(q => (m[q] = 'ring'));

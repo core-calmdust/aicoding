@@ -96,6 +96,8 @@ const starPage = (id, fen, stars) => page(id, {
   },
 });
 const PAGES = [
+  // common spec: the first page introduces the game (history / how to win / culture); every entry opens here
+  { id: 'intro', title: () => T('ri.t'), body: () => '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/chess.webp', origin: T('ri.origin'), players: T('ri.players'), time: T('ri.time'), history: T('ri.hist'), win: T('ri.win'), culture: T('ri.cult') }) },
   starPage('rook', '8/8/8/8/8/8/3R4/8 w - - 0 1', ['d7', 'h7']),
   page('bishop', {
     setup(api) {

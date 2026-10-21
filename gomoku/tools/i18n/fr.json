@@ -420,5 +420,12 @@
   "pz.rank": "Titre",
   "pz.rankNext": "★{n} avant le titre suivant",
   "pz.rankTop": "Titre suprême !",
-  "pz.rankUp": "Nouveau titre ! {r}"
+  "pz.rankUp": "Nouveau titre ! {r}",
+  "ri.t": "Qu’est-ce que le gomoku ?",
+  "ri.origin": "Japon",
+  "ri.players": "2 joueurs",
+  "ri.time": "env. 5 – 20 min",
+  "ri.hist": "Jouer à « cinq en ligne » avec le plateau et les pierres du go est un passe-temps apprécié au Japon depuis longtemps. Comme Noir, qui commence, a un trop grand avantage, une version de compétition appelée <b>renju</b>, avec des coups interdits pour Noir seulement, a été mise au point au Japon au début du XXe siècle.",
+  "ri.win": "On gagne en étant <b>le premier à aligner cinq de ses pierres</b> — horizontalement, verticalement ou en diagonale. Selon les règles, les lignes de six ou plus et les coups interdits de Noir ont des règles particulières.",
+  "ri.cult": "Il suffit d’un plateau et de pierres de go, et les règles s’apprennent en une minute : petits et grands y jouent. Le renju a une fédération internationale et des championnats du monde, et il est populaire au Japon mais aussi dans des pays comme la Russie et l’Estonie."
 }
