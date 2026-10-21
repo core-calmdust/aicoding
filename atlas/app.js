@@ -630,7 +630,7 @@
     const s = Math.max(1, W.login.streak || 1), pos = ((s - 1) % 7) + 1, lv = 1 + Math.floor(done / 3);
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
     const tile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
-    $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av" id="avBtn" aria-label="${t('pf.edit')}">${avatar(104)}<span class="lv">Lv.${lv}</span></button></div>
+    $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}" id="avBtn" aria-label="${t('pf.edit')}">${avatar(104)}<span class="lv">Lv.${lv}</span></button></div>
       <div class="pf-r"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
       <div class="ptiles">${tile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${tile('🏆', done, ACH.length, t('pf.ach'))}${tile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
       <div class="lgw"><div class="lgh"><b>🔥 ${esc(t('login.day', { n: s }))}</b><small>${esc(t('login.week'))}</small></div>
@@ -731,7 +731,7 @@
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" id="gClose">${t('g.close')}</button><button class="btn sky" id="gAgain" ${C.balance < cost ? 'disabled' : ''}>${t('g.again')}</button></div>`, opened ? 'gres' : '', onClose);
     const caps = [...document.querySelectorAll('.cap')];
     const openCap = c => { if (c.classList.contains('open')) return; c.classList.add('open'); const r = res[+c.dataset.i]; if (r.rar >= 3) confetti(r.rar === 4 ? 160 : 70); };
-    if (opened) caps.forEach((c, i) => { c.classList.add('open'); c.style.animationDelay = i * 40 + 'ms'; });
+    if (opened) { caps.forEach((c, i) => { c.classList.add('open'); c.style.animationDelay = i * 40 + 'ms'; }); const top = Math.max(...res.map(r => r.rar)); if (top >= 3) { confetti(top === 4 ? 160 : 90); SFX.shimmer(150); } }
     else { caps.forEach(c => c.onclick = () => openCap(c)); caps.forEach((c, i) => setTimeout(() => openCap(c), 350 + i * 170)); }
     $('gClose').onclick = closeSheet;
     $('gAgain').onclick = () => { closeSheet(); doPull(n); };

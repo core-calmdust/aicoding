@@ -68,13 +68,23 @@
     const lid = puck(.66, .28, red, .55); lid.position.y = DC.y + DR - .2; up.add(lid);
     K.blob(up, cream, [0, lid.position.y + .4, 0], .17);
     // front: ATLAS plate, knob, coin slot, outlet hood
-    const plate = rbox(1.3, .12, .38, .19, cream); plate.rotation.x = Math.PI / 2; plate.position.set(0, 1.5, F - .05); up.add(plate);
-    const pz = new T.Box3().setFromObject(plate).max.z;
+    // name plate: a smooth rounded slab built facing +z (no rotated rbox: its corner radius collapsed the shape), text decal glued to its flat face
+    const PW = 1.34, PH = .44, PR = .2, PD = .07, PB = .035, ps = new T.Shape();
+    { const x = PW / 2 - PB, y = PH / 2 - PB, r = PR - PB;
+      ps.moveTo(-x + r, -y); ps.lineTo(x - r, -y); ps.absarc(x - r, -y + r, r, -Math.PI / 2, 0); ps.lineTo(x, y - r); ps.absarc(x - r, y - r, r, 0, Math.PI / 2);
+      ps.lineTo(-x + r, y); ps.absarc(-x + r, y - r, r, Math.PI / 2, Math.PI); ps.lineTo(-x, -y + r); ps.absarc(-x + r, -y + r, r, Math.PI, Math.PI * 1.5); }
+    const pg0 = new T.ExtrudeGeometry(ps, { depth: PD, bevelEnabled: true, bevelThickness: PB, bevelSize: PB, bevelSegments: 6, curveSegments: 24 });
+    pg0.computeVertexNormals();
+    const PY = 1.46, PZ = F - .05;                       // back sunk into the body
+    const plate = mesh(pg0, cream); plate.position.set(0, PY, PZ); up.add(plate);
+    const pz = PZ + PD + PB;                             // its flat front face
     const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128;
-    const tex = new T.CanvasTexture(cv); tex.encoding = T.sRGBEncoding; tex.anisotropy = 4;
-    const drawPlate = () => { const g = cv.getContext('2d'); g.clearRect(0, 0, 512, 128); g.fillStyle = '#e8484f'; g.font = '700 96px Fredoka, "Zen Maru Gothic", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('ATLAS', 256, 70); tex.needsUpdate = true; };
-    drawPlate(); try { document.fonts && document.fonts.load('700 96px Fredoka').then(() => { drawPlate(); api && api.kick && api.kick(60); }); } catch (e) {}
-    const txt = new T.Mesh(new T.PlaneGeometry(1.24, .31), new T.MeshStandardMaterial({ map: tex, transparent: true, roughness: .8 })); txt.position.set(0, 1.5, pz + .006); noSh(txt); up.add(txt);
+    const tex = new T.CanvasTexture(cv); tex.encoding = T.sRGBEncoding; tex.anisotropy = 8;
+    const drawPlate = () => { const g = cv.getContext('2d'); g.clearRect(0, 0, 512, 128); g.font = '700 100px Fredoka, "Zen Maru Gothic", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = 'rgba(160,40,50,.22)'; g.fillText('ATLAS', 256, 72); g.fillStyle = '#e8484f'; g.fillText('ATLAS', 256, 68); tex.needsUpdate = true; };
+    drawPlate(); try { document.fonts && document.fonts.load('700 100px Fredoka').then(() => { drawPlate(); api && api.kick && api.kick(60); }); } catch (e) {}
+    const txtM = new T.MeshStandardMaterial({ map: tex, transparent: true, roughness: .85, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, depthWrite: false });
+    const txt = new T.Mesh(new T.PlaneGeometry(PW - 2 * PR + .32, (PW - 2 * PR + .32) / 4), txtM); txt.position.set(0, PY, pz + .001); txt.renderOrder = 2; noSh(txt); up.add(txt);
     const knob = new T.Group(); knob.position.set(-.3, .92, F); up.add(knob);
     const kb = puck(.44, .1, cream, .5); kb.rotation.x = Math.PI / 2; knob.add(kb);
     const kd = puck(.36, .2, gold, .55); kd.rotation.x = Math.PI / 2; kd.position.z = .06; knob.add(kd);
@@ -181,7 +191,7 @@
     /* particles */
     const parts = [];
     const pGeo = new T.SphereGeometry(.05, 10, 6), oct = new T.OctahedronGeometry(.08, 0);
-    function burst(pos, hex, n, rainbow) {
+    function burst(pos, hex, n, rainbow, small) {
       for (let i = 0; i < n; i++) {
         const col = rainbow ? new T.Color().setHSL(i / n, .9, .62) : new T.Color(i % 3 ? hex : 0xffffff);
         const m = new T.Mesh(i % 4 === 0 ? oct : pGeo, new T.MeshBasicMaterial({ color: col, transparent: true }));
@@ -189,9 +199,9 @@
         scene.add(m); parts.push({ m, v, life: 0, max: .7 + Math.random() * .5, g: -5, spin: Math.random() * 8 });
       }
       const fl = new T.Mesh(new T.SphereGeometry(.3, 24, 16), new T.MeshBasicMaterial({ color: rainbow ? 0xfff2c0 : hex, transparent: true, opacity: .9, blending: T.AdditiveBlending, depthWrite: false }));
-      fl.position.copy(pos); scene.add(fl); parts.push({ m: fl, flash: 1, life: 0, max: .38 });
+      fl.position.copy(pos); scene.add(fl); parts.push({ m: fl, flash: 1, life: 0, max: small ? .22 : .38, k: small ? .35 : 1 });
       const ring = new T.Mesh(new T.TorusGeometry(.4, .03, 8, 48), new T.MeshBasicMaterial({ color: rainbow ? 0xffd24a : hex, transparent: true, blending: T.AdditiveBlending, depthWrite: false }));
-      ring.position.copy(pos); ring.lookAt(cam.position); scene.add(ring); parts.push({ m: ring, flash: 2, life: 0, max: .55 });
+      ring.position.copy(pos); ring.lookAt(cam.position); scene.add(ring); parts.push({ m: ring, flash: 2, life: 0, max: .55, k: small ? .45 : 1 });
       kick();
     }
     const sparks = [];
@@ -207,8 +217,8 @@
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i]; p.life += dt; const k = p.life / p.max;
         if (k >= 1) { scene.remove(p.m); p.m.material.dispose(); if (p.flash) p.m.geometry.dispose(); parts.splice(i, 1); continue; }
-        if (p.flash === 1) { p.m.scale.setScalar(.4 + k * 4); p.m.material.opacity = .85 * (1 - k); }
-        else if (p.flash === 2) { p.m.scale.setScalar(.5 + E.out(k) * 1.8); p.m.material.opacity = 1 - k; }
+        if (p.flash === 1) { p.m.scale.setScalar((.4 + k * 4) * p.k); p.m.material.opacity = .85 * (1 - k) * (p.k < 1 ? .5 : 1); }
+        else if (p.flash === 2) { p.m.scale.setScalar((.5 + E.out(k) * 1.8) * p.k); p.m.material.opacity = 1 - k; }
         else { p.v.y += p.g * dt; p.m.position.addScaledVector(p.v, dt); p.m.rotation.y += p.spin * dt; p.m.material.opacity = 1 - k * k; p.m.scale.setScalar(1 - k * .6); }
       }
       sparks.forEach((s, i) => { s.a += dt * 2.4; const c = s.cap.position; s.m.position.set(c.x + Math.cos(s.a) * s.r, c.y + .1 + s.h + Math.sin(clock * 3 + i) * .08, c.z + Math.sin(s.a) * s.r);
@@ -221,7 +231,7 @@
       const a = Math.max(.3, W / Math.max(1, H)), vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * a), f = Math.min(vf, hf);
       let tgt, r, dir;
       if (name === 'tray') { tgt = P.REST.clone().add(V(0, .5, -.25)); r = 1.25; dir = V(.55, .45, 1); }
-      else if (name === 'line') { tgt = V(0, .65, P.TZ + .7); r = 2.45; dir = V(0, .62, 1); }
+      else if (name === 'pile') { tgt = V(0, .55, P.TZ + .25); r = 2.7; dir = V(.22, .7, 1); }
       else if (name === 'cap') { tgt = i.clone().add(V(0, .3, 0)); r = .9; dir = V(.1, .55, 1); }
       else { tgt = V(0, 2.3, .95); r = 3.0; dir = V(.2, .26, 1); }
       return { t: tgt, p: tgt.clone().addScaledVector(dir.normalize(), r / Math.sin(f)) };
@@ -339,10 +349,10 @@
         glow.intensity = gk * k * k; bm.emissive.copy(col).multiplyScalar((rar >= 2 ? .3 : .08) * k);
       }, E.in));
     }
-    async function open(A, c, rar, info, fast) {
+    async function open(A, c, rar, info, fast, quiet) {
       const { top, bot } = c.userData; c.rotation.set(0, 0, 0);
-      say('pop'); if (rar >= 3) say('shimmer', 80);
-      burst(c.position.clone().add(V(0, .05, 0)), RC[rar], fast ? (rar >= 3 ? 26 : 12) : (rar >= 3 ? 46 : 26), rar === 4);
+      if (!quiet) { say('pop'); if (rar >= 3) say('shimmer', 80); }
+      burst(c.position.clone().add(V(0, .05, 0)), RC[rar], quiet ? (rar >= 3 ? 22 : 7) : fast ? (rar >= 3 ? 26 : 12) : (rar >= 3 ? 46 : 26), rar === 4, quiet);
       info && info.onOpen && info.onOpen();
       await A(tw(fast ? 260 : 460, k => {
         top.rotation.set(0, k * Math.PI * 1.5, -k * .9); top.position.set(-.3 * k, .55 * Math.sin(k * Math.PI * .8), .05 * k);
@@ -387,37 +397,71 @@
       if (r.rar >= 3) say('fanfare', 120); else say('chime', 60);
       kick(400);
     }
-    function spots(n) {
-      const z0 = P.TZ + .66, out = [];
-      for (let i = 0; i < n; i++) { const row = Math.floor(i / 5), col = i % 5, cols = Math.min(5, n - row * 5); out.push(V((col - (cols - 1) / 2) * .76, CR, z0 + row * .74)); }
-      return out;
+    // 10-pull: all ten gush out of the chute at once, tumble and bump around the tray, then pop open together
+    function gush(cs) {
+      const tray = V(0, 0, P.TZ), dir = V().subVectors(P.B, P.A).normalize(), start = P.MOUTH, a = P.A.clone().add(V(0, CR - .3, .12)), b = P.B.clone().add(V(0, CR - .28, 0));
+      const RIN = .48 - CR * .6, ROUT = .62 + CR * .8, RIMY = .36 + CR, BODYZ = P.F + .15;
+      const st = cs.map((c, i) => ({ c, t0: i * .075 + Math.random() * .03, p: start.clone(), v: V(), live: false, done: false, spin: V((Math.random() - .5) * 14, (Math.random() - .5) * 6, (Math.random() - .5) * 14) }));
+      let t = 0, lastTok = 0;
+      const tmp = V();
+      function step(dt) {
+        t += dt;
+        st.forEach(s => {
+          const c = s.c, k = (t - s.t0) / .3;
+          if (k < 0) { c.visible = false; return; }
+          c.visible = true;
+          if (k < 1) {   // out of the hood and down the chute (accelerating), slightly fanned
+            if (k < .25) { c.position.lerpVectors(start, a, k / .25); c.scale.setScalar(.3 + .7 * k / .25); }
+            else { const q = (k - .25) / .75; c.position.lerpVectors(a, b, q * q); c.scale.setScalar(1); }
+            c.rotation.x += dt * 18; return;
+          }
+          if (!s.live) { s.live = true; s.p.copy(b); s.v.copy(dir).multiplyScalar(2.6 + Math.random() * 1.2); s.v.y = 1.2 + Math.random() * 1.4; s.v.x = (Math.random() - .5) * 3.2; }
+          s.v.y -= 9.8 * dt; s.p.addScaledVector(s.v, dt);
+          const dx = s.p.x - tray.x, dz = s.p.z - tray.z, rr = Math.hypot(dx, dz);
+          const fl = rr < RIN ? .09 + CR : CR;
+          if (s.p.y < fl) { s.p.y = fl; if (s.v.y < -.6 && t - lastTok > .05) { say('tok'); lastTok = t; } s.v.y = -s.v.y * .45; s.v.x *= .82; s.v.z *= .82; if (Math.abs(s.v.y) < .25) s.v.y = 0; }
+          if (rr > RIN && rr < ROUT && s.p.y < RIMY) {   // the tray rim
+            const out = rr > (RIN + ROUT) / 2, n = V(dx / rr, 0, dz / rr), d = out ? ROUT - rr : -(rr - RIN);
+            if (s.p.y > RIMY - .12 && s.v.y <= 0) { s.p.y = RIMY; s.v.y = Math.abs(s.v.y) * .4; s.p.addScaledVector(n, d * .3); }
+            else { s.p.addScaledVector(n, d); const vn = s.v.dot(n); if (vn * (out ? 1 : -1) < 0) s.v.addScaledVector(n, -1.6 * vn); }
+          }
+          if (s.p.z < BODYZ) { s.p.z = BODYZ; s.v.z = Math.abs(s.v.z) * .5; }
+          const lim = 2.3; if (Math.abs(s.p.x) > lim) { s.p.x = Math.sign(s.p.x) * lim; s.v.x *= -.5; }
+          if (s.p.z > P.TZ + 1.7) { s.p.z = P.TZ + 1.7; s.v.z *= -.5; }
+        });
+        const L = st.filter(s => s.live);
+        for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {   // bump into each other
+          const A_ = L[i], B_ = L[j]; tmp.subVectors(A_.p, B_.p); const d = tmp.length(), m = CR * 2.02;
+          if (d < m && d > 1e-5) { tmp.multiplyScalar(1 / d); const push = (m - d) / 2; A_.p.addScaledVector(tmp, push); B_.p.addScaledVector(tmp, -push);
+            const rv = tmp.dot(V().subVectors(A_.v, B_.v)); if (rv < 0) { A_.v.addScaledVector(tmp, -rv * .9); B_.v.addScaledVector(tmp, rv * .9); } }
+        }
+        L.forEach(s => { s.v.x *= (1 - 1.6 * dt); s.v.z *= (1 - 1.6 * dt); s.c.position.copy(s.p);
+          const sp = Math.hypot(s.v.x, s.v.z); s.c.rotation.x += s.v.z / CR * dt; s.c.rotation.z -= s.v.x / CR * dt; if (sp > .05) s.c.rotation.y += s.spin.y * dt * .1; });
+      }
+      return { step, settle() { let n = 0; while (n++ < 900) step(1 / 120); } };
     }
     async function playTen(A, res, o) {
       await coin(A, 3);
-      const cm = camTo('line', 1600, E.io);
-      await turn(A, 4, 190);
-      const sp = spots(res.length), jobs = [];
-      for (let i = 0; i < res.length; i++) {
-        const c = addCap(res[i].rar);
-        if (i % 3 === 0) dropBall(A, 220).catch(() => {});
-        jobs.push(roll(A, c, true, sp[i]));
-        await A(wait(260));
-      }
-      await A(Promise.all(jobs)); await A(cm);
-      skipping = false;   // checkpoint: lined up — now open them one by one
-      chipsLive = true;
-      for (let i = 0; i < res.length; i++) {
-        const r = res[i], c = caps[i];
-        await wobble(A, c, r.rar, r.rar >= 3 ? 750 : 230);
-        await open(A, c, r.rar, { onOpen: () => o.onOpen && o.onOpen(r, i) }, true);
-        if (urCap === c) urCap = null;
-        sparkle(null, false);
-        const d = document.createElement('div'); d.innerHTML = prizeCard(r, o.info(r), true); const ch = d.firstElementChild; $u('.g3chips').appendChild(ch);
-        chips.push({ el: ch, cap: c }); placeUI();
-        vanish(A, c, 220).catch(() => {});
-        await A(wait(r.rar >= 3 ? 380 : 120));
-      }
-      await A(wait(650));
+      const cm = camTo('pile', 1500, E.io);
+      await turn(A, 2, 220);
+      for (let i = 0; i < 4; i++) dropBall(A, 260).catch(() => {});
+      stir(2.2); say('whoosh');
+      const cs = res.map(r => { const c = addCap(r.rar); c.visible = false; return c; });
+      const G = gush(cs); let tl = 0;
+      await A(tw(2600, (k, raw) => { if (raw >= 1) { G.settle(); return; } const tt = raw * 2.6, dt = Math.min(.05, tt - tl); tl = tt; let x = dt; while (x > 1e-4) { const h = Math.min(1 / 120, x); G.step(h); x -= h; } }));
+      await A(cm);
+      // a beat, a shared shiver (colours glow with their rarity), then everything pops at once
+      await A(wait(250));
+      const top = Math.max(...res.map(r => r.rar)), rx = cs.map(c => c.rotation.x);
+      if (top >= 3) { glow.color.set(RC[top]); glow.position.set(0, 1.2, P.TZ + .6); }
+      await A(tw(top >= 3 ? 1100 : 700, (k, raw) => {
+        cs.forEach((c, i) => { const r = res[i].rar; c.rotation.x = rx[i] * (1 - k); c.rotation.y = 0; c.rotation.z = Math.sin(raw * 30 + i * 1.3) * (.05 + .25 * k);
+          c.userData.bot.material.emissive = c.userData.bot.material.emissive || new T.Color(); c.userData.bot.material.emissive.set(RC[r]).multiplyScalar((r >= 2 ? .3 : .06) * k); });
+        if (top >= 3) glow.intensity = (top === 4 ? 3 : 2) * k * k;
+      }, E.in));
+      say('pop'); if (top >= 3) say('shimmer', 90);
+      cs.forEach((c, i) => open(A, c, res[i].rar, null, true, true).catch(() => {}));
+      await A(wait(620));
       skipping = false;
     }
 

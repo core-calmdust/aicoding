@@ -468,6 +468,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .g3act:empty{display:none}
 .sheet.gres .cap .in{transition:none}
 .sheet.gres .cap{animation:pop .35s cubic-bezier(.3,1.5,.5,1) both}
+.sheet.gres .cap.c3.open .b{box-shadow:0 0 0 3px #fff,0 0 22px 5px #d4a8ff;animation:glow3 1.4s infinite alternate}
+@keyframes glow3{to{box-shadow:0 0 0 3px #fff,0 0 30px 9px #b46bff}}
 .gpanel{padding:20px;display:flex;flex-direction:column;gap:12px}
 .gpanel h3{margin:0;font-family:var(--round);font-size:26px}
 .gbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -679,6 +681,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .prof .pf-l .bgfill{position:absolute;inset:0;opacity:1}.prof .pf-l .bgfill::after{display:none}
 .prof .pf-l::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,rgba(255,255,255,.45),transparent 62%)}
 .prof .pf-l .av{position:relative;z-index:1;box-shadow:0 6px 0 rgba(0,0,0,.12),0 0 0 5px rgba(255,255,255,.85);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+/* with a 3D frame the frame image itself is the rim: no white disc / white ring behind it */
+.av.framed,.prof .pf-l .av.framed{background:none;box-shadow:none}
+.av.framed > svg{filter:drop-shadow(0 5px 0 rgba(0,0,0,.1))}
 .prof .pf-l .av:hover{transform:scale(1.05) rotate(-3deg)}
 .prof .pf-l .av .lv{bottom:-9px;font-size:13px;padding:2px 10px}
 .prof .pf-r{flex:1;min-width:0;padding:14px 16px 14px 18px;display:flex;flex-direction:column;gap:9px;justify-content:center}
@@ -829,7 +834,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/chess.js?v=1"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="gacha3d.js?v=1"></script>
+<script src="gacha3d.js?v=3"></script>
 <script src="app.js?v=63"></script>
 </body>
 </html>
