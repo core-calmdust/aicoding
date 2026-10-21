@@ -295,13 +295,14 @@
       // landscape views: the HUD is a slim column at the landscape left (the hint just above it); × (top) and やめる (bottom) on one line at the right
       + '.bv.land .hud,.bv.playing.land .hud,.bv.bgwide .hud,.bv.playing.bgwide .hud{flex-direction:column;gap:6px;padding:7px 5px;border-radius:24px;max-width:none}'
       + '.hud .hs.col{flex-direction:column;gap:1px;padding:5px 7px;font-size:10.5px;line-height:1.1}.hud .hs.col b{font-size:17px;min-width:0}.hud .hs.col .r{display:flex;align-items:center;gap:4px}.hud .hs.col .bgk{width:14px;height:14px}'
+      + '.hud .bgb.bgun{background:#36b4ff;color:#fff;box-shadow:0 3px 0 #1f86c4;border:0}.hud .bgb.bgok{background:#1ea36c;color:#fff;box-shadow:0 3px 0 #13764d;border:0}.hud .bgb svg{display:block}.hud .bgb.ic{opacity:1!important}'
       + '.hud .bgm.col{flex-direction:column;gap:7px}.hud .bgb.ic.ic{width:46px;height:46px;padding:0;border-radius:50%;font-size:21px}'
       + '.bv.land .hud,.bv.playing.land .hud{left:50%;top:calc(8px + env(safe-area-inset-top));bottom:auto;right:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}'
-      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(8px + env(safe-area-inset-left));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%)}'
+      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px - env(safe-area-inset-right));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,0)}'   // (where the × was: × is hidden in a game)
       + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px - env(safe-area-inset-right));right:auto;top:calc(100% - 45px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-50%,0)}'
       + '.bv.land .bgbub{right:auto;bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%)}'
       + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:50%;bottom:auto;right:auto;left:calc(8px + env(safe-area-inset-left));transform:translateY(-50%)}'
-      + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:auto;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(50%)}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));transform:translateX(50%)}'
+      + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));bottom:auto;transform:translateX(50%)}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));transform:translateX(50%)}'
       + '.bv.bgwide .bgbub{right:auto;top:auto;transform:translateX(-50%)}.bv.land .bgbub,.bv.bgwide .bgbub{font-size:12px;padding:6px 9px;border-radius:12px;width:max-content;max-width:120px}'
       + '.bv.land .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 40px)}.bv.land .endc h3{white-space:nowrap}.bv.land .endc.on{animation:bgpopL .4s cubic-bezier(.3,1.5,.5,1)}@keyframes bgpopL{from{transform:translate(-50%,-50%) rotate(90deg) scale(.7);opacity:0}}'
       + '@media (max-width:560px){.hud .bgb{padding:7px 10px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 12px}.hud .bgm{gap:5px}.bgbub{font-size:13px;padding:7px 13px}}';
@@ -338,13 +339,16 @@
       const dot = s => `<i class="bgk" style="background:${DOT[CID[s]] || DOT.gold}"></i>`;
       const side = s => colUI ? `<span class="hs col ${toMove === s ? 'on' : ''}">${s ? L.ai : L.you}<span class="r">${dot(s)}<b>${pips(s)}</b></span></span>`
         : `<span class="hs ${toMove === s ? 'on' : ''}">${dot(s)}${s ? L.ai : L.you}<b>${pips(s)}</b></span>`;
+      // clear, high-contrast icons (font glyphs like ↶ ✓ render thin / pale on phones)
+      const ICU = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
+      const ICK = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
       const btn = (a, cls, ic, lb) => colUI ? `<button type="button" class="btn bgb ic ${cls}" data-bgt="${a}" title="${lb}" aria-label="${lb}">${ic}</button>` : `<button type="button" class="btn bgb ${cls}" data-bgt="${a}">${ic} ${lb}</button>`;
       const b = []; let m = msg;
       if (phase === 'roll') { b.push(btn('roll', 'go', '🎲', L.roll)); m = ''; }
       else if (phase === 'move' && T && !busy) {
         const done = !legalNow().length;
-        if (T.steps.length) b.push(btn('undo', 'ghost2', '↶', L.undo));
-        if (done) { b.push(btn('ok', 'go', '✓', L.ok)); m = ''; }
+        if (T.steps.length) b.push(btn('undo', 'bgun', colUI ? ICU : '↶', L.undo));
+        if (done) { b.push(btn('ok', 'go bgok', colUI ? ICK : '✓', L.ok)); m = ''; }
       }
       ctx.hud(`${side(0)}${b.length ? `<span class="bgm${colUI ? ' col' : ''}">${b.join('')}</span>` : ''}${side(1)}`);
       if (bub.innerHTML !== m) { bub.innerHTML = m; placeLater(); } else placeBub();   // (the bar's width changes with its buttons)

@@ -230,6 +230,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .dk.b{background:#24262d}.dk.w{background:#f6f3ea;border:1px solid #d9d2bf}
 .bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
 .bv.playing .quit{display:inline-flex}
+/* in a game (and the rules tour) only 'quit' is shown, where the × sits */
+.bv.playing .x{display:none!important}
+.bv.playing .quit{inset-inline-start:auto;inset-inline-end:14px}
 .magic{position:fixed;inset:0;z-index:95;pointer-events:none}
 .magic i{position:absolute;display:block;background:currentColor;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px currentColor)}
 .magic b{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.95),rgba(255,248,220,.5) 45%,rgba(255,255,255,0))}
@@ -876,7 +879,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="games/shogi-play.js?v=1"></script>
 <script src="games/shogi.js?v=3"></script>
 <script src="games/chess.js?v=2"></script>
-<script src="games/backgammon.js?v=9"></script>
+<script src="games/backgammon.js?v=11"></script>
 <script src="rules/reversi.js?v=7"></script>
 <script src="rules/shogi.js?v=15"></script>
 <script src="rules/chess.js?v=1"></script>
