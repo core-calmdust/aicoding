@@ -1576,8 +1576,9 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=13"></script>
-<script src="firebase-config.js"></script>
-<script src="online.js?v=20261020gs"></script>
+<script src="firebase-config.js?v=sec1"></script>
+<script src="../shared/onlinesec.js?v=1"></script>
+<script src="online.js?v=sec1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -4451,14 +4452,16 @@ async function finishOnline(g) {
   }
   if (g.status === 'resign' || g.status === 'timeout') score = g.loser === Online.uid ? 0 : 1;
   else { const d = net.me === BLACK ? b - w : w - b; score = d > 0 ? 1 : d < 0 ? 0 : 0.5; }
-  const r = await Online.applyResult(net.gid, g, score);
+  // my own view of a game ended on the board: null when the board is not finished here (the end is disputed → no rating change)
+  const own = positions[positions.length - 1].toMove === 0 ? score : null;
+  const r = await Online.applyResult(net.gid, g, score, own);
   syncTouch();
   setStatus(BLACK, ''); setStatus(WHITE, ''); $('#statusBlack').classList.remove('low'); $('#statusWhite').classList.remove('low'); olClkOff($('#clkBlack')); olClkOff($('#clkWhite'));
   $('#resB').textContent = b; $('#resW').textContent = w; countUp($('#resB'), b); countUp($('#resW'), w);
   $('#resultTitle').textContent = t(score === 1 ? 'res.youWin' : score === 0 ? 'ol.lose' : 'res.draw');
   const why = g.status === 'resign' ? t(g.loser === Online.uid ? 'ol.youResigned' : 'ol.oppResigned') : g.status === 'timeout' ? t(g.loser === Online.uid ? 'ol.youTimeout' : 'ol.oppTimeout') : '';
   const diff = r.now - r.old;
-  $('#resultSub').innerHTML = (why ? why + '<br>' : '') + (r.rated ? `R ${r.old} → <b>${r.now}</b> (${diff >= 0 ? '+' : ''}${diff})` : t('ol.unrated'));
+  $('#resultSub').innerHTML = (why ? why + '<br>' : '') + (r.rated ? `R ${r.old} → <b>${r.now}</b> (${diff >= 0 ? '+' : ''}${diff})` : r.note ? esc(Online.secMsg(r.note)) : t('ol.unrated'));
   playChime(score >= 0.5); if (score === 1) confetti();
   showOverlay('#resultOverlay');
 }
@@ -5115,7 +5118,7 @@ accRender();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=3" defer></script>
-<script src="../shared/atlas-account.js?v=3" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
+<script src="../shared/atlas-account.js?v=4" defer></script>
 </body>
 </html>

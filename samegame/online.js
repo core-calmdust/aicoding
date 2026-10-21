@@ -48,6 +48,7 @@ async function init() {
     await loadScript(base + 'firebase-app-compat.js');
     await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
     if (!firebase.apps.some(a => a.name === '[DEFAULT]')) firebase.initializeApp(CFG);
+    if (window.OnlineSec) await OnlineSec.appCheck(firebase.app(), window.FIREBASE_APPCHECK_SITE_KEY, FB_VER);   // App Check (null key: skipped)
     const auth = firebase.auth();
     const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
     const u = auth.currentUser || cur || (await auth.signInAnonymously()).user;
