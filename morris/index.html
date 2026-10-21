@@ -130,6 +130,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hintlbl.best b{color:var(--accent)}
 .hintlbl.best::before{content:"";position:absolute;inset:12%;border-radius:50%;border:2px solid rgba(226,194,117,.85);box-shadow:0 0 10px rgba(226,194,117,.5)}
 .hintlbl.on-pc{color:#fff}
+/* phones: bigger 勝/負/value labels on the small board (PC keeps the sizes above) */
+@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-height: 560px){
+  .hintlbl b{font-size:clamp(calc(var(--cell) * 7 / var(--S) * .22), calc(var(--cell) * 7 / var(--S) * .36), 18px);padding:0 .18em;border-radius:5px}
+  .hintlbl small{font-size:clamp(calc(var(--cell) * 7 / var(--S) * .14), calc(var(--cell) * 7 / var(--S) * .24), 12px);margin-top:0}
+}
 .fxsvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .millfx{z-index:1}
 .fxsvg .mill{stroke:rgba(255,236,170,.9);stroke-linecap:round;filter:drop-shadow(0 0 7px rgba(255,226,140,1));stroke-dasharray:20;stroke-dashoffset:20;animation:drawl .55s ease-out forwards}
