@@ -1059,31 +1059,70 @@ function exitSpecial() {
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-// small flat board picture for list cards (no gradients / ids, so any number can be on a page)
+// ---- crop: which part of the 15x15 board a list-card picture shows (the whole board shrunk to ~90px makes the stones dots)
+// bounding box of the stones + 1 point of margin → at least 7x7, square or one line longer, snapped to the board edge when only one line
+// would be left. Puzzles pass only the stones (the answer point is never added, so the picture gives no hint).
+// o.crop: [c0, r0, c1, r1] (columns / rows 0-14, row 0 = the bottom line) overrides it.
+function thumbCrop(cells, o) {
+  if (o.crop && o.crop.length === 4) { const [a, b, x, y] = o.crop.map(Number); return [Math.max(0, Math.min(a, x)), Math.max(0, Math.min(b, y)), Math.min(14, Math.max(a, x)), Math.min(14, Math.max(b, y))]; }
+  if (!cells.length) return [0, 0, 14, 14];
+  let c0 = 14, c1 = 0, r0 = 14, r1 = 0;
+  for (const m of cells) { c0 = Math.min(c0, cx(m)); c1 = Math.max(c1, cx(m)); r0 = Math.min(r0, cy(m)); r1 = Math.max(r1, cy(m)); }
+  c0 = Math.max(0, c0 - 1); r0 = Math.max(0, r0 - 1); c1 = Math.min(14, c1 + 1); r1 = Math.min(14, r1 + 1);
+  const MIN = o.min || 7;
+  const grow = (a, b, n) => { while (b - a + 1 < n) { if (b < 14 && (a <= 0 || 14 - b <= a)) b++; else a--; } return [a, b]; };
+  const snap = () => { if (c0 === 1) c0 = 0; if (r0 === 1) r0 = 0; if (c1 === 13) c1 = 14; if (r1 === 13) r1 = 14; };
+  [c0, c1] = grow(c0, c1, MIN); [r0, r1] = grow(r0, r1, MIN); snap();
+  const W = c1 - c0 + 1, H = r1 - r0 + 1;
+  if (W < H - 1) [c0, c1] = grow(c0, c1, H - 1); else if (H < W - 1) [r0, r1] = grow(r0, r1, W - 1);
+  snap();
+  return [c0, r0, c1, r1];
+}
+let THUMB_UID = 0;
+// small board picture for list cards in a square 100x100 frame (the part shown is centred).
+// A side on the board's real edge gets the edge line and a rim; a cut side has no rim and fades out so the board visibly goes on.
+// o: { crop (see thumbCrop), min, n: {name: label}, mark: name }
 function thumbSvg(b, w, o) {
   o = o || {};
-  const P = x => typeof x === 'number' ? x : sqOf(x), B = toCells(b).map(P), W = toCells(w).map(P), all = B.concat(W);
-  let c0, r0, n;
-  if (o.crop) [c0, r0, n] = o.crop;
-  else {
-    let a = 14, bb = 0, c = 14, d = 0;
-    for (const m of all) { a = Math.min(a, cx(m)); bb = Math.max(bb, cx(m)); c = Math.min(c, cy(m)); d = Math.max(d, cy(m)); }
-    if (!all.length) { a = 5; bb = 9; c = 5; d = 9; }
-    n = Math.min(15, Math.max(o.min || 7, bb - a + 3, d - c + 3));
-    c0 = Math.max(0, Math.min(15 - n, Math.round((a + bb) / 2 - (n - 1) / 2))); r0 = Math.max(0, Math.min(15 - n, Math.round((c + d) / 2 - (n - 1) / 2)));
+  const B = toCells(b), Wt = toCells(w), [c0, r0, c1, r1] = thumbCrop(B.concat(Wt), o);
+  const W = c1 - c0 + 1, H = r1 - r0 + 1, id = 'gth' + (++THUMB_UID);
+  const eL = c0 === 0, eR = c1 === 14, eB = r0 === 0, eT = r1 === 14;   // row 0 is drawn at the bottom
+  const RIM = .72, FADE = .9, xL = eL ? RIM : FADE, xR = eR ? RIM : FADE, yT = eT ? RIM : FADE, yB = eB ? RIM : FADE;
+  const C = Math.min(100 / (W - 1 + xL + xR), 100 / (H - 1 + yT + yB));
+  const bw = (W - 1 + xL + xR) * C, bh = (H - 1 + yT + yB) * C, ox = (100 - bw) / 2, oy = (100 - bh) / 2, gx = ox + xL * C, gy = oy + yT * C;
+  const n = v => +v.toFixed(2), X = c => gx + (c - c0) * C, Y = r => gy + (r1 - r) * C;
+  const stops = (a, z, len, s0, s1) => `<stop offset="0" stop-color="#fff" stop-opacity="${s0 ? 1 : 0}"/><stop offset="${n(a / len)}" stop-color="#fff"/><stop offset="${n(1 - z / len)}" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="${s1 ? 1 : 0}"/>`;
+  const fz = (FADE - .45) * C;   // opaque up to ~0.45 line past the last line shown, then fades to nothing
+  let h = `<svg class="gm-th" viewBox="0 0 100 100" aria-hidden="true"><defs>` +
+    `<linearGradient id="${id}h" gradientUnits="userSpaceOnUse" x1="${n(ox)}" y1="0" x2="${n(ox + bw)}" y2="0">${stops(eL ? 0 : fz, eR ? 0 : fz, bw, eL, eR)}</linearGradient>` +
+    `<linearGradient id="${id}v" gradientUnits="userSpaceOnUse" x1="0" y1="${n(oy)}" x2="0" y2="${n(oy + bh)}">${stops(eT ? 0 : fz, eB ? 0 : fz, bh, eT, eB)}</linearGradient>` +
+    `<mask id="${id}H"><rect width="100" height="100" fill="url(#${id}h)"/></mask><mask id="${id}V"><rect width="100" height="100" fill="url(#${id}v)"/></mask></defs>`;
+  h += `<g mask="url(#${id}V)"><g mask="url(#${id}H)"><rect x="${n(ox)}" y="${n(oy)}" width="${n(bw)}" height="${n(bh)}" rx="${eL && eR && eT && eB ? n(C * .5) : 0}" fill="#d9a95c"/>`;
+  // grid: lines run on into the fade on a cut side and stop at the edge line on a real edge
+  const ya = eT ? gy : oy, yb = eB ? gy + (H - 1) * C : oy + bh, xa = eL ? gx : ox, xb = eR ? gx + (W - 1) * C : ox + bw;
+  let ln = '', ed = '';
+  for (let i = 0; i < W; i++) { const s = `M${n(gx + i * C)} ${n(ya)}V${n(yb)}`; if ((i === 0 && eL) || (i === W - 1 && eR)) ed += s; else ln += s; }
+  for (let j = 0; j < H; j++) { const s = `M${n(xa)} ${n(gy + j * C)}H${n(xb)}`; if ((j === 0 && eT) || (j === H - 1 && eB)) ed += s; else ln += s; }
+  h += `<path d="${ln}" stroke="#6b4a22" stroke-width="${n(Math.max(.45, C * .07))}" opacity=".6" fill="none"/>`;
+  if (ed) h += `<path d="${ed}" stroke="#5a3a14" stroke-width="${n(Math.max(.9, C * .14))}" stroke-linecap="square" fill="none"/>`;
+  for (const [c, r] of [[7, 7], [3, 3], [11, 3], [3, 11], [11, 11]]) if (c >= c0 && c <= c1 && r >= r0 && r <= r1) h += `<circle cx="${n(X(c))}" cy="${n(Y(r))}" r="${n(C * .14)}" fill="#6b4a22"/>`;
+  const lab = o.n || {}, inC = m => cx(m) >= c0 && cx(m) <= c1 && cy(m) >= r0 && cy(m) <= r1;
+  for (const [L, col] of [[B, 1], [Wt, 2]]) for (const m of L) {
+    if (!inC(m)) continue;
+    h += `<circle cx="${n(X(cx(m)))}" cy="${n(Y(cy(m)))}" r="${n(C * .46)}" fill="${col === 1 ? '#15130f' : '#f4efe4'}" stroke="${col === 1 ? '#000' : '#8f8676'}" stroke-width="${n(C * .06)}"/>`;
+    const l = lab[sqName(m)]; if (l !== undefined) h += `<text x="${n(X(cx(m)))}" y="${n(Y(cy(m)) + C * .23)}" font-size="${n(C * .62)}" font-weight="700" text-anchor="middle" font-family="JetBrains Mono,monospace" fill="${col === 1 ? '#f2ede4' : '#1b1712'}">${l}</text>`;
   }
+  if (o.mark !== undefined) { const m = typeof o.mark === 'number' ? o.mark : sqOf(o.mark); if (inC(m)) h += `<circle cx="${n(X(cx(m)))}" cy="${n(Y(cy(m)))}" r="${n(C * .56)}" fill="none" stroke="#e8463a" stroke-width="${n(C * .13)}"/>`; }
+  return h + '</g></g></svg>';
+}
+// tiny flat board for the tab icons (a fixed n x n corner of the board, no fade)
+function iconSvg(b, w, crop) {
+  const B = toCells(b), W = toCells(w), [c0, r0, n] = crop;
   const u = 10, pad = 7, S = (n - 1) * u + pad * 2, X = m => pad + (cx(m) - c0) * u, Y = m => pad + (r0 + n - 1 - cy(m)) * u;
   let h = `<svg viewBox="0 0 ${S} ${S}" aria-hidden="true"><rect width="${S}" height="${S}" rx="6" fill="#d9a95c"/><path d="`;
   for (let k = 0; k < n; k++) { const p = pad + k * u; h += `M${p} 0V${S}M0 ${p}H${S}`; }
   h += `" stroke="#6b4a22" stroke-width=".7" opacity=".55"/>`;
-  if (7 >= c0 && 7 < c0 + n && 7 >= r0 && 7 < r0 + n) h += `<circle cx="${pad + (7 - c0) * u}" cy="${pad + (r0 + n - 1 - 7) * u}" r="1.6" fill="#6b4a22"/>`;
-  const lab = o.n || {};
-  for (const [L, col] of [[B, 1], [W, 2]]) for (const m of L) {
-    if (cx(m) < c0 || cx(m) >= c0 + n || cy(m) < r0 || cy(m) >= r0 + n) continue;
-    h += `<circle cx="${X(m)}" cy="${Y(m)}" r="4.6" fill="${col === 1 ? '#15130f' : '#f4efe4'}" stroke="${col === 1 ? '#000' : '#8f8676'}" stroke-width=".6"/>`;
-    const l = lab[sqName(m)]; if (l !== undefined) h += `<text x="${X(m)}" y="${Y(m) + 2.3}" font-size="6.4" font-weight="700" text-anchor="middle" font-family="JetBrains Mono,monospace" fill="${col === 1 ? '#f2ede4' : '#1b1712'}">${l}</text>`;
-  }
-  if (o.mark !== undefined) { const m = P(o.mark); h += `<circle cx="${X(m)}" cy="${Y(m)}" r="5.6" fill="none" stroke="#e8463a" stroke-width="1.3"/>`; }
+  for (const [L, col] of [[B, 1], [W, 2]]) for (const m of L) h += `<circle cx="${X(m)}" cy="${Y(m)}" r="4.6" fill="${col === 1 ? '#15130f' : '#f4efe4'}" stroke="${col === 1 ? '#000' : '#8f8676'}" stroke-width=".6"/>`;
   return h + '</svg>';
 }
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -1288,7 +1327,7 @@ async function openOpenings(kind) {
   const cards = OPEN.sets.map((g, i) => {
     if (g.kind !== K) return '';
     const r = pr[g.id], L = g.line.split(' ');
-    const th = thumbSvg([L[0], L[2]], [L[1]], { crop: [5, 5, 5], n: { [L[0]]: 1, [L[1]]: 2, [L[2]]: 3 } });
+    const th = thumbSvg([L[0], L[2]], [L[1]], { crop: [5, 5, 9, 9], n: { [L[0]]: 1, [L[1]]: 2, [L[2]]: 3 } });
     const st = r ? (r.pass ? `<span class="lx-st ok">✓ ${t('u.pt', { n: r.best })}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
     const sub = LANG === 'ja' ? g.kana : LANG === 'zh' ? '' : g.kanji;
     return `<button class="lx-card op${r && r.pass ? ' clear' : ''}" data-o="${i}"><span class="lx-th">${th}</span><span class="lx-tx">` +
@@ -1302,7 +1341,7 @@ async function openOpenings(kind) {
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 // tab icon: the first two stones (black centre + white direct / indirect)
-function opIcon(k) { return thumbSvg(['h8'], [k === 'direct' ? 'h9' : 'i9'], { crop: [6, 6, 3] }); }
+function opIcon(k) { return iconSvg(['h8'], [k === 'direct' ? 'h9' : 'i9'], [6, 6, 3]); }
 function openOpeningChoice(i) {
   openChoiceIdx = i; const g = OPEN.sets[i], L = g.line.split(' ');
   $('#liStep').textContent = t('op.title') + ' · ' + t('op.grp.' + g.kind) + ' ' + g.no;
