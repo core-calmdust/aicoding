@@ -865,6 +865,20 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
 .htabs button svg{width:20px!important;height:20px!important}
 body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([data-skin="mid"]) .htabs button{border-radius:0!important}
 .hpanel[hidden],.hpanel.daily[hidden]{display:none!important}
+/* PC: daily action box fills the same height as free play */
+@media (min-width:861px){
+  #dBlitz .dacts{flex:1;grid-auto-rows:1fr;align-content:stretch}
+  #dBlitz .dact{grid-template-rows:auto 1fr;align-items:stretch}
+  .dat{flex-direction:column;align-items:flex-start!important;justify-content:flex-start;gap:2px!important}
+  .dat .dbest{position:absolute;top:12px;right:12px}
+  .dact{position:relative}
+  .dadesc{font-size:13px;font-weight:600;color:var(--sub);line-height:1.45;margin-top:4px}
+  .dat>b{padding-right:96px}
+  .dabtm [data-da]{white-space:nowrap;padding:4px 18px!important}
+  .dabtm{align-self:end}
+  .dabtm .tries em{display:none}
+}
+@media (max-width:860px){.dadesc,.dabtm .tries em{display:none}}
 /* free play options: spread across the full box width */
 #dFree .frow{display:grid;grid-template-columns:56px repeat(var(--n,3),1fr);align-items:center;gap:6px;margin-bottom:8px}
 #dFree .frow .chipb{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 4px;background:var(--paper);border-radius:999px;box-shadow:none;border:0}

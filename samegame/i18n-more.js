@@ -645,3 +645,20 @@ window.SAME_I18N.ar = {
   const A = { ja: '次は {n} コイン', en: 'Next: {n} coins', zh: '下次 {n} 金币', ko: '다음 {n}코인', es: 'Siguiente: {n} monedas', fr: 'Suivant : {n} pièces', pt: 'Próximo: {n} moedas', de: 'Nächster: {n} Münzen', hi: 'अगला: {n} सिक्के', ar: 'التالي: {n} عملة' };
   for (const l in A) window.SAME_I18N[l]['lb.next'] = A[l];
 })();
+
+(function () {
+  const A = {
+    ja: ['60秒でどれだけ稼げる？', '注文の色を3個以上で消す', '導火線が燃え尽きるまで消し続ける', '真珠を一番下まで落として回収'],
+    en: ['How much can you score in 60s?', 'Clear the ordered color, 3+ at a time', 'Keep clearing before the fuse burns out', 'Drop the pearls to the bottom'],
+    zh: ['60秒能拿多少分？', '按订单颜色3个以上消除', '在引线燃尽前不停消除', '把珍珠落到最底部'],
+    ko: ['60초 동안 몇 점?', '주문한 색을 3개 이상 지우기', '도화선이 다 타기 전에 계속 지우기', '진주를 맨 아래까지 떨어뜨리기'],
+    es: ['¿Cuánto sumas en 60 s?', 'Limpia el color pedido, de 3 en adelante', 'Sigue limpiando antes de que se consuma la mecha', 'Baja las perlas hasta el fondo'],
+    fr: ['Combien en 60 s ?', 'Videz la couleur commandée, par 3+', 'Videz avant que la mèche ne brûle', 'Faites descendre les perles'],
+    pt: ['Quanto você faz em 60 s?', 'Limpe a cor pedida, 3+ por vez', 'Limpe antes que o pavio acabe', 'Leve as pérolas até o fundo'],
+    de: ['Wie viel schaffst du in 60 s?', 'Bestellte Farbe ab 3 abräumen', 'Abräumen, bevor die Lunte abbrennt', 'Perlen ganz nach unten bringen'],
+    hi: ['60 सेकंड में कितना स्कोर?', 'ऑर्डर वाला रंग 3+ साफ़ करें', 'फ़्यूज़ जलने से पहले साफ़ करते रहें', 'मोती सबसे नीचे गिराएँ'],
+    ar: ['كم تجمع في 60 ثانية؟', 'أزل لون الطلب 3 فأكثر', 'واصل الإزالة قبل احتراق الفتيل', 'أنزل اللآلئ إلى الأسفل'],
+  };
+  const M = ['blitz', 'order', 'fuse', 'dive'];
+  for (const l in A) M.forEach((m, i) => window.SAME_I18N[l]['a.' + m + '.s'] = A[l][i]);
+})();
