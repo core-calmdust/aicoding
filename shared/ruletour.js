@@ -74,6 +74,8 @@ const CSS = `
 .rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
 @media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:6px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
+/* phones: compact type so the page text fits without scrolling (common spec) */
+@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:8px}}
 @media (max-width: 420px){.rt-steps{gap:3px;flex-wrap:nowrap}.rt-steps button{flex:0 1 26px;width:auto;height:auto;aspect-ratio:1;min-width:0;font-size:11px}}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
 .rt-steps button.cur{background:var(--panel2,#1f2a2a);color:var(--accent,#e2c275);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
@@ -251,10 +253,23 @@ function create(o) {
   }
   // fixed board size (common spec): computed from the size of .rt-main only, so it is the same on every page and does not
   // change when a ✓/✗ message appears; only a window resize / rotation changes it
+  // the tallest title + text of all board pages at a given width (column layout): the board is sized so that the text of
+  // every page fits without scrolling when there is room (the board stays one fixed size on every page)
+  const tnCache = {};
+  function textNeed(w) {
+    const m = mount(), main = m && m.querySelector('.rt-main'); if (!main) return 0;
+    const key = Math.round(w) + '|' + document.documentElement.lang + '|' + innerWidth; if (tnCache[key] != null) return tnCache[key];
+    const pr = document.createElement('div'); pr.className = 'rt-text';
+    pr.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;left:0;top:0;width:${w}px;height:auto;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none`;
+    main.appendChild(pr); let mx = 0;
+    for (const P of pages) { if (!P.setup || P.finish) continue; try { pr.innerHTML = `<h2 class="rt-title">${val(P.title)}</h2><div class="rt-body">${val(P.body) || ''}</div>` + (P.html ? `<div class="rt-html">${val(P.html)}</div>` : ''); mx = Math.max(mx, pr.scrollHeight); } catch (e) {} }
+    pr.remove();
+    return (tnCache[key] = Math.ceil(mx) + 2);
+  }
   function layout() {
     const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main');
     if (!main) return false;
-    const b = box(main, val(o.aspect));
+    const b = box(main, val(o.aspect), textNeed);
     if (!b) return false;
     rt.classList.toggle('rt-row', b.row); rt.classList.toggle('rt-col', !b.row);
     for (const k in b.vars) rt.style.setProperty(k, b.vars[k]);
@@ -360,16 +375,19 @@ function create(o) {
 // The fixed board box for a rules page: main = the element between the step dots and the nav bar (its size must not
 // depend on the page's content), aspect = board width / height (default 1). Returns { row, bw, bh, vars } or null.
 const PCQ = '(hover: hover) and (pointer: fine) and (min-width: 820px)';
-function box(main, aspect) {
+function box(main, aspect, need) {
   const cs = getComputedStyle(main);
   const W = main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   if (W < 40 || H < 40) return null;
   const ar = +aspect > 0 ? +aspect : 1, pc = matchMedia(PCQ).matches, short = innerHeight < 700;
   const fit = (w, h) => { w = Math.max(60, w); h = Math.max(60, h); return w / h > ar ? [h * ar, h] : [w, w / ar]; };
   const tk = main.querySelector('.rt-task, .ru-task'), fs = tk ? parseFloat(getComputedStyle(tk).fontSize) || 14.5 : 14.5;   // same on every board page
-  const gap = pc ? 12 : 8, th = Math.max(pc ? 126 : 98, Math.round(fs * 6.7)), tmin = pc ? 150 : short ? 84 : 104;   // task area (2 lines + ✓/✗ 2 lines) / smallest text area (column)
+  const gap = pc ? 12 : 8, th = pc ? Math.max(126, Math.round(fs * 6.7)) : Math.max(84, Math.round(fs * 6)), tmin = pc ? 150 : short ? 84 : 104;   // task area (2 lines + ✓/✗ 2 lines) / smallest text area (column)
   const cgap = pc ? 40 : 20, tw = pc ? 360 : 230;                                        // side by side: gap / smallest text column
-  const col = fit(W, H - th - tmin - 2 * gap);
+  // column: leave room for the tallest page text (need(width)), but keep the board at least ~68% of the width (still easy to tap)
+  let tcol = tmin;
+  if (need && !pc) { const nd = need(W); if (nd > tmin) { const minB = Math.min(W, Math.max(230, W * .68)), cap0 = fit(W, H - th - tmin - 2 * gap); tcol = Math.min(nd, Math.max(tmin, H - th - 2 * gap - Math.min(cap0[1], minB / ar))); } }
+  const col = fit(W, H - th - tcol - 2 * gap);
   const row = fit(Math.min(W - tw - cgap, W * .66), H);
   const isRow = W - row[0] - cgap >= tw * .9 && row[0] * row[1] > col[0] * col[1] * 1.05;   // room for the text column
   let [bw, bh] = isRow ? row : col;
