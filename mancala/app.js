@@ -1662,6 +1662,7 @@ function renderReview() {
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${x.side}"></i>${x.k + 1} → ${x.best + 1}</span><span class="ls">−${(Math.round(x.loss * 10) / 10)}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note">${t('rv.note')}</div>`;
+    if (typeof mcCoach === 'function') html = mcCoach() + html;   // 振り返り解説 (rvcoach.js) first, above the numbers
   }
   $('#rvBody').innerHTML = html;
 }

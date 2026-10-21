@@ -225,6 +225,21 @@ a.snd.home{text-decoration:none}
 .rv-list .mv i.p0{background:var(--gold2)}.rv-list .mv i.p1{background:var(--plat2)}
 .rv-list .ls{color:var(--dim);font-size:11px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
 .rv-note{font-size:11px;margin-top:8px;color:var(--dim);line-height:1.6}
+.cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.06)}
+.cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
+.cr-box p{font-size:14.5px;line-height:1.75;color:#eadfcd;margin:0 0 6px}
+.cr-mv b{color:var(--text)}
+.cr-mv .tag{font-size:12.5px;font-weight:700;margin-inline-start:6px}
+.cr-mv .tag.bad{color:#ff8b7d}.cr-mv .tag.dubious{color:#f2c060}.cr-mv .tag.best{color:#8fe3b8}.cr-mv .tag.good{color:#9fc7ff}
+.cr-list{margin:0 0 6px;padding-inline-start:18px}
+.cr-list li{font-size:14.5px;line-height:1.75;color:#eadfcd;margin-bottom:5px}
+.cr-list li::marker{color:var(--brass)}
+.cr-tip{color:#f1e2b8!important}
+.cr-coord{font-size:11.5px!important;color:var(--dim)!important;margin:4px 0 0!important}
+.cr-c{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);direction:ltr;unicode-bidi:isolate}
+.cr-go{font-size:12.5px;padding:1px 9px;border-radius:7px;border:1px solid var(--brass2);color:var(--accent);background:rgba(0,0,0,.2);margin-inline-start:4px;cursor:pointer}
+html[lang=ar] .cr-box{direction:rtl;text-align:right}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){ .cr-box p, .cr-list li{font-size:15.5px} .cr-h{font-size:17px} .side-in:has(.review-card.show) .review-card{flex:3 1 0} }
 /* ---------------------------------------------------------------- modal */
 .overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(6,3,4,.66);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px;height:100vh;height:100dvh;bottom:auto}
 .overlay.show{opacity:1;pointer-events:auto}
@@ -514,7 +529,7 @@ bdi{unicode-bidi:isolate}
   .app{display:grid;width:min(calc(var(--u) * 9.7), calc(100vw - 32px));margin:0 auto;padding:12px 0;gap:12px;height:auto;min-height:var(--vh);
     grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:auto auto var(--tb) var(--C);
     grid-template-areas:"brand brand brand brand brand brand" "board board board board board board" "ctrl ctrl ctrl ctrl ctrl ctrl" "eval eval eval kifu kifu kifu";align-content:center}
-  .app:has(.review-card.show){grid-template-areas:"brand brand brand brand brand brand" "board board board board board board" "ctrl ctrl ctrl ctrl ctrl ctrl" "eval eval rv rv kifu kifu"}
+  .app:has(.review-card.show){grid-template-areas:"brand brand brand brand brand brand" "board board board board board board" "ctrl ctrl ctrl ctrl ctrl ctrl" "eval rv rv rv kifu kifu"}
   .side,.side-in{display:contents}
   .brand{grid-area:brand;align-items:flex-end!important;padding:0 2px}
   .brand h1{font-size:36px!important}
@@ -542,7 +557,10 @@ bdi{unicode-bidi:isolate}
   /* the bottom row keeps the old menu row's height too, so lesson / puzzle cards have room and the board size does not change between modes */
   html.hb-on{--C2:calc(var(--C) + var(--tb) + 12px);--u:min((100vw - 64px) / 9.7, (var(--vh) - 24px - 2 * var(--plate) - 16px - 12px - var(--C2)) / 4.2, 132px)}
   html.hb-on .app{grid-template-rows:auto var(--C2);grid-template-areas:"board board board board board board" "eval eval eval kifu kifu kifu"}
-  html.hb-on .app:has(.review-card.show){grid-template-areas:"board board board board board board" "eval eval rv rv kifu kifu"}
+  html.hb-on .app:has(.review-card.show){grid-template-areas:"board board board board board board" "eval rv rv rv kifu kifu"}
+  /* review on PC: the commentary gets half the width and a taller bottom row (the board gives up a little height) */
+  html.hb-on:has(.review-card.show){--C2:calc(var(--C) + var(--tb) + 12px + clamp(40px, calc(var(--vh) * .09), 110px))}
+  .app:has(.review-card.show) #evalCard{padding:10px 12px}
   html.hb-on body.in-lesson .lesson-card, html.hb-on body.in-puzzle .puzzle-card{grid-area:2 / 1 / 3 / 7;align-self:stretch}
   html.hb-on .info-line{display:none}
 }
@@ -1020,7 +1038,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/rulesoffer.js?v=3"><\/script><script src="../shared/headerbar.js?v=3"><\/script><script src="../shared/ruletour.js?v=9"><\/script><script src="../shared/pzbook.js?v=2"><\/script><script src="app.js?v=20261021ru3b"><\/script>');
+  } else document.write('<script src="../shared/rulesoffer.js?v=3"><\/script><script src="../shared/headerbar.js?v=3"><\/script><script src="../shared/ruletour.js?v=9"><\/script><script src="../shared/pzbook.js?v=2"><\/script><script src="rvcoach.js?v=20261021a"><\/script><script src="app.js?v=20261021rv1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
