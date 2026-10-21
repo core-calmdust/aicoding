@@ -264,6 +264,15 @@ body.in-lesson .review-card{display:none!important}
 .level-wrap{display:flex;flex-direction:column;align-items:stretch;gap:6px}
 .level-wrap input{width:100%;margin:0;accent-color:var(--brass)}
 .level-name{font-weight:700;height:calc(1.4em + 1.45 * 11px + 2px);line-height:1.4;overflow:hidden}
+/* CPU strategy dropdown (cpu-style.js) beside the level name: same row, so the dialog keeps its height */
+.lv-row{display:flex;align-items:center;gap:10px;min-width:0}
+.lv-row .level-name{flex:1;min-width:0}
+.cs-wrap{flex:none;display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);letter-spacing:.04em;max-width:62%;white-space:nowrap}
+.cs-wrap.hidden{display:none}
+.cs-sel{appearance:none;-webkit-appearance:none;background:rgba(0,0,0,.25) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c9a961' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 10px center/10px 6px;color:var(--text);border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13px;letter-spacing:0;height:34px;padding:0 28px 0 11px;min-width:0;max-width:100%;text-overflow:ellipsis;cursor:pointer}
+.cs-sel:hover,.cs-sel:focus{border-color:rgba(201,169,97,.55);outline:none}
+.cs-sel option{background:var(--panel2,#2a2118);color:var(--text)}
+[dir=rtl] .cs-sel{background-position:left 10px center;padding:0 11px 0 28px}
 .level-name small{display:block;font-weight:400;font-size:11px;line-height:1.45;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
@@ -1050,9 +1059,9 @@ html[lang=ar] .pf-input{direction:rtl}
       <div class="seg" id="segColor"><button data-v="0" data-i18n="ng.black"></button><button data-v="1" data-i18n="ng.white"></button><button data-v="2" data-i18n="ng.random"></button></div>
     </div>
     <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div></div>
-    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="18" id="rngLevel"><div class="level-name" id="levelName"></div></div></div>
+    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="18" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel"></select></label></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
-    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="18" id="rngLevel2"><div class="level-name" id="levelName2"></div></div></div>
+    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="18" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel"></select></label></div></div></div>
     </div><div class="ng-col">
     <div class="field" id="fOpts"><label data-i18n="ng.options"></label>
       <div class="checks">
@@ -1194,6 +1203,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
+<script src="cpu-style.js?v=20261021cs"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=3"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -1680,9 +1690,10 @@ function drawArrows() {
 function playerName(c) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; return (c === net.me ? t('you') + ' · ' : '') + (c === 0 ? g.bn : g.wn) + ' (' + (c === 0 ? g.br : g.wr) + ')'; }
   if (settings.mode === 'pvp') return cname(c);
-  if (settings.mode === 'watch') return 'AI ' + t('lv')[c === 0 ? settings.level : settings.level2];
+  const cs = window.CpuStyle && game ? CpuStyle.tag(game, c, t) : '';
+  if (settings.mode === 'watch') return 'AI ' + t('lv')[c === 0 ? settings.level : settings.level2] + cs;
   if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : 'AI ' + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
-  return c === game.human ? t('you') : 'AI ' + t('lv')[settings.level];
+  return c === game.human ? t('you') : 'AI ' + t('lv')[settings.level] + cs;
 }
 const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('mated') : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(Math.round(v));
 const winRate = v => 1 / (1 + Math.exp(-v / 600));
@@ -1809,6 +1820,7 @@ function newGame(rated) {
   }
   game = newRecord(start, human);
   if (rated) game.rated = rated;
+  else if (window.CpuStyle) CpuStyle.attach(game, settings);   // game.cs: the CPU's chosen strategy per side
   clockInit();
   cur = 0; reviewing = false; hintMoves = null; sel = null;
   flip = settings.mode === 'ai' && human === 1;
@@ -1929,12 +1941,17 @@ async function schedule() {
     const t0 = performance.now();
     await weightsReady; if (token !== busyToken) return;
     const lv = LEVELS[levelOf(side)];
-    const bm = levelOf(side) >= 2 ? bookMove() : null;
+    let bm = null, bmLbl = 'book';
+    if (window.CpuStyle && CpuStyle.active(game, side, idx)) {   // chosen strategy (cpu-style.js): consistent book move / plan move / null = engine
+      const r = await CpuStyle.move({ E, P, game, side, ply: idx, book: levelOf(side) >= 2 ? BOOK : null, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }) });
+      if (token !== busyToken) return;
+      if (r) { bm = r.u; bmLbl = r.src === 'plan' ? 'cs.plan' : 'book'; }
+    } else bm = levelOf(side) >= 2 ? bookMove() : null;
     if (bm) {
       await sleep(settings.mode === 'watch' ? 500 : 400); if (token !== busyToken) return;
       const prev = game.info[idx]; if (prev && prev.pendingQ) delete prev.pendingQ;
       commitMove(P.fromUsi(bm), false);
-      setStatus(side, t('book'), false);
+      setStatus(side, t(bmLbl), false);
       return;
     }
     const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: lv }, m => {
@@ -1962,6 +1979,11 @@ async function schedule() {
     if (!lv.noise && res.score <= -E.MATE + 200 && settings.mode === 'ai') {
       game.over = { winner: side ^ 1, reason: 'resign', ply: idx };
       renderInfo(); save(); showResult(); return;
+    }
+    if (window.CpuStyle && CpuStyle.active(game, side, idx)) {   // keep the chosen strategy (no rook swing for a static rook …)
+      const g = await CpuStyle.guard({ E, P, game, side, ply: idx, move: res.move, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }), analyze: (mv, o) => aiCall({ type: 'analyze', sfen: game.start, moves: mv, opts: o }) });
+      if (token !== busyToken) return;
+      if (g) res.move = g;
     }
     const m = P.fromUsi(res.move);
     commitMove(m, false);
@@ -2229,6 +2251,7 @@ function openNewDialog() {
   $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join('');
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last; $('#optEval').checked = settings.eval; $('#optCoach').checked = settings.coach;
+  if (window.CpuStyle) CpuStyle.dlgOpen();
   updDialog();
   showOverlay('#newOverlay');
 }
@@ -2259,6 +2282,7 @@ function updDialog() {
   if (rt) { ['#fHandi', '#fClock', '#fColor', '#fLevel', '#fLevel2', '#lvNote', '#handiNote'].forEach(q => $(q).classList.add('hidden')); $('#rtStats').innerHTML = rtStatsHtml(); }
   $('#optEval').disabled = rt; $('#optCoach').disabled = rt;
   $('#newOverlay').classList.toggle('ng-watch', dlg.mode === 'watch');
+  if (window.CpuStyle) CpuStyle.dlgUpdate(dlg, settings, t);   // CPU strategy dropdowns (even games, vs AI / AI vs AI)
   $('#btnStart').textContent = t(rt ? 'rt.start' : ol ? 'ng.toOnline' : dlg.mode === 'lesson' ? 'ng.goLesson' : dlg.mode === 'tsume' ? 'ng.goTsume' : dlg.mode === 'edit' ? 'ng.goEdit' : 'start');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
@@ -2292,6 +2316,7 @@ $('#btnStart').onclick = () => {
   }
   Object.assign(settings, { clock: dlg.clock, mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
     legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
+  if (window.CpuStyle) CpuStyle.dlgRead(settings);
   newGame();
 };
 
