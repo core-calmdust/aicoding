@@ -124,6 +124,11 @@ const DAILY = {
   90: { sec: 90, goal: 10, every: 3, start: 2, lv: k => (k < 2 ? 2 : k < 9 ? 3 : 4), str: k => (k < 5 ? 2 : 3), ng: 3 },
 };
 const DKEYS = [30, 60, 90];
+/* from 2026-10-22 the three dailies are 30 / 45 / 60 seconds. The keys 30 / 60 / 90 stay as the bronze / silver / gold
+   slots (records, Firebase paths and rules use them); dsec / dgoal give the real seconds and goal for a date. */
+const DNEW = '2026-10-22', DSEC2 = { 30: 30, 60: 45, 90: 60 }, DGOAL2 = { 30: 4, 60: 6, 90: 8 };
+const dsec = (date, d) => (date >= DNEW ? DSEC2[d] : d);
+const dgoal = (date, d) => (date >= DNEW ? DGOAL2[d] : DAILY[d].goal);
 const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
 /* the day's featured gimmicks (the same for everyone) */
 function dailyGimmicks(date, d) {
@@ -146,7 +151,7 @@ function dailyPuzzle(date, d, k) {
   return { p: P.p, s: P.s, lv: P.lv, g };
 }
 
-const API = { N, ROW, COL, BOX, UNITS, CELL_UNITS, PEERS, ALL, mulberry32, hashStr, shuffle, countSolutions, solve, grade, make, enc, dec, GIMMICKS, CLASH, clash, parseG, expect, BASE_T, GEXTRA, DAILY, DKEYS, dailyGimmicks, dailyPuzzle, dayNum };
+const API = { N, ROW, COL, BOX, UNITS, CELL_UNITS, PEERS, ALL, mulberry32, hashStr, shuffle, countSolutions, solve, grade, make, enc, dec, GIMMICKS, CLASH, clash, parseG, expect, BASE_T, GEXTRA, DAILY, DKEYS, dsec, dgoal, dailyGimmicks, dailyPuzzle, dayNum };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.SpeedEngine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

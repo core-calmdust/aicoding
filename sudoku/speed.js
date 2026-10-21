@@ -8,7 +8,8 @@ let C = null, DATA = null;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const t = (k, p) => C.t(k, p);
-const DK = [30, 60, 90];
+const DK = [30, 60, 90];                              // bronze / silver / gold slots (real seconds: dsec)
+const dsec = (d, ds) => SE.dsec(ds || C.today(), d);
 const DT = { 30: 1, 60: 2, 90: 3 };                    // medal tier (bronze / silver / gold)
 // course layout comes from speed_puzzles.json (v2: 入門 5×10, 初級 5×10, 中級 3×10, 上級 5×20, 達人 5×20)
 const catLen = ci => (DATA ? DATA.cats[ci].st.length : 0);
@@ -145,7 +146,7 @@ function catalog() {
   [[10, 1, 'med10'], [50, 2, 'med50'], [150, 3, 'med150'], [365, 4, 'med365']].forEach(([n, ti, id]) => add('daily', id, medals >= n, ti, 'medals', t('sa.med', { n }), t('sa.med.d', { n }), [medals, n]));
   [[10, 2, 'gold10'], [30, 3, 'gold30'], [100, 4, 'gold100']].forEach(([n, ti, id]) => add('daily', id, golds >= n, ti, 'crown', t('sa.gold', { n }), t('sa.gold.d', { n }), [golds, n]));
   [[3, 1, 'sk3'], [7, 2, 'sk7'], [30, 3, 'sk30'], [100, 4, 'sk100']].forEach(([n, ti, id]) => add('daily', id, sk.best >= n, ti, 'flame', t('sa.sk', { n }), t('sa.sk.d', { n }), [sk.best, n]));
-  [[30, 6, 9], [60, 11, 16], [90, 14, 20]].forEach(([d, a, b]) => { const v = best(d); add('daily', 'best' + d + 'a', v >= a, 2, String(a), t('sa.best', { s: d, n: a }), t('sa.best.d', { s: d, n: a }), [v, a]); add('daily', 'best' + d + 'b', v >= b, 3, String(b), t('sa.best', { s: d, n: b }), t('sa.best.d', { s: d, n: b }), [v, b]); });
+  [[30, 6, 9], [60, 9, 13], [90, 11, 16]].forEach(([d, a, b]) => { const v = best(d); add('daily', 'best' + d + 'a', v >= a, 2, String(a), t('sa.best', { s: dsec(d), n: a }), t('sa.best.d', { s: dsec(d), n: a }), [v, a]); add('daily', 'best' + d + 'b', v >= b, 3, String(b), t('sa.best', { s: dsec(d), n: b }), t('sa.best.d', { s: dsec(d), n: b }), [v, b]); });
   const cc = totalClears(), st = totalStars();
   [[20, 1, 'cc20'], [100, 2, 'cc100'], [200, 3, 'cc250'], [nAll() || 330, 4, 'cc500']].forEach(([n, ti, id]) => add('col', id, cc >= n, ti, String(n), n === nAll() ? t('sa.ccall') : t('sa.cc', { n }), t('sa.cc.d', { n }), [cc, n]));
   [[100, 1, 'st150'], [400, 2, 'st600'], [nAll() * 3 || 990, 4, 'st1500']].forEach(([n, ti, id]) => add('col', id, st >= n, ti, 'star', t('sa.st', { n }), t('sa.st.d', { n }), [st, n]));
@@ -190,14 +191,14 @@ let homeTab = null, calMonth = null, dxDiff = 60;
 const ensureData = () => !!DATA;
 function dGimmickRow(ds) {
   const all = SE.dailyGimmicks(ds, 90);
-  return `<div class="sgl">${all.map((g, k) => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span><em>${DK.filter(d => SE.dailyGimmicks(ds, d).includes(g)).map(d => d + t('sp.sec')).join(' · ')}</em></div>`).join('')}</div>`;
+  return `<div class="sgl">${all.map((g, k) => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span><em>${DK.filter(d => SE.dailyGimmicks(ds, d).includes(g)).map(d => dsec(d, ds) + t('sp.sec')).join(' · ')}</em></div>`).join('')}</div>`;
 }
 function todayCard(compact) {
   const td = C.today(), sk = streakInfo();
   const btn = d => {
     const r = dayRec(td, d), a = r ? r.a || 0 : 0, left = Math.max(0, LIMIT_TRIES - a);
-    const st = r && r.c != null ? t('sp.best', { n: r.c }) : t('sp.goal', { n: SE.DAILY[d].goal });
-    return `<button class="dbtn sdbtn ${r && r.m ? 'done' : ''}" data-sd="${d}" style="--wc:${['#e0905a', '#7d93b8', '#e0a91c'][DT[d] - 1]}">${WATCH(d, ['#e0905a', '#7d93b8', '#e0a91c'][DT[d] - 1])}<span class="lb">${esc(t('sp.dn', { s: d }))}</span><span class="st">${esc(st)}</span><span class="tries">${[0, 1, 2].map(k => `<i class="${k < a ? 'used' : ''}"></i>`).join('')}</span>${r && r.m ? `<span class="smed">${C.miniMedal(DT[d])}</span>` : ''}${!left ? `<span class="resume">${esc(t('sp.practice'))}</span>` : ''}</button>`;
+    const st = r && r.c != null ? t('sp.best', { n: r.c }) : t('sp.goal', { n: SE.dgoal(td, d) });
+    return `<button class="dbtn sdbtn ${r && r.m ? 'done' : ''}" data-sd="${d}" style="--wc:${['#e0905a', '#7d93b8', '#e0a91c'][DT[d] - 1]}">${WATCH(dsec(d), ['#e0905a', '#7d93b8', '#e0a91c'][DT[d] - 1])}<span class="lb">${esc(t('sp.dn', { s: dsec(d) }))}</span><span class="st">${esc(st)}</span><span class="tries">${[0, 1, 2].map(k => `<i class="${k < a ? 'used' : ''}"></i>`).join('')}</span>${r && r.m ? `<span class="smed">${C.miniMedal(DT[d])}</span>` : ''}${!left ? `<span class="resume">${esc(t('sp.practice'))}</span>` : ''}</button>`;
   };
   return `<h2>${BOLT.replace('<svg', '<svg class="ttl-ico"')}<span>${esc(t('sp.today'))}</span>${compact ? `<a class="sub sopen" href="${C.speedUrl}">${esc(t('sp.openapp'))} ›</a>` : ''}</h2>
     <div class="date"><span>${esc(C.fmtDate(td, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }))}</span><span class="streak ${sk.cur ? '' : 'zero'}">${C.FLAME}${esc(sk.cur ? t('streak', { n: sk.cur }) : t('streak0'))}</span></div>
@@ -212,7 +213,7 @@ async function extraCard(host) {
   if (!host) return;
   const goals = catalog().filter(a => !a.got && a.prog && a.prog[1] > 0).map(a => Object.assign({ r: Math.min(1, a.prog[0] / a.prog[1]) }, a)).sort((x, y) => y.r - x.r || x.prog[1] - y.prog[1]).slice(0, 3);
   const goalsH = `<div class="dx"><h3>${C.badge(1, 'star').replace('<svg', '<svg style="width:22px;height:22px"')}${esc(t('dx.goals'))}</h3>${goals.map(a => `<div class="goal">${C.badge(a.tier, a.icon)}<div class="gt2"><b>${esc(a.name)}${a.rw ? ' <span class="rwchip">🎁</span>' : ''}</b><div class="bar"><i style="width:${(a.r * 100).toFixed(1)}%"></i></div></div><small>${Math.min(a.prog[0], a.prog[1])}/${a.prog[1]}</small></div>`).join('')}</div>`;
-  const chips = `<div class="chips">${DK.map(d => `<button data-dd="${d}" class="${d === dxDiff ? 'on' : ''}">${esc(t('sp.dn', { s: d }))}</button>`).join('')}</div>`;
+  const chips = `<div class="chips">${DK.map(d => `<button data-dd="${d}" class="${d === dxDiff ? 'on' : ''}">${esc(t('sp.dn', { s: dsec(d) }))}</button>`).join('')}</div>`;
   const head = `<h3>${C.badge(3, 'podium').replace('<svg', '<svg style="width:22px;height:22px"')}${esc(t('dx.rank'))}${chips}</h3>`;
   const body = h => { const box = host.querySelector('#sdxRank'); if (!box) return; box.innerHTML = head + h; box.querySelectorAll('[data-dd]').forEach(b => b.onclick = () => { dxDiff = +b.dataset.dd; C.SFX.tap(); extraCard(host); }); };
   host.innerHTML = `<div class="dx" id="sdxRank">${head}<div class="rkmsg" style="padding:10px">${esc(t('rk.loading'))}</div></div>` + goalsH + `<div class="dx sbtnrow"><button class="btn sm ghost" data-a="ach">${esc(t('sp.ach'))}</button><button class="btn sm ghost" data-a="rank">${esc(t('sp.rank'))}</button><button class="btn sm ghost" data-a="tut">${esc(t('sp.howto'))}</button></div>`;
@@ -227,7 +228,7 @@ async function extraCard(host) {
     if (d !== dxDiff) return;
     rows.sort((a, b) => b.s - a.s);
     let h = rows.length ? '<ol class="mini">' + rows.map((r, k) => `<li class="${r.uid === ON.uid ? 'me' : ''}"><span class="no">${C.miniMedal(3 - k)}</span>${C.avatar(r.i, 30)}<span class="nm">${esc(r.n)}</span><span class="vl">${esc(t('sp.cnt', { n: r.c }))}</span></li>`).join('') + '</ol>' : `<p class="note">${esc(t('rk.empty'))}</p>`;
-    h += `<p class="note">${mine ? esc(t('sp.dx.mine', { n: C.fmtN(mine.rank), c: mine.me.c })) : esc(t('sp.dx.notyet', { d: t('sp.dn', { s: d }) }))} <a href="#" class="sdxMore">${esc(t('dx.more'))}</a></p>`;
+    h += `<p class="note">${mine ? esc(t('sp.dx.mine', { n: C.fmtN(mine.rank), c: mine.me.c })) : esc(t('sp.dx.notyet', { d: t('sp.dn', { s: dsec(d) }) }))} <a href="#" class="sdxMore">${esc(t('dx.more'))}</a></p>`;
     body(h);
     const m = host.querySelector('.sdxMore'); if (m) m.onclick = e => { e.preventDefault(); rkTab = 'daily'; rkDiff = d; rkDate = td; openRank(); };
   } catch (e) { body(`<p class="note">${esc(t('rk.err'))}</p>`); }
@@ -373,7 +374,7 @@ const glyph = (d, given) => (R && R.fruit ? `<span class="fr">${FRUIT[R.fruit[d 
 function stageSpec(ci, pi) { return DATA.cats[ci].st[pi]; }
 function title() {
   if (!R) return '';
-  if (R.mode === 'd') return C.miniMedal(DT[R.d]) + `<span>${esc(t('sp.dn', { s: R.d }))}${R.ranked ? '' : ' · ' + esc(t('sp.practice'))}</span>`;
+  if (R.mode === 'd') return C.miniMedal(DT[R.d]) + `<span>${esc(t('sp.dn', { s: dsec(R.d, R.date) }))}${R.ranked ? '' : ' · ' + esc(t('sp.practice'))}</span>`;
   return `<span class="tchip" style="background:${TIERCOL[DATA.cats[R.ci].tier]}">${esc(t('sp.tier.' + DATA.cats[R.ci].tier))}</span><span>${esc(cname(R.ci))} #${R.pi + 1}</span>`;
 }
 function openGame(o) {
@@ -386,7 +387,7 @@ function openGame(o) {
   R = Object.assign({ k: 0, solved: 0, mist: 0, combo: 0, maxCombo: 0, pts: 0, elapsed: 0, freeze: 0, state: 'brief', paused: false, done: false, sel: -1, gims: [], tlast: 0, ptimes: [] }, o);
   if (o.mode === 'd') {
     const r = dayRec(R.date, o.d); R.ranked = !r || (r.a || 0) < LIMIT_TRIES;
-    R.limit = o.d * 1000; R.goal = SE.DAILY[o.d].goal;
+    R.limit = SE.dsec(R.date, o.d) * 1000; R.goal = SE.dgoal(R.date, o.d);
     R.glist = SE.dailyGimmicks(R.date, o.d);
   } else {
     const st = stageSpec(o.ci, o.pi);
@@ -975,10 +976,10 @@ function briefing() {
   R.state = 'brief';
   const cov = $('#sCov'), s = S();
   const gl = R.glist.map(g => `<div class="sgline ${s.st.gs[g] ? '' : 'new'}">${gic(g)}<span><b>${esc(t('g.' + g))}${s.st.gs[g] ? '' : ` <em class="newt">NEW</em>`}</b><small>${esc(t('g.' + g + '.d'))}</small></span></div>`).join('');
-  const goal = R.mode === 'd' ? t('sp.brief.d', { s: R.d, n: R.goal }) : t('sp.brief.c', { k: R.goal, s: R.limit / 1000 });
+  const goal = R.mode === 'd' ? t('sp.brief.d', { s: dsec(R.d, R.date), n: R.goal }) : t('sp.brief.c', { k: R.goal, s: R.limit / 1000 });
   const r = R.mode === 'd' ? dayRec(R.date, R.d) : rec(R.ci, R.pi);
   const sub = R.mode === 'd' ? (R.ranked ? t('sp.tries', { n: LIMIT_TRIES - ((r && r.a) || 0), m: LIMIT_TRIES }) : t('sp.practice.d')) : (r ? t('sp.brief.best', { s: [1, 2, 3].map(q => (q <= r.s ? '★' : '☆')).join('') }) : '');
-  cov.innerHTML = `<div class="sbrief"><div class="sbig">${R.mode === 'd' ? WATCH(R.d, ['#e0905a', '#7d93b8', '#e0a91c'][DT[R.d] - 1]) : SHOE}</div><b>${esc(goal)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${gl ? `<div class="sgl">${gl}</div>` : `<p class="sstd">${esc(t('sp.brief.std'))}</p>`}<p class="srule">${esc(t('sp.brief.rule', { n: PENALTY / 1000 }))}${R.mode === 'd' ? ' ' + esc(t('sp.bonus', { n: BONUS / 1000 })) : ''}</p><button class="btn xl" id="sGo">${PLAY}${esc(t('sp.start'))}</button></div>`;
+  cov.innerHTML = `<div class="sbrief"><div class="sbig">${R.mode === 'd' ? WATCH(dsec(R.d, R.date), ['#e0905a', '#7d93b8', '#e0a91c'][DT[R.d] - 1]) : SHOE}</div><b>${esc(goal)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${gl ? `<div class="sgl">${gl}</div>` : `<p class="sstd">${esc(t('sp.brief.std'))}</p>`}<p class="srule">${esc(t('sp.brief.rule', { n: PENALTY / 1000 }))}${R.mode === 'd' ? ' ' + esc(t('sp.bonus', { n: BONUS / 1000 })) : ''}</p><button class="btn xl" id="sGo">${PLAY}${esc(t('sp.start'))}</button></div>`;
   cov.className = 'scov on';
   stretchCov(true);
   $('#sGo').onclick = () => countdown();
@@ -1149,8 +1150,8 @@ function showResult(o) {
   const g = R; let h = '';
   if (g.mode === 'd') {
     const r = dayRec(g.date, g.d) || {};
-    h += o.medal || (g.ranked && r.m) && g.solved >= g.goal ? C.medal(DT[g.d], 'rm') : `<div class="sresbig">${WATCH(g.d, '#9a8fb8')}</div>`;
-    h += `<h3>${esc(o.medal ? t('sp.res.medal') : g.solved >= g.goal ? t('sp.res.goal') : t('sp.res.d', { n: g.solved }))}</h3><div class="rs">${esc(C.fmtDate(g.date, { month: 'long', day: 'numeric' }))} · ${esc(t('sp.dn', { s: g.d }))}${g.ranked ? '' : ' · ' + esc(t('sp.practice'))}</div>`;
+    h += o.medal || (g.ranked && r.m) && g.solved >= g.goal ? C.medal(DT[g.d], 'rm') : `<div class="sresbig">${WATCH(dsec(g.d, g.date), '#9a8fb8')}</div>`;
+    h += `<h3>${esc(o.medal ? t('sp.res.medal') : g.solved >= g.goal ? t('sp.res.goal') : t('sp.res.d', { n: g.solved }))}</h3><div class="rs">${esc(C.fmtDate(g.date, { month: 'long', day: 'numeric' }))} · ${esc(t('sp.dn', { s: dsec(g.d, g.date) }))}${g.ranked ? '' : ' · ' + esc(t('sp.practice'))}</div>`;
     h += `<div class="rgrid"><div><small>${esc(t('sp.solved'))}</small><b>${g.solved}</b>${o.newBest ? `<span class="best">${esc(t('res.best'))}</span>` : ''}</div><div><small>${esc(t('res.mist'))}</small><b>${g.mist}</b></div><div><small>${esc(t('sp.maxcombo'))}</small><b>${g.maxCombo}</b></div></div>`;
     if (!g.ranked) h += `<p class="note" style="text-align:center">${esc(t('sp.practice.d'))}</p>`;
   } else {
@@ -1188,7 +1189,7 @@ function showResult(o) {
 }
 async function share(o) {
   const g = R;
-  const s = g.mode === 'd' ? `${t('sp.title')} ${C.fmtDate(g.date, { month: 'numeric', day: 'numeric' })} ⚡${t('sp.dn', { s: g.d })} ${t('sp.cnt', { n: g.solved })}${g.solved >= g.goal ? ' ' + { 1: '🥉', 2: '🥈', 3: '🥇' }[DT[g.d]] : ''}${lastRank ? ' 🏆#' + lastRank : ''}`
+  const s = g.mode === 'd' ? `${t('sp.title')} ${C.fmtDate(g.date, { month: 'numeric', day: 'numeric' })} ⚡${t('sp.dn', { s: dsec(g.d, g.date) })} ${t('sp.cnt', { n: g.solved })}${g.solved >= g.goal ? ' ' + { 1: '🥉', 2: '🥈', 3: '🥇' }[DT[g.d]] : ''}${lastRank ? ' 🏆#' + lastRank : ''}`
     : `${t('sp.title')} ${cname(g.ci)} #${g.pi + 1} ${o.win ? '⭐'.repeat(o.stars) : '💨'}`;
   const text = s + '\n' + C.speedUrlAbs;
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
@@ -1217,7 +1218,7 @@ function openAch() {
     const s = S(), days = Object.keys(s.d);
     const runs = days.reduce((a, ds) => a + DK.reduce((b, d) => b + ((s.d[ds][d] || {}).a || 0), 0), 0);
     h += `<div class="stats"><div class="stat"><small>${esc(t('sp.st.solved'))}</small><b>${C.fmtN(s.st.solved)}</b></div><div class="stat"><small>${esc(t('sp.st.runs'))}</small><b>${runs}</b></div><div class="stat"><small>${esc(t('sp.col'))}</small><b>${totalClears()}</b><em>/${nAll()}</em></div><div class="stat"><small>★</small><b>${totalStars()}</b><em>/${nAll() * 3}</em></div><div class="stat"><small>${esc(t('sp.maxcombo'))}</small><b>${s.st.combo}</b></div><div class="stat"><small>${esc(t('prof.total'))}</small><b>${C.fmtN(s.sc.tot)}</b></div><div class="stat"><small>${esc(t('st.time'))}</small><b>${C.fmtTime(s.st.time)}</b></div></div>`;
-    h += `<table class="tbl"><tr><th></th><th>${esc(t('sp.st.days'))}</th><th>${esc(t('sp.st.bestc'))}</th><th>${esc(t('sp.st.avgc'))}</th><th>${esc(t('sp.st.medals'))}</th></tr>${DK.map(d => { const rs = days.map(ds => s.d[ds][d]).filter(r => r && r.c != null); const n = rs.length; return `<tr><td>${C.miniMedal(DT[d]).replace('<svg', '<svg style="width:16px;height:16px;vertical-align:-3px;margin-inline-end:4px"')}${esc(t('sp.dn', { s: d }))}</td><td>${n}</td><td>${n ? Math.max(...rs.map(r => r.c)) : '—'}</td><td>${n ? (rs.reduce((a, r) => a + r.c, 0) / n).toFixed(1) : '—'}</td><td>${rs.filter(r => r.m).length}</td></tr>`; }).join('')}</table>`;
+    h += `<table class="tbl"><tr><th></th><th>${esc(t('sp.st.days'))}</th><th>${esc(t('sp.st.bestc'))}</th><th>${esc(t('sp.st.avgc'))}</th><th>${esc(t('sp.st.medals'))}</th></tr>${DK.map(d => { const rs = days.map(ds => s.d[ds][d]).filter(r => r && r.c != null); const n = rs.length; return `<tr><td>${C.miniMedal(DT[d]).replace('<svg', '<svg style="width:16px;height:16px;vertical-align:-3px;margin-inline-end:4px"')}${esc(t('sp.dn', { s: dsec(d) }))}</td><td>${n}</td><td>${n ? Math.max(...rs.map(r => r.c)) : '—'}</td><td>${n ? (rs.reduce((a, r) => a + r.c, 0) / n).toFixed(1) : '—'}</td><td>${rs.filter(r => r.m).length}</td></tr>`; }).join('')}</table>`;
   }
   $('#achBody').innerHTML = h;
   C.openModal('mAch');
@@ -1237,7 +1238,7 @@ function openRank() {
 async function renderRank() {
   const body = $('#rkBody'); let ctl = '';
   const FD = C.FIRST_SPEED;
-  if (rkTab === 'daily') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1" ${rkDate <= FD ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(C.fmtDate(rkDate, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }))}</b><button class="ib flip" data-nav="1" ${rkDate >= C.today() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="chips">${DK.map(d => `<button data-d="${d}" class="${d === rkDiff ? 'on' : ''}">${esc(t('sp.dn', { s: d }))}</button>`).join('')}</div>`;
+  if (rkTab === 'daily') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1" ${rkDate <= FD ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(C.fmtDate(rkDate, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }))}</b><button class="ib flip" data-nav="1" ${rkDate >= C.today() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="chips">${DK.map(d => `<button data-d="${d}" class="${d === rkDiff ? 'on' : ''}">${esc(t('sp.dn', { s: dsec(d, rkDate) }))}</button>`).join('')}</div>`;
   if (rkTab === 'month') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1" ${rkMonth <= FD.slice(0, 7) ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(C.fmtMonth(rkMonth))}</b><button class="ib flip" data-nav="1" ${rkMonth >= C.thisMonth() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>`;
   body.innerHTML = `<div class="big sbig2" style="margin-bottom:10px">${BOLT}<div><b>${esc(t('sp.rank.title'))}</b><small>${esc(t('sp.rank.note'))}</small></div></div>` + ctl + `<div id="rkList"><div class="rkmsg">${esc(t('rk.loading'))}</div></div>`;
   body.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
