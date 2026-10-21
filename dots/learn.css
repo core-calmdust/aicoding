@@ -44,18 +44,50 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 #lessonOverlay .modal:is([data-view=lessonListView],[data-view=rulesView],[data-view=opDetailView]), #puzzleOverlay .modal{height:calc(100vh - 20px);height:calc(100dvh - 20px)}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #lessonOverlay .modal:is([data-view=lessonListView],[data-view=rulesView],[data-view=opDetailView]), #puzzleOverlay .modal{width:min(1080px, calc(100vw - 64px))!important;height:min(880px, calc(100vh - 40px));height:min(880px, calc(100dvh - 40px));padding:28px 32px}
-  #lessonOverlay .modal[data-view=rulesView] #rulesBody{max-width:760px;margin:0 auto}
 }
-/* PC rules tutorial: same sizes as shared/ruletour.js on PC — big mini board (--rt-bw) beside the text, title 25px /
-   body 16.5px / task 18px — so it fits 1280×720 without scrolling. Phones keep the layout above. */
+/* rules tutorial layout: the dialog keeps its fixed size; tabs and step dots on top and 前へ／閉じる／次へ (.ru-nav) at the
+   bottom never move. The page fills .ru-main between them: the board scales to the space left (--ru-ar = its
+   width / height, set per page) and only the text scrolls when it is too long. */
+#lessonOverlay .modal[data-view=rulesView]{display:flex;flex-direction:column;overflow:hidden;padding-bottom:max(14px, env(safe-area-inset-bottom))}
+#rulesView:not(.hidden){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+#rulesView > .ls-tabs{flex:none}
+#rulesBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.ru-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
+.ru-main > *{flex:none}
+.ru-main.is-fin{justify-content:center}
+/* phones (upright): title, text, board, task in one column; the board takes the height that is left */
+.ru-text{display:contents}
+.ru-text > *{flex:none}
+.ru-main.has-board h2{order:1}.ru-main.has-board .ru-body{order:2}.ru-main.has-board > .ru-board{order:3}.ru-main.has-board .ru-task{order:4}
+.ru-main.has-board > .ru-board{flex:1 1 0;min-height:150px;max-width:none;width:100%;margin:6px 0;container-type:size;display:flex;align-items:center;justify-content:center}
+.ru-main.has-board > .ru-board .mini-svg{width:min(100cqw, 100cqh * var(--ru-ar));max-width:none}
+.ru-main.has-board .ru-task{min-height:3.4em}
+#rulesBody > .ru-steps{flex:none}
+.ru-main:not(.has-board) > :first-child{margin-top:auto}
+.ru-main:not(.has-board) > :last-child{margin-bottom:auto}
+#rulesBody > .ru-nav{flex:none;margin-top:10px;padding-top:12px;border-top:1px solid rgba(201,169,97,.18)}
+/* wide but short (phone held sideways): text | board */
+@media (orientation: landscape) and (max-height: 560px){ #lessonOverlay .modal[data-view=rulesView]{width:min(900px, calc(100vw - 20px))!important} }
+@media (orientation: landscape) and (min-width: 600px){
+  .ru-main.has-board{flex-direction:row;gap:24px;overflow:hidden}
+  .ru-main.has-board > .ru-text{display:flex;flex-direction:column;flex:1 1 0;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .ru-main.has-board :is(h2, .ru-task){text-align:start}
+  .ru-main.has-board > .ru-board{flex:1 1 0;min-width:0;min-height:0;height:100%;margin:0}
+}
+@media (max-height: 560px){
+  #rulesView > .ls-tabs{margin-bottom:6px}
+  #rulesView > .ls-tabs button{padding-top:5px;padding-bottom:5px}
+  #rulesBody > .ru-steps{gap:4px;margin-bottom:6px}
+  #rulesBody > .ru-steps button{width:26px;height:26px;font-size:11px}
+  #rulesBody > .ru-nav{margin-top:6px;padding-top:6px}
+  #rulesBody > .ru-nav .mbtn{padding-top:7px;padding-bottom:7px}
+}
+/* PC: big board beside the text, title 25px / body 16.5px / task 18px (same sizes as shared/ruletour.js on PC) */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
-  #lessonOverlay .modal[data-view=rulesView] #rulesBody{--rt-bw:clamp(340px, calc(100vh - 300px), 600px);max-width:none}
-  #rulesBody:has(> .ru-board){display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto 1fr auto;column-gap:40px}
-  #rulesBody:has(> .ru-board) > *{grid-column:1}
-  #rulesBody:has(> .ru-board) > :is(.ru-steps, .modal-actions){grid-column:1 / -1}
-  #rulesBody:has(> .ru-board) > .ru-board{grid-column:2;grid-row:2 / 5;align-self:start;width:var(--rt-bw);max-width:none;margin:4px 0 0}
-  #rulesBody:has(> .ru-board) > :is(h2, .ru-task){text-align:start}
-  #rulesBody:not(:has(> .ru-board)){max-width:760px!important;margin:0 auto}
+  .ru-main.has-board{gap:40px}
+  .ru-main.has-board > .ru-board{flex-grow:1.3}
+  .ru-main:not(.has-board) > *{width:100%;max-width:860px;margin-inline:auto}
+  #rulesBody > .ru-nav{padding-top:14px}
   #rulesBody h2{font-size:25px;margin-bottom:10px}
   #rulesBody .ru-body, #rulesBody .ru-body p{font-size:16.5px;line-height:1.8}
   #rulesBody .ru-task{font-size:18px;line-height:1.7;min-height:60px}
@@ -64,7 +96,8 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
   #rulesBody .ru-steps button{width:36px;height:36px;font-size:14px}
   #rulesBody .ru-sizes figcaption{font-size:15px}
   #rulesBody .ru-sizes{max-width:min(100%, calc(100vh - 20px));margin-inline:auto}
-  #rulesBody .modal-actions .mbtn{font-size:16px}
+  #rulesBody .modal-actions{justify-content:center}
+  #rulesBody .modal-actions .mbtn{font-size:16px;flex:0 1 220px;min-width:0}
 }
 
 /* ---------------------------------------------------------------- PZBook: larger text */

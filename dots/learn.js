@@ -143,7 +143,12 @@ function rulesRender(keepState) {
   const P = RULES[RU.i], n = RULES.length;
   if (!keepState) rulesPageInit();
   const done = lsGet(RSTORE, {});
-  let h = `<div class="ru-steps">${RULES.map((x, j) => `<button data-ru="${j}" class="${j === RU.i ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${j + 1}">${j + 1}</button>`).join('')}</div>`;
+  // layout (common spec): step dots on top, 前へ／閉じる／次へ pinned at the bottom of the fixed-height dialog (same place on
+  // every page), the page in .ru-main between them (the board scales to the space left; only the text scrolls when too long)
+  const steps = `<div class="ru-steps">${RULES.map((x, j) => `<button data-ru="${j}" class="${j === RU.i ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${j + 1}">${j + 1}</button>`).join('')}</div>`;
+  const ar = P.R ? ((P.C || P.R) * MU + 2 * MM) / (P.R * MU + 2 * MM) : 1;
+  let h = steps + `<div class="ru-main${P.R ? ' has-board' : ''}${P.finish ? ' is-fin' : ''}" style="--ru-ar:${ar.toFixed(4)}">`;
+  if (P.R) h += '<div class="ru-text">';   // board pages: title / text / task beside (PC, sideways) or around (phones) the board
   if (P.intro) h += `<h2>${escH(t('intro.t'))}</h2>`;
   else h += `<h2>${escH(t('ru.p' + P.id + '.t'))}</h2><div class="lesson-intro ru-body">${t('ru.p' + P.id + '.b')}</div>`;
   if (P.intro) {
@@ -154,9 +159,9 @@ function rulesRender(keepState) {
   } else if (P.finish) {
     h += `<div class="ru-finish"><button class="mbtn go" id="ruPlay">${escH(t('ru.play'))}</button><button class="mbtn go" id="ruLessons">${escH(t('ru.toLessons'))}</button></div>`;
   } else {
-    h += `<div class="ru-board" id="ruBoard"></div><div class="ru-task" id="ruTask"></div>`;
+    h += `<div class="ru-task" id="ruTask"></div></div><div class="ru-board" id="ruBoard"></div>`;
   }
-  h += `<div class="modal-actions"><button class="mbtn" id="ruPrev" ${RU.i === 0 ? 'disabled' : ''}>${escH(t('ru.prev'))}</button><button class="mbtn" id="ruClose">${escH(t('close'))}</button><button class="mbtn go" id="ruNext" ${RU.i === n - 1 ? 'disabled' : ''}>${escH(t('ru.next'))}</button></div>`;
+  h += `</div><div class="modal-actions ru-nav"><button class="mbtn" id="ruPrev" ${RU.i === 0 ? 'disabled' : ''}>${escH(t('ru.prev'))}</button><button class="mbtn" id="ruClose">${escH(t('close'))}</button><button class="mbtn go" id="ruNext" ${RU.i === n - 1 ? 'disabled' : ''}>${escH(t('ru.next'))}</button></div>`;
   $('#rulesBody').innerHTML = h;
   if (P.R) { rulesDraw(); if (P.anim) rulesAnim(); else rulesTaskText(); }
   if (P.intro || P.sizes || P.finish) rulesMark(P.id);
@@ -181,6 +186,7 @@ function rulesTaskText(extra) {
   if (st.msg) h += `<div class="ru-msg ${st.msgCls || ''}">${st.msg}</div>`;
   if (st.done) h += `<button class="ru-again" id="ruAgain">↺ ${escH(t('ru.again'))}</button>`;
   $('#ruTask').innerHTML = h + (extra || '');
+  const g = st.msg && $('#ruTask .ru-msg'); if (g) g.scrollIntoView({ block: 'nearest' });   // a ✓ / ✗ below the fold comes into view
 }
 // play a scripted sequence on the mini board, then hand over to the task
 async function rulesAnim() {
