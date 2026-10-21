@@ -3445,8 +3445,27 @@ if (!pzProgress._v) {
 }
 const starVal = x => x === true ? 3 : x === 'h' ? 2 : (+x || 0);
 const PT = o => (o && (o[LANG] || o.en || o.ja)) || '';
-async function loadPuzzles() { if (!puzzleData) { try { puzzleData = await fetch('puzzles.json?v=3').then(r => r.json()); } catch (e) { puzzleData = { levels: [] }; } } return puzzleData; }
+async function loadPuzzles() { if (!puzzleData) { try { puzzleData = await fetch('puzzles.json?v=4').then(r => r.json()); pzResolveOld(); } catch (e) { puzzleData = { levels: [] }; } } return puzzleData; }
 function pzKey(li, i) { return puzzleData.levels[li].id + ':' + i; }
+// replaced puzzles (2026-10-21, fun score): puzzleData.old["<id>:<i>"] holds the previous content of a slot. A player who already
+// has a record for the slot (or started that version) keeps the old puzzle; markers '@o:<key>' / '@n:<key>' in the records
+// remember which version a player met (they sync with the records). The daily puzzle uses the old content for dates <= cut.
+function pzUseOld(key) { return !!pzProgress['@o:' + key] || (!pzProgress['@n:' + key] && key in pzProgress); }
+function pzResolveOld() {
+  const O = puzzleData.old || {}; puzzleData.fresh = {};
+  puzzleData.levels.forEach(lv => lv.puzzles.forEach((p, i) => { const key = lv.id + ':' + i; if (O[key]) { puzzleData.fresh[key] = p; if (pzUseOld(key)) lv.puzzles[i] = O[key]; } }));
+}
+function pzAt(li, k, date) {   // the puzzle shown for a slot (a daily date <= cut: the content that was live that day)
+  const key = pzKey(li, k), O = puzzleData.old || {};
+  return date && O[key] && date <= (puzzleData.cut || '') ? O[key] : puzzleData.levels[li].puzzles[k];
+}
+function pzMarkSeen(li, k, pz) {
+  const key = pzKey(li, k), O = puzzleData.old || {};
+  if (!O[key] || pzProgress['@o:' + key] || pzProgress['@n:' + key]) return;
+  pzProgress[(pz === O[key] ? '@o:' : '@n:') + key] = 1;
+  if (pz === O[key]) puzzleData.levels[li].puzzles[k] = pz;   // met the old version (e.g. as a past daily): keep it in the list too
+  try { localStorage.setItem(PZ_STORE, JSON.stringify(pzProgress)); } catch (e) {}
+}
 function pzRecs(li) { const lv = puzzleData.levels[li]; return lv.puzzles.map((_, k) => starVal(pzProgress[lv.id + ':' + k])); }
 // card colour from the theme's average difficulty (D = solver difficulty score in puzzles.json)
 function themeTier(lv) { const d = lv.puzzles.reduce((a, P) => a + (P.D || 0), 0) / Math.max(1, lv.puzzles.length); return Math.max(0, Math.min(5, Math.floor((d - 12) / 6))); }
@@ -3515,7 +3534,7 @@ async function openPuzzles() {
     `<span class="pzx-md" title="${esc(PZBook.t('medal')[2])}">${PZBook.MEDAL(3)}${md[3]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[1])}">${PZBook.MEDAL(2)}${md[2]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[0])}">${PZBook.MEDAL(1)}${md[1]}</span></span></span>` +
     (cont ? `<button class="pb-cont" data-cont="${cont[0]}:${cont[1]}">${esc(PZBook.t('cont'))} ▶ <b>No.${cont[1] + 1}</b><small>${esc(PT(d.levels[cont[0]].name))}</small></button>` : `<span class="pb-alldone">${esc(PZBook.t('allDone'))}</span>`) + `</div>`;
   if (dl) {
-    const P = d.levels[dl.li].puzzles[dl.k];
+    const P = pzAt(dl.li, dl.k, dl.date);
     h += `<button class="pzx-daily" data-daily="1"><span class="th">${rlSVG(P.cells.split('').map(Number))}</span><span class="tx"><b>★ ${t('daily.title')}<span>${dl.date.slice(5).replace('-', '/')}</span></b>` +
       `<small>${esc(PT(d.levels[dl.li].name))} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="go${di.today ? ' ok' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>`;
   }
@@ -3575,7 +3594,7 @@ function startPuzzle(li, k, daily) {
   if (lesson) { lesson = null; document.body.classList.remove('in-lesson'); clearMarks(); }
   busyToken++; cancelAI(); cancelAna();
   if (!puzzle && !savedGame) savedGame = { positions, cur, reviewing };
-  const pz = puzzleData.levels[li].puzzles[k];
+  const pz = pzAt(li, k, daily); pzMarkSeen(li, k, pz);
   puzzle = { li, k, pz, me: pz.toMove, goal: pz.goal, state: 'play', busy: false, hinted: false, failed: false, answered: false, daily: daily || null };
   if (!daily) { try { localStorage.setItem(PZ_LAST, String(li)); } catch (e) {} }
   document.body.classList.add('in-puzzle');
