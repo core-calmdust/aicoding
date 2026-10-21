@@ -73,6 +73,7 @@ async function init() {
       await loadScript(base + 'firebase-app-compat.js');
       await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
       if (!firebase.apps.some(a => a.name === '[DEFAULT]')) firebase.initializeApp(CFG);   // the shared-account app ('atlas') may already exist
+      if (window.OnlineSec) await OnlineSec.appCheck(firebase.app(), window.FIREBASE_APPCHECK_SITE_KEY, FB_VER);   // App Check (null key: skipped)
       const auth = firebase.auth();
       // keep an existing session (Google or anonymous); only create an anonymous one if none
       const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
