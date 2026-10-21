@@ -194,20 +194,33 @@
     },
   };
 
+  // the guided move: which checker, where, how far (merged into TXT)
+  const EX = {
+    ja: { tapCk: 'この駒をタップ', tapDest: '光っている場所をタップ', hintPick: '光っている駒をタップしてね', hintDest: '光っている場所をタップしてね', dieMove: '{n}の目 → {n}マス進む', mid: 'いいね！ つぎは<b>1</b>の目。6の駒を1つ進めて<b>5</b>へ動かそう！', done4: '5に<b>2個</b>そろった！ 2個以上あるポイントには相手が止まれない。これが<b>ポイントを作る</b>ってこと！' },
+    en: { tapCk: 'Tap this checker', tapDest: 'Tap the glowing spot', hintPick: 'Tap the glowing checker', hintDest: 'Tap the glowing spot', dieMove: '{n} on the die → move {n} points', mid: 'Nice! Now the <b>1</b>: move a checker from 6 one point on to <b>5</b>!', done4: 'Two checkers on 5! With <b>two or more</b> there, your opponent can\'t land on it — you\'ve <b>made a point</b>!' },
+    zh: { tapCk: '点击这枚棋子', tapDest: '点击发光的位置', hintPick: '请点击发光的棋子', hintDest: '请点击发光的位置', dieMove: '骰子{n} → 前进{n}格', mid: '很好！接下来用<b>1</b>：把6点的棋子前进1格到<b>5点</b>！', done4: '5点有<b>两枚</b>了！有两枚以上棋子的点，对手不能停留——这就是<b>做点</b>！' },
+    ko: { tapCk: '이 말을 탭하세요', tapDest: '빛나는 곳을 탭하세요', hintPick: '빛나는 말을 탭해 줘', hintDest: '빛나는 곳을 탭해 줘', dieMove: '주사위 {n} → {n}칸 이동', mid: '좋아! 다음은 <b>1</b>. 6의 말을 1칸 움직여 <b>5</b>로!', done4: '5에 <b>2개</b>가 모였어! 말이 2개 이상 있는 포인트에는 상대가 멈출 수 없어. 이게 <b>포인트 만들기</b>야!' },
+    es: { tapCk: 'Toca esta ficha', tapDest: 'Toca el punto brillante', hintPick: 'Toca la ficha que brilla', hintDest: 'Toca el punto que brilla', dieMove: 'Dado {n} → avanza {n} puntos', mid: '¡Bien! Ahora el <b>1</b>: avanza una ficha del 6 al <b>5</b>.', done4: '¡Dos fichas en el 5! Con <b>dos o más</b>, tu rival no puede caer ahí: ¡has <b>hecho un punto</b>!' },
+    fr: { tapCk: 'Touche cette dame', tapDest: 'Touche la case lumineuse', hintPick: 'Touche la dame qui brille', hintDest: 'Touche la case qui brille', dieMove: 'Dé {n} → avance de {n} flèches', mid: 'Bien ! Maintenant le <b>1</b> : avance une dame du 6 jusqu\'au <b>5</b> !', done4: 'Deux dames sur le 5 ! Avec <b>deux dames ou plus</b>, l\'adversaire ne peut pas s\'y poser : tu as <b>fait une case</b> !' },
+    pt: { tapCk: 'Toque nesta peça', tapDest: 'Toque no ponto brilhante', hintPick: 'Toque na peça que brilha', hintDest: 'Toque no ponto que brilha', dieMove: 'Dado {n} → ande {n} pontos', mid: 'Boa! Agora o <b>1</b>: ande uma peça do 6 até o <b>5</b>!', done4: 'Duas peças no 5! Com <b>duas ou mais</b>, o adversário não pode parar ali: você <b>fez um ponto</b>!' },
+    de: { tapCk: 'Tippe auf diesen Stein', tapDest: 'Tippe auf die leuchtende Stelle', hintPick: 'Tippe auf den leuchtenden Stein', hintDest: 'Tippe auf die leuchtende Stelle', dieMove: 'Würfel {n} → {n} Zungen weit', mid: 'Gut! Jetzt die <b>1</b>: Zieh einen Stein von 6 auf die <b>5</b>!', done4: 'Zwei Steine auf der 5! Mit <b>zwei oder mehr</b> Steinen darf der Gegner dort nicht hin – du hast <b>einen Punkt gebaut</b>!' },
+    hi: { tapCk: 'इस गोटी पर टैप करें', tapDest: 'चमकती जगह पर टैप करें', hintPick: 'चमकती गोटी पर टैप कीजिए', hintDest: 'चमकती जगह पर टैप कीजिए', dieMove: 'पासा {n} → {n} पॉइंट आगे', mid: 'बढ़िया! अब <b>1</b>: 6 वाली गोटी को एक पॉइंट आगे <b>5</b> पर ले जाइए!', done4: '5 पर <b>दो</b> गोटियाँ! जहाँ दो या ज़्यादा गोटियाँ हों, विरोधी वहाँ नहीं रुक सकता — आपने <b>पॉइंट बना</b> लिया!' },
+    ar: { tapCk: 'اضغط هذه القطعة', tapDest: 'اضغط المكان المضيء', hintPick: 'اضغط القطعة المضيئة', hintDest: 'اضغط المكان المضيء', dieMove: 'النرد {n} ← تقدّم {n} نقاط', mid: 'أحسنت! والآن الرقم <b>1</b>: انقل قطعة من 6 خطوة واحدة إلى <b>5</b>!', done4: 'قطعتان على 5! مع <b>قطعتين أو أكثر</b> لا يستطيع خصمك النزول هناك — لقد <b>صنعت نقطة</b>!' },
+  };
   /* positions: g / b = { point: count } in gold's numbering (24 → 1); bar / off counts
-     glow: points that pulse gold · act: { from (point | 'bar'), to (point | 'off'), path, die } · dice: shown at the start */
+     glow: points that pulse gold · acts: guided single-die moves { from (point | 'bar'), to (point | 'off'), d = index of the die used } · dice: shown at the start */
   const INIT = { g: { 24: 2, 13: 5, 8: 3, 6: 5 }, b: { 1: 2, 12: 5, 17: 3, 19: 5 } };
   const STEPS = [
     { pos: INIT },
     { pos: INIT, glow: [1, 2, 3, 4, 5, 6], tray: true },
     { pos: INIT, sweep: true },
     { pos: INIT, roll: [5, 3] },
-    { pos: INIT, dice: [3, 1], act: { from: 8, to: 5 }, then: { from: 6, to: 5 } },
-    { pos: { g: { 13: 1, 6: 3, 8: 2, 24: 2 }, b: { 1: 2, 12: 3, 19: 4, 17: 2 } }, dice: [2, 2, 2, 2], act: { from: 13, to: 5, path: [11, 9, 7, 5] } },
-    { pos: { g: { 13: 3, 6: 4, 8: 2 }, b: { 10: 1, 1: 2, 19: 4, 12: 3 } }, dice: [3, 5], act: { from: 13, to: 10 } },
-    { pos: { g: { bar: 1, 6: 4, 8: 3, 13: 3 }, b: { 19: 2, 20: 2, 22: 2, 12: 4 } }, dice: [6, 4], act: { from: 'bar', to: 21 }, cross: [19] },
-    { pos: { g: { 9: 2, 8: 3, 7: 2, 6: 4, 5: 1, 4: 2 }, b: { 2: 1, 19: 4, 17: 3, 12: 3 } }, dice: [3, 1], act: { from: 8, to: 5 }, prime: [4, 5, 6, 7, 8, 9] },
-    { pos: { g: { 6: 2, 5: 3, 4: 3, 3: 2, 2: 3, 1: 2 }, b: { 19: 4, 20: 3, 21: 3, 17: 3, 13: 2 } }, dice: [6, 4], act: { from: 6, to: 'off' } },
+    { pos: INIT, dice: [3, 1], acts: [{ from: 8, to: 5, d: 0 }, { from: 6, to: 5, d: 1, mid: true }] },
+    { pos: { g: { 13: 1, 6: 3, 8: 2, 24: 2 }, b: { 1: 2, 12: 3, 19: 4, 17: 2 } }, dice: [2, 2, 2, 2], acts: [{ from: 13, to: 11, d: 0 }, { from: 11, to: 9, d: 1 }, { from: 9, to: 7, d: 2 }, { from: 7, to: 5, d: 3 }] },
+    { pos: { g: { 13: 3, 6: 4, 8: 2 }, b: { 10: 1, 1: 2, 19: 4, 12: 3 } }, dice: [3, 5], acts: [{ from: 13, to: 10, d: 0 }] },
+    { pos: { g: { bar: 1, 6: 4, 8: 3, 13: 3 }, b: { 19: 2, 20: 2, 22: 2, 12: 4 } }, dice: [6, 4], acts: [{ from: 'bar', to: 21, d: 1 }], cross: [19] },
+    { pos: { g: { 9: 2, 8: 3, 7: 2, 6: 4, 5: 1, 4: 2 }, b: { 2: 1, 19: 4, 17: 3, 12: 3 } }, dice: [3, 1], acts: [{ from: 8, to: 5, d: 0 }], prime: [4, 5, 6, 7, 8, 9] },
+    { pos: { g: { 6: 2, 5: 3, 4: 3, 3: 2, 2: 3, 1: 2 }, b: { 19: 4, 20: 3, 21: 3, 17: 3, 13: 2 } }, dice: [6, 4], acts: [{ from: 6, to: 'off', d: 0 }] },
     { pos: { g: { off: 15 }, b: { 19: 4, 20: 3, 21: 3, 22: 2, 3: 1, bar: 0, 17: 2 } }, tray: true, glow: [3], win: true },
     { pos: { g: { 13: 4, 8: 3, 6: 5, 4: 2, 24: 1 }, b: { 1: 2, 12: 4, 17: 3, 19: 4, 20: 2 } }, cube: true },
     { pos: INIT, last: true },
@@ -241,7 +254,8 @@
   })();
 
   function start(ctx) {
-    const T3 = ctx.Table3D, TH = window.THREE, BG = T3.backgammon, L = TXT[ctx.lang] || TXT.en;
+    const T3 = ctx.Table3D, TH = window.THREE, BG = T3.backgammon, L0 = TXT[ctx.lang] || TXT.en, X0 = EX[ctx.lang] || EX.en;
+    const L = Object.assign({}, L0, X0, { s: L0.s.map((t, i) => i === 4 ? Object.assign({}, t, { done: X0.done4 }) : t) });
     const board = T3.MODELS.backgammon(true, { look: 'marq' }); T3.show('backgammon', board); T3.play(true);
     const g = BG.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;   // shown at about the other boards' size (the camera stays below the room's lamp)
     board.scale.setScalar(SC);
@@ -318,16 +332,21 @@
       const n = cks.filter(c => c.side === side && c.at === p).length; const s = spot({ side, at: p, k: n, n: n + 1 }); return [s.x, s.z];
     }
     let sweepT = 0;
-    (function pulse() {
+    function pulse() {
       if (stopped) return; const now = performance.now(), k = .5 + .5 * Math.sin(now / 260); let any = false;
       marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.userData.ring) m.scale.setScalar(.85 + k * .3); if (m.material) m.material.opacity = (m.userData.ring ? .5 : .2) + k * .35; } });
       cks.forEach(c => { if (c.bob) { any = true; c.m.position.y = Y + .05 + .18 * k; } });
+      guide.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.userData.ring) m.scale.setScalar(.85 + k * .3); if (m.material) m.material.opacity = (m.userData.ring ? .5 : .2) + k * .35; } if (m.userData.follow) { m.position.x = m.userData.follow.m.position.x; m.position.z = m.userData.follow.m.position.z; } });
+      if (arrow.visible) { any = true; arrow.position.set(arrowAt.x, arrowAt.y + Math.abs(Math.sin(now / 230)) * .35, arrowAt.z); }
+      else if (phase === 'pick' && cur && !busy) { arrow.visible = true; }
+      if (phase === 'pick' && cur) { arrowAt.x = cur.m.position.x; arrowAt.z = cur.m.position.z; arrowAt.y = Y + 1.05; }
       if (STEPS[step] && STEPS[step].sweep && !busy) {   // the direction of play: a light runs 24 → 1
         any = true; const i = Math.floor(now / 140) % 30;
         if (i !== sweepT) { sweepT = i; clearMarks(); for (let j = 0; j < 4; j++) { const p = 24 - i + j; if (p >= 1 && p <= 24) glowPt(p, 0xffc928, .15 + j * .12, false); } }
       }
       if (any) T3.kick(60); requestAnimationFrame(pulse);
-    })();
+    }
+    requestAnimationFrame(pulse);   // first frame after start() has set everything up
 
     /* ---------- moves ---------- */
     function moveTo(c, at, done, hopH) {   // lifted, carried and set down
@@ -339,7 +358,112 @@
     }
     function land(c) { anim(150, k => { const s = 1 + Math.sin(k * Math.PI) * .07; c.m.scale.set(s, 1 / s, s); }, () => c.m.scale.set(1, 1, 1)); }
     function hopPath(c, path, done) { let i = 0; const nx = () => { if (i >= path.length) { if (done) done(); return; } const p = path[i++]; moveTo(c, p, () => later(nx, 60), .7); }; nx(); }
-    function dimDie(n) { for (let i = 0; i < n && i < dice.length; i++) dice[i].traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = .35; } }); }
+    function dimDie(i) { const d = dice[i]; if (!d || d.userData.dim) return; d.userData.dim = true; d.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = .35; } }); }
+
+    /* ---------- the guided move: which checker → where, counted point by point ---------- */
+    const guide = new TH.Group(); board.add(guide);
+    // the pointing arrow: a DOM overlay over the projected 3D spot (it reads the same from any camera angle, on PC and phones)
+    const arrowEl = document.createElement('div'); arrowEl.className = 'bgt-arrow';
+    arrowEl.innerHTML = '<svg viewBox="0 0 52 64" width="52" height="64"><path d="M16 3h20v28h13L26 61 3 31h13z" fill="#ff4d4d" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>';
+    Object.assign(arrowEl.style, { position: 'fixed', left: 0, top: 0, zIndex: 9999, pointerEvents: 'none', display: 'none', filter: 'drop-shadow(0 4px 5px rgba(0,0,0,.35))', willChange: 'transform' });
+    document.body.appendChild(arrowEl);
+    const arrow = { _v: false, sc: 1, get visible() { return this._v; }, set visible(v) { this._v = v; arrowEl.style.display = v ? '' : 'none'; },
+      scale: { setScalar: k => { arrow.sc = k; } },
+      position: { set: (x, y, z) => { const q = T3.project(x * SC, z * SC, y * SC); arrowEl.style.transform = `translate(${(q.x - 26).toFixed(1)}px,${(q.y - 62).toFixed(1)}px) scale(${arrow.sc})`; } } };
+    const arrowAt = { x: 0, y: 0, z: 0 };
+    const numTex = {};
+    function numSprite(n) {
+      if (!numTex[n]) { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill(); x.lineWidth = 9; x.strokeStyle = '#ff4d4d'; x.stroke(); x.fillStyle = '#2b3044'; x.font = '900 74px Fredoka, "Zen Maru Gothic", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), 64, 70); numTex[n] = new TH.CanvasTexture(c); numTex[n].encoding = TH.sRGBEncoding; }
+      const sp = new TH.Sprite(new TH.SpriteMaterial({ map: numTex[n], depthTest: false, toneMapped: false })); sp.scale.set(.62, .62, 1); sp.renderOrder = 5; return sp;
+    }
+    let ai = 0, phase = '', cur = null, sel = null, idleT = 0, hand = null;
+    const act = () => (STEPS[step].acts || [])[ai];
+    const startN = a => a.from === 'bar' ? 25 : a.from, endN = a => a.to === 'off' ? 0 : a.to;
+    const pathOf = a => { const o = []; for (let v = startN(a) - 1; v >= endN(a); v--) o.push(v === 0 ? 'off' : v); return o; };
+    function clearGuide() { while (guide.children.length) guide.remove(guide.children[0]); arrow.visible = false; hideHand(); }
+    function pointArrow(x, y, z) { arrowAt.x = x; arrowAt.y = y; arrowAt.z = z; arrow.visible = true; }
+    function line(html, cls) { $('.cnt').innerHTML = html; if (cls) { const t = $('.cnt').lastElementChild; if (t && t.animate) t.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 360 }); } }
+    function dieTag(a) { const st = STEPS[step], v = st.dice[a.d], n = st.acts.length > 1 && st.dice.length === 4 ? ` (${ai + 1}/${st.acts.length})` : ''; return `<span class="tag" style="white-space:normal;height:auto;line-height:1.35;display:inline-block">🎲 ${X0.dieMove.replace(/\{n\}/g, v)}${n}</span>`; }
+    function dieGlow(a) { const d = dice[a.d]; if (!d) return; const r = new TH.Mesh(new TH.TorusGeometry(.55, .06, 10, 40), new TH.MeshBasicMaterial({ color: 0xffc928, transparent: true, opacity: .9, toneMapped: false })); r.rotation.x = -Math.PI / 2; r.position.set(d.position.x, Y + .03, d.position.z); r.userData.pulse = true; r.userData.ring = true; guide.add(r); }
+    function startAct() {   // phase 1: show the checker to take
+      const a = act(); if (!a) return;
+      clearGuide(); phase = 'pick'; sel = null;
+      cur = a.from === 'bar' ? topOf(0, 'bar') : topOf(0, a.from); if (!cur) return;
+      cur.bob = true; dieGlow(a);
+      const r = ring(cur.m.position.x, cur.m.position.z, 0xffc928); marks.remove(r); guide.add(r); r.userData.follow = cur;
+      if (a.mid) say(X0.mid);
+      line(`${dieTag(a)}<br><b class="tapl" style="color:#e0452b;display:inline-block;margin-top:6px;font-size:1.06em">👆 ${X0.tapCk}</b>`); buttons(); armIdle();
+    }
+    function pickCk() {   // phase 2: the checker is lifted, the way is counted out, the destination glows
+      const a = act(); phase = 'dest'; cur.bob = false; sel = cur; arrow.visible = false; SFX.tok(.7, 1.6);
+      const y0 = cur.m.position.y; anim(200, k => { cur.m.position.y = y0 + (Y + .45 - y0) * io(k); });
+      const P = pathOf(a), last = P[P.length - 1];
+      P.forEach((p, i) => later(() => {   // numbered markers on every point it passes, one by one
+        const [x, z] = landXZ(0, p), sp = numSprite(i + 1); sp.position.set(x, Y + .75, z); sp.userData.n = i; guide.add(sp);
+        sp.scale.set(.01, .01, 1); anim(180, k => { const s = .62 * (k < .7 ? k / .7 * 1.15 : 1.15 - (k - .7) / .3 * .15); sp.scale.set(s, s, 1); });
+        SFX.blip();
+      }, 160 + i * 170));
+      if (last === 'off') { const t = trayGlow(0); marks.remove(t); guide.add(t); } else { const t = glowPt(last, 0x2fd17a, .45); marks.remove(t); guide.add(t); }
+      const [x, z] = landXZ(0, last), r = ring(x, z); marks.remove(r); guide.add(r);
+      later(() => pointArrow(x, Y + 1.25, z), 160 + P.length * 170);
+      line(`${dieTag(a)}<br><b class="tapl" style="color:#e0452b;display:inline-block;margin-top:6px;font-size:1.06em">👆 ${X0.tapDest}</b>`); buttons(); armIdle();
+    }
+    function hopAlong(c, P, done) {   // point by point, counting, a tick at every point
+      let i = 0;
+      const nx = () => {
+        if (i >= P.length) return done();
+        const p = P[i], fin = i === P.length - 1; i++;
+        const mk = guide.children.find(o => o.isSprite && o.userData.n === i - 1);
+        if (fin) { moveTo(c, p, () => { if (mk) mk.visible = false; done(); }, .55); SFX.tok(.5, 1 + i * .08); return; }
+        const [x, z] = landXZ(0, p), p0 = c.m.position.clone(), p1 = new TH.Vector3(x, Y + .3, z);
+        anim(230, k => { c.m.position.lerpVectors(p0, p1, io(k)); c.m.position.y += Math.sin(k * Math.PI) * .45; }, () => {
+          SFX.tok(.45, 1 + i * .08); if (mk) anim(160, k => { const s = .62 * (1 + Math.sin(k * Math.PI) * .45); mk.scale.set(s, s, 1); }); later(nx, 40);
+        });
+      };
+      nx();
+    }
+    function doMove() {   // phase 3
+      const a = act(), c = sel, stepNow = step; phase = 'move'; busy = true; arrow.visible = false; hideHand();
+      guide.children.filter(o => !o.isSprite).forEach(o => guide.remove(o));
+      const victim = typeof a.to === 'number' ? cks.find(o => o.side === 1 && o.at === a.to) : null;
+      hopAlong(c, pathOf(a), () => {
+        if (step !== stepNow) return;
+        const next = () => {
+          if (step !== stepNow) return;
+          dimDie(a.d); clearGuide(); ai++; busy = false;
+          if (ai < STEPS[step].acts.length) { later(startAct, 350); return; }
+          const st = STEPS[step]; played = true;
+          if (st.prime) { st.prime.forEach(p => glowPt(p, 0xffc928, .4)); const bl = cks.find(o => o.side === 1 && o.at === 2); if (bl) { const sp = spot(bl); later(() => { cross(sp.x, sp.z); }, 300); } }
+          SFX.chime(); later(() => finish(), 300);
+        };
+        if (victim) later(() => moveTo(victim, 'bar', next, 1.2), 80); else next();
+      });
+    }
+    // after ~6 s without a tap: a ghost finger taps the right spot
+    function hideHand() { if (hand) { hand.remove(); hand = null; } }
+    function armIdle() { clearTimeout(idleT); hideHand(); idleT = setTimeout(showHand, 6000); }
+    function handTarget() {
+      if (phase === 'pick' && cur) return [cur.m.position.x, cur.m.position.z, cur.m.position.y + .2];
+      if (phase === 'dest') { const P = pathOf(act()), [x, z] = landXZ(0, P[P.length - 1]); return [x, z, Y + .1]; }
+      return null;
+    }
+    function showHand() {
+      if (stopped || busy || (phase !== 'pick' && phase !== 'dest')) return;
+      const t = handTarget(); if (!t) return;
+      const q = T3.project(t[0] * SC, t[1] * SC, t[2] * SC);
+      hand = document.createElement('div'); hand.className = 'bgt-hand';
+      hand.innerHTML = '<svg viewBox="0 0 48 60" width="48" height="60"><circle cx="16" cy="6" r="5" fill="none" stroke="#ff4d4d" stroke-width="3" opacity=".8"/><path d="M12 8c0-3 2-5 4-5s4 2 4 5v17l2-1c2-1 4 0 4 2l1-1c2-1 4 0 4 2l1-1c2-1 5 0 5 3v12c0 8-6 14-14 14h-3c-5 0-8-3-10-7l-6-11c-1-2 0-4 2-5s4 0 5 2l2 3z" fill="#fff" stroke="#2b3044" stroke-width="2.6" stroke-linejoin="round"/></svg>';
+      Object.assign(hand.style, { position: 'fixed', left: (q.x - 16) + 'px', top: (q.y - 4) + 'px', zIndex: 9999, pointerEvents: 'none', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,.35))', opacity: 0 });
+      document.body.appendChild(hand);
+      if (hand.animate) hand.animate([{ transform: 'translate(46px,60px) scale(1)', opacity: .5 }, { transform: 'translate(0,0) scale(1)', opacity: .95, offset: .4 }, { transform: 'translate(0,0) scale(.82)', opacity: .95, offset: .55 }, { transform: 'translate(0,0) scale(1)', opacity: .95, offset: .7 }, { transform: 'translate(0,0) scale(1)', opacity: 0 }], { duration: 1600, iterations: 3, fill: 'forwards' });
+      const flash = guide.children.find(o => o.userData.ring); if (flash) anim(600, k => flash.scale.setScalar(1 + Math.sin(k * Math.PI * 3) * .3));
+      idleT = setTimeout(() => { hideHand(); showHand(); }, 6500);
+    }
+    function nudge() {   // a wrong tap: the right checker gives a little shake, the hint is repeated
+      if (phase === 'pick' && cur) { const c = cur, x0 = c.m.position.x; anim(420, k => { c.m.position.x = x0 + Math.sin(k * Math.PI * 6) * .09 * (1 - k); }, () => { c.m.position.x = x0; }); line(`${dieTag(act())}<br><b class="tapl" style="color:#e0452b;display:inline-block;margin-top:6px;font-size:1.06em">👉 ${X0.hintPick}</b>`, 1); }
+      else if (phase === 'dest') { arrow.scale.setScalar(1.35); anim(380, k => arrow.scale.setScalar(1.35 - .35 * k)); line(`${dieTag(act())}<br><b class="tapl" style="color:#e0452b;display:inline-block;margin-top:6px;font-size:1.06em">👉 ${X0.hintDest}</b>`, 1); }
+      armIdle();
+    }
 
     /* ---------- guide panel ---------- */
     const el = document.createElement('div'); el.className = 'rgd';
@@ -358,12 +482,12 @@
       tx.onclick = () => { clearInterval(typeT); nodes.forEach(([n, s]) => { n.textContent = s; }); };
       const pic = $('.pic'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
     }
-    const waiting = () => { const st = STEPS[step]; return (st.act || st.roll) && !played; };
+    const waiting = () => { const st = STEPS[step]; return (st.acts || st.roll) && !played; };
     function buttons() {
       const st = STEPS[step], wait = waiting();
       $('[data-a=back]').style.visibility = step ? '' : 'hidden';
       const nx = $('[data-a=next]');
-      nx.textContent = st.last ? L.start + ' ▶' : wait ? (st.roll ? L.roll : L.tap) : L.next + ' ▶';
+      nx.textContent = st.last ? L.start + ' ▶' : wait ? (st.roll ? L.roll : phase === 'dest' ? X0.tapDest : X0.tapCk) : L.next + ' ▶';
       nx.disabled = !!wait; nx.classList.toggle('wait', !!wait);
       $('.dots').querySelectorAll('i').forEach((d, i) => d.className = i === step ? 'on' : i < step ? 'done' : '');
       $('.pg').textContent = `${step + 1} / ${STEPS.length}`;
@@ -372,7 +496,7 @@
       if (!st.last && ag) ag.remove();
     }
     function go(n) {
-      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false;
+      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false; ai = 0; phase = ''; cur = sel = null; clearTimeout(idleT); clearGuide();
       timers.forEach(clearTimeout); timers = [];
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
       const cnt = setBoard(st.pos); clearDice(); setCube(64, !!(st.cube || st.last || st === STEPS[0]));
@@ -382,12 +506,7 @@
         if (st.tray) trayGlow(0);
         (st.prime || []).forEach(p => glowPt(p, 0xffc928, .3, false));
         (st.cross || []).forEach(p => { const [x, z] = landXZ(0, p); cross(x, z); });
-        if (st.act) {
-          const c = st.act.from === 'bar' ? topOf(0, 'bar') : topOf(0, st.act.from);
-          if (c) { c.bob = true; }
-          if (st.act.to === 'off') trayGlow(0); else glowPt(st.act.to, 0x2fd17a, .4);
-          const [x, z] = landXZ(0, st.act.to); ring(x, z);
-        }
+        if (st.acts) startAct();
         if (st.win) { $('.cnt').innerHTML = `<span class="tag">${L.gammon}</span> <span class="tag">${L.bg}</span>`; SFX.chime(); }
         if (st.cube) later(cubeShow, 700);
       }, 380 + cnt * 14);
@@ -419,22 +538,10 @@
       if (busy || T3.wasDrag() || e.target.closest('.rgd')) return;
       const st = STEPS[step]; if (played) return;
       if (st.roll) { played = true; busy = true; rollDice(st.roll, () => later(() => finish(), 200)); return; }
-      if (!st.act) return;
-      const q = hitOf(e); if (q == null) return;
-      if (q !== st.act.to) { if (q !== st.act.from) say(L.nope); return; }
-      busy = true; played = true; clearMarks();
-      const c = st.act.from === 'bar' ? topOf(0, 'bar') : topOf(0, st.act.from), stepNow = step; if (!c) { busy = false; return; }
-      c.bob = false;
-      const after = () => {
-        if (step !== stepNow) return;
-        dimDie(st.act.path ? 4 : 1);
-        if (st.then) { const c2 = topOf(0, st.then.from); later(() => { if (c2) moveTo(c2, st.then.to, () => { dimDie(2); glowPt(st.then.to, 0xffc928, .35, false); later(() => finish(), 250); }); }, 380); return; }
-        if (st.prime) { st.prime.forEach(p => glowPt(p, 0xffc928, .4)); const bl = cks.find(o => o.side === 1 && o.at === 2); if (bl) { const s = spot(bl); later(() => { cross(s.x, s.z); SFX.chime(); }, 300); } later(() => finish(), 500); return; }
-        later(() => finish(), 250);
-      };
-      if (st.act.path) { hopPath(c, st.act.path, after); return; }
-      const victim = typeof st.act.to === 'number' ? cks.find(o => o.side === 1 && o.at === st.act.to) : null;
-      moveTo(c, st.act.to, () => { if (victim) later(() => moveTo(victim, 'bar', after, 1.2), 60); else after(); });
+      const a = act(); if (!a || !phase) return;
+      const q = hitOf(e);
+      if (phase === 'pick') { if (q === a.from) pickCk(); else nudge(); return; }
+      if (phase === 'dest') { const P = pathOf(a); if (q === P[P.length - 1]) doMove(); else if (q !== a.from) nudge(); return; }
     }
     $('[data-a=next]').onclick = () => { if (STEPS[step].last) ctx.onStart(); else go(step + 1); };
     $('[data-a=back]').onclick = () => go(step - 1);
@@ -452,9 +559,9 @@
     requestAnimationFrame(() => el.classList.add('on'));
     later(() => go(0), 350);
     return {
-      stop() { stopped = true; hidden.forEach(o => { o.visible = true; }); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
+      stop() { stopped = true; clearTimeout(idleT); hideHand(); arrowEl.remove(); hidden.forEach(o => { o.visible = true; }); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
       panel: el,
-      _debug: { pt: (p, side = 0) => { const [x, z] = landXZ(side, p); return [x * SC, z * SC, Y * SC]; }, step: () => step },
+      _debug: { pt: (p, side = 0) => { const [x, z] = landXZ(side, p); return [x * SC, z * SC, Y * SC]; }, ck: () => cur ? [cur.m.position.x * SC, cur.m.position.z * SC, Y * SC] : null, act: () => { const a = act(); if (!a) return null; const P = pathOf(a); return { from: a.from, dest: P[P.length - 1], phase }; }, step: () => step },
     };
   }
 

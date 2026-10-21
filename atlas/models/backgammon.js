@@ -365,7 +365,7 @@
   /* ---------- checkers, dice, cube ---------- */
   // id → rim metal + face leather (the light colours get light faces)
   const CKL = { gold: ['gold', 'ivory'], black: ['plat', 'black'], white: ['silver', 'white'], red: ['gold', 'scarlet'] };
-  const RIM = { gold: [0xe2bf72, .26], plat: [0xd6d8dc, .2], silver: [0xeceef2, .16] };
+  const RIM = { gold: [0xe2bf72, .26], plat: [0xd6d8dc, .2], silver: [0xdfe2e7, .14] };
   const FACE = { ivory: '#e9dfc8', black: '#1c1c1f', white: '#f5f2ea', scarlet: '#a8141d' };
   const CK_R = .47, CK_H = .2;
   const ckMats = {};
@@ -376,12 +376,13 @@
     // the inset face: leather grain, a slightly darker edge where it meets the ring
     const c = cv(256, 256), x = c.getContext('2d');
     x.fillStyle = FACE[face]; x.fillRect(0, 0, 256, 256);
-    x.globalCompositeOperation = 'overlay'; x.globalAlpha = face === 'black' ? 1 : .7; const p = x.createPattern(leatherTile(), 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.45)); x.fillStyle = p; x.fillRect(0, 0, 256, 256);
+    x.globalCompositeOperation = 'overlay'; x.globalAlpha = face === 'black' ? 1 : face === 'white' ? .12 : .7; const p = x.createPattern(leatherTile(), 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.45)); x.fillStyle = p; x.fillRect(0, 0, 256, 256);
     if (face === 'black') { x.globalCompositeOperation = 'screen'; x.globalAlpha = .05; x.fillRect(0, 0, 256, 256); }
     x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
     const gr = x.createRadialGradient(128, 128, 90, 128, 128, 128); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, face === 'black' ? 'rgba(0,0,0,.5)' : 'rgba(60,40,10,.28)'); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
     const ft = tex(c, 4);
-    const faceM = new TT.MeshPhysicalMaterial({ map: ft, bumpMap: ft, bumpScale: .006, roughness: face === 'black' ? .42 : .5, sheen: new TT.Color(face === 'black' ? 0x303036 : 0x6a6050), clearcoat: .1, clearcoatRoughness: .5 });
+    const en = face === 'white';   // white = glossy enamel, the others leather
+    const faceM = new TT.MeshPhysicalMaterial({ map: ft, bumpMap: ft, bumpScale: en ? .0012 : .006, roughness: en ? .18 : face === 'black' ? .42 : .5, sheen: new TT.Color(face === 'black' ? 0x303036 : en ? 0x000000 : 0x6a6050), clearcoat: en ? 1 : .1, clearcoatRoughness: en ? .05 : .5 });
     return (ckMats[id] = { metal, face: faceM });
   }
   let ckGeo = null;
@@ -428,6 +429,26 @@
     const R = { 1: [0, 0], 6: [Math.PI, 0], 2: [-Math.PI / 2, 0], 5: [Math.PI / 2, 0], 3: [0, Math.PI / 2], 4: [0, -Math.PI / 2] }[v] || [0, 0];
     g.rotation.set(R[0], yaw, R[1], 'YXZ');
   }
+  // the game's own die layout (backgammon/dice3d.js FACES, its frame x right · y down the screen · z up → here x · z · y):
+  // used for the rolling dice of the skin (they follow Dice3D's physics) and for the resting-dice renders, so both match
+  const GF = [[1, [0, 0, 1], [1, 0, 0], [0, 1, 0]], [6, [0, 0, -1], [1, 0, 0], [0, -1, 0]], [2, [1, 0, 0], [0, 1, 0], [0, 0, 1]], [5, [-1, 0, 0], [0, -1, 0], [0, 0, 1]], [3, [0, -1, 0], [1, 0, 0], [0, 0, 1]], [4, [0, 1, 0], [0, 0, 1], [1, 0, 0]]]
+    .map(([v, n, u, w]) => ({ v, n: [n[0], n[2], n[1]], u: [u[0], u[2], u[1]], w: [w[0], w[2], w[1]] }));
+  function dieG(id = 'gold', size = .82) {
+    const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
+    const body = new TT.Mesh(RB(size, size, size, size * .16, 4), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
+    const pg = new TT.SphereGeometry(size * .085, 14, 10), sp = size * .76 / 3;
+    for (const F of GF) for (const i of PIPS[F.v]) {
+      const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h - size * .035, s = new TT.Mesh(pg, m.pip);
+      s.position.set(F.n[0] * d + F.u[0] * cu + F.w[0] * cw, F.n[1] * d + F.u[1] * cu + F.w[1] * cw, F.n[2] * d + F.u[2] * cu + F.w[2] * cw);
+      s.scale.set(F.n[0] ? .55 : 1, F.n[1] ? .55 : 1, F.n[2] ? .55 : 1); g.add(s);
+    }
+    g.userData.die = id; return g;
+  }
+  // value v on top, its pip columns along +x and rows along +z (= down the screen): the resting die before the page turns it by its yaw
+  function dieGTop(g, v) { const F = GF.find(f => f.v === v), M = new (T().Matrix4)().makeBasis(new (T().Vector3)(...F.u), new (T().Vector3)(...F.n), new (T().Vector3)(...F.w)).transpose(); g.quaternion.setFromRotationMatrix(M); }
+  // a Dice3D pose (3×3 row-major rotation in the game frame) → this die's rotation
+  const SW3 = [0, 2, 1];
+  function dieGPose(g, m) { const e = []; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) e[i * 3 + j] = m[SW3[i] * 3 + SW3[j]]; g.quaternion.setFromRotationMatrix(new (T().Matrix4)().set(e[0], e[1], e[2], 0, e[3], e[4], e[5], 0, e[6], e[7], e[8], 0, 0, 0, 0, 1)); }
   let cubeTex = {};
   function cube(v = 64, size = .86) {
     const TT = T(), key = String(v);
@@ -458,10 +479,11 @@
   X.MODELS.backgammon = function (live, o) {
     const g = board((o && o.look) || 'marq', (o && o.H) || 12), Y = g.userData.top;
     if (live) return g;
+    let ck = ['gold', 'black']; try { const c = JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}').settings.ck; if (c && CKL[c[0]] && CKL[c[1]] && c[0] !== c[1]) ck = c; } catch (e) {}
     const put = (id, vp, n) => { for (let k = 0; k < n; k++) { const c = checker(id), [x, z] = stackXZ(vp, k, n); c.position.set(x, Y, z); g.add(c); const sh = X.contact(.47, .45); sh.position.set(x, Y + .002, z); g.add(sh); } };
-    put('gold', 24, 2); put('gold', 13, 5); put('gold', 8, 3); put('gold', 6, 5);
-    put('black', 1, 2); put('black', 12, 5); put('black', 17, 3); put('black', 19, 5);
-    const gm = geom(), d1 = die('gold'), d2 = die('gold');
+    put(ck[0], 24, 2); put(ck[0], 13, 5); put(ck[0], 8, 3); put(ck[0], 6, 5);
+    put(ck[1], 1, 2); put(ck[1], 12, 5); put(ck[1], 17, 3); put(ck[1], 19, 5);
+    const gm = geom(), d1 = die(ck[0]), d2 = die(ck[0]);
     dieRot(d1, 5, .35); dieRot(d2, 3, -.5);
     const [ax, az] = toWorld(gm.RX + 2.4, gm.MID - .2), [bx, bz] = toWorld(gm.RX + 3.6, gm.MID + .25);
     d1.position.set(ax, Y + .4, az); d2.position.set(bx, Y + .4, bz); g.add(d1, d2);
@@ -504,7 +526,7 @@
         const s = checker(id); s.rotation.x = Math.PI / 2; s.position.z = -CK_H / 2;   // on its edge: the rim band shows
         const wrap = new TT.Group(); wrap.add(s); out.slab[id] = shot(wrap, .5, .125, px, Math.round(px / 4));
         out.die[id] = [];
-        for (let v = 1; v <= 6; v++) { const d = die(id, .82); dieRot(d, v); out.die[id][v] = shot(d, .41, .41, Math.round(px * .9), Math.round(px * .9)); }
+        for (let v = 1; v <= 6; v++) { const d = dieG(id, .82); dieGTop(d, v); out.die[id][v] = shot(d, .41, .41, Math.round(px * .9), Math.round(px * .9)); }
       }
       const cb = cube(' ', .86); out.cube = shot(cb, .43, .43, Math.round(px * .9), Math.round(px * .9));
       R.dispose(); R.forceContextLoss && R.forceContextLoss();
@@ -512,5 +534,5 @@
     }));
   }
 
-  X.backgammon = { board, checker, die, dieRot, cube, sprites, geom, slotX, stackXZ, toWorld, FY, RH, CKL, DIE, CK_R, CK_H };
+  X.backgammon = { board, checker, die, dieRot, dieG, dieGTop, dieGPose, cube, sprites, geom, slotX, stackXZ, toWorld, FY, RH, CKL, DIE, CK_R, CK_H };
 })();

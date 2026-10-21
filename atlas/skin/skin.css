@@ -237,6 +237,7 @@ html.atlas-bg3d .slab.p1{background:var(--bgs1) center/100% 100% no-repeat!impor
 /* resting dice: the render of the face that is up */
 html.atlas-bg3d .die{background-size:100% 100%!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:20%}
 html.atlas-bg3d .die i{visibility:hidden!important}
+html.atlas-bg3d .dice3d{visibility:hidden!important}
 html.atlas-bg3d .die.p0[data-v="1"]{background-image:var(--bgd01)!important}html.atlas-bg3d .die.p0[data-v="2"]{background-image:var(--bgd02)!important}html.atlas-bg3d .die.p0[data-v="3"]{background-image:var(--bgd03)!important}
 html.atlas-bg3d .die.p0[data-v="4"]{background-image:var(--bgd04)!important}html.atlas-bg3d .die.p0[data-v="5"]{background-image:var(--bgd05)!important}html.atlas-bg3d .die.p0[data-v="6"]{background-image:var(--bgd06)!important}
 html.atlas-bg3d .die.p1[data-v="1"]{background-image:var(--bgd11)!important}html.atlas-bg3d .die.p1[data-v="2"]{background-image:var(--bgd12)!important}html.atlas-bg3d .die.p1[data-v="3"]{background-image:var(--bgd13)!important}
