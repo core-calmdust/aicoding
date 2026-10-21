@@ -207,7 +207,7 @@ const ICONS = {
   level: '<path d="M3 20h5v-5h5v-5h5V5h3"/>', theme: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="7.5" r="1.4"/>', unique: '<path d="M12 3l2.2 6.3L20.5 11l-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-1.7z"/>',
   real: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/>', crown: '<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>', bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12h.01" stroke-width="3.4"/>', sprout: '<path d="M12 21v-9M12 12C12 7 8 5 4 5c0 5 3 7 8 7zM12 14c0-4 3-6 7-6 0 4-3 6-7 6z"/>',
-  four: '<circle cx="4.5" cy="12" r="2.2"/><circle cx="9.5" cy="12" r="2.2"/><circle cx="14.5" cy="12" r="2.2"/><circle cx="19.5" cy="12" r="2.2"/>', three: '<circle cx="6" cy="18" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M4 7h7M7.5 3.5v7"/>',
+  four: '<circle cx="4.5" cy="12" r="2.2"/><circle cx="9.5" cy="12" r="2.2"/><circle cx="14.5" cy="12" r="2.2"/><circle cx="19.5" cy="12" r="2.2"/>', three: '<circle cx="5.5" cy="18.5" r="2.4"/><circle cx="12" cy="12" r="2.4"/><circle cx="18.5" cy="5.5" r="2.4"/><path d="M3 12h4M17 19h4" stroke-dasharray="1.5 2"/>',
   ban: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', grid: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
   trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>', mill: '<path d="M4 12h16"/><circle cx="4.5" cy="12" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="19.5" cy="12" r="2.6"/>',
 };
