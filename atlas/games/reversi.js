@@ -165,5 +165,5 @@
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
     return { name: L[0][n - 1], desc: L[1][n - 1], rating: RATING[n], who: W[n - 1] };
   }
-  window.Atlas3D.reversi = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], start, levelInfo };
+  window.Atlas3D.reversi = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai'], start, levelInfo };   // table: start() plays on the chabudai itself
 })();
