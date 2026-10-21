@@ -587,7 +587,7 @@ class Engine {
   timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit)) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
-    const nn = pos.nn;
+    const nn = pos.nn && this.nnx ? this.nnx : pos.nn;      // nnx: a per-engine net (A/B tests)
     if (nn && this.useNN !== false) {
       const b = pos.b, fb = pos.fb, bd = nn.board, fm = nn.forb, rj = pos.renju;
       for (let m = 0; m < 225; m++) { const i = M2I[m], x = b[i]; bd[m] = x; fm[m] = rj && x === EMPTY && fb[i] === 1 ? 1 : 0; }
@@ -904,14 +904,17 @@ function solve(rule, moves, start, n, defend, maxNodes) {
 
 // neural evaluation (nn.c compiled to WebAssembly), one instance per rule group
 const NNI = { renju: null, std: null };
-function setNN(group, wasmBytes, weightBytes) {
-  if (!wasmBytes) { NNI[group] = null; return true; }
+function makeNN(wasmBytes, weightBytes) {
   const inst = new WebAssembly.Instance(new WebAssembly.Module(wasmBytes), {});
   const x = inst.exports, mem = new Uint8Array(x.memory.buffer), n = x.nn_weights_size();
-  if (weightBytes.byteLength !== n) return false;
+  if (weightBytes.byteLength !== n) return null;
   mem.set(new Uint8Array(weightBytes), x.nn_weights()); x.nn_init();
-  NNI[group] = { eval: x.nn_eval, board: new Uint8Array(x.memory.buffer, x.nn_board(), 225), forb: new Uint8Array(x.memory.buffer, x.nn_forb(), 225) };
-  return true;
+  return { eval: x.nn_eval, board: new Uint8Array(x.memory.buffer, x.nn_board(), 225), forb: new Uint8Array(x.memory.buffer, x.nn_forb(), 225) };
+}
+function setNN(group, wasmBytes, weightBytes) {
+  if (!wasmBytes) { NNI[group] = null; return true; }
+  const nn = makeNN(wasmBytes, weightBytes); if (!nn) return false;
+  NNI[group] = nn; return true;
 }
 // learned weights file: Int8 [combo/pair/bias part (BIAS + 2) | line part (4 * NL)]
 function loadWeightsBuffer(group, buf) {
@@ -920,7 +923,7 @@ function loadWeightsBuffer(group, buf) {
   setWeights(group, a.subarray(0, nf)); setLineWeights(group, a.subarray(nf));
   return true;
 }
-const API = { setNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
+const API = { setNN, makeNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
   C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
@@ -930,9 +933,9 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const ready = typeof fetch !== 'function' ? Promise.resolve() : Promise.all([
     fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}),
     // renju: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails
-    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=3').then(r => r.ok ? gunzip(r) : null)])
+    Promise.all([fetch('nn48.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=4').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('renju', w, b); }).catch(() => {}),
-    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_std.bin.gz?v=1').then(r => r.ok ? gunzip(r) : null)])
+    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_std.bin.gz?v=2').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('std', w, b); }).catch(() => {}),
   ]);
   self.onmessage = async e => {
