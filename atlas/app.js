@@ -555,7 +555,7 @@
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  const FULL_SKIN = { reversi: true, shogi: true, chess: true };
+  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true };
   function startPlay() {
     const g = bvGame, ad = Atlas3D[g.id];
     if (FULL_SKIN[g.id]) {
