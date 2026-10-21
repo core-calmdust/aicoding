@@ -589,6 +589,109 @@ html[lang=ar] .lx-banner .pg{text-align:left}
 .fg-cap{display:block}
 html[lang=ar] .ls-fig figcaption{text-align:center}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #lessonIntroView .lesson-intro{column-gap:24px} }
+#pzGrid .pb-tile.hasth{aspect-ratio:1;padding:0;overflow:hidden;justify-content:flex-end;gap:0}
+#pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
+#pzGrid .pb-tile .th > svg{width:100%;height:100%;border-radius:4px}
+#pzGrid .pb-tile.hasth .n{position:absolute;top:3px;left:4px;z-index:1;font-size:10.5px;padding:0 4px;border-radius:5px;background:rgba(10,12,12,.82);color:#fff;line-height:1.45}
+#pzGrid .pb-tile.hasth .n{background:#e6cd8c;color:#1a160c}#pzGrid .pb-tile.hasth.p2 .n{background:#d4d9e0;color:#121413}
+#pzGrid .pb-tile.hasth .s, #pzGrid .pb-tile.hasth .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
+#pzGrid .pb-tile.done .th{opacity:1}
+#pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #pzGrid .pb-tile.hasth .n{font-size:11.5px} }
+/* puzzle collection (v3, same layout as Reversi): hero with overall progress, daily card, category tabs, theme cards with a board */
+.pzx{display:flex;flex-direction:column;gap:12px}
+.pzx-hero{position:relative;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:18px;overflow:hidden;
+  border:1px solid rgba(201,169,97,.32);background:radial-gradient(120% 140% at 0% 0%,rgba(29,107,76,.55),transparent 60%),linear-gradient(120deg,rgba(201,169,97,.16),rgba(0,0,0,.25) 70%)}
+.pzx-hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:220px;height:220px;border-radius:50%;opacity:.1;pointer-events:none;
+  background:repeating-conic-gradient(from 45deg,#fff 0 25%,transparent 0 50%) 0 0/44px 44px;mask:radial-gradient(closest-side,#000 40%,transparent)}
+.pzx-hero .pb-ring{width:84px;height:84px;background:radial-gradient(closest-side,#132019 79%,transparent 81%),conic-gradient(#f2c060 calc(var(--p)*360deg),rgba(255,255,255,.09) 0)}
+.pzx-hero .pb-ring b{font-size:22px}.pzx-hero .pb-ring small{font-size:11px}
+.pzx-hs{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;z-index:1}
+.pzx-title{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.1em;color:var(--text)}
+.pzx-title small{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--brass);margin-inline-start:8px;padding:2px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.4);vertical-align:3px}
+.pzx-lead{font-size:12px;color:var(--muted);line-height:1.6}
+.pzx-stats{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.pzx-stats .pb-st{font-size:14px;font-weight:700}.pzx-stats .pb-st .pb-star{width:15px;height:15px}
+.pzx-md{display:inline-flex;align-items:center;gap:3px}.pzx-md .pb-medal{width:17px;height:17px}
+.pzx-hero .pb-cont{z-index:1;max-width:220px;text-align:center;line-height:1.35}
+.pzx-hero .pb-cont small{display:block;font-weight:500;font-size:11px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pzx-daily{display:flex;align-items:center;gap:14px;width:100%;text-align:start;padding:10px 14px 10px 10px;border-radius:14px;color:var(--text);
+  border:1px solid rgba(242,192,96,.45);background:linear-gradient(110deg,rgba(242,192,96,.18),rgba(0,0,0,.2) 55%);transition:transform .15s,border-color .2s}
+.pzx-daily:hover{transform:translateY(-1px);border-color:#f2c060}
+.pzx-daily .th{flex:none;width:62px}.pzx-daily .th > svg{display:block;width:100%;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.pzx-daily .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pzx-daily .tx b{font-size:15px}.pzx-daily .tx b span{color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:12px;margin-inline-start:6px}
+.pzx-daily .tx small{font-size:12px;color:var(--muted)}
+.pzx-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f4d98f,#d4a84a)}
+.pzx-daily .go.ok{color:#8fe3b8;background:rgba(111,211,160,.12);border:1px solid rgba(111,211,160,.4)}
+.pzx .lx-tabs{margin:2px 0 0}
+.pzx .lx-tabs button .ic{background:none;color:var(--brass);padding:3px}
+.pzx .lx-tabs button .ic svg, .pzx-ic svg, .pzx-ghead .ic svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pzx-cat{font-size:12px;color:var(--muted);line-height:1.6;margin:-2px 2px 0}
+.pzx-cards{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.pzx-card{position:relative;display:flex;gap:12px;align-items:stretch;text-align:start;width:100%;padding:10px 12px 10px 10px;border-radius:15px;color:var(--text);overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--c) 32%,var(--line));background:linear-gradient(125deg,color-mix(in srgb,var(--c2) 34%,transparent),rgba(0,0,0,.24) 62%);transition:transform .15s,border-color .2s,box-shadow .2s}
+.pzx-card:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.pzx-card.full{border-color:rgba(242,192,96,.7);box-shadow:0 0 0 1px rgba(242,192,96,.25),0 6px 22px rgba(242,192,96,.12)}
+.pzx-th{flex:none;width:84px;align-self:center}
+.pzx-bd{position:relative;display:block;width:100%}
+.pzx-bd > svg{display:block;width:100%;height:auto;border-radius:7px;box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.pzx-ic{position:absolute;inset:auto -6px -6px auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;padding:5px;color:#0b0f16;
+  background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+.pzx-ic > svg{width:100%;height:100%}
+.pzx-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3cf,#e6cd8c 55%,#a8893f);box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
+.pzx-tm.p2{background:radial-gradient(circle at 35% 30%,#fff,#d4d9e0 60%,#8e96a1)}
+.pzx-ghead .chips .pzx-diff{margin-inline-start:4px}.pzx-ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:15px;line-height:1}
+.pzx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pzx-top{display:flex;align-items:center;gap:8px;min-width:0}
+.pzx-nm{font-size:15px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pzx-diff{margin-inline-start:auto;flex:none;display:inline-flex;align-items:center;gap:2px}
+.pzx-diff i{width:6px;height:11px;border-radius:2px;background:rgba(255,255,255,.12)}.pzx-diff i.on{background:var(--c)}
+.pzx-desc{font-size:12px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pzx-prog{display:flex;align-items:center;gap:8px;margin-top:auto;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.pzx-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pzx-meta .pb-medals .pb-medal{width:14px;height:14px}.pzx-meta .pb-pip{width:8px;height:8px}
+.pzx-card .pb-full{top:7px;inset-inline-end:10px;right:auto}
+.pzx-card.full .pzx-diff{visibility:hidden}
+.pzx-ghead{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.pzx-ghead .ic{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;padding:9px;color:#0b0f16;background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.pzx-ghead .ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:22px}
+.pzx-ghead .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pzx-ghead h2{margin:0;font-size:20px}
+.pzx-ghead small{font-size:12px;color:var(--muted);line-height:1.55}
+.pzx-ghead .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pzx-chip{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--c)}
+html[lang=ar] .pzx, html[lang=ar] .pzx-ghead{direction:rtl}
+html[lang=ar] .pzx :is(.pb-ring, .pzx-prog, .pzx-stats .pb-st, .pzx-title small){direction:ltr;unicode-bidi:isolate}
+@media (max-width:560px){
+  .pzx-hero{padding:12px 12px;gap:10px 12px;flex-wrap:wrap}.pzx-hero .pb-ring{width:66px;height:66px}.pzx-hero .pb-ring b{font-size:18px}
+  .pzx-title{font-size:19px}.pzx-lead{display:none}.pzx-hs{flex:1 1 calc(100% - 82px)}
+  .pzx-hero .pb-cont{flex:1 1 100%;max-width:none;padding:9px 12px}
+  .pzx-th{width:72px}.pzx-nm{font-size:14px}
+  #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:calc(100vh - 32px);height:calc(100dvh - 32px)}
+}
+@media (min-width: 640px){ .pzx-cards{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  .pzx-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pzx-card{flex-direction:column;align-items:stretch;padding:12px}
+  .pzx-th{width:100%;display:flex;justify-content:center;padding:6px 0 4px;border-radius:10px;background:radial-gradient(closest-side,rgba(0,0,0,.28),transparent)}
+  .pzx-bd{width:132px}
+  .pzx-ic{width:34px;height:34px}
+  .pzx-desc{min-height:3.1em}
+}
+.pzx-daily .th{position:relative}
+.pzx-title small{white-space:nowrap}
+@media (max-width:560px){ .pzx-title{font-size:17px;letter-spacing:.05em} .pzx-title small{font-size:11px;margin-inline-start:6px} }
+.pzx-stats .pb-st small{color:var(--muted);font-weight:400}
+/* puzzle result: explanation, solution line, other moves */
+.pz-why{margin:8px 0 4px;padding:9px 12px;border-radius:10px;background:rgba(0,0,0,.22);border:1px solid var(--line);font-size:13.5px;line-height:1.75;color:var(--text)}
+.pz-why .pz-ex{display:block}
+.pz-why .pz-pv, .pz-why .pz-oth{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.pz-why small{font-size:11px;color:var(--dim);margin-inline-end:6px;letter-spacing:.04em}
+.pz-why .pzv{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#1a160c}
+.pz-why .pzv.p1{background:#e6cd8c}.pz-why .pzv.p2{background:#d4d9e0}
+.pz-why .pz-pv i{font-style:normal;color:var(--dim);font-size:11px}
+html[lang=ar] .pz-why .pz-pv{direction:ltr;justify-content:flex-end}
 /* puzzle grid: each button shows the position */
 .pz-grid.th button{position:relative;aspect-ratio:1/0.95;padding:0;overflow:hidden}
 .pz-grid.th button .th{position:absolute;inset:4px 4px 4px;display:grid;place-items:center;opacity:.9}
@@ -872,14 +975,12 @@ body .info-line{font-size:12.5px}
   <div class="modal">
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div class="pzx" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
-      <div class="pz-grid" id="pzGrid"></div>
+      <div class="pzx-ghead" id="pzLevelHead"></div>
+      <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
   </div>
@@ -1077,6 +1178,19 @@ function playChime(win) {
     const tt = t0 + i * (win ? 0.1 : 0.16); g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.16, tt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.7);
     o.connect(g).connect(a.destination); o.start(tt); o.stop(tt + 0.75);
   });
+}
+// quiz-show "ピ〜ンポ〜ン" (same as Reversi): two ringing bell tones, high then a major third lower; soft = a short single ding
+function sfxCorrect(delay = 0.16, soft) {
+  if (!settings.sound) return; const a = ctx(); if (!a) return; const t0 = a.currentTime + delay;
+  const tone = (st, f, dur, vol) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(vol, st + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, st + dur); o.connect(g).connect(a.destination); o.start(st); o.stop(st + dur + 0.05); };
+  const bell = (st, f, dur, vol) => { tone(st, f, dur, vol); tone(st, f * 2, dur * 0.55, vol * 0.22); tone(st, f * 3, dur * 0.3, vol * 0.08); tone(st, f * 4.2, dur * 0.12, vol * 0.05); };
+  if (soft) { bell(t0, 987.77, 0.5, 0.1); return; }
+  bell(t0, 987.77, 1.0, 0.2); bell(t0 + 0.32, 783.99, 1.6, 0.22);
+}
+function sfxWrong(delay = 0.1) {   // gentle low falling "boop-boop"
+  if (!settings.sound) return; const a = ctx(); if (!a) return; const t0 = a.currentTime + delay;
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900; f.connect(a.destination);
+  [[311.1, 0, 0.22], [233.1, 0.15, 0.36]].forEach(([fr, dt, dur]) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = fr; const st = t0 + dt; g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(0.13, st + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, st + dur); o.connect(g).connect(f); o.start(st); o.stop(st + dur + 0.05); });
 }
 function playTick() {
   if (!settings.sound) return; const a = ctx(); if (!a) return;
@@ -1305,7 +1419,7 @@ function hbInfo(shown, st, tm, ev) {
   const over = !!st.winner || st.draw;
   let h = `<span class="hb-chip">${over ? (st.winner ? `<i class="hb-disc p${st.winner}"></i><b>${escHb(t('ev.won', { c: pname(st.winner) }))}</b>` : `<b>${escHb(t('res.draw'))}</b>`) : `<i class="hb-disc p${tm}"></i><b>${escHb(t('hb.turn', { c: pname(tm) }))}</b>${thinking ? ' · ' + escHb(t('thinking')) : ''}`}</span>`;
   h += `<span class="hb-chip">${escHb(t('hb.move', { n: shown.length + (over ? 0 : 1) }))}</span>`;
-  if (puzzle) h += `<span class="hb-chip">${escHb(t('pz.winIn', { n: puzzle.n }))} · <b>${escHb(pzt('movesLeft', { n: Math.max(0, puzzle.n - puzzle.used) }))}</b></span>`;
+  if (puzzle) h += `<span class="hb-chip">${escHb(puzzle.kind === 'mate' ? t('pz.winIn', { n: puzzle.n }) : PT(pzLv(puzzle.li).name))} · <b>${escHb(pzt('movesLeft', { n: Math.max(0, puzzle.n - puzzle.used) }))}</b></span>`;
   else if (!lesson && settings.eval && !over && ev && !document.body.classList.contains('rated-live') && !(window.rtLive && rtLive())) h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb(evalText(ev))}</b></span>`;
   HB.setInfo(h);
 }
@@ -1932,57 +2046,191 @@ $('#lsQuit').onclick = () => quitSpecial();
 $('#lsList').onclick = () => { if (lesson) openLessons(lsCourse(LESSONS.steps[lesson.step])); };
 
 // ====================================================================== puzzles
+// v3 collection (puzzles.json v:3): levels = themes { id, cat, icon, name{lang}, desc{lang}, puzzles }.
+// Puzzle kinds: mate  { moves, n, answer, pv, ex }          — connect four within n own moves (defender answers with its best defence)
+//               'b'   { moves, k:'b', goal, sc, answer, ex } — the only move that keeps the result (exact solver values sc)
+//               's'   { moves, k:'s', steps:[{ sc, a, r }]}  — several only-moves in a row (stored defender replies r)
+// The 45 original puzzles keep their level and index (old progress "L-j" becomes "w2:j" / "w3:j" / "w4:j").
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
-let pzLevel = 0;
+const esc = escHb;
+const puzzlesReady = fetch('puzzles.json?v=20261021c4p').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const PZ_CATS = ['mate', 'theme', 'unique'], PZ_CAT_KEY = STORE + '-pzcat', PZ_LAST = STORE + '-pzlast';
+const PZ_OLD_IDS = ['w2', 'w3', 'w4'];
+function pzStore() {
+  const pr = pzProgress();
+  if (pr._v !== 3) {   // migrate "L-j": true → "w?:j": 3 stars
+    const out = { _v: 3 };
+    for (const k in pr) { const m = /^(\d)-(\d+)$/.exec(k); if (m && pr[k] && PZ_OLD_IDS[+m[1]]) out[PZ_OLD_IDS[+m[1]] + ':' + m[2]] = 3; else if (k.includes(':')) out[k] = pr[k]; }
+    try { localStorage.setItem(PZ_STORE, JSON.stringify(out)); } catch (e) {}
+    return out;
+  }
+  return pr;
+}
+const starVal = x => x === true ? 3 : (+x || 0);
+const PT = o => (o && (o[LANG] || o.en || o.ja)) || '';
+const pzLv = li => PUZZLES.levels[li];
+function pzRecs(li, pr) { pr = pr || pzStore(); const lv = pzLv(li); return lv.puzzles.map((_, j) => starVal(pr[lv.id + ':' + j])); }
+const pzKind = P => P.k === 'b' ? 'b' : P.k === 's' ? 's' : 'mate';
+const pzTurns = P => P.k === 's' ? P.steps.length : P.k === 'b' ? 1 : P.n;
+const pzSteps = P => P.k === 's' ? P.steps : [{ sc: P.sc, a: P.answer }];
+// difficulty: 5 steps from the solver-based score D (≈ 12 … 100)
+const pzDiff = D => Math.max(1, Math.min(5, Math.ceil(((D || 0) - 8) / 12)));
+const pzDiffAvg = lv => pzDiff(lv.puzzles.reduce((a, P) => a + (P.D || 0), 0) / Math.max(1, lv.puzzles.length));
+const pzPips = n => `<span class="pzx-diff" title="${t('pz.diff')} ${n}/5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
+// icons (stroke SVG, 24×24)
+const PZI = {
+  mate: '<path d="M4 20h16M6 20V9l6-5 6 5v11"/><path d="M10 20v-5h4v5"/>', theme: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="7.5" r="1.4"/>',
+  unique: '<path d="M12 3l2.2 6.3L20.5 11l-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-1.7z"/>',
+  dbl: '<circle cx="5" cy="17" r="2.4"/><circle cx="19" cy="17" r="2.4"/><path d="M9 17h6"/><path d="M5 11V7M19 11V7M3.5 8.5 5 7l1.5 1.5M17.5 8.5 19 7l1.5 1.5"/>',
+  def: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  par: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9.3h18M3 14.6h18"/><circle cx="12" cy="17.3" r="1.2"/><circle cx="12" cy="6.7" r="1.2"/>',
+  mid: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/>', draw: '<circle cx="12" cy="12" r="9"/><path d="M8 10h8M8 14h8"/>',
+  endg: '<path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9"/>',
+  long: '<path d="M3 17l5-5 4 4 9-9M15 7h6v6"/>', edge: '<path d="M4 3v18"/><circle cx="9" cy="16" r="2.6"/><path d="M13 8h7M17 5l3 3-3 3"/>',
+  silent: '<path d="M20 4C11 4 6 9 5 20M5 20c7 0 12-5 13-12M9.5 15H14"/>',
+};
+const pzSvg = k => `<svg viewBox="0 0 24 24">${PZI[k] || PZI.theme}</svg>`;
+const PZ_HUE = { dbl: ['#ff8fa8', '#9a3f57'], def: ['#73d9c6', '#26786b'], par: ['#c0a0ff', '#5b3f99'], mid: ['#9fb8ff', '#3f5299'], draw: ['#cfd6e6', '#56607e'], endg: ['#5ec6d8', '#2a6f7f'],
+  long: ['#ff7a6b', '#8a322a'], edge: ['#ffb36b', '#8f5a2a'], silent: ['#7be8a8', '#2a8550'] };
+function pzIconOf(li) { const lv = pzLv(li); if (/^w\d$/.test(lv.id)) return `<b class="gl">${lv.id.slice(1)}</b>`; return pzSvg(lv.icon); }
+function pzColor(li) { const lv = pzLv(li), h = PZ_HUE[lv.icon]; if (h) return `--c:${h[0]};--c2:${h[1]}`; const T = PZBook.TIERS[Math.min(5, +lv.id.slice(1) - 1)]; return `--c:${T.c};--c2:${T.c2}`; }
+const pzCat = lv => lv.cat || 'mate';
+function pzShowIdx(li) { const r = pzRecs(li), j = PZBook.nextIndex(r); return j >= 0 ? j : r.length - 1; }
+function pzMedals() { const m = [0, 0, 0, 0], pr = pzStore(); PUZZLES.levels.forEach((lv, li) => PZBook.stageInfo(pzRecs(li, pr)).forEach(s => m[s.medal]++)); return m; }
+function pzThumb(P, big) { return thumbOf(miniBoardSVG(moveCells(P.moves))) + `<i class="pzx-tm p${toMoveOf(P.moves)}"></i>`; }
+function pzCardHTML(li) {
+  const lv = pzLv(li), recs = pzRecs(li), tt = PZBook.totals(recs), full = tt.done === tt.total && tt.total > 0;
+  const si = PZBook.stageInfo(recs), medals = si.map(x => x.medal ? PZBook.MEDAL(x.medal) : `<i class="pb-pip${x.done ? ' part' : ''}"></i>`).join('');
+  const P = lv.puzzles[pzShowIdx(li)];
+  return `<button class="pzx-card${full ? ' full' : ''}" data-i="${li}" style="${pzColor(li)}"><span class="pzx-th"><span class="pzx-bd">${P ? pzThumb(P) : ''}<span class="pzx-ic">${pzIconOf(li)}</span></span></span>` +
+    `<span class="pzx-tx"><span class="pzx-top"><b class="pzx-nm">${esc(PT(lv.name))}</b>${pzPips(pzDiffAvg(lv))}</span><span class="pzx-desc">${esc(PT(lv.desc))}</span>` +
+    `<span class="pzx-prog"><span class="pb-bar"><i style="width:${tt.total ? tt.done * 100 / tt.total : 0}%"></i></span><span>${tt.done}/${tt.total}</span></span>` +
+    `<span class="pzx-meta"><span class="pb-medals">${medals}</span><span class="pb-st">${PZBook.STAR(true)}${tt.stars}/${tt.total * 3}</span></span></span>` +
+    (full ? `<span class="pb-full"><svg class="pb-crown" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>${esc(PZBook.t('complete'))}</span>` : '') + `</button>`;
+}
+function pzResume() {
+  let last = -1; try { last = +(localStorage.getItem(PZ_LAST) ?? -1); } catch (e) {}
+  const L = PUZZLES.levels, ok = li => li >= 0 && li < L.length && PZBook.nextIndex(pzRecs(li)) >= 0;
+  if (ok(last)) return [last, PZBook.nextIndex(pzRecs(last))];
+  const cat = last >= 0 && last < L.length ? pzCat(L[last]) : 'mate';
+  const order = L.map((_, i) => i).sort((a, b) => (pzCat(L[a]) !== cat) - (pzCat(L[b]) !== cat));
+  for (const li of order) if (ok(li)) return [li, PZBook.nextIndex(pzRecs(li))];
+  return null;
+}
+const pzTotal = () => PUZZLES.levels.reduce((a, lv) => a + lv.puzzles.length, 0);
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
-  const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.level' + (dl.L + 1))} · ${t('pz.winIn', { n: PUZZLES.levels[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
-    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length;
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${t('pz.level' + (i + 1))}</b><small>${t('pz.levelSub', { n: L.n })}</small></span><span class="st ${solved === L.puzzles.length ? 'clear' : ''}">${solved}/${L.puzzles.length}</span></button>`;
-  }).join('');
+  PZBook.setLang(LANG);
+  const pr = pzStore(), all = PUZZLES.levels.map((_, i) => pzRecs(i, pr)).flat(), tt = PZBook.totals(all), md = pzMedals(), cont = pzResume();
+  let cur = ''; try { cur = localStorage.getItem(PZ_CAT_KEY) || ''; } catch (e) {}
+  if (!PZ_CATS.includes(cur)) cur = 'mate';
+  const dl = dailyPick(), di = dailyInfo();
+  let h = `<div class="pzx-hero"><span class="pb-ring" style="--p:${tt.total ? tt.done / tt.total : 0}"><b>${tt.done}</b><small>/${tt.total}</small></span>` +
+    `<span class="pzx-hs"><b class="pzx-title">${t('pz.title')}<small>${t('pz.count', { n: tt.total })}</small></b><span class="pzx-lead">${t('pz.desc', { N: tt.total })}</span>` +
+    `<span class="pzx-stats"><span class="pb-st">${PZBook.STAR(true)}${tt.stars}<small>/${tt.total * 3}</small></span>` +
+    `<span class="pzx-md" title="${esc(PZBook.t('medal')[2])}">${PZBook.MEDAL(3)}${md[3]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[1])}">${PZBook.MEDAL(2)}${md[2]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[0])}">${PZBook.MEDAL(1)}${md[1]}</span></span></span>` +
+    (cont ? `<button class="pb-cont" data-cont="${cont[0]}:${cont[1]}">${esc(PZBook.t('cont'))} ▶ <b>No.${cont[1] + 1}</b><small>${esc(PT(pzLv(cont[0]).name))}</small></button>` : `<span class="pb-alldone">${esc(PZBook.t('allDone'))}</span>`) + `</div>`;
+  if (dl) {
+    const P = pzLv(dl.li).puzzles[dl.j];
+    h += `<button class="pzx-daily" data-daily="1"><span class="th">${pzThumb(P)}</span><span class="tx"><b>★ ${t('daily.title')}<span>${dl.date.slice(5).replace('-', '/')}</span></b>` +
+      `<small>${esc(PT(pzLv(dl.li).name))} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="go${di.today ? ' ok' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>`;
+  }
+  const idx = c => PUZZLES.levels.map((lv, i) => pzCat(lv) === c ? i : -1).filter(i => i >= 0);
+  h += `<div class="lx-tabs pzx-tabs" role="tablist">${PZ_CATS.map(c => { const ii = idx(c), r = ii.map(i => pzRecs(i, pr)).flat(), k = r.filter(x => x > 0).length;
+    return `<button role="tab" data-cat="${c}" class="${c === cur ? 'sel' : ''}"><span class="ic">${pzSvg(c)}</span><span class="nm">${t('pz.cat.' + c)}</span><span class="ct${k === r.length ? ' ok' : ''}">${k}/${r.length}</span></button>`; }).join('')}</div>`;
+  h += `<p class="pzx-cat">${t('pz.cat.' + cur + '.d')}</p><div class="pzx-cards">${idx(cur).map(pzCardHTML).join('')}</div>`;
+  $('#pzLevels').innerHTML = h;
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
-$('#pzLevels').onclick = e => {
-  const b = e.target.closest('.lesson-item'); if (!b) return;
-  if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
-};
-function openPzGrid(i) {
-  pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
-  $('#pzLevelTitle').textContent = t('pz.level' + (i + 1)) + ' — ' + t('pz.winIn', { n: L.n });
-  // each button shows the puzzle position (a small board) with its number
-  $('#pzGrid').classList.add('th');
-  $('#pzGrid').innerHTML = L.puzzles.map((P, j) => `<button data-j="${j}" class="${pr[`${i}-${j}`] ? 'solved' : ''}"><span class="th">${thumbOf(miniBoardSVG(moveCells(P.moves)))}</span><span class="n">${j + 1}</span></button>`).join('');
+let pzLevel = 0;
+function openPzGrid(li, cur) {
+  pzLevel = li; const lv = pzLv(li);
+  PZBook.setLang(LANG);
+  const hd = $('#pzLevelHead'); hd.setAttribute('style', pzColor(li));
+  hd.innerHTML = `<span class="ic">${pzIconOf(li)}</span><span class="tx"><h2 id="pzLevelTitle">${esc(PT(lv.name))}</h2><small>${esc(PT(lv.desc))}</small>` +
+    `<span class="chips"><span class="pzx-chip">${t('pz.cat.' + pzCat(lv))}</span><span class="pzx-chip">${t('pz.count', { n: lv.puzzles.length })}</span>${pzPips(pzDiffAvg(lv))}</span></span>`;
+  const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(li), cur });
+  // each tile shows the position (a small board) under its number and stars; the number badge has the colour to move
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = lv.puzzles[+el.dataset.j]; if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${thumbOf(miniBoardSVG(moveCells(P.moves)))}</span>`); el.classList.add('hasth'); el.classList.toggle('p2', toMoveOf(P.moves) === P2); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
+  const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
-$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzLevel, +b.dataset.j); };
+$('#pzLevels').onclick = e => {
+  const tb = e.target.closest('[data-cat]'); if (tb) { try { localStorage.setItem(PZ_CAT_KEY, tb.dataset.cat); } catch (er) {} openPuzzles(); return; }
+  const cb = e.target.closest('[data-cont]'); if (cb) { const [li, j] = cb.dataset.cont.split(':').map(Number); startPuzzle(li, j); return; }
+  const b = e.target.closest('.pzx-daily, .pzx-card'); if (!b) return;
+  if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.li, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
+};
+$('#pzGrid').onclick = e => {
+  const b = e.target.closest('button[data-j]'); if (!b) return;
+  if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
+  startPuzzle(pzLevel, +b.dataset.j);
+};
 $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
-function startPuzzle(L, j, daily) {
+// carry: flags kept over a retry (a failed / hinted / answered attempt caps the stars)
+function startPuzzle(li, j, daily, carry) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0;
-  const P = PUZZLES.levels[L].puzzles[j];
-  puzzle = { L, j, P, me: toMoveOf(P.moves), n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, off: null };
+  const P = pzLv(li).puzzles[j], c0 = carry || {};
+  puzzle = { li, j, P, kind: pzKind(P), me: toMoveOf(P.moves), n: pzTurns(P), state: 'play', busy: false, used: 0, step: 0, daily: daily || null,
+    hinted: !!c0.hinted, failed: !!c0.failed, answered: !!c0.answered, off: null };
+  if (!daily) { try { localStorage.setItem(PZ_LAST, String(li)); } catch (e) {} }
   document.body.classList.add('in-puzzle');
   moves = P.moves; cur = moves.length; reviewing = false; hintList = null; lessonMarks = [];
-  update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
+  update(false); renderPuzzleCard(); pzStatus(puzzle.kind === 'mate' ? t('pz.start') : t('pz.start.b'));
+}
+function pzGoalText(Pz) {
+  const P = Pz.P, c = pname(Pz.me);
+  if (Pz.kind === 'mate') return t('pz.goal', { c, n: Pz.n });
+  if (Pz.kind === 's') return t('pz.goal.def', { c, n: Pz.n });
+  return t(P.goal === 'draw' ? 'pz.goal.draw' : 'pz.goal.win', { c });
 }
 function renderPuzzleCard() {
-  const Pz = puzzle, L = PUZZLES.levels[Pz.L];
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pz.level' + (Pz.L + 1))} · No.${Pz.j + 1}`;
-  $('#pzTitle').textContent = t('pz.winIn', { n: Pz.n });
-  const left = Pz.n - Pz.used;
-  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t('pz.goal', { c: pname(Pz.me), n: Pz.n })}</span>`;
+  const Pz = puzzle, lv = pzLv(Pz.li);
+  PZBook.setLang(LANG);
+  const best = starVal(pzStore()[lv.id + ':' + Pz.j]), df = pzDiff(Pz.P.D);
+  $('#pzStep').textContent = (Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')} · ` : '') + `${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1} · ${'●'.repeat(df)}${'○'.repeat(5 - df)}` + (best ? '  ' + '★'.repeat(best) : '');
+  $('#pzTitle').textContent = PT(lv.name);
+  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${pzGoalText(Pz)}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
-  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= L.puzzles.length && Pz.L + 1 >= PUZZLES.levels.length);
-  $('#pzHint').disabled = Pz.state !== 'play' || !!Pz.off; $('#pzAnswer').disabled = Pz.busy;
+  const L = PUZZLES.levels;
+  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= lv.puzzles.length && Pz.li + 1 >= L.length);
+  $('#pzHint').disabled = Pz.state !== 'play' || !!Pz.off || Pz.busy; $('#pzAnswer').disabled = Pz.busy;
   renderInfo();
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
+// ---- explanations in words (codes precomputed by the generator from the solved position)
+function pzExText(P) {
+  const ex = P.ex || [], code = ex[0], m = colName(P.k === 's' ? P.steps[0].a : P.answer);
+  if (!code) return '';
+  if (code === 'w1') return t('pz.ex.w1', { m, a: ex[1], dir: t('pz.ex.dir.' + ex[2]) }) + (ex[3] ? ' ' + t('pz.ex.prio', { x: ex[3] }) : '');
+  if (code === 'und') return t('pz.ex.und', { m, a: ex[1].split('').join(' / ') });
+  return t('pz.ex.' + code, { m, a: ex[1] || '', b: ex[2] || '' });
+}
+function pzPvHTML(Pz) {
+  const P = Pz.P; if (!P.pv) return '';
+  let who = Pz.me;
+  const chips = P.pv.split('').map(ch => { const s = `<span class="pzv p${who}">${colName(+ch - 1)}</span>`; who = who === P1 ? P2 : P1; return s; }).join('<i>›</i>');
+  return `<span class="pz-pv"><small>${t('pz.pv')}</small>${chips}</span>`;
+}
+// other moves of a one-move position grouped by solver result (mover's view)
+function pzOthersHTML(st, n0) {
+  const g = { loss: [], draw: [], win: [] };
+  st.sc.forEach((v, c) => { if (v === null || c === st.a) return; (v > 0 ? g.win : v < 0 ? g.loss : g.draw).push(colName(c)); });
+  const parts = ['win', 'draw', 'loss'].filter(k => g[k].length).map(k => t('pz.o.' + k, { cols: g[k].join(' ') }));
+  return parts.length ? `<span class="pz-oth"><small>${t('pz.o.head')}</small>${parts.join(' ・ ')}</span>` : '';
+}
+function pzResText(v, n) { return v > 0 ? t('pz.res.win', { n: 22 - v - (n >> 1) }) : t('pz.res.draw'); }
+function pzWhyHTML(Pz) {
+  const P = Pz.P, ex = pzExText(P);
+  if (Pz.kind === 'mate') return (ex ? `<span class="pz-ex">${ex}</span>` : '') + pzPvHTML(Pz);
+  const st = pzSteps(P)[0], v = st.sc[st.a];
+  return `<span class="pz-ex">${ex} ${pzResText(v, P.moves.length)}</span>` + pzOthersHTML(st);
+}
 // short forced-win search (engine 'mate'): attacker list = own moves needed per column, defender list = attacker moves left after each reply
 function mateReq(m, n, defend) { return request('ai', { type: 'mate', moves: m, n, defend: !!defend }).then(r => r && r.list); }
 const PREF = [3, 2, 4, 1, 5, 0, 6];
@@ -2000,6 +2248,7 @@ function mateHints(list, m, left) { const k = m.length >> 1; return list.filter(
 //       (exhaustive search with both sides' moves free) — the goal is visibly out of reach.
 // A move that only loses to perfect defence is not "obvious" (with an exact defender every off-solution move is that),
 // so it is played out to the end of the count.
+// One-move / only-move puzzles ('b', 's') are judged by the stored exact values: any other move changes the result.
 const pzt = (k, v) => { if (window.PZBook) { PZBook.setLang(LANG); return PZBook.t(k, v); } return k; };
 function immWins(g, p) { const out = []; for (let c = 0; c < COLS; c++) { if (g[c].length >= ROWS) continue; g[c].push(p); if (lineThrough(g, c, g[c].length - 1, p)) out.push(c); g[c].pop(); } return out; }
 // can p (to move) make four within d own moves when the other side cooperates?
@@ -2036,13 +2285,13 @@ function pzBlunder(before, c, left, me) {
 }
 async function pzFail(Pz, before, c, list, left, head) {
   const good = list.filter(x => x.need && x.need <= left).map(x => x.c);
-  Pz.state = 'fail'; Pz.busy = false;
+  Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
   await new Promise(r => setTimeout(r, dropDelay()));
   if (puzzle !== Pz) return;
   moves = before; cur = moves.length;
   hintList = mateHints(list, before, left); const g0 = gridOf(before);
   lessonMarks = good.map(gc => ({ c: gc, r: g0[gc].length, cls: 'ok' })).concat([{ c, r: g0[c].length, cls: 'ng' }]);
-  update(false); playChime(false);
+  update(false); sfxWrong();
   pzStatus(`<b class="ng">${head}</b> ${t('pz.failWhy', { m: colName(c), b: good.map(colName).join(' / '), n: Pz.n })}<br><span style="font-size:12px;color:var(--dim)">${t('pz.labels')}</span>`);
   renderPuzzleCard();
 }
@@ -2057,8 +2306,35 @@ async function pzDefend(Pz, tok) {
   playMove2(own.length ? own[0] : pickDefence(dl));
   return true;
 }
+// one-move / only-move puzzles: right move → (stored reply →) next step or solved; any other move → failed with the solver's verdict
+async function pzStepMove(Pz, c) {
+  const P = Pz.P, steps = pzSteps(P), st = steps[Pz.step], before = moves.slice(0, cur);
+  Pz.busy = true; lessonMarks = [];
+  playMove2(c);
+  if (c !== st.a) {
+    Pz.state = 'fail'; Pz.failed = true; renderPuzzleCard();
+    await new Promise(r => setTimeout(r, dropDelay() + 350)); if (puzzle !== Pz) return;
+    const v = st.sc[c], k = v < 0 ? 22 + v - ((before.length + 1) >> 1) : 0;
+    moves = before; cur = moves.length; const g0 = gridOf(before);
+    lessonMarks = [{ c: st.a, r: g0[st.a].length, cls: 'ok' }, { c, r: g0[c].length, cls: 'ng' }];
+    update(false); sfxWrong(); Pz.busy = false;
+    const why = v < 0 ? t('pz.wrong.loss', { m: colName(c), k: Math.max(1, k) }) : t('pz.wrong.draw', { m: colName(c) });
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${why} ${t('pz.right', { b: colName(st.a) })}`);
+    renderPuzzleCard(); return;
+  }
+  Pz.used++; Pz.step++;
+  if (Pz.step >= steps.length || statusOf(moves).winner === Pz.me) { setTimeout(() => puzzleSolved(), dropDelay() + 200); return; }
+  renderPuzzleCard(); pzStatus(t('pz.good.def')); sfxCorrect(0.05, true);
+  const tok = busyToken;
+  await new Promise(r => setTimeout(r, dropDelay() + 650));
+  if (puzzle !== Pz || tok !== busyToken) return;
+  playMove2(st.r);
+  Pz.busy = false; renderPuzzleCard(); pzStatus(t('pz.yourMove.def', { n: Pz.n - Pz.used }));
+}
 async function puzzleMove(c) {
-  const Pz = puzzle; Pz.busy = true; lessonMarks = [];
+  const Pz = puzzle; if (!Pz || Pz.state !== 'play' || Pz.busy) return;
+  if (Pz.kind !== 'mate') return pzStepMove(Pz, c);
+  Pz.busy = true; lessonMarks = [];
   const before = moves.slice(0, cur), left = Pz.n - Pz.used;
   playMove2(c);
   Pz.used++;
@@ -2093,36 +2369,55 @@ function playMove2(c) { moves = moves.slice(0, cur) + (c + 1); cur = moves.lengt
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(); pr[`${Pz.L}-${Pz.j}`] = true;
+  PZBook.setLang(LANG);
+  const lv = pzLv(Pz.li), key = lv.id + ':' + Pz.j, stars = PZBook.starsFor(Pz), before = pzRecs(Pz.li);
+  const pr = pzStore(); pr[key] = Math.max(starVal(pr[key]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
-  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || !!Pz.off);   // solved after leaving the solution counts like a hinted solve
-  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { n: Pz.used })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : ''));
-  playChime(true); confetti(); renderPuzzleCard();
+  const after = pzRecs(Pz.li, pr), ev = PZBook.events(before, after, Pz.j);
+  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || Pz.failed || !!Pz.off);   // solved after leaving the solution counts like a hinted solve
+  const head = Pz.kind === 's' ? t('pz.solved.def') : t('pz.solved');
+  const sub = Pz.kind === 'mate' ? t('pz.solvedSub', { n: Pz.used }) : '';
+  pzStatus(`<b class="ok">${head}</b> ${sub}<div class="pz-why">${pzWhyHTML(Pz)}</div>` + (Pz.daily ? `🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }));
+  sfxCorrect(); confetti(); renderPuzzleCard();
 }
-$('#pzRetry').onclick = () => { if (puzzle) startPuzzle(puzzle.L, puzzle.j, puzzle.daily); };
+$('#pzRetry').onclick = () => { if (puzzle) startPuzzle(puzzle.li, puzzle.j, puzzle.daily, puzzle); };
 $('#pzNext').onclick = () => {
   if (!puzzle) return;
-  let { L, j } = puzzle; j++;
-  if (j >= PUZZLES.levels[L].puzzles.length) { L++; j = 0; }
-  if (L < PUZZLES.levels.length) startPuzzle(L, j);
+  let { li, j } = puzzle; j++;
+  if (j >= pzLv(li).puzzles.length) { li++; j = 0; }
+  if (li < PUZZLES.levels.length) startPuzzle(li, j);
 };
-$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.L); };
+$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.li, puzzle.j); };
 $('#pzQuit').onclick = () => quitSpecial();
 $('#pzHint').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.state !== 'play' || Pz.busy) return;
-  const shown = moves.slice(0, cur), left = Pz.n - Pz.used, list = await mateReq(shown, left); if (puzzle !== Pz || !list) return;
+  const shown = moves.slice(0, cur), g = gridOf(shown);
+  if (Pz.kind !== 'mate') {   // winning squares of both sides (the answer itself is not revealed)
+    Pz.hinted = true; const op = Pz.me === P1 ? P2 : P1;
+    lessonMarks = emptyThreats(g, Pz.me).map(([c, r]) => ({ c, r, cls: 'threat' })).concat(emptyThreats(g, op).map(([c, r]) => ({ c, r, cls: 'threat op' })));
+    renderFx(); pzStatus(t('pz.hint.b')); return;
+  }
+  const left = Pz.n - Pz.used, list = await mateReq(shown, left); if (puzzle !== Pz || !list) return;
   Pz.hinted = true;
-  const g = gridOf(shown), good = list.filter(x => x.need && x.need <= left).map(x => x.c);
+  const good = list.filter(x => x.need && x.need <= left).map(x => x.c);
   lessonMarks = good.map(c => ({ c, r: g[c].length, cls: 'ok' })); renderFx();
   pzStatus(t('pz.hintText'));
 };
 $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz || Pz.busy) return;
-  Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.off = null; lessonMarks = []; hintList = null;
-  moves = Pz.P.moves; cur = moves.length; Pz.used = 0; update(false); renderPuzzleCard();
+  Pz.busy = true; Pz.state = 'answer'; Pz.answered = true; Pz.off = null; lessonMarks = []; hintList = null;
+  moves = Pz.P.moves; cur = moves.length; Pz.used = 0; Pz.step = 0; update(false); renderPuzzleCard();
   pzStatus(t('pz.showing'));
   let m = moves;
-  for (let step = 0; step < 12; step++) {
+  if (Pz.kind !== 'mate') {
+    for (const st of pzSteps(Pz.P)) {
+      await new Promise(r => setTimeout(r, 650)); if (puzzle !== Pz) return;
+      playMove2(st.a); Pz.used++; renderPuzzleCard();
+      if (st.r === undefined || st.r === null) break;
+      await new Promise(r => setTimeout(r, 650)); if (puzzle !== Pz) return;
+      playMove2(st.r);
+    }
+  } else for (let step = 0; step < 16; step++) {
     if (puzzle !== Pz) return;
     const att = toMoveOf(m) === Pz.me, left = Pz.n - Pz.used;
     let c;
@@ -2134,7 +2429,7 @@ $('#pzAnswer').onclick = async () => {
     m = moves; renderPuzzleCard();
     if (statusOf(m).winner) break;
   }
-  Pz.busy = false; renderPuzzleCard(); pzStatus(t('pz.answerDone'));
+  Pz.busy = false; renderPuzzleCard(); pzStatus(t('pz.answerDone') + `<div class="pz-why">${pzWhyHTML(Pz)}</div>`);
 };
 
 // ====================================================================== post-game review
@@ -2329,14 +2624,15 @@ let daily = { last: '', streak: 0, best: 0, days: {} };
 try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 function dailyPick() {
-  if (!PUZZLES || PUZZLES.levels.length < 3) return null;
+  if (!PUZZLES) return null;
   const now = new Date(), date = ymd(now);
   const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
   const wd = now.getDay();   // Mon-Tue: win in 2, Wed-Thu: win in 3, Fri-Sun: win in 4
-  const L = wd >= 1 && wd <= 2 ? 0 : wd >= 3 && wd <= 4 ? 1 : 2;
-  const n = PUZZLES.levels[L].puzzles.length;
+  const li = PUZZLES.levels.findIndex(lv => lv.id === (wd >= 1 && wd <= 2 ? 'w2' : wd >= 3 && wd <= 4 ? 'w3' : 'w4'));
+  if (li < 0) return null;
+  const n = PUZZLES.levels[li].puzzles.length;
   let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
-  return { date, L, j: (h >>> 0) % n };
+  return { date, li, j: (h >>> 0) % n };
 }
 function dailyInfo() {
   const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
@@ -2448,7 +2744,7 @@ document.addEventListener('keydown', e => {
 </script>
 <script src="rated.js?v=20261020pl"></script><!-- レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5f" defer></script>
+<script src="../shared/atlas.js?v=5g" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=2" defer></script>
 <script src="../shared/atlas-account.js?v=1" defer></script>
 </body>
