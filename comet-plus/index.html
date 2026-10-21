@@ -4459,8 +4459,8 @@ const hyperPool = [];
 function makeHyperObj() {
     const g = new THREE.Group();
     const spin = new THREE.Group(); // 水平方向にくるくる回る部分
-    const bladeMat = new StdMat({ color: 0x6c7890, emissive: 0x18202e, emissiveIntensity: 0.6, flatShading: true, metalness: 0.5, roughness: 0.35 });
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x10161e, transparent: true, opacity: 0.6 });
+    const bladeMat = new THREE.MeshBasicMaterial({ color: 0x1a3a5c, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }); // 実体は薄く、ワイヤーが主役
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xe8fdff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0x6fe6ff });
     // 刃: 外向きの矢じり形。内側の面にシアンの光
     const sh = new THREE.Shape();
@@ -4469,13 +4469,15 @@ function makeHyperObj() {
     bladeGeo.translate(0, 0, -3); bladeGeo.rotateX(-Math.PI / 2);
     const bladeEdge = new THREE.EdgesGeometry(bladeGeo, 20);
     const cageMat = new THREE.LineBasicMaterial({ color: 0x9ff0ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+    const cageMat2 = new THREE.LineBasicMaterial({ color: 0x6fc8ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false });
     const bc = bladeGeo.clone(); bc.translate(-22, 0, 0); bc.scale(1.18, 1.6, 1.18); bc.translate(22, 0, 0); const bladeCage = new THREE.EdgesGeometry(bc, 15);
+    const bc2 = bladeGeo.clone(); bc2.translate(-22, 0, 0); bc2.scale(1.22, 2.1, 1.22); bc2.translate(22, 0, 0); const bladeCage2 = new THREE.WireframeGeometry(bc2);
     const gs = new THREE.Shape(); [[13.6, 8.6], [19.6, 0], [13.6, -8.6], [12.2, -7.6], [17.6, 0], [12.2, 7.6]].forEach(([x, y], k) => (k ? gs.lineTo(x, y) : gs.moveTo(x, y)));
     const stripGeo = new THREE.ExtrudeGeometry(gs, { depth: 5, bevelEnabled: false }); stripGeo.translate(0, 0, -2.5); stripGeo.rotateX(-Math.PI / 2); // 内側の光るライン
     for (let k = 0; k < 3; k++) {
         const bl = new THREE.Group();
         const m = new THREE.Mesh(bladeGeo, bladeMat); m.add(new THREE.LineSegments(bladeEdge, lineMat));
-        const wc = new THREE.LineSegments(bladeCage, cageMat); m.add(wc); // ワイヤーの外殻
+        const wc = new THREE.LineSegments(bladeCage, cageMat); m.add(wc, new THREE.LineSegments(bladeCage2, cageMat2)); // ワイヤーの外殻（2重）
         const st = new THREE.Mesh(stripGeo, glowMat); m.position.x = st.position.x = 4; bl.add(m, st); // 刃どうしに隙間をあける
         bl.rotation.y = k * Math.PI * 2 / 3 + Math.PI / 2;
         spin.add(bl);
@@ -4497,8 +4499,17 @@ function makeHyperObj() {
         seg.position.set(Math.cos(a) * 34, 0, Math.sin(a) * 34); seg.rotation.y = -a + Math.PI / 2; ring.add(seg);
     }
     const tilt = new THREE.Group(); tilt.rotation.x = 0.45; // カメラ側に少し起こして形が見えるように
-    tilt.add(spin, core, ring, coreWire); g.add(tilt);
-    g.userData = { spin, core, ring, glowMat, coreMat, ringMat, coreWire, cageMat };
+    // キラキラ: 周りで瞬く小さな光
+    const sparks = [], sparkGeo = new THREE.OctahedronGeometry(1, 0); sparkGeo.scale(0.5, 0.5, 2.6);
+    for (let k = 0; k < 16; k++) {
+        const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+        const sp = new THREE.Group(); const a1 = new THREE.Mesh(sparkGeo, sm), a2 = new THREE.Mesh(sparkGeo, sm); a2.rotation.y = Math.PI / 2; sp.add(a1, a2);
+        const a = Math.random() * Math.PI * 2, r = 8 + Math.random() * 36;
+        sp.position.set(Math.cos(a) * r, (Math.random() - 0.5) * 14, Math.sin(a) * r);
+        sp.userData = { ph: Math.random() * Math.PI * 2, sp: 4 + Math.random() * 6, mat: sm }; sparks.push(sp);
+    }
+    tilt.add(spin, core, ring, coreWire, ...sparks); g.add(tilt);
+    g.userData = { spin, core, ring, glowMat, coreMat, ringMat, coreWire, cageMat, cageMat2, sparks };
     g.visible = false;
     scene.add(g);
     return g;
@@ -5402,7 +5413,8 @@ function render3D() {
             hu.ring.rotation.y = -rTime * 1.2;
             hu.core.rotation.set(rTime * 0.8, -rTime * 2, 0);
             hu.coreWire.rotation.set(-rTime * 0.6, rTime * 1.1, rTime * 0.4);
-            hu.cageMat.opacity = 0.4 + visualBeat * 0.4;
+            hu.cageMat.opacity = 0.55 + visualBeat * 0.4; hu.cageMat2.opacity = 0.2 + pulse * 0.2;
+            hu.sparks.forEach(sp => { const t = Math.max(0, Math.sin(rTime * sp.userData.sp + sp.userData.ph)); const k = t * t * t; sp.scale.setScalar(0.3 + k * 2.2); sp.userData.mat.opacity = k; sp.rotation.y = rTime * 3; }); // 瞬き
             hu.glowMat.color.setHSL(0.53, 1, 0.6 + pulse * 0.25);
             hu.coreMat.opacity = 0.6 + pulse * 0.3;
             hu.ringMat.opacity = 0.35 + visualBeat * 0.4;
@@ -5760,16 +5772,7 @@ function draw() {
     }
 
     // ハイパーアイテムのラベルと、ハイパー中の残り時間
-    items.forEach(it => {
-        if (it.type !== 'hyper') return;
-        const sp = project(it.x, it.y, 30);
-        renderCtx.save();
-        renderCtx.textAlign = 'center';
-        renderCtx.font = `800 ${IS_MOBILE ? 18 : 13}px ${config.fontFamily}`;
-        renderCtx.fillStyle = frameCount % 8 < 4 ? '#ffd400' : '#ff2d55';
-        renderCtx.fillText('HYPER', sp.x, sp.y - (IS_MOBILE ? 46 : 30));
-        renderCtx.restore();
-    });
+    // （アイテム上のHYPERの文字は表示しない）
     if (hyperT > 0 && (gameState === 'playing' || gameState === 'paused')) {
         const ratio = hyperT / HYPER_TIME, col = frameCount % 10 < 5 ? '#ffd400' : '#ff2d55';
         const tx = IS_MOBILE ? HUD_W - 20 : HUD_W / 2, ty = IS_MOBILE ? 156 : HUD_H - 50, bw = IS_MOBILE ? 150 : 180;
