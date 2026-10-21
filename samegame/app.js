@@ -374,8 +374,8 @@ function paintEl(d, v) {
 function cellSize() {
   const wrap = $('#boardWrap'), r = wrap.getBoundingClientRect();
   const wide = matchMedia('(min-width:1000px)').matches;
-  const availW = wide ? Math.min(innerWidth - 360 - 32 - 64, 1180) : r.width - 16, availH = Math.max(200, window.innerHeight - r.top - (wide ? 30 : ($('#gfoot').offsetHeight || 60) + 18));
-  return Math.max(18, Math.min(wide ? 84 : 64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
+  const availW = wide ? r.width - 40 : r.width - 16, availH = Math.max(200, wide ? innerHeight - 32 - 40 : innerHeight - r.top - ($('#gfoot').offsetHeight || 60) - 18);
+  return Math.max(18, Math.min(wide ? 120 : 64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
 }
 const pos = (x, y) => `translate(${x * G.cs}px, ${(G.rows - 1 - y) * G.cs}px)`;
 function buildBoard() {
@@ -526,7 +526,7 @@ function play(x, y) {
   clearHover(); hoverKey = '';
   if (G.undoable) G.hist.push({ b: G.board, s: G.score, pi: G.pi });
   if (G.kind === 'stage') { G.pi = G.pi || 0; if (G.pi >= 0 && G.sol && G.sol[G.pi] !== undefined) { const sv = G.sol[G.pi]; G.pi = g.some(([a, c]) => a === sv >> 4 && c === (sv & 15)) ? G.pi + 1 : -1; } }
-  const r = E.remove(G.board, g, { min: G.min, keep: G.keep });
+  const r = E.remove(G.board, g, { min: G.min, keep: G.keep && G.mode !== 'rise' });
   // scoring
   let pts;
   const now = performance.now();
@@ -556,6 +556,7 @@ function play(x, y) {
   const ne = r.board.map(c => new Array(c.length));
   r.moves.forEach(({ from, to }) => { ne[to[0]][to[1]] = G.els[from[0]][from[1]]; });
   G.board = r.board; G.els = ne;
+  if (G.mode === 'rise') while (G.board.length < G.cols) { G.board.push([]); G.els.push([]); }   // RISE: empty columns slide left like the classic game
   // repaint every surviving cell whose value changed (thaw / paint)
   G.board.forEach((c, gx) => c.forEach((vv, gy) => { const d = G.els[gx][gy]; if (d._v !== vv) { if (d._v !== undefined) { paintEl(d, vv); d.classList.add('flash'); } d._v = vv; } }));
   G.busy = true;
