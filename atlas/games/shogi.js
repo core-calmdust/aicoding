@@ -1,7 +1,8 @@
 /* =====================================================================
-   Shogi on the portal: the board card (levels, sides, modes). Start opens the
-   full game with the portal skin (shogi/?skin=atlas), so there is no in-portal
-   play loop here — just what the card needs. Level names come from the game.
+   Shogi on the portal: the board card (levels, sides, modes). "ちゃぶ台で遊ぶ"
+   plays vs the AI on the 3D table (games/shogi-play.js, the full game's engine);
+   the other modes open the full game with the portal skin (shogi/?skin=atlas).
+   Level names come from the game.
    ===================================================================== */
 (function () {
   'use strict';
@@ -24,5 +25,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], rating: RATING[n - 1], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.shogi = { levels: 19, sides: true, modes: ['ai', 'rated', 'pvp'], levelInfo, start() { return { stop() {} }; } };
+  window.Atlas3D.shogi = { levels: 19, sides: true, modes: ['ai', 'rated', 'pvp'], levelInfo, table: true, tableModes: ['ai'], start: ctx => window.AtlasShogiPlay.start(ctx) };   // table: plays on the chabudai (games/shogi-play.js)
 })();
