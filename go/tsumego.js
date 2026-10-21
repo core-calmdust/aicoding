@@ -49,7 +49,8 @@ class Board {
     this.h1 = 0; this.h2 = 0; this.ko = -1; this.noKo = 0;       // noKo: colour that may not capture a ko
     this.ms = new Int32Array(N); this.ml = new Int32Array(N); this.g = 1;
     this.cs = new Int16Array(N); this.ls = new Int16Array(N); this.ns = 0; this.nl = 0;
-    this.undo = []; this.p1 = []; this.p2 = []; this.b1 = 0; this.b2 = 0;   // b1/b2: hash of the start board                  // undo records; path of board hashes (superko)
+    this.undo = []; this.p1 = []; this.p2 = []; this.b1 = 0; this.b2 = 0;   // undo records; path of board hashes (superko); b1/b2 = start board
+    this.ver = 0;
   }
   put(i, c) { const v = this.b[i]; if (v) { this.h1 ^= Z1[i * 2 + v - 1]; this.h2 ^= Z2[i * 2 + v - 1]; } this.b[i] = c; if (c) { this.h1 ^= Z1[i * 2 + c - 1]; this.h2 ^= Z2[i * 2 + c - 1]; } }
   setKo(k) { if (this.ko >= 0) { this.h1 ^= K1[this.ko]; this.h2 ^= K2[this.ko]; } this.ko = k; if (k >= 0) { this.h1 ^= K1[k]; this.h2 ^= K2[k]; } }
@@ -63,39 +64,55 @@ class Board {
     }
     this.ns = ns; this.nl = nl; return nl;
   }
-  libs(i) { return this.chain(i); }
+  // does the chain at i have a liberty? (early exit)
+  hasLib(i) {
+    const b = this.b, nb = this.nb, c = b[i], ms = this.ms, cs = this.cs, g = ++this.g;
+    let ns = 1, k = 0; cs[0] = i; ms[i] = g;
+    while (k < ns) {
+      const q = cs[k++], o = q * 4;
+      for (let d = 0; d < 4; d++) { const r = nb[o + d]; if (r < 0) continue; const v = b[r]; if (v === 0) return true; if (v === c && ms[r] !== g) { ms[r] = g; cs[ns++] = r; } }
+    }
+    return false;
+  }
   // play c at i (PASS = -1). false when illegal (occupied, ko, suicide, forbidden ko capture, repetition of a path position)
   play(i, c) {
-    if (i === PASS) { this.undo.push({ i, c, caps: null, ko: this.ko, h1: this.h1, h2: this.h2 }); this.setKo(-1); this.p1.push(this.h1); this.p2.push(this.h2); return true; }
+    if (i === PASS) { this.undo.push({ i, c, caps: null, ko: this.ko }); this.setKo(-1); this.p1.push(this.h1); this.p2.push(this.h2); this.ver++; return true; }
     const b = this.b; if (b[i] || i === this.ko) return false;
-    const rec = { i, c, caps: null, ko: this.ko, h1: this.h1, h2: this.h2 }, o = 3 - c, nb = this.nb;
+    const o = 3 - c, nb = this.nb, ko0 = this.ko;
     this.put(i, c);
     let caps = null;
     for (let d = 0; d < 4; d++) {
-      const r = nb[i * 4 + d]; if (r < 0 || b[r] !== o) continue;
-      if (this.chain(r) === 0) { if (!caps) caps = []; for (let k = 0; k < this.ns; k++) { const s = this.cs[k]; caps.push(s); } for (const s of caps) if (b[s] === o) this.put(s, 0); }
+      const r = nb[i * 4 + d]; if (r < 0 || b[r] !== o || this.hasLib(r)) continue;
+      if (!caps) caps = [];
+      this.chain(r); for (let k = 0; k < this.ns; k++) caps.push(this.cs[k]);
+      for (let k = 0; k < this.ns; k++) this.put(this.cs[k], 0);
     }
     let nk = -1;
-    if (!caps) { if (this.chain(i) === 0) { this.put(i, 0); return false; } }
-    else if (caps.length === 1 && this.chain(i) === 1 && this.ns === 1) {
-      if (c === this.noKo) { this.put(caps[0], o); this.put(i, 0); return false; }
-      nk = caps[0];
+    if (!caps) { if (!this.hasLib(i)) { this.put(i, 0); return false; } }
+    else if (caps.length === 1) {   // ko: a single stone that captured one stone and has exactly one liberty
+      let own = false, lib = 0;
+      for (let d = 0; d < 4; d++) { const r = nb[i * 4 + d]; if (r < 0) continue; if (b[r] === c) own = true; else if (b[r] === 0) lib++; }
+      if (!own && lib === 1) {
+        if (c === this.noKo) { this.put(caps[0], o); this.put(i, 0); return false; }
+        nk = caps[0];
+      }
     }
     this.setKo(nk);
-    if (caps) {   // only a capture can repeat an earlier board
+    if (caps) {   // only a capture can repeat an earlier board (positional superko along the path)
       const h1 = this.h1 ^ (nk >= 0 ? K1[nk] : 0), h2 = this.h2 ^ (nk >= 0 ? K2[nk] : 0), P1 = this.p1, P2 = this.p2;
       let rep = h1 === this.b1 && h2 === this.b2;
       for (let k = P1.length - 1; k >= 0 && !rep; k--) if (P1[k] === h1 && P2[k] === h2) rep = true;
-      if (rep) { this.setKo(rec.ko); for (const s of caps) this.put(s, o); this.put(i, 0); return false; }
+      if (rep) { this.setKo(ko0); for (const s of caps) this.put(s, o); this.put(i, 0); return false; }
     }
-    rec.caps = caps; this.undo.push(rec);
+    this.undo.push({ i, c, caps, ko: ko0 });
     this.p1.push(this.h1 ^ (this.ko >= 0 ? K1[this.ko] : 0)); this.p2.push(this.h2 ^ (this.ko >= 0 ? K2[this.ko] : 0));
+    this.ver++;
     return true;
   }
   back() {
     const r = this.undo.pop(); this.p1.pop(); this.p2.pop();
     if (r.i !== PASS) { this.put(r.i, 0); if (r.caps) for (const s of r.caps) this.put(s, 3 - r.c); }
-    this.setKo(r.ko);
+    this.setKo(r.ko); this.ver++;
   }
   key(turn) { return ((this.h1 ^ T1[turn]) >>> 0) + (this.h2 & 0x1fffff) * 4294967296; }
 }
@@ -119,6 +136,7 @@ function ctxOf(P) {
   CTX.unshift(c); if (CTX.length > 3) CTX.pop();
   return c;
 }
+const ANCH = 99;   // liberties reported for an anchored chain
 class Ctx {
   constructor(P, s) {
     const n = s.n || 19, N = n * n, p0 = GR.Pos.from(s);
@@ -142,6 +160,10 @@ class Ctx {
       B.chain(i); let enc = true; for (let k = 0; k < B.nl; k++) if (!this.inR[B.ls[k]]) enc = false;
       for (let k = 0; k < B.ns; k++) { seen[B.cs[k]] = 1; if (enc) this.zone[B.cs[k]] = 1; }
     }
+    this.zoneList = []; for (let i = 0; i < N; i++) if (this.zone[i]) this.zoneList.push(i);
+    // points scanned each node: the zone and the stones next to it
+    const sp = new Uint8Array(N); this.scanPts = [];
+    for (const i of this.zoneList) { if (!sp[i]) { sp[i] = 1; this.scanPts.push(i); } for (let d = 0; d < 4; d++) { const r = B.nb[i * 4 + d]; if (r >= 0 && !sp[r]) { sp[r] = 1; this.scanPts.push(r); } } }
     // semeai: G's racing stones = G chains next to the target, enclosed
     this.own = [];
     if (gl === 'semeai') {
@@ -149,101 +171,111 @@ class Ctx {
       for (const t of this.tgt) { B.chain(t); const st = Array.from(B.cs.slice(0, B.ns)); for (const q of st) for (let d = 0; d < 4; d++) { const r = B.nb[q * 4 + d]; if (r >= 0 && B.b[r] === this.G && !mk[r] && this.zone[r]) { B.chain(r); for (let k = 0; k < B.ns; k++) { mk[B.cs[k]] = 1; this.own.push(B.cs[k]); } } } }
     }
     this.small = this.region.length <= 22;
-    this.UB = new Map(); this.BT = new Map(); this.RC = new Map();
+    this.UB = new Map(); this.UBm = new Map(); this.BT = new Map(); this.RC = new Map();
     this.nodes = 0; this.lim = Infinity;
-    // scratch for Benson
-    this.rid = new Int32Array(N); this.cid = new Int32Array(N); this.mark = new Int32Array(N); this.mg = 1;
+    // scan data (chain labels for the zone)
+    this.sm = new Int32Array(N); this.sg = 0; this.chId = new Int32Array(N); this.sv = -1;
+    this.cLibs = []; this.cAnch = []; this.cCol = []; this.cSize = []; this.nc = 0;
+    this.st = new Int16Array(N); this.lm = new Int32Array(N); this.lg = 0;
+    this.rm = new Int32Array(N); this.rg = 0;
   }
+  // ---- label the chains of the zone (anchored chains are not expanded: they can never be captured)
+  scan() {
+    const B = this.B; if (this.sv === B.ver) return; this.sv = B.ver;
+    const b = B.b, nb = B.nb, zone = this.zone, inR = this.inR, sm = this.sm, chId = this.chId, st = this.st, lm = this.lm;
+    const sg = ++this.sg; let nc = 0;
+    const cL = this.cLibs, cA = this.cAnch, cC = this.cCol, cS = this.cSize;
+    for (const p of this.scanPts) {
+      if (!b[p] || sm[p] === sg) continue;
+      const c = b[p], id = nc++, lg = ++this.lg;
+      let anch = !zone[p], libs = 0, ns = 1, k = 0; st[0] = p; sm[p] = sg; chId[p] = id;
+      if (!anch) while (k < ns) {
+        const q = st[k++], o = q * 4;
+        for (let d = 0; d < 4; d++) {
+          const r = nb[o + d]; if (r < 0) continue; const v = b[r];
+          if (v === 0) { if (lm[r] !== lg) { lm[r] = lg; libs++; if (!inR[r]) anch = true; } }
+          else if (v === c && sm[r] !== sg) { if (!zone[r]) { anch = true; continue; } sm[r] = sg; chId[r] = id; st[ns++] = r; }
+        }
+      }
+      cL[id] = anch ? ANCH : libs; cA[id] = anch; cC[id] = c; cS[id] = ns;
+    }
+    this.nc = nc;
+  }
+  libsAt(p) { this.scan(); return this.sm[p] === this.sg ? this.cLibs[this.chId[p]] : this.B.chain(p); }
   // ---- static tests
   captured() { const b = this.B.b, o = this.owner; for (const t of this.tgt) if (b[t] !== o) return true; return false; }
   ownCaptured() { const b = this.B.b; for (const t of this.own) if (b[t] !== this.G) return true; return false; }
-  anchoredChain(i) {   // chain has a liberty outside the region (or a stone outside the zone): never capturable
-    const B = this.B; B.chain(i);
-    for (let k = 0; k < B.nl; k++) if (!this.inR[B.ls[k]]) return true;
-    for (let k = 0; k < B.ns; k++) if (!this.zone[B.cs[k]]) return true;
-    return false;
-  }
-  // every target chain anchored or pass-alive (Benson with anchored chains immortal)
+  anchoredAt(p) { this.scan(); return this.sm[p] === this.sg ? this.cAnch[this.chId[p]] : true; }
+  // every target chain anchored or pass-alive (Benson's algorithm; anchored chains are immortal)
   ownerSafe() {
-    const B = this.B, b = B.b, own = this.owner, N = this.N, nb = B.nb;
+    const B = this.B, b = B.b, own = this.owner, nb = B.nb;
     for (const t of this.tgt) if (b[t] !== own) return false;
-    // quick: all target chains anchored?
-    let all = true; for (const t of this.tgt) { if (B.chain(t) < 2 && !this.anchoredChain(t)) return false; if (!this.anchoredChain(t)) all = false; }
+    this.scan();
+    const chId = this.chId, cL = this.cLibs, cA = this.cAnch, cC = this.cCol;
+    let all = true;
+    for (const t of this.tgt) { const id = chId[t]; if (cA[id]) continue; all = false; if (cL[id] < 2) return false; }
     if (all) return true;
-    // Benson: chains (owner) and regions (non-owner components) reachable from the target through closed regions
-    const cid = this.cid, rid = this.rid, g = ++this.mg, mark = this.mark;
-    const chains = [], regions = [];   // chain: {st, libs:Set?, anch, alive}; region: {pts, open, empt, adj:Set(chain idx), dead}
-    const chainAt = i => {
-      if (mark[i] === g && cid[i] >= 0) return cid[i];
-      B.chain(i); const st = Array.from(B.cs.subarray(0, B.ns)), lb = Array.from(B.ls.subarray(0, B.nl));
-      let anch = false; for (const l of lb) if (!this.inR[l]) anch = true; for (const q of st) if (!this.zone[q]) anch = true;
-      const id = chains.length; chains.push({ st, lb, anch, alive: true, reg: [] });
-      for (const q of st) { mark[q] = g; cid[q] = id; }
-      return id;
-    };
-    const regionAt = i => {
-      if (mark[i] === g && rid[i] >= 0) return rid[i];
-      const id = regions.length, pts = [i], R = { pts, open: false, adj: [], dead: false };
-      regions.push(R); mark[i] = g; rid[i] = id; cid[i] = -1;
-      for (let k = 0; k < pts.length; k++) {
-        const q = pts[k]; if (!this.zone[q]) R.open = true;
-        for (let d = 0; d < 4; d++) { const r = nb[q * 4 + d]; if (r < 0) continue; if (b[r] === own) continue; if (mark[r] !== g) { mark[r] = g; rid[r] = id; cid[r] = -1; pts.push(r); } }
+    // regions: components of non-owner points inside the zone (open = touches the outside)
+    const rm = this.rm, rg = ++this.rg, zone = this.zone, st = this.st;
+    const regs = [];   // { emp: [points], adj: [chain ids], open }
+    for (const p of this.zoneList) {
+      if (b[p] === own || rm[p] === rg) continue;
+      const R = { emp: [], adj: [], open: false };
+      let ns = 1, k = 0; st[0] = p; rm[p] = rg;
+      while (k < ns) {
+        const q = st[k++]; if (b[q] === 0) R.emp.push(q);
+        for (let d = 0; d < 4; d++) {
+          const r = nb[q * 4 + d]; if (r < 0) continue; const v = b[r];
+          if (v === own) { const id = chId[r]; if (R.adj.indexOf(id) < 0) R.adj.push(id); continue; }
+          if (!zone[r]) { R.open = true; continue; }
+          if (rm[r] !== rg) { rm[r] = rg; st[ns++] = r; }
+        }
       }
-      return id;
-    };
-    // mark chains with rid -1 / regions with cid -1 so lookups do not collide
-    const queue = [];
-    for (const t of this.tgt) { const c = chainAt(t); if (!chains[c].q) { chains[c].q = 1; queue.push(c); } for (const q of chains[c].st) rid[q] = -1; }
-    for (let qi = 0; qi < queue.length; qi++) {
-      const C = chains[queue[qi]];
-      if (C.anch) continue;
-      const rs = new Set();
-      for (const q of C.st) for (let d = 0; d < 4; d++) { const r = nb[q * 4 + d]; if (r >= 0 && b[r] !== own) rs.add(regionAt(r)); }
-      for (const ri of rs) {
-        const R = regions[ri]; C.reg.push(ri);
-        if (R.open || R.scan) continue; R.scan = 1;
-        const cs = new Set();
-        for (const q of R.pts) for (let d = 0; d < 4; d++) { const r = nb[q * 4 + d]; if (r >= 0 && b[r] === own) cs.add(r); }
-        const ids = new Set(); for (const r of cs) { const c = chainAt(r); for (const s of chains[c].st) rid[s] = -1; ids.add(c); }
-        R.adj = [...ids];
-        for (const c of ids) if (!chains[c].q) { chains[c].q = 1; queue.push(c); }
-      }
+      regs.push(R);
     }
-    // vital: closed region whose every empty point is a liberty of chain c
-    const isLib = (p, c) => { for (let d = 0; d < 4; d++) { const r = nb[p * 4 + d]; if (r >= 0 && b[r] === own && cid[r] === c) return true; } return false; };
-    for (const C of chains) C.vit = [];
-    regions.forEach((R, ri) => {
-      if (R.open || !R.scan) return;
-      for (const c of R.adj) { let ok = true; for (const p of R.pts) if (b[p] === 0 && !isLib(p, c)) { ok = false; break; } if (ok) chains[c].vit.push(ri); }
+    // vital regions per chain
+    const nc = this.nc, vit = [], alive = new Uint8Array(nc), adjR = [];
+    for (let c = 0; c < nc; c++) { vit.push([]); adjR.push([]); alive[c] = cC[c] === own ? 1 : 0; }
+    regs.forEach((R, ri) => {
+      for (const c of R.adj) adjR[c].push(ri);
+      if (R.open) return;
+      for (const c of R.adj) {
+        if (cA[c]) continue;
+        let ok = true;
+        for (const e of R.emp) { let lib = false; for (let d = 0; d < 4; d++) { const r = nb[e * 4 + d]; if (r >= 0 && b[r] === own && chId[r] === c) { lib = true; break; } } if (!lib) { ok = false; break; } }
+        if (ok) vit[c].push(ri);
+      }
     });
+    const dead = new Uint8Array(regs.length);
     let changed = true;
     while (changed) {
       changed = false;
-      for (let c = 0; c < chains.length; c++) {
-        const C = chains[c]; if (!C.alive || C.anch || !C.q) continue;
-        let v = 0; for (const ri of C.vit) if (!regions[ri].dead) v++;
-        if (v < 2) { C.alive = false; changed = true; for (const ri of C.reg) regions[ri].dead = true; }
+      for (let c = 0; c < nc; c++) {
+        if (!alive[c] || cA[c]) continue;
+        let v = 0; for (const ri of vit[c]) if (!dead[ri]) v++;
+        if (v < 2) { alive[c] = 0; changed = true; for (const ri of adjR[c]) dead[ri] = 1; }
       }
     }
-    for (const t of this.tgt) { const C = chains[cid[t]]; if (!C.anch && !C.alive) return false; }
+    for (const t of this.tgt) { const id = chId[t]; if (!cA[id] && !alive[id]) return false; }
     return true;
   }
-  escaped() { const B = this.B; for (const t of this.tgt) { if (this.anchoredChain(t)) continue; if (B.chain(t) < 4) return false; } return true; }
+  escaped() { this.scan(); for (const t of this.tgt) { const id = this.chId[t]; if (!this.cAnch[id] && this.cLibs[id] < 4) return false; } return true; }
   connected() { const B = this.B; B.chain(this.tgt[0]); const g = B.g, ms = B.ms; for (const t of this.tgt) if (ms[t] !== g) return false; return true; }
-  // the fewest liberties of a target chain (lower bound of the player's moves to capture)
-  minLibs() { let m = 99; for (const t of this.tgt) { const l = this.B.chain(t); if (l < m) m = l; } return m; }
+  // the fewest liberties of a target chain (lower bound of the player's moves to capture it)
+  minLibs() { this.scan(); let m = 99; for (const t of this.tgt) { const l = this.cLibs[this.chId[t]]; if (l < m) m = l; } return m; }
 
   // ---- move generation
-  // all empty region points (+ capture-freeing points); skip filling a point surrounded by own stones only
+  // all empty region points (+ capture-freeing points); the owner never fills its own eye (unless it saves a chain in atari)
   genAll(c) {
     const B = this.B, b = B.b, nb = B.nb, out = [];
+    this.scan();
+    const own = c === this.owner;
     for (const p of this.region) {
       if (b[p]) continue;
-      if (c === this.owner) {   // the owner never fills its own eye (unless it saves a chain in atari)
-        let ownOnly = true;
-        for (let d = 0; d < 4; d++) { const r = nb[p * 4 + d]; if (r >= 0 && b[r] !== c) { ownOnly = false; break; } }
-        if (ownOnly) { for (let d = 0; d < 4; d++) { const r = nb[p * 4 + d]; if (r >= 0 && B.chain(r) === 1) { ownOnly = false; break; } } }
-        if (ownOnly) continue;
+      if (own) {
+        let fill = true, atari = false;
+        for (let d = 0; d < 4; d++) { const r = nb[p * 4 + d]; if (r < 0) continue; if (b[r] !== c) { fill = false; break; } if (this.libsAt(r) === 1) atari = true; }
+        if (fill && !atari) continue;
       }
       out.push(p);
     }
@@ -252,51 +284,60 @@ class Ctx {
   }
   // capturing a chain in atari that touches the target or the racing stones (also outside the region)
   addCaps(c, out) {
-    const B = this.B, b = B.b, nb = B.nb, seen = new Set(out);
-    const base = this.tgt.concat(this.own);
+    const B = this.B, b = B.b, nb = B.nb;
+    let seen = null;
+    const base = this.own.length ? this.tgt.concat(this.own) : this.tgt;
     for (const t of base) {
       if (!b[t]) continue;
       B.chain(t); const st = Array.from(B.cs.subarray(0, B.ns));
       for (const q of st) for (let d = 0; d < 4; d++) {
-        const r = nb[q * 4 + d]; if (r < 0 || !b[r] || b[r] === b[t]) continue;
-        if (b[r] === c) continue;
-        if (B.chain(r) === 1) { const l = B.ls[0]; if (!seen.has(l)) { seen.add(l); out.push(l); } }
+        const r = nb[q * 4 + d]; if (r < 0 || !b[r] || b[r] === b[t] || b[r] === c) continue;
+        if (B.chain(r) === 1) { const l = B.ls[0]; if (!this.inR[l]) { if (!seen) seen = new Set(out); if (!seen.has(l)) { seen.add(l); out.push(l); } } }
       }
     }
   }
   // tactical candidates for big regions: liberties of the target, their neighbours, liberties of weak chains around it
   genTac(c) {
     if (this.small) return this.genAll(c);
-    const B = this.B, b = B.b, nb = B.nb, inR = this.inR, S = new Set(), isG = c === this.K;
+    const B = this.B, b = B.b, nb = B.nb, inR = this.inR, S = new Set(), isK = c === this.K;
     const tch = [], seenC = new Set();
     for (const t of this.tgt.concat(this.own)) { if (!b[t] || seenC.has(t)) continue; B.chain(t); const st = Array.from(B.cs.subarray(0, B.ns)), lb = Array.from(B.ls.subarray(0, B.nl)); for (const q of st) seenC.add(q); tch.push({ st, lb }); }
     for (const T of tch) {
-      for (const l of T.lb) { S.add(l); if (isG || T.lb.length <= 2) for (let d = 0; d < 4; d++) { const r = nb[l * 4 + d]; if (r >= 0 && !b[r]) S.add(r); } }
-      // neighbouring chains of the other colour with few liberties: their liberties (capture / save / counter-atari)
+      const tc = b[T.st[0]];
+      for (const l of T.lb) { S.add(l); if (isK || T.lb.length <= 2) for (let d = 0; d < 4; d++) { const r = nb[l * 4 + d]; if (r >= 0 && !b[r]) S.add(r); } }
       const nc = new Set();
-      for (const q of T.st) for (let d = 0; d < 4; d++) { const r = nb[q * 4 + d]; if (r >= 0 && b[r] && b[r] !== b[T.st[0]] && !nc.has(r)) { B.chain(r); const st = Array.from(B.cs.subarray(0, B.ns)); for (const s of st) nc.add(s); if (B.nl <= 2) { const lb = Array.from(B.ls.subarray(0, B.nl)); for (const l of lb) S.add(l); for (const s of st) for (let d2 = 0; d2 < 4; d2++) { const u = nb[s * 4 + d2]; if (u >= 0 && b[u] === b[T.st[0]]) { B.chain(u); if (B.nl === 1) S.add(B.ls[0]); } } } } }
+      for (const q of T.st) for (let d = 0; d < 4; d++) {
+        const r = nb[q * 4 + d]; if (r < 0 || !b[r] || b[r] === tc || nc.has(r)) continue;
+        B.chain(r); const st = Array.from(B.cs.subarray(0, B.ns)); for (const s of st) nc.add(s);
+        if (B.nl <= 2) {
+          for (const l of Array.from(B.ls.subarray(0, B.nl))) S.add(l);
+          for (const s of st) for (let d2 = 0; d2 < 4; d2++) { const u = nb[s * 4 + d2]; if (u >= 0 && b[u] === tc) { B.chain(u); if (B.nl === 1) S.add(B.ls[0]); } }
+        }
+      }
     }
     const out = [];
-    for (const p of S) if (inR[p]) out.push(p);
+    for (const p of S) if (inR[p] && !b[p]) out.push(p);
     this.addCaps(c, out);
     return out;
   }
-  // order moves: captures and ataris first, then points with many empty neighbours near the target
+  // order moves: captures, saving own chains in atari, ataris, then points with many empty neighbours
   order(list, c, best) {
-    const B = this.B, b = B.b, nb = B.nb, o = 3 - c, sc = new Map();
-    for (const p of list) {
-      let s = 0, emp = 0;
+    const B = this.B, b = B.b, nb = B.nb, o = 3 - c, sc = new Float64Array(list.length);
+    this.scan();
+    for (let j = 0; j < list.length; j++) {
+      const p = list[j]; let s = 0, emp = 0;
+      if (p === best) s += 1000;
       for (let d = 0; d < 4; d++) {
         const r = nb[p * 4 + d]; if (r < 0) { s += 0.3; continue; }
-        const v = b[r]; if (v === 0) emp++;
-        else { const l = B.chain(r); if (v === o) { if (l === 1) s += 20 + B.ns; else if (l === 2) s += 3; } else if (l === 1) s += 8; }
+        const v = b[r]; if (v === 0) { emp++; continue; }
+        const l = this.libsAt(r);
+        if (v === o) { if (l === 1) s += 20 + this.cSize[this.chId[r]]; else if (l === 2) s += 3; else s += 0.5; }
+        else if (l === 1) s += 8;
       }
-      s += emp * 1.5;
-      if (p === best) s += 1000;
-      sc.set(p, s);
+      sc[j] = s + emp * 1.5;
     }
-    list.sort((a, b2) => sc.get(b2) - sc.get(a));
-    return list;
+    const idx = list.map((_, j) => j).sort((x, y) => sc[y] - sc[x]);
+    return idx.map(j => list[j]);
   }
 
   // ---- unbounded life & death: does the owner's target survive? (K never passes; the owner may)
@@ -306,30 +347,29 @@ class Ctx {
     const B = this.B, key = B.key(turn), e = this.UB.get(key);
     if (e !== undefined) return e > 0;
     if (++this.nodes > this.lim) throw ABORT;
-    if (B.undo.length > 200) return true;
+    if (B.undo.length > 160) return true;
     const own = this.owner, K = this.K;
     let res;
     if (turn === K) {
       res = true;
-      const mv = this.order(this.genAll(K), K, this.UBm && this.UBm.get(key));
+      const mv = this.order(this.genAll(K), K, this.UBm.get(key));
       for (const m of mv) {
         if (!B.play(m, K)) continue;
         const r = this.ub(own); B.back();
-        if (!r) { res = false; this.bestm(key, m); break; }
+        if (!r) { res = false; this.UBm.set(key, m); break; }
       }
     } else {
       res = false;
-      const mv = this.order(this.genAll(own), own, this.UBm && this.UBm.get(key)); mv.push(PASS);
+      const mv = this.order(this.genAll(own), own, this.UBm.get(key)); mv.push(PASS);
       for (const m of mv) {
         if (!B.play(m, own)) continue;
         const r = this.ub(K); B.back();
-        if (r) { res = true; this.bestm(key, m); break; }
+        if (r) { res = true; this.UBm.set(key, m); break; }
       }
     }
     this.UB.set(key, res ? 1 : -1);
     return res;
   }
-  bestm(key, m) { (this.UBm || (this.UBm = new Map())).set(key, m); }
   // does the player's goal hold in the unbounded game with `turn` to move?
   ldWin(turn) { const s = this.ub(turn); return this.goal === 'kill' ? !s : s; }
 
@@ -344,13 +384,12 @@ class Ctx {
     const B = this.B, key = B.key(0), c = this.RC.get(key);
     if (c !== undefined) return c;
     let res;
-    if (gl === 'live' && this.ownerSafe()) res = true;
-    else if (gl === 'kill' && this.ownerSafe()) res = false;
+    if (this.ownerSafe()) res = gl === 'live';
     else {
       const O = this.O;
       res = this.ldWin(O);                      // the extra move = pass
       if (res) {
-        const mv = this.order(this.genAll(O), O);
+        const mv = this.order(this.genAll(O), O, this.UBm.get(B.key(O)));
         for (const d of mv) {
           if (!B.play(d, O)) continue;
           const w = this.ldWin(O); B.back();
@@ -365,16 +404,28 @@ class Ctx {
     const gl = this.goal;
     if (gl === 'semeai') return this.ownCaptured();
     if (gl === 'live' || gl === 'escape' || gl === 'connect') return this.captured();
-    if (gl === 'capture' || gl === 'cut') { for (const t of this.tgt) if (this.anchoredChain(t)) return true; }
+    if (gl === 'capture' || gl === 'cut') { for (const t of this.tgt) if (this.anchoredAt(t)) return true; }
     return false;
   }
   lb() { const gl = this.goal; return (gl === 'capture' || gl === 'cut' || gl === 'semeai') ? this.minLibs() : 1; }
   gen(c) { return this.ld ? this.genAll(c) : this.genTac(c); }
+  // the moves listed by solve(): every region point for small regions; for big (tactical) regions the tactical
+  // candidates plus the region points within 2 of the target / racing stones
+  rootMoves(c) {
+    if (this.ld || this.small) return this.genAll(c);
+    const out = this.genTac(c), seen = new Set(out), n = this.n, b = this.B.b, near = this.tgt.concat(this.own);
+    for (const p of this.region) {
+      if (b[p] || seen.has(p)) continue;
+      const x = p % n, y = (p / n) | 0;
+      for (const t of near) if (Math.abs(t % n - x) <= 2 && Math.abs(((t / n) | 0) - y) <= 2) { out.push(p); break; }
+    }
+    return out;
+  }
 
   // ---- bounded: can G reach the goal within k own moves? aw: G to move; dw: O to move
   aw(k) {
     if (this.R()) return true;
-    if (this.fail() || k <= 0) return false;
+    if (k <= 0 || this.fail()) return false;
     if (this.lb() > k) return false;
     const B = this.B, key = B.key(this.G), e = this.BT.get(key);
     if (e) { if (e.w <= k) return true; if (e.l >= k) return false; }
@@ -391,14 +442,14 @@ class Ctx {
   }
   dw(k) {
     if (this.R()) return true;
-    if (this.fail() || k <= 0) return false;
+    if (k <= 0 || this.fail()) return false;
     if (this.lb() > k) return false;
     if (this.ld && !this.ldWin(this.O)) return false;    // the opponent can resist forever: no bounded win
     const B = this.B, key = B.key(this.O), e = this.BT.get(key);
     if (e) { if (e.w <= k) return true; if (e.l >= k) return false; }
     if (++this.nodes > this.lim) throw ABORT;
-    const O = this.O, mv = this.order(this.gen(O), O, e && e.m); mv.push(PASS);
-    if (e && e.m === PASS) { mv.pop(); mv.unshift(PASS); }
+    const O = this.O, mv = this.order(this.gen(O), O, e && e.m);
+    if (e && e.m === PASS) mv.unshift(PASS); else mv.push(PASS);
     let res = true, bm = -2;
     for (const m of mv) {
       if (!B.play(m, O)) continue;
@@ -413,14 +464,15 @@ class Ctx {
     if (win) { if (k < e.w) e.w = k; } else if (k > e.l) e.l = k;
     if (m !== -2) e.m = m;
   }
-  // smallest number of G moves (<= left) to reach the goal with G to move now; 0 = not within left
+  // G to move: the fewest G moves (<= left) to reach the goal; 0 = not within left
   needG(left) { for (let j = 1; j <= left; j++) if (this.aw(j)) return j; return 0; }
-  needO(left) { if (this.R()) return 0; for (let j = 0; j <= left; j++) if (this.dw(j)) return j; return -1; }   // O to move: G moves needed (0 = already)
-  // ---- set the board to P.s + moves
+  // O to move: G moves still needed (0 = already reached); -1 = not within left
+  needO(left) { for (let j = 0; j <= left; j++) if (this.dw(j)) return j; return -1; }
+  // ---- set the board to P.s + moves (normal rules: either side may take a ko here)
   load(moves) {
     const B = this.B;
     while (B.undo.length) B.back();
-    let turn = this.G; const hist = [];
+    let turn = this.G;
     for (const m of moves || []) {
       const save = B.noKo; B.noKo = 0;
       const ok = B.play(m, turn); B.noKo = save;
@@ -429,7 +481,7 @@ class Ctx {
     }
     return turn;
   }
-  clearIfBig() { if (this.UB.size > 3e5) { this.UB.clear(); this.UBm = null; } if (this.BT.size > 3e5) this.BT.clear(); if (this.RC.size > 1e5) this.RC.clear(); }
+  clearIfBig() { if (this.UB.size > 4e5) { this.UB.clear(); this.UBm.clear(); } if (this.BT.size > 4e5) this.BT.clear(); if (this.RC.size > 2e5) this.RC.clear(); }
 }
 const ABORT = { abort: true };
 
@@ -440,7 +492,7 @@ function solve(P, moves, left, defend) {
   const B = C.B, out = [];
   left = Math.max(0, left | 0);
   if (!defend) {
-    const G = C.G, mv = C.order(C.ld ? C.genAll(G) : C.genAll(G), G);
+    const G = C.G, mv = C.order(C.rootMoves(G), G);
     for (const m of mv) {
       if (!B.play(m, G)) continue;
       let need = 0;
@@ -452,7 +504,7 @@ function solve(P, moves, left, defend) {
       out.push(hopeless ? { m, need, hopeless: true } : { m, need });
     }
   } else {
-    const O = C.O, mv = C.order(C.gen(O), O); mv.push(PASS);
+    const O = C.O, mv = C.order(C.rootMoves(O), O); mv.push(PASS);
     const rows = [];
     for (const m of mv) {
       if (!B.play(m, O)) continue;

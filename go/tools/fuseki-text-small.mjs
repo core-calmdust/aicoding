@@ -26,6 +26,11 @@ export const SETS = [
     [`<bdi>C5</bdi>と下につながって左辺を確保。`, `Black connects downward with ${b('C5')}, securing the left side.`],
     [`白は<bdi>C7</bdi>と上辺を確定させます。黒は下半分と左辺、白は上辺と右上で、細かいヨセ勝負の形勢です。`, `White secures the top with ${b('C7')}. Black has the bottom half and left side, White the top and upper right — a close endgame contest.`],
   ],
+  vars: [ { at: 2, key: 's9_tengen_v', title: ['真下に構える', 'Straight below'], notes: [
+    [`<bdi>E3</bdi>と天元の真下に構え、下半分を広く囲う手もあります。`, `Black can play straight below at <bdi>E3</bdi>, enclosing the whole bottom half.`],
+    [`白は<bdi>C6</bdi>と左側に広げます。`, `White expands left with <bdi>C6</bdi>.`],
+    [`<bdi>F7</bdi>と白<bdi>E7</bdi>の横にツケて、上辺の白陣を削ります。`, `Black attaches beside <bdi>E7</bdi> at <bdi>F7</bdi>, reducing White's top.`],
+    [`白は<bdi>F8</bdi>とハネて上辺を守ります。`, `White hanes at <bdi>F8</bdi> to protect the top.`] ] } ],
   problems: [2, 4, 6, 8, 10, 12, 14] },
 
 // ---------------------------------------------------------------- 9路 5-4
@@ -52,6 +57,11 @@ export const SETS = [
     [`白は<bdi>E5</bdi>とつないで上の白とつながります。`, `White connects at ${b('E5')}, joining the upper stones.`],
     [`<bdi>G7</bdi>で白<bdi>G6</bdi>をアタリにしながら<bdi>F7</bdi>とつながり、右辺全体を確保。黒は下辺と右辺を大きく得ました。`, `${b('G7')} puts ${b('G6')} in atari while linking with ${b('F7')}, securing the right side. Black has a large bottom and right side.`],
   ],
+  vars: [ { at: 2, key: 's9_54_v', title: ['上辺に入る', 'Entering the top'], notes: [
+    [`<bdi>F7</bdi>とすぐに上辺の白陣に入る手もあります。`, `Black can enter White's top side at once with <bdi>F7</bdi>.`],
+    [`白は<bdi>F6</bdi>と黒の間に伸びて分断を図ります。`, `White extends to <bdi>F6</bdi>, trying to split Black.`],
+    [`<bdi>E7</bdi>と白の頭を押さえます。`, `Black blocks White's head at <bdi>E7</bdi>.`],
+    [`白は<bdi>D6</bdi>と左に伸びます。お互いに分断し合う難しい戦いです。`, `White extends left to <bdi>D6</bdi>. A difficult fight in which both sides are split.`] ] } ],
   problems: [2, 4, 6, 8, 10, 12, 14] },
 
 // ---------------------------------------------------------------- 9路 星（3-3）
@@ -77,6 +87,11 @@ export const SETS = [
     [`<bdi>D4</bdi>とつないで断点をなくします。`, `Black connects at ${b('D4')}, removing the cutting point.`],
     [`白は<bdi>E6</bdi>とつないで白も一団に。下半分は黒、上半分は白で、ほぼ互角の分かれです。`, `White connects at ${b('E6')}; White is one group too. Black has the bottom, White the top — roughly even.`],
   ],
+  vars: [ { at: 2, key: 's9_33_v', title: ['下側から迫る', 'Approaching from below'], notes: [
+    [`<bdi>F4</bdi>と右下に構えるのも一法です。`, `<bdi>F4</bdi> in the lower right is another way.`],
+    [`白は<bdi>D6</bdi>と左上に広げます。`, `White expands to the upper left with <bdi>D6</bdi>.`],
+    [`<bdi>G5</bdi>と右辺に伸びて地を広げます。`, `Black extends along the right side with <bdi>G5</bdi>.`],
+    [`白は<bdi>C5</bdi>と左辺に迫ります。白が中央を押さえていて、本譜より黒は窮屈です。`, `White presses the left side with <bdi>C5</bdi>. White controls the centre and Black is more cramped than in the main line.`] ] } ],
   problems: [2, 4, 6, 8, 10, 12] },
 
 // ---------------------------------------------------------------- 9路 戦い
@@ -104,6 +119,11 @@ export const SETS = [
     [`<bdi>B3</bdi>と白<bdi>B4</bdi>の下を押さえ、左下を黒地にします。`, `Black blocks under ${b('B4')} with ${b('B3')}, making the lower left Black's.`],
     [`白は<bdi>C5</bdi>と<bdi>B4</bdi>・<bdi>C7</bdi>をつなげにいきます。左辺の白をどう攻めるかがこの後の焦点です。`, `White plays ${b('C5')} to link ${b('B4')} and ${b('C7')}. How Black attacks the left-side white stones is the next question.`],
   ],
+  vars: [ { at: 2, key: 's9_fight_v', title: ['上辺を広く', 'A broad top side'], notes: [
+    [`<bdi>E7</bdi>と上辺の中央に構える手もあります。`, `Black can also take the middle of the top at <bdi>E7</bdi>.`],
+    [`白は<bdi>C4</bdi>と左下に広げます。`, `White expands to the lower left with <bdi>C4</bdi>.`],
+    [`<bdi>F3</bdi>と白<bdi>E3</bdi>の横にツケて、右下に黒地を作ります。`, `Black attaches beside <bdi>E3</bdi> at <bdi>F3</bdi>, building territory in the lower right.`],
+    [`白は<bdi>F2</bdi>とハネて下辺を守ります。`, `White hanes at <bdi>F2</bdi> to protect the bottom.`] ] } ],
   problems: [2, 4, 6, 8, 10, 12, 14] },
 
 // ---------------------------------------------------------------- 9路 地
@@ -131,6 +151,11 @@ export const SETS = [
     [`<bdi>B7</bdi>と左上の白にハネて、白の上辺を小さくします。`, `Black hanes at ${b('B7')} against the upper-left corner, shrinking White's top.`],
     [`白は<bdi>G4</bdi>と右下で生きを目指します。黒は中央の厚みで右下の白を攻める展開です。`, `White aims for life in the lower right with ${b('G4')}. Black uses the central wall to attack it.`],
   ],
+  vars: [ { at: 4, key: 's9_terr_v', title: ['天元を占める', 'Taking the centre'], notes: [
+    [`<bdi>E5</bdi>と天元を占めて、中央から白を分断する手もあります。`, `Black can take the centre at <bdi>E5</bdi> and split White from there.`],
+    [`白は<bdi>F4</bdi>と右下の黒に迫ります。`, `White presses Black's lower right with <bdi>F4</bdi>.`],
+    [`<bdi>G6</bdi>と右上の白に迫り、右辺に地を求めます。`, `Black presses the upper-right white corner at <bdi>G6</bdi>, seeking right-side territory.`],
+    [`白は<bdi>G4</bdi>と右下の黒の地を削ります。互いに相手の陣地を削り合う展開です。`, `White reduces Black's lower right at <bdi>G4</bdi>. Both sides reduce each other's areas.`] ] } ],
   problems: [4, 6, 8, 10, 12, 14] },
 
 // ---------------------------------------------------------------- 13路 基本
@@ -156,6 +181,11 @@ export const SETS = [
     [`<bdi>E3</bdi>と隅の下にすべって、白の隅の地を減らします。`, `Black slides under the corner at ${b('E3')}, reducing White's corner.`],
     [`白は<bdi>D3</bdi>と止めて隅を守ります。黒は下辺がまとまり、左辺の<bdi>C6</bdi>と右辺の<bdi>L8</bdi>で白二子を両側から攻める楽しみがあります。`, `White stops Black at ${b('D3')}. Black's lower side is solid, and with ${b('C6')} and ${b('L8')} Black can look forward to attacking White's stones on both sides.`],
   ],
+  vars: [ { at: 6, key: 's13_basic_v', title: ['先に両ガカリ', 'Double approach first'], notes: [
+    [`<bdi>C6</bdi>と先に両ガカリする手もあります。`, `Black can make the double approach first at <bdi>C6</bdi>.`],
+    [`白は<bdi>J4</bdi>と右下の黒の外側に構えます。`, `White plays <bdi>J4</bdi> outside Black's lower-right corner.`],
+    [`<bdi>J3</bdi>とツケて白の根拠を奪います。`, `Black attaches at <bdi>J3</bdi>, taking White's base.`],
+    [`白は<bdi>H4</bdi>と下辺に伸びます。互いに攻め合う展開です。`, `White extends to <bdi>H4</bdi>. Both sides attack each other.`] ] } ],
   problems: [4, 6, 8, 10, 12] },
 
 // ---------------------------------------------------------------- 13路 早い戦い
@@ -184,5 +214,10 @@ export const SETS = [
     [`白は<bdi>C8</bdi>と左上の黒に迫ります。`, `White presses the upper-left black group with ${b('C8')}.`],
     [`<bdi>B7</bdi>とハネて生きを確かにします。黒は左上の地と中央の構え、白は上辺と右上の隅という分かれです。`, `Black hanes at ${b('B7')} to make sure of life. Black has the upper-left corner and the central position; White has the top side and upper-right corner.`],
   ],
+  vars: [ { at: 4, key: 's13_fight_v', title: ['小目のツケ', 'Attaching to the 3-4 point'], notes: [
+    [`三々の代わりに<bdi>L3</bdi>と右下の白星の下にツケる手もあります。`, `Instead of the 3-3 invasion, Black can attach under White's lower-right star at <bdi>L3</bdi>.`],
+    [`白は<bdi>L4</bdi>と押さえます。`, `White blocks at <bdi>L4</bdi>.`],
+    [`<bdi>K3</bdi>と這って根拠を作ります。`, `Black crawls to <bdi>K3</bdi> to make a base.`],
+    [`白は<bdi>J4</bdi>と下辺側を押さえます。黒は隅に小さく生きる形です。`, `White blocks along the lower side at <bdi>J4</bdi>; Black will live small in the corner.`] ] } ],
   problems: [4, 6, 8, 10, 12, 14, 16] },
 ];

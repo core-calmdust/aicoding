@@ -24,6 +24,10 @@ export const SETS = [
     [`白は<bdi>R9</bdi>と右下のカカリ石からヒラいて根拠を作ります。`, `White extends from the lower-right approach stone to ${b('R9')} to make a base.`],
     [`<bdi>R10</bdi>と押さえて白のヒラキを止めます。辺の星<bdi>Q10</bdi>と協力して、白の石は右辺で窮屈です。9子局はこのように、置き石と連携して白を攻め続けるのが勝ちパターンです。`, `Black blocks White's extension at ${b('R10')}. Working with ${b('Q10')}, Black leaves White cramped on the right side. Keep attacking in cooperation with your handicap stones — that is how nine-stone games are won.`],
   ],
+  vars: [ { at: 1, key: 'h9_v', title: ['左からはさむ', 'Blocking from the left'], notes: [
+    [`<bdi>N16</bdi>と白の左側に打って、上辺へ広がるのを止める手もあります。`, `Black can also play <bdi>N16</bdi> on White's left, stopping White from spreading along the top.`],
+    [`白は<bdi>P15</bdi>と中央へ出ます。`, `White heads out at <bdi>P15</bdi>.`],
+    [`<bdi>P16</bdi>と押さえて白を分断します。白二子は黒石に囲まれて苦しい形です。`, `Black blocks at <bdi>P16</bdi>, splitting White. The white stones are surrounded and in trouble.`] ] } ],
   problems: [1, 3, 5, 7, 9, 11, 13] },
 
 // ---------------------------------------------------------------- 6子局
@@ -49,6 +53,10 @@ export const SETS = [
     [`白は右下の黒星にカカって、新しい足場を探します。`, `White approaches the lower-right star, looking for a new foothold.`],
     [`<bdi>Q12</bdi>と右辺を固め、上の白<bdi>Q14</bdi>を攻めます。弱い白石が二つある間は、新しいカカリは後回しで構いません。`, `Black strengthens the right side with ${b('Q12')}, attacking ${b('Q14')} above. While White has weak stones, the new approach can wait.`],
   ],
+  vars: [ { at: 1, key: 'h6_v', title: ['ツケて押さえる', 'Attaching on top'], notes: [
+    [`9子局と同じく<bdi>O16</bdi>と上からツケるのも簡明です。`, `As in the nine-stone game, attaching on top at <bdi>O16</bdi> is simple.`],
+    [`白はハネます。`, `White hanes.`],
+    [`<bdi>O15</bdi>と伸びて、白を上辺に低く閉じ込めます。`, `Black extends to <bdi>O15</bdi>, keeping White low on the top side.`] ] } ],
   problems: [1, 3, 5, 7, 9, 11, 13] },
 
 // ---------------------------------------------------------------- 4子局
@@ -74,6 +82,10 @@ export const SETS = [
     [`白は<bdi>F2</bdi>とすべって生きを図ります。`, `White slides to ${b('F2')} to live.`],
     [`<bdi>N18</bdi>とハネて上辺の白二子の逃げ道を完全にふさぎます。白の生きを許さず、取り切れば黒の大優勢です。`, `Black hanes at ${b('N18')}, closing the last escape route of the two top-side white stones. Capturing them gives Black a winning position.`],
   ],
+  vars: [ { at: 1, key: 'h4_v', title: ['右からはさむ', 'Pincering from the right'], notes: [
+    [`<bdi>N17</bdi>と右側からはさむのも良い手です。`, `Pincering from the right at <bdi>N17</bdi> is also good.`],
+    [`白は<bdi>F17</bdi>と左上の黒星にカカって反撃します。`, `White counters by approaching the upper-left star at <bdi>F17</bdi>.`],
+    [`<bdi>H17</bdi>と白二子の間に打ち、両方を分断して攻めます。`, `Black plays between the two white stones at <bdi>H17</bdi>, splitting and attacking both.`] ] } ],
   problems: [1, 3, 5, 7, 9, 11, 13] },
 
 // ---------------------------------------------------------------- 3子局
@@ -99,6 +111,10 @@ export const SETS = [
     [`白は<bdi>R4</bdi>と這います。`, `White crawls to ${b('R4')}.`],
     [`<bdi>Q5</bdi>とつないで断点を守ります。隅の白は小さく、下辺の<bdi>O3</bdi>も弱い石。黒の厚みが生きる形です。`, `Black connects at ${b('Q5')}. White's corner is small and ${b('O3')} is weak — Black's thickness will tell.`],
   ],
+  vars: [ { at: 1, key: 'h3_v', title: ['上辺からカカる', 'Approaching from the top'], notes: [
+    [`<bdi>F17</bdi>と上辺からカカることもできます。`, `Black can also approach from the top at <bdi>F17</bdi>.`],
+    [`白は<bdi>C14</bdi>とケイマに受けます。`, `White answers with the knight's move at <bdi>C14</bdi>.`],
+    [`<bdi>D17</bdi>と隅に入って根拠を作ります。上辺の黒と右上の星が連携します。`, `Black slides into the corner at <bdi>D17</bdi> to make a base, linking with the top side and the upper-right star.`] ] } ],
   problems: [1, 3, 5, 7, 9, 11, 13] },
 
 // ---------------------------------------------------------------- 2子局
@@ -124,5 +140,9 @@ export const SETS = [
     [`白は<bdi>O5</bdi>と伸びて中央へ。`, `White extends to ${b('O5')}, heading for the centre.`],
     [`<bdi>Q3</bdi>と隅の下にツケて、白の根拠を奪います。白の石は中央で弱く、黒が攻める展開です。`, `Black attaches under the corner at ${b('Q3')}, taking away White's base. White's stones are weak in the centre and Black is attacking.`],
   ],
+  vars: [ { at: 7, key: 'h2_v', title: ['三々入り', '3-3 invasion'], notes: [
+    [`カカリの代わりに<bdi>R3</bdi>と白の星に三々入りして、地で対抗する手もあります。`, `Instead of approaching, Black can invade White's star at the 3-3 point at <bdi>R3</bdi>, competing for territory.`],
+    [`白は<bdi>Q3</bdi>と押さえます。`, `White blocks at <bdi>Q3</bdi>.`],
+    [`<bdi>R4</bdi>と這って隅で生きる形を作ります。`, `Black crawls to <bdi>R4</bdi> to live in the corner.`] ] } ],
   problems: [1, 3, 7, 9, 11, 13] },
 ];

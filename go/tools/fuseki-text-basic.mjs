@@ -39,6 +39,14 @@ export const SETS = [
     [`白は下辺に打ち込んで、黒の<bdi>O4</bdi>の構えに対抗しつつ自分の石の足場を作ります。`, `White plays on the lower side, challenging Black's ${b('O4')} while making room for White's own stones.`],
     [`最後の大場、左上の白星へのカカリ。二連星の布石は、星→カカリ→大場と流れるように打ち進めるのが理想です。`, `Black approaches the upper-left star point, the last big point. Nirensei flows smoothly: star points, approaches, then the remaining big points.`],
   ],
+  vars: [ { at: 4, key: 'nirensei_v', title: ['早い三々入り', 'Early 3-3 invasion'], notes: [
+    [`すぐに左下の三々に入るのも、AIが好む有力な手です。`, `Invading the lower-left 3-3 point at once is also strong, and a favourite of AI.`],
+    [`白は左辺側から押さえます。`, `White blocks from the left side.`],
+    [`這います。`, `Black crawls.`],
+    [`白はケイマにかぶせます。`, `White caps with a knight's move.`],
+    [`這って白に迫ります。`, `Black crawls, pressing White.`],
+    [`白はつなぎます。`, `White connects.`],
+    [`ハネて隅で生き。黒は地を、白は下辺の厚みを得ました。`, `Black hanes and lives. Black has territory, White has lower-side thickness.`] ] } ],
   problems: [6, 8, 10, 12, 16, 18, 20] },
 
 // ---------------------------------------------------------------- 三連星
@@ -74,6 +82,11 @@ export const SETS = [
     [`這って生きる形を作ります。`, `Black crawls to make a living shape.`],
     [`白は<bdi>C6</bdi>と止めて左辺に壁を作りました。ここまでで、黒は右辺の大模様＋三隅、白は外側の厚みという分かれです。`, `White stops Black at ${b('C6')} and builds a wall facing the left side. Result: Black has a big right-side framework plus three corners, White has outside thickness.`],
   ],
+  vars: [ { at: 5, key: 'sanrensei_v', title: ['白の内側からのカカリ', 'White approaches from the inside'], notes: [
+    [`白が<bdi>R6</bdi>と三連星の内側からカカるのは、黒の模様の中に入る積極策です。`, `White's approach from inside the framework at <bdi>R6</bdi> is an aggressive try.`],
+    [`ツケて白を外へ追い出します。`, `Black attaches and drives White outward.`],
+    [`白は<bdi>Q6</bdi>と形を作ります。`, `White makes shape with <bdi>Q6</bdi>.`],
+    [`<bdi>O4</bdi>と下辺を守り、白を右辺の狭い所に残します。白は<bdi>Q10</bdi>があるので大きくヒラけません。`, `Black guards the lower side at <bdi>O4</bdi>; White is left on the narrow right side and cannot extend far because of <bdi>Q10</bdi>.`] ] } ],
   problems: [4, 6, 8, 10, 16, 18] },
 
 // ---------------------------------------------------------------- 中国流
@@ -150,6 +163,13 @@ export const SETS = [
     [`白はハネて形を作ります。`, `White hanes to make shape.`],
     [`引いて隅を確保。「ツケヒキ」の定石で、上辺の<bdi>L17</bdi>の構えがあるので白の石はまだ根拠が不十分です。`, `Black draws back: the attach-and-draw-back joseki. Because of ${b('L17')}, White still lacks a secure base.`],
   ],
+  vars: [ { at: 4, key: 'minichinese_v', title: ['先に一間ジマリ', 'Enclosing first'], notes: [
+    [`カカリの前に右上を一間ジマリするのも堅実な手です。`, `Enclosing the upper right with a one-space move before approaching is a solid alternative.`],
+    [`白は右下の三々に入ります。`, `White invades the lower-right 3-3 point.`],
+    [`右辺側から押さえます。`, `Black blocks from the right side.`],
+    [`白は這います。`, `White crawls.`],
+    [`先回りして白の進路を止めます。`, `Black gets ahead to stop White.`],
+    [`白は押して隅を広げます。右辺は黒の勢力、下辺は白の地という分かれです。`, `White pushes to widen the corner. Black's influence on the right, White's territory below.`] ] } ],
   problems: [4, 6, 8, 10, 14, 20, 22] },
 
 // ---------------------------------------------------------------- 小林流
@@ -182,6 +202,9 @@ export const SETS = [
     [`白は<bdi>E16</bdi>とつなぎます。`, `White connects at ${b('E16')}.`],
     [`<bdi>F18</bdi>とハネて生きを確保。白の<bdi>F17</bdi>も弱くなっています。黒は三つの隅と下辺で楽しみの多い局面です。`, `Black hanes at ${b('F18')} to make life, and White's ${b('F17')} is weakened. With three corners and the lower side, Black has plenty to look forward to.`],
   ],
+  vars: [ { at: 7, key: 'kobayashi_v', title: ['白の低いカカリ', 'White\'s low approach'], notes: [
+    [`白が<bdi>R5</bdi>と低くカカる手もあります。`, `White can also approach low at <bdi>R5</bdi>.`],
+    [`<bdi>P4</bdi>とコスんで隅を守り、白<bdi>R5</bdi>の下辺への進出を止めます。下辺の黒石と協力した手です。`, `Black plays the diagonal <bdi>P4</bdi>, guarding the corner and stopping White from reaching the lower side, in cooperation with the lower-side stones.`] ] } ],
   problems: [4, 6, 8, 10, 12, 14, 18] },
 
 // ---------------------------------------------------------------- 向かい小目
@@ -218,6 +241,10 @@ export const SETS = [
     [`白は<bdi>P4</bdi>と押さえて外側を固めます。`, `White blocks at ${b('P4')}, strengthening the outside.`],
     [`<bdi>P2</bdi>とつないで下辺の黒はしっかり連絡。黒は四つの地点に安定した石を持ち、地で一歩リードの布石です。`, `Black connects at ${b('P2')}; the lower-side stones are firmly linked. Black has stable groups everywhere and a small lead in territory.`],
   ],
+  vars: [ { at: 10, key: 'mukai_v', title: ['大ゲイマガカリを手抜き', 'Ignoring the approach'], notes: [
+    [`白のカカリを手抜きして左下にカカるのも有力です。`, `Ignoring White's approach to approach the lower left is also strong.`],
+    [`白は<bdi>C17</bdi>と隅にツケて、黒の隅を荒らしにきます。`, `White attaches at <bdi>C17</bdi>, raiding Black's corner.`],
+    [`<bdi>D17</bdi>とハネて応じます。左上は戦いになりますが、黒は上辺の勢力を生かせます。`, `Black hanes at <bdi>D17</bdi>. The upper left turns into a fight in which Black can use the top-side strength.`] ] } ],
   problems: [4, 6, 8, 10, 12, 16, 18] },
 
 // ---------------------------------------------------------------- 秀策流
@@ -250,6 +277,13 @@ export const SETS = [
     [`白は<bdi>D14</bdi>と黒<bdi>C15</bdi>をはさみに来ました。`, `White pincers ${b('C15')} with ${b('D14')}.`],
     [`<bdi>M17</bdi>と上辺の大場をハサミながら占め、白<bdi>P17</bdi>を攻めます。左上の黒一子は軽く見て、より大きな所に回るのが秀策流の流儀です。`, `Black takes the big top-side point at ${b('M17')}, pincering ${b('P17')}. Black treats the upper-left stone lightly and turns to the bigger point — very much in Shusaku's style.`],
   ],
+  vars: [ { at: 6, key: 'shusaku_v', title: ['コスミを打たないと', 'Without the diagonal'], notes: [
+    [`コスミを打たずに先に左上にカカると…`, `If Black approaches the upper left instead of playing the diagonal...`],
+    [`白は<bdi>P4</bdi>と肩ツキ。`, `White shoulder-hits at <bdi>P4</bdi>.`],
+    [`這って隅を守ります。`, `Black crawls to keep the corner.`],
+    [`白は伸びます。`, `White extends.`],
+    [`一間にトンで根拠を確保。`, `Black jumps to secure a base.`],
+    [`白に<bdi>Q15</bdi>と打たれると、右上の黒は根拠が狭くなります。「相手の急所は自分の急所」。秀策のコスミがいかに大切な点か分かります。`, `Now White takes <bdi>Q15</bdi> and Black's upper-right corner becomes cramped. Your opponent's vital point is your own — which shows how important Shusaku's diagonal is.`] ] } ],
   problems: [4, 6, 8, 10, 12, 14, 16, 20] },
 
 // ---------------------------------------------------------------- たすき星
@@ -282,6 +316,11 @@ export const SETS = [
     [`白は左下の三々に入ります。`, `White invades the lower-left 3-3 point.`],
     [`<bdi>D3</bdi>と押さえ、下辺の黒石に向けて壁を作ります。下辺と右辺で黒の勢力が広がる布石です。`, `Black blocks at ${b('D3')}, building the wall toward the lower-side stones. Black's influence spreads over the lower and right sides.`],
   ],
+  vars: [ { at: 6, key: 'tasuki_v', title: ['上から押さえる', 'Blocking from above'], notes: [
+    [`<bdi>Q17</bdi>と上から押さえると、白は右辺に這い、黒の壁は上辺を向きます。`, `Blocking from above at <bdi>Q17</bdi> makes White crawl down the right side; Black's wall faces the top.`],
+    [`白は這います。`, `White crawls.`],
+    [`<bdi>Q15</bdi>と堅く伸びて壁を作ります。`, `Black extends solidly to <bdi>Q15</bdi>.`],
+    [`白はハネて生きを確保。この方向だと、右下の白星を攻める力は本譜より弱くなります。`, `White hanes and lives. In this direction Black has less power against the lower-right star than in the main line.`] ] } ],
   problems: [4, 6, 8, 10, 14, 16, 18] },
 
 // ---------------------------------------------------------------- シマリとカカリ
@@ -311,6 +350,11 @@ export const SETS = [
     [`下辺の白シマリにも肩ツキ。中央を意識した、布石の最終段階の打ち方です。`, `Black also shoulder-hits the lower-left enclosure — a final-stage opening move with the centre in mind.`],
     [`白は押して下辺を守ります。この後は中央の主導権争いになります。`, `White pushes to protect the lower side. Next comes the battle for the centre.`],
   ],
+  vars: [ { at: 4, key: 'shimari_v', title: ['シマリより先にカカリ', 'Approach before enclosing'], notes: [
+    [`自分のシマリより先に、相手の小目にカカる打ち方もあります。`, `Black can approach the opponent's 3-4 point before enclosing.`],
+    [`白はコスんで隅を守ります。`, `White guards the corner with a diagonal move.`],
+    [`<bdi>O17</bdi>と大ゲイマにシマって上辺を広く構えます。`, `Black encloses with a large knight's move at <bdi>O17</bdi>, claiming a wide top side.`],
+    [`白は右下の小目にカカリ。シマリとカカリを交互に打ち合う、序盤の基本の流れです。`, `White approaches the lower-right 3-4 point. Alternating enclosures and approaches is the basic flow of the opening.`] ] } ],
   problems: [4, 6, 8, 10, 12, 14, 16] },
 
 // ---------------------------------------------------------------- AI流
@@ -344,5 +388,10 @@ export const SETS = [
     [`<bdi>Q17</bdi>と上から押さえ、白を右辺へ這わせます。右下の黒の壁と協力して、右辺に大きな黒模様を作る方向です。`, `Black blocks from above at ${b('Q17')}, making White crawl down the right side. Together with the lower-right wall, this aims for a big right-side framework.`],
     [`白は這って隅で生きる形を作ります。互いに隅を取り合い、形勢は互角。中央と辺の構想力の勝負になります。`, `White crawls to make life. Both sides have their corners and the game is even; now it is a contest of plans for the sides and centre.`],
   ],
+  vars: [ { at: 12, key: 'modern_v', title: ['右辺側から押さえる', 'Blocking from the right side'], notes: [
+    [`<bdi>R4</bdi>と右辺側から押さえる方向もあります。`, `Black can also block from the right side at <bdi>R4</bdi>.`],
+    [`白は下辺に這います。`, `White crawls along the bottom.`],
+    [`<bdi>P4</bdi>と伸びて壁を作ります。`, `Black extends to <bdi>P4</bdi> to build the wall.`],
+    [`白は二線にハネて生き。黒の壁は右辺を向きますが、下辺の白の厚みに近づくので働きはやや弱くなります。`, `White hanes on the second line and lives. Black's wall faces the right side, but it sits close to White's lower-side thickness and works a little less well.`] ] } ],
   problems: [4, 6, 8, 10, 12, 14, 18, 20] },
 ];

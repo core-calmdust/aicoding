@@ -29,6 +29,13 @@ for (const d of [...S1, ...S2, ...S3]) {
     return { at: v.at, line: vline, title: tx(v.title), notes: vn };
   });
   o.evals = evals;
+  const varLoss = [];
+  for (const v of (d.vars || [])) {   // engine check of the first move of each side line
+    const vl = L[v.key][3].split(/\s+/), nd = nodes[v.at], sg = nd.turn === 1 ? 1 : -1;
+    const ch = await node(n, komi, hc, vl.slice(0, v.at + 1), V);
+    const best = Math.max(...nd.top.filter((t, i) => i === 0 || t[2] >= 10).map(t => t[1] * sg));
+    varLoss.push(`${vl[v.at]}:${Math.max(0, best - ch.lead * sg).toFixed(1)}`);
+  }
   // problems: position after `at` moves, side to move = d.side; ok = line move, good = engine-equal alternatives
   o.problems = d.problems.map(at => {
     const nd = nodes[at]; if (nd.turn !== d.side) throw new Error(`${d.id} problem at ${at}: wrong side`);
@@ -45,7 +52,7 @@ for (const d of [...S1, ...S2, ...S3]) {
     const best = Math.max(...nd.top.filter((t, i) => i === 0 || t[2] >= 10).map(t => t[1] * sg));
     const loss = Math.max(0, best - val * sg); maxLoss = Math.max(maxLoss, loss); if (nd.turn === 1) maxB = Math.max(maxB, loss);
   }
-  report.push(`${d.id.padEnd(22)} ${d.title[0].padEnd(14)} ${n}x${n} ${String(line.length).padStart(2)} moves  maxloss ${maxLoss.toFixed(1)} (black ${maxB.toFixed(1)})`);
+  report.push(`${d.id.padEnd(22)} ${d.title[0].padEnd(14)} ${n}x${n} ${String(line.length).padStart(2)} moves  maxloss ${maxLoss.toFixed(1)} (black ${maxB.toFixed(1)})  vars ${varLoss.join(' ')}`);
   sets.push(o);
 }
 save();
