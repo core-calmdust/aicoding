@@ -705,47 +705,73 @@
     <rect x="96" y="232" width="128" height="40" rx="20" fill="#fff6e2"/><text x="160" y="259" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="20" fill="#d93c3c">ATLAS</text>
     <g id="knob"><circle cx="160" cy="300" r="26" fill="#ffc928" stroke="#e09a00" stroke-width="4"/><rect x="152" y="280" width="16" height="40" rx="8" fill="#fff6e2"/></g>
   </svg>`;
+  // the 3D capsule machine (gacha3d.js); the flat SVG above is only the fallback without WebGL
+  let G3 = null;
+  function gacha3() {
+    if (G3 || !window.Gacha3D) return G3;
+    try { $('machine').innerHTML = ''; $('machine').classList.add('m3'); G3 = Gacha3D.mount($('machine'), { sfx: SFX }); } catch (e) { G3 = null; $('machine').classList.remove('m3'); }
+    return G3;
+  }
   function renderGacha() {
-    $('machine').innerHTML = MACHINE;
+    if (!gacha3()) $('machine').innerHTML = MACHINE;
     const R = A_.GACHA;
     $('gpanel').innerHTML = `<div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><h3>${t('g.h')}</h3><span class="coin mob"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
-      <div class="gbtns"><button class="btn sky" id="g1" ${C.balance < R.one ? 'disabled' : ''}>${t('g.one')}<small><span class="price"><i></i>${R.one}</span></small></button>
-      <button class="btn" id="g10" ${C.balance < R.ten ? 'disabled' : ''}>${t('g.ten')}<small><span class="price"><i></i>${R.ten}</span></small></button></div>
+      <div class="gbtns"><button class="btn sky" id="g1" ${C.balance < R.one || busy ? 'disabled' : ''}>${t('g.one')}<small><span class="price"><i></i>${R.one}</span></small></button>
+      <button class="btn" id="g10" ${C.balance < R.ten || busy ? 'disabled' : ''}>${t('g.ten')}<small><span class="price"><i></i>${R.ten}</span></small></button></div>
       <div class="gnote">★ ${t('g.tenNote')}<br>★ ${t('g.dup')}</div>
       <div><div class="gnote" style="margin-bottom:6px">${t('g.rates')}</div><div class="rates">${R.rates.map((p, i) => `<span class="r${i}" style="${i === 4 ? 'background:linear-gradient(135deg,#ff7fbe,#ffb21e)' : ''}">${ART.RAR[i]} ${(p * 100).toFixed(1)}%</span>`).join('')}</div></div>
       <div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div>`;
     $('g1').onclick = () => doPull(1); $('g10').onclick = () => doPull(10);
   }
   let busy = false;
-  function doPull(n) {
+  const capHtml = (r, i) => { const it = ART.byId(r.id);
+    return `<button class="cap c${r.rar}" data-i="${i}" aria-label="${t('g.tap')}"><span class="in"><span class="f"></span><span class="b">${r.dup ? `<span class="dp">¢${t('g.refund', { n: r.refund })}</span>` : `<span class="nw">${t('g.new')}</span>`}${ART.svg(r.id, 80)}<span class="rr">${ART.RAR[r.rar]}</span><span class="n">${esc(iname(it))}</span></span></span></button>`; };
+  function resultSheet(res, n, cost, opened, onClose) {
+    openSheet(`<h3>${t('g.h')}</h3><div class="res ${n === 1 ? 'one' : ''}">${res.map(capHtml).join('')}</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" id="gClose">${t('g.close')}</button><button class="btn sky" id="gAgain" ${C.balance < cost ? 'disabled' : ''}>${t('g.again')}</button></div>`, opened ? 'gres' : '', onClose);
+    const caps = [...document.querySelectorAll('.cap')];
+    const openCap = c => { if (c.classList.contains('open')) return; c.classList.add('open'); const r = res[+c.dataset.i]; if (r.rar >= 3) confetti(r.rar === 4 ? 160 : 70); };
+    if (opened) caps.forEach((c, i) => { c.classList.add('open'); c.style.animationDelay = i * 40 + 'ms'; });
+    else { caps.forEach(c => c.onclick = () => openCap(c)); caps.forEach((c, i) => setTimeout(() => openCap(c), 350 + i * 170)); }
+    $('gClose').onclick = closeSheet;
+    $('gAgain').onclick = () => { closeSheet(); doPull(n); };
+  }
+  async function doPull(n) {
     const cost = n === 10 ? A_.GACHA.ten : A_.GACHA.one;
     if (busy || C.balance < cost) return toast(t('shop.short'));
     busy = true;
     const res = A_.pull(W, n); refresh(); bumpCoins();
-    const m = $('machine'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake');
-    const k = $('knob'); if (k) k.style.transform = 'rotate(360deg)';
-    setTimeout(() => {
-      busy = false;
-      openSheet(`<h3>${t('g.h')}</h3><div class="res ${n === 1 ? 'one' : ''}">${res.map((r, i) => {
-        const it = ART.byId(r.id);
-        return `<button class="cap c${r.rar}" data-i="${i}" aria-label="${t('g.tap')}"><span class="in"><span class="f"></span><span class="b">${r.dup ? `<span class="dp">¢${t('g.refund', { n: r.refund })}</span>` : `<span class="nw">${t('g.new')}</span>`}${ART.svg(r.id, 80)}<span class="rr">${ART.RAR[r.rar]}</span><span class="n">${esc(iname(it))}</span></span></span></button>`;
-      }).join('')}</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" id="gClose">${t('g.close')}</button><button class="btn sky" id="gAgain" ${C.balance < cost ? 'disabled' : ''}>${t('g.again')}</button></div>`);
-      const caps = [...document.querySelectorAll('.cap')];
-      caps.forEach(c => c.onclick = () => openCap(c));
-      caps.forEach((c, i) => setTimeout(() => openCap(c), 350 + i * 170));
-      $('gClose').onclick = closeSheet;
-      $('gAgain').onclick = () => { closeSheet(); doPull(n); };
-      renderGacha();
-    }, 700);
-    function openCap(c) { if (c.classList.contains('open')) return; c.classList.add('open'); const r = res[+c.dataset.i]; if (r.rar >= 3) confetti(r.rar === 4 ? 160 : 70); }
+    const g = gacha3();
+    renderGacha();
+    if (!g) {   // fallback: shake the flat machine, then the flip cards
+      const m = $('machine'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake');
+      const k = $('knob'); if (k) k.style.transform = 'rotate(360deg)';
+      setTimeout(() => { busy = false; resultSheet(res, n, cost, false); renderGacha(); }, 700);
+      return;
+    }
+    const mr = $('machine').getBoundingClientRect();
+    if (mr.top < 60 || mr.bottom > innerHeight) $('machine').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const info = r => { const it = ART.byId(r.id);
+      return { art: ART.svg(r.id, 160), rar: ART.RAR[r.rar], name: esc(iname(it)), tag: r.dup ? '¢' + t('g.refund', { n: r.refund }) : t('g.new') }; };
+    let done = false;
+    try { done = await g.play(res, { info, skip: t('g.skip'), onOpen: r => { if (r.rar >= 3) confetti(r.rar === 4 ? 160 : 70); } }); }
+    catch (e) { console.error(e); done = true; }
+    busy = false; renderGacha();
+    if (!done) return;
+    if (n === 1) {
+      const a = g.actions(`<button class="btn ghost" id="gClose1">${t('g.close')}</button><button class="btn sky" id="gAgain1" ${C.balance < cost ? 'disabled' : ''}>${t('g.again')}</button>`);
+      a.querySelector('#gClose1').onclick = () => g.reset();
+      a.querySelector('#gAgain1').onclick = () => doPull(1);
+    } else if (page === 'gacha') resultSheet(res, n, cost, true, () => g.reset());
+    else g.reset();
   }
 
   /* ---------- DRESS ---------- */
   let dKind = 'icon';
   function renderDress() {
     $('hDress').textContent = t('dress.h');
-    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><div class="av" style="background:none;box-shadow:none">${avatar(150)}</div>
+    $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
+    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, 150, { pop: true })}</button>
       <div style="text-align:center"><b style="font-size:20px">${esc(W.name || t('pf.player'))}</b><div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div></div>`;
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
@@ -755,7 +781,36 @@
       const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
       return itemCard(it, own ? (on ? `<span class="btn sm mint">${t('dress.on')}</span>` : `<button class="btn sm sky" data-wear="${it.id}">${t('dress.wear')}</button>`) : '', (own ? '' : 'locked ') + (on ? 'sel' : ''));
     }).join('');
-    $('dItems').querySelectorAll('[data-wear]').forEach(b => b.onclick = () => { W.av[slot] = b.dataset.wear; A_.save(W); renderDress(); });
+    $('dItems').querySelectorAll('[data-wear]').forEach(b => b.onclick = () => { W.av[slot] = b.dataset.wear; A_.save(W); renderDress(); if (slot === 'icon') pokeAvatar(true); });
+    $('dprev').querySelector('.poke').onclick = () => pokeAvatar();
+  }
+  // tap the character in the dress-up preview: it reacts with a random little animation (+ hearts / stars / notes popping out)
+  const POSES = ['hop', 'spin', 'wiggle', 'squish', 'dance', 'flip'];
+  const PUFF = {
+    heart: c => `<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.4 4.4 0 0 1 8-2.6A4.4 4.4 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${c}"/></svg>`,
+    star: c => `<svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.7 6.2 20l1.4-6.4L2.7 9.2l6.5-.7z" fill="${c}"/></svg>`,
+    note: c => `<svg viewBox="0 0 24 24"><path d="M9 17.5V5l11-2v12" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/><circle cx="6.5" cy="17.5" r="3.2" fill="${c}"/><circle cx="17.5" cy="15" r="3.2" fill="${c}"/></svg>`,
+  };
+  let lastPose = '';
+  function pokeAvatar(wear) {
+    const av = document.querySelector('#dprev .poke'); if (!av) return;
+    let pose = wear ? 'hop' : POSES[Math.floor(Math.random() * POSES.length)];
+    if (!wear && pose === lastPose) pose = POSES[(POSES.indexOf(pose) + 1) % POSES.length];
+    lastPose = pose;
+    POSES.forEach(p => av.classList.remove('p-' + p)); void av.offsetWidth; av.classList.add('p-' + pose);
+    clearTimeout(av._t); av._t = setTimeout(() => av.classList.remove('p-' + pose), 1100);
+    const it = ART.byId(W.av.icon), rar = it ? it.rar : 0;
+    const kinds = pose === 'dance' ? ['note'] : pose === 'spin' || rar >= 3 ? ['star', 'heart'] : ['heart'];
+    const cols = rar >= 4 ? ['#ffc928', '#ff8fc7', '#7fd3ff', '#a17cff'] : rar >= 3 ? ['#b08cff', '#ffd34f', '#ff8fc7'] : ['#ff7fa0', '#ffb3c8', '#ffd34f'];
+    const n = 4 + Math.min(rar, 3) * 2;
+    for (let i = 0; i < n; i++) {
+      const sp = document.createElement('i'), k = kinds[i % kinds.length], a = (-90 + (i / (n - 1 || 1) - .5) * 150) * Math.PI / 180, d = 60 + Math.random() * 40;
+      sp.className = 'puff'; sp.innerHTML = PUFF[k](cols[i % cols.length]);
+      sp.style.cssText = `--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d}px;--r:${(Math.random() - .5) * 60}deg;--s:${.7 + Math.random() * .6};animation-delay:${i * 35}ms`;
+      av.appendChild(sp); setTimeout(() => sp.remove(), 1400);
+    }
+    ({ hop: () => SFX.boing(), spin: () => SFX.whoosh(0, .35), wiggle: () => { SFX.tok(); SFX.tok(160); SFX.tok(320); }, squish: () => SFX.boing(), dance: () => SFX.chime(), flip: () => { SFX.whoosh(0, .3); SFX.tok(420); } })[pose]();
+    if (rar >= 3) SFX.shimmer(150);
   }
 
   /* ---------- overlay / toast / confetti ---------- */

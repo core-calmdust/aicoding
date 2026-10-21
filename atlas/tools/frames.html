@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- Dev tool: renders one 3D avatar frame (atlas/frame3d.js) to a transparent PNG.
+     Open via a local server: http://localhost:8000/atlas/tools/frames.html?id=gold  → window.SHOT holds the data URL.
+     images/atlas/frame/<key>.webp were made from this page (headless Chromium, 768 px → downscaled to 256 px webp). -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script src="../icons3d.js"></script>
+<script src="../avatars3d.js"></script>
+<script src="../frame3d.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), id = q.get('id') || 'white', S = +q.get('size') || 768;
+  const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  R.setPixelRatio(1); R.setSize(S, S); R.setClearColor(0x000000, 0);
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .95;
+  document.body.appendChild(R.domElement);
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xfff6e8, 0x8a7a9a, .6));
+  const key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(-7, 9, 7); scene.add(key);   // soft key from the upper left
+  const fill = new THREE.DirectionalLight(0xdfe8ff, .35); fill.position.set(6, -4, 8); scene.add(fill);
+  const g = FRAME3D.build(id); scene.add(g);
+  // front view, orthographic: the image spans exactly x, y ∈ [-1, 1] (= the avatar's 0–100 square)
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 50); cam.position.set(0, 0, 10); cam.lookAt(0, 0, 0);
+  R.render(scene, cam);
+  window.SHOT = R.domElement.toDataURL('image/png');
+})();
+</script>
+</body></html>

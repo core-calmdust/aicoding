@@ -77,8 +77,10 @@
   };
   const avUrl = id => BASE + 'av/' + id.slice(3) + '.webp?v=' + AVV;
   // backgrounds: 3D-rendered images (atlas/bg3d.js → images/atlas/bg/<id>.webp). Skies are one picture, the rest seamless tiles.
-  const BGV = 1, COVER = { b024: 1, b028: 1 };
+  const BGV = 1, COVER_PAT = { sky: 1, meadow: 1, sea: 1, snowscape: 1, toytown: 1, space: 1 }, DARK_COL = { night: 1, forest: 1, ocean: 1, berry: 1 }, COVER = {};
   const bgUrl = id => BASE + 'bg/' + id + '.webp?v=' + BGV;
+  // frames: 3D-rendered rings (atlas/frame3d.js → images/atlas/frame/<key>.webp), drawn over the whole 100×100 avatar
+  const FRV = 1, frameImg = k => `<image href="${BASE}frame/${k}.webp?v=${FRV}" x="0" y="0" width="100" height="100"/>`;
 
   /* ---------- backgrounds (patterns) ---------- */
   const pat = (id, w, body) => `<pattern id="${id}" width="${w}" height="${w}" patternUnits="userSpaceOnUse">${body}</pattern>`;
@@ -99,11 +101,13 @@
   const BG_NAME = {
     plain: ['むじ', 'Plain'], dots: ['ドット', 'Dots'], stripe: ['ストライプ', 'Stripes'], checker: ['チェッカー', 'Checker'], goban: ['碁盤', 'Go board'], wave: ['なみ', 'Waves'],
     star: ['ほしぞら', 'Stars'], heart: ['ハート', 'Hearts'], hex: ['ヘックス', 'Hex'], pip: ['バックギャモン', 'Points'], sakura: ['さくら', 'Sakura'], sky: ['グラデーション', 'Gradient'],
+    cloud: ['くも', 'Clouds'], bubble: ['あわ', 'Bubbles'], flower: ['おはな', 'Flowers'], leaf: ['はっぱ', 'Leaves'], argyle: ['アーガイル', 'Argyle'], plaid: ['タータン', 'Tartan'], scale: ['うろこ', 'Scales'], moon: ['つき', 'Moons'], dice: ['サイコロ', 'Dice'], chess: ['チェス', 'Chess'], cards: ['トランプ', 'Cards'], stones: ['碁石', 'Go stones'], shogi: ['将棋の駒', 'Shogi pieces'], candy: ['キャンディ', 'Candy'], meadow: ['はらっぱ', 'Meadow'], sea: ['うみ', 'Sea'], snowscape: ['ゆきげしき', 'Snowscape'], toytown: ['おもちゃの町', 'Toy town'], space: ['うちゅう', 'Space'],
   };
   const BGCOL = {
     cream: ['#fff6df', '#ffe7a8', 'クリーム', 'Cream'], mint: ['#e3fbef', '#a8ecc9', 'ミント', 'Mint'], sky: ['#e2f4ff', '#a9dcff', 'そら', 'Sky'],
     rose: ['#ffe6ef', '#ffb5cf', 'ローズ', 'Rose'], lilac: ['#efe8ff', '#cdb8ff', 'ライラック', 'Lilac'], night: ['#26304f', '#43517f', 'よる', 'Night'],
     sunset: ['#ffd27a', '#ff7f9e', 'ゆうやけ', 'Sunset'], wood: ['#f2d49b', '#d9ae67', 'もくめ', 'Wood'], gold: ['#fff1b8', '#ffc93d', 'ゴールド', 'Gold'],
+    peach: ['#ffe9dc', '#ffbe9c', 'ピーチ', 'Peach'], lemon: ['#fffbd6', '#fff08a', 'レモン', 'Lemon'], snow: ['#f7f9fc', '#dbe4f0', 'スノー', 'Snow'], coral: ['#ffe2dc', '#ff9a8a', 'コーラル', 'Coral'], forest: ['#23402f', '#3d6b4c', 'フォレスト', 'Forest'], ocean: ['#1f3b55', '#2f6a8f', 'オーシャン', 'Ocean'], berry: ['#4a2340', '#8a3f74', 'ベリー', 'Berry'], cocoa: ['#e8d5c4', '#b98a66', 'ココア', 'Cocoa'], rainbow: ['#ffe1ef', '#bfe6ff', 'にじいろ', 'Rainbow'],
   };
 
   /* ---------- frames ---------- */
@@ -118,6 +122,46 @@
     rainbow: { r: 2, n: ['にじ', 'Rainbow'], d: u => `<defs><linearGradient id="${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset=".3" stop-color="#ffd23f"/><stop offset=".6" stop-color="#4fd8a0"/><stop offset="1" stop-color="#a17cff"/></linearGradient></defs><circle cx="50" cy="50" r="46.5" fill="none" stroke="url(#${u})" stroke-width="7"/>` },
     laurel: { r: 3, n: ['月桂冠', 'Laurel'], d: () => ring('#4fd8a0', 5) + Array.from({ length: 14 }, (_, i) => { const a = (i / 14) * Math.PI * 2; return `<ellipse cx="${50 + 46 * Math.cos(a)}" cy="${50 + 46 * Math.sin(a)}" rx="3.2" ry="6.5" fill="#22aa74" transform="rotate(${a * 180 / Math.PI + 30} ${50 + 46 * Math.cos(a)} ${50 + 46 * Math.sin(a)})"/>`; }).join('') },
     gold: { r: 3, n: ['ゴールド', 'Gold'], d: u => `<defs><linearGradient id="${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2a8"/><stop offset=".5" stop-color="#ffc93d"/><stop offset="1" stop-color="#d48a00"/></linearGradient></defs><circle cx="50" cy="50" r="46" fill="none" stroke="url(#${u})" stroke-width="8"/>` + [0, 90, 180, 270].map(r => `<circle cx="50" cy="4" r="3.6" fill="#fff" transform="rotate(${r} 50 50)"/>`).join('') },
+    // added later (all frames are 3D images now; d() is only the SVG fallback ring)
+    cream: { r: 0, n: ['クリーム', 'Cream'], d: () => ring('#fff', 7) },
+    lemon: { r: 0, n: ['レモン', 'Lemon'], d: () => ring('#fff', 7) },
+    lilac: { r: 0, n: ['ライラック', 'Lilac'], d: () => ring('#fff', 7) },
+    peach: { r: 0, n: ['ピーチ', 'Peach'], d: () => ring('#fff', 7) },
+    rose: { r: 0, n: ['ローズ', 'Rose'], d: () => ring('#fff', 7) },
+    ink: { r: 0, n: ['インク', 'Ink'], d: () => ring('#fff', 7) },
+    dots: { r: 0, n: ['ドット', 'Dots'], d: () => ring('#fff', 7) },
+    stitch: { r: 0, n: ['ステッチ', 'Stitch'], d: () => ring('#fff', 7) },
+    ribbon: { r: 0, n: ['リボン', 'Ribbon'], d: () => ring('#fff', 7) },
+    cloud: { r: 0, n: ['くも', 'Cloud'], d: () => ring('#fff', 7) },
+    bubble: { r: 1, n: ['あわ', 'Bubbles'], d: () => ring('#fff', 7) },
+    daisy: { r: 1, n: ['デイジー', 'Daisy'], d: () => ring('#fff', 7) },
+    vine: { r: 1, n: ['つる', 'Vine'], d: () => ring('#fff', 7) },
+    hearts: { r: 1, n: ['ハート', 'Hearts'], d: () => ring('#fff', 7) },
+    stars: { r: 1, n: ['ほし', 'Stars'], d: () => ring('#fff', 7) },
+    beads: { r: 1, n: ['ビーズ', 'Beads'], d: () => ring('#fff', 7) },
+    donut: { r: 1, n: ['ドーナツ', 'Donut'], d: () => ring('#fff', 7) },
+    twotone: { r: 1, n: ['ツートン', 'Two-tone'], d: () => ring('#fff', 7) },
+    pearl: { r: 1, n: ['パール', 'Pearl'], d: () => ring('#fff', 7) },
+    paw: { r: 1, n: ['にくきゅう', 'Paws'], d: () => ring('#fff', 7) },
+    cookie: { r: 1, n: ['クッキー', 'Cookie'], d: () => ring('#fff', 7) },
+    dice: { r: 2, n: ['サイコロ', 'Dice'], d: () => ring('#fff', 7) },
+    go: { r: 2, n: ['碁石', 'Go stones'], d: () => ring('#fff', 7) },
+    reversi: { r: 2, n: ['リバーシ', 'Reversi'], d: () => ring('#fff', 7) },
+    chess: { r: 2, n: ['チェス', 'Chess'], d: () => ring('#fff', 7) },
+    shogi: { r: 2, n: ['将棋', 'Shogi'], d: () => ring('#fff', 7) },
+    cards: { r: 2, n: ['トランプ', 'Cards'], d: () => ring('#fff', 7) },
+    sakura: { r: 2, n: ['さくら', 'Sakura'], d: () => ring('#fff', 7) },
+    mancala: { r: 2, n: ['マンカラ', 'Mancala'], d: () => ring('#fff', 7) },
+    sudoku: { r: 2, n: ['数独', 'Sudoku'], d: () => ring('#fff', 7) },
+    jewel: { r: 3, n: ['ジュエル', 'Jewel'], d: () => ring('#fff', 7) },
+    moon: { r: 3, n: ['つきよ', 'Moonlight'], d: () => ring('#fff', 7) },
+    ocean: { r: 3, n: ['うみ', 'Ocean'], d: () => ring('#fff', 7) },
+    autumn: { r: 3, n: ['もみじ', 'Autumn'], d: () => ring('#fff', 7) },
+    snow: { r: 3, n: ['ゆき', 'Snow'], d: () => ring('#fff', 7) },
+    sunflower: { r: 3, n: ['ひまわり', 'Sunflower'], d: () => ring('#fff', 7) },
+    galaxy: { r: 4, n: ['ぎんが', 'Galaxy'], d: () => ring('#fff', 7) },
+    prism: { r: 4, n: ['プリズム', 'Prism'], d: () => ring('#fff', 7) },
+    royal: { r: 4, n: ['ロイヤル', 'Royal'], d: () => ring('#fff', 7) },
     atlas: { r: 4, n: ['アトラス', 'Atlas'], d: u => `<defs><linearGradient id="${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4cc3ff"/><stop offset=".5" stop-color="#a17cff"/><stop offset="1" stop-color="#ff8fc7"/></linearGradient></defs><circle cx="50" cy="50" r="46" fill="none" stroke="url(#${u})" stroke-width="8"/>` + Array.from({ length: 8 }, (_, i) => `<path d="M50 0l2.6 5.4l5.4 2.6l-5.4 2.6L50 16l-2.6-5.4L42 8l5.4-2.6z" fill="#fff" transform="rotate(${i * 45} 50 50)"/>`).join('') },
   };
   function ring(col, w, r = 46.5) { return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="${w}"/>`; }
@@ -130,6 +174,8 @@
   [['pip', 'wood'], ['star', 'night'], ['sakura', 'rose'], ['hex', 'night'], ['checker', 'night'], ['star', 'lilac']].forEach(([p, c]) => bg(p, c, 2));
   [['sky', 'sunset'], ['sakura', 'night'], ['star', 'sunset'], ['goban', 'gold']].forEach(([p, c]) => bg(p, c, 3));
   [['sky', 'night'], ['star', 'gold']].forEach(([p, c]) => bg(p, c, 4));
+  // b030…b100 (added later; appended so the older ids never move)
+  [["cloud", "sky", 0], ["cloud", "rose", 0], ["bubble", "mint", 0], ["bubble", "lilac", 0], ["flower", "cream", 0], ["flower", "peach", 0], ["leaf", "mint", 0], ["leaf", "lemon", 0], ["plain", "peach", 0], ["plain", "lemon", 0], ["plain", "snow", 0], ["dots", "peach", 0], ["dots", "lemon", 0], ["stripe", "sky", 0], ["stripe", "lilac", 0], ["checker", "mint", 0], ["checker", "peach", 0], ["wave", "rose", 0], ["heart", "lilac", 0], ["argyle", "cream", 0], ["scale", "sky", 0], ["argyle", "rose", 1], ["plaid", "coral", 1], ["plaid", "forest", 1], ["scale", "mint", 1], ["moon", "lilac", 1], ["dice", "cream", 1], ["dice", "sky", 1], ["chess", "cream", 1], ["chess", "mint", 1], ["cards", "rose", 1], ["cards", "snow", 1], ["stones", "wood", 1], ["stones", "snow", 1], ["shogi", "wood", 1], ["candy", "rose", 1], ["candy", "lemon", 1], ["flower", "night", 1], ["leaf", "forest", 1], ["bubble", "ocean", 1], ["heart", "coral", 1], ["dice", "night", 2], ["chess", "night", 2], ["cards", "night", 2], ["shogi", "cocoa", 2], ["stones", "night", 2], ["moon", "night", 2], ["scale", "ocean", 2], ["plaid", "berry", 2], ["argyle", "berry", 2], ["candy", "berry", 2], ["sakura", "peach", 2], ["hex", "mint", 2], ["star", "ocean", 2], ["wave", "ocean", 2], ["cloud", "sunset", 2], ["meadow", "lemon", 2], ["sea", "sky", 3], ["meadow", "mint", 3], ["snowscape", "snow", 3], ["toytown", "cream", 3], ["sky", "peach", 3], ["chess", "gold", 3], ["cards", "gold", 3], ["dice", "gold", 3], ["star", "berry", 3], ["space", "night", 4], ["sky", "rainbow", 4], ["toytown", "night", 4], ["sea", "sunset", 4], ["star", "rainbow", 4]].forEach(([p, c, r]) => bg(p, c, r));
 
   const items = [];
   AV.forEach(([sp, ur, nm]) => {
@@ -149,28 +195,28 @@
   const BPK = Object.keys(BG_NAME), BCK = Object.keys(BGCOL), FRK = Object.keys(FRAME);
   const NAMES = {
     zh: {
-      bp: '纯色|圆点|条纹|格子|棋盘格|波浪|星空|爱心|六边形|双陆棋|樱花|渐变', bc: '奶油|薄荷|天空|玫瑰|丁香|夜晚|晚霞|木纹|金色', fr: '无|白色|珊瑚|天空|薄荷|糖果|棋盘|彩虹|月桂冠|金色|阿特拉斯',
+      bp: '纯色|圆点|条纹|格子|棋盘格|波浪|星空|爱心|六边形|双陆棋|樱花|渐变|云朵|泡泡|小花|叶子|菱格|格纹|鳞片|月亮|骰子|国际象棋|扑克|围棋子|将棋子|糖果|草原|大海|雪景|玩具小镇|宇宙', bc: '奶油|薄荷|天空|玫瑰|丁香|夜晚|晚霞|木纹|金色|蜜桃|柠檬|雪白|珊瑚|森林|海洋|莓果|可可|彩虹', fr: '无|白色|珊瑚|天空|薄荷|糖果|棋盘|彩虹|月桂冠|金色|奶油|柠檬|丁香|蜜桃|玫瑰|墨色|圆点|缝线|丝带|云朵|泡泡|雏菊|藤蔓|爱心|星星|串珠|甜甜圈|双色|珍珠|肉球|饼干|骰子|围棋子|黑白棋|国际象棋|将棋|扑克|樱花|播棋|数独|宝石|月夜|海洋|红叶|雪花|向日葵|银河|棱镜|皇家|阿特拉斯',
       bg: (p, c) => c + p },
     ko: {
-      bp: '무지|도트|스트라이프|체크|바둑판|물결|별하늘|하트|헥스|백개먼|벚꽃|그라데이션', bc: '크림|민트|하늘|로즈|라일락|밤|노을|나뭇결|골드', fr: '없음|화이트|코랄|스카이|민트|캔디|체크|무지개|월계관|골드|아틀라스',
+      bp: '무지|도트|스트라이프|체크|바둑판|물결|별하늘|하트|헥스|백개먼|벚꽃|그라데이션|구름|거품|꽃|나뭇잎|아가일|타탄|비늘|달|주사위|체스|트럼프|바둑돌|쇼기 말|사탕|들판|바다|설경|장난감 마을|우주', bc: '크림|민트|하늘|로즈|라일락|밤|노을|나뭇결|골드|피치|레몬|스노우|코랄|숲|오션|베리|코코아|무지개', fr: '없음|화이트|코랄|스카이|민트|캔디|체크|무지개|월계관|골드|크림|레몬|라일락|피치|로즈|잉크|도트|스티치|리본|구름|거품|데이지|덩굴|하트|별|비즈|도넛|투톤|진주|발바닥|쿠키|주사위|바둑돌|리버시|체스|쇼기|트럼프|벚꽃|만칼라|스도쿠|주얼|달밤|바다|단풍|눈꽃|해바라기|은하|프리즘|로열|아틀라스',
       bg: (p, c) => c + ' ' + p },
     es: {
-      bp: 'Liso|Lunares|Rayas|Cuadros|Tablero de go|Olas|Estrellas|Corazones|Hexágonos|Backgammon|Sakura|Degradado', bc: 'crema|menta|cielo|rosa|lila|noche|atardecer|madera|oro', fr: 'Ninguno|Blanco|Coral|Cielo|Menta|Caramelo|Cuadros|Arcoíris|Laurel|Oro|Atlas',
+      bp: 'Liso|Lunares|Rayas|Cuadros|Tablero de go|Olas|Estrellas|Corazones|Hexágonos|Backgammon|Sakura|Degradado|Nubes|Burbujas|Flores|Hojas|Rombos|Escocés|Escamas|Lunas|Dados|Ajedrez|Naipes|Piedras de go|Piezas de shogi|Caramelos|Pradera|Mar|Paisaje nevado|Pueblo de juguete|Espacio', bc: 'crema|menta|cielo|rosa|lila|noche|atardecer|madera|oro|melocotón|limón|nieve|coral|bosque|océano|frutos rojos|cacao|arcoíris', fr: 'Ninguno|Blanco|Coral|Cielo|Menta|Caramelo|Cuadros|Arcoíris|Laurel|Oro|Crema|Limón|Lila|Melocotón|Rosa|Tinta|Lunares|Costura|Lazo|Nube|Burbujas|Margarita|Enredadera|Corazones|Estrellas|Cuentas|Dónut|Bicolor|Perla|Huellitas|Galleta|Dados|Piedras de go|Reversi|Ajedrez|Shogi|Naipes|Sakura|Mancala|Sudoku|Joya|Luna|Océano|Otoño|Nieve|Girasol|Galaxia|Prisma|Real|Atlas',
       bg: (p, c) => p + ' color ' + c },
     fr: {
-      bp: 'Uni|Pois|Rayures|Damier|Goban|Vagues|Étoiles|Cœurs|Hexagones|Backgammon|Sakura|Dégradé', bc: 'crème|menthe|ciel|rose|lilas|nuit|couchant|bois|or', fr: 'Aucun|Blanc|Corail|Ciel|Menthe|Bonbon|Damier|Arc-en-ciel|Laurier|Or|Atlas',
+      bp: 'Uni|Pois|Rayures|Damier|Goban|Vagues|Étoiles|Cœurs|Hexagones|Backgammon|Sakura|Dégradé|Nuages|Bulles|Fleurs|Feuilles|Losanges|Tartan|Écailles|Lunes|Dés|Échecs|Cartes|Pierres de go|Pièces de shogi|Bonbons|Prairie|Mer|Paysage enneigé|Ville jouet|Espace', bc: 'crème|menthe|ciel|rose|lilas|nuit|couchant|bois|or|pêche|citron|neige|corail|forêt|océan|baies|cacao|arc-en-ciel', fr: 'Aucun|Blanc|Corail|Ciel|Menthe|Bonbon|Damier|Arc-en-ciel|Laurier|Or|Crème|Citron|Lilas|Pêche|Rose|Encre|Pois|Couture|Ruban|Nuage|Bulles|Marguerite|Liane|Cœurs|Étoiles|Perles|Donut|Bicolore|Nacre|Pattes|Biscuit|Dés|Pierres de go|Reversi|Échecs|Shogi|Cartes|Sakura|Mancala|Sudoku|Joyau|Clair de lune|Océan|Automne|Neige|Tournesol|Galaxie|Prisme|Royal|Atlas',
       bg: (p, c) => p + ' ' + c },
     pt: {
-      bp: 'Liso|Bolinhas|Listras|Xadrez|Goban|Ondas|Estrelas|Corações|Hexágonos|Gamão|Sakura|Degradê', bc: 'creme|menta|céu|rosa|lilás|noite|pôr do sol|madeira|ouro', fr: 'Nenhuma|Branca|Coral|Céu|Menta|Doce|Xadrez|Arco-íris|Louros|Ouro|Atlas',
+      bp: 'Liso|Bolinhas|Listras|Xadrez|Goban|Ondas|Estrelas|Corações|Hexágonos|Gamão|Sakura|Degradê|Nuvens|Bolhas|Flores|Folhas|Losangos|Xadrez escocês|Escamas|Luas|Dados|Xadrez|Cartas|Pedras de go|Peças de shogi|Balas|Campo|Mar|Paisagem de neve|Cidade de brinquedo|Espaço', bc: 'creme|menta|céu|rosa|lilás|noite|pôr do sol|madeira|ouro|pêssego|limão|neve|coral|floresta|oceano|frutas vermelhas|cacau|arco-íris', fr: 'Nenhuma|Branca|Coral|Céu|Menta|Doce|Xadrez|Arco-íris|Louros|Ouro|Creme|Limão|Lilás|Pêssego|Rosa|Tinta|Bolinhas|Costura|Fita|Nuvem|Bolhas|Margarida|Trepadeira|Corações|Estrelas|Contas|Rosquinha|Bicolor|Pérola|Patinhas|Biscoito|Dados|Pedras de go|Reversi|Xadrez|Shogi|Cartas|Sakura|Mancala|Sudoku|Joia|Luar|Oceano|Outono|Neve|Girassol|Galáxia|Prisma|Real|Atlas',
       bg: (p, c) => p + ' cor de ' + c },
     de: {
-      bp: 'Uni|Punkte|Streifen|Karo|Goban|Wellen|Sterne|Herzen|Waben|Backgammon|Sakura|Verlauf', bc: 'Creme|Minz|Himmel|Rosé|Flieder|Nacht|Abendrot|Holz|Gold', fr: 'Keiner|Weiß|Koralle|Himmel|Minze|Bonbon|Karo|Regenbogen|Lorbeer|Gold|Atlas',
+      bp: 'Uni|Punkte|Streifen|Karo|Goban|Wellen|Sterne|Herzen|Waben|Backgammon|Sakura|Verlauf|Wolken|Blasen|Blumen|Blätter|Rauten|Schottenkaro|Schuppen|Monde|Würfel|Schach|Karten|Go-Steine|Shogi-Steine|Bonbons|Wiese|Meer|Schneelandschaft|Spielzeugstadt|Weltall', bc: 'Creme|Minz|Himmel|Rosé|Flieder|Nacht|Abendrot|Holz|Gold|Pfirsich|Zitronen|Schnee|Korallen|Wald|Ozean|Beeren|Kakao|Regenbogen', fr: 'Keiner|Weiß|Koralle|Himmel|Minze|Bonbon|Karo|Regenbogen|Lorbeer|Gold|Creme|Zitrone|Flieder|Pfirsich|Rosé|Tinte|Punkte|Naht|Schleife|Wolke|Blasen|Gänseblümchen|Ranke|Herzen|Sterne|Perlen|Donut|Zweifarbig|Perlmutt|Pfötchen|Keks|Würfel|Go-Steine|Reversi|Schach|Shogi|Karten|Sakura|Mancala|Sudoku|Juwel|Mondschein|Ozean|Herbst|Schnee|Sonnenblume|Galaxie|Prisma|Königlich|Atlas',
       bg: (p, c) => c + '-' + p },
     hi: {
-      bp: 'सादा|बिंदियाँ|धारियाँ|चेकर|गो बोर्ड|लहरें|तारे|दिल|षट्कोण|बैकगैमन|साकुरा|ग्रेडिएंट', bc: 'क्रीम|मिंट|आसमानी|गुलाबी|बकाइनी|रात|शाम|लकड़ी|सुनहरा', fr: 'कोई नहीं|सफ़ेद|कोरल|आसमानी|पुदीना|कैंडी|चेकर|इंद्रधनुष|लॉरेल|सुनहरा|एटलस',
+      bp: 'सादा|बिंदियाँ|धारियाँ|चेकर|गो बोर्ड|लहरें|तारे|दिल|षट्कोण|बैकगैमन|साकुरा|ग्रेडिएंट|बादल|बुलबुले|फूल|पत्तियाँ|आर्गाइल|टार्टन|शल्क|चाँद|पासे|शतरंज|ताश|गो पत्थर|शोगी मोहरे|टॉफ़ी|घास का मैदान|समुद्र|बर्फ़ीला नज़ारा|खिलौना नगर|अंतरिक्ष', bc: 'क्रीम|मिंट|आसमानी|गुलाबी|बकाइनी|रात|शाम|लकड़ी|सुनहरा|आड़ू|नींबू|बर्फ़ीला|कोरल|जंगल|सागर|बेरी|कोको|इंद्रधनुषी', fr: 'कोई नहीं|सफ़ेद|कोरल|आसमानी|पुदीना|कैंडी|चेकर|इंद्रधनुष|लॉरेल|सुनहरा|क्रीम|नींबू|बकाइनी|आड़ू|गुलाबी|स्याही|बिंदियाँ|सिलाई|रिबन|बादल|बुलबुले|डेज़ी|बेल|दिल|तारे|मनके|डोनट|दो-रंगी|मोती|पंजे|कुकी|पासे|गो पत्थर|रिवर्सी|शतरंज|शोगी|ताश|साकुरा|मनकाला|सुडोकू|रत्न|चाँदनी|सागर|पतझड़|बर्फ़|सूरजमुखी|आकाशगंगा|प्रिज़्म|शाही|एटलस',
       bg: (p, c) => p + ' (' + c + ')' },
     ar: {
-      bp: 'سادة|نقاط|خطوط|مربعات|رقعة غو|أمواج|نجوم|قلوب|سداسيات|طاولة الزهر|ساكورا|تدرّج', bc: 'الكريم|النعناع|السماء|الورد|الليلك|الليل|الغروب|الخشب|الذهب', fr: 'بلا|أبيض|مرجاني|سماوي|نعناعي|حلوى|مربعات|قوس قزح|إكليل غار|ذهبي|أطلس',
+      bp: 'سادة|نقاط|خطوط|مربعات|رقعة غو|أمواج|نجوم|قلوب|سداسيات|طاولة الزهر|ساكورا|تدرّج|غيوم|فقاعات|زهور|أوراق|معيّنات|مربعات اسكتلندية|حراشف|أقمار|نرد|شطرنج|ورق اللعب|أحجار غو|قطع شوغي|حلوى|مرج|بحر|منظر ثلجي|مدينة الألعاب|فضاء', bc: 'الكريم|النعناع|السماء|الورد|الليلك|الليل|الغروب|الخشب|الذهب|الخوخ|الليمون|الثلج|المرجان|الغابة|المحيط|التوت|الكاكاو|قوس قزح', fr: 'بلا|أبيض|مرجاني|سماوي|نعناعي|حلوى|مربعات|قوس قزح|إكليل غار|ذهبي|كريمي|ليموني|ليلكي|خوخي|وردي|حبري|نقاط|غرزة|شريطة|غيمة|فقاعات|أقحوان|كرمة|قلوب|نجوم|خرز|دونات|ثنائي اللون|لؤلؤي|كفوف|بسكويت|نرد|أحجار غو|ريفرسي|شطرنج|شوغي|ورق اللعب|ساكورا|مانكالا|سودوكو|جوهرة|ضوء القمر|محيط|خريف|ثلج|دوار الشمس|مجرة|منشور|ملكي|أطلس',
       bg: (p, c) => p + ' بلون ' + c },
   };
   Object.keys(NAMES).forEach(l => {
@@ -183,6 +229,7 @@
     });
   });
   const map = Object.fromEntries(items.map(it => [it.id, it]));
+  items.forEach(it => { if (it.kind === 'bg' && COVER_PAT[it.d.p]) COVER[it.id] = 1; });
 
   // starter set everyone owns
   const STARTER = ['av-dice-0', 'av-plop-0', 'av-stone-0', 'b001', 'b003', 'f-none', 'f-white'];
@@ -202,19 +249,21 @@
     if (it.kind === 'icon') return `<svg ${vb} aria-hidden="true"><image href="${avUrl(id)}" x="0" y="0" width="100" height="100"/></svg>`;
     if (it.kind === 'bg') { const f = bgFill(it); return `<svg ${vb} aria-hidden="true"><defs>${f.p}</defs><rect width="100" height="100" rx="18" fill="${f.fill}"/></svg>`; }   // bgFill = the 3D image
     const fu = U('f');
-    return `<svg ${vb} aria-hidden="true"><circle cx="50" cy="50" r="40" fill="#eef2f8"/>${FRAME[it.d.k].d(fu)}</svg>`;
+    return `<svg ${vb} aria-hidden="true"><circle cx="50" cy="50" r="44" fill="#eef2f8"/>${it.d.k === 'none' ? '' : frameImg(it.d.k)}</svg>`;
   }
-  function avatar(a = {}, size = 72) {
+  // o.pop: the character may leave the circle upwards (used where it is animated: the dress-up preview)
+  function avatar(a = {}, size = 72, o = {}) {
     const ic = map[a.icon] || map[DEFAULT_ICON], b = map[a.bg] || map.b001, fr = map[a.frame] || map['f-none'];
-    const f = bgFill(b), cid = U('c'), fu = U('f');
-    return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" class="av-svg" aria-hidden="true"><defs>${f.p}<clipPath id="${cid}"><circle cx="50" cy="50" r="46"/></clipPath></defs>
-<g clip-path="url(#${cid})"><rect width="100" height="100" fill="${f.fill}"/>${ic ? `<image href="${avUrl(ic.id)}" x="6" y="9" width="88" height="88"/>` : ''}</g>${fr.d.k === 'none' ? '<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="2"/>' : FRAME[fr.d.k].d(fu)}</svg>`;
+    const f = bgFill(b), cid = U('c'), pid = U('c'), fu = U('f');
+    const ch = ic ? `<image class="av-ch" href="${avUrl(ic.id)}" x="6" y="9" width="88" height="88"/>` : '';
+    return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" class="av-svg" aria-hidden="true" style="overflow:visible"><defs>${f.p}<clipPath id="${cid}"><circle cx="50" cy="50" r="46"/></clipPath>${o.pop ? `<clipPath id="${pid}"><circle cx="50" cy="50" r="41"/><rect x="-40" y="-80" width="180" height="130"/></clipPath>` : ''}</defs>
+<g clip-path="url(#${cid})"><rect width="100" height="100" fill="${f.fill}"/>${o.pop ? '' : ch}</g>${fr.d.k === 'none' ? '<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="2"/>' : frameImg(fr.d.k)}${o.pop ? `<g clip-path="url(#${pid})">${ch}</g>` : ''}</svg>`;
   }
   function bgDataUri(id) {   // CSS background value for a profile card
     const it = map[id] || map.b001;
     return COVER[it.id] ? `url('${bgUrl(it.id)}') center/cover no-repeat` : `url('${bgUrl(it.id)}') 0 0/112px repeat`;
   }
-  function isDark(id) { const it = map[id]; return !!it && it.kind === 'bg' && it.d.c === 'night'; }
+  function isDark(id) { const it = map[id]; return !!it && it.kind === 'bg' && (DARK_COL[it.d.c] || (COVER_PAT[it.d.p] && it.d.c === 'night')); }
 
   window.AtlasArt = { RAR, items, byId: id => map[id], STARTER, DEFAULT_ICON, avUrl, svg, avatar, bgDataUri, isDark };
 })();

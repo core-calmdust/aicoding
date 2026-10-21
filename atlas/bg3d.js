@@ -21,6 +21,7 @@
   const COL = {
     cream: ['#fff6df', '#ffe7a8'], mint: ['#e3fbef', '#a8ecc9'], sky: ['#e2f4ff', '#a9dcff'], rose: ['#ffe6ef', '#ffb5cf'], lilac: ['#efe8ff', '#cdb8ff'],
     night: ['#26304f', '#43517f'], sunset: ['#ffd27a', '#ff7f9e'], wood: ['#f2d49b', '#d9ae67'], gold: ['#fff1b8', '#ffc93d'],
+    peach: ['#ffe9dc', '#ffbe9c'], lemon: ['#fffbd6', '#fff08a'], snow: ['#f7f9fc', '#dbe4f0'], coral: ['#ffe2dc', '#ff9a8a'], forest: ['#23402f', '#3d6b4c'], ocean: ['#1f3b55', '#2f6a8f'], berry: ['#4a2340', '#8a3f74'], cocoa: ['#e8d5c4', '#b98a66'], rainbow: ['#ffe1ef', '#bfe6ff'],
   };
   // same order as BGS in atlas/art.js → b001 … b029
   const LIST = [
@@ -29,6 +30,8 @@
     ['pip', 'wood'], ['star', 'night'], ['sakura', 'rose'], ['hex', 'night'], ['checker', 'night'], ['star', 'lilac'],
     ['sky', 'sunset'], ['sakura', 'night'], ['star', 'sunset'], ['goban', 'gold'],
     ['sky', 'night'], ['star', 'gold'],
+    // b030 … b100 (same order as art.js)
+    ["cloud", "sky"], ["cloud", "rose"], ["bubble", "mint"], ["bubble", "lilac"], ["flower", "cream"], ["flower", "peach"], ["leaf", "mint"], ["leaf", "lemon"], ["plain", "peach"], ["plain", "lemon"], ["plain", "snow"], ["dots", "peach"], ["dots", "lemon"], ["stripe", "sky"], ["stripe", "lilac"], ["checker", "mint"], ["checker", "peach"], ["wave", "rose"], ["heart", "lilac"], ["argyle", "cream"], ["scale", "sky"], ["argyle", "rose"], ["plaid", "coral"], ["plaid", "forest"], ["scale", "mint"], ["moon", "lilac"], ["dice", "cream"], ["dice", "sky"], ["chess", "cream"], ["chess", "mint"], ["cards", "rose"], ["cards", "snow"], ["stones", "wood"], ["stones", "snow"], ["shogi", "wood"], ["candy", "rose"], ["candy", "lemon"], ["flower", "night"], ["leaf", "forest"], ["bubble", "ocean"], ["heart", "coral"], ["dice", "night"], ["chess", "night"], ["cards", "night"], ["shogi", "cocoa"], ["stones", "night"], ["moon", "night"], ["scale", "ocean"], ["plaid", "berry"], ["argyle", "berry"], ["candy", "berry"], ["sakura", "peach"], ["hex", "mint"], ["star", "ocean"], ["wave", "ocean"], ["cloud", "sunset"], ["meadow", "lemon"], ["sea", "sky"], ["meadow", "mint"], ["snowscape", "snow"], ["toytown", "cream"], ["sky", "peach"], ["chess", "gold"], ["cards", "gold"], ["dice", "gold"], ["star", "berry"], ["space", "night"], ["sky", "rainbow"], ["toytown", "night"], ["sea", "sunset"], ["star", "rainbow"],
   ];
   const IDS = {}; LIST.forEach((x, i) => { IDS['b' + String(i + 1).padStart(3, '0')] = x; });
 
@@ -81,6 +84,20 @@
     return A ? [ax, ay, 0, Math.floor(x) + Math.floor(y) * 97] : [bx, by, 1, Math.floor(x + .5) + Math.floor(y + .5) * 97 + 5000];
   }
   const hash = k => fr(Math.sin(k * 12.9898 + 78.233) * 43758.5453);
+  const WHITE = [1, 1, 1];
+  const smin = (a, b, k) => { const h = cl(.5 + .5 * (b - a) / k); return b + (a - b) * h - k * h * (1 - h); };   // smooth union
+  const rot = (x, y, r) => { const c = Math.cos(r), s = Math.sin(r); return [x * c - y * s, x * s + y * c]; };
+  // stag() with a periodic id + integer cell coords (ix, iy) of the chosen centre, for motifs that vary per cell
+  function stagP(u, v, n) { const r = stag(u, v, n), o = r[2] ? .5 : 0, ix = ((Math.floor(u * n + o) % n) + n) % n, iy = ((Math.floor(v * n + o) % n) + n) % n; r[3] = ix + iy * 97 + r[2] * 5000; r.push(ix, iy); return r; }   // id wraps with the tile
+  // ground / motif colours for the b030+ motifs: dark grounds stay dark, gold = gold ground + cream motifs, rainbow = pastel hues cycling per motif
+  const RAINBOW = ['#ffb3c8', '#ffd09a', '#fff09a', '#b6efc4', '#a9dcff', '#cdb8ff'].map(rgb);
+  function pal(a, b, o) {
+    if (o.rainbow) return { ground: (u, v, f) => mix(rgb('#fff6fa'), rgb('#eef6ff'), cl(.5 + .5 * Math.sin((u + v) * Math.PI * 2)) * .7 + f * .05), motif: id => RAINBOW[Math.floor(hash(id + .37) * 6)] };
+    if (o.gold) return { ground: (u, v, f) => mix(mix(a, b, .45), b, .25 * Math.sin((u + v) * Math.PI * 2) ** 2 + f * .08), motif: () => rgb('#fff8e2') };
+    if (o.dark) return { ground: (u, v, f) => mix(a, b, f * .05), motif: () => mix(b, WHITE, .07) };
+    const mb = o.cn === 'lemon' ? mix(b, rgb('#f5c542'), .4) : o.cn === 'cream' ? mix(b, rgb('#f5c542'), .15) : b;   // pale yellows need a touch more depth
+    return { ground: (u, v, f) => mix(a, b, f * .05), motif: () => mb };
+  }
 
   /* ---------------- tile patterns: p(u, v) → [height (tile units), r, g, b (sRGB 0..1)] ---------------- */
   // every function must be periodic in u and v with period 1
@@ -152,14 +169,14 @@
         return [h, ...mix(a, b, sstep(.004, -.004, d))];
       };
     },
-    star(a, b, dark, gold) {   // puffy plush stars (+ tiny twinkles for night / gold)
-      const n = 4, fz = felt(41, 1), tw = dark ? rgb('#ffe9a8') : [1, 1, .96], G = gold ? rgb('#ffb21e') : b;
+    star(a, b, dark, gold, o = {}) {   // puffy plush stars (+ tiny twinkles for night / gold; rainbow: pastel hues cycling)
+      const n = 4, fz = felt(41, 1), RB = o.rainbow ? pal(a, b, o) : null, tw = dark ? rgb('#ffe9a8') : [1, 1, .96], G = gold ? rgb('#ffb21e') : b;
       return (u, v) => {
         const [x, y, k, id] = stag(u, v, n), r = (hash(id) - .5) * .5, cs = Math.cos(r), sn = Math.sin(r);
         const px = x * cs - y * sn, py = x * sn + y * cs;
         const d = (sdStar(px, py, .26, .5) - .02) / n;
         let h = puff(-d, .03) * .022 + fz(u, v) * .0008;
-        let c = mix(mix(a, b, fz(u, v) * .05), gold ? G : dark ? mix(b, [1, 1, 1], .07) : b, sstep(.003, -.003, d));
+        let c = RB ? mix(RB.ground(u, v, fz(u, v)), RB.motif(stagP(u, v, n)[3]), sstep(.003, -.003, d)) : mix(mix(a, b, fz(u, v) * .05), gold ? G : dark ? mix(b, [1, 1, 1], .07) : b, sstep(.003, -.003, d));
         if (dark || gold) {   // tiny 4-point twinkles between the stars
           const [tx, ty] = stag(u + .5 / n, v, n), t4 = len(tx, ty) - .035;
           const m = sstep(.01, -.01, t4); c = mix(c, tw, m * (dark ? .7 : .85)); h = Math.max(h, puff(-t4 / n, .006) * .007);
@@ -217,6 +234,216 @@
         const dc = len(x, y) - .045;
         let h = hp * .016 + fz(u, v) * .0008, c = mix(mix(a, b, fz(u, v) * .05), B, sstep(.012, -.012, dmin));
         h = Math.max(h, puff(-dc / n, .008) * .02); c = mix(c, W, sstep(.01, -.01, dc));
+        return [h, ...c];
+      };
+    },
+    /* ---- b030 … b100 motifs (all take o = { dark, gold, rainbow, cn }) ---- */
+    cloud(a, b, dark, gold, o) {   // little puffy clouds (lighter than the ground)
+      const n = 3, fz = felt(91, 1), Gc = mix(a, b, .3), Cc = mix(mix(a, b, .12), WHITE, .62);
+      const LB = [[-.17, .03, .1], [-.05, -.06, .135], [.11, -.03, .115], [.22, .05, .075]];
+      return (u, v) => {
+        const [x0, y0, k, id] = stagP(u, v, n), fl = hash(id) < .5 ? -1 : 1, x = x0 * fl + (hash(id + 1) - .5) * .08, y = y0 + (hash(id + 2) - .5) * .06;
+        let d = sdBox(x - .02, y - .07, .25, .07, .06), dome = 0;
+        for (const [lx, ly, r] of LB) { const q = len(x - lx, y - ly); d = smin(d, q - r, .05); dome = Math.max(dome, Math.sqrt(Math.max(0, 1 - (q / r) ** 2)) * r); }
+        const f = fz(u, v), h = puff(-d / n, .028) * .016 + dome * .05 / n + f * .0008;
+        return [h, ...mix(mix(Gc, a, f * .1), mix(Cc, WHITE, sstep(.05, -.12, y) * .25), sstep(.003, -.003, d / n))];
+      };
+    },
+    bubble(a, b, dark, gold, o) {   // soft bubbles of mixed sizes with a highlight
+      const n = 4, fz = felt(93, 1), P = pal(a, b, o), Hl = dark ? mix(b, WHITE, .55) : WHITE;
+      const one = (x, y, R, id, c0) => {
+        const q = len(x, y), d = q - R, m = sstep(.003, -.003, d / n);
+        if (m <= 0) return null;
+        const rim = sstep(.45, 1, q / R), C = mix(mix(c0, P.ground(0, 0, 0), dark ? .25 : .45), c0, rim);
+        const hs = len(x + R * .38, y + R * .4) - R * .22, c = mix(C, Hl, sstep(.02, -.04, hs) * (dark ? .5 : .75));
+        return [Math.sqrt(Math.max(0, 1 - (q / R) ** 2)) * R * .085 / n * 4, c, m];
+      };
+      return (u, v) => {
+        const f = fz(u, v); let h = f * .0008, c = P.ground(u, v, f);
+        const [x, y, k, id] = stagP(u, v, n), R = .11 + hash(id) * .12, s = .2 - R;
+        const A = one(x - (hash(id + 1) - .5) * s, y - (hash(id + 2) - .5) * s, R, id, P.motif(id));
+        const [x2, y2, k2, id2] = stagP(u + .5 / n, v, n), r2 = .035 + hash(id2 + 9) * .03;
+        const B2 = hash(id2 + 7) > .35 ? one(x2, y2, r2, id2, P.motif(id2 + 3)) : null;
+        for (const Z of [A, B2]) if (Z) { h = Math.max(h, Z[0] * Z[2]); c = mix(c, Z[1], Z[2]); }
+        return [h, ...c];
+      };
+    },
+    flower(a, b, dark, gold, o) {   // round-petalled puffy daisies with a domed centre
+      const n = 4, fz = felt(95, 1), P = pal(a, b, o), CTR = dark ? rgb('#ffe2a0') : mix(b, rgb('#ffb347'), .5), CT2 = dark ? .55 : 1;
+      return (u, v) => {
+        const [x, y, k, id] = stagP(u, v, n), r0 = hash(id) * 1.3; let dmin = 9, hp = 0;
+        for (let i = 0; i < 5; i++) {
+          const an = r0 + i * Math.PI * 2 / 5, px = x - Math.cos(an) * .12, py = y - Math.sin(an) * .12, q = len(px, py), d = q - .085;
+          dmin = Math.min(dmin, d); hp = Math.max(hp, puff(-d / n, .016) * .9 + Math.sqrt(Math.max(0, 1 - (q / .085) ** 2)) * .25);
+        }
+        const dc = len(x, y) - .065, f = fz(u, v);
+        let h = hp * .016 + f * .0008, c = mix(P.ground(u, v, f), P.motif(id), sstep(.003, -.003, dmin / n));
+        c = mix(c, mix(P.motif(id), WHITE, dark ? .05 : .25), sstep(-.01, -.07, dmin) * .5);   // lighter petal middles
+        h = Math.max(h, puff(-dc / n, .01) * .022); c = mix(c, mix(P.motif(id), CTR, CT2 * (dark ? .6 : .55)), sstep(.003, -.003, dc / n));
+        return [h, ...c];
+      };
+    },
+    leaf(a, b, dark, gold, o) {   // soft lens leaves with a pressed midrib and a little stem
+      const n = 4, fz = felt(97, 1), P = pal(a, b, o), VE = dark ? mix(b, WHITE, .2) : mix(b, a, .55);
+      return (u, v) => {
+        const [x0, y0, k, id] = stagP(u, v, n), [x, y] = rot(x0 * 1.15, y0 * 1.15, .7 + (hash(id) - .5) * 1.6 + (k ? Math.PI : 0));
+        const dl = Math.max(len(x - .19, y) - .29, len(x + .19, y) - .29), ds = sdSeg(x, y, 0, .2, .025, .29) - .018;
+        const d = Math.min(dl, ds), f = fz(u, v);
+        const rib = Math.exp(-x * x / .0003) * sstep(.2, .1, Math.abs(y + .01)) * sstep(.01, -.02, dl);
+        const h = puff(-dl / n, .025) * .018 + puff(-ds / n, .005) * .008 - rib * .003 + f * .0008;
+        let c = mix(P.ground(u, v, f), P.motif(id), sstep(.003, -.003, d / n)); c = mix(c, VE, rib * .7);
+        return [h, ...c];
+      };
+    },
+    argyle(a, b, dark, gold, o) {   // quilted diamonds + thin raised stitch lines through their middles
+      const fz = felt(99, 1), P = pal(a, b, o), gs = Math.hypot(5, 3), ST = dark ? mix(b, WHITE, .35) : WHITE;
+      return (u, v) => {
+        const S = 5 * u + 3 * v, Tt = 5 * u - 3 * v, x = fr(S) - .5, y = fr(Tt) - .5, odd = (Math.floor(S) + Math.floor(Tt)) & 1;
+        const pil = Math.pow((1 - Math.pow(Math.abs(2 * x), 3)) * (1 - Math.pow(Math.abs(2 * y), 3)), .5), f = fz(u, v);
+        let h = pil * (odd ? .016 : .012) + f * .0008;
+        let c = odd ? (dark ? mix(b, WHITE, .05) : b) : mix(a, b, .3); c = mix(c, mix(a, b, .5), (1 - pil) * .25);
+        const dsx = Math.min(Math.abs(x), Math.abs(y)) / gs - .0018, dash = sstep(-.2, .2, Math.sin((Math.abs(x) < Math.abs(y) ? Tt : S) * Math.PI * 12));
+        const m = sstep(.0015, -.0015, dsx) * dash;
+        h = Math.max(h, (pil * (odd ? .016 : .012)) + m * .0025); c = mix(c, ST, m * (dark ? .55 : .8));
+        return [h, ...c];
+      };
+    },
+    plaid(a, b, dark, gold, o) {   // soft tartan: raised woven bands crossing, twill texture
+      const n = 3, NT = 72, fz = felt(101, 1);
+      const AC = o.cn === 'forest' ? mix(b, rgb('#e2cf86'), .45) : o.cn === 'berry' ? mix(b, rgb('#ffc2e2'), .4) : mix(b, WHITE, .6);
+      const band = t => { const x = fr(t); return [sstep(.19, .17, Math.abs(x - .5)), sstep(.022, .012, Math.min(Math.abs(x - .06), Math.abs(x - .94))), sstep(.06, .045, Math.abs(x - .5))]; };
+      return (u, v) => {
+        const [bx, ax, cx] = band(u * n), [by, ay, cy] = band(v * n), f = fz(u, v);
+        const tw = ((Math.floor(u * NT) + Math.floor(v * NT)) & 3) < 2, up = tw ? 'x' : 'y';
+        let c = mix(a, b, cl(.34 * bx + .34 * by)); c = mix(c, mix(b, dark ? [0, 0, 0] : rgb('#4a3050'), .12), cx * by * .5 + cy * bx * .5);
+        const acc = Math.max(ax, ay); c = mix(c, AC, acc * .5);
+        const tex = Math.sin((u + v) * NT * Math.PI) * .5 + .5;
+        const hb = Math.max(bx * (up === 'x' ? 1 : .7), by * (up === 'y' ? 1 : .7));
+        const h = hb * .007 + acc * .002 + tex * .0006 + f * .0006;
+        return [h, ...mix(c, mix(c, WHITE, dark ? .05 : .15), tex * .25)];
+      };
+    },
+    scale(a, b, dark, gold, o) {   // fish-scale arcs, lower rows overlapping upper ones
+      const n = 5, R = .62, fz = felt(103, 1), P = pal(a, b, o);
+      return (u, v) => {
+        const X = u * n, Y = v * n * 2; let best = null;
+        const j0 = Math.floor(Y);
+        for (let j = j0 + 2; j >= j0 - 2 && !best; j--) {
+          const off = (j & 1) ? .5 : 0, cy = j * .5, ix = Math.round(X - off), cxs = [ix + off - 1, ix + off, ix + off + 1];
+          for (const cx of cxs) { const q = len(X - cx, Y * .5 - cy); if (q < R) { if (!best || q < best[0]) best = [q, cx, cy]; } }
+        }
+        const f = fz(u, v); if (!best) return [f * .0008, ...P.ground(u, v, f)];
+        const [q, cx, cy] = best, t = (R - q) / n;
+        const h = puff(t, .02) * .014 + f * .0008;
+        const M0 = P.motif(Math.round(cx * 7 + cy * 13));
+        return [h, ...mix(M0, mix(M0, P.ground(u, v, f), .5), sstep(.02, .07, t))];
+      };
+    },
+    moon(a, b, dark, gold, o) {   // puffy crescents + tiny dots
+      const n = 4, fz = felt(105, 1), P = pal(a, b, o), MC = dark ? mix(b, rgb('#ffe6a6'), .5) : b, DT = dark ? rgb('#ffe9a8') : WHITE;
+      return (u, v) => {
+        const [x0, y0, k, id] = stagP(u, v, n), [x, y] = rot(x0, y0, (hash(id) - .5) * 1.2);
+        const d = Math.max(len(x, y) - .22, -(len(x - .11, y + .08) - .19)), f = fz(u, v);
+        let h = puff(-d / n, .022) * .02 + f * .0008, c = mix(P.ground(u, v, f), MC, sstep(.003, -.003, d / n));
+        const [tx, ty, tk, tid] = stagP(u + .5 / n, v, n), td = len(tx - (hash(tid) - .5) * .2, ty) - .028;
+        const m = sstep(.01, -.01, td); c = mix(c, DT, m * (dark ? .6 : .8)); h = Math.max(h, puff(-td / n, .006) * .007);
+        return [h, ...c];
+      };
+    },
+    dice(a, b, dark, gold, o) {   // tilted soft dice with pressed pips
+      const n = 3, fz = felt(107, 1), P = pal(a, b, o);
+      const DC = gold ? rgb('#fff8e2') : dark ? mix(b, WHITE, .14) : o.cn === 'cream' ? mix(b, rgb('#f5c542'), .2) : mix(b, WHITE, .2), PC = gold ? rgb('#e3a21e') : dark ? mix(a, [0, 0, 0], .1) : mix(b, rgb('#5a5a8a'), .35);
+      const PIPS = [[], [[0, 0]], [[-1, -1], [1, 1]], [[-1, -1], [0, 0], [1, 1]], [[-1, -1], [1, -1], [-1, 1], [1, 1]], [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]]];
+      return (u, v) => {
+        const [x0, y0, k, id] = stagP(u, v, n), [x, y] = rot(x0, y0, (hash(id) - .5) * 1.1), f = fz(u, v);
+        const d = sdBox(x, y, .14, .14, .055), face = 1 + Math.floor(hash(id + 4) * 6) % 6;
+        let pd = 9; for (const [px, py] of PIPS[face]) pd = Math.min(pd, len(x - px * .075, y - py * .075) - .026);
+        const pm = sstep(.004, -.004, pd);
+        const h = puff(-d / n, .03) * .022 - pm * .0035 + f * .0008;
+        let c = mix(P.ground(u, v, f), DC, sstep(.003, -.003, d / n)); c = mix(c, PC, pm * .75);
+        return [h, ...c];
+      };
+    },
+    chess(a, b, dark, gold, o) {   // chess silhouettes in relief: pawn / rook / knight / king
+      const n = 3, fz = felt(109, 1), P = pal(a, b, o);
+      const base = (x, y) => sdBox(x, y - .165, .115, .035, .025);
+      const SH = [
+        (x, y) => smin(smin(len(x, y + .1) - .065, sdTri(x, y, -.085, .14, .085, .14, 0, -.06), .03), base(x, y), .02),                        // pawn
+        (x, y) => smin(Math.max(sdBox(x, y + .12, .095, .055, .015), -sdBox(x, y + .175, .018, .04, .005)), smin(sdBox(x, y - .02, .07, .12, .02), base(x, y), .02), .02),   // rook
+        (x, y) => {                                                                                                                       // knight
+          const [nx, ny] = rot(x - .015, y - .02, -.32), [hx, hy] = rot(x + .035, y + .1, .55);
+          let d = smin(sdBox(nx, ny, .06, .12, .04), sdBox(hx, hy, .11, .05, .04), .03);
+          d = smin(d, sdTri(x, y, .0, -.13, .06, -.13, .045, -.22) - .01, .02);
+          return smin(d, base(x, y), .02);
+        },
+        (x, y) => { let d = smin(sdTri(x, y, -.095, .14, .095, .14, 0, -.06), len(x, y + .05) - .075, .03);                                // king
+          d = smin(d, Math.min(sdBox(x, y + .175, .014, .055, .006), sdBox(x, y + .18, .045, .014, .006)), .015); return smin(d, base(x, y), .02); },
+      ];
+      return (u, v) => {
+        const [x, y, k, id, ix, iy] = stagP(u, v, n), d = SH[(ix + 2 * k + iy * 3) & 3](x * .88, y * .88) / .88, f = fz(u, v);
+        const h = puff(-d / n, .016) * .018 + f * .0008;
+        return [h, ...mix(P.ground(u, v, f), P.motif(id), sstep(.003, -.003, d / n))];
+      };
+    },
+    cards(a, b, dark, gold, o) {   // card suits ♥ ♦ ♣ ♠ in relief
+      const n = 3, fz = felt(111, 1), P = pal(a, b, o);
+      const RED = gold ? rgb('#fff0dc') : dark ? mix(b, rgb('#ff9ab4'), .3) : mix(b, rgb('#ff6f8e'), .3), BLK = gold ? rgb('#fffaf0') : dark ? mix(b, WHITE, .1) : mix(b, rgb('#56507a'), .3);
+      const SU = [
+        (x, y) => sdHeart(x * 5.4, -y * 5.4 + .55) / 5.4 - .01,
+        (x, y) => (Math.abs(x) / .13 + Math.abs(y) / .19 - 1) * .075 - .006,
+        (x, y) => { let d = Math.min(len(x, y + .075) - .068, len(x - .075, y + .01) - .068, len(x + .075, y + .01) - .068);
+          d = smin(d, sdBox(x, y, .03, .05, .01), .02); return smin(d, sdTri(x, y, -.06, .17, .06, .17, 0, .04), .015); },
+        (x, y) => smin(sdHeart(x * 5.6, y * 5.6 + .6) / 5.6 - .006, sdTri(x, y, -.06, .18, .06, .18, 0, .05), .015),
+      ];
+      return (u, v) => {
+        const [x0, y0, k, id, ix, iy] = stagP(u, v, n), s = (ix + 2 * k + iy * 3) & 3, [x, y] = rot(x0 * .85, y0 * .85, (hash(id) - .5) * .5), f = fz(u, v);
+        const d = SU[s](x, y) / .85, h = puff(-d / n, .02) * .02 + f * .0008;
+        return [h, ...mix(P.ground(u, v, f), s < 2 ? RED : BLK, sstep(.003, -.003, d / n))];
+      };
+    },
+    stones(a, b, dark, gold, o) {   // go stones scattered on the ground (soft black / white domes)
+      const n = 4, fz = felt(113, 1), wood = o.cn === 'wood', g1 = pnoise(21, 6), g2 = pnoise(25, 160);
+      const WS = dark ? rgb('#c9cde0') : rgb('#fbfaf6'), BS = dark ? rgb('#171c30') : rgb('#6b6878'), R = .15;
+      return (u, v) => {
+        const f = fz(u, v); let c, h;
+        if (wood) { const ring = Math.sin((v * 8 + g1(u, v) * 2.2) * Math.PI * 2) * .5 + .5, gr = Math.pow(ring, 3) * .5 + g2(u, v) * .5; c = mix(a, b, gr * .25); h = gr * .0012; }
+        else { c = mix(a, b, (dark ? .15 : .25) + f * .05); h = f * .0008; }
+        const [x, y, k, id] = stagP(u, v, n);
+        if (hash(id + 3) < .25) return [h, ...c];
+        const ox = (hash(id + 1) - .5) * .12, oy = (hash(id + 2) - .5) * .12, q = len(x - ox, y - oy), d = q - R, white = hash(id + 5) < .5;
+        const m = sstep(.003, -.003, d / n), dome = Math.sqrt(Math.max(0, 1 - (q / R) ** 2));
+        let sc = white ? WS : BS; const hl = len(x - ox + R * .35, y - oy + R * .38) - R * .3;
+        sc = mix(sc, white ? WHITE : mix(BS, WHITE, .3), sstep(.04, -.06, hl) * (white ? .6 : .7)); if (!white && !dark) sc = mix(sc, c, .12);
+        return [Math.max(h, dome * R * .1 / n * 4 * m), ...mix(c, sc, m)];
+      };
+    },
+    shogi(a, b, dark, gold, o) {   // pentagon shogi pieces in relief on soft grain (no text)
+      const n = 3, g1 = pnoise(21, 6), g2 = pnoise(23, 48), g3 = pnoise(25, 160);
+      const PC = mix(a, rgb(o.cn === 'cocoa' ? '#fff6ec' : '#fff4d8'), .55), ED = mix(a, b, .5);
+      const pent = (x, y) => { const ax = Math.abs(x);   // point up, slightly tapering sides
+        return Math.max(y - .17, (ax - .15) * .993 - (y - .17) * .119, (ax - .12) * .707 - (y + .08) * .707); };
+      return (u, v) => {
+        const [x0, y0, k, id] = stagP(u, v, n), [x, y] = rot(x0 * 1.15, y0 * 1.15, (hash(id) - .5) * .6);
+        const ring = Math.sin((v * 8 + g1(u, v) * 2.2) * Math.PI * 2) * .5 + .5, grain = Math.pow(ring, 3) * .5 + g2(u, v * 3 % 1) * .2 + g3(u, v) * .3;
+        const d = pent(x, y) - .012;
+        let h = puff(-d / n, .014) * .018 + grain * .0012;
+        let c = mix(mix(a, b, .22 + grain * .2), mix(PC, ED, grain * .18), sstep(.003, -.003, d / n));
+        const inner = sstep(.002, -.002, (d + .03) / n) ; c = mix(c, mix(PC, WHITE, .2), inner * .35);
+        return [h, ...c];
+      };
+    },
+    candy(a, b, dark, gold, o) {   // wrapped candies with striped bodies and twisted ends
+      const n = 3, fz = felt(115, 1), P = pal(a, b, o), WR = dark ? mix(b, WHITE, .16) : mix(P.motif(0), WHITE, .5), BC = dark ? mix(b, rgb('#ff9fd0'), .25) : P.motif(0), SC = dark ? mix(b, WHITE, .2) : mix(b, WHITE, .55);
+      return (u, v) => {
+        const [x0, y0, k, id] = stagP(u, v, n), [x, y] = rot(x0, y0, .5 + (hash(id) - .5) * 1.2 + (k ? 1.2 : 0)), f = fz(u, v);
+        const db = (len(x / .125, y / .085) - 1) * .085;
+        const ax = Math.abs(x), de = sdTri(ax, y, .1, 0, .235, -.085, .235, .085) - .01;
+        const pleat = Math.cos(Math.atan2(y, ax - .1) * 9) * .5 + .5;
+        const mb = sstep(.003, -.003, db / n), me = sstep(.003, -.003, de / n) * (1 - mb);
+        let c = P.ground(u, v, f); c = mix(c, mix(WR, mix(WR, [0, 0, 0], .06), pleat * .5), me);
+        const st = sstep(-.15, .15, Math.sin((x + y * .6) * Math.PI * 2 / .085));
+        c = mix(c, mix(BC, SC, st * .55), mb);
+        const h = Math.max(puff(-db / n, .02) * .02, puff(-de / n, .012) * (.009 + pleat * .002)) + f * .0008;
         return [h, ...c];
       };
     },
@@ -280,12 +507,13 @@
     const key = new T.DirectionalLight(o.key ?? 0xfffaf0, o.keyI ?? .46); key.position.copy(LDIR).multiplyScalar(20); scene.add(key);
   }
 
+  const DARK = { night: 1, forest: 1, ocean: 1, berry: 1 };   // dark grounds (white text on top)
   function buildTile(pat, cn) {
-    const [A, B] = COL[cn], dark = cn === 'night', gold = cn === 'gold';
+    const [A, B] = COL[cn], dark = DARK[cn] || false, gold = cn === 'gold';
     const scene = new T.Scene();
     lights(scene, dark ? { sky: 0xf4f2ff, hemi: .62, keyI: .44 } : {});
-    const fn = PAT[pat](rgb(A), rgb(B), dark, gold);
-    const aoTint = dark ? rgb('#141a30') : gold ? rgb('#b8741a') : pat === 'goban' || pat === 'pip' ? rgb('#8a5a2a') : mix(rgb(B), [.3, .25, .4], .55);
+    const fn = PAT[pat](rgb(A), rgb(B), dark, gold, { dark, gold, rainbow: cn === 'rainbow', cn });
+    const aoTint = cn === 'night' ? rgb('#141a30') : dark ? mix(rgb(A), [0, 0, 0], .55) : gold ? rgb('#b8741a') : pat === 'goban' || pat === 'pip' || pat === 'shogi' || (pat === 'stones' && cn === 'wood') ? rgb('#8a5a2a') : mix(rgb(B), [.3, .25, .4], .55);
     scene.add(tileMesh(fn, { aoTint, aoK: dark ? 10 : 12, shK: dark ? 12 : 14, sheen: gold ? 0xfff0a0 : undefined, sheenK: gold ? .4 : .12 }));
     const cam = new T.OrthographicCamera(-L / 2, L / 2, L / 2, -L / 2, .1, 50);
     cam.position.set(0, 20, 0); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
@@ -359,9 +587,13 @@
     return { scene, camera: cam, size: 512, mode: 'cover' };
   }
 
+  // cover scenes beyond the two original skies live in atlas/bg3d-covers.js: window.BG3D_COVERS[pattern](colourName, COL) → { scene, camera, size: 512, mode: 'cover' }
+  const COVER_PAT = { sky: 1, meadow: 1, sea: 1, snowscape: 1, toytown: 1, space: 1 };
   function build(id) {
-    const d = IDS[id] || IDS.b001;
-    return d[0] === 'sky' ? buildSky(d[1]) : buildTile(d[0], d[1]);
+    const d = IDS[id] || IDS.b001, X = window.BG3D_COVERS;
+    if (d[0] === 'sky' && (d[1] === 'sunset' || d[1] === 'night')) return buildSky(d[1]);
+    if (COVER_PAT[d[0]]) return X[d[0]](d[1], COL);
+    return buildTile(d[0], d[1]);
   }
-  window.BG3D = { build, ids: Object.keys(IDS), def: id => IDS[id] };
+  window.BG3D = { build, ids: Object.keys(IDS), def: id => IDS[id], COL, COVER_PAT, KIT: { soft, blob, mesh, M, cloud: (...a) => cloud(...a), puffyStar: (...a) => puffyStar(...a), gradTex: (...a) => gradTex(...a), glowTex: (...a) => glowTex(...a) } };
 })();
