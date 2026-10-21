@@ -37,7 +37,7 @@
       name: N('コネクトフォー', 'Connect Four', '四子棋', '커넥트 포', 'Conecta 4', 'Puissance 4', 'Lig 4', 'Vier gewinnt', 'कनेक्ट फ़ोर', 'أربعة في صف') },
     { id: 'mancala', cat: 'race', store: ['aicoding-mancala-v1'], href: 'mancala/', color: '#b98663', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 100, ls: 6 },
       name: N('マンカラ', 'Mancala', '播棋', '만칼라', 'Mancala', 'Mancala', 'Mancala', 'Mancala', 'मंकाला', 'مانكالا') },
-    { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 16, ls: 7 },
+    { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', premium: 1, tags: ['ai', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 500, ls: 23 },
       name: N('バックギャモン', 'Backgammon', '西洋双陆棋', '백개먼', 'Backgammon', 'Backgammon', 'Gamão', 'Backgammon', 'बैकगैमन', 'طاولة الزهر') },
     { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة') },

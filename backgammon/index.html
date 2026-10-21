@@ -773,6 +773,9 @@ html.pcw .kifu .gh{font-size:13px}
 html.pcw body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(360px, 440px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
 html.pcw body:is(.in-lesson,.in-puzzle) .side{width:100%}
 html.pcw body:is(.in-lesson,.in-puzzle) .side-in{display:flex;flex-direction:column;gap:12px}
+html.pcw body:is(.in-lesson,.in-puzzle) .side-in{height:auto;max-height:var(--fh)}
+html.pcw body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){flex:0 1 auto;min-height:0}
+html.pcw body:is(.in-lesson,.in-puzzle) .side-in > .players{flex:none}
 html.pcw body:is(.in-lesson,.in-puzzle) .lesson-card, html.pcw body:is(.in-lesson,.in-puzzle) .puzzle-card{max-height:calc(var(--vh) - 150px);overflow-y:auto}
 html.pcw body.flat-geo:is(.in-lesson,.in-puzzle) .scroll-jump{display:none}
 /* review commentary (all layouts) */
@@ -839,6 +842,17 @@ html[lang=ar] .ls-why li{padding-left:0;padding-right:14px}html[lang=ar] .ls-why
 .pz-alt bdi{color:#ffd0c8}
 .pz-choices{margin-top:4px}
 html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
+/* puzzle collection: shared PZBook.home layout; stage-grid tiles show their position */
+#pzGrid{display:block}
+#pzGrid .pb-tile.hasth{aspect-ratio:1.18;padding:0;overflow:hidden;justify-content:flex-end;gap:0}
+#pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
+#pzGrid .pb-tile .th > svg{width:100%;height:100%;border-radius:4px}
+#pzGrid .pb-tile.hasth .n{position:absolute;top:3px;left:4px;z-index:1;font-size:10.5px;padding:0 4px;border-radius:5px;background:rgba(10,12,12,.82);color:#fff;line-height:1.45}
+#pzGrid .pb-tile.hasth.wt .n{background:#ecebe5;color:#121413}
+#pzGrid .pb-tile.hasth .s, #pzGrid .pb-tile.hasth .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
+#pzGrid .pb-tile.done .th{opacity:1}
+#pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #pzGrid .pb-tile.hasth .n{font-size:11.5px} }
 .skinrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .skinrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11.5px;min-width:0}
 .skinrow button svg{display:block;width:100%;height:auto;border-radius:5px}
@@ -1065,13 +1079,11 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
   <div class="modal">
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
+      <div id="pzLevelHead"></div>
       <div class="pz-grid" id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
@@ -1131,18 +1143,18 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021sk"></script>
-<script src="i18n-x.js?v=20261021sk"></script>
-<script src="i18n-ls.js?v=20261021sk"></script>
-<script src="bg.js?v=20261021sk"></script>
-<script src="explain.js?v=20261021sk"></script>
+<script src="i18n.js?v=20261021pz"></script>
+<script src="i18n-x.js?v=20261021pz"></script>
+<script src="i18n-ls.js?v=20261021pz"></script>
+<script src="bg.js?v=20261021pz"></script>
+<script src="explain.js?v=20261021pz"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/ruletour.js?v=11"></script>
-<script src="../shared/pzbook.js?v=2"></script>
-<script src="dice3d.js?v=20261021sk"></script>
-<script src="themes.js?v=20261021sk"></script>
-<script src="app.js?v=20261021sk"></script>
+<script src="../shared/pzbook.js?v=4"></script>
+<script src="dice3d.js?v=20261021pz"></script>
+<script src="themes.js?v=20261021pz"></script>
+<script src="app.js?v=20261021pz"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=5g" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=2" defer></script>
