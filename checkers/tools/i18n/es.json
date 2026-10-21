@@ -345,5 +345,14 @@
  "pcs.ebony": "Ébano y marfil",
  "pcs.red": "Negro y rojo",
  "pcs.redwhite": "Rojo y blanco",
- "pcs.mono": "Blanco y negro"
+ "pcs.mono": "Blanco y negro",
+ "dr.aiOffer": "La IA ofrece tablas. ¿Aceptas?",
+ "dr.accept": "Aceptar tablas",
+ "dr.decline": "Seguir",
+ "dr.resignQ": "¿Abandonar? (Pierdes la partida)",
+ "dr.resign": "Abandonar",
+ "dr.wait": "Juega unas jugadas más antes de volver a ofrecer",
+ "dr.accepted": "La IA aceptó las tablas",
+ "dr.declined": "La IA rechazó las tablas (quiere seguir)",
+ "dr.aiResigned": "La IA abandonó"
 }

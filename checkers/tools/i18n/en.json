@@ -345,5 +345,14 @@
  "pcs.ebony": "Ebony & ivory",
  "pcs.red": "Black & red",
  "pcs.redwhite": "Red & white",
- "pcs.mono": "Black & white"
+ "pcs.mono": "Black & white",
+ "dr.aiOffer": "The AI offers a draw. Accept?",
+ "dr.accept": "Agree to a draw",
+ "dr.decline": "Play on",
+ "dr.resignQ": "Resign? (You lose the game)",
+ "dr.resign": "Resign",
+ "dr.wait": "Make a few more moves before offering again",
+ "dr.accepted": "The AI agreed to a draw",
+ "dr.declined": "The AI declined the draw (it wants to play on)",
+ "dr.aiResigned": "The AI resigned"
 }

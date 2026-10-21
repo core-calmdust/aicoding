@@ -1,11 +1,13 @@
 // Endgame database builder for English checkers (win / loss / draw for the side to move, all positions with
 // up to MAXN pieces). Iterates each class (black men, black kings, white men, white kings) to a fixpoint;
 // moves into other classes (captures, crowning) use classes solved earlier. Ignores the 40-move rule / repetition.
-// build: gcc -O2 -DNATIVE -o egdb tools/egdb.c   run: ./egdb 4 egdb4.bin
+// build: gcc -O3 -march=native -fopenmp -DNATIVE -o egdb tools/egdb.c   run: ./egdb 6 egdb6.bin  (6 pieces: ~1.5 GB of RAM for the result)
+#include <omp.h>
 #include "../engine.c"
 
 typedef struct { int bm, bk, wm, wk; u32 n; u8 *v; } Cls;   // v: 2 bits per (index * 2 + side)
-static Cls C[400]; static int NC;
+static Cls C[400]; static int NC; static Cls *TAB[13][13][13][13];
+static u8 *WORK; static Cls *WCLS;   // the class being solved: one byte per value (threads write distinct bytes)
 static u32 unrankIn(u32 r, int k, u32 allowed) {   // inverse of rankIn
   int sq[32], m = 0; for (u32 a = allowed; a; a &= a - 1) sq[m++] = ctz(a);
   u32 set = 0;
@@ -27,42 +29,48 @@ static void decode(u32 idx, int bm, int bk, int wm, int wk, Pos *p) {
 }
 static inline int getV(const Cls *c, u32 i) { return (c->v[i >> 2] >> ((i & 3) * 2)) & 3; }
 static inline void setV(Cls *c, u32 i, int x) { c->v[i >> 2] = (u8)((c->v[i >> 2] & ~(3 << ((i & 3) * 2))) | (x << ((i & 3) * 2))); }
-static Cls *find(int bm, int bk, int wm, int wk) { for (int i = 0; i < NC; i++) if (C[i].bm == bm && C[i].bk == bk && C[i].wm == wm && C[i].wk == wk) return &C[i]; return 0; }
+static Cls *find(int bm, int bk, int wm, int wk) { return TAB[bm][bk][wm][wk]; }
 // value of a position for the side to move (1 win, 2 loss, 3 draw, 0 unknown)
 static int lookup(const Pos *p, Cls *cur) {
   int bm = pc(p->p[0] & ~p->k), bk = pc(p->p[0] & p->k), wm = pc(p->p[1] & ~p->k), wk = pc(p->p[1] & p->k);
   if (!bm && !bk) return p->side ? 1 : 2;
   if (!wm && !wk) return p->side ? 2 : 1;
-  Cls *c = (cur && cur->bm == bm && cur->bk == bk && cur->wm == wm && cur->wk == wk) ? cur : find(bm, bk, wm, wk);
+  Cls *c = find(bm, bk, wm, wk);
+  if (c && c == WCLS) return WORK[egIndex(p, bm, bk, wm, wk) * 2 + p->side];
   if (!c || !c->v) { fprintf(stderr, "missing class %d %d %d %d\n", bm, bk, wm, wk); exit(1); }
   return getV(c, egIndex(p, bm, bk, wm, wk) * 2 + p->side);
 }
 static void solve(Cls *c) {
-  u32 N = c->n; c->v = calloc((N * 2 + 3) / 4, 1);
-  int pass = 0; u32 changed;
+  u32 N = c->n; WORK = calloc((size_t)N * 2, 1); WCLS = c;
+  double t0 = omp_get_wtime();
+  int pass = 0; u64 changed;
   do {
     changed = 0;
+    #pragma omp parallel for schedule(dynamic, 4096) reduction(+:changed)
     for (u32 i = 0; i < N; i++) {
+      if (pass && WORK[i * 2] && WORK[i * 2 + 1]) continue;
       Pos p; decode(i, c->bm, c->bk, c->wm, c->wk, &p);
-      if (p.p[1] & ~p.k & ROW[0]) { if (!pass) { setV(c, i * 2, 3); setV(c, i * 2 + 1, 3); } continue; }   // unused index
+      if (p.p[1] & ~p.k & ROW[0]) { WORK[i * 2] = WORK[i * 2 + 1] = 3; continue; }   // unused index
       for (int s = 0; s < 2; s++) {
-        u32 id = i * 2 + s; if (getV(c, id)) continue;
+        u32 id = i * 2 + s; if (WORK[id]) continue;
         p.side = s;
         Move L[MAXMV]; int n = gen(&p, L), win = 0, allWin = 1;
-        if (!n) { setV(c, id, 2); changed++; continue; }
+        if (!n) { WORK[id] = 2; changed++; continue; }
         for (int j = 0; j < n && !win; j++) {
           Pos q = p; doMove(&q, &L[j]);
           int v = lookup(&q, c);
           if (v == 2) win = 1; else if (v != 1) allWin = 0;
         }
-        if (win) { setV(c, id, 1); changed++; } else if (allWin) { setV(c, id, 2); changed++; }
+        if (win) { WORK[id] = 1; changed++; } else if (allWin) { WORK[id] = 2; changed++; }
       }
     }
     pass++;
   } while (changed);
-  u32 w = 0, l = 0, d = 0;
-  for (u32 i = 0; i < N * 2; i++) { int v = getV(c, i); if (!v) { setV(c, i, 3); d++; } else if (v == 1) w++; else l++; }
-  fprintf(stderr, "class %d%d-%d%d  n=%u  passes=%d  win %u loss %u draw %u\n", c->bm, c->bk, c->wm, c->wk, N, pass, w, l, d);
+  c->v = calloc(((size_t)N * 2 + 3) / 4, 1);
+  u64 w = 0, l = 0, d = 0;
+  for (u32 i = 0; i < N * 2; i++) { int v = WORK[i]; if (!v) { v = 3; d++; } else if (v == 1) w++; else if (v == 2) l++; else d++; setV(c, i, v); }
+  free(WORK); WORK = 0; WCLS = 0;
+  fprintf(stderr, "class %d%d-%d%d  n=%u  passes=%d  win %llu loss %llu draw %llu  %.1fs\n", c->bm, c->bk, c->wm, c->wk, N, pass, (unsigned long long)w, (unsigned long long)l, (unsigned long long)d, omp_get_wtime() - t0);
 }
 int main(int argc, char **argv) {
   initGeo(); initCB();
@@ -74,13 +82,13 @@ int main(int argc, char **argv) {
         for (int bk = 0; bk <= n - men; bk++) {
           int wk = n - men - bk;
           if (bm + bk == 0 || wm + wk == 0) continue;
-          Cls *c = &C[NC++]; c->bm = bm; c->bk = bk; c->wm = wm; c->wk = wk; c->n = eg_size(bm, bk, wm, wk); c->v = 0;
+          Cls *c = &C[NC++]; c->bm = bm; c->bk = bk; c->wm = wm; c->wk = wk; c->n = eg_size(bm, bk, wm, wk); c->v = 0; TAB[bm][bk][wm][wk] = c;
         }
       }
   // solve in order: fewer pieces first, then fewer men (crowning leads to a class with one man fewer)
   for (int i = 0; i < NC; i++) solve(&C[i]);
   // symmetry check: colour-flipped positions must have the same value
-  { u64 bad = 0, tot = 0;
+  if (!getenv("NOSYM")) { u64 bad = 0, tot = 0;
     for (int ci = 0; ci < NC; ci++) { Cls *c = &C[ci];
       for (u32 i = 0; i < c->n; i++) { Pos p; decode(i, c->bm, c->bk, c->wm, c->wk, &p); if (p.p[1] & ~p.k & ROW[0]) continue;
         for (int s = 0; s < 2; s++) { p.side = s; Pos q; q.p[0] = q.p[1] = q.k = 0; q.side = s ^ 1;
@@ -90,8 +98,8 @@ int main(int argc, char **argv) {
   // file: "CKDB", count, then per class: bm bk wm wk (u8 each), byte length (u32); then the data blocks in the same order
   FILE *f = fopen(argc > 2 ? argv[2] : "egdb.bin", "wb");
   fwrite("CKDB", 1, 4, f); u32 nc = NC; fwrite(&nc, 4, 1, f);
-  for (int i = 0; i < NC; i++) { u8 h[4] = { (u8)C[i].bm, (u8)C[i].bk, (u8)C[i].wm, (u8)C[i].wk }; u32 len = (C[i].n * 2 + 3) / 4; fwrite(h, 1, 4, f); fwrite(&len, 4, 1, f); }
-  for (int i = 0; i < NC; i++) fwrite(C[i].v, 1, (C[i].n * 2 + 3) / 4, f);
+  for (int i = 0; i < NC; i++) { u8 h[4] = { (u8)C[i].bm, (u8)C[i].bk, (u8)C[i].wm, (u8)C[i].wk }; u32 len = (u32)(((size_t)C[i].n * 2 + 3) / 4); fwrite(h, 1, 4, f); fwrite(&len, 4, 1, f); }
+  for (int i = 0; i < NC; i++) fwrite(C[i].v, 1, ((size_t)C[i].n * 2 + 3) / 4, f);
   fclose(f);
   return 0;
 }

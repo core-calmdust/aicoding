@@ -345,5 +345,14 @@
  "pcs.ebony": "Ebenholz & Elfenbein",
  "pcs.red": "Schwarz & Rot",
  "pcs.redwhite": "Rot & Weiß",
- "pcs.mono": "Schwarz & Weiß"
+ "pcs.mono": "Schwarz & Weiß",
+ "dr.aiOffer": "Die KI bietet Remis an. Annehmen?",
+ "dr.accept": "Remis annehmen",
+ "dr.decline": "Weiterspielen",
+ "dr.resignQ": "Aufgeben? (Die Partie ist verloren)",
+ "dr.resign": "Aufgeben",
+ "dr.wait": "Spiele erst noch ein paar Züge, bevor du erneut anbietest",
+ "dr.accepted": "Die KI hat das Remis angenommen",
+ "dr.declined": "Die KI hat das Remis abgelehnt (sie will weiterspielen)",
+ "dr.aiResigned": "Die KI hat aufgegeben"
 }

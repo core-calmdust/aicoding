@@ -202,6 +202,23 @@ static int egProbe(const Pos *p) {
   return (D[idx >> 2] >> ((idx & 3) * 2)) & 3;
 }
 
+// progress inside a database win (side to move's view, |x| < 150): the database knows the result but not how to get there,
+// so the winner is steered towards captures, crowning and closing in on the loser's pieces (the loser does the opposite).
+static int egProg(const Pos *p, int winnerToMove) {
+  int me = winnerToMove ? p->side : p->side ^ 1, op = me ^ 1;
+  u32 M = p->p[me], O = p->p[op];
+  int x = (pc(M) - pc(O)) * 25 + (pc(M & p->k) - pc(O & p->k)) * 6;
+  for (u32 a = M & ~p->k; a; a &= a - 1) { int q = ctz(a), r = q >> 2; x += me ? (7 - r) * 3 : r * 3; }   // men run for the crown
+  int dist = 0;
+  for (u32 a = M & p->k; a; a &= a - 1) {
+    int q = ctz(a), r = q >> 2, c = ((q & 3) << 1) + !(r & 1), best = 14;
+    for (u32 b = O; b; b &= b - 1) { int t = ctz(b), r2 = t >> 2, c2 = ((t & 3) << 1) + !(r2 & 1), dr = r > r2 ? r - r2 : r2 - r, dc = c > c2 ? c - c2 : c2 - c, d = dr > dc ? dr : dc; if (d < best) best = d; }
+    dist += best;
+  }
+  x -= dist * 3;
+  if (x > 140) x = 140; if (x < -140) x = -140;
+  return winnerToMove ? x : -x;
+}
 // ---------------------------------------------------------------- evaluation (side to move, man = 100)
 // learned evaluation: inputs 4x32 (own man, own king, opp man, opp king, from the mover's view: the board is flipped for
 // White so the mover always moves "down") -> H (clipped ReLU) -> H2 (clipped ReLU) -> 1. Weights from the host.
@@ -407,7 +424,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   if (egMaxN && !caps && ply > 0) {
     int e = egProbe(p);
     if (e) {
-      int v = e == 1 ? WINT - 200 - ply + evalAt(p, ply) / 16 : e == 2 ? -(WINT - 200 - ply) + evalAt(p, ply) / 16 : 0;
+      int v = e == 1 ? WINT - 200 - ply + egProg(p, 1) : e == 2 ? -(WINT - 200 - ply) + egProg(p, 0) : 0;
       if (e == 3) return 0;
       if (e == 1 && v >= beta) return v;
       if (e == 2 && v <= alpha) return v;
@@ -416,7 +433,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   }
   if (n == 1 && ply > 0) depth++;          // forced move: does not cost depth
   else if (caps && depth <= 0) depth = 1;   // captures pending at the horizon: resolve them (quiescence)
-  if (depth <= 0) { nodes++; int e = egMaxN ? egProbe(p) : 0; if (e == 3) return 0; if (e) return e == 1 ? WINT - 200 - ply + evalAt(p, ply) / 16 : -(WINT - 200 - ply) + evalAt(p, ply) / 16; return evalAt(p, ply); }
+  if (depth <= 0) { nodes++; int e = egMaxN ? egProbe(p) : 0; if (e == 3) return 0; if (e) return e == 1 ? WINT - 200 - ply + egProg(p, 1) : -(WINT - 200 - ply) + egProg(p, 0); return evalAt(p, ply); }
   nodes++;
   if (ply > seldepth) seldepth = ply;
   // transposition table

@@ -231,11 +231,11 @@ function think(start, moves, level, rand) {
     const vals = wList();
     if (L.blunder && rand() < L.blunder) {   // a slip: a random move among the not-hopeless ones
       const ok = vals.filter(e => e.v > vals[0].v - 400); const pool = ok.length > 1 ? ok : vals;
-      return { move: pool[Math.floor(rand() * pool.length)].m };
+      return { move: pool[Math.floor(rand() * pool.length)].m, v: vals[0].v };
     }
     let best = vals[0].m, bv = -Infinity;
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
-    return { move: best };
+    return { move: best, v: vals[0].v };
   }
   // opening variety for the top levels: in the first plies pick among moves within a few points of the best
   if (L.book && moves.length < 8 && !start) {
@@ -271,7 +271,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261021b';
+  const V = 'v=20261021c';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

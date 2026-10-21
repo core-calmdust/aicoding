@@ -345,5 +345,14 @@
  "pcs.ebony": "Ébène et ivoire",
  "pcs.red": "Noir et rouge",
  "pcs.redwhite": "Rouge et blanc",
- "pcs.mono": "Noir et blanc"
+ "pcs.mono": "Noir et blanc",
+ "dr.aiOffer": "L'IA propose la nulle. Accepter ?",
+ "dr.accept": "Accepter la nulle",
+ "dr.decline": "Continuer",
+ "dr.resignQ": "Abandonner ? (Vous perdez la partie)",
+ "dr.resign": "Abandonner",
+ "dr.wait": "Jouez encore quelques coups avant de reproposer",
+ "dr.accepted": "L'IA a accepté la nulle",
+ "dr.declined": "L'IA a refusé la nulle (elle veut continuer)",
+ "dr.aiResigned": "L'IA a abandonné"
 }

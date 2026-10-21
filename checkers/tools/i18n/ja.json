@@ -345,5 +345,14 @@
  "pcs.ebony": "黒檀と象牙",
  "pcs.red": "黒と赤",
  "pcs.redwhite": "赤と白",
- "pcs.mono": "黒と白"
+ "pcs.mono": "黒と白",
+ "dr.aiOffer": "AIが引き分けを提案しています。受けますか？",
+ "dr.accept": "引き分けにする",
+ "dr.decline": "続ける",
+ "dr.resignQ": "投了しますか？（負けになります）",
+ "dr.resign": "投了する",
+ "dr.wait": "引き分けの提案は少し指してからにしてください",
+ "dr.accepted": "AIが引き分けに同意しました",
+ "dr.declined": "AIは引き分けを断りました（まだ勝負を続けたいようです）",
+ "dr.aiResigned": "AIが投了しました"
 }

@@ -26,6 +26,7 @@ function posAt(i) {
 }
 // {over, winner, draw, why}
 function statusAt(i) {
+  if (manualEnd && manualEnd.n === moves.length && i === moves.length && !lesson && !puzzle && settings.mode !== 'online') return manualEnd;
   if (settings.mode === 'online' && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
   const { pos, hashes } = posAt(i);
@@ -61,6 +62,8 @@ function applyI18n() {
 function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
 let humanColor = P1;
 let reviewing = false;
+let manualEnd = null;    // resignation / agreed draw in a game vs the AI or between two players: { over, winner, draw, why, n }
+let aiVals = [];         // the AI's own search values (its view), newest last: for its draw offers and resignations
 let evals = [];          // evals[i] = evaluation after i moves (Black's view)
 let busyToken = 0;
 let lesson = null, puzzle = null;
@@ -83,7 +86,7 @@ function load() {
     if (Array.isArray(d.moves)) {
       startSpec = null;
       if (!validMoves(d.moves)) return false;
-      moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
+      moves = d.moves; humanColor = d.humanColor || 1; manualEnd = d.end && d.end.n === d.moves.length ? d.end : null; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) { rgame.t = Date.now(); rtHold = true; }
       cur = moves.length; gameOverShown = statusAt(cur).over;
       return true;
@@ -94,7 +97,7 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
@@ -496,7 +499,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); }
+function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle("ai-live", aiGameLive()); }
 
 // ====================================================================== input (click a piece, then its landing square; multiple jumps can be clicked hop by hop)
 function squareAt(clientX, clientY) {
@@ -567,7 +570,7 @@ function newGame(rated) {
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() });
   startSpec = null;
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
-  moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null;
+  moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; manualEnd = null; aiVals = []; drawAsked = -99;
   hideOverlay('#resultOverlay');
   request('ai', { type: 'newgame' });
   update(false); save();
@@ -606,8 +609,57 @@ async function maybeAI(tok) {
   if (tok !== busyToken) return;
   thinking = 0;
   if (res.move === undefined || res.move < 0) { renderInfo(); return; }
+  if (typeof res.v === 'number') { aiVals[cur] = res.v; }
+  if (settings.mode === 'ai' && aiResigns(p)) return;
   playMove(res.move);
+  if (settings.mode === 'ai') aiMaybeOfferDraw(p);
 }
+// ---------------------------------------------------------------- resignation and draw offers in games vs the AI
+const WINT_JS = 29000;
+let drawAsked = -99;   // ply of the last draw offer (either side), so offers are not repeated every move
+const pieces = pos => pos.count(P1) + pos.count(P2);
+function aiGameLive() { return settings.mode === 'ai' && !lesson && !puzzle && !gameOver(moves.length) && cur === moves.length; }
+function endManually(st) {
+  busyToken++; cancelWorker('ai'); thinking = 0;
+  st.n = moves.length;
+  if (rgame) rgame.over = st; else manualEnd = st;
+  save(); update(false); onGameEnd(st);
+}
+// the AI resigns when it is lost for sure (database / forced) or far behind with little left; not the weakest levels
+function aiResigns(p) {
+  const lv = levelFor(p), v = aiVals[cur]; if (lv < 6 || typeof v !== 'number') return false;
+  const prev = aiVals.slice(0, cur).filter(x => typeof x === 'number').slice(-1)[0];
+  const lost = v < -WINT_JS + 1000 || (v <= -450 && prev !== undefined && prev <= -450 && posAt(cur).pos.count(p) <= 6);
+  if (!lost) return false;
+  endManually({ over: true, winner: p === P1 ? P2 : P1, why: 'resign', aiResigned: true });
+  return true;
+}
+// the AI offers a draw in a dead-level ending (nobody can make progress); the player answers in a small dialog
+function aiMaybeOfferDraw(p) {
+  const v = aiVals[cur - 1]; if (typeof v !== 'number' || !aiGameLive()) return;
+  const pos = posAt(cur).pos;
+  if (Math.abs(v) > 15 || pieces(pos) > 8 || pos.quiet < 16 || cur - drawAsked < 20) return;
+  drawAsked = cur;
+  setTimeout(() => {
+    if (!aiGameLive()) return;
+    olConfirmAny(t('dr.aiOffer'), t('dr.accept'), () => { if (aiGameLive()) endManually({ over: true, winner: 0, draw: true, why: 'agree' }); }, t('dr.decline'));
+  }, 900);
+}
+// the player: resign / offer a draw (the AI accepts when it is not better)
+function playerResign() {
+  if (!aiGameLive()) return;
+  olConfirmAny(t('dr.resignQ'), t('dr.resign'), () => { if (aiGameLive()) endManually({ over: true, winner: humanColor === P1 ? P2 : P1, why: 'resign' }); });
+}
+function playerDraw() {
+  if (!aiGameLive()) return;
+  if (cur - drawAsked < 6) { toast(t('dr.wait'), 1800); return; }
+  drawAsked = cur;
+  const ai = humanColor === P1 ? P2 : P1, vs = aiVals.filter(x => typeof x === 'number'), v = vs.length ? vs[vs.length - 1] : 0, pos = posAt(cur).pos;
+  const ok = cur >= 20 && v <= 20 && (pieces(pos) <= 10 || pos.quiet >= 20 || v <= -60);
+  if (ok) { toast(t('dr.accepted'), 1600); endManually({ over: true, winner: 0, draw: true, why: 'agree' }); }
+  else toast(t('dr.declined'), 2000);
+}
+window.aiGameLive = aiGameLive; window.playerResign = playerResign; window.playerDraw = playerDraw;
 async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
@@ -638,7 +690,7 @@ function onGameEnd(st) {
   if (youWin || (settings.mode === 'pvp' && st.winner)) confetti();
   $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
   $('#resultTitle').textContent = st.draw ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: pname(st.winner) });
-  let sub = t('res.why.' + st.why) + '<br>' + t('res.sub', { n: moves.length });
+  let sub = (st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why)) + '<br>' + t('res.sub', { n: moves.length });
   if (rgame) {
     const rx = rtSettle(st);
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;

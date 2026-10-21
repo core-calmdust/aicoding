@@ -345,5 +345,14 @@
  "pcs.ebony": "Ébano e marfim",
  "pcs.red": "Preto e vermelho",
  "pcs.redwhite": "Vermelho e branco",
- "pcs.mono": "Preto e branco"
+ "pcs.mono": "Preto e branco",
+ "dr.aiOffer": "A IA propõe empate. Aceitar?",
+ "dr.accept": "Aceitar empate",
+ "dr.decline": "Continuar",
+ "dr.resignQ": "Desistir? (Você perde a partida)",
+ "dr.resign": "Desistir",
+ "dr.wait": "Faça mais alguns lances antes de propor de novo",
+ "dr.accepted": "A IA aceitou o empate",
+ "dr.declined": "A IA recusou o empate (quer continuar)",
+ "dr.aiResigned": "A IA desistiu"
 }

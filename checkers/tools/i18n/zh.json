@@ -345,5 +345,14 @@
  "pcs.ebony": "乌木与象牙",
  "pcs.red": "黑与红",
  "pcs.redwhite": "红与白",
- "pcs.mono": "黑与白"
+ "pcs.mono": "黑与白",
+ "dr.aiOffer": "AI提议和棋。接受吗？",
+ "dr.accept": "同意和棋",
+ "dr.decline": "继续",
+ "dr.resignQ": "要认输吗？（判负）",
+ "dr.resign": "认输",
+ "dr.wait": "请再走几步后再提议",
+ "dr.accepted": "AI同意和棋",
+ "dr.declined": "AI拒绝和棋（它还想继续下）",
+ "dr.aiResigned": "AI认输了"
 }

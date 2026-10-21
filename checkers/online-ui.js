@@ -67,7 +67,8 @@ applyI18n();
 
 // ====================================================================== confirm dialog
 let olcFn = null;
-function olConfirm(text, yes, fn) { $('#olcText').textContent = text; $('#olcYes').textContent = yes; $('#olcYes').classList.toggle('hidden', !fn); olcFn = fn; showOv('#olConfirm'); }
+function olConfirm(text, yes, fn, no) { $('#olcText').textContent = text; $('#olcYes').textContent = yes; $('#olcNo').textContent = no || t('close'); $('#olcYes').classList.toggle('hidden', !fn); olcFn = fn; showOv('#olConfirm'); }
+const olConfirmAny = olConfirm;   // also used by games vs the AI (resign / draw offers)
 $('#olcNo').onclick = () => { olcFn = null; hideOv('#olConfirm'); };
 $('#olcYes').onclick = () => { const f = olcFn; olcFn = null; hideOv('#olConfirm'); f && f(); };
 // leaving a live game first: an online game is resigned, a rated game vs the AI is forfeited (after a confirmation)
@@ -454,8 +455,8 @@ $('#btnAgain').addEventListener('click', e => {
   if (g && g.room && !g.rated) { if (g.again && g.again.by !== ON.uid) ON.answerRematch(net.gid, true).catch(err => console.warn(err)); else ON.requestRematch(net.gid).catch(err => console.warn(err)); return; }
   hideOv('#resultOverlay'); olDetach(); olStartSearch();
 }, true);
-$('#btnResign').onclick = () => { if (olLive()) olConfirm(t('ol.resignQ'), t('ol.resign'), () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
-$('#btnDraw').onclick = () => { if (olLive()) olConfirm(t('ol.drawQ'), t('ol.draw'), () => { if (olLive()) ON.offerDraw(net.gid).then(r => { if (r && r.committed) toast(t('ol.drawSent'), 1600); }).catch(e => console.warn(e)); }); };
+$('#btnResign').onclick = () => { if (!olLive() && window.aiGameLive && aiGameLive()) { playerResign(); return; } if (olLive()) olConfirm(t('ol.resignQ'), t('ol.resign'), () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); }); };
+$('#btnDraw').onclick = () => { if (!olLive() && window.aiGameLive && aiGameLive()) { playerDraw(); return; } if (olLive()) olConfirm(t('ol.drawQ'), t('ol.draw'), () => { if (olLive()) ON.offerDraw(net.gid).then(r => { if (r && r.committed) toast(t('ol.drawSent'), 1600); }).catch(e => console.warn(e)); }); };
 // leaving a live online game (new game, lessons, puzzles, loading a record) = resigning it, after a confirmation
 function olGuard(sel) {
   const b = $(sel); if (!b) return;

@@ -167,7 +167,7 @@ function create(o) {
     h += `</div><div class="rt-nav"><button type="button" data-rt-act="prev" ${tour.page === 0 ? 'disabled' : ''}>${esc(tx('prev'))}</button><button type="button" data-rt-act="close">${esc(tx('close'))}</button><button type="button" class="go" data-rt-act="next" ${tour.page === n - 1 ? 'disabled' : ''}>${esc(tx('next'))}</button></div></div>`;
     m.innerHTML = h;
     if (P.finish || !P.setup) mark(P.id);
-    if (P.setup) start();
+    if (P.setup) start(); else { fit(); requestAnimationFrame(fit); }   // read-only pictures are fitted too
   }
   function start() {
     const m = mount(), P = pages[tour.page], my = ++gen;
@@ -213,7 +213,7 @@ function create(o) {
   }
   // keep the whole page visible above the fixed buttons: if the middle part overflows, shrink the mini board (--rt-bw) to fit
   function fit() {
-    const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main'), bd = main && main.querySelector('.rt-board');
+    const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main'), bd = main && (main.querySelector('.rt-board') || main.querySelector('.rt-html .tour-pic'));   // boards and read-only pictures
     if (!bd || !main.clientHeight) return;
     rt.style.removeProperty('--rt-bw');
     for (let k = 0; k < 3; k++) {
