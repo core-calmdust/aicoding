@@ -751,6 +751,28 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
   .tut .mbtns{grid-area:btn;margin-top:18px}.tut .mbtns .btn{min-width:220px;min-height:52px;font-size:19.8px}
   .tut .dhud{transform:scale(1.25);margin-top:22px}
 }
+@media (min-width:1000px){
+  .tut{min-height:0;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:28px;align-items:center}
+  .tut .tpanel{align-self:center;flex-direction:row!important;align-items:center!important;gap:18px!important}
+  .tut .tmas{width:112px!important;height:112px!important;flex:none}
+  .tut .balloon::before{display:block!important;left:-18px!important;top:50%!important;translate:0 -50%;border:10px solid transparent!important;border-right:16px solid var(--ink)!important;border-left:0!important}
+  body[data-skin="mid"] .tut .balloon::before{border-right-color:var(--paper)!important}
+  body[data-skin="mid"] .tut .balloon{background:var(--paper);border:0!important}
+  .tut .tdemo,.tut .tboard{background:var(--paper);border-radius:28px;padding:28px 20px;min-height:380px;display:grid;place-items:center;align-self:stretch}
+  .tut .tboard{display:grid;grid-template-columns:repeat(4,84px);grid-template-rows:repeat(4,84px);place-content:center}
+  .tut .tmsg{grid-area:demo;align-self:end;margin-bottom:-36px}
+  .tut .demo{min-height:0}
+  .tut .mbtns{margin-top:22px}
+  /* short rule tips (gimmicks): mascot + balloon side by side, demo panel on the right */
+  .modal.mtip .mbox{width:min(980px,100%)}
+  .mtip #modalBody{padding:28px}
+  .mtip .tut{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"text demo" "btn btn"}
+  .mtip .tpanel{gap:16px}
+  .mtip .balloon b{font-size:26px}.mtip .balloon p{font-size:17px}
+  .mtip .tdemo{min-height:320px}
+  .mtip .mbtns{margin-top:20px}.mtip .mbtns .btn{min-width:260px}
+}
+body[data-skin="mid"] .tut .tdemo,body[data-skin="mid"] .tut .tboard{border-radius:28px}
 @media (min-width:1400px){ .hpanel.daily{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"p p c" "b f c"} }
 
 @media (min-width:1200px){

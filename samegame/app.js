@@ -1043,7 +1043,7 @@ function tutTry(body, ok) {
 }
 function maybeThemeTip(th, force) {
   if (th === 'cl' || (!force && DB.tut['th_' + th])) return; DB.tut['th_' + th] = 1; save();
-  modal(`<div class="tut"><div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('th.' + th))}</b><p>${esc(t('th.' + th + '.r'))}</p></div></div><div class="tdemo">${tutDemo('th_' + th)}</div><div class="mbtns"><button class="btn red" id="tOk">OK!</button></div></div>`, 'mtut');
+  modal(`<div class="tut"><div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('th.' + th))}</b><p>${esc(t('th.' + th + '.r'))}</p></div></div><div class="tdemo">${tutDemo('th_' + th)}</div><div class="mbtns"><button class="btn red" id="tOk">OK!</button></div></div>`, 'mtut mtip');
   startDemos($('#modalBody'));
   $('#tOk').onclick = () => { $('#modal').hidden = true; };
 }
