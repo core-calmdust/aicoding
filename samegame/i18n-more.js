@@ -488,3 +488,20 @@ window.SAME_I18N.ar = {
   'tu.a3.h': "FEVER!", 'tu.a3': "املأ العداد لتدخل FEVER: 6 ثوانٍ من النقاط المضاعفة، ويمكن إزالة المكعبات المفردة أيضًا.",
   'tu.a4.h': "امسك البطل", 'tu.a4': "انقر البطل الطائر لتحصل على +3 ثوانٍ و300 نقطة. بقع حبر؟ انقرها لإزالتها.",
 };
+
+/* v3: daily difficulties, tutorial caption (applied to every language) */
+(function () {
+  const A = {
+    ja: { 'd.gim': '今日のしかけ', 'dl.e': 'かんたん', 'dl.m': 'ふつう', 'dl.h': 'むずかしい', 'd.medals2': '残りブロックが少ないほど銅→銀→金。全消しで金メダル。', 'rk.pe': 'かんたん', 'rk.p': 'ふつう', 'rk.ph': 'むずかしい', 'tu.b1.c': '同じ色の3個をタップ！', 'd.puzzle.d': '全員が同じ盤に挑戦。3つの難しさから選べて、何度でも遊べます。いちばん良いスコアがランキングに残ります。' },
+    en: { 'd.gim': "Today's gimmick", 'dl.e': 'Easy', 'dl.m': 'Normal', 'dl.h': 'Hard', 'd.medals2': 'Fewer blocks left earns bronze → silver → gold. A full clear is gold.', 'rk.pe': 'Easy', 'rk.p': 'Normal', 'rk.ph': 'Hard', 'tu.b1.c': 'Tap the 3 matching blocks!', 'd.puzzle.d': 'Everyone plays the same boards. Pick one of 3 difficulties and play as often as you like — your best score goes on the ranking.' },
+    zh: { 'd.gim': '今日机关', 'dl.e': '简单', 'dl.m': '普通', 'dl.h': '困难', 'd.medals2': '剩余方块越少，奖牌从铜→银→金。全消即为金牌。', 'rk.pe': '简单', 'rk.p': '普通', 'rk.ph': '困难', 'tu.b1.c': '点击这3个同色方块！', 'd.puzzle.d': '所有人挑战同样的盘面。可从3种难度中选择，随时重玩，最佳分数计入排行榜。' },
+    ko: { 'd.gim': '오늘의 장치', 'dl.e': '쉬움', 'dl.m': '보통', 'dl.h': '어려움', 'd.medals2': '남은 블록이 적을수록 동→은→금. 전부 지우면 금메달.', 'rk.pe': '쉬움', 'rk.p': '보통', 'rk.ph': '어려움', 'tu.b1.c': '같은 색 3개를 탭!', 'd.puzzle.d': '모두가 같은 판에 도전. 3가지 난이도 중에서 고르고 몇 번이든 플레이할 수 있어요. 최고 점수가 랭킹에 남습니다.' },
+    es: { 'd.gim': 'Truco de hoy', 'dl.e': 'Fácil', 'dl.m': 'Normal', 'dl.h': 'Difícil', 'd.medals2': 'Cuantos menos bloques queden: bronce → plata → oro. Limpiarlo todo es oro.', 'rk.pe': 'Fácil', 'rk.p': 'Normal', 'rk.ph': 'Difícil', 'tu.b1.c': '¡Toca los 3 bloques iguales!', 'd.puzzle.d': 'Todos juegan los mismos tableros. Elige entre 3 dificultades y juega cuantas veces quieras; tu mejor puntuación entra en el ranking.' },
+    fr: { 'd.gim': 'Mécanisme du jour', 'dl.e': 'Facile', 'dl.m': 'Normal', 'dl.h': 'Difficile', 'd.medals2': 'Moins il reste de blocs : bronze → argent → or. Tout vider, c’est l’or.', 'rk.pe': 'Facile', 'rk.p': 'Normal', 'rk.ph': 'Difficile', 'tu.b1.c': 'Touchez les 3 blocs identiques !', 'd.puzzle.d': 'Tout le monde joue les mêmes plateaux. Choisissez parmi 3 difficultés et rejouez à volonté : votre meilleur score entre au classement.' },
+    pt: { 'd.gim': 'Mecânica do dia', 'dl.e': 'Fácil', 'dl.m': 'Normal', 'dl.h': 'Difícil', 'd.medals2': 'Quanto menos blocos sobrarem: bronze → prata → ouro. Limpar tudo é ouro.', 'rk.pe': 'Fácil', 'rk.p': 'Normal', 'rk.ph': 'Difícil', 'tu.b1.c': 'Toque nos 3 blocos iguais!', 'd.puzzle.d': 'Todos jogam os mesmos tabuleiros. Escolha entre 3 dificuldades e jogue quantas vezes quiser; sua melhor pontuação vai para o ranking.' },
+    de: { 'd.gim': 'Heutiger Kniff', 'dl.e': 'Leicht', 'dl.m': 'Normal', 'dl.h': 'Schwer', 'd.medals2': 'Je weniger Blöcke übrig: Bronze → Silber → Gold. Alles abgeräumt ist Gold.', 'rk.pe': 'Leicht', 'rk.p': 'Normal', 'rk.ph': 'Schwer', 'tu.b1.c': 'Tippe die 3 gleichen Blöcke an!', 'd.puzzle.d': 'Alle spielen dieselben Bretter. Wähle eine von 3 Stufen und spiele so oft du willst – dein bestes Ergebnis kommt in die Rangliste.' },
+    hi: { 'd.gim': 'आज की चाल', 'dl.e': 'आसान', 'dl.m': 'सामान्य', 'dl.h': 'कठिन', 'd.medals2': 'जितने कम ब्लॉक बचें: कांस्य → रजत → स्वर्ण। सब साफ़ करने पर स्वर्ण।', 'rk.pe': 'आसान', 'rk.p': 'सामान्य', 'rk.ph': 'कठिन', 'tu.b1.c': 'एक जैसे 3 ब्लॉक टैप करें!', 'd.puzzle.d': 'सभी एक ही बोर्ड खेलते हैं। 3 कठिनाइयों में से चुनें और जितनी बार चाहें खेलें; सबसे अच्छा स्कोर रैंकिंग में जाता है।' },
+    ar: { 'd.gim': 'آلية اليوم', 'dl.e': 'سهل', 'dl.m': 'عادي', 'dl.h': 'صعب', 'd.medals2': 'كلما قلّت الكتل المتبقية: برونز ← فضة ← ذهب. إزالة الكل ذهب.', 'rk.pe': 'سهل', 'rk.p': 'عادي', 'rk.ph': 'صعب', 'tu.b1.c': 'انقر على الكتل الثلاث المتشابهة!', 'd.puzzle.d': 'الجميع يلعب اللوحات نفسها. اختر من 3 مستويات والعب كما تشاء؛ أفضل نتيجة تدخل الترتيب.' },
+  };
+  for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
+})();

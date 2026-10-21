@@ -124,17 +124,27 @@ const MIS_TIER = ['mt.0', 'mt.1', 'mt.2'];
 
 /* ---------------- daily ---------------- */
 const DAILY_GIM = ['', 'rk', 'ic', 'bm', 'wd', 'pt', 'mx'];
-function dailyCfg(date) {
-  const h = E.hashStr('same-' + date), r = E.rng(h);
-  const g = DAILY_GIM[h % DAILY_GIM.length];
-  const sp = { '': {}, rk: { rock: 7 }, ic: { ice: 14 }, bm: { bomb: 6 }, wd: { wild: 4 }, pt: { paint: 5 }, mx: { rock: 3, bomb: 3, ice: 6 } }[g];
-  return { g, board: E.randomBoard(10, 14, 4, r, sp), seed: h };
+// 3 difficulties a day: e (easy) / m (normal, key 'p' — the original daily) / h (hard)
+const DIFFS = [
+  { k: 'e', key: 'pe', w: 8, h: 10, c: 3, sc: .5, md: [8, 3] },
+  { k: 'm', key: 'p', w: 10, h: 14, c: 4, sc: 1, md: [15, 5] },
+  { k: 'h', key: 'ph', w: 12, h: 16, c: 5, sc: 1.5, md: [22, 8] },
+];
+const diffOf = k => DIFFS.find(x => x.k === k) || DIFFS[1];
+function dailyCfg(date, k = 'm') {
+  const D = diffOf(k), h0 = E.hashStr('same-' + date), g = DAILY_GIM[h0 % DAILY_GIM.length];
+  const h = k === 'm' ? h0 : E.hashStr('same-' + date + '-' + k), r = E.rng(h);
+  const base = { '': {}, rk: { rock: 7 }, ic: { ice: 14 }, bm: { bomb: 6 }, wd: { wild: 4 }, pt: { paint: 5 }, mx: { rock: 3, bomb: 3, ice: 6 } }[g], sp = {};
+  for (const x in base) sp[x] = Math.max(1, Math.round(base[x] * D.sc));
+  return { g, board: E.randomBoard(D.w, D.h, D.c, r, sp), seed: h, D };
 }
-const dlRec = (date) => DB.dl[date] || (DB.dl[date] = { p: { s: 0, left: -1, md: 0 }, b: { s: 0, a: 0 } });
-const medalFor = left => left === 0 ? 3 : left <= 5 ? 2 : left <= 15 ? 1 : 0;
+const dlRec = (date) => { const r = DB.dl[date] || (DB.dl[date] = { p: { s: 0, left: -1, md: 0 }, b: { s: 0, a: 0 } }); r.pe = r.pe || { s: 0, left: -1, md: 0 }; r.ph = r.ph || { s: 0, left: -1, md: 0 }; return r; };
+const medalFor = (left, k = 'm') => { const [b, sv] = diffOf(k).md; return left === 0 ? 3 : left <= sv ? 2 : left <= b ? 1 : 0; };
+const dayPlayed = r => !!r && (r.p.left >= 0 || (r.pe && r.pe.left >= 0) || (r.ph && r.ph.left >= 0) || r.b.a > 0);
+const dayGold = r => !!r && [r.pe, r.p, r.ph].some(x => x && x.md >= 3);
 function streak() {
   let n = 0; const d = new Date();
-  for (;;) { const r = DB.dl[ymd(d)]; if (r && (r.p.left >= 0 || r.b.a > 0)) { n++; d.setDate(d.getDate() - 1); } else if (n === 0 && ymd(d) === today()) { d.setDate(d.getDate() - 1); } else break; if (n > 999) break; }
+  for (;;) { const r = DB.dl[ymd(d)]; if (dayPlayed(r)) { n++; d.setDate(d.getDate() - 1); } else if (n === 0 && ymd(d) === today()) { d.setDate(d.getDate() - 1); } else break; if (n > 999) break; }
   return n;
 }
 
@@ -158,7 +168,7 @@ const ACH = [
   ['theme1', () => [THEMES.filter(th => stRec(th).every(v => v)).length, 1], 500],
   ['mis10', () => [Object.values(DB.act.mis).filter(v => v).length, 10], 200], ['mis30', () => [Object.values(DB.act.mis).filter(v => v).length, 30], 800], ['mis3s', () => [Object.values(DB.act.mis).filter(v => v >= 3).length, 30], 1500],
   ['daily7', () => [streak(), 7], 300], ['daily30', () => [streak(), 30], 1000],
-  ['gold10', () => [Object.values(DB.dl).filter(r => r.p.md >= 3).length, 10], 500],
+  ['gold10', () => [Object.values(DB.dl).filter(dayGold).length, 10], 500],
   ['blitz10k', () => [DB.act.blitz, 10000], 300], ['rise10k', () => [DB.act.rise, 10000], 300],
   ['col30', () => [Object.keys(DB.own).length, 30], 300], ['col100', () => [Object.keys(DB.own).length, 100], 3000],
 ];
@@ -190,7 +200,12 @@ function profCard() {
   $('#profCard').innerHTML = `<button class="pic" id="pfEdit" aria-label="${esc(t('pf.edit'))}">${A.charSVG(DB.icon)}</button>
     <div class="pinfo"><b class="pname">${esc(DB.name || t('pf.guest'))}</b><span class="plv">LV.${lv}</span></div>
     <div class="pcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
-    <div class="pstreak"><b>${streak()}</b><span>${esc(t('pf.streak'))}</span></div>`;
+    <div class="pstreak"><b>${streak()}</b><span>${esc(t('pf.streak'))}</span></div>
+    <div class="pextra"><div class="plvbar"><span>LV.${lv} → ${lv + 1}</span><span class="bar"><i style="width:${Math.min(100, (DB.life - 50 * (lv - 1) ** 2) / (50 * lv ** 2 - 50 * (lv - 1) ** 2) * 100)}%"></i></span></div>
+      <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/400</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
+      <li><span>${esc(t('bk.title'))}</span><b>${Object.keys(DB.own).length}<small>/100</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
+      <div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
+  $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha('g'), book: openBook, ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
   $('#pfEdit').onclick = openProfile;
 }
 function renderHome() {
@@ -213,16 +228,15 @@ function miniBoard(b, cls = 'mini') {
   return s + '</svg>';
 }
 function renderDaily() {
-  const d = today(), cfg = dailyCfg(d), r = dlRec(d);
-  const gname = cfg.g ? t('th.' + cfg.g) : t('th.cl');
-  const md = r.p.md;
+  const d = today(), r = dlRec(d), c0 = dailyCfg(d, 'm');
+  const gname = c0.g ? t('th.' + c0.g) : t('th.cl');
   $('#dPuzzle').innerHTML = `<div class="ptag">${esc(t('d.puzzle'))}<i>${esc(d.slice(5).replace('-', '/'))}</i></div>
-    <div class="dbody"><div class="dthumb">${miniBoard(cfg.board)}</div>
-    <div class="dinfo"><h3>${esc(t('d.puzzle.h'))}</h3><p>${esc(t('d.puzzle.d'))}</p>
-    <div class="chips"><span class="chip">${A.themeIcon(cfg.g || 'cl')}${esc(gname)}</span><span class="chip">10×14 · 4${esc(t('u.colors'))}</span></div>
-    <div class="dbest"><span>${esc(t('d.best'))}</span><b>${r.p.left >= 0 ? fmt(r.p.s) : '—'}</b>${md ? `<i class="medal m${md}"></i>` : ''}</div></div></div>
-    <div class="dbtns"><button class="btn big red" id="dPlay">${A.ICON.play}${esc(t(r.p.left >= 0 ? 'd.again' : 'd.play'))}</button><button class="btn" data-rank="p">${A.ICON.rank}${esc(t('rk.title'))}</button></div>
-    <p class="note">${esc(t('d.medals'))}</p>`;
+    <div class="dhead"><div><h3>${esc(t('d.puzzle.h'))}</h3><p>${esc(t('d.puzzle.d'))}</p></div><span class="chip">${A.themeIcon(c0.g || 'cl')}${esc(t('d.gim'))}：${esc(gname)}</span></div>
+    <div class="dlvs">${DIFFS.map(D => { const rr = r[D.key], cf = dailyCfg(d, D.k), played = rr.left >= 0;
+      return `<div class="dlv lv-${D.k}"><div class="dic">${miniBoard(cf.board)}</div><div class="dlt"><b>${esc(t('dl.' + D.k))}</b><small>${D.w}×${D.h} · ${D.c}${esc(t('u.colors'))}</small>
+        <span class="dbest"><span>${esc(t('d.best'))}</span><b>${played ? fmt(rr.s) : '—'}</b>${rr.md ? `<i class="medal m${rr.md}"></i>` : ''}</span></div>
+        <div class="dlb"><button class="btn ${D.k === 'e' ? 'blue' : D.k === 'm' ? 'red' : 'dark'}" data-dl="${D.k}">${A.ICON.play}${esc(t(played ? 'd.again' : 'd.play'))}</button><button class="btn sm" data-rank="${D.key}">${A.ICON.rank}</button></div></div>`; }).join('')}</div>
+    <p class="note">${esc(t('d.medals2'))}</p>`;
   const left = 3 - r.b.a;
   $('#dBlitz').innerHTML = `<div class="ptag blue">${esc(t('d.blitz'))}<i>60s</i></div>
     <div class="dbody"><div class="dthumb burstbox">${A.burst(12, 46, 30, 'var(--yel)')}<b>60</b></div>
@@ -230,7 +244,7 @@ function renderDaily() {
     <div class="dbest"><span>${esc(t('d.best'))}</span><b>${r.b.a ? fmt(r.b.s) : '—'}</b></div>
     <div class="tries">${[0, 1, 2].map(i => `<i class="${i < r.b.a ? 'used' : ''}"></i>`).join('')}<span>${esc(t('d.tries', { n: left }))}</span></div></div></div>
     <div class="dbtns"><button class="btn big blue" id="bPlay" ${left <= 0 ? 'disabled' : ''}>${A.ICON.play}${esc(t(left > 0 ? 'd.play' : 'd.done'))}</button><button class="btn" data-rank="b">${A.ICON.rank}${esc(t('rk.title'))}</button></div>`;
-  $('#dPlay').onclick = () => startDaily();
+  $$('[data-dl]').forEach(b => b.onclick = () => startDaily(b.dataset.dl));
   $('#bPlay').onclick = () => { if (3 - dlRec(today()).b.a > 0) startBlitzDaily(); };
   $$('[data-rank]', $('#home')).forEach(b => b.onclick = () => openRank(b.dataset.rank));
   renderCal();
@@ -244,9 +258,9 @@ function renderCal() {
   for (let i = 0; i < first; i++) cells += '<i></i>';
   let gold = 0, played = 0;
   for (let d = 1; d <= days; d++) {
-    const k = `${y}-${pad(m + 1)}-${pad(d)}`, r = DB.dl[k], md = r ? r.p.md : 0, bl = r && r.b.a > 0;
-    if (md >= 3) gold++; if (r && (r.p.left >= 0 || bl)) played++;
-    cells += `<span class="${k === td ? 'today' : ''} ${md ? 'm' + md : ''}">${md ? '<i class="medal m' + md + '"></i>' : `<b>${d}</b>`}${bl ? '<em></em>' : ''}</span>`;
+    const k = `${y}-${pad(m + 1)}-${pad(d)}`, r = DB.dl[k], mds = r ? [r.pe, r.p, r.ph].map(x => x ? x.md : 0) : [0, 0, 0], md = Math.max(...mds), bl = r && r.b.a > 0;
+    if (dayGold(r)) gold++; if (dayPlayed(r)) played++;
+    cells += `<span class="${k === td ? 'today' : ''} ${md ? 'has' : ''}"><b>${d}</b>${md ? `<span class="mds">${mds.map(v => `<i class="medal m${v}"></i>`).join('')}</span>` : ''}${bl ? '<em></em>' : ''}</span>`;
   }
   $('#dCal').innerHTML = `<div class="calh"><button class="ib sm" id="calP">${A.ICON.back}</button><b>${y}.${pad(m + 1)}</b><button class="ib sm flip" id="calN" ${calOff >= 0 ? 'disabled' : ''}>${A.ICON.back}</button></div>
     <div class="calw">${[0, 1, 2, 3, 4, 5, 6].map(i => `<i>${esc(t('wd.' + i))}</i>`).join('')}</div><div class="calg">${cells}</div>
@@ -381,13 +395,13 @@ function hud() {
 function renderInfo() {
   const k = G.kind, types = new Set(); G.board.forEach(c => c.forEach(v => types.add(E.typ(v))));
   if (G.gim) { if (G.gim.has('bomb')) types.add(E.T.BOMB); if (G.gim.has('rock')) types.add(E.T.ROCK); if (G.gim.has('ice')) types.add(E.T.ICE); if (G.gim.has('wild')) types.add(E.T.WILD); }
-  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.puzzle.d') + ' ' + t('d.medals') : k === 'free' ? t('th.cl.r') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2') ;
+  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.puzzle.d') + ' ' + t('d.medals2') : k === 'free' ? t('th.cl.r') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2') ;
   if (k === 'mission') rule = goalText(G.mis) + '。' + t('r.mstar', { a: fmt(G.mis.s2), b: fmt(G.mis.s3) });
   const TY = [[E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
   const leg = TY.filter(([ty]) => types.has(ty)).map(([, v, th]) => { const d = mkEl(v); return `<li><span class="lg">${d.outerHTML}</span><span><b>${esc(t('th.' + th))}</b><br>${esc(t('th.' + th + '.d'))}</span></li>`; }).join('')
     + (G.gim && G.gim.has('hero') ? `<li><span class="lg">${A.mascot('wow')}</span><span><b>${esc(t('g.hero'))}</b><br>${esc(t('tu.a4.h'))} +3s</span></li>` : '')
     + (G.gim && G.gim.has('ink') ? `<li><span class="lg" style="background:#111;border:2px solid #000"></span><span><b>${esc(t('g.ink'))}</b><br>${esc(t('tu.a4'))}</span></li>` : '');
-  const best = k === 'stage' ? '★'.repeat(DB.st[stKey(G.th, G.j)] || 0) || '—' : k === 'daily' ? (dlRec(G.date).p.left >= 0 ? fmt(dlRec(G.date).p.s) : '—') : k === 'free' ? (DB.free[G.fk] ? fmt(DB.free[G.fk]) : '—') : k === 'dblitz' ? fmt(dlRec(G.date).b.s || 0) : k === 'mission' ? '★'.repeat(DB.act.mis[G.mis.id] || 0) || '—' : fmt(DB.act[G.mode === 'rise' ? 'rise' : 'blitz'] || 0);
+  const best = k === 'stage' ? '★'.repeat(DB.st[stKey(G.th, G.j)] || 0) || '—' : k === 'daily' ? (dlRec(G.date)[diffOf(G.dk).key].left >= 0 ? fmt(dlRec(G.date)[diffOf(G.dk).key].s) : '—') : k === 'free' ? (DB.free[G.fk] ? fmt(DB.free[G.fk]) : '—') : k === 'dblitz' ? fmt(dlRec(G.date).b.s || 0) : k === 'mission' ? '★'.repeat(DB.act.mis[G.mis.id] || 0) || '—' : fmt(DB.act[G.mode === 'rise' ? 'rise' : 'blitz'] || 0);
   $('#gInfo').innerHTML = `<h4>${esc(t('gi.rule'))}</h4><p style="margin:0 0 10px">${esc(rule)}</p>${leg ? `<h4>${esc(t('gi.blocks'))}</h4><ul>${leg}</ul>` : ''}
     <div class="best"><span>${esc(t('d.best'))}</span><b>${best}</b></div>${G.undoable ? `<div class="keys"><kbd>Ctrl</kbd>+<kbd>Z</kbd> ${esc(t('g.undo'))}${k === 'stage' ? `　<kbd>H</kbd> ${esc(t('g.hint'))}` : ''}</div>` : ''}`;
 }
@@ -405,10 +419,10 @@ function startStage(th, j) {
   newGame({ kind: 'stage', th, j, board: E.dec(p.b), min: T.min, sol: p.sol, undoable: true });
   startPlay(`${t('th.' + th)} ${j + 1}`, t('st.goal') + (T.min === 3 ? ' · ' + t('th.tr.r') : ''));
 }
-function startDaily() {
-  const d = today(), cfg = dailyCfg(d);
-  newGame({ kind: 'daily', date: d, board: cfg.board, undoable: true });
-  startPlay(t('d.puzzle'), d.replace(/-/g, '/') + (cfg.g ? ' · ' + t('th.' + cfg.g) : ''));
+function startDaily(k = 'm') {
+  const d = today(), cfg = dailyCfg(d, k);
+  newGame({ kind: 'daily', date: d, dk: k, board: cfg.board, undoable: true });
+  startPlay(`${t('d.puzzle')}（${t('dl.' + k)}）`, d.replace(/-/g, '/') + (cfg.g ? ' · ' + t('th.' + cfg.g) : ''));
 }
 function startFree() {
   const [w, h] = FREE_SIZES[freeSz];
@@ -647,13 +661,13 @@ function finishPuzzle(perfect) {
       html = resultCard(t('r.stuck'), `<p>${esc(t('r.stuck.d', { n: left }))}</p>`, [['undo', t('g.undo'), 'red'], ['retry', t('r.retry')], ['list', t('u.list')]], 'fail');
     }
   } else if (k === 'daily') {
-    const r = dlRec(G.date), md = medalFor(left), best = G.score > r.p.s;
-    if (best) { r.p.s = G.score; }
-    if (r.p.left < 0 || left < r.p.left) r.p.left = left;
-    r.p.md = Math.max(r.p.md, md);
-    coins = addCoin(G.score / 25);
-    if (best && ON && ON.available && DB.name) ON.putDaily(G.date, 'p', { n: DB.name, i: DB.icon, s: G.score }).catch(() => {});
-    html = resultCard(perfect ? 'PERFECT!' : t('r.end'), `<div class="rscore">${fmt(G.score)}</div><p>${esc(t('r.left', { n: left }))}</p>${md ? `<div class="rmedal"><i class="medal big m${md}"></i>${esc(t('md.' + md))}</div>` : `<p class="note">${esc(t('d.medals'))}</p>`}${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}${nameNudge()}`,
+    const D = diffOf(G.dk), rr = dlRec(G.date)[D.key], md = medalFor(left, G.dk), best = G.score > rr.s;
+    if (best) { rr.s = G.score; }
+    if (rr.left < 0 || left < rr.left) rr.left = left;
+    rr.md = Math.max(rr.md, md);
+    coins = addCoin(G.score / 25 * D.sc);
+    if (best && ON && ON.available && DB.name) ON.putDaily(G.date, D.key, { n: DB.name, i: DB.icon, s: G.score }).catch(() => {});
+    html = resultCard(perfect ? 'PERFECT!' : t('r.end'), `<div class="rscore">${fmt(G.score)}</div><p>${esc(t('r.left', { n: left }))}</p>${md ? `<div class="rmedal"><i class="medal big m${md}"></i>${esc(t('md.' + md))}</div>` : `<p class="note">${esc(t('d.medals2'))}</p>`}${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}${nameNudge()}`,
       [['undo', t('g.undo')], ['retry', t('r.retry'), 'red'], ['rank', t('rk.title')], ['home', t('u.home')]], perfect ? '' : 'plain');
   } else if (k === 'free') {
     const best = G.score > (DB.free[G.fk] || 0); if (best) DB.free[G.fk] = G.score;
@@ -703,12 +717,12 @@ function showResult(html) {
 function resultAct(a) {
   const m = $('#gameMsg');
   if (a === 'undo') { m.hidden = true; G.over = false; undo(); return; }
-  if (a === 'retry') { if (G.kind === 'stage') { const th = G.th, j = G.j; startStage(th, j); G.retried = true; } else if (G.kind === 'daily') startDaily(); return; }
+  if (a === 'retry') { if (G.kind === 'stage') { const th = G.th, j = G.j; startStage(th, j); G.retried = true; } else if (G.kind === 'daily') startDaily(G.dk); return; }
   if (a === 'next') return startStage(G.th, G.j + 1);
   if (a === 'list') { homeTab = 'stage'; themeOpen = G.th; goHome(); return; }
   if (a === 'home') return goHome();
   if (a === 'new') return startFree();
-  if (a === 'rank') return openRank(G.kind === 'dblitz' ? 'b' : 'p');
+  if (a === 'rank') return openRank(G.kind === 'dblitz' ? 'b' : diffOf(G.dk).key);
   if (a === 'name') return openProfile();
   if (a === 'again') { if (G.kind === 'dblitz') { if (3 - dlRec(today()).b.a > 0) startBlitzDaily(); return; } const o = { kind: G.kind, m: G.mode, k: G.k, t: G.tTotal, g: [...G.gim], mis: G.mis }; return startAction(o); }
   if (a === 'nextm') { const n = MIS[G.mis.id + 1]; return startAction({ kind: 'mission', m: n.m, k: n.k, t: n.t, g: n.g, mis: n }); }
@@ -829,12 +843,12 @@ function openBook() {
 }
 // --- ranking
 async function openRank(tab = 'p') {
-  const tabs = [['p', 'rk.p'], ['b', 'rk.b'], ['m', 'rk.m'], ['t', 'rk.t']];
+  const tabs = [['pe', 'rk.pe'], ['p', 'rk.p'], ['ph', 'rk.ph'], ['b', 'rk.b'], ['m', 'rk.m'], ['t', 'rk.t']];
   const body = modal(`<h2 class="mh">${esc(t('rk.title'))}</h2><div class="mtabs">${tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" data-tab="${k}">${esc(t(l))}</button>`).join('')}</div><div id="rkBody"><div class="loading">${esc(t('rk.load'))}</div></div>`, 'mrank');
   $$('[data-tab]', body).forEach(b => b.onclick = () => openRank(b.dataset.tab));
   const el = $('#rkBody');
   if (!ON || !ON.available) { el.innerHTML = `<p class="note">${esc(t('rk.off'))}</p>`; return; }
-  const d = today(), path = tab === 'p' ? `same/d/${d}/p` : tab === 'b' ? `same/d/${d}/b` : tab === 'm' ? 'same/m/' + d.slice(0, 7) : 'same/t';
+  const d = today(), path = ['p', 'pe', 'ph', 'b'].includes(tab) ? `same/d/${d}/${tab}` : tab === 'm' ? 'same/m/' + d.slice(0, 7) : 'same/t';
   try {
     const [list, me] = await Promise.all([ON.top(path, 50), ON.mine(path)]);
     if (!el.isConnected) return;
@@ -886,7 +900,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function demo(host, cfg) {
   const token = {}; host._demo = token;
   const alive = () => host._demo === token && host.isConnected;
-  const cs = matchMedia('(max-width:600px)').matches ? 38 : 48;
+  const cs = matchMedia('(max-width:600px)').matches ? 38 : matchMedia('(min-width:1000px)').matches ? 68 : 48;
   const run = async () => {
     while (alive()) {
       let b = E.clone(cfg.board), rows = cfg.rows || Math.max(...b.map(c => c.length)), cols = b.length;
