@@ -3501,14 +3501,14 @@ if (gl3dOK) {
                 vec3 yiq = toY * c.rgb;
                 float h = amt * (0.32 + 0.1 * sin(t * 2.0)); // 色相は控えめに回す（ステージの色を残す）
                 float cs = cos(h), sn = sin(h);
-                yiq.yz = mat2(cs, sn, -sn, cs) * yiq.yz * (1.0 + 0.15 * amt);
+                yiq.yz = mat2(cs, sn, -sn, cs) * yiq.yz * (1.0 + 0.08 * amt);
                 vec3 g = toR * yiq;
                 // ネオン感: 暗部は深い紫へ沈め、光っている所だけを強く・白熱させる
                 float l = dot(g, vec3(0.299, 0.587, 0.114));
                 vec3 sh = vec3(0.13, 0.03, 0.28);
-                g = mix(sh * (0.08 + l * 2.0) + g * 0.4, g, smoothstep(0.08, 0.45, l));
-                g = pow(max(g, 0.0), vec3(1.3)) * 1.22;
-                g += smoothstep(0.55, 1.0, l) * vec3(0.18, 0.07, 0.24) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
+                g = mix(sh * (0.1 + l * 2.0) + g * 0.55, g, smoothstep(0.08, 0.4, l));
+                g = pow(max(g, 0.0), vec3(1.15)) * 1.1;
+                g += smoothstep(0.55, 1.0, l) * vec3(0.09, 0.035, 0.12) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
                 float vig = 1.0 - amt * 0.3 * smoothstep(0.35, 0.85, length(vUv - 0.5));
                 gl_FragColor = vec4(mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0)), c.a);
             }`
@@ -4113,20 +4113,19 @@ function hpPlace(el, z) {
 function hpShatter(el) { // 砕けて短い線がばらまかれる
     el.st = 'off'; el.g.visible = false;
     const n = IS_MOBILE ? 22 : 44, p = el.g.position, fl = S_FLOAT(el);
-    hpBursts.push({ x: p.x, y: p.y + (fl ? 0 : el.h * 0.5), z: p.z, r: Math.max(el.w, el.h * 0.6), life: 0.35 });
     for (let k = 0; k < n; k++) {
         const fy = fl ? rand(-0.6, 0.6) * el.h : rand(0.05, 1) * el.h;
-        const L = rand(30, 130), a = rand(0, 6.28), b = rand(-1.2, 1.2);
+        // 構造物の線がそのままバラけるように: 水平の線（階の輪）か縦の線（柱）が中心
+        const L = rand(25, 90), a = el.g.rotation.y + Math.round(rand(0, 3)) * Math.PI / 2 + rand(-0.15, 0.15), b = Math.random() < 0.3 ? Math.PI / 2 + rand(-0.2, 0.2) : rand(-0.12, 0.12);
         hpFrags.push({ x: p.x + rand(-0.5, 0.5) * el.w, y: p.y + fy, z: p.z + rand(-0.5, 0.5) * el.w,
-            vx: rand(-700, 700), vy: rand(-150, 750), vz: rand(-700, 700),
-            dx: Math.cos(a) * Math.cos(b) * L, dy: Math.sin(b) * L, dz: Math.sin(a) * Math.cos(b) * L, sp: rand(-9, 9),
-            life: rand(1.0, 2.0), max: 2.0, hot: Math.random() < 0.25 });
+            vx: rand(-200, 200), vy: rand(-60, 160), vz: rand(-200, 200),
+            dx: Math.cos(a) * Math.cos(b) * L, dy: Math.sin(b) * L, dz: Math.sin(a) * Math.cos(b) * L, sp: rand(-2.5, 2.5),
+            life: rand(1.0, 1.9), max: 1.9 });
     }
 }
 const S_FLOAT = (el) => !!HP_SIZE[el.kind][4];
 function hyperPolyGlow(dt) { // 砕けた破片と閃光の光（glowはフレームごとに積み直すのでここで追加）
     for (let i = hpBursts.length - 1; i >= 0; i--) { const b = hpBursts[i]; b.life -= dt; if (b.life <= 0) { hpBursts.splice(i, 1); continue; } const a = b.life / 0.35; glow.add(b.x, b.y, b.z, hpLineMat.color, b.r * (2.2 - a), a * 1.4); }
-    for (let i = 0; i < hpFrags.length; i += 2) { const f = hpFrags[i]; if (!f.hot) continue; const a = Math.min(1, f.life / f.max * 1.6); glow.add(f.x, f.y, f.z, hpLineMat.color, 22 * a, a * 0.9); }
 }
 function updateHyperPolys(dt, ws) {
     const on = hyperT > 0 && gameState === 'playing';
@@ -4135,7 +4134,7 @@ function updateHyperPolys(dt, ws) {
         hpElems.forEach((el, i) => { hpPlace(el, WORLD_FAR + (i / HP_N) * (WORLD_SPAN * 0.85) + rand(-60, 60)); el.st = 'wait'; el.delay = rand(0, 0.7); el.g.visible = false; });
     } else if (!on && hpActive) { // 砕けて散る（時間差で）
         hpActive = false;
-        hpElems.forEach(el => { if (el.st !== 'off') { el.st = 'break'; el.delay = rand(0, 0.5); } });
+        hpElems.forEach(el => { if (el.st !== 'off') { el.st = 'break'; el.delay = rand(0, 0.12); } }); // ほぼ一斉に、突然散り散りに
     }
     hpSolidMat.color.copy(themeCur.grid).lerp(themeCur.comet, 0.35).lerp(COL_WHITE, 0.1);
     hpSolidMat.opacity = 0.2 + 0.25 * Math.max(0, Math.sin(rTime * 1.4)) + visualBeat * 0.15; // ガラス面はゆっくり明暗
@@ -4161,7 +4160,7 @@ function updateHyperPolys(dt, ws) {
     for (let i = hpFrags.length - 1; i >= 0; i--) {
         const f = hpFrags[i];
         f.life -= dt; if (f.life <= 0) { hpFrags.splice(i, 1); continue; }
-        f.vx *= 1 - dt * 0.9; f.vz *= 1 - dt * 0.9; f.vy -= 240 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += (f.vz + ws) * dt;
+        f.vx *= 1 - dt * 0.6; f.vz *= 1 - dt * 0.6; f.vy -= 60 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += (f.vz + ws) * dt;
         const c = Math.cos(f.sp * dt), sn = Math.sin(f.sp * dt), dx = f.dx * c - f.dz * sn; f.dz = f.dx * sn + f.dz * c; f.dx = dx; // くるくる回る
         if (m >= HP_LMAX) continue;
         const k = Math.min(1, f.life / f.max * 1.6), o = m * 6; // 消える直前に縮む
@@ -5854,7 +5853,7 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) + hyperK * 0.12; // ハイパー中は光をにじませてネオン感を出す
+        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) + hyperK * 0.06; // ハイパー中は光をにじませてネオン感を出す
         hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
         if (hyperK < 0.002) hyperK = 0;
         hyperGrade.enabled = hyperK > 0;
