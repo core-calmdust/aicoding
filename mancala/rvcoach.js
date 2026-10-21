@@ -28,6 +28,7 @@ ja: {
   bEnd: '穴{b}で対局を終わらせれば、そのまま勝ちでした。', bKeep: '穴{b}は相手の側に種を渡さない手です。', bNoExtra: '穴{b}なら相手に「もう一回」を与えません。',
   oppGain: 'この手の後、相手は次の手番で最大 +{n} をストアに入れられます（{how}）。', hExtra: 'もう一回', hCap: '横取り', bOpp: '穴{b}なら、相手の次の手番の得は最大 +{n} に抑えられました。', bSide: '穴{b}は自分の側に種を多く残す手です（{a}粒 → {b2}粒）。', bDeep: '穴{b}の良さは数手先まで読むと分かります。盤の数字で比べてみましょう。', only: 'ほかに指せる手のない一手です。', tOpp: '自分の手の後に、相手が次の手番でどれだけ得をするかも確かめましょう。',
   reply: '相手には穴{x}からの応手があります（{how}、この手番で +{n}）。',
+  hWin: '{who}の勝ち（{a}–{b}）', hDraw: '引き分け（{a}–{b}）', hNow: '{a}–{b}（対局途中）', head: '{res}。分かれ目は{n}手目 穴{m}（{who}）。', headClean: '{res}。勝敗を変える悪手はありませんでした。', chip: '{n}手目 穴{m}（{who}）−{l}',
   tExtra: '手を選ぶ前に、ストアにぴったり届く穴（もう一回）を探しましょう。ストアに近い穴から使うと連続しやすくなります。',
   tCap: '自分の側の空の穴に最後の1粒を止められる手を探しましょう。向かいの山がまるごと取れます。',
   tDef: '指す前に、相手が次に横取りできる山がないか確認しましょう。山を動かす・空の穴を埋める・相手の止まる位置をずらす、の3つで守れます。',
@@ -60,6 +61,7 @@ en: {
   bEnd: 'Ending the game with pit {b} would have won on the spot.', bKeep: 'Pit {b} gives no seeds to the opponent.', bNoExtra: 'Pit {b} does not hand the opponent an extra turn.',
   oppGain: 'After this move the opponent can store up to +{n} on their next turn ({how}).', hExtra: 'extra turn', hCap: 'capture', bOpp: 'With pit {b} the opponent\'s next turn would gain at most +{n}.', bSide: 'Pit {b} keeps more seeds on your side ({a} → {b2}).', bDeep: 'Why pit {b} is better shows a few moves deeper. Compare the numbers on the board.', only: 'The only legal move.', tOpp: 'After choosing your move, check how much the opponent can gain on their next turn.',
   reply: 'The opponent can answer with pit {x} ({how}, +{n} that turn).',
+  hWin: '{who} won ({a}–{b})', hDraw: 'Draw ({a}–{b})', hNow: '{a}–{b} (game in progress)', head: '{res}. The turning point: move {n}, pit {m} ({who}).', headClean: '{res}. No mistake changed the result.', chip: 'Move {n} pit {m} ({who}) −{l}',
   tExtra: 'Before choosing, look for a pit that reaches your store exactly (extra turn). Use the pits closest to the store first to chain them.',
   tCap: 'Look for a move whose last seed stops in an empty pit on your side: the whole pile opposite is yours.',
   tDef: 'Before moving, check which of your piles the opponent could capture next. Move the pile, fill the empty pit, or change where their seeds stop.',
@@ -92,6 +94,7 @@ zh: {
   bEnd: '用{b}号坑结束对局即可直接获胜。', bKeep: '{b}号坑不把种子送给对方。', bNoExtra: '{b}号坑不给对方「再走一次」。',
   oppGain: '这一手之后，对方下一回合最多可入仓 +{n}（{how}）。', hExtra: '再走一次', hCap: '吃子', bOpp: '走{b}号坑的话，对方下一回合最多只能得 +{n}。', bSide: '{b}号坑能在己方保留更多种子（{a}颗 → {b2}颗）。', bDeep: '{b}号坑的好处要多读几步才看得出，请比较盘上的数字。', only: '唯一可走的一手。', tOpp: '选好自己的着法后，也要看看对方下一回合能得多少。',
   reply: '对方可以用{x}号坑应对（{how}，该回合 +{n}）。',
+  hWin: '{who}获胜（{a}–{b}）', hDraw: '和棋（{a}–{b}）', hNow: '{a}–{b}（对局中）', head: '{res}。转折点：第{n}手{m}号坑（{who}）。', headClean: '{res}。没有改变胜负的坏棋。', chip: '第{n}手 {m}号坑（{who}）−{l}',
   tExtra: '选棋前先找正好落入仓的坑（再走一次）。从靠近仓的坑开始用，更容易连续。',
   tCap: '寻找最后一颗停在己方空坑的着法，对面整堆都归你。',
   tDef: '走之前先看对方下一手能吃你哪一堆。移走这堆、填上空坑、或改变对方停下的位置，都能防守。',
@@ -124,6 +127,7 @@ ko: {
   bEnd: '{b}번 구멍으로 대국을 끝내면 그대로 승리였습니다.', bKeep: '{b}번 구멍은 상대 쪽에 씨앗을 넘기지 않는 수입니다.', bNoExtra: '{b}번 구멍이면 상대에게 「한 번 더」를 주지 않습니다.',
   oppGain: '이 수 다음 상대는 다음 차례에 최대 +{n}을 창고에 넣을 수 있습니다（{how}）.', hExtra: '한 번 더', hCap: '가로채기', bOpp: '{b}번 구멍이면 상대의 다음 차례 이득은 최대 +{n}로 막을 수 있었습니다.', bSide: '{b}번 구멍은 내 쪽에 씨앗을 더 많이 남기는 수입니다（{a}개 → {b2}개）.', bDeep: '{b}번 구멍의 장점은 몇 수 앞까지 읽으면 보입니다. 판의 숫자로 비교해 보세요.', only: '둘 수 있는 수가 이것뿐입니다.', tOpp: '내 수를 고른 뒤에는 상대가 다음 차례에 얼마나 이득을 보는지도 확인하세요.',
   reply: '상대에게는 {x}번 구멍으로 받는 수가 있습니다（{how}, 그 차례에 +{n}）.',
+  hWin: '{who} 승리（{a}–{b}）', hDraw: '무승부（{a}–{b}）', hNow: '{a}–{b}（대국 중）', head: '{res}. 갈림길은 {n}수째 {m}번 구멍（{who}）.', headClean: '{res}. 승패를 바꾼 악수는 없었습니다.', chip: '{n}수째 {m}번（{who}）−{l}',
   tExtra: '수를 고르기 전에 창고에 딱 닿는 구멍（한 번 더）을 찾으세요. 창고에 가까운 구멍부터 쓰면 연속하기 쉽습니다.',
   tCap: '마지막 한 알을 내 쪽 빈 구멍에 멈추게 하는 수를 찾으세요. 맞은편 더미를 통째로 가져옵니다.',
   tDef: '두기 전에 상대가 다음에 가로챌 수 있는 더미가 있는지 확인하세요. 더미를 옮기기·빈 구멍 채우기·상대가 멈출 위치 바꾸기로 막을 수 있습니다.',
@@ -156,6 +160,7 @@ es: {
   bEnd: 'Terminar la partida con el hoyo {b} ganaba en el acto.', bKeep: 'El hoyo {b} no le da semillas al rival.', bNoExtra: 'El hoyo {b} no le da un turno extra al rival.',
   oppGain: 'Tras esta jugada el rival puede guardar hasta +{n} en su próximo turno ({how}).', hExtra: 'turno extra', hCap: 'captura', bOpp: 'Con el hoyo {b} el próximo turno del rival ganaría como mucho +{n}.', bSide: 'El hoyo {b} deja más semillas en tu lado ({a} → {b2}).', bDeep: 'La ventaja del hoyo {b} se ve unas jugadas más adelante. Compara los números del tablero.', only: 'La única jugada legal.', tOpp: 'Después de elegir tu jugada, mira cuánto puede ganar el rival en su próximo turno.',
   reply: 'El rival puede responder con el hoyo {x} ({how}, +{n} en ese turno).',
+  hWin: 'Gana {who} ({a}–{b})', hDraw: 'Tablas ({a}–{b})', hNow: '{a}–{b} (partida en curso)', head: '{res}. Momento clave: jugada {n}, hoyo {m} ({who}).', headClean: '{res}. Ningún error cambió el resultado.', chip: 'Jugada {n} hoyo {m} ({who}) −{l}',
   tExtra: 'Antes de elegir, busca un hoyo que llegue justo a tu almacén (turno extra). Usa primero los más cercanos al almacén para encadenarlos.',
   tCap: 'Busca una jugada cuya última semilla se detenga en un hoyo vacío de tu lado: el montón de enfrente es tuyo.',
   tDef: 'Antes de jugar, mira qué montón tuyo puede capturar el rival. Mueve el montón, llena el hoyo vacío o cambia dónde se detienen sus semillas.',
@@ -188,6 +193,7 @@ fr: {
   bEnd: 'Finir la partie avec le trou {b} gagnait aussitôt.', bKeep: 'Le trou {b} ne donne aucune graine à l\'adversaire.', bNoExtra: 'Le trou {b} ne donne pas de coup supplémentaire à l\'adversaire.',
   oppGain: 'Après ce coup, l\'adversaire peut engranger jusqu\'à +{n} à son prochain tour ({how}).', hExtra: 'coup rejoué', hCap: 'prise', bOpp: 'Avec le trou {b}, le prochain tour adverse rapporterait au plus +{n}.', bSide: 'Le trou {b} garde plus de graines de votre côté ({a} → {b2}).', bDeep: 'L\'avantage du trou {b} apparaît quelques coups plus loin. Comparez les nombres du plateau.', only: 'Le seul coup possible.', tOpp: 'Après avoir choisi votre coup, regardez combien l\'adversaire peut gagner à son prochain tour.',
   reply: 'L\'adversaire peut répondre par le trou {x} ({how}, +{n} sur ce tour).',
+  hWin: 'Victoire de {who} ({a}–{b})', hDraw: 'Nulle ({a}–{b})', hNow: '{a}–{b} (partie en cours)', head: '{res}. Tournant : coup {n}, trou {m} ({who}).', headClean: '{res}. Aucune erreur n\'a changé le résultat.', chip: 'Coup {n} trou {m} ({who}) −{l}',
   tExtra: 'Avant de choisir, cherchez un trou qui atteint juste votre grenier (on rejoue). Jouez d\'abord les trous les plus proches du grenier pour enchaîner.',
   tCap: 'Cherchez un coup dont la dernière graine s\'arrête dans un trou vide de votre côté : le tas d\'en face est pour vous.',
   tDef: 'Avant de jouer, regardez quel tas l\'adversaire peut prendre. Déplacez-le, remplissez le trou vide ou changez l\'endroit où ses graines s\'arrêtent.',
@@ -220,6 +226,7 @@ pt: {
   bEnd: 'Terminar o jogo com a cova {b} vencia na hora.', bKeep: 'A cova {b} não dá sementes ao adversário.', bNoExtra: 'A cova {b} não dá jogada extra ao adversário.',
   oppGain: 'Depois deste lance o adversário pode guardar até +{n} no próximo turno ({how}).', hExtra: 'jogada extra', hCap: 'captura', bOpp: 'Com a cova {b} o próximo turno do adversário renderia no máximo +{n}.', bSide: 'A cova {b} mantém mais sementes do seu lado ({a} → {b2}).', bDeep: 'A vantagem da cova {b} aparece alguns lances adiante. Compare os números do tabuleiro.', only: 'O único lance possível.', tOpp: 'Depois de escolher seu lance, veja quanto o adversário pode ganhar no próximo turno.',
   reply: 'O adversário pode responder com a cova {x} ({how}, +{n} nesse turno).',
+  hWin: '{who} venceu ({a}–{b})', hDraw: 'Empate ({a}–{b})', hNow: '{a}–{b} (jogo em andamento)', head: '{res}. Ponto de virada: lance {n}, cova {m} ({who}).', headClean: '{res}. Nenhum erro mudou o resultado.', chip: 'Lance {n} cova {m} ({who}) −{l}',
   tExtra: 'Antes de escolher, procure uma cova que chegue exata ao seu depósito (jogada extra). Use primeiro as mais próximas do depósito para encadear.',
   tCap: 'Procure um lance cuja última semente pare numa cova vazia do seu lado: o monte em frente é seu.',
   tDef: 'Antes de jogar, veja que monte seu o adversário pode capturar. Mova o monte, preencha a cova vazia ou mude onde as sementes dele param.',
@@ -252,6 +259,7 @@ de: {
   bEnd: 'Mit Mulde {b} die Partie zu beenden, hätte sofort gewonnen.', bKeep: 'Mulde {b} gibt dem Gegner keine Steine.', bNoExtra: 'Mulde {b} schenkt dem Gegner keinen Extrazug.',
   oppGain: 'Nach diesem Zug kann der Gegner im nächsten Zug bis zu +{n} speichern ({how}).', hExtra: 'Extrazug', hCap: 'Schlagen', bOpp: 'Mit Mulde {b} brächte der nächste gegnerische Zug höchstens +{n}.', bSide: 'Mulde {b} hält mehr Steine auf deiner Seite ({a} → {b2}).', bDeep: 'Der Vorteil von Mulde {b} zeigt sich einige Züge später. Vergleiche die Zahlen auf dem Brett.', only: 'Der einzig mögliche Zug.', tOpp: 'Prüfe nach der Wahl deines Zuges, wie viel der Gegner im nächsten Zug gewinnen kann.',
   reply: 'Der Gegner kann mit Mulde {x} antworten ({how}, +{n} in diesem Zug).',
+  hWin: '{who} gewinnt ({a}–{b})', hDraw: 'Remis ({a}–{b})', hNow: '{a}–{b} (Partie läuft)', head: '{res}. Wendepunkt: Zug {n}, Mulde {m} ({who}).', headClean: '{res}. Kein Fehler hat das Ergebnis verändert.', chip: 'Zug {n} Mulde {m} ({who}) −{l}',
   tExtra: 'Suche vor jedem Zug eine Mulde, die genau deinen Speicher erreicht (Extrazug). Nimm zuerst die Mulden nahe am Speicher, um sie zu verketten.',
   tCap: 'Suche einen Zug, dessen letzter Stein in einer leeren Mulde auf deiner Seite liegen bleibt: Der Haufen gegenüber gehört dir.',
   tDef: 'Prüfe vor dem Zug, welchen Haufen der Gegner schlagen kann. Bewege den Haufen, fülle die leere Mulde oder ändere, wo seine Steine enden.',
@@ -284,6 +292,7 @@ hi: {
   bEnd: 'गड्ढा {b} से खेल ख़त्म करते तो तुरंत जीत थी।', bKeep: 'गड्ढा {b} विरोधी को कोई बीज नहीं देता।', bNoExtra: 'गड्ढा {b} विरोधी को एक और चाल नहीं देता।',
   oppGain: 'इस चाल के बाद विरोधी अपनी अगली बारी में अधिकतम +{n} भंडार में डाल सकता है ({how})।', hExtra: 'एक और चाल', hCap: 'पकड़', bOpp: 'गड्ढा {b} से विरोधी की अगली बारी का फ़ायदा अधिकतम +{n} रहता।', bSide: 'गड्ढा {b} आपकी तरफ़ ज़्यादा बीज रखता है ({a} → {b2})।', bDeep: 'गड्ढा {b} की अच्छाई कुछ चालें आगे दिखती है। बोर्ड के अंक मिलाएँ।', only: 'यही एकमात्र चाल है।', tOpp: 'अपनी चाल चुनने के बाद देखें कि विरोधी अगली बारी में कितना ले सकता है।',
   reply: 'विरोधी गड्ढा {x} से जवाब दे सकता है ({how}, उस बारी में +{n})।',
+  hWin: '{who} जीते ({a}–{b})', hDraw: 'ड्रॉ ({a}–{b})', hNow: '{a}–{b} (खेल जारी)', head: '{res}। मोड़: चाल {n}, गड्ढा {m} ({who})।', headClean: '{res}। किसी गलती ने नतीजा नहीं बदला।', chip: 'चाल {n} गड्ढा {m} ({who}) −{l}',
   tExtra: 'चुनने से पहले ऐसा गड्ढा खोजें जो ठीक आपके भंडार तक पहुँचे (एक और चाल)। कड़ी बनाने के लिए भंडार के पास वाले गड्ढे पहले चलें।',
   tCap: 'ऐसी चाल खोजें जिसका आख़िरी बीज आपकी तरफ़ के खाली गड्ढे में रुके: सामने का पूरा ढेर आपका।',
   tDef: 'चलने से पहले देखें कि विरोधी आपका कौन-सा ढेर पकड़ सकता है। ढेर हटाएँ, खाली गड्ढा भरें या उसके बीज रुकने की जगह बदलें।',
@@ -316,6 +325,7 @@ ar: {
   bEnd: 'إنهاء المباراة بالحفرة {b} كان فوزاً فورياً.', bKeep: 'الحفرة {b} لا تعطي الخصم أي بذرة.', bNoExtra: 'الحفرة {b} لا تمنح الخصم دوراً إضافياً.',
   oppGain: 'بعد هذه النقلة يستطيع الخصم إدخال حتى +{n} في دوره التالي ({how}).', hExtra: 'دور إضافي', hCap: 'أسر', bOpp: 'مع الحفرة {b} كان مكسب الخصم في دوره التالي +{n} على الأكثر.', bSide: 'الحفرة {b} تُبقي بذوراً أكثر في جهتك ({a} → {b2}).', bDeep: 'تظهر أفضلية الحفرة {b} بعد بضع نقلات. قارن الأرقام على اللوحة.', only: 'النقلة الوحيدة الممكنة.', tOpp: 'بعد اختيار نقلتك تحقّق كم يستطيع الخصم أن يكسب في دوره التالي.',
   reply: 'يستطيع الخصم الرد بالحفرة {x} ({how}، +{n} في ذلك الدور).',
+  hWin: 'فاز {who} ({a}–{b})', hDraw: 'تعادل ({a}–{b})', hNow: '{a}–{b} (المباراة جارية)', head: '{res}. نقطة التحوّل: النقلة {n}، الحفرة {m} ({who}).', headClean: '{res}. لم يغيّر أي خطأ النتيجة.', chip: 'النقلة {n} الحفرة {m} ({who}) −{l}',
   tExtra: 'قبل الاختيار ابحث عن حفرة تبلغ مخزنك تماماً (دور إضافي). العب الحفر القريبة من المخزن أولاً لتسلسلها.',
   tCap: 'ابحث عن نقلة تتوقف بذرتها الأخيرة في حفرة فارغة في جهتك: الكومة المقابلة لك.',
   tDef: 'قبل اللعب انظر أي كومة لك يستطيع الخصم أسرها. حرّك الكومة أو املأ الحفرة الفارغة أو غيّر موضع توقف بذوره.',
@@ -459,40 +469,26 @@ function mcMove(i) {
   if (tip) h += `<p class="cr-tip">💡 ${mcT(tip)}</p>`;
   return h;
 }
+// end of the game: one headline (result + the decisive moment) and at most three one-line turning-point chips
 function mcSummary() {
-  const out = [], rules = game.rules, N = game.moves.length;
+  const N = game.moves.length, last = P[N], a = last.b[6], b = last.b[13];
+  const res = !last.over ? mcT('hNow', { a, b }) : a === b ? mcT('hDraw', { a, b }) : mcT('hWin', { who: mcEsc(shortName(a > b ? 0 : 1)), a, b });
   let picks = [];
   for (let i = 0; i < N; i++) {
     const j = rvJudge(i); if (!j || j.q !== 'bad') continue;
     if (settings.mode === 'ai' && j.side !== game.human) continue;
     picks.push({ i, j });
   }
-  picks = picks.sort((a, b) => b.j.loss - a.j.loss).slice(0, 3).sort((a, b) => a.i - b.i);
-  for (const { i, j } of picks) {
-    const L = rv.list[i], mine = L.find(x => x.m === j.k), bestE = L.reduce((a, x) => x.v > a.v ? x : a, L[0]);
-    out.push(mcT('sumTurn', { n: i + 1, m: mcPit(j.k), who: mcEsc(shortName(j.side)), a: mcOutcome(bestE.v, bestE.exact), b: mcOutcome(mine.v, mine.exact) }) + ` <button class="cr-go" data-i="${i}">${mcEsc(mcT('show'))}</button>`);
-  }
-  if (!picks.length) out.push(mcT('clean'));
-  // per-side statistics: extra turns, captures, the biggest capture, the final sweep
-  const st = [0, 1].map(() => ({ e: 0, c: 0, s: 0 })); let big = null;
-  for (let i = 1; i < P.length; i++) {
-    const mv = P[i].mv; if (!mv) continue;
-    if (mv.extra && !mv.over) st[mv.side].e++;
-    if (mv.cap) { const g = mv.cap + (E.RULES[rules].cap === 2 ? 1 : 0); st[mv.side].c++; st[mv.side].s += g; if (!big || g > big.g) big = { i: i - 1, m: mv.k, side: mv.side, g }; }
-  }
-  if (rules !== 'sunka' || st[0].e + st[1].e) [0, 1].forEach(s => out.push(mcT('sumStats', { who: mcEsc(shortName(s)), e: st[s].e, c: st[s].c, s: st[s].s })));
-  if (big && big.g >= 4) out.push(mcT('sumBig', { n: big.i + 1, m: mcPit(big.m), who: mcEsc(shortName(big.side)), g: big.g }) + ` <button class="cr-go" data-i="${big.i}">${mcEsc(mcT('show'))}</button>`);
-  const last = P[P.length - 1];
-  if (last.over && N) {
-    const F = E.trace(P[N - 1].b, P[N - 1].side, game.moves[N - 1], rules), sw = F.events.find(ev => ev.t === 'sweep');
-    if (sw) out.push(mcT('sumEnd', { p0: mcEsc(shortName(0)), p1: mcEsc(shortName(1)), a: sw.n0, b: sw.n1 }));
-  }
-  out.push(mcT('pick'));
-  return `<ul class="cr-list">${out.map(x => `<li>${x}</li>`).join('')}</ul>`;
+  picks = picks.sort((x, y) => y.j.loss - x.j.loss).slice(0, 3);
+  const top = picks[0];
+  let h = `<p class="cr-head">${top ? mcT('head', { res, n: top.i + 1, m: mcPit(top.j.k), who: mcEsc(shortName(top.j.side)) }) : mcT('headClean', { res })}</p>`;
+  if (picks.length) h += `<div class="cr-chips">${picks.sort((x, y) => x.i - y.i).map(({ i, j }) => `<button class="cr-chip" data-i="${i}"><span>${mcT('chip', { n: i + 1, m: mcPit(j.k), who: mcEsc(shortName(j.side)), l: Math.round(j.loss * 10) / 10 })}</span><b>${mcEsc(mcT('show'))}</b></button>`).join('')}</div>`;
+  return h;
 }
 function mcCoach() {
   if (typeof rv === 'undefined' || !rv || rv.running || rv.key !== rvKey()) return '';
   let body = '';
   try { body = cur < game.moves.length ? mcMove(cur) : mcSummary(); } catch (e) { console.warn(e); return ''; }
-  return body ? `<div class="cr-box"><div class="cr-h">${mcEsc(mcT('title'))}</div>${body}<p class="cr-coord">${mcEsc(mcT('coord'))}</p></div>` : '';
+  const coord = cur < game.moves.length ? `<p class="cr-coord">${mcEsc(mcT('coord'))}</p>` : '';
+  return body ? `<div class="cr-box"><div class="cr-h">${mcEsc(mcT('title'))}</div>${body}${coord}</div>` : '';
 }
