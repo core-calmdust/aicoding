@@ -468,7 +468,7 @@
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
     // scheduled first so it also runs if anything below fails
-    [60, 420, 900].forEach(ms => setTimeout(() => { fitStage(); if (back && window.Table3D && Table3D.snap && ms < 900) Table3D.snap(); }, ms));
+    [60, 420, 900].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
     if (window.ResizeObserver && !window.__bvRO) { window.__bvRO = new ResizeObserver(() => fitStage()); window.__bvRO.observe($('bvi')); }
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
