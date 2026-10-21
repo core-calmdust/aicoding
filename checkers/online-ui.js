@@ -420,6 +420,7 @@ function olShowResult() {
   $('#resultTitle').textContent = !R.winner ? t('res.draw') : me < 0 ? t('ol.pWin', { p: olShortName(R.winner) }) : R.winner === me ? t('ol.win') : t('ol.lose');
   let sub = olEsc((R.why ? R.why + ' · ' : '') + `${olShortName(P1)} vs ${olShortName(P2)} · ${varName(g.v)}`) + '<br>' + olEsc(t('res.sub', { n: moves.length }));
   if (R.rating && R.rating.rated) sub += `<div class="ol-rchg">${t('ol.rating')} ${R.rating.old} → <b>${R.rating.now}</b> <span class="${R.rating.now >= R.rating.old ? 'up' : 'dn'}">(${R.rating.now >= R.rating.old ? '+' : ''}${R.rating.now - R.rating.old})</span></div>`;
+  else if (R.rating && R.rating.note && ON.secMsg) sub += `<div class="ol-rchg">${olEsc(ON.secMsg(R.rating.note))}</div>`;
   $('#resultSub').innerHTML = sub;
   if (me > 0) { playChime(R.winner === me || !R.winner); if (R.winner === me) confetti(); }
   olResRender();
