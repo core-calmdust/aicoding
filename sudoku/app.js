@@ -848,7 +848,7 @@ function render() {
     el.classList.toggle('sel', i === sel);
     el.classList.toggle('peer', !!peers && peers.has(i) && s.hl);
     el.classList.toggle('same', !!v && s.hl && v === focusD && i !== sel);
-    el.classList.toggle('err', !!v && !given && s.check && v !== G.sol[i]);
+    el.classList.toggle('err', !!v && !given && !!G.errs && G.errs.has(i) && v !== G.sol[i]);
     el.children[1].textContent = v || '';
     const nt = el.children[2].children, m = v ? 0 : G.notes[i];
     for (let d = 1; d <= 9; d++) {
@@ -867,7 +867,7 @@ function render() {
   $('#pad').classList.toggle('memo', memo);
   $('#tMemo').classList.toggle('on', memo); $('#memoBadge').textContent = memo ? 'ON' : 'OFF';
   $('#tUndo').disabled = !G.hist.length || G.done;
-  const mi = $('#gMist'); mi.hidden = !s.check; mi.classList.toggle('z', !G.mist); $('#gMistN').textContent = G.mist;
+  const mi = $('#gMist'); mi.hidden = false; mi.classList.toggle('z', !G.mist); $('#gMistN').textContent = G.mist;
   $('#gTime').hidden = !s.timer; $('#gClock').textContent = fmtTime(G.time);
   const hn = $('#hintN'), hl = hintLeft(); hn.hidden = false; hn.textContent = hl > 0 ? hl : '+'; hn.title = hl > 0 ? t('hint.left', { n: hl }) : t('hint.paid', { n: fmtN(HINT_COST) });
   const ab = $('#autoN'); ab.textContent = DB.autoLeft > 0 ? DB.autoLeft : '+'; ab.title = DB.autoLeft > 0 ? t('auto.left', { n: DB.autoLeft }) : t('auto.paid', { n: AUTO_COST });
@@ -886,11 +886,40 @@ function setValue(i, d, fromHint) {
   pushHist(affected);
   G.grid[i] = d; G.notes[i] = 0;
   if (DB.set.clean) for (const p of affected) if (p !== i) G.notes[p] &= ~bitD(d);
-  if (d !== G.sol[i]) {
-    G.mist++; if (DB.set.check) { SFX.err(); vib([30, 40, 30]); flash(i, 'shake', 340); } else SFX.place();
-  } else { SFX.place(); vib(8); flash(i, 'pop', 300); checkUnits(i); }
+  if (G.errs) G.errs.delete(i);
+  SFX.place(); vib(8); flash(i, 'pop', 300); checkUnits(i);
   render(); saveGame();
-  if (G.grid.every((v, k) => v === G.sol[k])) finish();
+  afterPlace();
+}
+// no instant mistake feedback: the board is checked only with the 答え合わせ button (or automatically when full)
+function afterPlace() {
+  if (G.grid.every((v, k) => v === G.sol[k])) return finish();
+  if (G.grid.every(v => v)) return checkAnswers(true);
+  // only one digit left (and no mistakes so far) → fill the rest automatically
+  const empty = []; let ok = true;
+  for (let k = 0; k < 81; k++) { if (!G.grid[k]) empty.push(k); else if (G.grid[k] !== G.sol[k]) ok = false; }
+  if (!ok || !empty.length || new Set(empty.map(k => G.sol[k])).size !== 1) return;
+  autoFill(empty);
+}
+function autoFill(cells) {
+  G.done = true; closeHint(); sel = -1; lockD = 0;
+  const d = G.sol[cells[0]];
+  cells.sort((x, y) => (E.ROW[x] + E.COL[x]) - (E.ROW[y] + E.COL[y]));
+  cells.forEach((k, n) => setTimeout(() => {
+    G.grid[k] = d; G.notes[k] = 0; SFX.place(); flash(k, 'pop', 300); render();
+    if (n === cells.length - 1) setTimeout(() => { G.done = false; finish(); }, 380);
+  }, 260 + n * 110));
+  toast(esc(t('chk.auto', { d })));
+}
+function checkAnswers(full) {
+  if (!G || G.done || paused) return;
+  closeHint();
+  const wrong = []; for (let i = 0; i < 81; i++) if (G.grid[i] && !G.puz[i] && G.grid[i] !== G.sol[i]) wrong.push(i);
+  if (!wrong.length) { SFX.place(); toast(esc(t('chk.ok')), 'msg'); return; }
+  G.errs = new Set(wrong); G.mist += wrong.length;
+  SFX.err(); vib([30, 40, 30]); wrong.forEach(i => flash(i, 'shake', 340));
+  toast(esc(t(full ? 'chk.full' : 'chk.ng', { n: wrong.length })), 'msg');
+  render(); saveGame();
 }
 let memoFocus = 0;
 function toggleNote(i, d) { if (G.grid[i]) return; pushHist([i]); G.notes[i] ^= bitD(d); memoFocus = d; SFX.note(); render(); saveGame(); }
@@ -899,6 +928,7 @@ function erase(i) {
   if (!G.grid[i] && !G.notes[i]) return;
   pushHist([i]);
   if (G.grid[i]) G.grid[i] = 0; else G.notes[i] = 0;
+  if (G.errs) G.errs.delete(i);
   SFX.erase(); render(); saveGame();
 }
 function undo() {
@@ -938,7 +968,7 @@ function autoNotes() {
 }
 function checkUnits(i) {
   const done = [];
-  for (const u of E.CELL_UNITS[i]) if (E.UNITS[u].every(k => G.grid[k] === G.sol[k])) done.push(u);
+  for (const u of E.CELL_UNITS[i]) if (E.UNITS[u].every(k => G.grid[k])) done.push(u);
   if (!done.length) return;
   SFX.unit();
   const seen = new Set();
@@ -1664,7 +1694,7 @@ function hbList() {
   return MODE === 'speed' ? ['', ...sp, ...th] : ['', ...th, ...(SPD ? ['speedway', ...sp] : [])];
 }
 function openSettings() {
-  const items = [['check', 'set.check'], ['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
+  const items = [['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
   const tods = ['auto', 'day', 'eve', 'night'];
   $('#setBody').innerHTML = `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
     + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}${SPD ? ' ' + esc(t('hb.spdesc')) : ''}</small></span><div class="hbgrid">${hbList().map(k => { const ok = !k || hbOK(k), cur = DB.set[hbKey()] || '', on = cur === k && ok || (!k && cur && !hbOK(cur)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(bgName(k) + (ok ? '' : ' · ' + (isSpBg(k) ? SPD.bgCond(k) : t('hb.lock'))))}">${BG.svg(k || (MODE === 'speed' ? 'speedway' : 'daily'), 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(bgName(k))}</span></button>`; }).join('')}</div></div>`
@@ -1764,6 +1794,7 @@ $('#tErase').onclick = () => erase(sel);
 $('#tMemo').onclick = () => { memo = !memo; SFX.tap(); render(); };
 $('#tAuto').onclick = autoNotes;
 $('#tHint').onclick = onHint;
+{ const tc = $('#tCheck'); if (tc) tc.onclick = () => { SFX.tap(); checkAnswers(false); }; }
 $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
 $('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (G.ti + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
