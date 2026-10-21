@@ -302,6 +302,21 @@ function create(o) {
     if (e.key === 'ArrowRight') { e.preventDefault(); e.stopImmediatePropagation(); go(tour.page + (rtl ? -1 : 1)); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopImmediatePropagation(); go(tour.page + (rtl ? 1 : -1)); }
   }, true);
+  // phones: swipe left = next, right = prev (reversed in ar). Swipes starting on the board / buttons are ignored so moves still work.
+  let sw = null;
+  document.addEventListener('touchstart', e => {
+    sw = null; const m = mount();
+    if (e.touches.length > 1 || !m || !m.contains(e.target) || !visible()) return;
+    if (e.target.closest('.rt-board, input, textarea, select, [data-noswipe]')) return;
+    const t = e.touches[0]; sw = { x: t.clientX, y: t.clientY, t: Date.now() };
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!sw) return; const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Date.now() - sw.t; sw = null;
+    if (dt > 900 || Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    const rtl = document.documentElement.lang === 'ar';
+    go(tour.page + ((dx < 0) !== rtl ? 1 : -1));
+  }, { passive: true });
+  document.addEventListener('touchcancel', () => { sw = null; }, { passive: true });
   Object.assign(tour, {
     open(i) { tour.page = Math.max(0, Math.min(pages.length - 1, i | 0)); render(); },
     render() { if (visible()) { const P = pages[tour.page]; if (P && P.setup && P.relabel) { P.relabel(); return; } render(); } },

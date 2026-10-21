@@ -294,6 +294,18 @@ function rulesWire() {
     const d = (e.key === 'ArrowRight' ? 1 : -1) * (document.documentElement.lang === 'ar' ? -1 : 1), i = RU.i + d;
     if (i >= 0 && i < RULES.length) { RU.i = i; rulesRender(); }
   }, true);
+  // phones: swipe left = next page, right = prev (reversed in ar); swipes that start on the mini board are ignored
+  let ruSw = null;
+  $('#rulesView').addEventListener('touchstart', e => {
+    ruSw = null; if (e.touches.length > 1 || e.target.closest('svg, .mb-hit, button, input, select, textarea')) return;
+    const t = e.touches[0]; ruSw = { x: t.clientX, y: t.clientY, t: Date.now() };
+  }, { passive: true });
+  $('#rulesView').addEventListener('touchend', e => {
+    if (!ruSw || !RU) return; const t = e.changedTouches[0], dx = t.clientX - ruSw.x, dy = t.clientY - ruSw.y, dt = Date.now() - ruSw.t; ruSw = null;
+    if (dt > 900 || Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    const i = RU.i + ((dx < 0) !== (document.documentElement.lang === 'ar') ? 1 : -1);
+    if (i >= 0 && i < RULES.length) { RU.i = i; rulesRender(); }
+  }, { passive: true });
   // hover preview on the mini board
   $('#rulesBody').addEventListener('pointerover', e => { const h = e.target.closest('.mb-hit'); if (h) h.classList.add('hov'); });
   $('#rulesBody').addEventListener('pointerout', e => { const h = e.target.closest('.mb-hit'); if (h) h.classList.remove('hov'); });

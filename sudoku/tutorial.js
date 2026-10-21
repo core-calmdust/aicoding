@@ -229,5 +229,20 @@ addEventListener('keydown', e => {
   if (dm && board) { e.preventDefault(); board.put(+dm[1]); return; }
   if (board && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Tab')) { e.preventDefault(); board.move(e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey) ? -1 : 1); }
 }, true);
+/* phones: swipe left = next page, right = prev (reversed in RTL); swipes that start on the board or key pad are ignored (flick input) */
+let tuSw = null;
+addEventListener('touchstart', e => {
+  tuSw = null; const m = document.getElementById('mTut');
+  if (!m || !m.classList.contains('on') || !m.contains(e.target) || e.touches.length > 1) return;
+  if (e.target.closest('.tbd, .tpad, button, input, select, textarea')) return;
+  const t = e.touches[0]; tuSw = { x: t.clientX, y: t.clientY, t: Date.now() };
+}, { passive: true });
+addEventListener('touchend', e => {
+  if (!tuSw) return; const t = e.changedTouches[0], dx = t.clientX - tuSw.x, dy = t.clientY - tuSw.y, dt = Date.now() - tuSw.t; tuSw = null;
+  if (dt > 900 || Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+  const fwd = (dx < 0) !== (document.documentElement.dir === 'rtl'); if (fwd && step >= steps.length - 1) return;   // never closes the tutorial by swiping
+  const b = fwd ? $('#tuNext') : $('#tuPrev');
+  if (b && !b.disabled && b.offsetParent) b.click();
+}, { passive: true });
 window.SudokuTutorial = { open, mascot };
 })();
