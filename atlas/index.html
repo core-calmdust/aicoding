@@ -770,6 +770,27 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .act.act3 #bvTable{background:#ffeccc;color:#7a4a12;box-shadow:0 4px 0 #f0cf98;border:2px solid #f6dcae}.bvi .act.act3 #bvTable:hover{background:#ffe4b8}
 .bvi .act.act3 .pk:disabled{opacity:.45;filter:grayscale(.6);cursor:not-allowed}
 @media (max-width:819px){.bvi .act.act3 .pk b{font-size:15px}.bvi .act.act3 .btn.big.pk b{font-size:18px}}
+/* board card: own pickers instead of the system ones */
+.bvi .sidetg{flex:1;display:flex;gap:4px;padding:4px;border-radius:14px;background:#f3ead8;min-width:0}
+.bvi .sidetg button{flex:1;border:0;background:none;font:inherit;font-weight:900;font-size:15px;color:var(--ink2);padding:7px 6px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.bvi .sidetg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
+.bvi .lvpick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bvi .lvpick i{font-style:normal;color:var(--ink2);font-size:13px}
+@media (min-width:820px){.bvi .lvpick{height:48px;font-size:17px;padding:0 16px;border-radius:14px}.bvi .sidetg button{font-size:16px;padding:10px 8px}}
+.lvsheet{position:fixed;inset:0;z-index:120;background:rgba(40,30,10,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
+.lvsheet.on{background:rgba(40,30,10,.35)}
+.lvs-in{width:min(520px,100%);max-height:min(76vh,640px);display:flex;flex-direction:column;background:#fffdf7;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(60,40,10,.25);transform:translateY(100%);transition:transform .24s cubic-bezier(.3,1.2,.5,1);padding-bottom:env(safe-area-inset-bottom)}
+.lvsheet.on .lvs-in{transform:none}
+@media (min-width:820px){.lvsheet{align-items:center}.lvs-in{border-radius:24px}}
+.lvs-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px;font-weight:900;font-size:17px;color:var(--ink)}
+.lvs-x{border:0;background:#f3ead8;width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;color:var(--ink2)}
+.lvs-l{overflow:auto;padding:4px 12px 14px;display:grid;gap:6px;overscroll-behavior:contain}
+.lvs-l button{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;gap:2px 10px;text-align:start;border:2px solid var(--line);background:#fff;border-radius:14px;padding:9px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.lvs-l button b{grid-row:1 / 3;font-family:var(--round,inherit);font-size:15px;color:var(--ink2);min-width:46px}
+.lvs-l button .nm{font-weight:900;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lvs-l button small{grid-column:2 / 4;font-size:12px;font-weight:700;color:var(--ink2)}
+.lvs-l button .meter{display:flex;align-items:flex-end;gap:2px}.lvs-l button .meter i{width:3px;border-radius:2px;background:#e6dcc6}.lvs-l button .meter i.on{background:linear-gradient(#ffb03a,#ff6a3d)}
+.lvs-l button.on{border-color:var(--coral,#ff5d5d);background:#fff4f0;box-shadow:0 0 0 2px rgba(255,93,93,.15)}
 </style>
 </head>
 <body>
@@ -887,6 +908,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
-<script src="app.js?v=86"></script>
+<script src="app.js?v=87"></script>
 </body>
 </html>

@@ -548,10 +548,33 @@
     }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones: right of the progress ring
+    // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
+    // the level as a button that opens a list sheet with each level's name, meter and who it suits
+    if ($('bvSide')) {
+      const sel = $('bvSide'), tg = document.createElement('div'); tg.className = 'sidetg'; sel.hidden = true; sel.after(tg);
+      const paint = () => { tg.innerHTML = [...sel.options].map(o => `<button type="button" data-v="${o.value}" class="${o.value === sel.value ? 'on' : ''}">${esc(o.textContent)}</button>`).join(''); };
+      tg.onclick = e => { const b = e.target.closest('button'); if (!b) return; sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); paint(); if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} };
+      paint();
+    }
+    if ($('bvLv')) {
+      const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
+      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
+      sel.addEventListener('change', paint); paint();
+      bt.onclick = () => {
+        const max = ad.levels, cur = +sel.value;
+        const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
+          const n = +o.value, x = ad.levelInfo ? ad.levelInfo(n, lang) : null;
+          return `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${esc(x ? x.name : '')}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small>${esc(x.who)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
+        document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+        const close = () => { sh.classList.remove('on'); setTimeout(() => sh.remove(), 220); };
+        sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+        const onB = sh.querySelector('.on'); if (onB) onB.scrollIntoView({ block: 'center' });
+      };
+    }
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
       const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
         $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
-      $('bvLv').onchange = show; show();
+      $('bvLv').addEventListener('change', show); show();
       if ($('bvi').classList.contains('fold')) { const w = $('bvLvInfo').parentNode; if (w.classList.contains('lvw')) w.style.height = '0px'; }
     }
     fitStage();
