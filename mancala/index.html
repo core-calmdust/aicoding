@@ -420,6 +420,28 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .pz-grid button.solved::after{content:" ✓"}
 .daily{border-color:rgba(226,194,117,.55)!important;background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))!important}
 .daily .no{font-size:18px!important}
+
+.pz-best{display:inline-flex;gap:1px;vertical-align:middle}.pz-best .pb-star{width:15px;height:15px}
+.pz-df{display:inline-block;vertical-align:middle;font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.45);color:var(--accent);letter-spacing:.04em;font-family:'Zen Kaku Gothic New',sans-serif}
+.pz-line{margin-top:6px;font-size:14px;color:#eadfcd}
+#pzGrid .pb-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (min-width:700px){ #pzGrid .pb-tiles{grid-template-columns:repeat(5,minmax(0,1fr))} }
+#pzGrid .pb-tile{aspect-ratio:auto;padding:5px 5px 4px;justify-content:flex-start;gap:2px}
+#pzGrid .pb-tile .th{display:block;width:100%;opacity:.9}#pzGrid .pb-tile .th svg{display:block;width:100%;height:auto;border-radius:5px}
+#pzGrid .pb-tile .n{font-size:12px;line-height:1.2}
+#pzGrid .pb-tile .df{font-size:7.5px;letter-spacing:1px;color:var(--c);opacity:.8;line-height:1}
+#pzGrid .pb-tile.done .th{opacity:1}#pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
+/* puzzle home (shared PZBook.home): wide mancala boards as thumbnails, rule-set tabs above, title (称号) chip in the hero */
+#pzVarTabs{margin:0 0 12px}#pzVarTabs button{font-size:13px;padding:8px 4px}
+#pzVarTabs button small, .lx .var-tabs button small{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);margin-inline-start:4px}#pzVarTabs button small.ok{color:#8fe3b8}
+@media (max-width:560px){ #pzVarTabs button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;line-height:1.25}#pzVarTabs button small{margin:0} }
+#pzLevels .pbh-th{width:132px}#pzLevels .pbh-bd.mc > svg{max-height:none}#pzLevels .pbh-daily .th{width:112px}#pzLevels .pbh-daily .th > svg{max-height:none}
+@media (max-width:560px){ #pzLevels .pbh-th{width:108px}#pzLevels .pbh-daily .th{width:88px} }
+@media (min-width:900px) and (min-height:561px) and (pointer:fine){ #pzLevels .pbh-th{width:100%}#pzLevels .pbh-bd.mc{width:220px} }
+.pz-rk{display:inline-flex;align-items:baseline;gap:5px;padding:2px 10px;border-radius:999px;border:1px solid rgba(242,192,96,.45);background:rgba(242,192,96,.1);font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif}
+.pz-rk small{font-size:10.5px;color:var(--muted)}.pz-rk b{font-size:12.5px;color:#f2d07a}.pz-rk i{font-style:normal;font-size:10.5px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+#pzLevelHead{margin:0 0 12px}
+
 /* Arabic: text blocks right-to-left, board and notation stay left-to-right */
 html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status, .pz-goal, .ls-goal, .modal h2, .result-sub, .rv-note, .rl-lead, .rl-item, .rulecard, .field > label, .level-name, .result-big, #rsText){direction:rtl;text-align:right}
 html[lang=ar] .result-big, html[lang=ar] .result-sub{text-align:center}
@@ -734,6 +756,27 @@ html[lang=ar] .rottip p, html[lang=ar] .rottip h2{text-align:center}
 .lesson-list:has(> .lx){display:block}
 .lx .daily{margin:0 0 12px}
 .lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
+.lx-tabs.lx-c4{grid-auto-flow:row;grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:560px){ .lx-tabs.lx-c4{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.lx .var-tabs{margin:0 0 12px}.lx .var-tabs button{font-size:13px;padding:8px 4px}
+.lx .var-tabs button small{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);margin-inline-start:4px}.lx .var-tabs button small.ok{color:#8fe3b8}
+@media (max-width:560px){ .lx .var-tabs button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;line-height:1.25}.lx .var-tabs button small{margin:0} }
+.lx-tabs button .ic svg, .lx-banner .ic svg, .pzx-ic svg, .pzx-ghead .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lx-tabs button .ic{padding:3px}.lx-banner .ic{padding:9px}
+.lp{margin:6px 0 12px;padding:10px;border-radius:14px;border:1px solid rgba(201,169,97,.3);background:rgba(0,0,0,.18)}
+.lp svg{display:block;width:100%;max-width:560px;margin:0 auto}
+.lp-bar{display:flex;align-items:center;gap:10px;margin-top:8px}
+.lp-bar button{flex:none;width:46px;height:40px;border-radius:10px;border:1px solid var(--brass2);color:var(--accent);background:rgba(0,0,0,.25);font-size:16px}
+.lp-bar button:disabled{opacity:.3}
+.lp-cap{flex:1;text-align:center;font-size:15px;color:var(--text);font-weight:600}
+.lp-ev{display:inline-block;margin-inline-start:6px;font-size:12.5px;color:var(--accent);font-weight:400;font-family:'JetBrains Mono',monospace}
+.lp-note{margin:8px 2px 0;font-size:14px;line-height:1.7;color:#eadfcd}
+.ls-rule{font-size:13px;color:var(--accent);margin:-2px 0 8px}
+@media (min-width:900px) and (max-height:860px){ .puzzle-card.answered .pz-goal{display:none} .puzzle-card.answered .pz-status{margin-top:4px} }
+.ex-fold{margin-top:6px}.ex-fold > summary{cursor:pointer;font-size:13px;color:var(--accent);list-style-position:inside}
+.cr-ex{margin-top:8px;text-align:start}.cr-ex > b{font-size:13.5px;color:var(--accent)}
+.cr-ex .cr-list li{font-size:13.5px;line-height:1.65}
+html[lang=ar] .cr-ex{direction:rtl;text-align:right}
 .lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0}
 .lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(201,169,97,.14);color:var(--brass)}
@@ -964,14 +1007,13 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
   <div class="modal">
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div class="seg var-tabs" id="pzVarTabs"></div>
+      <div class="pz-home" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
-      <div class="pz-grid" id="pzGrid"></div>
+      <div id="pzLevelHead"></div>
+      <div class="pz-book" id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
   </div>
@@ -1019,6 +1061,8 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 </div>
 
 <script src="i18n.js?v=20261021lx"></script>
+<script src="i18n-learn.js?v=20261021c"></script>
+<script src="i18n-pz.js?v=20261021c"></script>
 <script src="engine.js"></script>
 <script>
 // "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
@@ -1042,7 +1086,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/rulesoffer.js?v=3"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=11"><\/script><script src="../shared/pzbook.js?v=2"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021rv1"><\/script>');
+  } else document.write('<script src="../shared/rulesoffer.js?v=3"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=11"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021px1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
