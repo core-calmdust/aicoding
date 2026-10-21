@@ -245,7 +245,10 @@
     const board = T3.MODELS.backgammon(true, { look: 'marq' }); T3.show('backgammon', board); T3.play(true);
     const g = BG.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;   // shown at about the other boards' size (the camera stays below the room's lamp)
     board.scale.setScalar(SC);
-    if (T3.fit) T3.fit({ w: (g.W + .3) * SC, d: (g.H + .6) * SC, y: Y * SC, pitch: 1.18 });   // the whole case, large, seen a little from the player's side
+    if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: Y * SC, pitch: 1.18 });   // the whole case, large, seen a little from the player's side
+    // the wide case needs a high camera on phones: the room's ceiling lamp (night) would hang in front of it — hidden during the tour
+    const hidden = [];
+    try { let sc = board; while (sc.parent) sc = sc.parent; sc.children.forEach(o => { if (o.isMesh && o.position.y > 10 && o.material && o.material.isMeshBasicMaterial && o.visible) { o.visible = false; hidden.push(o); } }); } catch (e) {}
     const marks = new TH.Group(); board.add(marks);
     let cks = [], dice = [], cubeM = null, step = 0, stopped = false, busy = false, played = false, timers = [];
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
@@ -449,7 +452,7 @@
     requestAnimationFrame(() => el.classList.add('on'));
     later(() => go(0), 350);
     return {
-      stop() { stopped = true; clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
+      stop() { stopped = true; hidden.forEach(o => { o.visible = true; }); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
       panel: el,
       _debug: { pt: (p, side = 0) => { const [x, z] = landXZ(side, p); return [x * SC, z * SC, Y * SC]; }, step: () => step },
     };
