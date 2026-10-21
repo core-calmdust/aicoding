@@ -56,7 +56,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.card.players').insertAdjacentHTML('afterbegin', '<div class="ol-watch hidden" id="olWatch" aria-live="polite"></div>');
 for (const s of [0, 1]) $('#pl' + s).insertAdjacentHTML('beforeend', `<span class="ol-clk" id="clk${s}"></span>`);
-$('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span data-i18n="ol.resign"></span></button>`);
+// the 投了 button itself is in the page menu (common spec: 対局 > 待った > 投了); online it opens the resignation below
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
 $('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
 // the new-game dialog: "online" shows a short description (colours and board design stay: they are your own view) and opens the online dialog
@@ -557,7 +557,7 @@ setInterval(() => { if (net && net.sending && net.sendOk && Date.now() - net.sen
 if (window.CountTick) { CountTick.setMuted(() => !settings.sound); }
 window.olAfterInfo = () => {
   const n = net;
-  $('#btnResign').disabled = !olLive();
+  $('#btnResign').disabled = !canResign();
   if (settings.mode !== 'online' || !n) { $('#evalCard').classList.remove('ol-noeval'); return; }
   olClockTick();
   const g = n.game; if (!g) return;
@@ -595,6 +595,8 @@ function olResignRender() {
 function olOpenResign() {
   const n = net; if (!olLive()) return;
   const g = n.game, R = n.R, cube = R && R.st ? R.st.cube : 1, canOffer = g.status === 'play' && R && R.phase !== 'commit' && !(g.ro && g.ro.by) && (g.cube || g.ml);
+  // nothing to choose (no points offer possible): the common 投了しますか？ はい / いいえ dialog
+  if (!canOffer) { Resign.confirm({ lang: LANG, note: g.ml ? t('ol.rsMatch') : undefined }).then(ok => { if (ok && olLive() && net.gid === n.gid) ON.resign(n.gid).catch(err => { console.warn(err); toast(t('ol.error'), 2000); }); }); return; }
   $('#olrText').textContent = canOffer ? t('ol.rsText', { c: cube }) : t('ol.resignQ');
   $('#olrBtns').innerHTML = (canOffer ? [1, 2, 3].map(k => `<button class="mbtn" data-rs="${k}">${t('ol.rs' + k, { n: k * cube })}</button>`).join('') : '')
     + `<button class="mbtn warn" data-rs="m">${t(g.ml ? 'ol.rsMatch' : 'ol.resign')}</button>`;
@@ -608,7 +610,7 @@ $('#olrBtns').onclick = e => {
   ON.offerResign(n.gid, +v).then(r => { if (r && r.committed) toast(t('ol.rsSent', { n: +v * (n.R && n.R.st ? n.R.st.cube : 1) }), 1800); }).catch(err => console.warn(err));
 };
 $('#olrClose').onclick = () => hideOv('#olResignOv');
-$('#btnResign').onclick = () => olOpenResign();
+$('#btnResign').onclick = () => settings.mode === 'online' ? olOpenResign() : resignClick();
 // ---------------------------------------------------------------- the end of a game / the match
 function olWhy(g, me) {
   const loserNo = g.loser ? ON.sideNo(g, g.loser) : -1, p = loserNo >= 0 ? olShortName(loserNo) : '';

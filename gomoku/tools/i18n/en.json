@@ -427,5 +427,7 @@
   "ri.time": "about 5 – 20 min",
   "ri.hist": "Playing “five in a row” with a Go board and stones has long been popular in Japan. Because Black, who moves first, has too big an advantage, a competitive version called <b>Renju</b> — with forbidden moves for Black only — was set up in Japan in the early 20th century.",
   "ri.win": "You win by being <b>the first to get five of your stones in a row</b> — across, down or diagonally. Depending on the rules, six or more in a row (an overline) and Black’s forbidden moves have special rules.",
-  "ri.cult": "All you need is a Go board and stones, and the rules are learned in a minute, so children and adults alike play it. Renju has an international federation and world championships, and it is popular not only in Japan but also in countries such as Russia and Estonia."
+  "ri.cult": "All you need is a Go board and stones, and the rules are learned in a minute, so children and adults alike play it. Renju has an international federation and world championships, and it is popular not only in Japan but also in countries such as Russia and Estonia.",
+  "res.why.time": "Time ran out",
+  "res.why.abandon": "Abandoned (left the game)"
 }

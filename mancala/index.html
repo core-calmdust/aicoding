@@ -175,7 +175,7 @@ a.snd.home{text-decoration:none}
 .navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
 .navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.controls{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 1px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:11.5px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0}
 .btn span{overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -482,8 +482,10 @@ bdi{unicode-bidi:isolate}
   .kifu-card{order:4}
   .info-line{display:none}
   .card{padding:10px 12px}
-  .controls{padding:8px;gap:5px}
+  .controls{padding:8px;gap:4px}
   .btn{padding:7px 1px;gap:3px;font-size:10.5px}
+  .controls .btn{font-size:9.5px;letter-spacing:-.02em}
+  html[lang=fr] #btnResign span{font-size:8.5px;letter-spacing:-.04em}
   .btn svg{width:17px;height:17px}
   .graph{height:70px;margin-top:8px}
   .kifu-card{flex:none;min-height:96px}
@@ -670,7 +672,7 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
 #btnRot.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
 @media not all and (pointer: coarse){#btnRot{display:none}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
-  .controls{grid-template-columns:repeat(3,1fr)!important}
+  .controls{grid-template-columns:repeat(4,1fr)!important}
   .controls .btn{flex-direction:row;justify-content:center;gap:4px;font-size:10.5px;padding:7px 2px}
 }
 /* ================================================================ phone landscape: header + player bars in one row, the board across the width, everything else below */
@@ -878,6 +880,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+      <button class="btn" id="btnResign"><span></span></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnRules" data-i18n-title="btn.rules.title"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span data-i18n="btn.rules"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
@@ -1068,7 +1071,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=13"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021fun"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=13"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021rsg"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

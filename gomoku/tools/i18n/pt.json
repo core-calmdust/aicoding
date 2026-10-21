@@ -427,5 +427,7 @@
   "ri.time": "cerca de 5 – 20 min",
   "ri.hist": "Jogar “cinco em linha” com o tabuleiro e as pedras do go é um passatempo popular no Japão há muito tempo. Como as pretas, que começam, têm vantagem demais, no início do século XX organizou-se no Japão uma versão de competição chamada <b>renju</b>, com lances proibidos só para as pretas.",
   "ri.win": "Vence quem <b>colocar primeiro cinco pedras suas em linha</b> — na horizontal, na vertical ou na diagonal. Conforme as regras, linhas de seis ou mais e os lances proibidos das pretas têm normas especiais.",
-  "ri.cult": "Basta um tabuleiro e pedras de go, e as regras se aprendem num minuto, por isso crianças e adultos jogam. O renju tem uma federação internacional e campeonatos mundiais, e é popular não só no Japão, mas também em países como Rússia e Estônia."
+  "ri.cult": "Basta um tabuleiro e pedras de go, e as regras se aprendem num minuto, por isso crianças e adultos jogam. O renju tem uma federação internacional e campeonatos mundiais, e é popular não só no Japão, mas também em países como Rússia e Estônia.",
+  "res.why.time": "O tempo acabou",
+  "res.why.abandon": "Abandono (saiu da partida)"
 }
