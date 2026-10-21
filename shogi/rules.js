@@ -118,6 +118,10 @@ html[lang=ar] .rt-wins,html[lang=ar] .rt-draw{direction:rtl}
   #lessonList.rt-host .rt:has(> .rt-board) > .rt-task{grid-area:task;text-align:left;margin-top:14px}
   #lessonList.rt-host .rt:has(> .rt-board) > .rt-board{grid-area:board;min-height:0;overflow-x:hidden;overflow-y:auto;margin:6px 0 0;align-items:flex-start}
   #lessonList.rt-host .rt:has(> .rt-board) > .rt-nav{grid-area:nav}
+  /* pages without a board (page 1 etc.): same footer position as the board pages — nav pinned to the bottom, content centred in the space above */
+  #lessonList.rt-host .rt:not(:has(> .rt-board)){height:100%;display:flex;flex-direction:column}
+  #lessonList.rt-host .rt:not(:has(> .rt-board)) > .rt-title{margin-top:auto}
+  #lessonList.rt-host .rt:not(:has(> .rt-board)) > .rt-nav{margin-top:auto}
   html[lang=ar] #lessonList.rt-host .rt:has(> .rt-board) > .rt-title,html[lang=ar] #lessonList.rt-host .rt:has(> .rt-board) > .rt-task{text-align:right}
   .rt-pinfo{font-size:15.5px}.rt-pinfo h4{font-size:17px}
   .rt-hand small{font-size:15px}
