@@ -38,15 +38,23 @@
   skin.alignTo(S, Y);
 
   /* ---------- pieces: renders of the 3D pieces ---------- */
-  let IMG = null;
+  // 3D sets: 'lux' (grey burl, silver / gold) and 'wood' (elm burl, boxwood / padauk); '' = the game's own 2D pieces
+  const IMGS = {}; let IMG = null;
   const PCK = 'atlas-chess-pc';
-  let mine = true; try { mine = localStorage.getItem(PCK) !== '0'; } catch (e) {}
-  const LBL = { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي' };
+  let mine = 'lux'; try { const v = localStorage.getItem(PCK); mine = v === '0' ? '' : v === 'wood' ? 'wood' : 'lux'; } catch (e) {}
+  const LBLS = {
+    lux: { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي' },
+    wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي' },
+  };
+  const BTN = { lux: 'atlas3d', wood: 'atlaswood' };
   const seg = document.getElementById('segSkin');
   const skinNow = () => { try { return settings.skin || 'classic'; } catch (e) { return 'classic'; } };
   function look() {   // selection mark and board tone follow the game's skin setting
-    if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
+    const mineBtn = mine && BTN[mine];
+    if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === mineBtn); else if (x.dataset.v === 'atlas3d' || x.dataset.v === 'atlaswood') x.classList.remove('sel'); });
+    if (board.userData.setSet) board.userData.setSet(mine || 'lux');
     if (board.userData.setTone) board.userData.setTone(mine ? 'classic' : skinNow());
+    IMG = mine ? IMGS[mine] || null : null; if (mine && !IMGS[mine]) loadSet(mine);
     document.documentElement.classList.toggle('atlas-svgpc', !mine);
     T3.kick(400);
   }
@@ -55,12 +63,12 @@
     try { renderReserves(posAt(cur).pos); } catch (e) {}
   }
   if (seg) {
-    const b = document.createElement('button'); b.type = 'button'; b.dataset.v = 'atlas3d'; seg.prepend(b);
-    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; b.textContent = LBL[l] || LBL.en; };
+    const bs = ['wood', 'lux'].map(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = BTN[k]; b.dataset.set = k; seg.prepend(b); return b; });
+    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.textContent = L[l] || L.en; }); };
     paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
     seg.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
-      mine = t.dataset.v === 'atlas3d'; try { localStorage.setItem(PCK, mine ? '1' : '0'); } catch (x) {}
+      mine = t.dataset.set || ''; try { localStorage.setItem(PCK, mine === 'wood' ? 'wood' : mine ? '1' : '0'); } catch (x) {}
       if (mine) e.stopImmediatePropagation();
       setTimeout(() => { look(); redraw(); }, 0);
     }, true);
@@ -80,10 +88,33 @@
 
   // pre-rendered sheet of the 3D pieces (images/atlas/chess-pieces.png, made with Table3D.chess.images); live render as fallback
   const SW = 256, SH = Math.round(256 * CH.SPR_H);
-  const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
+  const SRC = { lux: '../images/atlas/chess-pieces.png?v=1', wood: '../images/atlas/chess-pieces-wood.png?v=1' };
+  const sheet = set => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     if (im.naturalWidth !== SW * 6) return rej();
     const out = {};
     CH.SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = SW; c.height = SH; c.getContext('2d').drawImage(im, (i % 6) * SW, (i / 6 | 0) * SH, SW, SH, 0, 0, SW, SH); out[k] = c.toDataURL('image/png'); });
-    res(out); }; im.onerror = rej; im.src = '../images/atlas/chess-pieces.png?v=1'; });
-  sheet().catch(() => CH.images(SW)).then(o => { IMG = o; redraw(); });
+    res(out); }; im.onerror = rej; im.src = SRC[set]; });
+  const loading = {};
+  function loadSet(set) {
+    if (loading[set]) return; loading[set] = 1;
+    sheet(set).catch(() => CH.images(SW, set)).then(o => { IMGS[set] = o; if (mine === set) { IMG = o; redraw(); } });
+  }
+  if (mine) loadSet(mine);
+
+  /* ---------- moves: the piece is lifted off the board and set down (on top of the game's slide) ---------- */
+  const oFlip = window.flipFrom;
+  if (typeof oFlip === 'function') window.flipFrom = function (el, from, dur) {
+    const to = el.getBoundingClientRect();   // before the game's slide starts (its transform moves the box back to `from`)
+    dur = Math.max(dur || 260, 340); oFlip(el, from, dur);
+    try {
+      if (!IMG || !el.animate) return;
+      const d = Math.hypot(from.left - to.left, from.top - to.top); if (d < 2) return;
+      const cw = to.width, lift = Math.min(cw * .55, d * .22 + cw * .12), T = dur || 260;
+      const im = el.querySelector('img.a3d:not(.rf)'), rf = el.querySelector('img.a3d.rf');
+      const sh0 = `drop-shadow(0 ${cw * .05}px ${cw * .04}px rgba(0,0,0,.5))`, sh1 = `drop-shadow(0 ${cw * .05 + lift * .8}px ${cw * .1}px rgba(0,0,0,.3))`;
+      if (im) im.animate([{ transform: 'none', filter: sh0 }, { transform: `translateY(${-lift}px) scale(1.04)`, filter: sh1, offset: .45 }, { transform: 'none', filter: sh0 }], { duration: T, easing: 'ease-in-out' });
+      if (rf) rf.animate([{ opacity: .42 }, { opacity: 0, offset: .2 }, { opacity: 0, offset: .8 }, { opacity: .42 }], { duration: T });
+      T3.kick(T + 100);
+    } catch (e) {}
+  };
 })();

@@ -46,25 +46,29 @@
     });
   }
   // cream maple: fine straight fibres with a soft curly (fiddleback) shimmer
-  function maple(key, W = 512) {
+  function maple(key, W = 512, tint = [246, 234, 206, 34, 42, 52]) {
     return canvas(key, W, W, (g) => {
       const N = makeNoise(61), img = g.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
         const u = x / W, v = y / W;
         const fib = N(u * 4, v * 140, 2), curl = Math.sin((u * 26 + N(u * 2, v * 3, 3) * 3) * Math.PI) * .5 + .5;
         const t = .25 + (fib - .5) * .35 + Math.pow(curl, 3) * .18 + (N(u * 2, v * 2, 2) - .5) * .25, i = (y * W + x) * 4;
-        d[i] = 246 - t * 34; d[i + 1] = 234 - t * 42; d[i + 2] = 206 - t * 52; d[i + 3] = 255;
+        d[i] = tint[0] - t * tint[3]; d[i + 1] = tint[1] - t * tint[4]; d[i + 2] = tint[2] - t * tint[5]; d[i + 3] = 255;
       }
       g.putImageData(img, 0, 0);
     });
   }
   const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
-  const FRAME_BURL = () => burl("chBurlF", "#c4bfb7", "#4a4642", 31, 1024, 2.4);
-  const SQ_BURL = () => burl('chBurlS', '#97938c', '#33302d', 47);
+  // two sets: 'lux' = grey burl + silver/gold Staunton; 'wood' = amboyna/elm burl + boxwood/padauk
+  const SETS = {
+    lux: { frame: () => burl('chBurlF', '#c4bfb7', '#4a4642', 31, 1024, 2.4), sq: () => burl('chBurlS', '#97938c', '#33302d', 47), light: () => maple('chMaple'), inlay: 'cream', side: 0x23201c },
+    wood: { frame: () => burl('chBurlFw2', '#cf8c48', '#3f1806', 37, 1024, 1.5), sq: () => burl('chBurlSw2', '#c7843f', '#3a1605', 53, 768, .8), light: () => maple('chMapleW', 512, [248, 241, 226, 20, 26, 34]), inlay: 'line', side: 0x2a160b },
+  };
+  const FRAME_BURL = (set = 'lux') => SETS[set].frame();
   // the whole lacquered top in one picture: burl frame, inlay, the 64 squares
-  function boardTop() {
-    return canvasTex('chessTop4', 2048, 2048, (c, W) => {
-      const k = W / OW, F = FRAME_BURL(), SB = SQ_BURL(), MP = maple('chMaple');
+  function boardTop(set = 'lux') {
+    return canvasTex(set === 'lux' ? 'chessTop4' : 'chessTop4' + set, 2048, 2048, (c, W) => {
+      const k = W / OW, ST = SETS[set], F = ST.frame(), SB = ST.sq(), MP = ST.light();
       // frame: the burl sheet, drawn twice as large (its figure is bold on a real board)
       // frame: four mitred veneer strips cut from the burl sheet (each turned its own way)
       const o0 = MARGIN * k, E = [[0, 0], [W, 0], [W, W], [0, W]], I = [[o0, o0], [W - o0, o0], [W - o0, W - o0], [o0, W - o0]];
@@ -78,9 +82,11 @@
       const o = MARGIN * k, s = k, rnd = makeNoise(5);
       // inlay round the field: dark line, cream maple stripe, dark line
       const band = (a, b, col) => { c.fillStyle = col; c.fillRect(o - b * k, o - b * k, S * k + 2 * b * k, S * k + 2 * b * k); };
-      band(0, .16, 'rgba(24,20,16,.92)'); band(0, .145, '#efe1c0'); band(0, .1, 'rgba(24,20,16,.92)');
-      c.drawImage(SB, 0, 0, SB.width, SB.width, o - .085 * k, o - .085 * k, S * k + .17 * k, S * k + .17 * k);   // burl again between inlay and squares
-      band(0, .02, 'rgba(24,20,16,.9)');
+      if (ST.inlay === 'cream') {
+        band(0, .16, 'rgba(24,20,16,.92)'); band(0, .145, '#efe1c0'); band(0, .1, 'rgba(24,20,16,.92)');
+        c.drawImage(SB, 0, 0, SB.width, SB.width, o - .085 * k, o - .085 * k, S * k + .17 * k, S * k + .17 * k);   // burl again between inlay and squares
+        band(0, .02, 'rgba(24,20,16,.9)');
+      } else band(0, .05, 'rgba(26,14,8,.95)');   // one thin ebony line
       for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
         const x = o + f * s, y = o + r * s, light = (r + f) % 2 === 0;
         const src = light ? MP : SB, sw = src.width * (light ? .5 : .36), ox = rnd(f * 3.1, r * 2.7, 1) * (src.width - sw), oy = rnd(r * 1.9 + 4, f * 2.3, 1) * (src.height - sw);
@@ -96,9 +102,9 @@
       c.fillStyle = g; c.beginPath(); c.rect(0, 0, W, W); c.rect(o - .16 * k, o - .16 * k, S * k + .32 * k, S * k + .32 * k); c.fill('evenodd');
     });
   }
-  function sideTex() {
-    const key = 'chessSide2'; if (raw[key + 't']) return raw[key + 't'];
-    const t = new (T().CanvasTexture)(FRAME_BURL()); t.encoding = T().sRGBEncoding; t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(1, THICK / OW); t.anisotropy = 4;
+  function sideTex(set = 'lux') {
+    const key = 'chessSide2' + set; if (raw[key + 't']) return raw[key + 't'];
+    const t = new (T().CanvasTexture)(FRAME_BURL(set)); t.encoding = T().sRGBEncoding; t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(1, THICK / OW); t.anisotropy = 4;
     return (raw[key + 't'] = t);
   }
   // marbled resin of the piece bodies; x wraps round the lathe (seamless), y runs up the profile
@@ -118,9 +124,26 @@
     });
   }
 
+  // turned wood: fibres run up the piece (y), with soft growth bands; x wraps round the lathe
+  function grain(key, base, dark, hi, seed) {
+    return canvasTex(key, 512, 512, (g, W, H) => {
+      const N = makeNoise(seed), A = hexRGB(base), B = hexRGB(dark), C = hexRGB(hi), img = g.createImageData(W, H), d = img.data, TAU = Math.PI * 2;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const a = x / W * TAU, cx = Math.cos(a) * 1.3 + 5, cz = Math.sin(a) * 1.3 + 5, v = y / H;
+        const ring = N(cx * .9, cz * .9 + v * .6, 3) * 7 + v * 1.5, band = Math.pow(Math.sin(ring * TAU) * .5 + .5, 2.2);
+        const fib = N(cx * 14, cz * 14 + v * 60, 2), fl = N(cx * 3, cz * 3 + v * 5, 2);
+        let t = band * .45 + (fib - .5) * .3 + (fl - .5) * .35; t = Math.max(-1, Math.min(1, t));
+        const i = (y * W + x) * 4, P = t >= 0 ? B : C, k = Math.abs(t) * (t >= 0 ? 1 : .8);
+        d[i] = A[0] + (P[0] - A[0]) * k; d[i + 1] = A[1] + (P[1] - A[1]) * k; d[i + 2] = A[2] + (P[2] - A[2]) * k; d[i + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
+    });
+  }
+
   /* ---------- materials ---------- */
   const mats = {};
-  function matsOf(col) {
+  function matsOf(col, set = 'lux') {
+    if (set === 'wood') return woodMats(col);
     if (mats[col]) return mats[col];
     const TT = T(), w = col === 'w';
     const metal = new TT.MeshPhysicalMaterial({ color: new TT.Color(w ? 0xeef0f3 : 0xf2c464).convertSRGBToLinear(), metalness: 1, roughness: w ? .1 : .16, clearcoat: .6, clearcoatRoughness: .08, envMapIntensity: 1.25 });
@@ -132,6 +155,17 @@
       depthWrite: false, depthFunc: TT.GreaterDepth, stencilWrite: true, stencilRef: 2, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.IncrementStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp });
     const rMetal = ref(metal, w ? 0xc8ccd2 : 0xd8a645, .34), rResin = ref(resin, 0x9a9a9a, .3);
     return (mats[col] = { metal, resin, felt, rMetal, rResin });
+  }
+
+  function woodMats(col) {
+    const key = 'wood' + col; if (mats[key]) return mats[key];
+    const TT = T(), w = col === 'w';
+    const map = w ? grain('chBox2', '#e6c48e', '#c49a62', '#f3dcae', 9) : grain('chPad2', '#7c1610', '#470806', '#a02c1d', 17);
+    const wood = new TT.MeshPhysicalMaterial({ map, roughness: w ? .38 : .3, metalness: 0, clearcoat: .7, clearcoatRoughness: .18, sheen: 0 });
+    const felt = new TT.MeshStandardMaterial({ color: new TT.Color(0x1d3b26).convertSRGBToLinear(), roughness: 1 });
+    const TTb = TT, rw = new TTb.MeshBasicMaterial({ map, color: new TT.Color(0xa8a8a8).convertSRGBToLinear(), opacity: .3, blending: TT.CustomBlending, blendSrc: TT.SrcAlphaFactor, blendDst: TT.OneMinusSrcAlphaFactor, blendSrcAlpha: TT.ZeroFactor, blendDstAlpha: TT.OneFactor,
+      depthWrite: false, depthFunc: TT.GreaterDepth, stencilWrite: true, stencilRef: 2, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.IncrementStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp });
+    return (mats[key] = { metal: wood, resin: wood, felt, rMetal: rw, rResin: rw });
   }
 
   /* ---------- pieces: lathe parts, each in resin or metal ---------- */
@@ -248,7 +282,8 @@
   const TYPES = ' PNBRQK';
   function piece(type, color, o) {
     const TT = T(), tp = typeof type === 'number' ? TYPES[type] : String(type).toUpperCase(), col = color === 1 || color === 'b' ? 'b' : 'w';
-    const pr = PROFILES[tp](), m = matsOf(col), g = new TT.Group();
+    const set = (o && o.set) || 'lux', wd = set === 'wood';
+    const pr = PROFILES[tp](), m = matsOf(col, set), g = new TT.Group();
     const add = (geo, mat, o = {}) => { const x = new TT.Mesh(geo, mat); x.castShadow = true; x.receiveShadow = true; if (o.p) x.position.set(...o.p); if (o.r) x.rotation.set(...o.r); if (o.s) x.scale.set(...o.s); g.add(x); return x; };
     pr.resin.forEach((p, i) => add(lathe(tp + 'r' + i, p), m.resin));
     pr.metal.forEach((p, i) => add(lathe(tp + 'm' + i, p), m.metal));
@@ -265,7 +300,10 @@
       for (let i = 0; i < q.n; i++) add(geo, m.metal, { p: [0, q.y0 + .008, 0], r: [0, i * TAU / q.n + TAU / q.n / 2, 0] });
     }
     if (pr.coronet) { const q = pr.coronet, geo = geoCache.cor || (geoCache.cor = new TT.SphereGeometry(q.s, 14, 10)); for (let i = 0; i < q.n; i++) { const a = i / q.n * TAU; add(geo, m.metal, { p: [Math.cos(a) * q.r, q.y, Math.sin(a) * q.r] }); } }
-    if (pr.cross) {
+    if (pr.cross && wd) {   // wood king: a turned bud finial instead of the cross
+      const y = pr.cross.y, geo = geoCache.bud || (geoCache.bud = lathe('kbud', closed([[.05, y - .005], [.07, y + .03], [.085, y + .08], [.08, y + .13], [.06, y + .18], [.035, y + .22], [.012, y + .26], [0, y + .275]]), 40));
+      add(geo, m.resin);
+    } else if (pr.cross) {
       const y = pr.cross.y, v = geoCache.cv || (geoCache.cv = RB(.06, .22, .06, .015, 2)), h = geoCache.ch || (geoCache.ch = RB(.17, .06, .06, .015, 2));
       add(v, m.metal, { p: [0, y + .11, 0] }); add(h, m.metal, { p: [0, y + .15, 0] });
     }
@@ -279,14 +317,15 @@
       [1, -1].forEach(s => { const e = new TT.Mesh(eg, m.metal); e.position.set(.2, .655, s * .118); hd.add(e); });
       const nos = geoCache.nos || (geoCache.nos = new TT.TorusGeometry(.13, .018, 8, 24, Math.PI * .9));   // a metal noseband
       const nb = new TT.Mesh(nos, m.metal); nb.position.set(.3, .52, 0); nb.rotation.set(Math.PI / 2, 0, -.55); nb.scale.set(.9, .72, 1); nb.visible = false; hd.add(nb);
+      if (wd) [1, -1].forEach(s => { [0, 1].forEach(j => { const r = new TT.Mesh(maneGeo, m.resin); r.castShadow = true; r.position.set(.02 + j * .035, 0, s * (.05 + j * .028)); r.scale.set(.93 - j * .07, .97 - j * .05, .8); hd.add(r); }); });   // carved mane locks
     }
-    g.userData.type = tp; g.userData.color = col; g.userData.h = pr.h;
+    g.userData.type = tp; g.userData.color = col; g.userData.h = pr.h; g.userData.set = set;
     if (o && o.reflect) reflect(g);
     return g;
   }
   // mirror image under a piece standing on the glossy board (follows the piece when it moves)
   function reflect(g) {
-    const m = matsOf(g.userData.color), r = new (T().Group)(); r.scale.y = -1; r.userData.reflection = true;
+    const m = matsOf(g.userData.color, g.userData.set), r = new (T().Group)(); r.scale.y = -1; r.userData.reflection = true;
     g.children.slice().forEach(ch => { const c = ch.clone(); c.traverse(o => { if (o.isMesh) { o.material = o.material === m.metal ? m.rMetal : o.material === m.resin ? m.rResin : null; o.castShadow = o.receiveShadow = false; o.renderOrder = -1; if (!o.material) o.visible = false; } }); r.add(c); });
     g.add(r); return g;
   }
@@ -299,12 +338,20 @@
     topMat.map.anisotropy = 8;
     Object.assign(topMat, { stencilWrite: true, stencilRef: 2, stencilFunc: T().AlwaysStencilFunc, stencilZPass: T().ReplaceStencilOp });   // marks where reflections may show
     const side = new TT.MeshPhysicalMaterial({ map: sideTex(), roughness: .16, clearcoat: 1, clearcoatRoughness: .04 });
+    const topMaps = { lux: boardTop('lux') };
     const bottom = new TT.MeshStandardMaterial({ color: new TT.Color(0x23201c).convertSRGBToLinear(), roughness: .9 });
     const block = new TT.Mesh(RB(OW, THICK, OW, .09, 3), [side, side, topMat, bottom, side, side]);
     block.position.y = THICK / 2; block.castShadow = block.receiveShadow = true; block.renderOrder = -2; g.add(block);   // drawn first: the reflections test against it
     // the game's board skins tint the lacquer a little
     const tinted = [topMat, side], base0 = tinted.map(m => m.color.clone());
     const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460 };
+    let curSet = 'lux';
+    g.userData.setSet = name => {
+      if (!SETS[name] || name === curSet) return; curSet = name;
+      if (!topMaps[name]) { topMaps[name] = boardTop(name); topMaps[name].anisotropy = 8; }
+      topMat.map = topMaps[name]; side.map = sideTex(name); bottom.color.set(SETS[name].side).convertSRGBToLinear();
+      topMat.needsUpdate = side.needsUpdate = true;
+    };
     g.userData.setTone = name => { const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => m.color.copy(base0[i]).multiply(c)); };
     g.userData.S = S; g.userData.top = THICK + .001; g.userData.outer = OW / S;
     return g;
@@ -328,7 +375,7 @@
   /* ---------- 3/4 renders of each piece for the DOM (board, captured pieces, promotion, dragging) ----------
      sprite = 1 square wide × 1.6 tall; the centre of the piece's base sits 0.5 above the bottom edge */
   const SPR_H = 1.6, ELEV = 50 * Math.PI / 180;
-  let imgCache = null;
+  const imgCache = {};
   function studio(R) {
     const TT = T(), env = new TT.Scene();
     const sky = new TT.Mesh(new TT.SphereGeometry(20, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
@@ -340,9 +387,9 @@
     });
     const pm = new TT.PMREMGenerator(R), tex = pm.fromScene(env, .02).texture; pm.dispose(); return tex;
   }
-  function images(px = 256) {
-    if (imgCache) return imgCache;
-    return (imgCache = new Promise(res => setTimeout(res, 0)).then(() => {
+  function images(px = 256, set = 'lux') {
+    if (imgCache[set]) return imgCache[set];
+    return (imgCache[set] = new Promise(res => setTimeout(res, 0)).then(() => {
       const TT = T(), W = px, H = Math.round(px * SPR_H);
       const R = new TT.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       R.setSize(W, H, false); R.setPixelRatio(1); R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = 1.0;
@@ -356,7 +403,7 @@
       cam.position.set(0, Math.sin(ELEV) * 10, Math.cos(ELEV) * 10); cam.lookAt(0, 0, 0);
       const out = {};
       for (const col of ['w', 'b']) for (const tp of 'KQRBNP') {
-        const p = piece(tp, col);
+        const p = piece(tp, col, { set });
         if (tp === 'N') p.rotation.y = col === 'w' ? Math.PI * 1.1 : -Math.PI * .1;   // white looks left, black right (3/4)
         scene.add(p); R.render(scene, cam); out[col + tp] = R.domElement.toDataURL('image/png'); scene.remove(p);
       }
