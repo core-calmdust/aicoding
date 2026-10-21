@@ -2630,4 +2630,14 @@ add('pt', {"sp.rank.note": "O ranking diário vai por pontuação (bônus de com
 add('de', {"sp.rank.note": "Die Tagesrangliste geht nach Punkten (inkl. Combo-Bonus); bei Gleichstand gewinnt, wer früher fertig war.", "sp.daily.note": "Spiel um die höchste Punktzahl. Erreichst du das Ziel, gibt's eine Medaille: 30 s = Bronze, 45 s = Silber, 60 s = Gold. Bis zu {n} Ranglistenversuche pro Tag — der beste zählt.", "sp.dx.mine": "Du bist auf Platz {n} ({c})"});
 add('hi', {"sp.rank.note": "डेली रैंक स्कोर से तय होती है (कॉम्बो बोनस समेत); बराबरी पर जो जल्दी खत्म करे वह ऊपर।", "sp.daily.note": "सबसे ज़्यादा स्कोर के लिए खेलो। लक्ष्य पूरा करो तो मेडल: 30 सेकंड = कांस्य, 45 सेकंड = रजत, 60 सेकंड = स्वर्ण। रैंकिंग के लिए रोज़ {n} कोशिशें — सबसे अच्छी गिनी जाती है।", "sp.dx.mine": "आप #{n} पर हो ({c})"});
 add('ar', {"sp.rank.note": "الترتيب اليومي حسب النقاط (مع مكافأة الكومبو)، وعند التعادل يفوز من أنهى أسرع.", "sp.daily.note": "العب لأعلى نقاط. بلوغ الهدف يمنحك ميدالية: 30 ث = برونزية، 45 ث = فضية، 60 ث = ذهبية. حتى {n} محاولات للترتيب يوميًا، وتُحتسب أفضلها.", "sp.dx.mine": "أنت رقم {n} ({c})"});
+add('ja', {"sp.partial": "とちゅうボーナス +{n} pt（最後の問題で正しく置いた {k} マス分）"});
+add('en', {"sp.partial": "Progress bonus +{n} pt ({k} correct cells in the last puzzle)"});
+add('zh', {"sp.partial": "进度奖励 +{n} pt（最后一题中正确填入的{k}格）"});
+add('ko', {"sp.partial": "진행 보너스 +{n} pt (마지막 문제에서 맞게 놓은 {k}칸)"});
+add('es', {"sp.partial": "Bonus de avance +{n} pt ({k} casillas correctas en el último sudoku)"});
+add('fr', {"sp.partial": "Bonus de progression +{n} pt ({k} cases justes dans la dernière grille)"});
+add('pt', {"sp.partial": "Bônus de progresso +{n} pt ({k} casas certas no último sudoku)"});
+add('de', {"sp.partial": "Fortschrittsbonus +{n} pt ({k} richtige Felder im letzten Rätsel)"});
+add('hi', {"sp.partial": "प्रगति बोनस +{n} pt (आख़िरी पहेली में {k} सही खाने)"});
+add('ar', {"sp.partial": "مكافأة التقدّم +{n} نقطة ({k} خانات صحيحة في اللغز الأخير)"});
 })(window.I18N = window.I18N || {});

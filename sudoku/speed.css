@@ -611,3 +611,6 @@ body.scompact .skey .kd{top:4px;inset-inline-start:5px;font-size:11px;padding:2p
 
 /* phones: the すうどく daily tab skips the 今日のすぴーど数独 card (too much at once; it stays on PC) */
 @media (max-width:860px){.hpanel[data-m=su] #spdToday{display:none}}
+
+/* daily result: partial-progress bonus */
+.spart{margin:6px auto 0;width:fit-content;font-weight:800;font-size:13.5px;color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--surface));border-radius:99px;padding:4px 14px}

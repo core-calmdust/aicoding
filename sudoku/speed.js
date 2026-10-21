@@ -1103,6 +1103,12 @@ function finish(win, quitted, silent) {
   R.done = true; stopGims(); hideBan(); hideFlick(); R.state = 'end';
   $('#sSel').classList.remove('on');
   const s = S(); let earned = 0, stars = 0, newBest = false, medal = false;
+  // daily, time up: numbers already placed in the unfinished puzzle earn part of its points (half, in proportion)
+  R.partial = 0;
+  if (R.mode === 'd' && !quitted && R.P && !R.grid.every(Boolean)) {
+    const emp = R.P.p.filter(v => !v).length, got = R.user.filter(Boolean).length;
+    if (emp && got) { R.partial = Math.max(1, Math.round(puzPts(R.P.lv, R.P.g, R.combo) * got / emp * .5)); R.pts += R.partial; R.partCells = got; }
+  }
   if (R.mode === 'd') {
     if (R.ranked) {
       const day = s.d[R.date] = s.d[R.date] || {}, r = day[R.d] = day[R.d] || { a: 1 };
@@ -1158,6 +1164,7 @@ function showResult(o) {
     h += o.medal || (g.ranked && r.m) && g.solved >= g.goal ? C.medal(DT[g.d], 'rm') : `<div class="sresbig">${WATCH(dsec(g.d, g.date), '#9a8fb8')}</div>`;
     h += `<h3>${esc(o.medal ? t('sp.res.medal') : g.solved >= g.goal ? t('sp.res.goal') : t('sp.res.d', { n: g.solved }))}</h3><div class="rs">${esc(C.fmtDate(g.date, { month: 'long', day: 'numeric' }))} · ${esc(t('sp.dn', { s: dsec(g.d, g.date) }))}${g.ranked ? '' : ' · ' + esc(t('sp.practice'))}</div>`;
     h += `<div class="rgrid"><div><small>${esc(t('sp.solved'))}</small><b>${g.solved}</b>${o.newBest ? `<span class="best">${esc(t('res.best'))}</span>` : ''}</div><div><small>${esc(t('res.mist'))}</small><b>${g.mist}</b></div><div><small>${esc(t('sp.maxcombo'))}</small><b>${g.maxCombo}</b></div></div>`;
+    if (g.partial) h += `<p class="spart">${esc(t('sp.partial', { n: g.partial, k: g.partCells }))}</p>`;
     if (!g.ranked) h += `<p class="note" style="text-align:center">${esc(t('sp.practice.d'))}</p>`;
   } else {
     const st = g.st;

@@ -6,6 +6,8 @@ const CFG = window.FIREBASE_CONFIG || null;
 const MOCK = new URLSearchParams(location.search).has('mock');
 const FB_VER = '10.12.2';
 let db = null, uid = null, ready = null;
+// never hang forever: a stalled connection / auth check turns into an error the pages can show (and retry)
+const within = (pr, ms, what) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout: ' + what)), ms))]);
 
 const loadScript = src => { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); })); };
 
@@ -14,19 +16,19 @@ function firebaseDB() {
   return {
     set: (p, v) => f.ref(p).set(v),
     update: (p, v) => f.ref(p).update(v),
-    get: async p => (await f.ref(p).get()).val(),
+    get: async p => (await within(f.ref(p).get(), 12000, 'get')).val(),
     top: async (p, key, n, asc) => {
       const q = asc ? f.ref(p).orderByChild(key).limitToFirst(n) : f.ref(p).orderByChild(key).limitToLast(n);
-      const snap = await q.get(); const out = [];
+      const snap = await within(q.get(), 12000, 'top'); const out = [];
       snap.forEach(c => { out.push(Object.assign({ uid: c.key }, c.val())); });
       return out;
     },
     // number of entries strictly better than v
     better: async (p, key, v, asc) => {
       const q = asc ? f.ref(p).orderByChild(key).endBefore(v) : f.ref(p).orderByChild(key).startAfter(v);
-      const snap = await q.get(); return snap.numChildren();
+      const snap = await within(q.get(), 12000, 'better'); return snap.numChildren();
     },
-    count: async p => (await f.ref(p).get()).numChildren(),
+    count: async p => (await within(f.ref(p).get(), 12000, 'count')).numChildren(),
   };
 }
 function mockDB() {
@@ -76,9 +78,10 @@ async function init() {
       if (window.OnlineSec) await OnlineSec.appCheck(firebase.app(), window.FIREBASE_APPCHECK_SITE_KEY, FB_VER);   // App Check (null key: skipped)
       const auth = firebase.auth();
       // keep an existing session (Google or anonymous); only create an anonymous one if none
-      const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
-      try { const rr = await auth.getRedirectResult(); if (rr && rr.user) { uid = rr.user.uid; } } catch (e) {}
-      const u = auth.currentUser || cur || (await auth.signInAnonymously()).user;
+      const cur = await within(new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }), 8000, 'auth').catch(() => auth.currentUser);
+      // getRedirectResult can stall on some mobile browsers — don't let it block the rankings
+      try { const rr = await within(auth.getRedirectResult(), 3000, 'redirect'); if (rr && rr.user) { uid = rr.user.uid; } } catch (e) {}
+      const u = auth.currentUser || cur || (await within(auth.signInAnonymously(), 10000, 'signin')).user;
       uid = u.uid; db = firebaseDB();
     }
     return uid;
