@@ -265,9 +265,15 @@ function create(o) {
     const pr = document.createElement('div'); pr.className = 'rt-text';
     pr.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;left:0;top:0;width:${w}px;height:auto;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none`;
     main.appendChild(pr); let mx = 0;
-    for (const P of pages) { if (!P.setup || P.finish) continue; try { pr.innerHTML = `<h2 class="rt-title">${val(P.title)}</h2><div class="rt-body">${val(P.body) || ''}</div>` + (P.html ? `<div class="rt-html">${val(P.html)}</div>` : ''); mx = Math.max(mx, pr.scrollHeight); } catch (e) {} }
+    for (const P of pages) {
+      if (!P.setup || P.finish) continue;
+      // P.measure: other texts the page may show in its body (e.g. after a tap) — room is kept for them too
+      for (const bd of [val(P.body) || ''].concat(P.measure ? val(P.measure) || [] : [])) {
+        try { pr.innerHTML = `<h2 class="rt-title">${val(P.title)}</h2><div class="rt-body">${bd}</div>` + (P.html ? `<div class="rt-html">${val(P.html)}</div>` : ''); mx = Math.max(mx, pr.scrollHeight); } catch (e) {}
+      }
+    }
     pr.remove();
-    return (tnCache[key] = Math.ceil(mx) + 2);
+    return (tnCache[key] = Math.ceil(mx) + 4);
   }
   function layout() {
     const m = mount(), rt = m && m.querySelector('.rt'), main = rt && rt.querySelector('.rt-main');
@@ -398,9 +404,9 @@ function box(main, aspect, need) {
   // (out to the dialog's edges: --rt-bx is how far the board reaches past the text column on each side)
   let bx = 0;
   if (!pc && !isRow && ar >= 1.2) {
-    const dlg = main.closest('.modal') || main.parentElement, mr = main.getBoundingClientRect(), dr = dlg.getBoundingClientRect();
-    bx = Math.max(0, Math.min(24, Math.floor(Math.min(mr.left - dr.left, dr.right - mr.right) - 6)));
-    const fh = H - th - Math.min(tmin, 84) - 2 * gap; [bw, bh] = fit(W + 2 * bx, Math.max(bh, fh));
+    const dlg = main.closest('.modal') || main.parentElement;   // widths only (positions move while a page slides)
+    bx = Math.max(0, Math.min(24, Math.floor((dlg.clientWidth - main.clientWidth) / 2 - 6)));
+    const fh = H - th - tcol - 2 * gap; [bw, bh] = fit(W + 2 * bx, Math.max(bh, fh));   // still leaves room for the page text
   }
   const cap = pc ? 640 : 560; if (Math.max(bw, bh) > cap) { const k = cap / Math.max(bw, bh); bw *= k; bh *= k; }
   bw = Math.floor(bw); bh = Math.floor(bh);

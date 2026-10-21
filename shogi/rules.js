@@ -101,6 +101,7 @@ const CSS = `
 .rt-pcs button.cur{background:rgba(201,169,97,.2);box-shadow:0 0 0 2px rgba(201,169,97,.7)}
 .rt-pinfo{font-size:13.5px;line-height:1.65;color:var(--muted);max-width:440px;text-align:left}
 .rt-pinfo b{color:var(--accent)}
+.rt-pname{font-size:14.5px;font-weight:700;color:var(--accent);line-height:1.3;margin:-4px 0 -2px;text-align:center}
 .rt-pinfo h4{margin:0 0 2px;font-size:14.5px;color:var(--text)}
 html[lang=ar] .rt-pinfo{direction:rtl;text-align:right}
 .rt-wins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin:6px 0 12px}
@@ -238,11 +239,16 @@ const PAGES = [
       const seen = pcSeen = new Set(); let cur = -1;
       const draw = () => {
         if (!api.alive()) return;
-        const cw = cwFit(5, 5, 0, 290, api.board), Wd = (host() && host().clientWidth) || 320, sc = Math.max(22, Math.min(40, Math.floor((Wd - 8) / 8 - 18)));
-        const P0 = cur >= 0 ? PIECES[cur] : null;
+        const P0 = cur >= 0 ? PIECES[cur] : null, pc1 = !wide();
+        // phones: the 8 pieces in one row as wide as the page (the board box is narrower), the piece's move in the page text
+        // (inside the board box it pushed the picker out of view)
+        const mn = host() && host().querySelector('.rt-main'), mw = pc1 && mn ? mn.clientWidth - 4 : 0;
+        const Wd = (host() && host().clientWidth) || 320, sc = pc1 && mw ? Math.max(22, Math.min(40, Math.floor(((mw - 7 * 5) / 8 - 10) / .9))) : Math.max(22, Math.min(40, Math.floor((Wd - 8) / 8 - 18)));
+        const cw = cwFit(5, 5, 0, pc1 ? Math.round(sc * .99 + 52) : 290, api.board);
         const bd = P0 ? board(moves(P0[0], 5), cw) : board({ c: 5, r: 5, p: [] }, cw);
-        const info = P0 ? `<div class="rt-pinfo"><h4>${t('ru.' + P0[1] + '.t')}</h4>${t('ru.' + P0[1] + '.b')}</div>` : '';
-        api.board.innerHTML = `<div class="rt-wrap"><div class="rt-pcs" style="--cw:${sc}px">${PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px;display:block">${pc(tp, 0)}</span></button>`).join('')}</div>${bd}${info}</div>`;
+        // phones: only the piece's name under the picker (the board shows how it moves; the full text is on PC and in the lessons)
+        const info = !P0 ? (pc1 ? '<div class="rt-pname">&nbsp;</div>' : '') : pc1 ? `<div class="rt-pname">${t('ru.' + P0[1] + '.t')}</div>` : `<div class="rt-pinfo"><h4>${t('ru.' + P0[1] + '.t')}</h4>${t('ru.' + P0[1] + '.b')}</div>`;
+        api.board.innerHTML = `<div class="rt-wrap"><div class="rt-pcs" style="--cw:${sc}px${mw ? `;width:${mw}px;flex:none;flex-wrap:nowrap;gap:5px` : ''}">${PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px;display:block">${pc(tp, 0)}</span></button>`).join('')}</div>${pc1 ? info + bd : bd + info}</div>`;
         if (overflowFix(api.board)) draw();
       };
       api.board.onclick = e => {
@@ -315,6 +321,7 @@ function ensure() {
     lessons: () => { lsTab = 'lesson'; openLessons(); },
     sound: k => { if (k === 'ok') playChime(true); },
     pages: PAGES,
+    aspect: () => wide() ? 1 : 1.3,   // phones: the board window + hand is wider than tall, so use the full width (bigger squares)
   });
   return tour;
 }
