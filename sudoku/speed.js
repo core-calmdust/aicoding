@@ -14,10 +14,11 @@ const DT = { 30: 1, 60: 2, 90: 3 };                    // medal tier (bronze / s
 const catLen = ci => (DATA ? DATA.cats[ci].st.length : 0);
 const nAll = () => (DATA ? DATA.cats.reduce((a, c) => a + c.st.length, 0) : 0);
 const cname = ci => t(DATA.cats[ci].nk), cdesc = ci => t(DATA.cats[ci].dk);
-const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f', '#f08a24'];
-const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df'], ['#fff0dc', '#ffdfb8']];
-const TORDER = [0, 1, 2, 5, 3, 4];                      // tier 5 (中級＋) was added later and sits between 中級 and 上級
-const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8', bomb: '#ff8a3d', swap: '#e05aa8', cloud: '#7fa8d8', calc: '#e8a21c', card: '#26a69a', mole: '#a9785a', upside: '#7b61ff' };
+const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f', '#f08a24', '#13a39b'];
+const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df'], ['#fff0dc', '#ffdfb8'], ['#d9f6f2', '#bdebe5']];
+const TORDER = [0, 1, 2, 5, 6, 3, 4];                   // tiers 5 (中級＋) and 6 (チャレンジ) were added later and sit between 中級 and 上級
+const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8', bomb: '#ff8a3d', swap: '#e05aa8', cloud: '#7fa8d8', calc: '#e8a21c', card: '#26a69a', mole: '#a9785a', upside: '#7b61ff',
+  balloon: '#ff6f91', dark: '#4b4789', sway: '#2fa6c7', paint: '#c35bd6', order: '#3f8ee0', noline: '#8f99ad', star: '#f2b81c', rev: '#e0566b', dice: '#5c6bc0', sleepy: '#8e7cc3' };
 const GORDER = SE.GIMMICKS;
 const BONUS = 5000, PENALTY = 2000, FREEZE = 380, LIMIT_TRIES = 3;
 const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -40,6 +41,19 @@ GICON.calc = '<svg viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="20" 
 GICON.card = '<svg viewBox="0 0 32 32"><g transform="rotate(-12 11 17)"><rect x="4" y="7" width="14" height="20" rx="3" fill="#26a69a"/><rect x="6.2" y="9.2" width="9.6" height="15.6" rx="2" fill="none" stroke="#9fe3da" stroke-width="1.2"/><path d="M11 12.5l3 4.5-3 4.5-3-4.5z" fill="#9fe3da"/></g><g transform="rotate(10 21 15)"><rect x="14" y="5" width="14" height="20" rx="3" fill="#fff" stroke="#26a69a" stroke-width="1.7"/><text x="21" y="19.6" font-family="Fredoka,Arial" font-weight="700" font-size="11" fill="#1d7f75" text-anchor="middle">3</text></g></svg>';
 GICON.mole = '<svg viewBox="0 0 32 32"><ellipse cx="16" cy="26.5" rx="12.5" ry="3.6" fill="#6a4a32"/><path d="M7 26.5V17a9 9 0 0 1 18 0v9.5z" fill="#a9785a"/><ellipse cx="16" cy="21.5" rx="5.2" ry="3.7" fill="#efcfb2"/><circle cx="12.4" cy="15.6" r="1.4" fill="#2e1e14"/><circle cx="19.6" cy="15.6" r="1.4" fill="#2e1e14"/><ellipse cx="16" cy="19.2" rx="2.1" ry="1.5" fill="#ff8fa8"/><path d="M14.6 22.6q1.4 1 2.8 0" stroke="#2e1e14" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M5 27.5h4M23 27.5h4" stroke="#4a3222" stroke-width="1.3" stroke-linecap="round"/></svg>';
 GICON.upside = '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12.5" fill="#ece7ff"/><text x="16" y="21.5" font-family="Fredoka,Arial" font-weight="700" font-size="15" fill="#7b61ff" text-anchor="middle" transform="rotate(180 16 16.5)">2</text><path d="M26 9.5a12 12 0 0 0-6-5" fill="none" stroke="#7b61ff" stroke-width="2" stroke-linecap="round"/><path d="M26.8 5.8l-.6 3.9-3.8-.9" fill="none" stroke="#7b61ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+GICON.balloon = '<svg viewBox="0 0 32 32"><path d="M16 25.4q-2.2 2.6 0 5.2" stroke="#a08a96" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="13" rx="9" ry="10.5" fill="#ff6f91"/><path d="M14.4 23.2h3.2L16 25.6z" fill="#e0507a"/><ellipse cx="12.4" cy="9" rx="2.2" ry="3.3" fill="#fff" opacity=".55" transform="rotate(-20 12.4 9)"/></svg>';
+GICON.dark = '<svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="7" fill="#2b2850"/><path d="M16 6.5a6.8 6.8 0 0 0-4.2 12.1V21h8.4v-2.4A6.8 6.8 0 0 0 16 6.5z" fill="#6b6894"/><rect x="12" y="22" width="8" height="2.6" rx="1.2" fill="#9d9ac0"/><rect x="13" y="25.3" width="6" height="2.2" rx="1.1" fill="#9d9ac0"/><path d="M13.4 12.6l2 2M15.4 12.6l-2 2M16.6 12.6l2 2M18.6 12.6l-2 2" stroke="#2b2850" stroke-width="1.2" stroke-linecap="round"/><circle cx="25" cy="7.5" r="1" fill="#fff"/><circle cx="6.5" cy="11" r=".8" fill="#fff"/></svg>';
+GICON.sway = '<svg viewBox="0 0 32 32"><g transform="rotate(-9 16 17)"><path d="M6 17.5h20l-3.2 6H9.2z" fill="#2fa6c7"/><path d="M16 5v12.5" stroke="#7a5a3a" stroke-width="1.6"/><path d="M16.8 6l6.6 9.6h-6.6z" fill="#fff" stroke="#2fa6c7" stroke-width="1.2" stroke-linejoin="round"/></g><path d="M3 27q3.25-3 6.5 0t6.5 0 6.5 0 6.5 0" fill="none" stroke="#7fd0e8" stroke-width="2.2" stroke-linecap="round"/></svg>';
+GICON.paint = '<svg viewBox="0 0 32 32"><path d="M16 5c2 0 2.4 3 4 3.5s3.5-2 5-.5-1 3.5 0 5 3.8 1 3.8 3-3 2-3.5 3.6 1.5 4-.5 5.2-3.6-1.2-5-.4-1.6 4.2-3.8 4.2-2.3-3.4-3.8-4.2-3.6 1.5-5 .3 1-3.6-.4-5S3 18 3 16s3.4-1.6 3.8-3.1-1.8-3.6-.4-5 3.4 1 5 .5S14 5 16 5z" fill="#c35bd6"/><circle cx="27" cy="27.5" r="2" fill="#c35bd6"/><circle cx="4.5" cy="26.5" r="1.4" fill="#c35bd6"/><ellipse cx="12.5" cy="12.5" rx="2.6" ry="1.4" fill="#fff" opacity=".45" transform="rotate(-25 12.5 12.5)"/></svg>';
+GICON.order = '<svg viewBox="0 0 32 32"><path d="M10 20.5l3.4-5M18.6 15.5l3.4 5" stroke="#9cc4ee" stroke-width="2.2" stroke-linecap="round"/><circle cx="7.5" cy="24" r="5.2" fill="#3f8ee0"/><circle cx="16" cy="11" r="5.2" fill="#5fa3ea"/><circle cx="24.5" cy="24" r="5.2" fill="#86bbf2"/><g font-family="Fredoka,Arial" font-weight="700" font-size="7.5" fill="#fff" text-anchor="middle"><text x="7.5" y="26.7">1</text><text x="16" y="13.7">2</text><text x="24.5" y="26.7">3</text></g></svg>';
+GICON.noline = '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="5" fill="#fff" stroke="#8f99ad" stroke-width="1.6"/><path d="M16 4v24M4 16h24" stroke="#c3c9d6" stroke-width="2" stroke-dasharray="2.4 3"/><path d="M8.5 23.5l15-15" stroke="#e0566b" stroke-width="2.6" stroke-linecap="round"/></svg>';
+GICON.star = '<svg viewBox="0 0 32 32"><path d="M3.5 27l10-8.5" stroke="#ffe08a" stroke-width="3.4" stroke-linecap="round" opacity=".75"/><path d="M8 30l6.5-5.5" stroke="#ffd36b" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M21 3.5l2.5 5.1 5.6.7-4.1 3.8 1.1 5.5-5.1-2.8-4.9 2.8 1-5.5-4.1-3.8 5.6-.7z" fill="#f7c531" stroke="#e09b12" stroke-width="1" stroke-linejoin="round"/></svg>';
+GICON.rev = '<svg viewBox="0 0 32 32"><rect x="1.5" y="8.5" width="11" height="15" rx="3" fill="#ffe0e5"/><rect x="19.5" y="8.5" width="11" height="15" rx="3" fill="#ffe0e5"/><g font-family="Fredoka,Arial" font-weight="700" font-size="10" fill="#c0405a" text-anchor="middle"><text x="7" y="19.8">1</text><text x="25" y="19.8">4</text></g><path d="M13.6 13h4.8M16.6 11.2l1.8 1.8-1.8 1.8M18.4 19h-4.8M15.4 17.2 13.6 19l1.8 1.8" stroke="#e0566b" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+GICON.dice = '<svg viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="22" rx="5.5" fill="#fff" stroke="#5c6bc0" stroke-width="1.8"/><g fill="#5c6bc0"><circle cx="11" cy="11" r="2.2"/><circle cx="21" cy="11" r="2.2"/><circle cx="11" cy="21" r="2.2"/><circle cx="21" cy="21" r="2.2"/></g></svg>';
+GICON.sleepy = '<svg viewBox="0 0 32 32"><path d="M19 6a11 11 0 1 0 8.5 17.5A9.5 9.5 0 0 1 19 6z" fill="#b3a5e0"/><path d="M8.5 18.5q1.6 1.6 3.2 0M14.5 18.5q1.6 1.6 3.2 0" stroke="#4a3d7a" stroke-width="1.3" fill="none" stroke-linecap="round"/><g font-family="Fredoka,Arial" font-weight="700" fill="#8e7cc3"><text x="22" y="10" font-size="6.5">z</text><text x="26" y="6" font-size="5">z</text></g></svg>';
+const BALLOON = c => `<svg viewBox="0 0 40 56"><path d="M20 41q-3 5 0 10t-1 5" stroke="#a08a96" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="19" rx="15" ry="18" fill="${c}"/><path d="M17.6 36h4.8L20 40z" fill="${c}"/><ellipse cx="13.5" cy="11.5" rx="3.6" ry="5.6" fill="#fff" opacity=".5" transform="rotate(-20 13.5 11.5)"/><circle cx="15" cy="20" r="1.5" fill="#43385a"/><circle cx="25" cy="20" r="1.5" fill="#43385a"/><path d="M18 23.5q2 1.6 4 0" stroke="#43385a" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`;
+const DICE = d => `<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="9" fill="#fff" stroke="#5c6bc0" stroke-width="2.4"/><g fill="#3d4a9e">${({ 1: [[20, 20]], 2: [[12, 12], [28, 28]], 3: [[11, 11], [20, 20], [29, 29]], 4: [[12, 12], [28, 12], [12, 28], [28, 28]] })[d].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${d === 1 ? 5 : 4}"/>`).join('')}</g></svg>`;
+const PCOL = ['#c35bd6', '#ff8a3d', '#3fb4e8', '#5cc46a'];
 const CLOUD = '<svg viewBox="0 0 100 62"><g fill="#fff"><circle cx="30" cy="36" r="20"/><circle cx="52" cy="26" r="24"/><circle cx="74" cy="36" r="19"/><rect x="12" y="34" width="78" height="24" rx="12"/></g><circle cx="44" cy="39" r="2.4" fill="#43385a"/><circle cx="60" cy="39" r="2.4" fill="#43385a"/><path d="M49 44q3 2.4 6 0" stroke="#43385a" stroke-width="1.8" fill="none" stroke-linecap="round"/><ellipse cx="37" cy="45" rx="3.5" ry="2" fill="#ffc2d4"/><ellipse cx="67" cy="45" rx="3.5" ry="2" fill="#ffc2d4"/></svg>';
 const gic = (id, cls = 'gi') => `<i class="${cls}" style="--gc:${GCOL[id]}">${GICON[id]}</i>`;
 // digits as fruits: strawberry, lemon, grapes, melon
@@ -70,7 +84,7 @@ const rkey = (ci, pi) => DATA.cats[ci].nk + '.' + pi;   // stable across layout 
 const rec = (ci, pi) => S().cc[rkey(ci, pi)];
 const catClears = ci => { let n = 0; for (let p = 0; p < catLen(ci); p++) if (rec(ci, p)) n++; return n; };
 const catStars = ci => { let n = 0; for (let p = 0; p < catLen(ci); p++) { const r = rec(ci, p); if (r) n += r.s; } return n; };
-const tierCats = tr => DATA ? DATA.cats.map((c, i) => (c.tier === tr ? i : -1)).filter(i => i >= 0) : [];
+const tierCats = tr => DATA ? DATA.cats.map((c, i) => (c.tier === tr ? i : -1)).filter(i => i >= 0).sort((a, b) => (DATA.cats[a].o ?? a) - (DATA.cats[b].o ?? b)) : [];
 const tierClears = tr => tierCats(tr).reduce((a, ci) => a + catClears(ci), 0);
 const tierLen = tr => tierCats(tr).reduce((a, ci) => a + catLen(ci), 0);
 const TIER_NEED = 40;
@@ -247,7 +261,7 @@ function colCard() {
     h += `<div class="stier" id="stier${tr}" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
     for (const ci of tierCats(tr)) {
       const n = catClears(ci), c = DATA.cats[ci];
-      h += `<button class="tcard scard ${n === catLen(ci) ? 'full' : ''} ${open ? '' : 'locked'}" data-sc="${ci}">${catPic(ci)}<span class="crown">${C.CROWN}</span><div class="tx"><span class="nm">${esc(cname(ci))}</span><span class="lv">${c.kind === 'g' ? `<span class="gchip" style="--gc:${GCOL[c.g]}">${esc(t('g.' + c.g))}</span>` : `<span class="gchip std">${esc(t('sp.kind.' + (c.kind === 'combo' ? 'mix' : c.kind)))}</span>`}</span><span class="pg"><span class="bar"><i style="width:${n / catLen(ci) * 100}%"></i></span>${n}/${catLen(ci)}</span></div></button>`;
+      h += `<button class="tcard scard ${n === catLen(ci) ? 'full' : ''} ${open ? '' : 'locked'}" data-sc="${ci}">${catPic(ci)}<span class="crown">${C.CROWN}</span><div class="tx"><span class="nm">${esc(cname(ci))}</span><span class="lv">${c.kind === 'g' ? `<span class="gchip" style="--gc:${GCOL[c.g]}">${esc(t('g.' + c.g))}</span>` : `<span class="gchip std">${esc(c.kind === 'std' ? t('sp.std.' + [0, 0, 1, 1, 2][Math.min(4, tierCats(0).indexOf(ci))]) : t('sp.kind.' + (c.kind === 'combo' ? 'mix' : c.kind)))}</span>`}</span><span class="pg"><span class="bar"><i style="width:${n / catLen(ci) * 100}%"></i></span>${n}/${catLen(ci)}</span></div></button>`;
     }
     h += '</div></div>';
   }
@@ -322,8 +336,8 @@ function buildScreen() {
     <div class="sside"><div class="skeys" id="sKeys"></div><div class="sinfo" id="sInfo"></div><div class="help shelp" id="sKb"></div></div>`;
   $('#main').appendChild(sec);
   const b = $('#sBoard');
-  for (let i = 0; i < 16; i++) { const el = document.createElement('div'); el.className = 'scell'; el.dataset.i = i; el.innerHTML = '<span class="v"></span><span class="ice"></span><span class="ml">' + GICON.mole + '</span>'; cells[i] = el; b.appendChild(el); }
-  b.insertAdjacentHTML('beforeend', `<div class="sspot" id="sSpot"></div><svg class="sgrid" viewBox="0 0 400 400" preserveAspectRatio="none"><path d="M100 0V400M300 0V400M0 100H400M0 300H400" class="thin"/><path d="M200 0V400M0 200H400" class="thick"/></svg><div class="ssel" id="sSel"></div><div class="sbugs" id="sBugs"></div><div class="sclouds" id="sClouds"></div>`);
+  for (let i = 0; i < 16; i++) { const el = document.createElement('div'); el.className = 'scell'; el.dataset.i = i; el.innerHTML = '<span class="v"></span><span class="ice"></span><span class="ml">' + GICON.mole + '</span><span class="pt"></span><span class="ot"></span>'; cells[i] = el; b.appendChild(el); }
+  b.insertAdjacentHTML('beforeend', `<div class="sspot" id="sSpot"></div><svg class="sgrid" viewBox="0 0 400 400" preserveAspectRatio="none"><path d="M100 0V400M300 0V400M0 100H400M0 300H400" class="thin"/><path d="M200 0V400M0 200H400" class="thick"/></svg><div class="ssel" id="sSel"></div><div class="sbugs" id="sBugs"></div><div class="sclouds" id="sClouds"></div><div class="sfloat" id="sFloat"></div><div class="sdark" id="sDark"></div><div class="ssleep" id="sSleep"><b>Zzz</b></div>`);
   b.addEventListener('pointerdown', boardDown); b.addEventListener('pointermove', boardMove); b.addEventListener('pointerup', boardUp); b.addEventListener('pointercancel', () => hideFlick());
   b.addEventListener('contextmenu', e => e.preventDefault());
   $('#sBack').onclick = () => quit();
@@ -337,15 +351,17 @@ const keyOrder = () => (R && R.keyOrder) || [1, 2, 3, 4];
 function drawKeys(animate) {
   const host = $('#sKeys'), order = keyOrder();
   const before = {}; if (animate) host.querySelectorAll('.skey').forEach(k => before[k.dataset.d] = k.getBoundingClientRect());
-  host.innerHTML = order.map(d => `<button class="key skey ${R && R.fruit ? 'fk' : ''}" data-d="${d}">${R && R.fruit ? `<em class="kd">${d}</em>` : ''}<span class="n">${glyph(d)}</span></button>`).join('');
+  const pic = R && (R.fruit || R.dice >= 2), small = R && (R.fruit || R.dice === 2);
+  host.innerHTML = order.map(d => `<button class="key skey ${pic ? 'fk' : ''}" data-d="${d}">${small ? `<em class="kd">${d}</em>` : ''}<span class="n">${glyph(d)}</span></button>`).join('');
+  host.classList.toggle('rev', !!(R && R.revMap));
   host.querySelectorAll('.skey').forEach(k => {
     k.addEventListener('pointerdown', e => { e.preventDefault(); keyPress(+k.dataset.d); });
     k.addEventListener('click', e => { if (e.detail === 0) keyPress(+k.dataset.d); });
     if (animate && before[k.dataset.d]) { const a = before[k.dataset.d], b = k.getBoundingClientRect(); k.style.transform = `translate(${a.left - b.left}px,${a.top - b.top}px)`; k.style.transition = 'none'; requestAnimationFrame(() => { k.style.transition = 'transform .32s cubic-bezier(.3,1.3,.5,1)'; k.style.transform = ''; }); }
   });
 }
-// how a digit is shown: plain number, or a fruit
-const glyph = d => (R && R.fruit ? `<span class="fr">${FRUIT[R.fruit[d - 1]]}</span>` : d);
+// how a digit is shown: plain number, a fruit, or a die (dice ★1: only the given numbers)
+const glyph = (d, given) => (R && R.fruit ? `<span class="fr">${FRUIT[R.fruit[d - 1]]}</span>` : R && R.dice && (R.dice >= 2 || given) ? `<span class="fr dc">${DICE(d)}</span>` : d);
 function stageSpec(ci, pi) { return DATA.cats[ci].st[pi]; }
 function title() {
   if (!R) return '';
@@ -356,6 +372,7 @@ function openGame(o) {
   if (!DATA) return;
   buildScreen();
   stopLoop();
+  stopGims();
   C.show('spd');
   const s = S();
   R = Object.assign({ k: 0, solved: 0, mist: 0, combo: 0, maxCombo: 0, pts: 0, elapsed: 0, freeze: 0, state: 'brief', paused: false, done: false, sel: -1, gims: [], tlast: 0, ptimes: [] }, o);
@@ -390,13 +407,16 @@ function loadPuzzle(k, quiet) {
   R.k = k; R.P = P; R.grid = P.p.slice(); R.user = new Array(16).fill(0);
   R.ice = new Array(16).fill(0); R.mz = new Array(16).fill(0); R.ghostAt = new Array(16).fill(0);
   R.mole = new Array(16).fill(0); R.card = new Array(16).fill(0); R.peek = new Array(16).fill(0); R.calc = new Array(16).fill(''); R.rot = new Array(16).fill('');
+  R.paint = new Array(16).fill(0); R.pcol = new Array(16).fill(0); R.ord = new Array(16).fill(0); R.ordNext = 1;
+  R.dice = 0; R.revMap = null; R.nohl = false; R.lastPut = R.elapsed;
   R.fruit = null; R.keyOrder = [1, 2, 3, 4];
   R.sel = R.grid.indexOf(0);
   R.pStart = R.elapsed;
   R.gspec = SE.parseG(P.g);
   const b = $('#sBoard');
   b.className = 'sboard'; b.style.transform = '';
-  $('#sBugs').innerHTML = ''; $('#sClouds').innerHTML = '';
+  $('#sBugs').innerHTML = ''; $('#sClouds').innerHTML = ''; $('#sFloat').innerHTML = '';
+  $('#sDark').classList.remove('on'); const zz = $('#sSleep'); zz.style.opacity = 0; zz.classList.remove('z'); $('#sKeys').classList.remove('rev');
   R.rng = SE.mulberry32(SE.hashStr('g:' + (R.date || R.ci + '.' + R.pi) + ':' + k));
   R.gims = R.gspec.map(g => ({ id: g.id, s: g.s, st: {} }));
   if (!quiet) startGims();
@@ -539,7 +559,7 @@ const GIM = {
       C.SFX.note();
       setTimeout(() => {
         if (!R || R.done) return;
-        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt, R.mole, R.card, R.peek, R.calc, R.rot];
+        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt, R.mole, R.card, R.peek, R.calc, R.rot, R.paint, R.pcol, R.ord];
         for (let j = 0; j < 4; j++) { const x = idx(a, j), y = idx(b, j); for (const A of arrs) [A[x], A[y]] = [A[y], A[x]]; }
         if (R.sel >= 0) { const r = R.sel >> 2, c = R.sel & 3, k = col ? c : r; if (k === a || k === b) R.sel = col ? r * 4 + (k === a ? b : a) : (k === a ? b : a) * 4 + c; }
         for (let j = 0; j < 4; j++) for (const i of [idx(a, j), idx(b, j)]) { cells[i].classList.remove('swp'); cells[i].style.transform = ''; const gh = R.ghostAt[i] === -1; cells[i].classList.toggle('gh', gh && !!R.user[i]); }
@@ -616,6 +636,122 @@ const GIM = {
     tick(g, dt) { if (g.s < 3) return; g.st.next -= dt; if (g.st.next <= 0) { g.st.next = 2600; turn(g, false); C.SFX.note(); } },
     stop() { R.rot.fill(''); },
   },
+  balloon: {   // balloons drift up over the board — tap to pop
+    start(g) { g.st.next = 500; g.st.b = []; },
+    tick(g, dt) {
+      g.st.next -= dt;
+      if (g.st.next <= 0 && g.st.b.length < [2, 3, 4][g.s - 1]) {
+        g.st.next = [1800, 1350, 1000][g.s - 1];
+        const el = document.createElement('div'); el.className = 'sballoon';
+        el.innerHTML = BALLOON(['#ff6f91', '#ffb340', '#5ec2ff', '#8bd56a', '#b48cff'][(R.rng() * 5) | 0]);
+        const b = { el, x: R.rng() * 76, y: 104, v: 140 / [5600, 4600, 3800][g.s - 1] * (.8 + R.rng() * .4), ph: R.rng() * 6 };
+        el.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); if (!R || R.state !== 'play' || b.pop) return; b.pop = 1; el.classList.add('pop'); C.SFX.pop(); C.vib(8); setTimeout(() => el.remove(), 260); });
+        $('#sFloat').appendChild(el); g.st.b.push(b);
+      }
+      g.st.b = g.st.b.filter(b => {
+        if (b.pop) return false;
+        b.y -= b.v * dt; b.ph += dt / 700;
+        if (b.y < -40) { b.el.remove(); return false; }
+        b.el.style.left = (b.x + Math.sin(b.ph) * 2.5).toFixed(2) + '%'; b.el.style.top = b.y.toFixed(2) + '%';
+        return true;
+      });
+    },
+    stop(g) { (g.st.b || []).forEach(b => b.el.remove()); },
+  },
+  dark: {   // a power cut every few seconds
+    start(g) { g.st.wait = [3200, 2700, 2200][g.s - 1]; g.st.on = 0; },
+    tick(g, dt) {
+      const d = $('#sDark');
+      if (g.st.on > 0) { g.st.on -= dt; if (g.st.on <= 0) { d.classList.remove('on'); g.st.wait = [4300, 3500, 2800][g.s - 1] * (.8 + R.rng() * .4); } return; }
+      g.st.wait -= dt;
+      if (g.st.wait <= 0) { g.st.on = [1000, 1300, 1600][g.s - 1]; d.classList.remove('on'); void d.offsetWidth; d.classList.add('on'); C.SFX.note(); }
+    },
+    stop() { $('#sDark').classList.remove('on'); },
+  },
+  sway: {   // the board rocks like a boat
+    start(g) { g.st.ph = 0; },
+    tick(g, dt) {
+      g.st.ph += dt / [3400, 2700, 2100][g.s - 1] * 6.283;
+      const a = Math.sin(g.st.ph) * [5, 8, 11][g.s - 1], x = Math.sin(g.st.ph * .5 + 1) * [2, 3, 4][g.s - 1], y = Math.cos(g.st.ph) * [1, 1.5, 2][g.s - 1];
+      $('#sBoard').style.transform = `translate(${x.toFixed(2)}%,${y.toFixed(2)}%) rotate(${a.toFixed(2)}deg)`;
+    },
+    stop() { $('#sBoard').style.transform = ''; },
+  },
+  paint: {   // paint splats hide cells — tap to wipe (they also dry up after a while)
+    start(g) { g.st.next = 800; },
+    tick(g, dt) {
+      let ch = false;
+      for (let i = 0; i < 16; i++) if (R.paint[i] > 0) { R.paint[i] -= dt; if (R.paint[i] <= 0) { R.paint[i] = 0; ch = true; } }
+      g.st.next -= dt;
+      if (g.st.next <= 0) {
+        g.st.next = [2500, 1900, 1400][g.s - 1];
+        const free = [...Array(16).keys()].filter(i => !R.paint[i] && !R.mole[i] && !R.ice[i]);
+        if (R.paint.filter(Boolean).length < [2, 3, 4][g.s - 1] && free.length) { const i = free[(R.rng() * free.length) | 0]; R.paint[i] = [7000, 8000, 9000][g.s - 1]; R.pcol[i] = (R.rng() * 4) | 0; C.SFX.erase(); ch = true; }
+      }
+      if (ch) render();
+    },
+    stop() { R.paint.fill(0); },
+  },
+  order: {   // numbered cells must be filled 1, 2, 3 … (the rest are free)
+    start(g) {
+      const empties = SE.shuffle([...Array(16).keys()].filter(i => !R.grid[i]), R.rng);
+      empties.slice(0, Math.min(empties.length, [3, 5, 8][g.s - 1])).forEach((i, k) => (R.ord[i] = k + 1));
+      R.ordNext = 1; render();
+    },
+    tick() {}, stop() { R.ord.fill(0); },
+  },
+  noline: {   // the box lines (★2: all the lines) disappear; ★3: no same-number highlight either
+    start(g) { $('#sBoard').classList.add(g.s >= 2 ? 'nol2' : 'nol1'); R.nohl = g.s >= 3; render(); },
+    tick() {}, stop() { $('#sBoard').classList.remove('nol1', 'nol2'); },
+  },
+  star: {   // shooting stars — catch one for +2 seconds
+    start(g) { g.st.next = 1600; g.st.s = []; },
+    tick(g, dt) {
+      g.st.next -= dt;
+      if (g.st.next <= 0) {
+        g.st.next = [4600, 4000, 3400][g.s - 1] * (.8 + R.rng() * .4);
+        const el = document.createElement('div'); el.className = 'sstar'; el.innerHTML = GICON.star;
+        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2000, 1650, 1350][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
+        if (!ltr) el.classList.add('rtl');
+        el.addEventListener('pointerdown', e => {
+          e.stopPropagation(); e.preventDefault(); if (!R || R.state !== 'play' || st.got) return;
+          st.got = 1; el.classList.add('got'); setTimeout(() => el.remove(), 380);
+          R.left += 2000; const bn = $('#sBon'); bn.textContent = '+2'; bn.classList.remove('on'); void bn.offsetWidth; bn.classList.add('on');
+          C.SFX.unit(); C.vib(10); renderClock();
+        });
+        $('#sFloat').appendChild(el); g.st.s.push(st);
+      }
+      g.st.s = g.st.s.filter(st => {
+        if (st.got) return false;
+        st.t += dt / st.dur; if (st.t >= 1) { st.el.remove(); return false; }
+        st.el.style.left = (st.x0 + (st.x1 - st.x0) * st.t).toFixed(2) + '%'; st.el.style.top = (st.y0 + (st.y1 - st.y0) * st.t).toFixed(2) + '%';
+        return true;
+      });
+    },
+    stop(g) { (g.st.s || []).forEach(x => x.el.remove()); },
+  },
+  rev: {   // the keys type the opposite number (★1: only 1↔4; ★3: it switches on and off)
+    start(g) { g.st.map = g.s >= 2 ? [0, 4, 3, 2, 1] : [0, 4, 2, 3, 1]; R.revMap = g.st.map; g.st.next = 5200; drawKeys(false); },
+    tick(g, dt) {
+      if (g.s < 3) return;
+      g.st.next -= dt;
+      if (g.st.next <= 0) { g.st.next = R.revMap ? 4200 : 5200; R.revMap = R.revMap ? null : g.st.map; drawKeys(false); nudgeKeys(); }
+    },
+    stop() { R.revMap = null; $('#sKeys').classList.remove('rev'); },
+  },
+  dice: {   // numbers as dice (★1 the given numbers, ★2 all + keys, ★3 keys without the small digits)
+    start(g) { R.dice = g.s; drawKeys(false); render(); },
+    tick() {}, stop() { R.dice = 0; },
+  },
+  sleepy: {   // the board dozes off unless you keep writing
+    start() { R.lastPut = R.elapsed; },
+    tick(g) {
+      const idle = R.elapsed - R.lastPut - [2800, 2200, 1700][g.s - 1];
+      const lv = Math.max(0, Math.min(1, idle / 2000)) * [.72, .84, .93][g.s - 1];
+      const el = $('#sSleep'); el.style.opacity = lv.toFixed(3); el.classList.toggle('z', lv > .25);
+    },
+    stop() { const el = $('#sSleep'); el.style.opacity = 0; el.classList.remove('z'); },
+  },
   ice: {
     start(g) {
       const empties = [...Array(16).keys()].filter(i => !R.grid[i]);
@@ -683,12 +819,16 @@ function render() {
     el.classList.toggle('fdown', R.card[i] === 1);
     el.classList.toggle('fpeek', R.card[i] === 2);
     const cx = given && R.calc[i] && !R.fruit ? R.calc[i] : '';
-    const want = v ? String(v) + (R.fruit ? 'f' + R.fruit.join('') : '') + cx : '';
-    if (el.dataset.v !== want) { el.dataset.v = want; el.firstChild.innerHTML = v ? (cx ? `<span class="cx${cx.length > 3 ? ' l' : ''}">${cx}</span>` : glyph(v)) : ''; }
+    const want = v ? String(v) + (R.fruit ? 'f' + R.fruit.join('') : '') + (R.dice ? 'd' + R.dice : '') + cx : '';
+    if (el.dataset.v !== want) { el.dataset.v = want; el.firstChild.innerHTML = v ? (cx ? `<span class="cx${cx.length > 3 ? ' l' : ''}">${cx}</span>` : glyph(v, given)) : ''; }
+    el.classList.toggle('paint', R.paint[i] > 0); if (R.paint[i] > 0) el.style.setProperty('--pc', PCOL[R.pcol[i]]);
+    const ot = R.ord[i] && !v ? String(R.ord[i]) : '', otEl = el.querySelector('.ot');
+    if (otEl.textContent !== ot) otEl.textContent = ot;
+    el.classList.toggle('ordn', !!ot && R.ord[i] === R.ordNext); el.classList.toggle('ordw', !!ot && R.ord[i] > R.ordNext);
     const tf = v && !cx ? R.rot[i] : '';
     if (el.firstChild.style.transform !== tf) el.firstChild.style.transform = tf;
     const hidden = k => R.card[k] === 1 || !!R.calc[k] && !!R.P.p[k];   // don't give away face-down cards or sums by highlighting
-    el.classList.toggle('hl', !!v && R.sel >= 0 && R.grid[R.sel] === v && i !== R.sel && !hidden(i) && !hidden(R.sel));
+    el.classList.toggle('hl', !R.nohl && !!v && R.sel >= 0 && R.grid[R.sel] === v && i !== R.sel && !hidden(i) && !hidden(R.sel));
   }
   const sl = $('#sSel');
   if (R.sel >= 0 && R.state === 'play') { sl.style.left = ((R.sel & 3) * 25) + '%'; sl.style.top = ((R.sel >> 2) * 25) + '%'; sl.classList.add('on'); } else sl.classList.remove('on');
@@ -705,13 +845,14 @@ function renderClock() {
 }
 
 /* ---------------- input ---------------- */
-function nextEmpty(from) { for (let k = 1; k <= 16; k++) { const i = (from + k) % 16; if (!R.grid[i]) return i; } return -1; }
+const canWrite = i => !R.ord[i] || R.ord[i] <= R.ordNext;     // じゅんばん: numbered cells only in order
+function nextEmpty(from) { for (let k = 1; k <= 16; k++) { const i = (from + k) % 16; if (!R.grid[i] && canWrite(i)) return i; } for (let k = 1; k <= 16; k++) { const i = (from + k) % 16; if (!R.grid[i]) return i; } return -1; }
 function select(i) { if (!R || R.state !== 'play') return; R.sel = i; render(); }
 function keyPress(d) {
   if (!R || R.state !== 'play' || R.paused) return;
   const k = $(`#sKeys .skey[data-d="${d}"]`); if (k) { k.classList.add('press'); setTimeout(() => k.classList.remove('press'), 110); }
   if (R.sel < 0 || R.grid[R.sel]) { const n = nextEmpty(R.sel < 0 ? -1 : R.sel); if (n < 0) return; R.sel = n; }
-  put(R.sel, d);
+  put(R.sel, R.revMap ? R.revMap[d] : d);
 }
 function bonk(i) {
   if (!R.mole[i]) return false;
@@ -737,8 +878,10 @@ function hitIce(i) {
 function put(i, d) {
   if (R.grid[i] || R.P.p[i]) return;
   if (hitIce(i) || bonk(i)) return;
+  if (!canWrite(i)) { const el = cells[i]; el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope'); C.SFX.err(); C.vib(15); return; }
   if (d === R.P.s[i]) {
-    R.grid[i] = d; R.user[i] = d; R.ghostAt[i] = R.elapsed || 1;
+    R.grid[i] = d; R.user[i] = d; R.ghostAt[i] = R.elapsed || 1; R.lastPut = R.elapsed;
+    if (R.ord[i] && R.ord[i] === R.ordNext) { R.ordNext++; const mx = Math.max(...R.ord); while (R.ordNext <= mx && R.grid[R.ord.indexOf(R.ordNext)]) R.ordNext++; }
     const el = cells[i]; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     C.SFX.place(); C.vib(6);
     if (R.grid.every(Boolean)) { solved(); return; }
@@ -765,6 +908,7 @@ function boardDown(e) {
   if (R.ice[i] > 0) { R.sel = i; hitIce(i); return; }
   if (R.mole[i]) { R.sel = i; bonk(i); return; }
   if (R.card[i] === 1) { R.sel = i; peekCard(i); return; }
+  if (R.paint[i]) { R.paint[i] = 0; R.sel = i; const el = cells[i]; el.classList.remove('wipe'); void el.offsetWidth; el.classList.add('wipe'); C.SFX.erase(); C.vib(8); render(); return; }
   R.sel = i; render(); C.SFX.tap();
   fl = { i, x: e.clientX, y: e.clientY, shown: false, d: 0, id: e.pointerId, can: !R.grid[i] && C.DB.set.flick && !keysOnly() };
   try { $('#sBoard').setPointerCapture(e.pointerId); } catch (_) {}
@@ -788,7 +932,7 @@ function boardMove(e) {
 function boardUp(e) {
   if (!fl || e.pointerId !== fl.id) return;
   const f = fl; hideFlick();
-  if (f.shown && f.d) put(f.i, f.d);
+  if (f.shown && f.d) put(f.i, R.revMap ? R.revMap[f.d] : f.d);
 }
 
 /* ---------------- flow ---------------- */
@@ -1159,7 +1303,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=5';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=6';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },

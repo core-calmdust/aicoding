@@ -65,8 +65,8 @@ body.night .spic{filter:brightness(.82) saturate(.9)}
 .scatbox .sgl{grid-column:1/-1;margin-top:0}
 @container (min-width:600px){.scatbox .sgl{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}}
 /* tier jump bar (sticks under the tabs) */
-.stjump{position:sticky;top:calc(var(--hh) + env(safe-area-inset-top) + var(--htH,0px) + 8px);z-index:9;display:flex;gap:6px;margin:12px -6px 0;padding:6px;border-radius:16px;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(90,60,120,.08)}
-.stjump button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-radius:12px;background:color-mix(in srgb,var(--tc) 14%,var(--surface2));color:var(--tc);line-height:1.2}
+.stjump{overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(var(--hh) + env(safe-area-inset-top) + var(--htH,0px) + 8px);z-index:9;display:flex;gap:6px;margin:12px -6px 0;padding:6px;border-radius:16px;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(90,60,120,.08)}
+.stjump button{flex:1 0 auto;min-width:50px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-radius:12px;background:color-mix(in srgb,var(--tc) 14%,var(--surface2));color:var(--tc);line-height:1.2}
 .stjump button b{font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .stjump button small{font-size:10.5px;font-weight:700;color:var(--ink2)}
 .stjump button.done small{color:var(--tc)}
@@ -215,6 +215,51 @@ body.night .scell.fpeek .v{background:#1f4a46}
 .scell.bonk .ml{display:block;animation:mdown .45s ease-in forwards}
 @keyframes mup{from{transform:translateY(55%) scaleY(.3);opacity:0}}
 @keyframes mdown{20%{transform:scale(1.15,.75)}100%{transform:translateY(55%) scaleY(.2);opacity:0}}
+/* balloons & shooting stars (tappable) */
+.sfloat{position:absolute;inset:0;z-index:4;pointer-events:none}
+.sballoon{position:absolute;width:24%;pointer-events:auto;cursor:pointer;touch-action:none;filter:drop-shadow(0 4px 5px rgba(60,40,90,.22))}
+.sballoon svg{width:100%;height:auto;display:block}
+.sballoon.pop{animation:bpop .26s ease-out forwards}
+@keyframes bpop{40%{transform:scale(1.25)}100%{transform:scale(1.6);opacity:0}}
+.sstar{position:absolute;width:22%;aspect-ratio:1;pointer-events:auto;cursor:pointer;touch-action:none;filter:drop-shadow(0 0 8px rgba(255,214,90,.9))}
+.sstar svg{width:100%;height:100%;display:block;animation:stw .5s linear infinite alternate}
+.sstar.rtl svg{transform:scaleX(-1)}
+.sstar.got{animation:sgot .38s ease-out forwards}
+@keyframes stw{to{filter:brightness(1.25)}}
+@keyframes sgot{to{transform:scale(1.8) rotate(40deg);opacity:0}}
+/* power cut */
+.sdark{position:absolute;inset:0;z-index:4;pointer-events:none;background:#14112b;opacity:0;transition:opacity .25s}
+.sdark.on{opacity:.97;animation:flick .5s steps(1)}
+@keyframes flick{0%{opacity:.9}15%{opacity:.2}30%{opacity:.95}45%{opacity:.4}60%{opacity:.97}}
+/* sleepy */
+.ssleep{position:absolute;inset:0;z-index:4;pointer-events:none;background:#2a2450;opacity:0;transition:opacity .25s;display:grid;place-items:start end;padding:6%}
+.ssleep b{font-family:var(--num);font-size:calc(var(--sbs) * .1);color:#cfc3ff;opacity:0;transition:opacity .3s}
+.ssleep.z b{opacity:1;animation:zzz 1.6s ease-in-out infinite}
+@keyframes zzz{50%{transform:translateY(-12%) rotate(-6deg)}}
+/* paint */
+.scell .pt{display:none;position:absolute;inset:3%;z-index:3;pointer-events:none;background:var(--pc,#c35bd6);border-radius:46% 54% 42% 58% / 55% 40% 60% 45%;box-shadow:calc(var(--sbs) * .03) calc(var(--sbs) * -.02) 0 calc(var(--sbs) * -.025) var(--pc,#c35bd6),calc(var(--sbs) * -.03) calc(var(--sbs) * .025) 0 calc(var(--sbs) * -.028) var(--pc,#c35bd6);animation:splat .25s cubic-bezier(.3,1.6,.5,1)}
+.scell.paint .pt{display:block}
+.scell.wipe .pt{display:block;animation:pwipe .3s ease-in forwards}
+@keyframes splat{from{transform:scale(.2)}}
+@keyframes pwipe{to{transform:scale(.3) rotate(30deg);opacity:0}}
+/* order */
+.scell .ot{position:absolute;top:7%;inset-inline-start:7%;z-index:2;font-family:var(--num);font-weight:700;font-size:calc(var(--sbs) * .05);min-width:1.6em;height:1.6em;border-radius:99px;display:grid;place-items:center;pointer-events:none}
+.scell .ot:empty{display:none}
+.scell.ordw .ot{background:#dfe9f7;color:#5a7bb0}
+.scell.ordw{background:color-mix(in srgb,#3f8ee0 6%,var(--cellbg))}
+.scell.ordn .ot{background:#3f8ee0;color:#fff;animation:onext 1s ease-in-out infinite alternate}
+@keyframes onext{to{transform:scale(1.15)}}
+.scell.nope{animation:shake .3s}
+/* no lines */
+.sboard.nol1 .sgrid .thick{opacity:0}
+.sboard.nol2 .sgrid path{opacity:0}
+/* reversed keys */
+.skeys.rev .skey{background:color-mix(in srgb,#e0566b 12%,var(--surface))}
+.skeys.rev .skey::after{content:"⇄";position:absolute;top:4px;inset-inline-end:6px;font-size:12px;font-weight:900;color:#e0566b}
+.skey{position:relative}
+/* dice */
+.scell .dc,.skey .dc,.sflick .dc{display:block}
+.scell .fr.dc{width:calc(var(--sbs) * .15);height:calc(var(--sbs) * .15)}
 /* overlay: briefing / countdown / pause */
 .scov{position:absolute;inset:-6px;z-index:7;display:none;align-items:center;justify-content:center;padding:10px}
 .scov.on{display:flex}
