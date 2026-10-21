@@ -766,7 +766,10 @@
     if (inset > .5) cam.setViewOffset(cw, free, 0, 0, cw, ch); else cam.clearViewOffset();
     cam.updateProjectionMatrix();
   }
-  function setInset(px) { insetTo = Math.max(0, px || 0); }
+  // glide: a timed ease-in-out of the camera (and the framing above the info card) instead of the soft exponential follow
+  let glide = null;
+  const ioC = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  function setInset(px) { insetTo = Math.max(0, px || 0); if (glide) glide.i1 = insetTo; }
   function resize() {
     if (!R) return;
     const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
@@ -853,7 +856,8 @@
   let revealFn = null;
   function reveal() { const f = revealFn; revealFn = null; if (f) f(); }
   let lampShade = null;
-  function play(on) { if (lampShade) lampShade.visible = !on;   /* playing: the camera looks down past the ceiling lamp — hide its shade */
+  function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
+    if (o && o.glide) glide = { t0: performance.now(), dur: o.glide, k0: camK, i0: inset, i1: insetTo };
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
@@ -885,8 +889,15 @@
     if (now - lastT < (blurred ? 100 : FRAME_MS) - 2) return;
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
-    camK += (camTo - camK) * ez(.07); zoom += (zoomTo - zoom) * ez(.18);
-    if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same glide as the camera, frame-rate independent else if (inset !== insetTo) { inset = insetTo; frame(); }
+    if (glide) {
+      const k = Math.min(1, (now - glide.t0) / glide.dur), e = ioC(k);
+      camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; frame();
+      if (k >= 1) { camK = camTo; inset = glide.i1; glide = null; }
+    } else camK += (camTo - camK) * ez(.07);
+    zoom += (zoomTo - zoom) * ez(.18);
+    if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
+    else if (inset !== insetTo) { inset = insetTo; frame(); }
+    if (lampShade) lampShade.visible = mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
     if (mode === 'play') {   // in a game the board stays still, squared to the player

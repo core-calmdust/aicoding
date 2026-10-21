@@ -473,7 +473,9 @@
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
-      Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false);
+      // back from a game on the table: the board is simply there (no drop-in bounce) and the camera glides back to the showcase view
+      if (back) { Table3D.show(id, null, { still: true }); Table3D.play(false, { glide: 750 }); }
+      else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
