@@ -1156,6 +1156,8 @@ function renderInfo() {
   const fair = over ? `seed ${match.seed}` : `SHA-256 ${commitHash}…`;
   $('#infoLine').textContent = `${mt} · ${mode} · ${match.cube ? t('info.cube') : t('info.nocube')} · ${fair}`;
   $('#infoLine').title = over ? t('fair.seed') : t('fair.commit');
+  $('#plInfo').textContent = $('#infoLine').textContent; $('#plInfo').title = $('#infoLine').title;
+  $('#plMeta').textContent = match.len ? `${t('info.match', { n: match.len })} ${gm.start[0]}–${gm.start[1]}` : '';
   hbInfo(st, g, ev);
 }
 // PC header bar: whose turn + dice, pip counts, win chance (only when the evaluation display is on), match score
@@ -1436,11 +1438,15 @@ let PCW = false;
 function pcFit() {
   const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
   const side = document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
-  const reserve = side ? 0 : (rvOpen && rv) ? Math.round(Math.min(380, Math.max(240, hgt * 0.34))) : 0;
+  // the info row below the board has a fixed height (cards scroll inside); board + row fit in the window
+  const rowH = Math.round(Math.min(340, Math.max(236, hgt * 0.3)));
+  document.documentElement.style.setProperty('--rowh', rowH + 'px');
+  const reserve = side ? 0 : rowH + 18;
   const availW = w - 48 - (side ? Math.min(440, Math.max(360, w * 0.3)) + 24 : 0);
-  const availH = hgt - hb - 14 - 14 - reserve;
+  const availH = hgt - hb - 14 - 16 - reserve;
+  const hMin = side ? 8.4 : 7.2;
   let u = Math.min(availW / 15.85, 100), h = availH / u;
-  if (h < 8.4) { u = availH / 8.4; h = 8.4; }
+  if (h < hMin) { u = availH / hMin; h = hMin; }
   return { h: Math.min(12, h), u: Math.max(30, u) };
 }
 function updateGeom() {
@@ -1759,19 +1765,18 @@ function renderReview() {
     }
     const list = [];
     for (const [key, it] of rv.items) { const [g, i] = key.split(':').map(Number); if (it.q) { st[it.side][it.q]++; list.push({ g, i, it, ...it }); } }
-    const row = s => { const x = st[s], pr = x.n ? (x.loss / x.n * 500) : 0; return `<span class="who"><span class="pdisc p${s}"></span>${sideLabel(s)}</span><span><b>${x.n ? Math.round(x.best / x.n * 100) : 0}%</b></span><span><b>${pr.toFixed(1)}</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${x.bad}</span><span class="dubious">${t('q.dubious')} ${x.dubious}</span></span>`; };
+    // compact overview: one stats row per side, then at most 3 key moments (the biggest losses) with jump buttons
+    const chip = s => { const x = st[s], pr = x.n ? (x.loss / x.n * 500) : 0; return `<span class="rv-st"><span class="pdisc p${s}"></span><b>${esc(sideLabel(s))}</b> ${t('rv.acc')} <b>${x.n ? Math.round(x.best / x.n * 100) : 0}%</b> · PR <b title="${t('rv.prTitle')}">${pr.toFixed(1)}</b> · <span class="bad">${t('q.bad')} ${x.bad}</span> <span class="dubious">${t('q.dubious')} ${x.dubious}</span></span>`; };
     const cr = rvCurrent();
     html = cr ? rvCommentHTML(cr.g, cr.i) : `<div class="rv-cur empty">${t('rv.pick')}</div>`;
-    html += `<div class="rv-sum">${''}<span></span><span class="h">${t('rv.acc')}</span><span class="h" title="${t('rv.prTitle')}">PR</span><span></span>${row(0)}${row(1)}</div>`;
-    const shown = list.length > 12 ? list.slice().sort((a, b) => b.loss - a.loss).slice(0, 12).sort((a, b) => a.g - b.g || a.i - b.i) : list;
+    html += `<div class="rv-sum2">${chip(0)}${chip(1)}</div>`;
+    const key = list.slice().sort((a, b) => b.loss - a.loss).slice(0, 3).sort((a, b) => a.g - b.g || a.i - b.i);
     const curKey = cr ? cr.g + ':' + cr.i : '';
-    if (shown.length) html += `<div class="rv-list">${shown.map(x => {
+    if (key.length) html += `<div class="rv-kh">${t('rv.key')}</div><div class="rv-list">${key.map(x => {
       const lbl = x.kind === 'play' ? `${match.games[x.g].actions[x.i].d.join('')} ${BG.notation(x.played)} → ${BG.notation(x.best)}` : `${t('rv.cube.' + x.sub)} → ${x.bestTxt}`;
-      const why = rvShortWhy(x.it);
-      return `<button data-g="${x.g}" data-i="${x.i}" class="${curKey === x.g + ':' + x.i ? 'cur' : ''}"><span class="row"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${match.games.length > 1 ? 'G' + (x.g + 1) + ' ' : ''}<i class="p${x.side}"></i>${lbl}</span><span class="ls">−${x.loss.toFixed(3)}</span></span>${why ? `<span class="why">${why}</span>` : ''}</button>`;
+      return `<button data-g="${x.g}" data-i="${x.i}" class="${curKey === x.g + ':' + x.i ? 'cur' : ''}"><span class="row"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${match.games.length > 1 ? 'G' + (x.g + 1) + ' ' : ''}<i class="p${x.side}"></i>${lbl}</span><span class="ls">−${x.loss.toFixed(3)}</span></span></button>`;
     }).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
-    html += `<div class="rv-note" style="color:var(--dim);font-size:11.5px">${t('rv.note')}</div>`;
   }
   $('#rvBody').innerHTML = html;
 }
@@ -2251,7 +2256,7 @@ function bgThumb(pos, side, dice, opts) {
   if (dice && dice.length) { const y = G.MID, x = G.RX + 3, dark = sd === 1; s = s.replace(/<\/svg>$/, rlDie(x - .6, y, dice[0], dark, 1.05) + rlDie(x + .6, y, dice[1], dark, 1.05) + '</svg>'); }
   return s;
 }
-const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const plainText = html => String(html || '').replace(/\{fig\d\}/g, ' ').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
 // lessons in two courses: moving and fighting, then the race home and the cube
 // lessons in categories (tabs): from lessons.json (v2: cats), with the old two courses as the fallback
@@ -2280,6 +2285,7 @@ async function openLessons(course) {
       `<span class="lx-top"><span class="lx-no">STEP ${i + 1}</span>${st}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
       `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass ? 'ok' : '')}</span></button>`;
   }).join('');
+  $('#lsDesc').textContent = t('ls.desc2', { n: LESSONS.steps.length });
   $('#lessonList').innerHTML = `<div class="lx">` +
     `<div class="lx-tabs${courses.length > 3 ? ' many' : ''}">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k]}</span><span class="nm">${t('lx.c.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
     `<div class="lx-banner"><span class="ic">${LS_ICON[c]}</span><span class="tx"><b>${t('lx.c.' + c)}</b><small>${t('lx.c.' + c + '.d')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
@@ -2296,7 +2302,7 @@ function openIntro(i) {
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   let dia = '';
   if (s.diagram) { const p = decPos(s.diagram.pos); const ar = s.diagram.play ? [{ side: s.diagram.side || 0, moves: decMoves(p, s.diagram.side || 0, s.diagram.play).moves }] : []; dia = miniBoardSVG(p, s.diagram.side || 0, { marks: s.diagram.marks || [], arrows: ar }); }
-  let body = t('ls.' + s.id + '.intro', { c: pname(0), o: pname(1) });
+  let body = t('ls.' + s.id + '.intro', { c: pname(0), o: pname(1), fig0: '{fig0}', fig1: '{fig1}' });
   if (s.figs) body = body.replace(/\{fig(\d)\}/g, (_, i) => s.figs[+i] ? lsFigHTML(s.figs[+i], t('ls.' + s.id + '.cap' + i)) : '');
   else body = dia + body;
   $('#liBody').innerHTML = body;

@@ -698,33 +698,56 @@ html.pcw, html.pcw body{height:auto;overflow-x:hidden;overflow-y:auto}
 html.pcw .app{display:grid;height:auto;min-height:var(--vh);grid-template-columns:minmax(0,1fr);grid-template-areas:"board" "side";gap:18px;padding:14px 24px 40px;align-content:start;justify-content:stretch;align-items:start}
 html.pcw.hb-on:not(.rot) .app{padding-top:14px}
 html.pcw .board-area{grid-area:board;justify-self:center}
-html.pcw .side{grid-area:side;height:auto;max-height:none;justify-self:center;width:min(100%, max(var(--fw), 1180px))}
-html.pcw .side-in{display:grid;height:auto;gap:14px;align-items:start;grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"pl ev kf" "il il il"}
-html.pcw .side-in:has(> .review-card.show), html.pcw .side-in:has(> .hint-card.show){grid-template-columns:minmax(0,.9fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-areas:"pl rv kf" "ev rv kf" "ev hn kf" "il il il";grid-template-rows:auto auto 1fr auto}
-html.pcw .side-in:has(> .hint-card.show):not(:has(> .review-card.show)){grid-template-areas:"pl hn kf" "ev hn kf" "ev hn kf" "il il il"}
-html.pcw .side-in > .brand{display:none}
-html.pcw .players{grid-area:pl}
-html.pcw #evalCard{grid-area:ev;display:flex;flex-direction:column}
-html.pcw #evalCard .graph{height:150px}
-html.pcw .side-in:has(> .review-card.show) #evalCard .graph{height:110px}
-html.pcw .hint-card{grid-area:hn}
-html.pcw .hint-card.show{min-height:0}
-html.pcw .review-card{grid-area:rv}
-html.pcw .review-card.show{flex:none;overflow:visible}
-html.pcw #rvBody, html.pcw #hintBody{overflow:visible}
-html.pcw .kifu-card{grid-area:kf;flex:none;min-height:180px;max-height:min(640px, calc(var(--vh) - 80px))}
-html.pcw .kifu{font-size:14px;gap:4px 8px}
-html.pcw .kifu .gh{font-size:13px}
-html.pcw .info-line{grid-area:il;font-size:12px}
-html.pcw .controls{display:none}
-html.pcw .player .count{font-size:40px;white-space:nowrap}
-html.pcw .player .count small{white-space:nowrap}
-html.pcw .player .row{flex-wrap:wrap}
-html.pcw .side-in:has(> .review-card.show) .player .count, html.pcw .side-in:has(> .hint-card.show) .player .count{font-size:32px}
-html.pcw .player .name{font-size:14px}
-html.pcw .evalrow .label, html.pcw .kifu-head .label{font-size:13.5px}
-html.pcw .evalrow .val{font-size:15px}
+html.pcw .side{grid-area:side;height:auto;max-height:none;justify-self:center;width:max(var(--fw), min(100%, 1000px))}
+/* the info row: three equal-height cards (fixed height --rowh, set with the board fit); content scrolls inside each card */
+html.pcw .side-in{display:grid;height:var(--rowh,300px);gap:16px;align-items:stretch;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1.2fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"pl ev kf"}
+/* reviewing / hint shown: the commentary gets the whole middle column; 形勢 shrinks under the players */
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)){grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"pl rv kf" "ev rv kf"}
+html.pcw .side-in:has(> .hint-card.show):not(:has(> .review-card.show)){grid-template-areas:"pl hn kf" "ev hn kf"}
+html.pcw .side-in:has(> .hint-card.show):has(> .review-card.show){grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"pl rv kf" "ev hn kf"}
+html.pcw .side-in > .brand, html.pcw .controls, html.pcw .info-line, html.pcw .scroll-jump{display:none!important}
+html.pcw body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.players,#evalCard,.kifu-card,.review-card.show,.hint-card.show){min-height:0;margin:0;padding:12px 16px;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+html.pcw body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){display:none}
+html.pcw .card .kifu-head, html.pcw .evalrow{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;height:24px;margin:0 0 10px}
+html.pcw .card .kifu-head .label, html.pcw .evalrow .label{font-size:13.5px;color:var(--muted);letter-spacing:.1em}
 html.pcw .kifu-head button{font-size:12.5px}
+html.pcw .evalrow .val{font-size:15px}
+/* players: title row, the two sides stacked, match info at the bottom */
+html.pcw .players{grid-area:pl;gap:8px}
+html.pcw .players .pl-head{display:flex}
+html.pcw .player{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top row" "st row";align-items:center;column-gap:10px;padding:8px 12px;flex:1 1 0;min-height:0}
+html.pcw .player .top{grid-area:top}.html.pcw .player .row{grid-area:row}
+html.pcw .player .row{grid-area:row;margin:0;flex-direction:column;align-items:flex-end;gap:0}
+html.pcw .player .status{grid-area:st}
+html.pcw .player .count{font-size:clamp(26px, calc(var(--rowh,300px) / 9), 40px);white-space:nowrap;line-height:1}
+html.pcw .player .count small{white-space:nowrap}
+html.pcw .player .name{font-size:14px}
+html.pcw .players .pl-info{display:block;flex:none;font-size:11.5px;color:var(--dim);line-height:1.5;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 形勢: the graph fills the card; compact while the review / hint share the column */
+html.pcw #evalCard{grid-area:ev}
+html.pcw #evalCard .graph{flex:1 1 auto;height:auto;min-height:40px}
+html.pcw #evalCard .navbar{flex:none;margin-top:8px}
+html.pcw .side-in:has(> .review-card.show) #evalCard, html.pcw .side-in:has(> .hint-card.show) #evalCard{padding-bottom:10px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .graph{flex:none;height:34px;min-height:0;margin-top:6px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .evalrow{margin-bottom:6px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .navbar{margin-top:6px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player{padding:4px 10px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .count{font-size:24px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .status, html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .players .pl-info{display:none}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .players{gap:6px;padding:10px 12px;justify-content:center}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .players .pl-head{display:none}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player{flex:none;grid-template-areas:"top row";min-height:0}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .count small{display:none}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .row{flex-direction:row;align-items:baseline;gap:8px}
+html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .evalbar{height:6px}
+html.pcw .hint-card{grid-area:hn}
+html.pcw .hint-card.show{display:flex}
+html.pcw .review-card{grid-area:rv}
+html.pcw .review-card.show{display:flex}
+html.pcw #rvBody, html.pcw #hintBody{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin}
+html.pcw .kifu-card{grid-area:kf}
+html.pcw .kifu{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:14px;gap:4px 8px}
+html.pcw .kifu .gh{font-size:13px}
 /* lessons / puzzles: card on the right of the board, both fully visible */
 html.pcw body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(360px, 440px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
 html.pcw body:is(.in-lesson,.in-puzzle) .side{width:100%}
@@ -775,7 +798,7 @@ html[lang=ar] .rv-cur li{padding-left:0;padding-right:16px}html[lang=ar] .rv-cur
 .ls-fig svg.mini{width:100%;margin:0 auto 6px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .ls-fig figcaption{font-size:13px;line-height:1.6;color:var(--brass);text-align:center;padding:0 6px}
 html[lang=ar] .ls-fig figcaption{direction:rtl}
-.lx-tabs.many{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+.lx-tabs.many{grid-auto-flow:row;grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:560px){.lx-tabs.many{grid-template-columns:repeat(4,1fr)}.lx-tabs.many button .ct{display:none}}
 .ls-why{margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid rgba(201,169,97,.22)}
 .ls-why ul{list-style:none;display:grid;gap:4px}
@@ -801,6 +824,12 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 .skinrow button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .skinrow button:hover{border-color:var(--brass2);color:var(--text)}
 .skinrow button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:var(--panel2)}
+.players .pl-head, .players .pl-info{display:none}
+.rv-sum2{display:grid;gap:4px;margin:10px 0 2px}
+.rv-st{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.rv-st .pdisc{width:12px;height:12px}.rv-st b{color:var(--text)}.rv-st .bad{color:#ff8b7d}.rv-st .dubious{color:#f2c060}
+.rv-kh{margin:10px 0 0;font-size:12px;color:var(--brass);letter-spacing:.08em}
+.rv-kh + .rv-list{margin-top:5px}
 </style>
 </head>
 <body>
@@ -859,6 +888,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 
     <div class="sbox" id="statusBox" role="status" aria-live="polite"></div>
     <div class="card players">
+      <div class="kifu-head pl-head"><span class="label" data-i18n="pl.title"></span><span class="kb" id="plMeta"></span></div>
       <div class="player" id="pl0">
         <div class="top"><span class="pdisc p0"></span><div class="name" id="name0"></div></div>
         <div class="row"><div class="count"><span id="pip0">167</span><small data-i18n="pips"></small></div><div class="score" id="score0"></div></div>
@@ -869,6 +899,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
         <div class="row"><div class="count"><span id="pip1">167</span><small data-i18n="pips"></small></div><div class="score" id="score1"></div></div>
         <div class="status" id="status1"></div>
       </div>
+      <div class="pl-info" id="plInfo"></div>
     </div>
 
     <div class="card" id="evalCard">
@@ -987,7 +1018,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
     <div id="lessonListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
       <h2 data-i18n="ls.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px;line-height:1.7" data-i18n="ls.desc"></p>
+      <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px;line-height:1.7" id="lsDesc"></p>
       <div class="lesson-list" id="lessonList"></div>
       <div class="modal-actions"><button class="mbtn" id="btnLessonClose" data-i18n="close"></button></div>
     </div>
