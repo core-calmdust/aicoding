@@ -2795,7 +2795,11 @@ $('#langSel').onchange = e => {
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
   if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
-  if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
+  if ($('#lessonOverlay').classList.contains('show')) {
+    const tab = ($('#lessonListView .ls-tabs button.sel') || {}).dataset;
+    if (!$('#lessonListView').classList.contains('hidden')) { if (tab && tab.v === 'open') openOpenings(); else openLessons(); }
+    else if (!$('#lessonIntroView').classList.contains('hidden')) { if (openChoiceIdx >= 0) openOpeningChoice(openChoiceIdx); else openIntro(introIdx); }
+  }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
