@@ -91,6 +91,9 @@ const CSS = `
   .rt-msg{font-size:16.5px}
   .rt-again{font-size:14px;padding:7px 14px}
   .rt-nav button,.rt-finish button{font-size:16px;padding:12px 14px}
+  .rt .rt-nav{justify-content:center}
+  .rt .rt-nav button{flex:0 1 220px;min-width:0}
+  .rt .rt-finish button{flex:none;width:220px;max-width:100%}
 }
 .rt-intro{display:grid;gap:12px;text-align:start}
 .rt-intro-hero{display:flex;align-items:center;gap:16px}
