@@ -2004,7 +2004,7 @@ $('#lsList').onclick = () => { if (lesson) openLessons(lsCourse(LESSONS.steps[le
 // The 45 original puzzles keep their level and index (old progress "L-j" becomes "w2:j" / "w3:j" / "w4:j").
 let PUZZLES = null;
 const esc = escHb;
-const puzzlesReady = fetch('puzzles.json?v=20261021c4p').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261021fun').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const PZ_CATS = ['mate', 'theme', 'unique'], PZ_CAT_KEY = STORE + '-pzcat', PZ_LAST = STORE + '-pzlast';
 const PZ_OLD_IDS = ['w2', 'w3', 'w4'];
 function pzStore() {
@@ -2020,6 +2020,26 @@ function pzStore() {
 const starVal = x => x === true ? 3 : (+x || 0);
 const PT = o => (o && (o[LANG] || o.en || o.ja)) || '';
 const pzLv = li => PUZZLES.levels[li];
+// 2026-10-21 fun refresh (tools/fun.js, tools/refresh_fun.js): low-scoring puzzles were replaced; the previous one is in
+// PUZZLES.old["<id>:<j>"]. A player who had already played a slot (a record when this version first loads, or a solve
+// of the old puzzle later, e.g. a daily up to PUZZLES.cut) keeps the old puzzle there; dailies up to the cut stay old.
+const PZ_OLDK = STORE + '-pzold';
+let pzOldSet = null;
+function pzOldKeys() {
+  if (pzOldSet) return pzOldSet;
+  let d = null; try { d = JSON.parse(localStorage.getItem(PZ_OLDK) || 'null'); } catch (e) {}
+  if (!d || !Array.isArray(d.keys)) {
+    const pr = pzStore(); d = { keys: Object.keys((PUZZLES && PUZZLES.old) || {}).filter(k => starVal(pr[k]) > 0) };
+    try { localStorage.setItem(PZ_OLDK, JSON.stringify(d)); } catch (e) {}
+  }
+  return (pzOldSet = new Set(d.keys));
+}
+function pzOldMark(k) { const s = pzOldKeys(); if (s.has(k)) return; s.add(k); try { localStorage.setItem(PZ_OLDK, JSON.stringify({ keys: [...s] })); } catch (e) {} }
+function pzGet(li, j, date) {
+  const lv = pzLv(li), k = lv.id + ':' + j, o = PUZZLES.old && PUZZLES.old[k];
+  if (o && ((date && date <= PUZZLES.cut) || pzOldKeys().has(k))) return o;
+  return lv.puzzles[j];
+}
 function pzRecs(li, pr) { pr = pr || pzStore(); const lv = pzLv(li); return lv.puzzles.map((_, j) => starVal(pr[lv.id + ':' + j])); }
 const pzKind = P => P.k === 'b' ? 'b' : P.k === 's' ? 's' : 'mate';
 const pzTurns = P => P.k === 's' ? P.steps.length : P.k === 'b' ? 1 : P.n;
@@ -2052,7 +2072,7 @@ function pzThumb(P, big) { return thumbOf(miniBoardSVG(moveCells(P.moves))) + `<
 function pzCardHTML(li) {
   const lv = pzLv(li), recs = pzRecs(li), tt = PZBook.totals(recs), full = tt.done === tt.total && tt.total > 0;
   const si = PZBook.stageInfo(recs), medals = si.map(x => x.medal ? PZBook.MEDAL(x.medal) : `<i class="pb-pip${x.done ? ' part' : ''}"></i>`).join('');
-  const P = lv.puzzles[pzShowIdx(li)];
+  const P = pzGet(li, pzShowIdx(li));
   return `<button class="pzx-card${full ? ' full' : ''}" data-i="${li}" style="${pzColor(li)}"><span class="pzx-th"><span class="pzx-bd">${P ? pzThumb(P) : ''}<span class="pzx-ic">${pzIconOf(li)}</span></span></span>` +
     `<span class="pzx-tx"><span class="pzx-top"><b class="pzx-nm">${esc(PT(lv.name))}</b>${pzPips(pzDiffAvg(lv))}</span><span class="pzx-desc">${esc(PT(lv.desc))}</span>` +
     `<span class="pzx-prog"><span class="pb-bar"><i style="width:${tt.total ? tt.done * 100 / tt.total : 0}%"></i></span><span>${tt.done}/${tt.total}</span></span>` +
@@ -2084,7 +2104,7 @@ async function openPuzzles() {
     `<span class="pzx-md" title="${esc(PZBook.t('medal')[2])}">${PZBook.MEDAL(3)}${md[3]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[1])}">${PZBook.MEDAL(2)}${md[2]}</span><span class="pzx-md" title="${esc(PZBook.t('medal')[0])}">${PZBook.MEDAL(1)}${md[1]}</span></span></span>` +
     (cont ? `<button class="pb-cont" data-cont="${cont[0]}:${cont[1]}">${esc(PZBook.t('cont'))} ▶ <b>No.${cont[1] + 1}</b><small>${esc(PT(pzLv(cont[0]).name))}</small></button>` : `<span class="pb-alldone">${esc(PZBook.t('allDone'))}</span>`) + `</div>`;
   if (dl) {
-    const P = pzLv(dl.li).puzzles[dl.j];
+    const P = pzGet(dl.li, dl.j, dl.date);
     h += `<button class="pzx-daily" data-daily="1"><span class="th">${pzThumb(P)}</span><span class="tx"><b>★ ${t('daily.title')}<span>${dl.date.slice(5).replace('-', '/')}</span></b>` +
       `<small>${esc(PT(pzLv(dl.li).name))} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="go${di.today ? ' ok' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>`;
   }
@@ -2104,7 +2124,7 @@ function openPzGrid(li, cur) {
     `<span class="chips"><span class="pzx-chip">${t('pz.cat.' + pzCat(lv))}</span><span class="pzx-chip">${t('pz.count', { n: lv.puzzles.length })}</span>${pzPips(pzDiffAvg(lv))}</span></span>`;
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(li), cur });
   // each tile shows the position (a small board) under its number and stars; the number badge has the colour to move
-  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = lv.puzzles[+el.dataset.j]; if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${thumbOf(miniBoardSVG(moveCells(P.moves)))}</span>`); el.classList.add('hasth'); el.classList.toggle('p2', toMoveOf(P.moves) === P2); });
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = lv.puzzles[+el.dataset.j] && pzGet(li, +el.dataset.j); if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${thumbOf(miniBoardSVG(moveCells(P.moves)))}</span>`); el.classList.add('hasth'); el.classList.toggle('p2', toMoveOf(P.moves) === P2); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
   const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
@@ -2126,7 +2146,7 @@ function startPuzzle(li, j, daily, carry) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0;
-  const P = pzLv(li).puzzles[j], c0 = carry || {};
+  const P = pzGet(li, j, daily), c0 = carry || {};
   puzzle = { li, j, P, kind: pzKind(P), me: toMoveOf(P.moves), n: pzTurns(P), state: 'play', busy: false, used: 0, step: 0, daily: daily || null,
     hinted: !!c0.hinted, failed: !!c0.failed, answered: !!c0.answered, off: null };
   if (!daily) { try { localStorage.setItem(PZ_LAST, String(li)); } catch (e) {} }
@@ -2323,6 +2343,7 @@ function puzzleSolved() {
   PZBook.setLang(LANG);
   const lv = pzLv(Pz.li), key = lv.id + ':' + Pz.j, stars = PZBook.starsFor(Pz), before = pzRecs(Pz.li);
   const pr = pzStore(); pr[key] = Math.max(starVal(pr[key]), stars);
+  if (PUZZLES.old && PUZZLES.old[key] === Pz.P) pzOldMark(key);   // solved the pre-refresh puzzle: keep it for this slot
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
   const after = pzRecs(Pz.li, pr), ev = PZBook.events(before, after, Pz.j);
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || Pz.failed || !!Pz.off);   // solved after leaving the solution counts like a hinted solve
