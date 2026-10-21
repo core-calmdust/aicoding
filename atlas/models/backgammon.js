@@ -536,7 +536,7 @@
 
   /* ---------- table framing: on a portrait screen the view is a landscape one turned 90° (clockwise, like the
      game's own landscape mode: hold the phone sideways, your side at the bottom) so the long case fills the screen ---------- */
-  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing), band (px of the HUD at the bottom of a landscape view), onChange(mode) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
+  // o = { SC (board scale), Y (board top, board units), g (geom), rotate (default true), legacy (the tour's framing), side (px of the HUD column at the right of a landscape view), onChange(mode) } → { rot, toBoard(pick) → {x,z} board units, toCur(x, y, z) for T3.project, stop() }
   function frameOn(board, T3, o) {
     const TT = T(), g = o.g, SC = o.SC;
     let rot = null;
@@ -544,17 +544,18 @@
     function apply() {
       const a = aspect(), r = o.rotate !== false && a < .8, cv = T3.renderer && T3.renderer() && T3.renderer().domElement, cs = cv && cv.clientWidth ? Math.min(cv.clientWidth, cv.clientHeight) : Math.min(innerWidth, innerHeight), short = cs;
       // 'turn': portrait screen held sideways · 'wide': a short landscape screen (phone) · 'norm'
-      const mode = r ? 'turn' : o.band && a > 1.3 && short < 560 ? 'wide' : 'norm', key = mode + ':' + a.toFixed(3);
+      const mode = r ? 'turn' : o.side && a > 1.3 && short < 560 ? 'wide' : 'norm', key = mode + ':' + a.toFixed(3);
       if (key === rot) return; rot = key;
       if (o.legacy) { if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: o.Y * SC, pitch: 1.18 }); }
       else if (mode === 'norm') {   // as large as the screen allows; a band at the top is kept for the HUD
         const bw = g.W + 1.1, bd = g.H + .9, top = .05, dT = bd * SC / (1 - top);   // the case incl. its rails (+ perspective)
         board.position.set(0, 0, top / 2 * dT);
         if (T3.fit) T3.fit({ w: bw * SC, d: dT, y: o.Y * SC, pitch: 1.2 });
-      } else {   // a landscape view (turn: the camera rolls 90°, a true landscape on the portrait screen): the case centred, as large
-        // as the landscape height allows after the HUD's own thickness (o.band px) at the landscape bottom
-        const bw = g.W + 1.2, bd = g.H + .6, top = .015, bot = Math.min(.3, o.band / short), wT = bw * SC, dT = bd * SC / (1 - top - bot);   // the case incl. its rails (+ perspective)
-        board.position.set(0, 0, (top - bot) / 2 * dT);
+      } else {   // a landscape view (turn: the camera rolls 90°, a true landscape on the portrait screen): the case uses the full landscape
+        // height and is shifted left of the HUD column (o.side px) at the landscape right
+        const long = cv && cv.clientWidth ? Math.max(cv.clientWidth, cv.clientHeight) : Math.max(innerWidth, innerHeight), aL = a < 1 ? 1 / a : a;
+        const rf = Math.min(.35, o.side / long), bw = g.W + 1.1, bd = g.H + .5, wT = bw * SC / (1 - rf), dT = bd * SC, vis = Math.max(wT, dT * aL);
+        board.position.set(-Math.min(rf / 2 * vis, Math.max(0, (vis - bw * SC) / 2)), 0, 0);
         if (T3.fit) T3.fit(r ? { w: dT, d: wT, y: o.Y * SC, pitch: 1.25, roll: 1 } : { w: wT, d: dT, y: o.Y * SC, pitch: 1.25 });
       }
       board.updateMatrix(); board.updateMatrixWorld(true);

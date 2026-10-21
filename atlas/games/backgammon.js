@@ -53,9 +53,9 @@
     const g = M3.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;
     board.scale.setScalar(SC);
     const bvEl = ctx.el.parentNode;
-    let turned = false;
-    const FR = M3.frameOn(board, T3, { SC, Y, g, band: 64, onChange: m => { turned = m === 'turn'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
-      setTimeout(() => { if (!stopped) { placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
+    let turned = false, colUI = false;
+    const FR = M3.frameOn(board, T3, { SC, Y, g, side: 86, onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
+      setTimeout(() => { if (!stopped) { hud(); placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
     let pos = null, T = null, sel = null, dests = null, worker = null, jid = 0, seed = '', stream = null, nRoll = 0, busy = false;
@@ -292,11 +292,17 @@
       + '.bgbub{position:absolute;z-index:3;left:50%;transform:translateX(-50%);max-width:min(340px,calc(100% - 40px));padding:8px 16px;border-radius:16px;background:#fffdf7;border:2px solid #fff;box-shadow:0 8px 20px -10px rgba(80,40,0,.55);font-weight:900;font-size:14px;color:var(--ink2,#4a4f66);text-align:center;line-height:1.35;pointer-events:none;opacity:0;transition:opacity .2s}.bgbub.on{opacity:1}'
       + '.bgbub::after{content:"";position:absolute;left:50%;margin-left:-8px;border:8px solid transparent}.bgbub.up::after{top:100%;border-top-color:#fffdf7}.bgbub.dn::after{bottom:100%;border-bottom-color:#fffdf7}'
       // the turned page (portrait phone, board sideways): bar along the left edge, buttons in the corners, all read in landscape
-      + '.bv.land .hud,.bv.playing.land .hud{top:50%;bottom:auto;left:calc(6px + env(safe-area-inset-left));right:auto;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%);max-width:none}'
-      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 12px);right:auto;top:calc(14px + env(safe-area-inset-top));transform-origin:0 0;transform:rotate(90deg)}'
-      + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 12px);right:auto;top:calc(100% - 14px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-100%,0)}'
-      + '.bv.land .bgbub{right:auto;bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}.bgbub.lt::after{top:50%;left:auto;right:100%;margin:-8px 0 0;border-right-color:#fffdf7}'
-      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:auto;bottom:calc(6px + env(safe-area-inset-bottom));left:50%;right:auto;transform:translateX(-50%);max-width:none}.bv.bgwide .bgbub{right:auto;top:auto;transform:none}'
+      // landscape views: the HUD is a slim column at the landscape right (beside the tray), × above it and やめる below it in the corners
+      + '.bv.land .hud,.bv.playing.land .hud,.bv.bgwide .hud,.bv.playing.bgwide .hud{flex-direction:column;gap:6px;padding:7px 5px;border-radius:24px;max-width:none}'
+      + '.hud .hs.col{flex-direction:column;gap:1px;padding:5px 7px;font-size:10.5px;line-height:1.1}.hud .hs.col b{font-size:17px;min-width:0}.hud .hs.col .r{display:flex;align-items:center;gap:4px}.hud .hs.col .bgk{width:14px;height:14px}'
+      + '.hud .bgm.col{flex-direction:column;gap:7px}.hud .bgb.ic.ic{width:46px;height:46px;padding:0;border-radius:50%;font-size:21px}'
+      + '.bv.land .hud,.bv.playing.land .hud{left:calc(50% - 20px);top:calc(100% - 8px - env(safe-area-inset-bottom));bottom:auto;right:auto;transform-origin:0 0;transform:rotate(90deg) translate(-100%,-50%)}'
+      + '.bv.land .quit{inset-inline-start:auto;inset-inline-end:auto;left:calc(8px + env(safe-area-inset-left));right:auto;top:calc(100% - 8px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-100%,-100%)}'
+      + '.bv.land .x{inset-inline-start:auto;inset-inline-end:auto;left:calc(100% - 8px);right:auto;top:calc(100% - 8px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translate(-100%,0)}'
+      + '.bv.land .bgbub{right:auto;bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%)}'
+      + '.bv.bgwide .hud,.bv.playing.bgwide .hud{top:calc(50% + 20px);bottom:auto;left:auto;right:calc(8px + env(safe-area-inset-right));transform:translateY(-50%)}'
+      + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(8px + env(safe-area-inset-right));top:auto;bottom:calc(8px + env(safe-area-inset-bottom))}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;right:calc(8px + env(safe-area-inset-right));left:auto}'
+      + '.bv.bgwide .bgbub{right:auto;top:auto;transform:translateX(-50%)}.bv.land .bgbub,.bv.bgwide .bgbub{font-size:12px;padding:6px 9px;border-radius:12px;width:max-content;max-width:120px}'
       + '.bv.land .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 40px)}.bv.land .endc h3{white-space:nowrap}.bv.land .endc.on{animation:bgpopL .4s cubic-bezier(.3,1.5,.5,1)}@keyframes bgpopL{from{transform:translate(-50%,-50%) rotate(90deg) scale(.7);opacity:0}}'
       + '@media (max-width:560px){.hud .bgb{padding:7px 10px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 12px}.hud .bgm{gap:5px}.bgbub{font-size:13px;padding:7px 13px}}';
     document.head.appendChild(css);
@@ -305,15 +311,19 @@
       if (stopped) return;
       const h = document.getElementById('hud'); if (!h || !bub.textContent) { bub.classList.remove('on'); return; }
       const wide = bvEl && bvEl.classList.contains('bgwide');
-      if (turned || wide) {   // a landscape view: on the bar's line, to its (landscape) right, the tail pointing at it
-        bub.classList.remove('up', 'dn'); bub.classList.add('lt', 'on');
-        const hw = h.offsetWidth, hh = h.offsetHeight, LW = turned ? host.clientHeight : host.clientWidth, x0 = LW / 2 + hw / 2 + 14;
-        bub.style.maxWidth = Math.max(110, LW - x0 - 10) + 'px';
-        if (turned) { bub.style.left = (6 + hh / 2) + 'px'; bub.style.top = x0 + 'px'; bub.style.bottom = ''; }
-        else { bub.style.left = x0 + 'px'; bub.style.top = ''; bub.style.bottom = (6 + Math.max(0, (hh - bub.offsetHeight) / 2)) + 'px'; }
+      if (turned || wide) {   // a landscape view: just above the HUD column (landscape), its tail pointing down at it
+        bub.classList.remove('dn', 'lt'); bub.classList.add('up', 'on'); bub.style.maxWidth = '';
+        const r = h.getBoundingClientRect(), hr = host.getBoundingClientRect(), bw = bub.offsetWidth;
+        if (turned) {   // landscape up = screen right; the column's centre line = its screen y centre
+          const c = Math.min(r.top + r.height / 2 - hr.top, hr.height - 6 - bw / 2);
+          bub.style.left = (r.right - hr.left + 10) + 'px'; bub.style.top = c + 'px'; bub.style.bottom = '';
+        } else {
+          const c = Math.min(r.left + r.width / 2 - hr.left, hr.width - 6 - bw / 2);
+          bub.style.left = c + 'px'; bub.style.top = ''; bub.style.bottom = (hr.bottom - r.top + 10) + 'px';
+        }
         return;
       }
-      bub.classList.remove('lt'); bub.style.left = ''; bub.style.maxWidth = '';
+      bub.style.left = ''; bub.style.maxWidth = '';
       const t0 = h.offsetTop, hh = h.offsetHeight, H = host.clientHeight, up = t0 + hh / 2 > H / 2;   // layout box (the bar slides in with a transform)
       bub.classList.toggle('up', up); bub.classList.toggle('dn', !up);
       bub.style.top = up ? '' : (t0 + hh + 12) + 'px'; bub.style.bottom = up ? (H - t0 + 12) + 'px' : '';
@@ -325,15 +335,18 @@
     function hud() {
       if (stopped) return;
       const P = T ? T.pos : pos, pips = s => P && window.BG ? BG.pips(P, s) : 167;
-      const side = s => `<span class="hs ${toMove === s ? 'on' : ''}"><i class="bgk" style="background:${DOT[CID[s]] || DOT.gold}"></i>${s ? L.ai : L.you}<b>${pips(s)}</b></span>`;
+      const dot = s => `<i class="bgk" style="background:${DOT[CID[s]] || DOT.gold}"></i>`;
+      const side = s => colUI ? `<span class="hs col ${toMove === s ? 'on' : ''}">${s ? L.ai : L.you}<span class="r">${dot(s)}<b>${pips(s)}</b></span></span>`
+        : `<span class="hs ${toMove === s ? 'on' : ''}">${dot(s)}${s ? L.ai : L.you}<b>${pips(s)}</b></span>`;
+      const btn = (a, cls, ic, lb) => colUI ? `<button type="button" class="btn bgb ic ${cls}" data-bgt="${a}" title="${lb}" aria-label="${lb}">${ic}</button>` : `<button type="button" class="btn bgb ${cls}" data-bgt="${a}">${ic} ${lb}</button>`;
       const b = []; let m = msg;
-      if (phase === 'roll') { b.push(`<button type="button" class="btn bgb go" data-bgt="roll">🎲 ${L.roll}</button>`); m = ''; }
+      if (phase === 'roll') { b.push(btn('roll', 'go', '🎲', L.roll)); m = ''; }
       else if (phase === 'move' && T && !busy) {
         const done = !legalNow().length;
-        if (T.steps.length) b.push(`<button type="button" class="btn bgb ghost2" data-bgt="undo">↶ ${L.undo}</button>`);
-        if (done) { b.push(`<button type="button" class="btn bgb go" data-bgt="ok">✓ ${L.ok}</button>`); m = ''; }
+        if (T.steps.length) b.push(btn('undo', 'ghost2', '↶', L.undo));
+        if (done) { b.push(btn('ok', 'go', '✓', L.ok)); m = ''; }
       }
-      ctx.hud(`${side(0)}${b.length ? `<span class="bgm">${b.join('')}</span>` : ''}${side(1)}`);
+      ctx.hud(`${side(0)}${b.length ? `<span class="bgm${colUI ? ' col' : ''}">${b.join('')}</span>` : ''}${side(1)}`);
       if (bub.innerHTML !== m) { bub.innerHTML = m; placeLater(); } else placeBub();   // (the bar's width changes with its buttons)
     }
     function onHud(e) {
