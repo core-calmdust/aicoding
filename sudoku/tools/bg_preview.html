@@ -45,10 +45,10 @@ body.still *{animation:none!important}
 <div id="out"></div>
 <script src="../bg.js"></script>
 <script>
-// ?t=a,b (themes) &tod=day|eve|night &still
+// ?t=a,b (themes) | ?two (companion <theme>2 scenes) | ?pair (base + companion) &tod=day|eve|night &still
 const B = window.SudokuBG, q = new URLSearchParams(location.search);
 if (q.has('still')) document.body.classList.add('still');
-const list = q.get('t') ? q.get('t').split(',') : B.THEMES, tod = q.get('tod') || 'day';
+const list = q.get('t') ? q.get('t').split(',') : q.has('two') ? B.THEMES.map(t => t + '2') : q.has('pair') ? B.THEMES.flatMap(t => [t, t + '2']) : B.THEMES, tod = q.get('tod') || 'day';
 let h = '';
 for (const t of list) {
   const r = B.rng(7); let d = '';

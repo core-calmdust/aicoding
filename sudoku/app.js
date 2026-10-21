@@ -19,6 +19,17 @@ const NT = THEMES.length, NCOL = NT * 50;
 // display order: easiest → hardest (data/progress keys keep the original theme index)
 const ORDER = [0, 1, 2, 3, 4, 10, 11, 5, 12, 6, 7, 13, 14, 8, 15, 16, 17, 9, 18, 19];
 const TNO = ti => ORDER.indexOf(ti) + 1;
+// each theme is split into two collections of 25 (alternate puzzles: even → part 0, odd → part 1)
+const CSZ = 25, NC = NT * 2;
+const CORDER = ORDER.flatMap(ti => [ti * 2, ti * 2 + 1]);
+const CNO = ci => CORDER.indexOf(ci) + 1;
+const cPi = (ci, k) => k * 2 + (ci & 1);                 // theme puzzle index of collection ci, local k
+const cOf = (ti, pi) => ti * 2 + (pi & 1);                // collection of a theme puzzle
+const cKey = ci => THEMES[ci >> 1] + (ci & 1 ? '2' : '');  // background scene
+const cTh = ci => THEMES[ci >> 1];                        // palette / map decorations
+const cTxt = (k, ci) => t(k + (ci & 1 ? '2.' : '.') + (ci >> 1));
+const cName = ci => cTxt('th', ci);
+const cRoute = (ci, k) => 'c/' + ((ci >> 1) + 1) + '/' + (cPi(ci, k) + 1);
 const VTYPES = ['x', 'hyper', 'jigsaw', 'oddeven', 'killer', 'ineq', 'antiknight', 'kropki', 'thermo', 'arrow'];
 const VCOL = { x: ['#ffd9e6', '#e6dcff'], hyper: ['#d6ecff', '#e0fff1'], jigsaw: ['#fff1c9', '#ffd9cc'], oddeven: ['#ffe3cc', '#d9e9ff'], killer: ['#e8dcff', '#ffd6e6'], ineq: ['#dff4ff', '#ffe6d6'], antiknight: ['#e6f0d8', '#fff0cc'], kropki: ['#fff', '#e3e6ff'], thermo: ['#ffe0dc', '#fff2d0'], arrow: ['#dcf5ec', '#e4e0ff'] };
 const URL_SELF = 'https://core-calmdust.github.io/aicoding/sudoku/';
@@ -186,6 +197,12 @@ const varRec = (si, pi) => DB.vcol[si + '.' + pi];
 const themeCleared = ti => { let n = 0; for (let i = 0; i < 50; i++) if (colRec(ti, i)) n++; return n; };
 const themeStars = ti => { let n = 0; for (let i = 0; i < 50; i++) { const r = colRec(ti, i); if (r) n += r.s; } return n; };
 const themeScore = ti => { let n = 0; for (let i = 0; i < 50; i++) { const r = colRec(ti, i); if (r) n += r.sc || 0; } return n; };
+const cRec = (ci, k) => colRec(ci >> 1, cPi(ci, k));
+const cCleared = ci => { let n = 0; for (let k = 0; k < CSZ; k++) if (cRec(ci, k)) n++; return n; };
+const cStars = ci => { let n = 0; for (let k = 0; k < CSZ; k++) { const r = cRec(ci, k); if (r) n += r.s; } return n; };
+const cScore = ci => { let n = 0; for (let k = 0; k < CSZ; k++) { const r = cRec(ci, k); if (r) n += r.sc || 0; } return n; };
+const cLvs = ci => [...new Set([...Array(CSZ).keys()].map(k => +PZ.themes[ci >> 1][cPi(ci, k)][81]))];
+const ciOfKey = k => { for (let ci = 0; ci < NC; ci++) if (cKey(ci) === k) return ci; return -1; };
 const vsetLen = si => (vset(si) ? vset(si).puzzles.length : 0);
 const vsetCleared = si => { let n = 0; for (let i = 0; i < vsetLen(si); i++) if (varRec(si, i)) n++; return n; };
 const vsetStars = si => { let n = 0; for (let i = 0; i < vsetLen(si); i++) { const r = varRec(si, i); if (r) n += r.s; } return n; };
@@ -298,12 +315,12 @@ const refreshScene = () => setScene(scene[0], scene[1], scene[2]);
 const homeVariant = () => { const h = new Date().getHours(); return h >= 11 ? 'm' : 'e'; };
 // home background: any collection theme cleared 50/50 can be used
 const isSpBg = k => !!(SPD && SPD.bgs.includes(k));
-const hbOK = k => { if (isSpBg(k)) return SPD.bgOwned(k); const i = THEMES.indexOf(k); return i >= 0 && PZ && themeCleared(i) === 50; };
+const hbOK = k => { if (isSpBg(k)) return SPD.bgOwned(k); const ci = ciOfKey(k); return ci >= 0 && PZ && cCleared(ci) === CSZ; };
 const hbKey = () => (MODE === 'speed' ? 'homeBgS' : 'homeBg');
-const bgName = k => (!k ? (MODE === 'speed' ? t('sbg.speedway') : t('hb.def')) : isSpBg(k) ? t('sbg.' + k) : t('th.' + THEMES.indexOf(k)));
+const bgName = k => (!k ? (MODE === 'speed' ? t('sbg.speedway') : t('hb.def')) : isSpBg(k) ? t('sbg.' + k) : cName(ciOfKey(k)));
 function homeScene() {
   const k = DB.set[hbKey()];
-  if (k && hbOK(k)) setScene(k, '', isSpBg(k) ? 'spd' : k);
+  if (k && hbOK(k)) setScene(k, '', isSpBg(k) ? 'spd' : k.replace(/2$/, ''));
   else if (MODE === 'speed') setScene('speedway', '', 'spd');
   else setScene('daily', homeVariant(), 'de');
 }
@@ -347,7 +364,7 @@ function route() {
   if (p[0] === 'd' && /^\d{4}-\d\d-\d\d$/.test(p[1]) && DIFFS.includes(p[2]) && p[1] >= FIRST_DAY && p[1] <= today()) return openGame({ kind: 'd', date: p[1], d: p[2] });
   if (p[0] === 'c' && +p[1] >= 1 && +p[1] <= NT && +p[2] >= 1 && +p[2] <= 50) return openGame({ kind: 'c', ti: +p[1] - 1, pi: +p[2] - 1 });
   if (p[0] === 'x' && PV && vset(+p[1] - 1) && +p[2] >= 1 && +p[2] <= vsetLen(+p[1] - 1)) return openGame({ kind: 'x', si: +p[1] - 1, pi: +p[2] - 1 });
-  if (p[0] === 't' && +p[1] >= 1 && +p[1] <= NT) return openTheme(+p[1] - 1, p[2] === 'm' ? 'map' : '');
+  if (p[0] === 't' && +p[1] >= 1 && +p[1] <= NC) return openTheme(+p[1] - 1, p[2] === 'm' ? 'map' : '');
   if (p[0] === 'v' && PV && vset(+p[1] - 1)) return openVset(+p[1] - 1);
   openHome();
 }
@@ -434,9 +451,9 @@ function renderHome() {
   const tot = totalCleared();
   $('#colBar').style.width = (tot / NCOL * 100) + '%';
   $('#colCount').textContent = tot + ' / ' + NCOL;
-  $('#themes').innerHTML = ORDER.map(i => { const k = THEMES[i];
-    const n = themeCleared(i), lvs = [...new Set(PZ.themes[i].map(s => +s[81]))];
-    return `<button class="tcard ${n === 50 ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(k, 320, 200)}<span class="no">${TNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(t('th.' + i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n * 2}%"></i></span>${n}/50</span></div></button>`;
+  $('#themes').innerHTML = CORDER.map(i => {
+    const n = cCleared(i), lvs = cLvs(i);
+    return `<button class="tcard ${n === CSZ ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(cKey(i), 320, 200)}<span class="no">${CNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(cName(i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n / CSZ * 100}%"></i></span>${n}/${CSZ}</span></div></button>`;
   }).join('');
   $$('#themes .tcard').forEach(b => b.onclick = () => { SFX.tap(); go('t/' + (+b.dataset.t + 1)); });
   // variants
@@ -514,45 +531,45 @@ function openDay(ds) {
 
 /* ================= theme map ================= */
 let curTheme = 0;
-function openTheme(ti, stage) {
-  curTheme = ti; show('theme');
-  setScene(THEMES[ti], '', THEMES[ti]);
-  const n = themeCleared(ti);
-  $('#tlName').textContent = TNO(ti) + '. ' + t('th.' + ti);
-  $('#tlProg').innerHTML = `${n}/50 · ${STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${themeStars(ti)}/150`;
-  const lvs = [...new Set(PZ.themes[ti].map(s => +s[81]))];
+function openTheme(ci, stage) {
+  curTheme = ci; show('theme');
+  setScene(cKey(ci), '', cTh(ci));
+  const n = cCleared(ci), key = cKey(ci);
+  $('#tlName').textContent = CNO(ci) + '. ' + cName(ci);
+  $('#tlProg').innerHTML = `${n}/${CSZ} · ${STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${cStars(ci)}/${CSZ * 3}`;
+  const lvs = cLvs(ci);
   const legend = `<div class="legend">${lvs.map(l => `<span><i style="background:${LVCOL[l]}"></i>${esc(t('lv.' + l))}</span>`).join('')}<span>· ${esc(t('tl.stars'))}</span></div>`;
   $('#theme').classList.toggle('ovw', stage !== 'map');
   if (stage !== 'map') {
     // stage 1: overview box
-    const st = startTarget('c', ti);
+    const st = startTarget('c', ci);
     const lab = st.k < 0 ? t('st.mapall') : st.cont ? t('st.cont', { n: st.k + 1 }) : t('st.start');
-    $('#tlIntro').innerHTML = `<div class="intro"><div class="ban" id="tlBan" title="${esc(t('st.map'))}">${BG.svg(THEMES[ti], 320, 200, '', curTod())}<span class="mapcue"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg>${esc(t('st.map'))}</span></div><dl>
-      <dt>${esc(t('ti.theme'))}</dt><dd>${esc(t('thd.' + ti))}</dd>
-      <dt>${esc(t('ti.level'))}</dt><dd>${lvs.map(lvChip).join(' ')} <span class="note" style="margin:0">${esc(t('thl.' + ti))}</span></dd>
-      <dt>${esc(t('ti.score'))}</dt><dd class="num">${fmtN(themeScore(ti))}</dd></dl>
-      <div class="story">${esc(t('ths.' + ti))}</div>
-      <div class="startrow"><button class="btn xl" id="stGo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${st.k < 0 ? '' : `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>`}${n === 50 ? `<button class="btn ghost sm hbbtn ${DB.set.homeBg === THEMES[ti] ? 'on' : ''}" id="stHb">${esc(t(DB.set.homeBg === THEMES[ti] ? 'hb.on' : 'hb.set'))}</button>` : ''}</div></div>`;
+    $('#tlIntro').innerHTML = `<div class="intro"><div class="ban" id="tlBan" title="${esc(t('st.map'))}">${BG.svg(key, 320, 200, '', curTod())}<span class="mapcue"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg>${esc(t('st.map'))}</span></div><dl>
+      <dt>${esc(t('ti.theme'))}</dt><dd>${esc(cTxt('thd', ci))}</dd>
+      <dt>${esc(t('ti.level'))}</dt><dd>${lvs.map(lvChip).join(' ')} <span class="note" style="margin:0">${esc(t('thl.' + (ci >> 1)))}</span></dd>
+      <dt>${esc(t('ti.score'))}</dt><dd class="num">${fmtN(cScore(ci))}</dd></dl>
+      <div class="story">${esc(cTxt('ths', ci))}</div>
+      <div class="startrow"><button class="btn xl" id="stGo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${st.k < 0 ? '' : `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>`}${n === CSZ ? `<button class="btn ghost sm hbbtn ${DB.set.homeBg === key ? 'on' : ''}" id="stHb">${esc(t(DB.set.homeBg === key ? 'hb.on' : 'hb.set'))}</button>` : ''}</div></div>`;
     $('#tlBody').innerHTML = '';
-    const toMap = () => { SFX.tap(); go('t/' + (ti + 1) + '/m'); };
+    const toMap = () => { SFX.tap(); go('t/' + (ci + 1) + '/m'); };
     $('#stGo').onclick = toMap; if ($('#stMap')) $('#stMap').onclick = toMap; $('#tlBan').onclick = toMap;
-    const hb = $('#stHb'); if (hb) hb.onclick = () => { if (DB.set.homeBg === THEMES[ti]) return; setHomeBg(THEMES[ti]); hb.classList.add('on'); hb.textContent = t('hb.on'); };
+    const hb = $('#stHb'); if (hb) hb.onclick = () => { if (DB.set.homeBg === key) return; setHomeBg(key); hb.classList.add('on'); hb.textContent = t('hb.on'); };
     $('#tlBack').onclick = () => go('');
     return;
   }
   // stage 2: map, scrolled to the current position
-  const st = startTarget('c', ti);
+  const st = startTarget('c', ci);
   $('#tlIntro').innerHTML = '';
   $('#tlBody').innerHTML = `<div class="mapwrap"><div class="map" id="map"></div></div>${legend}${st.k >= 0 ? `<div class="mapgo"><button class="btn xl" id="mapPlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(t('st.play', { n: st.k + 1 }))}</button></div>` : ''}`;
-  const mp = $('#mapPlay'); if (mp) mp.onclick = () => { SFX.tap(); go('c/' + (ti + 1) + '/' + (st.k + 1)); };
-  $('#tlBack').onclick = () => go('t/' + (ti + 1));
-  drawMap(ti, true, st.k);
+  const mp = $('#mapPlay'); if (mp) mp.onclick = () => { SFX.tap(); go(cRoute(ci, st.k)); };
+  $('#tlBack').onclick = () => go('t/' + (ci + 1));
+  drawMap(ci, true, st.k);
 }
 /* intro start button: はじめる / つづきから */
 function startTarget(kind, ix) {
-  const L = kind === 'c' ? 50 : vsetLen(ix), pre = kind === 'c' ? 'c/' : 'x/';
-  const rec = kind === 'c' ? colRec : varRec;
-  for (let k = 0; k < L; k++) if (DB.saves[pre + (ix + 1) + '/' + (k + 1)] && !rec(ix, k)) return { k, cont: true };
+  const L = kind === 'c' ? CSZ : vsetLen(ix);
+  const rec = kind === 'c' ? cRec : varRec, sk = k => kind === 'c' ? cRoute(ix, k) : 'x/' + (ix + 1) + '/' + (k + 1);
+  for (let k = 0; k < L; k++) if (DB.saves[sk(k)] && !rec(ix, k)) return { k, cont: true };
   const played = [...Array(L).keys()].some(k => rec(ix, k));
   const nx = kind === 'c' ? nextUncleared(ix, -1) : nextVar(ix, -1);
   return { k: nx, cont: played };
@@ -560,15 +577,16 @@ function startTarget(kind, ix) {
 function startRow(kind, ix) {
   const st = startTarget(kind, ix);
   const lab = st.k < 0 ? t('tl.allclear') : st.cont ? t('st.cont', { n: st.k + 1 }) : t('st.start');
-  return `<div class="startrow"><button class="btn xl" id="stGo" data-to="${st.k < 0 ? '' : (kind === 'c' ? 'c/' : 'x/') + (ix + 1) + '/' + (st.k + 1)}" ${st.k < 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${kind === 'c' ? `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>` : ''}</div>`;
+  return `<div class="startrow"><button class="btn xl" id="stGo" data-to="${st.k < 0 ? '' : kind === 'c' ? cRoute(ix, st.k) : 'x/' + (ix + 1) + '/' + (st.k + 1)}" ${st.k < 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>${esc(lab)}</button>${kind === 'c' ? `<button class="btn ghost sm" id="stMap">${esc(t('st.map'))}</button>` : ''}</div>`;
 }
 function wireStart() {
   const g = $('#stGo'); if (g) g.onclick = () => { if (g.dataset.to) { SFX.tap(); go(g.dataset.to); } };
   const m = $('#stMap'); if (m) m.onclick = () => { const nx = $('#map .node.next') || $('#map .node'); if (nx) nx.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
 }
-function drawMap(ti, scrollToNext, focusK) {
+function drawMap(ci, scrollToNext, focusK) {
+  const ti = ci >> 1;
   const host = $('#map'); if (!host) return;
-  const W = Math.max(280, host.clientWidth), step = 92, N = 50, top = 90, bottom = 70;
+  const W = Math.max(280, host.clientWidth), step = 92, N = CSZ, top = 90, bottom = 70;
   const H = top + bottom + (N - 1) * step;
   const amp = Math.min(W * .32, 220);
   const pts = []; for (let k = 0; k < N; k++) pts.push([W / 2 + amp * Math.sin(k * .62 + .4), H - bottom - k * step]);
@@ -586,7 +604,7 @@ function drawMap(ti, scrollToNext, focusK) {
   const dark = th === 'stars' || th === 'moon', icy = th === 'snow' || th === 'iceberg' || th === 'cloudranch';
   const roadC = th === 'sea' ? '#f6e6b8' : dark ? '#6b5bb8' : icy ? '#ffffff' : '#fff3dc';
   const edgeC = dark ? '#4a3d95' : icy ? '#c9d6f5' : '#e9cfa3';
-  const r = BG.rng(97 + ti * 13);
+  const r = BG.rng(97 + ci * 13);
   let deco = '';
   for (let k = 0; k < N * 1.6; k++) {
     const y = top - 20 + r() * (H - top);
@@ -597,20 +615,20 @@ function drawMap(ti, scrollToNext, focusK) {
     if (Math.abs(x - rx) < 60) continue;
     deco += BG.deco(th, x, y + 20, 30 + r() * 16, r);
   }
-  const gid = 'mg' + ti;
+  const gid = 'mg' + ci;
   let flags = '';
-  for (let k = 9; k < N; k += 10) { const [x, y] = pts[k]; flags += `<g transform="translate(${(x + (x > W / 2 ? -46 : 46)).toFixed(1)} ${(y - 4).toFixed(1)})"><path d="M0 0v-34" stroke="#8f6a4a" stroke-width="3" stroke-linecap="round"/><path d="M1 -34h20l-6 7 6 7H1z" fill="${k === 49 ? '#ffcd4d' : '#ff8fb6'}"/></g>`; }
+  for (let k = 4; k < N; k += 5) { const [x, y] = pts[k]; flags += `<g transform="translate(${(x + (x > W / 2 ? -46 : 46)).toFixed(1)} ${(y - 4).toFixed(1)})"><path d="M0 0v-34" stroke="#8f6a4a" stroke-width="3" stroke-linecap="round"/><path d="M1 -34h20l-6 7 6 7H1z" fill="${k === N - 1 ? '#ffcd4d' : '#ff8fb6'}"/></g>`; }
   host.style.height = H + 'px';
   let html = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ground[0]}"/><stop offset="1" stop-color="${ground[1]}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${gid})"/>${night ? `<rect width="${W}" height="${H}" fill="#34337a" opacity=".85" style="mix-blend-mode:multiply"/>` : ''}<g opacity="${night ? .75 : 1}">${deco}</g><path d="${d}" fill="none" stroke="${edgeC}" stroke-width="40" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${roadC}" stroke-width="32" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${edgeC}" stroke-width="3" stroke-dasharray="10 12" stroke-linecap="round" opacity=".8"/>${flags}</svg>`;
-  const next = nextUncleared(ti, -1);
+  const next = nextUncleared(ci, -1);
   for (let k = 0; k < N; k++) {
-    const rec = colRec(ti, k), lv = +PZ.themes[ti][k][81], sv = DB.saves['c/' + (ti + 1) + '/' + (k + 1)];
+    const rec = cRec(ci, k), lv = +PZ.themes[ti][cPi(ci, k)][81], sv = DB.saves[cRoute(ci, k)];
     const [x, y] = pts[k];
-    html += `<button class="node ${rec ? 'cleared' : ''} ${k === next ? 'next' : ''} ${k % 10 === 9 ? 'boss' : ''}" data-p="${k}" style="left:${(x / W * 100).toFixed(3)}%;top:${y.toFixed(1)}px" title="${esc(t('lv.' + lv))}"><span class="lvd" style="background:${LVCOL[lv]}"></span>${sv && !rec ? '<span class="ip"></span>' : ''}<span class="n">${k + 1}</span><span class="stars">${rec ? [1, 2, 3].map(q => STAR(q <= rec.s)).join('') : ''}</span></button>`;
+    html += `<button class="node ${rec ? 'cleared' : ''} ${k === next ? 'next' : ''} ${k % 5 === 4 ? 'boss' : ''}" data-p="${k}" style="left:${(x / W * 100).toFixed(3)}%;top:${y.toFixed(1)}px" title="${esc(t('lv.' + lv))}"><span class="lvd" style="background:${LVCOL[lv]}"></span>${sv && !rec ? '<span class="ip"></span>' : ''}<span class="n">${k + 1}</span><span class="stars">${rec ? [1, 2, 3].map(q => STAR(q <= rec.s)).join('') : ''}</span></button>`;
   }
   if (next >= 0) html += `<div class="mapme" style="left:${(pts[next][0] / W * 100).toFixed(3)}%;top:${pts[next][1].toFixed(1)}px">${avatar(DB.prof.icon, 44)}</div>`;
   host.innerHTML = html;
-  host.querySelectorAll('.node').forEach(b => b.onclick = () => { SFX.tap(); go('c/' + (ti + 1) + '/' + (+b.dataset.p + 1)); });
+  host.querySelectorAll('.node').forEach(b => b.onclick = () => { SFX.tap(); go(cRoute(ci, +b.dataset.p)); });
   if (scrollToNext) {
     const k = focusK != null && focusK >= 0 ? focusK : next >= 0 ? next : 0;
     requestAnimationFrame(() => {
@@ -620,8 +638,8 @@ function drawMap(ti, scrollToNext, focusK) {
     });
   }
 }
-function nextUncleared(ti, after) {
-  for (let k = 1; k <= 50; k++) { const p = (after + k) % 50; if (!colRec(ti, p)) return p; }
+function nextUncleared(ci, after) {
+  for (let k = 1; k <= CSZ; k++) { const p = (after + k) % CSZ; if (!cRec(ci, p)) return p; }
   return -1;
 }
 
@@ -795,10 +813,10 @@ function openGame(o) {
     G.time = sv.t || 0; G.mist = sv.m || 0; G.hints = sv.h || 0;
   }
   if (o.kind === 'd') setScene('daily', o.d, 'd' + o.d);
-  else if (o.kind === 'c') setScene(THEMES[o.ti], '', THEMES[o.ti]);
+  else if (o.kind === 'c') setScene(cKey(cOf(o.ti, o.pi)), '', THEMES[o.ti]);
   else setScene('wonder', '', 'wonder');
   if (o.kind === 'd') $('#gTitle').innerHTML = miniMedal(DTIER[o.d]) + `<span>${esc(fmtDate(o.date, { month: 'short', day: 'numeric' }))} ${esc(t('d.' + o.d))}</span>`;
-  else if (o.kind === 'c') $('#gTitle').innerHTML = lvChip(G.lv) + `<span>${esc(t('th.' + o.ti))} #${o.pi + 1}</span>`;
+  else if (o.kind === 'c') $('#gTitle').innerHTML = lvChip(G.lv) + `<span>${esc(cName(cOf(o.ti, o.pi)))} #${(o.pi >> 1) + 1}</span>`;
   else $('#gTitle').innerHTML = lvChip(G.lv) + `<span>${esc(t('vt.' + spec.type))} #${o.pi + 1}</span>`;
   $('#gRule').hidden = o.kind !== 'x';
   $('#gRule').onclick = () => spec && openRule(spec.type);
@@ -1158,7 +1176,7 @@ function finish() {
     const k = (G.kind === 'c' ? G.ti : G.si) + '.' + G.pi, prev = store[k];
     const sc = puzzleScore(G.lv, stars, G.kind === 'x' ? 1.2 : 1);
     rec.s = stars; rec.sc = sc;
-    if (!prev) { store[k] = rec; earned = sc; if (G.kind === 'c' && themeCleared(G.ti) === 50) setTimeout(() => toast(esc(t('hb.unlock', { t: t('th.' + G.ti) })), 'gold'), 2600); }
+    if (!prev) { store[k] = rec; earned = sc; if (G.kind === 'c' && cCleared(cOf(G.ti, G.pi)) === CSZ) setTimeout(() => toast(esc(t('hb.unlock', { t: cName(cOf(G.ti, G.pi)) })), 'gold'), 2600); }
     else {
       earned = Math.max(0, sc - (prev.sc || 0)); prev.sc = Math.max(prev.sc || 0, sc);
       prev.s = Math.max(prev.s, stars); if (rec.t < prev.t) { prev.t = rec.t; newBest = true; }
@@ -1181,7 +1199,7 @@ async function submitOnline(rec) {
   try {
     const jobs = [ON.putScore('month/' + thisMonth(), Object.assign({ s: monthScore() }, me)), ON.putScore('total', Object.assign({ s: DB.sc.tot }, me))];
     if (g.kind === 'd' && !rec.late) jobs.push(ON.submitDaily(g.date, g.d, Object.assign({}, me, rec)));
-    if (g.kind === 'c') jobs.push(ON.putScore('col/' + g.ti, Object.assign({ s: themeScore(g.ti), c: themeCleared(g.ti), st: themeStars(g.ti) }, me)));
+    if (g.kind === 'c') { const ci = cOf(g.ti, g.pi); jobs.push(ON.putScore('col/c' + ci, Object.assign({ s: cScore(ci), c: cCleared(ci), st: cStars(ci) }, me))); }
     if (g.kind === 'x') jobs.push(ON.putScore('var/' + vset(g.si).type, Object.assign({ s: vsetScore(g.si), c: vsetCleared(g.si), st: vsetStars(g.si) }, me)));
     await Promise.all(jobs);
     if (g.kind === 'd' && !rec.late) { const r = await ON.myDaily(g.date, g.d); lastSubmit = r && r.rank; const el = $('#resRank'); if (el && r) el.innerHTML = t('res.rank', { n: `<b>${fmtN(r.rank)}</b>` }); }
@@ -1191,7 +1209,7 @@ function showResult(rec, o) {
   const kind = G.kind;
   let h = '';
   if (kind === 'd') h += medal(DTIER[G.d], 'rm') + `<h3>${esc(t('res.medal.' + G.d))}</h3><div class="rs">${esc(fmtDate(G.date, { year: 'numeric', month: 'long', day: 'numeric' }))} · ${esc(t('d.' + G.d))}${rec.late ? ' · ' + esc(t('res.late')) : ''}</div>`;
-  else h += `<div class="rstars">${[1, 2, 3].map(k => STAR(k <= o.stars)).join('')}</div><h3>${esc(t('res.clear'))}</h3><div class="rs">${esc(kind === 'c' ? t('th.' + G.ti) : t('vt.' + G.spec.type))} #${G.pi + 1} · ${esc(t('lv.' + G.lv))}</div>`;
+  else h += `<div class="rstars">${[1, 2, 3].map(k => STAR(k <= o.stars)).join('')}</div><h3>${esc(t('res.clear'))}</h3><div class="rs">${esc(kind === 'c' ? cName(cOf(G.ti, G.pi)) : t('vt.' + G.spec.type))} #${kind === 'c' ? (G.pi >> 1) + 1 : G.pi + 1} · ${esc(t('lv.' + G.lv))}</div>`;
   h += `<div class="rgrid"><div><small>${esc(t('res.time'))}</small><b>${fmtTime(rec.t)}</b>${o.newBest ? `<span class="best">${esc(t('res.best'))}</span>` : ''}</div><div><small>${esc(t('res.mist'))}</small><b>${rec.m}</b></div><div><small>${esc(t('res.hints'))}</small><b>${rec.h}</b></div></div>`;
   h += `<div class="rscore"><small>${esc(t('res.score'))}</small><span class="sc">+${fmtN(o.earned)}</span><span class="pt">${COIN}+${fmtN(o.earned)}</span></div>`;
   if (!rec.m && !rec.h) h += `<div class="rs" style="color:#e8603c;font-weight:700">✨ ${esc(t('res.perfect'))}</div>`;
@@ -1202,13 +1220,13 @@ function showResult(rec, o) {
     const nd = DIFFS.find(d => !(DB.daily[G.date] || {})[d]);
     next = nd ? `<button class="btn" data-a="next" data-to="d/${G.date}/${nd}">${esc(t('res.nextd', { d: t('d.' + nd) }))}</button>` : `<button class="btn" data-a="home">${esc(t('res.home'))}</button>`;
   } else if (kind === 'c') {
-    const np = nextUncleared(G.ti, G.pi);
-    next = np >= 0 ? `<button class="btn" data-a="next" data-to="c/${G.ti + 1}/${np + 1}">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="next" data-to="t/${G.ti + 1}/m">${esc(t('res.map'))}</button>`;
+    const ci = cOf(G.ti, G.pi), np = nextUncleared(ci, G.pi >> 1);
+    next = np >= 0 ? `<button class="btn" data-a="next" data-to="${cRoute(ci, np)}">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="next" data-to="t/${ci + 1}/m">${esc(t('res.map'))}</button>`;
   } else {
     const np = nextVar(G.si, G.pi);
     next = np >= 0 ? `<button class="btn" data-a="next" data-to="x/${G.si + 1}/${np + 1}">${esc(t('res.nextc', { n: np + 1 }))}</button>` : `<button class="btn" data-a="next" data-to="v/${G.si + 1}">${esc(t('res.list'))}</button>`;
   }
-  const backTo = kind === 'd' ? '' : kind === 'c' ? 't/' + (G.ti + 1) + '/m' : 'v/' + (G.si + 1);
+  const backTo = kind === 'd' ? '' : kind === 'c' ? 't/' + (cOf(G.ti, G.pi) + 1) + '/m' : 'v/' + (G.si + 1);
   h += `<div class="ract"><button class="btn ghost" data-a="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>${esc(t('share'))}</button>${next}</div>`;
   h += `<div class="ract" style="margin-top:12px"><button class="btn ghost sm" data-a="back" data-to="${backTo}">${esc(kind === 'd' ? t('res.cal') : kind === 'c' ? t('res.map') : t('res.list'))}</button>${DB.pts >= GACHA_COST ? `<button class="btn ghost sm" data-a="gacha">${esc(t('ga.btn'))}</button>` : ''}<button class="btn ghost sm" data-a="view">${esc(t('res.view'))}</button></div>`;
   $('#resBody').innerHTML = h;
@@ -1226,7 +1244,7 @@ function showResult(rec, o) {
 async function share(rec) {
   let s;
   if (G.kind === 'd') s = `${t('title')} ${fmtDate(G.date, { month: 'numeric', day: 'numeric' })} ${{ e: '🥉', m: '🥈', h: '🥇' }[G.d]}${t('d.' + G.d)} ⏱${fmtTime(rec.t)}${!rec.m && !rec.h ? ' ✨' + t('res.perfect') : ''}${lastSubmit ? ' 🏆#' + lastSubmit : ''}`;
-  else s = `${t('title')} ${G.kind === 'c' ? t('th.' + G.ti) : t('vt.' + G.spec.type)} #${G.pi + 1} ${'⭐'.repeat(rec.s || 1)} ⏱${fmtTime(rec.t)}`;
+  else s = `${t('title')} ${G.kind === 'c' ? cName(cOf(G.ti, G.pi)) : t('vt.' + G.spec.type)} #${G.kind === 'c' ? (G.pi >> 1) + 1 : G.pi + 1} ${'⭐'.repeat(rec.s || 1)} ⏱${fmtTime(rec.t)}`;
   const text = s + '\n' + URL_SELF;
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); toast(esc(t('copied')), 'msg'); } catch (e) { prompt('', text); }
@@ -1271,10 +1289,10 @@ function catalog() {
   [[1, 2], [10, 3]].forEach(([n, ti]) => add('daily', 'tri' + n, triDays >= n, ti, 'cal', t('a.tri', { n }), t('a.tri.d', { n }), [triDays, n]));
   const tot = totalCleared();
   [[50, 1], [100, 2], [250, 3], [500, 3], [1000, 4]].forEach(([n, ti]) => add('col', 'tot' + n, tot >= n, ti, String(n), n === NCOL ? t('a.master') : t('a.tot', { n }), t('a.tot.d', { n }), [tot, n]));
-  for (const i of ORDER) {
-    const c = themeCleared(i), s = themeStars(i);
-    [[10, 1], [25, 2], [50, 3]].forEach(([n, ti]) => add('theme' + i, 'th' + i + '.' + n, c >= n, ti, String(n), t('a.th', { t: t('th.' + i), n }), t('a.th.d', { n }), [c, n]));
-    add('theme' + i, 'th' + i + '.p', s >= 150, 4, 'star', t('a.thp', { t: t('th.' + i) }), t('a.thp.d'), [s, 150]);
+  for (const i of CORDER) {
+    const c = cCleared(i), s = cStars(i), nm = cName(i);
+    [[5, 1], [15, 2], [25, 3]].forEach(([n, ti]) => add('theme' + i, 'tc' + i + '.' + n, c >= n, ti, String(n), t('a.th', { t: nm, n }), t('a.th.d', { n }), [c, n]));
+    add('theme' + i, 'tc' + i + '.p', s >= CSZ * 3, 4, 'star', t('a.thp', { t: nm }), t('a.thp.d'), [s, CSZ * 3]);
   }
   if (PV) PV.sets.forEach((st, si) => {
     const c = vsetCleared(si), L = vsetLen(si);
@@ -1291,7 +1309,7 @@ function catalog() {
   add('chal', 'nohint50', nohint >= 50, 2, 'bulb', t('a.nohint', { n: 50 }), t('a.nohint.d', { n: 50 }), [nohint, 50]);
   add('chal', 'early', recs.some(r => r.hr >= 4 && r.hr < 7), 1, 'sun', t('a.early'), t('a.early.d'));
   add('chal', 'owl', recs.some(r => r.hr >= 0 && r.hr < 4), 1, 'moon', t('a.owl'), t('a.owl.d'));
-  add('chal', 'tour', [...Array(NT).keys()].every(i => themeCleared(i) > 0), 2, 'map', t('a.tour'), t('a.tour.d'));
+  add('chal', 'tour', [...Array(NC).keys()].every(i => cCleared(i) > 0), 2, 'map', t('a.tour'), t('a.tour.d'));
   const own = ownedCount(), hasUR = Object.keys(DB.icons).some(id => iconInfo(+id).rarity === 'UR');
   [[10, 1], [50, 2], [150, 3], [500, 4]].forEach(([n, ti]) => add('chal', 'ic' + n, own >= n, ti, 'face', t('a.ic', { n }), t('a.ic.d', { n }), [own, n]));
   add('chal', 'icUR', hasUR, 4, 'crown', t('a.icUR'), t('a.icUR.d'));
@@ -1356,9 +1374,9 @@ function openAch() {
     h += `<div class="big ${m.got ? '' : 'lock'}">${badge(4, 'crown')}<div><b>${esc(t('a.master'))}</b><small>${esc(t('a.master.d'))}</small><div class="col-total" style="margin:8px 0 0"><div class="bar"><i style="width:${tot / NCOL * 100}%"></i></div><b class="num">${tot}/${NCOL}</b></div></div></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.total'))}</h4><div class="agrid">${by('col').map(cell).join('')}</div></div>`;
     h += `<div class="agrp"><h4>${esc(t('ach.themes'))}</h4>`;
-    for (const i of ORDER) {
+    for (const i of CORDER) {
       const a = by('theme' + i);
-      h += `<div class="trow"><div class="tp">${BG.svg(THEMES[i], 160, 100)}</div><div class="tn"><b>${esc(t('th.' + i))}</b><small>${themeCleared(i)}/50 · ★${themeStars(i)}/150</small></div><div class="mb">${a.map(x => `<span title="${esc(x.name + ' — ' + x.desc)}" class="${x.got ? '' : 'lock'}">${badge(x.tier, x.icon)}</span>`).join('')}</div></div>`;
+      h += `<div class="trow"><div class="tp">${BG.svg(cKey(i), 160, 100)}</div><div class="tn"><b>${esc(cName(i))}</b><small>${cCleared(i)}/${CSZ} · ★${cStars(i)}/${CSZ * 3}</small></div><div class="mb">${a.map(x => `<span title="${esc(x.name + ' — ' + x.desc)}" class="${x.got ? '' : 'lock'}">${badge(x.tier, x.icon)}</span>`).join('')}</div></div>`;
     }
     h += '</div>';
     if (PV) h += `<div class="agrp"><h4>${esc(t('var.title'))}</h4><div class="agrid">${by('var').map(cell).join('')}</div></div>`;
@@ -1455,7 +1473,7 @@ async function renderRank() {
   let ctl = '';
   if (rkTab === 'daily') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(fmtDate(rkDate, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }))}</b><button class="ib flip" data-nav="1" ${rkDate >= today() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="chips">${DIFFS.map(d => `<button data-d="${d}" class="${d === rkDiff ? 'on' : ''}">${esc(t('d.' + d))}</button>`).join('')}</div>`;
   if (rkTab === 'month') ctl = `<div class="rkctl"><button class="ib flip" data-nav="-1" ${rkMonth <= FIRST_DAY.slice(0, 7) ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${esc(fmtMonth(rkMonth))}</b><button class="ib flip" data-nav="1" ${rkMonth >= thisMonth() ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><p class="note" style="margin:-4px 0 10px;text-align:center">${esc(t('rk.month.note'))}</p>`;
-  if (rkTab === 'col') ctl = `<div class="rkctl"><select id="rkSel" class="rksel"><optgroup label="${esc(t('ht.col'))}">${ORDER.map(i => `<option value="c${i}" ${rkSet === 'c' + i ? 'selected' : ''}>${TNO(i)}. ${esc(t('th.' + i))}</option>`).join('')}</optgroup>${PV ? `<optgroup label="${esc(t('ht.var'))}">${PV.sets.map(s => `<option value="v${s.type}" ${rkSet === 'v' + s.type ? 'selected' : ''}>${esc(t('vt.' + s.type))}</option>`).join('')}</optgroup>` : ''}</select></div>`;
+  if (rkTab === 'col') ctl = `<div class="rkctl"><select id="rkSel" class="rksel"><optgroup label="${esc(t('ht.col'))}">${CORDER.map(i => `<option value="c${i}" ${rkSet === 'c' + i ? 'selected' : ''}>${CNO(i)}. ${esc(cName(i))}</option>`).join('')}</optgroup>${PV ? `<optgroup label="${esc(t('ht.var'))}">${PV.sets.map(s => `<option value="v${s.type}" ${rkSet === 'v' + s.type ? 'selected' : ''}>${esc(t('vt.' + s.type))}</option>`).join('')}</optgroup>` : ''}</select></div>`;
   body.innerHTML = ctl + `<div id="rkList"><div class="rkmsg">${esc(t('rk.loading'))}</div></div>`;
   body.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
     const n = +b.dataset.nav;
@@ -1475,7 +1493,7 @@ async function renderRank() {
       [rows, mine] = await Promise.all([ON.topDaily(rkDate, rkDiff, 50), ON.myDaily(rkDate, rkDiff)]);
       rows.sort((a, b) => a.t - b.t); fmt = r => fmtTime(r.t);
     } else {
-      const path = rkTab === 'month' ? 'month/' + rkMonth : rkTab === 'total' ? 'total' : rkSet[0] === 'c' ? 'col/' + rkSet.slice(1) : 'var/' + rkSet.slice(1);
+      const path = rkTab === 'month' ? 'month/' + rkMonth : rkTab === 'total' ? 'total' : rkSet[0] === 'c' ? 'col/c' + rkSet.slice(1) : 'var/' + rkSet.slice(1);
       [rows, mine] = await Promise.all([ON.topScore(path, 50), ON.myScore(path)]);
       rows.sort((a, b) => b.s - a.s); fmt = r => fmtN(r.s);
     }
@@ -1655,7 +1673,7 @@ async function syncNow(quiet) {
   syncing = false;
 }
 function myRankPaths() {
-  const p = ['profiles', 'total', ...Object.keys(DB.sc.m).map(ym => 'month/' + ym), ...THEMES.map((_, i) => 'col/' + i), ...VTYPES.map(v => 'var/' + v)];
+  const p = ['profiles', 'total', ...Object.keys(DB.sc.m).map(ym => 'month/' + ym), ...THEMES.map((_, i) => 'col/' + i), ...[...Array(NC).keys()].map(i => 'col/c' + i), ...VTYPES.map(v => 'var/' + v)];
   for (const ds in DB.daily) for (const d of DIFFS) if (DB.daily[ds][d] && !DB.daily[ds][d].late) p.push('daily/' + ds + '/' + d);
   if (SPD) p.push(...SPD.rankPaths());
   return p;
@@ -1690,7 +1708,7 @@ function wireSync() {
 
 /* ================= settings / help ================= */
 function hbList() {
-  const th = ORDER.map(i => THEMES[i]), sp = SPD ? SPD.bgs.filter(k => k !== 'speedway') : [];
+  const th = CORDER.map(cKey), sp = SPD ? SPD.bgs.filter(k => k !== 'speedway') : [];
   return MODE === 'speed' ? ['', ...sp, ...th] : ['', ...th, ...(SPD ? ['speedway', ...sp] : [])];
 }
 function openSettings() {
@@ -1797,7 +1815,7 @@ $('#tHint').onclick = onHint;
 { const tc = $('#tCheck'); if (tc) tc.onclick = () => { SFX.tap(); checkAnswers(false); }; }
 $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
-$('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (G.ti + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
+$('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (cOf(G.ti, G.pi) + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
 $$('#htabs button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
 $('#logo').onclick = () => go('');
 if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); }; $('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); }; }
