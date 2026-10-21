@@ -223,7 +223,7 @@
         function chime() { // サウンドロゴ: 短いグリッチ → 3音の上昇フレーズ → 着地の和音（サブ＋FMベル）
             if (!ctx) return;
             try {
-                var t = ctx.currentTime + 0.02, out = ctx.createGain(); out.gain.value = 0.55;
+                var t = ctx.currentTime + 0.1, out = ctx.createGain(); out.gain.value = 0.55; // 出力の立ち上がりで頭が欠けないよう少し遅らせて開始
                 var dl = ctx.createDelay(1), fb = ctx.createGain(), dw = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
                 dl.delayTime.value = 0.18; fb.gain.value = 0.35; dw.gain.value = 0.4; // 余韻のディレイ
                 out.connect(ctx.destination); out.connect(dl); dl.connect(fb).connect(dl);
@@ -243,9 +243,9 @@
                     m.connect(mg).connect(c.frequency); env(g, at, v, dec); c.connect(g).connect(out); c.start(at); m.start(at); c.stop(at + dec + 0.02); m.stop(at + dec + 0.02);
                 };
                 // 1) グリッチ（モザイクの出現に合わせて）
-                for (var i = 0; i < 6; i++) { var at = t + i * 0.017, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = 900 + Math.random() * 3000; env(g, at, 0.04, 0.014, 0.002); o.connect(g).connect(out); o.start(at); o.stop(at + 0.02); }
+                for (var i = 0; i < 6; i++) { var at = t + i * 0.018, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = 900 + Math.random() * 3000; env(g, at, 0.13, 0.022, 0.002); o.connect(g).connect(out); o.start(at); o.stop(at + 0.03); }
                 // 2) 上昇フレーズ A4 - E5 - B5（ロゴが揃っていくのに合わせて）
-                [[0.11, 440], [0.2, 659.25], [0.29, 987.77]].forEach(function (n) { pluck(t + n[0], n[1], 0.22, 0.2); bell(t + n[0], n[1] * 2, 0.18, 0.05, 2); });
+                [[0.11, 440], [0.2, 659.25], [0.29, 987.77]].forEach(function (n, i) { pluck(t + n[0], n[1], 0.22, i === 0 ? 0.3 : 0.24); bell(t + n[0], n[1] * 2, 0.18, 0.05, 2); });
                 // 3) 着地: Am(add9) の和音＋サブ＋長めのベル
                 var hit = t + 0.4;
                 [110, 164.81, 220, 261.63, 493.88].forEach(function (f) { pluck(hit, f, 1.1, 0.11); });
