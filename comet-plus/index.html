@@ -1121,7 +1121,7 @@ function activateHyper() {
     triggerInvincibility(90); // 通常アイテムと同じ無敵
     if (tutorial) tutorial.hyper = (tutorial.hyper || 0) + 1;
     effects = effects.filter(e => e.type !== 'hyperMsg');
-    effects.push({ type: 'hyperMsg', text: 'HYPER!!  SCORE ×3', life: 120, maxLife: 120 });
+    // 取得時の「HYPER!! SCORE ×3」の文字は出さない
     effects.push({ type: 'screenFlash', life: 10, maxLife: 10 });
     screenShake = { intensity: 8, duration: 12 };
     audioHandler.playSound('waveClear');
