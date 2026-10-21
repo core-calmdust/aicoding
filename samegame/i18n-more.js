@@ -745,3 +745,9 @@ window.SAME_I18N.ar = {
   };
   for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => { D['th.' + k] = A[l][i][0]; D['th.' + k + '.d'] = A[l][i][1]; D['th.' + k + '.r'] = A[l][i][2]; }); }
 })();
+
+/* ORDER: game over when nothing can be cleared */
+(function () {
+  const S = { ja: ['詰み！消せるブロックがない', '消せるブロックがなくなったら詰みで即終了'], en: ['Stuck! Nothing left to clear', 'If nothing can be cleared, the game ends at once'], zh: ['死局！没有可消除的方块', '没有可消除的方块时立即结束'], ko: ['막혔다! 지울 블록이 없어요', '지울 수 있는 블록이 없으면 바로 종료'], es: ['¡Bloqueado! No queda nada que despejar', 'Si no se puede despejar nada, la partida termina al instante'], fr: ['Bloqué ! Plus rien à effacer', 'S’il n’y a plus rien à effacer, la partie s’arrête aussitôt'], pt: ['Travou! Nada para limpar', 'Se não houver nada para limpar, o jogo acaba na hora'], de: ['Festgefahren! Nichts mehr abzuräumen', 'Lässt sich nichts mehr abräumen, endet das Spiel sofort'], hi: ['फँस गए! हटाने को कुछ नहीं', 'कुछ भी हटाया न जा सके तो खेल तुरंत खत्म'], ar: ['طريق مسدود! لا شيء لإزالته', 'إذا لم يبقَ ما يمكن إزالته تنتهي اللعبة فورًا'] };
+  for (const l in S) { const D = window.SAME_I18N[l]; if (!D) continue; D['a.order.stuck'] = S[l][0]; D['a.order.t3'] = S[l][1]; }
+})();

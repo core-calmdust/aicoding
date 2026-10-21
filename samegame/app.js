@@ -632,6 +632,9 @@ function afterMove() {
     return;
   } else if (G.mode === 'dive' && diveStuck()) {
     floatText(t('a.dive.stuck'), 'minus'); setTimeout(() => G && !G.over && endAction(), 900); G.busy = true; return;
+  } else if (G.mode === 'order' && E.dead(G.board, G.feverT > 0 ? 1 : G.min)) {
+    // ORDER: no group left to clear → stuck, game over right away
+    G.stuck = true; floatText(t('a.order.stuck'), 'minus'); SND.bad(); setTimeout(() => G && !G.over && endAction(), 900); G.busy = true; return;
   } else if (G.refills && E.dead(G.board, G.feverT > 0 ? 1 : G.min)) {
     // reshuffle when stuck
     floatText(G.timed ? 'SHUFFLE -3s' : 'SHUFFLE!', 'fever'); if (G.timed) G.tLeft -= 3; if (G.mode === 'fuse') G.fuse = Math.max(.5, G.fuse - 1.5); const all = G.board.flat(); for (let i = all.length - 1; i > 0; i--) { const j = (G.rnd() * (i + 1)) | 0;[all[i], all[j]] = [all[j], all[i]]; }
@@ -854,7 +857,7 @@ function endAction() {
     const key = G.mode; if (sc > (DB.act[key] || 0)) { DB.act[key] = sc; best = true; }
     const left = k === 'dblitz' ? 3 - dlRec(G.date)[dkOf(G.mode)].a : 1;
     btns = [left > 0 ? ['again', k === 'dblitz' ? t('r.againN', { n: left }) : t('r.retry'), 'red'] : null, k === 'dblitz' ? ['rank', t('rk.title')] : null, ['home', t('u.home')]];
-    showResult(resultCard(G.mode === 'rise' ? 'GAME OVER' : G.mode === 'fuse' ? 'BURNED OUT!' : G.mode === 'dive' && G.tLeft > 0 ? 'NO WAY!' : 'TIME UP!', `<div class="rscore">${fmt(sc)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${G.mode === 'rise' || G.mode === 'fuse' ? `<p>${esc(t('r.surv', { n: Math.floor(G.elapsed) }))}</p>` : ''}${G.mode === 'order' ? `<p>${esc(t('a.order.r', { n: G.ordN }))}</p>` : ''}${G.mode === 'dive' ? `<p>${esc(t('a.dive.r', { n: G.pearlN }))}</p>` : ''}${G.mode === 'dive' && G.tLeft > 0 ? `<p class="note">${esc(t('a.dive.stuck'))}</p>` : ''}${stats}${coinLine(coins)}${k === 'dblitz' ? nameNudge() : ''}`, btns));
+    showResult(resultCard(G.mode === 'rise' ? 'GAME OVER' : G.mode === 'fuse' ? 'BURNED OUT!' : G.mode === 'dive' && G.tLeft > 0 ? 'NO WAY!' : G.stuck ? 'NO MOVES!' : 'TIME UP!', `<div class="rscore">${fmt(sc)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${G.mode === 'rise' || G.mode === 'fuse' ? `<p>${esc(t('r.surv', { n: Math.floor(G.elapsed) }))}</p>` : ''}${G.mode === 'order' ? `<p>${esc(t('a.order.r', { n: G.ordN }))}</p>` : ''}${G.mode === 'dive' ? `<p>${esc(t('a.dive.r', { n: G.pearlN }))}</p>` : ''}${G.mode === 'dive' && G.tLeft > 0 ? `<p class="note">${esc(t('a.dive.stuck'))}</p>` : ''}${G.stuck ? `<p class="note">${esc(t('a.order.stuck'))}</p>` : ''}${stats}${coinLine(coins)}${k === 'dblitz' ? nameNudge() : ''}`, btns));
   }
   if (DB.set.anim && sc > 0) confetti(1);
   save();
@@ -1309,6 +1312,6 @@ async function boot() {
   loginBonus();
   if (ON && ON.available) ON.init().then(() => { if (acct()) { syncNow(true); profCard(); } }).catch(() => {});
 }
-window.SameApp = { get DB() { return DB; }, get G() { return G; }, startStage, startDaily, startAction, MIS, play, maybeThemeTip };
+window.SameApp = { get DB() { return DB; }, get G() { return G; }, startStage, startDaily, startAction, MIS, play, maybeThemeTip, afterMove };
 boot();
 })();
