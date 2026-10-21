@@ -257,6 +257,8 @@ function create(o) {
   // the tallest title + text of all board pages at a given width (column layout): the board is sized so that the text of
   // every page fits without scrolling when there is room (the board stays one fixed size on every page)
   const tnCache = {};
+  // web fonts arriving later change the text size: measure again and re-lay out
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { for (const k in tnCache) delete tnCache[k]; if (visible()) fit(); });
   function textNeed(w) {
     const m = mount(), main = m && m.querySelector('.rt-main'); if (!main) return 0;
     const key = Math.round(w) + '|' + document.documentElement.lang + '|' + innerWidth; if (tnCache[key] != null) return tnCache[key];
