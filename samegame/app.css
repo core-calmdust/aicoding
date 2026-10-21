@@ -1161,3 +1161,12 @@ body[data-skin="mid"] .ttag{border:0;border-radius:999px;transform:none;box-shad
   .tpanel{flex-direction:column;align-items:center}.tmas{width:86px;height:86px}.balloon::before{display:none}
   .mbox{box-shadow:6px 6px 0 var(--ink)}
 }
+/* PC: free play fills the box height (matches the taller daily action box) */
+@media (min-width:1000px){
+  #dFree .fopts{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;gap:10px;margin:6px 0 4px;padding:14px 16px;background:color-mix(in srgb,var(--paper) 55%,transparent);border-radius:20px}
+  #dFree .fopts .frow{margin:0;gap:8px;grid-template-columns:64px repeat(var(--n,3),1fr)}
+  #dFree .fopts .chipb{min-height:46px;font-size:17px;background:var(--card,#fffaf0)}
+  #dFree .fopts .chipb.on{background:var(--ink)}
+  #dFree .fopts .frow span{font-size:16px}
+  #dFree .dbtns{padding-top:14px}
+}

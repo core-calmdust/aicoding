@@ -297,9 +297,9 @@ function renderFree() {
   $('#dFree').innerHTML = `<div class="ptag yel">${esc(t('f.title'))}</div>
     <div class="fhead"><div class="dthumb ficon">${miniBoard(E.randomBoard(fw, fh, freeK, E.rng(11)))}</div><div><h3>${esc(t('f.head'))}</h3><div class="dbest"><span>${esc(t('d.best'))}</span><b>${best ? fmt(best) : '—'}</b></div></div></div>
     <p class="sub">${esc(t('f.desc'))}</p>
-    <div class="frow" style="--n:2"><span>${esc(t('f.orient'))}</span>${['h', 'v'].map(o => `<button class="chipb ori ${o === freeO ? 'on' : ''}" data-o="${o}">${oIco(o)}${esc(t('f.' + o))}</button>`).join('')}</div>
+    <div class="fopts"><div class="frow" style="--n:2"><span>${esc(t('f.orient'))}</span>${['h', 'v'].map(o => `<button class="chipb ori ${o === freeO ? 'on' : ''}" data-o="${o}">${oIco(o)}${esc(t('f.' + o))}</button>`).join('')}</div>
     <div class="frow" style="--n:3"><span>${esc(t('f.size'))}</span>${FREE_SIZES.map((_, i) => { const [w, h] = freeDims(i); return `<button class="chipb ${i === freeSz ? 'on' : ''}" data-sz="${i}">${w}×${h}</button>`; }).join('')}</div>
-    <div class="frow" style="--n:4"><span>${esc(t('f.colors'))}</span>${[3, 4, 5, 6].map(k => `<button class="chipb ${k === freeK ? 'on' : ''}" data-k="${k}">${k}</button>`).join('')}</div>
+    <div class="frow" style="--n:4"><span>${esc(t('f.colors'))}</span>${[3, 4, 5, 6].map(k => `<button class="chipb ${k === freeK ? 'on' : ''}" data-k="${k}">${k}</button>`).join('')}</div></div>
     <div class="dbtns"><button class="btn big yel" id="fPlay">${A.ICON.play}${esc(t('d.play'))}</button></div>`;
   $$('[data-sz]', $('#dFree')).forEach(b => b.onclick = () => { freeSz = +b.dataset.sz; renderFree(); });
   $$('[data-k]', $('#dFree')).forEach(b => b.onclick = () => { freeK = +b.dataset.k; renderFree(); });
