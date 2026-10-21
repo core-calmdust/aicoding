@@ -16,7 +16,7 @@ function t(k, v) {
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
   return x;
 }
-const pname = s => t(s === 0 ? 'p0' : 'p1');
+const pname = s => t('ng.' + ((settings.ck && settings.ck[s]) || (s ? 'black' : 'gold')));
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
 const mvb = s => `<bdi class="mv">${s}</bdi>`;
 function applyI18n() {
@@ -30,7 +30,7 @@ function applyI18n() {
 
 // ====================================================================== settings / state
 const STORE = 'aicoding-backgammon-v2';
-const settings = { mode: 'ai', color: 0, level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: false, anim: true, sound: true, hint: false, lang: '' };
+const settings = { mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: false, anim: true, sound: true, hint: false, lang: '' };
 const $ = s => document.querySelector(s);
 // the game's own animation setting is the only switch (the OS "reduce motion" preference is not used: the user
 // asked for dice / checker animations to play regardless)
@@ -318,6 +318,7 @@ function shownState() {
   const [g, a] = curGA();
   const st = stateAt(g, a);
   if (lesson && lesson.posOverride) return Object.assign(st, { pos: lesson.posOverride });
+  if (puzzle && puzzle.posOverride) return Object.assign(st, { pos: puzzle.posOverride });
   if (turn && isLatest() && !reviewing) return Object.assign(st, { pos: turn.pos, turnSide: turn.side });
   return st;
 }
@@ -363,13 +364,14 @@ function renderCube(st, offeredBy) {
   if (st.owner === view) { x = G.TX + G.TW / 2; y = G.MID + 0.75; }
   else if (st.owner === 1 - view) { x = G.TX + G.TW / 2; y = G.MID - 0.75; }
   if (st.offered) { const d = st.doubler; x = d === view ? G.RX + 3 : G.LX + 3; y = G.MID; txt = String(v * 2); cls += ' offer'; }
-  if (lesson && lesson.cubeQ) {   // cube lessons: centred cube, or a pending double by the opponent
+  const CQ = (lesson && lesson.cubeQ) ? lesson : (puzzle && puzzle.cubeQ) ? puzzle : null;
+  if (CQ) {   // cube lessons / puzzles: centred cube, or a pending double by the opponent
     x = G.BX + G.B / 2; y = G.MID; txt = '64'; cls = 'cube';
-    if (lesson.cubeQ === 'take') { x = lesson.side === view ? G.LX + 3 : G.RX + 3; txt = '2'; cls += ' offer'; }
+    if (CQ.cubeQ === 'take') { x = CQ.side === view ? G.LX + 3 : G.RX + 3; txt = '2'; cls += ' offer'; }
   }
   cubeEl.className = cls; cubeEl.textContent = txt;
   cubeEl.style.left = U(x); cubeEl.style.top = U(y);
-  cubeEl.style.display = (match && match.cube && !lesson && !puzzle) || (lesson && lesson.cubeQ) ? '' : 'none';
+  cubeEl.style.display = (match && match.cube && !lesson && !puzzle) || CQ ? '' : 'none';
 }
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 function dieHTML(s, v, x, y, used, size, yaw) {
@@ -1203,8 +1205,8 @@ function renderGraph() {
   if (pts.length) { path = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L'); area = path + `L${pts[pts.length - 1][0].toFixed(1)},${H / 2}L0,${H / 2}Z`; }
   const cx = cur / (n - 1) * W;
   svg.innerHTML = `<defs><clipPath id="ctop"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath><clipPath id="cbot"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath></defs>
-    <path d="${area}" fill="rgba(229,195,108,.45)" clip-path="url(#ctop)"/>
-    <path d="${area}" fill="rgba(120,126,138,.45)" clip-path="url(#cbot)"/>
+    <path d="${area}" fill="${ckFlat(0)}" fill-opacity=".5" clip-path="url(#ctop)"/>
+    <path d="${area}" fill="${ckFlat(1) === '#202328' ? '#787e8a' : ckFlat(1)}" fill-opacity=".5" clip-path="url(#cbot)"/>
     <line class="zero" vector-effect="non-scaling-stroke" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
     ${seps.map(i => `<line class="sep" vector-effect="non-scaling-stroke" x1="${i / (n - 1) * W}" x2="${i / (n - 1) * W}" y1="0" y2="${H}"/>`).join('')}
     <path d="${path}" fill="none" stroke="rgba(240,230,200,.85)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
@@ -1428,8 +1430,24 @@ const mqPortrait = matchMedia('(orientation: portrait)'), mqCoarse = matchMedia(
 const mqLandPhone = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
 let geomReady = false;
 // flat board in any phone-landscape layout (physical landscape or the rotated page)
+// PC wide: the board spans the browser width (flat geometry, height fitted to the window), the info row sits below it;
+// lessons / puzzles keep their card beside the board; while the review is open the board leaves room for the row's top
+const mqPCW = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1000px) and (min-height: 560px)');
+let PCW = false;
+function pcFit() {
+  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
+  const side = document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
+  const reserve = side ? 0 : (rvOpen && rv) ? Math.round(Math.min(380, Math.max(240, hgt * 0.34))) : 0;
+  const availW = w - 48 - (side ? Math.min(440, Math.max(360, w * 0.3)) + 24 : 0);
+  const availH = hgt - hb - 14 - 14 - reserve;
+  let u = Math.min(availW / 15.85, 100), h = availH / u;
+  if (h < 8.4) { u = availH / 8.4; h = 8.4; }
+  return { h: Math.min(12, h), u: Math.max(30, u) };
+}
 function updateGeom() {
-  const flat = ROT || mqLandPhone.matches, f = flat ? flatFit() : { h: 12, u: 0 };
+  const pcw = mqPCW.matches && !ROT && !mqCoarse.matches;
+  if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); }
+  const flat = ROT || mqLandPhone.matches || PCW, f = flat ? (PCW ? pcFit() : flatFit()) : { h: 12, u: 0 };
   if (flat === G.FLAT && Math.abs(f.h - G.H) < 0.05 && Math.abs(f.u - (G.U || 0)) < 0.3 && geomReady) return;
   G.U = f.u; setGeom(flat, f.h, f.u);
   if (geomReady) { try { drawBoardSvg(); render(); } catch (e) {} }
@@ -1440,7 +1458,12 @@ function applyLand() {
   $('#btnLand').classList.toggle('on', landOn);
 }
 (mqLandPhone.addEventListener ? mqLandPhone.addEventListener('change', updateGeom) : mqLandPhone.addListener(updateGeom));
-addEventListener('resize', () => { if (G.FLAT || mqLandPhone.matches) updateGeom(); });
+addEventListener('resize', () => { if (G.FLAT || mqLandPhone.matches || mqPCW.matches !== PCW) updateGeom(); });
+(mqPCW.addEventListener ? mqPCW.addEventListener('change', updateGeom) : mqPCW.addListener(updateGeom));
+// PC wide: lessons / puzzles (body class) change the board's room
+let pcwRaf = 0;
+function pcwRefit() { if (!PCW || pcwRaf) return; pcwRaf = requestAnimationFrame(() => { pcwRaf = 0; updateGeom(); }); }
+new MutationObserver(pcwRefit).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (G.FLAT) requestAnimationFrame(updateGeom); }); for (const sel of ['#lessonCard', '#puzzleCard', '.brand', '.players']) { const el = document.querySelector(sel); if (el) ro.observe(el); } }
 async function setLand(on) {
   landOn = on; try { localStorage.setItem(LAND_STORE, on ? '1' : '0'); } catch (e) {}
@@ -1529,31 +1552,47 @@ let draft = {};
 function levelLabelHTML(v) { return `Lv.${v} ${LV(v)}<small>${LVD(v)}</small>`; }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
-  document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
+  ckSync();
   document.querySelectorAll('#segMatch button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.matchLen));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
-  $('#fColor').classList.toggle('hidden', m !== 'ai');
+  $('#fColor').classList.toggle('hidden', !game);
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
   $('#fDisplay').classList.toggle('hidden', !game);
   $('#fMatch').classList.toggle('hidden', !game);
   $('#fSeed').classList.toggle('hidden', !game);
   $('#fInfo').classList.toggle('hidden', game);
-  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
+  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc2', { n: LESSONS ? LESSONS.steps.length : 23 }) : m === 'puzzle' ? t('pz.desc') : '';
   $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : t('start');
-  $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
+  $('#levelLabel').textContent = m === 'watch' ? t('ng.levelC', { c: t('ng.' + draft.ck[0]) }) : t('ng.level');
+  if ($('#level2Label')) $('#level2Label').textContent = t('ng.levelC', { c: t('ng.' + draft.ck[1]) });
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
+// checker colours: one row per side (AI game: you / AI), four swatches each; the two sides always differ
+function ckSync() {
+  const T = window.BGTheme; if (!T) return;
+  const m = draft.mode, lab = s => m === 'ai' ? (s === 0 ? t('you') : 'AI') : m === 'watch' ? 'AI ' + (s + 1) : t('ng.pl', { n: s + 1 });
+  document.querySelectorAll('#ckRows .ckrow').forEach(row => {
+    const s = +row.dataset.s;
+    row.querySelector('.ckl').textContent = lab(s);
+    row.querySelector('.cksw').innerHTML = T.CK_IDS.map(id => { const c = T.CK[id]; return `<button data-c="${id}" class="${draft.ck[s] === id ? 'sel' : draft.ck[1 - s] === id ? 'dim' : ''}" title="${esc(t('ng.' + id))}"><i class="sw" style="background:radial-gradient(circle at 35% 30%,${c.c1},${c.c2} 40%,${c.c3} 80%,${c.c4});box-shadow:inset 0 0 0 1.5px ${c.ring},0 1px 3px rgba(0,0,0,.5)"></i><span>${esc(t('ng.' + id))}</span></button>`; }).join('');
+  });
+}
+$('#ckRows').onclick = e => {
+  const b = e.target.closest('button[data-c]'); if (!b) return;
+  const s = +b.closest('.ckrow').dataset.s, ck = draft.ck.slice(); ck[s] = b.dataset.c;
+  draft.ck = BGTheme.fixPair(ck[0], ck[1], s); segSync();
+};
+function applyCk() { if (window.BGTheme) { settings.ck = BGTheme.fixPair(settings.ck[0], settings.ck[1]); BGTheme.applyCheckers(settings.ck); } }
 function openNewDialog() {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: 0, ck: (settings.ck || ['gold', 'black']).slice(), level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
   $('#optCube').checked = settings.cube; $('#optEval').checked = settings.eval; $('#optForced').checked = settings.forced;
   $('#optRoll').checked = settings.autoRoll; $('#optCoach').checked = settings.coach; $('#optAnim').checked = settings.anim;
   $('#seedInput').value = '';
   segSync(); showOverlay('#newOverlay');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
-$('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#segMatch').onclick = e => { const b = e.target.closest('button'); if (b) { draft.matchLen = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -1563,9 +1602,10 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   exitSpecial();
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, matchLen: draft.matchLen,
+  Object.assign(settings, { mode: draft.mode, color: 0, ck: draft.ck.slice(), level: draft.level, level2: draft.level2, matchLen: draft.matchLen,
     cube: $('#optCube').checked, eval: $('#optEval').checked, forced: $('#optForced').checked, autoRoll: $('#optRoll').checked, coach: $('#optCoach').checked, anim: $('#optAnim').checked });
   pendingSeed = $('#seedInput').value;
+  applyCk(); drawBoardSvg();
   startNewMatch();
 };
 
@@ -1593,7 +1633,7 @@ async function runReview() {
         const s = st.nRolls === 0 ? (a.d[0] > a.d[1] ? 0 : 1) : st.turn;
         const plays = BG.genPlays(st.pos, s, a.d[0], a.d[1]);
         const after = st.pos.slice(); for (const c of a.m) BG.apply(after, s, BG.mvFrom(c), BG.mvTo(c));
-        if (plays.length > 1) jobs.push({ kind: 'play', g, i, side: s, msg: { type: 'analyze', pos: st.pos, side: s, dice: a.d, ply: 1, keep: 6, max: 3, played: BG.key(after), time: 2500 } });
+        if (plays.length > 1) jobs.push({ kind: 'play', g, i, side: s, msg: { type: 'analyze', pos: st.pos, side: s, dice: a.d, ply: 1, keep: 6, max: 3, played: BG.key(after), time: 2500, explain: true } });
         if (st.nRolls > 0 && BG.cubeAvailable(st, ctxAt(g, i, s), s)) jobs.push({ kind: 'nodouble', g, i, side: s, cube: st.cube, msg: { type: 'cubeinfo', pos: st.pos, side: s, depth: 1, ctx: ctxAt(g, i, s) } });
       } else if (a.t === 'd') {
         jobs.push({ kind: 'double', g, i, side: st.turn, cube: st.cube, msg: { type: 'cubeinfo', pos: st.pos, side: st.turn, depth: 1, ctx: ctxAt(g, i, st.turn) } });
@@ -1615,7 +1655,7 @@ async function runReview() {
       let item = null;
       if (j.kind === 'play' && res.list && res.played) {
         const loss = Math.max(0, res.list[0].e - res.played.e);
-        item = { kind: 'play', side: j.side, loss, best: res.list[0].moves, played: res.played.moves, isBest: res.list[0].key === res.played.key };
+        item = { kind: 'play', side: j.side, loss, best: res.list[0].moves, played: res.played.moves, isBest: res.list[0].key === res.played.key, x: res.x || null, sit: res.sit || null, wb: res.list[0].v, wp: res.played.v };
       } else if (res.cube) {
         const c = res.cube, norm = c.mode === 'money' ? j.cube : 1;
         let loss = 0, bestTxt = '';
@@ -1623,7 +1663,7 @@ async function runReview() {
         else if (j.kind === 'double') { loss = !c.double ? Math.max(0, c.nd - Math.min(c.dt, c.dp)) / norm : 0; bestTxt = t('rv.noDouble'); }
         else if (j.kind === 'take') { loss = !c.take ? Math.max(0, c.dt - c.dp) / norm : 0; bestTxt = t('hint.pass'); }
         else if (j.kind === 'pass') { loss = c.take ? Math.max(0, c.dp - c.dt) / norm : 0; bestTxt = t('hint.take'); }
-        item = { kind: 'cube', sub: j.kind, side: j.side, loss, isBest: loss < 0.002, bestTxt };
+        item = { kind: 'cube', sub: j.kind, side: j.side, loss, isBest: loss < 0.002, bestTxt, cx: window.BGX && res.v ? BGX.cube(res.v, c, j.kind) : null };
       }
       if (item) {
         item.q = item.isBest || item.loss < 0.04 ? null : item.loss < 0.08 ? 'dubious' : 'bad';
@@ -1645,15 +1685,57 @@ async function runReview() {
 function revealReview() { if (!ROT && matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudgeAt(g, i) { if (!rv || rv.running || !rvOpen || rv.sig !== rvSig()) return null; return rv.items.get(g + ':' + i) || null; }
 function sideLabel(s) { return settings.mode === 'ai' ? (s === humanSide ? t('you') : 'AI') : pname(s); }
+let rvSel = null;   // the move picked in the review list {g, i} (the board then shows the position before it, with arrows)
+function rvCurrent() {
+  if (!rv || rv.running || !match) return null;
+  const [g, a] = curGA();
+  if (rvSel && tlIndex(rvSel.g, rvSel.i) === cur) return rvSel;
+  rvSel = null;
+  return a > 0 ? { g, i: a - 1 } : null;
+}
+const rxt = r => t(r.k, r.a);
+// commentary for one analysed action: played vs best, the reasons (computed features -> templates) and the situation
+function rvCommentHTML(g, i, opts) {
+  const it = rv && rv.items.get(g + ':' + i), a = match.games[g] && match.games[g].actions[i];
+  if (!it || !a) return `<div class="rv-cur empty">${t('rv.noMove')}</div>`;
+  const main = it, other = it.play || it.cube || null;
+  const q = main.q || (other && other.q) || null;
+  const loss = Math.max(main.loss, other ? other.loss : 0);
+  const head = `<div class="h"><b>${t('rv.cur')}</b><span class="pdisc p${main.side}" style="width:12px;height:12px"></span>${esc(sideLabel(main.side))}${match.games.length > 1 ? ' · G' + (g + 1) : ''}` +
+    (q ? `<span class="tag ${q}">${t('q.' + q)}</span><span style="font-family:'JetBrains Mono',monospace">−${loss.toFixed(3)}</span>` : `<span class="tag ok">${t('q.best')}</span>`) + `</div>`;
+  let body = '';
+  const playIt = main.kind === 'play' ? main : other && other.kind === 'play' ? other : null;
+  const cubeIt = main.kind === 'cube' ? main : other && other.kind === 'cube' ? other : null;
+  if (playIt) {
+    const pl = BG.notation(playIt.played), bs = BG.notation(playIt.best), dice = a.t === 'r' ? a.d.join('') + ' ' : '';
+    body += `<div class="mvs"><span>${t('rv.played')}</span><bdi class="mv pld">${dice}${pl}</bdi>` + (playIt.isBest || playIt.loss < 0.004 ? '' : `<span>${t('rv.best')}</span><bdi class="mv bst">${dice}${bs}</bdi>`) + `</div>`;
+    if (playIt.x && playIt.x.length && playIt.loss >= 0.02) body += `<ul>${playIt.x.map(r => `<li class="${r.k === 'x.win' ? 'num' : ''}">${rxt(r)}</li>`).join('')}</ul>`;
+    else body += `<ul><li>${t('rv.goodMove')}</li></ul>`;
+  }
+  if (cubeIt && cubeIt.cx && (cubeIt.q || cubeIt.sub !== 'nodouble')) {
+    if (!playIt) body += `<div class="mvs"><span>${t('rv.played')}</span><bdi class="mv pld">${t('rv.cube.' + cubeIt.sub)}</bdi>${cubeIt.q ? `<span>${t('rv.best')}</span><bdi class="mv bst">${esc(cubeIt.bestTxt)}</bdi>` : ''}</div>`;
+    body += `<ul>${cubeIt.cx.map(r => `<li>${rxt(r)}</li>`).join('')}</ul>`;
+  }
+  const sit = playIt && playIt.sit;
+  if (sit) body += `<div class="sit"><b>${t('rv.sitLbl')}</b>${t(sit.k, sit.a)}</div>`;
+  return `<div class="rv-cur">${head}${body}</div>`;
+}
+function rvShortWhy(it) {
+  const p = it.kind === 'play' ? it : it.play && it.play.q ? it.play : null;
+  if (p && p.x) { const r = p.x.find(r => r.k !== 'x.win'); if (r) return rxt(r); }
+  const c = it.kind === 'cube' ? it : it.cube;
+  if (c && c.cx && c.cx.length) return rxt(c.cx[0]);
+  return '';
+}
 function renderReview() {
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.sig !== rvSig() && !rv.running) { rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
-  card.classList.toggle('show', !!show);
+  if (card.classList.contains('show') !== !!show) { card.classList.toggle('show', !!show); pcwRefit(); }
   if (!show) return;
   let html;
   if (rv.running) {
-    html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rv.done, b: rv.total })}</div><div class="rv-prog"><i style="width:${rv.total ? rv.done / rv.total * 100 : 0}%"></i></div>`;
+    html = `<div style="font-size:13px;color:var(--muted)">${t('rv.running', { a: rv.done, b: rv.total })}</div><div class="rv-prog"><i style="width:${rv.total ? rv.done / rv.total * 100 : 0}%"></i></div>`;
   } else {
     const st = { 0: { n: 0, best: 0, bad: 0, dubious: 0, loss: 0 }, 1: { n: 0, best: 0, bad: 0, dubious: 0, loss: 0 } };
     for (const it of rv.all || []) {
@@ -1662,23 +1744,27 @@ function renderReview() {
       s.loss += it.loss;
     }
     const list = [];
-    for (const [key, it] of rv.items) { const [g, i] = key.split(':').map(Number); if (it.q) { st[it.side][it.q]++; list.push({ g, i, ...it }); } }
+    for (const [key, it] of rv.items) { const [g, i] = key.split(':').map(Number); if (it.q) { st[it.side][it.q]++; list.push({ g, i, it, ...it }); } }
     const row = s => { const x = st[s], pr = x.n ? (x.loss / x.n * 500) : 0; return `<span class="who"><span class="pdisc p${s}"></span>${sideLabel(s)}</span><span><b>${x.n ? Math.round(x.best / x.n * 100) : 0}%</b></span><span><b>${pr.toFixed(1)}</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${x.bad}</span><span class="dubious">${t('q.dubious')} ${x.dubious}</span></span>`; };
-    html = `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" title="${t('rv.prTitle')}">PR</span><span></span>${row(0)}${row(1)}</div>`;
+    const cr = rvCurrent();
+    html = cr ? rvCommentHTML(cr.g, cr.i) : `<div class="rv-cur empty">${t('rv.pick')}</div>`;
+    html += `<div class="rv-sum">${''}<span></span><span class="h">${t('rv.acc')}</span><span class="h" title="${t('rv.prTitle')}">PR</span><span></span>${row(0)}${row(1)}</div>`;
     const shown = list.length > 12 ? list.slice().sort((a, b) => b.loss - a.loss).slice(0, 12).sort((a, b) => a.g - b.g || a.i - b.i) : list;
-    const curKey = curGA().join(':');
+    const curKey = cr ? cr.g + ':' + cr.i : '';
     if (shown.length) html += `<div class="rv-list">${shown.map(x => {
       const lbl = x.kind === 'play' ? `${match.games[x.g].actions[x.i].d.join('')} ${BG.notation(x.played)} → ${BG.notation(x.best)}` : `${t('rv.cube.' + x.sub)} → ${x.bestTxt}`;
-      return `<button data-g="${x.g}" data-i="${x.i}" class="${curKey === x.g + ':' + x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${match.games.length > 1 ? 'G' + (x.g + 1) + ' ' : ''}<i class="p${x.side}"></i>${lbl}</span><span class="ls">−${x.loss.toFixed(3)}</span></button>`;
+      const why = rvShortWhy(x.it);
+      return `<button data-g="${x.g}" data-i="${x.i}" class="${curKey === x.g + ':' + x.i ? 'cur' : ''}"><span class="row"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${match.games.length > 1 ? 'G' + (x.g + 1) + ' ' : ''}<i class="p${x.side}"></i>${lbl}</span><span class="ls">−${x.loss.toFixed(3)}</span></span>${why ? `<span class="why">${why}</span>` : ''}</button>`;
     }).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
-    html += `<div class="rv-note" style="color:var(--dim);font-size:11px">${t('rv.note')}</div>`;
+    html += `<div class="rv-note" style="color:var(--dim);font-size:11.5px">${t('rv.note')}</div>`;
   }
   $('#rvBody').innerHTML = html;
 }
 $('#rvBody').addEventListener('click', e => {
   const b = e.target.closest('button[data-g]'); if (!b) return;
   const g = +b.dataset.g, i = +b.dataset.i;
+  rvSel = { g, i };
   viewAt(tlIndex(g, i));
   const it = rv && rv.items.get(g + ':' + i);
   extraArrows = [];
@@ -1690,7 +1776,7 @@ $('#rvBody').addEventListener('click', e => {
   }
   renderArrows(); renderReview();
 });
-$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); extraArrows = []; renderReview(); renderArrows(); renderKifu(); };
+$('#rvClose').onclick = () => { rvOpen = false; rvSel = null; if (rv && rv.running) rvCancel(); extraArrows = []; renderReview(); renderArrows(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 
@@ -1860,6 +1946,9 @@ function miniBoardSVG(p, side, opts) {   // always drawn with the standard (tall
   const flat = G.FLAT, fh = G.H, fu = G.U; if (flat) setGeom(false);
   try { return miniBoardSVG0(p, side, opts); } finally { if (flat) setGeom(true, fh, fu); }
 }
+const ckPal = sd => (window.BGTheme && BGTheme.CK[settings.ck[sd]]) || null;
+const ckFlat = sd => { const c = ckPal(sd); return c ? c.flat : sd ? '#202328' : '#e2c275'; };
+const ckEdge = sd => { const c = ckPal(sd); return c ? c.edge : sd ? '#c9ccd2' : '#7a5c22'; };
 function miniBoardSVG0(p, side, opts) {
   opts = opts || {};
   const S = 20, W = 15.85 * S, H = 12 * S;
@@ -1870,7 +1959,21 @@ function miniBoardSVG0(p, side, opts) {
   }
   s += `<rect x="${G.TX * S}" y="${G.TOP * S}" width="${G.TW * S}" height="${11 * S}" rx="3" fill="#0d2f21"/>`;
   const v0 = view; view = side;
-  if (p) for (const sd of [0, 1]) for (let pt = 1; pt <= 25; pt++) { const n = p[sd * 26 + pt]; for (let k = 0; k < n; k++) { const [x, y] = ckXY(sd, pt, k, n); s += `<circle cx="${x * S}" cy="${y * S}" r="${0.45 * S}" fill="${sd ? '#202328' : '#e2c275'}" stroke="${sd ? '#c9ccd2' : '#7a5c22'}" stroke-width="1"/>`; } }
+  // highlighted zones [side, fromPt, toPt, colour] (points in that side's numbering)
+  for (const z of opts.zones || []) for (let pt = Math.min(z[1], z[2]); pt <= Math.max(z[1], z[2]); pt++) {
+    const vp = toV(z[0], pt), x = slotX(vp), top = vp >= 13;
+    s += `<rect x="${(x - .5) * S + 1}" y="${(top ? G.TOP : G.MID + .15) * S}" width="${S - 2}" height="${(G.MID - G.TOP - .15) * S}" rx="3" fill="${z[3] || 'rgba(255,226,140,.28)'}"/>`;
+  }
+  if (p) for (const sd of [0, 1]) for (let pt = 1; pt <= 25; pt++) { const n = p[sd * 26 + pt]; for (let k = 0; k < n; k++) { const [x, y] = ckXY(sd, pt, k, n); s += `<circle cx="${x * S}" cy="${y * S}" r="${0.45 * S}" fill="${ckFlat(sd)}" stroke="${ckEdge(sd)}" stroke-width="1"/>`; } }
+  for (const lb of opts.labels || []) {   // [side, pt, text]: a tag beside the point's base
+    const vp = toV(lb[0], lb[1]), x = slotX(vp), top = vp >= 13, y = top ? G.TOP + 5.3 : G.BOT - 5.3;
+    s += `<text x="${x * S}" y="${y * S}" font-size="9" font-weight="700" font-family="JetBrains Mono,sans-serif" fill="#fff3cf" text-anchor="middle" stroke="#0b1110" stroke-width="2.4" paint-order="stroke">${esc(lb[2])}</text>`;
+  }
+  if (opts.pips && p) {   // pip counts in the tray: the opponent at the top, the side at the bottom
+    const tx = (G.TX + G.TW / 2) * S;
+    s += `<text x="${tx}" y="${(G.TOP + .9) * S}" font-size="9.5" font-weight="700" font-family="JetBrains Mono,monospace" fill="${ckFlat(1 - side) === '#202328' ? '#c9ccd2' : ckFlat(1 - side)}" text-anchor="middle">${BG.pips(p, 1 - side)}</text>`;
+    s += `<text x="${tx}" y="${(G.BOT - .5) * S}" font-size="9.5" font-weight="700" font-family="JetBrains Mono,monospace" fill="${ckFlat(side) === '#202328' ? '#c9ccd2' : ckFlat(side)}" text-anchor="middle">${BG.pips(p, side)}</text>`;
+  }
   for (const mk of opts.marks || []) { const n = p[mk[0] * 26 + mk[1]]; const [x, y] = ckXY(mk[0], mk[1], Math.max(0, n - 1), Math.max(1, n)); s += `<circle cx="${x * S}" cy="${y * S}" r="${0.5 * S}" fill="none" stroke="${mk[2] || '#fff3cf'}" stroke-width="2.4" stroke-dasharray="${mk[3] ? '4 3' : ''}"/>`; }
   for (const ar of opts.arrows || []) {
     const q = p.slice(); for (const c of ar.moves) { const f = BG.mvFrom(c), to = BG.mvTo(c); const nf = q[ar.side * 26 + f]; const [x0, y0] = ckXY(ar.side, f, nf - 1, nf); BG.apply(q, ar.side, f, to); const n = to ? q[ar.side * 26 + to] : 1; const [x1, y1] = to ? ckXY(ar.side, to, n - 1, n) : [G.TX + .65, G.MID]; s += `<line x1="${x0 * S}" y1="${y0 * S}" x2="${x1 * S}" y2="${y1 * S}" stroke="#ffe6a0" stroke-width="2.4" stroke-linecap="round"/><circle cx="${x1 * S}" cy="${y1 * S}" r="3" fill="#ffe6a0"/>`; }
@@ -1982,7 +2085,7 @@ const RT_X = 7.1;   // bar centre (board units), where the cube sits
 function rtStd(fn) { const flat = G.FLAT, fh = G.H, fu = G.U; if (flat) setGeom(false); try { return fn(); } finally { if (flat) setGeom(true, fh, fu); } }
 function rtUnits(e, svg) { const r = lrect(svg), [x, y] = lp(e); return [(x - r.left) / r.width * 15.85, (y - r.top) / r.height * 12]; }
 function rtHit(e, svg) { const [ux, uy] = rtUnits(e, svg); return rtStd(() => hitPoint(ux, uy)); }
-const rtx = k => t('rt.' + k, { c: pname(0), o: pname(1) });
+const rtx = k => t('rt.' + k, { c: t('ng.gold'), o: t('ng.black') });   // the rules pictures keep gold / black
 // a tiny interactive turn for gold (side 0, view 0): tap a checker, then one of the marked points
 function rtGame(api, cfg) {
   const dice = cfg.dice, st = { pos: cfg.pos.slice(), dice, left: dice[0] === dice[1] ? [dice[0], dice[0], dice[0], dice[0]] : dice.slice(), used: 0, sel: null, hits: 0, fin: false };
@@ -2106,7 +2209,11 @@ $('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay(
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261021bp').then(r => r.json()).then(d => {
+  LESSONS = d;
+  if (d.cats) { LS_COURSES = {}; for (const c of d.cats) LS_COURSES[c.id] = c.steps; }
+  return d;
+}).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -2133,12 +2240,13 @@ function bgThumb(pos, side, dice, opts) {
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
 // lessons in two courses: moving and fighting, then the race home and the cube
-const LS_COURSES = { basic: ['move', 'hit', 'prime', 'safe'], home: ['bearoff', 'race', 'cube'] };
-const LS_ICON = { basic: '⚀', home: '⚑' };
-const lsCourseOf = id => Object.keys(LS_COURSES).find(c => LS_COURSES[c].includes(id)) || 'basic';
+// lessons in categories (tabs): from lessons.json (v2: cats), with the old two courses as the fallback
+let LS_COURSES = { basic: ['move', 'hit', 'prime', 'safe'], home: ['bearoff', 'race', 'cube'] };
+const LS_ICON = { basic: '⚀', home: '⚑', rules: '⚀', opening: '⚁', middle: '⛓', safety: '⛨', race: '⚑', cube: '⧉', adv: '♛' };
+const lsCourseOf = id => Object.keys(LS_COURSES).find(c => LS_COURSES[c].includes(id)) || Object.keys(LS_COURSES)[0];
 let lsCourseSel = '';
 function lsThumb(s) {
-  const d = s.diagram;
+  const d = s.diagram || (s.figs && s.figs[0]);
   if (d) { const p = decPos(d.pos), sd = d.side || 0; return bgThumb(p, sd, null, { marks: d.marks || [], arrows: d.play ? [{ side: sd, moves: decMoves(p, sd, d.play).moves }] : [] }); }
   const P = s.problems[0]; return bgThumb(P.pos, P.side, P.dice);
 }
@@ -2159,7 +2267,7 @@ async function openLessons(course) {
       `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass ? 'ok' : '')}</span></button>`;
   }).join('');
   $('#lessonList').innerHTML = `<div class="lx">` +
-    `<div class="lx-tabs">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k]}</span><span class="nm">${t('lx.c.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-tabs${courses.length > 3 ? ' many' : ''}">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic">${LS_ICON[k]}</span><span class="nm">${t('lx.c.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
     `<div class="lx-banner"><span class="ic">${LS_ICON[c]}</span><span class="tx"><b>${t('lx.c.' + c)}</b><small>${t('lx.c.' + c + '.d')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
     `<div class="lx-grid">${cards}</div></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
@@ -2174,7 +2282,10 @@ function openIntro(i) {
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   let dia = '';
   if (s.diagram) { const p = decPos(s.diagram.pos); const ar = s.diagram.play ? [{ side: s.diagram.side || 0, moves: decMoves(p, s.diagram.side || 0, s.diagram.play).moves }] : []; dia = miniBoardSVG(p, s.diagram.side || 0, { marks: s.diagram.marks || [], arrows: ar }); }
-  $('#liBody').innerHTML = dia + t('ls.' + s.id + '.intro');
+  let body = t('ls.' + s.id + '.intro', { c: pname(0), o: pname(1) });
+  if (s.figs) body = body.replace(/\{fig(\d)\}/g, (_, i) => s.figs[+i] ? lsFigHTML(s.figs[+i], t('ls.' + s.id + '.cap' + i)) : '');
+  else body = dia + body;
+  $('#liBody').innerHTML = body;
   showLessonView('lessonIntroView');
 }
 $('#btnLessonBack').onclick = () => openLessons(LESSONS.steps[introIdx] && lsCourseOf(LESSONS.steps[introIdx].id));
@@ -2183,6 +2294,14 @@ $('#btnLessonStart').onclick = () => startLesson(introIdx);
 $('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
 $('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
+// an illustrated figure of a lesson intro: board + arrows of the play + marks / highlighted zones / labels / pip counts
+function lsFigHTML(f, cap) {
+  const p = decPos(f.pos), sd = f.side || 0;
+  const ar = f.play ? [{ side: sd, moves: decMoves(p, sd, f.play).moves }] : [];
+  let svg = miniBoardSVG(p, sd, { marks: f.marks || [], arrows: ar, zones: f.zones || [], labels: f.labels || [], pips: !!f.pips });
+  if (f.dice) { const y = 6, x = 7.7 + 3, dark = sd === 1; svg = svg.replace(/<\/svg>$/, rlDie(x - .6, y, f.dice[0], dark, 1.05) + rlDie(x + .6, y, f.dice[1], dark, 1.05) + '</svg>'); }
+  return `<figure class="ls-fig">${svg}${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`;
+}
 function startLesson(step) {
   hideOverlay('#lessonOverlay');
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle'); $('#toast').classList.remove('show');
@@ -2202,6 +2321,7 @@ function loadLessonProblem() {
   else { setupProblem(p, P.side, [1, 2]); turn = null; lesson.posOverride = p; }
   // tutorial aids on the first problem
   if (P.aid && lesson.i === 0) marks = P.aid.map(([s, pt, cls]) => ({ side: s, p: pt, cls }));
+  if (P.mk) marks = P.mk.map(([s, pt, cls]) => ({ side: s, p: pt, cls: cls || 'blot' }));
   if (P.kind !== 'play') { diceLayer.innerHTML = ''; }
   render(); renderInfo(); renderLessonCard();
   if (P.kind !== 'play') { diceLayer.innerHTML = ''; setButtons([]); }
@@ -2237,7 +2357,7 @@ $('#lsChoices').addEventListener('click', e => {
 function lessonSubmit(tt) {
   const P = lessonProblem(), s = LESSONS.steps[lesson.step];
   const k = BG.key(tt.pos);
-  const plays = P.plays.map(([m, e]) => { const d = decMoves(decPos(P.pos), P.side, m); return { moves: d.moves, key: BG.key(d.pos), e }; });
+  const plays = P.plays.map(([m, e]) => { const d = decMoves(decPos(P.pos), P.side, m); return { moves: d.moves, key: BG.key(d.pos), pos: d.pos, e }; });
   const best = plays[0].e;
   let rank = plays.findIndex(x => x.key === k);
   if (rank < 0) rank = plays.length - 1;
@@ -2266,10 +2386,25 @@ function renderLessonFb() {
     if (F.pts < 20) h += t('fb.answerIs', { m: mvb(bestN) }) + ' ' + tagText(P);
     else h += whyText(P, bestN);
     h += `<div class="plays-table">${F.plays.slice(0, 4).map((x, i) => `<div class="${i === 0 ? 'best' : ''} ${i === F.mine ? 'mine' : ''}"><span>${i + 1}</span><span>${BG.notation(x.moves)}</span><span>${fmtE(x.e)}</span></div>`).join('')}${F.mine >= 4 ? `<div class="mine"><span>${F.mine + 1}</span><span>${BG.notation(F.plays[F.mine].moves)}</span><span>${fmtE(F.plays[F.mine].e)}</span></div>` : ''}</div><div style="font-size:12px;color:var(--dim);margin-top:4px">${t('fb.eqNote', { n: F.plays.length })}</div>`;
+    h += lsWhyHTML(P, F);
   } else {
-    h += t('ls.why.' + (P.why || P.q), QV(P));
+    const qv = QV(P); if (P.q === 'shots') qv.m = t('ls.why.shotsD', { d: (P.qv || {}).d });
+    h += t('ls.why.' + (P.why || P.q), qv);
   }
   $('#lsFb').innerHTML = h;
+}
+// why the best play is better (computed features -> the same templates as the review), plus what kind of position it is
+function lsWhyHTML(P, F) {
+  if (!window.BGX || !F.plays || F.plays.length < 2) return '';
+  try {
+    const p = decPos(P.pos), mineBest = F.mine === 0 || F.pts === 20, alt = mineBest ? F.plays[1] : F.plays[F.mine];
+    if (!alt) return '';
+    const x = BGX.compare(p, P.side, F.plays[0], alt);
+    const NEG = ['x.shots', 'x.shots0', 'x.win', 'x.stack', 'x.noHit', 'x.subtle'];
+    const r = x.r.filter(z => !(mineBest && NEG.includes(z.k)) && z.k !== 'x.win');
+    const li = r.map(z => `<li>${t(z.k, z.a)}</li>`).join('');
+    return `<div class="ls-why">${li ? `<ul>${li}</ul>` : ''}<div class="sit"><b>${t('rv.sitLbl')}</b>${t(x.sit.k, x.sit.a)}</div></div>`;
+  } catch (e) { return ''; }
 }
 function tagText(P) { return P.tags && P.tags.length ? P.tags.map(tg => t('tag.' + tg[0], { n: tg[1] })).join(' ') : ''; }
 function whyText(P, bestN) {
@@ -2304,70 +2439,103 @@ $('#lsNext').onclick = () => {
   if (pass) confetti();
 };
 $('#lsQuit').onclick = () => quitSpecial();
+$('#lsList').onclick = () => { if (!lesson) return; const id = LESSONS.steps[lesson.step].id; openLessons(lsCourseOf(id)); };
 
 // ====================================================================== puzzles
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
-let pzLevel = 0;
+// puzzles v3: categories (tabs / cards) of stages of 10 (shared PZBook: stars, medals, unlocks). Each puzzle has an id;
+// the 16 original puzzles keep their old progress keys ("L-j") as ids. Progress: PZ_STORE {id: stars (1–3) | true (old = 3)}.
+const puzzlesReady = fetch('puzzles.json?v=20261021bp').then(r => r.json()).then(d => {
+  if (!d.cats && d.levels) d.cats = [{ id: 'mix', puzzles: d.levels.flatMap((L, i) => L.puzzles.map((P, j) => Object.assign({ id: i + '-' + j }, P))) }];
+  return (PUZZLES = d);
+}).catch(() => null);
+const PZ_ICON = { opening: '⚁', hit: '✸', point: '▲', prime: '⛓', safe: '⛨', blitz: '⚡', defense: '⚓', race: '➜', bearoff: '⚑', cube: '⧉', mix: '◆' };
+let pzCat = 0;
+const pzcName = id => id === 'mix' ? t('btn.puzzle') : t('pzc.' + id), pzcText = (id, k) => id === 'mix' ? '' : t('pzc.' + id + k);
+const pzStars = v => v === true ? 3 : (+v || 0);
+function pzRecs(C, pr) { pr = pr || pzProgress(); return C.puzzles.map(P => pzStars(pr[P.id])); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
+  if (window.PZBook) PZBook.setLang(LANG);
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo();
-  const daily = dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${t('pz.level' + (dl.L + 1))} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '';
-  const cards = PUZZLES.levels.map((L, i) => {
-    const solved = L.puzzles.filter((_, j) => pr[`${i}-${j}`]).length, all = solved === L.puzzles.length, P0 = L.puzzles[0];
-    const th = [...new Set(L.puzzles.map(P => P.theme || 'best'))].map(x => t('pz.theme.' + x)).join(' · ');
-    return `<button class="lx-card pz${all ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${bgThumb(P0.pos, P0.side, P0.dice)}</span><span class="lx-tx">` +
-      `<span class="lx-top"><span class="lx-no">LEVEL ${i + 1}</span><span class="lx-st${all ? ' ok' : solved ? '' : ' new'}">${all ? '✓ ' : ''}${t('lx.solved', { a: solved, b: L.puzzles.length })}</span></span>` +
-      `<b class="lx-t">${t('pz.level' + (i + 1))}</b><small class="lx-sub">${th}</small><span class="lx-desc">${t('pz.levelSub' + (i + 1))}</span>${lxBar(solved / L.puzzles.length, all ? 'ok' : '')}</span></button>`;
-  }).join('');
-  $('#pzLevels').innerHTML = `<div class="lx">${daily}<div class="lx-grid">${cards}</div></div>`;
+  const daily = dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${esc(pzcName(PUZZLES.cats[dl.c].id))} · ${esc(PZBook.t('stage', { n: Math.floor(dl.j / PZBook.STAGE) + 1 }))} · No.${dl.j + 1} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '';
+  const all = PUZZLES.cats.reduce((a, C) => a.concat(pzRecs(C, pr)), []), tt = PZBook.totals(all);
+  const cards = PUZZLES.cats.map((C, i) => PZBook.card({ i, icon: PZ_ICON[C.id] || '◆', name: pzcName(C.id), sub: pzcText(C.id, '.d'), recs: pzRecs(C, pr), tier: i % 6 })).join('');
+  $('#pzLevels').innerHTML = `<div class="lx">${daily}<div class="pz-total">${PZBook.STAR(true)}<b>${tt.stars}</b><small>/${tt.total * 3}</small> · ${t('lx.solved', { a: tt.done, b: tt.total })}</div><div class="pb-list pz-cats">${cards}</div></div>`;
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
 $('#pzLevels').onclick = e => {
-  const b = e.target.closest('.lesson-item, .lx-card'); if (!b) return;
-  if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
+  const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return;
+  if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.c, dl.j, dl.date); } else openPzGrid(+b.dataset.i);
 };
-function openPzGrid(i) {
-  pzLevel = i; const pr = pzProgress(), L = PUZZLES.levels[i];
-  $('#pzLevelTitle').textContent = t('pz.level' + (i + 1));
-  // each tile shows the position (a small board with the dice) and its theme
-  $('#pzGrid').innerHTML = L.puzzles.map((P, j) => `<button data-j="${j}" class="th${pr[`${i}-${j}`] ? ' solved' : ''}"><span class="tth">${bgThumb(P.pos, P.side, P.dice)}</span><span class="tn">${j + 1} · ${t('pz.theme.' + (P.theme || 'best'))}</span></button>`).join('');
+function openPzGrid(i, cur) {
+  pzCat = i; const C = PUZZLES.cats[i];
+  if (window.PZBook) PZBook.setLang(LANG);
+  $('#pzLevelTitle').textContent = pzcName(C.id);
+  $('#pzGrid').innerHTML = `<p class="pz-catdesc">${pzcText(C.id, '.long')}</p>` + PZBook.grid({ recs: pzRecs(C), cur });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
-$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (b) startPuzzle(pzLevel, +b.dataset.j); };
+$('#pzGrid').onclick = e => {
+  const b = e.target.closest('[data-j]'); if (!b) return;
+  if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
+  startPuzzle(pzCat, +b.dataset.j);
+};
 $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
-function startPuzzle(L, j, daily) {
+function startPuzzle(ci, j, daily, keep) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson'); $('#toast').classList.remove('show');
-  if (G.FLAT) { scrollTo(0, 0); document.body.scrollTop = 0; }
+  if (G.FLAT && !PCW) { scrollTo(0, 0); document.body.scrollTop = 0; }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false;
-  const P = PUZZLES.levels[L].puzzles[j];
-  puzzle = { L, j, P, side: P.side, state: 'play', daily: daily || null, hinted: false };
+  const P = PUZZLES.cats[ci].puzzles[j];
+  puzzle = Object.assign({ ci, j, P, side: P.side, state: 'play', daily: daily || null, hinted: false, failed: false, answered: false, cubeQ: P.kind === 'cube' ? P.q : null, posOverride: null }, keep || {});
   document.body.classList.add('in-puzzle');
-  setupProblem(decPos(P.pos), P.side, P.dice);
-  render(); renderInfo(); renderPuzzleCard(); pzAfterStep();
+  if (P.kind === 'cube') { setupProblem(decPos(P.pos), P.side, [1, 2]); turn = null; puzzle.posOverride = decPos(P.pos); }
+  else setupProblem(decPos(P.pos), P.side, P.dice);
+  render(); if (P.kind === 'cube') { diceLayer.innerHTML = ''; setButtons([]); }
+  renderInfo(); renderPuzzleCard();
+  if (P.kind === 'cube') pzStatus(pzCubeChoices()); else pzAfterStep();
 }
+const pzCatId = Pz => PUZZLES.cats[Pz.ci].id;
 function renderPuzzleCard() {
-  const Pz = puzzle;
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pz.level' + (Pz.L + 1))} · No.${Pz.j + 1}`;
+  const Pz = puzzle, C = PUZZLES.cats[Pz.ci];
+  if (window.PZBook) PZBook.setLang(LANG);
+  $('#pzStep').textContent = (Pz.daily ? `★ ${t('daily.title')} ${Pz.daily.slice(5).replace('-', '/')} · ` : '') + `${pzcName(C.id)} · ${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1}`;
   $('#pzTitle').textContent = t('pz.theme.' + (Pz.P.theme || 'best'));
-  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.side}"></span><span>${t('pz.goal', { c: pname(Pz.side), d: Pz.P.dice.join('-') })}</span>`;
-  $('#pzNext').disabled = !!Pz.daily || (Pz.j + 1 >= PUZZLES.levels[Pz.L].puzzles.length && Pz.L + 1 >= PUZZLES.levels.length);
-  $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.state === 'answer';
+  const goal = Pz.P.kind === 'cube' ? t(Pz.P.q === 'take' ? 'ls.q.take' : 'ls.q.double', { c: pname(Pz.side), o: pname(1 - Pz.side) }) : t('pz.goal', { c: pname(Pz.side), d: Pz.P.dice.join('-') });
+  $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.side}"></span><span>${goal}</span>`;
+  $('#pzNext').disabled = !!Pz.daily || Pz.j + 1 >= C.puzzles.length || !PZBook.isOpen(pzRecs(C), Pz.j + 1);
+  $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.state === 'answer' || Pz.state === 'solved';
   renderInfo();
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
-function pzPlays() { const P = puzzle.P, p = decPos(P.pos); return P.plays.map(([m, e]) => { const d = decMoves(p, P.side, m); return { moves: d.moves, key: BG.key(d.pos), e }; }); }
+function pzPlays() { const P = puzzle.P, p = decPos(P.pos); return P.plays.map(([m, e]) => { const d = decMoves(p, P.side, m); return { moves: d.moves, key: BG.key(d.pos), pos: d.pos, e }; }); }
 function pzTable(plays, mine) { return `<div class="plays-table">${plays.slice(0, 5).map((x, i) => `<div class="${i === 0 ? 'best' : ''} ${i === mine ? 'mine' : ''}"><span>${i + 1}</span><span>${BG.notation(x.moves)}</span><span>${fmtE(x.e)}</span></div>`).join('')}</div>`; }
+// positional explanation stored with the puzzle (computed from features at generation with the 2-ply values):
+// the situation (what this kind of position asks for), why the best play is right, and how it beats the tempting alternative
+function pzExplainHTML(mine) {
+  const P = puzzle.P; if (!P.r && !P.sit && !P.cx) return '';
+  const plays = P.kind === 'cube' ? null : pzPlays();
+  let h = '<div class="ls-why pz-why">';
+  if (P.sit) h += `<div class="sit" style="margin:0 0 6px"><b>${t('rv.sitLbl')}</b>${t(P.sit[0], P.sit[1])}</div>`;
+  if (P.cx) h += `<ul>${P.cx.map(r => `<li>${t(r[0], r[1])}</li>`).join('')}</ul>`;
+  if (plays && P.r) {
+    const alt = mine > 0 && mine < plays.length ? mine : (P.alt || 1), altP = plays[alt];
+    const rs = (alt === (P.alt || 1) ? P.r : null);
+    if (altP) h += `<div class="pz-alt">${t('pz.altIs', { m: mvb(BG.notation(altP.moves)), d: (plays[0].e - altP.e).toFixed(3) })}</div>`;
+    let list = rs;
+    if (!list && window.BGX) { try { list = BGX.compare(decPos(P.pos), P.side, plays[0], altP).r.map(z => [z.k, z.a]); } catch (e) { list = P.r; } }
+    if (list && list.length) h += `<ul>${list.map(r => `<li class="${r[0] === 'x.win' ? 'num' : ''}">${t(r[0], r[1])}</li>`).join('')}</ul>`;
+  }
+  return h + '</div>';
+}
 // ---- puzzles v2 (common spec): a puzzle is one play (all the dice of the roll). The player keeps moving checkers
 // until the whole play is made (status shows the dice still to play) and it is judged on "Confirm" as before.
 // OBVIOUS MISTAKE (flagged at once, mid-play): a checker move after which none of the stored candidate plays (the
 // engine's top plays for this roll, up to six) can be reached any more — however the rest of the roll is played,
 // the result is worse than all of them. Illegal uses of the dice cannot happen: the board only offers legal steps.
-// A play that is finished and confirmed but not (close to) the best is a normal fail (★★ after retry, as before).
 function pzReach(q, left, used) {   // final positions reachable from a part-played turn
   const out = new Set(), seen = new Set(), side = turn.side, dice = turn.dice;
   const rec = (q, left, used) => {
@@ -2379,60 +2547,77 @@ function pzReach(q, left, used) {   // final positions reachable from a part-pla
   rec(q, left, used);
   return out;
 }
+function pzFail(html) {
+  const Pz = puzzle; Pz.state = 'fail'; Pz.failed = true; SFX.chime(false);
+  pzStatus(html); render(); renderPuzzleCard();
+}
 function pzAfterStep() {
   const Pz = puzzle; if (!Pz || !turn || Pz.state !== 'play') return;
-  const plays = pzPlays(), reach = pzReach(turn.pos, turn.left, turn.steps.length);
+  const plays = pzPlays().slice(0, 6), reach = pzReach(turn.pos, turn.left, turn.steps.length);
   if (turn.steps.length && !plays.some(x => reach.has(x.key))) {   // obvious mistake: fail now
-    Pz.state = 'fail'; turn.locked = true; SFX.chime(false);
+    turn.locked = true;
     const steps = turn.steps.map(s => s.code);
     turn.pos = turn.start.slice(); turn.steps = []; turn.left = [];
     extraArrows = [{ side: Pz.side, start: turn.start, moves: plays[0].moves, cls: 'hint' }, { side: Pz.side, start: turn.start, moves: steps, cls: 'bad' }];
-    pzStatus(`<b class="ng">${PZBook.t('blunder')}</b> ${t('pz.failWhy', { m: mvb(BG.notation(plays[0].moves)), l: '>' + (plays[0].e - plays[plays.length - 1].e).toFixed(3) })}` + pzTable(plays, -1));
-    render(); renderPuzzleCard(); return;
+    pzFail(`<b class="ng">${PZBook.t('blunder')}</b> ${t('pz.failWhy', { m: mvb(BG.notation(plays[0].moves)), l: '>' + (plays[0].e - plays[plays.length - 1].e).toFixed(3) })}` + pzExplainHTML(-1) + pzTable(pzPlays(), -1));
+    return;
   }
   const n = BG.maxUse(turn.pos, turn.side, turn.left);
   pzStatus(t('pz.start') + (n ? ` <b>${PZBook.t('movesLeft', { n })}</b>` : ''));
+}
+function pzSolved(extra) {
+  const Pz = puzzle, C = PUZZLES.cats[Pz.ci], pr = pzProgress(), stars = PZBook.starsFor(Pz);
+  const before = pzRecs(C, pr);
+  pr[Pz.P.id] = Math.max(pzStars(pr[Pz.P.id]), stars); try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
+  const after = pzRecs(C, pr), ev = PZBook.events(before, after, Pz.j);
+  Pz.state = 'solved';
+  if (Pz.daily) dailySolved(Pz.daily, Pz.hinted || Pz.failed);
+  SFX.chime(true); confetti(); if (ev.length) setTimeout(confetti, 650);
+  pzStatus(`<b class="ok">${t('pz.solved')}</b> ${extra || ''}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }) + pzExplainHTML(0));
+  render(); renderPuzzleCard();
 }
 function puzzleSubmit(tt) {
   const Pz = puzzle, plays = pzPlays(), k = BG.key(tt.pos);
   const mine = plays.findIndex(x => x.key === k);
   const ok = mine === 0 || (mine > 0 && plays[mine].e >= plays[0].e - 0.004);
   turn.locked = true;
-  if (ok) {
-    Pz.state = 'solved';
-    const pr = pzProgress(); pr[`${Pz.L}-${Pz.j}`] = true; try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
-    if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
-    SFX.chime(true); confetti();
-    pzStatus(`<b class="ok">${t('pz.solved')}</b> ${t('pz.solvedSub', { m: mvb(BG.notation(plays[0].moves)), g: (plays[0].e - plays[1].e).toFixed(3) })}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + pzTable(plays, 0));
-  } else {
-    Pz.state = 'fail';
-    SFX.chime(false);
-    const myE = mine >= 0 ? plays[mine].e : null;
-    turn.pos = turn.start.slice(); turn.steps = []; turn.left = [];
-    extraArrows = [{ side: Pz.side, start: turn.start, moves: plays[0].moves, cls: 'hint' }, { side: Pz.side, start: turn.start, moves: tt.steps.map(s => s.code), cls: 'bad' }];
-    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: mvb(BG.notation(plays[0].moves)), l: myE === null ? '>' + (plays[0].e - plays[plays.length - 1].e).toFixed(3) : (plays[0].e - myE).toFixed(3) })}` + pzTable(plays, mine));
-  }
-  render(); renderPuzzleCard();
+  if (ok) { pzSolved(t('pz.solvedSub', { m: mvb(BG.notation(plays[0].moves)), g: (plays[0].e - plays[1].e).toFixed(3) }) + pzTable(plays, 0)); return; }
+  const myE = mine >= 0 ? plays[mine].e : null;
+  turn.pos = turn.start.slice(); turn.steps = []; turn.left = [];
+  extraArrows = [{ side: Pz.side, start: turn.start, moves: plays[0].moves, cls: 'hint' }, { side: Pz.side, start: turn.start, moves: tt.steps.map(s => s.code), cls: 'bad' }];
+  pzFail(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: mvb(BG.notation(plays[0].moves)), l: myE === null ? '>' + (plays[0].e - plays[plays.length - 1].e).toFixed(3) : (plays[0].e - myE).toFixed(3) })}` + pzExplainHTML(mine) + pzTable(plays, mine));
 }
-$('#pzRetry').onclick = () => { if (puzzle) startPuzzle(puzzle.L, puzzle.j, puzzle.daily); };
+// cube puzzles: the decision buttons live in the status area
+function pzCubeChoices() {
+  const P = puzzle.P;
+  return `<div class="choices pz-choices">${P.opts.map((o, i) => `<button data-ci="${i}">${t('ls.opt.' + o)}</button>`).join('')}</div>`;
+}
+$('#pzStatus').addEventListener('click', e => {
+  const b = e.target.closest('button[data-ci]'); const Pz = puzzle; if (!b || !Pz || Pz.state !== 'play' || Pz.P.kind !== 'cube') return;
+  const i = +b.dataset.ci, P = Pz.P;
+  if (i === P.ans) pzSolved(`${t('pz.cubeAns', { a: t('ls.opt.' + P.opts[P.ans]) })}`);
+  else pzFail(`<b class="ng">${t('pz.fail')}</b> ${t('pz.cubeAns', { a: t('ls.opt.' + P.opts[P.ans]) })}` + pzExplainHTML(-1));
+});
+$('#pzRetry').onclick = () => { if (puzzle) startPuzzle(puzzle.ci, puzzle.j, puzzle.daily, { hinted: puzzle.hinted, failed: puzzle.failed, answered: puzzle.answered }); };
 $('#pzNext').onclick = () => {
   if (!puzzle) return;
-  let { L, j } = puzzle; j++;
-  if (j >= PUZZLES.levels[L].puzzles.length) { L++; j = 0; }
-  if (L < PUZZLES.levels.length) startPuzzle(L, j);
+  const { ci, j } = puzzle, C = PUZZLES.cats[ci];
+  if (j + 1 < C.puzzles.length && PZBook.isOpen(pzRecs(C), j + 1)) startPuzzle(ci, j + 1);
 };
-$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.L); };
+$('#pzList').onclick = () => { if (!puzzle) return; if (puzzle.daily) openPuzzles(); else openPzGrid(puzzle.ci, puzzle.j); };
 $('#pzQuit').onclick = () => quitSpecial();
 $('#pzHint').onclick = () => {
   const Pz = puzzle; if (!Pz || Pz.state !== 'play') return;
   Pz.hinted = true;
+  if (Pz.P.kind === 'cube') { pzStatus(t('ls.' + (Pz.P.q === 'take' ? 'takepoint' : 'racecube') + '.hint') + pzCubeChoices()); return; }
   const plays = pzPlays(); const froms = new Set(plays[0].moves.map(c => BG.mvFrom(c)));
   marks = [...froms].map(f => ({ side: Pz.side, p: f, cls: 'far' }));
-  render(); pzStatus(t('pz.hintText', { n: froms.size }) + (Pz.P.theme ? ' ' + t('pz.themeHint.' + Pz.P.theme) : ''));
+  render(); pzStatus(t('pz.hintText', { n: froms.size }) + (Pz.P.sit ? ' ' + t(Pz.P.sit[0], Pz.P.sit[1]) : Pz.P.theme ? ' ' + t('pz.themeHint.' + Pz.P.theme) : ''));
 };
 $('#pzAnswer').onclick = async () => {
   const Pz = puzzle; if (!Pz) return;
-  Pz.state = 'answer'; Pz.hinted = true; marks = []; extraArrows = [];
+  Pz.state = 'answer'; Pz.hinted = true; Pz.answered = true; marks = []; extraArrows = [];
+  if (Pz.P.kind === 'cube') { pzStatus(`${t('pz.cubeAns', { a: t('ls.opt.' + Pz.P.opts[Pz.P.ans]) })}` + pzExplainHTML(-1)); renderPuzzleCard(); return; }
   const plays = pzPlays();
   setupProblem(decPos(Pz.P.pos), Pz.side, Pz.P.dice); render(); renderPuzzleCard();
   pzStatus(t('pz.showing'));
@@ -2442,7 +2627,7 @@ $('#pzAnswer').onclick = async () => {
   await playMovesAnimated(plays[0].moves);
   if (puzzle !== Pz || !turn) return;
   turn.locked = true; render();
-  pzStatus(t('pz.answerDone', { m: mvb(BG.notation(plays[0].moves)) }) + pzTable(plays, -1));
+  pzStatus(t('pz.answerDone', { m: mvb(BG.notation(plays[0].moves)) }) + pzExplainHTML(0) + pzTable(plays, -1));
   renderPuzzleCard();
 };
 // ---- daily puzzle
@@ -2450,15 +2635,16 @@ const DAILY_STORE = STORE + '-daily';
 let daily = { last: '', streak: 0, best: 0, days: {} };
 try { Object.assign(daily, JSON.parse(localStorage.getItem(DAILY_STORE) || '{}')); } catch (e) {}
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+// a different category every day; weekdays get easier stages early in the week, the weekend the hardest
 function dailyPick() {
-  if (!PUZZLES || !PUZZLES.levels.length) return null;
+  if (!PUZZLES || !PUZZLES.cats || !PUZZLES.cats.length) return null;
   const now = new Date(), date = ymd(now);
   const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
-  const wd = now.getDay(), nL = PUZZLES.levels.length;
-  const L = Math.min(nL - 1, wd === 0 || wd === 6 ? nL - 1 : Math.floor((wd - 1) * nL / 5));
-  const n = PUZZLES.levels[L].puzzles.length;
-  let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
-  return { date, L, j: (h >>> 0) % n };
+  let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; h >>>= 0;
+  const cats = PUZZLES.cats, c = day % cats.length, n = cats[c].puzzles.length, wd = now.getDay();
+  const st = Math.max(1, Math.ceil(n / PZBook.STAGE)), stage = Math.min(st - 1, wd === 0 || wd === 6 ? st - 1 : Math.floor((wd - 1) * st / 5));
+  const a = stage * PZBook.STAGE, b = Math.min(n, a + PZBook.STAGE);
+  return { date, c, j: a + h % Math.max(1, b - a) };
 }
 function dailyInfo() {
   const today = ymd(new Date()), y = new Date(); y.setDate(y.getDate() - 1);
@@ -2475,8 +2661,9 @@ function dailySolved(date, hinted) {
 
 // ====================================================================== boot
 updateGeom(); geomReady = true;
-drawBoardSvg();
 const hadSave = load();
+applyCk();
+drawBoardSvg();
 // a game that was already finished when the page was saved: don't show its result (win condition) again on every visit
 try { if (hadSave && match) match.games.forEach((gm, g) => { if (stateAt(g, gm.actions.length).over) gameOverShown.add(g + ':' + gm.actions.length); }); } catch (e) {}
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
@@ -2491,7 +2678,7 @@ $('#langSel').onchange = e => {
   if (lesson) { renderLessonCard(); renderLessonFb(); }
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
-  if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
+  if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzCat); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (window.PZBook) PZBook.setLang(LANG);
   if (HB) HB.relabel();
@@ -2499,7 +2686,8 @@ $('#langSel').onchange = e => {
 if (window.PZBook) PZBook.setLang(LANG);
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
-if (HB) HB.onChange(() => { try { if (match) renderInfo(); } catch (e) {} });
+if (HB) HB.onChange(() => { try { updateGeom(); if (match) renderInfo(); } catch (e) {} });
+updateGeom();
 if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' });
 if (hadSave) { view = settings.mode === 'ai' ? humanSide : 0; cur = latestIdx(); updateCommit(); }
 if (loadFromHash()) { /* shared match opened */ }

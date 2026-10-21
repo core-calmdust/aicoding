@@ -297,5 +297,5 @@
     for (const F of FACES) { const n = mul(m, F.n); if (n[2] > best) { best = n[2]; v = F.v; } }
     return v;
   }
-  root.Dice3D = { plan, draw, pose, topValue, DT, A, ready: true, _choreo: choreo, _rej: REJ };
+  root.Dice3D = { plan, draw, pose, topValue, DT, A, COLORS, ready: true, _choreo: choreo, _rej: REJ };
 })(typeof window !== 'undefined' ? window : globalThis);

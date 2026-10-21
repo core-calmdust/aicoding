@@ -1,5 +1,5 @@
 // Backgammon V2 — AI / analysis worker
-importScripts('bg.js');
+importScripts('bg.js', 'explain.js');
 let ready = null;
 async function init() {
   try {
@@ -54,6 +54,13 @@ onmessage = async e => {
           const top = pl[0].ply;
           if (x.ply < top) { x.v = BG.evalPly ? BG.evalPly(x.pos, 1 - m.side, top) : top >= 2 ? BG.eval2(x.pos, 1 - m.side) : BG.eval1(x.pos, 1 - m.side); x.e = BG.equity(x.v); x.ply = top; }
           out.played = { moves: x.moves, e: x.e, v: x.v, ply: x.ply, key: k };
+          // commentary: why the best play beats the played one (features + templated reasons, see explain.js)
+          if (m.explain && self.BGX) {
+            try {
+              out.sit = BGX.situation(pos, m.side);
+              if (BGX && pl[0] !== x && pl[0].e - x.e >= (m.explainMin || 0.02)) out.x = BGX.compare(pos, m.side, pl[0], x).r;
+            } catch (e) {}
+          }
         }
       }
       out.n = pl.length;
