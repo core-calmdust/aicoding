@@ -1220,6 +1220,10 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/ruletour.js?v=13"></script>
 <script src="firebase-config.js?v=20261018ol"></script>
 <script src="online.js?v=20261020gt"></script>
+<script src="variants/search.js?v=20261021va"></script>
+<script src="variants/mini.js?v=20261021va"></script>
+<script src="variants/hasami.js?v=20261021va"></script>
+<script src="variants/variants.js?v=20261021va"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -1276,7 +1280,7 @@ const lvClamp = v => typeof v === 'number' && v >= 0 && v < LEVELS.length ? Math
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic' };
+const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic', variant: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
@@ -1305,8 +1309,9 @@ let promoPending = null;
 let hintMoves = null;
 
 function newRecord(start, human) { return { start, moves: [], info: [{ ev: 0 }], human, over: null }; }
+const newPos = () => (game && game.variant && window.Variants && Variants.pos(game.variant)) || new E.Position();   // おまけ: 5五将棋 / はさみ将棋 (variants/)
 function posAt(i) {
-  const p = new E.Position(); p.setSfen(game.start);
+  const p = newPos(); p.setSfen(game.start);
   for (let k = 0; k < i; k++) { p.doMove(p.fromUsi(game.moves[k])); p.histChk[p.hn - 1] = p.inCheck() ? 1 : 0; p.sp = 0; }
   return p;
 }
@@ -1365,10 +1370,10 @@ function anaMsg(e) {
   else { const j = anaJob; anaJob = null; j.resolve(m); }
 }
 aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
-function cancelAI() { if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); const j = aiJob; aiJob = null; j.resolve(null); } }
-function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); const j = anaJob; anaJob = null; j.resolve(null); } }
-function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress }; aiWorker.postMessage({ ...msg, id: aiJob.id }); }); }
-function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress }; anaWorker.postMessage({ ...msg, id: anaJob.id }); }); }
+function cancelAI() { if (aiJob) { if (aiJob.vw) Variants.kill('ai'); else { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); } const j = aiJob; aiJob = null; j.resolve(null); } }
+function cancelAna() { if (anaJob) { if (anaJob.vw) Variants.kill('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } const j = anaJob; anaJob = null; j.resolve(null); } }
+function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress }; const vw = window.Variants && Variants.wk(msg, 'ai', aiMsg, aiJob.id); if (vw) aiJob.vw = 1; (vw || aiWorker).postMessage({ ...msg, id: aiJob.id }); }); }
+function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress }; const vw = window.Variants && Variants.wk(msg, 'ana', anaMsg, anaJob.id); if (vw) anaJob.vw = 1; (vw || anaWorker).postMessage({ ...msg, id: anaJob.id }); }); }
 
 // ====================================================================== sound
 let actx = null;
@@ -1421,18 +1426,20 @@ const W_LETTER = ['', 'P', 'L', 'N', 'S', 'B', 'R', 'G', 'K', '+P', '+L', '+N', 
 const wSq = s => E.sqFile(s) + 'abcdefghi'[E.sqRank(s) - 1];
 function westName(pos, m) {
   const from = E.mFrom(m), to = E.mTo(m), us = pos.side;
+  if (pos.variant === 'hasami') return Variants.hasamiName(pos, m, false);
   if (E.isDrop(m)) return W_LETTER[E.dropType(m)] + '*' + wSq(to);
-  const p = pos.board[from], tp = E.typeOf(p);
+  const p = pos.board[from], tp = E.typeOf(p), inZ = pos.variant ? Variants.inZone : E.inZone;
   const amb = pos.legalMoves(true).some(x => !E.isDrop(x) && E.mTo(x) === to && E.mFrom(x) !== from && pos.board[E.mFrom(x)] === p);
   let s = W_LETTER[tp] + (amb ? wSq(from) : '') + (pos.board[to] ? 'x' : '-') + wSq(to);
   if (E.mPromo(m)) s += '+';
-  else if (E.CAN_PROMOTE[tp] && (E.inZone(us, from) || E.inZone(us, to))) s += '=';
+  else if (E.CAN_PROMOTE[tp] && (inZ(us, from) || inZ(us, to))) s += '=';
   return s;
 }
 // forFile: KIF file notation; ja: force Japanese (KI2 export)
 function kifName(pos, m, prevTo, forFile, ja) {
   if (!forFile && !ja && LANG !== 'ja') return westName(pos, m);
-  const from = E.mFrom(m), to = E.mTo(m), us = pos.side;
+  if (pos.variant === 'hasami') return Variants.hasamiName(pos, m, true);
+  const from = E.mFrom(m), to = E.mTo(m), us = pos.side, inZ = pos.variant ? Variants.inZone : E.inZone;
   let dest = (prevTo === to) ? (forFile ? '同　' : '同') : sqZen(to);
   if (E.isDrop(m)) {
     const tp = E.dropType(m);
@@ -1444,7 +1451,7 @@ function kifName(pos, m, prevTo, forFile, ja) {
   let s = dest + NAME[tp];
   if (!forFile) s += disamb(pos, m, p);
   if (E.mPromo(m)) s += '成';
-  else if (E.CAN_PROMOTE[tp] && (E.inZone(us, from) || E.inZone(us, to))) s += '不成';
+  else if (E.CAN_PROMOTE[tp] && (inZ(us, from) || inZ(us, to))) s += '不成';
   if (forFile) s += '(' + E.sqFile(from) + E.sqRank(from) + ')';
   return s;
 }
@@ -1498,11 +1505,13 @@ function pieceEl(code, promoted) {
 }
 function renderCoords() {
   let top = '', right = '';
-  for (let c = 0; c < 9; c++) top += `<span>${ZEN[flip ? c + 1 : 9 - c]}</span>`;
-  for (let r = 0; r < 9; r++) right += `<span>${KAN[flip ? 9 - r : r + 1]}</span>`;
+  const n = window.Variants ? Variants.geom(P).n : 9;   // 5五将棋: 5×5
+  for (let c = 0; c < n; c++) top += `<span>${ZEN[flip ? c + 1 : n - c]}</span>`;
+  for (let r = 0; r < n; r++) right += `<span>${KAN[flip ? n - r : r + 1]}</span>`;
   $('#coordTop').innerHTML = top; $('#coordRight').innerHTML = right;
 }
 function renderBoard(anim) {
+  if (window.Variants && Variants.geom(P).changed) renderCoords();
   const lm = cur > 0 ? P.fromUsi(game.moves[cur - 1]) : 0;
   const lastTo = lm ? E.mTo(lm) : -1;
   const chkSq = P.inCheck() ? P.king[P.side] : -1;
@@ -1579,7 +1588,8 @@ let drag = null, suppressClick = 0;
 function sqFromPoint(x, y) {
   const r = boardEl.getBoundingClientRect();
   if (x < r.left || x >= r.right || y < r.top || y >= r.bottom) return -1;
-  const c = Math.floor((x - r.left) / r.width * 9), rr = Math.floor((y - r.top) / r.height * 9);
+  const g = window.Variants ? Variants.geom(P) : { n: 9, c0: 0, r0: 0 };
+  const c = g.c0 + Math.floor((x - r.left) / r.width * g.n), rr = g.r0 + Math.floor((y - r.top) / r.height * g.n);
   return dispToSq(rr * 9 + c);
 }
 function startDrag(e, src) {
@@ -1645,8 +1655,9 @@ function askPromotion(s, cands) {
   const from = E.mFrom(promo), code = P.board[from];
   const box = document.createElement('div'); box.className = 'promo';
   const d = sqToDisp(s), r = boardEl.getBoundingClientRect(), fr = boardEl.parentElement.getBoundingClientRect();
-  box.style.left = (r.left - fr.left + ((d % 9) + 0.5) * r.width / 9) + 'px';
-  box.style.top = (r.top - fr.top + (((d / 9) | 0) + 0.5) * r.height / 9) + 'px';
+  const g = window.Variants ? Variants.geom(P) : { n: 9, c0: 0, r0: 0 };
+  box.style.left = (r.left - fr.left + ((d % 9) - g.c0 + 0.5) * r.width / g.n) + 'px';
+  box.style.top = (r.top - fr.top + (((d / 9) | 0) - g.r0 + 0.5) * r.height / g.n) + 'px';
   const mk = (m, c, lbl) => { const b = document.createElement('button'); b.appendChild(pieceEl(c)); const l = document.createElement('span'); l.className = 'lbl'; l.textContent = lbl; b.appendChild(l); b.onclick = e => { e.stopPropagation(); box.remove(); promoPending = null; humanMove(m); }; return b; };
   box.appendChild(mk(promo, code + 8, t('promote.yes')));
   box.appendChild(mk(plain, code, t('promote.no')));
@@ -1703,9 +1714,10 @@ function playerName(c) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; return (c === net.me ? t('you') + ' · ' : '') + (c === 0 ? g.bn : g.wn) + ' (' + (c === 0 ? g.br : g.wr) + ')'; }
   if (settings.mode === 'pvp') return cname(c);
   const cs = window.CpuStyle && game ? CpuStyle.tag(game, c, t) : '';
-  if (settings.mode === 'watch') return 'AI ' + t('lv')[c === 0 ? settings.level : settings.level2] + cs;
+  const lvN = i => game && game.variant ? Variants.lvName(i) : t('lv')[i];
+  if (settings.mode === 'watch') return 'AI ' + lvN(c === 0 ? settings.level : settings.level2) + cs;
   if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : 'AI ' + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
-  return c === game.human ? t('you') : 'AI ' + t('lv')[settings.level] + cs;
+  return c === game.human ? t('you') : 'AI ' + lvN(settings.level) + cs;
 }
 const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('mated') : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(Math.round(v));
 const winRate = v => 1 / (1 + Math.exp(-v / 600));
@@ -1730,7 +1742,7 @@ function hbClock() {
   el.hidden = !txt; if (txt && el.dataset.v !== txt) { el.dataset.v = txt; el.innerHTML = `⏱ <b>${escHb(txt)}</b>`; }
 }
 function renderInfo() {
-  try { const c = !lesson && game && !game.lessonGame && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (ShogiStrategy.localName ? ShogiStrategy.localName(c, LANG) : (LANG === 'ja' ? c.ja : c.en)) : ''; } catch (e) {}
+  try { const c = !lesson && game && !game.lessonGame && !game.variant && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (ShogiStrategy.localName ? ShogiStrategy.localName(c, LANG) : (LANG === 'ja' ? c.ja : c.en)) : ''; } catch (e) {}
   olPName($('#nameBlack'), 0); olPName($('#nameWhite'), 1);
   $('#pBlack').classList.toggle('active', !game.over && P.side === 0);
   $('#pWhite').classList.toggle('active', !game.over && P.side === 1);
@@ -1751,7 +1763,7 @@ function renderInfo() {
   document.body.classList.toggle('rated-live', rtLive());
   $('#evalCard').dataset.rtnote = t('rt.noEval');
   if (game.rated && !lesson) { $('#btnUndo').disabled = true; if (!game.over) $('#btnHint').disabled = true; }
-  $('#btnAnalyze').disabled = rtLive();
+  $('#btnAnalyze').disabled = rtLive() || !!game.variant;
   if (settings.mode === 'online') { const live = !!net && !net.done && !net.spectate && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
   else { $('#btnLesson').disabled = false; $('#btnTsume').disabled = false; }
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1779,7 +1791,7 @@ function kifList() {
   // cached kanji move names
   if (!game._kif || game._kif.length !== game.moves.length || game._kifLang !== LANG) {
     Object.defineProperty(game, '_kifLang', { value: LANG, enumerable: false, writable: true, configurable: true });
-    const p = new E.Position(); p.setSfen(game.start);
+    const p = newPos(); p.setSfen(game.start);
     const out = []; let prevTo = -1;
     for (const u of game.moves) { const m = p.fromUsi(u); out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; }
     Object.defineProperty(game, '_kif', { value: out, enumerable: false, writable: true, configurable: true });
@@ -1823,16 +1835,18 @@ function newGame(rated) {
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
   if (rated && !rated.id) rated = null;
-  const start = rated ? HANDI[0] : HANDI[settings.handicap] || HANDI[0];
+  const vr = window.Variants ? Variants.forGame(rated) : '';   // 5五将棋 / はさみ将棋: always even
+  const start = vr ? Variants.START[vr] : rated ? HANDI[0] : HANDI[settings.handicap] || HANDI[0];
   let human = 0;
   if (rated) human = Math.random() < 0.5 ? 0 : 1;      // rated: even game, random sente / gote
   else if (settings.mode === 'ai') {
     human = settings.color === 2 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
-    if (settings.handicap > 0 && settings.color === 2) human = 0;
+    if (settings.handicap > 0 && settings.color === 2 && !vr) human = 0;
   }
   game = newRecord(start, human);
+  if (vr) game.variant = vr;
   if (rated) game.rated = rated;
-  else if (window.CpuStyle) CpuStyle.attach(game, settings);   // game.cs: the CPU's chosen strategy per side
+  else if (window.CpuStyle && !vr) CpuStyle.attach(game, settings);   // game.cs: the CPU's chosen strategy per side
   clockInit();
   cur = 0; reviewing = false; hintMoves = null; sel = null;
   flip = settings.mode === 'ai' && human === 1;
@@ -1896,7 +1910,7 @@ function commitMove(m, fromHuman) {
   stopPlay();
   clockOnMove(P.side);
   const usi = P.toUsi(m);
-  const capture = !E.isDrop(m) && P.board[E.mTo(m)];
+  const capture = !E.isDrop(m) && (P.board[E.mTo(m)] || (P.variant === 'hasami' && P.capCount(E.mFrom(m), E.mTo(m))));
   game.moves.length = cur; game.info.length = cur + 1;
   game.moves.push(usi); game.info.push({ ev: null });
   cur = game.moves.length; hintMoves = null; sel = null;
@@ -1908,6 +1922,7 @@ function commitMove(m, fromHuman) {
   schedule();
 }
 function checkEnd() {
+  if (P.variant) { Variants.checkEnd(game, P); return; }
   const n = game.moves.length;
   if (!P.legalMoves(false).length) { game.over = { winner: P.side ^ 1, reason: 'mate', ply: n }; return; }
   // repetition: 4 occurrences
@@ -1958,7 +1973,7 @@ async function schedule() {
       const r = await CpuStyle.move({ E, P, game, side, ply: idx, book: levelOf(side) >= 2 ? BOOK : null, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }) });
       if (token !== busyToken) return;
       if (r) { bm = r.u; bmLbl = r.src === 'plan' ? 'cs.plan' : 'book'; }
-    } else bm = levelOf(side) >= 2 ? bookMove() : null;
+    } else bm = levelOf(side) >= 2 && !game.variant ? bookMove() : null;
     if (bm) {
       await sleep(settings.mode === 'watch' ? 500 : 400); if (token !== busyToken) return;
       const prev = game.info[idx]; if (prev && prev.pendingQ) delete prev.pendingQ;
@@ -1966,7 +1981,7 @@ async function schedule() {
       setStatus(side, t(bmLbl), false);
       return;
     }
-    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: lv }, m => {
+    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: game.variant ? Variants.levelOpts(levelOf(side), game.variant) : lv }, m => {
       if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
@@ -2133,6 +2148,7 @@ const DTXT = {
 const fillT = (o, v) => { const r = {}; for (const k in o) r[k] = o[k].replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return r; };
 // positions where the human played a dubious/bad move and the analysis knew a better one
 function mistakeProblems() {
+  if (game && game.variant) return [];
   if (!game || settings.mode !== 'ai') return [];
   const out = [];
   for (let i = 1; i <= game.moves.length; i++) {
@@ -2268,6 +2284,7 @@ function openNewDialog() {
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last; $('#optEval').checked = settings.eval; $('#optCoach').checked = settings.coach;
   if (window.CpuStyle) CpuStyle.dlgOpen();
+  if (window.Variants) Variants.dlgOpen();
   updDialog();
   showOverlay('#newOverlay');
 }
@@ -2299,6 +2316,7 @@ function updDialog() {
   $('#optEval').disabled = rt; $('#optCoach').disabled = rt;
   $('#newOverlay').classList.toggle('ng-watch', dlg.mode === 'watch');
   if (window.CpuStyle) CpuStyle.dlgUpdate(dlg, settings, t);   // CPU strategy dropdowns (even games, vs AI / AI vs AI)
+  if (window.Variants) Variants.dlgUpdate();   // 種目 (本将棋 / 5五将棋 / はさみ将棋) beside 手合い
   $('#btnStart').textContent = t(rt ? 'rt.start' : ol ? 'ng.toOnline' : dlg.mode === 'lesson' ? 'ng.goLesson' : dlg.mode === 'tsume' ? 'ng.goTsume' : dlg.mode === 'edit' ? 'ng.goEdit' : 'start');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
@@ -2333,6 +2351,7 @@ $('#btnStart').onclick = () => {
   Object.assign(settings, { clock: dlg.clock, mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
     legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
   if (window.CpuStyle) CpuStyle.dlgRead(settings);
+  if (window.Variants) Variants.dlgRead();
   newGame();
 };
 
