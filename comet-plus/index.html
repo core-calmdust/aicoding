@@ -1128,6 +1128,14 @@ function activateHyper() {
     audioHandler.playJingle('specialItemGet');
 }
 const SP_FOR_BONUS = 5;
+// スマホのアイテム取得判定: 自機の見た目（大きく表示している機体の輪郭）にアイテムが触れたら取得
+// 機体の輪郭は 幅±20・前35・後ろ29（モデル単位）を表示倍率VSで拡大した長方形として扱う
+function shipTouches(x, y, r) {
+    const hw = 20 * VS, front = 35 * VS, back = 29 * VS;
+    const dx = Math.max(0, Math.abs(x - player.x) - hw);
+    const dy = y < player.y ? Math.max(0, player.y - front - y) : Math.max(0, y - (player.y + back));
+    return dx * dx + dy * dy < r * r;
+}
 function shieldCap() { return DIFFS[difficultyIndex].cap || maxShields; }
 function gainShield() {
     if (tutorial) return;
@@ -2268,7 +2276,7 @@ function updatePlayingState(dt_sec) {
         }
         const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
 
-        if (dist < config.playerVisualSize + config.energyItemSize) {
+        if (IS_MOBILE ? shipTouches(item.x, item.y, 20 * VS * 0.85) : dist < config.playerVisualSize + config.energyItemSize) {
             if (tutorial) tutorial.items++;
             if (item.type === 'hyper') {
                 activateHyper();
@@ -2306,7 +2314,7 @@ function updatePlayingState(dt_sec) {
         if (g.x < 12 || g.x > config.canvasWidth - 12) { g.vx *= -0.6; g.x = Math.max(12, Math.min(config.canvasWidth - 12, g.x)); }
         if (g.y < 12) { g.vy = Math.abs(g.vy) * 0.6; g.y = 12; }
         if (g.y > config.canvasHeight + 20) { gems.splice(i, 1); continue; }
-        if (d < config.playerVisualSize + 16) {
+        if (IS_MOBILE ? shipTouches(g.x, g.y, 16) : d < config.playerVisualSize + 16) {
             score += g.value;
             gemCombo++;
             gemComboTimer = 40;
