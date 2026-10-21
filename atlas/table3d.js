@@ -890,7 +890,7 @@
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
-      const k = Math.min(1, (now - glide.t0) / glide.dur), e = ioC(k);
+      const k = Math.min(1, (now - glide.t0) / glide.dur), e = 1 - Math.pow(1 - k, 3);   // quick out, soft landing
       camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; frame();
       if (k >= 1) { camK = camTo; inset = glide.i1; glide = null; }
     } else camK += (camTo - camK) * ez(.07);
