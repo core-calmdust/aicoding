@@ -216,3 +216,39 @@ html.atlas-shogi .hslot.hint{background:rgba(255,214,70,.5)!important;border-rad
 html.atlas-skin .modal .pb-card{background:linear-gradient(120deg,color-mix(in srgb,var(--c2) 26%,#fff),#f8f0e0 60%)!important}
 html.atlas-skin .modal .pb-stage{background:linear-gradient(180deg,color-mix(in srgb,var(--c2) 18%,#fff),#f8f0e0)!important}
 html.atlas-skin .modal .pb-tile:not(.done){background:#f8f0e0!important}
+
+/* ===== backgammon skin: the museum-piece 3D board — the DOM frame is the 3D case's outer edge (15.85 × H board units) ===== */
+html.atlas-backgammon .frame{background:transparent!important;box-shadow:none!important;border-radius:0!important}
+html.atlas-bg3d #boardSvg{visibility:hidden}
+html.atlas-bg3d .lbl{color:rgba(250,236,200,.92)!important;text-shadow:0 1px 2px rgba(0,0,0,.75)!important}
+/* checkers: top-down renders of the metal-rimmed leather checkers (the light is up and to the left, as on the 3D board) */
+html.atlas-bg3d .ck.p0,html.atlas-bg3d body[data-ckm] .ck.p0{background:var(--bgc0) center/100% 100% no-repeat!important;box-shadow:none!important}
+html.atlas-bg3d .ck.p1,html.atlas-bg3d body[data-ckm] .ck.p1{background:var(--bgc1) center/100% 100% no-repeat!important;box-shadow:none!important}
+html.atlas-bg3d .ck{filter:drop-shadow(calc(var(--u)*.05) calc(var(--u)*.07) calc(var(--u)*.05) rgba(0,0,0,.55))}
+html.atlas-bg3d .ck::before{display:none!important}
+html.atlas-bg3d .ck b{font-family:Georgia,'Times New Roman',serif!important;font-size:calc(var(--u)*.4)!important}
+html.atlas-bg3d .ck.p0 b{color:var(--bgt0)!important}html.atlas-bg3d .ck.p1 b{color:var(--bgt1)!important}
+html.atlas-bg3d .ck.movable.movable{box-shadow:0 0 0 2px rgba(255,226,140,.75),0 0 calc(var(--u)*.3) rgba(255,214,110,.6)!important}
+html.atlas-bg3d .ck.sel.sel{box-shadow:0 0 0 3px #fff3cf,0 0 calc(var(--u)*.45) rgba(255,226,140,.95)!important}
+html.atlas-bg3d .ck.drag{filter:drop-shadow(calc(var(--u)*.22) calc(var(--u)*.34) calc(var(--u)*.2) rgba(0,0,0,.35))!important}
+/* borne-off checkers stand on their edge in the tray: the metal rim shows */
+html.atlas-bg3d .slab.p0{background:var(--bgs0) center/100% 100% no-repeat!important;box-shadow:none!important;filter:drop-shadow(0 calc(var(--u)*.025) calc(var(--u)*.02) rgba(0,0,0,.6))}
+html.atlas-bg3d .slab.p1{background:var(--bgs1) center/100% 100% no-repeat!important;box-shadow:none!important;filter:drop-shadow(0 calc(var(--u)*.025) calc(var(--u)*.02) rgba(0,0,0,.6))}
+/* resting dice: the render of the face that is up */
+html.atlas-bg3d .die{background-size:100% 100%!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:20%}
+html.atlas-bg3d .die i{visibility:hidden!important}
+html.atlas-bg3d .die.p0[data-v="1"]{background-image:var(--bgd01)!important}html.atlas-bg3d .die.p0[data-v="2"]{background-image:var(--bgd02)!important}html.atlas-bg3d .die.p0[data-v="3"]{background-image:var(--bgd03)!important}
+html.atlas-bg3d .die.p0[data-v="4"]{background-image:var(--bgd04)!important}html.atlas-bg3d .die.p0[data-v="5"]{background-image:var(--bgd05)!important}html.atlas-bg3d .die.p0[data-v="6"]{background-image:var(--bgd06)!important}
+html.atlas-bg3d .die.p1[data-v="1"]{background-image:var(--bgd11)!important}html.atlas-bg3d .die.p1[data-v="2"]{background-image:var(--bgd12)!important}html.atlas-bg3d .die.p1[data-v="3"]{background-image:var(--bgd13)!important}
+html.atlas-bg3d .die.p1[data-v="4"]{background-image:var(--bgd14)!important}html.atlas-bg3d .die.p1[data-v="5"]{background-image:var(--bgd15)!important}html.atlas-bg3d .die.p1[data-v="6"]{background-image:var(--bgd16)!important}
+html.atlas-bg3d .die.p0,html.atlas-bg3d .die.p1{box-shadow:calc(var(--u)*(var(--sx,0) + .03)) calc(var(--u)*(var(--sy,.08) + .02)) calc(var(--u)*.12) rgba(0,0,0,.5)!important}
+html.atlas-bg3d .die.used{opacity:.45}
+/* the doubling cube: rosewood with a gold ring, the value in gold */
+html.atlas-bg3d #cube{background:var(--bgcube) center/100% 100% no-repeat!important;box-shadow:calc(var(--u)*.05) calc(var(--u)*.08) calc(var(--u)*.12) rgba(0,0,0,.55)!important;color:#efd79e!important;font-family:Georgia,'Times New Roman',serif!important;font-size:calc(var(--u)*.34)!important;border-radius:18%}
+/* buttons on the board (roll / double / confirm) */
+html.atlas-backgammon .bbtn{background:rgba(255,253,247,.95)!important;color:#2b3044!important;border:2px solid #fff!important;box-shadow:0 4px 0 rgba(150,110,50,.45),0 10px 22px rgba(0,0,0,.3)!important;font-weight:900;border-radius:99px!important}
+html.atlas-backgammon .bbtn.go{background:#ff5d5d!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 0 #d93c3c,0 10px 22px rgba(0,0,0,.3)!important}
+html.atlas-backgammon .bbtn.red{color:#d93c3c!important}
+/* the 3D looks in the board-design row */
+html.atlas-backgammon #skinRow button.a3d{position:relative}
+html.atlas-backgammon #skinRow .b3d{position:absolute;right:8px;top:8px;padding:1px 7px;border-radius:99px;background:#ff5d5d;color:#fff;font:700 11px 'Fredoka',sans-serif;font-style:normal;box-shadow:0 2px 0 #d93c3c}

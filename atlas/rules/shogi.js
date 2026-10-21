@@ -418,12 +418,12 @@
     const sfxBtn = $('[data-a=sfx]'), paintSfx = () => { sfxBtn.classList.toggle('off', !SFX.on); sfxBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/>${SFX.on ? '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>' : '<path d="M16 9l6 6M22 9l-6 6"/>'}</svg>`; };
     sfxBtn.onclick = () => { SFX.toggle(); paintSfx(); }; paintSfx();
     ctx.el.addEventListener('click', onClick);
-    // keyboard: Space / → next, ← back (the next button's rules apply: an interactive step waits for the move)
+    // keyboard: Space / Enter / → next, ← back (the next button's rules apply: an interactive step waits for the move)
     const onKey = e => {
       if (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;
-      if (document.activeElement && el.contains(document.activeElement)) document.activeElement.blur();
-      if (e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); const nx = $('[data-a=next]'); if (nx.disabled || (e.key === 'ArrowRight' && STEPS[step].last)) return; nx.click(); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); if (step) go(step - 1); }
+      if (document.activeElement && document.activeElement !== document.body && (e.key === 'Enter' || e.key === ' ' || el.contains(document.activeElement))) document.activeElement.blur();   // Enter must not re-press a focused button (e.g. the Rules button → restart)
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.stopPropagation(); e.preventDefault(); const nx = $('[data-a=next]'); if (nx.disabled || (e.key === 'ArrowRight' && STEPS[step].last)) return; nx.click(); }
+      else if (e.key === 'ArrowLeft') { e.stopPropagation(); e.preventDefault(); if (step) go(step - 1); }
     };
     document.addEventListener('keydown', onKey, true);
     requestAnimationFrame(() => el.classList.add('on'));

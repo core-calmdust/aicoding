@@ -232,7 +232,7 @@ a.snd.home{text-decoration:none}
 .graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
-.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.controls{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
@@ -538,7 +538,8 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
   .card{padding:10px 12px}
   .controls{padding:8px;gap:5px}
-  .btn{flex-direction:column;justify-content:center;padding:7px 2px;gap:3px;font-size:10.5px}
+  .btn{flex-direction:column;justify-content:center;padding:7px 1px;gap:3px;font-size:10px;letter-spacing:-.02em}
+  .controls .btn span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:9.5px;letter-spacing:-.04em}
   .btn svg{width:17px;height:17px}
   .graph{height:72px;margin-top:8px}
   .kifu-card{flex:none;min-height:96px}
@@ -681,11 +682,10 @@ body .info-line{font-size:12.5px}
 /* ---------------------------------------------------------------- online play (ported from the Shogi page) */
 .ol-only{display:none!important}
 body.in-online .ol-only{display:flex!important}
-body.in-online #btnUndo, body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online #btnPaste, body.in-online #btnResAnalyze,
+body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online #btnPaste, body.in-online #btnResAnalyze,
 body.in-online .review-card, body.in-online #infoLine, body.in-online #evalCard .evalrow, body.in-online #evalCard .evalbar, body.in-online #evalCard .graph{display:none!important}
 body.in-online #evalCard{flex:none!important;min-height:0!important}
 body.in-online #evalCard .navbar{margin-top:0}
-body.in-watch #btnResign{display:none!important}
 .player .count .ol-clk{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-.02em;transition:color .2s}
 .player .count .ol-clk.ol-move{color:var(--accent)}
 .player .count .ol-clk.ol-low{color:var(--red);animation:clkPulse 1s ease-in-out infinite}
@@ -1055,7 +1055,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
-      <button class="btn ol-only" id="btnResign"><svg viewBox="0 0 24 24"><path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/></svg><span data-i18n="ol.resign"></span></button>
+      <button class="btn" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span></span></button>
       <button class="btn" id="btnHint" data-i18n-title="btn.hint.title"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnRules" data-i18n-title="btn.rules.title"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span data-i18n="btn.rules"></span></button>
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
@@ -1291,14 +1291,15 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/ruletour.js?v=13"></script>
 <script src="i18n_v2.js?v=20261021ri"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
-<script src="app.js?v=pz5"></script>
+<script src="../shared/resign.js?v=1"></script>
+<script src="app.js?v=rs1"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=17'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=18'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
