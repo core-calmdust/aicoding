@@ -251,16 +251,21 @@ function addScore(n) {
 const monthScore = ym => DB.sc.m[ym || thisMonth()] || 0;
 
 /* ================= audio & haptics ================= */
-let AC = null;
+let AC = null, OUT = null;
+const SFX_GAIN = 2.6;   // effects were too quiet on phones — boost them, with a compressor so stacked tones don't clip
 function tone(freq, dur = .08, type = 'sine', vol = .08, at = 0) {
   if (!DB.set.sound) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (!OUT) {
+      const comp = AC.createDynamicsCompressor(); comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 4; comp.attack.value = .003; comp.release.value = .12;
+      OUT = AC.createGain(); OUT.gain.value = SFX_GAIN; OUT.connect(comp).connect(AC.destination);
+    }
     if (AC.state === 'suspended') AC.resume();
     const t0 = AC.currentTime + at, o = AC.createOscillator(), g = AC.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t0);
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .008); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
-    o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + dur + .02);
+    o.connect(g).connect(OUT); o.start(t0); o.stop(t0 + dur + .02);
   } catch (e) {}
 }
 const SFX = {
