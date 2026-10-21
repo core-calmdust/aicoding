@@ -1078,6 +1078,7 @@ let difficultyIndex = 1;
 // ハイパー: 10秒間、スコア3倍・自機1.1倍速。代わりに隕石と弾が1.25倍速、敵の弾が2倍
 let hyperT = 0, nextHyperScore = 0;
 const HYPER_TIME = 10;
+const HYPER_TEST_RATE = 10; // ★テスト用: ハイパーの出現率を一時的に10倍（公開前に1へ戻す）
 const hyperOn = () => hyperT > 0;
 const HY = () => (hyperT > 0 ? 1.25 : 1);
 const scoreMul = () => Math.pow(1.1, stage - 1) * (tutorial ? 1 : DIFFS[difficultyIndex].mult) * (hyperT > 0 ? 3 : 1);
@@ -1427,7 +1428,7 @@ async function startGame(mode) {
     maxShields = shields = DIFFS[difficultyIndex].shields; spBonus = 0;
     nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult;
     nextSpecialItemScore = config.energyItemScoreSpecial * DIFFS[difficultyIndex].mult;
-    hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
+    hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
     distScoreAcc = 0;
     hurtTimer = 0;
     gameState = 'playing';
@@ -1979,7 +1980,7 @@ function updatePlayingState(dt_sec) {
         if (hyperT > 0) { hyperT -= dt_sec; if (hyperT <= 0) { hyperT = 0; effects.push({ type: 'hyperMsg', text: 'HYPER END', life: 60, maxLife: 60, end: true }); } }
         while (score >= nextHyperScore) {
             if (hyperT <= 0 && !items.some(it => it.type === 'hyper')) items.push({ x: 60 + Math.random() * (config.canvasWidth - 120), y: -20 - TOP_EXT, type: 'hyper' });
-            nextHyperScore += config.energyItemScoreSpecial * 2.5 * Math.pow(1.1, stage - 1) * DIFFS[difficultyIndex].mult * (hyperT > 0 ? 3 : 1);
+            nextHyperScore += config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * Math.pow(1.1, stage - 1) * DIFFS[difficultyIndex].mult * (hyperT > 0 ? 3 : 1);
         }
     } else if (hyperT > 0) {
         hyperT = Math.max(0, hyperT - dt_sec);
