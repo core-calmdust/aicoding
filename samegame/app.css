@@ -864,6 +864,13 @@ body[data-skin="pixel"] .rstars svg{shape-rendering:crispEdges}
 .htabs button,.htabs button.on{flex-direction:row!important;min-height:0;padding:9px 6px!important;font-size:15px!important;gap:6px!important;border:0!important;box-shadow:none!important;border-radius:999px!important;transform:none!important;background:transparent}
 .htabs button svg{width:20px!important;height:20px!important}
 body:not([data-skin="mid"]) .htabs{border:var(--line);border-radius:0}body:not([data-skin="mid"]) .htabs button{border-radius:0!important}
+.hpanel[hidden],.hpanel.daily[hidden]{display:none!important}
+/* free play options: spread across the full box width */
+#dFree .frow{display:grid;grid-template-columns:56px repeat(var(--n,3),1fr);align-items:center;gap:6px;margin-bottom:8px}
+#dFree .frow .chipb{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 4px;background:var(--paper);border-radius:999px;box-shadow:none;border:0}
+#dFree .frow .chipb.on{background:var(--ink);color:var(--yel)}
+#dFree .frow span{white-space:nowrap}
+body:not([data-skin="mid"]) #dFree .frow .chipb{border:2px solid var(--ink);border-radius:0}
 /* tabs never wrap; header icons stay on one line on phones */
 .htabs button span{white-space:nowrap}
 @media (max-width:600px){
