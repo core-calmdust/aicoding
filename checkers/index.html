@@ -777,21 +777,19 @@ body .info-line{font-size:12.5px}
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
 #newOverlay .ng-col{display:contents}
-#newOverlay .ng-play > .field:first-child{order:1}
+#fMode{order:1}
 #fRatedInfo, #fInfo{order:2} #fRules{order:3} #fColor{order:4} #fLevel{order:5} #fLevel2{order:6} #fDisplay{order:7} #fDesign{order:8} #fPieces{order:9}
 #newOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:.02em;min-width:0;overflow:hidden;text-overflow:ellipsis}
-#newOverlay #btnCancelNew{flex:0 1 auto;padding-left:18px;padding-right:18px}
-#newOverlay #btnStart{flex:1 1 auto}
+#newOverlay #btnCancelNew, #newOverlay #btnStart{flex:1 1 0}
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
-  /* left: strength / display, right: mode / side / board and pieces */
+  /* mode across the top; left: side / strength / display, right: board and pieces (same as Shogi) */
   #newOverlay .modal{width:min(980px, calc(100vw - 64px));padding:20px 28px 18px}
   #newOverlay .modal h2{margin-bottom:12px}
   #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
   #newOverlay .ng-col{display:block}
   #newOverlay .modal-actions{margin-top:8px}
-  #newOverlay #segMode{display:grid;grid-template-columns:repeat(12, minmax(0, 1fr))}
-  #newOverlay #segMode button{grid-column:span 3;min-width:0;white-space:normal;line-height:1.25}
-  #newOverlay #segMode button:nth-child(-n+3){grid-column:span 4}
+  #newOverlay #segMode{display:flex;flex-wrap:nowrap}
+  #newOverlay #segMode button{flex:1 1 0;min-width:0;white-space:nowrap}
 }
 /* board / piece design pickers (live mini boards) */
 .bdrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
@@ -930,7 +928,32 @@ html[data-pcs=mono]{--eb1:#5c5c5c;--eb2:#262626;--eb3:#121212;--eb4:#000;--iv1:#
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
+    <div class="field" id="fMode">
+      <label data-i18n="ng.mode"></label>
+      <div class="seg" id="segMode">
+        <button data-v="ai" data-i18n="ng.ai"></button>
+        <button data-v="rated" data-i18n="ng.rated"></button>
+        <button data-v="pvp" data-i18n="ng.pvp"></button>
+        <button data-v="watch" data-i18n="ng.watch"></button>
+        <button data-v="lesson" data-i18n="ng.lesson"></button>
+        <button data-v="puzzle" data-i18n="ng.puzzle"></button>
+      </div>
+    </div>
     <div class="ng-cols"><div class="ng-col ng-set">
+    <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
+    <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
+    <div class="field" id="fRules">
+      <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
+      <div class="rulecards" id="ruleCards"></div>
+    </div>
+    <div class="field" id="fColor">
+      <label data-i18n="ng.color"></label>
+      <div class="seg" id="segColor">
+        <button data-v="1" data-i18n="ng.first"></button>
+        <button data-v="2" data-i18n="ng.second"></button>
+        <button data-v="0" data-i18n="ng.random"></button>
+      </div>
+    </div>
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
@@ -956,31 +979,6 @@ html[data-pcs=mono]{--eb1:#5c5c5c;--eb2:#262626;--eb3:#121212;--eb4:#000;--iv1:#
       </div>
     </div>
     </div><div class="ng-col ng-play">
-    <div class="field">
-      <label data-i18n="ng.mode"></label>
-      <div class="seg" id="segMode">
-        <button data-v="ai" data-i18n="ng.ai"></button>
-        <button data-v="rated" data-i18n="ng.rated"></button>
-        <button data-v="pvp" data-i18n="ng.pvp"></button>
-        <button data-v="watch" data-i18n="ng.watch"></button>
-        <button data-v="lesson" data-i18n="ng.lesson"></button>
-        <button data-v="puzzle" data-i18n="ng.puzzle"></button>
-      </div>
-    </div>
-    <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
-    <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
-    <div class="field" id="fRules">
-      <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
-      <div class="rulecards" id="ruleCards"></div>
-    </div>
-    <div class="field" id="fColor">
-      <label data-i18n="ng.color"></label>
-      <div class="seg" id="segColor">
-        <button data-v="1" data-i18n="ng.first"></button>
-        <button data-v="2" data-i18n="ng.second"></button>
-        <button data-v="0" data-i18n="ng.random"></button>
-      </div>
-    </div>
     <div class="field" id="fDesign">
       <label data-i18n="bd.title"></label>
       <div class="bdrow" id="bdRow"></div>
