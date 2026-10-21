@@ -1998,14 +1998,14 @@ function updatePlayingState(dt_sec) {
 
     // Energy Item Spawning (STARTRAIL MODEではスキップ)
     if (gameMode !== 'STARTRAIL MODE') {
-        // チェイン中はアイテムの間隔を少し広げる（上限1.6倍）。チェインが切れたら元の間隔に戻す
-        // （以前は上限がなく、アイテムを大量に取ると次の出現が極端に先になって出なくなっていた）
-        const chaining = player.invincibleTimer > 0 && chainCount > 1;
-        const comboMultiplier = chaining ? Math.min(1.6, Math.pow(1.1, chainCount - 1)) : 1;
+        // チェイン中はアイテムの間隔をチェイン数に応じて広げる（アイテムが出続けて無限チェインになるのを防ぐ）
+        // チェインが切れて、画面内のアイテムが無くなったら即元の間隔に戻す
+        const settled = player.invincibleTimer <= 0 && !items.some(it => it.type !== 'hyper');
+        const comboMultiplier = !settled && chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
         const totalMultiplier = stageMultiplier * comboMultiplier;
         const currentNormalThreshold = config.energyItemScoreNormal * totalMultiplier;
         const currentSpecialThreshold = config.energyItemScoreSpecial * totalMultiplier;
-        if (!chaining) {
+        if (settled) {
             nextItemScore = Math.min(nextItemScore, score + currentNormalThreshold);
             nextSpecialItemScore = Math.min(nextSpecialItemScore, score + currentSpecialThreshold);
         }
