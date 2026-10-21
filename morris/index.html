@@ -2100,7 +2100,7 @@ let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
 function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261019c`).then(r => r.json()).catch(() => null)); }
-function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261019d`).then(r => r.json()).catch(() => null)); }
+function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261021f`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
 function varTabs(sel, cur) { $(sel).innerHTML = RULE_ORDER.map(r => `<button data-r="${r}" class="${r === cur ? 'sel' : ''}">${t('rule.' + r)}</button>`).join(''); }
@@ -2469,6 +2469,16 @@ const puzzlesReady = loadPz('nine').then(d => (PZN = d));
 let pzLevel = 0;
 const pzKey = (v, id, j) => VPRE(v) + id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
+// puzzles refreshed on 2026-10-21 (tools/refresh_fun.js): D.old keeps the previous content of the replaced slots.
+// A player who already has a record for a slot keeps the old puzzle (records made on the new content are flagged in
+// pr._new, so those keep the new one); the daily puzzle shows the old content for dates up to D.cut.
+function pzPick(v, D, T, j, date, pr) {
+  const o = D && D.old && D.old[T.id + '-' + j];
+  if (!o) return T.puzzles[j];
+  if (date) return date <= D.cut ? o : T.puzzles[j];
+  pr = pr || pzProgress(); const k = pzKey(v, T.id, j);
+  return pr[k] !== undefined && !(pr._new && pr._new[k]) ? o : T.puzzles[j];
+}
 function pzRecs(v, T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(v, T.id, j)])); }
 function themeTier(T) { const n = T.puzzles.reduce((a, P) => a + (P.n || 1), 0) / Math.max(1, T.puzzles.length); return Math.max(0, Math.min(5, Math.round((n - 1) * 1.4))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
@@ -2484,7 +2494,7 @@ const PZ_TSVG = {
   diag: '<path d="M5 19 19 5"/><circle cx="5" cy="19" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="5" r="2.2"/>',
 };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0].replace(/^(\d)(\d)$/, '$1·$2')}</b>`;
-function pzThumbOf(v, T, j) { const P = T.puzzles[j < 0 ? T.puzzles.length - 1 : j]; return P && P.s ? { board: miniSVG(v, specToB(P.s), { cls: 'lxb' }), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
+function pzThumbOf(v, T, j, D, date) { j = j < 0 ? T.puzzles.length - 1 : j; const P = pzPick(v, D || PUZZLES, T, j, date); return P && P.s ? { board: miniSVG(v, specToB(P.s), { cls: 'lxb' }), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
 async function openPuzzles(v) {
   if (v) pzVar = v;
   await puzzlesReady; const d = await loadPz(pzVar); selTab('puzzle');
@@ -2498,7 +2508,7 @@ async function openPuzzles(v) {
   box.innerHTML = PZBook.home({
     title: t('pz.title') + (pzVar === 'nine' ? '' : ' · ' + t('rule.' + pzVar)), lead: t(pzVar === 'nine' ? 'pz.desc' : 'pz.desc.' + pzVar), all: idx.map(i => pzRecs(pzVar, Ts[i], pr)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pz.th.' + Ts[+cont.key.split(':')[1]].id) },
-    daily: dl ? [{ key: '1', board: pzThumbOf('nine', PZN.themes[dl.L], dl.j).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+    daily: dl ? [{ key: '1', board: pzThumbOf('nine', PZN.themes[dl.L], dl.j, PZN, dl.date).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
       sub: `${t('pz.th.' + PZN.themes[dl.L].id)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
     cats: cats.map(g => { const r = idx.filter(i => Ts[i].grp === g).map(i => pzRecs(pzVar, Ts[i], pr)).flat(); return { key: g, icon: PZBook.icon(PZ_GIC[g]), name: t('pz.grp' + g), done: r.filter(x => x > 0).length, total: r.length }; }),
     cur, catDesc: t('pz.grp' + cur + 'Sub'),
@@ -2519,7 +2529,7 @@ function openPzGrid(i, cur) {
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(L), name: t('pz.th.' + L.id), desc: t('pz.th.' + L.id + '.sub'), chips: [pzVar === 'nine' ? '' : t('rule.' + pzVar), t('pz.grp' + L.grp), PZBook.t('count', { n: L.puzzles.length })], tier: themeTier(L) });
   $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(pzVar, L), cur });
   // each tile shows its position (a small board) under the number and stars
-  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(pzVar, specToB(P.s), { cls: 'lxb' })}</span>`); });
+  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = pzPick(pzVar, PUZZLES, L, +el.dataset.j); if (P && P.s) el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(pzVar, specToB(P.s), { cls: 'lxb' })}</span>`); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
 }
 $('#pzGrid').onclick = e => {
@@ -2533,7 +2543,7 @@ function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   const v = daily ? 'nine' : pzVar, D = daily ? PZN : PUZZLES;
-  const T = D.themes[L], P = T.puzzles[j];
+  const T = D.themes[L], P = pzPick(v, D, T, j, daily);
   if (!daily) PZBook.lastSet(PZ_LAST, v + ':' + L);
   puzzle = { L, j, P, T, v, D, goal: T.goal || 'win', me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
@@ -2665,6 +2675,7 @@ function puzzleSolved() {
   Pz.state = 'solved'; Pz.busy = false;
   const pr = pzProgress(), k = pzKey(Pz.v, Pz.T.id, Pz.j), stars = PZBook.starsFor(Pz);
   const before = pzRecs(Pz.v, Pz.T, pr);
+  if (Pz.D.old && Pz.D.old[Pz.T.id + '-' + Pz.j] && Pz.P === Pz.T.puzzles[Pz.j] && pr[k] === undefined) (pr._new = pr._new || {})[k] = 1;   // solved on the refreshed content
   pr[k] = Math.max(starVal(pr[k]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
   const after = pzRecs(Pz.v, Pz.T, pr), ev = PZBook.events(before, after, Pz.j);
