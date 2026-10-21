@@ -461,7 +461,10 @@ function startPlay(title, sub) {
 // ---- starts
 function startStage(th, j) {
   if (!STG) { toast(t('err.load')); return; }
-  const T = STG.themes[THEMES.indexOf(th)], s = (j / PER) | 0, p = T.stages[s].p[j % PER];
+  const T = STG.themes[THEMES.indexOf(th)], s = (j / PER) | 0, key = stKey(th, j);
+  // replaced (fun-score) slots: a player who already cleared it on the old content keeps the old puzzle
+  let p = T.stages[s].p[j % PER];
+  if (STG.old && STG.old[key]) { DB.sv = DB.sv || {}; if (DB.st[key] && !DB.sv[key]) p = STG.old[key]; else if (!DB.sv[key]) { DB.sv[key] = 1; save(); } }
   newGame({ kind: 'stage', th, j, board: E.dec(p.b), min: T.min, sol: p.sol, undoable: true });
   startPlay(`${t('th.' + th)} ${j + 1}`, t('st.goal') + (T.min === 3 ? ' · ' + t('th.tr.r') : ''));
 }
@@ -1242,6 +1245,7 @@ function mergeDB(L, C) {
   const newer = (C.mt || 0) > (L.mt || 0), out = JSON.parse(JSON.stringify(newer ? C : L)), o = newer ? L : C;
   const mx = (a, b) => Math.max(a || 0, b || 0);
   out.st = out.st || {}; for (const k in (o.st || {})) out.st[k] = mx(out.st[k], o.st[k]);
+  out.sv = Object.assign({}, o.sv || {}, out.sv || {});
   out.dl = out.dl || {}; for (const d in (o.dl || {})) { const a = out.dl[d] || (out.dl[d] = {}), b = o.dl[d];
     for (const k in b) { const x = a[k], y = b[k]; if (!x) { a[k] = y; continue; }
       if ('left' in y) a[k] = { s: mx(x.s, y.s), left: x.left < 0 ? y.left : y.left < 0 ? x.left : Math.min(x.left, y.left), md: mx(x.md, y.md) };
@@ -1309,7 +1313,7 @@ function bind() {
 }
 async function boot() {
   bind(); applyI18n(); applySkin(); sndIcon();
-  try { STG = await (await fetch('stages.json?v=1')).json(); } catch (e) { STG = null; }
+  try { STG = await (await fetch('stages.json?v=2')).json(); } catch (e) { STG = null; }
   showScreen('home'); renderHome();
   if (!DB.tut.basic) { DB.tut.basic = 1; save(); setTimeout(() => tutorial('basic'), 400); }
   loginBonus();
