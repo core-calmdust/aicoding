@@ -145,7 +145,7 @@ S.sea = (W, H) => {
 };
 S.garden = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = sky('sk', [[0, '#d7f1ff'], [.6, '#fff8ea'], [1, '#e9f9d9']]) + `<rect width="${W}" height="${H}" fill="url(#${CUR})"/>`;
+  let s = sky('sk', [[0, '#ffdf6b'], [.6, '#fff4b8'], [1, '#f6fbd2']]) + `<rect width="${W}" height="${H}" fill="url(#${CUR})"/>`;
   s += `<g opacity=".55"><path d="M${f(-W * .1)} ${f(H * .75)}A${f(W * .6)} ${f(H * .6)} 0 0 1 ${f(W * 1.1)} ${f(H * .75)}" fill="none" stroke="#ffb3c6" stroke-width="${f(u * .25)}"/><path d="M${f(-W * .1)} ${f(H * .75)}A${f(W * .6)} ${f(H * .6)} 0 0 1 ${f(W * 1.1)} ${f(H * .75)}" fill="none" stroke="#ffe08a" stroke-width="${f(u * .25)}" transform="translate(0 ${f(u * .25)})"/><path d="M${f(-W * .1)} ${f(H * .75)}A${f(W * .6)} ${f(H * .6)} 0 0 1 ${f(W * 1.1)} ${f(H * .75)}" fill="none" stroke="#a8e6b5" stroke-width="${f(u * .25)}" transform="translate(0 ${f(u * .5)})"/><path d="M${f(-W * .1)} ${f(H * .75)}A${f(W * .6)} ${f(H * .6)} 0 0 1 ${f(W * 1.1)} ${f(H * .75)}" fill="none" stroke="#b3d4ff" stroke-width="${f(u * .25)}" transform="translate(0 ${f(u * .75)})"/></g>`;
   s += cloud(W * .1, H * .7, u / 60) + cloud(W * .9, H * .72, u / 60);
   s += hills(W, H, H * .8, H * .08, '#bfeaa0', 7, 3) + hills(W, H, H * .9, H * .06, '#9bdc84', 17, 4);
@@ -159,7 +159,7 @@ S.garden = (W, H) => {
 };
 S.festival = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = sky('sk', [[0, '#2b2a6b'], [.55, '#7b4f9e'], [.85, '#ff9a8b'], [1, '#ffcf8a']]) + `<rect width="${W}" height="${H}" fill="url(#${CUR})"/>`;
+  let s = sky('sk', [[0, '#5a1a5e'], [.5, '#b8357a'], [.82, '#ff7d8a'], [1, '#ffc58a']]) + `<rect width="${W}" height="${H}" fill="url(#${CUR})"/>`;
   s += scatter(W, H, 30, 3, (x, y, r) => sparkle(x, y, 2 + r() * 3, '#fff6c9'), [0, 0, 1, .45]);
   const fw = (x, y, rad, c, d) => { let p = ''; for (let i = 0; i < 14; i++) { const a = i * Math.PI / 7; p += `<line x1="${f(x + Math.cos(a) * rad * .25)}" y1="${f(y + Math.sin(a) * rad * .25)}" x2="${f(x + Math.cos(a) * rad)}" y2="${f(y + Math.sin(a) * rad)}"/><circle cx="${f(x + Math.cos(a) * rad * 1.12)}" cy="${f(y + Math.sin(a) * rad * 1.12)}" r="${f(rad * .05)}" fill="${c}"/>`; } return `<g class="burst" style="--d:3.2s;--o:${d}s;transform-origin:${f(x)}px ${f(y)}px" stroke="${c}" stroke-width="${f(rad * .045)}" stroke-linecap="round">${p}</g>`; };
   s += fw(W * .2, H * .18, u * 1.3, '#ffd36b', 0) + fw(W * .78, H * .14, u * 1.1, '#ff8fb6', -1.1) + fw(W * .5, H * .3, u * .8, '#9fe6ff', -2.2);
@@ -167,7 +167,7 @@ S.festival = (W, H) => {
   const ly = H * .52; s += `<path d="M0 ${f(ly)}Q${f(W / 2)} ${f(ly + u * .8)} ${W} ${f(ly)}" fill="none" stroke="#3b2b4b" stroke-width="2"/>`;
   const n = Math.max(5, Math.round(W / (u * 1.3)));
   for (let i = 0; i < n; i++) { const t = (i + .5) / n, x = W * t, y = ly + u * .8 * 4 * t * (1 - t) * .5 + u * .05; s += `<g class="sway" style="--d:${f(3 + i % 3)}s;transform-origin:${f(x)}px ${f(y)}px"><rect x="${f(x - u * .05)}" y="${f(y)}" width="${f(u * .1)}" height="${f(u * .1)}" fill="#3b2b4b"/><ellipse class="glow" cx="${f(x)}" cy="${f(y + u * .45)}" rx="${f(u * .3)}" ry="${f(u * .36)}" fill="${i % 2 ? '#ff6b6b' : '#ffe08a'}"/><path d="M${f(x - u * .28)} ${f(y + u * .45)}h${f(u * .56)}" stroke="#3b2b4b" stroke-opacity=".3" stroke-width="2"/></g>`; }
-  s += `<rect x="0" y="${f(H * .86)}" width="${W}" height="${f(H * .14)}" fill="#4b3266"/>`;
+  s += `<rect x="0" y="${f(H * .86)}" width="${W}" height="${f(H * .14)}" fill="#5e2050"/>`;
   // stalls
   const stall = (x, sz, c) => `<g><rect x="${f(x - sz * .7)}" y="${f(H * .86 - sz * .8)}" width="${f(sz * 1.4)}" height="${f(sz * .8)}" fill="#f6e3c4"/><path d="M${f(x - sz * .85)} ${f(H * .86 - sz * .8)}h${f(sz * 1.7)}l${f(-sz * .15)} ${f(-sz * .35)}h${f(-sz * 1.4)}Z" fill="${c}"/><rect x="${f(x - sz * .7)}" y="${f(H * .86 - sz * .8)}" width="${f(sz * 1.4)}" height="${f(sz * .12)}" fill="#fff" opacity=".5"/></g>`;
   s += stall(W * .12, u * 1.4, '#ff6b6b') + stall(W * .88, u * 1.3, '#5aa8ff');
@@ -555,10 +555,10 @@ function snail(x, y, s) {
 }
 S.rain = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#a9b8e6'], [.5, '#dfe6fb'], [1, '#e9f3ff']]);
+  let s = bgr(W, H, [[0, '#7f8ad8'], [.5, '#c6cbf2'], [1, '#e8eafc']]);
   const fid = 'fl' + (++GID);
   s += `<defs><g id="${fid}"><circle cx="0" cy="-.5" r=".48"/><circle cx=".5" cy="0" r=".48"/><circle cx="0" cy=".5" r=".48"/><circle cx="-.5" cy="0" r=".48"/><circle cx="0" cy="0" r=".18" fill="#fff" opacity=".8"/></g></defs>`;
-  s += cloud(W * .2, H * .1, u / 70, '#f2f4ff') + cloud(W * .7, H * .07, u / 60, '#eef0fb') + cloud(W * .95, H * .22, u / 90, '#f6f7ff');
+  s += cloud(W * .2, H * .1, u / 70, '#eceefc') + cloud(W * .7, H * .07, u / 60, '#e4e6f8') + cloud(W * .95, H * .22, u / 90, '#f0f1fd');
   s += `<g opacity=".4" fill="none" stroke-width="${f(u * .16)}">${['#ffb3c6', '#ffe08a', '#a8e6b5', '#b3d4ff'].map((c, i) => `<path d="M${f(W * .5 + i * u * .16)} ${f(H * .84)}A${f(W * .32 - i * u * .16)} ${f(H * .58 - i * u * .16)} 0 0 1 ${f(W * 1.14 - i * u * .16)} ${f(H * .84)}" stroke="${c}"/>`).join('')}</g>`;
   s += scatter(W, H, 26, 83, (x, y, r) => `<path d="M${f(x)} ${f(y)}l${f(-u * .06)} ${f(u * .3)}" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="${f(.4 + r() * .4)}"/>`, [0, .12, 1, .75]);
   s += hills(W, H, H * .8, H * .06, '#c9e6c4', 7, 3) + hills(W, H, H * .88, H * .05, '#b0dcae', 17, 4);
@@ -738,20 +738,20 @@ function hab(x, y, s, c1, c2, d, who = 'sheep') {
 
 S.forest2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#a3d9d0'], [.5, '#def5df'], [1, '#d2eec4']]);
+  let s = bgr(W, H, [[0, '#5ec9ae'], [.5, '#c4f0dc'], [1, '#aee6c6']]);
   s += `<g opacity=".25" fill="#fff">${[.28, .52, .76].map((t, i) => `<path d="M${f(W * t)} 0h${f(u * .7)}L${f(W * t + u * (1.6 + i * .3))} ${f(H * .66)}h${f(-u * 1.1)}Z"/>`).join('')}</g>`;
   s += `<g class="bob" style="--d:8s"><circle cx="${f(W * .84)}" cy="${f(H * .12)}" r="${f(u * 1)}" fill="#fff6c9" opacity=".3"/><circle cx="${f(W * .84)}" cy="${f(H * .12)}" r="${f(u * .6)}" fill="#fff3b0"/>${face(W * .84, H * .12, u * .3)}</g>`;
-  s += hills(W, H, H * .6, H * .1, '#a6d8b0', 5, 4);
-  s += scatter(W, H, Math.max(8, Math.round(W / u)), 3, (x, y, r) => tree(x, y, u * (1.3 + r() * .6), ['#7cc495', '#6ab889', '#8fcf9f'][(r() * 3) | 0], '#8a6a5a'), [-.02, .62, 1.02, .67]);
+  s += hills(W, H, H * .6, H * .1, '#5fc49a', 5, 4);
+  s += scatter(W, H, Math.max(8, Math.round(W / u)), 3, (x, y, r) => tree(x, y, u * (1.3 + r() * .6), ['#3fae80', '#2f9f74', '#52bb8c'][(r() * 3) | 0], '#8a6a5a'), [-.02, .62, 1.02, .67]);
   // lake
-  const ly = H * .66, [lg, ld] = lgr([[0, '#a8e0e8'], [1, '#79bfdc']]);
+  const ly = H * .66, [lg, ld] = lgr([[0, '#86e3d2'], [1, '#3fb5ab']]);
   s += ld + `<path d="M0 ${f(ly)}Q${f(W * .5)} ${f(ly - u * .3)} ${W} ${f(ly)}V${H}H0Z" fill="url(#${lg})"/><path d="M0 ${f(ly)}Q${f(W * .5)} ${f(ly - u * .3)} ${W} ${f(ly)}" fill="none" stroke="#fff" stroke-width="3" opacity=".6"/>`;
   s += scatter(W, H, 7, 7, (x, y, r) => wline(x, y, u * (.6 + r() * .5), '#fff', 3 + r() * 3), [0, .7, 1, .86]);
   // lily pads
   const pad = (x, y, sz, fl) => `<g><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(sz)}" ry="${f(sz * .38)}" fill="#86d08f"/><path d="M${f(x)} ${f(y)}L${f(x + sz)} ${f(y - sz * .12)}L${f(x + sz * .9)} ${f(y + sz * .2)}Z" fill="#8fcde0"/>${fl ? flower(x - sz * .2, y - sz * .12, sz * .32, '#ffc2dc', '#ffe08a', false) : ''}</g>`;
   s += pad(W * .5, H * .76, u * .6, true) + pad(W * .9, H * .745, u * .45, false) + pad(W * .44, H * .86, u * .4, false);
   // left bank + pier
-  s += `<path d="M0 ${f(H * .76)}Q${f(W * .12)} ${f(H * .75)} ${f(W * .2)} ${f(H * .82)}Q${f(W * .24)} ${f(H * .88)} ${f(W * .14)} ${f(H * .92)}L0 ${f(H * .93)}Z" fill="#9bd98d"/>`;
+  s += `<path d="M0 ${f(H * .76)}Q${f(W * .12)} ${f(H * .75)} ${f(W * .2)} ${f(H * .82)}Q${f(W * .24)} ${f(H * .88)} ${f(W * .14)} ${f(H * .92)}L0 ${f(H * .93)}Z" fill="#5fc78f"/>`;
   const px0 = W * .14, px1 = W * .42, pdy = H * .835;
   s += `<g><g stroke="#a8714f" stroke-width="${f(u * .1)}" stroke-linecap="round">${[.2, .5, .8, 1].map(t => `<path d="M${f(px0 + (px1 - px0) * t)} ${f(pdy)}V${f(pdy + u * .55)}"/>`).join('')}</g><rect x="${f(px0)}" y="${f(pdy - u * .14)}" width="${f(px1 - px0)}" height="${f(u * .16)}" rx="${f(u * .05)}" fill="#d9a07a"/><path d="M${f(px0)} ${f(pdy - u * .06)}H${f(px1)}" stroke="#b07c5a" stroke-width="2" stroke-dasharray="${f(u * .4)} 3"/>`
     + `<path d="M${f(px1 - u * .1)} ${f(pdy - u * .1)}V${f(pdy - u * 1.2)}" stroke="#8a6a5a" stroke-width="${f(u * .07)}"/><path d="M${f(px1 - u * .1)} ${f(pdy - u * 1.2)}h${f(u * .3)}" stroke="#8a6a5a" stroke-width="${f(u * .05)}"/>${halo(px1 + u * .2, pdy - u * .95, u * .3 * 1.3, '#fff3b0', 0.8, 'glow')}<rect x="${f(px1 + u * .08)}" y="${f(pdy - u * 1.15)}" width="${f(u * .24)}" height="${f(u * .32)}" rx="${f(u * .08)}" fill="#ffe08a" stroke="#c98a5c" stroke-width="2"/></g>`;
@@ -761,7 +761,7 @@ S.forest2 = (W, H) => {
   s += `<g class="bob" style="--d:4s">${stil(bunny(bx - bs * .35, by + bs * .02, bs * .48))}${stil(bunny(bx + bs * .32, by + bs * .02, bs * .44, '#ffeef4'))}<g>${rock(bx - bs * .05, by - bs * .1, [-14, 18, -14], 2.4)}<path d="M${f(bx - bs * .05)} ${f(by - bs * .2)}L${f(bx - bs * .9)} ${f(by + bs * .3)}" stroke="#c98a5c" stroke-width="${f(bs * .05)}" stroke-linecap="round"/><ellipse cx="${f(bx - bs * .95)}" cy="${f(by + bs * .33)}" rx="${f(bs * .14)}" ry="${f(bs * .06)}" fill="#c98a5c" transform="rotate(-30 ${f(bx - bs * .95)} ${f(by + bs * .33)})"/></g><path d="M${f(bx - bs * .9)} ${f(by - bs * .1)}H${f(bx + bs * .9)}Q${f(bx + bs * .75)} ${f(by + bs * .3)} ${f(bx + bs * .45)} ${f(by + bs * .3)}H${f(bx - bs * .5)}Q${f(bx - bs * .8)} ${f(by + bs * .3)} ${f(bx - bs * .9)} ${f(by - bs * .1)}Z" fill="#ff9f8a"/><path d="M${f(bx - bs * .85)} ${f(by)}H${f(bx + bs * .85)}" stroke="#fff" stroke-width="${f(bs * .05)}" opacity=".8"/></g>`;
   s += ripple(bx, by + bs * .35, bs * 1.2, 3) + ripple(W * .5, H * .77, u * .5, 3.4, 1.5);
   // near shore
-  s += `<path d="M0 ${f(H * .95)}Q${f(W * .35)} ${f(H * .9)} ${f(W * .62)} ${f(H * .94)}T${W} ${f(H * .91)}V${H}H0Z" fill="#8fd08a"/>`;
+  s += `<path d="M0 ${f(H * .95)}Q${f(W * .35)} ${f(H * .9)} ${f(W * .62)} ${f(H * .94)}T${W} ${f(H * .91)}V${H}H0Z" fill="#4fbb84"/>`;
   const cattail = (x, h, a) => `<g class="sway" style="--d:${f(3.5 + (x % 2))}s"><path d="M${f(x)} ${f(H)}q${f(a * h * .15)} ${f(-h * .5)} ${f(a * h * .2)} ${f(-h)}" stroke="#6fae6f" stroke-width="${f(u * .05)}" fill="none"/><rect x="${f(x + a * h * .2 - u * .06)}" y="${f(H - h - u * .1)}" width="${f(u * .12)}" height="${f(u * .35)}" rx="${f(u * .06)}" fill="#b07c5a"/></g>`;
   s += cattail(W * .82, u * 1.6, -.3) + cattail(W * .86, u * 1.9, .1) + cattail(W * .9, u * 1.4, .4);
   s += tree(W * .04, H * .99, u * 2.1, '#5fbf6c', '#9a6648', true) + tree(W * .97, H * 1.01, u * 1.9, '#6bc673', '#9a6648');
@@ -774,9 +774,9 @@ S.forest2 = (W, H) => {
 
 S.harbor2 = (W, H) => {
   const u = Math.min(W, H) / 10, hz = H * .56;
-  let s = bgr(W, H, [[0, '#9fdcff'], [.55, '#eaf8ff'], [.56, '#8ad0f2'], [1, '#56aadc']]);
-  s += sun(W * .12, H * .12, u * .6) + cloud(W * .42, H * .1, u / 85) + cloud(W * .7, H * .22, u / 110);
-  s += `<path d="M0 ${f(hz)}Q${f(W * .12)} ${f(hz - u * .5)} ${f(W * .26)} ${f(hz)}Z" fill="#b8dcef"/>`;
+  let s = bgr(W, H, [[0, '#ff8f86'], [.32, '#ffb59a'], [.55, '#ffe4c4'], [.56, '#ffab98'], [1, '#e2769a']]);
+  s += sun(W * .12, H * .42, u * .6, '#ffd07a') + cloud(W * .42, H * .1, u / 85, '#fff1ea') + cloud(W * .7, H * .22, u / 110, '#ffe6dc');
+  s += `<path d="M0 ${f(hz)}Q${f(W * .12)} ${f(hz - u * .5)} ${f(W * .26)} ${f(hz)}Z" fill="#f4a6a6"/>`;
   const sail = (x, y, sz, c, d) => `<g class="bob" style="--d:${d}s"><path d="M${f(x)} ${f(y - sz * .05)}V${f(y - sz * 1.4)}" stroke="#8a6a5a" stroke-width="${f(sz * .05)}"/><path d="M${f(x + sz * .05)} ${f(y - sz * 1.35)}Q${f(x + sz * .7)} ${f(y - sz * .7)} ${f(x + sz * .6)} ${f(y - sz * .2)}H${f(x + sz * .05)}Z" fill="#fff"/><path d="M${f(x - sz * .05)} ${f(y - sz * 1.1)}L${f(x - sz * .5)} ${f(y - sz * .25)}H${f(x - sz * .05)}Z" fill="${c}"/><path d="M${f(x)} ${f(y - sz * 1.4)}l${f(sz * .25)} ${f(sz * .08)}l${f(-sz * .25)} ${f(sz * .08)}" fill="${c}"/><path d="M${f(x - sz * .7)} ${f(y - sz * .15)}H${f(x + sz * .75)}L${f(x + sz * .5)} ${f(y + sz * .15)}H${f(x - sz * .5)}Z" fill="${c}"/>${face(x, y - sz * .02, sz * .1)}</g>`;
   s += sail(W * .16, H * .64, u * .8, '#ff8fa3', 4) + sail(W * .44, H * .6, u * .45, '#ffd36b', 5) + sail(W * .58, H * .7, u * .6, '#9fd8ff', 4.6);
   s += scatter(W, H, 8, 4, (x, y, r) => wline(x, y, u * .8, '#fff', 3 + r() * 3), [0, .6, .62, .82]);
@@ -809,12 +809,12 @@ S.harbor2 = (W, H) => {
 
 S.sweets2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#e9cfff'], [.55, '#ffe2f2'], [1, '#fff0e2']]);
+  let s = bgr(W, H, [[0, '#86e0c6'], [.55, '#d6f8ea'], [1, '#f2fff8']]);
   s += scatter(W, H, 18, 33, (x, y, r) => sparkle(x, y, 4 + r() * 5, ['#fff', '#ffc2dc', '#fff3b0'][(r() * 3) | 0]), [0, 0, 1, .55]);
   s += cloud(W * .14, H * .12, u / 80, '#fff') + cloud(W * .86, H * .2, u / 95, '#fff');
-  s += hills(W, H, H * .7, H * .1, '#ffd2e6', 9, 3);
+  s += hills(W, H, H * .7, H * .1, '#a6ebd2', 9, 3);
   // cake mountain
-  s += hills(W, H, H * .86, H * .05, '#fff3e3', 15, 4);
+  s += hills(W, H, H * .86, H * .05, '#e6fbf1', 15, 4);
   const cx = W * .5, cb = H * .86, cw = Math.min(W * .64, u * 6.2), th = u * 1.05;
   const tier = (w, y, sp, ic, i) => { let dr = ''; const n = Math.max(4, Math.round(w / (u * .45))); for (let k = 0; k < n; k++) { const x = cx - w / 2 + (k + .5) * w / n; dr += `<path d="M${f(x - w / n * .4)} ${f(y - th + u * .05)}v${f(u * (.12 + (k % 3) * .08))}a${f(w / n * .4)} ${f(w / n * .4)} 0 0 0 ${f(w / n * .8)} 0v${f(-u * (.12 + (k % 3) * .08))}Z" fill="${ic}"/>`; } return `<rect x="${f(cx - w / 2)}" y="${f(y - th)}" width="${f(w)}" height="${f(th)}" rx="${f(u * .14)}" fill="${sp}"/><rect x="${f(cx - w / 2)}" y="${f(y - th * .42)}" width="${f(w)}" height="${f(u * .12)}" fill="#fff" opacity=".75"/><rect x="${f(cx - w / 2)}" y="${f(y - th * .42 + u * .12)}" width="${f(w)}" height="${f(u * .06)}" fill="#ff9fc5" opacity=".6"/><rect x="${f(cx - w / 2)}" y="${f(y - th)}" width="${f(w)}" height="${f(u * .16)}" rx="${f(u * .08)}" fill="${ic}"/>${dr}`; };
   s += `<g>${tier(cw, cb, '#ffe0b8', '#ff9fc5', 0)}${tier(cw * .72, cb - th, '#f6c9a0', '#a8e6cf', 1)}${tier(cw * .46, cb - th * 2, '#ffe0b8', '#b07a5a', 2)}${face(cx, cb - th * .62, u * .26)}`;
@@ -843,7 +843,7 @@ function coral2(x, y, sz, c) {
 }
 S.sea2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#3f84c4'], [.45, '#2a5aa2'], [1, '#1d3a7e']]);
+  let s = bgr(W, H, [[0, '#3cc6bb'], [.45, '#1e9a9e'], [1, '#126a7e']]);
   const rg = 'ry' + (++GID);
   s += `<defs><linearGradient id="${rg}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".09"/><stop offset=".8" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>`;
   s += scatter(W, H, 5, 5, (x, y, r) => `<path d="M${f(x)} 0L${f(x + u * (1 + r()))} 0L${f(x + u * 3.2)} ${H}L${f(x + u * .9)} ${H}Z" fill="url(#${rg})"/>`, [0, 0, 1, 0]);
@@ -855,7 +855,7 @@ S.sea2 = (W, H) => {
   const ax = W * .9, ay = H * .2, as = u * .55;
   s += `<g class="bob" style="--d:5s"><path d="M${f(ax - as * .2)} ${f(ay - as * .6)}Q${f(ax - as * .5)} ${f(ay - as * 1.3)} ${f(ax - as * 1.05)} ${f(ay - as * .9)}" stroke="#8fa0d8" stroke-width="${f(as * .07)}" fill="none"/>${halo(ax - as * 1.05, ay - as * .85, as * .4 * 1.3, '#fff3a8', 0.75, 'glow')}<circle cx="${f(ax - as * 1.05)}" cy="${f(ay - as * .85)}" r="${f(as * .14)}" fill="#fff3a8"/><path d="M${f(ax + as * .6)} ${f(ay)}l${f(as * .5)} ${f(-as * .35)}v${f(as * .7)}Z" fill="#7f8fd0"/><ellipse cx="${f(ax)}" cy="${f(ay)}" rx="${f(as * .7)}" ry="${f(as * .6)}" fill="#7f8fd0"/><path d="M${f(ax - as * .65)} ${f(ay + as * .15)}q${f(as * .3)} ${f(as * .2)} ${f(as * .6)} 0" stroke="#fff" stroke-width="${f(as * .06)}" fill="none" stroke-dasharray="${f(as * .06)} ${f(as * .06)}"/>${face(ax - as * .2, ay - as * .1, as * .24)}</g>`;
   // seafloor
-  s += `<path d="M0 ${f(H * .8)}Q${f(W * .3)} ${f(H * .76)} ${f(W * .55)} ${f(H * .81)}T${W} ${f(H * .79)}V${H}H0Z" fill="#8a86c8"/><path d="M0 ${f(H * .9)}Q${f(W * .4)} ${f(H * .86)} ${f(W * .7)} ${f(H * .9)}T${W} ${f(H * .89)}V${H}H0Z" fill="#a49ad8"/>`;
+  s += `<path d="M0 ${f(H * .8)}Q${f(W * .3)} ${f(H * .76)} ${f(W * .55)} ${f(H * .81)}T${W} ${f(H * .79)}V${H}H0Z" fill="#5fb8a8"/><path d="M0 ${f(H * .9)}Q${f(W * .4)} ${f(H * .86)} ${f(W * .7)} ${f(H * .9)}T${W} ${f(H * .89)}V${H}H0Z" fill="#86d0b8"/>`;
   s += scatter(W, H, 7, 19, (x, y, r) => `<path class="sway" style="--d:${f(3 + r() * 2)}s" d="M${f(x)} ${f(y)}q${f(-u * .3)} ${f(-u * .5)} 0 ${f(-u)}t0 ${f(-u * (.6 + r() * .6))}" fill="none" stroke="${['#5fd3b0', '#7fe0c0', '#4fbfa0'][(r() * 3) | 0]}" stroke-width="${f(u * .16)}" stroke-linecap="round"/>`, [0, .82, 1, .9]);
   s += coral2(W * .08, H * .97, u * 1.1, '#ff9fc8') + coral2(W * .24, H * .95, u * .7, '#ffb38a') + coral2(W * .78, H * .96, u * 1, '#c7a8ff') + coral2(W * .93, H * .98, u * .7, '#ff9fc8');
   s += `<g><path d="M${f(W * .66)} ${f(H * .98)}a${f(u * .45)} ${f(u * .4)} 0 0 1 ${f(u * .9)} 0Z" fill="#7fe0d0"/><path d="M${f(W * .66 + u * .15)} ${f(H * .96)}q${f(u * .3)} ${f(-u * .3)} ${f(u * .6)} 0M${f(W * .66 + u * .25)} ${f(H * .93)}q${f(u * .2)} ${f(-u * .2)} ${f(u * .4)} 0" stroke="#5fc3b3" stroke-width="2" fill="none"/></g>`;
@@ -967,11 +967,11 @@ function squirrel(x, y, s, flip = false) {
 }
 S.autumn2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#ffc9a8'], [.55, '#ffe8d2'], [1, '#f6d6aa']]);
-  s += sun(W * .16, H * .13, u * .6, '#ffb35c') + cloud(W * .62, H * .1, u / 90, '#fff7ec') + cloud(W * .9, H * .26, u / 120, '#fff7ec', .85);
-  s += hills(W, H, H * .68, H * .08, '#f6c79a', 6, 3);
-  s += scatter(W, H, Math.max(6, Math.round(W / (u * 1.3))), 11, (x, y, r) => tree(x, y, u * (.9 + r() * .4), ['#ff9f5c', '#ffcf5c', '#ff7b5c', '#e8a45c'][(r() * 4) | 0], '#8f5b3e'), [0, .66, 1, .7]);
-  s += hills(W, H, H * .8, H * .06, '#efbb84', 12, 3) + hills(W, H, H * .9, H * .05, '#e8ab72', 22, 4);
+  let s = bgr(W, H, [[0, '#ff8a8a'], [.55, '#ffd0c4'], [1, '#f6c6b0']]);
+  s += sun(W * .16, H * .13, u * .6, '#ffd07a') + cloud(W * .62, H * .1, u / 90, '#fff7ec') + cloud(W * .9, H * .26, u / 120, '#fff7ec', .85);
+  s += hills(W, H, H * .68, H * .08, '#f0a69a', 6, 3);
+  s += scatter(W, H, Math.max(6, Math.round(W / (u * 1.3))), 11, (x, y, r) => tree(x, y, u * (.9 + r() * .4), ['#f0505f', '#ff7b6b', '#d9435a', '#ffa05c'][(r() * 4) | 0], '#8f5b3e'), [0, .66, 1, .7]);
+  s += hills(W, H, H * .8, H * .06, '#e89a8a', 12, 3) + hills(W, H, H * .9, H * .05, '#de8a7c', 22, 4);
   // winding path into the village
   s += `<path d="M${f(W * .34)} ${H}C${f(W * .4)} ${f(H * .9)} ${f(W * .64)} ${f(H * .84)} ${f(W * .52)} ${f(H * .74)}L${f(W * .55)} ${f(H * .74)}C${f(W * .7)} ${f(H * .83)} ${f(W * .56)} ${f(H * .9)} ${f(W * .68)} ${H}Z" fill="#fbe6c2"/>` + [[.5, .97], [.55, .9], [.58, .83], [.545, .77]].map(([a, b], i) => `<ellipse cx="${f(W * a)}" cy="${f(H * b)}" rx="${f(u * (.3 - i * .05))}" ry="${f(u * (.1 - i * .015))}" fill="#f0d0a0"/>`).join('');
   s += mhouse(W * .36, H * .74, u * .6, '#ff9f7a') + mhouse(W * .7, H * .73, u * .55, '#c38fff');
@@ -985,17 +985,17 @@ S.autumn2 = (W, H) => {
   const bk = W * .81, bky = H * .975;
   s += `<g><path d="M${f(bk - u * .45)} ${f(bky - u * .4)}h${f(u * .9)}l${f(-u * .1)} ${f(u * .4)}h${f(-u * .7)}Z" fill="#d9a46a"/><path d="M${f(bk - u * .4)} ${f(bky - u * .4)}q${f(u * .4)} ${f(-u * .6)} ${f(u * .8)} 0" stroke="#b07c5a" stroke-width="${f(u * .06)}" fill="none"/>${[[-.22, '#ff6f6f'], [0, '#ff8f6b'], [.22, '#ffd36b']].map(([dx, c]) => `<circle cx="${f(bk + dx * u)}" cy="${f(bky - u * .45)}" r="${f(u * .14)}" fill="${c}"/>`).join('')}<path d="M${f(bk - u * .45)} ${f(bky - u * .22)}h${f(u * .9)}" stroke="#b07c5a" stroke-width="2"/></g>`;
   const leaf = (x, y, sz, c, r) => `<path class="fall" style="--d:${f(9 + r() * 9)}s;--o:${f(-r() * 14)}s" d="M${f(x)} ${f(y)}q${f(sz)} ${f(-sz)} ${f(sz * 2)} 0q${f(-sz)} ${f(sz)} ${f(-sz * 2)} 0Z" fill="${c}"/>`;
-  s += scatter(W, H, 22, 53, (x, y, r) => leaf(x, y, u * (.12 + r() * .1), ['#ff7b5c', '#ffb35c', '#ffd36b', '#e86c4a'][(r() * 4) | 0], r), [0, -.1, 1, .7]);
+  s += scatter(W, H, 22, 53, (x, y, r) => leaf(x, y, u * (.12 + r() * .1), ['#f0505f', '#ff7b6b', '#ffb35c', '#d9435a'][(r() * 4) | 0], r), [0, -.1, 1, .7]);
   return s;
 };
 
 S.snow2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#8fb2f6'], [.55, '#dbe6ff'], [1, '#f4f7ff']]);
+  let s = bgr(W, H, [[0, '#ae96ee'], [.55, '#e6dcfa'], [1, '#faf6ff']]);
   s += cloud(W * .2, H * .1, u / 85, '#fff') + cloud(W * .72, H * .14, u / 100, '#fff', .9);
   const mtn = (x, b, w, h, c) => `<path d="M${f(x - w)} ${f(b)}L${f(x - w * .12)} ${f(b - h)}Q${f(x)} ${f(b - h * 1.06)} ${f(x + w * .12)} ${f(b - h)}L${f(x + w)} ${f(b)}Z" fill="${c}" stroke="${c}" stroke-width="${f(u * .2)}" stroke-linejoin="round"/><path d="M${f(x - w * .12)} ${f(b - h)}Q${f(x)} ${f(b - h * 1.06)} ${f(x + w * .12)} ${f(b - h)}L${f(x + w * .36)} ${f(b - h * .66)}l${f(-w * .1)} ${f(h * .06)}l${f(-w * .12)} ${f(-h * .08)}l${f(-w * .12)} ${f(h * .08)}l${f(-w * .12)} ${f(-h * .06)}L${f(x - w * .36)} ${f(b - h * .66)}Z" fill="#fff"/>`;
-  s += mtn(W * .2, H * .68, u * 2.4, u * 2.6, '#a9b8ec') + mtn(W * .78, H * .68, u * 2.8, u * 3.2, '#9aaae6') + mtn(W * .5, H * .7, u * 2, u * 1.9, '#b8c4f0');
-  s += hills(W, H, H * .7, H * .05, '#eef3ff', 5, 3);
+  s += mtn(W * .2, H * .68, u * 2.4, u * 2.6, '#e8a6b6') + mtn(W * .78, H * .68, u * 2.8, u * 3.2, '#d896ac') + mtn(W * .5, H * .7, u * 2, u * 1.9, '#f2bcc6');
+  s += hills(W, H, H * .7, H * .05, '#f6f0ff', 5, 3);
   s += scatter(W, H, 7, 9, (x, y, r) => pine2(x, y, u * (.45 + r() * .3), '#7fb8a6'), [0, .7, 1, .74]);
   // sledding hill
   const p0 = [W * -.02, H * .7], p1 = [W * .3, H * .7], p2 = [W * .45, H * .88], p3 = [W * .8, H * .9];
@@ -1018,7 +1018,7 @@ S.snow2 = (W, H) => {
 
 S.stars2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#101245'], [.55, '#2c2876'], [1, '#56439a']]);
+  let s = bgr(W, H, [[0, '#2a1258'], [.5, '#6a2a8a'], [.85, '#c2508f'], [1, '#e87a96']]);
   s += dust(W, H, 60, 11, [0, 0, 1, .8], '#fff', .55) + twk(W, H, 26, 13, [0, 0, 1, .75]);
   s += `<path d="M${f(-W * .1)} ${f(H * .2)}Q${f(W * .5)} ${f(H * .55)} ${f(W * 1.1)} ${f(H * .1)}" fill="none" stroke="#b9a4ff" stroke-opacity=".14" stroke-width="${f(u * 1.6)}" stroke-linecap="round"/>`;
   const con = (ox, oy, sc, pts, links, col) => { const P = pts.map(([a, b]) => [ox + a * sc, oy + b * sc]); return `<g stroke="#cdd6ff" stroke-width="1.5" stroke-dasharray="4 4" opacity=".55" fill="none">${links.map(([i, j]) => `<path d="M${f(P[i][0])} ${f(P[i][1])}L${f(P[j][0])} ${f(P[j][1])}"/>`).join('')}</g>${P.map(([x, y], i) => star(x, y, u * (i % 3 ? .07 : .1), col, 'twinkle')).join('')}`; };
@@ -1028,7 +1028,7 @@ S.stars2 = (W, H) => {
   s += crescent(W * .16, H * .13, u * .7);
   s += `<g class="shoot"><path d="M${f(W * .34)} ${f(H * .08)}l${f(u * 1.8)} ${f(u * .6)}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>${star(W * .34 + u * 1.9, H * .08 + u * .63, u * .14, '#fff')}</g>`;
   // hills + observatory
-  s += `<path d="M0 ${f(H * .84)}Q${f(W * .3)} ${f(H * .76)} ${f(W * .6)} ${f(H * .8)}T${W} ${f(H * .74)}V${H}H0Z" fill="#2a2160"/><path d="M0 ${f(H * .93)}Q${f(W * .4)} ${f(H * .87)} ${f(W * .75)} ${f(H * .92)}T${W} ${f(H * .9)}V${H}H0Z" fill="#3d3180"/>`;
+  s += `<path d="M0 ${f(H * .84)}Q${f(W * .3)} ${f(H * .76)} ${f(W * .6)} ${f(H * .8)}T${W} ${f(H * .74)}V${H}H0Z" fill="#4a1f6a"/><path d="M0 ${f(H * .93)}Q${f(W * .4)} ${f(H * .87)} ${f(W * .75)} ${f(H * .92)}T${W} ${f(H * .9)}V${H}H0Z" fill="#66308a"/>`;
   const ox = Math.min(W * .82, W - u * 1.4), oy = H * .775, os = u * 1.6;
   s += `<g><rect x="${f(ox - os * .55)}" y="${f(oy - os * .7)}" width="${f(os * 1.1)}" height="${f(os * .72)}" rx="${f(os * .06)}" fill="#e6dcff"/><path d="M${f(ox - os * .6)} ${f(oy - os * .68)}A${f(os * .6)} ${f(os * .6)} 0 0 1 ${f(ox + os * .6)} ${f(oy - os * .68)}Z" fill="#f6f2ff"/><g>${rock(ox, oy - os * .68, [-8, 8, -8], 9)}<path d="M${f(ox - os * .1)} ${f(oy - os * .7)}L${f(ox + os * .45)} ${f(oy - os * 1.55)}L${f(ox + os * .62)} ${f(oy - os * 1.42)}L${f(ox + os * .12)} ${f(oy - os * .62)}Z" fill="#9f8fd8"/><circle cx="${f(ox + os * .54)}" cy="${f(oy - os * 1.49)}" r="${f(os * .1)}" fill="#c6e6ff"/></g><path d="M${f(ox - os * .1)} ${f(oy - os * 1.26)}L${f(ox + os * .1)} ${f(oy - os * 1.26)}L${f(ox + os * .1)} ${f(oy - os * .7)}L${f(ox - os * .1)} ${f(oy - os * .7)}Z" fill="#3a3070" opacity=".5"/>${face(ox, oy - os * .38, os * .14)}<rect x="${f(ox - os * .14)}" y="${f(oy - os * .25)}" width="${f(os * .28)}" height="${f(os * .25)}" rx="${f(os * .1)}" fill="#9f8fd8"/><rect class="glow" x="${f(ox + os * .28)}" y="${f(oy - os * .52)}" width="${f(os * .16)}" height="${f(os * .16)}" rx="${f(os * .04)}" fill="#ffe08a"/></g>`;
   // telescope + bunny
@@ -1043,7 +1043,7 @@ S.stars2 = (W, H) => {
 
 S.castle2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#c3aeff'], [.5, '#ffd9f0'], [1, '#fff2dc']]);
+  let s = bgr(W, H, [[0, '#ffc24f'], [.5, '#ffe49a'], [1, '#fff6dc']]);
   s += scatter(W, H, 16, 93, (x, y, r) => sparkle(x, y, 3 + r() * 5, ['#fff', '#fff3b0', '#ffd1e8'][(r() * 3) | 0]), [0, 0, 1, .6]);
   s += cloud(W * .12, H * .14, u / 75, '#fff') + cloud(W * .88, H * .1, u / 85, '#fff');
   // far castle behind the garden
@@ -1076,7 +1076,7 @@ S.castle2 = (W, H) => {
 
 S.cloudranch2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#8fcbff'], [.5, '#dcf0ff'], [1, '#ffe3ef']]);
+  let s = bgr(W, H, [[0, '#ffa86a'], [.5, '#ffd9b0'], [1, '#fff1e2']]);
   s += sun(W * .86, H * .1, u * .6) + scatter(W, H, 12, 43, (x, y, r) => sparkle(x, y, 3 + r() * 4, '#fff'), [0, 0, 1, .55]);
   s += cloud(W * .45, H * .08, u / 100) + cloud(W * .2, H * .45, u / 130, '#fff', .75);
   s += island(W * .38, H * .2, u * .7, sheep(W * .38, H * .19, u * .38, false, ''));
@@ -1084,7 +1084,7 @@ S.cloudranch2 = (W, H) => {
   s += hab(W * .14, H * .28, u * 1.2, '#ff9fb0', '#fff', 7) + hab(W * .66, H * .2, u * .95, '#9fd8ff', '#fff6c9', 8, 'bunny') + hab(W * .9, H * .62, u * .6, '#c7b2ff', '#fff', 6) + hab(W * .07, H * .6, u * .5, '#ffd36b', '#ff9fb0', 6.5);
   s += scatter(W, H, 3, 19, (x, y) => `<g class="float" style="--d:7s"><path d="M${f(x)} ${f(y)}q${f(u * .2)} ${f(-u * .2)} ${f(u * .4)} 0q${f(u * .2)} ${f(-u * .2)} ${f(u * .4)} 0" fill="none" stroke="#8a8fb5" stroke-width="2.5" stroke-linecap="round"/></g>`, [.2, .3, .8, .45]);
   // sea of clouds
-  s += puffs(W, H, H * .74, u * 1, '#ece4ff', 5) + puffs(W, H, H * .82, u * .85, '#f8eefb', 9) + puffs(W, H, H * .91, u * .7, '#fdf6ff', 17);
+  s += puffs(W, H, H * .74, u * 1, '#ffe0c4', 5) + puffs(W, H, H * .82, u * .85, '#ffecd8', 9) + puffs(W, H, H * .91, u * .7, '#fff7ee', 17);
   s += `<g><ellipse cx="${f(W * .84)}" cy="${f(H * .91)}" rx="${f(u * 1.1)}" ry="${f(u * .2)}" fill="#a8e29a"/></g>`;
   s += windmill(W * .84, H * .9, u * .8);
   // sleepy sheep on the clouds
@@ -1132,20 +1132,20 @@ S.park2 = (W, H) => {
 
 S.iceberg2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#0e1848'], [.45, '#22307a'], [.7, '#4658a6'], [1, '#7d96d8']]);
+  let s = bgr(W, H, [[0, '#082a3e'], [.45, '#0f4c62'], [.7, '#22798a'], [1, '#56b0b4']]);
   s += dust(W, H, 50, 31, [0, 0, 1, .65], '#fff', .55) + twk(W, H, 18, 33, [0, 0, 1, .6]);
   // aurora curtains
   const grad = (c1, c2) => { const id = 'au' + (++GID); s += `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}" stop-opacity="0"/><stop offset=".45" stop-color="${c1}" stop-opacity=".75"/><stop offset=".75" stop-color="${c2}" stop-opacity=".45"/><stop offset="1" stop-color="${c2}" stop-opacity="0"/></linearGradient></defs>`; return id; };
   const smooth = P => { let d = `M${f(P[0][0])} ${f(P[0][1])}`; for (let i = 1; i < P.length - 1; i++) d += `Q${f(P[i][0])} ${f(P[i][1])} ${f((P[i][0] + P[i + 1][0]) / 2)} ${f((P[i][1] + P[i + 1][1]) / 2)}`; return d + `L${f(P[P.length - 1][0])} ${f(P[P.length - 1][1])}`; };
   const curtain = (y0, h, amp, ph, b, op, id) => { const T = [], B = []; for (let i = 0; i <= 7; i++) { const x = -W * .1 + i * W * 1.2 / 7, y = y0 + Math.sin(i * 1.3 + ph) * amp; T.push([x, y]); B.push([x, y + h + Math.cos(i * 1.1 + ph) * amp * .5]); } return `<path class="wave" style="--d:${8 + b}s" d="${smooth(T)}L${f(B[7][0])} ${f(B[7][1])}${smooth(B.reverse()).replace(/^M/, 'L')}Z" fill="url(#${id})" opacity="${op}"><animate attributeName="opacity" values="${op};${f(op * .5)};${op}" dur="${5 + b}s" repeatCount="indefinite"/></path>`; };
-  const g1 = grad('#b9ffe6', '#7ff0c0'), g2 = grad('#ffc2e6', '#c7b2ff');
+  const g1 = grad('#b9ffe6', '#7ff0c0'), g2 = grad('#d6ffb0', '#7fe6e0');
   s += curtain(H * .04, H * .2, u * .6, 0, 0, .95, g1) + curtain(H * .15, H * .16, u * .45, 2, 2, .7, g2);
   s += crescent(W * .88, H * .1, u * .45);
   // horizon bergs
   const hz = H * .7;
-  s += berg(W * .14, hz, u * 2.2, u * 1.2, '#cfdcff', '#a9bbef') + berg(W * .5, hz, u * 1.4, u * .7, '#cfdcff', '#a9bbef') + berg(W * .86, hz, u * 2.4, u * 1.5, '#cfdcff', '#a9bbef');
+  s += berg(W * .14, hz, u * 2.2, u * 1.2, '#d8f6f2', '#9ed6d6') + berg(W * .5, hz, u * 1.4, u * .7, '#d8f6f2', '#9ed6d6') + berg(W * .86, hz, u * 2.4, u * 1.5, '#d8f6f2', '#9ed6d6');
   // ice field + slide slope
-  s += `<rect x="0" y="${f(hz - u * .5)}" width="${W}" height="${f(u * .5)}" fill="#8fa8e0" opacity=".35"/><path d="M0 ${f(hz)}H${W}V${H}H0Z" fill="#dfe8ff"/><path d="M${f(W * .3)} ${f(H * .9)}C${f(W * .55)} ${f(H * .88)} ${f(W * .7)} ${f(H * .74)} ${W} ${f(H * .72)}V${H}H${f(W * .3)}Z" fill="#f4f8ff"/><path d="M${f(W * .3)} ${f(H * .9)}C${f(W * .55)} ${f(H * .88)} ${f(W * .7)} ${f(H * .74)} ${W} ${f(H * .72)}" fill="none" stroke="#c3d4f6" stroke-width="3"/>`;
+  s += `<rect x="0" y="${f(hz - u * .5)}" width="${W}" height="${f(u * .5)}" fill="#5fbcbc" opacity=".35"/><path d="M0 ${f(hz)}H${W}V${H}H0Z" fill="#e2f6f4"/><path d="M${f(W * .3)} ${f(H * .9)}C${f(W * .55)} ${f(H * .88)} ${f(W * .7)} ${f(H * .74)} ${W} ${f(H * .72)}V${H}H${f(W * .3)}Z" fill="#f4f8ff"/><path d="M${f(W * .3)} ${f(H * .9)}C${f(W * .55)} ${f(H * .88)} ${f(W * .7)} ${f(H * .74)} ${W} ${f(H * .72)}" fill="none" stroke="#c3d4f6" stroke-width="3"/>`;
   s += `<path d="M0 ${f(H * .92)}Q${f(W * .3)} ${f(H * .9)} ${f(W * .6)} ${f(H * .93)}T${W} ${f(H * .92)}V${H}H0Z" fill="#fff"/>`;
   const ps = u * .55;
   s += `<g><animateMotion path="M${f(W * .98)} ${f(H * .72)}C${f(W * .7)} ${f(H * .74)} ${f(W * .55)} ${f(H * .88)} ${f(W * .3)} ${f(H * .9)}" dur="6s" repeatCount="indefinite" rotate="auto-reverse" keyPoints="0;1;1" keyTimes="0;.7;1" calcMode="spline" keySplines=".5 0 .7 1;0 0 1 1"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.08;.66;.74;1" dur="6s" repeatCount="indefinite"/><g transform="translate(0 ${f(-ps * .05)})"><rect x="${f(-ps * .6)}" y="${f(-ps * .2)}" width="${f(ps * 1.2)}" height="${f(ps * .16)}" rx="${f(ps * .06)}" fill="#ff8fb6"/><path d="M${f(-ps * .7)} 0h${f(ps * 1.3)}" stroke="#c98a5c" stroke-width="${f(ps * .06)}" stroke-linecap="round"/>${penguin(0, -ps * .15, ps, false, '', '#ffe08a')}</g></g>`;
@@ -1163,21 +1163,21 @@ S.iceberg2 = (W, H) => {
 
 S.desert2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#191650'], [.45, '#3a2f7e'], [.72, '#8a5aa0'], [1, '#d898a8']]);
+  let s = bgr(W, H, [[0, '#6a2a72'], [.4, '#c8487a'], [.7, '#ff7f66'], [1, '#ffc27a']]);
   s += dust(W, H, 60, 51, [0, 0, 1, .6], '#fff', .6) + twk(W, H, 20, 53, [0, 0, 1, .55]) + scatter(W, H, 6, 55, (x, y, r) => star(x, y, u * (.08 + r() * .08), ['#ffe27a', '#ffd1e8', '#c6e6ff'][(r() * 3) | 0], 'twinkle'), [0, .02, 1, .45]);
   const mx = W * .78, my = H * .17, mr = u * .85;
   s += `<g class="bob" style="--d:9s">${halo(mx, my, mr * 2.2, '#fff3c4', .4)}<circle cx="${f(mx)}" cy="${f(my)}" r="${f(mr)}" fill="#fff3c4"/><circle cx="${f(mx - mr * .4)}" cy="${f(my + mr * .35)}" r="${f(mr * .14)}" fill="#f2deb0"/><circle cx="${f(mx + mr * .45)}" cy="${f(my - mr * .4)}" r="${f(mr * .1)}" fill="#f2deb0"/>${face(mx, my, mr * .4, '#6a5a7a')}</g>`;
   s += `<g class="shoot"><path d="M${f(W * .12)} ${f(H * .08)}l${f(u * 1.6)} ${f(u * .5)}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>${star(W * .12 + u * 1.7, H * .08 + u * .53, u * .12, '#fff')}</g>`;
   // pyramids
-  const pyr = (x, b, w, h) => `<path d="M${f(x - w)} ${f(b)}L${f(x)} ${f(b - h)}L${f(x + w)} ${f(b)}Z" fill="#b48fcf"/><path d="M${f(x)} ${f(b - h)}L${f(x + w)} ${f(b)}H${f(x + w * .25)}Z" fill="#8a6ab4"/><path d="M${f(x - w * .5)} ${f(b - h * .5)}L${f(x + w * .1)} ${f(b - h * .5)}M${f(x - w * .75)} ${f(b - h * .25)}L${f(x + w * .2)} ${f(b - h * .25)}" stroke="#a07fc0" stroke-width="2"/>`;
+  const pyr = (x, b, w, h) => `<path d="M${f(x - w)} ${f(b)}L${f(x)} ${f(b - h)}L${f(x + w)} ${f(b)}Z" fill="#ef8f78"/><path d="M${f(x)} ${f(b - h)}L${f(x + w)} ${f(b)}H${f(x + w * .25)}Z" fill="#c8606e"/><path d="M${f(x - w * .5)} ${f(b - h * .5)}L${f(x + w * .1)} ${f(b - h * .5)}M${f(x - w * .75)} ${f(b - h * .25)}L${f(x + w * .2)} ${f(b - h * .25)}" stroke="#a07fc0" stroke-width="2"/>`;
   const pb = H * .72;
   s += pyr(W * .12, pb, u * 1.1, u * 1.2) + pyr(W * .44, pb, u * 1.3, u * 1.5) + pyr(W * .27, pb + u * .05, u * 1.9, u * 2.3) + sparkle(W * .27, pb - u * 2.35, u * .14, '#fff6c9');
   // dunes + caravan
-  s += hills(W, H, H * .74, H * .05, '#5c4a94', 7, 3);
+  s += hills(W, H, H * .74, H * .05, '#a84470', 7, 3);
   const cv = W * .6, cvy = H * .735; let car = '';
-  for (let i = 0; i < 4; i++) car += sil(camel(cv + i * u * .75, cvy - (i % 2) * u * .03, u * .32, true), '#2e2560') + `<circle class="glow" cx="${f(cv + i * u * .75 + u * .25)}" cy="${f(cvy - u * .42)}" r="${f(u * .035)}" fill="#ffd36b"/>`;
+  for (let i = 0; i < 4; i++) car += sil(camel(cv + i * u * .75, cvy - (i % 2) * u * .03, u * .32, true), '#6a2050') + `<circle class="glow" cx="${f(cv + i * u * .75 + u * .25)}" cy="${f(cvy - u * .42)}" r="${f(u * .035)}" fill="#ffd36b"/>`;
   s += car;
-  s += hills(W, H, H * .84, H * .06, '#7a62ac', 17, 3) + hills(W, H, H * .93, H * .05, '#9a80c2', 29, 4);
+  s += hills(W, H, H * .84, H * .06, '#d86e72', 17, 3) + hills(W, H, H * .93, H * .05, '#f09a7e', 29, 4);
   // camp: tent, fire, friends
   const tx = Math.min(W * .82, W - u * 1.1), ty = H * .93, ts = u * 1.3;
   s += `<g><path d="M${f(tx - ts * .8)} ${f(ty)}L${f(tx)} ${f(ty - ts)}L${f(tx + ts * .8)} ${f(ty)}Z" fill="#ffd6e6"/><path d="M${f(tx - ts * .4)} ${f(ty - ts * .5)}L${f(tx)} ${f(ty - ts)}L${f(tx - ts * .12)} ${f(ty - ts * .5)}ZM${f(tx + ts * .4)} ${f(ty - ts * .5)}L${f(tx)} ${f(ty - ts)}L${f(tx + ts * .12)} ${f(ty - ts * .5)}Z" fill="#ff9fb8" opacity=".7"/><path d="M${f(tx - ts * .3)} ${f(ty)}L${f(tx)} ${f(ty - ts * .62)}L${f(tx + ts * .3)} ${f(ty)}Z" fill="#ffd36b" class="glow"/><path d="M${f(tx)} ${f(ty - ts)}v${f(-ts * .25)}l${f(ts * .22)} ${f(ts * .08)}l${f(-ts * .22)} ${f(ts * .08)}" fill="#ff8fb6" stroke="#c98fb0" stroke-width="1.5"/></g>`;
@@ -1197,8 +1197,8 @@ function rockinghorse(x, y, s) {
 }
 S.toytown2 = (W, H) => {
   const u = Math.min(W, H) / 10, fy = H * .78;
-  let s = bgr(W, H, [[0, '#ffe9f3'], [1, '#fff4e6']]);
-  let st = ''; for (let x = 0; x < W; x += u * 1.2) st += `<rect x="${f(x)}" y="0" width="${f(u * .6)}" height="${f(fy)}" fill="#ffd9ea" opacity=".32"/>`;
+  let s = bgr(W, H, [[0, '#ffec8a'], [1, '#fff8d8']]);
+  let st = ''; for (let x = 0; x < W; x += u * 1.2) st += `<rect x="${f(x)}" y="0" width="${f(u * .6)}" height="${f(fy)}" fill="#ffd95c" opacity=".35"/>`;
   s += st + scatter(W, H, 14, 5, (x, y) => `<circle cx="${f(x)}" cy="${f(y)}" r="${f(u * .06)}" fill="#fff" opacity=".8"/>`, [0, .05, 1, .7]);
   s += bunting(W, H * .01, u * .45, Math.max(8, Math.round(W / (u * .9))), ['#ff8fb6', '#ffd36b', '#9fd8ff', '#a8e6b5', '#c7b2ff']);
   // window
@@ -1234,7 +1234,7 @@ S.toytown2 = (W, H) => {
 
 S.library2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#5b4a92'], [.5, '#a389cc'], [1, '#f2d2c4']]);
+  let s = bgr(W, H, [[0, '#8a5a3c'], [.5, '#c4926a'], [1, '#f4d8b4']]);
   s += scatter(W, H, 26, 9, (x, y, r) => `<path d="M${f(x)} ${f(y - 3)}l2 3l-2 3l-2-3Z" fill="#fff" opacity=".14"/>`, [0, 0, 1, .82]);
   // tall window with night sky
   const wx = W * .5, ww = Math.min(W * .17, u * 1.7), wt = H * .04, wb = H * .66, [ng, nd] = lgr([[0, '#1c1c5a'], [1, '#4a3f8e']]);
@@ -1272,7 +1272,7 @@ S.library2 = (W, H) => {
 
 S.rain2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#a3d8ff'], [.55, '#eef8ff'], [1, '#fff4e4']]);
+  let s = bgr(W, H, [[0, '#c6ec7a'], [.55, '#f0fbd2'], [1, '#fffbe6']]);
   const fid = 'fl' + (++GID);
   s += `<defs><g id="${fid}"><circle cx="0" cy="-.5" r=".48"/><circle cx=".5" cy="0" r=".48"/><circle cx="0" cy=".5" r=".48"/><circle cx="-.5" cy="0" r=".48"/><circle cx="0" cy="0" r=".18" fill="#fff" opacity=".8"/></g></defs>`;
   const rcx = W * .5, rb = H * .8, rr = Math.min(W * .48, H * .62), bw = u * .2, rc = ['#ff9fb0', '#ffc98a', '#ffe98a', '#a8e6b5', '#9fd2ff', '#c7b2ff'];
@@ -1305,9 +1305,9 @@ function toucan(x, y, s) {
 }
 S.jungle2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#c6f2dc'], [.5, '#e9fbdc'], [1, '#d0efbe']]);
+  let s = bgr(W, H, [[0, '#ff9c5a'], [.5, '#ffd08a'], [1, '#fff0c0']]);
   s += `<g opacity=".25" fill="#fff">${[.35, .6, .82].map((t, i) => `<path d="M${f(W * t)} 0h${f(u * .7)}L${f(W * t + u * (2.2 + i * .4))} ${f(H * .85)}h${f(-u * 1.3)}Z"/>`).join('')}</g>`;
-  s += hills(W, H, H * .64, H * .1, '#a6dca8', 13, 4) + scatter(W, H, 7, 15, (x, y, r) => tree(x, y, u * (1 + r() * .5), ['#8fd68a', '#74c779', '#a3dc8c'][(r() * 3) | 0], '#9a7a5a'), [.3, .62, 1, .7]);
+  s += hills(W, H, H * .64, H * .1, '#b6cf88', 13, 4) + scatter(W, H, 7, 15, (x, y, r) => tree(x, y, u * (1 + r() * .5), ['#8fd68a', '#74c779', '#a3dc8c'][(r() * 3) | 0], '#9a7a5a'), [.3, .62, 1, .7]);
   // temple ruins
   const tx = W * .62, tb = H * .85, tw = Math.min(W * .54, u * 5.4), tiers = 4, th = u * .72;
   let tp = '';
@@ -1342,7 +1342,7 @@ S.jungle2 = (W, H) => {
 
 S.bakery2 = (W, H) => {
   const u = Math.min(W, H) / 10, ct = H * .855;
-  let s = bgr(W, H, [[0, '#ffe2dc'], [1, '#fff3e4']]);
+  let s = bgr(W, H, [[0, '#f2dcb8'], [1, '#fff4e2']]);
   // tiled backsplash
   let tl = ''; const tz = u * .5;
   for (let y = H * .56; y < ct; y += tz) tl += `<path d="M0 ${f(y)}H${W}" />`;
@@ -1382,7 +1382,7 @@ S.bakery2 = (W, H) => {
 
 S.moon2 = (W, H) => {
   const u = Math.min(W, H) / 10;
-  let s = bgr(W, H, [[0, '#0d0f40'], [.55, '#25236a'], [1, '#3d3388']]);
+  let s = bgr(W, H, [[0, '#2a0c3e'], [.55, '#55205e'], [1, '#86367e']]);
   s += dust(W, H, 60, 91, [0, 0, 1, .8], '#fff', .55) + twk(W, H, 24, 93, [0, 0, 1, .75]) + scatter(W, H, 6, 95, (x, y, r) => star(x, y, u * (.08 + r() * .08), ['#ffe27a', '#ffd1e8', '#c6e6ff'][(r() * 3) | 0], 'twinkle'), [0, .05, 1, .6]);
   // big ringed planet
   const px = W * .84, py = H * .2, pr = u * 1;
@@ -1593,7 +1593,7 @@ S.beachrun = (W, H) => {   // チャレンジ reward: a seaside circuit
 };
 
 /* time of day: evening and night versions of every scene */
-const NIGHT = ['stars', 'moon', 'neoncity', 'stars2', 'moon2', 'festival2', 'park2', 'iceberg2', 'desert2', 'sea2'];
+const NIGHT = ['stars', 'moon', 'neoncity', 'stars2', 'moon2', 'festival2', 'park2', 'iceberg2', 'sea2'];
 function timeLayer(name, W, H, tod, variant) {
   if (!tod || tod === 'day') return '';
   const alreadyNight = NIGHT.includes(name) || (name === 'daily' && variant === 'h');
