@@ -79,16 +79,16 @@ export function makeReader(n, att, tgt, opt = {}) {
     if (p.turn === att) {
       res = false;
       if (d > 0 && (region || tgtInfo(p).min <= maxLibs)) {
-        for (const m of attMoves(p)) { const r = p.tryPlay(m, 0, true); if (!r) continue; if (captured(r.pos) || win(r.pos, d - 1)) { res = true; break; } }
+        for (const m of attMoves(p)) { const r = p.tryPlay(m, 0, true); if (!r) continue; if (opt.koStrict === 'att' && r.pos.ko >= 0 && !captured(r.pos)) continue; if (captured(r.pos) || win(r.pos, d - 1)) { res = true; break; } }
       }
     } else {
       res = true;
-      for (const m of defMoves(p)) { const r = p.tryPlay(m, 0, true); if (!r) continue; if (!win(r.pos, d)) { res = false; break; } }
+      for (const m of defMoves(p)) { const r = p.tryPlay(m, 0, true); if (!r) continue; if (opt.koStrict === 'def' && r.pos.ko >= 0) continue; if (!win(r.pos, d)) { res = false; break; } }
     }
     memo.set(key, res);
     return res;
   }
-  return { win, nodes: () => nodes, captured };
+  return { win, nodes: () => nodes, captured, attMoves, defMoves };
 }
 
 // Evaluate every first move for the side to move.
@@ -102,7 +102,7 @@ export function solveFirst(spec, goal, tgtS, opt = {}) {
   const depth = opt.depth || 8;
   const cands = opt.cands ? opt.cands.map(s => pt(s, n)) : region ? region.slice() : [...Array(n * n).keys()];
   const out = [];
-  const rd = makeReader(n, att, tgt, { region, maxLibs: opt.maxLibs });
+  const rd = makeReader(n, att, tgt, { region, maxLibs: opt.maxLibs, libsOnly: opt.libsOnly, attPass: opt.attPass, koStrict: opt.strict ? (attacking ? 'att' : 'def') : null });
   for (const m of cands) {
     if (p0.b[m]) continue;
     const r = p0.tryPlay(m, 0, true); if (!r) continue;
@@ -166,19 +166,46 @@ export function pv(spec, goal, tgtS, opt = {}, first) {
   const region = opt.region ? opt.region.map(s => pt(s, n)) : null;
   const rd = makeReader(n, att, tgt, { region, maxLibs: opt.maxLibs, libsOnly: opt.libsOnly });
   const maxD = opt.depth || 8, line = [];
-  const need = (q, cap) => { for (let d = 0; d <= cap; d++) if (rd.win(q, d)) return d; return 99; };
-  for (let ply = 0; ply < 20 && !rd.captured(p); ply++) {
-    let best = null, bv = p.turn === att ? 99 : -1;
-    const cand = region ? region.filter(i => p.b[i] === 0) : [...Array(n * n).keys()].filter(i => p.b[i] === 0);
-    if (ply === 0 && first) { best = pt(first, n); }
-    else for (const m of cand) {
-      const r = p.tryPlay(m, 0, true); if (!r) continue;
-      if (p.turn === att) { const v = rd.captured(r.pos) ? 0 : need(r.pos, maxD); if (v < bv) { bv = v; best = m; } }
-      else { const v = need(r.pos, maxD); if (v > bv) { bv = v; best = m; } }
+  // fewest attacker moves still needed (attacker to move: d such that win(p, d))
+  const need = q => { for (let d = 0; d <= maxD; d++) if (rd.win(q, d)) return d; return 99; };
+  for (let ply = 0; ply < 30 && !rd.captured(p); ply++) {
+    let best = null, bv;
+    if (ply === 0 && first) best = pt(first, n);
+    else if (p.turn === att) {
+      bv = 99;
+      for (const m of rd.attMoves(p)) { if (m < 0) continue; const r = p.tryPlay(m, 0, true); if (!r) continue; const v = rd.captured(r.pos) ? 0 : 1 + needDef(r.pos); if (v < bv) { bv = v; best = m; } }
+    } else {
+      bv = -1;
+      for (const m of rd.defMoves(p)) { if (m < 0) continue; const r = p.tryPlay(m, 0, true); if (!r) continue; const v = need(r.pos); if (v > bv) { bv = v; best = m; } }
+      if (bv >= 99) { if (best !== null) line.push(co(best, n)); break; }
     }
     if (best === null) break;
-    if (p.turn !== att && bv >= 99) { line.push(co(best, n)); break; }
     p = p.tryPlay(best, 0, true).pos; line.push(co(best, n));
   }
+  function needDef(q) { // defender to move: attacker moves needed against best defence
+    let worst = 0; const ms = rd.defMoves(q).filter(m => m >= 0); if (!ms.length) return 0;
+    for (const m of ms) { const r = q.tryPlay(m, 0, true); if (!r) continue; worst = Math.max(worst, need(r.pos)); }
+    return worst;
+  }
   return line;
+}
+
+// life & death template: eye space S (+ open points O, left empty) enclosed by a black wall and a white wall.
+// returns rows (X black group, O white wall). extraB / extraW / empty override cells. colours swapped with swap.
+export function ldRows(n, S, O = [], opt = {}) {
+  const nb = R.nbrs(n), P = s => pt(s, n);
+  const inner = new Set([...S, ...O].map(P));
+  const blk = new Set(), wht = new Set();
+  for (const i of inner) { const x = i % n, y = (i / n) | 0; for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= n || Y >= n) continue; const j = Y * n + X; if (!inner.has(j)) blk.add(j); } }
+  for (const s of opt.notB || []) blk.delete(P(s));
+  for (const s of opt.extraB || []) blk.add(P(s));
+  for (const i of blk) for (let k = 0; k < 4; k++) { const r = nb[i * 4 + k]; if (r >= 0 && !inner.has(r) && !blk.has(r)) wht.add(r); }
+  for (const s of opt.extraW || []) wht.add(P(s));
+  for (const s of opt.empty || []) { blk.delete(P(s)); wht.delete(P(s)); }
+  // diagonal corners of the black wall are added to the white wall to make it solid
+  if (!opt.noDiag) for (const i of blk) { const x = i % n, y = (i / n) | 0; for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= n || Y >= n) continue; const j = Y * n + X; if (!inner.has(j) && !blk.has(j)) wht.add(j); } }
+  for (const s of opt.empty || []) { blk.delete(P(s)); wht.delete(P(s)); }
+  const rows = [];
+  for (let y = 0; y < n; y++) { let r = ''; for (let x = 0; x < n; x++) { const i = y * n + x; r += blk.has(i) ? 'X' : wht.has(i) ? 'O' : '.'; } rows.push(r); }
+  return rows;
 }

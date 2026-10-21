@@ -21,7 +21,8 @@
  *   semeai  capturing race: target = O stones; reached when a target stone is captured; fails as soon as one of G's racing
  *           stones (G chains next to the target in P.s, without liberties outside the region) is captured.
  *   escape  target = G stones; reached when every target chain has >= 4 liberties or a liberty outside the region.
- *   connect target = G stones; reached when all target stones are one chain (fails if any is captured).
+ *   connect target = G stones; reached when all target stones are one chain, or connected in shape (whatever the opponent
+ *           plays, the player joins them at once into one chain with 2+ liberties); fails if any is captured.
  *   cut     target = O stones; treated as capture (a cut that captures cutting stones).
  * Search area: empty points of `region` (+ pass, + moves capturing a chain in atari next to the target / racing stones).
  * Chains with a liberty outside the region can never be captured (walls are safe).
@@ -172,7 +173,7 @@ class Ctx {
     }
     this.small = this.region.length <= 22;
     this.UB = new Map(); this.UBm = new Map(); this.BT = new Map(); this.RC = new Map();
-    this.nodes = 0; this.lim = Infinity;
+    this.nodes = 0; this.lim = api.nodeLimit; this.dl = 0;
     // scan data (chain labels for the zone)
     this.sm = new Int32Array(N); this.sg = 0; this.chId = new Int32Array(N); this.sv = -1;
     this.cLibs = []; this.cAnch = []; this.cCol = []; this.cSize = []; this.nc = 0;
@@ -346,7 +347,7 @@ class Ctx {
     if (this.ownerSafe()) return true;
     const B = this.B, key = B.key(turn), e = this.UB.get(key);
     if (e !== undefined) return e > 0;
-    if (++this.nodes > this.lim) throw ABORT;
+    if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
     if (B.undo.length > 160) return true;
     const own = this.owner, K = this.K;
     let res;
@@ -360,7 +361,16 @@ class Ctx {
       }
     } else {
       res = false;
-      const mv = this.order(this.genAll(own), own, this.UBm.get(key)); mv.push(PASS);
+      // the owner passes first when nothing of its own is in atari (in a living shape a pass usually holds, which keeps
+      // the tree small); otherwise answers first and passes last
+      const bm = this.UBm.get(key), mv = this.order(this.genAll(own), own, bm);
+      // one-ply: a move that makes the target pass-alive at once ends the search
+      for (const m of mv) {
+        if (!B.play(m, own)) continue;
+        const ok = !this.captured() && this.ownerSafe(); B.back();
+        if (ok) { this.UB.set(key, 1); this.UBm.set(key, m); return true; }
+      }
+      if (bm === PASS) mv.unshift(PASS); else mv.push(PASS);
       for (const m of mv) {
         if (!B.play(m, own)) continue;
         const r = this.ub(K); B.back();
@@ -370,6 +380,8 @@ class Ctx {
     this.UB.set(key, res ? 1 : -1);
     return res;
   }
+  // an owner chain in the zone (not anchored) with one liberty?
+  ownAtari(c) { this.scan(); for (let id = 0; id < this.nc; id++) if (this.cCol[id] === c && !this.cAnch[id] && this.cLibs[id] === 1) return true; return false; }
   // does the player's goal hold in the unbounded game with `turn` to move?
   ldWin(turn) { const s = this.ub(turn); return this.goal === 'kill' ? !s : s; }
 
@@ -378,7 +390,7 @@ class Ctx {
     const gl = this.goal;
     if (gl === 'capture' || gl === 'cut' || gl === 'semeai') return this.captured();
     if (gl === 'escape') return !this.captured() && this.escaped();
-    if (gl === 'connect') return !this.captured() && this.connected();
+    if (gl === 'connect') return this.connR();
     if (gl === 'kill' && this.captured()) return true;
     if (gl === 'live' && this.captured()) return false;
     const B = this.B, key = B.key(0), c = this.RC.get(key);
@@ -396,6 +408,30 @@ class Ctx {
           if (!w) { res = false; break; }
         }
       }
+    }
+    this.RC.set(key, res);
+    return res;
+  }
+  // connect: one chain, or connected in shape: whatever the opponent plays (incl. pass) the player joins all target
+  // stones into one chain with 2+ liberties at once
+  connR() {
+    if (this.captured()) return false;
+    if (this.connected()) return true;
+    const B = this.B, key = B.key(0), c = this.RC.get(key);
+    if (c !== undefined) return c;
+    const G = this.G, O = this.O, mo = this.genAll(O); mo.push(PASS);
+    let res = true;
+    for (const d of mo) {
+      if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
+      if (!B.play(d, O)) continue;
+      let ok = false;
+      if (!this.captured()) for (const a of this.genAll(G)) {
+        if (!B.play(a, G)) continue;
+        if (!this.captured() && this.connected() && B.chain(this.tgt[0]) >= 2) ok = true;
+        B.back(); if (ok) break;
+      }
+      B.back();
+      if (!ok) { res = false; break; }
     }
     this.RC.set(key, res);
     return res;
@@ -429,7 +465,7 @@ class Ctx {
     if (this.lb() > k) return false;
     const B = this.B, key = B.key(this.G), e = this.BT.get(key);
     if (e) { if (e.w <= k) return true; if (e.l >= k) return false; }
-    if (++this.nodes > this.lim) throw ABORT;
+    if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
     const G = this.G, mv = this.order(this.gen(G), G, e && e.m);
     let res = false, bm = -2;
     for (const m of mv) {
@@ -447,7 +483,7 @@ class Ctx {
     if (this.ld && !this.ldWin(this.O)) return false;    // the opponent can resist forever: no bounded win
     const B = this.B, key = B.key(this.O), e = this.BT.get(key);
     if (e) { if (e.w <= k) return true; if (e.l >= k) return false; }
-    if (++this.nodes > this.lim) throw ABORT;
+    if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
     const O = this.O, mv = this.order(this.gen(O), O, e && e.m);
     if (e && e.m === PASS) mv.unshift(PASS); else mv.push(PASS);
     let res = true, bm = -2;
@@ -486,38 +522,70 @@ class Ctx {
 const ABORT = { abort: true };
 
 // ================================================================ API
-function solve(P, moves, left, defend) {
+// is `moves` a prefix of the puzzle's main line? -> its length, else -1
+function lineIndex(C, P, moves) {
+  const line = (P.line || []).map(v => pt(v, C.n));
+  if (!line.length || moves.length > line.length) return -1;
+  for (let k = 0; k < moves.length; k++) if (moves[k] !== line[k]) return -1;
+  return moves.length;
+}
+// run f() for one candidate; on a timeout / node limit unwind the board and return `dflt`
+function guarded(C, f, dflt) {
+  const B = C.B, depth = B.undo.length;
+  try { return f(); } catch (e) { if (e !== ABORT) throw e; while (B.undo.length > depth) B.back(); C.aborted++; return dflt; }
+}
+function solve(P, moves, left, defend, opts) {
+  const exact = !!(opts && opts.exact);
   const C = ctxOf(P); C.clearIfBig();
-  const turn = C.load(moves || []); if (turn === null) return [];
-  const B = C.B, out = [];
+  moves = moves || [];
+  const turn = C.load(moves); if (turn === null) return [];
+  const B = C.B, out = [], n = C.n;
   left = Math.max(0, left | 0);
-  if (!defend) {
-    const G = C.G, mv = C.order(C.rootMoves(G), G);
-    for (const m of mv) {
-      if (!B.play(m, G)) continue;
-      let need = 0;
-      if (C.R()) need = 1;
-      else if (!C.fail() && left > 1) { const j = C.needO(left - 1); need = j > 0 ? j + 1 : 0; }
-      let hopeless = false;
-      if (!need && left > 1 && !C.ld) hopeless = !coop(C, left - 1);
-      B.back();
-      out.push(hopeless ? { m, need, hopeless: true } : { m, need });
+  C.dl = exact ? 0 : Date.now() + api.budget; C.aborted = 0; C.nodes = 0;
+  // page mode: on the verified main line the line's move is known (and at the start it is the only solution)
+  const k = exact ? -1 : lineIndex(C, P, moves), line = k >= 0 ? (P.line || []).map(v => pt(v, n)) : null;
+  const km = line && k < line.length ? line[k] : null;
+  const kneed = km === null ? 0 : defend ? Math.floor((line.length - k) / 2) : Math.ceil((line.length - k) / 2);
+  try {
+    if (!defend) {
+      const G = C.G, mv = C.order(C.rootMoves(G), G);
+      if (km !== null && mv.indexOf(km) < 0) mv.unshift(km);
+      for (const m of mv) {
+        if (m === km) { out.push({ m, need: Math.min(kneed, left) }); continue; }
+        if (k === 0) { if (B.play(m, G)) { B.back(); out.push({ m, need: 0 }); } continue; }   // unique answer (verified)
+        if (!B.play(m, G)) continue;
+        const r = guarded(C, () => {
+          let need = 0;
+          if (C.R()) need = 1;
+          else if (!C.fail() && left > 1) { const j = C.needO(left - 1); need = j > 0 ? j + 1 : 0; }
+          let hopeless = false;
+          if (!need && left > 1 && !C.ld) hopeless = !coop(C, left - 1);
+          return hopeless ? { m, need, hopeless: true } : { m, need };
+        }, { m, need: 0 });
+        B.back();
+        out.push(r);
+      }
+    } else {
+      const O = C.O, mv = C.order(C.rootMoves(O), O); mv.push(PASS);
+      if (km !== null && mv.indexOf(km) < 0) mv.unshift(km);
+      const rows = [];
+      for (const m of mv) {
+        if (m === km) { rows.push({ m, need: kneed || 1, line: 1 }); continue; }
+        if (!B.play(m, O)) continue;
+        const need = guarded(C, () => C.R() ? 1 : C.fail() ? 0 : C.needG(left), km !== null ? (kneed || 1) : 0);   // R: a self-destructive reply, ranked lowest
+        B.back();
+        rows.push({ m, need });
+      }
+      // preference: refutations first, then the longest resistance; among equals the main line's move, then the move
+      // closest to the action (the target / racing stones / the last move), pass last
+      const near = C.tgt.concat(C.own); if (moves.length && moves[moves.length - 1] >= 0) near.push(moves[moves.length - 1]);
+      const dist = m => { if (m === PASS) return 99; let d = 99; const x = m % n, y = (m / n) | 0; for (const t of near) d = Math.min(d, Math.max(Math.abs(t % n - x), Math.abs(((t / n) | 0) - y))); return d; };
+      rows.forEach((r, j) => { r.d = r.line ? -1 : dist(r.m); r.j = j; });
+      rows.sort((a, b) => (b.need === 0 ? 99 : b.need) - (a.need === 0 ? 99 : a.need) || a.d - b.d || a.j - b.j);
+      rows.forEach(r => { delete r.d; delete r.j; delete r.line; });
+      out.push(...rows);
     }
-  } else {
-    const O = C.O, mv = C.order(C.rootMoves(O), O); mv.push(PASS);
-    const rows = [];
-    for (const m of mv) {
-      if (!B.play(m, O)) continue;
-      let need = 0;
-      if (C.R()) need = 1;            // a self-destructive reply (the goal is reached at once): ranked lowest
-      else if (!C.fail()) need = C.needG(left);
-      B.back();
-      rows.push({ m, need });
-    }
-    // preference: refutations first, then the longest resistance; pass last among equals
-    rows.sort((a, b) => (b.need === 0 ? 99 : b.need) - (a.need === 0 ? 99 : a.need) || (a.m === PASS) - (b.m === PASS));
-    out.push(...rows);
-  }
+  } finally { C.dl = 0; }
   return out;
 }
 // can G reach the goal within k moves if O only passes? (for "hopeless" = the goal is out of reach even with help)
@@ -531,29 +599,46 @@ function coop(C, k) {
   if (!B.play(PASS, C.O)) return true;
   const r = go(k); B.back(); return r;
 }
-function reached(P, pos) {
-  const C = ctxOf(P), B = C.B;
+function reached(P, pos, opts) {
+  const exact = !!(opts && opts.exact);
+  const C = ctxOf(P), B = C.B, n = C.n;
   C.load([]);
-  const n = C.n, b = pos.b || GR.Pos.from(pos).b;
-  // set the board directly (keep the undo stack empty so load() still works)
+  const b = pos.b || GR.Pos.from(pos).b;
+  // page mode: a position of the verified main line is reached only at its end
+  if (!exact && P.line && P.line.length) {
+    const line = P.line.map(v => pt(v, n)), lk = line.join(',');
+    if (C.lineKey !== lk) {
+      C.lineKey = lk; C.lineH = [];
+      const tmp = new Board(n); for (let i = 0; i < C.N; i++) if (B.b[i]) tmp.put(i, B.b[i]);
+      let c = C.G; C.lineH.push(tmp.h1 + ':' + tmp.h2);
+      for (const m of line) { if (!tmp.play(m, c)) break; c = 3 - c; tmp.setKo(-1); C.lineH.push(tmp.h1 + ':' + tmp.h2); }
+    }
+    let h1 = 0, h2 = 0; for (let i = 0; i < C.N; i++) if (b[i]) { h1 ^= Z1[i * 2 + b[i] - 1]; h2 ^= Z2[i * 2 + b[i] - 1]; }
+    const at = C.lineH.indexOf(h1 + ':' + h2);
+    if (at >= 0) return at === C.lineH.length - 1;
+  }
+  // set the board directly (the undo stack stays empty so load() still works)
   const saved = Array.from(B.b);
   for (let i = 0; i < C.N; i++) if (B.b[i] !== b[i]) B.put(i, b[i]);
   const ko = pos.ko >= 0 ? pos.ko : -1; B.setKo(ko);
+  C.dl = exact ? 0 : Date.now() + api.budget; C.nodes = 0;
   let r;
-  try { r = C.R(); } finally { B.setKo(-1); for (let i = 0; i < C.N; i++) if (B.b[i] !== saved[i]) B.put(i, saved[i]); }
+  try { r = guarded(C, () => C.R(), false); }
+  finally { C.dl = 0; B.setKo(-1); for (let i = 0; i < C.N; i++) if (B.b[i] !== saved[i]) B.put(i, saved[i]); }
   return r;
 }
 // the main line: the answer (or the first winning move), then the defender's longest resistance, ... until reached
+const EX = { exact: true };
 function mainLine(P, left) {
   const C = ctxOf(P), n = C.n; left = left || P.n || 3;
   const line = []; let first = P.answer != null ? pt(P.answer, n) : null;
   for (let step = 0; step < 40 && left > 0; step++) {
-    let list = solve(P, line, left, false).filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
+    let list = solve(P, line, left, false, EX).filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
     if (!list.length) break;
     let m = list[0].m; if (step === 0 && first != null && list.some(x => x.m === first)) m = first;
     line.push(m); left--;
     C.load(line); if (C.R()) break;
-    const dl = solve(P, line, left, true);
+    const dl = solve(P, line, left, true, EX);
     if (!dl.length) break;
     line.push(dl[0].m);
     C.load(line); if (C.R()) break;
@@ -561,7 +646,7 @@ function mainLine(P, left) {
   return line;
 }
 
-const api = { solve, reached, mainLine, PASS, _ctx: ctxOf, _Board: Board };
+const api = { solve, reached, mainLine, PASS, budget: 220, nodeLimit: Infinity, _ctx: ctxOf, _Board: Board };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 root.GoTsumego = api;
 })(typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : globalThis);

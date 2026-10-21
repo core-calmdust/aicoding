@@ -4,7 +4,7 @@
 //   node lessons-build.mjs --only=id  restrict to steps whose id matches
 import fs from 'fs';
 import path from 'path';
-import { specFromRows, specFromLists, solveFirst, legalSetup, show, pt, co, R } from './lessons-lib.mjs';
+import { specFromRows, specFromLists, solveFirst, legalSetup, show, pt, co, R, pv } from './lessons-lib.mjs';
 const DIR = path.dirname(new URL(import.meta.url).pathname);
 const args = process.argv.slice(2), FAST = args.includes('--fast');
 const SHOW = args.includes('--show');
@@ -45,6 +45,7 @@ for (const st of steps) {
   for (let k = 0; k < st.problems.length; k++) {
     const P = st.problems[k], tag = st.id + '#' + (k + 1);
     const spec = P.rows ? specFromRows(P.rows, P.turn, P.swap) : specFromLists(P.n, P.ab || [], P.aw || [], P.turn);
+    if (P.line === 'auto') { const c = P.chk[0]; P.line = pv(spec, c.goal, c.tgt, Object.assign({}, c, { depth: c.pvDepth || c.depth }), P.ok[0]); }
     const bad = legalSetup(spec); if (bad.length) errors.push(tag + ': stones without liberties ' + bad);
     for (const t of ['why', 'ng']) if (!P[t] || !P[t].ja || !P[t].en) errors.push(tag + ': missing ' + t);
     const all = [...P.ok, ...(P.good || []), ...(P.half || [])];
@@ -55,9 +56,28 @@ for (const st of steps) {
       let p = p0; for (const m of P.line) { const r = p.tryPlay(m === 'pass' ? -1 : pt(m, spec.n), 0, true); if (!r) { errors.push(tag + ': illegal line move ' + m); break; } p = r.pos; }
     }
     if (SHOW) console.log(tag + ' ' + (spec.turn === 1 ? 'Black' : 'White') + ' to play, ok ' + P.ok + '\n' + show(spec));
+    // the main line must keep the goal: after the line, the side to move cannot overturn it
+    if (P.line && P.chk && P.chk[0] && !P.noLineChk) {
+      const c = P.chk[0], inv = { capture: 'escape', kill: 'live', escape: 'capture', live: 'kill' }[c.goal];
+      if (inv) {
+        let q = R.Pos.from(spec); for (const m of P.line) q = q.tryPlay(m === 'pass' ? -1 : pt(m, spec.n), 0, true).pos;
+        const tgtAlive = c.tgt.filter(t => q.b[pt(t, spec.n)] === p0.b[pt(t, spec.n)]);
+        if (tgtAlive.length) {
+          const moverIsOrig = q.turn === spec.turn;
+          const r = solveFirst(q.spec(), moverIsOrig ? c.goal : inv, tgtAlive, Object.assign({}, c, { depth: c.depth || 8 }));
+          const bad = moverIsOrig ? !r.wins.length : r.wins.length;
+          if (bad) errors.push(`${tag}: after the line the result is not settled (${moverIsOrig ? c.goal : inv} wins=${r.wins})`);
+        }
+      }
+    }
     const pr = { k: k + 1, turn: spec.turn === 1 ? 'B' : 'W', ok: P.ok, good: P.good, half: P.half, checks: [] };
     for (const c of P.chk || []) {
       const r = solveFirst(spec, c.goal, c.tgt, c);
+      if (c.region && c.goal !== 'connect' && c.goal !== 'cut') {   // the answer must work without relying on ko
+        const rs = solveFirst(spec, c.goal, c.tgt, Object.assign({}, c, { strict: true }));
+        const miss2 = P.ok.filter(m => !rs.wins.includes(m));
+        if (miss2.length) errors.push(`${tag}: answer ${miss2} only works through ko`);
+      }
       const allow = new Set([...all, ...(c.alsoWin || [])]);
       const miss = P.ok.filter(m => !r.wins.includes(m) && !(c.noOk));
       const extra = r.wins.filter(m => !allow.has(m));

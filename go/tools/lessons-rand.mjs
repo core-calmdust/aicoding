@@ -25,7 +25,7 @@ while (Date.now() - t0 < secs * 1000) {
   // white chains other than target: >= 2 libs
   for (let i = 0; i < n * n; i++) if (p.b[i] === 2 && p.group(i).libs < 2) ok = false;
   if (!ok) continue;
-  const r = solveFirst(spec, 'capture', [co(tgt, n)], { depth: 3 });
+  const r = solveFirst(spec, 'capture', [co(tgt, n)], { depth: +(process.env.DEPTH || 3) });
   if (r.wins.length !== 1) continue;
   const m = R.parseCoord(r.wins[0], n), after = p.tryPlay(m, 0, true);
   const selfAtari = after.pos.group(m).libs === 1 && after.captured.length === 0;
@@ -33,6 +33,14 @@ while (Date.now() - t0 < secs * 1000) {
   let want = false;
   if (kind === 'snapback' || kind === 'throwin') want = selfAtari && isLib;
   if (kind === 'net') want = !isLib;
+  if (kind === 'oiotoshi' && isLib && !selfAtari) {
+    // white's connecting reply: a defender move adjacent to the target that joins another white chain, leaving 1 liberty
+    const q = after.pos, g = q.group(tgt);
+    for (const l of [...Array(n * n).keys()].filter(i => q.b[i] === 0 && R.nbrs(n).slice(i * 4, i * 4 + 4).some(s => g.stones.includes(s)))) {
+      const rr = q.tryPlay(l, 0, true); if (!rr) continue; const g2 = rr.pos.group(tgt);
+      if (g2.stones.length > g.stones.length + 1 && g2.libs === 1) want = true;
+    }
+  }
   if (!want) continue;
   // count stones as a naturalness proxy
   const cnt = b.filter(c => c !== '.').length;
