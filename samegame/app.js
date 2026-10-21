@@ -248,7 +248,7 @@ function renderDaily() {
   const d = today(), r = dlRec(d), c0 = dailyCfg(d, 'm');
   const gname = c0.g ? t('th.' + c0.g) : t('th.cl');
   $('#dPuzzle').innerHTML = `<div class="ptag">${esc(t('d.puzzle'))}<i>${esc(d.slice(5).replace('-', '/'))}</i></div>
-    <div class="dhead"><div><h3>${esc(t('d.puzzle.h'))}</h3><p>${esc(t('d.puzzle.d'))}</p></div><span class="chip">${A.themeIcon(c0.g || 'cl')}${esc(t('d.gim'))}：${esc(gname)}</span></div>
+    <div class="dhead"><div><h3>${esc(t('d.puzzle.h'))}</h3><p>${esc(t('d.puzzle.d'))}</p></div><span class="gimrow"><span class="chip">${A.themeIcon(c0.g || 'cl')}${esc(t('d.gim'))}：${esc(gname)}</span>${c0.g ? `<button class="btn sm rulebtn" data-thrule="${c0.g}">?${esc(t('gi.rule'))}</button>` : ''}</span></div>
     <div class="dlvs">${DIFFS.map(D => { const rr = r[D.key], cf = dailyCfg(d, D.k), played = rr.left >= 0;
       return `<div class="dlv lv-${D.k}"><div class="dic">${miniBoard(cf.board)}</div><div class="dlt"><b>${esc(t('dl.' + D.k))}</b><small>${D.w}×${D.h} · ${D.c}${esc(t('u.colors'))}</small>
         <span class="dbest"><span>${esc(t('d.best'))}</span><b>${played ? fmt(rr.s) : '—'}</b>${rr.md ? `<i class="medal m${rr.md}"></i>` : ''}</span></div>
@@ -260,6 +260,7 @@ function renderDaily() {
       return `<div class="dact m-${m}"><span class="daic">${miniModeIcon(m)}</span><span class="dat"><b>${esc(t('a.' + m))}</b><span class="dbest"><span>${esc(t('d.best'))}</span><b>${rr.a ? fmt(rr.s) : '—'}</b></span></span>
         <span class="dabtm"><span class="tries">${[0, 1, 2].map(i => `<i class="${i < rr.a ? 'used' : ''}"></i>`).join('')}</span><button class="btn" data-da="${m}" ${left <= 0 ? 'disabled' : ''}>${A.ICON.play}${esc(t(left > 0 ? 'd.play' : 'd.done'))}</button><button class="btn sm" data-rank="${k}">${A.ICON.rank}</button><button class="btn sm qbtn" data-rule="${m}" aria-label="${esc(t('tu.rule'))}">?</button></span></div>`; }).join('')}</div>`;
   $$('[data-dl]').forEach(b => b.onclick = () => startDaily(b.dataset.dl));
+  $$('[data-thrule]').forEach(b => b.onclick = e => { e.stopPropagation(); maybeThemeTip(b.dataset.thrule, true); });
   $$('[data-da]').forEach(b => b.onclick = () => startDailyAct(b.dataset.da));
   $$('[data-rank]', $('#home')).forEach(b => b.onclick = () => openRank(b.dataset.rank));
   renderCal();
@@ -391,7 +392,8 @@ function paintEl(d, v) {
 function cellSize() {
   const wrap = $('#boardWrap'), r = wrap.getBoundingClientRect();
   const wide = matchMedia('(min-width:1000px)').matches;
-  const availW = wide ? r.width - 8 : r.width - 16, availH = Math.max(200, wide ? innerHeight - 16 - 24 : innerHeight - r.top - ($('#gfoot').offsetHeight || 60) - 18);
+  const vh = window.visualViewport ? visualViewport.height : innerHeight;
+  const availW = wide ? r.width - 8 : r.width - 16, availH = Math.max(160, wide ? innerHeight - 16 - 24 : vh - (r.top + scrollY) - ($('#gfoot').offsetHeight || 56) - 26);
   return Math.max(18, Math.min(wide ? 120 : 64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
 }
 const pos = (x, y) => `translate(${x * G.cs}px, ${(G.rows - 1 - y) * G.cs}px)`;
