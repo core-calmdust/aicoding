@@ -100,18 +100,18 @@ const dec = s => Array.from(s, Number);
 //  sway    ゆらゆら      the board rocks like a boat
 //  paint   ペンキ        paint splats land on cells and hide them — tap to wipe
 //  order   じゅんばん    numbered cells must be filled in order (the others are free)
-//  noline  わくなし      the box lines (★2: all lines) disappear
-//  star    ながれぼし    shooting stars fly by — catch one for +2 seconds
-//  rev     あまのじゃく  the keys type the opposite number (1↔4, 2↔3)
+//  peep    のぞきまど    only the row / column / box of the selected cell can be seen (★2: row + column, ★3: just the box)
+//  star    ながれぼし    shooting stars fly by — catch one for +2 seconds, miss it and lose 5
+//  rev     あまのじゃく  in the colored cells, what you type goes in as the opposite number (1↔4, 2↔3)
 //  dice    さいころ      numbers are shown as dice
 //  sleepy  ねむねむ      the board gets drowsy and dims unless you keep writing
 const GIMMICKS = ['bug', 'mosaic', 'spin', 'spot', 'fruit', 'shuffle', 'ghost', 'ice', 'bomb', 'swap', 'cloud', 'calc', 'card', 'mole', 'upside',
-  'balloon', 'dark', 'sway', 'paint', 'order', 'noline', 'star', 'rev', 'dice', 'sleepy'];
+  'balloon', 'dark', 'sway', 'paint', 'order', 'peep', 'star', 'rev', 'dice', 'sleepy'];
 /* pairs that don't go together in one puzzle (same display slot, or one makes the other unfair) */
-const CLASH = [['fruit', 'calc'], ['fruit', 'dice'], ['calc', 'dice'], ['card', 'mosaic'], ['spin', 'sway'], ['shuffle', 'rev'], ['order', 'bomb'], ['spot', 'dark'], ['dark', 'sleepy'], ['spot', 'sleepy']];
+const CLASH = [['fruit', 'calc'], ['fruit', 'dice'], ['calc', 'dice'], ['card', 'mosaic'], ['spin', 'sway'], ['shuffle', 'rev'], ['order', 'bomb'], ['spot', 'dark'], ['dark', 'sleepy'], ['spot', 'sleepy'], ['spot', 'peep'], ['dark', 'peep']];
 const clash = (a, b) => CLASH.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 const GEXTRA = { bug: s => 1.2 + s * .8, mosaic: s => .6 + s * .7, spin: s => 1.2 + s * .8, spot: s => 1.2 + s, fruit: s => 1.2 + s * .8, shuffle: s => 1 + s * .7, ghost: s => .8 + s * .8, ice: s => .8 + s, bomb: s => .8 + s * .6, swap: s => 1 + s * .8, cloud: s => 1 + s * .8, calc: s => .8 + s * .8, card: s => 1.2 + s * .9, mole: s => 1 + s * .8, upside: s => .6 + s * .6,
-  balloon: s => 1 + s * .8, dark: s => .9 + s * .8, sway: s => .6 + s * .5, paint: s => 1 + s * .8, order: s => 1.4 + s * 1, noline: s => .5 + s * .5, star: s => .3 + s * .2, rev: s => 1.3 + s * 1, dice: s => .8 + s * .7, sleepy: s => .6 + s * .6 };
+  balloon: s => 1 + s * .8, dark: s => .9 + s * .8, sway: s => .6 + s * .5, paint: s => 1 + s * .8, order: s => 1.4 + s * 1, peep: s => .9 + s * .8, star: s => .9 + s * .6, rev: s => 1.3 + s * 1, dice: s => .8 + s * .7, sleepy: s => .6 + s * .6 };
 const BASE_T = { 1: 5, 2: 7, 3: 9, 4: 12 };
 // g: '' | 'bug2' | 'spin1+mosaic2'
 const parseG = g => (g ? g.split('+').map(x => ({ id: x.replace(/\d/g, ''), s: +x.replace(/\D/g, '') || 1 })) : []);

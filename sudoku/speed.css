@@ -1,5 +1,28 @@
 /* すぴーど数独 — styles (loaded after app.css) */
-body[data-th=spd]{--acc:#ff7a3d;--acc2:#ffd2bd;--soft:#fff2ea;--peer:#fff6f0;--same:#ffe3d3;--sel:#ffcdb3}
+/* すぴーど = blue buttons (まいにち数独's すうどく mode stays orange) */
+body[data-th=spd]{--acc:#3b8beb;--acc2:#c4dcfb;--soft:#edf5ff;--peer:#f2f7fe;--same:#d9e8fd;--sel:#bcd6fb}
+/* game selector inside the home tabs (まいにち数独) */
+.gsel{position:relative;flex:1;display:flex}
+.gsel[hidden]{display:none}
+.gmbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 8px;border-radius:15px;font-weight:900;font-size:15px;white-space:nowrap;color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--surface));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 45%,transparent)}
+.gmbtn .gmi{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--acc);font-style:normal}
+.gmbtn .gmi svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.gsel[data-gm=sp] .gmbtn .gmi svg{fill:#fff;stroke:none}
+.gmbtn .car{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.gsel.open .gmbtn .car{transform:rotate(180deg)}
+.gmenu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;min-width:max(100%,160px);z-index:30;background:var(--sheet);border-radius:16px;box-shadow:0 12px 30px rgba(60,40,90,.25);padding:6px;display:none;flex-direction:column;gap:4px}
+.gsel.open .gmenu{display:flex;animation:pop .2s}
+.htabs .gmenu button{flex:none;flex-direction:row;gap:10px;font-size:15px;padding:10px 14px;justify-content:flex-start;box-shadow:none;background:none;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-weight:900;font-size:15px;color:var(--ink);white-space:nowrap;text-align:start}
+.htabs .gmenu button svg{width:22px;height:22px;padding:4px;border-radius:8px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;background:#ef7c52;flex:none}
+.htabs .gmenu button[data-gm=sp] svg{background:#3b8beb;fill:#fff;stroke:none}
+.htabs .gmenu button.on{background:var(--surface2);color:var(--ink)}
+.htabs .gmenu button:hover{background:var(--surface2)}
+.gtip{position:absolute;top:calc(100% + 12px);inset-inline-end:0;z-index:29;max-width:min(260px,80vw);width:max-content;white-space:normal;background:var(--acc);color:#fff;font-weight:800;font-size:13px;line-height:1.45;padding:8px 12px;border-radius:14px;box-shadow:0 8px 20px color-mix(in srgb,var(--acc) 35%,transparent);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .25s,transform .25s}
+.gtip::before{content:"";position:absolute;top:-6px;inset-inline-end:22px;border:7px solid transparent;border-top:0;border-bottom-color:var(--acc)}
+.gtip.on{opacity:1;transform:none}
+.gsel.open .gtip{display:none}
+.smixd{margin:-4px 0 10px}
+@media (max-width:420px){.gmbtn{flex-direction:column;gap:2px;font-size:12px;padding:5px 4px}.gmbtn .gmi{width:24px;height:24px}.gmbtn .car{position:absolute;top:6px;inset-inline-end:6px;width:12px;height:12px}}
 .ttl-ico.bolt{width:24px;height:24px}
 
 /* ---------- home: today's speed card ---------- */
@@ -232,7 +255,7 @@ body.night .scell.fpeek .v{background:#1f4a46}
 .sdark.on{opacity:.97;animation:flick .5s steps(1)}
 @keyframes flick{0%{opacity:.9}15%{opacity:.2}30%{opacity:.95}45%{opacity:.4}60%{opacity:.97}}
 /* sleepy */
-.ssleep{position:absolute;inset:0;z-index:4;pointer-events:none;background:#2a2450;opacity:0;transition:opacity .25s;display:grid;place-items:start end;padding:6%}
+.ssleep{position:absolute;inset:0;z-index:4;pointer-events:none;background:#16122e;opacity:0;transition:opacity .15s;display:grid;place-items:start end;padding:6%}
 .ssleep b{font-family:var(--num);font-size:calc(var(--sbs) * .1);color:#cfc3ff;opacity:0;transition:opacity .3s}
 .ssleep.z b{opacity:1;animation:zzz 1.6s ease-in-out infinite}
 @keyframes zzz{50%{transform:translateY(-12%) rotate(-6deg)}}
@@ -250,13 +273,13 @@ body.night .scell.fpeek .v{background:#1f4a46}
 .scell.ordn .ot{background:#3f8ee0;color:#fff;animation:onext 1s ease-in-out infinite alternate}
 @keyframes onext{to{transform:scale(1.15)}}
 .scell.nope{animation:shake .3s}
-/* no lines */
-.sboard.nol1 .sgrid .thick{opacity:0}
-.sboard.nol2 .sgrid path{opacity:0}
-/* reversed keys */
-.skeys.rev .skey{background:color-mix(in srgb,#e0566b 12%,var(--surface))}
-.skeys.rev .skey::after{content:"⇄";position:absolute;top:4px;inset-inline-end:6px;font-size:12px;font-weight:900;color:#e0566b}
-.skey{position:relative}
+/* peep window: only cells near the selection can be seen */
+.scell.pout .v,.scell.pout .ot{opacity:0;transition:opacity .15s}
+.scell.pout{background:color-mix(in srgb,#2c2a4a 78%,var(--cellbg));transition:background .15s}
+body.night .scell.pout{background:#141226}
+/* contrary cells (あまのじゃく) */
+.scell.revc{background:color-mix(in srgb,#e0566b 20%,var(--cellbg))}
+.scell.revc::after{content:"⇄";position:absolute;top:6%;inset-inline-end:8%;font-size:calc(var(--sbs) * .05);font-weight:900;color:#e0566b;pointer-events:none}
 /* dice */
 .scell .dc,.skey .dc,.sflick .dc{display:block}
 .scell .fr.dc{width:calc(var(--sbs) * .15);height:calc(var(--sbs) * .15)}

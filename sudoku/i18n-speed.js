@@ -2544,4 +2544,37 @@ add('pt', {"sp.std.0": "Fácil", "sp.std.1": "Normal", "sp.std.2": "Desafiador"}
 add('de', {"sp.std.0": "Leicht", "sp.std.1": "Normal", "sp.std.2": "Knifflig"});
 add('hi', {"sp.std.0": "आसान", "sp.std.1": "सामान्य", "sp.std.2": "थोड़ा कठिन"});
 add('ar', {"sp.std.0": "سهل", "sp.std.1": "عادي", "sp.std.2": "صعب قليلًا"});
+/* game selector (すうどく / すぴーど) and the ミックス tab */
+add('ja', {"gm.su": "すうどく", "gm.sp": "すぴーど", "gm.tip.su": "いまは「すうどく」。ここで「すぴーど」に切りかえられるよ", "gm.tip.sp": "いまは「すぴーど」。ここで「すうどく」に切りかえられるよ", "sp.mix": "ミックス", "sp.mix.d": "いくつもの変則ルールが同時に出てくる上級・達人コース", "sp.cs": "{c}コース・{s}ステージ"});
+add('en', {"gm.su": "Sudoku", "gm.sp": "Speed", "gm.tip.su": "Now playing Sudoku — switch to Speed here", "gm.tip.sp": "Now playing Speed — switch to Sudoku here", "sp.mix": "Mix", "sp.mix.d": "Advanced and Expert courses where several special rules appear at once", "sp.cs": "{c} courses · {s} stages"});
+add('zh', {"gm.su": "数独", "gm.sp": "速度", "gm.tip.su": "现在是「数独」。在这里可以切换到「速度」", "gm.tip.sp": "现在是「速度」。在这里可以切换到「数独」", "sp.mix": "混合", "sp.mix.d": "多个特殊规则同时出现的高级・达人路线", "sp.cs": "{c}条路线 · {s}关"});
+add('ko', {"gm.su": "스도쿠", "gm.sp": "스피드", "gm.tip.su": "지금은 「스도쿠」. 여기서 「스피드」로 바꿀 수 있어요", "gm.tip.sp": "지금은 「스피드」. 여기서 「스도쿠」로 바꿀 수 있어요", "sp.mix": "믹스", "sp.mix.d": "특수 규칙 여러 개가 동시에 나오는 상급·달인 코스", "sp.cs": "{c}코스 · {s}스테이지"});
+add('es', {"gm.su": "Sudoku", "gm.sp": "Veloz", "gm.tip.su": "Ahora: Sudoku — cambia a Veloz aquí", "gm.tip.sp": "Ahora: Veloz — cambia a Sudoku aquí", "sp.mix": "Mezcla", "sp.mix.d": "Recorridos Avanzado y Experto con varias reglas especiales a la vez", "sp.cs": "{c} recorridos · {s} fases"});
+add('fr', {"gm.su": "Sudoku", "gm.sp": "Vitesse", "gm.tip.su": "Mode Sudoku — passe en Vitesse ici", "gm.tip.sp": "Mode Vitesse — repasse en Sudoku ici", "sp.mix": "Mix", "sp.mix.d": "Parcours Avancé et Expert avec plusieurs règles spéciales à la fois", "sp.cs": "{c} parcours · {s} niveaux"});
+add('pt', {"gm.su": "Sudoku", "gm.sp": "Veloz", "gm.tip.su": "Agora: Sudoku — troque para Veloz aqui", "gm.tip.sp": "Agora: Veloz — troque para Sudoku aqui", "sp.mix": "Mistura", "sp.mix.d": "Percursos Avançado e Expert com várias regras especiais ao mesmo tempo", "sp.cs": "{c} percursos · {s} fases"});
+add('de', {"gm.su": "Sudoku", "gm.sp": "Tempo", "gm.tip.su": "Jetzt: Sudoku — hier zu Tempo wechseln", "gm.tip.sp": "Jetzt: Tempo — hier zu Sudoku wechseln", "sp.mix": "Mix", "sp.mix.d": "Fortgeschritten- und Profi-Kurse mit mehreren Sonderregeln gleichzeitig", "sp.cs": "{c} Kurse · {s} Stufen"});
+add('hi', {"gm.su": "सुडोकू", "gm.sp": "स्पीड", "gm.tip.su": "अभी «सुडोकू» है — यहाँ «स्पीड» पर बदलो", "gm.tip.sp": "अभी «स्पीड» है — यहाँ «सुडोकू» पर बदलो", "sp.mix": "मिक्स", "sp.mix.d": "कठिन और उस्ताद कोर्स जिनमें कई खास नियम एक साथ आते हैं", "sp.cs": "{c} कोर्स · {s} स्टेज"});
+add('ar', {"gm.su": "سودوكو", "gm.sp": "السرعة", "gm.tip.su": "الآن: سودوكو — بدّل إلى السرعة من هنا", "gm.tip.sp": "الآن: السرعة — بدّل إلى سودوكو من هنا", "sp.mix": "مزيج", "sp.mix.d": "مسارات متقدم وخبير تظهر فيها عدة قواعد خاصة معًا", "sp.cs": "{c} مسارًا · {s} مرحلة"});
+/* のぞきまど replaces わくなし; shooting stars: miss = −5 s */
+add('ja', {"g.peep": "のぞきまど", "g.peep.d": "選んだマスのたて・よこ・箱しか見えない（★2はたて・よこ、★3は箱だけ）。カーソルを動かして読もう", "sk.n.peep": "のぞきまど", "sk.d.peep": "見たいところへカーソルを動かそう。", "g.star.d": "ながれぼしをタップでキャッチすると+2秒、のがすと−5秒！"});
+add('en', {"g.peep": "Peephole", "g.peep.d": "Only the row, column and box of the selected cell are visible (★2: row + column, ★3: just the box) — move around to read", "sk.n.peep": "Peephole", "sk.d.peep": "Move the cursor to see what you need.", "g.star.d": "Tap a shooting star for +2 seconds — let it get away and lose 5!"});
+add('zh', {"g.peep": "窥视窗", "g.peep.d": "只能看到所选格子所在的行、列和宫（★2只有行和列，★3只有宫）。移动光标来看", "sk.n.peep": "窥视窗", "sk.d.peep": "把光标移到想看的地方。", "g.star.d": "点中流星+2秒，让它溜走就−5秒！"});
+add('ko', {"g.peep": "엿보기 창", "g.peep.d": "선택한 칸의 가로·세로·박스만 보여요(★2는 가로·세로, ★3은 박스만). 커서를 움직여 읽어요", "sk.n.peep": "엿보기 창", "sk.d.peep": "보고 싶은 곳으로 커서를 옮기자.", "g.star.d": "별똥별을 탭해서 잡으면 +2초, 놓치면 −5초!"});
+add('es', {"g.peep": "Mirilla", "g.peep.d": "Solo ves la fila, la columna y el cuadro de la casilla elegida (★2: fila y columna, ★3: solo el cuadro) — muévete para leer", "sk.n.peep": "Mirilla", "sk.d.peep": "Mueve el cursor a donde quieras mirar.", "g.star.d": "¡Toca una estrella fugaz para +2 s; si se escapa, −5 s!"});
+add('fr', {"g.peep": "Judas", "g.peep.d": "Seules la ligne, la colonne et le carré de la case choisie sont visibles (★2 : ligne et colonne, ★3 : le carré) — déplace-toi pour lire", "sk.n.peep": "Judas", "sk.d.peep": "Déplace le curseur pour voir ce qu'il te faut.", "g.star.d": "Touche une étoile filante : +2 s ; laisse-la filer : −5 s !"});
+add('pt', {"g.peep": "Olho mágico", "g.peep.d": "Só aparecem a linha, a coluna e o quadrado da casa escolhida (★2: linha e coluna, ★3: só o quadrado) — mova-se para ler", "sk.n.peep": "Olho mágico", "sk.d.peep": "Mova o cursor para ver o que precisa.", "g.star.d": "Toque numa estrela cadente: +2 s; se ela escapar: −5 s!"});
+add('de', {"g.peep": "Guckloch", "g.peep.d": "Nur Zeile, Spalte und Kasten des gewählten Feldes sind sichtbar (★2: Zeile + Spalte, ★3: nur der Kasten) — bewege dich, um zu lesen", "sk.n.peep": "Guckloch", "sk.d.peep": "Bewege den Cursor dorthin, wo du hinsehen willst.", "g.star.d": "Tipp eine Sternschnuppe an: +2 s — lässt du sie entwischen: −5 s!"});
+add('hi', {"g.peep": "झरोखा", "g.peep.d": "चुने खाने की पंक्ति, कॉलम और डिब्बा ही दिखते हैं (★2: पंक्ति + कॉलम, ★3: सिर्फ़ डिब्बा) — कर्सर घुमाकर पढ़ो", "sk.n.peep": "झरोखा", "sk.d.peep": "जहाँ देखना है, वहाँ कर्सर ले जाओ।", "g.star.d": "टूटते तारे को टैप करो तो +2 सेकंड, छूट जाए तो −5 सेकंड!"});
+add('ar', {"g.peep": "ثقب الباب", "g.peep.d": "لا يظهر إلا صف الخانة المختارة وعمودها ومربعها (★2: الصف والعمود، ★3: المربع فقط) — تحرّك لتقرأ", "sk.n.peep": "ثقب الباب", "sk.d.peep": "حرّك المؤشر إلى حيث تريد أن ترى.", "g.star.d": "المس الشهاب لتربح +2 ثانية — وإن أفلت تخسر 5!"});
+/* あまのじゃく: only the colored cells */
+add('ja', {"g.rev.d": "色のついたマスでは、入力した数字が反対になる（1↔4、2↔3）"});
+add('en', {"g.rev.d": "In the colored cells, whatever you type goes in as the opposite number (1↔4, 2↔3)"});
+add('zh', {"g.rev.d": "在有颜色的格子里，输入的数字会变成相反的（1↔4、2↔3）"});
+add('ko', {"g.rev.d": "색칠된 칸에서는 입력한 숫자가 반대로 들어가요(1↔4, 2↔3)"});
+add('es', {"g.rev.d": "En las casillas de color, el número que escribes entra al revés (1↔4, 2↔3)"});
+add('fr', {"g.rev.d": "Dans les cases colorées, le chiffre tapé devient son opposé (1↔4, 2↔3)"});
+add('pt', {"g.rev.d": "Nas casas coloridas, o número digitado entra ao contrário (1↔4, 2↔3)"});
+add('de', {"g.rev.d": "In den farbigen Feldern wird die Gegenzahl eingetragen (1↔4, 2↔3)"});
+add('hi', {"g.rev.d": "रंगीन खानों में लिखा अंक उल्टा हो जाता है (1↔4, 2↔3)"});
+add('ar', {"g.rev.d": "في الخانات الملوّنة يُكتب الرقم المعاكس لما تكتبه (1↔4، 2↔3)"});
 })(window.I18N = window.I18N || {});

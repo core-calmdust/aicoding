@@ -57,6 +57,9 @@ function load() {
   d.rk = d.rk || {}; d.seenRule = d.seenRule || {};
   if (d.autoLeft == null) d.autoLeft = 3;
   d.homeTab = d.homeTab || 'daily'; d.mt = d.mt || 0;
+  // game selector (まいにち数独 only): 'su' すうどく / 'sp' すぴーど — the old すぴーど tab becomes speed mode
+  if (d.homeTab === 'spd') { d.gm = 'sp'; d.homeTab = 'daily'; }
+  d.gm = d.gm === 'sp' ? 'sp' : 'su';
   return d;
 }
 let DB = load();
@@ -320,7 +323,9 @@ const isSpBg = k => !!(SPD && SPD.bgs.includes(k));
 const hbOK = k => { if (isSpBg(k)) return SPD.bgOwned(k); const ci = ciOfKey(k); return ci >= 0 && PZ && cCleared(ci) === CSZ; };
 const hbKey = () => (MODE === 'speed' ? 'homeBgS' : 'homeBg');
 const bgName = k => (!k ? (MODE === 'speed' ? t('sbg.speedway') : t('hb.def')) : isSpBg(k) ? t('sbg.' + k) : cName(ciOfKey(k)));
+const gmode = () => (MODE === 'speed' ? 'sp' : SPD && DB.gm === 'sp' ? 'sp' : 'su');
 function homeScene() {
+  if (MODE !== 'speed' && gmode() === 'sp') { const k = DB.set.homeBgS; setScene(k && isSpBg(k) && SPD.bgOwned(k) ? k : 'speedway', '', 'spd'); return; }
   const k = DB.set[hbKey()];
   if (k && hbOK(k)) setScene(k, '', isSpBg(k) ? 'spd' : k.replace(/2$/, ''));
   else if (MODE === 'speed') setScene('speedway', '', 'spd');
@@ -378,13 +383,19 @@ function go(h) {
   if (location.hash === '#' + h || (!h && !location.hash)) route(); else location.hash = h;
 }
 /* back to the home screen on a given tab (speed screens go to the すぴーど tab inside まいにち数独) */
-function goHome(tab) { DB[MODE === 'speed' ? 'homeTabS' : 'homeTab'] = MODE === 'speed' ? tab : (SPD ? 'spd' : 'daily'); persist(); go(''); }
+// speed screens pass 'daily' | 'col' | 'mix'; in まいにち数独 the course book / mix also switch the game selector to すぴーど
+function goHome(tab) {
+  const p = tab === 'mix' ? 'var' : tab === 'col' ? 'col' : 'daily';
+  if (MODE === 'speed') DB.homeTabS = p; else { DB.homeTab = p; if (p !== 'daily' && SPD) DB.gm = 'sp'; }
+  persist(); go('');
+}
 
 /* ================= home ================= */
 function openHome() {
   show('home');
   homeScene();
   renderHome();
+  setTimeout(showGmTip, 450);
   if (!DB.prof.name) setTimeout(() => openName(true), 350);
   else if (MODE !== 'speed') checkMonthAwards();
   if (DB.prof.name && !DB.seenTut && TUT) { DB.seenTut = 1; persist(); setTimeout(() => openHelp(), 500); }
@@ -429,18 +440,52 @@ async function loadMyRanks() {
   } catch (e) {}
 }
 function setHomeTab(p) {
-  if (p === 'var' && (!PV || !E.setVariant)) p = 'daily';
-  if (p === 'spd' && !SPD) p = 'daily';
-  if (MODE === 'speed') { if (p !== 'col') p = 'daily'; DB.homeTabS = p; } else DB.homeTab = p;
+  const gm = gmode();
+  if (!['daily', 'col', 'var'].includes(p)) p = 'daily';
+  if (gm === 'su' && p === 'var' && (!PV || !E.setVariant)) p = 'daily';
+  if (MODE === 'speed') DB.homeTabS = p; else DB.homeTab = p;
   persist();
-  $$('#htabs button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === p));
+  $$('#htabs > button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === p && (x.dataset.m || 'su') === gm));
 }
+/* game selector (まいにち数独): すうどく ⇄ すぴーど, with a short speech bubble every time the home screen opens */
+const GM_ICON = {
+  su: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>',
+  sp: '<svg viewBox="0 0 24 24"><path d="M13.5 2 4.5 13.5H11L9.5 22l10-12.5H13z"/></svg>',
+};
+function renderGsel() {
+  const box = $('#gsel'); if (!box) return;
+  box.hidden = MODE === 'speed' || !SPD;
+  if (box.hidden) return;
+  const gm = gmode();
+  box.dataset.gm = gm;
+  $('#gmIco').innerHTML = GM_ICON[gm];
+  $('#gmName').textContent = t('gm.' + gm);
+  $('#gmMenu').innerHTML = ['su', 'sp'].map(m => `<button data-gm="${m}" class="${m === gm ? 'on' : ''}" role="option">${GM_ICON[m]}<span>${esc(t('gm.' + m))}</span></button>`).join('');
+  $$('#gmMenu button').forEach(b => b.onclick = e => { e.stopPropagation(); box.classList.remove('open'); setGM(b.dataset.gm); });
+  $('#gmBtn').onclick = e => { e.stopPropagation(); SFX.tap(); box.classList.toggle('open'); hideGmTip(); };
+}
+function setGM(m) {
+  if (m === gmode()) return;
+  DB.gm = m; persist(); SFX.tap();
+  homeScene(); renderHome(); showGmTip();
+}
+function showGmTip() {
+  const tip = $('#gmTip'), box = $('#gsel'); if (!tip || !box || box.hidden) return;
+  tip.textContent = t('gm.tip.' + gmode());
+  tip.classList.remove('on'); void tip.offsetWidth; tip.classList.add('on');
+  clearTimeout(tip._t); tip._t = setTimeout(hideGmTip, 2800);
+}
+function hideGmTip() { const tip = $('#gmTip'); if (tip) tip.classList.remove('on'); }
+addEventListener('click', () => { const b = $('#gsel'); if (b) b.classList.remove('open'); });
 function renderHome() {
   renderProfile();
   if (MODE === 'speed') { setHomeTab(DB.homeTabS || 'daily'); if (SPD) SPD.renderHome(); loadMyRanks(); return; }
-  const st = $('#htabs [data-p=spd]'); if (st) st.hidden = !SPD;
-  $('#htabs [data-p=var]').hidden = !PV || !E.setVariant;
+  const gm = gmode();
+  document.body.classList.toggle('gm-sp', gm === 'sp');
+  $('#htabs [data-p=var]').hidden = gm === 'su' && (!PV || !E.setVariant);
+  $('#htVar').textContent = gm === 'sp' ? t('sp.mix') : t('ht.var');
+  renderGsel();
   setHomeTab(DB.homeTab);
   const td = today();
   $('#todayDate').textContent = fmtDate(td, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
@@ -1738,7 +1783,7 @@ function applyTod() {
 }
 function openHelp() {
   // ? on the すぴーど tab of the home screen (or in a speed game) opens the speed tutorial
-  if (TUT) { TUT.open(MODE === 'speed' || screen === 'spd' || (screen === 'home' && DB.homeTab === 'spd') ? 'speed' : 'daily', CORE); return; }
+  if (TUT) { TUT.open(MODE === 'speed' || screen === 'spd' || (screen === 'home' && gmode() === 'sp') ? 'speed' : 'daily', CORE); return; }
   const demo = `<svg viewBox="0 0 120 120"><rect x="38" y="38" width="44" height="44" rx="8" fill="#fff" stroke="var(--acc)" stroke-width="3"/>${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => { const [x, y] = FPOS[d]; return `<circle cx="${60 + x * 38}" cy="${60 + y * 38}" r="14" fill="${d === 3 ? 'var(--acc)' : '#fff'}" stroke="#e6dcef"/><text x="${60 + x * 38}" y="${60 + y * 38}" dy=".36em" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="15" fill="${d === 3 ? '#fff' : 'var(--acc)'}">${d}</text>`; }).join('')}<path d="M60 60L90 30" stroke="var(--acc)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 5"/></svg>`;
   $('#helpBody').innerHTML = t('help.html', { demo: `<div class="flickdemo">${demo}<p>${t('help.flick')}</p></div>` }) + t('help.more', { cost: fmtN(GACHA_COST) });
   openModal('mHelp');
@@ -1818,7 +1863,7 @@ $('#tHint').onclick = onHint;
 $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
 $('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (cOf(G.ti, G.pi) + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
-$$('#htabs button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
+$$('#htabs > button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
 $('#logo').onclick = () => go('');
 if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); }; $('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); }; }
 $('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };

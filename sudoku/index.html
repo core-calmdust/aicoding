@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css?v=12">
-<link rel="stylesheet" href="speed.css?v=21">
+<link rel="stylesheet" href="speed.css?v=25">
 </head>
 <body data-th="de">
 <div id="bg"></div>
@@ -43,10 +43,10 @@
       <nav class="htabs" id="htabs">
         <button data-p="daily"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15.5" r="2.2" fill="currentColor" stroke="none"/></svg><span data-i18n="ht.daily">デイリー</span></button>
         <button data-p="col"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg><span data-i18n="ht.col">コレクション</span></button>
-        <button data-p="var"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><circle cx="17" cy="7" r="4"/><path d="M7 13l4 8H3z"/><rect x="13" y="13" width="8" height="8" rx="2" transform="rotate(10 17 17)"/></svg><span data-i18n="ht.var">変わり種</span></button>
-        <button data-p="spd" hidden><svg viewBox="0 0 24 24"><path d="M13.5 2 4.5 13.5H11L9.5 22l10-12.5H13z"/></svg><span data-i18n="ht.spd">すぴーど</span></button>
+        <button data-p="var"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><circle cx="17" cy="7" r="4"/><path d="M7 13l4 8H3z"/><rect x="13" y="13" width="8" height="8" rx="2" transform="rotate(10 17 17)"/></svg><span id="htVar">変わり種</span></button>
+        <div class="gsel" id="gsel" hidden><button class="gmbtn" id="gmBtn" aria-haspopup="listbox"><i class="gmi" id="gmIco"></i><span id="gmName"></span><svg class="car" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button><div class="gmenu" id="gmMenu" role="listbox"></div><div class="gtip" id="gmTip"></div></div>
       </nav>
-      <div class="hpanel daily" data-p="daily">
+      <div class="hpanel daily" data-p="daily" data-m="su">
         <div class="dcol">
           <div class="card today">
             <h2><svg class="ttl-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#ffcd4d"/><g stroke="#ffb020" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span data-i18n="today">今日の数独</span></h2>
@@ -67,28 +67,30 @@
             <p class="note" data-i18n="cal.note"></p>
           </div>
       </div>
-      <div class="hpanel" data-p="col">
+      <div class="hpanel" data-p="col" data-m="su">
           <div class="card colcard">
             <h2><svg class="ttl-ico" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10v16H5.5A1.5 1.5 0 0 1 4 18.5z" fill="#ffb4c4"/><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14z" fill="#b9c9ff"/><rect x="10" y="4" width="4" height="16" fill="#ffe08a"/></svg><span data-i18n="col.title">厳選コレクション</span><span class="sub" data-i18n="col.sub"></span></h2>
             <div class="col-total"><div class="bar"><i id="colBar"></i></div><b class="num" id="colCount"></b></div>
             <div class="themes" id="themes"></div>
           </div>
       </div>
-      <div class="hpanel" data-p="var">
+      <div class="hpanel" data-p="var" data-m="su">
           <div class="card colcard">
             <h2><svg class="ttl-ico" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="#c7a8ff"/><rect x="13" y="3" width="8" height="8" rx="4" fill="#ffb36b"/><rect x="3" y="13" width="8" height="8" rx="2" fill="#8fc4ff" transform="rotate(8 7 17)"/><path d="M13 13h8l-4 8z" fill="#ff8fb6"/></svg><span data-i18n="var.title">変わり種コレクション</span><span class="sub" data-i18n="var.sub"></span></h2>
             <div class="col-total"><div class="bar"><i id="varBar"></i></div><b class="num" id="varCount"></b></div>
             <div class="themes" id="vsets"></div>
           </div>
       </div>
-      <div class="hpanel daily spdpanel" data-p="spd">
+      <!-- すぴーど mode (picked with the game selector): daily / course book / mix -->
+      <div class="hpanel daily spdpanel" data-p="daily" data-m="sp">
         <div class="dcol">
           <div class="card today" id="spdToday2"></div>
           <div class="card" id="spdExtra"></div>
         </div>
         <div class="card" id="spdCal"></div>
-        <div class="card colcard spdcol" id="spdCol"></div>
       </div>
+      <div class="hpanel" data-p="col" data-m="sp"><div class="card colcard spdcol" id="spdCol"></div></div>
+      <div class="hpanel" data-p="var" data-m="sp"><div class="card colcard spdcol" id="spdMix"></div></div>
     </section>
 
     <section class="screen" id="theme">
@@ -151,7 +153,7 @@
 <div class="modal" id="mZukan"><div class="sheet wide tall"><div class="sh"><h3><svg class="ttl-ico" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="#c7a8ff"/><circle cx="12" cy="11" r="4.5" fill="#fff"/><circle cx="10.4" cy="10.6" r=".9" fill="#43385a"/><circle cx="13.6" cy="10.6" r=".9" fill="#43385a"/></svg><span data-i18n="zk.title">キャラ図鑑</span></h3><button class="ib x" data-close data-i18n-title="close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="tabs seg" id="zkTabs"></div><div class="sb" id="zkBody"></div></div></div>
 
 <script src="engine.js?v=3"></script>
-<script src="speed-engine.js?v=5"></script>
+<script src="speed-engine.js?v=7"></script>
 <script src="bg.js?v=5"></script>
 <script src="icons.js?v=2"></script>
 <script src="i18n.js?v=2"></script>
@@ -159,12 +161,12 @@
 <script src="i18n3.js?v=6"></script>
 <script src="firebase-config.js?v=2"></script>
 <script src="online.js?v=20261021"></script>
-<script src="i18n-speed.js?v=12"></script>
-<script src="speed.js?v=12"></script>
+<script src="i18n-speed.js?v=15"></script>
+<script src="speed.js?v=16"></script>
 <script src="tutorial.js?v=8"></script>
 <script src="app.js?v=17"></script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5c" defer></script>
+<script src="../shared/atlas.js?v=5d" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=2" defer></script>
 <script src="../shared/atlas-account.js?v=1" defer></script>
 </body>

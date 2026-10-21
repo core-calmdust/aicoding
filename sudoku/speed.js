@@ -18,7 +18,7 @@ const TIERCOL = ['#3fbf7a', '#2fb2d8', '#4f7bea', '#9a62e0', '#ec5f9f', '#f08a24
 const TIERBG = [['#dff7e6', '#c3efd2'], ['#d9f3fb', '#bfe8f6'], ['#dfe7ff', '#c7d4ff'], ['#efe2ff', '#dccaff'], ['#ffe2ef', '#ffc9df'], ['#fff0dc', '#ffdfb8'], ['#d9f6f2', '#bdebe5']];
 const TORDER = [0, 1, 2, 5, 6, 3, 4];                   // tiers 5 (中級＋) and 6 (チャレンジ) were added later and sit between 中級 and 上級
 const GCOL = { bug: '#ff6b6b', mosaic: '#a77be0', spin: '#38b6e8', spot: '#f0a92e', fruit: '#ee5a7a', shuffle: '#3fbf7a', ghost: '#8a93c8', ice: '#5aa8e8', bomb: '#ff8a3d', swap: '#e05aa8', cloud: '#7fa8d8', calc: '#e8a21c', card: '#26a69a', mole: '#a9785a', upside: '#7b61ff',
-  balloon: '#ff6f91', dark: '#4b4789', sway: '#2fa6c7', paint: '#c35bd6', order: '#3f8ee0', noline: '#8f99ad', star: '#f2b81c', rev: '#e0566b', dice: '#5c6bc0', sleepy: '#8e7cc3' };
+  balloon: '#ff6f91', dark: '#4b4789', sway: '#2fa6c7', paint: '#c35bd6', order: '#3f8ee0', peep: '#f0a92e', star: '#f2b81c', rev: '#e0566b', dice: '#5c6bc0', sleepy: '#8e7cc3' };
 const GORDER = SE.GIMMICKS;
 const BONUS = 5000, PENALTY = 2000, FREEZE = 380, LIMIT_TRIES = 3;
 const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -46,7 +46,7 @@ GICON.dark = '<svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" 
 GICON.sway = '<svg viewBox="0 0 32 32"><g transform="rotate(-9 16 17)"><path d="M6 17.5h20l-3.2 6H9.2z" fill="#2fa6c7"/><path d="M16 5v12.5" stroke="#7a5a3a" stroke-width="1.6"/><path d="M16.8 6l6.6 9.6h-6.6z" fill="#fff" stroke="#2fa6c7" stroke-width="1.2" stroke-linejoin="round"/></g><path d="M3 27q3.25-3 6.5 0t6.5 0 6.5 0 6.5 0" fill="none" stroke="#7fd0e8" stroke-width="2.2" stroke-linecap="round"/></svg>';
 GICON.paint = '<svg viewBox="0 0 32 32"><path d="M16 5c2 0 2.4 3 4 3.5s3.5-2 5-.5-1 3.5 0 5 3.8 1 3.8 3-3 2-3.5 3.6 1.5 4-.5 5.2-3.6-1.2-5-.4-1.6 4.2-3.8 4.2-2.3-3.4-3.8-4.2-3.6 1.5-5 .3 1-3.6-.4-5S3 18 3 16s3.4-1.6 3.8-3.1-1.8-3.6-.4-5 3.4 1 5 .5S14 5 16 5z" fill="#c35bd6"/><circle cx="27" cy="27.5" r="2" fill="#c35bd6"/><circle cx="4.5" cy="26.5" r="1.4" fill="#c35bd6"/><ellipse cx="12.5" cy="12.5" rx="2.6" ry="1.4" fill="#fff" opacity=".45" transform="rotate(-25 12.5 12.5)"/></svg>';
 GICON.order = '<svg viewBox="0 0 32 32"><path d="M10 20.5l3.4-5M18.6 15.5l3.4 5" stroke="#9cc4ee" stroke-width="2.2" stroke-linecap="round"/><circle cx="7.5" cy="24" r="5.2" fill="#3f8ee0"/><circle cx="16" cy="11" r="5.2" fill="#5fa3ea"/><circle cx="24.5" cy="24" r="5.2" fill="#86bbf2"/><g font-family="Fredoka,Arial" font-weight="700" font-size="7.5" fill="#fff" text-anchor="middle"><text x="7.5" y="26.7">1</text><text x="16" y="13.7">2</text><text x="24.5" y="26.7">3</text></g></svg>';
-GICON.noline = '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="5" fill="#fff" stroke="#8f99ad" stroke-width="1.6"/><path d="M16 4v24M4 16h24" stroke="#c3c9d6" stroke-width="2" stroke-dasharray="2.4 3"/><path d="M8.5 23.5l15-15" stroke="#e0566b" stroke-width="2.6" stroke-linecap="round"/></svg>';
+GICON.peep = '<svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="6" fill="#3a3760"/><rect x="11" y="3" width="10" height="26" fill="#fff4c9"/><rect x="3" y="11" width="26" height="10" fill="#fff4c9"/><rect x="11" y="11" width="10" height="10" rx="2" fill="#fff" stroke="#f0a92e" stroke-width="2"/><circle cx="16" cy="16" r="2.2" fill="#43385a"/></svg>';
 GICON.star = '<svg viewBox="0 0 32 32"><path d="M3.5 27l10-8.5" stroke="#ffe08a" stroke-width="3.4" stroke-linecap="round" opacity=".75"/><path d="M8 30l6.5-5.5" stroke="#ffd36b" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M21 3.5l2.5 5.1 5.6.7-4.1 3.8 1.1 5.5-5.1-2.8-4.9 2.8 1-5.5-4.1-3.8 5.6-.7z" fill="#f7c531" stroke="#e09b12" stroke-width="1" stroke-linejoin="round"/></svg>';
 GICON.rev = '<svg viewBox="0 0 32 32"><rect x="1.5" y="8.5" width="11" height="15" rx="3" fill="#ffe0e5"/><rect x="19.5" y="8.5" width="11" height="15" rx="3" fill="#ffe0e5"/><g font-family="Fredoka,Arial" font-weight="700" font-size="10" fill="#c0405a" text-anchor="middle"><text x="7" y="19.8">1</text><text x="25" y="19.8">4</text></g><path d="M13.6 13h4.8M16.6 11.2l1.8 1.8-1.8 1.8M18.4 19h-4.8M15.4 17.2 13.6 19l1.8 1.8" stroke="#e0566b" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 GICON.dice = '<svg viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="22" rx="5.5" fill="#fff" stroke="#5c6bc0" stroke-width="1.8"/><g fill="#5c6bc0"><circle cx="11" cy="11" r="2.2"/><circle cx="21" cy="11" r="2.2"/><circle cx="11" cy="21" r="2.2"/><circle cx="21" cy="21" r="2.2"/></g></svg>';
@@ -251,12 +251,17 @@ function catPic(ci) {
   else { const pool = Array.isArray(c.pool) ? c.pool : GORDER; inner = `<span class="cg many">${pool.slice(0, c.kind === 'dbl' ? 2 : 4).map(g => GICON[g]).join('')}</span>`; }
   return `<div class="pic spic" style="--b1:${b1};--b2:${b2}">${inner}</div>`;
 }
-function colCard() {
+// the course book is split in two: single-rule courses (問題集) and the mixed-rule courses (ミックス = 上級・達人)
+const MIXT = [3, 4];
+const MIXICO = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="#c7a8ff"/><rect x="13" y="3" width="8" height="8" rx="4" fill="#ffb36b"/><rect x="3" y="13" width="8" height="8" rx="2" fill="#8fc4ff" transform="rotate(8 7 17)"/><path d="M13 13h8l-4 8z" fill="#ff8fb6"/></svg>';
+function colCard(kind) {
   if (!DATA) return '';
-  const cc = totalClears();
-  let h = `<h2>${SHOE.replace('<svg', '<svg class="ttl-ico"')}<span>${esc(t('sp.col'))}</span><span class="sub">${esc(t('sp.col.sub'))}</span></h2><div class="col-total"><div class="bar"><i style="width:${cc / (nAll() || 1) * 100}%"></i></div><b class="num">${cc} / ${nAll()}</b></div>`;
-  h += `<div class="stjump">${TORDER.map(tr => `<button data-tj="${tr}" style="--tc:${TIERCOL[tr]}" class="${tierClears(tr) >= tierLen(tr) ? 'done' : ''}"><b>${esc(t('sp.tier.' + tr))}</b><small class="num">${tierClears(tr)}/${tierLen(tr)}</small></button>`).join('')}</div>`;
-  for (const tr of TORDER) {
+  const tiers = TORDER.filter(tr => (kind === 'mix') === MIXT.includes(tr));
+  const cats = tiers.flatMap(tierCats), len = cats.reduce((a, ci) => a + catLen(ci), 0), cc = cats.reduce((a, ci) => a + catClears(ci), 0);
+  const ico = kind === 'mix' ? MIXICO.replace('<svg', '<svg class="ttl-ico"') : SHOE.replace('<svg', '<svg class="ttl-ico"');
+  let h = `<h2>${ico}<span>${esc(t(kind === 'mix' ? 'sp.mix' : 'sp.col'))}</span><span class="sub">${esc(t('sp.cs', { c: cats.length, s: len }))}</span></h2>${kind === 'mix' ? `<p class="note smixd">${esc(t('sp.mix.d'))}</p>` : ''}<div class="col-total"><div class="bar"><i style="width:${cc / (len || 1) * 100}%"></i></div><b class="num">${cc} / ${len}</b></div>`;
+  if (tiers.length > 2) h += `<div class="stjump">${tiers.map(tr => `<button data-tj="${tr}" style="--tc:${TIERCOL[tr]}" class="${tierClears(tr) >= tierLen(tr) ? 'done' : ''}"><b>${esc(t('sp.tier.' + tr))}</b><small class="num">${tierClears(tr)}/${tierLen(tr)}</small></button>`).join('')}</div>`;
+  for (const tr of tiers) {
     const open = tierOpen(tr), need = 0;
     h += `<div class="stier" id="stier${tr}" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
     for (const ci of tierCats(tr)) {
@@ -291,7 +296,8 @@ function renderHome() {
   fill('spdToday', todayCard(C.MODE !== 'speed'), wireToday);
   fill('spdToday2', todayCard(false), wireToday);
   fill('spdCal', calCard(), wireCal);
-  fill('spdCol', colCard(), wireCol);
+  fill('spdCol', colCard('col'), wireCol);
+  fill('spdMix', colCard('mix'), wireCol);
   extraCard(document.getElementById('spdExtra'));
 }
 
@@ -304,7 +310,7 @@ function openCat(ci) {
   const c = DATA.cats[ci], n = catClears(ci);
   $('#tlName').textContent = cname(ci);
   $('#tlProg').innerHTML = `${n}/${catLen(ci)} · ${C.STAR(true).replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-2px"')} ${catStars(ci)}/${catLen(ci) * 3}`;
-  $('#tlBack').onclick = () => C.goHome('col');
+  $('#tlBack').onclick = () => C.goHome(MIXT.includes(c.tier) ? 'mix' : 'col');
   const gl = c.kind === 'g' ? [c.g] : Array.isArray(c.pool) ? c.pool : c.pool ? GORDER : [];
   const next = (() => { for (let p = 0; p < catLen(ci); p++) if (!rec(ci, p) && stageOpen(ci, p)) return p; return -1; })();
   $('#tlIntro').innerHTML = `<div class="rulebox scatbox" style="--tc:${TIERCOL[c.tier]}">${catPic(ci)}<div><b>${esc(t('sp.tier.' + c.tier))} · ${esc(cname(ci))}</b><p>${esc(cdesc(ci))}</p></div>${gl.length ? `<div class="sgl mini ${gl.length > 4 ? 'many' : ''}">${gl.map(g => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span></div>`).join('')}</div>` : ''}</div>
@@ -353,7 +359,6 @@ function drawKeys(animate) {
   const before = {}; if (animate) host.querySelectorAll('.skey').forEach(k => before[k.dataset.d] = k.getBoundingClientRect());
   const pic = R && (R.fruit || R.dice >= 2), small = R && (R.fruit || R.dice === 2);
   host.innerHTML = order.map(d => `<button class="key skey ${pic ? 'fk' : ''}" data-d="${d}">${small ? `<em class="kd">${d}</em>` : ''}<span class="n">${glyph(d)}</span></button>`).join('');
-  host.classList.toggle('rev', !!(R && R.revMap));
   host.querySelectorAll('.skey').forEach(k => {
     k.addEventListener('pointerdown', e => { e.preventDefault(); keyPress(+k.dataset.d); });
     k.addEventListener('click', e => { if (e.detail === 0) keyPress(+k.dataset.d); });
@@ -408,7 +413,7 @@ function loadPuzzle(k, quiet) {
   R.ice = new Array(16).fill(0); R.mz = new Array(16).fill(0); R.ghostAt = new Array(16).fill(0);
   R.mole = new Array(16).fill(0); R.card = new Array(16).fill(0); R.peek = new Array(16).fill(0); R.calc = new Array(16).fill(''); R.rot = new Array(16).fill('');
   R.paint = new Array(16).fill(0); R.pcol = new Array(16).fill(0); R.ord = new Array(16).fill(0); R.ordNext = 1;
-  R.dice = 0; R.revMap = null; R.nohl = false; R.lastPut = R.elapsed;
+  R.dice = 0; R.peep = 0; R.revc = new Array(16).fill(0); R.lastPut = R.elapsed;
   R.fruit = null; R.keyOrder = [1, 2, 3, 4];
   R.sel = R.grid.indexOf(0);
   R.pStart = R.elapsed;
@@ -416,7 +421,7 @@ function loadPuzzle(k, quiet) {
   const b = $('#sBoard');
   b.className = 'sboard'; b.style.transform = '';
   $('#sBugs').innerHTML = ''; $('#sClouds').innerHTML = ''; $('#sFloat').innerHTML = '';
-  $('#sDark').classList.remove('on'); const zz = $('#sSleep'); zz.style.opacity = 0; zz.classList.remove('z'); $('#sKeys').classList.remove('rev');
+  $('#sDark').classList.remove('on'); const zz = $('#sSleep'); zz.style.opacity = 0; zz.classList.remove('z'); 
   R.rng = SE.mulberry32(SE.hashStr('g:' + (R.date || R.ci + '.' + R.pi) + ':' + k));
   R.gims = R.gspec.map(g => ({ id: g.id, s: g.s, st: {} }));
   if (!quiet) startGims();
@@ -559,7 +564,7 @@ const GIM = {
       C.SFX.note();
       setTimeout(() => {
         if (!R || R.done) return;
-        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt, R.mole, R.card, R.peek, R.calc, R.rot, R.paint, R.pcol, R.ord];
+        const arrs = [R.P.p, R.P.s, R.grid, R.user, R.ice, R.mz, R.ghostAt, R.mole, R.card, R.peek, R.calc, R.rot, R.paint, R.pcol, R.ord, R.revc];
         for (let j = 0; j < 4; j++) { const x = idx(a, j), y = idx(b, j); for (const A of arrs) [A[x], A[y]] = [A[y], A[x]]; }
         if (R.sel >= 0) { const r = R.sel >> 2, c = R.sel & 3, k = col ? c : r; if (k === a || k === b) R.sel = col ? r * 4 + (k === a ? b : a) : (k === a ? b : a) * 4 + c; }
         for (let j = 0; j < 4; j++) for (const i of [idx(a, j), idx(b, j)]) { cells[i].classList.remove('swp'); cells[i].style.transform = ''; const gh = R.ghostAt[i] === -1; cells[i].classList.toggle('gh', gh && !!R.user[i]); }
@@ -700,18 +705,18 @@ const GIM = {
     },
     tick() {}, stop() { R.ord.fill(0); },
   },
-  noline: {   // the box lines (★2: all the lines) disappear; ★3: no same-number highlight either
-    start(g) { $('#sBoard').classList.add(g.s >= 2 ? 'nol2' : 'nol1'); R.nohl = g.s >= 3; render(); },
-    tick() {}, stop() { $('#sBoard').classList.remove('nol1', 'nol2'); },
+  peep: {   // only the cells around the selection are visible (★1 row+column+box, ★2 row+column, ★3 box)
+    start(g) { R.peep = g.s; render(); },
+    tick() {}, stop() { R.peep = 0; cells.forEach(c => c.classList.remove('pout')); },
   },
-  star: {   // shooting stars — catch one for +2 seconds
+  star: {   // shooting stars — catch one for +2 seconds, let it fly away and lose 5
     start(g) { g.st.next = 1600; g.st.s = []; },
     tick(g, dt) {
       g.st.next -= dt;
       if (g.st.next <= 0) {
-        g.st.next = [4600, 4000, 3400][g.s - 1] * (.8 + R.rng() * .4);
+        g.st.next = [5600, 4800, 4100][g.s - 1] * (.85 + R.rng() * .3);
         const el = document.createElement('div'); el.className = 'sstar'; el.innerHTML = GICON.star;
-        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2000, 1650, 1350][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
+        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2900, 2400, 1950][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
         if (!ltr) el.classList.add('rtl');
         el.addEventListener('pointerdown', e => {
           e.stopPropagation(); e.preventDefault(); if (!R || R.state !== 'play' || st.got) return;
@@ -723,21 +728,29 @@ const GIM = {
       }
       g.st.s = g.st.s.filter(st => {
         if (st.got) return false;
-        st.t += dt / st.dur; if (st.t >= 1) { st.el.remove(); return false; }
+        st.t += dt / st.dur;
+        if (st.t >= 1) {   // missed it: −5 seconds
+          st.el.remove();
+          R.left -= 5000; R.combo = 0; R.missThis = true;
+          const pen = $('#sPen'); pen.textContent = '-5'; pen.classList.remove('on'); void pen.offsetWidth; pen.classList.add('on');
+          C.SFX.err(); C.vib([30, 30, 30]); render();
+          if (R.left <= 0) timeUp();
+          return false;
+        }
         st.el.style.left = (st.x0 + (st.x1 - st.x0) * st.t).toFixed(2) + '%'; st.el.style.top = (st.y0 + (st.y1 - st.y0) * st.t).toFixed(2) + '%';
         return true;
       });
     },
     stop(g) { (g.st.s || []).forEach(x => x.el.remove()); },
   },
-  rev: {   // the keys type the opposite number (★1: only 1↔4; ★3: it switches on and off)
-    start(g) { g.st.map = g.s >= 2 ? [0, 4, 3, 2, 1] : [0, 4, 2, 3, 1]; R.revMap = g.st.map; g.st.next = 5200; drawKeys(false); },
+  rev: {   // colored cells are contrary: whatever you type there goes in as the opposite number (1↔4, 2↔3); ★3: the cells move
+    start(g) { pickRev(g); g.st.next = 6500; },
     tick(g, dt) {
       if (g.s < 3) return;
       g.st.next -= dt;
-      if (g.st.next <= 0) { g.st.next = R.revMap ? 4200 : 5200; R.revMap = R.revMap ? null : g.st.map; drawKeys(false); nudgeKeys(); }
+      if (g.st.next <= 0) { g.st.next = 6500; pickRev(g); C.SFX.note(); }
     },
-    stop() { R.revMap = null; $('#sKeys').classList.remove('rev'); },
+    stop() { R.revc.fill(0); },
   },
   dice: {   // numbers as dice (★1 the given numbers, ★2 all + keys, ★3 keys without the small digits)
     start(g) { R.dice = g.s; drawKeys(false); render(); },
@@ -746,8 +759,8 @@ const GIM = {
   sleepy: {   // the board dozes off unless you keep writing
     start() { R.lastPut = R.elapsed; },
     tick(g) {
-      const idle = R.elapsed - R.lastPut - [2800, 2200, 1700][g.s - 1];
-      const lv = Math.max(0, Math.min(1, idle / 2000)) * [.72, .84, .93][g.s - 1];
+      const idle = R.elapsed - R.lastPut - [1800, 1400, 1000][g.s - 1];
+      const lv = Math.max(0, Math.min(1, idle / 1000)) * [.9, .96, .99][g.s - 1];
       const el = $('#sSleep'); el.style.opacity = lv.toFixed(3); el.classList.toggle('z', lv > .25);
     },
     stop() { const el = $('#sSleep'); el.style.opacity = 0; el.classList.remove('z'); },
@@ -769,6 +782,13 @@ function expr(d, s, rng) {
   if (s >= 3) { if (d === 4) opts.push('2×2'); [2, 3].forEach(b => opts.push((d * b) + '÷' + b)); if (d === 1) opts.push('1×1'); }
   return opts[(rng() * opts.length) | 0];
 }
+function pickRev(g) {
+  R.revc.fill(0);
+  const empties = SE.shuffle([...Array(16).keys()].filter(i => !R.grid[i]), R.rng);
+  empties.slice(0, Math.min(empties.length, [2, 4, 5][g.s - 1])).forEach(i => (R.revc[i] = 1));
+  render();
+}
+const revd = (i, d) => (R.revc && R.revc[i] ? 5 - d : d);   // あまのじゃく cells flip the number
 function turn(g, first) {
   const T = g.s >= 3 ? ['rotate(90deg)', 'rotate(180deg)', 'rotate(270deg)', 'scaleX(-1)', 'rotate(180deg) scaleX(-1)'] : g.s >= 2 ? ['rotate(90deg)', 'rotate(180deg)', 'rotate(270deg)'] : ['rotate(180deg)', 'rotate(90deg)'];
   for (let i = 0; i < 16; i++) {
@@ -806,6 +826,11 @@ function shoo(bug) {
 }
 
 /* ---------------- render ---------------- */
+function peepVis(i) {
+  const k = R.sel; if (k < 0) return false;
+  const row = (i >> 2) === (k >> 2), col = (i & 3) === (k & 3), box = SE.BOX(i) === SE.BOX(k);
+  return R.peep === 1 ? row || col || box : R.peep === 2 ? row || col : box;
+}
 function render() {
   if (!R || !built) return;
   for (let i = 0; i < 16; i++) {
@@ -821,6 +846,8 @@ function render() {
     const cx = given && R.calc[i] && !R.fruit ? R.calc[i] : '';
     const want = v ? String(v) + (R.fruit ? 'f' + R.fruit.join('') : '') + (R.dice ? 'd' + R.dice : '') + cx : '';
     if (el.dataset.v !== want) { el.dataset.v = want; el.firstChild.innerHTML = v ? (cx ? `<span class="cx${cx.length > 3 ? ' l' : ''}">${cx}</span>` : glyph(v, given)) : ''; }
+    el.classList.toggle('pout', !!R.peep && !peepVis(i));
+    el.classList.toggle('revc', !!R.revc[i] && !v);
     el.classList.toggle('paint', R.paint[i] > 0); if (R.paint[i] > 0) el.style.setProperty('--pc', PCOL[R.pcol[i]]);
     const ot = R.ord[i] && !v ? String(R.ord[i]) : '', otEl = el.querySelector('.ot');
     if (otEl.textContent !== ot) otEl.textContent = ot;
@@ -828,7 +855,7 @@ function render() {
     const tf = v && !cx ? R.rot[i] : '';
     if (el.firstChild.style.transform !== tf) el.firstChild.style.transform = tf;
     const hidden = k => R.card[k] === 1 || !!R.calc[k] && !!R.P.p[k];   // don't give away face-down cards or sums by highlighting
-    el.classList.toggle('hl', !R.nohl && !!v && R.sel >= 0 && R.grid[R.sel] === v && i !== R.sel && !hidden(i) && !hidden(R.sel));
+    el.classList.toggle('hl', !!v && R.sel >= 0 && R.grid[R.sel] === v && i !== R.sel && !hidden(i) && !hidden(R.sel));
   }
   const sl = $('#sSel');
   if (R.sel >= 0 && R.state === 'play') { sl.style.left = ((R.sel & 3) * 25) + '%'; sl.style.top = ((R.sel >> 2) * 25) + '%'; sl.classList.add('on'); } else sl.classList.remove('on');
@@ -852,7 +879,7 @@ function keyPress(d) {
   if (!R || R.state !== 'play' || R.paused) return;
   const k = $(`#sKeys .skey[data-d="${d}"]`); if (k) { k.classList.add('press'); setTimeout(() => k.classList.remove('press'), 110); }
   if (R.sel < 0 || R.grid[R.sel]) { const n = nextEmpty(R.sel < 0 ? -1 : R.sel); if (n < 0) return; R.sel = n; }
-  put(R.sel, R.revMap ? R.revMap[d] : d);
+  put(R.sel, revd(R.sel, d));
 }
 function bonk(i) {
   if (!R.mole[i]) return false;
@@ -932,7 +959,7 @@ function boardMove(e) {
 function boardUp(e) {
   if (!fl || e.pointerId !== fl.id) return;
   const f = fl; hideFlick();
-  if (f.shown && f.d) put(f.i, R.revMap ? R.revMap[f.d] : f.d);
+  if (f.shown && f.d) put(f.i, revd(f.i, f.d));
 }
 
 /* ---------------- flow ---------------- */
@@ -1303,7 +1330,7 @@ if (DEBUG) window.__spd = { get R() { return R; }, put: (i, d) => put(i, d), S: 
 window.SudokuSpeed = {
   init(core) {
     C = core; S();
-    const url = (core.BASE || '') + 'speed_puzzles.json?v=6';
+    const url = (core.BASE || '') + 'speed_puzzles.json?v=7';
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },

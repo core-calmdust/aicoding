@@ -4,7 +4,7 @@
    初級 5 × 10 (one special rule each: bug / mosaic / ice / mole / fruit)
    中級 5 × 10 (one special rule each: shuffle / ghost / spin / bomb / swap)
    中級＋ 5 × 10 (one special rule each: cloud / calc / card / spot / upside) — tier 5, shown between 中級 and 上級
-   チャレンジ 10 × 10 (balloon / dark / sway / paint / order / noline / star / rev / dice / sleepy) — tier 6, after 中級＋
+   チャレンジ 10 × 10 (balloon / dark / sway / paint / order / peep / star / rev / dice / sleepy) — tier 6, after 中級＋
    (上級 / 達人 combos draw from all 25 rules; clashing pairs from E.CLASH never meet)
    上級 5 × 20 (2 special rules at once, sometimes 3 near the end)
    達人 5 × 20 (2–3 rules at once at full strength; the last course up to 4)
@@ -26,7 +26,7 @@ const CATS = [
   ...['shuffle', 'ghost', 'ice', 'bomb', 'swap'].map((g, i) => ({ tier: 2, kind: 'g', g, nk: i < 3 ? 'sc.n.' + (15 + i) : 'sk.n.' + g, dk: i < 3 ? 'sc.d.' + (15 + i) : 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
   ...[['u0', ['bug', 'spin', 'swap', 'cloud', 'balloon', 'sway', 'star']],                               // things that move
        ['u1', ['fruit', 'ghost', 'calc', 'card', 'upside', 'rev', 'dice']],                                 // numbers that change
-       ['u2', ['mosaic', 'spot', 'ghost', 'cloud', 'card', 'dark', 'paint', 'noline', 'sleepy']],           // hard to see
+       ['u2', ['mosaic', 'spot', 'ghost', 'cloud', 'card', 'dark', 'paint', 'peep', 'sleepy']],           // hard to see
        ['u3', ['bug', 'ice', 'shuffle', 'bomb', 'mole', 'order', 'rev', 'paint', 'balloon']],               // in the way of your input
        ['u4', ALLG]].map(([id, pool]) =>
     ({ tier: 3, kind: 'combo', pool, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: [2, 6], sl: [2.2, 1.6], str: [1, 2], gn: [2, 2.6] })),
@@ -34,7 +34,7 @@ const CATS = [
     ({ tier: 4, kind: 'combo', pool: ALLG, nk: 'sk.n.' + id, dk: 'sk.d.' + id, n: 20, lv: [1, 3], k: k || [2, 5], sl: [2.1, 1.55], str, gn })),
   // appended last so every earlier course keeps exactly the same puzzles
   ...['cloud', 'calc', 'card', 'mole', 'upside'].map(g => ({ tier: 5, kind: 'g', g, nk: 'sk.n.' + g, dk: 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
-  ...['balloon', 'dark', 'sway', 'paint', 'order', 'noline', 'star', 'rev', 'dice', 'sleepy'].map(g => ({ tier: 6, kind: 'g', g, nk: 'sk.n.' + g, dk: 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
+  ...['balloon', 'dark', 'sway', 'paint', 'order', 'peep', 'star', 'rev', 'dice', 'sleepy'].map(g => ({ tier: 6, kind: 'g', g, nk: 'sk.n.' + g, dk: 'sk.d.' + g, lv: [1, 3], k: [2, 5], sl: [2.4, 1.7], str: [1, 3] })),
 ];
 /* courses moved between tiers after release (records are keyed by course id, puzzles stay the same):
    mole ↔ spot, ice ↔ spin.  `o` = display order inside its tier */
