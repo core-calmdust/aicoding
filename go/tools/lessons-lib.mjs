@@ -157,3 +157,28 @@ export const T = {
   transpose: rows => rows[0].split('').map((_, x) => rows.map(r => r[x]).join('')),
   swap: rows => rows.map(r => r.replace(/X/g, 'x').replace(/O/g, 'X').replace(/x/g, 'O')),
 };
+
+// principal variation for capture/kill problems: attacker plays the quickest win, defender the longest resistance.
+export function pv(spec, goal, tgtS, opt = {}, first) {
+  const n = spec.n, tgt = tgtS.map(s => pt(s, n));
+  let p = R.Pos.from(spec);
+  const att = goal === 'capture' || goal === 'kill' ? p.turn : 3 - p.turn;
+  const region = opt.region ? opt.region.map(s => pt(s, n)) : null;
+  const rd = makeReader(n, att, tgt, { region, maxLibs: opt.maxLibs, libsOnly: opt.libsOnly });
+  const maxD = opt.depth || 8, line = [];
+  const need = (q, cap) => { for (let d = 0; d <= cap; d++) if (rd.win(q, d)) return d; return 99; };
+  for (let ply = 0; ply < 20 && !rd.captured(p); ply++) {
+    let best = null, bv = p.turn === att ? 99 : -1;
+    const cand = region ? region.filter(i => p.b[i] === 0) : [...Array(n * n).keys()].filter(i => p.b[i] === 0);
+    if (ply === 0 && first) { best = pt(first, n); }
+    else for (const m of cand) {
+      const r = p.tryPlay(m, 0, true); if (!r) continue;
+      if (p.turn === att) { const v = rd.captured(r.pos) ? 0 : need(r.pos, maxD); if (v < bv) { bv = v; best = m; } }
+      else { const v = need(r.pos, maxD); if (v > bv) { bv = v; best = m; } }
+    }
+    if (best === null) break;
+    if (p.turn !== att && bv >= 99) { line.push(co(best, n)); break; }
+    p = p.tryPlay(best, 0, true).pos; line.push(co(best, n));
+  }
+  return line;
+}

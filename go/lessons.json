@@ -1,0 +1,916 @@
+{
+ "version": 1,
+ "courses": [
+  {
+   "id": "basics",
+   "title": {
+    "ja": "基本",
+    "en": "Basics"
+   },
+   "sub": {
+    "ja": "アタリ・逃げる・つなぐ・眼・攻め合い",
+    "en": "Atari, escaping, connecting, eyes, races"
+   }
+  }
+ ],
+ "steps": [
+  {
+   "id": "atari",
+   "course": "basics",
+   "title": {
+    "ja": "アタリと石を取る",
+    "en": "Atari and capturing"
+   },
+   "sub": {
+    "ja": "最後のダメをふさいで取る",
+    "en": "Fill the last liberty to capture"
+   },
+   "intro": {
+    "ja": "<p>石のまわりの空いている点を<b>ダメ</b>といいます。ダメが残り1つになった状態が<b>アタリ</b>です。</p><p>アタリの石は、最後のダメに打てば取れます。まず「相手の石のダメはいくつ？」と数えるクセをつけましょう。</p><p>辺や隅の石はもともとダメが少ないので、アタリになりやすいことにも注意してください。</p>",
+    "en": "<p>The empty points next to a stone are its <b>liberties</b>. A stone with only one liberty left is in <b>atari</b>.</p><p>A stone in atari is captured when you play on its last liberty. Get into the habit of asking: “How many liberties does that stone have?”</p><p>Stones on the edge or in the corner start with fewer liberties, so they fall into atari more easily.</p>"
+   },
+   "goal": {
+    "ja": "相手の石を取ってください",
+    "en": "Capture the opponent’s stones"
+   },
+   "hint": {
+    "ja": "ダメが1つしかない石を探し、そのダメに打ちましょう。",
+    "en": "Find the stones with only one liberty and play on it."
+   },
+   "diagram": {
+    "s": {
+     "n": 7,
+     "stones": ".................b.....bw......b.................",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "E4",
+      "ok"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 7,
+      "stones": ".................b.....bw......b.................",
+      "turn": 1
+     },
+     "ok": [
+      "E4"
+     ],
+     "why": {
+      "ja": "白石のダメは<bdi>E4</bdi>だけ。そこに打てば取れます。",
+      "en": "The white stone’s only liberty is <bdi>E4</bdi>. Play there to capture it."
+     },
+     "ng": {
+      "ja": "白石のダメは残り1つ、<bdi>E4</bdi>です。ほかに打つと白に逃げられます。",
+      "en": "The white stone has one liberty left: <bdi>E4</bdi>. Anywhere else lets White run away."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": "bbw.....w........................................",
+      "turn": 2
+     },
+     "ok": [
+      "A6"
+     ],
+     "why": {
+      "ja": "隅の黒2子はダメが<bdi>A6</bdi>の1つだけ。白<bdi>A6</bdi>で2子を取れます。",
+      "en": "The two black stones in the corner have just one liberty, <bdi>A6</bdi>. White captures both there."
+     },
+     "ng": {
+      "ja": "隅の石はダメが少なく、黒2子はすでにアタリです。最後のダメ<bdi>A6</bdi>を見つけましょう。",
+      "en": "Corner stones have few liberties: the two black stones are already in atari. Their last liberty is <bdi>A6</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".....................................bb....bww...",
+      "turn": 1
+     },
+     "ok": [
+      "E1"
+     ],
+     "why": {
+      "ja": "一線の白2子のダメは<bdi>E1</bdi>だけ。黒<bdi>E1</bdi>で取れます。",
+      "en": "The two white stones on the first line have one liberty, <bdi>E1</bdi>. Black captures there."
+     },
+     "ng": {
+      "ja": "白2子のダメを数えると、残りは<bdi>E1</bdi>の1つです。",
+      "en": "Count the liberties of the two white stones: only <bdi>E1</bdi> is left."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": "................bw....bwbw.......................",
+      "turn": 1
+     },
+     "ok": [
+      "C3"
+     ],
+     "why": {
+      "ja": "黒<bdi>D4</bdi>もアタリですが、先に白<bdi>C4</bdi>を<bdi>C3</bdi>で取れば、黒<bdi>D4</bdi>のダメも増えて助かります。",
+      "en": "Black <bdi>D4</bdi> is in atari too, but capturing <bdi>C4</bdi> at <bdi>C3</bdi> first also gives <bdi>D4</bdi> new liberties and saves it."
+     },
+     "ng": {
+      "ja": "取れる石があるときは、まず取るのが一番。<bdi>C3</bdi>で取れば自分の石も助かります。",
+      "en": "When you can capture, capturing first is usually best: <bdi>C3</bdi> captures and saves your own stone."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".........www...wbbbw...w.w.......b...............",
+      "turn": 2
+     },
+     "ok": [
+      "D4"
+     ],
+     "why": {
+      "ja": "黒3子のダメは<bdi>D4</bdi>だけ。白<bdi>D4</bdi>で3子をまとめて取れます。",
+      "en": "The three black stones have only <bdi>D4</bdi> left. White captures all three there."
+     },
+     "ng": {
+      "ja": "つながった石はダメを共有します。黒3子全体のダメを数えると<bdi>D4</bdi>の1つだけです。",
+      "en": "Connected stones share their liberties. The three black stones together have only <bdi>D4</bdi>."
+     }
+    }
+   ]
+  },
+  {
+   "id": "escape",
+   "course": "basics",
+   "title": {
+    "ja": "逃げる（ダメを増やす）",
+    "en": "Escaping (gain liberties)"
+   },
+   "sub": {
+    "ja": "アタリから逃げる・取って助かる",
+    "en": "Run from atari, or capture to escape"
+   },
+   "intro": {
+    "ja": "<p>自分の石がアタリにされたら、最後のダメに<b>ノビて</b>ダメを増やすのが基本です。</p><p>ただし、逃げた先でまたダメが2つ以下なら、すぐ追い詰められます。逃げたあとのダメを数えましょう。</p><p>まわりの相手の石がアタリなら、<b>取って助かる</b>のが一番の逃げ方です。</p>",
+    "en": "<p>When your stone is put in atari, the basic reply is to <b>extend</b> from its last liberty and gain liberties.</p><p>But if the stones still have only one or two liberties after running, they can be chased down. Count the liberties after you run.</p><p>If a surrounding enemy stone is in atari itself, <b>capturing it</b> is the best escape.</p>"
+   },
+   "goal": {
+    "ja": "石を助けてください",
+    "en": "Save your stones"
+   },
+   "hint": {
+    "ja": "逃げたあとにダメがいくつになるか数えましょう。取れる石はないかも確認。",
+    "en": "Count the liberties after escaping. Also check whether you can capture something."
+   },
+   "diagram": {
+    "s": {
+     "n": 7,
+     "stones": ".................w.....wbw.......................",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "D3",
+      "ok"
+     ]
+    ],
+    "arrows": [
+     [
+      "D4",
+      "D3"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 7,
+      "stones": ".................w.....wbw.......................",
+      "turn": 1
+     },
+     "ok": [
+      "D3"
+     ],
+     "why": {
+      "ja": "<bdi>D3</bdi>にノビるとダメが<bdi>C3</bdi>・<bdi>E3</bdi>・<bdi>D2</bdi>の3つに増え、もう取られません。",
+      "en": "Extending to <bdi>D3</bdi> gives three liberties (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), and the stones are safe."
+     },
+     "ng": {
+      "ja": "黒石はアタリです。ほかに打つと<bdi>D3</bdi>に打たれて取られます。",
+      "en": "The black stone is in atari. Anything else and White captures at <bdi>D3</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "..............................b.......bwb...................b....................",
+      "turn": 2
+     },
+     "ok": [
+      "D4"
+     ],
+     "why": {
+      "ja": "白<bdi>D4</bdi>とノビればダメは3つ。黒はもうアタリをかけ続けられません。",
+      "en": "White extends to <bdi>D4</bdi> and has three liberties; Black can no longer keep up the attack."
+     },
+     "ng": {
+      "ja": "白石はアタリなので、最後のダメ<bdi>D4</bdi>へ逃げるしかありません。",
+      "en": "The white stone is in atari; its only way out is its last liberty, <bdi>D4</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": ".............................bww.....bwbbw.......w.......w.......................",
+      "turn": 1
+     },
+     "ok": [
+      "C4"
+     ],
+     "why": {
+      "ja": "白<bdi>C5</bdi>もアタリです。<bdi>C4</bdi>で取れば黒2子のダメが一気に増えて助かります。",
+      "en": "White <bdi>C5</bdi> is also in atari. Capturing it at <bdi>C4</bdi> gives the two black stones plenty of liberties."
+     },
+     "ng": {
+      "ja": "<bdi>D4</bdi>にノビてもダメは2つだけで、白<bdi>C4</bdi>などで追われて取られます。取って助かりましょう。",
+      "en": "Extending to <bdi>D4</bdi> leaves only two liberties and White keeps chasing. Capture to escape instead."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "..............................b.......bw.......b.................................",
+      "turn": 2
+     },
+     "ok": [
+      "E5"
+     ],
+     "why": {
+      "ja": "白<bdi>E5</bdi>とノビるとダメは4つ。<bdi>D4</bdi>だと黒<bdi>C4</bdi>が邪魔をしてダメは3つです。広い方へ逃げましょう。",
+      "en": "Extending to <bdi>E5</bdi> gives four liberties; <bdi>D4</bdi> only three, because black <bdi>C4</bdi> takes one away. Run toward open space."
+     },
+     "ng": {
+      "ja": "<bdi>D4</bdi>は黒石の近くでダメが3つしか増えません。相手の石から離れる方向へ。",
+      "en": "<bdi>D4</bdi> runs next to black stones and gets only three liberties. Run away from the opponent’s stones."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w.........wb......wb.w......w................................",
+      "turn": 1
+     },
+     "ok": [
+      "E5"
+     ],
+     "why": {
+      "ja": "<bdi>E5</bdi>で2つの黒石がつながり、ダメが増えて両方とも助かります。",
+      "en": "<bdi>E5</bdi> connects the two black stones; together they have enough liberties and both are saved."
+     },
+     "ng": {
+      "ja": "黒<bdi>D5</bdi>はアタリで、黒<bdi>E6</bdi>もダメが少ない状態。<bdi>E5</bdi>でつなげば両方が助かります。",
+      "en": "Black <bdi>D5</bdi> is in atari and <bdi>E6</bdi> is short of liberties too. Connecting at <bdi>E5</bdi> saves both."
+     }
+    }
+   ]
+  },
+  {
+   "id": "connect",
+   "course": "basics",
+   "title": {
+    "ja": "つなぐ・切る",
+    "en": "Connecting and cutting"
+   },
+   "sub": {
+    "ja": "石は、つながると強くなる",
+    "en": "Connected stones are strong"
+   },
+   "intro": {
+    "ja": "<p>縦か横にとなり合った石は<b>つながって</b>いて、ダメを共有します。斜めの石や1つ空いた石は、まだ完全にはつながっていません。</p><p>相手に間に打たれて離されることを<b>切られる</b>といいます。切られそうな所は先につなぎましょう。</p><p>逆に、相手の切れ目を見つけたら<b>切って</b>攻めるチャンスです。</p>",
+    "en": "<p>Stones next to each other horizontally or vertically are <b>connected</b> and share liberties. Diagonal stones or stones with a gap are not fully connected yet.</p><p>When the opponent plays in between and separates them, you have been <b>cut</b>. Connect at such points before it happens.</p><p>When you find a weakness in the opponent’s shape, <b>cutting</b> is your chance to attack.</p>"
+   },
+   "goal": {
+    "ja": "つなぐ／切る、正しい一手を",
+    "en": "Connect or cut — find the key point"
+   },
+   "hint": {
+    "ja": "石と石のあいだの「切れ目」はどこでしょう？",
+    "en": "Where is the gap between the stones?"
+   },
+   "diagram": {
+    "s": {
+     "n": 7,
+     "stones": "........................b.....w.w....wbw.........",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "D3",
+      "ok"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 7,
+      "stones": "........................b.....w.w....wbw.........",
+      "turn": 1
+     },
+     "ok": [
+      "D3"
+     ],
+     "why": {
+      "ja": "<bdi>D3</bdi>で黒2子がつながり、ダメの多い石になります。",
+      "en": "<bdi>D3</bdi> connects the two black stones into one group with plenty of liberties."
+     },
+     "ng": {
+      "ja": "白に<bdi>D3</bdi>と切られると、黒<bdi>D2</bdi>は取られてしまいます。",
+      "en": "If White cuts at <bdi>D3</bdi>, black <bdi>D2</bdi> is lost."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".......................b......wb.....w...........",
+      "turn": 2
+     },
+     "ok": [
+      "D4"
+     ],
+     "why": {
+      "ja": "斜めの黒2子は<bdi>D4</bdi>が切れ目。白<bdi>D4</bdi>と切れば黒は2つに分かれて弱くなります。",
+      "en": "The diagonal black stones have a weakness at <bdi>D4</bdi>. Cutting there splits Black into two weak stones."
+     },
+     "ng": {
+      "ja": "黒に<bdi>D4</bdi>と打たれると黒はしっかりつながります。切れ目は<bdi>D4</bdi>です。",
+      "en": "If Black plays <bdi>D4</bdi>, Black is solidly connected. The cutting point is <bdi>D4</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": "................bw....bw.w....wb.................",
+      "turn": 1
+     },
+     "ok": [
+      "D4"
+     ],
+     "why": {
+      "ja": "黒<bdi>D4</bdi>で白は<bdi>C4</bdi>・<bdi>D5</bdi>・<bdi>E4</bdi>の3つにバラバラになります。",
+      "en": "Black <bdi>D4</bdi> splits White into three separate stones: <bdi>C4</bdi>, <bdi>D5</bdi> and <bdi>E4</bdi>."
+     },
+     "ng": {
+      "ja": "白が<bdi>D4</bdi>に打てば、白石は全部つながってしまいます。",
+      "en": "If White plays <bdi>D4</bdi>, all the white stones connect."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".......................wbw....bw.................",
+      "turn": 2
+     },
+     "ok": [
+      "D5"
+     ],
+     "why": {
+      "ja": "切ってきた黒<bdi>D4</bdi>はアタリ。<bdi>D5</bdi>で取れば白はしっかりつながります（ポン抜き）。",
+      "en": "The cutting stone <bdi>D4</bdi> is in atari. Capture it at <bdi>D5</bdi> and White is firmly connected."
+     },
+     "ng": {
+      "ja": "切った石を取るのが一番のつなぎ方。黒<bdi>D4</bdi>のダメは<bdi>D5</bdi>だけです。",
+      "en": "Capturing the cutting stone is the best way to connect. Black <bdi>D4</bdi> has only <bdi>D5</bdi> left."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".................w.....b.b....wbw................",
+      "turn": 1
+     },
+     "ok": [
+      "D4"
+     ],
+     "why": {
+      "ja": "<bdi>D4</bdi>の1手で3つの黒石が全部つながります。",
+      "en": "One move at <bdi>D4</bdi> connects all three black stones."
+     },
+     "ng": {
+      "ja": "白に<bdi>D4</bdi>と打たれると黒はバラバラに。3つの石の真ん中が急所です。",
+      "en": "If White takes <bdi>D4</bdi>, Black falls apart. The point in the middle of the three stones is vital."
+     }
+    }
+   ]
+  },
+  {
+   "id": "direction",
+   "course": "basics",
+   "title": {
+    "ja": "取る方向",
+    "en": "Which side to atari from"
+   },
+   "sub": {
+    "ja": "端や味方の方へ追い込む",
+    "en": "Drive stones to the edge or your own stones"
+   },
+   "intro": {
+    "ja": "<p>アタリには2方向あります。相手が逃げる先を考えて、<b>どちらからアタリするか</b>を選ぶのが大切です。</p><p>基本は、相手を<b>盤の端</b>や<b>自分の石のある方</b>へ追い込むこと。逃げた石のダメが増えなければ取れます。</p><p>反対に、広い方へ逃がしてしまうと、もう取れません。</p>",
+    "en": "<p>You can usually give atari from two sides. Think about where the stone will run, and choose <b>which side to atari from</b>.</p><p>The rule: drive the stone toward <b>the edge</b> or toward <b>your own stones</b>. If it cannot gain liberties when it runs, you capture it.</p><p>If you chase it into open space instead, it gets away.</p>"
+   },
+   "goal": {
+    "ja": "石を取ってください（2手以上かかります）",
+    "en": "Capture the stone (it takes more than one move)"
+   },
+   "hint": {
+    "ja": "相手が逃げる先が「端」か「自分の石」になる方からアタリ。",
+    "en": "Give atari so that the stone must run toward the edge or toward your stones."
+   },
+   "diagram": {
+    "s": {
+     "n": 7,
+     "stones": "...............................b.....bw..........",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "E2",
+      "ok"
+     ],
+     [
+      "D1",
+      "x"
+     ]
+    ],
+    "arrows": [
+     [
+      "D2",
+      "D1"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 7,
+      "stones": "...............................b.....bw..........",
+      "turn": 1
+     },
+     "ok": [
+      "E2"
+     ],
+     "line": [
+      "E2",
+      "D1",
+      "E1"
+     ],
+     "why": {
+      "ja": "<bdi>E2</bdi>からアタリすると白は一線の<bdi>D1</bdi>へしか逃げられず、<bdi>E1</bdi>（または<bdi>C1</bdi>）で取れます。",
+      "en": "Atari from <bdi>E2</bdi> forces White down to <bdi>D1</bdi> on the edge, and <bdi>E1</bdi> captures."
+     },
+     "ng": {
+      "ja": "<bdi>D1</bdi>からアタリすると白は<bdi>E2</bdi>へ広い方に逃げてしまいます。",
+      "en": "Atari from <bdi>D1</bdi> lets White run out to <bdi>E2</bdi>, into open space."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "........................................................w........bw..............",
+      "turn": 2
+     },
+     "ok": [
+      "B2"
+     ],
+     "line": [
+      "B2",
+      "C1",
+      "B1"
+     ],
+     "why": {
+      "ja": "白<bdi>B2</bdi>なら黒は一線の<bdi>C1</bdi>へ逃げるしかなく、<bdi>B1</bdi>で取れます。",
+      "en": "White <bdi>B2</bdi> leaves Black only <bdi>C1</bdi> on the edge, and <bdi>B1</bdi> captures."
+     },
+     "ng": {
+      "ja": "<bdi>C1</bdi>からアタリすると黒は<bdi>B2</bdi>と逃げ、ダメが3つになります。端の方へ追い込みましょう。",
+      "en": "Atari from <bdi>C1</bdi> lets Black run to <bdi>B2</bdi> with three liberties. Drive it toward the edge."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "..................................................b......bw........b.............",
+      "turn": 1
+     },
+     "ok": [
+      "E4"
+     ],
+     "line": [
+      "E4",
+      "F3",
+      "G3",
+      "F2",
+      "G2"
+     ],
+     "why": {
+      "ja": "<bdi>E4</bdi>からアタリすると白は<bdi>F3</bdi>へ逃げますが、そこは黒<bdi>F4</bdi>のそば。<bdi>G3</bdi>で追えば端に追い詰めて取れます。",
+      "en": "Atari from <bdi>E4</bdi>: White runs to <bdi>F3</bdi>, right next to black <bdi>F4</bdi>, and <bdi>G3</bdi> chases it into the edge."
+     },
+     "ng": {
+      "ja": "<bdi>F3</bdi>からアタリすると白は<bdi>E4</bdi>から上の広い所へ逃げます。味方の石の方へ追いましょう。",
+      "en": "Atari from <bdi>F3</bdi> lets White escape upward through <bdi>E4</bdi>. Chase toward your own stones."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": ".................................................b.......wb.......bw.............",
+      "turn": 2
+     },
+     "ok": [
+      "C2"
+     ],
+     "line": [
+      "C2",
+      "D1",
+      "E1"
+     ],
+     "why": {
+      "ja": "白<bdi>C2</bdi>なら黒は<bdi>D1</bdi>へ逃げるしかなく、<bdi>E1</bdi>で取れます。白<bdi>E2</bdi>がいる方へ追い込む形です。",
+      "en": "White <bdi>C2</bdi> leaves only <bdi>D1</bdi>, and <bdi>E1</bdi> captures — Black is driven toward white <bdi>E2</bdi>."
+     },
+     "ng": {
+      "ja": "<bdi>D1</bdi>からだと黒は<bdi>C2</bdi>へ逃げてダメが増えます。",
+      "en": "From <bdi>D1</bdi>, Black runs to <bdi>C2</bdi> and gains liberties."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................b.................wb.......b.................................",
+      "turn": 1
+     },
+     "ok": [
+      "B5"
+     ],
+     "line": [
+      "B5",
+      "C6",
+      "D6",
+      "B6",
+      "B7"
+     ],
+     "why": {
+      "ja": "<bdi>B5</bdi>からアタリすると白は<bdi>C6</bdi>へ逃げますが、上には黒<bdi>C7</bdi>が待っています。<bdi>D6</bdi>と追えば取れます。",
+      "en": "Atari from <bdi>B5</bdi>: White runs to <bdi>C6</bdi>, but black <bdi>C7</bdi> is waiting. <bdi>D6</bdi> keeps it in atari until it is captured."
+     },
+     "ng": {
+      "ja": "<bdi>C6</bdi>からアタリすると白は<bdi>B5</bdi>へ逃げてダメが増えます。黒<bdi>C7</bdi>の方へ追い込みましょう。",
+      "en": "Atari from <bdi>C6</bdi> lets White run to <bdi>B5</bdi>. Drive it toward black <bdi>C7</bdi> instead."
+     }
+    }
+   ]
+  },
+  {
+   "id": "eyes",
+   "course": "basics",
+   "title": {
+    "ja": "眼と二眼",
+    "en": "Eyes and two eyes"
+   },
+   "sub": {
+    "ja": "二眼あれば取られない",
+    "en": "Two eyes means alive"
+   },
+   "intro": {
+    "ja": "<p>自分の石で囲んだ1つの空き点を<b>眼</b>といいます。相手は眼の中に打てません（自殺手）。</p><p>眼が1つだけだと、まわりを全部ふさがれたあと、最後に眼に打たれて取られます。眼が<b>2つ（二眼）</b>あれば、相手はどちらにも打てないので<b>絶対に取られません</b>。</p><p>眼の形には<b>欠け眼</b>（斜めの点を相手に取られて本物の眼にならない形）もあります。眼をつくる急所を探しましょう。</p>",
+    "en": "<p>An empty point surrounded by your stones is an <b>eye</b>. The opponent cannot play there (it would be suicide).</p><p>With only one eye, your group can be surrounded and then captured by a move in the eye. With <b>two eyes</b>, the opponent can play in neither, so the group <b>can never be captured</b>.</p><p>Watch out for <b>false eyes</b> — eyes that are not real because the opponent controls a diagonal point. Look for the vital point that makes two eyes.</p>"
+   },
+   "goal": {
+    "ja": "黒は二眼をつくる／白は二眼をつくらせない",
+    "en": "Make two eyes / stop two eyes"
+   },
+   "hint": {
+    "ja": "眼になりそうな場所の「真ん中」や「斜め」が急所です。",
+    "en": "The vital point is usually the middle of the eye space, or a diagonal point of an eye."
+   },
+   "diagram": {
+    "s": {
+     "n": 7,
+     "stones": "............................wwwwwwwbbbbbbw.b.b.bw",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "A1",
+      "ok"
+     ],
+     [
+      "C1",
+      "ok"
+     ],
+     [
+      "E1",
+      "ok"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 7,
+      "stones": "............................wwwwww.bbb.bw..b.bbw.",
+      "turn": 1
+     },
+     "ok": [
+      "D2"
+     ],
+     "why": {
+      "ja": "<bdi>D2</bdi>でつなげば、<bdi>A1</bdi>と<bdi>C1</bdi>の二眼ができて生きです。",
+      "en": "<bdi>D2</bdi> connects everything, and <bdi>A1</bdi> and <bdi>C1</bdi> are two real eyes: alive."
+     },
+     "ng": {
+      "ja": "白に<bdi>D2</bdi>と打たれると右側の黒石がアタリになり、<bdi>C1</bdi>は眼になりません。",
+      "en": "If White takes <bdi>D2</bdi>, the black stones on the right are in atari and <bdi>C1</bdi> never becomes an eye."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".............................wwwwww.wb.bbb.wbb.b.",
+      "turn": 2
+     },
+     "ok": [
+      "D2"
+     ],
+     "why": {
+      "ja": "白<bdi>D2</bdi>で黒<bdi>C2</bdi>・<bdi>C1</bdi>・<bdi>D1</bdi>がアタリになり、<bdi>E1</bdi>は欠け眼に。黒は眼が1つしかできません。",
+      "en": "White <bdi>D2</bdi> puts the black stones on the left in atari, and <bdi>E1</bdi> becomes a false eye. Black can only make one eye."
+     },
+     "ng": {
+      "ja": "黒に<bdi>D2</bdi>と打たれると<bdi>E1</bdi>と<bdi>G1</bdi>の二眼で生きてしまいます。",
+      "en": "If Black plays <bdi>D2</bdi>, <bdi>E1</bdi> and <bdi>G1</bdi> are two eyes and Black lives."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": "............................wwwwww.bbbbbw.b...bw.",
+      "turn": 1
+     },
+     "ok": [
+      "C1"
+     ],
+     "why": {
+      "ja": "3つ並んだ空き点（直三）は真ん中の<bdi>C1</bdi>が急所。黒が打てば<bdi>B1</bdi>と<bdi>D1</bdi>の二眼です。",
+      "en": "Three empty points in a row (straight three): the middle point <bdi>C1</bdi> is vital. Black plays there and has two eyes, <bdi>B1</bdi> and <bdi>D1</bdi>."
+     },
+     "ng": {
+      "ja": "白に真ん中の<bdi>C1</bdi>を打たれると、黒は眼を2つに分けられません。",
+      "en": "If White takes the middle point <bdi>C1</bdi>, Black cannot divide the space into two eyes."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".....................wwwww..bbbbw..b..bw..bb.bw..",
+      "turn": 2
+     },
+     "ok": [
+      "C2"
+     ],
+     "why": {
+      "ja": "曲がった3つの空き点（曲がり三）は角の<bdi>C2</bdi>が急所。白が先に打てば黒は一眼しかできません。",
+      "en": "Bent three: the corner of the bend, <bdi>C2</bdi>, is vital. If White takes it, Black only gets one eye."
+     },
+     "ng": {
+      "ja": "黒に<bdi>C2</bdi>と打たれると<bdi>B2</bdi>と<bdi>C1</bdi>の二眼で生きです。",
+      "en": "If Black plays <bdi>C2</bdi>, <bdi>B2</bdi> and <bdi>C1</bdi> are two eyes."
+     }
+    },
+    {
+     "s": {
+      "n": 7,
+      "stones": ".....................wwwwww.bbbbbw.bb.bbw.b...bw.",
+      "turn": 1
+     },
+     "ok": [
+      "C1"
+     ],
+     "why": {
+      "ja": "4つの空き点が「凸」の形（ハナ四）のときは、真ん中の<bdi>C1</bdi>が急所。<bdi>B1</bdi>・<bdi>D1</bdi>・<bdi>C2</bdi>と眼が分かれます。",
+      "en": "Four points shaped like a T (pyramid four): the centre <bdi>C1</bdi> is vital. It splits the space into separate eyes at <bdi>B1</bdi>, <bdi>D1</bdi> and <bdi>C2</bdi>."
+     },
+     "ng": {
+      "ja": "白に<bdi>C1</bdi>を打たれると、眼は1つしかできません。真ん中が急所です。",
+      "en": "If White takes <bdi>C1</bdi>, Black gets only one eye. The centre is the vital point."
+     }
+    }
+   ]
+  },
+  {
+   "id": "semeai",
+   "course": "basics",
+   "title": {
+    "ja": "攻め合いとダメ",
+    "en": "Capturing races"
+   },
+   "sub": {
+    "ja": "ダメを数えて、外から詰める",
+    "en": "Count liberties, fill from the outside"
+   },
+   "intro": {
+    "ja": "<p>お互いの石が囲み合って、先に相手のダメをなくした方が勝つ戦いを<b>攻め合い</b>といいます。</p><p>まずダメを数えます。両方の石に共通する<b>内ダメ</b>と、相手だけの<b>外ダメ</b>があります。</p><p>詰めるのは<b>外ダメから</b>。内ダメを先に詰めると自分のダメも減ってしまいます（<b>ダメヅマリ</b>）。</p>",
+    "en": "<p>When two groups surround each other, the one that removes the other’s liberties first wins. This is a <b>capturing race</b> (semeai).</p><p>First count liberties. Some are <b>shared</b> by both groups; the others are <b>outside</b> liberties that belong to one group only.</p><p>Fill the opponent’s <b>outside liberties first</b>. Filling a shared liberty also takes away one of your own (<b>shortage of liberties</b>).</p>"
+   },
+   "goal": {
+    "ja": "攻め合いに勝ってください",
+    "en": "Win the capturing race"
+   },
+   "hint": {
+    "ja": "相手だけのダメ（外ダメ）を探しましょう。",
+    "en": "Find the liberties that belong only to the opponent."
+   },
+   "diagram": {
+    "s": {
+     "n": 9,
+     "stones": "......................................................wwwwbbbb.wbbbwwwb.wb..w.bb.",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "F1",
+      "ok"
+     ],
+     [
+      "D1",
+      "x"
+     ],
+     [
+      "C1",
+      "x"
+     ]
+    ],
+    "view": [
+     0,
+     5,
+     8,
+     8
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 9,
+      "stones": "......................................................wwwwbbbb.wbbbwwwb.wb..w.bb.",
+      "turn": 1
+     },
+     "view": [
+      0,
+      5,
+      8,
+      8
+     ],
+     "ok": [
+      "F1"
+     ],
+     "line": [
+      "F1",
+      "D1",
+      "C1"
+     ],
+     "why": {
+      "ja": "黒のダメは<bdi>C1</bdi>・<bdi>D1</bdi>、白のダメは<bdi>D1</bdi>・<bdi>F1</bdi>。外ダメの<bdi>F1</bdi>を詰めれば、白は<bdi>D1</bdi>だけになり黒の勝ちです。",
+      "en": "Black has <bdi>C1</bdi> and <bdi>D1</bdi>; White has <bdi>D1</bdi> and <bdi>F1</bdi>. Filling the outside liberty <bdi>F1</bdi> leaves White with only <bdi>D1</bdi>, and Black wins."
+     },
+     "ng": {
+      "ja": "内ダメの<bdi>D1</bdi>を詰めると黒自身もアタリになり、白<bdi>C1</bdi>で取られます。",
+      "en": "Filling the shared liberty <bdi>D1</bdi> puts Black in atari too, and White captures at <bdi>C1</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": ".ww.b..wb.wbbbwwwb.wwwwbbbb......................................................",
+      "turn": 2
+     },
+     "view": [
+      0,
+      0,
+      8,
+      3
+     ],
+     "ok": [
+      "D9"
+     ],
+     "line": [
+      "D9",
+      "G9",
+      "F9"
+     ],
+     "why": {
+      "ja": "黒のダメは<bdi>D9</bdi>と内ダメ<bdi>F9</bdi>、白は<bdi>F9</bdi>と<bdi>G9</bdi>。白は外ダメ<bdi>D9</bdi>から詰めて勝ちます。",
+      "en": "Black has <bdi>D9</bdi> and the shared <bdi>F9</bdi>; White has <bdi>F9</bdi> and <bdi>G9</bdi>. White fills the outside liberty <bdi>D9</bdi> and wins."
+     },
+     "ng": {
+      "ja": "<bdi>F9</bdi>（内ダメ）を詰めると白もアタリ。<bdi>G9</bdi>は自分のダメです。",
+      "en": "<bdi>F9</bdi> is shared — White would put itself in atari. <bdi>G9</bdi> is White’s own liberty."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "......www......wbb......wb.......wb.......bww......bw.......bwb......bbb.........",
+      "turn": 1
+     },
+     "view": [
+      5,
+      0,
+      8,
+      8
+     ],
+     "ok": [
+      "J4"
+     ],
+     "line": [
+      "J4",
+      "J6",
+      "J7"
+     ],
+     "why": {
+      "ja": "黒のダメは<bdi>J7</bdi>・<bdi>J6</bdi>、白は<bdi>J6</bdi>・<bdi>J4</bdi>。外ダメの<bdi>J4</bdi>を詰めれば黒の一手勝ちです。",
+      "en": "Black has <bdi>J7</bdi> and <bdi>J6</bdi>; White has <bdi>J6</bdi> and <bdi>J4</bdi>. Fill the outside liberty <bdi>J4</bdi> and Black wins by one move."
+     },
+     "ng": {
+      "ja": "内ダメの<bdi>J6</bdi>や自分のダメ<bdi>J7</bdi>を詰めると、黒が先にアタリになります。",
+      "en": "Filling the shared <bdi>J6</bdi> or your own <bdi>J7</bdi> puts Black in atari first."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": ".......................................................bbbbwwww.bwwwbbbw..w..b..w",
+      "turn": 2
+     },
+     "view": [
+      0,
+      5,
+      8,
+      8
+     ],
+     "ok": [
+      "G1",
+      "H1"
+     ],
+     "line": [
+      "G1",
+      "D1",
+      "H1"
+     ],
+     "why": {
+      "ja": "白のダメは<bdi>B1</bdi>・<bdi>D1</bdi>・<bdi>E1</bdi>、黒は<bdi>E1</bdi>・<bdi>G1</bdi>・<bdi>H1</bdi>。<bdi>E1</bdi>は内ダメなので、黒の外ダメ<bdi>G1</bdi>・<bdi>H1</bdi>から詰めれば白が勝ちます。",
+      "en": "White has <bdi>B1</bdi>, <bdi>D1</bdi>, <bdi>E1</bdi>; Black has <bdi>E1</bdi>, <bdi>G1</bdi>, <bdi>H1</bdi>. <bdi>E1</bdi> is shared, so White fills Black’s outside liberties <bdi>G1</bdi> and <bdi>H1</bdi> first and wins."
+     },
+     "ng": {
+      "ja": "<bdi>E1</bdi>は内ダメ、<bdi>B1</bdi>・<bdi>D1</bdi>は白自身のダメ。外ダメの<bdi>G1</bdi>か<bdi>H1</bdi>から詰めましょう。",
+      "en": "<bdi>E1</bdi> is shared and <bdi>B1</bdi>, <bdi>D1</bdi> are White’s own liberties. Start with the outside liberties <bdi>G1</bdi> or <bdi>H1</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "..b..w..b.wbbbwwwb.wwwwbbbb......................................................",
+      "turn": 1
+     },
+     "view": [
+      0,
+      0,
+      8,
+      3
+     ],
+     "ok": [
+      "G9",
+      "H9"
+     ],
+     "line": [
+      "G9",
+      "D9",
+      "H9"
+     ],
+     "why": {
+      "ja": "外ダメの<bdi>G9</bdi>・<bdi>H9</bdi>から詰めれば、白は内ダメしか残らず黒が勝ちます。",
+      "en": "Fill the outside liberties <bdi>G9</bdi> and <bdi>H9</bdi> first; White is left with only the shared liberty and Black wins."
+     },
+     "ng": {
+      "ja": "内ダメを先に詰めると自分のダメも減り、攻め合いに負けます。",
+      "en": "Filling a shared liberty first also costs you a liberty, and you lose the race."
+     }
+    }
+   ]
+  }
+ ]
+}
