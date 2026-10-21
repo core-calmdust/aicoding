@@ -4084,7 +4084,7 @@ for (let i = 0; i < HP_N; i++) {
     hpElems.push({ g, mesh, edge, st: 'off', t: 0, delay: 0, w: 1, h: 1, kind: 'city', spin: 0 });
 }
 const hpFrags = [];
-let hpActive = false;
+let hpActive = false, hpLightK = 1;
 function hpPlace(el, z) {
     const kind = (motifCur && HP_SIZE[motifCur.name]) ? motifCur.name : 'city', S = HP_SIZE[kind], V = hpGeo[kind][Math.floor(Math.random() * hpGeo[kind].length)];
     el.kind = kind; el.mesh.geometry = V.g; el.edge.geometry = V.e;
@@ -4137,9 +4137,13 @@ function updateHyperPolys(dt, ws) {
         hpElems.forEach(el => { if (el.st !== 'off') { el.st = 'break'; el.delay = rand(0, 0.12); } }); // ほぼ一斉に、突然散り散りに
     }
     hpSolidMat.color.copy(themeCur.grid).lerp(themeCur.comet, 0.35).lerp(COL_WHITE, 0.1);
-    hpSolidMat.opacity = 0.2 + 0.25 * Math.max(0, Math.sin(rTime * 1.4)) + visualBeat * 0.15; // ガラス面はゆっくり明暗
+    // 光量の調整: 線が密なモチーフ（山並み・リング）や、明るいテーマ色のステージではグローを抑える
+    const kindK = { terrain: 0.35, rings: 0.65, crystals: 0.85 }[hpElems[0].kind] || 1;
+    const lum = hpEdgeMat.color.r * 0.3 + hpEdgeMat.color.g * 0.59 + hpEdgeMat.color.b * 0.11;
+    hpLightK = kindK * Math.max(0.55, Math.min(1, 0.5 / Math.max(0.01, lum)));
+    hpSolidMat.opacity = (0.2 + 0.25 * Math.max(0, Math.sin(rTime * 1.4)) + visualBeat * 0.15) * hpLightK; // ガラス面はゆっくり明暗
     hpEdgeMat.color.copy(themeCur.grid).lerp(COL_WHITE, 0.35);
-    hpEdgeMat.opacity = 0.65 + visualBeat * 0.35;
+    hpEdgeMat.opacity = (0.65 + visualBeat * 0.35) * (0.4 + 0.6 * hpLightK);
     hpElems.forEach(el => {
         if (el.st === 'off') return;
         el.g.position.z += ws * dt;
@@ -4170,7 +4174,7 @@ function updateHyperPolys(dt, ws) {
     }
     hpLineGeo.setDrawRange(0, m * 2); hpLineGeo.attributes.position.needsUpdate = m > 0;
     hpLines.visible = m > 0;
-    hpLineMat.color.copy(hpEdgeMat.color).lerp(COL_WHITE, 0.3);
+    hpLineMat.color.copy(hpEdgeMat.color).lerp(COL_WHITE, 0.3); hpLineMat.opacity = 0.5 + 0.5 * hpLightK;
 }
 function updateMotifs(dt, ws, now) {
     // ステージ変更の検出
@@ -5853,11 +5857,11 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) + hyperK * 0.06; // ハイパー中は光をにじませてネオン感を出す
+        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
         hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
         if (hyperK < 0.002) hyperK = 0;
         hyperGrade.enabled = hyperK > 0;
-        hyperGrade.uniforms.amt.value = hyperK; hyperGrade.uniforms.t.value = rTime;
+        hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ hyperGrade.uniforms.t.value = rTime;
         composer.render(dt);
     } else {
         renderer.render(scene, camera);
