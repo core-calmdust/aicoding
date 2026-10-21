@@ -827,7 +827,10 @@
   let rafId = 0, blurred = false;
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
   addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; });
-  let lastKey = '', kickUntil = 0, dirty = true;
+  // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
+  // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
+  let lastKey = '', kickUntil = 0, dirty = true, lastDraw = 0, idleTick = 0;
+  addEventListener('resize', () => kick(300));
   const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
   function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; }
   function loop(now = performance.now()) {
@@ -847,6 +850,8 @@
     root.rotation.y = yaw;
     if (roomTicks.length && !alignFn) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
+      // idle (nothing moved for 1 s): only re-measure the DOM board ~10×/s; a resize or kick() wakes it at once
+      if (now > kickUntil && !dirty && now - lastDraw > 1000 && (idleTick++ % 6)) return;
       const r = alignFn(); if (r && r.w > 10) {
         const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
         // match the DOM board's CSS transform: perspective(P px) rotateX(tilt) about its centre = a pinhole camera P px in front
@@ -858,7 +863,7 @@
         if (key === lastKey && now > kickUntil && !dirty) return;
         lastKey = key; if (now > kickUntil) dirty = false;
         cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2), W, H); cam.updateProjectionMatrix();
-        R.render(scene, cam); return;
+        R.render(scene, cam); lastDraw = now; return;
       }
     }
     const q = camPose(0), r2 = camPose(1), k = camK;
