@@ -7,7 +7,7 @@
      5 paint (ペンキ: recolors the 3×3 around it to the group's color) */
 (function (root) {
 'use strict';
-const T = { N: 0, ROCK: 1, ICE: 2, BOMB: 3, WILD: 4, PAINT: 5 };
+const T = { N: 0, ROCK: 1, ICE: 2, BOMB: 3, WILD: 4, PAINT: 5, PEARL: 6 };   // PEARL: DIVE mode treasure (never tapped, joined or blasted)
 const col = v => v & 15, typ = v => v >> 4, mk = (c, t) => c | (t << 4);
 const clone = b => b.map(c => c.slice());
 const W = b => b.length;
@@ -53,7 +53,7 @@ function remove(b, cells, opt = {}) {
   while (bq.length) {
     const [bx, by] = bq.pop();
     for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
-      const nx = bx + dx, ny = by + dy, v = at(b, nx, ny); if (v < 0 || mark.has(key(nx, ny))) continue;
+      const nx = bx + dx, ny = by + dy, v = at(b, nx, ny); if (v < 0 || mark.has(key(nx, ny)) || typ(v) === T.PEARL) continue;
       mark.set(key(nx, ny), 'b'); if (typ(v) === T.BOMB) bq.push([nx, ny]);
     }
   }
@@ -73,7 +73,7 @@ function remove(b, cells, opt = {}) {
   for (const [x, y] of cells) if (typ(b[x][y]) === T.PAINT) {
     for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
       const nx = x + dx, ny = y + dy, v = at(nb, nx, ny); if (v < 0 || mark.has(key(nx, ny))) continue;
-      const t = typ(v); if (t === T.ROCK || t === T.WILD) continue;
+      const t = typ(v); if (t === T.ROCK || t === T.WILD || t === T.PEARL) continue;
       if (col(v) !== c0) { nb[nx][ny] = mk(c0, t); painted.push([nx, ny]); }
     }
   }

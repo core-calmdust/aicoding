@@ -333,6 +333,7 @@ function renderAction() {
   let html = `<div class="acards">
     <div class="card acard red"><div class="ptag">BLITZ</div><div class="abig">${A.burst(14, 47, 31, 'var(--yel)')}<b>60</b></div><h3>${esc(t('a.blitz'))}</h3><p>${esc(t('a.blitz.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></div><button class="btn big yel" id="aBlitz">${A.ICON.play}${esc(t('d.play'))}</button></div>
     <div class="card acard blue"><div class="ptag yel">RISE</div><div class="abig rise"><i></i><i></i><i></i><i></i></div><h3>${esc(t('a.rise'))}</h3><p>${esc(t('a.rise.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.rise ? fmt(DB.act.rise) : '—'}</b></div><button class="btn big yel" id="aRise">${A.ICON.play}${esc(t('d.play'))}</button></div>
+    ${NEW_MODES.map((m, i) => `<div class="card acard ${['grn', 'plum', 'teal'][i]}"><div class="ptag ${i === 1 ? 'yel' : ''}">${m.toUpperCase()}</div><div class="abig mic">${modeIcon(m)}</div><h3>${esc(t('a.' + m))}</h3><p>${esc(t('a.' + m + '.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act[m] ? fmt(DB.act[m]) : '—'}</b></div><button class="btn big yel" data-am="${m}">${A.ICON.play}${esc(t('d.play'))}</button></div>`).join('')}
   </div><div class="sechead"><h2>${esc(t('m.h'))}</h2><p>${esc(t('m.d'))}</p></div>`;
   for (let tier = 0; tier < 3; tier++) {
     const list = MIS.filter(m => m.tier === tier), stars = list.reduce((a, m) => a + (DB.act.mis[m.id] || 0), 0);
@@ -345,6 +346,7 @@ function renderAction() {
   el.innerHTML = html;
   $('#aBlitz').onclick = () => startAction({ kind: 'blitz', m: 'blitz', k: 4, t: 60, g: ['hero', 'bomb'] });
   $('#aRise').onclick = () => startAction({ kind: 'rise', m: 'rise', k: 4, t: 0, g: ['bomb'] });
+  $$('[data-am]', el).forEach(b => b.onclick = () => { const m = b.dataset.am; startAction({ kind: m, m, k: m === 'order' ? 4 : 4, t: 60, g: m === 'fuse' ? ['bomb'] : ['hero'] }); });
   $$('.mis', el).forEach(b => b.onclick = () => { const m = MIS[+b.dataset.m]; startAction({ kind: 'mission', m: m.m, k: m.k, t: m.t, g: m.g, mis: m }); });
 }
 const goalText = m => t('goal.' + m.goal[0], { n: m.goal[0] === 'score' ? fmt(m.goal[1]) : m.goal[1] });
@@ -367,8 +369,8 @@ function mkEl(v) {
 }
 function paintEl(d, v) {
   const ty = E.typ(v), c = E.col(v);
-  d.className = 'blk ' + (ty === E.T.ROCK ? 'rock' : ty === E.T.WILD ? 'wild' : 'c' + c) + (ty === E.T.ICE ? ' ice' : '') + (ty === E.T.BOMB ? ' bomb' : '') + (ty === E.T.PAINT ? ' paint' : '');
-  const sym = ty === E.T.ROCK ? 'emRock' : ty === E.T.WILD ? 'emWild' : ty === E.T.BOMB ? 'emBomb' : ty === E.T.PAINT ? 'emPaint' : 'em' + c;
+  d.className = 'blk ' + (ty === E.T.PEARL ? 'pearl' : ty === E.T.ROCK ? 'rock' : ty === E.T.WILD ? 'wild' : 'c' + c) + (ty === E.T.ICE ? ' ice' : '') + (ty === E.T.BOMB ? ' bomb' : '') + (ty === E.T.PAINT ? ' paint' : '');
+  const sym = ty === E.T.PEARL ? 'emPearl' : ty === E.T.ROCK ? 'emRock' : ty === E.T.WILD ? 'emWild' : ty === E.T.BOMB ? 'emBomb' : ty === E.T.PAINT ? 'emPaint' : 'em' + c;
   d.innerHTML = `<svg><use href="#${sym}"/></svg>`;
 }
 function cellSize() {
@@ -392,14 +394,15 @@ function hud() {
   $('#gScore').textContent = fmt(G.score);
   const sub = $('#gSub');
   if (G.timed) { const s = Math.max(0, G.tLeft); sub.innerHTML = `<b class="${s < 10 ? 'low' : ''}">${Math.ceil(s)}</b><small>${esc(t('u.sec'))}</small>`; }
-  else if (G.mode === 'rise') sub.innerHTML = `<b>${Math.floor(G.elapsed)}</b><small>${esc(t('u.sec'))}</small>`;
+  else if (G.mode === 'rise' || G.mode === 'fuse') sub.innerHTML = `<b>${Math.floor(G.elapsed)}</b><small>${esc(t('u.sec'))}</small>`;
   else sub.innerHTML = `<b>${E.count(G.board)}</b><small>${esc(t('u.left'))}</small>`;
   const gf = $('#gtFill'); if (gf) { const tot = G.init.reduce((a, c) => a + c.length, 0), left = E.count(G.board); gf.style.width = (tot - left) / tot * 100 + '%'; $('#gtLeft').textContent = t('gt.left', { n: left }); $$('.gmd span').forEach(e => e.classList.toggle('ok', left <= +e.dataset.n)); }
   $('#gRestart').hidden = G.kind === 'dblitz'; $('#gUndo').hidden = !G.undoable; $('#gHint').hidden = G.kind !== 'stage';
   $('#gUndo').disabled = !G.hist.length || G.over;
   const fv = $('#fever'); fv.hidden = !G.action; $('#riseWrap').hidden = G.mode !== 'rise';
-  const bl = $('#blitzInfo'); bl.hidden = !G.timed;
-  if (G.timed) bl.innerHTML = `<span class="blv">LV ${G.lv}</span><span class="bext"><small>${esc(t('bz.ext'))}</small><span class="fbar"><i style="width:${G.ext / EXT_MAX * 100}%"></i></span><b>+${G.ext}/${EXT_MAX}s</b></span>`;
+  const bl = $('#blitzInfo'); bl.hidden = !G.timed && G.mode !== 'fuse';
+  if (G.mode === 'fuse') bl.innerHTML = `<span class="blv">FUSE</span><span class="bext fuse ${G.fuse < 3 ? 'low' : ''}"><span class="fbar"><i style="width:${G.fuse / FUSE_MAX * 100}%"></i></span><b>${G.fuse.toFixed(1)}s</b></span>`;
+  else if (G.timed) bl.innerHTML = (G.mode === 'order' ? `<span class="ordq">${G.order.map((c, i) => `<span class="blk c${c} ${i ? '' : 'now'}" style="--cs:${i ? 30 : 40}px;position:relative;transform:none"><svg><use href="#em${c}"/></svg></span>`).join('')}<small>${esc(t('a.order.q'))}${G.ordStreak > 1 ? ` ×${G.ordStreak}` : ''}</small></span>` : '') + (G.mode === 'dive' ? `<span class="ordq"><span class="blk pearl" style="--cs:30px;position:relative;transform:none"><svg><use href="#emPearl"/></svg></span><b>×${G.pearlN}</b></span>` : '') + `<span class="blv">LV ${G.lv}</span><span class="bext"><small>${esc(t('bz.ext'))}</small><span class="fbar"><i style="width:${G.ext / EXT_MAX * 100}%"></i></span><b>+${G.ext}/${EXT_MAX}s</b></span>`;
   if (G.action) { $('#feverBar').style.width = (G.feverT > 0 ? G.feverT / FEVER_T * 100 : G.fever / FEVER_MAX * 100) + '%'; fv.classList.toggle('on', G.feverT > 0); $('#comboV').textContent = G.combo > 1 ? 'x' + G.combo : ''; }
 }
 function trackHTML() {
@@ -412,9 +415,10 @@ function trackHTML() {
 function renderInfo() {
   const k = G.kind, types = new Set(); G.board.forEach(c => c.forEach(v => types.add(E.typ(v))));
   if (G.gim) { if (G.gim.has('bomb')) types.add(E.T.BOMB); if (G.gim.has('rock')) types.add(E.T.ROCK); if (G.gim.has('ice')) types.add(E.T.ICE); if (G.gim.has('wild')) types.add(E.T.WILD); }
-  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.medals2') : k === 'free' ? t('th.cl.r') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2') ;
+  let rule = k === 'stage' ? t('th.' + G.th + '.r') : k === 'daily' ? t('d.medals2') : k === 'free' ? t('th.cl.r') : (NEW_MODES.includes(G.mode) ? [1, 2, 3].map(i => t('a.' + G.mode + '.t' + i)).join(' ／ ') : (G.mode === 'rise' ? t('a.rise.d') : t('a.blitz.d')) + ' ' + t('tu.a2')) ;
   if (k === 'mission') rule = goalText(G.mis) + '。' + t('r.mstar', { a: fmt(G.mis.s2), b: fmt(G.mis.s3) });
-  const TY = [[E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
+  if (G.mode === 'dive') types.add(E.T.PEARL);
+  const TY = [[E.T.PEARL, E.mk(0, E.T.PEARL), 'pearl'], [E.T.ROCK, E.mk(0, E.T.ROCK), 'rk'], [E.T.ICE, E.mk(1, E.T.ICE), 'ic'], [E.T.BOMB, E.mk(0, E.T.BOMB), 'bm'], [E.T.WILD, E.mk(0, E.T.WILD), 'wd'], [E.T.PAINT, E.mk(3, E.T.PAINT), 'pt']];
   const leg = TY.filter(([ty]) => types.has(ty)).map(([, v, th]) => { const d = mkEl(v); return `<li><span class="lg">${d.outerHTML}</span><span><b>${esc(t('th.' + th))}</b><br>${esc(t('th.' + th + '.d'))}</span></li>`; }).join('')
     + (G.gim && G.gim.has('hero') ? `<li><span class="lg">${A.mascot('wow')}</span><span><b>${esc(t('g.hero'))}</b><br>${esc(t('tu.a4.h'))} +3s</span></li>` : '')
     + (G.gim && G.gim.has('ink') ? `<li><span class="lg" style="background:#111;border:2px solid #000"></span><span><b>${esc(t('g.ink'))}</b><br>${esc(t('tu.a4'))}</span></li>` : '');
@@ -453,14 +457,20 @@ function startBlitzDaily() {
 }
 const FEVER_MAX = 70, FEVER_T = 6;
 function startAction(o) {
+  if (NEW_MODES.includes(o.m) && !DB.tut['m_' + o.m] && !o.tipped) return modeTip(o.m, () => startAction(Object.assign({}, o, { tipped: 1 })));
   if (!DB.tut.action) { DB.tut.action = 1; save(); return tutorial('action', () => startAction(o)); }
   const rows = o.m === 'rise' ? 12 : 10, cols = 8;
   const rnd = E.rng(o.seed || (Date.now() & 0x7fffffff));
-  const g = { kind: o.kind, mis: o.mis, date: o.date, gim: new Set(o.g), k: o.k, action: true, keep: true, timed: o.m === 'blitz', tLeft: o.t || 60, tTotal: o.t || 60, rowsMax: rows, mode: o.m, seed: o.seed };
+  const g = { kind: o.kind, mis: o.mis, date: o.date, gim: new Set(o.g), k: o.k, action: true, keep: true, timed: ['blitz', 'order', 'dive'].includes(o.m), refills: o.m !== 'rise', tLeft: o.t || 60, tTotal: o.t || 60, rowsMax: rows, mode: o.m, seed: o.seed };
   const startH = o.m === 'rise' ? 5 : rows;
   g.board = []; for (let x = 0; x < cols; x++) { const c = []; for (let y = 0; y < startH; y++) c.push(randCell(o.k, rnd, g.gim, true)); g.board.push(c); }
-  newGame(g); G.rnd = rnd; G.riseT = 0; G.riseEvery = 6.5; G.ext = 0; G.lv = 1; G.k0 = o.k; G.nextHero = 7 + rnd() * 4; G.nextInk = 12 + rnd() * 6;
+  if (o.m === 'dive') for (let i = 0; i < 3; i++) g.board[1 + i * 3][rows - 1 - (i % 2)] = E.mk(0, E.T.PEARL);
+  newGame(g); G.rnd = rnd; G.riseT = 0;
+  if (o.m === 'order') { G.order = [0, 0, 0].map(() => (rnd() * o.k) | 0); G.ordN = 0; G.ordStreak = 0; }
+  if (o.m === 'fuse') { G.fuse = FUSE_MAX * .75; }
+  if (o.m === 'dive') { G.pearlsDue = 0; G.pearlN = 0; } G.riseEvery = 6.5; G.ext = 0; G.lv = 1; G.k0 = o.k; G.nextHero = 7 + rnd() * 4; G.nextInk = 12 + rnd() * 6;
   const title = o.kind === 'mission' ? `${t('m.no', { n: o.mis.id + 1 })}` : o.kind === 'dblitz' ? t('d.blitz') : t('a.' + o.m);
+  if (NEW_MODES.includes(o.m) && !DB.tut['m_' + o.m]) { DB.tut['m_' + o.m] = 1; save(); }
   startPlay(title, o.kind === 'mission' ? goalText(o.mis) : '');
   countdown(() => { G.t0 = performance.now(); G.last = G.t0; loop(); });
 }
@@ -521,7 +531,7 @@ function play(x, y) {
   let g = E.group(G.board, x, y);
   if (g.length < min) {
     if (G.action && ty === E.T.BOMB) g = [[x, y]];
-    else { if (E.tappable(v) || ty === E.T.ICE || ty === E.T.ROCK || ty === E.T.WILD) { const d = G.els[x][y]; d.classList.remove('nope'); void d.offsetWidth; d.classList.add('nope'); } SND.bad(); if (G.action) G.combo = 0; if (G.timed && G.feverT <= 0) { G.tLeft -= 1; floatText('-1s', 'minus'); } hud(); return; }
+    else { if (E.tappable(v) || ty === E.T.ICE || ty === E.T.ROCK || ty === E.T.WILD) { const d = G.els[x][y]; d.classList.remove('nope'); void d.offsetWidth; d.classList.add('nope'); } SND.bad(); if (G.action) G.combo = 0; if (G.timed && G.feverT <= 0) { G.tLeft -= 1; floatText('-1s', 'minus'); } if (G.mode === 'fuse') { G.fuse -= .6; floatText('-0.6s', 'minus'); } hud(); return; }
   }
   clearHover(); hoverKey = '';
   if (G.undoable) G.hist.push({ b: G.board, s: G.score, pi: G.pi });
@@ -535,6 +545,11 @@ function play(x, y) {
     const mult = (1 + Math.min(G.combo - 1, 10) * .2) * (G.feverT > 0 ? 2 : 1);
     pts = Math.round(r.n * (r.n + 1) * 5 * mult);
     if (G.timed) { const bonus = r.n >= 18 ? 3 : r.n >= 12 ? 2 : r.n >= 8 ? 1 : 0; addTime(bonus); }
+    if (G.mode === 'order') {
+      if (r.color === G.order[0] && r.nG >= 3) { G.ordStreak++; G.ordN++; const bonus = 300 * G.ordStreak; pts += bonus; addTime(2, true); floatText(`ORDER! +${fmt(bonus)}`, 'time'); SND.hero(); G.order.shift(); G.order.push((G.rnd() * G.k) | 0); }
+      else if (r.color !== G.order[0]) { pts = Math.round(pts * .4); if (G.ordStreak) floatText('MISS', 'minus'); G.ordStreak = 0; }
+    }
+    if (G.mode === 'fuse') { const add = Math.min(FUSE_MAX - G.fuse, (.3 * r.n - .3) * Math.max(.35, 1 - G.elapsed / 150)); if (add > 0) G.fuse += add; }
     if (G.feverT <= 0) { G.fever += r.n; if (G.fever >= FEVER_MAX) { G.fever = 0; G.feverT = FEVER_T; G.feverN++; DB.stats.fever++; SND.fever(); boardEl().classList.add('fev'); floatText('FEVER!', 'fever'); } }
   } else pts = r.score;
   G.score += pts; G.pops++; G.big = Math.max(G.big, r.nG);
@@ -568,12 +583,12 @@ function play(x, y) {
   hud();
 }
 function refill() {
-  if (G.mode !== 'blitz') return;
+  if (!G.refills) return;
   const b = boardEl();
   G.board.forEach((c, x) => {
     let k = 0;
     while (c.length < G.rows) {
-      const v = randCell(G.k, G.rnd, G.gim); c.push(v); const yy = c.length - 1, d = mkEl(v); d._v = v; d.style.transform = `translate(${x * G.cs}px, ${-(++k) * G.cs - 10}px)`; b.appendChild(d); G.els[x].push(d);
+      let v = randCell(G.k, G.rnd, G.gim); if (G.mode === 'dive' && G.pearlsDue > 0 && c.length === G.rows - 1 && G.rnd() < .5) { v = E.mk(0, E.T.PEARL); G.pearlsDue--; } c.push(v); const yy = c.length - 1, d = mkEl(v); d._v = v; d.style.transform = `translate(${x * G.cs}px, ${-(++k) * G.cs - 10}px)`; b.appendChild(d); G.els[x].push(d);
       requestAnimationFrame(() => requestAnimationFrame(() => { d.style.transform = pos(x, yy); }));
     }
   });
@@ -583,12 +598,37 @@ function afterMove() {
   if (!G.action) {
     if (E.count(G.board) === 0) return finishPuzzle(true);
     if (E.dead(G.board, G.min)) return finishPuzzle(false);
-  } else if (G.mode === 'blitz' && E.dead(G.board, G.feverT > 0 ? 1 : G.min)) {
+  } else if (G.mode === 'dive' && collectPearls()) {
+    return;
+  } else if (G.refills && E.dead(G.board, G.feverT > 0 ? 1 : G.min)) {
     // reshuffle when stuck
-    floatText(G.timed ? 'SHUFFLE -3s' : 'SHUFFLE!', 'fever'); if (G.timed) G.tLeft -= 3; const all = G.board.flat(); for (let i = all.length - 1; i > 0; i--) { const j = (G.rnd() * (i + 1)) | 0;[all[i], all[j]] = [all[j], all[i]]; }
+    floatText(G.timed ? 'SHUFFLE -3s' : 'SHUFFLE!', 'fever'); if (G.timed) G.tLeft -= 3; if (G.mode === 'fuse') G.fuse = Math.max(.5, G.fuse - 1.5); const all = G.board.flat(); for (let i = all.length - 1; i > 0; i--) { const j = (G.rnd() * (i + 1)) | 0;[all[i], all[j]] = [all[j], all[i]]; }
     let i = 0; G.board = G.board.map(c => c.map(() => all[i++])); G.els.forEach((c, x) => c.forEach((d, y) => { paintEl(d, G.board[x][y]); d._v = G.board[x][y]; }));
   }
   hud();
+}
+const NEW_MODES = ['order', 'fuse', 'dive'];
+const FUSE_MAX = 8;
+// DIVE: pearls that reached the bottom row are collected
+function collectPearls() {
+  const got = []; G.board.forEach((c, x) => { if (c.length && E.typ(c[0]) === E.T.PEARL) got.push(x); });
+  if (!got.length) return false;
+  G.busy = true;
+  got.forEach(x => { const d = G.els[x][0]; d.classList.add('pop'); setTimeout(() => d.remove(), 450); G.board[x].shift(); G.els[x].shift(); });
+  G.pearlN += got.length; G.pearlsDue += got.length; G.score += 800 * got.length; addTime(3 * got.length, true);
+  floatText(`PEARL ×${got.length} +${3 * got.length}s`, 'time'); SND.fan(); DB.stats.hero += 0;
+  setTimeout(() => { if (!G) return; G.els.forEach((c, x) => c.forEach((d, y) => d.style.transform = pos(x, y))); refill(); setTimeout(() => { if (!G) return; G.busy = false; afterMove(); }, 240); }, 160);
+  return true;
+}
+function modeTip(m, done) {
+  const lines = [1, 2, 3].map(i => `<li>${esc(t('a.' + m + '.t' + i))}</li>`).join('');
+  modal(`<div class="tut">${ttag('tu.rule', t('a.' + m))}<div class="tpanel"><div class="tmas">${A.mascot('wow')}</div><div class="balloon"><b>${esc(t('a.' + m))}</b><p>${esc(t('a.' + m + '.d'))}</p></div></div><div class="tdemo"><div class="mtipbox"><div class="micon">${modeIcon(m)}</div><ul class="mtl">${lines}</ul></div></div><div class="mbtns"><button class="btn red" id="tOk">${esc(t('u.start'))}</button></div></div>`, 'mtut mtip');
+  $('#tOk').onclick = () => { $('#modal').hidden = true; done && done(); };
+}
+function modeIcon(m) {
+  if (m === 'order') return `<div class="mi-order">${[0, 1, 2].map(i => `<span class="blk c${i}" style="--cs:44px;position:relative;transform:none"><svg><use href="#em${i}"/></svg></span>`).join('<b>›</b>')}</div>`;
+  if (m === 'fuse') return `<div class="mi-fuse"><svg viewBox="0 0 120 60"><path d="M8 40c20 0 24-20 46-20s22 18 40 18" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="2 9" stroke-linecap="round"/><circle cx="100" cy="36" r="13" fill="#E8B83A"/><path d="M100 18l3 8 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z" fill="#D9622B"/></svg></div>`;
+  return `<div class="mi-dive"><span class="blk pearl" style="--cs:56px;position:relative;transform:none"><svg><use href="#emPearl"/></svg></span><svg viewBox="0 0 30 60" class="arr"><path d="M15 4v44M5 38l10 12 10-12" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 }
 const EXT_MAX = 20;
 // add bonus time (capped at EXT_MAX seconds per game); returns seconds actually added
@@ -624,6 +664,13 @@ function loop() {
     G.tLeft -= dt * (1 + (G.lv - 1) * .15);
     const s = Math.ceil(G.tLeft); if (s <= 5 && s >= 1 && s !== lastTick) { lastTick = s; SND.tick(); }
     if (G.tLeft <= 0) { G.tLeft = 0; hud(); return endAction(); }
+  }
+  if (G.mode === 'fuse') {
+    G.fuse -= dt * (1 + G.elapsed / 25);
+    const flv = Math.min(4, 1 + Math.floor(G.elapsed / 25));
+    if (flv > G.lv) { G.lv = flv; G.k = Math.min(6, G.k0 + flv - 1); floatText('LEVEL ' + flv + '!', 'fever'); SND.fever(); }
+    const s2 = Math.ceil(G.fuse); if (G.fuse < 3 && s2 !== lastTick) { lastTick = s2; SND.tick(); }
+    if (G.fuse <= 0) { G.fuse = 0; hud(); return endAction(); }
   }
   if (G.mode === 'rise') {
     G.riseT += dt; const every = Math.max(2.2, G.riseEvery - G.elapsed / 30);
@@ -696,12 +743,12 @@ function finishPuzzle(perfect) {
     coins = addCoin(G.score / 25 * D.sc);
     if (best && ON && ON.available && DB.name) ON.putDaily(G.date, D.key, { n: DB.name, i: DB.icon, s: G.score }).catch(() => {});
     html = resultCard(perfect ? 'PERFECT!' : t('r.end'), `<div class="rscore">${fmt(G.score)}</div><p>${esc(t('r.left', { n: left }))}</p>${md ? `<div class="rmedal"><i class="medal big m${md}"></i>${esc(t('md.' + md))}</div>` : `<p class="note">${esc(t('d.medals2'))}</p>`}${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}${nameNudge()}`,
-      [['undo', t('g.undo')], ['retry', t('r.retry'), 'red'], ['rank', t('rk.title')], ['home', t('u.home')]], perfect ? '' : 'plain');
+      [['retry', t('r.retry'), 'red'], ['undo', t('g.undo')], ['home', t('u.home')], ['rank', t('rk.title')]], perfect ? '' : 'plain');
   } else if (k === 'free') {
     const best = G.score > (DB.free[G.fk] || 0); if (best) DB.free[G.fk] = G.score;
     coins = addCoin(G.score / 40);
     html = resultCard(perfect ? 'PERFECT!' : t('r.end'), `<div class="rscore">${fmt(G.score)}</div><p>${esc(t('r.left', { n: left }))}</p>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}`,
-      [['undo', t('g.undo')], ['new', t('r.new'), 'red'], ['home', t('u.home')]], perfect ? '' : 'plain');
+      [['new', t('r.new'), 'red'], ['undo', t('g.undo')], ['home', t('u.home')]], perfect ? '' : 'plain');
   }
   save(); showResult(html); hud();
 }
@@ -722,10 +769,10 @@ function endAction() {
   } else {
     let best = false;
     if (k === 'dblitz') { const r = dlRec(G.date); if (sc > r.b.s) { r.b.s = sc; best = true; } if (ON && ON.available && DB.name) ON.putDaily(G.date, 'b', { n: DB.name, i: DB.icon, s: sc }).catch(() => {}); }
-    const key = G.mode === 'rise' ? 'rise' : 'blitz'; if (sc > DB.act[key]) { DB.act[key] = sc; best = true; }
+    const key = G.mode; if (sc > (DB.act[key] || 0)) { DB.act[key] = sc; best = true; }
     const left = k === 'dblitz' ? 3 - dlRec(G.date).b.a : 1;
     btns = [left > 0 ? ['again', k === 'dblitz' ? t('r.againN', { n: left }) : t('r.retry'), 'red'] : null, k === 'dblitz' ? ['rank', t('rk.title')] : null, ['home', t('u.home')]];
-    showResult(resultCard(G.mode === 'rise' ? 'GAME OVER' : 'TIME UP!', `<div class="rscore">${fmt(sc)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${G.mode === 'rise' ? `<p>${esc(t('r.surv', { n: Math.floor(G.elapsed) }))}</p>` : ''}${stats}${coinLine(coins)}${k === 'dblitz' ? nameNudge() : ''}`, btns));
+    showResult(resultCard(G.mode === 'rise' ? 'GAME OVER' : G.mode === 'fuse' ? 'BURNED OUT!' : 'TIME UP!', `<div class="rscore">${fmt(sc)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${G.mode === 'rise' || G.mode === 'fuse' ? `<p>${esc(t('r.surv', { n: Math.floor(G.elapsed) }))}</p>` : ''}${G.mode === 'order' ? `<p>${esc(t('a.order.r', { n: G.ordN }))}</p>` : ''}${G.mode === 'dive' ? `<p>${esc(t('a.dive.r', { n: G.pearlN }))}</p>` : ''}${stats}${coinLine(coins)}${k === 'dblitz' ? nameNudge() : ''}`, btns));
   }
   if (DB.set.anim && sc > 0) confetti(1);
   save();
@@ -752,12 +799,12 @@ function resultAct(a) {
   if (a === 'new') return startFree();
   if (a === 'rank') return openRank(G.kind === 'dblitz' ? 'b' : diffOf(G.dk).key);
   if (a === 'name') return openProfile();
-  if (a === 'again') { if (G.kind === 'dblitz') { if (3 - dlRec(today()).b.a > 0) startBlitzDaily(); return; } const o = { kind: G.kind, m: G.mode, k: G.k, t: G.tTotal, g: [...G.gim], mis: G.mis }; return startAction(o); }
+  if (a === 'again') { if (G.kind === 'dblitz') { if (3 - dlRec(today()).b.a > 0) startBlitzDaily(); return; } const o = { kind: G.kind, m: G.mode, k: G.k0 || G.k, t: G.tTotal, g: [...G.gim], mis: G.mis, tipped: 1 }; return startAction(o); }
   if (a === 'nextm') { const n = MIS[G.mis.id + 1]; return startAction({ kind: 'mission', m: n.m, k: n.k, t: n.t, g: n.g, mis: n }); }
 }
 function restart() {
   if (!G || G.busy) return;
-  if (G.action) { if (G.kind === 'dblitz') return; if (!G.over && !confirm(t('q.restart'))) return; const o = { kind: G.kind, m: G.mode, k: G.k0 || G.k, t: G.tTotal, g: [...G.gim], mis: G.mis }; return startAction(o); }
+  if (G.action) { if (G.kind === 'dblitz') return; if (!G.over && !confirm(t('q.restart'))) return; const o = { kind: G.kind, m: G.mode, k: G.k0 || G.k, t: G.tTotal, g: [...G.gim], mis: G.mis, tipped: 1 }; return startAction(o); }
   if (G.kind === 'stage') { const th = G.th, j = G.j, hinted = G.hinted; startStage(th, j); G.retried = true; G.hinted = hinted; return; }
   G.board = E.clone(G.init); G.score = 0; G.hist = []; G.over = false; G.pi = 0; $('#gameMsg').hidden = true; buildBoard(); G.els.forEach((c, x) => c.forEach((d, y) => d._v = G.board[x][y])); hud(); tone(440, .08, 'triangle', .05, .7);
 }
