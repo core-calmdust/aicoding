@@ -380,6 +380,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 /* ---------- achievements ---------- */
 .chips{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
+.hsc{position:relative}
+.hsn{position:absolute;top:calc(50% - 4px);transform:translateY(-50%);z-index:2;width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:rgba(43,48,68,.42);color:#fff;font:900 22px/1 var(--round);display:grid;place-items:center;padding:0 0 3px;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 3px 10px rgba(0,0,0,.15);opacity:0;pointer-events:none;transition:opacity .2s,background .15s}
+.hsn.l{left:-6px}.hsn.r{right:-6px}
+.hsn.on{opacity:1;pointer-events:auto}
+.hsn:hover{background:rgba(43,48,68,.68)}
 .chip{flex:none;display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px 5px 6px;font-weight:900;font-size:13.5px;box-shadow:0 2px 0 var(--line)}
 .chip img{width:24px;height:24px;border-radius:7px}
 .chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 2px 0 #161a28}
@@ -705,7 +710,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   <section class="pg" id="pg-ach">
     <h2 class="h" id="hAch"></h2>
     <div class="achsum" id="achSum"></div>
-    <div class="chips" id="achChips"></div>
+    <div class="hsc" id="achHsc"><button class="hsn l" type="button" aria-label="‹" tabindex="-1">‹</button><div class="chips" id="achChips"></div><button class="hsn r" type="button" aria-label="›" tabindex="-1">›</button></div>
     <div class="alist" id="achList"></div>
   </section>
 
@@ -764,6 +769,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/shogi.js?v=14"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
-<script src="app.js?v=60"></script>
+<script src="app.js?v=61"></script>
 </body>
 </html>

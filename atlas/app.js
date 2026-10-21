@@ -647,6 +647,20 @@
   }
 
   /* ---------- ACHIEVEMENTS ---------- */
+  /* horizontal chip rows: translucent ‹ › buttons for people without a trackpad / shift-wheel */
+  function hscroll(w) {
+    if (!w) return; const row = w.querySelector('.chips'), [l, r] = w.querySelectorAll('.hsn');
+    const rtl = getComputedStyle(row).direction === 'rtl';
+    const upd = () => { const x = Math.abs(row.scrollLeft), m = row.scrollWidth - row.clientWidth - 2;
+      (rtl ? r : l).classList.toggle('on', x > 2); (rtl ? l : r).classList.toggle('on', x < m); };
+    if (!w._hs) {
+      w._hs = 1;
+      const go = d => row.scrollBy({ left: d * Math.max(160, row.clientWidth * .7), behavior: 'smooth' });
+      l.onclick = () => go(-1); r.onclick = () => go(1);
+      row.addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd);
+    }
+    requestAnimationFrame(upd);
+  }
   let achF = 'all';
   function renderAch() {
     $('hAch').textContent = t('ach.h');
@@ -659,6 +673,7 @@
       return `<button class="chip" aria-pressed="${achF === k}" data-k="${k}">${g ? `<img src="${artSrc(g)}" alt="" style="object-fit:contain;background:none">` : ''}${esc(l)} <em>${list.filter(a => a.done).length}/${list.length}</em></button>`;
     }).join('');
     $('achChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { achF = b.dataset.k; renderAch(); });
+    hscroll($('achHsc'));
     const list = (achF === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === achF)).slice()
       .sort((a, b) => (b.done - a.done) || (a.done ? 0 : (b.have / b.need) - (a.have / a.need)));
     $('achList').innerHTML = list.map(achHtml).join('');
