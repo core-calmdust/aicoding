@@ -235,7 +235,11 @@ function create(o) {
     else if (a === 'lessons') { stop(); o.lessons && o.lessons(); }
   }
   document.addEventListener('click', onClick);
-  function visible() { const m = mount(); return !!(m && m.offsetParent && m.querySelector('.rt')); }
+  function visible() {   // really on screen: games hide their dialogs with opacity 0 (still laid out), so check that too
+    const m = mount(); if (!(m && m.offsetParent && m.querySelector('.rt'))) return false;
+    for (let x = m; x && x !== document.body; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.opacity === '0' || cs.visibility === 'hidden') return false; if (x.classList.contains('overlay') && !x.classList.contains('show')) return false; }
+    return true;
+  }
   document.addEventListener('keydown', e => {
     if (!visible() || e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
