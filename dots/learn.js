@@ -827,24 +827,48 @@ const pzOrder = C => C.order || C.counts.flatMap((c, lv) => Array.from({ length:
 function pzRecs(C, prog) { prog = prog || pzProg(); return pzOrder(C).map(([lv, k]) => pzStars(prog[pzKey(C.id, lv, k)])); }
 const PZ_GROUPS = [['T', ['take', 'double', 'longchain', 'loop', 'sacrifice', 'count']], ['R', ['real3', 'real4', 'real5']]];
 function pzTier(C) { if (!C.diff) return 0; const m = C.diff.reduce((a, b) => a + b, 0) / C.diff.length; return Math.max(0, Math.min(5, Math.round((m - 5.6) / 0.9))); }
+// collection home (the layout of 詰めオセロ, PZBook.home): hero → daily → tabs テーマ別 / 実戦 → theme cards with the position
+const PZ_LAST = 'dots-pz-last', PZ_TAB = 'dots-pztab-v1';
+const PZ_SVG = {
+  take: '<path d="M3 6h18v12H3zM9 6v12M15 6v12"/><path d="M5 12h13.5M16 9.5l2.5 2.5-2.5 2.5"/>',
+  double: '<path d="M3 7h18v10H3zM12 7v10"/><path d="M5.5 10l3 4M8.5 10l-3 4M15.5 10l3 4M18.5 10l-3 4"/>',
+  longchain: '<rect x="2.5" y="8.5" width="11" height="7" rx="3.5"/><rect x="10.5" y="8.5" width="11" height="7" rx="3.5"/>',
+  loop: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 4v16M4 12h16"/>',
+  sacrifice: '<path d="M4 10h16v10H4zM3 7h18v3H3zM12 7v13M12 7C10 3 6 4 8 7M12 7c2-4 6-3 4 0"/>',
+  count: '<path d="M18 5H6l6 7-6 7h12"/>',
+};
+const pzBadge = id => PZ_SVG[id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_SVG[id]}</svg>` : `<b class="gl">${PZ_ICON[id] || '◆'}</b>`;
+function pzThumbAt(C, j) {
+  const D = PZC[C.id], o = pzOrder(C)[j], q = D && o && D.levels[o[0]] && D.levels[o[0]][o[1]];
+  if (!q) return ''; try { return miniSVG(figFromProblem(decodePz(q))); } catch (e) { return ''; }
+}
 async function openPuzzles() {
   await Promise.all([pzIndexLoad(), textReady()]); selTabL('puzzle');
   if (!PZI) { toast(t('pz.fail2')); return; }
   PZBook.setLang(LANG);
   const prog = pzProg(), dl = dailyPick(), di = dailyInfo();
-  let all = 0, solved = 0, stars = 0;
-  for (const C of PZI.cats) { const r = pzRecs(C, prog); all += r.length; solved += r.filter(x => x).length; stars += r.reduce((a, b) => a + b, 0); }
-  let h = '';
-  if (dl) { const C = pzC(dl.cat); h += `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span class="dl-date">${dl.date.slice(5).replace('-', '/')}</span></b><small>${escH(t('pc.' + dl.cat + '.t'))} · ${escH(PZBook.t('stage', { n: Math.floor(dl.j / PZBook.STAGE) + 1 }))} · No.${dl.j + 1} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>`; void C; }
-  h += `<p class="pz-total">${t('pz.totalSolved', { n: solved, t: all })} · ★ ${stars} / ${all * 3}</p>`;
-  for (const [g, ids] of PZ_GROUPS) {
-    h += `<p class="ls-course"><b>${escH(t('pz.grp' + g))}</b><small>${escH(t('pz.grp' + g + 'Sub'))}</small></p>`;
-    for (const id of ids) {
-      const i = PZI.cats.findIndex(c => c.id === id); if (i < 0) continue; const C = PZI.cats[i];
-      h += PZBook.card({ i, no: '', icon: PZ_ICON[id] || '◆', name: t('pc.' + id + '.t'), sub: t('pc.' + id + '.d'), recs: pzRecs(C, prog), tier: pzTier(C) });
-    }
-  }
-  $('#pzLevels').innerHTML = h;
+  const grp = id => (PZ_GROUPS.find(g => g[1].includes(id)) || PZ_GROUPS[0])[0];
+  const cats = PZ_GROUPS.map(g => g[0]);
+  let cur = lsGet(PZ_TAB, cats[0]); if (!cats.includes(cur)) cur = cats[0];
+  const ids = PZ_GROUPS.flatMap(g => g[1]).filter(id => pzC(id)), shown = ids.filter(id => grp(id) === cur);
+  await Promise.all(shown.concat(dl ? [dl.cat] : []).map(pzCatLoad));
+  const cont = PZBook.resume(ids.map(id => ({ key: id, recs: pzRecs(pzC(id), prog), cat: grp(id) })), PZ_LAST);
+  const box = $('#pzLevels'); box.className = 'pz-home';
+  box.innerHTML = PZBook.home({
+    title: t('pz.title'), lead: t('pz.desc2'), all: ids.map(id => pzRecs(pzC(id), prog)),
+    cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pc.' + cont.key + '.t') },
+    daily: dl ? [{ key: '1', board: pzThumbAt(pzC(dl.cat), dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+      sub: `${t('pc.' + dl.cat + '.t')} · ${PZBook.t('stage', { n: Math.floor(dl.j / PZBook.STAGE) + 1 })} · No.${dl.j + 1} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
+    cats: cats.map(g => { const r = ids.filter(id => grp(id) === g).map(id => pzRecs(pzC(id), prog)).flat(); return { key: g, icon: PZBook.icon(g === 'T' ? 'theme' : 'grid'), name: t('pz.grp' + g), done: r.filter(x => x > 0).length, total: r.length }; }),
+    cur, catDesc: t('pz.grp' + cur + 'Sub'),
+    cards: shown.map(id => { const C = pzC(id), r = pzRecs(C, prog), j = PZBook.nextIndex(r); return { key: id, board: pzThumbAt(C, j >= 0 ? j : r.length - 1), badge: pzBadge(id), name: t('pc.' + id + '.t'), desc: t('pc.' + id + '.d'), recs: r, tier: pzTier(C) }; }),
+  });
+  PZBook.bindHome(box, {
+    cat: k => { lsSet(PZ_TAB, k); openPuzzles(); },
+    cont: v => { const [id, j] = v.split(':'); $('#puzzleOverlay').classList.remove('show'); startPuzzle(id, +j); },
+    daily: () => { const d = dailyPick(); if (!d) return; $('#puzzleOverlay').classList.remove('show'); startPuzzle(d.cat, d.j, d.date); },
+    card: id => openPzCat(id),
+  });
   $('#pzListView').classList.remove('hidden'); $('#pzGridView').classList.add('hidden');
   $('#puzzleOverlay').classList.add('show');
 }
@@ -854,7 +878,7 @@ async function openPzCat(id, cur) {
   await Promise.all([pzIndexLoad(), textReady()]);
   const C = pzC(id); if (!C) return;
   pzCat = id; PZBook.setLang(LANG);
-  $('#pzLevelTitle').textContent = t('pc.' + id + '.t');
+  $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(id), name: t('pc.' + id + '.t'), desc: t('pc.' + id + '.d'), chips: [t('pz.grp' + (PZ_GROUPS.find(g => g[1].includes(id)) || PZ_GROUPS[0])[0]), PZBook.t('count', { n: pzOrder(C).length })], tier: pzTier(C) });
   $('#pzGrid').innerHTML = `<p class="pz-catdesc">${t('pc.' + id + '.long')} <span class="pz-ord">${escH(t('pz.orderNote'))}</span></p>` + PZBook.grid({ recs: pzRecs(C), cur });
   // each tile shows its position (a small board) under the number and stars
   const D = await pzCatLoad(id), ord = pzOrder(C);
@@ -875,6 +899,7 @@ async function startPuzzle(cat, j, daily, keep) {
   const pz = decodePz(d.levels[lv][k]);
   pz.best = pz.values.reduce((a, b) => b[1] > a[1] ? b : a)[0];
   enterSetup({ edges: pz.edges, owners: pz.owners }, pz.n);
+  if (!daily) PZBook.lastSet(PZ_LAST, cat);
   puzzle = Object.assign({ cat, j, lv, k, pz, state: 'play', waiting: false, first: true, dev: null, total: 0, daily: daily || null, hinted: false, failed: false, answered: false }, keep || {});
   document.body.classList.add('in-puzzle');
   refresh(false);
@@ -1156,11 +1181,6 @@ function learnInit() {
   $('#lsList').onclick = () => { const L = lesson; endLesson(); if (L && (L.study || L.drill)) openOpenings(L.si); else if (L) openLessons(L2 && L.i !== undefined && L2.steps[L.i] ? L2.steps[L.i].course : undefined).then(() => { if (L2 && L.i !== undefined) { const b = $(`#lessonList .lx-card[data-i="${L.i}"]`); if (b) b.scrollIntoView({ block: 'center' }); } }); };
   rulesWire();
   // puzzles
-  $('#pzLevels').addEventListener('click', e => {
-    const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return;
-    if (b.dataset.daily) { const d = dailyPick(); if (!d) return; $('#puzzleOverlay').classList.remove('show'); startPuzzle(d.cat, d.j, d.date); }
-    else if (b.dataset.i !== undefined) openPzCat(PZI.cats[+b.dataset.i].id);
-  });
   $('#pzGrid').addEventListener('click', e => {
     const b = e.target.closest('button[data-j]'); if (!b) return;
     if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }

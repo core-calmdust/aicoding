@@ -815,13 +815,11 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
   <div class="modal">
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p class="ls-desc" data-i18n="pz.desc2"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div class="pz-home" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
+      <div id="pzLevelHead"></div>
       <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
@@ -870,13 +868,13 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="i18n.js?v=20261021rt"></script>
 <script src="i18n-learn.js?v=20261021ru3"></script><!-- learn-ui -->
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/pzbook.js?v=2"></script><!-- learn-ui -->
+<script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=10"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261021ru3"><!-- learn-ui -->
 <script src="engine.js?v=20261020d5"></script>
-<script src="learn.js?v=20261021ru3b"></script>
+<script src="learn.js?v=20261021pz4"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
 <script src="firebase-config.js?v=20261019o"></script>
 <script src="online.js?v=20261020gh"></script>
