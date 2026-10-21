@@ -4358,12 +4358,12 @@ function makeShipModel() {
 
     // ---- メインユニット: 左右2つのパーツで機首を構成（明るい装甲板＋外側の濃紺の刃）----
     both([[141, 28], [142, 64], [142, 252], [118, 252], [116, 200], [120, 140], [127, 92], [136, 52]], steel, { cage: 1.08, bot: -1.6, it: 0.5, ib: 0.5, topF: lerpTop(28, 0.8, 250, 3.6) });
-    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { neon: true, bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
+    both([[134, 25], [137, 38], [129, 82], [121, 132], [114, 172], [105, 174], [107, 140], [115, 100], [126, 56]], navy, { neon: true, cage: 1.1, bot: -1.2, it: 0.35, ib: 0.35, topF: lerpTop(25, 1.2, 150, 4.6) });
     part(slab([[142, 60], [143.5, 60], [143.5, 250], [140.5, 250], [140.5, 60]], { bot: 0, top: 3.75, it: 0, ib: 0 }), navy, g, false); // 2つのパーツの合わせ目（暗い溝）
     // 胴体中央の厚い装甲（肩）
     both([[142, 168], [154, 164], [172, 172], [182, 200], [180, 248], [170, 272], [142, 272]], armor, { cage: 1.1, bot: -2.6, top: 2.8, it: 1.2, ib: 1.2 });
     both([[160, 196], [176, 202], [176, 236], [162, 240]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });              // 肩の上の濃いパネル
-    both([[150, 254], [168, 252], [170, 272], [150, 274]], steel, { bot: 0, top: 3.2, it: 0.4, ib: 0.2 });              // 推進ユニット手前の装甲
+    both([[150, 254], [168, 252], [170, 272], [150, 274]], steel, { cage: 1.15, bot: 0, top: 3.2, it: 0.4, ib: 0.2 });              // 推進ユニット手前の装甲
 
     // ---- 後ろの2枚の羽（間から噴射）----
     both([[110, 274], [127, 274], [132, 300], [132, 390], [127, 384], [119, 352], [111, 312]], navy, { neon: true, cage: 1.12, bot: -1.8, it: 0.45, ib: 0.45, topF: lerpTop(274, 2.6, 390, 1.0) });
@@ -4382,8 +4382,8 @@ function makeShipModel() {
     // ---- ウィングポッド: 前は細く（面取り）、後ろへ向かって太く広がる ----
     const podOut = [[96, 136], [104, 142], [106, 200], [104, 248], [93, 282], [84, 302], [78, 324], [66, 348], [53, 358], [48, 371], [42, 366], [36, 356], [32, 332], [30, 310], [32, 290], [38, 262], [48, 238], [60, 210], [74, 180], [86, 156]];
     both(podOut, steel, { cage: 1.07, bot: -2.8, mid: -0.2, it: 1.5, ib: 1.2, topF: lerpTop(140, 2.4, 300, 3.6) });
-    both([[92, 278], [84, 302], [78, 324], [66, 348], [53, 358], [44, 360], [38, 350], [34, 330], [33, 310], [36, 292], [40, 280]], gun, { bot: 0, mid: 0, it: 1.0, ib: 0.6, topF: lerpTop(278, 3.9, 360, 3.4) }); // 後半のガンメタ装甲
-    both([[96, 150], [100, 156], [100, 214], [92, 232], [80, 232], [86, 196]], armor, { bot: 0, top: 3.3, it: 0.5, ib: 0.2 });   // 前半の装甲板
+    both([[92, 278], [84, 302], [78, 324], [66, 348], [53, 358], [44, 360], [38, 350], [34, 330], [33, 310], [36, 292], [40, 280]], gun, { cage: 1.08, bot: 0, mid: 0, it: 1.0, ib: 0.6, topF: lerpTop(278, 3.9, 360, 3.4) }); // 後半のガンメタ装甲
+    both([[96, 150], [100, 156], [100, 214], [92, 232], [80, 232], [86, 196]], armor, { cage: 1.12, bot: 0, top: 3.3, it: 0.5, ib: 0.2 });   // 前半の装甲板
     both([[60, 214], [74, 186], [80, 198], [70, 236], [56, 244]], navy, { bot: 0, top: 3.4, it: 0.4, ib: 0.2 });             // 外側の濃いパネル
     both([[92, 222], [102, 226], [101, 242], [90, 240]], pink, { bot: 0, top: 3.75, it: 0.15, ib: 0 }, g, false);            // 内側のピンク
     both([[40, 246], [47, 244], [42, 278], [35, 278]], glowC, { bot: 0, top: 3.8, it: 0.1, ib: 0 }, g, false);               // 外側のシアンの光
@@ -4468,11 +4468,14 @@ function makeHyperObj() {
     const bladeGeo = new THREE.ExtrudeGeometry(sh, { depth: 6, bevelEnabled: true, bevelThickness: 1.8, bevelSize: 1.2, bevelSegments: 1 });
     bladeGeo.translate(0, 0, -3); bladeGeo.rotateX(-Math.PI / 2);
     const bladeEdge = new THREE.EdgesGeometry(bladeGeo, 20);
+    const cageMat = new THREE.LineBasicMaterial({ color: 0x9ff0ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+    const bc = bladeGeo.clone(); bc.translate(-22, 0, 0); bc.scale(1.18, 1.6, 1.18); bc.translate(22, 0, 0); const bladeCage = new THREE.EdgesGeometry(bc, 15);
     const gs = new THREE.Shape(); [[13.6, 8.6], [19.6, 0], [13.6, -8.6], [12.2, -7.6], [17.6, 0], [12.2, 7.6]].forEach(([x, y], k) => (k ? gs.lineTo(x, y) : gs.moveTo(x, y)));
     const stripGeo = new THREE.ExtrudeGeometry(gs, { depth: 5, bevelEnabled: false }); stripGeo.translate(0, 0, -2.5); stripGeo.rotateX(-Math.PI / 2); // 内側の光るライン
     for (let k = 0; k < 3; k++) {
         const bl = new THREE.Group();
         const m = new THREE.Mesh(bladeGeo, bladeMat); m.add(new THREE.LineSegments(bladeEdge, lineMat));
+        const wc = new THREE.LineSegments(bladeCage, cageMat); m.add(wc); // ワイヤーの外殻
         const st = new THREE.Mesh(stripGeo, glowMat); m.position.x = st.position.x = 4; bl.add(m, st); // 刃どうしに隙間をあける
         bl.rotation.y = k * Math.PI * 2 / 3 + Math.PI / 2;
         spin.add(bl);
@@ -4484,6 +4487,7 @@ function makeHyperObj() {
     core.add(new THREE.LineSegments(new THREE.EdgesGeometry(coreGeo), new THREE.LineBasicMaterial({ color: 0xffffff })));
     const inner = new THREE.Mesh(new THREE.OctahedronGeometry(5.5, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
     core.add(inner);
+    const coreWire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(17, 0)), cageMat); // コアを包むワイヤー
     // 浮遊リング: 途切れ途切れの光の帯
     const ring = new THREE.Group();
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x8fdcff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -4493,8 +4497,8 @@ function makeHyperObj() {
         seg.position.set(Math.cos(a) * 34, 0, Math.sin(a) * 34); seg.rotation.y = -a + Math.PI / 2; ring.add(seg);
     }
     const tilt = new THREE.Group(); tilt.rotation.x = 0.45; // カメラ側に少し起こして形が見えるように
-    tilt.add(spin, core, ring); g.add(tilt);
-    g.userData = { spin, core, ring, glowMat, coreMat, ringMat };
+    tilt.add(spin, core, ring, coreWire); g.add(tilt);
+    g.userData = { spin, core, ring, glowMat, coreMat, ringMat, coreWire, cageMat };
     g.visible = false;
     scene.add(g);
     return g;
@@ -5397,6 +5401,8 @@ function render3D() {
             hu.spin.rotation.y = rTime * 2.6;            // 水平にくるくる回る
             hu.ring.rotation.y = -rTime * 1.2;
             hu.core.rotation.set(rTime * 0.8, -rTime * 2, 0);
+            hu.coreWire.rotation.set(-rTime * 0.6, rTime * 1.1, rTime * 0.4);
+            hu.cageMat.opacity = 0.4 + visualBeat * 0.4;
             hu.glowMat.color.setHSL(0.53, 1, 0.6 + pulse * 0.25);
             hu.coreMat.opacity = 0.6 + pulse * 0.3;
             hu.ringMat.opacity = 0.35 + visualBeat * 0.4;
@@ -5553,7 +5559,7 @@ function render3D() {
         shipPivot.rotation.z = shipBank;
         shipModel.userData.ring.rotation.z = rTime * 1.4; if (shipModel.userData.prop) shipModel.userData.prop.rotation.z = -rTime * 3.2; // 推進ユニットを時計回りに回す
         shipWireMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.45); shipModel.userData.glowC.color.copy(themeCur.player).lerp(COL_WHITE, 0.25); shipModel.userData.core.scale.setScalar(1 + visualBeat * 0.35 + Math.sin(rTime * 9) * 0.06);
-        shipCageMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.3); shipCageMat.opacity = 0.2 + visualBeat * 0.35; // ワイヤーの外殻は拍に合わせて光る
+        shipCageMat.color.copy(themeCur.player).lerp(COL_WHITE, 0.3); shipCageMat.opacity = 0.36 + visualBeat * 0.35; // ワイヤーの外殻は拍に合わせて光る
         shipPivot.rotation.x = -0.12;
         playerGroup.scale.setScalar(VS * (1 + visualBeat * 0.18));
 
