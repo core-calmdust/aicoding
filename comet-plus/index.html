@@ -874,10 +874,21 @@ class AudioHandler {
             case 'start':
                 [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.75, now + i * 0.08));
                 break;
-            case 'menu': // タイトル・難易度選択のカーソル音（グレイズ音と同じ形で大きめ）
-                this.createSound(880, 0.1, 'triangle', 0.8, 1.0, now, {endFreq: 1200});
-                this.createSound(1760, 0.06, 'sine', 0.8, 0.35, now, {endFreq: 2400});
+            case 'menu': { // タイトル・難易度選択のカーソル音: シリアスなサイバー系（低めの短い電子音＋データのノイズ）
+                const c = this.ctx, out = this.sfxOut();
+                // 低めの電子音: 下がっていく1音（上がる音は可愛くなるので使わない）
+                const o = c.createOscillator(), g = c.createGain(), bp = c.createBiquadFilter();
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(330, now); o.frequency.exponentialRampToValueAtTime(140, now + 0.07);
+                bp.type = 'bandpass'; bp.frequency.setValueAtTime(1400, now); bp.frequency.exponentialRampToValueAtTime(500, now + 0.07); bp.Q.value = 3;
+                g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.2, now + 0.003); g.gain.exponentialRampToValueAtTime(0.0005, now + 0.09);
+                o.connect(bp).connect(g).connect(out); o.start(now); o.stop(now + 0.1);
+                // データが走るような短いノイズ
+                const n = c.createBufferSource(); n.buffer = this.getNoise();
+                const nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 3000; nf.Q.value = 1.5;
+                const ng = c.createGain(); ng.gain.setValueAtTime(0.09, now); ng.gain.exponentialRampToValueAtTime(0.0005, now + 0.04);
+                n.connect(nf).connect(ng).connect(out); n.start(now, Math.random() * 0.5, 0.05);
                 break;
+            }
             case 'glaze':
                 this.createSound(880, 0.1, 'triangle', 0.8, 0.5, now, {endFreq: 1200});
                 break;
