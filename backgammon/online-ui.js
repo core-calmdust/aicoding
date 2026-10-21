@@ -271,7 +271,7 @@ function olMarkLive() { if (net && !net.spec) { try { localStorage.setItem(olLiv
 // hooks used by app.js
 window.olMine = s => !!(net && !net.spec && s === net.me);
 window.olSavedMode = () => (net && net.saved ? net.saved.mode : 'ai');
-window.olLiveNow = () => olLive();
+window.olLiveNow = () => !!(net && !net.done && net.game && !ON.matchOverG(net.game));   // players and spectators: no evaluation while the match is on
 function olShortName(s) { const g = net && net.game; return g ? ((s ? g.wn : g.bn) || '?') : '?'; }
 window.olShortName = olShortName;
 window.olPlayerName = s => {
@@ -565,7 +565,7 @@ window.olAfterInfo = () => {
   const txt = `${t(g.rated ? 'ol.rated' : 'ol.friendly')} · ${fmtFull(g.f, g.cube)}${sc} · ${tcText(g.f)}`;
   $('#infoLine').textContent = txt; $('#infoLine').title = t('ol.fair');
   $('#plInfo').textContent = txt; $('#plInfo').title = t('ol.fair');
-  $('#evalCard').classList.toggle('ol-noeval', olLive()); $('#evalCard').dataset.olnote = t('ol.noEval');
+  $('#evalCard').classList.toggle('ol-noeval', olLiveNow()); $('#evalCard').dataset.olnote = t('ol.noEval');
 };
 function olWatchRender() {
   const el = $('#olWatch');

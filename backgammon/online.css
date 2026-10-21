@@ -255,7 +255,10 @@ html[lang=ar] :is(.ol-hist, .ol-offer){direction:rtl}
 .ol-cubeopt input{width:16px;height:16px;accent-color:var(--brass)}
 .ol-fair{margin-top:14px!important}
 #segMode button[data-v=online]{white-space:nowrap}
-html.pcw .card.players .ol-watch{margin:0 0 6px;padding:4px 10px}
+html.pcw .card.players .ol-watch{margin:0 0 6px;padding:3px 8px;flex-wrap:nowrap}
+html.pcw .card.players .ol-watch .wi{flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
+html.pcw .card.players .ol-watch button{min-height:26px;padding:2px 10px;font-size:12px;flex:none}
+html.pcw .card.players .ol-watch:has(.ol-offer){flex-wrap:wrap}
 html[lang=ar] :is(.ol-rsbtns, #olrText, .ol-cubeopt){direction:rtl}
 /* phone landscape (physical or the rotated page): the clocks sit in the slim player chips; a slimmer tab bar */
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
@@ -276,3 +279,7 @@ html.rot body:not(.no-online) .app{padding-bottom:44px}
 html.pcw #evalCard.ol-noeval{justify-content:space-between}
 body.in-online #evalCard.hidden{display:block!important}
 body.in-online #evalCard.hidden:not(.ol-noeval) :is(.evalrow,.evalbar,.graph){display:none!important}
+/* PC wide: the clock under the player's name; the strip (spectating / offers) replaces the card title */
+html.pcw body.in-online .player{grid-template-areas:"top row" "ck row" "st row"}
+html.pcw body.in-online .player .ol-clk{position:static;grid-area:ck;font-size:15px;justify-self:start}
+html.pcw .card.players:has(.ol-watch:not(.hidden)) .pl-head{display:none}
