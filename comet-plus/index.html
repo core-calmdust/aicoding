@@ -874,10 +874,22 @@ class AudioHandler {
             case 'start':
                 [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.75, now + i * 0.08));
                 break;
-            case 'menu': // タイトル・難易度選択のカーソル音（グレイズ音と同じ形で大きめ）
-                this.createSound(880, 0.1, 'triangle', 0.8, 1.0, now, {endFreq: 1200});
-                this.createSound(1760, 0.06, 'sine', 0.8, 0.35, now, {endFreq: 2400});
+            case 'menu': { // タイトル・難易度選択のカーソル音: 金属的で無機質な短い「キン」
+                const c = this.ctx, out = this.sfxOut();
+                // 非整数倍の倍音を重ねると金属っぽい響きになる
+                [[1480, 0.34, 0.09], [1480 * 2.76, 0.2, 0.05], [1480 * 5.4, 0.12, 0.03], [1480 * 1.41, 0.16, 0.07]].forEach(([f, v, d]) => {
+                    const o = c.createOscillator(), g = c.createGain();
+                    o.type = 'sine'; o.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(v, now); g.gain.exponentialRampToValueAtTime(0.0005, now + d);
+                    o.connect(g).connect(out); o.start(now); o.stop(now + d + 0.02);
+                });
+                // 頭のカチッというノイズ
+                const n = c.createBufferSource(); n.buffer = this.getNoise();
+                const bp = c.createBiquadFilter(); bp.type = 'highpass'; bp.frequency.value = 5000;
+                const ng = c.createGain(); ng.gain.setValueAtTime(0.5, now); ng.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+                n.connect(bp).connect(ng).connect(out); n.start(now, Math.random() * 0.5, 0.03);
                 break;
+            }
             case 'glaze':
                 this.createSound(880, 0.1, 'triangle', 0.8, 0.5, now, {endFreq: 1200});
                 break;
