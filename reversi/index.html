@@ -769,6 +769,68 @@ body.in-lesson .controls{display:none}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
 }
 
+/* lesson / opening lists (same layout as Gomoku): big category tabs, a banner, cards with a board picture and a short explanation */
+#lessonOverlay #lessonList.lx-on{display:block}
+.lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
+.lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0;transition:border-color .2s,color .2s}
+.lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lx-tabs button .ic{flex:none;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:rgba(201,169,97,.14);overflow:hidden}
+.lx-tabs button .ic > svg, .lx-banner .ic > svg{display:block;width:100%;height:100%}
+.lx-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.lx-tabs button .ct.ok{color:#8fe3b8}
+.lx-tabs button:hover{border-color:var(--brass2);color:var(--text)}
+.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(201,169,97,.2),rgba(201,169,97,.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(201,169,97,.28);background:linear-gradient(120deg,rgba(201,169,97,.14),rgba(0,0,0,.18) 70%)}
+.lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;padding:3px;background:linear-gradient(140deg,#e9cf8e,#a8873f)}
+.lx-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-banner .tx b{font-family:'Shippori Mincho B1',serif;font-size:17px;color:var(--brass)}
+.lx-banner .tx small{font-size:12px;color:var(--muted);line-height:1.6}
+.lx-banner .pg{flex:none;width:120px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);text-align:end}
+.lx-bar{display:block;height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.lx-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brass2),var(--brass))}
+.lx-bar.ok i{background:linear-gradient(90deg,#2f7d5a,#6fd3a0)}
+.lx-grid{display:grid;gap:10px}
+#lessonList .lx-card{display:flex;gap:12px;align-items:stretch;text-align:start;width:100%;padding:10px 12px 10px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--text);transition:transform .15s,border-color .2s}
+#lessonList .lx-card:hover{transform:translateY(-1px);border-color:var(--brass2)}
+#lessonList .lx-card.done{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
+.lx-th{flex:none;width:88px;align-self:center}.lx-th > svg{display:block;width:100%;height:auto;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lx-top{display:flex;align-items:center;gap:8px;min-width:0}
+.lx-no{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brass);white-space:nowrap}
+.lx-st{margin-inline-start:auto;font-size:11px;color:var(--muted);white-space:nowrap}.lx-st.ok{color:#8fe3b8;font-weight:700}.lx-st.new{color:var(--dim)}
+.lx-t{font-size:15px}.lx-t small{font-size:11.5px;color:var(--dim);font-weight:400;margin-inline-start:6px}
+.lx-sub{font-size:12px;color:var(--brass);opacity:.9}
+.lx-desc{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#lessonList .lx-card .lx-bar{margin-top:auto;height:4px}
+.lx-side{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lx-side i{width:10px;height:10px;border-radius:50%;flex:none;background:#f1e9dc;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.lx-side.b i{background:#1d1712;box-shadow:0 0 0 1px rgba(241,233,220,.6)}
+.lx-credit{font-size:11px;color:var(--dim);margin-top:12px;line-height:1.6}
+html[lang=ar] .lx{direction:rtl}
+html[lang=ar] .lx-tabs .ct, html[lang=ar] .lx-banner .pg small{direction:ltr;unicode-bidi:isolate}
+@media (max-width:560px){
+  .lx-tabs button{flex-direction:column;gap:2px;padding:7px 4px;font-size:11.5px}.lx-tabs button .ic{width:24px;height:24px}
+  .lx-tabs button .nm{max-width:100%}
+  .lx-banner{padding:10px 12px;gap:6px 10px;flex-wrap:wrap}.lx-banner .ic{width:36px;height:36px}.lx-banner .tx{flex:1 1 calc(100% - 50px)}.lx-banner .pg{width:100%;flex-direction:row;align-items:center;gap:8px;text-align:start}.lx-banner .pg .lx-bar{flex:1}
+  .lx-th{width:72px}
+}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
+  .lx-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lx-desc{-webkit-line-clamp:3}
+  .lx-th{width:96px}
+}
+.lx-tabs button .ic .gl{font-size:14px;color:var(--brass)}.lx-banner .ic .gl{font-size:22px;color:#1a140c}
+.lx-tabs button .ic{padding:1px}
+html[lang=ar] .lx :is(p, .tx){text-align:start}
+/* puzzle tiles: the position under the number and stars */
+#pzGrid .pb-tile.hasth{aspect-ratio:1;padding:0;overflow:hidden;justify-content:flex-end;gap:0}
+#pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
+#pzGrid .pb-tile .th > svg{width:100%;height:100%;border-radius:4px}
+#pzGrid .pb-tile.hasth .n{position:absolute;top:3px;left:4px;z-index:1;font-size:10.5px;padding:0 4px;border-radius:5px;background:rgba(10,12,12,.82);color:#fff;line-height:1.45}
+#pzGrid .pb-tile.hasth.wt .n{background:#ecebe5;color:#121413}
+#pzGrid .pb-tile.hasth .s, #pzGrid .pb-tile.hasth .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
+#pzGrid .pb-tile.done .th{opacity:1}
+#pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
+@media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #pzGrid .pb-tile.hasth .n{font-size:11.5px} }
 /* PC: opening steps spread across the browser width, cards in 2-3 columns */
 @media (min-width: 1000px) and (min-height: 561px){
   #lessonOverlay .modal:has(> #lessonIntroView.op-intro:not(.hidden)){width:min(1500px, 94vw)}
@@ -1310,7 +1372,7 @@ html[lang=ar] .pf-input{direction:rtl}
   </div>
 </div>
 
-<script src="i18n.js?v=20261021ri"></script>
+<script src="i18n.js?v=20261021lx4"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=3"></script>
@@ -2499,18 +2561,63 @@ const ruleTour = window.RuleTour ? RuleTour.create({
 function renderRules() { if (ruleTour) ruleTour.render(); }
 function openRules() { selTab('rules'); showOverlay('#rulesOverlay'); if (ruleTour) ruleTour.open(0); }
 $('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); hideOverlay('#rulesOverlay'); };
+// lesson / opening lists (same layout as Gomoku): big category tabs, a banner card, item cards with a board picture
+const LX_STORE = STORE + '-lxtab';
+function lxTab(kind, v) { try { const o = JSON.parse(localStorage.getItem(LX_STORE) || '{}'); if (v === undefined) return o[kind]; o[kind] = v; localStorage.setItem(LX_STORE, JSON.stringify(o)); } catch (e) { } }
+const lxPlain = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, ok) => `<span class="lx-bar${ok ? ' ok' : ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+// position after a move string like "f5d6c3" (passes are skipped automatically); returns { cells, last }
+function lxAfter(moves, max) {
+  const c = initialCells(); let col = BLACK, last = -1;
+  const ms = String(moves || '').match(/../g) || [];
+  for (const m of ms.slice(0, max || 99)) {
+    const q = rlSq(m); let f = flipsOf(c, q, col);
+    if (!f.length) { col = 3 - col; f = flipsOf(c, q, col); if (!f.length) break; }
+    c[q] = col; for (const x of f) c[x] = col; last = q; col = 3 - col;
+  }
+  return { cells: c, last };
+}
+// tab / banner icons: a 4×4 crop of the centre after the first two moves (perpendicular f5 d6 / diagonal f5 f6), or a glyph
+function lxIcon(key) {
+  if (key === 'perp' || key === 'diag') { const p = lxAfter(key === 'perp' ? 'f5d6' : 'f5f6'); return rlSVG(p.cells, { crop: [2, 2, 4, 4], marks: { [p.last]: 'new' } }); }
+  return `<span class="gl">${{ basic: '①', middle: '◐', end: '⚑' }[key] || '●'}</span>`;
+}
+const LX_LESSON_CAT = { rules: 'basic', corner: 'basic', mobility: 'basic', quiet: 'middle', wall: 'middle', edge: 'middle', exception: 'middle', parity: 'end', finish: 'end' };
+// cats: [{key, tab, name, desc, items:[{html, done}]}]
+function lxRender(kind, cats, foot) {
+  let cur = lxTab(kind);
+  if (!cats.some(c => c.key === cur)) cur = (cats.find(c => c.items.some(x => !x.done)) || cats[0]).key;
+  const list = $('#lessonList'); list.classList.add('lx-on');
+  const c = cats.find(x => x.key === cur), n = c.items.filter(x => x.done).length, m = c.items.length;
+  list.innerHTML = `<div class="lx">` +
+    (cats.length > 1 ? `<div class="lx-tabs" role="tablist">${cats.map(x => { const k = x.items.filter(y => y.done).length; return `<button role="tab" data-lx="${x.key}" class="${x.key === cur ? 'sel' : ''}"><span class="ic">${lxIcon(x.key)}</span><span class="nm">${x.tab}</span><span class="ct${k === x.items.length ? ' ok' : ''}">${k}/${x.items.length}</span></button>`; }).join('')}</div>` : '') +
+    `<div class="lx-banner"><span class="ic">${lxIcon(c.key)}</span><span class="tx"><b>${c.name}</b><small>${c.desc}</small></span><span class="pg"><small>${t('lx.prog', { n, m })}</small>${lxBar(m ? n / m : 0, true)}</span></div>` +
+    `<div class="lx-grid">${c.items.map(x => x.html).join('')}</div>${foot || ''}</div>`;
+  list.querySelectorAll('[data-lx]').forEach(b => b.onclick = () => { lxTab(kind, b.dataset.lx); lxRender(kind, cats, foot); list.scrollTop = 0; });
+}
+// o = {i, board, no, st:{text, cls}, title, sub, desc, p (0..1), done, op}
+function lxCard(o) {
+  return `<button class="lesson-item lx-card${o.op ? ' op-item' : ''}${o.done ? ' done' : ''}" data-i="${o.i}"><span class="lx-th">${o.board}</span><span class="lx-tx">` +
+    `<span class="lx-top"><span class="lx-no">${o.no}</span><span class="lx-st ${o.st.cls || ''}">${o.st.text}</span></span>` +
+    `<b class="lx-t">${o.title}</b>${o.sub ? `<span class="lx-sub">${o.sub}</span>` : ''}<span class="lx-desc">${o.desc}</span>${lxBar(o.p, o.done)}</span></button>`;
+}
+function lxState(id) {
+  const pr = lessonProgress[id] ? progressOf(id) : null;
+  return { pr, done: !!(pr && pr.clear), st: pr ? (pr.clear ? { text: '✓ ' + t('u.pt', { n: pr.best }), cls: 'ok' } : { text: t('u.pt', { n: pr.best }) }) : { text: t('ls.notyet'), cls: 'new' } };
+}
 async function openOpenings() {
   const d = await loadOpenings();
   lessonSrc = 'open'; selTab('open');
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
-  $('#lessonList').innerHTML = d.sets.map((l, i) => {
-    const pr = lessonProgress[l.id] ? progressOf(l.id) : null;
-    const st = pr ? (pr.clear ? `<span class="st clear">${t('ls.clear')} ✓ ${t('u.pt', { n: pr.best })}</span>` : `<span class="st">${t('u.pt', { n: pr.best })}</span>`) : `<span class="st">${t('ls.notyet')}</span>`;
-    const x = LT(l);
-    return `<button class="lesson-item op-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${x.title}</b><small title="${esc(x.short)}">${x.short}</small><span class="op-lines" data-names="${esc(JSON.stringify(l.lines.map(n => PT(n.name))))}"></span></span>${st}</button>`;
-  }).join('') + (d.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6">${PT(d.credit)}</p>` : '');
+  const cats = ['perp', 'diag'].map(key => ({ key, tab: t('lx.o.' + key), name: t('lx.o.' + key), desc: t('lx.o.' + key + '.d'), items: [] }));
+  d.sets.forEach((l, i) => {
+    const x = LT(l), s = lxState(l.id), ln = l.lines[0] || { moves: '' };
+    const c = cats[/^f5f6/.test(ln.moves) ? 1 : 0];
+    const p = lxAfter(ln.moves, 14), board = rlSVG(p.cells, { marks: p.last >= 0 ? { [p.last]: 'new' } : {} });
+    c.items.push({ done: s.done, html: lxCard({ i, op: 1, board, no: 'STEP ' + (c.items.length + 1), st: s.st, title: x.title, sub: x.short, desc: l.lines.map(n => PT(n.name)).join(' · '), p: s.pr ? s.pr.best / 100 : 0, done: s.done }) });
+  });
+  lxRender('open', cats.filter(c => c.items.length), d.credit ? `<p class="lx-credit">${PT(d.credit)}</p>` : '');
   showLessonView('list'); showOverlay('#lessonOverlay');
-  requestAnimationFrame(fitOpLines); setTimeout(fitOpLines, 120); setTimeout(fitOpLines, 450); if (document.fonts) document.fonts.ready.then(fitOpLines);
 }
 // list as many opening names as fit on one line, then "etc."
 function opInfoHtml(txt) {
@@ -2539,12 +2646,17 @@ async function openLessons() {
   lessonSrc = 'lesson'; selTab('lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
   const list = $('#lessonList');
-  list.innerHTML = d.lessons.map((l, i) => {
-    const pr = lessonProgress[l.id] ? progressOf(l.id) : null;
-    const st = pr ? (pr.clear ? `<span class="st clear">${t('ls.clear')} ✓ ${t('u.pt', { n: pr.best })}</span>` : `<span class="st">${t('u.pt', { n: pr.best })}</span>`) : `<span class="st">${t('ls.notyet')}</span>`;
-    const x = LT(l);
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${i + 1}</span><span class="tx"><b>${x.title}</b><small>${x.short}</small></span>${st}</button>`;
-  }).join('') + (d.credit ? `<p style="font-size:11px;color:var(--dim);margin-top:6px">${(d.credit[LANG] || d.credit.en || d.credit.ja || d.credit)}</p>` : '') || `<p style="color:var(--dim)">${t('ls.fail')}</p>`;
+  if (!d.lessons.length) { list.classList.remove('lx-on'); list.innerHTML = `<p style="color:var(--dim)">${t('ls.fail')}</p>`; }
+  else {
+    const cats = ['basic', 'middle', 'end'].map(key => ({ key, tab: t('lx.c.' + key), name: t('lx.c.' + key), desc: t('lx.c.' + key + '.d'), items: [] }));
+    d.lessons.forEach((l, i) => {
+      const x = LT(l), s = lxState(l.id), c = cats.find(q => q.key === (LX_LESSON_CAT[l.id] || 'middle'));
+      const P0 = l.problems[0], board = rlSVG(P0 ? P0.cells.split('').map(Number) : initialCells());
+      c.items.push({ done: s.done, html: lxCard({ i, board, no: 'STEP ' + (i + 1), st: s.st, title: x.title, sub: x.short, desc: lxPlain((x.intro || []).join(' ')), p: s.pr ? s.pr.best / 100 : 0, done: s.done }) });
+    });
+    const credit = d.credit ? (d.credit[LANG] || d.credit.en || d.credit.ja || d.credit) : '';
+    lxRender('lesson', cats.filter(c => c.items.length), credit ? `<p class="lx-credit">${credit}</p>` : '');
+  }
   showLessonView('list');
   showOverlay('#lessonOverlay');
 }
@@ -2567,7 +2679,7 @@ function openIntro(i) {
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
-$('#btnLessonBack').onclick = () => showLessonView('list');
+$('#btnLessonBack').onclick = () => (lessonSrc === 'open' ? openOpenings() : openLessons());
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (n < curSets().length) openIntro(n); else { endLesson(); lessonSrc === 'open' ? openOpenings() : openLessons(); } };
@@ -3088,8 +3200,11 @@ function openPuzzleLevel(li, cur) {
   pzLevelIdx = li; const lv = puzzleData.levels[li];
   PZBook.setLang(LANG);
   $('#pzLevelTitle').textContent = PT(lv.name);
-  $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(li), cur });
+  const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(li), cur });
+  // each tile shows the position to solve (a small board) under its number and stars; the number badge has the colour to move
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = lv.puzzles[+el.dataset.j]; if (!P) return; el.insertAdjacentHTML('afterbegin', `<span class="th">${rlSVG(P.cells.split('').map(Number))}</span>`); el.classList.add('hasth'); el.classList.toggle('wt', P.toMove === WHITE); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
+  const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
 $('#pzLevels').addEventListener('click', e => { const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); hideOverlay('#puzzleOverlay'); startPuzzle(dl.li, dl.k, dl.date); } else openPuzzleLevel(+b.dataset.i); });
 $('#pzGrid').addEventListener('click', e => {

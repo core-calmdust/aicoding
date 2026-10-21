@@ -1036,27 +1036,35 @@ function exitSpecial() {
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-// lesson / opening lists: category sub-tabs + board-thumbnail cards
+// lesson / opening lists (same layout as Gomoku): big category tabs, a banner card, item cards with a board picture
 const LX_STORE = STORE + '-lxtab';
 function lxTab(kind, v) { try { const o = JSON.parse(localStorage.getItem(LX_STORE) || '{}'); if (v === undefined) return o[kind]; o[kind] = v; localStorage.setItem(LX_STORE, JSON.stringify(o)); } catch (e) { } }
-// cats: [{key, tab, name, desc, items:[{html, done}]}]
+const lxPlain = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, ok) => `<span class="lx-bar${ok ? ' ok' : ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+// a piece drawn as a tab / banner icon
+const lxPiece = (ch, dark) => `<svg viewBox="0 0 100 100" class="${dark ? 'pb' : 'pw'}" aria-hidden="true"><use href="#s${ch}"/></svg>`;
+// cats: [{key, icon, tab, name, desc, items:[{html, done}]}]
 function lxRender(kind, cats, foot) {
   let cur = lxTab(kind);
   if (!cats.some(c => c.key === cur)) cur = (cats.find(c => c.items.some(x => !x.done)) || cats[0]).key;
   const list = $('#lessonList'); list.classList.add('lx-on');
   const c = cats.find(x => x.key === cur), n = c.items.filter(x => x.done).length, m = c.items.length;
   list.innerHTML = `<div class="lx">` +
-    (cats.length > 1 ? `<div class="lx-tabs" role="tablist">${cats.map(x => `<button role="tab" data-lx="${x.key}" class="${x.key === cur ? 'sel' : ''}"><bdi>${x.tab}</bdi><em>${x.items.filter(y => y.done).length}/${x.items.length}</em></button>`).join('')}</div>` : '') +
-    `<div class="lx-head"><div class="lx-ht"><b>${c.name}</b><p>${c.desc}</p></div><div class="lx-pr"><span class="lx-bar"><i style="width:${m ? Math.round(n / m * 100) : 0}%"></i></span><small>${t('lx.prog', { n, m })}</small></div></div>` +
+    (cats.length > 1 ? `<div class="lx-tabs" role="tablist">${cats.map(x => { const k = x.items.filter(y => y.done).length; return `<button role="tab" data-lx="${x.key}" class="${x.key === cur ? 'sel' : ''}"><span class="ic">${x.icon}</span><span class="nm"><bdi>${x.tab}</bdi></span><span class="ct${k === x.items.length ? ' ok' : ''}">${k}/${x.items.length}</span></button>`; }).join('')}</div>` : '') +
+    `<div class="lx-banner"><span class="ic">${c.icon}</span><span class="tx"><b>${c.name}</b><small>${c.desc}</small></span><span class="pg"><small>${t('lx.prog', { n, m })}</small>${lxBar(m ? n / m : 0, true)}</span></div>` +
     `<div class="lx-grid">${c.items.map(x => x.html).join('')}</div>${foot || ''}</div>`;
   list.querySelectorAll('[data-lx]').forEach(b => b.onclick = () => { lxTab(kind, b.dataset.lx); lxRender(kind, cats, foot); list.scrollTop = 0; });
 }
 // thumbnails: zoom each piece a little so it stays readable at small sizes
 const lxBoard = svg => svg.replace(/viewBox="0 0 100 100"/g, 'viewBox="8 6 84 84"');
-function lxCard(attr, board, no, title, sub, st, done, badge) {
-  return `<button class="lesson-item lx-card${done ? ' done' : ''}" ${attr}><span class="lx-thumb">${lxBoard(board)}${no ? `<span class="lx-no">${no}</span>` : ''}${done ? '<span class="lx-ok">✓</span>' : ''}</span>` +
-    `<span class="lx-body"><b>${title}</b><span class="lx-sub">${sub}</span><span class="lx-foot">${badge || ''}<span class="st ${done ? 'clear' : ''}">${st}</span></span></span></button>`;
+// o = {attr, board, no, st:{text, cls}, title, small, sub, desc, badge, p (0..1), done}
+function lxCard(o) {
+  return `<button class="lesson-item lx-card${o.done ? ' done' : ''}" ${o.attr}><span class="lx-th">${lxBoard(o.board)}</span><span class="lx-tx">` +
+    `<span class="lx-top"><span class="lx-no">${o.no}</span>${o.badge || ''}<span class="lx-st ${o.st.cls || ''}">${o.st.text}</span></span>` +
+    `<b class="lx-t">${o.title}${o.small ? `<small>${o.small}</small>` : ''}</b>${o.sub ? `<span class="lx-sub">${o.sub}</span>` : ''}` +
+    `<span class="lx-desc">${o.desc}</span>${lxBar(o.p, o.done)}</span></button>`;
 }
+const LX_ICON = { basics: lxPiece('P'), tactics: lxPiece('N'), e4: lxPiece('K'), d4: lxPiece('Q'), other: lxPiece('N') };
 async function openLessons() {
   await lessonsReady; selTab('lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
@@ -1065,11 +1073,13 @@ async function openLessons() {
   LESSONS.steps.forEach((s, i) => {
     const r = pr[s.id], key = s.course || 'tactics';
     let c = cats.find(x => x.key === key);
-    if (!c) cats.push(c = { key, tab: t('course.' + key), name: t('course.' + key), desc: t('course.' + key + '.sub'), items: [] });
-    const score = r ? (s.kind === 'drill' ? '★' + r.best + '/' + s.stages.length * 3 : t('u.pt', { n: r.best })) : '';
+    if (!c) cats.push(c = { key, icon: LX_ICON[key] || lxPiece('P'), tab: t('course.' + key), name: t('course.' + key), desc: t('course.' + key + '.sub'), items: [] });
+    const drill = s.kind === 'drill', max = drill ? s.stages.length * 3 : 100;
+    const score = r ? (drill ? '★' + r.best + '/' + max : t('u.pt', { n: r.best })) : '';
     const d = s.diagram || { fen: (s.stages || s.problems)[0].fen };
     const board = miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] });
-    c.items.push({ done: !!(r && r.clear), html: lxCard(`data-i="${i}"`, board, c.items.length + 1, t('ls.' + s.id + '.title'), t('ls.' + s.id + '.sub'), r ? (r.clear ? t('ls.clear') + ' ' : '') + score : t('ls.notyet'), r && r.clear) });
+    const st = r ? (r.clear ? { text: '✓ ' + t('ls.clear'), cls: 'ok' } : { text: score }) : { text: t('ls.notyet'), cls: 'new' };
+    c.items.push({ done: !!(r && r.clear), html: lxCard({ attr: `data-i="${i}"`, board, no: 'STEP ' + (c.items.length + 1), st, title: t('ls.' + s.id + '.title'), sub: t('ls.' + s.id + '.sub'), desc: lxPlain(t('ls.' + s.id + '.intro')), p: r ? r.best / max : 0, done: !!(r && r.clear) }) });
   });
   lxRender('lesson', cats);
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
@@ -1275,10 +1285,11 @@ async function openOpenings() {
     const r = pr[g.id], pre = g.prefix.split(' '), first = pre[0], last = pre[pre.length - 1];
     const key = first === 'e2e4' ? 'e4' : first === 'd2d4' ? 'd4' : 'other';
     let c = cats.find(x => x.key === key);
-    if (!c) cats.push(c = { key, tab: t('lx.tab.' + key), name: t('op.grp.' + key), desc: t('lx.grp.' + key + '.d'), items: [] });
+    if (!c) cats.push(c = { key, icon: LX_ICON[key], tab: t('lx.tab.' + key), name: t('op.grp.' + key), desc: t('lx.grp.' + key + '.d'), items: [] });
     const board = miniBoard(lineAfter(pre), { arrows: [[last.slice(0, 2), last.slice(2, 4)]] });
     const badge = `<span class="lx-side ${g.side}"><i></i>${t(g.side === 'w' ? 'op.forWhite' : 'op.forBlack')}</span>`;
-    c.items.push({ done: !!(r && r.pass), html: lxCard(`data-o="${i}"`, board, '', LL(g.title), LL(g.short), r ? (r.pass ? '✓ ' : '') + t('u.pt', { n: r.best }) : t('ls.notyet'), r && r.pass, badge) });
+    const st = r ? (r.pass ? { text: '✓ ' + t('u.pt', { n: r.best }), cls: 'ok' } : { text: t('u.pt', { n: r.best }) }) : { text: t('ls.notyet'), cls: 'new' };
+    c.items.push({ done: !!(r && r.pass), html: lxCard({ attr: `data-o="${i}"`, board, no: `<bdi>${LL(g.label)}</bdi>`, badge, st, title: LL(g.title), sub: LL(g.short), desc: lxPlain((LL(g.intro) || []).join(' ')), p: r ? r.best / 100 : 0, done: !!(r && r.pass) }) });
   });
   const order = ['e4', 'd4', 'other']; cats.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
   lxRender('open', cats, `<p class="lx-credit">${LL(OPEN.credit)}</p>`);
@@ -1440,9 +1451,20 @@ function pzSub(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('p
 function openPzGrid(i, cur) {
   pzLevel = i; const L = PUZZLES.levels[i]; PZBook.setLang(LANG);
   $('#pzLevelTitle').textContent = pzName(i) + ' — ' + (L.kind === 'line' ? pzSub(i) : t('pz.winIn', { n: L.n }));
-  $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(i), cur });
+  const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(i), cur });
+  // each tile shows the position to solve (a small board, seen from the solver's side) under its number and stars
+  g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (!P) return; const th = pzThumb(P); el.insertAdjacentHTML('afterbegin', `<span class="th">${th.svg}</span>`); el.classList.toggle('wt', !th.black); el.classList.add('hasth'); });
   showPzView('pzGridView'); showOverlay('#puzzleOverlay');
+  const c = g.querySelector('.pb-tile.cur') || g.querySelector('.pb-tile.next'); if (c && c.offsetTop > g.parentNode.clientHeight * 0.6) c.scrollIntoView({ block: 'center' });
 }
+// puzzle thumbnail: the position you face (tactics: after the opponent's first move, shown with an arrow), rotated when Black is to move
+function pzThumb(P) {
+  let pcs = fenPieces(P.fen), black = P.fen.split(' ')[1] === 'b', arrows = [];
+  if (P.line) { try { const u = P.line[0]; pcs = lineAfterFen(P.fen, [u]); arrows = [[u.slice(0, 2), u.slice(2, 4)]]; black = !black; } catch (e) { } }
+  if (black) { const R = n => 'abcdefgh'[7 - (n.charCodeAt(0) - 97)] + (9 - +n[1]), q = {}; for (const n in pcs) q[R(n)] = pcs[n]; pcs = q; arrows = arrows.map(a => a.map(R)); }
+  return { svg: lxBoard(miniBoard(pcs, { arrows })), black };
+}
+function lineAfterFen(fen, ucis) { const pos = E.Pos.fromFEN(fen); const pcs = {}; for (const u of ucis) pos.make(pos.fromUci(u)); for (let q = 0; q < 128; q++) { if (q & 0x88) { q += 7; continue; } const p = pos.b[q]; if (p) pcs[E.sqName(q)] = ' PNBRQK'[p & 7][p & 8 ? 'toLowerCase' : 'toUpperCase'](); } return pcs; }
 $('#pzGrid').onclick = e => {
   const b = e.target.closest('button[data-j]'); if (!b) return;
   if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
