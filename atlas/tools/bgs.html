@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Dev tool: renders the soft 3D profile backgrounds in bg3d.js (b001…b029) to PNG.
+     Open via a local server: http://localhost:8000/atlas/tools/bgs.html?id=b001  → window.SHOT holds the data URL.
+     The repo's images/atlas/bg/<id>.webp files were made with this page (headless Chromium) — rerun after changing bg3d.js.
+     Tiles (256×256) are seamless; the two skies (b024, b028) are 512×512 cover images. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#fff}canvas{display:block}</style></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script src="../icons3d.js"></script>
+<script src="../bg3d.js"></script>
+<script>
+(function () {
+  const id = new URLSearchParams(location.search).get('id') || 'b001';
+  const B = BG3D.build(id), S = B.size;
+  const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  R.setPixelRatio(1); R.setSize(S, S);
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.NoToneMapping;
+  document.body.appendChild(R.domElement);
+  if (B.mode === 'cover') {
+    // supersample the cover (2×) for smooth cloud edges, then downscale
+    const big = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    big.setPixelRatio(1); big.setSize(S * 2, S * 2); big.outputEncoding = THREE.sRGBEncoding; big.toneMapping = THREE.NoToneMapping;
+    big.render(B.scene, B.camera);
+    const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+    g.imageSmoothingQuality = 'high'; g.drawImage(big.domElement, 0, 0, S, S);
+    window.SHOT = c.toDataURL('image/png');
+  } else {
+    R.render(B.scene, B.camera);
+    window.SHOT = R.domElement.toDataURL('image/png');
+  }
+})();
+</script>
+</body></html>

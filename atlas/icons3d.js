@@ -253,7 +253,7 @@
   // soft-touch plush material. o.under = underside pastel tint, o.sheen/sheenK = velvet rim, o.wrap, o.glow, o.rim, o.rough
   function soft(hex, o = {}) {
     const m = M(Object.assign({ color: hex, roughness: o.rough ?? .84, sheen: new T.Color(o.sheen ?? 0xffffff).multiplyScalar((o.sheenK ?? .2) * .4) }, o.mat || {}));
-    m.userData.soft = true;
+    m.userData.soft = true; m.userData.hex = hex; m.userData.underHex = o.under ?? null;
     m.userData.u = { uWrap: { value: o.wrap ?? .5 }, uUnder: { value: new T.Color(o.under ?? hex).convertSRGBToLinear() }, uUK: { value: o.under != null ? (o.uk ?? .5) : 0 },
       uGlow: { value: o.glow ?? .015 }, uRim: { value: o.rim ?? .16 } };
     m.onBeforeCompile = softHook;
@@ -616,5 +616,7 @@
       return g;
     };
   });
-  window.Icons3D = { PIECES, ICONS: FIX, MONS, MON_INFO };
+  // building kit for other creature files (atlas/avatars3d.js and atlas/avatars/*.js)
+  const KIT = { T, X, M, mesh, C, gloss, rbox, puck, ball, V3, soft, blob, sq, sqs, sph, ell, flat, hugDecal, stick, bead, arc, face, crown, alive, decal, sparkle, noShadow, inkM, INK, blushTex, shogiPiece };
+  window.Icons3D = { PIECES, ICONS: FIX, MONS, MON_INFO, KIT };
 })();

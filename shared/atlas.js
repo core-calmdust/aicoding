@@ -208,7 +208,10 @@
     const d = J(KEY) || {};
     d.name = d.name || ''; d.owned = d.owned || []; d.spent = d.spent || 0; d.bonus = d.bonus || 0; d.pulls = d.pulls || 0;
     d.seen = d.seen || {}; d.plays = d.plays || {}; d.login = d.login || { last: '', streak: 0, total: 0 };
-    d.av = d.av || { icon: 'i001', bg: 'b001', frame: 'f-none' };
+    d.av = d.av || { icon: 'av-dice-0', bg: 'b001', frame: 'f-none' };
+    // the old 2D critter icons (i001…) were retired for the 3D avatars: everyone starts again from the starter creatures
+    d.owned = d.owned.filter(id => !/^i\d{3}$/.test(id));
+    if (!/^av-/.test(d.av.icon || '')) d.av.icon = window.AtlasArt ? AtlasArt.DEFAULT_ICON : 'av-dice-0';
     if (window.AtlasArt) AtlasArt.STARTER.forEach(id => { if (!d.owned.includes(id)) d.owned.push(id); });
     return d;
   }
