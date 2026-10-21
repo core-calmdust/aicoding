@@ -187,7 +187,7 @@ async function pushScores() {
 let homeTab = 'daily', themeOpen = null;
 function updateCoins() { $$('.coinv').forEach(e => e.textContent = fmt(DB.coin)); }
 const SKINS = ['mid', 'vintage', 'pop', 'riso', 'night', 'swiss', 'wa', 'pixel'];
-const SKIN_FONTS = { swiss: 'Archivo+Black', wa: 'Shippori+Mincho+B1:wght@600;800', mid: 'Josefin+Sans:wght@600;700', pixel: 'DotGothic16' };
+const SKIN_FONTS = { swiss: 'Archivo+Black', wa: 'Shippori+Mincho+B1:wght@600;800', pixel: 'DotGothic16' };
 function applySkin() {
   const q = new URLSearchParams(location.search).get('skin');
   const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'mid');
@@ -269,15 +269,19 @@ function renderCal() {
   $('#calN').onclick = () => { if (calOff < 0) { calOff++; renderCal(); } };
 }
 const FREE_SIZES = [[8, 8], [10, 12], [12, 16]];
-let freeSz = 1, freeK = 4;
+let freeSz = 1, freeK = 4, freeO = matchMedia('(min-width:1000px)').matches ? 'h' : 'v';
+const freeDims = i => { const [w, h] = FREE_SIZES[i]; return freeO === 'h' ? [h, w] : [w, h]; };
 function renderFree() {
-  const best = DB.free[`${freeSz}.${freeK}`] || 0;
+  const best = DB.free[`${freeSz}.${freeK}${freeO === 'h' ? 'h' : ''}`] || 0;
+  const oIco = o => `<svg viewBox="0 0 24 24" width="22" height="22"><rect x="${o === 'h' ? 3 : 7}" y="${o === 'h' ? 7 : 3}" width="${o === 'h' ? 18 : 10}" height="${o === 'h' ? 10 : 18}" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`;
   $('#dFree').innerHTML = `<div class="ptag yel">${esc(t('f.title'))}</div><p class="sub">${esc(t('f.desc'))}</p>
-    <div class="frow"><span>${esc(t('f.size'))}</span>${FREE_SIZES.map(([w, h], i) => `<button class="chipb ${i === freeSz ? 'on' : ''}" data-sz="${i}">${w}×${h}</button>`).join('')}</div>
+    <div class="frow"><span>${esc(t('f.orient'))}</span>${['h', 'v'].map(o => `<button class="chipb ori ${o === freeO ? 'on' : ''}" data-o="${o}">${oIco(o)}${esc(t('f.' + o))}</button>`).join('')}</div>
+    <div class="frow"><span>${esc(t('f.size'))}</span>${FREE_SIZES.map((_, i) => { const [w, h] = freeDims(i); return `<button class="chipb ${i === freeSz ? 'on' : ''}" data-sz="${i}">${w}×${h}</button>`; }).join('')}</div>
     <div class="frow"><span>${esc(t('f.colors'))}</span>${[3, 4, 5, 6].map(k => `<button class="chipb ${k === freeK ? 'on' : ''}" data-k="${k}">${k}</button>`).join('')}</div>
     <div class="dbtns"><div class="dbest"><span>${esc(t('d.best'))}</span><b>${best ? fmt(best) : '—'}</b></div><button class="btn yel" id="fPlay">${A.ICON.play}${esc(t('d.play'))}</button></div>`;
   $$('[data-sz]', $('#dFree')).forEach(b => b.onclick = () => { freeSz = +b.dataset.sz; renderFree(); });
   $$('[data-k]', $('#dFree')).forEach(b => b.onclick = () => { freeK = +b.dataset.k; renderFree(); });
+  $$('[data-o]', $('#dFree')).forEach(b => b.onclick = () => { freeO = b.dataset.o; renderFree(); });
   $('#fPlay').onclick = startFree;
 }
 const THEME_COL = ['#19A35B', '#5BD3E8', 'var(--mute)', '#6A93F2', 'var(--red)', 'var(--yel)', '#FF4FA0', '#7B3FD0'];
@@ -367,7 +371,7 @@ function paintEl(d, v) {
 function cellSize() {
   const wrap = $('#boardWrap'), r = wrap.getBoundingClientRect();
   const wide = matchMedia('(min-width:1000px)').matches;
-  const availW = r.width - 16, availH = Math.max(200, window.innerHeight - r.top - (wide ? 30 : ($('#gfoot').offsetHeight || 60) + 18));
+  const availW = wide ? Math.min(innerWidth - 360 - 32 - 64, 1180) : r.width - 16, availH = Math.max(200, window.innerHeight - r.top - (wide ? 30 : ($('#gfoot').offsetHeight || 60) + 18));
   return Math.max(18, Math.min(wide ? 84 : 64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
 }
 const pos = (x, y) => `translate(${x * G.cs}px, ${(G.rows - 1 - y) * G.cs}px)`;
@@ -387,10 +391,18 @@ function hud() {
   if (G.timed) { const s = Math.max(0, G.tLeft); sub.innerHTML = `<b class="${s < 10 ? 'low' : ''}">${Math.ceil(s)}</b><small>${esc(t('u.sec'))}</small>`; }
   else if (G.mode === 'rise') sub.innerHTML = `<b>${Math.floor(G.elapsed)}</b><small>${esc(t('u.sec'))}</small>`;
   else sub.innerHTML = `<b>${E.count(G.board)}</b><small>${esc(t('u.left'))}</small>`;
+  const gf = $('#gtFill'); if (gf) { const tot = G.init.reduce((a, c) => a + c.length, 0), left = E.count(G.board); gf.style.width = (tot - left) / tot * 100 + '%'; $('#gtLeft').textContent = t('gt.left', { n: left }); $$('.gmd span').forEach(e => e.classList.toggle('ok', left <= +e.dataset.n)); }
   $('#gUndo').hidden = !G.undoable; $('#gHint').hidden = G.kind !== 'stage';
   $('#gUndo').disabled = !G.hist.length || G.over;
   const fv = $('#fever'); fv.hidden = !G.action; $('#riseWrap').hidden = G.mode !== 'rise';
   if (G.action) { $('#feverBar').style.width = (G.feverT > 0 ? G.feverT / FEVER_T * 100 : G.fever / FEVER_MAX * 100) + '%'; fv.classList.toggle('on', G.feverT > 0); $('#comboV').textContent = G.combo > 1 ? 'x' + G.combo : ''; }
+}
+function trackHTML() {
+  const k = G.kind; if (!['daily', 'stage', 'free'].includes(k)) return '';
+  const tot = G.init.reduce((a, c) => a + c.length, 0);
+  let marks = '';
+  if (k === 'daily') { const [b, sv] = diffOf(G.dk).md; marks = `<div class="gmd">${[[b, 1], [sv, 2], [0, 3]].map(([n, m]) => `<span data-n="${n}"><i class="medal m${m}"></i>${n ? '≤' + n : '0'}</span>`).join('')}</div>`; }
+  return `<div class="gtrack"><div class="gtl"><span>${esc(t('gt.goal'))}</span><b id="gtLeft"></b></div><div class="gtb"><i id="gtFill"></i></div>${marks}</div>`;
 }
 function renderInfo() {
   const k = G.kind, types = new Set(); G.board.forEach(c => c.forEach(v => types.add(E.typ(v))));
@@ -402,6 +414,7 @@ function renderInfo() {
     + (G.gim && G.gim.has('hero') ? `<li><span class="lg">${A.mascot('wow')}</span><span><b>${esc(t('g.hero'))}</b><br>${esc(t('tu.a4.h'))} +3s</span></li>` : '')
     + (G.gim && G.gim.has('ink') ? `<li><span class="lg" style="background:#111;border:2px solid #000"></span><span><b>${esc(t('g.ink'))}</b><br>${esc(t('tu.a4'))}</span></li>` : '');
   const best = k === 'stage' ? '★'.repeat(DB.st[stKey(G.th, G.j)] || 0) || '—' : k === 'daily' ? (dlRec(G.date)[diffOf(G.dk).key].left >= 0 ? fmt(dlRec(G.date)[diffOf(G.dk).key].s) : '—') : k === 'free' ? (DB.free[G.fk] ? fmt(DB.free[G.fk]) : '—') : k === 'dblitz' ? fmt(dlRec(G.date).b.s || 0) : k === 'mission' ? '★'.repeat(DB.act.mis[G.mis.id] || 0) || '—' : fmt(DB.act[G.mode === 'rise' ? 'rise' : 'blitz'] || 0);
+  $('#gTrack').innerHTML = trackHTML();
   $('#gInfo').innerHTML = `<h4>${esc(t('gi.rule'))}</h4><p style="margin:0 0 10px">${esc(rule)}</p>${leg ? `<h4>${esc(t('gi.blocks'))}</h4><ul>${leg}</ul>` : ''}
     <div class="best"><span>${esc(t('d.best'))}</span><b>${best}</b></div>${G.undoable ? `<div class="keys"><kbd>Ctrl</kbd>+<kbd>Z</kbd> ${esc(t('g.undo'))}${k === 'stage' ? `　<kbd>H</kbd> ${esc(t('g.hint'))}` : ''}</div>` : ''}`;
 }
@@ -422,11 +435,11 @@ function startStage(th, j) {
 function startDaily(k = 'm') {
   const d = today(), cfg = dailyCfg(d, k);
   newGame({ kind: 'daily', date: d, dk: k, board: cfg.board, undoable: true });
-  startPlay(`${t('d.puzzle')}（${t('dl.' + k)}）`, d.replace(/-/g, '/') + (cfg.g ? ' · ' + t('th.' + cfg.g) : ''));
+  startPlay(t('d.puzzle'), t('dl.' + k) + ' · ' + d.slice(5).replace('-', '/') + (cfg.g ? ' · ' + t('th.' + cfg.g) : ''));
 }
 function startFree() {
-  const [w, h] = FREE_SIZES[freeSz];
-  newGame({ kind: 'free', board: E.randomBoard(w, h, freeK, E.rng(Date.now() & 0x7fffffff)), undoable: true, fk: `${freeSz}.${freeK}` });
+  const [w, h] = freeDims(freeSz);
+  newGame({ kind: 'free', board: E.randomBoard(w, h, freeK, E.rng(Date.now() & 0x7fffffff)), undoable: true, fk: `${freeSz}.${freeK}${freeO === 'h' ? 'h' : ''}` });
   startPlay(t('f.title'), `${w}×${h} · ${freeK}${t('u.colors')}`);
 }
 function startBlitzDaily() {

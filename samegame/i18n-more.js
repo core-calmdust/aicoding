@@ -505,3 +505,19 @@ window.SAME_I18N.ar = {
   };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
 })();
+
+(function () {
+  const A = {
+    ja: { 'f.orient': '向き', 'f.h': '横', 'f.v': '縦', 'gt.goal': '全消しまで', 'gt.left': 'あと{n}個' },
+    en: { 'f.orient': 'Shape', 'f.h': 'Wide', 'f.v': 'Tall', 'gt.goal': 'To a full clear', 'gt.left': '{n} left' },
+    zh: { 'f.orient': '方向', 'f.h': '横', 'f.v': '竖', 'gt.goal': '距离全消', 'gt.left': '还剩{n}个' },
+    ko: { 'f.orient': '방향', 'f.h': '가로', 'f.v': '세로', 'gt.goal': '전부 지우기까지', 'gt.left': '{n}개 남음' },
+    es: { 'f.orient': 'Forma', 'f.h': 'Ancho', 'f.v': 'Alto', 'gt.goal': 'Para limpiarlo todo', 'gt.left': 'Quedan {n}' },
+    fr: { 'f.orient': 'Forme', 'f.h': 'Large', 'f.v': 'Haut', 'gt.goal': 'Avant de tout vider', 'gt.left': 'Encore {n}' },
+    pt: { 'f.orient': 'Formato', 'f.h': 'Largo', 'f.v': 'Alto', 'gt.goal': 'Para limpar tudo', 'gt.left': 'Faltam {n}' },
+    de: { 'f.orient': 'Form', 'f.h': 'Breit', 'f.v': 'Hoch', 'gt.goal': 'Bis alles weg ist', 'gt.left': 'noch {n}' },
+    hi: { 'f.orient': 'आकार', 'f.h': 'चौड़ा', 'f.v': 'लंबा', 'gt.goal': 'सब साफ़ करने तक', 'gt.left': '{n} बाकी' },
+    ar: { 'f.orient': 'الشكل', 'f.h': 'عريض', 'f.v': 'طويل', 'gt.goal': 'حتى إزالة الكل', 'gt.left': 'باقٍ {n}' },
+  };
+  for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
+})();
