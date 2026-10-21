@@ -4032,45 +4032,45 @@ let warpT = 99;
 // ハイパー中: ステージのモチーフに合わせたポリゴンが背景からムキッと生え、終わると砕けて散る
 // ---------------------------------
 const HP_N = IS_MOBILE ? 16 : 36;
-const hpSolidMat = new StdMat({ color: 0x140830, emissive: 0x8040ff, emissiveIntensity: 0.55, flatShading: true, transparent: true, opacity: 0.62, depthWrite: false, metalness: 0.3, roughness: 0.4 });
+const hpSolidMat = new THREE.MeshBasicMaterial({ color: 0x8040ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); // 一部の面だけガラスのようなポリゴン
 const hpEdgeMat = new THREE.LineBasicMaterial({ color: 0xc0a0ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
-const hpShards = new InstPool(new THREE.TetrahedronGeometry(1, 0), glowInstMaterial(0.6), IS_MOBILE ? 140 : 420, 2);
+// 砕けた時の短い線（まとめて1つのLineSegmentsで描く）
+const HP_LMAX = IS_MOBILE ? 160 : 480;
+const hpLineGeo = new THREE.BufferGeometry(); hpLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(HP_LMAX * 6), 3).setUsage(THREE.DynamicDrawUsage));
+const hpLineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+const hpLines = new THREE.LineSegments(hpLineGeo, hpLineMat); hpLines.frustumCulled = false; hpLines.renderOrder = 2; scene.add(hpLines);
 const hpGeo = (() => {
     const NI = (g) => (g.index ? g.toNonIndexed() : g);
     const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y + h / 2, z); return NI(g); };
     const M = (list) => mergeGeometries(list.map(NI));
-    const V = [];
-    // 都市: セットバックのある高層ビル・先細りのビル・ツインタワー
+    const LM = (list) => mergeGeometries(list); // 線どうしをまとめる
+    const tw = (w, d, h, st, tp = 1, x = 0, y = 0) => { const g = towerGeometry(w, d, h, st, tp); g.translate(x, y, 0); return g; }; // 背景のビルと同じ線の組み方
+    // 面の一部だけをガラスにする（四角形の単位で間引く）
+    const glass = (g, frac) => { const P = g.attributes.position, out = [];
+        for (let k = 0; k + 5 < P.count; k += 6) { if (Math.random() > frac) continue; for (let j = 0; j < 6; j++) out.push(P.getX(k + j), P.getY(k + j), P.getZ(k + j)); }
+        if (!out.length) for (let j = 0; j < 6 && j < P.count; j++) out.push(P.getX(j), P.getY(j), P.getZ(j));
+        const r = new THREE.BufferGeometry(); r.setAttribute('position', new THREE.Float32BufferAttribute(out, 3)); return r; };
+    const tri = (g, frac) => { const P = g.attributes.position, out = [];
+        for (let k = 0; k + 2 < P.count; k += 3) { if (Math.random() > frac) continue; for (let j = 0; j < 3; j++) out.push(P.getX(k + j), P.getY(k + j), P.getZ(k + j)); }
+        const r = new THREE.BufferGeometry(); r.setAttribute('position', new THREE.Float32BufferAttribute(out, 3)); return r; };
     const city = [
-        M([box(1, 0.55, 1, 0, 0, 0), box(0.74, 0.3, 0.74, 0, 0.55, 0), box(0.46, 0.15, 0.46, 0, 0.85, 0)]),
-        (() => { const g = new THREE.CylinderGeometry(0.42, 0.707, 1, 4); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return NI(g); })(),
-        M([box(0.46, 1, 0.62, -0.27, 0, 0), box(0.46, 0.72, 0.62, 0.27, 0, 0), box(0.12, 0.08, 0.3, 0, 0.5, 0)]),
+        { w: LM([tw(1, 1, 0.55, 0.05), tw(0.74, 0.74, 0.3, 0.05, 1, 0, 0.55), tw(0.46, 0.46, 0.15, 0.05, 1, 0, 0.85)]), s: M([box(1, 0.55, 1, 0, 0, 0), box(0.74, 0.3, 0.74, 0, 0.55, 0), box(0.46, 0.15, 0.46, 0, 0.85, 0)]) },
+        { w: tw(1, 1, 1, 0.045, 0.6), s: (() => { const g = new THREE.CylinderGeometry(0.42, 0.707, 1, 4, 6); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return NI(g); })(), tri: true },
+        { w: LM([tw(0.46, 0.62, 1, 0.05, 1, -0.27), tw(0.46, 0.62, 0.72, 0.05, 1, 0.27)]), s: M([box(0.46, 1, 0.62, -0.27, 0, 0), box(0.46, 0.72, 0.62, 0.27, 0, 0)]) },
     ];
-    // 鉄塔: 細い四角錐に、段ごとの足場
-    const pylons = [0, 1].map(v => {
-        const c = new THREE.ConeGeometry(0.707, 1, 4); c.rotateY(Math.PI / 4); c.translate(0, 0.5, 0);
-        const L = [c]; (v ? [0.22, 0.45, 0.66] : [0.3, 0.58]).forEach(t => L.push(box(1.25 * (1 - t), 0.025, 1.25 * (1 - t), 0, t, 0)));
-        return M(L);
-    });
-    // リング: トンネルと同じ多角形の枠（太い帯）
-    const rings = [3, 4, 6, 8].map(n => { const g = new THREE.TorusGeometry(1, 0.055, 3, n); g.rotateZ(Math.PI / 2 - Math.PI / n); return NI(g); });
-    // 結晶: 細長い結晶が束になったクラスター
-    const crystals = [0, 1, 2].map(v => {
-        const L = [];
-        const n = 3 + v;
+    const pylons = [0, 1].map(() => { const c = new THREE.ConeGeometry(0.707, 1, 4, 8); c.rotateY(Math.PI / 4); c.translate(0, 0.5, 0); return { w: spireGeometry(0.707, 1), s: NI(c), tri: true }; });
+    const rings = [3, 4, 6, 8].map((n, i) => { const qs = []; for (let k = 0; k < n; k++) { const a0 = (k / n) * Math.PI * 2, a1 = ((k + 1) / n) * Math.PI * 2; qs.push([[Math.cos(a0), Math.sin(a0), 0], [Math.cos(a1), Math.sin(a1), 0], [Math.cos(a1) * 0.93, Math.sin(a1) * 0.93, 0], [Math.cos(a0) * 0.93, Math.sin(a0) * 0.93, 0]]); }
+        return { w: ringGeos[i], s: quadGlass(qs), tri: true, frac: 0.5 }; });
+    const crystals = [0, 1, 2].map(v => { const L = [], n = 3 + v;
         for (let k = 0; k < n; k++) { const o = new THREE.OctahedronGeometry(0.5, 0); o.scale(0.42, 1.5 + (k % 2) * 0.6, 0.42); o.rotateZ((k - (n - 1) / 2) * 0.42); o.rotateY(k * 1.7); L.push(o); }
-        L.push(new THREE.IcosahedronGeometry(0.32, 0));
-        return M(L);
-    });
-    // 山並み: ローポリの尖った峰（頂点を崩して岩肌に）
-    const peak = (seed) => { const g = NI(new THREE.ConeGeometry(0.5, 1, 6, 2)); const P = g.attributes.position;
-        const off = {}; for (let k = 0; k < P.count; k++) { const key = P.getX(k).toFixed(3) + P.getY(k).toFixed(3) + P.getZ(k).toFixed(3); if (!off[key]) off[key] = [Math.sin(k * 12.9 + seed) * 0.09, Math.cos(k * 7.3 + seed) * 0.08]; if (P.getY(k) < 0.49) { P.setX(k, P.getX(k) + off[key][0]); P.setZ(k, P.getZ(k) + off[key][1]); P.setY(k, P.getY(k) + off[key][1] * 0.6); } }
+        L.push(new THREE.IcosahedronGeometry(0.32, 0)); const g = M(L); return { w: new THREE.EdgesGeometry(g, 1), s: g, tri: true, frac: 0.4 }; });
+    const peak = (seed) => { const g = NI(new THREE.ConeGeometry(0.5, 1, 6, 3)); const P = g.attributes.position;
+        for (let k = 0; k < P.count; k++) { if (P.getY(k) > 0.49) continue; const x = P.getX(k), z = P.getZ(k), y = P.getY(k); const h = Math.sin(x * 37 + z * 23 + y * 11 + seed) * 0.07; P.setX(k, x + h); P.setZ(k, z + Math.cos(x * 19 + z * 31 + seed) * 0.06); }
         g.translate(0, 0.5, 0); g.computeVertexNormals(); return g; };
-    const terrain = [peak(1), M([(() => { const g = peak(2); g.scale(0.7, 0.75, 0.7); g.translate(-0.32, 0, 0); return g; })(), peak(3), (() => { const g = peak(4); g.scale(0.6, 0.6, 0.6); g.translate(0.36, 0, 0.05); return g; })()])];
-    // データピラー: 角柱＋上面の板
-    const pillars = [M([box(1, 1, 1, 0, 0, 0), box(1.15, 0.02, 1.15, 0, 1, 0)]), M([box(1, 1, 1, 0, 0, 0), box(1.15, 0.02, 1.15, 0, 0.5, 0), box(1.15, 0.02, 1.15, 0, 1, 0)])];
+    const terrain = [peak(1), (() => { const a = peak(2); a.scale(0.7, 0.75, 0.7); a.translate(-0.32, 0, 0); const c = peak(4); c.scale(0.6, 0.6, 0.6); c.translate(0.36, 0, 0.05); return M([a, peak(3), c]); })()].map(g => ({ w: new THREE.WireframeGeometry(g), s: g, tri: true, frac: 0.18 }));
+    const pillars = [1, 2].map(n => { const L = [tw(1, 1, 1, 1 / n)]; return { w: LM(L), s: M([box(1, 1, 1, 0, 0, 0)]) }; });
     const out = {};
-    Object.entries({ city, pylons, rings, crystals, terrain, pillars }).forEach(([k, arr]) => { out[k] = arr.map(g => ({ g, e: new THREE.EdgesGeometry(g, 12) })); });
+    Object.entries({ city, pylons, rings, crystals, terrain, pillars }).forEach(([k, arr]) => { out[k] = arr.map(v => ({ e: v.w, g: v.tri ? tri(v.s, v.frac || 0.3) : glass(v.s, v.frac || 0.4) })); });
     return out;
 })();
 // 大きさと置き方: [幅の最小, 最大, 高さの最小, 最大, 全体を均等に伸ばすか]
@@ -4108,14 +4108,16 @@ function hpPlace(el, z) {
     }
     el.st = 'grow'; el.t = 0; el.g.visible = true; el.g.scale.set(0.001, 0.001, 0.001);
 }
-function hpShatter(el) {
+function hpShatter(el) { // 砕けて短い線がばらまかれる
     el.st = 'off'; el.g.visible = false;
-    const n = IS_MOBILE ? 6 : 11, p = el.g.position;
+    const n = IS_MOBILE ? 9 : 18, p = el.g.position, fl = S_FLOAT(el);
     for (let k = 0; k < n; k++) {
-        const fy = S_FLOAT(el) ? rand(-0.6, 0.6) * el.h : rand(0.05, 1) * el.h;
+        const fy = fl ? rand(-0.6, 0.6) * el.h : rand(0.05, 1) * el.h;
+        const L = rand(18, 60), a = rand(0, 6.28), b = rand(-1.2, 1.2);
         hpFrags.push({ x: p.x + rand(-0.5, 0.5) * el.w, y: p.y + fy, z: p.z + rand(-0.5, 0.5) * el.w,
-            vx: rand(-260, 260), vy: rand(-80, 320), vz: rand(-260, 260), s: rand(0.12, 0.3) * Math.min(el.w, 160) + 14,
-            rx: rand(0, 6), ry: rand(0, 6), sp: rand(-6, 6), life: rand(0.9, 1.7), max: 1.7 });
+            vx: rand(-300, 300), vy: rand(-60, 360), vz: rand(-300, 300),
+            dx: Math.cos(a) * Math.cos(b) * L, dy: Math.sin(b) * L, dz: Math.sin(a) * Math.cos(b) * L, sp: rand(-5, 5),
+            life: rand(0.8, 1.6), max: 1.6 });
     }
 }
 const S_FLOAT = (el) => !!HP_SIZE[el.kind][4];
@@ -4128,8 +4130,8 @@ function updateHyperPolys(dt, ws) {
         hpActive = false;
         hpElems.forEach(el => { if (el.st !== 'off') { el.st = 'break'; el.delay = rand(0, 0.5); } });
     }
-    hpSolidMat.emissive.copy(themeCur.grid).lerp(themeCur.comet, 0.35);
-    hpSolidMat.emissiveIntensity = 0.4 + visualBeat * 0.45;
+    hpSolidMat.color.copy(themeCur.grid).lerp(themeCur.comet, 0.35).lerp(COL_WHITE, 0.1);
+    hpSolidMat.opacity = 0.2 + 0.25 * Math.max(0, Math.sin(rTime * 1.4)) + visualBeat * 0.15; // ガラス面はゆっくり明暗
     hpEdgeMat.color.copy(themeCur.grid).lerp(COL_WHITE, 0.35);
     hpEdgeMat.opacity = 0.65 + visualBeat * 0.35;
     hpElems.forEach(el => {
@@ -4148,15 +4150,21 @@ function updateHyperPolys(dt, ws) {
         if (el.spin) { if (el.kind === 'rings') el.g.rotation.z += el.spin * dt; else el.g.rotation.y += el.spin * dt; }
         if (el.g.position.z > WORLD_NEAR && el.st === 'grow') hpPlace(el, el.g.position.z - WORLD_SPAN); // 奥でまた生える
     });
-    hpShards.begin();
+    const P = hpLineGeo.attributes.position.array; let m = 0;
     for (let i = hpFrags.length - 1; i >= 0; i--) {
         const f = hpFrags[i];
         f.life -= dt; if (f.life <= 0) { hpFrags.splice(i, 1); continue; }
-        f.vy -= 260 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += (f.vz + ws) * dt; f.rx += f.sp * dt; f.ry += f.sp * 0.7 * dt;
-        const a = Math.min(1, f.life / f.max * 1.8), s = f.s * a;
-        hpShards.add(f.x, f.y, f.z, s, s, s, f.rx, f.ry, 0, hpEdgeMat.color);
+        f.vy -= 240 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += (f.vz + ws) * dt;
+        const c = Math.cos(f.sp * dt), sn = Math.sin(f.sp * dt), dx = f.dx * c - f.dz * sn; f.dz = f.dx * sn + f.dz * c; f.dx = dx; // くるくる回る
+        if (m >= HP_LMAX) continue;
+        const k = Math.min(1, f.life / f.max * 1.6), o = m * 6; // 消える直前に縮む
+        P[o] = f.x - f.dx * k / 2; P[o + 1] = f.y - f.dy * k / 2; P[o + 2] = f.z - f.dz * k / 2;
+        P[o + 3] = f.x + f.dx * k / 2; P[o + 4] = f.y + f.dy * k / 2; P[o + 5] = f.z + f.dz * k / 2;
+        m++;
     }
-    hpShards.end();
+    hpLineGeo.setDrawRange(0, m * 2); hpLineGeo.attributes.position.needsUpdate = m > 0;
+    hpLines.visible = m > 0;
+    hpLineMat.color.copy(hpEdgeMat.color).lerp(COL_WHITE, 0.3);
 }
 function updateMotifs(dt, ws, now) {
     // ステージ変更の検出
