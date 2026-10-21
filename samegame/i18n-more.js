@@ -751,3 +751,15 @@ window.SAME_I18N.ar = {
   const S = { ja: ['詰み！消せるブロックがない', '消せるブロックがなくなったら詰みで即終了'], en: ['Stuck! Nothing left to clear', 'If nothing can be cleared, the game ends at once'], zh: ['死局！没有可消除的方块', '没有可消除的方块时立即结束'], ko: ['막혔다! 지울 블록이 없어요', '지울 수 있는 블록이 없으면 바로 종료'], es: ['¡Bloqueado! No queda nada que despejar', 'Si no se puede despejar nada, la partida termina al instante'], fr: ['Bloqué ! Plus rien à effacer', 'S’il n’y a plus rien à effacer, la partie s’arrête aussitôt'], pt: ['Travou! Nada para limpar', 'Se não houver nada para limpar, o jogo acaba na hora'], de: ['Festgefahren! Nichts mehr abzuräumen', 'Lässt sich nichts mehr abräumen, endet das Spiel sofort'], hi: ['फँस गए! हटाने को कुछ नहीं', 'कुछ भी हटाया न जा सके तो खेल तुरंत खत्म'], ar: ['طريق مسدود! لا شيء لإزالته', 'إذا لم يبقَ ما يمكن إزالته تنتهي اللعبة فورًا'] };
   for (const l in S) { const D = window.SAME_I18N[l]; if (!D) continue; D['a.order.stuck'] = S[l][0]; D['a.order.t3'] = S[l][1]; }
 })();
+
+/* missions v2: new goals + new gimmick names */
+(function () {
+  const G = {
+    ja: ['{n}回注文を達成', '真珠を{n}個回収', 'ライン'], en: ['Fill {n} orders', 'Collect {n} pearls', 'Lines'],
+    zh: ['完成{n}次订单', '回收{n}颗珍珠', '横竖线'], ko: ['주문 {n}회 달성', '진주 {n}개 회수', '라인'],
+    es: ['Completa {n} pedidos', 'Recoge {n} perlas', 'Líneas'], fr: ['Remplis {n} commandes', 'Récupère {n} perles', 'Lignes'],
+    pt: ['Complete {n} pedidos', 'Colete {n} pérolas', 'Linhas'], de: ['Erfülle {n} Bestellungen', 'Sammle {n} Perlen', 'Linien'],
+    hi: ['{n} ऑर्डर पूरे करें', '{n} मोती इकट्ठा करें', 'लाइन'], ar: ['أنجز {n} طلبات', 'اجمع {n} لآلئ', 'خطوط'],
+  };
+  for (const l in G) { const D = window.SAME_I18N[l]; if (!D) continue; D['goal.orders'] = G[l][0]; D['goal.pearls'] = G[l][1]; D['g.line'] = G[l][2]; D['g.prism'] = D['th.pr']; D['g.ice2'] = D['th.ih']; D['g.hid'] = D['th.hd']; D['g.cham'] = D['th.ch']; }
+})();

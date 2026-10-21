@@ -81,44 +81,44 @@ const stRec = th => { const a = []; for (let j = 0; j < 50; j++) a.push(DB.st[st
 const stageOpen = (recs, j) => { const s = (j / PER) | 0; if (s === 0) return true; let c = 0; for (let i = (s - 1) * PER; i < s * PER; i++) if (recs[i]) c++; return c >= UNLOCK; };
 const stMedal = (recs, s) => { const r = recs.slice(s * PER, s * PER + PER); if (r.some(v => !v)) return 0; if (r.every(v => v >= 3)) return 3; if (r.every(v => v >= 2)) return 2; return 1; };
 // gimmick names used in action modes
-const GIM = ['hero', 'bomb', 'rock', 'ice', 'wild', 'ink'];
+const GIM = ['hero', 'bomb', 'rock', 'ice', 'wild', 'ink', 'line', 'prism', 'ice2', 'hid', 'cham'];
 // action missions: m=mode, k=colors, t=seconds, g=gimmicks, goal=[type,value], s2/s3 = score for ★2/★3
 const MIS = (() => {
   const L = [];
   const add = (tier, m, k, tm, g, goal, s1) => L.push({ id: L.length, tier, m, k, t: tm, g, goal, s2: Math.round(s1 * 1.6 / 100) * 100, s3: Math.round(s1 * 2.4 / 100) * 100 });
-  // ROOKIE
+  // ROOKIE — one taste of every action mode
   add(0, 'blitz', 3, 60, ['hero'], ['score', 2000], 2000);
-  add(0, 'blitz', 3, 60, ['hero'], ['big', 10], 2500);
-  add(0, 'blitz', 3, 60, ['hero'], ['combo', 5], 2500);
-  add(0, 'blitz', 4, 60, ['hero'], ['hero', 2], 2000);
-  add(0, 'blitz', 4, 60, ['hero', 'bomb'], ['score', 3000], 3000);
+  add(0, 'order', 3, 60, ['hero'], ['orders', 5], 2500);
+  add(0, 'fuse', 3, 0, ['bomb'], ['survive', 30], 2500);
+  add(0, 'dive', 3, 60, ['hero'], ['pearls', 2], 2500);
   add(0, 'rise', 3, 0, [], ['survive', 60], 1500);
-  add(0, 'blitz', 4, 60, ['hero'], ['fever', 1], 3000);
-  add(0, 'blitz', 4, 60, ['hero', 'rock'], ['score', 3000], 3000);
-  add(0, 'rise', 4, 0, ['bomb'], ['survive', 60], 2000);
-  add(0, 'blitz', 4, 60, ['hero', 'ice'], ['pops', 40], 3000);
-  // HERO
-  add(1, 'blitz', 4, 60, ['hero', 'bomb'], ['score', 5000], 5000);
-  add(1, 'blitz', 4, 45, ['hero'], ['combo', 10], 4000);
-  add(1, 'blitz', 5, 60, ['hero'], ['big', 10], 3500);
-  add(1, 'rise', 4, 0, ['rock'], ['survive', 90], 3000);
-  add(1, 'blitz', 4, 60, ['hero', 'wild'], ['score', 6000], 6000);
-  add(1, 'blitz', 4, 60, ['hero', 'ink'], ['score', 4500], 4500);
-  add(1, 'blitz', 5, 60, ['hero', 'bomb', 'ice'], ['fever', 2], 4500);
-  add(1, 'rise', 5, 0, ['ice'], ['survive', 90], 3000);
-  add(1, 'blitz', 4, 60, ['hero', 'rock', 'ice'], ['hero', 4], 4500);
-  add(1, 'blitz', 5, 60, ['hero', 'ink', 'wild'], ['score', 5500], 5500);
-  // LEGEND
-  add(2, 'blitz', 5, 60, ['hero', 'bomb', 'rock'], ['score', 8000], 8000);
-  add(2, 'blitz', 5, 45, ['hero', 'ink'], ['combo', 15], 6000);
-  add(2, 'rise', 5, 0, ['rock', 'ice'], ['survive', 120], 5000);
-  add(2, 'blitz', 6, 60, ['hero', 'wild'], ['big', 12], 6000);
-  add(2, 'blitz', 5, 60, ['hero', 'bomb', 'ice', 'ink'], ['fever', 3], 7000);
-  add(2, 'blitz', 5, 30, ['hero'], ['score', 4000], 4000);
-  add(2, 'rise', 5, 0, ['rock', 'ink'], ['survive', 150], 6000);
-  add(2, 'blitz', 6, 60, ['hero', 'rock', 'ice', 'wild'], ['score', 7000], 7000);
-  add(2, 'blitz', 6, 60, ['hero', 'bomb', 'ink'], ['hero', 6], 7000);
-  add(2, 'rise', 6, 0, ['bomb', 'rock', 'ice', 'ink'], ['survive', 180], 8000);
+  add(0, 'blitz', 4, 60, ['hero', 'line'], ['big', 10], 3000);
+  add(0, 'order', 4, 60, ['hero', 'ice'], ['score', 3000], 3000);
+  add(0, 'fuse', 4, 0, ['bomb', 'wild'], ['combo', 5], 3000);
+  add(0, 'dive', 4, 60, ['hero', 'rock'], ['pearls', 3], 3000);
+  add(0, 'blitz', 4, 60, ['hero', 'prism'], ['fever', 1], 3500);
+  // HERO — new blocks mixed in
+  add(1, 'order', 4, 60, ['hero', 'line'], ['orders', 10], 5000);
+  add(1, 'fuse', 4, 0, ['bomb', 'ice'], ['survive', 45], 5000);
+  add(1, 'dive', 4, 60, ['hero', 'ice2'], ['pearls', 4], 4000);
+  add(1, 'blitz', 5, 60, ['hero', 'cham'], ['score', 5000], 5000);
+  add(1, 'rise', 4, 0, ['rock', 'line'], ['survive', 90], 3000);
+  add(1, 'order', 5, 60, ['hero', 'prism'], ['combo', 8], 5000);
+  add(1, 'fuse', 5, 0, ['bomb', 'line', 'ink'], ['big', 10], 5000);
+  add(1, 'dive', 5, 60, ['hero', 'hid'], ['score', 4500], 4500);
+  add(1, 'blitz', 5, 45, ['hero', 'ink', 'ice2'], ['hero', 4], 4500);
+  add(1, 'rise', 5, 0, ['ice', 'prism'], ['survive', 100], 3500);
+  // LEGEND — heavy mixes
+  add(2, 'blitz', 5, 60, ['hero', 'bomb', 'line', 'prism'], ['score', 9000], 9000);
+  add(2, 'order', 5, 45, ['hero', 'ink', 'cham'], ['orders', 12], 6000);
+  add(2, 'fuse', 5, 0, ['bomb', 'rock', 'hid'], ['survive', 60], 7000);
+  add(2, 'dive', 5, 60, ['hero', 'ice2', 'rock'], ['pearls', 6], 6000);
+  add(2, 'rise', 5, 0, ['rock', 'ice2', 'cham'], ['survive', 150], 6000);
+  add(2, 'blitz', 6, 60, ['hero', 'wild', 'hid'], ['big', 12], 6000);
+  add(2, 'order', 6, 60, ['hero', 'line', 'prism', 'ice'], ['orders', 15], 8000);
+  add(2, 'fuse', 6, 0, ['bomb', 'cham', 'ink'], ['fever', 3], 8000);
+  add(2, 'dive', 6, 45, ['hero', 'hid', 'cham'], ['pearls', 5], 6000);
+  add(2, 'rise', 6, 0, ['bomb', 'rock', 'ice2', 'hid', 'line'], ['survive', 180], 8000);
   return L;
 })();
 const MIS_TIER = ['mt.0', 'mt.1', 'mt.2'];
@@ -359,7 +359,7 @@ function renderAction() {
     const prev = tier ? MIS.filter(m => m.tier === tier - 1 && DB.act.mis[m.id]).length : 10, open = prev >= UNLOCK;
     html += `<section class="mtier mt${tier}"><div class="stgh"><b>${esc(t(MIS_TIER[tier]))}</b><span class="cnt">★ ${stars}/30</span></div>`;
     if (!open) html += `<div class="locked">${A.ICON.lock}${esc(t('m.lock', { n: UNLOCK - prev }))}</div>`;
-    else html += '<div class="mlist">' + list.map(m => `<button class="mis" data-m="${m.id}"><b class="mno">${m.id + 1}</b><span class="mtx"><b>${esc(goalText(m))}</b><small>${esc(t('a.' + m.m))}${m.t ? ' ' + m.t + 's' : ''} · ${m.k}${esc(t('u.colors'))}${m.g.filter(x => x !== 'hero').map(g => ' · ' + t('g.' + g)).join('')}</small></span><span class="stars">${'★'.repeat(DB.act.mis[m.id] || 0)}${'☆'.repeat(3 - (DB.act.mis[m.id] || 0))}</span></button>`).join('') + '</div>';
+    else html += '<div class="mlist">' + list.map(m => `<button class="mis" data-m="${m.id}"><b class="mno">${m.id + 1}</b><span class="mtx"><b>${esc(goalText(m))}</b><small>${esc(m.m === 'blitz' ? 'BLITZ' : t('a.' + m.m))}${m.t ? ' ' + m.t + 's' : ''} · ${m.k}${esc(t('u.colors'))}${m.g.filter(x => x !== 'hero').map(g => ' · ' + t('g.' + g)).join('')}</small></span><span class="stars">${'★'.repeat(DB.act.mis[m.id] || 0)}${'☆'.repeat(3 - (DB.act.mis[m.id] || 0))}</span></button>`).join('') + '</div>';
     html += '</section>';
   }
   el.innerHTML = html;
@@ -510,6 +510,9 @@ function randCell(k, rnd, gim, initial) {
   if (gim.has('wild') && r > .025 && r < .045) return E.mk(0, E.T.WILD);
   if (gim.has('line') && r > .045 && r < .06) return E.mk(c, r < .0525 ? E.T.ROW : E.T.COL);
   if (gim.has('prism') && r > .06 && r < .068) return E.mk(c, E.T.PRISM);
+  if (gim.has('cham') && r > .068 && r < .085) return E.mk(c, E.T.CHAM);
+  if (gim.has('hid') && r > .84 && r <= .87) return E.mk(c, E.T.HID);
+  if (gim.has('ice2') && r > .87 && r <= .91) return E.mk(c, E.T.ICE2);
   return c;
 }
 function countdown(done) {
@@ -566,7 +569,7 @@ function play(x, y) {
   clearHover(); hoverKey = '';
   if (G.undoable) G.hist.push({ b: G.board, s: G.score, pi: G.pi });
   if (G.kind === 'stage') { G.pi = G.pi || 0; if (G.pi >= 0 && G.sol && G.sol[G.pi] !== undefined) { const sv = G.sol[G.pi]; G.pi = g.some(([a, c]) => a === sv >> 4 && c === (sv & 15)) ? G.pi + 1 : -1; } }
-  const r = E.remove(G.board, g, { min: G.min, keep: G.keep && G.mode !== 'rise' });
+  const r = E.remove(G.board, g, { min: G.min, keep: G.keep && G.mode !== 'rise', k: G.k });
   // scoring
   let pts;
   const now = performance.now();
@@ -844,7 +847,7 @@ function endAction() {
   const stats = `<div class="rstats"><span><b>${G.maxCombo}</b>${esc(t('r.combo'))}</span><span><b>${G.big}</b>${esc(t('r.big'))}</span><span><b>${G.heroN}</b>${esc(t('r.hero'))}</span><span><b>${G.feverN}</b>FEVER</span></div>`;
   if (k === 'mission') {
     const m = G.mis, [gt, gv] = m.goal;
-    const val = { score: sc, big: G.big, combo: G.maxCombo, hero: G.heroN, fever: G.feverN, pops: G.pops, survive: Math.floor(G.elapsed) }[gt];
+    const val = { score: sc, big: G.big, combo: G.maxCombo, hero: G.heroN, fever: G.feverN, pops: G.pops, survive: Math.floor(G.elapsed), orders: G.ordN || 0, pearls: G.pearlN || 0 }[gt];
     const ok = val >= gv, stars = !ok ? 0 : sc >= m.s3 ? 3 : sc >= m.s2 ? 2 : 1, old = DB.act.mis[m.id] || 0;
     if (stars > old) { DB.act.mis[m.id] = stars; coins += addCoin((stars - old) * 20); }
     extra = `<div class="goalchk ${ok ? 'ok' : 'ng'}">${ok ? '✓' : '✕'} ${esc(goalText(m))}<small>${esc(t('r.val', { n: gt === 'score' ? fmt(val) : val }))}</small></div>` + (ok ? starRow(stars) + `<p class="note">${esc(t('r.mstar', { a: fmt(m.s2), b: fmt(m.s3) }))}</p>` : '');
