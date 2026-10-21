@@ -610,6 +610,9 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   /* PC: settings in two columns (mode / rule / colour | strength / display / board) */
   #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
   #newOverlay .ng-col > .field:first-child{margin-top:0}
+  /* the mode row spans the dialog in one line (same structure as shogi / chess / checkers) */
+  #newOverlay .ng-mode #segMode{display:flex;flex-wrap:nowrap}
+  #newOverlay .ng-mode #segMode button{flex:1 1 0;min-width:0;white-space:nowrap;padding-left:6px;padding-right:6px}
   #newOverlay .checks{grid-template-columns:1fr 1fr}
 }
 /* PC with a short window (e.g. 1280×720): tighter spacing so "Next" stays visible without scrolling */
@@ -1056,8 +1059,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
-    <div class="ng-cols"><div class="ng-col">
-    <div class="field">
+    <div class="field ng-mode">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
         <button data-v="ai" data-i18n="ng.ai"></button>
@@ -1069,6 +1071,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
         <button data-v="puzzle" data-i18n="ng.puzzle"></button>
       </div>
     </div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fRule">
