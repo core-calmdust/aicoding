@@ -201,7 +201,7 @@
       busy = true; drop(); clearMarks(); say('');
       for (const st of path) {
         if (stopped || !T) return;
-        await stepAnim(T.side, st.from, st.to, true);
+        await stepAnim(T.side, st.from, st.to, false);   // one flight, like the AI's moves
         const q = T.pos.slice(), code = BG.apply(q, T.side, st.from, st.to);
         T.pos = q; T.steps.push({ code, die: st.die, from: st.from, to: st.to, hit: BG.mvHit(code) });
         T.left.splice(T.left.indexOf(st.die), 1); dimDice(T.left);
@@ -218,8 +218,8 @@
       if (!T || busy || !T.steps.length) return;
       busy = true; drop(); clearMarks(); say('');
       const st = T.steps.pop();
-      const me = T.side, c = topOf(me, locOf(me, st.to)); if (c) await moveTo(c, locOf(me, st.from), null, true);
-      if (st.hit) { const v = topOf(1 - me, 'bar'); if (v) await moveTo(v, locOf(me, st.to), null, true); }
+      const me = T.side, c = topOf(me, locOf(me, st.to)); if (c) await moveTo(c, locOf(me, st.from));   // flies back the same way
+      if (st.hit) { const v = topOf(1 - me, 'bar'); if (v) await moveTo(v, locOf(me, st.to), 1.2); }
       const q = T.start.slice(); T.left = T.dice[0] === T.dice[1] ? [T.dice[0], T.dice[0], T.dice[0], T.dice[0]] : T.dice.slice();
       for (const s of T.steps) { BG.apply(q, me, s.from, s.to); T.left.splice(T.left.indexOf(s.die), 1); }
       T.pos = q; dimDice(T.left); busy = false; afterStep();
