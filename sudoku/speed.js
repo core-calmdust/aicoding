@@ -234,9 +234,10 @@ function colCard() {
   if (!DATA) return '';
   const cc = totalClears();
   let h = `<h2>${SHOE.replace('<svg', '<svg class="ttl-ico"')}<span>${esc(t('sp.col'))}</span><span class="sub">${esc(t('sp.col.sub'))}</span></h2><div class="col-total"><div class="bar"><i style="width:${cc / (nAll() || 1) * 100}%"></i></div><b class="num">${cc} / ${nAll()}</b></div>`;
+  h += `<div class="stjump">${[0, 1, 2, 3, 4].map(tr => `<button data-tj="${tr}" style="--tc:${TIERCOL[tr]}" class="${tierClears(tr) >= tierLen(tr) ? 'done' : ''}"><b>${esc(t('sp.tier.' + tr))}</b><small class="num">${tierClears(tr)}/${tierLen(tr)}</small></button>`).join('')}</div>`;
   for (let tr = 0; tr < 5; tr++) {
     const open = tierOpen(tr), need = 0;
-    h += `<div class="stier" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
+    h += `<div class="stier" id="stier${tr}" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
     for (const ci of tierCats(tr)) {
       const n = catClears(ci), c = DATA.cats[ci];
       h += `<button class="tcard scard ${n === catLen(ci) ? 'full' : ''} ${open ? '' : 'locked'}" data-sc="${ci}">${catPic(ci)}<span class="crown">${C.CROWN}</span><div class="tx"><span class="nm">${esc(cname(ci))}</span><span class="lv">${c.kind === 'g' ? `<span class="gchip" style="--gc:${GCOL[c.g]}">${esc(t('g.' + c.g))}</span>` : `<span class="gchip std">${esc(t('sp.kind.' + (c.kind === 'combo' ? 'mix' : c.kind)))}</span>`}</span><span class="pg"><span class="bar"><i style="width:${n / catLen(ci) * 100}%"></i></span>${n}/${catLen(ci)}</span></div></button>`;
@@ -246,6 +247,15 @@ function colCard() {
   return h;
 }
 function wireCol(host) {
+  const tabs = document.getElementById('htabs');
+  const setH = () => document.documentElement.style.setProperty('--htH', (tabs && tabs.offsetParent ? tabs.offsetHeight : 0) + 'px');
+  setH(); if (!wireCol.rs) { wireCol.rs = 1; addEventListener('resize', setH); }
+  host.querySelectorAll('[data-tj]').forEach(b => b.onclick = () => {
+    const el = host.querySelector('#stier' + b.dataset.tj), bar = host.querySelector('.stjump');
+    if (!el) return; C.SFX.tap(); setH();
+    const top = parseFloat(getComputedStyle(bar).top) || 0;
+    scrollTo({ top: scrollY + el.getBoundingClientRect().top - (top + bar.offsetHeight + 10), behavior: 'smooth' });
+  });
   host.querySelectorAll('[data-sc]').forEach(b => b.onclick = () => {
     const ci = +b.dataset.sc;
     if (!tierOpen(DATA.cats[ci].tier)) { C.toast(esc(t('sp.locked')), 'msg'); return; }
@@ -276,7 +286,7 @@ function openCat(ci) {
   $('#tlBack').onclick = () => C.goHome('col');
   const gl = c.kind === 'g' ? [c.g] : Array.isArray(c.pool) ? c.pool : c.pool ? GORDER : [];
   const next = (() => { for (let p = 0; p < catLen(ci); p++) if (!rec(ci, p) && stageOpen(ci, p)) return p; return -1; })();
-  $('#tlIntro').innerHTML = `<div class="rulebox scatbox" style="--tc:${TIERCOL[c.tier]}">${catPic(ci)}<div><b>${esc(t('sp.tier.' + c.tier))} · ${esc(cname(ci))}</b><p>${esc(cdesc(ci))}</p>${gl.length ? `<div class="sgl mini">${gl.map(g => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span></div>`).join('')}</div>` : ''}</div></div>
+  $('#tlIntro').innerHTML = `<div class="rulebox scatbox" style="--tc:${TIERCOL[c.tier]}">${catPic(ci)}<div><b>${esc(t('sp.tier.' + c.tier))} · ${esc(cname(ci))}</b><p>${esc(cdesc(ci))}</p></div>${gl.length ? `<div class="sgl mini ${gl.length > 4 ? 'many' : ''}">${gl.map(g => `<div class="sgline">${gic(g)}<span><b>${esc(t('g.' + g))}</b><small>${esc(t('g.' + g + '.d'))}</small></span></div>`).join('')}</div>` : ''}</div>
     <div class="startrow"><button class="btn xl" id="stGo" ${next < 0 ? 'disabled' : ''}>${PLAY}${esc(next < 0 ? t('tl.allclear') : n ? t('st.cont', { n: next + 1 }) : t('st.start'))}</button></div>`;
   $('#stGo').onclick = () => { if (next >= 0) { C.SFX.tap(); C.go('s/c/' + (ci + 1) + '/' + (next + 1)); } };
   $('#tlBody').innerHTML = `<div class="plist sstages">${c.st.map((s, pi) => {
@@ -676,13 +686,24 @@ function briefing() {
   const sub = R.mode === 'd' ? (R.ranked ? t('sp.tries', { n: LIMIT_TRIES - ((r && r.a) || 0), m: LIMIT_TRIES }) : t('sp.practice.d')) : (r ? t('sp.brief.best', { s: [1, 2, 3].map(q => (q <= r.s ? '★' : '☆')).join('') }) : '');
   cov.innerHTML = `<div class="sbrief"><div class="sbig">${R.mode === 'd' ? WATCH(R.d, ['#e0905a', '#7d93b8', '#e0a91c'][DT[R.d] - 1]) : SHOE}</div><b>${esc(goal)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${gl ? `<div class="sgl">${gl}</div>` : `<p class="sstd">${esc(t('sp.brief.std'))}</p>`}<p class="srule">${esc(t('sp.brief.rule', { n: PENALTY / 1000 }))}${R.mode === 'd' ? ' ' + esc(t('sp.bonus', { n: BONUS / 1000 })) : ''}</p><button class="btn xl" id="sGo">${PLAY}${esc(t('sp.start'))}</button></div>`;
   cov.className = 'scov on';
+  stretchCov(true);
   $('#sGo').onclick = () => countdown();
   $('#sBoard').classList.add('hide');
   hideBan();
 }
+/* phones: the board is small, so let the briefing / pause card also cover the (unused) key area below it */
+function stretchCov(on) {
+  const cov = $('#sCov'), bw = $('#sBw'), side = document.querySelector('#spd .sside');
+  cov.style.bottom = '';
+  if (!on || !bw || !side) return;
+  const a = bw.getBoundingClientRect(), b = side.getBoundingClientRect();
+  if (b.top >= a.bottom - 4) cov.style.bottom = -(b.bottom - a.bottom) + 'px';   // keys sit below the board
+}
+addEventListener('resize', () => { if (R && (R.state === 'brief' || R.paused)) stretchCov(true); });
 function countdown() {
   if (!R || R.state !== 'brief') return;
   R.state = 'count';
+  stretchCov(false);
   const cov = $('#sCov');
   let n = 3;
   const step = () => {
@@ -746,8 +767,8 @@ function setPaused(p) {
   if (!R || R.done || (R.state !== 'play' && R.state !== 'clear')) return;
   R.paused = p;
   const cov = $('#sCov');
-  if (p) { cov.innerHTML = `<div class="sbrief"><b>${esc(t('g.paused'))}</b><button class="btn" id="sRes">${PLAY}${esc(t('g.resume'))}</button><button class="btn ghost sm" id="sQuit">${esc(t('sp.quit'))}</button></div>`; cov.className = 'scov on'; $('#sBoard').classList.add('hide'); $('#sRes').onclick = () => setPaused(false); $('#sQuit').onclick = () => quit(); }
-  else { cov.className = 'scov'; cov.innerHTML = ''; $('#sBoard').classList.remove('hide'); R.last = performance.now(); }
+  if (p) { cov.innerHTML = `<div class="sbrief"><b>${esc(t('g.paused'))}</b><button class="btn" id="sRes">${PLAY}${esc(t('g.resume'))}</button><button class="btn ghost sm" id="sQuit">${esc(t('sp.quit'))}</button></div>`; cov.className = 'scov on'; stretchCov(true); $('#sBoard').classList.add('hide'); $('#sRes').onclick = () => setPaused(false); $('#sQuit').onclick = () => quit(); }
+  else { cov.className = 'scov'; cov.innerHTML = ''; stretchCov(false); $('#sBoard').classList.remove('hide'); R.last = performance.now(); }
 }
 function quit() {
   if (R && !R.done && (R.state === 'play' || R.state === 'clear' || R.paused)) {
