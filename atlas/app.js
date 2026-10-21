@@ -897,16 +897,28 @@
   let toastT = 0;
   function toast(s) { const el = $('toast'); el.textContent = s; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
   function bumpCoins(el) { const p = el || $('coinPill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
+  // confetti: light on the GPU — a half-resolution canvas (scaled up by CSS), no save/restore per piece,
+  // time-based motion (same speed at any frame rate), fewer pieces on phones; a new burst joins the running one
+  const CF = { ps: [], run: false };
   function confetti(n) {
-    const cv = $('confetti'), g = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
+    const cv = $('confetti'), g = cv.getContext('2d'), K = .5, W0 = Math.round(innerWidth * K), H0 = Math.round(innerHeight * K);
+    if (cv.width !== W0 || cv.height !== H0) { cv.width = W0; cv.height = H0; }
     const cols = ['#ff5d5d', '#ffc928', '#3ccf91', '#36b4ff', '#8d6bff', '#ff7fbe'];
-    const ps = Array.from({ length: n }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .45, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6.28, s: 6 + Math.random() * 6, c: cols[Math.random() * 6 | 0] }));
-    let f = 0;
-    (function step() {
-      g.clearRect(0, 0, cv.width, cv.height);
-      ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .45; p.vx *= .99; p.r += .2; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); });
-      if (++f < 120) requestAnimationFrame(step); else g.clearRect(0, 0, cv.width, cv.height);
-    })();
+    n = Math.round(n * (matchMedia('(pointer: coarse)').matches ? .5 : .8));
+    for (let i = 0; i < n; i++) CF.ps.push({ x: W0 / 2 + (Math.random() - .5) * 100, y: H0 * .45, vx: (Math.random() - .5) * 7 * 60, vy: (-Math.random() * 7 - 2) * 60, r: Math.random() * 6.28, vr: (Math.random() - .5) * 14, s: 3 + Math.random() * 3.5, c: cols[i % cols.length], life: 1.9 + Math.random() * .5 });
+    if (CF.run) return; CF.run = true;
+    let last = performance.now();
+    (function step(now) {
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W0, H0);
+      CF.ps = CF.ps.filter(p => (p.life -= dt) > 0 && p.y < H0 + 20);
+      for (const p of CF.ps) {
+        p.vy += 13.5 * 60 * dt; p.vx *= Math.pow(.99, dt * 60); p.x += p.vx * dt; p.y += p.vy * dt * .5; p.r += p.vr * dt;
+        const c = Math.cos(p.r), sn = Math.sin(p.r); g.setTransform(c, sn, -sn, c, p.x, p.y); g.globalAlpha = Math.min(1, p.life * 2); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      }
+      g.globalAlpha = 1;
+      if (CF.ps.length) requestAnimationFrame(step); else { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W0, H0); CF.run = false; }
+    })(last);
   }
 
   /* ---------- welcome: login bonus (character popup) + new achievements ---------- */
