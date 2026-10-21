@@ -266,6 +266,7 @@ a.snd.home{text-decoration:none}
 .overlay{height:100vh;height:100dvh;bottom:auto}
 .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overscroll-behavior:contain}
 .ls-tabs{margin-bottom:16px}
+.pz-credit{font-size:11px;color:var(--dim);margin:2px 2px 0;line-height:1.6}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 @media (max-width: 520px), (max-height: 560px){
   .overlay{padding:10px}
@@ -1189,13 +1190,11 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
   <div class="modal">
     <div id="pzListView">
       <div class="seg ls-tabs"><button data-v="rules" data-i18n="btn.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="open" data-i18n="tab.open"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-      <h2 data-i18n="pz.title"></h2>
-      <p style="font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7" data-i18n="pz.desc"></p>
-      <div class="lesson-list" id="pzLevels"></div>
+      <div class="pz-home" id="pzLevels"></div>
       <div class="modal-actions"><button class="mbtn" id="pzClose" data-i18n="close"></button></div>
     </div>
     <div id="pzGridView" class="hidden">
-      <h2 id="pzLevelTitle"></h2>
+      <div id="pzLevelHead"></div>
       <div id="pzGrid"></div>
       <div class="modal-actions"><button class="mbtn" id="pzBack" data-i18n="ls.back"></button></div>
     </div>
@@ -1294,7 +1293,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n_coach.js?v=20261019nm"></script>
 <script src="i18n_sync.js?v=20261020gs"></script>
 <script src="i18n_ai.js?v=20261021a"></script>
-<script src="../shared/pzbook.js?v=3"></script>
+<script src="../shared/pzbook.js?v=4"></script>
 <script src="engine.js?v=20261021L"></script>
 <script src="firebase-config.js?v=20261020gs"></script>
 <script src="online.js?v=20261020gt"></script>
@@ -1305,7 +1304,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/ruletour.js?v=10"></script>
 <script src="i18n_v2.js?v=20261021ri"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
-<script src="app.js?v=rm1"></script>
+<script src="app.js?v=pz4"></script>
 <script src="rules.js?v=20261021ri"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>

@@ -1431,26 +1431,44 @@ function pzRecs(i, pr) { pr = pr || pzProgress(); return PUZZLES.levels[i].puzzl
 // card colour from difficulty: mate length (1..4) or the tactics rating band
 function themeTier(L) { if (L.kind === 'line') { const m = (L.band[0] + L.band[1]) / 2; return Math.max(0, Math.min(5, Math.floor((m - 700) / 300))); } return Math.max(0, Math.min(5, Math.round(((L.n || 1) - 1) * 1.4))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+// collection home (the layout of 詰めオセロ, PZBook.home): hero → daily → tabs 詰めチェス / 戦術問題 → theme cards with the position
+const PZ_LAST = STORE + '-pz-last';
+const pzKind = i => PUZZLES.levels[i].kind === 'line' ? 'tac' : 'mate';
+const pzShowJ = i => { const r = pzRecs(i), j = PZBook.nextIndex(r); return j >= 0 ? j : r.length - 1; };
+const pzBadge = i => `<b class="gl">${pzNo(i)}</b>`;
+function pzThumbOf(i, j) { const P = PUZZLES.levels[i].puzzles[j]; if (!P) return { board: '', tm: '' }; const th = pzThumb(P); return { board: th.svg, tm: th.black ? 'b' : 'w' }; }
 async function openPuzzles() {
   await puzzlesReady; selTab('puzzle');
   if (!PUZZLES) { toast(t('ls.fail')); return; }
   const pr = pzProgress(), dl = dailyPick(), di = dailyInfo(); PZBook.setLang(LANG);
-  $('#pzLevels').innerHTML = (dl ? `<button class="lesson-item daily" data-daily="1"><span class="no">★</span><span class="tx"><b>${t('daily.title')} <span style="color:var(--dim);font-weight:400">${dl.date.slice(5).replace('-', '/')}</span></b><small>${pzName(dl.L)} · ${PUZZLES.levels[dl.L].kind === 'line' ? pzSub(dl.L) : t('pz.winIn', { n: PUZZLES.levels[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}</small></span><span class="st ${di.today ? 'clear' : ''}">${di.today ? '✓' : t('daily.go')}</span></button>` : '') + PUZZLES.levels.map((L, i) => {
-    const prev = PUZZLES.levels[i - 1];
-    let head = '';
-    if (i === 0) head = `<p class="ls-course"><b>${t('pz.mateHead')}</b><small>${t('pz.mateHeadSub')}</small></p>`;
-    if (L.kind === 'line' && (!prev || prev.kind !== 'line')) head = `<p class="ls-course"><b>${t('pz.tacHead')}</b><small>${t('pz.tacHeadSub')}</small></p>`;
-    return head + PZBook.card({ i, no: pzNo(i), name: pzName(i), sub: pzSub(i), recs: pzRecs(i, pr), tier: themeTier(L) });
-  }).join('') + (PUZZLES.levels.some(L => L.kind === 'line') ? `<p style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.6;grid-column:1 / -1">${t('pz.credit')}</p>` : '');
+  const Ls = PUZZLES.levels, idx = Ls.map((_, i) => i), cats = ['mate', 'tac'].filter(k => idx.some(i => pzKind(i) === k));
+  let cur = lxTab('pzcat'); if (!cats.includes(cur)) cur = cats[0];
+  const cont = PZBook.resume(idx.map(i => ({ key: i, recs: pzRecs(i, pr), cat: pzKind(i) })), PZ_LAST);
+  const box = $('#pzLevels'); box.className = 'pz-home';
+  box.innerHTML = PZBook.home({
+    title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(i, pr)),
+    cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: pzName(cont.key) },
+    daily: dl ? [{ key: '1', board: pzThumbOf(dl.L, dl.j).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+      sub: `${pzName(dl.L)} · ${Ls[dl.L].kind === 'line' ? pzSub(dl.L) : t('pz.winIn', { n: Ls[dl.L].n })} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
+    cats: cats.map(k => { const r = idx.filter(i => pzKind(i) === k).map(i => pzRecs(i, pr)).flat(); return { key: k, icon: PZBook.icon(k === 'mate' ? 'crown' : 'bolt'), name: t(k === 'mate' ? 'pz.mateHead' : 'pz.tacHead'), done: r.filter(x => x > 0).length, total: r.length }; }),
+    cur, catDesc: t(cur === 'mate' ? 'pz.mateHeadSub' : 'pz.tacHeadSub'),
+    cards: idx.filter(i => pzKind(i) === cur).map(i => Object.assign({ key: i, badge: pzBadge(i), name: pzName(i), desc: pzSub(i), recs: pzRecs(i, pr), tier: themeTier(Ls[i]) }, pzThumbOf(i, pzShowJ(i)))),
+    foot: cur === 'tac' ? `<p class="pz-credit">${t('pz.credit')}</p>` : '',
+  });
+  PZBook.bindHome(box, {
+    cat: k => { lxTab('pzcat', k); openPuzzles(); },
+    cont: v => { const [i, j] = v.split(':').map(Number); startPuzzle(i, j); },
+    daily: () => { const d = dailyPick(); if (d) startPuzzle(d.L, d.j, d.date); },
+    card: v => openPzGrid(+v),
+  });
   showPzView('pzListView'); showOverlay('#puzzleOverlay');
 }
-$('#pzLevels').onclick = e => { const b = e.target.closest('.lesson-item, .pb-card'); if (!b) return; if (b.dataset.daily) { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); } else openPzGrid(+b.dataset.i); };
 function pzNo(i) { const L = PUZZLES.levels[i]; let k = 0; for (let q = 0; q <= i; q++) if ((PUZZLES.levels[q].kind || 'mate') === (L.kind || 'mate')) k++; return k; }
 function pzName(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('pz.tlevel' + pzNo(i)) : t('pz.level' + (i + 1)); }
 function pzSub(i) { const L = PUZZLES.levels[i]; return L.kind === 'line' ? t('pz.tsub', { a: L.band[0], b: L.band[1] }) : t('pz.levelSub', { n: L.n }); }
 function openPzGrid(i, cur) {
   pzLevel = i; const L = PUZZLES.levels[i]; PZBook.setLang(LANG);
-  $('#pzLevelTitle').textContent = pzName(i) + ' — ' + (L.kind === 'line' ? pzSub(i) : t('pz.winIn', { n: L.n }));
+  $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: pzBadge(i), name: pzName(i), desc: pzSub(i), chips: [t(L.kind === 'line' ? 'pz.tacHead' : 'pz.mateHead'), PZBook.t('count', { n: L.puzzles.length })], tier: themeTier(L) });
   const g = $('#pzGrid'); g.innerHTML = PZBook.grid({ recs: pzRecs(i), cur });
   // each tile shows the position to solve (a small board, seen from the solver's side) under its number and stars
   g.querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = L.puzzles[+el.dataset.j]; if (!P) return; const th = pzThumb(P); el.insertAdjacentHTML('afterbegin', `<span class="th">${th.svg}</span>`); el.classList.toggle('wt', !th.black); el.classList.add('hasth'); });
@@ -1476,6 +1494,7 @@ function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   const P = PUZZLES.levels[L].puzzles[j];
+  if (!daily) PZBook.lastSet(PZ_LAST, L);
   if (P.line) {
     // tactics: the opponent's last move is shown first, then you play the solution line
     const me = P.fen.split(' ')[1] === 'b' ? P1 : P2;
