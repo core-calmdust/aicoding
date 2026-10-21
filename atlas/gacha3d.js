@@ -251,7 +251,7 @@
       if (name === 'tray') { tgt = P.REST.clone().add(V(0, .5, -.25)); r = 1.25; dir = V(.55, .45, 1); }
       else if (name === 'pile') { tgt = V(0, .55, P.TZ + .25); r = 2.7; dir = V(.22, .7, 1); }
       else if (name === 'cap') { tgt = i.clone().add(V(0, .3, 0)); r = .9; dir = V(.1, .55, 1); }
-      else { tgt = V(0, 2.45, .95); r = 3.3; dir = V(.1, .28, 1); }
+      else { tgt = V(0, 2.3, .95); r = 3.75; dir = V(.1, .28, 1); }   // idle: the whole machine + pedestal with a margin
       return { t: tgt, p: tgt.clone().addScaledVector(dir.normalize(), r / Math.sin(f)) };
     }
     let curView = 'idle';

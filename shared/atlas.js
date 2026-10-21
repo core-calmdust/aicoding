@@ -219,6 +219,9 @@
     d.owned = d.owned.filter(id => !/^i\d{3}$/.test(id));
     if (!/^av-/.test(d.av.icon || '')) d.av.icon = window.AtlasArt ? AtlasArt.DEFAULT_ICON : 'av-dice-0';
     if (window.AtlasArt) AtlasArt.STARTER.forEach(id => { if (!d.owned.includes(id)) d.owned.push(id); });
+    // one-time gift when the 3D avatars replaced the 2D icons (removed icons also lowered the item-collection awards)
+    d.gifts = d.gifts || {};
+    if (!d.gifts.av3d) { d.gifts.av3d = 1; d.bonus += 2000; save(d); }
     return d;
   }
   // record a finished game played on the portal's 3D table
