@@ -4027,6 +4027,91 @@ for (let i = 0; i < 16; i++) {
 }
 let warpT = 99;
 
+// ---------------------------------
+// ハイパー中: ステージのモチーフに合わせたポリゴンが背景からムキッと生え、終わると砕けて散る
+// ---------------------------------
+const HP_N = IS_MOBILE ? 16 : 36;
+const hpSolidMat = new StdMat({ color: 0x140830, emissive: 0x8040ff, emissiveIntensity: 0.55, flatShading: true, transparent: true, opacity: 0.62, depthWrite: false, metalness: 0.3, roughness: 0.4 });
+const hpEdgeMat = new THREE.LineBasicMaterial({ color: 0xc0a0ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+const hpShards = new InstPool(new THREE.TetrahedronGeometry(1, 0), glowInstMaterial(0.6), IS_MOBILE ? 140 : 420, 2);
+const hpGeo = (() => {
+    const up = (g) => { g.translate(0, 0.5, 0); return g; };
+    const tower = mergeGeometries([up(new THREE.CylinderGeometry(0.36, 0.5, 1, 6)).toNonIndexed(), (() => { const c = new THREE.ConeGeometry(0.36, 0.25, 6); c.translate(0, 1.125, 0); return c.toNonIndexed(); })()]);
+    const crystal = new THREE.OctahedronGeometry(0.5, 0); crystal.scale(1, 2.6, 1); crystal.translate(0, 0.9, 0);
+    const shapes = { city: tower, pylons: up(new THREE.ConeGeometry(0.5, 1, 4)), rings: new THREE.IcosahedronGeometry(1, 0), crystals: crystal, terrain: up(new THREE.ConeGeometry(0.5, 1, 5)), pillars: up(new THREE.BoxGeometry(1, 1, 1)) };
+    const out = {};
+    Object.entries(shapes).forEach(([k, g]) => { out[k] = { g, e: new THREE.EdgesGeometry(g, 10) }; });
+    return out;
+})();
+// 大きさ: [幅の最小, 最大, 高さの最小, 最大, 浮遊するか]
+const HP_SIZE = { city: [90, 190, 450, 1150], pylons: [70, 150, 600, 1400], rings: [70, 170, 70, 170, true], crystals: [60, 130, 380, 800], terrain: [320, 720, 300, 800], pillars: [60, 130, 500, 1300] };
+const hpElems = [];
+for (let i = 0; i < HP_N; i++) {
+    const mesh = new THREE.Mesh(hpGeo.city.g, hpSolidMat), edge = new THREE.LineSegments(hpGeo.city.e, hpEdgeMat);
+    const g = new THREE.Group(); g.add(mesh, edge); g.visible = false; world.add(g);
+    hpElems.push({ g, mesh, edge, st: 'off', t: 0, delay: 0, w: 1, h: 1, kind: 'city', spin: 0 });
+}
+const hpFrags = [];
+let hpActive = false;
+function hpPlace(el, z) {
+    const kind = (motifCur && HP_SIZE[motifCur.name]) ? motifCur.name : 'city', S = HP_SIZE[kind];
+    el.kind = kind; el.mesh.geometry = hpGeo[kind].g; el.edge.geometry = hpGeo[kind].e;
+    el.w = rand(S[0], S[1]); el.h = S[4] ? el.w : rand(S[2], S[3]);
+    el.g.position.set(sideX(), S[4] ? rand(-150, 480) : FLOOR_Y, z);
+    el.g.rotation.set(S[4] ? rand(0, 6) : rand(-0.12, 0.12), rand(0, 6.28), S[4] ? rand(0, 6) : rand(-0.12, 0.12));
+    el.spin = S[4] ? rand(-0.8, 0.8) : 0;
+    el.st = 'grow'; el.t = 0; el.g.visible = true; el.g.scale.set(0.001, 0.001, 0.001);
+}
+function hpShatter(el) {
+    el.st = 'off'; el.g.visible = false;
+    const n = IS_MOBILE ? 6 : 11, p = el.g.position;
+    for (let k = 0; k < n; k++) {
+        const fy = S_FLOAT(el) ? rand(-0.6, 0.6) * el.h : rand(0.05, 1) * el.h;
+        hpFrags.push({ x: p.x + rand(-0.5, 0.5) * el.w, y: p.y + fy, z: p.z + rand(-0.5, 0.5) * el.w,
+            vx: rand(-260, 260), vy: rand(-80, 320), vz: rand(-260, 260), s: rand(0.12, 0.3) * Math.min(el.w, 160) + 14,
+            rx: rand(0, 6), ry: rand(0, 6), sp: rand(-6, 6), life: rand(0.9, 1.7), max: 1.7 });
+    }
+}
+const S_FLOAT = (el) => !!HP_SIZE[el.kind][4];
+function updateHyperPolys(dt, ws) {
+    const on = hyperT > 0 && gameState === 'playing';
+    if (on && !hpActive) { // 生やす（少しずつ時間差で）
+        hpActive = true;
+        hpElems.forEach((el, i) => { hpPlace(el, WORLD_FAR + (i / HP_N) * (WORLD_SPAN * 0.85) + rand(-60, 60)); el.st = 'wait'; el.delay = rand(0, 0.7); el.g.visible = false; });
+    } else if (!on && hpActive) { // 砕けて散る（時間差で）
+        hpActive = false;
+        hpElems.forEach(el => { if (el.st !== 'off') { el.st = 'break'; el.delay = rand(0, 0.5); } });
+    }
+    hpSolidMat.emissive.copy(themeCur.grid).lerp(themeCur.comet, 0.35);
+    hpSolidMat.emissiveIntensity = 0.4 + visualBeat * 0.45;
+    hpEdgeMat.color.copy(themeCur.grid).lerp(COL_WHITE, 0.35);
+    hpEdgeMat.opacity = 0.65 + visualBeat * 0.35;
+    hpElems.forEach(el => {
+        if (el.st === 'off') return;
+        el.g.position.z += ws * dt;
+        if (el.st === 'wait' || el.st === 'break') {
+            el.delay -= dt;
+            if (el.delay <= 0) { if (el.st === 'wait') { el.st = 'grow'; el.t = 0; el.g.visible = true; } else { hpShatter(el); return; } }
+        }
+        if (el.st === 'grow' || el.st === 'break') {
+            el.t = Math.min(1, el.t + dt / 0.42);
+            const x = el.t - 1, k = 1 + 2.6 * x * x * x + 1.6 * x * x; // 行き過ぎてから戻る（ムキッと）
+            const ky = Math.max(0.001, k), kw = Math.max(0.001, 0.55 + 0.45 * k);
+            el.g.scale.set(el.w * kw, el.h * ky, el.w * kw);
+        }
+        if (el.spin) el.g.rotation.y += el.spin * dt;
+        if (el.g.position.z > WORLD_NEAR && el.st === 'grow') hpPlace(el, el.g.position.z - WORLD_SPAN); // 奥でまた生える
+    });
+    hpShards.begin();
+    for (let i = hpFrags.length - 1; i >= 0; i--) {
+        const f = hpFrags[i];
+        f.life -= dt; if (f.life <= 0) { hpFrags.splice(i, 1); continue; }
+        f.vy -= 260 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += (f.vz + ws) * dt; f.rx += f.sp * dt; f.ry += f.sp * 0.7 * dt;
+        const a = Math.min(1, f.life / f.max * 1.8), s = f.s * a;
+        hpShards.add(f.x, f.y, f.z, s, s, s, f.rx, f.ry, 0, hpEdgeMat.color);
+    }
+    hpShards.end();
+}
 function updateMotifs(dt, ws, now) {
     // ステージ変更の検出
     if (currentThemeIndex !== lastThemeIdx) {
@@ -5293,6 +5378,7 @@ function render3D() {
     floorGrid.position.z = (floorGrid.position.z + ws * dt) % 100;
     updateMotifs(dt, ws, now);
     updateSidePolys(dt, ws, rTime);
+    updateHyperPolys(frozen ? 0 : dt, ws);
     updateGlass(rTime);
     flows.forEach(f => {
         const t = rTime * f.speed + f.phase;
