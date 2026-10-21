@@ -874,17 +874,17 @@ class AudioHandler {
             case 'start':
                 [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.75, now + i * 0.08));
                 break;
-            case 'menu': { // タイトル・難易度選択のカーソル音: 控えめで金属的・無機質（リングモジュレーションの短い残響）
+            case 'menu': { // タイトル・難易度選択のカーソル音: サイバーな電子音（控えめな「ピピッ」）
                 const c = this.ctx, out = this.sfxOut();
-                const car = c.createOscillator(), mod = c.createOscillator(), rm = c.createGain(), g = c.createGain(), hp = c.createBiquadFilter();
-                car.type = 'sine'; car.frequency.setValueAtTime(2350, now);
-                mod.type = 'sine'; mod.frequency.setValueAtTime(3617, now); // 非整数比で掛け合わせると金属的な響き
-                rm.gain.value = 0; mod.connect(rm.gain); car.connect(rm);
-                hp.type = 'highpass'; hp.frequency.value = 1800;
-                g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.16, now + 0.004);
-                g.gain.exponentialRampToValueAtTime(0.0005, now + 0.22);
-                rm.connect(hp).connect(g).connect(out);
-                car.start(now); mod.start(now); car.stop(now + 0.25); mod.stop(now + 0.25);
+                const blip = (t, f0, f1, d, v) => {
+                    const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+                    o.type = 'square'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d * 0.6);
+                    lp.type = 'lowpass'; lp.frequency.value = 5200; lp.Q.value = 6; // デジタルっぽい硬さを少し残す
+                    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.003); g.gain.setValueAtTime(v, t + d * 0.7); g.gain.exponentialRampToValueAtTime(0.0005, t + d);
+                    o.connect(lp).connect(g).connect(out); o.start(t); o.stop(t + d + 0.01);
+                };
+                blip(now, 1600, 2400, 0.028, 0.07);
+                blip(now + 0.04, 3200, 3200, 0.022, 0.045);
                 break;
             }
             case 'glaze':
