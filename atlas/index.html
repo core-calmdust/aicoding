@@ -773,6 +773,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 @media (max-width:819px){.bvi .act.act3 .pk b{font-size:15px}.bvi .act.act3 .btn.big.pk b{font-size:18px}}
 /* board card: own pickers instead of the system ones */
 .bvi .sidetg{flex:1;display:flex;gap:4px;padding:4px;border-radius:14px;background:#f3ead8;min-width:0}
+.bvi .opts label:has(.sidetg){flex:none!important}.bvi .opts label:has(.lvpick){min-width:0;flex:1 1 auto!important}
+.bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
 .bvi .sidetg button{flex:1;border:0;background:none;font:inherit;font-weight:900;font-size:15px;color:var(--ink2);padding:7px 6px;border-radius:10px;cursor:pointer;white-space:nowrap}
 .bvi .sidetg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
@@ -909,6 +911,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
-<script src="app.js?v=90"></script>
+<script src="app.js?v=91"></script>
 </body>
 </html>
