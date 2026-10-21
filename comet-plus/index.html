@@ -1282,6 +1282,8 @@ const MODE_DESCRIPTIONS = [
     'Learn the Basics Step by Step'
 ];
 const RANDOM_CHARS = "!?#$@%&<>*=/+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+// 文字化け演出用の乱数: ゲーム内フレームで決まるので、一時停止中は文字が動かない
+const frameRand = (i) => { const v = Math.sin(frameCount * 12.9898 + i * 78.233) * 43758.5453; return v - Math.floor(v); };
 // ▲▲▲ 追加はここまで ▲▲▲
 
 function hexToRgba(hex, alpha) {
@@ -3359,10 +3361,10 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
         // ★ 変更点: 文字列の直接連結をやめ、配列を使って高速化
         const textChars = [];
         for (let i = 0; i < comboText.length; i++) {
-            if (progress > (i / comboText.length) * 0.5 + (Math.random() * 0.1)) {
+            if (progress > (i / comboText.length) * 0.5 + (frameRand(i) * 0.1)) {
                 textChars.push(comboText[i]);
             } else {
-                textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+                textChars.push(chars[Math.floor(frameRand(i + 50) * chars.length)]);
             }
         }
         textToDraw = textChars.join('');
@@ -3377,7 +3379,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     const gradient = renderCtx.createLinearGradient(20, 0, 20 + textMetrics.width, 0);
     const numColors = 12;
     for (let i = 0; i < numColors; i++) {
-        const hue = (Date.now() / 15 + i * (360 / numColors)) % 360;
+        const hue = (rTime * 1000 / 15 + i * (360 / numColors)) % 360; // ゲーム内時間（停止中は止まる）
         gradient.addColorStop(Math.max(0, Math.min(1, i / (numColors - 1))), `hsl(${hue}, 100%, 70%)`);
     }
 
@@ -3503,8 +3505,8 @@ if (gl3dOK) {
                 float l = dot(g, vec3(0.299, 0.587, 0.114));
                 vec3 sh = vec3(0.13, 0.03, 0.28);
                 g = mix(sh * (0.08 + l * 2.0) + g * 0.4, g, smoothstep(0.08, 0.45, l));
-                g = pow(max(g, 0.0), vec3(1.3)) * 1.45;
-                g += smoothstep(0.5, 1.0, l) * vec3(0.32, 0.12, 0.42) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
+                g = pow(max(g, 0.0), vec3(1.3)) * 1.22;
+                g += smoothstep(0.55, 1.0, l) * vec3(0.18, 0.07, 0.24) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
                 float vig = 1.0 - amt * 0.3 * smoothstep(0.35, 0.85, length(vUv - 0.5));
                 gl_FragColor = vec4(mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0)), c.a);
             }`
@@ -5498,7 +5500,7 @@ function render3D() {
         });
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
-            const c = eb.isGlazed ? COL_GLAZE : hsl(Date.now() / 10 + eb.y, 1, 0.72);
+            const c = eb.isGlazed ? COL_GLAZE : hsl(rTime * 100 + eb.y, 1, 0.72);
             const x = toX(ix(eb)), z = toZ(iy(eb)), y = 16;
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * (IS_MOBILE ? 1.3 : 1) * pulse;
@@ -5704,7 +5706,7 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) + hyperK * 0.25; // ハイパー中は光をにじませてネオン感を出す
+        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) + hyperK * 0.12; // ハイパー中は光をにじませてネオン感を出す
         hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
         if (hyperK < 0.002) hyperK = 0;
         hyperGrade.enabled = hyperK > 0;
@@ -6003,10 +6005,10 @@ function draw() {
             const transitionProgress = (lifeProgress - transitionStart) / (transitionEnd - transitionStart);
             const textChars = []; // 配列を使って高速化
             for (let i = 0; i < toText.length; i++) {
-                if (transitionProgress > (i / toText.length) + (Math.random() * 0.1)) {
+                if (transitionProgress > (i / toText.length) + (frameRand(i) * 0.1)) {
                     textChars.push(toText[i]);
                 } else {
-                    textChars.push(chars[Math.floor(Math.random() * chars.length)]);
+                    textChars.push(chars[Math.floor(frameRand(i + 50) * chars.length)]);
                 }
             }
             displayText = textChars.join('');
