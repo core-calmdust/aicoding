@@ -1204,6 +1204,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="engine.js?v=20261021v2"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
+<script src="lists-ui.js?v=20261021lx"></script>
 <script src="openings-ui.js?v=20261021op"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=3"></script>
@@ -2934,6 +2935,7 @@ function openTsGrid(si, cur) {
   PZBook.setLang(LANG);
   $('#tsGridTitle').textContent = `${L(g.title)} — ${L(g.short)}`;
   $('#tsGrid').innerHTML = PZBook.grid({ recs: tsRecs(g), cur });
+  if (window.ShogiLX) ShogiLX.tsThumbs($('#tsGrid'), g.problems);   // position thumbnails on the tiles
   lessonView('grid'); showOverlay('#lessonOverlay');
 }
 $('#tsGrid').onclick = e => {
@@ -2983,19 +2985,11 @@ async function openLessons() {
   if (lsTab === 'open') { openOpenList(); return; }
   segSel('segLs', 'lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
-  const list = LESSONS.grades.map((g, i) => {
-    const pr = lprog[g.id];
-    const st = pr && pr.pass ? `<span class="st clear">✓ ${t('ls.clear')}<br>${t('ls.pts', { p: pr.best })}</span>` : pr ? `<span class="st">${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
-    return `<button class="lesson-item" data-i="${i}"><span class="no">${L(g.grade)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
-  }).join('');
-  const ex = exprog ? `<span class="st clear">${t('ex.best', { g: L(LESSONS.grades[exprog.best].grade) })}</span>` : `<span class="st">${t('ls.new')}</span>`;
-  const exam = `<button class="lesson-item" data-exam="1" style="border-color:rgba(201,169,97,.55)"><span class="no" style="font-size:13px">${t('ex.tag')}</span><span class="tx"><b>${t('ex.title')}</b><small>${t('ex.desc', { n: EXAM_N })}</small></span>${ex}</button>`;
-  const rx = (LESSONS.rules || []).map((g, j) => {
-    const pr = lprog[g.id], i = -j - 1;
-    const st = pr && pr.pass ? `<span class="st clear">✓ ${t('ls.clear')}<br>${t('ls.pts', { p: pr.best })}</span>` : pr ? `<span class="st">${t('ls.bestPts', { p: pr.best })}</span>` : `<span class="st">${t('ls.new')}</span>`;
-    return `<p class="ls-gh">${L(g.head)}</p><button class="lesson-item" data-i="${i}"><span class="no" style="font-size:13px">${L(g.grade)}</span><span class="tx"><b>${L(g.title)}</b><small>${L(g.short)}</small></span>${st}</button>`;
-  }).join('');
-  $('#lessonList').innerHTML = exam + list + rx + (LESSONS.credit ? `<p class="ls-credit">${L(LESSONS.credit)}</p>` : '');
+  // graphic list (lists-ui.js): rank-band tabs → banner → cards with the first problem's position; the rank test sits on top
+  const ex = exprog ? { text: '✓ ' + t('ex.best', { g: L(LESSONS.grades[exprog.best].grade) }), cls: 'ok' } : { text: t('ls.new'), cls: 'new' };
+  const exSf = ((LESSONS.grades[LESSONS.grades.length - 2] || LESSONS.grades[0]).problems[0] || {}).sfen || 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
+  const exam = ShogiLX.card({ attr: 'data-exam="1"', wide: true, board: ShogiLX.board(exSf, { flip: exSf.split(' ')[1] === 'w' }), no: t('ex.tag'), st: ex, title: t('ex.title'), desc: t('ex.desc', { n: EXAM_N }), p: exprog ? 1 : 0, done: !!exprog });
+  ShogiLX.lessons({ lang: () => LANG, L, t, grades: LESSONS.grades, rules: LESSONS.rules || [], prog: id => lprog[id], top: `<div class="lx-grid" style="margin-bottom:12px">${exam}</div>`, foot: LESSONS.credit ? `<p class="lx-credit">${L(LESSONS.credit)}</p>` : '' });
 }
 function lessonView(v) { ['list', 'grid', 'intro', 'done'].forEach(x => $('#lesson' + x[0].toUpperCase() + x.slice(1) + 'View').classList.toggle('hidden', x !== v)); }
 $('#lessonList').onclick = e => {
@@ -3107,7 +3101,7 @@ function showStudy() {
     const note = st.notes && st.notes[i - 1]; fb = note ? (note[LANG] || note.en || note.ja) : '';
   }
   const prac = !window.ShogiOpenUI || ShogiOpenUI.hasPractice(g);
-  if (i === N) fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${prac ? t('op.studyEnd') : ShogiOpenUI.tx('endNo')}</b>`;
+  if (i === N) { fb += (fb ? '<br>' : '') + `<b style="color:var(--accent)">${prac ? t('op.studyEnd') : ShogiOpenUI.tx('endNo')}</b>`; if (window.ShogiOpenUI) ShogiOpenUI.studied(g.id); }
   $('#lsPrompt').innerHTML = pr; $('#lsFb').innerHTML = fb;
   $('#lsHint').textContent = t('op.prev'); $('#lsHint').disabled = i === 0;
   $('#lsNext').textContent = i === N ? (prac ? t('op.toPractice') : ShogiOpenUI.tx('back')) : t('op.next');
