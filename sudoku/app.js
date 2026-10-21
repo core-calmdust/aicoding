@@ -321,13 +321,14 @@ const homeVariant = () => { const h = new Date().getHours(); return h >= 11 ? 'm
 // home background: any collection theme cleared 50/50 can be used
 const isSpBg = k => !!(SPD && SPD.bgs.includes(k));
 const hbOK = k => { if (isSpBg(k)) return SPD.bgOwned(k); const ci = ciOfKey(k); return ci >= 0 && PZ && cCleared(ci) === CSZ; };
-const hbKey = () => (MODE === 'speed' ? 'homeBgS' : 'homeBg');
+const hbKey = () => (MODE === 'speed' || gmode() === 'sp' ? 'homeBgS' : 'homeBg');
 const bgName = k => (!k ? (MODE === 'speed' ? t('sbg.speedway') : t('hb.def')) : isSpBg(k) ? t('sbg.' + k) : cName(ciOfKey(k)));
 const gmode = () => (MODE === 'speed' ? 'sp' : SPD && DB.gm === 'sp' ? 'sp' : 'su');
 function homeScene() {
   if (MODE !== 'speed' && gmode() === 'sp') { const k = DB.set.homeBgS; setScene(k && isSpBg(k) && SPD.bgOwned(k) ? k : 'speedway', '', 'spd'); return; }
   const k = DB.set[hbKey()];
-  if (k && hbOK(k)) setScene(k, '', isSpBg(k) ? 'spd' : k.replace(/2$/, ''));
+  // home buttons: すぴーど = blue, すうどく = orange, whatever background is picked
+  if (k && hbOK(k)) setScene(k, '', MODE === 'speed' ? 'spd' : 'de');
   else if (MODE === 'speed') setScene('speedway', '', 'spd');
   else setScene('daily', homeVariant(), 'de');
 }
