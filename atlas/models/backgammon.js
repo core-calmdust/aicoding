@@ -97,6 +97,17 @@
     cherry: () => veneer('vChe', '#b8693e', '#7a3a1c', { ring: 4, seed: 28 }),
     teal: () => veneer('vTea', '#56705a', '#26362a', { ring: 3, seed: 29 }),     // dyed sycamore
     navy: () => veneer('vNav', '#3f4a5e', '#1a1f2c', { ring: 3, seed: 30 }),
+    // dyed veneers of the colourful 2D marquetry board (the same palette, still with their wood figure)
+    dRed: () => veneer('vdRed', '#e2475a', '#a8243a', { ring: 2, seed: 41 }),
+    dGold: () => veneer('vdGold', '#f0c46a', '#c8923a', { ring: 2, seed: 42 }),
+    dCream: () => veneer('vdCre', '#f6ead0', '#dccaa4', { ring: 1.5, seed: 43 }),
+    dCyan: () => veneer('vdCya', '#3fa7c4', '#22758e', { ring: 2, seed: 44 }),
+    dNavy: () => veneer('vdNav', '#1d3f9e', '#10246a', { ring: 2, seed: 45 }),
+    dGreen: () => veneer('vdGre', '#1d6b4f', '#0e4230', { ring: 2, seed: 46 }),
+    dBlue: () => veneer('vdBlu', '#2c6ad8', '#1a4596', { ring: 2, seed: 47 }),
+    dOrange: () => veneer('vdOra', '#e8a24a', '#b46c22', { ring: 2, seed: 48 }),
+    dBrown: () => veneer('vdBro', '#6a4024', '#3a2010', { ring: 3, seed: 49 }),
+    dBlack: () => veneer('vdBlk', '#1e1a18', '#0a0808', { ring: 3, seed: 50 }),
   };
 
   /* ---------- the top of the case (field level): fields, points, trays ---------- */
@@ -105,6 +116,7 @@
     const k = PX() / g.W, Wc = Math.round(g.W * k), Hc = Math.round(g.H * k), c = cv(Wc, Hc), x = c.getContext('2d');
     const U = v => v * k;
     const fields = [g.LX, g.RX];
+    const triN = (x0, i, top) => { const cx = U(x0 + i + .5), y0 = U(top ? g.TOP : g.BOT), y1 = U(top ? g.TOP + g.PL : g.BOT - g.PL), hw = U(.31); x.beginPath(); x.moveTo(cx - hw, y0); x.lineTo(cx + hw, y0); x.lineTo(cx, y1); x.closePath(); };   // the marquetry board's slimmer points
     const tri = (x0, i, top) => { const cx = U(x0 + i + .5), y0 = U(top ? g.TOP : g.BOT), y1 = U(top ? g.TOP + g.PL : g.BOT - g.PL), hw = U(.455); x.beginPath(); x.moveTo(cx - hw, y0); x.lineTo(cx + hw, y0); x.lineTo(cx, y1); x.closePath(); };
     // a swatch laid along a direction (angle) to fill the current clip
     const lay = (sw, ang, cx, cy, sc = 1) => { x.save(); x.translate(cx, cy); x.rotate(ang); const s = Math.max(Wc, Hc) * 1.5; x.scale(sc, sc); const p = x.createPattern(sw, 'repeat'); x.fillStyle = p; x.fillRect(-s, -s, 2 * s, 2 * s); x.restore(); };
@@ -129,14 +141,18 @@
     } else {
       // walnut ground (only seen at the edges), then the two marquetry fields
       x.save(); lay(W_.walnut(), 0, 0, 0, 1.4); x.restore();
-      const RING = ['walnut', 'E', 'maple', 'S', 'padauk', 'olive', 'E', 'rosewood', 'cherry', 'S', 'maple', 'E', 'teal', 'walnutR', 'olive', 'S', 'macassar', 'cherry', 'E', 'maple', 'navy', 'S', 'padauk', 'walnut', 'E', 'olive', 'rosewood', 'S', 'maple', 'teal', 'E', 'cherry', 'walnutR', 'S', 'olive', 'padauk', 'E', 'maple', 'macassar', 'S'];
-      const WID = { S: .022, E: .026 };
-      for (const x0 of fields) {
-        const cx = U(x0 + 3), cy = U(g.MID), R0 = Math.hypot(3, g.H / 2 - .5) + .1;
+      // colourful and off-centre like the 2D marquetry board: the same ring colours, one centre low on the left field, one high on the right
+      const RC = ['dBrown', 'dRed', 'dGold', 'dCream', 'dCyan', 'dNavy', 'dGreen', 'dBlack', 'dBlue', 'dOrange', 'dBrown', 'dCyan', 'dRed', 'dGold', 'dGreen', 'dNavy', 'walnutR', 'dRed'];
+      const RING = []; RC.forEach((c, i) => { RING.push(c); if (i % 4 === 1) RING.push('E'); });
+      const WID = { S: .022, E: .03 };
+      const CEN = [[3.6, g.BOT - 1.2, 0], [2.2, g.TOP + 2.4, 5]];
+      fields.forEach((x0, fi) => {
+        const [ox, oy, n0] = CEN[fi], cx = U(x0 + ox), cy = U(oy);
+        const R0 = Math.max(...[[x0, g.TOP], [x0 + 6, g.TOP], [x0, g.BOT], [x0 + 6, g.BOT]].map(([px, py]) => Math.hypot(px - x0 - ox, py - oy))) + .1;
         x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
         // rings from the outside in: each a ring of veneer segments, the grain running round the circle
-        const rings = []; let r = .42, n = 0;
-        while (r < R0) { const sp = RING[n % RING.length]; const w = WID[sp] || (.16 + ((n * 7) % 5) * .035); rings.push([r, r + w, sp]); r += w; n++; }
+        const rings = []; let r = .2, n = n0;
+        while (r < R0) { const sp = RING[n % RING.length]; const w = WID[sp] || (.24 + (n % 3) * .05); rings.push([r, r + w, sp]); r += w; n++; }
         for (let j = rings.length - 1; j >= 0; j--) {
           const [r0, r1, sp] = rings[j];
           if (sp === 'S' || sp === 'E') { x.beginPath(); x.arc(cx, cy, U(r1), 0, Math.PI * 2); x.arc(cx, cy, U(r0), 0, Math.PI * 2, true); x.fillStyle = sp === 'S' ? '#efe6d0' : '#140c08'; x.fill('evenodd'); continue; }
@@ -154,26 +170,22 @@
           for (let s = 0; s < segs; s++) { const a = s / segs * Math.PI * 2; x.moveTo(cx + Math.cos(a) * U(r0), cy + Math.sin(a) * U(r0)); x.lineTo(cx + Math.cos(a) * U(r1), cy + Math.sin(a) * U(r1)); } x.stroke();
           x.beginPath(); x.arc(cx, cy, U(r0) + .5, 0, Math.PI * 2); x.strokeStyle = 'rgba(20,10,4,.35)'; x.stroke();
         }
-        // centre rosette: an eight-point compass star in holly and ebony
-        const star = (R1, R2, n2, col, rot = 0) => { x.beginPath(); for (let s = 0; s < n2 * 2; s++) { const a = rot + s / (n2 * 2) * Math.PI * 2, rr = s % 2 ? R2 : R1; x.lineTo(cx + Math.cos(a) * U(rr), cy + Math.sin(a) * U(rr)); } x.closePath(); x.fillStyle = col; x.fill(); };
-        x.beginPath(); x.arc(cx, cy, U(.42), 0, Math.PI * 2); x.fillStyle = '#140c08'; x.fill();
-        x.beginPath(); x.arc(cx, cy, U(.39), 0, Math.PI * 2); x.save(); x.clip(); lay(W_.macassar(), .4, cx, cy, .8); x.restore();
-        star(.36, .1, 8, '#efe4c8', Math.PI / 8); star(.36, .12, 4, '#f7efdc', 0); star(.18, .06, 4, '#2a1a10', Math.PI / 4);
-        x.beginPath(); x.arc(cx, cy, U(.045), 0, Math.PI * 2); x.fillStyle = '#c9a25a'; x.fill();
-        x.globalCompositeOperation = 'multiply'; x.fillStyle = 'rgba(236,196,130,.42)'; x.fillRect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.globalCompositeOperation = 'source-over';
-        // the points: curly maple (light) and macassar ebony, each framed by holly stringing and an ebony hairline, each framed by holly stringing and an ebony hairline
+        // the centre: a holly disc with an ebony dot (as on the 2D board)
+        x.beginPath(); x.arc(cx, cy, U(.2), 0, Math.PI * 2); x.save(); x.clip(); lay(W_.dCream(), .4, cx, cy, .6); x.restore();
+        x.beginPath(); x.arc(cx, cy, U(.085), 0, Math.PI * 2); x.fillStyle = '#3a2416'; x.fill();
+        x.globalCompositeOperation = 'multiply'; x.fillStyle = 'rgba(236,206,160,.16)'; x.fillRect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.globalCompositeOperation = 'source-over';   // a light varnish warmth only
+        // the points: slim holly and curly-maple spikes laid over the rings (both light, as on the 2D board), with an ebony hairline
         for (let i = 0; i < 6; i++) for (const top of [true, false]) {
           const a = (i % 2 === 0) === top;
-          x.save(); x.shadowColor = 'rgba(10,4,0,.45)'; x.shadowBlur = U(.05); x.shadowOffsetY = U(.01); tri(x0, i, top); x.fillStyle = '#1a0e08'; x.fill(); x.restore();
-          tri(x0, i, top); x.save(); x.clip(); lay(a ? W_.pointL() : W_.macassar(), Math.PI / 2 + (top ? .015 : -.015), U(x0 + i + .5), U(g.MID), a ? .9 : .5); x.restore();
-          tri(x0, i, top); x.strokeStyle = '#140a05'; x.lineWidth = U(.05); x.lineJoin = 'miter'; x.stroke();
-          tri(x0, i, top); x.strokeStyle = '#f2e7cc'; x.lineWidth = U(.026); x.stroke();
+          x.save(); x.shadowColor = 'rgba(10,4,0,.45)'; x.shadowBlur = U(.05); x.shadowOffsetY = U(.01); triN(x0, i, top); x.fillStyle = '#1a0e08'; x.fill(); x.restore();
+          triN(x0, i, top); x.save(); x.clip(); lay(a ? W_.holly() : W_.pointL(), Math.PI / 2 + (top ? .015 : -.015), U(x0 + i + .5), U(g.MID), .9); x.restore();
+          triN(x0, i, top); x.strokeStyle = 'rgba(40,20,10,.7)'; x.lineWidth = U(.022); x.lineJoin = 'miter'; x.stroke();
         }
         // stringing band round the field: ebony · holly · ebony
         const band = (ins, w, col) => { x.strokeStyle = col; x.lineWidth = U(w); x.strokeRect(U(x0 + ins), U(g.TOP + ins), U(6 - 2 * ins), U(g.H - 1 - 2 * ins)); };
         band(.03, .06, '#120a06'); band(.035, .025, '#f0e6cc'); band(.09, .018, '#120a06');
         x.restore();
-      }
+      });
       // trays: black suede lining
       x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdTray', '#16120f'), 0, 0, 0); x.restore();
     }
