@@ -563,8 +563,11 @@
     if (!glOK) return;
     const card = $('bvi'), playing = $('bv').classList.contains('playing');
     if ($('bv').classList.contains('rules')) { const p = $('bv').querySelector('.rgd'); Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0); return; }
-    Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - card.getBoundingClientRect().top + 4);
-    $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - card.getBoundingClientRect().top) + 'px');
+    // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
+    let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
+    if (!card.offsetParent) top = card.getBoundingClientRect().top;
+    Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4);
+    $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
@@ -789,7 +792,7 @@
   }
 
   /* ---------- DRESS ---------- */
-  let dKind = 'icon';
+  let dKind = 'icon', dSort = (() => { try { return localStorage.getItem('atlas-dsort') || 'own'; } catch (e) { return 'own'; } })();
   // the dress-up character as an HTML image over the SVG frame: CSS animations on SVG <image> don't run on iOS Safari.
   // The wrapper keeps the same clip as the SVG's pop clip (the frame's circle + everything above its middle).
   function popChar(av, S) {
@@ -806,12 +809,16 @@
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     const slot = dKind;
-    const list = ART.items.filter(it => it.kind === dKind).sort((a, b) => (W.owned.includes(b.id) - W.owned.includes(a.id)) || a.rar - b.rar);
+    // sort: owned first (default) · rarity high → low · rarity low → high (owned first within the same rarity)
+    $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
+    $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
+    const ownd = it => W.owned.includes(it.id) ? 1 : 0;
+    const list = ART.items.filter(it => it.kind === dKind).sort((a, b) => dSort === 'rarD' ? (b.rar - a.rar) || (ownd(b) - ownd(a)) : dSort === 'rarA' ? (a.rar - b.rar) || (ownd(b) - ownd(a)) : (ownd(b) - ownd(a)) || a.rar - b.rar);
     $('dItems').innerHTML = list.map(it => {
       const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
-      return itemCard(it, own ? (on ? `<span class="btn sm mint">${t('dress.on')}</span>` : `<button class="btn sm sky" data-wear="${it.id}">${t('dress.wear')}</button>`) : '', (own ? '' : 'locked ') + (on ? 'sel' : ''));
+      return itemCard(it, '', (own ? '' : 'locked ') + (on ? 'sel' : ''));   // tap the card to wear it (no buttons); the worn one is outlined
     }).join('');
-    // tap an owned item's picture (the whole card) to wear it — the button stays as a label
+    // tap an owned item's picture (the whole card) to wear it
     $('dItems').querySelectorAll('.item').forEach(c => { const id = c.dataset.id; if (!W.owned.includes(id) || W.av[slot] === id) return;
       c.classList.add('wearable'); c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
     $('dprev').querySelector('.poke').onclick = () => pokeAvatar();

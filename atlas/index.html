@@ -417,6 +417,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .item.locked .art svg{filter:brightness(0) opacity(.12)}
 .item .kd{font-size:11px;font-weight:700;color:var(--ink2)}
 .item.sel{outline:4px solid var(--sky);outline-offset:-2px}
+.dbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.dbar .seg{margin:0}
+.dsort{display:flex;gap:4px;padding:4px;border-radius:99px;background:#fff;border:2px solid var(--line)}.dsort button{border:0;background:none;font:inherit;font-weight:800;font-size:13px;color:var(--ink2);padding:6px 12px;border-radius:99px;cursor:pointer}.dsort button[aria-pressed=true]{background:var(--ink);color:#fff}
+#dItems .item.sel{position:relative}#dItems .item.sel::after{content:'✓';position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--sky);color:#fff;font-weight:900;font-size:15px;display:grid;place-items:center;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .price{display:inline-flex;align-items:center;gap:4px}
 .price i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 .shophead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -838,7 +841,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
     <h2 class="h" id="hDress"></h2>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
-      <div><div class="seg" id="dseg"></div><div class="items" id="dItems"></div></div>
+      <div><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div><div class="items" id="dItems"></div></div>
     </div>
   </section>
 
@@ -863,7 +866,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas.js?v=5p"></script>
 <script src="../shared/atlas-firebase-config.js?v=4"></script>
 <script src="../shared/atlas-account.js?v=4"></script>
-<script src="i18n.js?v=13"></script>
+<script src="i18n.js?v=14"></script>
 <script src="table3d.js?v=51"></script>
 <script src="models/shogi.js?v=20"></script>
 <script src="models/chess.js?v=3"></script>
@@ -881,6 +884,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
-<script src="app.js?v=82"></script>
+<script src="app.js?v=85"></script>
 </body>
 </html>
