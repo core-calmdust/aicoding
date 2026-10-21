@@ -253,3 +253,54 @@ html.atlas-backgammon .bbtn.red{color:#d93c3c!important}
 /* the 3D looks in the board-design row */
 html.atlas-backgammon #skinRow button.a3d{position:relative}
 html.atlas-backgammon #skinRow .b3d{position:absolute;right:8px;top:8px;padding:1px 7px;border-radius:99px;background:#ff5d5d;color:#fff;font:700 11px 'Fredoka',sans-serif;font-style:normal;box-shadow:0 2px 0 #d93c3c}
+/* ===== backgammon, phone landscape (html.atlas-land: a landscape phone or the page rotated on a portrait phone) =====
+   like the game's own landscape layout: row 1 = the portal bar (logo · names · icons) + player chips, row 2 = status line + menu icons,
+   then the 3D board across the full width; slim pills instead of the big portal cards */
+html.atlas-skin.atlas-land .app{padding-top:4px!important}
+html.atlas-land .app > .atlas-top{position:relative;z-index:6;grid-area:brand;top:auto;left:auto;right:auto;height:32px;min-width:0;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);backdrop-filter:none;-webkit-backdrop-filter:none;border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);align-self:center;justify-self:stretch}
+html.atlas-land .atlas-top .sp{flex:1 1 0;min-width:0}
+html.atlas-land .atlas-brand{gap:6px;flex:0 1 auto;min-width:0}
+html.atlas-land .atlas-brand img{width:26px;height:26px}
+html.atlas-land .atlas-brand span{flex-direction:row;align-items:baseline;gap:7px;white-space:nowrap}
+html.atlas-land .atlas-brand b{font-size:12.5px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.atlas-land .atlas-brand small{display:none}
+.atlas-gname{display:none}
+html.atlas-land .atlas-gname{display:block;flex:none;font-style:normal;font-weight:900;font-size:13px;color:#d93c3c;white-space:nowrap}
+html.atlas-land .atlas-coin{display:none}
+html.atlas-land :is(.atlas-ic,.atlas-lbtn){height:26px;min-width:30px;width:30px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}
+html.atlas-land :is(.atlas-ic,.atlas-lbtn) svg{width:15px;height:15px}
+html.atlas-land .atlas-lbtn b{display:none}
+html.atlas-land .atlas-lpop{top:34px;right:0;z-index:60}
+html[dir=rtl].atlas-land .atlas-lpop{right:auto;left:0}
+/* the rotate button (touch screens only, like the game's own) */
+.atlas-land-b{display:none!important}
+@media (pointer: coarse){.atlas-land-b{display:inline-grid!important}}
+.atlas-land-b.on{color:#d93c3c;border-color:#ffb3a8!important}
+.atlas-land-b.pulse{color:#d93c3c;border-color:#ff5d5d!important;animation:atlasGlow 1.1s ease-in-out infinite}
+/* status line, player chips and menu icons: slim cream pills on the wood */
+html.atlas-land .sbox{height:30px;line-height:26px;border-radius:99px;background:rgba(255,253,247,.94)!important;border:2px solid #fff!important;color:var(--text)!important;font-weight:700;font-size:12.5px;box-shadow:0 3px 0 rgba(150,110,50,.35);padding:0 12px}
+html.atlas-land .card.players,html.atlas-land .card.controls{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important}
+html.atlas-land .card.players .player{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:99px!important;box-shadow:0 3px 0 rgba(150,110,50,.35);height:32px}
+html.atlas-land .card.players .player.active{border-color:#ffc928!important;box-shadow:0 3px 0 #e09a00}
+html.atlas-land .card.controls .btn{width:38px;height:30px;border-radius:99px!important;background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+html.atlas-land .card.controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
+html.atlas-land .card.controls .btn svg{width:16px;height:16px}
+/* lessons / puzzles: the problem strip stays slim (the guide's picture is left out) */
+html.atlas-land body:is(.in-lesson,.in-puzzle) .atlas-top .atlas-brand span{display:none}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-foot .pic{display:none}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-guide .bub{margin-bottom:4px;padding:6px 10px;border-radius:14px}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-guide .bub::before,html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-guide .bub::after{display:none}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-btns button{padding:5px 9px!important;font-size:12px!important}
+html.atlas-land :is(.lesson-card,.puzzle-card){border-radius:14px!important}
+/* portrait phones: room for the rotate button in the portal bar without cutting the title */
+@media (pointer: coarse) and (max-width:520px){html:not(.atlas-land) .atlas-top:has(.atlas-land-b){gap:6px;padding:0 12px}html:not(.atlas-land) .atlas-top:has(.atlas-land-b) :is(.atlas-ic,.atlas-lbtn){height:36px;min-width:36px;width:36px}}
+html.atlas-land body.mtab-online .dock{background:#fffdf7!important}
+html.atlas-land body.in-lesson .lesson-card,html.atlas-land body.in-puzzle .puzzle-card{display:flex!important;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:5px 8px!important}
+html.atlas-land :is(.lesson-card,.puzzle-card) .lh{flex:none;max-width:110px;display:flex;flex-direction:column;gap:2px}
+html.atlas-land :is(.lesson-card,.puzzle-card) .lh .lt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-guide{flex:1 1 220px;min-width:0}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-guide .bub{margin:0!important}
+html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-foot{flex:0 1 auto;margin:0;min-width:0}
+html.atlas-land :is(.lesson-card,.puzzle-card) .choices{flex:1 1 100%}
+html.atlas-land body.mtab-online .dock{bottom:max(calc(36px + env(safe-area-inset-bottom)), var(--kb, 0px))!important}
+html.rot.atlas-land body.mtab-online .dock{bottom:max(36px, var(--kb, 0px))!important}

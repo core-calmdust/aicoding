@@ -189,4 +189,41 @@
     try { skinSync(); } catch (e) {}
   }
   look();
+
+  /* ---------- phone landscape (a landscape phone, or the page rotated on a portrait phone) ----------
+     the portal's top bar becomes the slim first row of the game's grid (logo · game name · sound · language · rotate · home),
+     next to the player chips; status line + menu icons in the second row; the 3D board across the full width below */
+  (function landscape() {
+    const bar = document.querySelector('.atlas-top'), app = document.querySelector('.app'), land = document.getElementById('btnLand');
+    if (!bar || !app) return;
+    const home = bar.querySelector('a.atlas-ic[aria-label=Portal]');
+    // the game's name next to the portal's title
+    const brand = bar.querySelector('.atlas-brand span'), gname = document.createElement('em'); gname.className = 'atlas-gname';
+    if (brand) brand.appendChild(gname);
+    const paintName = () => { const t = document.querySelector('.brand h1 [data-i18n=title]'); gname.textContent = t ? t.textContent : ''; };
+    paintName(); const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paintName, 60));
+    // the rotate (landscape) button: the game's own one is in its hidden title row
+    if (land) {
+      const rb = document.createElement('button'); rb.type = 'button'; rb.id = 'atlasLand'; rb.innerHTML = land.innerHTML;
+      rb.setAttribute('aria-label', land.getAttribute('aria-label') || 'Landscape');
+      const sync = () => { rb.className = 'atlas-ic atlas-land-b' + (land.classList.contains('on') ? ' on' : '') + (land.classList.contains('pulse') ? ' pulse' : ''); rb.title = land.title || ''; };
+      rb.onclick = e => { e.stopPropagation(); land.click(); setTimeout(sync, 0); };
+      new MutationObserver(sync).observe(land, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
+      bar.insertBefore(rb, home || null);
+    }
+    const mq = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
+    let on = null;
+    const apply = () => {
+      const v = de.classList.contains('rot') || mq.matches;
+      if (v === on) return; on = v;
+      de.classList.toggle('atlas-land', v);
+      if (v) app.prepend(bar); else document.body.appendChild(bar);
+      try { updateGeom(); } catch (e) {}
+      requestAnimationFrame(() => { try { updateGeom(); render(); } catch (e) {} T3.kick(600); });
+      T3.kick(600);
+    };
+    new MutationObserver(apply).observe(de, { attributes: true, attributeFilter: ['class'] });
+    if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
+    apply();
+  })();
 })();
