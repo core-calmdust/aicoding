@@ -304,3 +304,26 @@ html.atlas-land :is(.lesson-card,.puzzle-card) .atlas-foot{flex:0 1 auto;margin:
 html.atlas-land :is(.lesson-card,.puzzle-card) .choices{flex:1 1 100%}
 html.atlas-land body.mtab-online .dock{bottom:max(calc(36px + env(safe-area-inset-bottom)), var(--kb, 0px))!important}
 html.rot.atlas-land body.mtab-online .dock{bottom:max(36px, var(--kb, 0px))!important}
+
+/* ===== gomoku skin: the legged go board — the DOM board (16 × 16 cells) is the 3D field; the 3D board reaches --gmrim cells
+   beyond it and its near side + legs --gmband cells below it (shift lens), so the layout keeps that room free ===== */
+html.atlas-gomoku,html.atlas-gomoku body{--cell:max(22px, min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / (16.5 + var(--gmband, 2.2)), (100vw - var(--pad) * 2 - var(--gap) - 340px) / 16.5, 62px))!important}
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){html.atlas-gomoku,html.atlas-gomoku body{--cell:min((100vw - 24px) / 16.5, (var(--vh) - 260px) / (16.5 + var(--gmband, 2.2)), 58px)!important}}
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){html.atlas-gomoku,html.atlas-gomoku body{--cell:min((var(--vh) - 20px) / (16.5 + var(--gmband, 2.2)), (100vw - 300px) / 16.5, 62px)!important}}
+html.atlas-skin.atlas-gomoku:not(.atlas-shogi) .frame{background:transparent!important;box-shadow:none!important;border:0!important;margin:0 0 calc(var(--cell) * var(--gmband, 2.2))!important}
+html.atlas-gomoku .board::before,html.atlas-gomoku .board::after,html.atlas-gomoku .frame::before,html.atlas-gomoku .frame::after{display:none!important}
+html.atlas-gomoku .board{background:transparent!important;box-shadow:none!important}
+html.atlas-gomoku .grid line,html.atlas-gomoku .grid circle{display:none}
+html.atlas-gomoku .grid text{fill:rgba(70,40,10,.5)!important}
+/* 3D stones: the page's stones only keep their move numbers and the gold ring of the winning five */
+html.atlas-gm3d #stones .st{background:none!important;box-shadow:none!important}
+html.atlas-gm3d #stones .st.win{box-shadow:0 0 0 calc(var(--cell) * .055) rgba(255,214,90,.95),0 0 calc(var(--cell) * .42) rgba(255,200,60,.75)!important}
+html.atlas-gm3d #stones .st.drop{animation:none!important}
+html.atlas-gm3d #stones .st .n{text-shadow:0 0 2px rgba(0,0,0,.35)}
+html.atlas-gomoku .mk.last::before{background:#ff4b3b!important;box-shadow:0 0 0 calc(var(--cell) * .035) rgba(255,255,255,.85),0 0 8px rgba(255,60,40,.7)!important}
+html.atlas-gomoku .st.ghost{opacity:.5}
+html.atlas-gomoku .winline line{stroke:rgba(255,206,70,.9)}
+html.atlas-gomoku #segSkin{flex-wrap:wrap}
+html.atlas-gomoku .st-nav button{background:#fff!important;border:2px solid #ead9b6!important;color:#2b3044!important}
+/* the side column is fitted to the 3D board (taller than the page's frame): anchor it at the top of the row, so its new height doesn't re-centre it */
+html.atlas-gomoku .side{align-self:start!important}
