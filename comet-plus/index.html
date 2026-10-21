@@ -1248,6 +1248,10 @@ let stageClearFrame;
 let currentThemeIndex;
 let energy;
 let nextItemScore;
+let itemLagPeak = 0, itemLagT = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
+const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
+// 隕石が画面の上から下まで流れる秒数（ステージが進んで隕石が速くなるほど短い）
+function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY()); }
 let nextSpecialItemScore;
 let newHighScoreAchieved;
 let elapsedTime;
@@ -1436,7 +1440,7 @@ async function startGame(mode) {
     init();
     gameMode = mode;
     maxShields = shields = DIFFS[difficultyIndex].shields; spBonus = 0;
-    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult;
+    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0;
     nextSpecialItemScore = config.energyItemScoreSpecial * DIFFS[difficultyIndex].mult;
     hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
     distScoreAcc = 0;
@@ -1998,14 +2002,20 @@ function updatePlayingState(dt_sec) {
 
     // Energy Item Spawning (STARTRAIL MODEではスキップ)
     if (gameMode !== 'STARTRAIL MODE') {
-        // チェイン中はアイテムの間隔を少し広げる（上限1.6倍）。チェインが切れたら元の間隔に戻す
-        // （以前は上限がなく、アイテムを大量に取ると次の出現が極端に先になって出なくなっていた）
-        const chaining = player.invincibleTimer > 0 && chainCount > 1;
-        const comboMultiplier = chaining ? Math.min(1.6, Math.pow(1.1, chainCount - 1)) : 1;
+        // チェイン中はアイテムの間隔をチェイン数に応じて広げる（アイテムが出続けて無限チェインになるのを防ぐ）
+        // チェインが切れて、画面内のアイテムが無くなったら即元の間隔に戻す
+        // 大きなチェイン（CHAIN_LAG_LINE以上）の後は、戻るまでにタイムラグを入れる（すぐ戻ると出過ぎるため）
+        const clear = player.invincibleTimer <= 0 && !items.some(it => it.type !== 'hyper');
+        if (!clear) { itemLagPeak = Math.max(itemLagPeak, chainCount); itemLagT = -1; }
+        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * 0.9 : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間）
+        if (clear && itemLagT > 0) itemLagT -= dt_sec;
+        const settled = clear && itemLagT <= 0;
+        if (settled) itemLagPeak = 0;
+        const comboMultiplier = !settled && chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
         const totalMultiplier = stageMultiplier * comboMultiplier;
         const currentNormalThreshold = config.energyItemScoreNormal * totalMultiplier;
         const currentSpecialThreshold = config.energyItemScoreSpecial * totalMultiplier;
-        if (!chaining) {
+        if (settled) {
             nextItemScore = Math.min(nextItemScore, score + currentNormalThreshold);
             nextSpecialItemScore = Math.min(nextSpecialItemScore, score + currentSpecialThreshold);
         }
