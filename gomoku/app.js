@@ -1052,7 +1052,12 @@ function thumbSvg(b, w, o) {
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
 let lsCourseSel = '', opKindSel = 'direct';
-const LS_ICON = { basics: '①', renju: '✕', tactics: '⚔' };
+// course icons (SVG so they read clearly at any size): five in a row / forbidden point / crossed swords
+const LS_ICON = {
+  basics: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="3.2" cy="20.8" r="2.5"/><circle cx="7.6" cy="16.4" r="2.5"/><circle cx="12.0" cy="12.0" r="2.5"/><circle cx="16.4" cy="7.6" r="2.5"/><circle cx="20.8" cy="3.2" r="2.5"/></g></svg>',
+  renju: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.2" opacity=".45"/><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  tactics: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><g transform="rotate(45 12 12) scale(.92) translate(1 1)"><path d="M12 -1.5l2 3V14.5h-4V1.5z"/><rect x="6.5" y="14.5" width="11" height="2.4" rx="1.2"/><rect x="10.8" y="16.9" width="2.4" height="5"/><circle cx="12" cy="23.4" r="1.8"/></g></svg>',
+};
 async function openLessons(course) {
   await lessonsReady; selTab('lesson');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
