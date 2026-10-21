@@ -337,6 +337,17 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .op-info{font-size:12.5px;line-height:1.75;color:var(--text);margin:8px 0 6px;padding:8px 10px;border-left:3px solid var(--brass);background:rgba(201,169,97,.07);border-radius:0 8px 8px 0}
 .op-info b{color:var(--accent)}
 .op-book{display:grid;gap:12px;margin-top:14px}
+.op-hero{display:flex;gap:18px;align-items:center;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(135deg,rgba(201,169,97,.12),rgba(0,0,0,.12));margin:4px 0 2px}
+.oh-b{flex:none;width:150px}.oh-b > svg,.ob-th > svg{display:block;width:100%;height:auto;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.oh-t{min-width:0;flex:1}.oh-t .op-lead{margin:0 0 8px}
+.oh-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}.oh-chips span{font-size:12px;font-weight:700;color:var(--accent);border:1px solid rgba(201,169,97,.4);border-radius:99px;padding:2px 9px;background:rgba(201,169,97,.08)}
+.op-book .ob{flex-direction:row!important;gap:14px;align-items:flex-start}
+.ob-th{flex:none;width:118px;margin-top:2px}
+.ob-c{min-width:0;flex:1;display:flex;flex-direction:column;align-self:stretch}
+.ob-no{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brass);color:#1a1408;font-size:12.5px;font-weight:800;margin-right:8px}
+.ob-h{justify-content:flex-start!important}
+.op-book .mv b{color:var(--accent);font-weight:700}
+@media (max-width: 560px){.op-hero{gap:12px;padding:12px;align-items:flex-start}.oh-b{width:92px}.oh-chips span{font-size:11px;padding:1px 7px}.ob-th{width:80px}.op-book .ob{gap:10px;padding:12px}.op-book .op-dr{display:flex;flex-wrap:wrap;gap:6px}.op-book .op-dr button{white-space:nowrap;font-size:12px;padding-left:8px;padding-right:8px;margin:0}}
 .op-book .ob{padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2)}
 .ob-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .op-book .nm{font-weight:700;color:var(--accent);font-size:17px;letter-spacing:.04em}
@@ -2730,8 +2741,15 @@ function openIntro(i) {
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
   $('#lessonIntroView').classList.toggle('op-intro', l.kind === 'opening');
   if (l.kind === 'opening') {   // keep the overview light: one lead line, cards with name / moves / one concept line; the long texts live in the lesson itself
-    $('#liBody').innerHTML = `<p class="op-lead">${x.short}</p><details class="op-more"><summary>${t('op.more')}</summary>${x.intro.map(p => `<p>${p}</p>`).join('')}${x.note ? `<p class="note">${x.note}</p>` : ''}<p class="note">${t('op.drillNote')}</p></details>`
-      + `<div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><div class="ob-h"><span class="nm">${PT(n.name)}</span></div><div class="mv">${n.moves.match(/../g).map((m, i) => `<i>${i + 1}</i>${m}`).join(' ')}</div>${n.aim ? `<div class="ob-aim">${PT(n.aim)}</div>` : ''}<span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div>`).join('')}</div>`;
+    // hero: the shared starting moves on a board; cards: the position each line reaches, with its last move marked
+    const mvs = l.lines.map(n => n.moves.match(/../g) || []);
+    let k0 = 0; while (mvs.length && mvs.every(m => m[k0] && m[k0] === mvs[0][k0])) k0++;
+    const pre = (mvs[0] || []).slice(0, k0).join(''), hp = lxAfter(pre);
+    const thumb = mv => { const p = lxAfter(mv); return rlSVG(p.cells, { marks: p.last >= 0 ? { [p.last]: 'new' } : {} }); };
+    $('#liBody').innerHTML = `<div class="op-hero"><span class="oh-b">${rlSVG(hp.cells, { marks: hp.last >= 0 ? { [hp.last]: 'new' } : {} })}</span><div class="oh-t"><p class="op-lead">${x.short}</p>`
+      + `<div class="oh-chips">${l.lines.map((n, li) => `<span>${li + 1}. ${PT(n.name)}</span>`).join('')}</div>`
+      + `<details class="op-more"><summary>${t('op.more')}</summary>${x.intro.map(p => `<p>${p}</p>`).join('')}${x.note ? `<p class="note">${x.note}</p>` : ''}<p class="note">${t('op.drillNote')}</p></details></div></div>`
+      + `<div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><span class="ob-th">${thumb(n.moves)}</span><div class="ob-c"><div class="ob-h"><span class="ob-no">${li + 1}</span><span class="nm">${PT(n.name)}</span></div><div class="mv">${(n.moves.match(/../g) || []).map((m, i) => `<i>${i + 1}</i>${i < k0 ? m : `<b>${m}</b>`}`).join(' ')}</div>${n.aim ? `<div class="ob-aim">${PT(n.aim)}</div>` : ''}<span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div></div>`).join('')}</div>`;
   } else $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '');
   showLessonView('intro');
 }
