@@ -119,8 +119,8 @@ body.no-anim .die.dbl{animation:none}
 .coach{position:absolute;left:50%;top:calc(var(--u)*.9);transform:translate(-50%,-6px);z-index:44;padding:6px 14px;border-radius:10px;font-size:13px;font-weight:700;background:rgba(10,16,14,.92);border:1px solid var(--line);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
 .coach.show{opacity:1;transform:translate(-50%,0)}
 .coach.q-best{border-color:#6fd3a0;color:#b8f0d2}.coach.q-good{border-color:#9fc7ff;color:#d3e5ff}.coach.q-dubious{border-color:#f2c060;color:#ffe2a6}.coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
-.lbl{position:absolute;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-size:calc(var(--u)*.24);color:rgba(226,194,117,.62);pointer-events:none;white-space:nowrap}
-.lbl.pip{font-size:calc(var(--u)*.26);color:rgba(255,246,220,.82);font-weight:700}
+.lbl{position:absolute;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-size:calc(var(--u)*.24);color:var(--lbl,rgba(226,194,117,.62));pointer-events:none;white-space:nowrap}
+.lbl.pip{font-size:calc(var(--u)*.26);color:var(--lblpip,rgba(255,246,220,.82));font-weight:700}
 .dicehint{position:absolute;transform:translate(-50%,-50%);font-size:calc(var(--u)*.24);color:rgba(255,246,220,.75);pointer-events:none;white-space:nowrap;letter-spacing:.05em}
 /* ---------------------------------------------------------------- side */
 .side{grid-area:side;width:100%;height:var(--fh);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
@@ -795,6 +795,12 @@ html[lang=ar] .ls-why li{padding-left:0;padding-right:14px}html[lang=ar] .ls-why
 .pz-alt bdi{color:#ffd0c8}
 .pz-choices{margin-top:4px}
 html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
+.skinrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.skinrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11.5px;min-width:0}
+.skinrow button svg{display:block;width:100%;height:auto;border-radius:5px}
+.skinrow button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skinrow button:hover{border-color:var(--brass2);color:var(--text)}
+.skinrow button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:var(--panel2)}
 </style>
 </head>
 <body>
@@ -924,6 +930,10 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
         <div class="ckrow" data-s="0"><span class="ckl" id="ckL0"></span><div class="cksw"></div></div>
         <div class="ckrow" data-s="1"><span class="ckl" id="ckL1"></span><div class="cksw"></div></div>
       </div>
+    </div>
+    <div class="field" id="fSkin">
+      <label data-i18n="ng.skin"></label>
+      <div class="skinrow" id="skinRow"></div>
     </div>
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>

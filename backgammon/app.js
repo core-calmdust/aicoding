@@ -252,26 +252,23 @@ function ckXY(s, p, k, n) { if (p === 25) return barXY(s, k, n); return slotXY(t
 const U = v => `calc(var(--u) * ${+v.toFixed(4)})`;
 
 // static board drawing (SVG, 100 user units per board unit)
+const curSkin = () => (window.BGTheme ? BGTheme.skin(settings.skin) : { frame: ['#3a2416', '#24150c', '#3b2517'], grain: 'rgba(255,220,170,.05)', felt: ['#1d6a4b', '#145238', '#0b3424'], noise: .9, ptA: ['#efe5cc', '#c8b994'], ptB: ['#7a2a24', '#4a1612'], bar: ['#1f130a', '#3a2416', '#1f130a'], tray: ['#08251a', '#0d2f21', '#08251a'], inlay: ['#f0d68f', '#b8934e', '#e2c275'], hinge: true, mini: { frame: '#2b1a10', felt: '#17573f', a: '#e6dbc2', b: '#6b2420', tray: '#0d2f21' } });
 function drawBoardSvg() {
-  const S = 100, w = G.W * S, h = G.H * S;
+  const S = 100, w = G.W * S, h = G.H * S, K = curSkin();
+  const lg = (id, c, x2, y2, x1, y1) => `<linearGradient id="${id}" x1="${x1 || 0}" y1="${y1 || 0}" x2="${x2}" y2="${y2}">${c.map((v, i) => `<stop offset="${c.length === 2 ? i : [0, .45, 1][i]}" stop-color="${v}"/>`).join('')}</linearGradient>`;
   let s = `<defs>
-    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a2416"/><stop offset=".45" stop-color="#24150c"/><stop offset="1" stop-color="#3b2517"/></linearGradient>
-    <pattern id="grainP" width="400" height="60" patternUnits="userSpaceOnUse"><path d="M0 12 Q100 2 200 14 T400 10 M0 34 Q120 26 220 38 T400 32 M0 52 Q90 46 200 55 T400 50" stroke="rgba(255,220,170,.05)" stroke-width="3" fill="none"/></pattern>
-    <radialGradient id="felt" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#1d6a4b"/><stop offset=".65" stop-color="#145238"/><stop offset="1" stop-color="#0b3424"/></radialGradient>
-    <linearGradient id="ivory" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efe5cc"/><stop offset="1" stop-color="#c8b994"/></linearGradient>
-    <linearGradient id="ivoryB" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#efe5cc"/><stop offset="1" stop-color="#c8b994"/></linearGradient>
-    <linearGradient id="ox" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a2a24"/><stop offset="1" stop-color="#4a1612"/></linearGradient>
-    <linearGradient id="oxB" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#7a2a24"/><stop offset="1" stop-color="#4a1612"/></linearGradient>
-    <linearGradient id="brassG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0d68f"/><stop offset=".5" stop-color="#b8934e"/><stop offset="1" stop-color="#e2c275"/></linearGradient>
-    <linearGradient id="barG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1f130a"/><stop offset=".5" stop-color="#3a2416"/><stop offset="1" stop-color="#1f130a"/></linearGradient>
-    <linearGradient id="trayG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#08251a"/><stop offset=".5" stop-color="#0d2f21"/><stop offset="1" stop-color="#08251a"/></linearGradient>
+    ${lg('wood', K.frame, 1, 1)}
+    <pattern id="grainP" width="400" height="60" patternUnits="userSpaceOnUse"><path d="M0 12 Q100 2 200 14 T400 10 M0 34 Q120 26 220 38 T400 32 M0 52 Q90 46 200 55 T400 50" stroke="${K.grain}" stroke-width="3" fill="none"/></pattern>
+    <radialGradient id="felt" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="${K.felt[0]}"/><stop offset=".65" stop-color="${K.felt[1]}"/><stop offset="1" stop-color="${K.felt[2]}"/></radialGradient>
+    ${lg('ivory', K.ptA, 0, 1)}${lg('ivoryB', K.ptA, 0, 0, 0, 1)}${lg('ox', K.ptB, 0, 1)}${lg('oxB', K.ptB, 0, 0, 0, 1)}
+    ${lg('brassG', K.inlay || ['#000', '#000', '#000'], 1, 1)}${lg('barG', K.bar, 1, 0)}${lg('trayG', K.tray, 1, 0)}
     <filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
     <filter id="ptShadow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity=".35"/></filter>
   </defs>`;
   s += `<rect x="0" y="0" width="${w}" height="${h}" rx="28" fill="url(#wood)"/><rect x="0" y="0" width="${w}" height="${h}" rx="28" fill="url(#grainP)"/>`;
   const half = (x0) => {
     let r = `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.BOT - G.TOP) * S}" fill="url(#felt)"/>`;
-    r += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.BOT - G.TOP) * S}" fill="#fff" filter="url(#nz)" opacity=".9"/>`;
+    if (K.noise) r += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.BOT - G.TOP) * S}" fill="#fff" filter="url(#nz)" opacity="${K.noise}"/>`;
     for (let i = 0; i < 6; i++) {
       const x = (x0 + i) * S, a = (i % 2 === 0);
       r += `<path d="M${x + 4} ${G.TOP * S} L${x + S - 4} ${G.TOP * S} L${x + S / 2} ${(G.TOP + G.PL) * S} Z" fill="url(#${a ? 'ivory' : 'ox'})" filter="url(#ptShadow)"/>`;
@@ -289,12 +286,14 @@ function drawBoardSvg() {
   s += `<line x1="${(G.TX + 0.15) * S}" x2="${(G.TX + G.TW - 0.15) * S}" y1="${G.MID * S}" y2="${G.MID * S}" stroke="rgba(201,169,97,.28)" stroke-width="3"/>`;
   // brass inlay lines
   const inl = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${ww}" height="${hh}" rx="10" fill="none" stroke="url(#brassG)" stroke-width="3.2" opacity=".85"/>`;
-  s += inl(G.LX * S - 9, G.TOP * S - 9, (G.RE - G.LX) * S + 18, (G.BOT - G.TOP) * S + 18);
-  s += inl(G.TX * S - 9, G.TOP * S - 9, G.TW * S + 18, (G.BOT - G.TOP) * S + 18);
-  // brass corner studs
-  for (const [cx, cy] of [[24, 24], [w - 24, 24], [24, h - 24], [w - 24, h - 24]]) s += `<circle cx="${cx}" cy="${cy}" r="9" fill="url(#brassG)" stroke="rgba(0,0,0,.4)" stroke-width="2"/>`;
+  if (K.inlay) {
+    s += inl(G.LX * S - 9, G.TOP * S - 9, (G.RE - G.LX) * S + 18, (G.BOT - G.TOP) * S + 18);
+    s += inl(G.TX * S - 9, G.TOP * S - 9, G.TW * S + 18, (G.BOT - G.TOP) * S + 18);
+    // brass corner studs
+    for (const [cx, cy] of [[24, 24], [w - 24, 24], [24, h - 24], [w - 24, h - 24]]) s += `<circle cx="${cx}" cy="${cy}" r="9" fill="url(#brassG)" stroke="rgba(0,0,0,.4)" stroke-width="2"/>`;
+  }
   // hinge marks on the bar
-  for (const y of [G.TOP + 1.2, G.BOT - 1.2]) s += `<rect x="${(G.BX + 0.32) * S}" y="${y * S - 22}" width="${(G.B - 0.64) * S}" height="44" rx="6" fill="url(#brassG)" opacity=".75"/>`;
+  if (K.hinge) for (const y of [G.TOP + 1.2, G.BOT - 1.2]) s += `<rect x="${(G.BX + 0.32) * S}" y="${y * S - 22}" width="${(G.B - 0.64) * S}" height="44" rx="6" fill="url(#brassG)" opacity=".75"/>`;
   $('#boardSvg').setAttribute('viewBox', `0 0 ${w} ${h}`); $('#arrows').setAttribute('viewBox', `0 0 ${w} ${h}`);
   $('#boardSvg').innerHTML = s;
 }
@@ -1552,7 +1551,7 @@ let draft = {};
 function levelLabelHTML(v) { return `Lv.${v} ${LV(v)}<small>${LVD(v)}</small>`; }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
-  ckSync();
+  ckSync(); skinSync();
   document.querySelectorAll('#segMatch button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.matchLen));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
   $('#fColor').classList.toggle('hidden', !game);
@@ -1584,6 +1583,21 @@ $('#ckRows').onclick = e => {
   const s = +b.closest('.ckrow').dataset.s, ck = draft.ck.slice(); ck[s] = b.dataset.c;
   draft.ck = BGTheme.fixPair(ck[0], ck[1], s); segSync();
 };
+// board skins: small previews in the new-game dialog; a click applies (and keeps) the skin at once
+function skinPreview(id) {
+  const K = BGTheme.skin(id), m = K.mini;
+  let r = `<svg viewBox="0 0 64 40"><rect width="64" height="40" rx="4" fill="${m.frame}"/><rect x="3" y="3" width="24" height="34" fill="${m.felt}"/><rect x="31" y="3" width="24" height="34" fill="${m.felt}"/><rect x="57" y="3" width="5" height="34" rx="1" fill="${m.tray}"/>`;
+  for (const x0 of [3, 31]) for (let i = 0; i < 6; i++) { const x = x0 + i * 4; r += `<path d="M${x} 3h4l-2 14z" fill="${i % 2 ? m.b : m.a}"/><path d="M${x} 37h4l-2 -14z" fill="${i % 2 ? m.a : m.b}"/>`; }
+  const c0 = ckFlat(0), c1 = ckFlat(1);
+  r += `<circle cx="9" cy="33" r="2" fill="${c0}"/><circle cx="9" cy="29" r="2" fill="${c0}"/><circle cx="45" cy="7" r="2" fill="${c1}"/><circle cx="45" cy="11" r="2" fill="${c1}"/>`;
+  return r + '</svg>';
+}
+function skinSync() {
+  if (!window.BGTheme) return;
+  $('#skinRow').innerHTML = BGTheme.SKIN_IDS.map(id => `<button data-skin="${id}" class="${(settings.skin || 'classic') === id ? 'sel' : ''}">${skinPreview(id)}<span>${esc(t('skin.' + id))}</span></button>`).join('');
+}
+$('#skinRow').onclick = e => { const b = e.target.closest('button[data-skin]'); if (!b) return; settings.skin = b.dataset.skin; save(); applySkinNow(); skinSync(); };
+function applySkinNow() { if (window.BGTheme) BGTheme.applySkin(settings.skin); drawBoardSvg(); try { render(); } catch (e) {} }
 function applyCk() { if (window.BGTheme) { settings.ck = BGTheme.fixPair(settings.ck[0], settings.ck[1]); BGTheme.applyCheckers(settings.ck); } }
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: 0, ck: (settings.ck || ['gold', 'black']).slice(), level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
@@ -1952,12 +1966,12 @@ const ckEdge = sd => { const c = ckPal(sd); return c ? c.edge : sd ? '#c9ccd2' :
 function miniBoardSVG0(p, side, opts) {
   opts = opts || {};
   const S = 20, W = 15.85 * S, H = 12 * S;
-  let s = `<svg class="mini" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" rx="8" fill="#2b1a10"/>`;
+  let s = `<svg class="mini" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" rx="8" fill="${curSkin().mini.frame}"/>`;
   for (const x0 of [G.LX, G.RX]) {
-    s += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${11 * S}" fill="#17573f"/>`;
-    for (let i = 0; i < 6; i++) { const x = (x0 + i) * S; s += `<path d="M${x + 1} ${G.TOP * S}L${x + S - 1} ${G.TOP * S}L${x + S / 2} ${(G.TOP + 4.6) * S}Z" fill="${i % 2 ? '#6b2420' : '#e6dbc2'}"/><path d="M${x + 1} ${G.BOT * S}L${x + S - 1} ${G.BOT * S}L${x + S / 2} ${(G.BOT - 4.6) * S}Z" fill="${i % 2 ? '#e6dbc2' : '#6b2420'}"/>`; }
+    s += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${11 * S}" fill="${curSkin().mini.felt}"/>`;
+    for (let i = 0; i < 6; i++) { const x = (x0 + i) * S; s += `<path d="M${x + 1} ${G.TOP * S}L${x + S - 1} ${G.TOP * S}L${x + S / 2} ${(G.TOP + 4.6) * S}Z" fill="${i % 2 ? curSkin().mini.b : curSkin().mini.a}"/><path d="M${x + 1} ${G.BOT * S}L${x + S - 1} ${G.BOT * S}L${x + S / 2} ${(G.BOT - 4.6) * S}Z" fill="${i % 2 ? curSkin().mini.a : curSkin().mini.b}"/>`; }
   }
-  s += `<rect x="${G.TX * S}" y="${G.TOP * S}" width="${G.TW * S}" height="${11 * S}" rx="3" fill="#0d2f21"/>`;
+  s += `<rect x="${G.TX * S}" y="${G.TOP * S}" width="${G.TW * S}" height="${11 * S}" rx="3" fill="${curSkin().mini.tray}"/>`;
   const v0 = view; view = side;
   // highlighted zones [side, fromPt, toPt, colour] (points in that side's numbering)
   for (const z of opts.zones || []) for (let pt = Math.min(z[1], z[2]); pt <= Math.max(z[1], z[2]); pt++) {
@@ -2006,12 +2020,12 @@ function rlDie(x, y, n, dark, sz) {
 }
 function rulesSVG0(p, o) {
   const S = 20, W = G.W * S, H = G.H * S, q = p ? p.slice() : null;
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img"><rect width="${W}" height="${H}" rx="8" fill="#2b1a10"/>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img"><rect width="${W}" height="${H}" rx="8" fill="${curSkin().mini.frame}"/>`;
   for (const x0 of [G.LX, G.RX]) {
-    s += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${11 * S}" fill="#17573f"/>`;
-    for (let i = 0; i < 6; i++) { const x = (x0 + i) * S; s += `<path d="M${x + 1} ${G.TOP * S}L${x + S - 1} ${G.TOP * S}L${x + S / 2} ${(G.TOP + 4.6) * S}Z" fill="${i % 2 ? '#6b2420' : '#e6dbc2'}"/><path d="M${x + 1} ${G.BOT * S}L${x + S - 1} ${G.BOT * S}L${x + S / 2} ${(G.BOT - 4.6) * S}Z" fill="${i % 2 ? '#e6dbc2' : '#6b2420'}"/>`; }
+    s += `<rect x="${x0 * S}" y="${G.TOP * S}" width="${6 * S}" height="${11 * S}" fill="${curSkin().mini.felt}"/>`;
+    for (let i = 0; i < 6; i++) { const x = (x0 + i) * S; s += `<path d="M${x + 1} ${G.TOP * S}L${x + S - 1} ${G.TOP * S}L${x + S / 2} ${(G.TOP + 4.6) * S}Z" fill="${i % 2 ? curSkin().mini.b : curSkin().mini.a}"/><path d="M${x + 1} ${G.BOT * S}L${x + S - 1} ${G.BOT * S}L${x + S / 2} ${(G.BOT - 4.6) * S}Z" fill="${i % 2 ? curSkin().mini.a : curSkin().mini.b}"/>`; }
   }
-  s += `<rect x="${G.TX * S}" y="${G.TOP * S}" width="${G.TW * S}" height="${11 * S}" rx="3" fill="#0d2f21"/>`;
+  s += `<rect x="${G.TX * S}" y="${G.TOP * S}" width="${G.TW * S}" height="${11 * S}" rx="3" fill="${curSkin().mini.tray}"/>`;
   if (o.homes) {
     s += `<rect x="${G.RX * S}" y="${G.MID * S}" width="${6 * S}" height="${(G.BOT - G.MID) * S}" fill="rgba(226,194,117,.22)" stroke="#e2c275" stroke-width="1.6" stroke-dasharray="4 3"/>`;
     s += `<rect x="${G.RX * S}" y="${G.TOP * S}" width="${6 * S}" height="${(G.MID - G.TOP) * S}" fill="rgba(201,204,210,.16)" stroke="#c9ccd2" stroke-width="1.6" stroke-dasharray="4 3"/>`;
@@ -2070,7 +2084,7 @@ function rlMatchSVG() {
   const W = 317, H = 130;
   const disc = (x, sd) => `<circle cx="${x}" cy="52" r="17" fill="${sd ? '#202328' : '#e2c275'}" stroke="${sd ? '#c9ccd2' : '#7a5c22'}" stroke-width="1.5"/>`;
   const num = (x, n) => `<text x="${x}" y="64" font-size="32" font-weight="800" font-family="Shippori Mincho B1,serif" fill="#e8eee9" text-anchor="middle">${n}</text>`;
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img"><rect width="${W}" height="${H}" rx="10" fill="#2b1a10"/><rect x="8" y="8" width="${W - 16}" height="${H - 16}" rx="7" fill="#17573f"/>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img"><rect width="${W}" height="${H}" rx="10" fill="${curSkin().mini.frame}"/><rect x="8" y="8" width="${W - 16}" height="${H - 16}" rx="7" fill="${curSkin().mini.felt}"/>`;
   s += `<text x="${W / 2}" y="27" font-size="12" font-weight="700" fill="#e2c275" text-anchor="middle">${t('info.match', { n: 5 })}</text>`;
   s += disc(46, 0) + num(96, 4) + `<text x="${W / 2 - 40}" y="62" font-size="22" fill="#8fa39a" text-anchor="middle">–</text>` + num(W / 2 - 4, 2) + disc(W / 2 + 34, 1);
   const cx = 262, cy = 56, z = 30;
@@ -2663,6 +2677,7 @@ function dailySolved(date, hinted) {
 updateGeom(); geomReady = true;
 const hadSave = load();
 applyCk();
+if (window.BGTheme) BGTheme.applySkin(settings.skin);
 drawBoardSvg();
 // a game that was already finished when the page was saved: don't show its result (win condition) again on every visit
 try { if (hadSave && match) match.games.forEach((gm, g) => { if (stateAt(g, gm.actions.length).over) gameOverShown.add(g + ':' + gm.actions.length); }); } catch (e) {}
