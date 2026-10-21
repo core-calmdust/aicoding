@@ -194,11 +194,11 @@ async function pushScores() {
 /* ============================================================ HOME ============================================================ */
 let homeTab = 'daily', themeOpen = null;
 function updateCoins() { $$('.coinv').forEach(e => e.textContent = fmt(DB.coin)); }
-const SKINS = ['mid', 'vintage', 'pop', 'riso', 'night', 'swiss', 'wa', 'pixel'];
+const SKINS = ['vintage', 'mid', 'pop', 'riso', 'night', 'swiss', 'wa', 'pixel'];
 const SKIN_FONTS = { swiss: 'Archivo+Black', wa: 'Shippori+Mincho+B1:wght@600;800', pixel: 'DotGothic16' };
 function applySkin() {
   const q = new URLSearchParams(location.search).get('skin');
-  const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'mid');
+  const sk = SKINS.includes(q) ? q : (SKINS.includes(DB.set.skin) ? DB.set.skin : 'vintage');
   document.body.dataset.skin = sk; A.setStyle(sk === 'mid' ? 'mid' : 'pop'); A.syncPalette(); setBg(); setWords();
   if (SKIN_FONTS[sk] && !document.getElementById('font-' + sk)) { const l = document.createElement('link'); l.id = 'font-' + sk; l.rel = 'stylesheet'; l.href = `https://fonts.googleapis.com/css2?family=${SKIN_FONTS[sk]}&display=swap`; document.head.appendChild(l); }
 }
