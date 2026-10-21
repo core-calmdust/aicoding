@@ -2,8 +2,8 @@
  * categorized puzzles (詰めドット) and the daily puzzle. Loaded before the main script; uses its globals at run time.
  * All positions and move values come from the exact solvers (see the repository notes); nothing here is heuristic. */
 'use strict';
-const LV = '?v=20261019L';
-const LSTORE2 = 'dots-lessons-v2', PSTORE2 = 'dots-puzzles-v2', OSTORE = 'dots-openings-v1', RSTORE = 'dots-rules-v1';
+const LV = '?v=20261021L';
+const LSTORE2 = 'dots-lessons-v2', PSTORE2 = 'dots-puzzles-v2', PKEEP = 'dots-pz-keep-v1', OSTORE = 'dots-openings-v1', RSTORE = 'dots-rules-v1';
 const K64L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const decE = s => [...s].map(c => K64L.indexOf(c));
 const decO = s => [...s].map(c => c === '.' ? -1 : +c);
@@ -847,8 +847,22 @@ const PZ_SVG = {
   count: '<path d="M18 5H6l6 7-6 7h12"/>',
 };
 const pzBadge = id => PZ_SVG[id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_SVG[id]}</svg>` : `<b class="gl">${PZ_ICON[id] || '◆'}</b>`;
-function pzThumbAt(C, j) {
-  const D = PZC[C.id], o = pzOrder(C)[j], q = D && o && D.levels[o[0]] && D.levels[o[0]][o[1]];
+// Puzzles replaced on 2026-10-21 (fun refresh, tools/refresh_fun.js): the data file keeps the previous one in
+// old["lv-k"]. A player who already had a record for the slot when this version first ran keeps the old puzzle
+// (snapshot in PKEEP), and dailies up to index.json "cut" keep theirs; everyone else gets the new one.
+function pzKeep() {
+  if (!PZI || !PZI.cut) return [];
+  let s = lsGet(PKEEP, null);
+  if (!s || s.cut !== PZI.cut) { const prog = pzProg(); s = { cut: PZI.cut, keys: (PZI.rep || []).filter(k => prog[k] !== undefined && prog[k] !== null) }; lsSet(PKEEP, s); }
+  return s.keys;
+}
+function pzQ(id, lv, k, daily) {
+  const D = PZC[id], q = D && D.levels[lv] && D.levels[lv][k], o = D && D.old && D.old[lv + '-' + k];
+  if (o && ((daily && daily <= PZI.cut) || pzKeep().includes(pzKey(id, lv, k)))) return o;
+  return q;
+}
+function pzThumbAt(C, j, daily) {
+  const o = pzOrder(C)[j], q = o && pzQ(C.id, o[0], o[1], daily);
   if (!q) return ''; try { return miniSVG(figFromProblem(decodePz(q))); } catch (e) { return ''; }
 }
 async function openPuzzles() {
@@ -866,7 +880,7 @@ async function openPuzzles() {
   box.innerHTML = PZBook.home({
     title: t('pz.title'), lead: t('pz.desc2'), all: ids.map(id => pzRecs(pzC(id), prog)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pc.' + cont.key + '.t') },
-    daily: dl ? [{ key: '1', board: pzThumbAt(pzC(dl.cat), dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
+    daily: dl ? [{ key: '1', board: pzThumbAt(pzC(dl.cat), dl.j, dl.date), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
       sub: `${t('pc.' + dl.cat + '.t')} · ${PZBook.t('stage', { n: Math.floor(dl.j / PZBook.STAGE) + 1 })} · No.${dl.j + 1} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
     cats: cats.map(g => { const r = ids.filter(id => grp(id) === g).map(id => pzRecs(pzC(id), prog)).flat(); return { key: g, icon: PZBook.icon(g === 'T' ? 'theme' : 'grid'), name: t('pz.grp' + g), done: r.filter(x => x > 0).length, total: r.length }; }),
     cur, catDesc: t('pz.grp' + cur + 'Sub'),
@@ -892,7 +906,7 @@ async function openPzCat(id, cur) {
   // each tile shows its position (a small board) under the number and stars
   const D = await pzCatLoad(id), ord = pzOrder(C);
   if (D && pzCat === id) $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => {
-    const o = ord[+el.dataset.j], q = o && D.levels[o[0]] && D.levels[o[0]][o[1]]; if (!q) return;
+    const o = ord[+el.dataset.j], q = o && pzQ(id, o[0], o[1]); if (!q) return;
     try { el.insertAdjacentHTML('afterbegin', `<span class="th">${miniSVG(figFromProblem(decodePz(q)))}</span>`); } catch (e) {}
   });
   $('#pzListView').classList.add('hidden'); $('#pzGridView').classList.remove('hidden');
@@ -905,7 +919,8 @@ async function startPuzzle(cat, j, daily, keep) {
   const d = await pzCatLoad(cat); await pzIndexLoad(); if (!d || !PZI) return;
   const C = pzC(cat), [lv, k] = pzOrder(C)[j];
   endLesson(true);
-  const pz = decodePz(d.levels[lv][k]);
+  pzKeep();   // take the keep-old snapshot before this play can add a record
+  const pz = decodePz(pzQ(cat, lv, k, daily));
   pz.best = pz.values.reduce((a, b) => b[1] > a[1] ? b : a)[0];
   enterSetup({ edges: pz.edges, owners: pz.owners }, pz.n);
   if (!daily) PZBook.lastSet(PZ_LAST, cat);
