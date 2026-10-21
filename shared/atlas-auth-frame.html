@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- World Board Game Atlas — hidden helper frame (loaded by shared/atlas-account.js).
+     Signs ONE game's own Firebase project (its online play / rated games) in with the Google
+     credential of the shared Atlas sign-in, as that game page's default app — so the game page
+     finds itself already signed in (same origin → same saved session) and needs no second login.
+     ?g=<game folder>  (its firebase-config.js is loaded)      messages: {op:'in', idToken, accessToken} | {op:'out'} -->
+<html><head><meta charset="utf-8"></head><body>
+<script>
+(function () {
+  'use strict';
+  const g = (new URLSearchParams(location.search).get('g') || '').replace(/[^a-z0-9-]/g, '');
+  const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.appendChild(s); });
+  const reply = (id, o) => parent.postMessage(Object.assign({ atlasAuth: 1, g, id }, o), location.origin);
+  let auth = null;
+  const ready = (async () => {
+    await load('../' + g + '/firebase-config.js');
+    if (!window.FIREBASE_CONFIG) throw new Error('no-config');
+    await load(FB + 'firebase-app-compat.js'); await load(FB + 'firebase-auth-compat.js');
+    firebase.initializeApp(window.FIREBASE_CONFIG);   // the game page's own default app → its saved session
+    auth = firebase.auth();
+    await new Promise(res => { const off = auth.onAuthStateChanged(() => { off(); res(); }); });
+  })();
+  async function signIn(idToken, accessToken) {
+    const P = firebase.auth.GoogleAuthProvider;
+    const tries = [P.credential(idToken || null, accessToken || null)];
+    if (idToken && accessToken) tries.push(P.credential(null, accessToken));   // an ID token issued to another project may be refused; the access token alone can still work
+    let last = null;
+    for (const cred of tries) {
+      try {
+        const u = auth.currentUser;
+        if (u && !u.isAnonymous && u.providerData.some(p => p.providerId === 'google.com')) {   // already signed in with Google: switch only if it's another account
+          const r = await auth.signInWithCredential(cred); return r.user.uid;
+        }
+        if (u && u.isAnonymous) {   // keep this device's player (profile, rating) by linking it to the Google account
+          try { return (await u.linkWithCredential(cred)).user.uid; }
+          catch (e) {
+            if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') return (await auth.signInWithCredential(e.credential || cred)).user.uid;
+            throw e;
+          }
+        }
+        return (await auth.signInWithCredential(cred)).user.uid;
+      } catch (e) { last = e; }
+    }
+    throw last;
+  }
+  addEventListener('message', async e => {
+    if (e.origin !== location.origin || !e.data || !e.data.atlasAuthReq) return;
+    const m = e.data;
+    try {
+      await ready;
+      if (m.op === 'in') reply(m.id, { ok: true, uid: await signIn(m.idToken, m.accessToken) });
+      else if (m.op === 'out') { if (auth.currentUser && !auth.currentUser.isAnonymous) await auth.signOut(); reply(m.id, { ok: true }); }
+    } catch (x) { reply(m.id, { ok: false, err: String((x && (x.code || x.message)) || x) }); }
+  });
+  ready.then(() => reply(0, { loaded: true }), x => reply(0, { loaded: false, err: String(x && x.message || x) }));
+})();
+</script>
+</body></html>

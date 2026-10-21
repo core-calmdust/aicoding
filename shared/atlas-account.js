@@ -27,10 +27,41 @@
   const META = 'atlas-sync-meta';                 // { key: lastLocalChangeMs }  + _h: { key: hash }
   const subs = [];
   let app = null, user = null, ready = null, syncing = false, last = 0, err = '';
+  // games with their own Firebase project (online play / rated games, Google sign-in): signed in together with the
+  // shared account through a hidden frame each (shared/atlas-auth-frame.html), so one sign-in covers every game.
+  const GAME_AUTH = ['shogi', 'chess', 'reversi', 'checkers', 'gomoku', 'dots', 'morris', 'sudoku'];   // sudoku = also speed sudoku / SameGame POP!
+  const HERE = (document.currentScript && document.currentScript.src) || location.href;
+  let games = { done: 0, fail: [] };
 
   const loadScript = src => { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.appendChild(s); })); };   // shared with the games' online.js
   const emit = () => subs.forEach(f => { try { f(state()); } catch (e) {} });
-  const state = () => ({ available: !!(CFG || MOCK), ready: !!ready, user: user && !user.isAnonymous ? { name: user.displayName || '', photo: user.photoURL || '', email: user.email || '' } : null, syncing, last, err });
+  const state = () => ({ available: !!(CFG || MOCK), ready: !!ready, user: user && !user.isAnonymous ? { name: user.displayName || '', photo: user.photoURL || '', email: user.email || '' } : null, syncing, last, err, games });
+
+  /* ---------- the games' own projects: sign in / out together ---------- */
+  function frameCall(g, msg) {
+    return new Promise(res => {
+      const f = document.createElement('iframe'); f.style.display = 'none'; f.setAttribute('aria-hidden', 'true');
+      f.src = new URL('atlas-auth-frame.html?g=' + g, HERE).href;
+      const id = Math.random().toString(36).slice(2);
+      const done = r => { removeEventListener('message', on); clearTimeout(to); f.remove(); res(r); };
+      const on = e => {
+        if (e.origin !== location.origin || !e.data || !e.data.atlasAuth || e.data.g !== g) return;
+        if (e.data.id === 0) { if (e.data.loaded) f.contentWindow.postMessage(Object.assign({ atlasAuthReq: 1, id }, msg), location.origin); else done({ ok: false, err: e.data.err }); }
+        else if (e.data.id === id) done(e.data);
+      };
+      const to = setTimeout(() => done({ ok: false, err: 'timeout' }), 30000);
+      addEventListener('message', on); document.body.appendChild(f);
+    });
+  }
+  async function gamesIn(cred) {
+    if (!cred || (!cred.idToken && !cred.accessToken)) return;
+    const msg = { op: 'in', idToken: cred.idToken || null, accessToken: cred.accessToken || null };
+    const rs = await Promise.all(GAME_AUTH.map(async g => [g, await frameCall(g, msg)]));
+    games = { done: rs.filter(([, r]) => r.ok).length, fail: rs.filter(([, r]) => !r.ok).map(([g, r]) => g + ':' + r.err) };
+    if (games.fail.length) console.warn('[atlas-account] game sign-in failed:', games.fail);
+    emit();   // (an open game page picks the new session up by itself: Firebase watches its saved session across frames)
+  }
+  const gamesOut = () => Promise.all(GAME_AUTH.map(g => frameCall(g, { op: 'out' })));
   const LS = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
   const J = s => { try { return JSON.parse(s); } catch (e) { return undefined; } };
   const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return (h >>> 0).toString(36) + s.length; };
@@ -120,13 +151,13 @@
       auth = app.auth(); db = app.database();
     };
     return {
-      restore: async () => { await init(); try { const r = await auth.getRedirectResult(); if (r && r.user) user = r.user; } catch (e) {} user = user || await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }); },
+      restore: async () => { await init(); try { const r = await auth.getRedirectResult(); if (r && r.user) { user = r.user; gamesIn(r.credential); } } catch (e) {} user = user || await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }); },
       signIn: async () => {
         await init(); const prov = new firebase.auth.GoogleAuthProvider();
-        try { user = (await auth.signInWithPopup(prov)).user; }
+        try { const r = await auth.signInWithPopup(prov); user = r.user; gamesIn(r.credential); }
         catch (e) { if (/popup-blocked|operation-not-supported|popup-closed-by-browser/.test(e.code || '')) { await auth.signInWithRedirect(prov); return; } throw e; }
       },
-      signOut: async () => { await init(); await auth.signOut(); user = null; },
+      signOut: async () => { await init(); await auth.signOut(); user = null; gamesOut(); },
       pull: async () => (await db.ref('users/' + user.uid + '/kv').get()).val() || {},
       push: async (patch) => db.ref('users/' + user.uid + '/kv').update(patch),
     };
