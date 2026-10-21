@@ -420,7 +420,7 @@
       const tray = V(0, 0, P.TZ), dir = V().subVectors(P.B, P.A).normalize(), start = P.MOUTH, a = P.A.clone().add(V(0, CR - .3, .12)), b = P.B.clone().add(V(0, CR - .28, 0));
       const RIN = .48 - CR * .6, ROUT = .62 + CR * .8, RIMY = .36 + CR, BODYZ = P.F + .15;
       const st = cs.map((c, i) => ({ c, t0: i * .075 + Math.random() * .03, p: start.clone(), v: V(), live: false, done: false, spin: V((Math.random() - .5) * 14, (Math.random() - .5) * 6, (Math.random() - .5) * 14) }));
-      let t = 0, lastTok = 0;
+      let t = 0, lastTok = 0, nTok = 0;
       const tmp = V();
       function step(dt) {
         t += dt;
@@ -437,7 +437,7 @@
           s.v.y -= 9.8 * dt; s.p.addScaledVector(s.v, dt);
           const dx = s.p.x - tray.x, dz = s.p.z - tray.z, rr = Math.hypot(dx, dz);
           const fl = rr < RIN ? .09 + CR : CR;
-          if (s.p.y < fl) { s.p.y = fl; if (s.v.y < -.6 && t - lastTok > .05) { say('tok'); lastTok = t; } s.v.y = -s.v.y * .45; s.v.x *= .82; s.v.z *= .82; if (Math.abs(s.v.y) < .25) s.v.y = 0; }
+          if (s.p.y < fl) { s.p.y = fl; if (s.v.y < -.6 && t - lastTok > .11 && nTok < 14) { say('clack'); lastTok = t; nTok++; } s.v.y = -s.v.y * .45; s.v.x *= .82; s.v.z *= .82; if (Math.abs(s.v.y) < .25) s.v.y = 0; }
           if (rr > RIN && rr < ROUT && s.p.y < RIMY) {   // the tray rim
             const out = rr > (RIN + ROUT) / 2, n = V(dx / rr, 0, dz / rr), d = out ? ROUT - rr : -(rr - RIN);
             if (s.p.y > RIMY - .12 && s.v.y <= 0) { s.p.y = RIMY; s.v.y = Math.abs(s.v.y) * .4; s.p.addScaledVector(n, d * .3); }
