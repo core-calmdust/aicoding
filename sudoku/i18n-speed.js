@@ -2577,4 +2577,14 @@ add('pt', {"g.rev.d": "Nas casas coloridas, o número digitado entra ao contrár
 add('de', {"g.rev.d": "In den farbigen Feldern wird die Gegenzahl eingetragen (1↔4, 2↔3)"});
 add('hi', {"g.rev.d": "रंगीन खानों में लिखा अंक उल्टा हो जाता है (1↔4, 2↔3)"});
 add('ar', {"g.rev.d": "في الخانات الملوّنة يُكتب الرقم المعاكس لما تكتبه (1↔4، 2↔3)"});
+add('ja', {"sp.starmiss": "−5秒"});
+add('en', {"sp.starmiss": "−5 s"});
+add('zh', {"sp.starmiss": "−5秒"});
+add('ko', {"sp.starmiss": "−5초"});
+add('es', {"sp.starmiss": "−5 s"});
+add('fr', {"sp.starmiss": "−5 s"});
+add('pt', {"sp.starmiss": "−5 s"});
+add('de', {"sp.starmiss": "−5 s"});
+add('hi', {"sp.starmiss": "−5 सेकंड"});
+add('ar', {"sp.starmiss": "−5 ث"});
 })(window.I18N = window.I18N || {});

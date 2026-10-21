@@ -716,7 +716,7 @@ const GIM = {
       if (g.st.next <= 0) {
         g.st.next = [5600, 4800, 4100][g.s - 1] * (.85 + R.rng() * .3);
         const el = document.createElement('div'); el.className = 'sstar'; el.innerHTML = GICON.star;
-        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2900, 2400, 1950][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
+        const ltr = R.rng() < .5, st = { el, t: 0, dur: [2300, 1900, 1550][g.s - 1], x0: ltr ? -22 : 100, x1: ltr ? 100 : -22, y0: R.rng() * 35, y1: 35 + R.rng() * 45 };
         if (!ltr) el.classList.add('rtl');
         el.addEventListener('pointerdown', e => {
           e.stopPropagation(); e.preventDefault(); if (!R || R.state !== 'play' || st.got) return;
@@ -731,6 +731,11 @@ const GIM = {
         st.t += dt / st.dur;
         if (st.t >= 1) {   // missed it: −5 seconds
           st.el.remove();
+          const fx = document.createElement('div'); fx.className = 'smiss';
+          fx.innerHTML = `<i>${GICON.star}</i><b>${esc(t('sp.starmiss'))}</b>`;
+          fx.style.left = Math.max(4, Math.min(66, st.x1 < 0 ? 4 : 66)) + '%'; fx.style.top = Math.max(6, Math.min(70, st.y1)) + '%';
+          $('#sFloat').appendChild(fx); setTimeout(() => fx.remove(), 1300);
+          const tm = $('#sTimer'); tm.classList.remove('hurt'); void tm.offsetWidth; tm.classList.add('hurt'); setTimeout(() => tm.classList.remove('hurt'), 600);
           R.left -= 5000; R.combo = 0; R.missThis = true;
           const pen = $('#sPen'); pen.textContent = '-5'; pen.classList.remove('on'); void pen.offsetWidth; pen.classList.add('on');
           C.SFX.err(); C.vib([30, 30, 30]); render();

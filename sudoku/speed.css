@@ -250,6 +250,14 @@ body.night .scell.fpeek .v{background:#1f4a46}
 .sstar.got{animation:sgot .38s ease-out forwards}
 @keyframes stw{to{filter:brightness(1.25)}}
 @keyframes sgot{to{transform:scale(1.8) rotate(40deg);opacity:0}}
+.smiss{position:absolute;width:34%;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:6;animation:smiss 1.3s ease-out forwards}
+.smiss i{width:42%;aspect-ratio:1;filter:grayscale(1) brightness(.85);opacity:.8;animation:sfall 1.3s ease-in forwards}
+.smiss i svg{width:100%;height:100%;display:block}
+.smiss b{font-family:var(--num);font-weight:700;font-size:calc(var(--sbs) * .1);line-height:1.2;color:#fff;background:#ff4d6d;border-radius:99px;padding:.08em .5em;box-shadow:0 0 0 3px #fff,0 6px 14px rgba(180,30,60,.35);white-space:nowrap}
+@keyframes smiss{0%{transform:scale(.4);opacity:0}15%{transform:scale(1.25);opacity:1}30%{transform:scale(1)}75%{opacity:1}100%{transform:translateY(-30%);opacity:0}}
+@keyframes sfall{to{transform:translateY(60%) rotate(140deg);opacity:0}}
+.stimer.hurt{animation:shake .4s}
+.stimer.hurt .sclock{color:#ff4d6d}
 /* power cut */
 .sdark{position:absolute;inset:0;z-index:4;pointer-events:none;background:#14112b;opacity:0;transition:opacity .25s}
 .sdark.on{opacity:.97;animation:flick .5s steps(1)}
