@@ -5798,6 +5798,118 @@ NB.ZENITH = () => {
     g.userData.anim = (o, b, t) => { star.rotation.set(t, t * 1.4, 0); cage.rotation.set(-t * 0.3, t * 0.4, 0); halo.rotation.y = t * 0.6; cage.material.color.setHex([0xffd040, 0xff4090, 0x40e0ff][b.phase || 0]); };
     return g;
 };
+// 作り直し（より凝った造形）: TRIDENT / COMB / SPINDLE / RAZOR / TITAN / BEACON
+NB.TRIDENT = () => {
+    // 海神の矛: 装飾付きの柄の先に、外へ反る3本の刃。刃先の間を電撃が走り、根元に光球
+    const g = new THREE.Group();
+    const shaft = fuse(LAB.loft([[-80, 6, 6], [-50, 12, 12], [-20, 9, 9], [0, 18, 16], [10, 26, 20]], 8, Math.PI / 8), 0xffc040, { glass: 0.25 }); g.add(shaft);
+    [-62, -36].forEach(z => { const r = LAB.dashRing(14, 12, 5, 1.5, LAB.glass(0xffe080, 0.85), 3); r.position.z = z; r.rotation.x = Math.PI / 2; g.add(r); });
+    const guard = fuse(LAB.loft([[-58, 8, 8, 0, 0], [-30, 14, 10, 0, 0], [0, 18, 12, 0, 0], [30, 14, 10, 0, 0], [58, 8, 8, 0, 0]], 6), 0xffc040, { cage: false }); guard.rotation.y = Math.PI / 2; guard.position.z = 14; g.add(guard);
+    const prongs = [-1, 0, 1].map(k => {
+        const st = k === 0 ? [[0, 16, 12, 0, 0], [30, 14, 10, 0, 0], [62, 8, 6, 0, 0], [84, 1, 1, 0, 0]]
+            : [[0, 14, 10, 0, 0], [22, 12, 9, 0, k * 6], [46, 9, 6, 0, k * 18], [66, 1, 1, 0, k * 34]];
+        const p = fuse(LAB.loft(st, 6), k === 0 ? 0xff4060 : 0xffe080, { glass: 0.3, seed: k + 4, cage: false });
+        const piv = new THREE.Group(); piv.position.set(k * 46, 0, 18); piv.add(p); g.add(piv); return piv;
+    });
+    const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(11, 1), new THREE.MeshBasicMaterial({ color: 0xff6080 })); orb.position.set(0, 0, 30); orb.add(wire(new THREE.IcosahedronGeometry(18, 0), 0xffe080, 0.7)); g.add(orb);
+    const arcMat = LAB.line(0xbff8ff, 0.9), arc = new THREE.LineSegments(new THREE.BufferGeometry(), arcMat); g.add(arc);
+    g.userData.anim = (o, b, t) => {
+        prongs.forEach((p, k) => { p.rotation.y = (k - 1) * (0.08 + 0.06 * Math.sin(t * 3)); p.position.z = 18 + Math.sin(t * 5 + k) * 3; });
+        orb.rotation.set(t * 2, t * 3, 0); orb.scale.setScalar(1 + 0.15 * Math.sin(t * 8));
+        // 刃先どうしをジグザグの電撃でつなぐ
+        const tips = prongs.map((p, k) => new THREE.Vector3(p.position.x + (k - 1) * 34, 0, p.position.z + (k === 1 ? 84 : 66)));
+        const pts = [];
+        for (let a = 0; a < 2; a++) { let prev = tips[a]; for (let s = 1; s <= 6; s++) { const q = tips[a].clone().lerp(tips[a + 1], s / 6); if (s < 6) q.add(new THREE.Vector3(0, (Math.random() - 0.5) * 14, (Math.random() - 0.5) * 14)); pts.push(...prev.toArray(), ...q.toArray()); prev = q; } }
+        arc.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); arcMat.opacity = 0.5 + Math.random() * 0.5;
+    };
+    return g;
+};
+NB.COMB = () => {
+    // 光の竪琴: アーチ状の装甲フレームから、鍵盤のような結晶が弦で吊られて順番に跳ねる。両端でタービンが回る
+    const g = new THREE.Group();
+    const st = []; for (let k = 0; k <= 10; k++) { const u = k / 10, x = -110 + u * 220; st.push([x, 16, 14, 18 * Math.sin(u * Math.PI), 0]); }
+    const arch = fuse(LAB.loft(st, 6), 0x40ffa0, { glass: 0.25 }); arch.rotation.y = Math.PI / 2; g.add(arch);
+    const turb = [-1, 1].map(s => { const tg = new THREE.Group(); tg.position.x = s * 112; tg.add(fuse(LAB.loft([[-10, 30, 30], [10, 30, 30]], 8, Math.PI / 8), 0x40ffa0, { cage: false })); for (let k = 0; k < 6; k++) { const bl = fuse(bladeGeo(22, 8, 3), 0xb0ffd0, { cage: false, glass: 0 }); bl.rotation.z = k * Math.PI / 3; bl.rotation.y = Math.PI / 2; tg.add(bl); } tg.rotation.z = 0; const w = new THREE.Group(); w.add(tg); g.add(w); return tg; });
+    const keys = [], strings = new THREE.LineSegments(new THREE.BufferGeometry(), LAB.line(0xb0ffd0, 0.5)); g.add(strings);
+    for (let k = -5; k <= 5; k++) { const kk = fuse(crystal(5, 13, 4), k % 2 ? 0xb0ffd0 : 0x40ffa0, { cage: false, glass: 0.45, seed: k + 9 }); kk.userData.x = k * 20; g.add(kk); keys.push(kk); }
+    g.userData.anim = (o, b, t) => {
+        const pts = [];
+        keys.forEach((kk, i) => { const x = kk.userData.x, top = 18 * Math.sin((x + 110) / 220 * Math.PI), drop = 24 + Math.max(0, Math.sin(t * 6 - i * 0.6)) * 14; kk.position.set(x, top - drop, 6); kk.rotation.y = t * 2 + i; pts.push(x, top, 0, x, top - drop + 13, 6); });
+        strings.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+        turb.forEach((tg, s) => { tg.rotation.x = (s ? -1 : 1) * t * 4; });
+    };
+    return g;
+};
+NB.SPINDLE = () => {
+    // 多段ジャイロの独楽: 結晶の軸のまわりを、大きさの違う装甲の輪が交互の向きに回り、独楽の形を作る
+    const g = new THREE.Group(), sp = new THREE.Group();
+    sp.add(fuse(crystal(9, 70, 6), 0xffe0a0, { glass: 0.5, tint: 0.2 }));
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(12), new THREE.MeshBasicMaterial({ color: 0xff6030 })); core.add(wire(new THREE.OctahedronGeometry(20), 0xffb040, 0.7)); sp.add(core);
+    const tiers = [[-42, 16], [-26, 34], [-10, 48], [8, 48], [24, 34], [40, 16]].map(([y, r], k) => { const ring = segRing(r, 6 + k, 8, 6, k % 2 ? 0xffb040 : 0xff6030); ring.position.y = y; sp.add(ring); return ring; });
+    g.add(sp);
+    const orbit = LAB.dashRing(66, 32, 9, 1.6, LAB.glass(0xffffff, 0.55), 4); g.add(orbit);
+    g.userData.anim = (o, b, t) => { sp.rotation.z = Math.sin(t * 2) * 0.25; tiers.forEach((r, k) => { r.rotation.y = (k % 2 ? -1 : 1) * t * (3 + k * 0.6); }); core.rotation.y = t * 5; orbit.rotation.y = -t * 2; };
+    return g;
+};
+NB.RAZOR = () => {
+    // 回転刃のチャクラム: 反った4枚刃と、節の輪でできたハブ。突進中は高速回転する
+    const g = new THREE.Group(), blade = new THREE.Group();
+    const arm = LAB.loft([[0, 20, 10, 0, 0], [24, 22, 8, 0, 8], [48, 16, 5, 0, 22], [66, 8, 3, 0, 40], [76, 1, 1, 0, 54]], 4, Math.PI / 4);
+    for (let k = 0; k < 4; k++) { const a = fuse(arm, k % 2 ? 0xd0e8ff : 0x9fd8ff, { glass: 0.35, tint: 0.2, seed: k + 1, cage: 1.08 }); const piv = new THREE.Group(); piv.rotation.y = k * Math.PI / 2; a.position.z = 14; piv.add(a); blade.add(piv); }
+    blade.add(segRing(22, 8, 8, 10, 0xd0e8ff));
+    const eye = new THREE.Mesh(new THREE.IcosahedronGeometry(10, 1), new THREE.MeshBasicMaterial({ color: 0xff3050 })); eye.add(wire(new THREE.IcosahedronGeometry(15, 0), 0xff3050, 0.7)); blade.add(eye);
+    const trail = LAB.dashRing(86, 40, 10, 1.4, LAB.glass(0xd0e8ff, 0.45), 3); g.add(blade, trail);
+    g.userData.anim = (o, b, t) => { const dash = b.mode === 'dash'; blade.rotation.y = t * (dash ? 30 : 3); trail.visible = dash; trail.rotation.y = -t * 6; eye.rotation.set(t, -t * 2, 0); };
+    return g;
+};
+NB.TITAN = () => {
+    // 多層の要塞戦艦: 段になった甲板に2基の砲塔（自機を狙って回る）、艦橋とアンテナ、後部のエンジン。左右に浮かぶ防壁
+    const g = new THREE.Group();
+    g.add(fuse(LAB.loft([[-70, 50, 22, 0], [-40, 110, 36, 0], [30, 120, 38, 0], [62, 70, 24, 0], [74, 30, 10, -4]], 8, Math.PI / 8), 0x707890, { glass: 0.2, tint: 0.2, cage: 1.06 }));
+    g.add(fuse(LAB.loft([[-50, 70, 14, 22], [20, 80, 14, 22], [40, 50, 10, 20]], 6), 0x8a90aa, { cage: false }));
+    const bridge = fuse(LAB.loft([[-44, 26, 22, 36], [-24, 22, 20, 40], [-14, 10, 10, 38]], 6), 0x9aa0c0, { cage: false }); g.add(bridge);
+    const ant = wire(new THREE.ConeGeometry(4, 36, 4), 0xffd080, 0.8); ant.position.set(0, 64, -34); g.add(ant);
+    const turrets = [-24, 20].map((z, i) => { const tr = new THREE.Group(); tr.position.set(0, 32, z + 12);
+        tr.add(fuse(LAB.loft([[-10, 26, 12], [10, 26, 12]], 8, Math.PI / 8), 0xff8040, { cage: false }));
+        [-6, 6].forEach(x => { const bar = fuse(LAB.loft([[0, 5, 5, 0, x], [36, 4, 4, 0, x]], 6), 0xffb070, { cage: false, glass: 0 }); tr.add(bar); });
+        g.add(tr); return tr; });
+    const engines = [-30, 0, 30].map(x => { const e = new THREE.Mesh(new THREE.CircleGeometry(9, 10), new THREE.MeshBasicMaterial({ color: 0xff7040 })); e.position.set(x, 4, -71); e.rotation.y = Math.PI; g.add(e); return e; });
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(60, 5, 3), new THREE.MeshBasicMaterial({ color: 0xff3040 })); eye.position.set(0, 4, 75); g.add(eye);
+    const plates = [];
+    for (let k = 0; k < 4; k++) { const p = fuse(LAB.loft([[-24, 10, 34], [-14, 14, 40], [14, 14, 40], [24, 10, 34]], 6), 0xff8040, { cage: false, seed: k, glass: 0.35 }); g.add(p); plates.push(p); }
+    g.userData.anim = (o, b, t) => {
+        const aim = Math.atan2(player.x - b.x, player.y - b.y);
+        turrets.forEach((tr, i) => { tr.rotation.y = aim + Math.sin(t * 1.5 + i) * 0.2; });
+        plates.forEach((p, k) => { const sx = k % 2 ? 1 : -1, sz = k < 2 ? -1 : 1; p.position.set(sx * 84, Math.sin(t * 2 + k) * 6, sz * 26); p.rotation.set(0, 0, sx * 0.35); });
+        engines.forEach((e, i) => e.scale.setScalar(0.8 + 0.3 * Math.abs(Math.sin(t * 9 + i))));
+        eye.scale.x = 0.6 + (Math.sin(t * 4) + 1) * 0.3; ant.rotation.y = t * 3;
+    };
+    return g;
+};
+NB.BEACON = () => {
+    // 監視塔: 浮かぶ節の尖塔の上で、ガラスのドームに収まった「目」がサーチライトを回す。下には吊り下がるケーブル
+    const g = new THREE.Group();
+    const spire = new THREE.Group(); g.add(spire);
+    [[-30, 34], [-12, 28], [4, 22]].forEach(([y, w], k) => { const s = fuse(loftY([[-7, w, w], [7, w * 0.85, w * 0.85]], 6, 0), 0x8090b0, { cage: false, seed: k + 2, glass: 0.3 }); s.position.y = y; spire.add(s); });
+    const rings = [-22, -4].map(y => { const r = LAB.dashRing(30, 18, 7, 1.5, LAB.glass(0xfff080, 0.7), 3); r.position.y = y; g.add(r); return r; });
+    const head = new THREE.Group(); head.position.y = 30; g.add(head);
+    head.add(fuse(loftY([[-10, 40, 40], [0, 46, 46], [8, 36, 36]], 8, Math.PI / 8), 0x8090b0, { cage: false }));
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(18, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), LAB.glass(0xfff080, 0.35)); dome.position.y = 8; dome.add(wire(dome.geometry, 0xfff080, 0.6)); head.add(dome);
+    const iris = new THREE.Mesh(new THREE.SphereGeometry(8, 12, 8), new THREE.MeshBasicMaterial({ color: 0xfff080 })); iris.position.y = 14; head.add(iris);
+    const cables = new THREE.LineSegments(new THREE.BufferGeometry(), LAB.line(0x8090b0, 0.6)); g.add(cables);
+    const beam = new THREE.Mesh(new THREE.ConeGeometry(18, 120, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff080, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    beam.geometry.translate(0, -60, 0);
+    const bh = new THREE.Group(); bh.position.y = 10; bh.add(beam); g.add(bh);
+    g.userData.anim = (o, b, t) => {
+        const sp = b.spin ?? Math.PI / 2;
+        bh.rotation.set(Math.PI / 2, 0, -(sp - Math.PI / 2)); head.rotation.y = -(sp - Math.PI / 2);
+        iris.position.x = Math.sin(t * 3) * 3; rings.forEach((r, k) => { r.rotation.y = (k ? -1 : 1) * t * 2; });
+        spire.children.forEach((s, k) => { s.position.y = [-30, -12, 4][k] + Math.sin(t * 2 + k) * 2; s.rotation.y = t * (k % 2 ? -0.8 : 0.8); });
+        const pts = []; for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2 + t * 0.3, x = Math.cos(a) * 14, z = Math.sin(a) * 14; pts.push(x, -36, z, x * 1.6 + Math.sin(t * 2 + k) * 4, -70, z * 1.6); }
+        cables.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    };
+    return g;
+};
 const BOSS_BUILDERS = [
     // AXIS（新造形）
     () => NB.AXIS(),
