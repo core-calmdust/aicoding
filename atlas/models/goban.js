@@ -20,6 +20,8 @@
      Table3D.goban.stone(color 1 black | 2 white, cell)   → Mesh (base at y = 0)
      Table3D.goban.bowl(color, cell, { stones })         → Group (+ userData.lid: the lid, separate)
      Table3D.MODELS.gomoku(live, o)   15 × 15 board (+ a mid-game position and both bowls unless live)
+     Table3D.MODELS.go(live, o)       go board, o.n = 5 … 19 lines (default 19; + an opening and both bowls unless live).
+                                      Same outer size for every n (W): a 9 × 9 board simply has larger cells.
    ===================================================================== */
 (function () {
   'use strict';
@@ -135,7 +137,12 @@
     if (n === 19) return [3, 9, 15].flatMap(a => [3, 9, 15].map(b => [a, b]));
     if (n === 13) return [[3, 3], [9, 3], [6, 6], [3, 9], [9, 9]];
     if (n === 9) return [[2, 2], [6, 2], [4, 4], [2, 6], [6, 6]];
-    const a = 3, b = n - 4, c = (n - 1) / 2; return [[a, a], [b, a], [c, c], [a, b], [b, b]];   // 15: the gomoku board
+    if (n === 15) { const a = 3, b = n - 4, c = (n - 1) / 2; return [[a, a], [b, a], [c, c], [a, b], [b, b]]; }   // 15: the gomoku board
+    // other go boards (5 … 18): the same points as the go page (go/rules.js starPoints)
+    if (n < 7) return n === 5 ? [[2, 2]] : [];
+    const e = n >= 13 ? 3 : 2, b = n - 1 - e, m = (n - 1) >> 1, s = [[e, e], [b, e], [e, b], [b, b]];
+    if (n % 2) { s.push([m, m]); if (n >= 15) s.push([e, m], [b, m], [m, e], [m, b]); }
+    return s;
   }
   function topCanvas(n, margin) {
     const span = n - 1 + 2 * margin;
@@ -595,6 +602,30 @@
     const R = c * 2.4;
     [[1, 6.15, 1.9], [2, -6.15, -1.9]].forEach(([col, x, z]) => {
       const bw = bowl(col, c, { R, stones: 24 }); bw.position.set(x, 0, z); g.add(bw);
+      const lid = bw.userData.lid; lid.rotation.x = Math.PI; lid.position.set(x + (x > 0 ? -.15 : .15), R * .4, z + (z > 0 ? -2.55 : 2.55)); g.add(lid);
+    });
+    return g;
+  };
+
+  /* ---------- go on the chabudai (replaces table3d.js's plain slab) ---------- */
+  // the showcase: a 19 × 19 opening (x, y from the top-left corner), black first
+  const GO_SHOW = ['pd', 'dp', 'pq', 'dd', 'fq', 'cn', 'jp', 'qf', 'nc', 'rd', 'qc', 'qi', 'qk', 'oe', 'pe', 'of', 'ld', 'fc', 'cf', 'ch'];
+  X.MODELS.go = function (live, o) {
+    const TT = T(), g = new TT.Group(), n = Math.max(5, Math.min(19, (o && o.n) || 19));
+    let look = (o && o.look) || null; if (!look) { try { look = localStorage.getItem('atlas-go-look') === 'lacquer' ? 'lacquer' : 'kaya'; } catch (e) { look = 'kaya'; } }
+    const b = board({ n, look, W: (o && o.W) || 8.8 }); g.add(b);
+    Object.assign(g.userData, b.userData, { board: b });
+    if (live) return g;
+    const Y = b.userData.top, c = b.userData.cell;
+    GO_SHOW.forEach((s, k) => {
+      const x = s.charCodeAt(0) - 97, y = s.charCodeAt(1) - 97; if (x >= n || y >= n) return;
+      const [px, pz] = b.userData.pt(x, y), st = stone(k % 2 ? 2 : 1, c, k);
+      st.position.set(px, Y, pz); g.add(st);
+      const sh = X.contact(c * .47, .45); sh.position.set(px, Y + .002, pz); g.add(sh);
+    });
+    const R = 1.28;   // the same bowls as gomoku's
+    [[1, 6.15, 1.9], [2, -6.15, -1.9]].forEach(([col, x, z]) => {
+      const bw = bowl(col, c, { R, stones: 30 }); bw.position.set(x, 0, z); g.add(bw);
       const lid = bw.userData.lid; lid.rotation.x = Math.PI; lid.position.set(x + (x > 0 ? -.15 : .15), R * .4, z + (z > 0 ? -2.55 : 2.55)); g.add(lid);
     });
     return g;

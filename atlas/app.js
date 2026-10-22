@@ -104,7 +104,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === "checkers" || g.id === "samegame" ? 4 : g.id === "speedsudoku" ? 3 : 2}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === "checkers" || g.id === "samegame" ? 4 : g.id === "go" ? 3 : g.id === "speedsudoku" ? 3 : 2}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -494,12 +494,14 @@
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
     const lv = pref[id + ':lv'] || Math.min(4, ad ? ad.levels : 4), side = pref[id + ':side'] || 1;
+    const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes[0]) : 0;   // board size (go)
     const mode = ad && ad.modes && ad.modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${ad.modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
-        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>
+        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
+        ${ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${z}×${z}</option>`).join('')}</select></label>` : ''}</div>
         ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
@@ -572,12 +574,12 @@
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones: right of the progress ring
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
-    if ($('bvSide')) {
-      const sel = $('bvSide'), tg = document.createElement('div'); tg.className = 'sidetg'; sel.hidden = true; sel.after(tg);
+    ['bvSide', 'bvSize'].forEach(sid => { if (!$(sid)) return;
+      const sel = $(sid), tg = document.createElement('div'); tg.className = 'sidetg'; sel.hidden = true; sel.after(tg);
       const paint = () => { tg.innerHTML = [...sel.options].map(o => `<button type="button" data-v="${o.value}" class="${o.value === sel.value ? 'on' : ''}">${esc(o.textContent)}</button>`).join(''); };
       tg.onclick = e => { const b = e.target.closest('button'); if (!b) return; sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); paint(); if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} };
       paint();
-    }
+    });
     if ($('bvLv')) {
       const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
       const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
@@ -629,26 +631,26 @@
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true };
+  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true };
   let lastKind;
   function startPlay(kind) {
     const g = bvGame, ad = Atlas3D[g.id];
     if (FULL_SKIN[g.id] && !(kind === 'table' && ad.table)) {
-      const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1, mode = $('bvMode') ? $('bvMode').dataset.v : 'ai';
-      pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = mode; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+      const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1, mode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
+      pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = mode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
-      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side); }, 420);
+      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
-    const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai';
-    pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+    const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
+    pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
     const tc = tcOf(ad, $('bvTc') ? $('bvTc').dataset.v : pref[g.id + ':tc']), tcT = new URLSearchParams(location.search).get('tcTest');
     const clock = tcT ? { id: 'test', byo: +tcT } : tc;   // (tests: ?tcTest=5 → 5 s per move)
     if ($('bvTc')) { pref[g.id + ':tc'] = $('bvTc').dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }
     $('bv').classList.add('playing'); $('endc').classList.remove('on'); fitStage();
     let sess = null, tbOn = false;
-    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
+    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); },
       onEnd: res => {
         if (session === sess) TB.end();
