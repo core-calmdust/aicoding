@@ -19,7 +19,15 @@
 //      then bump the ?v= of firebase-config.js in connect4/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, online play shows "coming soon" and Google sync is hidden (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDNT4seKGotL-TCJPoodH-2sztJy2u4MHY",
+  authDomain: "connect4-multiplay.firebaseapp.com",
+  databaseURL: "https://connect4-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "connect4-multiplay",
+  storageBucket: "connect4-multiplay.firebasestorage.app",
+  messagingSenderId: "651683615696",
+  appId: "1:651683615696:web:1f8b7e55224b8aa6905fd5"
+};
 // App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
 // Setup: create the key for core-calmdust.github.io, register it in Firebase console → App Check → this web app, publish the page
