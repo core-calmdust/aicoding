@@ -107,10 +107,13 @@ function legalFor(job, m) {
   return m === PASS || rp.pos.legal(m);
 }
 
-// ---------------------------------------------------------------- strength levels (1 = 15級 … 15 = 1級, 16 = 初段 … 20 = 五段)
-// kyu levels: one net evaluation per move, a move drawn from the policy (temperature) with some looser picks;
-// dan levels: search (visits) with the light / strong net.
+// ---------------------------------------------------------------- strength levels (1 = 15級 … 15 = 1級, 16 = 初段 … 23 = 八段, 24–26 = アマ最強 / プロ級 / 最強)
+// anchored on GNU Go 3.8 level 10 (≈ 6級 = level 10 here), about 100 Elo per step in self-play on 19x19
+// levels 1–21 (15級 … 六段): one net evaluation per move, a move drawn from the policy (temperature) with some looser picks;
+// levels 22–26 (七段 … 最強): search (visits) with the light / strong net.
 const LEVELS = [null,
+  { T: 2.1, slip: 0.55, top: 80 }, { T: 2.03, slip: 0.5, top: 72 }, { T: 1.97, slip: 0.46, top: 66 }, { T: 1.9, slip: 0.42, top: 60 },
+  { T: 1.75, slip: 0.33, top: 45 }, { T: 1.7, slip: 0.31, top: 42 },
   { T: 1.7, slip: 0.30, top: 40 }, { T: 1.6, slip: 0.25, top: 36 }, { T: 1.5, slip: 0.21, top: 32 }, { T: 1.4, slip: 0.17, top: 28 },
   { T: 1.3, slip: 0.14, top: 24 }, { T: 1.2, slip: 0.11, top: 20 }, { T: 1.1, slip: 0.09, top: 18 }, { T: 1.0, slip: 0.07, top: 16 },
   { T: 0.9, slip: 0.055, top: 14 }, { T: 0.8, slip: 0.04, top: 12 }, { T: 0.7, slip: 0.03, top: 10 }, { T: 0.6, slip: 0.02, top: 8 },
@@ -163,7 +166,7 @@ function bestOf(res) {
 
 // ---------------------------------------------------------------- jobs
 async function think(job) {
-  const L = job.params || LEVELS[Math.max(1, Math.min(20, job.level | 0))];
+  const L = job.params || LEVELS[Math.max(1, Math.min(LEVELS.length - 1, job.level | 0))];
   const n = job.spec.n;
   if (!L.net) {
     const r = await policyMove(job, L);

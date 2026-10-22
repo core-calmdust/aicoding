@@ -1,4 +1,4 @@
-// Self-play matches between AI levels (the page's own worker code) to calibrate the 20 strength levels.
+// Self-play matches between AI levels (the page's own worker code) to calibrate the strength levels.
 //   node tools/selfplay.mjs <levelA|json> <levelB|json> [games=20] [size=19]
 // A level may be a number (engine.js LEVELS) or a JSON params object, e.g. '{"T":0.5,"slip":0.02,"top":8}'.
 import { createWorker } from './workerhost.mjs';
