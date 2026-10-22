@@ -65,15 +65,15 @@ const CSS = `
 .modal:has(.rt) > :has(.rt), .modal:has(.rt) > :has(.rt) > :has(.rt){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .modal:has(.rt) > :not(:has(.rt)){flex:none}
 .rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
-.rt{position:relative}.rt.rt-sliding{overflow:hidden}
+.rt{position:relative}.rt.rt-sliding{overflow:hidden;overflow-x:clip;overflow-y:visible}
 .rt-steps{flex:none}
 .rt-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:safe center;padding:0 2px}
 .rt-main > *{flex:none}
 .rt > .rt-nav{flex:none;margin-top:0;padding-top:12px;border-top:1px solid var(--line,rgba(255,255,255,.1))}
 .rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
-.rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
+.rt-steps{display:flex;gap:6px;justify-content:center;margin:-8px 0 8px;padding:4px 0;flex-wrap:wrap}   /* padding keeps the current step's ring inside .rt (never clipped while a page slides) */
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
-@media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:6px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
+@media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:2px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
 @media (max-width: 420px){.rt-steps{gap:3px;flex-wrap:nowrap}.rt-steps button{flex:0 1 26px;width:auto;height:auto;aspect-ratio:1;min-width:0;font-size:11px}}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
 .rt-steps button.cur{background:var(--panel2,#1f2a2a);color:var(--accent,#e2c275);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
@@ -94,7 +94,7 @@ const CSS = `
 .rt-msg.ok::before{content:'✓ '}.rt-msg.ng::before{content:'✗ '}
 .rt-again{flex:none;white-space:nowrap;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);cursor:pointer;font-family:inherit}
 /* phones: compact type so the page text fits without scrolling (common spec) */
-@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:8px}}
+@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:4px}}
 /* board pages (common spec): the mini board has ONE fixed size for a given window size — the same on every page and
    before / after answering. layout() computes it from the space of .rt-main only (never from the page's text):
    --rt-bw × --rt-bh is the board box; the game draws its board to fill it (an svg is stretched to the box, its viewBox
