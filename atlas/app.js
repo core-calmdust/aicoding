@@ -497,9 +497,9 @@
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div><div class="mnote" id="bvMNote"></div>` : ''}${ad ? `<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
+      </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${ad.modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>
-        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label></div>` : ''}` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
@@ -509,18 +509,26 @@
     if ($('bvFull')) $('bvFull').onclick = () => startPlay('full');
     if ($('bvMode')) {   // AI / rated / two players: only the AI game has a level and a side to pick
       // the card keeps the AI-game height: the note of the other modes fills the space the level / side rows take
-      let midH = 0;
-      const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-        if (!midH) { $('bvOpts').hidden = false; midH = $('bvOpts').offsetHeight; }
+      // one fixed height for the settings area in every mode (the tallest mode's): the note of a mode without a level fills the space
+      const body = $('bvMBody');
+      const layout = m => {
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
-        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
-        if ($('bvTcRow')) $('bvTcRow').style.visibility = (ad.tableModes || ['ai']).includes(m) ? '' : 'hidden';   // the time control is for table play (kept in the layout: the card's height stays)
+        if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
         $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
-        $('bvMNote').style.minHeight = midH ? midH + 'px' : ''; fitStage(); };
+      };
+      let bodyH = 0;
+      const measure = () => { body.style.height = 'auto'; bodyH = 0; ad.modes.forEach(m => { layout(m); $('bvMNote').style.flex = 'none'; bodyH = Math.max(bodyH, body.offsetHeight); }); $('bvMNote').style.flex = ''; body.style.height = bodyH + 'px'; };
+      const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+        if (!bodyH) measure();
+        layout(m);
+        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
+        fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
-      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; midH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
+      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
       $('bvMode').onclick = e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); };
       setMode(mode);
+      // measure again once the custom pickers below are in place and the web fonts have loaded
+      setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again

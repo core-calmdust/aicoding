@@ -696,6 +696,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .mtab3 button.on{background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--line)}
 .bvi .mnote{display:flex;align-items:center;box-sizing:border-box;background:#fff8e8;border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-size:13px;font-weight:700;color:var(--ink2);line-height:1.6}
 .bvi .mnote[hidden],.bvi .opts[hidden]{display:none}
+.bvi .mbody{display:flex;flex-direction:column;gap:10px;margin-top:12px}.bvi .mbody > .opts{margin-top:0!important}.bvi .mbody > .mnote{flex:1 1 auto;justify-content:center;text-align:center;margin:0}
+.bvi .mbody > [hidden]{display:none!important}
 
 /* board card: one rhythm — every block in both columns is 14px apart; the left column spreads to the right column's height */
 .bvi .R{display:flex;flex-direction:column;gap:14px}
@@ -957,6 +959,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=96"></script>
+<script src="app.js?v=97"></script>
 </body>
 </html>
