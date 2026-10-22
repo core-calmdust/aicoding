@@ -50,6 +50,8 @@ GAMES = {
                    variant=('v', ['six', 'nine', 'twelve'])),
     'dots': dict(first='b', alt=False, tckey='tc', tcs={'s3': (60000, 0, 3000), 's4': (120000, 0, 3000), 's5': (180000, 0, 3000)},
                  legacy_byo=None, free=0, imm=['tc', 'n'], draw=False, abandon=False, hist=False, moves_max=400, bg=False),
+    'connect4': dict(first='b', alt=True, tckey='tc', tcs={'std': (120000, 0, 3000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+                     draw=True, abandon=True, hist=True, moves_max=42, bg=False, variant=('v', ['std'])),
     'backgammon': dict(first=None, alt=False, tckey='f', tcs={'g1': (180000, 0, 0), 'm3': (360000, 0, 0), 'm5': (600000, 0, 0), 'm7': (840000, 0, 0)},
                        legacy_byo=None, free=12000, imm=['f', 'ml', 'cube', 'cr', 'cu', 'gi', 'mid', 'pv'], draw=False, abandon=True,
                        hist=True, moves_max=20000, bg=True),
