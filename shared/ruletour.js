@@ -65,15 +65,15 @@ const CSS = `
 .modal:has(.rt) > :has(.rt), .modal:has(.rt) > :has(.rt) > :has(.rt){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .modal:has(.rt) > :not(:has(.rt)){flex:none}
 .rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
-.rt{position:relative}.rt.rt-sliding{overflow:hidden}
+.rt{position:relative}.rt.rt-sliding{overflow:hidden;overflow-x:clip;overflow-y:visible}
 .rt-steps{flex:none}
 .rt-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:safe center;padding:0 2px}
 .rt-main > *{flex:none}
 .rt > .rt-nav{flex:none;margin-top:0;padding-top:12px;border-top:1px solid var(--line,rgba(255,255,255,.1))}
 .rt{--rt-ok:#8fe3b8;--rt-ng:#ff9b90;--rt-bw:min(320px, 86vw)}
-.rt-steps{display:flex;gap:6px;justify-content:center;margin:-4px 0 12px;flex-wrap:wrap}
+.rt-steps{display:flex;gap:6px;justify-content:center;margin:-8px 0 8px;padding:4px 0;flex-wrap:wrap}   /* padding keeps the current step's ring inside .rt (never clipped while a page slides) */
 .rt-steps button{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer}
-@media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:6px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
+@media (max-height: 560px){.rt-steps{gap:4px;margin-bottom:2px}.rt-steps button{width:26px;height:26px;font-size:11px}.rt > .rt-nav{padding-top:6px}.rt-nav button{padding:7px 10px}}
 @media (max-width: 420px){.rt-steps{gap:3px;flex-wrap:nowrap}.rt-steps button{flex:0 1 26px;width:auto;height:auto;aspect-ratio:1;min-width:0;font-size:11px}}
 .rt-steps button.ok{border-color:rgba(111,211,160,.6);color:var(--rt-ok)}
 .rt-steps button.cur{background:var(--panel2,#1f2a2a);color:var(--accent,#e2c275);box-shadow:0 0 0 2px rgba(201,169,97,.55)}
@@ -94,7 +94,7 @@ const CSS = `
 .rt-msg.ok::before{content:'✓ '}.rt-msg.ng::before{content:'✗ '}
 .rt-again{flex:none;white-space:nowrap;font-size:12.5px;padding:5px 12px;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.25);color:var(--muted,#9aa);cursor:pointer;font-family:inherit}
 /* phones: compact type so the page text fits without scrolling (common spec) */
-@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:8px}}
+@media (max-width: 520px){.rt h2.rt-title{font-size:17.5px;margin:0 0 4px}.rt-body{font-size:14px;line-height:1.62}.rt-body p{margin:0 0 5px}.rt-task{font-size:14px;line-height:1.55}.rt-fb{margin-top:3px}.rt-msg{font-size:13.5px;line-height:1.45;min-height:2.9em}.rt-steps{margin-bottom:4px}}
 /* board pages (common spec): the mini board has ONE fixed size for a given window size — the same on every page and
    before / after answering. layout() computes it from the space of .rt-main only (never from the page's text):
    --rt-bw × --rt-bh is the board box; the game draws its board to fill it (an svg is stretched to the box, its viewBox
@@ -115,6 +115,7 @@ const CSS = `
 .rt-wide .rt-main.has-board{overflow:visible}.rt-wide .rt-main.has-board > .rt-board{margin-inline:calc(-1 * var(--rt-bx,0px))}
 .rt-col .rt-main.has-board .rt-task{grid-row:3;overflow-y:auto;overscroll-behavior:contain}
 .rt-row .rt-main.has-board{grid-template-columns:minmax(0,1fr) var(--rt-bw);grid-template-rows:minmax(0,1fr);column-gap:var(--rt-cgap,24px)}
+.rt-row .rt-main.has-board > .rt-board{align-self:start}   /* top aligned with the page title */
 .rt-row .rt-main.has-board > .rt-side{display:flex;flex-direction:column;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
 .rt-row .rt-main.has-board .rt-text{flex:0 1 auto;min-height:min(84px, 40%)}
 .rt-row .rt-main.has-board .rt-task{flex:none;text-align:start;margin-top:8px}
@@ -123,6 +124,12 @@ const CSS = `
 .rt-html{margin:10px 0}
 .rt-finish{display:flex;flex-direction:column;gap:10px;margin:14px auto 4px;max-width:340px}
 .rt-finish .rt-fin-ico{font-size:44px;text-align:center;line-height:1}
+/* last page (これで遊べます！): everything centred, vertically too, in every game */
+.rt .rt-main.rt-finpage{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important}
+.rt .rt-main.rt-finpage > *, .rt .rt-main.rt-finpage .rt-text > *{margin-left:auto!important;margin-right:auto!important;text-align:center!important}
+.rt .rt-main.rt-finpage .rt-text{display:flex!important;flex-direction:column!important;align-items:center!important;width:100%!important;max-width:none!important}
+.rt .rt-main.rt-finpage .rt-body{max-width:640px}
+.rt .rt-main.rt-finpage .rt-finish{align-items:center;width:100%;margin-top:18px}
 .rt-nav{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
 .rt-nav button,.rt-finish button{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(255,255,255,.05);color:var(--text,#eee);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .rt-nav button.go,.rt-finish button.go{border:0;background:linear-gradient(180deg,#e9cf8e,#c9a961);color:#14100a}
@@ -190,9 +197,9 @@ function create(o) {
     stop();
     const m = mount(); if (!m) return;
     const P = pages[tour.page], n = pages.length, done = get();
-    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main${P.setup ? ' has-board' : ''}">`;
+    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main${P.setup ? ' has-board' : ''}${P.finish ? ' rt-finpage' : ''}">`;
     if (P.finish) {
-      h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${esc(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
+      h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${finLines(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
         (o.play ? `<button type="button" class="go" data-rt-act="play">${esc(tx('play'))}</button>` : '') +
         (o.lessons ? `<button type="button" class="go" data-rt-act="lessons">${esc(tx('lessons'))}</button>` : '') + `</div>`;
     } else {
@@ -209,6 +216,11 @@ function create(o) {
     }
     if (P.finish || !P.setup) mark(P.id);
     if (P.setup) start(); else { fit(); requestAnimationFrame(fit); }   // read-only pictures are fitted too
+  }
+  // last page text: line break before the final sentence (「…対局してみましょう。」／「上達のコツや作戦は…」)
+  function finLines(str) {
+    const m = String(str).trim().match(/^(.*[。．.!?！？।؟])\s*([^。．.!?！？।؟]+[。．.!?！？।؟]?)$/);
+    return m ? esc(m[1]) + '<br>' + esc(m[2]) : esc(str);
   }
   function start() {
     const m = mount(), P = pages[tour.page], my = ++gen;

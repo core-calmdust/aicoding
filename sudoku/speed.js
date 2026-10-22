@@ -1093,6 +1093,10 @@ function loop(now) {
     tickGims(dt);
     if (R.left <= 0) { timeUp(); return; }
     renderClock();
+    // last 5 seconds: a short "pi" every second (higher on the final one)
+    const sec = Math.ceil(R.left / 1000);
+    if (sec > 5) R.beepSec = 0;
+    else if (sec >= 1 && sec !== R.beepSec) { R.beepSec = sec; C.SFX.beep && C.SFX.beep(sec === 1); }
   }
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && R && R.state === 'play' && !R.done) setPaused(true); });

@@ -1001,11 +1001,11 @@ body .info-line{font-size:12.5px}
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=23"></script>
+<script src="../shared/ruletour.js?v=28"></script>
 <script src="engine.js?v=20261019n"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
-<script src="firebase-config.js?v=sec1"></script>
-<script src="../shared/onlinesec.js?v=1"></script>
+<script src="firebase-config.js?v=ac1"></script>
+<script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=sec1"></script>
 <script>
 'use strict';
@@ -1768,7 +1768,7 @@ $('#btnHint').onclick = () => {
   if (!settings.hint) { hintList = null; renderFx(); renderInfo(); }
   else { const k = keyOf(cur); if (anaCache.has(k)) { hintList = anaCache.get(k); renderFx(); } else analyzeCurrent(busyToken); renderInfo(); }
 };
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playTick(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playTick(); };
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
 $('#btnRules').onclick = () => openRules(gv);
@@ -3020,6 +3020,7 @@ function dailySolved(date, hinted) {
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'morris', lang: () => LANG, open: () => openRules(gv, 0), watch: '#rulesOverlay' });
 const hadSave = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 if (!hadSave) setVariant(settings.rule);
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
@@ -3126,8 +3127,8 @@ window.addEventListener('resize', () => renderFx());
 </script>
 <script src="online-ui.js?v=20261021rsgsec1"></script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
-<script src="../shared/atlas-account.js?v=4" defer></script>
+<script src="../shared/atlas.js?v=20261022v2" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
+<script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
 </html>

@@ -39,6 +39,13 @@
 /* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar, so no title row above the side panel */
 html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
 @supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
+@media not all and (pointer: coarse){
+  /* online dock at the bottom (online.css): the board area also leaves room for it under the header bar */
+  html.hb-on.ol-dock{--vh:calc(100vh - 108px - var(--hb-h))}
+  @supports (height:100dvh){html.hb-on.ol-dock{--vh:calc(100dvh - 108px - var(--hb-h))}}
+  html.hb-on.ol-dock.ol-soon{--vh:calc(100vh - 46px - var(--hb-h))}
+  @supports (height:100dvh){html.hb-on.ol-dock.ol-soon{--vh:calc(100dvh - 46px - var(--hb-h))}}
+}
 html,body{height:100%;overflow:hidden}
 body{
   background:
@@ -178,6 +185,10 @@ a.snd.home{text-decoration:none}
 .pdisc.p1{background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 35%,var(--gold3) 85%)}
 .pdisc.p2{background:radial-gradient(circle at 35% 30%,var(--ruby1),var(--ruby2) 35%,var(--ruby3) 85%)}
 .player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player .clk{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--muted);padding:1px 7px;border-radius:7px;background:rgba(0,0,0,.28);border:1px solid var(--line);flex:none}
+.player .clk:empty{display:none}
+.player.active .clk{color:var(--accent);border-color:rgba(201,169,97,.6)}
+.player .clk.low{color:#ff9b90;border-color:rgba(255,107,91,.6)}
 .player .count{font-family:'Shippori Mincho B1',serif;font-size:36px;font-weight:800;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
 .player .count small{font-size:12px;color:var(--dim);font-family:'Zen Kaku Gothic New';font-weight:500;margin-left:6px;letter-spacing:.05em}
 .player .status{font-size:11px;color:var(--dim);height:15px;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -194,6 +205,7 @@ a.snd.home{text-decoration:none}
 .graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
 .controls{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}   /* 対局 待った 投了 ヒント レッスン パズル ルール: one row */
+body.in-online .controls{grid-template-columns:repeat(6,1fr)}   /* online: no 待った / ヒント, + 引き分け提案 */
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
@@ -426,6 +438,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .player .count{font-size:24px;margin-top:0;line-height:1}
   .player .count small{display:none}
   .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .clk{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
+  .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .card{padding:10px 12px}
   .controls{padding:7px;gap:4px}
   .btn{flex-direction:column;justify-content:center;padding:7px 0;gap:3px;font-size:10px;letter-spacing:0}
@@ -461,6 +475,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .player .count{font-size:20px;margin:0;line-height:1}
   .player .count small{display:none}
   .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .clk{position:absolute;left:50%;bottom:1px;transform:translateX(-50%);font-size:10px;padding:0 4px;line-height:1.3}
+  .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .evalrow{margin-bottom:5px}
   .evalrow .label{font-size:11px}
   .evalrow .val{font-size:12px}
@@ -755,6 +771,7 @@ body .info-line{font-size:12.5px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
 </style>
+<link rel="stylesheet" href="online.css?v=20261022a">
 </head>
 <body>
 <div class="app">
@@ -818,12 +835,12 @@ body .info-line{font-size:12.5px}
 
     <div class="card players">
       <div class="player" id="pl1">
-        <div class="top"><div class="pdisc p1"></div><div class="name" id="name1"></div></div>
+        <div class="top"><div class="pdisc p1"></div><div class="name" id="name1"></div><span class="clk" id="clk1"></span></div>
         <div class="count"><span id="count1">21</span><small data-i18n="left"></small></div>
         <div class="status" id="status1"></div>
       </div>
       <div class="player" id="pl2">
-        <div class="top"><div class="pdisc p2"></div><div class="name" id="name2"></div></div>
+        <div class="top"><div class="pdisc p2"></div><div class="name" id="name2"></div><span class="clk" id="clk2"></span></div>
         <div class="count"><span id="count2">21</span><small data-i18n="left"></small></div>
         <div class="status" id="status2"></div>
       </div>
@@ -1009,7 +1026,12 @@ body .info-line{font-size:12.5px}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="../shared/ruletour.js?v=23"></script>
+<script src="../shared/ruletour.js?v=28"></script>
+<script src="../shared/tick.js?v=1"></script>
+<script src="i18n-online.js?v=20261022a"></script>
+<script src="firebase-config.js?v=ac1"></script>
+<script src="../shared/onlinesec.js?v=2"></script>
+<script src="online.js?v=20261022a"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1030,13 +1052,14 @@ function lineThrough(g, c, r, p) {
   return null;
 }
 // status of a move sequence: {winner, line, draw}
-function statusOf(moves) {
-  if (resigned && moves === resigned.mv && !lesson && !puzzle) return { winner: resigned.loser === P1 ? P2 : P1, resign: true, loser: resigned.loser };   // 投了
-  if (!moves.length) return { winner: 0 };
-  const g = gridOf(moves), c = moves.charCodeAt(moves.length - 1) - 49, r = g[c].length - 1, p = g[c][r];
+function statusOf(mv) {
+  if (settings.mode === 'online' && window.olOver && mv === moves && !lesson && !puzzle) { const o = olOver(); if (o) return o; }   // online: resign / timeout / abandonment / agreed draw
+  if (resigned && mv === resigned.mv && !lesson && !puzzle) return { winner: resigned.loser === P1 ? P2 : P1, resign: true, loser: resigned.loser };   // 投了
+  if (!mv.length) return { winner: 0 };
+  const g = gridOf(mv), c = mv.charCodeAt(mv.length - 1) - 49, r = g[c].length - 1, p = g[c][r];
   const line = lineThrough(g, c, r, p);
   if (line) return { winner: p, line };
-  if (moves.length === 42) return { winner: 0, draw: true };
+  if (mv.length === 42) return { winner: 0, draw: true };
   return { winner: 0 };
 }
 function emptyThreats(g, p) {   // empty cells (supported or not) that would complete four for p
@@ -1087,6 +1110,7 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (settings.mode === 'online') settings.mode = 'pvp';
     if (typeof d.moves === 'string' && /^[1-7]*$/.test(d.moves)) {
       // validate
       const g = Array(7).fill(0); for (const ch of d.moves) { if (++g[+ch - 1] > 6) return false; }
@@ -1099,6 +1123,7 @@ function load() {
   return false;
 }
 function save() {
+  if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), resigned: resigned && resigned.mv === moves ? resigned.loser : 0 })); } catch (e) {}
 }
@@ -1276,7 +1301,7 @@ function renderFx() {
     svg.appendChild(L); fxEl.appendChild(svg);
   }
   // threats (optional display)
-  if (settings.threat && !st.winner && !lesson) {
+  if (settings.threat && !st.winner && !lesson && !(window.olLive && olLive())) {
     for (const p of [P1, P2]) for (const [c, r] of emptyThreats(gridOf(shown), p)) {
       const d = document.createElement('div'); d.className = 'mark threat' + (p === P2 ? ' op' : ''); d.style.borderColor = p === P1 ? 'rgba(230,205,140,.9)' : 'rgba(212,217,224,.95)';
       discPos(d, c, r); fxEl.appendChild(d);
@@ -1352,17 +1377,19 @@ function evalText(ev) {
 // ====================================================================== players / panel
 function isAIColor(p) { return settings.mode === 'watch' || (settings.mode === 'ai' && p !== humanColor); }
 function levelFor(p) { return settings.mode === 'watch' ? (p === P1 ? settings.level : settings.level2) : settings.level; }
-function gameOver(m) { const st = statusOf(m); return !!st.winner || m.length >= 42; }
+function gameOver(m) { const st = statusOf(m); return !!st.winner || !!st.draw || m.length >= 42; }
 function canHumanPlay() {
   const shown = moves.slice(0, cur);
   if (gameOver(shown)) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveOf(shown) === puzzle.me;
   if (lesson) return !lesson.answered;
   if (reviewing) return false;
+  if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
   return !isAIColor(toMoveOf(shown)) && !thinking;
 }
 function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
+  if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
   if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
   return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
@@ -1382,7 +1409,7 @@ function renderInfo() {
     $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!over && tm === p ? t('st.turn') : '');
   }
   // eval
-  $('#evalCard').classList.toggle('hidden', !settings.eval);
+  $('#evalCard').classList.toggle('hidden', !settings.eval || !!(window.olLive && olLive()));   // online: no evaluation while the game is on
   let ev = st.winner ? { s: st.winner === P1 ? 1 : -1, kind: 'final', side: st.winner } : st.draw ? { s: 0, kind: 'final', side: 0 } : evals[cur];
   if (!ev && cur > 0 && evals[cur - 1]) ev = evals[cur - 1];
   $('#evalText').textContent = evalText(ev);
@@ -1397,6 +1424,7 @@ function renderInfo() {
   renderReview();
   hbInfo(shown, st, tm, ev);
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  if (window.olAfterInfo) olAfterInfo();
 }
 // PC header bar: whose turn, move number, evaluation (hidden in rated games and when the evaluation is off)
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1406,7 +1434,7 @@ function hbInfo(shown, st, tm, ev) {
   let h = `<span class="hb-chip">${over ? (st.winner ? `<i class="hb-disc p${st.winner}"></i><b>${escHb(t('ev.won', { c: pname(st.winner) }))}</b>` : `<b>${escHb(t('res.draw'))}</b>`) : `<i class="hb-disc p${tm}"></i><b>${escHb(t('hb.turn', { c: pname(tm) }))}</b>${thinking ? ' · ' + escHb(t('thinking')) : ''}`}</span>`;
   h += `<span class="hb-chip">${escHb(t('hb.move', { n: shown.length + (over ? 0 : 1) }))}</span>`;
   if (puzzle) h += `<span class="hb-chip">${escHb(puzzle.kind === 'mate' ? t('pz.winIn', { n: puzzle.n }) : PT(pzLv(puzzle.li).name))} · <b>${escHb(pzt('movesLeft', { n: Math.max(0, puzzle.n - puzzle.used) }))}</b></span>`;
-  else if (!lesson && settings.eval && !over && ev && !document.body.classList.contains('rated-live') && !(window.rtLive && rtLive())) h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb(evalText(ev))}</b></span>`;
+  else if (!lesson && settings.eval && !over && ev && !document.body.classList.contains('rated-live') && !(window.rtLive && rtLive()) && !(window.olLive && olLive())) h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb(evalText(ev))}</b></span>`;
   HB.setInfo(h);
 }
 function evalAt(i) {
@@ -1467,13 +1495,14 @@ function newGame() {
 function onColumn(c) {
   ctx();
   if (!canHumanPlay()) {
-    if (reviewing && !lesson && !puzzle) rsOpen();
+    if (reviewing && !lesson && !puzzle) { if (settings.mode === 'online') viewAt(moves.length); else rsOpen(); }   // online: back to the live position
     return;
   }
   const shown = moves.slice(0, cur);
   if (!canDrop(shown, c)) { toast(t('full')); return; }
   if (lesson) return lessonAnswer(c);
   if (puzzle) return puzzleMove(c);
+  if (settings.mode === 'online' && window.olHumanMove) return olHumanMove(c);
   playMove(c);
 }
 function playMove(c) {
@@ -1508,6 +1537,7 @@ async function maybeAI(tok) {
 async function analyzeCurrent(tok) {
   const shown = moves.slice(0, cur), idx = cur;
   if (gameOver(shown) || lesson || puzzle) { hintList = null; return; }
+  if (window.olLive && olLive()) { hintList = null; return; }   // online: no analysis while the game is on
   if (!settings.eval && !settings.hint) return;
   const key = shown;
   const apply = (list, final) => {
@@ -1532,6 +1562,7 @@ async function analyzeCurrent(tok) {
 }
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
+  if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
@@ -1545,16 +1576,20 @@ function onGameEnd(st) {
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
 // 投了 (common spec, shared/resign.js): after 対局 and 待った; asks 投了しますか？ and only はい ends the game as a loss.
-// vs AI (incl. rated): the human resigns; 2 players on one device: the side to move resigns.
+// vs AI (incl. rated): the human resigns; 2 players on one device: the side to move resigns; online: online-ui.js sends the resignation.
 const RS_TXT = {
   ja: ['投了しました', '{c}が投了しました'], en: ['You resigned', '{c} resigned'], zh: ['你认输了', '{c}认输了'], ko: ['기권했습니다', '{c} 기권'],
   es: ['Te rendiste', '{c} se rindió'], fr: ['Vous avez abandonné', '{c} a abandonné'], pt: ['Você desistiu', '{c} desistiu'],
   de: ['Du hast aufgegeben', '{c} hat aufgegeben'], hi: ['आपने हार मानी', '{c} ने हार मानी'], ar: ['لقد استسلمت', 'استسلم {c}'],
 };
 function resignText(st) { const x = RS_TXT[LANG] || RS_TXT.en; return settings.mode === 'pvp' ? x[1].replace('{c}', pname(st.loser)) : x[0]; }
-function canResign() { return !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !gameOver(moves); }
+function canResign() {
+  if (settings.mode === 'online') return !lesson && !puzzle && typeof olLive === 'function' && olLive();
+  return !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !gameOver(moves);
+}
 function resignNow() {
   if (!canResign()) return;
+  if (settings.mode === 'online') { if (window.olResignGame) olResignGame(); return; }
   busyToken++; cancelWorker('ai'); thinking = 0; hintList = null;
   cur = moves.length; reviewing = false; gameOverShown = false;
   resigned = { loser: settings.mode === 'ai' ? humanColor : toMoveOf(moves), mv: moves };
@@ -1563,7 +1598,7 @@ function resignNow() {
 }
 $('#btnResign').onclick = () => { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignNow(); }); };
 function canUndo() {
-  if (lesson || puzzle) return false;
+  if (lesson || puzzle || settings.mode === 'online') return false;
   if (resigned && resigned.mv === moves) return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveOf(moves.slice(0, i)) === humanColor) return true; return false; }
@@ -1589,11 +1624,13 @@ function viewAt(i) {
 }
 function resumeHere() {
   if (!reviewing) return;
+  if (settings.mode === 'online') { viewAt(moves.length); return; }   // an online record is never cut
   moves = moves.slice(0, cur); evals.length = cur + 1; reviewing = false; gameOverShown = false;
   update(false); save(); afterPosition();
 }
 function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
+function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
 function confetti() {
   if (!settings.anim || reduceMotion) return;
   const cols = ['#e6cd8c', '#fff6dc', '#d4d9e0', '#ffffff', '#b39249'];
@@ -1614,7 +1651,7 @@ $('#btnHint').onclick = () => {
   if (!settings.hint) { hintList = null; renderFx(); renderInfo(); }
   else { const shown = moves.slice(0, cur); if (anaCache.has(shown)) { hintList = anaCache.get(shown); renderFx(); } analyzeCurrent(busyToken); renderInfo(); }
 };
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playTick(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playTick(); };
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
 $('#btnRules').onclick = () => openRules();
@@ -2647,6 +2684,8 @@ function dailySolved(date, hinted) {
 
 // ====================================================================== boot
 const hadSave = load();
+if (window.CountTick) CountTick.setMuted(() => !settings.sound);   // time signal (last 5 s of my own clock in online games)
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
@@ -2740,10 +2779,11 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 </script>
-<script src="rated.js?v=20261021rsg"></script><!-- レーティング戦 -->
+<script src="rated.js?v=20261022ol"></script><!-- レーティング戦 -->
+<script src="online-ui.js?v=20261022a"></script><!-- オンライン対戦・Google連携 -->
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
-<script src="../shared/atlas-account.js?v=4" defer></script>
+<script src="../shared/atlas.js?v=20261022v2" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
+<script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
 </html>

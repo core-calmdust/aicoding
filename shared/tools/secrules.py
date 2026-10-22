@@ -33,7 +33,8 @@ INITIAL = 1500
 # per game: first = field of the side that moves first; alt = strict alternation of moves; tckey = record field naming the
 # time control; tcs = {key: (main, byo, inc)}; legacy_byo = per-move limit of records without a time control (None: none);
 # free = free seconds per action (backgammon delay); extra immutable primitive fields; draw / abandon = statuses offered;
-# hist = players/<uid>/hist entries; moves_max = max length of the move record.
+# hist = players/<uid>/hist entries; moves_max = max length of the move record;
+# nt = the record names the player to move next (games with extra turns: turn order and timeout / abandon claims follow it).
 GAMES = {
     'reversi': dict(first='b', alt=False, tckey='tc', tcs={'fast': (300000, 30000, 0), 'long': (600000, 30000, 0), 'blitz': (0, 30000, 0)},
                     legacy_byo=90000, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=400, bg=False),
@@ -55,9 +56,14 @@ GAMES = {
                variant=('v', ['9', '13', '19'])),
     'dots': dict(first='b', alt=False, tckey='tc', tcs={'s3': (60000, 0, 3000), 's4': (120000, 0, 3000), 's5': (180000, 0, 3000)},
                  legacy_byo=None, free=0, imm=['tc', 'n'], draw=False, abandon=False, hist=False, moves_max=400, bg=False),
+    'connect4': dict(first='b', alt=True, tckey='tc', tcs={'std': (120000, 0, 3000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+                     draw=True, abandon=True, hist=True, moves_max=42, bg=False, variant=('v', ['std'])),
     'backgammon': dict(first=None, alt=False, tckey='f', tcs={'g1': (180000, 0, 0), 'm3': (360000, 0, 0), 'm5': (600000, 0, 0), 'm7': (840000, 0, 0)},
                        legacy_byo=None, free=12000, imm=['f', 'ml', 'cube', 'cr', 'cu', 'gi', 'mid', 'pv'], draw=False, abandon=True,
                        hist=True, moves_max=20000, bg=True),
+    'mancala': dict(first='b', alt=False, nt=True, tckey='tc', tcs={r + n: ((300000 if n == '6' else 180000), 0, 0) for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')},
+                    legacy_byo=None, free=5000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=2000, bg=False,
+                    variant=('v', [r + n for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')])),
 }
 
 
@@ -252,11 +258,18 @@ def build(name, P):
     clock_keep = AND(f"newData.child({oth}).val() === data.child({oth}).val()",
                      f"({moved} || !data.child({own}).isNumber() || {NM} <= {M})")
     turn = None
-    if P['alt']:
+    NT = P.get('nt')
+    if NT:   # extra turns: the mover names the next player (b / w) with every move; nt changes only with a move or when the game ends
+        turn = AND(f"(!({moved}) || (data.child('nt').exists() ? data.child('nt').val() === auth.uid : (data.child('moves').val() === '' && data.child('{P['first']}').val() === auth.uid)))",
+                   f"(!({moved}) || newData.child('status').val() !== 'play' || newData.child('nt').val() === data.child('b').val() || newData.child('nt').val() === data.child('w').val())",
+                   f"({moved} || newData.child('status').val() !== 'play' || newData.child('nt').val() === data.child('nt').val())")
+    elif P['alt']:
         turn = f"(!({moved}) || (data.child('lm').exists() ? data.child('lm').val() !== auth.uid : (data.child('moves').val() !== '' || data.child('{P['first']}').val() === auth.uid)))"
     loser = "newData.child('loser').val()"
     other = AND(OR(f"{loser} === data.child('b').val()", f"{loser} === data.child('w').val()"), f"{loser} !== auth.uid")
-    if P['first']:
+    if NT:
+        myturn_over = f"(data.child('nt').exists() ? data.child('nt').val() === {loser} : (data.child('moves').val() === '' && data.child('{P['first']}').val() === {loser}))"
+    elif P['first']:
         myturn_over = f"(data.child('lm').exists() ? data.child('lm').val() === auth.uid : (data.child('moves').val() === '' && data.child('{P['first']}').val() === {loser}))"
     else:
         myturn_over = None
@@ -277,7 +290,8 @@ def build(name, P):
                  "newData.child('draw').val() === data.child('draw').val()", "newData.child('moves').val() === data.child('moves').val()",
                  "newData.child('t').val() === data.child('t').val()", "newData.child('mb').val() === data.child('mb').val()",
                  "newData.child('mw').val() === data.child('mw').val()",
-                 "newData.child('mo').val() === data.child('mo').val()" if P['bg'] else None)
+                 "newData.child('mo').val() === data.child('mo').val()" if P['bg'] else None,
+                 "newData.child('nt').val() === data.child('nt').val()" if NT else None)
     imm_fields = ['b', 'w', 'bn', 'wn', 'br', 'wr', 'rated', 'created', 'room', 'host'] + P['imm']
     immut = AND(*[f"newData.child('{f}').val() === data.child('{f}').val()" for f in imm_fields],
                 *([f"newData.child('sc').child('{i}').val() === data.child('sc').child('{i}').val()" for i in (0, 1)] if P['bg'] else []))
@@ -313,6 +327,7 @@ def build(name, P):
                    "newData.child('created').val() === now", "newData.child('t').val() === now", f"{bn} !== {wn}",
                    "newData.child('b').isString()", "newData.child('w').isString()",
                    "!newData.child('loser').exists()", "!newData.child('res').exists()", "!newData.child('lm').exists()",
+                   "!newData.child('nt').exists()" if NT else None,
                    f"(!newData.child('mb').exists() || newData.child('mb').val() <= {MAINN})", f"(!newData.child('mw').exists() || newData.child('mw').val() <= {MAINN})",
                    f"(newData.child('rated').val() !== true || ({rated_ok} && {NRg}.child('open').child({bn}).val() === $gid && {NRg}.child('open').child({wn}).val() === $gid))")
     vfield = P.get('variant')

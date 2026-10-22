@@ -1,9 +1,10 @@
 /* =====================================================================
    Reversi on the 3D table (portal play).  Uses ../reversi/engine.js
    (same AI, weights and opening book as the full game).
-   Adapter contract — every game in atlas/games/<id>.js registers:
-     Atlas3D[id] = { levels: n, sides: true|false, start(ctx) → { stop() } }
-   ctx = { el, Table3D, lang, t(key), hud(html), level, side, onEnd({win, draw, level}) }
+   Adapter contract — every game in atlas/games/<id>.js registers (see atlas/README.md):
+     Atlas3D[id] = { levels: n, sides: true|false, clock, start(ctx) → session }
+   ctx = { el, Table3D, lang, t(key), hud(html), level, side, mode, onTurn(side, {human, ply}), onEnd({win, draw, level}) }
+   session = { stop(), undo(), canUndo(), hint(), canHint(), resign(), canResign(), timeout(side), human }
    ===================================================================== */
 (function () {
   'use strict';
@@ -33,6 +34,14 @@
   }
   const legal = (cells, color) => { const m = []; for (let s = 0; s < 64; s++) if (!cells[s] && flipsOf(cells, s, color).length) m.push(s); return m; };
   const count = (cells, c) => cells.filter(x => x === c).length;
+  // two players on one device (ctx.mode 'pvp'): the colours' names, whose turn, who won
+  const PV = {
+    ja: { n: ['黒', '白'], turn: '{p}の番', win: '{p}の勝ち' }, en: { n: ['Black', 'White'], turn: '{p} to move', win: '{p} wins' },
+    zh: { n: ['黑', '白'], turn: '轮到{p}', win: '{p}胜' }, ko: { n: ['흑', '백'], turn: '{p} 차례', win: '{p} 승리' },
+    es: { n: ['Negras', 'Blancas'], turn: 'Turno: {p}', win: 'Ganan {p}' }, fr: { n: ['Noirs', 'Blancs'], turn: 'Trait : {p}', win: 'Victoire des {p}' },
+    pt: { n: ['Pretas', 'Brancas'], turn: 'Vez: {p}', win: 'Vitória das {p}' }, de: { n: ['Schwarz', 'Weiß'], turn: '{p} am Zug', win: '{p} gewinnt' },
+    hi: { n: ['काला', 'सफ़ेद'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['الأسود', 'الأبيض'], turn: 'دور {p}', win: 'فوز {p}' },
+  };
 
   function start(ctx) {
     const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t;
@@ -45,9 +54,17 @@
     const pos = sq => [T3.cellPos(8, S, sq & 7), T3.cellPos(8, S, sq >> 3)];
     const discs = {}, hints = new THREE.Group(); board.add(hints);
     const lastDot = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .02, 16), lastM); lastDot.visible = false; board.add(lastDot);
-    const human = ctx.side === 2 ? 2 : 1, ai = 3 - human;
+    const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en, pname = c => PX.n[c - 1];   // pvp: both colours are tapped in turn; black (first) at the bottom
+    const human = pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;
     let cells = Array(64).fill(0); cells[27] = cells[36] = 2; cells[28] = cells[35] = 1;
-    let turn = 1, over = false, stopped = false, busy = false, worker = null;
+    let turn = 1, over = false, stopped = false, busy = false, worker = null, ply = 0, hist = [], last = -1, hintW = null, hintJ = 0, aiJ = 0, hintSq = -1;
+    const hintRing = new THREE.Mesh(new THREE.TorusGeometry(.36, .06, 10, 40), new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true, opacity: .95, toneMapped: false }));
+    hintRing.rotation.x = Math.PI / 2; hintRing.visible = false; board.add(hintRing);
+    const hintGlow = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .015, 32), new THREE.MeshBasicMaterial({ color: 0xffb03a, transparent: true, opacity: .5, toneMapped: false, depthWrite: false }));
+    hintGlow.visible = false; board.add(hintGlow);
+    const ix = c => c - 1;   // HUD pill / clock side: black (left) 0, white 1
+    const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(turn), { human: pvp || turn === human, ply }); };
+    function hideHint() { hintSq = -1; if (hintRing.visible || hintGlow.visible) { hintRing.visible = hintGlow.visible = false; if (T3.kick) T3.kick(150); } hintJ++; }
 
     function makeDisc(sq, color) {
       const g = new THREE.Group();
@@ -71,15 +88,17 @@
 
     function showHints() {
       while (hints.children.length) hints.remove(hints.children[0]);
-      if (over || turn !== human) return;
-      legal(cells, human).forEach(s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .02, 20), hintM); const [x, z] = pos(s); m.position.set(x, Y + .02, z); hints.add(m); });
+      if (over || (!pvp && turn !== human)) return;
+      legal(cells, turn).forEach(s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .02, 20), hintM); const [x, z] = pos(s); m.position.set(x, Y + .02, z); hints.add(m); });
     }
     function hud(msg) {
       const b = count(cells, 1), w = count(cells, 2);
-      const side = c => `<span class="hs ${turn === c && !over ? 'on' : ''}"><i class="dk ${c === 1 ? 'b' : 'w'}"></i>${c === human ? L.you : L.ai}<b>${c === 1 ? b : w}</b></span>`;
+      const side = c => `<span class="hs ${turn === c && !over ? 'on' : ''}"><i class="dk ${c === 1 ? 'b' : 'w'}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${c === 1 ? b : w}</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
     }
     function apply(sq, color) {
+      if (pvp || color === human) hist.push({ cells: cells.slice(), turn: color, last });   // 待った: back to before this move
+      hideHint(); ply++; last = sq;
       const fl = flipsOf(cells, sq, color);
       cells[sq] = color; fl.forEach(s => { cells[s] = color; });
       drop(sq, color);
@@ -93,8 +112,9 @@
       if (stopped) return;
       const me = legal(cells, turn), opp = legal(cells, 3 - turn);
       if (!me.length && !opp.length) return end();
-      if (!me.length) { hud(L.pass); turn = 3 - turn; return setTimeout(next, 900); }
-      showHints();
+      if (!me.length) { hud(pvp ? pname(turn) + ' · ' + L.pass : L.pass); turn = 3 - turn; ply++; onTurn(); if (T3.kick) T3.kick(150); return setTimeout(next, pvp ? 1400 : 900); }
+      showHints(); onTurn(); if (T3.kick) T3.kick(150);
+      if (pvp) { hud(PX.turn.replace('{p}', pname(turn))); return; }
       if (turn === human) { hud(L.turn); return; }
       hud(L.think); aiMove();
     }
@@ -107,37 +127,93 @@
         if (weights) worker.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase });
         if (book) worker.postMessage({ type: 'book', book });
       }
-      const t0 = Date.now();
+      const t0 = Date.now(), j = ++aiJ;
       worker.onmessage = e => {
-        const m = e.data; if (m.type !== 'result' || stopped) return;
+        const m = e.data; if (m.type !== 'result' || stopped || j !== aiJ || over) return;
         setTimeout(() => {
-          if (stopped) return;
+          if (stopped || j !== aiJ || over) return;
           const wait = m.move >= 0 ? apply(m.move, ai) : 0;
-          turn = human; busy = false; setTimeout(next, wait);
+          turn = human; busy = false; onTurn(); setTimeout(next, wait);
         }, Math.max(0, 450 - (Date.now() - t0)));
       };
       worker.postMessage({ type: 'think', id: 1, cells: cells.slice(), toMove: ai, opts: { level: ctx.level } });
     }
     function end() {
-      over = true; showHints();
+      over = true; hideHint(); showHints(); if (ctx.onTurn) ctx.onTurn(-1); if (T3.kick) T3.kick(150);
+      if (pvp) {
+        const b = count(cells, 1), w = count(cells, 2), wt = b === w ? '' : PX.win.replace('{p}', pname(b > w ? 1 : 2));
+        hud(wt || L.draw);
+        return ctx.onEnd({ win: false, draw: b === w, level: ctx.level, score: b + ' - ' + w, pvp: true, winnerText: wt });
+      }
       const me = count(cells, human), op = count(cells, ai);
       hud(me > op ? L.win : me < op ? L.lose : L.draw);
       ctx.onEnd({ win: me > op, draw: me === op, level: ctx.level, score: me + ' - ' + op });
     }
     function onClick(e) {
-      if (over || busy || turn !== human || T3.wasDrag()) return;
+      if (over || busy || (!pvp && turn !== human) || T3.wasDrag()) return;
+      const me = pvp ? turn : human;
       const p = T3.pick(e, Y); if (!p) return;
       const c = Math.floor((p.x + S / 2) / (S / 8)), r = Math.floor((p.z + S / 2) / (S / 8));
       if (c < 0 || c > 7 || r < 0 || r > 7) return;
       const sq = r * 8 + c;
-      if (!flipsOf(cells, sq, human).length) return;
-      busy = true; const wait = apply(sq, human); turn = ai;
+      if (!flipsOf(cells, sq, me).length) return;
+      busy = true; const wait = apply(sq, me); turn = 3 - me; onTurn();
       while (hints.children.length) hints.remove(hints.children[0]);
       setTimeout(() => { busy = false; next(); }, wait);
     }
     ctx.el.addEventListener('click', onClick);
     setTimeout(next, 600); hud('');
-    return { stop() { stopped = true; ctx.el.removeEventListener('click', onClick); if (worker) worker.terminate(); } };
+    // test hooks (Playwright): a square's screen position, the state
+    window.Atlas3D.reversi._dbg = { at: sq => { const [x, z] = pos(sq); return T3.project(x, z, Y); }, state: () => ({ turn, over, busy, pvp, legal: legal(cells, turn), b: count(cells, 1), w: count(cells, 2), hint: hintSq, hist: hist.length, discs: Object.keys(discs).length }) };
+    /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
+    function rebuild() {   // the discs as `cells` says (after 待った)
+      Object.keys(discs).forEach(k => { board.remove(discs[k].outer); delete discs[k]; });
+      for (let s = 0; s < 64; s++) if (cells[s]) makeDisc(s, cells[s]);
+      if (last >= 0) { const [x, z] = pos(last); lastDot.position.set(x, Y + .32, z); lastDot.visible = true; } else lastDot.visible = false;
+      if (T3.kick) T3.kick(300);
+    }
+    const myTurn = () => !over && !busy && (pvp || turn === human) && legal(cells, turn).length > 0;
+    function finish(loser, why) {   // resign / time-out: the side `loser` (colour) loses
+      if (over) return;
+      over = true; busy = false; aiJ++; hideHint(); showHints(); if (ctx.onTurn) ctx.onTurn(-1); if (T3.kick) T3.kick(150);
+      const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
+      if (pvp) { const wt = PX.win.replace('{p}', pname(3 - loser)); hud(wt); return ctx.onEnd({ win: false, draw: false, level: ctx.level, score: t('act.pvpEnd', { p: pname(loser), r, w: wt }), pvp: true, winnerText: wt }); }
+      hud(L.lose); ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r });
+    }
+    const api = {
+      human: human - 1,
+      canUndo: () => myTurn() && hist.length > 0,
+      undo() {
+        if (!api.canUndo()) return;
+        const h = hist.pop(); aiJ++; hideHint();
+        cells = h.cells; turn = h.turn; last = h.last; ply++;   // (a new turn for the clock)
+        while (hints.children.length) hints.remove(hints.children[0]);
+        rebuild(); busy = false; next();
+      },
+      canHint: () => myTurn(),
+      hint() {
+        if (!myTurn()) return Promise.resolve(false);
+        const j = ++hintJ, c0 = cells.slice(), me = turn;
+        return ready.then(() => new Promise(res => {
+          if (stopped || j !== hintJ) return res(true);
+          if (!hintW) { hintW = new Worker(BASE + 'engine.js'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
+          hintW.onmessage = e => {
+            const m = e.data; if (m.type !== 'result') return;
+            if (stopped || j !== hintJ || turn !== me || over) return res(true);
+            if (!(m.move >= 0)) return res(false);
+            hintSq = m.move; const [x, z] = pos(m.move); hintRing.position.set(x, Y + .03, z); hintGlow.position.set(x, Y + .012, z); hintRing.visible = hintGlow.visible = true;
+            anim(520, k => { const s = 1 + Math.sin(k * Math.PI * 2) * .18 * (1 - k); hintRing.scale.set(s, s, s); if (T3.kick) T3.kick(80); });
+            res(true);
+          };
+          hintW.postMessage({ type: 'think', id: 2, cells: c0, toMove: me, opts: { level: Math.max(14, Math.min(16, ctx.level + 2)) } });
+        }));
+      },
+      canResign: () => !over,
+      resign() { if (!over) finish(pvp ? turn : human, 'resign'); },
+      timeout(side) { if (!over) finish(side + 1, 'time'); },
+      stop() { stopped = true; ctx.el.removeEventListener('click', onClick); if (worker) worker.terminate(); if (hintW) hintW.terminate(); hintRing.geometry.dispose(); hintGlow.geometry.dispose(); },
+    };
+    return api;
   }
 
   // v4.1: the full game went from 10 to 20 AI levels; move the portal's saved choice to the same setting on the new scale
@@ -165,5 +241,5 @@
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
     return { name: L[0][n - 1], desc: L[1][n - 1], rating: RATING[n], who: W[n - 1] };
   }
-  window.Atlas3D.reversi = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai'], start, levelInfo };   // table: start() plays on the chabudai itself
+  window.Atlas3D.reversi = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'byo', start, levelInfo };   // table: start() plays on the chabudai itself
 })();

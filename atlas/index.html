@@ -250,6 +250,42 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .endc.on{display:flex;animation:pop .4s cubic-bezier(.3,1.5,.5,1)}
 .endc h3{margin:0;font-family:var(--round);font-size:30px}
 .endc .sc{font-family:var(--round);font-weight:700;font-size:20px;color:var(--ink2)}
+/* table play: the action bar (待った · 投了 · ヒント) with the clocks at its ends — bottom centre, the board is framed above it */
+.tbar{position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s}
+.bv.playing.tbon .tbar{opacity:1;visibility:visible;pointer-events:auto}
+.bv.rules .tbar{display:none}
+.tbar .tbtns{display:flex;gap:5px}
+.tbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:62px;height:48px;padding:0 10px;border:0;border-radius:24px;background:#fff1d6;color:#5a3a12;font:900 11.5px/1.1 var(--font,inherit);cursor:pointer;box-shadow:0 3px 0 #efd7a8;white-space:nowrap;transition:transform .1s,opacity .2s}
+.tbar button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tbar button[data-a=resign]{background:#ffe3de;color:#a5321f;box-shadow:0 3px 0 #f5c2b8}
+.tbar button[data-a=hint]{background:#fff6c2;color:#7a5a00;box-shadow:0 3px 0 #efdc7c}
+.tbar button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.1)}
+.tbar button:disabled{opacity:.38;cursor:default}
+.tbar button.busy svg{animation:tbBusy .8s ease-in-out infinite}
+@keyframes tbBusy{50%{transform:scale(.8);opacity:.5}}
+.tbar .tclk{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;height:40px;padding:0 10px;border-radius:99px;background:#f3ead8;color:var(--ink2);font-family:var(--round);font-weight:700;font-size:18px;line-height:1;font-variant-numeric:tabular-nums;box-sizing:border-box}
+.tbar .tclk[hidden]{display:none}
+.tbar .tclk small{font-family:var(--font,inherit);font-weight:900;font-size:9px;line-height:1;margin-bottom:1px;opacity:.8}
+.tbar .tclk.on{background:var(--sun);color:var(--ink);box-shadow:0 3px 0 var(--sun2)}
+.tbar .tclk.low{background:#ff5d5d;color:#fff;box-shadow:0 3px 0 #d63c3c;animation:tbLow 1s ease-in-out infinite}
+@keyframes tbLow{50%{transform:scale(1.07)}}
+@media (max-width:560px){
+  .tbar{gap:4px;padding:4px}.tbar .tbtns{gap:4px}
+  .tbar button{min-width:50px;height:44px;padding:0 6px;font-size:10px;border-radius:22px}.tbar button svg{width:19px;height:19px}
+  .tbar .tclk{min-width:50px;height:36px;padding:0 7px;font-size:16px}
+  /* phones: the HUD sits just above the bar */
+  .bv.playing.tbon:not(.land):not(.bgwide) .hud{bottom:calc(var(--tbh,0px) + env(safe-area-inset-bottom))}
+}
+/* backgammon's landscape views (turned portrait phone / short landscape phone): a slim column at the landscape left,
+   mirroring the HUD column on the right (turned: rotated with the view, along the top edge of the portrait screen) */
+.tbar.col,.tbar.col .tbtns{flex-direction:column}
+.bv.bgwide .tbar.col{left:calc(8px + env(safe-area-inset-left));top:50%;bottom:auto;transform:translateY(-50%)}
+.bv.land .tbar.col{left:50%;top:calc(8px + env(safe-area-inset-top));bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}
+.tbar.col button{min-width:0;width:52px;height:48px;padding:0}
+.tbar.col .tclk{min-width:0;width:56px}
+@media (max-width:560px),(max-height:560px){.tbar.col button{width:48px;height:44px;font-size:9.5px}.tbar.col .tclk{width:52px;height:34px;font-size:15px}}
+.tcsheet .tcnote{padding:0 18px 14px;font-size:12px;font-weight:700;color:var(--ink2)}
+.tcsheet .lvs-l button b{min-width:28px;text-align:center}
 /* ---------- home: compact profile (one update-card wide) + today's game ---------- */
 .toprow{display:grid;grid-template-columns:503px minmax(0,1fr);gap:16px;margin-top:18px}   /* the gap sits under the centre of the 2nd update card (330 + 16 + 165 − 8) */
 .prof{position:relative;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-radius:28px;border:0!important;box-shadow:0 6px 0 #e9dcc0,0 14px 28px -14px rgba(120,80,20,.4)!important}   /* same solid edge as Today's game, so both read the same size */
@@ -547,7 +583,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .total i{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);opacity:0;z-index:90;background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-weight:900;font-size:14px;transition:.25s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%)}
-#confetti{position:fixed;inset:0;pointer-events:none;z-index:95}
+.toast{bottom:max(calc(96px + env(safe-area-inset-bottom)),calc(var(--tbclear,0px) + 10px))}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95;will-change:transform;transform:translateZ(0)}
+@media (pointer:coarse){.ov{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(40,30,15,.6)}}   /* a full-screen blur under falling confetti is costly on phones */
 
 /* ---------- dress ---------- */
 .dress{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;align-items:start}
@@ -658,6 +696,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .mtab3 button.on{background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--line)}
 .bvi .mnote{display:flex;align-items:center;box-sizing:border-box;background:#fff8e8;border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-size:13px;font-weight:700;color:var(--ink2);line-height:1.6}
 .bvi .mnote[hidden],.bvi .opts[hidden]{display:none}
+.bvi .mbody{display:flex;flex-direction:column;gap:10px;margin-top:12px}.bvi .mbody > .opts{margin-top:0!important}.bvi .mbody > .mnote{flex:1 1 auto;justify-content:center;text-align:center;margin:0}
+.bvi .mbody > [hidden]{display:none!important}
 
 /* board card: one rhythm — every block in both columns is 14px apart; the left column spreads to the right column's height */
 .bvi .R{display:flex;flex-direction:column;gap:14px}
@@ -763,7 +803,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .rgd-act .dots{gap:8px}.rgd-act .dots i{width:11px;height:11px}.rgd-act .dots i.on{width:28px}
 }
 /* three ways to play (chabudai / full game in 3D / 2D) */
-.bvi .act.act3{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-wrap:nowrap}.bvi .act.act3 #bvFull{grid-column:1 / -1;padding:12px 16px}
+.bvi .act.act3{display:grid;grid-template-columns:1fr 1fr;gap:16px 10px;flex-wrap:nowrap}   /* row gap allows for the buttons' 4px bottom shadow: looks like the rows above */.bvi .act.act3 #bvFull{grid-column:1 / -1;padding:12px 16px}
 .bvi .act.act3 .pk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;max-width:none;padding:12px 10px;text-align:center;line-height:1.2}
 .bvi .act.act3 .pk b{font-size:17px;white-space:nowrap}.bvi .act.act3 .pk small{font-size:11.5px;font-weight:700;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .bvi .act.act3 .btn.big.pk b{font-size:19px}
@@ -772,6 +812,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 @media (max-width:819px){.bvi .act.act3 .pk b{font-size:15px}.bvi .act.act3 .btn.big.pk b{font-size:18px}}
 /* board card: own pickers instead of the system ones */
 .bvi .sidetg{flex:1;display:flex;gap:4px;padding:4px;border-radius:14px;background:#f3ead8;min-width:0}
+.bvi .opts label:has(.sidetg){flex:none!important}.bvi .opts label:has(.lvpick){min-width:0;flex:1 1 auto!important}
+.bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
 .bvi .sidetg button{flex:1;border:0;background:none;font:inherit;font-weight:900;font-size:15px;color:var(--ink2);padding:7px 6px;border-radius:10px;cursor:pointer;white-space:nowrap}
 .bvi .sidetg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
@@ -781,14 +823,18 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .lvsheet.on{background:rgba(40,30,10,.35)}
 .lvs-in{width:min(520px,100%);max-height:min(76vh,640px);display:flex;flex-direction:column;background:#fffdf7;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(60,40,10,.25);transform:translateY(100%);transition:transform .24s cubic-bezier(.3,1.2,.5,1);padding-bottom:env(safe-area-inset-bottom)}
 .lvsheet.on .lvs-in{transform:none}
-@media (min-width:820px){.lvsheet{align-items:center}.lvs-in{border-radius:24px}}
+@media (min-width:820px){.lvsheet{align-items:center}.lvs-in{border-radius:24px;transform:translateY(14px) scale(.96);opacity:0;transition:transform .22s cubic-bezier(.2,.9,.3,1.15),opacity .18s}.lvsheet.on .lvs-in{opacity:1}}
+/* closing: one smooth motion (no overshoot), finished before the element is removed */
+.lvsheet.out{background:rgba(40,30,10,0);transition:background .18s}
+.lvsheet.out .lvs-in{transform:translateY(100%);transition:transform .2s cubic-bezier(.4,0,1,1)}
+@media (min-width:820px){.lvsheet.out .lvs-in{transform:translateY(10px) scale(.97);opacity:0;transition:transform .16s ease-in,opacity .16s ease-in}}
 .lvs-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px;font-weight:900;font-size:17px;color:var(--ink)}
 .lvs-x{border:0;background:#f3ead8;width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;color:var(--ink2)}
 .lvs-l{overflow:auto;padding:4px 12px 14px;display:grid;gap:6px;overscroll-behavior:contain}
 .lvs-l button{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;gap:2px 10px;text-align:start;border:2px solid var(--line);background:#fff;border-radius:14px;padding:9px 12px;font:inherit;color:var(--ink);cursor:pointer}
 .lvs-l button b{grid-row:1 / 3;font-family:var(--round,inherit);font-size:15px;color:var(--ink2);min-width:46px}
 .lvs-l button .nm{font-weight:900;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lvs-l button small{grid-column:2 / 4;font-size:12px;font-weight:700;color:var(--ink2)}
+.lvs-l button small{grid-column:2 / 4;font-size:12px;font-weight:700;color:var(--ink2);line-height:1.45}.lvs-l button small em{font-style:normal;color:var(--ink)}
 .lvs-l button .meter{display:flex;align-items:flex-end;gap:2px}.lvs-l button .meter i{width:3px;border-radius:2px;background:#e6dcc6}.lvs-l button .meter i.on{background:linear-gradient(#ffb03a,#ff6a3d)}
 .lvs-l button.on{border-color:var(--coral,#ff5d5d);background:#fff4f0;box-shadow:0 0 0 2px rgba(255,93,93,.15)}
 </style>
@@ -834,7 +880,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   <!-- GAMES -->
   <section class="pg" id="pg-games">
     <h2 class="h" id="hAll"></h2>
+    <div class="gfilter"><div class="chips cats" id="catChips2"></div><label class="gsearch"><span id="gSearchIc2"></span><input id="gSearch2" type="search" autocomplete="off" enterkeyhint="search"></label></div>
     <div class="ggrid" id="allGames"></div>
+    <p class="gnone" id="gNone2" hidden></p>
   </section>
 
   <!-- ACHIEVEMENTS -->
@@ -887,27 +935,32 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="art.js?v=6"></script>
-<script src="../shared/atlas.js?v=5p"></script>
-<script src="../shared/atlas-firebase-config.js?v=4"></script>
-<script src="../shared/atlas-account.js?v=4"></script>
-<script src="i18n.js?v=14"></script>
-<script src="table3d.js?v=52"></script>
+<script src="../shared/atlas.js?v=20261022v2"></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1"></script>
+<script src="../shared/atlas-account.js?v=20261022ent"></script>
+<script src="i18n.js?v=16"></script>
+<script src="table3d.js?v=54"></script>
 <script src="models/shogi.js?v=20"></script>
 <script src="models/chess.js?v=3"></script>
 <script src="models/backgammon.js?v=12"></script>
+<script src="models/goban.js?v=2"></script>
 <script src="icons3d.js?v=4"></script>
-<script src="games/reversi.js?v=9"></script>
-<script src="games/shogi-play.js?v=1"></script>
-<script src="games/shogi.js?v=3"></script>
-<script src="games/chess.js?v=2"></script>
-<script src="games/backgammon.js?v=11"></script>
+<script src="games/reversi.js?v=11"></script>
+<script src="games/shogi-play.js?v=3"></script>
+<script src="games/shogi.js?v=5"></script>
+<script src="games/chess.js?v=4"></script>
+<script src="games/backgammon.js?v=15"></script>
+<script src="games/gomoku.js?v=3"></script>
 <script src="rules/reversi.js?v=7"></script>
 <script src="rules/shogi.js?v=15"></script>
 <script src="rules/chess.js?v=1"></script>
 <script src="rules/backgammon.js?v=6"></script>
+<script src="rules/gomoku.js?v=3"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
-<script src="app.js?v=87"></script>
+<script src="../shared/resign.js?v=1"></script>
+<script src="../shared/tick.js?v=1"></script>
+<script src="app.js?v=99"></script>
 </body>
 </html>

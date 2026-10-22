@@ -8,7 +8,7 @@
 //            A game whose result can not count (reports disagree, the loser never joined, stale, pair limit) is "void": the link is
 //            cleared without a rating change. Unsettled links are retried at start-up, every minute and before a rated search, so a
 //            result is never lost when a tab closes or the connection drops (the server keeps the state; nothing is only local).
-// Also: Firebase App Check (reCAPTCHA v3) when a site key is configured (window.FIREBASE_APPCHECK_SITE_KEY in <game>/firebase-config.js;
+// Also: Firebase App Check (reCAPTCHA Enterprise; 'v3:' prefix = classic v3) when a site key is configured (window.FIREBASE_APPCHECK_SITE_KEY in <game>/firebase-config.js;
 // null = skipped). Local testing: ?appcheckdebug=1 (or localStorage 'appcheck-debug' = a registered debug token) on localhost.
 (function () {
   'use strict';
@@ -34,7 +34,9 @@
           if (tok || Q.has('appcheckdebug')) self.FIREBASE_APPCHECK_DEBUG_TOKEN = tok || true;   // true: the SDK prints a token to register in the console
         }
         const ac = app.appCheck ? app.appCheck() : firebase.appCheck(app);
-        ac.activate(new firebase.appCheck.ReCaptchaV3Provider(siteKey), true);
+        // reCAPTCHA Enterprise (Fraud Defense) by default; a key written as 'v3:<key>' uses the classic reCAPTCHA v3 provider
+        const v3 = /^v3:/.test(siteKey), key = siteKey.replace(/^(v3|ent):/, '');
+        ac.activate(v3 ? new firebase.appCheck.ReCaptchaV3Provider(key) : new firebase.appCheck.ReCaptchaEnterpriseProvider(key), true);
         return true;
       } catch (e) { console.warn('App Check', e); return false; }
     })());

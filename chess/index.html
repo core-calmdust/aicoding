@@ -1282,35 +1282,35 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n_ai.js?v=20261021a"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="engine.js?v=20261021L"></script>
-<script src="firebase-config.js?v=sec1"></script>
-<script src="../shared/onlinesec.js?v=1"></script>
+<script src="firebase-config.js?v=ac1"></script>
+<script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=sec1"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=23"></script>
+<script src="../shared/ruletour.js?v=28"></script>
 <script src="i18n_v2.js?v=20261022rt"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=rs1mvic1"></script>
+<script src="app.js?v=snd1"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=19'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/chess.js?v=2')).then(() => load('../atlas/skin/chess.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=54')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/chess.js?v=2')).then(() => load('../atlas/skin/chess.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
-<script src="../shared/atlas-account.js?v=4" defer></script>
+<script src="../shared/atlas.js?v=20261022v2" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
+<script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
 </html>

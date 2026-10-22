@@ -54,6 +54,16 @@
       shimmer: (ms = 0) => at(ms, (C, t) => [1568, 2093, 2637, 3136, 2349, 2794, 3520, 4186].forEach((f, i) => tone(C, t + i * .04, f, 0, .38, 'sine', .03, .003))),
       chime: (ms = 0) => at(ms, (C, t) => [[784, 0], [988, .08], [1175, .16], [1568, .26]].forEach(([f, d]) => tone(C, t + d, f, 0, .7, 'sine', .06, .01))),   // the board is here
       coin: (ms = 0) => at(ms, (C, t) => { tone(C, t, 1319, 0, .09, 'square', .025, .002); tone(C, t + .07, 1976, 0, .3, 'square', .025, .002); }),
+      // end of a game on the table: a bright victory jingle with a sparkle, a soft falling "aww" for a loss, two even notes for a draw
+      win: (ms = 0) => at(ms, (C, t) => {
+        [[523, 0, .16], [659, .12, .16], [784, .24, .16], [1047, .36, .5], [988, .62, .14], [1047, .76, .7]].forEach(([f, d, l]) => { tone(C, t + d, f, 0, l + .25, 'triangle', .1); tone(C, t + d, f * 2, 0, l, 'sine', .025); tone(C, t + d, f / 2, 0, l + .2, 'sine', .04); });
+        [2093, 2637, 3136, 4186, 3520, 4699].forEach((f, i) => tone(C, t + .9 + i * .05, f, 0, .45, 'sine', .022, .003));
+      }),
+      lose: (ms = 0) => at(ms, (C, t) => {
+        [[392, 0], [370, .26], [349, .52]].forEach(([f, d]) => { tone(C, t + d, f, f * .985, .34, 'triangle', .08); tone(C, t + d, f / 2, 0, .4, 'sine', .035); });
+        tone(C, t + .8, 330, 196, 1.0, 'triangle', .08); tone(C, t + .8, 165, 98, 1.1, 'sine', .04);   // the last note sags down
+      }),
+      draw: (ms = 0) => at(ms, (C, t) => { [[523, 0], [659, .18]].forEach(([f, d]) => tone(C, t + d, f, 0, .5, 'triangle', .08)); tone(C, t + .4, 587, 0, .7, 'sine', .05); }),
       fanfare: (ms = 0) => at(ms, (C, t) => [[523, 0], [659, .1], [784, .2], [1047, .32]].forEach(([f, d]) => { tone(C, t + d, f, 0, .45, 'triangle', .09); tone(C, t + d, f * 2, 0, .3, 'sine', .02); })),
     };
   })();
@@ -218,7 +228,7 @@
     (function step(now) {
       propRaf = requestAnimationFrame(step);
       if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
-      if (now - lastP < (document.hasFocus() ? 1000 / 60 : 100) - 2) return;   // 60 fps cap, 10 fps when the window isn't focused
+      if (!document.hasFocus() || now - lastP < 1000 / 60 - 2) return;   // 60 fps cap; stopped while the window isn't focused
       lastP = now;
       if ($('bv').classList.contains('on')) return;   // hidden behind the 3D board
       px += (tx - px) * .06; py += (ty - py) * .06;
@@ -286,15 +296,16 @@
     return A_.byUpdate().filter(g => (gCat === 'all' || g.cat === gCat) && (!q || hay(g).includes(q)));
   }
   const SRCH = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
-  function renderFilter() {
-    const cats = ['all', ...(A_.CATS || [])];
-    $('catChips').innerHTML = cats.map(k => { const n = k === 'all' ? A_.GAMES.length : A_.GAMES.filter(g => g.cat === k).length;
+  // the same chips + search on the home grid and on the games tab (they share one filter state)
+  function renderFilter(ids = { chips: 'catChips', q: 'gSearch', ic: 'gSearchIc' }, onChange = renderGrid) {
+    const cats = ['all', ...(A_.CATS || [])], C = $(ids.chips);
+    C.innerHTML = cats.map(k => { const n = k === 'all' ? A_.GAMES.length : A_.GAMES.filter(g => g.cat === k).length;
       return `<button type="button" class="chip cat" data-k="${k}" aria-pressed="${gCat === k}">${esc(t('cat.' + k))} <em>${n}</em></button>`; }).join('');
-    $('catChips').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
-      $('catChips').querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); renderGrid(); });
-    const s = $('gSearch'); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
-    s.oninput = () => { gQ = s.value; renderGrid(); };
-    $('gSearchIc').innerHTML = SRCH;
+    C.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
+      C.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); onChange(); });
+    const s = $(ids.q); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
+    s.oninput = () => { gQ = s.value; onChange(); };
+    $(ids.ic).innerHTML = SRCH;
   }
   // the random tile: an isometric die with "?" faces on a thick base, drawn like the 3D game icons
   const RND_SVG = `<svg class="dieic" viewBox="0 0 200 200" aria-hidden="true">
@@ -487,8 +498,9 @@
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div><div class="mnote" id="bvMNote"></div>` : ''}${ad ? `<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
-        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}${ad.levelInfo ? `<div class="lvinfo" id="bvLvInfo"></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
+      </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${ad.modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
+        ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}</div>
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label></div>` : ''}</div>` : `<div class="soon">${g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' ? '' : t('bv.soon')}</div>`}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
@@ -498,16 +510,26 @@
     if ($('bvFull')) $('bvFull').onclick = () => startPlay('full');
     if ($('bvMode')) {   // AI / rated / two players: only the AI game has a level and a side to pick
       // the card keeps the AI-game height: the note of the other modes fills the space the level / side rows take
-      let midH = 0;
-      const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-        if (!midH) { $('bvOpts').hidden = false; midH = $('bvOpts').offsetHeight; }
+      // one fixed height for the settings area in every mode (the tallest mode's): the note of a mode without a level fills the space
+      const body = $('bvMBody');
+      const layout = m => {
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
-        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
-        $('bvMNote').style.minHeight = midH ? midH + 'px' : ''; fitStage(); };
+        if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
+        $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
+      };
+      let bodyH = 0;
+      const measure = () => { body.style.height = 'auto'; bodyH = 0; ad.modes.forEach(m => { layout(m); $('bvMNote').style.flex = 'none'; bodyH = Math.max(bodyH, body.offsetHeight); }); $('bvMNote').style.flex = ''; body.style.height = bodyH + 'px'; };
+      const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+        if (!bodyH) measure();
+        layout(m);
+        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
+        fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
-      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; midH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
+      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
       $('bvMode').onclick = e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); };
       setMode(mode);
+      // measure again once the custom pickers below are in place and the web fonts have loaded
+      setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
@@ -564,11 +586,24 @@
         const max = ad.levels, cur = +sel.value;
         const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
           const n = +o.value, x = ad.levelInfo ? ad.levelInfo(n, lang) : null;
-          return `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${esc(x ? x.name : '')}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small>${esc(x.who)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
+          return `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${esc(x ? x.name : '')}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
-        const close = () => { sh.classList.remove('on'); setTimeout(() => sh.remove(), 220); };
+        const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
         sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
         const onB = sh.querySelector('.on'); if (onB) onB.scrollIntoView({ block: 'center' });
+      };
+    }
+    if ($('bvTc')) {   // time control for table play: a picker button + a list sheet (same UI as the level)
+      const bt = $('bvTc');
+      const paint = () => { bt.innerHTML = `<span>${esc(tcName(tcOf(ad, bt.dataset.v)))}</span><i>▾</i>`; };
+      paint();
+      bt.onclick = () => {
+        const cur = bt.dataset.v, L = TCS[ad.clock];
+        const sh = document.createElement('div'); sh.className = 'lvsheet tcsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('tc.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${L.map(c =>
+          `<button type="button" role="option" data-v="${c.id}" class="${c.id === cur ? 'on' : ''}"><b>${c.id === 'none' ? '—' : '⏱'}</b><span class="nm">${esc(tcName(c))}</span><small>${esc(tcDesc(c))}</small></button>`).join('')}</div><div class="tcnote">${esc(t('tc.note'))}</div></div>`;
+        document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+        const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+        sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { bt.dataset.v = b.dataset.v; pref[id + ':tc'] = b.dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
       };
     }
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
@@ -589,12 +624,12 @@
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
-    Table3D.setInset(playing || !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4);
+    Table3D.setInset(playing ? (window.__tbar ? __tbar.band : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4);   // playing: the board is framed above the action bar
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true };
+  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true };
   let lastKind;
   function startPlay(kind) {
     const g = bvGame, ad = Atlas3D[g.id];
@@ -608,22 +643,153 @@
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai';
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
+    const tc = tcOf(ad, $('bvTc') ? $('bvTc').dataset.v : pref[g.id + ':tc']), tcT = new URLSearchParams(location.search).get('tcTest');
+    const clock = tcT ? { id: 'test', byo: +tcT } : tc;   // (tests: ?tcTest=5 → 5 s per move)
+    if ($('bvTc')) { pref[g.id + ':tc'] = $('bvTc').dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }
     $('bv').classList.add('playing'); $('endc').classList.remove('on'); fitStage();
-    session = ad.start({ el: $('gl'), Table3D, lang, t, level, side, mode: pmode, hud: h => { $('hud').innerHTML = h; },
+    let sess = null, tbOn = false;
+    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
+      onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); },
       onEnd: res => {
-        A_.recordPlay(W, g.id, res); refresh();
+        if (session === sess) TB.end();
+        if (!res.pvp) A_.recordPlay(W, g.id, res); refresh();   // two players on one device: no win / loss for the player's record
         setTimeout(() => {
-          $('endc').innerHTML = `<h3>${res.win ? '🎉 ' : ''}${esc(t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose'))}</h3>${res.score ? `<div class="sc">${esc(res.score)}</div>` : ''}<div class="gnote">Lv.${res.level}</div>
+          if (session !== sess) return;
+          TB.hide();
+          const head = res.pvp ? (res.draw ? t('res.draw') : '🎉 ' + (res.winnerText || res.score || '')) : (res.win ? '🎉 ' : '') + t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose');
+          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.pvp ? '' : `<div class="gnote">Lv.${res.level}</div>`}
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${t('bv.again')}</button></div>`;
-          $('endc').classList.add('on'); if (res.win) confetti(120);
+          $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
+          try { SFX[res.draw ? 'draw' : res.win || res.pvp ? 'win' : 'lose'](); } catch (e) {}   // (respects the sound setting)
           $('eAgain').onclick = () => { stopSession(); Table3D.show(g.id); setTimeout(() => startPlay(lastKind), 50); };
           $('eBack').onclick = () => openBoard(g.id);
           welcome();
         }, 900);
       } });
+    TB.on(sess, clock, pmode === 'pvp' ? -1 : sess.human != null ? sess.human : side === 2 ? 1 : 0); tbOn = true;   // the human's HUD pill (left when playing first, unless the adapter says)
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
-  function stopSession() { if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+  function stopSession() { TB.off(); if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+
+  /* ---------- table play: time controls, clocks and the action bar (待った · 投了 · ヒント), one implementation for every game ----------
+     Adapter session API (atlas/games/*.js): undo() canUndo() · hint() → Promise canHint() · resign() canResign() · timeout(side).
+     The adapter calls ctx.onTurn(side, { human, ply }) whenever the side to move changes (side 0 = the left pill of its HUD,
+     1 = the right one; side -1 = nobody, e.g. the game just ended) — the clock here runs the time and flags a loss on time. */
+  const TCS = {   // per game (adapter.clock): the time controls its full version offers
+    byo: [{ id: 'none' }, { id: 'b30', byo: 30 }, { id: 'm10', main: 600, byo: 30 }, { id: 'm30', main: 1800, byo: 60 }],      // reversi, shogi
+    fis: [{ id: 'none' }, { id: 'f3', main: 180, inc: 2 }, { id: 'f10', main: 600, inc: 5 }, { id: 'f15', main: 900, inc: 10 }],   // chess, gomoku (Fischer)
+    bg: [{ id: 'none' }, { id: 'b30', byo: 30 }, { id: 'm5', main: 300, byo: 30 }, { id: 'm10', main: 600, byo: 30 }],           // backgammon
+  };
+  const tcOf = (ad, id) => { const L = ad && TCS[ad.clock]; if (!L) return null; return L.find(c => c.id === id) || L[0]; };
+  const tcName = c => !c || (!c.main && !c.byo) ? t('tc.none') : c.inc ? t('tc.fis', { m: c.main / 60, s: c.inc }) : !c.main ? t('tc.byo', { s: c.byo }) : t('tc.mb', { m: c.main / 60, s: c.byo });
+  const tcDesc = c => !c || (!c.main && !c.byo) ? t('tc.noneD') : c.inc ? t('tc.fisD', { m: c.main / 60, s: c.inc }) : !c.main ? t('tc.byoD', { s: c.byo }) : t('tc.mbD', { m: c.main / 60, s: c.byo });
+  const TB = (() => {
+    const IC = {
+      undo: '<svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>',
+      hint: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
+    };
+    const bar = document.createElement('div'); bar.className = 'tbar'; bar.id = 'tbar';
+    bar.innerHTML = '<span class="tclk" data-s="0" hidden></span><span class="tbtns"><button type="button" data-a="undo"></button><button type="button" data-a="resign"></button><button type="button" data-a="hint"></button></span><span class="tclk" data-s="1" hidden></span>';
+    $('bv').appendChild(bar);
+    const ck = [...bar.querySelectorAll('.tclk')], btn = k => bar.querySelector(`[data-a="${k}"]`);
+    let S = null, ended = false, hinting = false, iv = 0, ro = null;
+    // the clock: tc = { main, byo, inc } (s) · left[s] = main time left (ms) · the side to move's turn started at t0
+    const C = { tc: null, left: [0, 0], side: -1, key: '', human: false, t0: 0, show: [false, false], pvp: false, flagged: false };
+    const now = () => performance.now();
+    function used() { return C.side >= 0 && C.human ? now() - C.t0 : 0; }
+    function remain(s) {   // { ms: what is shown, byo: in the byoyomi, flag: ms until a loss on time (Infinity: never) }
+      const tc = C.tc, u = s === C.side ? used() : 0, m = C.left[s] - u;
+      if (m > 0) return { ms: m, byo: false, flag: tc.byo ? Infinity : m, main: true };
+      if (tc.byo) { const b = tc.byo * 1000 + m; return { ms: Math.max(0, b), byo: true, flag: b }; }
+      return { ms: 0, byo: false, flag: m };
+    }
+    function settle() {   // the side to move's turn ends: charge its time (Fischer: + increment)
+      if (C.side < 0 || !C.tc || !C.human) return;
+      const s = C.side, m = C.left[s] - used();
+      C.left[s] = m > 0 ? m + (C.tc.inc || 0) * 1000 : C.tc.byo ? 0 : 0;
+      if (window.CountTick) CountTick.reset('tb' + s);
+    }
+    function turn(side, info) {
+      if (!S || ended) return;
+      info = info || {};
+      const key = side + ':' + (info.ply == null ? '' : info.ply);
+      if (side === C.side && key === C.key) return;   // the same turn reported again
+      settle();
+      C.side = side; C.key = key; C.human = side >= 0 && (C.pvp || !!info.human); C.t0 = now();
+      sync();
+    }
+    const fmt = ms => { const s = Math.ceil(ms / 1000 - 1e-6), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
+    function sync() {
+      if (!S) return;
+      // clocks
+      if (C.tc) for (const s of [0, 1]) {
+        const el = ck[s]; el.hidden = !C.show[s]; if (!C.show[s]) continue;
+        const r = remain(s), on = s === C.side && !ended, low = on && (r.byo ? r.ms <= 10000 : !C.tc.byo && r.ms <= 10000);
+        const txt = r.byo ? `<small>${esc(t('tc.byoS'))}</small>${Math.ceil(r.ms / 1000 - 1e-6)}` : fmt(r.ms);
+        if (el._t !== txt) { el.innerHTML = txt; el._t = txt; }
+        el.classList.toggle('on', on); el.classList.toggle('low', low); el.classList.toggle('byo', r.byo);
+        if (on && C.human && window.CountTick) CountTick.feed(r.flag, 'tb' + s);
+        if (on && C.human && r.flag <= 0 && !C.flagged) { C.flagged = true; const sd = s; setTimeout(() => { if (S && !ended && S.timeout) { turn(-1); S.timeout(sd); } }, 0); }
+      }
+      // buttons
+      const can = k => !!(S && !ended && S[k] && S[k]());
+      btn('undo').disabled = !can('canUndo');
+      btn('hint').disabled = hinting || !can('canHint'); btn('hint').classList.toggle('busy', hinting);
+      btn('resign').disabled = ended || (S.canResign ? !S.canResign() : false);
+    }
+    function paint() {
+      btn('undo').innerHTML = `${IC.undo}<span>${esc(t('act.undo'))}</span>`;
+      btn('resign').innerHTML = `${window.Resign ? Resign.icon : ''}<span>${esc(window.Resign ? Resign.label(lang) : t('act.resigned'))}</span>`;
+      btn('hint').innerHTML = `${IC.hint}<span>${esc(t('act.hint'))}</span>`;
+      ['undo', 'resign', 'hint'].forEach(k => { const b = btn(k); b.setAttribute('aria-label', b.textContent); b.title = b.textContent; });
+    }
+    // where the bar sits: the bottom centre (the board is framed above it); the backgammon landscape views: a slim column
+    // at the landscape left, mirroring the HUD column on the right
+    function place() {
+      const bv = $('bv'), col = bv.classList.contains('land') || bv.classList.contains('bgwide');
+      bar.classList.toggle('col', col);
+      const band = bv.classList.contains('tbon') && !col ? bar.offsetHeight + 14 + 8 : 0;
+      bv.style.setProperty('--tbh', band + 'px');
+      const hudR = $('hud').getBoundingClientRect(), phoneHud = !col && innerWidth <= 560;
+      document.documentElement.style.setProperty('--tbclear', (col ? 18 : phoneHud ? innerHeight - hudR.top + 4 : band + 4) + 'px');   // toasts stay clear of the bar (and the HUD below on phones)
+      fitStage();
+    }
+    bar.addEventListener('click', e => {
+      const b = e.target.closest('button[data-a]'); if (!b || b.disabled || !S || ended) return;
+      e.stopPropagation();
+      const a = b.dataset.a, s = S;
+      if (a === 'undo') { if (s.canUndo()) { s.undo(); SFX.tok(); } }
+      else if (a === 'hint') {
+        if (!s.canHint()) return; hinting = true; sync(); SFX.tok();
+        Promise.resolve(s.hint()).then(ok => { if (ok === false && S === s) toast(t('act.noHint')); }).catch(() => {}).then(() => { hinting = false; if (S === s) sync(); });
+      }
+      else if (a === 'resign') {
+        const go = () => { if (S === s && !ended && (!s.canResign || s.canResign())) { turn(-1); s.resign(); } };
+        if (window.Resign) Resign.confirm({ lang }).then(ok => { if (ok) go(); }); else go();
+      }
+      sync();
+    });
+    return {
+      // a table game starts: tc = the chosen time control (null: none), human = the player's side (-1: two players)
+      on(sess, tc, human) {
+        S = sess; ended = false; hinting = false; C.tc = tc && (tc.main || tc.byo) ? tc : null; C.side = -1; C.key = ''; C.flagged = false; C.pvp = human < 0;
+        C.left = [0, 1].map(() => C.tc ? (C.tc.main || 0) * 1000 : 0); C.show = [0, 1].map(s => !!C.tc && (C.pvp || s === human));
+        if (window.CountTick) { CountTick.reset(); CountTick.setMuted(() => !SFX.on); }
+        paint(); ck.forEach(el => { el.hidden = true; el._t = ''; });
+        $('bv').classList.add('tbon'); sync(); place(); setTimeout(place, 60);
+        clearInterval(iv); iv = setInterval(() => { if (S) sync(); }, 200);
+        if (!ro && window.ResizeObserver) { ro = new ResizeObserver(() => { if (S) place(); }); ro.observe(bar); ro.observe($('hud')); }
+      },
+      turn, sync,
+      end() { if (!S) return; turn(-1); ended = true; sync(); },   // the game is over: buttons off, the clock stops
+      hide() { $('bv').classList.remove('tbon'); },                 // the end card is up
+      off() { clearInterval(iv); iv = 0; if (S) turn(-1); S = null; ended = true; C.tc = null; $('bv').classList.remove('tbon'); $('bv').style.setProperty('--tbh', '0px'); document.documentElement.style.removeProperty('--tbclear'); if (window.CountTick) CountTick.reset(); },
+      place,
+      get band() { return $('bv').classList.contains('tbon') && !bar.classList.contains('col') ? parseFloat($('bv').style.getPropertyValue('--tbh')) || 0 : 0; },
+      _dbg: () => ({ side: C.side, human: C.human, left: C.left.slice(), tc: C.tc, show: C.show.slice(), ended, r: C.tc ? [remain(0), remain(1)] : null, undo: !btn('undo').disabled, hint: !btn('hint').disabled, resign: !btn('resign').disabled }),
+    };
+  })();
+  window.__tbar = TB;   // (tests)
   // back from a game (page restored from the back-forward cache): drop the loading screen and the "playing" state,
   // so the board viewer shows its info card again instead of a bare board with only the × button
   addEventListener('pageshow', e => {
@@ -685,7 +851,14 @@
   }
   /* ---------- GAMES ---------- */
   function renderGames() {
-    $('hAll').textContent = t('games.h'); $('allGames').innerHTML = A_.byUpdate().map(g => gameCard(g)).join('');
+    $('hAll').textContent = t('games.h');
+    renderFilter({ chips: 'catChips2', q: 'gSearch2', ic: 'gSearchIc2' }, renderGamesList);
+    renderGamesList();
+  }
+  function renderGamesList() {
+    const list = visibleGames();
+    $('allGames').innerHTML = list.map(g => gameCard(g)).join('');
+    $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }
 
@@ -884,16 +1057,28 @@
   let toastT = 0;
   function toast(s) { const el = $('toast'); el.textContent = s; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
   function bumpCoins(el) { const p = el || $('coinPill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
+  // confetti: light on the GPU — a half-resolution canvas (scaled up by CSS), no save/restore per piece,
+  // time-based motion (same speed at any frame rate), fewer pieces on phones; a new burst joins the running one
+  const CF = { ps: [], run: false };
   function confetti(n) {
-    const cv = $('confetti'), g = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
+    const cv = $('confetti'), g = cv.getContext('2d'), K = .5, W0 = Math.round(innerWidth * K), H0 = Math.round(innerHeight * K);
+    if (cv.width !== W0 || cv.height !== H0) { cv.width = W0; cv.height = H0; }
     const cols = ['#ff5d5d', '#ffc928', '#3ccf91', '#36b4ff', '#8d6bff', '#ff7fbe'];
-    const ps = Array.from({ length: n }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .45, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6.28, s: 6 + Math.random() * 6, c: cols[Math.random() * 6 | 0] }));
-    let f = 0;
-    (function step() {
-      g.clearRect(0, 0, cv.width, cv.height);
-      ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .45; p.vx *= .99; p.r += .2; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); });
-      if (++f < 120) requestAnimationFrame(step); else g.clearRect(0, 0, cv.width, cv.height);
-    })();
+    n = Math.round(n * (matchMedia('(pointer: coarse)').matches ? .5 : .8));
+    for (let i = 0; i < n; i++) CF.ps.push({ x: W0 / 2 + (Math.random() - .5) * 100, y: H0 * .45, vx: (Math.random() - .5) * 7 * 60, vy: (-Math.random() * 7 - 2) * 60, r: Math.random() * 6.28, vr: (Math.random() - .5) * 14, s: 3 + Math.random() * 3.5, c: cols[i % cols.length], life: 1.9 + Math.random() * .5 });
+    if (CF.run) return; CF.run = true;
+    let last = performance.now();
+    (function step(now) {
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W0, H0);
+      CF.ps = CF.ps.filter(p => (p.life -= dt) > 0 && p.y < H0 + 20);
+      for (const p of CF.ps) {
+        p.vy += 13.5 * 60 * dt; p.vx *= Math.pow(.99, dt * 60); p.x += p.vx * dt; p.y += p.vy * dt * .5; p.r += p.vr * dt;
+        const c = Math.cos(p.r), sn = Math.sin(p.r); g.setTransform(c, sn, -sn, c, p.x, p.y); g.globalAlpha = Math.min(1, p.life * 2); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      }
+      g.globalAlpha = 1;
+      if (CF.ps.length) requestAnimationFrame(step); else { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W0, H0); CF.run = false; }
+    })(last);
   }
 
   /* ---------- welcome: login bonus (character popup) + new achievements ---------- */

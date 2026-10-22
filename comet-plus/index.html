@@ -203,6 +203,116 @@
     </script>
 </head>
 <body>
+    <!-- 起動ロゴ（NEORETRO ARCADES）: 起動時に約0.5秒表示。音が鳴らせない環境ではタップ/キー入力を待ってから鳴らす -->
+    <div id="boot-logo" aria-hidden="true"><div class="bl-in"><canvas id="bl-cv"></canvas><img id="bl-img" alt="NEORETRO ARCADES" style="display:none" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjUxLjQgOTguNiAxMTU5LjggMjU5LjQiIHdpZHRoPSIxMTYwIiBoZWlnaHQ9IjI1OSIgb3ZlcmZsb3c9InZpc2libGUiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iTkVPUkVUUk8gQVJDQURFUyI+PGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iY2hyb21lIiB4MT0iMCIgeTE9IjExMCIgeDI9IjAiIHkyPSIyNjAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmZmZmYiLz48c3RvcCBvZmZzZXQ9Ii41NSIgc3RvcC1jb2xvcj0iI2U5ZWRmNyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2I5YzJkOCIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0icGl4IiB4MT0iMTE4IiB5MT0iMCIgeDI9IjI0Mi4yIiB5Mj0iMCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzJiZTRmZiIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjOWZmNGZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmZmZmIi8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJ3aXJlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMzZlNmZmIi8+PHN0b3Agb2Zmc2V0PSIuNiIgc3RvcC1jb2xvcj0iIzViOGNmZiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2IwNGNmZiIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0ic3ViIiB4MT0iMCIgeTE9IjAiIHgyPSI3MjYiIHkyPSIwIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMjJlMmZmIi8+PHN0b3Agb2Zmc2V0PSIuNDUiIHN0b3AtY29sb3I9IiMzZjdkZmYiLz48c3RvcCBvZmZzZXQ9Ii43MiIgc3RvcC1jb2xvcj0iIzlhNTJmZiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmM2ZkMiIvPjwvbGluZWFyR3JhZGllbnQ+CjxmaWx0ZXIgaWQ9Imdsb3ciIHg9Ii0zMCUiIHk9Ii0zMCUiIHdpZHRoPSIxNjAlIiBoZWlnaHQ9IjE2MCUiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNCIgcmVzdWx0PSJiIi8+PGZlTWVyZ2U+PGZlTWVyZ2VOb2RlIGluPSJiIi8+PGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIi8+PC9mZU1lcmdlPjwvZmlsdGVyPgo8ZmlsdGVyIGlkPSJiaWdnbG93IiB4PSItNDAlIiB5PSItNDAlIiB3aWR0aD0iMTgwJSIgaGVpZ2h0PSIxODAlIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxNCIvPjwvZmlsdGVyPgo8L2RlZnM+PHRpdGxlPk5FT1JFVFJPIEFSQ0FERVM8L3RpdGxlPjxyZWN0IHg9IjExOC4wIiB5PSIxMTAuMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTMxLjgiIHk9IjExMC4wIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxNDUuNiIgeT0iMTEwLjAiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIxNC42MDAwMDAwMDAwMDAwMiIgeT0iMTEwLjAiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIyOC40IiB5PSIxMTAuMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTE4LjAiIHk9IjEyMy44IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxMzEuOCIgeT0iMTIzLjgiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjE0NS42IiB5PSIxMjMuOCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTU5LjQiIHk9IjEyMy44IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIyMTQuNjAwMDAwMDAwMDAwMDIiIHk9IjEyMy44IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIyMjguNCIgeT0iMTIzLjgiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjExOC4wIiB5PSIxMzcuNiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTMxLjgiIHk9IjEzNy42IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxNDUuNiIgeT0iMTM3LjYiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjE1OS40IiB5PSIxMzcuNiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjE0LjYwMDAwMDAwMDAwMDAyIiB5PSIxMzcuNiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjI4LjQiIHk9IjEzNy42IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxMTguMCIgeT0iMTUxLjQiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjEzMS44IiB5PSIxNTEuNCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTU5LjQiIHk9IjE1MS40IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxNzMuMiIgeT0iMTUxLjQiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIxNC42MDAwMDAwMDAwMDAwMiIgeT0iMTUxLjQiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIyOC40IiB5PSIxNTEuNCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTE4LjAiIHk9IjE2NS4yIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxMzEuOCIgeT0iMTY1LjIiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjE1OS40IiB5PSIxNjUuMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTczLjIiIHk9IjE2NS4yIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIyMTQuNjAwMDAwMDAwMDAwMDIiIHk9IjE2NS4yIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIyMjguNCIgeT0iMTY1LjIiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjExOC4wIiB5PSIxNzkuMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTMxLjgiIHk9IjE3OS4wIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxNzMuMiIgeT0iMTc5LjAiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjE4Ny4wIiB5PSIxNzkuMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjE0LjYwMDAwMDAwMDAwMDAyIiB5PSIxNzkuMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjI4LjQiIHk9IjE3OS4wIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxMTguMCIgeT0iMTkyLjgiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjEzMS44IiB5PSIxOTIuOCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTg3LjAiIHk9IjE5Mi44IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIyMDAuOCIgeT0iMTkyLjgiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIxNC42MDAwMDAwMDAwMDAwMiIgeT0iMTkyLjgiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIyOC40IiB5PSIxOTIuOCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTE4LjAiIHk9IjIwNi42MDAwMDAwMDAwMDAwMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTMxLjgiIHk9IjIwNi42MDAwMDAwMDAwMDAwMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTg3LjAiIHk9IjIwNi42MDAwMDAwMDAwMDAwMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjAwLjgiIHk9IjIwNi42MDAwMDAwMDAwMDAwMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjE0LjYwMDAwMDAwMDAwMDAyIiB5PSIyMDYuNjAwMDAwMDAwMDAwMDIiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIyOC40IiB5PSIyMDYuNjAwMDAwMDAwMDAwMDIiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjExOC4wIiB5PSIyMjAuNCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTMxLjgiIHk9IjIyMC40IiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIyMDAuOCIgeT0iMjIwLjQiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIxNC42MDAwMDAwMDAwMDAwMiIgeT0iMjIwLjQiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIyOC40IiB5PSIyMjAuNCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMTE4LjAiIHk9IjIzNC4yIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxMzEuOCIgeT0iMjM0LjIiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjIwMC44IiB5PSIyMzQuMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjE0LjYwMDAwMDAwMDAwMDAyIiB5PSIyMzQuMiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjI4LjQiIHk9IjIzNC4yIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSIxMTguMCIgeT0iMjQ4LjAiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjUiIGZpbGw9InVybCgjcGl4KSIvPjxyZWN0IHg9IjEzMS44IiB5PSIyNDguMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjE0LjYwMDAwMDAwMDAwMDAyIiB5PSIyNDguMCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuNSIgZmlsbD0idXJsKCNwaXgpIi8+PHJlY3QgeD0iMjI4LjQiIHk9IjI0OC4wIiB3aWR0aD0iMTEuNCIgaGVpZ2h0PSIxMS40IiByeD0iMS41IiBmaWxsPSJ1cmwoI3BpeCkiLz48cmVjdCB4PSI5MC40IiB5PSIxMzcuNiIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuMiIgZmlsbD0iIzNlZThmZiIgb3BhY2l0eT0iMC45NSIvPjxyZWN0IHg9Ijc3LjQiIHk9IjEyNC42IiB3aWR0aD0iOS44IiBoZWlnaHQ9IjkuOCIgcng9IjEuMiIgZmlsbD0iIzNlZThmZiIgb3BhY2l0eT0iMC43MyIvPjxyZWN0IHg9IjY0LjQiIHk9IjExMS42IiB3aWR0aD0iOC4yIiBoZWlnaHQ9IjguMiIgcng9IjEuMiIgZmlsbD0iIzNlZThmZiIgb3BhY2l0eT0iMC41MiIvPjxyZWN0IHg9IjUxLjQiIHk9Ijk4LjYiIHdpZHRoPSI2LjYiIGhlaWdodD0iNi42IiByeD0iMS4yIiBmaWxsPSIjM2VlOGZmIiBvcGFjaXR5PSIwLjMwIi8+PHJlY3QgeD0iOTAuNCIgeT0iMTc5LjAiIHdpZHRoPSIxMS40IiBoZWlnaHQ9IjExLjQiIHJ4PSIxLjIiIGZpbGw9IiMzZWU4ZmYiIG9wYWNpdHk9IjAuOTUiLz48cmVjdCB4PSI3Ny40IiB5PSIxNjYuMCIgd2lkdGg9IjkuOCIgaGVpZ2h0PSI5LjgiIHJ4PSIxLjIiIGZpbGw9IiMzZWU4ZmYiIG9wYWNpdHk9IjAuNzMiLz48cmVjdCB4PSI2NC40IiB5PSIxNTMuMCIgd2lkdGg9IjguMiIgaGVpZ2h0PSI4LjIiIHJ4PSIxLjIiIGZpbGw9IiMzZWU4ZmYiIG9wYWNpdHk9IjAuNTIiLz48cmVjdCB4PSI1MS40IiB5PSIxNDAuMCIgd2lkdGg9IjYuNiIgaGVpZ2h0PSI2LjYiIHJ4PSIxLjIiIGZpbGw9IiMzZWU4ZmYiIG9wYWNpdHk9IjAuMzAiLz48cmVjdCB4PSI5MC40IiB5PSIyMjAuNCIgd2lkdGg9IjExLjQiIGhlaWdodD0iMTEuNCIgcng9IjEuMiIgZmlsbD0iIzNlZThmZiIgb3BhY2l0eT0iMC45NSIvPjxyZWN0IHg9Ijc3LjgiIHk9IjIwNy44IiB3aWR0aD0iOS4wIiBoZWlnaHQ9IjkuMCIgcng9IjEuMiIgZmlsbD0iIzNlZThmZiIgb3BhY2l0eT0iMC42MiIvPjxyZWN0IHg9IjY1LjIiIHk9IjE5NS4yIiB3aWR0aD0iNi42IiBoZWlnaHQ9IjYuNiIgcng9IjEuMiIgZmlsbD0iIzNlZThmZiIgb3BhY2l0eT0iMC4zMCIvPjxwb2x5Z29uIHBvaW50cz0iMjcwLjgsMTEwLjAgMzUyLjgsMTEwLjAgMzYxLjgsMTE5LjAgMzYxLjgsMTQwLjAgMzYxLjgsMTQwLjAgMjYxLjgsMTQwLjAgMjYxLjgsMTQwLjAgMjYxLjgsMTE5LjAiIGZpbGw9InVybCgjY2hyb21lKSIgLz48cG9seWdvbiBwb2ludHM9IjI2MS44LDExMC4wIDI5MS44LDExMC4wIDI5MS44LDExMC4wIDI5MS44LDI2MC4wIDI5MS44LDI2MC4wIDI2MS44LDI2MC4wIDI2MS44LDI2MC4wIDI2MS44LDExMC4wIiBmaWxsPSJ1cmwoI2Nocm9tZSkiIC8+PHBvbHlnb24gcG9pbnRzPSIyNjEuOCwxNzEuMCAzNDAuOCwxNzEuMCAzNDkuOCwxODAuMCAzNDkuOCwxOTAuMCAzNDAuOCwxOTkuMCAyNjEuOCwxOTkuMCAyNjEuOCwxOTkuMCAyNjEuOCwxNzEuMCIgZmlsbD0idXJsKCNjaHJvbWUpIiAvPjxwb2x5Z29uIHBvaW50cz0iMjYxLjgsMjMwLjAgMzYxLjgsMjMwLjAgMzYxLjgsMjMwLjAgMzYxLjgsMjUxLjAgMzUyLjgsMjYwLjAgMjcwLjgsMjYwLjAgMjYxLjgsMjUxLjAgMjYxLjgsMjMwLjAiIGZpbGw9InVybCgjY2hyb21lKSIgLz48cGF0aCBkPSJNNDgxLjAgMTEwLjBMNTIwLjUgMTM4LjZNNDY4LjggMTQ3LjVMNDg4LjYgMTYxLjhNNDkxLjAgMTM3LjhMNTEyLjIgMTY3LjBNNDgxLjAgMTEwLjBMNDkxLjAgMTM3LjhNNTIwLjUgMTM4LjZMNDkxLjAgMTM3LjhNNDkxLjAgMTM3LjhMNDY4LjggMTQ3LjVNNDkxLjAgMTM3LjhMNDg4LjYgMTYxLjhNNTIwLjUgMTM4LjZMNTM1LjUgMTg1LjBNNDg4LjYgMTYxLjhMNDk2LjEgMTg1LjBNNTEyLjIgMTY3LjBMNTEyLjIgMjAzLjBNNTIwLjUgMTM4LjZMNTEyLjIgMTY3LjBNNTM1LjUgMTg1LjBMNTEyLjIgMTY3LjBNNTEyLjIgMTY3LjBMNDg4LjYgMTYxLjhNNTEyLjIgMTY3LjBMNDk2LjEgMTg1LjBNNTM1LjUgMTg1LjBMNTIwLjUgMjMxLjRNNDk2LjEgMTg1LjBMNDg4LjYgMjA4LjJNNTEyLjIgMjAzLjBMNDkxLjAgMjMyLjJNNTM1LjUgMTg1LjBMNTEyLjIgMjAzLjBNNTIwLjUgMjMxLjRMNTEyLjIgMjAzLjBNNTEyLjIgMjAzLjBMNDk2LjEgMTg1LjBNNTEyLjIgMjAzLjBMNDg4LjYgMjA4LjJNNTIwLjUgMjMxLjRMNDgxLjAgMjYwLjBNNDg4LjYgMjA4LjJMNDY4LjggMjIyLjVNNDkxLjAgMjMyLjJMNDU2LjcgMjQzLjRNNTIwLjUgMjMxLjRMNDkxLjAgMjMyLjJNNDgxLjAgMjYwLjBMNDkxLjAgMjMyLjJNNDkxLjAgMjMyLjJMNDg4LjYgMjA4LjJNNDkxLjAgMjMyLjJMNDY4LjggMjIyLjVNNDgxLjAgMjYwLjBMNDMyLjMgMjYwLjBNNDY4LjggMjIyLjVMNDQ0LjUgMjIyLjVNNDU2LjcgMjQzLjRMNDIyLjQgMjMyLjJNNDgxLjAgMjYwLjBMNDU2LjcgMjQzLjRNNDMyLjMgMjYwLjBMNDU2LjcgMjQzLjRNNDU2LjcgMjQzLjRMNDY4LjggMjIyLjVNNDU2LjcgMjQzLjRMNDQ0LjUgMjIyLjVNNDMyLjMgMjYwLjBMMzkyLjkgMjMxLjRNNDQ0LjUgMjIyLjVMNDI0LjggMjA4LjJNNDIyLjQgMjMyLjJMNDAxLjIgMjAzLjBNNDMyLjMgMjYwLjBMNDIyLjQgMjMyLjJNMzkyLjkgMjMxLjRMNDIyLjQgMjMyLjJNNDIyLjQgMjMyLjJMNDQ0LjUgMjIyLjVNNDIyLjQgMjMyLjJMNDI0LjggMjA4LjJNMzkyLjkgMjMxLjRMMzc3LjggMTg1LjBNNDI0LjggMjA4LjJMNDE3LjIgMTg1LjBNNDAxLjIgMjAzLjBMNDAxLjIgMTY3LjBNMzkyLjkgMjMxLjRMNDAxLjIgMjAzLjBNMzc3LjggMTg1LjBMNDAxLjIgMjAzLjBNNDAxLjIgMjAzLjBMNDI0LjggMjA4LjJNNDAxLjIgMjAzLjBMNDE3LjIgMTg1LjBNMzc3LjggMTg1LjBMMzkyLjkgMTM4LjZNNDE3LjIgMTg1LjBMNDI0LjggMTYxLjhNNDAxLjIgMTY3LjBMNDIyLjQgMTM3LjhNMzc3LjggMTg1LjBMNDAxLjIgMTY3LjBNMzkyLjkgMTM4LjZMNDAxLjIgMTY3LjBNNDAxLjIgMTY3LjBMNDE3LjIgMTg1LjBNNDAxLjIgMTY3LjBMNDI0LjggMTYxLjhNMzkyLjkgMTM4LjZMNDMyLjMgMTEwLjBNNDI0LjggMTYxLjhMNDQ0LjUgMTQ3LjVNNDIyLjQgMTM3LjhMNDU2LjcgMTI2LjZNMzkyLjkgMTM4LjZMNDIyLjQgMTM3LjhNNDMyLjMgMTEwLjBMNDIyLjQgMTM3LjhNNDIyLjQgMTM3LjhMNDI0LjggMTYxLjhNNDIyLjQgMTM3LjhMNDQ0LjUgMTQ3LjVNNDMyLjMgMTEwLjBMNDgxLjAgMTEwLjBNNDQ0LjUgMTQ3LjVMNDY4LjggMTQ3LjVNNDU2LjcgMTI2LjZMNDkxLjAgMTM3LjhNNDMyLjMgMTEwLjBMNDU2LjcgMTI2LjZNNDgxLjAgMTEwLjBMNDU2LjcgMTI2LjZNNDU2LjcgMTI2LjZMNDQ0LjUgMTQ3LjVNNDU2LjcgMTI2LjZMNDY4LjggMTQ3LjUiIHN0cm9rZT0idXJsKCN3aXJlKSIgc3Ryb2tlLXdpZHRoPSIyLjIiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PHBhdGggZD0iTTQ4MS4wIDExMC4wTDUyMC41IDEzOC42TTQ2OC44IDE0Ny41TDQ4OC42IDE2MS44TTQ5MS4wIDEzNy44TDUxMi4yIDE2Ny4wTTQ4MS4wIDExMC4wTDQ5MS4wIDEzNy44TTUyMC41IDEzOC42TDQ5MS4wIDEzNy44TTQ5MS4wIDEzNy44TDQ2OC44IDE0Ny41TTQ5MS4wIDEzNy44TDQ4OC42IDE2MS44TTUyMC41IDEzOC42TDUzNS41IDE4NS4wTTQ4OC42IDE2MS44TDQ5Ni4xIDE4NS4wTTUxMi4yIDE2Ny4wTDUxMi4yIDIwMy4wTTUyMC41IDEzOC42TDUxMi4yIDE2Ny4wTTUzNS41IDE4NS4wTDUxMi4yIDE2Ny4wTTUxMi4yIDE2Ny4wTDQ4OC42IDE2MS44TTUxMi4yIDE2Ny4wTDQ5Ni4xIDE4NS4wTTUzNS41IDE4NS4wTDUyMC41IDIzMS40TTQ5Ni4xIDE4NS4wTDQ4OC42IDIwOC4yTTUxMi4yIDIwMy4wTDQ5MS4wIDIzMi4yTTUzNS41IDE4NS4wTDUxMi4yIDIwMy4wTTUyMC41IDIzMS40TDUxMi4yIDIwMy4wTTUxMi4yIDIwMy4wTDQ5Ni4xIDE4NS4wTTUxMi4yIDIwMy4wTDQ4OC42IDIwOC4yTTUyMC41IDIzMS40TDQ4MS4wIDI2MC4wTTQ4OC42IDIwOC4yTDQ2OC44IDIyMi41TTQ5MS4wIDIzMi4yTDQ1Ni43IDI0My40TTUyMC41IDIzMS40TDQ5MS4wIDIzMi4yTTQ4MS4wIDI2MC4wTDQ5MS4wIDIzMi4yTTQ5MS4wIDIzMi4yTDQ4OC42IDIwOC4yTTQ5MS4wIDIzMi4yTDQ2OC44IDIyMi41TTQ4MS4wIDI2MC4wTDQzMi4zIDI2MC4wTTQ2OC44IDIyMi41TDQ0NC41IDIyMi41TTQ1Ni43IDI0My40TDQyMi40IDIzMi4yTTQ4MS4wIDI2MC4wTDQ1Ni43IDI0My40TTQzMi4zIDI2MC4wTDQ1Ni43IDI0My40TTQ1Ni43IDI0My40TDQ2OC44IDIyMi41TTQ1Ni43IDI0My40TDQ0NC41IDIyMi41TTQzMi4zIDI2MC4wTDM5Mi45IDIzMS40TTQ0NC41IDIyMi41TDQyNC44IDIwOC4yTTQyMi40IDIzMi4yTDQwMS4yIDIwMy4wTTQzMi4zIDI2MC4wTDQyMi40IDIzMi4yTTM5Mi45IDIzMS40TDQyMi40IDIzMi4yTTQyMi40IDIzMi4yTDQ0NC41IDIyMi41TTQyMi40IDIzMi4yTDQyNC44IDIwOC4yTTM5Mi45IDIzMS40TDM3Ny44IDE4NS4wTTQyNC44IDIwOC4yTDQxNy4yIDE4NS4wTTQwMS4yIDIwMy4wTDQwMS4yIDE2Ny4wTTM5Mi45IDIzMS40TDQwMS4yIDIwMy4wTTM3Ny44IDE4NS4wTDQwMS4yIDIwMy4wTTQwMS4yIDIwMy4wTDQyNC44IDIwOC4yTTQwMS4yIDIwMy4wTDQxNy4yIDE4NS4wTTM3Ny44IDE4NS4wTDM5Mi45IDEzOC42TTQxNy4yIDE4NS4wTDQyNC44IDE2MS44TTQwMS4yIDE2Ny4wTDQyMi40IDEzNy44TTM3Ny44IDE4NS4wTDQwMS4yIDE2Ny4wTTM5Mi45IDEzOC42TDQwMS4yIDE2Ny4wTTQwMS4yIDE2Ny4wTDQxNy4yIDE4NS4wTTQwMS4yIDE2Ny4wTDQyNC44IDE2MS44TTM5Mi45IDEzOC42TDQzMi4zIDExMC4wTTQyNC44IDE2MS44TDQ0NC41IDE0Ny41TTQyMi40IDEzNy44TDQ1Ni43IDEyNi42TTM5Mi45IDEzOC42TDQyMi40IDEzNy44TTQzMi4zIDExMC4wTDQyMi40IDEzNy44TTQyMi40IDEzNy44TDQyNC44IDE2MS44TTQyMi40IDEzNy44TDQ0NC41IDE0Ny41TTQzMi4zIDExMC4wTDQ4MS4wIDExMC4wTTQ0NC41IDE0Ny41TDQ2OC44IDE0Ny41TTQ1Ni43IDEyNi42TDQ5MS4wIDEzNy44TTQzMi4zIDExMC4wTDQ1Ni43IDEyNi42TTQ4MS4wIDExMC4wTDQ1Ni43IDEyNi42TTQ1Ni43IDEyNi42TDQ0NC41IDE0Ny41TTQ1Ni43IDEyNi42TDQ2OC44IDE0Ny41IiBzdHJva2U9IiNlYWZjZmYiIHN0cm9rZS13aWR0aD0iMC45IiBmaWxsPSJub25lIiBvcGFjaXR5PSIuOCIvPjxjaXJjbGUgY3g9IjQ4MS4wIiBjeT0iMTEwLjAiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNTIwLjUiIGN5PSIxMzguNiIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI1MzUuNSIgY3k9IjE4NS4wIiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjUyMC41IiBjeT0iMjMxLjQiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDgxLjAiIGN5PSIyNjAuMCIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0MzIuMyIgY3k9IjI2MC4wIiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjM5Mi45IiBjeT0iMjMxLjQiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iMzc3LjgiIGN5PSIxODUuMCIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSIzOTIuOSIgY3k9IjEzOC42IiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjQzMi4zIiBjeT0iMTEwLjAiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDkxLjAiIGN5PSIxMzcuOCIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI1MTIuMiIgY3k9IjE2Ny4wIiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjUxMi4yIiBjeT0iMjAzLjAiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDkxLjAiIGN5PSIyMzIuMiIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0NTYuNyIgY3k9IjI0My40IiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjQyMi40IiBjeT0iMjMyLjIiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDAxLjIiIGN5PSIyMDMuMCIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0MDEuMiIgY3k9IjE2Ny4wIiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjQyMi40IiBjeT0iMTM3LjgiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDU2LjciIGN5PSIxMjYuNiIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0NjguOCIgY3k9IjE0Ny41IiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjQ4OC42IiBjeT0iMTYxLjgiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDk2LjEiIGN5PSIxODUuMCIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0ODguNiIgY3k9IjIwOC4yIiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjQ2OC44IiBjeT0iMjIyLjUiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDQ0LjUiIGN5PSIyMjIuNSIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0MjQuOCIgY3k9IjIwOC4yIiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxjaXJjbGUgY3g9IjQxNy4yIiBjeT0iMTg1LjAiIHI9IjIuNiIgZmlsbD0iI2U4ZmRmZiIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+PGNpcmNsZSBjeD0iNDI0LjgiIGN5PSIxNjEuOCIgcj0iMi42IiBmaWxsPSIjZThmZGZmIiBmaWx0ZXI9InVybCgjZ2xvdykiLz48Y2lyY2xlIGN4PSI0NDQuNSIgY3k9IjE0Ny41IiByPSIyLjYiIGZpbGw9IiNlOGZkZmYiIGZpbHRlcj0idXJsKCNnbG93KSIvPjxwb2x5Z29uIHBvaW50cz0iNTYwLjUsMTEwLjAgNTgxLjUsMTEwLjAgNTgxLjUsMTEwLjAgNTgxLjUsMjYwLjAgNTgxLjUsMjYwLjAgNTYwLjUsMjYwLjAgNTUxLjUsMjUxLjAgNTUxLjUsMTE5LjAiIGZpbGw9InVybCgjY2hyb21lKSIgLz48cG9seWdvbiBwb2ludHM9IjU1MS41LDExMC4wIDYzMy41LDExMC4wIDY1OS41LDEzNi4wIDY1OS41LDE2OC4wIDYzMy41LDE5NC4wIDU1MS41LDE5NC4wIDU1MS41LDE2NC4wIDYxNS41LDE2NC4wIDYyOS41LDE1MC4wIDYyOS41LDE1NC4wIDYxNS41LDE0MC4wIDU1MS41LDE0MC4wIiBmaWxsPSJ1cmwoI2Nocm9tZSkiIC8+PHBvbHlnb24gcG9pbnRzPSI1OTkuNSwxOTIuMCA2MzcuNSwxOTIuMCA2NjMuNSwyNjAuMCA2MjMuNSwyNjAuMCIgZmlsbD0idXJsKCNjaHJvbWUpIiAvPjxwb2x5Z29uIHBvaW50cz0iNjkyLjUsMTEwLjAgNzc0LjUsMTEwLjAgNzgzLjUsMTE5LjAgNzgzLjUsMTQwLjAgNzgzLjUsMTQwLjAgNjgzLjUsMTQwLjAgNjgzLjUsMTQwLjAgNjgzLjUsMTE5LjAiIGZpbGw9InVybCgjY2hyb21lKSIgLz48cG9seWdvbiBwb2ludHM9IjY4My41LDExMC4wIDcxMy41LDExMC4wIDcxMy41LDExMC4wIDcxMy41LDI2MC4wIDcxMy41LDI2MC4wIDY4My41LDI2MC4wIDY4My41LDI2MC4wIDY4My41LDExMC4wIiBmaWxsPSJ1cmwoI2Nocm9tZSkiIC8+PHBvbHlnb24gcG9pbnRzPSI2ODMuNSwxNzEuMCA3NjIuNSwxNzEuMCA3NzEuNSwxODAuMCA3NzEuNSwxOTAuMCA3NjIuNSwxOTkuMCA2ODMuNSwxOTkuMCA2ODMuNSwxOTkuMCA2ODMuNSwxNzEuMCIgZmlsbD0idXJsKCNjaHJvbWUpIiAvPjxwb2x5Z29uIHBvaW50cz0iNjgzLjUsMjMwLjAgNzgzLjUsMjMwLjAgNzgzLjUsMjMwLjAgNzgzLjUsMjUxLjAgNzc0LjUsMjYwLjAgNjkyLjUsMjYwLjAgNjgzLjUsMjUxLjAgNjgzLjUsMjMwLjAiIGZpbGw9InVybCgjY2hyb21lKSIgLz48cG9seWdvbiBwb2ludHM9IjgxMC41LDExMC4wIDkwMi41LDExMC4wIDkxMS41LDExOS4wIDkxMS41LDE0MC4wIDkxMS41LDE0MC4wIDgwMS41LDE0MC4wIDgwMS41LDE0MC4wIDgwMS41LDExOS4wIiBmaWxsPSJ1cmwoI2Nocm9tZSkiIC8+PHBvbHlnb24gcG9pbnRzPSI4NDEuNSwxMTAuMCA4NzEuNSwxMTAuMCA4NzEuNSwxMTAuMCA4NzEuNSwyNTEuMCA4NjIuNSwyNjAuMCA4NTAuNSwyNjAuMCA4NDEuNSwyNTEuMCA4NDEuNSwxMTAuMCIgZmlsbD0idXJsKCNjaHJvbWUpIiAvPjxwb2x5Z29uIHBvaW50cz0iOTM0LjUsMTEwLjAgOTU1LjUsMTEwLjAgOTU1LjUsMTEwLjAgOTU1LjUsMjYwLjAgOTU1LjUsMjYwLjAgOTM0LjUsMjYwLjAgOTI1LjUsMjUxLjAgOTI1LjUsMTE5LjAiIGZpbGw9InVybCgjY2hyb21lKSIgLz48cG9seWdvbiBwb2ludHM9IjkyNS41LDExMC4wIDEwMDcuNSwxMTAuMCAxMDMzLjUsMTM2LjAgMTAzMy41LDE2OC4wIDEwMDcuNSwxOTQuMCA5MjUuNSwxOTQuMCA5MjUuNSwxNjQuMCA5ODkuNSwxNjQuMCAxMDAzLjUsMTUwLjAgMTAwMy41LDE1NC4wIDk4OS41LDE0MC4wIDkyNS41LDE0MC4wIiBmaWxsPSJ1cmwoI2Nocm9tZSkiIC8+PHBvbHlnb24gcG9pbnRzPSI5NzMuNSwxOTIuMCAxMDExLjUsMTkyLjAgMTAzNy41LDI2MC4wIDk5Ny41LDI2MC4wIiBmaWxsPSJ1cmwoI2Nocm9tZSkiIC8+PHBhdGggZD0iTTExNDYuNyAxMTAuMEwxMTg2LjIgMTM4LjZMMTIwMS4yIDE4NS4wTDExODYuMiAyMzEuNEwxMTQ2LjcgMjYwLjBMMTA5OC4wIDI2MC4wTDEwNTguNiAyMzEuNEwxMDQzLjUgMTg1LjBMMTA1OC42IDEzOC42TDEwOTguMCAxMTAuMFogTTExMzQuNiAxNDcuNUwxMTU0LjMgMTYxLjhMMTE2MS44IDE4NS4wTDExNTQuMyAyMDguMkwxMTM0LjYgMjIyLjVMMTExMC4yIDIyMi41TDEwOTAuNSAyMDguMkwxMDgyLjkgMTg1LjBMMTA5MC41IDE2MS44TDExMTAuMiAxNDcuNVoiIGZpbGw9IiM2YTdiZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsdGVyPSJ1cmwoI2JpZ2dsb3cpIiBvcGFjaXR5PSIuNiIvPjxwb2x5Z29uIHBvaW50cz0iMTE0Ni43LDExMC4wIDExODYuMiwxMzguNiAxMTU3LjYsMTM2LjUiIGZpbGw9IiMyZmQ4ZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTEzNC42LDE0Ny41IDExNTQuMywxNjEuOCAxMTU3LjYsMTM2LjUiIGZpbGw9IiMyZmQ4ZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE0Ni43LDExMC4wIDExNTcuNiwxMzYuNSAxMTIyLjQsMTI1LjEiIGZpbGw9IiMyZmQ4ZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTEzNC42LDE0Ny41IDExNTcuNiwxMzYuNSAxMTIyLjQsMTI1LjEiIGZpbGw9IiMyZmQ4ZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE4Ni4yLDEzOC42IDEyMDEuMiwxODUuMCAxMTc5LjQsMTY2LjUiIGZpbGw9IiMyYWE3ZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE1NC4zLDE2MS44IDExNjEuOCwxODUuMCAxMTc5LjQsMTY2LjUiIGZpbGw9IiMyYWE3ZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE4Ni4yLDEzOC42IDExNzkuNCwxNjYuNSAxMTU3LjYsMTM2LjUiIGZpbGw9IiMyYWE3ZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE1NC4zLDE2MS44IDExNzkuNCwxNjYuNSAxMTU3LjYsMTM2LjUiIGZpbGw9IiMyYWE3ZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTIwMS4yLDE4NS4wIDExODYuMiwyMzEuNCAxMTc5LjQsMjAzLjUiIGZpbGw9IiMzYzdkZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE2MS44LDE4NS4wIDExNTQuMywyMDguMiAxMTc5LjQsMjAzLjUiIGZpbGw9IiMzYzdkZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTIwMS4yLDE4NS4wIDExNzkuNCwyMDMuNSAxMTc5LjQsMTY2LjUiIGZpbGw9IiMzYzdkZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE2MS44LDE4NS4wIDExNzkuNCwyMDMuNSAxMTc5LjQsMTY2LjUiIGZpbGw9IiMzYzdkZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE4Ni4yLDIzMS40IDExNDYuNywyNjAuMCAxMTU3LjYsMjMzLjUiIGZpbGw9IiM1YTVjZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE1NC4zLDIwOC4yIDExMzQuNiwyMjIuNSAxMTU3LjYsMjMzLjUiIGZpbGw9IiM1YTVjZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE4Ni4yLDIzMS40IDExNTcuNiwyMzMuNSAxMTc5LjQsMjAzLjUiIGZpbGw9IiM1YTVjZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE1NC4zLDIwOC4yIDExNTcuNiwyMzMuNSAxMTc5LjQsMjAzLjUiIGZpbGw9IiM1YTVjZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE0Ni43LDI2MC4wIDEwOTguMCwyNjAuMCAxMTIyLjQsMjQ0LjkiIGZpbGw9IiM3YTRkZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTEzNC42LDIyMi41IDExMTAuMiwyMjIuNSAxMTIyLjQsMjQ0LjkiIGZpbGw9IiM3YTRkZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTE0Ni43LDI2MC4wIDExMjIuNCwyNDQuOSAxMTU3LjYsMjMzLjUiIGZpbGw9IiM3YTRkZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTEzNC42LDIyMi41IDExMjIuNCwyNDQuOSAxMTU3LjYsMjMzLjUiIGZpbGw9IiM3YTRkZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5OC4wLDI2MC4wIDEwNTguNiwyMzEuNCAxMDg3LjIsMjMzLjUiIGZpbGw9IiM5YjQ2ZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTExMC4yLDIyMi41IDEwOTAuNSwyMDguMiAxMDg3LjIsMjMzLjUiIGZpbGw9IiM5YjQ2ZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5OC4wLDI2MC4wIDEwODcuMiwyMzMuNSAxMTIyLjQsMjQ0LjkiIGZpbGw9IiM5YjQ2ZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTExMC4yLDIyMi41IDEwODcuMiwyMzMuNSAxMTIyLjQsMjQ0LjkiIGZpbGw9IiM5YjQ2ZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA1OC42LDIzMS40IDEwNDMuNSwxODUuMCAxMDY1LjQsMjAzLjUiIGZpbGw9IiNiODRjZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5MC41LDIwOC4yIDEwODIuOSwxODUuMCAxMDY1LjQsMjAzLjUiIGZpbGw9IiNiODRjZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA1OC42LDIzMS40IDEwNjUuNCwyMDMuNSAxMDg3LjIsMjMzLjUiIGZpbGw9IiNiODRjZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5MC41LDIwOC4yIDEwNjUuNCwyMDMuNSAxMDg3LjIsMjMzLjUiIGZpbGw9IiNiODRjZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA0My41LDE4NS4wIDEwNTguNiwxMzguNiAxMDY1LjQsMTY2LjUiIGZpbGw9IiM4ZTViZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA4Mi45LDE4NS4wIDEwOTAuNSwxNjEuOCAxMDY1LjQsMTY2LjUiIGZpbGw9IiM4ZTViZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA0My41LDE4NS4wIDEwNjUuNCwxNjYuNSAxMDY1LjQsMjAzLjUiIGZpbGw9IiM4ZTViZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA4Mi45LDE4NS4wIDEwNjUuNCwxNjYuNSAxMDY1LjQsMjAzLjUiIGZpbGw9IiM4ZTViZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA1OC42LDEzOC42IDEwOTguMCwxMTAuMCAxMDg3LjIsMTM2LjUiIGZpbGw9IiM0ZDhiZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5MC41LDE2MS44IDExMTAuMiwxNDcuNSAxMDg3LjIsMTM2LjUiIGZpbGw9IiM0ZDhiZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA1OC42LDEzOC42IDEwODcuMiwxMzYuNSAxMDY1LjQsMTY2LjUiIGZpbGw9IiM0ZDhiZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5MC41LDE2MS44IDEwODcuMiwxMzYuNSAxMDY1LjQsMTY2LjUiIGZpbGw9IiM0ZDhiZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5OC4wLDExMC4wIDExNDYuNywxMTAuMCAxMTIyLjQsMTI1LjEiIGZpbGw9IiMyOGM0ZmYiIG9wYWNpdHk9IjAuODIiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTExMC4yLDE0Ny41IDExMzQuNiwxNDcuNSAxMTIyLjQsMTI1LjEiIGZpbGw9IiMyOGM0ZmYiIG9wYWNpdHk9IjAuNjciIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTA5OC4wLDExMC4wIDExMjIuNCwxMjUuMSAxMDg3LjIsMTM2LjUiIGZpbGw9IiMyOGM0ZmYiIG9wYWNpdHk9IjAuOTEiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwb2x5Z29uIHBvaW50cz0iMTExMC4yLDE0Ny41IDExMjIuNCwxMjUuMSAxMDg3LjIsMTM2LjUiIGZpbGw9IiMyOGM0ZmYiIG9wYWNpdHk9IjAuNzUiIHN0cm9rZT0iI2JmZWZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIgc3Ryb2tlLXdpZHRoPSIuOCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQ0OS4yLDApIiBzdHJva2U9InVybCgjc3ViKSIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbGluZWNhcD0iYnV0dCI+PHBhdGggZD0iTTAgMzU0TDI5LjAgMzA4TDU4IDM1NCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xMTYgMzU0VjMwOEgxNTZMMTY2IDMxOFYzMjcuMzJMMTU2IDMzMS45MkgxMjhNMTQzLjUgMzMxLjkyTDE2NiAzNTQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMjc4IDMwOEgyMzRMMjI0IDMxOFYzNDRMMjM0IDM1NEgyNzgiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMzM2IDM1NEwzNjUuMCAzMDhMMzk0IDM1NCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00NTIgMzA4SDQ5NEw1MDggMzIyVjM0MEw0OTQgMzU0SDQ1MloiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNjE2IDMwOEg1NjZNNTcyIDMzMS4wSDYxMk01NjYgMzU0SDYxNiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik03MjYgMzA4SDY4Mkw2NzQgMzE2VjMyNS4wTDY4MCAzMzEuMEg3MjBMNzI2IDMzNy4wVjM0Nkw3MTggMzU0SDY3NCIgZmlsbD0ibm9uZSIvPjwvZz48L3N2Zz4="></div></div>
+    <style>
+    #boot-logo{position:fixed;inset:0;z-index:100000;background:#04000c;display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity .22s ease}
+    #boot-logo::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px)}
+    #boot-logo .bl-in{width:min(78vw,760px);text-align:center}
+    #boot-logo canvas{width:100%;height:auto;display:block;image-rendering:pixelated}
+    #boot-logo .bl-tap{margin-top:5vh;font:600 clamp(11px,1.6vw,15px)/1 'Orbitron',system-ui,sans-serif;letter-spacing:.4em;color:#7fe9ff;opacity:0;text-shadow:0 0 10px rgba(80,220,255,.7)}
+    #boot-logo.wait .bl-tap{animation:blBlink 1.1s steps(2) infinite}
+    @keyframes blBlink{0%{opacity:.9}100%{opacity:.15}}
+    #boot-logo.out{opacity:0;pointer-events:none}
+    </style>
+    <script>
+    (function () {
+        var el = document.getElementById('boot-logo'); if (!el) return;
+        var ctx = null;
+        try { var AC = window.AudioContext || window.webkitAudioContext; ctx = new AC(); } catch (e) {}
+        var sfxOff = false; try { sfxOff = localStorage.getItem('atlas-sfx') === '0'; } catch (e) {} // サウンドOFFの人には鳴らさない
+        function chime() { // サウンドロゴ: 短いグリッチ → 3音の上昇フレーズ → 着地の和音（サブ＋FMベル）
+            if (!ctx || sfxOff) return;
+            try {
+                var t = ctx.currentTime + 0.1, out = ctx.createGain(); out.gain.value = 0.55; // 出力の立ち上がりで頭が欠けないよう少し遅らせて開始
+                var dl = ctx.createDelay(1), fb = ctx.createGain(), dw = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+                dl.delayTime.value = 0.18; fb.gain.value = 0.35; dw.gain.value = 0.4; // 余韻のディレイ
+                out.connect(ctx.destination); out.connect(dl); dl.connect(fb).connect(dl);
+                if (pn) { pn.pan.value = 0.6; dl.connect(dw).connect(pn).connect(ctx.destination); } else dl.connect(dw).connect(ctx.destination);
+                var env = function (g, at, peak, dec, atk) { g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + (atk || 0.005)); g.gain.exponentialRampToValueAtTime(0.0005, at + dec); };
+                // シンセの1音: 2本の鋸波＋共振フィルターのプラック
+                var pluck = function (at, f, dec, v) {
+                    var lp = ctx.createBiquadFilter(), g = ctx.createGain(); lp.type = 'lowpass'; lp.Q.value = 8;
+                    lp.frequency.setValueAtTime(f * 6, at); lp.frequency.exponentialRampToValueAtTime(f * 1.2, at + dec * 0.8);
+                    env(g, at, v, dec); lp.connect(g).connect(out);
+                    [-6, 6].forEach(function (dt) { var o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt; o.connect(lp); o.start(at); o.stop(at + dec + 0.02); });
+                };
+                // FMの金属ベル
+                var bell = function (at, f, dec, v, idx) {
+                    var c = ctx.createOscillator(), m = ctx.createOscillator(), mg = ctx.createGain(), g = ctx.createGain();
+                    c.frequency.value = f; m.frequency.value = f * 3.5; mg.gain.setValueAtTime(f * idx, at); mg.gain.exponentialRampToValueAtTime(f * 0.05, at + dec);
+                    m.connect(mg).connect(c.frequency); env(g, at, v, dec); c.connect(g).connect(out); c.start(at); m.start(at); c.stop(at + dec + 0.02); m.stop(at + dec + 0.02);
+                };
+                // 1) グリッチ（モザイクの出現に合わせて）
+                for (var i = 0; i < 6; i++) { var at = t + i * 0.018, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = 900 + Math.random() * 3000; env(g, at, 0.13, 0.022, 0.002); o.connect(g).connect(out); o.start(at); o.stop(at + 0.03); }
+                // 2) 上昇フレーズ A4 - E5 - B5（ロゴが揃っていくのに合わせて）
+                [[0.11, 440], [0.2, 659.25], [0.29, 987.77]].forEach(function (n, i) { pluck(t + n[0], n[1], 0.22, i === 0 ? 0.3 : 0.24); bell(t + n[0], n[1] * 2, 0.18, 0.05, 2); });
+                // 3) 着地: Am(add9) の和音＋サブ＋長めのベル
+                var hit = t + 0.4;
+                [110, 164.81, 220, 261.63, 493.88].forEach(function (f) { pluck(hit, f, 1.1, 0.11); });
+                var sub = ctx.createOscillator(), sg = ctx.createGain(); sub.type = 'sine'; sub.frequency.setValueAtTime(110, hit); sub.frequency.exponentialRampToValueAtTime(55, hit + 0.25); env(sg, hit, 0.7, 0.9); sub.connect(sg).connect(out); sub.start(hit); sub.stop(hit + 0.95);
+                bell(hit, 1318.5, 1.3, 0.12, 3.2); bell(hit + 0.02, 1975.5, 1.0, 0.05, 2.4);
+                // 4) 着地の瞬間のきらめき（ハイパスのノイズ）
+                var len = Math.floor(ctx.sampleRate * 0.4), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0); for (var k = 0; k < len; k++) d[k] = Math.random() * 2 - 1;
+                var nz = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), ngn = ctx.createGain(); nz.buffer = buf; hp.type = 'highpass'; hp.frequency.value = 7000; env(ngn, hit, 0.12, 0.35); nz.connect(hp).connect(ngn).connect(out); nz.start(hit);
+            } catch (e) {}
+        }
+        // ボス登場と同じ、ドットのモザイクで現れて消える演出
+        var cv = document.getElementById('bl-cv'), img = document.getElementById('bl-img'), cx = cv.getContext('2d');
+        var off = document.createElement('canvas'), ox = off.getContext('2d');
+        var dpr = Math.min(2, window.devicePixelRatio || 1), W = 0, H = 0;
+        function size() { W = Math.round(Math.min(innerWidth * 0.78, 760) * dpr); H = Math.round(W * 259.4 / 1159.8); cv.width = W; cv.height = H; }
+        var seed = []; for (var q = 0; q < 4096; q++) seed.push(Math.random());
+        function draw(block, drop) { // block: モザイクの大きさ(px)、drop: 消えているドットの割合
+            cx.clearRect(0, 0, W, H);
+            if (drop >= 1) return;
+            var bw = Math.max(1, Math.ceil(W / block)), bh = Math.max(1, Math.ceil(H / block));
+            off.width = bw; off.height = bh; ox.imageSmoothingEnabled = true; ox.drawImage(img, 0, 0, bw, bh);
+            cx.imageSmoothingEnabled = false; cx.drawImage(off, 0, 0, bw, bh, 0, 0, bw * block, bh * block);
+            if (drop > 0 && block > 1.5) for (var y = 0; y < bh; y++) for (var x = 0; x < bw; x++) if (seed[(x * 31 + y * 17) & 4095] < drop) cx.clearRect(x * block, y * block, block, block);
+        }
+        var T_IN = 260, T_HOLD = 1000, T_OUT = 260, t0 = 0, phase = 'in', outAt = 0, done = false;
+        var ease = function (k) { return 1 - Math.pow(1 - k, 2); };
+        function frame() {
+            var now = performance.now(); // rAFの時刻は古いことがあるので実時刻で進める
+            if (!t0) t0 = now;
+            var e = now - t0;
+            if (phase === 'in') {
+                var k = Math.min(1, e / T_IN), bl = Math.round(48 * Math.pow(1 / 48, ease(k)));
+                draw(Math.max(1, bl), 0.8 * (1 - k));
+                if (k >= 1) { phase = 'hold'; draw(1, 0); }
+            }
+            if (phase === 'hold' && outAt && now >= outAt) { phase = 'out'; t0 = now; e = 0; }
+            if (phase === 'out') {
+                var k2 = Math.min(1, e / T_OUT), bl2 = Math.round(Math.pow(48, ease(k2)));
+                draw(Math.max(1, bl2), k2);
+                if (k2 >= 1) { finish(); return; }
+            }
+            requestAnimationFrame(frame);
+        }
+        function finish() { if (done) return; done = true; window.__bootBusy = false; el.classList.add('out'); setTimeout(function () { el.remove(); }, 400); setTimeout(function () { if (ctx && ctx.close) try { ctx.close(); } catch (e) {} }, 3200); } // 音の余韻は最後まで鳴らす
+        function begin(waiting) {
+            size(); el.classList.add('show'); if (waiting) el.classList.add('wait');
+            requestAnimationFrame(frame);
+            if (!waiting) { chime(); outAt = performance.now() + T_IN + T_HOLD; } // 約0.5秒表示してから消える
+        }
+        function play() { el.classList.remove('wait'); chime(); outAt = Math.max(performance.now() + 250, t0 + T_IN + 120); }
+        var startIt = function () { window.__bootBusy = true; begin(false); }; // 入力待ちはしない（音を鳴らせない環境では音なしで表示）
+        // ゲームの読み込みと重なるとモザイクがカクつくので、読み込みが終わって描画が安定してから始める
+        var ready = function () {
+            var last = 0, smooth = 0, t1 = performance.now();
+            var chk = function (now) {
+                if (last && now - last < 25) smooth++; else smooth = 0;
+                last = now;
+                if (smooth >= 4 || now - t1 > 900) { setTimeout(startIt, 120); return; } // 4フレーム連続で滑らか（または最大0.9秒）→少し間を置いて開始
+                requestAnimationFrame(chk);
+            };
+            requestAnimationFrame(chk);
+        };
+        var whenLoaded = function () { if (document.readyState === 'complete') ready(); else window.addEventListener('load', ready, { once: true }); };
+        if (img.complete && img.naturalWidth) whenLoaded(); else { img.onload = whenLoaded; img.onerror = finish; }
+    })();
+    </script>
     <div id="rotate-msg"></div>
     <div id="fullscreen-root">
         <div id="game-wrapper">
@@ -214,7 +324,7 @@
                     <button type="button" id="effects-toggle-button" class="ib on" aria-label="Effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/><path class="off-x" d="M3 3l18 18"/></svg></button>
                     <button type="button" id="sound-toggle-button" class="ib on" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
                     <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
-                    <a href="../" id="home-link" class="ib" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
+                    <a href="../" id="home-link" class="ib on" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
                 </span>
             </div>
             <div id="stage">
@@ -532,7 +642,7 @@ class AudioHandler {
         this.bgmBus = this.ctx.createGain();
         this.bgmBus.connect(this.masterGain);
         this.bgmPlaying = true;
-        this.current16th = 0;
+        this.current16th = 0; this.lastBgmStage = null; this.seq4Off = 0;
         this.seq4MelodyIndex = 0;
         this.seq5MelodyIndex = 0;
         this.hiHatPanIndex = 0;
@@ -749,12 +859,69 @@ class AudioHandler {
             this.bgmOscillators.push(osc, panner, gain);
         };
         // 予約済みのキック・小節頭が実際に鳴った時に演出を出す
-        const nowA = this.ctx.currentTime + (this.ctx.outputLatency || 0) * 0.5;
+        // 予約した音が実際に耳に届くのは currentTime から出力遅延ぶん後。スマホは遅延が大きいので、その分だけ演出を遅らせる
+        // （以前は逆に早めていたため、遅延の大きいスマホで演出が音より先に出ていた）
+        const outLat = (this.ctx.outputLatency || this.ctx.baseLatency || 0);
+        const nowA = this.ctx.currentTime - Math.max(0, outLat - 0.016);
         while (this.kickQ && this.kickQ.length && this.kickQ[0] <= nowA) { this.kickQ.shift(); visualBeat = 1.0; }
         while (this.barQ && this.barQ.length && this.barQ[0] <= nowA) { this.barQ.shift(); this.barTrigger = true; }
+        // 段階ごとに重なるパート（2〜5）。lo < 段階 <= hi のパートだけ鳴らす
+        const layers = (beatInLoop, t, lo, hi) => {
+            if (2 > lo && 2 <= hi) {
+                if ((beatInLoop % 16) % 4 === 0) {
+                    const degree = [0, 7, 3, 5][Math.floor((beatInLoop % 16) / 4)];
+                    createSequence2(t, rootNote * 8 * Math.pow(2, degree / 12));
+                }
+            }
+            if (3 > lo && 3 <= hi) {
+                if (beatInLoop === 62) {
+                    const chordIndex = 1;
+                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
+                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 7) / 12);
+                    createSequence3(t, note);
+                }
+                if (beatInLoop === 126) {
+                    const chordIndex = 3;
+                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
+                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 2) / 12);
+                    createSequence3(t, note);
+                }
+            }
+            if (4 > lo && 4 <= hi) {
+                if ((beatInLoop - (this.seq4Off || 0) + 128) % 8 === 0) { // 入った拍から8分刻み（入りを待たせない）
+                    const degree = this.seq4Melody[this.seq4MelodyIndex];
+                    const note = rootNote * 16 * Math.pow(2, degree / 12);
+                    createSequence4(t, note);
+                    this.seq4MelodyIndex = (this.seq4MelodyIndex + 1) % this.seq4Melody.length;
+                }
+            }
+            if (5 > lo && 5 <= hi) {
+                if (beatInLoop % 4 === 0) {
+                    const degree = this.seq5Melody[this.seq5MelodyIndex];
+                    if (degree !== null) {
+                        const note = rootNote * 8 * Math.pow(2, degree / 12);
+                        createSequence5(t, note);
+                    }
+                    this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
+                }
+            }
+        };
+        // ステージが上がって新しいパートが加わったら、すでに先読みで予約済みの区間にも新パートの音を足す
+        // （先読みの分だけ新パートの入りが遅れないように）
+        if (this.lastBgmStage != null && bgmStage > this.lastBgmStage) {
+            const steps = [];
+            for (let j = 1; this.nextNoteTime - j * sixteenth >= this.ctx.currentTime - 0.005 && j < 16; j++) steps.unshift(j);
+            if (this.lastBgmStage < 4 && bgmStage >= 4) { // メロディのパートは、すぐ次の拍（4分）から頭で入る
+                const first = steps.length ? (this.current16th - steps[0] + 128) % 128 : this.current16th;
+                let b0 = first; while (b0 % 4 !== 0) b0 = (b0 + 1) % 128;
+                this.seq4Off = b0 % 8; this.seq4MelodyIndex = 0;
+            }
+            steps.forEach(j => layers((this.current16th - j + 128) % 128, this.nextNoteTime - j * sixteenth, this.lastBgmStage, bgmStage));
+        }
+        this.lastBgmStage = bgmStage;
         // 処理が大きく止まって予約が遅れたときは、遅れた分を鳴らさずに飛ばす（まとめて鳴ってリズムが崩れるのを防ぐ）
-        while (this.nextNoteTime < this.ctx.currentTime - 0.03) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
-        while (this.nextNoteTime < this.ctx.currentTime + 0.1) { // 先読みは元の0.1秒（長くするとステージ切り替えでパートの入りが遅れる）
+        while (this.nextNoteTime < this.ctx.currentTime - 0.06) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
+        while (this.nextNoteTime < this.ctx.currentTime + (IS_MOBILE ? 0.2 : 0.1)) { // 先読み: PCは0.1秒。スマホは処理落ちで予約が間に合わず音が飛ぶので0.2秒
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
             if (noteInMeasure === 0) {
@@ -789,44 +956,7 @@ class AudioHandler {
             if ([3, 7, 10, 15].includes(noteInMeasure)) {
                 createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
             }
-            if (bgmStage >= 2) {
-                if (noteInMeasure % 4 === 0) {
-                    const degree = [0, 7, 3, 5][Math.floor(noteInMeasure / 4)];
-                    createSequence2(this.nextNoteTime, rootNote * 8 * Math.pow(2, degree / 12));
-                }
-            }
-            if (bgmStage >= 3) {
-                if (beatInLoop === 62) {
-                    const chordIndex = 1;
-                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
-                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 7) / 12);
-                    createSequence3(this.nextNoteTime, note);
-                }
-                if (beatInLoop === 126) {
-                    const chordIndex = 3;
-                    const chordRootDegree = this.seq3ChordProgression[chordIndex];
-                    const note = rootNote * 16 * Math.pow(2, (chordRootDegree + 2) / 12);
-                    createSequence3(this.nextNoteTime, note);
-                }
-            }
-            if (bgmStage >= 4) {
-                if (beatInLoop % 8 === 0) {
-                    const degree = this.seq4Melody[this.seq4MelodyIndex];
-                    const note = rootNote * 16 * Math.pow(2, degree / 12);
-                    createSequence4(this.nextNoteTime, note);
-                    this.seq4MelodyIndex = (this.seq4MelodyIndex + 1) % this.seq4Melody.length;
-                }
-            }
-            if (bgmStage >= 5) {
-                if (beatInLoop % 4 === 0) {
-                    const degree = this.seq5Melody[this.seq5MelodyIndex];
-                    if (degree !== null) {
-                        const note = rootNote * 8 * Math.pow(2, degree / 12);
-                        createSequence5(this.nextNoteTime, note);
-                    }
-                    this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
-                }
-            }
+            layers(beatInLoop, this.nextNoteTime, 1, bgmStage);
             this.nextNoteTime += sixteenth;
             this.current16th = (this.current16th + 1) % 128;
         }
@@ -872,8 +1002,23 @@ class AudioHandler {
                 setTimeout(() => this.createSound(1046, 0.2, 'sine', 0.8, 0.6, now + 0.3), 300);
                 break;
             case 'start':
-                [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.4, now + i * 0.08));
+                [261.63, 329.63, 392].forEach((f, i) => this.createSound(f, 0.1, 'square', 0.9, 0.75, now + i * 0.08));
                 break;
+            case 'menu': { // タイトル・難易度選択のカーソル音: シリアスなサイバー系（低めの短い電子音＋データのノイズ）
+                const c = this.ctx, out = this.sfxOut();
+                // 低めの電子音: 下がっていく1音（上がる音は可愛くなるので使わない）
+                const o = c.createOscillator(), g = c.createGain(), bp = c.createBiquadFilter();
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(330, now); o.frequency.exponentialRampToValueAtTime(140, now + 0.07);
+                bp.type = 'bandpass'; bp.frequency.setValueAtTime(1400, now); bp.frequency.exponentialRampToValueAtTime(500, now + 0.07); bp.Q.value = 3;
+                g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.55, now + 0.003); g.gain.exponentialRampToValueAtTime(0.0005, now + 0.09);
+                o.connect(bp).connect(g).connect(out); o.start(now); o.stop(now + 0.1);
+                // データが走るような短いノイズ
+                const n = c.createBufferSource(); n.buffer = this.getNoise();
+                const nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 3000; nf.Q.value = 1.5;
+                const ng = c.createGain(); ng.gain.setValueAtTime(0.22, now); ng.gain.exponentialRampToValueAtTime(0.0005, now + 0.04);
+                n.connect(nf).connect(ng).connect(out); n.start(now, Math.random() * 0.5, 0.05);
+                break;
+            }
             case 'glaze':
                 this.createSound(880, 0.1, 'triangle', 0.8, 0.5, now, {endFreq: 1200});
                 break;
@@ -995,6 +1140,7 @@ class AudioHandler {
             return;
         }
         this.isMuted = !this.isMuted;
+        try { localStorage.setItem('atlas-sfx', this.isMuted ? '0' : '1'); } catch (e) {}
         this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
         return this.isMuted;
     }
@@ -1021,6 +1167,7 @@ const ctx = canvas.getContext('2d', { desynchronized: true });
 const stageEl = document.getElementById('stage');
 
 const audioHandler = new AudioHandler();
+try { if (localStorage.getItem('atlas-sfx') === '0') audioHandler.isMuted = true; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 
 // ---------------------------------
 // 多言語対応（サイト共通の 'aicoding-lang' を使う）
@@ -1091,6 +1238,249 @@ let shields = 0, maxShields = 0, hurtTimer = 0, pendingHitClear = false, spBonus
 // ハイスコアは難易度ごとに保存（STANDARDは従来のキーをそのまま使う）
 const hsKey = base => base + (DIFFS[difficultyIndex].id === 'STANDARD' ? '' : '_' + DIFFS[difficultyIndex].id.toLowerCase()) + (IS_MOBILE ? '_mobile' : ''); // スマホは別記録
 const readHS = base => { try { return +localStorage.getItem(hsKey(base)) || 0; } catch (e) { return 0; } };
+// ---------------------------------
+// ハイスコアランキング（難易度×モード×端末ごとに上位100件。ネーム登録はアーケード風・英字のみ最大8文字）
+// ---------------------------------
+const RANK_MAX = 100, RANK_SHOW = 10, NAME_MAX = 8;
+const RANK_MODES = [['STANDARD MODE', 'STANDARD'], ['JOURNEY MODE', 'JOURNEY'], ['STARTRAIL MODE', 'STARTRAIL']];
+// オンラインランキング: Firebase Realtime Database のURLを入れると有効になる（空のままならローカルのみ）
+// 例: 'https://xxxx-default-rtdb.firebaseio.com'
+// ルール例: { "rules": { "cometplus": { "rank": { "$key": { ".read": true, ".indexOn": ["s"],
+//   "$id": { ".write": "!data.exists()", ".validate": "newData.hasChildren(['n','s','t']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() < 1e12" } } } } }
+const RANK_DB_URL = '';
+const rankKey = (modeIdx, diffIdx) => `${['std', 'jny', 'str'][modeIdx]}_${DIFFS[diffIdx].id.toLowerCase()}_${IS_MOBILE ? 'mobile' : 'pc'}`;
+const RankLocal = {
+    _db: null,
+    db() { if (!this._db) { try { this._db = JSON.parse(localStorage.getItem('cometPlusRank_v1') || '{}') || {}; } catch (e) { this._db = {}; } } return this._db; },
+    list(k) { return (this.db()[k] || []).slice(); },
+    qualifies(k, s) { const l = this.list(k); return s > 0 && (l.length < RANK_MAX || s > l[l.length - 1].s); },
+    add(k, e) { // 追加した順位（1始まり）を返す
+        const d = this.db(), l = (d[k] || []).slice(); l.push(e);
+        l.sort((a, b) => b.s - a.s || a.t - b.t);
+        d[k] = l.slice(0, RANK_MAX);
+        try { localStorage.setItem('cometPlusRank_v1', JSON.stringify(d)); } catch (err) {}
+        return d[k].indexOf(e) + 1;
+    },
+};
+const RankOnline = {
+    enabled: () => !!RANK_DB_URL,
+    cache: {}, // key -> { at, list, err }
+    async fetch(k) {
+        if (!RANK_DB_URL) return null;
+        const c = this.cache[k]; if (c && performance.now() - c.at < 30000) return c.list;
+        try {
+            const r = await fetch(`${RANK_DB_URL}/cometplus/rank/${k}.json?orderBy=%22s%22&limitToLast=${RANK_MAX}`);
+            const j = await r.json(); const list = Object.values(j || {}).filter(e => e && typeof e.s === 'number').sort((a, b) => b.s - a.s || a.t - b.t);
+            this.cache[k] = { at: performance.now(), list }; return list;
+        } catch (e) { this.cache[k] = { at: performance.now(), list: null, err: true }; return null; }
+    },
+    async submit(k, e) {
+        if (!RANK_DB_URL) return;
+        try { await fetch(`${RANK_DB_URL}/cometplus/rank/${k}.json`, { method: 'POST', body: JSON.stringify({ n: e.n, s: e.s, st: e.st || 0, t: e.t }) }); delete this.cache[k]; } catch (err) {}
+    },
+};
+let rankView = { diff: 1, mode: 0, src: 'local', online: null, loading: false }; // ランキング画面の状態
+let nameEntry = null;   // ネーム登録中: { key, name, cur, rank, entry }
+let rankResult = null;  // 登録した順位（ゲームオーバー画面に表示）
+const NAME_KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(['DEL', 'END']); // 13列×2段＋DEL/END
+// 登録名は1つに固定（初回のランキング入りで入力。以後は自動で使う。タイトルでSELECT/Nキーで変更）。旧バージョンの名前は使わない
+const lastName = () => { try { return (localStorage.getItem('cometPlusName_v2') || '').replace(/[^A-Z]/g, '').slice(0, NAME_MAX); } catch (e) { return ''; } };
+const typedLetters = []; // ネーム登録中にキーボードで打った文字
+function openRanking() {
+    rankView.diff = difficultyIndex; rankView.mode = Math.max(0, RANK_MODES.findIndex(m => m[0] === titleMenuItems[titleMenuIndex])); rankView.src = 'local';
+    gameState = 'ranking'; audioHandler.playSound('menu');
+}
+function rankRefreshOnline() {
+    if (rankView.src !== 'online' || !RankOnline.enabled()) return;
+    const k = rankKey(rankView.mode, rankView.diff), want = k + (IS_MOBILE ? '' : '*');
+    rankView.loading = true; rankView.want = want;
+    const keys = IS_MOBILE ? [k] : RANK_MODES.map((_, i) => rankKey(i, rankView.diff));
+    Promise.all(keys.map(x => RankOnline.fetch(x))).then(() => { if (rankView.want === want) rankView.loading = false; });
+}
+function startNameEntry(k, entry, edit) {
+    const nm = edit ? lastName() : '';
+    nameEntry = { key: k, name: nm, cur: nm ? NAME_KEYS.length - 1 : 0, entry, edit: !!edit };
+    typedLetters.length = 0;
+}
+function openNameEdit() { // タイトルから名前を変更
+    gameState = 'nameEdit'; gameOverAt = performance.now(); startNameEntry(null, null, true); audioHandler.playSound('menu');
+}
+function registerRank(k, entry) { // 固定の名前で登録
+    entry.n = lastName() || 'PLAYER';
+    rankResult = { rank: RankLocal.add(k, entry), key: k };
+    RankOnline.submit(k, entry);
+}
+function finishNameEntry() {
+    const ne = nameEntry; if (!ne) return;
+    if (!ne.name) { audioHandler.playSound('lowEnergy'); return; } // 名前は1文字以上
+    try { localStorage.setItem('cometPlusName_v2', ne.name); } catch (e) {}
+    if (ne.edit) { nameEntry = null; gameState = 'title'; audioHandler.playSound('waveClear'); return; }
+    ne.entry.n = ne.name;
+    rankResult = { rank: RankLocal.add(ne.key, ne.entry), key: ne.key };
+    RankOnline.submit(ne.key, ne.entry);
+    nameEntry = null; gameOverAt = performance.now(); // 登録直後のタップでリトライしないように
+    audioHandler.playSound('waveClear');
+}
+function nameEntryInput() { // ネーム登録の入力処理（gameOver中に毎フレーム）
+    const ne = nameEntry, cols = 13;
+    while (typedLetters.length) {
+        const ch = typedLetters.shift();
+        if (ch === 'ESC') { nameEntry = null; gameState = 'title'; audioHandler.playSound('menu'); return; }
+        if (ch === 'BACK') ne.name = ne.name.slice(0, -1);
+        else if (ne.name.length < NAME_MAX) ne.name += ch;
+        audioHandler.playSound('menu');
+    }
+    if (performance.now() - gameOverAt < 700) { input.shootTrigger = false; input.replayTrigger = false; tapNameKey = null; } // ゲームオーバー直後の押しっぱなし・連打を拾わない
+    // 押しっぱなしで高速移動（0.28秒後から0.055秒ごと）
+    const now = performance.now(), rep = (dir, held) => {
+        const st = ne.rep || (ne.rep = {});
+        if (!held) { st[dir] = 0; return false; }
+        if (!st[dir]) { st[dir] = now + 280; return false; } // 最初の1回は通常のトリガーで動く
+        if (now >= st[dir]) { st[dir] = now + 55; return true; }
+        return false;
+    };
+    if (rep('l', input.left)) input.leftTrigger = true;
+    if (rep('r', input.right)) input.rightTrigger = true;
+    if (rep('u', input.up)) input.upTrigger = true;
+    if (rep('d', input.down)) input.downTrigger = true;
+    let c = ne.cur;
+    const row = c < 26 ? Math.floor(c / cols) : 2;
+    if (input.leftTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + cols - 1) % cols) : (c === 26 ? 27 : 26);
+    if (input.rightTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + 1) % cols) : (c === 26 ? 27 : 26);
+    if (input.upTrigger) c = row === 0 ? (c % cols < 7 ? 26 : 27) : row === 1 ? c - cols : (c === 26 ? 13 + 3 : 13 + 9);
+    if (input.downTrigger) c = row === 0 ? c + cols : row === 1 ? (c % cols < 7 ? 26 : 27) : (c === 26 ? 3 : 9);
+    if (c !== ne.cur) { ne.cur = c; audioHandler.playSound('menu'); }
+    const press = (k, byTap) => {
+        const key = NAME_KEYS[k];
+        if (key === 'END') { if (byTap) finishNameEntry(); return; } // 決定はSTART/Enter（スマホはENDのタップ）だけ。ショットボタンでは決定しない（誤爆防止）
+        if (key === 'DEL') ne.name = ne.name.slice(0, -1);
+        else if (ne.name.length < NAME_MAX) { ne.name += key; if (ne.name.length >= NAME_MAX) ne.cur = 27; }
+        audioHandler.playSound('menu');
+    };
+    if (performance.now() - gameOverAt < 700) { input.padOk = input.padDel = false; }
+    if ((input.shootTrigger && !keyState['KeyX'] && lastInputDevice !== 'gamepad') || input.padOk) press(ne.cur); // 文字入力: Space / パッドのA・X
+    if (input.padDel) { ne.name = ne.name.slice(0, -1); audioHandler.playSound('menu'); } // パッドのB・Y: 1文字消す
+    if (ne.edit && input.titleTrigger) { nameEntry = null; gameState = 'title'; audioHandler.playSound('menu'); return; }
+    if (input.replayTrigger) { finishNameEntry(); return; } // スタート/Enterで決定（前回の名前ならそのまま1回押すだけ）
+    if (nameEntry && tapNameKey !== null) { const k = tapNameKey; ne.cur = k; press(k, true); }
+}
+let tapNameKey = null;
+function nameKeyRect(k) { // 文字盤のキーの位置（HUD座標）
+    const cols = 13, kw = IS_MOBILE ? 40 : 38, kh = IS_MOBILE ? 52 : 40, gx = HUD_W / 2 - cols * kw / 2, gy = HUD_H / 2 + (IS_MOBILE ? 10 : 20);
+    if (k < 26) return { x: gx + (k % cols) * kw, y: gy + Math.floor(k / cols) * kh, w: kw - 4, h: kh - 6 };
+    const bw = IS_MOBILE ? 150 : 130;
+    return { x: HUD_W / 2 + (k === 26 ? -bw - 10 : 10), y: gy + 2 * kh + 6, w: bw, h: kh - 6 };
+}
+function drawNameEntry(ctx) {
+    const ne = nameEntry, cx = HUD_W / 2, cy = HUD_H / 2, col = `hsl(${(frameCount * 3) % 360},100%,70%)`;
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,0,14,0.78)'; ctx.fillRect(0, 0, HUD_W, HUD_H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (!ne.edit) {
+        const rankNow = RankLocal.list(ne.key).filter(e => e.s >= ne.entry.s).length + 1;
+        drawWithGlow(ctx, () => { ctx.fillStyle = col; ctx.font = `600 ${IS_MOBILE ? 34 : 30}px ${config.fontFamily}`; ctx.fillText(`NEW RECORD!  RANK ${rankNow}`, cx, cy - (IS_MOBILE ? 250 : 200)); }, col);
+        ctx.font = `600 ${IS_MOBILE ? 18 : 15}px ${config.fontFamily}`; ctx.fillStyle = '#cfe8ff';
+        ctx.fillText(`${DIFFS[difficultyIndex].id}  /  ${gameMode.replace(' MODE', '')}  /  ${score.toLocaleString('en')}`, cx, cy - (IS_MOBILE ? 205 : 162));
+    } else {
+        drawWithGlow(ctx, () => { ctx.fillStyle = col; ctx.font = `600 ${IS_MOBILE ? 34 : 30}px ${config.fontFamily}`; ctx.fillText('CHANGE NAME', cx, cy - (IS_MOBILE ? 250 : 200)); }, col);
+    }
+    ctx.font = `600 ${IS_MOBILE ? 18 : 15}px ${config.fontFamily}`;
+    ctx.fillStyle = '#ffffff'; ctx.fillText('ENTER YOUR NAME', cx, cy - (IS_MOBILE ? 150 : 118));
+    // 名前の枠
+    const sw = IS_MOBILE ? 50 : 44, sx = cx - NAME_MAX * sw / 2, sy = cy - (IS_MOBILE ? 80 : 62);
+    for (let i = 0; i < NAME_MAX; i++) {
+        const x = sx + i * sw + sw / 2, ch = ne.name[i] || '';
+        ctx.fillStyle = i === ne.name.length && frameCount % 40 < 20 ? col : 'rgba(160,200,255,0.5)';
+        ctx.fillRect(x - sw / 2 + 6, sy + 22, sw - 12, 3);
+        if (ch) drawWithGlow(ctx, () => { ctx.fillStyle = '#ffffff'; ctx.font = `700 ${IS_MOBILE ? 40 : 34}px ${config.fontFamily}`; ctx.fillText(ch, x, sy); }, '#7fe9ff');
+    }
+    // 文字盤
+    for (let k = 0; k < NAME_KEYS.length; k++) {
+        const r = nameKeyRect(k), on = k === ne.cur;
+        ctx.fillStyle = on ? 'rgba(127,233,255,0.28)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(r.x, r.y, r.w, r.h);
+        ctx.strokeStyle = on ? col : 'rgba(127,233,255,0.25)'; ctx.lineWidth = on ? 2 : 1; ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+        ctx.fillStyle = on ? '#ffffff' : '#a9c8ff'; ctx.font = `600 ${NAME_KEYS[k].length > 1 ? (IS_MOBILE ? 18 : 15) : (IS_MOBILE ? 22 : 18)}px ${config.fontFamily}`;
+        ctx.fillText(NAME_KEYS[k] === 'DEL' ? '◀ DEL' : NAME_KEYS[k], r.x + r.w / 2, r.y + r.h / 2 + 1);
+    }
+    ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 14 : 12}px ${config.fontFamily}`;
+    const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · A/X: INPUT · B/Y: DEL · START: OK' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: OK';
+    ctx.fillText(hint, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 40 : 30));
+    // 名前は固定で使う旨
+    const chg = IS_MOBILE ? (LANG === 'ja' ? 'タイトル画面の「NAME」' : '"NAME" on the title screen') : lastInputDevice === 'gamepad' ? 'SELECT' : (LANG === 'ja' ? 'Nキー' : 'the N key');
+    ctx.fillStyle = 'rgba(255,215,120,0.85)'; ctx.font = `500 ${IS_MOBILE ? 15 : 13}px ${config.fontFamily}`;
+    ctx.fillText(LANG === 'ja' ? `この名前は以後のランキング登録に自動で使われます（変更はタイトルで${chg}）` : `This name is used for all future rankings (change it with ${chg} on the title screen)`, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 72 : 54), HUD_W - 30);
+    ctx.restore();
+}
+function rankInput() { // ランキング画面の入力処理
+    if (input.leftTrigger) { rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+    if (input.rightTrigger) { rankView.diff = (rankView.diff + 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+    if (input.upTrigger || input.downTrigger) { // LOCAL / ONLINE の切り替え
+        rankView.src = rankView.src === 'local' ? 'online' : 'local'; audioHandler.playSound('menu'); rankRefreshOnline();
+    }
+    if (input.titleTrigger || input.replayTrigger) { gameState = 'title'; audioHandler.playSound('menu'); }
+    while (rankTaps.length) {
+        const tp = rankTaps.shift(), L = rankLayout();
+        if (tp.y < L.top + 40 && tp.x < HUD_W * 0.25) { rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (tp.y < L.top + 40 && tp.x > HUD_W * 0.75) { rankView.diff = (rankView.diff + 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (Math.abs(tp.y - L.srcY) < 24) { rankView.src = tp.x < HUD_W / 2 ? 'local' : 'online'; audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (IS_MOBILE && Math.abs(tp.y - L.tabY) < 26) { rankView.mode = Math.max(0, Math.min(2, Math.floor(tp.x / (HUD_W / 3)))); audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (tp.y > L.backY - 30) { gameState = 'title'; audioHandler.playSound('menu'); }
+    }
+}
+const rankTaps = [];
+const titleRankY = () => IS_MOBILE ? HUD_H * 0.8 : HUD_H - 32;
+function rankLayout() {
+    const top = IS_MOBILE ? HUD_H * 0.12 : 60;
+    return { top, srcY: top + 62, tabY: top + 112, listY: top + (IS_MOBILE ? 160 : 140), rowH: IS_MOBILE ? 46 : 32, backY: IS_MOBILE ? HUD_H * 0.86 : HUD_H - 40 };
+}
+function drawRanking(ctx) {
+    const L = rankLayout(), cx = HUD_W / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,0,14,0.72)'; ctx.fillRect(0, 0, HUD_W, HUD_H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const dcol = ['#7dffd0', '#7fe9ff', '#ff7ab0'][rankView.diff];
+    drawWithGlow(ctx, () => { ctx.fillStyle = '#ffffff'; ctx.font = `300 ${IS_MOBILE ? 22 : 18}px ${config.logoFontFamily}`; ctx.fillText('R A N K I N G', cx, L.top - 22); }, '#7fe9ff');
+    drawWithGlow(ctx, () => { ctx.fillStyle = dcol; ctx.font = `700 ${IS_MOBILE ? 34 : 30}px ${config.fontFamily}`; ctx.fillText(DIFFS[rankView.diff].id, cx, L.top + 16); }, dcol);
+    const blink = frameCount % 50 < 35 ? 1 : 0.4;
+    ctx.globalAlpha = blink; ctx.fillStyle = dcol; ctx.font = `700 ${IS_MOBILE ? 30 : 26}px ${config.fontFamily}`;
+    ctx.fillText('◀', cx - (IS_MOBILE ? 170 : 160), L.top + 16); ctx.fillText('▶', cx + (IS_MOBILE ? 170 : 160), L.top + 16); ctx.globalAlpha = 1;
+    // LOCAL / ONLINE
+    ctx.font = `600 ${IS_MOBILE ? 17 : 14}px ${config.fontFamily}`;
+    [['local', 'LOCAL'], ['online', 'ONLINE']].forEach(([id, lb], i) => {
+        const x = cx + (i ? 70 : -70), on = rankView.src === id;
+        ctx.fillStyle = on ? '#ffffff' : 'rgba(170,190,230,0.55)'; ctx.fillText(lb, x, L.srcY);
+        if (on) { ctx.fillStyle = dcol; ctx.fillRect(x - 34, L.srcY + 12, 68, 2); }
+    });
+    const modes = IS_MOBILE ? [rankView.mode] : [0, 1, 2];
+    if (IS_MOBILE) { // モードのタブ
+        RANK_MODES.forEach((m, i) => { const x = HUD_W / 6 + i * HUD_W / 3, on = i === rankView.mode; ctx.fillStyle = on ? dcol : 'rgba(170,190,230,0.5)'; ctx.font = `600 ${on ? 19 : 16}px ${config.fontFamily}`; ctx.fillText(m[1], x, L.tabY); if (on) ctx.fillRect(x - 46, L.tabY + 15, 92, 2); });
+    }
+    const colW = IS_MOBILE ? HUD_W - 60 : Math.min(330, (HUD_W - 60) / 3);
+    modes.forEach((mi, ci) => {
+        const x0 = IS_MOBILE ? 30 : cx - colW * 1.5 + ci * colW, k = rankKey(mi, rankView.diff);
+        if (!IS_MOBILE) { ctx.textAlign = 'center'; ctx.fillStyle = dcol; ctx.font = `600 16px ${config.fontFamily}`; ctx.fillText(RANK_MODES[mi][1], x0 + colW / 2, L.listY - 28); }
+        let list;
+        if (rankView.src === 'online') {
+            if (!RankOnline.enabled()) { if (ci === (IS_MOBILE ? 0 : 1)) { ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,220,255,0.8)'; ctx.font = `600 ${IS_MOBILE ? 22 : 18}px ${config.fontFamily}`; ctx.fillText('ONLINE RANKING  COMING SOON', cx, L.listY + L.rowH * 4); } return; }
+            const c = RankOnline.cache[k]; list = c && c.list;
+            if (!list) { ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 15px ${config.fontFamily}`; ctx.fillText(c && c.err ? 'OFFLINE' : 'LOADING...', x0 + colW / 2, L.listY + L.rowH * 4); return; }
+        } else list = RankLocal.list(k);
+        const myName = lastName();
+        for (let i = 0; i < RANK_SHOW; i++) {
+            const e = list[i], y = L.listY + i * L.rowH, me = e && rankResult && rankResult.key === k && rankResult.rank === i + 1 && rankView.src === 'local';
+            const c = me ? `hsl(${(frameCount * 4) % 360},100%,72%)` : i === 0 ? '#ffd76a' : i < 3 ? '#e8f4ff' : 'rgba(200,215,255,0.78)';
+            ctx.fillStyle = c; ctx.font = `600 ${IS_MOBILE ? 22 : 16}px ${config.fontFamily}`;
+            const pad = IS_MOBILE ? 8 : 22; // 列どうしの間隔
+            ctx.textAlign = 'left'; ctx.fillText(String(i + 1).padStart(2, '0'), x0 + pad, y);
+            ctx.fillText(e ? e.n : '--------', x0 + pad + (IS_MOBILE ? 56 : 38), y);
+            ctx.textAlign = 'right'; ctx.fillText(e ? e.s.toLocaleString('en') : '-', x0 + colW - pad, y);
+            if (e && !me && myName && e.n === myName && rankView.src === 'online') { ctx.fillStyle = 'rgba(127,233,255,0.12)'; ctx.fillRect(x0, y - L.rowH / 2 + 3, colW, L.rowH - 6); }
+        }
+    });
+    ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 16 : 12}px ${config.fontFamily}`;
+    ctx.fillText(IS_MOBILE ? '◀ ▶ DIFFICULTY · TAP HERE TO RETURN' : lastInputDevice === 'gamepad' ? '◀ ▶ DIFFICULTY · ▲▼ LOCAL / ONLINE · START: BACK' : '← → DIFFICULTY · ↑↓ LOCAL / ONLINE · ENTER / ESC: BACK', cx, L.backY);
+    ctx.restore();
+}
 let highScoreStandard = 0, highScoreJourney = 0, highScoreStartrail = 0;
 function loadHighScores() {
     highScoreStandard = readHS(config.highScoreKeyStandard);
@@ -1169,6 +1559,11 @@ let perfLastT = 0;
 const keyState = {};
 window.addEventListener('keydown', e => {
     lastInputDevice = 'keyboard';
+    if (nameEntry && (gameState === 'gameOver' || gameState === 'nameEdit') && !e.repeat) { // ネーム登録: 英字は直接入力、Backspaceで1文字消す
+        if (/^Key[A-Z]$/.test(e.code)) { typedLetters.push(e.code.slice(3)); e.preventDefault(); }
+        else if (e.code === 'Backspace') { typedLetters.push('BACK'); e.preventDefault(); }
+        else if (e.code === 'Escape' && gameState === 'nameEdit') typedLetters.push('ESC');
+    }
     if (!keyState[e.code]) {
         inputDirty = true;
         // PC: 押した瞬間に1フレーム分だけ先に動かす（次の描画を待たずに反応。当たり判定も一緒に動く）
@@ -1222,7 +1617,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
-const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false, resetTrigger: false, confirmYesTrigger: false, confirmNoTrigger: false }; // ★ プロパティを追加
+const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false, resetTrigger: false, confirmYesTrigger: false, confirmNoTrigger: false, leftTrigger: false, rightTrigger: false }; // ★ プロパティを追加
 let wasEnterPressed = false, wasQPressed = false, wasSelectPressed = false;
 let wasStartPressed = false, wasPPressed = false, wasUpPressed = false;
 let wasDownPressed = false, wasShootPressed = false;
@@ -1473,7 +1868,7 @@ function updateInstructions() {
 function pollInput() {
     const gamepads = navigator.getGamepads();
     let gpLeft = false, gpRight = false, gpUp = false, gpDown = false;
-    let gpStart = false, gpSlow = false, gpSelect = false, gpShoot = false;
+    let gpStart = false, gpSlow = false, gpSelect = false, gpShoot = false, gpFace = [false, false, false, false];
 
     for (const gp of gamepads) {
         if (!gp) continue;
@@ -1488,6 +1883,7 @@ function pollInput() {
         gpSlow = gp.buttons[0]?.pressed || gp.buttons[1]?.pressed;
         gpShoot = gp.buttons[2]?.pressed || gp.buttons[3]?.pressed;
         gpSelect = gp.buttons[8]?.pressed;
+        gpFace = [0, 1, 2, 3].map(i => !!gp.buttons[i]?.pressed);
     }
 
     // Direct state for continuous actions (movement, slow)
@@ -1538,6 +1934,7 @@ function pollInput() {
     const isSelectPressed = gpSelect;
 
     const enterTrigger = isEnterPressed && !wasEnterPressed;
+    input.nameTrigger = gameState === 'title' && ((isSelectPressed && !wasSelectPressed) || (keyState['KeyN'] && !pollInput.wn)); pollInput.wn = !!keyState['KeyN']; // タイトル: SELECT/Nキーで名前の変更
     const qTrigger = isQPressed && !wasQPressed;
     const startTrigger = isStartPressed && !wasStartPressed;
     const selectTrigger = isSelectPressed && !wasSelectPressed;
@@ -1554,7 +1951,13 @@ function pollInput() {
         input.titleTrigger = qTrigger || selectTrigger || escTrigger;
     } else if (gameState === 'gameOver') {
         input.replayTrigger = enterTrigger || startTrigger;
-        input.titleTrigger = qTrigger || selectTrigger;
+        input.titleTrigger = nameEntry ? false : qTrigger || selectTrigger;
+    } else if (gameState === 'nameEdit') {
+        input.replayTrigger = enterTrigger || startTrigger;
+        input.titleTrigger = selectTrigger; // パッドのSELECTでキャンセル（キーボードはEsc）
+    } else if (gameState === 'ranking') {
+        input.replayTrigger = enterTrigger || startTrigger;
+        input.titleTrigger = qTrigger || selectTrigger || escTrigger;
     } else if (gameState === 'paused') {
         input.replayTrigger = false;
         input.titleTrigger = qTrigger || selectTrigger;
@@ -1570,15 +1973,29 @@ function pollInput() {
     const isDownPressed = input.down;
     input.downTrigger = isDownPressed && !wasDownPressed;
     wasDownPressed = isDownPressed;
+    input.leftTrigger = input.left && !pollInput.wl; pollInput.wl = input.left;
+    // パッドの A/X（文字入力）と B/Y（DEL）の押した瞬間（ネーム入力用）
+    const wf = pollInput.wf || [false, false, false, false];
+    input.padOk = (gpFace[0] && !wf[0]) || (gpFace[2] && !wf[2]);
+    input.padDel = (gpFace[1] && !wf[1]) || (gpFace[3] && !wf[3]);
+    pollInput.wf = gpFace;
+    input.rightTrigger = input.right && !pollInput.wr; pollInput.wr = input.right;
     
     wasStartPressed = isStartPressed;
     wasEnterPressed = isEnterPressed;
     wasSelectPressed = isSelectPressed;
     wasQPressed = isQPressed;
     // タップをメニュー操作に変換（座標は表示キャンバス基準）
-    tapSel = null; tapDiffSel = null;
+    tapSel = null; tapDiffSel = null; tapNameKey = null;
     while (tapQueue.length) {
         const tp = tapQueue.shift();
+        if (gameState === 'ranking') { rankTaps.push(tp); continue; }
+        if ((gameState === 'gameOver' || gameState === 'nameEdit') && nameEntry) { // ネーム登録の文字盤
+            for (let k = 0; k < NAME_KEYS.length; k++) { const r = nameKeyRect(k); if (tp.x >= r.x - 2 && tp.x <= r.x + r.w + 2 && tp.y >= r.y - 3 && tp.y <= r.y + r.h + 3) { tapNameKey = k; break; } }
+            continue;
+        }
+        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - (HUD_W / 2 - 110)) < 100) { openRanking(); continue; }
+        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - (HUD_W / 2 + 110)) < 100) { openNameEdit(); continue; }
         if (gameState === 'title') {
             const ty = TITLE_PIV + (tp.y - (MENU_DY - 40) - TITLE_PIV) / TITLE_S;
             const i = Math.round((ty - 344 + 7) / 42);
@@ -1717,6 +2134,12 @@ function gameOver(reason) {
                 break;
         }
         newHighScoreAchieved = true;
+    }
+    // ランキング: 上位100件に入ったらネーム登録
+    rankResult = null; nameEntry = null;
+    if (!hasUsedInvincibility) {
+        const mi = RANK_MODES.findIndex(m => m[0] === gameMode);
+        if (mi >= 0) { const k = rankKey(mi, difficultyIndex); if (RankLocal.qualifies(k, score)) { const en = { n: '', s: score, st: stage, t: Date.now() }; if (lastName()) registerRank(k, en); else startNameEntry(k, en); } } // 名前登録済みなら入力を省略
     }
 
 if (reason === 'collision') {
@@ -3250,6 +3673,8 @@ function update(timestamp) {
             }
 
             // --- 入力処理 ---
+            if (input.nameTrigger) { openNameEdit(); return; }
+            if (input.leftTrigger || input.rightTrigger) { openRanking(); if (input.leftTrigger) rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; else rankView.diff = (rankView.diff + 1) % DIFFS.length; return; } // 左右でランキング画面へ
             const prevMenuIndex = titleMenuIndex;
             if (input.upTrigger) {
                 titleMenuIndex = (titleMenuIndex - 1 + titleMenuItems.length) % titleMenuItems.length;
@@ -3260,6 +3685,7 @@ function update(timestamp) {
             if (tapSel !== null) titleMenuIndex = tapSel;
 
             if (prevMenuIndex !== titleMenuIndex) {
+                audioHandler.playSound('menu'); // カーソル音
                 // メニューが変更されたので、エフェクトと説明タイマーを開始
                 effectTimer = EFFECT_DURATION;
                 descriptionTimer = DESCRIPTION_DISPLAY_DURATION;
@@ -3293,14 +3719,14 @@ function update(timestamp) {
                     pendingMode = titleMenuItems[titleMenuIndex];
                     diffMenuIndex = difficultyIndex;
                     gameState = 'difficulty';
-                    audioHandler.playSound('glaze');
+                    audioHandler.playSound('menu');
                 }
             }
         } else if (gameState === 'difficulty') {
             frameCount++;
-            if (input.upTrigger) { diffMenuIndex = (diffMenuIndex + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('glaze'); }
-            if (input.downTrigger) { diffMenuIndex = (diffMenuIndex + 1) % DIFFS.length; audioHandler.playSound('glaze'); }
-            if (tapDiffSel !== null) { diffMenuIndex = tapDiffSel; audioHandler.playSound('glaze'); }
+            if (input.upTrigger) { diffMenuIndex = (diffMenuIndex + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('menu'); }
+            if (input.downTrigger) { diffMenuIndex = (diffMenuIndex + 1) % DIFFS.length; audioHandler.playSound('menu'); }
+            if (tapDiffSel !== null) { diffMenuIndex = tapDiffSel; audioHandler.playSound('menu'); }
             if (input.titleTrigger) {
                 gameState = 'title';
             } else if (input.replayTrigger) {
@@ -3309,9 +3735,16 @@ function update(timestamp) {
                 loadHighScores();
                 startGame(pendingMode);
             }
+        } else if (gameState === 'ranking') {
+            frameCount++;
+            rankInput();
+        } else if (gameState === 'nameEdit') {
+            frameCount++;
+            if (nameEntry) nameEntryInput(); else gameState = 'title';
         } else if (gameState === 'gameOver') {
             frameCount++; // Keep frameCount running for animations
-            if (input.titleTrigger) {
+            if (nameEntry) nameEntryInput(); // ネーム登録中は他の操作をしない
+            else if (input.titleTrigger) {
                  gameState = 'title';
                  init();
             } else if (input.replayTrigger) {
@@ -5331,7 +5764,9 @@ function spawnLink(tx, ty) {
 }
 
 const debris = [];
+let loadLv = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
 function spawnBurst(x, y, color, count, opts = {}) {
+    if (loadLv >= 1) count = Math.ceil(count * (loadLv >= 2 ? 0.35 : 0.6)); // 重い時は破片を減らす
     if (!isEffectsEnabled) count = Math.ceil(count / 3);
     for (let i = 0; i < count; i++) {
         const a = Math.random() * Math.PI * 2;
@@ -5497,7 +5932,7 @@ function render3D() {
     cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(0.8 + visualBeat * 0.3); });
 
     // タイトル用ハブ
-    const showHub = gameState === 'title' || gameState === 'confirmReset' || gameState === 'difficulty';
+    const showHub = gameState === 'title' || gameState === 'confirmReset' || gameState === 'difficulty' || gameState === 'ranking' || gameState === 'nameEdit';
     updateTitleDemo(dt, showHub);
     titleHub.visible = titleHubInner.visible = showHub && titleDemo.idx < 0;
     kickRing.visible = showHub;
@@ -5585,6 +6020,13 @@ function render3D() {
         }
     });
 
+    // スマホ: 画面のオブジェクトが一定数を超えたら描画を軽くする（後半ステージの処理落ち対策）
+    if (IS_MOBILE) {
+        const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + debris.length * 0.2 + (monsters ? monsters.length * 2 : 0);
+        if (loadLv < 2 && load > 280) loadLv = 2; else if (loadLv < 1 && load > 170) loadLv = 1;
+        else if (loadLv === 2 && load < 230) loadLv = 1; else if (loadLv === 1 && load < 130) loadLv = 0;
+        if (bloom) bloom.enabled = loadLv < 2; // 重い時はブルームを切る
+    }
     // 彗星（数が増えるほど光を控えめに）
     const cometDensityK = 1 / (1 + comets.length / 220);
     const stageSpeedMod = 1 + (stage - 1) * 0.08;
@@ -5596,8 +6038,8 @@ function render3D() {
         const rot = rTime * 3 + c._r;
         const s = c.radius * 1.7 * VS * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
-        cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
-        glow.add(x, y, z, color, 13 + visualBeat * 6, 0.3 * cometDensityK);
+        if (loadLv < 2) cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
+        glow.add(x, y, z, color, (13 + visualBeat * 6) * (loadLv >= 1 ? 0.75 : 1), 0.3 * cometDensityK * (loadLv >= 1 ? 1.4 : 1)); // 重い時は光を小さく（描画面積を減らす）
         if (efx && !IS_MOBILE) { // スマホは彗星の尾を省略
             let vx, vy;
             if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod; }
@@ -5683,9 +6125,9 @@ function render3D() {
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * (IS_MOBILE ? 1.3 : 1) * pulse;
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
-            glow.add(x, y, z, c, eb.radius * 13, 1.25);     // 色のハロー
-            glow.add(x, y + 2, z, COL_WHITE, eb.radius * 5, 2.2);   // 白い芯
-            if (efx) {
+            glow.add(x, y, z, c, eb.radius * (loadLv >= 2 ? 9 : 13), 1.25);     // 色のハロー
+            if (loadLv < 1) glow.add(x, y + 2, z, COL_WHITE, eb.radius * 5, 2.2);   // 白い芯
+            if (efx && loadLv < 1) {
                 const sp = Math.hypot(eb.vx, eb.vy) || 1;
                 trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
             }
@@ -5712,7 +6154,7 @@ function render3D() {
         const sz = g.big ? 9 : 6;
         gemBodies.add(x, y, z, sz, sz * 1.5, sz, 0, rTime * 5 + k, 0, c);
         glow.add(x, y, z, c, sz * 6, 0.9);
-        if (isEffectsEnabled && Math.hypot(g.vx, g.vy) > 60) {
+        if (isEffectsEnabled && loadLv < 1 && Math.hypot(g.vx, g.vy) > 60) {
             const sp = Math.hypot(g.vx, g.vy);
             trails.add(x - g.vx / sp * 26, y, z - g.vy / sp * 26, x, y, z, 6, c, 0.7);
         }
@@ -5974,7 +6416,7 @@ function draw() {
     }
 
     // タイトル画面の読みやすさ確保用ベール
-    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver' || gameState === 'difficulty') {
+    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver' || gameState === 'difficulty' || gameState === 'ranking' || gameState === 'nameEdit') {
         const g = renderCtx.createRadialGradient(HUD_W / 2, HUD_H / 2, 60, HUD_W / 2, HUD_H / 2, 560);
         g.addColorStop(0, gameState === 'title' ? 'rgba(5,0,18,0.7)' : 'rgba(5,0,18,0.55)');
         g.addColorStop(1, 'rgba(5,0,18,0.15)');
@@ -6493,6 +6935,20 @@ function draw() {
     } else if (gameState === 'title') {
         const cx = HUD_W / 2;
         const hasLS = 'letterSpacing' in renderCtx;
+        // 最下部のコピーライト表記
+        renderCtx.save();
+        renderCtx.textAlign = 'center'; renderCtx.textBaseline = 'alphabetic';
+        renderCtx.font = `500 ${IS_MOBILE ? 13 : 11}px ${config.fontFamily}`;
+        if (hasLS) renderCtx.letterSpacing = '1.5px';
+        renderCtx.fillStyle = 'rgba(200,210,255,0.55)';
+        renderCtx.fillText('(C) 2026 Archetypes Inc. / CALMDUST', cx, HUD_H - (IS_MOBILE ? 14 : 10));
+        // ランキングへの案内（スマホはタップ、PCは左右キー）
+        renderCtx.font = `600 ${IS_MOBILE ? 17 : 13}px ${config.fontFamily}`;
+        renderCtx.fillStyle = `rgba(160,235,255,${0.55 + 0.3 * Math.sin(frameCount * 0.08)})`;
+        const nm = lastName() || '--------';
+        if (IS_MOBILE) { renderCtx.fillText('▶ RANKING', cx - 110, titleRankY()); renderCtx.fillText(`NAME: ${nm}`, cx + 110, titleRankY()); }
+        else renderCtx.fillText(`${lastInputDevice === 'gamepad' ? '◀ ▶' : '← →'}  RANKING      ${lastInputDevice === 'gamepad' ? 'SELECT' : 'N'}:  NAME ${nm}`, cx, titleRankY());
+        renderCtx.restore();
         renderCtx.save();
         renderCtx.translate(0, MENU_DY - 40); // 画面の上下中央に揃える
         if (IS_MOBILE) { renderCtx.translate(cx, TITLE_PIV); renderCtx.scale(TITLE_S, TITLE_S); renderCtx.translate(-cx, -TITLE_PIV); }
@@ -6566,6 +7022,10 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
 
+    } else if (gameState === 'ranking') {
+        drawRanking(renderCtx);
+    } else if (gameState === 'nameEdit') {
+        if (nameEntry) drawNameEntry(renderCtx);
     } else if (gameState === 'gameOver') {
         renderCtx.textAlign = 'center';
         renderCtx.textBaseline = 'middle';
@@ -6626,6 +7086,11 @@ function draw() {
             renderCtx.fillText(replayText, HUD_W / 2, replayY);
             if (!IS_MOBILE) renderCtx.fillText(titleText, HUD_W / 2, replayY + 30); // スマホはボタン
         }, '#ffffff');
+        if (rankResult) { // 登録した順位
+            const rc = `hsl(${(frameCount * 3 + 120) % 360},100%,72%)`;
+            drawWithGlow(renderCtx, () => { renderCtx.font = `600 22px ${config.fontFamily}`; renderCtx.fillStyle = rc; renderCtx.fillText(`RANK ${rankResult.rank}  ${(lastName() || 'PLAYER')}`, HUD_W / 2, scoreY + 84); }, rc);
+        }
+        if (nameEntry) drawNameEntry(renderCtx);
 
         renderCtx.textBaseline = 'alphabetic';
     }
@@ -6740,6 +7205,7 @@ function movePlayerRT(ms) {
     player.x = Math.max(0, Math.min(config.canvasWidth, player.x + (kr ? 1 : -1) * sp * ms / 1000));
 }
 function gameLoop(timestamp) {
+    if (window.__bootBusy) { simRealLast = null; requestAnimationFrame(gameLoop); return; } // 起動ロゴ表示中はゲームの描画を止めてロゴを滑らかに
     if (timestamp !== undefined) {
         if (simRealLast === null) simRealLast = timestamp;
         let delta = Math.min(250, timestamp - simRealLast);
@@ -6774,6 +7240,7 @@ function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 }
 
+soundToggleButton.classList.toggle('on', !audioHandler.isMuted);
 soundToggleButton.addEventListener('click', () => {
     if (!audioHandler.isInitialized) {
         audioHandler.initialize();
@@ -6937,7 +7404,7 @@ if (IS_MOBILE) {
         if (gameState === lastState) return; lastState = gameState;
         document.body.classList.toggle('in-play', gameState === 'playing' || gameState === 'paused');
         document.body.classList.toggle('on-title', gameState === 'title');
-        document.body.classList.toggle('show-tbtn', gameState === 'paused' || gameState === 'gameOver');
+        document.body.classList.toggle('show-tbtn', gameState === 'paused' || (gameState === 'gameOver' && !nameEntry));
         if (gameState !== 'playing') { touchShot = touchSlow = false; touchDX = 0; document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('down')); }
     }, 100);
     document.documentElement.style.setProperty('--tb', '#00ccff');

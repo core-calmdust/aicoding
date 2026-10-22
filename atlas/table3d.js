@@ -883,10 +883,10 @@
   }
   // frame cap: at most 60 fps (120 Hz phones/monitors would otherwise render twice as often for nothing)
   const FRAME_MS = 1000 / 60; let lastT = 0;
-  // pause completely while the tab is hidden; tick slowly (10 fps) while the window isn't focused
+  // pause completely while the tab is hidden or the window isn't focused
   let rafId = 0, blurred = false;
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
-  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; });
+  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; if (typeof kick === 'function') kick(300); });
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
   let lastKey = '', kickUntil = 0, dirty = true, lastDraw = 0, idleTick = 0;
@@ -897,7 +897,8 @@
     if (document.hidden) { rafId = 0; return; }
     rafId = requestAnimationFrame(loop);
     if (!el.offsetParent && !alignFn) return;
-    if (now - lastT < (blurred ? 100 : FRAME_MS) - 2) return;
+    if (blurred) { lastT = now; return; }   // window not focused: no rendering at all (resumes on focus)
+    if (now - lastT < FRAME_MS - 2) return;
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
@@ -923,13 +924,15 @@
         const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
         // match the DOM board's CSS transform: perspective(P px) rotateX(tilt) about its centre = a pinhole camera P px in front
         // of the board centre, the field leaning back by `tilt`; the principal point is moved onto the board centre
-        const unit = r.h / ((alignSize || 8.4)), P = r.persp || r.h * 3, tl = (r.tilt || 0) * Math.PI / 180, D = P / unit;
+        // r.shift (world units, optional): a shift lens — the camera stands that far towards the player but still looks straight down,
+        // so the field keeps its exact square on the DOM board while the near side of a thick board (and its legs) comes into view
+        const unit = r.h / ((alignSize || 8.4)), P = r.persp || r.h * 3, tl = (r.tilt || 0) * Math.PI / 180, D = P / unit, sh = r.shift || 0;
         cam.fov = 2 * Math.atan(H / 2 / P) * 180 / Math.PI; cam.aspect = W / H;
-        cam.position.set(0, top + D * Math.cos(tl), D * Math.sin(tl)); cam.up.set(0, Math.sin(tl), -Math.cos(tl)); cam.lookAt(0, top, 0);
+        cam.position.set(0, top + D * Math.cos(tl), D * Math.sin(tl) + sh); cam.up.set(0, Math.sin(tl), -Math.cos(tl)); cam.lookAt(0, top, sh);
         const key = r.x.toFixed(1) + ',' + r.y.toFixed(1) + ',' + r.w.toFixed(1) + ',' + r.h.toFixed(1) + ',' + W + ',' + H;
         if (key === lastKey && now > kickUntil && !dirty) return;
         lastKey = key; if (now > kickUntil) dirty = false;
-        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2), W, H); cam.updateProjectionMatrix();
+        cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2) - sh * unit, W, H); cam.updateProjectionMatrix();
         R.render(scene, cam); lastDraw = now; return;
       }
     }

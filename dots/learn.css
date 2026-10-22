@@ -56,7 +56,10 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 #rulesBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .ru-main{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
 .ru-main > *{flex:none}
-.ru-main.is-fin{justify-content:center}
+.ru-main.is-fin{justify-content:center;align-items:center;text-align:center}
+.ru-main.is-fin > *{margin-left:auto;margin-right:auto;text-align:center}
+.ru-main.is-fin .ru-finish{align-items:center;width:100%;max-width:340px;margin-top:18px}
+.ru-main.is-fin .ru-finish .mbtn{width:100%}
 .ru-main.has-board{display:grid;overflow:hidden;gap:var(--rt-gap,8px)}
 .ru-main.has-board .ru-text{min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .ru-main.has-board .ru-text > :last-child{margin-bottom:0}

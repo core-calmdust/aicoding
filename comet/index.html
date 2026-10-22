@@ -887,6 +887,7 @@ class AudioHandler {
             return;
         }
         this.isMuted = !this.isMuted;
+        try { localStorage.setItem('atlas-sfx', this.isMuted ? '0' : '1'); } catch (e) {}
         this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
         return this.isMuted;
     }
@@ -903,6 +904,7 @@ offscreenCanvas.height = config.canvasHeight;
 const offscreenCtx = offscreenCanvas.getContext('2d');
 
 const audioHandler = new AudioHandler();
+try { if (localStorage.getItem('atlas-sfx') === '0') audioHandler.isMuted = true; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 const instructionsContainer = document.getElementById('instructions-container');
 const mainInstruction = document.getElementById('main-instruction');
 const extraInstruction = document.getElementById('extra-instruction');
@@ -3008,6 +3010,7 @@ function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 }
 
+soundToggleButton.textContent = audioHandler.isMuted ? 'SOUND OFF' : 'SOUND ON';
 soundToggleButton.addEventListener('click', () => {
     if (!audioHandler.isInitialized) {
         audioHandler.initialize();

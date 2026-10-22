@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // サイト共通のサウンド設定（トップページのON/OFFと連動）
+    const sfxOff = () => { try { return localStorage.getItem('atlas-sfx') === '0'; } catch (e) { return false; } };
     // --- サウンドエンジン ---
     const sound = {
         audioContext: null, bgmInterval: null, masterVolume: 0.3,
         init: async function() { if (!this.audioContext) try { this.audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.error("Web Audio API not supported."); return; } if (this.audioContext.state === 'suspended') await this.audioContext.resume(); },
-        _playTone: function(freq, type, dur, vol = 1) { if (!this.audioContext || this.audioContext.state !== 'running') return; const osc = this.audioContext.createOscillator(), gain = this.audioContext.createGain(); osc.connect(gain); gain.connect(this.audioContext.destination); osc.type = type; osc.frequency.setValueAtTime(freq, this.audioContext.currentTime); gain.gain.setValueAtTime(vol * this.masterVolume, this.audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, this.audioContext.currentTime + dur); osc.start(); osc.stop(this.audioContext.currentTime + dur); },
-        startBgm: function() { if (this.bgmInterval) clearInterval(this.bgmInterval); if (!this.audioContext || this.audioContext.state !== 'running') return; const notes = [261.63, 329.63, 392.00, 440.00]; let i = 0; this.bgmInterval = setInterval(() => { this._playTone(notes[i++ % notes.length], 'triangle', 0.1, 0.4); }, 150); },
+        _playTone: function(freq, type, dur, vol = 1) { if (!this.audioContext || this.audioContext.state !== 'running' || sfxOff()) return; const osc = this.audioContext.createOscillator(), gain = this.audioContext.createGain(); osc.connect(gain); gain.connect(this.audioContext.destination); osc.type = type; osc.frequency.setValueAtTime(freq, this.audioContext.currentTime); gain.gain.setValueAtTime(vol * this.masterVolume, this.audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, this.audioContext.currentTime + dur); osc.start(); osc.stop(this.audioContext.currentTime + dur); },
+        startBgm: function() { if (this.bgmInterval) clearInterval(this.bgmInterval); if (!this.audioContext || this.audioContext.state !== 'running' || sfxOff()) return; const notes = [261.63, 329.63, 392.00, 440.00]; let i = 0; this.bgmInterval = setInterval(() => { this._playTone(notes[i++ % notes.length], 'triangle', 0.1, 0.4); }, 150); },
         stopBgm: function() { if (this.bgmInterval) clearInterval(this.bgmInterval); this.bgmInterval = null; },
         playStart: function() { this._playTone(261.63, 'square', 0.2, 0.7); },
         playCorrect: function() { this._playTone(523.25, 'sine', 0.2, 0.8); },

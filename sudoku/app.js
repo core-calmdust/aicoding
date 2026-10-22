@@ -63,6 +63,8 @@ function load() {
   return d;
 }
 let DB = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') DB.set.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
+const saveSitePref = () => { try { localStorage.setItem('atlas-sfx', DB.set.sound ? '1' : '0'); } catch (e) {} };
 let saveT = 0;
 function persist(now) {
   clearTimeout(saveT);
@@ -251,16 +253,21 @@ function addScore(n) {
 const monthScore = ym => DB.sc.m[ym || thisMonth()] || 0;
 
 /* ================= audio & haptics ================= */
-let AC = null;
+let AC = null, OUT = null;
+const SFX_GAIN = 2.6;   // effects were too quiet on phones — boost them, with a compressor so stacked tones don't clip
 function tone(freq, dur = .08, type = 'sine', vol = .08, at = 0) {
   if (!DB.set.sound) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (!OUT) {
+      const comp = AC.createDynamicsCompressor(); comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 4; comp.attack.value = .003; comp.release.value = .12;
+      OUT = AC.createGain(); OUT.gain.value = SFX_GAIN; OUT.connect(comp).connect(AC.destination);
+    }
     if (AC.state === 'suspended') AC.resume();
     const t0 = AC.currentTime + at, o = AC.createOscillator(), g = AC.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t0);
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .008); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
-    o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + dur + .02);
+    o.connect(g).connect(OUT); o.start(t0); o.stop(t0 + dur + .02);
   } catch (e) {}
 }
 const SFX = {
@@ -275,6 +282,7 @@ const SFX = {
   ach: () => [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, .2, 'sine', .05, i * .07)),
   rumble: () => [140, 160, 150, 170, 155].forEach((f, i) => tone(f, .12, 'triangle', .06, i * .1)),
   pop: () => { tone(600, .06, 'sine', .07); tone(1200, .12, 'sine', .05, .05); },
+  beep: last => tone(last ? 1760 : 1320, last ? .14 : .08, 'square', .03),   // すぴーど: last-5-seconds countdown
   rare: () => [784, 988, 1175, 1568, 1976, 2349].forEach((f, i) => tone(f, .35, 'triangle', .06, i * .07)),
 };
 const vib = ms => { if (DB.set.vib && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} };
@@ -1796,7 +1804,7 @@ function openSettings() {
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
     + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
   $$('#todSeg button').forEach(b => b.onclick = () => { DB.set.tod = b.dataset.k; persist(); $$('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); applyTod(); SFX.tap(); });
-  $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
+  $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; if (k === 'sound') saveSitePref(); b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
   $$('#setBody .hbt:not(.lock)').forEach(b => b.onclick = () => { setHomeBg(b.dataset.hb); $$('#setBody .hbt').forEach(x => x.classList.toggle('on', x === b)); if (screen === 'home') homeScene(); });
   wireSync();
   $('#setName').onclick = () => { closeModals(); setTimeout(() => openName(!DB.prof.name), 60); };
@@ -1899,7 +1907,7 @@ if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMon
 $('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
 $('#btnSet').onclick = () => { SFX.tap(); openSettings(); };
 $('#btnHelp').onclick = () => { SFX.tap(); openHelp(); };
-$('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; persist(); applySettings(); SFX.tap(); };
+$('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; saveSitePref(); persist(); applySettings(); SFX.tap(); };
 $('#langSel').onchange = e => {
   LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   applyI18n(); route();

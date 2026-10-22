@@ -810,6 +810,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #puzzleOverlay .pz-grid{grid-template-columns:repeat(5, 1fr)} }
 @media (max-width:560px){ .pz-grid:has(> .th){grid-template-columns:repeat(3,1fr)} }
 </style>
+<link rel="stylesheet" href="online.css?v=20261022ol">
 </head>
 <body>
 <div id="bgfx" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="glow g3"></i><i class="sheen"></i></div>
@@ -1048,6 +1049,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 <script src="i18n.js?v=20261021lx"></script>
 <script src="i18n-learn.js?v=20261021c"></script>
 <script src="i18n-pz.js?v=20261021c"></script>
+<script src="i18n-online.js?v=20261022ol"></script>
 <script src="engine.js"></script>
 <script>
 // "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
@@ -1071,12 +1073,12 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=23"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="app.js?v=20261021rsg"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=4"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=20261022ol"><\/script><script src="app.js?v=20261022ol"><\/script><script src="online-ui.js?v=20261022ol"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
-<script src="../shared/atlas-account.js?v=4" defer></script>
+<script src="../shared/atlas.js?v=20261022v2" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac2" defer></script>
+<script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
 </html>

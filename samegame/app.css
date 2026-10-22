@@ -1217,3 +1217,15 @@ body[data-skin="mid"] .gi .gk{bottom:auto;top:5px;left:auto;right:5px;translate:
   .acards .acard .qc{position:static!important;grid-column:4;grid-row:1/3;width:30px!important;height:30px!important;font-size:14px}
   .hpanel[data-p="action"] .sechead{margin-top:4px}
 }
+/* daily bonuses */
+.gclock{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 2px;font-size:14px}
+.gclock span{font-weight:700;opacity:.75}.gclock b{font-family:var(--f-sfx);font-size:20px;white-space:pre}
+.rbonus{list-style:none;margin:8px auto 10px;padding:8px 14px;max-width:300px;background:var(--paper);border-radius:12px;font-size:14px}
+.rbonus li{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+.rbonus li+li{border-top:1px dashed color-mix(in srgb,var(--text) 20%,transparent)}
+.rbonus .pos b{color:var(--grn)}.rbonus .neg b{color:var(--red)}
+/* ORDER: remaining time inside the order panel (phones may not see the top bar) */
+.goh .gotime{margin-left:auto;display:inline-flex;align-items:baseline;gap:3px;background:var(--ink);color:var(--on);border-radius:999px;padding:2px 12px}
+.goh .gotime b{font-family:var(--f-sfx);font-size:22px;line-height:1.1;color:inherit}.goh .gotime small{font-size:12px;font-weight:700}
+.goh .gotime.low{background:var(--red)}
+.goh .gostk{margin-left:auto}.goh .gostk+.gotime{margin-left:0}

@@ -16,4 +16,4 @@ window.ATLAS_FIREBASE_CONFIG = {
   appId: "1:457113450734:web:4f6a0b1bece3e942191bff",
 };
 // App Check (reCAPTCHA v3) for the shared account project — null = skipped (see <game>/firebase-config.js for the steps).
-window.ATLAS_APPCHECK_SITE_KEY = null;
+window.ATLAS_APPCHECK_SITE_KEY = '6LeBsfotAAAAAC1lR3R3dE9VbO7qvSBNb4mqo9lZ';   // reCAPTCHA Enterprise (Fraud Defense) site key

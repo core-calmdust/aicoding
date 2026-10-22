@@ -50,7 +50,7 @@ function rtPick(r) {
 }
 function rtGame() { return !!(RT && settings.mode === 'ai' && !lesson && !puzzle && humanColor === RT.human); }
 function rtLive() { return rtGame() && !RT.done && !gameOver(moves); }
-window.rtGame = rtGame; window.rtLive = rtLive;
+window.rtGame = rtGame; window.rtLive = rtLive; window.rtForfeit = (...a) => rtForfeit(...a);   // online-ui.js: leaving a rated game for an online one
 // apply a result once (the game id is kept in the history, so a reload never counts it twice)
 function rtSettle(s, why) {
   if (!RT) return null;

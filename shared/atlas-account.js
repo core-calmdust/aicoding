@@ -29,7 +29,7 @@
   let app = null, user = null, ready = null, syncing = false, last = 0, err = '';
   // games with their own Firebase project (online play / rated games, Google sign-in): signed in together with the
   // shared account through a hidden frame each (shared/atlas-auth-frame.html), so one sign-in covers every game.
-  const GAME_AUTH = ['shogi', 'chess', 'reversi', 'checkers', 'gomoku', 'dots', 'morris', 'backgammon', 'sudoku'];   // sudoku = also speed sudoku / SameGame POP!
+  const GAME_AUTH = ['shogi', 'chess', 'reversi', 'checkers', 'gomoku', 'dots', 'morris', 'backgammon', 'connect4', 'mancala', 'sudoku'];   // sudoku = also speed sudoku / SameGame POP!
   const HERE = (document.currentScript && document.currentScript.src) || location.href;
   let games = { done: 0, fail: [] };
 
@@ -139,7 +139,7 @@
       push: async (patch) => { const a = all(); a[user.uid] = Object.assign(a[user.uid] || {}, patch); LS.set(K, JSON.stringify(a)); },
     };
   }
-  // App Check (reCAPTCHA v3) for the shared account project: window.ATLAS_APPCHECK_SITE_KEY (null = skipped). On localhost,
+  // App Check (reCAPTCHA Enterprise) for the shared account project: window.ATLAS_APPCHECK_SITE_KEY (null = skipped). On localhost,
   // ?appcheckdebug=1 (or localStorage 'appcheck-debug' = a registered debug token) uses a debug token instead.
   async function appCheck(app, base) {
     const key = window.ATLAS_APPCHECK_SITE_KEY;
@@ -147,7 +147,8 @@
     try {
       await loadScript(base + 'firebase-app-check-compat.js');
       if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) { let tok = null; try { tok = localStorage.getItem('appcheck-debug'); } catch (e) {} if (tok || /[?&]appcheckdebug\b/.test(location.search)) self.FIREBASE_APPCHECK_DEBUG_TOKEN = tok || true; }
-      app.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(key), true);
+      const v3 = /^v3:/.test(key), k = key.replace(/^(v3|ent):/, '');   // reCAPTCHA Enterprise by default; 'v3:<key>' = classic v3
+      app.appCheck().activate(v3 ? new firebase.appCheck.ReCaptchaV3Provider(k) : new firebase.appCheck.ReCaptchaEnterpriseProvider(k), true);
       app.__appCheck = true;
     } catch (e) { console.warn('App Check', e); }
   }

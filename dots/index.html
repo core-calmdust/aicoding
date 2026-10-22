@@ -873,13 +873,13 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=23"></script><!-- only RuleTour.intro() for the rules intro page -->
-<link rel="stylesheet" href="learn.css?v=20261021rb"><!-- learn-ui -->
+<script src="../shared/ruletour.js?v=28"></script><!-- only RuleTour.intro() for the rules intro page -->
+<link rel="stylesheet" href="learn.css?v=fin1"><!-- learn-ui -->
 <script src="engine.js?v=20261020d5"></script>
 <script src="learn.js?v=20261022sl"></script>
 <script src="i18n-online.js?v=20261020gh"></script>
-<script src="firebase-config.js?v=sec1"></script>
-<script src="../shared/onlinesec.js?v=1"></script>
+<script src="firebase-config.js?v=ac1"></script>
+<script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=sec1"></script>
 <script>
 'use strict';
@@ -1351,7 +1351,7 @@ document.addEventListener('keydown', ev => {
   $('#resultOverlay').classList.remove('show');
   undo();
 });
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playLine(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playLine(); };
 $('#btnHint').onclick = () => {
   if (!canHumanMove()) return;
   const tok = busy;
@@ -1729,6 +1729,7 @@ function backToBoard() {
 })();
 // ====================================================================== boot
 const hadSave = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
@@ -1770,8 +1771,8 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
 <script src="online-ui.js?v=20261021rsgsec1"></script>
 <script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
-<script src="../shared/atlas-account.js?v=4" defer></script>
+<script src="../shared/atlas.js?v=20261022v2" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
+<script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
 </html>

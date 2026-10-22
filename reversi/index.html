@@ -1575,9 +1575,9 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
 <script src="../shared/headerbar.js?v=4"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="../shared/ruletour.js?v=23"></script>
-<script src="firebase-config.js?v=sec1"></script>
-<script src="../shared/onlinesec.js?v=1"></script>
+<script src="../shared/ruletour.js?v=28"></script>
+<script src="firebase-config.js?v=ac1"></script>
+<script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=sec1"></script>
 <script>
 'use strict';
@@ -2589,7 +2589,7 @@ $('#btnHint').onclick = () => {
   if (!reviewing && isHumanTurn()) schedule(null);
 };
 $('#btnPuzzle').onclick = () => { ctx(); openPuzzles(); };
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playPlace(0); else sfxStop(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playPlace(0); else sfxStop(); };
 $('#btnCopy').onclick = async () => {
   const s = positions.slice(1).map(p => sqName(p.last)).join('');
   try { await navigator.clipboard.writeText(s); toast(t('copied'), 1000); } catch (e) { toast(s || t('nokifu'), 2500); }
@@ -4575,6 +4575,7 @@ loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800); } else document.body.classList.add('no-online');
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 const hadSave = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 rtSync();
 if (settings.mode === 'online') settings.mode = 'ai';
 const qLang = new URLSearchParams(location.search).get('lang');
@@ -5108,17 +5109,17 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=19'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/skin/reversi.js?v=18'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=54')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/skin/reversi.js?v=18'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=5n" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=4" defer></script>
-<script src="../shared/atlas-account.js?v=4" defer></script>
+<script src="../shared/atlas.js?v=20261022v2" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
+<script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
 </html>

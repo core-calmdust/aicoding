@@ -730,7 +730,7 @@ $('#btnHint').onclick = () => {
   if (!settings.hint) { hintList = null; renderFx(); renderInfo(); }
   else { const k = keyOf(cur); if (anaCache.has(k)) { hintList = anaCache.get(k); renderFx(); } else analyzeCurrent(busyToken); renderInfo(); }
 };
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playTick(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playTick(); };
 $('#btnFlip').onclick = () => { settings.flip = !settings.flip; save(); orient(); drawSquares(); shownKey = ''; syncPieces(posAt(cur).pos.b); renderBoard(false); renderInfo(); };
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
@@ -2905,6 +2905,7 @@ if (olOn()) { accRender(); setTimeout(() => { dockStart().then(() => { if (signe
 
 // ====================================================================== boot
 const hadSave = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 // board & piece skin: applied immediately, kept with the settings
 function applySkin() {
   ['grain', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, settings.skin === k));

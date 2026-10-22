@@ -120,6 +120,37 @@ html[lang=ar] .rt-wins,html[lang=ar] .rt-draw{direction:rtl}
   .rt-hand small{font-size:15px}
   .rt-promo button{font-size:15px}
 }
+/* phones sideways, page 3: the 8 pieces in one row in the text column */
+.rt-pls{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;margin:6px 0 0}
+.rt-task .rt-pcs.ls{--pb:42px;display:grid;grid-template-columns:repeat(8,var(--pb));gap:5px;justify-content:start}
+.rt-task .rt-pcs.ls button{width:auto;height:auto;aspect-ratio:1 / 1.06;padding:3px;border-radius:8px}
+.rt-task .rt-pcs.ls button .rh{--cw:calc(var(--pb) - 8px);--ch:calc((var(--pb) - 8px) * 1.1)}
+.rt-task .rt-pname.ls{min-height:0;text-align:start;flex:1 1 60px}
+.rt-task .rt-pname.ls:empty{display:none}
+/* PC (like chess): the rules dialog is as big as the window allows (not reduced by the header bar), the board fills the
+   right column — one cell size on every page (room for the pieces in hand is always kept on its left, so the board never
+   moves), top aligned with the title. Page 3: the 8 pieces are a big 4×2 grid in the text column. */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 561px){
+  #lessonOverlay .modal:has(#lessonList.rt-host){width:min(1080px, calc(100vw - 64px));height:min(820px, calc(100dvh - 32px))}
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #lessonList .rt-row .rt-main.has-board > .rt-board{align-items:flex-start;justify-content:flex-end}
+  #lessonList .rt-row .rt-board > .rt-wrap{width:100%;align-items:stretch}
+  #lessonList .rt-row .rt-board .ru-row{justify-content:flex-end}
+  #lessonList .rt-row .rt-board .rb{margin:0}
+  .rt-task .rt-pcs{--pb:76px;display:grid;grid-template-columns:repeat(4,minmax(0,var(--pb)));gap:10px;justify-content:start;margin:12px 0 4px}
+  .rt-task .rt-pcs button{width:auto;height:auto;aspect-ratio:1 / 1.06;padding:8px;border-radius:12px}
+  .rt-task .rt-pcs button .rh{--cw:calc(var(--pb) - 18px);--ch:calc((var(--pb) - 18px) * 1.1)}
+  .rt-task .rt-pinfo{max-width:none;margin-top:8px;font-size:15px;line-height:1.6}
+  .rt-task .rt-pinfo:empty{display:none}
+  .rt-task .rt-pinfo h4{font-size:16.5px}
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (max-height: 820px){
+  .rt-task .rt-pcs{--pb:60px;gap:8px;margin:8px 0 2px}
+  .rt-task .rt-pcs button{padding:5px;border-radius:10px}
+  .rt-task .rt-pcs button .rh{--cw:calc(var(--pb) - 12px);--ch:calc((var(--pb) - 12px) * 1.1)}
+  .rt-task .rt-pinfo{margin-top:4px;font-size:14px;line-height:1.5}.rt-task .rt-pinfo h4{font-size:15px}
+}
 @media (hover: hover) and (pointer: fine) and (min-width: 820px) and (max-height: 760px){
   .rt h2.rt-title{margin-bottom:4px!important}.rt-steps{margin-bottom:6px!important}.rt-html{margin:4px 0!important}.rt-nav{margin-top:8px!important}.rt-intro{gap:6px;grid-template-columns:repeat(3,minmax(0,1fr))!important}.rt-intro-sec.hist{grid-column:auto!important}.rt-intro-hero img{width:64px!important;height:64px!important}.rt-intro-sec{padding:8px 12px}.rt-intro-sec p{font-size:14px!important;line-height:1.45}.rt-intro-facts span{padding:4px 12px!important}
   .rt-wins{gap:6px 12px;margin:2px 0 8px}.rt-wins .ru-win{padding:4px 10px}.rt-wins .ic{width:36px;height:36px}.rt-wins .ic svg{width:32px;height:32px}
@@ -135,11 +166,15 @@ const wide = () => matchMedia('(hover: hover) and (pointer: fine) and (min-width
 function cwFit(cols, rows, extraW, extraH, el) {
   if (el && el.clientWidth > 60 && el.clientHeight > 60) {
     const byW = (el.clientWidth - 8 - (extraW || 0)) / cols, byH = (el.clientHeight - 8 - (extraH || 0)) / (rows * 1.1 + .1);
-    return Math.max(18, Math.min(84, Math.floor(Math.min(byW, byH) * (el._k || 1)) - 1));
+    return Math.max(18, Math.min(150, Math.floor(Math.min(byW, byH) * (el._k || 1)) - 1));
   }
   const L = host(), W = (L && L.clientWidth) || 320;
   return Math.max(24, Math.min(56, Math.floor((W - 8 - (extraW || 0)) / cols) - 1));
 }
+// PC: every board page is a 5x5 window drawn with the same cell size; a column for the pieces in hand (pieces at HK of a
+// cell) is always kept on the board's left, so the board has the same size and place on every page, with or without a hand
+const HK = .8;
+function cwPC(el) { return cwFit(5 + HK, 5, 44, 0, el); }
 // if the drawing (board + hand / promotion buttons / piece text) still overflows the box, shrink the cells once or
 // twice (el._k) — the box keeps its size, so nothing else on the page moves
 function overflowFix(el) {
@@ -161,7 +196,7 @@ function play(api, o) {
   const targets = () => !sel ? [] : legal().filter(m => sel.hand ? E.isDrop(m) && E.dropType(m) === sel.hand : !E.isDrop(m) && E.mFrom(m) === sel.sq);
   function draw() {
     if (!api.alive()) return;
-    const cw = cwFit(w, h, o.hand ? 110 : 0, 0, api.board), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
+    const pcw = wide(), cw = pcw ? cwPC(api.board) : cwFit(w, h, o.hand ? 110 : 0, 0, api.board), ch = Math.round(cw * 1.1), tg = targets(), tset = new Set(tg.map(E.mTo));
     let cells = '';
     for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
       const s = y * 9 + x, p = pos.board[s], cls = ['rc'];
@@ -181,7 +216,8 @@ function play(api, o) {
     let hd = '';
     if (o.hand) {
       const list = [HI, KA, KI, GI, KE, KY, FU].filter(tp => pos.hand[tp]);
-      hd = `<div class="rt-hand" style="--cw:${cw}px;--ch:${ch}px"><small>${t('ru.hand')}</small>${list.length ? list.map(tp => `<button type="button" data-h="${tp}" class="${sel && sel.hand === tp ? 'sel' : ''}"><span class="rh" style="--cw:${cw}px;--ch:${ch}px;display:block">${pcHtml(tp)}</span>${pos.hand[tp] > 1 ? `<b>${pos.hand[tp]}</b>` : ''}</button>`).join('') : '<i>—</i>'}</div>`;
+      const hw = pcw ? Math.round(cw * HK) : cw;
+      hd = `<div class="rt-hand" style="--cw:${hw}px;--ch:${Math.round(hw * 1.1)}px"><small>${t('ru.hand')}</small>${list.length ? list.map(tp => `<button type="button" data-h="${tp}" class="${sel && sel.hand === tp ? 'sel' : ''}"><span class="rh" style="--cw:${hw}px;--ch:${Math.round(hw * 1.1)}px;display:block">${pcHtml(tp)}</span>${pos.hand[tp] > 1 ? `<b>${pos.hand[tp]}</b>` : ''}</button>`).join('') : '<i>—</i>'}</div>`;
     }
     const pr = promo ? `<div class="rt-promo" style="--cw:${cw}px;--ch:${ch}px">${promo.map((m, i) => `<button type="button" data-pr="${i}"><span class="rh" style="display:block">${pcHtml(pos.board[E.mFrom(m)] + (E.mPromo(m) ? 8 : 0))}</span>${t(E.mPromo(m) ? 'promote.yes' : 'promote.no')}</button>`).join('')}</div>` : '';
     api.board.innerHTML = `<div class="rt-wrap"><div class="ru-row">${hd}${bd}</div>${pr}</div>`;
@@ -242,7 +278,8 @@ const PAGES = [
       const seen = pcSeen = new Set(); let cur = -1;
       const draw = () => {
         if (!api.alive()) return;
-        const P0 = cur >= 0 ? PIECES[cur] : null, pc1 = !wide();
+        const rt = api.board.closest('.rt'), ls = !wide() && rt && rt.classList.contains('rt-row');
+        const P0 = cur >= 0 ? PIECES[cur] : null, pc1 = !wide() && !ls;
         // phones: the 8 pieces in 2 columns beside the board (name of the tapped piece under them) so the board can use the full height;
         // the board shows how it moves, the full text is on PC and in the lessons
         const Wd = (host() && host().clientWidth) || 320, sc = pc1 ? 32 : Math.max(22, Math.min(40, Math.floor((Wd - 8) / 8 - 18)));
@@ -250,16 +287,25 @@ const PAGES = [
         const cw = cwFit(5, 5, pc1 ? side + 14 : 0, pc1 ? 0 : 290, api.board);
         const bd = P0 ? board(moves(P0[0], 5), cw) : board({ c: 5, r: 5, p: [] }, cw);
         const btns = PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="--cw:${sc}px;--ch:${Math.round(sc * 1.1)}px;display:block">${pc(tp, 0)}</span></button>`).join('');
+        if (ls) {   // phones sideways: the board fills the box, the 8 pieces are one row under the task (name beside the count)
+          const btns3 = PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="display:block">${pc(tp, 0)}</span></button>`).join('');
+          api.board.innerHTML = `<div class="rt-wrap">${P0 ? board(moves(P0[0], 5), cwFit(5, 5, 0, 0, api.board)) : board({ c: 5, r: 5, p: [] }, cwFit(5, 5, 0, 0, api.board))}</div>`;
+          api.setTask(`<div class="rt-pls"><div class="rt-pcs ls">${btns3}</div><div class="rt-pname ls">${P0 ? t('ru.' + P0[1] + '.t') : ''}</div></div>`);
+          return;
+        }
         if (pc1) {
           api.board.innerHTML = `<div class="rt-wrap"><div class="ru-row" style="gap:12px"><div class="rt-pside" style="width:${side}px"><div class="rt-pcs" style="--cw:${sc}px;display:grid;grid-template-columns:repeat(2,${pb}px);gap:6px">${btns}</div><div class="rt-pname">${P0 ? t('ru.' + P0[1] + '.t') : '&nbsp;'}</div></div>${bd}</div></div>`;
           if (overflowFix(api.board)) draw();
           return;
         }
-        const info = P0 ? `<div class="rt-pinfo"><h4>${t('ru.' + P0[1] + '.t')}</h4>${t('ru.' + P0[1] + '.b')}</div>` : '';
-        api.board.innerHTML = `<div class="rt-wrap"><div class="rt-pcs" style="--cw:${sc}px">${btns}</div>${bd}${info}</div>`;
-        if (overflowFix(api.board)) draw();
+        // PC: the board fills the box like the other pages; the 8 pieces (big, 4×2) and the tapped piece's text go in the text column
+        const cp = cwPC(api.board), btns2 = PIECES.map(([tp], i) => `<button type="button" data-pi="${i}" class="${seen.has(i) ? 'seen' : ''} ${i === cur ? 'cur' : ''}"><span class="rh" style="display:block">${pc(tp, 0)}</span></button>`).join('');
+        const bd2 = P0 ? board(moves(P0[0], 5), cp) : board({ c: 5, r: 5, p: [] }, cp);
+        api.board.innerHTML = `<div class="rt-wrap"><div class="ru-row">${bd2}</div></div>`;
+        api.setTask(`<div class="rt-pcs">${btns2}</div><div class="rt-pinfo">${P0 ? `<h4>${t('ru.' + P0[1] + '.t')}</h4>${t('ru.' + P0[1] + '.b')}` : ''}</div>`);
       };
-      api.board.onclick = e => {
+      const task = api.board.closest('.rt').querySelector('.rt-task');
+      api.board.onclick = task.onclick = e => {
         const b = e.target.closest('[data-pi]'); if (!b || !api.alive()) return;
         cur = +b.dataset.pi; seen.add(cur); playPiece(false); draw();
         if (!api.state.done) { if (seen.size >= PIECES.length) api.ok(t('rt.pc.ok')); else api.say(''); }
@@ -288,7 +334,7 @@ const PAGES = [
     } },
   { id: 'mate', title: () => t('rt.mate.t'), body: () => `<p>${t('rt.mate.b')}</p>`, task: () => t('rt.mate.task'),
     setup(api) {
-      play(api, { sfen: '4k4/9/4P4/9/9/9/9/9/9 b G 1', v: [2, 0, 5, 4], hand: true,
+      play(api, { sfen: '4k4/9/4P4/9/9/9/9/9/9 b G 1', v: wide() ? [2, 0, 5, 5] : [2, 0, 5, 4], hand: true,
         after(m, pos, a, c) {
           const chk = pos.inCheck(), mate = chk && !pos.legalMoves(false).length;
           c.lock();
@@ -297,7 +343,7 @@ const PAGES = [
     } },
   { id: 'evade', title: () => t('rt.evade.t'), body: () => `<p>${t('rt.evade.b')}</p>`, task: () => t('rt.evade.task'),
     setup(api) {
-      play(api, { sfen: '9/9/9/9/4r4/5S3/9/3GK4/9 b P 1', v: [2, 3, 5, 6], hand: true,
+      play(api, { sfen: '9/9/9/9/4r4/5S3/9/3GK4/9 b P 1', v: wide() ? [2, 4, 5, 5] : [2, 3, 5, 6], hand: true,
         onMove(m, pos) {
           const how = E.isDrop(m) ? 'block' : E.typeOf(pos.board[E.mFrom(m)]) === OU ? 'flee' : pos.board[E.mTo(m)] ? 'cap' : 'block';
           api._how = how;
@@ -329,7 +375,7 @@ function ensure() {
     lessons: () => { lsTab = 'lesson'; openLessons(); },
     sound: k => { if (k === 'ok') playChime(true); },
     pages: PAGES,
-    aspect: () => wide() ? 1 : 'fill',   // phones: the board window + hand is wider than tall, so use the full width (bigger squares)
+    aspect: () => wide() ? 1.1 : 'fill',   // PC: board + the hand column on its left (see cwPC); phones: the board window + hand is wider than tall, so use the full width (bigger squares)
   });
   return tour;
 }
