@@ -47,13 +47,22 @@ export async function build() {
   const cacheF = path.join(DATA, 'fun-cache.json');
   const cache = fs.existsSync(cacheF) ? JSON.parse(fs.readFileSync(cacheF, 'utf8')) : {};
   T.nodeLimit = 2e6;
-  const L = await import('./golib.mjs'); const E = await L.load('light');
+  const L = await import('./golib.mjs');
+  // the wasm engine can trap on odd inputs: then reload a fresh instance and score that candidate without the net
+  const fresh = async () => { const fs2 = await import('fs'), zlib = await import('zlib'); const D2 = path.join(DIR, '..'); const { instance } = await WebAssembly.instantiate(fs2.readFileSync(path.join(D2, 'engine_simd.wasm')), {}); const X = instance.exports; const raw = zlib.gunzipSync(fs2.readFileSync(path.join(D2, 'net_light.bin.gz'))); const p = X.galloc(raw.length); new Uint8Array(X.memory.buffer).set(raw, p); X.net_load(p, raw.length); X.set_seed(12345); return X; };
+  let E = await fresh();
   const net = { policy: (s, m) => L.policy(E, s, m, 7, 2).list, own: (s, m) => L.ownership(E, s, m, 7) };
   let done = 0; const t0 = Date.now();
   for (const c of cands) {
     const k = key(c);
     if (!cache[k]) {
-      let r; try { r = funScore(c, { net }); } catch (e) { if (!e.abort) throw e; r = { fun: 0, sound: false, why: 'slow', info: {} }; }
+      let r;
+      try { r = funScore(c, { net }); }
+      catch (e) {
+        if (e.abort) r = { fun: 0, sound: false, why: 'slow', info: {} };
+        else if (e instanceof WebAssembly.RuntimeError) { E = await fresh(); try { r = funScore(c, {}); } catch (e2) { if (!e2.abort) throw e2; r = { fun: 0, sound: false, why: 'slow', info: {} }; } }
+        else throw e;
+      }
       cache[k] = { fun: r.fun, sound: r.sound, why: r.why, diff: r.info.diff, netAgree: r.info.netAgree, pAns: r.info.pAns };
       if (++done % 25 === 0) { fs.writeFileSync(cacheF, JSON.stringify(cache)); console.log(`fun ${done} (${((Date.now() - t0) / 1000).toFixed(0)} s)`); }
     }
