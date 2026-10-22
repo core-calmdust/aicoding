@@ -50,7 +50,8 @@
     RIM = (U.W - S) / 2 / c;                                         // the 3D board's margin around the DOM board (cells)
     const span = n + 1;   // the DOM board in cells; the frame is shrunk so the band under it (near side + legs) fits the page
     de.style.setProperty('--goband', ((below + .35) / span).toFixed(4));
-    de.style.setProperty('--gok', (1 / (1 + (below + .35 + RIM) / span)).toFixed(4));
+    // about the 2D board's size: only part of the near side / legs band has to fit inside the 2D frame's height (the rest may hang below)
+    de.style.setProperty('--gok', (1 / (1 + (0.3 * (below + .35) + RIM) / span)).toFixed(4));
     for (const [, o] of st3) group.remove(o.g); st3.clear(); lastMark = -2;
     root.add(group);
   }
