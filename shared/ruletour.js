@@ -199,7 +199,7 @@ function create(o) {
     const P = pages[tour.page], n = pages.length, done = get();
     let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main${P.setup ? ' has-board' : ''}${P.finish ? ' rt-finpage' : ''}">`;
     if (P.finish) {
-      h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${esc(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
+      h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${finLines(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
         (o.play ? `<button type="button" class="go" data-rt-act="play">${esc(tx('play'))}</button>` : '') +
         (o.lessons ? `<button type="button" class="go" data-rt-act="lessons">${esc(tx('lessons'))}</button>` : '') + `</div>`;
     } else {
@@ -216,6 +216,11 @@ function create(o) {
     }
     if (P.finish || !P.setup) mark(P.id);
     if (P.setup) start(); else { fit(); requestAnimationFrame(fit); }   // read-only pictures are fitted too
+  }
+  // last page text: line break before the final sentence (「…対局してみましょう。」／「上達のコツや作戦は…」)
+  function finLines(str) {
+    const m = String(str).trim().match(/^(.*[。．.!?！？।؟])\s*([^。．.!?！？।؟]+[。．.!?！？।؟]?)$/);
+    return m ? esc(m[1]) + '<br>' + esc(m[2]) : esc(str);
   }
   function start() {
     const m = mount(), P = pages[tour.page], my = ++gen;
