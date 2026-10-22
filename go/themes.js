@@ -9,9 +9,9 @@
 (function (root) {
 'use strict';
 const BOARDS = {
-  kaya:     { base: ['#e9c27a', '#ddb062', '#d2a053'], grain: 'masa', gk: .95, line: '#2a1c0e', star: '#1d1209', coord: 'rgba(60,38,16,.78)', edge: ['#b98444', '#8a5d2b'], mini: ['#e1b469', '#2a1c0e'], hl: .16 },
-  shinkaya: { base: ['#f4dcaa', '#ecd096', '#e2c283'], grain: 'masa', gk: .6, line: '#3a2a16', star: '#2a1d0e', coord: 'rgba(70,50,24,.75)', edge: ['#cfa76a', '#a07a44'], mini: ['#efd49c', '#3a2a16'], hl: .18 },
-  katsura:  { base: ['#d89f62', '#cb8f52', '#bd7f45'], grain: 'ita', gk: .5, line: '#2b170a', star: '#1f1006', coord: 'rgba(62,32,12,.78)', edge: ['#a86a33', '#7b4a20'], mini: ['#cf9459', '#2b170a'], hl: .14 },
+  kaya:     { base: ['#e9c27a', '#ddb062', '#d2a053'], grain: 'masa', rings: 62, late: '#b8803c', gk: .9, line: '#2a1c0e', star: '#1d1209', coord: 'rgba(60,38,16,.78)', edge: ['#b98444', '#8a5d2b'], mini: ['#e1b469', '#2a1c0e'], hl: .16 },
+  shinkaya: { base: ['#f4dcaa', '#ecd096', '#e2c283'], grain: 'masa', rings: 74, late: '#d0a463', gk: .6, line: '#3a2a16', star: '#2a1d0e', coord: 'rgba(70,50,24,.75)', edge: ['#cfa76a', '#a07a44'], mini: ['#efd49c', '#3a2a16'], hl: .18 },
+  katsura:  { base: ['#d89f62', '#cb8f52', '#bd7f45'], grain: 'ita', rings: 18, late: '#a2622c', gk: .75, line: '#2b170a', star: '#1f1006', coord: 'rgba(62,32,12,.78)', edge: ['#a86a33', '#7b4a20'], mini: ['#cf9459', '#2b170a'], hl: .14 },
   urushi:   { base: ['#2b1210', '#160807', '#0a0404'], grain: 'gloss', gk: 0, line: '#c9a24a', star: '#e0bd62', coord: 'rgba(214,180,100,.8)', edge: ['#3a1d18', '#1a0c0a'], mini: ['#1d0f0d', '#c9a24a'], hl: .22 },
   bamboo:   { base: ['#dcbc72', '#d1ad62', '#c7a057'], grain: 'bamboo', gk: .6, line: '#2c2410', star: '#211a0a', coord: 'rgba(56,44,18,.78)', edge: ['#a98a42', '#7c6430'], mini: ['#d4b366', '#2c2410'], hl: .12 },
   washi:    { base: ['#f3ecdc', '#ece3cf', '#e3d8c0'], grain: 'washi', gk: .5, line: '#1b1b1b', star: '#111', coord: 'rgba(40,36,30,.7)', edge: ['#b8ab90', '#8d816a'], mini: ['#efe7d5', '#1b1b1b'], hl: .1, ink: true },
@@ -40,7 +40,8 @@ function vnoise(px, py, seed) {
 }
 function fbm(px, py, oct, seed) {
   const ns = []; for (let o = 0; o < oct; o++) ns.push(vnoise(px << o, py << o, seed + o * 97));
-  return (u, v) => { let s = 0, a = 1, t = 0; for (const n of ns) { s += n(u, v) * a; t += a; a *= 0.5; } return s / t; };
+  const m = ns.length, tot = 2 - Math.pow(0.5, m - 1);
+  return (u, v) => { let s = 0, a = 1; for (let o = 0; o < m; o++) { s += ns[o](u, v) * a; a *= 0.5; } return s / tot; };
 }
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const mix = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
@@ -60,6 +61,13 @@ function boardTex(id, px) {
   const f1 = fbm(3, 24, 4, seed), f2 = vnoise(6, 200, seed + 3), f3 = fbm(4, 4, 3, seed + 9), fine = vnoise(48, 48, seed + 5);
   const fw = fbm(3, 2, 3, seed + 21), fw2 = vnoise(9, 5, seed + 23), fb = fbm(12, 2, 2, seed + 29);
   const hash1 = i => { let h = Math.imul(i + seed, 2654435761) >>> 0; h ^= h >>> 13; return (h % 1000) / 1000; };
+  // smooth fields are sampled once on a coarse grid (fast), then read back with bilinear interpolation
+  const baked = (fn, G) => { const T = new Float32Array((G + 1) * (G + 1)); for (let j = 0; j <= G; j++) for (let i = 0; i <= G; i++) T[j * (G + 1) + i] = fn(i / G, j / G);
+    return (u, v) => { const x = Math.min(G, Math.max(0, u * G)), y = Math.min(G, Math.max(0, v * G)), i = Math.min(G - 1, x | 0), j = Math.min(G - 1, y | 0), fx = x - i, fy = y - j, o = j * (G + 1) + i;
+      const a = T[o] + (T[o + 1] - T[o]) * fx, b = T[o + G + 1] + (T[o + G + 2] - T[o + G + 1]) * fx; return a + (b - a) * fy; }; };
+  const sp = baked(fbm(5, 1, 4, seed + 41), 256), wan = baked(fbm(2, 1.5, 4, seed + 43), 192), wan2 = baked(vnoise(14, 6, seed + 47), 128);
+  const pores = vnoise(N >> 1, 26, seed + 53), stk = baked(fbm(4, 1, 3, seed + 59), 128), sheen = baked(fbm(2, 9, 3, seed + 61), 192);
+  const lateC = hex(B.late || B.base[2]).map((x, i) => x * 0.8), hiC = hex(B.base[0]).map(x => Math.min(255, x * 1.04));
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     const u = x / N, v = y / N;
     // soft overall light: brighter towards the upper left
@@ -67,17 +75,25 @@ function boardTex(id, px) {
     let c = mix(c2, c1, light);
     c = mix(c, c0, Math.max(0, light - 0.6) * 1.2);
     let k = 0;
-    if (B.grain === 'masa') {          // 柾目: straight, fine vertical grain with gentle drift and per-line tone
-      const drift = (fw(u, v) - .5) * 1.6 + (fw2(u, v) - .5) * 0.5;
-      const w = u * 64 + drift, li = Math.floor(w), fr = w - li;
-      const lineTone = 0.5 + 0.5 * Math.sin(li * 12.9898) * 0.5 + (hash1(li) - .5) * .6;
-      const ln = fr < 0.16 ? Math.pow(1 - fr / 0.16, 1.6) : 0;
-      const band = (fb(u, v) - .5);
-      k = -ln * (18 + lineTone * 26) * B.gk + band * 22 * B.gk + (fine(u, v) - .5) * 6;
-    } else if (B.grain === 'ita') {    // 板目: arcs of growth rings
-      const cxu = u - 0.5, w = Math.sqrt(cxu * cxu * 9 + (v + 0.8) * (v + 0.8)) * 22 + f1(u, v) * 2.4, ring = Math.abs(w - Math.round(w));
-      const ln = ring < 0.12 ? (1 - ring / 0.12) : 0;
-      k = -ln * 36 * B.gk - (f3(u, v) - .5) * 30 * B.gk;
+    if (B.grain === 'masa' || B.grain === 'ita') {
+      // growth rings: R = ring coordinate (masa 柾目: straight lines across u with uneven spacing and a slow wander;
+      // ita 板目: nested arches around a heart below the board). Each ring = soft earlywood + a crisp dark latewood edge.
+      let R;
+      if (B.grain === 'masa') R = u * B.rings + (sp(u, .5) - .5) * B.rings * 0.18 + (wan(u, v) - .5) * 0.9 + (wan2(u, v) - .5) * 0.18;
+      else { const du = (u - 0.47) * 1.15 + (wan(u, v) - .5) * 0.07; R = Math.sqrt(du * du * 10 + Math.pow(v + 0.55 + (sp(u, .5) - .5) * 0.25, 2)) * B.rings + (wan2(u, v) - .5) * 0.2; }
+      const ri = Math.floor(R), fr = R - ri, h = hash1(ri), h2 = hash1(ri + 7777);
+      const lw = 0.1 + h * 0.22;                       // latewood width varies ring to ring
+      const late = fr > 1 - lw ? Math.pow((fr - (1 - lw)) / lw, 0.7) : 0;
+      const edge = fr < 0.035 ? 1 - fr / 0.035 : 0;     // the sharp boundary where the next spring wood starts
+      const early = Math.pow(fr, 2.2) * 0.35;           // spring wood darkens slowly towards the latewood
+      let t = Math.min(1, (early + late * (0.55 + h2 * 0.45) + edge * 0.3) * B.gk);
+      // pores / fibre flecks along the grain, and broad tone streaks (heart / sap wood)
+      const pore = pores(u, v); if (pore > 0.86) t = Math.min(1, t + (pore - 0.86) * 2.2 * B.gk);
+      const streak = (stk(u, v) - .5) * 0.5;
+      c = mix(c, lateC, t);
+      c = mix(c, streak > 0 ? hiC : lateC, Math.abs(streak) * 0.35);
+      // chatoyance: soft bands of sheen across the grain
+      k = (sheen(u, v) - .5) * 14 + (fine(u, v) - .5) * 4;
     } else if (B.grain === 'bamboo') { // laminated bamboo strips with nodes
       const strip = Math.floor(u * 14), sv = (strip * 7919 % 13) / 13;
       k = (sv - .5) * 22 + (f2(u, v) - .5) * 18;

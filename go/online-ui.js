@@ -722,7 +722,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // rated: the record with the newest game, its history united by game id; settings / name: newest wins.
 const GoSync = (() => {
   const META = 'go-sync-meta';
-  const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'coord', 'num', 'atari', 'hint', 'terr', 'level', 'level2', 'color', 'size', 'rule', 'ha', 'komi', 'tap', 'bd', 'st', 'lang'];
+  const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'coord', 'num', 'atari', 'hint', 'terr', 'coordAll', 'level', 'level2', 'color', 'size', 'rule', 'ha', 'komi', 'tap', 'bd', 'st', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

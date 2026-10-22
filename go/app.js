@@ -38,7 +38,7 @@ function mvAt(i) { return mvName(moves[i]); }
 
 // ====================================================================== state
 const STORE = 'aicoding-go';
-const settings = { mode: 'ai', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, coord: true, num: false, atari: false, lang: '', bd: 'kaya', st: 'classic', size: 19, rule: 'jp', ha: 0, komi: 'auto', tap: 'auto', terr: false };
+const settings = { mode: 'ai', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, coord: true, coordAll: false, num: false, atari: false, lang: '', bd: 'kaya', st: 'classic', size: 19, rule: 'jp', ha: 0, komi: 'auto', tap: 'auto', terr: false };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -178,32 +178,34 @@ function designApply() {
   const B = GoTheme.BOARDS[settings.bd], st = goban.style;
   st.setProperty('--bd-line', B.line); st.setProperty('--bd-star', B.star); st.setProperty('--bd-coord', B.coord);
   st.setProperty('--bd-base', B.base[1]); st.setProperty('--bd-edge1', B.edge[0]); st.setProperty('--bd-edge2', B.edge[1]);
-  const px = COARSE ? 640 : 900;
+  const px = COARSE ? 900 : 1400;
   goban.style.backgroundImage = 'url(' + GoTheme.boardTex(settings.bd, px) + ')';
   drawnKey = ''; stoneEls.forEach(el => el.remove()); stoneEls.clear(); shownKey = '';
 }
-function padOf() { return settings.coord ? 1.05 : 0.62; }
+// board margin: coordinates on the top and left edges (the usual way in Japanese books and software), or on all four sides
+function padOf() { return settings.coord ? 1.05 : 0.62; }                       // top / left
+function padFar() { return settings.coord && settings.coordAll ? 1.05 : 0.62; }   // bottom / right
 // viewBox of the shown part of the board
 function vbox() {
-  const n = N(), p = padOf();
-  if (!view) return [-p, -p, n - 1 + 2 * p, n - 1 + 2 * p];
+  const n = N(), p = padOf(), q = padFar();
+  if (!view) return [-p, -p, n - 1 + p + q, n - 1 + p + q];
   let [x0, y0, x1, y1] = view; const w = x1 - x0, h = y1 - y0, s = Math.max(w, h);
   // square box (the frame is square): grow the short side, keep inside the board
   let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   x0 = cx - s / 2; x1 = cx + s / 2; y0 = cy - s / 2; y1 = cy + s / 2;
   const sh = (a, b, lo, hi) => { if (a < lo) { b += lo - a; a = lo; } if (b > hi) { a -= b - hi; b = hi; } return [a, b]; };
   [x0, x1] = sh(x0, x1, 0, n - 1); [y0, y1] = sh(y0, y1, 0, n - 1);
-  const pl = x0 <= 0 ? p : 0.55, pt = y0 <= 0 ? p : 0.55, pr = x1 >= n - 1 ? p : 0.55, pb = y1 >= n - 1 ? p : 0.55;
+  const pl = x0 <= 0 ? p : 0.55, pt = y0 <= 0 ? p : 0.55, pr = x1 >= n - 1 ? p : 0.55, pb = y1 >= n - 1 ? p : 0.55;   // zoomed: labels on whichever board edges are shown
   return [x0 - pl, y0 - pt, x1 - x0 + pl + pr, y1 - y0 + pt + pb];
 }
 function drawGrid() {
-  const n = N(), vb = vbox(), key = [n, vb.join(','), settings.coord, settings.bd].join('|');
+  const n = N(), vb = vbox(), key = [n, vb.join(','), settings.coord, settings.coordAll, settings.bd].join('|');
   if (key === drawnKey) return;
   drawnKey = key;
   svg.setAttribute('viewBox', vb.map(v => v.toFixed(3)).join(' '));
   goban.classList.toggle('crop', !!view);
   // background texture covers the frame; when zoomed show the texture enlarged so the grain matches the zoom
-  const full = n - 1 + 2 * padOf(), sc = view ? full / vb[2] : 1;
+  const full = n - 1 + padOf() + padFar(), sc = view ? Math.min(1.3, full / vb[2]) : 1;   // zoomed: the grain grows only a little (huge planks look fake)
   goban.style.backgroundSize = (sc * 100) + '% ' + (sc * 100) + '%';
   goban.style.backgroundPosition = view ? `${-((vb[0] + padOf()) / full) * sc * 100 / (sc - 1 || 1)}% ${-((vb[1] + padOf()) / full) * sc * 100 / (sc - 1 || 1)}%` : '0 0';
   const lw = n <= 9 ? 0.03 : n <= 13 ? 0.035 : 0.04;
@@ -213,8 +215,9 @@ function drawGrid() {
   for (const i of R.starPoints(n)) { const [x, y] = xyOf(i); s += `<circle class="gstar" cx="${x}" cy="${y}" r="${n <= 9 ? 0.09 : 0.11}"/>`; }
   if (settings.coord) {
     const fs = 0.38, o = 0.72;
-    for (let x = 0; x < n; x++) { const L = R.COLS[x]; s += `<text class="gco" x="${x}" y="${-o}" font-size="${fs}">${L}</text><text class="gco" x="${x}" y="${n - 1 + o}" font-size="${fs}">${L}</text>`; }
-    for (let y = 0; y < n; y++) { const L = n - y; s += `<text class="gco" x="${-o}" y="${y}" font-size="${fs}">${L}</text><text class="gco" x="${n - 1 + o}" y="${y}" font-size="${fs}">${L}</text>`; }
+    const all = settings.coordAll || !!view;
+    for (let x = 0; x < n; x++) { const L = R.COLS[x]; s += `<text class="gco" x="${x}" y="${-o}" font-size="${fs}">${L}</text>` + (all ? `<text class="gco" x="${x}" y="${n - 1 + o}" font-size="${fs}">${L}</text>` : ''); }
+    for (let y = 0; y < n; y++) { const L = n - y; s += `<text class="gco" x="${-o}" y="${y}" font-size="${fs}">${L}</text>` + (all ? `<text class="gco" x="${n - 1 + o}" y="${y}" font-size="${fs}">${L}</text>` : ''); }
   }
   s += '</g><g id="gTerr"></g><g id="gStones"></g><g id="gMarks"></g><g id="gHints"></g><g id="gGhost"></g>';
   svg.innerHTML = s;
@@ -936,7 +939,7 @@ function segSync() {
 }
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, size: settings.size, rule: settings.rule, ha: settings.ha, komi: settings.komi, tap: settings.tap };
-  $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optCoord').checked = settings.coord; $('#optNum').checked = settings.num; $('#optAtari').checked = settings.atari;
+  $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optCoord').checked = settings.coord; $('#optCoordAll').checked = settings.coordAll; $('#optCoordAll').disabled = !settings.coord; $('#optNum').checked = settings.num; $('#optAtari').checked = settings.atari;
   segSync(); designPickers(); showOverlay('#newOverlay');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
@@ -955,7 +958,7 @@ $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
-  Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, coord: $('#optCoord').checked, num: $('#optNum').checked, atari: $('#optAtari').checked, tap: draft.tap });
+  Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, coord: $('#optCoord').checked, coordAll: $('#optCoordAll').checked, num: $('#optNum').checked, atari: $('#optAtari').checked, tap: draft.tap });
   drawnKey = '';
   if (draft.mode === 'rated') { rtStart(); return; }
   exitSpecial();
@@ -1289,3 +1292,4 @@ $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) 
 $('#pasteFile').onclick = () => $('#pasteInput').click();
 $('#pasteInput').onchange = e => { const f = e.target.files && e.target.files[0]; if (!f) return; f.text().then(txt => { $('#pasteText').value = txt; loadText(txt); }); e.target.value = ''; };
 $('#pasteText').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('#pasteOk').click(); } else if (e.key === 'Escape') hideOverlay('#pasteOverlay'); });
+$('#optCoord').addEventListener('change', e => { $('#optCoordAll').disabled = !e.target.checked; });
