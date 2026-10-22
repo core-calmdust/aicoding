@@ -276,6 +276,7 @@
     [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
+    g.userData.viewY = g.userData.top * .72 * 1.05;   // the chabudai camera looks at the (scaled) playing surface of the legged board, like the goban
     return g;
   };
 
