@@ -1688,7 +1688,7 @@ let invaderSpawnCountForStage = 0;
 let invadersSpawnedThisStage = 0;
 let hasUFOSpawnedThisStage = false;
 let hasLooperSpawnedThisStage = false;
-let extraEnemy = null; // そのステージで出す新しい雑魚 { type, frame }（毎ステージではない）
+let extraEnemy = []; // そのステージで出す新しい雑魚 [{ type, frame }]（0〜3体）
 let looperSpawnFrame = -1;
 let highScoreDisplayToggle = 0;
 let isEffectsEnabled = true;
@@ -1808,7 +1808,7 @@ function init() {
     isShowingModeInGame = true; // ★ 追加: 開始時は必ずモード名を表示する
     boss = null;
     bossSpawnFrame = -1;
-    bossCount = 0; lastBossIdx = -1; extraEnemy = null;
+    bossCount = 0; lastBossIdx = -1; extraEnemy = [];
     tutorial = null;
 
     // ▼▼▼ 追加された初期化処理 ▼▼▼
@@ -1837,9 +1837,11 @@ function setupNewStage() {
     invaderSpawnCountForStage = Math.floor(stage / 2);
     hasUFOSpawnedThisStage = false;
     hasLooperSpawnedThisStage = false;
-    // 新しい雑魚: 4面からウィーバー、5面からセントリー、7面からランス。ボス面以外で約55%の確率で1体
-    { const pool = []; if (stage >= 4) pool.push('weaver'); if (stage >= 5) pool.push('sentry'); if (stage >= 7) pool.push('lance');
-      extraEnemy = pool.length && stage % 3 !== 0 && Math.random() < 0.55 ? { type: pool[Math.floor(Math.random() * pool.length)], frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.3 + Math.random() * 0.4)) } : null; }
+    // 新しい雑魚: 4面からウィーバー・ランス、5面からセントリー。ボス面以外で0〜3体（種類も時間もばらばら）
+    { const pool = []; if (stage >= 4) pool.push('weaver', 'lance'); if (stage >= 5) pool.push('sentry');
+      extraEnemy = [];
+      if (pool.length && stage % 3 !== 0) { const n = Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) extraEnemy.push({ type: pool[Math.floor(Math.random() * pool.length)], frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.15 + Math.random() * 0.65)) }); }
+      extraEnemy.sort((a, b) => a.frame - b.frame); }
     
     // Set Looper spawn frame for this stage
     if (stage >= 4 && stage % 2 === 0) {
@@ -2403,8 +2405,8 @@ function updatePlayingState(dt_sec) {
             });
         }
         
-        if (extraEnemy && frameCount >= extraEnemy.frame && !boss && bossSpawnFrame === -1) {
-            const ty = extraEnemy.type, W = config.canvasWidth; extraEnemy = null;
+        if (extraEnemy.length && frameCount >= extraEnemy[0].frame && !boss && bossSpawnFrame === -1) {
+            const ty = extraEnemy.shift().type, W = config.canvasWidth;
             if (ty === 'weaver') { const d = Math.random() < 0.5 ? 1 : -1; monsters.push({ type: ty, x: d > 0 ? -40 : W + 40, y: 150, baseY: 120 + Math.random() * 120, vx: d * 170, vy: 0, t: 0, st: 0.5, k: 0, width: 60, height: 40, scoreK: 1.5 }); }
             else if (ty === 'sentry') monsters.push({ type: ty, x: W * (0.25 + Math.random() * 0.5), y: -30 - TOP_EXT, ty: 170 + Math.random() * 60, t: 0, st: 0, spin: Math.random() * 6, width: 56, height: 56, scoreK: 2.5 });
             else monsters.push({ type: ty, x: W * (0.2 + Math.random() * 0.6), y: -30 - TOP_EXT, t: 0, pt: 0, cyc: 0, ang: Math.PI / 2, aim: false, width: 40, height: 56, scoreK: 2 });
