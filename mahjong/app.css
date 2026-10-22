@@ -555,3 +555,5 @@ html.lp .plines{display:none}
 html.lp .ch-title{font-size:18px}
 html:not(.lp) .ch-main{grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr) minmax(280px,1fr)}
 @media (max-width: 760px){ html:not(.lp) .ch-main{grid-template-columns:1fr;overflow:auto} html:not(.lp) .ch-art{height:50vh} }
+
+.ab.rii.sealed{background:linear-gradient(180deg,#6d6488,#433b5c);color:#d9d2ee;font-size:15px;opacity:.9;border:1px dashed #c6a0ff}

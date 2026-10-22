@@ -236,8 +236,10 @@ class MJGame {
         const ag = this.agariFor(s, T(drawn), true, { rinshan });
         opts.canTsumo = !!ag; opts.tsumoRes = ag;
         const sealed = this.P.some((q, i) => i !== s && q.fx.seal);   // skill "seal": no riichi for the others this hand
-        if (!p.riichi && p.melds.length === 0 && this.scores[s] >= 1000 && this.liveLeft() >= 4 && !sealed) {
-          opts.riichi = this.riichiDiscards(p);
+        if (!p.riichi && p.melds.length === 0 && this.scores[s] >= 1000 && this.liveLeft() >= 4) {
+          const rd = this.riichiDiscards(p);
+          if (sealed) { if (rd.length) opts.riichiSealed = true; }
+          else opts.riichi = rd;
         }
         opts.ankans = []; opts.kakans = [];
         if (this.liveLeft() > 0 && this.kans < 4) {

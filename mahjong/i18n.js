@@ -19,7 +19,7 @@ const S = {
     you: 'あなた', yourTurn: 'あなたの番', noArt: 'イラスト準備中', collection: 'コレクション', owned: '所持', close: '閉じる',
     rotate: '横向きにすると遊びやすくなります', landTitle: 'このゲームは横画面で遊びます', landSub: 'スマホを横向きにしてください。\n横にすると対局が始まります。', landNote: '対局はスマホを横向きにして遊びます', loading: '読み込み中…', guide: 'タップで選択、もう一度タップで捨てる',
     timing_deal: '配牌時', timing_turn: '手番で', costLine: '1回目 無料 ・ 2回目 {n}点 ・ 以降は倍', setPartner: 'パートナーにする', isPartner: 'パートナー', notOwned: 'ガチャで手に入ります',
-    lineH: '台詞', dealQ: 'この局で「{name}」を使いますか？', use: '使う', notUse: '使わない', dealOnly: '配牌時に選択', tapChange: 'タップでキャラ変更', back: '戻る',
+    lineH: '台詞', dealQ: 'この局で「{name}」を使いますか？', use: '使う', notUse: '使わない', dealOnly: '配牌時に選択', tapChange: 'タップでキャラ変更', back: '戻る', riichiSealed: 'リーチ封印中', riichiSealedWhy: '他家の「封じ」で、この局はリーチできません',
   },
   en: {
     title: 'JANKA', sub: 'Mahjong of the Princesses', series: 'CALMDUST COLLECTION',
@@ -38,7 +38,7 @@ const S = {
     you: 'You', yourTurn: 'Your turn', noArt: 'Art coming soon', collection: 'Collection', owned: 'Owned', close: 'Close',
     rotate: 'Landscape is easier to play', landTitle: 'This game is played in landscape', landSub: 'Turn your phone sideways.\nThe game starts when you do.', landNote: 'Games are played with the phone held sideways', loading: 'Loading…', guide: 'Tap to pick, tap again to discard',
     timing_deal: 'At the deal', timing_turn: 'On your turn', costLine: '1st use free · 2nd {n} pts · doubles after', setPartner: 'Make partner', isPartner: 'Partner', notOwned: 'Get her from the gacha',
-    lineH: 'Lines', dealQ: 'Use “{name}” this hand?', use: 'Use', notUse: 'Skip', dealOnly: 'Chosen at the deal', tapChange: 'Tap to change', back: 'Back',
+    lineH: 'Lines', dealQ: 'Use “{name}” this hand?', use: 'Use', notUse: 'Skip', dealOnly: 'Chosen at the deal', tapChange: 'Tap to change', back: 'Back', riichiSealed: 'Riichi sealed', riichiSealedWhy: 'An opponent used Seal: no riichi this hand',
   },
 };
 const YAKU = {
