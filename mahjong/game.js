@@ -43,15 +43,23 @@ class MJGame {
   roundWind() { return WIND[this.round]; }
   isDealer(s) { return s === this.kyoku; }
   liveLeft() { return this.liveEnd - this.livePos; }
-  skillCost(s) { const n = this.skillUses[s]; return n === 0 ? 0 : 1000 * Math.pow(2, n - 1); }
-  canSkill(s) {
+  // first use in a game is free; later uses cost the skill's base, doubling each time (paid into the pot)
+  skillCost(s) {
+    const n = this.skillUses[s];
+    if (n === 0) return 0;
+    const sk = this.chars[s] && SK.get(this.chars[s].skill);
+    const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
+    return base * Math.pow(2, n - 1);
+  }
+  skillOf(s) { return this.chars[s] && this.chars[s].skill ? SK.get(this.chars[s].skill) : null; }
+  canSkill(s, timing) {
     const p = this.P[s];
-    if (!this.rules.skills || !this.chars[s] || !this.chars[s].skill) return false;
-    if (p.skillUsed) return false;
-    const sk = SK.get(this.chars[s].skill);
-    if (!sk) return false;
+    if (!this.rules.skills) return false;
+    const sk = this.skillOf(s);
+    if (!sk || p.skillUsed) return false;
+    if ((sk.timing || 'turn') !== (timing || 'turn')) return false;
     if (sk.can && !sk.can(this, s)) return false;
-    return this.scores[s] >= this.skillCost(s) + (this.skillCost(s) ? 0 : 0);
+    return this.scores[s] >= this.skillCost(s);
   }
   doraInds() { return this.doraIdx.map(i => T(this.dead[i])); }
   uraInds() { return this.doraIdx.map(i => T(this.dead[i + 1])); }
@@ -131,6 +139,16 @@ class MJGame {
     await this.emit('hand-start', { round: this.round, kyoku: this.kyoku, honba: this.honba, kyotaku: this.kyotaku, scores: this.scores.slice() });
 
     let cur = this.kyoku;
+    // deal-time skills: each player with one decides now, in turn order from the dealer
+    if (this.rules.skills) {
+      for (let k = 0; k < 4; k++) {
+        const s = (this.kyoku + k) % 4;
+        if (!this.canSkill(s, 'deal')) continue;
+        const ag = this.agents[s];
+        const yes = ag.dealSkill ? await ag.dealSkill(this, s, { cost: this.skillCost(s), skill: this.skillOf(s).id }) : false;
+        if (yes && this.canSkill(s, 'deal')) await this.useSkill(s);
+      }
+    }
     let drawn = this.draw();
     this.P[cur].hand.push(drawn);
     let rinshan = false;
@@ -506,7 +524,7 @@ class MJGame {
       if (!res) continue;
       const dealer = this.isDealer(w);
       const pays = MJ.payments(res.base, dealer, tsumo);
-      const potMul = p.fx.pot ? 3 : 1;
+      const potMul = p.fx.pot ? 2 : 1;
       const hb = first ? this.honba * potMul : 0; first = false;
       const moves = [];
       if (tsumo) {
@@ -522,15 +540,15 @@ class MJGame {
         const ura = (res.list.find(x => x[0] === 'ura') || [0, 0])[1];
         const ip = res.list.some(x => x[0] === 'ippatsu') ? 1 : 0;
         const n = (res.aka || 0) + ura + ip;
-        if (n) for (let q = 0; q < 4; q++) if (q !== w) moves.push([q, this.pay(q, w, 500 * n), 'shugi']);
+        if (n) for (let q = 0; q < 4; q++) if (q !== w) moves.push([q, this.pay(q, w, 800 * n), 'shugi']);
         res.shugi = n;
       }
       if (!sticksTaken) {
         sticksTaken = true;
         const k = this.kyotaku;
         this.scores[w] += k; res.kyotaku = k; this.kyotaku = 0;
-        if (p.fx.pot && k) {           // jackpot: the other three add twice the pot between them
-          const each = Math.ceil(k * 2 / 3 / 100) * 100;
+        if (p.fx.pot && k) {           // jackpot: the other three add the pot again between them
+          const each = Math.ceil(k / 3 / 100) * 100;
           for (let q = 0; q < 4; q++) if (q !== w) { this.scores[q] -= each; this.scores[w] += each; }
           res.kyotaku += each * 3;
         }

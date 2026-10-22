@@ -7,6 +7,7 @@ const L = o => I18N.L(o);
 const T = id => id >> 2;
 const FAST = /[?&]fast/.test(location.search) ? 0.12 : 1;
 const sleep = ms => new Promise(r => setTimeout(r, ms * FAST));
+const ASSETS = window.JANKA_ASSETS || '../images/mahjong/';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------------------------------------------------------------- save
@@ -86,7 +87,7 @@ const SND = (() => {
 // ---------------------------------------------------------------- character art
 const ART = new Map();
 function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face'
-  if (c.art) return `../images/mahjong/chara/${c.id}${kind === 'full' ? '' : '-' + kind}.webp`;
+  if (c.art) return `${ASSETS}chara/${c.id}${kind === 'full' ? '' : '-' + kind}.webp`;
   const k = c.id + kind;
   if (ART.has(k)) return ART.get(k);
   const W = kind === 'full' ? 540 : kind === 'bust' ? 400 : 160, H = kind === 'full' ? 960 : W;
@@ -171,7 +172,7 @@ function renderHome() {
   const c = MJChars.get(DB.sel);
   const sk = MJSkills.get(c.skill);
   $('#partner').innerHTML = `
-    <div class="pimg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""></div>
+    <button class="pimg" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><span class="ptap">${esc(t('tapChange'))}</span></button>
     <div class="pinfo">
       <div class="prar r-${c.rarity}">${c.rarity}</div>
       <div class="pname">${esc(L(c.name))}<small>${esc(L(c.title))}</small></div>
@@ -185,11 +186,8 @@ function renderHome() {
   seg($('#optLen'), [['east', t('east')], ['south', t('south')]], DB.set.len, v => DB.set.len = v);
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
-  // roster
-  $('#roster').innerHTML = MJChars.list.filter(x => DB.owned[x.id]).map(x =>
-    `<button class="rc ${x.id === DB.sel ? 'on' : ''}" data-id="${x.id}" style="--c:${x.color}"><img src="${charImg(x, 'face')}" alt=""><span>${esc(L(x.name))}</span><em class="r-${x.rarity}">${x.rarity}</em></button>`).join('');
 }
-$('#roster').addEventListener('click', e => { const b = e.target.closest('.rc'); if (!b) return; DB.sel = b.dataset.id; save(); SND.pick(); renderHome(); });
+$('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
 $('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); });
 $('#btnSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); SND.unlock(); });
 $('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
@@ -206,7 +204,8 @@ addEventListener('resize', fitRoot);
 addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
 $('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(); });
 $('#btnGacha').addEventListener('click', openGacha);
-$('#btnColl').addEventListener('click', openCollection);
+$('#btnColl').addEventListener('click', () => openChara(DB.sel));
+$('#chBack').addEventListener('click', () => { SND.pick(); closeChara(); });
 
 // ---------------------------------------------------------------- gacha
 const COST1 = 300, COST10 = 2700;
@@ -271,25 +270,46 @@ async function showPulls(got) {
       ${g.isNew ? `<i class="gnew">${t('newChar')}</i>` : `<i class="gdup">${t('dupe', { n: g.refund })}</i>`}
     </div>`).join('')}</div>`;
 }
-function openCollection() {
-  const b = modal(`
-    <div class="coll">
-      <h2>${t('collection')} <small>${Object.keys(DB.owned).length} / ${MJChars.list.length}</small></h2>
-      <div class="cgrid">${MJChars.list.map(c => {
-        const own = !!DB.owned[c.id]; const sk = MJSkills.get(c.skill);
-        return `<div class="cc ${own ? '' : 'lock'} r-${c.rarity}" style="--c:${c.color};--c2:${c.color2}">
-          <div class="cci"><img src="${charImg(c, 'bust')}" alt=""></div>
-          <div class="ccb"><em>${c.rarity}</em><b>${own ? esc(L(c.name)) : '？？？'}</b><span style="--sc:${sk.color}">${icon(sk.icon)}${esc(L(sk.name))}</span></div>
-          ${own ? `<button class="btn sm ${c.id === DB.sel ? 'on' : ''}" data-id="${c.id}">${c.id === DB.sel ? t('selected') : t('select')}</button>` : ''}
-        </div>`; }).join('')}</div>
-      <button class="x" data-a="close">×</button>
-    </div>`, 'wide');
-  b.addEventListener('click', e => {
-    if (e.target.closest('[data-a=close]')) { closeModal(); renderHome(); return; }
-    const s = e.target.closest('[data-id]'); if (!s) return;
-    DB.sel = s.dataset.id; save(); closeModal(); renderHome();
-  });
+// ---------------------------------------------------------------- character screen (view + choose partner)
+let chView = null;
+const RORD = { SSR: 0, SR: 1, R: 2, N: 3 };
+function openChara(id) {
+  chView = id || DB.sel;
+  closeModal();
+  $('#home').hidden = true; $('#chara').hidden = false;
+  $('#chBack').innerHTML = IC.exit;
+  renderChara();
 }
+function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); }
+function renderChara() {
+  applyText();
+  $('#coinN2').textContent = DB.coins.toLocaleString();
+  $('#chara .coin').innerHTML = IC.coin;
+  const list = MJChars.list.slice().sort((a, b) => (!DB.owned[a.id]) - (!DB.owned[b.id]) || RORD[a.rarity] - RORD[b.rarity]);
+  $('#chCount').textContent = `${t('owned')} ${Object.keys(DB.owned).filter(k => MJChars.get(k)).length} / ${MJChars.list.length}`;
+  $('#chList').innerHTML = list.map(c => {
+    const own = !!DB.owned[c.id];
+    return `<button class="chi ${own ? '' : 'lock'} ${c.id === chView ? 'on' : ''}" data-id="${c.id}" style="--c:${c.color}">
+      <img src="${charImg(c, 'face')}" alt=""><em class="r-${c.rarity}">${c.rarity}</em>${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
+  }).join('');
+  const c = MJChars.get(chView), own = !!DB.owned[c.id], sk = MJSkills.get(c.skill);
+  const art = $('#chArt');
+  art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
+  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt="">`;
+  const lines = ['riichi', 'tsumo', 'ron', 'skill'].map(k => c.lines && c.lines[k] ? `<li>「${esc(L(c.lines[k]))}」</li>` : '').join('');
+  $('#chInfo').innerHTML = `
+    <div class="prar r-${c.rarity}">${c.rarity}</div>
+    <div class="pname">${own ? esc(L(c.name)) : '？？？'}<small>${esc(L(c.title))}</small></div>
+    <div class="pskill" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
+      <b>${esc(L(sk.name))} <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
+      <span>${esc(L(sk.desc))}</span>
+      <small class="cl">${esc(t('costLine', { n: (sk.cost || 1000).toLocaleString() }))}</small></div></div>
+    ${own ? `<p class="pprof">${esc(L(c.profile))}</p><ul class="plines">${lines}</ul>` : ''}
+    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go sm" id="chSet">${t('setPartner')}</button>`) : `<div class="chsel">${t('notOwned')}</div>`}`;
+  const b = $('#chSet');
+  if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
+}
+$('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
 
 // ================================================================ GAME
 let G = null;          // MJGame
@@ -298,6 +318,7 @@ let UIS = null;        // ui state for the game screen
 const ME = 0;
 
 class Human {
+  dealSkill(g, s, o) { return new Promise(res => askDealSkill(o, res)); }
   turn(g, s, o) { return new Promise(res => myTurn(o, res)); }
   react(g, s, o) { return new Promise(res => myCall(o, res)); }
 }
@@ -305,6 +326,7 @@ class SlowBot {
   constructor(lv) { this.b = new MJBot.Bot(lv); }
   async turn(g, s, o) { await sleep(320 + Math.random() * 380); return this.b.turn(g, s, o); }
   async react(g, s, o) { if (o.canRon) await sleep(250); return this.b.react(g, s, o); }
+  async dealSkill(g, s, o) { await sleep(150); return this.b.dealSkill(g, s, o); }
 }
 
 class AutoMe extends SlowBot {     // ?auto: the player's seat plays itself (testing)
@@ -338,6 +360,7 @@ $('#gExit').addEventListener('click', async () => {
 });
 function quitGame() {
   if (UIS) UIS.abort = true;
+  $('#dealAsk').hidden = true;
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
   closeModal(); $('#cutin').hidden = true;
@@ -465,7 +488,7 @@ function renderMe(badgeHtml) {
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
     ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''}" id="skBtn" style="--sc:${sk.color}" ${can ? '' : 'disabled'}>
-      <i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))}</b><small>${p && p.skillUsed ? t('used') : cost ? t('cost', { n: cost.toLocaleString() }) : t('free')} · ${esc(L(sk.short))}</small></span></button>` : ''}`;
+      <i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))}</b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short))}</small></span></button>` : ''}`;
   const b = $('#skBtn');
   if (b) b.onclick = async () => {
     if (!UIS.opts || !UIS.opts.canSkill || !UIS.resolve) return;
@@ -571,6 +594,25 @@ function myCall(o, res) {
   });
   btn(t('skip'), 'skip', () => finish({ act: 'pass' }));
   TB.highlightType(T(o.tile));
+}
+
+// ---------------------------------------------------------------- deal-time skill prompt
+function askDealSkill(o, res) {
+  const sk = MJSkills.get(o.skill);
+  const el = $('#dealAsk');
+  el.style.setProperty('--sc', sk.color);
+  el.innerHTML = `<i>${icon(sk.icon)}</i>
+    <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) }))}</b><span>${esc(L(sk.desc))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
+    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}</button><button class="ab call" data-a="yes">${t('use')}</button></div>`;
+  el.hidden = false;
+  renderHand();
+  el.onclick = async e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    const yes = b.dataset.a === 'yes';
+    el.hidden = true; el.onclick = null;
+    SND.pick();
+    res(yes);
+  };
 }
 
 // ---------------------------------------------------------------- intel (peek / mind read)

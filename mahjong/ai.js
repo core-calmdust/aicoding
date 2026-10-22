@@ -98,7 +98,11 @@ class Bot {
     if (o.kakans && o.kakans.length && lv >= 2) return { act: 'kakan', t: o.kakans[0] };
 
     const u = unseen(g, s);
-    const threats = [1, 2, 3].map(k => (s + k) % 4).map(q => ({ q, w: threatLevel(g, s, q) })).filter(x => x.w > 0);
+    const read = p.fx.read;          // skill "mind": exact tenpai / waits of the others
+    const threats = read
+      ? read.filter(r => r.shanten <= 0 && (g.P[r.seat].riichi || g.P[r.seat].melds.length >= 2 || r.shanten === 0)).map(r => ({ q: r.seat, w: 1, waits: r.waits }))
+      : [1, 2, 3].map(k => (s + k) % 4).map(q => ({ q, w: threatLevel(g, s, q) })).filter(x => x.w > 0);
+    const peek = p.fx.peek ? p.fx.peek.filter(id => !p.hand.includes(id)) : null;
     const forbid = o.forbid || [];
     const cand = [];
     const seen = new Set();
@@ -110,9 +114,14 @@ class Bot {
       const uk = s2 <= 6 ? ukeire(c, m, u, s2) : 0;
       c[t]++;
       let score = -s2 * 100 + uk - keepValue(g, s, t, c) * 2;
+      if (peek && peek.length) {     // skill "peek": among equal shapes, prefer the one the known next draws improve
+        let bonus = 0;
+        for (const pid of peek) { const pt = T(pid); if (c[pt] >= 4) continue; c[pt]++; if (shan(c, m) < s2) bonus += 12; c[pt]--; }
+        score += bonus;
+      }
       if (MJ.RED.has(id) && p.hand.some(x => T(x) === t && !MJ.RED.has(x))) score += 0; // discard plain copy instead (handled below)
       let dg = 0;
-      for (const th of threats) dg = Math.max(dg, danger(g, th.q, t) * th.w);
+      for (const th of threats) dg = Math.max(dg, (th.waits ? (th.waits.includes(t) ? 12 : 0) : danger(g, th.q, t)) * th.w);
       cand.push({ id, t, s2, uk, score, dg });
     }
     // prefer the plain copy over a red five
@@ -125,7 +134,7 @@ class Bot {
     if (threats.length && lv >= 1) {
       const bestS = Math.min(...cand.map(x => x.s2));
       const bestUk = Math.max(...cand.filter(x => x.s2 === bestS).map(x => x.uk));
-      const maxW = Math.max(...threats.map(t => t.w));
+      const maxW = Math.max(...threats.map(t => (t.waits ? 1 : t.w)));
       if (bestS >= 2) fold = true;
       else if (bestS === 1) fold = maxW >= 1 && (lv >= 2 ? bestUk < 30 || g.liveLeft() < 30 : bestUk < 12);
       else fold = maxW >= 1 && bestUk <= 2 && lv >= 3;
@@ -150,32 +159,58 @@ class Bot {
     return { act: 'discard', id: pick.id };
   }
 
+  // value of one use (points) for paid-use decisions; filled from the skill-value simulation
+  skillValue(id) { const V = (typeof MJSkills !== 'undefined' && MJSkills.value) || {}; return V[id] || 1000; }
+  paidOk(g, s) {
+    const cost = g.skillCost(s);
+    if (!cost) return true;
+    if (this.policy === 'always') return true;
+    if (this.policy === 'never') return false;
+    return this.skillValue(g.chars[s].skill) >= cost * 1.15 && g.scores[s] - cost >= 12000;
+  }
+
+  // deal-time skills (point multipliers): decide right after the deal from the starting hand
+  async dealSkill(g, s, o) {
+    if (this.policy === 'always') return true;
+    if (this.policy === 'never') return false;
+    if (!this.paidOk(g, s)) return false;
+    const p = g.P[s];
+    const c = MJ.countsIds(p.hand);
+    const sh = shan(c, 0);
+    let dora = 0;
+    for (const ind of g.doraInds()) dora += c[MJ.doraOf(ind)];
+    const aka = p.hand.filter(id => MJ.RED.has(id)).length;
+    const pot = g.kyotaku + g.honba * 300;
+    const T0 = this.thresholds || {};
+    switch (o.skill) {
+      case 'wareme': return sh <= (T0.wareme ?? 2) || (sh <= 3 && dora + aka >= 2);
+      case 'hanup': return sh <= (T0.hanup ?? 3);
+      case 'guard': return sh >= (T0.guard ?? 4);
+      case 'shugi': return aka >= 1 && sh <= (T0.shugi ?? 3);
+      case 'pot': return pot >= 1000 && sh <= (T0.pot ?? 3);
+    }
+    return false;
+  }
+
+  // turn-timed skills
   wantSkill(g, s, sh) {
     const p = g.P[s];
-    const cost = g.skillCost(s);
     const sk = g.chars[s].skill;
-    if (cost > 0) {
-      // paid uses only for big moments, and only for skills that move points
-      if (!['wareme', 'hanup', 'doraplus', 'shugi', 'pot', 'guard'].includes(sk)) return false;
-      if (cost > 4000 || g.scores[s] - cost < 15000) return false;
-      if (Math.random() > 0.25) return false;
-    }
-    const anyRiichi = g.P.some((q, i) => i !== s && q.riichi);
+    if (this.policy === 'never') return false;
+    if (!this.paidOk(g, s)) return false;
+    if (this.policy === 'always') return true;
     switch (sk) {
-      case 'wareme': return (p.riichi || sh === 0) && !anyRiichi;
-      case 'hanup': case 'doraplus': case 'shugi': return p.riichi || sh === 0;
-      case 'pot': return (sh === 0) && (g.kyotaku + g.honba * 300) >= 2000;
-      case 'guard': return anyRiichi && sh >= 1;
-      case 'lure': return sh >= 2 && g.liveLeft() > 40;
+      case 'doraplus': return p.riichi || sh === 0;
+      case 'lure': return sh >= 1 && g.liveLeft() > 30;
       case 'seal': return g.P.some((q, i) => i !== s && q.melds.length >= 1) && sh <= 2;
       case 'swap': {
         if (p.riichi || g.curDrawn == null) return false;
         const c = MJ.countsIds(p.hand), t = T(g.curDrawn);
         c[t]--; const before = shan(c, p.melds.length); c[t]++;
-        return before <= sh && sh >= 1 && Math.random() < 0.3;
+        return before <= sh && sh >= 1;
       }
-      case 'mind': return g.P.some((q, i) => i !== s && (q.riichi || q.melds.length >= 2));
-      case 'peek': return sh <= 2 && g.liveLeft() > 30 && Math.random() < 0.2;
+      case 'mind': return g.P.some((q, i) => i !== s && (q.riichi || q.melds.length >= 2)) && sh >= 1;
+      case 'peek': return sh >= 1 && sh <= 2 && g.liveLeft() > 24;
     }
     return false;
   }

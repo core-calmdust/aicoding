@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Cinzel:wght@600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=3">
+<link rel="stylesheet" href="app.css?v=5">
 </head>
 <body>
 <div id="root">
@@ -52,7 +52,22 @@
       </div>
     </div>
   </main>
-  <div class="roster" id="roster"></div>
+</section>
+
+<!-- ============ CHARACTERS ============ -->
+<section id="chara" class="screen" hidden>
+  <header class="top ch-top">
+    <button class="ib" id="chBack"></button>
+    <b class="ch-title" data-t="chars"></b>
+    <small class="ch-count" id="chCount"></small>
+    <span class="sp"></span>
+    <div class="coins"><i class="coin"></i><b id="coinN2">0</b></div>
+  </header>
+  <div class="ch-main">
+    <div class="ch-list" id="chList"></div>
+    <div class="ch-art" id="chArt"></div>
+    <div class="ch-info" id="chInfo"></div>
+  </div>
 </section>
 
 <!-- ============ GAME ============ -->
@@ -71,6 +86,7 @@
     <div class="me" id="mePanel"></div>
     <div class="acts" id="acts"></div>
     <div class="chiPick" id="chiPick" hidden></div>
+    <div class="dealAsk" id="dealAsk" hidden></div>
     <div class="hand" id="hand"></div>
     <div class="callout" id="callout"></div>
   </div>
@@ -82,14 +98,14 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="i18n.js?v=2"></script>
+<script src="i18n.js?v=3"></script>
 <script src="engine.js?v=1"></script>
-<script src="skills.js?v=1"></script>
-<script src="game.js?v=1"></script>
-<script src="ai.js?v=1"></script>
+<script src="skills.js?v=3"></script>
+<script src="game.js?v=3"></script>
+<script src="ai.js?v=3"></script>
 <script src="tiles.js?v=1"></script>
 <script src="chars.js?v=1"></script>
-<script src="table3d.js?v=2"></script>
-<script src="app.js?v=3"></script>
+<script src="table3d.js?v=3"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

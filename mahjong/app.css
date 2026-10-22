@@ -396,7 +396,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 #game .hand.active .tl.can:hover,#game .hand .tl.up{transform:translateY(calc(var(--th) * -.24))}
 #game .hand{bottom:max(6px,var(--sb));gap:calc(var(--th) * .3)}
 #game .hand .hrow{gap:1px}
-#game .hand .gap{width:calc(var(--th) * .22)}
+#game .hand .gap{width:calc(var(--th) * .55)}
 #game .acts{bottom:calc(var(--th) * 1.5 + 22px);right:max(18px,var(--sr))}
 #game .chiPick{bottom:calc(var(--th) * 1.5 + 90px)}
 /* seat portraits: square framed faces with a name plate */
@@ -499,3 +499,59 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 #root{position:fixed;inset:0;overflow:hidden}
 html.rot #root{inset:auto;top:0;left:0;width:var(--W);height:var(--H);transform-origin:0 0;transform:translateX(var(--H)) rotate(90deg)}
 html.rot{--st:env(safe-area-inset-right);--sr:env(safe-area-inset-bottom);--sb:env(safe-area-inset-left);--sl:env(safe-area-inset-top)}
+
+/* ================= partner image -> character screen ================= */
+button.pimg{padding:0;border:0;cursor:pointer;display:block;text-align:left}
+.pimg .ptap{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;padding:6px 14px;border-radius:99px;background:rgba(10,6,22,.72);border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
+button.pimg:hover img{filter:brightness(1.06)}
+#chara{z-index:2}
+.ch-top{gap:12px}
+.ch-title{font-family:var(--serif);font-size:24px;color:var(--gold)}
+.ch-count{font-size:12px;color:var(--muted);font-weight:700}
+.ch-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr) minmax(280px,1fr);gap:18px;padding:4px max(18px,var(--sr)) max(14px,var(--sb)) max(18px,var(--sl))}
+.ch-list{min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:10px;align-content:start;padding:4px;scrollbar-width:thin}
+.chi{position:relative;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chi img{width:100%;aspect-ratio:1;border-radius:14px;object-fit:cover;border:2px solid rgba(255,255,255,.14);box-shadow:0 4px 12px rgba(0,0,0,.4);transition:transform .12s}
+.chi.on img{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,206,140,.3),0 0 20px var(--c)}
+.chi:hover img{transform:translateY(-2px)}
+.chi.lock img{filter:brightness(.15) saturate(0)}
+.chi span{font-size:11.5px;font-weight:700;white-space:nowrap}
+.chi em{position:absolute;top:4px;left:4px;font-style:normal;font-family:'Cinzel',serif;font-size:9.5px;font-weight:800;background:rgba(10,6,22,.85);padding:1px 5px;border-radius:6px}
+.chi .pm{position:absolute;top:2px;right:6px;font-style:normal;color:#ffd24a;text-shadow:0 0 6px #000}
+.ch-art{position:relative;min-height:0;border-radius:24px;overflow:hidden;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 0 0 2px rgba(232,206,140,.45)}
+.ch-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 15%;animation:chIn .35s ease,breathe 6s 0.4s ease-in-out infinite}
+.ch-art img.lock{filter:brightness(0) opacity(.55)}
+@keyframes chIn{from{opacity:0;transform:translateX(18px)}}
+.ch-info{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px}
+.ch-info .pname{font-size:40px}
+.pskill .tm{font-style:normal;font-size:11px;margin-left:6px;padding:2px 8px;border-radius:99px;background:color-mix(in srgb,var(--sc) 35%,transparent);color:#fff;vertical-align:2px}
+.pskill .cl{display:block;margin-top:6px;font-size:12px;color:#ffe9b0;font-weight:700}
+.plines{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13px;color:#d9cff2}
+.go.sm{padding:12px;font-size:18px;letter-spacing:.12em}
+.chsel{padding:12px;text-align:center;border-radius:14px;border:1px dashed var(--line);color:var(--muted);font-weight:700}
+.chsel.on{border-style:solid;color:var(--gold);background:rgba(232,206,140,.08)}
+
+/* ================= deal-time skill prompt ================= */
+.dealAsk{position:absolute;left:50%;bottom:calc(var(--th) * 1.55 + 18px);transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(40,26,80,.96),rgba(18,12,36,.96));border:1px solid var(--sc);box-shadow:0 0 0 3px color-mix(in srgb,var(--sc) 30%,transparent),0 16px 40px rgba(0,0,0,.55);animation:pop .25s cubic-bezier(.3,1.6,.6,1);max-width:min(720px,calc(var(--W) - 24px))}
+.dealAsk > i{flex:none;width:52px;height:52px;padding:11px;border-radius:14px;color:#fff;background:var(--sc);box-shadow:0 0 20px var(--sc)}
+.da-t{display:flex;flex-direction:column;gap:3px;min-width:0}
+.da-t b{font-size:16px}
+.da-t span{font-size:12.5px;color:var(--muted);line-height:1.5}
+.da-t small{font-size:12px;color:#ffe9b0;font-weight:800}
+.da-b{display:flex;gap:8px;flex:none}
+.da-b .ab{min-width:92px;padding:11px 16px;font-size:16px}
+html.lp .dealAsk{padding:8px 10px;gap:10px}
+html.lp .dealAsk > i{width:38px;height:38px;padding:8px}
+html.lp .da-t b{font-size:13px}html.lp .da-t span{font-size:10.5px}
+html.lp .da-b .ab{min-width:70px;padding:8px 12px;font-size:14px}
+html.lp .ch-main{grid-template-columns:minmax(150px,.75fr) minmax(0,.9fr) minmax(0,1.1fr);gap:10px}
+html.lp .ch-list{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+html.lp .chi span{font-size:10px}
+html.lp .ch-info{gap:7px}
+html.lp .ch-info .pname{font-size:24px}
+html.lp .ch-info .pprof{display:block;font-size:11.5px;line-height:1.55}
+html.lp .plines{display:none}
+html.lp .ch-title{font-size:18px}
+html:not(.lp) .ch-main{grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr) minmax(280px,1fr)}
+@media (max-width: 760px){ html:not(.lp) .ch-main{grid-template-columns:1fr;overflow:auto} html:not(.lp) .ch-art{height:50vh} }

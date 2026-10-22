@@ -112,8 +112,8 @@ class Table3D {
     const stMat = new THREE.MeshStandardMaterial({ map: stTex, roughness: .4 });
     this.sticks = [0, 1, 2, 3].map(k => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.07, 0.2), [stMat, stMat, stMat, stMat, stMat, stMat]);
-      const p = this.local(k, 0, 1.55);
-      m.position.set(p.x, 0.54, p.z); m.rotation.y = k * PI / 2; m.visible = false; m.castShadow = true; s.add(m);
+      const p = this.local(k, -0.4, 2.42);
+      m.position.set(p.x, 0.05, p.z); m.rotation.y = k * PI / 2; m.visible = false; m.castShadow = true; s.add(m);
       return m;
     });
 
@@ -191,14 +191,14 @@ class Table3D {
   hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.dirty = true; }
 
   layoutRiver(seat, river, animLast, fromSeatHand) {
-    let row = 0, col = 0, x = -2.5 * W;
+    let row = 0, col = 0, x = -3.0 * W;
     river.forEach((r, i) => {
-      if (col === ROW && row < 2) { row++; col = 0; x = -2.5 * W; }
+      if (col === ROW && row < 2) { row++; col = 0; x = -3.0 * W; }
       const g = this.tile(r.id);
       const side = !!r.sideways;
       const w = side ? H : W;
       const lx = x + (w - W) / 2;
-      const lz = 2.66 + row * (H + 0.02) + (side ? (H - W) / 2 * 0 : 0);
+      const lz = 3.56 + row * (H + 0.02) + (side ? (H - W) / 2 * 0 : 0);
       const anim = (animLast && i === river.length - 1) ? { dur: 240, from: this.handOrigin(seat) } : null;
       this.place(g, seat, lx, lz, side ? 'side' : 'flat', anim);
       g.userData.taken = !!r.taken;
@@ -337,8 +337,8 @@ class Table3D {
     const a = w / h;
     this.camera.aspect = a;
     // fit the table width: landscape tilts toward the player, portrait looks almost straight down
-    const P = a >= 1.9 ? { fov: 30, elev: 49, fitX: 11.2, tz: 0.9 }
-      : a >= 1.2 ? { fov: 34, elev: 51, fitX: 12.4, tz: 0.35 }
+    const P = a >= 1.9 ? { fov: 30, elev: 50, fitX: 11.9, tz: 0.9 }
+      : a >= 1.2 ? { fov: 34, elev: 52, fitX: 12.9, tz: 0.45 }
       : a >= 0.8 ? { fov: 42, elev: 66, fitX: 10.8, tz: 0.4 }
       : { fov: 46, elev: 78, fitX: 7.5, tz: -1.8 };
     const V = P.fov * PI / 180, hf = 2 * Math.atan(Math.tan(V / 2) * a);
