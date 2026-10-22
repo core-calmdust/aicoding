@@ -115,8 +115,8 @@ const LEVELS = [null,
   { T: 1.3, slip: 0.14, top: 24 }, { T: 1.2, slip: 0.11, top: 20 }, { T: 1.1, slip: 0.09, top: 18 }, { T: 1.0, slip: 0.07, top: 16 },
   { T: 0.9, slip: 0.055, top: 14 }, { T: 0.8, slip: 0.04, top: 12 }, { T: 0.7, slip: 0.03, top: 10 }, { T: 0.6, slip: 0.02, top: 8 },
   { T: 0.5, slip: 0.01, top: 6 }, { T: 0.4, slip: 0, top: 5 }, { T: 0.3, slip: 0, top: 4 },
-  { net: 'light', visits: 6, time: 1500 }, { net: 'light', visits: 24, time: 2500 }, { net: 'strong', visits: 24, time: 3000 },
-  { net: 'strong', visits: 80, time: 4500 }, { net: 'strong', visits: 240, time: 7000 },
+  { net: 'light', visits: 6, time: 1500 }, { net: 'light', visits: 12, time: 2000 }, { net: 'light', visits: 32, time: 3000 },
+  { net: 'strong', visits: 64, time: 4500 }, { net: 'strong', visits: 160, time: 7000 },
 ];
 function rng() { return Math.random(); }
 // own single-point eye (all neighbours own colour): weak levels never fill it
