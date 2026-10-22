@@ -220,8 +220,9 @@
         var el = document.getElementById('boot-logo'); if (!el) return;
         var ctx = null;
         try { var AC = window.AudioContext || window.webkitAudioContext; ctx = new AC(); } catch (e) {}
+        var sfxOff = false; try { sfxOff = localStorage.getItem('atlas-sfx') === '0'; } catch (e) {} // サウンドOFFの人には鳴らさない
         function chime() { // サウンドロゴ: 短いグリッチ → 3音の上昇フレーズ → 着地の和音（サブ＋FMベル）
-            if (!ctx) return;
+            if (!ctx || sfxOff) return;
             try {
                 var t = ctx.currentTime + 0.1, out = ctx.createGain(); out.gain.value = 0.55; // 出力の立ち上がりで頭が欠けないよう少し遅らせて開始
                 var dl = ctx.createDelay(1), fb = ctx.createGain(), dw = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
@@ -1139,6 +1140,7 @@ class AudioHandler {
             return;
         }
         this.isMuted = !this.isMuted;
+        try { localStorage.setItem('atlas-sfx', this.isMuted ? '0' : '1'); } catch (e) {}
         this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
         return this.isMuted;
     }
@@ -1165,6 +1167,7 @@ const ctx = canvas.getContext('2d', { desynchronized: true });
 const stageEl = document.getElementById('stage');
 
 const audioHandler = new AudioHandler();
+try { if (localStorage.getItem('atlas-sfx') === '0') audioHandler.isMuted = true; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 
 // ---------------------------------
 // 多言語対応（サイト共通の 'aicoding-lang' を使う）
@@ -6937,6 +6940,7 @@ function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 }
 
+soundToggleButton.classList.toggle('on', !audioHandler.isMuted);
 soundToggleButton.addEventListener('click', () => {
     if (!audioHandler.isInitialized) {
         audioHandler.initialize();

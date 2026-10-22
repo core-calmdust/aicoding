@@ -1534,7 +1534,7 @@ if (landTipWanted()) {
     showOverlay('#landTipOverlay');
   }, 700);
 }
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) SFX.tick(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) SFX.tick(); };
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
@@ -2747,6 +2747,7 @@ function dailySolved(date, hinted) {
 // ====================================================================== boot
 updateGeom(); geomReady = true;
 const hadSave = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 applyCk();
 if (window.BGTheme) { settings.skin = BGTheme.skinId(settings.skin); BGTheme.applySkin(settings.skin); }
 drawBoardSvg();

@@ -63,6 +63,8 @@ function load() {
   return d;
 }
 let DB = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') DB.set.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
+const saveSitePref = () => { try { localStorage.setItem('atlas-sfx', DB.set.sound ? '1' : '0'); } catch (e) {} };
 let saveT = 0;
 function persist(now) {
   clearTimeout(saveT);
@@ -1802,7 +1804,7 @@ function openSettings() {
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
     + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
   $$('#todSeg button').forEach(b => b.onclick = () => { DB.set.tod = b.dataset.k; persist(); $$('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); applyTod(); SFX.tap(); });
-  $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
+  $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; if (k === 'sound') saveSitePref(); b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
   $$('#setBody .hbt:not(.lock)').forEach(b => b.onclick = () => { setHomeBg(b.dataset.hb); $$('#setBody .hbt').forEach(x => x.classList.toggle('on', x === b)); if (screen === 'home') homeScene(); });
   wireSync();
   $('#setName').onclick = () => { closeModals(); setTimeout(() => openName(!DB.prof.name), 60); };
@@ -1905,7 +1907,7 @@ if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMon
 $('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
 $('#btnSet').onclick = () => { SFX.tap(); openSettings(); };
 $('#btnHelp').onclick = () => { SFX.tap(); openHelp(); };
-$('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; persist(); applySettings(); SFX.tap(); };
+$('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; saveSitePref(); persist(); applySettings(); SFX.tap(); };
 $('#langSel').onchange = e => {
   LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   applyI18n(); route();

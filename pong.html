@@ -393,6 +393,7 @@
         }
         function toggleMute(forceState) {
             isMuted = forceState !== undefined ? forceState : !isMuted;
+            if (forceState === undefined) { try { localStorage.setItem('atlas-sfx', isMuted ? '0' : '1'); } catch (e) {} }
             if (audioCtx) {
                 masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : MASTER_VOLUME, audioCtx.currentTime + 0.1);
             }
@@ -887,7 +888,8 @@
         function unlockAudio() {
             if (audioCtx) return;
             initAudio();
-            toggleMute(false);
+            let off = false; try { off = localStorage.getItem('atlas-sfx') === '0'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
+            toggleMute(off);
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }

@@ -238,6 +238,8 @@
             let audioContext, masterGain, compressor;
             let gameBgmTimer = 0, titleBgmTimer = 0, gameLoopLastTime = 0;
             let soundEnabled = true;
+            try { if (localStorage.getItem('atlas-sfx') === '0') soundEnabled = false; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
+            if (!soundEnabled) soundToggleButton.textContent = "SOUND OFF";
             let gridAlpha = 0.08;
             let baseHue = 0;
             const gameBpm = 135, gameSixteenthNoteDuration = (60 / gameBpm) / 4;
@@ -512,6 +514,7 @@
             function toggleSound() {
                 initAudio();
                 soundEnabled = !soundEnabled;
+                try { localStorage.setItem('atlas-sfx', soundEnabled ? '1' : '0'); } catch (e) {}
                 if (soundEnabled) {
                     soundToggleButton.textContent = "SOUND ON";
                     if (gameState === 'PLAYING') {

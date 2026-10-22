@@ -98,6 +98,11 @@ nav ul{display:flex;gap:26px;list-style:none;font-size:13px;color:var(--muted)}
 .nav-r{display:flex;align-items:center;gap:22px}
 #langSel{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--line2);border-radius:8px;font:inherit;font-size:12px;padding:5px 6px;cursor:pointer}
 #langSel:hover{color:var(--text)}
+/* サウンドON/OFF（全ゲーム共通の設定 localStorage 'atlas-sfx'） */
+#sndBtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--line2);border-radius:8px;cursor:pointer;padding:0;vertical-align:middle}
+#sndBtn:hover{color:var(--text)}
+#sndBtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#sndBtn .x{display:none}#sndBtn:not(.on) .w{display:none}#sndBtn:not(.on) .x{display:inline}#sndBtn:not(.on){opacity:.7}
 nav ul a:hover{color:var(--text)}
 
 /* hero */
@@ -474,7 +479,9 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
       <li><a href="#games" data-i18n="nav.games">ボード＆パズル</a></li>
       <li><a href="#about" data-i18n="nav.about">このサイトについて</a></li>
     </ul>
-    <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
+    <span class="nav-tools" style="display:inline-flex;align-items:center;gap:6px">
+    <button type="button" id="sndBtn" class="on" aria-label="Sound" aria-pressed="true" title="Sound ON / OFF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+    <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select></span>
     </div>
   </div>
 </nav>
@@ -648,6 +655,15 @@ const I18N = {"ja": {"gx.modes": "モード", "gx.stages": "ステージ", "come
     window.dispatchEvent(new CustomEvent('aicoding:lang', { detail: l }));
   }
   apply(lang);
+  // サウンドON/OFF: 全ゲーム共通（各ゲームの音のボタンとも連動）
+  (function () {
+    const b = document.getElementById('sndBtn'); if (!b) return;
+    const get = () => { try { return localStorage.getItem('atlas-sfx') !== '0'; } catch (e) { return true; } };
+    const show = on => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+    show(get());
+    b.addEventListener('click', () => { const on = !get(); try { localStorage.setItem('atlas-sfx', on ? '1' : '0'); } catch (e) {} show(on); });
+    window.addEventListener('storage', e => { if (e.key === 'atlas-sfx') show(get()); });
+  })();
   document.getElementById('langSel').addEventListener('change', e => {
     lang = e.target.value; try { localStorage.setItem(KEY, lang); } catch (_) {}
     apply(lang);

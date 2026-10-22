@@ -2135,7 +2135,7 @@ function confirmBox(text, yes, fn) {
   showOverlay('#confirmOverlay');
 }
 $('#btnConfirmNo').onclick = () => hideOverlay('#confirmOverlay');
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; renderInfo(); save(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} renderInfo(); save(); };
 $('#btnResume').onclick = () => {
   if (settings.mode === 'online' || (game && game.rated)) { viewAt(game.moves.length); return; }   // rated: no taking back
   // continue the game from the displayed position
@@ -4335,6 +4335,7 @@ applyI18n();
 (function boot() {
   if (settings.lang) LANG = settings.lang;
   let had = load();
+  try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
   if (settings.mode === 'online') { settings.mode = 'ai'; had = false; game = null; cur = 0; }
   if (had && game.over) { game.resultShown = true; if (game.rated) rtSettle(game); }   // a finished game restored on reload: do not pop the result dialog up again   // an online game cannot be resumed after a reload
   if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;

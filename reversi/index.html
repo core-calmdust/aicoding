@@ -2589,7 +2589,7 @@ $('#btnHint').onclick = () => {
   if (!reviewing && isHumanTurn()) schedule(null);
 };
 $('#btnPuzzle').onclick = () => { ctx(); openPuzzles(); };
-$('#btnSound').onclick = () => { settings.sound = !settings.sound; save(); renderInfo(); if (settings.sound) playPlace(0); else sfxStop(); };
+$('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playPlace(0); else sfxStop(); };
 $('#btnCopy').onclick = async () => {
   const s = positions.slice(1).map(p => sqName(p.last)).join('');
   try { await navigator.clipboard.writeText(s); toast(t('copied'), 1000); } catch (e) { toast(s || t('nokifu'), 2500); }
@@ -4575,6 +4575,7 @@ loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800); } else document.body.classList.add('no-online');
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 const hadSave = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 rtSync();
 if (settings.mode === 'online') settings.mode = 'ai';
 const qLang = new URLSearchParams(location.search).get('lang');

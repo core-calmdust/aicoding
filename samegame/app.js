@@ -22,6 +22,7 @@ function load() {
   return d;
 }
 let DB = load();
+try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') DB.set.snd = sp === '1' ? 1 : 0; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 const save = () => { DB.mt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} if (window.__schedPush) window.__schedPush(); };
 
 /* ---------------- i18n ---------------- */
@@ -1346,7 +1347,7 @@ function bind() {
   for (const [id, ic] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[ic]); }
   $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha(); $('#btnBook').onclick = () => openBook(); $('#btnRank').onclick = () => openRank('p');
   $('#btnSet').onclick = openSettings; $('#btnHelp').onclick = () => tutorial('basic');
-  $('#btnSound').onclick = () => { DB.set.snd = DB.set.snd ? 0 : 1; save(); sndIcon(); if (DB.set.snd) SND.coin(); };
+  $('#btnSound').onclick = () => { DB.set.snd = DB.set.snd ? 0 : 1; try { localStorage.setItem('atlas-sfx', DB.set.snd ? '1' : '0'); } catch (e) {} save(); sndIcon(); if (DB.set.snd) SND.coin(); };
   $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else { homeTab = 'daily'; themeOpen = null; renderHome(); } };
   $('#modalX').onclick = closeModal; $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   $('#gBack').onclick = quitGame; $('#gUndo').onclick = undo; $('#gHint').onclick = hint; $('#gRestart').onclick = restart;
