@@ -223,7 +223,7 @@ function drawGrid() {
   svg.innerHTML = s;
   stoneEls.clear(); shownKey = '';
 }
-const SR = 0.5;   // stone radius (grid units); images are 1.3 x diameter with the shadow
+const SR = 0.47;  // stone radius (grid units; real stones are a little smaller than the grid spacing); images are 1.3 x diameter with the shadow
 function stoneHref(c, i) { return GoTheme.stoneImg(settings.st, c, c === 2 ? (i * 7 + (i >> 3)) % 4 : i % 2); }
 function newStone(i, c) {
   const el = document.createElementNS(NS, 'image'), [x, y] = xyOf(i), w = 2 * SR * 1.3;

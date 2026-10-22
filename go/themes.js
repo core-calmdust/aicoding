@@ -143,7 +143,7 @@ function stoneImg(set, color, variant) {
   if (SI[key] !== undefined) return SI[key];
   if (typeof document === 'undefined') return (SI[key] = '');
   const S = (STONES[set] || STONES.classic)[color === 1 ? 'b' : 'w'];
-  const N = 120, D = N / 1.3, R = D / 2, cxp = N / 2, cyp = N / 2;
+  const N = 256, D = N / 1.3, R = D / 2, cxp = N / 2, cyp = N / 2;
   const cv = document.createElement('canvas'); cv.width = cv.height = N;
   const cx = cv.getContext('2d'); if (!cx) return (SI[key] = '');
   // shadow
@@ -172,7 +172,7 @@ function stoneImg(set, color, variant) {
     }
     if (S.milky) { const m = cx.createRadialGradient(cxp + R * .2, cyp + R * .25, R * .1, cxp, cyp, R); m.addColorStop(0, 'rgba(200,215,230,.0)'); m.addColorStop(1, 'rgba(160,180,205,.35)'); cx.fillStyle = m; cx.beginPath(); cx.arc(cxp, cyp, R, 0, 7); cx.fill(); }
     if (S.rim) { cx.strokeStyle = S.rim; cx.globalAlpha = .55; cx.lineWidth = R * .1; cx.beginPath(); cx.arc(cxp, cyp, R * .94, 0.8, 2.6); cx.stroke(); cx.globalAlpha = 1; }
-    if (S.matte && color === 1) { const r = rng(5 + (variant || 0)); for (let k = 0; k < 120; k++) { const a = r() * 6.28, rr = Math.sqrt(r()) * R * .95; cx.fillStyle = `rgba(255,255,255,${r() * 0.035})`; cx.fillRect(cxp + Math.cos(a) * rr, cyp + Math.sin(a) * rr, 1.4, 1.4); } }
+    if (S.matte && color === 1) { const r = rng(5 + (variant || 0)); for (let k = 0; k < 120; k++) { const a = r() * 6.28, rr = Math.sqrt(r()) * R * .95; cx.fillStyle = `rgba(255,255,255,${r() * 0.035})`; cx.fillRect(cxp + Math.cos(a) * rr, cyp + Math.sin(a) * rr, N / 90, N / 90); } }
     // specular highlight
     if (S.spec) {
       const h = cx.createRadialGradient(cxp - R * .36, cyp - R * .42, 0, cxp - R * .36, cyp - R * .42, R * .55);
