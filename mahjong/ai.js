@@ -160,13 +160,13 @@ class Bot {
   }
 
   // value of one use (points) for paid-use decisions; filled from the skill-value simulation
-  skillValue(id) { const V = (typeof MJSkills !== 'undefined' && MJSkills.value) || {}; return V[id] || 1000; }
+  skillValue(id) { const V = (typeof MJSkills !== 'undefined' && MJSkills.value) || (typeof require !== 'undefined' ? require('./skills.js').value : {}); return V[id] ?? 1000; }
   paidOk(g, s) {
     const cost = g.skillCost(s);
     if (!cost) return true;
     if (this.policy === 'always') return true;
     if (this.policy === 'never') return false;
-    return this.skillValue(g.chars[s].skill) >= cost * 1.15 && g.scores[s] - cost >= 12000;
+    return this.skillValue(g.chars[s].skill) >= cost && g.scores[s] - cost >= 12000;
   }
 
   // deal-time skills (point multipliers): decide right after the deal from the starting hand
