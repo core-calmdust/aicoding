@@ -1660,7 +1660,7 @@ const pickBgmStage = (st, prev) => { if (st <= 6) return st; let n; do { n = 1 +
 let energy;
 let nextItemScore;
 let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
-const TEST_START_STAGE = 15; // テスト用: このステージから開始（公開時は1）
+const TEST_START_STAGE = 1; // テスト用: このステージから開始（公開時は1）
 const ITEM_FLOOR_STAGE = 15; // この面以降は「エネルギーが尽きる時間の半分」ごとに必ずアイテムを降らせる
 let itemGapT = 0; // 最後にエネルギーアイテムが出てからの秒数
 const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
