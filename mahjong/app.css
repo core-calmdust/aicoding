@@ -383,3 +383,114 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
   .ag-total b{font-size:34px}
   .tl.md{--tw:26px}
 }
+
+/* ================= game HUD v2: real-table landscape layout ================= */
+#game{--th:min(calc((100vw - 90px) / 15.6), calc(16vh * .75), 86px);--bf:66px}
+#game .hand .tl:not(.sm):not(.xs){--tw:var(--th)}
+#game .hand .melds .tl.sm{--tw:calc(var(--th) * .7)}
+#game .hand .tl{box-shadow:inset 0 -3px 0 #ddd3bb,0 calc(var(--tw)*.12) 0 #6b3fc4,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
+#game .hand.active .tl.can:hover,#game .hand .tl.up{transform:translateY(calc(var(--th) * -.24))}
+#game .hand{bottom:max(6px,env(safe-area-inset-bottom));gap:calc(var(--th) * .3)}
+#game .hand .hrow{gap:1px}
+#game .hand .gap{width:calc(var(--th) * .22)}
+#game .acts{bottom:calc(var(--th) * 1.5 + 22px);right:max(18px,env(safe-area-inset-right))}
+#game .chiPick{bottom:calc(var(--th) * 1.5 + 90px)}
+/* seat portraits: square framed faces with a name plate */
+#game .opp{flex-direction:column;align-items:center;gap:3px;padding:0;border:0;background:none;box-shadow:none;border-radius:0}
+#game .bf{width:var(--bf);height:var(--bf)}
+#game .bf img{border-radius:12%;border:2px solid #e2cf96;box-shadow:0 6px 16px rgba(0,0,0,.5),0 0 0 3px rgba(20,24,40,.85),0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
+#game .bf em{bottom:-6px;right:-8px}
+#game .bt{align-items:center;gap:2px}
+#game .bt b{padding:2px 12px;border-radius:6px;background:rgba(12,16,32,.86);border:1px solid rgba(226,207,150,.35);font-size:12.5px}
+#game .bt .sc{font-size:12px;color:#cfd8ee;font-weight:700}
+#game .bk{min-height:0}
+#opp1{right:max(14px,env(safe-area-inset-right));top:20%}
+#opp2{right:auto;left:74.5%;top:max(8px,env(safe-area-inset-top));transform:none}
+#opp3{left:max(14px,env(safe-area-inset-left));top:22%}
+#game .me{left:max(14px,env(safe-area-inset-left));bottom:calc(var(--th) * 1.5 + 18px);flex-direction:row;align-items:flex-end;gap:12px}
+#game .me .mb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0;border:0;background:none;border-radius:0}
+#game .rbox{padding:7px 10px;gap:4px;background:rgba(10,14,30,.82);border-color:rgba(160,200,255,.25)}
+
+/* rotate prompt (phones play in landscape) */
+.rotate{display:none;position:fixed;inset:0;z-index:90;place-items:center;background:radial-gradient(circle at 50% 40%,#2a1d4c,#0c0818);text-align:center;padding:24px}
+.rotate .rp{display:flex;flex-direction:column;align-items:center;gap:14px}
+.rotate i{width:70px;height:120px;border:4px solid var(--gold);border-radius:14px;position:relative;animation:turn 2.2s ease-in-out infinite}
+.rotate i::after{content:"";position:absolute;left:50%;bottom:7px;width:16px;height:4px;margin-left:-8px;border-radius:2px;background:var(--gold)}
+@keyframes turn{0%,20%{transform:rotate(0)}50%,80%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+.rotate b{font-family:var(--serif);font-size:22px;color:var(--gold)}
+.rotate span{font-size:14px;color:var(--muted);line-height:1.6;white-space:pre-line}
+.rotate button{margin-top:6px}
+@media (orientation: portrait){ body.phone.ingame .rotate{display:grid} }
+.lsnote{display:none;align-items:center;justify-content:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700}
+.lsnote svg{width:18px;height:18px;color:var(--gold)}
+body.phone .lsnote{display:flex}
+
+/* phones held sideways */
+@media (orientation: landscape) and (max-height: 520px){
+  #game{--bf:44px;--th:min(calc((100vw - 80px) / 15.6), calc(17vh * .75), 60px)}
+  #game .bt b{font-size:10.5px;padding:1px 8px}
+  #game .bt .sc{font-size:10.5px}
+  #game .bk i{width:15px;height:15px;padding:2px}
+  #game .bf em{width:17px;height:17px;font-size:10px}
+  #opp1{top:16%}#opp3{top:24%}
+  #game .rbox{padding:5px 7px;gap:2px}
+  #game .rk b{font-size:13px}
+  #game .rk span,#game .rl{font-size:10px}
+  #game .rd .tl.xs{--tw:16px}
+  #game .tbtns .ib{width:32px;height:32px;padding:7px}
+  #game .ab{min-width:70px;padding:8px 14px;font-size:15px;border-radius:12px}
+  #game .ab.win{font-size:18px}
+  #game .acts{gap:6px}
+  #game .skb{padding:4px 9px 4px 4px;gap:6px;border-radius:12px}
+  #game .skb i{width:28px;height:28px;padding:5px;border-radius:8px}
+  #game .skb b{font-size:11.5px}
+  #game .skb small{font-size:9.5px}
+  #game .intel{top:46px;padding:8px 32px 8px 8px}
+  .callout.pop b{font-size:34px}
+  .callout.banner b{font-size:24px;padding:8px 36px}
+  .ci-word{font-size:min(17vw,30vh)}
+  .ci-word[data-len="4"],.ci-word[data-len="5"]{font-size:min(12vw,22vh)}
+  .ci-word[data-len="6"],.ci-word[data-len="7"],.ci-word[data-len="8"]{font-size:min(8vw,16vh)}
+  .ci-kana{font-size:16px}.ci-sub{font-size:13px}.ci-line{font-size:13px}
+  .modal{padding:8px}
+  .mbox{max-height:calc(100dvh - 16px);padding:14px}
+  .agari{grid-template-columns:28% 1fr;min-height:0}
+  .ag-art{height:auto}
+  .ag-main{padding:10px 14px;gap:7px}
+  .ag-hand .tl.md{--tw:26px}
+  .ag-hand .tl.sm{--tw:22px}
+  .ag-yaku{grid-template-columns:1fr 1fr}
+  .yk{font-size:12.5px;padding:3px 0}
+  .ag-total b{font-size:28px}
+  .stamp{font-size:17px}
+  .srows{grid-template-columns:1fr 1fr;gap:4px}
+  .sr{padding:4px 8px}
+  .nx{padding:8px 18px}
+  .ryu,.final{padding:12px}
+  .fi{padding:6px 12px;grid-template-columns:44px 40px 1fr auto}
+  .fi > img{width:40px;height:40px}
+  .fi em{font-size:17px}
+  /* home in landscape: two columns, compact */
+  #home{display:flex;overflow:hidden}
+  .top{flex-wrap:nowrap;padding-top:6px;padding-bottom:4px}
+  .top .logo{flex-basis:auto}
+  .top .sp{display:block}
+  .coins{margin-right:0}
+  .lg-k{font-size:26px}
+  .hmain{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px;overflow:hidden;padding-bottom:4px}
+  .partner{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:10px}
+  .pimg{height:100%;min-height:0}
+  .pinfo{margin-top:0;padding:0;gap:6px}
+  .pname{font-size:24px}.pname small{font-size:12px}
+  .pskill{padding:8px;gap:8px}.pskill i{width:34px;height:34px;padding:7px}.pskill b{font-size:13px}.pskill span{font-size:11px;line-height:1.45}
+  .pprof{display:none}
+  .modes{gap:8px;justify-content:center;overflow:auto}
+  .mcard{padding:10px}
+  .mcard.main{gap:6px}
+  .mh b{font-size:17px}
+  .seg button{padding:5px 4px;font-size:12px}
+  .go{padding:9px;font-size:17px}
+  .mrow{display:none}
+  .roster{position:static;padding-top:2px;padding-bottom:max(4px,env(safe-area-inset-bottom))}
+  .rc{width:52px}.rc img{width:42px;height:42px}.rc span{font-size:10px}
+}

@@ -17,7 +17,7 @@ const S = {
     skillUse: 'スキルを使う', skillCostQ: '{n}点を供託に払ってスキルを使いますか？',
     peekT: '次の3回のツモ', mindT: '他家の手', shanten: '{n}向聴', waitsOn: '待ち', abort: { kyuushu: '九種九牌', sanchahou: '三家和', suukaikan: '四開槓' },
     you: 'あなた', yourTurn: 'あなたの番', noArt: 'イラスト準備中', collection: 'コレクション', owned: '所持', close: '閉じる',
-    rotate: '横向きにすると遊びやすくなります', loading: '読み込み中…', guide: 'タップで選択、もう一度タップで捨てる',
+    rotate: '横向きにすると遊びやすくなります', landTitle: 'このゲームは横画面で遊びます', landSub: 'スマホを横向きにしてください。\n横にすると対局が始まります。', landNote: '対局はスマホを横向きにして遊びます', loading: '読み込み中…', guide: 'タップで選択、もう一度タップで捨てる',
   },
   en: {
     title: 'JANKA', sub: 'Mahjong of the Princesses', series: 'CALMDUST COLLECTION',
@@ -34,7 +34,7 @@ const S = {
     skillUse: 'Use skill', skillCostQ: 'Pay {n} points into the pot to use the skill?',
     peekT: 'Your next 3 draws', mindT: 'Opponents', shanten: '{n} away', waitsOn: 'Waits', abort: { kyuushu: 'Nine terminals', sanchahou: 'Triple ron', suukaikan: 'Four kans' },
     you: 'You', yourTurn: 'Your turn', noArt: 'Art coming soon', collection: 'Collection', owned: 'Owned', close: 'Close',
-    rotate: 'Landscape is easier to play', loading: 'Loading…', guide: 'Tap to pick, tap again to discard',
+    rotate: 'Landscape is easier to play', landTitle: 'This game is played in landscape', landSub: 'Turn your phone sideways.\nThe game starts when you do.', landNote: 'Games are played with the phone held sideways', loading: 'Loading…', guide: 'Tap to pick, tap again to discard',
   },
 };
 const YAKU = {

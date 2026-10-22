@@ -13,8 +13,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='14' y='6' width='36' height='50' rx='7' fill='%23f6f0e0'/%3E%3Crect x='14' y='50' width='36' height='8' rx='3' fill='%236b3fc4'/%3E%3Ctext x='32' y='42' font-size='30' text-anchor='middle' fill='%23d42a2a' font-family='serif' font-weight='900'%3E中%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=1">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Cinzel:wght@600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=2">
 </head>
 <body>
 <div id="bgfx"></div>
@@ -43,6 +43,7 @@
         <div class="opt"><div class="seg" id="optSkill"></div></div>
         <div class="opt"><small data-t="strength"></small><div class="seg lv" id="optLv"></div></div>
         <button class="go" id="btnStart" data-t="start"></button>
+        <div class="lsnote" id="lsNote"></div>
       </div>
       <div class="mrow">
         <div class="mcard sub soon"><b data-t="rated"></b><em data-t="soon"></em></div>
@@ -75,19 +76,20 @@
   </div>
 </section>
 
+<div id="rotate" class="rotate"><div class="rp"><i></i><b data-t="landTitle"></b><span data-t="landSub"></span></div></div>
 <div id="cutin" class="cutin" hidden></div>
 <div id="modal" class="modal" hidden></div>
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="i18n.js?v=1"></script>
+<script src="i18n.js?v=2"></script>
 <script src="engine.js?v=1"></script>
 <script src="skills.js?v=1"></script>
 <script src="game.js?v=1"></script>
 <script src="ai.js?v=1"></script>
 <script src="tiles.js?v=1"></script>
 <script src="chars.js?v=1"></script>
-<script src="table3d.js?v=1"></script>
-<script src="app.js?v=1"></script>
+<script src="table3d.js?v=2"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
