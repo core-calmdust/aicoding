@@ -1318,6 +1318,7 @@ function nameEntryInput() { // ネーム登録の入力処理（gameOver中に�
         else if (ne.name.length < NAME_MAX) ne.name += ch;
         audioHandler.playSound('menu');
     }
+    if (performance.now() - gameOverAt < 700) { input.shootTrigger = false; input.replayTrigger = false; tapNameKey = null; } // ゲームオーバー直後の押しっぱなし・連打を拾わない
     let c = ne.cur;
     const row = c < 26 ? Math.floor(c / cols) : 2;
     if (input.leftTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + cols - 1) % cols) : (c === 26 ? 27 : 26);
@@ -1325,16 +1326,16 @@ function nameEntryInput() { // ネーム登録の入力処理（gameOver中に�
     if (input.upTrigger) c = row === 0 ? (c % cols < 7 ? 26 : 27) : row === 1 ? c - cols : (c === 26 ? 13 + 3 : 13 + 9);
     if (input.downTrigger) c = row === 0 ? c + cols : row === 1 ? (c % cols < 7 ? 26 : 27) : (c === 26 ? 3 : 9);
     if (c !== ne.cur) { ne.cur = c; audioHandler.playSound('menu'); }
-    const press = k => {
+    const press = (k, byTap) => {
         const key = NAME_KEYS[k];
-        if (key === 'END') { finishNameEntry(); return; }
+        if (key === 'END') { if (byTap) finishNameEntry(); return; } // 決定はSTART/Enter（スマホはENDのタップ）だけ。ショットボタンでは決定しない（誤爆防止）
         if (key === 'DEL') ne.name = ne.name.slice(0, -1);
         else if (ne.name.length < NAME_MAX) { ne.name += key; if (ne.name.length >= NAME_MAX) ne.cur = 27; }
         audioHandler.playSound('menu');
     };
     if (input.shootTrigger && !keyState['KeyX']) press(ne.cur); // Xは文字入力に使うので決定はSpace/パッド
     if (input.replayTrigger) { finishNameEntry(); return; } // スタート/Enterで決定（前回の名前ならそのまま1回押すだけ）
-    if (nameEntry && tapNameKey !== null) { const k = tapNameKey; ne.cur = k; press(k); }
+    if (nameEntry && tapNameKey !== null) { const k = tapNameKey; ne.cur = k; press(k, true); }
 }
 let tapNameKey = null;
 function nameKeyRect(k) { // 文字盤のキーの位置（HUD座標）
@@ -1370,7 +1371,7 @@ function drawNameEntry(ctx) {
         ctx.fillText(NAME_KEYS[k] === 'DEL' ? '◀ DEL' : NAME_KEYS[k], r.x + r.w / 2, r.y + r.h / 2 + 1);
     }
     ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 14 : 12}px ${config.fontFamily}`;
-    const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · X/Y: INPUT · START: FINISH' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: FINISH';
+    const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · X/Y: INPUT · START: OK' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: OK';
     ctx.fillText(hint, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 40 : 30));
     ctx.restore();
 }
