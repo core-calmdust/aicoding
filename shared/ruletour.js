@@ -115,6 +115,7 @@ const CSS = `
 .rt-wide .rt-main.has-board{overflow:visible}.rt-wide .rt-main.has-board > .rt-board{margin-inline:calc(-1 * var(--rt-bx,0px))}
 .rt-col .rt-main.has-board .rt-task{grid-row:3;overflow-y:auto;overscroll-behavior:contain}
 .rt-row .rt-main.has-board{grid-template-columns:minmax(0,1fr) var(--rt-bw);grid-template-rows:minmax(0,1fr);column-gap:var(--rt-cgap,24px)}
+.rt-row .rt-main.has-board > .rt-board{align-self:start}   /* top aligned with the page title */
 .rt-row .rt-main.has-board > .rt-side{display:flex;flex-direction:column;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
 .rt-row .rt-main.has-board .rt-text{flex:0 1 auto;min-height:min(84px, 40%)}
 .rt-row .rt-main.has-board .rt-task{flex:none;text-align:start;margin-top:8px}
