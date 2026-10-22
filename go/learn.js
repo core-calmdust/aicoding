@@ -566,6 +566,7 @@ function startPuzzle(Li, j, daily) {
   puzzle = { L: Li, j, P, Pi, T, me: Pi.s.turn || P1, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(Pi.s, { view: pzView(P) });
+  if (P.goal !== 'live' && P.goal !== 'kill') lessonMarks = (Pi.target || []).map(at => ({ at, cls: 'tri' }));   // which stones the goal is about
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
 }
 const goalKey = g => 'pz.goal.' + (g || 'kill');
