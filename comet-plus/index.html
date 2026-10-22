@@ -1336,7 +1336,7 @@ function finishNameEntry() {
     audioHandler.playSound('waveClear');
 }
 function nameEntryInput() { // ネーム登録の入力処理（gameOver中に毎フレーム）
-    const ne = nameEntry, cols = 13;
+    const ne = nameEntry, cols = NAME_COLS;
     while (typedLetters.length) {
         const ch = typedLetters.shift();
         if (ch === 'ESC') { nameEntry = null; gameState = 'title'; audioHandler.playSound('menu'); return; }
@@ -1357,12 +1357,14 @@ function nameEntryInput() { // ネーム登録の入力処理（gameOver中に�
     if (rep('r', input.right)) input.rightTrigger = true;
     if (rep('u', input.up)) input.upTrigger = true;
     if (rep('d', input.down)) input.downTrigger = true;
+    // 文字盤の移動（列数はPC 13列×2段 / スマホ 7列×4段。最下段は DEL / END）
     let c = ne.cur;
-    const row = c < 26 ? Math.floor(c / cols) : 2;
-    if (input.leftTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + cols - 1) % cols) : (c === 26 ? 27 : 26);
-    if (input.rightTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + 1) % cols) : (c === 26 ? 27 : 26);
-    if (input.upTrigger) c = row === 0 ? (c % cols < 7 ? 26 : 27) : row === 1 ? c - cols : (c === 26 ? 13 + 3 : 13 + 9);
-    if (input.downTrigger) c = row === 0 ? c + cols : row === 1 ? (c % cols < 7 ? 26 : 27) : (c === 26 ? 3 : 9);
+    const R = Math.ceil(26 / cols), rowLen = r => Math.min(cols, 26 - r * cols), row = c < 26 ? Math.floor(c / cols) : R;
+    const toBottom = col => (col < cols / 2 ? 26 : 27), fromBottom = (r, k) => { const col = k === 26 ? Math.floor(cols / 4) : Math.floor(cols * 3 / 4); return r * cols + Math.min(col, rowLen(r) - 1); };
+    if (input.leftTrigger) c = row < R ? row * cols + (c % cols + rowLen(row) - 1) % rowLen(row) : (c === 26 ? 27 : 26);
+    if (input.rightTrigger) c = row < R ? row * cols + (c % cols + 1) % rowLen(row) : (c === 26 ? 27 : 26);
+    if (input.upTrigger) c = row === 0 ? toBottom(c % cols) : row < R ? c - cols : fromBottom(R - 1, c);
+    if (input.downTrigger) c = row === R ? fromBottom(0, c) : (row + 1 < R && c % cols < rowLen(row + 1)) ? c + cols : toBottom(c % cols);
     if (c !== ne.cur) { ne.cur = c; audioHandler.playSound('menu'); }
     const press = (k, byTap) => {
         const key = NAME_KEYS[k];
@@ -1379,11 +1381,14 @@ function nameEntryInput() { // ネーム登録の入力処理（gameOver中に�
     if (nameEntry && tapNameKey !== null) { const k = tapNameKey; ne.cur = k; press(k, true); }
 }
 let tapNameKey = null;
+const NAME_COLS = IS_MOBILE ? 7 : 13; // スマホは7列×4段の大きなキー
 function nameKeyRect(k) { // 文字盤のキーの位置（HUD座標）
-    const cols = 13, kw = IS_MOBILE ? 40 : 38, kh = IS_MOBILE ? 52 : 40, gx = HUD_W / 2 - cols * kw / 2, gy = HUD_H / 2 + (IS_MOBILE ? 10 : 20);
-    if (k < 26) return { x: gx + (k % cols) * kw, y: gy + Math.floor(k / cols) * kh, w: kw - 4, h: kh - 6 };
-    const bw = IS_MOBILE ? 150 : 130;
-    return { x: HUD_W / 2 + (k === 26 ? -bw - 10 : 10), y: gy + 2 * kh + 6, w: bw, h: kh - 6 };
+    const cols = NAME_COLS, R = Math.ceil(26 / cols);
+    const kw = IS_MOBILE ? 80 : 38, kh = IS_MOBILE ? Math.max(56, Math.min(80, Math.floor((HUD_H / 2 - 150) / (R + 1)))) : 40;
+    const gx = HUD_W / 2 - cols * kw / 2, gy = HUD_H / 2 + (IS_MOBILE ? -20 : 20);
+    if (k < 26) return { x: gx + (k % cols) * kw + 2, y: gy + Math.floor(k / cols) * kh, w: kw - 6, h: kh - 8 };
+    const bw = IS_MOBILE ? (cols * kw) / 2 - 8 : 130;
+    return { x: HUD_W / 2 + (k === 26 ? -bw - 6 : 6), y: gy + R * kh + 6, w: bw, h: kh - 8 };
 }
 function drawNameEntry(ctx) {
     const ne = nameEntry, cx = HUD_W / 2, cy = HUD_H / 2, col = `hsl(${(frameCount * 3) % 360},100%,70%)`;
@@ -1413,14 +1418,14 @@ function drawNameEntry(ctx) {
         const r = nameKeyRect(k), on = k === ne.cur;
         ctx.fillStyle = on ? 'rgba(127,233,255,0.28)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(r.x, r.y, r.w, r.h);
         ctx.strokeStyle = on ? col : 'rgba(127,233,255,0.25)'; ctx.lineWidth = on ? 2 : 1; ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
-        ctx.fillStyle = on ? '#ffffff' : '#a9c8ff'; ctx.font = `600 ${NAME_KEYS[k].length > 1 ? (IS_MOBILE ? 18 : 15) : (IS_MOBILE ? 22 : 18)}px ${config.fontFamily}`;
+        ctx.fillStyle = on ? '#ffffff' : '#a9c8ff'; ctx.font = `600 ${NAME_KEYS[k].length > 1 ? (IS_MOBILE ? 24 : 15) : (IS_MOBILE ? 32 : 18)}px ${config.fontFamily}`;
         ctx.fillText(NAME_KEYS[k] === 'DEL' ? '◀ DEL' : NAME_KEYS[k], r.x + r.w / 2, r.y + r.h / 2 + 1);
     }
     ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 14 : 12}px ${config.fontFamily}`;
     const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · A/X: INPUT · B/Y: DEL · START: OK' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: OK';
     ctx.fillText(hint, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 40 : 30));
     // 名前は固定で使う旨
-    const chg = IS_MOBILE ? (LANG === 'ja' ? 'タイトル画面の「NAME」' : '"NAME" on the title screen') : lastInputDevice === 'gamepad' ? 'SELECT' : (LANG === 'ja' ? 'Nキー' : 'the N key');
+    const chg = IS_MOBILE ? (LANG === 'ja' ? '「NAME」' : '"NAME"') : lastInputDevice === 'gamepad' ? 'SELECT' : (LANG === 'ja' ? 'Nキー' : 'the N key');
     ctx.fillStyle = 'rgba(255,215,120,0.85)'; ctx.font = `500 ${IS_MOBILE ? 15 : 13}px ${config.fontFamily}`;
     ctx.fillText(LANG === 'ja' ? `この名前は以後のランキング登録に自動で使われます（変更はタイトルで${chg}）` : `This name is used for all future rankings (change it with ${chg} on the title screen)`, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 72 : 54), HUD_W - 30);
     ctx.restore();
@@ -1840,7 +1845,7 @@ function setupNewStage() {
     // 新しい雑魚: 4面からウィーバー・ランス、5面からセントリー。ボス面以外で0〜3体（種類も時間もばらばら）
     { const pool = []; if (stage >= 4) pool.push('weaver', 'lance'); if (stage >= 5) pool.push('sentry');
       extraEnemy = [];
-      if (pool.length && stage % 3 !== 0) { const n = Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) extraEnemy.push({ type: pool[Math.floor(Math.random() * pool.length)], frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.15 + Math.random() * 0.65)) }); }
+      if (pool.length && stage % 3 !== 0) { const n = Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) { let ty = pool[Math.floor(Math.random() * pool.length)]; if (ty === 'weaver' && extraEnemy.filter(e => e.type === 'weaver').length >= 2) ty = pool.filter(t => t !== 'weaver')[Math.floor(Math.random() * (pool.length - 1))]; extraEnemy.push({ type: ty, frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.15 + Math.random() * 0.65)) }); } } // WEAVERは1面に最大2体
       extraEnemy.sort((a, b) => a.frame - b.frame); }
     
     // Set Looper spawn frame for this stage
@@ -2389,8 +2394,11 @@ function updatePlayingState(dt_sec) {
     
     // Monster Spawning (Standard Mode only)
     if (gameMode === 'STANDARD MODE') {
+        // 同時に出る雑魚の上限（ボスとボスが呼んだ雑魚は数えない）: 1〜5面は2体 → 15面で5体
+        const enemyCap = Math.min(5, 2 + Math.floor((stage - 1) * 3 / 14));
+        const canSpawn = () => monsters.filter(m => !m.fromBoss).length < enemyCap;
         // Looper Spawning
-        if (looperSpawnFrame !== -1 && frameCount >= looperSpawnFrame && !hasLooperSpawnedThisStage) {
+        if (looperSpawnFrame !== -1 && frameCount >= looperSpawnFrame && !hasLooperSpawnedThisStage && canSpawn()) {
             hasLooperSpawnedThisStage = true;
             monsters.push({
                 type: 'looper',
@@ -2405,16 +2413,16 @@ function updatePlayingState(dt_sec) {
             });
         }
         
-        if (extraEnemy.length && frameCount >= extraEnemy[0].frame && !boss && bossSpawnFrame === -1) {
+        if (extraEnemy.length && frameCount >= extraEnemy[0].frame && !boss && bossSpawnFrame === -1 && canSpawn()) {
             const ty = extraEnemy.shift().type, W = config.canvasWidth;
-            if (ty === 'weaver') { const d = Math.random() < 0.5 ? 1 : -1; monsters.push({ type: ty, x: d > 0 ? -40 : W + 40, y: 150, baseY: 120 + Math.random() * 120, vx: d * 170, vy: 0, t: 0, st: 0.5, k: 0, width: 60, height: 40, scoreK: 1.5 }); }
+            if (ty === 'weaver') { const d = Math.random() < 0.5 ? 1 : -1; monsters.push({ type: ty, x: d > 0 ? -40 : W + 40, y: 150, baseY: 120 + Math.random() * 120, vx: d * 170, vy: 0, t: 0, st: 0.5, k: 0, width: 80, height: 58, scoreK: 1.5 }); }
             else if (ty === 'sentry') monsters.push({ type: ty, x: W * (0.25 + Math.random() * 0.5), y: -30 - TOP_EXT, ty: 170 + Math.random() * 60, t: 0, st: 0, spin: Math.random() * 6, width: 56, height: 56, scoreK: 2.5 });
             else monsters.push({ type: ty, x: W * (0.2 + Math.random() * 0.6), y: -30 - TOP_EXT, t: 0, pt: 0, cyc: 0, ang: Math.PI / 2, aim: false, width: 40, height: 56, scoreK: 2 });
         }
         const spawnCheckInterval = 120;
         if (frameCount % spawnCheckInterval === 0) {
             // UFO Spawning
-            if (stage % 3 === 2 && !hasUFOSpawnedThisStage && !boss && bossSpawnFrame === -1 && Math.random() < 0.2) { // ボス面(3の倍数)と重なって出なくなっていたので、ボスの手前の面に
+            if (stage % 3 === 2 && !hasUFOSpawnedThisStage && !boss && bossSpawnFrame === -1 && canSpawn() && Math.random() < 0.2) { // ボス面(3の倍数)と重なって出なくなっていたので、ボスの手前の面に
                 hasUFOSpawnedThisStage = true;
                 const startX = Math.random() < 0.5 ? -30 : config.canvasWidth + 30;
                 const speedX = startX < 0 ? 250 : -250;
@@ -2432,7 +2440,7 @@ function updatePlayingState(dt_sec) {
 
             // Invader Spawning
             const hasInvaderOnScreen = monsters.some(m => m.type === 'invader');
-            if (invadersSpawnedThisStage < invaderSpawnCountForStage && !hasInvaderOnScreen && Math.random() < 0.5) {
+            if (invadersSpawnedThisStage < invaderSpawnCountForStage && !hasInvaderOnScreen && canSpawn() && Math.random() < 0.5) {
                 invadersSpawnedThisStage++;
                 monsters.push({
                     type: 'invader',
@@ -2987,7 +2995,7 @@ const BOSS_DEFS = [
             b.y = 150;
             if (b.t % 240 === 120) {
                 b.doors = 30;
-                [-1, 1].forEach(s => monsters.push({ type: 'invader', x: b.x + s * 40, y: b.y + 30, vx: s * 40, vy: 120, width: 56, height: 56, shootCooldown: 60 + Math.random() * 30 }));
+                [-1, 1].forEach(s => monsters.push({ type: 'invader', fromBoss: true, x: b.x + s * 40, y: b.y + 30, vx: s * 40, vy: 120, width: 56, height: 56, shootCooldown: 60 + Math.random() * 30 }));
             }
             if (b.doors > 0) b.doors--;
             if (b.t % 90 === 0) {
@@ -6204,7 +6212,8 @@ const ENEMY_BUILD = {
     // ウィーバー（光の連鎖竜）: 光るプリズムの頭のあとに、六角の枠をつないだ長い帯がうねって続く。節ごとに装甲片と宝石、尾は光の吹き流し
     weaver(K) {
         const g = new THREE.Group(), P = 0xff4fd8, C = 0x7fe9ff; g.scale.setScalar(1.45);
-        const head = new THREE.Group(); g.add(head);
+        const HS = 1.35; // 頭は一回り大きく（当たり判定も広げた）
+        const head = new THREE.Group(); head.scale.setScalar(HS); g.add(head);
         head.add(ePart(K, LAB.loft([[-10, 14, 14], [4, 18, 18], [18, 1, 1]], 3, -Math.PI / 2), 1, { glass: 0.55, cage: 1.3, seed: 3 }));
         const eye = new THREE.Mesh(new THREE.OctahedronGeometry(4.5, 0), K.mats[3]); eye.position.set(0, 6, 4); head.add(eye);
         [-1, 1].forEach(s => { const h = fuse(LAB.loft([[-6, 3, 2, 0, s * 8], [8, 2, 1.5, 4, s * 18], [14, 1, 1, 6, s * 22]], 4), C, { cage: false }); head.add(h); }); // 角
@@ -6218,7 +6227,7 @@ const ENEMY_BUILD = {
         }
         const tail = []; for (let k = 0; k < 6; k++) { const d = new THREE.Mesh(new THREE.BoxGeometry(6 - k * 0.7, 0.8, 2.4), LAB.glass(P, 0.85 - k * 0.12)); g.add(d); tail.push(d); }
         g.userData.anim = (t, m) => {
-            const dir = m && m.vx < 0 ? -1 : 1, pos = k => new THREE.Vector3(-dir * (k * 13 + 16), Math.sin(t * 5 - k * 0.7) * 3, Math.sin(t * 3.2 - k * 0.55) * (6 + k * 2.2));
+            const dir = m && m.vx < 0 ? -1 : 1, pos = k => new THREE.Vector3(-dir * (k * 13 + 22), Math.sin(t * 5 - k * 0.7) * 3, Math.sin(t * 3.2 - k * 0.55) * (6 + k * 2.2));
             head.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2; head.rotation.z = Math.sin(t * 3.2) * 0.2;
             segs.forEach((sg, k) => { const p = pos(k), q = pos(k + 1); sg.position.copy(p); sg.rotation.y = Math.atan2(p.x - q.x, p.z - q.z); sg.rotation.z = Math.sin(t * 4 + k) * 0.3; });
             tail.forEach((d, k) => { const p = pos(9 + k * 0.6); d.position.copy(p); d.rotation.y = t * 4 + k; });
@@ -6823,8 +6832,10 @@ function render3D() {
             const pulse = 1 + Math.sin(rTime * 14 + eb._r) * 0.15;
             const s = eb.radius * 2.4 * (IS_MOBILE ? 1.3 : 1) * pulse;
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
-            glow.add(x, y, z, c, eb.radius * (loadLv >= 2 ? 9 : 13), 1.25);     // 色のハロー
-            if (loadLv < 1) glow.add(x, y + 2, z, COL_WHITE, eb.radius * 5, 2.2);   // 白い芯
+            // 大きい弾（ECLIPSEなど）はハローが巨大になって眩しいので、大きさと明るさを抑える
+            const gr = eb.radius > 5 ? 5 + (eb.radius - 5) * 0.3 : eb.radius, ga = eb.radius > 5 ? 0.7 : 1;
+            glow.add(x, y, z, c, gr * (loadLv >= 2 ? 9 : 13), 1.25 * ga);     // 色のハロー
+            if (loadLv < 1) glow.add(x, y + 2, z, COL_WHITE, gr * 5, 2.2 * ga);   // 白い芯
             if (efx && loadLv < 1) {
                 const sp = Math.hypot(eb.vx, eb.vy) || 1;
                 trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
@@ -7863,7 +7874,11 @@ function updateExtraEnemy(m, dt) {
     m.t += sp;
     if (m.type === 'weaver') { // 横切りながら波打ち、真下へ弾のすだれ。8発ごとに自機狙いの3way
         m.x += m.vx * sp; m.y = m.baseY + Math.sin(m.t * 2.2) * 60;
-        if ((m.st -= dt * r) <= 0) { m.st = 0.16; shot(Math.PI / 2, 150); if (++m.k % 8 === 0) { const a = Math.atan2(player.y - m.y, player.x - m.x); [-0.18, 0, 0.18].forEach(d => shot(a + d, 300)); } }
+        // すだれの弾は横に一定距離ごと（すり抜けられる間隔）。ハイパー中も間隔は詰めない
+        m.dx = (m.dx || 0) + Math.abs(m.vx * sp);
+        const gap = IS_MOBILE ? 92 : 50; // PCは濃いめ、スマホは確実に抜けられる間隔
+        if (m.dx >= gap) { m.dx -= gap; m.st = 0.2; shot(Math.PI / 2, 150); if (++m.k % 4 === 0) { const a = Math.atan2(player.y - m.y, player.x - m.x); [-0.18, 0, 0.18].forEach(d => shot(a + d, 300)); } }
+        else m.st -= dt;
     } else if (m.type === 'sentry') { // 降りてきて止まり、3方向の渦をまいて去る
         if (m.t > 6.5) { m.leave = true; m.y -= 180 * sp; } else m.y += (m.ty - m.y) * Math.min(1, dt * 2.5);
         if (m.t > 1.3 && m.t < 6 && (m.st -= dt * r) <= 0) { m.st = 0.11; m.spin += 0.27; for (let k = 0; k < 3; k++) shot(m.spin + k * Math.PI * 2 / 3, 170); }
