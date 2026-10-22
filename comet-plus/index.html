@@ -2402,7 +2402,7 @@ function updatePlayingState(dt_sec) {
         const spawnCheckInterval = 120;
         if (frameCount % spawnCheckInterval === 0) {
             // UFO Spawning
-            if (stage % 3 === 0 && !hasUFOSpawnedThisStage && !boss && bossSpawnFrame === -1 && Math.random() < 0.2) {
+            if (stage % 3 === 2 && !hasUFOSpawnedThisStage && !boss && bossSpawnFrame === -1 && Math.random() < 0.2) { // ボス面(3の倍数)と重なって出なくなっていたので、ボスの手前の面に
                 hasUFOSpawnedThisStage = true;
                 const startX = Math.random() < 0.5 ? -30 : config.canvasWidth + 30;
                 const speedX = startX < 0 ? 250 : -250;
