@@ -11,9 +11,25 @@
 //   5. Project settings (gear) → General → Your apps → Web (</>) → register an app (no Hosting needed)
 //      and copy the firebaseConfig object it shows (make sure databaseURL is included).
 //   6. Replace `null` below with that object, e.g.
-//        window.FIREBASE_CONFIG = null;
+//        window.FIREBASE_CONFIG = {
+//          apiKey: "…", authDomain: "go-multiplay.firebaseapp.com",
+//          databaseURL: "https://go-multiplay-default-rtdb.<region>.firebasedatabase.app",
+//          projectId: "go-multiplay", storageBucket: "…", messagingSenderId: "…", appId: "…"
+//        };
+//      then bump the ?v= of firebase-config.js in go/index.html.
+// The web config is public by design; access is protected by the Realtime Database rules.
+// While this is null, online play shows "coming soon" and Google sync is hidden (testing: add ?mock=1 to the URL).
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAIi8vOZHvCnD8YHGfZVQ42NjGsdWZEpPs",
+  authDomain: "go-multiplay.firebaseapp.com",
+  databaseURL: "https://go-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "go-multiplay",
+  storageBucket: "go-multiplay.firebasestorage.app",
+  messagingSenderId: "651623210120",
+  appId: "1:651623210120:web:5cc66304fcfbf00d6a133d"
+};
 // App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
 // Setup: create the key for core-calmdust.github.io, register it in Firebase console → App Check → this web app, publish the page
 // with the key, then turn on enforcement for Realtime Database (local testing: ?appcheckdebug=1 on localhost prints a debug token).
-window.FIREBASE_APPCHECK_SITE_KEY = null;   // reCAPTCHA Enterprise (Fraud Defense) site key — set after registering go-multiplay in App Check
+window.FIREBASE_APPCHECK_SITE_KEY = '6LeHvPotAAAAAG2QhGF_YWbr5rRU-k1s6dSE9sQI';   // reCAPTCHA Enterprise (Fraud Defense) site key
