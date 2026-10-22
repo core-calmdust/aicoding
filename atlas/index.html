@@ -816,7 +816,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
 /* board size + time control on one row (go) */
 .bvi .tcrow:has(#bvSize){flex-wrap:nowrap!important;gap:10px!important}.bvi .tcrow:has(#bvSize) label{gap:6px}
-@media (max-width:819px){.bvi .tcrow:has(#bvSize) label:first-child{font-size:0;gap:0}.bvi .tcrow:has(#bvSize) .sidetg button{padding-inline:7px;font-size:14px}.bvi .tcrow:has(#bvSize) .lvpick{padding:0 8px}}   /* phones: the 9×9 / 13×13 / 19×19 toggle speaks for itself */
+@media (max-width:819px){.bvi .tcrow label:has(#bvSize){font-size:0;gap:0}.bvi .tcrow:has(#bvSize) .sidetg button{padding-inline:7px;font-size:14px}.bvi .tcrow:has(#bvSize) .lvpick{padding:0 8px}}   /* phones: the 9×9 / 13×13 / 19×19 toggle speaks for itself */
 .bvi .sidetg button{flex:1;border:0;background:none;font:inherit;font-weight:900;font-size:15px;color:var(--ink2);padding:7px 6px;border-radius:10px;cursor:pointer;white-space:nowrap}
 .bvi .sidetg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
@@ -966,6 +966,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=101"></script>
+<script src="app.js?v=102"></script>
 </body>
 </html>
