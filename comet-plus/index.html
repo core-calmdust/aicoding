@@ -1238,6 +1238,212 @@ let shields = 0, maxShields = 0, hurtTimer = 0, pendingHitClear = false, spBonus
 // ハイスコアは難易度ごとに保存（STANDARDは従来のキーをそのまま使う）
 const hsKey = base => base + (DIFFS[difficultyIndex].id === 'STANDARD' ? '' : '_' + DIFFS[difficultyIndex].id.toLowerCase()) + (IS_MOBILE ? '_mobile' : ''); // スマホは別記録
 const readHS = base => { try { return +localStorage.getItem(hsKey(base)) || 0; } catch (e) { return 0; } };
+// ---------------------------------
+// ハイスコアランキング（難易度×モード×端末ごとに上位100件。ネーム登録はアーケード風・英字のみ最大8文字）
+// ---------------------------------
+const RANK_MAX = 100, RANK_SHOW = 10, NAME_MAX = 8;
+const RANK_MODES = [['STANDARD MODE', 'STANDARD'], ['JOURNEY MODE', 'JOURNEY'], ['STARTRAIL MODE', 'STARTRAIL']];
+// オンラインランキング: Firebase Realtime Database のURLを入れると有効になる（空のままならローカルのみ）
+// 例: 'https://xxxx-default-rtdb.firebaseio.com'
+// ルール例: { "rules": { "cometplus": { "rank": { "$key": { ".read": true, ".indexOn": ["s"],
+//   "$id": { ".write": "!data.exists()", ".validate": "newData.hasChildren(['n','s','t']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() < 1e12" } } } } }
+const RANK_DB_URL = '';
+const rankKey = (modeIdx, diffIdx) => `${['std', 'jny', 'str'][modeIdx]}_${DIFFS[diffIdx].id.toLowerCase()}_${IS_MOBILE ? 'mobile' : 'pc'}`;
+const RankLocal = {
+    _db: null,
+    db() { if (!this._db) { try { this._db = JSON.parse(localStorage.getItem('cometPlusRank_v1') || '{}') || {}; } catch (e) { this._db = {}; } } return this._db; },
+    list(k) { return (this.db()[k] || []).slice(); },
+    qualifies(k, s) { const l = this.list(k); return s > 0 && (l.length < RANK_MAX || s > l[l.length - 1].s); },
+    add(k, e) { // 追加した順位（1始まり）を返す
+        const d = this.db(), l = (d[k] || []).slice(); l.push(e);
+        l.sort((a, b) => b.s - a.s || a.t - b.t);
+        d[k] = l.slice(0, RANK_MAX);
+        try { localStorage.setItem('cometPlusRank_v1', JSON.stringify(d)); } catch (err) {}
+        return d[k].indexOf(e) + 1;
+    },
+};
+const RankOnline = {
+    enabled: () => !!RANK_DB_URL,
+    cache: {}, // key -> { at, list, err }
+    async fetch(k) {
+        if (!RANK_DB_URL) return null;
+        const c = this.cache[k]; if (c && performance.now() - c.at < 30000) return c.list;
+        try {
+            const r = await fetch(`${RANK_DB_URL}/cometplus/rank/${k}.json?orderBy=%22s%22&limitToLast=${RANK_MAX}`);
+            const j = await r.json(); const list = Object.values(j || {}).filter(e => e && typeof e.s === 'number').sort((a, b) => b.s - a.s || a.t - b.t);
+            this.cache[k] = { at: performance.now(), list }; return list;
+        } catch (e) { this.cache[k] = { at: performance.now(), list: null, err: true }; return null; }
+    },
+    async submit(k, e) {
+        if (!RANK_DB_URL) return;
+        try { await fetch(`${RANK_DB_URL}/cometplus/rank/${k}.json`, { method: 'POST', body: JSON.stringify({ n: e.n, s: e.s, st: e.st || 0, t: e.t }) }); delete this.cache[k]; } catch (err) {}
+    },
+};
+let rankView = { diff: 1, mode: 0, src: 'local', online: null, loading: false }; // ランキング画面の状態
+let nameEntry = null;   // ネーム登録中: { key, name, cur, rank, entry }
+let rankResult = null;  // 登録した順位（ゲームオーバー画面に表示）
+const NAME_KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(['DEL', 'END']); // 13列×2段＋DEL/END
+const lastName = () => { try { return (localStorage.getItem('cometPlusName') || '').replace(/[^A-Z]/g, '').slice(0, NAME_MAX); } catch (e) { return ''; } };
+const typedLetters = []; // ネーム登録中にキーボードで打った文字
+function openRanking() {
+    rankView.diff = difficultyIndex; rankView.mode = Math.max(0, RANK_MODES.findIndex(m => m[0] === titleMenuItems[titleMenuIndex])); rankView.src = 'local';
+    gameState = 'ranking'; audioHandler.playSound('menu');
+}
+function rankRefreshOnline() {
+    if (rankView.src !== 'online' || !RankOnline.enabled()) return;
+    const k = rankKey(rankView.mode, rankView.diff), want = k + (IS_MOBILE ? '' : '*');
+    rankView.loading = true; rankView.want = want;
+    const keys = IS_MOBILE ? [k] : RANK_MODES.map((_, i) => rankKey(i, rankView.diff));
+    Promise.all(keys.map(x => RankOnline.fetch(x))).then(() => { if (rankView.want === want) rankView.loading = false; });
+}
+function startNameEntry(k, entry) {
+    const nm = lastName();
+    nameEntry = { key: k, name: nm, cur: nm ? NAME_KEYS.length - 1 : 0, entry };
+    typedLetters.length = 0;
+}
+function finishNameEntry() {
+    const ne = nameEntry; if (!ne) return;
+    ne.entry.n = ne.name || 'PLAYER';
+    try { localStorage.setItem('cometPlusName', ne.name); } catch (e) {}
+    rankResult = { rank: RankLocal.add(ne.key, ne.entry), key: ne.key };
+    RankOnline.submit(ne.key, ne.entry);
+    nameEntry = null; gameOverAt = performance.now(); // 登録直後のタップでリトライしないように
+    audioHandler.playSound('waveClear');
+}
+function nameEntryInput() { // ネーム登録の入力処理（gameOver中に毎フレーム）
+    const ne = nameEntry, cols = 13;
+    while (typedLetters.length) {
+        const ch = typedLetters.shift();
+        if (ch === 'BACK') ne.name = ne.name.slice(0, -1);
+        else if (ne.name.length < NAME_MAX) ne.name += ch;
+        audioHandler.playSound('menu');
+    }
+    let c = ne.cur;
+    const row = c < 26 ? Math.floor(c / cols) : 2;
+    if (input.leftTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + cols - 1) % cols) : (c === 26 ? 27 : 26);
+    if (input.rightTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + 1) % cols) : (c === 26 ? 27 : 26);
+    if (input.upTrigger) c = row === 0 ? (c % cols < 7 ? 26 : 27) : row === 1 ? c - cols : (c === 26 ? 13 + 3 : 13 + 9);
+    if (input.downTrigger) c = row === 0 ? c + cols : row === 1 ? (c % cols < 7 ? 26 : 27) : (c === 26 ? 3 : 9);
+    if (c !== ne.cur) { ne.cur = c; audioHandler.playSound('menu'); }
+    const press = k => {
+        const key = NAME_KEYS[k];
+        if (key === 'END') { finishNameEntry(); return; }
+        if (key === 'DEL') ne.name = ne.name.slice(0, -1);
+        else if (ne.name.length < NAME_MAX) { ne.name += key; if (ne.name.length >= NAME_MAX) ne.cur = 27; }
+        audioHandler.playSound('menu');
+    };
+    if (input.shootTrigger && !keyState['KeyX']) press(ne.cur); // Xは文字入力に使うので決定はSpace/パッド
+    if (input.replayTrigger) { finishNameEntry(); return; } // スタート/Enterで決定（前回の名前ならそのまま1回押すだけ）
+    if (nameEntry && tapNameKey !== null) { const k = tapNameKey; ne.cur = k; press(k); }
+}
+let tapNameKey = null;
+function nameKeyRect(k) { // 文字盤のキーの位置（HUD座標）
+    const cols = 13, kw = IS_MOBILE ? 40 : 38, kh = IS_MOBILE ? 52 : 40, gx = HUD_W / 2 - cols * kw / 2, gy = HUD_H / 2 + (IS_MOBILE ? 10 : 20);
+    if (k < 26) return { x: gx + (k % cols) * kw, y: gy + Math.floor(k / cols) * kh, w: kw - 4, h: kh - 6 };
+    const bw = IS_MOBILE ? 150 : 130;
+    return { x: HUD_W / 2 + (k === 26 ? -bw - 10 : 10), y: gy + 2 * kh + 6, w: bw, h: kh - 6 };
+}
+function drawNameEntry(ctx) {
+    const ne = nameEntry, cx = HUD_W / 2, cy = HUD_H / 2, col = `hsl(${(frameCount * 3) % 360},100%,70%)`;
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,0,14,0.78)'; ctx.fillRect(0, 0, HUD_W, HUD_H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const rankNow = RankLocal.list(ne.key).filter(e => e.s >= ne.entry.s).length + 1;
+    drawWithGlow(ctx, () => { ctx.fillStyle = col; ctx.font = `600 ${IS_MOBILE ? 34 : 30}px ${config.fontFamily}`; ctx.fillText(`NEW RECORD!  RANK ${rankNow}`, cx, cy - (IS_MOBILE ? 250 : 200)); }, col);
+    ctx.font = `600 ${IS_MOBILE ? 18 : 15}px ${config.fontFamily}`; ctx.fillStyle = '#cfe8ff';
+    ctx.fillText(`${DIFFS[difficultyIndex].id}  /  ${gameMode.replace(' MODE', '')}  /  ${score.toLocaleString('en')}`, cx, cy - (IS_MOBILE ? 205 : 162));
+    ctx.fillStyle = '#ffffff'; ctx.fillText('ENTER YOUR NAME', cx, cy - (IS_MOBILE ? 150 : 118));
+    // 名前の枠
+    const sw = IS_MOBILE ? 50 : 44, sx = cx - NAME_MAX * sw / 2, sy = cy - (IS_MOBILE ? 80 : 62);
+    for (let i = 0; i < NAME_MAX; i++) {
+        const x = sx + i * sw + sw / 2, ch = ne.name[i] || '';
+        ctx.fillStyle = i === ne.name.length && frameCount % 40 < 20 ? col : 'rgba(160,200,255,0.5)';
+        ctx.fillRect(x - sw / 2 + 6, sy + 22, sw - 12, 3);
+        if (ch) drawWithGlow(ctx, () => { ctx.fillStyle = '#ffffff'; ctx.font = `700 ${IS_MOBILE ? 40 : 34}px ${config.fontFamily}`; ctx.fillText(ch, x, sy); }, '#7fe9ff');
+    }
+    // 文字盤
+    for (let k = 0; k < NAME_KEYS.length; k++) {
+        const r = nameKeyRect(k), on = k === ne.cur;
+        ctx.fillStyle = on ? 'rgba(127,233,255,0.28)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(r.x, r.y, r.w, r.h);
+        ctx.strokeStyle = on ? col : 'rgba(127,233,255,0.25)'; ctx.lineWidth = on ? 2 : 1; ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+        ctx.fillStyle = on ? '#ffffff' : '#a9c8ff'; ctx.font = `600 ${NAME_KEYS[k].length > 1 ? (IS_MOBILE ? 18 : 15) : (IS_MOBILE ? 22 : 18)}px ${config.fontFamily}`;
+        ctx.fillText(NAME_KEYS[k] === 'DEL' ? '◀ DEL' : NAME_KEYS[k], r.x + r.w / 2, r.y + r.h / 2 + 1);
+    }
+    ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 14 : 12}px ${config.fontFamily}`;
+    const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · X/Y: INPUT · START: FINISH' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: FINISH';
+    ctx.fillText(hint, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 40 : 30));
+    ctx.restore();
+}
+function rankInput() { // ランキング画面の入力処理
+    if (input.leftTrigger) { rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+    if (input.rightTrigger) { rankView.diff = (rankView.diff + 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+    if (input.upTrigger || input.downTrigger) { // LOCAL / ONLINE の切り替え
+        rankView.src = rankView.src === 'local' ? 'online' : 'local'; audioHandler.playSound('menu'); rankRefreshOnline();
+    }
+    if (input.titleTrigger || input.replayTrigger) { gameState = 'title'; audioHandler.playSound('menu'); }
+    while (rankTaps.length) {
+        const tp = rankTaps.shift(), L = rankLayout();
+        if (tp.y < L.top + 40 && tp.x < HUD_W * 0.25) { rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (tp.y < L.top + 40 && tp.x > HUD_W * 0.75) { rankView.diff = (rankView.diff + 1) % DIFFS.length; audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (Math.abs(tp.y - L.srcY) < 24) { rankView.src = tp.x < HUD_W / 2 ? 'local' : 'online'; audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (IS_MOBILE && Math.abs(tp.y - L.tabY) < 26) { rankView.mode = Math.max(0, Math.min(2, Math.floor(tp.x / (HUD_W / 3)))); audioHandler.playSound('menu'); rankRefreshOnline(); }
+        else if (tp.y > L.backY - 30) { gameState = 'title'; audioHandler.playSound('menu'); }
+    }
+}
+const rankTaps = [];
+const titleRankY = () => IS_MOBILE ? HUD_H * 0.8 : HUD_H - 32;
+function rankLayout() {
+    const top = IS_MOBILE ? HUD_H * 0.12 : 60;
+    return { top, srcY: top + 62, tabY: top + 112, listY: top + (IS_MOBILE ? 160 : 140), rowH: IS_MOBILE ? 46 : 32, backY: IS_MOBILE ? HUD_H * 0.86 : HUD_H - 40 };
+}
+function drawRanking(ctx) {
+    const L = rankLayout(), cx = HUD_W / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,0,14,0.72)'; ctx.fillRect(0, 0, HUD_W, HUD_H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const dcol = ['#7dffd0', '#7fe9ff', '#ff7ab0'][rankView.diff];
+    drawWithGlow(ctx, () => { ctx.fillStyle = '#ffffff'; ctx.font = `300 ${IS_MOBILE ? 22 : 18}px ${config.logoFontFamily}`; ctx.fillText('R A N K I N G', cx, L.top - 22); }, '#7fe9ff');
+    drawWithGlow(ctx, () => { ctx.fillStyle = dcol; ctx.font = `700 ${IS_MOBILE ? 34 : 30}px ${config.fontFamily}`; ctx.fillText(DIFFS[rankView.diff].id, cx, L.top + 16); }, dcol);
+    const blink = frameCount % 50 < 35 ? 1 : 0.4;
+    ctx.globalAlpha = blink; ctx.fillStyle = dcol; ctx.font = `700 ${IS_MOBILE ? 30 : 26}px ${config.fontFamily}`;
+    ctx.fillText('◀', cx - (IS_MOBILE ? 170 : 160), L.top + 16); ctx.fillText('▶', cx + (IS_MOBILE ? 170 : 160), L.top + 16); ctx.globalAlpha = 1;
+    // LOCAL / ONLINE
+    ctx.font = `600 ${IS_MOBILE ? 17 : 14}px ${config.fontFamily}`;
+    [['local', 'LOCAL'], ['online', 'ONLINE']].forEach(([id, lb], i) => {
+        const x = cx + (i ? 70 : -70), on = rankView.src === id;
+        ctx.fillStyle = on ? '#ffffff' : 'rgba(170,190,230,0.55)'; ctx.fillText(lb, x, L.srcY);
+        if (on) { ctx.fillStyle = dcol; ctx.fillRect(x - 34, L.srcY + 12, 68, 2); }
+    });
+    const modes = IS_MOBILE ? [rankView.mode] : [0, 1, 2];
+    if (IS_MOBILE) { // モードのタブ
+        RANK_MODES.forEach((m, i) => { const x = HUD_W / 6 + i * HUD_W / 3, on = i === rankView.mode; ctx.fillStyle = on ? dcol : 'rgba(170,190,230,0.5)'; ctx.font = `600 ${on ? 19 : 16}px ${config.fontFamily}`; ctx.fillText(m[1], x, L.tabY); if (on) ctx.fillRect(x - 46, L.tabY + 15, 92, 2); });
+    }
+    const colW = IS_MOBILE ? HUD_W - 60 : Math.min(330, (HUD_W - 60) / 3);
+    modes.forEach((mi, ci) => {
+        const x0 = IS_MOBILE ? 30 : cx - colW * 1.5 + ci * colW, k = rankKey(mi, rankView.diff);
+        if (!IS_MOBILE) { ctx.textAlign = 'center'; ctx.fillStyle = dcol; ctx.font = `600 16px ${config.fontFamily}`; ctx.fillText(RANK_MODES[mi][1], x0 + colW / 2, L.listY - 28); }
+        let list;
+        if (rankView.src === 'online') {
+            if (!RankOnline.enabled()) { if (ci === (IS_MOBILE ? 0 : 1)) { ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,220,255,0.8)'; ctx.font = `600 ${IS_MOBILE ? 22 : 18}px ${config.fontFamily}`; ctx.fillText('ONLINE RANKING  COMING SOON', cx, L.listY + L.rowH * 4); } return; }
+            const c = RankOnline.cache[k]; list = c && c.list;
+            if (!list) { ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 15px ${config.fontFamily}`; ctx.fillText(c && c.err ? 'OFFLINE' : 'LOADING...', x0 + colW / 2, L.listY + L.rowH * 4); return; }
+        } else list = RankLocal.list(k);
+        const myName = lastName();
+        for (let i = 0; i < RANK_SHOW; i++) {
+            const e = list[i], y = L.listY + i * L.rowH, me = e && rankResult && rankResult.key === k && rankResult.rank === i + 1 && rankView.src === 'local';
+            const c = me ? `hsl(${(frameCount * 4) % 360},100%,72%)` : i === 0 ? '#ffd76a' : i < 3 ? '#e8f4ff' : 'rgba(200,215,255,0.78)';
+            ctx.fillStyle = c; ctx.font = `600 ${IS_MOBILE ? 22 : 16}px ${config.fontFamily}`;
+            const pad = IS_MOBILE ? 8 : 22; // 列どうしの間隔
+            ctx.textAlign = 'left'; ctx.fillText(String(i + 1).padStart(2, '0'), x0 + pad, y);
+            ctx.fillText(e ? e.n : '--------', x0 + pad + (IS_MOBILE ? 56 : 38), y);
+            ctx.textAlign = 'right'; ctx.fillText(e ? e.s.toLocaleString('en') : '-', x0 + colW - pad, y);
+            if (e && !me && myName && e.n === myName && rankView.src === 'online') { ctx.fillStyle = 'rgba(127,233,255,0.12)'; ctx.fillRect(x0, y - L.rowH / 2 + 3, colW, L.rowH - 6); }
+        }
+    });
+    ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 16 : 12}px ${config.fontFamily}`;
+    ctx.fillText(IS_MOBILE ? '◀ ▶ DIFFICULTY · TAP HERE TO RETURN' : lastInputDevice === 'gamepad' ? '◀ ▶ DIFFICULTY · ▲▼ LOCAL / ONLINE · START: BACK' : '← → DIFFICULTY · ↑↓ LOCAL / ONLINE · ENTER / ESC: BACK', cx, L.backY);
+    ctx.restore();
+}
 let highScoreStandard = 0, highScoreJourney = 0, highScoreStartrail = 0;
 function loadHighScores() {
     highScoreStandard = readHS(config.highScoreKeyStandard);
@@ -1316,6 +1522,10 @@ let perfLastT = 0;
 const keyState = {};
 window.addEventListener('keydown', e => {
     lastInputDevice = 'keyboard';
+    if (nameEntry && gameState === 'gameOver' && !e.repeat) { // ネーム登録: 英字は直接入力、Backspaceで1文字消す
+        if (/^Key[A-Z]$/.test(e.code)) { typedLetters.push(e.code.slice(3)); e.preventDefault(); }
+        else if (e.code === 'Backspace') { typedLetters.push('BACK'); e.preventDefault(); }
+    }
     if (!keyState[e.code]) {
         inputDirty = true;
         // PC: 押した瞬間に1フレーム分だけ先に動かす（次の描画を待たずに反応。当たり判定も一緒に動く）
@@ -1369,7 +1579,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
-const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false, resetTrigger: false, confirmYesTrigger: false, confirmNoTrigger: false }; // ★ プロパティを追加
+const input = { left: false, right: false, up: false, down: false, slow: false, shootTrigger: false, titleTrigger: false, replayTrigger: false, pauseTrigger: false, resetTrigger: false, confirmYesTrigger: false, confirmNoTrigger: false, leftTrigger: false, rightTrigger: false }; // ★ プロパティを追加
 let wasEnterPressed = false, wasQPressed = false, wasSelectPressed = false;
 let wasStartPressed = false, wasPPressed = false, wasUpPressed = false;
 let wasDownPressed = false, wasShootPressed = false;
@@ -1701,7 +1911,10 @@ function pollInput() {
         input.titleTrigger = qTrigger || selectTrigger || escTrigger;
     } else if (gameState === 'gameOver') {
         input.replayTrigger = enterTrigger || startTrigger;
-        input.titleTrigger = qTrigger || selectTrigger;
+        input.titleTrigger = nameEntry ? false : qTrigger || selectTrigger;
+    } else if (gameState === 'ranking') {
+        input.replayTrigger = enterTrigger || startTrigger;
+        input.titleTrigger = qTrigger || selectTrigger || escTrigger;
     } else if (gameState === 'paused') {
         input.replayTrigger = false;
         input.titleTrigger = qTrigger || selectTrigger;
@@ -1717,15 +1930,23 @@ function pollInput() {
     const isDownPressed = input.down;
     input.downTrigger = isDownPressed && !wasDownPressed;
     wasDownPressed = isDownPressed;
+    input.leftTrigger = input.left && !pollInput.wl; pollInput.wl = input.left;
+    input.rightTrigger = input.right && !pollInput.wr; pollInput.wr = input.right;
     
     wasStartPressed = isStartPressed;
     wasEnterPressed = isEnterPressed;
     wasSelectPressed = isSelectPressed;
     wasQPressed = isQPressed;
     // タップをメニュー操作に変換（座標は表示キャンバス基準）
-    tapSel = null; tapDiffSel = null;
+    tapSel = null; tapDiffSel = null; tapNameKey = null;
     while (tapQueue.length) {
         const tp = tapQueue.shift();
+        if (gameState === 'ranking') { rankTaps.push(tp); continue; }
+        if (gameState === 'gameOver' && nameEntry) { // ネーム登録の文字盤
+            for (let k = 0; k < NAME_KEYS.length; k++) { const r = nameKeyRect(k); if (tp.x >= r.x - 2 && tp.x <= r.x + r.w + 2 && tp.y >= r.y - 3 && tp.y <= r.y + r.h + 3) { tapNameKey = k; break; } }
+            continue;
+        }
+        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - HUD_W / 2) < 120) { openRanking(); continue; }
         if (gameState === 'title') {
             const ty = TITLE_PIV + (tp.y - (MENU_DY - 40) - TITLE_PIV) / TITLE_S;
             const i = Math.round((ty - 344 + 7) / 42);
@@ -1864,6 +2085,12 @@ function gameOver(reason) {
                 break;
         }
         newHighScoreAchieved = true;
+    }
+    // ランキング: 上位100件に入ったらネーム登録
+    rankResult = null; nameEntry = null;
+    if (!hasUsedInvincibility) {
+        const mi = RANK_MODES.findIndex(m => m[0] === gameMode);
+        if (mi >= 0) { const k = rankKey(mi, difficultyIndex); if (RankLocal.qualifies(k, score)) startNameEntry(k, { n: '', s: score, st: stage, t: Date.now() }); }
     }
 
 if (reason === 'collision') {
@@ -3397,6 +3624,7 @@ function update(timestamp) {
             }
 
             // --- 入力処理 ---
+            if (input.leftTrigger || input.rightTrigger) { openRanking(); if (input.leftTrigger) rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; else rankView.diff = (rankView.diff + 1) % DIFFS.length; return; } // 左右でランキング画面へ
             const prevMenuIndex = titleMenuIndex;
             if (input.upTrigger) {
                 titleMenuIndex = (titleMenuIndex - 1 + titleMenuItems.length) % titleMenuItems.length;
@@ -3457,9 +3685,13 @@ function update(timestamp) {
                 loadHighScores();
                 startGame(pendingMode);
             }
+        } else if (gameState === 'ranking') {
+            frameCount++;
+            rankInput();
         } else if (gameState === 'gameOver') {
             frameCount++; // Keep frameCount running for animations
-            if (input.titleTrigger) {
+            if (nameEntry) nameEntryInput(); // ネーム登録中は他の操作をしない
+            else if (input.titleTrigger) {
                  gameState = 'title';
                  init();
             } else if (input.replayTrigger) {
@@ -5647,7 +5879,7 @@ function render3D() {
     cornerGems.forEach((g, i) => { g.rotation.y = rTime * 2 + i; g.scale.setScalar(0.8 + visualBeat * 0.3); });
 
     // タイトル用ハブ
-    const showHub = gameState === 'title' || gameState === 'confirmReset' || gameState === 'difficulty';
+    const showHub = gameState === 'title' || gameState === 'confirmReset' || gameState === 'difficulty' || gameState === 'ranking';
     updateTitleDemo(dt, showHub);
     titleHub.visible = titleHubInner.visible = showHub && titleDemo.idx < 0;
     kickRing.visible = showHub;
@@ -6131,7 +6363,7 @@ function draw() {
     }
 
     // タイトル画面の読みやすさ確保用ベール
-    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver' || gameState === 'difficulty') {
+    if (gameState === 'title' || gameState === 'confirmReset' || gameState === 'gameOver' || gameState === 'difficulty' || gameState === 'ranking') {
         const g = renderCtx.createRadialGradient(HUD_W / 2, HUD_H / 2, 60, HUD_W / 2, HUD_H / 2, 560);
         g.addColorStop(0, gameState === 'title' ? 'rgba(5,0,18,0.7)' : 'rgba(5,0,18,0.55)');
         g.addColorStop(1, 'rgba(5,0,18,0.15)');
@@ -6657,6 +6889,10 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '1.5px';
         renderCtx.fillStyle = 'rgba(200,210,255,0.55)';
         renderCtx.fillText('(C) 2026 Archetypes Inc. / CALMDUST', cx, HUD_H - (IS_MOBILE ? 14 : 10));
+        // ランキングへの案内（スマホはタップ、PCは左右キー）
+        renderCtx.font = `600 ${IS_MOBILE ? 17 : 13}px ${config.fontFamily}`;
+        renderCtx.fillStyle = `rgba(160,235,255,${0.55 + 0.3 * Math.sin(frameCount * 0.08)})`;
+        renderCtx.fillText(IS_MOBILE ? '▶ RANKING' : lastInputDevice === 'gamepad' ? '◀ ▶  RANKING' : '← →  RANKING', cx, titleRankY());
         renderCtx.restore();
         renderCtx.save();
         renderCtx.translate(0, MENU_DY - 40); // 画面の上下中央に揃える
@@ -6731,6 +6967,8 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
 
+    } else if (gameState === 'ranking') {
+        drawRanking(renderCtx);
     } else if (gameState === 'gameOver') {
         renderCtx.textAlign = 'center';
         renderCtx.textBaseline = 'middle';
@@ -6791,6 +7029,11 @@ function draw() {
             renderCtx.fillText(replayText, HUD_W / 2, replayY);
             if (!IS_MOBILE) renderCtx.fillText(titleText, HUD_W / 2, replayY + 30); // スマホはボタン
         }, '#ffffff');
+        if (rankResult) { // 登録した順位
+            const rc = `hsl(${(frameCount * 3 + 120) % 360},100%,72%)`;
+            drawWithGlow(renderCtx, () => { renderCtx.font = `600 22px ${config.fontFamily}`; renderCtx.fillStyle = rc; renderCtx.fillText(`RANK ${rankResult.rank}  ${(lastName() || 'PLAYER')}`, HUD_W / 2, scoreY + 84); }, rc);
+        }
+        if (nameEntry) drawNameEntry(renderCtx);
 
         renderCtx.textBaseline = 'alphabetic';
     }
@@ -7104,7 +7347,7 @@ if (IS_MOBILE) {
         if (gameState === lastState) return; lastState = gameState;
         document.body.classList.toggle('in-play', gameState === 'playing' || gameState === 'paused');
         document.body.classList.toggle('on-title', gameState === 'title');
-        document.body.classList.toggle('show-tbtn', gameState === 'paused' || gameState === 'gameOver');
+        document.body.classList.toggle('show-tbtn', gameState === 'paused' || (gameState === 'gameOver' && !nameEntry));
         if (gameState !== 'playing') { touchShot = touchSlow = false; touchDX = 0; document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('down')); }
     }, 100);
     document.documentElement.style.setProperty('--tb', '#00ccff');
