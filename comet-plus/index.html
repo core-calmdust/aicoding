@@ -1644,6 +1644,9 @@ let currentThemeIndex;
 let energy;
 let nextItemScore;
 let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
+const TEST_START_STAGE = 15; // テスト用: このステージから開始（公開時は1）
+const ITEM_FLOOR_STAGE = 15; // この面以降は「エネルギーが尽きる時間の半分」ごとに必ずアイテムを降らせる
+let itemGapT = 0; // 最後にエネルギーアイテムが出てからの秒数
 const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
 // 隕石が画面の上から下まで流れる秒数（ステージが進んで隕石が速くなるほど短い）
 function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY()); }
@@ -1835,13 +1838,18 @@ async function startGame(mode) {
     init();
     gameMode = mode;
     maxShields = shields = DIFFS[difficultyIndex].shields; spBonus = 0;
-    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0; itemDryT = 0; itemWatchN = 0;
+    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0; itemDryT = 0; itemWatchN = 0; itemGapT = 0;
     nextSpecialItemScore = config.energyItemScoreSpecial * DIFFS[difficultyIndex].mult;
     hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
     distScoreAcc = 0;
     hurtTimer = 0;
     gameState = 'playing';
     
+    if (TEST_START_STAGE > 1 && gameMode !== 'STARTRAIL MODE') { // テスト用の途中ステージ開始
+        stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; applyThemeStyles(themes[currentThemeIndex]);
+        bossCount = Math.floor((stage - 1) / 3); currentCometSpeed += config.cometSpeedIncrease * (stage - 1) * STAGE_LENGTH_IN_FRAMES / 60;
+        if (stage % 3 === 0) bossSpawnFrame = 150;
+    }
     // Determine monster spawn counts for the first stage
     invaderSpawnCountForStage = Math.floor(stage / 2);
     invadersSpawnedThisStage = 0;
@@ -2449,6 +2457,7 @@ function updatePlayingState(dt_sec) {
             items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
             hasSpawned5000PointItem = true;
         }
+        const nItemsBefore = items.length;
         while (score >= nextSpecialItemScore) {
             items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'special' });
             nextSpecialItemScore += currentSpecialThreshold;
@@ -2459,6 +2468,12 @@ function updatePlayingState(dt_sec) {
                 items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
             }
             nextItemScore += currentNormalThreshold;
+        }
+        // 15面以降: エネルギーが尽きる時間の半分が経ってもアイテムが出ていなければ1個降らせる
+        if (items.length > nItemsBefore) itemGapT = 0; else itemGapT += dt_sec;
+        if (stage >= ITEM_FLOOR_STAGE) {
+            const emptySec = config.energyTotal / (0.9 * Math.pow(1.10, stage - 1) * 60);
+            if (itemGapT >= emptySec / 2) { items.push({ x: 60 + Math.random() * (config.canvasWidth - 120), y: -20, type: 'normal' }); itemGapT = 0; }
         }
     }
 
