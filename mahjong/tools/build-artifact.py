@@ -29,6 +29,7 @@ def local_script(m):
     files[name] = os.path.join(HERE, name)
     return f'<script src="{name}"></script>'
 body = re.sub(r'<script src="([a-z0-9]+\.js)\?v=\d+"></script>', local_script, body)
+body = body.replace('href="../"', 'href="https://core-calmdust.github.io/aicoding/" target="_blank" rel="noopener"')
 body = body.replace('<script src="app.js"></script>', '<script>window.JANKA_ASSETS = "img/";</script>\n<script src="app.js"></script>')
 files['app.css'] = os.path.join(HERE, 'app.css')
 

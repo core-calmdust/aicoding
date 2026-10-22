@@ -235,7 +235,8 @@ class MJGame {
       if (!afterCall) {
         const ag = this.agariFor(s, T(drawn), true, { rinshan });
         opts.canTsumo = !!ag; opts.tsumoRes = ag;
-        if (!p.riichi && p.melds.length === 0 && this.scores[s] >= 1000 && this.liveLeft() >= 4) {
+        const sealed = this.P.some((q, i) => i !== s && q.fx.seal);   // skill "seal": no riichi for the others this hand
+        if (!p.riichi && p.melds.length === 0 && this.scores[s] >= 1000 && this.liveLeft() >= 4 && !sealed) {
           opts.riichi = this.riichiDiscards(p);
         }
         opts.ankans = []; opts.kakans = [];
@@ -379,8 +380,7 @@ class MJGame {
       const o = { seat: s, tile: id, from };
       const ag = this.agariFor(s, t, false, { ronId: id });
       if (ag && !this.isFuriten(s)) { o.canRon = true; o.ronRes = ag; }
-      const sealed = this.P[from].fx.seal;
-      if (!p.riichi && this.liveLeft() > 0 && !sealed) {
+      if (!p.riichi && this.liveLeft() > 0) {
         const same = p.hand.filter(x => T(x) === t);
         if (same.length >= 2) o.pons = this.ponOptions(same);
         if (same.length === 3 && this.kans < 4) o.minkan = same.slice();

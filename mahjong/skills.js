@@ -64,8 +64,8 @@ const SKILLS = [
       return { from: old, to: nw };
     } },
   { id: 'seal', timing: 'turn', cost: 1000, icon: 'lock', color: '#c6a0ff',
-    name: L('封じ', 'Seal'), short: L('鳴き禁止', 'No calls'),
-    desc: L('この局、あなたの捨て牌はポン・チー・カンできない（ロンは可）。', 'This hand, nobody can pon, chi or kan your discards (ron is still allowed).'),
+    name: L('封じ', 'Seal'), short: L('他家のリーチ封じ', 'No riichi for others'),
+    desc: L('この局、他家はこれからリーチできない（すでにしたリーチはそのまま）。', 'This hand, the others can no longer declare riichi (riichi already declared stays).'),
     use(g, s) { g.P[s].fx.seal = true; } },
   { id: 'shugi', timing: 'deal', cost: 1000, icon: 'coin', color: '#ffd76a',
     name: L('祝儀', 'Bounty'), short: L('赤・裏・一発で+', 'Red/ura/ippatsu bonus'),
