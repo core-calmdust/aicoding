@@ -516,7 +516,21 @@ const themes = [
     { name: 'Crystal Cave', grid: '#00008B', player: '#E0FFFF', comet: '#AFEEEE', ui: '#ADD8E6' },
     { name: 'Gilded Age', grid: '#2F4F4F', player: '#FFD700', comet: '#F0E68C', ui: '#DAA520' },
     { name: 'Cosmic',    grid: '#a953e6', player: '#ffffff', comet: '#68d9f5', ui: '#f06e8c' },
-    { name: 'Monochrome',grid: '#888888', player: '#ffffff', comet: '#cccccc', ui: '#dddddd' }
+    { name: 'Monochrome',grid: '#888888', player: '#ffffff', comet: '#cccccc', ui: '#dddddd' },
+    { name: 'Cyber Rain', grid: '#00c87a', player: '#e0fff4', comet: '#00d0ff', ui: '#7dffcf' },
+    { name: 'Ultraviolet', grid: '#7a00ff', player: '#ff7af6', comet: '#b44dff', ui: '#e0a0ff' },
+    { name: 'Glacier', grid: '#0a5fa8', player: '#ffffff', comet: '#9fe8ff', ui: '#cdeeff' },
+    { name: 'Desert Mirage', grid: '#a0522d', player: '#fff0b0', comet: '#ffb347', ui: '#ffd27f' },
+    { name: 'Toxic', grid: '#3d7a00', player: '#d4ff00', comet: '#7fff00', ui: '#c8ff60' },
+    { name: 'Blood Moon', grid: '#7a0018', player: '#ffd0d0', comet: '#ff2040', ui: '#ff7080' },
+    { name: 'Abyss', grid: '#003a6e', player: '#40e0ff', comet: '#0080ff', ui: '#80d8ff' },
+    { name: 'Vaporwave', grid: '#ff71ce', player: '#01cdfe', comet: '#b967ff', ui: '#fffb96' },
+    { name: 'Ember', grid: '#6a2a00', player: '#ffe0a0', comet: '#ff7a00', ui: '#ffb060' },
+    { name: 'Mint', grid: '#1f8f75', player: '#ffffff', comet: '#98ffd8', ui: '#c0fff0' },
+    { name: 'Thunder', grid: '#30309a', player: '#ffff80', comet: '#a0a0ff', ui: '#ffffa0' },
+    { name: 'Rose Gold', grid: '#8a4050', player: '#ffe4d0', comet: '#ff9aa8', ui: '#f0c0a0' },
+    { name: 'Event Horizon', grid: '#50107a', player: '#ffffff', comet: '#ff60ff', ui: '#c080ff' },
+    { name: 'Zenith', grid: '#8a6a20', player: '#ffffff', comet: '#ffe680', ui: '#fff2b0' }
 ];
 
 // ---------------------------------
@@ -655,7 +669,7 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStage = ((stage - 1) % 6) + 1;
+        const bgmStage = bgmPick || 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -1641,9 +1655,14 @@ let lastInputDevice = IS_MOBILE ? 'touch' : 'keyboard';
 let stage;
 let stageClearFrame;
 let currentThemeIndex;
+let bgmPick = 1; // そのステージのBGMの段（1〜6）
+const pickBgmStage = (st, prev) => { if (st <= 6) return st; let n; do { n = 1 + Math.floor(Math.random() * 6); } while (n === prev); return n; };
 let energy;
 let nextItemScore;
 let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
+const TEST_START_STAGE = 1; // テスト用: このステージから開始（公開時は1）
+const ITEM_FLOOR_STAGE = 15; // この面以降は「エネルギーが尽きる時間の半分」ごとに必ずアイテムを降らせる
+let itemGapT = 0; // 最後にエネルギーアイテムが出てからの秒数
 const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
 // 隕石が画面の上から下まで流れる秒数（ステージが進んで隕石が速くなるほど短い）
 function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY()); }
@@ -1764,7 +1783,7 @@ function init() {
     currentCometSpeed = config.initialCometSpeed;
     stage = 1;
     stageClearFrame = STAGE_LENGTH_IN_FRAMES;
-    currentThemeIndex = 0;
+    currentThemeIndex = 0; bgmPick = 1;
     energy = config.energyTotal;
     nextItemScore = config.energyItemScoreNormal;
     nextSpecialItemScore = config.energyItemScoreSpecial;
@@ -1807,7 +1826,11 @@ function init() {
 
 function setupNewStage() {
     stage++;
-    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    // 30面まではテーマを順番に、それ以降はランダム（直前と同じは避ける）
+    if (stage <= themes.length) currentThemeIndex = stage - 1;
+    else { let n; do { n = Math.floor(Math.random() * themes.length); } while (n === currentThemeIndex); currentThemeIndex = n; }
+    // BGM: 6面で1ループ（パートが1→6段まで積み上がる）。7面以降は段をランダムに（直前と同じは避ける）
+    bgmPick = pickBgmStage(stage, bgmPick);
     stageClearFrame += STAGE_LENGTH_IN_FRAMES;
     effects.push({ type: 'stageClear', text: `STAGE ${stage} START`, life: 120, maxLife: 120 });
     audioHandler.playSound('waveClear');
@@ -1835,13 +1858,18 @@ async function startGame(mode) {
     init();
     gameMode = mode;
     maxShields = shields = DIFFS[difficultyIndex].shields; spBonus = 0;
-    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0; itemDryT = 0; itemWatchN = 0;
+    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0; itemDryT = 0; itemWatchN = 0; itemGapT = 0;
     nextSpecialItemScore = config.energyItemScoreSpecial * DIFFS[difficultyIndex].mult;
     hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
     distScoreAcc = 0;
     hurtTimer = 0;
     gameState = 'playing';
     
+    if (TEST_START_STAGE > 1 && gameMode !== 'STARTRAIL MODE') { // テスト用の途中ステージ開始
+        stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; bgmPick = pickBgmStage(stage, 0); applyThemeStyles(themes[currentThemeIndex]);
+        bossCount = Math.floor((stage - 1) / 3); currentCometSpeed += config.cometSpeedIncrease * (stage - 1) * STAGE_LENGTH_IN_FRAMES / 60;
+        if (stage % 3 === 0) bossSpawnFrame = 150;
+    }
     // Determine monster spawn counts for the first stage
     invaderSpawnCountForStage = Math.floor(stage / 2);
     invadersSpawnedThisStage = 0;
@@ -2368,8 +2396,8 @@ function updatePlayingState(dt_sec) {
                 angle: Math.random() * Math.PI * 2,
                 speed: (1.5 + (stage * 0.1)) * (4/9), 
                 direction: Math.random() < 0.5 ? 1 : -1,
-                width: 14 * 6,
-                height: 14 * 6,
+                width: 14 * 4.2,
+                height: 14 * 4.2,
                 shootCooldown: 0,
                 shootAngle: Math.random() * Math.PI * 2
             });
@@ -2430,9 +2458,9 @@ function updatePlayingState(dt_sec) {
         // 大きなチェイン（CHAIN_LAG_LINE以上）の後は、戻るまでにタイムラグを入れる（すぐ戻ると出過ぎるため）
         // 保険: 無敵が切れてから長く経っても画面にアイテムが残り続けている場合（ボス撃破後など）は、残っていても「落ち着いた」とみなす
         if (player.invincibleTimer <= 0) itemDryT += dt_sec; else itemDryT = 0;
-        const clear = player.invincibleTimer <= 0 && (!items.some(it => it.type !== 'hyper') || itemDryT > cometScrollSec() * 2);
+        const clear = player.invincibleTimer <= 0 && (!items.some(it => it.type !== 'hyper') || itemDryT > cometScrollSec() * (stage >= 14 ? 1 : 2));
         if (!clear) { itemLagPeak = Math.max(itemLagPeak, chainCount); itemLagT = -1; }
-        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * 0.9 : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間）
+        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * (stage >= 14 ? 0.25 : 0.9) : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間。STAGE14以降は死活問題なので0.25回・保険も1回に短縮）
         if (clear && itemLagT > 0) itemLagT -= dt_sec;
         const settled = clear && itemLagT <= 0;
         if (settled) itemLagPeak = 0;
@@ -2449,6 +2477,7 @@ function updatePlayingState(dt_sec) {
             items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
             hasSpawned5000PointItem = true;
         }
+        const nItemsBefore = items.length;
         while (score >= nextSpecialItemScore) {
             items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'special' });
             nextSpecialItemScore += currentSpecialThreshold;
@@ -2459,6 +2488,12 @@ function updatePlayingState(dt_sec) {
                 items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
             }
             nextItemScore += currentNormalThreshold;
+        }
+        // 15面以降: エネルギーが尽きる時間の半分が経ってもアイテムが出ていなければ1個降らせる
+        if (items.length > nItemsBefore) itemGapT = 0; else itemGapT += dt_sec;
+        if (stage >= ITEM_FLOOR_STAGE) {
+            const emptySec = config.energyTotal / (0.9 * Math.pow(1.10, stage - 1) * 60);
+            if (itemGapT >= emptySec / 2) { items.push({ x: 60 + Math.random() * (config.canvasWidth - 120), y: -20, type: 'normal' }); itemGapT = 0; }
         }
     }
 
@@ -4460,7 +4495,7 @@ makeMotif('pillars', 84, i => {
 });
 
 // テーマ（ステージ）→ モチーフ
-const MOTIF_FOR_THEME = [0, 5, 3, 2, 1, 4, 3, 1, 4, 2, 3, 5, 3, 0, 2, 5];
+const MOTIF_FOR_THEME = [0, 5, 3, 2, 1, 4, 3, 1, 4, 2, 3, 5, 3, 0, 2, 5, 0, 2, 3, 4, 1, 5, 2, 0, 4, 3, 1, 5, 2, 5];
 let motifCur = motifs[0];
 let motifOld = null;
 let motifTrans = 1; // 0→1 で切り替え完了
@@ -5184,22 +5219,19 @@ function buildVoxelModel(art, px, heights) {
     });
     return { group, mats, edgeMat };
 }
-const monsterModels = {
-    ufo: buildVoxelModel(UFO_PIXEL_ART_FINAL, 4, { 1: 1.4, 2: 0.9, 3: 2.6, 4: 1.9 }),
-    invader: buildVoxelModel(INVADER_PIXEL_ART_GAMING, 4, { 1: 1.5, 2: 1.0, 3: 2.4 }),
-    looper: buildVoxelModel(LOOPER_PIXEL_ART, 6, { 1: 1.3, 2: 2.4, 3: 0.8 }),
-};
+const monsterModels = {}; // 中身は造形キットの定義のあと（ENEMY_BUILD）で入れる
 // ルーパーには画像風のハブを装着
 const monsterObjs = new Map();
 function makeMonsterObj(m) {
-    const model = monsterModels[m.type] || monsterModels.invader;
+    const type = monsterModels[m.type] ? m.type : 'invader';
     const obj = new THREE.Group();
-    const body = model.group.clone();
+    const body = ENEMY_BUILD[type](monsterModels[type]);
     obj.add(body);
     if (m.type === 'looper') {
+        body.scale.setScalar(0.65); // 大きすぎたので小さく
         const hub = makeHub(8, 0x22e6ff, 0xff9a20);
-        hub.scale.setScalar(0.85);
-        hub.position.y = -14;
+        hub.scale.setScalar(0.55);
+        hub.position.y = -9;
         obj.add(hub);
         obj.userData.hub = hub;
     }
@@ -6094,6 +6126,79 @@ NB.TESTUDO = () => {
     return g;
 };
 
+// ---------------------------------
+// 敵キャラ（ボスと同じ造形キット: 装甲＋ガラス面＋発光ライン＋ワイヤー殻。元のドット絵の形と配色を保つ）
+// mats[コード] はドット絵の色コードと同じ（毎フレームの色替えはそのまま効く）
+// ---------------------------------
+const enemyKit = codes => {
+    const mats = {};
+    codes.forEach(c => { const m = new StdMat({ color: 0xffffff, emissive: 0x000000, flatShading: true, metalness: 0.55, roughness: 0.32 }); m.side = THREE.DoubleSide; mats[c] = m; });
+    return { mats, edge: LAB.line(0xffffff, 0.9), glass: LAB.glass(0xffffff, 0.3), cage: LAB.line(0xffffff, 0.35) };
+};
+const ePart = (K, geo, code, o = {}) => LAB.part(geo, { mat: K.mats[code], edge: K.edge, glass: o.glass ? K.glass : null, glassFrac: o.glass || 0.3, seed: o.seed || 5, cage: o.cage || 0, cageMat: K.cage });
+// 色替えのあと、ライン・ガラス・殻の色をボディ色に合わせる
+const enemySync = (K, edgeC, glassC, cageC) => { K.edge.color.copy(K.mats[edgeC].color).lerp(_c(0xffffff), 0.35); K.glass.color.copy(K.mats[glassC].color); K.cage.color.copy(K.mats[cageC].color); };
+
+const ENEMY_BUILD = {
+    // インベーダー（Rez風の抽象体）: 光る結晶の核を、回るワイヤーの多面体と4枚の装甲片が包む。装甲片は拍に合わせて開閉する
+    invader(K) {
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.5; g.add(tilt);
+        const core = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), K.mats[3]); core.scale.set(1, 1.5, 1); tilt.add(core);
+        core.add(new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), LAB.glow(0xffffff)));
+        const sh1 = LAB.wireOnly(new THREE.IcosahedronGeometry(17, 0), K.edge), sh2 = LAB.wireOnly(new THREE.OctahedronGeometry(25, 0), K.cage); tilt.add(sh1, sh2);
+        const shardGeo = LAB.loft([[0, 3, 3], [8, 12, 4], [20, 9, 3], [28, 1, 1]], 3, -Math.PI / 2);
+        const shards = [0, 1, 2, 3].map(k => {
+            const piv = new THREE.Group(); piv.rotation.y = k * Math.PI / 2 + Math.PI / 4; tilt.add(piv);
+            const p = ePart(K, shardGeo, k % 2 ? 1 : 2, { glass: 0.5, seed: k + 2 }); p.position.z = 10; piv.add(p); return { piv, p, k };
+        });
+        const ring = LAB.dashRing(34, 16, 5, 1, K.glass, 4); tilt.add(ring);
+        g.userData.anim = t => {
+            const beat = Math.pow(Math.max(0, Math.sin(t * 4.3)), 6);
+            core.rotation.y = t * 2; sh1.rotation.set(t * 0.9, t * 1.3, 0); sh2.rotation.set(-t * 0.5, -t * 0.8, t * 0.3);
+            shards.forEach(({ piv, p, k }) => { p.position.z = 10 + beat * 9; p.rotation.x = (k % 2 ? 1 : -1) * (0.3 + beat * 0.5); piv.rotation.y = k * Math.PI / 2 + Math.PI / 4 + t * 0.7; });
+            ring.rotation.y = -t * 1.5; ring.scale.setScalar(1 + beat * 0.2);
+        };
+        return g;
+    },
+    // UFO（迎撃円盤）: 角ばった六角の装甲リングにガラス板、内側で刃のローターが回り、中心に1つの走査眼。外をワイヤーの殻が囲む
+    ufo(K) {
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.35; g.add(tilt);
+        const seg = LAB.loft([[-14, 8, 5], [-9, 12, 7], [9, 12, 7], [14, 8, 5]], 4, Math.PI / 4); seg.rotateY(Math.PI / 2);
+        for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, s = ePart(K, seg, 1, { glass: 0.4, seed: k + 1 }); s.position.set(Math.cos(a) * 26, 0, Math.sin(a) * 26); s.rotation.y = -a + Math.PI / 2; tilt.add(s); }
+        const rotor = new THREE.Group(); tilt.add(rotor);
+        const blade = LAB.loft([[4, 6, 2], [14, 5, 1.6], [20, 1, 1]], 4, Math.PI / 4);
+        for (let k = 0; k < 3; k++) { const b = ePart(K, blade, 2, { seed: k + 7 }); b.rotation.y = k * Math.PI * 2 / 3; rotor.add(b); }
+        const eye = new THREE.Mesh(new THREE.CylinderGeometry(5, 7, 6, 6), K.mats[4]); eye.position.y = 4; tilt.add(eye);
+        const scan = new THREE.Mesh(new THREE.OctahedronGeometry(3, 0), LAB.glow(0xffffff)); scan.position.y = 8; tilt.add(scan);
+        const cage = LAB.wireOnly(new THREE.CylinderGeometry(20, 38, 14, 6, 1, true), K.cage); cage.position.y = 2; tilt.add(cage);
+        const top = LAB.wireOnly(new THREE.ConeGeometry(14, 14, 6, 1, true), K.edge); top.position.y = 14; tilt.add(top);
+        g.userData.anim = t => { rotor.rotation.y = t * 9; cage.rotation.y = -t * 0.8; top.rotation.y = t * 1.6; scan.position.x = Math.sin(t * 5) * 3; };
+        return g;
+    },
+    // ルーパー: 鋭い矢じり形の頭（紫の装甲とガラス）に細い一本の眼。金の節が光るケーブル状の触手が、ハブの回転に合わせて渦を巻く
+    looper(K) {
+        const g = new THREE.Group();
+        g.add(ePart(K, LAB.loft([[-40, 4, 4, 14], [-28, 30, 14, 16], [-8, 56, 22, 16], [8, 44, 16, 14], [18, 18, 8, 12]], 6, Math.PI / 2), 1, { glass: 0.45, cage: 1.12, seed: 9 }));
+        [-1, 1].forEach(s => g.add(ePart(K, LAB.loft([[-20, 4, 3, 18, s * 20], [-4, 8, 5, 18, s * 36], [8, 2, 2, 16, s * 46]], 4), 1, { seed: s + 3 }))); // 側面のひれ
+        const slit = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 3), K.mats[2]); slit.position.set(0, 28, -8); g.add(slit);
+        const tents = [], segGeo = LAB.loft([[0, 5, 5], [6, 7, 6], [13, 3, 3]], 4, Math.PI / 4);
+        for (let k = 0; k < 6; k++) {
+            const base = new THREE.Group(), a = -1.2 + k * 0.48; base.position.set(Math.sin(a) * 24, 10, 10 + Math.cos(a) * 4); base.rotation.y = a; g.add(base);
+            let par = base; const segs = [];
+            for (let j = 0; j < 5; j++) {
+                const sg = new THREE.Group(); if (j) sg.position.z = 13; par.add(sg);
+                sg.add(ePart(K, segGeo, 1, { seed: k * 5 + j }));
+                const node = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), K.mats[3]); node.scale.set(1, 1, 1.8); node.position.z = 13; sg.add(node);
+                segs.push(sg); par = sg;
+            }
+            tents.push({ segs, k });
+        }
+        g.userData.anim = t => { slit.scale.x = 0.7 + 0.3 * Math.abs(Math.sin(t * 1.3)); tents.forEach(({ segs, k }) => segs.forEach((sg, j) => { sg.rotation.y = Math.sin(t * 2.6 - j * 0.8 + k * 0.5) * 0.22 + (k < 3 ? -0.06 : 0.06) * j; sg.rotation.x = 0.1; })); };
+        return g;
+    },
+};
+Object.assign(monsterModels, { ufo: enemyKit([1, 2, 3, 4]), invader: enemyKit([1, 2, 3]), looper: enemyKit([1, 2, 3]) });
+
 const BOSS_BUILDERS = [
     // AXIS（新造形）
     () => NB.AXIS(),
@@ -6591,10 +6696,11 @@ function render3D() {
         const setMat = (mat, h, s, l, e = 0.18) => { hsl(h, s, l, mat.color); mat.emissive.copy(mat.color).multiplyScalar(e); };
         setMat(mm.ufo.mats[1], hue1, 0.85, 0.55); setMat(mm.ufo.mats[2], hue1, 0.6, 0.32, 0.1);
         setMat(mm.ufo.mats[3], hue1, 0.7, 0.8, 0.25); setMat(mm.ufo.mats[4], hue1 + 180, 1, 0.55, 0.6);
-        setMat(mm.invader.mats[1], hue1, 1, 0.55); setMat(mm.invader.mats[2], hue1 + 120, 1, 0.5); setMat(mm.invader.mats[3], hue1 + 240, 1, 0.6, 0.7);
+        setMat(mm.invader.mats[1], 40, 0.08, 0.88, 0.2); setMat(mm.invader.mats[2], 40, 0.1, 0.07, 0); setMat(mm.invader.mats[3], 44, 1, 0.55, 0.8); // インベーダーは白・黒・金
         mm.looper.mats[1].color.set('#9400D3'); mm.looper.mats[1].emissive.set('#4a0070');
         mm.looper.mats[2].color.set('#ffffff'); mm.looper.mats[2].emissive.set('#ffffff');
         mm.looper.mats[3].color.set('#FFD700'); mm.looper.mats[3].emissive.set('#a07000');
+        enemySync(mm.ufo, 1, 3, 4); enemySync(mm.invader, 3, 3, 1); enemySync(mm.looper, 1, 1, 3);
         monsters.forEach(m => {
             alive.add(m);
             let obj = monsterObjs.get(m);
@@ -6604,14 +6710,15 @@ function render3D() {
             obj.position.set(toX(ix(m)), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(iy(m)));
             obj.userData.body.rotation.z = Math.sin(rTime * 2.4 + sd) * 0.18;
             obj.userData.body.rotation.x = Math.sin(rTime * 1.7 + sd) * 0.1;
+            if (obj.userData.body.userData.anim) obj.userData.body.userData.anim(rTime + sd);
             const sc = VS * ES * (1 + visualBeat * 0.12);
             obj.scale.setScalar(sc);
             if (obj.userData.hub) {
                 obj.userData.hub.rotation.y = rTime * 1.5;
                 obj.userData.hub.userData.lineMat.color.copy(themeCur.ui);
             }
-            const gc = hsl(hue1, 1, 0.7);
-            glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, (m.type === 'looper' ? 110 : 70) * ES, 0.14);
+            const gc = m.type === 'invader' ? hexColor('#ffd060') : hsl(hue1, 1, 0.7);
+            glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, (m.type === 'looper' ? 75 : 70) * ES, 0.14);
         });
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
@@ -6633,7 +6740,7 @@ function render3D() {
         if (alive.has(m)) return;
         const lx = obj.userData.lastX, ly = obj.userData.lastY;
         if (lx > -20 && lx < W + 20 && ly > -20 && ly < H + 20 && gameState !== 'title') {
-            const c = obj.userData.type === 'looper' ? hexColor('#9400D3') : hsl(frameCount * 2, 1, 0.65, new THREE.Color());
+            const c = obj.userData.type === 'looper' ? hexColor('#9400D3') : obj.userData.type === 'invader' ? hexColor('#ffd060') : hsl(frameCount * 2, 1, 0.65, new THREE.Color());
             spawnBurst(lx, ly, c, obj.userData.type === 'invader' ? 34 : 60, { speed: 420, up: 520, minSize: 3, maxSize: 8 });
         }
         scene.remove(obj);
