@@ -2430,9 +2430,9 @@ function updatePlayingState(dt_sec) {
         // 大きなチェイン（CHAIN_LAG_LINE以上）の後は、戻るまでにタイムラグを入れる（すぐ戻ると出過ぎるため）
         // 保険: 無敵が切れてから長く経っても画面にアイテムが残り続けている場合（ボス撃破後など）は、残っていても「落ち着いた」とみなす
         if (player.invincibleTimer <= 0) itemDryT += dt_sec; else itemDryT = 0;
-        const clear = player.invincibleTimer <= 0 && (!items.some(it => it.type !== 'hyper') || itemDryT > cometScrollSec() * 2);
+        const clear = player.invincibleTimer <= 0 && (!items.some(it => it.type !== 'hyper') || itemDryT > cometScrollSec() * (stage >= 14 ? 1 : 2));
         if (!clear) { itemLagPeak = Math.max(itemLagPeak, chainCount); itemLagT = -1; }
-        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * 0.9 : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間）
+        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * (stage >= 14 ? 0.25 : 0.9) : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間。STAGE14以降は死活問題なので0.25回・保険も1回に短縮）
         if (clear && itemLagT > 0) itemLagT -= dt_sec;
         const settled = clear && itemLagT <= 0;
         if (settled) itemLagPeak = 0;
