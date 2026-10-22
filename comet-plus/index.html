@@ -1643,7 +1643,7 @@ let stageClearFrame;
 let currentThemeIndex;
 let energy;
 let nextItemScore;
-let itemLagPeak = 0, itemLagT = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
+let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
 const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
 // 隕石が画面の上から下まで流れる秒数（ステージが進んで隕石が速くなるほど短い）
 function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY()); }
@@ -1835,7 +1835,7 @@ async function startGame(mode) {
     init();
     gameMode = mode;
     maxShields = shields = DIFFS[difficultyIndex].shields; spBonus = 0;
-    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0;
+    nextItemScore = config.energyItemScoreNormal * DIFFS[difficultyIndex].mult; itemLagPeak = 0; itemLagT = 0; itemDryT = 0; itemWatchN = 0;
     nextSpecialItemScore = config.energyItemScoreSpecial * DIFFS[difficultyIndex].mult;
     hyperT = 0; nextHyperScore = config.energyItemScoreSpecial * 2.5 / HYPER_TEST_RATE * DIFFS[difficultyIndex].mult; // スペシャルの2.5倍の間隔で登場
     distScoreAcc = 0;
@@ -2457,6 +2457,16 @@ function updatePlayingState(dt_sec) {
                 items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
             }
             nextItemScore += currentNormalThreshold;
+        }
+        // 保険: チェインが落ち着いているのに長い間アイテムが出ていなければ、1個出して間隔を元に戻す
+        // （ボス撃破後などにアイテムが出なくなるのを防ぐ。目安は隕石が画面を3回流れる時間）
+        const nItems = items.filter(it => it.type !== 'hyper').length;
+        if (nItems > itemWatchN) itemDryT = 0; else itemDryT += dt_sec;
+        itemWatchN = nItems;
+        if (settled && itemDryT > cometScrollSec() * 3) {
+            items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
+            nextItemScore = score + currentNormalThreshold;
+            itemDryT = 0; itemWatchN = nItems + 1;
         }
     }
 
