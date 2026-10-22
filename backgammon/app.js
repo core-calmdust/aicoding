@@ -1445,7 +1445,8 @@ function pcFit() {
   const rowH = Math.round(Math.min(340, Math.max(236, hgt * 0.3)));
   document.documentElement.style.setProperty('--rowh', rowH + 'px');
   const reserve = side ? 0 : rowH + 18;
-  const availW = w - 48 - (side ? Math.min(440, Math.max(360, w * 0.3)) + 24 : 0);
+  // board width capped like Mancala's (~1200px) so wide screens don't feel cramped edge to edge
+  const availW = Math.min(1200, w - 48 - (side ? Math.min(440, Math.max(360, w * 0.3)) + 24 : 0));
   const availH = hgt - hb - 14 - 16 - reserve - (window.olDockH ? olDockH() : 0);
   const hMin = side ? 8.4 : 7.2;
   let u = Math.min(availW / 15.85, 100), h = availH / u;
