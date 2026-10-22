@@ -2428,7 +2428,9 @@ function updatePlayingState(dt_sec) {
         // チェイン中はアイテムの間隔をチェイン数に応じて広げる（アイテムが出続けて無限チェインになるのを防ぐ）
         // チェインが切れて、画面内のアイテムが無くなったら即元の間隔に戻す
         // 大きなチェイン（CHAIN_LAG_LINE以上）の後は、戻るまでにタイムラグを入れる（すぐ戻ると出過ぎるため）
-        const clear = player.invincibleTimer <= 0 && !items.some(it => it.type !== 'hyper');
+        // 保険: 無敵が切れてから長く経っても画面にアイテムが残り続けている場合（ボス撃破後など）は、残っていても「落ち着いた」とみなす
+        if (player.invincibleTimer <= 0) itemDryT += dt_sec; else itemDryT = 0;
+        const clear = player.invincibleTimer <= 0 && (!items.some(it => it.type !== 'hyper') || itemDryT > cometScrollSec() * 2);
         if (!clear) { itemLagPeak = Math.max(itemLagPeak, chainCount); itemLagT = -1; }
         else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * 0.9 : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間）
         if (clear && itemLagT > 0) itemLagT -= dt_sec;
@@ -2457,16 +2459,6 @@ function updatePlayingState(dt_sec) {
                 items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
             }
             nextItemScore += currentNormalThreshold;
-        }
-        // 保険: チェインが落ち着いているのに長い間アイテムが出ていなければ、1個出して間隔を元に戻す
-        // （ボス撃破後などにアイテムが出なくなるのを防ぐ。目安は隕石が画面を3回流れる時間）
-        const nItems = items.filter(it => it.type !== 'hyper').length;
-        if (nItems > itemWatchN) itemDryT = 0; else itemDryT += dt_sec;
-        itemWatchN = nItems;
-        if (settled && itemDryT > cometScrollSec() * 3) {
-            items.push({ x: Math.random() * config.canvasWidth, y: -20, type: 'normal' });
-            nextItemScore = score + currentNormalThreshold;
-            itemDryT = 0; itemWatchN = nItems + 1;
         }
     }
 
