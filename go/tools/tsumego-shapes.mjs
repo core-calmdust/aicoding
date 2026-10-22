@@ -198,3 +198,30 @@ export function lineOf(P, n) {
   if (att !== n) return null;
   return line;
 }
+
+// theme of a capture puzzle (goal capture) from its main line:
+//   snapback  the key move is a sacrifice the opponent captures, or the player later plays where its stones were
+//             captured (snapback / under the stones)
+//   ladder    a ladder (every move but the last an atari, 3+ moves) or a net / loose ladder (the key move is not atari)
+//   capture   1-2 moves starting with an atari
+//   tesuji    anything else (shortage of liberties, throw-ins ...)
+export function tacTheme(P) {
+  if (P.goal !== 'capture') return P.goal === 'connect' ? 'tesuji' : P.goal;
+  let p = R.Pos.from(P.s);
+  const steps = [];
+  for (let k = 0; k < P.line.length; k++) {
+    const m = P.line[k], r = p.tryPlay(m); p = r.pos;
+    const t = P.target.find(s => p.b[s]);
+    steps.push({ m, att: k % 2 === 0, caps: r.captured, tlibs: t !== undefined ? p.group(t).libs : 0, selfLibs: p.b[m] ? p.group(m).libs : 0 });
+  }
+  const first = steps[0];
+  const sac = first.selfLibs === 1 && steps.length > 1 && steps[1].caps.length > 0;
+  let under = false;
+  steps.forEach((s, k) => { if (!s.att && s.caps.length) for (let j = k + 1; j < steps.length; j++) if (steps[j].att && s.caps.includes(steps[j].m)) under = true; });
+  if (sac || under) return 'snapback';
+  const atk = steps.filter(s => s.att);
+  if (P.n >= 3 && atk.slice(0, -1).every(s => s.tlibs === 1)) return 'ladder';
+  if (P.n >= 2 && first.tlibs >= 2) return 'ladder';
+  if (P.n <= 2) return 'capture';
+  return 'tesuji';
+}

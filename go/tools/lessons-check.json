@@ -1,0 +1,3313 @@
+{
+ "generated": "2026-10-22T00:18:25.276Z",
+ "steps": [
+  {
+   "id": "atari",
+   "course": "basics",
+   "title": "アタリと石を取る",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "E4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 1,
+       "region": false,
+       "wins": [
+        "E4"
+       ],
+       "nodes": 0,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "A6"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "A7"
+       ],
+       "depth": 1,
+       "region": false,
+       "wins": [
+        "A6"
+       ],
+       "nodes": 0,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C1"
+       ],
+       "depth": 1,
+       "region": false,
+       "wins": [
+        "E1"
+       ],
+       "nodes": 0,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "B",
+     "ok": [
+      "C3"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C4"
+       ],
+       "depth": 1,
+       "region": false,
+       "wins": [
+        "C3"
+       ],
+       "nodes": 0,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "escape",
+       "target": [
+        "D4"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [
+        "C3",
+        "D3"
+       ],
+       "nodes": 57,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C5"
+       ],
+       "depth": 1,
+       "region": false,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 0,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "escape",
+   "course": "basics",
+   "title": "逃げる（ダメを増やす）",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "D3"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "escape",
+       "target": [
+        "D4"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "D3"
+       ],
+       "nodes": 45,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "escape",
+       "target": [
+        "D5"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 76,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "C4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "escape",
+       "target": [
+        "D5"
+       ],
+       "depth": 10,
+       "region": false,
+       "wins": [
+        "C4"
+       ],
+       "nodes": 81,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "E5"
+     ],
+     "checks": [
+      {
+       "how": "liberties",
+       "counts": {
+        "E5": 4,
+        "D4": 3
+       },
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "E5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "escape",
+       "target": [
+        "D5",
+        "E6"
+       ],
+       "depth": 12,
+       "region": false,
+       "wins": [
+        "E5"
+       ],
+       "nodes": 74,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "connect",
+   "course": "basics",
+   "title": "つなぐ・切る",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "D3"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "connect",
+       "target": [
+        "D4",
+        "D2"
+       ],
+       "depth": 3,
+       "region": true,
+       "wins": [
+        "D3"
+       ],
+       "nodes": 120,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "cut",
+       "target": [
+        "C4",
+        "D3"
+       ],
+       "depth": 3,
+       "region": true,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 604,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "cut",
+       "target": [
+        "C4",
+        "E4",
+        "D5"
+       ],
+       "depth": 3,
+       "region": true,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 418,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "D5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 1,
+       "region": false,
+       "wins": [
+        "D5"
+       ],
+       "nodes": 0,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "connect",
+       "target": [
+        "C4",
+        "D3",
+        "E4"
+       ],
+       "depth": 3,
+       "region": true,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 606,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "direction",
+   "course": "basics",
+   "title": "取る方向",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "E2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D2"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "E2"
+       ],
+       "nodes": 94,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "B2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C2"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "B2"
+       ],
+       "nodes": 158,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "E4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "E3"
+       ],
+       "depth": 8,
+       "region": false,
+       "wins": [
+        "E4"
+       ],
+       "nodes": 6835,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "C2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D2"
+       ],
+       "depth": 8,
+       "region": false,
+       "wins": [
+        "C2"
+       ],
+       "nodes": 161,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "B5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C5"
+       ],
+       "depth": 8,
+       "region": false,
+       "wins": [
+        "B5"
+       ],
+       "nodes": 191,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "eyes",
+   "course": "basics",
+   "title": "眼と二眼",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "D2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "A2",
+        "E2"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "D2"
+       ],
+       "nodes": 12,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "G2",
+        "C2"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "D2"
+       ],
+       "nodes": 12,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "C1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "A2"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "C1"
+       ],
+       "nodes": 22,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "C2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "A3"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "C2"
+       ],
+       "nodes": 21,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "C1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "A3"
+       ],
+       "depth": 9,
+       "region": true,
+       "wins": [
+        "C1"
+       ],
+       "nodes": 62,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "semeai",
+   "course": "basics",
+   "title": "攻め合いとダメ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "F1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "E2"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "F1"
+       ],
+       "nodes": 30,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D9"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D8"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "D9"
+       ],
+       "nodes": 22,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "J4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "H5"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "J4"
+       ],
+       "nodes": 30,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "G1",
+      "H1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F2"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "G1",
+        "H1"
+       ],
+       "nodes": 649,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "G9",
+      "H9"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F8"
+       ],
+       "depth": 6,
+       "region": true,
+       "wins": [
+        "G9",
+        "H9"
+       ],
+       "nodes": 649,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ladder",
+   "course": "tactics",
+   "title": "シチョウ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "E2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D2"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "E2"
+       ],
+       "nodes": 158,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D2"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [
+        "E2"
+       ],
+       "nodes": 158,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "E4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "E4"
+       ],
+       "nodes": 223,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [],
+       "nodes": 712,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "E4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "E4"
+       ],
+       "nodes": 215,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [],
+       "nodes": 702,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "F5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D5"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "F5"
+       ],
+       "nodes": 197,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D5"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [],
+       "nodes": 341,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "E4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "escape",
+       "target": [
+        "D4"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "E4"
+       ],
+       "nodes": 91,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "net",
+   "course": "tactics",
+   "title": "ゲタ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C3"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 1148,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "E5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F4"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "E5"
+       ],
+       "nodes": 1127,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "E6"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D4"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "E6"
+       ],
+       "nodes": 1034,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "D6"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C7"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "D6"
+       ],
+       "nodes": 1148,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "E5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F4"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "E5"
+       ],
+       "nodes": 1099,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "snapback",
+   "course": "tactics",
+   "title": "ウッテガエシ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "B1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "A2"
+       ],
+       "depth": 3,
+       "region": false,
+       "wins": [
+        "B1"
+       ],
+       "nodes": 208,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "E9"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D8"
+       ],
+       "depth": 3,
+       "region": false,
+       "wins": [
+        "E9"
+       ],
+       "nodes": 202,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "F1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D2"
+       ],
+       "depth": 3,
+       "region": false,
+       "wins": [
+        "F1"
+       ],
+       "nodes": 193,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "H9"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "H8"
+       ],
+       "depth": 3,
+       "region": false,
+       "wins": [
+        "H9"
+       ],
+       "nodes": 140,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "E2"
+       ],
+       "depth": 3,
+       "region": false,
+       "wins": [
+        "E1"
+       ],
+       "nodes": 136,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "double",
+   "course": "tactics",
+   "title": "両アタリと切り",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C4",
+        "E4"
+       ],
+       "depth": 2,
+       "region": false,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 95,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D4"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C4",
+        "D5"
+       ],
+       "depth": 2,
+       "region": false,
+       "wins": [
+        "D4"
+       ],
+       "nodes": 99,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "D2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C2",
+        "E2"
+       ],
+       "depth": 2,
+       "region": false,
+       "wins": [
+        "D2"
+       ],
+       "nodes": 157,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "D8"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C8",
+        "E8"
+       ],
+       "depth": 2,
+       "region": false,
+       "wins": [
+        "D8"
+       ],
+       "nodes": 157,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "F5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F6",
+        "G5"
+       ],
+       "depth": 2,
+       "region": false,
+       "wins": [
+        "F5"
+       ],
+       "nodes": 2885,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tesuji",
+   "course": "tactics",
+   "title": "手筋の総合問題",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "E5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F4"
+       ],
+       "depth": 6,
+       "region": false,
+       "wins": [
+        "E5"
+       ],
+       "nodes": 1449,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "E6"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D6"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "E6"
+       ],
+       "nodes": 215,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D6"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [],
+       "nodes": 702,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "D9"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "D8"
+       ],
+       "depth": 3,
+       "region": false,
+       "wins": [
+        "D9"
+       ],
+       "nodes": 130,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "D5"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "C5",
+        "D4"
+       ],
+       "depth": 2,
+       "region": false,
+       "wins": [
+        "D5"
+       ],
+       "nodes": 163,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "E2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F2"
+       ],
+       "depth": 14,
+       "region": false,
+       "wins": [
+        "E2"
+       ],
+       "nodes": 158,
+       "pass": true
+      },
+      {
+       "how": "solver",
+       "goal": "capture",
+       "target": [
+        "F2"
+       ],
+       "depth": 4,
+       "region": false,
+       "wins": [
+        "E2"
+       ],
+       "nodes": 158,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "live",
+   "course": "lifedeath",
+   "title": "二眼をつくる（生き）",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "D3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "E1"
+       ],
+       "nodes": 2488,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "B",
+     "ok": [
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "C3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1"
+       ],
+       "nodes": 2527,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "B1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "A3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1"
+       ],
+       "nodes": 206,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "B",
+     "ok": [
+      "B1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "A3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1"
+       ],
+       "nodes": 2953,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "G1",
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "B2"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1",
+        "G1"
+       ],
+       "nodes": 398,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "kill",
+   "course": "lifedeath",
+   "title": "眼を奪う（殺し）",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "W",
+     "ok": [
+      "G1",
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "B2"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1",
+        "G1"
+       ],
+       "nodes": 405,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "D3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "E1"
+       ],
+       "nodes": 893,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "W",
+     "ok": [
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "C3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1"
+       ],
+       "nodes": 710,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "C1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "B3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "C1"
+       ],
+       "nodes": 1390,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "B1",
+      "H1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "B2"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1",
+        "H1"
+       ],
+       "nodes": 4240,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nakade",
+   "course": "lifedeath",
+   "title": "急所と中手",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "W",
+     "ok": [
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "B2"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1"
+       ],
+       "nodes": 21,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "C3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1"
+       ],
+       "nodes": 21,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "W",
+     "ok": [
+      "D1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "C3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "D1"
+       ],
+       "nodes": 67,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "C1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "A3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "C1"
+       ],
+       "nodes": 205,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "B1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "A3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1"
+       ],
+       "nodes": 287,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "corner",
+   "course": "lifedeath",
+   "title": "隅の死活",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "A2"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "B2"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "A2"
+       ],
+       "nodes": 292,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "B",
+     "ok": [
+      "B1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "B3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1"
+       ],
+       "nodes": 264,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "W",
+     "ok": [
+      "B1",
+      "A3"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "B3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1",
+        "A3"
+       ],
+       "nodes": 384,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "B",
+     "ok": [
+      "B1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "live",
+       "target": [
+        "A3"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1"
+       ],
+       "nodes": 14034,
+       "pass": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "B1",
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "solver",
+       "goal": "kill",
+       "target": [
+        "B2"
+       ],
+       "depth": 12,
+       "region": true,
+       "wins": [
+        "B1",
+        "E1"
+       ],
+       "nodes": 405,
+       "pass": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "corners",
+   "course": "opening",
+   "title": "隅から辺、そして中央へ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "W",
+     "ok": [
+      "K10",
+      "K4",
+      "D10"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "K10",
+         "n": 113,
+         "lead": 0.15
+        },
+        {
+         "m": "D10",
+         "n": 53,
+         "lead": 0.05
+        },
+        {
+         "m": "K4",
+         "n": 24,
+         "lead": 0.03
+        }
+       ],
+       "values": {
+        "K10": 0.19,
+        "K4": 0.04,
+        "D10": 0.06,
+        "G7": -1.67,
+        "D7": -1.3,
+        "G4": -1.32
+       },
+       "okValue": 0.19,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "D10"
+     ],
+     "good": [
+      "C10",
+      "D11"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "D10",
+         "n": 125,
+         "lead": 0.16
+        },
+        {
+         "m": "C10",
+         "n": 44,
+         "lead": 0.11
+        },
+        {
+         "m": "D11",
+         "n": 29,
+         "lead": -0.01
+        }
+       ],
+       "values": {
+        "D10": 0.21,
+        "C10": 0.1,
+        "G7": -1.54,
+        "D7": -1.05,
+        "K7": -1.34,
+        "D11": -0.01
+       },
+       "okValue": 0.21,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "W",
+     "ok": [
+      "D16"
+     ],
+     "good": [
+      "C16",
+      "D17",
+      "R6"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "D16",
+         "n": 159,
+         "lead": 0.02
+        },
+        {
+         "m": "D17",
+         "n": 22,
+         "lead": -0.1
+        },
+        {
+         "m": "C16",
+         "n": 13,
+         "lead": -0.15
+        }
+       ],
+       "values": {
+        "D16": 0.14,
+        "C16": -0.16,
+        "D17": -0.09,
+        "K10": -1.44,
+        "Q10": -1.41,
+        "R6": -0.72,
+        "D10": -1.16
+       },
+       "okValue": 0.14,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "Q4"
+     ],
+     "good": [
+      "R4",
+      "Q3"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "Q4",
+         "n": 171,
+         "lead": 0.05
+        },
+        {
+         "m": "R4",
+         "n": 16,
+         "lead": -0.16
+        },
+        {
+         "m": "Q3",
+         "n": 10,
+         "lead": -0.08
+        }
+       ],
+       "values": {
+        "Q4": 0.05,
+        "R4": -0.14,
+        "Q3": -0.19,
+        "K10": -1.47,
+        "Q10": -1.3,
+        "D10": -1.09,
+        "R10": -1.4
+       },
+       "okValue": 0.05,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "C10",
+      "C4",
+      "F11",
+      "F3"
+     ],
+     "good": [
+      "C7",
+      "D7"
+     ],
+     "half": [
+      "G7"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "C4",
+         "n": 53,
+         "lead": -0.22
+        },
+        {
+         "m": "F11",
+         "n": 49,
+         "lead": -0.17
+        },
+        {
+         "m": "F3",
+         "n": 39,
+         "lead": -0.22
+        },
+        {
+         "m": "C10",
+         "n": 33,
+         "lead": -0.2
+        }
+       ],
+       "values": {
+        "C7": -0.44,
+        "D7": -0.47,
+        "K7": -1.38,
+        "G7": -0.91,
+        "C10": -0.1,
+        "K3": -1.14,
+        "C4": -0.2,
+        "F11": -0.24,
+        "F3": -0.23
+       },
+       "okValue": -0.1,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "urgent",
+   "course": "opening",
+   "title": "シマリ・カカリと急場",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "W",
+     "ok": [
+      "E4",
+      "L3",
+      "L11",
+      "F3"
+     ],
+     "half": [
+      "D8",
+      "G10"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "E4",
+         "n": 55,
+         "lead": 1.41
+        },
+        {
+         "m": "L11",
+         "n": 44,
+         "lead": 1.37
+        },
+        {
+         "m": "L3",
+         "n": 39,
+         "lead": 1.42
+        },
+        {
+         "m": "F3",
+         "n": 31,
+         "lead": 1.16
+        },
+        {
+         "m": "E3",
+         "n": 24,
+         "lead": 1.17
+        }
+       ],
+       "values": {
+        "D7": 0.13,
+        "C7": 0.39,
+        "D8": 0.67,
+        "G7": -0.08,
+        "G10": 0.55,
+        "G4": 0.31,
+        "C10": 0.11,
+        "F3": 1.25,
+        "E4": 1.44,
+        "L11": 1.31,
+        "L3": 1.36
+       },
+       "okValue": 1.44,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "B",
+     "ok": [
+      "M9"
+     ],
+     "good": [
+      "L10",
+      "C3"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "L10",
+         "n": 81,
+         "lead": 0.38
+        },
+        {
+         "m": "M9",
+         "n": 78,
+         "lead": 0.47
+        }
+       ],
+       "values": {
+        "M9": 0.71,
+        "M10": -0.53,
+        "L9": -0.59,
+        "M8": -0.63,
+        "G4": -2.33,
+        "G3": -1.71,
+        "C3": 0.21,
+        "K12": -2.17,
+        "L10": 0.36
+       },
+       "okValue": 0.71,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "W",
+     "ok": [
+      "M9"
+     ],
+     "good": [
+      "M8"
+     ],
+     "half": [
+      "L3"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "M9",
+         "n": 124,
+         "lead": 2.13
+        },
+        {
+         "m": "M8",
+         "n": 15,
+         "lead": 1.83
+        },
+        {
+         "m": "L10",
+         "n": 13,
+         "lead": 1.32
+        }
+       ],
+       "values": {
+        "L3": 1.21,
+        "K12": 0.43,
+        "M12": -5.24,
+        "G3": -0.54,
+        "H3": -0.48,
+        "F3": -0.28,
+        "D9": -2.17,
+        "G7": -1.12,
+        "M9": 2.17,
+        "M8": 1.69
+       },
+       "okValue": 2.17,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "M5"
+     ],
+     "good": [
+      "M6",
+      "L4"
+     ],
+     "half": [
+      "L5"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "M5",
+         "n": 126,
+         "lead": 1.84
+        },
+        {
+         "m": "L4",
+         "n": 18,
+         "lead": 1.6
+        },
+        {
+         "m": "L5",
+         "n": 13,
+         "lead": 1.88
+        }
+       ],
+       "values": {
+        "M5": 2.08,
+        "M6": 1.94,
+        "L5": 1.23,
+        "M4": -0.01,
+        "C11": -0.87,
+        "G11": -0.47,
+        "F11": -0.29,
+        "K2": 0.5,
+        "L4": 1.6
+       },
+       "okValue": 2.08,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "L11",
+      "L3",
+      "C5"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "L11",
+         "n": 79,
+         "lead": 1.11
+        },
+        {
+         "m": "L3",
+         "n": 47,
+         "lead": 1.17
+        },
+        {
+         "m": "C5",
+         "n": 46,
+         "lead": 1.01
+        },
+        {
+         "m": "C8",
+         "n": 16,
+         "lead": 0.9
+        }
+       ],
+       "values": {
+        "F4": 0.15,
+        "G4": 0.01,
+        "E3": -0.06,
+        "G10": 0.01,
+        "F11": 0.04,
+        "G7": -0.55,
+        "C10": -0.55,
+        "D6": 0.02,
+        "L11": 1.32,
+        "L3": 1.22,
+        "C5": 1.05
+       },
+       "okValue": 1.32,
+       "gapRequired": 1,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "base",
+   "course": "middle",
+   "title": "根拠を奪う・弱い石を攻める",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "L4"
+     ],
+     "good": [
+      "L8"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "L4",
+         "n": 140,
+         "lead": -0.63
+        },
+        {
+         "m": "L8",
+         "n": 15,
+         "lead": -1.13
+        }
+       ],
+       "values": {
+        "L4": -0.56,
+        "M6": -3.28,
+        "K5": -1.76,
+        "L9": -3.43,
+        "M7": -4.79,
+        "K6": -1.67,
+        "G4": -2.28,
+        "L8": -0.89
+       },
+       "okValue": -0.56,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "L4"
+     ],
+     "good": [
+      "L8"
+     ],
+     "half": [
+      "K5",
+      "C7"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "L4",
+         "n": 145,
+         "lead": 0.24
+        },
+        {
+         "m": "L8",
+         "n": 11,
+         "lead": -0.61
+        }
+       ],
+       "values": {
+        "L4": 0.08,
+        "L8": -0.75,
+        "M6": -2.49,
+        "L9": -1.67,
+        "M7": -3.85,
+        "K5": -0.81,
+        "C7": -0.86
+       },
+       "okValue": 0.08,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "L10"
+     ],
+     "good": [
+      "L6"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "L10",
+         "n": 146,
+         "lead": -0.26
+        },
+        {
+         "m": "L6",
+         "n": 13,
+         "lead": -0.78
+        }
+       ],
+       "values": {
+        "L10": -0.33,
+        "M8": -2.31,
+        "L8": -3.98,
+        "K9": -2.31,
+        "L6": -0.82,
+        "L5": -3.85,
+        "G4": -2.48
+       },
+       "okValue": -0.33,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "B",
+     "ok": [
+      "C4"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "C4",
+         "n": 147,
+         "lead": -0.37
+        },
+        {
+         "m": "C8",
+         "n": 11,
+         "lead": -0.86
+        }
+       ],
+       "values": {
+        "C4": -0.47,
+        "B6": -2.32,
+        "D5": -2.13,
+        "C9": -3.83,
+        "C3": -2.46,
+        "G10": -2.41,
+        "K7": -1.76
+       },
+       "okValue": -0.47,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "J5",
+      "J4",
+      "H3"
+     ],
+     "good": [
+      "L8"
+     ],
+     "half": [
+      "G4"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "J5",
+         "n": 81,
+         "lead": -0.11
+        },
+        {
+         "m": "J4",
+         "n": 38,
+         "lead": -0.46
+        },
+        {
+         "m": "H3",
+         "n": 20,
+         "lead": -0.26
+        }
+       ],
+       "values": {
+        "M5": -1.16,
+        "M6": -3.1,
+        "K3": -4.01,
+        "L8": -0.64,
+        "L9": -2.24,
+        "J5": -0.11,
+        "G4": -1.03,
+        "J4": -0.24,
+        "H3": -0.23
+       },
+       "okValue": -0.11,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "thickness",
+   "course": "middle",
+   "title": "地と厚み",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "W",
+     "ok": [
+      "L11",
+      "L3"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "L11",
+         "n": 89,
+         "lead": 1.75
+        },
+        {
+         "m": "L3",
+         "n": 63,
+         "lead": 1.83
+        }
+       ],
+       "values": {
+        "H8": -0.42,
+        "G7": -0.46,
+        "L6": 0.53,
+        "H7": -0.63,
+        "G4": 0.13,
+        "L8": 0.15,
+        "M7": -0.32,
+        "L11": 1.9,
+        "L3": 1.8
+       },
+       "okValue": 1.9,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "B",
+     "ok": [
+      "C11",
+      "C3"
+     ],
+     "good": [
+      "E7"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "C11",
+         "n": 77,
+         "lead": -0.08
+        },
+        {
+         "m": "C3",
+         "n": 75,
+         "lead": -0.09
+        }
+       ],
+       "values": {
+        "G7": -2.57,
+        "G10": -1.76,
+        "G4": -1.73,
+        "F7": -2.4,
+        "H7": -3.17,
+        "E7": -0.9,
+        "C11": -0.11,
+        "C3": 0
+       },
+       "okValue": 0,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "F3",
+      "G4",
+      "G10",
+      "G11"
+     ],
+     "good": [
+      "E7"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "F3",
+         "n": 94,
+         "lead": -0.17
+        },
+        {
+         "m": "E7",
+         "n": 15,
+         "lead": -0.46
+        },
+        {
+         "m": "G11",
+         "n": 10,
+         "lead": -0.51
+        }
+       ],
+       "values": {
+        "G7": -1.49,
+        "G10": -0.62,
+        "G4": -0.56,
+        "H7": -2.19,
+        "F7": -1.44,
+        "E7": -0.39,
+        "J7": -4.36,
+        "G11": -0.62,
+        "F3": -0.35
+       },
+       "okValue": -0.35,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "G11",
+      "G3",
+      "G4",
+      "H3"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "G3",
+         "n": 54,
+         "lead": 0.64
+        },
+        {
+         "m": "G4",
+         "n": 49,
+         "lead": 0.62
+        },
+        {
+         "m": "H3",
+         "n": 27,
+         "lead": 0.57
+        }
+       ],
+       "values": {
+        "G4": 0.65,
+        "G7": -0.75,
+        "H8": -0.15,
+        "F8": -1.04,
+        "J8": -1.07,
+        "F4": -0.71,
+        "G11": 1.03,
+        "E7": -3.23,
+        "G3": 0.87,
+        "H3": 0.69
+       },
+       "okValue": 1.03,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "E11",
+      "G3",
+      "H3"
+     ],
+     "good": [
+      "F11",
+      "E7"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 160/60 visits, komi 6.5)",
+       "rootTop": [
+        {
+         "m": "E11",
+         "n": 129,
+         "lead": -0.76
+        },
+        {
+         "m": "H3",
+         "n": 7,
+         "lead": -1.14
+        }
+       ],
+       "values": {
+        "G11": -3.43,
+        "G3": -0.59,
+        "F11": -1.35,
+        "H3": -0.82,
+        "G7": -2.22,
+        "E7": -1.45,
+        "H7": -3.4,
+        "F7": -1.73,
+        "E11": -0.56
+       },
+       "okValue": -0.56,
+       "gapRequired": 1.2,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sente",
+   "course": "endgame",
+   "title": "先手と後手のヨセ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "A5"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "A5",
+         "n": 188,
+         "lead": -13.5
+        },
+        {
+         "m": "J4",
+         "n": 10,
+         "lead": -17.62
+        }
+       ],
+       "values": {
+        "A5": -13.61,
+        "J4": -16.97,
+        "A4": -16.14,
+        "J3": -18.69,
+        "E3": -22.59
+       },
+       "okValue": -13.61,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "A4"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "A4",
+         "n": 156,
+         "lead": 23.4
+        },
+        {
+         "m": "J4",
+         "n": 39,
+         "lead": 19.87
+        }
+       ],
+       "values": {
+        "A4": 23.08,
+        "J4": 19.67,
+        "A5": 20.68,
+        "J3": 16.82,
+        "E6": 14.11
+       },
+       "okValue": 23.08,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "A5"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "A5",
+         "n": 195,
+         "lead": -14.05
+        },
+        {
+         "m": "A4",
+         "n": 4,
+         "lead": -15.7
+        }
+       ],
+       "values": {
+        "A5": -14.01,
+        "E4": -17.06,
+        "A4": -15.84,
+        "E3": -18.53,
+        "A6": -16.38
+       },
+       "okValue": -14.01,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "A4",
+      "E4"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "A4",
+         "n": 130,
+         "lead": 18.98
+        },
+        {
+         "m": "E4",
+         "n": 67,
+         "lead": 18.4
+        }
+       ],
+       "values": {
+        "A4": 19.01,
+        "E4": 18.66,
+        "A5": 17.18,
+        "E3": 16.66,
+        "A3": 16.81
+       },
+       "okValue": 19.01,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "B",
+     "ok": [
+      "E3"
+     ],
+     "good": [
+      "D4",
+      "F4"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "E3",
+         "n": 145,
+         "lead": -24.18
+        },
+        {
+         "m": "D3",
+         "n": 24,
+         "lead": -27.05
+        },
+        {
+         "m": "F3",
+         "n": 12,
+         "lead": -26.67
+        }
+       ],
+       "values": {
+        "A5": -28.16,
+        "E4": -26.84,
+        "D4": -24.7,
+        "F4": -25.15,
+        "A4": -30.19,
+        "E3": -24.43,
+        "D3": -26.99
+       },
+       "okValue": -24.43,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hane",
+   "course": "endgame",
+   "title": "ハネツギと二線のヨセ",
+   "problems": [
+    {
+     "k": 1,
+     "turn": "B",
+     "ok": [
+      "A5"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "A5",
+         "n": 195,
+         "lead": -12.79
+        },
+        {
+         "m": "A4",
+         "n": 5,
+         "lead": -13.79
+        }
+       ],
+       "values": {
+        "A5": -12.51,
+        "A4": -15.07,
+        "A3": -14.93,
+        "A6": -14.5,
+        "E3": -16.75,
+        "E6": -15.84
+       },
+       "okValue": -12.51,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "turn": "W",
+     "ok": [
+      "A4"
+     ],
+     "half": [
+      "A3"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "A4",
+         "n": 191,
+         "lead": 17.1
+        },
+        {
+         "m": "A5",
+         "n": 8,
+         "lead": 15.05
+        }
+       ],
+       "values": {
+        "A4": 17.11,
+        "A5": 15.12,
+        "A6": 15.11,
+        "A3": 15.96,
+        "E3": 12.2,
+        "E6": 12.76
+       },
+       "okValue": 17.11,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "turn": "B",
+     "ok": [
+      "E2"
+     ],
+     "good": [
+      "F1"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "E2",
+         "n": 195,
+         "lead": -10.17
+        },
+        {
+         "m": "F1",
+         "n": 4,
+         "lead": -11.24
+        }
+       ],
+       "values": {
+        "E1": -11.7,
+        "D2": -13.81,
+        "D1": -13.07,
+        "E2": -10.08,
+        "F1": -10.76,
+        "A5": -15.83,
+        "G6": -14.8
+       },
+       "okValue": -10.08,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "turn": "W",
+     "ok": [
+      "E2"
+     ],
+     "good": [
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "E2",
+         "n": 153,
+         "lead": 15.99
+        },
+        {
+         "m": "E1",
+         "n": 38,
+         "lead": 15.48
+        }
+       ],
+       "values": {
+        "D2": 11.8,
+        "D1": 13.18,
+        "C1": 12.03,
+        "E1": 15.68,
+        "E2": 16.16,
+        "A5": 9.57,
+        "G6": 10.13
+       },
+       "okValue": 16.16,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "turn": "W",
+     "ok": [
+      "E2"
+     ],
+     "good": [
+      "E1"
+     ],
+     "checks": [
+      {
+       "how": "engine (strong net, 200/80 visits, komi 7)",
+       "rootTop": [
+        {
+         "m": "E2",
+         "n": 182,
+         "lead": 13.11
+        },
+        {
+         "m": "F2",
+         "n": 10,
+         "lead": 11.34
+        }
+       ],
+       "values": {
+        "E2": 13.25,
+        "D1": 6.85,
+        "E1": 12.43,
+        "C1": 8.38,
+        "F2": 11.69,
+        "C2": 5.17
+       },
+       "okValue": 13.25,
+       "gapRequired": 1.5,
+       "pass": true,
+       "notes": []
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "errors": []
+}

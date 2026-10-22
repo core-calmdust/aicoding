@@ -1,0 +1,75 @@
+// Lessons — course "opening" (布石). Positions are given as move lists from an empty board; every answer measured
+// with lessons-eng.mjs (strong net, 160–200 visits at the root, 60–80 after each candidate). `eng.vals` = the mover's
+// score lead after each candidate. Opening moves are close in value, so wrong moves here must lose >= 1 point (gap 1.0).
+export const course = {
+  id: 'opening',
+  title: { ja: '布石', en: 'Opening' },
+  sub: { ja: '隅・シマリとカカリ・急場', en: 'Corners, enclosures and approaches, urgent points' },
+};
+const ENG = (o) => Object.assign({ komi: 6.5, visits: '200/80', gap: 1.0 }, o);
+export const steps = [
+// ------------------------------------------------------------------ 1
+{ id: 'corners', course: 'opening',
+  title: { ja: '隅から辺、そして中央へ', en: 'Corners, then sides, then the centre' },
+  sub: { ja: '隅は一番地を取りやすい', en: 'The corner is the easiest place to make territory' },
+  intro: {
+    ja: '<p>碁の打ち始め（<b>布石</b>）では、「<b>隅→辺→中央</b>」の順に打つのが基本です。</p><p>隅は2辺の盤端を味方にできるので、少ない石で地を囲めます。辺は1辺、中央は盤端の助けがありません。</p><p>空いている隅があれば、まず隅へ。星（4-4）や小目（3-4）、三々（3-3）が代表的な場所です。</p>',
+    en: '<p>In the opening (<b>fuseki</b>), the basic order is <b>corners → sides → centre</b>.</p><p>In a corner two board edges help you, so a few stones surround territory efficiently. A side has one edge, the centre none.</p><p>If a corner is still empty, play there first. The 4-4 point (hoshi), the 3-4 point (komoku) and the 3-3 point (san-san) are typical choices.</p>' },
+  goal: { ja: '布石で一番大きいところに打ってください', en: 'Play the biggest point in the opening' },
+  hint: { ja: 'まだ誰も打っていない隅はありませんか？', en: 'Is there a corner nobody has played in yet?' },
+  diagram: { n: 13, moves: ['D4'], marks: [['K10', 'ok'], ['K4', 'ok'], ['D10', 'ok'], ['G7', 'x']] },
+  problems: [
+    { n: 13, moves: ['D4'], ok: ['K10', 'K4', 'D10'],
+      eng: ENG({ top: [{ m: 'K10', n: 113, lead: 0.15 }, { m: 'D10', n: 53, lead: 0.05 }, { m: 'K4', n: 24, lead: 0.03 }], vals: { K10: 0.19, K4: 0.04, D10: 0.06, G7: -1.67, D7: -1.3, G4: -1.32 }, wrong: ['G7', 'D7', 'G4'] }),
+      why: { ja: '空いている3つの隅の星（<bdi>K10</bdi>・<bdi>K4</bdi>・<bdi>D10</bdi>）は、どれも同じくらいの価値です。', en: 'The 4-4 points of the three empty corners (<bdi>K10</bdi>, <bdi>K4</bdi>, <bdi>D10</bdi>) are all about equally valuable.' },
+      ng: { ja: '天元<bdi>G7</bdi>や辺の<bdi>D7</bdi>は、空き隅より1目半ほど小さい手です。まず隅から。', en: 'Tengen <bdi>G7</bdi> or the side point <bdi>D7</bdi> is about one and a half points smaller than an empty corner. Corners first.' } },
+    { n: 13, moves: ['K10', 'D4', 'K4'], ok: ['D10'], good: ['C10', 'D11'],
+      eng: ENG({ top: [{ m: 'D10', n: 125, lead: 0.16 }, { m: 'C10', n: 44, lead: 0.11 }, { m: 'D11', n: 29, lead: -0.01 }], vals: { D10: 0.21, C10: 0.1, G7: -1.54, D7: -1.05, K7: -1.34, D11: -0.01 }, wrong: ['G7', 'D7', 'K7'] }),
+      why: { ja: '最後の空き隅<bdi>D10</bdi>が一番の大場。小目の<bdi>C10</bdi>・<bdi>D11</bdi>でも構いません。', en: 'The last empty corner, <bdi>D10</bdi>, is the biggest point. The 3-4 points <bdi>C10</bdi> or <bdi>D11</bdi> are fine too.' },
+      ng: { ja: '黒2つの星の間<bdi>K7</bdi>や天元<bdi>G7</bdi>は、隅より価値が低い手です。', en: 'The point between Black’s two hoshi, <bdi>K7</bdi>, or tengen <bdi>G7</bdi>, is worth less than the corner.' } },
+    { n: 19, moves: ['Q16', 'D4', 'Q4'], ok: ['D16'], good: ['C16', 'D17', 'R6'],
+      eng: ENG({ top: [{ m: 'D16', n: 159, lead: 0.02 }, { m: 'D17', n: 22, lead: -0.1 }, { m: 'C16', n: 13, lead: -0.15 }], vals: { D16: 0.14, C16: -0.16, D17: -0.09, K10: -1.44, Q10: -1.41, R6: -0.72, D10: -1.16 }, wrong: ['K10', 'Q10', 'D10'] }),
+      why: { ja: '19路でも同じ。最後の空き隅<bdi>D16</bdi>（または小目）が大場です。', en: 'The same on 19x19: the last empty corner, <bdi>D16</bdi> (or a 3-4 point), is the big point.' },
+      ng: { ja: '<bdi>Q10</bdi>は黒の星2つにはさまれた狭い場所、<bdi>K10</bdi>は早すぎる中央です。', en: '<bdi>Q10</bdi> is squeezed between Black’s two hoshi, and <bdi>K10</bdi> is the centre — too early.' } },
+    { n: 19, moves: ['Q16', 'D4', 'D16'], ok: ['Q4'], good: ['R4', 'Q3'],
+      eng: ENG({ top: [{ m: 'Q4', n: 171, lead: 0.05 }, { m: 'R4', n: 16, lead: -0.16 }, { m: 'Q3', n: 10, lead: -0.08 }], vals: { Q4: 0.05, R4: -0.14, Q3: -0.19, K10: -1.47, Q10: -1.3, D10: -1.09, R10: -1.4 }, wrong: ['K10', 'Q10', 'D10', 'R10'] }),
+      why: { ja: '右下の空き隅<bdi>Q4</bdi>へ。小目<bdi>R4</bdi>・<bdi>Q3</bdi>でもよい手です。', en: 'Take the empty lower-right corner at <bdi>Q4</bdi>; the 3-4 points <bdi>R4</bdi> or <bdi>Q3</bdi> are good as well.' },
+      ng: { ja: '辺の<bdi>D10</bdi>や<bdi>Q10</bdi>は、空き隅を残したままでは小さい手です。', en: 'Side points like <bdi>D10</bdi> or <bdi>Q10</bdi> are small while a corner is still empty.' } },
+    { n: 13, moves: ['K10', 'D4', 'K4', 'D10'], ok: ['C10', 'C4', 'F11', 'F3'], good: ['C7', 'D7'], half: ['G7'],
+      eng: ENG({ top: [{ m: 'C4', n: 53, lead: -0.22 }, { m: 'F11', n: 49, lead: -0.17 }, { m: 'F3', n: 39, lead: -0.22 }, { m: 'C10', n: 33, lead: -0.2 }], vals: { C7: -0.44, D7: -0.47, K7: -1.38, G7: -0.91, C10: -0.1, K3: -1.14, C4: -0.2, F11: -0.24, F3: -0.23 }, wrong: ['K7', 'K3'] }),
+      why: { ja: '空き隅がなくなったら、次は相手の隅に<b>カカる</b>（<bdi>F11</bdi>・<bdi>F3</bdi>）か、隅にツケて（<bdi>C10</bdi>・<bdi>C4</bdi>）相手の隅を荒らすのが大きな手です。白の左辺<bdi>C7</bdi>・<bdi>D7</bdi>への打ち込みもまずまずです。', en: 'With no empty corner left, the big moves are to <b>approach</b> the opponent’s corners (<bdi>F11</bdi>, <bdi>F3</bdi>) or to attach against them (<bdi>C10</bdi>, <bdi>C4</bdi>). Invading White’s left side at <bdi>C7</bdi> or <bdi>D7</bdi> is also reasonable.' },
+      ng: { ja: '自分の星と星の間<bdi>K7</bdi>や、自分の隅を固める<bdi>K3</bdi>は、まだ小さい手です（1目以上の差）。', en: 'The point between your own hoshi, <bdi>K7</bdi>, or reinforcing your own corner at <bdi>K3</bdi>, is still small (over a point less).' } },
+  ] },
+// ------------------------------------------------------------------ 2
+{ id: 'urgent', course: 'opening',
+  title: { ja: 'シマリ・カカリと急場', en: 'Enclosures, approaches and urgent points' },
+  sub: { ja: '大場より急場', en: 'Urgent points before big points' },
+  intro: {
+    ja: '<p>隅の石にもう1手加えて隅を固めるのが<b>シマリ</b>、相手の隅の石に近づいて地を固めさせないのが<b>カカリ</b>。どちらも布石の大きな手です。</p><p>ただし、<b>弱い石</b>があるときは話が別。相手の弱い石を攻める手、自分の弱い石を安定させる手は、どんな大場より先に打つべき<b>急場</b>です。</p><p>「盤上に弱い石はないか？」をいつも最初に確認しましょう。</p>',
+    en: '<p>Adding a second stone to your corner is an <b>enclosure</b> (shimari); approaching the opponent’s corner stone so it cannot settle is an <b>approach</b> (kakari). Both are big opening moves.</p><p>But when there are <b>weak stones</b> on the board, things change. Attacking the opponent’s weak stones, or stabilising your own, is an <b>urgent point</b> that comes before any big point.</p><p>Always check first: is there a weak group on the board?</p>' },
+  goal: { ja: '急場・大場を見つけてください', en: 'Find the urgent or big point' },
+  hint: { ja: '根拠のない石はありませんか？なければ、隅のシマリ・カカリを考えましょう。', en: 'Any stones without a base? If not, think about enclosures and approaches.' },
+  diagram: { n: 13, moves: ['K10', 'D4', 'K4', 'D10', 'K7', 'D7', 'G10', 'L11', 'K11', 'L12'], marks: [['M9', 'ok'], ['G4', 'x']] },
+  problems: [
+    { n: 13, moves: ['K10', 'C4', 'K4', 'D10', 'K7'], ok: ['E4', 'L3', 'L11', 'F3'], half: ['D8', 'G10'],
+      eng: ENG({ top: [{ m: 'E4', n: 55, lead: 1.41 }, { m: 'L11', n: 44, lead: 1.37 }, { m: 'L3', n: 39, lead: 1.42 }, { m: 'F3', n: 31, lead: 1.16 }, { m: 'E3', n: 24, lead: 1.17 }], vals: { D7: 0.13, C7: 0.39, D8: 0.67, G7: -0.08, G10: 0.55, G4: 0.31, C10: 0.11, F3: 1.25, E4: 1.44, L11: 1.31, L3: 1.36 }, wrong: ['G7', 'D7', 'C10'] }),
+      why: { ja: '白の小目<bdi>C4</bdi>をシマる（<bdi>E4</bdi>・<bdi>F3</bdi>）か、黒の星の三々（<bdi>L3</bdi>・<bdi>L11</bdi>）に入るのが大きな手です。', en: 'Enclosing White’s 3-4 stone <bdi>C4</bdi> (<bdi>E4</bdi>, <bdi>F3</bdi>) or invading at the 3-3 point under a black hoshi (<bdi>L3</bdi>, <bdi>L11</bdi>) is the big move.' },
+      ng: { ja: '天元<bdi>G7</bdi>や辺の<bdi>D7</bdi>・<bdi>C10</bdi>は、隅の手より1目以上小さい手です。', en: 'Tengen <bdi>G7</bdi> or the side points <bdi>D7</bdi>, <bdi>C10</bdi> are over a point smaller than the corner moves.' } },
+    { n: 13, moves: ['K10', 'D4', 'K4', 'D10', 'K7', 'D7', 'G10', 'L11', 'K11', 'L12'], ok: ['M9'], good: ['L10', 'C3'],
+      eng: ENG({ top: [{ m: 'L10', n: 81, lead: 0.38 }, { m: 'M9', n: 78, lead: 0.47 }], vals: { M9: 0.71, M10: -0.53, L9: -0.59, M8: -0.63, G4: -2.33, G3: -1.71, C3: 0.21, K12: -2.17, L10: 0.36 }, wrong: ['M10', 'L9', 'M8', 'G4', 'G3', 'K12'] }),
+      why: { ja: '三々に入った白2子はまだ眼がありません。<bdi>M9</bdi>で右辺へのヒラキを止めるのが急場。攻めながら右辺の黒地も守れます。', en: 'The two white stones that invaded at 3-3 have no eyes yet. <bdi>M9</bdi>, stopping their extension down the right side, is the urgent point — it attacks while protecting Black’s right side.' },
+      ng: { ja: '下辺の大場<bdi>G4</bdi>などに回ると、白に<bdi>M9</bdi>方面へヒラかれて安定されます（2目以上の差）。', en: 'Going to a big point like <bdi>G4</bdi> lets White extend toward <bdi>M9</bdi> and settle (two points or more).' } },
+    { n: 13, moves: ['K10', 'D4', 'K4', 'D10', 'K7', 'D7', 'G10', 'L11', 'K11', 'L12', 'G4'], ok: ['M9'], good: ['M8'], half: ['L3'],
+      eng: ENG({ top: [{ m: 'M9', n: 124, lead: 2.13 }, { m: 'M8', n: 15, lead: 1.83 }, { m: 'L10', n: 13, lead: 1.32 }], vals: { L3: 1.21, K12: 0.43, M12: -5.24, G3: -0.54, H3: -0.48, F3: -0.28, D9: -2.17, G7: -1.12, M9: 2.17, M8: 1.69 }, wrong: ['K12', 'M12', 'G3', 'D9', 'G7'] }),
+      why: { ja: '前の問題で黒が大場の<bdi>G4</bdi>に回った場面。白は自分から<bdi>M9</bdi>とヒラいて、三々の石を安定させるのが急場です。', en: 'Black took the big point <bdi>G4</bdi> instead. Now White extends to <bdi>M9</bdi> to stabilise the 3-3 stones — the urgent point.' },
+      ng: { ja: '<bdi>G3</bdi>など下辺に打つと、黒に<bdi>M9</bdi>と止められ、白2子が苦しくなります（約3目の差）。', en: 'Playing on the bottom side, e.g. <bdi>G3</bdi>, lets Black block at <bdi>M9</bdi>, and the two white stones are in trouble (about three points).' } },
+    { n: 13, moves: ['K10', 'D4', 'K4', 'D10', 'K7', 'D7', 'G4', 'L3', 'K3', 'L2', 'G10'], ok: ['M5'], good: ['M6', 'L4'], half: ['L5'],
+      eng: ENG({ top: [{ m: 'M5', n: 126, lead: 1.84 }, { m: 'L4', n: 18, lead: 1.6 }, { m: 'L5', n: 13, lead: 1.88 }], vals: { M5: 2.08, M6: 1.94, L5: 1.23, M4: -0.01, C11: -0.87, G11: -0.47, F11: -0.29, K2: 0.5, L4: 1.6 }, wrong: ['M4', 'K2', 'C11', 'G11', 'F11'] }),
+      why: { ja: '右下の三々に入った白2子（<bdi>L3</bdi>・<bdi>L2</bdi>）が不安定です。上辺の大場より先に、<bdi>M5</bdi>とヒラいて根拠を作るのが急場です。', en: 'The two white stones that invaded the lower-right 3-3 point (<bdi>L3</bdi>, <bdi>L2</bdi>) are unsettled. Before any big point on the top, extend to <bdi>M5</bdi> to make a base.' },
+      ng: { ja: '<bdi>F11</bdi>・<bdi>G11</bdi>などの上辺に回ると、黒に<bdi>M5</bdi>方面を止められて白2子が攻められます（2目以上の差）。<bdi>M4</bdi>は狭すぎます。', en: 'Turning to the top side (<bdi>F11</bdi>, <bdi>G11</bdi>) lets Black block toward <bdi>M5</bdi> and attack the two stones (two points or more). <bdi>M4</bdi> is too narrow.' } },
+    { n: 13, moves: ['K10', 'D4', 'K4', 'D10', 'C7', 'D8', 'K7'], ok: ['L11', 'L3', 'C5'],
+      eng: ENG({ top: [{ m: 'L11', n: 79, lead: 1.11 }, { m: 'L3', n: 47, lead: 1.17 }, { m: 'C5', n: 46, lead: 1.01 }, { m: 'C8', n: 16, lead: 0.9 }], vals: { F4: 0.15, G4: 0.01, E3: -0.06, G10: 0.01, F11: 0.04, G7: -0.55, C10: -0.55, D6: 0.02, L11: 1.32, L3: 1.22, C5: 1.05 }, wrong: ['F4', 'G4', 'E3', 'G10', 'F11', 'D6', 'G7', 'C10'] }),
+      why: { ja: '左辺の黒<bdi>C7</bdi>はまだ根拠がない石。<bdi>C5</bdi>で根拠を奪って攻めるか、黒の星の三々（<bdi>L11</bdi>・<bdi>L3</bdi>）に入るのが大きな手です。', en: 'Black <bdi>C7</bdi> on the left has no base yet. Attacking it by taking its base with <bdi>C5</bdi>, or invading the 3-3 points under Black’s hoshi (<bdi>L11</bdi>, <bdi>L3</bdi>), is the big move.' },
+      ng: { ja: '<bdi>F4</bdi>・<bdi>G10</bdi>などの辺の手は、弱い石への攻めや三々より1目以上小さい手です。', en: 'Side moves such as <bdi>F4</bdi> or <bdi>G10</bdi> are over a point smaller than attacking the weak stone or the 3-3 invasions.' } },
+  ] },
+];

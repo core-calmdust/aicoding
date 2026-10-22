@@ -3,14 +3,22 @@
  * Runs in the engine worker (importScripts after rules.js), as the browser global `GoTsumego`, and in node (require).
  *
  * API (problem P: { s: spec, goal, target, region, n, ... }; points may be indices or GTP strings):
- *   GoTsumego.solve(P, moves, left, defend) -> [{ m, need, hopeless? }]
+ *   GoTsumego.solve(P, moves, left, defend[, opts]) -> [{ m, need, hopeless? }]
  *       moves: point indices played from P.s (PASS = -1). left: the player's moves still allowed.
  *       defend=false: the player's (attacker's) candidate moves; need = the player's moves needed to reach the goal,
- *         counting this move (1 = reaches it at once), 0 = cannot be reached within `left`.
+ *         counting this move (1 = reaches it at once), 0 = cannot be reached within `left`. hopeless: true (tactical
+ *         goals) = the goal is out of reach even if the opponent only passed.
  *       defend=true: the opponent's candidate moves (incl. pass) with need computed the same way (the page picks the
  *         largest need; 0 = the move refutes). The list is ordered by preference so the first maximum is the natural reply.
- *   GoTsumego.reached(P, pos) -> true when the goal is achieved in pos (a GoRules.Pos or a spec).
- *   GoTsumego.mainLine(P, left) -> indices of the solution line (answer, best resistance, ...).
+ *   GoTsumego.reached(P, pos[, opts]) -> true when the goal is achieved in pos (a GoRules.Pos or a spec).
+ *   GoTsumego.mainLine(P, left) -> indices of the solution line (answer, best resistance, ...), exact.
+ *   GoTsumego.budget = 150 (ms per call in page mode), GoTsumego.nodeLimit = Infinity (exact mode: throws {abort}).
+ * Modes: page mode (default) is what the worker uses. Puzzles in puzzles.json are verified offline, so when `moves` is
+ *   a prefix of P.line the line's next move is known to be correct (and at the start the answer is the only solution);
+ *   every other move gets an exact search within the time budget; a move still unresolved when the budget runs out
+ *   counts as "not a solution" (need 0) — for the defender: the line's move stays the preferred reply. reached() on a
+ *   main-line position answers from the line (true only at its end). Exact mode (opts {exact: true}: the generator,
+ *   fun.js, test-tsumego.mjs) never uses the stored answer and has no time limit.
  *
  * Roles: the player ("G") is the side to move in P.s, the opponent is "O". `target` are the stones whose fate decides:
  *   kill    target = O stones. Reached when a target stone is captured, or the target is dead in a SETTLED way: O cannot
@@ -651,7 +659,7 @@ function mainLine(P, left) {
   return line;
 }
 
-const api = { solve, reached, mainLine, PASS, budget: 150, nodeLimit: Infinity, _ctx: ctxOf, _Board: Board };
+const api = { solve, reached, mainLine, PASS, budget: 150, nodeLimit: Infinity, _ctx: ctxOf, _reset: () => { CTX.length = 0; }, _Board: Board };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 root.GoTsumego = api;
 })(typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : globalThis);

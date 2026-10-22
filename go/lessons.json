@@ -33,6 +33,39 @@
     "ja": "二眼・急所・中手・隅の形",
     "en": "Two eyes, vital points, nakade, corner shapes"
    }
+  },
+  {
+   "id": "opening",
+   "title": {
+    "ja": "布石",
+    "en": "Opening"
+   },
+   "sub": {
+    "ja": "隅・シマリとカカリ・急場",
+    "en": "Corners, enclosures and approaches, urgent points"
+   }
+  },
+  {
+   "id": "middle",
+   "title": {
+    "ja": "中盤",
+    "en": "Middle game"
+   },
+   "sub": {
+    "ja": "根拠・攻め・地と厚み",
+    "en": "Bases, attacking, territory and thickness"
+   }
+  },
+  {
+   "id": "endgame",
+   "title": {
+    "ja": "ヨセ",
+    "en": "Endgame"
+   },
+   "sub": {
+    "ja": "先手と後手、ハネツギ、二線のヨセ",
+    "en": "Sente and gote, hane-and-connect, second-line moves"
+   }
   }
  ],
  "steps": [
@@ -1674,6 +1707,184 @@
    ]
   },
   {
+   "id": "tesuji",
+   "course": "tactics",
+   "title": {
+    "ja": "手筋の総合問題",
+    "en": "Tactics review"
+   },
+   "sub": {
+    "ja": "どの手筋を使う？",
+    "en": "Which technique fits?"
+   },
+   "intro": {
+    "ja": "<p>これまでの手筋の総復習です。問題ごとに使う手筋は違います。</p><p>考える順番は、<b>①相手のダメの数を数える</b>、<b>②アタリで追えるか（シチョウ・シチョウアタリ）</b>、<b>③アタリ以外で包めるか（ゲタ）</b>、<b>④わざと取らせる手はないか（ウッテガエシ）</b>、<b>⑤2つ同時に狙えないか（両アタリ）</b>。</p><p>正解のあとに表示される手順も、自分で並べて確かめてみましょう。</p>",
+    "en": "<p>A review of all the techniques so far. Each problem needs a different one.</p><p>Think in this order: <b>1. count the liberties</b>, <b>2. can a chain of ataris work (ladder, ladder breakers)?</b>, <b>3. can you enclose without atari (net)?</b>, <b>4. can you sacrifice a stone (snapback)?</b>, <b>5. can you threaten two things at once (double atari)?</b></p><p>After each answer, replay the sequence shown on the board yourself.</p>"
+   },
+   "goal": {
+    "ja": "手筋で石を取ってください",
+    "en": "Capture using the right technique"
+   },
+   "hint": {
+    "ja": "シチョウアタリの石はないか、まず盤全体を見ましょう。",
+    "en": "First look over the board for ladder breakers."
+   },
+   "diagram": {
+    "s": {
+     "n": 9,
+     "stones": ".........................w................b.......wb......bb.....................",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "E5",
+      "ok"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 9,
+      "stones": ".........................w................b.......wb......bb.....................",
+      "turn": 1
+     },
+     "ok": [
+      "E5"
+     ],
+     "line": [
+      "E5",
+      "E4",
+      "D4",
+      "F5",
+      "F6"
+     ],
+     "why": {
+      "ja": "右上の<bdi>H7</bdi>がシチョウアタリなので、アタリで追うと逃げられます。<bdi>E5</bdi>のゲタが正解です。",
+      "en": "White <bdi>H7</bdi> breaks the ladder, so chasing with atari fails. The net at <bdi>E5</bdi> is correct."
+     },
+     "ng": {
+      "ja": "<bdi>F5</bdi>や<bdi>E4</bdi>からアタリしても、白は<bdi>H7</bdi>の方へ逃げてつながります。",
+      "en": "Atari from <bdi>F5</bdi> or <bdi>E4</bdi> lets White run toward <bdi>H7</bdi> and connect."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "......................w......wb........w...........b.............................",
+      "turn": 2
+     },
+     "ok": [
+      "E6"
+     ],
+     "line": [
+      "E6",
+      "D7",
+      "D8",
+      "C7",
+      "B7",
+      "C8",
+      "B8",
+      "C9",
+      "B9",
+      "D9",
+      "E9"
+     ],
+     "why": {
+      "ja": "<bdi>E6</bdi>からアタリすれば、黒は左上へ逃げるしかなく、盤端でシチョウが成功します。",
+      "en": "Atari from <bdi>E6</bdi>: Black can only run toward the upper left, and the ladder succeeds at the edge."
+     },
+     "ng": {
+      "ja": "<bdi>D7</bdi>からのアタリだと、黒は右下の<bdi>G4</bdi>の黒石へ向かって逃げてしまいます。",
+      "en": "Atari from <bdi>D7</bdi> sends Black toward its own stone at <bdi>G4</bdi>, and it escapes."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": ".ww..bb...wbwwwb....bbbbb...w....................................................",
+      "turn": 1
+     },
+     "view": [
+      0,
+      0,
+      8,
+      5
+     ],
+     "ok": [
+      "D9"
+     ],
+     "line": [
+      "D9",
+      "E9",
+      "D9"
+     ],
+     "why": {
+      "ja": "<bdi>D9</bdi>に放り込むウッテガエシ。白が<bdi>E9</bdi>で取っても、白4子はダメ1つで、<bdi>D9</bdi>に打ち返して取れます。",
+      "en": "A snapback: throw in at <bdi>D9</bdi>. If White captures at <bdi>E9</bdi>, the four white stones have one liberty and <bdi>D9</bdi> takes them back."
+     },
+     "ng": {
+      "ja": "<bdi>E9</bdi>からアタリすると白に<bdi>D9</bdi>とつながれて、<bdi>C9</bdi>の白石と連絡されます。",
+      "en": "Atari at <bdi>E9</bdi> lets White connect at <bdi>D9</bdi> to the stones at <bdi>C9</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": ".....................................wb........wb........w.......................",
+      "turn": 2
+     },
+     "ok": [
+      "D5"
+     ],
+     "line": [
+      "D5",
+      "C6",
+      "E4"
+     ],
+     "why": {
+      "ja": "斜めの黒2子の切れ目<bdi>D5</bdi>に切ると両アタリ。どちらか一方を取れます。",
+      "en": "Cutting at <bdi>D5</bdi> between the diagonal black stones is a double atari; White captures one of them."
+     },
+     "ng": {
+      "ja": "黒<bdi>C5</bdi>と<bdi>D4</bdi>はどちらもダメ2つ。共通のダメ<bdi>D5</bdi>が急所です。",
+      "en": "Black <bdi>C5</bdi> and <bdi>D4</bdi> each have two liberties; their shared liberty <bdi>D5</bdi> is the key."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "...........................................................w........bw...........",
+      "turn": 2
+     },
+     "view": [
+      0,
+      3,
+      8,
+      8
+     ],
+     "ok": [
+      "E2"
+     ],
+     "line": [
+      "E2",
+      "F1",
+      "E1",
+      "G1",
+      "H1"
+     ],
+     "why": {
+      "ja": "二線の黒石は<bdi>E2</bdi>からアタリすれば一線へ逃げるしかなく、シチョウで取れます。",
+      "en": "Atari the second-line stone from <bdi>E2</bdi>: it can only run along the first line and is captured in a ladder."
+     },
+     "ng": {
+      "ja": "<bdi>F1</bdi>からのアタリでは黒に<bdi>E2</bdi>へ逃げられ、広い方へ出られます。",
+      "en": "Atari from <bdi>F1</bdi> lets Black run out through <bdi>E2</bdi> into open space."
+     }
+    }
+   ]
+  },
+  {
    "id": "live",
    "course": "lifedeath",
    "title": {
@@ -2382,6 +2593,985 @@
      "ng": {
       "ja": "黒に<bdi>E1</bdi>とふさがれると、一線に4つ並んだ直四で生きてしまいます。",
       "en": "If Black closes at <bdi>E1</bdi>, the straight four on the first line lives."
+     }
+    }
+   ]
+  },
+  {
+   "id": "corners",
+   "course": "opening",
+   "title": {
+    "ja": "隅から辺、そして中央へ",
+    "en": "Corners, then sides, then the centre"
+   },
+   "sub": {
+    "ja": "隅は一番地を取りやすい",
+    "en": "The corner is the easiest place to make territory"
+   },
+   "intro": {
+    "ja": "<p>碁の打ち始め（<b>布石</b>）では、「<b>隅→辺→中央</b>」の順に打つのが基本です。</p><p>隅は2辺の盤端を味方にできるので、少ない石で地を囲めます。辺は1辺、中央は盤端の助けがありません。</p><p>空いている隅があれば、まず隅へ。星（4-4）や小目（3-4）、三々（3-3）が代表的な場所です。</p>",
+    "en": "<p>In the opening (<b>fuseki</b>), the basic order is <b>corners → sides → centre</b>.</p><p>In a corner two board edges help you, so a few stones surround territory efficiently. A side has one edge, the centre none.</p><p>If a corner is still empty, play there first. The 4-4 point (hoshi), the 3-4 point (komoku) and the 3-3 point (san-san) are typical choices.</p>"
+   },
+   "goal": {
+    "ja": "布石で一番大きいところに打ってください",
+    "en": "Play the biggest point in the opening"
+   },
+   "hint": {
+    "ja": "まだ誰も打っていない隅はありませんか？",
+    "en": "Is there a corner nobody has played in yet?"
+   },
+   "diagram": {
+    "s": {
+     "n": 13,
+     "stones": "........................................................................................................................b................................................",
+     "turn": 2
+    },
+    "marks": [
+     [
+      "K10",
+      "ok"
+     ],
+     [
+      "K4",
+      "ok"
+     ],
+     [
+      "D10",
+      "ok"
+     ],
+     [
+      "G7",
+      "x"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 13,
+      "stones": "........................................................................................................................b................................................",
+      "turn": 2
+     },
+     "ok": [
+      "K10",
+      "K4",
+      "D10"
+     ],
+     "why": {
+      "ja": "空いている3つの隅の星（<bdi>K10</bdi>・<bdi>K4</bdi>・<bdi>D10</bdi>）は、どれも同じくらいの価値です。",
+      "en": "The 4-4 points of the three empty corners (<bdi>K10</bdi>, <bdi>K4</bdi>, <bdi>D10</bdi>) are all about equally valuable."
+     },
+     "ng": {
+      "ja": "天元<bdi>G7</bdi>や辺の<bdi>D7</bdi>は、空き隅より1目半ほど小さい手です。まず隅から。",
+      "en": "Tengen <bdi>G7</bdi> or the side point <bdi>D7</bdi> is about one and a half points smaller than an empty corner. Corners first."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "................................................b.......................................................................w.....b..........................................",
+      "turn": 2
+     },
+     "ok": [
+      "D10"
+     ],
+     "good": [
+      "C10",
+      "D11"
+     ],
+     "why": {
+      "ja": "最後の空き隅<bdi>D10</bdi>が一番の大場。小目の<bdi>C10</bdi>・<bdi>D11</bdi>でも構いません。",
+      "en": "The last empty corner, <bdi>D10</bdi>, is the biggest point. The 3-4 points <bdi>C10</bdi> or <bdi>D11</bdi> are fine too."
+     },
+     "ng": {
+      "ja": "黒2つの星の間<bdi>K7</bdi>や天元<bdi>G7</bdi>は、隅より価値が低い手です。",
+      "en": "The point between Black’s two hoshi, <bdi>K7</bdi>, or tengen <bdi>G7</bdi>, is worth less than the corner."
+     }
+    },
+    {
+     "s": {
+      "n": 19,
+      "stones": "........................................................................b.......................................................................................................................................................................................................................w...........b............................................................",
+      "turn": 2
+     },
+     "ok": [
+      "D16"
+     ],
+     "good": [
+      "C16",
+      "D17",
+      "R6"
+     ],
+     "why": {
+      "ja": "19路でも同じ。最後の空き隅<bdi>D16</bdi>（または小目）が大場です。",
+      "en": "The same on 19x19: the last empty corner, <bdi>D16</bdi> (or a 3-4 point), is the big point."
+     },
+     "ng": {
+      "ja": "<bdi>Q10</bdi>は黒の星2つにはさまれた狭い場所、<bdi>K10</bdi>は早すぎる中央です。",
+      "en": "<bdi>Q10</bdi> is squeezed between Black’s two hoshi, and <bdi>K10</bdi> is the centre — too early."
+     }
+    },
+    {
+     "s": {
+      "n": 19,
+      "stones": "............................................................b...........b.......................................................................................................................................................................................................................w........................................................................",
+      "turn": 2
+     },
+     "ok": [
+      "Q4"
+     ],
+     "good": [
+      "R4",
+      "Q3"
+     ],
+     "why": {
+      "ja": "右下の空き隅<bdi>Q4</bdi>へ。小目<bdi>R4</bdi>・<bdi>Q3</bdi>でもよい手です。",
+      "en": "Take the empty lower-right corner at <bdi>Q4</bdi>; the 3-4 points <bdi>R4</bdi> or <bdi>Q3</bdi> are good as well."
+     },
+     "ng": {
+      "ja": "辺の<bdi>D10</bdi>や<bdi>Q10</bdi>は、空き隅を残したままでは小さい手です。",
+      "en": "Side points like <bdi>D10</bdi> or <bdi>Q10</bdi> are small while a corner is still empty."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w.....b.......................................................................w.....b..........................................",
+      "turn": 1
+     },
+     "ok": [
+      "C10",
+      "C4",
+      "F11",
+      "F3"
+     ],
+     "good": [
+      "C7",
+      "D7"
+     ],
+     "half": [
+      "G7"
+     ],
+     "why": {
+      "ja": "空き隅がなくなったら、次は相手の隅に<b>カカる</b>（<bdi>F11</bdi>・<bdi>F3</bdi>）か、隅にツケて（<bdi>C10</bdi>・<bdi>C4</bdi>）相手の隅を荒らすのが大きな手です。白の左辺<bdi>C7</bdi>・<bdi>D7</bdi>への打ち込みもまずまずです。",
+      "en": "With no empty corner left, the big moves are to <b>approach</b> the opponent’s corners (<bdi>F11</bdi>, <bdi>F3</bdi>) or to attach against them (<bdi>C10</bdi>, <bdi>C4</bdi>). Invading White’s left side at <bdi>C7</bdi> or <bdi>D7</bdi> is also reasonable."
+     },
+     "ng": {
+      "ja": "自分の星と星の間<bdi>K7</bdi>や、自分の隅を固める<bdi>K3</bdi>は、まだ小さい手です（1目以上の差）。",
+      "en": "The point between your own hoshi, <bdi>K7</bdi>, or reinforcing your own corner at <bdi>K3</bdi>, is still small (over a point less)."
+     }
+    }
+   ]
+  },
+  {
+   "id": "urgent",
+   "course": "opening",
+   "title": {
+    "ja": "シマリ・カカリと急場",
+    "en": "Enclosures, approaches and urgent points"
+   },
+   "sub": {
+    "ja": "大場より急場",
+    "en": "Urgent points before big points"
+   },
+   "intro": {
+    "ja": "<p>隅の石にもう1手加えて隅を固めるのが<b>シマリ</b>、相手の隅の石に近づいて地を固めさせないのが<b>カカリ</b>。どちらも布石の大きな手です。</p><p>ただし、<b>弱い石</b>があるときは話が別。相手の弱い石を攻める手、自分の弱い石を安定させる手は、どんな大場より先に打つべき<b>急場</b>です。</p><p>「盤上に弱い石はないか？」をいつも最初に確認しましょう。</p>",
+    "en": "<p>Adding a second stone to your corner is an <b>enclosure</b> (shimari); approaching the opponent’s corner stone so it cannot settle is an <b>approach</b> (kakari). Both are big opening moves.</p><p>But when there are <b>weak stones</b> on the board, things change. Attacking the opponent’s weak stones, or stabilising your own, is an <b>urgent point</b> that comes before any big point.</p><p>Always check first: is there a weak group on the board?</p>"
+   },
+   "goal": {
+    "ja": "急場・大場を見つけてください",
+    "en": "Find the urgent or big point"
+   },
+   "hint": {
+    "ja": "根拠のない石はありませんか？なければ、隅のシマリ・カカリを考えましょう。",
+    "en": "Any stones without a base? If not, think about enclosures and approaches."
+   },
+   "diagram": {
+    "s": {
+     "n": 13,
+     "stones": ".......................w...........bw.....w..b..b................................w.....b................................w.....b..........................................",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "M9",
+      "ok"
+     ],
+     [
+      "G4",
+      "x"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w.....b......................................b...............................w......b..........................................",
+      "turn": 2
+     },
+     "ok": [
+      "E4",
+      "L3",
+      "L11",
+      "F3"
+     ],
+     "half": [
+      "D8",
+      "G10"
+     ],
+     "why": {
+      "ja": "白の小目<bdi>C4</bdi>をシマる（<bdi>E4</bdi>・<bdi>F3</bdi>）か、黒の星の三々（<bdi>L3</bdi>・<bdi>L11</bdi>）に入るのが大きな手です。",
+      "en": "Enclosing White’s 3-4 stone <bdi>C4</bdi> (<bdi>E4</bdi>, <bdi>F3</bdi>) or invading at the 3-3 point under a black hoshi (<bdi>L3</bdi>, <bdi>L11</bdi>) is the big move."
+     },
+     "ng": {
+      "ja": "天元<bdi>G7</bdi>や辺の<bdi>D7</bdi>・<bdi>C10</bdi>は、隅の手より1目以上小さい手です。",
+      "en": "Tengen <bdi>G7</bdi> or the side points <bdi>D7</bdi>, <bdi>C10</bdi> are over a point smaller than the corner moves."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": ".......................w...........bw.....w..b..b................................w.....b................................w.....b..........................................",
+      "turn": 1
+     },
+     "ok": [
+      "M9"
+     ],
+     "good": [
+      "L10",
+      "C3"
+     ],
+     "why": {
+      "ja": "三々に入った白2子はまだ眼がありません。<bdi>M9</bdi>で右辺へのヒラキを止めるのが急場。攻めながら右辺の黒地も守れます。",
+      "en": "The two white stones that invaded at 3-3 have no eyes yet. <bdi>M9</bdi>, stopping their extension down the right side, is the urgent point — it attacks while protecting Black’s right side."
+     },
+     "ng": {
+      "ja": "下辺の大場<bdi>G4</bdi>などに回ると、白に<bdi>M9</bdi>方面へヒラかれて安定されます（2目以上の差）。",
+      "en": "Going to a big point like <bdi>G4</bdi> lets White extend toward <bdi>M9</bdi> and settle (two points or more)."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": ".......................w...........bw.....w..b..b................................w.....b................................w..b..b..........................................",
+      "turn": 2
+     },
+     "ok": [
+      "M9"
+     ],
+     "good": [
+      "M8"
+     ],
+     "half": [
+      "L3"
+     ],
+     "why": {
+      "ja": "前の問題で黒が大場の<bdi>G4</bdi>に回った場面。白は自分から<bdi>M9</bdi>とヒラいて、三々の石を安定させるのが急場です。",
+      "en": "Black took the big point <bdi>G4</bdi> instead. Now White extends to <bdi>M9</bdi> to stabilise the 3-3 stones — the urgent point."
+     },
+     "ng": {
+      "ja": "<bdi>G3</bdi>など下辺に打つと、黒に<bdi>M9</bdi>と止められ、白2子が苦しくなります（約3目の差）。",
+      "en": "Playing on the bottom side, e.g. <bdi>G3</bdi>, lets Black block at <bdi>M9</bdi>, and the two white stones are in trouble (about three points)."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w..b..b................................w.....b................................w..b..b............bw............w...............",
+      "turn": 2
+     },
+     "ok": [
+      "M5"
+     ],
+     "good": [
+      "M6",
+      "L4"
+     ],
+     "half": [
+      "L5"
+     ],
+     "why": {
+      "ja": "右下の三々に入った白2子（<bdi>L3</bdi>・<bdi>L2</bdi>）が不安定です。上辺の大場より先に、<bdi>M5</bdi>とヒラいて根拠を作るのが急場です。",
+      "en": "The two white stones that invaded the lower-right 3-3 point (<bdi>L3</bdi>, <bdi>L2</bdi>) are unsettled. Before any big point on the top, extend to <bdi>M5</bdi> to make a base."
+     },
+     "ng": {
+      "ja": "<bdi>F11</bdi>・<bdi>G11</bdi>などの上辺に回ると、黒に<bdi>M5</bdi>方面を止められて白2子が攻められます（2目以上の差）。<bdi>M4</bdi>は狭すぎます。",
+      "en": "Turning to the top side (<bdi>F11</bdi>, <bdi>G11</bdi>) lets Black block toward <bdi>M5</bdi> and attack the two stones (two points or more). <bdi>M4</bdi> is too narrow."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w.....b...................w...........b......b................................w.....b..........................................",
+      "turn": 2
+     },
+     "ok": [
+      "L11",
+      "L3",
+      "C5"
+     ],
+     "why": {
+      "ja": "左辺の黒<bdi>C7</bdi>はまだ根拠がない石。<bdi>C5</bdi>で根拠を奪って攻めるか、黒の星の三々（<bdi>L11</bdi>・<bdi>L3</bdi>）に入るのが大きな手です。",
+      "en": "Black <bdi>C7</bdi> on the left has no base yet. Attacking it by taking its base with <bdi>C5</bdi>, or invading the 3-3 points under Black’s hoshi (<bdi>L11</bdi>, <bdi>L3</bdi>), is the big move."
+     },
+     "ng": {
+      "ja": "<bdi>F4</bdi>・<bdi>G10</bdi>などの辺の手は、弱い石への攻めや三々より1目以上小さい手です。",
+      "en": "Side moves such as <bdi>F4</bdi> or <bdi>G10</bdi> are over a point smaller than attacking the weak stone or the 3-3 invasions."
+     }
+    }
+   ]
+  },
+  {
+   "id": "base",
+   "course": "middle",
+   "title": {
+    "ja": "根拠を奪う・弱い石を攻める",
+    "en": "Taking the base: attacking weak stones"
+   },
+   "sub": {
+    "ja": "攻めは、眼を作る場所を奪うことから",
+    "en": "Attack by taking away the room for eyes"
+   },
+   "intro": {
+    "ja": "<p>辺で眼を作るための足場を<b>根拠</b>といいます。根拠のない石（<b>弱い石</b>）は、逃げ回るうちに相手に地や厚みを与えてしまいます。</p><p>相手の弱い石を攻めるときは、外から追いかけるより、<b>辺の下側（二線・三線）から根拠を奪う</b>のが効果的です。</p><p>攻めながら<b>自分の地も固まる</b>手が理想です。外から押すだけの手は、相手を強くするので注意しましょう。</p>",
+    "en": "<p>The foothold on the side that lets a group make eyes is its <b>base</b>. Stones without a base (<b>weak stones</b>) have to run, and while they run the opponent gains territory and strength.</p><p>To attack a weak group, <b>take away its base from underneath (on the 2nd or 3rd line)</b> rather than chasing it from outside.</p><p>The ideal attack also <b>firms up your own territory</b>. Pushing from outside only makes the opponent stronger.</p>"
+   },
+   "goal": {
+    "ja": "相手の弱い石を攻めてください",
+    "en": "Attack the weak stones"
+   },
+   "hint": {
+    "ja": "相手の石の「眼を作りたい場所」を先に取りましょう。",
+    "en": "Take the place where the opponent wants to make eyes."
+   },
+   "diagram": {
+    "s": {
+     "n": 13,
+     "stones": "..........................................w..b..b......................................bw.........................w.....w.....b..........................................",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "L4",
+      "ok"
+     ],
+     [
+      "M6",
+      "x"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w..b..b......................................bw.........................w.....w.....b..........................................",
+      "turn": 1
+     },
+     "ok": [
+      "L4"
+     ],
+     "good": [
+      "L8"
+     ],
+     "why": {
+      "ja": "<bdi>L4</bdi>で白のヒラキの先を止め、右下の黒地も固まります。白2子は根拠がなく、これから苦しい戦いになります。",
+      "en": "<bdi>L4</bdi> blocks White’s extension and secures Black’s lower-right corner at the same time. The two white stones have no base and face a hard fight."
+     },
+     "ng": {
+      "ja": "<bdi>M6</bdi>や<bdi>M7</bdi>の二線の手は狭く、白に<bdi>L4</bdi>方面へ進まれます（3目前後の損）。",
+      "en": "Second-line moves like <bdi>M6</bdi> or <bdi>M7</bdi> are too narrow; White expands toward <bdi>L4</bdi> (about three points lost)."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................b..w..w......................................wb.........................b.....b..b..w..........................................",
+      "turn": 2
+     },
+     "ok": [
+      "L4"
+     ],
+     "good": [
+      "L8"
+     ],
+     "half": [
+      "K5",
+      "C7"
+     ],
+     "why": {
+      "ja": "前の問題と色が逆の形。白も<bdi>L4</bdi>で黒2子のヒラキを止め、右下の隅を固めながら攻めます。",
+      "en": "The previous shape with colours reversed. White also plays <bdi>L4</bdi>, stopping the two black stones from extending while securing the lower-right corner."
+     },
+     "ng": {
+      "ja": "二線の<bdi>M6</bdi>・<bdi>M7</bdi>は狭く、<bdi>L9</bdi>は方向違い。黒に<bdi>L4</bdi>方面へヒラかれます。",
+      "en": "The second-line moves <bdi>M6</bdi>, <bdi>M7</bdi> are narrow and <bdi>L9</bdi> faces the wrong way; Black extends toward <bdi>L4</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w..b..b.............w........................bw...............................w.....b..........................................",
+      "turn": 1
+     },
+     "ok": [
+      "L10"
+     ],
+     "good": [
+      "L6"
+     ],
+     "why": {
+      "ja": "白が上へヒラいてきたら、<bdi>L10</bdi>で隅を守りながら白の根拠を狭めます。<bdi>L6</bdi>で下側を止めるのも有力です。",
+      "en": "White extended upward, so <bdi>L10</bdi> guards the corner and narrows White’s base. Blocking the lower side with <bdi>L6</bdi> is also strong."
+     },
+     "ng": {
+      "ja": "<bdi>L8</bdi>のツケは白を固めるだけ、<bdi>K9</bdi>は外から押す手で、どちらも2目以上の損です。",
+      "en": "The attachment at <bdi>L8</bdi> only strengthens White, and <bdi>K9</bdi> pushes from outside; both lose two points or more."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................b.....w...............................wb........................w.............b..b..w..........................................",
+      "turn": 1
+     },
+     "ok": [
+      "C4"
+     ],
+     "why": {
+      "ja": "左辺の白2子（<bdi>C7</bdi>・<bdi>C5</bdi>）に対し、<bdi>C4</bdi>で下へのヒラキを止めます。左下の黒地が固まり、白は根拠が足りません。",
+      "en": "Against the two white stones on the left (<bdi>C7</bdi>, <bdi>C5</bdi>), <bdi>C4</bdi> stops their extension downward. Black’s lower-left corner is secured, and White lacks a base."
+     },
+     "ng": {
+      "ja": "<bdi>B6</bdi>や<bdi>D5</bdi>は白を固めるだけ。手を抜いて<bdi>G10</bdi>などに打つと、白に<bdi>C4</bdi>方面へ進まれて2目ほど損です。",
+      "en": "<bdi>B6</bdi> or <bdi>D5</bdi> only strengthens White. Tenuki to a point like <bdi>G10</bdi> lets White expand toward <bdi>C4</bdi>, about two points lost."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w..b..b......................................bw........................ww.....w.....bb.........................................",
+      "turn": 1
+     },
+     "ok": [
+      "J5",
+      "J4",
+      "H3"
+     ],
+     "good": [
+      "L8"
+     ],
+     "half": [
+      "G4"
+     ],
+     "why": {
+      "ja": "白は<bdi>K5</bdi>と押して中央・下辺へ出ようとしています。<bdi>J5</bdi>（または<bdi>J4</bdi>・<bdi>H3</bdi>）で行く手をふさげば、白はまだ根拠も逃げ道もありません。",
+      "en": "White pushed at <bdi>K5</bdi> to get out toward the centre and the bottom. Blocking the way with <bdi>J5</bdi> (or <bdi>J4</bdi>, <bdi>H3</bdi>) leaves White with neither a base nor an exit."
+     },
+     "ng": {
+      "ja": "<bdi>M6</bdi>や<bdi>K3</bdi>は小さく、白に<bdi>J5</bdi>方面へ出られて攻めが空振りになります（2〜4目の損）。",
+      "en": "<bdi>M6</bdi> or <bdi>K3</bdi> is small; White gets out toward <bdi>J5</bdi> and the attack fizzles (two to four points lost)."
+     }
+    }
+   ]
+  },
+  {
+   "id": "thickness",
+   "course": "middle",
+   "title": {
+    "ja": "地と厚み",
+    "en": "Territory and thickness"
+   },
+   "sub": {
+    "ja": "三々の地、辺の大場、厚みから離れる",
+    "en": "The 3-3 point, big side points, playing away from thickness"
+   },
+   "intro": {
+    "ja": "<p>星の石は外側に強い（<b>厚み</b>）反面、隅の<b>三々</b>が空いています。三々に入れば、相手の陣地の中で確実に<b>地</b>を取りながら生きられます。</p><p>一方、自分の厚みのすぐ近くに打つのは効率が悪い手。厚みはそれだけで十分働いているので、<b>厚みから離れた大場</b>に打ちましょう。</p><p>「地を取る手」と「模様を広げる手」のどちらが大きいか、いつも比べるクセをつけましょう。</p>",
+    "en": "<p>A hoshi stone is strong toward the outside (<b>thickness</b>), but leaves the <b>3-3 point</b> open. Invading at 3-3, you can live inside the opponent’s sphere while taking sure <b>territory</b>.</p><p>On the other hand, playing right next to your own thickness is inefficient. Thickness already works on its own, so play <b>big points away from it</b>.</p><p>Always compare: which is bigger, the move that takes territory or the move that expands a framework?</p>"
+   },
+   "goal": {
+    "ja": "一番大きなところに打ってください",
+    "en": "Play the biggest point"
+   },
+   "hint": {
+    "ja": "相手の陣地の中で、確実に地になる場所はどこ？",
+    "en": "Inside the opponent’s area, where can you make sure territory?"
+   },
+   "diagram": {
+    "s": {
+     "n": 13,
+     "stones": "..........................................w..b..b................................w.....b................................w.....b..........................................",
+     "turn": 2
+    },
+    "marks": [
+     [
+      "L11",
+      "ok"
+     ],
+     [
+      "L3",
+      "ok"
+     ],
+     [
+      "H8",
+      "x"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w..b..b................................w.....b................................w.....b..........................................",
+      "turn": 2
+     },
+     "ok": [
+      "L11",
+      "L3"
+     ],
+     "why": {
+      "ja": "黒の模様は大きく見えますが、星の下の三々<bdi>L11</bdi>・<bdi>L3</bdi>が空いています。三々に入れば地を取りながら生きられます。",
+      "en": "Black’s framework looks big, but the 3-3 points <bdi>L11</bdi> and <bdi>L3</bdi> under the hoshi stones are open. Invading there, White lives while taking territory."
+     },
+     "ng": {
+      "ja": "<bdi>H8</bdi>や天元<bdi>G7</bdi>の外からの消しは、黒に三々を守られると地の差が開きます（2目以上の差）。",
+      "en": "Reducing from outside at <bdi>H8</bdi> or tengen <bdi>G7</bdi> lets Black protect the 3-3 points, and the territory gap grows (two points or more)."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "..........................................w.....b................................w.....b................................w.....b..........................................",
+      "turn": 1
+     },
+     "ok": [
+      "C11",
+      "C3"
+     ],
+     "good": [
+      "E7"
+     ],
+     "why": {
+      "ja": "黒番でも同じ考え方。白の星の下の三々<bdi>C11</bdi>・<bdi>C3</bdi>に入るのが一番大きな手です（白の壁に近づく<bdi>E7</bdi>もまずまず）。",
+      "en": "The same idea with Black to play: the 3-3 points under White’s hoshi, <bdi>C11</bdi> and <bdi>C3</bdi>, are the biggest moves (approaching White’s wall at <bdi>E7</bdi> is also reasonable)."
+     },
+     "ng": {
+      "ja": "天元<bdi>G7</bdi>や<bdi>H7</bdi>で模様を広げても、白に三々を守られると地で遅れます。",
+      "en": "Expanding the framework with tengen <bdi>G7</bdi> or <bdi>H7</bdi> falls behind in territory once White protects the 3-3 points."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "............................w.......b.....w.....b................................w.....b................................w.....b.....w.......b............................",
+      "turn": 1
+     },
+     "ok": [
+      "F3",
+      "G4",
+      "G10",
+      "G11"
+     ],
+     "good": [
+      "E7"
+     ],
+     "why": {
+      "ja": "隅が決まったら、次は上下の辺の大場（<bdi>F3</bdi>・<bdi>G4</bdi>・<bdi>G10</bdi>・<bdi>G11</bdi>）です。",
+      "en": "With the corners settled, the next big points are on the top and bottom sides (<bdi>F3</bdi>, <bdi>G4</bdi>, <bdi>G10</bdi>, <bdi>G11</bdi>)."
+     },
+     "ng": {
+      "ja": "<bdi>H7</bdi>・<bdi>J7</bdi>は自分の厚み（右辺の黒3子）に近すぎて、ほとんど地が増えません。厚みからは離れて打ちましょう。",
+      "en": "<bdi>H7</bdi> and <bdi>J7</bdi> are too close to Black’s own thickness on the right and add almost nothing. Play away from thickness."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "............................w.......b.....w..b..b................................w.....b................................w.....b.....w.......b............................",
+      "turn": 2
+     },
+     "ok": [
+      "G11",
+      "G3",
+      "G4",
+      "H3"
+     ],
+     "why": {
+      "ja": "黒が上辺に<bdi>G10</bdi>と広げました。その下の<bdi>G11</bdi>への打ち込みか、空いている下辺の大場（<bdi>G3</bdi>・<bdi>G4</bdi>・<bdi>H3</bdi>）が大きな手です。",
+      "en": "Black expanded on the top with <bdi>G10</bdi>. Invading under it at <bdi>G11</bdi>, or taking the open bottom side (<bdi>G3</bdi>, <bdi>G4</bdi>, <bdi>H3</bdi>), are the big moves."
+     },
+     "ng": {
+      "ja": "<bdi>E7</bdi>は自分の厚みに近すぎる手、<bdi>F8</bdi>・<bdi>J8</bdi>は中途半端な消しです。",
+      "en": "<bdi>E7</bdi> is too close to White’s own thickness; <bdi>F8</bdi> and <bdi>J8</bdi> are half-hearted reductions."
+     }
+    },
+    {
+     "s": {
+      "n": 13,
+      "stones": "............................w.......b.....w..b..b................................w.....b................................w..w..b.....w.......b............................",
+      "turn": 1
+     },
+     "ok": [
+      "E11",
+      "G3",
+      "H3"
+     ],
+     "good": [
+      "F11",
+      "E7"
+     ],
+     "why": {
+      "ja": "上辺を<bdi>E11</bdi>と白の方へ広げるか、下辺の白<bdi>G4</bdi>の下<bdi>G3</bdi>（<bdi>H3</bdi>）に打ち込むのが大きい。どちらも地の差を広げる手です。",
+      "en": "Expanding the top side toward White with <bdi>E11</bdi>, or invading under white <bdi>G4</bdi> at <bdi>G3</bdi> (<bdi>H3</bdi>), is big. Both widen the territory gap."
+     },
+     "ng": {
+      "ja": "<bdi>G11</bdi>と自分の上辺を守る手や、厚みの近くの<bdi>H7</bdi>は小さく、2目以上の損です。",
+      "en": "Guarding your own top side with <bdi>G11</bdi>, or <bdi>H7</bdi> next to your own thickness, is small — two points or more lost."
+     }
+    }
+   ]
+  },
+  {
+   "id": "sente",
+   "course": "endgame",
+   "title": {
+    "ja": "先手と後手のヨセ",
+    "en": "Sente and gote endgame"
+   },
+   "sub": {
+    "ja": "相手が受けるヨセから先に打つ",
+    "en": "Play the moves your opponent must answer first"
+   },
+   "intro": {
+    "ja": "<p>終盤、境界線を決めていく打ち合いを<b>ヨセ</b>といいます。</p><p>打ったあと相手が受けなければならず、もう一度自分の番が来る手を<b>先手</b>、相手が受けなくてよい手を<b>後手</b>といいます。先手のヨセは「ただで打てる」ので、同じくらいの大きさなら<b>先手から先に打つ</b>のが基本です。</p><p>自分の陣地のすき間をふさぐ手は後手になりがち。あわてず、先に相手の境界をハネる手がないか探しましょう。</p>",
+    "en": "<p>The late stage of the game, where the borders are settled, is called the <b>endgame</b> (yose).</p><p>A move the opponent must answer, so that you get to play again, is <b>sente</b>; a move the opponent can ignore is <b>gote</b>. Sente moves are “free”, so as a rule, <b>play sente moves first</b> when the sizes are similar.</p><p>Closing a gap in your own wall is usually gote. Before doing that, look for a hane on the opponent’s border.</p>"
+   },
+   "goal": {
+    "ja": "一番大きいヨセを打ってください",
+    "en": "Play the biggest endgame move"
+   },
+   "hint": {
+    "ja": "相手が必ず受けるハネはどこでしょう？",
+    "en": "Which hane must the opponent answer?"
+   },
+   "diagram": {
+    "s": {
+     "n": 9,
+     "stones": "....................w...w............wwwwwwww.bbbbbbb............b...b...........",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "A5",
+      "ok"
+     ],
+     [
+      "J4",
+      "x"
+     ]
+    ],
+    "arrows": [
+     [
+      "B4",
+      "A5"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bbbbbbb............b...b...........",
+      "turn": 1
+     },
+     "ok": [
+      "A5"
+     ],
+     "line": [
+      "A5",
+      "A6",
+      "A4"
+     ],
+     "why": {
+      "ja": "<bdi>A5</bdi>のハネは白が<bdi>A6</bdi>と受けなければならない先手。<bdi>A4</bdi>とついでも、まだ黒の番です。右の<bdi>J4</bdi>はそのあとで打てます。",
+      "en": "The hane at <bdi>A5</bdi> is sente: White must block at <bdi>A6</bdi>. After Black connects at <bdi>A4</bdi>, it is still Black’s turn, and <bdi>J4</bdi> can be played afterwards."
+     },
+     "ng": {
+      "ja": "<bdi>J4</bdi>は後手の手。先に打つと、白に<bdi>A4</bdi>とハネられて左側を押し込まれます（約3目の損）。",
+      "en": "<bdi>J4</bdi> is gote. Playing it first lets White hane at <bdi>A4</bdi> on the left (about 3 points lost)."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bbbbbbb............b...b...........",
+      "turn": 2
+     },
+     "ok": [
+      "A4"
+     ],
+     "line": [
+      "A4",
+      "A3",
+      "A5"
+     ],
+     "why": {
+      "ja": "白も左端の<bdi>A4</bdi>ハネが先手で一番大きい手。黒<bdi>A3</bdi>なら<bdi>A5</bdi>とツいで、まだ白の番です。",
+      "en": "For White too, the hane at <bdi>A4</bdi> on the left edge is sente and the biggest move. After Black blocks at <bdi>A3</bdi>, White connects at <bdi>A5</bdi> and keeps the move."
+     },
+     "ng": {
+      "ja": "右の<bdi>J4</bdi>の押しは、<bdi>A4</bdi>のハネより3目以上小さい手です。",
+      "en": "The push at <bdi>J4</bdi> on the right is more than three points smaller than the hane at <bdi>A4</bdi>."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bbb.bbbb...........b...b...........",
+      "turn": 1
+     },
+     "ok": [
+      "A5"
+     ],
+     "line": [
+      "A5",
+      "A6",
+      "A4"
+     ],
+     "why": {
+      "ja": "自分の壁のすき間<bdi>E4</bdi>は気になりますが、まずは先手の<bdi>A5</bdi>ハネ。白が受けたら、ゆっくり<bdi>E4</bdi>をふさげます。",
+      "en": "The gap at <bdi>E4</bdi> in Black’s wall is tempting, but first play the sente hane at <bdi>A5</bdi>. After White answers, Black can still close <bdi>E4</bdi>."
+     },
+     "ng": {
+      "ja": "<bdi>E4</bdi>は後手。白に<bdi>A4</bdi>とハネられると、黒の損は3目ほどになります。",
+      "en": "<bdi>E4</bdi> is gote. If White then hanes at <bdi>A4</bdi>, Black loses about three points."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bbb.bbbb...........b...b...........",
+      "turn": 2
+     },
+     "ok": [
+      "A4",
+      "E4"
+     ],
+     "line": [
+      "A4",
+      "A3",
+      "A5"
+     ],
+     "why": {
+      "ja": "白から見ると、<bdi>A4</bdi>のハネも、すき間への<bdi>E4</bdi>の押しも、黒が受けなければならない先手。どちらから打っても正解です。",
+      "en": "From White’s side both the hane at <bdi>A4</bdi> and the push into the gap at <bdi>E4</bdi> are sente — Black must answer each. Either one is correct."
+     },
+     "ng": {
+      "ja": "<bdi>A5</bdi>と自分の側を守る手は後手で、2目ほど小さくなります。",
+      "en": "Defending your own side at <bdi>A5</bdi> is gote and about two points smaller."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bb...bbb...........b...b...........",
+      "turn": 1
+     },
+     "ok": [
+      "E3"
+     ],
+     "good": [
+      "D4",
+      "F4"
+     ],
+     "why": {
+      "ja": "黒の壁に3路の大きなすき間があります。ここに白が入ってくると被害が大きいので、後手でも<bdi>E3</bdi>（または<bdi>D4</bdi>・<bdi>F4</bdi>）で守るのが一番大きい手です。",
+      "en": "Black’s wall has a wide three-point gap. A White intrusion there would cost a lot, so defending with <bdi>E3</bdi> (or <bdi>D4</bdi>, <bdi>F4</bdi>) is the biggest move even though it is gote."
+     },
+     "ng": {
+      "ja": "先手のハネ<bdi>A5</bdi>より、大きな後手が優先する場面です（約4目の差）。「先手から」は、大きさが同じくらいのときの原則です。",
+      "en": "Here a big gote move beats the sente hane at <bdi>A5</bdi> (about four points). “Sente first” applies when the sizes are similar."
+     }
+    }
+   ]
+  },
+  {
+   "id": "hane",
+   "course": "endgame",
+   "title": {
+    "ja": "ハネツギと二線のヨセ",
+    "en": "Hane-and-connect, second-line moves"
+   },
+   "sub": {
+    "ja": "一線・二線は一歩でも深く",
+    "en": "On the edge, every step counts"
+   },
+   "intro": {
+    "ja": "<p>境界が決まっていない端では、<b>ハネてツぐ</b>（ハネツギ）のが基本のヨセです。ハネた石が相手の陣地を1路へこませ、ツいで自分の石をしっかりさせます。</p><p>自分の側に下がって守るだけの手は、相手にハネられる分だけ損をします。ハネは<b>相手より先に</b>打つことが大切です。</p><p>二線の石があるときは、相手の陣地へ<b>二線をすべり込む</b>手も大きなヨセ。逆に守る側は、二線で<b>止める</b>のが急所です。</p>",
+    "en": "<p>Where a border is still open at the edge, the basic endgame move is <b>hane and connect</b>: the hane dents the opponent’s area by one line and the connection keeps your stones safe.</p><p>Simply drawing back on your own side loses the point your opponent then gains with their hane. Play the hane <b>before the opponent does</b>.</p><p>With a stone on the second line, <b>sliding along the second line</b> into the opponent’s area is a big move too; the defender’s key point is to <b>block it on the second line</b>.</p>"
+   },
+   "goal": {
+    "ja": "境界の一番よいヨセを打ってください",
+    "en": "Find the best endgame move on the border"
+   },
+   "hint": {
+    "ja": "守るより、相手の側へ一歩踏み込めないか考えましょう。",
+    "en": "Instead of defending, can you step one line into the opponent’s side?"
+   },
+   "diagram": {
+    "s": {
+     "n": 9,
+     "stones": "....................w...w............wwwwwwww.bbbbbbbb...........b...b...........",
+     "turn": 1
+    },
+    "marks": [
+     [
+      "A5",
+      "ok"
+     ],
+     [
+      "A4",
+      "x"
+     ]
+    ],
+    "arrows": [
+     [
+      "B4",
+      "A5"
+     ]
+    ]
+   },
+   "problems": [
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bbbbbbbb...........b...b...........",
+      "turn": 1
+     },
+     "ok": [
+      "A5"
+     ],
+     "line": [
+      "A5",
+      "A6",
+      "A4"
+     ],
+     "why": {
+      "ja": "<bdi>A5</bdi>とハネて、白<bdi>A6</bdi>には<bdi>A4</bdi>とツぎます。白の陣地が1路減り、黒の陣地は守れます。",
+      "en": "Hane at <bdi>A5</bdi>; when White blocks at <bdi>A6</bdi>, connect at <bdi>A4</bdi>. White’s area shrinks by a line and Black’s stays intact."
+     },
+     "ng": {
+      "ja": "<bdi>A4</bdi>と守るだけでは、白に<bdi>A5</bdi>とハネられたのと同じ形に近く、2目半ほど損です。",
+      "en": "Just defending at <bdi>A4</bdi> loses about two and a half points compared with the hane."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "....................w...w............wwwwwwww.bbbbbbbb...........b...b...........",
+      "turn": 2
+     },
+     "ok": [
+      "A4"
+     ],
+     "half": [
+      "A3"
+     ],
+     "line": [
+      "A4",
+      "A3",
+      "A5"
+     ],
+     "why": {
+      "ja": "白も同じく<bdi>A4</bdi>とハネ、黒<bdi>A3</bdi>なら<bdi>A5</bdi>とツぎます。先にハネた方が得をします。",
+      "en": "White also hanes, at <bdi>A4</bdi>; after Black blocks at <bdi>A3</bdi>, White connects at <bdi>A5</bdi>. Whoever hanes first gains."
+     },
+     "ng": {
+      "ja": "<bdi>A5</bdi>と守ると、逆に黒に<bdi>A5</bdi>側からハネられる分（約2目）損をします。",
+      "en": "Defending at <bdi>A5</bdi> lets Black gain the hane instead — about two points lost."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "...bw.......bw..w....bw.......bw.....b.bw.......bw......bbwwwww..b...............",
+      "turn": 1
+     },
+     "view": [
+      0,
+      3,
+      8,
+      8
+     ],
+     "ok": [
+      "E2"
+     ],
+     "good": [
+      "F1"
+     ],
+     "why": {
+      "ja": "二線の黒<bdi>C2</bdi>から<bdi>E2</bdi>と一間にすべり込むのが大きなヨセ。<bdi>D2</bdi>で切られる心配もありません（白は自分がアタリ）。",
+      "en": "From the second-line stone <bdi>C2</bdi>, sliding one space to <bdi>E2</bdi> is the big move. White cannot cut at <bdi>D2</bdi>, because that stone would be in atari itself."
+     },
+     "ng": {
+      "ja": "<bdi>D2</bdi>のハネは1路しか進めず、3目以上小さい手です。二線は一歩でも深く。",
+      "en": "The hane at <bdi>D2</bdi> advances only one line and is over three points smaller. Go as deep as you safely can on the second line."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "...bw.......bw..w....bw.......bw.....b.bw.......bw......bbwwwww..b...............",
+      "turn": 2
+     },
+     "view": [
+      0,
+      3,
+      8,
+      8
+     ],
+     "ok": [
+      "E2"
+     ],
+     "good": [
+      "E1"
+     ],
+     "why": {
+      "ja": "同じ形で白番。<bdi>E2</bdi>で黒の二線のすべり込みを止めるのが急所です。",
+      "en": "The same shape with White to play: <bdi>E2</bdi> blocks Black’s slide along the second line."
+     },
+     "ng": {
+      "ja": "<bdi>D2</bdi>とハネると白石はダメが少なく、逆に黒に攻められて4目ほど損をします。",
+      "en": "The hane at <bdi>D2</bdi> is short of liberties; Black hits back and White loses about four points."
+     }
+    },
+    {
+     "s": {
+      "n": 9,
+      "stones": "...bw.......bw.......bw..w....bw.....b.bw.......bw.......bw..w....b..............",
+      "turn": 2
+     },
+     "view": [
+      0,
+      3,
+      8,
+      8
+     ],
+     "ok": [
+      "E2"
+     ],
+     "good": [
+      "E1"
+     ],
+     "why": {
+      "ja": "黒<bdi>D2</bdi>から<bdi>E2</bdi>とハネられる前に、白から<bdi>E2</bdi>と止めます。白の陣地の入り口を閉じる手です。",
+      "en": "Before Black can hane at <bdi>E2</bdi> from <bdi>D2</bdi>, White blocks there first, closing the entrance to White’s area."
+     },
+     "ng": {
+      "ja": "<bdi>D1</bdi>などで黒の陣地をねらうより、自分の入り口<bdi>E2</bdi>を閉じる方がずっと大きい場面です（6目以上の差）。",
+      "en": "Attacking Black’s side with <bdi>D1</bdi> is far smaller here than closing your own entrance at <bdi>E2</bdi> (over six points)."
      }
     }
    ]

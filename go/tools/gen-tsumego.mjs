@@ -1,10 +1,10 @@
 // Tsumego (詰碁) generator for go/puzzles.json.
 //
-//   node tools/gen-tsumego.mjs ld     <count> <seed>   life & death candidates (19x19 corners / edges, eye-space-first shapes)
+//   node tools/gen-tsumego.mjs ld     <count> <seed> [hard]   life & death candidates (19x19 corners / edges, eye-space-first shapes)
 //   node tools/gen-tsumego.mjs semeai <count> <seed>   capturing races (19x19 corners: inner group vs the ring around it)
 //   node tools/gen-tsumego.mjs tac    <games> <seed>   capture / ladder / net / snapback / tesuji / connect puzzles
 //                                                       harvested from light-net self-play games on 9x9 and 13x13
-//   node tools/gen-tsumego.mjs syn    <count> <seed>   dense tactical shapes near an edge of 9x9 (snapback / under the
+//   node tools/gen-tsumego.mjs syn    <count> <seed> [theme]   dense tactical shapes near an edge of 9x9 (snapback / under the
 //                                                       stones / shortage of liberties; also capture / net / tesuji)
 //   node tools/gen-tsumego.mjs build                    fun score (tools/fun.js + the net) -> select -> go/puzzles.json
 //
@@ -16,7 +16,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
-import { rng, R, T, PASS, ldShape, semeaiShape, finish, legal, chains, posOf, transform, viewFor, classify, unsettled, lineOf } from './tsumego-shapes.mjs';
+import { tacTheme, rng, R, T, PASS, ldShape, semeaiShape, finish, legal, chains, posOf, transform, viewFor, classify, unsettled, lineOf } from './tsumego-shapes.mjs';
 const require = createRequire(import.meta.url);
 const DIR = path.dirname(new URL(import.meta.url).pathname);
 const OUT = path.join(DIR, 'data', 'tsumego');
@@ -49,7 +49,7 @@ function genLD(count, seed) {
   let made = 0, tries = 0; const t0 = Date.now();
   while (made < count) {
     tries++;
-    const sh = ldShape(rand, n);
+    const sh = ldShape(rand, n, HARD ? { size: 5 + Math.floor(rand() * 5) } : {});
     if (!sh || !legal(sh.b, n) || sh.region.length < 3 || sh.region.length > 15) continue;
     const big = chains(sh.b, n, 1).sort((a, b) => b.stones.length - a.stones.length)[0];
     if (!big || big.stones.length < 3) continue;
@@ -64,7 +64,7 @@ function genLD(count, seed) {
         P = check(P, 4, true); if (!P) continue;
         done = true;
         const th = themeLD(goal, P.n);
-        if ((quota[th] || 0) >= QUOTA) continue;
+        if ((quota[th] || 0) >= QUOTA || (HARD && P.n < 2)) continue;
         P = minimize(P, sh.b, player, rand);
         if (themeLD(goal, P.n) !== th) continue;
         quota[th] = (quota[th] || 0) + 1;
@@ -219,27 +219,6 @@ async function genTac(games, seed) {
     console.log(`tac seed ${seed}: game ${g + 1}/${games} n=${n}, puzzles ${made} ${JSON.stringify(stat)} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
   }
 }
-// theme of a capture puzzle from its main line
-function tacTheme(P, pos0, G) {
-  const n = P.s.n; let p = R.Pos.from(P.s);
-  const steps = [];
-  for (let k = 0; k < P.line.length; k++) {
-    const m = P.line[k], before = p; const r = p.tryPlay(m); p = r.pos;
-    const t = P.target.find(s => p.b[s]) ;
-    steps.push({ m, att: k % 2 === 0, caps: r.captured.length, tlibs: t !== undefined && p.b[t] ? p.group(t).libs : 0, selfLibs: p.b[m] ? p.group(m).libs : 0, capturedG: k % 2 === 1 && r.captured.length > 0 });
-  }
-  const first = steps[0];
-  const sac = first.selfLibs === 1 && steps.length > 1 && steps[1].capturedG;
-  const underStones = steps.some((s, k) => s.capturedG && k > 0 && steps[k].caps >= 2);
-  if (sac || underStones) return 'snapback';
-  const atk = steps.filter(s => s.att);
-  const allAtari = atk.slice(0, -1).every(s => s.tlibs === 1);
-  if (P.n >= 3 && allAtari) return 'ladder';
-  if (P.n >= 2 && first.tlibs >= 2) return 'ladder';   // a net (geta) or a loose ladder
-  if (P.n <= 2) return 'capture';
-  return 'tesuji';
-}
-
 // ---- synthetic tactical shapes near an edge / corner of a 9x9 board (snapback, under the stones, shortage of liberties)
 function synShape(rand, n = 9) {
   const b = new Uint8Array(n * n), I = (x, y) => y * n + x, nb = R.nbrs(n);
@@ -292,9 +271,9 @@ function snapShape(rand, n = 9) {
   const T0 = tg(); if (!T0.length) return null;
   return { n, b, region, tgt: T0.sort((a, z) => a - z) };
 }
-function genSyn(count, seed) {
+function genSyn(count, seed, want = 'snapback') {
   const rand = rng(seed * 2654435761 + 11), n = 9, file = path.join(OUT, `syn-${seed}.jsonl`), seen = new Set();
-  const quota = {}, Q = { snapback: count, tesuji: Math.ceil(count / 2), capture: Math.ceil(count / 3), ladder: Math.ceil(count / 4) };
+  const quota = {}, Q = want === 'snapback' ? { snapback: count, tesuji: Math.ceil(count / 2), capture: Math.ceil(count / 3), ladder: Math.ceil(count / 4) } : { [want]: count, capture: count, snapback: Math.ceil(count / 4) };
   let made = 0, tries = 0; const t0 = Date.now();
   while (made < count) {
     tries++;
@@ -312,15 +291,16 @@ function genSyn(count, seed) {
     if ((quota[th] || 0) >= (Q[th] || 0)) continue;
     quota[th] = (quota[th] || 0) + 1;
     emit(file, P, { th, fam: 'syn' });
-    if (th === 'snapback') made++;
-    if (tries % 200 === 0 || th === 'snapback') console.log(`syn seed ${seed}: snapback ${made}/${count} ${JSON.stringify(quota)} (${tries} shapes, ${((Date.now() - t0) / 1000).toFixed(0)} s)`);
+    if (th === want) made++;
+    if (tries % 200 === 0 || th === want) console.log(`syn seed ${seed}: ${want} ${made}/${count} ${JSON.stringify(quota)} (${tries} shapes, ${((Date.now() - t0) / 1000).toFixed(0)} s)`);
   }
 }
 
 // ---- main
-const [cmd, a1, a2] = process.argv.slice(2);
+const [cmd, a1, a2, a3] = process.argv.slice(2);
+var HARD = a3 === 'hard';   // ld: keep only n >= 2 (live3 / kill3 / ld5), larger eye spaces
 if (cmd === 'ld') genLD(+a1 || 50, +a2 || 1);
-else if (cmd === 'syn') genSyn(+a1 || 50, +a2 || 1);
+else if (cmd === 'syn') genSyn(+a1 || 50, +a2 || 1, a3 || 'snapback');
 else if (cmd === 'semeai') genSemeai(+a1 || 50, +a2 || 1);
 else if (cmd === 'tac') await genTac(+a1 || 20, +a2 || 1);
 else if (cmd === 'build') { const { build } = await import('./build-tsumego.mjs'); await build(); }

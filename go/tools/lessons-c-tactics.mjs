@@ -10,6 +10,8 @@ const L = (ab, aw) => { const a = new Array(81).fill('.'); const P = s => (9 - +
 const Na = L(['C5', 'C4', 'D3', 'E3'], ['D4', 'G6']);
 const Nb = L(['C6', 'C5', 'C4', 'D3', 'E4'], ['D4', 'D5', 'G6']);
 const Nc = L(['B4', 'B3', 'C2', 'D2'], ['C3', 'F5']);
+const NaB7 = L(['C5', 'C4', 'D3', 'E3'], ['D4', 'B7']);
+const L3 = [E9, E9, E9, '......O..', '...X.....', '..XO.....', '....X....', E9, E9];
 const Sd = [E9, E9, E9, E9, E9, '...O.....', 'XXXO.....', 'OOXO.....', '..OO.....'];
 const Sg = [E9, E9, E9, E9, E9, '......O..', '..XXXX...', '..XOOXO..', '..X..OO..'];
 const Sg3 = [E9, E9, E9, E9, E9, '.......O.', '..XXXXX..', '..XOOOXO.', '..XX..OO.'];
@@ -123,5 +125,32 @@ export const steps = [
     { rows: T.flipH(T.swap(['.........', '.........', '...O.....', '..OX.....', '.OX......', E9, E9, E9, E9])), turn: 1, ok: ['F5'], line: ['F5', 'G4', 'E6'], chk: tac(['F6', 'G5'], 2),
       why: { ja: '斜めの白2子の切れ目<bdi>F5</bdi>に切れば両アタリ。片方を取れます。', en: 'Cut at <bdi>F5</bdi>, the gap between the diagonal white stones: a double atari.' },
       ng: { ja: '白<bdi>F6</bdi>と<bdi>G5</bdi>は斜めにつながっているだけ。切れ目の<bdi>F5</bdi>が急所です。', en: 'White <bdi>F6</bdi> and <bdi>G5</bdi> are only diagonally linked. The cutting point <bdi>F5</bdi> is vital.' } },
+  ] },
+// ------------------------------------------------------------------ 5
+{ id: 'tesuji', course: 'tactics',
+  title: { ja: '手筋の総合問題', en: 'Tactics review' },
+  sub: { ja: 'どの手筋を使う？', en: 'Which technique fits?' },
+  intro: {
+    ja: '<p>これまでの手筋の総復習です。問題ごとに使う手筋は違います。</p><p>考える順番は、<b>①相手のダメの数を数える</b>、<b>②アタリで追えるか（シチョウ・シチョウアタリ）</b>、<b>③アタリ以外で包めるか（ゲタ）</b>、<b>④わざと取らせる手はないか（ウッテガエシ）</b>、<b>⑤2つ同時に狙えないか（両アタリ）</b>。</p><p>正解のあとに表示される手順も、自分で並べて確かめてみましょう。</p>',
+    en: '<p>A review of all the techniques so far. Each problem needs a different one.</p><p>Think in this order: <b>1. count the liberties</b>, <b>2. can a chain of ataris work (ladder, ladder breakers)?</b>, <b>3. can you enclose without atari (net)?</b>, <b>4. can you sacrifice a stone (snapback)?</b>, <b>5. can you threaten two things at once (double atari)?</b></p><p>After each answer, replay the sequence shown on the board yourself.</p>' },
+  goal: { ja: '手筋で石を取ってください', en: 'Capture using the right technique' },
+  hint: { ja: 'シチョウアタリの石はないか、まず盤全体を見ましょう。', en: 'First look over the board for ladder breakers.' },
+  diagram: { rows: T.flipH(NaB7), marks: [['E5', 'ok']] },
+  problems: [
+    { rows: T.flipH(NaB7), turn: 1, ok: ['E5'], line: 'auto', chk: tac(['F4'], 6),
+      why: { ja: '右上の<bdi>H7</bdi>がシチョウアタリなので、アタリで追うと逃げられます。<bdi>E5</bdi>のゲタが正解です。', en: 'White <bdi>H7</bdi> breaks the ladder, so chasing with atari fails. The net at <bdi>E5</bdi> is correct.' },
+      ng: { ja: '<bdi>F5</bdi>や<bdi>E4</bdi>からアタリしても、白は<bdi>H7</bdi>の方へ逃げてつながります。', en: 'Atari from <bdi>F5</bdi> or <bdi>E4</bdi> lets White run toward <bdi>H7</bdi> and connect.' } },
+    { rows: T.flipV(T.swap(L3)), turn: 2, ok: ['E6'], line: 'auto', chk: ladder(['D6']),
+      why: { ja: '<bdi>E6</bdi>からアタリすれば、黒は左上へ逃げるしかなく、盤端でシチョウが成功します。', en: 'Atari from <bdi>E6</bdi>: Black can only run toward the upper left, and the ladder succeeds at the edge.' },
+      ng: { ja: '<bdi>D7</bdi>からのアタリだと、黒は右下の<bdi>G4</bdi>の黒石へ向かって逃げてしまいます。', en: 'Atari from <bdi>D7</bdi> sends Black toward its own stone at <bdi>G4</bdi>, and it escapes.' } },
+    { rows: T.flipV(T.flipH(Sg3)), view: [0, 0, 8, 5], turn: 1, ok: ['D9'], line: 'auto', chk: tac(['D8'], 3),
+      why: { ja: '<bdi>D9</bdi>に放り込むウッテガエシ。白が<bdi>E9</bdi>で取っても、白4子はダメ1つで、<bdi>D9</bdi>に打ち返して取れます。', en: 'A snapback: throw in at <bdi>D9</bdi>. If White captures at <bdi>E9</bdi>, the four white stones have one liberty and <bdi>D9</bdi> takes them back.' },
+      ng: { ja: '<bdi>E9</bdi>からアタリすると白に<bdi>D9</bdi>とつながれて、<bdi>C9</bdi>の白石と連絡されます。', en: 'Atari at <bdi>E9</bdi> lets White connect at <bdi>D9</bdi> to the stones at <bdi>C9</bdi>.' } },
+    { rows: T.flipV(['.........', '.........', '...O.....', '..OX.....', '.OX......', E9, E9, E9, E9]), turn: 2, ok: ['D5'], line: ['D5', 'C6', 'E4'], chk: tac(['C5', 'D4'], 2),
+      why: { ja: '斜めの黒2子の切れ目<bdi>D5</bdi>に切ると両アタリ。どちらか一方を取れます。', en: 'Cutting at <bdi>D5</bdi> between the diagonal black stones is a double atari; White captures one of them.' },
+      ng: { ja: '黒<bdi>C5</bdi>と<bdi>D4</bdi>はどちらもダメ2つ。共通のダメ<bdi>D5</bdi>が急所です。', en: 'Black <bdi>C5</bdi> and <bdi>D4</bdi> each have two liberties; their shared liberty <bdi>D5</bdi> is the key.' } },
+    { rows: T.flipH(T.swap([E9, E9, E9, E9, E9, E9, '...X.....', '..XO.....', E9])), view: [0, 3, 8, 8], turn: 2, ok: ['E2'], line: 'auto', chk: ladder(['F2']),
+      why: { ja: '二線の黒石は<bdi>E2</bdi>からアタリすれば一線へ逃げるしかなく、シチョウで取れます。', en: 'Atari the second-line stone from <bdi>E2</bdi>: it can only run along the first line and is captured in a ladder.' },
+      ng: { ja: '<bdi>F1</bdi>からのアタリでは黒に<bdi>E2</bdi>へ逃げられ、広い方へ出られます。', en: 'Atari from <bdi>F1</bdi> lets Black run out through <bdi>E2</bdi> into open space.' } },
   ] },
 ];

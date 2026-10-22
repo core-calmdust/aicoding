@@ -258,3 +258,228 @@
 14W D6   lead    0.7 loss 1.2 pol#3 best B6   | B6:-0.5 D6:0.0
 15B C5   lead    1.0 loss 0.0 pol#1 best C5   | C5:0.8
 16W C7   lead    0.8 loss 0.5 pol#1 best C7   | C7:1.0 D5:1.7 H4:0.4
+== s9_54  maxloss 4.3
+ 1B E4   lead    0.0 loss 0.1 pol#6 best E5   | E5:0.0 E6:-0.1
+ 2W E6   lead    0.0 loss 0.0 pol#1 best E6   | E6:-0.1
+ 3B G5   lead    0.1 loss 0.0 pol#2 best C5   | C5:0.1 G5:0.1
+ 4W C6   lead    0.3 loss 0.3 pol#1 best C5   | C5:-0.0 C6:0.2
+ 5B F7   lead    0.5 loss 0.0 pol#1 best F7   | F7:0.4
+ 6W E7   lead    0.3 loss 0.1 pol#1 best E7   | E7:0.4 C4:0.3 F6:0.4 D3:1.0
+ 7B C4   lead    0.4 loss 0.1 pol#1 best F8   | F8:0.4 C4:0.2
+ 8W G3   lead    0.5 loss 0.2 pol#2 best G3   | G3:0.5 F6:0.3 E2:0.4 D3:0.4
+ 9B F2   lead    0.9 loss 0.0 pol#1 best F2   | F2:0.6 F8:0.7
+10W F5   lead    1.6 loss 1.6 pol#1 best G7   | G7:0.1 F5:1.4 G6:1.1 H5:0.9
+11B F4   lead    1.6 loss 0.1 pol#1 best F4   | F4:1.8
+12W G6   lead    1.9 loss 0.2 pol#1 best G6   | G6:1.5
+13B F6   lead    1.9 loss 0.1 pol#1 best F6   | F6:2.0
+14W E5   lead    5.5 loss 4.3 pol#1 best G7   | G7:1.2 E5:4.5
+15B G7   lead    5.1 loss 0.4 pol#1 best G7   | G7:5.9
+== s9_33  maxloss 1.1
+ 1B C3   lead   -0.8 loss 0.8 pol#99 best E5   | E5:0.0 E6:-0.1
+ 2W G7   lead    0.2 loss 1.1 pol#99 best F6   | F6:-0.8 E6:-0.8 D4:-1.0 F5:-0.9
+ 3B F6   lead    0.2 loss 0.0 pol#1 best F6   | F6:0.2
+ 4W G6   lead    0.5 loss 0.3 pol#1 best D4   | D4:0.1 G6:0.5 F7:0.5
+ 5B F5   lead    0.5 loss 0.0 pol#1 best F5   | F5:0.4 F4:0.5
+ 6W E8   lead    0.7 loss 0.3 pol#1 best G5   | G5:0.4 F7:0.4 E8:0.8
+ 7B G5   lead    0.8 loss 0.0 pol#1 best G5   | G5:0.8 D7:0.5
+ 8W D6   lead    1.0 loss 0.3 pol#1 best D4   | D4:0.7 D6:0.8
+ 9B D5   lead    1.2 loss 0.0 pol#1 best D5   | D5:1.2 C5:0.7
+10W C5   lead    1.1 loss 0.0 pol#1 best C5   | C5:1.2
+11B C4   lead    0.9 loss 0.2 pol#1 best C4   | C4:1.3 D4:0.9
+12W E5   lead    1.5 loss 0.7 pol#1 best B5   | B5:0.7 E5:1.4
+13B D4   lead    1.3 loss 0.1 pol#1 best D4   | D4:1.5
+14W E6   lead    1.4 loss 0.1 pol#1 best E6   | E6:1.2
+== s9_fight  maxloss 1.8
+ 1B E5   lead    0.0 loss 0.0 pol#1 best E5   | E5:0.0 E6:-0.1
+ 2W E3   lead    0.1 loss 0.2 pol#9 best C5   | C5:-0.1 E7:-0.1 E3:-0.1
+ 3B D7   lead    0.0 loss 0.3 pol#1 best D3   | D3:0.3 F3:0.1 D7:-0.1 F7:-0.1 E7:-0.1
+ 4W G4   lead    0.0 loss 0.0 pol#1 best G4   | G4:-0.1 G6:-0.1 C4:0.1
+ 5B F4   lead    0.1 loss 0.1 pol#1 best F4   | F4:0.0 D3:0.1 G5:-0.6
+ 6W F3   lead    0.2 loss 0.0 pol#1 best F3   | F3:0.1
+ 7B G5   lead    0.1 loss 0.0 pol#1 best G5   | G5:0.2
+ 8W H4   lead    0.0 loss 0.0 pol#2 best H4   | H4:0.0 E4:0.5 D5:0.0
+ 9B D4   lead    0.2 loss 0.0 pol#1 best D4   | D4:0.1 C4:-0.4
+10W C7   lead   -0.1 loss 0.0 pol#1 best D3   | D3:0.1 C7:0.5 D8:0.2
+11B D8   lead    0.2 loss 0.0 pol#1 best D8   | D8:-0.0 C6:-0.5
+12W B4   lead    0.8 loss 1.0 pol#1 best H5   | H5:-0.1 B4:0.9
+13B D3   lead    1.0 loss 0.1 pol#1 best D3   | D3:0.9 H5:1.1
+14W H5   lead    1.0 loss 0.1 pol#2 best H5   | H5:0.8 C5:1.2
+15B B3   lead    0.9 loss 0.2 pol#1 best B3   | B3:1.2
+16W C5   lead    1.6 loss 1.8 pol#2 best C4   | C4:-0.3 C5:1.5 C8:1.2
+== s9_terr  maxloss 1.5
+ 1B C3   lead   -0.8 loss 0.8 pol#99 best E5   | E5:0.0 E6:-0.1
+ 2W G7   lead    0.2 loss 1.1 pol#99 best F6   | F6:-0.8 E6:-0.8 D4:-1.0 F5:-0.9
+ 3B G3   lead   -1.3 loss 1.5 pol#99 best F6   | F6:0.2
+ 4W C7   lead   -0.2 loss 1.2 pol#99 best D6   | D6:-1.4
+ 5B D6   lead   -0.4 loss 0.2 pol#1 best D6   | D6:-0.2 F6:-0.1
+ 6W D7   lead    0.0 loss 0.6 pol#1 best C6   | C6:-0.6 D7:0.0
+ 7B E6   lead    0.3 loss 0.0 pol#1 best E6   | E6:0.1 F6:-0.3
+ 8W E7   lead   -0.1 loss 0.0 pol#1 best E7   | E7:0.1
+ 9B G6   lead    0.0 loss 0.1 pol#1 best G6   | G6:-0.1 F6:-0.0
+10W H6   lead    1.2 loss 1.4 pol#1 best B5   | B5:-0.2 C4:0.1
+11B F6   lead    1.3 loss 0.2 pol#1 best F6   | F6:1.1 F7:1.4
+12W H8   lead    1.0 loss 0.0 pol#1 best H8   | H8:1.1
+13B C6   lead    1.3 loss 0.0 pol#1 best C6   | C6:1.1 B6:0.3
+14W H4   lead    0.8 loss 0.0 pol#1 best H4   | H4:1.0 G5:1.5
+15B B7   lead    0.6 loss 0.4 pol#1 best G4   | G4:0.9 H3:0.9 B7:0.6
+16W G4   lead    0.4 loss 0.0 pol#1 best G4   | G4:0.5
+== s13_basic  maxloss 0.3
+ 1B K10  lead   -0.1 loss 0.1 pol#2 best D10  | D10:-0.0 K10:-0.1 D4:-0.1 K4:-0.2
+ 2W D4   lead   -0.2 loss 0.0 pol#2 best D4   | D4:-0.2 D10:-0.0 K4:-0.1
+ 3B K3   lead   -0.2 loss 0.1 pol#6 best C3   | C3:-0.1 D11:-0.1 K4:-0.2 L4:-0.1 D10:-0.2
+ 4W D10  lead   -0.3 loss 0.0 pol#1 best D10  | D10:-0.2 D11:-0.2 C10:-0.2
+ 5B F3   lead   -0.2 loss 0.0 pol#1 best F3   | F3:-0.3 F11:-0.3 C4:-0.3 C10:-0.3 G11:-0.3
+ 6W L5   lead    0.0 loss 0.3 pol#2 best K4   | K4:-0.3 H11:-0.3 L10:-0.3 L5:0.1 K5:-0.0
+ 7B L8   lead    0.0 loss 0.0 pol#1 best L8   | L8:0.1 C6:-0.0 C10:-0.1 F11:0.0
+ 8W G11  lead    0.1 loss 0.3 pol#1 best G11  | G11:0.0 H3:-0.3 H11:0.1 J4:0.1 F11:0.2
+ 9B C6   lead    0.1 loss 0.0 pol#1 best C6   | C6:0.2 C10:0.1 F5:-0.1
+10W F4   lead    0.2 loss 0.2 pol#1 best B5   | B5:-0.0 F4:0.1 C5:0.1 J4:0.3
+11B G4   lead    0.2 loss 0.0 pol#1 best G4   | G4:0.2
+12W F5   lead    0.3 loss 0.0 pol#1 best F5   | F5:0.2
+13B E3   lead    0.4 loss 0.0 pol#2 best E3   | E3:0.4 C10:0.3 C3:-0.2
+14W D3   lead    0.2 loss 0.0 pol#1 best D3   | D3:0.3
+== s13_fight  maxloss 0.7
+ 1B K10  lead   -0.1 loss 0.1 pol#2 best D10  | D10:-0.0 K10:-0.1 D4:-0.1 K4:-0.2
+ 2W D10  lead    0.0 loss 0.2 pol#1 best D4   | D4:-0.2 D10:-0.0 K4:-0.1
+ 3B D4   lead    0.0 loss 0.0 pol#1 best D4   | D4:0.1 C4:-0.2
+ 4W K4   lead    0.0 loss 0.0 pol#1 best K4   | K4:0.0 L4:0.0 K3:0.1
+ 5B C11  lead    0.1 loss 0.0 pol#1 best L3   | L3:0.1 C11:0.0
+ 6W D11  lead    0.1 loss 0.0 pol#2 best D11  | D11:0.1 C10:0.1
+ 7B C10  lead    0.0 loss 0.1 pol#1 best C10  | C10:0.1
+ 8W D9   lead    0.1 loss 0.1 pol#1 best D9   | D9:-0.1 C8:-0.0 C9:0.1
+ 9B B8   lead    0.1 loss 0.0 pol#1 best B8   | B8:0.1 C9:-0.1
+10W K11  lead    0.2 loss 0.1 pol#2 best K11  | K11:0.0 L11:0.0 H11:0.3
+11B J11  lead    0.2 loss 0.0 pol#1 best J11  | J11:0.2 L11:0.1
+12W L11  lead    0.2 loss 0.0 pol#1 best L11  | L11:0.2 C8:0.3
+13B J10  lead   -0.4 loss 0.7 pol#1 best L10  | L10:0.4 H10:0.1 J10:-0.5
+14W M9   lead   -0.3 loss 0.0 pol#1 best M9   | M9:-0.4
+15B K7   lead   -0.2 loss 0.0 pol#1 best K7   | K7:-0.2 J7:-0.4 C12:-0.7
+16W C8   lead   -0.2 loss 0.0 pol#1 best C8   | C8:-0.3 L8:-0.1
+17B B7   lead   -0.1 loss 0.0 pol#1 best B7   | B7:-0.2
+== h9  maxloss 3.4
+ 1W O17  lead  116.0 loss 0.0 pol#8 best R6   | R6:116.5 R14:116.5 O4:116.0 O3:116.2
+ 2B O16  lead  116.5 loss 0.1 pol#1 best O16  | O16:116.2 M17:116.4 N16:115.2
+ 3W P17  lead  117.5 loss 1.6 pol#6 best N16  | N16:116.0 R6:116.8 P16:117.2
+ 4B Q17  lead  117.7 loss 0.3 pol#1 best Q17  | Q17:117.4 P16:117.8
+ 5W R6   lead  119.6 loss 2.3 pol#7 best P16  | P16:117.4 N16:117.3
+ 6B N16  lead  119.5 loss 1.2 pol#2 best P16  | P16:120.5 N16:119.0
+ 7W C3   lead  120.0 loss 1.9 pol#99 best P5   | P5:118.2 L18:119.7 P6:117.8
+ 8B D3   lead  120.7 loss 0.0 pol#1 best D3   | D3:120.5 C4:120.3 R8:118.1
+ 9W C4   lead  119.5 loss 0.0 pol#1 best C4   | C4:119.8 P5:120.2 M17:122.1
+10B D5   lead  119.6 loss 0.7 pol#1 best D5   | D5:119.6 C5:119.3 C6:120.3
+11W B6   lead  119.4 loss 0.1 pol#1 best B6   | B6:119.3 C5:120.1
+12B C7   lead  120.3 loss 0.0 pol#4 best R8   | R8:119.6 Q7:119.3 C6:119.5 C7:119.1 Q8:119.3
+13W R9   lead  122.6 loss 3.4 pol#7 best C6   | C6:119.8 B7:121.1 P5:119.2
+14B R10  lead  123.1 loss 0.0 pol#1 best R10  | R10:123.2 Q9:120.8
+== h6  maxloss 2.3
+ 1W O17  lead   77.2 loss 0.0 pol#6 best F17  | F17:77.3 O3:77.2 R14:77.6 C14:77.3 F3:77.0
+ 2B M17  lead   77.0 loss 1.2 pol#1 best M17  | M17:77.2 L17:77.4 L16:78.2 O16:75.8 M16:77.3
+ 3W O15  lead   76.8 loss 0.2 pol#1 best O15  | O15:76.4 F17:77.0 O3:77.2 R17:77.5 R14:76.7
+ 4B M15  lead   76.2 loss 1.4 pol#1 best M15  | M15:76.0 Q14:77.5 P14:77.1
+ 5W Q14  lead   75.5 loss 0.0 pol#1 best Q14  | Q14:75.8 Q18:76.9 Q15:76.4
+ 6B P17  lead   75.8 loss 0.0 pol#1 best P17  | P17:75.6 P14:75.3 R17:75.2 R14:74.8
+ 7W C3   lead   76.7 loss 2.3 pol#99 best P18  | P18:74.5 N17:76.8 O18:76.0
+ 8B C4   lead   76.9 loss 0.2 pol#1 best C4   | C4:76.7 D3:77.0 P14:76.4
+ 9W D3   lead   76.6 loss 0.3 pol#1 best D3   | D3:76.7 P18:76.4
+10B E4   lead   76.7 loss 0.0 pol#1 best E4   | E4:76.6 F3:76.7
+11W F2   lead   76.3 loss 0.0 pol#1 best F2   | F2:76.4 P18:76.6 E3:76.9
+12B O18  lead   76.6 loss 0.5 pol#2 best P14  | P14:77.1 O18:76.2 Q12:76.2
+13W R6   lead   77.9 loss 2.1 pol#99 best R12  | R12:75.8 Q12:75.8 F17:77.4 G3:77.6
+14B Q12  lead   78.5 loss 0.0 pol#1 best Q12  | Q12:78.5 R12:77.9
+== h4  maxloss 1.6
+ 1W K16  lead   49.9 loss 0.0 pol#99 best C6   | C6:51.2 O3:50.6 R14:51.2 F17:51.4 O17:51.4
+ 2B G17  lead   50.1 loss 0.3 pol#1 best G17  | G17:50.1 N17:50.4 F17:49.8
+ 3W R10  lead   50.7 loss 1.0 pol#99 best O17  | O17:49.7
+ 4B N17  lead   51.1 loss 0.0 pol#2 best N17  | N17:51.0 R13:50.7 R7:50.4 O17:50.8
+ 5W O17  lead   51.8 loss 1.1 pol#99 best R6   | R6:50.7 R14:51.7 R13:50.9 R7:50.3
+ 6B O16  lead   51.8 loss 0.3 pol#1 best O16  | O16:51.7 N16:52.0
+ 7W P17  lead   52.4 loss 1.6 pol#1 best P17  | P17:52.0 N16:50.6 R6:51.5
+ 8B P16  lead   52.6 loss 0.5 pol#1 best P16  | P16:52.4 N16:53.0
+ 9W C3   lead   52.9 loss 0.6 pol#7 best N18  | N18:52.3 R6:52.5 R7:53.1
+10B C4   lead   52.8 loss 0.1 pol#1 best C4   | C4:53.0 D3:52.7
+11W D3   lead   52.6 loss 0.0 pol#1 best D3   | D3:52.7 N18:52.7
+12B E4   lead   52.4 loss 0.1 pol#1 best E4   | E4:52.7 F3:52.5 E3:52.5
+13W F2   lead   52.6 loss 0.2 pol#1 best F2   | F2:52.4 E3:52.3 N18:52.7
+14B N18  lead   53.4 loss 0.0 pol#1 best N18  | N18:53.2 R7:52.5 C11:52.7 D10:52.4
+== h3  maxloss 1
+ 1W D16  lead   33.9 loss 0.1 pol#1 best D16  | D16:33.7
+ 2B C14  lead   33.8 loss 0.2 pol#1 best C14  | C14:34.2 F17:34.2
+ 3W F17  lead   33.3 loss 0.1 pol#1 best F17  | F17:33.1 C6:33.7 F16:34.5
+ 4B C6   lead   33.2 loss 0.4 pol#1 best C6   | C6:33.3 G16:33.6 D6:33.8
+ 5W O17  lead   32.7 loss 0.4 pol#1 best O17  | O17:33.0 R17:32.9 C12:33.1 R6:33.0 R14:33.2
+ 6B R14  lead   32.7 loss 0.4 pol#1 best R14  | R14:32.9 M17:33.1 Q14:33.0 R13:33.8
+ 7W R6   lead   32.0 loss 0.0 pol#1 best R6   | R6:32.1 C12:32.7 Q17:33.3 Q18:33.1 R3:32.2
+ 8B R8   lead   32.8 loss 0.0 pol#2 best R8   | R8:32.8 R5:31.9 M17:31.3
+ 9W O3   lead   32.1 loss 0.2 pol#1 best O3   | O3:31.9 P6:33.5 R3:33.1 O4:32.3 C12:33.2
+10B Q6   lead   32.2 loss 0.4 pol#2 best O4   | O4:32.5 Q6:31.9
+11W R3   lead   32.2 loss 1.0 pol#1 best R3   | R3:32.4 Q5:31.4 Q7:32.1
+12B Q3   lead   33.6 loss 0.0 pol#1 best Q3   | Q3:33.2 R5:30.6 R4:31.6
+13W R4   lead   33.0 loss 0.1 pol#1 best R4   | R4:33.4 Q7:33.1 Q2:34.0
+14B Q5   lead   33.6 loss 0.0 pol#1 best Q5   | Q5:33.6 R5:33.1 R2:30.7
+== h2  maxloss 0.3
+ 1W Q4   lead   19.2 loss 0.1 pol#2 best D16  | D16:19.3 Q4:19.5
+ 2B D16  lead   19.4 loss 0.2 pol#1 best D16  | D16:19.2 C16:19.4 D17:19.5
+ 3W C3   lead   19.4 loss 0.2 pol#1 best C3   | C3:19.9 R17:19.7 R14:19.3 C17:19.6 C6:19.1
+ 4B C4   lead   19.3 loss 0.1 pol#1 best C4   | C4:19.5 D3:19.4
+ 5W D3   lead   19.4 loss 0.1 pol#1 best D3   | D3:19.3
+ 6B E4   lead   19.3 loss 0.1 pol#1 best E4   | E4:19.5 F3:19.3
+ 7W F2   lead   19.3 loss 0.0 pol#1 best F2   | F2:19.2 E3:19.4 F3:19.6
+ 8B R6   lead   19.5 loss 0.0 pol#1 best R6   | R6:19.4 R3:18.9 O3:19.1
+ 9W G3   lead   19.4 loss 0.3 pol#1 best G3   | G3:19.4 R17:19.2 C17:19.1 O4:19.4 R14:19.6
+10B O3   lead   19.8 loss 0.0 pol#1 best O3   | O3:19.7 R3:18.7 D9:19.6 O4:19.7
+11W O4   lead   20.0 loss 0.2 pol#1 best O4   | O4:19.7 Q6:19.8
+12B N4   lead   19.8 loss 0.1 pol#1 best N4   | N4:20.1
+13W O5   lead   19.9 loss 0.1 pol#1 best O5   | O5:19.8 P3:19.9
+14B Q3   lead   20.4 loss 0.0 pol#1 best Q3   | Q3:20.2 P3:20.1 P2:19.0
+== s9_tengen  maxloss 1.9
+ 1B E5   lead    0.0 loss 0.0 pol#1 best E5   | E5:0.0 E6:-0.1
+ 2W E7   lead    0.0 loss 0.2 pol#1 best C5   | C5:-0.1 E7:-0.1 E3:-0.1
+ 3B D3   lead    0.0 loss 0.1 pol#2 best D7   | D7:0.1 F7:0.1 F3:-0.1 D3:-0.0 E3:-0.1
+ 4W G6   lead    0.0 loss 0.0 pol#2 best G6   | G6:-0.1 C6:0.1
+ 5B F6   lead    0.1 loss 0.0 pol#1 best F6   | F6:-0.0 D7:0.1 G5:-0.6
+ 6W F7   lead    0.2 loss 0.3 pol#1 best F7   | F7:0.1 G7:-0.1
+ 7B G5   lead    0.0 loss 0.1 pol#1 best G5   | G5:0.2
+ 8W H6   lead    0.0 loss 0.3 pol#1 best H6   | H6:0.0 D5:-0.3 C6:-0.0
+ 9B C6   lead    0.0 loss 0.2 pol#3 best D6   | D6:0.1 C6:-0.3 H5:-0.3
+10W C3   lead   -0.2 loss 0.0 pol#1 best H5   | H5:-0.2 C3:0.0 D2:0.0 D6:-0.2
+11B D2   lead   -0.2 loss 0.0 pol#1 best D2   | D2:-0.1
+12W H5   lead   -0.1 loss 0.1 pol#1 best H5   | H5:-0.4
+13B G4   lead   -0.3 loss 0.2 pol#1 best C8   | C8:0.1 G4:-0.0 D7:-0.6
+14W B6   lead   -0.4 loss 0.0 pol#2 best B6   | B6:-0.5 D6:0.0
+15B B7   lead   -2.1 loss 1.9 pol#1 best B5   | B5:-0.2 B7:-1.4
+16W B5   lead   -2.7 loss 0.0 pol#1 best B5   | B5:-2.3
+17B D7   lead   -2.5 loss 0.0 pol#1 best C5   | C5:-2.6 D6:-2.5 D7:-2.9 C7:-4.0
+== s9_54  maxloss 0.7
+ 1B E4   lead    0.0 loss 0.1 pol#6 best E5   | E5:0.0 E6:-0.1
+ 2W E6   lead    0.0 loss 0.0 pol#1 best E6   | E6:-0.1
+ 3B G5   lead    0.1 loss 0.0 pol#2 best C5   | C5:0.1 G5:0.1
+ 4W C6   lead    0.3 loss 0.3 pol#1 best C5   | C5:-0.0 C6:0.2
+ 5B F7   lead    0.5 loss 0.0 pol#1 best F7   | F7:0.4
+ 6W E7   lead    0.3 loss 0.1 pol#1 best E7   | E7:0.4 C4:0.3 F6:0.4 D3:1.0
+ 7B C4   lead    0.4 loss 0.1 pol#1 best F8   | F8:0.4 C4:0.2
+ 8W G3   lead    0.5 loss 0.2 pol#2 best G3   | G3:0.5 F6:0.3 E2:0.4 D3:0.4
+ 9B F2   lead    0.9 loss 0.0 pol#1 best F2   | F2:0.6 F8:0.7
+10W G7   lead    0.8 loss 0.7 pol#5 best G7   | G7:0.1 F5:1.4 G6:1.1 H5:0.9
+11B G6   lead    0.7 loss 0.3 pol#1 best H7   | H7:1.0 G6:-0.2
+12W F6   lead    1.0 loss 0.5 pol#2 best F4   | F4:0.5 H7:0.8 F6:0.9
+13B H7   lead    1.1 loss 0.0 pol#1 best H7   | H7:1.0
+14W F8   lead    1.1 loss 0.0 pol#1 best F8   | F8:1.1
+15B F4   lead    1.2 loss 0.0 pol#1 best F4   | F4:1.1 F5:1.2
+== s9_fight  maxloss 1
+ 1B E5   lead    0.0 loss 0.0 pol#1 best E5   | E5:0.0 E6:-0.1
+ 2W E3   lead    0.1 loss 0.2 pol#9 best C5   | C5:-0.1 E7:-0.1 E3:-0.1
+ 3B D7   lead    0.0 loss 0.3 pol#1 best D3   | D3:0.3 F3:0.1 D7:-0.1 F7:-0.1 E7:-0.1
+ 4W G4   lead    0.0 loss 0.0 pol#1 best G4   | G4:-0.1 G6:-0.1 C4:0.1
+ 5B F4   lead    0.1 loss 0.1 pol#1 best F4   | F4:0.0 D3:0.1 G5:-0.6
+ 6W F3   lead    0.2 loss 0.0 pol#1 best F3   | F3:0.1
+ 7B G5   lead    0.1 loss 0.0 pol#1 best G5   | G5:0.2
+ 8W H4   lead    0.0 loss 0.0 pol#2 best H4   | H4:0.0 E4:0.5 D5:0.0
+ 9B D4   lead    0.2 loss 0.0 pol#1 best D4   | D4:0.1 C4:-0.4
+10W C7   lead   -0.1 loss 0.0 pol#1 best D3   | D3:0.1 C7:0.5 D8:0.2
+11B D8   lead    0.2 loss 0.0 pol#1 best D8   | D8:-0.0 C6:-0.5
+12W B4   lead    0.8 loss 1.0 pol#1 best H5   | H5:-0.1 B4:0.9
+13B D3   lead    1.0 loss 0.1 pol#1 best D3   | D3:0.9 H5:1.1
+14W H5   lead    1.0 loss 0.1 pol#2 best H5   | H5:0.8 C5:1.2
+15B B3   lead    0.9 loss 0.2 pol#1 best B3   | B3:1.2
+16W C4   lead    1.1 loss 0.7 pol#4 best C4   | C4:-0.3 C5:1.5 C8:1.2
+17B C3   lead    1.4 loss 0.0 pol#1 best C3   | C3:1.3

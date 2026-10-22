@@ -9,7 +9,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
-import { R, T, transform, viewFor, rng } from './tsumego-shapes.mjs';
+import { R, T, transform, viewFor, rng, tacTheme } from './tsumego-shapes.mjs';
 const require = createRequire(import.meta.url);
 const { funScore } = require('./fun.js');
 const DIR = path.dirname(new URL(import.meta.url).pathname);
@@ -35,7 +35,13 @@ export async function build() {
   const files = fs.readdirSync(DATA).filter(f => f.endsWith('.jsonl'));
   const cands = [], seen = new Set();
   for (const f of files) for (const ln of fs.readFileSync(path.join(DATA, f), 'utf8').split('\n')) {
-    if (!ln.trim()) continue; const c = JSON.parse(ln); const k = key(c); if (seen.has(k)) continue; seen.add(k); cands.push(c);
+    if (!ln.trim()) continue; const c = JSON.parse(ln); const k = key(c); if (seen.has(k)) continue; seen.add(k);
+    if (c.goal === 'capture') {   // the theme of capture puzzles from the line (snapback / ladder / capture / tesuji)
+      const n = c.s.n, ix = a => a.map(v => R.parseCoord(v, n));
+      c.th = tacTheme({ s: c.s, goal: c.goal, target: ix(c.target), line: ix(c.line), n: c.n });
+    }
+    if (c.goal === 'connect' && c.n < 2) continue;   // one-move connections are too plain for the tesuji theme
+    cands.push(c);
   }
   console.log('candidates', cands.length);
   const cacheF = path.join(DATA, 'fun-cache.json');
