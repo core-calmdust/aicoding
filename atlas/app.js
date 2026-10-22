@@ -296,15 +296,16 @@
     return A_.byUpdate().filter(g => (gCat === 'all' || g.cat === gCat) && (!q || hay(g).includes(q)));
   }
   const SRCH = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
-  function renderFilter() {
-    const cats = ['all', ...(A_.CATS || [])];
-    $('catChips').innerHTML = cats.map(k => { const n = k === 'all' ? A_.GAMES.length : A_.GAMES.filter(g => g.cat === k).length;
+  // the same chips + search on the home grid and on the games tab (they share one filter state)
+  function renderFilter(ids = { chips: 'catChips', q: 'gSearch', ic: 'gSearchIc' }, onChange = renderGrid) {
+    const cats = ['all', ...(A_.CATS || [])], C = $(ids.chips);
+    C.innerHTML = cats.map(k => { const n = k === 'all' ? A_.GAMES.length : A_.GAMES.filter(g => g.cat === k).length;
       return `<button type="button" class="chip cat" data-k="${k}" aria-pressed="${gCat === k}">${esc(t('cat.' + k))} <em>${n}</em></button>`; }).join('');
-    $('catChips').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
-      $('catChips').querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); renderGrid(); });
-    const s = $('gSearch'); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
-    s.oninput = () => { gQ = s.value; renderGrid(); };
-    $('gSearchIc').innerHTML = SRCH;
+    C.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
+      C.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); onChange(); });
+    const s = $(ids.q); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
+    s.oninput = () => { gQ = s.value; onChange(); };
+    $(ids.ic).innerHTML = SRCH;
   }
   // the random tile: an isometric die with "?" faces on a thick base, drawn like the 3D game icons
   const RND_SVG = `<svg class="dieic" viewBox="0 0 200 200" aria-hidden="true">
@@ -850,7 +851,14 @@
   }
   /* ---------- GAMES ---------- */
   function renderGames() {
-    $('hAll').textContent = t('games.h'); $('allGames').innerHTML = A_.byUpdate().map(g => gameCard(g)).join('');
+    $('hAll').textContent = t('games.h');
+    renderFilter({ chips: 'catChips2', q: 'gSearch2', ic: 'gSearchIc2' }, renderGamesList);
+    renderGamesList();
+  }
+  function renderGamesList() {
+    const list = visibleGames();
+    $('allGames').innerHTML = list.map(g => gameCard(g)).join('');
+    $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }
 
