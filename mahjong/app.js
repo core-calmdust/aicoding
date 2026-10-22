@@ -165,7 +165,6 @@ function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.inner
 function renderHome() {
   applyText();
   $('#coinN').textContent = DB.coins.toLocaleString();
-  $('#lsNote').innerHTML = `<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M18 11v2"/></svg>${esc(t('landNote'))}`;
   $('#btnGacha').innerHTML = IC.gacha; $('#btnColl').innerHTML = IC.collection; $('#btnPortal').innerHTML = IC.home;
   $('#coinBox .coin').innerHTML = IC.coin;
   sndIcons();
@@ -194,19 +193,18 @@ $('#roster').addEventListener('click', e => { const b = e.target.closest('.rc');
 $('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); });
 $('#btnSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); SND.unlock(); });
 $('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
-// phones play in landscape: try fullscreen + orientation lock (Android); otherwise the rotate prompt shows
+// phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
-document.body.classList.toggle('phone', PHONE);
-function goLandscape() {
-  if (!PHONE) return;
-  const el = document.documentElement;
-  const lock = () => { try { const p = screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape'); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
-  try { if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen({ navigationUI: 'hide' }).then(lock, lock); else lock(); } catch (e) { lock(); }
+function fitRoot() {
+  const w = innerWidth, h = innerHeight, de = document.documentElement;
+  const rot = PHONE && h > w;
+  de.classList.toggle('lp', PHONE); de.classList.toggle('rot', rot);
+  de.style.setProperty('--W', (rot ? h : w) + 'px'); de.style.setProperty('--H', (rot ? w : h) + 'px');
 }
-const portraitMQ = matchMedia('(orientation: portrait)');
-const isBlocked = () => PHONE && portraitMQ.matches && document.body.classList.contains('ingame');
-function waitLandscape() { return isBlocked() ? new Promise(res => { const f = () => { if (!isBlocked()) { portraitMQ.removeEventListener('change', f); setTimeout(res, 350); } }; portraitMQ.addEventListener('change', f); }) : Promise.resolve(); }
-$('#btnStart').addEventListener('click', () => { SND.unlock(); goLandscape(); startGame(); });
+fitRoot();
+addEventListener('resize', fitRoot);
+addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
+$('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(); });
 $('#btnGacha').addEventListener('click', openGacha);
 $('#btnColl').addEventListener('click', openCollection);
 
@@ -317,9 +315,7 @@ const AUTO = /[?&]auto/.test(location.search);
 
 async function startGame() {
   $('#home').hidden = true; $('#game').hidden = false;
-  document.body.classList.add('ingame');
   closeModal();
-  await waitLandscape();
   if (!TB) TB = new Table3D($('#stage'));
   TB.hideAll();
   const me = MJChars.get(DB.sel);
@@ -344,8 +340,6 @@ function quitGame() {
   if (UIS) UIS.abort = true;
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
-  document.body.classList.remove('ingame');
-  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
   closeModal(); $('#cutin').hidden = true;
   renderHome();
 }
@@ -599,8 +593,8 @@ async function banner(text) {
   el.classList.remove('show');
 }
 function seatXY(s) {
-  const r = $('#stage').getBoundingClientRect();
-  if (s === ME) return { x: r.width / 2, y: r.height * .72 };
+  const st = $('#stage');
+  if (s === ME) return { x: st.clientWidth / 2, y: st.clientHeight * .72 };
   const p = TB.project(s, 0, 6);
   return p;
 }
