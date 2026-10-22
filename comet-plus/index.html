@@ -669,7 +669,7 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStage = bgmPick || 1;
+        const bgmStage = ((stage - 1) % 6) + 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -1655,8 +1655,6 @@ let lastInputDevice = IS_MOBILE ? 'touch' : 'keyboard';
 let stage;
 let stageClearFrame;
 let currentThemeIndex;
-let bgmPick = 1; // そのステージのBGMの段（1〜6）
-const pickBgmStage = (st, prev) => { if (st <= 6) return st; let n; do { n = 1 + Math.floor(Math.random() * 6); } while (n === prev); return n; };
 let energy;
 let nextItemScore;
 let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
@@ -1783,7 +1781,7 @@ function init() {
     currentCometSpeed = config.initialCometSpeed;
     stage = 1;
     stageClearFrame = STAGE_LENGTH_IN_FRAMES;
-    currentThemeIndex = 0; bgmPick = 1;
+    currentThemeIndex = 0;
     energy = config.energyTotal;
     nextItemScore = config.energyItemScoreNormal;
     nextSpecialItemScore = config.energyItemScoreSpecial;
@@ -1826,11 +1824,9 @@ function init() {
 
 function setupNewStage() {
     stage++;
-    // 30面まではテーマを順番に、それ以降はランダム（直前と同じは避ける）
-    if (stage <= themes.length) currentThemeIndex = stage - 1;
+    // 6面まではテーマを順番に、7面以降は30種からランダム（直前と同じは避ける）
+    if (stage <= 6) currentThemeIndex = stage - 1;
     else { let n; do { n = Math.floor(Math.random() * themes.length); } while (n === currentThemeIndex); currentThemeIndex = n; }
-    // BGM: 6面で1ループ（パートが1→6段まで積み上がる）。7面以降は段をランダムに（直前と同じは避ける）
-    bgmPick = pickBgmStage(stage, bgmPick);
     stageClearFrame += STAGE_LENGTH_IN_FRAMES;
     effects.push({ type: 'stageClear', text: `STAGE ${stage} START`, life: 120, maxLife: 120 });
     audioHandler.playSound('waveClear');
@@ -1866,7 +1862,7 @@ async function startGame(mode) {
     gameState = 'playing';
     
     if (TEST_START_STAGE > 1 && gameMode !== 'STARTRAIL MODE') { // テスト用の途中ステージ開始
-        stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; bgmPick = pickBgmStage(stage, 0); applyThemeStyles(themes[currentThemeIndex]);
+        stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; applyThemeStyles(themes[currentThemeIndex]);
         bossCount = Math.floor((stage - 1) / 3); currentCometSpeed += config.cometSpeedIncrease * (stage - 1) * STAGE_LENGTH_IN_FRAMES / 60;
         if (stage % 3 === 0) bossSpawnFrame = 150;
     }
