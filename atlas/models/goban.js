@@ -592,7 +592,6 @@
     const b = board({ n: 15, look, W: (o && o.W) || 8.8 }); g.add(b);
     Object.assign(g.userData, b.userData, { board: b, viewY: b.userData.top * 1.05 });   // showcase: the camera looks at the playing surface of the tall legged board, so it sits where the other boards do
     if (live) return g;
-    g.scale.setScalar(.9);   // (the thick goban reads larger than the flat boards)
     const Y = b.userData.top, c = b.userData.cell;
     SHOW.forEach((m, k) => {
       const [x, z] = b.userData.pt(m % 15, 14 - Math.floor(m / 15)), s = stone(k % 2 ? 2 : 1, c, k);
@@ -617,7 +616,6 @@
     const b = board({ n, look, W: (o && o.W) || 8.8 }); g.add(b);
     Object.assign(g.userData, b.userData, { board: b, viewY: b.userData.top * 1.05 });   // showcase: the camera looks at the playing surface of the tall legged board, so it sits where the other boards do
     if (live) return g;
-    g.scale.setScalar(.9);   // (the thick goban reads larger than the flat boards)
     const Y = b.userData.top, c = b.userData.cell;
     GO_SHOW.forEach((s, k) => {
       const x = s.charCodeAt(0) - 97, y = s.charCodeAt(1) - 97; if (x >= n || y >= n) return;
