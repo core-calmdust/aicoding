@@ -7870,7 +7870,7 @@ function updateExtraEnemy(m, dt) {
         m.x += m.vx * sp; m.y = m.baseY + Math.sin(m.t * 2.2) * 60;
         // すだれの弾は横に一定距離ごと（すり抜けられる間隔）。ハイパー中も間隔は詰めない
         m.dx = (m.dx || 0) + Math.abs(m.vx * sp);
-        const gap = IS_MOBILE ? 110 : 62; // PCは濃いめ、スマホは確実に抜けられる間隔
+        const gap = IS_MOBILE ? 92 : 50; // PCは濃いめ、スマホは確実に抜けられる間隔
         if (m.dx >= gap) { m.dx -= gap; m.st = 0.2; shot(Math.PI / 2, 150); if (++m.k % 4 === 0) { const a = Math.atan2(player.y - m.y, player.x - m.x); [-0.18, 0, 0.18].forEach(d => shot(a + d, 300)); } }
         else m.st -= dt;
     } else if (m.type === 'sentry') { // 降りてきて止まり、3方向の渦をまいて去る
