@@ -1331,6 +1331,18 @@ function nameEntryInput() { // ネーム登録の入力処理（gameOver中に�
         audioHandler.playSound('menu');
     }
     if (performance.now() - gameOverAt < 700) { input.shootTrigger = false; input.replayTrigger = false; tapNameKey = null; } // ゲームオーバー直後の押しっぱなし・連打を拾わない
+    // 押しっぱなしで高速移動（0.28秒後から0.055秒ごと）
+    const now = performance.now(), rep = (dir, held) => {
+        const st = ne.rep || (ne.rep = {});
+        if (!held) { st[dir] = 0; return false; }
+        if (!st[dir]) { st[dir] = now + 280; return false; } // 最初の1回は通常のトリガーで動く
+        if (now >= st[dir]) { st[dir] = now + 55; return true; }
+        return false;
+    };
+    if (rep('l', input.left)) input.leftTrigger = true;
+    if (rep('r', input.right)) input.rightTrigger = true;
+    if (rep('u', input.up)) input.upTrigger = true;
+    if (rep('d', input.down)) input.downTrigger = true;
     let c = ne.cur;
     const row = c < 26 ? Math.floor(c / cols) : 2;
     if (input.leftTrigger) c = row < 2 ? (Math.floor(c / cols) * cols + (c % cols + cols - 1) % cols) : (c === 26 ? 27 : 26);
@@ -1345,7 +1357,9 @@ function nameEntryInput() { // ネーム登録の入力処理（gameOver中に�
         else if (ne.name.length < NAME_MAX) { ne.name += key; if (ne.name.length >= NAME_MAX) ne.cur = 27; }
         audioHandler.playSound('menu');
     };
-    if (input.shootTrigger && !keyState['KeyX']) press(ne.cur); // Xは文字入力に使うので決定はSpace/パッド
+    if (performance.now() - gameOverAt < 700) { input.padOk = input.padDel = false; }
+    if ((input.shootTrigger && !keyState['KeyX'] && lastInputDevice !== 'gamepad') || input.padOk) press(ne.cur); // 文字入力: Space / パッドのA・X
+    if (input.padDel) { ne.name = ne.name.slice(0, -1); audioHandler.playSound('menu'); } // パッドのB・Y: 1文字消す
     if (ne.edit && input.titleTrigger) { nameEntry = null; gameState = 'title'; audioHandler.playSound('menu'); return; }
     if (input.replayTrigger) { finishNameEntry(); return; } // スタート/Enterで決定（前回の名前ならそのまま1回押すだけ）
     if (nameEntry && tapNameKey !== null) { const k = tapNameKey; ne.cur = k; press(k, true); }
@@ -1389,7 +1403,7 @@ function drawNameEntry(ctx) {
         ctx.fillText(NAME_KEYS[k] === 'DEL' ? '◀ DEL' : NAME_KEYS[k], r.x + r.w / 2, r.y + r.h / 2 + 1);
     }
     ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 14 : 12}px ${config.fontFamily}`;
-    const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · X/Y: INPUT · START: OK' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: OK';
+    const hint = IS_MOBILE ? 'TAP LETTERS · END TO FINISH' : lastInputDevice === 'gamepad' ? 'D-PAD: SELECT · A/X: INPUT · B/Y: DEL · START: OK' : 'TYPE A-Z / ARROWS + SPACE · BACKSPACE: DELETE · ENTER: OK';
     ctx.fillText(hint, cx, nameKeyRect(26).y + nameKeyRect(26).h + (IS_MOBILE ? 40 : 30));
     // 名前は固定で使う旨
     const chg = IS_MOBILE ? (LANG === 'ja' ? 'タイトル画面の「NAME」' : '"NAME" on the title screen') : lastInputDevice === 'gamepad' ? 'SELECT' : (LANG === 'ja' ? 'Nキー' : 'the N key');
@@ -1854,7 +1868,7 @@ function updateInstructions() {
 function pollInput() {
     const gamepads = navigator.getGamepads();
     let gpLeft = false, gpRight = false, gpUp = false, gpDown = false;
-    let gpStart = false, gpSlow = false, gpSelect = false, gpShoot = false;
+    let gpStart = false, gpSlow = false, gpSelect = false, gpShoot = false, gpFace = [false, false, false, false];
 
     for (const gp of gamepads) {
         if (!gp) continue;
@@ -1869,6 +1883,7 @@ function pollInput() {
         gpSlow = gp.buttons[0]?.pressed || gp.buttons[1]?.pressed;
         gpShoot = gp.buttons[2]?.pressed || gp.buttons[3]?.pressed;
         gpSelect = gp.buttons[8]?.pressed;
+        gpFace = [0, 1, 2, 3].map(i => !!gp.buttons[i]?.pressed);
     }
 
     // Direct state for continuous actions (movement, slow)
@@ -1959,6 +1974,11 @@ function pollInput() {
     input.downTrigger = isDownPressed && !wasDownPressed;
     wasDownPressed = isDownPressed;
     input.leftTrigger = input.left && !pollInput.wl; pollInput.wl = input.left;
+    // パッドの A/X（文字入力）と B/Y（DEL）の押した瞬間（ネーム入力用）
+    const wf = pollInput.wf || [false, false, false, false];
+    input.padOk = (gpFace[0] && !wf[0]) || (gpFace[2] && !wf[2]);
+    input.padDel = (gpFace[1] && !wf[1]) || (gpFace[3] && !wf[3]);
+    pollInput.wf = gpFace;
     input.rightTrigger = input.right && !pollInput.wr; pollInput.wr = input.right;
     
     wasStartPressed = isStartPressed;
