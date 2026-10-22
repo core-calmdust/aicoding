@@ -1,5 +1,5 @@
 {
-"meta.title": "围棋 — 5路至19路，20级AI",
+"meta.title": "围棋 — 5路至19路，26级AI",
 "title": "围棋",
 "sub": "",
 "series": "世界桌游大全",
@@ -20,7 +20,8 @@
 "围棋新手",
 "已了解规则",
 "常下棋的棋手",
-"实力较强的棋手"
+"实力较强的棋手",
+"高段棋手"
 ],
 "u.pts": "{n}目",
 "u.pt": "{n}目",
@@ -371,5 +372,11 @@
 "tr.end.b": "没有值得下的地方时就停一手。双方连续停一手，对局结束。\n移除死子（×）后计算地和提子。后手的白方获得贴目（例如6目半）。",
 "tr.end.task": "",
 "credit.ai": "AI：KataGo系神经网络（vibego by Sander Land, CC BY 4.0；教师模型 KataGo by lightvector 及贡献者），在WebAssembly中运行。",
-"ai.err": "AI 出错了，请重试。"
+"ai.err": "AI 出错了，请重试。",
+"lv.dan6": "六段",
+"lv.dan7": "七段",
+"lv.dan8": "八段",
+"lv.top1": "业余顶尖",
+"lv.top2": "职业级",
+"lv.top3": "最强"
 }

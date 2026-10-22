@@ -45,10 +45,11 @@ let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-// AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
-const LV_MAX = 20;
-const LV = i => i <= 15 ? t('lv.kyu', { n: 16 - i }) : t('lv.dan' + (i - 15));
-const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
+// AI strength: 26 steps, 15級 (1) … 1級 (15), 初段 (16) … 八段 (23), then アマ最強 / プロ級 / 最強 (24–26).
+// Anchored with GNU Go 3.8 (≈ 6級) and about 100 Elo per step in self-play (tools/vs-gnugo.mjs, tools/selfplay.mjs).
+const LV_MAX = 26;
+const LV = i => i <= 15 ? t('lv.kyu', { n: 16 - i }) : i <= 23 ? t('lv.dan' + (i - 15)) : t('lv.top' + (i - 23));
+const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : i <= 20 ? 3 : 4];
 // points: 3.5 → "3目半" / "3.5"
 function pts(x) { x = Math.abs(Math.round(x * 2) / 2); return t('u.pts', { n: LANG === 'ja' ? (x % 1 ? Math.floor(x) + '目半' : x + '目') : (x % 1 ? x.toFixed(1) : String(x)) }).replace('目目', '目'); }
 const fmtLead = v => (v >= 0 ? '+' : '−') + (Math.round(Math.abs(v) * 10) / 10).toFixed(1);
@@ -129,7 +130,7 @@ function cancelWorker() { W.postMessage({ type: 'cancel' }); }
 const anaCache = new Map();     // position key -> analysis {lead, wr, list}
 const rawCache = new Map();     // position key -> raw eval {lead, wr}
 const keyOf = i => baseKey() + '|' + game.komi + '|' + moves.slice(0, i).join(',');
-const strongNet = () => !COARSE || settings.level >= 18;
+const strongNet = () => !COARSE || settings.level >= 24;
 
 // ====================================================================== sound (stone on wood)
 let actx = null;
@@ -965,7 +966,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo): 9x9, 5 min + 20 s byo-yomi
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { base: 300000, byo: 20000 };
 // rating of each AI step on the kyu / dan scale (100 per kyu: 15級 = 450 … 1級 = 1850, then about 100 per dan)
-const RT_LV = [0, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 1950, 2050, 2150, 2250, 2350];
+const RT_LV = [0].concat(Array.from({ length: 26 }, (_, i) => 450 + 100 * i));   // 15級 450 … 1級 1850, 初段 1950 … 八段 2650, 2750 / 2850 / 2950
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

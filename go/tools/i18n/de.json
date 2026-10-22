@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — 5x5 bis 19x19, KI mit 20 Stufen",
+"meta.title": "Go — 5x5 bis 19x19, KI mit 26 Stufen",
 "title": "Go",
 "sub": "",
 "series": "Welt-Brettspielatlas",
@@ -20,6 +20,7 @@
 "Neu beim Go",
 "Kennen die Regeln",
 "Regelmäßige Spieler",
+"Starke Spieler",
 "Starke Spieler"
 ],
 "u.pts": "{n} Punkte",
@@ -371,5 +372,11 @@
 "tr.end.b": "Wenn nichts Sinnvolles mehr zu spielen ist, passt man. Zweimal Passen hintereinander beendet die Partie.\nTote Steine (×) werden entfernt, dann werden Gebiet und Gefangene gezählt. Weiß, das als Zweites zieht, erhält Komi (z. B. 6,5 Punkte).",
 "tr.end.task": "",
 "credit.ai": "KI: Neuronale Netze der KataGo-Familie (vibego von Sander Land, CC BY 4.0; Lehrermodell KataGo von lightvector und Mitwirkenden), ausgeführt in WebAssembly.",
-"ai.err": "Bei der KI ist ein Fehler aufgetreten. Bitte erneut versuchen."
+"ai.err": "Bei der KI ist ein Fehler aufgetreten. Bitte erneut versuchen.",
+"lv.dan6": "6. Dan",
+"lv.dan7": "7. Dan",
+"lv.dan8": "8. Dan",
+"lv.top1": "Spitzenamateur",
+"lv.top2": "Profiniveau",
+"lv.top3": "Stärkste Stufe"
 }

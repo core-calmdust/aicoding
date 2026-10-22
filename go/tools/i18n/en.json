@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — 5x5 to 19x19, 20 AI levels",
+"meta.title": "Go — 5x5 to 19x19, 26 AI levels",
 "title": "Go",
 "sub": "",
 "series": "World Board Game Atlas",
@@ -20,6 +20,7 @@
 "New to Go",
 "Know the rules",
 "Regular players",
+"Strong players",
 "Strong players"
 ],
 "u.pts": "{n} points",
@@ -371,5 +372,11 @@
 "tr.end.b": "When there is nothing useful left to play, you pass. Two passes in a row end the game.\nDead stones (×) are removed, then territory and prisoners are counted. White, who played second, gets komi (e.g. 6.5 points).",
 "tr.end.task": "",
 "credit.ai": "AI: KataGo-family neural nets (vibego by Sander Land, CC BY 4.0; teacher model KataGo by lightvector and contributors), running in WebAssembly.",
-"ai.err": "The AI ran into an error. Please try again."
+"ai.err": "The AI ran into an error. Please try again.",
+"lv.dan6": "6 dan",
+"lv.dan7": "7 dan",
+"lv.dan8": "8 dan",
+"lv.top1": "Top amateur",
+"lv.top2": "Pro level",
+"lv.top3": "Strongest"
 }

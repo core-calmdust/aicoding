@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — de 5x5 a 19x19, IA de 20 niveles",
+"meta.title": "Go — de 5x5 a 19x19, IA de 26 niveles",
 "title": "Go",
 "sub": "",
 "series": "Atlas Mundial de Juegos de Mesa",
@@ -20,6 +20,7 @@
 "Nuevos en el Go",
 "Conocen las reglas",
 "Jugadores habituales",
+"Jugadores fuertes",
 "Jugadores fuertes"
 ],
 "u.pts": "{n} puntos",
@@ -371,5 +372,11 @@
 "tr.end.b": "Cuando no queda nada útil por jugar, se pasa. Dos pases seguidos terminan la partida.\nSe retiran las piedras muertas (×) y se cuentan territorio y prisioneros. Blanco, que juega segundo, recibe komi (p. ej. 6,5 puntos).",
 "tr.end.task": "",
 "credit.ai": "IA: redes neuronales de la familia KataGo (vibego de Sander Land, CC BY 4.0; modelo maestro KataGo de lightvector y colaboradores), ejecutadas en WebAssembly.",
-"ai.err": "La IA tuvo un error. Inténtalo de nuevo."
+"ai.err": "La IA tuvo un error. Inténtalo de nuevo.",
+"lv.dan6": "6 dan",
+"lv.dan7": "7 dan",
+"lv.dan8": "8 dan",
+"lv.top1": "Aficionado top",
+"lv.top2": "Nivel pro",
+"lv.top3": "El más fuerte"
 }
