@@ -516,7 +516,21 @@ const themes = [
     { name: 'Crystal Cave', grid: '#00008B', player: '#E0FFFF', comet: '#AFEEEE', ui: '#ADD8E6' },
     { name: 'Gilded Age', grid: '#2F4F4F', player: '#FFD700', comet: '#F0E68C', ui: '#DAA520' },
     { name: 'Cosmic',    grid: '#a953e6', player: '#ffffff', comet: '#68d9f5', ui: '#f06e8c' },
-    { name: 'Monochrome',grid: '#888888', player: '#ffffff', comet: '#cccccc', ui: '#dddddd' }
+    { name: 'Monochrome',grid: '#888888', player: '#ffffff', comet: '#cccccc', ui: '#dddddd' },
+    { name: 'Cyber Rain', grid: '#00c87a', player: '#e0fff4', comet: '#00d0ff', ui: '#7dffcf' },
+    { name: 'Ultraviolet', grid: '#7a00ff', player: '#ff7af6', comet: '#b44dff', ui: '#e0a0ff' },
+    { name: 'Glacier', grid: '#0a5fa8', player: '#ffffff', comet: '#9fe8ff', ui: '#cdeeff' },
+    { name: 'Desert Mirage', grid: '#a0522d', player: '#fff0b0', comet: '#ffb347', ui: '#ffd27f' },
+    { name: 'Toxic', grid: '#3d7a00', player: '#d4ff00', comet: '#7fff00', ui: '#c8ff60' },
+    { name: 'Blood Moon', grid: '#7a0018', player: '#ffd0d0', comet: '#ff2040', ui: '#ff7080' },
+    { name: 'Abyss', grid: '#003a6e', player: '#40e0ff', comet: '#0080ff', ui: '#80d8ff' },
+    { name: 'Vaporwave', grid: '#ff71ce', player: '#01cdfe', comet: '#b967ff', ui: '#fffb96' },
+    { name: 'Ember', grid: '#6a2a00', player: '#ffe0a0', comet: '#ff7a00', ui: '#ffb060' },
+    { name: 'Mint', grid: '#1f8f75', player: '#ffffff', comet: '#98ffd8', ui: '#c0fff0' },
+    { name: 'Thunder', grid: '#30309a', player: '#ffff80', comet: '#a0a0ff', ui: '#ffffa0' },
+    { name: 'Rose Gold', grid: '#8a4050', player: '#ffe4d0', comet: '#ff9aa8', ui: '#f0c0a0' },
+    { name: 'Event Horizon', grid: '#50107a', player: '#ffffff', comet: '#ff60ff', ui: '#c080ff' },
+    { name: 'Zenith', grid: '#8a6a20', player: '#ffffff', comet: '#ffe680', ui: '#fff2b0' }
 ];
 
 // ---------------------------------
@@ -655,7 +669,7 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStage = ((stage - 1) % 6) + 1;
+        const bgmStage = bgmPick || 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -1641,6 +1655,8 @@ let lastInputDevice = IS_MOBILE ? 'touch' : 'keyboard';
 let stage;
 let stageClearFrame;
 let currentThemeIndex;
+let bgmPick = 1; // そのステージのBGMの段（1〜6）
+const pickBgmStage = (st, prev) => { if (st <= 6) return st; let n; do { n = 1 + Math.floor(Math.random() * 6); } while (n === prev); return n; };
 let energy;
 let nextItemScore;
 let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチェイン後のアイテム間隔の戻り待ち
@@ -1767,7 +1783,7 @@ function init() {
     currentCometSpeed = config.initialCometSpeed;
     stage = 1;
     stageClearFrame = STAGE_LENGTH_IN_FRAMES;
-    currentThemeIndex = 0;
+    currentThemeIndex = 0; bgmPick = 1;
     energy = config.energyTotal;
     nextItemScore = config.energyItemScoreNormal;
     nextSpecialItemScore = config.energyItemScoreSpecial;
@@ -1810,7 +1826,11 @@ function init() {
 
 function setupNewStage() {
     stage++;
-    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    // 30面まではテーマを順番に、それ以降はランダム（直前と同じは避ける）
+    if (stage <= themes.length) currentThemeIndex = stage - 1;
+    else { let n; do { n = Math.floor(Math.random() * themes.length); } while (n === currentThemeIndex); currentThemeIndex = n; }
+    // BGM: 6面で1ループ（パートが1→6段まで積み上がる）。7面以降は段をランダムに（直前と同じは避ける）
+    bgmPick = pickBgmStage(stage, bgmPick);
     stageClearFrame += STAGE_LENGTH_IN_FRAMES;
     effects.push({ type: 'stageClear', text: `STAGE ${stage} START`, life: 120, maxLife: 120 });
     audioHandler.playSound('waveClear');
@@ -1846,7 +1866,7 @@ async function startGame(mode) {
     gameState = 'playing';
     
     if (TEST_START_STAGE > 1 && gameMode !== 'STARTRAIL MODE') { // テスト用の途中ステージ開始
-        stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; applyThemeStyles(themes[currentThemeIndex]);
+        stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; bgmPick = pickBgmStage(stage, 0); applyThemeStyles(themes[currentThemeIndex]);
         bossCount = Math.floor((stage - 1) / 3); currentCometSpeed += config.cometSpeedIncrease * (stage - 1) * STAGE_LENGTH_IN_FRAMES / 60;
         if (stage % 3 === 0) bossSpawnFrame = 150;
     }
@@ -4475,7 +4495,7 @@ makeMotif('pillars', 84, i => {
 });
 
 // テーマ（ステージ）→ モチーフ
-const MOTIF_FOR_THEME = [0, 5, 3, 2, 1, 4, 3, 1, 4, 2, 3, 5, 3, 0, 2, 5];
+const MOTIF_FOR_THEME = [0, 5, 3, 2, 1, 4, 3, 1, 4, 2, 3, 5, 3, 0, 2, 5, 0, 2, 3, 4, 1, 5, 2, 0, 4, 3, 1, 5, 2, 5];
 let motifCur = motifs[0];
 let motifOld = null;
 let motifTrans = 1; // 0→1 で切り替え完了
