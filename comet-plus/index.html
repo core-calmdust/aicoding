@@ -5219,17 +5219,13 @@ function buildVoxelModel(art, px, heights) {
     });
     return { group, mats, edgeMat };
 }
-const monsterModels = {
-    ufo: buildVoxelModel(UFO_PIXEL_ART_FINAL, 4, { 1: 1.4, 2: 0.9, 3: 2.6, 4: 1.9 }),
-    invader: buildVoxelModel(INVADER_PIXEL_ART_GAMING, 4, { 1: 1.5, 2: 1.0, 3: 2.4 }),
-    looper: buildVoxelModel(LOOPER_PIXEL_ART, 6, { 1: 1.3, 2: 2.4, 3: 0.8 }),
-};
+const monsterModels = {}; // 中身は造形キットの定義のあと（ENEMY_BUILD）で入れる
 // ルーパーには画像風のハブを装着
 const monsterObjs = new Map();
 function makeMonsterObj(m) {
-    const model = monsterModels[m.type] || monsterModels.invader;
+    const type = monsterModels[m.type] ? m.type : 'invader';
     const obj = new THREE.Group();
-    const body = model.group.clone();
+    const body = ENEMY_BUILD[type](monsterModels[type]);
     obj.add(body);
     if (m.type === 'looper') {
         const hub = makeHub(8, 0x22e6ff, 0xff9a20);
@@ -6129,6 +6125,71 @@ NB.TESTUDO = () => {
     return g;
 };
 
+// ---------------------------------
+// 敵キャラ（ボスと同じ造形キット: 装甲＋ガラス面＋発光ライン＋ワイヤー殻。元のドット絵の形と配色を保つ）
+// mats[コード] はドット絵の色コードと同じ（毎フレームの色替えはそのまま効く）
+// ---------------------------------
+const enemyKit = codes => {
+    const mats = {};
+    codes.forEach(c => { const m = new StdMat({ color: 0xffffff, emissive: 0x000000, flatShading: true, metalness: 0.55, roughness: 0.32 }); m.side = THREE.DoubleSide; mats[c] = m; });
+    return { mats, edge: LAB.line(0xffffff, 0.9), glass: LAB.glass(0xffffff, 0.3), cage: LAB.line(0xffffff, 0.35) };
+};
+const ePart = (K, geo, code, o = {}) => LAB.part(geo, { mat: K.mats[code], edge: K.edge, glass: o.glass ? K.glass : null, glassFrac: o.glass || 0.3, seed: o.seed || 5, cage: o.cage || 0, cageMat: K.cage });
+// 色替えのあと、ライン・ガラス・殻の色をボディ色に合わせる
+const enemySync = (K, edgeC, glassC, cageC) => { K.edge.color.copy(K.mats[edgeC].color).lerp(_c(0xffffff), 0.35); K.glass.color.copy(K.mats[glassC].color); K.cage.color.copy(K.mats[cageC].color); };
+
+const ENEMY_BUILD = {
+    // インベーダー: 横長の頭（サブ色）を本体色の外殻がはさみ、光る2つの目。両脇の腕と下の脚はドット絵どおり
+    invader(K) {
+        const g = new THREE.Group();
+        g.add(ePart(K, LAB.loft([[-26, 30, 9, 5], [-17, 46, 14, 6], [-2, 50, 16, 6], [8, 36, 10, 4]], 8, Math.PI / 8), 2, { glass: 0.35, cage: 1.14, seed: 3 }));
+        g.add(ePart(K, LAB.loft([[-28, 22, 5, 11], [-20, 34, 6, 13], [-12, 30, 5, 13]], 6), 1)); // 額の外殻
+        [-1, 1].forEach(s => {
+            const arm = ePart(K, LAB.loft([[-16, 8, 9, 6, s * 25], [-4, 9, 10, 6, s * 28], [8, 7, 8, 4, s * 27], [16, 3, 4, 2, s * 23]], 6), 1, { seed: s + 4 }); g.add(arm);
+            const leg = ePart(K, LAB.loft([[4, 9, 7, 3, s * 16], [12, 8, 6, 2, s * 14], [20, 4, 4, 1, s * 8]], 6), 1, { seed: s + 7 }); g.add(leg);
+            const eye = new THREE.Mesh(new THREE.OctahedronGeometry(6, 0), K.mats[3]); eye.scale.set(1.1, 0.6, 0.9); eye.position.set(s * 11, 15, -8); g.add(eye);
+            const pupil = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), LAB.glow(0xffffff)); pupil.position.set(s * 11, 19, -8); g.add(pupil);
+        });
+        g.userData.anim = t => { g.children.forEach((c, i) => { if (i >= 2 && i % 4 === 2) c.rotation.y = Math.sin(t * 6) * 0.08 * (i % 8 === 2 ? 1 : -1); }); };
+        return g;
+    },
+    // UFO: ガラスのドーム（明色）に大きな2つの目（補色）、本体色の円盤とサブ色の底。縁の灯りが回る
+    ufo(K) {
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.3; g.add(tilt);
+        const domeGeo = new THREE.SphereGeometry(17, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2);
+        tilt.add(ePart(K, domeGeo, 3, { glass: 0.5, cage: 1.18, seed: 2 }));
+        const disc = LAB.loft([[-6, 40, 40, 0], [-2, 58, 58, 0], [2, 52, 52, 0], [6, 30, 30, 0]], 12, 0); disc.rotateX(Math.PI / 2); tilt.add(ePart(K, disc, 1, { glass: 0.25, seed: 6 }));
+        const belly = LAB.loft([[6, 30, 30], [12, 16, 16]], 12, 0); belly.rotateX(Math.PI / 2); tilt.add(ePart(K, belly, 2));
+        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5.5, 0), K.mats[4]); e.scale.set(1, 1.3, 0.6); e.position.set(s * 7, 8, 13); tilt.add(e); });
+        const lights = new THREE.Group(); tilt.add(lights);
+        for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, l = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), K.mats[4]); l.position.set(Math.cos(a) * 27, -1, Math.sin(a) * 27); lights.add(l); }
+        g.userData.anim = t => { lights.rotation.y = t * 3; };
+        return g;
+    },
+    // ルーパー（タコ）: 紫のガラスの頭に白い目、金の吸盤の節が付いた触手がうねる（下のハブはそのまま）
+    looper(K) {
+        const g = new THREE.Group();
+        g.add(ePart(K, LAB.loft([[-36, 26, 20, 10], [-26, 52, 36, 12], [-8, 70, 40, 12], [6, 64, 30, 10], [14, 44, 18, 8]], 8, Math.PI / 8), 1, { glass: 0.4, cage: 1.1, seed: 9 }));
+        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5, 0), K.mats[2]); e.scale.set(1, 0.8, 1.2); e.position.set(s * 18, 30, -8); g.add(e); });
+        const tents = [];
+        const segGeo = LAB.loft([[0, 10, 8], [12, 8, 6]], 6), tipGeo = LAB.loft([[0, 7, 5], [10, 2, 2]], 6);
+        for (let k = 0; k < 6; k++) {
+            const base = new THREE.Group(), a = -1.1 + k * 0.44; base.position.set(Math.sin(a) * 30, 6, 8 + Math.cos(a) * 6); base.rotation.y = a; g.add(base);
+            let par = base; const segs = [];
+            for (let j = 0; j < 4; j++) {
+                const sg = new THREE.Group(); if (j) sg.position.z = 12; par.add(sg);
+                sg.add(ePart(K, j < 3 ? segGeo : tipGeo, 1, { seed: k * 4 + j }));
+                const su = new THREE.Mesh(new THREE.OctahedronGeometry(2.6, 0), K.mats[3]); su.position.set(0, -3, 6); sg.add(su);
+                segs.push(sg); par = sg;
+            }
+            tents.push({ segs, k });
+        }
+        g.userData.anim = t => { tents.forEach(({ segs, k }) => segs.forEach((sg, j) => { sg.rotation.y = Math.sin(t * 3 + k * 0.9 - j * 0.7) * 0.28; sg.rotation.x = 0.12 + Math.sin(t * 2.4 + k + j) * 0.12; })); };
+        return g;
+    },
+};
+Object.assign(monsterModels, { ufo: enemyKit([1, 2, 3, 4]), invader: enemyKit([1, 2, 3]), looper: enemyKit([1, 2, 3]) });
+
 const BOSS_BUILDERS = [
     // AXIS（新造形）
     () => NB.AXIS(),
@@ -6630,6 +6691,7 @@ function render3D() {
         mm.looper.mats[1].color.set('#9400D3'); mm.looper.mats[1].emissive.set('#4a0070');
         mm.looper.mats[2].color.set('#ffffff'); mm.looper.mats[2].emissive.set('#ffffff');
         mm.looper.mats[3].color.set('#FFD700'); mm.looper.mats[3].emissive.set('#a07000');
+        enemySync(mm.ufo, 1, 3, 4); enemySync(mm.invader, 1, 2, 3); enemySync(mm.looper, 1, 1, 3);
         monsters.forEach(m => {
             alive.add(m);
             let obj = monsterObjs.get(m);
@@ -6639,6 +6701,7 @@ function render3D() {
             obj.position.set(toX(ix(m)), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(iy(m)));
             obj.userData.body.rotation.z = Math.sin(rTime * 2.4 + sd) * 0.18;
             obj.userData.body.rotation.x = Math.sin(rTime * 1.7 + sd) * 0.1;
+            if (obj.userData.body.userData.anim) obj.userData.body.userData.anim(rTime + sd);
             const sc = VS * ES * (1 + visualBeat * 0.12);
             obj.scale.setScalar(sc);
             if (obj.userData.hub) {
