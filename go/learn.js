@@ -336,7 +336,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings: 布石・定石 studied move by move (notes, side lines, engine values), then practice
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=1').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=2').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -416,7 +416,7 @@ function showStudy(anim) {
   if (i === 0) { pr = t('op.studyStart'); const s = LL(g.story); fb = plainText(s).slice(0, 220) + (plainText(s).length > 220 ? '…' : ''); }
   else {
     const side = toMoveAt(i - 1);
-    const ev = !L.vr && g.evals && g.evals[i - 1] != null ? `<span class="op-eval">${t('op.evalBlack', { v: fmtLead(g.evals[i - 1]) })}</span>` : '';
+    const ev = !L.vr && g.cat !== 'handi' && g.evals && g.evals[i - 1] != null ? `<span class="op-eval">${t('op.evalBlack', { v: fmtLead(g.evals[i - 1]) })}</span>` : '';
     pr = `<span class="pdisc p${side}"></span><b style="font-size:16px"><bdi>${i}. ${mvAt(i - 1)}</bdi></b>${ev}`;
     fb = studyNote(i) || '';
   }
