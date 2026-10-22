@@ -36,6 +36,8 @@
  * Chains with a liberty outside the region can never be captured (walls are safe).
  * Ko: the player may never capture a ko; the opponent may. A result that needs a ko therefore counts as a failure for the
  * player and success for the opponent, so every solution is unconditional (the generator also keeps ko out of the lines).
+ * Inside the search only the simple ko rule applies (it is part of the hash): positional superko would make values depend
+ * on the path, which transposition tables cannot see; the moves given to solve() are replayed with superko.
  * Search: exact boolean life & death search (DFS, transposition table, Benson pruning) + bounded "moves needed" search
  * with iterative deepening; the life & death search gates the player's moves so only real candidates are read.
  * Copyright 2026 core-calmdust — Apache License 2.0
@@ -59,7 +61,7 @@ class Board {
     this.ms = new Int32Array(N); this.ml = new Int32Array(N); this.g = 1;
     this.cs = new Int16Array(N); this.ls = new Int16Array(N); this.ns = 0; this.nl = 0;
     this.undo = []; this.p1 = []; this.p2 = []; this.b1 = 0; this.b2 = 0;   // undo records; path of board hashes (superko); b1/b2 = start board
-    this.ver = 0;
+    this.ver = 0; this.superko = false;
   }
   put(i, c) { const v = this.b[i]; if (v) { this.h1 ^= Z1[i * 2 + v - 1]; this.h2 ^= Z2[i * 2 + v - 1]; } this.b[i] = c; if (c) { this.h1 ^= Z1[i * 2 + c - 1]; this.h2 ^= Z2[i * 2 + c - 1]; } }
   setKo(k) { if (this.ko >= 0) { this.h1 ^= K1[this.ko]; this.h2 ^= K2[this.ko]; } this.ko = k; if (k >= 0) { this.h1 ^= K1[k]; this.h2 ^= K2[k]; } }
@@ -107,7 +109,8 @@ class Board {
       }
     }
     this.setKo(nk);
-    if (caps) {   // only a capture can repeat an earlier board (positional superko along the path)
+    if (caps && this.superko) {   // positional superko along the path (only while replaying the page's moves: in the
+      // search it would make values depend on the path, which the transposition tables cannot see)
       const h1 = this.h1 ^ (nk >= 0 ? K1[nk] : 0), h2 = this.h2 ^ (nk >= 0 ? K2[nk] : 0), P1 = this.p1, P2 = this.p2;
       let rep = h1 === this.b1 && h2 === this.b2;
       for (let k = P1.length - 1; k >= 0 && !rep; k--) if (P1[k] === h1 && P2[k] === h2) rep = true;
@@ -180,7 +183,7 @@ class Ctx {
       for (const t of this.tgt) { B.chain(t); const st = Array.from(B.cs.slice(0, B.ns)); for (const q of st) for (let d = 0; d < 4; d++) { const r = B.nb[q * 4 + d]; if (r >= 0 && B.b[r] === this.G && !mk[r] && this.zone[r]) { B.chain(r); for (let k = 0; k < B.ns; k++) { mk[B.cs[k]] = 1; this.own.push(B.cs[k]); } } } }
     }
     this.small = this.region.length <= 22;
-    this.UB = new Map(); this.UBm = new Map(); this.BT = new Map(); this.RC = new Map();
+    this.UB = new Map(); this.UBm = new Map(); this.BT = new Map(); this.RC = new Map(); this.onPath = new Set(); this.taint = 0;
     this.nodes = 0; this.lim = api.nodeLimit; this.dl = 0;
     // scan data (chain labels for the zone)
     this.sm = new Int32Array(N); this.sg = 0; this.chId = new Int32Array(N); this.sv = -1;
@@ -355,37 +358,42 @@ class Ctx {
     if (this.ownerSafe()) return true;
     const B = this.B, key = B.key(turn), e = this.UB.get(key);
     if (e !== undefined) return e > 0;
+    // a repetition on the current search path: the attacker made no progress, the target survives. Values that depend
+    // on such a cycle (or on the depth cap) depend on the path: they are "tainted" and never stored
+    if (this.onPath.has(key) || B.undo.length > 160) { this.taint++; return true; }
     if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
-    if (B.undo.length > 160) return true;
-    const own = this.owner, K = this.K;
+    const own = this.owner, K = this.K, t0 = this.taint;
+    this.onPath.add(key);
     let res;
-    if (turn === K) {
-      res = true;
-      const mv = this.order(this.genAll(K), K, this.UBm.get(key));
-      for (const m of mv) {
-        if (!B.play(m, K)) continue;
-        const r = this.ub(own); B.back();
-        if (!r) { res = false; this.UBm.set(key, m); break; }
+    try {
+      if (turn === K) {
+        res = true;
+        const mv = this.order(this.genAll(K), K, this.UBm.get(key));
+        for (const m of mv) {
+          if (!B.play(m, K)) continue;
+          const r = this.ub(own); B.back();
+          if (!r) { res = false; this.UBm.set(key, m); break; }
+        }
+      } else {
+        res = false;
+        const bm = this.UBm.get(key), mv = this.order(this.genAll(own), own, bm);
+        // one-ply: a move that makes the target pass-alive at once ends the search
+        for (const m of mv) {
+          if (!B.play(m, own)) continue;
+          const ok = !this.captured() && this.ownerSafe(); B.back();
+          if (ok) { res = true; this.UBm.set(key, m); break; }
+        }
+        if (!res) {
+          if (bm === PASS) mv.unshift(PASS); else mv.push(PASS);
+          for (const m of mv) {
+            if (!B.play(m, own)) continue;
+            const r = this.ub(K); B.back();
+            if (r) { res = true; this.UBm.set(key, m); break; }
+          }
+        }
       }
-    } else {
-      res = false;
-      // the owner passes first when nothing of its own is in atari (in a living shape a pass usually holds, which keeps
-      // the tree small); otherwise answers first and passes last
-      const bm = this.UBm.get(key), mv = this.order(this.genAll(own), own, bm);
-      // one-ply: a move that makes the target pass-alive at once ends the search
-      for (const m of mv) {
-        if (!B.play(m, own)) continue;
-        const ok = !this.captured() && this.ownerSafe(); B.back();
-        if (ok) { this.UB.set(key, 1); this.UBm.set(key, m); return true; }
-      }
-      if (bm === PASS) mv.unshift(PASS); else mv.push(PASS);
-      for (const m of mv) {
-        if (!B.play(m, own)) continue;
-        const r = this.ub(K); B.back();
-        if (r) { res = true; this.UBm.set(key, m); break; }
-      }
-    }
-    this.UB.set(key, res ? 1 : -1);
+    } finally { this.onPath.delete(key); }
+    if (this.taint === t0) this.UB.set(key, res ? 1 : -1);
     return res;
   }
   // an owner chain in the zone (not anchored) with one liberty?
@@ -403,7 +411,7 @@ class Ctx {
     if (gl === 'live' && this.captured()) return false;
     const B = this.B, key = B.key(0), c = this.RC.get(key);
     if (c !== undefined) return c;
-    let res;
+    let res; const t0 = this.taint;
     if (this.ownerSafe()) res = gl === 'live';
     else {
       const O = this.O;
@@ -417,7 +425,7 @@ class Ctx {
         }
       }
     }
-    this.RC.set(key, res);
+    if (this.taint === t0) this.RC.set(key, res);
     return res;
   }
   // connect: one chain, or connected in shape: whatever the opponent plays (incl. pass) the player joins all target
@@ -474,14 +482,14 @@ class Ctx {
     const B = this.B, key = B.key(this.G), e = this.BT.get(key);
     if (e) { if (e.w <= k) return true; if (e.l >= k) return false; }
     if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
-    const G = this.G, mv = this.order(this.gen(G), G, e && e.m);
+    const G = this.G, mv = this.order(this.gen(G), G, e && e.m), t0 = this.taint;
     let res = false, bm = -2;
     for (const m of mv) {
       if (!B.play(m, G)) continue;
       const r = this.dw(k - 1); B.back();
       if (r) { res = true; bm = m; break; }
     }
-    this.tset(key, k, res, bm);
+    if (this.taint === t0) this.tset(key, k, res, bm);
     return res;
   }
   dw(k) {
@@ -494,13 +502,13 @@ class Ctx {
     if (++this.nodes > this.lim || ((this.nodes & 127) === 0 && this.dl && Date.now() > this.dl)) throw ABORT;
     const O = this.O, mv = this.order(this.gen(O), O, e && e.m);
     if (e && e.m === PASS) mv.unshift(PASS); else mv.push(PASS);
-    let res = true, bm = -2;
+    let res = true, bm = -2; const t0 = this.taint;
     for (const m of mv) {
       if (!B.play(m, O)) continue;
       const r = this.aw(k); B.back();
       if (!r) { res = false; bm = m; break; }
     }
-    this.tset(key, k, res, bm);
+    if (this.taint === t0) this.tset(key, k, res, bm);
     return res;
   }
   tset(key, k, win, m) {
@@ -514,12 +522,12 @@ class Ctx {
   needO(left) { for (let j = 0; j <= left; j++) if (this.dw(j)) return j; return -1; }
   // ---- set the board to P.s + moves (normal rules: either side may take a ko here)
   load(moves) {
-    const B = this.B;
+    const B = this.B; this.onPath.clear();
     while (B.undo.length) B.back();
     let turn = this.G;
     for (const m of moves || []) {
-      const save = B.noKo; B.noKo = 0;
-      const ok = B.play(m, turn); B.noKo = save;
+      const save = B.noKo; B.noKo = 0; B.superko = true;
+      const ok = B.play(m, turn); B.noKo = save; B.superko = false;
       if (!ok) return null;
       turn = 3 - turn;
     }
@@ -544,7 +552,7 @@ function guarded(C, f, dflt) {
   catch (e) {
     if (e !== ABORT || !C.dl) throw e;   // exact mode: the caller handles the node limit
     while (B.undo.length > depth) B.back();
-    C.aborted++; return dflt;
+    C.onPath.clear(); C.aborted++; return dflt;
   }
 }
 function solve(P, moves, left, defend, opts) {

@@ -9,7 +9,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
-import { R, T, transform, viewFor, rng, tacTheme } from './tsumego-shapes.mjs';
+import { R, T, transform, viewFor, rng, tacTheme, classify, unsettled, lineOf } from './tsumego-shapes.mjs';
 const require = createRequire(import.meta.url);
 const { funScore } = require('./fun.js');
 const DIR = path.dirname(new URL(import.meta.url).pathname);
@@ -72,18 +72,38 @@ export async function build() {
   const out = { version: 1, cut: '', daily: THEMES.map(t => t.id), themes: [] }, report = [];
   for (const Th of THEMES) {
     const pool = cands.filter(c => c.th === Th.id && c.sound).sort((a, b) => b.fun - a.fun);
-    let min = MIN, sel = pool.filter(c => c.fun >= min);
-    if (sel.length < PER) { min = 60; sel = pool.filter(c => c.fun >= min); }
-    sel = sel.slice(0, PER);
-    report.push({ id: Th.id, pool: pool.length, ge70: pool.filter(c => c.fun >= 70).length, used: sel.length, min, lo: sel.length ? sel[sel.length - 1].fun : 0, hi: sel.length ? sel[0].fun : 0 });
-    sel.sort((a, b) => a.diff - b.diff || b.fun - a.fun);
     const rand = rng(Th.id.split('').reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7));
-    const puzzles = sel.map((c, j) => orient(c, j % 2 === 0 ? 1 : 2, Math.floor(rand() * 8)));
+    // best first; every pick is oriented and re-verified on a fresh exact solver (unique answer, same n, line reaches)
+    const pick = lim => { const out = []; for (const c of pool) { if (out.length >= PER) break; if (c.fun < lim || c.used) continue; const o = orient(c, out.length % 2 === 0 ? 1 : 2, Math.floor(rand() * 8)); if (verify(o)) { c.used = 1; o.diff = c.diff; out.push(o); } else rejected++; } return out; };
+    let rejected = 0, min = MIN, sel = pick(MIN);
+    if (sel.length < PER) { min = 60; sel = sel.concat(pick(60).slice(0, PER - sel.length)); }
+    const funs = sel.map(o => o.fun);
+    report.push({ id: Th.id, pool: pool.length, ge70: pool.filter(c => c.fun >= 70).length, used: sel.length, rejected, min, lo: Math.min(...funs), hi: Math.max(...funs) });
+    sel.sort((a, b) => a.diff - b.diff || b.fun - a.fun);
+    // the player's colour alternates along the final (easy -> hard) order
+    const puzzles = sel.map((o, j) => { delete o.diff; return (o.s.turn === (j % 2 === 0 ? 1 : 2)) ? o : swapColour(o); });
     out.themes.push({ id: Th.id, grp: Th.grp, title: Th.title, sub: Th.sub, puzzles });
   }
   console.table(report);
   fs.writeFileSync(OUT, JSON.stringify(out, null, 0).replace(/\{"s":/g, '\n{"s":').replace(/\],"themes":\[/, '],\n"themes":[').replace(/\{"id":/g, '\n{"id":') + '\n');
   console.log('wrote', OUT);
+}
+function swapColour(o) { return Object.assign({}, o, { s: { n: o.s.n, stones: o.s.stones.replace(/[bw]/g, ch => ch === 'b' ? 'w' : 'b'), turn: 3 - o.s.turn } }); }
+function verify(o) {
+  const n = o.s.n, ix = a => a.map(v => R.parseCoord(v, n));
+  const P = { s: o.s, goal: o.goal, target: ix(o.target), region: ix(o.region) };
+  T._reset();
+  try {
+    const c = classify(P, o.n + 1); if (!c.n || c.n !== o.n || R.coord(c.answer, n) !== o.answer) return false;
+    P.n = c.n; P.answer = c.answer;
+    if (!unsettled(P, c.n)) return false;
+    const line = lineOf(Object.assign({}, P), c.n); if (!line || line[0] !== c.answer) return false;
+    o.line = line.map(i => R.coord(i, n));
+    // the stored line must also pass the page-mode reached() at its end
+    let p = R.Pos.from(o.s); for (const m of line) p = p.tryPlay(m).pos;
+    T._reset(); P.line = line; if (!T.reached(P, p)) return false;
+    return true;
+  } catch (e) { if (e.abort) return false; throw e; }
 }
 // a random symmetry (keeps corner problems in a corner) and the player's colour
 function orient(c, colour, t) {

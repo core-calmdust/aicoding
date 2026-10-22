@@ -21,7 +21,8 @@ for (let g = 0; g < games; g++) {
     let m;
     if (k < 2) {
       const p = await W.call({ type: 'policy', spec: { n }, moves, komi, net: 'light' });
-      const c = p.list.filter(x => x.m >= 0).slice(0, 6); m = c[Math.floor(Math.random() * c.length)].m;
+      const c = (p.list || []).filter(x => x.m >= 0).slice(0, 6);
+      if (!c.length) { console.error('policy reply', JSON.stringify(p).slice(0, 300)); m = -1; } else m = c[Math.floor(Math.random() * c.length)].m;
     } else {
       const r = await W.call(Object.assign({ type: 'think', spec: { n }, moves, komi }, me));
       m = r.move;
