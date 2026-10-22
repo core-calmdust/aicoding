@@ -124,6 +124,12 @@ const CSS = `
 .rt-html{margin:10px 0}
 .rt-finish{display:flex;flex-direction:column;gap:10px;margin:14px auto 4px;max-width:340px}
 .rt-finish .rt-fin-ico{font-size:44px;text-align:center;line-height:1}
+/* last page (これで遊べます！): everything centred, vertically too, in every game */
+.rt .rt-main.rt-finpage{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important}
+.rt .rt-main.rt-finpage > *, .rt .rt-main.rt-finpage .rt-text > *{margin-left:auto!important;margin-right:auto!important;text-align:center!important}
+.rt .rt-main.rt-finpage .rt-text{display:flex!important;flex-direction:column!important;align-items:center!important;width:100%!important;max-width:none!important}
+.rt .rt-main.rt-finpage .rt-body{max-width:640px}
+.rt .rt-main.rt-finpage .rt-finish{align-items:center;width:100%;margin-top:18px}
 .rt-nav{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
 .rt-nav button,.rt-finish button{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(255,255,255,.05);color:var(--text,#eee);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .rt-nav button.go,.rt-finish button.go{border:0;background:linear-gradient(180deg,#e9cf8e,#c9a961);color:#14100a}
@@ -191,7 +197,7 @@ function create(o) {
     stop();
     const m = mount(); if (!m) return;
     const P = pages[tour.page], n = pages.length, done = get();
-    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main${P.setup ? ' has-board' : ''}">`;
+    let h = `<div class="rt"><div class="rt-steps">${pages.map((x, j) => `<button type="button" data-rt="${j}" class="${j === tour.page ? 'cur' : ''} ${done[x.id] ? 'ok' : ''}" aria-label="${esc(tx('step', { n: j + 1 }))}">${x.finish ? '★' : j + 1}</button>`).join('')}</div><div class="rt-main${P.setup ? ' has-board' : ''}${P.finish ? ' rt-finpage' : ''}">`;
     if (P.finish) {
       h += `<h2 class="rt-title">${esc(tx('finT'))}</h2><div class="rt-body"><p>${esc(tx('finB'))}</p></div><div class="rt-finish"><div class="rt-fin-ico">🎉</div>` +
         (o.play ? `<button type="button" class="go" data-rt-act="play">${esc(tx('play'))}</button>` : '') +
