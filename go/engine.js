@@ -8,7 +8,7 @@
  * Copyright 2026 core-calmdust — Apache License 2.0
  */
 'use strict';
-importScripts('rules.js?v=1');
+importScripts('rules.js?v=2');
 try { importScripts('tsumego.js?v=1'); } catch (e) {}
 const R = self.GoRules, PASS = -1;
 

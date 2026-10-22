@@ -241,10 +241,13 @@ function sgfRead(text) {
 function defaultKomi(n, rule) {
   const cn = rule === 'cn';
   if (n >= 13) return cn ? 7.5 : 6.5;
-  const T = { 5: 24.5, 6: 3.5, 7: 8.5, 8: 9.5, 9: 6.5, 10: 6.5, 11: 6.5, 12: 6.5 };   // area-based where it matters (5x5 = whole board)
-  let k = T[n] !== undefined ? T[n] : 6.5;
-  if (cn && n >= 9) k = 7.5;
-  return k;
+  if (n >= 9) return cn ? 7.5 : 6.5;
+  // tiny boards: the solved / best-known result + 0.5 so that perfect play gives Black a half-point win.
+  // Area (Chinese) scoring: 5x5 B+25, 6x6 B+4, 7x7 B+9, 8x8 about B+10. Territory (Japanese) scoring comes out one point lower
+  // (White may simply pass instead of adding stones, e.g. 7x7 B+8 per KataGo), so Japanese komi = area komi - 1.
+  const A = { 5: 24.5, 6: 3.5, 7: 8.5, 8: 9.5 };
+  const k = A[n] !== undefined ? A[n] : 6.5;
+  return cn ? k : k - 1;
 }
 
 const api = { EMPTY, BLACK, WHITE, PASS, COLS, Pos, replay, nbrs, handicapPoints, starPoints, score, coord, parseCoord, sgfWrite, sgfRead, defaultKomi };
