@@ -2993,8 +2993,8 @@ const BOSS_DEFS = [
             if (b.t % 200 === 100) fan(b.x, b.y, aimAt(b.x, b.y), 3, 0.3, 280);
         },
     },
-    {   // 12. TRIDENT: 3本の穂先から順番に自機狙いの連射
-        name: 'TRIDENT', hp: 6, r: 40,
+    {   // 12. CHORUS: 3つの仮面の口から順番に自機狙いの連射
+        name: 'CHORUS', hp: 6, r: 40,
         fight(b) {
             const CW = config.canvasWidth;
             b.x = CW / 2 + Math.sin(b.t * 0.014) * 280 * FS; b.y = 170;
@@ -3003,8 +3003,8 @@ const BOSS_DEFS = [
             if (c === 90) fan(b.x, b.y + 30, Math.PI / 2, 7, 1.2, 190);
         },
     },
-    {   // 13. COMB: 横長のバー。すき間のある縦のカーテン弾を下ろす
-        name: 'COMB', hp: 6, r: 40,
+    {   // 13. LOOM: 光の機織り機。すき間のある縦のカーテン弾を下ろす
+        name: 'LOOM', hp: 6, r: 40,
         fight(b) {
             const CW = config.canvasWidth;
             b.x = CW / 2 + Math.sin(b.t * 0.006) * 120 * FS; b.y = 150 + Math.sin(b.t * 0.02) * 30;
@@ -3037,8 +3037,8 @@ const BOSS_DEFS = [
             if (c === 70) ring(b.x, b.y, 16, 150, Math.random());
         },
     },
-    {   // 16. SPINDLE: 回転するコマ。逆回転する2重のリング
-        name: 'SPINDLE', hp: 6, r: 38,
+    {   // 16. NAUTILUS: 機械のオウム貝。逆回転する2重のリング
+        name: 'NAUTILUS', hp: 6, r: 38,
         fight(b) {
             const CW = config.canvasWidth;
             b.x = CW / 2 + Math.sin(b.t * 0.017) * 300 * FS; b.y = 200 + Math.sin(b.t * 0.034) * 40;
@@ -3076,8 +3076,8 @@ const BOSS_DEFS = [
             if (c === 99) { fan(b.x, b.y, aimAt(b.x, b.y), 9, 1.0, 230); fan(b.x, b.y, aimAt(b.x, b.y), 5, 0.5, 300); }
         },
     },
-    {   // 20. BEACON: 上にとどまり、首を振るように弾の帯をなぎ払う
-        name: 'BEACON', hp: 6, r: 38,
+    {   // 20. MEDUSA: 上にとどまり、触手で弾の帯をなぎ払う
+        name: 'MEDUSA', hp: 6, r: 38,
         fight(b) {
             const CW = config.canvasWidth;
             b.x = CW / 2 + Math.sin(b.t * 0.004) * 100 * FS; b.y = 140;
@@ -3128,8 +3128,8 @@ const BOSS_DEFS = [
             if (b.t % 60 === 30) fan(b.x, b.y, aimAt(b.x, b.y), 3, 0.18, 340, 3);
         },
     },
-    {   // 25. RAZOR: 画面を横切るように突進し、通り道に落ちる弾を残す
-        name: 'RAZOR', hp: 6, r: 36,
+    {   // 25. KESTREL: 猛禽が翼をたたんで突進し、通り道に落ちる弾を残す
+        name: 'KESTREL', hp: 6, r: 36,
         init(b) { b.dir = 1; },
         fight(b) {
             const CW = config.canvasWidth;
@@ -3171,8 +3171,8 @@ const BOSS_DEFS = [
             if (b.t % 210 === 105) ring(b.x, b.y, 14, 150, Math.random());
         },
     },
-    {   // 29. TITAN: 大きくゆっくり。1か所だけすき間のある弾の壁
-        name: 'TITAN', hp: 6, r: 54,
+    {   // 29. GLACIER: 浮かぶ氷河の聖堂。大きくゆっくり。1か所だけすき間のある弾の壁
+        name: 'GLACIER', hp: 6, r: 54,
         fight(b) {
             const CW = config.canvasWidth;
             b.x = CW / 2 + Math.sin(b.t * 0.005) * 150 * FS; b.y = 170;
@@ -5910,6 +5910,125 @@ NB.BEACON = () => {
     };
     return g;
 };
+// 新ボス（名前ごと一新）: CHORUS / LOOM / NAUTILUS / KESTREL / GLACIER / MEDUSA
+NB.CHORUS = () => {
+    // 3つの仮面の聖歌隊: 光の五線譜の弧の上に浮かぶ仮面。撃つ順に仮面の口が光って開く
+    const g = new THREE.Group(), C = 0xffd27a, P = 0xff5a8a;
+    const staff = new THREE.Group();
+    for (let k = 0; k < 5; k++) { const pts = []; for (let i = 0; i <= 24; i++) { const u = i / 24 * Math.PI, r = 62 + k * 5; pts.push(new THREE.Vector3(Math.cos(u) * r, -k * 2, -Math.sin(u) * r * 0.45 + 18)); } staff.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(C, 0.45))); }
+    g.add(staff);
+    const maskGeo = LAB.loft([[-14, 24, 30, 0], [-4, 32, 38, 0], [8, 28, 34, -2], [16, 14, 18, -4]], 8, Math.PI / 8);
+    const masks = [-1, 0, 1].map(k => {
+        const m = new THREE.Group(); m.position.set(k * 48, 0, k === 0 ? -6 : 8);
+        m.scale.setScalar(1.3); m.add(fuse(maskGeo, k === 0 ? P : C, { glass: 0.3, seed: k + 3, cage: 1.14 }));
+        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.ConeGeometry(3, 10, 3), LAB.glow(0xffffff)); e.rotation.x = Math.PI / 2; e.rotation.z = s * 0.5; e.position.set(s * 7, 8, 16); m.add(e); });
+        const mouth = new THREE.Mesh(new THREE.TorusGeometry(5, 1.6, 4, 10), LAB.glow(P)); mouth.position.set(0, -8, 16); m.add(mouth);
+        const halo = LAB.dashRing(20, 14, 5, 1.2, LAB.glass(C, 0.8), 3); halo.position.y = 24; m.add(halo);
+        g.add(m); return { m, mouth, halo };
+    });
+    g.userData.anim = (o, b, t) => {
+        const c = (b.t || 0) % 120, sing = c < 60 ? Math.floor(c / 20) : -1;
+        masks.forEach((x, k) => { const on = k === sing || c >= 85 && c < 100; x.mouth.scale.setScalar(on ? 1.9 : 0.8); x.m.position.y = Math.sin(t * 2 + k) * 4 + (on ? 4 : 0); x.m.rotation.y = Math.sin(t * 1.3 + k) * 0.25; x.halo.rotation.y = t * (k - 1 || 1.5); });
+        staff.rotation.y = Math.sin(t * 0.6) * 0.1;
+    };
+    return g;
+};
+NB.LOOM = () => {
+    // 光の機織り機: 左右の柱で糸巻きが回り、張られた光の糸の上を杼（ひ）が往復する。カーテン弾の瞬間に糸が光る
+    const g = new THREE.Group(), C = 0x40ffa0, W = 0xd8fff0;
+    const post = s => { const p = new THREE.Group(); p.position.x = s * 108; p.add(fuse(loftY([[-30, 16, 16], [24, 12, 12], [32, 20, 20]], 6, 0), C, { cage: false, seed: s + 3 })); g.add(p); return p; };
+    post(-1); post(1);
+    const beamTop = fuse(LAB.loft([[-108, 8, 8, 22], [108, 8, 8, 22]], 6), C, { cage: false }); beamTop.rotation.y = Math.PI / 2; g.add(beamTop);
+    const spools = [-1, 1].map(s => { const sp = new THREE.Group(); sp.position.set(s * 108, 34, 0); const body = fuse(LAB.loft([[-10, 26, 26], [-6, 14, 14], [6, 14, 14], [10, 26, 26]], 8, Math.PI / 8), 0xffe080, { cage: false, glass: 0.4 }); body.rotation.y = Math.PI / 2; sp.add(body); g.add(sp); return sp; });
+    const threadMat = LAB.line(W, 0.45), threads = new THREE.LineSegments(new THREE.BufferGeometry(), threadMat); g.add(threads);
+    const tp = []; for (let k = 0; k < 9; k++) { const y = -18 + k * 4.5; tp.push(-104, y, -6 + (k % 2) * 12, 104, y, -6 + ((k + 1) % 2) * 12); }
+    threads.geometry.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3));
+    const shuttle = fuse(crystal(7, 22, 6), 0xffffff, { glass: 0.5, cage: false, tint: 0.1 }); shuttle.rotation.z = Math.PI / 2; g.add(shuttle);
+    g.userData.anim = (o, b, t) => {
+        const c = (b.t || 0) % 90;
+        shuttle.position.set(Math.sin(t * 2.4) * 92, 0, Math.cos(t * 4.8) * 6); shuttle.rotation.x = t * 6;
+        spools.forEach((sp, k) => { sp.rotation.x = (k ? -1 : 1) * t * 3; });
+        threadMat.opacity = c < 12 ? 1 : 0.4; threadMat.color.setHex(c < 12 ? 0xffffff : W);
+    };
+    return g;
+};
+NB.NAUTILUS = () => {
+    // 機械のオウム貝: 対数らせんに部屋が並ぶ殻。殻は装甲とガラス、仕切りはワイヤー。開口部から輪の弾を放つ
+    const g = new THREE.Group(), C = 0xffb040, A = 0x7fe9ff, shell = new THREE.Group();
+    const N = 16;
+    for (let i = 0; i < N; i++) {
+        const a0 = i * 0.42, a1 = (i + 1) * 0.42, r0 = 8 * Math.exp(a0 * 0.24), r1 = 8 * Math.exp(a1 * 0.24);
+        const p0 = [Math.cos(a0) * r0, Math.sin(a0) * r0], p1 = [Math.cos(a1) * r1, Math.sin(a1) * r1];
+        const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+        const ch = fuse(LAB.loft([[0, r0 * 0.9, r0 * 0.8], [len, r1 * 0.9, r1 * 0.8]], 8, Math.PI / 8), i % 2 ? C : 0xffd090, { cage: false, glass: 0.3, seed: i });
+        ch.position.set(p0[0], 0, p0[1]); ch.rotation.y = -Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) + Math.PI / 2; shell.add(ch);
+        const wall = wire(new THREE.TorusGeometry(r1 * 0.42, 0.6, 3, 8), A, 0.6); wall.position.set(p1[0], 0, p1[1]); wall.rotation.y = ch.rotation.y; shell.add(wall);
+    }
+    const mouth = new THREE.Mesh(new THREE.TorusGeometry(16, 2.5, 4, 16), LAB.glow(A)); shell.add(mouth);
+    const pts = []; const aE = N * 0.42, rE = 8 * Math.exp(aE * 0.24); mouth.position.set(Math.cos(aE) * rE, 0, Math.sin(aE) * rE); mouth.rotation.y = -aE;
+    for (let k = 0; k < 5; k++) { const tn = wire(new THREE.ConeGeometry(2, 30, 3), A, 0.6); tn.position.copy(mouth.position).add(new THREE.Vector3(Math.cos(aE + 1.6) * 14, (k - 2) * 6, Math.sin(aE + 1.6) * 14)); tn.rotation.z = Math.PI / 2; shell.add(tn); pts.push(tn); }
+    shell.position.set(-26, 0, -14); shell.scale.setScalar(1.35); g.add(shell);
+    g.add(LAB.dashRing(78, 36, 9, 1.6, LAB.glass(A, 0.5), 4));
+    g.userData.anim = (o, b, t) => { shell.rotation.y = t * 1.6; shell.rotation.z = Math.sin(t * 1.2) * 0.15; pts.forEach((tn, k) => { tn.rotation.y = Math.sin(t * 4 + k) * 0.4; }); mouth.scale.setScalar(1 + 0.2 * Math.sin(t * 6)); };
+    return g;
+};
+NB.KESTREL = () => {
+    // 猛禽の滑空機: 狙う間は翼を大きく広げ、突進では翼をたたんで矢のように細くなる
+    const g0 = new THREE.Group(), g = new THREE.Group(), C = 0xd0e8ff, R = 0xff3050; g.scale.setScalar(1.35); g0.add(g);
+    g.add(fuse(LAB.loft([[-40, 10, 8], [-16, 22, 16], [14, 20, 14], [36, 8, 8], [48, 2, 2]], 6), C, { glass: 0.3, tint: 0.25 }));
+    const head = fuse(LAB.loft([[30, 12, 10, 4], [44, 8, 8, 2], [56, 1, 2, -2]], 4, Math.PI / 4), 0xffd060, { cage: false }); g.add(head);
+    const eye = new THREE.Mesh(new THREE.OctahedronGeometry(3), LAB.glow(R)); eye.position.set(0, 7, 40); g.add(eye);
+    const wings = [-1, 1].map(s => {
+        const piv = new THREE.Group(); piv.position.set(s * 8, 2, 4);
+        const feathers = new THREE.Group();
+        for (let f = 0; f < 5; f++) { const fe = fuse(LAB.loft([[0, 7, 3], [40 - f * 4, 8, 2.5], [62 - f * 6, 1, 1]], 4, Math.PI / 4), f % 2 ? C : 0x9fc8ff, { cage: false, seed: f + 1, glass: 0.35 }); fe.rotation.y = s * (Math.PI / 2 - f * 0.2); fe.position.z = -f * 3; feathers.add(fe); }
+        piv.add(feathers); g.add(piv); return { piv, s };
+    });
+    const tail = fuse(LAB.loft([[-36, 14, 3], [-60, 26, 2], [-66, 30, 1]], 4, Math.PI / 4), 0x9fc8ff, { cage: false }); g.add(tail);
+    const trail = LAB.dashRing(60, 30, 8, 1.4, LAB.glass(C, 0.5), 3); trail.scale.set(1, 1, 0.4); g.add(trail);
+    g.userData.anim = (o, b, t) => {
+        const dash = b.mode === 'dash';
+        wings.forEach(({ piv, s }) => { const fold = dash ? 1 : 0; piv.rotation.y += ((s * fold * 1.05) - piv.rotation.y) * 0.2; piv.rotation.z = s * (dash ? 0.1 : 0.15 + Math.sin(t * 5) * 0.18); });
+        g.rotation.z = dash ? Math.sin(t * 20) * 0.08 : Math.sin(t * 1.5) * 0.12; trail.visible = dash; eye.scale.setScalar(dash ? 1.8 : 1);
+    };
+    g0.userData.anim = g.userData.anim; return g0;
+};
+NB.GLACIER = () => {
+    // 浮かぶ氷河の聖堂: 切り出した氷の土台から結晶の尖塔が林立し、上空にオーロラのワイヤーのカーテンが揺れる
+    const g = new THREE.Group(), C = 0xbfefff, A = 0x7dffb0;
+    const base = LAB.loft([[-50, 120, 30, 0], [-20, 150, 40, -4], [30, 140, 36, -6], [56, 90, 24, -4]], 7, 0.3);
+    g.add(fuse(base, C, { glass: 0.35, tint: 0.2, cage: 1.05 }));
+    [[0, 0, 70, 14], [-36, 10, 50, 10], [34, -6, 56, 11], [-62, -4, 36, 8], [64, 8, 34, 8], [-14, -26, 40, 9], [18, 28, 44, 9]].forEach(([x, z, h, r], k) => {
+        const s = fuse(crystal(r, h, 6), k % 3 ? C : 0x8fd8ff, { glass: 0.5, tint: 0.15, seed: k + 1, cage: false }); s.position.set(x, 12 + h * 0.5, z); s.rotation.z = (k % 2 ? 1 : -1) * 0.08; g.add(s);
+    });
+    const aur = new THREE.Group(); aur.position.y = 62; g.add(aur);
+    const curtains = [0, 1, 2].map(i => { const ls = new THREE.LineSegments(new THREE.BufferGeometry(), LAB.line(i === 1 ? A : 0x9ab8ff, 0.5)); aur.add(ls); return ls; });
+    const heart = new THREE.Mesh(new THREE.OctahedronGeometry(12), LAB.glow(A)); heart.position.set(0, 4, 40); g.add(heart);
+    g.userData.anim = (o, b, t) => {
+        curtains.forEach((ls, i) => { const p = []; for (let k = 0; k <= 30; k++) { const x = -110 + k * 7.3, z = -20 + i * 18 + Math.sin(k * 0.4 + t * 1.5 + i) * 10; p.push(x, 0, z, x, -26 - Math.sin(k * 0.7 + t * 2 + i) * 10, z); } ls.geometry.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); });
+        heart.rotation.y = t * 2; heart.scale.setScalar(1 + 0.12 * Math.sin(t * 5)); g.position.y = Math.sin(t * 0.8) * 4;
+    };
+    return g;
+};
+NB.MEDUSA = () => {
+    // 機械のクラゲ: ガラスの傘とワイヤーの骨が脈打ち、垂れる触手が弾をなぎ払う向きへなびく
+    const g = new THREE.Group(), C = 0xff7ad8, A = 0x7fe9ff;
+    const bell = new THREE.Group(); g.add(bell);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(40, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), LAB.glass(C, 0.32)); bell.add(dome);
+    bell.add(wire(new THREE.SphereGeometry(41, 14, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), C, 0.7));
+    const rim = segRing(34, 14, 6, 5, C); rim.position.y = 4; bell.add(rim);
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(12, 1), LAB.glow(A)); core.position.y = 16; core.add(wire(new THREE.IcosahedronGeometry(20, 0), A, 0.6)); bell.add(core);
+    const tents = []; for (let k = 0; k < 8; k++) { const ls = new THREE.Line(new THREE.BufferGeometry(), LAB.line(k % 2 ? A : C, 0.75)); g.add(ls); tents.push(ls); }
+    const arms = [-1, 1].map(s => { const a = fuse(LAB.loft([[0, 10, 8], [30, 8, 6], [52, 2, 2]], 6), C, { cage: false }); a.position.set(s * 14, -4, 0); g.add(a); return a; });
+    g.userData.anim = (o, b, t) => {
+        const pulse = 1 + 0.1 * Math.sin(t * 4); bell.scale.set(pulse, 1 / pulse, pulse); core.rotation.set(t, t * 1.6, 0); rim.rotation.y = t * 0.8;
+        const sw = (b.spin ?? Math.PI / 2) - Math.PI / 2, dir = new THREE.Vector3(Math.sin(-sw), 0, Math.cos(sw));
+        tents.forEach((ls, k) => { const a = k / 8 * Math.PI * 2, p = []; for (let i = 0; i <= 10; i++) { const u = i / 10, r = 28 * (1 - u * 0.5); p.push(new THREE.Vector3(Math.cos(a) * r + dir.x * u * 60 + Math.sin(t * 3 + k + u * 4) * 5, -u * 30, Math.sin(a) * r + dir.z * u * 90)); } ls.geometry.setFromPoints(p); });
+        arms.forEach((a, i) => { a.rotation.y = -sw + (i ? 0.25 : -0.25); });
+    };
+    return g;
+};
+
 const BOSS_BUILDERS = [
     // AXIS（新造形）
     () => NB.AXIS(),
@@ -5934,15 +6053,15 @@ const BOSS_BUILDERS = [
     // VORTEX（新造形）
     () => NB.VORTEX(),
     // TRIDENT（新造形）
-    () => NB.TRIDENT(),
+    () => NB.CHORUS(),
     // COMB（新造形）
-    () => NB.COMB(),
+    () => NB.LOOM(),
     // ORBIT（新造形）
     () => NB.ORBIT(),
     // LATTICE（新造形）
     () => NB.LATTICE(),
     // SPINDLE（新造形）
-    () => NB.SPINDLE(),
+    () => NB.NAUTILUS(),
     // MANTA（新造形）
     () => labBoss('MANTA', 0.36),
     // HYDRA（新造形）
@@ -5950,7 +6069,7 @@ const BOSS_BUILDERS = [
     // GYRO（新造形）
     () => NB.GYRO(),
     // BEACON（新造形）
-    () => NB.BEACON(),
+    () => NB.MEDUSA(),
     // SHARD（新造形）
     () => NB.SHARD(),
     // WAVE（新造形）
@@ -5960,7 +6079,7 @@ const BOSS_BUILDERS = [
     // ECLIPSE（新造形）
     () => NB.ECLIPSE(),
     // RAZOR（新造形）
-    () => NB.RAZOR(),
+    () => NB.KESTREL(),
     // LOTUS（新造形）
     () => NB.LOTUS(),
     // CIPHER（新造形）
@@ -5968,7 +6087,7 @@ const BOSS_BUILDERS = [
     // QUASAR（新造形）
     () => NB.QUASAR(),
     // TITAN（新造形）
-    () => NB.TITAN(),
+    () => NB.GLACIER(),
     // ZENITH（新造形）
     () => NB.ZENITH(),
 ];
