@@ -53,12 +53,24 @@ const SKILLS = [
       return { peek: ids };
     } },
   { id: 'swap', timing: 'turn', cost: 1000, icon: 'swap', color: '#9aa7ff',
-    name: L('すり替え', 'Switch'), short: L('ツモ牌を引き直す', 'Redraw'),
-    desc: L('今ツモった牌を山に戻し、次の牌と入れ替える。', 'Put the tile you just drew back and take the next one instead.'),
-    can(g, s) { return g.curSeat === s && g.curDrawn != null && g.liveLeft() > 0 && !g.P[s].fx.swapped; },
+    name: L('すり替え', 'Switch'), short: L('次の3枚から良い牌に', 'Best of next 3'),
+    desc: L('今ツモった牌を、山の次の3枚のうち手がいちばん進む牌と入れ替える。', 'Swap the tile you just drew for the best of the next 3 tiles in the wall.'),
+    can(g, s) { return g.curSeat === s && g.curDrawn != null && g.liveLeft() > 1 && !g.P[s].fx.swapped; },
     use(g, s) {
-      const p = g.P[s], old = g.curDrawn, nw = g.wall[g.livePos];
-      g.wall[g.livePos] = old;
+      const p = g.P[s], old = g.curDrawn;
+      const base = p.hand.filter(x => x !== old);
+      const score = id => {          // best shanten after keeping `id`, then ukeire-ish tie break (fewer copies seen)
+        const c = MJ.countsIds(base.concat([id]));
+        let best = 9;
+        for (let d = 0; d < 34; d++) if (c[d]) { c[d]--; best = Math.min(best, MJ.shanten(c, p.melds.length)); c[d]++; }
+        return -best * 10 - (MJ.isHonor(id >> 2) ? 1 : 0);
+      };
+      let bi = -1, bv = score(old);
+      const n = Math.min(3, g.liveLeft());
+      for (let k = 0; k < n; k++) { const v = score(g.wall[g.livePos + k]); if (v > bv) { bv = v; bi = g.livePos + k; } }
+      if (bi < 0) bi = g.livePos;              // nothing better: still take the next tile
+      const nw = g.wall[bi];
+      g.wall[bi] = old;
       p.hand[p.hand.indexOf(old)] = nw;
       p.fx.swapped = nw;
       return { from: old, to: nw };

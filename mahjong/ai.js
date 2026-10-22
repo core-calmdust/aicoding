@@ -207,7 +207,7 @@ class Bot {
         if (p.riichi || g.curDrawn == null) return false;
         const c = MJ.countsIds(p.hand), t = T(g.curDrawn);
         c[t]--; const before = shan(c, p.melds.length); c[t]++;
-        return before <= sh && sh >= 1;
+        return before <= sh && sh >= 1;          // the drawn tile did not help
       }
       case 'mind': return g.P.some((q, i) => i !== s && (q.riichi || q.melds.length >= 2)) && sh >= 1;
       case 'peek': return sh >= 1 && sh <= 2 && g.liveLeft() > 24;
