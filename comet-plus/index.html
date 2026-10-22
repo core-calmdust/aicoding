@@ -3915,7 +3915,7 @@ const _tmpC2 = new THREE.Color();
 const hsl = (h, s, l, target = _tmpC) => target.setHSL(((h % 360) + 360) % 360 / 360, s, l);
 
 let gl3dOK = true;
-let renderer, scene, camera, composer, bloom, hyperGrade, hyperK = 0;
+let renderer, scene, camera, composer, bloom, hyperGrade, hyperK = 0, hyperLin = 0;
 try {
     const glc = document.getElementById('glCanvas');
     let glctx = null;
@@ -6327,7 +6327,9 @@ function render3D() {
     adaptQuality(now);
     if (efx) {
         bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
-        hyperK += ((hyperT > 0 ? 1 : 0) - hyperK) * Math.min(1, dt * (hyperT > 0 ? 4 : 2.5)); // ふわっと変わり、切れたら戻る
+        // 取ったら約1秒かけてじわっと変化し、切れたら約1秒かけて戻る（なめらかな曲線で）
+        hyperLin = Math.max(0, Math.min(1, hyperLin + (hyperT > 0 ? 1 : -1) * (frozen ? 0 : dt) / 1.0));
+        hyperK = hyperLin * hyperLin * (3 - 2 * hyperLin);
         if (hyperK < 0.002) hyperK = 0;
         hyperGrade.enabled = hyperK > 0;
         hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ hyperGrade.uniforms.t.value = rTime;
