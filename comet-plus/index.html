@@ -1688,6 +1688,7 @@ let invaderSpawnCountForStage = 0;
 let invadersSpawnedThisStage = 0;
 let hasUFOSpawnedThisStage = false;
 let hasLooperSpawnedThisStage = false;
+let extraEnemy = null; // そのステージで出す新しい雑魚 { type, frame }（毎ステージではない）
 let looperSpawnFrame = -1;
 let highScoreDisplayToggle = 0;
 let isEffectsEnabled = true;
@@ -1807,7 +1808,7 @@ function init() {
     isShowingModeInGame = true; // ★ 追加: 開始時は必ずモード名を表示する
     boss = null;
     bossSpawnFrame = -1;
-    bossCount = 0; lastBossIdx = -1;
+    bossCount = 0; lastBossIdx = -1; extraEnemy = null;
     tutorial = null;
 
     // ▼▼▼ 追加された初期化処理 ▼▼▼
@@ -1836,6 +1837,9 @@ function setupNewStage() {
     invaderSpawnCountForStage = Math.floor(stage / 2);
     hasUFOSpawnedThisStage = false;
     hasLooperSpawnedThisStage = false;
+    // 新しい雑魚: 4面からウィーバー、5面からセントリー、7面からランス。ボス面以外で約55%の確率で1体
+    { const pool = []; if (stage >= 4) pool.push('weaver'); if (stage >= 5) pool.push('sentry'); if (stage >= 7) pool.push('lance');
+      extraEnemy = pool.length && stage % 3 !== 0 && Math.random() < 0.55 ? { type: pool[Math.floor(Math.random() * pool.length)], frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.3 + Math.random() * 0.4)) } : null; }
     
     // Set Looper spawn frame for this stage
     if (stage >= 4 && stage % 2 === 0) {
@@ -2399,6 +2403,12 @@ function updatePlayingState(dt_sec) {
             });
         }
         
+        if (extraEnemy && frameCount >= extraEnemy.frame && !boss && bossSpawnFrame === -1) {
+            const ty = extraEnemy.type, W = config.canvasWidth; extraEnemy = null;
+            if (ty === 'weaver') { const d = Math.random() < 0.5 ? 1 : -1; monsters.push({ type: ty, x: d > 0 ? -40 : W + 40, y: 150, baseY: 120 + Math.random() * 120, vx: d * 170, vy: 0, t: 0, st: 0.5, k: 0, width: 60, height: 40, scoreK: 1.5 }); }
+            else if (ty === 'sentry') monsters.push({ type: ty, x: W * (0.25 + Math.random() * 0.5), y: -30 - TOP_EXT, ty: 170 + Math.random() * 60, t: 0, st: 0, spin: Math.random() * 6, width: 56, height: 56, scoreK: 2.5 });
+            else monsters.push({ type: ty, x: W * (0.2 + Math.random() * 0.6), y: -30 - TOP_EXT, t: 0, pt: 0, cyc: 0, ang: Math.PI / 2, aim: false, width: 40, height: 56, scoreK: 2 });
+        }
         const spawnCheckInterval = 120;
         if (frameCount % spawnCheckInterval === 0) {
             // UFO Spawning
@@ -2556,6 +2566,8 @@ function updatePlayingState(dt_sec) {
                 m.angle += m.speed * m.direction * dt_sec * ENEMY_SPD;
                 m.x = config.canvasWidth / 2 + Math.cos(m.angle) * (config.canvasWidth / 2.5);
                 m.y = (config.canvasHeight / 4) + Math.sin(m.angle) * (config.canvasHeight / 5);
+            } else if (m.type === 'weaver' || m.type === 'sentry' || m.type === 'lance') {
+                updateExtraEnemy(m, dt_sec);
             } else {
                 m.x += m.vx * dt_sec * ENEMY_SPD;
                 m.y += m.vy * dt_sec * ENEMY_SPD;
@@ -2626,7 +2638,7 @@ function updatePlayingState(dt_sec) {
                              triggerSpecialItemEffect();
                         }
                     } else {
-                        const baseScore = m.type === 'ufo' ? config.monsterUFOBaseScore : config.monsterInvaderBaseScore;
+                        const baseScore = (m.type === 'ufo' ? config.monsterUFOBaseScore : config.monsterInvaderBaseScore) * (m.scoreK || 1);
                         const earnedScore = Math.floor(baseScore * stageMultiplier * comboMultiplier);
                         score += earnedScore;
                         scoreTexts.push({ x: m.x, y: m.y, text: `+${earnedScore}`, life: 60, type: 'bonus' });
@@ -2678,7 +2690,7 @@ function updatePlayingState(dt_sec) {
             }
 
             // Despawn if off-screen (for UFO and Invader)
-            if (m.type !== 'looper' && (m.y > config.canvasHeight + 50 || m.x < -50 || m.x > config.canvasWidth + 50)) {
+            if (m.type !== 'looper' && (m.y > config.canvasHeight + 50 || m.x < -50 || m.x > config.canvasWidth + 50 || (m.leave && m.y < -60 - TOP_EXT))) {
                 monsters.splice(i, 1);
             }
         }
@@ -2822,6 +2834,7 @@ let bossCount = 0; // 出現した通算数（種類のローテーションに�
 class LiteMat extends THREE.MeshLambertMaterial { constructor(p = {}) { const q = Object.assign({}, p); delete q.metalness; delete q.roughness; super(q); } }
 const StdMat = IS_MOBILE ? LiteMat : THREE.MeshStandardMaterial;
 const BS = IS_MOBILE ? 1.5 : 1.7;
+const COL_LANCE = new THREE.Color(0xff3050);
 const ENEMY_SPD = IS_MOBILE ? 1.4 : 1; // スマホは雑魚敵の動きを速めに
 const VS = IS_MOBILE ? 2.0 : 1;
 const CK = IS_MOBILE ? 1.35 : 1; // 中央メッセージの間隔（スマホは文字が大きいので広め）
@@ -6171,29 +6184,64 @@ const ENEMY_BUILD = {
         g.userData.anim = t => { rotor.rotation.y = t * 9; cage.rotation.y = -t * 0.8; top.rotation.y = t * 1.6; scan.position.x = Math.sin(t * 5) * 3; };
         return g;
     },
-    // ルーパー: 鋭い矢じり形の頭（紫の装甲とガラス）に細い一本の眼。金の節が光るケーブル状の触手が、ハブの回転に合わせて渦を巻く
+    // ルーパー（Rez風の抽象体）: 紫の多面体の核に白い光の芯。傾いた金の輪が2重に逆回転し、紫の結晶片が8の字の軌道を描いて周回する（下のハブはそのまま）
     looper(K) {
-        const g = new THREE.Group();
-        g.add(ePart(K, LAB.loft([[-40, 4, 4, 14], [-28, 30, 14, 16], [-8, 56, 22, 16], [8, 44, 16, 14], [18, 18, 8, 12]], 6, Math.PI / 2), 1, { glass: 0.45, cage: 1.12, seed: 9 }));
-        [-1, 1].forEach(s => g.add(ePart(K, LAB.loft([[-20, 4, 3, 18, s * 20], [-4, 8, 5, 18, s * 36], [8, 2, 2, 16, s * 46]], 4), 1, { seed: s + 3 }))); // 側面のひれ
-        const slit = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 3), K.mats[2]); slit.position.set(0, 28, -8); g.add(slit);
-        const tents = [], segGeo = LAB.loft([[0, 5, 5], [6, 7, 6], [13, 3, 3]], 4, Math.PI / 4);
-        for (let k = 0; k < 6; k++) {
-            const base = new THREE.Group(), a = -1.2 + k * 0.48; base.position.set(Math.sin(a) * 24, 10, 10 + Math.cos(a) * 4); base.rotation.y = a; g.add(base);
-            let par = base; const segs = [];
-            for (let j = 0; j < 5; j++) {
-                const sg = new THREE.Group(); if (j) sg.position.z = 13; par.add(sg);
-                sg.add(ePart(K, segGeo, 1, { seed: k * 5 + j }));
-                const node = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), K.mats[3]); node.scale.set(1, 1, 1.8); node.position.z = 13; sg.add(node);
-                segs.push(sg); par = sg;
-            }
-            tents.push({ segs, k });
-        }
-        g.userData.anim = t => { slit.scale.x = 0.7 + 0.3 * Math.abs(Math.sin(t * 1.3)); tents.forEach(({ segs, k }) => segs.forEach((sg, j) => { sg.rotation.y = Math.sin(t * 2.6 - j * 0.8 + k * 0.5) * 0.22 + (k < 3 ? -0.06 : 0.06) * j; sg.rotation.x = 0.1; })); };
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.45; tilt.position.y = 22; g.add(tilt);
+        const core = ePart(K, new THREE.DodecahedronGeometry(20, 0), 1, { glass: 0.45, cage: 1.35, seed: 9 }); tilt.add(core);
+        const eye = new THREE.Mesh(new THREE.IcosahedronGeometry(7, 0), K.mats[2]); tilt.add(eye);
+        const r1 = segRing(36, 10, 5, 4, 0xffd060), r2 = segRing(46, 14, 4, 3, 0xffd060); r1.rotation.x = 0.9; r2.rotation.z = 0.8; tilt.add(r1, r2);
+        const shardGeo = new THREE.TetrahedronGeometry(6, 0), sats = [];
+        for (let k = 0; k < 8; k++) { const s = ePart(K, shardGeo, k % 2 ? 1 : 3, { seed: k + 1 }); tilt.add(s); sats.push(s); }
+        g.userData.anim = t => {
+            core.rotation.set(t * 0.7, t * 1.1, 0); eye.rotation.y = -t * 3; eye.scale.setScalar(1 + 0.2 * Math.sin(t * 6));
+            r1.rotation.y = t * 1.4; r2.rotation.y = -t * 0.9;
+            sats.forEach((s, k) => { const u = t * 1.6 + k * Math.PI / 4; s.position.set(Math.sin(u) * 58, Math.sin(u * 2) * 14, Math.sin(u) * Math.cos(u) * 40); s.rotation.set(t * 3 + k, t * 2, 0); });
+        };
+        return g;
+    },
+    // ウィーバー: 横切りながら波打ち、下へ弾のすだれを垂らす。細長い結晶の本体の後ろに、ワイヤーの輪がたなびく
+    weaver(K) {
+        const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+        const hull = LAB.loft([[-26, 2, 2], [-10, 12, 8], [8, 14, 9], [26, 1, 1]], 4, Math.PI / 4); hull.rotateY(Math.PI / 2);
+        body.add(ePart(K, hull, 1, { glass: 0.5, cage: 1.25, seed: 4 }));
+        [-1, 1].forEach(s => { const f = LAB.loft([[0, 6, 2, 0, 0], [14, 4, 1.5, 0, 0], [22, 1, 1, 0, 0]], 3); const fp = ePart(K, f, 2, { seed: s + 5 }); fp.position.z = s * 4; fp.rotation.y = s * Math.PI / 2 + Math.PI; fp.rotation.z = s * 0.3; body.add(fp); });
+        const core = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), K.mats[3]); core.position.y = 6; body.add(core);
+        const rings = [0, 1, 2].map(k => { const r = LAB.wireOnly(new THREE.TorusGeometry(10 - k * 2, 0.5, 3, 6), k ? K.cage : K.edge); body.add(r); return r; });
+        g.userData.anim = (t, m) => {
+            const dir = m && m.vx < 0 ? -1 : 1; body.rotation.y = dir > 0 ? 0 : Math.PI;
+            rings.forEach((r, k) => { r.position.x = -30 - k * 12; r.position.y = Math.sin(t * 6 - k) * 4; r.rotation.y = Math.PI / 2; r.rotation.z = t * 3 + k; });
+            body.rotation.x = Math.sin(t * 2.2) * 0.35; core.rotation.y = t * 4;
+        };
+        return g;
+    },
+    // セントリー: 降りてきて止まり、3本の砲身を回して渦の弾をまく。回るワイヤーの立方体の中に赤い核
+    sentry(K) {
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.4; g.add(tilt);
+        const core = new THREE.Mesh(new THREE.TetrahedronGeometry(12, 0), K.mats[3]); tilt.add(core);
+        const cube = LAB.wireOnly(new THREE.BoxGeometry(26, 26, 26), K.edge), cube2 = LAB.wireOnly(new THREE.OctahedronGeometry(24, 0), K.cage); tilt.add(cube, cube2);
+        const turret = new THREE.Group(); tilt.add(turret);
+        const barrel = LAB.loft([[8, 7, 7], [22, 6, 6], [30, 8, 8], [34, 4, 4]], 6);
+        for (let k = 0; k < 3; k++) { const b = ePart(K, barrel, k % 2 ? 1 : 2, { glass: 0.3, seed: k + 3 }); b.rotation.y = k * Math.PI * 2 / 3; turret.add(b); }
+        turret.add(ePart(K, new THREE.CylinderGeometry(12, 14, 8, 6), 2, { seed: 8 }));
+        g.userData.anim = (t, m) => { turret.rotation.y = -(m && m.spin != null ? m.spin : t); cube.rotation.set(t * 0.8, t * 1.2, 0); cube2.rotation.set(-t * 0.5, t * 0.6, 0); core.rotation.set(t * 2, t * 3, 0); const f = m && m.st < 0.04 ? 1.5 : 1; core.scale.setScalar(f); };
+        return g;
+    },
+    // ランス: 狙いを定めて赤い照準線を引き、一直線の高速弾を撃ち込む。長い針の結晶にリングが通る
+    lance(K) {
+        const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+        body.add(ePart(K, LAB.loft([[-26, 3, 3], [-14, 16, 16], [8, 12, 12], [40, 1, 1]], 4, Math.PI / 4), 1, { glass: 0.5, cage: 1.2, seed: 6 }));
+        const rings = [-8, 6].map((z, k) => { const r = ePart(K, new THREE.TorusGeometry(13 - k * 4, 1.4, 3, 8), 2, { seed: k + 2 }); r.position.z = z; body.add(r); return r; });
+        const tip = new THREE.Mesh(new THREE.OctahedronGeometry(3.5, 0), K.mats[3]); tip.position.z = 42; body.add(tip);
+        g.userData.anim = (t, m) => { const a = m && m.ang != null ? m.ang : Math.PI / 2; body.rotation.y = Math.atan2(Math.cos(a), Math.sin(a)); rings.forEach((r, k) => r.rotation.z = t * (k ? -3 : 3)); tip.scale.setScalar(m && m.aim ? 1.4 + 0.5 * Math.sin(t * 30) : 1); };
         return g;
     },
 };
-Object.assign(monsterModels, { ufo: enemyKit([1, 2, 3, 4]), invader: enemyKit([1, 2, 3]), looper: enemyKit([1, 2, 3]) });
+Object.assign(monsterModels, { ufo: enemyKit([1, 2, 3, 4]), invader: enemyKit([1, 2, 3]), looper: enemyKit([1, 2, 3]), weaver: enemyKit([1, 2, 3]), sentry: enemyKit([1, 2, 3]), lance: enemyKit([1, 2, 3]) });
+// 新しい雑魚の配色（固定）
+[['weaver', 0x9ff4ff, 0x2a3a52, 0xff4fd8], ['sentry', 0xe8e4ff, 0x1c1c2a, 0xff3a3a], ['lance', 0xdfffe8, 0x1e3a2c, 0x5dff7a]].forEach(([n, a, b, c]) => {
+    const K = monsterModels[n]; K.mats[1].color.setHex(a); K.mats[1].emissive.setHex(a).multiplyScalar(0.15); K.mats[2].color.setHex(b); K.mats[3].color.setHex(c); K.mats[3].emissive.setHex(c).multiplyScalar(0.8);
+    enemySync(K, 3, 1, 3);
+});
 
 const BOSS_BUILDERS = [
     // AXIS（新造形）
@@ -6706,14 +6754,15 @@ function render3D() {
             obj.position.set(toX(ix(m)), 6 + Math.sin(rTime * 3 + sd) * 4, toZ(iy(m)));
             obj.userData.body.rotation.z = Math.sin(rTime * 2.4 + sd) * 0.18;
             obj.userData.body.rotation.x = Math.sin(rTime * 1.7 + sd) * 0.1;
-            if (obj.userData.body.userData.anim) obj.userData.body.userData.anim(rTime + sd);
+            if (obj.userData.body.userData.anim) obj.userData.body.userData.anim(rTime + sd, m);
             const sc = VS * ES * (1 + visualBeat * 0.12);
             obj.scale.setScalar(sc);
             if (obj.userData.hub) {
                 obj.userData.hub.rotation.y = rTime * 1.5;
                 obj.userData.hub.userData.lineMat.color.copy(themeCur.ui);
             }
-            const gc = m.type === 'invader' ? hexColor('#ffd060') : hsl(hue1, 1, 0.7);
+            if (m.type === 'lance' && m.aim) { const x2 = m.x + Math.cos(m.ang) * 1600, y2 = m.y + Math.sin(m.ang) * 1600, bl = 0.75 + 0.35 * Math.sin(rTime * 40); trails.add(obj.position.x, 16, obj.position.z, toX(x2), 16, toZ(y2), 3.2, COL_LANCE, bl); }
+            const gc = m.type === 'invader' ? hexColor('#ffd060') : m.type === 'weaver' ? hexColor('#ff4fd8') : m.type === 'sentry' ? hexColor('#ff3a3a') : m.type === 'lance' ? hexColor('#5dff7a') : hsl(hue1, 1, 0.7);
             glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, (m.type === 'looper' ? 75 : 70) * ES, 0.14);
         });
         enemyBullets.forEach(eb => {
@@ -7756,6 +7805,26 @@ function snapshotPrev() {
     if (monsters) monsters.forEach(sp);
     if (particles) particles.forEach(sp);
     if (gems) gems.forEach(sp);
+}
+// 新しい雑魚の動きと攻撃
+function updateExtraEnemy(m, dt) {
+    const r = hyperT > 0 ? 2 : 1, sp = dt * ENEMY_SPD, shot = (a, v) => enemyBullets.push({ x: m.x, y: m.y, vx: v * Math.cos(a), vy: v * Math.sin(a), radius: 4, isGlazed: false });
+    m.t += sp;
+    if (m.type === 'weaver') { // 横切りながら波打ち、真下へ弾のすだれ。8発ごとに自機狙いの3way
+        m.x += m.vx * sp; m.y = m.baseY + Math.sin(m.t * 2.2) * 60;
+        if ((m.st -= dt * r) <= 0) { m.st = 0.16; shot(Math.PI / 2, 150); if (++m.k % 8 === 0) { const a = Math.atan2(player.y - m.y, player.x - m.x); [-0.18, 0, 0.18].forEach(d => shot(a + d, 300)); } }
+    } else if (m.type === 'sentry') { // 降りてきて止まり、3方向の渦をまいて去る
+        if (m.t > 6.5) { m.leave = true; m.y -= 180 * sp; } else m.y += (m.ty - m.y) * Math.min(1, dt * 2.5);
+        if (m.t > 1.3 && m.t < 6 && (m.st -= dt * r) <= 0) { m.st = 0.11; m.spin += 0.27; for (let k = 0; k < 3; k++) shot(m.spin + k * Math.PI * 2 / 3, 170); }
+    } else { // lance: 照準線で狙って、一直線の高速弾。3回撃って去る
+        if (m.cyc >= 3) { m.leave = true; m.aim = false; m.y -= 220 * sp; return; }
+        m.y += (130 - m.y) * Math.min(1, dt * 2);
+        if (m.t < 1) return;
+        m.pt += dt * r;
+        if (m.pt < 1.1) { m.aim = true; if (m.pt < 0.8) { m.ang = Math.atan2(player.y - m.y, player.x - m.x); m.x += (player.x - m.x) * Math.min(1, dt * 0.6); } m.fired = 0; }
+        else if (m.pt < 1.5) { m.aim = false; if (m.fired < 6 && m.pt > 1.1 + m.fired * 0.05) { m.fired++; shot(m.ang, 560); } }
+        else if (m.pt > 2.1) { m.pt = 0; m.cyc++; }
+    }
 }
 function ix(o) { if (o._px === undefined) return o.x; const d = o.x - o._px; return Math.abs(d) > 120 ? o.x : o._px + d * simAlpha; }
 function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; return Math.abs(d) > 120 ? o.y : o._py + d * simAlpha; }
