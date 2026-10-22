@@ -118,7 +118,23 @@ for (const st of steps) {
   outSteps.push(so);
 }
 if (ONLY) { console.log(errors.join('\n') || 'OK'); process.exit(0); }
-fs.writeFileSync(path.join(DIR, '..', 'lessons.json'), JSON.stringify({ version: 1, courses, steps: outSteps }, null, 1));
+// translations: data/lessons-i18n.json maps each English string to {zh,ko,es,fr,pt,de,hi,ar}; merged into every {ja,en} object
+const I18N_LANGS = ['zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const I18N_FILE = path.join(DIR, 'data', 'lessons-i18n.json');
+const tr = fs.existsSync(I18N_FILE) ? JSON.parse(fs.readFileSync(I18N_FILE, 'utf8')) : {};
+const missingTr = new Set();
+const loc = o => {
+  if (Array.isArray(o)) return o.map(loc);
+  if (!o || typeof o !== 'object') return o;
+  if (typeof o.ja === 'string' && typeof o.en === 'string') {
+    const t = tr[o.en] || {}, r = { ja: o.ja, en: o.en };
+    for (const l of I18N_LANGS) if (typeof t[l] === 'string') r[l] = t[l]; else missingTr.add(o.en);
+    return r;
+  }
+  const r = {}; for (const k in o) r[k] = loc(o[k]); return r;
+};
+fs.writeFileSync(path.join(DIR, '..', 'lessons.json'), JSON.stringify({ version: 1, courses: loc(courses), steps: loc(outSteps) }, null, 1));
 fs.writeFileSync(path.join(DIR, 'lessons-check.json'), JSON.stringify({ generated: new Date().toISOString(), steps: report, errors }, null, 1));
 console.log(outSteps.length + ' steps, ' + outSteps.reduce((a, s) => a + s.problems.length, 0) + ' problems');
+if (missingTr.size) console.log('i18n: ' + missingTr.size + ' strings without full translations (en fallback) — add them to data/lessons-i18n.json');
 console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'all checks passed');
