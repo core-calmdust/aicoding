@@ -25,5 +25,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], rating: RATING[n - 1], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.shogi = { levels: 19, sides: true, modes: ['ai', 'rated', 'pvp'], levelInfo, table: true, tableModes: ['ai', 'pvp'], start: ctx => window.AtlasShogiPlay.start(ctx) };   // table: plays on the chabudai (games/shogi-play.js)
+  window.Atlas3D.shogi = { levels: 19, sides: true, modes: ['ai', 'rated', 'pvp'], levelInfo, table: true, tableModes: ['ai', 'pvp'], clock: 'byo', start: ctx => window.AtlasShogiPlay.start(ctx) };   // table: plays on the chabudai (games/shogi-play.js)
 })();

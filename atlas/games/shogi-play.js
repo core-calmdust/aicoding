@@ -90,6 +90,8 @@
     const hc = pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
     let E = null, P = null, moves = [], legal = [], sel = null, over = null, stopped = false, busy = true, worker = null, book = null, jobId = 0, popup = null, last = null;
+    let ply = 0, hintW = null, hintJ = 0, hint = null;
+    const onTurn = () => { if (ctx.onTurn && P) ctx.onTurn(P.side, { human: pvp || P.side === hc, ply }); };   // HUD pills: sente (left) 0, gote 1
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const anim = (dur, f, done) => { const t0 = performance.now(); T3.kick(dur + 150); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
     const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -168,6 +170,7 @@
 
     /* ---------- marks: selection, destinations, last move, check ---------- */
     const marks = new TH.Group(); board.add(marks);
+    const hintRingGeo = new TH.TorusGeometry(.46, .055, 10, 40);
     const tileGeo = new TH.BoxGeometry(CW * .92, .02, CH * .92), ringGeo = new TH.CylinderGeometry(.17, .17, .02, 24), padGeo = new TH.CylinderGeometry(.5, .5, .02, 28);
     const MAT = {};
     const mat = (color, op) => MAT[color + ':' + op] || (MAT[color + ':' + op] = new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false }));
@@ -175,6 +178,12 @@
     function tileAt(sq, color, op, geo = tileGeo) { const m = new TH.Mesh(geo, mat(color, op)), [x, z] = cellXZ(sq); m.position.set(x, Y + .012, z); marks.add(m); return m; }
     function drawMarks() {
       clearMarks();
+      if (hint && !over) {   // ヒント: the engine's best move — a glowing ring on its square (and on the piece it moves / drops)
+        const ring = (x, z, y) => { const m = new TH.Mesh(hintRingGeo, mat(0xff7a1a, .95)); m.rotation.x = Math.PI / 2; m.position.set(x, y + .03, z); marks.add(m); return m; };
+        if (hint.from >= 0) { const [x, z] = cellXZ(hint.from); ring(x, z, Y); }
+        else { const h = hand[meWho()].find(h => h.t === hint.drop); if (h) ring(h.g.position.x, h.g.position.z, KH); }
+        tileAt(hint.to, 0xffb03a, .5); const [x, z] = cellXZ(hint.to); ring(x, z, Y);
+      }
       if (last) { if (last.from >= 0) tileAt(last.from, 0xffb347, .28); tileAt(last.to, 0xff9a1f, .38); }
       if (!over && P.inCheck()) { const k = P.king[P.side]; if (k >= 0) tileAt(k, 0xff2a2a, .45); }
       if (sel) {
@@ -208,7 +217,7 @@
     function play(m, done) {
       const c = P.side, who = c === hc ? 0 : 1, from = E.mFrom(m), to = E.mTo(m), drop = E.isDrop(m), promo = E.mPromo(m);
       const victim = drop ? 0 : P.board[to];
-      moves.push(P.toUsi(m)); P.doMove(m); P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0;
+      moves.push(P.toUsi(m)); P.doMove(m); P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0; hint = null; hintJ++; ply++; onTurn();
       last = { from: drop ? -1 : from, to }; sel = null; clearMarks();
       const [x1, z1] = cellXZ(to);
       let g, y0;
@@ -268,9 +277,10 @@
       return null;
     }
     function end(o) {
-      over = o; busy = true; sel = null; closePopup(); drawMarks();
+      over = o; busy = true; sel = null; hint = null; hintJ++; jobId++; closePopup(); drawMarks(); if (ctx.onTurn) ctx.onTurn(-1);
       const win = !pvp && o.winner === hc, draw = o.winner < 0, wt = pvp && !draw ? PX.win.replace('{p}', PX.n[o.winner]) : '';
-      const sc = o.reason === 'mate' ? fmt(S.mate, o.ply) : o.reason === 'resign' ? fmt(S.resign, o.ply) : S[o.reason];
+      let sc = o.reason === 'mate' ? fmt(S.mate, o.ply) : o.reason === 'resign' ? fmt(S.resign, o.ply) : o.reason === 'time' ? t('act.timeout') : S[o.reason];
+      if (pvp && o.by != null) sc = t('act.pvpEnd', { p: PX.n[o.by], r: o.reason === 'time' ? t('act.timeout') : t('act.resigned'), w: wt });   // the side to move resigned / ran out of time
       hud(`${draw ? L.draw : pvp ? wt : win ? L.win : L.lose} · ${sc}`);
       if (o.reason === 'mate') { const k = P.king[o.winner ^ 1], g = pcs[k]; if (g) { const r0 = g.rotation.y; anim(700, k2 => { g.rotation.y = r0 + Math.sin(k2 * Math.PI * 7) * .16 * (1 - k2); }, () => { g.rotation.y = r0; }); } }
       ctx.onEnd(pvp ? { win: false, draw, level: ctx.level, score: sc, pvp: true, winnerText: wt } : { win, draw, level: ctx.level, score: sc });
@@ -278,6 +288,7 @@
     function next() {
       if (stopped || over) return;
       const o = checkEnd(); if (o) return end(o);
+      onTurn();
       const chk = P.inCheck() ? S.check + ' ' : '';
       if (pvp || P.side === hc) { legal = P.legalMoves(true); busy = false; hud(`${plyTag()} · ${chk}${pvp ? PX.turn.replace('{p}', PX.n[P.side]) : L.turn}`); drawMarks(); return; }
       busy = true; legal = []; hud(`${plyTag()} · ${chk}${L.think}`); drawMarks(); aiMove();
@@ -297,11 +308,12 @@
         play(m, next);
       };
       const bm = bookMove();
-      if (bm) return later(() => go(bm), 400);
+      if (bm) { const id0 = jobId; return later(() => { if (id0 === jobId) go(bm); }, 400); }
       const id = ++jobId;
       worker.onmessage = e => {
-        const r = e.data; if (r.id !== id || r.type !== 'result' || stopped) return;
+        const r = e.data; if (r.id !== id || r.type !== 'result' || stopped || over) return;
         later(() => {
+          if (id !== jobId || over) return;
           if (!r.move) return end({ winner: hc, reason: 'mate', ply: moves.length });
           if (!LV.noise && r.score <= -E.MATE + 200) return end({ winner: hc, reason: 'resign', ply: moves.length });   // hopeless: the strong levels resign, as in the full game
           go(r.move);
@@ -369,11 +381,47 @@
       later(next, 80 + 40 * 14 + 400);
     }).catch(() => { if (!stopped) hud('⚠'); });
 
+    /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
+    const myTurn = () => !!P && !over && !busy && !popup && (pvp || P.side === hc);
+    const undoN = () => pvp ? 1 : 2;
+    function replay(n) {   // the position after the first n moves (待った), the 3D board rebuilt to match
+      const keep = moves.slice(0, n); P = new E.Position(); P.setSfen(START); last = null;
+      for (const u of keep) { const m = P.fromUsi(u); P.doMove(m); P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0; last = { from: E.isDrop(m) ? -1 : E.mFrom(m), to: E.mTo(m) }; }
+      moves = keep; sel = null; hint = null; hintJ++;
+      buildBoard(false); verify(); drawMarks(); T3.kick(300);
+    }
     const api = {
+      human: hc,
+      canUndo: () => myTurn() && moves.length >= undoN() + (pvp || hc === 0 ? 0 : 1),
+      undo() {
+        if (!api.canUndo()) return;
+        timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup();
+        replay(moves.length - undoN()); ply++; next();
+      },
+      canHint: () => myTurn() && legal.length > 0,
+      hint() {
+        if (!myTurn()) return Promise.resolve(false);
+        const j = ++hintJ, n = moves.length;
+        return new Promise(res => {
+          if (!hintW) hintW = newWorker();
+          hintW.onmessage = e => {
+            const r = e.data; if (r.type !== 'result' || r.id !== j) return;
+            if (stopped || j !== hintJ || over || moves.length !== n) return res(true);
+            const m = r.move ? P.fromUsi(r.move) : 0; if (!m || !legal.includes(m)) return res(false);
+            hint = { from: E.isDrop(m) ? -1 : E.mFrom(m), drop: E.isDrop(m) ? E.mFrom(m) - 80 : -1, to: E.mTo(m), usi: r.move };
+            drawMarks(); res(true);
+          };
+          hintW.onerror = () => { if (hintW) hintW.terminate(); hintW = null; res(false); };
+          hintW.postMessage({ type: 'think', id: j, sfen: START, moves: moves.slice(), opts: LEVELS[Math.max(12, Math.min(14, lvIdx + 2))] });
+        });
+      },
+      canResign: () => !!P && !over,
+      resign() { if (!P || over) return; const by = pvp ? P.side : hc; end({ winner: by ^ 1, reason: 'resign', ply: moves.length, by }); },
+      timeout(side) { if (!P || over) return; end({ winner: side ^ 1, reason: 'time', ply: moves.length, by: side }); },
       stop() {
         stopped = true; timers.forEach(clearTimeout); closePopup();
         ctx.el.removeEventListener('click', onClick); removeEventListener('resize', onResize);
-        if (worker) worker.terminate(); worker = null;
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         if (window.__shogiTable === dbg) delete window.__shogiTable;
       },
     };
@@ -387,7 +435,7 @@
         for (let sq = 0; sq < 81; sq++) { const code = P.board[sq], g = pcs[sq]; if (!!code !== !!g) out.push('mismatch ' + sq); else if (g && (g.userData.ty !== (code & 15) || g.userData.c !== code >> 4)) out.push('type ' + sq); }
         return out;
       },
-      state: () => ({ moves: moves.slice(), side: P && P.side, hc, pvp, busy, over, sfen: P && P.sfen(), legal: legal.map(m => P.toUsi(m)), popup: !!popup, tall, hand: P && Array.from(P.hand) }),
+      state: () => ({ hint: hint && hint.usi, moves: moves.slice(), side: P && P.side, hc, pvp, busy, over, sfen: P && P.sfen(), legal: legal.map(m => P.toUsi(m)), popup: !!popup, tall, hand: P && Array.from(P.hand) }),
     };
     window.__shogiTable = dbg;
     return api;

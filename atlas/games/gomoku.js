@@ -47,7 +47,7 @@
   function css() {
     if (cssDone) return; cssDone = true;
     const s = document.createElement('style');
-    s.textContent = `.gmtoast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:10px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:700;font-size:14px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);animation:gmT .2s ease-out;pointer-events:none}
+    s.textContent = `.gmtoast{position:fixed;left:50%;bottom:calc(var(--tbclear,18px) + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:10px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:700;font-size:14px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);animation:gmT .2s ease-out;pointer-events:none}
 @keyframes gmT{from{transform:translate(-50%,8px);opacity:0}}`;
     document.head.appendChild(s);
   }
@@ -64,6 +64,8 @@
     const xz = m => U.pt(m % 15, 14 - Math.floor(m / 15));
 
     let E = null, pos = null, moves = [], stopped = false, busy = true, over = false, worker = null, jid = 0, toastEl = null, toastT = 0;
+    let ply = 0, hintW = null, hintJ = 0, hintM = -1;
+    const onTurn = () => { if (ctx.onTurn && pos) ctx.onTurn(pos.side - 1, { human: pvp || pos.side === human, ply }); };   // HUD pills: black (left) 0, white 1
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
@@ -94,7 +96,7 @@
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); pulsing = []; kick(); }
     function addMark(geo, mat, m, y) { const k = new TH.Mesh(geo, mat), [x, z] = xz(m); k.position.set(x, Y + y, z); k.renderOrder = 3; marks.add(k); return k; }
     function showMarks() {
-      clearMarks();
+      clearMarks(); hintM = -1; hintJ++;
       if (moves.length) addMark(GEO.last, MAT.last, moves[moves.length - 1], H + .004);
       if (over) return;
       const blackTurn = pos.side === 1, mine = pvp || pos.side === human;
@@ -133,20 +135,20 @@
       return s;
     }
     function play(m, col) {
-      moves.push(m); pos.make(m);
+      moves.push(m); pos.make(m); ply++; onTurn();
       const wait = place(m, col, true); showMarks(); return wait;
     }
     function next() {
       if (stopped) return;
       const s = status();
       if (s.over) return end(s);
-      showMarks();
+      showMarks(); onTurn();
       if (pvp) { hud(fmt(X.turn, pname(pos.side))); busy = false; return; }
       if (pos.side === human) { hud(L.turn); busy = false; return; }
       aiMove();
     }
     function end(s) {
-      over = true; busy = false; showMarks();
+      over = true; busy = false; showMarks(); if (ctx.onTurn) ctx.onTurn(-1);
       if (s.line) winLine(s.line);
       const draw = !s.winner, wt = draw ? '' : fmt(X.win, pname(s.winner));
       if (pvp) { hud(wt || L.draw); later(() => ctx.onEnd({ win: false, draw, level: ctx.level, score: draw ? X.full : X.five, pvp: true, winnerText: wt }), 1300); return; }
@@ -159,9 +161,10 @@
       if (!worker) worker = new Worker(BASE + 'engine.js' + VER);
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
-        if (stopped || id !== jid) return;
+        if (stopped || id !== jid || over) return;
         if (m === undefined || m === null || m < 0) { try { m = E.think(RULE, mvs, ctx.level).move; } catch (e) { m = -1; } }   // the worker failed: the same search on the page
         later(() => {
+          if (id !== jid || over) return;
           if (m < 0 || !pos.isLegal(m)) { busy = false; hud(''); return; }
           const w = play(m, ai); later(next, w + 60);
         }, Math.max(0, 420 - (Date.now() - t0)));
@@ -203,20 +206,63 @@
     // test hooks (positions on screen, state)
     const dbg = {
       at: m => { const [x, z] = xz(m); return T3.project(x, z, Y); },
-      state: () => ({ moves: moves.slice(), side: pos && pos.side, human, over, busy, pvp, stones: Object.keys(st).length }),
+      state: () => ({ hint: hintM, moves: moves.slice(), side: pos && pos.side, human, over, busy, pvp, stones: Object.keys(st).length }),
     };
     window.Atlas3D.gomoku._dbg = dbg;
-    return {
+    /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
+    const myTurn = () => !!pos && !over && !busy && (pvp || pos.side === human);
+    const undoN = () => pvp ? 1 : 2;
+    function finish(loser, why) {   // resign / time-out: colour `loser` (1 black, 2 white) loses
+      if (over || !pos) return;
+      over = true; busy = false; jid++; showMarks(); if (ctx.onTurn) ctx.onTurn(-1);
+      const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
+      if (pvp) { const wt = fmt(X.win, pname(3 - loser)); hud(wt); return later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: t('act.pvpEnd', { p: pname(loser), r, w: wt }), pvp: true, winnerText: wt }), 200); }
+      hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
+    }
+    const api = {
+      human: human - 1,
+      canUndo: () => myTurn() && moves.length >= undoN() + (pvp || human === 1 ? 0 : 1),
+      undo() {
+        if (!api.canUndo()) return;
+        timers.forEach(clearTimeout); timers.length = 0; jid++;
+        moves.splice(moves.length - undoN()).forEach(m => { const g = st[m]; if (g) { stones.remove(g); delete st[m]; } });
+        pos = E.replay(RULE, moves); ply++; kick(300);
+        busy = true; next();
+      },
+      canHint: () => myTurn(),
+      hint() {
+        if (!myTurn()) return Promise.resolve(false);
+        const j = ++hintJ, mvs = moves.slice();
+        return new Promise(res => {
+          if (!hintW) hintW = new Worker(BASE + 'engine.js' + VER);
+          hintW.onmessage = e => {
+            const r = e.data; if (r.type !== 'result' || r.id !== j) return;
+            if (stopped || j !== hintJ || over || moves.length !== mvs.length) return res(true);
+            const m = r.error ? -1 : r.move; if (!(m >= 0) || !pos.isLegal(m)) return res(false);
+            hintM = m;
+            const g = GB.tapMark(c), [x, z] = xz(m); g.position.set(x, Y, z); marks.add(g);   // the same vivid "here" marker as the first move's
+            pulsing.push(g); if (!pulseOn) { pulseOn = true; pulse(); }
+            later(() => { pulsing = pulsing.filter(q => q !== g); kick(); }, 2600);   // it pulses a few times, then stays lit (no idle loop)
+            res(true);
+          };
+          hintW.onerror = () => { hintW = null; res(false); };
+          hintW.postMessage({ type: 'think', id: j, rule: RULE, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
+        });
+      },
+      canResign: () => !!pos && !over,
+      resign() { if (pos && !over) finish(pvp ? pos.side : human, 'resign'); },
+      timeout(side) { finish(side + 1, 'time'); },
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick);
-        if (worker) worker.terminate(); worker = null;
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.gomoku._dbg === dbg) delete window.Atlas3D.gomoku._dbg;
       },
       _debug: dbg,
     };
+    return api;
   }
 
   /* ---------- the board card ---------- */
@@ -241,5 +287,5 @@
     return { name, desc: L.lvd[n <= 3 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.gomoku = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.gomoku = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

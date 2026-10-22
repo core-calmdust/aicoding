@@ -59,11 +59,14 @@
     board.scale.setScalar(SC);
     const bvEl = ctx.el.parentNode;
     let turned = false, colUI = false;
-    const FR = M3.frameOn(board, T3, { SC, Y, g, left: 6, right: 92, onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
+    const FR = M3.frameOn(board, T3, { SC, Y, g, left: ctx.bar ? 92 : 6, right: 92,   // (ctx.bar: the portal's action bar takes a column at the landscape left)
+      onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
       setTimeout(() => { if (!stopped) { hud(); placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
     let pos = null, T = null, sel = null, dests = null, worker = null, jid = 0, seed = '', stream = null, nRoll = 0, busy = false;
+    let ply = 0, hist = [], hintPlay = null, hintJ = 0;   // 待った: the position + dice at the start of each human turn · ヒント: the best play's remaining steps
+    const turnOn = side => { ply++; if (ctx.onTurn) ctx.onTurn(side, { human: PVP || side === 0, ply }); };   // the clock: a player's time runs from the roll to the last step
     const jobs = new Map();
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const sleep = ms => new Promise(r => later(r, ms));
@@ -184,6 +187,7 @@
       drop(); clearMarks(); sel = null; dests = null;
       const srcs = [...new Set(legalNow().map(x => x.from))];
       srcs.forEach(p => { const c = topOf(T.side, locOf(T.side, p)); if (c) popIn(ring(c.m.position.x, c.m.position.y + M3.CK_H + .02, c.m.position.z, 0xffc928), 1); });
+      drawHint();
       return srcs;
     }
     function select(p) {
@@ -198,7 +202,7 @@
       say(L.tapDest);
     }
     async function doPath(path) {
-      busy = true; drop(); clearMarks(); say('');
+      busy = true; hintPlay = null; hintJ++; drop(); clearMarks(); say('');
       for (const st of path) {
         if (stopped || !T) return;
         await stepAnim(T.side, st.from, st.to, false);   // one flight, like the AI's moves
@@ -216,7 +220,7 @@
     }
     async function undo() {
       if (!T || busy || !T.steps.length) return;
-      busy = true; drop(); clearMarks(); say('');
+      busy = true; hintPlay = null; hintJ++; drop(); clearMarks(); say('');
       const st = T.steps.pop();
       const me = T.side, c = topOf(me, locOf(me, st.to)); if (c) await moveTo(c, locOf(me, st.from));   // flies back the same way
       if (st.hit) { const v = topOf(1 - me, 'bar'); if (v) await moveTo(v, locOf(me, st.to), 1.2); }
@@ -227,18 +231,20 @@
     function commit() {
       if (!T || busy || legalNow().length) return;
       if (!T.plays.some(x => BG.key(x.pos) === BG.key(T.pos))) return;   // safety: must be one of the legal plays
-      const me = T.side; pos = T.pos; T = null; clearMarks(); SFX.tok(.5, 1.5);
+      const me = T.side; pos = T.pos; T = null; hintPlay = null; hintJ++; clearMarks(); SFX.tok(.5, 1.5);
       if (!checkEnd()) nextTurn(1 - me);
     }
     function beginMove(d, side = 0) {   // a human's move (side 1 too in a two-player game): the engine in that side's own numbering
+      if (stopped || over) return;
       toMove = side; T = { side, dice: d, left: d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice(), steps: [], pos: pos.slice(), start: pos.slice(), plays: BG.genPlays(pos, side, d[0], d[1]) };
-      if (T.plays.length === 1 && !T.plays[0].moves.length) { T = null; say(PVP ? L.noMoveC.replace('{c}', cname(side)) : L.noMove); later(() => { dimDice([]); nextTurn(1 - side); }, 1700); return; }
+      if (T.plays.length === 1 && !T.plays[0].moves.length) { T = null; say(PVP ? L.noMoveC.replace('{c}', cname(side)) : L.noMove); later(() => { if (!over) { dimDice([]); nextTurn(1 - side); } }, 1700); return; }
+      hist.push({ pos: pos.slice(), dice: d.slice(), side });
       phase = 'move'; afterStep();
     }
     async function humanRoll() {
-      if (phase !== 'roll' || stopped) return;
+      if (phase !== 'roll' || stopped || over) return;
       phase = 'anim'; say('');
-      const side = toMove === 1 ? 1 : 0, d = nextRoll(); await rollFor(side, d); if (stopped) return;
+      const side = toMove === 1 ? 1 : 0, d = nextRoll(); await rollFor(side, d); if (stopped || over) return;
       beginMove(d, side);
     }
 
@@ -252,16 +258,16 @@
       return new Promise(r => { const id = ++jid; jobs.set(id, r); worker.postMessage(Object.assign({}, m, { id })); });
     }
     async function aiTurn(d0) {
-      if (stopped) return;
-      toMove = 1; phase = 'ai'; say('');
+      if (stopped || over) return;
+      toMove = 1; phase = 'ai'; say(''); turnOn(1);
       const k = nRoll, d = d0 || nextRoll();
-      if (!d0) { await sleep(350); await rollFor(1, d); if (stopped) return; }
+      if (!d0) { await sleep(350); await rollFor(1, d); if (stopped || over) return; }
       const plays = BG.genPlays(pos, 1, d[0], d[1]);
-      if (plays.length === 1 && !plays[0].moves.length) { say(L.aiNoMove); await sleep(1500); if (stopped) return; dimDice([]); return yourTurn(); }
+      if (plays.length === 1 && !plays[0].moves.length) { say(L.aiNoMove); await sleep(1500); if (stopped || over) return; dimDice([]); return yourTurn(); }
       say(L.think);
       const t0 = Date.now();
       const r = await ask({ type: 'move', pos: Array.from(pos), side: 1, dice: d, level, tag: seed + '0:' + (d0 ? 0 : k) });
-      if (stopped) return;
+      if (stopped || over) return;
       let moves = r && r.moves;
       const ok = moves && plays.some(x => { const q = pos.slice(); moves.forEach(c => BG.apply(q, 1, BG.mvFrom(c), BG.mvTo(c))); return BG.key(q) === BG.key(x.pos); });
       if (!ok) moves = plays[0].moves;   // (the worker failed to load: still a legal play)
@@ -269,23 +275,23 @@
       say('');
       const left = d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice();
       for (const c of moves) {
-        if (stopped) return;
+        if (stopped || over) return;
         const from = BG.mvFrom(c), to = BG.mvTo(c);
         await stepAnim(1, from, to, false); BG.apply(pos, 1, from, to);
         const dd = from - to, i = left.indexOf(dd) >= 0 ? left.indexOf(dd) : left.indexOf(Math.min(...left.filter(v => v > dd)));
         if (i >= 0) left.splice(i, 1); else left.pop();
         dimDice(left); hud(); await sleep(140);
       }
-      if (stopped || checkEnd()) return;
-      await sleep(250); yourTurn();
+      if (stopped || over || checkEnd()) return;
+      await sleep(250); if (!over) yourTurn();
     }
-    function yourTurn(side = 0) { if (stopped) return; toMove = side; phase = 'roll'; say(PVP ? L.turnC.replace('{c}', cname(side)) : ''); }
+    function yourTurn(side = 0) { if (stopped || over) return; toMove = side; phase = 'roll'; turnOn(side); say(PVP ? L.turnC.replace('{c}', cname(side)) : ''); }
     function nextTurn(side) { if (PVP) yourTurn(side); else if (side === 1) aiTurn(); else yourTurn(0); }
 
     /* ---------- the end ---------- */
     function checkEnd() {
       const w = BG.winner(pos); if (w < 0) return false;
-      over = true; phase = 'over'; toMove = -1; clearMarks();
+      over = true; phase = 'over'; toMove = -1; clearMarks(); if (ctx.onTurn) ctx.onTurn(-1);
       const kind = BG.winKind(pos, w), kt = L['k' + Math.min(3, kind)];
       if (PVP) { const t = L.winC.replace('{c}', cname(w)) + ' · ' + kt; say(t); SFX.chime(); ctx.onEnd({ win: false, draw: false, level, score: t, pvp: true }); return true; }
       say((w === 0 ? L.win : L.lose) + ' · ' + kt); SFX.chime();
@@ -413,16 +419,71 @@
       const sp = diceSpots(2, s), p0 = dice.map(o => o.position.clone());   // both dice slide over to the starter
       await animP(380, k => dice.forEach((o, i) => { o.position.set(p0[i].x + (sp[i].x - p0[i].x) * io(k), p0[i].y + Math.sin(k * Math.PI) * .5, p0[i].z + (sp[i].z - p0[i].z) * io(k)); }));
       if (stopped) return;
-      if (s === 0 || PVP) { say(''); beginMove(d, s); } else aiTurn(d);
+      if (s === 0 || PVP) { say(''); turnOn(s); beginMove(d, s); } else aiTurn(d);
     })();
 
+    /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
+    function rebuildCks() {   // the checkers exactly as `pos` says (after 待った)
+      cks.forEach(c => board.remove(c.m)); cks = [];
+      for (const side of [0, 1]) for (let p = 0; p <= 25; p++) for (let i = 0; i < pos[side * 26 + p]; i++) cks.push({ side, at: locOf(side, p), m: mk(side) });
+      restack(); cks.forEach(c => { place(c); shadow(c); }); T3.kick(300);
+    }
+    function drawHint() {   // the best play's remaining steps: a glowing ring on each checker to move, its landing spot lit
+      if (!hintPlay || !T) return;
+      hintPlay.forEach((st, i) => {
+        const fl = locOf(T.side, st.from), c = topOf(T.side, fl);
+        if (c) popIn(ring(c.m.position.x, c.m.position.y + M3.CK_H + .04, c.m.position.z, 0xff7a1a), 1.25);
+        const at = locOf(T.side, st.to), [x, z] = landXZ(T.side, at);
+        if (st.to === 0) trayGlow(T.side); else glowPt(at, 0xffb03a, .5);
+        const sp = numSprite(i + 1); sp.position.set(x, Y + .8, z); marks.add(sp); popIn(sp, .5);
+      });
+      T3.kick(300);
+    }
+    function finish(loser, why) {   // resign / time-out: engine side `loser` loses (a single game, or the gammon / backgammon already obvious)
+      if (over || !pos) return;
+      const P = T ? T.pos : pos, w = 1 - loser, kind = P[loser * 26] === 0 && P[w * 26] > 0 && BG.allHome(P, w) ? BG.winKind(P, w) : 1;
+      over = true; phase = 'over'; toMove = -1; T = null; hintPlay = null; hintJ++; busy = false; drop(); clearMarks(); if (ctx.onTurn) ctx.onTurn(-1);
+      const r = t(why === 'time' ? 'act.timeout' : 'act.resigned'), kt = L['k' + Math.min(3, kind)];
+      SFX.chime();
+      if (PVP) { const wt = L.winC.replace('{c}', cname(w)); say(wt); return ctx.onEnd({ win: false, draw: false, level, score: t('act.pvpEnd', { p: cname(loser), r, w: wt }) + ' · ' + kt, pvp: true, winnerText: wt }); }
+      say(L.lose + ' · ' + r); ctx.onEnd({ win: false, draw: false, level, score: r + ' · ' + kt });
+    }
     const api = {
+      human: 0,
+      // 待った (the bar): when it is your turn to roll, the whole last turn pair (yours + the AI's) goes back; you play that roll again
+      // (also right after a roll, before any step: one more turn pair back)
+      canUndo: () => !stopped && !over && !busy && (PVP || toMove === 0) && (phase === 'roll' ? hist.length > 0 : phase === 'move' && !!T && !T.steps.length && hist.length > 1),
+      undo() {
+        if (!api.canUndo()) return;
+        if (phase === 'move') hist.pop();   // this turn's own snapshot
+        const h = hist.pop(); hintPlay = null; hintJ++;
+        pos = Int8Array.from(h.pos); T = null; sel = null; dests = null; drop(); clearMarks(); clearDice(); rebuildCks();
+        toMove = h.side; phase = 'anim'; say(''); turnOn(h.side);
+        rollFor(h.side, h.dice).then(() => { if (!stopped && !over) beginMove(h.dice, h.side); });
+      },
+      canHint: () => !stopped && !over && !busy && phase === 'move' && !!T && legalNow().length > 0,
+      hint() {
+        if (!api.canHint()) return Promise.resolve(false);
+        const j = ++hintJ, T0 = T, made = T.steps.map(x => x.from + ':' + x.to);
+        return ask({ type: 'analyze', pos: Array.from(T.start), side: T.side, dice: T.dice, ply: 1, keep: 8, max: 12, time: 1200 }).then(r => {
+          if (stopped || j !== hintJ || T !== T0 || T.steps.length !== made.length) return true;
+          const list = (r && r.list) || [];
+          for (const e of list) {   // the best play that still fits the steps already made
+            const rest = e.moves.map(c => BG.mvFrom(c) + ':' + BG.mvTo(c)), ok = made.every(k => { const i = rest.indexOf(k); if (i < 0) return false; rest.splice(i, 1); return true; });
+            if (ok && rest.length) { hintPlay = rest.map(k => { const [from, to] = k.split(':').map(Number); return { from, to }; }); showSources(); say(L.tapCk); return true; }
+          }
+          return false;
+        });
+      },
+      canResign: () => !stopped && !over && !!pos,
+      resign() { if (!over && pos) finish(PVP ? (toMove >= 0 ? toMove : 0) : 0, 'resign'); },
+      timeout(side) { finish(side, 'time'); },
       stop() {
         stopped = true; timers.forEach(clearTimeout); timers = [];
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true);
         if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); if (bvEl) bvEl.classList.remove('land', 'bgwide'); removeEventListener('resize', placeLater); FR.stop();
       },
-      _debug: { hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { side: T.side, left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
+      _debug: { hint: () => hintPlay, hist: () => hist.length, marks: () => marks.children.length, hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { side: T.side, left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
         pt: p => { const sd = T ? T.side : 0, at = locOf(sd, p), c = topOf(sd, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(sd, at); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); },
         dst: p => { const sd = T ? T.side : 0, [x, z] = landXZ(sd, locOf(sd, p)); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); } },
     };
@@ -448,5 +509,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], who: Wh[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
+  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
 })();

@@ -95,13 +95,15 @@
 
     let E = null, pos = null, hashes = [], legal = [], moves = [], startFen = null;
     let stopped = false, busy = true, over = false, thinking = false, sel = -1, worker = null, jid = 0, promoEl = null, imgs = null;
+    let ply = 0, hintW = null, hintJ = 0, hintMv = 0;
+    const onTurn = () => { if (ctx.onTurn && pos) ctx.onTurn(pos.side, { human: pvp || pos.side === human, ply }); };   // HUD pills: White (left) 0, Black 1
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
 
     /* ---------- marks on the board (last move, check, selection, destinations) ---------- */
     const hl = new TH.Group(), mv = new TH.Group(); board.add(hl, mv);
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
-    const MAT = { last: basic(0xffcf3a, .42), check: basic(0xff2a2a, .62), sel: basic(0x2fd17a, .5), dot: basic(0x1f9e5a, .78), cap: basic(0x1f9e5a, .85) };
+    const MAT = { last: basic(0xffcf3a, .42), check: basic(0xff2a2a, .62), sel: basic(0x2fd17a, .5), dot: basic(0x1f9e5a, .78), cap: basic(0x1f9e5a, .85), hint: basic(0xff7a1a, .95), hintT: basic(0xffb03a, .42) };
     const GEO = { tile: new TH.BoxGeometry(.96, .012, .96), dot: new TH.CylinderGeometry(.15, .15, .012, 28), ring: new TH.TorusGeometry(.4, .05, 8, 40) };
     GEO.ring.rotateX(Math.PI / 2);
     function mark(group, geo, mat, sq, y = .008) { if (T3.kick) T3.kick(150); const m = new TH.Mesh(geo, mat); const [x, z] = xz(sq); m.position.set(x, Y + y, z); m.renderOrder = 2; group.add(m); return m; }
@@ -204,7 +206,7 @@
       ctx.hud(`${side(0)}<span class="hm">${msg || ''}</span>${side(1)}`);
     }
     function showMarks() {
-      clear(hl);
+      clear(hl); hintMv = 0; hintJ++;
       if (moves.length) { const m = moves[moves.length - 1]; mark(hl, GEO.tile, MAT.last, m & 127); mark(hl, GEO.tile, MAT.last, (m >> 7) & 127); }
       if (pos.inCheck()) { const k = mark(hl, GEO.tile, MAT.check, pos.ksq[pos.side], .01); anim(420, e => { const s = 1 + Math.sin(e * Math.PI) * .12; k.scale.set(s, 1, s); }); }
     }
@@ -238,7 +240,7 @@
       let rook = null, rto = -1;
       if (fl & 4) { const rf = to > from ? from + 3 : from - 4; rto = to > from ? from + 1 : from - 1; rook = pcs[rf]; delete pcs[rf]; pcs[rto] = rook; }
       pcs[to] = g;
-      moves.push(m); refresh(); showMarks(); hud('');
+      moves.push(m); refresh(); ply++; onTurn(); showMarks(); hud('');
       let pending = 1; const fin = () => { if (--pending === 0 && done) done(); };
       const [x0, z0] = [g.position.x, g.position.z], [x1, z1] = xz(to);
       const dur = glide(g, to, g.userData.type === 'N', () => { if (pr) { pending++; promote(g, TYPES[pr], to, fin); } fin(); });
@@ -253,6 +255,7 @@
       if (stopped) return;
       const st = status(); legal = st.legal || [];
       if (st.over) return end(st);
+      onTurn();
       if (pvp || pos.side === human) {
         const tn = pvp ? PX.turn.replace('{p}', PX.n[pos.side]) : L.turn;
         hud(pos.inCheck() ? (pvp ? X.check + ' ' + tn : X.check) : tn);
@@ -262,7 +265,7 @@
       aiMove();
     }
     function end(st) {
-      over = true; busy = false; clear(mv);
+      over = true; busy = false; clear(mv); if (ctx.onTurn) ctx.onTurn(-1);
       const win = !pvp && !st.draw && st.winner === human, wt = pvp && !st.draw ? PX.win.replace('{p}', PX.n[st.winner]) : '';
       hud(st.draw ? L.draw : pvp ? wt : win ? L.win : L.lose);
       if (st.why === 'mate') {   // the mated king lies down
@@ -278,9 +281,10 @@
       if (!worker) worker = new Worker(BASE + 'engine.js' + VER);
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
-        if (stopped || id !== jid) return;
+        if (stopped || id !== jid || over) return;
         if (!m) { try { m = E.think(startFen, mvs, ctx.level).move; } catch (e) { m = 0; } }   // the worker failed: same search on the page (JS)
         later(() => {
+          if (id !== jid || over) return;
           thinking = false;
           if (!m) { next(); return; }
           busy = true; play(m, () => { busy = false; next(); });
@@ -349,22 +353,69 @@
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
       at: n => { const sq = (n.charCodeAt(0) - 97) + ((+n[1] - 1) << 4), [x, z] = xz(sq); return T3.project(x, z, Y); },
-      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel, promo: !!promoEl, check: !!(pos && pos.inCheck()), pieces: Object.keys(pcs).length }),
+      state: () => ({ hint: hintMv ? E.sqName(hintMv & 127) + E.sqName((hintMv >> 7) & 127) : '', moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel, promo: !!promoEl, check: !!(pos && pos.inCheck()), pieces: Object.keys(pcs).length }),
       board: () => { const o = {}; Object.entries(pcs).forEach(([sq, g]) => { o[E.sqName(+sq)] = (g.userData.color === 'w' ? g.userData.type : g.userData.type.toLowerCase()); }); return o; },
       setup: fen => begin(fen),
     };
     window.Atlas3D.chess._dbg = dbg;
-    return {
+    /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
+    const myTurn = () => !!pos && !over && !busy && !thinking && !promoEl && (pvp || pos.side === human);
+    const undoN = () => pvp ? 1 : 2;
+    function finish(loser, why) {   // resign / time-out: colour `loser` (0 White, 1 Black) loses
+      if (over || !pos) return;
+      over = true; busy = false; thinking = false; jid++; hintJ++; closePromo(); clear(mv); if (ctx.onTurn) ctx.onTurn(-1);
+      const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
+      if (pvp) { const wt = PX.win.replace('{p}', PX.n[loser ^ 1]); hud(wt); return later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: t('act.pvpEnd', { p: PX.n[loser], r, w: wt }), pvp: true, winnerText: wt }), 200); }
+      hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
+    }
+    function rebuild() {   // pieces exactly as the position says, without the drop-in
+      Object.values(pcs).forEach(g => board.remove(g)); pcs = {};
+      for (let sq = 0; sq < 120; sq++) { if (sq & 0x88) continue; const p = pos.b[sq]; if (p) pcs[sq] = mk(TYPES[p & 7], p & 8 ? 'b' : 'w', sq); }
+      board.children.filter(g => g.userData && g.userData.type && (g.userData.color === 'w' || g.userData.color === 'b') && !Object.values(pcs).includes(g)).forEach(g => board.remove(g));   // a toppled king, a fading capture
+      if (T3.kick) T3.kick(300);
+    }
+    const api = {
+      human,
+      canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 1 ? 1 : 0)),
+      undo() {
+        if (!api.canUndo()) return;
+        timers.forEach(clearTimeout); timers.length = 0; jid++; deselect();
+        moves.splice(moves.length - undoN()); refresh(); rebuild(); ply++;
+        busy = false; showMarks(); next();
+      },
+      canHint: () => myTurn(),
+      hint() {
+        if (!myTurn()) return Promise.resolve(false);
+        const j = ++hintJ, mvs = moves.slice();
+        return new Promise(res => {
+          if (!hintW) hintW = new Worker(BASE + 'engine.js' + VER);
+          hintW.onmessage = e => {
+            const r = e.data; if (r.type !== 'result' || r.id !== j) return;
+            if (stopped || j !== hintJ || over || moves.length !== mvs.length) return res(true);
+            const m = r.error ? 0 : r.move; if (!m || !legal.includes(m)) return res(false);
+            hintMv = m; const from = m & 127, to = (m >> 7) & 127;
+            const a = mark(hl, GEO.ring, MAT.hint, from, .035), b = mark(hl, GEO.ring, MAT.hint, to, .035), g = mark(hl, GEO.tile, MAT.hintT, to, .011);
+            anim(560, k => { const s = 1 + Math.sin(k * Math.PI * 2) * .16 * (1 - k); a.scale.set(s, s, s); b.scale.set(s, s, s); });
+            res(true);
+          };
+          hintW.onerror = () => { hintW = null; res(false); };
+          hintW.postMessage({ type: 'think', id: j, fen: startFen, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
+        });
+      },
+      canResign: () => !!pos && !over,
+      resign() { if (pos && !over) finish(pvp ? pos.side : human, 'resign'); },
+      timeout(side) { finish(side, 'time'); },
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); closePromo();
         ctx.el.removeEventListener('click', onClick); removeEventListener('resize', onResize);
-        if (worker) worker.terminate(); worker = null;
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.chess._dbg === dbg) delete window.Atlas3D.chess._dbg;
       },
       _debug: dbg,
     };
+    return api;
   }
 
   /* ---------- the board card ---------- */
@@ -380,5 +431,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], rating: RATING[n - 1], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.chess = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.chess = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

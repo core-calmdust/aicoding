@@ -30,6 +30,11 @@
 - ショップ：毎日日付で入れかわる6品（アイコン3・背景2・フレーム1）
 
 ## 3Dアダプタの約束
-`Atlas3D[id] = { levels, sides, start(ctx) → { stop() } }`
-`ctx = { el, Table3D, lang, t, level, side, hud(html), onEnd({win, draw, level, score}) }`
+`Atlas3D[id] = { levels, sides, modes, table, tableModes, clock: 'byo'|'fis'|'bg', start(ctx) → session }`
+`ctx = { el, Table3D, lang, t, level, side, mode, bar, hud(html), onTurn(side, { human, ply }), onEnd({win, draw, level, score, pvp, winnerText}) }`
+`session = { stop(), human, undo(), canUndo(), hint() → Promise, canHint(), resign(), canResign(), timeout(side) }`
+- ちゃぶ台の対局では app.js が共通のアクションバー（待った・投了・ヒント、両端に時計）を画面下部に出す（バックギャモンの横向き表示では左の縦列）。盤はバーの上に収まるよう `Table3D.setInset` で枠取りされる
+- `onTurn(side)`：手番が変わるたびに呼ぶ（side＝HUDの左0／右1、-1＝誰の番でもない）。時計は app.js が進め、時間切れで `session.timeout(side)` を呼ぶ。AI戦では人間の時計だけが進む
+- 持ち時間（`clock`）：byo＝なし／1手30秒／10分+30秒／30分+60秒、fis＝なし／3分+2秒／10分+5秒／15分+10秒、bg＝なし／1手30秒／5分+30秒／10分+30秒。ボードカードで選び `atlas-play` に `<id>:tc` で保存
+- 待った：AI戦は自分の前の手番まで（2手）、二人対戦は1手。AIの思考中・終局後は不可。ヒント：エンジンの最善手を光るリングで表示。投了は `shared/resign.js` で確認
 盤は `Table3D.show(id, model)` で置き、クリックは `Table3D.pick(event, 盤面の高さ)` で盤上の座標に変換。
