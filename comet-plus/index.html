@@ -1845,7 +1845,7 @@ function setupNewStage() {
     // 新しい雑魚: 4面からウィーバー・ランス、5面からセントリー。ボス面以外で0〜3体（種類も時間もばらばら）
     { const pool = []; if (stage >= 4) pool.push('weaver', 'lance'); if (stage >= 5) pool.push('sentry');
       extraEnemy = [];
-      if (pool.length && stage % 3 !== 0) { const n = Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) extraEnemy.push({ type: pool[Math.floor(Math.random() * pool.length)], frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.15 + Math.random() * 0.65)) }); }
+      if (pool.length && stage % 3 !== 0) { const n = Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) { let ty = pool[Math.floor(Math.random() * pool.length)]; if (ty === 'weaver' && extraEnemy.filter(e => e.type === 'weaver').length >= 2) ty = pool.filter(t => t !== 'weaver')[Math.floor(Math.random() * (pool.length - 1))]; extraEnemy.push({ type: ty, frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.15 + Math.random() * 0.65)) }); } } // WEAVERは1面に最大2体
       extraEnemy.sort((a, b) => a.frame - b.frame); }
     
     // Set Looper spawn frame for this stage
