@@ -9,9 +9,9 @@
 (function (root) {
 'use strict';
 const BOARDS = {
-  kaya:     { base: ['#e9c27a', '#ddb062', '#d2a053'], grain: 'masa', rings: 62, late: '#b8803c', gk: .9, line: '#2a1c0e', star: '#1d1209', coord: 'rgba(60,38,16,.78)', edge: ['#b98444', '#8a5d2b'], mini: ['#e1b469', '#2a1c0e'], hl: .16 },
-  shinkaya: { base: ['#f4dcaa', '#ecd096', '#e2c283'], grain: 'masa', rings: 74, late: '#d0a463', gk: .6, line: '#3a2a16', star: '#2a1d0e', coord: 'rgba(70,50,24,.75)', edge: ['#cfa76a', '#a07a44'], mini: ['#efd49c', '#3a2a16'], hl: .18 },
-  katsura:  { base: ['#d89f62', '#cb8f52', '#bd7f45'], grain: 'ita', rings: 18, late: '#a2622c', gk: .75, line: '#2b170a', star: '#1f1006', coord: 'rgba(62,32,12,.78)', edge: ['#a86a33', '#7b4a20'], mini: ['#cf9459', '#2b170a'], hl: .14 },
+  kaya:     { base: ['#e9c27a', '#ddb062', '#d2a053'], grain: 'masa', rings: 70, late: '#c08a44', gk: .7, line: '#2a1c0e', star: '#1d1209', coord: 'rgba(60,38,16,.78)', edge: ['#b98444', '#8a5d2b'], mini: ['#e1b469', '#2a1c0e'], hl: .16 },
+  shinkaya: { base: ['#f4dcaa', '#ecd096', '#e2c283'], grain: 'masa', rings: 84, late: '#d4aa6a', gk: .5, line: '#3a2a16', star: '#2a1d0e', coord: 'rgba(70,50,24,.75)', edge: ['#cfa76a', '#a07a44'], mini: ['#efd49c', '#3a2a16'], hl: .18 },
+  katsura:  { base: ['#d89f62', '#cb8f52', '#bd7f45'], grain: 'ita', rings: 20, late: '#a8683a', gk: .6, line: '#2b170a', star: '#1f1006', coord: 'rgba(62,32,12,.78)', edge: ['#a86a33', '#7b4a20'], mini: ['#cf9459', '#2b170a'], hl: .14 },
   urushi:   { base: ['#2b1210', '#160807', '#0a0404'], grain: 'gloss', gk: 0, line: '#c9a24a', star: '#e0bd62', coord: 'rgba(214,180,100,.8)', edge: ['#3a1d18', '#1a0c0a'], mini: ['#1d0f0d', '#c9a24a'], hl: .22 },
   bamboo:   { base: ['#dcbc72', '#d1ad62', '#c7a057'], grain: 'bamboo', gk: .6, line: '#2c2410', star: '#211a0a', coord: 'rgba(56,44,18,.78)', edge: ['#a98a42', '#7c6430'], mini: ['#d4b366', '#2c2410'], hl: .12 },
   washi:    { base: ['#f3ecdc', '#ece3cf', '#e3d8c0'], grain: 'washi', gk: .5, line: '#1b1b1b', star: '#111', coord: 'rgba(40,36,30,.7)', edge: ['#b8ab90', '#8d816a'], mini: ['#efe7d5', '#1b1b1b'], hl: .1, ink: true },
@@ -82,13 +82,13 @@ function boardTex(id, px) {
       if (B.grain === 'masa') R = u * B.rings + (sp(u, .5) - .5) * B.rings * 0.18 + (wan(u, v) - .5) * 0.9 + (wan2(u, v) - .5) * 0.18;
       else { const du = (u - 0.47) * 1.15 + (wan(u, v) - .5) * 0.07; R = Math.sqrt(du * du * 10 + Math.pow(v + 0.55 + (sp(u, .5) - .5) * 0.25, 2)) * B.rings + (wan2(u, v) - .5) * 0.2; }
       const ri = Math.floor(R), fr = R - ri, h = hash1(ri), h2 = hash1(ri + 7777);
-      const lw = 0.1 + h * 0.22;                       // latewood width varies ring to ring
+      const lw = 0.05 + h * 0.1;                        // latewood width varies ring to ring (thin, like real kaya)
       const late = fr > 1 - lw ? Math.pow((fr - (1 - lw)) / lw, 0.7) : 0;
-      const edge = fr < 0.035 ? 1 - fr / 0.035 : 0;     // the sharp boundary where the next spring wood starts
-      const early = Math.pow(fr, 2.2) * 0.35;           // spring wood darkens slowly towards the latewood
-      let t = Math.min(1, (early + late * (0.55 + h2 * 0.45) + edge * 0.3) * B.gk);
+      const edge = fr < 0.02 ? 1 - fr / 0.02 : 0;     // the sharp boundary where the next spring wood starts
+      const early = Math.pow(fr, 2.2) * 0.18;           // spring wood darkens slowly towards the latewood
+      let t = Math.min(1, (early + late * (0.35 + h2 * 0.4) + edge * 0.15) * B.gk);
       // pores / fibre flecks along the grain, and broad tone streaks (heart / sap wood)
-      const pore = pores(u, v); if (pore > 0.86) t = Math.min(1, t + (pore - 0.86) * 2.2 * B.gk);
+      const pore = pores(u, v); if (pore > 0.9) t = Math.min(1, t + (pore - 0.9) * 1.2 * B.gk);
       const streak = (stk(u, v) - .5) * 0.5;
       c = mix(c, lateC, t);
       c = mix(c, streak > 0 ? hiC : lateC, Math.abs(streak) * 0.35);

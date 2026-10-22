@@ -208,10 +208,10 @@ function drawGrid() {
   const full = n - 1 + padOf() + padFar(), sc = view ? Math.min(1.3, full / vb[2]) : 1;   // zoomed: the grain grows only a little (huge planks look fake)
   goban.style.backgroundSize = (sc * 100) + '% ' + (sc * 100) + '%';
   goban.style.backgroundPosition = view ? `${-((vb[0] + padOf()) / full) * sc * 100 / (sc - 1 || 1)}% ${-((vb[1] + padOf()) / full) * sc * 100 / (sc - 1 || 1)}%` : '0 0';
-  const lw = n <= 9 ? 0.03 : n <= 13 ? 0.035 : 0.04;
+  const lw = n <= 9 ? 0.024 : n <= 13 ? 0.028 : 0.034;
   let d = '';
   for (let i = 0; i < n; i++) { d += `M0 ${i}H${n - 1}M${i} 0V${n - 1}`; }
-  let s = `<g class="grid"><path class="gl" d="${d}" stroke-width="${lw}"/><rect class="gl" x="0" y="0" width="${n - 1}" height="${n - 1}" fill="none" stroke-width="${lw * 2}"/>`;
+  let s = `<g class="grid"><path class="gl" d="${d}" stroke-width="${lw}"/><rect class="gl" x="0" y="0" width="${n - 1}" height="${n - 1}" fill="none" stroke-width="${lw * 1.8}"/>`;
   for (const i of R.starPoints(n)) { const [x, y] = xyOf(i); s += `<circle class="gstar" cx="${x}" cy="${y}" r="${n <= 9 ? 0.09 : 0.11}"/>`; }
   if (settings.coord) {
     const fs = 0.38, o = 0.72;
