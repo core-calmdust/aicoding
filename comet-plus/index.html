@@ -272,7 +272,8 @@
         }
         var T_IN = 260, T_HOLD = 1000, T_OUT = 260, t0 = 0, phase = 'in', outAt = 0, done = false;
         var ease = function (k) { return 1 - Math.pow(1 - k, 2); };
-        function frame(now) {
+        function frame() {
+            var now = performance.now(); // rAFの時刻は古いことがあるので実時刻で進める
             if (!t0) t0 = now;
             var e = now - t0;
             if (phase === 'in') {
@@ -288,15 +289,27 @@
             }
             requestAnimationFrame(frame);
         }
-        function finish() { if (done) return; done = true; el.classList.add('out'); setTimeout(function () { el.remove(); }, 400); setTimeout(function () { if (ctx && ctx.close) try { ctx.close(); } catch (e) {} }, 3200); } // 音の余韻は最後まで鳴らす
+        function finish() { if (done) return; done = true; window.__bootBusy = false; el.classList.add('out'); setTimeout(function () { el.remove(); }, 400); setTimeout(function () { if (ctx && ctx.close) try { ctx.close(); } catch (e) {} }, 3200); } // 音の余韻は最後まで鳴らす
         function begin(waiting) {
             size(); el.classList.add('show'); if (waiting) el.classList.add('wait');
             requestAnimationFrame(frame);
             if (!waiting) { chime(); outAt = performance.now() + T_IN + T_HOLD; } // 約0.5秒表示してから消える
         }
         function play() { el.classList.remove('wait'); chime(); outAt = Math.max(performance.now() + 250, t0 + T_IN + 120); }
-        var startIt = function () { begin(false); }; // 入力待ちはしない（音を鳴らせない環境では音なしで表示）
-        if (img.complete && img.naturalWidth) startIt(); else { img.onload = startIt; img.onerror = finish; }
+        var startIt = function () { window.__bootBusy = true; begin(false); }; // 入力待ちはしない（音を鳴らせない環境では音なしで表示）
+        // ゲームの読み込みと重なるとモザイクがカクつくので、読み込みが終わって描画が安定してから始める
+        var ready = function () {
+            var last = 0, smooth = 0, t1 = performance.now();
+            var chk = function (now) {
+                if (last && now - last < 25) smooth++; else smooth = 0;
+                last = now;
+                if (smooth >= 4 || now - t1 > 900) { setTimeout(startIt, 120); return; } // 4フレーム連続で滑らか（または最大0.9秒）→少し間を置いて開始
+                requestAnimationFrame(chk);
+            };
+            requestAnimationFrame(chk);
+        };
+        var whenLoaded = function () { if (document.readyState === 'complete') ready(); else window.addEventListener('load', ready, { once: true }); };
+        if (img.complete && img.naturalWidth) whenLoaded(); else { img.onload = whenLoaded; img.onerror = finish; }
     })();
     </script>
     <div id="rotate-msg"></div>
@@ -6889,6 +6902,7 @@ function movePlayerRT(ms) {
     player.x = Math.max(0, Math.min(config.canvasWidth, player.x + (kr ? 1 : -1) * sp * ms / 1000));
 }
 function gameLoop(timestamp) {
+    if (window.__bootBusy) { simRealLast = null; requestAnimationFrame(gameLoop); return; } // 起動ロゴ表示中はゲームの描画を止めてロゴを滑らかに
     if (timestamp !== undefined) {
         if (simRealLast === null) simRealLast = timestamp;
         let delta = Math.min(250, timestamp - simRealLast);
