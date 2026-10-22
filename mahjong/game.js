@@ -236,9 +236,11 @@ class MJGame {
         const ag = this.agariFor(s, T(drawn), true, { rinshan });
         opts.canTsumo = !!ag; opts.tsumoRes = ag;
         const sealed = this.P.some((q, i) => i !== s && q.fx.seal);   // skill "seal": no riichi for the others this hand
-        if (!p.riichi && p.melds.length === 0 && this.scores[s] >= 1000 && this.liveLeft() >= 4) {
+        if (!p.riichi && p.melds.every(m => m.type === 'ankan')) {
           const rd = this.riichiDiscards(p);
-          if (sealed) { if (rd.length) opts.riichiSealed = true; }
+          // tenpai but riichi not allowed: tell the player why
+          const why = sealed ? 'sealed' : this.scores[s] < 1000 ? 'points' : this.liveLeft() < 4 ? 'wall' : '';
+          if (why) { if (rd.length) opts.riichiBlocked = why; }
           else opts.riichi = rd;
         }
         opts.ankans = []; opts.kakans = [];
@@ -286,7 +288,7 @@ class MJGame {
       const t = T(id); if (seen.has(t)) continue; seen.add(t);
       const h = p.hand.slice(); h.splice(h.indexOf(id), 1);
       const c = MJ.countsIds(h);
-      if (MJ.shanten(c, 0) === 0 && MJ.waits(c, 0).length) out.push(id);
+      if (MJ.shanten(c, p.melds.length) === 0 && MJ.waits(c, p.melds.length).length) out.push(id);
     }
     return out;
   }

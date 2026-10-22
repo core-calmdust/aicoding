@@ -569,7 +569,7 @@ function myTurn(o, res) {
     e.currentTarget.innerHTML = UIS.riichiMode ? t('cancel') : t('riichi');
     renderHand();
   });
-  if (o.riichiSealed) { const b = btn(t('riichiSealed'), 'rii', () => toast(t('riichiSealedWhy'))); b.classList.add('sealed'); }
+  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked))); b.classList.add('sealed'); }
   const kans = (o.ankans || []).map(x => ['ankan', x]).concat((o.kakans || []).map(x => ['kakan', x]));
   for (const [k, tt] of kans) btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt }));
   if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }));
