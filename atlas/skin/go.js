@@ -86,7 +86,7 @@ html.atlas-go.atlas-go3d #gStones{display:none}
 html.atlas-go.atlas-go3d .bsvg .lm{display:none}
 html.atlas-go .bsvg .ghost{opacity:.55}
 html.atlas-go .side{align-self:start!important}
-html.atlas-go #bdRow button[data-look] svg{border-radius:4px}
+html.atlas-go body.counting #evalCard .graph{display:none}
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){html.atlas-go .side-in > *{width:min(var(--bs), 100%)}}`;
   document.head.appendChild(css);
 
@@ -176,7 +176,10 @@ html.atlas-go #bdRow button[data-look] svg{border-radius:4px}
     kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي' },
     lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي' },
   };
-  const THUMB = { kaya: 'linear-gradient(90deg,#e9b25a,#d99a3f 40%,#e7ad55 70%,#d39441)', lacquer: 'linear-gradient(180deg,#e9b25a 0 62%,#120d0a 62% 100%)' };
+  // thumbnails: the game's own kaya thumbnail (a real little board), the lacquer one with a black urushi side and a gold line
+  const thumb = k => { let s = ''; try { s = designThumb('kaya', 'classic'); } catch (e) {} if (!s) return '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#e1b469"/></svg>';
+    if (k !== 'lacquer') return s; const W = +(s.match(/viewBox="0 0 ([\d.]+)/) || [0, 74])[1];
+    return s.replace('</svg>', `<rect x="0" y="${W * .8}" width="${W}" height="${W * .2}" fill="#120d0a"/><path d="M${W * .08} ${W * .9}H${W * .92}" stroke="#efcd72" stroke-width="${W * .02}"/></svg>`); };
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   function look(quiet) {
     U.setLook(mine || 'kaya');
@@ -190,7 +193,7 @@ html.atlas-go #bdRow button[data-look] svg{border-radius:4px}
     const row = document.getElementById('bdRow'); if (!row) return;
     let bs = [...row.querySelectorAll('button[data-look]')];
     if (!bs.length) bs = ['lacquer', 'kaya'].map(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.look = k; row.prepend(b); return b; });
-    bs.forEach(b => { const k = b.dataset.look, L = LBLS[k]; b.innerHTML = '<svg viewBox="0 0 40 40"></svg><span></span>'; b.querySelector('span').textContent = L[lang()] || L.en; b.querySelector('svg').style.background = THUMB[k]; b.classList.toggle('sel', mine === k); b.setAttribute('aria-pressed', mine === k); });
+    bs.forEach(b => { const k = b.dataset.look, L = LBLS[k]; b.innerHTML = thumb(k) + '<span></span>'; b.querySelector('span').textContent = L[lang()] || L.en; b.classList.toggle('sel', mine === k); b.setAttribute('aria-pressed', mine === k); });
     if (mine) row.querySelectorAll('button[data-bd]').forEach(b => { b.classList.remove('sel'); b.setAttribute('aria-pressed', 'false'); });
   }
   const bdRow = document.getElementById('bdRow');

@@ -62,10 +62,10 @@
     "done": "<b>目が2つ</b>できた！ 白はどちらの目にも打てないから、この黒はもう絶対に取られない。これを<b>生き</b>っていうよ。"
    },
    {
-    "say": "打つところがなくなったら<b>パス</b>。2人続けてパスしたら<b>終局</b>だよ。自分の石で囲んだ空き点が<b>地</b>（陣地）。黒の地は34目、白は29目。後から打つ白は<b>コミ</b>5目半をもらえるよ。"
+    "say": "打つところがなくなったら<b>パス</b>。2人続けてパスしたら<b>終局</b>だよ。自分の石で囲んだ空き点が<b>地</b>（陣地）。黒の地は35目、白は28目。後から打つ白は<b>コミ</b>6目半をもらえるよ。"
    },
    {
-    "say": "<b>地＋アゲハマ</b>（取った石）の多いほうが<b>勝ち</b>！ いまのは白 29＋5.5＝34.5 で、黒の34目より半目多いから白の勝ち。取られない形を作りながら、広く囲もう。さあ、対局してみよう！"
+    "say": "<b>地＋アゲハマ</b>（取った石）の多いほうが<b>勝ち</b>！ いまのは黒35目、白は 28＋6.5＝34.5 で、黒の<b>半目勝ち</b>。コミがあるから、ほんの少しの差で勝ち負けが決まるんだ。取られない形を作りながら、広く囲もう。さあ、対局してみよう！"
    }
   ]
  },
@@ -118,10 +118,10 @@
     "done": "<b>Two eyes!</b> White can never fill both, so this black group can never be captured. It is <b>alive</b>."
    },
    {
-    "say": "When there's nothing useful left to play, you <b>pass</b>. Two passes in a row <b>end the game</b>. The empty points you surround are your <b>territory</b>: Black 34, White 29. White moved second, so White gets <b>komi</b>: 5.5 points."
+    "say": "When there's nothing useful left to play, you <b>pass</b>. Two passes in a row <b>end the game</b>. The empty points you surround are your <b>territory</b>: Black 35, White 28. White moved second, so White gets <b>komi</b>: 6.5 points."
    },
    {
-    "say": "The bigger total of <b>territory + prisoners</b> <b>wins</b>! Here White has 29 + 5.5 = 34.5 — half a point more than Black's 34. Make shapes that can't be captured and surround plenty. Let's play!"
+    "say": "The bigger total of <b>territory + prisoners</b> <b>wins</b>! Here Black has 35 and White 28 + 6.5 = 34.5, so Black wins by <b>half a point</b>. Thanks to komi, games are often that close. Make shapes that can't be captured and surround plenty. Let's play!"
    }
   ]
  },
@@ -174,10 +174,10 @@
     "done": "<b>两只眼</b>做成了！白棋不可能同时填满两只眼，所以这块黑棋永远不会被提掉，这叫<b>活棋</b>。"
    },
    {
-    "say": "没有有用的地方可下时就<b>停一手</b>。双方连续停一手，<b>对局结束</b>。自己的棋子围住的空点就是<b>地</b>：黑34目，白29目。后下的白棋能得到<b>贴目</b>5目半。"
+    "say": "没有有用的地方可下时就<b>停一手</b>。双方连续停一手，<b>对局结束</b>。自己的棋子围住的空点就是<b>地</b>：黑35目，白28目。后下的白棋能得到<b>贴目</b>6目半。"
    },
    {
-    "say": "<b>地＋提子</b>多的一方<b>获胜</b>！这里白棋 29＋5.5＝34.5，比黑棋的34目多半目，白胜。一边做出不会被提的形，一边多围地吧。来下一局！"
+    "say": "<b>地＋提子</b>多的一方<b>获胜</b>！这里黑棋35目，白棋 28＋6.5＝34.5，黑棋<b>胜半目</b>。因为有贴目，胜负常常只差一点点。一边做出不会被提的形，一边多围地吧。来下一局！"
    }
   ]
  },
@@ -230,10 +230,10 @@
     "done": "<b>눈이 두 개</b>! 백은 두 눈을 모두 메울 수 없으니 이 흑은 절대 잡히지 않아. 이걸 <b>삶</b>이라고 해."
    },
    {
-    "say": "더 둘 곳이 없으면 <b>패스</b>. 두 사람이 연달아 패스하면 <b>대국 종료</b>야. 내 돌로 둘러싼 빈 점이 <b>집</b>이야. 흑 34집, 백 29집. 나중에 두는 백은 <b>덤</b> 5집 반을 받아."
+    "say": "더 둘 곳이 없으면 <b>패스</b>. 두 사람이 연달아 패스하면 <b>대국 종료</b>야. 내 돌로 둘러싼 빈 점이 <b>집</b>이야. 흑 35집, 백 28집. 나중에 두는 백은 <b>덤</b> 6집 반을 받아."
    },
    {
-    "say": "<b>집＋사석</b>이 많은 쪽이 <b>승리</b>! 여기서는 백 29＋5.5＝34.5로 흑 34집보다 반 집 많아서 백 승. 잡히지 않는 모양을 만들면서 넓게 둘러싸자. 자, 대국해 보자!"
+    "say": "<b>집＋사석</b>이 많은 쪽이 <b>승리</b>! 여기서는 흑 35집, 백 28＋6.5＝34.5라서 흑의 <b>반집승</b>. 덤이 있어서 아주 작은 차이로 승부가 갈리기도 해. 잡히지 않는 모양을 만들면서 넓게 둘러싸자. 자, 대국해 보자!"
    }
   ]
  },
@@ -286,10 +286,10 @@
     "done": "¡<b>Dos ojos</b>! Las blancas nunca pueden llenar ambos, así que este grupo negro no se puede capturar: está <b>vivo</b>."
    },
    {
-    "say": "Cuando no quedan jugadas útiles, se <b>pasa</b>. Dos pases seguidos <b>terminan la partida</b>. Los puntos vacíos que rodeas son tu <b>territorio</b>: negras 34, blancas 29. Las blancas juegan segundas y reciben <b>komi</b>: 5,5 puntos."
+    "say": "Cuando no quedan jugadas útiles, se <b>pasa</b>. Dos pases seguidos <b>terminan la partida</b>. Los puntos vacíos que rodeas son tu <b>territorio</b>: negras 35, blancas 28. Las blancas juegan segundas y reciben <b>komi</b>: 6,5 puntos."
    },
    {
-    "say": "¡Gana quien sume más <b>territorio + prisioneros</b>! Aquí las blancas tienen 29 + 5,5 = 34,5: medio punto más que las 34 negras. Forma grupos que no se puedan capturar y rodea mucho. ¡A jugar!"
+    "say": "¡Gana quien sume más <b>territorio + prisioneros</b>! Aquí las negras tienen 35 y las blancas 28 + 6,5 = 34,5: ganan las negras por <b>medio punto</b>. Gracias al komi, las partidas suelen ser así de reñidas. Forma grupos que no se puedan capturar y rodea mucho. ¡A jugar!"
    }
   ]
  },
@@ -342,10 +342,10 @@
     "done": "<b>Deux yeux</b> ! Blanc ne pourra jamais remplir les deux : ce groupe noir est imprenable. Il est <b>vivant</b>."
    },
    {
-    "say": "Quand il n'y a plus rien d'utile à jouer, on <b>passe</b>. Deux passes de suite <b>terminent la partie</b>. Les points vides que tu entoures sont ton <b>territoire</b> : Noir 34, Blanc 29. Blanc joue en second et reçoit le <b>komi</b> : 5,5 points."
+    "say": "Quand il n'y a plus rien d'utile à jouer, on <b>passe</b>. Deux passes de suite <b>terminent la partie</b>. Les points vides que tu entoures sont ton <b>territoire</b> : Noir 35, Blanc 28. Blanc joue en second et reçoit le <b>komi</b> : 6,5 points."
    },
    {
-    "say": "Le plus grand total <b>territoire + prisonniers</b> <b>gagne</b> ! Ici Blanc a 29 + 5,5 = 34,5 : un demi-point de plus que les 34 de Noir. Fais des formes imprenables et entoure beaucoup. À toi de jouer !"
+    "say": "Le plus grand total <b>territoire + prisonniers</b> <b>gagne</b> ! Ici Noir a 35 et Blanc 28 + 6,5 = 34,5 : Noir gagne d'<b>un demi-point</b>. Grâce au komi, les parties sont souvent aussi serrées. Fais des formes imprenables et entoure beaucoup. À toi de jouer !"
    }
   ]
  },
@@ -398,10 +398,10 @@
     "done": "<b>Dois olhos</b>! As brancas nunca conseguem preencher os dois, então este grupo preto não pode ser capturado: está <b>vivo</b>."
    },
    {
-    "say": "Quando não há mais lances úteis, você <b>passa</b>. Dois passes seguidos <b>encerram a partida</b>. Os pontos vazios que você cerca são o seu <b>território</b>: pretas 34, brancas 29. As brancas jogam em segundo e recebem <b>komi</b>: 5,5 pontos."
+    "say": "Quando não há mais lances úteis, você <b>passa</b>. Dois passes seguidos <b>encerram a partida</b>. Os pontos vazios que você cerca são o seu <b>território</b>: pretas 35, brancas 28. As brancas jogam em segundo e recebem <b>komi</b>: 6,5 pontos."
    },
    {
-    "say": "Vence quem somar mais <b>território + prisioneiros</b>! Aqui as brancas têm 29 + 5,5 = 34,5: meio ponto a mais que as 34 das pretas. Faça formas que não podem ser capturadas e cerque bastante. Vamos jogar!"
+    "say": "Vence quem somar mais <b>território + prisioneiros</b>! Aqui as pretas têm 35 e as brancas 28 + 6,5 = 34,5: as pretas vencem por <b>meio ponto</b>. Graças ao komi, as partidas costumam ser apertadas assim. Faça formas que não podem ser capturadas e cerque bastante. Vamos jogar!"
    }
   ]
  },
@@ -454,10 +454,10 @@
     "done": "<b>Zwei Augen</b>! Weiß kann nie beide füllen, also kann diese schwarze Gruppe nie geschlagen werden. Sie <b>lebt</b>."
    },
    {
-    "say": "Gibt es nichts Sinnvolles mehr zu spielen, <b>passt</b> man. Zweimal Passen hintereinander <b>beendet die Partie</b>. Die leeren Punkte, die du umschließt, sind dein <b>Gebiet</b>: Schwarz 34, Weiß 29. Weiß zieht als Zweiter und bekommt <b>Komi</b>: 5,5 Punkte."
+    "say": "Gibt es nichts Sinnvolles mehr zu spielen, <b>passt</b> man. Zweimal Passen hintereinander <b>beendet die Partie</b>. Die leeren Punkte, die du umschließt, sind dein <b>Gebiet</b>: Schwarz 35, Weiß 28. Weiß zieht als Zweiter und bekommt <b>Komi</b>: 6,5 Punkte."
    },
    {
-    "say": "Wer mehr <b>Gebiet + Gefangene</b> hat, <b>gewinnt</b>! Hier hat Weiß 29 + 5,5 = 34,5 – einen halben Punkt mehr als die 34 von Schwarz. Bilde Formen, die nicht geschlagen werden können, und umschließe viel. Los geht's!"
+    "say": "Wer mehr <b>Gebiet + Gefangene</b> hat, <b>gewinnt</b>! Hier hat Schwarz 35 und Weiß 28 + 6,5 = 34,5 – Schwarz gewinnt mit <b>einem halben Punkt</b>. Dank Komi sind Partien oft so knapp. Bilde Formen, die nicht geschlagen werden können, und umschließe viel. Los geht's!"
    }
   ]
  },
@@ -510,10 +510,10 @@
     "done": "<b>दो आँखें</b>! सफ़ेद दोनों को कभी नहीं भर सकता, इसलिए यह काला समूह कभी नहीं पकड़ा जाएगा। यह <b>जीवित</b> है।"
    },
    {
-    "say": "जब कोई काम की चाल न बचे, तो <b>पास</b> करो। लगातार दो पास से <b>खेल ख़त्म</b> होता है। अपने पत्थरों से घेरे खाली बिंदु तुम्हारा <b>क्षेत्र</b> हैं: काला 34, सफ़ेद 29। सफ़ेद बाद में चलता है, इसलिए उसे <b>कोमी</b> के 5.5 अंक मिलते हैं।"
+    "say": "जब कोई काम की चाल न बचे, तो <b>पास</b> करो। लगातार दो पास से <b>खेल ख़त्म</b> होता है। अपने पत्थरों से घेरे खाली बिंदु तुम्हारा <b>क्षेत्र</b> हैं: काला 35, सफ़ेद 28। सफ़ेद बाद में चलता है, इसलिए उसे <b>कोमी</b> के 6.5 अंक मिलते हैं।"
    },
    {
-    "say": "<b>क्षेत्र + बंदी</b> का जोड़ जिसका ज़्यादा हो, वही <b>जीतता</b> है! यहाँ सफ़ेद के 29 + 5.5 = 34.5 हैं — काले के 34 से आधा अंक ज़्यादा। न पकड़े जा सकने वाले आकार बनाओ और खूब घेरो। चलो खेलें!"
+    "say": "<b>क्षेत्र + बंदी</b> का जोड़ जिसका ज़्यादा हो, वही <b>जीतता</b> है! यहाँ काले के 35 और सफ़ेद के 28 + 6.5 = 34.5 हैं, इसलिए काला <b>आधे अंक</b> से जीता। कोमी के कारण खेल अक्सर इतने क़रीबी होते हैं। न पकड़े जा सकने वाले आकार बनाओ और खूब घेरो। चलो खेलें!"
    }
   ]
  },
@@ -566,18 +566,18 @@
     "done": "<b>عينان</b>! لا يستطيع الأبيض ملء الاثنتين أبدًا، فلن تُؤسر هذه المجموعة السوداء. إنها <b>حيّة</b>."
    },
    {
-    "say": "حين لا تبقى نقلات مفيدة <b>تمرّر</b>. تمريران متتاليان <b>ينهيان المباراة</b>. النقاط الفارغة التي تحيطها هي <b>أرضك</b>: الأسود 34، الأبيض 29. الأبيض يلعب ثانيًا فيحصل على <b>كومي</b>: 5.5 نقاط."
+    "say": "حين لا تبقى نقلات مفيدة <b>تمرّر</b>. تمريران متتاليان <b>ينهيان المباراة</b>. النقاط الفارغة التي تحيطها هي <b>أرضك</b>: الأسود 35، الأبيض 28. الأبيض يلعب ثانيًا فيحصل على <b>كومي</b>: 6.5 نقاط."
    },
    {
-    "say": "يفوز صاحب المجموع الأكبر من <b>الأرض + الأسرى</b>! هنا للأبيض 29 + 5.5 = 34.5، أي نصف نقطة أكثر من 34 للأسود. اصنع أشكالًا لا تُؤسر وأحِط بمساحة كبيرة. هيا نلعب!"
+    "say": "يفوز صاحب المجموع الأكبر من <b>الأرض + الأسرى</b>! هنا للأسود 35 وللأبيض 28 + 6.5 = 34.5، فيفوز الأسود <b>بنصف نقطة</b>. بفضل الكومي تكون المباريات متقاربة هكذا غالبًا. اصنع أشكالًا لا تُؤسر وأحِط بمساحة كبيرة. هيا نلعب!"
    }
   ]
  }
 };
   // the opening picture: a small 9 × 9 game in progress
   const SHOW = { b: ['22', '62', '44', '25', '36', '63', '54'], w: ['66', '26', '64', '35', '55', '65', '46'] };
-  // the counted game (step 8): black walls at x = BX[y], white walls just right of them → Black 34, White 29 points
-  const BX = [4, 4, 4, 3, 3, 4, 4, 4, 4];
+  // the counted game (step 8): black walls at x = BX[y], white walls just right of them → Black 35, White 28 points
+  const BX = [4, 4, 4, 4, 3, 4, 4, 4, 4];
   const END = { b: BX.map((x, y) => '' + x + y), w: BX.map((x, y) => '' + (x + 1) + y) };
   const STEPS = [
     { show: true },
@@ -587,7 +587,7 @@
     { b: ['34', '54', '33', '53', '45'], w: ['44', '43'], group: ['43', '44'], libs: ['42'], act: { to: ['42'], take: ['44', '43'] } },
     { b: [], w: ['43', '34', '54', '45'], cross: ['44'], act: { to: ['44'], forbid: true } },
     { b: ['43', '34', '45'], w: ['53', '64', '55', '44'], act: { to: ['54'], take: ['44'], ko: '44' } },
-    { b: ['06', '16', '26', '36', '46', '47', '48', '27'], w: ['05', '15', '25', '35', '45', '55', '56', '57', '58'], act: { to: ['28'], eyes: ['07', '17', '08', '18', '37', '38'] } },
+    { b: ['07', '17', '27', '37', '47', '48', '38'], w: ['06', '16', '26', '36', '46', '56', '57', '58'], act: { to: ['18'], eyes: ['08', '28'] } },
     { b: END.b, w: END.w, count: true },
     { last: true, b: END.b, w: END.w, count: true },
   ];
@@ -760,7 +760,7 @@
       if (S.count) {   // the finished game: its territory appears point by point, then the score
         const own = territory(S); let k = 0;
         own.forEach((o, i) => { if (o) square('' + (i % N) + ((i / N) | 0), o, wait + 200 + (k++) * 22); });
-        const b = own.filter(o => o === 1).length, w = own.filter(o => o === 2).length, km = 5.5;
+        const b = own.filter(o => o === 1).length, w = own.filter(o => o === 2).length, km = 6.5;   // GoRules.defaultKomi(9, 'jp')
         later(() => { line(`<span class="tag"><i class="dk b"></i> ${L.b} ${b}</span> <span class="tag"><i class="dk w"></i> ${L.w} ${w} + ${L.komi} ${dec(km)} = ${dec(w + km)}</span>`); }, wait + 300 + k * 22);
       }
       say(L.s[step].say); buttons();

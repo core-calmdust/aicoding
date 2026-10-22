@@ -217,7 +217,7 @@
       const draw = sc.diff === 0, winner = sc.diff > 0 ? 1 : 2;
       const res = draw ? X.draw : fmt(X.byPts, { c: pname(winner), p: pts(sc.diff) });
       const detail = `${X.p1} ${sc.b} · ${X.p2} ${sc.w} (${fmt(X.komiShort, { k: komi })})`;
-      if (pvp) { hud(res); later(() => ctx.onEnd({ win: false, draw, level: ctx.level, score: res + ' — ' + detail, pvp: true, winnerText: draw ? '' : res }), 2200); return; }
+      if (pvp) { hud(res); later(() => ctx.onEnd({ win: false, draw, level: ctx.level, score: detail, pvp: true, winnerText: draw ? '' : res }), 2200); return; }
       const win = !draw && winner === human;
       hud(draw ? L.draw : win ? L.win : L.lose);
       later(() => ctx.onEnd({ win, draw, level: ctx.level, score: res + ' — ' + detail }), 2200);
