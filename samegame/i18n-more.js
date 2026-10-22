@@ -812,3 +812,9 @@ window.SAME_I18N.ar = {
   };
   for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => D[k] = A[l][i]); }
 })();
+
+/* daily action tiles: short "used up" label so it fits the button */
+(function () {
+  const A = { ja: 'やすみ', en: 'Rest', zh: '休息', ko: '휴식', es: 'Descanso', fr: 'Repos', pt: 'Pausa', de: 'Pause', hi: 'आराम', ar: 'استراحة' };
+  for (const l in A) if (window.SAME_I18N[l]) window.SAME_I18N[l]['d.done'] = A[l];
+})();
