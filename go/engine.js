@@ -14,7 +14,7 @@ const R = self.GoRules, PASS = -1;
 
 let simd = true;
 try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
-const WASM = simd ? 'engine_simd.wasm?v=1' : 'engine.wasm?v=1';
+const WASM = simd ? 'engine_simd.wasm?v=2' : 'engine.wasm?v=2';
 const NETS = { light: 'net_light.bin.gz?v=1', strong: 'net_strong.bin.gz?v=1' };
 const inst = {};          // name -> { E, mem }
 const loading = {};
@@ -130,6 +130,14 @@ function isOwnEye(pos, i, c) {
   for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= n || yy >= n) { edge = true; continue; } if (pos.b[yy * n + xx] === 3 - c) bad++; }
   return edge ? bad === 0 : bad <= 1;
 }
+// the AI only passes when the opponent just passed or the board is settled (every empty point clearly owned):
+// on tiny boards the net "knows" the result early and would otherwise pass from move 2 on
+function mayPass(job, pos, ev) {
+  if (job.moves.length && job.moves[job.moves.length - 1] === PASS) return true;
+  const n = pos.n; let empty = 0;
+  for (let i = 0; i < n * n; i++) if (pos.b[i] === 0) { empty++; if (Math.abs(ev.own[ePos(i, n)]) < 0.8) return false; }
+  return empty < n * n * 0.6;
+}
 async function policyMove(job, L) {
   const I = await getNet('light');
   setPos(I, job);
@@ -140,7 +148,7 @@ async function policyMove(job, L) {
   const passP = ev.pol[361];
   const lastPass = job.moves.length && job.moves[job.moves.length - 1] === PASS;
   // pass when the net wants to, or nothing sensible is left
-  if (!cand.length || passP > 0.5 || (lastPass && (passP > 0.12 || cand[0].p < passP))) return { move: PASS, ev };
+  if (!cand.length || (mayPass(job, pos, ev) && (passP > 0.5 || (lastPass && (passP > 0.12 || cand[0].p < passP))))) return { move: PASS, ev };
   const top = cand.slice(0, L.top);
   let pick;
   if (rng() < L.slip) {
@@ -179,6 +187,8 @@ async function think(job) {
   const res = await search(I, job, { visits: Math.round(L.visits * boost), time: job.time || L.time, minVisits: Math.min(8, L.visits), slice: 4 });
   if (!res) return null;
   let b = bestOf(res);
+  // no early pass (see mayPass): take the best real move instead
+  if (b && b.m === PASS) { setPos(I, job); if (!mayPass(job, R.replay(job.spec, job.moves).pos, rootEval(I, 1))) { const alt = res.list.filter(c => c.m !== PASS && c.n > 0).sort((x, y) => y.n - x.n)[0]; if (alt) b = alt; } }
   // the page enforces superko: skip a move it would refuse
   const ordered = [b].concat(res.list.filter(c => c !== b && c.n > 0));
   b = ordered.find(c => c && legalFor(job, c.m)) || { m: PASS };
