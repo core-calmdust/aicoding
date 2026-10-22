@@ -62,7 +62,7 @@ const RSG_T = {
   hi: { you: 'आपने हार मान ली', p: '{c} ने हार मान ली' }, ar: { you: 'لقد استسلمت', p: 'استسلم {c}' },
 };
 function resignText() { const L = RSG_T[LANG] || RSG_T.en, s = game.resigned; return settings.mode === 'ai' && s === game.human ? L.you : L.p.replace('{c}', shortName(s)); }
-function resignWinText() { const w = 1 - game.resigned; return settings.mode === 'ai' ? (w === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(w) }); }
+function resignWinText() { const w = 1 - game.resigned; if (settings.mode === 'online' && window.olTurnText) return olTurnText(shownPos()) || ''; return settings.mode === 'ai' ? (w === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(w) }); }
 
 function load() {
   try {
@@ -70,6 +70,7 @@ function load() {
     if (!d) return false;
     Object.assign(settings, d.settings || {});
     if (!E.RULES[settings.rules]) settings.rules = 'kalah';
+    if (settings.mode === 'online') settings.mode = 'pvp';
     if (d.game && E.RULES[d.game.rules] && [4, 6].includes(d.game.seeds) && Array.isArray(d.game.moves)) {
       game = { rules: d.game.rules, seeds: d.game.seeds, moves: d.game.moves.filter(x => x >= 0 && x <= 5), human: d.game.human ? 1 : 0, setup: null, resigned: d.game.resigned === 0 || d.game.resigned === 1 ? d.game.resigned : null };
       evals = Array.isArray(d.evals) ? d.evals : [];
@@ -81,6 +82,7 @@ function load() {
   return false;
 }
 function save() {
+  if (settings.mode === 'online') return;   // an online game is not kept as the local game (online-ui.js restores the local one afterwards)
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   try { localStorage.setItem(STORE, JSON.stringify({ settings, game: { rules: game.rules, seeds: game.seeds, moves: game.moves, human: game.human, resigned: game.resigned != null ? game.resigned : null }, evals: evals.slice(0, game.moves.length + 1) })); } catch (e) {}
 }
@@ -151,7 +153,7 @@ let vert = false, U = 60;
 const isStore = i => i === 6 || i === 13;
 const ownerOf = i => i <= 6 ? 0 : 1;
 const pitIndex = (side, k) => (side ? 7 : 0) + k;
-function bottomSide() { return (settings.mode === 'ai' && !lesson && !puzzle) ? game.human : 0; }
+function bottomSide() { return ((settings.mode === 'ai' || settings.mode === 'online') && !lesson && !puzzle) ? game.human : 0; }
 function slotUV(i) {
   const B = bottomSide(), own = ownerOf(i), bottom = own === B;
   if (isStore(i)) return { x: bottom ? 8.45 : 0.75, y: 1.85, bottom };
@@ -564,15 +566,18 @@ function canHumanPlay() {
   if (lesson) return !lesson.answered && p.side === 0;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && p.side === 0;
   if (reviewing || resignedNow()) return false;
+  if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
   return !isAISide(p.side) && thinking < 0;
 }
 function sideName(s) {
   if (lesson || puzzle) return s === 0 ? t('you') : (puzzle && puzzle.P.kind === 'end' ? t('defender') : t('opp'));
+  if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(s);
   if (settings.mode === 'ai') return s === game.human ? t('you') : `AI ${LV(settings.level)}`;
   if (settings.mode === 'watch') return `AI ${LV(levelFor(s))}`;
   return t(s === 0 ? 'p0' : 'p1');
 }
 function shortName(s) {
+  if (settings.mode === 'online' && window.olShortName && !lesson && !puzzle) return olShortName(s);
   if (settings.mode === 'ai' && !lesson && !puzzle) return s === game.human ? t('you') : 'AI';
   return t(s === 0 ? 'p0' : 'p1');
 }
@@ -597,7 +602,7 @@ function renderPlates(b) {
     pl.classList.toggle('thinking', thinking === s);
     let st = '';
     if (thinking === s) st = t('thinking');
-    else if (resignedNow() && cur === game.moves.length) st = s === game.resigned ? Resign.label(LANG) : t('st.win');
+    else if (resignedNow() && cur === game.moves.length) st = s === game.resigned ? (settings.mode === 'online' && window.olLoserLabel ? olLoserLabel() : Resign.label(LANG)) : t('st.win');
     else if (p.over) { const a = p.b[E.storeOf(s)], o = p.b[E.storeOf(1 - s)]; st = a > o ? t('st.win') : a === o ? t('st.draw') : ''; }
     else if (active && cur > 0 && P[cur].mv && P[cur].mv.extra && P[cur].mv.side === s) st = t('st.again');
     else if (active) st = t('st.turn');
@@ -612,7 +617,8 @@ function renderTurnLabel() {
   renderStoreLabels();
   const p = shownPos(), el = $('#turnLbl');
   let txt = '';
-  if (resignedNow() && cur === game.moves.length) txt = resignWinText();
+  if (settings.mode === 'online' && window.olTurnText && !lesson && !puzzle) txt = olTurnText(p) || '';
+  else if (resignedNow() && cur === game.moves.length) txt = resignWinText();
   else if (p.over) { const a = p.b[6], o = p.b[13]; txt = a === o ? t('res.draw') : (settings.mode === 'ai' && !lesson && !puzzle) ? ((a > o ? 0 : 1) === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(a > o ? 0 : 1) }); }
   else if (thinking >= 0) txt = t('turn.thinking');
   else if (lesson || puzzle) txt = p.side === 0 ? t('turn.you') : t('turn.opp');
@@ -651,7 +657,7 @@ function renderInfo() {
   $('#btnUndo').disabled = !canUndo();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
-  $('#btnHint').disabled = settings.mode === 'watch';
+  $('#btnHint').disabled = settings.mode === 'watch' || settings.mode === 'online';
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnShare').disabled = !game.moves.length;
   $('#btnAnalyze').disabled = !game.moves.length;
@@ -661,6 +667,7 @@ function renderInfo() {
   const mode = settings.mode === 'ai' ? `AI Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
   $('#infoLine').textContent = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${mode} · ${t('info.moves', { n: game.moves.length })}`;
   hbInfo(p, ev);
+  if (window.olAfterInfo) olAfterInfo();
 }
 // PC header bar: whose turn, store counts, evaluation (only when it is shown on the board), rules and moves
 function hbInfo(p, ev) {
@@ -747,13 +754,17 @@ function onPit(i) {
   }
   armedPit = -1;
   const p = shownPos();
-  if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle && !animating) rsOpen(); return; }
+  if (!canHumanPlay()) {
+    if (settings.mode === 'online' && !lesson && !puzzle) { if (reviewing && !animating) viewAt(game.moves.length); return; }   // online: a tap while looking back returns to the game
+    if (reviewing && !lesson && !puzzle && !animating) rsOpen(); return;
+  }
   if (ownerOf(i) !== p.side) return;
   if (!p.b[i]) { toast(t('emptyPit'), 1000); return; }
   const k = i % 7;
   setHover(-1);
   if (lesson) return lessonAnswer(k);
   if (puzzle) return puzzleMove(k);
+  if (settings.mode === 'online') { if (window.olHumanMove) olHumanMove(k); return; }
   const q = settings.coach && settings.mode !== 'watch' ? judgeCoach(cur, k) : null;
   playMove(k).then(() => { if (q) coach(q.text, 'q-' + q.cls); });
 }
@@ -776,8 +787,9 @@ async function playMove(k, opts) {
 function afterPosition() {
   const tok = ++busyToken;
   const p = shownPos();
-  if (p.over) { if (!lesson && !puzzle && cur === game.moves.length) setTimeout(() => { if (tok === busyToken) onGameEnd(); }, 350); return; }
+  if (p.over) { if (!lesson && !puzzle && cur === game.moves.length && settings.mode !== 'online') setTimeout(() => { if (tok === busyToken) onGameEnd(); }, 350); return; }
   if (lesson || puzzle) return;
+  if (settings.mode === 'online') { if (!(window.olNoAna && olNoAna())) analyzeCurrent(tok); return; }   // online: the result comes from online-ui.js; no analysis while it is played
   if (resignedNow()) { if (reviewing) analyzeCurrent(tok); return; }
   if (!reviewing && isAISide(p.side)) maybeAI(tok);
   else analyzeCurrent(tok);
@@ -798,6 +810,7 @@ async function maybeAI(tok) {
 async function analyzeCurrent(tok) {
   const p = shownPos(), idx = cur;
   if (p.over || lesson || puzzle) return;
+  if (settings.mode === 'online' && window.olNoAna && olNoAna()) return;
   if (!settings.eval && !settings.hint && !settings.coach) return;
   if (anaLists[idx]) { renderFx(); return; }
   cancelWorker('ana');
@@ -821,7 +834,7 @@ function judgeCoach(idx, k) {
   return { cls, text };
 }
 function onGameEnd() {
-  if (cur !== game.moves.length || gameOverShown) return;
+  if (cur !== game.moves.length || gameOverShown || settings.mode === 'online') return;
   gameOverShown = true;
   const b = shownPos().b, a = b[6], o = b[13], w = a > o ? 0 : a < o ? 1 : -1;
   const youWin = settings.mode === 'ai' && w === game.human, aiWin = settings.mode === 'ai' && w >= 0 && w !== game.human;
@@ -835,12 +848,14 @@ function onGameEnd() {
   setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
 }
 function canResign() {
+  if (settings.mode === 'online') return !lesson && !puzzle && !!(window.olLive && olLive());
   if (lesson || puzzle || settings.mode === 'watch' || !P.length || resignedNow()) return false;
   return !P[game.moves.length].over;
 }
 // 投了: vs AI you lose; in a 2-player game the side to move resigns
 function resignGame() {
   if (!canResign()) return;
+  if (settings.mode === 'online') { if (window.olResignGame) olResignGame(); return; }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay();
   game.resigned = settings.mode === 'ai' ? game.human : P[game.moves.length].side;
   cur = game.moves.length; reviewing = false; fxMarks = []; gameOverShown = true;
@@ -856,7 +871,7 @@ function resignGame() {
   setTimeout(() => $('#resultOverlay').classList.add('show'), 300);
 }
 function canUndo() {
-  if (lesson || puzzle || settings.mode === 'watch' || !P.length) return false;
+  if (lesson || puzzle || settings.mode === 'watch' || settings.mode === 'online' || !P.length) return false;
   if (settings.mode === 'pvp') return cur > 0;
   for (let i = cur - 1; i >= 0; i--) if (P[i].side === game.human) return true;
   return false;
@@ -880,7 +895,7 @@ function viewAt(i) {
   update(); afterPosition();
 }
 function resumeHere() {
-  if (!reviewing) return;
+  if (!reviewing || settings.mode === 'online') return;
   game.moves = game.moves.slice(0, cur); game.resigned = null; recompute(); reviewing = false; gameOverShown = false;
   evals.length = Math.min(evals.length, cur + 1);
   update(); save(); afterPosition();
@@ -1996,6 +2011,7 @@ function backToBoard() {
 })();
 function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && !isOver(game.moves.length); }
 function rsOpen() {
+  if (settings.mode === 'online') { openNewDialog(); return; }
   if (!rsInProgress() && !reviewing) { openNewDialog(); return; }
   $('#rsText').textContent = reviewing ? t('rs.viewing', { n: cur }) : t('rs.playing', { n: game.moves.length });
   $('#resumeOverlay').classList.add('show');
@@ -2092,14 +2108,16 @@ let fixW = 0, fixH = 0, fixPortrait = null;
 function fixSize() {
   const root = document.documentElement.style;
   if (!coarseMQ.matches) { root.removeProperty('--u'); root.removeProperty('--vh'); fixW = 0; return; }
-  const W = window.innerWidth, H = window.innerHeight, portrait = H >= W;
+  const W = window.innerWidth, portrait = window.innerHeight >= W;
+  // the online tab bar (+ the chat strip in portrait) at the bottom takes its height from the board (online-ui.js sets html.ol-dock)
+  const dk = document.documentElement.classList, H = window.innerHeight - (dk.contains('ol-dock') ? (portrait && !dk.contains('ol-soon') ? 90 : 50) : 0);
   // a height-only change from the browser bars keeps the size; a big height change (or a bogus first measurement
   // taken mid-rotation / while an iframe is still sizing) is recomputed
   if (W === fixW && portrait === fixPortrait && Math.abs(H - fixH) < fixH * 0.25) return;
   if (W < 200 || H < 200) { fixW = 0; root.removeProperty('--u'); return; }   // transient: wait for a real size
   fixW = W; fixH = H; fixPortrait = portrait;
   root.setProperty('--vh', H + 'px');
-  if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - 172) / 9.7, 100)) + 'px');
+  if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - (dk.contains('ol-dock') ? 222 : 172)) / 9.7, 100)) + 'px');   // with the bottom bars both player plates stay above them
   else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 6 - 34 - 6 - 8) / 4.2, (W - 24) / 9.7, 110)) + 'px');   // board across the width, cards below
   else root.removeProperty('--u');
 }
