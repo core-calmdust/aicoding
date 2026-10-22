@@ -370,5 +370,6 @@
 "tr.end.t": "The end of the game",
 "tr.end.b": "When there is nothing useful left to play, you pass. Two passes in a row end the game.\nDead stones (×) are removed, then territory and prisoners are counted. White, who played second, gets komi (e.g. 6.5 points).",
 "tr.end.task": "",
-"credit.ai": "AI: KataGo-family neural nets (vibego by Sander Land, CC BY 4.0; teacher model KataGo by lightvector and contributors), running in WebAssembly."
+"credit.ai": "AI: KataGo-family neural nets (vibego by Sander Land, CC BY 4.0; teacher model KataGo by lightvector and contributors), running in WebAssembly.",
+"ai.err": "The AI ran into an error. Please try again."
 }

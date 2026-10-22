@@ -370,5 +370,6 @@
 "tr.end.t": "Das Ende der Partie",
 "tr.end.b": "Wenn nichts Sinnvolles mehr zu spielen ist, passt man. Zweimal Passen hintereinander beendet die Partie.\nTote Steine (×) werden entfernt, dann werden Gebiet und Gefangene gezählt. Weiß, das als Zweites zieht, erhält Komi (z. B. 6,5 Punkte).",
 "tr.end.task": "",
-"credit.ai": "KI: Neuronale Netze der KataGo-Familie (vibego von Sander Land, CC BY 4.0; Lehrermodell KataGo von lightvector und Mitwirkenden), ausgeführt in WebAssembly."
+"credit.ai": "KI: Neuronale Netze der KataGo-Familie (vibego von Sander Land, CC BY 4.0; Lehrermodell KataGo von lightvector und Mitwirkenden), ausgeführt in WebAssembly.",
+"ai.err": "Bei der KI ist ein Fehler aufgetreten. Bitte erneut versuchen."
 }

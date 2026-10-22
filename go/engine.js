@@ -18,6 +18,9 @@ const WASM = simd ? 'engine_simd.wasm?v=1' : 'engine.wasm?v=1';
 const NETS = { light: 'net_light.bin.gz?v=1', strong: 'net_strong.bin.gz?v=1' };
 const inst = {};          // name -> { E, mem }
 const loading = {};
+const netBytes = {};      // decompressed nets (kept to rebuild an instance after a trap)
+// a wasm trap (e.g. out of bounds) leaves the instance's stack / state unusable: rebuild it on next use
+function resetEngines() { for (const k in inst) delete inst[k]; for (const k in loading) delete loading[k]; }
 let wasmBytes = null;
 
 async function gunzip(buf) {
@@ -32,8 +35,8 @@ async function getNet(name) {
     if (!wasmBytes) wasmBytes = await (await fetch(WASM)).arrayBuffer();
     const { instance } = await WebAssembly.instantiate(wasmBytes, {});
     const E = instance.exports;
-    let raw = new Uint8Array(await (await fetch(NETS[name])).arrayBuffer());
-    if (raw[0] === 0x1f && raw[1] === 0x8b) raw = await gunzip(raw);
+    let raw = netBytes[name];
+    if (!raw) { raw = new Uint8Array(await (await fetch(NETS[name])).arrayBuffer()); if (raw[0] === 0x1f && raw[1] === 0x8b) raw = await gunzip(raw); netBytes[name] = raw; }
     const p = E.galloc(raw.length);
     new Uint8Array(E.memory.buffer).set(raw, p);
     const r = E.net_load(p, raw.length);
@@ -255,6 +258,7 @@ async function pump() {
       if (out === null && curJob !== job.id) out = { superseded: true };
       postMessage(Object.assign({ type: 'done', id: job.id }, out || { error: 'none' }));
     } catch (e) {
+      if (e instanceof WebAssembly.RuntimeError) resetEngines();
       postMessage({ type: 'done', id: job.id, error: String(e && e.message || e) });
     }
   }

@@ -370,5 +370,6 @@
 "tr.end.t": "El final de la partida",
 "tr.end.b": "Cuando no queda nada útil por jugar, se pasa. Dos pases seguidos terminan la partida.\nSe retiran las piedras muertas (×) y se cuentan territorio y prisioneros. Blanco, que juega segundo, recibe komi (p. ej. 6,5 puntos).",
 "tr.end.task": "",
-"credit.ai": "IA: redes neuronales de la familia KataGo (vibego de Sander Land, CC BY 4.0; modelo maestro KataGo de lightvector y colaboradores), ejecutadas en WebAssembly."
+"credit.ai": "IA: redes neuronales de la familia KataGo (vibego de Sander Land, CC BY 4.0; modelo maestro KataGo de lightvector y colaboradores), ejecutadas en WebAssembly.",
+"ai.err": "La IA tuvo un error. Inténtalo de nuevo."
 }

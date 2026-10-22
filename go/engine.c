@@ -187,7 +187,7 @@ static int ladder_captured(const Board *b0, int p, int defFirst) {
 
 static int ladder(Board *b, int lp, int def, int defToMove, int depth) {
   if (b->st[lp] != def) return 1;
-  if (++lad_nodes > 3000 || depth > 200) return 0;
+  if (++lad_nodes > 3000 || depth > 120) return 0;
   int att = OPP(def);
   short libs[4]; int nl;
   group_info(b, lp, &nl, libs, 4);

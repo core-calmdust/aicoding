@@ -545,13 +545,16 @@ function afterPosition() {
   if (isCounting(cur) && !lesson && !puzzle && settings.mode !== 'online') { startCounting(tok); return; }
   maybeAI(tok);
 }
+let aiErrs = 0;
 async function maybeAI(tok) {
   if (lesson || puzzle || reviewing || gameOver(cur) || isCounting(cur)) return;
   const p = toMoveAt(cur);
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); svg.classList.remove('can');
   const t0 = Date.now(), lv = levelFor(p);
-  const res = await request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? rtAiTime() : undefined });
+  const job = () => request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? rtAiTime() : undefined });
+  let res = await job();
+  if (res && res.error && tok === busyToken) res = await job();   // the engine rebuilds itself after a crash: try once more
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? 650 : 380) - (Date.now() - t0);
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -559,7 +562,9 @@ async function maybeAI(tok) {
   thinking = 0;
   if (typeof res.wr === 'number') aiVals[cur] = res.wr;
   if (settings.mode === 'ai' && aiResigns(p, res)) return;
-  playMove(res.move === undefined ? PASS : res.move);
+  if (res.move === undefined) { renderInfo(); if ((aiErrs = (aiErrs || 0) + 1) <= 3) setTimeout(() => { if (tok === busyToken) maybeAI(tok); }, 1200); else toast(t('ai.err')); return; }
+  aiErrs = 0;
+  playMove(res.move);
 }
 // ---------------------------------------------------------------- the AI resigns when hopeless (dan levels sooner, kyu levels only when far behind)
 function aiResigns(p, res) {
