@@ -6139,52 +6139,60 @@ const ePart = (K, geo, code, o = {}) => LAB.part(geo, { mat: K.mats[code], edge:
 const enemySync = (K, edgeC, glassC, cageC) => { K.edge.color.copy(K.mats[edgeC].color).lerp(_c(0xffffff), 0.35); K.glass.color.copy(K.mats[glassC].color); K.cage.color.copy(K.mats[cageC].color); };
 
 const ENEMY_BUILD = {
-    // インベーダー: 横長の頭（サブ色）を本体色の外殻がはさみ、光る2つの目。両脇の腕と下の脚はドット絵どおり
+    // インベーダー（Rez風の抽象体）: 光る結晶の核を、回るワイヤーの多面体と4枚の装甲片が包む。装甲片は拍に合わせて開閉する
     invader(K) {
-        const g = new THREE.Group();
-        g.add(ePart(K, LAB.loft([[-26, 30, 9, 5], [-17, 46, 14, 6], [-2, 50, 16, 6], [8, 36, 10, 4]], 8, Math.PI / 8), 2, { glass: 0.35, cage: 1.14, seed: 3 }));
-        g.add(ePart(K, LAB.loft([[-28, 22, 5, 11], [-20, 34, 6, 13], [-12, 30, 5, 13]], 6), 1)); // 額の外殻
-        [-1, 1].forEach(s => {
-            const arm = ePart(K, LAB.loft([[-16, 8, 9, 6, s * 25], [-4, 9, 10, 6, s * 28], [8, 7, 8, 4, s * 27], [16, 3, 4, 2, s * 23]], 6), 1, { seed: s + 4 }); g.add(arm);
-            const leg = ePart(K, LAB.loft([[4, 9, 7, 3, s * 16], [12, 8, 6, 2, s * 14], [20, 4, 4, 1, s * 8]], 6), 1, { seed: s + 7 }); g.add(leg);
-            const eye = new THREE.Mesh(new THREE.OctahedronGeometry(6, 0), K.mats[3]); eye.scale.set(1.1, 0.6, 0.9); eye.position.set(s * 11, 15, -8); g.add(eye);
-            const pupil = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), LAB.glow(0xffffff)); pupil.position.set(s * 11, 19, -8); g.add(pupil);
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.5; g.add(tilt);
+        const core = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), K.mats[3]); core.scale.set(1, 1.5, 1); tilt.add(core);
+        core.add(new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), LAB.glow(0xffffff)));
+        const sh1 = LAB.wireOnly(new THREE.IcosahedronGeometry(17, 0), K.edge), sh2 = LAB.wireOnly(new THREE.OctahedronGeometry(25, 0), K.cage); tilt.add(sh1, sh2);
+        const shardGeo = LAB.loft([[0, 3, 3], [8, 12, 4], [20, 9, 3], [28, 1, 1]], 3, -Math.PI / 2);
+        const shards = [0, 1, 2, 3].map(k => {
+            const piv = new THREE.Group(); piv.rotation.y = k * Math.PI / 2 + Math.PI / 4; tilt.add(piv);
+            const p = ePart(K, shardGeo, k % 2 ? 1 : 2, { glass: 0.5, seed: k + 2 }); p.position.z = 10; piv.add(p); return { piv, p, k };
         });
-        g.userData.anim = t => { g.children.forEach((c, i) => { if (i >= 2 && i % 4 === 2) c.rotation.y = Math.sin(t * 6) * 0.08 * (i % 8 === 2 ? 1 : -1); }); };
+        const ring = LAB.dashRing(34, 16, 5, 1, K.glass, 4); tilt.add(ring);
+        g.userData.anim = t => {
+            const beat = Math.pow(Math.max(0, Math.sin(t * 4.3)), 6);
+            core.rotation.y = t * 2; sh1.rotation.set(t * 0.9, t * 1.3, 0); sh2.rotation.set(-t * 0.5, -t * 0.8, t * 0.3);
+            shards.forEach(({ piv, p, k }) => { p.position.z = 10 + beat * 9; p.rotation.x = (k % 2 ? 1 : -1) * (0.3 + beat * 0.5); piv.rotation.y = k * Math.PI / 2 + Math.PI / 4 + t * 0.7; });
+            ring.rotation.y = -t * 1.5; ring.scale.setScalar(1 + beat * 0.2);
+        };
         return g;
     },
-    // UFO: ガラスのドーム（明色）に大きな2つの目（補色）、本体色の円盤とサブ色の底。縁の灯りが回る
+    // UFO（迎撃円盤）: 角ばった六角の装甲リングにガラス板、内側で刃のローターが回り、中心に1つの走査眼。外をワイヤーの殻が囲む
     ufo(K) {
-        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.3; g.add(tilt);
-        const domeGeo = new THREE.SphereGeometry(17, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2);
-        tilt.add(ePart(K, domeGeo, 3, { glass: 0.5, cage: 1.18, seed: 2 }));
-        const disc = LAB.loft([[-6, 40, 40, 0], [-2, 58, 58, 0], [2, 52, 52, 0], [6, 30, 30, 0]], 12, 0); disc.rotateX(Math.PI / 2); tilt.add(ePart(K, disc, 1, { glass: 0.25, seed: 6 }));
-        const belly = LAB.loft([[6, 30, 30], [12, 16, 16]], 12, 0); belly.rotateX(Math.PI / 2); tilt.add(ePart(K, belly, 2));
-        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5.5, 0), K.mats[4]); e.scale.set(1, 1.3, 0.6); e.position.set(s * 7, 8, 13); tilt.add(e); });
-        const lights = new THREE.Group(); tilt.add(lights);
-        for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, l = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), K.mats[4]); l.position.set(Math.cos(a) * 27, -1, Math.sin(a) * 27); lights.add(l); }
-        g.userData.anim = t => { lights.rotation.y = t * 3; };
+        const g = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = 0.35; g.add(tilt);
+        const seg = LAB.loft([[-14, 8, 5], [-9, 12, 7], [9, 12, 7], [14, 8, 5]], 4, Math.PI / 4); seg.rotateY(Math.PI / 2);
+        for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, s = ePart(K, seg, 1, { glass: 0.4, seed: k + 1 }); s.position.set(Math.cos(a) * 26, 0, Math.sin(a) * 26); s.rotation.y = -a + Math.PI / 2; tilt.add(s); }
+        const rotor = new THREE.Group(); tilt.add(rotor);
+        const blade = LAB.loft([[4, 6, 2], [14, 5, 1.6], [20, 1, 1]], 4, Math.PI / 4);
+        for (let k = 0; k < 3; k++) { const b = ePart(K, blade, 2, { seed: k + 7 }); b.rotation.y = k * Math.PI * 2 / 3; rotor.add(b); }
+        const eye = new THREE.Mesh(new THREE.CylinderGeometry(5, 7, 6, 6), K.mats[4]); eye.position.y = 4; tilt.add(eye);
+        const scan = new THREE.Mesh(new THREE.OctahedronGeometry(3, 0), LAB.glow(0xffffff)); scan.position.y = 8; tilt.add(scan);
+        const cage = LAB.wireOnly(new THREE.CylinderGeometry(20, 38, 14, 6, 1, true), K.cage); cage.position.y = 2; tilt.add(cage);
+        const top = LAB.wireOnly(new THREE.ConeGeometry(14, 14, 6, 1, true), K.edge); top.position.y = 14; tilt.add(top);
+        g.userData.anim = t => { rotor.rotation.y = t * 9; cage.rotation.y = -t * 0.8; top.rotation.y = t * 1.6; scan.position.x = Math.sin(t * 5) * 3; };
         return g;
     },
-    // ルーパー（タコ）: 紫のガラスの頭に白い目、金の吸盤の節が付いた触手がうねる（下のハブはそのまま）
+    // ルーパー: 鋭い矢じり形の頭（紫の装甲とガラス）に細い一本の眼。金の節が光るケーブル状の触手が、ハブの回転に合わせて渦を巻く
     looper(K) {
         const g = new THREE.Group();
-        g.add(ePart(K, LAB.loft([[-36, 26, 20, 10], [-26, 52, 36, 12], [-8, 70, 40, 12], [6, 64, 30, 10], [14, 44, 18, 8]], 8, Math.PI / 8), 1, { glass: 0.4, cage: 1.1, seed: 9 }));
-        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5, 0), K.mats[2]); e.scale.set(1, 0.8, 1.2); e.position.set(s * 18, 30, -8); g.add(e); });
-        const tents = [];
-        const segGeo = LAB.loft([[0, 10, 8], [12, 8, 6]], 6), tipGeo = LAB.loft([[0, 7, 5], [10, 2, 2]], 6);
+        g.add(ePart(K, LAB.loft([[-40, 4, 4, 14], [-28, 30, 14, 16], [-8, 56, 22, 16], [8, 44, 16, 14], [18, 18, 8, 12]], 6, Math.PI / 2), 1, { glass: 0.45, cage: 1.12, seed: 9 }));
+        [-1, 1].forEach(s => g.add(ePart(K, LAB.loft([[-20, 4, 3, 18, s * 20], [-4, 8, 5, 18, s * 36], [8, 2, 2, 16, s * 46]], 4), 1, { seed: s + 3 }))); // 側面のひれ
+        const slit = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 3), K.mats[2]); slit.position.set(0, 28, -8); g.add(slit);
+        const tents = [], segGeo = LAB.loft([[0, 5, 5], [6, 7, 6], [13, 3, 3]], 4, Math.PI / 4);
         for (let k = 0; k < 6; k++) {
-            const base = new THREE.Group(), a = -1.1 + k * 0.44; base.position.set(Math.sin(a) * 30, 6, 8 + Math.cos(a) * 6); base.rotation.y = a; g.add(base);
+            const base = new THREE.Group(), a = -1.2 + k * 0.48; base.position.set(Math.sin(a) * 24, 10, 10 + Math.cos(a) * 4); base.rotation.y = a; g.add(base);
             let par = base; const segs = [];
-            for (let j = 0; j < 4; j++) {
-                const sg = new THREE.Group(); if (j) sg.position.z = 12; par.add(sg);
-                sg.add(ePart(K, j < 3 ? segGeo : tipGeo, 1, { seed: k * 4 + j }));
-                const su = new THREE.Mesh(new THREE.OctahedronGeometry(2.6, 0), K.mats[3]); su.position.set(0, -3, 6); sg.add(su);
+            for (let j = 0; j < 5; j++) {
+                const sg = new THREE.Group(); if (j) sg.position.z = 13; par.add(sg);
+                sg.add(ePart(K, segGeo, 1, { seed: k * 5 + j }));
+                const node = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), K.mats[3]); node.scale.set(1, 1, 1.8); node.position.z = 13; sg.add(node);
                 segs.push(sg); par = sg;
             }
             tents.push({ segs, k });
         }
-        g.userData.anim = t => { tents.forEach(({ segs, k }) => segs.forEach((sg, j) => { sg.rotation.y = Math.sin(t * 3 + k * 0.9 - j * 0.7) * 0.28; sg.rotation.x = 0.12 + Math.sin(t * 2.4 + k + j) * 0.12; })); };
+        g.userData.anim = t => { slit.scale.x = 0.7 + 0.3 * Math.abs(Math.sin(t * 1.3)); tents.forEach(({ segs, k }) => segs.forEach((sg, j) => { sg.rotation.y = Math.sin(t * 2.6 - j * 0.8 + k * 0.5) * 0.22 + (k < 3 ? -0.06 : 0.06) * j; sg.rotation.x = 0.1; })); };
         return g;
     },
 };
