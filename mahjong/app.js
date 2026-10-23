@@ -871,7 +871,8 @@ async function showRyuukyoku(d) {
 async function showFinal(d) {
   const rank = d.rank;
   const myRank = rank.indexOf(ME);
-  const coins = [220, 140, 90, 60][myRank] + (G.rules.length === 'south' ? 60 : 0);
+  // 1st = two single pulls, 2nd = one pull (COST1 each); hanchan adds a little
+  const coins = [COST1 * 2, COST1, 120, 60][myRank] + (G.rules.length === 'south' ? 60 : 0);
   DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++; save();
   const box = modal(`
     <div class="final">
