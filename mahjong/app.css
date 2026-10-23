@@ -766,3 +766,8 @@ html.ds .khelp{display:block}
 .khelp{display:none;position:absolute;left:max(10px,var(--sl));top:calc(max(10px,var(--st)) + 110px);font-size:10.5px;line-height:1.7;color:rgba(207,196,255,.75);background:rgba(10,14,30,.6);padding:6px 9px;border-radius:10px;border:1px solid rgba(160,200,255,.15);pointer-events:none}
 .khelp b{color:#ffe9b0;font-weight:700}
 .khelp{left:calc(max(10px,var(--sl)) + 184px);top:max(10px,var(--st))}
+/* number-row labels on hand tiles (PC) */
+html.ds .tl kbd.tk{position:absolute;left:50%;bottom:calc(var(--tw) * -.02);transform:translateX(-50%);margin:0;min-width:0;height:auto;padding:0 4px;font-size:clamp(9px,calc(var(--tw) * .2),13px);line-height:1.25;
+  color:#5b5070;background:rgba(255,255,255,.85);border:1px solid rgba(91,80,112,.35);border-bottom-width:1px;z-index:2;pointer-events:none}
+html.ds .tl.no kbd.tk{opacity:.4}
+html.ds .tl.drawn kbd.tk{font-size:clamp(8px,calc(var(--tw) * .16),11px)}

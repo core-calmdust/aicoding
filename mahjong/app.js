@@ -601,9 +601,13 @@ function renderHand(drawn) {
     if (m.type !== 'ankan' && m.called != null) { order = order.filter(x => x !== m.called); order.splice(rel === 3 ? 0 : rel === 2 ? 1 : order.length, 0, m.called); }
     return `<span class="meld">${order.map((id, i) => m.type === 'ankan' && (i === 0 || i === 3) ? backHTML('sm') : tileHTML(id, 'sm' + (id === m.called ? ' side' : '') + (m.type === 'kakan' && id === m.called ? ' kk' : ''))).join('')}</span>`;
   }).join('');
-  $('#hand').innerHTML = `<div class="hrow">${ids.map(id => tileHTML(id, cls(id))).join('')}${dr != null ? `<span class="gap"></span>${tileHTML(dr, cls(dr) + ' drawn')}` : ''}</div><div class="melds">${melds}</div>`;
+  const kl = i => `<kbd class="tk">${HAND_LABELS[i] || ''}</kbd>`;
+  $('#hand').innerHTML = `<div class="hrow">${ids.map((id, i) => tileHTML(id, cls(id)).replace('</span>', kl(i) + '</span>')).join('')}${dr != null ? `<span class="gap"></span>${tileHTML(dr, cls(dr) + ' drawn').replace('</span>', '<kbd class="tk">Space</kbd></span>')}` : ''}</div><div class="melds">${melds}</div>`;
   $('#hand').classList.toggle('active', !!o);
 }
+// hand tiles are bound to the number row, left to right: 1 … 0 - ^ ¥ ; the drawn tile is Space
+const HAND_CODES = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal', 'IntlYen'];
+const HAND_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', '¥'];
 const handEl = $('#hand');
 const fine = matchMedia('(hover: hover) and (pointer: fine)');
 handEl.addEventListener('pointerover', e => { const el = e.target.closest('.tl[data-id]'); if (el && TB) TB.highlightType(T(+el.dataset.id)); });
@@ -635,23 +639,33 @@ function btn(label, cls, fn, key) {
   $('#acts').appendChild(b); return b;
 }
 
+// action buttons are bound to the bottom-left letter row in on-screen order: Z X C V B N M
+const ACT_KEYS = 'zxcvbnm';
+function bindActKeys() {
+  [...document.querySelectorAll('#acts .ab')].forEach((b, i) => {
+    const k = ACT_KEYS[i]; if (!k) return;
+    b.dataset.key = k;
+    const kb = b.querySelector('kbd'); if (kb) kb.textContent = k.toUpperCase(); else b.insertAdjacentHTML('beforeend', `<kbd>${k.toUpperCase()}</kbd>`);
+  });
+}
 function myTurn(o, res) {
   UIS.opts = o; UIS.kind = 'turn'; UIS.resolve = res; UIS.riichiMode = false; UIS.picked = null;
   UIS.drawn = o.drawn ?? null;
   renderHand(); renderBadges();
   clearActs();
   const finish = a => { const r = UIS.resolve; if (!r) return; UIS.resolve = null; UIS.opts = null; UIS.kind = null; clearActs(); renderHand(); r(a); };
-  if (o.canTsumo) btn(t('tsumo'), 'win', () => finish({ act: 'tsumo' }), 'w');
+  if (o.canTsumo) btn(t('tsumo'), 'win', () => finish({ act: 'tsumo' }));
   if (o.riichi && o.riichi.length) btn(t('riichi'), 'rii', e => {
     UIS.riichiMode = !UIS.riichiMode; e.currentTarget.classList.toggle('on', UIS.riichiMode);
-    e.currentTarget.innerHTML = (UIS.riichiMode ? t('cancel') : t('riichi')) + '<kbd>Q</kbd>';
+    e.currentTarget.innerHTML = (UIS.riichiMode ? t('cancel') : t('riichi')) + `<kbd>${(e.currentTarget.dataset.key || '').toUpperCase()}</kbd>`;
     if (UIS.riichiMode && UIS.picked != null && !o.riichi.some(x => T(x) === T(UIS.picked))) UIS.picked = null;
     renderHand();
-  }, 'q');
-  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked)), 'q'); b.classList.add('sealed'); }
+  });
+  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked))); b.classList.add('sealed'); }
   const kans = (o.ankans || []).map(x => ['ankan', x]).concat((o.kakans || []).map(x => ['kakan', x]));
-  kans.forEach(([k, tt], i) => btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt }), i ? null : 'k'));
-  if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }), 'l');
+  kans.forEach(([k, tt], i) => btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt })));
+  if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }));
+  bindActKeys();
   // riichi: auto tsumogiri when there is nothing else to do
   if (o.mustTsumogiri && !o.canTsumo && !(o.ankans && o.ankans.length) && !o.canSkill) {
     setTimeout(() => { if (UIS.resolve === res) doDiscard(o.drawn); }, 420);
@@ -662,17 +676,18 @@ function myCall(o, res) {
   clearActs();
   let done = false;
   const finish = a => { if (done) return; done = true; clearActs(); UIS.kind = null; UIS.opts = null; res(a); };
-  if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }), 'w');
-  if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }), 'e');
-  if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }), 'k');
+  if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }));
+  if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }));
+  if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }));
   if (o.chis) btn(t('chi'), 'call', () => {
     if (o.chis.length === 1) return finish({ act: 'chi', use: o.chis[0] });
     const pk = $('#chiPick');
     pk.innerHTML = o.chis.map((u, i) => `<button data-i="${i}">${[...u, o.tile].sort((a, b) => a - b).map(id => tileHTML(id, 'xs' + (id === o.tile ? ' hl' : ''))).join('')}<kbd>${i + 1}</kbd></button>`).join('');
     pk.hidden = false;
     pk.onclick = e => { const b = e.target.closest('[data-i]'); if (b) finish({ act: 'chi', use: o.chis[+b.dataset.i] }); };
-  }, 'c');
-  btn(t('skip'), 'skip', () => finish({ act: 'pass' }), 'x');
+  });
+  btn(t('skip'), 'skip', () => finish({ act: 'pass' }));
+  bindActKeys();
   TB.highlightType(T(o.tile));
 }
 
@@ -690,7 +705,7 @@ function askDealSkill(o, res) {
   el.style.setProperty('--sc', sk.color);
   el.innerHTML = `<i>${icon(sk.icon)}</i>
     <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
-    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>N</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>Y</kbd></button></div>`;
+    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>Z</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>X</kbd></button></div>`;
   el.hidden = false;
   renderHand();
   el.onclick = async e => {
@@ -844,8 +859,9 @@ async function showFinal(d) {
 }
 
 // ---------------------------------------------------------------- keyboard
-// PC keys: ←/→ pick a tile, Space/Enter discard, Q riichi, W tsumo/ron, E pon, C chi (1-3 picks), K kan, S skill,
-// X/Esc skip, L nine terminals; deal-time skill Y/N; result screens Enter/Space; home Enter = start.
+// PC keys: number row 1…0 - ^ ¥ = hand tiles left to right, Space = drawn tile (tsumogiri), ←/→ + Enter also work;
+// action buttons Z X C V B … in on-screen order (Esc = skip), 1-3 chi choice, S skill; deal-time skill Z/X (Y/N);
+// result screens Enter/Space; home Enter = start.
 function handTiles() { return [...document.querySelectorAll('#hand .hrow .tl.can')]; }
 function moveCursor(d) {
   const ts = handTiles(); if (!ts.length) return;
@@ -879,17 +895,25 @@ document.addEventListener('keydown', e => {
   // deal-time skill prompt
   const da = $('#dealAsk');
   if (!da.hidden) {
-    if (k === 'y' || k === 'Enter') { e.preventDefault(); da.querySelector('[data-a=yes]').click(); }
-    else if (k === 'n' || k === 'Escape') { e.preventDefault(); da.querySelector('[data-a=no]').click(); }
+    if (k === 'x' || k === 'y' || k === 'Enter') { e.preventDefault(); da.querySelector('[data-a=yes]').click(); }
+    else if (k === 'z' || k === 'n' || k === 'Escape') { e.preventDefault(); da.querySelector('[data-a=no]').click(); }
     return;
   }
   // chi choice
   const pk = $('#chiPick');
   if (!pk.hidden && /^[1-3]$/.test(k)) { const b = pk.querySelector(`[data-i="${+k - 1}"]`); if (b) { e.preventDefault(); b.click(); } return; }
-  // action buttons
-  const key = k === 'Escape' ? 'x' : k;
-  const ab = $(`#acts [data-key="${key}"]`);
+  // action buttons (Z X C V … in on-screen order); Esc = skip
+  if (k === 'Escape') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } if (UIS.riichiMode) { const r = $('#acts .rii'); if (r) r.click(); return; } }
+  const ab = $(`#acts [data-key="${k}"]`);
   if (ab) { e.preventDefault(); ab.click(); return; }
+  // hand tiles by number row
+  const hi = HAND_CODES.indexOf(e.code === 'Backslash' ? 'IntlYen' : e.code);
+  if (hi >= 0 && UIS.kind === 'turn' && UIS.resolve) {
+    const el = document.querySelectorAll('#hand .hrow .tl:not(.drawn)')[hi];
+    e.preventDefault();
+    if (el && el.classList.contains('can')) doDiscard(+el.dataset.id);
+    return;
+  }
   if (k === 's') { const b = $('#skBtn'); if (b && !b.disabled) { e.preventDefault(); b.click(); } return; }
   // hand
   if (UIS.kind === 'turn' && UIS.resolve) {
@@ -898,7 +922,7 @@ document.addEventListener('keydown', e => {
     else if (k === ' ' || k === 'Enter') {
       e.preventDefault();
       const ts = handTiles().map(x => +x.dataset.id);
-      let id = ts.includes(UIS.picked) ? UIS.picked : (ts.includes(UIS.drawn) ? UIS.drawn : ts[ts.length - 1]);
+      let id = (k === 'Enter' && ts.includes(UIS.picked)) ? UIS.picked : (ts.includes(UIS.drawn) ? UIS.drawn : ts.includes(UIS.picked) ? UIS.picked : ts[ts.length - 1]);
       if (id != null) doDiscard(id);
     }
   }
