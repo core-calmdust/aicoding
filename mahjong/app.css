@@ -732,7 +732,7 @@ html.ds .pimg{max-height:100%}
 .fr-UR{box-shadow:0 0 18px rgba(255,92,214,.55),0 0 8px rgba(92,200,255,.5)}
 .frame::before{will-change:transform}
 .frame .fx-sh{overflow:hidden;background:none!important;animation:none!important}
-.fr-SSR .fx-sh::before,.fr-UR .fx-sh::before{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;
+.fr-SSR .fx-sh::before,.fr-UR .fx-sh::before{display:none;content:"";position:absolute;top:0;bottom:0;left:0;width:45%;
   background:linear-gradient(105deg,transparent,rgba(255,250,225,.55),transparent);transform:translateX(-120%);animation:sweep 3s ease-in-out infinite;will-change:transform}
 .fr-UR .fx-sh::before{background:linear-gradient(105deg,transparent,rgba(255,255,255,.6),rgba(255,210,250,.35),transparent);animation-duration:2.2s}
 .fr-UR .fx-sh::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 22%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 78% 30%,#fff 0 1.2px,transparent 2.2px),radial-gradient(circle at 60% 76%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 30% 64%,#fff 0 1px,transparent 2px);animation:twinkle 1.4s ease-in-out infinite}
@@ -840,7 +840,7 @@ html.lite .gc.frame{animation:flip .45s var(--d) forwards!important}
 .pimg.frame .fx-sh{border-radius:22px}.ch-art.frame .fx-sh{border-radius:22px}
 
 /* ================= animated frame effects (canvas, framefx.js) replace the bright glow ================= */
-.ffx{position:absolute;left:-72px;top:-72px;width:calc(100% + 144px);height:calc(100% + 144px);pointer-events:none;z-index:5}
+.ffx{position:absolute;left:-64px;top:-64px;width:calc(100% + 128px);height:calc(100% + 128px);pointer-events:none;z-index:5}
 .gc.frame,.pimg.frame,.ch-art.frame{overflow:visible}
 .gc.frame .gci{border-radius:12px 12px 0 0}
 .pimg.fr-SR::after,.ch-art.fr-SR::after,.pimg.fr-SSR::after,.ch-art.fr-SSR::after{content:none!important}
@@ -890,3 +890,11 @@ html.ds #game .chiPick{right:calc(var(--gi) + 10px)}
 html.ds #game .hand{bottom:calc(var(--gi) * .45)}
 html.ds .khelp{top:var(--gi);left:calc(var(--gi) + 262px)}
 html.ds #game .intel{right:var(--gi);top:calc(var(--gi) + 56px)}
+
+/* call buttons at the mouse pointer (PC) */
+#game .acts.atptr{right:auto!important;bottom:auto!important;max-width:none;flex-wrap:nowrap;animation:actPop .14s ease-out}
+#game .chiPick.atptr{right:auto!important;bottom:auto!important}
+@keyframes actPop{from{opacity:0;transform:translateY(6px) scale(.96)}to{opacity:1;transform:none}}
+/* dora / round box sits further in, on the felt */
+html.ds #game .rbox{top:calc(var(--GH) * .115);left:calc(var(--GW) * .23);padding:8px 12px;gap:5px}
+html.ds #game .khelp{left:var(--gi)}

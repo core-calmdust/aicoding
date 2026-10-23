@@ -1,250 +1,155 @@
-// Animated frame effects drawn on a canvas around large character frames.
-//   SR  : violet flames licking up from the frame edge
-//   SSR : glittering gold — twinkling star sparks along the frame and gold dust rising
-//   UR  : rainbow flames + glitter
-// One shared loop at ~30fps; frames that are off screen or removed are skipped; html.lite stops everything.
+// Animated frame effects rendered with a WebGL fragment shader (one shared GL canvas, copied into a 2D canvas
+// per frame), for a smooth, continuous "After Effects" look:
+//   SR  : violet fire burning around the frame (domain-warped fbm noise scrolling upward, always lit)
+//   SSR : gold — light running along the frame line, soft halo, twinkling star glints with long tapered streaks
+//   UR  : rainbow fire + white glints
+// ~30fps, only frames that are on screen, nothing in html.lite.
 (function (root) {
 'use strict';
-const PAD = 72;                     // canvas extends this far outside the frame
+const PAD = 64;
 const items = new Set();
-let running = false, last = 0;
+let running = false, last = 0, GL = null;
 
-function rnd(a, b) { return a + Math.random() * (b - a); }
-// smooth 1D value noise (two octaves) for flame silhouettes
-const NT = Array.from({ length: 256 }, () => Math.random());
-function vn(x) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return NT[i & 255] * (1 - u) + NT[(i + 1) & 255] * u; }
-function noise(x) { return vn(x) * .65 + vn(x * 2.3 + 17) * .35; }
+const VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+const FS = `
+precision highp float;
+uniform vec2 uSize, uRect;
+uniform float uPad, uT, uR, uMode, uSeed, uS;
+float h21(vec2 p){p=fract(p*vec2(123.34,456.21)+uSeed);p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1,0)),u.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),u.x),u.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*vnoise(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
+float sdBox(vec2 p,vec2 b,float r){vec2 q=abs(p)-b+r;return length(max(q,0.))+min(max(q.x,q.y),0.)-r;}
+vec3 hsv(float h,float s,float v){vec3 k=clamp(abs(mod(h*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.);return v*mix(vec3(1),k,s);}
+float glint(vec2 d,float s){
+  float core=exp(-dot(d,d)/(s*s*.12));
+  float hx=exp(-abs(d.y)/(.6*uS))*exp(-abs(d.x)/(s*2.2));
+  float hy=exp(-abs(d.x)/(.6*uS))*exp(-abs(d.y)/(s*1.2));
+  float dg=exp(-abs(d.x+d.y)*.7/(.6*uS))*exp(-length(d)/(s*.6))+exp(-abs(d.x-d.y)*.7/(.6*uS))*exp(-length(d)/(s*.6));
+  float bl=exp(-length(d)/(s*.5))*.35;
+  return core*1.2+hx*.9+hy*.65+dg*.3+bl;
+}
+void main(){
+  vec2 fc=vec2(gl_FragCoord.x,uSize.y-gl_FragCoord.y);
+  vec2 q=(fc-uPad-uRect*.5)/uS;            // css px, centre-relative, y down
+  vec2 R=uRect*.5/uS;
+  float d=sdBox(q,R,uR);                    // >0 outside the frame
+  vec3 col=vec3(0.);float al=0.;
+  if(uMode<.5||uMode>1.5){
+    float top=clamp(-q.y/R.y,-1.,1.);
+    float H=mix(9.,44.,smoothstep(-.85,.95,top));
+    // vertically stretched, warped noise = flame tongues rising
+    vec2 np=vec2(q.x*.055,q.y*.022+uT*1.7);
+    vec2 w=vec2(fbm(np*vec2(.7,1.)+vec2(0.,uT*.35)),fbm(np*vec2(.7,1.)+vec2(5.2,uT*.35)));
+    float n=fbm(np+w*vec2(.9,1.4));
+    n=clamp((n-.25)*1.6,0.,1.);
+    float f=clamp(1.-max(d,0.)/(H*(.3+1.7*pow(n,1.4))),0.,1.);
+    f*=smoothstep(-6.,0.,d);
+    vec3 deep,mid,hot;
+    if(uMode<.5){deep=vec3(.3,.05,.75);mid=vec3(.62,.28,1.);hot=vec3(.92,.76,1.);}
+    else{float hu=fract(atan(q.y,q.x)/6.2832+uT*.08);deep=hsv(hu,.95,.75);mid=hsv(hu+.05,.8,1.);hot=hsv(hu+.1,.3,1.);}
+    vec3 c=mix(deep,mid,smoothstep(.12,.42,f));
+    c=mix(c,hot,smoothstep(.5,.78,f));
+    c=mix(c,vec3(1.),smoothstep(.85,1.,f)*.6);
+    float a=smoothstep(0.,.1,f)*(.5+.5*smoothstep(0.,.5,f));
+    float halo=exp(-max(d,0.)/20.)*.18*smoothstep(-6.,0.,d);
+    col+=c*a+mid*halo; al=max(al,clamp(a+halo,0.,1.));
+  }
+  if(uMode>.5){
+    vec3 g1=uMode<1.5?vec3(1.,.8,.36):vec3(1.,.92,1.);
+    float halo=exp(-max(d,0.)/12.)*.26*smoothstep(-4.,0.,d);
+    float ang=atan(q.y,q.x);
+    float run=pow(.5+.5*sin(ang*2.-uT*2.4),22.)+pow(.5+.5*sin(-ang*3.+uT*1.7+1.7),28.)*.7;
+    float line=exp(-abs(d)/1.8)*(.3+1.7*run);
+    float glow=exp(-max(d,0.)/9.)*run*.45*smoothstep(-4.,0.,d);
+    col+=g1*(halo+line*.9+glow); al=max(al,clamp(halo+line*.8+glow,0.,1.));
+    float cs=24.;
+    vec2 cell=floor(q/cs);
+    for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){
+      vec2 c=cell+vec2(float(i),float(j));
+      float h=h21(c);
+      if(h<.3)continue;
+      vec2 pos=(c+vec2(h21(c+3.1),h21(c+7.7)))*cs;
+      float pd=sdBox(pos,R,uR);
+      if(pd>12.||pd<-5.)continue;
+      float ph=h21(c+11.3)*6.2832,rate=1.1+h21(c+5.5)*2.;
+      float tw=pow(max(0.,sin(uT*rate+ph)),5.);
+      float s=6.+h*11.;
+      float g=glint(q-pos,s)*tw;
+      vec3 gc=uMode<1.5?vec3(1.,.93,.72):vec3(1.);
+      col+=gc*g; al=max(al,min(1.,g));
+    }
+  }
+  gl_FragColor=vec4(min(col,vec3(1.)),clamp(al,0.,1.));
+}`;
 
-// point on the rounded-rect perimeter, t in [0,1); returns position and outward normal
-function perim(w, h, t) {
-  const L = 2 * (w + h); let d = t * L;
-  if (d < w) return { x: d, y: 0, nx: 0, ny: -1 };
-  d -= w; if (d < h) return { x: w, y: d, nx: 1, ny: 0 };
-  d -= h; if (d < w) return { x: w - d, y: h, nx: 0, ny: 1 };
-  d -= w; return { x: 0, y: h - d, nx: -1, ny: 0 };
+function initGL() {
+  if (GL !== null) return GL;
+  const cv = document.createElement('canvas');
+  const gl = cv.getContext('webgl', { premultipliedAlpha: true, preserveDrawingBuffer: true, alpha: true, antialias: false });
+  if (!gl) return (GL = false);
+  const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(s)); return null; } return s; };
+  const vs = sh(gl.VERTEX_SHADER, VS), fs = sh(gl.FRAGMENT_SHADER, FS);
+  if (!vs || !fs) return (GL = false);
+  const pr = gl.createProgram(); gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return (GL = false);
+  gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = n => gl.getUniformLocation(pr, n);
+  GL = { cv, gl, u: { size: U('uSize'), rect: U('uRect'), pad: U('uPad'), t: U('uT'), r: U('uR'), mode: U('uMode'), seed: U('uSeed'), s: U('uS') } };
+  return GL;
 }
 
-const PAL = {
-  SR: { flame: ['255,255,255', '236,190,255', '176,96,255', '96,40,220'], glitter: null, rate: 1.0 },
-  SSR: { flame: null, glitter: ['255,255,255', '255,236,160', '255,207,74', '255,170,40'], rate: 1.0 },
-  UR: { flame: 'rainbow', glitter: ['255,255,255', '255,220,250', '200,240,255'], rate: 1.2 },
-};
-
+const MODE = { SR: 0, SSR: 1, UR: 2 };
 function attach(el, rarity) {
-  if (!PAL[rarity] || !el) return;
+  if (!(rarity in MODE) || !el) return;
   for (const it of items) if (it.el === el) { if (it.r === rarity) return; detach(el); }
-  const cv = document.createElement('canvas');
-  cv.className = 'ffx';
+  if (!initGL()) return;
+  const cv = document.createElement('canvas'); cv.className = 'ffx';
   el.appendChild(cv);
-  const it = { el, cv, ctx: cv.getContext('2d'), r: rarity, ps: [], w: 0, h: 0, dpr: 1 };
-  items.add(it);
+  items.add({ el, cv, ctx: cv.getContext('2d'), r: rarity, seed: Math.random() * 10 });
   if (!running) { running = true; requestAnimationFrame(loop); }
 }
 function detach(el) { for (const it of items) if (it.el === el) { it.cv.remove(); items.delete(it); } }
 
-function size(it) {
+function render(it, t) {
   const w = it.el.clientWidth, h = it.el.clientHeight;
+  if (!w || !h) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  if (w !== it.w || h !== it.h || dpr !== it.dpr) {
-    it.w = w; it.h = h; it.dpr = dpr;
-    it.cv.width = Math.round((w + PAD * 2) * dpr); it.cv.height = Math.round((h + PAD * 2) * dpr);
-  }
-  return w > 0 && h > 0;
-}
-
-// Two layers: a quarter-resolution "glow" buffer scaled up (soft, translucent flame and light), and a crisp layer
-// on top for a few fine details (ember sparks, star cores and flares).
-const LO = 3;
-function spawn(it, dt) {
-  const P = PAL[it.r], w = it.w, h = it.h, per = 2 * (w + h);
-  const scale = Math.min(1.4, Math.max(.45, per / 1500));
-  const emit = (rate, make) => { let n = rate * dt; while (n > 0) { if (Math.random() < n) it.ps.push(make()); n -= 1; } };
-  if (P.flame) {
-    // soft flame puffs born just outside the frame edge; they rise, stretch and fade
-    if (false) emit(120 * scale * P.rate, () => {
-      const t = Math.random(), q = perim(w, h, t);
-      const side = q.ny < 0 ? 1.2 : q.ny > 0 ? .55 : 1;      // taller on the top edge, low on the bottom
-      return { k: 'f', x: q.x + q.nx * rnd(5, 12), y: q.y + q.ny * rnd(5, 12), vx: q.nx * rnd(6, 16) + rnd(-5, 5), vy: q.ny * rnd(3, 10) - rnd(30, 60) * side,
-        life: 0, max: rnd(.5, .95), s: (rnd(6, 12) * scale + 4) * side, hue: Math.random() * 360, wob: Math.random() * 6 };
-    });
-    // a few crisp embers
-    emit(5 * scale, () => { const q = perim(w, h, Math.random()); return { k: 'e', x: q.x + q.nx * 4, y: q.y + q.ny * 4, vx: q.nx * rnd(8, 22) + rnd(-10, 10), vy: -rnd(40, 90), life: 0, max: rnd(.7, 1.4), s: rnd(.8, 1.6), hue: Math.random() * 360 }; });
-  }
-  if (P.glitter) {
-    emit(16 * scale * P.rate, () => {
-      const q = perim(w, h, Math.random()), o = rnd(-2, 5);
-      return { k: 'g', x: q.x + q.nx * o, y: q.y + q.ny * o, vx: rnd(-2, 2), vy: -rnd(1, 6), life: 0, max: rnd(.7, 1.4), s: rnd(3, 8) * scale + 2,
-        c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: rnd(-.25, .25) };
-    });
-    emit(12 * scale, () => ({ k: 'd', x: rnd(0, w), y: h + rnd(-4, 4), vx: rnd(-6, 6), vy: -rnd(18, 40), life: 0, max: rnd(1.4, 2.6), s: rnd(.8, 1.6), c: it.r === 'UR' ? '255,215,250' : '255,220,140' }));
-    if (!it.comets) it.comets = [{ t: Math.random(), v: .13 }, { t: Math.random(), v: .13 }];
-    for (const cm of it.comets) {
-      cm.t = (cm.t + cm.v * dt) % 1;
-      const q = perim(w, h, cm.t);
-      it.ps.push({ k: 'c', x: q.x, y: q.y, vx: 0, vy: 0, life: 0, max: .45, s: 16 * scale + 8, c: P.glitter[2] });
-      if (Math.random() < .35) it.ps.push({ k: 'g', x: q.x + rnd(-3, 3), y: q.y + rnd(-3, 3), vx: q.nx * rnd(2, 8), vy: q.ny * rnd(2, 8) - rnd(2, 8), life: 0, max: rnd(.5, .9), s: rnd(2.5, 5) * scale + 1.5, c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: 0 });
-    }
-  }
-  if (it.ps.length > 600) it.ps.splice(0, it.ps.length - 600);
-}
-
-// Fire along the frame: for each edge, a silhouette whose height follows scrolling noise, filled with a gradient
-// from a bright core at the frame to transparent at the tips; three layers (outer / body / core) blended additively
-// in the soft buffer read as flickering flames. Side flames lean upward; the bottom edge burns low.
-function drawFlames(L, it, P, t) {
-  const w = it.w, h = it.h, sc = Math.min(1.3, Math.max(.6, (w + h) / 1300));
-  const layers = [
-    { amp: 70 * sc, base: 12 * sc, f: .018, sp: 1.5, a: .5, col: P.flame === 'rainbow' ? null : P.flame[3] },
-    { amp: 46 * sc, base: 8 * sc, f: .03, sp: 2.3, a: .55, col: P.flame === 'rainbow' ? null : P.flame[2] },
-    { amp: 20 * sc, base: 3 * sc, f: .055, sp: 3.4, a: .5, col: P.flame === 'rainbow' ? null : P.flame[1] },
-  ];
-  const STEP = 5;
-  const edges = [
-    { len: w, pt: d => [d, 0], dir: [0, -1], k: 1 },
-    { len: h, pt: d => [w, h - d], dir: [.7, -.71], k: 1 },
-    { len: h, pt: d => [0, h - d], dir: [-.7, -.71], k: 1 },
-    { len: w, pt: d => [d, h], dir: [0, 1], k: .3 },
-  ];
-  edges.forEach((E, ei) => {
-    layers.forEach((Ly, li) => {
-      const tips = [];
-      for (let d = 0; d <= E.len + .1; d += STEP) {
-        // flames grow toward the middle of each edge and taper at the corners
-        const edgeFade = Math.min(1, d / 40, (E.len - d) / 40) * .55 + .45;
-        const n = noise((d + ei * 333) * Ly.f - t * Ly.sp + li * 50);
-        const n2 = noise((d + ei * 777) * Ly.f * 2.2 - t * Ly.sp * 1.7 + li * 9);
-        const hh = (Ly.base + Ly.amp * Math.pow(n, 2.2) * (.5 + .8 * n2)) * E.k * edgeFade;
-        const [x, y] = E.pt(d);
-        tips.push([x + E.dir[0] * hh, y + E.dir[1] * hh, x, y]);
-      }
-      const maxH = (Ly.base + Ly.amp * .9) * E.k;
-      const [x0, y0] = E.pt(E.len / 2);
-      const gr = L.createLinearGradient(x0, y0, x0 + E.dir[0] * maxH, y0 + E.dir[1] * maxH);
-      if (Ly.col) {
-        gr.addColorStop(0, li === 2 ? `rgba(255,236,255,${Ly.a})` : `rgba(${Ly.col},${Ly.a})`); gr.addColorStop(.12, `rgba(${Ly.col},${Ly.a})`); gr.addColorStop(.7, `rgba(${Ly.col},${Ly.a * .35})`); gr.addColorStop(1, `rgba(${Ly.col},0)`);
-      } else {
-        const hu = (t * 40 + ei * 90 + li * 30) % 360;
-        gr.addColorStop(0, `hsla(${hu},100%,92%,${Ly.a})`); gr.addColorStop(.3, `hsla(${hu},100%,62%,${Ly.a})`); gr.addColorStop(1, `hsla(${(hu + 60) % 360},100%,55%,0)`);
-      }
-      L.fillStyle = gr;
-      L.beginPath();
-      L.moveTo(tips[0][2] - E.dir[0] * 3, tips[0][3] - E.dir[1] * 3);
-      for (const p of tips) L.lineTo(p[0], p[1]);
-      const lp = tips[tips.length - 1];
-      L.lineTo(lp[2] - E.dir[0] * 3, lp[3] - E.dir[1] * 3);
-      L.closePath(); L.fill();
-    });
-  });
-}
-
-function flameRGB(P, p, k) {
-  if (P.flame === 'rainbow') { const h = (p.hue + k * 90) % 360; return [`hsla(${h},100%,90%,`, `hsla(${h},95%,62%,`]; }
-  return [`rgba(${P.flame[1]},`, `rgba(${P.flame[3]},`];
-}
-
-function draw(it, dt) {
-  const P = PAL[it.r], W = it.w + PAD * 2, H = it.h + PAD * 2;
-  // low-res glow buffer
-  if (!it.lo) { it.lo = document.createElement('canvas'); it.lg = it.lo.getContext('2d'); }
-  const lw = Math.max(1, Math.round(W / LO)), lh = Math.max(1, Math.round(H / LO));
-  if (it.lo.width !== lw || it.lo.height !== lh) { it.lo.width = lw; it.lo.height = lh; }
-  const L = it.lg;
-  L.setTransform(1 / LO, 0, 0, 1 / LO, PAD / LO, PAD / LO);
-  L.globalCompositeOperation = 'source-over';
-  L.clearRect(-PAD, -PAD, W, H);
-  L.globalCompositeOperation = 'lighter';
-  const t = performance.now() / 1000;
-  if (P.flame) drawFlames(L, it, P, t);
-  if (false) {
-    L.lineWidth = 14;
-    L.strokeStyle = P.flame === 'rainbow' ? `hsla(${(t * 60) % 360},100%,70%,.18)` : `rgba(${P.flame[2]},${.12 + .04 * Math.sin(t * 5)})`;
-    L.strokeRect(-3, -3, it.w + 6, it.h + 6);
-  }
-  const g = it.ctx;
-  g.setTransform(it.dpr, 0, 0, it.dpr, PAD * it.dpr, PAD * it.dpr);
-  g.globalCompositeOperation = 'source-over';
-  g.clearRect(-PAD, -PAD, W, H);
-
-  const keep = [], crisp = [];
-  for (const p of it.ps) {
-    p.life += dt;
-    if (p.life >= p.max) continue;
-    keep.push(p);
-    const k = p.life / p.max;
-    p.x += p.vx * dt; p.y += p.vy * dt;
-    if (p.k === 'f') {
-      p.vx *= .95; p.vy -= 24 * dt; p.x += Math.sin(p.life * 9 + p.wob) * 10 * dt;
-      const r = p.s * (1 - k * .55), a = Math.sin(Math.min(1, k * 3) * Math.PI / 2) * (1 - k);
-      const [c1, c2] = flameRGB(P, p, k);
-      L.save(); L.translate(p.x, p.y); L.scale(1, 1.7);
-      const gr = L.createRadialGradient(0, 0, 0, 0, 0, r);
-      gr.addColorStop(0, `rgba(255,248,255,${.4 * a})`); gr.addColorStop(.35, c1 + (.3 * a) + ')'); gr.addColorStop(1, c2 + '0)');
-      L.fillStyle = gr; L.beginPath(); L.arc(0, 0, r, 0, Math.PI * 2); L.fill(); L.restore();
-    } else if (p.k === 'c') {
-      const a = 1 - k, r = p.s * (1 - k * .4);
-      const gr = L.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-      gr.addColorStop(0, `rgba(255,255,255,${.55 * a})`); gr.addColorStop(.4, `rgba(${p.c},${.35 * a})`); gr.addColorStop(1, `rgba(${p.c},0)`);
-      L.fillStyle = gr; L.beginPath(); L.arc(p.x, p.y, r, 0, Math.PI * 2); L.fill();
-    } else if (p.k === 'g') {
-      const a = Math.max(0, Math.sin(k * Math.PI)) * (.7 + .3 * Math.sin(p.life * 26 + p.rot * 9));
-      const gr = L.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.s * 2.4);
-      gr.addColorStop(0, `rgba(${p.c},${.35 * a})`); gr.addColorStop(1, `rgba(${p.c},0)`);
-      L.fillStyle = gr; L.beginPath(); L.arc(p.x, p.y, p.s * 2.4, 0, Math.PI * 2); L.fill();
-      crisp.push([p, a]);
-    } else {
-      crisp.push([p, 0]);
-    }
-  }
-  it.ps = keep;
-  // composite the soft layer (smoothing upscales it into a soft blur)
-  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
-  g.globalCompositeOperation = 'lighter';
-  g.drawImage(it.lo, -PAD, -PAD, W, H);
-  // keep the character art clear: effects live outside the frame and only creep a few px over its edge
-  g.globalCompositeOperation = 'destination-out';
-  const E = 10;
-  g.fillStyle = 'rgba(0,0,0,.92)'; g.fillRect(E, E, it.w - E * 2, it.h - E * 2);
-  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [[0, 0, 0, E, 0, 0, it.w, E], [0, it.h, 0, it.h - E, 0, it.h - E, it.w, E], [0, 0, E, 0, 0, E, E, it.h - E * 2], [it.w, 0, it.w - E, 0, it.w - E, E, E, it.h - E * 2]]) {
-    const lg = g.createLinearGradient(x0, y0, x1, y1); lg.addColorStop(0, 'rgba(0,0,0,0)'); lg.addColorStop(1, 'rgba(0,0,0,.92)');
-    g.fillStyle = lg; g.fillRect(rx, ry, rw, rh);
-  }
-  g.globalCompositeOperation = 'lighter';
-  // crisp details
-  for (const [p, a0] of crisp) {
-    const k = p.life / p.max;
-    if (p.k === 'g') {
-      const a = a0 * .85, r = p.s * (.6 + .6 * Math.sin(k * Math.PI));
-      g.save(); g.translate(p.x, p.y); g.rotate(p.rot);
-      const lg = g.createLinearGradient(-r * 2.2, 0, r * 2.2, 0);
-      lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(.5, `rgba(255,255,255,${a})`); lg.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = lg; g.fillRect(-r * 2.2, -.6, r * 4.4, 1.2);
-      const vg = g.createLinearGradient(0, -r * 1.3, 0, r * 1.3);
-      vg.addColorStop(0, 'rgba(255,255,255,0)'); vg.addColorStop(.5, `rgba(255,255,255,${a * .8})`); vg.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = vg; g.fillRect(-.6, -r * 1.3, 1.2, r * 2.6);
-      g.fillStyle = `rgba(255,255,255,${a})`; g.beginPath(); g.arc(0, 0, Math.max(.8, r * .14), 0, Math.PI * 2); g.fill();
-      g.restore();
-    } else if (p.k === 'e') {
-      const a = (1 - k) * .9;
-      const col = P.flame === 'rainbow' ? `hsla(${p.hue},100%,85%,${a})` : `rgba(240,215,255,${a})`;
-      g.strokeStyle = col; g.lineWidth = p.s; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x - p.vx * .04, p.y - p.vy * .04); g.stroke();
-    } else if (p.k === 'd') {
-      g.fillStyle = `rgba(${p.c},${Math.sin(k * Math.PI) * .7})`;
-      g.beginPath(); g.arc(p.x + Math.sin(p.life * 3 + p.s * 9) * 3, p.y, p.s, 0, Math.PI * 2); g.fill();
-    }
-  }
+  const W = Math.round((w + PAD * 2) * dpr), H = Math.round((h + PAD * 2) * dpr);
+  if (it.cv.width !== W || it.cv.height !== H) { it.cv.width = W; it.cv.height = H; }
+  const { cv, gl, u } = GL;
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  gl.viewport(0, 0, W, H);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform2f(u.size, W, H);
+  gl.uniform2f(u.rect, w * dpr, h * dpr);
+  gl.uniform1f(u.pad, PAD * dpr);
+  gl.uniform1f(u.s, dpr);
+  gl.uniform1f(u.t, t);
+  gl.uniform1f(u.r, Math.min(18, w * .07));
+  gl.uniform1f(u.mode, MODE[it.r]);
+  gl.uniform1f(u.seed, it.seed);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  it.ctx.clearRect(0, 0, W, H);
+  it.ctx.drawImage(cv, 0, 0);
 }
 
 function loop(now) {
   if (!items.size) { running = false; return; }
   requestAnimationFrame(loop);
-  if (now - last < 33) return;              // ~30fps
-  const dt = Math.min(.05, (now - last) / 1000 || .033); last = now;
+  if (now - last < 33) return;
+  last = now;
   if (document.hidden || document.documentElement.classList.contains('lite')) return;
+  const t = now / 1000;
   for (const it of [...items]) {
     if (!it.el.isConnected) { items.delete(it); continue; }
-    if (!it.el.offsetParent || !size(it)) continue;      // not on screen
-    spawn(it, dt); draw(it, dt);
+    if (!it.el.offsetParent) continue;
+    const r = it.el.getBoundingClientRect();
+    if (r.bottom < -PAD || r.top > innerHeight + PAD || r.right < -PAD || r.left > innerWidth + PAD) continue;
+    render(it, t);
   }
 }
 

@@ -631,7 +631,7 @@ function doDiscard(id) {
 }
 
 // ---------------------------------------------------------------- my turn / my call
-function clearActs() { $('#acts').innerHTML = ''; $('#chiPick').hidden = true; }
+function clearActs() { const a = $('#acts'); a.innerHTML = ''; a.classList.remove('atptr'); a.style.left = a.style.top = ''; $('#chiPick').hidden = true; }
 function btn(label, cls, fn, role) {
   const b = document.createElement('button'); b.className = 'ab ' + cls; b.onclick = fn;
   if (role) b.dataset.role = role;
@@ -692,7 +692,29 @@ function myCall(o, res) {
   }, 'chi');
   btn(t('skip'), 'skip', () => finish({ act: 'pass' }), 'skip');
   bindActKeys();
+  placeActsAtPointer();
   TB.highlightType(T(o.tile));
+}
+
+// PC: call buttons pop up right above the mouse pointer (only for a mouse, not in the rotated phone layout)
+let PTR = null;
+document.addEventListener('pointermove', e => { PTR = e.pointerType === 'mouse' ? { x: e.clientX, y: e.clientY } : null; }, { passive: true });
+function hudLocal(p) {
+  const hud = $('#acts').offsetParent; if (!hud || !p) return null;
+  const r = hud.getBoundingClientRect(); if (!r.width) return null;
+  return { x: (p.x - r.left) * hud.offsetWidth / r.width, y: (p.y - r.top) * hud.offsetHeight / r.height, W: hud.offsetWidth, H: hud.offsetHeight };
+}
+function placeActsAtPointer() {
+  const a = $('#acts'), pk = $('#chiPick');
+  a.classList.remove('atptr'); a.style.left = a.style.top = ''; pk.classList.remove('atptr'); pk.style.left = pk.style.top = '';
+  if (document.documentElement.classList.contains('rot')) return;
+  const p = hudLocal(PTR); if (!p) return;
+  a.classList.add('atptr');
+  const w = a.offsetWidth, h = a.offsetHeight;
+  const x = Math.max(8, Math.min(p.W - w - 8, p.x - w / 2));
+  const y = Math.max(8, Math.min(p.H - h - 8, p.y - h - 18));
+  a.style.left = x + 'px'; a.style.top = y + 'px';
+  pk.classList.add('atptr'); pk.style.left = x + 'px'; pk.style.top = Math.max(8, y - 64) + 'px';
 }
 
 // while a call (chi/pon/kan/ron) is offered, clicking anywhere except the buttons skips it
