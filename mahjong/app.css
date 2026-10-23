@@ -913,3 +913,9 @@ html.ds #game .bt .bk{zoom:var(--hz, 1)}
 html.ds .tl kbd.tk{font-size:clamp(9px,calc(var(--tw) * .2),calc(13px * var(--hz, 1)))}
 html.ds #game .bt .sc{background:rgba(10,14,30,.72);border-radius:8px;padding:0 calc(8px * var(--hz, 1))}
 html.ds #game #opp3{top:calc(var(--gi) + (var(--rbh, 140px) + var(--khh, 70px)) * var(--hz, 1) + 34px)}
+/* phones: compact skill button — icon + name only (details stay in the character screen / confirm) */
+html.lp #game .skb{padding:3px 8px 3px 3px;gap:5px;border-radius:10px;max-width:calc(var(--W) * .22)}
+html.lp #game .skb i{width:26px;height:26px;padding:5px;border-radius:7px}
+html.lp #game .skb b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.lp #game .skb small{display:none}
+html.lp #game .skb em.sr{font-size:8.5px;padding:0 3px}

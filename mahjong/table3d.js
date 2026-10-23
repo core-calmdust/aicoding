@@ -341,7 +341,7 @@ class Table3D {
     this.camera.aspect = a;
     // fit the table width: landscape tilts toward the player, portrait looks almost straight down
     const P = a >= 1.9 ? { fov: 30, elev: 50, fitX: 11.9, tz: 0.9 }
-      : a >= 1.55 ? { fov: 34, elev: 47, fitX: 12.1, tz: 0.7 }
+      : a >= 1.55 ? { fov: 34, elev: 54, fitX: 14.8, tz: 1.6 }
       : a >= 1.2 ? { fov: 34, elev: 52, fitX: 12.9, tz: 0.45 }
       : a >= 0.8 ? { fov: 42, elev: 66, fitX: 10.8, tz: 0.4 }
       : { fov: 46, elev: 78, fitX: 7.5, tz: -1.8 };
