@@ -31,7 +31,7 @@ const SKILLS = [
     name: L('引き寄せ', 'Lure'), short: v => L(v > 1 ? '有効牌ツモ×2（良形寄り）' : '有効牌ツモ×2', v > 1 ? 'Good draws ×2 (better)' : 'Good draws ×2'),
     desc: v => L(`次の2回のツモが、山に残っていれば向聴数が進む牌になる。${v > 1 ? `候補${v > 50 ? 'すべて' : `${v}枚`}から受け入れが最も広がる牌を選ぶ。` : ''}`, `Your next 2 draws become tiles that improve your hand, if any remain in the wall.${v > 1 ? ` Picks the one that widens your waits most from ${v > 50 ? 'all' : v} candidates.` : ''}`),
     use(g, s, v) { g.P[s].fx.lure = 2; g.P[s].fx.lureW = v; } },
-  { id: 'mind', timing: 'turn', cost: 500, icon: 'eye', color: '#ff6fb5', P: [0, 1, 2, 3],
+  { id: 'mind', timing: 'turn', cost: 2000, icon: 'eye', color: '#ff6fb5', P: [0, 1, 2, 3],
     name: L('読心', 'Mind Read'), short: v => L(v ? `他家の手を読む＋${v}枚` : '他家の手を読む', v ? `Read hands +${v} tiles` : 'Read hands'),
     desc: v => L(`他家3人の向聴数と、テンパイなら待ち牌を見る。${v ? `さらに各自の手牌を${v}枚ずつ見る。` : ''}`, `See how close each opponent is to ready, and their waits if they are ready.${v ? ` Also see ${v} tile${v > 1 ? 's' : ''} of each hand.` : ''}`),
     use(g, s, v) {
@@ -46,7 +46,7 @@ const SKILLS = [
       g.P[s].fx.read = out;
       return { read: out };
     } },
-  { id: 'peek', timing: 'turn', cost: 500, icon: 'scope', color: '#7fd3ff', P: [3, 4, 5, 6],
+  { id: 'peek', timing: 'turn', cost: 1000, icon: 'scope', color: '#7fd3ff', P: [3, 4, 5, 6],
     name: L('先読み', 'Foresight'), short: v => L(`次のツモ${v}回`, `Next ${v} draws`),
     desc: v => L(`鳴きが入らなければ引くことになる、あなたの次の${v}回のツモ牌を見る。`, `See the tiles of your next ${v} draws (if nobody calls).`),
     use(g, s, v) {
@@ -113,7 +113,8 @@ function rigDora(g, s) {
 const TIERS = ['N', 'R', 'SR', 'SSR'];
 const TIER_W = [55, 30, 12, 3];
 // Points one use is worth at tier N (paired BOT simulation, tools/skill-value.js, 2026-10-23). The 2nd-use cost is set
-// to about this value. Foresight is information the BOT cannot use, so its cost is set by hand.
+// to about this value. Mind Read and Foresight are information a BOT barely uses but a person can (knowing every
+// opponent's waits is near-perfect defence), so their costs are set by hand well above the BOT value: 2000 / 1000.
 const VALUE = {wareme: 1033, hanup: 547, guard: 658, shugi: 718, pot: 671, doraplus: 807, lure: 1399, mind: 530, peek: 0, swap: 440, seal: 547};
 const val = (sk, t) => sk.P[Math.max(0, Math.min(3, t | 0))];
 const MJSkills = { list: SKILLS, get: id => BY[id], value: VALUE, TIERS, TIER_W, val,
