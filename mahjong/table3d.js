@@ -12,12 +12,14 @@ function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcT
 class Table3D {
   constructor(host) {
     this.host = host;
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     const mobile = matchMedia('(pointer: coarse)').matches;
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2));
+    this.mobile = mobile;
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5));
     r.outputEncoding = THREE.sRGBEncoding;
     r.shadowMap.enabled = true;
-    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    r.shadowMap.type = THREE.PCFShadowMap;
+    r.shadowMap.autoUpdate = true;
     host.appendChild(r.domElement);
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 200);
@@ -40,7 +42,8 @@ class Table3D {
     const key = new THREE.DirectionalLight(0xffffff, 0.85);
     key.position.set(-6, 22, 10);
     key.castShadow = true;
-    key.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
+    key.shadow.mapSize.set(1024, 1024);
+    this.key = key;
     const sc = key.shadow.camera; sc.left = -14; sc.right = 14; sc.top = 14; sc.bottom = -14; sc.near = 4; sc.far = 50;
     key.shadow.bias = -0.0006; key.shadow.radius = 3;
     s.add(key);
@@ -351,7 +354,20 @@ class Table3D {
     this.camera.lookAt(this.lookAt);
     this.dirty = true;
   }
+  // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
+  setQuality(q) {
+    const lite = q === 'lite';
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lite ? 1 : this.mobile ? 1.25 : 1.5));
+    this.renderer.shadowMap.enabled = !lite;
+    this.key.castShadow = !lite;
+    this.scene.traverse(o => { if (o.material) { const m = Array.isArray(o.material) ? o.material : [o.material]; m.forEach(x => x.needsUpdate = true); } });
+    this.resize();
+  }
+  // stop the frame loop while the table is not on screen
+  pause() { this.paused = true; }
+  resume() { if (!this.paused) return; this.paused = false; this.dirty = true; requestAnimationFrame(this._loop); }
   _loop(now) {
+    if (this.paused) return;
     requestAnimationFrame(this._loop);
     if (this.tweens.length) {
       this.tweens = this.tweens.filter(tw => {

@@ -721,3 +721,34 @@ html.ds #home,html.ds #chara{inset:auto;left:var(--SX);top:var(--SY);width:calc(
 html.ds .hmain{padding-bottom:22px}
 html.ds .partner{grid-template-columns:minmax(0,.82fr) minmax(0,1fr)}
 html.ds .pimg{max-height:100%}
+
+/* ================= performance =================
+   Looping effects use only transform/opacity (no repaint each frame); small portraits stay still;
+   html.lite stops every looping effect. */
+.modal{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(6,3,14,.78)}
+.fr-SSR,.fr-UR,.gc.fr-SSR,.gc.fr-UR{animation:none}
+.gc.fr-SSR,.gc.fr-UR{animation:flip .45s var(--d) forwards}
+.fr-SSR{box-shadow:0 0 16px rgba(255,207,74,.6)}
+.fr-UR{box-shadow:0 0 18px rgba(255,92,214,.55),0 0 8px rgba(92,200,255,.5)}
+.frame::before{will-change:transform}
+.frame .fx-sh{overflow:hidden;background:none!important;animation:none!important}
+.fr-SSR .fx-sh::before,.fr-UR .fx-sh::before{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;
+  background:linear-gradient(105deg,transparent,rgba(255,250,225,.55),transparent);transform:translateX(-120%);animation:sweep 3s ease-in-out infinite;will-change:transform}
+.fr-UR .fx-sh::before{background:linear-gradient(105deg,transparent,rgba(255,255,255,.6),rgba(255,210,250,.35),transparent);animation-duration:2.2s}
+.fr-UR .fx-sh::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 22%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 78% 30%,#fff 0 1.2px,transparent 2.2px),radial-gradient(circle at 60% 76%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 30% 64%,#fff 0 1px,transparent 2px);animation:twinkle 1.4s ease-in-out infinite}
+@keyframes sweep{0%{transform:translateX(-120%)}55%,100%{transform:translateX(260%)}}
+/* small portraits (lists, table badges, sisters, results): ring stays still */
+.chi .frame::before,.bf .frame::before,.sib .frame::before,.fi .frame::before{animation:none}
+.chi .fx-sh,.bf .fx-sh,.sib .fx-sh,.fi .fx-sh{display:none}
+.chi .r-UR,.prar.r-UR{animation:none}
+.bf.rii img{animation:none;box-shadow:0 0 18px #ffd24a,0 0 4px #fff}
+.bk i.fx{animation:none}
+.skb.ready{animation:none}
+.unlock i{animation:none}
+.ci-rays{width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;mix-blend-mode:normal;will-change:transform,opacity}
+/* light mode */
+html.lite .frame::before,html.lite .pimg img,html.lite .ch-art img,html.lite .fx-sh::before,html.lite .fx-sh::after,
+html.lite .r-UR,html.lite .gorb,html.lite .ci-lines{animation:none!important}
+html.lite .ci-rays,html.lite .ci-spark{display:none}
+html.lite #bgfx::after{display:none}
+#btnLite.on{background:rgba(232,206,140,.2);color:#ffe9a0;box-shadow:inset 0 0 0 1px var(--gold)}

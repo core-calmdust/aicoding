@@ -27,7 +27,8 @@ function load() {
   if (!Object.keys(d.chars).length) { const st = MJChars.starter, k = MJSkills.key(st.skill, st.tier); d.chars[st.id] = { skills: [k], use: k }; }
   delete d.owned;
   d.sel = d.sel && d.chars[d.sel] ? d.sel : Object.keys(d.chars)[0];
-  d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true }, d.set || {});
+  const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak }, d.set || {});
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
   return d;
 }
@@ -59,6 +60,7 @@ const IC = {
   scope: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M11 7v8M7 11h8"/></svg>',
   swap: '<svg viewBox="0 0 24 24"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>',
   lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
 };
@@ -206,6 +208,7 @@ function renderHome() {
   $('#btnGacha').innerHTML = IC.gacha; $('#btnColl').innerHTML = IC.collection; $('#btnPortal').innerHTML = IC.home;
   $('#coinBox .coin').innerHTML = IC.coin;
   sndIcons();
+  $('#btnLite').innerHTML = IC.bolt; applyLite();
   const c = MJChars.get(DB.sel);
   const o = DB.chars[c.id], uk = useKey(c.id);
   $('#partner').innerHTML = `
@@ -229,6 +232,13 @@ function renderHome() {
 }
 $('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
 $('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); });
+function applyLite() {
+  document.documentElement.classList.toggle('lite', !!DB.set.lite);
+  const b = $('#btnLite');
+  if (b) { b.classList.toggle('on', !!DB.set.lite); b.title = t(DB.set.lite ? 'liteOn' : 'liteOff'); b.setAttribute('aria-label', b.title); }
+  if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
+}
+$('#btnLite').addEventListener('click', () => { DB.set.lite = !DB.set.lite; save(); applyLite(); toast(t(DB.set.lite ? 'liteOn' : 'liteOff')); });
 $('#btnSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); SND.unlock(); });
 $('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
@@ -397,7 +407,8 @@ const AUTO = /[?&]auto/.test(location.search);
 async function startGame() {
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
-  if (!TB) TB = new Table3D($('#stage'));
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); }
+  TB.resume();
   TB.hideAll();
   const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
   const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
@@ -423,6 +434,7 @@ function quitGame() {
   $('#dealAsk').hidden = true;
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
+  if (TB) TB.pause();
   closeModal(); $('#cutin').hidden = true;
   renderHome();
 }
