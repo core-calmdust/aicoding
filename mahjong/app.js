@@ -930,6 +930,9 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- boot
+// animated frame effects follow whatever large frames are on screen
+let ffxT = 0;
+new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => FrameFX.scan(), 60); }).observe(document.body, { childList: true, subtree: true });
 I18N.set(I18N.lang);
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome();

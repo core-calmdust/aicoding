@@ -838,3 +838,13 @@ html.lite .gc.frame{animation:flip .45s var(--d) forwards!important}
 .pimg.fr-SR,.ch-art.fr-SR{box-shadow:0 0 0 2px #f0d8ff,0 0 30px 6px rgba(194,123,255,.9),0 0 90px 24px rgba(140,80,255,.5),0 0 170px 50px rgba(120,60,255,.2)}
 .frame .fx-sh,.pimg.frame .fx-sh,.ch-art.frame .fx-sh{overflow:hidden!important;z-index:3!important;border-radius:inherit;inset:0}
 .pimg.frame .fx-sh{border-radius:22px}.ch-art.frame .fx-sh{border-radius:22px}
+
+/* ================= animated frame effects (canvas, framefx.js) replace the bright glow ================= */
+.ffx{position:absolute;left:-40px;top:-40px;width:calc(100% + 80px);height:calc(100% + 80px);pointer-events:none;z-index:5}
+.gc.frame,.pimg.frame,.ch-art.frame{overflow:visible}
+.gc.frame .gci{border-radius:12px 12px 0 0}
+.pimg.fr-SR::after,.ch-art.fr-SR::after,.pimg.fr-SSR::after,.ch-art.fr-SSR::after{content:none!important}
+.pimg.fr-SSR,.ch-art.fr-SSR,.gc.fr-SSR,.ag-art.fr-SSR{box-shadow:0 0 0 2px #fff3c4,0 0 18px rgba(255,190,60,.55)}
+.pimg.fr-SR,.ch-art.fr-SR,.gc.fr-SR,.ag-art.fr-SR{box-shadow:0 0 0 2px #e9d2ff,0 0 16px rgba(160,100,255,.5)}
+.pimg.fr-UR,.ch-art.fr-UR,.gc.fr-UR,.ag-art.fr-UR{box-shadow:0 0 0 2px #fff,0 0 20px rgba(255,120,220,.5)}
+html.lite .ffx{display:none}
