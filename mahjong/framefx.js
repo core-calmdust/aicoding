@@ -50,9 +50,9 @@ void main(){
     else{float hu=fract(atan(q.y,q.x)/6.2832+uT*.08);deep=hsv(hu,.95,.75);mid=hsv(hu+.05,.8,1.);hot=hsv(hu+.1,.3,1.);}
     vec3 c=mix(deep,mid,smoothstep(.12,.42,f));
     c=mix(c,hot,smoothstep(.5,.78,f));
-    c=mix(c,vec3(1.),smoothstep(.85,1.,f)*.6);
-    float a=smoothstep(0.,.1,f)*(.5+.5*smoothstep(0.,.5,f));
-    float halo=exp(-max(d,0.)/20.)*.18*smoothstep(-6.,0.,d);
+    c=mix(c,vec3(1.),smoothstep(.85,1.,f)*.3);
+    float a=smoothstep(0.,.22,f)*(.16+.34*smoothstep(0.,.7,f));
+    float halo=exp(-max(d,0.)/20.)*.1*smoothstep(-6.,0.,d);
     col+=c*a+mid*halo; al=max(al,clamp(a+halo,0.,1.));
   }
   if(uMode>.5){
@@ -105,7 +105,7 @@ function initGL() {
 const MODE = { SR: 0, SSR: 1, UR: 2 };
 function attach(el, rarity) {
   if (!(rarity in MODE) || !el) return;
-  for (const it of items) if (it.el === el) { if (it.r === rarity) return; detach(el); }
+  for (const it of items) if (it.el === el) { if (it.r === rarity && it.cv.parentNode === el) return; detach(el); }
   if (!initGL()) return;
   const cv = document.createElement('canvas'); cv.className = 'ffx';
   el.appendChild(cv);
