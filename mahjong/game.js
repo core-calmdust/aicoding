@@ -145,7 +145,7 @@ class MJGame {
         const s = (this.kyoku + k) % 4;
         if (!this.canSkill(s, 'deal')) continue;
         const ag = this.agents[s];
-        const yes = ag.dealSkill ? await ag.dealSkill(this, s, { cost: this.skillCost(s), skill: this.skillOf(s).id }) : false;
+        const yes = ag.dealSkill ? await ag.dealSkill(this, s, { cost: this.skillCost(s), skill: this.skillOf(s).id, tier: this.chars[s].tier | 0 }) : false;
         if (yes && this.canSkill(s, 'deal')) await this.useSkill(s);
       }
     }
@@ -199,17 +199,28 @@ class MJGame {
     const p = this.P[s];
     if (p.fx.lure > 0) {
       p.fx.lure--;
-      const c = MJ.countsIds(p.hand), sh = MJ.shanten(c, p.melds.length);
-      for (let i = this.livePos; i < this.liveEnd; i++) {
+      const m = p.melds.length, c = MJ.countsIds(p.hand), sh = MJ.shanten(c, m);
+      const W = p.fx.lureW || 1;           // higher tiers compare more candidates and keep the widest
+      let pick = -1, pickUk = -1, found = 0;
+      const seenT = new Set();
+      for (let i = this.livePos; i < this.liveEnd && found < W; i++) {
         const t = T(this.wall[i]);
-        if (c[t] >= 4) continue;
+        if (c[t] >= 4 || seenT.has(t)) continue;
+        seenT.add(t);
         c[t]++;
-        // 14 tiles: best shanten after the best discard
-        let best = 9;
-        for (let d = 0; d < 34; d++) if (c[d]) { c[d]--; best = Math.min(best, MJ.shanten(c, p.melds.length)); c[d]++; }
+        // 14 tiles: best shanten after the best discard, and the widest acceptance at that shanten
+        let best = 9, uk = 0;
+        for (let d = 0; d < 34; d++) if (c[d]) {
+          c[d]--;
+          const s2 = MJ.shanten(c, m);
+          if (s2 < best) { best = s2; uk = 0; }
+          if (s2 === best && W > 1) { let u = 0; for (let x = 0; x < 34; x++) if (c[x] < 4) { c[x]++; if (MJ.shanten(c, m) < s2) u += 4 - c[x] + 1; c[x]--; } uk = Math.max(uk, u); }
+          c[d]++;
+        }
         c[t]--;
-        if (best < sh) { [this.wall[i], this.wall[this.livePos]] = [this.wall[this.livePos], this.wall[i]]; break; }
+        if (best < sh) { found++; if (uk > pickUk) { pickUk = uk; pick = i; } }
       }
+      if (pick >= 0) [this.wall[pick], this.wall[this.livePos]] = [this.wall[this.livePos], this.wall[pick]];
     }
     return this.draw();
   }
@@ -366,7 +377,7 @@ class MJGame {
       tenhou: tsumo && this.firstGo && p.firstTurn && this.isDealer(s),
       chiihou: tsumo && this.firstGo && p.firstTurn && !this.isDealer(s) && p.melds.length === 0,
       doraInd: this.doraInds(), uraInd: this.uraInds(), aka,
-      skillHan: p.fx.hanup ? 1 : 0,
+      skillHan: p.fx.hanup ? 1 : 0, skillFu: p.fx.hanup ? p.fx.hanup.fu : 0,
     };
     const r = MJ.evaluate(o);
     if (!r) return null;
@@ -506,11 +517,13 @@ class MJGame {
 
   // ---------------------------------------------------------------- payments
   // move points with skill modifiers (wareme doubles, guard halves the payer's side)
-  pay(from, to, amt) {
+  pay(from, to, amt, ron) {
     let m = 1;
-    if (this.P[from].fx.wareme) m *= 2;
-    if (this.P[to].fx.wareme) m *= 2;
-    if (this.P[from].fx.guard) m *= 0.5;
+    const F = this.P[from].fx, Tt = this.P[to].fx;
+    if (F.wareme) m *= 2;
+    if (Tt.wareme) m *= Tt.wareme;
+    if (F.guard) m *= F.guard;
+    if (ron && F.seal) m *= F.seal;
     const v = m === 1 ? amt : Math.ceil(amt * m / 100) * 100;
     this.scores[from] -= v; this.scores[to] += v;
     return v;
@@ -528,23 +541,23 @@ class MJGame {
       if (!res) continue;
       const dealer = this.isDealer(w);
       const pays = MJ.payments(res.base, dealer, tsumo);
-      const potMul = p.fx.pot ? 2 : 1;
+      const potMul = p.fx.pot || 1;
       const hb = first ? this.honba * potMul : 0; first = false;
       const moves = [];
       if (tsumo) {
         for (let q = 0; q < 4; q++) if (q !== w) {
-          const amt = (dealer ? pays.all : (this.isDealer(q) ? pays.dealer : pays.other)) + hb * 100;
+          const amt = (dealer ? pays.all : (this.isDealer(q) ? pays.dealer : pays.other)) + Math.ceil(hb) * 100;
           moves.push([q, this.pay(q, w, amt)]);
         }
       } else {
-        moves.push([from, this.pay(from, w, pays.ron + hb * 300)]);
+        moves.push([from, this.pay(from, w, pays.ron + Math.ceil(hb * 3) * 100, true)]);
       }
       // shugi skill: +500 from each other player per red / ura / ippatsu
       if (p.fx.shugi) {
         const ura = (res.list.find(x => x[0] === 'ura') || [0, 0])[1];
         const ip = res.list.some(x => x[0] === 'ippatsu') ? 1 : 0;
         const n = (res.aka || 0) + ura + ip;
-        if (n) for (let q = 0; q < 4; q++) if (q !== w) moves.push([q, this.pay(q, w, 800 * n), 'shugi']);
+        if (n) for (let q = 0; q < 4; q++) if (q !== w) moves.push([q, this.pay(q, w, p.fx.shugi * n), 'shugi']);
         res.shugi = n;
       }
       if (!sticksTaken) {
@@ -552,7 +565,7 @@ class MJGame {
         const k = this.kyotaku;
         this.scores[w] += k; res.kyotaku = k; this.kyotaku = 0;
         if (p.fx.pot && k) {           // jackpot: the other three add the pot again between them
-          const each = Math.ceil(k / 3 / 100) * 100;
+          const each = Math.ceil(k * (potMul - 1) / 3 / 100) * 100;
           for (let q = 0; q < 4; q++) if (q !== w) { this.scores[q] -= each; this.scores[w] += each; }
           res.kyotaku += each * 3;
         }
@@ -592,12 +605,12 @@ class MJGame {
   // ---------------------------------------------------------------- skills
   async useSkill(s) {
     const cost = this.skillCost(s);
-    const sk = SK.get(this.chars[s].skill);
+    const sk = SK.get(this.chars[s].skill), tier = this.chars[s].tier | 0;
     this.scores[s] -= cost; this.kyotaku += cost;
     this.skillUses[s]++;
     this.P[s].skillUsed = true;
-    const info = await sk.use(this, s);
-    await this.emit('skill', { seat: s, skill: sk.id, cost, info: info || {}, scores: this.scores.slice(), kyotaku: this.kyotaku, char: this.chars[s] });
+    const info = await sk.use(this, s, SK.val(sk, tier));
+    await this.emit('skill', { seat: s, skill: sk.id, tier, cost, info: info || {}, scores: this.scores.slice(), kyotaku: this.kyotaku, char: this.chars[s] });
   }
 }
 

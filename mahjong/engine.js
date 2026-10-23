@@ -416,6 +416,7 @@ function finish(r, o, menzen, all) {
     for (const ind of o.uraInd || []) { const d = doraOf(ind); for (const t of all) if (t === d) ura++; }
     list.push(['ura', ura]); han += ura;
   }
+  if (o.skillFu && r.fu !== 25) r.fu = Math.min(110, r.fu + o.skillFu);
   r.han = han; r.list = list;
   r.base = limitBase(han, r.fu, 0);
   r.limit = limitName(han, r.fu, 0);

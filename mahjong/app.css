@@ -563,3 +563,132 @@ html:not(.lp) .ch-main{grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr)
 .ch-vars button.on{border-color:var(--gold);opacity:1;box-shadow:0 0 10px rgba(232,206,140,.6)}
 .ch-vars img{width:100%;height:100%;object-fit:cover;display:block}
 html.lp .ch-vars button{width:30px}
+
+/* ================= rarity frames (N plain → UR rainbow) ================= */
+.r-UR{color:#fff;background:linear-gradient(90deg,#ff6b8b,#ffd36b,#7dffb0,#6bc8ff,#c68bff,#ff6b8b);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:rainbowText 3s linear infinite}
+.prar.r-UR{border-color:#ffd36b;-webkit-text-fill-color:transparent}
+@keyframes rainbowText{to{background-position:200% 0}}
+.frame{position:relative;display:block;overflow:hidden;isolation:isolate;padding:2px;background:#8c93a3}
+.frame > img{position:relative;z-index:1;display:block;width:100%;height:100%;object-fit:cover;border:0!important;box-shadow:none!important}
+.frame::before{content:"";position:absolute;inset:-60%;z-index:0}
+.frame .fx-sh{position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit}
+.fr-N{background:linear-gradient(160deg,#c9ced8,#6c7383)}
+.fr-R{background:linear-gradient(160deg,#9fd4ff,#2d6fd1);box-shadow:0 0 10px rgba(90,176,255,.45)}
+.fr-SR::before{background:conic-gradient(#c27bff,#ff8ad8,#7d5cff,#e3b8ff,#c27bff);animation:spinr 5s linear infinite}
+.fr-SR{box-shadow:0 0 14px rgba(194,123,255,.55)}
+.fr-SSR{padding:3px}
+.fr-SSR::before{background:conic-gradient(#fff3c4,#ffcf4a,#b8861e,#ffe9a0,#fff,#ffcf4a,#fff3c4);animation:spinr 3.2s linear infinite}
+.fr-SSR{animation:glowGold 2.4s ease-in-out infinite}
+.fr-SSR .fx-sh{background:linear-gradient(115deg,transparent 38%,rgba(255,250,220,.6) 50%,transparent 62%);background-size:260% 100%;animation:shine 2.8s ease-in-out infinite}
+.fr-UR{padding:3px}
+.fr-UR::before{background:conic-gradient(#ff5c7a,#ffb85c,#fff36b,#6bff9a,#5cc8ff,#8a6bff,#ff5cd6,#ff5c7a);animation:spinr 2s linear infinite}
+.fr-UR{animation:glowRainbow 2s linear infinite}
+.fr-UR .fx-sh{background:
+  radial-gradient(circle at 18% 22%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 78% 30%,#fff 0 1.2px,transparent 2.2px),
+  radial-gradient(circle at 60% 76%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 30% 64%,#fff 0 1px,transparent 2px),
+  linear-gradient(115deg,transparent 36%,rgba(255,255,255,.65) 48%,rgba(255,220,255,.4) 52%,transparent 64%);
+  background-size:100% 100%,100% 100%,100% 100%,100% 100%,260% 100%;animation:shine 2s ease-in-out infinite,twinkle 1.2s ease-in-out infinite}
+@keyframes spinr{to{transform:rotate(1turn)}}
+@keyframes shine{0%{background-position:0 0,0 0,0 0,0 0,140% 0}60%,100%{background-position:0 0,0 0,0 0,0 0,-60% 0}}
+.fr-SSR .fx-sh{animation-name:shineOne}
+@keyframes shineOne{0%{background-position:140% 0}60%,100%{background-position:-60% 0}}
+@keyframes twinkle{50%{opacity:.55}}
+@keyframes glowGold{50%{box-shadow:0 0 22px rgba(255,207,74,.85),0 0 4px #fff}0%,100%{box-shadow:0 0 12px rgba(255,207,74,.5)}}
+@keyframes glowRainbow{0%{box-shadow:0 0 20px #ff5c7a}25%{box-shadow:0 0 24px #fff36b}50%{box-shadow:0 0 22px #5cc8ff}75%{box-shadow:0 0 24px #ff5cd6}100%{box-shadow:0 0 20px #ff5c7a}}
+
+/* placements */
+#game .bf .frame{width:100%;height:100%;border-radius:12%}
+#game .bf .frame > img{border-radius:10%}
+.chi .frame{width:100%;aspect-ratio:1;border-radius:14px}
+.chi .frame > img{border-radius:12px}
+.chi.lock .frame > img{filter:brightness(.15) saturate(0)}
+.chi.on .frame{outline:2px solid var(--gold);outline-offset:2px}
+.fi > .frame{width:54px;height:54px;border-radius:50%}
+.fi > .frame > img{border-radius:50%}
+.pimg.frame,.ch-art.frame,.ag-art.frame{padding:0}
+.pimg.frame > img,.ch-art.frame > img,.ag-art.frame > img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);border-radius:21px}
+.ag-art.frame > img{border-radius:0}
+.pimg.fr-N > img,.ch-art.fr-N > img{inset:2px;width:calc(100% - 4px);height:calc(100% - 4px)}
+.pimg::after,.ch-art::after{z-index:3}
+.pimg .ptap{z-index:4}
+.gc.frame{padding:2px;border:0}
+.gc.frame .gci{position:relative;z-index:1;overflow:hidden;border-radius:12px 12px 0 0}
+.gc.frame .gcn{z-index:3}
+.gc.frame .gnew,.gc.frame .gdup{z-index:4}
+.gnew.sk{background:#3a8dff}
+.sis{display:flex;flex-direction:column;gap:6px}
+.sis small{font-size:11.5px;color:var(--muted);font-weight:700}
+.sis > div{display:flex;gap:6px;flex-wrap:wrap}
+.sib{width:44px;height:44px;padding:0;border:0;background:none;border-radius:10px}
+.sib .frame{width:100%;height:100%;border-radius:10px}
+.sib .frame > img{border-radius:8px}
+.sib.lock .frame > img{filter:brightness(.15) saturate(0)}
+.sib.on .frame{outline:2px solid var(--gold);outline-offset:2px}
+
+/* skill chips + skill rarity */
+.skl{display:flex;flex-wrap:wrap;gap:6px}
+.skc{display:inline-flex;align-items:center;gap:5px;padding:4px 9px 4px 4px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);font-size:12px;cursor:pointer;white-space:nowrap}
+.skc i{width:20px;height:20px;padding:3px;border-radius:50%;background:var(--sc);color:#fff;flex:none}
+.skc b{font-weight:700}
+.skc em{font-style:normal;font-family:'Cinzel',serif;font-size:10px;font-weight:800;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.35)}
+.skc.on{border-color:var(--gold);background:rgba(232,206,140,.16);box-shadow:0 0 0 1px var(--gold)}
+.skc.sm{padding:2px 7px 2px 2px;font-size:10.5px;margin-top:3px;cursor:default}
+.skc.sm i{width:16px;height:16px;padding:2px}
+.st1 em,.sr.st1,em.sr.st1{color:#6cbcff}
+.skc.st1 em{color:#6cbcff}.skc.st2 em{color:#d39bff}.skc.st3 em{color:#ffd56a}
+.skc.st3{border-color:rgba(255,213,106,.6);box-shadow:0 0 10px rgba(255,213,106,.35)}
+.skc.st2{border-color:rgba(211,155,255,.5)}
+.pskill em.sr{font-style:normal;font-family:'Cinzel',serif;font-size:11px;padding:1px 7px;border-radius:6px;background:rgba(0,0,0,.35);margin-left:4px}
+.pskill.st1 em.sr{color:#6cbcff}.pskill.st2 em.sr{color:#d39bff}.pskill.st3 em.sr{color:#ffd56a}
+.pskill.st3{border-color:rgba(255,213,106,.55);box-shadow:0 0 16px rgba(255,213,106,.25)}
+.skb em.sr{font-style:normal;font-family:'Cinzel',serif;font-size:10px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.4)}
+em.sr.st1{color:#6cbcff}em.sr.st2{color:#d39bff}em.sr.st3{color:#ffd56a}
+.skpick{display:flex;flex-direction:column;gap:6px}
+.skpick small{font-size:11.5px;color:var(--muted);font-weight:700}
+.bk i.sk{position:relative}
+.bk i.sk .tr{position:absolute;right:-6px;bottom:-5px;font-family:'Cinzel',serif;font-size:7.5px;font-weight:800;line-height:1;padding:1px 2px;border-radius:3px;background:#120d22;color:#ffe9b0}
+.intel .ish{display:inline-flex;gap:1px;margin-left:4px}
+
+/* ================= cut-in by character rarity ================= */
+.ci-rays{position:absolute;left:50%;top:50%;width:260vmax;height:260vmax;margin:-130vmax 0 0 -130vmax;opacity:0;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.0) 0 7deg,color-mix(in srgb,var(--c) 55%,#fff) 7deg 9deg);mix-blend-mode:screen}
+.cutin.show .ci-rays{animation:raysIn .5s .05s forwards,spinr 9s linear infinite}
+@keyframes raysIn{to{opacity:.35}}
+.cr-SSR .ci-rays{background:repeating-conic-gradient(from 0deg,rgba(255,255,255,0) 0 6deg,rgba(255,214,110,.9) 6deg 8.5deg)}
+.cr-UR .ci-rays{background:repeating-conic-gradient(from 0deg,#ff5c7a 0 3deg,transparent 3deg 9deg,#fff36b 9deg 12deg,transparent 12deg 18deg,#5cc8ff 18deg 21deg,transparent 21deg 27deg,#ff5cd6 27deg 30deg,transparent 30deg 36deg)}
+.cr-UR.show .ci-rays{animation:raysIn .4s forwards,spinr 4s linear infinite}
+.ci-spark{position:absolute;inset:0;pointer-events:none;z-index:3}
+.ci-spark i{position:absolute;left:var(--x);top:var(--y);width:calc(14px * var(--s));height:calc(14px * var(--s));opacity:0;
+  background:radial-gradient(circle,#fff 0 18%,transparent 22%),conic-gradient(from 45deg,transparent 0 20%,#fff 22%,transparent 26% 45%,#fff 47%,transparent 51% 70%,#fff 72%,transparent 76% 95%,#fff 97%,transparent 100%);
+  filter:drop-shadow(0 0 6px #ffd56a)}
+.cr-UR .ci-spark i{filter:drop-shadow(0 0 6px #ff9af0) drop-shadow(0 0 10px #8ad8ff)}
+.cutin.show .ci-spark i{animation:spark 1.1s var(--d) ease-out infinite}
+@keyframes spark{0%{opacity:0;transform:scale(.2) rotate(0)}30%{opacity:1;transform:scale(1.2) rotate(45deg)}100%{opacity:0;transform:scale(.4) rotate(120deg)}}
+.cr-SR .ci-band{border-color:#d39bff}
+.cr-SSR .ci-band{border-top:4px solid #ffd56a;border-bottom:4px solid #ffd56a;box-shadow:0 0 60px rgba(255,213,106,.7)}
+.cr-SSR .ci-word{background:linear-gradient(180deg,#fff,#ffe9a0 45%,#ffbf3d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:3px #5a3a06;filter:drop-shadow(0 0 18px rgba(255,200,80,.8))}
+.cr-UR .ci-band{border-top:5px solid #fff;border-bottom:5px solid #fff;box-shadow:0 0 80px #ff5cd6,0 0 40px #5cc8ff}
+.cr-UR .ci-word{background:linear-gradient(90deg,#ff5c7a,#ffb85c,#fff36b,#6bff9a,#5cc8ff,#c68bff,#ff5c7a);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:3px #2a0e40;animation:rainbowText 1.2s linear infinite}
+.cutin.show.cr-UR .ci-word{animation:wordIn .38s .18s cubic-bezier(.2,1.4,.4,1) forwards,rainbowText 1.2s linear infinite}
+.cr-UR .ci-art img{filter:drop-shadow(0 0 30px #ff9af0) drop-shadow(0 0 60px rgba(140,200,255,.6))}
+.cr-SSR .ci-art img{filter:drop-shadow(0 0 26px rgba(255,214,110,.75))}
+.cutin.show.cr-SSR{animation:shake .45s .2s}
+.cutin.show.cr-UR{animation:shake .6s .18s,shake .4s .9s}
+.cr-UR .ci-flash{background:radial-gradient(circle,#fff,#ffd6f6 40%,#a8e6ff)}
+.cutin.show.cr-UR .ci-flash{animation:flash .5s .16s ease-out,flash .5s .85s ease-out}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,4px)}}
+
+/* ================= game stage keeps a landscape shape in any window ================= */
+#game{--GW:min(var(--W), calc(var(--H) * 2.4));--GH:min(var(--H), calc(var(--W) / 1.36));
+  width:var(--GW);height:var(--GH);inset:0;margin:auto;overflow:hidden}
+#game{--th:min(calc((var(--GW) - 90px) / 15.6), calc(var(--GH) * .16 * .75), 86px)}
+html.lp #game{--th:min(calc((var(--GW) - 80px) / 15.6), calc(var(--GH) * .17 * .75), 60px)}
+body:has(#game:not([hidden])) #bgfx{background:radial-gradient(ellipse at 50% 50%,#1b2a52,#0a0814 70%)}
+.gcards.n10{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.gstage{overflow:auto;max-height:calc(var(--H) - 210px)}
+.gc .skc.sm{max-width:100%;overflow:hidden}
+.gc .skc.sm b{overflow:hidden;text-overflow:ellipsis}
+.pskill b{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.pskill b em{margin-left:0!important}
+.gc.fr-SSR{animation:flip .45s var(--d) forwards,glowGold 2.4s 1s ease-in-out infinite}
+.gc.fr-UR{animation:flip .45s var(--d) forwards,glowRainbow 2s 1s linear infinite}

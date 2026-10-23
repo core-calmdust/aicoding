@@ -18,11 +18,27 @@ function load() {
   try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
   if (!d) d = {};
   d.coins = d.coins ?? 3000;
-  d.owned = d.owned || { komachi: 1 };
-  d.sel = d.sel && d.owned[d.sel] ? d.sel : 'komachi';
+  // owned characters: { id: { skills: ['wareme:2', …], use: 'wareme:2' } } (skill id : skill tier)
+  if (!d.chars) {
+    d.chars = {};
+    for (const id in (d.owned || {})) if (MJChars.get(id) && MJChars.LEGACY[id]) { const k = MJSkills.key(MJChars.LEGACY[id], 0); d.chars[id] = { skills: [k], use: k }; }
+  }
+  for (const id in d.chars) if (!MJChars.get(id)) delete d.chars[id];
+  if (!Object.keys(d.chars).length) { const st = MJChars.starter, k = MJSkills.key(st.skill, st.tier); d.chars[st.id] = { skills: [k], use: k }; }
+  delete d.owned;
+  d.sel = d.sel && d.chars[d.sel] ? d.sel : Object.keys(d.chars)[0];
   d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true }, d.set || {});
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
   return d;
+}
+const owns = id => !!DB.chars[id];
+function useKey(id) { const o = DB.chars[id]; return o ? (o.skills.includes(o.use) ? o.use : o.skills[0]) : null; }
+function seatChar(c, key) { const k = MJSkills.parse(key); return Object.assign({}, c, { skill: k.id, tier: k.tier }); }
+function rollSkillKey() {
+  const r = Math.random() * 100; let acc = 0, tier = 0;
+  for (let i = MJSkills.TIERS.length - 1; i >= 0; i--) { acc += MJSkills.TIER_W[i]; if (r < acc) { tier = i; break; } }
+  const sk = MJSkills.list[(Math.random() * MJSkills.list.length) | 0];
+  return MJSkills.key(sk.id, tier);
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} }
 
@@ -86,10 +102,10 @@ const SND = (() => {
 
 // ---------------------------------------------------------------- character art
 const ART = new Map();
-function charImg(c, kind, v) {       // kind: 'full' | 'bust' | 'face' | 'thumb'; v: art variant (1..arts)
+function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb'
   if (c.art) {
-    if (kind === 'full') return `${ASSETS}chara/${c.id}${v > 1 ? '-' + v : ''}.webp`;
-    if (kind === 'thumb') return `${ASSETS}chara/${c.id}-t${v || 1}.webp`;
+    if (kind === 'full') return `${ASSETS}chara/${c.id}.webp`;
+    if (kind === 'thumb') return `${ASSETS}chara/${c.id}-t.webp`;
     return `${ASSETS}chara/${c.id}-${kind}.webp`;
   }
   const k = c.id + kind;
@@ -130,6 +146,23 @@ function charImg(c, kind, v) {       // kind: 'full' | 'bust' | 'face' | 'thumb'
   const u = cv.toDataURL('image/webp', .85);
   ART.set(k, u);
   return u;
+}
+
+// rarity frame around a character image (N plain … UR rainbow, animated)
+function frame(c, kind, cls = '', extra = '') {
+  return `<span class="frame fr-${c.rarity} ${cls}" style="--c:${c.color}" ${extra}><img src="${charImg(c, kind)}" alt="" draggable="false"><i class="fx-sh"></i></span>`;
+}
+// skill chip: icon + name + skill rarity
+function skillChip(key, cls = '', attrs = '') {
+  const k = MJSkills.parse(key), sk = MJSkills.get(k.id);
+  return `<span class="skc st${k.tier} ${cls}" style="--sc:${sk.color}" ${attrs}><i>${icon(sk.icon)}</i><b>${esc(L(sk.name))}</b><em>${MJSkills.TIERS[k.tier]}</em></span>`;
+}
+function skillBlock(key) {
+  const k = MJSkills.parse(key), sk = MJSkills.get(k.id), v = MJSkills.val(sk, k.tier);
+  return `<div class="pskill st${k.tier}" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
+    <b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[k.tier]}</em> <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
+    <span>${esc(L(sk.desc(v)))}</span>
+    <small class="cl">${esc(t('costLine', { n: (sk.cost || 1000).toLocaleString() }))}</small></div></div>`;
 }
 
 // ---------------------------------------------------------------- tile html
@@ -174,15 +207,18 @@ function renderHome() {
   $('#coinBox .coin').innerHTML = IC.coin;
   sndIcons();
   const c = MJChars.get(DB.sel);
-  const sk = MJSkills.get(c.skill);
+  const o = DB.chars[c.id], uk = useKey(c.id);
   $('#partner').innerHTML = `
-    <button class="pimg" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><span class="ptap">${esc(t('tapChange'))}</span></button>
+    <button class="pimg frame fr-${c.rarity}" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i><span class="ptap">${esc(t('tapChange'))}</span></button>
     <div class="pinfo">
       <div class="prar r-${c.rarity}">${c.rarity}</div>
       <div class="pname">${esc(L(c.name))}<small>${esc(L(c.title))}</small></div>
-      <div class="pskill" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div><b>${esc(L(sk.name))}</b><span>${esc(L(sk.desc))}</span></div></div>
+      ${skillBlock(uk)}
+      ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small><div class="skl" id="homeSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
       <p class="pprof">${esc(L(c.profile))}</p>
     </div>`;
+  const hs = $('#homeSk');
+  if (hs) hs.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; DB.chars[c.id].use = b.dataset.k; save(); SND.pick(); renderHome(); };
   const seg = (el, items, cur, cb) => {
     el.innerHTML = items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('');
     el.onclick = e => { const b = e.target.closest('button'); if (!b) return; SND.pick(); cb(b.dataset.v); save(); renderHome(); };
@@ -216,8 +252,8 @@ const COST1 = 300, COST10 = 2700;
 function rollRarity(guarantee) {
   const R = MJChars.RARITY;
   let r = Math.random() * 100, acc = 0, out = 'N';
-  for (const k of ['SSR', 'SR', 'R', 'N']) { acc += R[k].w; if (r < acc) { out = k; break; } }
-  if (guarantee && (out === 'N' || out === 'R')) out = Math.random() < .2 ? 'SSR' : 'SR';
+  for (const k of ['UR', 'SSR', 'SR', 'R', 'N']) { acc += R[k].w; if (r < acc) { out = k; break; } }
+  if (guarantee && (out === 'N' || out === 'R')) { const x = Math.random(); out = x < .05 ? 'UR' : x < .25 ? 'SSR' : 'SR'; }
   return out;
 }
 function rollChar(guarantee) {
@@ -226,12 +262,13 @@ function rollChar(guarantee) {
   if (!pool.length) pool = MJChars.list;
   return pool[(Math.random() * pool.length) | 0];
 }
-const DUPE = { N: 30, R: 80, SR: 250, SSR: 800 };
+const DUPE = { N: 30, R: 80, SR: 250, SSR: 800, UR: 2000 };
+const RANK_I = r => ['N', 'R', 'SR', 'SSR', 'UR'].indexOf(r);
 function openGacha() {
   const b = modal(`
     <div class="gacha">
       <h2>${t('gacha')}</h2>
-      <div class="gstage" id="gStage"><div class="gorb"></div><p class="grates">SSR 4% ・ SR 13% ・ R 33% ・ N 50%<br><small>10${I18N.lang === 'ja' ? '回目はSR以上確定' : 'th pull: SR or better'}</small></p></div>
+      <div class="gstage" id="gStage"><div class="gorb"></div><p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
       <div class="gbtns">
         <button class="btn" data-n="1">${t('pull1', { n: COST1 })}</button>
         <button class="btn gold" data-n="10">${t('pull10', { n: COST10.toLocaleString() })}</button>
@@ -249,11 +286,12 @@ function openGacha() {
     const got = [];
     for (let i = 0; i < n; i++) {
       const c = rollChar(n === 10 && i === 9);
-      const isNew = !DB.owned[c.id];
-      DB.owned[c.id] = (DB.owned[c.id] || 0) + 1;
-      let refund = 0;
-      if (!isNew) { refund = DUPE[c.rarity]; DB.coins += refund; }
-      got.push({ c, isNew, refund });
+      const key = rollSkillKey();
+      let kind = 'newChar', refund = 0;
+      if (!DB.chars[c.id]) DB.chars[c.id] = { skills: [key], use: key };
+      else if (!DB.chars[c.id].skills.includes(key)) { DB.chars[c.id].skills.push(key); kind = 'newSkill'; }
+      else { kind = 'dupe'; refund = DUPE[c.rarity]; DB.coins += refund; }
+      got.push({ c, key, kind, refund });
     }
     save();
     await showPulls(got);
@@ -263,21 +301,21 @@ function openGacha() {
 }
 async function showPulls(got) {
   const st = $('#gStage');
-  const best = got.reduce((a, g) => ['N', 'R', 'SR', 'SSR'].indexOf(g.c.rarity) > ['N', 'R', 'SR', 'SSR'].indexOf(a) ? g.c.rarity : a, 'N');
+  const best = got.reduce((a, g) => RANK_I(g.c.rarity) > RANK_I(a) ? g.c.rarity : a, 'N');
   st.innerHTML = `<div class="gorb spin r-${best}"></div>`;
   SND.gacha(best);
   await sleep(1100);
   st.innerHTML = `<div class="gcards n${got.length}">${got.map((g, i) => `
-    <div class="gc r-${g.c.rarity}" style="--d:${i * 110}ms;--c:${g.c.color};--c2:${g.c.color2}">
-      <div class="gci"><img src="${charImg(g.c, 'bust')}" alt=""></div>
-      <div class="gcn"><em>${g.c.rarity}</em>${esc(L(g.c.name))}</div>
-      ${g.isNew ? `<i class="gnew">${t('newChar')}</i>` : `<i class="gdup">${t('dupe', { n: g.refund })}</i>`}
+    <div class="gc frame fr-${g.c.rarity}" style="--d:${i * 110}ms;--c:${g.c.color};--c2:${g.c.color2}">
+      <div class="gci"><img src="${charImg(g.c, 'bust')}" alt=""><i class="fx-sh"></i></div>
+      <div class="gcn"><em>${g.c.rarity}</em>${esc(L(g.c.name))}${skillChip(g.key, 'sm')}</div>
+      ${g.kind === 'newChar' ? `<i class="gnew">${t('newChar')}</i>` : g.kind === 'newSkill' ? `<i class="gnew sk">${t('newSkill')}</i>` : `<i class="gdup">${t('dupe', { n: g.refund })}</i>`}
     </div>`).join('')}</div>`;
 }
 // ---------------------------------------------------------------- character screen (view + choose partner)
 let chView = null;
-const chVar = {};
-const RORD = { SSR: 0, SR: 1, R: 2, N: 3 };
+const RORD = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
+const FORD = Object.keys(MJChars.families);
 function openChara(id) {
   chView = id || DB.sel;
   closeModal();
@@ -290,33 +328,35 @@ function renderChara() {
   applyText();
   $('#coinN2').textContent = DB.coins.toLocaleString();
   $('#chara .coin').innerHTML = IC.coin;
-  const list = MJChars.list.slice().sort((a, b) => (!DB.owned[a.id]) - (!DB.owned[b.id]) || RORD[a.rarity] - RORD[b.rarity]);
-  $('#chCount').textContent = `${t('owned')} ${Object.keys(DB.owned).filter(k => MJChars.get(k)).length} / ${MJChars.list.length}`;
+  const list = MJChars.list.slice().sort((a, b) => (!owns(a.id)) - (!owns(b.id)) || RORD[a.rarity] - RORD[b.rarity] || FORD.indexOf(a.family) - FORD.indexOf(b.family));
+  $('#chCount').textContent = `${t('owned')} ${Object.keys(DB.chars).length} / ${MJChars.list.length}`;
   $('#chList').innerHTML = list.map(c => {
-    const own = !!DB.owned[c.id];
+    const own = owns(c.id);
     return `<button class="chi ${own ? '' : 'lock'} ${c.id === chView ? 'on' : ''}" data-id="${c.id}" style="--c:${c.color}">
-      <img src="${charImg(c, 'face')}" alt=""><em class="r-${c.rarity}">${c.rarity}</em>${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
+      ${frame(c, 'face')}<em class="r-${c.rarity}">${c.rarity}</em>${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
   }).join('');
-  const c = MJChars.get(chView), own = !!DB.owned[c.id], sk = MJSkills.get(c.skill);
+  const c = MJChars.get(chView), own = owns(c.id);
   const art = $('#chArt');
+  art.className = `ch-art frame fr-${c.rarity}`;
   art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
-  const nv = own && c.arts ? c.arts : 1;
-  if (!chVar[c.id] || chVar[c.id] > nv) chVar[c.id] = 1;
-  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full', chVar[c.id])}" alt="">` +
-    (nv > 1 ? `<div class="ch-vars">${Array.from({ length: nv }, (_, k) => `<button class="${k + 1 === chVar[c.id] ? 'on' : ''}" data-v="${k + 1}"><img src="${charImg(c, 'thumb', k + 1)}" alt=""></button>`).join('')}</div>` : '');
-  art.onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; chVar[c.id] = +b.dataset.v; SND.pick(); renderChara(); };
-  const lines = ['riichi', 'tsumo', 'ron', 'skill'].map(k => c.lines && c.lines[k] ? `<li>「${esc(L(c.lines[k]))}」</li>` : '').join('');
+  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i>`;
+  const sisters = MJChars.list.filter(x => x.family === c.family);
+  const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
   $('#chInfo').innerHTML = `
     <div class="prar r-${c.rarity}">${c.rarity}</div>
     <div class="pname">${own ? esc(L(c.name)) : '？？？'}<small>${esc(L(c.title))}</small></div>
-    <div class="pskill" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
-      <b>${esc(L(sk.name))} <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
-      <span>${esc(L(sk.desc))}</span>
-      <small class="cl">${esc(t('costLine', { n: (sk.cost || 1000).toLocaleString() }))}</small></div></div>
-    ${own ? `<p class="pprof">${esc(L(c.profile))}</p><ul class="plines">${lines}</ul>` : ''}
-    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go sm" id="chSet">${t('setPartner')}</button>`) : `<div class="chsel">${t('notOwned')}</div>`}`;
+    ${own ? `${skillBlock(uk)}
+      <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
+      <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
+      <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel">${t('notOwned')}</div>`}
+    <div class="sis"><small>${esc(L(MJChars.families[c.family].name))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}">${frame(x, 'face')}</button>`).join('')}</div></div>
+    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go sm" id="chSet">${t('setPartner')}</button>`) : ''}`;
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
+  $('#chInfo').onclick = e => {
+    const k = e.target.closest('#chSk [data-k]'); if (k) { DB.chars[c.id].use = k.dataset.k; save(); SND.pick(); renderChara(); return; }
+    const sb = e.target.closest('.sib'); if (sb) { chView = sb.dataset.id; SND.pick(); renderChara(); }
+  };
 }
 $('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
 
@@ -349,13 +389,11 @@ async function startGame() {
   closeModal();
   if (!TB) TB = new Table3D($('#stage'));
   TB.hideAll();
-  const me = MJChars.get(DB.sel);
-  const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3);
+  const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
+  const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
   const chars = [me, ...others];
-  // one art variant per character for this game's cut-ins, loaded in advance
-  const cv = chars.map(c => c.arts ? 1 + ((Math.random() * c.arts) | 0) : 1);
-  chars.forEach((c, i) => { const im = new Image(); im.src = charImg(c, 'full', cv[i]); });
-  UIS = { cv, chars, abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); });   // cut-in art, loaded in advance
+  UIS = { chars, abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
@@ -484,9 +522,9 @@ function renderBadges() {
     const sk = MJSkills.get(c.skill);
     const chips = fx.map(k => { const s2 = MJSkills.get(k === 'lure' ? 'lure' : k); return s2 ? `<i class="fx" style="--sc:${s2.color}" title="${esc(L(s2.name))}">${icon(s2.icon)}</i>` : ''; }).join('');
     const html = `
-      <div class="bf ${(s === g.kyoku) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}"><img src="${charImg(c, 'face')}" alt=""><em>${wind}</em></div>
+      <div class="bf ${(s === g.kyoku) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em></div>
       <div class="bt"><b>${esc(L(c.name))}</b><span class="sc">${g.scores[s].toLocaleString()}</span>
-        <span class="bk">${p && p.riichi ? `<i class="rbadge">${t('riichi')}</i>` : ''}${chips}${DB.set.skills && g.rules.skills ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))}">${icon(sk.icon)}</i>` : ''}</span></div>`;
+        <span class="bk">${p && p.riichi ? `<i class="rbadge">${t('riichi')}</i>` : ''}${chips}${DB.set.skills && g.rules.skills ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
     if (s === ME) renderMe(html);
     else $('#opp' + s).innerHTML = html;
   }
@@ -500,7 +538,7 @@ function renderMe(badgeHtml) {
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
     ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''}" id="skBtn" style="--sc:${sk.color}" ${can ? '' : 'disabled'}>
-      <i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))}</b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short))}</small></span></button>` : ''}`;
+      <i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short(MJSkills.val(sk, c.tier))))}</small></span></button>` : ''}`;
   const b = $('#skBtn');
   if (b) b.onclick = async () => {
     if (!UIS.opts || !UIS.opts.canSkill || !UIS.resolve) return;
@@ -615,7 +653,7 @@ function askDealSkill(o, res) {
   const el = $('#dealAsk');
   el.style.setProperty('--sc', sk.color);
   el.innerHTML = `<i>${icon(sk.icon)}</i>
-    <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) }))}</b><span>${esc(L(sk.desc))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
+    <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
     <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}</button><button class="ab call" data-a="yes">${t('use')}</button></div>`;
   el.hidden = false;
   renderHand();
@@ -633,7 +671,7 @@ function showIntel(info) {
   const el = $('#intel');
   let h = '';
   if (info.peek) h += `<h4>${t('peekT')}</h4><div class="it">${info.peek.map(id => tileHTML(id, 'xs')).join('')}</div>`;
-  if (info.read) h += `<h4>${t('mindT')}</h4>` + info.read.map(r => `<div class="ir"><img src="${charImg(UIS.chars[r.seat], 'face')}" alt=""><span>${r.shanten === 0 ? `<b>${t('tenpai')}</b> ${r.waits.map(w => typeHTML(w, 'xs')).join('')}` : r.shanten < 0 ? t('tenpai') : t('shanten', { n: r.shanten })}</span></div>`).join('');
+  if (info.read) h += `<h4>${t('mindT')}</h4>` + info.read.map(r => `<div class="ir"><img src="${charImg(UIS.chars[r.seat], 'face')}" alt=""><span>${r.shanten === 0 ? `<b>${t('tenpai')}</b> ${r.waits.map(w => typeHTML(w, 'xs')).join('')}` : r.shanten < 0 ? t('tenpai') : t('shanten', { n: r.shanten })}${r.show && r.show.length ? ` <i class="ish">${r.show.map(id => tileHTML(id, 'xs')).join('')}</i>` : ''}</span></div>`).join('');
   el.innerHTML = h + '<button class="x">×</button>';
   el.hidden = false;
   el.querySelector('.x').onclick = () => { el.hidden = true; };
@@ -667,17 +705,20 @@ async function cutin(s, kind, d) {
   const c = UIS.chars[s];
   const el = $('#cutin');
   let word, sub = '';
-  if (kind === 'skill') { const sk = MJSkills.get(d.skill); word = L(sk.name); sub = L(sk.short) + (d.cost ? ` ・ ${t('cost', { n: d.cost.toLocaleString() })}` : ''); }
+  if (kind === 'skill') { const sk = MJSkills.get(d.skill); word = L(sk.name); sub = MJSkills.TIERS[d.tier | 0] + ' ・ ' + L(sk.short(MJSkills.val(sk, d.tier))) + (d.cost ? ` ・ ${t('cost', { n: d.cost.toLocaleString() })}` : ''); }
   else word = I18N.lang === 'ja' ? WORD[kind].ja : WORD[kind].en;
   const kana = kind === 'riichi' ? t('riichi') : kind === 'tsumo' ? t('tsumo') : kind === 'ron' ? t('ron') : '';
   const line = c.lines && c.lines[kind] ? L(c.lines[kind]) : '';
   const sk = MJSkills.get(c.skill);
-  el.className = `cutin k-${kind} ${s === ME ? 'me' : ''}`;
+  const rk = RANK_I(c.rarity);
+  el.className = `cutin k-${kind} cr-${c.rarity} ${s === ME ? 'me' : ''}`;
   el.style.setProperty('--c', c.color); el.style.setProperty('--c2', c.color2); el.style.setProperty('--sc', sk.color);
   el.innerHTML = `
     <div class="ci-dim"></div>
+    ${rk >= 2 ? '<div class="ci-rays"></div>' : ''}
+    ${rk >= 3 ? `<div class="ci-spark">${Array.from({ length: rk >= 4 ? 28 : 16 }, () => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--y:${(Math.random() * 100).toFixed(1)}%;--d:${(Math.random() * .9).toFixed(2)}s;--s:${(.5 + Math.random()).toFixed(2)}"></i>`).join('')}</div>` : ''}
     <div class="ci-band"><div class="ci-lines"></div></div>
-    <div class="ci-art"><img src="${charImg(c, 'full', (UIS.cv && UIS.cv[s]) || 1)}" alt=""></div>
+    <div class="ci-art"><img src="${charImg(c, 'full')}" alt=""></div>
     <div class="ci-txt">
       <div class="ci-word" data-len="${word.length}">${esc(word)}</div>
       ${kana && I18N.lang === 'ja' ? `<div class="ci-kana">${esc(kana)}</div>` : ''}
@@ -689,7 +730,7 @@ async function cutin(s, kind, d) {
   void el.offsetWidth;
   el.classList.add('show');
   if (kind === 'riichi') SND.riichi(); else if (kind === 'skill') SND.skill(); else SND.ok();
-  await sleep(kind === 'skill' ? 1700 : kind === 'riichi' ? 1450 : 1500);
+  await sleep((kind === 'skill' ? 1700 : kind === 'riichi' ? 1450 : 1500) + [0, 0, 150, 350, 650][rk]);
   el.classList.add('out');
   await sleep(260);
   el.hidden = true; el.className = 'cutin';
@@ -718,7 +759,7 @@ async function showAgari(d, r, last) {
   const pts = pays;
   const box = modal(`
     <div class="agari" style="--c:${c.color};--c2:${c.color2}">
-      <div class="ag-art"><img src="${charImg(c, 'bust')}" alt=""><div class="ag-who"><b>${esc(L(c.name))}</b><span>${r.tsumo ? t('tsumo') : t('ron')}</span></div></div>
+      <div class="ag-art frame fr-${c.rarity}"><img src="${charImg(c, 'bust')}" alt=""><i class="fx-sh"></i><div class="ag-who"><b>${esc(L(c.name))}</b><span>${r.tsumo ? t('tsumo') : t('ron')}</span></div></div>
       <div class="ag-main">
         <div class="ag-hand">${hand.map(id => tileHTML(id, 'md')).join('')}${melds}<span class="gap"></span>${tileHTML(r.winId, 'md win')}</div>
         <div class="ag-dora"><span><small>${t('dora')}</small>${d.dora.map(x => typeHTML(x, 'xs')).join('')}</span>${G.P[r.seat].riichi ? `<span><small>${I18N.yaku('ura')}</small>${d.ura.slice(0, d.dora.length).map(x => typeHTML(x, 'xs')).join('')}</span>` : ''}</div>
@@ -753,7 +794,7 @@ async function showFinal(d) {
   const box = modal(`
     <div class="final">
       <h2>${t('final')}</h2>
-      <div class="fr">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fi r${i} ${s === ME ? 'me' : ''}" style="--c:${c.color}"><em>${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+      <div class="fr">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fi r${i} ${s === ME ? 'me' : ''}" style="--c:${c.color}"><em>${t('rank')[i]}</em>${frame(c, 'face')}<b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
       <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
       <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
     </div>`, 'wide res');
