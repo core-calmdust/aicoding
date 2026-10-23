@@ -193,7 +193,7 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .bf.rii img{animation:riiGlow 1.6s ease-in-out infinite}
 @keyframes riiGlow{50%{box-shadow:0 0 22px #ffd24a,0 0 4px #fff}}
 .bt{display:flex;flex-direction:column;gap:2px;min-width:0}
-.bt b{font-size:13px;white-space:nowrap}
+.bt > b{font-size:13px;white-space:nowrap}
 .bt .sc{font-weight:900;font-size:16px;color:#ffe9b0;font-variant-numeric:tabular-nums}
 .bk{display:flex;gap:4px;align-items:center}
 .bk i{width:20px;height:20px;border-radius:6px;padding:3px;color:#fff;background:var(--sc,#555)}
@@ -360,7 +360,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
   html:not(.lp) .opp{padding:4px 8px 4px 4px;gap:5px}
   html:not(.lp) .bf{width:36px;height:36px}
   html:not(.lp) .bf em{width:17px;height:17px;font-size:10px}
-  html:not(.lp) .bt b{font-size:11px}
+  html:not(.lp) .bt > b{font-size:11px}
   html:not(.lp) .bt .sc{font-size:13px}
   html:not(.lp) .bk i{width:16px;height:16px;padding:2px}
   html:not(.lp) #opp1,html:not(.lp) #opp2,html:not(.lp) #opp3{top:calc(max(8px,var(--st)) + 96px);transform:none}
@@ -405,7 +405,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 #game .bf img{border-radius:12%;border:2px solid #e2cf96;box-shadow:0 6px 16px rgba(0,0,0,.5),0 0 0 3px rgba(20,24,40,.85),0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
 #game .bf em{bottom:-6px;right:-8px}
 #game .bt{align-items:center;gap:2px}
-#game .bt b{padding:2px 12px;border-radius:6px;background:rgba(12,16,32,.86);border:1px solid rgba(226,207,150,.35);font-size:12.5px}
+#game .bt > b{padding:2px 12px;border-radius:6px;background:rgba(12,16,32,.86);border:1px solid rgba(226,207,150,.35);font-size:12.5px}
 #game .bt .sc{font-size:12px;color:#cfd8ee;font-weight:700}
 #game .bk{min-height:0}
 #opp1{right:max(14px,var(--sr));top:20%}
@@ -419,7 +419,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 /* phones held sideways */
 /* phones: always a landscape layout (rotated when held upright) */
   html.lp #game{--bf:44px;--th:min(calc((var(--W) - 80px) / 15.6), calc(calc(var(--H) * 0.17) * .75), 60px)}
-  html.lp #game .bt b{font-size:10.5px;padding:1px 8px}
+  html.lp #game .bt > b{font-size:10.5px;padding:1px 8px}
   html.lp #game .bt .sc{font-size:10.5px}
   html.lp #game .bk i{width:15px;height:15px;padding:2px}
   html.lp #game .bf em{width:17px;height:17px;font-size:10px}
@@ -852,7 +852,7 @@ html.lite .ffx{display:none}
 /* ================= PC table readability ================= */
 .tl.ph{visibility:hidden}
 html.ds #game{--bf:clamp(76px, calc(var(--GH) * .125), 112px)}
-html.ds #game .bt b{font-size:14px;padding:3px 14px}
+html.ds #game .bt > b{font-size:14px;padding:3px 14px}
 html.ds #game .bt .sc{font-size:15px;color:#fff;font-weight:900;text-shadow:0 1px 3px #000}
 html.ds #game .bf em{width:28px;height:28px;font-size:15px;right:-10px;bottom:-8px}
 html.ds #game .bk i{width:24px;height:24px;padding:4px}
