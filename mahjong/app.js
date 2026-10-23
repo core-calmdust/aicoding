@@ -903,6 +903,7 @@ document.addEventListener('keydown', e => {
   const pk = $('#chiPick');
   if (!pk.hidden && /^[1-3]$/.test(k)) { const b = pk.querySelector(`[data-i="${+k - 1}"]`); if (b) { e.preventDefault(); b.click(); } return; }
   // action buttons (Z X C V … in on-screen order); Esc = skip
+  if (k === ' ' && UIS.kind === 'call') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } }
   if (k === 'Escape') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } if (UIS.riichiMode) { const r = $('#acts .rii'); if (r) r.click(); return; } }
   const ab = $(`#acts [data-key="${k}"]`);
   if (ab) { e.preventDefault(); ab.click(); return; }
