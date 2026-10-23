@@ -5,7 +5,7 @@
 // One shared loop at ~30fps; frames that are off screen or removed are skipped; html.lite stops everything.
 (function (root) {
 'use strict';
-const PAD = 40;                     // canvas extends this far outside the frame
+const PAD = 44;                     // canvas extends this far outside the frame
 const items = new Set();
 let running = false, last = 0;
 
@@ -48,74 +48,70 @@ function size(it) {
   return w > 0 && h > 0;
 }
 
+// Two layers: a quarter-resolution "glow" buffer scaled up (soft, translucent flame and light), and a crisp layer
+// on top for a few fine details (ember sparks, star cores and flares).
+const LO = 4;
 function spawn(it, dt) {
   const P = PAL[it.r], w = it.w, h = it.h, per = 2 * (w + h);
-  const scale = Math.min(1.5, Math.max(.45, per / 1500));      // smaller frames get fewer / smaller particles
+  const scale = Math.min(1.4, Math.max(.45, per / 1500));
   const emit = (rate, make) => { let n = rate * dt; while (n > 0) { if (Math.random() < n) it.ps.push(make()); n -= 1; } };
   if (P.flame) {
-    // flame tongues: born on the frame edge, rising and leaning outward
-    emit(240 * scale * P.rate, () => {
-      const q = perim(w, h, Math.random());
-      const out = rnd(6, 22);
-      return { k: 'f', x: q.x + q.nx * rnd(-2, 3), y: q.y + q.ny * rnd(-2, 3), vx: q.nx * out + rnd(-8, 8), vy: q.ny * out * .6 - rnd(40, 90),
-        life: 0, max: rnd(.4, .85), s: rnd(5, 13) * scale + 3, hue: Math.random() * 360, wob: Math.random() * 6 };
+    // soft flame puffs born just outside the frame edge; they rise, stretch and fade
+    emit(200 * scale * P.rate, () => {
+      const t = Math.random(), q = perim(w, h, t);
+      const side = q.ny < 0 ? 1.2 : q.ny > 0 ? .55 : 1;      // taller on the top edge, low on the bottom
+      return { k: 'f', x: q.x + q.nx * rnd(1, 6), y: q.y + q.ny * rnd(1, 6), vx: q.nx * rnd(6, 16) + rnd(-5, 5), vy: q.ny * rnd(3, 10) - rnd(30, 60) * side,
+        life: 0, max: rnd(.55, 1.1), s: (rnd(9, 18) * scale + 5) * side, hue: Math.random() * 360, wob: Math.random() * 6 };
     });
+    // a few crisp embers
+    emit(9 * scale, () => { const q = perim(w, h, Math.random()); return { k: 'e', x: q.x + q.nx * 4, y: q.y + q.ny * 4, vx: q.nx * rnd(8, 22) + rnd(-10, 10), vy: -rnd(40, 90), life: 0, max: rnd(.7, 1.4), s: rnd(.8, 1.6), hue: Math.random() * 360 }; });
   }
   if (P.glitter) {
-    // twinkling star sparks on the frame
-    emit(55 * scale * P.rate, () => {
-      const q = perim(w, h, Math.random()), o = rnd(-4, 8);
-      return { k: 'g', x: q.x + q.nx * o, y: q.y + q.ny * o, vx: q.nx * rnd(0, 6), vy: q.ny * rnd(0, 6) - rnd(2, 10),
-        life: 0, max: rnd(.5, 1.1), s: (rnd(4, 10) * scale + 2), c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: rnd(-.3, .3) };
+    emit(26 * scale * P.rate, () => {
+      const q = perim(w, h, Math.random()), o = rnd(-2, 5);
+      return { k: 'g', x: q.x + q.nx * o, y: q.y + q.ny * o, vx: rnd(-2, 2), vy: -rnd(1, 6), life: 0, max: rnd(.7, 1.4), s: rnd(3, 8) * scale + 2,
+        c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: rnd(-.25, .25) };
     });
-    // gold dust drifting up
-    emit(16 * scale, () => ({ k: 'd', x: rnd(-6, w + 6), y: h + rnd(-6, 6), vx: rnd(-8, 8), vy: -rnd(25, 60), life: 0, max: rnd(1.2, 2.4), s: rnd(1, 2.4), c: it.r === 'UR' ? '255,200,250' : '255,214,110' }));
-    // comets of light running around the frame, shedding glitter
-    if (!it.comets) it.comets = [{ t: Math.random(), v: .16 }, { t: Math.random(), v: .16 }];
+    emit(12 * scale, () => ({ k: 'd', x: rnd(0, w), y: h + rnd(-4, 4), vx: rnd(-6, 6), vy: -rnd(18, 40), life: 0, max: rnd(1.4, 2.6), s: rnd(.8, 1.6), c: it.r === 'UR' ? '255,215,250' : '255,220,140' }));
+    if (!it.comets) it.comets = [{ t: Math.random(), v: .13 }, { t: Math.random(), v: .13 }];
     for (const cm of it.comets) {
       cm.t = (cm.t + cm.v * dt) % 1;
       const q = perim(w, h, cm.t);
-      it.ps.push({ k: 'c', x: q.x, y: q.y, vx: 0, vy: 0, life: 0, max: .28, s: 14 * scale + 6, c: P.glitter[1] });
-      if (Math.random() < 0.6) it.ps.push({ k: 'g', x: q.x + rnd(-4, 4), y: q.y + rnd(-4, 4), vx: q.nx * rnd(4, 16), vy: q.ny * rnd(4, 16) - rnd(4, 14), life: 0, max: rnd(.4, .8), s: rnd(3, 7) * scale + 1.5, c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: 0 });
+      it.ps.push({ k: 'c', x: q.x, y: q.y, vx: 0, vy: 0, life: 0, max: .45, s: 16 * scale + 8, c: P.glitter[2] });
+      if (Math.random() < .35) it.ps.push({ k: 'g', x: q.x + rnd(-3, 3), y: q.y + rnd(-3, 3), vx: q.nx * rnd(2, 8), vy: q.ny * rnd(2, 8) - rnd(2, 8), life: 0, max: rnd(.5, .9), s: rnd(2.5, 5) * scale + 1.5, c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: 0 });
     }
   }
-  if (it.ps.length > 700) it.ps.splice(0, it.ps.length - 700);
+  if (it.ps.length > 600) it.ps.splice(0, it.ps.length - 600);
 }
 
-// 4-ray star with long thin flares
-function star(g, x, y, r, rot, col, a) {
-  g.save(); g.translate(x, y); g.rotate(rot);
-  const glow = g.createRadialGradient(0, 0, 0, 0, 0, r * 1.2);
-  glow.addColorStop(0, `rgba(${col},${a * .9})`); glow.addColorStop(1, `rgba(${col},0)`);
-  g.fillStyle = glow; g.beginPath(); g.arc(0, 0, r * 1.2, 0, Math.PI * 2); g.fill();
-  g.fillStyle = `rgba(255,255,255,${a})`;
-  g.beginPath();
-  for (let i = 0; i < 4; i++) {
-    const L = i % 2 ? r * 1.0 : r * 2.0, an = i * Math.PI / 2;
-    g.lineTo(Math.cos(an) * L, Math.sin(an) * L);
-    g.lineTo(Math.cos(an + Math.PI / 4) * r * .16, Math.sin(an + Math.PI / 4) * r * .16);
-  }
-  g.closePath(); g.fill(); g.restore();
-}
-
-function flameColor(P, p, k) {
-  if (P.flame === 'rainbow') { const h = (p.hue + k * 90) % 360; return [`hsla(${h},100%,92%,${.55 * (1 - k)})`, `hsla(${h},100%,62%,${.45 * (1 - k)})`, `hsla(${(h + 40) % 360},100%,50%,0)`]; }
-  const f = P.flame;
-  return [`rgba(255,250,240,${(1 - k) * .5})`, `rgba(${f[1]},${.45 * (1 - k)})`, `rgba(${f[3]},0)`];
+function flameRGB(P, p, k) {
+  if (P.flame === 'rainbow') { const h = (p.hue + k * 90) % 360; return [`hsla(${h},100%,90%,`, `hsla(${h},95%,62%,`]; }
+  return [`rgba(${P.flame[1]},`, `rgba(${P.flame[3]},`];
 }
 
 function draw(it, dt) {
-  const g = it.ctx, P = PAL[it.r];
-  g.setTransform(it.dpr, 0, 0, it.dpr, PAD * it.dpr, PAD * it.dpr);
-  g.clearRect(-PAD, -PAD, it.w + PAD * 2, it.h + PAD * 2);
-  g.globalCompositeOperation = 'lighter';
-  if (P.flame) {             // soft burning band hugging the frame
-    const t = performance.now() / 1000;
-    g.lineWidth = 10; g.lineJoin = 'round';
-    g.strokeStyle = P.flame === 'rainbow' ? `hsla(${(t * 80) % 360},100%,70%,.28)` : `rgba(${P.flame[2]},${.26 + .08 * Math.sin(t * 9)})`;
-    g.strokeRect(-2, -2, it.w + 4, it.h + 4);
+  const P = PAL[it.r], W = it.w + PAD * 2, H = it.h + PAD * 2;
+  // low-res glow buffer
+  if (!it.lo) { it.lo = document.createElement('canvas'); it.lg = it.lo.getContext('2d'); }
+  const lw = Math.max(1, Math.round(W / LO)), lh = Math.max(1, Math.round(H / LO));
+  if (it.lo.width !== lw || it.lo.height !== lh) { it.lo.width = lw; it.lo.height = lh; }
+  const L = it.lg;
+  L.setTransform(1 / LO, 0, 0, 1 / LO, PAD / LO, PAD / LO);
+  L.globalCompositeOperation = 'source-over';
+  L.clearRect(-PAD, -PAD, W, H);
+  L.globalCompositeOperation = 'lighter';
+  const t = performance.now() / 1000;
+  if (P.flame) {        // faint breathing aura band
+    L.lineWidth = 14;
+    L.strokeStyle = P.flame === 'rainbow' ? `hsla(${(t * 60) % 360},100%,70%,.18)` : `rgba(${P.flame[2]},${.26 + .07 * Math.sin(t * 5)})`;
+    L.strokeRect(-3, -3, it.w + 6, it.h + 6);
   }
-  const keep = [];
+  const g = it.ctx;
+  g.setTransform(it.dpr, 0, 0, it.dpr, PAD * it.dpr, PAD * it.dpr);
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(-PAD, -PAD, W, H);
+
+  const keep = [], crisp = [];
   for (const p of it.ps) {
     p.life += dt;
     if (p.life >= p.max) continue;
@@ -123,35 +119,57 @@ function draw(it, dt) {
     const k = p.life / p.max;
     p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.k === 'f') {
-      p.vx *= .94; p.vy -= 30 * dt; p.x += Math.sin(p.life * 14 + p.wob) * 12 * dt;
-      const r = p.s * (1 - k * .6), len = r * (2.6 + k * 1.4);
-      const [c0, c1, c2] = flameColor(P, p, k);
-      // teardrop: round base, tip pointing along the motion (mostly up)
-      const ang = Math.atan2(p.vy, p.vx) + Math.PI / 2;
-      g.save(); g.translate(p.x, p.y); g.rotate(ang);
-      const gr = g.createLinearGradient(0, r, 0, -len);
-      gr.addColorStop(0, c0); gr.addColorStop(.35, c1); gr.addColorStop(1, c2);
-      g.fillStyle = gr;
-      g.beginPath();
-      g.moveTo(0, -len);
-      g.bezierCurveTo(r * .9, -len * .45, r * 1.1, r * .3, 0, r);
-      g.bezierCurveTo(-r * 1.1, r * .3, -r * .9, -len * .45, 0, -len);
-      g.fill(); g.restore();
-    } else if (p.k === 'g') {
-      const a = Math.max(0, Math.sin(k * Math.PI) * (.75 + .25 * Math.sin(p.life * 30)));
-      star(g, p.x, p.y, p.s * (.5 + .7 * Math.sin(k * Math.PI)), p.rot, p.c, a);
+      p.vx *= .95; p.vy -= 24 * dt; p.x += Math.sin(p.life * 9 + p.wob) * 10 * dt;
+      const r = p.s * (1 - k * .55), a = Math.sin(Math.min(1, k * 3) * Math.PI / 2) * (1 - k);
+      const [c1, c2] = flameRGB(P, p, k);
+      L.save(); L.translate(p.x, p.y); L.scale(1, 1.7);
+      const gr = L.createRadialGradient(0, 0, 0, 0, 0, r);
+      gr.addColorStop(0, `rgba(255,248,255,${.75 * a})`); gr.addColorStop(.35, c1 + (.55 * a) + ')'); gr.addColorStop(1, c2 + '0)');
+      L.fillStyle = gr; L.beginPath(); L.arc(0, 0, r, 0, Math.PI * 2); L.fill(); L.restore();
     } else if (p.k === 'c') {
-      const a = 1 - k, r = p.s * (1 - k * .5);
-      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-      gr.addColorStop(0, `rgba(255,255,255,${a})`); gr.addColorStop(.3, `rgba(${p.c},${a * .8})`); gr.addColorStop(1, `rgba(${p.c},0)`);
-      g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
+      const a = 1 - k, r = p.s * (1 - k * .4);
+      const gr = L.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+      gr.addColorStop(0, `rgba(255,255,255,${.55 * a})`); gr.addColorStop(.4, `rgba(${p.c},${.35 * a})`); gr.addColorStop(1, `rgba(${p.c},0)`);
+      L.fillStyle = gr; L.beginPath(); L.arc(p.x, p.y, r, 0, Math.PI * 2); L.fill();
+    } else if (p.k === 'g') {
+      const a = Math.max(0, Math.sin(k * Math.PI)) * (.7 + .3 * Math.sin(p.life * 26 + p.rot * 9));
+      const gr = L.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.s * 2.4);
+      gr.addColorStop(0, `rgba(${p.c},${.35 * a})`); gr.addColorStop(1, `rgba(${p.c},0)`);
+      L.fillStyle = gr; L.beginPath(); L.arc(p.x, p.y, p.s * 2.4, 0, Math.PI * 2); L.fill();
+      crisp.push([p, a]);
     } else {
-      p.x += Math.sin(p.life * 3 + p.s) * 6 * dt;
-      g.fillStyle = `rgba(${p.c},${Math.sin(k * Math.PI) * .9})`;
-      g.beginPath(); g.arc(p.x, p.y, p.s, 0, Math.PI * 2); g.fill();
+      crisp.push([p, 0]);
     }
   }
   it.ps = keep;
+  // composite the soft layer (smoothing upscales it into a soft blur)
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.globalCompositeOperation = 'lighter';
+  g.drawImage(it.lo, -PAD, -PAD, W, H);
+  // crisp details
+  for (const [p, a0] of crisp) {
+    const k = p.life / p.max;
+    if (p.k === 'g') {
+      const a = a0 * .85, r = p.s * (.6 + .6 * Math.sin(k * Math.PI));
+      g.save(); g.translate(p.x, p.y); g.rotate(p.rot);
+      const lg = g.createLinearGradient(-r * 2.2, 0, r * 2.2, 0);
+      lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(.5, `rgba(255,255,255,${a})`); lg.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = lg; g.fillRect(-r * 2.2, -.6, r * 4.4, 1.2);
+      const vg = g.createLinearGradient(0, -r * 1.3, 0, r * 1.3);
+      vg.addColorStop(0, 'rgba(255,255,255,0)'); vg.addColorStop(.5, `rgba(255,255,255,${a * .8})`); vg.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = vg; g.fillRect(-.6, -r * 1.3, 1.2, r * 2.6);
+      g.fillStyle = `rgba(255,255,255,${a})`; g.beginPath(); g.arc(0, 0, Math.max(.8, r * .14), 0, Math.PI * 2); g.fill();
+      g.restore();
+    } else if (p.k === 'e') {
+      const a = (1 - k) * .9;
+      const col = P.flame === 'rainbow' ? `hsla(${p.hue},100%,85%,${a})` : `rgba(240,215,255,${a})`;
+      g.strokeStyle = col; g.lineWidth = p.s; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x - p.vx * .04, p.y - p.vy * .04); g.stroke();
+    } else if (p.k === 'd') {
+      g.fillStyle = `rgba(${p.c},${Math.sin(k * Math.PI) * .7})`;
+      g.beginPath(); g.arc(p.x + Math.sin(p.life * 3 + p.s * 9) * 3, p.y, p.s, 0, Math.PI * 2); g.fill();
+    }
+  }
 }
 
 function loop(now) {

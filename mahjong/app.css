@@ -840,7 +840,7 @@ html.lite .gc.frame{animation:flip .45s var(--d) forwards!important}
 .pimg.frame .fx-sh{border-radius:22px}.ch-art.frame .fx-sh{border-radius:22px}
 
 /* ================= animated frame effects (canvas, framefx.js) replace the bright glow ================= */
-.ffx{position:absolute;left:-40px;top:-40px;width:calc(100% + 80px);height:calc(100% + 80px);pointer-events:none;z-index:5}
+.ffx{position:absolute;left:-44px;top:-44px;width:calc(100% + 88px);height:calc(100% + 88px);pointer-events:none;z-index:5}
 .gc.frame,.pimg.frame,.ch-art.frame{overflow:visible}
 .gc.frame .gci{border-radius:12px 12px 0 0}
 .pimg.fr-SR::after,.ch-art.fr-SR::after,.pimg.fr-SSR::after,.ch-art.fr-SSR::after{content:none!important}
