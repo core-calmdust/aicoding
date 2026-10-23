@@ -37,9 +37,9 @@ void main(){
   vec3 col=vec3(0.);float al=0.;
   if(uMode<.5||uMode>1.5){
     float top=clamp(-q.y/R.y,-1.,1.);
-    float H=mix(9.,44.,smoothstep(-.85,.95,top));
+    float H=mix(10.,13.,smoothstep(-.85,.95,top));
     // vertically stretched, warped noise = flame tongues rising
-    vec2 np=vec2(q.x*.055,q.y*.022+uT*1.7);
+    vec2 np=vec2(q.x*.075,q.y*.03+uT*1.9);
     vec2 w=vec2(fbm(np*vec2(.7,1.)+vec2(0.,uT*.35)),fbm(np*vec2(.7,1.)+vec2(5.2,uT*.35)));
     float n=fbm(np+w*vec2(.9,1.4));
     n=clamp((n-.25)*1.6,0.,1.);
@@ -52,7 +52,7 @@ void main(){
     c=mix(c,hot,smoothstep(.5,.78,f));
     c=mix(c,vec3(1.),smoothstep(.85,1.,f)*.3);
     float a=smoothstep(0.,.22,f)*(.16+.34*smoothstep(0.,.7,f));
-    float halo=exp(-max(d,0.)/20.)*.1*smoothstep(-6.,0.,d);
+    float halo=exp(-max(d,0.)/12.)*.1*smoothstep(-6.,0.,d);
     col+=c*a+mid*halo; al=max(al,clamp(a+halo,0.,1.));
   }
   if(uMode>.5){
