@@ -704,6 +704,9 @@ function hudLocal(p) {
   const r = hud.getBoundingClientRect(); if (!r.width) return null;
   return { x: (p.x - r.left) * hud.offsetWidth / r.width, y: (p.y - r.top) * hud.offsetHeight / r.height, W: hud.offsetWidth, H: hud.offsetHeight };
 }
+if (window.ResizeObserver) { const ro = new ResizeObserver(() => { const r = $('#rbox'), k = $('#khelp'), g = $('#game');
+  if (r.offsetHeight) g.style.setProperty('--rbh', r.offsetHeight + 'px'); if (k.offsetHeight) g.style.setProperty('--khh', k.offsetHeight + 'px'); });
+  ro.observe($('#rbox')); ro.observe($('#khelp')); }
 function placeActsAtPointer() {
   const a = $('#acts'), pk = $('#chiPick');
   a.classList.remove('atptr'); a.style.left = a.style.top = ''; pk.classList.remove('atptr'); pk.style.left = pk.style.top = '';
