@@ -253,6 +253,8 @@ function fitRoot() {
   if (!PHONE) {
     const GW = Math.min(w, h * 2.0), GH = Math.min(h, w / 1.45);
     const Z = Math.max(.5, Math.min(GW / 1280, GH / 760, 1.6));
+    // game HUD scale for big windows (icons, panels and tiles grow with the window instead of stopping at fixed px)
+    de.style.setProperty('--hz', Math.max(1, Math.min(2, Math.min(h, w / 1.36) / 860)).toFixed(3));
     de.style.setProperty('--SW', GW + 'px'); de.style.setProperty('--SH', GH + 'px'); de.style.setProperty('--Z', Z);
     de.style.setProperty('--SX', ((w - GW) / 2) + 'px'); de.style.setProperty('--SY', ((h - GH) / 2) + 'px');
   }
@@ -696,9 +698,7 @@ function myCall(o, res) {
   TB.highlightType(T(o.tile));
 }
 
-// PC: call buttons pop up right above the mouse pointer (only for a mouse, not in the rotated phone layout)
-let PTR = null;
-document.addEventListener('pointermove', e => { PTR = e.pointerType === 'mouse' ? { x: e.clientX, y: e.clientY } : null; }, { passive: true });
+// PC: call buttons sit just above the draw-tile slot at the right end of the hand (not in the rotated phone layout)
 function hudLocal(p) {
   const hud = $('#acts').offsetParent; if (!hud || !p) return null;
   const r = hud.getBoundingClientRect(); if (!r.width) return null;
@@ -707,14 +707,16 @@ function hudLocal(p) {
 function placeActsAtPointer() {
   const a = $('#acts'), pk = $('#chiPick');
   a.classList.remove('atptr'); a.style.left = a.style.top = ''; pk.classList.remove('atptr'); pk.style.left = pk.style.top = '';
-  if (document.documentElement.classList.contains('rot')) return;
-  const p = hudLocal(PTR); if (!p) return;
+  if (!document.documentElement.classList.contains('ds')) return;
+  const tiles = [...document.querySelectorAll('#hand .hrow > .tl')]; if (!tiles.length) return;
+  const last = tiles[tiles.length - 1].getBoundingClientRect();
+  const p = hudLocal({ x: last.right, y: last.top }); if (!p) return;
   a.classList.add('atptr');
   const w = a.offsetWidth, h = a.offsetHeight;
-  const x = Math.max(8, Math.min(p.W - w - 8, p.x - w / 2));
-  const y = Math.max(8, Math.min(p.H - h - 8, p.y - h - 18));
+  const x = Math.max(8, Math.min(p.W - w - 8, p.x - w));
+  const y = Math.max(8, p.y - h - 14);
   a.style.left = x + 'px'; a.style.top = y + 'px';
-  pk.classList.add('atptr'); pk.style.left = x + 'px'; pk.style.top = Math.max(8, y - 64) + 'px';
+  pk.classList.add('atptr'); pk.style.left = x + 'px'; pk.style.top = Math.max(8, y - 64 * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hz')) || 1)) + 'px';
 }
 
 // while a call (chi/pon/kan/ron) is offered, clicking anywhere except the buttons skips it

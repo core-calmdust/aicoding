@@ -898,3 +898,17 @@ html.ds #game .intel{right:var(--gi);top:calc(var(--gi) + 56px)}
 /* dora / round box sits further in, on the felt */
 html.ds #game .rbox{top:calc(var(--GH) * .115);left:calc(var(--GW) * .23);padding:8px 12px;gap:5px}
 html.ds #game .khelp{left:var(--gi)}
+
+/* big desktop windows: HUD grows with the window (--hz >= 1) */
+html.ds #game{--th:min(calc((var(--GW) - 90px) / 15.6), calc(var(--GH) * .12), calc(86px * var(--hz, 1)));--bf:clamp(76px, calc(var(--GH) * .125), calc(112px * var(--hz, 1)))}
+html.ds #game .rbox,html.ds #game .khelp{transform:scale(var(--hz, 1));transform-origin:top left}
+html.ds #game .tbtns{transform:scale(var(--hz, 1));transform-origin:top right}
+html.ds #game .acts,html.ds #game .chiPick{transform-origin:bottom right;scale:var(--hz, 1)}
+html.ds #game .me .skb{transform:scale(var(--hz, 1));transform-origin:bottom left}
+html.ds #game .intel{transform:scale(var(--hz, 1));transform-origin:top right}
+html.ds #game .bt > b{font-size:calc(14px * var(--hz, 1));padding:calc(3px * var(--hz, 1)) calc(14px * var(--hz, 1))}
+html.ds #game .bt .sc{font-size:calc(15px * var(--hz, 1))}
+html.ds #game .bf em{width:calc(28px * var(--hz, 1));height:calc(28px * var(--hz, 1));font-size:calc(15px * var(--hz, 1))}
+html.ds #game .bt .bk{zoom:var(--hz, 1)}
+html.ds .tl kbd.tk{font-size:clamp(9px,calc(var(--tw) * .2),calc(13px * var(--hz, 1)))}
+html.ds #game .bt .sc{background:rgba(10,14,30,.72);border-radius:8px;padding:0 calc(8px * var(--hz, 1))}
