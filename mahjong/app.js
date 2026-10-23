@@ -238,6 +238,14 @@ function fitRoot() {
   const rot = PHONE && h > w;
   de.classList.toggle('lp', PHONE); de.classList.toggle('rot', rot);
   de.style.setProperty('--W', (rot ? h : w) + 'px'); de.style.setProperty('--H', (rot ? w : h) + 'px');
+  // desktop: home and character screens are laid out at a 1280-wide landscape design size and scaled to fit
+  de.classList.toggle('ds', !PHONE);
+  if (!PHONE) {
+    const GW = Math.min(w, h * 2.0), GH = Math.min(h, w / 1.45);
+    const Z = Math.max(.5, Math.min(GW / 1280, GH / 760, 1.6));
+    de.style.setProperty('--SW', GW + 'px'); de.style.setProperty('--SH', GH + 'px'); de.style.setProperty('--Z', Z);
+    de.style.setProperty('--SX', ((w - GW) / 2) + 'px'); de.style.setProperty('--SY', ((h - GH) / 2) + 'px');
+  }
 }
 fitRoot();
 addEventListener('resize', fitRoot);

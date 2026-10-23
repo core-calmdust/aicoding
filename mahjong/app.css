@@ -325,37 +325,37 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
   html:not(.lp){--tw:46px}
 }
 @media (max-width: 900px){
-  html:not(.lp) .hmain{grid-template-columns:1fr;overflow:auto}
-  html:not(.lp) .partner{grid-template-columns:minmax(0,.8fr) minmax(0,1fr);min-height:340px}
-  html:not(.lp) #home{overflow-y:auto}
-  html:not(.lp) .pname{font-size:34px}
+  html:not(.lp):not(.ds) .hmain{grid-template-columns:1fr;overflow:auto}
+  html:not(.lp):not(.ds) .partner{grid-template-columns:minmax(0,.8fr) minmax(0,1fr);min-height:340px}
+  html:not(.lp):not(.ds) #home{overflow-y:auto}
+  html:not(.lp):not(.ds) .pname{font-size:34px}
   html:not(.lp) .agari{grid-template-columns:1fr}
   html:not(.lp) .ag-art{height:180px}
   html:not(.lp) .ag-art img{object-position:50% 25%}
 }
 @media (max-width: 760px){
   html:not(.lp){--tw:min(42px,calc((var(--W) - 24px) / 15))}
-  html:not(.lp) .top{flex-wrap:wrap;gap:6px;padding-bottom:8px}
-  html:not(.lp) .top .logo{flex-basis:100%}
-  html:not(.lp) .top .sp{display:none}
-  html:not(.lp) .top .ib{width:36px;height:36px;padding:8px}
-  html:not(.lp) #langSel{height:36px}
-  html:not(.lp) .coins{height:36px;font-size:15px;margin-right:auto}
-  html:not(.lp) .lg-k{font-size:32px}
-  html:not(.lp) .lg-s small{display:none}
-  html:not(.lp) #home{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  html:not(.lp) .hmain{display:flex;flex-direction:column;gap:14px;padding-top:0;overflow:visible}
-  html:not(.lp) .partner{display:block;position:relative;min-height:0}
-  html:not(.lp) .pimg{height:calc(var(--H) * 0.46);min-height:280px;width:100%}
-  html:not(.lp) .pimg img{object-position:50% 16%}
-  html:not(.lp) .pinfo{position:relative;z-index:2;margin-top:-118px;padding:0 14px;gap:10px}
-  html:not(.lp) .pname{text-shadow:0 2px 12px rgba(0,0,0,.8)}
-  html:not(.lp) .roster{position:sticky;bottom:0;background:linear-gradient(transparent,rgba(12,8,24,.95) 30%)}
-  html:not(.lp) .modes{justify-content:flex-start}
-  html:not(.lp) .pname{font-size:28px}
-  html:not(.lp) .pskill{padding:10px}
-  html:not(.lp) .pskill span{font-size:12px}
-  html:not(.lp) .pprof{display:none}
+  html:not(.lp):not(.ds) .top{flex-wrap:wrap;gap:6px;padding-bottom:8px}
+  html:not(.lp):not(.ds) .top .logo{flex-basis:100%}
+  html:not(.lp):not(.ds) .top .sp{display:none}
+  html:not(.lp):not(.ds) .top .ib{width:36px;height:36px;padding:8px}
+  html:not(.lp):not(.ds) #langSel{height:36px}
+  html:not(.lp):not(.ds) .coins{height:36px;font-size:15px;margin-right:auto}
+  html:not(.lp):not(.ds) .lg-k{font-size:32px}
+  html:not(.lp):not(.ds) .lg-s small{display:none}
+  html:not(.lp):not(.ds) #home{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  html:not(.lp):not(.ds) .hmain{display:flex;flex-direction:column;gap:14px;padding-top:0;overflow:visible}
+  html:not(.lp):not(.ds) .partner{display:block;position:relative;min-height:0}
+  html:not(.lp):not(.ds) .pimg{height:calc(var(--H) * 0.46);min-height:280px;width:100%}
+  html:not(.lp):not(.ds) .pimg img{object-position:50% 16%}
+  html:not(.lp):not(.ds) .pinfo{position:relative;z-index:2;margin-top:-118px;padding:0 14px;gap:10px}
+  html:not(.lp):not(.ds) .pname{text-shadow:0 2px 12px rgba(0,0,0,.8)}
+  html:not(.lp):not(.ds) .roster{position:sticky;bottom:0;background:linear-gradient(transparent,rgba(12,8,24,.95) 30%)}
+  html:not(.lp):not(.ds) .modes{justify-content:flex-start}
+  html:not(.lp):not(.ds) .pname{font-size:28px}
+  html:not(.lp):not(.ds) .pskill{padding:10px}
+  html:not(.lp):not(.ds) .pskill span{font-size:12px}
+  html:not(.lp):not(.ds) .pprof{display:none}
   html:not(.lp) .gcards.n10{grid-template-columns:repeat(3,1fr)}
   html:not(.lp) .opp{padding:4px 8px 4px 4px;gap:5px}
   html:not(.lp) .bf{width:36px;height:36px}
@@ -553,7 +553,7 @@ html.lp .ch-info .pname{font-size:24px}
 html.lp .ch-info .pprof{display:block;font-size:11.5px;line-height:1.55}
 html.lp .plines{display:none}
 html.lp .ch-title{font-size:18px}
-html:not(.lp) .ch-main{grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr) minmax(280px,1fr)}
+html:not(.lp):not(.ds) .ch-main{grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr) minmax(280px,1fr)}
 @media (max-width: 760px){ html:not(.lp) .ch-main{grid-template-columns:1fr;overflow:auto} html:not(.lp) .ch-art{height:50vh} }
 
 .ab.rii.sealed{background:linear-gradient(180deg,#6d6488,#433b5c);color:#d9d2ee;font-size:15px;opacity:.9;border:1px dashed #c6a0ff}
@@ -714,3 +714,10 @@ html.lp .unlock .go{min-width:120px;padding:8px;font-size:14px}
 .chi .lk{position:absolute;right:4px;bottom:22px;z-index:3;width:20px;height:20px;padding:3px;border-radius:50%;background:rgba(10,6,22,.85);color:var(--gold);border:1px solid rgba(232,206,140,.5)}
 .chsel.lockline{display:flex;align-items:center;justify-content:center;gap:8px}
 .chsel.lockline i{width:18px;height:18px;color:var(--gold)}
+
+/* ================= desktop: home / character screens on a scaled landscape stage ================= */
+html.ds #home,html.ds #chara{inset:auto;left:var(--SX);top:var(--SY);width:calc(var(--SW) / var(--Z));height:calc(var(--SH) / var(--Z));
+  transform:scale(var(--Z));transform-origin:0 0}
+html.ds .hmain{padding-bottom:22px}
+html.ds .partner{grid-template-columns:minmax(0,.82fr) minmax(0,1fr)}
+html.ds .pimg{max-height:100%}
