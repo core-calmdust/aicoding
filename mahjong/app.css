@@ -692,3 +692,10 @@ body:has(#game:not([hidden])) #bgfx{background:radial-gradient(ellipse at 50% 50
 .pskill b em{margin-left:0!important}
 .gc.fr-SSR{animation:flip .45s var(--d) forwards,glowGold 2.4s 1s ease-in-out infinite}
 .gc.fr-UR{animation:flip .45s var(--d) forwards,glowRainbow 2s 1s linear infinite}
+/* not owned yet: plain dark frame, opaque silhouette (no spinning ring showing through) */
+.fr-lock,.lock .frame,.sib.lock .frame{background:#2a2440!important;animation:none!important;box-shadow:none!important}
+.fr-lock::before,.lock .frame::before{content:none!important}
+.fr-lock .fx-sh,.lock .frame .fx-sh{display:none}
+.ch-art img.lock{filter:brightness(0)!important;opacity:1!important}
+.ch-art.fr-lock{background:radial-gradient(ellipse at 50% 40%,#3a2f5c,#151022)!important}
+.ch-art.fr-lock > img{opacity:.85!important}

@@ -337,7 +337,7 @@ function renderChara() {
   }).join('');
   const c = MJChars.get(chView), own = owns(c.id);
   const art = $('#chArt');
-  art.className = `ch-art frame fr-${c.rarity}`;
+  art.className = `ch-art frame ${own ? 'fr-' + c.rarity : 'fr-lock'}`;
   art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
   art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i>`;
   const sisters = MJChars.list.filter(x => x.family === c.family);
