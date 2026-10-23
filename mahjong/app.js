@@ -420,6 +420,7 @@ async function startGame() {
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
   UIS.game = G;
   $('#gSnd').innerHTML = DB.set.snd ? IC.snd : IC.mute; $('#gExit').innerHTML = IC.exit;
+  $('#khelp').innerHTML = t('keys');
   sndIcons();
   const g0 = G;
   try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
@@ -560,7 +561,7 @@ function renderMe(badgeHtml) {
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
     ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''}" id="skBtn" style="--sc:${sk.color}" ${can ? '' : 'disabled'}>
-      <i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short(MJSkills.val(sk, c.tier))))}</small></span></button>` : ''}`;
+      <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short(MJSkills.val(sk, c.tier))))}</small></span></button>` : ''}`;
   const b = $('#skBtn');
   if (b) b.onclick = async () => {
     if (!UIS.opts || !UIS.opts.canSkill || !UIS.resolve) return;
@@ -627,7 +628,12 @@ function doDiscard(id) {
 
 // ---------------------------------------------------------------- my turn / my call
 function clearActs() { $('#acts').innerHTML = ''; $('#chiPick').hidden = true; }
-function btn(label, cls, fn) { const b = document.createElement('button'); b.className = 'ab ' + cls; b.innerHTML = label; b.onclick = fn; $('#acts').appendChild(b); return b; }
+function btn(label, cls, fn, key) {
+  const b = document.createElement('button'); b.className = 'ab ' + cls; b.onclick = fn;
+  if (key) b.dataset.key = key;
+  b.innerHTML = label + (key ? `<kbd>${key === 'Escape' ? 'Esc' : key.toUpperCase()}</kbd>` : '');
+  $('#acts').appendChild(b); return b;
+}
 
 function myTurn(o, res) {
   UIS.opts = o; UIS.kind = 'turn'; UIS.resolve = res; UIS.riichiMode = false; UIS.picked = null;
@@ -635,16 +641,17 @@ function myTurn(o, res) {
   renderHand(); renderBadges();
   clearActs();
   const finish = a => { const r = UIS.resolve; if (!r) return; UIS.resolve = null; UIS.opts = null; UIS.kind = null; clearActs(); renderHand(); r(a); };
-  if (o.canTsumo) btn(t('tsumo'), 'win', () => finish({ act: 'tsumo' }));
+  if (o.canTsumo) btn(t('tsumo'), 'win', () => finish({ act: 'tsumo' }), 'w');
   if (o.riichi && o.riichi.length) btn(t('riichi'), 'rii', e => {
     UIS.riichiMode = !UIS.riichiMode; e.currentTarget.classList.toggle('on', UIS.riichiMode);
-    e.currentTarget.innerHTML = UIS.riichiMode ? t('cancel') : t('riichi');
+    e.currentTarget.innerHTML = (UIS.riichiMode ? t('cancel') : t('riichi')) + '<kbd>Q</kbd>';
+    if (UIS.riichiMode && UIS.picked != null && !o.riichi.some(x => T(x) === T(UIS.picked))) UIS.picked = null;
     renderHand();
-  });
-  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked))); b.classList.add('sealed'); }
+  }, 'q');
+  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked)), 'q'); b.classList.add('sealed'); }
   const kans = (o.ankans || []).map(x => ['ankan', x]).concat((o.kakans || []).map(x => ['kakan', x]));
-  for (const [k, tt] of kans) btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt }));
-  if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }));
+  kans.forEach(([k, tt], i) => btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt }), i ? null : 'k'));
+  if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }), 'l');
   // riichi: auto tsumogiri when there is nothing else to do
   if (o.mustTsumogiri && !o.canTsumo && !(o.ankans && o.ankans.length) && !o.canSkill) {
     setTimeout(() => { if (UIS.resolve === res) doDiscard(o.drawn); }, 420);
@@ -655,19 +662,26 @@ function myCall(o, res) {
   clearActs();
   let done = false;
   const finish = a => { if (done) return; done = true; clearActs(); UIS.kind = null; UIS.opts = null; res(a); };
-  if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }));
-  if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }));
-  if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }));
+  if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }), 'w');
+  if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }), 'e');
+  if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }), 'k');
   if (o.chis) btn(t('chi'), 'call', () => {
     if (o.chis.length === 1) return finish({ act: 'chi', use: o.chis[0] });
     const pk = $('#chiPick');
-    pk.innerHTML = o.chis.map((u, i) => `<button data-i="${i}">${[...u, o.tile].sort((a, b) => a - b).map(id => tileHTML(id, 'xs' + (id === o.tile ? ' hl' : ''))).join('')}</button>`).join('');
+    pk.innerHTML = o.chis.map((u, i) => `<button data-i="${i}">${[...u, o.tile].sort((a, b) => a - b).map(id => tileHTML(id, 'xs' + (id === o.tile ? ' hl' : ''))).join('')}<kbd>${i + 1}</kbd></button>`).join('');
     pk.hidden = false;
     pk.onclick = e => { const b = e.target.closest('[data-i]'); if (b) finish({ act: 'chi', use: o.chis[+b.dataset.i] }); };
-  });
-  btn(t('skip'), 'skip', () => finish({ act: 'pass' }));
+  }, 'c');
+  btn(t('skip'), 'skip', () => finish({ act: 'pass' }), 'x');
   TB.highlightType(T(o.tile));
 }
+
+// while a call (chi/pon/kan/ron) is offered, clicking anywhere except the buttons skips it
+$('#game').addEventListener('click', e => {
+  if (!UIS || UIS.kind !== 'call') return;
+  if (e.target.closest('#acts, #chiPick, .tbtns, #skBtn, #dealAsk')) return;
+  const s = $('#acts .skip'); if (s) s.click();
+});
 
 // ---------------------------------------------------------------- deal-time skill prompt
 function askDealSkill(o, res) {
@@ -676,7 +690,7 @@ function askDealSkill(o, res) {
   el.style.setProperty('--sc', sk.color);
   el.innerHTML = `<i>${icon(sk.icon)}</i>
     <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
-    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}</button><button class="ab call" data-a="yes">${t('use')}</button></div>`;
+    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>N</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>Y</kbd></button></div>`;
   el.hidden = false;
   renderHand();
   el.onclick = async e => {
@@ -830,9 +844,64 @@ async function showFinal(d) {
 }
 
 // ---------------------------------------------------------------- keyboard
+// PC keys: ←/→ pick a tile, Space/Enter discard, Q riichi, W tsumo/ron, E pon, C chi (1-3 picks), K kan, S skill,
+// X/Esc skip, L nine terminals; deal-time skill Y/N; result screens Enter/Space; home Enter = start.
+function handTiles() { return [...document.querySelectorAll('#hand .hrow .tl.can')]; }
+function moveCursor(d) {
+  const ts = handTiles(); if (!ts.length) return;
+  const ids = ts.map(x => +x.dataset.id);
+  let i = ids.indexOf(UIS.picked);
+  if (i < 0) i = d > 0 ? -1 : ids.length;
+  i = Math.max(0, Math.min(ids.length - 1, i + d));
+  UIS.picked = ids[i]; SND.pick(); renderHand(); TB.highlightType(T(UIS.picked));
+}
 document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  const m = $('#modal');
+  // modal screens
+  if (!m.hidden) {
+    if (k === 'Enter' || k === ' ') {
+      const b = m.querySelector('.nx, [data-a=yes], [data-a=again]');
+      if (b) { e.preventDefault(); b.click(); }
+    } else if (k === 'Escape') {
+      const b = m.querySelector('[data-a=no], [data-a=close], [data-a=home]');
+      if (b) { e.preventDefault(); b.click(); }
+    }
+    return;
+  }
+  // home
+  if (!$('#home').hidden) { if (k === 'Enter') { e.preventDefault(); $('#btnStart').click(); } return; }
+  if (!$('#chara').hidden) { if (k === 'Escape') { e.preventDefault(); $('#chBack').click(); } return; }
   if (!UIS || $('#game').hidden) return;
-  if (e.key === 'Escape') { if (UIS.kind === 'call') { const s = $('#acts .skip'); if (s) s.click(); } else if (UIS.riichiMode) { const b = $('#acts .rii'); if (b) b.click(); } }
+  // deal-time skill prompt
+  const da = $('#dealAsk');
+  if (!da.hidden) {
+    if (k === 'y' || k === 'Enter') { e.preventDefault(); da.querySelector('[data-a=yes]').click(); }
+    else if (k === 'n' || k === 'Escape') { e.preventDefault(); da.querySelector('[data-a=no]').click(); }
+    return;
+  }
+  // chi choice
+  const pk = $('#chiPick');
+  if (!pk.hidden && /^[1-3]$/.test(k)) { const b = pk.querySelector(`[data-i="${+k - 1}"]`); if (b) { e.preventDefault(); b.click(); } return; }
+  // action buttons
+  const key = k === 'Escape' ? 'x' : k;
+  const ab = $(`#acts [data-key="${key}"]`);
+  if (ab) { e.preventDefault(); ab.click(); return; }
+  if (k === 's') { const b = $('#skBtn'); if (b && !b.disabled) { e.preventDefault(); b.click(); } return; }
+  // hand
+  if (UIS.kind === 'turn' && UIS.resolve) {
+    if (k === 'ArrowLeft') { e.preventDefault(); moveCursor(-1); }
+    else if (k === 'ArrowRight') { e.preventDefault(); moveCursor(1); }
+    else if (k === ' ' || k === 'Enter') {
+      e.preventDefault();
+      const ts = handTiles().map(x => +x.dataset.id);
+      let id = ts.includes(UIS.picked) ? UIS.picked : (ts.includes(UIS.drawn) ? UIS.drawn : ts[ts.length - 1]);
+      if (id != null) doDiscard(id);
+    }
+  }
 });
 
 // ---------------------------------------------------------------- boot

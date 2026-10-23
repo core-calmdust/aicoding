@@ -752,3 +752,17 @@ html.lite .r-UR,html.lite .gorb,html.lite .ci-lines{animation:none!important}
 html.lite .ci-rays,html.lite .ci-spark{display:none}
 html.lite #bgfx::after{display:none}
 #btnLite.on{background:rgba(232,206,140,.2);color:#ffe9a0;box-shadow:inset 0 0 0 1px var(--gold)}
+
+/* keyboard hints (PC only) */
+kbd{display:none}
+html.ds kbd{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;margin-left:6px;border-radius:5px;font:700 10.5px 'Zen Kaku Gothic New',sans-serif;letter-spacing:0;
+  color:rgba(255,255,255,.9);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.35);border-bottom-width:2px;vertical-align:middle}
+html.ds .ab.rii:not(.on) kbd{color:#3a2205;background:rgba(255,255,255,.45);border-color:rgba(58,34,5,.4)}
+html.ds .chiPick button{position:relative}
+html.ds .chiPick kbd{margin-left:4px}
+html.ds .skb{position:relative}
+html.ds .skb .skk{position:absolute;top:-7px;left:-7px;margin:0;background:#1d1536}
+html.ds .khelp{display:block}
+.khelp{display:none;position:absolute;left:max(10px,var(--sl));top:calc(max(10px,var(--st)) + 110px);font-size:10.5px;line-height:1.7;color:rgba(207,196,255,.75);background:rgba(10,14,30,.6);padding:6px 9px;border-radius:10px;border:1px solid rgba(160,200,255,.15);pointer-events:none}
+.khelp b{color:#ffe9b0;font-weight:700}
+.khelp{left:calc(max(10px,var(--sl)) + 184px);top:max(10px,var(--st))}
