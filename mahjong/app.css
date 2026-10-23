@@ -848,3 +848,25 @@ html.lite .gc.frame{animation:flip .45s var(--d) forwards!important}
 .pimg.fr-SR,.ch-art.fr-SR,.gc.fr-SR,.ag-art.fr-SR{box-shadow:0 0 0 2px #e9d2ff,0 0 16px rgba(160,100,255,.5)}
 .pimg.fr-UR,.ch-art.fr-UR,.gc.fr-UR,.ag-art.fr-UR{box-shadow:0 0 0 2px #fff,0 0 20px rgba(255,120,220,.5)}
 html.lite .ffx{display:none}
+
+/* ================= PC table readability ================= */
+.tl.ph{visibility:hidden}
+html.ds #game{--bf:clamp(76px, calc(var(--GH) * .125), 112px)}
+html.ds #game .bt b{font-size:14px;padding:3px 14px}
+html.ds #game .bt .sc{font-size:15px;color:#fff;font-weight:900;text-shadow:0 1px 3px #000}
+html.ds #game .bf em{width:28px;height:28px;font-size:15px;right:-10px;bottom:-8px}
+html.ds #game .bk i{width:24px;height:24px;padding:4px}
+/* riichi: a clear banner on the portrait and a pulsing frame */
+.riiflag{position:absolute;left:50%;top:-10px;transform:translateX(-50%);z-index:6;font-style:normal;font-family:var(--serif);font-weight:800;font-size:13px;letter-spacing:.1em;white-space:nowrap;
+  padding:2px 10px;border-radius:6px;color:#3a2205;background:linear-gradient(180deg,#fff0b0,#ffcf4a 55%,#d9961e);box-shadow:0 2px 8px rgba(0,0,0,.5),0 0 12px rgba(255,200,80,.7)}
+html.ds .riiflag{font-size:clamp(13px, calc(var(--bf) * .2), 19px);top:-14px;padding:3px 14px}
+#game .bf.rii .frame{outline:3px solid #ffcf4a;outline-offset:2px;animation:riiPulse 1.4s ease-in-out infinite}
+@keyframes riiPulse{50%{outline-color:rgba(255,207,74,.35)}}
+html.lite #game .bf.rii .frame{animation:none}
+/* dora indicators larger */
+html.ds #game .rbox{padding:10px 14px;gap:7px}
+html.ds #game .rk b{font-size:22px}
+html.ds #game .rk span,html.ds #game .rl{font-size:13px}
+html.ds #game .rd small{font-size:13px}
+html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shadow:0 3px 0 #6b3fc4,0 4px 8px rgba(0,0,0,.4)}
+html.ds .khelp{left:calc(max(10px,var(--sl)) + 262px)}

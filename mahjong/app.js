@@ -545,7 +545,7 @@ function renderBadges() {
     const sk = MJSkills.get(c.skill);
     const chips = fx.map(k => { const s2 = MJSkills.get(k === 'lure' ? 'lure' : k); return s2 ? `<i class="fx" style="--sc:${s2.color}" title="${esc(L(s2.name))}">${icon(s2.icon)}</i>` : ''; }).join('');
     const html = `
-      <div class="bf ${(s === g.kyoku) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em></div>
+      <div class="bf ${(s === g.kyoku) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em>${p && p.riichi ? `<i class="riiflag">${esc(t('riichi'))}</i>` : ''}</div>
       <div class="bt"><b>${esc(L(c.name))}</b><span class="sc">${g.scores[s].toLocaleString()}</span>
         <span class="bk">${p && p.riichi ? `<i class="rbadge">${t('riichi')}</i>` : ''}${chips}${DB.set.skills && g.rules.skills ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
     if (s === ME) renderMe(html);
@@ -602,7 +602,7 @@ function renderHand(drawn) {
     return `<span class="meld">${order.map((id, i) => m.type === 'ankan' && (i === 0 || i === 3) ? backHTML('sm') : tileHTML(id, 'sm' + (id === m.called ? ' side' : '') + (m.type === 'kakan' && id === m.called ? ' kk' : ''))).join('')}</span>`;
   }).join('');
   const kl = i => `<kbd class="tk">${HAND_LABELS[i] || ''}</kbd>`;
-  $('#hand').innerHTML = `<div class="hrow">${ids.map((id, i) => tileHTML(id, cls(id)).replace('</span>', kl(i) + '</span>')).join('')}${dr != null ? `<span class="gap"></span>${tileHTML(dr, cls(dr) + ' drawn').replace('</span>', '<kbd class="tk">Space</kbd></span>')}` : ''}</div><div class="melds">${melds}</div>`;
+  $('#hand').innerHTML = `<div class="hrow">${ids.map((id, i) => tileHTML(id, cls(id)).replace('</span>', kl(i) + '</span>')).join('')}<span class="gap"></span>${dr != null ? tileHTML(dr, cls(dr) + ' drawn').replace('</span>', '<kbd class="tk">Space</kbd></span>') : '<span class="tl ph"></span>'}</div><div class="melds">${melds}</div>`;
   $('#hand').classList.toggle('active', !!o);
 }
 // hand tiles are bound to the number row, left to right: 1 … 0 - ^ ¥ ; the drawn tile is Space
@@ -632,20 +632,24 @@ function doDiscard(id) {
 
 // ---------------------------------------------------------------- my turn / my call
 function clearActs() { $('#acts').innerHTML = ''; $('#chiPick').hidden = true; }
-function btn(label, cls, fn, key) {
+function btn(label, cls, fn, role) {
   const b = document.createElement('button'); b.className = 'ab ' + cls; b.onclick = fn;
-  if (key) b.dataset.key = key;
-  b.innerHTML = label + (key ? `<kbd>${key === 'Escape' ? 'Esc' : key.toUpperCase()}</kbd>` : '');
+  if (role) b.dataset.role = role;
+  b.innerHTML = label;
   $('#acts').appendChild(b); return b;
 }
 
 // action buttons are bound to the bottom-left letter row in on-screen order: Z X C V B N M
-const ACT_KEYS = 'zxcvbnm';
+// keys follow SEGA MJ: Enter = win (tsumo/ron), X riichi, C chi, V pon, B kan, Space tsumogiri, Esc cancel/skip
+const KEY_OF = { win: 'Enter', rii: 'x', chi: 'c', pon: 'v', kan: 'b', kyuushu: 'n', skip: 'Escape' };
+const KEY_LABEL = { Enter: 'Enter', Escape: 'Esc' };
 function bindActKeys() {
-  [...document.querySelectorAll('#acts .ab')].forEach((b, i) => {
-    const k = ACT_KEYS[i]; if (!k) return;
+  [...document.querySelectorAll('#acts .ab')].forEach(b => {
+    const k = KEY_OF[b.dataset.role]; if (!k) return;
+    if (b.dataset.role === 'kan' && b.previousElementSibling && b.previousElementSibling.dataset.role === 'kan') return;
     b.dataset.key = k;
-    const kb = b.querySelector('kbd'); if (kb) kb.textContent = k.toUpperCase(); else b.insertAdjacentHTML('beforeend', `<kbd>${k.toUpperCase()}</kbd>`);
+    const lab = KEY_LABEL[k] || k.toUpperCase();
+    const kb = b.querySelector('kbd'); if (kb) kb.textContent = lab; else b.insertAdjacentHTML('beforeend', `<kbd>${lab}</kbd>`);
   });
 }
 function myTurn(o, res) {
@@ -654,20 +658,20 @@ function myTurn(o, res) {
   renderHand(); renderBadges();
   clearActs();
   const finish = a => { const r = UIS.resolve; if (!r) return; UIS.resolve = null; UIS.opts = null; UIS.kind = null; clearActs(); renderHand(); r(a); };
-  if (o.canTsumo) btn(t('tsumo'), 'win', () => finish({ act: 'tsumo' }));
+  if (o.canTsumo) btn(t('tsumo'), 'win', () => finish({ act: 'tsumo' }), 'win');
   if (o.riichi && o.riichi.length) btn(t('riichi'), 'rii', e => {
     UIS.riichiMode = !UIS.riichiMode; e.currentTarget.classList.toggle('on', UIS.riichiMode);
-    e.currentTarget.innerHTML = (UIS.riichiMode ? t('cancel') : t('riichi')) + `<kbd>${(e.currentTarget.dataset.key || '').toUpperCase()}</kbd>`;
+    e.currentTarget.innerHTML = (UIS.riichiMode ? t('cancel') : t('riichi')) + '<kbd>X</kbd>';
     if (UIS.riichiMode && UIS.picked != null && !o.riichi.some(x => T(x) === T(UIS.picked))) UIS.picked = null;
     renderHand();
-  });
-  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked))); b.classList.add('sealed'); }
+  }, 'rii');
+  if (o.riichiBlocked) { const b = btn(t('riichiNo'), 'rii', () => toast(t('riichiWhy_' + o.riichiBlocked)), 'rii'); b.classList.add('sealed'); }
   const kans = (o.ankans || []).map(x => ['ankan', x]).concat((o.kakans || []).map(x => ['kakan', x]));
-  kans.forEach(([k, tt], i) => btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt })));
-  if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }));
+  kans.forEach(([k, tt]) => btn(`${t('kan')}${typeHTML(tt, 'xs')}`, 'call', () => finish({ act: k, t: tt }), 'kan'));
+  if (o.canKyuushu) btn(t('kyuushu'), 'call', () => finish({ act: 'kyuushu' }), 'kyuushu');
   bindActKeys();
   // riichi: auto tsumogiri when there is nothing else to do
-  if (o.mustTsumogiri && !o.canTsumo && !(o.ankans && o.ankans.length) && !o.canSkill) {
+  if (o.mustTsumogiri && !o.canTsumo && !(o.ankans && o.ankans.length)) {
     setTimeout(() => { if (UIS.resolve === res) doDiscard(o.drawn); }, 420);
   }
 }
@@ -676,17 +680,17 @@ function myCall(o, res) {
   clearActs();
   let done = false;
   const finish = a => { if (done) return; done = true; clearActs(); UIS.kind = null; UIS.opts = null; res(a); };
-  if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }));
-  if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }));
-  if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }));
+  if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }), 'win');
+  if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }), 'pon');
+  if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }), 'kan');
   if (o.chis) btn(t('chi'), 'call', () => {
     if (o.chis.length === 1) return finish({ act: 'chi', use: o.chis[0] });
     const pk = $('#chiPick');
     pk.innerHTML = o.chis.map((u, i) => `<button data-i="${i}">${[...u, o.tile].sort((a, b) => a - b).map(id => tileHTML(id, 'xs' + (id === o.tile ? ' hl' : ''))).join('')}<kbd>${i + 1}</kbd></button>`).join('');
     pk.hidden = false;
     pk.onclick = e => { const b = e.target.closest('[data-i]'); if (b) finish({ act: 'chi', use: o.chis[+b.dataset.i] }); };
-  });
-  btn(t('skip'), 'skip', () => finish({ act: 'pass' }));
+  }, 'chi');
+  btn(t('skip'), 'skip', () => finish({ act: 'pass' }), 'skip');
   bindActKeys();
   TB.highlightType(T(o.tile));
 }
@@ -705,7 +709,7 @@ function askDealSkill(o, res) {
   el.style.setProperty('--sc', sk.color);
   el.innerHTML = `<i>${icon(sk.icon)}</i>
     <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
-    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>Z</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>X</kbd></button></div>`;
+    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>Esc</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>Enter</kbd></button></div>`;
   el.hidden = false;
   renderHand();
   el.onclick = async e => {
@@ -895,14 +899,14 @@ document.addEventListener('keydown', e => {
   // deal-time skill prompt
   const da = $('#dealAsk');
   if (!da.hidden) {
-    if (k === 'x' || k === 'y' || k === 'Enter') { e.preventDefault(); da.querySelector('[data-a=yes]').click(); }
-    else if (k === 'z' || k === 'n' || k === 'Escape') { e.preventDefault(); da.querySelector('[data-a=no]').click(); }
+    if (k === 'y' || k === 'Enter') { e.preventDefault(); da.querySelector('[data-a=yes]').click(); }
+    else if (k === 'n' || k === 'Escape' || k === ' ') { e.preventDefault(); da.querySelector('[data-a=no]').click(); }
     return;
   }
   // chi choice
   const pk = $('#chiPick');
   if (!pk.hidden && /^[1-3]$/.test(k)) { const b = pk.querySelector(`[data-i="${+k - 1}"]`); if (b) { e.preventDefault(); b.click(); } return; }
-  // action buttons (Z X C V … in on-screen order); Esc = skip
+  // action buttons (Enter win, X riichi, C chi, V pon, B kan, N nine terminals); Esc / Space = skip
   if (k === ' ' && UIS.kind === 'call') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } }
   if (k === 'Escape') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } if (UIS.riichiMode) { const r = $('#acts .rii'); if (r) r.click(); return; } }
   const ab = $(`#acts [data-key="${k}"]`);

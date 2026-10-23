@@ -57,17 +57,17 @@ function spawn(it, dt) {
   const emit = (rate, make) => { let n = rate * dt; while (n > 0) { if (Math.random() < n) it.ps.push(make()); n -= 1; } };
   if (P.flame) {
     // soft flame puffs born just outside the frame edge; they rise, stretch and fade
-    emit(200 * scale * P.rate, () => {
+    emit(120 * scale * P.rate, () => {
       const t = Math.random(), q = perim(w, h, t);
       const side = q.ny < 0 ? 1.2 : q.ny > 0 ? .55 : 1;      // taller on the top edge, low on the bottom
-      return { k: 'f', x: q.x + q.nx * rnd(1, 6), y: q.y + q.ny * rnd(1, 6), vx: q.nx * rnd(6, 16) + rnd(-5, 5), vy: q.ny * rnd(3, 10) - rnd(30, 60) * side,
-        life: 0, max: rnd(.55, 1.1), s: (rnd(9, 18) * scale + 5) * side, hue: Math.random() * 360, wob: Math.random() * 6 };
+      return { k: 'f', x: q.x + q.nx * rnd(5, 12), y: q.y + q.ny * rnd(5, 12), vx: q.nx * rnd(6, 16) + rnd(-5, 5), vy: q.ny * rnd(3, 10) - rnd(30, 60) * side,
+        life: 0, max: rnd(.5, .95), s: (rnd(6, 12) * scale + 4) * side, hue: Math.random() * 360, wob: Math.random() * 6 };
     });
     // a few crisp embers
-    emit(9 * scale, () => { const q = perim(w, h, Math.random()); return { k: 'e', x: q.x + q.nx * 4, y: q.y + q.ny * 4, vx: q.nx * rnd(8, 22) + rnd(-10, 10), vy: -rnd(40, 90), life: 0, max: rnd(.7, 1.4), s: rnd(.8, 1.6), hue: Math.random() * 360 }; });
+    emit(5 * scale, () => { const q = perim(w, h, Math.random()); return { k: 'e', x: q.x + q.nx * 4, y: q.y + q.ny * 4, vx: q.nx * rnd(8, 22) + rnd(-10, 10), vy: -rnd(40, 90), life: 0, max: rnd(.7, 1.4), s: rnd(.8, 1.6), hue: Math.random() * 360 }; });
   }
   if (P.glitter) {
-    emit(26 * scale * P.rate, () => {
+    emit(16 * scale * P.rate, () => {
       const q = perim(w, h, Math.random()), o = rnd(-2, 5);
       return { k: 'g', x: q.x + q.nx * o, y: q.y + q.ny * o, vx: rnd(-2, 2), vy: -rnd(1, 6), life: 0, max: rnd(.7, 1.4), s: rnd(3, 8) * scale + 2,
         c: P.glitter[(Math.random() * P.glitter.length) | 0], rot: rnd(-.25, .25) };
@@ -103,7 +103,7 @@ function draw(it, dt) {
   const t = performance.now() / 1000;
   if (P.flame) {        // faint breathing aura band
     L.lineWidth = 14;
-    L.strokeStyle = P.flame === 'rainbow' ? `hsla(${(t * 60) % 360},100%,70%,.18)` : `rgba(${P.flame[2]},${.26 + .07 * Math.sin(t * 5)})`;
+    L.strokeStyle = P.flame === 'rainbow' ? `hsla(${(t * 60) % 360},100%,70%,.18)` : `rgba(${P.flame[2]},${.12 + .04 * Math.sin(t * 5)})`;
     L.strokeRect(-3, -3, it.w + 6, it.h + 6);
   }
   const g = it.ctx;
@@ -124,7 +124,7 @@ function draw(it, dt) {
       const [c1, c2] = flameRGB(P, p, k);
       L.save(); L.translate(p.x, p.y); L.scale(1, 1.7);
       const gr = L.createRadialGradient(0, 0, 0, 0, 0, r);
-      gr.addColorStop(0, `rgba(255,248,255,${.75 * a})`); gr.addColorStop(.35, c1 + (.55 * a) + ')'); gr.addColorStop(1, c2 + '0)');
+      gr.addColorStop(0, `rgba(255,248,255,${.4 * a})`); gr.addColorStop(.35, c1 + (.3 * a) + ')'); gr.addColorStop(1, c2 + '0)');
       L.fillStyle = gr; L.beginPath(); L.arc(0, 0, r, 0, Math.PI * 2); L.fill(); L.restore();
     } else if (p.k === 'c') {
       const a = 1 - k, r = p.s * (1 - k * .4);
@@ -146,6 +146,15 @@ function draw(it, dt) {
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
   g.globalCompositeOperation = 'lighter';
   g.drawImage(it.lo, -PAD, -PAD, W, H);
+  // keep the character art clear: effects live outside the frame and only creep a few px over its edge
+  g.globalCompositeOperation = 'destination-out';
+  const E = 10;
+  g.fillStyle = 'rgba(0,0,0,.92)'; g.fillRect(E, E, it.w - E * 2, it.h - E * 2);
+  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [[0, 0, 0, E, 0, 0, it.w, E], [0, it.h, 0, it.h - E, 0, it.h - E, it.w, E], [0, 0, E, 0, 0, E, E, it.h - E * 2], [it.w, 0, it.w - E, 0, it.w - E, E, E, it.h - E * 2]]) {
+    const lg = g.createLinearGradient(x0, y0, x1, y1); lg.addColorStop(0, 'rgba(0,0,0,0)'); lg.addColorStop(1, 'rgba(0,0,0,.92)');
+    g.fillStyle = lg; g.fillRect(rx, ry, rw, rh);
+  }
+  g.globalCompositeOperation = 'lighter';
   // crisp details
   for (const [p, a0] of crisp) {
     const k = p.life / p.max;
