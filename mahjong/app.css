@@ -771,3 +771,70 @@ html.ds .tl kbd.tk{position:absolute;left:50%;bottom:calc(var(--tw) * -.02);tran
   color:#5b5070;background:rgba(255,255,255,.85);border:1px solid rgba(91,80,112,.35);border-bottom-width:1px;z-index:2;pointer-events:none}
 html.ds .tl.no kbd.tk{opacity:.4}
 html.ds .tl.drawn kbd.tk{font-size:clamp(8px,calc(var(--tw) * .16),11px)}
+
+/* ================= SR / SSR frames: much flashier (large art only; small icons keep a static ring) ================= */
+.frame{overflow:visible}
+.frame > img{border-radius:inherit}
+.frame::before{border-radius:inherit;inset:0;overflow:hidden}
+/* outer aura layer drawn by .fx-sh::after on large frames */
+.pimg.frame,.ch-art.frame,.gc.frame,.ag-art.frame{overflow:visible}
+.pimg.fr-SR,.ch-art.fr-SR,.gc.fr-SR{box-shadow:0 0 0 2px #e3b8ff,0 0 26px 4px rgba(194,123,255,.75),0 0 60px 10px rgba(140,80,255,.45)}
+.pimg.fr-SSR,.ch-art.fr-SSR,.gc.fr-SSR,.ag-art.fr-SSR{box-shadow:0 0 0 3px #fff3c4,0 0 30px 6px rgba(255,207,74,.9),0 0 80px 18px rgba(255,170,40,.55)}
+.pimg.fr-UR,.ch-art.fr-UR,.gc.fr-UR,.ag-art.fr-UR{box-shadow:0 0 0 3px #fff,0 0 34px 8px rgba(255,92,214,.8),0 0 90px 22px rgba(92,200,255,.55)}
+/* rotating light rays behind the art */
+.pimg.frame .fx-sh,.ch-art.frame .fx-sh{overflow:visible}
+.pimg.fr-SR .fx-sh::after,.ch-art.fr-SR .fx-sh::after,
+.pimg.fr-SSR .fx-sh::after,.ch-art.fr-SSR .fx-sh::after{content:"";position:absolute;left:50%;top:50%;width:180%;aspect-ratio:1;margin:-90% 0 0 -90%;z-index:-1;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,transparent 0 8deg,rgba(214,160,255,.38) 8deg 12deg);
+  -webkit-mask:radial-gradient(circle,#000 30%,transparent 68%);mask:radial-gradient(circle,#000 30%,transparent 68%);
+  animation:spinr 14s linear infinite;will-change:transform}
+.pimg.fr-SSR .fx-sh::after,.ch-art.fr-SSR .fx-sh::after{background:repeating-conic-gradient(from 0deg,transparent 0 6deg,rgba(255,220,120,.55) 6deg 10deg);animation-duration:9s}
+.pimg.frame,.ch-art.frame{isolation:auto}
+.pimg.frame .fx-sh,.ch-art.frame .fx-sh{z-index:0}
+.pimg.frame > img,.ch-art.frame > img{z-index:2}
+/* thicker, brighter rotating rings */
+.pimg.fr-SR,.ch-art.fr-SR,.gc.fr-SR{padding:4px}
+.pimg.fr-SSR,.ch-art.fr-SSR,.gc.fr-SSR{padding:5px}
+.pimg.fr-SR > img,.ch-art.fr-SR > img{inset:4px;width:calc(100% - 8px);height:calc(100% - 8px)}
+.pimg.fr-SSR > img,.ch-art.fr-SSR > img{inset:5px;width:calc(100% - 10px);height:calc(100% - 10px)}
+.fr-SR::before{background:conic-gradient(#fff,#c27bff 10%,#ff8ad8 25%,#7d5cff 40%,#fff 50%,#e3b8ff 60%,#ff8ad8 75%,#7d5cff 90%,#fff)}
+.fr-SSR::before{background:conic-gradient(#fff,#ffcf4a 8%,#b8861e 20%,#fff3c4 32%,#fff 40%,#ffcf4a 50%,#ff9a2e 62%,#fff3c4 75%,#ffcf4a 88%,#fff)}
+/* sparkles orbiting the frame (SSR: gold, SR: violet) */
+.pimg.fr-SSR::after,.ch-art.fr-SSR::after,.pimg.fr-SR::after,.ch-art.fr-SR::after{content:"";position:absolute;inset:-14px;z-index:4;pointer-events:none;border-radius:30px;box-shadow:none;
+  background:
+   radial-gradient(circle at 8% 12%,#fff 0 2px,transparent 4px),radial-gradient(circle at 92% 20%,#fff 0 2.5px,transparent 5px),
+   radial-gradient(circle at 96% 70%,#fff 0 2px,transparent 4px),radial-gradient(circle at 4% 82%,#fff 0 2.5px,transparent 5px),
+   radial-gradient(circle at 50% 2%,#fff 0 2px,transparent 4px),radial-gradient(circle at 60% 98%,#fff 0 2px,transparent 4px);
+  filter:drop-shadow(0 0 6px #ffd56a) drop-shadow(0 0 12px #ffb02e);animation:twinkle 1.1s ease-in-out infinite}
+.pimg.fr-SR::after,.ch-art.fr-SR::after{filter:drop-shadow(0 0 6px #d39bff) drop-shadow(0 0 12px #9b5cff);animation-duration:1.5s}
+/* gacha cards: brighter pulse on reveal */
+.gc.fr-SR{animation:flip .45s var(--d) forwards,srPop .9s calc(var(--d) + .4s) ease-out}
+.gc.fr-SSR{animation:flip .45s var(--d) forwards,ssrPop 1.1s calc(var(--d) + .4s) ease-out}
+@keyframes srPop{0%{filter:brightness(2.2)}100%{filter:none}}
+@keyframes ssrPop{0%{filter:brightness(2.8) saturate(1.4)}40%{filter:brightness(1.6)}100%{filter:none}}
+/* light mode keeps the static glow only */
+html.lite .pimg::after,html.lite .ch-art::after,html.lite .fx-sh::after{display:none}
+
+/* ring = animated conic background on the frame itself (no rotating box that pokes out) */
+@property --ra{syntax:'<angle>';inherits:false;initial-value:0deg}
+.fr-SR::before,.fr-SSR::before,.fr-UR::before{content:none!important}
+.fr-SR{background:conic-gradient(from var(--ra),#fff,#c27bff 10%,#ff8ad8 25%,#7d5cff 40%,#fff 50%,#e3b8ff 60%,#ff8ad8 75%,#7d5cff 90%,#fff)}
+.fr-SSR{background:conic-gradient(from var(--ra),#fff,#ffcf4a 8%,#b8861e 20%,#fff3c4 32%,#fff 40%,#ffcf4a 50%,#ff9a2e 62%,#fff3c4 75%,#ffcf4a 88%,#fff)}
+.fr-UR{background:conic-gradient(from var(--ra),#ff5c7a,#ffb85c,#fff36b,#6bff9a,#5cc8ff,#8a6bff,#ff5cd6,#ff5c7a)}
+.pimg.fr-SR,.ch-art.fr-SR,.gc.fr-SR,.ag-art.fr-SR{animation:ringSpin 4s linear infinite}
+.pimg.fr-SSR,.ch-art.fr-SSR,.gc.fr-SSR,.ag-art.fr-SSR{animation:ringSpin 2.6s linear infinite}
+.pimg.fr-UR,.ch-art.fr-UR,.gc.fr-UR,.ag-art.fr-UR{animation:ringSpin 1.8s linear infinite}
+.gc.fr-SR{animation:flip .45s var(--d) forwards,srPop .9s calc(var(--d) + .4s) ease-out,ringSpin 4s linear infinite}
+.gc.fr-SSR{animation:flip .45s var(--d) forwards,ssrPop 1.1s calc(var(--d) + .4s) ease-out,ringSpin 2.6s linear infinite}
+.gc.fr-UR{animation:flip .45s var(--d) forwards,ringSpin 1.8s linear infinite}
+@keyframes ringSpin{to{--ra:360deg}}
+html.lite .frame{animation-name:none!important}
+html.lite .gc.frame{animation:flip .45s var(--d) forwards!important}
+/* rays behind: only on the two big portraits, kept inside a soft circle */
+.pimg.frame .fx-sh,.ch-art.frame .fx-sh{z-index:-1;overflow:visible}
+.pimg .fx-sh::after,.ch-art .fx-sh::after{content:none!important}
+/* stronger breathing aura instead of rays (box-shadow only, outside the frame) */
+.pimg.fr-SSR,.ch-art.fr-SSR{box-shadow:0 0 0 3px #fff3c4,0 0 34px 8px rgba(255,207,74,.95),0 0 110px 30px rgba(255,170,40,.55),0 0 200px 60px rgba(255,140,30,.22)}
+.pimg.fr-SR,.ch-art.fr-SR{box-shadow:0 0 0 2px #f0d8ff,0 0 30px 6px rgba(194,123,255,.9),0 0 90px 24px rgba(140,80,255,.5),0 0 170px 50px rgba(120,60,255,.2)}
+.frame .fx-sh,.pimg.frame .fx-sh,.ch-art.frame .fx-sh{overflow:hidden!important;z-index:3!important;border-radius:inherit;inset:0}
+.pimg.frame .fx-sh{border-radius:22px}.ch-art.frame .fx-sh{border-radius:22px}
