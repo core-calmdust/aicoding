@@ -699,3 +699,18 @@ body:has(#game:not([hidden])) #bgfx{background:radial-gradient(ellipse at 50% 50
 .ch-art img.lock{filter:brightness(0)!important;opacity:1!important}
 .ch-art.fr-lock{background:radial-gradient(ellipse at 50% 40%,#3a2f5c,#151022)!important}
 .ch-art.fr-lock > img{opacity:.85!important}
+/* locked character: unlock prompt */
+.unlock{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;
+  background:radial-gradient(ellipse at 50% 45%,rgba(60,44,110,.55),rgba(10,6,22,.2) 70%)}
+.unlock i{width:64px;height:64px;padding:14px;border-radius:50%;color:var(--gold);background:rgba(10,6,22,.75);border:2px solid var(--gold);box-shadow:0 0 24px rgba(232,206,140,.35);animation:lockPulse 2.2s ease-in-out infinite}
+@keyframes lockPulse{50%{box-shadow:0 0 36px rgba(232,206,140,.65)}}
+.unlock b{font-family:var(--serif);font-size:30px;letter-spacing:.2em;color:var(--gold)}
+.unlock span{font-size:13.5px;color:#d9cff2}
+.unlock .go{margin-top:6px;min-width:180px}
+html.lp .unlock i{width:44px;height:44px;padding:10px}
+html.lp .unlock b{font-size:20px}
+html.lp .unlock span{font-size:11px}
+html.lp .unlock .go{min-width:120px;padding:8px;font-size:14px}
+.chi .lk{position:absolute;right:4px;bottom:22px;z-index:3;width:20px;height:20px;padding:3px;border-radius:50%;background:rgba(10,6,22,.85);color:var(--gold);border:1px solid rgba(232,206,140,.5)}
+.chsel.lockline{display:flex;align-items:center;justify-content:center;gap:8px}
+.chsel.lockline i{width:18px;height:18px;color:var(--gold)}

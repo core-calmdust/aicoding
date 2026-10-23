@@ -58,7 +58,7 @@ const IC = {
   eye: '<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   scope: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M11 7v8M7 11h8"/></svg>',
   swap: '<svg viewBox="0 0 24 24"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>',
-  lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>',
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
 };
@@ -277,7 +277,7 @@ function openGacha() {
       <button class="x" data-a="close">×</button>
     </div>`, 'wide');
   b.addEventListener('click', async e => {
-    if (e.target.closest('[data-a=close]')) { closeModal(); renderHome(); return; }
+    if (e.target.closest('[data-a=close]')) { closeModal(); if (!$('#chara').hidden) renderChara(); else renderHome(); return; }
     const btn = e.target.closest('[data-n]'); if (!btn || b.busy) return;
     const n = +btn.dataset.n, cost = n === 1 ? COST1 : COST10;
     if (DB.coins < cost) { toast(t('notEnough')); return; }
@@ -333,13 +333,15 @@ function renderChara() {
   $('#chList').innerHTML = list.map(c => {
     const own = owns(c.id);
     return `<button class="chi ${own ? '' : 'lock'} ${c.id === chView ? 'on' : ''}" data-id="${c.id}" style="--c:${c.color}">
-      ${frame(c, 'face')}<em class="r-${c.rarity}">${c.rarity}</em>${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
+      ${frame(c, 'face')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
   }).join('');
   const c = MJChars.get(chView), own = owns(c.id);
   const art = $('#chArt');
   art.className = `ch-art frame ${own ? 'fr-' + c.rarity : 'fr-lock'}`;
   art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
-  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i>`;
+  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i>` +
+    (own ? '' : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
+  art.onclick = e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } };
   const sisters = MJChars.list.filter(x => x.family === c.family);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
   $('#chInfo').innerHTML = `
@@ -348,7 +350,7 @@ function renderChara() {
     ${own ? `${skillBlock(uk)}
       <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
       <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
-      <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel">${t('notOwned')}</div>`}
+      <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(t('notOwned'))}</div>`}
     <div class="sis"><small>${esc(L(MJChars.families[c.family].name))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}">${frame(x, 'face')}</button>`).join('')}</div></div>
     ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go sm" id="chSet">${t('setPartner')}</button>`) : ''}`;
   const b = $('#chSet');
