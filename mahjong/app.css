@@ -557,3 +557,9 @@ html:not(.lp) .ch-main{grid-template-columns:minmax(200px,.8fr) minmax(0,1.05fr)
 @media (max-width: 760px){ html:not(.lp) .ch-main{grid-template-columns:1fr;overflow:auto} html:not(.lp) .ch-art{height:50vh} }
 
 .ab.rii.sealed{background:linear-gradient(180deg,#6d6488,#433b5c);color:#d9d2ee;font-size:15px;opacity:.9;border:1px dashed #c6a0ff}
+
+.ch-vars{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;gap:6px;justify-content:center;padding:28px 10px 10px;background:linear-gradient(transparent,rgba(8,4,18,.8))}
+.ch-vars button{width:44px;aspect-ratio:9/16;padding:0;border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.25);background:#000;opacity:.7}
+.ch-vars button.on{border-color:var(--gold);opacity:1;box-shadow:0 0 10px rgba(232,206,140,.6)}
+.ch-vars img{width:100%;height:100%;object-fit:cover;display:block}
+html.lp .ch-vars button{width:30px}

@@ -86,8 +86,12 @@ const SND = (() => {
 
 // ---------------------------------------------------------------- character art
 const ART = new Map();
-function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face'
-  if (c.art) return `${ASSETS}chara/${c.id}${kind === 'full' ? '' : '-' + kind}.webp`;
+function charImg(c, kind, v) {       // kind: 'full' | 'bust' | 'face' | 'thumb'; v: art variant (1..arts)
+  if (c.art) {
+    if (kind === 'full') return `${ASSETS}chara/${c.id}${v > 1 ? '-' + v : ''}.webp`;
+    if (kind === 'thumb') return `${ASSETS}chara/${c.id}-t${v || 1}.webp`;
+    return `${ASSETS}chara/${c.id}-${kind}.webp`;
+  }
   const k = c.id + kind;
   if (ART.has(k)) return ART.get(k);
   const W = kind === 'full' ? 540 : kind === 'bust' ? 400 : 160, H = kind === 'full' ? 960 : W;
@@ -272,6 +276,7 @@ async function showPulls(got) {
 }
 // ---------------------------------------------------------------- character screen (view + choose partner)
 let chView = null;
+const chVar = {};
 const RORD = { SSR: 0, SR: 1, R: 2, N: 3 };
 function openChara(id) {
   chView = id || DB.sel;
@@ -295,7 +300,11 @@ function renderChara() {
   const c = MJChars.get(chView), own = !!DB.owned[c.id], sk = MJSkills.get(c.skill);
   const art = $('#chArt');
   art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
-  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt="">`;
+  const nv = own && c.arts ? c.arts : 1;
+  if (!chVar[c.id] || chVar[c.id] > nv) chVar[c.id] = 1;
+  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full', chVar[c.id])}" alt="">` +
+    (nv > 1 ? `<div class="ch-vars">${Array.from({ length: nv }, (_, k) => `<button class="${k + 1 === chVar[c.id] ? 'on' : ''}" data-v="${k + 1}"><img src="${charImg(c, 'thumb', k + 1)}" alt=""></button>`).join('')}</div>` : '');
+  art.onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; chVar[c.id] = +b.dataset.v; SND.pick(); renderChara(); };
   const lines = ['riichi', 'tsumo', 'ron', 'skill'].map(k => c.lines && c.lines[k] ? `<li>「${esc(L(c.lines[k]))}」</li>` : '').join('');
   $('#chInfo').innerHTML = `
     <div class="prar r-${c.rarity}">${c.rarity}</div>
@@ -343,7 +352,10 @@ async function startGame() {
   const me = MJChars.get(DB.sel);
   const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3);
   const chars = [me, ...others];
-  UIS = { chars, abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  // one art variant per character for this game's cut-ins, loaded in advance
+  const cv = chars.map(c => c.arts ? 1 + ((Math.random() * c.arts) | 0) : 1);
+  chars.forEach((c, i) => { const im = new Image(); im.src = charImg(c, 'full', cv[i]); });
+  UIS = { cv, chars, abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
@@ -665,7 +677,7 @@ async function cutin(s, kind, d) {
   el.innerHTML = `
     <div class="ci-dim"></div>
     <div class="ci-band"><div class="ci-lines"></div></div>
-    <div class="ci-art"><img src="${charImg(c, 'full')}" alt=""></div>
+    <div class="ci-art"><img src="${charImg(c, 'full', (UIS.cv && UIS.cv[s]) || 1)}" alt=""></div>
     <div class="ci-txt">
       <div class="ci-word" data-len="${word.length}">${esc(word)}</div>
       ${kana && I18N.lang === 'ja' ? `<div class="ci-kana">${esc(kana)}</div>` : ''}
