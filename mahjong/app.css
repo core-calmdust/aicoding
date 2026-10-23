@@ -840,7 +840,7 @@ html.lite .gc.frame{animation:flip .45s var(--d) forwards!important}
 .pimg.frame .fx-sh{border-radius:22px}.ch-art.frame .fx-sh{border-radius:22px}
 
 /* ================= animated frame effects (canvas, framefx.js) replace the bright glow ================= */
-.ffx{position:absolute;left:-44px;top:-44px;width:calc(100% + 88px);height:calc(100% + 88px);pointer-events:none;z-index:5}
+.ffx{position:absolute;left:-72px;top:-72px;width:calc(100% + 144px);height:calc(100% + 144px);pointer-events:none;z-index:5}
 .gc.frame,.pimg.frame,.ch-art.frame{overflow:visible}
 .gc.frame .gci{border-radius:12px 12px 0 0}
 .pimg.fr-SR::after,.ch-art.fr-SR::after,.pimg.fr-SSR::after,.ch-art.fr-SSR::after{content:none!important}
@@ -870,3 +870,23 @@ html.ds #game .rk span,html.ds #game .rl{font-size:13px}
 html.ds #game .rd small{font-size:13px}
 html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shadow:0 3px 0 #6b3fc4,0 4px 8px rgba(0,0,0,.4)}
 html.ds .khelp{left:calc(max(10px,var(--sl)) + 262px)}
+
+/* ================= PC: pull the UI in from the window edges ================= */
+html.ds{--ui:clamp(22px, calc(var(--SW, 1280px) * .028), 56px)}
+html.ds #game{--gi:clamp(20px, calc(var(--GW) * .028), 60px)}
+/* home / character screens: wider margins, room above the big portraits for their effects */
+html.ds .top{padding:18px var(--ui) 10px}
+html.ds .hmain{padding:30px var(--ui) 26px;gap:30px}
+html.ds .ch-main{padding:30px var(--ui) 26px;gap:26px}
+/* game HUD */
+html.ds #game .rbox{top:var(--gi);left:var(--gi)}
+html.ds #game .tbtns{top:var(--gi);right:var(--gi)}
+html.ds #opp1{right:var(--gi)}
+html.ds #opp3{left:var(--gi)}
+html.ds #opp2{top:var(--gi)}
+html.ds #game .me{left:var(--gi)}
+html.ds #game .acts{right:calc(var(--gi) + 10px)}
+html.ds #game .chiPick{right:calc(var(--gi) + 10px)}
+html.ds #game .hand{bottom:calc(var(--gi) * .45)}
+html.ds .khelp{top:var(--gi);left:calc(var(--gi) + 262px)}
+html.ds #game .intel{right:var(--gi);top:calc(var(--gi) + 56px)}

@@ -5,11 +5,15 @@
 // One shared loop at ~30fps; frames that are off screen or removed are skipped; html.lite stops everything.
 (function (root) {
 'use strict';
-const PAD = 44;                     // canvas extends this far outside the frame
+const PAD = 72;                     // canvas extends this far outside the frame
 const items = new Set();
 let running = false, last = 0;
 
 function rnd(a, b) { return a + Math.random() * (b - a); }
+// smooth 1D value noise (two octaves) for flame silhouettes
+const NT = Array.from({ length: 256 }, () => Math.random());
+function vn(x) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return NT[i & 255] * (1 - u) + NT[(i + 1) & 255] * u; }
+function noise(x) { return vn(x) * .65 + vn(x * 2.3 + 17) * .35; }
 
 // point on the rounded-rect perimeter, t in [0,1); returns position and outward normal
 function perim(w, h, t) {
@@ -21,7 +25,7 @@ function perim(w, h, t) {
 }
 
 const PAL = {
-  SR: { flame: ['255,255,255', '226,170,255', '170,100,255', '110,60,230'], glitter: null, rate: 1.0 },
+  SR: { flame: ['255,255,255', '236,190,255', '176,96,255', '96,40,220'], glitter: null, rate: 1.0 },
   SSR: { flame: null, glitter: ['255,255,255', '255,236,160', '255,207,74', '255,170,40'], rate: 1.0 },
   UR: { flame: 'rainbow', glitter: ['255,255,255', '255,220,250', '200,240,255'], rate: 1.2 },
 };
@@ -50,14 +54,14 @@ function size(it) {
 
 // Two layers: a quarter-resolution "glow" buffer scaled up (soft, translucent flame and light), and a crisp layer
 // on top for a few fine details (ember sparks, star cores and flares).
-const LO = 4;
+const LO = 3;
 function spawn(it, dt) {
   const P = PAL[it.r], w = it.w, h = it.h, per = 2 * (w + h);
   const scale = Math.min(1.4, Math.max(.45, per / 1500));
   const emit = (rate, make) => { let n = rate * dt; while (n > 0) { if (Math.random() < n) it.ps.push(make()); n -= 1; } };
   if (P.flame) {
     // soft flame puffs born just outside the frame edge; they rise, stretch and fade
-    emit(120 * scale * P.rate, () => {
+    if (false) emit(120 * scale * P.rate, () => {
       const t = Math.random(), q = perim(w, h, t);
       const side = q.ny < 0 ? 1.2 : q.ny > 0 ? .55 : 1;      // taller on the top edge, low on the bottom
       return { k: 'f', x: q.x + q.nx * rnd(5, 12), y: q.y + q.ny * rnd(5, 12), vx: q.nx * rnd(6, 16) + rnd(-5, 5), vy: q.ny * rnd(3, 10) - rnd(30, 60) * side,
@@ -84,6 +88,55 @@ function spawn(it, dt) {
   if (it.ps.length > 600) it.ps.splice(0, it.ps.length - 600);
 }
 
+// Fire along the frame: for each edge, a silhouette whose height follows scrolling noise, filled with a gradient
+// from a bright core at the frame to transparent at the tips; three layers (outer / body / core) blended additively
+// in the soft buffer read as flickering flames. Side flames lean upward; the bottom edge burns low.
+function drawFlames(L, it, P, t) {
+  const w = it.w, h = it.h, sc = Math.min(1.3, Math.max(.6, (w + h) / 1300));
+  const layers = [
+    { amp: 70 * sc, base: 12 * sc, f: .018, sp: 1.5, a: .5, col: P.flame === 'rainbow' ? null : P.flame[3] },
+    { amp: 46 * sc, base: 8 * sc, f: .03, sp: 2.3, a: .55, col: P.flame === 'rainbow' ? null : P.flame[2] },
+    { amp: 20 * sc, base: 3 * sc, f: .055, sp: 3.4, a: .5, col: P.flame === 'rainbow' ? null : P.flame[1] },
+  ];
+  const STEP = 5;
+  const edges = [
+    { len: w, pt: d => [d, 0], dir: [0, -1], k: 1 },
+    { len: h, pt: d => [w, h - d], dir: [.7, -.71], k: 1 },
+    { len: h, pt: d => [0, h - d], dir: [-.7, -.71], k: 1 },
+    { len: w, pt: d => [d, h], dir: [0, 1], k: .3 },
+  ];
+  edges.forEach((E, ei) => {
+    layers.forEach((Ly, li) => {
+      const tips = [];
+      for (let d = 0; d <= E.len + .1; d += STEP) {
+        // flames grow toward the middle of each edge and taper at the corners
+        const edgeFade = Math.min(1, d / 40, (E.len - d) / 40) * .55 + .45;
+        const n = noise((d + ei * 333) * Ly.f - t * Ly.sp + li * 50);
+        const n2 = noise((d + ei * 777) * Ly.f * 2.2 - t * Ly.sp * 1.7 + li * 9);
+        const hh = (Ly.base + Ly.amp * Math.pow(n, 2.2) * (.5 + .8 * n2)) * E.k * edgeFade;
+        const [x, y] = E.pt(d);
+        tips.push([x + E.dir[0] * hh, y + E.dir[1] * hh, x, y]);
+      }
+      const maxH = (Ly.base + Ly.amp * .9) * E.k;
+      const [x0, y0] = E.pt(E.len / 2);
+      const gr = L.createLinearGradient(x0, y0, x0 + E.dir[0] * maxH, y0 + E.dir[1] * maxH);
+      if (Ly.col) {
+        gr.addColorStop(0, li === 2 ? `rgba(255,236,255,${Ly.a})` : `rgba(${Ly.col},${Ly.a})`); gr.addColorStop(.12, `rgba(${Ly.col},${Ly.a})`); gr.addColorStop(.7, `rgba(${Ly.col},${Ly.a * .35})`); gr.addColorStop(1, `rgba(${Ly.col},0)`);
+      } else {
+        const hu = (t * 40 + ei * 90 + li * 30) % 360;
+        gr.addColorStop(0, `hsla(${hu},100%,92%,${Ly.a})`); gr.addColorStop(.3, `hsla(${hu},100%,62%,${Ly.a})`); gr.addColorStop(1, `hsla(${(hu + 60) % 360},100%,55%,0)`);
+      }
+      L.fillStyle = gr;
+      L.beginPath();
+      L.moveTo(tips[0][2] - E.dir[0] * 3, tips[0][3] - E.dir[1] * 3);
+      for (const p of tips) L.lineTo(p[0], p[1]);
+      const lp = tips[tips.length - 1];
+      L.lineTo(lp[2] - E.dir[0] * 3, lp[3] - E.dir[1] * 3);
+      L.closePath(); L.fill();
+    });
+  });
+}
+
 function flameRGB(P, p, k) {
   if (P.flame === 'rainbow') { const h = (p.hue + k * 90) % 360; return [`hsla(${h},100%,90%,`, `hsla(${h},95%,62%,`]; }
   return [`rgba(${P.flame[1]},`, `rgba(${P.flame[3]},`];
@@ -101,7 +154,8 @@ function draw(it, dt) {
   L.clearRect(-PAD, -PAD, W, H);
   L.globalCompositeOperation = 'lighter';
   const t = performance.now() / 1000;
-  if (P.flame) {        // faint breathing aura band
+  if (P.flame) drawFlames(L, it, P, t);
+  if (false) {
     L.lineWidth = 14;
     L.strokeStyle = P.flame === 'rainbow' ? `hsla(${(t * 60) % 360},100%,70%,.18)` : `rgba(${P.flame[2]},${.12 + .04 * Math.sin(t * 5)})`;
     L.strokeRect(-3, -3, it.w + 6, it.h + 6);
