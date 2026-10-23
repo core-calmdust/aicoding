@@ -967,5 +967,5 @@ new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => FrameFX
 I18N.set(I18N.lang);
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame, cutin };
 })();

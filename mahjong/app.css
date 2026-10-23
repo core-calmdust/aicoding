@@ -919,3 +919,14 @@ html.lp #game .skb i{width:26px;height:26px;padding:5px;border-radius:7px}
 html.lp #game .skb b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.lp #game .skb small{display:none}
 html.lp #game .skb em.sr{font-size:8.5px;padding:0 3px}
+/* cut-in text: big "DON!" word and readable line (desktop) */
+html:not(.lp) .ci-word{font-size:min(calc(var(--W) * 0.22), calc(var(--H) * 0.34))}
+html:not(.lp) .ci-word[data-len="3"]{font-size:min(calc(var(--W) * 0.17), calc(var(--H) * 0.3))}
+html:not(.lp) .ci-word[data-len="4"],html:not(.lp) .ci-word[data-len="5"]{font-size:min(calc(var(--W) * 0.13), calc(var(--H) * 0.26))}
+html:not(.lp) .ci-word[data-len="6"],html:not(.lp) .ci-word[data-len="7"],html:not(.lp) .ci-word[data-len="8"]{font-size:min(calc(var(--W) * 0.09), calc(var(--H) * 0.18))}
+html:not(.lp) .ci-kana{font-size:clamp(20px, calc(var(--H) * .036), 44px)}
+html:not(.lp) .ci-line{font-size:clamp(18px, calc(var(--H) * .034), 40px);padding:.4em .9em;border-left-width:5px}
+html:not(.lp) .ci-sub{font-size:clamp(18px, calc(var(--H) * .03), 34px)}
+html:not(.lp) .ci-txt{gap:clamp(10px, calc(var(--H) * .016), 22px);max-width:66%}
+html.lp .ci-line{font-size:clamp(14px, calc(var(--H) * .045), 20px)}
+html.lp .ci-kana{font-size:clamp(14px, calc(var(--H) * .045), 20px)}
