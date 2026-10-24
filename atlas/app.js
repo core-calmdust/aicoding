@@ -472,8 +472,10 @@
     ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(2.2)' }], { duration: 600, delay: shift + 140, easing: 'ease-out', fill: 'both' });
     setTimeout(() => box.remove(), 1300);
   }
+  let bvDrawer = 0;   // phones: the board card's drawer state, kept while moving between games on the table
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
+    if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
     bvGame = g; stopSession();
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
@@ -559,7 +561,7 @@
       };
       const measure = () => { Hs = D.map(fullOf); Hr = RC ? fullOf(RC) : 1; };
       const to = (s, anim = true) => {
-        st = s; fold = s < 1; measure();
+        st = s; bvDrawer = s; fold = s < 1; measure();
         const els = [...D, RC].filter(Boolean);
         els.forEach(el => { el.style.transition = anim ? 'height .32s cubic-bezier(.3,1.15,.5,1), opacity .25s' : 'none'; });
         apply(s);
@@ -571,7 +573,7 @@
           fitStage();
         }, anim ? 340 : 0);
       };
-      to(0, false);
+      to(bvDrawer, false);   // moving to the next / previous game keeps the card as it was (lowered stays lowered)
       let y0 = null, s0 = 0, p0 = 0, last = 0, lt = 0, vy = 0, kNow = 0, Hup = 1;
       card.addEventListener('touchstart', e => { const r = card.getBoundingClientRect(), y = e.touches[0].clientY; if (y - r.top > 110) { y0 = null; return; }
         y0 = y; measure(); Hup = Hs.reduce((a, b) => a + b, 0) || 1; s0 = st; p0 = st === 1 ? Hup : st === 0 ? 0 : -Hr; kNow = st; last = y; lt = performance.now(); vy = 0;

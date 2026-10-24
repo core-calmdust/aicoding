@@ -604,13 +604,23 @@
     const cable = new TT.Mesh(new TT.TubeGeometry(curve, 40, .05, 6), M({ color: 0x2b3044, roughness: .6 })); g.add(cable);
 
     // --- the Atlas Mon live here ---
+    // phones: build the room's figures with far fewer segments (they are small in the background; ~370k → ~60k triangles)
+    const lowPoly = make => {
+      const f = .38, sg = (n, d, lo) => Math.max(lo, Math.round((n || d) * f)), keep = {};
+      const patch = (name, fn) => { const B = TT[name]; keep[name] = B; TT[name] = class extends B { constructor(...a) { super(...fn(a)); } }; };
+      patch('SphereGeometry', a => { a[1] = sg(a[1], 32, 8); a[2] = sg(a[2], 16, 6); return a; });
+      patch('TorusGeometry', a => { a[2] = sg(a[2], 16, 4); a[3] = sg(a[3], 48, 8); return a; });
+      patch('LatheGeometry', a => { a[1] = sg(a[1], 12, 8); return a; });
+      patch('CylinderGeometry', a => { a[3] = sg(a[3], 8, 6); return a; });
+      try { return make(); } finally { Object.assign(TT, keep); }
+    };
     const MON = window.Icons3D && Icons3D.MONS;
     if (MON) {
       const place = (id, h, x, y, z, ry, par = g) => {
-        if (!MON[id]) return; let m; try { m = MON[id](); } catch (e) { return; }
+        if (!MON[id]) return; let m; try { m = COARSE ? lowPoly(MON[id]) : MON[id](); } catch (e) { return; }
         const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
         const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
-        m.traverse(o => { if (o.isMesh) o.castShadow = true; });
+        m.traverse(o => { if (o.isMesh) o.castShadow = !COARSE; });   // phones: tiny far-away figures, no shadow pass
         if (m.userData.tick && !COARSE) { w.userData.keep = true; roomTicks.push(t => m.userData.tick(t)); }   // phones: the room's characters stand still and get merged (far fewer draw calls)
         return w;
       };

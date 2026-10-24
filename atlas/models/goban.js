@@ -404,9 +404,9 @@
     const key = 'leg' + h.toFixed(3) + r.toFixed(3); if (geos[key]) return geos[key];
     const TT = T();
     const P = [[0, 0], [.6, 0], [.78, .025], [.93, .085], [1, .17], [.97, .26], [.84, .34], [.64, .4], [.52, .425], [.5, .44], [.58, .455], [.6, .475], [.5, .5], [.42, .53], [.4, .56], [.46, .62], [.62, .7], [.8, .79], [.9, .87], [.93, .94], [.9, .985], [.8, 1], [0, 1]];
-    const pts = []; for (let i = 0; i < P.length - 1; i++) { const [r0, y0] = P[i], [r1, y1] = P[i + 1]; for (let k = 0; k < 4; k++) { const t = k / 4; pts.push(new TT.Vector2(Math.max(.0005, (r0 + (r1 - r0) * t) * r), (y0 + (y1 - y0) * t) * h)); } }
+    const pts = []; for (let i = 0; i < P.length - 1; i++) { const [r0, y0] = P[i], [r1, y1] = P[i + 1]; for (let k = 0, K = X.coarse ? 2 : 4; k < K; k++) { const t = k / K; pts.push(new TT.Vector2(Math.max(.0005, (r0 + (r1 - r0) * t) * r), (y0 + (y1 - y0) * t) * h)); } }
     pts.push(new TT.Vector2(.0005, h));
-    const g = new TT.LatheGeometry(pts, 96), p = g.attributes.position;
+    const g = new TT.LatheGeometry(pts, X.coarse ? 64 : 96), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {   // lobes: rounded petals, sharp creases between them
       const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), k = .9 + .1 * Math.sqrt(Math.abs(Math.cos(4 * a)));
       p.setX(i, x * k); p.setZ(i, z * k);
@@ -449,7 +449,7 @@
   function stoneGeo(r) {
     const key = 'st' + r.toFixed(4); if (geos[key]) return geos[key];
     const TT = T(), pts = [], h = r * SH;
-    const N = 24;
+    const N = X.coarse ? 10 : 24;   // phones: ~1/5 of the triangles (dozens of stones in the bowls)
     for (let i = 0; i <= N; i++) {   // from the rim up to the crown; denser near the rounded rim
       const t = i / N, a = t * Math.PI / 2, x = Math.cos(a), yy = Math.sin(a);
       const rr = r * Math.pow(x, .82), y = h * Math.pow(yy, .9) * (1 + .04 * (1 - x));
@@ -458,7 +458,7 @@
     pts[pts.length - 1].x = .0004;
     const lowers = pts.slice(1).reverse().map(v => new TT.Vector2(v.x, -v.y));
     const all = lowers.reverse().concat(pts);   // bottom crown → rim → top crown
-    const g = new TT.LatheGeometry(all.sort((a, b) => a.y - b.y), 48);
+    const g = new TT.LatheGeometry(all.sort((a, b) => a.y - b.y), X.coarse ? 28 : 48);
     g.translate(0, h, 0);
     const p = g.attributes.position, uv = g.attributes.uv;   // planar UVs from the top: the shell's stripes run straight across
     for (let i = 0; i < p.count; i++) uv.setXY(i, .5 + p.getX(i) / (2 * r), .5 + p.getZ(i) / (2 * r));
