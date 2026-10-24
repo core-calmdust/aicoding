@@ -855,6 +855,17 @@
   // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
   const ease = { outBack: k => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2), out3: k => 1 - Math.pow(1 - k, 3), in2: k => k * k };
   function dispose(o) { o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); }
+  // phones: free the GPU copies of the textures only the outgoing board used (the canvases stay cached, so a revisit
+  // simply re-uploads them). Without this, flicking through every game piles up 150 MB+ of board textures on the GPU
+  // and an older iPhone starts failing uploads (boards drawn without their wood / inlay).
+  const TEXK = ['map', 'bumpMap', 'roughnessMap', 'metalnessMap', 'normalMap', 'alphaMap', 'emissiveMap', 'aoMap', 'clearcoatMap', 'clearcoatNormalMap', 'clearcoatRoughnessMap', 'sheenColorMap'];
+  const texOf = (o, set) => { o.traverse(x => { const ms = x.material ? (Array.isArray(x.material) ? x.material : [x.material]) : []; ms.forEach(m => TEXK.forEach(k => { const t = m[k]; if (t && t.isCanvasTexture) set.add(t); })); }); return set; };
+  function freeTextures(old, keep) {
+    if (!COARSE || !old) return;
+    const gone = texOf(old, new Set()); if (!gone.size) return;
+    const live = new Set(); keep.forEach(o => o && texOf(o, live));
+    gone.forEach(t => { if (!live.has(t)) t.dispose(); });
+  }
   // build (and compile shaders for) a board ahead of time, e.g. on pointerdown, so the transition doesn't hitch
   const prepared = {};
   function prepare(id, extra) {
@@ -868,9 +879,10 @@
   function show(id, model, opts = {}) {
     if (!R) return null;
     mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; fitTo = null;
-    if (cur) { const old = cur; root.remove(old); dispose(old); }
+    const old = cur; if (old) { root.remove(old); dispose(old); }
     const pre = !model && take(id);
     const g = model || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
+    freeTextures(old, [scene, g]);   // (the room and the incoming board keep theirs)
     if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
     if (!model && !g.userData.merged) { g.userData.merged = true; try { mergeStatic(g); } catch (e) {} }   // the showcase boards are static: fewer draw calls (stones, pieces, bowls…)
