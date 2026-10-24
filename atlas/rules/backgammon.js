@@ -285,12 +285,31 @@
       const grp = {}; cks.forEach(c => { const key = c.side + ':' + c.at; (grp[key] = grp[key] || []).push(c); });
       Object.values(grp).forEach(a => a.forEach((c, i) => { c.k = i; c.n = a.length; }));
     }
-    function setBoard(pos) {
-      cks.forEach(c => board.remove(c.m)); cks = [];
-      [['g', 0], ['b', 1]].forEach(([key, side]) => { const P = pos[key] || {}; Object.keys(P).forEach(at => { for (let i = 0; i < P[at]; i++) cks.push({ side, at: isNaN(+at) ? at : +at, m: mk(side) }); }); });
-      restack();
-      cks.forEach((c, i) => { place(c); c.m.children.forEach(ch => { if (ch.userData.contact) ch.visible = c.at !== 'off'; }); const y0 = c.m.position.y; c.m.visible = false; later(() => { c.m.visible = true; anim(240, k => { c.m.position.y = y0 + (1 - k) * (1 - k) * 1.2; }, () => { c.m.position.y = y0; if (i % 4 === 0) SFX.tok(.3, 1.2); }); }, 30 + i * 14); });
-      return cks.length;
+    function setBoard(pos) {   // diff against the checkers already on the board: keep the same ones, slide the moved ones, drop in only new ones
+      const want = [];
+      [['g', 0], ['b', 1]].forEach(([key, side]) => { const P = pos[key] || {}; Object.keys(P).forEach(at => { for (let i = 0; i < P[at]; i++) want.push({ side, at: isNaN(+at) ? at : +at }); }); });
+      const pool = {}; cks.forEach(c => { const k = c.side + ':' + c.at; (pool[k] = pool[k] || []).push(c); });
+      const next = [], miss = [];
+      want.forEach(w => { const a = pool[w.side + ':' + w.at]; if (a && a.length) { const c = a.shift(); c.mode = 'keep'; next.push(c); } else miss.push(w); });
+      const left = [].concat(...Object.values(pool));
+      miss.forEach(w => { const i = left.findIndex(c => c.side === w.side); if (i >= 0) { const c = left.splice(i, 1)[0]; c.at = w.at; c.mode = 'move'; next.push(c); } else next.push({ side: w.side, at: w.at, m: mk(w.side), mode: 'new' }); });
+      left.forEach(c => board.remove(c.m));
+      cks = next; restack();
+      let nNew = 0, moved = false;
+      cks.forEach((c, i) => {
+        c.m.children.forEach(ch => { if (ch.userData.contact) ch.visible = c.at !== 'off'; });
+        const p = spot(c), tz = p.z + (p.edge ? -BG.CK_H / 2 : 0), m = c.m;
+        if (c.mode === 'new') { const j = nNew++; place(c, p); const y0 = m.position.y; m.visible = false; later(() => { m.visible = true; anim(240, k => { m.position.y = y0 + (1 - k) * (1 - k) * 1.2; }, () => { m.position.y = y0; if (j % 4 === 0) SFX.tok(.3, 1.2); }); }, 30 + j * 14); }
+        else {
+          m.visible = true;
+          const f = m.position.clone(), d = Math.hypot(f.x - p.x, f.z - tz), rx0 = m.rotation.x, rx1 = p.edge ? Math.PI / 2 : 0;
+          if (d < 1e-3 && Math.abs(rx0 - rx1) < 1e-3) { place(c, p); }
+          else { moved = true; const lift = c.mode === 'move' ? Math.min(1.4, .35 + d * .12) : 0;
+            anim(c.mode === 'move' ? 420 : 220, k => { const e = io(k); m.position.set(f.x + (p.x - f.x) * e, f.y + (p.y - f.y) * e + Math.sin(Math.PI * k) * lift, f.z + (tz - f.z) * e); m.rotation.x = rx0 + (rx1 - rx0) * e; }, () => { place(c, p); }); }
+        }
+        delete c.mode;
+      });
+      return Math.max(nNew, moved ? 24 : 0);
     }
     const topOf = (side, at) => { let t = null; cks.forEach(c => { if (c.side === side && c.at === at && (!t || c.k > t.k)) t = c; }); return t; };
 
