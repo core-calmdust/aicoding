@@ -1323,7 +1323,12 @@ function openIntro(i) {
 $('#btnLessonBack').onclick = () => openLessons(LESSONS.steps[introIdx] && lsCourseOf(LESSONS.steps[introIdx].id));
 $('#btnLessonClose').onclick = () => $('#lessonOverlay').classList.remove('show');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
-$('#btnLessonQuit2').onclick = () => { $('#lessonOverlay').classList.remove('show'); quitSpecial(); };
+// finished screen: 「レッスンに戻る」 ends the lesson and reopens the lesson list on its rule set / course, scrolled to the step
+$('#btnLessonQuit2').onclick = async () => {
+  const L = lesson; quitSpecial();
+  await openLessons(L ? lsCourseOf(LESSONS.steps[L.step].id) : undefined);
+  const el = L && $('#lessonList').querySelector(`[data-i="${L.step}"]`); if (el) el.scrollIntoView({ block: 'center' });
+};
 $('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
 // the next step in course order (rule set → category → step); -1 at the end of the rule set
 function lsNextIdx(i) {
