@@ -547,30 +547,44 @@
       // the level hint folds away with them (wrapped so its height can animate)
       const lvi = $('bvLvInfo'), D = [more];
       if (lvi) { const w = document.createElement('div'); w.className = 'more lvw'; lvi.before(w); w.appendChild(lvi); D.push(w); }
-      let fold = true;   // always opens folded
+      // three states: 1 = open (tags + progress shown), 0 = settings (default), -1 = mini (only the name row: the board can be seen)
+      const RC = card.querySelector('.R');
+      let st = 0, fold = true;
       const fullOf = el => { const h = el.style.height; el.style.height = 'auto'; const v = el.scrollHeight; el.style.height = h; return v; };
-      let Hs = [];
-      const apply = k => D.forEach((el, i) => { el.style.height = Math.max(0, Hs[i] * k) + 'px'; el.style.opacity = Math.max(0, Math.min(1, k * 1.4)); });
-      const to = (open, anim = true) => {
-        fold = !open; try { localStorage.setItem('atlas-bv-fold2', fold ? '1' : '0'); } catch (e) {}
-        Hs = D.map(fullOf);
-        D.forEach(el => { el.style.transition = anim ? 'height .32s cubic-bezier(.3,1.25,.5,1), opacity .25s' : 'none'; });
-        if (open && !anim) D.forEach(el => { el.style.height = 'auto'; el.style.opacity = 1; }); else apply(open ? 1 : 0);
-        card.classList.toggle('fold', fold);
-        setTimeout(() => { if (!fold) D.forEach(el => { el.style.transition = 'none'; el.style.height = 'auto'; }); fitStage(); }, anim ? 340 : 0);
+      let Hs = [], Hr = 1;
+      const apply = k => {   // k in [-1, 1] (a little beyond while rubber-banding)
+        const ku = Math.max(0, k), kd = Math.max(0, Math.min(1, 1 + Math.min(0, k)));
+        D.forEach((el, i) => { el.style.height = Math.max(0, Hs[i] * ku) + 'px'; el.style.opacity = Math.max(0, Math.min(1, ku * 1.4)); });
+        if (RC) { RC.style.height = Math.max(0, Hr * kd) + 'px'; RC.style.opacity = Math.max(0, Math.min(1, kd * 1.6 - .4)); RC.style.overflow = 'hidden'; }
       };
-      to(!fold, false);
-      let y0 = null, k0 = 0, H = 1, last = 0, lt = 0, vy = 0, kNow = 0;
+      const measure = () => { Hs = D.map(fullOf); Hr = RC ? fullOf(RC) : 1; };
+      const to = (s, anim = true) => {
+        st = s; fold = s < 1; measure();
+        const els = [...D, RC].filter(Boolean);
+        els.forEach(el => { el.style.transition = anim ? 'height .32s cubic-bezier(.3,1.15,.5,1), opacity .25s' : 'none'; });
+        apply(s);
+        card.classList.toggle('fold', s < 1); card.classList.toggle('mini', s < 0);
+        setTimeout(() => {
+          els.forEach(el => { el.style.transition = 'none'; });
+          if (s === 1) D.forEach(el => { el.style.height = 'auto'; });
+          if (RC && s >= 0) { RC.style.height = 'auto'; RC.style.overflow = ''; }
+          fitStage();
+        }, anim ? 340 : 0);
+      };
+      to(0, false);
+      let y0 = null, s0 = 0, p0 = 0, last = 0, lt = 0, vy = 0, kNow = 0, Hup = 1;
       card.addEventListener('touchstart', e => { const r = card.getBoundingClientRect(), y = e.touches[0].clientY; if (y - r.top > 110) { y0 = null; return; }
-        y0 = y; Hs = D.map(fullOf); H = Hs.reduce((a, b) => a + b, 0) || 1; k0 = fold ? 0 : 1; kNow = k0; last = y; lt = performance.now(); vy = 0;
-        D.forEach(el => { el.style.transition = 'none'; }); apply(k0); }, { passive: true });
+        y0 = y; measure(); Hup = Hs.reduce((a, b) => a + b, 0) || 1; s0 = st; p0 = st === 1 ? Hup : st === 0 ? 0 : -Hr; kNow = st; last = y; lt = performance.now(); vy = 0;
+        [...D, RC].filter(Boolean).forEach(el => { el.style.transition = 'none'; }); apply(st); }, { passive: true });
       card.addEventListener('touchmove', e => { if (y0 === null) return; const y = e.touches[0].clientY, now = performance.now();
         vy = (y - last) / Math.max(1, now - lt); last = y; lt = now;
-        let k = k0 + (y0 - y) / H; if (k > 1) k = 1 + (k - 1) * .25; if (k < 0) k *= .25;   // rubber band past the ends
+        const p = p0 + (y0 - y); let k = p >= 0 ? p / Hup : p / Hr;
+        if (k > 1) k = 1 + (k - 1) * .25; if (k < -1) k = -1 + (k + 1) * .25;   // rubber band past the ends
         kNow = k; apply(k); if (Math.abs(y - y0) > 6) e.preventDefault(); }, { passive: false });
       card.addEventListener('touchend', () => { if (y0 === null) return; y0 = null;
-        to(vy < -.3 ? true : vy > .3 ? false : kNow > .5); }, { passive: true });
-      grab.onclick = () => to(fold);
+        const t = vy < -.3 ? Math.min(1, s0 + 1) : vy > .3 ? Math.max(-1, s0 - 1) : Math.max(-1, Math.min(1, Math.round(kNow)));
+        to(t); }, { passive: true });
+      grab.onclick = () => to(st === 0 ? 1 : 0);   // tap the handle: settings ↔ open, and from mini back to settings
     }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones: right of the progress ring
