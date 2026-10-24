@@ -2321,7 +2321,12 @@ function openIntro(i) {
 $('#btnLessonBack').onclick = () => (window.OPH && OPH.isItem()) ? OPH.back() : openLessons(LESSONS.steps[introIdx] && lsCourseOf(LESSONS.steps[introIdx].id));
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => (window.OPH && OPH.isItem()) ? OPH.start() : startLesson(introIdx);
-$('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
+// finished screen: 「レッスンに戻る」 ends the lesson and reopens the lesson list on its course, scrolled to the step
+$('#btnLessonQuit2').onclick = async () => {
+  const L = lesson; quitSpecial();
+  await openLessons(L && !L.op ? lsCourseOf(LESSONS.steps[L.step].id) : undefined);
+  const el = L && !L.op && $('#lessonList').querySelector(`[data-i="${L.step}"]`); if (el) el.scrollIntoView({ block: 'center' });
+};
 $('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 // an illustrated figure of a lesson intro: board + arrows of the play + marks / highlighted zones / labels / pip counts
