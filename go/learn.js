@@ -148,7 +148,7 @@ const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
 let introIdx = 0;
-function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); if (v === 'lessonDoneView') lsDoneLabel(); }
 const ICON_STONES = (a, b) => `<svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="6" fill="${a}" stroke="#000" stroke-width=".6"/><circle cx="15.5" cy="12" r="6" fill="${b}" stroke="rgba(0,0,0,.5)" stroke-width=".6"/></svg>`;
 const LS_ICON = {
   basics: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="#e1b469"/><path d="M7 2v20M12 2v20M17 2v20M2 7h20M2 12h20M2 17h20" stroke="#2a1c0e" stroke-width=".9"/><circle cx="12" cy="12" r="3.6" fill="#141414"/></svg>',
@@ -216,7 +216,17 @@ function openIntro(i) {
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings(OPEN.sets[openChoiceIdx] && OPEN.sets[openChoiceIdx].cat) : openLessons(null, LESSONS.steps[introIdx] && (LESSONS.steps[introIdx].course || 'basics'));
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
-$('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
+// finished screen: 「レッスンに戻る」/「定石・布石に戻る」 ends the lesson and reopens the list it came from, on its tab, scrolled to the item
+const lsDoneSrc = () => !lesson || !lesson.virt ? 'lesson' : lesson.virt.id === 'mk' ? 'game' : 'open';
+function lsDoneLabel() { const b = $('#btnLessonQuit2'), k = { lesson: 'ls.toList', open: 'ls.toOpen', game: 'ls.toGame' }[lsDoneSrc()]; b.dataset.i18n = k; b.textContent = t(k); }
+function lsReveal(sel) { const el = $('#lessonList').querySelector(sel); if (el) el.scrollIntoView({ block: 'center' }); }
+$('#btnLessonQuit2').onclick = async () => {
+  const L = lesson, src = lsDoneSrc();
+  if (src === 'game') { hideOverlay('#lessonOverlay'); quitSpecial(); return; }
+  quitSpecial();
+  if (src === 'open') { await openOpenings(OPEN.sets[L.gi] && OPEN.sets[L.gi].cat); lsReveal(`[data-o="${L.gi}"]`); }
+  else { const st = L && LESSONS.steps[L.step]; await openLessons(null, st && (st.course || 'basics')); if (L) lsReveal(`[data-i="${L.step}"]`); }
+};
 $('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function startLesson(step) {
