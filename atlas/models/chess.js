@@ -180,7 +180,9 @@
   const ball = (cy, rad, n = 16) => arc(0, cy, rad, 0, Math.PI, n);
   const closed = (pts) => { const a = pts[0], b = pts[pts.length - 1]; return [[0, a[1]], ...pts, [0, b[1]]]; };
   const geoCache = {};
-  function lathe(key, pts, seg = X.coarse ? 32 : 56) {   // phones: fewer segments round the lathe
+  let LOW = false;   // building the faint mirror image in the lacquer: a coarser lathe is enough
+  function lathe(key, pts, seg) {   // phones: fewer segments round the lathe
+    seg = Math.min(seg || 99, LOW ? 20 : X.coarse ? 32 : 48); key += '@' + seg;
     if (geoCache[key]) return geoCache[key];
     const TT = T(), g = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(Math.max(0, r), y)), seg);
     return (geoCache[key] = g);
@@ -330,7 +332,8 @@
   // mirror image under a piece standing on the glossy board (follows the piece when it moves)
   function reflect(g) {
     const m = matsOf(g.userData.color, g.userData.set), r = new (T().Group)(); r.scale.y = -1; r.userData.reflection = true;
-    g.children.slice().forEach(ch => { const c = ch.clone(); c.traverse(o => { if (o.isMesh) { o.material = o.material === m.metal ? m.rMetal : o.material === m.resin ? m.rResin : null; o.castShadow = o.receiveShadow = false; o.renderOrder = -1; if (!o.material) o.visible = false; } }); r.add(c); });
+    let lo; LOW = true; try { lo = piece(g.userData.type, g.userData.color, { set: g.userData.set }); } finally { LOW = false; }   // same piece, coarser (it is seen dimmed and upside down)
+    lo.children.slice().forEach(ch => { const c = ch.clone(); c.traverse(o => { if (o.isMesh) { o.material = o.material === m.metal ? m.rMetal : o.material === m.resin ? m.rResin : null; o.castShadow = o.receiveShadow = false; o.renderOrder = -1; if (!o.material) o.visible = false; } }); r.add(c); });
     g.add(r); return g;
   }
 

@@ -392,6 +392,7 @@
   // idle: breathing squash + a small bob + a blink every few seconds (only if someone calls tick)
   function alive(g, eyes) {
     const ph = Math.random() * 6;
+    eyes.forEach(e => { e.userData.keep = true; });   // blinking parts stay separate when a host merges the rest
     g.traverse(o => { if (o.isMesh && o.material && o.material.userData && o.material.userData.soft) o.receiveShadow = false; });   // wrap-lit plush never self-shadows (no hard terminator)
     g.userData.tick = (t) => {
       const b = Math.sin(t * 2.2 + ph); g.scale.set(1 - b * .015, 1 + b * .022, 1 - b * .015);

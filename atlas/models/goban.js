@@ -449,7 +449,7 @@
   function stoneGeo(r) {
     const key = 'st' + r.toFixed(4); if (geos[key]) return geos[key];
     const TT = T(), pts = [], h = r * SH;
-    const N = X.coarse ? 10 : 24;   // phones: ~1/5 of the triangles (dozens of stones in the bowls)
+    const N = X.coarse ? 10 : 16;   // phones: ~1/5 of the triangles (dozens of stones in the bowls)
     for (let i = 0; i <= N; i++) {   // from the rim up to the crown; denser near the rounded rim
       const t = i / N, a = t * Math.PI / 2, x = Math.cos(a), yy = Math.sin(a);
       const rr = r * Math.pow(x, .82), y = h * Math.pow(yy, .9) * (1 + .04 * (1 - x));
@@ -458,7 +458,7 @@
     pts[pts.length - 1].x = .0004;
     const lowers = pts.slice(1).reverse().map(v => new TT.Vector2(v.x, -v.y));
     const all = lowers.reverse().concat(pts);   // bottom crown → rim → top crown
-    const g = new TT.LatheGeometry(all.sort((a, b) => a.y - b.y), X.coarse ? 28 : 48);
+    const g = new TT.LatheGeometry(all.sort((a, b) => a.y - b.y), X.coarse ? 28 : 40);
     g.translate(0, h, 0);
     const p = g.attributes.position, uv = g.attributes.uv;   // planar UVs from the top: the shell's stripes run straight across
     for (let i = 0; i < p.count; i++) uv.setXY(i, .5 + p.getX(i) / (2 * r), .5 + p.getZ(i) / (2 * r));

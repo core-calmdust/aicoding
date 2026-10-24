@@ -475,34 +475,51 @@
   const roomTicks = [];
   // merge the static room meshes that share a material into one mesh each: the toy room has ~350 small meshes
   // (bricks, toys, characters…) → a few dozen draw calls (and as many shadow draws). Animated parts are kept as they are.
+  const SIGX = mt => mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid].join(',');
   function mergeStatic(g) {
     const TT = T(); g.updateMatrixWorld(true);
     const inv = new TT.Matrix4().copy(g.matrixWorld).invert(), buckets = new Map(), drop = [];
     const animated = o => { for (let x = o; x && x !== g; x = x.parent) if (x.userData.keep) return true; return false; };
+    const sigOf = mt => { const u = mt.userData.u; return SIGX(mt) + (u ? '|u' + Object.values(u).map(v => v.value && v.value.isColor ? v.value.getHexString() : v.value).join(',') : '') + (mt.sheen && mt.sheen.isColor ? '|sh' + mt.sheen.getHexString() : ''); };
+    const add = (o, mt, grp, multi) => {
+      const k = (mt.userData.noMerge ? mt.uuid : sigOf(mt)) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0) + '|' + o.renderOrder + (mt.stencilWrite ? '|s' + mt.stencilRef + mt.stencilFunc : '');
+      if (!buckets.has(k)) buckets.set(k, { mat: mt, cast: o.castShadow, recv: o.receiveShadow, ro: o.renderOrder, list: [], multi: false });
+      const b = buckets.get(k); b.list.push({ o, grp }); if (multi) b.multi = true;
+    };
+    const multis = [];
     g.traverse(o => {
-      if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || !o.visible || animated(o)) return;
+      if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.visible || animated(o)) return;
       const gm = o.geometry; if (!gm || !gm.attributes.position || gm.morphAttributes && Object.keys(gm.morphAttributes).length) return;
-      const mt = o.material, sig = mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid].join(',');
-      const k = (mt.userData.noMerge ? mt.uuid : sig) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0) + '|' + o.renderOrder + (mt.stencilWrite ? '|s' + mt.stencilRef + mt.stencilFunc : '');   // the same look = one material (the room makes a new material per toy)
-      if (!buckets.has(k)) buckets.set(k, { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, ro: o.renderOrder, list: [] });
-      buckets.get(k).list.push(o);
+      if (Array.isArray(o.material)) {   // a box with a different face material: each face group joins its material's bucket
+        if (!gm.groups.length || o.material.some(m => !m)) return;
+        gm.groups.forEach(gr => add(o, o.material[gr.materialIndex], gr, true)); multis.push(o); return;
+      }
+      add(o, o.material, null, false);
     });
+    const nonIdx = new Map();   // one de-indexed, transformed copy per multi-material mesh (its groups are sliced from it)
+    const geoFor = it => {
+      const o = it.o;
+      if (!it.grp) { const gm = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); gm.applyMatrix4(new TT.Matrix4().multiplyMatrices(inv, o.matrixWorld)); return { gm, start: 0, count: gm.attributes.position.count, own: true }; }
+      let gm = nonIdx.get(o); if (!gm) { gm = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); gm.applyMatrix4(new TT.Matrix4().multiplyMatrices(inv, o.matrixWorld)); nonIdx.set(o, gm); }
+      return { gm, start: it.grp.start, count: Math.min(it.grp.count, gm.attributes.position.count - it.grp.start), own: false };
+    };
     buckets.forEach(b => {
-      if (b.list.length < 2) return;
-      const parts = b.list.map(o => { let gm = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); gm.applyMatrix4(new TT.Matrix4().multiplyMatrices(inv, o.matrixWorld)); return gm; });
-      const n = parts.reduce((a, gm) => a + gm.attributes.position.count, 0), P = new Float32Array(n * 3), N = new Float32Array(n * 3), U = new Float32Array(n * 2);
+      if (b.list.length < 2 && !b.multi) return;
+      const parts = b.list.map(geoFor);
+      const n = parts.reduce((a, p) => a + p.count, 0), P = new Float32Array(n * 3), N = new Float32Array(n * 3), U = new Float32Array(n * 2);
       let off = 0;
-      parts.forEach(gm => {
-        const c = gm.attributes.position.count; P.set(gm.attributes.position.array, off * 3);
-        if (gm.attributes.normal) N.set(gm.attributes.normal.array, off * 3);
-        if (gm.attributes.uv) U.set(gm.attributes.uv.array, off * 2);
-        off += c; gm.dispose();
+      parts.forEach(({ gm, start, count, own }) => {
+        const A = gm.attributes; P.set(A.position.array.subarray(start * 3, (start + count) * 3), off * 3);
+        if (A.normal) N.set(A.normal.array.subarray(start * 3, (start + count) * 3), off * 3);
+        if (A.uv) U.set(A.uv.array.subarray(start * 2, (start + count) * 2), off * 2);
+        off += count; if (own) gm.dispose();
       });
       const mg = new TT.BufferGeometry(); mg.setAttribute('position', new TT.BufferAttribute(P, 3)); mg.setAttribute('normal', new TT.BufferAttribute(N, 3)); mg.setAttribute('uv', new TT.BufferAttribute(U, 2));
       mg.computeBoundingSphere();
       const m = new TT.Mesh(mg, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.renderOrder = b.ro; m.matrixAutoUpdate = false; g.add(m);
-      b.list.forEach(o => drop.push(o));
+      b.list.forEach(it => { if (!it.grp) drop.push(it.o); });
     });
+    nonIdx.forEach(gm => gm.dispose()); multis.forEach(o => drop.push(o));
     drop.forEach(o => { o.visible = false; o.userData.merged = true; });   // hidden, not removed: groups and their children stay intact
   }
   function decorate(g, FLOOR, mode) {
@@ -605,8 +622,8 @@
 
     // --- the Atlas Mon live here ---
     // phones: build the room's figures with far fewer segments (they are small in the background; ~370k → ~60k triangles)
-    const lowPoly = make => {
-      const f = .38, sg = (n, d, lo) => Math.max(lo, Math.round((n || d) * f)), keep = {};
+    const lowPoly = (make, f = .38) => {
+      const sg = (n, d, lo) => Math.max(lo, Math.round((n || d) * f)), keep = {};
       const patch = (name, fn) => { const B = TT[name]; keep[name] = B; TT[name] = class extends B { constructor(...a) { super(...fn(a)); } }; };
       patch('SphereGeometry', a => { a[1] = sg(a[1], 32, 8); a[2] = sg(a[2], 16, 6); return a; });
       patch('TorusGeometry', a => { a[2] = sg(a[2], 16, 4); a[3] = sg(a[3], 48, 8); return a; });
@@ -617,11 +634,11 @@
     const MON = window.Icons3D && Icons3D.MONS;
     if (MON) {
       const place = (id, h, x, y, z, ry, par = g) => {
-        if (!MON[id]) return; let m; try { m = COARSE ? lowPoly(MON[id]) : MON[id](); } catch (e) { return; }
+        if (!MON[id]) return; let m; try { m = lowPoly(MON[id], COARSE ? .38 : .6); } catch (e) { return; }   // PC: still round at this size, ~1/3 of the triangles
         const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
         const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
         m.traverse(o => { if (o.isMesh) o.castShadow = !COARSE; });   // phones: tiny far-away figures, no shadow pass
-        if (m.userData.tick && !COARSE) { w.userData.keep = true; roomTicks.push(t => m.userData.tick(t)); }   // phones: the room's characters stand still and get merged (far fewer draw calls)
+        if (m.userData.tick && !COARSE) { w.userData.keep = true; try { mergeStatic(m); } catch (e) {} roomTicks.push(t => m.userData.tick(t)); }   // PC: it breathes and blinks, but as a few meshes (the eyes stay separate)   // phones: the room's characters stand still and get merged (far fewer draw calls)
         return w;
       };
       place('plop', 2.2, -.4, CH - .9, .2, .1, chest);                 // peeking out of the toy chest
