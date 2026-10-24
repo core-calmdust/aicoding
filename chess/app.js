@@ -1061,7 +1061,7 @@ function exitSpecial() {
   reviewing = cur !== moves.length; hintList = null; gameOverShown = gameOver(moves.length);
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
-function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); if (v === 'lessonDoneView') lsDoneLabel(); }
 // lesson / opening lists (same layout as Gomoku): big category tabs, a banner card, item cards with a board picture
 const LX_STORE = STORE + '-lxtab';
 function lxTab(kind, v) { try { const o = JSON.parse(localStorage.getItem(LX_STORE) || '{}'); if (v === undefined) return o[kind]; o[kind] = v; localStorage.setItem(LX_STORE, JSON.stringify(o)); } catch (e) { } }
@@ -1178,7 +1178,18 @@ function openIntro(i) {
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons();
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
-$('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
+// finished screen: 「レッスンに戻る」/「定跡に戻る」 ends the lesson and reopens the list it came from, on its tab, scrolled to the item
+// (mistakes practice from a game review keeps 「対局に戻る」)
+const lsDoneSrc = () => !lesson || !lesson.virt ? 'lesson' : lesson.virt.id === 'mk' ? 'game' : 'open';
+function lsDoneLabel() { const b = $('#btnLessonQuit2'), k = { lesson: 'ls.toList', open: 'ls.toOpen', game: 'ls.toGame' }[lsDoneSrc()]; b.dataset.i18n = k; b.textContent = t(k); }
+function lxReveal(sel) { const L = $('#lessonList'); let el = L.querySelector(sel); if (!el) for (const b of L.querySelectorAll('[data-lx]')) { b.click(); if ((el = L.querySelector(sel))) break; } if (el) el.scrollIntoView({ block: 'center' }); }
+$('#btnLessonQuit2').onclick = async () => {
+  const L = lesson, src = lsDoneSrc();
+  if (src === 'game') { hideOverlay('#lessonOverlay'); quitSpecial(); return; }
+  quitSpecial();
+  if (src === 'open') { await openOpenings(); lxReveal(`[data-o="${L.gi}"]`); }
+  else { await openLessons(); if (L) lxReveal(`[data-i="${L.step}"]`); }
+};
 $('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt && lesson.virt.id === 'mk') { hideOverlay('#lessonOverlay'); lesson = { step: 0, virt: lesson.virt, i: 0, results: [], answered: false, hinted: false, me: P1 }; document.body.classList.add('in-lesson'); loadLessonProblem(); return; } if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function enterSpecial(fen) {
