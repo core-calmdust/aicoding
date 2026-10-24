@@ -1205,7 +1205,7 @@ function learnInit() {
   $('#btnLessonClose').onclick = () => closeLessonOverlay();
   $('#btnLessonBack').onclick = () => { $('#btnLessonStart').classList.remove('hidden'); lessonSrc === 'open' ? openOpenings() : openLessons(L2 && L2.steps[introI] && L2.steps[introI].course); };
   $('#btnLessonStart').onclick = () => { closeLessonOverlay(); startLessonL(introI); };
-  $('#btnLessonQuit2').onclick = () => { closeLessonOverlay(); endLesson(); };
+  $('#btnLessonQuit2').onclick = () => $('#lsList').onclick();   // 「レッスンに戻る」: end the lesson, reopen the lesson list on its course, scrolled to the step
   $('#btnLessonRetry').onclick = () => { closeLessonOverlay(); startLessonL(lesson ? lesson.i : introI); };
   $('#btnLessonNextStep').onclick = () => { const i = (lesson ? lesson.i : introI) + 1; endLesson(true); if (i < L2.steps.length) openIntroL(i); else { closeLessonOverlay(); restoreGame(); } };
   $('#lessonCard').addEventListener('click', e => {
