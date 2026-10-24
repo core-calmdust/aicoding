@@ -483,8 +483,8 @@
       if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || !o.visible || animated(o)) return;
       const gm = o.geometry; if (!gm || !gm.attributes.position || gm.morphAttributes && Object.keys(gm.morphAttributes).length) return;
       const mt = o.material, sig = mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid].join(',');
-      const k = (mt.userData.noMerge ? mt.uuid : sig) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0);   // the same look = one material (the room makes a new material per toy)
-      if (!buckets.has(k)) buckets.set(k, { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, list: [] });
+      const k = (mt.userData.noMerge ? mt.uuid : sig) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0) + '|' + o.renderOrder + (mt.stencilWrite ? '|s' + mt.stencilRef + mt.stencilFunc : '');   // the same look = one material (the room makes a new material per toy)
+      if (!buckets.has(k)) buckets.set(k, { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, ro: o.renderOrder, list: [] });
       buckets.get(k).list.push(o);
     });
     buckets.forEach(b => {
@@ -500,7 +500,7 @@
       });
       const mg = new TT.BufferGeometry(); mg.setAttribute('position', new TT.BufferAttribute(P, 3)); mg.setAttribute('normal', new TT.BufferAttribute(N, 3)); mg.setAttribute('uv', new TT.BufferAttribute(U, 2));
       mg.computeBoundingSphere();
-      const m = new TT.Mesh(mg, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.matrixAutoUpdate = false; g.add(m);
+      const m = new TT.Mesh(mg, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.renderOrder = b.ro; m.matrixAutoUpdate = false; g.add(m);
       b.list.forEach(o => drop.push(o));
     });
     drop.forEach(o => { o.visible = false; o.userData.merged = true; });   // hidden, not removed: groups and their children stay intact
@@ -1008,5 +1008,5 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

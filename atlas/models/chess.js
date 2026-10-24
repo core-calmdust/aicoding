@@ -14,6 +14,7 @@
   const X = window.Table3D; if (!X) return;
   const T = () => window.THREE;
   const { M, canvasTex, makeNoise, RB, mesh } = X;
+  const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));   // phones: half-size procedural textures
   const S = 8, MARGIN = .85, OW = S + 2 * MARGIN, THICK = .5;
 
   /* ---------- textures ---------- */
@@ -24,6 +25,7 @@
   }
   // grey burl: domain-warped noise → wavy, swirling figure with little dark "eyes"
   function burl(key, light, dark, seed, W = 768, sc = 1) {
+    W = SZ(W);
     return canvas(key, W, W, (g) => {
       const N = makeNoise(seed), A = hexRGB(light), B = hexRGB(dark), img = g.createImageData(W, W), d = img.data;
       const TAU = Math.PI * 2;
@@ -47,6 +49,7 @@
   }
   // cream maple: fine straight fibres with a soft curly (fiddleback) shimmer
   function maple(key, W = 512, tint = [246, 234, 206, 34, 42, 52]) {
+    W = SZ(W);
     return canvas(key, W, W, (g) => {
       const N = makeNoise(61), img = g.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
@@ -67,7 +70,7 @@
   const FRAME_BURL = (set = 'lux') => SETS[set].frame();
   // the whole lacquered top in one picture: burl frame, inlay, the 64 squares
   function boardTop(set = 'lux') {
-    return canvasTex(set === 'lux' ? 'chessTop4' : 'chessTop4' + set, 2048, 2048, (c, W) => {
+    return canvasTex(set === 'lux' ? 'chessTop4' : 'chessTop4' + set, SZ(2048), SZ(2048), (c, W) => {
       const k = W / OW, ST = SETS[set], F = ST.frame(), SB = ST.sq(), MP = ST.light();
       // frame: the burl sheet, drawn twice as large (its figure is bold on a real board)
       // frame: four mitred veneer strips cut from the burl sheet (each turned its own way)
@@ -109,7 +112,7 @@
   }
   // marbled resin of the piece bodies; x wraps round the lathe (seamless), y runs up the profile
   function marble(key, base, vein, seed) {
-    return canvasTex(key, 512, 512, (g, W, H) => {
+    return canvasTex(key, SZ(512), SZ(512), (g, W, H) => {
       const N = makeNoise(seed), A = hexRGB(base), B = hexRGB(vein), img = g.createImageData(W, H), d = img.data, TAU = Math.PI * 2;
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const a = x / W * TAU, px = Math.cos(a) * 1.2 + 4, py = Math.sin(a) * 1.2 + y / H * 3.2 + 4;
@@ -126,7 +129,7 @@
 
   // turned wood: fibres run up the piece (y), with soft growth bands; x wraps round the lathe
   function grain(key, base, dark, hi, seed) {
-    return canvasTex(key, 512, 512, (g, W, H) => {
+    return canvasTex(key, SZ(512), SZ(512), (g, W, H) => {
       const N = makeNoise(seed), A = hexRGB(base), B = hexRGB(dark), C = hexRGB(hi), img = g.createImageData(W, H), d = img.data, TAU = Math.PI * 2;
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const a = x / W * TAU, cx = Math.cos(a) * 1.3 + 5, cz = Math.sin(a) * 1.3 + 5, v = y / H;
@@ -177,7 +180,7 @@
   const ball = (cy, rad, n = 16) => arc(0, cy, rad, 0, Math.PI, n);
   const closed = (pts) => { const a = pts[0], b = pts[pts.length - 1]; return [[0, a[1]], ...pts, [0, b[1]]]; };
   const geoCache = {};
-  function lathe(key, pts, seg = 56) {
+  function lathe(key, pts, seg = X.coarse ? 32 : 56) {   // phones: fewer segments round the lathe
     if (geoCache[key]) return geoCache[key];
     const TT = T(), g = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(Math.max(0, r), y)), seg);
     return (geoCache[key] = g);
@@ -320,7 +323,8 @@
       if (wd) [1, -1].forEach(s => { [0, 1].forEach(j => { const r = new TT.Mesh(maneGeo, m.resin); r.castShadow = true; r.position.set(.02 + j * .035, 0, s * (.05 + j * .028)); r.scale.set(.93 - j * .07, .97 - j * .05, .8); hd.add(r); }); });   // carved mane locks
     }
     g.userData.type = tp; g.userData.color = col; g.userData.h = pr.h; g.userData.set = set;
-    if (o && o.reflect) reflect(g);
+    if (X.mergeStatic) { try { X.mergeStatic(g); } catch (e) {} }   // one mesh per material (resin / metal / felt) instead of ~8 parts: far fewer draw calls
+    if (o && o.reflect && !X.coarse) reflect(g);   // phones: no mirror images in the lacquer (they double every piece)
     return g;
   }
   // mirror image under a piece standing on the glossy board (follows the piece when it moves)
