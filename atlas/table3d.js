@@ -12,6 +12,14 @@
 
   /* ---------- procedural textures ---------- */
   const texCache = {};
+  // ---- quality tier for older / weaker phones ----
+  // 'lite': picked from the device (little memory / few cores on a touch device) or remembered from an earlier
+  // visit where the frames were slow (see the adaptive check in loop()). Lite = 1× pixels, no antialias, small soft-free
+  // shadows, half-size procedural textures, small parts cast no shadows (they have contact shadows).
+  const COARSE = matchMedia('(pointer: coarse)').matches;
+  const LITE = (() => { try { if (localStorage.getItem('atlas-lite') === '1') return true; } catch (e) {}
+    return COARSE && (navigator.deviceMemory || 8) <= 3; })();   // (core counts are unreliable on iOS: the frame-time check below decides there)
+  const texScale = () => (LITE ? .5 : COARSE ? .5 : 1);   // phones never need 2048² procedural textures
   function canvasTex(key, w, h, draw, rep) {
     if (texCache[key]) return texCache[key];
     const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -141,6 +149,7 @@
 
   /* ---------- material helpers ---------- */
   const M = (o) => {   // colours are given as sRGB hex (as designed) → convert to linear for the sRGB output
+    if (LITE && (o.clearcoat !== undefined || o.sheen !== undefined)) { o = Object.assign({}, o); delete o.clearcoat; delete o.clearcoatRoughness; delete o.sheen; o.roughness = Math.max(.18, (o.roughness ?? .55) * .9); }   // lite: the cheaper standard shader
     const phys = o.clearcoat !== undefined || o.sheen !== undefined;
     const m = new (T()[phys ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'])(Object.assign({ roughness: .55, metalness: 0 }, o));
     if (o.map && o.bump !== false && !o.bumpMap) { m.bumpMap = o.map; m.bumpScale = o.bumpScale ?? .012; }
@@ -464,6 +473,38 @@
   }
   /* ---------- toy-room props: toy chest, brick castle, retro TV game, and the Atlas Mon living in the room ---------- */
   const roomTicks = [];
+  // merge the static room meshes that share a material into one mesh each: the toy room has ~350 small meshes
+  // (bricks, toys, characters…) → a few dozen draw calls (and as many shadow draws). Animated parts are kept as they are.
+  function mergeStatic(g) {
+    const TT = T(); g.updateMatrixWorld(true);
+    const inv = new TT.Matrix4().copy(g.matrixWorld).invert(), buckets = new Map(), drop = [];
+    const animated = o => { for (let x = o; x && x !== g; x = x.parent) if (x.userData.keep) return true; return false; };
+    g.traverse(o => {
+      if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || !o.visible || animated(o)) return;
+      const gm = o.geometry; if (!gm || !gm.attributes.position || gm.morphAttributes && Object.keys(gm.morphAttributes).length) return;
+      const mt = o.material, sig = mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid].join(',');
+      const k = (mt.userData.noMerge ? mt.uuid : sig) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0);   // the same look = one material (the room makes a new material per toy)
+      if (!buckets.has(k)) buckets.set(k, { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, list: [] });
+      buckets.get(k).list.push(o);
+    });
+    buckets.forEach(b => {
+      if (b.list.length < 2) return;
+      const parts = b.list.map(o => { let gm = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); gm.applyMatrix4(new TT.Matrix4().multiplyMatrices(inv, o.matrixWorld)); return gm; });
+      const n = parts.reduce((a, gm) => a + gm.attributes.position.count, 0), P = new Float32Array(n * 3), N = new Float32Array(n * 3), U = new Float32Array(n * 2);
+      let off = 0;
+      parts.forEach(gm => {
+        const c = gm.attributes.position.count; P.set(gm.attributes.position.array, off * 3);
+        if (gm.attributes.normal) N.set(gm.attributes.normal.array, off * 3);
+        if (gm.attributes.uv) U.set(gm.attributes.uv.array, off * 2);
+        off += c; gm.dispose();
+      });
+      const mg = new TT.BufferGeometry(); mg.setAttribute('position', new TT.BufferAttribute(P, 3)); mg.setAttribute('normal', new TT.BufferAttribute(N, 3)); mg.setAttribute('uv', new TT.BufferAttribute(U, 2));
+      mg.computeBoundingSphere();
+      const m = new TT.Mesh(mg, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.matrixAutoUpdate = false; g.add(m);
+      b.list.forEach(o => drop.push(o));
+    });
+    drop.forEach(o => { o.visible = false; o.userData.merged = true; });   // hidden, not removed: groups and their children stay intact
+  }
   function decorate(g, FLOOR, mode) {
     const TT = T(), F = FLOOR;
     roomTicks.length = 0;
@@ -494,7 +535,7 @@
     [[1.5, 1.5], [7.5, 1.5]].forEach(([x, z]) => { const roof = new TT.Mesh(new TT.ConeGeometry(1.25, 1.6, 4), plastic(0x2f7fe0)); roof.rotation.y = Math.PI / 4; roof.position.set((x + .5) * U, (5 + .3 / BH) * BH + .8, (z + .5) * U); roof.castShadow = true; castle.add(roof); });
     const pole = new TT.Mesh(new TT.CylinderGeometry(.05, .05, 1.6, 8), plastic(0x555555)); pole.position.set(2 * U, 6.6 * BH, 2 * U); castle.add(pole);
     const flag = new TT.Mesh(new TT.PlaneGeometry(.9, .55), M({ color: 0xff5d5d, roughness: .7, side: TT.DoubleSide })); flag.position.set(2 * U + .46, 6.6 * BH + .5, 2 * U); castle.add(flag);
-    roomTicks.push(t => { flag.rotation.y = Math.sin(t * 3) * .25; });
+    flag.userData.keep = true; roomTicks.push(t => { flag.rotation.y = Math.sin(t * 3) * .25; });
     // a brick tree beside the gate
     brick(0, 5, .3 / BH, 1, 1, 0x8a5a2b); brick(0, 5, 1 + .3 / BH, 1, 1, 0x8a5a2b);
     const leaves = new TT.Mesh(new TT.SphereGeometry(.85, 18, 12), plastic(0x2fbf62)); leaves.position.set(.5 * U, 2 * BH + .9, 5.5 * U); leaves.castShadow = true; castle.add(leaves);
@@ -570,7 +611,7 @@
         const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
         const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
         m.traverse(o => { if (o.isMesh) o.castShadow = true; });
-        if (m.userData.tick) roomTicks.push(t => m.userData.tick(t));
+        if (m.userData.tick && !COARSE) { w.userData.keep = true; roomTicks.push(t => m.userData.tick(t)); }   // phones: the room's characters stand still and get merged (far fewer draw calls)
         return w;
       };
       place('plop', 2.2, -.4, CH - .9, .2, .1, chest);                 // peeking out of the toy chest
@@ -703,11 +744,12 @@
     cush(0, 13, .1, 0xd94a4a); cush(-13, 2, -.4, 0x3b6fd1);
     const ball = new TT.Mesh(new TT.SphereGeometry(1.1, 32, 20), M({ color: 0xffc928, roughness: .3 })); ball.position.set(14, FLOOR + 1.1, 9); ball.castShadow = true; g.add(ball);
       decorate(g, FLOOR, mode);
+      try { mergeStatic(g); } catch (e) { console.warn('[table3d] merge', e); }
     }
     // lights of the hour
     scene.add(new TT.HemisphereLight(L.hemi[0], L.hemi[1], L.hemi[2]));
     const key = new TT.DirectionalLight(L.sun, L.sunI * (plain ? .7 : 1)); key.position.set(...L.sunPos); key.castShadow = true;
-    key.shadow.mapSize.setScalar(matchMedia('(pointer: coarse)').matches ? 1024 : 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
+    key.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = false;   // a point-light shadow is 6 extra shadow passes per frame scene.add(lamp);
@@ -718,10 +760,10 @@
   }
   function mount(container, opts = {}) {
     el = container;
-    R = new (T().WebGLRenderer)({ antialias: true, alpha: true });
-    const coarse = matchMedia('(pointer: coarse)').matches;
-    R.setPixelRatio(Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1));   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x
-    R.shadowMap.enabled = true; R.shadowMap.type = T().PCFSoftShadowMap;
+    R = new (T().WebGLRenderer)({ antialias: !LITE, alpha: true, powerPreference: 'high-performance' });
+    const coarse = COARSE;
+    pr = Math.min(LITE ? 1 : coarse ? 1.5 : 2, window.devicePixelRatio || 1); R.setPixelRatio(pr);   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
+    R.shadowMap.enabled = true; R.shadowMap.type = LITE ? T().PCFShadowMap : T().PCFSoftShadowMap;
     R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .78;
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
@@ -821,6 +863,7 @@
     const g = model || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
     if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
+    if (!model && !g.userData.merged) { g.userData.merged = true; try { mergeStatic(g); } catch (e) {} }   // the showcase boards are static: fewer draw calls (stones, pieces, bowls…)
     const c = new (T().Group)(); c.add(g); cur = c;
     const land = () => {        // board drops in and lands with squash & stretch
       root.add(c);
@@ -893,6 +936,19 @@
   addEventListener('resize', () => kick(300));
   const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
   function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; }
+  // adaptive resolution: while something animates, watch the frame interval; if a phone can't keep up (median > 34 ms),
+  // drop to 1× pixels at once and remember 'lite' for the next visit (half-size textures, small shadows)
+  let pr = 1, slow = [], slowDone = false;
+  function watchSpeed(dt) {
+    if (slowDone || !COARSE || !R) return;
+    slow.push(dt); if (slow.length < 40) return;
+    const med = slow.slice().sort((a, b) => a - b)[20]; slow = [];
+    if (med > 34) {
+      if (pr > 1) { pr = 1; R.setPixelRatio(1); frame(); kick(300); }
+      try { localStorage.setItem('atlas-lite', '1'); } catch (e) {}
+      slowDone = true;
+    } else if (med < 22) slowDone = true;   // fast enough: stop measuring
+  }
   function loop(now = performance.now()) {
     if (document.hidden) { rafId = 0; return; }
     rafId = requestAnimationFrame(loop);
@@ -940,6 +996,7 @@
     const py = q[1] + (r2[1] - q[1]) * k, pz = q[2] + (r2[2] - q[2]) * k, d = Math.hypot(py, pz), a = Math.atan2(py, pz) + tilt;
     cam.position.set(0, d * Math.sin(a), d * Math.cos(a));
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
+    if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
       const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     R.render(scene, cam);
@@ -950,5 +1007,6 @@
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, aspect: cam && cam.aspect });
-  window.Table3D = { _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  const _scene = () => scene;
+  window.Table3D = { _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

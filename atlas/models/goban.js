@@ -33,6 +33,8 @@
 
   /* ---------- canvases / textures (cached: every board shares them) ---------- */
   const cv = {}, tx = {};
+  // phones: half-size procedural textures (4× less pixel work at load and 4× less GPU memory)
+  const TK = () => (X.texScale ? X.texScale() : 1), SZ = v => Math.round(v * TK());
   function canvas(key, W, H, draw) {
     if (cv[key]) return cv[key];
     const c = document.createElement('canvas'); c.width = W; c.height = H; draw(c.getContext('2d'), W, H, c); return (cv[key] = c);
@@ -56,6 +58,7 @@
   /* ---------- kaya, straight grain (柾目): fine parallel growth rings along the board's depth ---------- */
   const KAYA = { L: [234, 168, 56], D: [158, 92, 20] };
   function kayaGrain(key, W, H, seed, o = {}) {
+    W = SZ(W); H = SZ(H);
     return canvas(key, W, H, (g) => {
       const R = rnd(seed), img = g.createImageData(W, H), d = img.data;
       const RES = 4, len = (W + 64) * RES, prof = new Float32Array(len), tone = new Float32Array(len);
@@ -93,6 +96,7 @@
   // around a pith below the face, faint rays. A second canvas holds roughness (G) for the chatoyant sheen bands.
   function kayaSide(key, W, H, seed, end) {
     if (cv[key]) return cv[key];
+    W = SZ(W); H = SZ(H);
     const R = rnd(seed), img = new ImageData(W, H), d = img.data, rough = new ImageData(W, H), q = rough.data;
     const w1 = grid(seed + 1, 7, 4, .8, 3), w2 = grid(seed + 2, 28, 12, 1, 2), fib = grid(seed + 3, 420, 10, 1, 1), tn = grid(seed + 4, 9, 4, .7, 3), ch = grid(seed + 5, 40, 3, 1, 2);
     const E = [240, 190, 92], Lw = [178, 104, 30], Dk = [128, 70, 18], asp = H / W;
@@ -146,7 +150,7 @@
   }
   function topCanvas(n, margin) {
     const span = n - 1 + 2 * margin;
-    return canvas('gbTop' + n, 2048, 2048, (g, W) => {
+    return canvas('gbTop' + n, SZ(2048), SZ(2048), (g, W) => {
       g.imageSmoothingQuality = 'high';
       g.save(); g.translate(W, 0); g.rotate(Math.PI / 2); g.drawImage(kayaGrain('kayaTop', 2048, 2048, 11), 0, 0, W, W); g.restore();   // the grain runs left → right
       const c = W / span, p = i => (margin + i) * c;
@@ -162,7 +166,7 @@
   }
   function topBump(n, margin) {   // the lacquer lines are raised a hair (太刀盛り)
     const span = n - 1 + 2 * margin;
-    return canvas('gbTopB' + n, 1024, 1024, (g, W) => {
+    return canvas('gbTopB' + n, SZ(1024), SZ(1024), (g, W) => {
       g.fillStyle = '#808080'; g.fillRect(0, 0, W, W);
       const c = W / span, p = i => (margin + i) * c;
       g.strokeStyle = '#fff'; g.lineWidth = c * .05;
@@ -174,7 +178,8 @@
   /* ---------- 沈金: gold hairline landscapes on black urushi ---------- */
   const GOLD = '#efcd72', PALE = '#f7e3a4', DEEP = '#c9a04a', MOSS = '#bcc77a', JADE = '#8fbf8e', BLUE = '#8fb1c4';
   function art(side, W, H) {
-    return canvas('gbArt' + side, W, H, (g) => {
+    return canvas('gbArt' + side, SZ(W), SZ(H), (g) => {
+      g.scale(TK(), TK());   // drawn in the full-size coordinates
       const R = rnd(101 + side * 37);
       // urushi: deep black with the faintest warm depth
       const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#120d0a'); bg.addColorStop(.5, '#0b0807'); bg.addColorStop(1, '#0e0a08');
@@ -350,15 +355,15 @@
       }
       g.restore();
       // the engraving catches the light unevenly: break the gold up a little
-      const img = g.getImageData(0, 0, W, H), d = img.data;
+      const img = g.getImageData(0, 0, g.canvas.width, g.canvas.height), d = img.data;
       for (let i = 0; i < d.length; i += 4) { const m = Math.max(d[i], d[i + 1], d[i + 2]); if (m > 40) { const k = .82 + R() * .3; d[i] = Math.min(255, d[i] * k); d[i + 1] = Math.min(255, d[i + 1] * k); d[i + 2] = Math.min(255, d[i + 2] * k); } }
       g.putImageData(img, 0, 0);
     });
   }
   // metalness / roughness of the side panels: gold is metal (roughish), the lacquer a mirror
   function artMR(side, W, H) {
-    return canvas('gbArtMR' + side, W, H, (g) => {
-      const src = art(side, W, H).getContext('2d').getImageData(0, 0, W, H).data, img = g.createImageData(W, H), d = img.data;
+    return canvas('gbArtMR' + side, SZ(W), SZ(H), (g, w, h) => {
+      const src = art(side, W, H).getContext('2d').getImageData(0, 0, w, h).data, img = g.createImageData(w, h), d = img.data;
       for (let i = 0; i < d.length; i += 4) { const m = Math.max(src[i], src[i + 1], src[i + 2]) / 255, k = Math.min(1, Math.max(0, (m - .1) * 1.6)); d[i] = 255; d[i + 1] = (.1 + k * .3) * 255; d[i + 2] = k * .9 * 255; d[i + 3] = 255; }
       g.putImageData(img, 0, 0);
     });
@@ -484,7 +489,7 @@
   }
   function stone(color, cell, seed) {
     const m = new (T().Mesh)(stoneGeo(cell * .47), stoneMat(color === 1 ? 1 : 2));
-    m.castShadow = true; m.receiveShadow = true; m.rotation.y = ((seed ?? Math.random() * 1e3) * 2.39996) % TAU;
+    m.castShadow = !X.coarse; m.receiveShadow = !X.coarse; m.rotation.y = ((seed ?? Math.random() * 1e3) * 2.39996) % TAU;
     m.userData.stone = color; return m;
   }
 
