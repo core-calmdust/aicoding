@@ -1058,7 +1058,7 @@ function exitSpecial() {
   reviewing = cur !== moves.length; hintList = null; gameOverShown = gameOver(moves.length);
 }
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
-function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
+function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); if (v === 'lessonDoneView') lsDoneLabel(); }
 // ---- crop: which part of the 15x15 board a list-card picture shows (the whole board shrunk to ~90px makes the stones dots)
 // bounding box of the stones + 1 point of margin → at least 7x7, square or one line longer, snapped to the board edge when only one line
 // would be left. Puzzles pass only the stones (the answer point is never added, so the picture gives no hint).
@@ -1174,7 +1174,18 @@ function openIntro(i) {
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons(LESSONS.steps[introIdx] && LESSONS.steps[introIdx].course);
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonStart').onclick = () => startLesson(introIdx);
-$('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); quitSpecial(); };
+// finished screen: 「レッスンに戻る」/「定石に戻る」 ends the lesson and reopens the list it came from, on its course / kind, scrolled to the item
+// (mistakes practice from a game review keeps 「対局に戻る」)
+const lsDoneSrc = () => !lesson || !lesson.virt ? 'lesson' : lesson.virt.id === 'mk' ? 'game' : 'open';
+function lsDoneLabel() { const b = $('#btnLessonQuit2'), k = { lesson: 'ls.toList', open: 'ls.toOpen', game: 'ls.toGame' }[lsDoneSrc()]; b.dataset.i18n = k; b.textContent = t(k); }
+function lsReveal(sel) { const el = $('#lessonList').querySelector(sel); if (el) el.scrollIntoView({ block: 'center' }); }
+$('#btnLessonQuit2').onclick = async () => {
+  const L = lesson, src = lsDoneSrc();
+  if (src === 'game') { hideOverlay('#lessonOverlay'); quitSpecial(); return; }
+  quitSpecial();
+  if (src === 'open') { await openOpenings(OPEN.sets[L.gi] && OPEN.sets[L.gi].kind); lsReveal(`[data-o="${L.gi}"]`); }
+  else { const st = L && LESSONS.steps[L.step]; await openLessons(st && st.course); if (L) lsReveal(`[data-i="${L.step}"]`); }
+};
 $('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt && lesson.virt.id === 'mk') startMistakes(lesson.virt.problems); else if (lesson && lesson.virt) startPractice(lesson.gi); else startLesson(lesson ? lesson.step : introIdx); };
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 // a set-up position on the board (lessons, openings practice, puzzles)
