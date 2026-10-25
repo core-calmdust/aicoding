@@ -4,7 +4,9 @@
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-xiangqi') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'wood'; document.documentElement.dataset.pcs = S.pcs || 'wood'; } catch (e) {}</script>
 <script>/* phones (portrait): freeze the height the board is sized from, so it doesn't grow/shrink while the browser bars slide away on scroll; re-measured only when the width changes (rotation) */
 (function () { const R = document.documentElement, mq = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)'); let w = 0;
-  const set = () => { if (!mq.matches) { R.style.removeProperty('--vh'); w = 0; return; } if (innerWidth === w) return; w = innerWidth; R.style.setProperty('--vh', innerHeight + 'px'); };
+  // (pinch-zoom changes innerWidth/innerHeight but not the layout width: ignore it — only a real width change re-measures)
+  const zoomed = () => window.visualViewport && Math.abs(visualViewport.scale - 1) > .01;
+  const set = () => { if (!mq.matches) { R.style.removeProperty('--vh'); w = 0; return; } const lw = R.clientWidth; if (lw === w || (w && zoomed())) return; w = lw; R.style.setProperty('--vh', Math.round(zoomed() ? R.clientHeight : innerHeight) + 'px'); };
   set(); addEventListener('resize', set); addEventListener('orientationchange', () => setTimeout(() => { w = 0; set(); }, 300)); })();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
