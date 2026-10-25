@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="xiangqi-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d29"/><stop offset="1" stop-color="#0a0b11"/></linearGradient>
+    <radialGradient id="xiangqi-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#ff4a3d" stop-opacity=".30"/><stop offset=".6" stop-color="#ff4a3d" stop-opacity=".04"/><stop offset="1" stop-color="#ff4a3d" stop-opacity="0"/></radialGradient>
+    <radialGradient id="xiangqi-d" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#fdeccb"/><stop offset=".55" stop-color="#eecb8e"/><stop offset="1" stop-color="#c6924c"/></radialGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#xiangqi-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#xiangqi-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <g stroke="#fff" stroke-opacity=".09" stroke-width="1.4" fill="none"><path d="M16 22h64M16 38h64M16 58h64M16 74h64M24 14v26M40 14v26M56 14v26M72 14v26M24 56v26M40 56v26M56 56v26M72 56v26"/><path d="M40 58 56 74M56 58 40 74"/></g>
+  <ellipse cx="48" cy="56" rx="25" ry="23" fill="#7a5326"/>
+  <circle cx="48" cy="51" r="25" fill="url(#xiangqi-d)"/>
+  <circle cx="48" cy="51" r="19.5" fill="none" stroke="#b8231b" stroke-opacity=".75" stroke-width="1.8"/>
+  <text x="48" y="52.5" font-size="27" text-anchor="middle" dominant-baseline="central" fill="#b8231b" font-family="'Shippori Mincho B1','Noto Serif SC','Noto Serif CJK SC','Noto Serif CJK JP','Songti SC','SimSun',serif" font-weight="900">帥</text>
+</svg>

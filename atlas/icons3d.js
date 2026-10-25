@@ -100,6 +100,13 @@
     const top = mesh(new T.PlaneGeometry(.8, .8), M({ map: tex, roughness: .5 })); top.rotation.x = -Math.PI / 2; top.position.y = .505;
     const g = grp(b, top); g.scale.setScalar(s); return g;
   }
+  function xqPiece(ch, red, s = 1, turn = 0) {
+    const g = new T.Group(), ink = red ? '#9a140d' : '#15110e';
+    g.add(puck(.62, .34, C(0xe2bb7c, { roughness: .4 }), .38));
+    const face = M({ map: X.canvasTex('ic-xq' + ch, 256, 256, (c, W) => { const r = W / 2, gr = c.createRadialGradient(r * .8, r * .7, 10, r, r, r); gr.addColorStop(0, '#fbe8c2'); gr.addColorStop(1, '#e8c286'); c.fillStyle = gr; c.fillRect(0, 0, W, W); c.strokeStyle = ink; c.lineWidth = 11; c.beginPath(); c.arc(r, r, r * .8, 0, 7); c.stroke(); c.fillStyle = ink; c.font = '900 138px "Shippori Mincho B1","Noto Serif CJK SC","Noto Serif CJK JP",serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, r, r + 8); }), roughness: .45 });
+    const top = mesh(new T.CircleGeometry(.52, 44), face); top.rotation.set(-Math.PI / 2, 0, turn); top.position.y = .342; top.castShadow = false; g.add(top);
+    g.scale.setScalar(s); return g;
+  }
   function pin(hex, s = 1) { const g = new T.Group(); g.add(at(ball(.3, gloss(hex)), 0, .3, 0)); g.scale.setScalar(s); return g; }
 
   const PIECES = {
@@ -261,6 +268,16 @@
       g.add(at(taflPiece(0x3a2418, .68), p(0), .5, p(0))); g.add(at(taflPiece(0x3a2418, .68), p(1), .5, p(2)));
       g.add(at(taflPiece(0xf2e6cc, .68), p(0), .5, p(2)));
       g.add(at(taflPiece(0xf2e6cc, 1.25, true), p(2) - .15, 1.05, p(0) + .25, -.2, 0, -.22));   // the king, arriving
+      return g;
+    },
+    xiangqi() {
+      // a corner of the board (lines on the points) with two small pieces; the big red general (帥) hops in
+      const g = boardChunk(3, 3.6, gridMat('xq', '#f0c77e', '#3d220c', 3, { points: true, lw: 9 }), M({ map: X.wood('icxq', '#c98f4b', '#8a5626') }));
+      const q = k => -1.033 + 1.033 * k, tw = -Math.PI / 4;
+      g.add(at(xqPiece('卒', false, .62, tw), q(2), .5, q(1)));
+      g.add(at(xqPiece('馬', false, .62, tw), q(0), .5, q(0)));
+      g.add(at(xqPiece('兵', true, .62, tw), q(0), .5, q(2)));
+      g.add(at(xqPiece('帥', true, 1.25, tw), -.1, 1.9, -.25, .42, 0, -.25));
       return g;
     },
     sudoku() {
