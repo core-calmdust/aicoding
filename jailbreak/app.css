@@ -124,12 +124,12 @@ button:disabled { cursor: default; opacity: .45; }
 /* calendar */
 #dCal { border-inline-start: 2px dashed #bfb8aa; padding-inline-start: 16px; }
 .calh { display: flex; align-items: center; justify-content: space-between; font: 800 20px 'Jost'; margin-bottom: 6px; }
-.calw, .calg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.calw, .calg { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; text-align: center; }
 .calw i { font-style: normal; font-size: 11px; font-weight: 800; color: var(--mute); }
-.calg span { aspect-ratio: 1; border: 1.6px solid var(--ink); border-radius: 4px; background: #fff; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
-.calg span.today { background: var(--yel); }
-.calg span.has { background: #fff3e6; }
-.calg .mds { display: flex; gap: 1px; } .calg .mds .medal { width: 7px; height: 7px; border-width: 1px; }
+.calg > span { min-width: 0; aspect-ratio: 1; border: 1.6px solid var(--ink); border-radius: 4px; background: #fff; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
+.calg > span.today { background: var(--yel); }
+.calg > span.has { background: #fff3e6; }
+.calg .mds { display: flex; gap: 1px; margin-top: 1px; } .calg .mds .medal { width: 7px; height: 7px; border-width: 1px; }
 .calg em { position: absolute; top: 1px; right: 1px; width: 5px; height: 5px; background: var(--blue); border-radius: 50%; }
 .calsum { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 12px; font-weight: 800; align-items: center; }
 .calsum .stk { background: var(--red); color: #fff; padding: 1px 8px; }
