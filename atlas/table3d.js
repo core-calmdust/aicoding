@@ -255,6 +255,62 @@
       });
       return g;
     },
+    xiangqi(live) {   // Xiangqi: a boxwood board on low legs (lines, palaces, the river 楚河 漢界), thick discs with engraved characters
+      const TT = T(), g = new TT.Group(), u = .9, W = 8 * u + 1.5, D = 9 * u + 1.5, H = .55;
+      const tw = 1024, th = Math.round(1024 * D / W);
+      const top = M({ map: canvasTex('xqTop', tw, th, (c, Wd, Ht) => {
+        c.drawImage(wood('xqw', '#e9c27c', '#b98a45', 512, 512, .7).image, 0, 0, Wd, Ht);
+        const k = Wd / W, ox = .75 * k, oy = .75 * k, s = u * k, X = i => ox + i * s, Y = j => oy + j * s;
+        c.strokeStyle = '#3d220c'; c.lineCap = 'square';
+        c.lineWidth = k * .06; c.strokeRect(X(0) - k * .14, Y(0) - k * .14, 8 * s + k * .28, 9 * s + k * .28);
+        c.lineWidth = k * .022;
+        const L = (a, b, e, f) => { c.beginPath(); c.moveTo(a, b); c.lineTo(e, f); c.stroke(); };
+        for (let j = 0; j < 10; j++) L(X(0), Y(j), X(8), Y(j));
+        for (let i = 0; i < 9; i++) { if (i === 0 || i === 8) L(X(i), Y(0), X(i), Y(9)); else { L(X(i), Y(0), X(i), Y(4)); L(X(i), Y(5), X(i), Y(9)); } }
+        L(X(3), Y(0), X(5), Y(2)); L(X(5), Y(0), X(3), Y(2)); L(X(3), Y(7), X(5), Y(9)); L(X(5), Y(7), X(3), Y(9));
+        const mk = (i, j) => { const a = s * .08, b = s * .22; for (const dx of [-1, 1]) { if ((dx < 0 && i === 0) || (dx > 0 && i === 8)) continue; for (const dy of [-1, 1]) { c.beginPath(); c.moveTo(X(i) + dx * a, Y(j) + dy * b); c.lineTo(X(i) + dx * a, Y(j) + dy * a); c.lineTo(X(i) + dx * b, Y(j) + dy * a); c.stroke(); } } };
+        [[1, 2], [7, 2], [1, 7], [7, 7], [0, 3], [2, 3], [4, 3], [6, 3], [8, 3], [0, 6], [2, 6], [4, 6], [6, 6], [8, 6]].forEach(([i, j]) => mk(i, j));
+        c.fillStyle = 'rgba(70,35,10,.82)'; c.font = `800 ${Math.round(s * .55)}px "Shippori Mincho B1","Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP",serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText('楚 河', X(2), Y(4.5)); c.fillText('漢 界', X(6), Y(4.5));
+      }), roughness: .42, bumpScale: .004 });
+      const side = M({ map: wood('xqs', '#c48f4c', '#7a4a1e'), roughness: .5 });
+      g.add(slab(W, H, D, top, side));
+      for (const [x, z] of [[-W / 2 + .7, -D / 2 + .7], [W / 2 - .7, -D / 2 + .7], [-W / 2 + .7, D / 2 - .7], [W / 2 - .7, D / 2 - .7]]) g.add(mesh(new TT.CylinderGeometry(.42, .34, .35, 20), M({ map: wood('xql', '#8a5626', '#4a2a10'), roughness: .5 }), x, -.17, z));
+      const Y0 = H + .001;
+      g.userData.top = Y0; g.userData.u = u; g.userData.W = W; g.userData.D = D;
+      g.userData.pt = (i, j) => [(i - 4) * u, (j - 4.5) * u];   // i: file 0..8 left → right, j: rank 0..9 far → near
+      // a piece: a thick disc (rounded edge) with the character engraved on the top face. code: 1 帥 … 7 兵 (+8 black)
+      const PR = u * .44, PH = u * .22, TYPE = ' KAEHRCP';
+      const GL = { r: ' 帥仕相傌俥炮兵', b: ' 將士象馬車砲卒' };
+      g.userData.piece = (code, o = {}) => {
+        const black = code >= 8, tp = code & 7, ch = GL[black ? 'b' : 'r'][tp];
+        const face = canvasTex('xqf' + code + (o.west ? 'w' : ''), 256, 256, (c, Wd) => {
+          const r = Wd / 2; c.fillStyle = '#f3d7a0'; c.fillRect(0, 0, Wd, Wd);
+          const gr = c.createRadialGradient(r * .8, r * .7, r * .1, r, r, r); gr.addColorStop(0, '#fbe8c2'); gr.addColorStop(1, '#e1b878'); c.fillStyle = gr; c.beginPath(); c.arc(r, r, r, 0, 7); c.fill();
+          c.strokeStyle = black ? 'rgba(30,24,20,.75)' : 'rgba(170,30,22,.8)'; c.lineWidth = Wd * .025; c.beginPath(); c.arc(r, r, r * .82, 0, 7); c.stroke();
+          c.fillStyle = black ? '#1e1a17' : '#b31f18'; c.font = `900 ${Math.round(Wd * .52)}px "Shippori Mincho B1","Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP","Songti SC",serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(ch, r, r + Wd * .02);
+        });
+        const pts = [], e = PH * .3, seg = 6; pts.push(new TT.Vector2(0, 0));
+        for (let k = 0; k <= seg; k++) { const a = -Math.PI / 2 + Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, e + Math.sin(a) * e)); }
+        for (let k = 0; k <= seg; k++) { const a = Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, PH - e + Math.sin(a) * e)); }
+        pts.push(new TT.Vector2(0, PH));
+        const body = mesh(new TT.LatheGeometry(pts, 36), M({ map: wood('xqp', '#e7c287', '#b8874a', 256, 256, 1.6), roughness: .45, clearcoat: .3, clearcoatRoughness: .5 }));
+        const cap = new TT.Mesh(new TT.CircleGeometry(PR * .9, 36), M({ map: face, roughness: .5, bumpScale: .003 }));
+        cap.rotation.x = -Math.PI / 2; cap.position.y = PH + .002; cap.castShadow = false; cap.receiveShadow = true;
+        const p = new TT.Group(); p.add(body, cap); p.userData = { code, type: TYPE[tp], black, h: PH, r: PR };
+        return p;
+      };
+      if (live) return g;
+      // the start position (a central cannon already played)
+      const start = ['rnbakabnr', '.........', '.c.....c.', 'p.p.p.p.p', '.........', '.........', 'P.P.P.P.P', '.C..C....', '.........', 'RNBAKABNR'];
+      start.forEach((row, j) => [...row].forEach((chx, i) => {
+        if (chx === '.') return; const blk = chx === chx.toLowerCase(), t = ' kabnrcp'.indexOf(chx.toLowerCase());
+        const p = g.userData.piece(t | (blk ? 8 : 0)), [x, z] = g.userData.pt(i, j); p.position.set(x, Y0, z); g.add(p);
+        const sh = contact(PR, .45); sh.position.set(x, Y0 + .001, z); g.add(sh);
+      }));
+      return g;
+    },
     gomoku() {
       const g = new (T().Group)(), S = 9;
       const top = M({ map: grid('gm', '#e7b768', '#2a1a0a', 15, 15, { points: true, pad: 40, lw: 2.5, woodBase: '#c8944a', stars: [[3, 3], [11, 3], [7, 7], [3, 11], [11, 11]] }) });
