@@ -31,7 +31,7 @@ button{cursor:pointer}
 .round{font-family:var(--round)}
 
 /* ---------- header ---------- */
-header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:2px solid var(--line)}
+header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-bottom:2px solid var(--line)}
 .hd{display:flex;align-items:center;gap:12px;height:68px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:0}
 .brand img{flex:none;width:48px;height:48px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.08))}
@@ -119,9 +119,10 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   box-shadow:0 2px 0 rgba(0,0,0,.06),0 24px 40px -26px rgba(60,40,10,.45);display:grid;place-items:center}
 .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 45%,#fff 40%,#f3f3f1 100%)}
 .props{position:absolute;inset:0}
-.props img{position:absolute;width:var(--w);left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));
-  will-change:transform;cursor:pointer;transition:filter .2s;-webkit-user-drag:none;user-select:none}
-.props img:hover{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
+/* the moving layer is the span; the image (with its shadow) is painted into it once, so the GPU doesn't redo a drop-shadow blur per piece every frame */
+.props .pp{position:absolute;width:var(--w);left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));will-change:transform;cursor:pointer;padding:0;line-height:0}
+.props .pp img{display:block;width:100%;filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));transition:filter .2s;-webkit-user-drag:none;user-select:none}
+.props .pp:hover img{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
 @keyframes float{from{transform:translate(-50%,-50%) rotate(var(--r)) translateY(0)}to{transform:translate(-50%,-50%) rotate(calc(var(--r) + 6deg)) translateY(-12px)}}
 .ttl{position:relative;z-index:2;margin:0;width:min(640px,96%);line-height:0;filter:drop-shadow(0 14px 18px rgba(0,0,0,.12))}
 .ttl svg{width:100%;height:auto;overflow:visible}
@@ -585,7 +586,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);opacity:0;z-index:90;background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-weight:900;font-size:14px;transition:.25s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .toast{bottom:max(calc(96px + env(safe-area-inset-bottom)),calc(var(--tbclear,0px) + 10px))}
-#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95;will-change:transform;transform:translateZ(0)}
+#confetti{display:none;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95;will-change:transform;transform:translateZ(0)}
 @media (pointer:coarse){.ov{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(40,30,15,.6)}}   /* a full-screen blur under falling confetti is costly on phones */
 
 /* ---------- dress ---------- */
@@ -968,6 +969,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=105"></script>
+<script src="app.js?v=106"></script>
 </body>
 </html>

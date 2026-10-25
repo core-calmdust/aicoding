@@ -210,7 +210,7 @@
     const ja = lang === 'ja', phone = innerWidth < 760;
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大全' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<img src="../images/atlas/p-${img}.webp?v=1" alt="" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg;--d:${2.6 + (i % 5) * .5}s;--dl:${-i * .37}s">`).join('');
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt=""></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -221,14 +221,16 @@
   function hop(el, big) { el._hop = performance.now(); el._big = !!big; }
   function startProps() {
     cancelAnimationFrame(propRaf);
-    const els = [...$('props').querySelectorAll('img')];
+    const els = [...$('props').querySelectorAll('.pp')];
     els.forEach((el, i) => { el._ph = i * 1.7; el._sp = .7 + (i % 5) * .12; el._r = parseFloat(el.style.getPropertyValue('--r')) || 0; el._z = .4 + (i % 4) * .2; });
     let nextHop = performance.now() + 1200;
     let lastP = 0;
     (function step(now) {
       propRaf = requestAnimationFrame(step);
       if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
-      if (!document.hasFocus() || now - lastP < 1000 / 60 - 2) return;   // 60 fps cap; stopped while the window isn't focused
+      // 60 fps while a piece hops or the pointer / tilt moves them, 30 fps for the slow idle bob; stopped while the window isn't focused
+      const busy = els.some(e => e._hop) || Math.abs(tx - px) > .002 || Math.abs(ty - py) > .002;
+      if (!document.hasFocus() || now - lastP < 1000 / (busy ? 60 : 30) - 2) return;
       lastP = now;
       if ($('bv').classList.contains('on')) return;   // hidden behind the 3D board
       px += (tx - px) * .06; py += (ty - py) * .06;
@@ -1086,7 +1088,7 @@
     const cols = ['#ff5d5d', '#ffc928', '#3ccf91', '#36b4ff', '#8d6bff', '#ff7fbe'];
     n = Math.round(n * (matchMedia('(pointer: coarse)').matches ? .5 : .8));
     for (let i = 0; i < n; i++) CF.ps.push({ x: W0 / 2 + (Math.random() - .5) * 100, y: H0 * .45, vx: (Math.random() - .5) * 7 * 60, vy: (-Math.random() * 7 - 2) * 60, r: Math.random() * 6.28, vr: (Math.random() - .5) * 14, s: 3 + Math.random() * 3.5, c: cols[i % cols.length], life: 1.9 + Math.random() * .5 });
-    if (CF.run) return; CF.run = true;
+    if (CF.run) return; CF.run = true; cv.style.display = 'block';
     let last = performance.now();
     (function step(now) {
       const dt = Math.min(.05, (now - last) / 1000); last = now;
@@ -1097,7 +1099,7 @@
         const c = Math.cos(p.r), sn = Math.sin(p.r); g.setTransform(c, sn, -sn, c, p.x, p.y); g.globalAlpha = Math.min(1, p.life * 2); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
       }
       g.globalAlpha = 1;
-      if (CF.ps.length) requestAnimationFrame(step); else { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W0, H0); CF.run = false; }
+      if (CF.ps.length) requestAnimationFrame(step); else { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W0, H0); CF.run = false; cv.style.display = 'none'; }
     })(last);
   }
 
