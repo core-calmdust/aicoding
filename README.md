@@ -43,6 +43,7 @@ Classic board games and puzzles from around the world, each with a serious AI, s
 | [Daily Sudoku](https://core-calmdust.github.io/aicoding/sudoku/) | Puzzles | — | — | 1,300 | Three daily puzzles with medals, online rankings, 500-character gacha, 20 themes, 10 variant rule sets, flick input |
 | [Speed Sudoku](https://core-calmdust.github.io/aicoding/speed-sudoku/) | Puzzles | — | — | 500 stages | 4×4 time attack, 30/60/90-second daily rankings, special rules |
 | [SameGame POP!](https://core-calmdust.github.io/aicoding/samegame/) | Puzzles | — | — | 400 stages | Pop-art tile clearing, daily puzzle and rankings, BLITZ and Rising modes, missions |
+| [Jailbreak Slide](https://core-calmdust.github.io/aicoding/jailbreak/) | Puzzles | — | — | 1,000 stages | Sliding-block prison escape: 600-stage course, 3 dailies + Searchlight with rankings, 12 modes (keys, pressure plates, ice, guards, digging, tilting cells…), BFS-verified optimal moves |
 
 🌐 = online play (rating, rooms, lobby, chat)
 
@@ -65,7 +66,7 @@ shared/             Common modules for the board games
                       tick.js (byoyomi beeps) · placement.js (rating placement) · rulesoffer.js · atlas*.js (portal account / progress)
 shogi/ chess/ checkers/ go/ reversi/ gomoku/ dots/ morris/ connect4/ mancala/ backgammon/
                     Board games (each: index.html, engine, i18n, lessons, puzzles, MODEL_CARD.md where a learned model is used)
-sudoku/ speed-sudoku/ samegame/   Puzzle games
+sudoku/ speed-sudoku/ samegame/ jailbreak/   Puzzle games
 comet/ comet-plus/  NEORETRO ARCADES (plus single-file games at the top level: pong.html, danmaku-inv.html)
 images/             Thumbnails, icons, logos
 ```

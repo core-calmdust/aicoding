@@ -319,6 +319,27 @@
       const b2 = blk(2); b2.scale.setScalar(.75); g0.add(at(b2, .95, 2.35, -.5, -.5, .6, .4));
       return g0;
     },
+    jailbreak() {   // a 3×3 patch of concrete cell floor: crates, the orange inmate slipping through the bars, a gold key
+      const g0 = new T.Group();
+      const tile = C(0xd8d2c4, { roughness: .7 });
+      for (let i = 0; i < 9; i++) { const x = (i % 3 - 1) * 1.12, z = ((i / 3 | 0) - 1) * 1.12; g0.add(at(rbox(1.08, .3, 1.08, .1, tile), x, 0, z)); }
+      g0.add(at(rbox(1, .8, 2.1, .16, C(0x7a8fa6)), -1.12, .3, -.56));
+      g0.add(at(rbox(1, .8, 1, .16, C(0xa0784f)), 1.12, .3, 1.12));
+      const orange = gloss(0xf26b1d), inm = new T.Group();
+      inm.add(rbox(2.1, .95, 1, .3, orange));
+      [-.75, -.45, -.15].forEach(dx => inm.add(at(mesh(new T.BoxGeometry(.14, .03, .84), C(0xffc59a)), dx, .96, 0)));
+      inm.add(at(puck(.42, .2, C(0xfbe6cf), .5), .5, .9, 0));
+      [-.15, .15].forEach(dz => inm.add(at(ball(.07, C(0x2a2622)), .62, 1.12, dz)));
+      inm.add(at(mesh(new T.BoxGeometry(.05, .04, .2), C(0x2a2622)), .36, 1.11, 0));
+      g0.add(at(inm, .45, .3, 0, 0, 0, 0));
+      const steel = C(0x5d6575, { roughness: .3, metalness: .6 });
+      for (let i = 0; i < 3; i++) g0.add(at(mesh(new T.CylinderGeometry(.08, .08, 2.2, 12), steel), 1.75, 1.3, -1.1 + i * .55));
+      g0.add(at(mesh(new T.BoxGeometry(.18, .16, 1.5), steel), 1.75, 2.42, -.55));
+      const gold = C(0xffcd3c, { roughness: .2, metalness: .7 }), key = new T.Group();
+      key.add(mesh(new T.TorusGeometry(.3, .1, 12, 28), gold)); key.add(at(mesh(new T.BoxGeometry(.7, .14, .14), gold), .58, 0, 0)); key.add(at(mesh(new T.BoxGeometry(.12, .26, .14), gold), .82, -.14, 0));
+      key.scale.setScalar(.8); g0.add(at(key, -.55, .42, 1.05, -Math.PI / 2, 0, .6));
+      return g0;
+    },
   };
 
   /* ---------- collectible creatures ("Atlas Mon") — original board-game spirits ----------
@@ -724,7 +745,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9] };
+  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {

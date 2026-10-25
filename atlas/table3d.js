@@ -602,6 +602,47 @@
       });
       return g;
     },
+    jailbreak() {   // a steel-framed 6×6 cell: concrete floor, crates and lockers, the orange inmate sliding out through the gap, a gold key
+      const TT = T(), g = new TT.Group(), N = 6, cs = 1.15, S = N * cs;
+      const steel = M({ color: 0x3a3f4a, roughness: .35, metalness: .5 }), steel2 = M({ color: 0x5d6575, roughness: .3, metalness: .6 });
+      g.add(mesh(RB(S + 1.2, .55, S + 1.2, .25, 3), steel, 0, .275, 0));
+      const floor = M({ map: canvasTex('jbFloor', 256, 256, (c, W) => { c.fillStyle = '#d8d2c4'; c.fillRect(0, 0, W, W); c.strokeStyle = '#bfb7a6'; c.lineWidth = 6; for (let i = 0; i <= N; i++) { const k = i * W / N; c.beginPath(); c.moveTo(k, 0); c.lineTo(k, W); c.stroke(); c.beginPath(); c.moveTo(0, k); c.lineTo(W, k); c.stroke(); } }), roughness: .8 });
+      g.add(mesh(new TT.BoxGeometry(S, .06, S), floor, 0, .58, 0));
+      const pos = (x, z) => [(x - (N - 1) / 2) * cs, (z - (N - 1) / 2) * cs];
+      // walls on 3 sides + the right side with an exit gap in row 2
+      const wallM = M({ color: 0x555c6a, roughness: .4, metalness: .4 });
+      g.add(mesh(RB(S + 1.2, .9, .5, .12, 2), wallM, 0, 1.0, -S / 2 - .35));
+      g.add(mesh(RB(S + 1.2, .9, .5, .12, 2), wallM, 0, 1.0, S / 2 + .35));
+      g.add(mesh(RB(.5, .9, S + .2, .12, 2), wallM, -S / 2 - .35, 1.0, 0));
+      const [, gz] = pos(0, 2);
+      g.add(mesh(RB(.5, .9, (gz + S / 2) - cs / 2 + .1, .12, 2), wallM, S / 2 + .35, 1.0, (-S / 2 + gz - cs / 2) / 2));
+      g.add(mesh(RB(.5, .9, S / 2 - gz - cs / 2 + .1, .12, 2), wallM, S / 2 + .35, 1.0, (S / 2 + gz + cs / 2) / 2));
+      // EXIT sign
+      const sign = M({ map: canvasTex('jbExit', 256, 128, (c, W, H) => { c.fillStyle = '#1fa463'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff'; c.font = '900 72px Jost, Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('EXIT', W / 2, H / 2 + 4); }), roughness: .4, emissive: 0x0c5a32 });
+      const sg = mesh(new TT.BoxGeometry(1.5, .7, .12), [steel, steel, steel, steel, sign, steel], S / 2 + .5, 2.15, gz); sg.rotation.y = -Math.PI / 2; g.add(sg);
+      g.add(mesh(new TT.CylinderGeometry(.06, .06, .9, 10), steel2, S / 2 + .5, 1.55, gz));
+      // blocks: [x, z, len, vertical, colour]
+      const COL = [0x7a8fa6, 0xa0784f, 0x6f8b5e, 0x8c7aa0, 0x5f8e94, 0xa86a5a];
+      [[2, 0, 2, 1, 0], [3, 1, 3, 1, 1], [0, 3, 2, 0, 2], [4, 3, 2, 1, 3], [1, 4, 3, 0, 4], [5, 0, 2, 1, 5], [0, 0, 2, 0, 1]].forEach(([x, z, l, v, k]) => {
+        const [px, pz] = pos(x + (v ? 0 : (l - 1) / 2), z + (v ? (l - 1) / 2 : 0));
+        g.add(mesh(RB((v ? 1 : l) * cs - .14, .7, (v ? l : 1) * cs - .14, .14, 2), M({ color: COL[k], roughness: .45, clearcoat: .3 }), px, .96, pz));
+      });
+      // the inmate: an orange two-cell block with a round face, half out of the gap
+      const inm = new TT.Group(), orange = M({ color: 0xf26b1d, roughness: .4, clearcoat: .4 });
+      inm.add(mesh(RB(2 * cs - .14, .78, cs - .14, .24, 3), orange, 0, 0, 0));
+      [-.55, -.15, .25].forEach(dx => inm.add(mesh(new TT.BoxGeometry(.12, .8, cs - .1), M({ color: 0xffb27a, roughness: .5 }), dx, .01, 0)));
+      const face = mesh(new TT.SphereGeometry(.42, 24, 16), M({ color: 0xfbe6cf, roughness: .5 }), .62, .55, 0); face.scale.y = .9; inm.add(face);
+      [-.15, .15].forEach(dz => inm.add(mesh(new TT.SphereGeometry(.06, 10, 8), M({ color: 0x2a2622 }), .98, .62, dz)));
+      const [ix] = pos(4.5, 2); inm.position.set(ix + .6, 1.0, gz); g.add(inm);
+      // gold key + keyhole
+      const gold = M({ color: 0xffcd3c, roughness: .25, metalness: .7 });
+      const key = new TT.Group(); key.add(mesh(new TT.TorusGeometry(.26, .09, 10, 24), gold)); const sh = mesh(new TT.BoxGeometry(.62, .12, .12), gold, .5, 0, 0); key.add(sh); key.add(mesh(new TT.BoxGeometry(.1, .22, .12), gold, .72, -.12, 0));
+      const [kx, kz] = pos(1, 1); key.position.set(kx, 1.05, kz); key.rotation.set(-Math.PI / 2, 0, .5); g.add(key);
+      // bars on the back wall
+      for (let i = 0; i < 7; i++) g.add(mesh(new TT.CylinderGeometry(.07, .07, 1.5, 10), steel2, -S / 2 + .6 + i * .5, 1.9, -S / 2 - .35));
+      g.add(mesh(new TT.BoxGeometry(3.6, .12, .16), steel2, -S / 2 + 2.1, 2.62, -S / 2 - .35));
+      return g;
+    },
   };
 
   /* ---------- scene ---------- */
