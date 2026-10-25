@@ -993,10 +993,12 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== rated games vs the AI (solo, Copenhagen rules)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 420000, inc: 4000 };
-// rating of each AI step (15級 = 450, 100 points per kyu at first): measured by self-play of adjacent levels, both sides (MODEL_CARD.md)
-const RT_LV = [0, 450, 560, 670, 780, 890, 1000, 1110, 1220, 1330, 1440, 1550, 1660, 1770, 1880, 1990, 2100, 2200, 2300, 2400, 2500];
-// the defenders' advantage at equal strength (Elo, from the same self-play): the expected score of a rated game uses it
-const RT_SIDE = 60;
+// rating of each AI step (15級 = 450): measured by self-play of adjacent levels, both sides, smoothed (MODEL_CARD.md)
+const RT_LV = [0, 450, 570, 670, 790, 960, 1030, 1100, 1160, 1230, 1290, 1390, 1480, 1580, 1670, 1760, 1880, 1960, 2040, 2120, 2200];
+// the defenders' advantage at equal strength (Elo, fitted from the same self-play per level, smoothed): a player who takes the
+// defenders is expected to score as if RT_SIDE_LV[level] points stronger; it grows with the level (strong attackers rarely break through)
+const RT_SIDE_LV = [0, 30, 30, 30, 30, 70, 70, 70, 70, 70, 200, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350];
+const RT_SIDE = lv => RT_SIDE_LV[Math.max(1, Math.min(20, lv || 1))];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
@@ -1039,7 +1041,7 @@ function rtSettle(st) {
   const S = rtLoad(), prev = S.hist.find(h => h.id === R.id);
   if (prev) { R.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return R.done; }
   const sc = st.draw || !st.winner ? 0.5 : st.winner === humanColor ? 1 : 0;
-  const adj = humanColor === P2 ? RT_SIDE : -RT_SIDE;   // the side played: defenders are expected to score a little more
+  const adj = humanColor === P2 ? RT_SIDE(R.lv) : -RT_SIDE(R.lv);   // the side played: the defenders are expected to score more
   const old = S.r, pl = Placement.on(S) ? Placement.record(S, R.or - adj, sc) : null;   // 予備選: the first 3 games set the rating
   const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - old - adj) / 400));
   const now = pl ? pl.r : Math.max(0, Math.round(old + K * (sc - Ex)));

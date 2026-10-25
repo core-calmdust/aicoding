@@ -648,13 +648,18 @@ static void beginSearch(int ms) {
   for (int a = 0; a < 2; a++) for (int b = 0; b < NSQ; b++) { for (int c = 0; c < NSQ / 8 + 1; c++) hist[a][b][c] >>= 2; histT[a][b] >>= 2; }
   memset(killers, 0, sizeof(killers));
 }
+// reported values (analysis, the AI's own view, the evaluation bar): the tuned weights leave a large constant edge for
+// the defenders in the raw score (it matters to the search: draws and repetitions are scored 0), so the values handed to
+// the page are taken relative to the start position's static score (defenders' view). Exact results are left as they are.
+static const int D0[3] = { 7982, 1130, -51 };
+static int rep(int v) { if (v > WINT || v < -WINT) return v; return v - (ROOT.side ? D0[VAR] : -D0[VAR]); }
 // best move: IO[0] = move, IO[2] = value, IO[3] = depth, IO[4] = nodes / 1000
 EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   beginSearch(ms); nodeLimit_on = nodeK > 0; nodeLimit = (u64)nodeK * 1000;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
   orderRoot();
   Move bm = rootL[0]; int bv = rootVal[0], bd = 0;
-  if (rootN == 1 || rootVal[0] >= WIN - 1) { writeMove(IO, &bm); IO[2] = bv; IO[3] = 0; IO[4] = 0; return; }
+  if (rootN == 1 || rootVal[0] >= WIN - 1) { writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = 0; IO[4] = 0; return; }
   for (int i = 0; i < rootN; i++) rootVal[i] = -INF;
   int prev = 0;
   for (int d = 1; d <= maxDepth && d < MAXPLY - 8; d++) {
@@ -681,7 +686,7 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
     if (v < -WINT && WIN + v <= d) break;
     if (ms > 0 && d > 1 && now() > tEnd - ms * 0.55) break;
   }
-  writeMove(IO, &bm); IO[2] = bv; IO[3] = bd; IO[4] = (i32)(nodes / 1000);
+  writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = bd; IO[4] = (i32)(nodes / 1000);
 }
 // analysis: values of all root moves. IO[0] = n, IO[1] = depth, then (move, v) * n, best first
 EXPORT(analyze) void analyze(int ms, int maxDepth) {
@@ -695,7 +700,7 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
       sortRoot();
       for (int i = 0; i < rootN; i++) { ord[i] = rootL[i]; vals[i] = rootVal[i]; }
       depthDone = d;
-      IO[0] = rootN; IO[1] = depthDone; for (int i = 0; i < rootN; i++) { writeMove(IO + 2 + 2 * i, &ord[i]); IO[3 + 2 * i] = vals[i]; }
+      IO[0] = rootN; IO[1] = depthDone; for (int i = 0; i < rootN; i++) { writeMove(IO + 2 + 2 * i, &ord[i]); IO[3 + 2 * i] = rep(vals[i]); }
       progress(d, rootN);
       int solved = 1; for (int i = 0; i < rootN; i++) if (vals[i] < WINT && vals[i] > -WINT) solved = 0;
       if (solved) break;
@@ -704,7 +709,7 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
   }
   if (!depthDone) depthDone = 1;
   IO[0] = rootN; IO[1] = depthDone;
-  for (int i = 0; i < rootN; i++) { writeMove(IO + 2 + 2 * i, &ord[i]); IO[3 + 2 * i] = vals[i]; }
+  for (int i = 0; i < rootN; i++) { writeMove(IO + 2 + 2 * i, &ord[i]); IO[3 + 2 * i] = rep(vals[i]); }
 }
 // fixed-depth values of all root moves (weak levels): IO like analyze
 EXPORT(values) void values(int depth, int noise) {
@@ -714,7 +719,7 @@ EXPORT(values) void values(int depth, int noise) {
   for (int d = 2; d <= depth; d++) { rootSearch(d, 1, -INF, INF); sortRoot(); }
   (void)noise;
   IO[0] = rootN; IO[1] = depth;
-  for (int i = 0; i < rootN; i++) { writeMove(IO + 2 + 2 * i, &rootL[i]); IO[3 + 2 * i] = rootVal[i]; }
+  for (int i = 0; i < rootN; i++) { writeMove(IO + 2 + 2 * i, &rootL[i]); IO[3 + 2 * i] = rep(rootVal[i]); }
 }
 
 // ---------------------------------------------------------------- puzzles: forced win within k own moves (exact)
@@ -797,12 +802,12 @@ EXPORT(set_noise) void set_noise(int amp, int seed) { noiseAmp = amp; noiseSeed 
 // kind 0: fixed-depth values of all moves + noise / an occasional slip; kind 1: normal search (node budget or time) with
 // a small evaluation noise for the middle levels. Shared by the browser (engine.js) and the native tools.
 typedef struct { int kind, depth, nodesK, ms, noise, slip, blind, miss; } Level;   // slip, blind, miss: per mille
-// blind: the move is chosen without the tactical horizon (escape lines, king captures); miss: a win in one is overlooked
-// (taken as merely good) — the low levels' defenders would otherwise never let a beginner's open line go
+// blind: the move is chosen without the tactical horizon (escape lines, king captures); miss (defenders only): an escape in
+// one is passed over — the low levels' defenders would otherwise never let a beginner's open line go
 static const Level LEVELS[21] = { { 0 },
   { 0, 1, 0, 0, 320, 300, 700, 500 }, { 0, 1, 0, 0, 260, 220, 550, 400 }, { 0, 1, 0, 0, 200, 160, 420, 300 },   // 15級 14級 13級
   { 0, 1, 0, 0, 160, 120, 300, 200 }, { 0, 2, 0, 0, 140, 90, 200, 120 }, { 0, 2, 0, 0, 110, 60, 120, 70 }, { 0, 2, 0, 0, 85, 40, 60, 30 },   // 12級 … 9級
-  { 1, 99, 1, 0, 60, 0, 0 }, { 1, 99, 2, 0, 50, 0, 0 }, { 1, 99, 4, 0, 40, 0, 0 }, { 1, 99, 8, 0, 30, 0, 0 },     // 8級 … 5級
+  { 1, 99, 2, 0, 60, 0, 0 }, { 1, 99, 3, 0, 50, 0, 0 }, { 1, 99, 4, 0, 40, 0, 0 }, { 1, 99, 8, 0, 30, 0, 0 },     // 8級 … 5級
   { 1, 99, 15, 0, 22, 0, 0 }, { 1, 99, 30, 0, 15, 0, 0 }, { 1, 99, 60, 0, 10, 0, 0 }, { 1, 99, 120, 0, 6, 0, 0 }, // 4級 … 1級
   { 1, 99, 250, 3000, 0, 0, 0 }, { 1, 99, 500, 3000, 0, 0, 0 }, { 1, 99, 1000, 3000, 0, 0, 0 },             // 初段 二段 三段
   { 1, 99, 0, 1200, 0, 0, 0 }, { 1, 99, 0, 2500, 0, 0, 0 } };                                             // 四段 五段
@@ -817,20 +822,23 @@ EXPORT(think) void think(int level, int seed) {
   if (rootN == 0) { IO[0] = -1; IO[2] = -WIN; IO[3] = 0; return; }
   if (rootN == 1) { writeMove(IO, &rootL[0]); IO[2] = 0; IO[3] = 0; return; }
   if (L->kind == 0) {
-    noTac = L->blind && (int)(tr32() % 1000) < L->blind;
-    values(L->depth, 0);
+    // the sides are uneven at this level of play: a one-ply attacker never blocks a road, so the attackers always read
+    // two plies and play blind three times less often; the defenders keep the level's weaknesses (and its misses)
+    const int att = ROOT.side == 0;
+    noTac = L->blind && (int)(tr32() % 1000) < (att ? L->blind / 3 : L->blind);
+    values(att && L->depth < 2 ? 2 : L->depth, 0);
     noTac = 0;
-    int bestv = rootVal[0], miss = L->miss && (int)(tr32() % 1000) < L->miss;
-    if (miss) { for (int i = 0; i < rootN; i++) if (rootVal[i] > WINT) rootVal[i] = 250; bestv = -INF; for (int i = 0; i < rootN; i++) if (rootVal[i] > bestv) bestv = rootVal[i]; }
-    if (bestv >= WIN - 2 || bestv > WINT) { writeMove(IO, &rootL[0]); IO[2] = bestv; IO[3] = L->depth; return; }   // a win in one is always seen
+    int bestv = rootVal[0], miss = !att && L->miss && (int)(tr32() % 1000) < L->miss;   // the defenders pass over an escape in one
+    if (miss) { for (int i = 0; i < rootN; i++) if (rootVal[i] > WINT) rootVal[i] = -WINT; bestv = -INF; for (int i = 0; i < rootN; i++) if (rootVal[i] > bestv) bestv = rootVal[i]; }
+    if (bestv >= WIN - 2 || bestv > WINT) { writeMove(IO, &rootL[0]); IO[2] = rep(bestv); IO[3] = L->depth; return; }   // a win in one is always seen
     if (L->slip && (int)(tr32() % 1000) < L->slip) {   // a slip: a random move among the not hopeless ones
       int ok[MAXMV], k = 0; for (int i = 0; i < rootN; i++) if (rootVal[i] > bestv - 500 && rootVal[i] > -WINT) ok[k++] = i;
       int pick = k ? ok[tr32() % k] : (int)(tr32() % rootN);
-      writeMove(IO, &rootL[pick]); IO[2] = bestv; IO[3] = L->depth; return;
+      writeMove(IO, &rootL[pick]); IO[2] = rep(bestv); IO[3] = L->depth; return;
     }
     int bi = 0, bx = -INF * 2;
     for (int i = 0; i < rootN; i++) { int v = rootVal[i]; int x = v + (v > WINT || v < -WINT ? 0 : gaussI(L->noise)); if (x > bx) { bx = x; bi = i; } }
-    writeMove(IO, &rootL[bi]); IO[2] = bestv; IO[3] = L->depth; return;
+    writeMove(IO, &rootL[bi]); IO[2] = rep(bestv); IO[3] = L->depth; return;
   }
   if (L->noise) set_noise(L->noise, (int)tr32()); else noiseAmp = 0;
 #ifdef NATIVE
