@@ -227,7 +227,7 @@ function renderFloors() {
       ${open ? '' : `<span class="lk">${A.ICON.lock}${esc(t('co.lock', { n: Math.max(0, FLOOR_UNLOCK - floorRecs(f - 1).filter(v => v).length) }))}</span>`}</span>${comp ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</button>`;
   }
   el.innerHTML = html + '</div>';
-  $$('.tcard', el).forEach(b => { b.onclick = () => { const f = +b.dataset.fl; if (!floorOpen(f)) { SND.bump(); toast(t('co.lockT')); return; } floorOpenId = f; renderFloor(f); scrollTo(0, 0); }; });
+  $$('.tcard', el).forEach(b => { b.onclick = () => { const f = +b.dataset.fl; if (!floorOpen(f)) { SND.bump(); toast(t('co.lockT')); return; } floorOpenId = f; renderFloor(f); scrollTo(0, 0); if (!floorRecs(f).some(v => v)) showStory(f); }; });
 }
 function stageTiles(recs, n, keyOf, isNext, cls = '') {
   let html = '<div class="stgs">';
@@ -245,9 +245,17 @@ function stageTiles(recs, n, keyOf, isNext, cls = '') {
 function renderFloor(f) {
   const el = $('#coursePanel'), recs = floorRecs(f), done = recs.filter(v => v).length;
   el.innerHTML = `<div class="thead" style="--tc:${FLOOR_COL[f]}"><button class="btn sm" id="flBack">${A.ICON.back}${esc(t('u.list'))}</button><span class="tic">${floorIcon(f)}</span>
-    <div><h2>${esc(t('fl.' + f))}</h2><p>${esc(t('fl.' + f + '.d'))}</p></div><div class="ring" style="--p:${done * 2}"><b>${done}</b><small>/${FLOOR_N}</small></div></div>` + stageTiles(recs, FLOOR_N);
+    <div><h2>${esc(t('fl.' + f))}</h2><p>${esc(t('fl.' + f + '.d'))}</p><button class="btn sm sybtn" id="flStory">${A.ICON.book}${esc(t('sy.btn'))}</button></div><div class="ring" style="--p:${done * 2}"><b>${done}</b><small>/${FLOOR_N}</small></div></div>` + stageTiles(recs, FLOOR_N);
   $('#flBack').onclick = () => { floorOpenId = null; renderFloors(); };
+  $('#flStory').onclick = () => showStory(f);
   $$('.tile', el).forEach(b => { b.onclick = () => startStage('c', f * FLOOR_N + +b.dataset.j); });
+}
+// the floor's story: an illustration of the location + a few lines (opens by itself while no stage on the floor is cleared)
+function showStory(f) {
+  const body = modal(`<div class="story" style="--tc:${FLOOR_COL[f]}"><div class="syfig">${window.JBStory ? JBStory.scene(f, A.inmateSVG(DB.icon)) : ''}<span class="sytag">${esc(t('sy.tag'))} ${f + 1}/${FLOORS}</span></div>
+    <h2 class="mh">${esc(t('fl.' + f))}</h2><p class="sytx">${esc(t('sy.' + f))}</p><div class="mbtns"><button class="btn big org" id="syGo">${A.ICON.play}${esc(t('sy.go'))}</button></div></div>`, 'mwide');
+  $('#syGo', body).onclick = () => { $('#modal').hidden = true; if (G) G.paused = false; };
+  SND.page && SND.page();
 }
 function renderModes() {
   const el = $('#modePanel');

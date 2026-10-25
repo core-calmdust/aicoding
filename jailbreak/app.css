@@ -150,6 +150,10 @@ button:disabled { cursor: default; opacity: .45; }
 .lk .ico { width: 16px; height: 16px; }
 .crown { position: absolute; top: -10px; inset-inline-end: 8px; background: var(--yel); border: 2px solid var(--ink); font: 800 11px 'Jost'; padding: 2px 6px; transform: rotate(3deg); }
 .thead { --tc: var(--steel2); display: grid; grid-template-columns: auto auto 1fr auto; gap: 12px; align-items: center; background: var(--paper); border: 3px solid var(--ink); border-radius: var(--r); box-shadow: var(--sh); padding: 12px; border-top: 10px solid var(--tc); }
+.thead .sybtn { min-height: 30px; padding: 3px 10px; font-size: 12px; gap: 4px; } .thead .sybtn .ico { width: 16px; height: 16px; }
+.story { text-align: center; } .syfig { position: relative; margin: -4px 0 12px; } .syimg { width: 100%; height: auto; display: block; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 4px 4px 0 var(--ink); background: var(--tc); }
+.sytag { position: absolute; top: 10px; inset-inline-start: 10px; background: var(--org); color: #fff; font: 800 12px 'Jost'; letter-spacing: .08em; padding: 3px 10px; border: 2px solid var(--ink); transform: rotate(-2deg); }
+.sytx { font-size: 15px; line-height: 1.8; font-weight: 600; margin: 6px 4px 14px; text-align: start; }
 .thead h2 { margin: 0; font: 400 20px var(--disp); } .thead p { margin: 4px 0 6px; font-size: 13px; line-height: 1.5; color: #4e4a43; }
 .mtic { background: var(--tc); border: 2.5px solid var(--ink); border-radius: 10px; }
 .mtic svg { width: 44px; height: 44px; }
