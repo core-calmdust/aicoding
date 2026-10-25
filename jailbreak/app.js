@@ -182,10 +182,10 @@ function renderDaily() {
   const d = today(), r = dlOf(d);
   $('#dPuzzle').innerHTML = `<div class="ptag">${esc(t('d.title'))}<i>${esc(d.slice(5).replace('-', '/'))}</i></div>
     <div class="dhead"><h3>${esc(t('d.head'))}</h3><p>${esc(t('d.desc'))}</p></div>
-    <div class="dlvs">${DIFFS.map(D => { const rec = dRec(d, D.k), P = E.decode(rec), rr = r[D.k], played = rr.md > 0;
+    <div class="dlvs">${DIFFS.map(D => { const rec = dRec(d, D.k), P = E.decode(rec), rr = r[D.k], played = rr.md > 0, going = !played && !!rr.p;
       return `<div class="dlv lv-${D.k}"><div class="dic">${A.miniBoard(P, P.s0)}</div><div class="dlt"><b>${esc(t('dl.' + D.k))}</b>${ruleChip(rec.r)}<small>${esc(t('u.opt', { n: rec.o }))}</small>
         <span class="dbest"><span>${esc(t('d.best'))}</span><b>${played ? fmt(rr.s) : '—'}</b>${rr.md ? `<i class="medal m${rr.md}"></i>` : ''}</span></div>
-        <div class="dlb"><button class="btn ${D.k === 'e' ? 'blue' : D.k === 'm' ? 'org' : 'dark'}" data-dl="${D.k}">${A.ICON.play}${esc(t(played ? 'd.again' : 'd.play'))}</button><button class="btn sm" data-rank="${D.k}" aria-label="${esc(t('rk.title'))}">${A.ICON.rank}</button></div></div>`; }).join('')}</div>
+        <div class="dlb"><button class="btn ${D.k === 'e' ? 'blue' : D.k === 'm' ? 'org' : 'dark'}" data-dl="${D.k}" ${played ? 'disabled' : ''}>${played ? '' : A.ICON.play}${esc(t(played ? 'd.done' : going ? 'd.resume' : 'd.play'))}</button><button class="btn sm" data-rank="${D.k}" aria-label="${esc(t('rk.title'))}">${A.ICON.rank}</button></div></div>`; }).join('')}</div>
     <p class="note">${esc(t('d.medals'))}</p>`;
   const left = DSL_TRIES - r.sl.a;
   $('#dSearch').innerHTML = `<div class="ptag blue">${esc(t('d.sl'))}</div><div class="slrow"><span class="slic">${A.MI.sl}</span><div><h3>${esc(t('d.sl.h'))}</h3><p>${esc(t('d.sl.d', { s: SL_TIME }))}</p>
@@ -300,9 +300,14 @@ function startStage(src, j) {
   startPlay();
   if (src !== 'c') maybeRuleTip(src); else if (j === 0 && !DB.tut.first) { DB.tut.first = 1; save(); setTimeout(() => floatTip(t('tip.first')), 500); }
 }
+// one play per difficulty a day: the attempt starts when the cell opens; leaving keeps it (resume: same board, moves and clock)
 function startDaily(k) {
-  const d = today(), rec = dRec(d, k);
+  const d = today(), rec = dRec(d, k), rr = dlOf(d)[k];
+  if (rr.md > 0) return;
+  const p = rr.p;
   newGame(rec, { kind: 'daily', m: rec.r || 'basic', dk: k, date: d, title: `${t('d.title')} · ${t('dl.' + k)}` });
+  if (p) { Object.assign(G, { S: p.S.slice(), hist: p.hist.map(x => x.slice()), moves: p.moves, undoN: p.undoN, hinted: !!p.hinted, t0: Date.now() - p.el }); buildBoard(); hud(); }
+  else { rr.p = { S: G.S.slice(), hist: [], moves: 0, undoN: 0, hinted: false, el: 0 }; save(); }
   startPlay(); if (rec.r && rec.r !== 'basic') maybeRuleTip(rec.r);
 }
 // SEARCHLIGHT: escape as many cells as you can before the light finds you (90 s); daily = same puzzle order for everyone, 3 tries
@@ -414,7 +419,12 @@ addEventListener('resize', () => { clearTimeout(relayout.t); relayout.t = setTim
 function boardIn() { const b = boardEl(); b.classList.remove('bin'); void b.offsetWidth; b.classList.add('bin'); }
 
 /* ---------------- HUD ---------------- */
+function keepDaily() {
+  if (!G || G.kind !== 'daily' || G.over) return; const rr = dlOf(G.date)[G.dk]; if (!rr.p) return;
+  rr.p = { S: G.S.slice(), hist: G.hist.map(x => x.slice()), moves: G.moves, undoN: G.undoN, hinted: G.hinted, el: Date.now() - G.t0 }; save();
+}
 function hud() {
+  keepDaily();
   if (!G) return;
   const o = G.rec.o, mv = G.moves;
   $('#gTitle').textContent = G.title || '';
@@ -580,14 +590,14 @@ function win() {
     const D = DIFFS.find(x => x.k === G.dk), rr = dlOf(G.date)[G.dk], md = starsFor(mv, o), sec = (Date.now() - G.t0) / 1000;
     const B = { base: D.base + o * 100, extra: -120 * Math.max(0, mv - o), undo: -30 * G.undoN, time: Math.round(Math.max(0, (o * 6 + 30) * 2 - sec) * 6) };
     const final = Math.max(100, B.base + B.extra + B.undo + B.time), best = final > rr.s;
-    if (best) rr.s = final; rr.md = Math.max(rr.md, md); if (!rr.mv || mv < rr.mv) rr.mv = mv;
+    delete rr.p; if (best) rr.s = final; rr.md = Math.max(rr.md, md); if (!rr.mv || mv < rr.mv) rr.mv = mv;
     if (md >= 3) DB.stats.dgold++;
     coins = addCoin(final / 60);
     if (best && ON && ON.available && DB.name) ON.putDaily(G.date, G.dk, Object.assign({ s: final }, who())).catch(() => {});
     const row = (l, v, c = '') => `<li class="${c}"><span>${esc(l)}</span><b>${v >= 0 ? '+' : '−'}${fmt(Math.abs(v))}</b></li>`;
     html = resultCard(md === 3 ? 'PERFECT ESCAPE!' : 'ESCAPED!', `<div class="rscore">${fmt(final)}</div><ul class="rbonus"><li><span>${esc(t('db.base'))}</span><b>${fmt(B.base)}</b></li>${row(t('db.extra', { n: mv - o }), B.extra, B.extra ? 'neg' : '')}${G.undoN ? row(t('db.undo', { n: G.undoN }), B.undo, 'neg') : ''}${row(t('db.time', { t: mmss(sec) }), B.time, B.time ? 'pos' : '')}</ul>
       <p class="rmv">${esc(t('r.moves', { m: mv, o }))}</p><div class="rmedal"><i class="medal big m${md}"></i>${esc(t('md.' + md))}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}${coinLine(coins)}${nameNudge()}`,
-      [['retryd', t('r.retry'), 'org'], ['home', t('u.home')], ['rank', t('rk.title')]]);
+      [['home', t('u.home'), 'org'], ['rank', t('rk.title')]]);
     [0, 1, 2].forEach(i => i < md && setTimeout(() => SND.star(i), 500 + i * 180));
   }
   save(); if (DB.set.anim) confetti(); showResult(html); updateBadges();
@@ -652,8 +662,7 @@ function resultCard(head, body, btns, cls = '') {
 function showResult(html) { const m = $('#gameMsg'); m.innerHTML = html; m.hidden = false; $$('[data-act]', m).forEach(b => { b.onclick = () => resultAct(b.dataset.act); }); }
 function resultAct(a) {
   const m = $('#gameMsg');
-  if (a === 'retry') { if (G.kind === 'stage') { const s = G.src, j = G.j; startStage(s, j); G.retried = true; } else if (G.kind === 'daily') startDaily(G.dk); return; }
-  if (a === 'retryd') return startDaily(G.dk);
+  if (a === 'retry') { if (G.kind === 'stage') { const s = G.src, j = G.j; startStage(s, j); G.retried = true; } return; }
   if (a === 'undo1') { m.hidden = true; G.over = false; G.S = G.hist.pop() || G.S; G.moves--; buildBoard(); hud(); return; }
   if (a === 'next') { const s = G.src; return startStage(s, G.j + 1); }
   if (a === 'list') { if (G.src === 'c') { homeTab = 'course'; floorOpenId = Math.floor(G.j / FLOOR_N); } else { homeTab = 'modes'; modeOpenId = G.src; } return goHome(); }
