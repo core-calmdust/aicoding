@@ -26,17 +26,17 @@ const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'R
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب' };
 const ICON_RULES = '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const CSS = `
-/* player cards (common spec, PC): the side / count label is information, not a headline — keep it modest */
-html.hb-on .side .players .count, html.hb-on .side .players .count > span:first-child, html.hb-on .side .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)!important;line-height:1.15!important}
-html.hb-on .side .players .side-l{font-size:clamp(15px, 1.15vw, 18px)!important;line-height:1.3!important}
+/* player cards (common spec: whenever the info column stands beside the board — html.side-col): the side / count label is information, not a headline — keep it modest */
+html.side-col .side .players .count, html.side-col .side .players .count > span:first-child, html.side-col .side .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)!important;line-height:1.15!important}
+html.side-col .side .players .side-l{font-size:clamp(15px, 1.15vw, 18px)!important;line-height:1.3!important}
 /* …and the card itself compact: name on the left, the count / side on the right of the same line, the status line under it
    (not while a game clock is shown — those cards keep their own clock layout) */
-html.hb-on body:not(.has-clk):not(.in-online) .side .players .player{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;padding:8px 12px!important;min-height:0!important}
-html.hb-on body:not(.has-clk):not(.in-online) .side .players .player > .top{grid-column:1;grid-row:1;min-width:0}
-html.hb-on body:not(.has-clk):not(.in-online) .side .players .player > .count, html.hb-on body:not(.has-clk):not(.in-online) .side .players .player > .side-l, html.hb-on body:not(.has-clk):not(.in-online) .side .players .player > .row{grid-column:2;grid-row:1;margin:0!important;text-align:end}
-html.hb-on body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2}
-html.hb-on body:not(.has-clk):not(.in-online) .side .players .player > .status:empty{display:none}
-html.hb-on .side .card.players{padding-top:10px!important;padding-bottom:10px!important}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;padding:8px 12px!important;min-height:0!important}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .top{grid-column:1;grid-row:1;min-width:0}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .count, html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .side-l, html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .row{grid-column:2;grid-row:1;margin:0!important;text-align:end}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status:empty{display:none}
+html.side-col .side .card.players{padding-top:10px!important;padding-bottom:10px!important}
 :root{--hb-h:0px}
 html.hb-on,body.hb-on{--hb-h:${H}px}
 .hb{position:fixed;z-index:60;top:0;left:0;right:0;height:${H}px;display:none;align-items:center;gap:14px;padding:0 max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left));
@@ -254,6 +254,18 @@ html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
   window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
     rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
 }
+// html.side-col: the info column (.side) stands beside the board (not stacked under it) — the compact player cards use it
+function sideCol() {
+  const side = document.querySelector('.app .side'), app = document.querySelector('.app'); if (!side || !app) return;
+  const upd = () => {
+    const sr = side.getBoundingClientRect(), others = [...app.children].filter(c => c !== side && c.getClientRects().length && getComputedStyle(c).position !== 'fixed');
+    const beside = sr.width > 0 && others.some(c => { const r = c.getBoundingClientRect(); return r.width > 40 && (sr.left >= r.right - 4 || sr.right <= r.left + 4) && sr.top < r.bottom && sr.bottom > r.top; });
+    document.documentElement.classList.toggle('side-col', beside);
+  };
+  upd(); setTimeout(upd, 300); setTimeout(upd, 1500);
+  let t = 0; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(upd, 80); });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(sideCol, 0)); else setTimeout(sideCol, 0);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(dockCenter, 0)); else setTimeout(dockCenter, 0);
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES };
 })();
