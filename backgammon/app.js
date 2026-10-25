@@ -1436,27 +1436,42 @@ let geomReady = false;
 // flat board in any phone-landscape layout (physical landscape or the rotated page)
 // PC wide: the board spans the browser width (flat geometry, height fitted to the window), the info row sits below it;
 // lessons / puzzles keep their card beside the board; while the review is open the board leaves room for the row's top
-const mqPCW = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1000px) and (min-height: 560px)');
-let PCW = false;
+// (from 820px wide = whenever the PC header bar holds the title and the menu: on square / portrait windows too the full-width
+// board with the info row under it is far bigger than a board squeezed beside a column)
+const mqPCW = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 560px)');
+let PCW = false, PCS = false;
 function pcFit() {
-  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
+  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0, R = document.documentElement;
   const side = document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
-  // the info row below the board has a fixed height (cards scroll inside); board + row fit in the window
   const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js): the row may get lower too
-  const rowH = document.documentElement.classList.contains('dock-compact') ? 112 : Math.round(Math.min(340, Math.max(dfx ? 180 : 236, (hgt - dfx) * 0.3)));   // dock-compact: players + evaluation bar only
-  document.documentElement.style.setProperty('--rowh', rowH + 'px');
-  const reserve = side ? 0 : rowH + 18;
-  // board width capped like Mancala's (~1200px) so wide screens don't feel cramped edge to edge
-  const availW = Math.min(1200, w - 48 - (side ? Math.min(440, Math.max(360, w * 0.3)) + 24 : 0));
-  const availH = hgt - hb - 14 - 16 - reserve - (window.olDockH ? olDockH() : 0);
-  const hMin = side ? 8.4 : 7.2;
-  let u = Math.min(availW / 15.85, 100), h = availH / u;
-  if (h < hMin) { u = availH / hMin; h = hMin; }
-  return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
+  const compact = R.classList.contains('dock-compact');   // dock-compact: players + evaluation bar only
+  const base = hgt - hb - 14 - 16 - (window.olDockH ? olDockH() : 0);   // height for the board (+ the info row under it)
+  const fitU = (availW, availH, hMin) => { let u = Math.min(availW / 15.85, 100), h = availH / u; if (h < hMin) { u = availH / hMin; h = hMin; } return { u, h }; };
+  // the info row under the board: its height gives way to the board (down to rowMin) when the window is low for its width,
+  // and keeps the roomy height (rowMax) when the board is limited by the width anyway; cards scroll inside
+  const availW = Math.min(1200, w - 48);   // board width capped like Mancala's (~1200px) so wide screens don't feel cramped edge to edge
+  const rowMax = compact ? 112 : Math.round(Math.min(340, Math.max(dfx ? 180 : 236, (hgt - dfx) * 0.3)));
+  const rowMin = compact ? 112 : dfx ? 150 : 196;
+  const rowH = Math.round(Math.max(rowMin, Math.min(rowMax, base - 18 - 7.2 * Math.min(availW / 15.85, 100))));
+  R.style.setProperty('--rowh', rowH + 'px');
+  let f;
+  if (side) f = fitU(Math.min(1200, w - 48 - Math.min(440, Math.max(280, w * 0.3)) - 24), base, 8.4);   // lessons / puzzles: card beside the board
+  else {
+    f = fitU(availW, base - rowH - 18, 7.2);
+    // low / wide windows: the info as a column beside the board (html.pcs) when that gives a clearly bigger board
+    // (kept while the online dock is open: its fit-to-space pass resizes the game; a little hysteresis near the switch point)
+    const sw = Math.round(Math.min(400, Math.max(280, w * 0.24)));
+    const b = fitU(Math.min(1200, w - 48 - sw - 24), base, 7.2), bh = b.u * Math.min(12, b.h);
+    const want = document.body.classList.contains('dock-open') ? PCS : !compact && bh >= 340 && b.u > f.u * (PCS ? 1.03 : 1.08);
+    if (want !== PCS) { PCS = want; R.classList.toggle('pcs', want); }
+    if (PCS) { R.style.setProperty('--pcsw', sw + 'px'); f = b; }
+  }
+  if (side && PCS) { PCS = false; R.classList.remove('pcs'); }
+  return { h: Math.min(12, f.h), u: Math.max(dfx ? 16 : 30, f.u) };   // with the online dock open the board may get smaller
 }
 function updateGeom() {
   const pcw = mqPCW.matches && !ROT && !mqCoarse.matches;
-  if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); }
+  if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); if (!pcw && PCS) { PCS = false; document.documentElement.classList.remove('pcs'); } }
   const flat = ROT || mqLandPhone.matches || PCW, f = flat ? (PCW ? pcFit() : flatFit()) : { h: 12, u: 0 };
   if (flat === G.FLAT && Math.abs(f.h - G.H) < 0.05 && Math.abs(f.u - (G.U || 0)) < 0.3 && geomReady) return;
   G.U = f.u; setGeom(flat, f.h, f.u);

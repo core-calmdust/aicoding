@@ -29,7 +29,10 @@
   --pad: clamp(24px, 5vmin, 72px);
   --gap: clamp(20px, 2.6vw, 44px);
   --ttop: 0px;
-  --u: min((var(--vh) - var(--pad) * 2 - var(--ttop)) / 12,(var(--vw) - var(--pad) * 2 - var(--gap) - 360px) / 15.85, 70px);
+  /* info column width follows the window shape (narrow / square windows give the board the room) */
+  --sidew: clamp(250px, 26vw, 440px);
+  --padx: var(--pad);
+  --u: min((var(--vh) - var(--padt, var(--pad)) - var(--pad) - var(--ttop)) / 12,(var(--vw) - var(--padx) * 2 - var(--gap) - var(--sidew)) / 15.85, 70px);
   --fw: calc(var(--u) * 15.85);
   --gh: 12;
   --fh: calc(var(--u) * var(--gh));
@@ -63,7 +66,11 @@ body{
   -webkit-tap-highlight-color:transparent;
 }
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
-.app{height:var(--vh);display:grid;grid-template-columns:auto minmax(330px, 500px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:var(--pad)}
+.app{height:var(--vh);display:grid;grid-template-columns:auto minmax(var(--sidew), 500px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:var(--pad) var(--padx)}
+/* narrow PC windows (below the wide layout): slimmer side margins so the board keeps its size */
+@media not all and (pointer: coarse){ @media (max-width: 1100px){ :root{--padx:clamp(14px, 2.5vw, var(--pad));--gap:clamp(16px, 2.4vw, 44px)} } }
+/* below 820px (no PC header bar): start at the top, and the info column may run longer than the board instead of squeezing its cards */
+@media not all and (pointer: coarse){ @media (max-width: 819px){ :root:not(.rot){--padt:min(var(--pad), 28px)} html:not(.rot) .app{align-content:start;align-items:start} html:not(.rot) .side{height:auto;min-height:var(--fh);max-height:none} html:not(.rot) .side-in{height:auto;min-height:var(--fh)} } }
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center}
 .frame{position:relative;width:var(--fw);height:var(--fh);user-select:none;-webkit-user-select:none;touch-action:none;border-radius:calc(var(--u)*.28);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(201,169,97,.3)}
@@ -200,6 +207,8 @@ a.snd.home{text-decoration:none}
 .btn.primary{color:var(--text)}
 /* narrow side panel (PC): seven menu buttons as two rows of four, icon beside the label */
 @container (max-width: 440px){ html:not(.rot) .controls{grid-template-columns:repeat(4,1fr);gap:6px;padding:8px} html:not(.rot) .controls .btn{flex-direction:row;justify-content:center;gap:6px;padding:7px 6px} }
+/* slim info column (square / portrait PC windows below the wide layout): players one per line, labels under the icons */
+@media not all and (pointer: coarse){ @container (max-width: 400px){ html:not(.rot) .players{grid-template-columns:minmax(0,1fr);gap:6px;padding:8px} html:not(.rot) .controls .btn{flex-direction:column;gap:2px;padding:6px 2px;font-size:11px} html:not(.rot) .controls .btn span{text-overflow:clip} html:not(.rot) .graph{height:clamp(28px, calc(var(--vh) * .05), 56px)} html:not(.rot) .kifu-card{min-height:80px} } }
 .kifu-card{flex:1;min-height:92px;display:flex;flex-direction:column}
 .hint-card.show{flex:0 1 auto;min-height:min(150px, 15vh);overflow:hidden;flex-direction:column}
 @media (max-height: 800px) and (pointer: fine){ .side-in:has(.hint-card.show) .graph, .side-in:has(.review-card.show) .graph{height:30px} }
@@ -731,7 +740,7 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
 /* PC: header row above the board-top line like the other games — title above the board's top-left corner, icons above the side panel; the panel's top lines up with the board's top */
 @media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
   :root:not(.rot){--ttop:58px}
-  html:not(.rot) .app{padding-top:calc(var(--pad) + var(--ttop))}
+  html:not(.rot) .app{padding-top:calc(var(--padt, var(--pad)) + var(--ttop))}
   html:not(.rot) .side{position:relative}
   html:not(.rot) .side-in > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px);justify-content:flex-end}
   html:not(.rot) .side-in > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
@@ -856,7 +865,7 @@ html.pcw .kifu-card{grid-area:kf}
 html.pcw .kifu{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:14px;gap:4px 8px}
 html.pcw .kifu .gh{font-size:13px}
 /* lessons / puzzles: card on the right of the board, both fully visible */
-html.pcw body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(360px, 440px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
+html.pcw body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(280px, 440px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
 html.pcw body:is(.in-lesson,.in-puzzle) .side{width:100%}
 html.pcw body:is(.in-lesson,.in-puzzle) .side-in{display:flex;flex-direction:column;gap:12px}
 html.pcw body:is(.in-lesson,.in-puzzle) .side-in{height:auto;max-height:var(--fh)}
@@ -864,6 +873,25 @@ html.pcw body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card
 html.pcw body:is(.in-lesson,.in-puzzle) .side-in > .players{flex:none}
 html.pcw body:is(.in-lesson,.in-puzzle) .lesson-card, html.pcw body:is(.in-lesson,.in-puzzle) .puzzle-card{max-height:calc(var(--vh) - 150px);overflow-y:auto}
 html.pcw body.flat-geo:is(.in-lesson,.in-puzzle) .scroll-jump{display:none}
+/* narrower windows in the wide layout (820-1100px): smaller counts so the names keep their room in the players card */
+@media (max-width: 1100px){ html.pcw:not(.pcs) .player .count{font-size:24px} html.pcw:not(.pcs) .player{column-gap:6px;padding:8px 10px} html.pcw:not(.pcs) .player .count small{margin-left:3px} }
+/* low / wide windows (html.pcs, chosen in pcFit): the info stands as a column beside the board instead of the row under it */
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .app{grid-template-columns:auto var(--pcsw,320px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side{width:100%}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in{display:flex;flex-direction:column;gap:12px;height:var(--fh)}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .players{flex:none}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > #evalCard{flex:1 1 0;min-height:118px}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .kifu-card{flex:1.2 1 0;min-height:90px}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.review-card.show,.hint-card.show){flex:2 1 0;min-height:120px}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .players .player{flex:none;padding:6px 12px}
+html.pcw.pcs .player .count{font-size:clamp(22px, calc(var(--fh) / 18), 34px)}
+html.pcw.pcs #evalCard .graph{min-height:16px}
+html.pcw.pcs .players .pl-head{display:none}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.players,#evalCard,.kifu-card,.review-card.show,.hint-card.show){padding:10px 14px}
+html.pcw.pcs .card .kifu-head, html.pcw.pcs .evalrow{margin-bottom:6px}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > #evalCard{min-height:104px}
+html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .kifu-card{min-height:76px}
+html.pcw.pcs.dock-compact .side-in{height:auto!important}
 /* review commentary (all layouts) */
 .rv-cur{margin:10px 0 4px;padding:10px 12px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:linear-gradient(160deg,rgba(201,169,97,.10),rgba(0,0,0,.18))}
 .rv-cur .h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
@@ -1251,7 +1279,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
-<script src="app.js?v=20261025dk3"></script>
+<script src="app.js?v=20261025sw"></script>
 <script src="op.js?v=20261021op"></script>
 <script src="online-ui.js?v=20261025dk"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->

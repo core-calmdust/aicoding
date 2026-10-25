@@ -565,7 +565,18 @@ bdi{unicode-bidi:isolate}
   .lesson-fb,.pz-status{min-height:0}
   /* header bar on: the title row and the menu row move into the bar, so the board gets that height */
   /* the bottom row keeps the old menu row's height too, so lesson / puzzle cards have room and the board size does not change between modes */
-  html.hb-on{--C2:calc(var(--C) + var(--tb) + 12px);--u:min((100vw - 64px) / 9.7, (var(--vh) - 24px - 2 * var(--plate) - 16px - 12px - var(--C2)) / 4.2, 132px)}
+  html.hb-on{--C2:calc(var(--C) + var(--tb) + 12px);--uA:min((100vw - 64px) / 9.7, (var(--vh) - 24px - 2 * var(--plate) - 16px - 12px - var(--C2)) / 4.2, 132px);--u:var(--uA)}
+  /* wide / low windows: the info (形勢 + 棋譜) can stand beside the board instead of under it (html.mc-side, chosen by the
+     script at the end of the page when that gives a clearly bigger board; --uA = info below, --uB = info beside) */
+  html.hb-on{--sidew:clamp(260px, 22vw, 400px);--uB:min((100vw - 64px - 24px - var(--sidew)) / 9.7, (var(--vh) - 24px - 2 * var(--plate) - 16px) / 4.2, 132px)}
+  html.hb-on.mc-side{--u:var(--uB);--BH:calc(var(--u) * 4.2 + 2 * var(--plate) + 16px - 12px)}
+  html.hb-on.mc-side .app{width:min(calc(var(--u) * 9.7 + 24px + var(--sidew)), calc(100vw - 32px));column-gap:24px;
+    grid-template-columns:minmax(0,1fr) var(--sidew);grid-template-rows:calc(var(--BH) * .42) calc(var(--BH) * .58);grid-template-areas:"board eval" "board kifu"}
+  html.hb-on.mc-side .app:has(.review-card.show){grid-template-rows:calc(var(--BH) * .3) calc(var(--BH) * .45) calc(var(--BH) * .25);grid-template-areas:"board eval" "board rv" "board kifu"}
+  html.hb-on.mc-side .kifu{grid-template-columns:repeat(4,1fr)}
+  html.hb-on.mc-side body.in-lesson .lesson-card, html.hb-on.mc-side body.in-puzzle .puzzle-card{grid-area:1 / 2 / -1 / 3;grid-template-columns:minmax(0,1fr);align-self:stretch}
+  html.hb-on.mc-side .lesson-card > *, html.hb-on.mc-side .puzzle-card > *{grid-column:1!important;grid-row:auto!important}
+  html.hb-on.mc-side .lesson-card > .lesson-actions, html.hb-on.mc-side .puzzle-card > .lesson-actions{flex-direction:row;flex-wrap:wrap;align-self:start;margin-top:8px}
   html.hb-on .app{grid-template-rows:auto var(--C2);grid-template-areas:"board board board board board board" "eval eval eval kifu kifu kifu"}
   html.hb-on .app:has(.review-card.show){grid-template-areas:"board board board board board board" "eval rv rv rv kifu kifu"}
   /* review on PC: the commentary gets half the width and a taller bottom row (the board gives up a little height) */
@@ -1074,6 +1085,33 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
     };
     fit(); addEventListener('resize', fit);
   } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=5"><\/script><script src="../shared/headerbar.js?v=22"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=20261022ol"><\/script><script src="app.js?v=20261024ls"><\/script><script src="online-ui.js?v=20261022ol"><\/script>');
+})();
+</script>
+<script>
+// PC: put the info column beside the board (html.mc-side) when that makes the board clearly bigger than the info row below it
+// (low / wide windows); a little hysteresis so a window near the switch point does not flip back and forth
+(function () {
+  if (window.__ROTWRAP) return;
+  var R = document.documentElement, pr = null;
+  var px = function (v) { pr.style.width = 'var(' + v + ')'; return pr.getBoundingClientRect().width; };
+  var upd = function () {
+    if (!document.body || document.body.classList.contains('dock-open')) return;   // keep the layout while the online dock is open (its fit-to-space pass resizes the game)
+    if (!pr) { pr = document.createElement('div'); pr.setAttribute('aria-hidden', 'true'); pr.style.cssText = 'position:fixed;left:0;top:0;height:0;visibility:hidden;pointer-events:none'; document.body.appendChild(pr); }
+    var on = R.classList.contains('mc-side'), want = false;
+    if (R.classList.contains('hb-on') && !matchMedia('(pointer: coarse)').matches) {
+      var a = px('--uA'), b = px('--uB');
+      want = a > 0 && b > a * (on ? 1.03 : 1.08);
+    }
+    if (want !== on) { R.classList.toggle('mc-side', want); dispatchEvent(new Event('resize')); }
+  };
+  var t = 0, later = function () { cancelAnimationFrame(t); t = requestAnimationFrame(upd); };
+  addEventListener('resize', later);
+  new MutationObserver(later).observe(R, { attributes: true, attributeFilter: ['class', 'style'] });
+  var wasOpen = false;
+  new MutationObserver(function () { var o = document.body.classList.contains('dock-open'); if (o !== wasOpen) { wasOpen = o; if (!o) setTimeout(later, 700); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  var go = function () { upd(); var c = document.querySelector('.review-card'); if (c) new MutationObserver(later).observe(c, { attributes: true, attributeFilter: ['class'] }); var st = document.getElementById('dockFitCss'); if (st) new MutationObserver(later).observe(st, { childList: true, characterData: true, subtree: true }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(go, 0); }); else setTimeout(go, 0);
+  setTimeout(go, 1200);
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
