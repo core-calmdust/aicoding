@@ -362,6 +362,62 @@
       put(5, 4, W, true);
       return g;
     },
+    // Hex: an n × n rhombus of hexagons inlaid in a walnut slab, red edges (top and bottom rows, far and near) and blue sides,
+    // glazed red / blue stones. live: no showcase position; o.n = 3 … 13 (default 11), every size the same outer width.
+    // userData: { n, cell, top, W, D, pt(i) → [x, z] (cell i = r * n + c, row 0 on the far side), stone(col) → Mesh }
+    hex(live, o = {}) {
+      const TT = T(), g = new TT.Group(), n = o.n || 11, S3 = Math.sqrt(3), HR = 1 / S3;
+      const cell = (o.W || 10.4) / (1.5 * (n - 1) + 1 + 2.1), cx = .75 * (n - 1), cz = (n - 1) * S3 / 4;
+      const P = (r, c) => [(c + r / 2 - cx) * cell, (r * S3 / 2 - cz) * cell];
+      // outline: the parallelogram of the corner cells' centres pushed out by d (clockwise as seen from above)
+      const outline = d => {
+        const C = [P(0, 0), P(0, n - 1), P(n - 1, n - 1), P(n - 1, 0)];
+        return C.map((p, k) => { const a = C[(k + 3) % 4], b = C[(k + 1) % 4], nrm = (u, v) => { const dx = v[0] - u[0], dz = v[1] - u[1], L = Math.hypot(dx, dz); return [dz / L, -dx / L]; }, n1 = nrm(a, p), n2 = nrm(p, b), q = d / (1 + n1[0] * n2[0] + n1[1] * n2[1]); return [p[0] + (n1[0] + n2[0]) * q, p[1] + (n1[1] + n2[1]) * q]; });
+      };
+      const shapeOf = L => { const s = new TT.Shape(); L.forEach(([x, z], k) => (k ? s.lineTo(x, -z) : s.moveTo(x, -z))); s.closePath(); return s; };
+      const rim = outline(cell * 1.08), inner = outline(cell * .96), H = .5;
+      const xs = rim.map(p => p[0]), zs = rim.map(p => p[1]), minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs), W = maxX - minX, D = maxZ - minZ;
+      // walnut slab with a rounded bevel
+      const slabG = new TT.ExtrudeGeometry(shapeOf(rim), { depth: H, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 5, curveSegments: 4 });
+      slabG.rotateX(-Math.PI / 2); slabG.translate(0, .08, 0);
+      { const Pp = slabG.attributes.position, UV = slabG.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, (Pp.getX(i) - minX) / W + Pp.getY(i) * .07, (Pp.getZ(i) - minZ) / D); }
+      const wal = wood('hxw', '#6a3f22', '#2a160a', 1024, 1024, 1.2);
+      g.add(mesh(slabG, M({ map: wal, color: 0xffffff, roughness: .32, clearcoat: .8, clearcoatRoughness: .2, bumpScale: .004 })));
+      // the inlay: cells, coloured edges, a fine brass line round the field (drawn on one canvas, mapped by position)
+      const CW = 2048, CH = Math.round(CW * D / W), px = x => (x - minX) / W * CW, pz = z => (z - minZ) / D * CH, R = cell * HR;
+      const top = canvasTex('hxTop' + n, CW, CH, (c2) => {
+        c2.drawImage(wood('hxw2', '#7a4a28', '#331b0c', 1024, 1024, 1.3).image, 0, 0, CW, CH);
+        const poly = (L, fill, stroke, lw) => { c2.beginPath(); L.forEach(([x, z], k) => (k ? c2.lineTo(px(x), pz(z)) : c2.moveTo(px(x), pz(z)))); c2.closePath(); if (fill) { c2.fillStyle = fill; c2.fill(); } if (stroke) { c2.strokeStyle = stroke; c2.lineWidth = lw; c2.stroke(); } };
+        poly(inner, null, 'rgba(226,194,117,.65)', 5);
+        const hexL = (x, z, k) => { const L = []; for (let j = 0; j < 6; j++) { const a = Math.PI / 180 * (60 * j - 90); L.push([x + Math.cos(a) * R * k, z + Math.sin(a) * R * k]); } return L; };
+        // coloured edges: the outer sides of the border cells, pushed out a little
+        const DIRS = [[-1, 0], [-1, 1], [0, 1], [1, 0], [1, -1], [0, -1]], SIDE = [[5, 0], [0, 1], [1, 2], [2, 3], [3, 4], [4, 5]];
+        c2.lineCap = 'round'; c2.lineWidth = Math.max(10, R / W * CW * .42);
+        for (let i = 0; i < n * n; i++) {
+          const r = Math.floor(i / n), c = i % n, [x, z] = P(r, c), L = hexL(x, z, 1);
+          DIRS.forEach(([dr, dc], d) => { const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < n && cc >= 0 && cc < n) return; const red = rr < 0 || rr >= n, [a, b] = SIDE[d], mx = (L[a][0] + L[b][0]) / 2 - x, mz = (L[a][1] + L[b][1]) / 2 - z, Lm = Math.hypot(mx, mz), ox = mx / Lm * R * .3, oz = mz / Lm * R * .3;
+            c2.strokeStyle = red ? '#d8342a' : '#2a6fd6'; c2.beginPath(); c2.moveTo(px(L[a][0] + ox), pz(L[a][1] + oz)); c2.lineTo(px(L[b][0] + ox), pz(L[b][1] + oz)); c2.stroke(); });
+        }
+        for (let i = 0; i < n * n; i++) {
+          const r = Math.floor(i / n), c = i % n, [x, z] = P(r, c), gr = c2.createRadialGradient(px(x - R * .3), pz(z - R * .35), 2, px(x), pz(z), R / W * CW * 1.1);
+          const alt = (r + 2 * c) % 3 === 0; gr.addColorStop(0, alt ? '#f3dcae' : '#f7e6c0'); gr.addColorStop(1, alt ? '#d2b37a' : '#dcc08a');
+          poly(hexL(x, z, .955), gr, 'rgba(60,34,12,.75)', 3);
+        }
+      });
+      top.anisotropy = 8;
+      const topG = new TT.ShapeGeometry(shapeOf(rim)); topG.rotateX(-Math.PI / 2);
+      { const Pp = topG.attributes.position, UV = topG.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, (Pp.getX(i) - minX) / W, 1 - (Pp.getZ(i) - minZ) / D); }
+      const Y = H + .161, face = mesh(topG, M({ map: top, roughness: .38, clearcoat: .5, clearcoatRoughness: .3, bumpScale: .003 }), 0, Y, 0); face.castShadow = false; g.add(face);
+      const RED = M({ color: 0xd2301f, roughness: .22, clearcoat: .9, clearcoatRoughness: .12 }), BLUE = M({ color: 0x2463c9, roughness: .22, clearcoat: .9, clearcoatRoughness: .12 });
+      const stoneOf = col => bevelDisc(cell * .4, cell * .26, col === 1 ? RED : BLUE);
+      const pt = i => P(Math.floor(i / n), i % n);
+      Object.assign(g.userData, { n, cell, top: Y + .002, W, D, pt, stone: stoneOf, S: W });
+      if (live) return g;
+      // a mid-game position: a red chain of bridges from the far edge, blue blocking from the sides
+      const put = (r, c, col) => { const [x, z] = P(r, c), s = stoneOf(col); s.position.set(x, Y + .002, z); g.add(s); const sh = contact(cell * .42); sh.position.set(x, Y + .003, z); g.add(sh); };
+      [[1, 6, 1], [3, 5, 1], [4, 4, 1], [5, 4, 1], [6, 3, 1], [8, 2, 1], [3, 6, 2], [4, 6, 2], [5, 5, 2], [6, 5, 2], [2, 8, 2], [7, 4, 2], [8, 3, 2]].forEach(([r, c, col]) => { if (r < n && c < n) put(r, c, col); });
+      return g;
+    },
     sudoku() {
       const g = new (T().Group)();
       const top = M({ map: grid('sd', '#fffdf6', '#2b3044', 9, 9, { lw: 3, after: (c, W) => { c.lineWidth = 9; for (let i = 0; i <= 3; i++) { c.beginPath(); c.moveTo(i * W / 3, 0); c.lineTo(i * W / 3, W); c.moveTo(0, i * W / 3); c.lineTo(W, i * W / 3); c.stroke(); } c.fillStyle = '#2b3044'; c.font = '700 70px Fredoka, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; const d = '530070000600195000098000060800060003400803001700020006060000280000419005000080079'; for (let i = 0; i < 81; i++) if (d[i] !== '0') c.fillText(d[i], (i % 9 + .5) * W / 9, ((i / 9 | 0) + .55) * W / 9); } }), roughness: .9 });
