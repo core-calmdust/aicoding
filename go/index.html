@@ -27,9 +27,23 @@
   --ttop: 58px;
   --pad: clamp(24px, 6vmin, 90px);
   --gap: clamp(22px, 3vw, 46px);
-  --bs: min(var(--vh) - var(--pad) * 2 - 64px - var(--ttop), 100vw - var(--pad) * 2 - var(--gap) - 350px, 1040px);
+  --padx: clamp(16px, 4vw, var(--pad));
+  /* info column width follows the window shape: squarish windows give the board the room, wide ones keep the roomy column (2026-10-25) */
+  --bv: min(var(--vh) - var(--pad) * 2 - 64px - var(--ttop), 1040px);
+  --sidew: clamp(260px, 100vw - var(--padx) * 2 - var(--gap) - var(--bv), 520px);
+  --bs: min(var(--bv), 100vw - var(--padx) * 2 - var(--gap) - var(--sidew));
 }
 *{box-sizing:border-box;margin:0;padding:0}
+/* PC window without the header bar (< 820px) or a low one: smaller margins so the board keeps its size (2026-10-25) */
+@media (hover: hover) and (pointer: fine) and (max-width: 819px), (hover: hover) and (pointer: fine) and (max-height: 680px){:root{--pad:clamp(14px, 3vmin, 28px)}}
+/* online dock opened (shared/headerbar.js dock-fit lowers --vh): a board limited by the window width (narrow info column)
+   still gives back what --vh loses, so every fit step makes the layout smaller; the info column takes the width it frees (2026-10-25) */
+@media not all and (pointer: coarse){
+  html.ol-dock{--vbase:calc(100vh - 108px - var(--hb-h))}
+  @supports (height:100dvh){html.ol-dock{--vbase:calc(100dvh - 108px - var(--hb-h))}}
+  body.dock-open .side{height:calc(var(--bs) + 52px)}   /* (no taller floor while the dock is open: the fit / compact steps size it) */
+  html.dock-fit{--bs:min(var(--bv), 100vw - var(--padx) * 2 - var(--gap) - 260px - max(0px, var(--vbase, var(--vh)) - var(--vh)));--sidew:clamp(260px, 100vw - var(--padx) * 2 - var(--gap) - var(--bs), 520px)}
+}
 @supports (height:100lvh){:root{--vh:100lvh}}
 html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
 @supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
@@ -53,7 +67,7 @@ body{
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden;
 }
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
-.app{height:var(--vh);display:grid;grid-template-columns:auto minmax(330px, 520px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:calc(var(--pad) + var(--ttop)) var(--pad) var(--pad)}
+.app{height:var(--vh);display:grid;grid-template-columns:auto var(--sidew);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-content:center;align-items:start;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:10px}
 .frame{position:relative;width:var(--bs);height:var(--bs);user-select:none;-webkit-user-select:none;touch-action:manipulation}
@@ -100,7 +114,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .confirm-tip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:15;font-size:12px;color:#1b150a;background:rgba(233,199,126,.95);border-radius:999px;padding:4px 12px;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
 .confirm-tip.show{opacity:1}
 /* ---------------------------------------------------------------- side */
-.side{grid-area:side;width:100%;height:calc(var(--bs) + 52px);min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size;position:relative}
+.side{grid-area:side;width:100%;height:max(calc(var(--bs) + 52px), min(620px, calc(var(--bv) + 52px)));min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size;position:relative}
 .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
 .side > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px)}
 .kifu-card{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -544,6 +558,20 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   .info-line{display:none}
   .playbar{min-height:34px}
   .pbtn{padding:6px 12px}
+}
+/* narrow info column (squarish windows, 2026-10-25): one player per row, the buttons in two rows, the kifu header may wrap */
+@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-height: 561px){
+@container (max-width: 359px){
+  .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}
+  .controls{grid-auto-flow:row!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
+  .controls .btn{font-size:11px;letter-spacing:-.02em;padding:6px 2px;gap:3px}
+  .kifu-head{flex-wrap:wrap;row-gap:2px}
+  .side-in{gap:8px}
+  .side-in > .card{padding:10px 12px}
+  .graph{max-height:56px}
+  .info-line{display:none}   /* as on phones: the summary line gives its room to the kifu */
+  @media (max-height: 780px){ .graph{display:none} }   /* low window too: the kifu list keeps a few rows (the bar and the eval text stay) */
+}
 }
 @media (min-height: 561px){
 @container (min-width: 420px){
