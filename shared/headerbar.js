@@ -183,21 +183,36 @@ function dockCenter() {
   const relayout = () => { own++; window.dispatchEvent(new Event('resize')); setTimeout(() => own--, 0); };
   // the reduction R is applied as --vh (an !important rule on <html> and <body>: some games re-declare --vh on body or rewrite
   // the inline value on resize) and as DockFit.extra for games that size the board in JS (backgammon: olDockH)
-  let R = 0, base = 0;
+  let R = 0, base = 0, lastStep = 0;
   const css = document.createElement('style'); css.id = 'dockFitCss'; document.head.appendChild(css);
+  const cmp = document.createElement('style'); cmp.id = 'dockCompactCss';
+  cmp.textContent = `html.dock-compact .side .kifu-card, html.dock-compact .side .info-line, html.dock-compact .side #graph, html.dock-compact .side .pl-info{display:none!important}
+html.dock-compact .side, html.dock-compact .side .side-in{height:auto!important;max-height:none!important}
+html.dock-compact .side .card{padding-top:9px!important;padding-bottom:9px!important}
+html.dock-compact .side .players .player{padding-top:8px!important;padding-bottom:8px!important}
+html.dock-compact .side .players .count, html.dock-compact .side .players .count > span:first-child{font-size:clamp(20px, 4.2vh, 30px)!important;line-height:1.1!important}
+html.dock-compact .side .players .status:not(.low){display:none!important}
+html.dock-compact .side .players .count{margin-top:2px!important}
+html.dock-compact .side #evalCard{min-height:0!important;height:auto!important;flex:none!important}
+html.dock-compact .side #evalCard .evalbar{margin-top:6px!important}
+html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
+  document.head.appendChild(cmp);
   const apply = () => { css.textContent = R ? `html.dock-fit, html.dock-fit body{--vh:${Math.max(240, Math.floor(base - R))}px !important}` : ''; window.DockFit.extra = R; root.classList.toggle('dock-fit', R > 0); relayout(); };
   window.DockFit = { extra: 0 };
-  const unfit = () => { if (!fitted) return; fitted = false; R = 0; apply(); };
+  const unfit = () => { const c = root.classList.contains('dock-compact'); root.classList.remove('dock-compact'); if (!fitted) { if (c) relayout(); return; } fitted = false; R = 0; apply(); };
   // too tall for the space between the header and the dock: lay the game out smaller (a few passes: not everything scales with --vh)
   // (games may redraw their board a moment after a resize, so each pass waits before measuring again)
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const fit = async my => {
+    let prev = Infinity;
     for (let k = 0; k < 6; k++) {
       const [top, bot] = region(), room = bot - top - 2 * M, u = bounds(); if (!u || my !== gen) return;
       const over = (u[1] - u[0]) - room; if (over <= 1) return;
+      if (u[1] - u[0] >= prev - 1) { R = Math.max(0, R - lastStep); apply(); await wait(120); return; }   // no longer shrinking: undo the last step and stop
+      prev = u[1] - u[0];
       if (!fitted) { base = vhPx(); if (!base) return; }
-      if (base - R <= 240 && R) return;   // as small as it goes
-      fitted = true; R += Math.ceil(over) + 1; apply();
+      if (R > base) return;   // (--vh itself never goes below 240px; DockFit.extra may keep growing for JS-sized boards)
+      fitted = true; lastStep = Math.ceil(over) + 1; R += lastStep; apply();
       await wait(180);
     }
   };
@@ -206,8 +221,13 @@ function dockCenter() {
     const my = ++gen;
     if (!isOpen()) { cur = 0; app.style.top = '0px'; setTimeout(() => { if (!isOpen() && my === gen) unfit(); }, 460); return; }   // size back once it has scrolled back
     await fit(my); if (my !== gen || !isOpen()) return;
+    // the info column too short for its cards: compact it (players smaller, graph / record / info line hidden — the
+    // evaluation bar and the ◀ ▶ navigation stay), like the phone layout
+    const sd = document.querySelector('.app .side');
+    const ub = bounds(), rg = region(), still = ub && (ub[1] - ub[0]) > rg[1] - rg[0] - 2 * M + 2;   // still too tall after fitting
+    if (sd && !root.classList.contains('dock-compact') && (still || sd.scrollHeight > sd.clientHeight + 4 || [...(sd.querySelector('.side-in') || sd).children].some(c => c.getClientRects().length && c.getBoundingClientRect().bottom > sd.getBoundingClientRect().bottom + 4))) { root.classList.add('dock-compact'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; await fit(my); if (my !== gen || !isOpen()) return; }   // compact first, then fit again from the full size
     const [top, bot] = region(), u = bounds(); if (!u) return;
-    const d = Math.max(0, Math.round((u[0] + u[1]) / 2 - (top + bot) / 2));
+    const d = Math.round((u[0] + u[1]) / 2 - (top + bot) / 2);   // (may be negative: a smaller layout is moved down to the middle)
     if (d !== cur) { cur = d; app.style.top = -d + 'px'; }
   };
   // wait for the dock to finish opening / closing (its height animates), then settle

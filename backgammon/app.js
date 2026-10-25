@@ -1443,7 +1443,7 @@ function pcFit() {
   const side = document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
   // the info row below the board has a fixed height (cards scroll inside); board + row fit in the window
   const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js): the row may get lower too
-  const rowH = Math.round(Math.min(340, Math.max(dfx ? 180 : 236, (hgt - dfx) * 0.3)));
+  const rowH = document.documentElement.classList.contains('dock-compact') ? 112 : Math.round(Math.min(340, Math.max(dfx ? 180 : 236, (hgt - dfx) * 0.3)));   // dock-compact: players + evaluation bar only
   document.documentElement.style.setProperty('--rowh', rowH + 'px');
   const reserve = side ? 0 : rowH + 18;
   // board width capped like Mancala's (~1200px) so wide screens don't feel cramped edge to edge
@@ -1452,7 +1452,7 @@ function pcFit() {
   const hMin = side ? 8.4 : 7.2;
   let u = Math.min(availW / 15.85, 100), h = availH / u;
   if (h < hMin) { u = availH / hMin; h = hMin; }
-  return { h: Math.min(12, h), u: Math.max(30, u) };
+  return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
 }
 function updateGeom() {
   const pcw = mqPCW.matches && !ROT && !mqCoarse.matches;
