@@ -158,6 +158,15 @@
       g.add(at(goStone(true, 1.15), p(3) + .1, 1.9, p(0) - .1, .5, 0, -.3));
       return g;
     },
+    hex() {
+      // a 3 × 3 rhombus of the walnut hex board (red edges far / near, blue sides): a red chain, a blue stone, the red stone that connects dropping in
+      const g = new T.Group(), inner = new T.Group(), b = X.MODELS.hex(true, { n: 3, W: 4.6 }), U = b.userData;
+      inner.add(b); inner.rotation.y = -Math.PI / 12; g.add(inner);   // (icons.html turns every icon by 45°: the long diagonal ends up level)
+      const st = (i, col, s = 1.25) => { const m = U.stone(col); m.scale.set(s, s * 1.15, s); const [x, z] = U.pt(i); m.position.set(x, U.top, z); return m; };
+      inner.add(st(1, 1), st(4, 1), st(3, 2), st(5, 2));
+      const big = U.stone(1), [bx, bz] = U.pt(7); big.scale.set(2.1, 2.3, 2.1); big.position.set(bx + .1, U.top + 1.55, bz - .15); big.rotation.set(.45, 0, -.25); inner.add(big);
+      return g;
+    },
     go() {
       // 5 lines of a kaya board: a white stone in atari, the capturing black stone dropping onto its last liberty
       const g = boardChunk(5, 3.8, gridMat('go', '#d9a14e', '#2a1a0a', 5, { points: true, lw: 7 }), M({ map: X.wood('icgo', '#c8904a', '#7e5222') }), null, .7);
