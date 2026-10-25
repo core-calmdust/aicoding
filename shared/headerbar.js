@@ -155,38 +155,73 @@ function init(o) {
   apply();
   return api;
 }
-// Online dock (common spec): when the dock at the bottom is opened on PC, the page content (.app: board + info) slides up so that
-// it sits centred between the header bar and the top of the opened dock (sizes unchanged); closing slides it back.
-// position:relative + top (not transform), so fixed dialogs inside .app keep working.
+// Online dock (common spec): when the dock at the bottom is opened on PC, the page content (.app: board + info) scrolls up
+// smoothly so that it sits centred between the header bar and the top of the opened dock; closing scrolls it back.
+// If it is taller than that space, the game is laid out smaller first (its --vh, which every game sizes the board and the
+// info column from) so nothing hides under the header or the dock. position:relative + top (not transform), so the board's
+// pointer maths and fixed dialogs keep working.
 function dockCenter() {
   const app = document.querySelector('.app'), dock = document.getElementById('dock') || document.querySelector('.dock');
   if (!app || !dock) { if (!dockCenter.tried) { dockCenter.tried = 1; setTimeout(dockCenter, 1500); } return; }
+  const root = document.documentElement, M = 10;   // M: breathing room above / below the content
   if (getComputedStyle(app).position === 'static') app.style.position = 'relative';
-  app.style.transition = 'top .32s cubic-bezier(.22,.7,.25,1)';
-  let raf = 0, cur = 0;
-  const bounds = () => {   // the visible content of .app (its children), measured without the current shift
+  app.style.top = '0px';   // a length (not auto), so the change of top can transition
+  app.style.transition = 'top .45s cubic-bezier(.25,.8,.3,1)';
+  let raf = 0, cur = 0, own = 0, fitted = false;
+  const isOpen = () => { const ds = getComputedStyle(dock); return document.body.classList.contains('dock-open') && ds.display !== 'none' && ds.position === 'fixed'; };
+  const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
+  const bounds = () => {   // the visible content of .app (its children), as if not shifted
     let t = Infinity, b = -Infinity;
     for (const c of app.children) { const cs = getComputedStyle(c); if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); }
-    const now = -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
-    return t === Infinity ? null : [t + now, b + now];
+    const now = shift(); return t === Infinity ? null : [t + now, b + now];
   };
-  const target = () => {
-    const ds = getComputedStyle(dock);
-    if (!document.body.classList.contains('dock-open') || ds.display === 'none' || ds.position !== 'fixed') return 0;
+  const region = () => {
     const bar = document.querySelector('header.hb, .atlas-top'), br = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;   // (fixed: no offsetParent)
-    const top = br && br.height ? br.bottom : 0, bot = dock.getBoundingClientRect().top, u = bounds(); if (!u) return 0;
-    return Math.max(0, Math.round((u[0] + u[1]) / 2 - (top + bot) / 2));
+    return [br && br.height ? br.bottom : 0, dock.getBoundingClientRect().top];
   };
-  const set = d => { if (d === cur) return; cur = d; app.style.top = d ? -d + 'px' : ''; };
-  // follow the dock while it opens / closes (its height animates), then settle
+  const vhPx = () => { const pr = document.createElement('div'); pr.style.cssText = 'position:absolute;visibility:hidden;height:var(--vh)'; app.appendChild(pr); const h = pr.getBoundingClientRect().height; pr.remove(); return h; };
+  const relayout = () => { own++; window.dispatchEvent(new Event('resize')); setTimeout(() => own--, 0); };
+  // the reduction R is applied as --vh (an !important rule on <html> and <body>: some games re-declare --vh on body or rewrite
+  // the inline value on resize) and as DockFit.extra for games that size the board in JS (backgammon: olDockH)
+  let R = 0, base = 0;
+  const css = document.createElement('style'); css.id = 'dockFitCss'; document.head.appendChild(css);
+  const apply = () => { css.textContent = R ? `html.dock-fit, html.dock-fit body{--vh:${Math.max(240, Math.floor(base - R))}px !important}` : ''; window.DockFit.extra = R; root.classList.toggle('dock-fit', R > 0); relayout(); };
+  window.DockFit = { extra: 0 };
+  const unfit = () => { if (!fitted) return; fitted = false; R = 0; apply(); };
+  // too tall for the space between the header and the dock: lay the game out smaller (a few passes: not everything scales with --vh)
+  // (games may redraw their board a moment after a resize, so each pass waits before measuring again)
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const fit = async my => {
+    for (let k = 0; k < 6; k++) {
+      const [top, bot] = region(), room = bot - top - 2 * M, u = bounds(); if (!u || my !== gen) return;
+      const over = (u[1] - u[0]) - room; if (over <= 1) return;
+      if (!fitted) { base = vhPx(); if (!base) return; }
+      if (base - R <= 240 && R) return;   // as small as it goes
+      fitted = true; R += Math.ceil(over) + 1; apply();
+      await wait(180);
+    }
+  };
+  let gen = 0;
+  const settle = async () => {
+    const my = ++gen;
+    if (!isOpen()) { cur = 0; app.style.top = '0px'; setTimeout(() => { if (!isOpen() && my === gen) unfit(); }, 460); return; }   // size back once it has scrolled back
+    await fit(my); if (my !== gen || !isOpen()) return;
+    const [top, bot] = region(), u = bounds(); if (!u) return;
+    const d = Math.max(0, Math.round((u[0] + u[1]) / 2 - (top + bot) / 2));
+    if (d !== cur) { cur = d; app.style.top = -d + 'px'; }
+  };
+  // wait for the dock to finish opening / closing (its height animates), then settle
   const follow = () => {
     cancelAnimationFrame(raf); let last = null, still = 0, n = 0;
-    const step = () => { const y = Math.round(dock.getBoundingClientRect().top); still = y === last ? still + 1 : 0; last = y; if (still >= 3 || ++n > 90) { set(target()); return; } raf = requestAnimationFrame(step); };
-    if (!document.body.classList.contains('dock-open')) { set(0); return; }
+    const step = () => { const y = Math.round(dock.getBoundingClientRect().top); still = y === last ? still + 1 : 0; last = y; if (still >= 2 || ++n > 90) { settle(); return; } raf = requestAnimationFrame(step); };
+    if (!isOpen()) { settle(); return; }
     raf = requestAnimationFrame(step);
   };
-  new MutationObserver(follow).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(follow, 120); });
+  let wasOpen = isOpen();
+  new MutationObserver(() => { const o = isOpen(); if (o !== wasOpen) { wasOpen = o; follow(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  let rt = 0, ws = innerWidth + 'x' + innerHeight;
+  window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
+    rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(dockCenter, 0)); else setTimeout(dockCenter, 0);
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES };

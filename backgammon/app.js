@@ -1442,7 +1442,8 @@ function pcFit() {
   const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
   const side = document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
   // the info row below the board has a fixed height (cards scroll inside); board + row fit in the window
-  const rowH = Math.round(Math.min(340, Math.max(236, hgt * 0.3)));
+  const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js): the row may get lower too
+  const rowH = Math.round(Math.min(340, Math.max(dfx ? 180 : 236, (hgt - dfx) * 0.3)));
   document.documentElement.style.setProperty('--rowh', rowH + 'px');
   const reserve = side ? 0 : rowH + 18;
   // board width capped like Mancala's (~1200px) so wide screens don't feel cramped edge to edge

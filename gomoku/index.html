@@ -851,6 +851,8 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 @media not all and (pointer: coarse){
   /* the board area leaves room for the dock (46px bar + 62px chat strip) */
   body:not(.no-online){--vh:calc(100dvh - 108px - var(--hb-h, 0px));--cell:max(26px, min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 16.5, (100vw - var(--pad) * 2 - var(--gap) - 340px) / 16.5, 62px));--fw:calc(var(--cell) * 16.5);--fh:calc(var(--cell) * 16.5)}
+  /* the opened online dock leaves less room (shared/headerbar.js sets html.dock-fit + a smaller --vh): allow smaller cells */
+  html.dock-fit body:not(.no-online){--cell:max(15px, min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 16.5, (100vw - var(--pad) * 2 - var(--gap) - 340px) / 16.5, 62px))}
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#1f1913,#0f0c09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
@@ -1274,7 +1276,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <script src="../shared/rulesoffer.js?v=5"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="../shared/headerbar.js?v=7"></script>
+<script src="../shared/headerbar.js?v=12"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="app.js?v=20261024ls"></script>

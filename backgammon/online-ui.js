@@ -80,7 +80,7 @@ if (!olOn()) { document.body.classList.add('ol-soon'); document.documentElement.
 document.documentElement.classList.add('ol-dock');
 applyI18n();
 // PC: the board leaves room for the dock (bar + folded chat strip)
-window.olDockH = () => (matchMedia('(pointer: coarse)').matches || document.body.classList.contains('no-online') ? 0 : olOn() ? 108 : 46);
+window.olDockH = () => (matchMedia('(pointer: coarse)').matches || document.body.classList.contains('no-online') ? 0 : (olOn() ? 108 : 46) + ((window.DockFit && DockFit.extra) || 0));   // DockFit: the opened dock leaves less room (shared/headerbar.js)
 window.olTabH = () => { const m = document.getElementById('mtabs'); return m && getComputedStyle(m).display !== 'none' ? (ROT ? m.getBoundingClientRect().width : m.getBoundingClientRect().height) : 0; };
 try { updateGeom(); } catch (e) {}
 
