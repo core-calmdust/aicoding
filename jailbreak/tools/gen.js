@@ -145,16 +145,16 @@ function ruleAt(r, lo, hi, iters = 40) {
 const lerp = (a, b, t) => Math.round(a + (b - a) * t);
 const PARTS = {
   // 12 floors × 50: optimal moves rise from 2 to ~40; some floors have fixed walls (laundry machines, pillars…)
-  course(f0 = 0, f1 = 11) {
+  course(f0 = 0, f1 = 11, j0 = 0, j1 = 50) {
     const WALLS = [0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1], o = [];
-    for (let f = f0; f <= f1; f++) for (let j = 0; j < 50; j++) {
+    for (let f = f0; f <= f1; f++) for (let j = j0; j < j1; j++) {
       const t = (f * 50 + j) / 599, d = Math.max(2, Math.round(2 + 29 * Math.pow(t, 1.15) + (j % 10) * .2));
       o.push(Object.assign(plainAt(d, { walls: WALLS[f] ? [1, 2] : null, n0: d < 8 ? 4 : 7, n1: d < 8 ? 8 : 12 }), { f, j }));
       if (o.length % 50 === 0) console.error('course', o.length, d);
     }
     return o;
   },
-  course_a() { return PARTS.course(0, 5); }, course_b() { return PARTS.course(6, 8); }, course_c() { return PARTS.course(9, 10); }, course_d() { return PARTS.course(11, 11); },
+  course_a() { return PARTS.course(0, 5); }, course_b() { return PARTS.course(6, 8); }, course_c() { return PARTS.course(9, 10); }, course_d() { return PARTS.course(11, 11); }, course_d1() { return PARTS.course(11, 11, 0, 17); }, course_d2() { return PARTS.course(11, 11, 17, 34); }, course_d3() { return PARTS.course(11, 11, 34, 50); },
   daily_h1() { return PARTS.daily_h(0, 183); }, daily_h2() { return PARTS.daily_h(183, 366); },
   sprint() { const o = []; for (let k = 0; k < 600; k++) o.push(plainAt(3 + Math.floor(k / 600 * 12), { n0: 5, n1: 10 })); return o.sort((a, b) => a.o - b.o); },
   silent() { const o = []; for (let k = 0; k < 40; k++) o.push(plainAt(lerp(5, 24, k / 39), { walls: k % 3 === 2 ? [1, 1] : null })); return o; },
@@ -191,28 +191,19 @@ function finalize(rec) {
   return o;
 }
 
-if (part === 'quick') {   // small throw-away data set for UI testing (overwritten by merge)
-  const base = path.join(__dirname, '..'), fin = a => a.map(finalize), modes = {};
-  const course = []; for (let k = 0; k < 600; k++) course.push(plainAt(2 + (k % 6)));
-  for (const r of RULES) { modes[r] = []; for (let k = 0; k < 40; k++) modes[r].push(ruleAt(r, 3, 5, 4)); }
-  modes.big = []; for (let k = 0; k < 40; k++) modes.big.push(plainAt(4, { w: k < 20 ? 7 : 8, h: k < 20 ? 7 : 8, n0: 8, n1: 12 }));
-  modes.silent = []; for (let k = 0; k < 40; k++) modes.silent.push(plainAt(5));
-  const sp = []; for (let k = 0; k < 120; k++) sp.push(plainAt(3 + (k % 10)));
-  const de = [], dm = [], dh = []; const RS = ['basic', 'key', 'plate', 'oneway', 'ice', 'patrol', 'dig'];
-  for (let k = 0; k < 21; k++) { de.push(plainAt(5)); dh.push(plainAt(12)); dm.push(RS[k % 7] === 'basic' ? plainAt(8) : ruleAt(RS[k % 7], 5, 8, 6)); }
-  for (const k in modes) modes[k] = fin(modes[k]);
-  fs.writeFileSync(path.join(base, 'stages.json'), JSON.stringify({ v: 0, course: fin(course), modes }));
-  fs.writeFileSync(path.join(base, 'daily.json'), JSON.stringify({ v: 0, e: fin(de), m: fin(dm), h: fin(dh), sprint: fin(sp).sort((a, b) => a.o - b.o) }));
-  console.log('quick data written');
-} else if (part === 'test') {
+if (part === 'test') {
   for (const r of RULES) { const t0 = Date.now(); const x = ruleAt(r, 6, 8); console.log(r, x.o, Date.now() - t0, 'ms', JSON.stringify(x)); }
   const t1 = Date.now(); console.log('plain20', plainAt(20).o, Date.now() - t1);
 } else if (part === 'merge') {
   const dir = out, rd = n => JSON.parse(fs.readFileSync(path.join(dir, n + '.json'), 'utf8'));
   const t0 = Date.now(), fin = a => a.map(finalize);
-  const course = fin([...rd('course_a'), ...rd('course_b'), ...rd('course_c'), ...rd('course_d')]), modes = {};
+  const course = fin([...rd('course_a'), ...rd('course_b'), ...rd('course_c'), ...(fs.existsSync(path.join(dir, 'course_d.json')) ? rd('course_d') : [...rd('course_d1'), ...rd('course_d2'), ...rd('course_d3')])]), modes = {};
   for (const r of RULES) modes[r] = fin(rd('mode_' + r));
   modes.big = fin([...rd('big7'), ...rd('big8')]); modes.silent = fin(rd('silent'));
+  // no layout twice across the whole set (parts were generated in separate processes)
+  const all = [...course, ...Object.values(modes).flat()], keys = new Set();
+  const dupe = all.filter(r => { const k = L.canon(Object.assign({ w: 6, h: 6, r: 'basic' }, r)); if (keys.has(k)) return true; keys.add(k); return false; });
+  if (dupe.length) throw new Error('duplicate stages: ' + dupe.length);
   const ST = { v: 1, course, modes };
   const DL = { v: 1, e: fin(rd('daily_e')), m: fin(rd('daily_m')), h: fin([...rd('daily_h1'), ...rd('daily_h2')]), sprint: fin(rd('sprint')) };
   const base = path.join(__dirname, '..');
