@@ -33,7 +33,7 @@
       name: N('さめが〜め POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!') },
     { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2') },
-    { id: 'xiangqi', cat: 'chess', store: ['aicoding-xiangqi', 'xiangqi-online-name'], href: 'xiangqi/', color: '#c0392b', released: '2026-10-25', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 360, ls: 16 },
+    { id: 'xiangqi', cat: 'chess', store: ['aicoding-xiangqi', 'xiangqi-online-name'], href: 'xiangqi/', color: '#c0392b', released: '2026-10-25', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 543, ls: 16 },
       name: N('シャンチー（中国象棋）', 'Xiangqi', '中国象棋', '샹치(중국 장기)', 'Xiangqi (ajedrez chino)', 'Xiangqi (échecs chinois)', 'Xiangqi (xadrez chinês)', 'Xiangqi (Chinesisches Schach)', 'शियांगची (चीनी शतरंज)', 'شيانغ تشي (الشطرنج الصيني)') },
     { id: 'go', cat: 'line', store: ['aicoding-go', 'go-online-name'], href: 'go/', color: '#b8893f', released: '2026-10-22', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 21 },
       name: N('囲碁', 'Go', '围棋', '바둑', 'Go', 'Go', 'Go', 'Go', 'गो', 'غو') },

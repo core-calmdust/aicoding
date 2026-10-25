@@ -45,7 +45,9 @@ let rs = 12345; const rnd = n => { rs = (rs * 1103515245 + 12345) & 0x7fffffff; 
   const want = { b_rook: 5, b_horse: 5, b_cannon: 5, b_pawn: 5, b_escape: 5, t_capture: 5, t_fork: 5, t_check: 5, t_defend: 5 };
   const got = {}; for (const k in want) got[k] = [];
   let analysed = 0;
-  for (const g of games) {
+  const cache = process.env.LS_CACHE && fs.existsSync(process.env.LS_CACHE) ? JSON.parse(fs.readFileSync(process.env.LS_CACHE, 'utf8')) : null;
+  if (cache) Object.assign(got, cache);
+  else for (const g of games) {
     const usedHere = new Set();
     for (let i = 0; i < g.length; i += 1) {
       const fen = g[i], pos = E.Pos.from(fen); if (pos.status() !== 0 || pos.inCheck()) continue;
@@ -61,10 +63,12 @@ let rs = 12345; const rnd = n => { rs = (rs * 1103515245 + 12345) & 0x7fffffff; 
     }
     if (Object.keys(want).every(x => got[x].length >= want[x] * 3)) break;
   }
+  if (process.env.LS_CACHE && !cache) fs.writeFileSync(process.env.LS_CACHE, JSON.stringify(got));
   process.stderr.write('analysed ' + analysed + ' ' + Object.entries(got).map(([k, v]) => k + ':' + v.length).join(' ') + '\n');
   // easier problems (fewer pieces) first; pick spread over the candidates
   const pick = (arr, n) => { arr.sort((a, b) => a.n - b.n); if (arr.length <= n) return arr; const o = []; for (let i = 0; i < n; i++) o.push(arr[Math.floor(i * arr.length / n)]); return o; };
   // ---- mates (verified by build_puzzles.js, not used in the puzzle collection)
+  if (pzF === '-') { console.log('middlegame candidates cached'); return; }
   const PZ = JSON.parse(fs.readFileSync(pzF, 'utf8')).filter(p => !p.used);
   const mateSet = (f, n) => pick(PZ.filter(f).map(p => ({ s: p.s, ok: p.firsts || [p.a], best: p.a, n: (p.s.split(' ')[0].match(/[a-z]/gi) || []).length })), n);
   const mates = {
@@ -91,18 +95,20 @@ let rs = 12345; const rnd = n => { rs = (rs * 1103515245 + 12345) & 0x7fffffff; 
     }
     return null;
   }
-  function endSet(spec, n) {
+  function endSet(spec, n, loose) {
     const o = []; let t = 0;
     while (o.length < n * 2 && t++ < 400) {
       const fen = randEnd(spec); if (!fen) continue;
       const r = E.analyze(fen, [], ms * 2), L = r.list.slice().sort((a, b) => b.v - a.v);
-      if (L.length < 4 || L[0].v < E.WINT || L[1].v >= E.WINT) continue;
+      if (L.length < 4 || L[0].v < E.WINT) continue;
+      // exactly one mating move; or (loose) at most two equally fast ones while some other moves throw the win away
+      if (!loose ? L[1].v >= E.WINT : L.filter(e => e.v >= L[0].v - 10).length > 2 || !L.some(e => e.v < E.WINT)) continue;
       const mateIn = Math.ceil((E.WIN - L[0].v) / 2); if (mateIn < 2 || mateIn > 7) continue;
       o.push({ s: fen, best: L[0].m, sc: L.map(e => [e.m, e.v]), n: mateIn });
     }
     return pick(o, n);
   }
-  const ends = { e_rook: endSet('Raa', 5), e_pawn: endSet('PP', 5) };
+  const ends = { e_rook: endSet('Raa', 5), e_pawn: endSet('PPa', 5, true) };
   process.stderr.write('mates ' + Object.entries(mates).map(([k, v]) => k + ':' + v.length).join(' ') + ' ends ' + Object.entries(ends).map(([k, v]) => k + ':' + v.length).join(' ') + '\n');
   const COURSE = { b_rook: 'basics', b_horse: 'basics', b_cannon: 'basics', b_pawn: 'basics', b_escape: 'basics', b_mate1: 'basics',
     t_capture: 'tactics', t_fork: 'tactics', t_check: 'tactics', t_defend: 'tactics', m_mate2: 'mates', m_hc: 'mates', m_dc: 'mates', m_face: 'mates', e_rook: 'endgame', e_pawn: 'endgame' };

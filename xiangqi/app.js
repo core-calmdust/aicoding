@@ -1022,7 +1022,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each AI step on the kyu / dan scale, from the calibration matches (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2050, 2150, 2250, 2350, 2450, 2550, 2650];
+const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1905, 2015, 2140, 2230, 2265, 2330, 2455, 2520];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
@@ -1677,7 +1677,7 @@ $('#pzAnswer').onclick = async () => {
     if (statusAt(cur).over || (cur > 0 && pzReached(Pz, pos))) break;
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
-    if (att && step === 0) m = Pz.P.answer;
+    if (att && step === 0) m = Pz.P.a;
     else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? pickDefence(list) : null); }
     if (m == null) break;
     await sleep(700); if (puzzle !== Pz) return;

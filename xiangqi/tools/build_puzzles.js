@@ -75,7 +75,10 @@ const flipFen = f => {   // rotate 180 degrees and swap the colours: Black to mo
     ['hc', 'Pattern'], ['dc', 'Pattern'], ['mg', 'Pattern'], ['wc', 'Pattern'], ['face', 'Pattern'], ['rr', 'Pattern']];
   const themes = [];
   for (const [id, grp, ck] of DEF) {
-    const ps = by(id).sort((a, b) => a.n - b.n || material(E, a.s) - material(E, b.s)).slice(0, 60);
+    let ps = by(id).sort((a, b) => a.n - b.n || material(E, a.s) - material(E, b.s));
+    // keep a few back for the lessons (tools/gen_lessons.js uses the puzzles not in the collection)
+    if (['mate1', 'mate2', 'hc', 'dc', 'face'].includes(id)) { const keep = new Set(ps.filter((_, i) => i % 7 === 3).slice(0, 6)); ps = ps.filter(p => !keep.has(p)); }
+    ps = ps.slice(0, 60);
     for (const p of ps) p.used = 1;
     if (!ps.length) continue;
     themes.push({ id, grp, ck: !!ck, puzzles: ps.map(p => Object.assign({ s: p.s, n: p.n, a: p.a }, p.ck ? { ck: 1 } : {})) });

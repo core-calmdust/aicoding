@@ -367,6 +367,8 @@
     document.addEventListener('keydown', onKey, true);
     requestAnimationFrame(() => el.classList.add('on'));
     later(() => go(0), 350);
+    // test hook: screen point of a board point, the current step and its expected move
+    window.AtlasRules.xiangqi._dbg = { at: n => { const [x, z] = xz(n); return T3.project(x, z, Y); }, step: () => step, act: () => STEPS[step].act || null, last: () => !!STEPS[step].last, busy: () => busy };
     return {
       stop() { stopped = true; clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); },
       panel: el,
