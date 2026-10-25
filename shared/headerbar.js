@@ -26,6 +26,9 @@ const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'R
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب' };
 const ICON_RULES = '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const CSS = `
+/* player cards (common spec, PC): the side / count label is information, not a headline — keep it modest */
+html.hb-on .side .players .count, html.hb-on .side .players .count > span:first-child, html.hb-on .side .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)!important;line-height:1.15!important}
+html.hb-on .side .players .side-l{font-size:clamp(15px, 1.15vw, 18px)!important;line-height:1.3!important}
 :root{--hb-h:0px}
 html.hb-on,body.hb-on{--hb-h:${H}px}
 .hb{position:fixed;z-index:60;top:0;left:0;right:0;height:${H}px;display:none;align-items:center;gap:14px;padding:0 max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left));
@@ -190,7 +193,7 @@ function dockCenter() {
 html.dock-compact .side, html.dock-compact .side .side-in{height:auto!important;max-height:none!important}
 html.dock-compact .side .card{padding-top:9px!important;padding-bottom:9px!important}
 html.dock-compact .side .players .player{padding-top:8px!important;padding-bottom:8px!important}
-html.dock-compact .side .players .count, html.dock-compact .side .players .count > span:first-child{font-size:clamp(20px, 4.2vh, 30px)!important;line-height:1.1!important}
+html.dock-compact .side .players .count, html.dock-compact .side .players .count > span:first-child, html.dock-compact .side .players [id^=pip]{font-size:20px!important;line-height:1.1!important}
 html.dock-compact .side .players .status:not(.low){display:none!important}
 html.dock-compact .side .players .count{margin-top:2px!important}
 html.dock-compact .side #evalCard{min-height:0!important;height:auto!important;flex:none!important}
