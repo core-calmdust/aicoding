@@ -81,6 +81,15 @@
   }
   function revDisc(s = 1, up = 'b') { const g = new T.Group(); const a = puck(.62, .14, C(up === 'b' ? 0xf4f1e8 : 0x15161b, { roughness: .3 }), .5), b = puck(.62, .14, C(up === 'b' ? 0x15161b : 0xf4f1e8, { roughness: .3 }), .5); b.position.y = .14; g.add(a, b); g.scale.setScalar(s); return g; }
   function goStone(black, s = 1) { const m = ball(.5, black ? C(0x15161b, { roughness: .18 }) : C(0xfbfaf4, { roughness: .2 }), .5); m.position.y = .24; const g = grp(m); g.scale.setScalar(s); return g; }
+  function taflPiece(hex, s = 1, king = false) {
+    const g = new T.Group(), m = C(hex, { roughness: .3 }), h = king ? 1.5 : 1.05, k = .5;
+    const pts = [[0, 0], [k, 0], [k * 1.04, h * .1], [k * .9, h * .24], [k * .6, h * .46], [k * .5, h * .64], [k * .62, h * .76], [k * .5, h * .88], [k * .26, h * .98], [0, h]];
+    g.add(mesh(new T.LatheGeometry(pts.map(([a, b]) => new T.Vector2(Math.max(.001, a), b)), 40), m));
+    if (king) { const cr = new T.Group(), gm = gloss(0xf2c94c), band = mesh(new T.CylinderGeometry(.24, .27, .16, 32, 1, true), gm); band.material.side = T.DoubleSide; cr.add(band);
+      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = mesh(new T.ConeGeometry(.06, .2, 12), gm); c.position.set(Math.cos(a) * .25, .16, Math.sin(a) * .25); cr.add(c); }
+      cr.position.y = h * .9; g.add(cr); }
+    g.scale.setScalar(s); return g;
+  }
   function checker(hex, s = 1) { const g = new T.Group(); g.add(puck(.6, .26, C(hex, { roughness: .3 }), .4)); const r = mesh(new T.TorusGeometry(.38, .045, 10, 40), C(hex, { roughness: .3 })); r.rotation.x = Math.PI / 2; r.position.y = .27; g.add(r); g.scale.setScalar(s); return g; }
   function c4disc(hex, s = 1) { const g = new T.Group(); const d = puck(.6, .3, gloss(hex), .45); g.add(d); const r = mesh(new T.TorusGeometry(.38, .05, 10, 40), gloss(hex)); r.rotation.x = Math.PI / 2; r.position.y = .31; g.add(r); g.scale.setScalar(s); return g; }
   function gem(hex, s = 1) { const m = mesh(new T.IcosahedronGeometry(.4, 1), C(hex, { roughness: .15, metalness: .05, flatShading: true })); m.scale.set(1, .8, 1); m.position.y = .32; const g = grp(m); g.scale.setScalar(s); return g; }
@@ -227,6 +236,22 @@
       const gold = gloss(0xf2c94c), band = mesh(new T.CylinderGeometry(.3, .32, .14, 32, 1, true), gold); band.position.y = .66; k.add(band);
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = mesh(new T.ConeGeometry(.075, .2, 12), gold); c.position.set(Math.cos(a) * .3, .82, Math.sin(a) * .3); k.add(c); }
       k.scale.setScalar(1.45); g.add(at(k, .3, 2.0, -.3, .45, 0, -.3));
+      return g;
+    },
+    tafl() {   // a corner of the hnefatafl board: the king steps onto the knotted corner square, attackers too late
+      const top = M({ map: X.canvasTex('ictf', 512, 512, (c, W) => {
+        c.drawImage(X.wood('ictfw', '#d4a66a', '#8a5e34').image, 0, 0, W, W); const s = W / 3;
+        c.fillStyle = 'rgba(70,36,14,.55)'; c.fillRect(2 * s + 8, 8, s - 16, s - 16);
+        c.strokeStyle = 'rgba(244,214,160,.95)'; c.lineWidth = 12; c.lineCap = 'round'; const cx = 2.5 * s, cy = .5 * s, r = s * .3;
+        c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke(); c.beginPath(); c.arc(cx, cy, r * .42, 0, 7); c.stroke();
+        for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; c.beginPath(); c.moveTo(cx + Math.cos(a) * r * .42, cy + Math.sin(a) * r * .42); c.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); c.stroke(); }
+        c.strokeStyle = '#3a200c'; c.lineWidth = 10; for (let i = 1; i < 3; i++) { c.beginPath(); c.moveTo(i * s, 0); c.lineTo(i * s, W); c.stroke(); c.beginPath(); c.moveTo(0, i * s); c.lineTo(W, i * s); c.stroke(); }
+      }), roughness: .5 });
+      const g = boardChunk(3, 3.6, top, M({ map: X.wood('ictfs', '#5a3a22', '#2a180c') }));
+      const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
+      g.add(at(taflPiece(0x3a2418, .68), p(0), .5, p(0))); g.add(at(taflPiece(0x3a2418, .68), p(1), .5, p(2)));
+      g.add(at(taflPiece(0xf2e6cc, .68), p(0), .5, p(2)));
+      g.add(at(taflPiece(0xf2e6cc, 1.25, true), p(2) - .15, 1.05, p(0) + .25, -.2, 0, -.22));   // the king, arriving
       return g;
     },
     sudoku() {
@@ -624,6 +649,34 @@
       });
       g.userData.head = [.95, .95, .3]; return alive(g, eyes);
     },
+    // タフリン: a plush puffin in a horned viking helmet (hnefatafl's guide)
+    puffin() {
+      const g = new T.Group(), D = soft(0x2f3550, { under: 0x5a5fa0, uk: .5 }), Wt = soft(0xfffbf4, { under: 0xd8dcff, uk: .4 }), O = soft(0xff8a3a, { under: 0xff6a6a }), Yl = soft(0xffcf4a);
+      blob(g, D, [0, .7, 0], [.62, .64, .56]);
+      blob(g, Wt, [0, .62, .3], [.44, .48, .32]);                                                  // belly
+      const hc = V3(0, 1.56, .02), HR = [.72, .64, .64];
+      blob(g, D, [hc.x, hc.y, hc.z], HR);
+      const fc = V3(0, 1.52, .22), FR = [.58, .46, .5];
+      blob(g, Wt, [fc.x, fc.y, fc.z], FR);                                                          // white face disc
+      const eyes = face(g, ell(fc, FR), { er: .1, gap: .27, v: .1, mouth: 'none', by: .2, bx: .12 });
+      const bk = new T.Group(), cone = mesh(new T.ConeGeometry(.2, .42, 28), O); cone.rotation.x = Math.PI / 2; cone.scale.set(1, 1, 1.45); bk.add(cone);
+      const base = mesh(new T.CylinderGeometry(.205, .205, .08, 28), Yl); base.rotation.x = Math.PI / 2; base.position.z = -.17; base.scale.set(1, 1.45, 1); bk.add(base);
+      bk.position.set(0, 1.36, .78); g.add(bk);                                                     // the big striped beak
+      [-1, 1].forEach(s => blob(g, D, [s * .62, .78, -.02], [.14, .38, .3], [0, 0, s * .32]));      // wings
+      [-1, 1].forEach(s => blob(g, O, [s * .24, .08, .32], [.18, .07, .22]));                       // feet
+      const H = new T.Group(), steel = soft(0xc8ccd6, { under: 0x8a92b0, rough: .45, sheenK: .5 }), brass = soft(0xe8b456, { rough: .5 }), horn = soft(0xfff2dc, { under: 0xe8c8a0 });
+      const dome = mesh(new T.SphereGeometry(.68, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), steel); dome.scale.set(1.02, .82, 1); H.add(dome);
+      const rim = mesh(new T.TorusGeometry(.69, .07, 12, 48), brass); rim.rotation.x = Math.PI / 2; H.add(rim);
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; blob(H, brass, [Math.cos(a) * .7, .02, Math.sin(a) * .7], .055); }   // rivets
+      blob(H, brass, [0, .56, 0], [.1, .08, .1]);                                                   // the knob on top
+      [-1, 1].forEach(s => {                                                                        // horns: out from the sides, curving up
+        const hg = new T.Group(), R = .3, arcM = mesh(new T.TorusGeometry(R, .1, 12, 24, Math.PI / 2), horn); arcM.rotation.z = -Math.PI / 2; arcM.position.y = R; hg.add(arcM);
+        const tip = mesh(new T.ConeGeometry(.1, .26, 16), horn); tip.position.set(R, R + .12, 0); hg.add(tip);
+        hg.position.set(s * .58, .18, 0); hg.scale.x = s; H.add(hg);
+      });
+      H.position.set(0, 1.82, -.02); H.rotation.x = -.12; g.add(H);
+      g.userData.head = [1.62, 1.0, .1]; return alive(g, eyes);
+    },
     // キンダイスン: the rare golden die puppy
     gold() { return dicepup(true); },
   };
@@ -640,6 +693,7 @@
     dice:   { ja: 'ダイスン', en: 'Dicepup', game: 'backgammon', rar: 'N', desc_ja: 'サイコロの子犬。ぶち模様はぜんぶ目の数。', desc_en: 'A dice puppy — every spot on it is a pip.' },
     owl:    { ja: 'モリフク', en: 'Millowl', game: 'morris', rar: 'R', desc_ja: 'おなかにミル盤の模様があるねぼすけフクロウ。三つ並ぶと目をさます。', desc_en: 'A sleepy owl with a mill board on its belly. Wakes up when three line up.' },
     crab:   { ja: 'チェッカニ', en: 'Checkrab', game: 'checkers', rar: 'SR', desc_ja: '二段重ねのキング駒を背負ったカニ。はさみを上げて王冠を自慢する。', desc_en: 'A crab carrying a stacked king checker, claws up to show off its crown.' },
+    puffin: { ja: 'タフリン', en: 'Taflin', game: 'tafl', rar: 'R', desc_ja: '角つきかぶとのツノメドリ。王さまを隅まで送りとどけるのが夢。', desc_en: 'A puffin in a horned helmet who dreams of escorting the king to a corner.' },
     gold:   { ja: 'キンダイスン', en: 'Goldpup', game: 'atlas', rar: 'UR', desc_ja: 'めったに出会えない金色のダイスン。ふると幸運が出る。', desc_en: 'A rare golden Dicepup. Shake it and luck comes out.' },
   };
 

@@ -422,6 +422,74 @@
       [[-.6, 3.4, -2.6], [.9, 3.6, -3.0], [1.3, 2.6, -1.6], [-.9, 2.5, -1.5]].forEach(([x, y, z]) => g.add(mesh(new TT.SphereGeometry(.13, 12, 8), M({ color: 0xe8b83a, roughness: .4 }), x, y, z)));
       return g;
     },
+    // Hnefatafl: an oak board with a carved grid, knotwork corners and throne, a rune-carved frame;
+    // dark walnut attackers, bone defenders, a crowned king. o.n = 11 | 9 | 7 (same outer size, larger cells).
+    // live → userData { top, S, n, cs, cell(f, r) → [x, z] (f: column left→right, r: row top→bottom), piece(k: 1 att | 2 def | 3 king) → Group }
+    tafl(live, o = {}) {
+      const TT = T(), g = new TT.Group(), n = o.n || 11, S = 8.6, cs = S / n, mid = n >> 1;
+      const knot = (c, x, y, r, col) => {   // a carved sun-cross knot
+        c.strokeStyle = col; c.lineWidth = r * .16; c.lineCap = 'round';
+        c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+        c.beginPath(); c.arc(x, y, r * .42, 0, 7); c.stroke();
+        for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; c.beginPath(); c.moveTo(x + Math.cos(a) * r * .42, y + Math.sin(a) * r * .42); c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); c.stroke(); }
+      };
+      const top = M({ map: canvasTex('tf' + n, 1024, 1024, (c, W) => {
+        c.drawImage(wood('tfw', '#c39762', '#7a5230', 512, 512, 1.3).image, 0, 0, W, W);
+        const s = W / n, home = new Set();
+        if (n === 11) [[0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 5]].forEach(([a, b]) => [[a, b], [b, a], [n - 1 - a, b], [b, n - 1 - a]].forEach(([x, y]) => home.add(y * n + x)));
+        else for (let k = 0; k < n; k++) if ((k >= mid - (n === 9 ? 1 : 0) && k <= mid + (n === 9 ? 1 : 0)) || k === mid) [[k, 0], [0, k], [k, n - 1], [n - 1, k]].forEach(([x, y]) => home.add(y * n + x));
+        home.forEach(i => { c.fillStyle = 'rgba(70,38,16,.16)'; c.fillRect((i % n) * s, (i / n | 0) * s, s, s); });
+        [[0, 0], [n - 1, 0], [0, n - 1], [n - 1, n - 1], [mid, mid]].forEach(([x, y]) => {
+          c.fillStyle = 'rgba(60,30,10,.5)'; c.fillRect(x * s + 4, y * s + 4, s - 8, s - 8);
+          knot(c, x * s + s / 2, y * s + s / 2, s * .3, 'rgba(236,206,150,.85)');
+        });
+        c.strokeStyle = 'rgba(42,22,8,.9)'; c.lineWidth = n > 9 ? 4 : 5;
+        for (let i = 0; i <= n; i++) { c.beginPath(); c.moveTo(i * s, 0); c.lineTo(i * s, W); c.stroke(); c.beginPath(); c.moveTo(0, i * s); c.lineTo(W, i * s); c.stroke(); }
+      }), roughness: .52, bumpScale: .01 });
+      const FW = S + 1.1, runes = 'ᚺᚾᛖᚠᛏᚨᚠᛚ ᚲᛁᚾᚷ ';
+      const frameTop = M({ map: canvasTex('tfr', 1024, 1024, (c, W) => {
+        c.drawImage(wood('tfrw', '#5a3a22', '#2a180c', 512, 512, 1.1).image, 0, 0, W, W);
+        const b = W * .55 / FW / 2, m = W * .5 / FW / 2;   // the band's half-width and centre offset from the edge
+        c.fillStyle = 'rgba(232,196,128,.78)'; c.font = `700 ${Math.round(b * .95)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+        for (let side = 0; side < 4; side++) {
+          c.save(); c.translate(W / 2, W / 2); c.rotate(side * Math.PI / 2); c.translate(-W / 2, -W / 2);
+          const k = 22; for (let i = 0; i < k; i++) c.fillText(runes[i % runes.length], W * (i + 1.5) / (k + 2), m + 2);
+          c.restore();
+        }
+        c.strokeStyle = 'rgba(232,196,128,.45)'; c.lineWidth = 3; c.strokeRect(4, 4, W - 8, W - 8); c.strokeRect(2 * m - 4, 2 * m - 4, W - 4 * m + 8, W - 4 * m + 8);
+      }), roughness: .45, bumpScale: .008 });
+      const frameSide = M({ map: wood('tfrs', '#5a3a22', '#2a180c'), roughness: .5 });
+      g.add(slab(FW, .5, FW, frameTop, frameSide));
+      const inner = slab(S, .06, S, top, frameSide); inner.position.y = .5; g.add(inner);
+      const Y = .56, cell = (f, r) => [cellPos(n, S, f), cellPos(n, S, r)];
+      const MAT = {
+        1: M({ map: wood('tfa', '#4a2c1c', '#1c0f08', 256, 256, 1.6), roughness: .32, clearcoat: .55, clearcoatRoughness: .3 }),
+        2: M({ map: wood('tfd', '#f4ead4', '#cdb689', 256, 256, 1.2), roughness: .34, clearcoat: .5, clearcoatRoughness: .3 }),
+        gold: M({ color: 0xf0c050, metalness: .7, roughness: .28 }),
+      };
+      const r0 = Math.min(.42, cs * .4);
+      const prof = (h, k) => { const pts = [[0, 0], [k, 0], [k * 1.02, h * .08], [k * .9, h * .2], [k * .62, h * .42], [k * .5, h * .62], [k * .6, h * .74], [k * .48, h * .86], [k * .26, h * .97], [0, h]];
+        return new TT.LatheGeometry(pts.map(([a, b]) => new TT.Vector2(Math.max(.001, a), b)), 32); };
+      const GEO = { 1: prof(r0 * 2.0, r0), 2: prof(r0 * 2.0, r0), 3: prof(r0 * 2.9, r0 * 1.1) };
+      function piece(k) {
+        const p = new TT.Group(); p.userData.kind = k;
+        p.add(mesh(GEO[k], MAT[k === 1 ? 1 : 2]));
+        if (k === 3) {
+          const h = r0 * 2.9, band = mesh(new TT.CylinderGeometry(r0 * .44, r0 * .5, r0 * .3, 24, 1, true), MAT.gold); band.position.y = h * .86; band.material.side = TT.DoubleSide; p.add(band);
+          for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = mesh(new TT.ConeGeometry(r0 * .1, r0 * .32, 10), MAT.gold); c.position.set(Math.cos(a) * r0 * .44, h * .86 + r0 * .26, Math.sin(a) * r0 * .44); p.add(c); }
+        }
+        return p;
+      }
+      g.userData = { top: Y, S, n, cs, cell, piece, mats: MAT };
+      if (live) return g;
+      const start = '...aaaaa........a................a....d....aa...ddd...aaa.ddkdd.aaa...ddd...aa....d....a................a........aaaaa...';
+      const moved = { 16: 13, 40: 46 };   // a couple of opening moves for a lived-in look (cells r*11+c)
+      [...start].forEach((ch, i) => {
+        if (ch === '.') return; const j = moved[i] ?? i, p = piece(ch === 'a' ? 1 : ch === 'd' ? 2 : 3), [x, z] = cell(j % n, j / n | 0);
+        p.position.set(x, Y, z); g.add(p); const sh = contact(r0 * .9); sh.position.set(x, Y + .002, z); g.add(sh);
+      });
+      return g;
+    },
   };
 
   /* ---------- scene ---------- */
