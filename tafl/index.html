@@ -2,6 +2,10 @@
 <html lang="ja">
 <head>
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-tafl') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'birch'; document.documentElement.dataset.pcs = S.pcs || 'bone'; } catch (e) {}</script>
+<script>/* phones (portrait): freeze the height the board is sized from, so it doesn't grow/shrink while the browser bars slide away on scroll; re-measured only when the width changes (rotation) */
+(function () { const R = document.documentElement, mq = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)'); let w = 0;
+  const set = () => { if (!mq.matches) { R.style.removeProperty('--vh'); w = 0; return; } if (innerWidth === w) return; w = innerWidth; R.style.setProperty('--vh', innerHeight + 'px'); };
+  set(); addEventListener('resize', set); addEventListener('orientationchange', () => setTimeout(() => { w = 0; set(); }, 300)); })();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0c1218">
