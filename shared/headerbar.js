@@ -155,5 +155,39 @@ function init(o) {
   apply();
   return api;
 }
+// Online dock (common spec): when the dock at the bottom is opened on PC, the page content (.app: board + info) slides up so that
+// it sits centred between the header bar and the top of the opened dock (sizes unchanged); closing slides it back.
+// position:relative + top (not transform), so fixed dialogs inside .app keep working.
+function dockCenter() {
+  const app = document.querySelector('.app'), dock = document.getElementById('dock') || document.querySelector('.dock');
+  if (!app || !dock) { if (!dockCenter.tried) { dockCenter.tried = 1; setTimeout(dockCenter, 1500); } return; }
+  if (getComputedStyle(app).position === 'static') app.style.position = 'relative';
+  app.style.transition = 'top .32s cubic-bezier(.22,.7,.25,1)';
+  let raf = 0, cur = 0;
+  const bounds = () => {   // the visible content of .app (its children), measured without the current shift
+    let t = Infinity, b = -Infinity;
+    for (const c of app.children) { const cs = getComputedStyle(c); if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); }
+    const now = -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
+    return t === Infinity ? null : [t + now, b + now];
+  };
+  const target = () => {
+    const ds = getComputedStyle(dock);
+    if (!document.body.classList.contains('dock-open') || ds.display === 'none' || ds.position !== 'fixed') return 0;
+    const bar = document.querySelector('header.hb, .atlas-top'), br = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;   // (fixed: no offsetParent)
+    const top = br && br.height ? br.bottom : 0, bot = dock.getBoundingClientRect().top, u = bounds(); if (!u) return 0;
+    return Math.max(0, Math.round((u[0] + u[1]) / 2 - (top + bot) / 2));
+  };
+  const set = d => { if (d === cur) return; cur = d; app.style.top = d ? -d + 'px' : ''; };
+  // follow the dock while it opens / closes (its height animates), then settle
+  const follow = () => {
+    cancelAnimationFrame(raf); let last = null, still = 0, n = 0;
+    const step = () => { const y = Math.round(dock.getBoundingClientRect().top); still = y === last ? still + 1 : 0; last = y; if (still >= 3 || ++n > 90) { set(target()); return; } raf = requestAnimationFrame(step); };
+    if (!document.body.classList.contains('dock-open')) { set(0); return; }
+    raf = requestAnimationFrame(step);
+  };
+  new MutationObserver(follow).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(follow, 120); });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(dockCenter, 0)); else setTimeout(dockCenter, 0);
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES };
 })();
