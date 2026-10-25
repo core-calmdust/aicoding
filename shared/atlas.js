@@ -391,7 +391,7 @@
   const doneIds = () => { try { return A.achievements().filter(a => a.done); } catch (e) { return []; } };
   let I18N = window.ATLAS_I18N, loading = null;
   const needText = () => I18N ? Promise.resolve() : (loading || (loading = new Promise(res => {
-    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=8', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
+    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=9', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
   })));
   const lang = () => { const l = (document.documentElement.lang || localStorage.getItem('aicoding-lang') || 'ja').slice(0, 2); return A.LANGS && A.LANGS.includes(l) ? l : (l in (I18N || {}) ? l : 'en'); };
   const tr = (k, v) => { const L = I18N || {}, l = lang(); let s = (L[l] && L[l][k]) ?? (L.en && L.en[k]) ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
