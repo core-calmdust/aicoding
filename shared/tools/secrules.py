@@ -64,6 +64,10 @@ GAMES = {
     'mancala': dict(first='b', alt=False, nt=True, tckey='tc', tcs={r + n: ((300000 if n == '6' else 180000), 0, 0) for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')},
                     legacy_byo=None, free=5000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=2000, bg=False,
                     variant=('v', [r + n for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')])),
+    # Hex: v = board size ('s9' / 's11' / 's13', swap rule always on); moves are 2 characters each (swap 'P_'); no draws
+    'hex': dict(first='b', alt=True, tckey='tc', tcs={'s9': (180000, 0, 3000), 's11': (300000, 0, 5000), 's13': (420000, 0, 5000)},
+                legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=400, bg=False,
+                variant=('v', ['s9', 's11', 's13'])),
 }
 
 
