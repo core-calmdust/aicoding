@@ -108,7 +108,6 @@ function miniBoard(P, S, cls = 'mini') {
   P.cracks.forEach(c => { s += `<rect x="${X(c)}" y="${Y(c)}" width="${u}" height="${u}" fill="#a1553a"/><path d="M${X(c) + 3} ${Y(c) + 2}l3 3-2 2 3 3" stroke="#2a2622" stroke-width="1" fill="none"/>`; });
   if (P.plate >= 0) s += `<rect x="${X(P.plate) + 1}" y="${Y(P.plate) + 1}" width="${u - 2}" height="${u - 2}" fill="#ffcd3c"/>`;
   P.doors.forEach(c => { s += `<path d="M${X(c) + 3} ${Y(c)}v${u}M${X(c) + 7} ${Y(c)}v${u}" stroke="#8d96a8" stroke-width="1.6"/>`; });
-  if (P.lock >= 0) s += `<circle cx="${X(P.lock) + 5}" cy="${Y(P.lock) + 5}" r="3" fill="none" stroke="#e0a800" stroke-width="1.6"/>`;
   P.gate.forEach(c => { s += `<path d="M${X(c) + 2} ${Y(c)}v${u}M${X(c) + 5} ${Y(c)}v${u}M${X(c) + 8} ${Y(c)}v${u}" stroke="#d64541" stroke-width="1.6"/>`; });
   P.pc.forEach((p, i) => {
     const x = S[2 * i]; if (x < 0) return; const y = S[2 * i + 1];
@@ -116,6 +115,7 @@ function miniBoard(P, S, cls = 'mini') {
     const fill = p.t === 'P' ? '#f26b1d' : p.t === 'Q' ? '#ff9a3c' : p.t === 'g' ? '#2f4d7a' : p.t === 'k' ? '#ffcd3c' : p.t === 'x' ? '#c98b55' : p.t === 'o' ? '#3d8fd1' : BCOL[i % BCOL.length];
     s += `<rect x="${pad + 1 + x * u + .8}" y="${pad + 1 + y * u + .8}" width="${pw}" height="${ph}" rx="2" fill="${fill}" stroke="#2a2622" stroke-width=".8"/>`;
   });
+  if (P.lock >= 0) s += `<circle cx="${X(P.lock) + 5}" cy="${Y(P.lock) + 5}" r="3.2" fill="rgba(42,38,34,.6)" stroke="#ffcd3c" stroke-width="1.6"/>`;   // keyhole on top: it can start under a block
   return s + '</svg>';
 }
 window.JBArt = { INMATES, inmateSVG, GUARD, KEY, LOCK, ICON, MI, SKINS, miniBoard, BCOL, RAR: ['N', 'R', 'SR', 'SSR'] };

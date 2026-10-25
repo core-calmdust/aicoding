@@ -376,6 +376,7 @@ function buildBoard() {
     if (p.t === 'Q') html += `<div class="exit eb" style="left:${P.s0[2 * i] * cs}px;width:${cs}px"><span class="sign">${A.ICON.exit}</span></div>`;
   });
   html += '<div class="pcs">' + P.pc.map((p, i) => `<div class="pc t${p.t} ${p.v ? 'pv' : 'ph'} l${p.l} c${i % A.BCOL.length}" data-i="${i}" style="width:${(p.v ? 1 : p.l) * cs}px;height:${(p.v ? p.l : 1) * cs}px">${pieceHTML(p, i)}</div>`).join('') + '</div>';
+  if (P.lock >= 0) html += `<div class="cell lockmk" ${at(P.lock)}>${A.LOCK}</div>`;   // the keyhole stays visible even under a block
   html += '<div class="ghost" hidden></div><div class="beam" hidden></div>';
   b.innerHTML = html;
   G.els = $$('.pc', b);
@@ -405,6 +406,7 @@ function render(anim = true, ev) {
   // gate / doors / plate / cracks
   const shut = P.gate.length && E.gateShut(P, S);
   $$('.gate', boardEl()).forEach(e => e.classList.toggle('open', !shut));
+  $$('.lockmk', boardEl()).forEach(e => e.classList.toggle('used', !!P.gate.length && !shut));
   const plateOn = P.plate >= 0 && g[P.plate] > 0;
   const pl = $('.plate', boardEl()); if (pl) pl.classList.toggle('on', plateOn);
   $$('.door', boardEl()).forEach(e => e.classList.toggle('open', plateOn));
