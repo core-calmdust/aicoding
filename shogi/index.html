@@ -24,8 +24,12 @@
   --vh: 100vh;
   --top: 58px;  /* room above the side panel for the title row (PC) */
   --pad: clamp(20px, 5vmin, 80px);
-  --gap: clamp(20px, 2.6vw, 44px);
-  --cw: min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);
+  --gap: clamp(14px, 2.6vw, 44px);
+  /* info column width is fluid: it takes what the board (height-limited) leaves over, between 260px and 500px — on square / tall windows it shrinks so the board grows */
+  --padx: clamp(14px, 3vw, var(--pad));
+  --cwh: calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8);
+  --sidew: clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cwh), 120px) * 12.6), 500px);
+  --cw: min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 12.6), 120px);
   --ch: calc(var(--cw) * 1.1);
   --bw: calc(var(--cw) * 9); --bh: calc(var(--ch) * 9);
   --fp: calc(var(--cw) * 0.45);
@@ -47,7 +51,7 @@ body{
   color:var(--text);font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
 }
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
-.app{height:var(--vh);display:grid;grid-template-columns:auto minmax(320px,500px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:calc(var(--pad) + var(--top)) var(--pad) var(--pad)}
+.app{height:var(--vh);display:grid;grid-template-columns:auto var(--sidew);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:calc(var(--pad) + var(--top)) var(--padx) var(--pad)}
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:grid;grid-template-columns:calc(var(--cw)*1.25) auto calc(var(--cw)*1.25);gap:calc(var(--cw)*0.22);align-items:stretch}
 .hand{display:flex;flex-direction:column;gap:calc(var(--cw)*0.06);padding:calc(var(--cw)*0.12) calc(var(--cw)*0.08);border-radius:12px;
@@ -615,8 +619,8 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
   .side{display:flex;flex-direction:column;gap:8px}
   .side > .brand{position:static}
   .side-in{flex:1;min-height:0;height:auto}
-  :root{--pad:10px;--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))}
-  .app{grid-template-columns:auto minmax(220px,340px);gap:14px}
+  :root{--pad:10px;--sidew:clamp(220px, calc(100vw - 34px - (var(--vh) - 20px) / 10.8 * 12.9), 340px);--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 34px - var(--sidew)) / 12.9))}
+  .app{grid-template-columns:auto var(--sidew);gap:14px;padding-left:10px;padding-right:10px}
   .side{max-height:calc(var(--vh) - 20px);height:calc(var(--vh) - 20px);overflow-y:auto;scrollbar-width:none}
   .side-in{gap:8px;height:auto}
   .brand h1{font-size:17px}
@@ -706,8 +710,8 @@ body.in-online #evalCard .navbar{margin-top:0}
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
-  @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))} }
+  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--padx:clamp(14px, 3vw, var(--pad));--cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cwh), 120px) * 12.6), 500px);--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 12.6), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
+  @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--sidew:clamp(220px, calc(100vw - 34px - (var(--vh) - 20px) / 10.8 * 12.9), 340px);--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 34px - var(--sidew)) / 12.9))} }
   @media (max-width: 700px) and (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} body:not(.no-online) .app{padding-bottom:124px} }
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#24180f,#150e09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
@@ -756,8 +760,8 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .ol-watch button.warn{border-color:rgba(255,107,91,.5);color:#ffb0a6}
 .ol-watch.pl{padding:5px 12px;border-color:var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel))}
 @media (pointer: coarse){
-  body:not(.no-online){--vh:calc(100lvh - 50px - 40px - env(safe-area-inset-bottom));--cw:min(calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8), calc((100vw - var(--pad) * 2 - var(--gap) - 340px) / 12.9), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
-  @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 300px) / 12.9))} }
+  body:not(.no-online){--vh:calc(100lvh - 50px - 40px - env(safe-area-inset-bottom));--padx:clamp(14px, 3vw, var(--pad));--cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cwh), 120px) * 12.6), 500px);--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 12.6), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
+  @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--sidew:clamp(220px, calc(100vw - 34px - (var(--vh) - 20px) / 10.8 * 12.9), 340px);--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 34px - var(--sidew)) / 12.9))} }
   @media (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} }
   body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#150e09;border-top:1px solid var(--line)}
   .mtabs button{flex:1;font-size:13px;color:var(--muted);letter-spacing:.06em}
@@ -831,6 +835,26 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--cw) * 12.55);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--cw) * 12.55) / 18), 30px)}
+  /* board + info column side by side: when the board is limited by the width (square / tall windows), let the info column use the full height (kifu stays visible) and pin the board to the top under the title */
+  .side{height:max(calc(var(--bh) + var(--fp) + var(--cw)*0.16), min(calc(var(--vh) - var(--pad)*2 - var(--top) - 8px), (min(var(--cwh), 120px) - var(--cw)) * 1000))}
+  .app{align-content:center}
+  .board-area{align-self:start}
+  html.dock-compact .side{align-self:start}
+}
+/* narrow info column (square / tall windows): players stacked one per row, the 7 buttons in two rows so the labels stay readable */
+@media not all and (pointer: coarse){
+@container (max-width: 340px){
+  .side-in{gap:8px}
+  .side-in > .card{padding:12px}
+  #evalCard .graph{height:40px}
+  body:not(.has-clk):not(.in-online) .side .players{grid-template-columns:minmax(0,1fr)!important;gap:4px}
+  html.side-col body:not(.has-clk):not(.in-online) .side .card.players .player{padding:5px 10px!important}
+  .controls{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .controls .btn{padding:4px 2px;gap:1px;font-size:11px;white-space:nowrap;min-width:0}
+  .controls .btn span{letter-spacing:-.04em;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .controls .btn svg{width:17px;height:17px}
+  .kifu-card{min-height:90px}
+}
 }
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* ---- online: player names never overflow the two boxes; big clocks; rematch prompt; public chat (shared by the shogi / reversi pages) */

@@ -28,9 +28,13 @@
   --vh: 100vh;
   --ttop: 58px;
   --pad: clamp(28px, 7vmin, 100px);
-  --gap: clamp(24px, 3vw, 48px);
+  --gap: clamp(16px, 3vw, 48px);
   /* frame = 8.5 x 9.7 cells: 8x8 board + a row of captured pieces above and below */
-  --cell: min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 9.7, (100vw - var(--pad) * 2 - var(--gap) - 340px) / 8.5, 128px);
+  /* info column width is fluid: it takes what the board (height-limited) leaves over, between 260px and 520px — on square / tall windows it shrinks so the board grows */
+  --padx: clamp(14px, 3vw, var(--pad));
+  --cellh: calc((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 9.7);
+  --sidew: clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cellh), 128px) * 8.5), 520px);
+  --cell: min(var(--cellh), (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 8.5, 128px);
   --fw: calc(var(--cell) * 8.5);
   --fh: calc(var(--cell) * 9.7);
 }
@@ -56,12 +60,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .app{
   height:var(--vh);
   display:grid;
-  grid-template-columns: auto minmax(320px, 520px);
+  grid-template-columns: auto var(--sidew);
   grid-template-areas:"board side";
   gap:var(--gap);
   justify-content:center;
   align-items:center;
-  padding:calc(var(--pad) + var(--ttop)) var(--pad) var(--pad);
+  padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad);
 }
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center}
@@ -657,6 +661,26 @@ body .info-line{font-size:12.5px}
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
+  /* board + info column side by side: when the board is limited by the width (square / tall windows), let the info column use the full height and pin the board to the top under the title */
+  .side{height:max(var(--fh), min(calc(var(--vh) - var(--pad) * 2 - var(--ttop) - 8px), (min(var(--cellh), 128px) - var(--cell)) * 1000))}
+  .app{align-content:center}
+  .board-area{align-self:start}
+  html.dock-compact .side{align-self:start}
+}
+/* narrow info column (square / tall windows): players stacked one per row, the buttons in two rows so the labels stay readable */
+@media not all and (pointer: coarse){
+@container (max-width: 340px){
+  .side-in{gap:8px}
+  .side-in > .card{padding:12px}
+  #evalCard .graph{height:40px}
+  body:not(.has-clk):not(.in-online) .side .players{grid-template-columns:minmax(0,1fr)!important;gap:4px}
+  html.side-col body:not(.has-clk):not(.in-online) .side .card.players .player{padding:5px 10px!important}
+  .controls{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .controls .btn{padding:4px 2px;gap:1px;font-size:11px;white-space:nowrap;min-width:0}
+  .controls .btn span{letter-spacing:-.04em;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .controls .btn svg{width:17px;height:17px}
+  .kifu-card{min-height:90px}
+}
 }
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
@@ -840,7 +864,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .chat-form button{height:36px;min-width:64px;padding:0 14px}
 @media not all and (pointer: coarse){
   /* the board area leaves room for the dock (46px bar + 62px chat strip) */
-  body:not(.no-online){--vh:calc(100dvh - 108px - var(--hb-h, 0px));--cell:min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 9.7, (100vw - var(--pad) * 2 - var(--gap) - 340px) / 8.5, 128px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
+  body:not(.no-online){--vh:calc(100dvh - 108px - var(--hb-h, 0px));--cellh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 9.7);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cellh), 128px) * 8.5), 520px);--cell:min(var(--cellh), (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 8.5, 128px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#1f1913,#0f0c09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}

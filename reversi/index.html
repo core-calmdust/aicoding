@@ -31,8 +31,12 @@
   --vh: 100vh;
   --top: 58px;  /* room above the side panel for the title row (PC) */
   --pad: clamp(28px, 7vmin, 100px);
-  --gap: clamp(24px, 3vw, 48px);
-  --board: calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1400px) / 1.105);
+  --gap: clamp(16px, 3vw, 48px);
+  /* info column width is fluid: it takes what the board (height-limited) leaves over, between 260px and 520px — on square / tall windows it shrinks so the board grows */
+  --padx: clamp(14px, 3vw, var(--pad));
+  --fmax: min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 1400px);
+  --sidew: clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - var(--fmax)), 520px);
+  --board: calc(min(var(--fmax), 100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 1.105);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
@@ -57,12 +61,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .app{
   height:var(--vh);
   display:grid;
-  grid-template-columns: auto minmax(320px, 520px);
+  grid-template-columns: auto var(--sidew);
   grid-template-areas:"board side";
   gap:var(--gap);
   justify-content:center;
   align-items:center;
-  padding:calc(var(--pad) + var(--top)) var(--pad) var(--pad);
+  padding:calc(var(--pad) + var(--top)) var(--padx) var(--pad);
 }
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -526,7 +530,7 @@ body.in-online #evalCard, body.in-online #btnHint, body.in-online #btnAnalyze, b
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--board:calc(min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 100vw - var(--pad) * 2 - var(--gap) - 340px, 1400px) / 1.105)}
+  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--fmax:min(var(--vh) - var(--pad) * 2 - 8px - var(--top), 1400px);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - var(--fmax)), 520px);--board:calc(min(var(--fmax), 100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 1.105)}
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#16211e,#0f1715);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.4)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
@@ -1004,6 +1008,26 @@ body .info-line{font-size:12.5px}
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--board) + var(--cell) * 0.84);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--board) + var(--cell) * 0.84) / 18), 30px)}
+  /* board + info column side by side: when the board is limited by the width (square / tall windows), let the info column use the full height and pin the board to the top under the title */
+  .side{height:max(calc(var(--board) * 1.105), min(calc(var(--vh) - var(--pad) * 2 - var(--top) - 8px), (var(--fmax) - var(--board) * 1.105) * 1000))}
+  .app{align-content:center}
+  .board-area{align-self:start}
+  html.dock-compact .side{align-self:start}
+}
+/* narrow info column (square / tall windows): players stacked one per row, the buttons in two rows so the labels stay readable */
+@media not all and (pointer: coarse){
+@container (max-width: 340px){
+  .side-in{gap:8px}
+  .side-in > .card{padding:12px}
+  #evalCard .graph{height:40px}
+  body:not(.has-clk):not(.in-online) .side .players{grid-template-columns:minmax(0,1fr)!important;gap:4px}
+  html.side-col body:not(.has-clk):not(.in-online) .side .card.players .player{padding:5px 10px!important}
+  .controls{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .controls .btn{padding:4px 2px;gap:1px;font-size:11px;white-space:nowrap;min-width:0}
+  .controls .btn span{letter-spacing:-.04em;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .controls .btn svg{width:17px;height:17px}
+  .info-line{display:none}
+}
 }
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* ---- online: player names never overflow the two boxes; big clocks; rematch prompt; public chat (shared by the shogi / reversi pages) */
