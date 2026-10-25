@@ -55,10 +55,28 @@ for (const l in TX) {
   const d = I18N[l] || (I18N[l] = {});
   for (const k in TX[l]) d[k.startsWith('res.') ? k : 'vr.' + k] = TX[l][k];
 }
+// post-game review notes (generic: no openings / castles / entering king — only what fits the variant's rules)
+const RV = {
+  ja: { mateMiss: '詰みを逃しました。最善手から詰ませられます。', winMiss: '勝ちを決める手を逃しました。', lostM: 'この手のあと、詰まされる形になりました。', lostH: 'この手のあと、負けが決まる形になりました。', capMiss: '相手の駒を取れる手がありました。', capMissH: '{n}枚取れる手を見逃しました。', hang: '次に相手に駒を取られる形になりました。', hangH: '挟まれる位置に駒が残り、次に{n}枚取られる形になりました。', sumBad: 'いちばん形勢を損ねたのは{i}手目 {m}（最善は {b}）。' },
+  en: { mateMiss: 'There was a forced mate starting with the best move.', winMiss: 'A move that wins at once was missed.', lostM: 'After this move, the king gets mated.', lostH: 'After this move, the game is lost.', capMiss: 'An enemy piece could have been captured.', capMissH: 'A move capturing {n} piece(s) was missed.', hang: 'This lets the opponent capture a piece next.', hangH: 'Pieces are left where they can be sandwiched: the opponent can capture {n} next.', sumBad: 'The biggest swing: move {i}, {m} (best: {b}).' },
+  zh: { mateMiss: '错过了杀棋：从最佳着法开始可以将死对方。', winMiss: '错过了一举获胜的着法。', lostM: '这步棋之后会被将死。', lostH: '这步棋之后已成败局。', capMiss: '本可以吃掉对方的棋子。', capMissH: '错过了能吃{n}枚的着法。', hang: '这步之后，对方下一手可以吃子。', hangH: '棋子留在会被夹住的位置，对方下一手可吃{n}枚。', sumBad: '形势变化最大的是第{i}手 {m}（最佳：{b}）。' },
+  ko: { mateMiss: '외통을 놓쳤습니다. 최선수부터 외통으로 몰 수 있었습니다.', winMiss: '단번에 이기는 수를 놓쳤습니다.', lostM: '이 수 뒤에 외통을 당하는 형태가 되었습니다.', lostH: '이 수 뒤에 패배가 정해지는 형태가 되었습니다.', capMiss: '상대 말을 잡을 수 있는 수가 있었습니다.', capMissH: '{n}개를 잡는 수를 놓쳤습니다.', hang: '다음에 상대에게 말을 잡히는 형태가 되었습니다.', hangH: '끼워질 위치에 말이 남아, 다음에 {n}개를 잡히는 형태가 되었습니다.', sumBad: '형세가 가장 크게 기운 수: {i}수째 {m} (최선: {b}).' },
+  es: { mateMiss: 'Había mate forzado empezando por la mejor jugada.', winMiss: 'Se escapó una jugada que ganaba al instante.', lostM: 'Tras esta jugada, el rey recibe mate.', lostH: 'Tras esta jugada, la partida está perdida.', capMiss: 'Se podía capturar una pieza rival.', capMissH: 'Se escapó una jugada que capturaba {n} pieza(s).', hang: 'Esto permite al rival capturar una pieza a continuación.', hangH: 'Quedan piezas donde pueden ser encerradas: el rival puede capturar {n} a continuación.', sumBad: 'El mayor cambio: jugada {i}, {m} (mejor: {b}).' },
+  fr: { mateMiss: 'Il y avait un mat forcé à partir du meilleur coup.', winMiss: 'Un coup gagnant immédiat a été manqué.', lostM: 'Après ce coup, le roi est maté.', lostH: 'Après ce coup, la partie est perdue.', capMiss: 'Une pièce adverse pouvait être prise.', capMissH: 'Un coup prenant {n} pièce(s) a été manqué.', hang: 'Cela permet à l’adversaire de prendre une pièce au coup suivant.', hangH: 'Des pièces restent là où elles peuvent être coincées : l’adversaire peut en prendre {n} au coup suivant.', sumBad: 'Le plus gros basculement : coup {i}, {m} (meilleur : {b}).' },
+  pt: { mateMiss: 'Havia mate forçado começando pelo melhor lance.', winMiss: 'Um lance que vencia na hora foi perdido.', lostM: 'Depois deste lance, o rei leva mate.', lostH: 'Depois deste lance, a partida está perdida.', capMiss: 'Era possível capturar uma peça adversária.', capMissH: 'Um lance que capturava {n} peça(s) foi perdido.', hang: 'Isso deixa o adversário capturar uma peça no lance seguinte.', hangH: 'Ficam peças onde podem ser cercadas: o adversário pode capturar {n} no lance seguinte.', sumBad: 'A maior virada: lance {i}, {m} (melhor: {b}).' },
+  de: { mateMiss: 'Mit dem besten Zug gab es ein erzwungenes Matt.', winMiss: 'Ein sofort gewinnender Zug wurde verpasst.', lostM: 'Nach diesem Zug wird der König mattgesetzt.', lostH: 'Nach diesem Zug ist die Partie verloren.', capMiss: 'Ein gegnerischer Stein hätte geschlagen werden können.', capMissH: 'Ein Zug, der {n} Stein(e) schlägt, wurde verpasst.', hang: 'Damit kann der Gegner im nächsten Zug einen Stein schlagen.', hangH: 'Steine bleiben einschließbar stehen: Der Gegner kann im nächsten Zug {n} schlagen.', sumBad: 'Größter Umschwung: Zug {i}, {m} (am besten: {b}).' },
+  hi: { mateMiss: 'सबसे अच्छी चाल से शुरू होकर ज़बरदस्ती मात थी।', winMiss: 'तुरंत जिताने वाली चाल छूट गई।', lostM: 'इस चाल के बाद राजा को मात हो जाती है।', lostH: 'इस चाल के बाद खेल हार में बदल जाता है।', capMiss: 'विरोधी का मोहरा पकड़ा जा सकता था।', capMissH: '{n} मोहरे पकड़ने वाली चाल छूट गई।', hang: 'इससे विरोधी अगली चाल में मोहरा पकड़ सकता है।', hangH: 'मोहरे घिरने की जगह पर रह गए: विरोधी अगली चाल में {n} पकड़ सकता है।', sumBad: 'सबसे बड़ा बदलाव: चाल {i}, {m} (सबसे अच्छी: {b})।' },
+  ar: { mateMiss: 'كان هناك كش مات إجباري يبدأ بأفضل نقلة.', winMiss: 'فاتت نقلة تحسم الفوز فورًا.', lostM: 'بعد هذه النقلة يتعرض الملك للكش مات.', lostH: 'بعد هذه النقلة أصبحت المباراة خاسرة.', capMiss: 'كان يمكن أسر قطعة للخصم.', capMissH: 'فاتت نقلة تأسر {n} قطعة.', hang: 'هذا يسمح للخصم بأسر قطعة في النقلة التالية.', hangH: 'بقيت قطع في موضع يمكن حصرها فيه: يستطيع الخصم أسر {n} في النقلة التالية.', sumBad: 'أكبر تحوّل: النقلة {i}، <bdi>{m}</bdi> (الأفضل: <bdi>{b}</bdi>).' },
+};
+for (const l in RV) { const d = I18N[l] || (I18N[l] = {}); for (const k in RV[l]) d['vr.rv.' + k] = RV[l][k]; }
 const tx = k => t('vr.' + k);
 
 // ---------------------------------------------------------------- positions
 function pos(v) { return v === 'mini' ? new MiniShogi() : v === 'hasami' ? new HasamiShogi() : null; }
+// the variant of a position by its SFEN (5 ranks: 5五将棋; no kings: はさみ将棋), '' for 本将棋
+function sfenVariant(sfen) { const b = String(sfen || '').split(' ')[0]; return b.split('/').length === 5 ? 'mini' : b && !/k/i.test(b) ? 'hasami' : ''; }
+// win-rate scale of the evaluation (mini: piece values close to 本将棋; hasami: one capture = 100 and a 5-capture lead wins)
+const WR = { mini: 600, hasami: 160 };
 const forGame = rated => (!rated && MODES.includes(settings.mode) && START[settings.variant]) ? settings.variant : '';
 
 // ---------------------------------------------------------------- board geometry (5×5 inside the 9×9 grid of cells)
@@ -144,10 +162,49 @@ function worker(kind, onmsg) {
   }
   return W[kind];
 }
+// a separate worker for the post-game analysis (index.html runs several at once)
+const newWorker = () => new Worker('variants/worker.js?v=' + V);
+
+// ---------------------------------------------------------------- post-game review notes
+const VMATE = 30000, WIN = VMATE - 200;
+function capOf(p, u) {   // pieces a move captures
+  const m = p.fromUsi(u), f = m & 127, to = (m >> 7) & 127;
+  if (p.variant === 'hasami') return p.capCount(f, to);
+  return f <= 80 && p.board[to] ? 1 : 0;
+}
+// a, b: analysis of the position before / after the move played ({s, bm, pv}); returns '' or <p> lines
+function rvNote(sfen, played, best, a, b, q) {
+  if (!a || !b || played === best) return '';
+  const v = sfenVariant(sfen), H = v === 'hasami', p = pos(v); if (!p) return '';
+  const out = [];
+  try {
+    p.setSfen(sfen);
+    if (a.s >= WIN && -b.s < WIN) out.push(t('vr.rv.' + (H ? 'winMiss' : 'mateMiss')));
+    else if (-b.s <= -WIN && a.s > -WIN) out.push(t('vr.rv.' + (H ? 'lostH' : 'lostM')));
+    else if (q === 'dubious' || q === 'bad') {
+      const cb = capOf(p, best), cp = capOf(p, played);
+      if (cb > cp) out.push(H ? t('vr.rv.capMissH', { n: cb }) : t('vr.rv.capMiss'));
+      // the opponent's best reply after the move played captures (more than after the best move)
+      const reply = (u, r) => { if (!r) return 0; p.doMove(p.fromUsi(u)); let n = 0; try { n = capOf(p, r); } catch (e) {} p.undoMove(); return n; };
+      const hp = reply(played, b.pv && b.pv[0]), hb = a.pv && a.pv[0] === best ? reply(best, a.pv[1]) : 0;
+      if (hp > hb) out.push(H ? t('vr.rv.hangH', { n: hp }) : t('vr.rv.hang'));
+    }
+  } catch (e) { return ''; }
+  return out.map(x => `<p class="vrn">${x}</p>`).join('');
+}
+// feature tags of a move (index.html rvFeat): はさみ将棋 names already say 「n枚取り」
+function rvFeat(sfen, u) {
+  const v = sfenVariant(sfen), p = pos(v); if (!p || v === 'hasami') return [];
+  p.setSfen(sfen); const m = p.fromUsi(u), f = [];
+  if ((m & 127) > 80) f.push(t('rv.f.drop'));
+  else { if (p.board[(m >> 7) & 127]) f.push(t('rv.f.cap')); if (u.endsWith('+')) f.push(t('rv.f.prom')); }
+  p.doMove(m); if (p.inCheck()) f.push(t('rv.f.check'));
+  return f;
+}
 function kill(kind) { if (W[kind]) { const w = W[kind]; delete W[kind]; w.onmessage = null; w.terminate(); } }
 // aiCall / anaCall: returns the variant worker (and tags the message) when the current game is a variant
 function wk(msg, kind, onmsg, id) {
-  if (!game || !game.variant || lesson) return null;
+  if (!game || !game.variant || (lesson && !game.lessonGame)) return null;   // (the review of a variant game's mistakes runs as a lesson)
   msg.variant = game.variant;
   if (msg.opts && msg.opts.top) msg.opts = { ...msg.opts, time: Math.min(msg.opts.time || 1500, 1500) };
   wId[kind] = id;
@@ -184,7 +241,8 @@ const CSS = `
 .board.v5 .sq:not(.vr){border-right:1px solid rgba(40,22,5,.75)}
 body.skin-metal .board.v5 .sq:not(.vr){border-right-color:rgba(20,28,34,.7)}
 body.skin-ink .board.v5 .sq:not(.vr){border-right-color:rgba(214,180,110,.35)}
-body.variant #btnEdit,body.variant #btnAnalyze,body.variant #btnShare,body.variant #btnCopy,body.variant #btnResAnalyze,body.variant #btnMistakes,body.variant #senkei{display:none!important}
+body.variant #btnEdit,body.variant #btnShare,body.variant #btnCopy,body.variant #senkei{display:none!important}
+.rv-ex p.vrn{color:#e8c98a}
 #btnVRules{display:none}
 body.variant #btnVRules{display:inline-block}
 /* rules of the variants */
@@ -295,5 +353,5 @@ function relabel() { const b = document.getElementById('btnVRules'); if (b) b.te
 document.getElementById('langSel').addEventListener('change', () => setTimeout(relabel, 0));
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', relabel); else setTimeout(relabel, 0);
 
-window.Variants = { START, MODES, pos, forGame, geom, hasamiName, inZone: MiniShogi.inZone, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
+window.Variants = { START, MODES, WR, pos, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
 })();

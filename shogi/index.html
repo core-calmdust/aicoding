@@ -1226,7 +1226,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=12"></script>
+<script src="../shared/headerbar.js?v=16"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1235,7 +1235,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/search.js?v=20261021vb"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261022sp"></script>
+<script src="variants/variants.js?v=20261025va"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -1732,7 +1732,7 @@ function playerName(c) {
   return c === game.human ? t('you') : 'AI ' + lvN(settings.level) + cs;
 }
 const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('mated') : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(Math.round(v));
-const winRate = v => 1 / (1 + Math.exp(-v / 600));
+const winRate = v => 1 / (1 + Math.exp(-v / (game && game.variant && window.Variants ? Variants.WR[game.variant] || 600 : 600)));   // variants: their own evaluation scale
 function evAt(i) { for (let k = i; k >= 0 && k >= i - 1; k--) if (game.info[k] && game.info[k].ev != null) return game.info[k].ev; return null; }
 // header bar (PC): whose turn, move number, evaluation (not during rated / online games), clock of the side to move
 var HB = null;
@@ -1775,7 +1775,7 @@ function renderInfo() {
   document.body.classList.toggle('rated-live', rtLive());
   $('#evalCard').dataset.rtnote = t('rt.noEval');
   if (game.rated && !lesson) { $('#btnUndo').disabled = true; if (!game.over) $('#btnHint').disabled = true; }
-  $('#btnAnalyze').disabled = rtLive() || !!game.variant;
+  $('#btnAnalyze').disabled = rtLive();
   if (settings.mode === 'online') { const live = !!net && !net.done && !net.spectate && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
   else { $('#btnLesson').disabled = false; $('#btnTsume').disabled = false; }
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -2160,14 +2160,16 @@ const DTXT = {
 const fillT = (o, v) => { const r = {}; for (const k in o) r[k] = o[k].replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return r; };
 // positions where the human played a dubious/bad move and the analysis knew a better one
 function mistakeProblems() {
-  if (game && game.variant) return [];
   if (!game || settings.mode !== 'ai') return [];
   const out = [];
   for (let i = 1; i <= game.moves.length; i++) {
-    const q = game.info[i] && game.info[i].q, b = game.info[i - 1];
+    const q = game.info[i] && game.info[i].q;
+    if (game.variant && sideAtPly(i - 1) !== game.human) continue;   // (after the analysis every move has a grade)
+    let b = game.info[i - 1];
+    if (game.variant && b && !b.bm && b.ra && b.ra.bm) b = { bm: b.ra.bm, best: b.ra.s, bpv: b.ra.pv };   // variants: the post-game analysis when the game had none
     if ((q === 'dubious' || q === 'bad') && b && b.bm && b.bm !== game.moves[i - 1]) {
       const p = posAt(i - 1), played = lineKanji(p.sfen(), [game.moves[i - 1]])[0];
-      out.push({ kind: 'best', sfen: p.sfen(), accept: [b.bm], bestScore: b.best, pv: b.bpv && b.bpv.length ? b.bpv : [b.bm],
+      out.push({ kind: 'best', variant: game.variant || undefined, sfen: p.sfen(), accept: [b.bm], bestScore: b.best, pv: b.bpv && b.bpv.length ? b.bpv : [b.bm],
         expl: fillT(DTXT.rvExpl, { m: played, q: t('q.' + q), i }) });
     }
   }
@@ -2527,7 +2529,7 @@ function thinkOnce(w, idx, time) {
     const id = ++jobId;
     w.onmessage = e => { const m = e.data; if (m.id === id && m.type === 'result') resolve(m); };
     w.onerror = () => resolve(null);
-    w.postMessage({ type: 'think', id, sfen: game.start, moves: game.moves.slice(0, idx), opts: { time } });
+    w.postMessage({ type: 'think', id, variant: game.variant, sfen: game.start, moves: game.moves.slice(0, idx), opts: { time } });
   });
 }
 function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
@@ -2537,7 +2539,8 @@ async function runReview() {
   const n = game.moves.length, todo = [];
   for (let i = 0; i <= n; i++) todo.push(i);
   await weightsReady;
-  const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(makeWorker(() => {}));
+  const vr = game.variant && window.Variants ? game.variant : '';   // 5五将棋 / はさみ将棋: the variants' search (variants/worker.js)
+  const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(vr ? Variants.newWorker() : makeWorker(() => {}));
   const run = rvRun = { ws, done: 0, total: todo.length, game };
   rvOpen = true; renderReview();
   let next = 0;
@@ -2546,7 +2549,7 @@ async function runReview() {
       const i = todo[next++];
       const p = posAt(i);
       let ra;
-      if (!p.legalMoves(false).length) ra = { s: -E.MATE, bm: null };
+      if (!p.legalMoves(false).length || (vr === 'hasami' && p.result(0) != null)) ra = { s: -E.MATE, bm: null };
       else { const r = await thinkOnce(w, i, 450); if (!r) continue; ra = { s: r.score, bm: r.move, pv: (r.pv || []).slice(0, 4) }; }
       if (rvRun !== run || run.game !== game) return;
       game.info[i] = game.info[i] || {};
@@ -2572,6 +2575,7 @@ function rvLoss(i) {
 // review: explain the move at the current position (what the best move was, win-rate difference, engine line)
 let rvPvShow = false;
 function rvFeat(sf, u) {
+  if (window.Variants && Variants.sfenVariant(sf)) { const f = Variants.rvFeat(sf, u); return !f.length ? '' : (LANG === 'ja' || LANG === 'zh') ? '（' + f.join('・') + '）' : ' (' + f.join(', ') + ')'; }
   const p = new E.Position(); p.setSfen(sf); const m = p.fromUsi(u), f = [];
   if (E.isDrop(m)) f.push(t('rv.f.drop'));
   else { if (p.board[E.mTo(m)]) f.push(t('rv.f.cap')); if (u.endsWith('+')) f.push(t('rv.f.prom')); }
@@ -2587,6 +2591,7 @@ function rvExplainHtml() {
   const pv = (a.pv && a.pv.length && a.pv[0] === r.best ? a.pv : [r.best]);
   let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${t('rv.ex.move', { n: cur + 1 })} <b>${kan1(sf, r.played)}</b></span><span class="tag ${q}">${t('q.' + q)}</span></div>` + opNotes(cur + 1);
   if (r.best === r.played) h += `<p>${t('rv.ex.same')}</p>`;
+  else if (game.variant && window.Variants) h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p>` + Variants.rvNote(sf, r.played, r.best, a, b, q) + `<p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
   else h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p><p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
   h += `<p class="pv"><span class="h">${t('rv.ex.pv')}</span> ${lineKanji(sf, pv).join(' ')}</p>`;
   h += `<button class="rv-pvbtn" id="rvPvBtn">${t(rvPvShow ? 'rv.ex.hidePv' : 'rv.ex.showPv')}</button></div>`;
@@ -2613,6 +2618,7 @@ function renderReview() {
     const row = c => { const x = st[c]; return `<span>${c ? '☖' : '☗'} ${sideName(c)}</span><span><b>${x.n ? Math.round(x.ok / x.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: x.n ? (x.drop / x.n * 100).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${x.c.best}</span><span class="good">${x.c.good}</span><span class="dubious">${x.c.dubious}</span><span class="bad">${x.c.bad}</span></span>`; };
     html = opSummary() + rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
     bad.sort((a, b) => b.drop - a.drop);
+    if (bad.length && game.variant) { const x = bad[0]; html += `<div style="font-size:12.5px;color:var(--muted);margin-top:8px">${t('vr.rv.sumBad', { i: x.i, m: names[x.i - 1], b: kan1(posAt(x.i - 1).sfen(), x.best) })}</div>`; }
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${names[x.i - 1]} → ${kan1(posAt(x.i - 1).sfen(), x.best)}</span><span class="ls">−${Math.round(x.drop * 100)}%</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
   }
@@ -3134,7 +3140,7 @@ for (const l in OPN_TXT) Object.assign(I18N[l] || (I18N[l] = {}), OPN_TXT[l]);
 
 let opcC = { g: null, n: -1, r: null };
 function opClass() {
-  if (!game || !window.ShogiOpClass) return null;
+  if (!game || !window.ShogiOpClass || game.variant) return null;   // no openings / castles in the variants
   if (opcC.g !== game || opcC.n !== game.moves.length) opcC = { g: game, n: game.moves.length, r: ShogiOpClass.classify(E, game.start, game.moves) };
   return opcC.r;
 }
@@ -3381,7 +3387,7 @@ function lessonGame(sfen, moves) {
   rtForfeit(); hideOverlay('#resultOverlay');
   const keep = game && !game.lessonGame ? game : (lesson && lesson.savedGame) || null;
   if (lesson && !lesson.savedGame && keep) lesson.savedGame = keep;
-  game = newRecord(sfen, 0); game.lessonGame = true; game.moves = moves.slice(); game.info = moves.map(() => ({})).concat([{}]);
+  game = newRecord(sfen, 0); game.lessonGame = true; if (lesson && lesson.cur && lesson.cur.variant) game.variant = lesson.cur.variant; game.moves = moves.slice(); game.info = moves.map(() => ({})).concat([{}]);
   cur = moves.length; reviewing = false; hintMoves = null; sel = null;
   P = posAt(cur);
   flip = sfen.split(' ')[1] === 'w';
@@ -3435,7 +3441,8 @@ function renderLesson0() {
   $('#lsQuit').textContent = t('ls.quit');
 }
 function lineKanji(sfen, moves) {
-  const p = new E.Position(); p.setSfen(sfen); let prevTo = -1; const out = [];
+  const vr = window.Variants ? Variants.sfenVariant(sfen) : '';
+  const p = vr ? Variants.pos(vr) : new E.Position(); p.setSfen(sfen); let prevTo = -1; const out = [];
   for (const u of moves) { const m = p.fromUsi(u); out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; }
   return out;
 }
@@ -3508,6 +3515,7 @@ async function lessonMove(m) {
 }
 // step-specific explanation (cf. reversi lessonReason)
 function lessonReason(pr, usi) {
+  if (!pr.src) return '';   // (the review of your own game's mistakes; may be a variant position)
   const p = new E.Position(); p.setSfen(pr.sfen);
   const m = p.fromUsi(usi), bm = p.fromUsi(pr.accept[0]);
   const capName = x => { const q = p.board[E.mTo(x)]; return !E.isDrop(x) && q ? NAME[E.typeOf(q)] : null; };
