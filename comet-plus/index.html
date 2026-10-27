@@ -394,7 +394,7 @@ const config = {
     starCount: 50,
     starScrollMultiplier: 16,
     starGlazeRadius: 20,
-    glazeDistance: 40,
+    glazeDistance: IS_MOBILE ? 74 : 40, // スマホは自機を2倍で表示しているので、グレイズ範囲（自機周りの円）も同じ比率に
     glazeScore: 750,
     starGlazeScore: 500,
     highScoreKeyStandard: 'cometPlusHighScore_standard',
@@ -409,7 +409,7 @@ const config = {
     energyItemScoreNormal: 10000,
     energyItemScoreSpecial: 50000,
     gravity: 600,
-    playerBulletSpeed: IS_MOBILE ? 880 * 1.2 : 880, // 1.1倍。スマホはさらに1.2倍
+    playerBulletSpeed: IS_MOBILE ? 880 * 1.1 : 880, // 1.1倍。スマホはさらに1.1倍
     playerBulletHitRadius: 12, // 3D化で狙いにくくなった分、弾の当たり判定を太く（オリジナルは幅3の点判定）
     monsterUFOBaseScore: 10000,
     monsterInvaderBaseScore: 3000,
