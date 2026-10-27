@@ -661,7 +661,12 @@ class AudioHandler {
         this.seq5MelodyIndex = 0;
         this.hiHatPanIndex = 0;
         this.nextNoteTime = this.ctx.currentTime + 0.1;
+        // 曲の頭の時刻と、その時のステージ。以後のステージは「曲が何ループ鳴ったか」で決める（描画の遅れに左右されない）
+        this.bgmStartT = this.nextNoteTime; this.bgmBase = stage;
     }
+    loopSec() { return 60 / 130 / 4 * 128; } // 1ループ（8小節）の長さ
+    stageAtTime(t) { return this.bgmStartT == null ? stage : this.bgmBase + Math.max(0, Math.floor((t - this.bgmStartT) / this.loopSec() + 1e-4)); }
+    heardTime() { const lat = this.ctx ? (this.ctx.outputLatency || this.ctx.baseLatency || 0) : 0; return this.ctx.currentTime - Math.max(0, lat - 0.016); }
 
     scheduleBGM() {
         if (!this.bgmPlaying || !this.bgmBus) {
@@ -669,7 +674,9 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStage = ((stage - 1) % 6) + 1;
+        const audioClock = this.bgmStartT != null;
+        const bgmStageAt = t => ((this.stageAtTime(t) - 1) % 6) + 1; // その音が鳴る時刻のステージに合わせたパート構成
+        const bgmStage = audioClock ? bgmStageAt(this.nextNoteTime) : ((stage - 1) % 6) + 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -921,7 +928,7 @@ class AudioHandler {
         };
         // ステージが上がって新しいパートが加わったら、すでに先読みで予約済みの区間にも新パートの音を足す
         // （先読みの分だけ新パートの入りが遅れないように）
-        if (this.lastBgmStage != null && bgmStage > this.lastBgmStage) {
+        if (!audioClock && this.lastBgmStage != null && bgmStage > this.lastBgmStage) { // 曲の時計でステージを決めている時は、パートはループの頭でぴったり切り替わるので後足し不要
             const steps = [];
             for (let j = 1; this.nextNoteTime - j * sixteenth >= this.ctx.currentTime - 0.005 && j < 16; j++) steps.unshift(j);
             // メロディのパートは常に小節の8分グリッドに揃えて鳴らす（入った拍に合わせて裏拍にずらすと、周回ごとに表/裏が入れ替わってずれて聞こえる）
@@ -966,7 +973,7 @@ class AudioHandler {
             if ([3, 7, 10, 15].includes(noteInMeasure)) {
                 createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
             }
-            layers(beatInLoop, this.nextNoteTime, 1, bgmStage);
+            layers(beatInLoop, this.nextNoteTime, 1, audioClock ? bgmStageAt(this.nextNoteTime) : bgmStage);
             this.nextNoteTime += sixteenth;
             this.current16th = (this.current16th + 1) % 128;
         }
@@ -2367,8 +2374,11 @@ function updatePlayingState(dt_sec) {
     }
 
 
-    // Stage Progression
-    if (frameCount >= stageClearFrame) {
+    // Stage Progression: 曲が鳴っている時は「曲のループ」でステージを進める（音楽のループ・パートの増減とぴったり合わせる）
+    const ah = audioHandler;
+    if (ah.bgmPlaying && ah.bgmStartT != null && ah.ctx && ah.ctx.state === 'running') {
+        if (ah.stageAtTime(ah.heardTime()) > stage) { stageClearFrame = frameCount; setupNewStage(); } // 出現タイミングなどは今のフレームから数え直す
+    } else if (frameCount >= stageClearFrame) {
         setupNewStage();
     }
 
