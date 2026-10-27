@@ -1447,7 +1447,9 @@ function rankInput() { // ランキング画面の入力処理
     }
 }
 const rankTaps = [];
-const titleRankY = () => IS_MOBILE ? HUD_H * 0.8 : HUD_H - 32;
+const TITLE_UP = IS_MOBILE ? 40 : 62; // タイトル全体を持ち上げる量（ランキング行のぶん下寄りにならないように）
+const titleRankY = () => IS_MOBILE ? MENU_DY - TITLE_UP + TITLE_PIV + (592 - TITLE_PIV) * TITLE_S : HUD_H - 50; // ランキング/ネームのボタンの中心
+const titleBtnRect = k => { const w = IS_MOBILE ? 230 : 210, h = IS_MOBILE ? 60 : 32, gap = IS_MOBILE ? 22 : 18; return { x: HUD_W / 2 + (k ? gap / 2 : -gap / 2 - w), y: titleRankY() - h / 2, w, h }; };
 function rankLayout() {
     const top = IS_MOBILE ? HUD_H * 0.12 : 60;
     return { top, srcY: top + 62, tabY: top + 112, listY: top + (IS_MOBILE ? 160 : 140), rowH: IS_MOBILE ? 46 : 32, backY: IS_MOBILE ? HUD_H * 0.86 : HUD_H - 40 };
@@ -2033,10 +2035,11 @@ function pollInput() {
             for (let k = 0; k < NAME_KEYS.length; k++) { const r = nameKeyRect(k); if (tp.x >= r.x - 2 && tp.x <= r.x + r.w + 2 && tp.y >= r.y - 3 && tp.y <= r.y + r.h + 3) { tapNameKey = k; break; } }
             continue;
         }
-        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - (HUD_W / 2 - 110)) < 100) { openRanking(); continue; }
-        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - (HUD_W / 2 + 110)) < 100) { openNameEdit(); continue; }
+        const inBtn = k => { const r = titleBtnRect(k); return tp.x >= r.x - 6 && tp.x <= r.x + r.w + 6 && tp.y >= r.y - 8 && tp.y <= r.y + r.h + 8; };
+        if (gameState === 'title' && inBtn(0)) { openRanking(); continue; }
+        if (gameState === 'title' && inBtn(1)) { openNameEdit(); continue; }
         if (gameState === 'title') {
-            const ty = TITLE_PIV + (tp.y - (MENU_DY - 40) - TITLE_PIV) / TITLE_S;
+            const ty = TITLE_PIV + (tp.y - (MENU_DY - TITLE_UP) - TITLE_PIV) / TITLE_S;
             const i = Math.round((ty - 344 + 7) / 42);
             if (i >= 0 && i < titleMenuItems.length && Math.abs(ty - (344 + i * 42 - 7)) < 21) {
                 if (i === titleMenuIndex) input.replayTrigger = true; else tapSel = i;
@@ -7711,15 +7714,27 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '1.5px';
         renderCtx.fillStyle = 'rgba(200,210,255,0.55)';
         renderCtx.fillText('(C) 2026 Archetypes Inc. / CALMDUST', cx, HUD_H - (IS_MOBILE ? 14 : 10));
-        // ランキングへの案内（スマホはタップ、PCは左右キー）
-        renderCtx.font = `600 ${IS_MOBILE ? 17 : 13}px ${config.fontFamily}`;
-        renderCtx.fillStyle = `rgba(160,235,255,${0.55 + 0.3 * Math.sin(frameCount * 0.08)})`;
-        const nm = lastName() || '--------';
-        if (IS_MOBILE) { renderCtx.fillText('▶ RANKING', cx - 110, titleRankY()); renderCtx.fillText(`NAME: ${nm}`, cx + 110, titleRankY()); }
-        else renderCtx.fillText(`${lastInputDevice === 'gamepad' ? '◀ ▶' : '← →'}  RANKING      ${lastInputDevice === 'gamepad' ? 'SELECT' : 'N'}:  NAME ${nm}`, cx, titleRankY());
+        // ランキング / ネームのボタン（スマホはタップ、PCはキーの案内つき）
+        const nm = lastName() || '--------', pad = lastInputDevice === 'gamepad';
+        const labels = IS_MOBILE ? ['RANKING', `NAME  ${nm}`] : [`${pad ? '◀ ▶' : '← →'}  RANKING`, `${pad ? 'SELECT' : 'N'}  NAME  ${nm}`];
+        renderCtx.textBaseline = 'middle';
+        labels.forEach((lb, k) => {
+            const r = titleBtnRect(k), pulse = 0.5 + 0.5 * Math.sin(frameCount * 0.06 + k * 1.4);
+            renderCtx.save();
+            renderCtx.fillStyle = 'rgba(8,4,22,0.62)';
+            renderCtx.beginPath(); if (renderCtx.roundRect) renderCtx.roundRect(r.x, r.y, r.w, r.h, IS_MOBILE ? 12 : 8); else renderCtx.rect(r.x, r.y, r.w, r.h); renderCtx.fill();
+            renderCtx.shadowColor = theme.ui; renderCtx.shadowBlur = IS_MOBILE ? 14 + pulse * 8 : 8 + pulse * 6;
+            renderCtx.strokeStyle = hexToRgba(theme.ui, 0.75 + pulse * 0.25); renderCtx.lineWidth = IS_MOBILE ? 2 : 1.5; renderCtx.stroke();
+            renderCtx.shadowBlur = IS_MOBILE ? 10 : 6;
+            if (hasLS) renderCtx.letterSpacing = IS_MOBILE ? '2px' : '1.5px';
+            renderCtx.font = `700 ${IS_MOBILE ? 22 : 14}px ${config.fontFamily}`;
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.fillText(lb, r.x + r.w / 2, r.y + r.h / 2 + 1, r.w - 16);
+            renderCtx.restore();
+        });
         renderCtx.restore();
         renderCtx.save();
-        renderCtx.translate(0, MENU_DY - 40); // 画面の上下中央に揃える
+        renderCtx.translate(0, MENU_DY - TITLE_UP); // 画面の上下中央に揃える
         if (IS_MOBILE) { renderCtx.translate(cx, TITLE_PIV); renderCtx.scale(TITLE_S, TITLE_S); renderCtx.translate(-cx, -TITLE_PIV); }
         const tMaxW = HUD_W / TITLE_S - 24;
         renderCtx.textAlign = 'center';
@@ -7787,7 +7802,7 @@ function draw() {
         const hsText = (highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`) + hsDiff;
         renderCtx.font = `400 13px ${config.fontFamily}`;
         renderCtx.fillStyle = hexToRgba(theme.ui, 0.85);
-        renderCtx.fillText(hsText.toLowerCase(), cx, 566, tMaxW);
+        if (!IS_MOBILE) renderCtx.fillText(hsText.toLowerCase(), cx, 566, tMaxW); // スマホはランキングのボタンと重なるので出さない
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
 
