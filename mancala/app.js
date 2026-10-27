@@ -38,6 +38,9 @@ let busyToken = 0, thinking = -1, animating = false, gameOverShown = false;
 let lesson = null, puzzle = null, savedGame = null;
 let hoverPit = -1;
 let HB = null;   // PC header bar (shared/headerbar.js)
+let study = null, bxHover = -1;   // 検討 (study) mode of the PC review box: { g: game, n: moves, base, moves: [], P: [] }; hovered candidate
+function inStudy() { return !!(study && study.g === game && study.n === game.moves.length && !lesson && !puzzle); }
+function studyTop() { return study.P[study.P.length - 1]; }
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim;            // seed-by-seed sowing (with reduced motion the gems step without flying arcs)
 const motionOn = () => settings.anim && !reduceMotion;
@@ -50,7 +53,7 @@ function recompute() {
   P = r.positions;
   if (cur > game.moves.length) cur = game.moves.length;
 }
-const shownPos = () => P[cur];
+const shownPos = () => inStudy() ? studyTop() : P[cur];
 const isOver = i => P[i === undefined ? cur : i].over;
 // resignation (common 投了 button): game.resigned = side that resigned; the game then ends at its last move
 const resignedNow = () => !lesson && !puzzle && game.resigned != null;
@@ -90,7 +93,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js');
+  const w = new Worker('engine.js?v=20261028B10');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (m.type === 'error') console.warn(m.msg); if (!j) return; w.jobs.delete(m.id); j.resolve(m.type === 'error' ? null : m); };
   w.onerror = e => console.warn('worker', e.message);
@@ -183,7 +186,7 @@ function buildBoard() {
   }
 }
 function layout() {
-  vert = matchMedia('(max-aspect-ratio: 1/1)').matches;   // any portrait window (phone layout): the board stands upright
+  vert = matchMedia('(max-aspect-ratio: 1/1)').matches && !(window.HeaderBar && matchMedia(HeaderBar.MEDIA).matches);   // any portrait window in the phone layout: the board stands upright (PC layout: always across)
   $('#frame').classList.toggle('vert', vert);
   const nu = vert ? boardEl.clientHeight / BW : boardEl.clientWidth / BW;
   if (!(nu > 4)) { setTimeout(layout, 120); return; }   // not laid out yet (iframe loading, rotation in progress): keep the old size and retry
@@ -528,7 +531,8 @@ function renderFx() {
   if (!P.length) return;
   const p = shownPos();
   for (const m of fxMarks) { if (m.ring) fxRing(m.at, m.cls); if (m.label) fxAt(m.at, 0, m.dy || -0.3, 'hintlbl' + (m.lcls ? ' ' + m.lcls : ''), m.label); }
-  if (drawReviewFx()) return;
+  if (inStudy()) { drawStudyFx(); drawBoxFx(); if (hoverPit >= 0) drawPreview(hoverPit); return; }
+  if (drawReviewFx()) { drawBoxFx(); return; }
   // hint labels (per-pit predicted final margin for the side to move)
   if (settings.hint && !lesson && !puzzle && !p.over && anaLists[cur] && canHumanPlay()) {
     const list = anaLists[cur]; let best = -1e9; for (const x of list) best = Math.max(best, x.v);
@@ -563,6 +567,7 @@ function isAISide(s) { if (lesson || puzzle) return false; return settings.mode 
 function levelFor(s) { return settings.mode === 'watch' ? (s === 0 ? settings.level : settings.level2) : settings.level; }
 function canHumanPlay() {
   const p = shownPos(); if (!p || p.over || animating) return false;
+  if (inStudy()) return true;
   if (lesson) return !lesson.answered && p.side === 0;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && p.side === 0;
   if (reviewing || resignedNow()) return false;
@@ -604,7 +609,7 @@ function renderPlates(b) {
     if (thinking === s) st = t('thinking');
     else if (resignedNow() && cur === game.moves.length) st = s === game.resigned ? (settings.mode === 'online' && window.olLoserLabel ? olLoserLabel() : Resign.label(LANG)) : t('st.win');
     else if (p.over) { const a = p.b[E.storeOf(s)], o = p.b[E.storeOf(1 - s)]; st = a > o ? t('st.win') : a === o ? t('st.draw') : ''; }
-    else if (active && cur > 0 && P[cur].mv && P[cur].mv.extra && P[cur].mv.side === s) st = t('st.again');
+    else if (active && p.mv && p.mv.extra && p.mv.side === s) st = t('st.again');
     else if (active) st = t('st.turn');
     $('#stat' + w).textContent = st;
   });
@@ -617,7 +622,8 @@ function renderTurnLabel() {
   renderStoreLabels();
   const p = shownPos(), el = $('#turnLbl');
   let txt = '';
-  if (settings.mode === 'online' && window.olTurnText && !lesson && !puzzle) txt = olTurnText(p) || '';
+  if (inStudy() && !p.over) txt = t('turn.p', { c: shortName(p.side) });
+  else if (settings.mode === 'online' && window.olTurnText && !lesson && !puzzle) txt = olTurnText(p) || '';
   else if (resignedNow() && cur === game.moves.length) txt = resignWinText();
   else if (p.over) { const a = p.b[6], o = p.b[13]; txt = a === o ? t('res.draw') : (settings.mode === 'ai' && !lesson && !puzzle) ? ((a > o ? 0 : 1) === game.human ? t('res.youWin') : t('res.aiWin')) : t('res.pWin', { c: shortName(a > o ? 0 : 1) }); }
   else if (thinking >= 0) txt = t('turn.thinking');
@@ -651,6 +657,7 @@ function renderInfo() {
   renderPlates(); renderTurnLabel(); renderPits();
   let ev = evalOf(cur); if (!ev && cur > 0) ev = evalOf(cur - 1);
   if (!settings.eval && !(rv && rvOpen) && !(ev && ev.final)) ev = null;
+  if (inStudy()) { const L = bxCache.get(bxKey(p)); ev = p.over ? { v: p.b[6] - p.b[13], exact: true, final: true } : L && L.length ? { v: p.side === 0 ? L[0].v : -L[0].v, exact: L[0].exact } : null; }
   $('#evalText').textContent = evalText(ev);
   $('#evalFill').style.width = (50 + 50 * (ev ? sq(ev.v) : 0)) + '%';
   renderGraph(); renderKifu();
@@ -661,7 +668,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnShare').disabled = !game.moves.length;
   $('#btnAnalyze').disabled = !game.moves.length;
-  renderReview();
+  renderReview(); renderBox();
   const nav = $('#navBar'); nav.querySelector('[data-n=first]').disabled = nav.querySelector('[data-n=prev]').disabled = cur === 0;
   nav.querySelector('[data-n=next]').disabled = nav.querySelector('[data-n=last]').disabled = cur >= game.moves.length;
   const mode = settings.mode === 'ai' ? `AI Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
@@ -755,6 +762,7 @@ function onPit(i) {
   armedPit = -1;
   const p = shownPos();
   if (!canHumanPlay()) {
+    if (inStudy()) return;
     if (settings.mode === 'online' && !lesson && !puzzle) { if (reviewing && !animating) viewAt(game.moves.length); return; }   // online: a tap while looking back returns to the game
     if (reviewing && !lesson && !puzzle && !animating) rsOpen(); return;
   }
@@ -762,6 +770,7 @@ function onPit(i) {
   if (!p.b[i]) { toast(t('emptyPit'), 1000); return; }
   const k = i % 7;
   setHover(-1);
+  if (inStudy()) return studyMove(k);
   if (lesson) return lessonAnswer(k);
   if (puzzle) return puzzleMove(k);
   if (settings.mode === 'online') { if (window.olHumanMove) olHumanMove(k); return; }
@@ -786,6 +795,7 @@ async function playMove(k, opts) {
 }
 function afterPosition() {
   const tok = ++busyToken;
+  if (inStudy()) return;
   const p = shownPos();
   if (p.over) { if (!lesson && !puzzle && cur === game.moves.length && settings.mode !== 'online') setTimeout(() => { if (tok === busyToken) onGameEnd(); }, 350); return; }
   if (lesson || puzzle) return;
@@ -848,6 +858,7 @@ function onGameEnd() {
   setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
 }
 function canResign() {
+  if (inStudy()) return false;
   if (settings.mode === 'online') return !lesson && !puzzle && !!(window.olLive && olLive());
   if (lesson || puzzle || settings.mode === 'watch' || !P.length || resignedNow()) return false;
   return !P[game.moves.length].over;
@@ -871,6 +882,7 @@ function resignGame() {
   setTimeout(() => $('#resultOverlay').classList.add('show'), 300);
 }
 function canUndo() {
+  if (inStudy()) return false;
   if (lesson || puzzle || settings.mode === 'watch' || settings.mode === 'online' || !P.length) return false;
   if (settings.mode === 'pvp') return cur > 0;
   for (let i = cur - 1; i >= 0; i--) if (P[i].side === game.human) return true;
@@ -889,6 +901,7 @@ function undo() {
 function viewAt(i) {
   if (lesson || puzzle) return;
   i = Math.max(0, Math.min(game.moves.length, i));
+  if (study) { const s = inStudy(); study = null; bxHover = -1; if (s && i === cur) { busyToken++; stopAnim(); fxMarks = []; update(); afterPosition(); return; } }
   if (i === cur && !animating) return;
   busyToken++; cancelWorker('ai'); thinking = -1; stopAnim();
   cur = i; reviewing = i !== game.moves.length; fxMarks = [];
@@ -942,7 +955,7 @@ document.addEventListener('keydown', e => {
   if (/^[1-6]$/.test(e.key)) { const p = shownPos(); if (p && !p.over) onPit(pitIndex(p.side, +e.key - 1)); return; }
   if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
-  if (!k) return;
+  if (!k || inStudy()) return;   // (no record navigation while exploring)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
@@ -951,6 +964,7 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle) return;
+  if (inStudy()) studyExit();
   const N = game.moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }
@@ -1895,7 +1909,7 @@ function renderReview() {
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${x.side}"></i>${x.k + 1} → ${x.best + 1}</span><span class="ls">−${(Math.round(x.loss * 10) / 10)}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note">${t('rv.note')}</div>`;
-    if (typeof mcCoach === 'function') html = mcCoach() + html;   // 振り返り解説 (rvcoach.js) first, above the numbers
+    if (typeof mcCoach === 'function' && !bxAllowed()) html = mcCoach() + html;   // (PC review box: the commentary is in the box)   // 振り返り解説 (rvcoach.js) first, above the numbers
   }
   $('#rvBody').innerHTML = html;
 }
@@ -1912,6 +1926,170 @@ function drawReviewFx() {
 $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderInfo(); renderFx(); };
 $('#btnAnalyze').onclick = () => runReview();
+
+// ====================================================================== PC review box (below the board + right column) and 検討 (study) mode
+// While a review is open on a PC (header bar layout), a wide box under the board shows the coach commentary for the
+// viewed move (left) and the engine's candidate moves with their lines (right). [検討する] lets both sides play freely
+// from the viewed position (the record and the graph stay as they are); [元に戻す] returns at once.
+const BX_T = {
+  ja: { title: '解説', cand: '候補手', loading: '読み込み中…', running: '分析中… {a}/{b}', study: '検討する', restore: '元に戻す', back: '1手戻す', studying: '検討中', played: '実戦', head: '検討中：{n}手目の局面から +{m}手', hint: '盤上で手を指すか、候補手をクリックして検討できます。◀ で1手戻し、［元に戻す］で元の局面に戻ります。', over: '終局', last: '直前の手：{m}', none: '—', clickHint: 'クリックでこの手を指して検討' },
+  en: { title: 'Commentary', cand: 'Candidate moves', loading: 'Loading…', running: 'Analysing… {a}/{b}', study: 'Explore', restore: 'Back to game', back: 'Take back one move', studying: 'Exploring', played: 'played', head: 'Exploring: from the position before move {n}, +{m} moves', hint: 'Play moves on the board or click a candidate to explore. ◀ takes one back, [Back to game] returns to the game position.', over: 'Game over', last: 'Last move: {m}', none: '—', clickHint: 'Click to play this move and explore' },
+  zh: { title: '解说', cand: '候选着法', loading: '计算中…', running: '分析中… {a}/{b}', study: '研究', restore: '复原', back: '退一步', studying: '研究中', played: '实战', head: '研究中：从第{n}手的局面起 +{m}手', hint: '可在棋盘上落子，或点击候选着法进行研究。◀ 退一步，［复原］回到原局面。', over: '终局', last: '上一手：{m}', none: '—', clickHint: '点击走这一手并研究' },
+  ko: { title: '해설', cand: '후보수', loading: '계산 중…', running: '분석 중… {a}/{b}', study: '검토하기', restore: '되돌리기', back: '한 수 무르기', studying: '검토 중', played: '실전', head: '검토 중: {n}수째 국면에서 +{m}수', hint: '판 위에서 수를 두거나 후보수를 클릭해 검토할 수 있습니다. ◀ 로 한 수 무르고, [되돌리기]로 원래 국면으로 돌아갑니다.', over: '종국', last: '직전 수: {m}', none: '—', clickHint: '클릭하면 이 수를 두고 검토' },
+  es: { title: 'Comentario', cand: 'Jugadas candidatas', loading: 'Cargando…', running: 'Analizando… {a}/{b}', study: 'Explorar', restore: 'Volver a la partida', back: 'Deshacer una jugada', studying: 'Explorando', played: 'jugada', head: 'Explorando: desde la posición antes de la jugada {n}, +{m}', hint: 'Juega en el tablero o haz clic en una candidata para explorar. ◀ deshace una, [Volver a la partida] vuelve a la posición original.', over: 'Fin de la partida', last: 'Última jugada: {m}', none: '—', clickHint: 'Clic para jugar esta jugada y explorar' },
+  fr: { title: 'Commentaire', cand: 'Coups candidats', loading: 'Chargement…', running: 'Analyse… {a}/{b}', study: 'Explorer', restore: 'Revenir à la partie', back: 'Annuler un coup', studying: 'Exploration', played: 'joué', head: 'Exploration : depuis la position avant le coup {n}, +{m}', hint: 'Jouez sur le plateau ou cliquez sur un candidat pour explorer. ◀ annule un coup, [Revenir à la partie] rétablit la position.', over: 'Partie terminée', last: 'Dernier coup : {m}', none: '—', clickHint: 'Cliquer pour jouer ce coup et explorer' },
+  pt: { title: 'Comentário', cand: 'Lances candidatos', loading: 'Carregando…', running: 'Analisando… {a}/{b}', study: 'Explorar', restore: 'Voltar à partida', back: 'Voltar um lance', studying: 'Explorando', played: 'jogado', head: 'Explorando: a partir da posição antes do lance {n}, +{m}', hint: 'Jogue no tabuleiro ou clique em um candidato para explorar. ◀ volta um lance, [Voltar à partida] retorna à posição original.', over: 'Fim de jogo', last: 'Último lance: {m}', none: '—', clickHint: 'Clique para jogar este lance e explorar' },
+  de: { title: 'Kommentar', cand: 'Kandidatenzüge', loading: 'Wird berechnet…', running: 'Analyse… {a}/{b}', study: 'Untersuchen', restore: 'Zurück zur Partie', back: 'Einen Zug zurück', studying: 'Analysemodus', played: 'gespielt', head: 'Analysemodus: ab der Stellung vor Zug {n}, +{m}', hint: 'Ziehe auf dem Brett oder klicke einen Kandidaten an. ◀ nimmt einen Zug zurück, [Zurück zur Partie] stellt die Stellung wieder her.', over: 'Partie beendet', last: 'Letzter Zug: {m}', none: '—', clickHint: 'Klicken, um diesen Zug zu spielen' },
+  hi: { title: 'टिप्पणी', cand: 'संभावित चालें', loading: 'लोड हो रहा है…', running: 'विश्लेषण… {a}/{b}', study: 'जाँचें', restore: 'वापस खेल पर', back: 'एक चाल वापस', studying: 'जाँच जारी', played: 'खेली गई', head: 'जाँच: चाल {n} से पहले की स्थिति से +{m}', hint: 'बोर्ड पर चाल चलें या किसी संभावित चाल पर क्लिक करें। ◀ एक चाल वापस, [वापस खेल पर] मूल स्थिति पर लौटाता है।', over: 'खेल समाप्त', last: 'पिछली चाल: {m}', none: '—', clickHint: 'यह चाल चलकर जाँचने के लिए क्लिक करें' },
+  ar: { title: 'الشرح', cand: 'النقلات المرشحة', loading: 'جارٍ التحميل…', running: 'جارٍ التحليل… {a}/{b}', study: 'استكشاف', restore: 'العودة إلى المباراة', back: 'التراجع نقلة', studying: 'وضع الاستكشاف', played: 'المُلعوبة', head: 'استكشاف: من الوضع قبل النقلة {n}، ‎+{m}', hint: 'العب على اللوحة أو انقر على نقلة مرشحة للاستكشاف. ◀ للتراجع نقلة، و[العودة إلى المباراة] للرجوع إلى الوضع الأصلي.', over: 'انتهت المباراة', last: 'النقلة الأخيرة: {m}', none: '—', clickHint: 'انقر للعب هذه النقلة والاستكشاف' },
+};
+function bxT(k, v) { let s = (BX_T[LANG] || BX_T.en)[k]; if (s === undefined) s = BX_T.en[k]; return v ? s.replace(/\{(\w+)\}/g, (_, x) => v[x] !== undefined ? v[x] : '') : s; }
+const bxEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const bxCache = new Map();  // position key → analysis list with lines
+let bxW = null, bxPending = '';
+function bxAllowed() {
+  return !!(HB && HB.on && !lesson && !puzzle && rvOpen && rv && rv.key === rvKey() && !(settings.mode === 'online' && window.olNoAna && olNoAna())
+    && (settings.mode !== 'ai' || isOver(game.moves.length) || game.resigned != null));   // (not while a game against the AI is still on)
+}
+const bxKey = p => game.rules + p.side + ':' + Array.from(p.b).join(',');
+function studyStart(k) {
+  if (!bxAllowed() || animating) return;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay();
+  study = { g: game, n: game.moves.length, base: cur, moves: [], P: [P[cur]] };
+  fxMarks = []; bxHover = -1; update();
+  if (k !== undefined && k >= 0) studyMove(k);
+}
+function studyRecompute() { study.P = E.replay(P[study.base].b, P[study.base].side, study.moves, game.rules).positions; }
+async function studyMove(k) {
+  if (!inStudy() || animating) return;
+  const from = studyTop(); if (from.over || !from.b[E.baseOf(from.side) + k]) return;
+  bxHover = -1; setHover(-1); fxEl.innerHTML = '';
+  const tok = ++busyToken;
+  await animateMove(from.b, from.side, k, game.rules);
+  if (tok !== busyToken || !inStudy()) return;
+  study.moves.push(k); studyRecompute();
+  update();
+}
+function studyBack() {
+  if (!inStudy() || !study.moves.length) return;
+  busyToken++; stopAnim();
+  study.moves.pop(); studyRecompute(); bxHover = -1; update();
+}
+function studyExit() {
+  if (!study) return;
+  const was = inStudy(); study = null; bxHover = -1;
+  if (!was) return;
+  busyToken++; stopAnim(); fxMarks = [];
+  update(); afterPosition();
+}
+// the position the box describes and its analysis (multi-move search with lines) on a worker of its own
+function bxAnalyze(p) {
+  const key = bxKey(p);
+  if (bxCache.has(key) || bxPending === key || p.over) return;
+  if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); }
+  bxW = makeWorker(); bxPending = key;
+  const w = bxW, id = ++jobId, at = inStudy() ? -1 : cur, run = rv;
+  new Promise(resolve => { w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', ...posMsg(p, game.rules), ms: 800, pv: 8, id }); }).then(res => {
+    if (bxW === w) { w.terminate(); bxW = null; bxPending = ''; }
+    if (!res) return;
+    const list = res.list.slice().sort((a, b) => b.v - a.v);
+    bxCache.set(key, list); if (bxCache.size > 300) bxCache.delete(bxCache.keys().next().value);
+    // a review position: the box's search (a little longer than the review's) becomes the review's values too, so the
+    // verdict, the commentary and the numbers on the pits agree with the candidate list
+    if (at >= 0 && run && rv === run && !run.running && run.key === rvKey() && P[at] && bxKey(P[at]) === key) {
+      const plain = res.list.map(x => ({ m: x.m, v: x.v, exact: x.exact }));
+      run.list[at] = plain; anaLists[at] = plain;
+      if (!evals[at] || !evals[at].exact) evals[at] = { v: P[at].side === 0 ? list[0].v : -list[0].v, exact: res.exact };
+    }
+    renderInfo(); renderFx();
+  });
+}
+function bxStop() { if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); bxW = null; bxPending = ''; } }
+const bxMv = (side, k, extra) => `<span class="bx-m"><i class="p${side}"></i>${k + 1}${extra ? '<sup>+</sup>' : ''}</span>`;
+function bxPV(p, line) {
+  let b = Int8Array.from(p.b), out = '';
+  for (let j = 0; j < line.length; j++) {
+    const x = line[j], tr = E.trace(b, x.side, x.k, game.rules);
+    if (j) out += bxMv(x.side, x.k, tr.extra && !tr.over);
+    b = tr.board;
+  }
+  return out;
+}
+function renderBox() {
+  const on = bxAllowed();
+  if (!on && study) { const s = inStudy(); study = null; bxHover = -1; if (s) { stopAnim(); setTimeout(() => { update(); afterPosition(); }, 0); } }
+  if (study && !inStudy()) study = null;
+  const was = document.body.classList.contains('rvbox-on');
+  document.body.classList.toggle('rvbox-on', on);
+  document.body.classList.toggle('in-study', inStudy());
+  if (was !== on) { setTimeout(layout, 30); if (!on) bxStop(); }
+  const sb = $('#studyBadge'); sb.textContent = bxT('studying'); sb.classList.toggle('show', inStudy());
+  if (!on) return;
+  const st = inStudy(), p = st ? studyTop() : P[cur];
+  // left: commentary
+  let left = '';
+  if (st) {
+    left = `<p class="cr-mv"><b>${bxEsc(bxT('head', { n: study.base + 1, m: study.moves.length }))}</b></p>`;
+    if (study.moves.length) {
+      const i = study.P.length - 2, q = study.P[i], k = study.moves[i], L = bxCache.get(bxKey(q));
+      let tag = '';
+      if (L && L.length > 1) {
+        const best = L[0], mine = L.find(x => x.m === k), loss = mine ? Math.max(0, best.v - mine.v) : 0;
+        const flips = mine && mine.exact && best.exact && Math.sign(Math.round(best.v)) > Math.sign(Math.round(mine.v));
+        const cls = loss < 0.3 ? 'best' : flips || loss >= 4 ? 'bad' : loss < 1.5 ? 'good' : 'dubious';
+        tag = ` <span class="tag ${cls}">${bxEsc(t('q.' + cls))}</span>`;
+      }
+      let ex = []; try { ex = typeof mcExplain === 'function' ? mcExplain(q.b, q.side, k, game.rules) : []; } catch (e) {}
+      left += `<p>${bxEsc(bxT('last', { m: '' }))}${bxMv(q.side, k, false)}${tag}</p>` + (ex.length ? `<ul class="cr-list">${ex.map(x => `<li>${x}</li>`).join('')}</ul>` : '');
+    } else left += `<p class="bx-note">${bxEsc(bxT('hint'))}</p>`;
+  } else if (rv.running) left = `<p class="bx-note">${bxEsc(bxT('running', { a: rv.done, b: rv.total }))}</p>`;
+  else { try { left = cur < game.moves.length ? mcMove(cur) : mcSummary(); } catch (e) { console.warn(e); } }
+  $('#bxCoach').innerHTML = left;
+  // right: candidate moves with their lines
+  let right = '';
+  if (p.over) right = `<p class="bx-note">${bxEsc(bxT('over'))}</p>`;
+  else {
+    const L = bxCache.get(bxKey(p));
+    if (!L) { right = `<p class="bx-note bx-load">${bxEsc(bxT('loading'))}</p>`; bxAnalyze(p); }
+    else {
+      const played = !st && cur < game.moves.length ? game.moves[cur] : -1;
+      right = L.slice(0, 5).map((x, j) => {
+        const tr = E.trace(p.b, p.side, x.m, game.rules);
+        return `<button class="bx-c${x.m === played ? ' played' : ''}${j === 0 ? ' top' : ''}" data-k="${x.m}" title="${bxEsc(bxT('clickHint'))}"><span class="rk">${j + 1}</span>${bxMv(p.side, x.m, tr.extra && !tr.over)}<span class="ev${x.v < 0 ? ' neg' : ''}">${fmtV(x.v, x.exact)}</span><span class="pv">${bxPV(p, x.pv || [])}</span>${x.m === played ? `<span class="pl">${bxEsc(bxT('played'))}</span>` : ''}</button>`;
+      }).join('');
+    }
+  }
+  $('#bxCands').innerHTML = right;
+  $('#bxCandT').textContent = bxT('cand');
+  $('#bxTitle').textContent = bxT('title');
+  const bs = $('#bxStudy'), br = $('#bxRestore'), bb = $('#bxBack');
+  bs.textContent = bxT('study'); br.textContent = bxT('restore'); bb.title = bxT('back');
+  bs.classList.toggle('hidden', st); br.classList.toggle('hidden', !st); bb.classList.toggle('hidden', !st);
+  bb.disabled = !st || !study.moves.length;
+}
+// the board while a candidate is hovered: the pit, where its last seed lands and what it captures
+function drawBoxFx() {
+  if (bxHover < 0 || !document.body.classList.contains('rvbox-on')) return;
+  const p = shownPos(); if (p.over || !p.b[pitIndex(p.side, bxHover)]) return;
+  const tr = E.trace(p.b, p.side, bxHover, game.rules);
+  fxRing(pitIndex(p.side, bxHover), 'cand');
+  fxRing(tr.land, tr.extra ? 'ok' : '');
+  if (tr.cap) fxRing(tr.capFrom, 'cap');
+}
+$('#bxCands').addEventListener('pointerover', e => { const b = e.target.closest('.bx-c'); const k = b ? +b.dataset.k : -1; if (k !== bxHover) { bxHover = k; renderFx(); } });
+$('#bxCands').addEventListener('pointerleave', () => { if (bxHover >= 0) { bxHover = -1; renderFx(); } });
+$('#bxCands').addEventListener('click', e => { const b = e.target.closest('.bx-c'); if (!b) return; const k = +b.dataset.k; if (inStudy()) studyMove(k); else studyStart(k); });
+$('#bxStudy').onclick = () => studyStart();
+$('#bxRestore').onclick = () => studyExit();
+$('#bxBack').onclick = () => studyBack();
+$('#bxCoach').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
+// study: the values of the moves (from the box's analysis) on the pits
+function drawStudyFx() {
+  const p = shownPos(); if (p.over) return;
+  const L = bxCache.get(bxKey(p)); if (!L) return;
+  const best = L[0].v;
+  for (const x of L) { const i = pitIndex(p.side, x.m), u = slotUV(i); fxAt(i, 0, u.bottom ? -0.36 : 0.36, 'hintlbl' + (x.v >= best - 1e-9 ? ' best' : '') + (x.v < 0 ? ' neg' : ''), fmtV(x.v, x.exact)); }
+}
 
 // ====================================================================== share / load
 const RULE_CODE = { kalah: 'kalah', basic: 'basic', easy: 'easy', sunka: 'sunka' };
@@ -2016,6 +2194,7 @@ function backToBoard() {
 })();
 function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && !isOver(game.moves.length); }
 function rsOpen() {
+  if (inStudy()) studyExit();
   if (settings.mode === 'online') { openNewDialog(); return; }
   if (!rsInProgress() && !reviewing) { openNewDialog(); return; }
   $('#rsText').textContent = reviewing ? t('rs.viewing', { n: cur }) : t('rs.playing', { n: game.moves.length });

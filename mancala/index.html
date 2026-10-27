@@ -462,7 +462,7 @@ bdi{unicode-bidi:isolate}
   #segMode{display:grid;grid-template-columns:1fr 1fr}
   .rulecard small{font-size:11px}
 }
-@media (max-aspect-ratio: 1/1){
+@media (max-aspect-ratio: 1/1){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   /* phone portrait (and any portrait window): the board stands upright (stores at top and bottom) */
   :root{--plate:40px;--u:min((100vw - 24px) / 4.2, (var(--vh) - 196px) / 9.7, 100px);--bw:calc(var(--u) * 3.7);--bh:calc(var(--u) * 9.2)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -492,12 +492,12 @@ bdi{unicode-bidi:isolate}
   .kifu{max-height:none;overflow:visible}
   .review-card.show{flex:none;overflow:visible}
   .lesson-prompt{font-size:15px}
-}
-@media (max-aspect-ratio: 1/1) and (pointer: fine){   /* a tall PC window: the phone portrait layout, both player bars above the online dock */
+}}
+@media (max-aspect-ratio: 1/1) and (pointer: fine){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){   /* a tall PC window: the phone portrait layout, both player bars above the online dock */
   :root{--u:min((100vw - 24px) / 4.2, (var(--vh) - 232px) / 9.7, 100px)}
   body:not(.no-online) .app{padding-bottom:120px}
   .brand a.series{display:none}
-}
+}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
   :root{--plate:32px;--u:min((var(--vh) - 20px - 2 * var(--plate) - 16px) / 4.2, (100vw - 270px) / 9.7, 110px)}
@@ -534,47 +534,42 @@ bdi{unicode-bidi:isolate}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
-/* ================================================================ PC (common spec: mouse, >= 1040px wide, not a tall window):
-   three columns — left: 形勢 (the state of the game), centre: the board with its player bars, right: 棋譜 / 振り返り / lesson & puzzle cards.
-   The board is wide and low, so the side columns are a little narrower than the common 280 / 330px. */
+/* ================================================================ PC (common spec: mouse, >= 1040px wide, not a clearly tall window):
+   two columns — the board with its player bars on the left, a fixed-width info column on the right
+   (lesson / puzzle card → 形勢 → 振り返り → 棋譜). The board is wide and low, so the column is a little narrower than the common 360px. */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  :root{--lw:250px; --rw:300px; --cg:20px; --px:24px; --plate:clamp(34px, calc(var(--vh) * .046), 42px)}
+  :root{--rw:330px; --cg:20px; --px:24px; --plate:clamp(34px, calc(var(--vh) * .046), 42px)}
   /* (declared on body, so the online dock below can change them) */
   body{
-    --uw:calc((100vw - 2 * var(--px) - var(--lw) - var(--rw) - 2 * var(--cg)) / 9.7);
+    --uw:calc((100vw - 2 * var(--px) - var(--rw) - var(--cg)) / 9.7);
     --u:min(var(--uw), (var(--vh) - 24px - 2 * var(--plate) - 16px) / 4.2, 132px);
     --BH:calc(var(--u) * 4.2 + 2 * var(--plate) + 16px);
-    --CH:var(--BH);   /* the side columns are as tall as the board (their cards scroll inside) */
+    --CH:var(--BH);   /* the info column is as tall as the board (its cards scroll inside) */
     --bw:calc(var(--u) * 9.2); --bh:calc(var(--u) * 3.7);
   }
-  /* online dock opened: the board (usually limited by the width) fits the space between the header and the dock
-     (the dock is 47px + min(46vh, 380px); --vh already leaves 108px for the folded dock), so the shared fitting can shrink it further */
   /* lessons / puzzles: the card needs some height even when the wide board is low */
   body.in-lesson, body.in-puzzle{--CH:max(var(--BH), min(var(--vh) - 24px, 520px))}
   body.dock-open:not(.ol-soon){--u:min(var(--uw), (var(--vh) + 61px - min(46vh, 380px) - 20px - 2 * var(--plate) - 16px) / 4.2, 132px)}
-  @media (max-width: 1299px){ :root{--lw:220px;--rw:260px;--cg:16px;--px:16px} }
+  @media (max-width: 1299px){ :root{--rw:310px;--cg:16px;--px:16px} }
   html,body{height:100%;overflow:hidden}
-  /* the board and the info frame share one cell: .side is a real box over the whole width (so the shared dock fitting can
-     measure it) with the board's column left empty and clicks passing through to the board */
-  .app{display:grid;height:var(--vh);width:auto;margin:0;padding:12px var(--px);gap:0;align-content:center;justify-content:center;align-items:center;
-    grid-template-columns:calc(var(--lw) + var(--rw) + 2 * var(--cg) + var(--u) * 9.7);grid-template-rows:var(--CH);grid-template-areas:none}
-  .side{grid-area:1 / 1;width:100%;height:var(--CH);max-height:none;display:grid;column-gap:var(--cg);row-gap:12px;container-type:normal;pointer-events:none;
-    grid-template-columns:var(--lw) minmax(0,1fr) var(--rw);grid-template-rows:repeat(3, calc((var(--CH) - 24px) / 3))}
-  .side-in{display:contents}
-  .side-in > *{pointer-events:auto}
-  .brand,.controls{grid-area:1 / 2 / 2 / 3}   /* (moved into the header bar) */
-  .board-area{grid-area:1 / 1;justify-self:start;margin-inline-start:calc(var(--lw) + var(--cg));align-self:center;width:calc(var(--u) * 9.7);display:flex;flex-direction:column;gap:8px;position:relative;z-index:1}
+  .app{display:grid;height:var(--vh);width:auto;margin:0;padding:12px var(--px);gap:0 var(--cg);align-content:center;justify-content:center;align-items:center;
+    grid-template-columns:calc(var(--u) * 9.7) var(--rw);grid-template-rows:var(--CH);grid-template-areas:none}
+  .board-area{grid-area:1 / 1;align-self:center;width:calc(var(--u) * 9.7);display:flex;flex-direction:column;gap:8px;position:relative;z-index:1}
+  .side{grid-area:1 / 2;width:100%;height:var(--CH);max-height:none;min-height:0;display:block;container-type:normal}
+  .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+  .side-in > *{flex:none;min-height:0;margin:0}
+  .side-in > .brand{display:none}   /* (title and menu are in the header bar) */
   .frame{align-self:center}
   .info-line{display:none}
-  #evalCard{grid-area:1 / 1 / 4 / 2;display:flex;flex-direction:column;min-height:0!important;overflow:hidden;padding:12px 14px}
-  #evalCard .graph{flex:1 1 0;height:0!important;min-height:30px;margin-top:10px}
+  #evalCard{display:flex;flex-direction:column;overflow:hidden;padding:12px 14px}
+  #evalCard .graph{flex:none;height:clamp(52px, calc(var(--CH) * .2), 130px)!important;margin-top:10px}
   #evalCard .navbar{margin-top:8px;gap:4px}
-  #evalCard .navbar button{width:auto;flex:1 1 0;max-width:42px}
-  .kifu-card{grid-area:1 / 3 / 4 / 4;min-height:0!important;overflow:hidden;padding:12px 14px}
-  .kifu{grid-template-columns:repeat(4,1fr)}
-  .review-card.show{grid-area:1 / 3 / 3 / 4;min-height:0!important;flex:none;padding:12px 14px}
-  .app:has(.review-card.show) .kifu-card{grid-area:3 / 3 / 4 / 4}
-  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:1 / 3 / 4 / 4;display:block;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  #evalCard .navbar button{width:auto;flex:1 1 0;max-width:46px}
+  .kifu-card{flex:1 1 0;min-height:76px!important;overflow:hidden;padding:12px 14px}
+  .kifu{grid-template-columns:repeat(5,1fr)}
+  .review-card.show{flex:1.5 1 0;min-height:0!important;padding:12px 14px}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{display:block;flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  body.in-lesson :is(#evalCard,.kifu-card,.review-card), body.in-puzzle :is(#evalCard,.kifu-card,.review-card){display:none!important}
   .lesson-card > .lesson-actions, .puzzle-card > .lesson-actions{flex-wrap:wrap;margin-top:8px}
   .lesson-card h3,.puzzle-card h3{margin:2px 0 6px}
   .lesson-fb,.pz-status{min-height:0}
@@ -605,6 +600,61 @@ bdi{unicode-bidi:isolate}
   .kifu{max-height:none;overflow:visible;grid-template-columns:repeat(8,1fr)}
   .review-card.show{flex:none;overflow:visible}
 }
+}
+/* ================================================================ PC review box (below the board and the right column) + 検討 (study) mode */
+.rvbox{display:none}
+.study-badge{display:none}
+body.in-study .study-badge{display:block;position:absolute;top:calc(var(--u) * .06);left:50%;transform:translateX(-50%);z-index:30;padding:3px 14px;border-radius:99px;background:rgba(201,169,97,.95);color:#1a1206;font-weight:700;font-size:13px;letter-spacing:.06em;box-shadow:0 4px 14px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap}
+body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(227,194,122,.25)!important}
+.ring.cand{border:3px solid #7fd0ff;box-shadow:0 0 16px rgba(127,208,255,.6)}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  body.rvbox-on{--bxh:clamp(170px, calc(var(--vh) * .28), 250px);--u:min(var(--uw), (var(--vh) - var(--bxh) - 12px - 24px - 2 * var(--plate) - 16px) / 4.2, 132px)}
+  body.rvbox-on .app{grid-template-rows:var(--CH) var(--bxh);row-gap:12px}
+  body.rvbox-on #evalCard .graph{height:clamp(30px, calc(var(--CH) * .1), 70px)!important}
+  body.rvbox-on #evalCard{padding:10px 14px}
+  body.rvbox-on .side{overflow:hidden}
+  body.rvbox-on .review-card.show{flex:1 1 0;min-height:0!important}
+  body.rvbox-on .kifu-card{flex:1 1 0;min-height:52px!important}
+  body.rvbox-on .rvbox{display:grid;grid-area:2 / 1 / 3 / 3;justify-self:stretch;width:auto;height:var(--bxh);
+    grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;padding:12px 16px;min-height:0;box-sizing:border-box;position:relative;z-index:2}
+  .rvbox .bx-l,.rvbox .bx-r{display:flex;flex-direction:column;min-height:0;min-width:0}
+  .rvbox .bx-r{border-inline-start:1px solid var(--line);padding-inline-start:18px}
+  .rvbox .bx-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex:none;min-height:28px}
+  .rvbox .bx-h .label{font-family:'Shippori Mincho B1',serif;font-size:15px;color:var(--brass);letter-spacing:.06em}
+  .rvbox .bx-body{flex:1 1 0;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .rvbox .bx-body p{font-size:14px;line-height:1.7;color:#eadfcd;margin:0 0 5px}
+  .rvbox .bx-body .cr-list li{font-size:14px;line-height:1.65;margin-bottom:3px}
+  .rvbox .bx-body .cr-mv{margin-bottom:4px}
+  .rvbox .bx-note{color:var(--muted)!important;font-size:13px!important}
+  .rvbox .bx-load::after{content:"";display:inline-block;width:10px;height:10px;margin-inline-start:8px;border-radius:50%;border:2px solid var(--brass);border-top-color:transparent;animation:bxspin .8s linear infinite;vertical-align:-1px}
+  @keyframes bxspin{to{transform:rotate(360deg)}}
+  .rvbox .bx-ctl{display:flex;gap:6px}
+  .rvbox .bx-ctl button{height:28px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+  .rvbox .bx-ctl button:hover:not(:disabled){border-color:var(--brass2)}
+  .rvbox .bx-ctl button:disabled{opacity:.35;cursor:default}
+  .rvbox .bx-ctl button svg{width:14px;height:14px;fill:currentColor}
+  .rvbox .bx-ctl #bxStudy{border-color:var(--brass2);color:var(--accent)}
+  .rvbox .bx-ctl .bx-restore{background:var(--accent);border-color:var(--accent);color:#1a1206}
+  .rvbox .bx-ctl .bx-restore:hover{filter:brightness(1.08)}
+  .rvbox .hidden{display:none!important}
+  .bx-cands{display:flex;flex-direction:column;gap:4px}
+  .bx-c{display:grid;grid-template-columns:18px auto 52px minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;text-align:start;padding:3px 8px;min-height:27px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font-size:13px;cursor:pointer;flex:none}
+  .bx-c:hover{border-color:#7fd0ff;background:rgba(127,208,255,.07)}
+  .bx-c.top .rk{color:var(--accent)}
+  .bx-c .rk{font-weight:700;color:var(--dim);font-size:12px;text-align:center}
+  .bx-c .ev{font-family:'JetBrains Mono',monospace;font-weight:700;color:#8fe3b8;text-align:end;direction:ltr}
+  .bx-c .ev.neg{color:#ff9d8f}
+  .bx-c .pv{display:flex;flex-wrap:nowrap;gap:2px 7px;overflow:hidden;color:var(--muted);font-size:12px;direction:ltr;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .bx-c .pl{font-size:11px;font-weight:700;color:#1a1206;background:#d9d2c4;border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .bx-c.played{border-color:rgba(217,210,196,.55)}
+  .bx-m{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;direction:ltr}
+  .bx-c > .bx-m{font-size:14px}
+  .bx-m i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .bx-m i.p0{background:var(--gold2)}.bx-m i.p1{background:var(--plat2)}
+  .bx-m sup{font-size:9px;color:var(--accent)}
+  .rvbox .tag{font-size:12.5px;font-weight:700;margin-inline-start:6px}
+  .rvbox .tag.bad{color:#ff8b7d}.rvbox .tag.dubious{color:#f2c060}.rvbox .tag.best{color:#8fe3b8}.rvbox .tag.good{color:#9fc7ff}
+  html[lang=ar] .rvbox .bx-body p, html[lang=ar] .rvbox .cr-list{direction:rtl;text-align:right}
 }
 .hb .pdisc{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
 .hb .hb-chip.hb-turn b{color:var(--accent)}
@@ -859,6 +909,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
       <div class="banner" id="banner"></div>
       <div class="toast" id="toast"></div>
       <div class="coach" id="coach"></div>
+      <div class="study-badge" id="studyBadge"></div>
     </div>
     <div class="plate" id="plateBot"><div class="pdisc" id="discBot"></div><div class="pname" id="nameBot"></div><div class="pstat" id="statBot"></div><div class="pscore" id="scoreBot">0</div></div>
   </div>
@@ -930,6 +981,10 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
     </div>
     <div class="info-line" id="infoLine"></div>
   </div></aside>
+  <section class="card rvbox" id="rvBox">
+    <div class="bx-l"><div class="bx-h"><span class="label" id="bxTitle"></span></div><div class="bx-body" id="bxCoach"></div></div>
+    <div class="bx-r"><div class="bx-h"><span class="label" id="bxCandT"></span><span class="bx-ctl"><button id="bxBack" class="hidden" aria-label="back"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button><button id="bxStudy"></button><button id="bxRestore" class="bx-restore hidden"></button></span></div><div class="bx-body bx-cands" id="bxCands"></div></div>
+  </section>
 </div>
 
 <!-- new game -->
@@ -1082,7 +1137,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 <script src="i18n-learn.js?v=20261021c"></script>
 <script src="i18n-pz.js?v=20261021c"></script>
 <script src="i18n-online.js?v=stale1"></script>
-<script src="engine.js"></script>
+<script src="engine.js?v=20261028B10"></script>
 <script>
 // "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
 // embedded page sees a landscape viewport (its own layout, hit testing and touch coordinates stay correct)
@@ -1105,7 +1160,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=24"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028L9"><\/script><script src="online-ui.js?v=20261028L9"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=24"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028B10"><\/script><script src="online-ui.js?v=20261028L9"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

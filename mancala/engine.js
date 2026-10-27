@@ -308,6 +308,30 @@ function analyze(b, side, rules, ms, maxDepth) {
   else list = list.map(x => ({ m: x.m, v: x.v / SEED, exact: x.exact }));
   return { list, depth, exact: list.every(x => x.exact), nodes };
 }
+// principal variation after root move k (review box 読み筋): follows the transposition table's best moves,
+// with a short search where the table has nothing; [{side, k}] up to n moves (the root move first)
+function ttMoveOf(b, side) {
+  let h1 = side ? ZS1 : 0, h2 = side ? ZS2 : 0;
+  for (let i = 0; i < 14; i++) { h1 ^= Z1[i * ZN + b[i]]; h2 ^= Z2[i * ZN + b[i]]; }
+  h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
+  const ti = h1 & TT_MASK;
+  return ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
+}
+function pvLine(b, side, k, n) {
+  const c = Int8Array.from(b), out = [];
+  let s = side, m = k;
+  deadline = Infinity; aborted = false;
+  for (let i = 0; i < n; i++) {
+    if (m < 0 || !c[baseOf(s) + m]) break;
+    out.push({ side: s, k: m });
+    const r = play(c, s, m, Rcur);
+    if (r.over) break;
+    s = r.extra ? s : 1 - s;
+    m = ttMoveOf(c, s);
+    if (m < 0 || !c[baseOf(s) + m]) m = rootBest(c, s, 6, -1).m;
+  }
+  return out;
+}
 // exact solve without time limit (generators, puzzles); returns list like analyze
 function solve(b, side, rules, maxMs) {
   b = Int8Array.from(b); setup(b, rules);
@@ -361,7 +385,7 @@ function chooseMove(b, side, rules, level) {
 }
 
 const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
-  evaluate, think, analyze, solve, chooseMove, LEVELS, W, ttClear, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
+  evaluate, think, analyze, solve, chooseMove, LEVELS, W, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.MancalaEngine = API;
@@ -377,6 +401,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
         root.postMessage({ type: 'move', id: m.id, move: r.move, value: r.value, exact: r.exact, depth: r.depth });
       } else if (m.type === 'analyze') {
         const r = analyze(b, m.side, m.rules, m.ms || 1000, m.maxDepth);
+        if (m.pv) for (const x of r.list) x.pv = pvLine(b, m.side, x.m, m.pv);
         root.postMessage({ type: 'analyze', id: m.id, list: r.list, depth: r.depth, exact: r.exact });
       } else if (m.type === 'solve') {
         const r = solve(b, m.side, m.rules, m.ms || 8000) || analyze(b, m.side, m.rules, 1500);
