@@ -194,14 +194,16 @@ function think(start, moves, level, rand) {
   }
   return { move: m, v: r[1], po: r[2] };
 }
-function analyze(start, moves, ms, onProgress, maxList) {
+function analyze(start, moves, ms, onProgress, maxList, pvN) {
   const { pos } = replay(start, moves);
   if (!WX || pos.winner()) return { list: [], playouts: 0 };
   if (!wSetup(start, moves)) return { list: [], playouts: 0 };
   const read = () => { const io = wIO(), L = []; for (let i = 0; i < io[0]; i++) L.push({ m: io[2 + 3 * i], v: io[3 + 3 * i], n: io[4 + 3 * i], kind: kindOf(io[3 + 3 * i]) }); return L; };
   progressCb = null;
   WX.analyze(ms, 0, maxList || 24);
-  return { list: read(), playouts: wIO()[1] };
+  const out = { list: read(), playouts: wIO()[1] };
+  if (pvN && WX.pv) for (const e of out.list.slice(0, pvN)) { WX.pv(e.m, 10); const io = wIO(); e.pv = []; for (let k = 0; k < io[0]; k++) e.pv.push(io[1 + k]); }
+  return out;
 }
 // puzzles: n own moves at most; see engine.c puzzle()
 function puzzle(start, moves, n, defend, budgetK) {
@@ -219,7 +221,7 @@ const API = { P1, P2, RED, BLUE, SWAP, WIN, WINT, SIZES, COLS, geo, mirror, onEd
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.HexEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=1';
+  const V = 'v=2';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
@@ -235,7 +237,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     queue = queue.then(() => Promise.all([readyP, firstP])).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
-        else if (m.type === 'analyze') self.postMessage({ id: m.id, type: 'result', ...analyze(m.start, m.moves, m.time || 1000, null, m.max) });
+        else if (m.type === 'analyze') self.postMessage({ id: m.id, type: 'result', ...analyze(m.start, m.moves, m.time || 1000, null, m.max, m.pv) });
         else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.budget) });
         else if (m.type === 'newgame') self.postMessage({ id: m.id, type: 'result' });
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }

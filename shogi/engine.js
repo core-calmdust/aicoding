@@ -1317,6 +1317,49 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       self.postMessage({ type: 'analysis', id: d.id, list: res.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s, depth: r.d })) });
       return;
     }
+    if (d.type === 'multipv') {
+      // review box: the best few moves with their lines (each search leaves out the moves already found), best first
+      setup(d);
+      const o = d.opts || {}, n = Math.min(o.n || 4, pos.legalMoves(false).length), ex = [], out = [];
+      for (let k = 0; k < n; k++) {
+        const ms = (o.time || 700) * (k ? 0.7 : 1);
+        let r;
+        setup(d);
+        if (useWasm()) {
+          nueUse(true); wsetup(d);
+          if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+          X.set_exclude(ex.length);
+          const mv = X.root_search(ms, 0, 0);
+          if (!mv) break;
+          const rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+          r = { m: mv, score: X.res_score(), pv: Array.from(rr.subarray(4, 4 + rr[3])) };
+        } else {
+          const res = se.rootSearch({ time: ms, exclude: ex.slice() });
+          if (!res.move) break;
+          r = { m: res.move, score: res.score, pv: res.pv && res.pv.length ? res.pv : [res.move] };
+        }
+        if (r.pv[0] !== r.m) r.pv = [r.m];
+        ex.push(r.m);
+        out.push({ move: pos.toUsi(r.m), score: r.score, pv: r.pv.slice(0, 10).map(m => pos.toUsi(m)) });
+        self.postMessage({ type: 'progress', id: d.id, list: out.slice() });
+      }
+      // short lines are extended move by move with quick searches (6-8 moves are shown)
+      for (const e of out) {
+        for (let g = 0; e.pv.length < 7 && g < 7; g++) {
+          const d2 = { sfen: d.sfen, moves: (d.moves || []).concat(e.pv) };
+          let mv = 0;
+          if (useWasm()) { wsetup(d2); X.set_exclude(0); mv = X.root_search(110, 0, 0); }
+          else { setup(d2); const res = se.rootSearch({ time: 110 }); mv = res.move; }
+          if (!mv) break;
+          setup(d2); const u = pos.toUsi(mv);
+          if (!pos.legalMoves(true).includes(mv)) break;
+          e.pv.push(u);
+        }
+        self.postMessage({ type: 'progress', id: d.id, list: out.slice() });
+      }
+      self.postMessage({ type: 'result', id: d.id, list: out });
+      return;
+    }
     if (d.type === 'mate') {
       setup(d);
       const r = solveMate(pos, d.maxPly || 7, d.nodes || 300000);

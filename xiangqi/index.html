@@ -839,31 +839,30 @@ html[data-bd=slate]{--bd1:#7e8790;--bd2:#535b63;--bdLn:#f1ece0;--bdRv:#f6efe1;--
 html[data-pcs=ivory]{--pf1:#ffffff;--pf2:#f4efe3;--pf3:#d6ccb6;--pfe:#8f8166;--pRing:rgba(130,110,80,.45)}
 html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;--pRing:rgba(201,169,97,.7);--pRed:#ff6b55;--pBlk:#f0e3c6}
 /* player cards: the piece summary goes on its own line so it never runs out of the card */
-/* ---------------------------------------------------------------- PC layout (common spec, shared/headerbar.js MEDIA): three columns —
-   a fixed-width info column on the left (players, evaluation), the board in the middle, a fixed-width column on the right (record,
-   review, lessons / puzzles, spectating; moved there by app.js). The board takes the smaller of the window height and the width left
-   by the two columns; both columns are as tall as the board and scroll inside. On wide screens the three columns stay together in the middle. */
+/* ---------------------------------------------------------------- PC layout (common spec, shared/headerbar.js MEDIA): two columns —
+   the board on the left, a fixed-width info column on the right (players, evaluation, review, record). The board takes the smaller of
+   the window height and the width left by the column; the column is as tall as the board and scrolls inside. On wide screens the
+   pair stays together in the middle. */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  :root{--lw:280px;--rw:330px;--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(14px, 1.6vw, 28px);
-    --cell:min((var(--vh) - var(--pad) * 2 - var(--ttop)) / 12, (100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw)) / 9.5, 110px)}
-  .app{grid-template-columns:var(--lw) auto var(--rw);grid-template-areas:"side board rside";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
-  .side{grid-area:side;width:var(--lw);height:var(--fh);max-height:none}
-  .side.side-r{grid-area:rside;width:var(--rw)}
+  :root{--rw:360px;--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(16px, 2vw, 32px);
+    --cell:min((var(--vh) - var(--pad) * 2 - var(--ttop)) / 12, (100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 9.5, 110px)}
+  .app{grid-template-columns:auto var(--rw);grid-template-areas:"board side";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
+  .side{grid-area:side;width:var(--rw);height:var(--fh);max-height:none}
   .side-in{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .side-in > *{flex-shrink:0}
-  .side-in > #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:150px}
-  .side-in > #evalCard .graph{flex:1;height:auto;min-height:40px}
-  .side-r .side-in > .kifu-card{flex:1 1 0;min-height:140px}
-  .side-r .side-in > .review-card.show{flex:1.6 1 0;min-height:160px}
-  .side-r .side-in:has(.review-card.show) > .kifu-card{flex:.6 1 0;min-height:110px}
-  html.dock-compact .side-in > #evalCard{flex:none}
-  body.rated-live .side-in > #evalCard{flex:none;min-height:0}   /* rated game: no evaluation shown, only the navigation */
+  .side-in > #evalCard{flex:none}
+  .side-in > .kifu-card{flex:1 1 0;min-height:140px}
+  .side-in > .review-card.show{flex:1.6 1 0;min-height:180px}
+  .side-in:has(.review-card.show) > .kifu-card{flex:.6 1 0;min-height:110px}
   .side .player:has(.clk:not(:empty)) .count small{display:none}   /* clock shown: the piece summary would squeeze the name */
-  .side-r #lessonCard .lesson-actions{flex-wrap:wrap}
-  .side-r #lessonCard .lesson-actions button:not(#lsAuto){flex:1 1 calc(50% - 4px);white-space:nowrap;padding:10px 6px}
-  /* players one per row (the shared compact card: name on the left, count and piece summary on the right) */
-  .side .players{grid-template-columns:minmax(0,1fr);gap:6px}
   .player .count small{display:block;margin:2px 0 0;font-size:11.5px;line-height:1.3;white-space:nowrap}
+  /* review box (rvbox.js) under the board + info column: the board gives up its height */
+  html.rvbox-on{--rvbh:clamp(170px, calc(var(--vh) * .28), 250px);--rvbgap:12px;
+    --cell:min((var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rvbh) - var(--rvbgap)) / 12, (100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 9.5, 110px)}
+  .fxsvg .arrow.rvb2{stroke:rgba(160,200,255,.75);stroke-dasharray:.12 .09}
+  .mark.rvbsel{border-color:var(--accent);border-width:2px}
+  .rvbox .cr-tip{color:#e9dcb4}
+  .rvbox .cr-see{font:inherit;font-size:12px;padding:1px 8px;border-radius:6px;border:1px solid var(--line);color:var(--accent);margin-inline-start:6px}
 }
 </style>
 <link rel="stylesheet" href="online.css?v=2">
@@ -1153,12 +1152,13 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=1"></script>
+<script src="engine.js?v=2"></script>
 <script src="firebase-config.js?v=1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=20261028pc"></script>
+<script src="rvbox.js?v=1"></script>
+<script src="app.js?v=20261028rb"></script>
 <script src="online-ui.js?v=20261028pc"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261025x5" defer></script>

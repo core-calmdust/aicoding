@@ -14,7 +14,7 @@ const R = self.GoRules, PASS = -1;
 
 let simd = true;
 try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
-const WASM = simd ? 'engine_simd.wasm?v=2' : 'engine.wasm?v=2';
+const WASM = simd ? 'engine_simd.wasm?v=3' : 'engine.wasm?v=3';
 const NETS = { light: 'net_light.bin.gz?v=1', strong: 'net_strong.bin.gz?v=1' };
 const inst = {};          // name -> { E, mem }
 const loading = {};
@@ -207,8 +207,30 @@ async function analyze(job, post) {
   const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, slice: 3, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
   if (!res) return null;
   const out = fmt(res);
+  if (job.pv) addPV(I, job, out.list.slice(0, job.pv));
   if (job.own) { setPos(I, job); out.own = ownOf(I, job, job.own); }
   return out;
+}
+// review box: the line after each candidate — the search tree's most visited path, then the net's first choice (up to 7 moves)
+function addPV(I, job, cands) {
+  const E = I.E, n = job.spec.n;
+  for (const c of cands) {
+    const ptr = E.search_pv(ePos(c.m, n), 10), f = new Float32Array(E.memory.buffer, ptr, 11);
+    c.pv = []; for (let k = 0; k < f[0]; k++) c.pv.push(iPos(f[1 + k], n));
+  }
+  for (const c of cands) {
+    let line = job.moves.concat([c.m], c.pv), guard = 0;
+    let rp; try { rp = R.replay(job.spec, line); } catch (e) { continue; }
+    if (!rp || !rp.pos || rp.bad) continue;
+    while (c.pv.length < 7 && guard++ < 8) {
+      setPos(I, Object.assign({}, job, { moves: line }));
+      const ev = rootEval(I, 1), pos = rp.pos; let best = -1, bp = ev.pol[361];
+      for (let i = 0; i < n * n; i++) { const p = ev.pol[ePos(i, n)]; if (p > bp && !pos.b[i] && pos.legal(i)) { bp = p; best = i; } }
+      if (best < 0) break;
+      const r = pos.tryPlay(best); if (!r) break;
+      c.pv.push(best); line = line.concat([best]); rp = { pos: r.pos };
+    }
+  }
 }
 // ownership (black's view, -1..1) averaged over symmetries
 function ownOf(I, job, nsym) {

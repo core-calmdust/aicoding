@@ -894,7 +894,36 @@ function think(cells, toMove, opts, onProgress) {
   return { move, score: score / SCALE, depth: exactDone ? empties : depthDone, nodes, ms: Date.now() - t0, exact: exactDone };
 }
 
-/** analyze: score all legal moves; returns [{move, score(discs), exact}] */
+// principal variation after `first` (review box): each next move by a short search (exact near the end); -1 = pass
+function pvAfter(pos, first, len) {
+  const saveDl = deadline; deadline = Infinity;
+  let [pl, ph, ol, oh] = childOf(pos[0], pos[1], pos[2], pos[3], first);
+  const out = [];
+  while (out.length < len) {
+    const ms = legalList(pl, ph, ol, oh);
+    if (!ms.length) {
+      if (!legalList(ol, oh, pl, ph).length) break;
+      out.push(-1); [pl, ph, ol, oh] = [ol, oh, pl, ph]; continue;
+    }
+    const empties = 64 - pc(pl | ol) - pc(ph | oh);
+    let best = ms[0], bv = -1e9;
+    if (ms.length > 1) for (const s of ms) {
+      const [a, b, c, d] = childOf(pl, ph, ol, oh, s);
+      const v = empties <= 12 ? -solve(a, b, c, d, -64, 64, empties - 1, 1, false) * SCALE : -search(a, b, c, d, Math.min(4, empties - 1), -32000, 32000, 1, false);
+      if (v > bv) { bv = v; best = s; }
+    }
+    out.push(best); [pl, ph, ol, oh] = childOf(pl, ph, ol, oh, best);
+  }
+  deadline = saveDl;
+  return out;
+}
+function withPV(pos, list, n) {
+  if (!n || !list) return list;
+  const top = list.slice().sort((a, b) => b.score - a.score).slice(0, n);
+  for (const x of top) x.pv = pvAfter(pos, x.move, 7);
+  return list;
+}
+/** analyze: score all legal moves; returns [{move, score(discs), exact}] (+ pv: the line after the move for the best opts.pv moves) */
 function analyze(cells, toMove, opts, onProgress) {
   MPC.on = true;
   const pos = toBits(cells, toMove);
@@ -908,7 +937,7 @@ function analyze(cells, toMove, opts, onProgress) {
     deadline = t0 + time * 4;
     try { out = scoreAllMoves(pos, moves, 'exact').map(x => ({ move: x.move, score: x.score / SCALE, exact: true })); }
     catch (e) { if (e !== ABORT) throw e; }
-    if (out) return out;
+    if (out) return withPV(pos, out, opts.pv);
   }
   deadline = t0 + time * 2;
   let prev = null;
@@ -921,7 +950,7 @@ function analyze(cells, toMove, opts, onProgress) {
       if (Date.now() - t0 > time * 0.5) break;
     }
   } catch (e) { if (e !== ABORT) throw e; }
-  return out || moves.map(m => ({ move: m, score: 0 }));
+  return withPV(pos, out || moves.map(m => ({ move: m, score: 0 })), opts.pv);
 }
 
 /** search a single root move (for parallel root splitting). Returns score from the root side's perspective, or null if aborted. */

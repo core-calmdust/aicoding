@@ -792,6 +792,8 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle) return;
+  if (rbS && what === 'prev') { RBox.back(); return; }   // review box study: ◀ takes back an explored move
+  if (rbS) RBox.stop();
   const NN = moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }

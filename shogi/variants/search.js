@@ -169,7 +169,7 @@ class VSearch {
       for (const r of roots) { if (r.s < -MATE + 200 && roots[0].s > -MATE + 200) continue; const s = r.s + Math.random() * noise; if (s > bs) { bs = s; pick = r; } }
     }
     const out = { move: p.toUsi(pick.m), score: pick.s, depth: depthDone, nodes: this.nodes, time: Date.now() - this.t0, pv: this.pv(pick.m) };
-    if (o.top) out.list = roots.slice(0, o.top).map(r => ({ move: p.toUsi(r.m), score: r.s }));
+    if (o.top) out.list = roots.slice(0, o.top).map(r => ({ move: p.toUsi(r.m), score: r.s, pv: o.pv ? this.pv(r.m) : undefined }));
     return out;
   }
 }
