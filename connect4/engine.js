@@ -692,6 +692,21 @@ function think(str, level) {
   return { move: best.c, how: 'search', depth: hr.depth, ms: Date.now() - t0, score: best.kind !== 'heur' ? { kind: best.kind, v: best.v } : { kind: 'heur', v: best.h } };
 }
 
+// a line of play: column c, then the best reply each time (a short analysis per move)
+function pvLine(str, c, plies, ms) {
+  const line = [c];
+  loadMoves(str); if (isWinningMove(c)) return line;
+  let s = str + (c + 1);
+  while (line.length < plies && s.length < 42) {
+    const r = analyzePosition(s, ms);
+    if (!r.list || !r.list.length) break;
+    let b = r.list[0]; for (const e of r.list) if (rankVal(e) > rankVal(b)) b = e;
+    line.push(b.c);
+    loadMoves(s); const win = isWinningMove(b.c); s += b.c + 1;
+    if (win) break;
+  }
+  return line;
+}
 const API = { decodeTree, treeLookup, treeList, setTree: m => { TREE = m; }, loadMoves, solve, solveMove, analyzePosition, mateList, defendList, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
   state: () => ({ nm }), setDeadline: d => { deadline = d; aborted = false; }, nodes: () => nodes, evaluate, EP, rootHeur, setDeadline2: () => { deadline = Infinity; aborted = false; }, clearHT: () => { htF.fill(0); } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -706,6 +721,16 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postM
     } else if (m.type === 'analyze') {
       const r = analyzePosition(m.moves, m.time || 1000, (list, depth) => postMessage({ type: 'progress', id: m.id, list, depth }));
       postMessage({ type: 'analysis', id: m.id, ...r });
+    } else if (m.type === 'cands') {   // review box (rvbox.js): the top moves and a short line after each
+      const r = analyzePosition(m.moves, m.time || 1000);
+      const list = r.list.slice().sort((a, b) => rankVal(b) - rankVal(a));
+      postMessage({ type: 'cands', id: m.id, list, lines: {} });
+      const lines = {};
+      for (const e of list.slice(0, m.n || 4)) {
+        lines[e.c] = pvLine(m.moves, e.c, m.plies || 8, m.ply || 120);
+        postMessage({ type: 'cands', id: m.id, list, lines: Object.assign({}, lines) });
+      }
+      postMessage({ type: 'candsDone', id: m.id, list, lines });
     } else if (m.type === 'mate') {
       postMessage({ type: 'mate', id: m.id, list: m.defend ? defendList(m.moves, m.n) : mateList(m.moves, m.n) });
     }

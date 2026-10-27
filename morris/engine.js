@@ -655,12 +655,28 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   }
   self.onmessage = e => {
     const m = e.data;
-    if (m.type === 'think' || m.type === 'analyze') wantDB(m);
+    if (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') wantDB(m);
     try {
       if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.variant, m.start, m.moves, m.level) });
       else if (m.type === 'analyze') {
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
         self.postMessage({ id: m.id, type: 'result', ...r });
+      } else if (m.type === 'cands') {   // review box (rvbox.js): the top moves and a short line after each
+        const r = analyze(m.variant, m.start, m.moves, m.time || 1000), list = r.list.slice().sort((a, b) => b.v - a.v), lines = {};
+        self.postMessage({ id: m.id, type: 'cands', list, lines: {} });
+        for (const e of list.slice(0, m.n || 5)) {
+          const line = [e.m], seq = m.moves.concat(e.m);
+          while (line.length < (m.plies || 8)) {
+            if (replay(m.variant, m.start, seq).pos.status() !== 0) break;
+            const q = analyze(m.variant, m.start, seq, m.ply || 120).list;
+            if (!q || !q.length) break;
+            let b = q[0]; for (const x of q) if (x.v > b.v) b = x;
+            line.push(b.m); seq.push(b.m);
+          }
+          lines[e.m] = line;
+          self.postMessage({ id: m.id, type: 'cands', list, lines: Object.assign({}, lines) });
+        }
+        self.postMessage({ id: m.id, type: 'candsDone', list, lines });
       } else if (m.type === 'mill') self.postMessage({ id: m.id, type: 'result', list: mill(m.variant, m.start, m.moves, m.n, m.defend) });
       else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.variant, m.start, m.moves, m.n, m.defend, m.maxNodes) });
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }

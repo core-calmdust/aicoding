@@ -277,6 +277,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .bl-num.p0 circle{fill:var(--p0)}.bl-num.p1 circle{fill:var(--p1)}
 .bl-num text{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
 .bl-num.first circle{stroke:var(--accent);stroke-width:3}
+.bestline.rb-first{stroke-dasharray:none;stroke-width:9}
 body.viewing #svg{cursor:default}
 .paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
 .daily{border-color:rgba(226,194,117,.55)!important;background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))!important}
@@ -657,28 +658,28 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
-/* PC layout (common spec 2026-10-28): the board in the middle, a fixed-width info column on each side — left: the game
-   now (players, boxes left / evaluation graph / ◀ ▶, info line), right: record and study (lesson / puzzle cards, watch
-   card, review, record). The board takes the smaller of the window height and the width left by the two columns; on
-   wide screens the three columns stay together in the middle. Both columns are as tall as the board and scroll inside. */
-.app > .side-r{display:none}
+/* PC layout (2026-10-28, back to two columns at the user's request): the board on the left, a fixed-width (360px) info
+   column on the right (lesson / puzzle / watch cards, players, boxes left / evaluation graph / ◀ ▶, review, record, info line). The board takes the
+   smaller of the window height and the width left by the column; on wide screens the pair stays in the middle. The column
+   is as tall as the board (a little taller when the board is limited by the width) and scrolls inside. */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  :root{--sl:280px;--sr:330px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.6vw, 30px);
-    --bw:calc(100vw - var(--padx) * 2 - var(--gap) * 2 - var(--sl) - var(--sr));
+  :root{--sidew:360px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.8vw, 34px);
+    --bw:calc(100vw - var(--padx) * 2 - var(--gap) - var(--sidew));
     --bv:min(var(--vh) - var(--pad) * 2, 1100px);
     --board:calc(min(var(--bv), var(--bw)) / 1.07)}
   /* online dock opened (shared dock-fit lowers --vh): a width-limited board gives back what --vh loses too */
   html.dock-fit{--board:calc(min(var(--bv), var(--bw) - max(0px, var(--vbase, var(--vh)) - var(--vh))) / 1.07)}
-  .app{grid-template-columns:var(--sl) auto var(--sr);grid-template-areas:"left board right";align-items:center;align-content:center;padding:var(--pad) var(--padx)}
-  .app > .side{grid-area:left;height:max(calc(var(--board) * 1.07), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}   /* (as tall as the board; a little taller when the board is limited by the width) */
-  .app > .side.side-r{display:block;grid-area:right}
+  .app{grid-template-columns:auto var(--sidew);grid-template-areas:"board side";justify-content:center;align-items:center;align-content:center;padding:var(--pad) var(--padx)}
+  .app > .side{height:max(calc(var(--board) * 1.07), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}
   .app > .side > .side-in{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;gap:10px}
   .app > .side > .side-in > *{flex:none}
-  .app > .side:not(.side-r) #progCard .graph{display:block;height:clamp(64px, 15vh, 170px);max-height:none;min-height:0}
-  body.reviewing .app > .side:not(.side-r) #progCard .graph{height:clamp(40px, 8vh, 90px)}
-  .app > .side:not(.side-r) .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
-  .app > .side-r .kifu-card{flex:1 1 auto;min-height:150px}
-  .app > .side-r .review-card.show{flex:1.4 1 0;min-height:120px}
+  .app > .side #progCard .graph{display:block;height:clamp(48px, 9vh, 110px);max-height:none;min-height:0}
+  body.reviewing .app > .side #progCard .graph{height:clamp(36px, 6vh, 80px)}
+  .app > .side .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
+  .app > .side .kifu-card{flex:1 1 auto;min-height:130px}
+  .app > .side .review-card.show{flex:1.4 1 0;min-height:120px}
+  .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one player per row: full names in the 360px column */
+  html.rb-on body.reviewing .app > .side #progCard .graph{height:clamp(30px, 5vh, 60px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
 <link rel="stylesheet" href="online.css?v=20261028l9">
@@ -786,7 +787,6 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
     </div>
     <div class="info-line" id="infoLine"></div>
   </div></aside>
-  <aside class="side side-r" aria-label="record"><div class="side-in"></div></aside>
 </div>
 
 <!-- new game -->
@@ -929,7 +929,8 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=fin1"><!-- learn-ui -->
-<script src="engine.js?v=20261020d5"></script>
+<script src="engine.js?v=20261028rb"></script>
+<script src="rvbox.js?v=20261028rb"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261024ls"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1037,7 +1038,7 @@ function shortName(i) {
   return i === 0 ? t('pA') : t('pB');
 }
 function isAITurn() {
-  if (!S || S.over || viewPly !== null) return false;
+  if (!S || S.over || viewPly !== null || rbCons()) return false;
   if (lesson || settings.mode === 'online') return false;
   if (puzzle) return S.turn === 1 && puzzle.state === 'play';
   if (settings.mode === 'watch') return true;
@@ -1045,6 +1046,7 @@ function isAITurn() {
   return false;
 }
 function canHumanMove() {
+  if (rbCons()) return !!S && !S.over;   // 検討 (review box study): both sides
   if (!S || S.over || viewPly !== null || isAITurn()) return false;
   if (lesson) return !lesson.answered;
   if (puzzle) return puzzle.state === 'play' && !puzzle.waiting;
@@ -1059,7 +1061,7 @@ function edgeName(e) {
 }
 
 // ====================================================================== workers
-function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261020d5'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261028rb'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
 let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
 function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
 function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
@@ -1152,7 +1154,8 @@ function renderBoard(anim) {
   if (hintEdge >= 0 && !p.drawn[hintEdge]) { const [x1, y1, x2, y2] = edgeXY(hintEdge); el('line', { x1, y1, x2, y2, class: 'hintline' }, gFx); }
   if (badEdge >= 0 && !p.drawn[badEdge]) { const [x1, y1, x2, y2] = edgeXY(badEdge); el('line', { x1, y1, x2, y2, class: 'badline' }, gFx); }
   if (lesson) drawAids();
-  if (viewPly !== null) drawReviewOverlay();
+  if (viewPly !== null && !rbCons() && !(rbHov !== null && rbOn())) drawReviewOverlay();
+  rbDrawHover();
   document.body.classList.toggle('viewing', viewPly !== null);
   $('#board').classList.toggle('no-anim', !settings.anim);
   svg.classList.toggle('can-move', canHumanMove());
@@ -1259,7 +1262,7 @@ function hbInfo() {
 function refresh(anim) {
   SF = compute(game);
   if (viewPly !== null && (viewPly >= game.moves.length || viewPly < 0)) viewPly = null;
-  S = viewPly === null ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly), human: game.human, setup: game.setup });
+  S = viewPly === null && !rbCons() ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly === null ? game.moves.length : viewPly).concat(rbCons() ? csLine : []), human: game.human, setup: game.setup });
   renderBoard(anim); renderInfo(); renderReview(); renderGraph();
 }
 function applyMove(e, fromHuman) {
@@ -1312,6 +1315,7 @@ function aiTurn() {
 }
 function humanMove(e) {
   ac();
+  if (rbCons()) return rbStudyPlay(e);
   if (lesson) return lessonAnswer(e);
   if (puzzle) return puzzleHumanMove(e);
   if (settings.mode === 'online') return olHumanMove(e);
@@ -1548,7 +1552,8 @@ function rvJudge(i) {
 }
 function rvQuality(i) { const j = rv && !rv.running ? rvJudge(i) : null; return j ? j.q : null; }
 const fmtLoss = j => Math.round(j.loss * 10) / 10, approxMark = j => j.exact ? '' : '≈';
-function renderReview() {
+function renderReview() { renderReview0(); if (window.RvBox) RvBox.refresh(); }
+function renderReview0() {
   const card = $('#reviewCard');
   const hasRv = !!rv && rv.key === game.moves.join(',');
   const show = !lesson && !puzzle && ((rvOpen && hasRv) || viewPly !== null);
@@ -1576,7 +1581,7 @@ function renderReview() {
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i}" class="${viewPly === x.i ? 'cur' : ''}"><span class="tag ${x.j.q}">${t('q.' + x.j.q)}</span><span class="mv">${x.i + 1}. <i class="p${rv.mover[x.i]}"></i>${edgeName(game.moves[x.i])} → ${edgeName(x.j.it.bestMove)}</span><span class="ls">${approxMark(x.j)}−${fmtLoss(x.j)}</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
     html += `<div class="rv-note">${t('rv.note')}${approx ? ' ' + t('rv.approx') : ''}</div>`;
-    if (typeof rvCoach === 'function') html = rvCoach() + html;   /* learn-ui: 振り返り解説 — first, above the numbers */
+    if (typeof rvCoach === 'function' && !rbOn()) html = rvCoach() + html;   /* (PC review box: the commentary is there instead) */   /* learn-ui: 振り返り解説 — first, above the numbers */
   }
   const keepTop = card.scrollTop;
   $('#rvBody').innerHTML = html;
@@ -1614,6 +1619,7 @@ function drawReviewOverlay() {
 }
 function viewAt(i) {
   if (!canReview()) return;
+  if (rbCons()) RvBox.endCons(true);   // leaving the studied position ends the study
   hintEdge = -1; badEdge = -1;
   viewPly = i === null || i >= game.moves.length ? null : Math.max(0, i);
   refresh(false);
@@ -1625,6 +1631,81 @@ $('#rvPrev').onclick = () => { if (viewPly !== null) viewAt(viewPly - 1); };
 $('#rvNext').onclick = () => { if (viewPly !== null) viewAt(viewPly + 1); };
 $('#rvLive').onclick = () => viewAt(null);
 $('#btnAnalyze').onclick = () => { if (rv && !rv.running && rv.key === game.moves.join(',')) { rvOpen = true; viewAt(viewPly === null ? 0 : viewPly); return; } runReview(); };
+
+// ====================================================================== review box (PC, rvbox.js): candidates + 検討
+let csLine = [];      // 検討: edges drawn from the reviewed position (not part of the record)
+let rbW = null, rbBusy = false, rbLines = {}, rbHov = null;
+const rbCons = () => !!(window.RvBox && RvBox.cons);
+// only after the game (or while stepping back through the record): never during a game in progress, rated or online
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === game.moves.join(',') && (viewPly !== null || !!(SF && SF.over)) && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()); }
+function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
+function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
+function rbLineHtml(line) {
+  const q = S.p.clone(); let turn = S.turn;
+  return line.map(e => { const h = `<span style="color:${turn ? 'var(--p1)' : 'var(--p0)'}">${edgeName(e)}</span>`; if (!q.play(e)) turn ^= 1; return h; });
+}
+function rbRows(list, exact, lines) {
+  const me = S.turn, rem = S.G.B - S.p.filled, played = !rbCons() && viewPly !== null ? game.moves[viewPly] : -1;
+  return list.slice(0, 5).map(x => {
+    const v = Math.max(-rem, Math.min(rem, x.v)), a = S.scores[me] + (rem + v) / 2, b = S.scores[1 - me] + (rem - v) / 2;
+    const f = z => Math.round(z * 10) / 10, sc = me === 0 ? [a, b] : [b, a];
+    return { mv: x.m, move: edgeName(x.m), score: (exact ? '' : '≈') + f(sc[0]) + ' – ' + f(sc[1]), cls: a > b + 0.25 ? 'win' : a < b - 0.25 ? 'loss' : 'draw',
+      pv: lines && lines[x.m] ? rbLineHtml(lines[x.m]) : null, played: x.m === played };
+  });
+}
+function rbStudyPlay(e) { if (!S || S.over || S.p.drawn[e]) return; csLine.push(e); hintEdge = -1; badEdge = -1; refresh(true); playLine(); }
+if (window.RvBox) RvBox.init({
+  active: rbActive, lang: () => LANG, key: () => game.n + ':' + game.moves.slice(0, viewPly === null ? game.moves.length : viewPly).concat(rbCons() ? csLine : []).join(','), boardEl: () => $('#board'),
+  head() {
+    if (viewPly === null) return `${escH(t('cr.title'))} · ${escH(RvBox.tx('final'))}`;
+    const i = viewPly, j = rvJudge(i);
+    return `${escH(t('cr.move', { n: i + 1, who: shortName(rv.mover[i]) }))} <span class="mv" style="color:var(--accent)">${edgeName(game.moves[i])}</span>` + (j ? `<span class="tag ${j.q}">${escH(t('q.' + j.q))}</span>` : '');
+  },
+  coach: () => typeof rvCoach === 'function' ? rvCoach() : '',
+  cands(onUpdate) {
+    rbLines = {};
+    if (!S || S.over || S.p.undrawn === 0) { onUpdate([], true); return; }
+    if (!rbW) rbW = makeWorker(null);
+    rbBusy = true;
+    const w = rbW, id = ++jobId, edges = [];
+    for (let e = 0; e < S.G.E; e++) if (S.p.drawn[e]) edges.push(e);
+    w.onmessage = ev => {
+      const m = ev.data; if (m.id !== id) return;
+      if (m.type === 'error') { rbBusy = false; onUpdate([], true); return; }
+      const fin = m.type === 'candsDone'; if (fin) rbBusy = false;
+      rbLines = m.lines || {};
+      onUpdate(rbRows(m.list, m.exact, m.lines), fin);
+      if (rbHov !== null) renderBoard(false);
+    };
+    w.postMessage({ type: 'cands', id, R: game.n, C: game.n, edges, ms: game.n === 5 ? 1200 : 900, n: 5, plies: 8, ply: game.n === 5 ? 90 : 60 });
+  },
+  cancel: rbCancel,
+  hover(mv) { rbHov = mv; renderBoard(false); },
+  consStart() { csLine = []; hintEdge = -1; badEdge = -1; stopPlay(); busy++; refresh(false); },
+  consPlay(e) { rbStudyPlay(e); },
+  consBack() { if (csLine.length) { csLine.pop(); refresh(false); } },
+  consEnd(silent) { csLine = []; rbHov = null; if (!silent) refresh(false); else { S = viewPly === null ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly), human: game.human, setup: game.setup }); renderBoard(false); } },
+  consDepth: () => csLine.length,
+  goto: i => viewAt(i),
+});
+// hovered candidate: the move and its line, numbered, on the board (as the review's best line)
+function rbDrawHover() {
+  if (rbHov === null || !rbOn() || !S) return;
+  const line = rbLines[rbHov] || [rbHov], q = S.p.clone(); let turn = S.turn;
+  const labels = [];
+  line.forEach((e, k) => {
+    if (q.drawn[e]) return;
+    const [a1, b1, a2, b2] = edgeXY(e);
+    el('line', { x1: a1, y1: b1, x2: a2, y2: b2, class: 'bestline p' + turn + (k ? '' : ' rb-first') }, gFx);
+    labels.push([(a1 + a2) / 2, (b1 + b2) / 2, k + 1, turn]);
+    if (!q.play(e)) turn ^= 1;
+  });
+  for (const [x, y, k, pl] of labels) {
+    const g = el('g', { class: 'bl-num p' + pl + (k === 1 ? ' first' : '') }, gFx);
+    el('circle', { cx: x, cy: y, r: 14 }, g);
+    const tx = el('text', { x, y: y + 1 }, g); tx.textContent = k;
+  }
+}
 // evaluation graph (predicted final margin, first player up) + record navigation with ← → ↑ ↓ / Space
 function scoreDiffs() {
   const G = E.geom(game.n, game.n), p = new E.Pos(G), out = [0]; let turn = 0, d = 0;
@@ -1698,7 +1779,7 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.overlay.show') || lesson || puzzle) return;
   if (e.key === 'Escape' && viewPly !== null) { stopPlay(); viewAt(null); return; }
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
-  if (!k || !canReview()) return;
+  if (!k || !canReview() || rbCons()) return;   // 検討中: no record navigation (the box has ◀ and 元に戻す)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
@@ -1803,21 +1884,6 @@ learnInit();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(0), lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { if (S) renderInfo(); });
-// PC layout (common spec 2026-10-28): record / study cards move to the right column; back in place for the phone layout
-const sideR = (() => {
-  const right = document.querySelector('.side-r .side-in'), home = new Map();
-  const SEL = ['#lessonCard', '#puzzleCard', '#olWatch', '#reviewCard', '.kifu-card'];
-  const place = () => {
-    const on = !!(HB && HB.on);
-    for (const s of SEL) {
-      const el = document.querySelector(s); if (!el || !right) continue;
-      if (!home.has(el)) { const ph = document.createComment('side'); el.before(ph); home.set(el, ph); }
-      if (on) right.appendChild(el); else home.get(el).after(el);
-    }
-  };
-  place(); if (HB) HB.onChange(place); window.addEventListener('load', place);
-  return { place };
-})();
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 function rulesOfferSync() { let n = 0; try { n = Object.keys(JSON.parse(localStorage.getItem('dots-rules-v1') || '{}')).length; } catch (e) {} $('#rulesOffer').classList.toggle('hidden', n >= 7); }
 rulesOfferSync();
