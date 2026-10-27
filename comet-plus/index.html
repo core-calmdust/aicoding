@@ -1758,6 +1758,9 @@ function applyThemeStyles(theme) {
             button.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
         }
     });
+    // スマホのホームボタンはRANKING/NAMEと同じ半透明のガラス風に
+    const mhb = document.getElementById('m-home');
+    if (mhb) { mhb.style.background = `linear-gradient(180deg, ${hexToRgba(theme.ui, 0.12)}, ${hexToRgba(theme.ui, 0.03)} 50%, ${hexToRgba(theme.ui, 0.07)})`; mhb.style.color = '#ffffff'; mhb.style.borderColor = hexToRgba(theme.ui, 0.65); mhb.style.textShadow = `0 0 8px ${theme.ui}`; mhb.style.opacity = '1'; }
 }
 
 function init() {
@@ -7752,7 +7755,7 @@ function draw() {
             // 半透明のガラス風ボタン: 背景が透けるテーマ色の薄い面＋上側のハイライト＋細い光る枠
             renderCtx.beginPath(); if (renderCtx.roundRect) renderCtx.roundRect(r.x, r.y, r.w, r.h, IS_MOBILE ? 12 : 8); else renderCtx.rect(r.x, r.y, r.w, r.h);
             const gg = renderCtx.createLinearGradient(0, r.y, 0, r.y + r.h);
-            gg.addColorStop(0, hexToRgba(theme.ui, 0.26)); gg.addColorStop(0.5, hexToRgba(theme.ui, 0.1)); gg.addColorStop(1, hexToRgba(theme.ui, 0.16));
+            gg.addColorStop(0, hexToRgba(theme.ui, 0.12)); gg.addColorStop(0.5, hexToRgba(theme.ui, 0.03)); gg.addColorStop(1, hexToRgba(theme.ui, 0.07));
             renderCtx.fillStyle = gg; renderCtx.fill();
             renderCtx.shadowColor = theme.ui; renderCtx.shadowBlur = 10 + pulse * 8;
             renderCtx.strokeStyle = hexToRgba(theme.ui, 0.45 + pulse * 0.3); renderCtx.lineWidth = 1.5; renderCtx.stroke();
