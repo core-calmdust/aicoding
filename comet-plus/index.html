@@ -903,20 +903,19 @@ class AudioHandler {
             }
             if (4 > lo && 4 <= hi) {
                 if ((beatInLoop - (this.seq4Off || 0) + 128) % 8 === 0) { // 入った拍から8分刻み（入りを待たせない）
-                    const degree = this.seq4Melody[this.seq4MelodyIndex];
+                    // メロディの位置は拍の位置から決める（数えて進める方式だと、音の飛ばしや曲のループのたびにずれていく）
+                    const degree = this.seq4Melody[Math.floor(((beatInLoop - (this.seq4Off || 0) + 128) % 128) / 8) % this.seq4Melody.length];
                     const note = rootNote * 16 * Math.pow(2, degree / 12);
                     createSequence4(t, note);
-                    this.seq4MelodyIndex = (this.seq4MelodyIndex + 1) % this.seq4Melody.length;
                 }
             }
             if (5 > lo && 5 <= hi) {
                 if (beatInLoop % 4 === 0) {
-                    const degree = this.seq5Melody[this.seq5MelodyIndex];
+                    const degree = this.seq5Melody[(beatInLoop / 4) % this.seq5Melody.length]; // 小節に揃えた位置（ループしてもずれない）
                     if (degree !== null) {
                         const note = rootNote * 8 * Math.pow(2, degree / 12);
                         createSequence5(t, note);
                     }
-                    this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
                 }
             }
         };
