@@ -4042,7 +4042,7 @@ if (gl3dOK) {
     composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
-    { const bk = IS_MOBILE ? 0.6 : 0.6; // スマホも低すぎるとグローが荒く見えるので同じ比率 const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
+    { const bk = 0.6; /* スマホも低すぎるとグローが荒く見えるのでPCと同じ比率 */ const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
     // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
     hyperGrade = new ShaderPass({
