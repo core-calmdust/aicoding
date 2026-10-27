@@ -4042,7 +4042,7 @@ if (gl3dOK) {
     composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
-    { const bk = IS_MOBILE ? 0.4 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
+    { const bk = IS_MOBILE ? 0.6 : 0.6; // スマホも低すぎるとグローが荒く見えるので同じ比率 const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
     // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
     hyperGrade = new ShaderPass({
@@ -7120,7 +7120,7 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
+        bloom.strength = (0.48 + visualBeat * (IS_MOBILE ? 0.12 : 0.28)) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
         // 取ったら約1秒かけてじわっと変化し、切れたら約1秒かけて戻る（なめらかな曲線で）
         hyperLin = Math.max(0, Math.min(1, hyperLin + (hyperT > 0 ? 1 : -1) * (frozen ? 0 : dt) / 1.0));
         hyperK = hyperLin * hyperLin * (3 - 2 * hyperLin);
