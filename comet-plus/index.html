@@ -159,6 +159,7 @@
         body.mobile #fullscreen-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         body.mobile #game-wrapper { transform: scale(var(--fit, 1)); transform-origin: center; }
         body.mobile #stage { touch-action: none; }
+        body.mobile, body.mobile * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; } /* ダブルタップ・長押しで拡大鏡や選択が出ないように */
         .mob-only { display: none !important; }
         body.mobile .mob-only { display: inline-flex !important; }
         body.mobile #topbar { display: none; }
@@ -8324,6 +8325,14 @@ function prewarmGPU() {
     } catch (e) { console.warn('prewarm failed', e); }
 }
 prewarmGPU();
+// スマホ: ダブルタップやピンチでの拡大・拡大鏡（ルーペ）・文字選択を出さない（ボタンやリンク・言語選択はそのまま使える）
+if (IS_MOBILE) {
+    const isUi = t => t && t.closest && t.closest('a, button, select, input, label');
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', e => { const n = Date.now(); if (n - lastTouchEnd < 350 && !isUi(e.target)) e.preventDefault(); lastTouchEnd = n; }, { passive: false });
+    ['gesturestart', 'gesturechange', 'dblclick', 'selectstart', 'contextmenu'].forEach(ev => document.addEventListener(ev, e => { if (!isUi(e.target)) e.preventDefault(); }, { passive: false }));
+    document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+}
 // BGMの予約は描画とは別のタイマーでも回す（スマホで描画が一瞬止まっても、音の予約が遅れてリズムがずれないように）
 setInterval(() => { if (gameState === 'playing' && !document.hidden) audioHandler.scheduleBGM(); }, 40);
 requestAnimationFrame(gameLoop);
