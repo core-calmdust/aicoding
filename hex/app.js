@@ -253,8 +253,25 @@ function drawBoardSVG(n) {
   stoneEls.clear(); shownKey = '';
   boardEl.classList.toggle('no-num', !settings.num);
 }
-function ensureBoard(n) { if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); }
+// PC three-column layout (html.pc3, see index.html): the board also stands upright when that makes it larger — a narrow middle
+// column between the two info columns (2026-10-28). Decided per window size / board size (not while the online dock refits the page).
+let rotKey = '', rotPc = false;
+function pcRot(n) {
+  const de = document.documentElement, pc = de.classList.contains('pc3');
+  const k = innerWidth + 'x' + innerHeight + (pc ? 'p' : '') + n;
+  if (k === rotKey) return rotPc;
+  rotKey = k; rotPc = false;
+  const app = document.querySelector('.app'); if (!pc || !app) return rotPc;
+  const pr = document.createElement('div');
+  pr.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:calc(100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw));height:calc(var(--vh) - var(--pad) * 2 - var(--ttop))';
+  app.appendChild(pr); const r = pr.getBoundingClientRect(); pr.remove();
+  const w = (n - 1) * 1.5 + 1 + 2.7, h = (n - 1) * SQ3 / 2 + 2 * HR + 2.4;   // the flat board's view box (see geom)
+  const flat = Math.min(r.height / h, r.width / w), up = Math.min(r.height / w, r.width / h);
+  return (rotPc = up > flat * 1.08);
+}
+function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); }
 rotQ.addEventListener && rotQ.addEventListener('change', () => { ROT = rotQ.matches; G = null; update(false); });
+window.addEventListener('resize', () => { if (!G) return; const w = rotQ.matches || pcRot(G.n); if (w !== G.rot) update(false); });
 const stoneEls = new Map();      // cell → <g>
 let shownKey = '';
 function stoneSVG(i, p, cls) {
@@ -556,7 +573,7 @@ function playMove(m) {
   animating = animOn(); setTimeout(() => { animating = false; renderInfo(); renderFx(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
   update(true); save();
   const st = statusAt(cur);
-  if (st.over) { if (st.why === 'connect') sConnect(d); setTimeout(() => onGameEnd(st), d + 650); }
+  if (st.over) { if (st.why === 'connect') sConnect(d); const mv = moves; setTimeout(() => { if (moves === mv) onGameEnd(st); }, d + 650); }   // (same game only)
   afterPosition();
 }
 function afterPosition() {
@@ -639,6 +656,7 @@ async function analyzeCurrent(tok) {
 }
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
+  if (lesson || puzzle) return;   // (a lesson / puzzle opened meanwhile: the game result is only shown right when the game ends)
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
@@ -653,7 +671,8 @@ function onGameEnd(st) {
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
-  setTimeout(() => showOverlay('#resultOverlay'), 700);
+  const mv = moves;
+  setTimeout(() => { if (moves === mv && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700);   // not when a lesson / puzzle / other game was opened meanwhile
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1942,7 +1961,7 @@ $('#langSel').onchange = e => {
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { update(false); }   // (no new-game dialog on load: the empty board waits — 対局 opens it)
 else { update(false); afterPosition(); }
 // expose for tests
 window.__hx = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, encMoves, decMoves, onCell, statusAt, posAt, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, openReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, get OPEN() { return OPEN; }, playMove, viewAt, cellAt, get G() { return G; }, commit, get gN() { return gN; } };

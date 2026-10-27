@@ -447,15 +447,18 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
-  /* phone portrait */
+@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+  /* phone portrait (and every window that is not the PC layout: narrow / tall mouse windows too) */
   :root{--cell:min((100vw - 16px) / var(--WU), 64px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   :root{--ttop:0px}
   .side > .brand{position:static;width:var(--fw);max-width:100%;flex:none}
   .side, .side-in{display:contents}
+  .side2{display:none}
   .side-in > *{width:var(--fw);max-width:100%;flex:none}
+  .brand a.series{display:none}
+  .side > .brand:has(.brand-l){align-items:center}
   .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:clamp(14px, calc((100vw - 200px) / (var(--tl) * .64)), 19px);letter-spacing:.03em}
   .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
@@ -496,6 +499,10 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .prompt{font-size:10px;left:auto;right:calc(var(--cell) * .3);transform:none;letter-spacing:.02em}
   .player .count small{display:none}
   .player .name{min-width:0}
+}
+/* mouse windows in the stacked layout: the (unrotated, wide) board also fits the window height (2026-10-28) */
+@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+  :root{--cell:max(16px, min((100vw - 16px) / var(--WU), (var(--vh) - 250px) / var(--HU), 64px))}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
@@ -686,7 +693,7 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
@@ -696,7 +703,7 @@ body .info-line{font-size:12.5px}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
@@ -722,7 +729,7 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
 @media (max-width: 1600px){.hb .hb-info .hb-chip.opt{display:none}}
 @media (max-width: 1360px){.hb .hb-info .hb-chip.cnt{display:none}}
 .player .count small{white-space:nowrap}
-@media (min-width: 901px){ .player .count small{display:block;margin:4px 0 0;font-size:12px;line-height:1.3;white-space:normal} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1){ .player .count small{display:block;margin:4px 0 0;font-size:12px;line-height:1.3;white-space:normal} }
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
 #newOverlay .ng-col{display:contents}
@@ -764,8 +771,32 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
 .fm-sizes button{padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12.5px}
 .fm-sizes button.sel{color:var(--text);border-color:var(--accent)}
 
+/* ---------------------------------------------------------------- PC (html.pc3 = the PC media of shared/headerbar.js; set by the
+   layout script at the end of the page): board in the middle, a fixed-width column on each side — left: this game (players,
+   evaluation bar / graph / ◀ ▶, info line), right: records & study (kifu, review, lesson / puzzle card, online watch card).
+   The board takes the most the window height and the width left by the two columns allow; both columns are as tall as the
+   board and scroll inside when their cards need more room (2026-10-28) */
+.side2{display:none}
+html.pc3{--pad:clamp(14px, 2.6vmin, 30px);--padx:clamp(16px, 2vw, 32px);--gap:clamp(16px, 1.6vw, 26px);--lw:280px;--rw:330px;
+  --cell:max(14px, min((var(--vh) - var(--pad) * 2 - var(--ttop)) / var(--HU), (100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw)) / var(--WU), 76px))}
+html.pc3 .app{grid-template-columns:var(--lw) auto var(--rw);grid-template-areas:"side board side2";align-items:start;align-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
+html.pc3 .side, html.pc3 .side2{width:100%;height:var(--fh);max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;container-type:normal}
+html.pc3 .side2{display:block;grid-area:side2;position:relative}
+html.pc3 .side-in{gap:10px}
+html.pc3 .side-in > .card{padding:12px 14px}
+html.pc3 .players{grid-template-columns:minmax(0,1fr);gap:6px}
+html.pc3 #evalCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:150px}
+html.pc3 #evalCard .graph{flex:1 1 0;height:auto;min-height:40px}
+html.pc3 .kifu-card{flex:1 1 0;min-height:140px}
+html.pc3 .kifu-head{flex-wrap:wrap;row-gap:2px}
+html.pc3 .side2 .review-card.show{flex:1.6 1 0;min-height:120px}
+html.pc3 .side2 .side-in:has(.review-card.show) .kifu-card{flex:.8 1 0;min-height:110px}
+html.pc3 body.in-lesson .side2 .side-in, html.pc3 body.in-puzzle .side2 .side-in{height:auto}
+html.pc3 .lesson-actions{flex-wrap:wrap}
+html.pc3 .ol-watch{flex:none}
+html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:var(--fh)!important}
 </style>
-<link rel="stylesheet" href="online.css?v=1">
+<link rel="stylesheet" href="online.css?v=2">
 </head>
 <body>
 <div class="app">
@@ -946,8 +977,8 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
     </div>
     </div></div>
     <div class="modal-actions">
-      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
   </div>
 </div>
@@ -1032,9 +1063,9 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
     </div>
   </div>
 </div>
@@ -1048,7 +1079,7 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
 </div>
 
 <script src="i18n.js?v=1"></script>
-<script src="i18n-online.js?v=1"></script>
+<script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
@@ -1058,10 +1089,33 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
 <script src="engine.js?v=1"></script>
 <script src="firebase-config.js?v=1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=1"></script>
+<script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=1"></script>
-<script src="online-ui.js?v=1"></script>
+<script src="app.js?v=2"></script>
+<script src="online-ui.js?v=2"></script>
+<script>
+/* PC layout (shared/headerbar.js HeaderBar.MEDIA): the records & study cards move to the right column (.side2); every other
+   layout (phones, tablets, narrow / tall windows) keeps them in their place in the one stacked column (2026-10-28) */
+(function () {
+  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)';
+  const left = document.querySelector('.app > .side'); if (!left) return;
+  const right = document.createElement('aside'); right.className = 'side2'; right.innerHTML = '<div class="side-in"></div>'; left.after(right);
+  const box = right.firstChild, home = new Map(), mq = matchMedia(MQ);
+  const SEL = ['#olWatch', '#lessonCard', '#puzzleCard', '#reviewCard', '.kifu-card'];
+  function apply() {
+    const pc = mq.matches;
+    document.documentElement.classList.toggle('pc3', pc);
+    for (const q of SEL) {
+      const el = document.querySelector(q); if (!el) continue;
+      if (pc && el.parentNode !== box) { const ph = document.createComment('pc3'); el.before(ph); home.set(el, ph); box.appendChild(el); }
+      else if (!pc && home.has(el)) { const ph = home.get(el); if (ph.parentNode) ph.replaceWith(el); home.delete(el); }
+    }
+    window.dispatchEvent(new Event('resize'));
+  }
+  if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
+  apply();
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261025x5" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
