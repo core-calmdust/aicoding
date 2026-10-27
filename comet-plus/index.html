@@ -6544,7 +6544,7 @@ function spawnLink(tx, ty) {
 }
 
 const debris = [], debrisFree = [];
-let loadLv = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
+let loadLv = 0, loadUpT = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
 function spawnBurst(x, y, color, count, opts = {}) {
     if (loadLv >= 1) count = Math.ceil(count * (loadLv >= 2 ? 0.35 : 0.6)); // 重い時は破片を減らす
     if (!isEffectsEnabled) count = Math.ceil(count / 3);
@@ -6803,10 +6803,12 @@ function render3D() {
 
     // スマホ: 画面のオブジェクトが一定数を超えたら描画を軽くする（後半ステージの処理落ち対策）
     if (IS_MOBILE) {
-        const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + debris.length * 0.2 + (monsters ? monsters.length * 2 : 0);
-        if (loadLv < 2 && load > 210) loadLv = 2; else if (loadLv < 1 && load > 120) loadLv = 1; // スマホは早めに軽くする
-        else if (loadLv === 2 && load < 170) loadLv = 1; else if (loadLv === 1 && load < 90) loadLv = 0;
-        if (bloom) bloom.enabled = loadLv < 2; // 重い時はブルームを切る
+        // 撃破の破片など一瞬の増加では切り替えない（見た目が急に簡素になるのを防ぐ）。高い状態が1.5秒続いたら軽くする
+        const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + (monsters ? monsters.length * 2 : 0);
+        const want = load > 320 ? 2 : load > 200 ? 1 : 0;
+        if (want > loadLv) { loadUpT = (loadUpT || 0) + dt; if (loadUpT > 1.5) { loadLv = want; loadUpT = 0; } } else loadUpT = 0;
+        if (want < loadLv && load < (loadLv === 2 ? 260 : 150)) loadLv = want;
+        if (bloom) bloom.enabled = true; // ブルームは切らない（光の見た目を保つ）
     }
     // 彗星（数が増えるほど光を控えめに）
     const cometDensityK = 1 / (1 + comets.length / 220);
@@ -6819,8 +6821,8 @@ function render3D() {
         const rot = rTime * 3 + c._r;
         const s = c.radius * 1.7 * VS * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
-        if (loadLv < 2) cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
-        glow.add(x, y, z, color, (13 + visualBeat * 6) * (loadLv >= 1 ? 0.75 : 1), 0.3 * cometDensityK * (loadLv >= 1 ? 1.4 : 1)); // 重い時は光を小さく（描画面積を減らす）
+        cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
+        glow.add(x, y, z, color, (13 + visualBeat * 6) * (loadLv >= 2 ? 0.85 : 1), 0.3 * cometDensityK * (loadLv >= 2 ? 1.2 : 1)); // 重い時は光を小さく（描画面積を減らす）
         if (efx && !IS_MOBILE) { // スマホは彗星の尾を省略
             let vx, vy;
             if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod * MOB_FALL; }
@@ -6917,8 +6919,8 @@ function render3D() {
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
             // 大きい弾（ECLIPSEなど）はハローが巨大になって眩しいので、大きさと明るさを抑える
             const gr = eb.radius > 5 ? 5 + (eb.radius - 5) * 0.3 : eb.radius, ga = eb.radius > 5 ? 0.7 : 1;
-            glow.add(x, y, z, c, gr * (loadLv >= 2 ? 9 : 13), 1.25 * ga);     // 色のハロー
-            if (loadLv < 1) glow.add(x, y + 2, z, COL_WHITE, gr * 5, 2.2 * ga);   // 白い芯
+            glow.add(x, y, z, c, gr * 13, 1.25 * ga);     // 色のハロー
+            glow.add(x, y + 2, z, COL_WHITE, gr * 5, 2.2 * ga);   // 白い芯
             if (efx && loadLv < 1) {
                 const sp = Math.hypot(eb.vx, eb.vy) || 1;
                 trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
