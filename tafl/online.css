@@ -230,6 +230,9 @@ body.ol-soon .dk-dot{background:var(--dim);box-shadow:none}
 @media not all and (pointer: coarse){
   html.ol-dock.ol-soon{--vh:calc(100vh - 46px)}
   @supports (height:100dvh){html.ol-dock.ol-soon{--vh:calc(100dvh - 46px)}}
+  /* PC header bar on: below it too */
+  html.hb-on.ol-dock.ol-soon{--vh:calc(100vh - 46px - var(--hb-h))}
+  @supports (height:100dvh){html.hb-on.ol-dock.ol-soon{--vh:calc(100dvh - 46px - var(--hb-h))}}
 }
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){
   body.ol-soon:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}

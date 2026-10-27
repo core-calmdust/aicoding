@@ -490,7 +490,7 @@ function playMove(m) {
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
   update(true); save();
   const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), moveDur() + 500);
+  if (st.over) { const ref = moves; setTimeout(() => { if (moves === ref) onGameEnd(st); }, moveDur() + 500); }   // only if this game is still on the board
   afterPosition();
 }
 function moveDur() { return animOn() ? 200 : 20; }
@@ -527,7 +527,9 @@ async function analyzeCurrent(tok) {
   if (!res || res.error) return;
   anaCache.set(key, res.list); apply(res.list); coachResolve(idx, res.list); save();
 }
+// the result dialog only when a game ends right now on the board (never for a lesson / puzzle, nor for a finished game that is restored)
 function onGameEnd(st) {
+  if (lesson || puzzle) return;
   if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
@@ -544,7 +546,7 @@ function onGameEnd(st) {
   $('#resultSub').innerHTML = sub;
   const mk = settings.mode === 'ai' && !rgame ? mistakeProblems() : [];
   $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
-  setTimeout(() => showOverlay('#resultOverlay'), 900);
+  { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle && !net) showOverlay('#resultOverlay'); }, 900); }
 }
 // ---------------------------------------------------------------- resign (common spec, shared/resign.js)
 // The 投了 button sits after 対局 / 待った and asks 「投了しますか？」 (はい / いいえ); はい ends the game as your loss
@@ -1741,7 +1743,7 @@ async function runReview() {
   if (gameKey() === key) save();
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (getComputedStyle($('.app > .side')).display === 'contents') setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudge(i) {
   if (!rv || rv.key !== gameKey()) return null;
   const L = rv.list[i]; if (!L || !L.length) return null;
@@ -2098,7 +2100,7 @@ function olRender(view) {
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
     B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${R.title ? `<b class="ol-rtitle">${olEsc(R.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
-      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olBack">${t('ol.back')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: t('meta.title'), url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
   }
 }
@@ -2693,7 +2695,7 @@ function olAfter() {
   if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
   else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
   else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
-  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button>`;
   box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
   btn.disabled = !!(pending && g.again.by === me) || g.post === 'again';
@@ -2860,7 +2862,7 @@ $('#langSel').onchange = e => {
 };
 const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); if (!olRoomQ) openNewDialog(); }
+else if (!hadSave) { update(false); if (!olRoomQ) afterPosition(); }   // no saved game: the starting position, waiting (the settings dialog opens from 対局)
 else { update(false); afterPosition(); }
 // ?room=CODE (or #room=CODE): join a friend's online room
 if (olRoomQ) {
@@ -2934,6 +2936,26 @@ window.addEventListener('resize', () => renderFx());
 if (window.RulesOffer) RulesOffer.init({ game: 'gomoku', lang: () => LANG, open: () => openRules('basic'), watch: '#rulesOverlay' });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+
+// PC layout (common spec): [left: this game — players, evaluation, info] [board] [right: record, review, lesson / puzzle, watching].
+// The right-hand cards move into their own column (.side-r) while the PC layout is on, and back into the one info column otherwise.
+(() => {
+  const side = document.querySelector('.app > .side'), L = side && side.querySelector('.side-in'); if (!L || !window.HeaderBar) return;
+  const R = document.createElement('aside'); R.className = 'side side-r'; R.innerHTML = '<div class="side-in"></div>'; side.after(R);
+  const RI = R.firstChild, home = new Map(), mq = matchMedia(HeaderBar.MEDIA);
+  const SEL = ['#olWatch', '#lessonCard', '#puzzleCard', '#reviewCard', '.kifu-card'];
+  const apply = () => {
+    const pc = mq.matches;
+    for (const sel of SEL) {
+      const c = L.querySelector(':scope > ' + sel) || RI.querySelector(':scope > ' + sel); if (!c) continue;
+      if (!home.has(c)) { if (c.parentNode !== L) continue; const ph = document.createComment('side'); L.insertBefore(ph, c); home.set(c, ph); }
+      if (pc) RI.appendChild(c); else { const ph = home.get(c); ph.parentNode.insertBefore(c, ph.nextSibling); }
+    }
+    document.documentElement.classList.toggle('side3', pc);
+  };
+  const init = () => { apply(); const f = () => { apply(); window.dispatchEvent(new Event('resize')); }; if (mq.addEventListener) mq.addEventListener('change', f); else mq.addListener(f); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else setTimeout(init, 0);
+})();
 if (HB) HB.onChange(() => renderInfo());
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 renderInfo();
