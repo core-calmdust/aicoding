@@ -1869,7 +1869,7 @@ async function runReview() {
   if (gameKey() === key) save();
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (!matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (!matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudge(i) {
   if (!rv || rv.key !== gameKey()) return null;
   const L = rv.list[i]; if (!L || !L.length) return null;
