@@ -409,7 +409,7 @@ const config = {
     energyItemScoreNormal: 10000,
     energyItemScoreSpecial: 50000,
     gravity: 600,
-    playerBulletSpeed: 880, // 1.1倍
+    playerBulletSpeed: IS_MOBILE ? 880 * 1.2 : 880, // 1.1倍。スマホはさらに1.2倍
     playerBulletHitRadius: 12, // 3D化で狙いにくくなった分、弾の当たり判定を太く（オリジナルは幅3の点判定）
     monsterUFOBaseScore: 10000,
     monsterInvaderBaseScore: 3000,
