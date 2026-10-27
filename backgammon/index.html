@@ -67,10 +67,6 @@ body{
 }
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .app{height:var(--vh);display:grid;grid-template-columns:auto minmax(var(--sidew), 500px);grid-template-areas:"board side";gap:var(--gap);justify-content:center;align-items:center;padding:var(--pad) var(--padx)}
-/* narrow PC windows (below the wide layout): slimmer side margins so the board keeps its size */
-@media not all and (pointer: coarse){ @media (max-width: 1100px){ :root{--padx:clamp(14px, 2.5vw, var(--pad));--gap:clamp(16px, 2.4vw, 44px)} } }
-/* below 820px (no PC header bar): start at the top, and the info column may run longer than the board instead of squeezing its cards */
-@media not all and (pointer: coarse){ @media (max-width: 819px){ :root:not(.rot){--padt:min(var(--pad), 28px)} html:not(.rot) .app{align-content:start;align-items:start} html:not(.rot) .side{height:auto;min-height:var(--fh);max-height:none} html:not(.rot) .side-in{height:auto;min-height:var(--fh)} } }
 /* ---------------------------------------------------------------- board */
 .board-area{grid-area:board;display:flex;flex-direction:column;align-items:center}
 .frame{position:relative;width:var(--fw);height:var(--fh);user-select:none;-webkit-user-select:none;touch-action:none;border-radius:calc(var(--u)*.28);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(201,169,97,.3)}
@@ -507,8 +503,8 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   .op-book .ob{gap:10px;padding:10px}.ob-th{width:104px}.op-book .nm{font-size:14.5px}.ob-aim{font-size:13.5px}
 }
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
-  /* phone portrait */
+@media (max-aspect-ratio: 1/1){
+  /* phone portrait (and any portrait window: tablets, tall PC windows) */
   html:not(.rot){--u:min((var(--vw) - 14px) / 15.85, (var(--vh) - 300px) / 12, 60px)}
   html:not(.rot), html:not(.rot) body{overflow-x:hidden;overflow-y:auto;height:auto}
   html:not(.rot) .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:8px 7px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
@@ -545,8 +541,8 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   html:not(.rot) .coach{top:calc(var(--u)*.6);font-size:12px}
   html:not(.rot) .toast{font-size:13px;padding:10px 16px}
 }
-@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
-  /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
+@media (min-aspect-ratio: 1/1){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  /* phone landscape (and every other landscape window below the PC layout: tablets, small PC windows): one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
   :root{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html,body{height:auto;overflow-x:hidden;overflow-y:auto}
   .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "sbox ctrl" "board board" "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
@@ -613,7 +609,7 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   :is(.lesson-card,.puzzle-card) .lesson-actions{grid-area:a1;flex-direction:row;gap:4px;margin:0}
   .puzzle-card .lesson-actions + .lesson-actions{grid-area:a2;margin-top:0}
   :is(.lesson-card,.puzzle-card) .lesson-actions button{flex:none;padding:5px 9px;font-size:12px;border-radius:8px;min-width:0}
-}
+} }
 /* forced landscape (CSS-rotated app on a portrait phone): same rules as phone landscape */
 @media (pointer: coarse){
   /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
@@ -737,15 +733,6 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
-/* PC: header row above the board-top line like the other games — title above the board's top-left corner, icons above the side panel; the panel's top lines up with the board's top */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
-  :root:not(.rot){--ttop:58px}
-  html:not(.rot) .app{padding-top:calc(var(--padt, var(--pad)) + var(--ttop))}
-  html:not(.rot) .side{position:relative}
-  html:not(.rot) .side-in > .brand{position:absolute;left:0;right:0;bottom:calc(100% + 14px);justify-content:flex-end}
-  html:not(.rot) .side-in > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
-  html:not(.rot) .side-in > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
-}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
 @media (min-width: 900px) and (hover: hover) and (pointer: fine){
@@ -807,91 +794,54 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 .pz-grid button.th.solved .tth svg{opacity:1}
 .pz-grid:has(> .th){grid-template-columns:repeat(2,1fr)}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ .pz-grid:has(> .th){grid-template-columns:repeat(4, 1fr)} }
-/* ---------------------------------------------------------------- PC wide (html.pcw, set from app.js): the board uses the
-   browser width (flattened geometry fitted to the window), the info panels sit in ONE ROW of columns below it
-   (形勢 / ヒント・振り返り / 棋譜); lessons and puzzles keep their card beside the board */
-html.pcw, html.pcw body{height:auto;overflow-x:hidden;overflow-y:auto}
-html.pcw .app{display:grid;height:auto;min-height:var(--vh);grid-template-columns:minmax(0,1fr);grid-template-areas:"board" "side";gap:18px;padding:14px 24px 40px;align-content:start;justify-content:stretch;align-items:start}
-html.pcw.hb-on:not(.rot) .app{padding-top:14px}
-html.pcw .board-area{grid-area:board;justify-self:center}
-html.pcw .side{grid-area:side;height:auto;max-height:none;justify-self:center;width:max(var(--fw), min(100%, 1000px))}
-/* the info row: three equal-height cards (fixed height --rowh, set with the board fit); content scrolls inside each card */
-html.pcw .side-in{display:grid;height:var(--rowh,300px);gap:16px;align-items:stretch;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1.2fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"pl ev kf"}
-/* reviewing / hint shown: the commentary gets the whole middle column; 形勢 shrinks under the players */
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)){grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"pl rv kf" "ev rv kf"}
-html.pcw .side-in:has(> .hint-card.show):not(:has(> .review-card.show)){grid-template-areas:"pl hn kf" "ev hn kf"}
-html.pcw .side-in:has(> .hint-card.show):has(> .review-card.show){grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"pl rv kf" "ev hn kf"}
-html.pcw .side-in > .brand, html.pcw .controls:not(.hb-menu), html.pcw .info-line, html.pcw .scroll-jump{display:none!important}
-html.pcw body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.players,#evalCard,.kifu-card,.review-card.show,.hint-card.show){min-height:0;margin:0;padding:12px 16px;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
-html.pcw body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){display:none}
-html.pcw .card .kifu-head, html.pcw .evalrow{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;height:24px;margin:0 0 10px}
-html.pcw .card .kifu-head .label, html.pcw .evalrow .label{font-size:13.5px;color:var(--muted);letter-spacing:.1em}
-html.pcw .kifu-head button{font-size:12.5px}
-html.pcw .evalrow .val{font-size:15px}
-/* players: title row, the two sides stacked, match info at the bottom */
-html.pcw .players{grid-area:pl;gap:8px}
-html.pcw .players .pl-head{display:flex}
-html.pcw .player{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top row" "st row";align-items:center;column-gap:10px;padding:8px 12px;flex:1 1 0;min-height:0}
-html.pcw .player .top{grid-area:top}.html.pcw .player .row{grid-area:row}
-html.pcw .player .row{grid-area:row;margin:0;flex-direction:column;align-items:flex-end;gap:0}
-html.pcw .player .status{grid-area:st}
-html.pcw .player .count{font-size:clamp(26px, calc(var(--rowh,300px) / 9), 40px);white-space:nowrap;line-height:1}
-html.pcw .player .count small{white-space:nowrap}
-html.pcw .player .name{font-size:14px}
-html.pcw .players .pl-info{display:block;flex:none;font-size:11.5px;color:var(--dim);line-height:1.5;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* 形勢: the graph fills the card; compact while the review / hint share the column */
-html.pcw #evalCard{grid-area:ev}
-html.pcw #evalCard .graph{flex:1 1 auto;height:auto;min-height:40px}
-html.pcw #evalCard .navbar{flex:none;margin-top:8px}
-html.pcw .side-in:has(> .review-card.show) #evalCard, html.pcw .side-in:has(> .hint-card.show) #evalCard{padding-bottom:10px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .graph{flex:none;height:34px;min-height:0;margin-top:6px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .evalrow{margin-bottom:6px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .navbar{margin-top:6px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player{padding:4px 10px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .count{font-size:24px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .status, html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .players .pl-info{display:none}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .players{gap:6px;padding:10px 12px;justify-content:center}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .players .pl-head{display:none}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player{flex:none;grid-template-areas:"top row";min-height:0}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .count small{display:none}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .player .row{flex-direction:row;align-items:baseline;gap:8px}
-html.pcw .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) #evalCard .evalbar{height:6px}
-html.pcw .hint-card{grid-area:hn}
-html.pcw .hint-card.show{display:flex}
-html.pcw .review-card{grid-area:rv}
-html.pcw .review-card.show{display:flex}
-html.pcw #rvBody, html.pcw #hintBody{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin}
-html.pcw .kifu-card{grid-area:kf}
-html.pcw .kifu{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:14px;gap:4px 8px}
-html.pcw .kifu .gh{font-size:13px}
-/* lessons / puzzles: card on the right of the board, both fully visible */
-html.pcw body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:auto minmax(280px, 440px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
-html.pcw body:is(.in-lesson,.in-puzzle) .side{width:100%}
-html.pcw body:is(.in-lesson,.in-puzzle) .side-in{display:flex;flex-direction:column;gap:12px}
-html.pcw body:is(.in-lesson,.in-puzzle) .side-in{height:auto;max-height:var(--fh)}
-html.pcw body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){flex:0 1 auto;min-height:0}
-html.pcw body:is(.in-lesson,.in-puzzle) .side-in > .players{flex:none}
-html.pcw body:is(.in-lesson,.in-puzzle) .lesson-card, html.pcw body:is(.in-lesson,.in-puzzle) .puzzle-card{max-height:calc(var(--vh) - 150px);overflow-y:auto}
-html.pcw body.flat-geo:is(.in-lesson,.in-puzzle) .scroll-jump{display:none}
-/* narrower windows in the wide layout (820-1100px): smaller counts so the names keep their room in the players card */
-@media (max-width: 1100px){ html.pcw:not(.pcs) .player .count{font-size:24px} html.pcw:not(.pcs) .player{column-gap:6px;padding:8px 10px} html.pcw:not(.pcs) .player .count small{margin-left:3px} }
-/* low / wide windows (html.pcs, chosen in pcFit): the info stands as a column beside the board instead of the row under it */
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .app{grid-template-columns:auto var(--pcsw,320px);grid-template-areas:"board side";justify-content:center;align-items:start;gap:24px}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side{width:100%}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in{display:flex;flex-direction:column;gap:12px;height:var(--fh)}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .players{flex:none}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > #evalCard{flex:1 1 0;min-height:118px}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .kifu-card{flex:1.2 1 0;min-height:90px}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.review-card.show,.hint-card.show){flex:2 1 0;min-height:120px}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .players .player{flex:none;padding:6px 12px}
-html.pcw.pcs .player .count{font-size:clamp(22px, calc(var(--fh) / 18), 34px)}
-html.pcw.pcs #evalCard .graph{min-height:16px}
-html.pcw.pcs .players .pl-head{display:none}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > :is(.players,#evalCard,.kifu-card,.review-card.show,.hint-card.show){padding:10px 14px}
-html.pcw.pcs .card .kifu-head, html.pcw.pcs .evalrow{margin-bottom:6px}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > #evalCard{min-height:104px}
-html.pcw.pcs body:not(.in-lesson):not(.in-puzzle) .side-in > .kifu-card{min-height:76px}
-html.pcw.pcs.dock-compact .side-in{height:auto!important}
+/* ---------------------------------------------------------------- PC (common spec: mouse, >= 1040px wide, not a tall window):
+   three columns — left: 対局者 + 形勢 (the state of the game), centre: the board (flat geometry fitted by pcFit in app.js:
+   the height of the window and the width left between the columns), right: 棋譜 / ヒント / 振り返り / lesson & puzzle cards.
+   The board and the info frame share one grid cell: .side is a real box over the whole width (the shared dock fitting
+   measures it) with the board's column left empty and clicks passing through to the board. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  :root{--lw:260px;--rw:300px;--cg:20px;--px:24px}
+  @media (max-width: 1299px){ :root{--lw:230px;--rw:270px;--cg:16px;--px:16px} .players .count small{display:none} }
+  html:not(.rot) .app{display:grid;height:var(--vh);padding:12px var(--px)!important;gap:0;justify-content:center;align-content:center;align-items:center;
+    grid-template-columns:calc(var(--lw) + var(--rw) + 2 * var(--cg) + var(--fw));grid-template-rows:var(--fh);grid-template-areas:none}
+  .board-area{grid-area:1 / 1;justify-self:start;align-self:center;margin-inline-start:calc(var(--lw) + var(--cg));position:relative;z-index:1}
+  .side{grid-area:1 / 1;width:100%;height:var(--fh);max-height:none;min-height:0;display:grid;container-type:normal;pointer-events:none;column-gap:var(--cg);row-gap:12px;
+    grid-template-columns:var(--lw) minmax(0,1fr) var(--rw);grid-template-rows:auto minmax(0,1fr) minmax(0,1fr)}
+  .side-in{display:contents}
+  .side-in > *{pointer-events:auto;min-height:0;margin:0}
+  .side-in > .brand, .controls:not(.hb-menu), .info-line, .scroll-jump, .sbox{display:none!important}
+  /* left: players, 形勢 under them */
+  .players{grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column;gap:6px;padding:10px 12px}
+  .players .pl-head{display:flex;margin-bottom:2px}
+  .players .pl-info{display:block;flex:none;font-size:11.5px;color:var(--dim);line-height:1.5;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #evalCard{grid-area:2 / 1 / 4 / 2;display:flex;flex-direction:column;overflow:hidden;padding:12px 14px}
+  #evalCard .graph{flex:1 1 0;height:0!important;min-height:30px}
+  #evalCard .navbar{flex:none;margin-top:8px;gap:4px}
+  #evalCard .navbar button{width:auto;flex:1 1 0;max-width:42px}
+  /* right: 棋譜 (the commentary / hint above it while shown) */
+  .kifu-card{grid-area:1 / 3 / 4 / 4;display:flex;flex-direction:column;overflow:hidden;padding:12px 14px}
+  .kifu{flex:1 1 auto;min-height:0;overflow-y:auto}
+  .side-in:is(:has(> .review-card.show),:has(> .hint-card.show)) .kifu-card{grid-area:3 / 3 / 4 / 4}
+  .review-card.show{grid-area:1 / 3 / 3 / 4;display:flex;flex-direction:column;overflow:hidden;padding:12px 14px}
+  .hint-card.show{grid-area:1 / 3 / 3 / 4;display:flex;flex-direction:column;overflow:hidden;padding:12px 14px;min-height:0}
+  .side-in:has(> .review-card.show) .hint-card.show{grid-area:1 / 3 / 2 / 4}
+  .side-in:has(> .hint-card.show) .review-card.show{grid-area:2 / 3 / 3 / 4}
+  #rvBody, #hintBody{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:1 / 3 / 4 / 4;overflow-y:auto}
+  :is(.lesson-card,.puzzle-card) .lesson-actions{flex-wrap:wrap}
+  :is(.lesson-card,.puzzle-card) .lesson-actions button{flex:1 1 auto;white-space:nowrap;text-overflow:clip}
+  /* compact player cards (the common side-column style): name on the left, pips on the right, the status line under it */
+  body:not(.has-clk):not(.in-online) .players .player{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;padding:7px 12px;min-height:0}
+  body:not(.has-clk):not(.in-online) .players .player > .top{grid-column:1;grid-row:1;min-width:0}
+  body:not(.has-clk):not(.in-online) .players .player > .row{grid-column:2;grid-row:1;margin:0;text-align:end;align-items:baseline;gap:8px}
+  body:not(.has-clk):not(.in-online) .players .player > .status{grid-column:1 / -1;grid-row:2}
+  body:not(.has-clk):not(.in-online) .players .player > .status:empty{display:none}
+  .players .count, .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)}
+  .players .count small{margin-left:3px}
+}
+/* phone layouts on a mouse (narrow / tall PC windows): no jump button (the page scrolls with the wheel), room above the online dock */
+@media (pointer: fine){ .scroll-jump{display:none!important} body:not(.no-online) .app{padding-bottom:120px!important} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ body:not(.no-online) .app{padding-bottom:12px!important} }
 /* review commentary (all layouts) */
 .rv-cur{margin:10px 0 4px;padding:10px 12px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:linear-gradient(160deg,rgba(201,169,97,.10),rgba(0,0,0,.18))}
 .rv-cur .h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
@@ -1162,8 +1112,8 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
     </div>
     </div></div>
     <div class="modal-actions">
-      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
   </div>
 </div>
@@ -1236,9 +1186,9 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
     </div>
   </div>
 </div>
@@ -1267,10 +1217,10 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="i18n-op.js?v=20261021op"></script>
 <script src="bg.js?v=20261021op"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="i18n-online.js?v=20261021ol"></script>
+<script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=sec1"></script>
+<script src="online.js?v=stale1"></script>
 <script src="explain.js?v=20261021pz"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
@@ -1279,9 +1229,9 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
-<script src="app.js?v=20261025sw"></script>
+<script src="app.js?v=20261028L9"></script>
 <script src="op.js?v=20261021op"></script>
-<script src="online-ui.js?v=20261025dk"></script>
+<script src="online-ui.js?v=20261028L9"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

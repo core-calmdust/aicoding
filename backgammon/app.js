@@ -219,7 +219,7 @@ function flatFit() {
       if (el && el.offsetParent && getComputedStyle(el).display !== 'none') { const r = lrect(el); if (r.height) top = Math.max(top, r.top - a0 + r.height); }
     }
   }
-  const avail = hgt - top - 4 - 5 - 6 - (window.olTabH ? olTabH() : 0);
+  const avail = hgt - top - 4 - 5 - 6 - (window.olTabH ? olTabH() : 0) - (!ROT && window.olDockH ? olDockH() : 0);   // (olDockH: the dock bar of a PC window in this layout)
   const u = Math.min((w - 12) / 15.85, avail / 6.4, 60);
   return { h: Math.max(6.4, Math.min(10, avail / u)), u };
 }
@@ -1431,48 +1431,29 @@ const LAND_STORE = STORE + '-land';
 let landOn = false, landLocked = false;
 try { landOn = localStorage.getItem(LAND_STORE) === '1'; } catch (e) {}
 const mqPortrait = matchMedia('(orientation: portrait)'), mqCoarse = matchMedia('(pointer: coarse)');
-const mqLandPhone = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
 let geomReady = false;
 // flat board in any phone-landscape layout (physical landscape or the rotated page)
-// PC wide: the board spans the browser width (flat geometry, height fitted to the window), the info row sits below it;
-// lessons / puzzles keep their card beside the board; while the review is open the board leaves room for the row's top
-// (from 820px wide = whenever the PC header bar holds the title and the menu: on square / portrait windows too the full-width
-// board with the info row under it is far bigger than a board squeezed beside a column)
-const mqPCW = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 560px)');
-let PCW = false, PCS = false;
+// PC (common spec: mouse, >= 1040px wide, not a tall window — the same condition as the shared header bar): three columns,
+// fixed-width info columns left and right, the board between them (flat geometry: its height fits the window, its width
+// the room left between the columns); everything else uses the phone layouts (portrait / landscape)
+const mqPCW = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)');
+const mqLand = matchMedia('(min-aspect-ratio: 1/1)');
+const landPhone = () => mqLand.matches && !mqPCW.matches;   // the phone landscape layout (phones, tablets, small PC windows)
+let PCW = false;
 function pcFit() {
-  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0, R = document.documentElement;
-  const side = document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
-  const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js): the row may get lower too
-  const compact = R.classList.contains('dock-compact');   // dock-compact: players + evaluation bar only
-  const base = hgt - hb - 14 - 16 - (window.olDockH ? olDockH() : 0);   // height for the board (+ the info row under it)
-  const fitU = (availW, availH, hMin) => { let u = Math.min(availW / 15.85, 100), h = availH / u; if (h < hMin) { u = availH / hMin; h = hMin; } return { u, h }; };
-  // the info row under the board: its height gives way to the board (down to rowMin) when the window is low for its width,
-  // and keeps the roomy height (rowMax) when the board is limited by the width anyway; cards scroll inside
-  const availW = Math.min(1200, w - 48);   // board width capped like Mancala's (~1200px) so wide screens don't feel cramped edge to edge
-  const rowMax = compact ? 112 : Math.round(Math.min(340, Math.max(dfx ? 180 : 236, (hgt - dfx) * 0.3)));
-  const rowMin = compact ? 112 : dfx ? 150 : 196;
-  const rowH = Math.round(Math.max(rowMin, Math.min(rowMax, base - 18 - 7.2 * Math.min(availW / 15.85, 100))));
-  R.style.setProperty('--rowh', rowH + 'px');
-  let f;
-  if (side) f = fitU(Math.min(1200, w - 48 - Math.min(440, Math.max(280, w * 0.3)) - 24), base, 8.4);   // lessons / puzzles: card beside the board
-  else {
-    f = fitU(availW, base - rowH - 18, 7.2);
-    // low / wide windows: the info as a column beside the board (html.pcs) when that gives a clearly bigger board
-    // (kept while the online dock is open: its fit-to-space pass resizes the game; a little hysteresis near the switch point)
-    const sw = Math.round(Math.min(400, Math.max(280, w * 0.24)));
-    const b = fitU(Math.min(1200, w - 48 - sw - 24), base, 7.2), bh = b.u * Math.min(12, b.h);
-    const want = document.body.classList.contains('dock-open') ? PCS : !compact && bh >= 340 && b.u > f.u * (PCS ? 1.03 : 1.08);
-    if (want !== PCS) { PCS = want; R.classList.toggle('pcs', want); }
-    if (PCS) { R.style.setProperty('--pcsw', sw + 'px'); f = b; }
-  }
-  if (side && PCS) { PCS = false; R.classList.remove('pcs'); }
-  return { h: Math.min(12, f.h), u: Math.max(dfx ? 16 : 30, f.u) };   // with the online dock open the board may get smaller
+  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
+  const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js)
+  const narrow = w < 1300, lw = narrow ? 230 : 260, rw = narrow ? 270 : 300, cg = narrow ? 16 : 20, px = narrow ? 16 : 24;   // (= the CSS --lw / --rw / --cg / --px)
+  const base = hgt - hb - 24 - (window.olDockH ? olDockH() : 0);   // height for the board (and the info columns beside it)
+  const availW = w - 2 * px - lw - rw - 2 * cg;
+  let u = Math.min(availW / 15.85, 100), h = base / u;
+  if (h < 7.2) { u = base / 7.2; h = 7.2; }
+  return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
 }
 function updateGeom() {
   const pcw = mqPCW.matches && !ROT && !mqCoarse.matches;
-  if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); if (!pcw && PCS) { PCS = false; document.documentElement.classList.remove('pcs'); } }
-  const flat = ROT || mqLandPhone.matches || PCW, f = flat ? (PCW ? pcFit() : flatFit()) : { h: 12, u: 0 };
+  if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); }
+  const flat = ROT || landPhone() || PCW, f = flat ? (PCW ? pcFit() : flatFit()) : { h: 12, u: 0 };
   if (flat === G.FLAT && Math.abs(f.h - G.H) < 0.05 && Math.abs(f.u - (G.U || 0)) < 0.3 && geomReady) return;
   G.U = f.u; setGeom(flat, f.h, f.u);
   if (geomReady) { try { drawBoardSvg(); render(); } catch (e) {} }
@@ -1482,8 +1463,8 @@ function applyLand() {
   if (rot !== ROT) { ROT = rot; document.documentElement.classList.toggle('rot', rot); selected = null; updateGeom(); requestAnimationFrame(() => { try { render(); } catch (e) {} }); }
   $('#btnLand').classList.toggle('on', landOn);
 }
-(mqLandPhone.addEventListener ? mqLandPhone.addEventListener('change', updateGeom) : mqLandPhone.addListener(updateGeom));
-addEventListener('resize', () => { if (G.FLAT || mqLandPhone.matches || mqPCW.matches !== PCW) updateGeom(); });
+(mqLand.addEventListener ? mqLand.addEventListener('change', updateGeom) : mqLand.addListener(updateGeom));
+addEventListener('resize', () => { if (G.FLAT || landPhone() || mqPCW.matches !== PCW) updateGeom(); });
 (mqPCW.addEventListener ? mqPCW.addEventListener('change', updateGeom) : mqPCW.addListener(updateGeom));
 // PC wide: lessons / puzzles (body class) change the board's room
 let pcwRaf = 0;
@@ -1962,6 +1943,8 @@ function exitSpecial() {
   busyToken++; cancelWorker('ai'); cancelWorker('ana');
   if (savedGame) { ({ match, cur, view, humanSide, evals, gameOverShown } = savedGame); savedGame = null; }
   if (!match) match = newMatch(null, settings.matchLen, settings.cube);
+  // the game we come back to: a game that is already over never shows its result again (only a game ending right now does)
+  try { match.games.forEach((gm, g) => { if (stateAt(g, gm.actions.length).over) gameOverShown.add(g + ':' + gm.actions.length); }); } catch (e) {}
   reviewing = cur !== latestIdx(); hintData = null;
 }
 function quitSpecial() { exitSpecial(); render(); renderInfo(); analyzeCurrent(); if (!reviewing) drive(); }
@@ -2802,7 +2785,7 @@ updateGeom();
 if (window.RulesOffer) RulesOffer.init({ game: 'backgammon', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' });
 if (hadSave) { view = settings.mode === 'ai' ? humanSide : 0; cur = latestIdx(); updateCommit(); }
 if (loadFromHash()) { /* shared match opened */ }
-else if (!hadSave) { match = newMatch(null, settings.matchLen, settings.cube); updateCommit(); render(); renderInfo(); openNewDialog(); }
+else if (!hadSave) startNewMatch();   // no new-game dialog on load: a game with the default settings is ready (対局 opens the settings)
 else { render(); renderInfo(); analyzeCurrent(); drive(); }
 // for tests
 window.__bg = {
