@@ -602,8 +602,9 @@ function playMove(m) {
   evals.length = moves.length; hintList = null;
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
   update(true); save();
-  const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), moveDur() + 450);
+  const st = statusAt(cur), mv = moves;
+  // (the dialog only for this game: not when a lesson / puzzle / another game was opened in the meantime)
+  if (st.over) setTimeout(() => { if (moves === mv && !lesson && !puzzle) onGameEnd(st); }, moveDur() + 450);
   afterPosition();
 }
 function afterPosition() { const tok = ++busyToken; analyzeCurrent(tok); maybeAI(tok); }
@@ -646,7 +647,7 @@ async function analyzeCurrent(tok) {
   anaCache.set(key, res.list); apply(res.list); save();
 }
 function onGameEnd(st) {
-  if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
+  if (settings.mode === 'online' || lesson || puzzle) return;   // the result dialog only for a game that has just ended on the board          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor, aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
@@ -1868,7 +1869,7 @@ async function runReview() {
   if (gameKey() === key) save();
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (!matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudge(i) {
   if (!rv || rv.key !== gameKey()) return null;
   const L = rv.list[i]; if (!L || !L.length) return null;
@@ -2172,7 +2173,7 @@ function olRender(view) {
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
     B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${R.title ? `<b class="ol-rtitle">${olEsc(R.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
-      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olBack">${t('ol.back')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: 'Chess', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
   }
 }
@@ -2548,7 +2549,7 @@ function olAfter() {
   if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
   else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
   else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
-  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button>`;
   box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
   btn.disabled = !!(pending && g.again.by === me) || g.post === 'again';
@@ -2931,6 +2932,27 @@ applyI18n(); orient(); drawSquares();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
+// PC layout (common spec): a second info column right of the board — the record, review, lesson / puzzle and spectating cards
+// move there; in the phone layout they go back to their places in the one column
+(function sideColumns() {
+  const app = document.querySelector('.app'), home = document.querySelector('.side .side-in');
+  if (!app || !home || !window.HeaderBar) return;
+  const right = document.createElement('aside'); right.className = 'side side-r'; right.innerHTML = '<div class="side-in"></div>';
+  const SEL = ['#lessonCard', '#puzzleCard', '#olWatch', '#reviewCard', '.kifu-card'], marks = new Map();
+  const items = () => SEL.map(q => document.querySelector(q)).filter(el => {   // (cards added later, e.g. the spectating card, join on the next call)
+    if (el && !marks.has(el) && home.contains(el)) { const m = document.createComment('rcol'); el.before(m); marks.set(el, m); }
+    return el && marks.has(el);
+  });
+  const mq = matchMedia(HeaderBar.MEDIA);
+  const apply = () => {
+    const pc = mq.matches, list = items();
+    if (pc) { if (!right.isConnected) app.appendChild(right); const box = right.firstChild; if (!list.every((el, i) => box.children[i] === el)) list.forEach(el => box.appendChild(el)); }
+    else if (right.isConnected) { list.forEach(el => marks.get(el).after(el)); right.remove(); }
+    document.documentElement.classList.toggle('pc3', pc);
+  };
+  if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
+  apply(); setTimeout(apply, 0);
+})();
 openReady.then(() => { if (HB && HB.on) renderInfo(); });
 // time-signal beeps (last 5 seconds) follow the sound setting
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
@@ -2951,7 +2973,7 @@ $('#langSel').onchange = e => {
 };
 const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); if (!olRoomQ) openNewDialog(); }
+else if (!hadSave) { update(false); if (!olRoomQ) afterPosition(); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
 else { update(false); afterPosition(); }
 // ?room=CODE (or #room=CODE): join a friend's online room
 if (olRoomQ) {

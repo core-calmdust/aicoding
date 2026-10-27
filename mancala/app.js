@@ -183,7 +183,7 @@ function buildBoard() {
   }
 }
 function layout() {
-  vert = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches;
+  vert = matchMedia('(max-aspect-ratio: 1/1)').matches;   // any portrait window (phone layout): the board stands upright
   $('#frame').classList.toggle('vert', vert);
   const nu = vert ? boardEl.clientHeight / BW : boardEl.clientWidth / BW;
   if (!(nu > 4)) { setTimeout(layout, 120); return; }   // not laid out yet (iframe loading, rotation in progress): keep the old size and retry
@@ -1864,7 +1864,7 @@ async function runReview() {
   run.ws.forEach(w => w.terminate()); run.ws = null; run.running = false;
   save(); renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (!(HB && HB.on)) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudge(i) {
   if (!rv || rv.key !== rvKey()) return null;
   const L = rv.list[i]; if (!L || L.length < 2) return null;
@@ -2135,7 +2135,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', () =
 requestAnimationFrame(() => {
   layout();
   if (loadFromHash()) { /* shared game opened */ }
-  else if (!hadSave) { update(); openNewDialog(); }
+  else if (!hadSave) { update(); }   // (no new-game dialog on load: the start position waits for 対局)
   else { update(); if (!isOver()) toast(t('saved'), 1400); afterPosition(); }
 });
 // test hooks

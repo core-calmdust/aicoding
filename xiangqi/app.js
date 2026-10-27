@@ -576,8 +576,9 @@ function playMove(m) {
   const d = moveDur(m, before);
   animating = animOn(); setTimeout(() => { animating = false; renderInfo(); renderFx(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
   update(true); save();
-  const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), d + 450);
+  const st = statusAt(cur), mv = moves;
+  // (the dialog only for this game: not when a lesson / puzzle / another game was opened in the meantime)
+  if (st.over) setTimeout(() => { if (moves === mv && !lesson && !puzzle) onGameEnd(st); }, d + 450);
   else if (posAt(cur).pos.inCheck() && !lesson && !puzzle) setTimeout(() => toast(t('toast.check'), 900, true), d);
   afterPosition();
 }
@@ -684,7 +685,7 @@ async function analyzeCurrent(tok) {
   save();
 }
 function onGameEnd(st) {
-  if (moves.length !== cur || gameOverShown) return;
+  if (moves.length !== cur || gameOverShown || lesson || puzzle) return;   // the result dialog only for a game that has just ended on the board
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
@@ -1728,7 +1729,7 @@ async function runReview() {
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
 function revealReview() {
-  if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+  if (!matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
 }
 // judgement of move i+1 (played from position i)
 function rvJudge(i) {
@@ -1942,6 +1943,27 @@ flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
+// PC layout (common spec): a second info column right of the board — the record, review, lesson / puzzle and spectating cards
+// move there; in the phone layout they go back to their places in the one column
+(function sideColumns() {
+  const app = document.querySelector('.app'), home = document.querySelector('.side .side-in');
+  if (!app || !home || !window.HeaderBar) return;
+  const right = document.createElement('aside'); right.className = 'side side-r'; right.innerHTML = '<div class="side-in"></div>';
+  const SEL = ['#lessonCard', '#puzzleCard', '#olWatch', '#reviewCard', '.kifu-card'], marks = new Map();
+  const items = () => SEL.map(q => document.querySelector(q)).filter(el => {   // (cards added later, e.g. the spectating card, join on the next call)
+    if (el && !marks.has(el) && home.contains(el)) { const m = document.createComment('rcol'); el.before(m); marks.set(el, m); }
+    return el && marks.has(el);
+  });
+  const mq = matchMedia(HeaderBar.MEDIA);
+  const apply = () => {
+    const pc = mq.matches, list = items();
+    if (pc) { if (!right.isConnected) app.appendChild(right); const box = right.firstChild; if (!list.every((el, i) => box.children[i] === el)) list.forEach(el => box.appendChild(el)); }
+    else if (right.isConnected) { list.forEach(el => marks.get(el).after(el)); right.remove(); }
+    document.documentElement.classList.toggle('pc3', pc);
+  };
+  if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
+  apply(); setTimeout(apply, 0);
+})();
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
@@ -1956,7 +1978,7 @@ $('#langSel').onchange = e => {
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { update(false); afterPosition(); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
 else { update(false); afterPosition(); }
 // expose for tests
 window.__xq = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, encMoves, decMoves, onSquare, statusAt, posAt, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, openReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, get OPEN() { return OPEN; }, playMove, viewAt, E, startStudy, startPractice, runReview, recordText, get thinking() { return thinking; } };

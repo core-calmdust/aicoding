@@ -230,8 +230,15 @@ body.ol-soon .dk-dot{background:var(--dim);box-shadow:none}
 @media not all and (pointer: coarse){
   html.ol-dock.ol-soon{--vh:calc(100vh - 46px)}
   @supports (height:100dvh){html.ol-dock.ol-soon{--vh:calc(100dvh - 46px)}}
+  html.hb-on.ol-dock.ol-soon{--vh:calc(100vh - 46px - var(--hb-h))}   /* (the PC header bar too) */
+  @supports (height:100dvh){html.hb-on.ol-dock.ol-soon{--vh:calc(100dvh - 46px - var(--hb-h))}}
 }
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){
   body.ol-soon:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
 }
 html[lang=ar] :is(.ol-hist, .ol-offer){direction:rtl}
+/* mouse windows in the stacked (phone) layout: the page scrolls above the fixed dock (2026-10-28) */
+@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+  body:not(.no-online) .app{padding-bottom:124px}
+  body.ol-soon:not(.no-online) .app{padding-bottom:62px}
+}

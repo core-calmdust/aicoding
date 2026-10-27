@@ -180,6 +180,11 @@ body.in-watch #btnDraw{display:none!important}
   body.mtab-online .dock-panel .ol-list{max-height:none}
   .dk-input{font-size:16px}
 }
+/* phone layout with a mouse (narrow / tall PC window): the dock stays at the bottom, the page leaves room for it */
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  body:not(.no-online) .app{padding-bottom:124px}
+  body.ol-soon:not(.no-online) .app{padding-bottom:62px}
+} }
 /* Arabic: text right-to-left, the board stays left-to-right */
 html[lang=ar] :is(.ol-note, .syncbox, .pf-lbl, .ol-sub, .ol-tcl, .ol-watch, .ol-again, .dock-panel, .dk-me, .ol-list, #olcText){direction:rtl}
 html[lang=ar] :is(.ol-note, .syncbox, .pf-lbl, .ol-sub, .ol-tcl, #olcText){text-align:right}
@@ -198,8 +203,8 @@ html[lang=ar] .pf-input,html[lang=ar] .ol-me input{direction:rtl}
 .chat-form input{flex:1;min-width:0;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:0 10px;font:inherit;font-size:14px}
 .chat-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(201,169,97,.25)}
 .chat-form button{height:36px;min-width:64px;padding:0 14px}
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
-  /* phone portrait: tab bar + two chat lines at the bottom */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px){
+  /* phone layout (touch): tab bar + two chat lines at the bottom */
   body:not(.no-online) .app{padding-bottom:calc(102px + env(safe-area-inset-bottom))}
   body:not(.no-online):not(.mtab-online) .mt-strip{display:flex;flex-direction:column;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));height:40px;z-index:45;padding:0 14px;background:#210c11;border-top:1px solid var(--line);cursor:pointer;overflow:hidden}
 }
@@ -228,10 +233,10 @@ body.ol-soon .dock-panel,body.ol-soon .mt-strip{display:none!important}
 body.ol-soon .dock-bar > :is(.dk-me,.dk-g,.dk-myroom,#dkRoom,#dkAuto,.tg,.dk-unread){display:none!important}
 body.ol-soon .dk-dot{background:var(--dim);box-shadow:none}
 @media not all and (pointer: coarse){
-  html.ol-dock.ol-soon{--vh:calc(100vh - 46px)}
-  @supports (height:100dvh){html.ol-dock.ol-soon{--vh:calc(100dvh - 46px)}}
+  html.ol-dock.ol-soon{--vh:calc(100vh - 46px - var(--hb-h, 0px))}
+  @supports (height:100dvh){html.ol-dock.ol-soon{--vh:calc(100dvh - 46px - var(--hb-h, 0px))}}
 }
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px){
   body.ol-soon:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
 }
 html[lang=ar] :is(.ol-hist, .ol-offer){direction:rtl}

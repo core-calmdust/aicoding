@@ -375,7 +375,7 @@ function olDrawRender() {
   if (!g || g.status !== 'play' || !g.offer || !g.offer.by || net.done) return;
   const mine = g.offer.by === ON.uid;
   const d = document.createElement('div'); d.className = 'ol-offer';
-  d.innerHTML = net.spectate ? `<span>${t('ol.drawW')}</span>` : mine ? `<span>${t('ol.drawSent')}</span>` : `<span>${t('ol.drawGot')}</span><button class="go" id="olDrawYes">${t('ol.accept')}</button><button id="olDrawNo">${t('ol.decline')}</button>`;
+  d.innerHTML = net.spectate ? `<span>${t('ol.drawW')}</span>` : mine ? `<span>${t('ol.drawSent')}</span>` : `<span>${t('ol.drawGot')}</span><button id="olDrawNo">${t('ol.decline')}</button><button class="go" id="olDrawYes">${t('ol.accept')}</button>`;
   box.appendChild(d); box.classList.remove('hidden');
   const y = $('#olDrawYes'); if (y) y.onclick = () => ON.answerDraw(net.gid, true).catch(e => console.warn(e));
   const n = $('#olDrawNo'); if (n) n.onclick = () => ON.answerDraw(net.gid, false).catch(e => console.warn(e));
@@ -411,7 +411,7 @@ async function finishOnline(g) {
     syncTouch();
   }
   if (!net || net.gid !== gid) return;
-  setTimeout(() => { if (net && net.gid === gid) olShowResult(); }, g.status === 'over' ? 900 : 250);
+  setTimeout(() => { if (net && net.gid === gid && !lesson && !puzzle) olShowResult(); }, g.status === 'over' ? 900 : 250);
   renderInfo(); olWatchRender(); dockRender();
 }
 function olShowResult() {
@@ -439,7 +439,7 @@ function olResRender() {
   if (g.next || g.post === 'again') h = `<span>${t('ol.pAgain')}</span>`, again.disabled = true;
   else if (g.post) h = `<span>${t(g.post === 'no' ? 'ol.pNo' : g.post === 'timeout' ? 'ol.pTimeout' : g.post === 'host' ? 'ol.pHost' : 'ol.pLeft')}</span>`, again.disabled = true;
   else if (g.again && g.again.by === me) { h = `<span>${t('ol.reqSent')} <b class="cd">${Math.max(0, Math.ceil((ON.REMATCH_MS - (ON.now() - g.again.t)) / 1000))}</b></span>`; again.disabled = true; }
-  else if (g.again) { h = `<span>${t('ol.reqGot')}</span><button class="mbtn go" id="olAccept">${t('ol.accept')}</button><button class="mbtn" id="olDecline">${t('ol.decline')}</button>`; again.textContent = t('ol.accept'); }
+  else if (g.again) { h = `<span>${t('ol.reqGot')}</span><button class="mbtn" id="olDecline">${t('ol.decline')}</button><button class="mbtn go" id="olAccept">${t('ol.accept')}</button>`; again.textContent = t('ol.accept'); }
   box.className = 'ol-res ol-again' + (g.post && g.post !== 'again' ? ' muted' : '');
   if (!h) box.classList.add('hidden');
   if (box.dataset.h === h) return;          // unchanged (the 1-second refresh): keep the buttons

@@ -675,9 +675,9 @@ body.in-lesson .controls{display:none}
 .lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
-  /* phone portrait: page may scroll so the eval graph and kifu always fit */
-  :root{--board:calc(min(100vw - 20px, var(--vh) - 200px, 900px) / 1.105)}
+@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+  /* phone portrait (and every window that is not the PC layout: narrow / tall mouse windows too): page may scroll so the eval graph and kifu always fit */
+  :root, body:not(.no-online){--board:calc(max(220px, min(100vw - 20px, var(--vh) - 200px, 900px)) / 1.105);--cell:calc(var(--board) / 8)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   .controls{order:-4}
@@ -688,9 +688,12 @@ body.in-lesson .controls{display:none}
   :root{--top:0px}
   .side > .brand{position:static;width:calc(var(--board) * 1.105);max-width:100%;flex:none}
   .side, .side-in{display:contents}
+  .side2{display:none}
   .side-in > *{width:calc(var(--board) * 1.105);max-width:100%;flex:none}
   .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:22px}
+  .brand a.series{display:none}
+  .side > .brand:has(.brand-l){align-items:center}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
   .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
@@ -1004,7 +1007,7 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--board) + var(--cell) * 0.84);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--board) + var(--cell) * 0.84) / 18), 30px)}
@@ -1015,7 +1018,7 @@ body .info-line{font-size:12.5px}
   html.dock-compact .side{align-self:start}
 }
 /* narrow info column (square / tall windows): players stacked one per row, the buttons in two rows so the labels stay readable */
-@media not all and (pointer: coarse){
+@media (pointer: coarse) and (min-width: 901px){
 @container (max-width: 340px){
   .side-in{gap:8px}
   .side-in > .card{padding:12px}
@@ -1089,6 +1092,10 @@ body.has-clk .player .status{grid-area:st}
 .chat-form input{flex:1;min-width:0;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:0 10px;font:inherit;font-size:14px}
 .chat-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(201,169,97,.25)}
 .chat-form button{height:36px;min-width:64px;padding:0 14px}
+/* mouse windows in the stacked (phone) layout: the page scrolls above the fixed dock (2026-10-28) */
+@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+  body:not(.no-online) .app{padding-bottom:124px}
+}
 @media not all and (pointer: coarse){
   .dock-panel{grid-template-columns:1.1fr 1fr .9fr 1.4fr}
   .dock-panel section{min-height:0;overflow:hidden}
@@ -1171,7 +1178,7 @@ html[lang=ar] .pf-input{direction:rtl}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
@@ -1263,6 +1270,33 @@ html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .face.w{background:radi
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .last-mark{width:16%;height:16%;margin-top:calc(var(--cell)*-.1);background:#d8362a;box-shadow:0 0 0 1.5px rgba(255,255,255,.7),0 0 6px rgba(216,54,42,.8)}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .hint{margin-top:calc(var(--cell)*-.1)}
 html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
+/* ---------------------------------------------------------------- PC (html.pc3 = the PC media of shared/headerbar.js; set by the
+   layout script at the end of the page): board in the middle, a fixed-width column on each side — left: this game (players,
+   evaluation bar / graph / ◀ ▶, info line), right: records & study (kifu, review, lesson / puzzle card, online watch card).
+   The board takes the smaller of the window height and the width left by the two columns; both columns are exactly as tall
+   as the board and scroll inside when their cards need more room (2026-10-28) */
+.side2{display:none}
+html.pc3, html.pc3 body{--pad:clamp(14px, 2.6vmin, 30px);--padx:clamp(16px, 2vw, 32px);--gap:clamp(16px, 1.6vw, 26px);--lw:280px;--rw:330px;
+  --fmax:max(180px, min(var(--vh) - var(--pad) * 2 - var(--top), 100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw), 1400px));
+  --board:calc(var(--fmax) / 1.105);--cell:calc(var(--board) / 8)}
+html.pc3 .app{grid-template-columns:var(--lw) auto var(--rw);grid-template-areas:"side board side2";align-items:start;align-content:center}
+html.pc3 .board-area{align-self:start}
+html.pc3 .side, html.pc3 .side2{width:100%;height:calc(var(--board) * 1.105);max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;container-type:normal}
+html.pc3 .side2{display:block;grid-area:side2;position:relative}
+html.pc3 .side-in{gap:10px}
+html.pc3 .side-in > .card{padding:12px 14px}
+html.pc3 body:not(.has-clk):not(.in-online) .side .players{grid-template-columns:minmax(0,1fr);gap:6px}
+html.pc3 body.has-clk .side .players, html.pc3 body.in-online .side .players{grid-template-columns:minmax(0,1fr);gap:6px}
+html.pc3 #evalCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:150px}
+html.pc3 #evalCard .graph{flex:1 1 0;height:auto;min-height:40px}
+html.pc3 .kifu-card{flex:1 1 0;min-height:140px}
+html.pc3 .kifu-head{flex-wrap:wrap;row-gap:2px}
+html.pc3 .side2 .review-card.show{flex:1.6 1 0;min-height:120px}
+html.pc3 .side2 .side-in:has(.review-card.show) .kifu-card{flex:.8 1 0;min-height:110px}
+html.pc3 body.in-lesson .side2 .side-in, html.pc3 body.in-puzzle .side2 .side-in{height:auto}
+html.pc3 .ol-watch{flex:none}
+html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:calc(var(--board) * 1.105)!important}
+html.pc3.dock-compact .side{align-self:start}
 </style>
 </head>
 <body>
@@ -1432,8 +1466,8 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
     </div>
     </div></div>
     <div class="modal-actions">
-      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
     <p class="credit" data-i18n-html="credit"></p>
   </div>
@@ -1565,9 +1599,9 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
     </div>
   </div>
 </div>
@@ -1595,13 +1629,13 @@ html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=22"></script>
+<script src="../shared/headerbar.js?v=23"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=sec1"></script>
+<script src="online.js?v=stale1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -4643,8 +4677,7 @@ if (roomLink) {
 } else {
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
   cur = 0;
-  renderBoard(null); renderInfo();
-  openNew();
+  renderBoard(null); renderInfo();   // (no new-game dialog on load: the start position waits — 対局 opens it)
 }
 
 // record navigation (first / prev / play / next / last) under the evaluation graph, with ← → ↑ ↓ and Space
@@ -4740,7 +4773,7 @@ function olAfter() {
   if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
   else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
   else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
-  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button>`;
   if (box) {
     box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
     if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
@@ -5129,6 +5162,29 @@ if (olOn()) {
 }
 window.rvAccReady = true;
 accRender();
+</script>
+<script>
+/* PC layout (shared/headerbar.js HeaderBar.MEDIA): the records & study cards move to the right column (.side2); every other
+   layout (phones, tablets, narrow / tall windows) keeps them in their place in the one stacked column (2026-10-28) */
+(function () {
+  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)';
+  const left = document.querySelector('.app > .side'); if (!left) return;
+  const right = document.createElement('aside'); right.className = 'side2'; right.innerHTML = '<div class="side-in"></div>'; left.after(right);
+  const box = right.firstChild, home = new Map(), mq = matchMedia(MQ);
+  const SEL = ['#olWatch', '#lessonCard', '#puzzleCard', '#reviewCard', '.kifu-card'];
+  function apply() {
+    const pc = mq.matches;
+    document.documentElement.classList.toggle('pc3', pc);
+    for (const q of SEL) {
+      const el = document.querySelector(q); if (!el) continue;
+      if (pc && el.parentNode !== box) { const ph = document.createComment('pc3'); el.before(ph); home.set(el, ph); box.appendChild(el); }
+      else if (!pc && home.has(el)) { const ph = home.get(el); if (ph.parentNode) ph.replaceWith(el); home.delete(el); }
+    }
+    window.dispatchEvent(new Event('resize'));
+  }
+  if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
+  apply();
+})();
 </script>
 <!-- World Board Game Atlas portal skin: reversi/?skin=atlas — 3D board, guide speech bubbles, portal look (all features kept) -->
 <script>

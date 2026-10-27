@@ -752,7 +752,7 @@ $('#langSel').onchange = e => {
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { setGame({ n: settings.size || 19, komi: R.defaultKomi(settings.size || 19, settings.rule), rule: settings.rule, ha: 0 }); update(false); openNewDialog(); }
+else if (!hadSave) { setGame({ n: settings.size || 19, komi: R.defaultKomi(settings.size || 19, settings.rule), rule: settings.rule, ha: 0 }); update(false); }   // (no new-game dialog on load: the empty board waits — 対局 opens it)
 else { update(false); afterPosition(); }
 window.__go = { get moves() { return moves; }, get cur() { return cur; }, settings, get game() { return game; }, get rv() { return rv; }, rvJudge, dailyPick, encMoves, decMoves, onPoint, statusAt, posAt, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, openReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, get OPEN() { return OPEN; }, playMove, viewAt, startStudy, get count() { return count; } };
 

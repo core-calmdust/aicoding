@@ -695,6 +695,7 @@ $('#cntResume').onclick = () => countResume();
 
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
+  if (lesson || puzzle) return;   // (a lesson / puzzle opened meanwhile: the game result is only shown right when the game ends)
   if (settings.mode === 'online') return;
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
@@ -709,7 +710,8 @@ function onGameEnd(st) {
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: LV(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
-  setTimeout(() => showOverlay('#resultOverlay'), 700);
+  const mv = moves;
+  setTimeout(() => { if (moves === mv && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700);   // not when a lesson / puzzle / other game was opened meanwhile
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;

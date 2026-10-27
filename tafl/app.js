@@ -565,7 +565,7 @@ function playMove(m) {
   animating = animOn(); setTimeout(() => { animating = false; renderInfo(); renderFx(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
   update(true); save();
   const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), d + 450);
+  if (st.over) { const ref = moves; setTimeout(() => { if (moves === ref) onGameEnd(st); }, d + 450); }   // only if this game is still on the board
   afterPosition();
 }
 function afterPosition() {
@@ -654,7 +654,9 @@ async function analyzeCurrent(tok) {
   apply(res.list);
   save();
 }
+// the result dialog only when a game ends right now on the board (never for a lesson / puzzle, nor for a finished game that is restored)
 function onGameEnd(st) {
+  if (lesson || puzzle) return;
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
@@ -670,7 +672,7 @@ function onGameEnd(st) {
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })} · ${t('rt.side', { c: pname(humanColor) })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
-  setTimeout(() => showOverlay('#resultOverlay'), 700);
+  { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700); }
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1719,7 +1721,7 @@ async function runReview() {
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
 function revealReview() {
-  if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+  if (getComputedStyle($('.app > .side')).display === 'contents') setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
 }
 // judgement of move i+1 (played from position i)
 function rvJudge(i) {
@@ -1935,6 +1937,26 @@ applyI18n();
 drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+
+// PC layout (common spec): [left: this game — players, evaluation, info] [board] [right: record, review, lesson / puzzle, watching].
+// The right-hand cards move into their own column (.side-r) while the PC layout is on, and back into the one info column otherwise.
+(() => {
+  const side = document.querySelector('.app > .side'), L = side && side.querySelector('.side-in'); if (!L || !window.HeaderBar) return;
+  const R = document.createElement('aside'); R.className = 'side side-r'; R.innerHTML = '<div class="side-in"></div>'; side.after(R);
+  const RI = R.firstChild, home = new Map(), mq = matchMedia(HeaderBar.MEDIA);
+  const SEL = ['#olWatch', '#lessonCard', '#puzzleCard', '#reviewCard', '.kifu-card'];
+  const apply = () => {
+    const pc = mq.matches;
+    for (const sel of SEL) {
+      const c = L.querySelector(':scope > ' + sel) || RI.querySelector(':scope > ' + sel); if (!c) continue;
+      if (!home.has(c)) { if (c.parentNode !== L) continue; const ph = document.createComment('side'); L.insertBefore(ph, c); home.set(c, ph); }
+      if (pc) RI.appendChild(c); else { const ph = home.get(c); ph.parentNode.insertBefore(c, ph.nextSibling); }
+    }
+    document.documentElement.classList.toggle('side3', pc);
+  };
+  const init = () => { apply(); const f = () => { apply(); window.dispatchEvent(new Event('resize')); }; if (mq.addEventListener) mq.addEventListener('change', f); else mq.addListener(f); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else setTimeout(init, 0);
+})();
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
@@ -1950,7 +1972,7 @@ $('#langSel').onchange = e => {
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { update(false); afterPosition(); }   // no saved game: the starting position, waiting (the settings dialog opens from 対局)
 else { update(false); afterPosition(); }
 // expose for tests
 window.__tf = { get moves() { return moves; }, get cur() { return cur; }, settings, get gv() { return gv; }, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, encMoves, decMoves, onSquare, statusAt, posAt, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, startStudy, startPractice, lessonsReady, puzzlesReady, openReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, get OPEN() { return OPEN; }, playMove, viewAt, setVariant, get humanColor() { return humanColor; } };
