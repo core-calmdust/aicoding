@@ -27,6 +27,11 @@ const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'R
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب' };
 const ICON_RULES = '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const CSS = `
+/* lesson / puzzle card buttons in the PC info column (common spec): two per row, labels on one line */
+html.side-col .side .lesson-actions{display:grid!important;grid-template-columns:repeat(auto-fit, minmax(118px, 1fr));gap:8px}
+html.side-col .side .lesson-actions > button{white-space:nowrap;min-width:0;flex:none!important}
+html.side-col .side .lesson-actions > button.hidden{display:none!important}
+html.side-col .side .lesson-card .lh{flex-wrap:wrap;row-gap:6px}html.side-col .side .lesson-card .lh .lt{white-space:nowrap}
 /* player cards (common spec: whenever the info column stands beside the board — html.side-col): the side / count label is information, not a headline — keep it modest */
 html.side-col .side .players .count, html.side-col .side .players .count > span:first-child, html.side-col .side .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)!important;line-height:1.15!important}
 html.side-col .side .players .side-l{font-size:clamp(15px, 1.15vw, 18px)!important;line-height:1.3!important}
