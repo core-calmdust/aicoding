@@ -260,16 +260,16 @@ html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
   window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
     rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
 }
-// a draw-offer button in the header menu leaves no room: the puzzle button is left out of the header then (common spec)
+// a draw-offer button in the top menu (PC header / phone) leaves no room: the puzzle button is left out of the header then (common spec)
 function drawNoPuzzle() {
   const upd = () => {
-    const menu = document.querySelector('header.hb .hb-menu'); if (!menu) return;
-    const d = menu.querySelector('#btnDraw'), p = menu.querySelector('#btnPuzzle, #btnTsume');
+    const d = document.getElementById('btnDraw'), p = document.querySelector('#btnPuzzle, #btnTsume');
     if (!p) return;
+    if (!d || d.parentElement !== p.parentElement) { p.classList.remove('hb-skip'); return; }   // same button row (PC header menu or phone top menu)
     const on = !!(d && getComputedStyle(d).display !== 'none' && !d.classList.contains('hidden'));
     p.classList.toggle('hb-skip', on);
   };
-  if (!document.getElementById('hbSkipCss')) { const st = document.createElement('style'); st.id = 'hbSkipCss'; st.textContent = 'header.hb .hb-menu .hb-skip{display:none!important}'; document.head.appendChild(st); }
+  if (!document.getElementById('hbSkipCss')) { const st = document.createElement('style'); st.id = 'hbSkipCss'; st.textContent = '.hb-skip{display:none!important}'; document.head.appendChild(st); }
   let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; upd(); }); };
   new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'hidden'], subtree: true });
   window.addEventListener('resize', later); upd();
