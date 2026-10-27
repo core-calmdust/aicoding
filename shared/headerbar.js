@@ -20,7 +20,8 @@
 //   hb.relabel()                       // re-translate the added rules button after a language change
 (function () {
 'use strict';
-const MQ = '(hover: hover) and (pointer: fine) and (min-width: 820px)';
+// PC layout (common spec): mouse + wide enough for left panel + board + right panel, and not a tall window; otherwise the phone layout
+const MQ = '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)';
 const H = 56;
 const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد' };
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب' };
@@ -254,6 +255,21 @@ html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
   window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
     rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
 }
+// a draw-offer button in the header menu leaves no room: the puzzle button is left out of the header then (common spec)
+function drawNoPuzzle() {
+  const upd = () => {
+    const menu = document.querySelector('header.hb .hb-menu'); if (!menu) return;
+    const d = menu.querySelector('#btnDraw'), p = menu.querySelector('#btnPuzzle, #btnTsume');
+    if (!p) return;
+    const on = !!(d && getComputedStyle(d).display !== 'none' && !d.classList.contains('hidden'));
+    p.classList.toggle('hb-skip', on);
+  };
+  if (!document.getElementById('hbSkipCss')) { const st = document.createElement('style'); st.id = 'hbSkipCss'; st.textContent = 'header.hb .hb-menu .hb-skip{display:none!important}'; document.head.appendChild(st); }
+  let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; upd(); }); };
+  new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'hidden'], subtree: true });
+  window.addEventListener('resize', later); upd();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(drawNoPuzzle, 0)); else setTimeout(drawNoPuzzle, 0);
 // html.side-col: the info column (.side) stands beside the board (not stacked under it) — the compact player cards use it
 function sideCol() {
   const side = document.querySelector('.app .side'), app = document.querySelector('.app'); if (!side || !app) return;
