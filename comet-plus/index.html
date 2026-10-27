@@ -3994,7 +3994,7 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 // =================================================================================
 const W = config.canvasWidth, H = config.canvasHeight; // フィールド
 const VH = HUD_H; // ビューポートの高さ
-const PR = IS_MOBILE ? Math.min(window.devicePixelRatio || 1, 0.62) : Math.min((window.devicePixelRatio || 1) * PC_FIT, 1.25 * PC_FIT, 2); // スマホは描画解像度を抑える
+const PR = IS_MOBILE ? Math.min(window.devicePixelRatio || 1, 0.7) : Math.min((window.devicePixelRatio || 1) * PC_FIT, 1.25 * PC_FIT, 2); // スマホは描画解像度を抑える
 const VW = HUD_W;
 const toX = x => x - W / 2;
 const toZ = y => y - H / 2;
@@ -4042,7 +4042,7 @@ if (gl3dOK) {
     composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
-    { const bk = IS_MOBILE ? 0.32 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
+    { const bk = IS_MOBILE ? 0.4 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
     // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
     hyperGrade = new ShaderPass({
@@ -6822,7 +6822,7 @@ function render3D() {
         const s = c.radius * 1.7 * VS * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
         cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
-        glow.add(x, y, z, color, (13 + visualBeat * 6) * (loadLv >= 2 ? 0.85 : 1), 0.3 * cometDensityK * (loadLv >= 2 ? 1.2 : 1)); // 重い時は光を小さく（描画面積を減らす）
+        glow.add(x, y, z, color, 13 + visualBeat * 6, 0.3 * cometDensityK); // 光の大きさは負荷で変えない（チカチカ防止） // 重い時は光を小さく（描画面積を減らす）
         if (efx && !IS_MOBILE) { // スマホは彗星の尾を省略
             let vx, vy;
             if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod * MOB_FALL; }
