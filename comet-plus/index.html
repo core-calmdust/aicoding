@@ -409,7 +409,7 @@ const config = {
     energyItemScoreNormal: 10000,
     energyItemScoreSpecial: 50000,
     gravity: 600,
-    playerBulletSpeed: IS_MOBILE ? 880 * 1.32 : 880, // 1.1倍。スマホはさらに1.32倍
+    playerBulletSpeed: IS_MOBILE ? 880 * 1.452 : 880, // 1.1倍。スマホはさらに1.452倍（1.32×1.1）
     playerBulletHitRadius: 12, // 3D化で狙いにくくなった分、弾の当たり判定を太く（オリジナルは幅3の点判定）
     monsterUFOBaseScore: 10000,
     monsterInvaderBaseScore: 3000,
@@ -935,7 +935,7 @@ class AudioHandler {
         this.lastBgmStage = bgmStage;
         // 処理が大きく止まって予約が遅れたときは、遅れた分を鳴らさずに飛ばす（まとめて鳴ってリズムが崩れるのを防ぐ）
         while (this.nextNoteTime < this.ctx.currentTime - 0.06) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
-        while (this.nextNoteTime < this.ctx.currentTime + (IS_MOBILE ? 0.2 : 0.1)) { // 先読み: PCは0.1秒。スマホは処理落ちで予約が間に合わず音が飛ぶので0.2秒
+        while (this.nextNoteTime < this.ctx.currentTime + (IS_MOBILE ? 0.3 : 0.1)) { // 先読み: PCは0.1秒。スマホは処理落ちで予約が間に合わず音がずれるので0.3秒
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
             if (noteInMeasure === 0) {
@@ -8301,6 +8301,8 @@ function prewarmGPU() {
     } catch (e) { console.warn('prewarm failed', e); }
 }
 prewarmGPU();
+// BGMの予約は描画とは別のタイマーでも回す（スマホで描画が一瞬止まっても、音の予約が遅れてリズムがずれないように）
+setInterval(() => { if (gameState === 'playing' && !document.hidden) audioHandler.scheduleBGM(); }, 40);
 requestAnimationFrame(gameLoop);
 
 </script>
