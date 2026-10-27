@@ -43,7 +43,7 @@
 @media (hover: hover) and (pointer: fine) and (max-width: 819px), (hover: hover) and (pointer: fine) and (max-height: 680px){:root{--pad:clamp(14px, 3vmin, 28px)}}
 /* online dock opened (shared/headerbar.js dock-fit lowers --vh): a board limited by the window width (narrow info column)
    still gives back what --vh loses, so every fit step makes the layout smaller; the info column takes the width it frees (2026-10-25) */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.ol-dock{--vbase:calc(100vh - 108px - var(--hb-h))}
   @supports (height:100dvh){html.ol-dock{--vbase:calc(100dvh - 108px - var(--hb-h))}}
   html.ol-dock.ol-soon{--vbase:calc(100vh - 46px - var(--hb-h))}
@@ -391,6 +391,10 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 .rv-chips span{font-size:11px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.25);white-space:nowrap}
 .rv-chips .bad{color:#ff8b7d}.rv-chips .dubious{color:#f2c060}
 /* 振り返り解説 (rvcoach.js) */
+.disc.rb-gh{opacity:.62;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:6}
+.disc.rb-gh.first{opacity:.9;outline:3px solid var(--accent);outline-offset:2px}
+.disc.rb-gh b{font:700 calc(var(--cell) * .3) 'JetBrains Mono',monospace;color:#1a1408;text-shadow:0 0 4px rgba(255,255,255,.5)}
+.disc.rb-gh.p2 b{color:#2a2f36}
 .cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.06)}
 .cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
 .cr-box p{font-size:14.5px;line-height:1.75;color:#d6e2dc;margin:0 0 6px}
@@ -429,7 +433,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec 2026-10-28): everything that is not the PC layout (narrow / tall PC windows, tablets, phones),
    except a phone held sideways (its own layout below) */
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
   :root{--top:.5;--cell:min((100vw - 20px) / 7.84, (var(--vh) - 250px) / 7.05, 110px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -508,7 +512,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .info-line{display:none}
 }
 /* narrow info column (squarish windows, 2026-10-25): one player per row, the buttons in two rows, the kifu header may wrap */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @container (max-width: 359px){
   .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}
   .controls{grid-auto-flow:row!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
@@ -777,54 +781,54 @@ body .rv-list{gap:6px} body .rv-list button{font-size:14.5px;padding:8px 10px} b
 body .rv-note{font-size:13.5px!important;line-height:1.65!important}
 body .info-line{font-size:12.5px}
 /* PC: while the review is open, give its card (振り返り解説 first) most of the side panel height */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ body .side-in .review-card.show{flex-grow:2.6} body .side-in:has(.review-card.show) .kifu-card{flex-grow:.6;min-height:118px} }
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10) and (max-height: 960px){ body .side-in:has(.review-card.show) #evalCard{flex:none!important;min-height:0!important} body .side-in:has(.review-card.show) #evalCard .graph{height:34px!important;min-height:0!important;flex:none!important} body .side-in:has(.review-card.show) .kifu-card{min-height:96px} body .side-in:has(.review-card.show) .card.players{display:none} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ body .side-in .review-card.show{flex-grow:2.6} body .side-in:has(.review-card.show) .kifu-card{flex-grow:.6;min-height:118px} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-height: 960px){ body .side-in:has(.review-card.show) #evalCard{flex:none!important;min-height:0!important} body .side-in:has(.review-card.show) #evalCard .graph{height:34px!important;min-height:0!important;flex:none!important} body .side-in:has(.review-card.show) .kifu-card{min-height:96px} body .side-in:has(.review-card.show) .card.players{display:none} }
 @media (min-height: 561px){ @container (min-width: 420px){ body .side-in:has(.review-card.show) #evalCard{min-height:156px} body .side-in:has(.review-card.show) #evalCard .graph{min-height:40px} } }
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
 }
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
-/* PC layout (common spec 2026-10-28): the board in the middle, a fixed-width info column on each side — left: the game
-   now (players, evaluation bar / graph / ◀ ▶, info line), right: record and study (lesson / puzzle cards, watch card,
-   review, record). The board takes the smaller of the window height and the width left by the two columns; on wide
-   screens the three columns stay together in the middle. Both columns are as tall as the board and scroll inside. */
-.app > .side-r{display:none}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
-  :root{--sl:280px;--sr:330px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.6vw, 30px);
-    --cw:calc((100vw - var(--padx) * 2 - var(--gap) * 2 - var(--sl) - var(--sr)) / 7.84);
+/* PC layout (2026-10-28, back to two columns at the user's request): the board on the left, a fixed-width (360px) info
+   column on the right (lesson / puzzle / watch cards, players, evaluation, review, record, info line). The board takes the
+   smaller of the window height and the width left by the column; on wide screens the pair stays in the middle. The column
+   is as tall as the board (a little taller when the board is limited by the width) and scrolls inside. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  :root{--sidew:360px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.8vw, 34px);
+    --cw:calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 7.84);
     --cv:min((var(--vh) - var(--pad) * 2) / (6.55 + var(--top)), 170px);
     --cell:min(var(--cv), var(--cw))}
   /* online dock opened (shared dock-fit lowers --vh): a width-limited board gives back what --vh loses too */
   html.dock-fit{--cell:min(var(--cv), var(--cw) - max(0px, var(--vbase, var(--vh)) - var(--vh)) / (6.55 + var(--top)))}
-  .app{grid-template-columns:var(--sl) auto var(--sr);grid-template-areas:"left board right";align-items:center;align-content:center;padding:var(--pad) var(--padx)}
-  .app > .side{grid-area:left;height:max(var(--fh), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}   /* (as tall as the board; a little taller when the board is limited by the width) */
-  .app > .side.side-r{display:block;grid-area:right}
+  .app{grid-template-columns:auto var(--sidew);grid-template-areas:"board side";justify-content:center;align-items:center;align-content:center;padding:var(--pad) var(--padx)}
+  .app > .side{height:max(var(--fh), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}
   .app > .side > .side-in{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;gap:10px}
   .app > .side > .side-in > *{flex:none}
-  .app > .side:not(.side-r) #evalCard{display:flex;flex-direction:column}
-  .app > .side:not(.side-r) #evalCard .graph{display:block;height:clamp(64px, 15vh, 170px);max-height:none;min-height:0;flex:none}
-  .app > .side:not(.side-r) .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
-  .app > .side-r .kifu-card{flex:1 1 auto;min-height:150px}
-  .app > .side-r .review-card.show{flex:2.6 1 0;min-height:200px}
-  .app > .side-r .side-in:has(.review-card.show) .kifu-card{flex:.6 1 0;min-height:118px}
-  .app > .side-r .side-in:has(.lesson-card, .puzzle-card) > :is(.lesson-card, .puzzle-card){overflow:visible}
+  .app > .side #evalCard{display:flex;flex-direction:column}
+  .app > .side #evalCard .graph{display:block;height:clamp(48px, 9vh, 110px);max-height:none;min-height:0;flex:none}
+  .app > .side .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
+  .app > .side .kifu-card{flex:1 1 auto;min-height:130px}
+  .app > .side .review-card.show{flex:2.6 1 0;min-height:200px}
+  .app > .side .side-in:has(.review-card.show) .kifu-card{flex:.6 1 0;min-height:110px}
+  .app > .side .side-in:has(.lesson-card, .puzzle-card) > :is(.lesson-card, .puzzle-card){overflow:visible}
+  .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one player per row: full names in the 360px column */
+  html.rb-on .app > .side #evalCard .graph{height:clamp(34px, 6vh, 70px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
 <link rel="stylesheet" href="online.css?v=20261028l9">
@@ -935,7 +939,6 @@ body .info-line{font-size:12.5px}
     </div>
     <div class="info-line" id="infoLine"></div>
   </div></aside>
-  <aside class="side side-r" aria-label="record"><div class="side-in"></div></aside>
 </div>
 
 <!-- new game -->
@@ -1078,6 +1081,7 @@ body .info-line{font-size:12.5px}
 <script src="i18n.js?v=20261024ls"></script>
 <script src="learn.js?v=20261021c4p"></script><!-- lessons / puzzles strings -->
 <script src="rvcoach.js?v=20261021b"></script><!-- 振り返り解説 -->
+<script src="rvbox.js?v=20261028rb"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/pzbook.js?v=2"></script>
@@ -1193,7 +1197,7 @@ let TREEBUF = null;
 const treeReady = fetch('tree.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (TREEBUF = b));
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js');
+  const w = new Worker('engine.js?v=20261028rb');
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -1284,11 +1288,11 @@ function setHover(c) {
   hoverCol = c;
   if (ghostEl) { ghostEl.remove(); ghostEl = null; }
   if (previewEl) { previewEl.remove(); previewEl = null; }
-  const can = c >= 0 && canHumanPlay() && canDrop(moves.slice(0, cur), c);
+  const can = c >= 0 && canHumanPlay() && canDrop(shownMoves(), c);
   colhl.classList.toggle('show', can);
   if (!can) return;
   colhl.style.left = `calc(var(--cell) * ${c})`;
-  const shown = moves.slice(0, cur), p = toMoveOf(shown), r = gridOf(shown)[c].length;
+  const shown = shownMoves(), p = toMoveOf(shown), r = gridOf(shown)[c].length;
   ghostEl = document.createElement('div'); ghostEl.className = `disc p${p} ghost`;
   ghostEl.style.left = `calc(var(--cell) * ${c})`; ghostEl.style.top = `calc(var(--cell) * -1)`; ghostEl.style.opacity = '.85';
   discsEl.appendChild(ghostEl);
@@ -1298,7 +1302,7 @@ function setHover(c) {
 
 let discMap = new Map();   // "c,r" -> element
 function renderBoard(anim) {
-  const shown = moves.slice(0, cur), g = gridOf(shown);
+  const shown = shownMoves(), g = gridOf(shown);
   const want = new Set();
   for (let c = 0; c < COLS; c++) for (let r = 0; r < g[c].length; r++) want.add(c + ',' + r);
   for (const [k, el] of discMap) {
@@ -1342,7 +1346,7 @@ let hintList = null;
 let lessonMarks = [];
 function renderFx() {
   fxEl.innerHTML = '';
-  const shown = moves.slice(0, cur), st = statusOf(shown), g = gridOf(shown);
+  const shown = shownMoves(), st = statusOf(shown), g = gridOf(shown);
   // dim non-winning discs at game end
   for (const [k, el] of discMap) el.classList.remove('dim');
   if (st.winner && st.line) {
@@ -1365,7 +1369,8 @@ function renderFx() {
     }
   }
   for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; discPos(d, m.c, m.r); fxEl.appendChild(d); }
-  if (!drawReviewFx(g) && hintList && !st.winner) drawHints(hintList, g, shown.length);
+  if (!drawReviewFx(g) && hintList && !st.winner && !rbCons()) drawHints(hintList, g, shown.length);
+  rbDrawHover(g, shown);
 }
 // convert an engine list entry into a label (mover's view)
 function entryLabel(e, nm) {
@@ -1436,6 +1441,7 @@ function isAIColor(p) { return settings.mode === 'watch' || (settings.mode === '
 function levelFor(p) { return settings.mode === 'watch' ? (p === P1 ? settings.level : settings.level2) : settings.level; }
 function gameOver(m) { const st = statusOf(m); return !!st.winner || !!st.draw || m.length >= 42; }
 function canHumanPlay() {
+  if (rbCons()) return !gameOver(shownMoves());   // 検討 (review box study): both sides
   const shown = moves.slice(0, cur);
   if (gameOver(shown)) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveOf(shown) === puzzle.me;
@@ -1453,7 +1459,7 @@ function playerName(p) {
 }
 let thinking = 0;  // color currently thinking
 function renderInfo() {
-  const shown = moves.slice(0, cur), g = gridOf(shown), st = statusOf(shown), tm = toMoveOf(shown);
+  const shown = shownMoves(), g = gridOf(shown), st = statusOf(shown), tm = toMoveOf(shown);
   let n1 = 0, n2 = 0; for (const col of g) for (const v of col) v === 1 ? n1++ : n2++;
   $('#count1').textContent = 21 - n1; $('#count2').textContent = 21 - n2;
   for (const p of [P1, P2]) { const n = playerName(p); $('#name' + p).textContent = n ? n + ' · ' + pname(p) : pname(p); }
@@ -1551,6 +1557,7 @@ function newGame() {
 }
 function onColumn(c) {
   ctx();
+  if (rbCons()) { const s = shownMoves(); if (!gameOver(s) && canDrop(s, c)) rbStudyPlay(c); else if (!gameOver(s)) toast(t('full')); return; }
   if (!canHumanPlay()) {
     if (reviewing && !lesson && !puzzle) { if (settings.mode === 'online') viewAt(moves.length); else rsOpen(); }   // online: back to the live position
     return;
@@ -1672,6 +1679,7 @@ function undo() {
 }
 function viewAt(i) {
   if (lesson || puzzle) return;
+  if (rbCons()) RvBox.endCons(true);   // leaving the studied position ends the study
   i = Math.max(0, Math.min(moves.length, i));
   if (i === cur) return;
   busyToken++; cancelWorker('ai'); thinking = 0;
@@ -2612,7 +2620,8 @@ function rvJudge(i) {
   return { q, ok, desc, best: best.c, c, loss: sOf(best) - sOf(mine), mine, bestE: best };
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
-function renderReview() {
+function renderReview() { renderReview0(); if (window.RvBox) RvBox.refresh(); }
+function renderReview0() {
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.moves !== moves) { rvCancel(); rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
@@ -2633,7 +2642,7 @@ function renderReview() {
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${x.i & 1 ? 2 : 1}"></i>${colName(x.c)} → ${colName(x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note" style="color:var(--dim);font-size:11px;line-height:1.6">${t('rv.note')}</div>`;
-    if (typeof rvCoach === 'function') html = rvCoach() + html;   // 振り返り解説 (rvcoach.js) first, above the numbers
+    if (typeof rvCoach === 'function' && !rbOn()) html = rvCoach() + html;   // 振り返り解説 (rvcoach.js) first, above the numbers (PC review box: there instead)
   }
   $('#rvBody').innerHTML = html;
   // review bar text for the position being viewed
@@ -2644,6 +2653,8 @@ function renderReview() {
 }
 // on the board: the analysis of the viewed position, the move actually played and the best move
 function drawReviewFx(g) {
+  if (rbCons()) return false;
+  if (rbHov !== null && rbOn()) return true;   // a hovered candidate of the review box is drawn instead
   if (lesson || puzzle || !rvOpen || !rv || rv.running || rv.moves !== moves || cur >= moves.length) return false;
   const L = rv.list[cur]; if (!L) return false;
   drawHints(L, g, cur);
@@ -2655,6 +2666,80 @@ $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
+
+// ====================================================================== review box (PC, rvbox.js): candidates + 検討
+let csLine = '';      // 検討: moves played from the reviewed position (not part of the record)
+let rbW = null, rbBusy = false, rbLines = {}, rbHov = null;
+const rbCons = () => !!(window.RvBox && RvBox.cons);
+function shownMoves() { return moves.slice(0, cur) + (rbCons() ? csLine : ''); }
+// only after the game (or while stepping back through the record): never during a game in progress, rated or online
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.moves === moves && (gameOver(moves) || (resigned && resigned.mv === moves) || cur < moves.length) && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()); }
+function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
+function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
+function rbRows(list, nm, played, lines) {
+  const sorted = list.slice().sort((a, b) => rankOf(b) - rankOf(a)).slice(0, 5);
+  return sorted.map(e => {
+    const L = entryLabel(e, nm), ln = lines && lines[e.c];
+    return { mv: e.c, move: colName(e.c), score: L.big + (L.small ? ' ' + L.small : ''), cls: L.cls === 'heur' ? '' : L.cls,
+      pv: ln ? ln.map((c, k) => `<span style="color:${(nm + k) & 1 ? 'var(--ruby2)' : 'var(--gold2)'}">${colName(c)}</span>`) : null, played: e.c === played };
+  });
+}
+function rbStudyPlay(c) { csLine += c + 1; renderBoard(true); renderInfo(); }
+if (window.RvBox) RvBox.init({
+  active: rbActive, lang: () => LANG, key: () => shownMoves(), boardEl: () => $('#frame'),
+  head() {
+    if (cur >= moves.length) return `${crEsc(crT('title'))} · ${crEsc(RvBox.tx('final'))}`;
+    const j = rvJudge(cur), p = cur & 1 ? P2 : P1, c = moves.charCodeAt(cur) - 49;
+    return crT('move', { n: cur + 1, who: crEsc(sideLabel(p)), m: crCol(c) }) + (j && j.q ? `<span class="tag ${j.q}">${crEsc(t('q.' + j.q))}</span>` : '');
+  },
+  coach: () => typeof rvCoach === 'function' ? rvCoach() : '',
+  cands(onUpdate) {
+    const s = shownMoves(), nm = s.length;
+    rbLines = {};
+    if (gameOver(s)) { onUpdate([], true); return; }
+    const played = !rbCons() && cur < moves.length ? moves.charCodeAt(cur) - 49 : -1;
+    const pre = !rbCons() && rv && rv.list[cur];
+    if (pre) onUpdate(rbRows(pre, nm, played, null), false);
+    if (!rbW) rbW = makeWorker();
+    rbBusy = true;
+    const w = rbW, id = ++jobId;
+    w.jobs.set(id, { resolve: () => {}, onProgress: null });
+    const prev = w.onmessage;
+    w.onmessage = e => {
+      const m = e.data;
+      if (m.id !== id) { prev && prev(e); return; }
+      if (m.type !== 'cands' && m.type !== 'candsDone') return;
+      rbLines = m.lines || {};
+      const fin = m.type === 'candsDone'; if (fin) { rbBusy = false; w.onmessage = prev; w.jobs.delete(id); }
+      // the review's own (longer) analysis of this position wins over a shorter heuristic value
+      const list = pre ? m.list.map(e => { const o = pre.find(x => x.c === e.c); return o && e.kind === 'heur' && o.kind !== 'heur' ? o : e; }) : m.list;
+      onUpdate(rbRows(list, nm, played, m.lines), fin);
+      if (rbHov !== null) renderFx();
+    };
+    w.postMessage({ type: 'cands', id, moves: s, time: 900, n: 7, plies: 8, ply: 100 });
+  },
+  cancel: rbCancel,
+  hover(mv) { rbHov = mv; renderFx(); },
+  consStart() { csLine = ''; hintList = null; busyToken++; cancelWorker('ai'); thinking = 0; renderBoard(false); },
+  consPlay(c) { const s = shownMoves(); if (!gameOver(s) && canDrop(s, c)) rbStudyPlay(c); },
+  consBack() { if (csLine) { csLine = csLine.slice(0, -1); renderBoard(false); renderInfo(); } },
+  consEnd(silent) { csLine = ''; rbHov = null; renderBoard(false); if (!silent) renderInfo(); },
+  consDepth: () => csLine.length,
+  goto: i => viewAt(i),
+});
+// hovered candidate: the move and its line as numbered see-through discs
+function rbDrawHover(g, shown) {
+  if (rbHov === null || !rbOn()) return;
+  const line = rbLines[rbHov] || [rbHov], g2 = g.map(col => col.slice());
+  let p = toMoveOf(shown);
+  line.forEach((c, k) => {
+    const r = g2[c].length; if (r >= ROWS) return;
+    g2[c].push(p);
+    const d = document.createElement('div'); d.className = `disc p${p} rb-gh` + (k ? '' : ' first'); discPos(d, c, r);
+    d.innerHTML = `<b>${k + 1}</b>`; fxEl.appendChild(d);
+    p = p === P1 ? P2 : P1;
+  });
+}
 
 // ====================================================================== share / load
 function parseGameText(v) {
@@ -2756,21 +2841,6 @@ const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang:
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
-// PC layout (common spec 2026-10-28): record / study cards move to the right column; back in place for the phone layout
-const sideR = (() => {
-  const right = document.querySelector('.side-r .side-in'), home = new Map();
-  const SEL = ['#lessonCard', '#puzzleCard', '#olWatch', '#reviewCard', '.kifu-card'];
-  const place = () => {
-    const on = !!(HB && HB.on);
-    for (const s of SEL) {
-      const el = document.querySelector(s); if (!el || !right) continue;
-      if (!home.has(el)) { const ph = document.createComment('side'); el.before(ph); home.set(el, ph); }
-      if (on) right.appendChild(el); else home.get(el).after(el);
-    }
-  };
-  place(); if (HB) HB.onChange(place); window.addEventListener('load', place);
-  return { place };
-})();
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
@@ -2851,7 +2921,7 @@ document.addEventListener('keydown', e => {
   const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
   if (document.querySelector('.overlay.show') || lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
-  if (!k) return;
+  if (!k || rbCons()) return;   // 検討中: no record navigation (the box has ◀ and 元に戻す)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });

@@ -1230,7 +1230,21 @@ function reviewMove(p, played, ms) {
   const quiet = !cap && p.gives(played) === 0 && p.gives(list[0].m) === 0;
   return { exact: false, quiet, best: list[0].v, played: mine ? Math.min(mine.v, list[0].v) : list[0].v, bestMove: list[0].m, line };
 }
-return { x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+// review box (rvbox.js): a short line after a candidate move — forced captures, then the solver's / search's best move
+function candLine(p, first, plies, ms) {
+  const q = p.clone(), line = [first]; q.play(first);
+  while (line.length < plies && q.undrawn > 0) {
+    const c = q.hasCapture() ? captureMoves(q) : null; let e = -1;
+    if (c && c.forced !== undefined) e = c.forced;
+    else if (x4Ok(q)) { const r = x4BestW(q, ms); if (r) e = r.move; }
+    else if (q.G.E <= 24 || countSafe(q) <= (q.G.R <= 4 ? 20 : 15)) { const S = fastSolverFor(q.G); S.limit(0, ms); const r = S.best(q); if (r) e = r.move; }
+    if (e < 0) { const H = hsFor(q.G, 3, true); const l = H.root(q, 8, ms); if (l && l.length) e = l[0].m; }
+    if (e < 0 || q.drawn[e]) break;
+    q.play(e); line.push(e);
+  }
+  return line;
+}
+return { candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -1292,6 +1306,11 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
         if (d.R === 4 && d.C === 4 && DotsEngine.X4.st === 2) list = DotsEngine.x4All(p, d.ms || 8000);
         else { const S = DotsEngine.fastSolverFor(G); S.limit(0, d.ms || 8000); list = S.all(p); }
         self.postMessage({ type: 'solve', id: d.id, list });
+      } else if (d.type === 'cands') {
+        const r = DotsEngine.analyze(p, d.ms || 900), top = r.list.slice(0, d.n || 5), lines = {};
+        self.postMessage({ type: 'cands', id: d.id, list: r.list, exact: r.exact, lines: {} });
+        for (const x of top) { lines[x.m] = DotsEngine.candLine(p, x.m, d.plies || 8, d.ply || 70); self.postMessage({ type: 'cands', id: d.id, list: r.list, exact: r.exact, lines: Object.assign({}, lines) }); }
+        self.postMessage({ type: 'candsDone', id: d.id, list: r.list, exact: r.exact, lines });
       } else if (d.type === 'review') {
         const r = DotsEngine.reviewMove(p, d.played, d.ms || 600);
         self.postMessage({ type: 'review', id: d.id, r });

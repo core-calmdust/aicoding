@@ -43,7 +43,7 @@
 @media (hover: hover) and (pointer: fine) and (max-width: 819px), (hover: hover) and (pointer: fine) and (max-height: 680px){:root{--pad:clamp(14px, 3vmin, 28px)}}
 /* online dock opened (shared/headerbar.js dock-fit lowers --vh): a board limited by the window width (narrow info column)
    still gives back what --vh loses, so every fit step makes the layout smaller; the info column takes the width it frees (2026-10-25) */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.ol-dock{--vbase:calc(100vh - 108px - var(--hb-h))}
   @supports (height:100dvh){html.ol-dock{--vbase:calc(100dvh - 108px - var(--hb-h))}}
 }
@@ -157,6 +157,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 @keyframes drawl{to{stroke-dashoffset:0}}
 .fxsvg .arrow{stroke:rgba(226,194,117,.9);fill:none;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(0,0,0,.8))}
 .fxsvg .arrow.ok{stroke:rgba(226,194,117,.95)}
+.fxsvg .arrow.rbh{opacity:.75}.fxsvg .arrow.rbh.p1{stroke:var(--gold2)}.fxsvg .arrow.rbh.p2{stroke:var(--plat2)}.fxsvg .arrow.rbh.first{opacity:1}
+.rbh-num{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .44);height:calc(var(--cell) * 7 / var(--S) * .44);margin:calc(var(--cell) * 7 / var(--S) * -.22) 0 0 calc(var(--cell) * 7 / var(--S) * -.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 calc(var(--cell) * 7 / var(--S) * .24) 'JetBrains Mono',monospace;color:#1a1408;z-index:9;pointer-events:none;opacity:.88;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+.rbh-num.p1{background:var(--gold2)}.rbh-num.p2{background:var(--plat2);color:#2a2f36}
+.rbh-num.first{opacity:1;outline:3px solid var(--accent);outline-offset:1px}
 .fxsvg .arrow.ng{stroke:rgba(255,107,91,.9)}
 .fxsvg .arrow.pl{stroke:rgba(255,255,255,.8);stroke-dasharray:.08 .08}
 .coords-x,.coords-y{position:absolute;pointer-events:none;color:rgba(226,194,117,.55);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .17);line-height:1}
@@ -485,7 +489,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec 2026-10-28): everything that is not the PC layout (narrow / tall PC windows, tablets, phones),
    except a phone held sideways (its own layout below) */
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
   :root{--cell:min((100vw - 20px) / 7.5, (var(--vh) - 250px) / 8.7, 110px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -571,7 +575,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .info-line{display:none}
 }
 /* narrow info column (squarish windows, 2026-10-25): one player per row, the buttons in two rows, the kifu header may wrap */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @container (max-width: 359px){
   .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}
   .controls{grid-auto-flow:row!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
@@ -739,45 +743,45 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
 }
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
-/* PC layout (common spec 2026-10-28): the board in the middle, a fixed-width info column on each side — left: the game
-   now (players, evaluation bar / graph / ◀ ▶, info line), right: record and study (lesson / puzzle cards, watch card,
-   review, record). The board takes the smaller of the window height and the width left by the two columns; on wide
-   screens the three columns stay together in the middle. Both columns are as tall as the board and scroll inside. */
-.app > .side-r{display:none}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
-  :root{--sl:280px;--sr:330px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.6vw, 30px);
-    --cw:calc((100vw - var(--padx) * 2 - var(--gap) * 2 - var(--sl) - var(--sr)) / 7.5);
+/* PC layout (2026-10-28, back to two columns at the user's request): the board on the left, a fixed-width (360px) info
+   column on the right (lesson / puzzle / watch cards, players, evaluation, review, record, info line). The board takes the
+   smaller of the window height and the width left by the column; on wide screens the pair stays in the middle. The column
+   is as tall as the board (a little taller when the board is limited by the width) and scrolls inside. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  :root{--sidew:360px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.8vw, 34px);
+    --cw:calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 7.5);
     --cv:min((var(--vh) - var(--pad) * 2) / 8.7, 150px);
     --cell:min(var(--cv), var(--cw))}
   /* online dock opened (shared dock-fit lowers --vh): a width-limited board gives back what --vh loses too */
   html.dock-fit{--cell:min(var(--cv), var(--cw) - max(0px, var(--vbase, var(--vh)) - var(--vh)) / 8.7)}
-  .app{grid-template-columns:var(--sl) auto var(--sr);grid-template-areas:"left board right";align-items:center;align-content:center;padding:var(--pad) var(--padx)}
-  .app > .side{grid-area:left;height:max(var(--fh), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}   /* (as tall as the board; a little taller when the board is limited by the width) */
-  .app > .side.side-r{display:block;grid-area:right}
+  .app{grid-template-columns:auto var(--sidew);grid-template-areas:"board side";justify-content:center;align-items:center;align-content:center;padding:var(--pad) var(--padx)}
+  .app > .side{height:max(var(--fh), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}
   .app > .side > .side-in{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;gap:10px}
   .app > .side > .side-in > *{flex:none}
-  .app > .side:not(.side-r) #evalCard{display:flex;flex-direction:column}
-  .app > .side:not(.side-r) #evalCard .graph{display:block;height:clamp(64px, 15vh, 170px);max-height:none;min-height:0;flex:none}
-  .app > .side:not(.side-r) .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
-  .app > .side-r .kifu-card{flex:1 1 auto;min-height:150px}
-  .app > .side-r .review-card.show{flex:3 1 0;min-height:200px}
-  .app > .side-r .side-in:has(.review-card.show) .kifu-card{flex:.5 1 0;min-height:110px}
+  .app > .side #evalCard{display:flex;flex-direction:column}
+  .app > .side #evalCard .graph{display:block;height:clamp(48px, 9vh, 110px);max-height:none;min-height:0;flex:none}
+  .app > .side .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
+  .app > .side .kifu-card{flex:1 1 auto;min-height:130px}
+  .app > .side .review-card.show{flex:3 1 0;min-height:200px}
+  .app > .side .side-in:has(.review-card.show) .kifu-card{flex:.5 1 0;min-height:110px}
+  .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one player per row: full names in the 360px column */
+  html.rb-on .app > .side #evalCard .graph{height:clamp(34px, 6vh, 70px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
 <link rel="stylesheet" href="online.css?v=20261028l9">
@@ -890,7 +894,6 @@ body .info-line{font-size:12.5px}
     </div>
     <div class="info-line" id="infoLine"></div>
   </div></aside>
-  <aside class="side side-r" aria-label="record"><div class="side-in"></div></aside>
 </div>
 
 <!-- new game -->
@@ -1057,7 +1060,8 @@ body .info-line{font-size:12.5px}
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=20261019n"></script>
+<script src="engine.js?v=20261028rb"></script>
+<script src="rvbox.js?v=20261028rb"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
@@ -1078,15 +1082,20 @@ function setVariant(v) { gv = RULE_ORDER.includes(v) ? v : 'nine'; G = E.geom(gv
 const startKey = () => startSpec ? startSpec.b + '/' + startSpec.h + '/' + startSpec.side : '';
 const keyOf = i => gv + '|' + startKey() + '|' + moves.slice(0, i).join(',');
 let posCache = { key: '' };
+// 検討 (review box study): the shown position (cur) continues with the study moves; keyOf / the record stay the game's
+const seqAt = i => rbCons() && i === cur ? moves.slice(0, cur).concat(csLine) : moves.slice(0, i);
+const shownKeyOf = i => rbCons() && i === cur ? keyOf(i) + '|cs:' + csLine.join(',') : keyOf(i);
+const lastShown = () => { const q = seqAt(cur); return q.length ? q[q.length - 1] : -1; };
 function posAt(i) {
-  const key = keyOf(i);
+  const key = shownKeyOf(i);
   if (posCache.key === key) return posCache;
-  const r = E.replay(gv, startSpec, moves.slice(0, i));
+  const r = E.replay(gv, startSpec, seqAt(i));
   posCache = { key, pos: r.pos, hashes: r.hashes };
   return posCache;
 }
 // {over, winner, draw, why}
 function statusAt(i) {
+  if (rbCons() && i === cur) { const { pos, hashes } = posAt(i), st = pos.status(); let c = 0; for (const h of hashes) if (h === pos.h1) c++; if (st === -1) return { over: true, winner: 3 - pos.side }; if (st === 2 || c >= 3) return { over: true, winner: 0, draw: true }; return { over: false }; }
   if (settings.mode === 'online' && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
   if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
   if (resignOver && resignOver.mv === moves && i === moves.length && !lesson && !puzzle) return resignOver;
@@ -1179,7 +1188,7 @@ function save() {
 // ====================================================================== engine workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261019n');
+  const w = new Worker('engine.js?v=20261028rb');
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -1330,18 +1339,19 @@ function renderReserves(pos) {
   }
 }
 function renderBoard(anim) {
-  const { pos } = posAt(cur), key = keyOf(cur);
+  const { pos } = posAt(cur), key = shownKeyOf(cur);
   const prev = shownKey; shownKey = key;
-  const m = cur > 0 ? moves[cur - 1] : -1;
+  const m = lastShown(), inStudy = rbCons() && csLine.length > 0;
+  const prevKey = inStudy ? keyOf(cur) + '|cs:' + csLine.slice(0, -1).join(',') : keyOf(cur - 1);
   let done = false;
-  if (anim && animOn() && m >= 0 && prev === keyOf(cur - 1)) {
-    const before = posAt(cur - 1).pos, mover = before.side;
+  if (anim && animOn() && m >= 0 && prev === prevKey) {
+    const before = inStudy ? E.replay(gv, startSpec, seqAt(cur).slice(0, -1)).pos : posAt(cur - 1).pos, mover = before.side;
     const flying = mFrom(m) !== NONE && before.flying(mover);
     done = animateMove(m, mover, flying);
     // safety: fall back to a plain redraw if the map no longer matches the position
     if (done) for (let i = 0; i < G.n; i++) if (!!pos.b[i] !== pcEls.has(i)) { done = false; break; }
     if (done) clearTent();
-  } else if (anim && m >= 0 && prev === keyOf(cur - 1)) {
+  } else if (anim && m >= 0 && prev === prevKey) {
     const f = mFrom(m); if (f === NONE) sPlace(); else sSlide(); if (mRm(m) !== NONE) setTimeout(() => { sMill(); sTake(); }, 120);
   }
   if (!done) syncPieces(pos.b);
@@ -1374,7 +1384,7 @@ function svgArrow(svg, f, t, cls) {
 }
 function renderFx() {
   fxEl.innerHTML = '';
-  const { pos } = posAt(cur), st = statusAt(cur), m = cur > 0 ? moves[cur - 1] : -1;
+  const { pos } = posAt(cur), st = statusAt(cur), m = lastShown();
   const svg = fxSvg(), msvg = $('#millfx');
   msvg.setAttribute('viewBox', `0 0 ${G.size} ${G.size}`); msvg.innerHTML = '';
   for (const [, el] of pcEls) el.classList.remove('dim', 'sel', 'rmable', 'inmill', 'old');
@@ -1384,7 +1394,7 @@ function renderFx() {
     if (mRm(m) !== NONE) fxDiv('mark took', mRm(m));
   }
   if (m >= 0 && mRm(m) !== NONE && !sel) {
-    const fresh = shownKey === keyOf(cur) && !st.over;
+    const fresh = shownKey === shownKeyOf(cur) && !st.over;
     for (const ml of millsAt(pos.b, mTo(m))) {
       svgLine(msvg, ml[0], ml[2], 'mill' + (fresh ? '' : ' old'), 0.12);
       for (const i of ml) { const el = pcEls.get(i); if (el) el.classList.add('inmill'); if (el && !fresh) el.classList.add('old'); }
@@ -1466,6 +1476,7 @@ function gameOver(i) { return statusAt(i).over; }
 function canHumanPlay() {
   if (gameOver(cur)) return false;
   if (animating) return false;
+  if (rbCons()) return true;   // 検討 (review box study): both sides
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
   if (lesson) return !lesson.answered;
   if (reviewing) return false;
@@ -1600,7 +1611,7 @@ boardEl.addEventListener('click', e => { const i = pointAt(e.clientX, e.clientY)
 function cancelSel() {
   if (!sel) return;
   const was = sel; sel = null;
-  if (was.stage === 'remove') { const { pos } = posAt(cur); syncPieces(pos.b); for (const [i, el] of pcEls) el.classList.toggle('last', settings.last && cur > 0 && i === mTo(moves[cur - 1])); }
+  if (was.stage === 'remove') { const { pos } = posAt(cur); syncPieces(pos.b); for (const [i, el] of pcEls) el.classList.toggle('last', settings.last && lastShown() >= 0 && i === mTo(lastShown())); }
   renderFx();
 }
 function onPoint(i) {
@@ -1654,6 +1665,7 @@ function commit(m) {
     // the piece already stands on its destination: re-key it so animateMove keeps it there (no second slide)
     const el = pcEls.get(mTo(m)); if (el) { el.getAnimations && el.getAnimations().forEach(a => a.finish()); pcEls.delete(mTo(m)); pcEls.set(mFrom(m), el); }
   }
+  if (rbCons()) return rbStudyPlay(m);
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
   if (settings.mode === 'online' && window.olHumanMove) return olHumanMove(m);
@@ -1786,6 +1798,7 @@ function undo() {
 }
 function viewAt(i) {
   if (lesson || puzzle) return;
+  if (rbCons()) RvBox.endCons(true);   // leaving the studied position ends the study
   i = Math.max(0, Math.min(moves.length, i));
   if (i === cur) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
@@ -2929,7 +2942,8 @@ function rvCoach() {
   return h + `<p class="cr-more">${t('cr.nav')}</p></div>`;
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
-function renderReview() {
+function renderReview() { renderReview0(); if (window.RvBox) RvBox.refresh(); }
+function renderReview0() {
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
@@ -2946,7 +2960,7 @@ function renderReview() {
       const s = st[i & 1 ? P2 : P1]; s.n++; if (j.ok) s.ok++; if (j.q) { s[j.q]++; list.push({ i, ...j }); }
     }
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
-    html = rvCoach();   // the numbers are in the coach's short summary
+    html = rbOn() ? '' : rvCoach();   // the numbers are in the coach's short summary (PC review box: shown there instead)
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${x.i & 1 ? 2 : 1}"></i>${mvName(x.m)} → ${mvName(x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
@@ -2958,6 +2972,8 @@ function renderReview() {
 }
 // on the board: the analysis of the viewed position, the move actually played and the best move
 function drawReviewFx(svg) {
+  if (rbCons()) return false;
+  if (rbHov !== null && rbOn()) { rbDrawHover(svg); return true; }   // a hovered candidate of the review box instead
   if (lesson || puzzle || !rvOpen || !rv || rv.running || rv.key !== gameKey() || cur >= moves.length || sel) return false;
   const L = rv.list[cur]; if (!L) return false;
   drawHints(L, svg);
@@ -2970,6 +2986,82 @@ $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
+
+// ====================================================================== review box (PC, rvbox.js): candidates + 検討
+let csLine = [];      // 検討: moves played from the reviewed position (not part of the record)
+let rbW = null, rbBusy = false, rbLines = {}, rbHov = null;
+function rbCons() { return !!(window.RvBox && RvBox.cons); }
+// only after the game (or while stepping back through the record): never during a game in progress, rated or online
+function rbRealOver() {
+  if ((resignOver && resignOver.mv === moves) || (rgame && rgame.over)) return true;
+  if (settings.mode === 'online' && window.olOver && olOver()) return true;
+  const { pos, hashes } = E.replay(gv, startSpec, moves); let c = 0; for (const h of hashes) if (h === pos.h1) c++;
+  return pos.status() !== 0 || c >= 3;
+}
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === gameKey() && (cur < moves.length || rbRealOver()) && !rtLive() && !(window.olLive && olLive()); }
+function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
+function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
+function rbRows(list, lines) {
+  const side = posAt(cur).pos.side, played = !rbCons() && cur < moves.length ? moves[cur] : -1;
+  return list.slice().sort((a, b) => b.v - a.v).slice(0, 5).map(e => {
+    const L = valLabel(e.v), ln = lines && lines[e.m];
+    return { mv: e.m, move: mvName(e.m), score: L.big + (L.small ? ' ' + L.small : ''), cls: L.cls === 'win' || L.cls === 'loss' ? L.cls : '',
+      pv: ln ? ln.map((m, k) => `<span style="color:${(side === P1) === !(k & 1) ? 'var(--gold2)' : 'var(--plat2)'}">${mvName(m)}</span>`) : null, played: e.m === played };
+  });
+}
+function rbStudyPlay(m) {
+  if (gameOver(cur) || !posAt(cur).pos.moves().includes(m)) return;
+  csLine.push(m); hintList = null;
+  const d = moveDur(m);
+  animating = animOn(); setTimeout(() => { animating = false; renderInfo(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
+  update(true);
+}
+if (window.RvBox) RvBox.init({
+  active: rbActive, lang: () => LANG, key: () => shownKeyOf(cur), boardEl: () => $('#frame'),
+  head() {
+    if (cur >= moves.length) return `${t('cr.title')} · ${RvBox.tx('final')}`;
+    const i = cur, j = rvJudge(i), who = i & 1 ? P2 : P1;
+    return t('cr.move', { n: i + 1, who: sideLabel(who), m: crName(moves[i]) }) + (j && j.q ? `<span class="tag ${j.q}">${t('q.' + j.q)}</span>` : j && j.ok ? `<span class="tag best">${t('q.best')}</span>` : '');
+  },
+  coach: () => rvCoach(),
+  cands(onUpdate) {
+    rbLines = {};
+    if (gameOver(cur)) { onUpdate([], true); return; }
+    const pre = !rbCons() && rv && rv.list[cur];
+    if (pre) onUpdate(rbRows(pre, null), false);
+    if (!rbW) rbW = makeWorker();
+    rbBusy = true;
+    const w = rbW, id = ++jobId;
+    w.onmessage = e => {
+      const m = e.data; if (m.id !== id) return;
+      if (m.type !== 'cands' && m.type !== 'candsDone') { if (m.error) { rbBusy = false; onUpdate(pre ? rbRows(pre, null) : [], true); } return; }
+      const fin = m.type === 'candsDone'; if (fin) rbBusy = false;
+      rbLines = m.lines || {};
+      onUpdate(rbRows(m.list, m.lines), fin);
+      if (rbHov !== null) renderFx();
+    };
+    w.postMessage({ type: 'cands', id, variant: gv, start: startSpec, moves: seqAt(cur), time: 900, n: 5, plies: 8, ply: 110 });
+  },
+  cancel: rbCancel,
+  hover(mv) { rbHov = mv; renderFx(); },
+  consStart() { csLine = []; hintList = null; sel = null; busyToken++; cancelWorker('ai'); thinking = 0; update(false); },
+  consPlay(m) { if (!animating) rbStudyPlay(m); },
+  consBack() { if (csLine.length) { csLine.pop(); animating = false; update(false); } },
+  consEnd(silent) { csLine = []; rbHov = null; sel = null; animating = false; if (!silent) update(false); else renderBoard(false); },
+  consDepth: () => csLine.length,
+  goto: i => viewAt(i),
+});
+// hovered candidate: the move and its line on the board (arrows for moves, numbered discs on the destinations)
+function rbDrawHover(svg) {
+  const line = rbLines[rbHov] || [rbHov], pos = posAt(cur).pos.clone();
+  line.forEach((m, k) => {
+    const p = pos.side;
+    if (mFrom(m) !== NONE) svgArrow(svg, mFrom(m), mTo(m), 'rbh p' + p + (k ? '' : ' first'));
+    const d = fxDiv('rbh-num p' + p + (k ? '' : ' first'), mTo(m)); d.textContent = k + 1;
+    if (mRm(m) !== NONE) fxDiv('mark took', mRm(m));
+    try { pos.play(m); } catch (e) {}
+  });
+}
 
 // ====================================================================== share / load
 const CH = 'abcdefghijklmnopqrstuvwxyz';
@@ -3095,21 +3187,6 @@ drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
-// PC layout (common spec 2026-10-28): record / study cards move to the right column; back in place for the phone layout
-const sideR = (() => {
-  const right = document.querySelector('.side-r .side-in'), home = new Map();
-  const SEL = ['#lessonCard', '#puzzleCard', '#olWatch', '#reviewCard', '.kifu-card'];
-  const place = () => {
-    const on = !!(HB && HB.on);
-    for (const s of SEL) {
-      const el = document.querySelector(s); if (!el || !right) continue;
-      if (!home.has(el)) { const ph = document.createComment('side'); el.before(ph); home.set(el, ph); }
-      if (on) right.appendChild(el); else home.get(el).after(el);
-    }
-  };
-  place(); if (HB) HB.onChange(place); window.addEventListener('load', place);
-  return { place };
-})();
 // time signal: the last 5 seconds of my own clock beep once per second (rated games vs the AI, online games)
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
@@ -3199,7 +3276,7 @@ document.addEventListener('keydown', e => {
   }
   if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
-  if (!k) return;
+  if (!k || rbCons()) return;   // 検討中: no record navigation (the box has ◀ and 元に戻す)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
