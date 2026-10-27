@@ -4,7 +4,7 @@
 // the AI (variants/search.js) runs in variants/worker.js. A game record carries game.variant ('mini' | 'hasami');
 // 本将棋 records have none, so everything else stays exactly as before.
 (() => {
-const V = '20261021vb';
+const V = '20261028rb';
 const START = { mini: MiniShogi.START, hasami: HasamiShogi.START };
 const MODES = ['ai', 'pvp', 'watch'];   // modes a variant can be played in
 

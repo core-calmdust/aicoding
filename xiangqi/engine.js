@@ -378,6 +378,26 @@ function puzzle(start, moves, n, defend, checks) {
   return out;
 }
 let progressCb = null;
+// review box: the best few moves (values from the all-moves analysis) and a line for each (short searches move by move)
+function multiPV(start, moves, n, ms, plies, onProgress) {
+  const top = analyze(start, moves, ms).list.slice().sort((a, b) => b.v - a.v).slice(0, n || 4).map(e => ({ m: e.m, v: e.v, pv: [e.m] }));
+  if (onProgress) onProgress(top);
+  if (!WX) return top;
+  for (const c of top) {
+    const line = moves.concat([c.m]);
+    for (let k = 1; k < (plies || 8); k++) {
+      const { pos, hashes } = replay(start, line);
+      if (!pos.moves().length || judge(pos, hashes, start, line).over) break;
+      if (!wSetup(start, line, [])) break;
+      WX.best(99, 70, 0);
+      const r = wIO(); if (r[0] < 0) break;
+      const m = fromC(r[0]); if (!pos.moves().includes(m)) break;
+      line.push(m); c.pv.push(m);
+    }
+    if (onProgress) onProgress(top);
+  }
+  return top;
+}
 
 const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROOK, CANNON, PAWN, START, RC, sqAt, colorOf, typeOf, mv, mFrom, mTo, Pos, name, parse, sqName, replay, judge, isChase, threats, losingRepMoves, LEVELS, think, analyze, puzzle, kindOf, NMOV, RAYS, setWasm: x => { WX = x; }, toC, fromC };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -400,6 +420,9 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
           self.postMessage({ id: m.id, type: 'result', ...r });
+        } else if (m.type === 'multipv') {
+          const list = multiPV(m.start, m.moves, m.n, m.time || 800, m.plies, l => self.postMessage({ id: m.id, type: 'progress', list: l.map(e => ({ m: e.m, v: e.v, pv: e.pv.slice() })) }));
+          self.postMessage({ id: m.id, type: 'result', list });
         } else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.checks) });
         else if (m.type === 'newgame') { if (WX) WX.new_game(); self.postMessage({ id: m.id, type: 'result' }); }
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }

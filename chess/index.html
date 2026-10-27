@@ -513,7 +513,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
    except a phone held sideways (below). MOB = this list */
-@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   /* phone portrait */
   :root{--cell:min((100vw - 20px) / 7.5, (var(--vh) - 250px) / 8.7, 110px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -658,35 +658,36 @@ body .info-line{font-size:12.5px}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
-/* PC layout (common spec, shared/headerbar.js MEDIA): three columns — a fixed-width info column on the left (players, evaluation),
-   the board in the middle, a fixed-width column on the right (record, review, lessons / puzzles, spectating; moved there by app.js).
-   The board takes the smaller of the window height and the width left by the two columns; both columns are as tall as the board
-   and scroll inside. On wide screens the three columns stay together in the middle. */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
-  :root{--lw:280px;--rw:330px}
-  body{--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(14px, 1.6vw, 28px);
+/* PC layout (common spec, shared/headerbar.js MEDIA): two columns — the board on the left, a fixed-width info column on the right
+   (players, evaluation, review, record). The board takes the smaller of the window height and the width left by the column; the
+   column is as tall as the board and scrolls inside. On wide screens the pair stays together in the middle. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  :root{--rw:360px}
+  body{--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(16px, 2vw, 32px);
     --cellh:calc((var(--vh) - var(--pad) * 2 - var(--ttop)) / 9.7);
-    --cell:min(var(--cellh), (100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw)) / 8.5, 128px);
+    --cell:min(var(--cellh), (100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 8.5, 128px);
     --fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
-  .app{grid-template-columns:var(--lw) auto var(--rw);grid-template-areas:"side board rside";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
-  .side{grid-area:side;width:var(--lw);height:var(--fh);max-height:none}
-  .side.side-r{grid-area:rside;width:var(--rw)}
+  .app{grid-template-columns:auto var(--rw);grid-template-areas:"board side";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
+  .side{grid-area:side;width:var(--rw);height:var(--fh);max-height:none}
   .side-in{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .side-in > *{flex-shrink:0}
-  .side-in > #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:150px}
-  .side-in > #evalCard .graph{flex:1;height:auto;min-height:40px}
-  .side-r .side-in > .kifu-card{flex:1 1 0;min-height:140px}
-  .side-r .side-in > .review-card.show{flex:1.6 1 0;min-height:160px}
-  body.in-puzzle .side-in > .players{flex:none}
+  .side-in > #evalCard{flex:none}
+  .side-in > .kifu-card{flex:1 1 0;min-height:140px}
+  .side-in > .review-card.show{flex:1.6 1 0;min-height:180px}
   .board-area{align-self:center}
   html.dock-compact .side{align-self:center}
-  html.dock-compact .side-in > #evalCard{flex:none}
-  body.rated-live .side-in > #evalCard{flex:none;min-height:0}   /* rated game: no evaluation shown, only the navigation */
-  .side-r #lessonCard .lesson-actions{flex-wrap:wrap}
-  .side-r #lessonCard .lesson-actions button:not(#lsAuto){flex:1 1 calc(50% - 4px);white-space:nowrap;padding:10px 6px}
+  /* review box (rvbox.js) under the board + info column: the board gives up its height */
+  html.rvbox-on body{--rvbh:clamp(170px, calc(var(--vh) * .28), 250px);--rvbgap:12px;--cellh:calc((var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rvbh) - var(--rvbgap)) / 9.7)}
 }
-/* narrow info column (PC: the fixed-width columns): players stacked one per row, the buttons in two rows so the labels stay readable */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+/* PC info column (360px): players one per row so the AI names stay readable */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+@container (max-width: 380px){
+  body:not(.has-clk):not(.in-online) .side .players{grid-template-columns:minmax(0,1fr)!important;gap:4px}
+  html.side-col body:not(.has-clk):not(.in-online) .side .card.players .player{padding:5px 10px!important}
+}
+}
+/* narrow info column (PC: the fixed-width column): players stacked one per row, the buttons in two rows so the labels stay readable */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @container (max-width: 340px){
   .side-in{gap:8px}
   .side-in > .card{padding:12px}
@@ -700,12 +701,12 @@ body .info-line{font-size:12.5px}
   .kifu-card{min-height:90px}
 }
 }
-@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* ---------------------------------------------------------------- chess overrides */
-@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   :root{--cell:min((100vw - 20px) / 8.5, (var(--vh) - 250px) / 9.7, 110px)}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
@@ -952,7 +953,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body.mtab-online .dock{bottom:max(calc(42px + env(safe-area-inset-bottom)), var(--kb, 0px))}
 }
 /* phone layout with a mouse (narrow / tall PC window): the online dock stays at the bottom (108px), so the page leaves room for it */
-@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   body:not(.no-online){--cell:min((100vw - 20px) / 8.5, (var(--vh) - 250px) / 9.7, 110px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
   body:not(.no-online) .app{padding-bottom:124px}
 } }
@@ -1328,7 +1329,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n_sync.js?v=20261020gs"></script>
 <script src="i18n_ai.js?v=20261021a"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="engine.js?v=20261021L"></script>
+<script src="engine.js?v=20261028rb"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale1"></script>
@@ -1340,7 +1341,8 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n_v2.js?v=20261022rt"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=20261028pc"></script>
+<script src="rvbox.js?v=1"></script>
+<script src="app.js?v=20261028rb"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
