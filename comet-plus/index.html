@@ -1670,7 +1670,8 @@ const ITEM_FLOOR_STAGE = 15; // この面以降は「エネルギーが尽きる
 let itemGapT = 0; // 最後にエネルギーアイテムが出てからの秒数
 const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「彗星が画面を0.9回流れる時間」待って元の間隔へ
 // 彗星が画面の上から下まで流れる秒数（ステージが進んで彗星が速くなるほど短い）
-const MOB_FALL = IS_MOBILE ? 1.12 : 1; // スマホは彗星とアイテムの落下をやや速く
+const MOB_FALL = IS_MOBILE ? 1.12 * 0.8 : 1; // スマホの彗星の落下速度（1.12倍→その0.8倍）
+const MOB_ITEM_FALL = IS_MOBILE ? 1.12 * 1.1 : 1; // スマホのアイテムの落下速度
 function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY() * MOB_FALL); }
 let nextSpecialItemScore;
 let newHighScoreAchieved;
@@ -2766,7 +2767,7 @@ function updatePlayingState(dt_sec) {
             item.x = Math.max(16, Math.min(config.canvasWidth - 16, item.x + item.vx * dt_sec));
             item.y += item.vy * dt_sec;
         } else {
-            item.y += config.energyItemSpeed * (item.type === 'hyper' ? 0.75 : 1) * MOB_FALL * (IS_MOBILE ? 1.1 : 1) * dt_sec; // スマホのアイテムは彗星よりさらに1.1倍
+            item.y += config.energyItemSpeed * (item.type === 'hyper' ? 0.75 : 1) * MOB_ITEM_FALL * dt_sec;
             if (item.type === 'hyper') { // ハイパーは左右に大きく、ゆっくり揺れながら落ちてくる
                 const A = Math.min(200, config.canvasWidth / 2 - 50);
                 if (item.x0 == null) { item.x0 = Math.max(50 + A, Math.min(config.canvasWidth - 50 - A, item.x)); item.t = 0; }
