@@ -3987,7 +3987,7 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
 // =================================================================================
 const W = config.canvasWidth, H = config.canvasHeight; // フィールド
 const VH = HUD_H; // ビューポートの高さ
-const PR = IS_MOBILE ? Math.min(window.devicePixelRatio || 1, 0.7) : Math.min((window.devicePixelRatio || 1) * PC_FIT, 1.25 * PC_FIT, 2); // スマホは描画解像度を抑える
+const PR = IS_MOBILE ? Math.min(window.devicePixelRatio || 1, 0.62) : Math.min((window.devicePixelRatio || 1) * PC_FIT, 1.25 * PC_FIT, 2); // スマホは描画解像度を抑える
 const VW = HUD_W;
 const toX = x => x - W / 2;
 const toZ = y => y - H / 2;
@@ -4035,7 +4035,7 @@ if (gl3dOK) {
     composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
-    { const bk = IS_MOBILE ? 0.4 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
+    { const bk = IS_MOBILE ? 0.32 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
     // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
     hyperGrade = new ShaderPass({
@@ -4360,7 +4360,7 @@ function makeMotif(name, count, build, place, animate) {
     group.visible = false;
     world.add(group);
     const items = [];
-    if (IS_MOBILE) count = Math.ceil(count * 0.45); // スマホは背景オブジェクトを減らす
+    if (IS_MOBILE) count = Math.ceil(count * 0.3); // スマホは背景オブジェクトを減らす
     for (let i = 0; i < count; i++) {
         const it = build(i);
         it.i = i;
@@ -5231,15 +5231,17 @@ function makeHyperObj() {
     // 浮遊リング: 途切れ途切れの光の帯
     const ring = new THREE.Group();
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x8fdcff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
-    for (let k = 0; k < 14; k++) {
+    { const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
+      for (let k = 0; k < 14; k++) {
         if (k % 5 === 4) continue;
-        const a = k * Math.PI * 2 / 14, seg = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.8, 1.8), ringMat);
-        seg.position.set(Math.cos(a) * 34, 0, Math.sin(a) * 34); seg.rotation.y = -a + Math.PI / 2; ring.add(seg);
-    }
+        const a = k * Math.PI * 2 / 14; q.setFromAxisAngle(up, -a + Math.PI / 2); m4.compose(new THREE.Vector3(Math.cos(a) * 34, 0, Math.sin(a) * 34), q, one);
+        parts.push(new THREE.BoxGeometry(10.5, 0.8, 1.8).applyMatrix4(m4));
+      }
+      ring.add(new THREE.Mesh(mergeGeometries(parts), ringMat)); } // 区切りをまとめて1回で描く
     const tilt = new THREE.Group(); tilt.rotation.x = 0.45; // カメラ側に少し起こして形が見えるように
     // キラキラ: 周りで瞬く小さな光
     const sparks = [], sparkGeo = new THREE.OctahedronGeometry(1, 0); sparkGeo.scale(0.5, 0.5, 2.6);
-    for (let k = 0; k < 16; k++) {
+    for (let k = 0; k < (IS_MOBILE ? 6 : 16); k++) { // スマホはキラキラを減らす
         const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
         const sp = new THREE.Group(); const a1 = new THREE.Mesh(sparkGeo, sm), a2 = new THREE.Mesh(sparkGeo, sm); a2.rotation.y = Math.PI / 2; sp.add(a1, a2);
         const a = Math.random() * Math.PI * 2, r = 8 + Math.random() * 36;
@@ -5341,7 +5343,7 @@ function part(geo, opt) {
   const m = new THREE.Mesh(geo, opt.mat); g.add(m);
   g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 14), opt.edge));
   if (opt.glass) g.add(new THREE.Mesh(triSubset(geo, opt.glassFrac || 0.3, opt.seed || 7), opt.glass));
-  if (opt.cage) { const c = geo.clone(); c.computeBoundingBox(); const ctr = new THREE.Vector3(); c.boundingBox.getCenter(ctr); c.translate(-ctr.x, -ctr.y, -ctr.z); c.scale(opt.cage, opt.cage, opt.cage); c.translate(ctr.x, ctr.y, ctr.z); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(c, 8), opt.cageMat)); }
+  if (opt.cage && !IS_MOBILE) { /* スマホはワイヤーの外殻を省いて描画を軽く */ const c = geo.clone(); c.computeBoundingBox(); const ctr = new THREE.Vector3(); c.boundingBox.getCenter(ctr); c.translate(-ctr.x, -ctr.y, -ctr.z); c.scale(opt.cage, opt.cage, opt.cage); c.translate(ctr.x, ctr.y, ctr.z); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(c, 8), opt.cageMat)); }
   return g;
 }
 // ワイヤーだけの多面体
@@ -5349,7 +5351,10 @@ const wireOnly = (geo, mat) => new THREE.LineSegments(new THREE.EdgesGeometry(ge
 // 途切れた光のリング
 function dashRing(R, n, len, th, mat, gap = 4) {
   const g = new THREE.Group();
-  for (let k = 0; k < n; k++) { if (k % gap === gap - 1) continue; const a = k / n * Math.PI * 2, s = new THREE.Mesh(new THREE.BoxGeometry(len, th, th * 1.6), mat); s.position.set(Math.cos(a) * R, 0, Math.sin(a) * R); s.rotation.y = -a + Math.PI / 2; g.add(s); }
+  // 区切りを1つの形にまとめて1回で描く（描画回数を減らす）
+  const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
+  for (let k = 0; k < n; k++) { if (k % gap === gap - 1) continue; const a = k / n * Math.PI * 2; q.setFromAxisAngle(up, -a + Math.PI / 2); m4.compose(new THREE.Vector3(Math.cos(a) * R, 0, Math.sin(a) * R), q, one); parts.push(new THREE.BoxGeometry(len, th, th * 1.6).applyMatrix4(m4)); }
+  if (parts.length) g.add(new THREE.Mesh(mergeGeometries(parts), mat));
   return g;
 }
 
@@ -5582,7 +5587,10 @@ const wire = (geo, c, o = 0.6) => LAB.wireOnly(geo, LAB.line(c, o));
 function segRing(R, n, w, h, accent, gap = 0.16) {
     const g = new THREE.Group(), L = 2 * Math.PI * R / n * (1 - gap);
     const geo = LAB.loft([[-L / 2, w * 0.7, h * 0.7], [-L / 2 + 3, w, h], [L / 2 - 3, w, h], [L / 2, w * 0.7, h * 0.7]], 6); geo.rotateY(Math.PI / 2);
-    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, s = fuse(geo, accent, { cage: false, seed: k + 2 }); s.position.set(Math.cos(a) * R, 0, Math.sin(a) * R); s.rotation.y = -a + Math.PI / 2; g.add(s); }
+    // 節を1つの形にまとめて描く（描画回数を減らす）
+    const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -a + Math.PI / 2); m4.compose(new THREE.Vector3(Math.cos(a) * R, 0, Math.sin(a) * R), q, one); parts.push(geo.clone().applyMatrix4(m4)); }
+    g.add(fuse(mergeGeometries(parts), accent, { cage: false, seed: 2 }));
     return g;
 }
 const bladeGeo = (len, w, h) => LAB.loft([[0, w * 0.5, h * 0.6], [len * 0.25, w, h], [len * 0.75, w * 0.6, h * 0.6], [len, 1, 1]], 6);
@@ -6771,8 +6779,8 @@ function render3D() {
     // スマホ: 画面のオブジェクトが一定数を超えたら描画を軽くする（後半ステージの処理落ち対策）
     if (IS_MOBILE) {
         const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + debris.length * 0.2 + (monsters ? monsters.length * 2 : 0);
-        if (loadLv < 2 && load > 280) loadLv = 2; else if (loadLv < 1 && load > 170) loadLv = 1;
-        else if (loadLv === 2 && load < 230) loadLv = 1; else if (loadLv === 1 && load < 130) loadLv = 0;
+        if (loadLv < 2 && load > 210) loadLv = 2; else if (loadLv < 1 && load > 120) loadLv = 1; // スマホは早めに軽くする
+        else if (loadLv === 2 && load < 170) loadLv = 1; else if (loadLv === 1 && load < 90) loadLv = 0;
         if (bloom) bloom.enabled = loadLv < 2; // 重い時はブルームを切る
     }
     // 彗星（数が増えるほど光を控えめに）
