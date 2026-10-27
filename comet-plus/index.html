@@ -7719,8 +7719,14 @@ function draw() {
         const labels = IS_MOBILE ? ['RANKING', `NAME  ${nm}`] : [`${pad ? '◀ ▶' : '← →'}  RANKING`, `${pad ? 'SELECT' : 'N'}  NAME  ${nm}`];
         renderCtx.textBaseline = 'middle';
         labels.forEach((lb, k) => {
-            const r = titleBtnRect(k), pulse = 0.5 + 0.5 * Math.sin(frameCount * 0.06 + k * 1.4);
+            const r = titleBtnRect(k), pulse = IS_MOBILE ? 0.5 + 0.5 * Math.sin(frameCount * 0.06 + k * 1.4) : 0.5 + 0.5 * Math.sin(frameCount * 0.1);
             renderCtx.save();
+            if (!IS_MOBILE) { // PCは枠なし。太字の文字を点滅させて目立たせる
+                renderCtx.globalAlpha = 0.45 + 0.55 * pulse; renderCtx.shadowColor = theme.ui; renderCtx.shadowBlur = 10;
+                if (hasLS) renderCtx.letterSpacing = '2px';
+                renderCtx.font = `700 15px ${config.fontFamily}`; renderCtx.fillStyle = '#ffffff';
+                renderCtx.fillText(lb, r.x + r.w / 2, r.y + r.h / 2 + 1); renderCtx.restore(); return;
+            }
             renderCtx.fillStyle = 'rgba(8,4,22,0.62)';
             renderCtx.beginPath(); if (renderCtx.roundRect) renderCtx.roundRect(r.x, r.y, r.w, r.h, IS_MOBILE ? 12 : 8); else renderCtx.rect(r.x, r.y, r.w, r.h); renderCtx.fill();
             renderCtx.shadowColor = theme.ui; renderCtx.shadowBlur = IS_MOBILE ? 14 + pulse * 8 : 8 + pulse * 6;
