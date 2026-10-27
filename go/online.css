@@ -238,7 +238,7 @@ html[lang=ar] .ol-hist{direction:rtl}
 body.in-online.counting #evalCard{flex:none!important;min-height:0!important}
 body.in-online.counting #evalCard .graph{display:none}
 /* mouse windows in the stacked (phone) layout: the page scrolls above the fixed dock (2026-10-28) */
-@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine){
   body:not(.no-online) .app{padding-bottom:124px}
   body.ol-soon:not(.no-online) .app{padding-bottom:62px}
 }

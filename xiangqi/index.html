@@ -477,7 +477,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
    except a phone held sideways (below) */
-@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   /* phone portrait (on wide / short screens the board also fits the height) */
   :root{--cell:min((100vw - 20px) / 9.5, (var(--vh) - 200px) / 12, 100px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -716,12 +716,12 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
 }
-@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
@@ -843,7 +843,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
    a fixed-width info column on the left (players, evaluation), the board in the middle, a fixed-width column on the right (record,
    review, lessons / puzzles, spectating; moved there by app.js). The board takes the smaller of the window height and the width left
    by the two columns; both columns are as tall as the board and scroll inside. On wide screens the three columns stay together in the middle. */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root{--lw:280px;--rw:330px;--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(14px, 1.6vw, 28px);
     --cell:min((var(--vh) - var(--pad) * 2 - var(--ttop)) / 12, (100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw)) / 9.5, 110px)}
   .app{grid-template-columns:var(--lw) auto var(--rw);grid-template-areas:"side board rside";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
@@ -1150,7 +1150,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="engine.js?v=1"></script>

@@ -1436,7 +1436,7 @@ let geomReady = false;
 // PC (common spec: mouse, >= 1040px wide, not a tall window — the same condition as the shared header bar): three columns,
 // fixed-width info columns left and right, the board between them (flat geometry: its height fits the window, its width
 // the room left between the columns); everything else uses the phone layouts (portrait / landscape)
-const mqPCW = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)');
+const mqPCW = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
 const mqLand = matchMedia('(min-aspect-ratio: 1/1)');
 const landPhone = () => mqLand.matches && !mqPCW.matches;   // the phone landscape layout (phones, tablets, small PC windows)
 let PCW = false;

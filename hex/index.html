@@ -447,7 +447,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine){
   /* phone portrait (and every window that is not the PC layout: narrow / tall mouse windows too) */
   :root{--cell:min((100vw - 16px) / var(--WU), 64px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -501,7 +501,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .player .name{min-width:0}
 }
 /* mouse windows in the stacked layout: the (unrotated, wide) board also fits the window height (2026-10-28) */
-@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+@media (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine){
   :root{--cell:max(16px, min((100vw - 16px) / var(--WU), (var(--vh) - 250px) / var(--HU), 64px))}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
@@ -693,7 +693,7 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
@@ -703,7 +703,7 @@ body .info-line{font-size:12.5px}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
@@ -729,7 +729,7 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
 @media (max-width: 1600px){.hb .hb-info .hb-chip.opt{display:none}}
 @media (max-width: 1360px){.hb .hb-info .hb-chip.cnt{display:none}}
 .player .count small{white-space:nowrap}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1){ .player .count small{display:block;margin:4px 0 0;font-size:12px;line-height:1.3;white-space:normal} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1){ .player .count small{display:block;margin:4px 0 0;font-size:12px;line-height:1.3;white-space:normal} }
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
 #newOverlay .ng-col{display:contents}
@@ -1083,7 +1083,7 @@ html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:var(-
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="engine.js?v=1"></script>
@@ -1097,7 +1097,7 @@ html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:var(-
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): the records & study cards move to the right column (.side2); every other
    layout (phones, tablets, narrow / tall windows) keeps them in their place in the one stacked column (2026-10-28) */
 (function () {
-  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)';
+  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';
   const left = document.querySelector('.app > .side'); if (!left) return;
   const right = document.createElement('aside'); right.className = 'side2'; right.innerHTML = '<div class="side-in"></div>'; left.after(right);
   const box = right.firstChild, home = new Map(), mq = matchMedia(MQ);

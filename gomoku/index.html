@@ -434,7 +434,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 
 /* ---------------------------------------------------------------- responsive */
 /* phones, tablets and narrow / tall PC windows (common spec: everything that is not the PC layout and not a phone held sideways) */
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
@@ -675,7 +675,7 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: the long title sits above the board's top-left corner; the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
@@ -959,7 +959,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .coach.q-best{border-color:#6fd3a0;color:#b8f0d2}.coach.q-good{border-color:#9fc7ff;color:#d3e5ff}.coach.q-dubious{border-color:#f2c060;color:#ffe2a6}.coach.q-bad{border-color:#ff6b5b;color:#ffc4bd}
 body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
@@ -970,7 +970,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
    The board is as large as the window height and the width left by the two columns allow; the columns are as tall as the board
    and scroll inside. Wide windows keep the three together in the middle. (app.js moves the right-hand cards into .side-r.) */
 .side-r{display:none}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root, body, body:not(.no-online), html.dock-fit body:not(.no-online){
     --lw:280px !important; --rw:330px !important;
     --gap:clamp(14px, 1.6vw, 32px) !important; --padx:clamp(12px, 1.6vw, 32px) !important; --pad:clamp(12px, 2.4vh, 32px) !important;
@@ -998,7 +998,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
   html.dock-compact .app > .side, html.dock-compact .app > .side > .side-in{height:var(--fh)!important}
 }
 /* PC mouse, but a narrow or tall window: the phone layout (above) with the online strip at the bottom */
-@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   body:not(.no-online), html.dock-fit body:not(.no-online){--cell:min((100vw - 20px) / 16.5, (var(--vh) - 230px) / 16.5, 58px);--fw:calc(var(--cell) * 16.5);--fh:calc(var(--cell) * 16.5)}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
@@ -1341,7 +1341,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="app.js?v=20261024lsl9"></script>

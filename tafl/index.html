@@ -476,7 +476,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 
 /* ---------------------------------------------------------------- responsive */
 /* phones, tablets and narrow / tall PC windows (common spec: everything that is not the PC layout and not a phone held sideways) */
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
@@ -718,7 +718,7 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
@@ -728,7 +728,7 @@ body .info-line{font-size:12.5px}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
@@ -837,7 +837,7 @@ html[data-pcs=mono]{--at1:#5c5c5c;--at2:#262626;--at3:#121212;--at4:#000;--df1:#
 .side-r{display:none}
 /* the menu stays in the PC header bar during lessons / puzzles (the side-panel copy is hidden there on phones) */
 body.hb-on .hb .controls.hb-menu{display:flex!important}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root, body, body:not(.no-online), html.dock-fit body:not(.no-online){
     --lw:280px !important; --rw:330px !important;
     --gap:clamp(14px, 1.6vw, 32px) !important; --padx:clamp(12px, 1.6vw, 32px) !important; --pad:clamp(12px, 2.4vh, 32px) !important;
@@ -865,7 +865,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   html.dock-compact .app > .side, html.dock-compact .app > .side > .side-in{height:var(--fh)!important}
 }
 /* PC mouse, but a narrow or tall window: the phone layout (above) with the online strip at the bottom */
-@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root{--cell:min((100vw - 20px) / (var(--S) + .5), (var(--vh) - 250px) / (var(--S) + 1.5), calc(800px / var(--S)));--fw:calc(var(--cell) * (var(--S) + .5));--fh:calc(var(--cell) * (var(--S) + 1.5))}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
@@ -1152,7 +1152,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="engine.js?v=1"></script>
