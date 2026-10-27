@@ -159,7 +159,7 @@
         body.mobile #fullscreen-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         body.mobile #game-wrapper { transform: scale(var(--fit, 1)); transform-origin: center; }
         body.mobile #stage { touch-action: none; }
-        body.mobile, body.mobile * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; } /* ダブルタップ・長押しで拡大鏡や選択が出ないように */
+        html, body.mobile, body.mobile * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; } /* ダブルタップ・長押しで拡大鏡や選択が出ないように */
         .mob-only { display: none !important; }
         body.mobile .mob-only { display: inline-flex !important; }
         body.mobile #topbar { display: none; }
@@ -8328,6 +8328,11 @@ prewarmGPU();
 // スマホ: ダブルタップやピンチでの拡大・拡大鏡（ルーペ）・文字選択を出さない（ボタンやリンク・言語選択はそのまま使える）
 if (IS_MOBILE) {
     const isUi = t => t && t.closest && t.closest('a, button, select, input, label');
+    // iOS（Safari・Chrome共通のWebKit）は touchstart を止めないとダブルタップ長押しの拡大鏡が出るので、操作用UI以外では止める
+    // （ゲームの操作は pointer イベントで受けているので影響なし）
+    document.addEventListener('touchstart', e => { if (!isUi(e.target)) e.preventDefault(); }, { passive: false });
+    // touchstartを止めても音が鳴らせるよう、指を離した時（iOSで確実に音を許可される操作）にも音声を起こす
+    document.addEventListener('touchend', () => { try { if (!audioHandler.isInitialized) audioHandler.initialize(); else if (audioHandler.ctx && audioHandler.ctx.state === 'suspended' && gameState !== 'paused') audioHandler.ctx.resume(); } catch (e) {} }, { passive: true });
     let lastTouchEnd = 0;
     document.addEventListener('touchend', e => { const n = Date.now(); if (n - lastTouchEnd < 350 && !isUi(e.target)) e.preventDefault(); lastTouchEnd = n; }, { passive: false });
     ['gesturestart', 'gesturechange', 'dblclick', 'selectstart', 'contextmenu'].forEach(ev => document.addEventListener(ev, e => { if (!isUi(e.target)) e.preventDefault(); }, { passive: false }));
