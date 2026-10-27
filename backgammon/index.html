@@ -541,7 +541,7 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   html:not(.rot) .coach{top:calc(var(--u)*.6);font-size:12px}
   html:not(.rot) .toast{font-size:13px;padding:10px 16px}
 }
-@media (min-aspect-ratio: 1/1){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (min-aspect-ratio: 1/1){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   /* phone landscape (and every other landscape window below the PC layout: tablets, small PC windows): one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
   :root{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html,body{height:auto;overflow-x:hidden;overflow-y:auto}
@@ -799,7 +799,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
    the height of the window and the width left between the columns), right: 棋譜 / ヒント / 振り返り / lesson & puzzle cards.
    The board and the info frame share one grid cell: .side is a real box over the whole width (the shared dock fitting
    measures it) with the board's column left empty and clicks passing through to the board. */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root{--lw:260px;--rw:300px;--cg:20px;--px:24px}
   @media (max-width: 1299px){ :root{--lw:230px;--rw:270px;--cg:16px;--px:16px} .players .count small{display:none} }
   html:not(.rot) .app{display:grid;height:var(--vh);padding:12px var(--px)!important;gap:0;justify-content:center;align-content:center;align-items:center;
@@ -841,7 +841,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 }
 /* phone layouts on a mouse (narrow / tall PC windows): no jump button (the page scrolls with the wheel), room above the online dock */
 @media (pointer: fine){ .scroll-jump{display:none!important} body:not(.no-online) .app{padding-bottom:120px!important} }
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ body:not(.no-online) .app{padding-bottom:12px!important} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ body:not(.no-online) .app{padding-bottom:12px!important} }
 /* review commentary (all layouts) */
 .rv-cur{margin:10px 0 4px;padding:10px 12px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:linear-gradient(160deg,rgba(201,169,97,.10),rgba(0,0,0,.18))}
 .rv-cur .h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
@@ -1224,7 +1224,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="explain.js?v=20261021pz"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>

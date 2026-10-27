@@ -537,7 +537,7 @@ bdi{unicode-bidi:isolate}
 /* ================================================================ PC (common spec: mouse, >= 1040px wide, not a tall window):
    three columns — left: 形勢 (the state of the game), centre: the board with its player bars, right: 棋譜 / 振り返り / lesson & puzzle cards.
    The board is wide and low, so the side columns are a little narrower than the common 280 / 330px. */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root{--lw:250px; --rw:300px; --cg:20px; --px:24px; --plate:clamp(34px, calc(var(--vh) * .046), 42px)}
   /* (declared on body, so the online dock below can change them) */
   body{
@@ -582,7 +582,7 @@ bdi{unicode-bidi:isolate}
 /* everything else (phones, tablets, narrow or tall PC windows): the phone layout — title, menu, board, 形勢, 振り返り, 棋譜 stacked.
    Landscape windows keep the board across the width (phone landscape has its own rows further down). */
 @media (min-aspect-ratio: 1/1) and (pointer: fine), (min-aspect-ratio: 1/1) and (min-width: 901px) and (min-height: 561px){
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root{--plate:38px;--u:min((100vw - 24px) / 9.7, (var(--vh) - 2 * var(--plate) - 16px - 132px) / 4.2, 112px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 12px 16px;height:auto;min-height:var(--vh);width:auto;margin:0}
@@ -1105,7 +1105,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=23"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028L9"><\/script><script src="online-ui.js?v=20261028L9"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=24"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028L9"><\/script><script src="online-ui.js?v=20261028L9"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
