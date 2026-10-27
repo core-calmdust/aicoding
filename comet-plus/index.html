@@ -1204,6 +1204,7 @@ const TK = k => { const suf = lastInputDevice === 'gamepad' ? '_pad' : lastInput
 // 字間を空けると文字の連結が崩れる言語（ヒンディー語・アラビア語）では字間をつけない
 const LS = px => (LANG === 'hi' || LANG === 'ar') ? '0px' : px;
 function applyLang() {
+    try { preloadFonts(); } catch (e) {} // 言語を変えたらその言語の文字も先読み
     document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
     const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
     canvas.dir = LANG === 'ar' ? 'rtl' : 'ltr';
@@ -6522,7 +6523,7 @@ function spawnLink(tx, ty) {
     l.bend = Math.random() < 0.5 ? -1 : 1;
 }
 
-const debris = [];
+const debris = [], debrisFree = [];
 let loadLv = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
 function spawnBurst(x, y, color, count, opts = {}) {
     if (loadLv >= 1) count = Math.ceil(count * (loadLv >= 2 ? 0.35 : 0.6)); // 重い時は破片を減らす
@@ -6530,15 +6531,16 @@ function spawnBurst(x, y, color, count, opts = {}) {
     for (let i = 0; i < count; i++) {
         const a = Math.random() * Math.PI * 2;
         const sp = rand(80, opts.speed || 320);
-        debris.push({
-            x: toX(x), y: opts.h || 10, z: toZ(y),
-            vx: Math.cos(a) * sp, vy: rand(120, opts.up || 420), vz: Math.sin(a) * sp,
-            life: rand(0.5, 1.1), max: 1.1,
-            color: color.clone ? color.clone() : hexColor(color).clone(),
-            size: rand(opts.minSize || 3, opts.maxSize || 7),
-            cube: opts.cube !== false && Math.random() < 0.6,
-            rx: rand(0, 6), ry: rand(0, 6), spin: rand(-8, 8),
-        });
+        // 破片は使い回す（毎回オブジェクトを作るとメモリ掃除でカクつくため）
+        const d = debrisFree.pop() || { color: new THREE.Color() };
+        d.x = toX(x); d.y = opts.h || 10; d.z = toZ(y);
+        d.vx = Math.cos(a) * sp; d.vy = rand(120, opts.up || 420); d.vz = Math.sin(a) * sp;
+        d.life = rand(0.5, 1.1); d.max = 1.1;
+        d.color.copy(color.isColor ? color : hexColor(color));
+        d.size = rand(opts.minSize || 3, opts.maxSize || 7);
+        d.cube = opts.cube !== false && Math.random() < 0.6;
+        d.rx = rand(0, 6); d.ry = rand(0, 6); d.spin = rand(-8, 8);
+        debris.push(d);
     }
 }
 
@@ -6954,7 +6956,7 @@ function render3D() {
     for (let i = debris.length - 1; i >= 0; i--) {
         const d = debris[i];
         d.life -= simDt;
-        if (d.life <= 0) { debris.splice(i, 1); continue; }
+        if (d.life <= 0) { debris[i] = debris[debris.length - 1]; debris.pop(); debrisFree.push(d); continue; }
         d.vy -= 900 * simDt;
         d.x += d.vx * simDt; d.y += d.vy * simDt; d.z += d.vz * simDt;
         if (d.y < 0) { d.y = 0; d.vy *= -0.45; d.vx *= 0.7; d.vz *= 0.7; }
@@ -8128,6 +8130,17 @@ window.addEventListener('resize', () => {
 });
 updateScale(); // 起動時にも合わせる
 if (document.fonts) document.fonts.ready.then(updateScale);
+// 文字のフォントを先読み（キャンバスの文字は初めて使う太さ・文字の時に読み込まれ、その瞬間にカクつくため）
+function preloadFonts() {
+    if (!document.fonts || !document.fonts.load) return;
+    try {
+        const dict = I18N[LANG] || I18N.en, chars = new Set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-×!?.,:;·/()[]%★✔…◀▶←→');
+        Object.values(dict).forEach(v => { for (const ch of String(v)) chars.add(ch); });
+        const text = [...chars].join('');
+        [300, 400, 500, 600, 700, 800].forEach(w => { document.fonts.load(`${w} 20px "Jura"`, text).catch(() => {}); document.fonts.load(`${w} 20px "M PLUS 1"`, text).catch(() => {}); });
+    } catch (e) {}
+}
+preloadFonts();
 window.addEventListener('load', updateScale);
 setTimeout(updateScale, 1500);
 
@@ -8237,13 +8250,23 @@ function prewarmGPU() {
             (o.userData.extra || []).forEach(e => { scene.remove(e); o.add(e); });
             tmp.add(o);
         });
-        ['ufo', 'invader', 'looper'].forEach(t => { const o = makeMonsterObj({ type: t }); scene.remove(o); tmp.add(o); });
+        ['ufo', 'invader', 'looper', 'weaver', 'sentry', 'lance'].forEach(t => { const o = makeMonsterObj({ type: t, vx: 1 }); scene.remove(o); tmp.add(o); });
+        // ハイパー時の背景ポリゴン（全種類の形）も先にGPUへ送っておく
+        Object.values(hpGeo).forEach(list => list.forEach(v => { tmp.add(new THREE.Mesh(v.g, hpSolidMat)); tmp.add(new THREE.LineSegments(v.e, hpEdgeMat)); }));
         prewarmGPU.keep = tmp;
         const hidden = [];
         scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
         renderer.compile(scene, camera);
         renderer.compile(tmp, camera, scene);
+        // 一度だけ小さな画面に実際に描いて、形やテクスチャのGPU転送も済ませる（初登場時のカクつき防止）
+        const culled = [], rt = new THREE.WebGLRenderTarget(64, 64);
+        const noCull = root => root.traverse(o => { if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; } });
+        noCull(scene); noCull(tmp);
+        renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.render(tmp, camera); renderer.setRenderTarget(null);
+        culled.forEach(o => { o.frustumCulled = true; }); rt.dispose();
         hidden.forEach(o => { o.visible = false; });
+        // ハイパーの色調シェーダー（普段は無効）も一度通しておく
+        if (hyperGrade && composer) { hyperGrade.enabled = true; composer.render(); hyperGrade.enabled = false; }
     } catch (e) { console.warn('prewarm failed', e); }
 }
 prewarmGPU();
