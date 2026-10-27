@@ -394,7 +394,7 @@ const config = {
     starCount: 50,
     starScrollMultiplier: 16,
     starGlazeRadius: 20,
-    glazeDistance: IS_MOBILE ? 74 : 40, // スマホは自機を2倍で表示しているので、グレイズ範囲（自機周りの円）も同じ比率に
+    glazeDistance: IS_MOBILE ? 74 : 40, // 無敵中（アイテム取得後）は INV_GLAZE_K 倍 // スマホは自機を2倍で表示しているので、グレイズ範囲（自機周りの円）も同じ比率に
     glazeScore: 750,
     starGlazeScore: 500,
     highScoreKeyStandard: 'cometPlusHighScore_standard',
@@ -409,7 +409,7 @@ const config = {
     energyItemScoreNormal: 10000,
     energyItemScoreSpecial: 50000,
     gravity: 600,
-    playerBulletSpeed: IS_MOBILE ? 880 * 1.1 : 880, // 1.1倍。スマホはさらに1.1倍
+    playerBulletSpeed: IS_MOBILE ? 880 * 1.32 : 880, // 1.1倍。スマホはさらに1.32倍
     playerBulletHitRadius: 12, // 3D化で狙いにくくなった分、弾の当たり判定を太く（オリジナルは幅3の点判定）
     monsterUFOBaseScore: 10000,
     monsterInvaderBaseScore: 3000,
@@ -2558,7 +2558,7 @@ function updatePlayingState(dt_sec) {
             }
         }
 
-        const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+        const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * INV_GLAZE_K : config.glazeDistance;
         if (!c.isGlazed && d < player.radius + c.radius + currentGlazeDistance) {
             c.isGlazed = true;
             if (tutorial) tutorial.glazes++;
@@ -2740,7 +2740,7 @@ function updatePlayingState(dt_sec) {
                 }
             }
 
-            const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+            const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * INV_GLAZE_K : config.glazeDistance;
             if (!eb.isGlazed && dist < player.radius + eb.radius + currentGlazeDistance) {
                 eb.isGlazed = true;
                 if (tutorial) tutorial.glazes++;
@@ -2852,6 +2852,7 @@ const BS = IS_MOBILE ? 1.5 : 1.7;
 const COL_LANCE = new THREE.Color(0xff3050);
 const ENEMY_SPD = IS_MOBILE ? 1.4 : 1; // スマホは雑魚敵の動きを速めに
 const VS = IS_MOBILE ? 2.0 : 1;
+const INV_GLAZE_K = IS_MOBILE ? 1.5 * 0.9 : 1.5; // 無敵中のグレイズ範囲（自機周りの円）の倍率。スマホは0.9倍に
 const CK = IS_MOBILE ? 1.35 : 1; // 中央メッセージの間隔（スマホは文字が大きいので広め）
 const ES = IS_MOBILE ? 1 : 1.5; // PCは雑魚敵を1.5倍（見た目と当たり判定） // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
@@ -6982,7 +6983,7 @@ function render3D() {
         shipPivot.rotation.x = -0.12;
         playerGroup.scale.setScalar(VS * (1 + visualBeat * 0.18));
 
-        const glazeR = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance);
+        const glazeR = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * INV_GLAZE_K : config.glazeDistance);
         glazeDisc.position.set(px, 11, pz); glazeDisc.scale.setScalar(glazeR);
         glazeRing.position.set(px, 11.5, pz); glazeRing.scale.setScalar(glazeR);
         glazeFillMat.color.copy(themeCur.player);
