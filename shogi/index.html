@@ -64,7 +64,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 html:not(.atlas-skin) .frame{padding-right:calc(var(--cw)*0.3)}
 html:not(.atlas-skin) .coords.right{width:calc(var(--cw)*0.3)}
 html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*-0.14)}
-@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   html:not(.atlas-skin) .frame{padding-right:var(--fp)}
   html:not(.atlas-skin) .coords.right{width:var(--fp)}
   html:not(.atlas-skin) .board-area > .hand.bottom{left:0;margin-top:calc(var(--fp) - var(--cw)*0.16)}
@@ -581,7 +581,7 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
    except a phone held sideways (below) */
-@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   :root{--top:0px}
   .side > .brand{position:static;width:calc(var(--bw) + var(--fp) + var(--cw)*0.16);max-width:100%;flex:none}
   :root{--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 200px) / 12.6), 90px)}
@@ -714,7 +714,7 @@ body.in-online #evalCard .navbar{margin-top:0}
 @media not all and (pointer: coarse){
   body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px))}
   /* phone layout with a mouse (narrow / tall PC window): the dock stays at the bottom, the page leaves room for it */
-  @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 200px) / 12.6), 90px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)} body:not(.no-online) .app{padding-bottom:124px} }
+  @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 200px) / 12.6), 90px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)} body:not(.no-online) .app{padding-bottom:124px} }
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#24180f,#150e09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
@@ -833,7 +833,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--cw) * 12.55);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--cw) * 12.55) / 18), 30px)}
@@ -844,7 +844,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
   html.dock-compact .side{align-self:start}
 }
 /* narrow info column (PC: the fixed-width columns): players stacked one per row, the 7 buttons in two rows so the labels stay readable */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @container (max-width: 340px){
   .side-in{gap:8px}
   .side-in > .card{padding:12px}
@@ -858,7 +858,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
   .kifu-card{min-height:90px}
 }
 }
-@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* ---- online: player names never overflow the two boxes; big clocks; rematch prompt; public chat (shared by the shogi / reversi pages) */
 .players{grid-template-columns:repeat(2,minmax(0,1fr))}
 .player{min-width:0}
@@ -1003,7 +1003,7 @@ html[lang=ar] .pf-input{direction:rtl}
    the right (record, review, lessons / tsume, editor, spectating; moved there by the script). The board takes the smaller of the window
    height and the width left by the two columns; both columns are as tall as the board and scroll inside. On wide screens the three
    columns stay together in the middle. */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root, body:not(.no-online){--lw:280px;--rw:330px;--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(14px, 1.6vw, 28px);
     --cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.6);
     --cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw)) / 12.6), 120px);
@@ -1283,7 +1283,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>

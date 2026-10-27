@@ -127,12 +127,12 @@ a.snd.home{text-decoration:none}
 .snd:not(.on) .on-w{display:none}
 .snd:not(.on) .off-x{display:inline}
 .brand h1.to-board{cursor:pointer}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--bs);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--bs) / 22), 30px)}
 }
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg{width:20px;height:20px}
@@ -477,7 +477,7 @@ html[lang=ar] :is(.result-sub, .result-big){text-align:center}
 html[lang=ar] *{letter-spacing:0 !important}
 html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .result-big){font-family:'Noto Sans Devanagari','Noto Sans Arabic','Zen Kaku Gothic New',sans-serif}
 /* ---------------------------------------------------------------- phones (and every window that is not the PC layout: narrow / tall mouse windows too) */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine){
   :root{--bs:max(200px, min(100vw - 16px, var(--vh) - 250px, 760px))}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 8px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
@@ -890,7 +890,7 @@ html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:calc(
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=23"></script>
+<script src="../shared/headerbar.js?v=24"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=23"></script>
 <script src="rules.js?v=2"></script>
@@ -906,7 +906,7 @@ html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:calc(
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): the records & study cards move to the right column (.side2); every other
    layout (phones, tablets, narrow / tall windows) keeps them in their place in the one stacked column (2026-10-28) */
 (function () {
-  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)';
+  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';
   const left = document.querySelector('.app > .side'); if (!left) return;
   const right = document.createElement('aside'); right.className = 'side2'; right.innerHTML = '<div class="side-in"></div>'; left.after(right);
   const box = right.firstChild, home = new Map(), mq = matchMedia(MQ);

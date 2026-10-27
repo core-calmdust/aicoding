@@ -181,7 +181,7 @@ body.in-watch #btnDraw{display:none!important}
   .dk-input{font-size:16px}
 }
 /* phone layout with a mouse (narrow / tall PC window): the dock stays at the bottom, the page leaves room for it */
-@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   body:not(.no-online) .app{padding-bottom:124px}
   body.ol-soon:not(.no-online) .app{padding-bottom:62px}
 } }
