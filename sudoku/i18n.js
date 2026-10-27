@@ -1,6 +1,7 @@
 // UI strings for まいにち数独 — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar
 window.I18N = {
 ja: {
+  'set.lang': '言語',
   'series': '世界のボドゲ大全', 'title': 'まいにち数独', 'meta.sub': '毎日3問のデイリー数独',
   'kb.help': '<kbd>1</kbd>〜<kbd>9</kbd> 入力 ／ <kbd>Shift</kbd>+数字 メモ ／ <kbd>N</kbd> メモ切替 ／ <kbd>0</kbd> 消す ／ 矢印で移動 ／ <kbd>Ctrl</kbd>+<kbd>Z</kbd> もどす ／ <kbd>H</kbd> ヒント ／ <kbd>P</kbd> 一時停止<br>マスを長押し・フリックでも数字を入れられます',
   'today': '今日の数独', 'streak': '{n}日連続', 'streak0': '今日からはじめよう',
@@ -72,6 +73,7 @@ ja: {
   'help.html': '<h4>ルール</h4><p>どの行・列・3×3のブロックにも 1〜9 が1つずつ入るように、空いているマスをうめましょう。答えはいつも1通りです。</p><h4>入力のしかた</h4><ul><li><b>タップ</b>：マスを選んで、下の数字ボタンを押す。</li><li><b>数字から選ぶ</b>：マスを選ばずに数字ボタンを押すと、その数字を連続で置けます。</li><li><b>フリック</b>：</li></ul>{demo}<ul><li><b>メモ</b>：メモをONにすると候補の小さな数字を書けます。「自動メモ」で全マスの候補を一度に書き込めます。</li><li><b>キーボード</b>：数字キー・矢印・<kbd>Shift</kbd>+数字でメモ・<kbd>Ctrl</kbd>+<kbd>Z</kbd>でもどす。</li></ul><h4>ヒント</h4><p>次に決まるマスと、その理由（使うテクニック）を教えてくれます。まちがいがあるときは先にそれを知らせます。</p><h4>デイリーとメダル</h4><p>毎日、初級・中級・上級の3問が出ます（世界中で同じ問題）。クリアするとカレンダーに銅・銀・金のメダルがつきます。月ごとに3日連続・1週間連続・皆勤の実績があります。</p><h4>厳選コレクション</h4><p>10テーマ×50問＝500問。ヒントなしで★2、さらにノーミスで★3。全問クリアで「まいにち数独マスター」に。</p><p class="note">記録はこの端末のブラウザに保存されます。</p>',
 },
 en: {
+  'set.lang': 'Language',
   'series': 'World Board Game Atlas', 'title': 'Daily Sudoku', 'meta.sub': 'three new puzzles every day',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> enter · <kbd>Shift</kbd>+digit note · <kbd>N</kbd> notes mode · <kbd>0</kbd> erase · arrows move · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · <kbd>H</kbd> hint · <kbd>P</kbd> pause<br>You can also long-press or flick on a cell to enter digits',
   'today': "Today's Sudoku", 'streak': '{n}-day streak', 'streak0': 'Start your streak today',
@@ -143,6 +145,7 @@ en: {
   'help.html': '<h4>Rules</h4><p>Fill the empty cells so every row, column and 3×3 box contains 1–9 exactly once. Every puzzle has exactly one solution.</p><h4>Entering digits</h4><ul><li><b>Tap</b>: select a cell, then press a digit button.</li><li><b>Digit first</b>: press a digit with no cell selected to place it repeatedly.</li><li><b>Flick</b>:</li></ul>{demo}<ul><li><b>Notes</b>: turn Notes on to pencil in small candidates. “Auto notes” fills in every candidate at once.</li><li><b>Keyboard</b>: digits, arrows, <kbd>Shift</kbd>+digit for notes, <kbd>Ctrl</kbd>+<kbd>Z</kbd> to undo.</li></ul><h4>Hints</h4><p>Shows the next cell that can be solved and why (the technique). If you made a mistake, it tells you first.</p><h4>Dailies and medals</h4><p>Every day brings Easy, Medium and Hard puzzles — the same for everyone. Solving them puts bronze, silver and gold medals on your calendar. Each month offers 3-in-a-row, 7-in-a-row and every-day awards.</p><h4>Curated collection</h4><p>10 themes × 50 = 500 puzzles. No hints earns ★2, no hints and no mistakes ★3. Solve them all to become a Daily Sudoku Master.</p><p class="note">Progress is saved in this browser on this device.</p>',
 },
 zh: {
+  'set.lang': '语言',
   'series': '世界桌游大全', 'title': '每日数独', 'meta.sub': '每天三道新题',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> 输入 · <kbd>Shift</kbd>+数字 笔记 · <kbd>N</kbd> 笔记模式 · <kbd>0</kbd> 擦除 · 方向键移动 · <kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销 · <kbd>H</kbd> 提示 · <kbd>P</kbd> 暂停<br>也可以在格子上长按或滑动来输入数字',
   'today': '今日数独', 'streak': '连续{n}天', 'streak0': '从今天开始吧',
@@ -214,6 +217,7 @@ zh: {
   'help.html': '<h4>规则</h4><p>填满空格，使每一行、每一列和每个3×3宫都恰好包含1–9各一次。每道题都只有唯一解。</p><h4>输入方式</h4><ul><li><b>点击</b>：选中格子，再按下方数字按钮。</li><li><b>先选数字</b>：不选格子直接按数字，可以连续放置该数字。</li><li><b>滑动</b>：</li></ul>{demo}<ul><li><b>笔记</b>：打开笔记后可以写下小的候选数。“自动笔记”可一次写入所有候选数。</li><li><b>键盘</b>：数字键、方向键、<kbd>Shift</kbd>+数字写笔记、<kbd>Ctrl</kbd>+<kbd>Z</kbd>撤销。</li></ul><h4>提示</h4><p>告诉你下一个能确定的格子以及原因（使用的技巧）。如果有错误，会先提醒你。</p><h4>每日题与奖牌</h4><p>每天有初级、中级、高级三道题（全世界相同）。完成后日历上会出现铜、银、金牌。每个月还有连续3天、连续1周、全勤的成就。</p><h4>精选题集</h4><p>10个主题×50题＝500题。不用提示得★2，再加零失误得★3。全部完成即成为“每日数独大师”。</p><p class="note">记录保存在本设备的浏览器中。</p>',
 },
 ko: {
+  'set.lang': '언어',
   'series': '세계 보드게임 대전', 'title': '매일 스도쿠', 'meta.sub': '매일 새로운 세 문제',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> 입력 · <kbd>Shift</kbd>+숫자 메모 · <kbd>N</kbd> 메모 모드 · <kbd>0</kbd> 지우기 · 방향키 이동 · <kbd>Ctrl</kbd>+<kbd>Z</kbd> 되돌리기 · <kbd>H</kbd> 힌트 · <kbd>P</kbd> 일시정지<br>칸을 길게 누르거나 플릭해서도 숫자를 넣을 수 있어요',
   'today': '오늘의 스도쿠', 'streak': '{n}일 연속', 'streak0': '오늘부터 시작해요',
@@ -285,6 +289,7 @@ ko: {
   'help.html': '<h4>규칙</h4><p>모든 행, 열, 3×3 박스에 1–9가 한 번씩 들어가도록 빈칸을 채우세요. 답은 항상 하나입니다.</p><h4>입력 방법</h4><ul><li><b>탭</b>: 칸을 고르고 아래 숫자 버튼을 누릅니다.</li><li><b>숫자 먼저</b>: 칸을 고르지 않고 숫자를 누르면 그 숫자를 계속 놓을 수 있어요.</li><li><b>플릭</b>:</li></ul>{demo}<ul><li><b>메모</b>: 메모를 켜면 작은 후보 숫자를 적을 수 있어요. “자동 메모”는 모든 후보를 한 번에 적습니다.</li><li><b>키보드</b>: 숫자 키, 방향키, <kbd>Shift</kbd>+숫자로 메모, <kbd>Ctrl</kbd>+<kbd>Z</kbd>로 되돌리기.</li></ul><h4>힌트</h4><p>다음에 정해지는 칸과 그 이유(사용하는 기법)를 알려 줍니다. 틀린 곳이 있으면 먼저 알려 줘요.</p><h4>데일리와 메달</h4><p>매일 초급·중급·상급 세 문제가 나옵니다(전 세계 공통). 클리어하면 캘린더에 동·은·금메달이 붙어요. 매달 3일 연속, 1주 연속, 개근 업적이 있습니다.</p><h4>엄선 컬렉션</h4><p>10테마×50문제＝500문제. 힌트 없이 ★2, 실수까지 없으면 ★3. 모두 클리어하면 “매일 스도쿠 마스터”!</p><p class="note">기록은 이 기기의 브라우저에 저장됩니다.</p>',
 },
 es: {
+  'set.lang': 'Idioma',
   'series': 'Atlas Mundial de Juegos de Mesa', 'title': 'Sudoku Diario', 'meta.sub': 'tres sudokus nuevos cada día',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> escribir · <kbd>Shift</kbd>+número nota · <kbd>N</kbd> modo notas · <kbd>0</kbd> borrar · flechas mover · <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshacer · <kbd>H</kbd> pista · <kbd>P</kbd> pausa<br>También puedes mantener pulsada o deslizar desde una casilla para escribir',
   'today': 'Sudoku de hoy', 'streak': 'Racha de {n} días', 'streak0': 'Empieza tu racha hoy',
@@ -356,6 +361,7 @@ es: {
   'help.html': '<h4>Reglas</h4><p>Rellena las casillas vacías para que cada fila, columna y bloque de 3×3 tenga del 1 al 9 una sola vez. Cada sudoku tiene una única solución.</p><h4>Cómo escribir</h4><ul><li><b>Tocar</b>: elige una casilla y pulsa un número.</li><li><b>Número primero</b>: pulsa un número sin elegir casilla para colocarlo varias veces.</li><li><b>Deslizar</b>:</li></ul>{demo}<ul><li><b>Notas</b>: activa Notas para apuntar candidatos pequeños. «Autonotas» los escribe todos de una vez.</li><li><b>Teclado</b>: números, flechas, <kbd>Shift</kbd>+número para notas, <kbd>Ctrl</kbd>+<kbd>Z</kbd> para deshacer.</li></ul><h4>Pistas</h4><p>Muestra la siguiente casilla que se puede resolver y por qué (la técnica). Si hay un error, te lo dice primero.</p><h4>Diarios y medallas</h4><p>Cada día hay un sudoku Fácil, uno Medio y uno Difícil, iguales para todo el mundo. Al resolverlos aparecen medallas de bronce, plata y oro en tu calendario. Cada mes hay logros de 3 seguidos, 7 seguidos y todos los días.</p><h4>Colección selecta</h4><p>10 temas × 50 = 500 sudokus. Sin pistas: ★2; sin pistas ni errores: ★3. Resuélvelos todos para ser Maestro del Sudoku Diario.</p><p class="note">El progreso se guarda en el navegador de este dispositivo.</p>',
 },
 fr: {
+  'set.lang': 'Langue',
   'series': 'Atlas mondial des jeux de société', 'title': 'Sudoku du jour', 'meta.sub': 'trois nouvelles grilles chaque jour',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> saisir · <kbd>Maj</kbd>+chiffre note · <kbd>N</kbd> mode notes · <kbd>0</kbd> effacer · flèches pour bouger · <kbd>Ctrl</kbd>+<kbd>Z</kbd> annuler · <kbd>H</kbd> indice · <kbd>P</kbd> pause<br>Vous pouvez aussi appuyer longuement ou glisser depuis une case',
   'today': 'Sudoku du jour', 'streak': 'Série de {n} jours', 'streak0': 'Commencez votre série',
@@ -427,6 +433,7 @@ fr: {
   'help.html': '<h4>Règles</h4><p>Remplissez les cases vides pour que chaque ligne, colonne et bloc 3×3 contienne une fois chaque chiffre de 1 à 9. Chaque grille a une solution unique.</p><h4>Saisie</h4><ul><li><b>Toucher</b> : choisissez une case puis un bouton chiffre.</li><li><b>Chiffre d’abord</b> : touchez un chiffre sans case choisie pour le placer à la suite.</li><li><b>Glisser</b> :</li></ul>{demo}<ul><li><b>Notes</b> : activez Notes pour écrire de petits candidats. « Notes auto » les écrit tous d’un coup.</li><li><b>Clavier</b> : chiffres, flèches, <kbd>Maj</kbd>+chiffre pour les notes, <kbd>Ctrl</kbd>+<kbd>Z</kbd> pour annuler.</li></ul><h4>Indices</h4><p>Montre la prochaine case trouvable et pourquoi (la technique). En cas d’erreur, il vous le signale d’abord.</p><h4>Grilles du jour et médailles</h4><p>Chaque jour : une grille Facile, Moyenne et Difficile, les mêmes pour tout le monde. Résolues, elles posent des médailles de bronze, d’argent et d’or sur votre calendrier. Chaque mois offre les trophées 3 d’affilée, 7 d’affilée et tous les jours.</p><h4>Collection choisie</h4><p>10 thèmes × 50 = 500 grilles. Sans indice : ★2 ; sans indice ni erreur : ★3. Résolvez-les toutes pour devenir Maître du Sudoku du jour.</p><p class="note">La progression est enregistrée dans le navigateur de cet appareil.</p>',
 },
 pt: {
+  'set.lang': 'Idioma',
   'series': 'Atlas Mundial de Jogos de Tabuleiro', 'title': 'Sudoku Diário', 'meta.sub': 'três sudokus novos todo dia',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> escrever · <kbd>Shift</kbd>+número nota · <kbd>N</kbd> modo notas · <kbd>0</kbd> apagar · setas mover · <kbd>Ctrl</kbd>+<kbd>Z</kbd> desfazer · <kbd>H</kbd> dica · <kbd>P</kbd> pausa<br>Você também pode segurar ou deslizar a partir de uma casa',
   'today': 'Sudoku de hoje', 'streak': 'Sequência de {n} dias', 'streak0': 'Comece sua sequência hoje',
@@ -498,6 +505,7 @@ pt: {
   'help.html': '<h4>Regras</h4><p>Preencha as casas vazias para que cada linha, coluna e bloco 3×3 tenha os números de 1 a 9 uma vez só. Cada sudoku tem uma única solução.</p><h4>Como escrever</h4><ul><li><b>Tocar</b>: escolha uma casa e toque num número.</li><li><b>Número primeiro</b>: toque num número sem casa escolhida para colocá-lo várias vezes.</li><li><b>Deslizar</b>:</li></ul>{demo}<ul><li><b>Notas</b>: ative Notas para anotar candidatos pequenos. “Notas auto” escreve todos de uma vez.</li><li><b>Teclado</b>: números, setas, <kbd>Shift</kbd>+número para notas, <kbd>Ctrl</kbd>+<kbd>Z</kbd> para desfazer.</li></ul><h4>Dicas</h4><p>Mostra a próxima casa que dá para resolver e por quê (a técnica). Se houver um erro, avisa antes.</p><h4>Diários e medalhas</h4><p>Todo dia há um sudoku Fácil, um Médio e um Difícil, iguais para todos. Ao resolvê-los, medalhas de bronze, prata e ouro aparecem no calendário. Cada mês tem conquistas de 3 seguidos, 7 seguidos e todos os dias.</p><h4>Coleção selecionada</h4><p>10 temas × 50 = 500 sudokus. Sem dicas: ★2; sem dicas e sem erros: ★3. Resolva todos para virar Mestre do Sudoku Diário.</p><p class="note">O progresso fica salvo no navegador deste aparelho.</p>',
 },
 de: {
+  'set.lang': 'Sprache',
   'series': 'Weltatlas der Brettspiele', 'title': 'Tägliches Sudoku', 'meta.sub': 'jeden Tag drei neue Rätsel',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> eintragen · <kbd>Shift</kbd>+Ziffer Notiz · <kbd>N</kbd> Notizmodus · <kbd>0</kbd> löschen · Pfeile bewegen · <kbd>Strg</kbd>+<kbd>Z</kbd> rückgängig · <kbd>H</kbd> Tipp · <kbd>P</kbd> Pause<br>Ziffern gehen auch per langem Druck oder Wischen auf einem Feld',
   'today': 'Heutiges Sudoku', 'streak': '{n} Tage in Folge', 'streak0': 'Starte heute deine Serie',
@@ -569,6 +577,7 @@ de: {
   'help.html': '<h4>Regeln</h4><p>Fülle die leeren Felder so, dass jede Zeile, Spalte und jeder 3×3-Block die Ziffern 1–9 genau einmal enthält. Jedes Rätsel hat genau eine Lösung.</p><h4>Eingabe</h4><ul><li><b>Tippen</b>: Feld wählen, dann eine Zifferntaste drücken.</li><li><b>Ziffer zuerst</b>: Ohne gewähltes Feld eine Ziffer drücken, um sie mehrfach zu setzen.</li><li><b>Wischen</b>:</li></ul>{demo}<ul><li><b>Notizen</b>: Notizen einschalten, um kleine Kandidaten einzutragen. „Auto-Notizen“ trägt alle auf einmal ein.</li><li><b>Tastatur</b>: Ziffern, Pfeile, <kbd>Shift</kbd>+Ziffer für Notizen, <kbd>Strg</kbd>+<kbd>Z</kbd> rückgängig.</li></ul><h4>Tipps</h4><p>Zeigt das nächste lösbare Feld und warum (die Technik). Bei einem Fehler weist er zuerst darauf hin.</p><h4>Tagesrätsel und Medaillen</h4><p>Jeden Tag gibt es ein leichtes, mittleres und schweres Rätsel – für alle gleich. Gelöst erscheinen Bronze-, Silber- und Goldmedaillen im Kalender. Jeden Monat gibt es Auszeichnungen für 3 in Folge, 7 in Folge und jeden Tag.</p><h4>Ausgewählte Sammlung</h4><p>10 Themen × 50 = 500 Rätsel. Ohne Tipp ★2, ohne Tipp und Fehler ★3. Löse alle und werde Meister des täglichen Sudoku.</p><p class="note">Der Fortschritt wird im Browser dieses Geräts gespeichert.</p>',
 },
 hi: {
+  'set.lang': 'भाषा',
   'series': 'विश्व बोर्ड गेम एटलस', 'title': 'रोज़ का सुडोकू', 'meta.sub': 'हर दिन तीन नई पहेलियाँ',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> भरें · <kbd>Shift</kbd>+अंक नोट · <kbd>N</kbd> नोट मोड · <kbd>0</kbd> मिटाएँ · तीर से चलें · <kbd>Ctrl</kbd>+<kbd>Z</kbd> वापस · <kbd>H</kbd> संकेत · <kbd>P</kbd> रोकें<br>खाने पर देर तक दबाकर या स्वाइप करके भी अंक भर सकते हैं',
   'today': 'आज का सुडोकू', 'streak': 'लगातार {n} दिन', 'streak0': 'आज से शुरुआत करें',
@@ -640,6 +649,7 @@ hi: {
   'help.html': '<h4>नियम</h4><p>खाली खाने ऐसे भरें कि हर पंक्ति, स्तंभ और 3×3 ब्लॉक में 1–9 हर अंक ठीक एक बार हो। हर पहेली का एक ही हल होता है।</p><h4>अंक कैसे भरें</h4><ul><li><b>टैप</b>: खाना चुनें, फिर अंक बटन दबाएँ।</li><li><b>पहले अंक</b>: बिना खाना चुने अंक दबाएँ और उसे बार-बार रखें।</li><li><b>स्वाइप</b>:</li></ul>{demo}<ul><li><b>नोट</b>: नोट चालू करके छोटे संभावित अंक लिखें। “ऑटो नोट” सब एक साथ भर देता है।</li><li><b>कीबोर्ड</b>: अंक, तीर, नोट के लिए <kbd>Shift</kbd>+अंक, वापस के लिए <kbd>Ctrl</kbd>+<kbd>Z</kbd>।</li></ul><h4>संकेत</h4><p>अगला हल होने वाला खाना और उसका कारण (तकनीक) बताता है। गलती हो तो पहले वही बताता है।</p><h4>दैनिक पहेलियाँ और पदक</h4><p>हर दिन आसान, मध्यम और कठिन — तीन पहेलियाँ, सबके लिए एक जैसी। हल करने पर कैलेंडर में कांस्य, रजत और स्वर्ण पदक लगते हैं। हर महीने लगातार 3, लगातार 7 और हर दिन की उपलब्धियाँ हैं।</p><h4>चुनिंदा संग्रह</h4><p>10 थीम × 50 = 500 पहेलियाँ। बिना संकेत ★2, बिना संकेत और गलती ★3। सब हल करके बनें रोज़ का सुडोकू मास्टर।</p><p class="note">प्रगति इस डिवाइस के ब्राउज़र में सहेजी जाती है।</p>',
 },
 ar: {
+  'set.lang': 'اللغة',
   'series': 'أطلس ألعاب الطاولة العالمي', 'title': 'سودوكو كل يوم', 'meta.sub': 'ثلاثة ألغاز جديدة كل يوم',
   'kb.help': '<kbd>1</kbd>–<kbd>9</kbd> إدخال · <kbd>Shift</kbd>+رقم ملاحظة · <kbd>N</kbd> وضع الملاحظات · <kbd>0</kbd> مسح · الأسهم للتنقل · <kbd>Ctrl</kbd>+<kbd>Z</kbd> تراجع · <kbd>H</kbd> تلميح · <kbd>P</kbd> إيقاف مؤقت<br>يمكنك أيضًا الضغط المطوّل أو السحب من الخانة لإدخال الأرقام',
   'today': 'سودوكو اليوم', 'streak': '{n} يوم متتالٍ', 'streak0': 'ابدأ سلسلتك اليوم',

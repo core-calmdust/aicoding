@@ -1229,3 +1229,23 @@ body[data-skin="mid"] .gi .gk{bottom:auto;top:5px;left:auto;right:5px;translate:
 .goh .gotime b{font-family:var(--f-sfx);font-size:22px;line-height:1.1;color:inherit}.goh .gotime small{font-size:12px;font-weight:700}
 .goh .gotime.low{background:var(--red)}
 .goh .gostk{margin-left:auto}.goh .gostk+.gotime{margin-left:0}
+/* header slimmed: gacha/book/achievements/ranking live on the profile card (all widths); language + sound in settings */
+.plinks .btn{position:relative}
+.plinks .dot{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--ink);display:none}
+[dir="rtl"] .plinks .dot{right:auto;left:-6px}
+.slang select{height:38px;border:var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:700;padding:0 8px;max-width:60%}
+@media (max-width:999px){
+  .prof{flex-wrap:wrap}
+  .plinks{flex-basis:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .plinks .btn{min-height:38px;font-size:14px;padding:4px 6px;min-width:0}
+  .plinks .btn span{overflow:hidden;text-overflow:ellipsis}
+}
+@media (max-width:600px){
+  .plinks{gap:5px}.plinks .btn{flex-direction:column;gap:1px;font-size:12px;min-height:46px;padding:3px 2px}
+  .plinks .btn svg{width:18px;height:18px}
+  .plinks .btn span{max-width:100%;white-space:nowrap}
+}
+@media (max-width:600px){
+  .top .icons{width:auto;justify-content:flex-end;gap:6px;margin-inline-start:auto}
+  .plinks .btn{font-size:11px;letter-spacing:-.02em}
+}

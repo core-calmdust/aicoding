@@ -792,3 +792,6 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
   #home .pts{font-size:18px}
 }
 @media (max-width:560px){.namebox .nmdesc{font-size:15px}.namebox .note{font-size:12.5px!important}.namebox .syncbox p{font-size:13.5px}}
+/* language selector inside settings (moved out of the header) */
+.set.slang{cursor:default}
+.set.slang select{height:36px;border-radius:10px;border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:14px;padding:0 8px;max-width:55%}

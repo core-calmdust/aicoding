@@ -93,7 +93,6 @@ function applyI18n() {
   $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
   document.title = MODE === 'speed' ? t('sp.title') + ' — ' + t('sp.meta') : t('title') + ' — ' + t('meta.sub');
-  $('#langSel').value = LANG;
   $('#kbHelp').innerHTML = t('kb.help');
 }
 
@@ -1796,22 +1795,24 @@ function hbList() {
   const th = CORDER.map(cKey), sp = SPD ? SPD.bgs.filter(k => k !== 'speedway') : [];
   return MODE === 'speed' ? ['', ...sp, ...th] : ['', ...th, ...(SPD ? ['speedway', ...sp] : [])];
 }
-function openSettings() {
+function openSettings(reopen) {
   const items = [['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
   const tods = ['auto', 'day', 'eve', 'night'];
   $('#setBody').innerHTML = `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
     + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}${SPD ? ' ' + esc(t('hb.spdesc')) : ''}</small></span><div class="hbgrid">${hbList().map(k => { const ok = !k || hbOK(k), cur = DB.set[hbKey()] || '', on = cur === k && ok || (!k && cur && !hbOK(cur)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(bgName(k) + (ok ? '' : ' · ' + (isSpBg(k) ? SPD.bgCond(k) : t('hb.lock'))))}">${BG.svg(k || (MODE === 'speed' ? 'speedway' : 'daily'), 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(bgName(k))}</span></button>`; }).join('')}</div></div>`
+    + `<label class="set slang"><span class="lbl"><b>${esc(t('set.lang'))}</b></span><select id="setLang" aria-label="Language">${Object.entries(LANG_NAMES).map(([k, n]) => `<option value="${k}"${k === LANG ? ' selected' : ''}>${n}</option>`).join('')}</select></label>`
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
     + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
   $$('#todSeg button').forEach(b => b.onclick = () => { DB.set.tod = b.dataset.k; persist(); $$('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); applyTod(); SFX.tap(); });
   $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; if (k === 'sound') saveSitePref(); b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
   $$('#setBody .hbt:not(.lock)').forEach(b => b.onclick = () => { setHomeBg(b.dataset.hb); $$('#setBody .hbt').forEach(x => x.classList.toggle('on', x === b)); if (screen === 'home') homeScene(); });
+  $('#setLang').onchange = e => { setLang(e.target.value); route(); openSettings(true); };
   wireSync();
   $('#setName').onclick = () => { closeModals(); setTimeout(() => openName(!DB.prof.name), 60); };
   $('#resetAll').onclick = () => { if (confirm(t('set.reset.q'))) { localStorage.removeItem(STORE); DB = load(); persist(true); closeModals(); go(''); } };
-  openModal('mSet');
+  if (reopen) $('#mSet').classList.add('on'); else openModal('mSet'); // reopen: re-rendered in place after a language change (history entry already pushed)
 }
-function applySettings() { $('#btnSound').classList.toggle('muted', !DB.set.sound); document.body.classList.toggle('still', !DB.set.motion); }
+function applySettings() { const sb = $('#btnSound'); if (sb) sb.classList.toggle('muted', !DB.set.sound); document.body.classList.toggle('still', !DB.set.motion); }
 let lastTod = null;
 function applyTod() {
   const tod = curTod(); if (tod === lastTod) return; lastTod = tod;
@@ -1907,11 +1908,8 @@ if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMon
 $('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
 $('#btnSet').onclick = () => { SFX.tap(); openSettings(); };
 $('#btnHelp').onclick = () => { SFX.tap(); openHelp(); };
-$('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; saveSitePref(); persist(); applySettings(); SFX.tap(); };
-$('#langSel').onchange = e => {
-  LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
-  applyI18n(); route();
-};
+const LANG_NAMES = { ja: '日本語', en: 'English', zh: '中文', ko: '한국어', es: 'Español', fr: 'Français', pt: 'Português', de: 'Deutsch', hi: 'हिन्दी', ar: 'العربية' };
+function setLang(l) { LANG = l; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); }
 document.addEventListener('pointerdown', e => {
   if (screen !== 'game' || !G) return;
   if (e.target.closest('.board,.side,.hintcard,.gbar,.modal,.top')) return;
