@@ -17,6 +17,7 @@ The rules use the Realtime Database rules language only (Spark plan). What they 
   * rated games can only be created between two players who are both in the lobby, without an unsettled rated game, with their
     current ratings, and the creator must link the game to both players (open/<uid>) in the same write.
   * chat: one message per 3 s per uid (chatLast/<uid>, server time); presence / lobby / rooms / profiles: own uid, size limits.
+  * stale presence / lobby / rooms records (owner gone without its disconnect handler, heartbeat too old) may be deleted by anyone.
 Keep the K table, INITIAL and time controls here in sync with <game>/online.js.
 """
 import json, os, sys
@@ -29,6 +30,10 @@ STALE = 3 * 3600000     # a rated game nobody can settle any more is void after 
 PAIR_MAX = 3            # rated settlements per opponent and UTC day
 DAY = 86400000
 INITIAL = 1500
+LIVE_STALE = 180000     # rooms / lobby: heartbeat (hb) older than this = owner gone, anyone may delete the record
+LEGACY_STALE = 3600000  # the same for records without hb (older clients), by created / since
+ROOM_EXPIRED = 60000    # an unjoined room this long past its expiry may be deleted by anyone
+PRES_GONE = 300000      # presence: t older than this = owner gone
 
 # per game: first = field of the side that moves first; alt = strict alternation of moves; tckey = record field naming the
 # time control; tcs = {key: (main, byo, inc)}; legacy_byo = per-move limit of records without a time control (None: none);
@@ -67,6 +72,9 @@ GAMES = {
     'mancala': dict(first='b', alt=False, nt=True, tckey='tc', tcs={r + n: ((300000 if n == '6' else 180000), 0, 0) for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')},
                     legacy_byo=None, free=5000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=2000, bg=False,
                     variant=('v', [r + n for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')])),
+    # Xiangqi: one time control (10 min + 5 s); b = red (moves first). Was a hand-edited copy of the checkers file (wrong clock limits)
+    'xiangqi': dict(first='b', alt=True, tckey='tc', tcs={'standard': (600000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+                    draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['standard'])),
     # Hex: v = board size ('s9' / 's11' / 's13', swap rule always on); moves are 2 characters each (swap 'P_'); no draws
     'hex': dict(first='b', alt=True, tckey='tc', tcs={'s9': (180000, 0, 3000), 's11': (300000, 0, 5000), 's13': (420000, 0, 5000)},
                 legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=400, bg=False,
@@ -376,20 +384,32 @@ def build(name, P):
 
     # ------------------------------------------------------------------ lobby / rooms / chat / watch / presence / profiles / sync
     small = {'.validate': "newData.isString() ? newData.val().length <= 64 : (newData.isNumber() || newData.isBoolean())"}
+    # stale records (owner gone without its disconnect handler): rooms / lobby entries carry hb = server time of the owner's last
+    # heartbeat (every 60 s; the owner can only set it to now or keep it); anyone may delete a record whose heartbeat is older than
+    # LIVE_STALE (records of older clients without hb: created / since older than LEGACY_STALE), a room nobody joined that expired
+    # over ROOM_EXPIRED ago, and a presence entry whose t is older than PRES_GONE (presence beats every 60 s). Mirrored in <game>/online.js.
+    hb = {'.validate': 'newData.isNumber() && (newData.val() === now || newData.val() === data.val())'}
+    stale_rec = lambda base: (f"(data.child('hb').isNumber() ? now - data.child('hb').val() > {LIVE_STALE}"
+                              f" : (!data.child('{base}').isNumber() || now - data.child('{base}').val() > {LEGACY_STALE}))")
     lobby = {
         '.read': 'auth != null',
         '$uid': {
-            '.write': "auth != null && (auth.uid === $uid || (data.exists() && newData.exists() && !data.child('game').exists() && newData.child('name').val() === data.child('name').val() && newData.child('rating').val() === data.child('rating').val() && newData.child('since').val() === data.child('since').val()))",
+            '.write': OR("auth != null && (auth.uid === $uid || (data.exists() && newData.exists() && !data.child('game').exists() && newData.child('name').val() === data.child('name').val() && newData.child('rating').val() === data.child('rating').val() && newData.child('since').val() === data.child('since').val()))",
+                         AND('auth != null', 'data.exists()', '!newData.exists()', stale_rec('since'))),
             '.validate': "newData.hasChildren(['name', 'rating']) && newData.child('name').isString() && newData.child('name').val().length <= 16 && newData.child('rating').isNumber() && (auth.uid !== $uid || newData.child('rating').val() === root.child('players').child($uid).child('rating').val())",
             'game': {'.validate': 'newData.isString() && newData.val().length <= 64'},
+            'hb': hb,
             '$other': small,
         },
     }
     rooms = {
         '.read': 'auth != null',
         '$code': {
-            '.write': "auth != null && (!data.exists() || data.child('host').val() === auth.uid || (!data.child('game').exists() && newData.child('host').val() === data.child('host').val()))",
+            '.write': OR("auth != null && (!data.exists() || data.child('host').val() === auth.uid || (!data.child('game').exists() && newData.child('host').val() === data.child('host').val()))",
+                         AND('auth != null', 'data.exists()', '!newData.exists()',
+                             OR(stale_rec('created'), f"(!data.child('game').exists() && data.child('expires').isNumber() && now - data.child('expires').val() > {ROOM_EXPIRED})"))),
             '.validate': "$code.matches(/^[A-Z0-9]{4,8}$/) && newData.hasChildren(['host']) && newData.child('host').isString() && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 16)) && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 24))",
+            'hb': hb,
             '$other': small,
         },
     }
@@ -415,7 +435,9 @@ def build(name, P):
     presence = {
         '.read': 'auth != null',
         '$uid': {
-            '.write': 'auth != null && auth.uid === $uid',
+            '.write': OR('auth != null && auth.uid === $uid',
+                         AND('auth != null', 'data.exists()', '!newData.exists()',
+                             f"(!data.child('t').isNumber() || now - data.child('t').val() > {PRES_GONE})")),
             '.validate': "newData.hasChildren(['name']) && newData.child('name').isString() && newData.child('name').val().length <= 16",
             '$other': small,
         },

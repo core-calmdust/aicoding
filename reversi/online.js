@@ -282,20 +282,81 @@
   // entries whose owner stopped beating (crashed tab, lost disconnect handler) are not shown
   const PRES_BEAT = 60000, PRES_STALE = 150000;
   const presLive = x => typeof x.t === 'number' && !!x.name && db.now() - x.t < PRES_STALE;
+  // ---- stale records: a tab that vanished without its disconnect handler (crash, sleep, lost connection, failed delete) must not
+  // leave a room / lobby entry / presence behind for good. Rooms and lobby entries carry hb (server time) rewritten by the owner
+  // every LIVE_BEAT; older than LIVE_STALE = not listed / joined / matched. Records of older clients (no hb) are judged by
+  // created / since with LEGACY_STALE. Dead records (a margin past the limits) are deleted by whoever sees them (the rules allow
+  // that only for stale records), so leftovers in the database disappear the next time anyone opens the online lists.
+  const LIVE_BEAT = 60000, LIVE_STALE = 180000, LEGACY_STALE = 3600000, PRES_GONE = 300000, POST_IDLE = 180000, SWEEP_MARGIN = 20000;
+  const recOld = (x, base, now, margin) => {
+    if (!x || typeof x !== 'object') return true;
+    if (typeof x.hb === 'number') return now - x.hb > LIVE_STALE + margin;
+    return typeof base === 'number' ? now - base > LEGACY_STALE + margin : true;
+  };
+  const roomStale = (r, now) => recOld(r, r && r.created, now == null ? db.now() : now, 0);
+  const lobbyStale = (x, now) => recOld(x, x && x.since, now == null ? db.now() : now, 0);
+  const roomDead = (r, now) => recOld(r, r && r.created, now, SWEEP_MARGIN) || (!r.game && typeof r.expires === 'number' && now - r.expires > 60000 + SWEEP_MARGIN);
+  const lobbyDead = (x, now) => recOld(x, x && x.since, now, SWEEP_MARGIN);
+  const presDead = (x, now) => !x || typeof x !== 'object' || typeof x.t !== 'number' || now - x.t > PRES_GONE + SWEEP_MARGIN;
+  const swept = new Map();
+  // delete the dead children of node (not my own live records); each path is tried at most every 5 min; returns v
+  function sweep(node, v, dead) {
+    if (!v || typeof v !== 'object' || !db || !(MOCK || secure())) return v;    // the old (legacy) rules do not allow these deletes
+    const now = db.now();
+    for (const [id, x] of Object.entries(v)) {
+      if (node === 'rooms' ? id === roomCode : id === uid) continue;
+      if (!dead(x, now)) continue;
+      const p = node + '/' + id;
+      if (swept.get(p) > now) continue;
+      swept.set(p, now + 300000);
+      db.remove(p).catch(() => {});
+    }
+    return v;
+  }
+  // leaving the page: drop the own live records right away (the disconnect handlers are the fallback, the staleness above the last resort)
+  window.addEventListener('pagehide', () => {
+    if (!db || !uid) return;
+    try {
+      if (roomCode) db.remove('rooms/' + roomCode).catch(() => {});
+      if (lobbyState) db.remove('lobby/' + uid).catch(() => {});
+      if (presOn) db.remove('presence/' + uid).catch(() => {});
+    } catch (e) {}
+  });
+  // own heartbeats (transactions: never recreate a record that is gone)
+  function lobbyBeat(st) {
+    if (db.now() - (st.hbAt || st.since) < LIVE_BEAT) return;
+    st.hbAt = db.now();
+    db.txn('lobby/' + uid, cur => (cur === null ? null : Object.assign(cur, { hb: db.stamp() }))).catch(() => {});
+  }
+  let roomBeatAt = 0, roomIdle = null;
+  function roomBeat() {
+    if (db.now() - roomBeatAt < LIVE_BEAT) return;
+    roomBeatAt = db.now();
+    db.txn('rooms/' + roomCode, cur => (cur === null ? null : cur.host === uid ? Object.assign(cur, { hb: db.stamp() }) : undefined)).catch(() => {});
+  }
+  // delete the own room / lobby entry; the disconnect handler stays registered until the delete went through
+  async function roomDrop(c) {
+    try { await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid ? null : undefined)); db.cancelDisconnect('rooms/' + c); }
+    catch (e) { console.warn(e); }
+  }
+  async function lobbyDrop() {
+    const p = 'lobby/' + uid;
+    try { await db.remove(p); db.cancelDisconnect(p); } catch (e) { console.warn(e); }
+  }
   const listOf = (v, me) => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
-  function watchPresence(cb) { return db.on('presence', v => cb(listOf(v).filter(x => x.me || presLive(x)).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
+  function watchPresence(cb) { return db.on('presence', v => cb(listOf(sweep('presence', v, presDead)).filter(x => x.me || presLive(x)).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
   // a room is usable while nobody joined it and it has not expired (expires; old records: created + ROOM_TTL). Lists hide expired rooms even if the host vanished without cleanup.
   // Open rooms with a game in progress stay listed (marked as playing, with a watch button); closed rooms are never listed
   const roomExp = r => (typeof r.expires === 'number' ? r.expires : (typeof r.created === 'number' ? r.created : 0) + ROOM_TTL);
-  const roomLive = (r, now) => !!r && !r.game && roomExp(r) > (now == null ? db.now() : now);
+  const roomLive = (r, now) => { now = now == null ? db.now() : now; return !!r && !r.game && roomExp(r) > now && !roomStale(r, now); };
   function watchRooms(cb) {
     let last = null;
-    const emit = () => cb(listOf(last).filter(r => !r.priv && (r.game ? !!r.host : roomLive(r))).sort((a, b) => (a.game ? 1 : 0) - (b.game ? 1 : 0) || (a.created || 0) - (b.created || 0)));
-    const off = db.on('rooms', v => { last = v; emit(); });
+    const emit = () => cb(listOf(last).filter(r => !r.priv && !roomStale(r) && (r.game ? !!r.host : roomLive(r))).sort((a, b) => (a.game ? 1 : 0) - (b.game ? 1 : 0) || (a.created || 0) - (b.created || 0)));
+    const off = db.on('rooms', v => { last = sweep('rooms', v, roomDead); emit(); });
     const iv = setInterval(() => { if (last) emit(); }, 15000);     // drop rooms that expire while nothing changes
     return () => { off(); clearInterval(iv); };
   }
-  function watchLobby(cb) { return db.on('lobby', v => cb(listOf(v).filter(x => !x.game))); }
+  function watchLobby(cb) { return db.on('lobby', v => cb(listOf(sweep('lobby', v, lobbyDead)).filter(x => !x.game && (x.me || !lobbyStale(x))))); }
 
   // ---------------------------------------------------------------- Elo
   const kFactor = games => games < 10 ? 40 : games < 30 ? 32 : 24;
@@ -316,10 +377,10 @@
     tc = TC[tc] ? tc : 'fast';
     lobbyState = { since, onMatched, onStatus, tc };
     await secPrepare(lobbyState);
-    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), game: null });
+    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), hb: db.stamp(), game: null });
     db.onDisconnectRemove('lobby/' + uid);
     lobbyUnsub = db.on('lobby', v => {
-      const list = Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid })).sort((a, b) => b.rating - a.rating);
+      const list = Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid })).filter(x => x.me || !lobbyStale(x)).sort((a, b) => b.rating - a.rating);
       lobbyState && (lobbyState.list = list);
       onList && onList(list);
     });
@@ -336,14 +397,14 @@
   }
   const skip = new Map();     // candidates that still have an unsettled rated game (re-checked after a while)
   async function tryMatch() {
-    const st = lobbyState; if (!st || !st.list || st.busy) return;
+    const st = lobbyState; if (st) lobbyBeat(st); if (!st || !st.list || st.busy) return;
     if (st.blocked) {
       st.busy = true;
       try { if (db.now() - (st.lastTry || 0) > 10000) { st.lastTry = db.now(); if (await SEC.resolve().catch(() => false)) { st.blocked = false; const p = await db.get('players/' + uid); if (p) { profile.rating = p.rating; await db.update('lobby/' + uid, { rating: p.rating }); } } } } finally { st.busy = false; }
       if (st.blocked) return;
     }
     const now = db.now(), myWait = now - st.since;
-    const others = st.list.filter(x => !x.me && !x.game && typeof x.rating === 'number');
+    const others = st.list.filter(x => !x.me && !x.game && !lobbyStale(x) && typeof x.rating === 'number');
     // same time control first; once both have waited CROSS_WAIT, nearer controls, then farther ones; closest rating within each
     let best = null;
     for (const o of others) {
@@ -390,6 +451,7 @@
   const room = () => (roomCode ? { code: roomCode, priv: roomPriv, title: roomTitle, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()), game: roomGame } : null);
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   function roomAttach(code, d, cbs) {
+    roomBeatAt = 0; roomIdle = null;
     roomCode = code; roomTc = d.tc; roomPriv = !!d.priv; roomTitle = d.title || ''; roomExpires = d.expires; roomCbs = cbs;
     if (!d.game) setPresence('room', { room: d.priv ? null : code });
     db.onDisconnectRemove('rooms/' + code);
@@ -420,7 +482,7 @@
     const g = await db.get('games/' + s.gid);
     if (!g || g.room !== s.code || g.host !== uid || g.status !== 'play') return null;
     const expires = db.now() + ROOM_TTL, guest = g.b === uid ? g.w : g.b, gname = g.b === uid ? g.wn : g.bn;
-    const r = await db.txn('rooms/' + s.code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc: s.tc || g.tc || 'fast', created: db.stamp(), expires, game: s.gid, guest, gname, priv: !!s.priv, title: s.title || '' } : cur.host === uid ? cur : undefined);
+    const r = await db.txn('rooms/' + s.code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc: s.tc || g.tc || 'fast', created: db.stamp(), hb: db.stamp(), expires, game: s.gid, guest, gname, priv: !!s.priv, title: s.title || '' } : cur.host === uid ? cur : undefined);
     if (!r.committed || !r.value || r.value.host !== uid) return null;
     const v = r.value;
     roomAttach(s.code, { tc: v.tc, priv: v.priv, title: v.title, expires: v.expires, game: v.game }, cbs);
@@ -433,7 +495,7 @@
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
       const expires = db.now() + ROOM_TTL;
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), expires, game: null, guest: null, priv: !!priv, title } : undefined);
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), hb: db.stamp(), expires, game: null, guest: null, priv: !!priv, title } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid || r.value.expires !== expires) continue;
       roomAttach(code, { tc, priv: !!priv, title, expires }, { onMatched, onExpired });
       return code;
@@ -442,11 +504,15 @@
   }
   function roomCheck() {
     if (!roomCode) return;
+    roomBeat();
     if (roomGame) {          // a game in the room (no expiry); after it, drop a guest who went offline without leaving
       const g = roomG, gid = roomGame;
       if (g && g.status !== 'play' && !g.post) {
+        // nobody decides after the game (both idle / gone elsewhere): stop listing it as playing, reopen the room
+        if (!roomIdle || roomIdle.gid !== gid) roomIdle = { gid, t: db.now() };
+        else if (!g.again && db.now() - roomIdle.t > POST_IDLE) setPost(gid, 'timeout').catch(() => {});
         const guest = g.b === uid ? g.w : g.b;
-        db.get('presence/' + guest).then(p => { if (!p && roomGame === gid) setPost(gid, 'left'); }).catch(() => {});
+        db.get('presence/' + guest).then(p => { if ((!p || !presLive(p)) && roomGame === gid) setPost(gid, 'left'); }).catch(() => {});
         if (g.again && db.now() - g.again.t > REMATCH_MS + 2000) expireRematch(gid);
       }
       return;
@@ -485,19 +551,19 @@
     }
   }
   // stop watching the own room (does not delete it)
-  function roomEnd() {
+  function roomEnd(keepDisc) {
     roomUnsub && roomUnsub(); roomUnsub = null; clearInterval(roomTimer); roomTimer = 0;
     roomWatchGame(null);
-    if (roomCode) db.cancelDisconnect('rooms/' + roomCode);
+    if (roomCode && !keepDisc) db.cancelDisconnect('rooms/' + roomCode);
     roomCode = null; roomCbs = null; roomExpires = 0;
   }
   // delete the own room (部屋を閉じる / expiry); a guest still in it is told that there is no rematch
   async function closeRoom(why) {
     if (!roomCode) return;
-    const c = roomCode, gid = roomGame; roomEnd();
+    const c = roomCode, gid = roomGame; roomEnd(true);
     if (gid) setPost(gid, 'host').catch(() => {});
     if (presOn && presState === 'room') setPresence('idle', { room: null });
-    await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid ? null : undefined));
+    await roomDrop(c);
     roomEmit(why === 'expired' ? 'expired' : 'closed');
   }
   // restart the expiry timer (the host looked at the room again)
@@ -561,7 +627,7 @@
     clearInterval(matchTimer); matchTimer = 0;
     lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub();
     lobbyUnsub = selfUnsub = null;
-    if (lobbyState) { lobbyState = null; db.cancelDisconnect('lobby/' + uid); await db.remove('lobby/' + uid); if (presOn && presState === 'lobby') setPresence(roomCode ? 'room' : 'idle', { room: roomCode && !roomPriv ? roomCode : null }); }
+    if (lobbyState) { lobbyState = null; await lobbyDrop(); if (presOn && presState === 'lobby') setPresence(roomCode ? 'room' : 'idle', { room: roomCode && !roomPriv ? roomCode : null }); }
   }
   // leave the lobby and close the own room (before searching / creating / joining; keepMatched = a game was found, keep presence)
   async function leave(keepMatched) {
@@ -569,8 +635,8 @@
     clearInterval(matchTimer); matchTimer = 0;
     lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub();
     lobbyUnsub = selfUnsub = null;
-    if (lobbyState) { lobbyState = null; db.cancelDisconnect('lobby/' + uid); await db.remove('lobby/' + uid); }
-    if (roomCode) { const c = roomCode, gid = roomGame; roomEnd(); if (gid) setPost(gid, 'host').catch(() => {}); await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid ? null : undefined)); roomEmit('closed'); }
+    if (lobbyState) { lobbyState = null; await lobbyDrop(); }
+    if (roomCode) { const c = roomCode, gid = roomGame; roomEnd(true); if (gid) setPost(gid, 'host').catch(() => {}); await roomDrop(c); roomEmit('closed'); }
   }
 
   // ---------------------------------------------------------------- games
