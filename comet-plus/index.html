@@ -7281,7 +7281,7 @@ function draw() {
             renderCtx.fillStyle = uiColor;
             
             renderCtx.textAlign = 'left';
-            renderCtx.fillText(`SCORE: ${score}`, 20, IS_MOBILE ? 46 : 40);
+            renderCtx.fillText(`SCORE: ${IS_MOBILE ? shortNum(score) : score}`, 20, IS_MOBILE ? 46 : 40); // スマホは大きな数をK/Mで短く（タイムと重ならないように）
 
             renderCtx.textAlign = 'center';
             renderCtx.fillText(formatTime(elapsedTime), HUD_W / 2 + (IS_MOBILE ? 22 : 0), IS_MOBILE ? 46 : 40);
@@ -7327,7 +7327,7 @@ function draw() {
                 renderCtx.textAlign = 'left';
                 renderCtx.fillText(tutorial ? T('tut.label') : gameMode.replace(' MODE', ''), 20, 84);
                 renderCtx.textAlign = 'right';
-                renderCtx.fillText(`HI: ${hiS}`, HUD_W - 20, 84);
+                renderCtx.fillText(`HI: ${shortNum(hiS)}`, HUD_W - 20, 84);
                 return;
             }
             renderCtx.textAlign = 'right';
@@ -8005,6 +8005,13 @@ function updateExtraEnemy(m, dt) {
         else if (m.pt < 1.5) { m.aim = false; if (m.fired < 6 && m.pt > 1.1 + m.fired * 0.05) { m.fired++; shot(m.ang, 560); } }
         else if (m.pt > 2.1) { m.pt = 0; m.cyc++; }
     }
+}
+// 大きな得点を短く表示（10万未満はそのまま、以降は K / M / B。ゲーム中のスマホ表示用。最終得点は省略しない）
+function shortNum(n) {
+    if (n < 1e5) return String(n);
+    if (n < 1e6) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    if (n < 1e9) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+    return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'B';
 }
 function ix(o) { if (o._px === undefined) return o.x; const d = o.x - o._px; return Math.abs(d) > 120 ? o.x : o._px + d * simAlpha; }
 function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; return Math.abs(d) > 120 ? o.y : o._py + d * simAlpha; }
