@@ -924,11 +924,8 @@ class AudioHandler {
         if (this.lastBgmStage != null && bgmStage > this.lastBgmStage) {
             const steps = [];
             for (let j = 1; this.nextNoteTime - j * sixteenth >= this.ctx.currentTime - 0.005 && j < 16; j++) steps.unshift(j);
-            if (this.lastBgmStage < 4 && bgmStage >= 4) { // メロディのパートは、すぐ次の拍（4分）から頭で入る
-                const first = steps.length ? (this.current16th - steps[0] + 128) % 128 : this.current16th;
-                let b0 = first; while (b0 % 4 !== 0) b0 = (b0 + 1) % 128;
-                this.seq4Off = b0 % 8; this.seq4MelodyIndex = 0;
-            }
+            // メロディのパートは常に小節の8分グリッドに揃えて鳴らす（入った拍に合わせて裏拍にずらすと、周回ごとに表/裏が入れ替わってずれて聞こえる）
+            this.seq4Off = 0;
             steps.forEach(j => layers((this.current16th - j + 128) % 128, this.nextNoteTime - j * sixteenth, this.lastBgmStage, bgmStage));
         }
         this.lastBgmStage = bgmStage;
