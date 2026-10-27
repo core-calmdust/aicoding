@@ -34,7 +34,7 @@ function courseSlots(C, rnd) {
         if (nr && s === 0) o = Math.max(3, Math.min(o, 5));     // the first stage of a new rule is a gentle one
         if (r === 'twin') o = Math.max(o, 6);
       } else {
-        const pool = C.lv >= 2 ? [...RULES, 'silent', 'big'] : RULES;
+        const pool = C.lv >= 2 ? [...RULES, 'silent'] : RULES;
         r = [1, 4, 8].includes(s) ? (C.lv >= 3 && s === 8 ? 'big' : 'basic') : pool[Math.floor(rnd() * pool.length)];
       }
     } else if (C.lv >= 4 && s === 9) r = 'basic';
