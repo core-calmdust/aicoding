@@ -511,7 +511,9 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+/* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
+   except a phone held sideways (below). MOB = this list */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
   /* phone portrait */
   :root{--cell:min((100vw - 20px) / 7.5, (var(--vh) - 250px) / 8.7, 110px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -656,19 +658,35 @@ body .info-line{font-size:12.5px}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
-/* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
-  .side > .brand{justify-content:flex-end}
-  .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
-  .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
-  /* board + info column side by side: when the board is limited by the width (square / tall windows), let the info column use the full height and pin the board to the top under the title */
-  .side{height:max(var(--fh), min(calc(var(--vh) - var(--pad) * 2 - var(--ttop) - 8px), (min(var(--cellh), 128px) - var(--cell)) * 1000))}
-  .app{align-content:center}
-  .board-area{align-self:start}
-  html.dock-compact .side{align-self:start}
+/* PC layout (common spec, shared/headerbar.js MEDIA): three columns — a fixed-width info column on the left (players, evaluation),
+   the board in the middle, a fixed-width column on the right (record, review, lessons / puzzles, spectating; moved there by app.js).
+   The board takes the smaller of the window height and the width left by the two columns; both columns are as tall as the board
+   and scroll inside. On wide screens the three columns stay together in the middle. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  :root{--lw:280px;--rw:330px}
+  body{--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(14px, 1.6vw, 28px);
+    --cellh:calc((var(--vh) - var(--pad) * 2 - var(--ttop)) / 9.7);
+    --cell:min(var(--cellh), (100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw)) / 8.5, 128px);
+    --fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
+  .app{grid-template-columns:var(--lw) auto var(--rw);grid-template-areas:"side board rside";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
+  .side{grid-area:side;width:var(--lw);height:var(--fh);max-height:none}
+  .side.side-r{grid-area:rside;width:var(--rw)}
+  .side-in{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .side-in > *{flex-shrink:0}
+  .side-in > #evalCard{flex:1 1 0;display:flex;flex-direction:column;min-height:150px}
+  .side-in > #evalCard .graph{flex:1;height:auto;min-height:40px}
+  .side-r .side-in > .kifu-card{flex:1 1 0;min-height:140px}
+  .side-r .side-in > .review-card.show{flex:1.6 1 0;min-height:160px}
+  body.in-puzzle .side-in > .players{flex:none}
+  .board-area{align-self:center}
+  html.dock-compact .side{align-self:center}
+  html.dock-compact .side-in > #evalCard{flex:none}
+  body.rated-live .side-in > #evalCard{flex:none;min-height:0}   /* rated game: no evaluation shown, only the navigation */
+  .side-r #lessonCard .lesson-actions{flex-wrap:wrap}
+  .side-r #lessonCard .lesson-actions button:not(#lsAuto){flex:1 1 calc(50% - 4px);white-space:nowrap;padding:10px 6px}
 }
-/* narrow info column (square / tall windows): players stacked one per row, the buttons in two rows so the labels stay readable */
-@media not all and (pointer: coarse){
+/* narrow info column (PC: the fixed-width columns): players stacked one per row, the buttons in two rows so the labels stay readable */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
 @container (max-width: 340px){
   .side-in{gap:8px}
   .side-in > .card{padding:12px}
@@ -682,12 +700,12 @@ body .info-line{font-size:12.5px}
   .kifu-card{min-height:90px}
 }
 }
-@media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* ---------------------------------------------------------------- chess overrides */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 10999/10000), (hover: none) and (pointer: fine), (pointer: none){
   :root{--cell:min((100vw - 20px) / 8.5, (var(--vh) - 250px) / 9.7, 110px)}
 }
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
@@ -864,7 +882,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .chat-form button{height:36px;min-width:64px;padding:0 14px}
 @media not all and (pointer: coarse){
   /* the board area leaves room for the dock (46px bar + 62px chat strip) */
-  body:not(.no-online){--vh:calc(100dvh - 108px - var(--hb-h, 0px));--cellh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 9.7);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cellh), 128px) * 8.5), 520px);--cell:min(var(--cellh), (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 8.5, 128px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
+  body:not(.no-online){--vh:calc(100dvh - 108px - var(--hb-h, 0px))}
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#1f1913,#0f0c09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
@@ -920,8 +938,8 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   .mt-strip .me b{color:#8fe3b8}
   .mt-strip .empty{color:var(--dim)}
 }
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
-  /* phone portrait: tab bar + two chat lines at the bottom */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-width: 901px) and (min-height: 561px){
+  /* phone portrait (touch): tab bar + two chat lines at the bottom */
   body:not(.no-online) .app{padding-bottom:calc(102px + env(safe-area-inset-bottom))}
   body:not(.no-online):not(.mtab-online) .mt-strip{display:flex;flex-direction:column;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));height:40px;z-index:45;padding:0 14px;background:#15110d;border-top:1px solid var(--line);cursor:pointer;overflow:hidden}
   body:not(.no-online){--cell:min((100vw - 20px) / 8.5, (var(--vh) - 340px) / 9.7, 110px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
@@ -933,6 +951,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   body:not(.no-online) .mtabs{height:calc(42px + env(safe-area-inset-bottom))}
   body.mtab-online .dock{bottom:max(calc(42px + env(safe-area-inset-bottom)), var(--kb, 0px))}
 }
+/* phone layout with a mouse (narrow / tall PC window): the online dock stays at the bottom (108px), so the page leaves room for it */
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  body:not(.no-online){--cell:min((100vw - 20px) / 8.5, (var(--vh) - 250px) / 9.7, 110px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.7)}
+  body:not(.no-online) .app{padding-bottom:124px}
+} }
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
 @media (min-width: 900px) and (hover: hover) and (pointer: fine){
   .brand-r{gap:10px}
@@ -1156,8 +1179,8 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     </div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
     <div class="modal-actions">
-      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
   </div>
 </div>
@@ -1251,9 +1274,9 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
     </div>
   </div>
 </div>
@@ -1308,7 +1331,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="engine.js?v=20261021L"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=sec1"></script>
+<script src="online.js?v=stale1"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/headerbar.js?v=23"></script>
@@ -1317,7 +1340,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n_v2.js?v=20261022rt"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=20261024ls"></script>
+<script src="app.js?v=20261028pc"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
