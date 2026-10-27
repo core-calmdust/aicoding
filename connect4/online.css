@@ -235,3 +235,8 @@ body.ol-soon .dk-dot{background:var(--dim);box-shadow:none}
   body.ol-soon:not(.no-online) .app{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
 }
 html[lang=ar] :is(.ol-hist, .ol-offer){direction:rtl}
+/* phone layout in a mouse window (narrow / tall PC window, common spec 2026-10-28): the page scrolls, so its end stays clear of the dock */
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  body:not(.no-online) .app{padding-bottom:124px}
+  body.ol-soon:not(.no-online) .app{padding-bottom:62px}
+} }

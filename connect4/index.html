@@ -43,13 +43,11 @@
 @media (hover: hover) and (pointer: fine) and (max-width: 819px), (hover: hover) and (pointer: fine) and (max-height: 680px){:root{--pad:clamp(14px, 3vmin, 28px)}}
 /* online dock opened (shared/headerbar.js dock-fit lowers --vh): a board limited by the window width (narrow info column)
    still gives back what --vh loses, so every fit step makes the layout smaller; the info column takes the width it frees (2026-10-25) */
-@media not all and (pointer: coarse){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
   html.ol-dock{--vbase:calc(100vh - 108px - var(--hb-h))}
   @supports (height:100dvh){html.ol-dock{--vbase:calc(100dvh - 108px - var(--hb-h))}}
   html.ol-dock.ol-soon{--vbase:calc(100vh - 46px - var(--hb-h))}
   @supports (height:100dvh){html.ol-dock.ol-soon{--vbase:calc(100dvh - 46px - var(--hb-h))}}
-  body.dock-open .side{height:var(--fh)}   /* (no taller floor while the dock is open: the fit / compact steps size it) */
-  html.dock-fit{--cell:min(var(--cv), (100vw - var(--padx) * 2 - var(--gap) - 260px) / 7.84 - max(0px, var(--vbase, var(--vh)) - var(--vh)) / (6.55 + var(--top)));--sidew:clamp(260px, 100vw - var(--padx) * 2 - var(--gap) - var(--cell) * 7.84, 520px)}
 }
 @supports (height:100lvh){:root{--vh:100lvh}}
 /* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar, so no title row above the side panel */
@@ -429,7 +427,9 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+/* phone layout (common spec 2026-10-28): everything that is not the PC layout (narrow / tall PC windows, tablets, phones),
+   except a phone held sideways (its own layout below) */
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
   :root{--top:.5;--cell:min((100vw - 20px) / 7.84, (var(--vh) - 250px) / 7.05, 110px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -466,7 +466,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .kifu-card .kifu{max-height:none;overflow:visible}
   .review-card.show{flex:none;overflow:visible}
   .info-line{display:none}
-}
+}}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
   :root{--top:.6;--cell:min((var(--vh) - 20px) / 7.15, (100vw - 300px) / 7.84, 130px)}
@@ -508,7 +508,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .info-line{display:none}
 }
 /* narrow info column (squarish windows, 2026-10-25): one player per row, the buttons in two rows, the kifu header may wrap */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
 @container (max-width: 359px){
   .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}
   .controls{grid-auto-flow:row!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
@@ -777,32 +777,57 @@ body .rv-list{gap:6px} body .rv-list button{font-size:14.5px;padding:8px 10px} b
 body .rv-note{font-size:13.5px!important;line-height:1.65!important}
 body .info-line{font-size:12.5px}
 /* PC: while the review is open, give its card (振り返り解説 first) most of the side panel height */
-@media (pointer: fine) and (min-width: 901px) and (min-height: 561px){ body .side-in .review-card.show{flex-grow:2.6} body .side-in:has(.review-card.show) .kifu-card{flex-grow:.6;min-height:118px} }
-@media (pointer: fine) and (min-width: 901px) and (max-height: 960px){ body .side-in:has(.review-card.show) #evalCard{flex:none!important;min-height:0!important} body .side-in:has(.review-card.show) #evalCard .graph{height:34px!important;min-height:0!important;flex:none!important} body .side-in:has(.review-card.show) .kifu-card{min-height:96px} body .side-in:has(.review-card.show) .card.players{display:none} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ body .side-in .review-card.show{flex-grow:2.6} body .side-in:has(.review-card.show) .kifu-card{flex-grow:.6;min-height:118px} }
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10) and (max-height: 960px){ body .side-in:has(.review-card.show) #evalCard{flex:none!important;min-height:0!important} body .side-in:has(.review-card.show) #evalCard .graph{height:34px!important;min-height:0!important;flex:none!important} body .side-in:has(.review-card.show) .kifu-card{min-height:96px} body .side-in:has(.review-card.show) .card.players{display:none} }
 @media (min-height: 561px){ @container (min-width: 420px){ body .side-in:has(.review-card.show) #evalCard{min-height:156px} body .side-in:has(.review-card.show) #evalCard .graph{min-height:40px} } }
 .brand-l{display:flex;flex-direction:column;min-width:0}
 .brand a.series{font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-size:10.5px;letter-spacing:.3em;color:var(--brass);opacity:.85;margin:0 0 3px 2px;white-space:nowrap;text-decoration:none}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
 }
-@media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* PC layout (common spec 2026-10-28): the board in the middle, a fixed-width info column on each side — left: the game
+   now (players, evaluation bar / graph / ◀ ▶, info line), right: record and study (lesson / puzzle cards, watch card,
+   review, record). The board takes the smaller of the window height and the width left by the two columns; on wide
+   screens the three columns stay together in the middle. Both columns are as tall as the board and scroll inside. */
+.app > .side-r{display:none}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+  :root{--sl:280px;--sr:330px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.6vw, 30px);
+    --cw:calc((100vw - var(--padx) * 2 - var(--gap) * 2 - var(--sl) - var(--sr)) / 7.84);
+    --cv:min((var(--vh) - var(--pad) * 2) / (6.55 + var(--top)), 170px);
+    --cell:min(var(--cv), var(--cw))}
+  /* online dock opened (shared dock-fit lowers --vh): a width-limited board gives back what --vh loses too */
+  html.dock-fit{--cell:min(var(--cv), var(--cw) - max(0px, var(--vbase, var(--vh)) - var(--vh)) / (6.55 + var(--top)))}
+  .app{grid-template-columns:var(--sl) auto var(--sr);grid-template-areas:"left board right";align-items:center;align-content:center;padding:var(--pad) var(--padx)}
+  .app > .side{grid-area:left;height:max(var(--fh), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}   /* (as tall as the board; a little taller when the board is limited by the width) */
+  .app > .side.side-r{display:block;grid-area:right}
+  .app > .side > .side-in{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;gap:10px}
+  .app > .side > .side-in > *{flex:none}
+  .app > .side:not(.side-r) #evalCard{display:flex;flex-direction:column}
+  .app > .side:not(.side-r) #evalCard .graph{display:block;height:clamp(64px, 15vh, 170px);max-height:none;min-height:0;flex:none}
+  .app > .side:not(.side-r) .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
+  .app > .side-r .kifu-card{flex:1 1 auto;min-height:150px}
+  .app > .side-r .review-card.show{flex:2.6 1 0;min-height:200px}
+  .app > .side-r .side-in:has(.review-card.show) .kifu-card{flex:.6 1 0;min-height:118px}
+  .app > .side-r .side-in:has(.lesson-card, .puzzle-card) > :is(.lesson-card, .puzzle-card){overflow:visible}
+}
 </style>
-<link rel="stylesheet" href="online.css?v=20261022a">
+<link rel="stylesheet" href="online.css?v=20261028l9">
 </head>
 <body>
 <div class="app">
@@ -910,6 +935,7 @@ body .info-line{font-size:12.5px}
     </div>
     <div class="info-line" id="infoLine"></div>
   </div></aside>
+  <aside class="side side-r" aria-label="record"><div class="side-in"></div></aside>
 </div>
 
 <!-- new game -->
@@ -959,8 +985,8 @@ body .info-line{font-size:12.5px}
       </div>
     </div>
     <div class="modal-actions">
-      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
   </div>
 </div>
@@ -1034,9 +1060,9 @@ body .info-line{font-size:12.5px}
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
     </div>
   </div>
 </div>
@@ -1059,10 +1085,10 @@ body .info-line{font-size:12.5px}
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="i18n-online.js?v=20261022a"></script>
+<script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=20261022a"></script>
+<script src="online.js?v=stale1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -2543,7 +2569,7 @@ async function runReview() {
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
 function revealReview() {
-  if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+  if (!(window.HB && HB.on)) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
 }
 const signOf = e => e.kind === 'heur' ? null : Math.sign(e.v);
 function sOf(e) {   // mover's view in [-1, 1] (same scale as the evaluation bar)
@@ -2730,6 +2756,21 @@ const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang:
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
+// PC layout (common spec 2026-10-28): record / study cards move to the right column; back in place for the phone layout
+const sideR = (() => {
+  const right = document.querySelector('.side-r .side-in'), home = new Map();
+  const SEL = ['#lessonCard', '#puzzleCard', '#olWatch', '#reviewCard', '.kifu-card'];
+  const place = () => {
+    const on = !!(HB && HB.on);
+    for (const s of SEL) {
+      const el = document.querySelector(s); if (!el || !right) continue;
+      if (!home.has(el)) { const ph = document.createComment('side'); el.before(ph); home.set(el, ph); }
+      if (on) right.appendChild(el); else home.get(el).after(el);
+    }
+  };
+  place(); if (HB) HB.onChange(place); window.addEventListener('load', place);
+  return { place };
+})();
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
@@ -2745,7 +2786,7 @@ $('#langSel').onchange = e => {
 };
 window.addEventListener('resize', () => renderFx());
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { newGame(); }
 else { update(false); afterPosition(); }
 // expose for tests
 window.__c4 = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, playMove: c => onColumn(c), statusOf, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; } };
@@ -2816,7 +2857,7 @@ document.addEventListener('keydown', e => {
 });
 </script>
 <script src="rated.js?v=20261022ol"></script><!-- レーティング戦 -->
-<script src="online-ui.js?v=20261022a"></script><!-- オンライン対戦・Google連携 -->
+<script src="online-ui.js?v=20261028l9"></script><!-- オンライン対戦・Google連携 -->
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261025x5" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
