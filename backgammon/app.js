@@ -57,6 +57,10 @@ let previewPlay = null;     // moves to draw as arrows {side, start, moves, cls}
 let extraArrows = [];
 let marks = [];             // lesson marks [{side, p, cls}]
 let commitHash = '';
+var bxReady = false, bxRowsData = null;   // (bxRowsData: {side, start, list} of the candidate rows shown in the box)
+let study = null, bxHover = null;   // 検討 (study) mode of the PC review box; candidate hovered in the box (arrows)
+function inStudy() { return !!(study && study.m === match && match && study.ng === match.games.length && study.na === match.games[match.games.length - 1].actions.length && !lesson && !puzzle); }
+const liveTurn = () => !!turn && (inStudy() || (isLatest() && !reviewing));
 
 function newMatch(seed, len, cube) {
   return { seed: seed || BG.randomSeed(), len: len || 0, cube: cube !== false, games: [{ actions: [], start: [0, 0], crawford: false }] };
@@ -279,6 +283,11 @@ function drawLabels() {
 // ====================================================================== shown position
 // what is on the board: the record state at cur, or the interactive turn's partial position
 function shownState() {
+  if (inStudy()) {
+    const pos = turn ? turn.pos : study.pos, w = BG.winner(pos);
+    return Object.assign({}, study.base, { pos, turn: w >= 0 ? -1 : study.side, turnSide: turn ? turn.side : undefined, dice: study.dice, lastSide: study.lastSide, lastMoves: study.lastMoves,
+      offered: false, over: w >= 0, winner: w, points: w >= 0 ? BG.winKind(pos, w) * study.base.cube : 0, nRolls: (study.base.nRolls || 0) + study.hist.length + 1 });
+  }
   const [g, a] = curGA();
   const st = stateAt(g, a);
   if (lesson && lesson.posOverride) return Object.assign(st, { pos: lesson.posOverride });
@@ -452,17 +461,18 @@ function render() {
   document.body.classList.toggle('no-anim', !settings.anim);   // CSS effects follow the game's animation setting
   const st = shownState();
   const opts = {};
-  if (turn && isLatest() && !reviewing && canInteract()) {
+  if (liveTurn() && canInteract()) {
     const steps = legalNow();
     opts.movable = new Set(steps.map(x => turn.side * 100 + x.from));
     if (selected) opts.sel = selected;
   } else if (settings.anim !== null) opts.last = lastMap(st);
-  if (!turn || !isLatest()) opts.last = lastMap(st);
+  if (!liveTurn()) opts.last = lastMap(st);
   renderCheckers(st.pos, opts);
   renderCube(st);
   // dice (left alone while the roll animation owns the dice layer)
   if (rollAnimating) {}
-  else if (turn && isLatest() && !reviewing) renderTurnDice();
+  else if (liveTurn()) renderTurnDice();
+  else if (bxShowNext()) { const nx = bxNext(); renderDice(nx.side, nx.act.d, nx.act.d[0] === nx.act.d[1] ? 0 : [false, false]); }
   else if (st.dice && st.lastSide >= 0 && !st.over && !st.offered) renderDice(st.lastSide, st.dice, st.dice[0] === st.dice[1] ? 4 : [true, true]);
   else diceLayer.innerHTML = '';
   if (!rollAnimating && st.dice && !turn && diceLayer.innerHTML && !reviewing) diceLayer.querySelectorAll('.die').forEach(d => d.classList.add('used'));
@@ -479,6 +489,7 @@ function renderTurnDice() {
 
 // ====================================================================== interactive turn
 function canInteract() {
+  if (turn && inStudy()) return !turn.locked;
   if (!turn || reviewing || !isLatest()) return false;
   if (turn.locked) return false;
   if (lesson) return !lesson.answered;
@@ -640,6 +651,7 @@ function commitTurn() {
   // safety: the result must be one of the legal plays
   const k = BG.key(turn.pos);
   if (!turn.plays.some(x => BG.key(x.pos) === k)) { console.warn('illegal play rejected'); return; }
+  if (inStudy()) { studyCommit(turn); return; }
   if (lesson && lesson.op) { if (window.OPH) OPH.submit(turn); return; }
   if (lesson) { lessonSubmit(turn); return; }
   if (puzzle) { puzzleSubmit(turn); return; }
@@ -667,7 +679,7 @@ let drag = null;
 frameEl.addEventListener('pointerdown', e => {
   ctx();
   if (e.button !== undefined && e.button !== 0) return;
-  if (!canInteract()) { if (reviewing && !lesson && !puzzle && isPlayingMatch()) rsOpen(); return; }
+  if (!canInteract()) { if (inStudy()) return; if (reviewing && !lesson && !puzzle && isPlayingMatch()) rsOpen(); return; }
   const [ux, uy] = unitXY(e), vp = hitPoint(ux, uy);
   if (vp < 0) { selected = null; render(); return; }
   const s = turn.side, p = vp === 0 ? 0 : fromV(s, vp);
@@ -766,7 +778,7 @@ function setButtons(list, side, own) {
 function renderButtons() {
   renderStatusBox();
   if (!match) { setButtons([]); return; }
-  if (lesson || puzzle) {
+  if (lesson || puzzle || inStudy()) {
     if (turn && canInteract()) {
       const b = [];
       if (turn.steps.length) b.push({ id: 'undo', label: t('bb.undo'), fn: undoStep });
@@ -822,6 +834,7 @@ function afterAction() {
   drive();
 }
 async function drive() {
+  if (inStudy()) { renderButtons(); return; }
   if (settings.mode === 'online') { if (window.olDrive) olDrive(); else renderButtons(); return; }
   const tok = ++busyToken;
   if (!match || lesson || puzzle || reviewing || !isLatest()) { renderButtons(); return; }
@@ -1007,6 +1020,7 @@ function updateCommit() { commitHash = match ? BG.sha256('bg2|' + match.seed).sl
 // gets the game's value: a single game, or the gammon / backgammon when it is already obvious (the winner is bearing
 // off and the loser has borne off nothing), times the cube. In a match the next game then follows as usual.
 function canResign() {
+  if (inStudy()) return false;
   if (settings.mode === 'online') return !!(window.olLive && olLive());
   if (!match || lesson || puzzle || settings.mode === 'watch') return false;
   const g = match.games.length - 1;
@@ -1030,6 +1044,7 @@ function resignClick() { if (canResign()) Resign.confirm({ lang: LANG }).then(ok
 $('#btnResign').innerHTML = Resign.icon + '<span></span>';
 $('#btnResign').onclick = () => resignClick();
 function canUndo() {
+  if (inStudy()) return !!(turn && turn.steps.length && !turn.locked);
   if (!match || settings.mode === 'watch') return false;
   if (lesson || puzzle) return !!(turn && turn.steps.length);
   if (turn && turn.steps.length && canInteract()) return true;
@@ -1071,6 +1086,7 @@ function undo() {
 function viewAt(i) {
   if (lesson || puzzle || !match) return;
   i = Math.max(0, Math.min(latestIdx(), i));
+  if (study && studyDrop() && i === cur) { busyToken++; render(); renderInfo(); analyzeCurrent(); if (!reviewing) { if (turn) { renderButtons(); maybeHint(); } else drive(); } return; }
   if (i === cur && !(turn && i === latestIdx() && reviewing)) return;
   busyToken++; cancelWorker('ai'); thinking = -1;
   if (turn && !turn.ai) { turn.steps = []; turn.pos = turn.start.slice(); turn.left = turn.dice[0] === turn.dice[1] ? [turn.dice[0], turn.dice[0], turn.dice[0], turn.dice[0]] : turn.dice.slice(); }
@@ -1127,20 +1143,20 @@ function renderInfo() {
     $('#pip' + s).textContent = BG.pips(st.pos, s);
     $('#score' + s).innerHTML = match.len ? `${sc[s]}<small>/${match.len}</small>` : (match.games.length > 1 || st.over ? `${scoreAfterShown(g, a)[s]}<small> ${t('pt')}</small>` : '');
     const el = $('#pl' + s);
-    const toMove = turn && isLatest() ? turn.side : st.over ? -1 : st.turn;
+    const toMove = liveTurn() ? turn.side : st.over ? -1 : st.turn;
     el.classList.toggle('active', !st.over && toMove === s);
     el.classList.toggle('won', st.over && st.winner === s);
     el.classList.toggle('thinking', thinking === s);
     let status = '';
     if (st.over && st.winner === s) status = t('st.win', { n: st.points });
     else if (thinking === s) status = t('thinking');
-    else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : turn && isLatest() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : t('st.turn');
+    else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : liveTurn() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : t('st.turn');
     $('#status' + s).textContent = status;
   }
   renderStatusBox(st);
   // eval
   $('#evalCard').classList.toggle('hidden', !settings.eval);
-  const ev = evalOf(g, a);
+  const ev = inStudy() ? (st.over ? { p: st.winner === 0 ? 1 : 0, final: true } : studyEval(study.pos, study.side)) : evalOf(g, a);
   $('#evalText').textContent = evalText(ev, st);
   $('#evalFill').style.width = (ev ? ev.p * 100 : 50) + '%';
   renderGraph(); renderKifu();
@@ -1148,7 +1164,7 @@ function renderInfo() {
   $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
-  renderReview(); renderHintCard();
+  renderReview(); renderHintCard(); renderBox();
   const mode = settings.mode === 'ai' ? `AI Lv.${settings.level}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
   const mt = match.len ? t('info.match', { n: match.len }) + (gm.crawford ? ' · ' + t('info.crawford') : '') : t('info.single');
   const over = matchOver() || settings.mode !== 'ai' || (stateAt(match.games.length - 1, match.games[match.games.length - 1].actions.length).over && !match.len);
@@ -1164,9 +1180,9 @@ function renderInfo() {
 var HB = null;
 function hbInfo(st, g, ev) {
   if (!HB || !HB.on) return;
-  const toMove = turn && isLatest() ? turn.side : st.over ? -1 : st.turn;
+  const toMove = liveTurn() ? turn.side : st.over ? -1 : st.turn;
   let h = st.over ? `<span class="hb-chip"><i class="hb-disc p${st.winner}"></i><b>${esc(pname(st.winner))} ${esc(t('st.win', { n: st.points }))}</b></span>`
-    : toMove >= 0 ? `<span class="hb-chip"><i class="hb-disc p${toMove}"></i><b>${esc(t('hb.turn', { c: pname(toMove) }))}</b>${turn && isLatest() ? ' ' + turn.dice.map(d => `<i class="hb-die p${turn.side}">${d}</i>`).join('') : ''}</span>` : '';
+    : toMove >= 0 ? `<span class="hb-chip"><i class="hb-disc p${toMove}"></i><b>${esc(t('hb.turn', { c: pname(toMove) }))}</b>${liveTurn() ? ' ' + turn.dice.map(d => `<i class="hb-die p${turn.side}">${d}</i>`).join('') : ''}</span>` : '';
   h += `<span class="hb-chip"><i class="hb-disc p0"></i><b>${BG.pips(st.pos, 0)}</b> – <b>${BG.pips(st.pos, 1)}</b><i class="hb-disc p1"></i> ${esc(t('pips'))}</span>`;
   if (settings.eval && !lesson && !puzzle && ev) h += `<span class="hb-chip">${esc(evalText(ev, st))}</span>`;
   if (match.len && !lesson && !puzzle) h += `<span class="hb-chip">${esc(t('info.match', { n: match.len }))} <b>${match.games[g].start[0]}–${match.games[g].start[1]}</b></span>`;
@@ -1375,11 +1391,12 @@ function renderArrows() {
   const defs = c => `<marker id="ah${c.replace(/[^a-z0-9]/gi, '')}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}"/></marker>`;
   const colors = new Set();
   const arr = [];
-  if (previewPlay) arr.push(previewPlay);
+  if (bxHover) arr.push(bxHover);
+  else if (previewPlay) arr.push(previewPlay);
   else if (settings.hint && hintData && hintData.list && turn && hintData.key === hintKey() && !turn.steps.length && !lesson && !puzzle) arr.push({ side: hintData.side, start: hintData.start, moves: hintData.list[0].moves, cls: 'hint' });
   for (const a of extraArrows) arr.push(a);
   for (const a of arr) {
-    const col = a.cls === 'bad' ? '#ff7b6b' : a.cls === 'played' ? 'rgba(255,255,255,.85)' : '#ffe6a0';
+    const col = a.cls === 'cand' ? '#7fd0ff' : a.cls === 'bad' ? '#ff7b6b' : a.cls === 'played' ? 'rgba(255,255,255,.85)' : '#ffe6a0';
     colors.add(col);
     h += playArrows(a.side, a.start, a.moves, col, a.cls === 'bad' || a.cls === 'played');
   }
@@ -1436,16 +1453,18 @@ let geomReady = false;
 // PC (common spec: mouse, >= 1040px wide, not a tall window — the same condition as the shared header bar): three columns,
 // fixed-width info columns left and right, the board between them (flat geometry: its height fits the window, its width
 // the room left between the columns); everything else uses the phone layouts (portrait / landscape)
-const mqPCW = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)');
+const mqPCW = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
 const mqLand = matchMedia('(min-aspect-ratio: 1/1)');
 const landPhone = () => mqLand.matches && !mqPCW.matches;   // the phone landscape layout (phones, tablets, small PC windows)
 let PCW = false;
 function pcFit() {
   const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
   const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js)
-  const narrow = w < 1300, lw = narrow ? 230 : 260, rw = narrow ? 270 : 300, cg = narrow ? 16 : 20, px = narrow ? 16 : 24;   // (= the CSS --lw / --rw / --cg / --px)
-  const base = hgt - hb - 24 - (window.olDockH ? olDockH() : 0);   // height for the board (and the info columns beside it)
-  const availW = w - 2 * px - lw - rw - 2 * cg;
+  const narrow = w < 1300, rw = narrow ? 310 : 330, cg = narrow ? 16 : 20, px = narrow ? 16 : 24;   // (= the CSS --rw / --cg / --px)
+  const bxh = document.body.classList.contains('rvbox-on') ? Math.round(Math.max(170, Math.min(250, (hgt - hb) * 0.28))) : 0;   // the PC review box under the board
+  document.documentElement.style.setProperty('--bxh', bxh + 'px');
+  const base = hgt - hb - 24 - (bxh ? bxh + 12 : 0) - (window.olDockH ? olDockH() : 0);   // height for the board (and the info columns beside it)
+  const availW = w - 2 * px - rw - cg;
   let u = Math.min(availW / 15.85, 100), h = base / u;
   if (h < 7.2) { u = base / 7.2; h = 7.2; }
   return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
@@ -1762,7 +1781,7 @@ function renderReview() {
     // compact overview: one stats row per side, then at most 3 key moments (the biggest losses) with jump buttons
     const chip = s => { const x = st[s], pr = x.n ? (x.loss / x.n * 500) : 0; return `<span class="rv-st"><span class="pdisc p${s}"></span><b>${esc(sideLabel(s))}</b> ${t('rv.acc')} <b>${x.n ? Math.round(x.best / x.n * 100) : 0}%</b> · PR <b title="${t('rv.prTitle')}">${pr.toFixed(1)}</b> · <span class="bad">${t('q.bad')} ${x.bad}</span> <span class="dubious">${t('q.dubious')} ${x.dubious}</span></span>`; };
     const cr = rvCurrent();
-    html = cr ? rvCommentHTML(cr.g, cr.i) : `<div class="rv-cur empty">${t('rv.pick')}</div>`;
+    html = bxAllowed() ? '' : cr ? rvCommentHTML(cr.g, cr.i) : `<div class="rv-cur empty">${t('rv.pick')}</div>`;   // (PC review box: the commentary is in the box)
     html += `<div class="rv-sum2">${chip(0)}${chip(1)}</div>`;
     const key = list.slice().sort((a, b) => b.loss - a.loss).slice(0, 3).sort((a, b) => a.g - b.g || a.i - b.i);
     const curKey = cr ? cr.g + ':' + cr.i : '';
@@ -1792,6 +1811,251 @@ $('#rvBody').addEventListener('click', e => {
 $('#rvClose').onclick = () => { rvOpen = false; rvSel = null; if (rv && rv.running) rvCancel(); extraArrows = []; renderReview(); renderArrows(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
+
+// ====================================================================== PC review box (below the board + right column) and 検討 (study) mode
+// While a finished game is reviewed on a PC, a wide box under the board shows the commentary for the next action from
+// the shown position (left) and the candidate plays for its roll (right: win chance, equity, gammon chances — the
+// "line" of a dice game is its expected outcome). [検討する] lets both sides play on from the shown position with a roll
+// chosen or thrown; the record and the graph stay as they are, and [元に戻す] returns at once.
+const BX_T = {
+  ja: { title: '解説', cand: '候補手', loading: '読み込み中…', running: '分析中… {a}/{b}', study: '検討する', restore: '元に戻す', back: '1手戻す', studying: '検討中', played: '実戦', head: '検討中：{p}の局面から +{m}手', hint: '盤上で駒を動かすか、候補手をクリックして検討できます。出目は選ぶか振ってください。◀ で1手戻し、［元に戻す］で元の局面に戻ります。', over: '終局', last: '直前の手：', none: '—', clickHint: 'クリックでこの手を指して検討', dice: '出目', roll: '振る', win: '勝率', eq: '期待値', gam: 'G {g}% · 被G {l}%', mv: '{n}手目', start: '開始局面', bestIs: '最善：', noMove: '動かせる駒がありません', cube: 'キューブ判断', sum: '{w}の勝ち（{n}点）', acc: '一致率', winOf: '{c} {p}%' },
+  en: { title: 'Commentary', cand: 'Candidate plays', loading: 'Loading…', running: 'Analysing… {a}/{b}', study: 'Explore', restore: 'Back to game', back: 'Take back one move', studying: 'Exploring', played: 'played', head: 'Exploring: from {p}, +{m} moves', hint: 'Move checkers on the board or click a candidate to explore. Pick the dice or roll them. ◀ takes one move back, [Back to game] returns to the game position.', over: 'Game over', last: 'Last move: ', none: '—', clickHint: 'Click to play this and explore', dice: 'Dice', roll: 'Roll', win: 'Win', eq: 'Equity', gam: 'G {g}% · opp. G {l}%', mv: 'move {n}', start: 'the start', bestIs: 'Best: ', noMove: 'No legal move', cube: 'Cube decision', sum: '{w} wins ({n} pt)', acc: 'Accuracy', winOf: '{c} {p}%' },
+  zh: { title: '解说', cand: '候选着法', loading: '计算中…', running: '分析中… {a}/{b}', study: '研究', restore: '复原', back: '退一步', studying: '研究中', played: '实战', head: '研究中：从{p}的局面起 +{m}手', hint: '可在棋盘上移动棋子，或点击候选着法进行研究。点数可选择或掷骰。◀ 退一步，［复原］回到原局面。', over: '终局', last: '上一手：', none: '—', clickHint: '点击走这一手并研究', dice: '点数', roll: '掷骰', win: '胜率', eq: '期望值', gam: 'G {g}% · 被G {l}%', mv: '第{n}手', start: '开局', bestIs: '最佳：', noMove: '没有可走的棋子', cube: '倍数决策', sum: '{w}获胜（{n}分）', acc: '一致率', winOf: '{c} {p}%' },
+  ko: { title: '해설', cand: '후보수', loading: '계산 중…', running: '분석 중… {a}/{b}', study: '검토하기', restore: '되돌리기', back: '한 수 무르기', studying: '검토 중', played: '실전', head: '검토 중: {p} 국면에서 +{m}수', hint: '판 위에서 말을 움직이거나 후보수를 클릭해 검토할 수 있습니다. 주사위 눈은 고르거나 굴리세요. ◀ 로 한 수 무르고, [되돌리기]로 원래 국면으로 돌아갑니다.', over: '종국', last: '직전 수: ', none: '—', clickHint: '클릭하면 이 수를 두고 검토', dice: '눈', roll: '굴리기', win: '승률', eq: '기대값', gam: 'G {g}% · 상대 G {l}%', mv: '{n}수째', start: '시작', bestIs: '최선: ', noMove: '움직일 수 있는 말이 없습니다', cube: '큐브 판단', sum: '{w} 승리 ({n}점)', acc: '일치율', winOf: '{c} {p}%' },
+  es: { title: 'Comentario', cand: 'Jugadas candidatas', loading: 'Cargando…', running: 'Analizando… {a}/{b}', study: 'Explorar', restore: 'Volver a la partida', back: 'Deshacer una jugada', studying: 'Explorando', played: 'jugada', head: 'Explorando: desde {p}, +{m}', hint: 'Mueve fichas en el tablero o haz clic en una candidata para explorar. Elige los dados o tíralos. ◀ deshace una jugada, [Volver a la partida] vuelve a la posición original.', over: 'Fin de la partida', last: 'Última jugada: ', none: '—', clickHint: 'Clic para jugar esto y explorar', dice: 'Dados', roll: 'Tirar', win: 'Victoria', eq: 'Equidad', gam: 'G {g}% · G rival {l}%', mv: 'jugada {n}', start: 'el inicio', bestIs: 'Mejor: ', noMove: 'No hay jugada legal', cube: 'Decisión de cubo', sum: 'Gana {w} ({n} pt)', acc: 'Precisión', winOf: '{c} {p}%' },
+  fr: { title: 'Commentaire', cand: 'Coups candidats', loading: 'Chargement…', running: 'Analyse… {a}/{b}', study: 'Explorer', restore: 'Revenir à la partie', back: 'Annuler un coup', studying: 'Exploration', played: 'joué', head: 'Exploration : depuis {p}, +{m}', hint: 'Déplacez les dames sur le plateau ou cliquez sur un candidat pour explorer. Choisissez les dés ou lancez-les. ◀ annule un coup, [Revenir à la partie] rétablit la position.', over: 'Partie terminée', last: 'Dernier coup : ', none: '—', clickHint: 'Cliquer pour jouer ceci et explorer', dice: 'Dés', roll: 'Lancer', win: 'Victoire', eq: 'Équité', gam: 'G {g} % · G adv. {l} %', mv: 'coup {n}', start: 'le départ', bestIs: 'Meilleur : ', noMove: 'Aucun coup légal', cube: 'Décision du videau', sum: '{w} gagne ({n} pt)', acc: 'Précision', winOf: '{c} {p} %' },
+  pt: { title: 'Comentário', cand: 'Lances candidatos', loading: 'Carregando…', running: 'Analisando… {a}/{b}', study: 'Explorar', restore: 'Voltar à partida', back: 'Voltar um lance', studying: 'Explorando', played: 'jogado', head: 'Explorando: a partir de {p}, +{m}', hint: 'Mova as peças no tabuleiro ou clique em um candidato para explorar. Escolha os dados ou role-os. ◀ volta um lance, [Voltar à partida] retorna à posição original.', over: 'Fim de jogo', last: 'Último lance: ', none: '—', clickHint: 'Clique para jogar isto e explorar', dice: 'Dados', roll: 'Rolar', win: 'Vitória', eq: 'Equidade', gam: 'G {g}% · G adv. {l}%', mv: 'lance {n}', start: 'o início', bestIs: 'Melhor: ', noMove: 'Nenhum lance legal', cube: 'Decisão do cubo', sum: '{w} vence ({n} pt)', acc: 'Precisão', winOf: '{c} {p}%' },
+  de: { title: 'Kommentar', cand: 'Kandidatenzüge', loading: 'Wird berechnet…', running: 'Analyse… {a}/{b}', study: 'Untersuchen', restore: 'Zurück zur Partie', back: 'Einen Zug zurück', studying: 'Analysemodus', played: 'gespielt', head: 'Analysemodus: ab {p}, +{m}', hint: 'Ziehe Steine auf dem Brett oder klicke einen Kandidaten an. Wähle die Würfel oder würfle. ◀ nimmt einen Zug zurück, [Zurück zur Partie] stellt die Stellung wieder her.', over: 'Partie beendet', last: 'Letzter Zug: ', none: '—', clickHint: 'Klicken, um dies zu spielen', dice: 'Würfel', roll: 'Würfeln', win: 'Sieg', eq: 'Equity', gam: 'G {g} % · Gegner-G {l} %', mv: 'Zug {n}', start: 'dem Start', bestIs: 'Bester: ', noMove: 'Kein legaler Zug', cube: 'Dopplerentscheidung', sum: '{w} gewinnt ({n} P.)', acc: 'Genauigkeit', winOf: '{c} {p} %' },
+  hi: { title: 'टिप्पणी', cand: 'संभावित चालें', loading: 'लोड हो रहा है…', running: 'विश्लेषण… {a}/{b}', study: 'जाँचें', restore: 'वापस खेल पर', back: 'एक चाल वापस', studying: 'जाँच जारी', played: 'खेली गई', head: 'जाँच: {p} से +{m}', hint: 'बोर्ड पर गोटियाँ चलाएँ या किसी संभावित चाल पर क्लिक करें। पासे चुनें या फेंकें। ◀ एक चाल वापस, [वापस खेल पर] मूल स्थिति पर लौटाता है।', over: 'खेल समाप्त', last: 'पिछली चाल: ', none: '—', clickHint: 'यह चाल चलकर जाँचने के लिए क्लिक करें', dice: 'पासे', roll: 'फेंकें', win: 'जीत', eq: 'इक्विटी', gam: 'G {g}% · विरोधी G {l}%', mv: 'चाल {n}', start: 'शुरुआत', bestIs: 'सर्वश्रेष्ठ: ', noMove: 'कोई वैध चाल नहीं', cube: 'क्यूब निर्णय', sum: '{w} जीते ({n} अंक)', acc: 'सटीकता', winOf: '{c} {p}%' },
+  ar: { title: 'الشرح', cand: 'النقلات المرشحة', loading: 'جارٍ التحميل…', running: 'جارٍ التحليل… {a}/{b}', study: 'استكشاف', restore: 'العودة إلى المباراة', back: 'التراجع نقلة', studying: 'وضع الاستكشاف', played: 'المُلعوبة', head: 'استكشاف: من {p}، ‎+{m}', hint: 'حرّك القطع على اللوحة أو انقر على نقلة مرشحة للاستكشاف. اختر النرد أو ارمه. ◀ للتراجع نقلة، و[العودة إلى المباراة] للرجوع إلى الوضع الأصلي.', over: 'انتهت المباراة', last: 'النقلة الأخيرة: ', none: '—', clickHint: 'انقر للعب هذه النقلة والاستكشاف', dice: 'النرد', roll: 'ارمِ', win: 'الفوز', eq: 'القيمة المتوقعة', gam: 'G ‏{g}% · G للخصم {l}%', mv: 'النقلة {n}', start: 'البداية', bestIs: 'الأفضل: ', noMove: 'لا توجد نقلة قانونية', cube: 'قرار المكعب', sum: 'فوز {w} ({n} نقطة)', acc: 'الدقة', winOf: '{c} {p}%' },
+};
+function bxT(k, v) { let s = (BX_T[LANG] || BX_T.en)[k]; if (s === undefined) s = BX_T.en[k]; return v ? s.replace(/\{(\w+)\}/g, (_, x) => v[x] !== undefined ? v[x] : '') : s; }
+function bxAllowed() {
+  if (!(HB && HB.on && PCW && !ROT && !lesson && !puzzle && match && rvOpen && rv && rv.sig === rvSig())) return false;
+  if (settings.mode === 'online' && window.olLiveNow && olLiveNow()) return false;
+  const g = match.games.length - 1;
+  return settings.mode !== 'ai' || stateAt(g, match.games[g].actions.length).over;   // (not while a game against the AI is still on)
+}
+// the action played from the shown position (the box describes it): roll + play, or a cube action
+function bxNext() {
+  if (!match) return null;
+  const [g, a] = curGA(), act = match.games[g].actions[a];
+  if (!act) return null;
+  const st = stateAt(g, a);
+  const side = act.t === 'r' ? (st.nRolls === 0 ? (act.d[0] > act.d[1] ? 0 : 1) : st.turn) : st.turn;
+  return { g, a, act, st, side };
+}
+const bxCache = new Map();
+let bxW = null, bxBusy = '', bxWant = null;
+// one analysis worker of its own; a newer request replaces a waiting one and a stale answer is dropped
+function bxQueue(key, msg) {
+  if (bxCache.has(key) || bxBusy === key || (bxWant && bxWant.key === key)) return;
+  bxWant = { key, msg }; bxPump();
+}
+function bxPump() {
+  if (bxBusy || !bxWant) return;
+  if (!bxW) bxW = makeWorker();
+  const { key, msg } = bxWant; bxWant = null; bxBusy = key;
+  request(bxW, msg).then(res => {
+    bxBusy = '';
+    if (res && !res.error) { bxCache.set(key, res); if (bxCache.size > 300) bxCache.delete(bxCache.keys().next().value); }
+    if (bxWant) bxPump();
+    else if (res) { renderInfo(); renderArrows(); }
+  });
+}
+const bxPlayKey = (pos, side, d) => 'p|' + BG.key(pos) + side + d.join('');
+function bxPlays(pos, side, d, played) {
+  const key = bxPlayKey(pos, side, d), r = bxCache.get(key);
+  if (r) return r;
+  const msg = { type: 'analyze', pos: Array.from(pos), side, dice: d.slice(), ply: 1, keep: 8, max: 5, time: 2500 };
+  if (played) msg.played = played;
+  bxQueue(key, msg); return null;
+}
+function bxCube(st, g, a, side, kind) {
+  const key = 'c|' + BG.key(st.pos) + side + st.cube + kind + g + ':' + a, r = bxCache.get(key);
+  if (r) return r;
+  bxQueue(key, { type: 'cubeinfo', pos: Array.from(st.pos), side, depth: 1, ctx: ctxAt(g, a, side) }); return null;
+}
+function studyEval(pos, side) {
+  const key = 'e|' + BG.key(pos) + side, r = bxCache.get(key);
+  if (r) { const v = r.v, g0 = side === 0 ? v : BG.flip(v); return { p: g0[0], v: g0, g0: g0[1], g1: g0[3] }; }
+  bxQueue(key, { type: 'eval', pos: Array.from(pos), side, depth: 0 }); return null;
+}
+const bxDieRoll = () => [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
+function studyTurn() {
+  const d = study.dice, side = study.side;
+  turn = { side, dice: d.slice(), left: d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice(), steps: [], pos: study.pos.slice(), start: study.pos.slice(), study: true };
+  turn.plays = BG.genPlays(turn.start, side, d[0], d[1]);
+  selected = null;
+}
+function studyStart(moves) {
+  if (!bxAllowed() || inStudy() || rollAnimating) return;
+  const [g, a] = curGA(), st = stateAt(g, a); if (st.over) return;
+  const nx = bxNext();
+  if (nx && nx.act.t !== 'r' && moves) return;
+  busyToken++; cancelWorker('ai'); thinking = -1; stopPlay();
+  const side = st.offered ? st.doubler : nx ? nx.side : st.turn >= 0 ? st.turn : 0;
+  const dice = nx && nx.act.t === 'r' ? nx.act.d.slice() : bxDieRoll();
+  study = { m: match, ng: match.games.length, na: match.games[match.games.length - 1].actions.length, g, a, base: st, side, pos: st.pos.slice(), dice, hist: [],
+    lastSide: st.lastSide, lastMoves: st.lastMoves, savedTurn: turn };
+  hintData = null; previewPlay = null; extraArrows = []; rvSel = null; bxHover = null;
+  studyTurn(); render(); renderInfo();
+  if (moves) studyPlay(moves);
+}
+async function studyPlay(moves) {
+  if (!inStudy() || !turn || turn.locked) return;
+  const my = turn;
+  if (turn.steps.length) { turn.steps = []; turn.pos = turn.start.slice(); turn.left = turn.dice[0] === turn.dice[1] ? [turn.dice[0], turn.dice[0], turn.dice[0], turn.dice[0]] : turn.dice.slice(); render(); }
+  bxHover = null; renderArrows();
+  turn.locked = true;
+  await playMovesAnimated(moves);
+  if (turn !== my || !inStudy()) return;
+  turn.locked = false;
+  commitTurn();
+}
+function studyCommit(tt) {
+  const moves = tt.steps.map(s => s.code);
+  study.hist.push({ pos: tt.start.slice(), side: tt.side, dice: tt.dice.slice(), moves, lastSide: study.lastSide, lastMoves: study.lastMoves });
+  study.pos = tt.pos.slice(); study.lastSide = tt.side; study.lastMoves = moves;
+  turn = null; selected = null; bxHover = null;
+  if (BG.winner(study.pos) < 0) { study.side = 1 - tt.side; study.dice = bxDieRoll(); studyTurn(); }
+  render(); renderInfo();
+}
+function studyBack() {
+  if (!inStudy() || (turn && turn.locked)) return;
+  if (turn && turn.steps.length) { studyTurn(); SFX.tick(); render(); renderInfo(); return; }
+  const h = study.hist.pop(); if (!h) return;
+  study.pos = h.pos; study.side = h.side; study.dice = h.dice; study.lastSide = h.lastSide; study.lastMoves = h.lastMoves;
+  bxHover = null; studyTurn(); SFX.tick(); render(); renderInfo();
+}
+function studyDice(d) {
+  if (!inStudy() || (turn && turn.locked) || BG.winner(study.pos) >= 0) return;
+  study.dice = d; bxHover = null; studyTurn(); render(); renderInfo();
+}
+// leave study mode: the game's own turn (if one was in progress) comes back as it was
+function studyDrop() {
+  const was = inStudy(), saved = study ? study.savedTurn : null;
+  study = null; bxHover = null;
+  if (!was) return false;
+  turn = saved;
+  if (turn && !turn.ai) { turn.locked = false; turn.steps = []; turn.pos = turn.start.slice(); turn.left = turn.dice[0] === turn.dice[1] ? [turn.dice[0], turn.dice[0], turn.dice[0], turn.dice[0]] : turn.dice.slice(); }
+  selected = null;
+  return true;
+}
+function studyExit() {
+  if (!studyDrop()) return;
+  busyToken++;
+  render(); renderInfo(); analyzeCurrent();
+  if (!reviewing) { if (turn) { renderButtons(); maybeHint(); } else drive(); }
+}
+const bxDice = d => `<span class="bx-dice">${d.map(v => `<i>${v}</i>`).join('')}</span>`;
+const bxPct = x => (x * 100).toFixed(1) + '%';
+function bxRows(list, played, side) {
+  const best = list[0].e;
+  return list.map((x, j) => `<button class="bx-c${played && x.key === played ? ' played' : ''}${j === 0 ? ' top' : ''}" data-j="${j}" title="${esc(bxT('clickHint'))}"><span class="rk">${j + 1}</span><bdi class="mv">${x.moves.length ? BG.notation(x.moves) : '—'}</bdi>` +
+    `<span class="wp">${bxPct(x.v[0])}</span><span class="eq">${fmtE(x.e)}${j ? `<small>${(x.e - best).toFixed(3)}</small>` : ''}</span><span class="pv">${esc(bxT('gam', { g: Math.round(x.v[1] * 100), l: Math.round(x.v[3] * 100) }))}</span>` +
+    (played && x.key === played ? `<span class="pl">${esc(bxT('played'))}</span>` : '') + `</button>`).join('');
+}
+function renderBox() {
+  if (!bxReady) return;
+  const on = bxAllowed();
+  if (!on && study) { if (studyDrop()) setTimeout(() => { render(); renderInfo(); }, 0); }
+  if (study && !inStudy()) { study = null; bxHover = null; }
+  const was = document.body.classList.contains('rvbox-on');
+  document.body.classList.toggle('rvbox-on', on);
+  document.body.classList.toggle('in-study', inStudy());
+  if (was !== on) pcwRefit();
+  $('#studyBadge').textContent = bxT('studying');
+  if (!on) { bxRowsData = null; return; }
+  const st = inStudy();
+  let left = '', right = '', diceRow = '';
+  bxRowsData = null;
+  if (st) {
+    const [g] = curGA(), p0 = study.a ? bxT('mv', { n: study.a + 1 }) : bxT('start');
+    left = `<p class="bx-hd"><b>${esc(bxT('head', { p: (match.games.length > 1 ? 'G' + (g + 1) + ' ' : '') + p0, m: study.hist.length }))}</b></p>`;
+    const h = study.hist[study.hist.length - 1];
+    if (h) {
+      let tag = '', bestTxt = '';
+      const r = bxCache.get(bxPlayKey(h.pos, h.side, h.dice));
+      if (r && r.list && r.list.length) {
+        const q = h.pos.slice(); for (const c of h.moves) BG.apply(q, h.side, BG.mvFrom(c), BG.mvTo(c));
+        const k = BG.key(q), mine = r.list.find(x => x.key === k);
+        if (mine) { const loss = Math.max(0, r.list[0].e - mine.e), cls = qualOf(loss, r.list[0].key === k); tag = `<span class="tag ${cls}">${esc(t('q.' + cls))}</span>${cls !== 'best' ? `<span class="ls">−${loss.toFixed(3)}</span>` : ''}`; if (cls !== 'best') bestTxt = `<p>${esc(bxT('bestIs'))}<bdi class="mv">${h.dice.join('')} ${BG.notation(r.list[0].moves)}</bdi></p>`; }
+      }
+      left += `<p>${esc(bxT('last'))}<span class="pdisc p${h.side}"></span> <bdi class="mv">${h.dice.join('')} ${h.moves.length ? BG.notation(h.moves) : esc(t('nomove'))}</bdi> ${tag}</p>${bestTxt}`;
+    } else left += `<p class="bx-note">${esc(bxT('hint'))}</p>`;
+    // right: the dice (pick or roll) and the candidates for them
+    const over = BG.winner(study.pos) >= 0;
+    if (over) right = `<p class="bx-note">${esc(bxT('over'))}</p>`;
+    else {
+      const d = study.dice;
+      diceRow = `<div class="bx-dsel"><span class="lb">${esc(bxT('dice'))}</span>${[0, 1].map(i => `<span class="dg">${[1, 2, 3, 4, 5, 6].map(v => `<button data-di="${i}" data-dv="${v}" class="${d[i] === v ? 'sel' : ''}">${v}</button>`).join('')}</span>`).join('')}<button class="bx-roll" id="bxRoll">🎲 ${esc(bxT('roll'))}</button></div>`;
+      const r = bxPlays(study.pos, study.side, d);
+      if (!r) right = `<p class="bx-note bx-load">${esc(bxT('loading'))}</p>`;
+      else if (!r.list || !r.list.length || (r.list.length === 1 && !r.list[0].moves.length)) right = `<p class="bx-note">${esc(bxT('noMove'))}</p>`;
+      else { right = bxRows(r.list, '', study.side); bxRowsData = { side: study.side, start: study.pos, list: r.list }; }
+    }
+  } else {
+    const nx = bxNext();
+    if (rv.running) left = `<p class="bx-note">${esc(bxT('running', { a: rv.done, b: rv.total }))}</p>`;
+    else if (nx) {
+      const lbl = (match.games.length > 1 ? 'G' + (nx.g + 1) + ' · ' : '') + bxT('mv', { n: nx.a + 1 });
+      left = `<p class="bx-hd"><b>${esc(lbl)}</b> <span class="pdisc p${nx.side}"></span> ${esc(sideLabel(nx.side))}${nx.act.t === 'r' ? ' ' + bxDice(nx.act.d) : ''}</p>` + rvCommentHTML(nx.g, nx.a);
+    } else {
+      const [g, a] = curGA(), s = stateAt(g, a);
+      if (s.over) left = `<p class="bx-hd"><b>${esc(bxT('sum', { w: sideLabel(s.winner), n: s.points }))}</b></p>`;
+      const acc = [0, 1].map(sd => { let n = 0, b = 0; for (const it of rv.all || []) if (it.side === sd && it.kind === 'play') { n++; if (it.isBest) b++; } return `<p><span class="pdisc p${sd}"></span> ${esc(sideLabel(sd))} · ${esc(bxT('acc'))} <b>${n ? Math.round(b / n * 100) : 0}%</b></p>`; }).join('');
+      left += acc;
+    }
+    if (!nx) right = `<p class="bx-note">${esc(bxT('over'))}</p>`;
+    else if (nx.act.t === 'r') {
+      const after = nx.st.pos.slice(); for (const c of nx.act.m) BG.apply(after, nx.side, BG.mvFrom(c), BG.mvTo(c));
+      const pk = BG.key(after), r = bxPlays(nx.st.pos, nx.side, nx.act.d, pk);
+      if (!r) right = `<p class="bx-note bx-load">${esc(bxT('loading'))}</p>`;
+      else if (!r.list || r.list.length < 1 || !r.list[0].moves.length) right = `<p class="bx-note">${esc(bxT('noMove'))}</p>`;
+      else { right = bxRows(r.list, pk, nx.side); bxRowsData = { side: nx.side, start: nx.st.pos, list: r.list }; if (r.played && !r.list.some(x => x.key === pk)) right += `<div class="bx-c played other"><span class="rk">…</span><bdi class="mv">${BG.notation(r.played.moves)}</bdi><span class="wp">${bxPct(r.played.v[0])}</span><span class="eq">${fmtE(r.played.e)}<small>${(r.played.e - r.list[0].e).toFixed(3)}</small></span><span class="pv"></span><span class="pl">${esc(bxT('played'))}</span></div>`; }
+    } else {
+      // cube action: the cube analysis of the doubler's position
+      const doubler = nx.act.t === 'd' ? nx.side : nx.st.doubler;
+      const r = bxCube(nx.st, nx.g, nx.a, doubler, nx.act.t);
+      if (!r) right = `<p class="bx-note bx-load">${esc(bxT('loading'))}</p>`;
+      else if (r.cube) {
+        const c = r.cube, v = r.v;
+        const rec = nx.act.t === 'd' ? (c.double ? (c.take ? t('hint.dt') : t('hint.dp')) : t('hint.nd')) : (c.take ? t('hint.take') : t('hint.pass'));
+        right = `<div class="bx-cube"><p><b>${esc(bxT('cube'))}</b> · ${esc(rec)}</p><p>${t('hint.win', { p: (v[0] * 100).toFixed(1), g: (v[1] * 100).toFixed(1), l: (v[3] * 100).toFixed(1) })}</p><p class="mono">ND ${fmtE(c.nd)} · D/T ${fmtE(c.dt)} · D/P ${fmtE(c.dp)}</p></div>`;
+      }
+    }
+  }
+  $('#bxCoach').innerHTML = left;
+  $('#bxCands').innerHTML = diceRow + `<div class="bx-list">${right}</div>`;
+  $('#bxTitle').textContent = bxT('title'); $('#bxCandT').textContent = bxT('cand');
+  const bs = $('#bxStudy'), br = $('#bxRestore'), bb = $('#bxBack');
+  bs.textContent = bxT('study'); br.textContent = bxT('restore'); bb.title = bxT('back');
+  const [g0, a0] = curGA();
+  bs.disabled = !st && stateAt(g0, a0).over;
+  bs.classList.toggle('hidden', st); br.classList.toggle('hidden', !st); bb.classList.toggle('hidden', !st);
+  bb.disabled = !st || (!study.hist.length && !(turn && turn.steps.length));
+}
+$('#bxCands').addEventListener('pointerover', e => {
+  const b = e.target.closest('.bx-c[data-j]'), j = b ? +b.dataset.j : -1;
+  const want = j >= 0 && bxRowsData && bxRowsData.list[j] ? { side: bxRowsData.side, start: bxRowsData.start, moves: bxRowsData.list[j].moves, cls: 'cand', j } : null;
+  if ((want && want.j) !== (bxHover && bxHover.j) || !!want !== !!bxHover) { bxHover = want; renderArrows(); }
+});
+$('#bxCands').addEventListener('pointerleave', () => { if (bxHover) { bxHover = null; renderArrows(); } });
+$('#bxCands').addEventListener('click', e => {
+  const dv = e.target.closest('button[data-dv]');
+  if (dv) { const d = study ? study.dice.slice() : [1, 1]; d[+dv.dataset.di] = +dv.dataset.dv; studyDice(d); return; }
+  if (e.target.closest('#bxRoll')) { SFX.tick(); studyDice(bxDieRoll()); return; }
+  const b = e.target.closest('.bx-c[data-j]'); if (!b || !bxRowsData) return;
+  const x = bxRowsData.list[+b.dataset.j]; if (!x) return;
+  if (inStudy()) studyPlay(x.moves); else studyStart(x.moves);
+});
+$('#bxStudy').onclick = () => studyStart();
+$('#bxRestore').onclick = () => studyExit();
+$('#bxBack').onclick = () => studyBack();
+bxReady = true;
+// review (not exploring): the board shows the dice of the roll the box describes
+function bxShowNext() { if (inStudy() || !document.body.classList.contains('rvbox-on') || rvSel) return false; const nx = bxNext(); return !!(nx && nx.act.t === 'r'); }
 
 // ====================================================================== share / load
 function encodeMatch() { return `${match.seed}.${match.len}.${match.cube ? 1 : 0}.` + match.games.map(gm => BG.encodeGame(gm.actions)).join('~'); }
@@ -1878,6 +2142,7 @@ $('#btnCopy').onclick = async () => {
 function rsInProgress() { if (lesson || puzzle || !match) return false; const g = match.games.length - 1, gm = match.games[g]; return !matchOver() && (gm.actions.length > 0 || g > 0) && !(match.len === 0 && stateAt(g, gm.actions.length).over); }
 function rsViewing() { return !lesson && !puzzle && reviewing; }
 function rsOpen() {
+  if (inStudy()) studyExit();
   if (settings.mode === 'online') { viewAt(latestIdx()); return; }
   if (!rsInProgress() && !rsViewing()) { openNewDialog(); return; }
   $('#rsText').textContent = rsViewing() ? t('rs.viewing') : t('rs.playing');
@@ -1890,6 +2155,7 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; $('#navPlay').classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle || !match) return;
+  if (inStudy()) studyExit();
   const N = latestIdx();
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }
@@ -1907,7 +2173,7 @@ $('#navBar').addEventListener('click', e => { const b = e.target.closest('button
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
-  if (document.querySelector('.overlay.show') || lesson || puzzle) return;
+  if (document.querySelector('.overlay.show') || lesson || puzzle || inStudy()) return;   // (no record navigation while exploring)
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
