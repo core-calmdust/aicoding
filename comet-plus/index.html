@@ -2384,7 +2384,7 @@ function updatePlayingState(dt_sec) {
 
     const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval / (1 + (stage - 1) * 0.2)));
     if (frameCount % spawnInterval === 0) {
-        cometSpawnCarry += config.cometSpawnAmount * (tutorial ? 1 : (DIFFS[difficultyIndex].cometMul || 1) * (IS_MOBILE && DIFFS[difficultyIndex].id !== 'ARCADE' ? 2 / 3 : 1)); // EASYは彗星2/3。スマホはSTANDARD・EASYをさらに2/3
+        cometSpawnCarry += config.cometSpawnAmount * (tutorial ? 1 : (DIFFS[difficultyIndex].cometMul || 1) * (IS_MOBILE ? 2 / 3 : 1)); // EASYは彗星2/3。スマホは全難易度をさらに2/3（ARCADEはSTANDARDと同じ密度）
         for (; cometSpawnCarry >= 1; cometSpawnCarry--) {
             comets.push({
                 x: Math.random() * config.canvasWidth,
@@ -2766,7 +2766,7 @@ function updatePlayingState(dt_sec) {
             item.x = Math.max(16, Math.min(config.canvasWidth - 16, item.x + item.vx * dt_sec));
             item.y += item.vy * dt_sec;
         } else {
-            item.y += config.energyItemSpeed * (item.type === 'hyper' ? 0.75 : 1) * MOB_FALL * dt_sec;
+            item.y += config.energyItemSpeed * (item.type === 'hyper' ? 0.75 : 1) * MOB_FALL * (IS_MOBILE ? 1.1 : 1) * dt_sec; // スマホのアイテムは彗星よりさらに1.1倍
             if (item.type === 'hyper') { // ハイパーは左右に大きく、ゆっくり揺れながら落ちてくる
                 const A = Math.min(200, config.canvasWidth / 2 - 50);
                 if (item.x0 == null) { item.x0 = Math.max(50 + A, Math.min(config.canvasWidth - 50 - A, item.x)); item.t = 0; }
