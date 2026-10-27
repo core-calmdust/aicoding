@@ -2192,7 +2192,7 @@ if (reason === 'collision') {
         effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
 
         // ▼▼▼ 爆発エフェクトを動画のように強化 ▼▼▼
-        const particleCount = isEffectsEnabled ? 450 : 70; // ★ 変更点: パーティクル数を増加
+        const particleCount = isEffectsEnabled ? (IS_MOBILE ? 140 : 240) : 70; // 多すぎると一瞬重くなるので控えめに // ★ 変更点: パーティクル数を増加
         
         // ★ 変更点: 爆発専用の鮮やかなカラーパレットを定義
         const explosionColors = ['#ff3344', '#ff8800', '#ffff00', '#88ff00', '#00ffff', '#4488ff', '#ff00ff', '#ffffff'];
@@ -4043,9 +4043,9 @@ if (gl3dOK) {
     composer.addPass(bloom);
     // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
     hyperGrade = new ShaderPass({
-        uniforms: { tDiffuse: { value: null }, amt: { value: 0 }, t: { value: 0 } },
+        uniforms: { tDiffuse: { value: null }, amt: { value: 0 }, t: { value: 0 }, gray: { value: 0 } },
         vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-        fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float t; varying vec2 vUv;
+        fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float t; uniform float gray; varying vec2 vUv;
             void main(){
                 vec4 c = texture2D(tDiffuse, vUv);
                 const mat3 toY = mat3(0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312);
@@ -4062,7 +4062,9 @@ if (gl3dOK) {
                 g = pow(max(g, 0.0), vec3(1.15)) * 1.1;
                 g += smoothstep(0.55, 1.0, l) * vec3(0.09, 0.035, 0.12) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
                 float vig = 1.0 - amt * 0.3 * smoothstep(0.35, 0.85, length(vUv - 0.5));
-                gl_FragColor = vec4(mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0)), c.a);
+                vec3 o = mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0));
+                float lo = dot(o, vec3(0.299, 0.587, 0.114));
+                gl_FragColor = vec4(mix(o, vec3(lo) * (1.0 - 0.2 * gray), gray), c.a); // エネルギー切れのゲームオーバーで白黒に（CSSのフィルターより軽い）
             }`
     });
     hyperGrade.enabled = false;
@@ -4552,9 +4554,15 @@ makeMotif('pillars', 84, i => {
 // テーマ（ステージ）→ モチーフ
 const MOTIF_FOR_THEME = [0, 5, 3, 2, 1, 4, 3, 1, 4, 2, 3, 5, 3, 0, 2, 5, 0, 2, 3, 4, 1, 5, 2, 0, 4, 3, 1, 5, 2, 5];
 // モチーフごとに材質を複製（切り替えで消える側だけをフェードアウトできるように）
+// 共有の材質（線・ガラス面など）はモチーフごとに複製して毎フレーム元に合わせ、フェード分だけ薄くする。
+// そのモチーフ専用の材質（毎フレーム明滅させているもの）は、明滅のあとにフェードを掛ける
 motifs.forEach(m => {
-    m.matA = buildingMatA.clone(); m.matB = buildingMatB.clone(); m.fade = 1;
-    m.group.traverse(o => { if (o.material === buildingMatA) o.material = m.matA; else if (o.material === buildingMatB) o.material = m.matB; });
+    m.fade = 1; m.sync = []; m.own = [];
+    const uses = new Map();
+    m.group.traverse(o => { if (o.material) uses.set(o.material, (uses.get(o.material) || 0) + 1); });
+    const clones = new Map();
+    uses.forEach((n, mat) => { if (n > 1 || mat === buildingMatA || mat === buildingMatB) { const c = mat.clone(); clones.set(mat, c); m.sync.push([c, mat]); } else m.own.push(mat); });
+    m.group.traverse(o => { if (o.material && clones.has(o.material)) o.material = clones.get(o.material); });
 });
 let motifCur = motifs[0];
 let motifOld = null;
@@ -4772,7 +4780,7 @@ function updateMotifs(dt, ws, now) {
         m.fade = 1 - ee; m.group.position.y = -420 * ee; m.group.scale.set(1 + ee * 0.25, Math.max(0.05, 1 - ee * 0.6), 1 + ee * 0.25);
         if (e >= 1) { m.group.visible = false; m.group.position.y = 0; m.group.scale.set(1, 1, 1); m.fade = 1; motifFading.splice(i, 1); }
     }
-    motifs.forEach(m => { if (!m.group.visible) return; m.matA.color.copy(buildingMatA.color); m.matA.opacity = buildingMatA.opacity * m.fade; m.matB.color.copy(buildingMatB.color); m.matB.opacity = buildingMatB.opacity * m.fade; });
+    motifs.forEach(m => { if (!m.group.visible) return; m.sync.forEach(([c, o]) => { c.color.copy(o.color); c.opacity = o.opacity * m.fade; }); });
     [motifCur, ...motifFading].forEach(m => {
         if (!m) return;
         m.items.forEach(it => {
@@ -4780,6 +4788,7 @@ function updateMotifs(dt, ws, now) {
             if (it.obj.position.z > WORLD_NEAR) m.place(it, it.obj.position.z - WORLD_SPAN);
             if (m.animate) m.animate(it, rTime);
         });
+        if (m.fade < 1) m.own.forEach(mt => { mt.opacity *= m.fade; }); // 専用材質（毎フレーム明滅）もフェード
     });
 
     // 切り替え演出
@@ -5291,7 +5300,15 @@ function buildVoxelModel(art, px, heights) {
 const monsterModels = {}; // 中身は造形キットの定義のあと（ENEMY_BUILD）で入れる
 // ルーパーには画像風のハブを装着
 const monsterObjs = new Map();
+// 敵のモデルは使い回す（出現のたびに形を作ると、その瞬間にカクつくため）
+const monsterPool = {};
 function makeMonsterObj(m) {
+    const type0 = monsterModels[m.type] ? m.type : 'invader', pool = monsterPool[type0];
+    if (pool && pool.length) { const o = pool.pop(); o.userData.seed = Math.random() * 100; o.visible = true; scene.add(o); return o; }
+    return buildMonsterObj(m);
+}
+function releaseMonsterObj(obj) { scene.remove(obj); (monsterPool[obj.userData.type] = monsterPool[obj.userData.type] || []).push(obj); }
+function buildMonsterObj(m) {
     const type = monsterModels[m.type] ? m.type : 'invader';
     const obj = new THREE.Group();
     const body = ENEMY_BUILD[type](monsterModels[type]);
@@ -5306,7 +5323,7 @@ function makeMonsterObj(m) {
     }
     obj.userData.body = body;
     obj.userData.seed = Math.random() * 100;
-    obj.userData.type = m.type;
+    obj.userData.type = type;
     scene.add(obj);
     return obj;
 }
@@ -6913,7 +6930,7 @@ function render3D() {
             const c = obj.userData.type === 'looper' ? hexColor('#9400D3') : obj.userData.type === 'invader' ? hexColor('#ffd060') : hsl(frameCount * 2, 1, 0.65, new THREE.Color());
             spawnBurst(lx, ly, c, obj.userData.type === 'invader' ? 34 : 60, { speed: 420, up: 520, minSize: 3, maxSize: 8 });
         }
-        scene.remove(obj);
+        releaseMonsterObj(obj);
         monsterObjs.delete(m);
     });
 
@@ -7103,8 +7120,11 @@ function render3D() {
         hyperLin = Math.max(0, Math.min(1, hyperLin + (hyperT > 0 ? 1 : -1) * (frozen ? 0 : dt) / 1.0));
         hyperK = hyperLin * hyperLin * (3 - 2 * hyperLin);
         if (hyperK < 0.002) hyperK = 0;
-        hyperGrade.enabled = hyperK > 0;
-        hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ hyperGrade.uniforms.t.value = rTime;
+        const grayK = gameState === 'gameOver' && gameOverReason === 'energy' ? grayscaleAnimation.progress : 0;
+        hyperGrade.uniforms.gray.value = grayK;
+        hyperGrade.enabled = hyperK > 0 || grayK > 0;
+        hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ
+        hyperGrade.uniforms.t.value = rTime;
         composer.render(dt);
     } else {
         renderer.render(scene, camera);
@@ -7889,9 +7909,8 @@ function draw() {
 
     if (gameState === 'gameOver' && gameOverReason === 'energy') {
         const progress = grayscaleAnimation.progress;
-        const filterValue = `grayscale(${progress}) brightness(${1 - progress * 0.2})`;
-        stageEl.style.filter = filterValue;
-        stageEl.style.webkitFilter = filterValue;
+        // 白黒化は描画のシェーダーで行う（CSSのフィルターは重くてカクつくため）。エフェクトOFFの時だけCSSで
+        if (!isEffectsEnabled) { const fv = `grayscale(${progress}) brightness(${1 - progress * 0.2})`; stageEl.style.filter = fv; stageEl.style.webkitFilter = fv; }
     } else {
         if (stageEl.style.filter !== 'none') {
             stageEl.style.filter = 'none';
@@ -8250,7 +8269,10 @@ function prewarmGPU() {
             (o.userData.extra || []).forEach(e => { scene.remove(e); o.add(e); });
             tmp.add(o);
         });
-        ['ufo', 'invader', 'looper', 'weaver', 'sentry', 'lance'].forEach(t => { const o = makeMonsterObj({ type: t, vx: 1 }); scene.remove(o); tmp.add(o); });
+        // 敵は種類ごとに3体ずつ先に作って使い回す（GPUへの転送もここで済ませる）
+        const pooled = [];
+        ['ufo', 'invader', 'looper', 'weaver', 'sentry', 'lance'].forEach(t => { for (let k = 0; k < 3; k++) { const o = buildMonsterObj({ type: t, vx: 1 }); scene.remove(o); tmp.add(o); pooled.push(o); } });
+        prewarmGPU.pooled = pooled;
         // ハイパー時の背景ポリゴン（全種類の形）も先にGPUへ送っておく
         Object.values(hpGeo).forEach(list => list.forEach(v => { tmp.add(new THREE.Mesh(v.g, hpSolidMat)); tmp.add(new THREE.LineSegments(v.e, hpEdgeMat)); }));
         prewarmGPU.keep = tmp;
@@ -8265,6 +8287,7 @@ function prewarmGPU() {
         renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.render(tmp, camera); renderer.setRenderTarget(null);
         culled.forEach(o => { o.frustumCulled = true; }); rt.dispose();
         hidden.forEach(o => { o.visible = false; });
+        (prewarmGPU.pooled || []).forEach(o => { tmp.remove(o); (monsterPool[o.userData.type] = monsterPool[o.userData.type] || []).push(o); });
         // ハイパーの色調シェーダー（普段は無効）も一度通しておく
         if (hyperGrade && composer) { hyperGrade.enabled = true; composer.render(); hyperGrade.enabled = false; }
     } catch (e) { console.warn('prewarm failed', e); }
