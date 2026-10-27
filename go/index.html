@@ -127,12 +127,12 @@ a.snd.home{text-decoration:none}
 .snd:not(.on) .on-w{display:none}
 .snd:not(.on) .off-x{display:inline}
 .brand h1.to-board{cursor:pointer}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--bs);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--bs) / 22), 30px)}
 }
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg{width:20px;height:20px}
@@ -477,14 +477,13 @@ html[lang=ar] :is(.result-sub, .result-big){text-align:center}
 html[lang=ar] *{letter-spacing:0 !important}
 html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .result-big){font-family:'Noto Sans Devanagari','Noto Sans Arabic','Zen Kaku Gothic New',sans-serif}
 /* ---------------------------------------------------------------- phones (and every window that is not the PC layout: narrow / tall mouse windows too) */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 1099/1000), (hover: none) and (pointer: fine){
+@media (max-aspect-ratio: 1/1) and (pointer: coarse), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine){
   :root{--bs:max(200px, min(100vw - 16px, var(--vh) - 250px, 760px))}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 8px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   :root{--ttop:0px}
   .side > .brand{position:static;width:var(--bs);max-width:100%;flex:none}
   .side, .side-in{display:contents}
-  .side2{display:none}
   .side-in > *{width:var(--bs);max-width:100%;flex:none}
   .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:clamp(14px, calc((100vw - 200px) / (var(--tl) * .64)), 19px);letter-spacing:.03em}
@@ -576,38 +575,39 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   .player .count{font-size:clamp(30px, 4.2cqw, 46px)}
 }
 }
-/* ---------------------------------------------------------------- PC (html.pc3 = the PC media of shared/headerbar.js; set by the
-   layout script at the end of the page): board in the middle, a fixed-width column on each side — left: this game (players,
-   count, evaluation bar / graph / ◀ ▶), right: records & study (kifu, review, lesson / puzzle card, online watch card).
-   The board takes the smaller of the window height and the width left by the two columns; both columns are as tall as the
-   board (+ the pass bar under it) and scroll inside when their cards need more room (2026-10-28) */
-.side2{display:none}
-html.pc3{--pad:clamp(14px, 2.6vmin, 30px);--padx:clamp(16px, 2vw, 32px);--gap:clamp(16px, 1.6vw, 26px);--lw:280px;--rw:330px;
+/* ---------------------------------------------------------------- PC (html.pc2 = the PC media of shared/headerbar.js; set by the
+   layout script at the end of the page): two columns — the board (+ the pass bar), and a fixed-width info column on its right
+   (online watch / lesson / puzzle card, players, evaluation bar / graph / ◀ ▶, review, kifu, info line). The board takes the
+   smaller of the window height and the width the column leaves; the column is as tall as the board + pass bar and scrolls
+   inside when its cards need more room; on wide screens the pair stays centred (2026-10-28) */
+html.pc2{--pad:clamp(14px, 2.6vmin, 30px);--padx:clamp(16px, 2vw, 32px);--gap:clamp(18px, 1.8vw, 30px);--rw:360px;--sidew:var(--rw);
   --bv:calc(var(--vh) - var(--pad) * 2 - 52px - var(--ttop));
-  --bs:max(160px, min(var(--bv), 100vw - var(--padx) * 2 - var(--gap) * 2 - var(--lw) - var(--rw), 1100px))}
-html.pc3 .app{grid-template-columns:var(--lw) var(--bs) var(--rw);grid-template-areas:"side board side2";align-items:start}
-html.pc3 .side, html.pc3 .side2{width:100%;height:calc(var(--bs) + 52px);max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;container-type:normal}
-html.pc3 .side2{display:block;grid-area:side2;position:relative}
-html.pc3 .side-in{gap:10px}
-html.pc3 .side-in > .card{padding:12px 14px}
-html.pc3 .players{grid-template-columns:minmax(0,1fr);gap:6px}
-html.pc3 #evalCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:150px}
-html.pc3 #evalCard .graph{flex:1 1 0;height:auto;min-height:40px}
-html.pc3 .info-line{font-size:12px;line-height:1.6}
-html.pc3 .kifu-card{flex:1 1 0;min-height:140px}
-html.pc3 .kifu-head{flex-wrap:wrap;row-gap:2px}
-html.pc3 .side2 .review-card.show{flex:1.6 1 0;min-height:120px}
-html.pc3 .side2 .side-in:has(.review-card.show) .kifu-card{flex:.8 1 0;min-height:110px}
-html.pc3 .side2 .review-card.show:has(.cr-box){flex:none!important}
-html.pc3 body.in-lesson .side2 .side-in, html.pc3 body.in-puzzle .side2 .side-in{height:auto}
-html.pc3 .lesson-card h3, html.pc3 .puzzle-card h3{font-size:20px}
-html.pc3 .lesson-prompt{font-size:15px;line-height:1.7}
-html.pc3 .lesson-actions{flex-wrap:wrap}
-html.pc3 .lesson-actions button{flex:1 1 auto;min-width:0;white-space:nowrap;padding:9px 8px}
-html.pc3 .ol-watch{flex:none}
-/* online dock open and the columns compacted (shared dock-compact): the right column keeps its kifu */
-html.pc3.dock-compact .app .side2 .kifu-card{display:flex!important}
-html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:calc(var(--bs) + 52px)!important}
+  --bs:max(160px, min(var(--bv), 100vw - var(--padx) * 2 - var(--gap) - var(--rw), 1100px))}
+html.pc2 .app{grid-template-columns:var(--bs) var(--rw);grid-template-areas:"board side";align-items:start;justify-content:center;align-content:center}
+html.pc2 .side{width:var(--rw);height:calc(var(--bs) + 52px);max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;container-type:normal}
+html.pc2 .side-in{gap:10px}
+html.pc2 .side-in > .card{padding:12px 14px}
+html.pc2 .players{grid-template-columns:minmax(0,1fr);gap:6px}
+html.pc2 #evalCard .graph{height:clamp(44px, calc(var(--vh) * .08), 80px)}
+html.pc2 .info-line{font-size:12px;line-height:1.6}
+html.pc2 .kifu-card{flex:1 1 0;min-height:120px}
+html.pc2 .kifu-head{flex-wrap:wrap;row-gap:2px}
+html.pc2 .review-card.show{flex:1.4 1 0;min-height:120px}
+html.pc2 .side-in:has(.review-card.show) .kifu-card{flex:.8 1 0;min-height:100px}
+html.pc2 .review-card.show:has(.cr-box){flex:none!important}
+html.pc2 .lesson-card h3, html.pc2 .puzzle-card h3{font-size:20px}
+html.pc2 .lesson-prompt{font-size:15px;line-height:1.7}
+html.pc2 .lesson-actions{flex-wrap:wrap}
+html.pc2 .lesson-actions button{flex:1 1 auto;min-width:0;white-space:nowrap;padding:9px 8px}
+html.pc2 .ol-watch{flex:none}
+/* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the right
+   column (commentary | candidate moves with their lines | study mode); the board and both columns give up its height (2026-10-28) */
+.rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:#111;--rb-s2:#f4f2ea}
+html.pc2.rb-on{--rbh:clamp(170px, calc(var(--vh) * .26), 250px);--bv:calc(var(--vh) - var(--pad) * 2 - 52px - var(--ttop) - var(--rbh) - var(--gap))}
+html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox"}
+html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh)}
+.rb-body .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b0e15;background:#8fe3b8}.rb-body .tag.dubious{background:#f2c060}.rb-body .tag.bad{background:#ff6b5b}
+html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 </style>
 <link rel="stylesheet" href="online.css?v=2">
 </head>
@@ -899,28 +899,17 @@ html.pc3.dock-compact .side2, html.pc3.dock-compact .side2 .side-in{height:calc(
 <script src="../shared/onlinesec.js?v=1"></script>
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=8"></script>
-<script src="learn.js?v=20261028pc"></script>
+<script src="rbox.js?v=2"></script>
+<script src="app.js?v=9"></script>
+<script src="learn.js?v=20261028rb"></script>
 <script src="online-ui.js?v=3"></script>
 <script>
-/* PC layout (shared/headerbar.js HeaderBar.MEDIA): the records & study cards move to the right column (.side2); every other
-   layout (phones, tablets, narrow / tall windows) keeps them in their place in the one stacked column (2026-10-28) */
+/* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other
+   layout (phones, tablets, narrow / clearly tall windows) is the one stacked column */
 (function () {
-  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10)';
-  const left = document.querySelector('.app > .side'); if (!left) return;
-  const right = document.createElement('aside'); right.className = 'side2'; right.innerHTML = '<div class="side-in"></div>'; left.after(right);
-  const box = right.firstChild, home = new Map(), mq = matchMedia(MQ);
-  const SEL = ['#olWatch', '#lessonCard', '#puzzleCard', '#reviewCard', '.kifu-card'];
-  function apply() {
-    const pc = mq.matches;
-    document.documentElement.classList.toggle('pc3', pc);
-    for (const q of SEL) {
-      const el = document.querySelector(q); if (!el) continue;
-      if (pc && el.parentNode !== box) { const ph = document.createComment('pc3'); el.before(ph); home.set(el, ph); box.appendChild(el); }
-      else if (!pc && home.has(el)) { const ph = home.get(el); if (ph.parentNode) ph.replaceWith(el); home.delete(el); }
-    }
-    window.dispatchEvent(new Event('resize'));
-  }
+  const MQ = window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';
+  const mq = matchMedia(MQ);
+  function apply() { document.documentElement.classList.toggle('pc2', mq.matches); window.dispatchEvent(new Event('resize')); }
   if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
   apply();
 })();

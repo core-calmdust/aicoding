@@ -614,6 +614,20 @@ EXPORT(analyze) void analyze(int ms, int playouts, int maxList) {
   for (int i = 0; i < maxList; i++) { Node *c = &ch[idx[i]]; IO[2 + 3 * i] = c->mv; IO[3 + 3 * i] = childV(c); IO[4 + 3 * i] = (int)c->n; }
   IO[0] = maxList;
 }
+// principal variation after the root move `move` of the last analyze() (review box): the proven-winning or most visited child
+// at each level while the tree goes. IO = [len, moves...]
+EXPORT(pv) void pv(int move, int maxLen) {
+  Node *r = &T[0]; IO[0] = 0; if (!r->exp) return;
+  Node *c = 0; for (int i = 0; i < r->nch; i++) if (T[r->first + i].mv == move) { c = &T[r->first + i]; break; }
+  int k = 0; if (maxLen > 60) maxLen = 60;
+  while (c && k < maxLen && c->exp && c->nch > 0) {
+    Node *ch = &T[c->first], *b = 0;
+    for (int i = 0; i < c->nch; i++) { Node *x = &ch[i]; if (x->proof > 0) { b = x; break; } if (x->n > 0 && (!b || x->n > b->n)) b = x; }
+    if (!b) break;
+    IO[1 + k++] = b->mv; c = b;
+  }
+  IO[0] = k;
+}
 EXPORT(set_param) void set_param(int k, int v) {
   if (k == 0) RAVE_B = v / 1e6f; else if (k == 1) UCT_C = v / 1000.f; else if (k == 2) PRIOR_N = (float)v; else if (k == 3) EXPAND_T = v;
 }

@@ -1095,6 +1095,21 @@ EXPORT float *search_result(int maxChildren) {
   return out;
 }
 EXPORT float *root_ownership(void) { return rootOut.own; }
+/* principal variation after the root move `move` (review box): the most visited child at each level, as long as the tree goes.
+ * out[0] = length, then moves (19x19 pos, PASS = 361) */
+EXPORT float *search_pv(int move, int maxLen) {
+  static float out[65];
+  Node *r = rootN, *c = 0; int k = 0;
+  if (maxLen > 64) maxLen = 64;
+  for (int i = 0; r && i < r->nch; i++) if (nodes[r->first + i].move == move) { c = &nodes[r->first + i]; break; }
+  while (c && k < maxLen && c->expanded && c->nch > 0) {
+    Node *b = 0;
+    for (int i = 0; i < c->nch; i++) { Node *x = &nodes[c->first + i]; if (x->N > 0 && (!b || x->N > b->N)) b = x; }
+    if (!b) break;
+    out[1 + k++] = b->move; c = b;
+  }
+  out[0] = k; return out;
+}
 
 #ifdef NATIVE
 /* helpers for native tools */
