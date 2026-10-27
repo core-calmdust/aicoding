@@ -480,7 +480,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 
 /* ---------------------------------------------------------------- responsive */
 /* phones, tablets and narrow / tall PC windows (common spec: everything that is not the PC layout and not a phone held sideways) */
-@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
@@ -722,7 +722,7 @@ body .info-line{font-size:12.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:var(--fw);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(var(--fw) / 18), 30px)}
@@ -732,7 +732,7 @@ body .info-line{font-size:12.5px}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
@@ -847,42 +847,44 @@ html[data-pcs=mono]{--eb1:#5c5c5c;--eb2:#262626;--eb3:#121212;--eb4:#000;--iv1:#
   .evalrow{margin-bottom:6px}
 } }
 
-/* ---------------------------------------------------------------- PC layout (common spec): [left column 280px] [board] [right column 330px]
-   left: this game (players, evaluation bar / graph / ◀ ▶, info) — right: the record, review, lesson / puzzle cards, watching.
-   The board is as large as the window height and the width left by the two columns allow; the columns are as tall as the board
-   and scroll inside. Wide windows keep the three together in the middle. (app.js moves the right-hand cards into .side-r.) */
-.side-r{display:none}
+/* ---------------------------------------------------------------- PC layout (common spec): [board] [info column 360px]
+   The info column (watching / lesson / puzzle cards, players, evaluation, review, record, info line) has a fixed width and the
+   board's height; it scrolls inside. The board is as large as the window height and the width left by the column allow; wide
+   windows keep the two together in the middle. While a reviewed game is shown, the review box (rvbox.js) takes --rbx below them. */
 /* the menu stays in the PC header bar during lessons / puzzles (the side-panel copy is hidden there on phones) */
 body.hb-on .hb .controls.hb-menu{display:flex!important}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root, body, body:not(.no-online), html.dock-fit body:not(.no-online){
-    --lw:280px !important; --rw:330px !important;
-    --gap:clamp(14px, 1.6vw, 32px) !important; --padx:clamp(12px, 1.6vw, 32px) !important; --pad:clamp(12px, 2.4vh, 32px) !important;
-    --cell:max(12px, min((var(--vh) - var(--pad) * 2) / 9.5, (100vw - var(--lw) - var(--rw) - var(--gap) * 2 - var(--padx) * 2) / 8.5, 130px)) !important;
+    --rw:360px !important;
+    --gap:clamp(16px, 2vw, 36px) !important; --padx:clamp(12px, 1.6vw, 32px) !important; --pad:clamp(12px, 2.4vh, 32px) !important;
+    --cell:max(12px, min((var(--vh) - var(--pad) * 2 - var(--rbx, 0px)) / 9.5, (100vw - var(--rw) - var(--gap) - var(--padx) * 2) / 8.5, 130px)) !important;
     --fw:calc(var(--cell) * 8.5) !important; --fh:calc(var(--cell) * 9.5) !important;
   }
-  .app{display:grid!important;grid-template-columns:var(--lw) var(--fw) var(--rw)!important;grid-template-rows:auto!important;grid-template-areas:"left board right"!important;column-gap:var(--gap)!important;row-gap:0!important;justify-content:center!important;align-content:center!important;align-items:center!important;height:var(--vh)!important;padding:var(--pad) var(--padx)!important}
+  .app{display:grid!important;grid-template-columns:var(--fw) var(--rw)!important;grid-template-rows:auto!important;grid-template-areas:"board side"!important;column-gap:var(--gap)!important;row-gap:0!important;justify-content:center!important;align-content:center!important;align-items:center!important;height:var(--vh)!important;padding:var(--pad) var(--padx)!important}
   .app > .board-area{grid-area:board!important;align-self:center!important}
-  .app > .side{grid-area:left!important;display:block!important;width:var(--lw)!important;height:var(--fh)!important;max-height:none!important;min-height:0!important;align-self:center!important;overflow:visible}
-  .app > .side.side-r{grid-area:right!important;width:var(--rw)!important}
+  .app > .side{grid-area:side!important;display:block!important;width:var(--rw)!important;height:var(--fh)!important;max-height:none!important;min-height:0!important;align-self:center!important;overflow:visible}
   .app > .side > .side-in{display:flex!important;flex-direction:column!important;gap:12px!important;height:100%!important;min-height:0!important;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .app > .side > .side-in > *{flex:none;min-height:auto}
   .app > .side > .side-in > .card{padding:12px 14px}
-  /* left: the evaluation card takes the free height (its graph grows) */
-  .app > .side:not(.side-r) #evalCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
-  .app > .side:not(.side-r) #evalCard .graph{flex:1 1 auto;height:auto;min-height:48px}
-  body.in-online .app > .side:not(.side-r) #evalCard{flex:none!important}
-  body:not(.in-lesson):not(.in-puzzle) .app > .side:not(.side-r) .info-line{display:block!important;text-align:start}
-  .app > .side:not(.side-r) .players{grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
-  /* right: the record fills what the other cards leave (it scrolls inside), the review list shares it */
-  .app > .side-r .kifu-card{flex:1 1 0;min-height:150px;display:flex;flex-direction:column}
-  .app > .side-r .kifu-card .kifu{flex:1;min-height:0;max-height:none;overflow-y:auto}
-  .app > .side-r .review-card.show{flex:1.3 1 0;min-height:140px;overflow-y:auto}
-  .app > .side-r .lesson-card, .app > .side-r .puzzle-card{flex:none}
+  body:not(.in-lesson):not(.in-puzzle) .app > .side .info-line{display:block!important;text-align:start}
+  .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
+  /* the record fills what the other cards leave (it scrolls inside), the review list shares it */
+  .app > .side .kifu-card{flex:1 1 0;min-height:150px;display:flex;flex-direction:column}
+  .app > .side .kifu-card .kifu{flex:1;min-height:0;max-height:none;overflow-y:auto}
+  .app > .side .review-card.show{flex:1.3 1 0;min-height:140px;overflow-y:auto}
+  .app > .side .lesson-card, .app > .side .puzzle-card{flex:none}
   html.dock-compact .app > .side, html.dock-compact .app > .side > .side-in{height:var(--fh)!important}
 }
+/* PC review box (rvbox.js): the coach text without its frame; hovered candidate on the board (arrow 1, then the line 2, 3, 4) */
+.rvbox .cr-box{border:0;background:none;padding:0;margin:0}
+.rvbox .cr-h,.rvbox .cr-more{display:none}
+.rvbox .cr-box p{font-size:13.5px}
+.fxsvg .arrow.rvb1{stroke:rgba(255,214,102,.98)}
+.fxsvg .arrow.rvb2{stroke:rgba(159,199,255,.8);stroke-dasharray:.12 .07}
+.rvb-n{position:absolute;width:calc(var(--cell) * .34);height:calc(var(--cell) * .34);margin:calc(var(--cell) * -.47) 0 0 calc(var(--cell) * .13);border-radius:50%;background:#9fc7ff;color:#0b1110;font:700 calc(var(--cell) * .22)/calc(var(--cell) * .34) 'JetBrains Mono',monospace;text-align:center;pointer-events:none;z-index:12;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+.rvb-n.first{background:#ffd666}
 /* PC mouse, but a narrow or tall window: the phone layout (above) with the online strip at the bottom */
-@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 11/10){
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   :root{--cell:min((100vw - 20px) / 8.5, (var(--vh) - 250px) / 9.5, 100px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.5)}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
@@ -1172,12 +1174,13 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/headerbar.js?v=23"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=2"></script>
+<script src="engine.js?v=rb1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="app.js?v=20261024lsl9"></script>
+<script src="rvbox.js?v=1"></script>
+<script src="app.js?v=20261028rb"></script>
 <script src="online-ui.js?v=3sec1l9"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261025x5" defer></script>

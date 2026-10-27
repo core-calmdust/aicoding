@@ -894,6 +894,28 @@ function analyze(rule, moves, ms, start, onProgress) {
   const r = E.rootList(pos, ms || 1000, onProgress, 12);
   return r;
 }
+// review box (PC): the best k candidate moves with values, each with a line of up to `plies` further moves
+// (each move of the line is the engine's choice after a short search; the transposition table of the analysis helps)
+function cands(rule, moves, ms, start, k, plies, onProgress) {
+  const pos = replay(rule, moves, start);
+  if (pos.status().over) return { list: [], depth: 0 };
+  const E = eng();
+  const r = E.rootList(pos, ms || 1200, onProgress, 12);
+  const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
+  for (const e of list) {
+    e.pv = [];
+    pos.make(e.m); let made = 1;
+    for (let d = 0; d < (plies || 7); d++) {
+      if (pos.status().over) break;
+      const b = E.best(pos, { ms: 35 });
+      if (!b || b.i < 0) break;
+      const m = I2M[b.i]; if (!pos.isLegal(m)) break;
+      pos.make(m); made++; e.pv.push(m);
+    }
+    while (made--) pos.unmake();
+  }
+  return { list, depth: r.depth };
+}
 // puzzle solver. attacker to move (defend=false): need per candidate move; defender to move (defend=true): need per reply
 function solve(rule, moves, start, n, defend, maxNodes) {
   const pos = replay(rule, moves, start);
@@ -923,7 +945,7 @@ function loadWeightsBuffer(group, buf) {
   setWeights(group, a.subarray(0, nf)); setLineWeights(group, a.subarray(nf));
   return true;
 }
-const API = { setNN, makeNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
+const API = { setNN, makeNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, cands, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
   C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
@@ -947,6 +969,9 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
         self.postMessage({ id: m.id, type: 'result', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog) });
+      } else if (m.type === 'cands') {
+        const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
+        self.postMessage({ id: m.id, type: 'result', ...cands(m.rule, m.moves, m.time || 1200, m.start, m.k, m.plies, prog) });
       } else if (m.type === 'solve') self.postMessage({ id: m.id, type: 'result', list: solve(m.rule, m.moves, m.start, m.n, m.defend, m.maxNodes) });
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };

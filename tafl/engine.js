@@ -276,6 +276,28 @@ function analyze(start, moves, ms, onProgress, v) {
   WX.analyze(ms, 40); progressCb = null;
   return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1] };
 }
+// review box (PC): the best k candidate moves with values, each with a line of up to `plies` further moves
+// (each move of the line is the engine's choice after a short search; the transposition table of the analysis helps)
+function cands(start, moves, ms, k, plies, onProgress, v) {
+  const r = analyze(start, moves, ms, onProgress, v);
+  const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
+  for (const e of list) {
+    e.pv = [];
+    if (!WX) continue;
+    const line = moves.concat([e.m]);
+    for (let d = 0; d < (plies || 7); d++) {
+      const { pos, hashes } = replay(start, line, v);
+      if (judge(pos, hashes).over) break;
+      if (!wSetup(start, line, v)) break;
+      WX.best(99, 30, 0);
+      const io = wIO(); if (io[0] < 0) break;
+      const m = wMove(io[0]);
+      if (!pos.moves().includes(m)) break;
+      line.push(m); e.pv.push(m);
+    }
+  }
+  return { list, depth: r.depth };
+}
 // puzzles: the side to move (defend = 0) or its opponent (defend = 1) wins within n own moves. See engine.c puzzle().
 function puzzle(start, moves, n, defend, v) {
   if (!WX) return null;
@@ -287,7 +309,7 @@ function puzzle(start, moves, n, defend, v) {
 }
 let progressCb = null;
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, Pos, sqName, sqParse, mFrom, mTo, name, parse, replay, judge, LEVELS, think, analyze, puzzle, kindOf };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, Pos, sqName, sqParse, mFrom, mTo, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, kindOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
@@ -308,7 +330,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), m.v);
           self.postMessage({ id: m.id, type: 'result', ...r });
-        } else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.v) });
+        } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...cands(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), m.v) });
+        else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.v) });
         else if (m.type === 'newgame') { if (WX) WX.new_game(); self.postMessage({ id: m.id, type: 'result' }); }
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
