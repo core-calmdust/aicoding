@@ -4037,7 +4037,9 @@ const LIFT_T = 0.76; // スマホのボス: カメラまでの距離を76%に（
 function liftToCam(o) { o.position.sub(CAM_BASE).multiplyScalar(LIFT_T).add(CAM_BASE); }
 
 if (gl3dOK) {
-    composer = new EffectComposer(renderer);
+    // 画面の後処理用の描画先にもアンチエイリアス（MSAA）をかける。細い線や小さな光が動くたびにチラつくのを防ぐ
+    const msaa = renderer.capabilities.isWebGL2 && !IS_MOBILE ? 4 : 0; // スマホは負荷を増やさないためMSAAなし
+    composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(Math.round(VW * PR), Math.round(VH * PR), { type: THREE.HalfFloatType, samples: msaa }));
     composer.setPixelRatio(PR);
     composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
@@ -4094,23 +4096,28 @@ const glowMat = new THREE.ShaderMaterial({
         attribute float size;
         attribute vec3 gcolor;
         varying vec3 vColor;
+        varying float vFade;
         uniform float uScale;
         void main() {
             vColor = gcolor;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = size * uScale / -mv.z;
+            // 小さすぎる光は動くたびに画素の当たり方が変わってチラつくので、最小サイズを確保して明るさで補う
+            float ps = size * uScale / -mv.z, cps = max(ps, 7.0);
+            vFade = (ps * ps) / (cps * cps);
+            gl_PointSize = cps;
             gl_Position = projectionMatrix * mv;
         }`,
     fragmentShader: `
         varying vec3 vColor;
+        varying float vFade;
         void main() {
             float r = length(gl_PointCoord - 0.5) * 2.0;
             if (r > 1.0) discard;
             // なめらかなガウス風の減衰（縁は0へ滑らかに）。負荷はほぼ増えない
             float r2 = r * r;
             float halo = (exp(-r2 * 4.2) * 0.95 + exp(-r2 * 14.0) * 0.25) * (1.0 - r2) * 0.85;
-            float core = smoothstep(0.34, 0.0, r);
-            vec3 col = vColor * halo + vec3(core) * length(vColor) * 0.6;
+            float core = exp(-r2 * 22.0); // 芯もなめらかに（硬い点だとチラつく）
+            vec3 col = (vColor * halo + vec3(core) * length(vColor) * 0.55) * vFade;
             gl_FragColor = vec4(col, 1.0); // ディザはグローに拾われてチラつくので入れない
         }`,
     blending: THREE.AdditiveBlending,
