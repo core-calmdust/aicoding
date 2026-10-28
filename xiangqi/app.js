@@ -69,7 +69,7 @@ function applyI18n() {
   document.title = t('meta.title');
   renderBrand();
 }
-function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
+function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); const h1 = $('#brandTitle').closest('h1'); if (h1) h1.style.setProperty('--tl', Math.max(14, tt.length)); }   // (the portal skin moves the h1 into its top bar)
 let humanColor = P1;
 let reviewing = false;
 let manualEnd = null;    // resignation / agreed draw in a game vs the AI or between two players: { over, winner, draw, why, n }
