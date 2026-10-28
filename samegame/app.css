@@ -1363,3 +1363,22 @@ body[data-screen="play"] #app{padding-bottom:0}
   .gbar.nosub .gscore{grid-column:1/-1}
   .gorder{grid-area:order}
 }
+
+/* ===== phones: stage themes as compact 3-column icon tiles (no wasted space) ===== */
+@media (max-width:600px){
+  .tgrid{grid-template-columns:repeat(3,1fr)!important;gap:8px}
+  .tcard{flex-direction:column;align-items:center;text-align:center;gap:4px;padding:8px 6px 8px 10px}
+  .tcard::before{width:6px}
+  .tcard .tic{width:46px;height:46px;margin:0}.tcard .tic svg{width:34px;height:34px}
+  .tcard .tt{width:100%;align-items:stretch;gap:3px}
+  .tcard .tt b{font-size:13.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tcard .tt .bar{margin-top:2px;height:7px}
+  .tcard .tmeta{justify-content:center;gap:5px;font-size:10.5px;flex-wrap:nowrap;white-space:nowrap}
+  .tcard .crown{font-size:10px;top:-8px;right:-4px}
+}
+@media (max-width:360px){ .tcard .tt b{font-size:12px} .tcard .tmeta .st{display:none} }
+/* header: the settings button and the language picker get breathing room */
+.top #langSel{margin-inline:6px}
+@media (max-width:400px){ .top #langSel{margin-inline:5px} }
+/* dialog close button: the ✕ is an SVG centred in the square (the text glyph sat low) */
+.mx svg{width:20px;height:20px;display:block}
