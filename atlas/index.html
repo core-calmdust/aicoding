@@ -596,7 +596,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .dprev .bgfill{position:absolute;inset:0;opacity:.85}
 .dprev > *:not(.bgfill){position:relative}
 /* worn names: player + character / background / frame, beside (phone) or under (PC) the character */
-.dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,253,247,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
+.dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
 .dprev .dpl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;border-bottom:2px dashed rgba(0,0,0,.08)}
 .dprev .dpl b{font-size:18px;color:var(--ink);min-width:0;overflow-wrap:anywhere}.dprev .dpl .gnote{color:#5a6078;flex:none}
 .dprev .dw{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
@@ -604,7 +604,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .dprev .dwh{display:flex;align-items:center;gap:6px}.dprev .dw .dwk{font-size:11px;font-weight:800;color:#5a6078;white-space:nowrap}
 .dprev .dw b{font-weight:900;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
 .dprev .dw .rar{position:static;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
-.dprev.dark .dname{background:rgba(22,26,44,.74);border-color:rgba(255,255,255,.18)}.dprev.dark .dpl b,.dprev.dark .dpl .gnote,.dprev.dark .dw b,.dprev.dark .dw .dwk{color:#fff}.dprev.dark .dpl{border-color:rgba(255,255,255,.15)}
+/* the name panel stays translucent white on every background (no dark variant) */
 @media (max-width:760px){
   .dprev{position:relative;top:auto;flex-direction:row;padding:12px;gap:10px}
   .dprev .poke{flex:none}
