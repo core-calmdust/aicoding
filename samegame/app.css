@@ -1304,6 +1304,23 @@ body[data-screen="play"] #app{padding-bottom:0}
   body[data-skin="mid"] .bnav button{border-radius:16px}
   body[data-skin="mid"] .bnav button.on{border-color:transparent;box-shadow:none;transform:translateY(-2px)}
   body.phnav[data-screen="home"] #toast{bottom:calc(var(--bnh) + 18px + env(safe-area-inset-bottom))}
+  /* group chips right above the bar (アクション: modes / mission ranks, a stage list: STAGE 1–5) */
+  body.phnav[data-screen="home"] #home>.sgbar:not([hidden]){flex:none;display:flex;gap:7px;align-items:center;margin:0 -12px;padding:8px max(10px,env(safe-area-inset-right)) 7px max(10px,env(safe-area-inset-left));overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;background:var(--card);border-top:var(--line);position:relative;z-index:49}
+  #home>.sgbar::-webkit-scrollbar{display:none}
+  .sgbar button{flex:1 0 auto;min-width:58px;height:36px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 11px;border:2px solid var(--ink);background:var(--paper);color:var(--text);font-weight:900;font-size:13px;line-height:1;white-space:nowrap;box-shadow:2px 2px 0 var(--ink);transition:transform .1s}
+  .sgbar button:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+  .sgbar button b{font-family:var(--f-sfx);font-weight:400;font-size:16px;letter-spacing:.5px}
+  .sgbar button small{font-size:11px;font-weight:800;opacity:.75}
+  .sgbar button svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4}
+  .sgbar button.lk{opacity:.55}
+  .sgbar button.done:not(.on) b{color:var(--grn)}
+  .sgbar button.on{background:var(--ink);color:var(--yel);transform:translateY(-1px)}
+  .sgbar button.on small{opacity:.9}
+  body.phnav[data-skin="mid"][data-screen="home"] #home>.sgbar:not([hidden]){border-top:0;box-shadow:0 -8px 24px -12px rgba(0,0,0,.35)}
+  body[data-skin="mid"].has-sg .bnav{box-shadow:none}
+  body[data-skin="mid"] .sgbar button{border:0;border-radius:999px;box-shadow:none;background:color-mix(in srgb,var(--ink) 7%,var(--card))}
+  body[data-skin="mid"] .sgbar button b{font-family:'Jost',sans-serif;font-weight:700;font-size:14px}
+  body[data-skin="mid"] .sgbar button.on{background:var(--ink);transform:none}
 }
 
 /* ===== header: only 設定・言語・ホーム ===== */

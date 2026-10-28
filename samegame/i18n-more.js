@@ -818,3 +818,8 @@ window.SAME_I18N.ar = {
   const A = { ja: 'やすみ', en: 'Rest', zh: '休息', ko: '휴식', es: 'Descanso', fr: 'Repos', pt: 'Pausa', de: 'Pause', hi: 'आराम', ar: 'استراحة' };
   for (const l in A) if (window.SAME_I18N[l]) window.SAME_I18N[l]['d.done'] = A[l];
 })();
+/* phone group chips above the bottom bar: the action modes group */
+(function () {
+  const A = { ja: 'モード', en: 'Modes', zh: '模式', ko: '모드', es: 'Modos', fr: 'Modes', pt: 'Modos', de: 'Modi', hi: 'मोड', ar: 'الأنماط' };
+  for (const l in A) if (window.SAME_I18N[l]) window.SAME_I18N[l]['sg.modes'] = A[l];
+})();
