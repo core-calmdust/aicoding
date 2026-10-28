@@ -19,7 +19,15 @@
 //      then bump the ?v= of firebase-config.js in tafl/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, online play shows "coming soon" and Google sync is hidden (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCs0hGgwG_T5Oxs98RuT_P73-M8FPT53TA",
+  authDomain: "tafl-multiplay.firebaseapp.com",
+  databaseURL: "https://tafl-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tafl-multiplay",
+  storageBucket: "tafl-multiplay.firebasestorage.app",
+  messagingSenderId: "740285273122",
+  appId: "1:740285273122:web:909d656a1bf72be923e67b"
+};
 // App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
 window.FIREBASE_APPCHECK_SITE_KEY = null;

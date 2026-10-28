@@ -19,7 +19,15 @@
 //      then bump the ?v= of firebase-config.js in xiangqi/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, online play shows "coming soon" and Google sync is hidden (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCXFTHWt8oLlHjoh2qeI2gaWTgfMxr1lyE",
+  authDomain: "xiangqi-multiplay.firebaseapp.com",
+  databaseURL: "https://xiangqi-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "xiangqi-multiplay",
+  storageBucket: "xiangqi-multiplay.firebasestorage.app",
+  messagingSenderId: "426921312982",
+  appId: "1:426921312982:web:5ab1cb66200367c275ff77"
+};
 // App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
 window.FIREBASE_APPCHECK_SITE_KEY = null;
