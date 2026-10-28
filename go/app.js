@@ -525,11 +525,13 @@ function update(anim) { pending = -1; renderBoard(anim); renderInfo(); if (windo
 // ====================================================================== flow
 function setGame(g) { game = Object.assign({ n: 19, komi: 6.5, rule: 'jp', ha: 0 }, g); view = null; drawnKey = ''; }
 function handicapSpec(n, k) { if (k < 2) return null; return { n, stones: R.handicapPoints(n, k).map(i => [i, P1]), turn: P2 }; }
+// boards under 9x9 are scored by area (Chinese): their komi is the perfect-play margin, which only works when stones count
+const effRule = (n, rule) => n < 9 ? 'cn' : rule;
 function newGame(rated) {
   busyToken++; cancelWorker(); thinking = 0;
   rgame = null; rtHold = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], byo: [0, 0], t: Date.now() });
-  const n = rated ? RT_SIZE : settings.size, rule = settings.rule, ha = rated ? 0 : settings.ha;
+  const n = rated ? RT_SIZE : settings.size, rule = effRule(n, settings.rule), ha = rated ? 0 : settings.ha;
   const komi = ha >= 2 ? 0.5 : settings.komi === 'auto' || rated ? R.defaultKomi(n, rule) : +settings.komi;
   setGame({ n, komi, rule, ha });
   startSpec = handicapSpec(n, ha);
@@ -937,10 +939,10 @@ function segSync() {
   const isOther = !SIZES_MAIN.includes(draft.size);
   $('#segSize').innerHTML = SIZES_MAIN.map(k => `<button data-s="${k}" class="${k === draft.size ? 'sel' : ''}">${k}${t('u.ro')}</button>`).join('') +
     `<select id="selSizeOther" class="${isOther ? 'sel' : ''}"><option value="">${t('ng.otherSize')}</option>${other.map(k => `<option value="${k}" ${k === draft.size ? 'selected' : ''}>${k}${t('u.ro')}</option>`).join('')}</select>`;
-  $('#selRule').value = draft.rule;
+  $('#selRule').value = effRule(draft.size, draft.rule); $('#selRule').disabled = draft.size < 9;
   const hs = $('#selHandi'); hs.innerHTML = [0, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<option value="${k}" ${k === draft.ha ? 'selected' : ''}>${k ? t('ha', { n: k }) : t('ha0')}</option>`).join('');
   hs.disabled = draft.size < 7;
-  const ks = $('#selKomi'), dk = R.defaultKomi(draft.size, draft.rule);
+  const ks = $('#selKomi'), dk = R.defaultKomi(draft.size, effRule(draft.size, draft.rule));
   const kopts = ['auto', 0.5, 0, 5.5, 6.5, 7.5]; if (draft.size < 13) kopts.push(dk);
   ks.innerHTML = [...new Set(kopts)].map(k => `<option value="${k}" ${String(k) === String(draft.komi) ? 'selected' : ''}>${k === 'auto' ? t('komi.auto', { k: draft.ha >= 2 ? 0.5 : dk }) : k}</option>`).join('');
   ks.disabled = draft.ha >= 2;
@@ -955,7 +957,7 @@ $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#segSize').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if (b) { draft.size = +b.dataset.s; if (draft.size < 7) draft.ha = 0; segSync(); } });
 $('#segSize').addEventListener('change', e => { if (e.target.id === 'selSizeOther' && e.target.value) { draft.size = +e.target.value; if (draft.size < 7) draft.ha = 0; segSync(); } });
-$('#selRule').onchange = e => { draft.rule = e.target.value; segSync(); };
+$('#selRule').onchange = e => { if (draft.size < 9) return; draft.rule = e.target.value; segSync(); };
 $('#selHandi').onchange = e => { draft.ha = +e.target.value; segSync(); };
 $('#selKomi').onchange = e => { draft.komi = e.target.value === 'auto' ? 'auto' : +e.target.value; };
 $('#selTap').onchange = e => { draft.tap = e.target.value; };
