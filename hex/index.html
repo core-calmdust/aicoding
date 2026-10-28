@@ -814,11 +814,11 @@ html.pc2 .side > .brand:not(:has(*)){display:none}
 html.bd-dia .swapbtn{left:calc(50% - var(--fw) / 2 + 16px);top:auto;bottom:16px;transform:none}
 html.bd-dia .prompt{left:auto;right:calc(50% - var(--fw) / 2 + 16px);bottom:16px;transform:none}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box (commentary | candidate moves
-   with their lines | study mode); it shares the row under the board with the info cards (players + evaluation | review + kifu),
+   with their lines | study mode); it sits on the left of the row under the board, next to the info cards (players + evaluation | review + kifu),
    and that row grows a little (2026-10-28) */
 .rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:var(--pr2);--rb-s2:var(--pb2)}
 html.pc2.rb-on{--ih:clamp(200px, calc(var(--vh) * .32), 320px)}
-html.pc2.rb-on .app{grid-template-columns:minmax(0, 1fr) minmax(0, 1.25fr);grid-template-areas:"board board" "side rbox"}
+html.pc2.rb-on .app{grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr);grid-template-areas:"board board" "rbox side"}   /* commentary box on the left, like Backgammon */
 html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--ih);min-width:0}
 html.pc2.rb-on .side-in{display:grid;grid-template-columns:minmax(0, .85fr) minmax(0, 1fr);grid-template-rows:minmax(0, 1fr) minmax(0, 1fr)}
 html.pc2.rb-on .side-in > .players{display:none}   /* (the header bar shows the result and the stone counts) */
