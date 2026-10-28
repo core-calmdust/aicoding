@@ -38,18 +38,21 @@ function mvAt(i) { return mvName(moves[i]); }
 
 // ====================================================================== state
 const STORE = 'aicoding-go';
-const settings = { mode: 'ai', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, coord: true, coordAll: false, num: false, atari: false, lang: '', bd: 'kaya', st: 'classic', size: 19, rule: 'jp', ha: 0, komi: 'auto', tap: 'auto', terr: false };
+const settings = { mode: 'ai', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, coord: true, coordAll: false, num: false, atari: false, lang: '', bd: 'kaya', st: 'classic', size: 19, rule: 'jp', ha: 0, komi: 'auto', tap: 'auto', terr: false };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-// AI strength: 26 steps, 15級 (1) … 1級 (15), 初段 (16) … 八段 (23), then アマ最強 / プロ級 / 最強 (24–26).
-// Anchored with GNU Go 3.8 (≈ 6級) and about 100 Elo per step in self-play (tools/vs-gnugo.mjs, tools/selfplay.mjs).
-const LV_MAX = 26;
-const LV = i => i <= 15 ? t('lv.kyu', { n: 16 - i }) : i <= 23 ? t('lv.dan' + (i - 15)) : t('lv.top' + (i - 23));
-const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : i <= 20 ? 3 : 4];
+// AI strength: 25 steps labelled with the ranks measured on 19x19 against KataGo's human-like model (MODEL_CARD.md):
+// 18級 … 1級, 初段 … 八段, then the strongest. Some kyu ranks are skipped where two engine settings played alike.
+const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k10', 'k9', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't3'];
+const LV_MAX = RANKS.length - 1;
+// rank as a number: 18級 = -17 … 1級 = 0, 初段 = 1 … 八段 = 8, beyond = 9+
+const rankVal = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))]; const v = +r.slice(1); return r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v; };
+const LV = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))], v = +r.slice(1); return r[0] === 'k' ? t('lv.kyu', { n: v }) : r[0] === 'd' ? t('lv.dan' + v) : t('lv.top' + v); };
+const LVD = i => { const v = rankVal(i); return t('lvd')[v <= -12 ? 0 : v <= -6 ? 1 : v <= 0 ? 2 : v <= 5 ? 3 : 4]; };
 // points: 3.5 → "3目半" / "3.5"
 function pts(x) { x = Math.abs(Math.round(x * 2) / 2); return t('u.pts', { n: LANG === 'ja' ? (x % 1 ? Math.floor(x) + '目半' : x + '目') : (x % 1 ? x.toFixed(1) : String(x)) }).replace('目目', '目'); }
 const fmtLead = v => (v >= 0 ? '+' : '−') + (Math.round(Math.abs(v) * 10) / 10).toFixed(1);
@@ -87,8 +90,8 @@ function load() {
     if (!d) return false;
     Object.assign(settings, d.settings || {});
     if (settings.mode === 'online') settings.mode = 'pvp';
-    if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 6;
-    if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
+    if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 8;
+    if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 8;
     if (d.game && d.game.n >= 5 && d.game.n <= 19 && Array.isArray(d.moves)) {
       if (!validMoves(d.start || null, d.moves, d.game.n)) return false;
       game = d.game; startSpec = d.start || null;
@@ -107,7 +110,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=6';
+const ENGINE_URL = 'engine.js?v=7';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
@@ -589,7 +592,7 @@ function aiResigns(p, res) {
   if (lv < 4 || cur < n * n * 0.35) return false;
   const wr = res.wr, lead = res.lead;   // AI's view
   const k = cur;
-  const lost = (wr < 0.03 && lead < -(lv >= 16 ? 8 : 20)) || lead < -(n * n * 0.25);
+  const lost = (wr < 0.03 && lead < -(rankVal(lv) >= 1 ? 8 : 20)) || lead < -(n * n * 0.25);
   aiVals[k] = wr;
   if (!lost) return false;
   const prev = aiVals.slice(0, k).filter(x => typeof x === 'number').slice(-2);
@@ -1012,7 +1015,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo): 9x9, 5 min + 20 s byo-yomi
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { base: 300000, byo: 20000 };
 // rating of each AI step on the kyu / dan scale (100 per kyu: 15級 = 450 … 1級 = 1850, then about 100 per dan)
-const RT_LV = [0].concat(Array.from({ length: 26 }, (_, i) => 450 + 100 * i));   // 15級 450 … 1級 1850, 初段 1950 … 八段 2650, 2750 / 2850 / 2950
+const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => 1850 + 100 * rankVal(i + 1)));   // 18級 150 … 1級 1850, 初段 1950 … 八段 2650, the strongest 3050
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
