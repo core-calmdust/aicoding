@@ -837,3 +837,23 @@ body.achnew .achdot{display:block}
 .megrid button{position:relative}.megrid .achdot{top:8px;right:8px}
 #home .htabs > button{position:relative}#home .htabs .achdot{top:4px;right:calc(50% - 20px)}
 @media (max-width:760px){.pact .pcx{display:none}}
+/* phones: group chips fixed right above the bottom tab bar (コレクション difficulties / すぴーど tiers); PC never shows them */
+.sgbar{display:none}
+@media (max-width:760px){
+  :root{--sgH:50px}
+  body.scr-home.has-sg #home.on{height:calc(100vh - var(--hh) - env(safe-area-inset-top) - var(--tbH) - var(--sgH));height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - var(--tbH) - var(--sgH))}
+  body.has-sg #home .sgbar:not([hidden]){display:flex;position:fixed;left:0;right:0;bottom:var(--tbH);z-index:31;height:var(--sgH);box-sizing:border-box;gap:6px;align-items:center;padding:7px max(10px,env(safe-area-inset-right)) 3px max(10px,env(safe-area-inset-left));overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;background:var(--sheet);border-radius:20px 20px 0 0;box-shadow:0 -4px 18px rgba(90,60,120,.13)}
+  #home .sgbar::-webkit-scrollbar{display:none}
+  body.has-sg #home .htabs{border-radius:0;box-shadow:none}
+  body.has-sg #home .htabs::before{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:var(--line);opacity:.7}
+  .sgbar button{flex:1 0 auto;min-width:64px;height:36px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 11px;border-radius:12px;background:color-mix(in srgb,var(--tc) 13%,var(--surface2));color:var(--tc);line-height:1;white-space:nowrap;transition:background .15s,color .15s,transform .1s}
+  .sgbar button:active{transform:scale(.96)}
+  .sgbar button b{font-size:13px;font-weight:900}
+  .sgbar button small{font-size:10.5px;font-weight:700;color:var(--ink2)}
+  .sgbar button.on{background:var(--tc);color:#fff;box-shadow:0 2px 0 color-mix(in srgb,var(--tc) 70%,#000)}
+  .sgbar button.on small{color:rgba(255,255,255,.85)}
+  .sgbar button.done:not(.on) small{color:var(--tc)}
+  .sgbar button.lk{opacity:.6}
+  /* the in-list difficulty jump bar is redundant with the chips; the chosen group starts right below the title */
+  body.has-sg #home .stjump{display:none}
+}

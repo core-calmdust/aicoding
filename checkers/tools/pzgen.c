@@ -3,7 +3,8 @@
 // Goals: win (the opponent cannot move) within n, or gain g pieces within n (see engine.c puzzle()).
 // build: gcc -O2 -DNATIVE -o pzgen tools/pzgen.c
 // usage: pzgen pos <data.bin> <skip> <count> <maxWinN> <maxShotN>   |   pzgen eg <seed> <count> <maxN>
-//        eg mode options (env): KINGS=1 kings only, NPMIN / NPMAX piece count range (default 3..5)
+//        eg mode options (env): KINGS=1 kings only, NPMIN / NPMAX piece count range (default 3..5),
+//        KPCT king chance per piece in % (default 33; 0 = men endings)
 #include "../engine.c"
 
 static u64 rng = 0x9E3779B97F4A7C15ull;
@@ -69,6 +70,7 @@ int main(int argc, char **argv) {
   if (argc > 1 && !strcmp(argv[1], "eg")) {   // random endgames: 3-6 pieces, at least one king, side to move has a DB win (when <= 4 pieces)
     rng ^= (u64)atoll(argv[2]) * 0x2545F4914F6CDD1Dull; long count = atol(argv[3]); int maxN = atoi(argv[4]);
     int konly = getenv("KINGS") ? atoi(getenv("KINGS")) : 0, npMin = getenv("NPMIN") ? atoi(getenv("NPMIN")) : 3, npMax = getenv("NPMAX") ? atoi(getenv("NPMAX")) : 5;
+    int kpct = getenv("KPCT") ? atoi(getenv("KPCT")) : 33;   // chance (%) of a king for each piece (men reaching the far row always crown)
     for (long it = 0; it < count; it++) {
       int np = npMin + rnd() % (npMax - npMin + 1); Pos p; p.p[0] = p.p[1] = p.k = 0; p.side = rnd() & 1;
       u32 used = 0; int nb = 1 + rnd() % (np - 1), ok = 1;
@@ -76,7 +78,7 @@ int main(int argc, char **argv) {
         int c = i < nb ? 0 : 1, sq, tries = 0;
         do { sq = rnd() % 32; } while (((used >> sq) & 1) && ++tries < 100);
         used |= 1u << sq; p.p[c] |= 1u << sq;
-        int king = konly || (rnd() % 3) == 0 || (c == 0 && (ROW[7] >> sq & 1)) || (c == 1 && (ROW[0] >> sq & 1));
+        int king = konly || (int)(rnd() % 100) < kpct || (c == 0 && (ROW[7] >> sq & 1)) || (c == 1 && (ROW[0] >> sq & 1));
         if (king) p.k |= 1u << sq;
       }
       if (!p.p[0] || !p.p[1] || hasCaps(&p)) continue;

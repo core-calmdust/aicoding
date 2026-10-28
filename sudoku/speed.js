@@ -272,7 +272,7 @@ function colCard(kind) {
   if (tiers.length > 2) h += `<div class="stjump">${tiers.map(tr => `<button data-tj="${tr}" style="--tc:${TIERCOL[tr]}" class="${tierClears(tr) >= tierLen(tr) ? 'done' : ''}"><b>${esc(t('sp.tier.' + tr))}</b><small class="num">${tierClears(tr)}/${tierLen(tr)}</small></button>`).join('')}</div>`;
   for (const tr of tiers) {
     const open = tierOpen(tr), need = 0;
-    h += `<div class="stier" id="stier${tr}" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
+    h += `<div class="stier" id="stier${tr}" data-sg="${tr}" style="--tc:${TIERCOL[tr]}"><div class="sth"><b>${esc(t('sp.tier.' + tr))}</b><small>${esc(t('sp.tier.' + tr + '.d'))}</small>${open ? `<em>${tierClears(tr)}/${tierLen(tr)}</em>` : `<em class="lk">${LOCK}${esc(t('sp.tier.lock', { t: t('sp.tier.' + (tr - 1)), n: need }))}</em>`}</div><div class="themes scats">`;
     for (const ci of tierCats(tr)) {
       const n = catClears(ci), c = DATA.cats[ci];
       h += `<button class="tcard scard ${n === catLen(ci) ? 'full' : ''} ${open ? '' : 'locked'}" data-sc="${ci}">${catPic(ci)}<span class="crown">${C.CROWN}</span><div class="tx"><span class="nm">${esc(cname(ci))}</span><span class="lv">${c.kind === 'g' ? `<span class="gchip" style="--gc:${GCOL[c.g]}">${esc(t('g.' + c.g))}</span>` : `<span class="gchip std">${esc(c.kind === 'std' ? t('sp.std.' + [0, 0, 1, 1, 2][Math.min(4, tierCats(0).indexOf(ci))]) : t('sp.kind.' + (c.kind === 'combo' ? 'mix' : c.kind)))}</span>`}</span><span class="pg"><span class="bar"><i style="width:${n / catLen(ci) * 100}%"></i></span>${n}/${catLen(ci)}</span></div></button>`;
@@ -295,6 +295,11 @@ function wireCol(host) {
     if (!tierOpen(DATA.cats[ci].tier)) { C.toast(esc(t('sp.locked')), 'msg'); return; }
     C.SFX.tap(); C.go('s/c/' + (ci + 1));
   });
+}
+/* course groups for the phone group chips above the tab bar (app.js renders them) */
+function groups(kind) {
+  if (!DATA) return null;
+  return TORDER.filter(tr => (kind === 'mix') === MIXT.includes(tr)).map(tr => ({ id: String(tr), lb: t('sp.tier.' + tr), col: TIERCOL[tr], n: tierClears(tr), L: tierLen(tr), open: tierOpen(tr) }));
 }
 /* fill whichever speed containers the page has */
 function renderHome() {
@@ -1358,7 +1363,7 @@ window.SudokuSpeed = {
     return fetch(url).then(r => r.json()).then(j => { DATA = j; syncAch(false); return true; }).catch(e => { console.warn('speed data', e); return false; });
   },
   get ready() { return !!DATA; },
-  route, leave, key, layout, renderHome, openAch, openRank, merge, rankPaths, myRanks, catalog,
+  route, leave, key, layout, renderHome, groups, openAch, openRank, merge, rankPaths, myRanks, catalog,
   monthPts, totalPts: () => S().sc.tot, bgs: BGS, bgOwned, bgCond, bgDefault: 'speedway', spdBg, gic, GICON, FRUIT, BUG, WATCH, GCOL, BOLT, SHOE,
   get playing() { return !!(R && !R.done && (R.state === 'play' || R.state === 'clear')); },
 };

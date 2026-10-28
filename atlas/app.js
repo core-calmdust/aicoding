@@ -255,12 +255,17 @@
   // after load, in idle time: start the 3D table, then build every board ahead of time (one per idle slice),
   // so tapping an icon never has to build a board while the fly / smoke / sparkle effects are playing
   const idle = window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 2500 })) : (f => setTimeout(f, 300));
-  idle(() => {
+  // (none of this runs while a popup / confetti is up: building the table and compiling shaders is long main-thread work
+  // that made the login-bonus confetti hitch)
+  const fxBusy = () => CF.run || $('ov').classList.contains('on');
+  const boot = () => idle(() => {
+    if (!glOK && fxBusy()) return setTimeout(boot, 700);
     if (!glOK) initGL(); if (!glOK) return;
     const q = A_.byUpdate().map(g => g.id);
-    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
+    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
     setTimeout(next, 400);
   });
+  boot();
   // ‹ › buttons page the recent-updates row (one card step; hidden at either end)
   function updNav() {
     const row = $('updRow'), pv = $('updPrev'), nx = $('updNext'); if (!row || !pv) return;
@@ -380,7 +385,7 @@
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
-  function warm(id) { if (initGL()) Table3D.prepare(id, window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null); }
+  function warm(id) { if (initGL()) Table3D.prepare(id); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
@@ -1147,7 +1152,9 @@
         <button class="btn sun big" id="lbTake">${esc(t('ach.take'))}</button></div>`, 'lbs', take);
     $('lbTake').onclick = take;
     SFX.fanfare(250);
-    setTimeout(() => { if (!taken) confetti(40); }, 420);
+    // the first burst waits for the page to have loaded (images decoding, fonts) so it isn't drawn over a busy main thread
+    const burst = () => setTimeout(() => { if (!taken) confetti(40); }, 420);
+    if (document.readyState === 'complete') burst(); else addEventListener('load', burst, { once: true });
   }
   // coins burst out of the popup and fly into the coin counter (header pill, or the hero's pill on phones)
   function flyCoins(src, from, to, done) {

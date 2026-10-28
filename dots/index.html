@@ -477,6 +477,10 @@ body.viewing #svg{cursor:default}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
 .rules{font-size:12.5px;color:var(--muted);line-height:1.75;margin:-6px 0 16px;padding-left:10px;border-left:2px solid var(--brass2)}
 .modal-actions{display:flex;gap:10px;margin-top:22px}
+/* list views fill the fixed-size tabbed dialog; the Close / Back buttons stay pinned to the bottom when there is spare space */
+#lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){display:flex;flex-direction:column}
+#lessonListView:not(.hidden), #pzListView:not(.hidden), #pzGridView:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
+#lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.06em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
 .mbtn.go{background:linear-gradient(180deg,var(--go1),var(--go2));color:var(--go-ink);border-color:transparent}
@@ -2142,7 +2146,7 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
 <script src="online-ui.js?v=20261028l9"></script>
 <script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028tf2" defer></script>
+<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

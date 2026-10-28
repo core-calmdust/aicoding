@@ -388,6 +388,7 @@ function show(id) {
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === id));
   $('#main').classList.toggle('gm', id === 'game' || id === 'spd');
   document.body.classList.toggle('scr-home', id === 'home'); // phones: home = fixed-height area + bottom tab bar
+  if (id !== 'home') document.body.classList.remove('has-sg');
   scrollTo(0, 0);
 }
 function route() {
@@ -480,6 +481,35 @@ function setHomeTab(p) {
   $('#home').dataset.mt = PHONE.matches ? p : pp;
   $$('#htabs > button').forEach(b => b.classList.toggle('on', b.dataset.p === (PHONE.matches ? p : pp)));
   $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === pp && (x.dataset.m || 'su') === gm));
+  renderSG();
+}
+/* phones: tabs that stack several course groups (コレクション's difficulties, すぴーど's tiers) get a row of group chips
+   fixed right above the tab bar, and only the chosen group is shown. The choice is kept per game mode + tab in the settings. */
+function sgGroups() {
+  const gm = gmode(), p = curTab();
+  if (gm === 'su' && p === 'col') return CTIERS.map(([lv, a, b]) => { const ids = CORDER.slice(a, b); return { id: String(lv), lb: t('lv.' + lv), col: LVCOL[lv], n: ids.reduce((x, i) => x + cCleared(i), 0), L: ids.length * CSZ, open: true }; });
+  if (gm === 'sp' && (p === 'col' || p === 'var') && SPD && SPD.groups) return SPD.groups(p === 'var' ? 'mix' : 'col');
+  return null;
+}
+function renderSG() {
+  const bar = $('#sgbar'); if (!bar) return;
+  const gs = PHONE.matches && screen === 'home' ? sgGroups() : null;
+  document.body.classList.toggle('has-sg', !!(gs && gs.length > 1));
+  if (!gs || gs.length < 2) { bar.hidden = true; $('#sgcss').textContent = ''; return; }
+  const key = gmode() + '.' + curTab(), sv = DB.set.sg || {};
+  let sel = sv[key];
+  if (!gs.some(g => g.id === sel)) sel = (gs.find(g => g.open && g.n < g.L) || gs[0]).id;
+  bar.hidden = false;
+  bar.innerHTML = gs.map(g => `<button data-sg="${g.id}" style="--tc:${g.col}" class="${g.id === sel ? 'on' : ''} ${g.n >= g.L ? 'done' : ''} ${g.open ? '' : 'lk'}" aria-pressed="${g.id === sel}"><b>${esc(g.lb)}</b><small class="num">${g.n}/${g.L}</small></button>`).join('');
+  // hide the other groups with a rule (survives re-renders of the panel content)
+  $('#sgcss').textContent = `body.has-sg.scr-home #home .hpanel.on [data-sg]:not([data-sg="${sel}"]){display:none}`;
+  const on = bar.querySelector('.on');
+  if (on) { const l = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; bar.scrollLeft = Math.max(0, l); }
+  bar.querySelectorAll('button').forEach(b => b.onclick = () => {
+    if (b.dataset.sg === sel) return;
+    SFX.tap(); DB.set.sg = Object.assign({}, DB.set.sg, { [key]: b.dataset.sg }); persist();
+    renderSG(); $('#home').scrollTop = 0;
+  });
 }
 /* the game selector sits in the tab row on PC and above the content on phones */
 function placeGsel() {
@@ -527,7 +557,7 @@ function hideGmTip() { const tip = $('#gmTip'); if (tip) tip.classList.remove('o
 addEventListener('click', () => { const b = $('#gsel'); if (b) b.classList.remove('open'); });
 function renderHome() {
   renderProfile();
-  if (MODE === 'speed') { setHomeTab(DB.homeTabS || 'daily'); if (SPD) SPD.renderHome(); loadMyRanks(); return; }
+  if (MODE === 'speed') { setHomeTab(DB.homeTabS || 'daily'); if (SPD) SPD.renderHome(); renderSG(); loadMyRanks(); return; }
   const gm = gmode();
   document.body.classList.toggle('gm-sp', gm === 'sp');
   $('#htabs [data-p=var]').hidden = gm === 'su' && (!PV || !E.setVariant);
@@ -553,7 +583,7 @@ function renderHome() {
   const groups = CTIERS.map(([lv, a, b]) => ({ lv, ids: CORDER.slice(a, b) })).map(g => Object.assign(g, { n: g.ids.reduce((x, i) => x + cCleared(i), 0), L: g.ids.length * CSZ }));
   const tc = $('#themes'); tc.className = 'ctiers';
   tc.innerHTML = `<div class="stjump">${groups.map(g => `<button data-tj="${g.lv}" style="--tc:${LVCOL[g.lv]}" class="${g.n >= g.L ? 'done' : ''}"><b>${esc(t('lv.' + g.lv))}</b><small class="num">${g.n}/${g.L}</small></button>`).join('')}</div>`
-    + groups.map(g => `<div class="stier" id="ctier${g.lv}" style="--tc:${LVCOL[g.lv]}"><div class="sth"><b>${esc(t('lv.' + g.lv))}</b><small>${esc(t('ct.d.' + g.lv))}</small><em>${g.n}/${g.L}</em></div><div class="themes">${g.ids.map(card).join('')}</div></div>`).join('');
+    + groups.map(g => `<div class="stier" id="ctier${g.lv}" data-sg="${g.lv}" style="--tc:${LVCOL[g.lv]}"><div class="sth"><b>${esc(t('lv.' + g.lv))}</b><small>${esc(t('ct.d.' + g.lv))}</small><em>${g.n}/${g.L}</em></div><div class="themes">${g.ids.map(card).join('')}</div></div>`).join('');
   $$('#themes .tcard').forEach(b => b.onclick = () => { SFX.tap(); go('t/' + (+b.dataset.t + 1)); });
   $$('#themes [data-tj]').forEach(b => b.onclick = () => {
     const el = $('#ctier' + b.dataset.tj), bar = $('#themes .stjump'); if (!el) return; SFX.tap();
@@ -576,6 +606,7 @@ function renderHome() {
   loadMyRanks();
   renderDailyExtra();
   if (SPD) SPD.renderHome();
+  renderSG();
 }
 /* daily panel: today's mini ranking + goals close to completion */
 let dxDiff = 'e';
@@ -1951,6 +1982,7 @@ $$('#mePanel [data-me]').forEach(b => b.onclick = () => {
   const sp = MODE === 'speed' && SPD;
   ({ gacha: openGacha, zukan: openZukan, rank: () => (sp ? SPD.openRank() : openRank()), ach: () => (sp ? SPD.openAch() : openAch()), set: openSettings, help: openHelp })[b.dataset.me]();
 });
+if (!$('#sgbar')) { $('#home').insertAdjacentHTML('beforeend', '<nav class="sgbar" id="sgbar" hidden></nav>'); document.head.insertAdjacentHTML('beforeend', '<style id="sgcss"></style>'); }
 placeGsel();
 PHONE.addEventListener('change', () => { placeGsel(); if (screen === 'home') setHomeTab(MODE === 'speed' ? DB.homeTabS : DB.homeTab); });
 $('#logo').onclick = () => go('');

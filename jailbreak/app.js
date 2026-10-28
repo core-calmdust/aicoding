@@ -208,11 +208,35 @@ function renderHome() {
   $$('#htabs button').forEach(b => b.classList.toggle('on', b.dataset.p === homeTab));
   $$('#bnav button').forEach(b => { const on = b.dataset.p === homeTab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   $$('.hpanel').forEach(p => { p.hidden = p.dataset.p !== homeTab; });
+  renderSubnav();
   if (homeTab === 'gacha') openGacha($('#gachaPanel'));
   if (!ST || !DL) { $('#dBox').innerHTML = `<p class="note">${esc(t('err.load'))}</p>`; return; }
   if (homeTab === 'daily' || homeTab === 'me') renderDaily();
   if (homeTab === 'course') courseOpenId ? renderCourse(courseOpenId) : renderCourses();
   if (homeTab === 'modes') modeOpenId ? renderMode(modeOpenId) : renderModes();
+}
+/* phones: コース / モード show one category at a time, picked from a row of chips fixed just above the tab bar.
+   The choice is kept per tab (DB.set.sub); before any choice, コース opens on the category holding the next unfinished course. */
+const SUBS = { course: ['mix', 'cls'], modes: ['run', 'rule'] };
+const subCount = { mix: () => COURSES().filter(c => c.kind === 'mix').length, cls: () => COURSES().filter(c => c.kind === 'classic').length, run: () => 2, rule: () => SMODES.length };
+function subOf(tab) {
+  const s = (DB.set.sub || {})[tab];
+  if (SUBS[tab].includes(s)) return s;
+  if (tab === 'course') { const c = COURSES().find(c => courseRecs(c.id).some(v => !v)); return c && c.kind === 'classic' ? 'cls' : 'mix'; }
+  return SUBS[tab][0];
+}
+const subShown = () => PHONE.matches && !!SUBS[homeTab];
+function renderSubnav() {
+  const el = $('#subnav'), on = subShown() && !courseOpenId && !modeOpenId && !!ST;
+  document.body.classList.toggle('hassub', on);
+  if (!on) { el.innerHTML = ''; return; }
+  const cur = subOf(homeTab);
+  el.innerHTML = SUBS[homeTab].map(k => `<button type="button" role="tab" class="sb-${k}${k === cur ? ' on' : ''}" data-sub="${k}" aria-selected="${k === cur}"><span>${esc(t('sub.' + k))}</span><small>${subCount[k]()}</small></button>`).join('');
+  $$('button', el).forEach(b => { b.onclick = () => {
+    if (b.dataset.sub === subOf(homeTab)) return;
+    DB.set.sub = Object.assign({}, DB.set.sub, { [homeTab]: b.dataset.sub }); save(); SND.page && SND.page();
+    renderHome(); const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0;
+  }; });
 }
 function setHomeTab(p) {
   const same = p === homeTab && !courseOpenId && !modeOpenId; homeTab = p; courseOpenId = modeOpenId = null;
@@ -283,9 +307,9 @@ function storyThen(co, j, go) {
   DB.tut[k] = 1; save(); showStory(f, go, co);
 }
 function renderCourses() {
-  const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic');
-  el.innerHTML = `<section class="card panel secbox sb-mix"><div class="ptag">${esc(t('co.mix.h'))}</div><p class="secd">${esc(t('co.mix.d'))}</p><div class="tgrid">${mix.map(courseCard).join('')}</div></section>
-    <section class="card panel secbox sb-cls"><div class="ptag">${esc(t('co.cls.h'))}</div><p class="secd">${esc(t('co.cls.d'))}</p><div class="tgrid">${cls.map(courseCard).join('')}</div></section>`;
+  const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic'), sub = subShown() ? subOf('course') : '';
+  el.innerHTML = `${sub === 'cls' ? '' : `<section class="card panel secbox sb-mix"><div class="ptag">${esc(t('co.mix.h'))}</div><p class="secd">${esc(t('co.mix.d'))}</p><div class="tgrid">${mix.map(courseCard).join('')}</div></section>`}
+    ${sub === 'mix' ? '' : `<section class="card panel secbox sb-cls"><div class="ptag">${esc(t('co.cls.h'))}</div><p class="secd">${esc(t('co.cls.d'))}</p><div class="tgrid">${cls.map(courseCard).join('')}</div></section>`}`;
   // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
   // while nothing on the course is cleared yet, its story comes first (then the stage starts)
   fitNames(el);
@@ -341,13 +365,14 @@ function showStory(f, then, co = courseOpenId) {
   SND.page && SND.page();
 }
 function renderModes() {
-  const el = $('#modePanel');
+  const el = $('#modePanel'), sub = subShown() ? subOf('modes') : '';
   const sc = (m, best, extra) => `<div class="card acard" style="--mc:${MODE_COL[m]}"><div class="ptag">${esc(t('mo.' + m))}</div><button class="qbtn qc" data-rule="${m}">?</button><span class="aic">${A.MI[m]}</span><p>${esc(t('mo.' + m + '.s'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${best ? fmt(best) : '—'}</b>${extra || ''}</div><button class="btn big org" data-sm="${m}">${A.ICON.play}${esc(t('d.play'))}</button></div>`;
-  let html = `<section class="card panel secbox sb-run"><div class="ptag">${esc(t('mo.h'))}</div><p class="secd">${esc(t('mo.d'))}</p><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}</div>
-    </section><section class="card panel secbox sb-rule"><div class="ptag">${esc(t('mo.h2'))}</div><p class="secd">${esc(t('mo.d2'))}</p><div class="mgrid">`;
+  let html = sub === 'rule' ? '' : `<section class="card panel secbox sb-run"><div class="ptag">${esc(t('mo.h'))}</div><p class="secd">${esc(t('mo.d'))}</p><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}</div></section>`;
+  if (sub === 'run') { el.innerHTML = html; } else {
+  html += `<section class="card panel secbox sb-rule"><div class="ptag">${esc(t('mo.h2'))}</div><p class="secd">${esc(t('mo.d2'))}</p><div class="mgrid">`;
   SMODES.forEach(m => { const recs = modeRecs(m), done = recs.filter(v => v).length, stars = recs.reduce((a, b) => a + b, 0), N = recs.length;
     html += `<div class="mcard" style="--mc:${MODE_COL[m]}"><button class="cmain" data-mode="${m}" data-j="${contIdx(m)}"><span class="mic">${A.MI[m]}</span><span class="mt"><b>${esc(t('mo.' + m))}</b><small>${esc(t('mo.' + m + '.s'))}</small><span class="bar"><i style="width:${done / N * 100}%"></i></span><span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><span class="mnext">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} ${contIdx(m) + 1}</span></span></span></button>${done === N ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`; });
-  el.innerHTML = html + '</div></section>';
+  el.innerHTML = html + '</div></section>'; }
   $$('[data-sm]', el).forEach(b => { b.onclick = () => b.dataset.sm === 'sl' ? startSearch(false) : startChain(); });
   // a rule-mode card starts its next stage straight away (the stage list opens from the result screen's "list")
   $$('[data-mode]', el).forEach(b => { b.onclick = () => startStage(b.dataset.mode, +b.dataset.j); });
@@ -362,7 +387,11 @@ function renderMode(m) {
   $('#moCont').onclick = () => startStage(m, j);
   $$('.tile', el).forEach(b => { b.onclick = () => startStage(m, +b.dataset.j); });
 }
-function closeList() { courseOpenId = modeOpenId = null; renderHome(); const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0; scrollTo(0, 0); }
+function closeList() {
+  // back to the list: the sub-tab follows the category of the course / mode that was open
+  const c = courseOpenId && courseOf(courseOpenId), sk = c ? (c.kind === 'classic' ? 'cls' : 'mix') : modeOpenId ? 'rule' : null;
+  if (sk && subOf(homeTab) !== sk && SUBS[homeTab] && SUBS[homeTab].includes(sk)) { DB.set.sub = Object.assign({}, DB.set.sub, { [homeTab]: sk }); save(); }
+  courseOpenId = modeOpenId = null; renderHome(); const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0; scrollTo(0, 0); }
 document.addEventListener('click', e => { const b = e.target.closest('[data-rule]'); if (b) { e.stopPropagation(); maybeRuleTip(b.dataset.rule, true); } });
 
 /* ============================================================ GAME ============================================================ */
@@ -809,7 +838,17 @@ const nameNudge = () => (ON && ON.available && !DB.name) ? `<button class="nudge
 function resultCard(head, body, btns, cls = '') {
   return `<div class="result ${cls}"><div class="rbody"><div class="rhead"><b>${esc(head)}</b></div>${body}</div><div class="rbtns">${btns.filter(Boolean).map(([a, l, c]) => `<button class="btn ${c || ''}" data-act="${a}">${esc(l)}</button>`).join('')}</div></div>`;
 }
-function showResult(html) { const m = $('#gameMsg'); m.innerHTML = html; m.hidden = false; $$('[data-act]', m).forEach(b => { b.onclick = () => resultAct(b.dataset.act); }); }
+function showResult(html) { const m = $('#gameMsg'); m.innerHTML = html; m.hidden = false; $$('[data-act]', m).forEach(b => { b.onclick = () => resultAct(b.dataset.act); }); centerMsg(); }
+// PC: the result card sits on the centre of the board (not of the window, which the side panel shifts)
+function centerMsg() {
+  const r = $('#gameMsg .result'); if (!r) return; r.style.translate = '';
+  if (innerWidth < 1000 || !G || $('#play').hidden) return;
+  const b = boardEl().getBoundingClientRect(), c = r.getBoundingClientRect(); if (!b.width) return;
+  const dx = (b.left + b.width / 2) - (c.left + c.width / 2), dy = (b.top + b.height / 2) - (c.top + c.height / 2);
+  const cx = Math.max(8 - c.left, Math.min(innerWidth - 8 - c.right, dx)), cy = Math.max(8 - c.top, Math.min(innerHeight - 8 - c.bottom, dy));
+  r.style.translate = `${Math.round(cx)}px ${Math.round(cy)}px`;
+}
+addEventListener('resize', () => { if (!$('#gameMsg').hidden) centerMsg(); });
 function resultAct(a) {
   const m = $('#gameMsg');
   if (a === 'retry') { if (G.kind === 'stage') { const s = G.src, j = G.j; startStage(s, j); G.retried = true; } return; }

@@ -726,7 +726,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // Merge: progress keys are united (best / stars max, clear or), daily days united and the streak recomputed; settings / name: newest wins.
 const MancalaSync = (() => {
   const META = 'mancala-sync-meta';
-  const SET_KEYS = ['rules', 'seeds', 'color', 'level', 'level2', 'eval', 'anim', 'coach', 'preview', 'sound', 'hint', 'lang'];
+  const SET_KEYS = ['rules', 'seeds', 'color', 'level', 'level2', 'eval', 'anim', 'speed', 'skin', 'coach', 'preview', 'sound', 'hint', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -802,6 +802,8 @@ const MancalaSync = (() => {
       SET_KEYS.forEach(k => { if (k !== 'lang' && d.set[k] !== undefined) settings[k] = d.set[k]; });
       if (!E.RULES[settings.rules]) settings.rules = 'kalah';
       if (![4, 6].includes(settings.seeds)) settings.seeds = 4;
+      if (settings.speed !== 'fast') settings.speed = 'normal';
+      if (typeof skinApply === 'function') skinApply(settings.skin);
       if (d.set.lang && SUPPORTED.includes(d.set.lang)) { LANG = d.set.lang; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (e) {} }
       const set = {}; SET_KEYS.forEach(k => { if (settings[k] !== undefined) set[k] = settings[k]; }); set.lang = LANG;
       m.setH = JSON.stringify(set); m.setT = d.setT || 1;

@@ -180,10 +180,15 @@
   const ball = (cy, rad, n = 16) => arc(0, cy, rad, 0, Math.PI, n);
   const closed = (pts) => { const a = pts[0], b = pts[pts.length - 1]; return [[0, a[1]], ...pts, [0, b[1]]]; };
   const geoCache = {};
-  let LOW = false;   // building the faint mirror image in the lacquer: a coarser lathe is enough
+  // the portal (atlas/) shows the pieces small on the chabudai — showcase and table play — so it always builds the light versions;
+  // the full 3D chess page keeps the fine ones
+  const PORTAL = /\/atlas\//.test(location.pathname), small = () => MID || PORTAL;
+  let LOW = false, MID = false;   // LOW: building the faint mirror image in the lacquer: a coarser lathe is enough · MID: the small showcase pieces on the chabudai
   function lathe(key, pts, seg) {   // phones: fewer segments round the lathe
-    seg = Math.min(seg || 99, LOW ? 20 : X.coarse ? 32 : 48); key += '@' + seg;
+    const sm = small();
+    seg = Math.min(seg || 99, LOW ? (sm ? 8 : 14) : sm ? 14 : X.coarse ? 24 : 36); key += '@' + seg + (sm || LOW ? 'd' : '');
     if (geoCache[key]) return geoCache[key];
+    if (sm || LOW) pts = pts.filter((p, i) => i < 2 || i > pts.length - 3 || i % 2 === 0);   // small pieces: every other profile point (the turned shape stays, at half the rings)
     const TT = T(), g = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(Math.max(0, r), y)), seg);
     return (geoCache[key] = g);
   }
@@ -252,9 +257,11 @@
     },
   };
   // knight head: a modelled side profile (facing +x), extruded and tapered towards the muzzle
-  let headGeo = null, maneGeo = null;
+  let headGeo = null, maneGeo = null; const headLo = {};
   function knightHead() {
-    if (headGeo) return { headGeo, maneGeo };
+    const lo = small() || LOW;
+    if (lo && headLo.headGeo) return headLo;
+    if (!lo && headGeo) return { headGeo, maneGeo };
     const TT = T(), V = (x, y) => new TT.Vector2(x, y);
     const sh = new TT.Shape();
     sh.moveTo(-.2, .02); sh.lineTo(.17, .02);
@@ -265,7 +272,7 @@
     sh.splineThru([V(-.025, .87), V(-.06, .8)]);     // back ear
     sh.splineThru([V(-.14, .7), V(-.21, .56), V(-.25, .38), V(-.255, .2), V(-.23, .08), V(-.2, .02)]);
     const D = .1, BT = .075;
-    const g = new TT.ExtrudeGeometry(sh, { depth: D, bevelEnabled: true, bevelThickness: BT, bevelSize: .045, bevelSegments: 7, curveSegments: 24 });
+    const g = new TT.ExtrudeGeometry(sh, { depth: D, bevelEnabled: true, bevelThickness: BT, bevelSize: .045, bevelSegments: lo ? 2 : 3, curveSegments: lo ? 3 : 6 });   // (curveSegments is per spline span: 6 keeps the profile smooth at ~40% of the triangles)
     g.translate(0, 0, -D / 2);
     const P = g.attributes.position, UV = g.attributes.uv;
     for (let i = 0; i < P.count; i++) {   // narrower muzzle and ears, a fuller jaw and neck
@@ -278,11 +285,12 @@
       UV.setXY(i, x * 1.3 + .5 + z * .4, y * 1.3);   // planar marble, no stretched stripes on the sides
     }
     g.computeVertexNormals();
-    headGeo = g;
+    if (lo) headLo.headGeo = g; else headGeo = g;
     // mane: a metal crest along the back of the neck
     const curve = new TT.CatmullRomCurve3([[-.04, .83], [-.13, .73], [-.215, .59], [-.265, .42], [-.278, .25], [-.262, .1]].map(([x, y]) => new TT.Vector3(x, y, 0)));
-    maneGeo = new TT.TubeGeometry(curve, 48, .042, 10, false);
-    return { headGeo, maneGeo };
+    const mg = new TT.TubeGeometry(curve, lo ? 14 : 32, .042, lo ? 5 : 8, false);
+    if (lo) { headLo.maneGeo = mg; return headLo; }
+    maneGeo = mg; return { headGeo, maneGeo };
   }
   const TYPES = ' PNBRQK';
   function piece(type, color, o) {
@@ -299,12 +307,12 @@
       if (!geo) {
         const s = new TT.Shape(), a = TAU / q.n * .56;
         s.absarc(0, 0, q.r1, -a / 2, a / 2, false); s.absarc(0, 0, q.r0, a / 2, -a / 2, true);
-        geo = geoCache[key] = new TT.ExtrudeGeometry(s, { depth: q.y1 - q.y0 - .016, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: 2, curveSegments: 10 });
+        geo = geoCache[key] = new TT.ExtrudeGeometry(s, { depth: q.y1 - q.y0 - .016, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: 2, curveSegments: 6 });
         geo.rotateX(-Math.PI / 2);
       }
       for (let i = 0; i < q.n; i++) add(geo, m.metal, { p: [0, q.y0 + .008, 0], r: [0, i * TAU / q.n + TAU / q.n / 2, 0] });
     }
-    if (pr.coronet) { const q = pr.coronet, geo = geoCache.cor || (geoCache.cor = new TT.SphereGeometry(q.s, 14, 10)); for (let i = 0; i < q.n; i++) { const a = i / q.n * TAU; add(geo, m.metal, { p: [Math.cos(a) * q.r, q.y, Math.sin(a) * q.r] }); } }
+    if (pr.coronet) { const q = pr.coronet, ck = small() ? 'corS' : 'cor', geo = geoCache[ck] || (geoCache[ck] = small() ? new TT.SphereGeometry(q.s, 6, 4) : new TT.SphereGeometry(q.s, 10, 7)); for (let i = 0; i < q.n; i++) { const a = i / q.n * TAU; add(geo, m.metal, { p: [Math.cos(a) * q.r, q.y, Math.sin(a) * q.r] }); } }
     if (pr.cross && wd) {   // wood king: a turned bud finial instead of the cross
       const y = pr.cross.y, geo = geoCache.bud || (geoCache.bud = lathe('kbud', closed([[.05, y - .005], [.07, y + .03], [.085, y + .08], [.08, y + .13], [.06, y + .18], [.035, y + .22], [.012, y + .26], [0, y + .275]]), 40));
       add(geo, m.resin);
@@ -351,7 +359,7 @@
     block.position.y = THICK / 2; block.castShadow = block.receiveShadow = true; block.renderOrder = -2; g.add(block);   // drawn first: the reflections test against it
     // the game's board skins tint the lacquer a little
     const tinted = [topMat, side], base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460 };
+    const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460, marble: 0xf2f1ee, tourney: 0xdce8cf, ocean: 0xd2e0ee, rosewood: 0xe8c4b2 };
     let curSet = 'lux';
     g.userData.setSet = name => {
       if (!SETS[name] || (name === curSet && topMat.map === topMaps[name])) return; curSet = name;   // topMat is shared by every board: another board may have left a different set on it
@@ -374,7 +382,7 @@
       if (t === 'N') p.rotation.y = col === 'w' ? Math.PI / 2 + (f < 4 ? -.35 : .35) : -Math.PI / 2 + (f < 4 ? .35 : -.35);   // knights look at the opponent, a little outward
       g.add(p); const sh = X.contact(.34, .5); sh.position.set(x, Y + .002, z); g.add(sh);
     };
-    [...back].forEach((t, f) => { put(t, f, 0, 'b'); put(t, f, 7, 'w'); put('P', f, 1, 'b'); put('P', f, 6, 'w'); });
+    MID = true; try { [...back].forEach((t, f) => { put(t, f, 0, 'b'); put(t, f, 7, 'w'); put('P', f, 1, 'b'); put('P', f, 6, 'w'); }); } finally { MID = false; }   // (showcase: 32 small pieces + their mirror images → coarser lathes)
     g.scale.setScalar(.98);   // about the reversi board's size on the chabudai
     return g;
   };

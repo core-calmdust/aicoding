@@ -210,7 +210,7 @@
   /* ---------- the legged board ---------- */
   function leg(mat) {   // kuchinashi (gardenia fruit) foot: a carved, eight-lobed bulb
     const TT = T(), pts = [[0, 0], [.34, 0], [.42, .08], [.6, .32], [.62, .45], [.55, .62], [.36, .78], [.26, .86], [.28, .93], [.42, .98], [.44, 1.04], [.36, 1.1], [.36, LEG], [0, LEG]];
-    const geo = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), 64);
+    const geo = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), 40);
     const P = geo.attributes.position;
     for (let i = 0; i < P.count; i++) {
       const x = P.getX(i), z = P.getZ(i), y = P.getY(i), a = Math.atan2(z, x), lobe = y < .9 ? 1 + .1 * Math.pow(Math.abs(Math.cos(a * 4)), .6) - .05 : 1;

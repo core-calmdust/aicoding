@@ -303,7 +303,7 @@
  "op.hint": "The gold ring marks the piece the best move uses.",
  "op.auto": "Autoplay / stop (Space)",
  "pz.title": "Checkers puzzles",
- "pz.desc": "\"Win in N\" problems and \"Win material in N\" shots. The opponent always defends as stubbornly as possible. There is exactly one correct first move, and every puzzle was verified by the engine (with endgame databases).",
+ "pz.desc": "\"Win in N\" and \"Win material in N\" problems on many themes: shots, multi-jumps, breakthroughs, defence and endgames. The opponent always defends as stubbornly as possible. There is exactly one correct first move, and every puzzle was verified by the engine (with endgame databases).",
  "pz.retry": "Retry",
  "pz.answer": "Show answer",
  "pz.next": "Next puzzle",
