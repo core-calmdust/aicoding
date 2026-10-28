@@ -566,9 +566,19 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
 }
 @media (max-width: 480px) {
   #app { padding: 8px 12px 30px; }
-  .top .icons { width: 100%; justify-content: flex-end; }
+  /* phones: logo and the 4 icons on one row */
+  .top { flex-wrap: nowrap; gap: 6px; }
+  .top .brand { min-width: 0; flex: 1 1 auto; }
+  .top .icons { width: auto; flex: none; flex-wrap: nowrap; gap: 4px; }
+  .top .ib { width: 34px; height: 34px; } .top .ib .ico { width: 19px; height: 19px; }
+  .lg1 { font-size: 21px; -webkit-text-stroke-width: 1.3px; text-shadow: 2px 2px 0 var(--ink); } .lg2 { font-size: 11px; padding: 3px 6px; border-width: 2px; letter-spacing: .06em; }
+  .logo { gap: 4px; } .series { font-size: 10px; padding: 3px 6px; }
   .dlv { grid-template-columns: 60px minmax(0, 1fr); gap: 8px 10px; } .dlb { grid-column: 1 / -1; flex-direction: row; } .dlb .btn:first-child { flex: 1; } .dlb .btn.sm { width: auto; flex: none; padding-inline: 18px; } .dic svg { width: 60px; height: 60px; }
   .gctl { gap: 6px; } .gctl .ns, .gctl .lim { min-width: 66px; padding: 1px 8px 2px; height: 44px; } .gbtn { width: 44px; height: 44px; } .hst i { font-size: 19px; }
   .gitems { grid-template-columns: repeat(4, 1fr); }
   .acard p { margin-top: 26px; }
 }
+
+.lg1, .lg2 { white-space: nowrap; }
+@media (max-width: 380px) { .lg1 { font-size: 18px; } .lg2 { font-size: 10px; padding: 2px 5px; } .top .ib { width: 32px; height: 32px; } }
+@media (max-width: 340px) { .lg1 { font-size: 15px; -webkit-text-stroke-width: 1px; } .lg2 { font-size: 9px; padding: 2px 4px; letter-spacing: .02em; } .top .ib { width: 29px; height: 29px; } .top .ib .ico { width: 17px; height: 17px; } .top .icons { gap: 3px; } }
