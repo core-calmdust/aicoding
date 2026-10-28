@@ -1262,4 +1262,8 @@ add("ar", {
  ["de","10 Themen × 50 = 500 Rätsel","40 Sammlungen × 25 = 1.000 Rätsel"],
  ["hi","10 थीम × 50 = 500 पहेलियाँ","40 संग्रह × 25 = 1000 पहेलियाँ"],
  ["ar","10 مواضيع × 50 = 500 لغز","40 مجموعة × 25 = 1000 لغز"]].forEach(([l, a, b]) => { const v = I[l] && I[l]['help.html']; if (typeof v === 'string' && v.indexOf(a) >= 0) I[l]['help.html'] = v.replace(a, b); });
+// phones: bottom tab bar — 記録 (rankings / goals / calendar) and マイページ (profile + shortcuts)
+[['ja', '記録', 'マイページ'], ['en', 'Records', 'Me'], ['zh', '记录', '我的'], ['ko', '기록', '마이'], ['es', 'Registro', 'Perfil'],
+ ['fr', 'Suivi', 'Profil'], ['pt', 'Registro', 'Perfil'], ['de', 'Verlauf', 'Profil'], ['hi', 'रिकॉर्ड', 'प्रोफ़ाइल'], ['ar', 'السجل', 'ملفي']]
+  .forEach(([l, r, m]) => add(l, { 'ht.rec': r, 'ht.me': m }));
 })(window.I18N);

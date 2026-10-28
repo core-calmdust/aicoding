@@ -17,8 +17,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=rm1">
-<link rel="stylesheet" href="speed.css?v=31">
+<link rel="stylesheet" href="app.css?v=tb1">
+<link rel="stylesheet" href="speed.css?v=tb1">
 </head>
 <body data-th="de">
 <div id="bg"></div>
@@ -40,10 +40,13 @@
   <main id="main">
     <section class="screen" id="home">
       <div class="card" id="profCard"></div>
+      <div class="gselm" id="gselM"></div>
       <nav class="htabs" id="htabs">
         <button data-p="daily"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15.5" r="2.2" fill="currentColor" stroke="none"/></svg><span data-i18n="ht.daily">デイリー</span></button>
         <button data-p="col"><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg><span data-i18n="ht.col">コレクション</span></button>
         <button data-p="var"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><circle cx="17" cy="7" r="4"/><path d="M7 13l4 8H3z"/><rect x="13" y="13" width="8" height="8" rx="2" transform="rotate(10 17 17)"/></svg><span id="htVar">変わり種</span></button>
+        <button data-p="rec" class="mob"><svg viewBox="0 0 24 24"><rect x="9" y="7" width="6" height="14" rx="1.5"/><rect x="2.5" y="11" width="6" height="10" rx="1.5"/><rect x="15.5" y="13" width="6" height="8" rx="1.5"/><path d="M12 2.2l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 4.3l2-.3z"/></svg><span data-i18n="ht.rec">記録</span></button>
+        <button data-p="me" class="mob"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span data-i18n="ht.me">マイページ</span></button>
         <div class="gsel" id="gsel" hidden><button class="gmbtn" id="gmBtn" aria-haspopup="listbox"><i class="gmi" id="gmIco"></i><span id="gmName"></span><svg class="car" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button><div class="gmenu" id="gmMenu" role="listbox"></div><div class="gtip" id="gmTip"></div></div>
       </nav>
       <div class="hpanel daily" data-p="daily" data-m="su">
@@ -91,6 +94,15 @@
       </div>
       <div class="hpanel" data-p="col" data-m="sp"><div class="card colcard spdcol" id="spdCol"></div></div>
       <div class="hpanel" data-p="var" data-m="sp"><div class="card colcard spdcol" id="spdMix"></div></div>
+      <!-- phones: マイページ tab (profile card above + shortcuts to the dialogs) -->
+      <div class="mepanel" id="mePanel"><div class="card"><div class="megrid">
+        <button data-me="gacha"><svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="8" fill="#ffd0e0"/><circle cx="9" cy="8" r="2.4" fill="#ffcd4d"/><circle cx="14" cy="11" r="2.4" fill="#8fc4ff"/><rect x="7" y="17" width="10" height="5" rx="1.5" fill="#f07a8f"/></svg><b data-i18n="ga.title">キャラガチャ</b></button>
+        <button data-me="zukan"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="#c7a8ff"/><circle cx="12" cy="11" r="4.5" fill="#fff"/><circle cx="10.4" cy="10.6" r=".9" fill="#43385a"/><circle cx="13.6" cy="10.6" r=".9" fill="#43385a"/></svg><b data-i18n="zk.title">キャラ図鑑</b></button>
+        <button data-me="rank"><svg viewBox="0 0 24 24"><rect x="9" y="6" width="6" height="15" rx="1.5" fill="#ffcd4d"/><rect x="2.5" y="11" width="6" height="10" rx="1.5" fill="#c9d3e0"/><rect x="15.5" y="13" width="6" height="8" rx="1.5" fill="#e09a62"/><path d="M12 1.8l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="#ff8fb6"/></svg><b data-i18n="rk.title">ランキング</b></button>
+        <button data-me="ach"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z" fill="#ffcd4d"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4" stroke="#e8a20f" stroke-width="2" fill="none"/><path d="M10 13h4v3h-4zM8 18h8v2H8z" fill="#e8a20f"/></svg><b data-i18n="ach.title">実績</b></button>
+        <button data-me="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#cfe3ff"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#5f86c9" stroke-width="2.2"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" stroke="#5f86c9" stroke-width="2.2" stroke-linecap="round"/></svg><b data-i18n="set.title">設定</b></button>
+        <button data-me="help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffe3b3"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.5" fill="none" stroke="#d9891a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="#d9891a"/></svg><b data-i18n="help.title">あそびかた</b></button>
+      </div></div></div>
     </section>
 
     <section class="screen" id="theme">
@@ -158,14 +170,14 @@
 <script src="icons.js?v=3"></script>
 <script src="i18n.js?v=2"></script>
 <script src="i18n2.js?v=3"></script>
-<script src="i18n3.js?v=6"></script>
+<script src="i18n3.js?v=tb1"></script>
 <script src="firebase-config.js?v=ac2"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=sec2"></script>
 <script src="i18n-speed.js?v=22"></script>
-<script src="speed.js?v=24"></script>
+<script src="speed.js?v=tb1"></script>
 <script src="tutorial.js?v=11"></script>
-<script src="app.js?v=snd1"></script>
+<script src="app.js?v=tb1"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261025x5" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac2" defer></script>
