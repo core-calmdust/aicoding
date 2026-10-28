@@ -87,8 +87,6 @@ python3 -m http.server 8000
 - **Backgammon** — includes a JavaScript port of the [wildbg](https://github.com/carsten-wenderdel/wildbg) neural net (© 2023 Carsten Wenderdel, MIT / Apache-2.0); see [backgammon/THIRD_PARTY_LICENSES.txt](backgammon/THIRD_PARTY_LICENSES.txt). The lightweight net was trained on our own self-play positions labelled with wildbg evaluations and [wildbg-training](https://github.com/carsten-wenderdel/wildbg-training) rollout data (CC0).
 - **Checkers, Nine Men's Morris** — evaluations learned from the engines' own self-play.
 
-## License
-
-[Apache License 2.0](LICENSE)
+## Copyright
 
 Copyright 2026 core-calmdust
