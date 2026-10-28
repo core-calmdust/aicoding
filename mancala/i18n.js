@@ -955,3 +955,19 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+// animation speed + board & stone designs (new-game dialog)
+(function () {
+const S = {
+  ja: { 'ng.speed': 'アニメーション速度', 'sp.normal': 'ふつう', 'sp.fast': 'はやい', 'ng.skin': '盤と石のデザイン', 'sk.luxe': 'ブラック', 'sk.walnut': 'ウォルナット', 'sk.marble': '大理石', 'sk.jade': '翡翠', 'sk.ocean': 'オーシャン' },
+  en: { 'ng.speed': 'Animation speed', 'sp.normal': 'Normal', 'sp.fast': 'Fast', 'ng.skin': 'Board & stones', 'sk.luxe': 'Black', 'sk.walnut': 'Walnut', 'sk.marble': 'Marble', 'sk.jade': 'Jade', 'sk.ocean': 'Ocean' },
+  zh: { 'ng.speed': '动画速度', 'sp.normal': '普通', 'sp.fast': '快速', 'ng.skin': '棋盘与棋子', 'sk.luxe': '黑漆', 'sk.walnut': '胡桃木', 'sk.marble': '大理石', 'sk.jade': '翡翠', 'sk.ocean': '海洋' },
+  ko: { 'ng.speed': '애니메이션 속도', 'sp.normal': '보통', 'sp.fast': '빠르게', 'ng.skin': '판과 돌 디자인', 'sk.luxe': '블랙', 'sk.walnut': '월넛', 'sk.marble': '대리석', 'sk.jade': '비취', 'sk.ocean': '오션' },
+  es: { 'ng.speed': 'Velocidad de animación', 'sp.normal': 'Normal', 'sp.fast': 'Rápida', 'ng.skin': 'Tablero y piedras', 'sk.luxe': 'Negro', 'sk.walnut': 'Nogal', 'sk.marble': 'Mármol', 'sk.jade': 'Jade', 'sk.ocean': 'Océano' },
+  fr: { 'ng.speed': "Vitesse d'animation", 'sp.normal': 'Normale', 'sp.fast': 'Rapide', 'ng.skin': 'Plateau et pierres', 'sk.luxe': 'Noir', 'sk.walnut': 'Noyer', 'sk.marble': 'Marbre', 'sk.jade': 'Jade', 'sk.ocean': 'Océan' },
+  pt: { 'ng.speed': 'Velocidade da animação', 'sp.normal': 'Normal', 'sp.fast': 'Rápida', 'ng.skin': 'Tabuleiro e pedras', 'sk.luxe': 'Preto', 'sk.walnut': 'Nogueira', 'sk.marble': 'Mármore', 'sk.jade': 'Jade', 'sk.ocean': 'Oceano' },
+  de: { 'ng.speed': 'Animationstempo', 'sp.normal': 'Normal', 'sp.fast': 'Schnell', 'ng.skin': 'Brett & Steine', 'sk.luxe': 'Schwarz', 'sk.walnut': 'Nussbaum', 'sk.marble': 'Marmor', 'sk.jade': 'Jade', 'sk.ocean': 'Ozean' },
+  hi: { 'ng.speed': 'एनिमेशन की गति', 'sp.normal': 'सामान्य', 'sp.fast': 'तेज़', 'ng.skin': 'बोर्ड और बीज', 'sk.luxe': 'काला', 'sk.walnut': 'अखरोट', 'sk.marble': 'संगमरमर', 'sk.jade': 'हरिताश्म', 'sk.ocean': 'समुद्र' },
+  ar: { 'ng.speed': 'سرعة الحركة', 'sp.normal': 'عادية', 'sp.fast': 'سريعة', 'ng.skin': 'اللوحة والحجارة', 'sk.luxe': 'أسود', 'sk.walnut': 'جوز', 'sk.marble': 'رخام', 'sk.jade': 'يشم', 'sk.ocean': 'محيط' },
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();

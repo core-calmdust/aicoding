@@ -27,7 +27,7 @@ function applyI18n() {
 
 // ====================================================================== state
 const STORE = 'aicoding-mancala-v1';
-const settings = { mode: 'ai', rules: 'kalah', seeds: 4, color: 0, level: 5, level2: 8, eval: true, anim: true, coach: true, preview: true, sound: true, hint: false, lang: '' };
+const settings = { mode: 'ai', rules: 'kalah', seeds: 4, color: 0, level: 5, level2: 8, eval: true, anim: true, speed: 'normal', skin: 'luxe', coach: true, preview: true, sound: true, hint: false, lang: '' };
 let game = { rules: 'kalah', seeds: 4, moves: [], human: 0, setup: null };
 let P = [];              // positions (engine replay)
 let cur = 0;             // number of moves shown
@@ -206,20 +206,45 @@ function layout() {
 }
 
 // ====================================================================== gems
-const GEMS = [
-  ['#ffb3bd', '#d6324b', '#5c0a18'], ['#bfe0ff', '#2f7fd6', '#0b2a5c'], ['#c9ffd9', '#26a65b', '#0a3d20'], ['#ffe9b0', '#e0a526', '#6b4206'],
-  ['#e8ccff', '#9152d6', '#35115e'], ['#c4fbff', '#21b4c4', '#07434d'], ['#ffffff', '#d9dde6', '#7c8494'], ['#ffd1b0', '#e2702e', '#6b2a07'],
-];
+// board & stone designs: CSS does the board (html[data-sk]); here are the stone colours [highlight, body, shadow]
+// and the colours of the small SVG boards (rules tour, lessons, the picker in the new-game dialog)
+const SKINS = {
+  luxe: { gems: [['#ffb3bd', '#d6324b', '#5c0a18'], ['#bfe0ff', '#2f7fd6', '#0b2a5c'], ['#c9ffd9', '#26a65b', '#0a3d20'], ['#ffe9b0', '#e0a526', '#6b4206'],
+      ['#e8ccff', '#9152d6', '#35115e'], ['#c4fbff', '#21b4c4', '#07434d'], ['#ffffff', '#d9dde6', '#7c8494'], ['#ffd1b0', '#e2702e', '#6b2a07']],
+    svg: { bg: ['#202022', '#19191b', '#101011'], rim: 'rgba(255,255,255,.08)', cup: ['#050506', '#121213', '#232326'], txt: '#f4e4bd', txt0: 'rgba(244,228,189,.4)', cap: 'rgba(226,194,117,.55)', line: 'rgba(255,255,255,.07)' } },
+  walnut: { gems: [['#f6f0e6', '#cfc4b2', '#6f6658'], ['#e2e3e1', '#8d9092', '#33363a'], ['#f8dfc4', '#c08a5c', '#5e3b1f'], ['#ebe6d8', '#a9a089', '#4d4635'], ['#ffffff', '#e9e4da', '#9a9184'], ['#c9c9c9', '#55575a', '#161718']],
+    svg: { bg: ['#6e3519', '#56290f', '#3e1d0c'], rim: 'rgba(226,194,117,.45)', cup: ['#120803', '#2a150b', '#552b15'], txt: '#f7e6c4', txt0: 'rgba(247,230,196,.4)', cap: 'rgba(247,230,196,.6)', line: 'rgba(255,220,170,.12)' } },
+  marble: { gems: [['#ffffff', '#f1ebe2', '#a49b90'], ['#9aa0aa', '#2d3036', '#050506'], ['#fff3c4', '#d6aa3e', '#6b4b0e'], ['#ffe6ec', '#e3a0b2', '#8a4a5c'], ['#c4d6fa', '#3657a8', '#0f1f4d']],
+    svg: { bg: ['#f8f5ef', '#ece7de', '#dcd5c9'], rim: '#c9a961', cup: ['#837c72', '#aaa397', '#e0dacf'], txt: '#4a3f33', txt0: 'rgba(74,63,51,.35)', cap: 'rgba(120,96,50,.75)', line: 'rgba(110,90,60,.18)' } },
+  jade: { gems: [['#fff3c4', '#d6aa3e', '#6b4b0e'], ['#ffffff', '#f1ebe2', '#a49b90'], ['#ffd6c8', '#e65c42', '#7a1f10'], ['#ffe9f0', '#f09ab0', '#8a3b52'], ['#fff9e0', '#f3d77e', '#8a6a1a']],
+    svg: { bg: ['#2e7a5c', '#1b5642', '#0d3327'], rim: 'rgba(226,194,117,.55)', cup: ['#03100b', '#0a261d', '#1b4c3a'], txt: '#f1e6c2', txt0: 'rgba(241,230,194,.4)', cap: 'rgba(226,194,117,.65)', line: 'rgba(226,194,117,.22)' } },
+  ocean: { gems: [['#eafffb', '#7fd6c4', '#1f6b5e'], ['#e8f4ff', '#7fb4e6', '#1f4a7a'], ['#ffffff', '#d8ecf2', '#7f9aa6'], ['#f3ebff', '#b39be6', '#4a3580'], ['#fff8e0', '#e9cf8a', '#7a6230']],
+    svg: { bg: ['#25527c', '#173a5c', '#0a1b31'], rim: 'rgba(170,220,255,.3)', cup: ['#020811', '#08182e', '#18406a'], txt: '#e6f1ff', txt0: 'rgba(230,241,255,.4)', cap: 'rgba(170,220,255,.6)', line: 'rgba(170,220,255,.16)' } },
+};
+const SKIN_KEYS = Object.keys(SKINS);
+const skinOf = k => SKINS[k] || SKINS[settings.skin] || SKINS.luxe;
 let seeds = Array.from({ length: 14 }, () => []);   // per slot: {el, x, y} (offsets in u, horizontal frame)
 let gemRs = 1;
 function gemRand() { gemRs = (Math.imul(gemRs, 1103515245) + 12345) & 0x7fffffff; return gemRs / 0x7fffffff; }
+function paintSeed(el) {
+  const G = skinOf().gems, g = G[el._gi % G.length];
+  el.style.setProperty('--c1', g[0]); el.style.setProperty('--c2', g[1]); el.style.setProperty('--c3', g[2]);
+}
 function newSeed() {
   const el = document.createElement('div'); el.className = 'seed';
-  const g = GEMS[Math.floor(gemRand() * GEMS.length)];
-  el.style.setProperty('--c1', g[0]); el.style.setProperty('--c2', g[1]); el.style.setProperty('--c3', g[2]);
+  el._gi = Math.floor(gemRand() * 840);   // divisible by every palette size, so each design keeps an even mix
+  paintSeed(el);
   seedsEl.appendChild(el);
   return { el, x: 0, y: 0, slot: -1 };
 }
+// switch the board & stone design (stones already on the board are recoloured in place)
+function skinApply(k) {
+  settings.skin = SKINS[k] ? k : 'luxe';
+  document.documentElement.dataset.sk = settings.skin;
+  seedsEl.querySelectorAll('.seed').forEach(el => { if (el._gi !== undefined) paintSeed(el); });
+}
+// animation speed: 'normal' | 'fast' (the sowing in the game and in the rules tour)
+const spd = () => settings.speed === 'fast' ? 0.5 : 1;
 function inside(i, x, y) {
   if (isStore(i)) return [Math.max(-0.4, Math.min(0.4, x)), Math.max(-1.19, Math.min(1.19, y))];
   const R = 0.31, r = Math.hypot(x, y); return r > R ? [x / r * R, y / r * R] : [x, y];
@@ -349,7 +374,7 @@ async function animateMove(b, side, k, rules) {
   animating = true; boardEl.classList.add('animating');
   const counts = Int8Array.from(b), total = tr.events.filter(e => e.t === 'drop').length;
   // ~300 ms per seed, quicker for very long sows (relays can move dozens of seeds)
-  const step = total <= 8 ? 400 : Math.max(200, 400 - (total - 8) * 10), dur = Math.round(step * 1.35);
+  const f = spd(), step = (total <= 8 ? 400 : Math.max(200, 400 - (total - 8) * 10)) * f, dur = Math.round(step * 1.35);
   let hand = [];
   try {
     for (const ev of tr.events) {
@@ -376,12 +401,12 @@ async function animateMove(b, side, k, rules) {
         capFx(ev.from); if (ev.own >= 0) capFx(ev.own);
         handAt(ev.to, 0, 'cap');
         showBanner(t('bn.capture'), '+' + (ev.n + (ev.own >= 0 ? 1 : 0)), 'cap'); sCapture();
-        await nap(650);
+        await nap(650 * f);
         if (tok !== animTok) break;
         const got = seeds[ev.from].splice(0).concat(ev.own >= 0 ? seeds[ev.own].splice(0) : []);
         counts[ev.from] = 0; if (ev.own >= 0) counts[ev.own] = 0; setBadges(counts);
-        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: ev.to, x, y }, 1100, 1.7, { cap: true }); }, j * 110); });
-        await nap(1150 + got.length * 110);
+        got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: ev.to, x, y }, 1100 * f, 1.7, { cap: true }); }, j * 110 * f); });
+        await nap((1150 + got.length * 110) * f);
         if (tok !== animTok) break;
         counts[ev.to] += got.length; setBadges(counts, ev.to);
       } else if (ev.t === 'sweep') {
@@ -391,12 +416,12 @@ async function animateMove(b, side, k, rules) {
         const moving = [];
         for (let i = 0; i < 14; i++) if (!isStore(i) && seeds[i].length) { const to = ownerOf(i) ? 13 : 6; for (const s of seeds[i].splice(0)) moving.push([s, to]); counts[i] = 0; }
         setBadges(counts);
-        moving.forEach(([s, to], j) => { const [x, y] = placeIn(to, seeds[to]); seeds[to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: to, x, y }, 800, 0.7); }, j * 40); });
-        await nap(850 + moving.length * 40);
+        moving.forEach(([s, to], j) => { const [x, y] = placeIn(to, seeds[to]); seeds[to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: to, x, y }, 800 * f, 0.7); }, j * 40 * f); });
+        await nap((850 + moving.length * 40) * f);
       }
     }
     if (tok === animTok) {
-      if (tr.extra && !tr.over) { handAt(tr.land, 0, 'extra'); showBanner(t('bn.extra'), '', ''); sExtra(); await nap(motionOn() ? 900 : 500); }
+      if (tr.extra && !tr.over) { handAt(tr.land, 0, 'extra'); showBanner(t('bn.extra'), '', ''); sExtra(); await nap((motionOn() ? 900 : 500) * f); }
       else await nap(dur);
     }
   } finally {
@@ -1051,8 +1076,17 @@ function segSync() {
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, rules: settings.rules, seeds: settings.seeds };
   $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach; $('#optPreview').checked = settings.preview;
-  segSync(); $('#newOverlay').classList.add('show');
+  segSync(); skinPicker(); speedSync(); $('#newOverlay').classList.add('show');
 }
+// design picker: a live mini board per design; a click switches the board at once (kept in the settings)
+function skinPicker() {
+  const el = $('#skRow'); if (!el) return;
+  const c = B0([4, 4, 4, 4, 4, 4], [4, 4, 4, 4, 4, 4], 7, 7);
+  el.innerHTML = SKIN_KEYS.map(k => `<button type="button" data-sk="${k}" class="${k === settings.skin ? 'sel' : ''}" aria-pressed="${k === settings.skin}">${miniBoard(c, {}, null, { sk: k, mini: 1 })}<span>${t('sk.' + k)}</span></button>`).join('');
+}
+$('#skRow').onclick = e => { const b = e.target.closest('button[data-sk]'); if (!b) return; skinApply(b.dataset.sk); save(); skinPicker(); sTick(); if ($('#rulesOverlay').classList.contains('show')) renderRules(); };
+function speedSync() { document.querySelectorAll('#segSpeed button').forEach(b => b.classList.toggle('sel', b.dataset.v === (settings.speed === 'fast' ? 'fast' : 'normal'))); }
+$('#segSpeed').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.speed = b.dataset.v === 'fast' ? 'fast' : 'normal'; save(); speedSync(); sTick(); };
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#segSeeds').onclick = e => { const b = e.target.closest('button'); if (b) { draft.seeds = +b.dataset.v; segSync(); } };
@@ -1080,35 +1114,41 @@ function mbXY(i) {   // player 0 at the bottom
   if (i < 6) return [85 + i * 60, 122]; return [385 - (i - 7) * 60, 48];
 }
 // mini board: counts[14], marks: {i: 'land'|'cap'|'src'|'store'|'relay'}, path: [slot indices] drawn as numbered drops
+// opt.sk: design (default: the current one); opt.mini: the picker tile (the right end only: store + two pit columns, no numbers)
+let mbN = 0;
 function miniBoard(counts, marks, path, opt) {
   opt = opt || {};
-  let s = `<svg viewBox="0 0 ${MB.W} ${MB.H}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e2c275"/></marker><linearGradient id="wd" x1="0" x2="1"><stop offset="0" stop-color="#202022"/><stop offset=".5" stop-color="#19191b"/><stop offset="1" stop-color="#101011"/></linearGradient><radialGradient id="cup" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#050506"/><stop offset=".7" stop-color="#121213"/><stop offset="1" stop-color="#232326"/></radialGradient><radialGradient id="gm" cx=".33" cy=".28" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".2" stop-color="#ffb3bd"/><stop offset=".6" stop-color="#d6324b"/><stop offset="1" stop-color="#5c0a18"/></radialGradient></defs>`;
-  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#wd)" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>`;
+  const SK = skinOf(opt.sk), C = SK.svg, id = 'mb' + (++mbN) + '-';   // ids are unique per picture (several boards share the page)
+  const gems = SK.gems.map((g, j) => `<radialGradient id="${id}g${j}" cx=".33" cy=".28" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".2" stop-color="${g[0]}"/><stop offset=".6" stop-color="${g[1]}"/><stop offset="1" stop-color="${g[2]}"/></radialGradient>`).join('');
+  const vb = opt.mini ? '292 4 176 184' : `0 0 ${MB.W} ${MB.H}`;
+  let s = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" data-mb="${id}"><defs><marker id="${id}ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e2c275"/></marker><linearGradient id="${id}wd" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${C.bg[0]}"/><stop offset=".5" stop-color="${C.bg[1]}"/><stop offset="1" stop-color="${C.bg[2]}"/></linearGradient><radialGradient id="${id}cup" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="${C.cup[0]}"/><stop offset=".7" stop-color="${C.cup[1]}"/><stop offset="1" stop-color="${C.cup[2]}"/></radialGradient>${gems}</defs>`;
+  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#${id}wd)" stroke="${C.rim}" stroke-width="1.5"/>`;
+  s += `<line x1="70" x2="400" y1="85" y2="85" stroke="${C.line}" stroke-width="1"/>`;
   for (let i = 0; i < 14; i++) {
     const [x, y] = mbXY(i), mk = marks && marks[i];
-    if (isStore(i)) s += `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#cup)"/>`;
-    else s += `<circle cx="${x}" cy="${y}" r="23" fill="url(#cup)"/>`;
+    if (isStore(i)) s += `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#${id}cup)"/>`;
+    else s += `<circle cx="${x}" cy="${y}" r="23" fill="url(#${id}cup)"/>`;
     const n = counts[i];
     // a few gems + the count
     const g = Math.min(n, isStore(i) ? 8 : 5);
-    for (let j = 0; j < g; j++) { const a = j * 2.4, r = j ? 6 + (j % 3) * 3 : 0; const gx = x + Math.cos(a) * r, gy = y + Math.sin(a) * r * (isStore(i) ? 4 : 1) + (isStore(i) ? 0 : 0); s += `<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="5" fill="url(#gm)" opacity=".9"/>`; }
-    s += `<text x="${x}" y="${isStore(i) ? (i === 6 ? y + 78 : y - 70) : (i < 6 ? y + 38 : y - 30)}" fill="${n ? '#f4e4bd' : 'rgba(244,228,189,.4)'}" font-family="JetBrains Mono,monospace" font-size="15" font-weight="700" text-anchor="middle">${n}</text>`;
+    for (let j = 0; j < g; j++) { const a = j * 2.4, r = j ? (opt.mini ? 9 + (j % 3) * 2 : 6 + (j % 3) * 3) : 0; const gx = x + Math.cos(a) * r * (opt.mini && isStore(i) ? 0.9 : 1), gy = y + Math.sin(a) * r * (isStore(i) ? (opt.mini ? 4.5 : 4) : 1); s += `<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="${opt.mini ? 8 : 5}" fill="url(#${id}g${(i * 3 + j) % SK.gems.length})" opacity=".95"/>`; }
+    if (!opt.mini) s += `<text x="${x}" y="${isStore(i) ? (i === 6 ? y + 78 : y - 70) : (i < 6 ? y + 38 : y - 30)}" fill="${n ? C.txt : C.txt0}" font-family="JetBrains Mono,monospace" font-size="15" font-weight="700" text-anchor="middle">${n}</text>`;
     if (mk) {
-      const col = mk === 'cap' ? '#ff7a6a' : mk === 'relay' ? '#7fc8ff' : mk === 'src' ? '#ffffff' : '#e2c275';
+      const col = mk === 'cap' ? '#ff7a6a' : mk === 'relay' ? '#7fc8ff' : mk === 'src' ? (opt.sk || settings.skin) === 'marble' ? '#6b5a40' : '#ffffff' : '#e2c275';
       if (isStore(i)) s += `<rect x="${x - 26}" y="${y - 66}" width="52" height="132" rx="26" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${mk === 'src' ? '0' : '6 4'}"/>`;
       else s += `<circle cx="${x}" cy="${y}" r="27" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${mk === 'src' ? '0' : '6 4'}"/>`;
     }
   }
   if (path && path.length > 1) {
-    const pts = path.map(i => { const [x, y] = mbXY(i); return [x, isStore(i) ? y : y < 85 ? y - 2 : y - 2]; });
+    const pts = path.map(i => { const [x, y] = mbXY(i); return [x, isStore(i) ? y : y - 2]; });
     let d = `M${pts[0][0]},${pts[0][1]}`;
     for (let j = 1; j < pts.length; j++) { const [x0, y0] = pts[j - 1], [x1, y1] = pts[j]; const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - (Math.abs(y1 - y0) > 40 ? 0 : 26); d += ` Q${cx},${cy} ${x1},${y1}`; }
-    s += `<path d="${d}" fill="none" stroke="#e2c275" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" opacity=".95"/>`;
-    path.slice(1).forEach((i, j) => { const [x, y] = mbXY(i); const yy = isStore(i) ? y - 20 + j * 0 : y - 2; if (opt.nums !== false) s += `<circle cx="${x + 16}" cy="${yy - 16}" r="9" fill="#e2c275"/><text x="${x + 16}" y="${yy - 12}" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700" text-anchor="middle" fill="#1b150a">${j + 1}</text>`; });
+    s += `<path d="${d}" fill="none" stroke="#e2c275" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#${id}ah)" opacity=".95"/>`;
+    path.slice(1).forEach((i, j) => { const [x, y] = mbXY(i); const yy = isStore(i) ? y - 20 : y - 2; if (opt.nums !== false) s += `<circle cx="${x + 16}" cy="${yy - 16}" r="9" fill="#e2c275"/><text x="${x + 16}" y="${yy - 12}" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700" text-anchor="middle" fill="#1b150a">${j + 1}</text>`; });
   }
   if (opt.cross) { const [x, y] = mbXY(opt.cross); s += `<path d="M${x - 12} ${y - 12}L${x + 12} ${y + 12}M${x + 12} ${y - 12}L${x - 12} ${y + 12}" stroke="#ff6b5b" stroke-width="4" stroke-linecap="round"/>`; }
-  if (opt.capArrow) { const [x0, y0] = mbXY(opt.capArrow[0]), [x1, y1] = mbXY(opt.capArrow[1]); s += `<path d="M${x0},${y0 - 24} Q${(x0 + x1) / 2},${Math.min(y0, y1) - 40} ${x1},${y1 - 66}" fill="none" stroke="#ff8b7d" stroke-width="2.4" marker-end="url(#ah)"/>`; }
-  s += `<text x="${MB.W / 2}" y="${MB.H - 7}" fill="rgba(226,194,117,.55)" font-size="11" text-anchor="middle" font-family="sans-serif">${opt.caption || t('rl.youBottom')}</text>`;
+  if (opt.capArrow) { const [x0, y0] = mbXY(opt.capArrow[0]), [x1, y1] = mbXY(opt.capArrow[1]); s += `<path d="M${x0},${y0 - 24} Q${(x0 + x1) / 2},${Math.min(y0, y1) - 40} ${x1},${y1 - 66}" fill="none" stroke="#ff8b7d" stroke-width="2.4" marker-end="url(#${id}ah)"/>`; }
+  if (!opt.mini) s += `<text x="${MB.W / 2}" y="${MB.H - 7}" fill="${C.cap}" font-size="11" text-anchor="middle" font-family="sans-serif">${opt.caption || t('rl.youBottom')}</text>`;
   return s + '</svg>';
 }
 const B0 = (bot, top, s0, s1) => { const b = new Array(14).fill(0); bot.forEach((v, i) => { b[i] = v; }); top.forEach((v, i) => { b[7 + i] = v; }); b[6] = s0 || 0; b[13] = s1 || 0; return b; };
@@ -1126,23 +1166,94 @@ function rtPitAt(api, e) {
   for (let i = 0; i < 6; i++) { const [px, py] = mbXY(i); if (Math.hypot(x - px, y - py) < 32) return i; }
   return -1;
 }
-// sow pit k on the mini board seed by seed (same sounds as the game); resolves with the engine trace
-async function rtSow(api, b, k, rules) {
-  const tr = E.trace(Int8Array.from(b), 0, k, rules), c = Array.from(b), path = [k];
-  let last = k;
-  for (const ev of tr.events) {
-    if (ev.t === 'pick') { c[ev.at] = 0; last = ev.at; sPick(); }
-    else if (ev.t === 'drop') { c[ev.at]++; last = ev.at; path.push(ev.at); sDrop(isStore(ev.at)); }
-    else if (ev.t === 'cap') { c[ev.to] += ev.n + (ev.own >= 0 ? 1 : 0); c[ev.from] = 0; if (ev.own >= 0) c[ev.own] = 0; sCapture(); }
-    else if (ev.t === 'sweep') { for (let i = 0; i < 6; i++) { c[6] += c[i]; c[13] += c[7 + i]; c[i] = c[7 + i] = 0; } sDrop(true); }
-    const mk = { [k]: 'src', [last]: ev.t === 'cap' ? 'cap' : isStore(last) ? 'store' : 'land' };
-    if (ev.t === 'cap') { mk[ev.from] = 'cap'; mk[ev.to] = 'store'; }
-    rtDraw(api, c, mk, { busy: true });
-    await api.sleep(ev.t === 'pick' ? 260 : ev.t === 'cap' || ev.t === 'sweep' ? 520 : 190);
+// sow pit k on the mini board seed by seed (same sounds as the game); resolves with the engine trace.
+// The stones visibly travel: they rise from the pit into a "hand" (with ×n), the hand glides pit to pit and drops
+// one stone into each; captured stones and the final sweep fly into the stores.
+function rtTween(api, ms, fn) {
+  return new Promise(res => {
+    const t0 = performance.now();
+    const step = now => { if (!api.alive()) return; const k = Math.min(1, (now - t0) / ms); fn(k < 1 ? k : 1); if (k < 1) requestAnimationFrame(step); else res(); };
+    requestAnimationFrame(step);
+  });
+}
+const rtEase = e => e < 0.5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
+// overlay on the current mini board: o.ring = slot (glowing hand ring), o.hand = {x, y, n} (stones held), o.gems = [[x, y, colour index]]
+function rtOverlay(api, o) {
+  const svg = api.board.querySelector('svg'); if (!svg) return;
+  const id = svg.dataset.mb, NG = skinOf().gems.length;
+  let g = svg.querySelector('g.rt-ov');
+  if (!g) { g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'rt-ov'); g.style.pointerEvents = 'none'; svg.appendChild(g); }
+  let h = '';
+  if (o.ring !== undefined && o.ring >= 0) {
+    const [x, y] = mbXY(o.ring);
+    h += isStore(o.ring) ? `<rect x="${x - 28}" y="${y - 68}" width="56" height="136" rx="28" fill="none" stroke="#ffe7a8" stroke-width="3" opacity=".9" style="filter:drop-shadow(0 0 5px rgba(255,214,130,.9))"/>`
+      : `<circle cx="${x}" cy="${y}" r="29" fill="none" stroke="#ffe7a8" stroke-width="3" opacity=".9" style="filter:drop-shadow(0 0 5px rgba(255,214,130,.9))"/>`;
   }
-  const mk = { [k]: 'src', [tr.land]: tr.extra ? 'store' : 'land' };
-  if (tr.cap) { mk[tr.capFrom] = 'cap'; mk[6] = 'store'; }
-  rtDraw(api, Array.from(tr.board), mk, { busy: true });
+  const gem = (x, y, j, r) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r || 6}" fill="url(#${id}g${j % NG})" stroke="rgba(0,0,0,.35)" stroke-width=".6" style="filter:drop-shadow(0 3px 2px rgba(0,0,0,.55))"/>`;
+  if (o.hand && o.hand.n > 0) {
+    const { x, y, n } = o.hand, OFF = [[0, 0], [-7, 3], [7, 3], [-3, -5], [4, -6], [0, 7], [-8, -2], [8, -3]];
+    h += `<ellipse cx="${x}" cy="${y + 4}" rx="${Math.min(16, 7 + n * 2)}" ry="9" fill="rgba(255,226,150,.16)" stroke="rgba(255,226,150,.55)" stroke-width="1.2"/>`;
+    for (let j = 0; j < Math.min(n, OFF.length); j++) h += gem(x + OFF[j][0], y + OFF[j][1], j * 3 + 1);
+    h += `<rect x="${x + 9}" y="${y - 22}" width="${n > 9 ? 28 : 22}" height="15" rx="6" fill="#e2c275"/><text x="${x + 9 + (n > 9 ? 14 : 11)}" y="${y - 11}" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700" text-anchor="middle" fill="#1b150a">×${n}</text>`;
+  }
+  for (const [x, y, j] of (o.gems || [])) h += gem(x, y, j);
+  g.innerHTML = h;
+}
+async function rtSow(api, b, k, rules) {
+  const tr = E.trace(Int8Array.from(b), 0, k, rules), c = Array.from(b), f = spd(), T = ms => ms * f;
+  const handXY = i => { const [x, y] = mbXY(i); return [x, isStore(i) ? y - 34 : i > 6 ? y + 34 : y - 34]; };   // the hand travels in the lane between the rows
+  const arc = (a, z, e, lift) => [a[0] + (z[0] - a[0]) * e, a[1] + (z[1] - a[1]) * e - Math.sin(Math.PI * e) * lift];
+  let mk = { [k]: 'src' }, at = k, held = 0;
+  const draw = () => rtDraw(api, c, mk, { busy: true });
+  for (const ev of tr.events) {
+    if (!api.alive()) return tr;
+    if (ev.t === 'pick') {
+      held = c[ev.at]; c[ev.at] = 0; at = ev.at; draw(); sPick();
+      if (ev.relay) { mk = Object.assign({}, mk, { [ev.at]: 'relay' }); draw(); }
+      const p0 = mbXY(ev.at), p1 = handXY(ev.at);
+      // the stones rise out of the pit into the hand
+      await rtTween(api, T(360), e => { const q = rtEase(e); rtOverlay(api, { ring: ev.at, hand: { x: p0[0] + (p1[0] - p0[0]) * q, y: p0[1] + (p1[1] - p0[1]) * q, n: held } }); });
+      await api.sleep(T(ev.relay ? 260 : 120));
+    } else if (ev.t === 'drop') {
+      const h0 = handXY(at), h1 = handXY(ev.at), p = mbXY(ev.at);
+      // the hand glides to the next pit…
+      if (ev.at !== at) await rtTween(api, T(240), e => { const [x, y] = arc(h0, h1, rtEase(e), 14); rtOverlay(api, { hand: { x, y, n: held } }); });
+      at = ev.at; held--;
+      // …and one stone drops into it
+      await rtTween(api, T(200), e => rtOverlay(api, { ring: ev.at, hand: { x: h1[0], y: h1[1], n: held }, gems: [[h1[0] + (p[0] - h1[0]) * e, h1[1] + (p[1] - h1[1]) * e * e, 1]] }));
+      c[ev.at]++; mk = { [k]: 'src', [ev.at]: isStore(ev.at) ? 'store' : 'land' }; draw(); sDrop(isStore(ev.at));
+      rtOverlay(api, { ring: ev.at, hand: { x: h1[0], y: h1[1], n: held } });
+      await api.sleep(T(90));
+    } else if (ev.t === 'cap') {
+      mk = { [k]: 'src', [ev.from]: 'cap', [ev.to]: 'store' }; if (ev.own >= 0) mk[ev.own] = 'cap';
+      draw(); sCapture();
+      await api.sleep(T(520));
+      // the captured stones (and the last one) fly together into the store
+      const from = [];
+      for (let j = 0; j < Math.min(ev.n, 6); j++) from.push([mbXY(ev.from), j]);
+      if (ev.own >= 0) from.push([mbXY(ev.own), 7]);
+      const st = mbXY(ev.to), add = ev.n + (ev.own >= 0 ? 1 : 0);
+      c[ev.from] = 0; if (ev.own >= 0) c[ev.own] = 0; draw();
+      await rtTween(api, T(620), e => rtOverlay(api, { gems: from.map(([p0, j]) => { const ee = Math.max(0, Math.min(1, (e - j * 0.05) / 0.75)), q = rtEase(ee), [x, y] = arc(p0, [st[0] + ((j % 3) - 1) * 6, st[1] - 20 + j * 8], q, 40); return [x, y, j * 3]; }) }));
+      c[ev.to] += add; draw(); sDrop(true);
+      await api.sleep(T(260));
+    } else if (ev.t === 'sweep') {
+      await api.sleep(T(300));
+      const fl = [];
+      for (let i = 0; i < 14; i++) if (!isStore(i) && c[i]) { for (let j = 0; j < Math.min(c[i], 4); j++) fl.push([mbXY(i), mbXY(i < 6 ? 6 : 13), j + i]); }
+      const gain0 = c.slice(0, 6).reduce((x, y) => x + y, 0), gain1 = c.slice(7, 13).reduce((x, y) => x + y, 0);
+      for (let i = 0; i < 6; i++) c[i] = c[7 + i] = 0;
+      mk = { [6]: 'store', [13]: 'store' }; draw();
+      await rtTween(api, T(700), e => rtOverlay(api, { gems: fl.map(([p0, p1, j]) => { const [x, y] = arc(p0, [p1[0], p1[1] - 30 + (j % 6) * 12], rtEase(e), 30); return [x, y, j]; }) }));
+      c[6] += gain0; c[13] += gain1; draw(); sDrop(true);
+      await api.sleep(T(260));
+    }
+  }
+  if (!api.alive()) return tr;
+  if (tr.extra && !tr.over) { rtOverlay(api, { ring: tr.land }); await api.sleep(T(300)); }
+  const fm = { [k]: 'src', [tr.land]: tr.extra ? 'store' : 'land' };
+  if (tr.cap) { fm[tr.capFrom] = 'cap'; fm[6] = 'store'; }
+  rtDraw(api, Array.from(tr.board), fm, { busy: true });
   return tr;
 }
 // a page: board b; clicking a pit sows it; judge(trace, k) -> true (cleared) / string (wrong, message)
@@ -2295,6 +2406,7 @@ buildBoard();
 const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
+skinApply(settings.skin);
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 try { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (_) {} } } catch (e) {}
 $('#btnResign').innerHTML = Resign.icon + '<span></span>';
