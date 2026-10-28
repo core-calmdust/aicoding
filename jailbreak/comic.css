@@ -1,0 +1,177 @@
+/* だつごくスライダー！ — comic / arcade-shooter skin for the board (loaded after app.css).
+   Only colours, borders, textures and fonts: no layout sizes or positions of the UI are changed here. */
+:root { --hz-y: #ffcd3c; --hz-k: #1f1c19; --rivet: radial-gradient(circle, #f4efe4 0 1.2px, #2a2622 1.3px 2.6px, transparent 2.7px); }
+
+/* ---------- board frame + floor ---------- */
+#board.board { --frame: #3b4250; }
+#board .floor { background-image:
+  radial-gradient(circle, rgba(0,0,0,.09) 0 1px, transparent 1.4px),
+  linear-gradient(var(--floor2) 2px, transparent 2px), linear-gradient(90deg, var(--floor2) 2px, transparent 2px),
+  radial-gradient(circle at 30% 30%, rgba(255,255,255,.28), transparent 60%);
+  background-size: 6px 6px, var(--cs) var(--cs), var(--cs) var(--cs), 100% 100%; background-position: 0 0, -1px -1px, -1px -1px, 0 0; }
+#board .floor::before { content: ''; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+  background: radial-gradient(circle at 100% 100%, rgba(0,0,0,.14), transparent 55%); box-shadow: inset 0 0 0 3px rgba(0,0,0,.25); }
+
+/* ---------- ICE: always ice, whatever floor skin is equipped ---------- */
+#board.board[data-mode="ice"] { --floor: #d6f2ff !important; --floor2: #a9dcf2 !important; }
+#board.board[data-mode="ice"] .floor { background-color: #d6f2ff !important; box-shadow: none !important;
+  background-image:
+    linear-gradient(115deg, transparent 0 18%, rgba(255,255,255,.75) 18% 21%, transparent 21% 26%, rgba(255,255,255,.55) 26% 27.5%, transparent 27.5% 62%, rgba(255,255,255,.7) 62% 64.5%, transparent 64.5%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cpath d='M8 20l18 10 6 18M26 30l20-4M70 8l-6 22 14 12 18-4M78 42l-4 20M20 90l22-8 10 14 20 2M52 96l-6 18M96 70l10 16 -14 18' fill='none' stroke='%237cc3e0' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M30 60l4 4M90 24l3-3M60 50l2 3' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"),
+    linear-gradient(#a9dcf2 2px, transparent 2px), linear-gradient(90deg, #a9dcf2 2px, transparent 2px),
+    linear-gradient(160deg, #eefaff 0%, #c6ebfb 45%, #a8dcf3 100%) !important;
+  background-size: 100% 100%, calc(var(--cs) * 2.2) calc(var(--cs) * 2.2), var(--cs) var(--cs), var(--cs) var(--cs), 100% 100% !important;
+  background-position: 0 0, 0 0, -1px -1px, -1px -1px, 0 0 !important; }
+#board.board[data-mode="ice"] .floor::before { background: radial-gradient(ellipse at 20% 15%, rgba(255,255,255,.7), transparent 45%) !important; box-shadow: inset 0 0 0 3px rgba(80,160,200,.45), inset 0 0 22px rgba(120,200,240,.6) !important; }
+#board.board[data-mode="ice"] .floor::after { content: '' !important; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.55) 46%, transparent 56%) !important; animation: cmIce 4s ease-in-out infinite; }
+@keyframes cmIce { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+
+/* ---------- walls: riveted steel-plated concrete pillars ---------- */
+#board .cell.wall { border: 2.5px solid var(--ink); border-radius: 4px; background-color: #6f7480;
+  background-image: var(--rivet), var(--rivet), var(--rivet), var(--rivet),
+    linear-gradient(135deg, rgba(255,255,255,.28) 0 14%, transparent 14% 100%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,.14) 0 2px, transparent 2px 7px),
+    linear-gradient(#5d626d, #6f7480 30%, #565b66);
+  background-size: 9px 9px, 9px 9px, 9px 9px, 9px 9px, 100% 100%, 100% 100%, 100% 100%;
+  background-position: 3px 3px, calc(100% - 3px) 3px, 3px calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), 0 0, 0 0, 0 0;
+  background-repeat: no-repeat; box-shadow: inset 0 -6px 0 rgba(0,0,0,.35), inset 0 0 0 3px rgba(255,255,255,.08); }
+body[data-floor=brick] #board .cell.wall { background-color: #8a4b33; background-image: var(--rivet), var(--rivet), var(--rivet), var(--rivet), linear-gradient(135deg, rgba(255,255,255,.25) 0 14%, transparent 14%), linear-gradient(#5a2a1a 2px, transparent 2px), linear-gradient(90deg, #5a2a1a 2px, transparent 2px), linear-gradient(#7a3f2a, #8a4b33); background-size: 9px 9px, 9px 9px, 9px 9px, 9px 9px, 100% 100%, 50% 33%, 50% 33%, 100% 100%; background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat; }
+
+/* crack (dig mode): rough brick with a comic crack */
+#board .cell.crack { border: 2.5px solid var(--ink); background-color: #b0603f; background-image: radial-gradient(circle, rgba(0,0,0,.18) 0 1px, transparent 1.4px), linear-gradient(#7d3d28 2px, transparent 2px), linear-gradient(90deg, #7d3d28 2px, transparent 2px); background-size: 5px 5px, 50% 33%, 50% 33%; box-shadow: inset 0 -5px 0 rgba(0,0,0,.3); }
+
+/* ---------- blocks: military / prison props ---------- */
+#board .pc > span:first-child { border: 3px solid var(--ink); border-radius: 5px; box-shadow: 0 4px 0 #1b1815, inset 0 3px 0 rgba(255,255,255,.28), inset 0 -4px 0 rgba(0,0,0,.25); }
+#board .pc.c0 .bk { --b: #6b7a3c; } /* olive drab */
+#board .pc.c1 .bk { --b: #a8642e; } /* rust */
+#board .pc.c2 .bk { --b: #7d8a97; } /* steel */
+#board .pc.c3 .bk { --b: #b88a4a; } /* wood */
+#board .pc.c4 .bk { --b: #3f6d78; } /* teal navy */
+#board .pc.c5 .bk { --b: #9c3b33; } /* red oxide */
+#board .pc.c6 .bk { --b: #6a4f7e; } /* plum paint (kept apart from the grey walls) */
+#board .pc.c7 .bk { --b: #c4a33a; } /* mustard */
+#board .bk { background-color: var(--b); }
+/* corner rivets on every block */
+#board .bk::after { inset: 0; border: 0; border-radius: 0;
+  background: var(--rivet), var(--rivet), var(--rivet), var(--rivet);
+  background-size: 9px 9px; background-repeat: no-repeat;
+  background-position: 2px 2px, calc(100% - 2px) 2px, 2px calc(100% - 2px), calc(100% - 2px) calc(100% - 2px); }
+/* h2: wooden ammo crate — planks, end battens, diagonal brace, stencil band */
+#board .bk.h2 { background-image:
+  linear-gradient(90deg, rgba(0,0,0,.28) 0 3px, transparent 3px calc(100% - 3px), rgba(0,0,0,.28) calc(100% - 3px)),
+  linear-gradient(90deg, transparent 13%, rgba(0,0,0,.3) 13% 15%, transparent 15% 85%, rgba(0,0,0,.3) 85% 87%, transparent 87%),
+  linear-gradient(90deg, rgba(255,255,255,.14) 0 13%, transparent 13% 87%, rgba(255,255,255,.14) 87%),
+  linear-gradient(0deg, transparent 31%, rgba(0,0,0,.22) 31% 34%, transparent 34% 64%, rgba(0,0,0,.22) 64% 67%, transparent 67%),
+  linear-gradient(90deg, transparent 42%, rgba(0,0,0,.16) 42% 58%, transparent 58%),
+  repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 1px, transparent 1px 9px); }
+/* h3: steel shipping container — vertical ribs + warning stripe */
+#board .bk.h3 { background-image:
+  linear-gradient(0deg, transparent 78%, rgba(0,0,0,.25) 78% 80%, transparent 80%),
+  repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 3px, rgba(0,0,0,.2) 3px 5px, transparent 5px 13px),
+  linear-gradient(90deg, rgba(0,0,0,.25) 0 6%, transparent 6% 94%, rgba(0,0,0,.25) 94%),
+  linear-gradient(180deg, rgba(255,255,255,.18), transparent 40%, rgba(0,0,0,.18)); }
+/* v2: prison locker — top vents, centre seam, handle */
+#board .bk.v2 { background-image:
+  repeating-linear-gradient(0deg, transparent 0 4px, rgba(0,0,0,.42) 4px 6px),
+  linear-gradient(0deg, transparent 49%, rgba(0,0,0,.35) 49% 51%, transparent 51%),
+  linear-gradient(90deg, transparent 68%, #1f1c19 68% 76%, transparent 76%),
+  linear-gradient(90deg, rgba(255,255,255,.2) 0 14%, transparent 14% 86%, rgba(0,0,0,.2) 86%);
+  background-size: 50% 22%, 100% 100%, 100% 22%, 100% 100%; background-repeat: no-repeat; background-position: 50% 12%, 0 0, 0 70%, 0 0; }
+/* v3: sandbag / riveted steel pillar — horizontal bands */
+#board .bk.v3 { background-image:
+  repeating-linear-gradient(0deg, rgba(0,0,0,.32) 0 3px, transparent 3px 33.33%),
+  radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.25), transparent 60%),
+  linear-gradient(90deg, rgba(0,0,0,.22) 0 12%, transparent 12% 88%, rgba(0,0,0,.22) 88%);
+  background-size: 100% 100%, 100% 33.33%, 100% 100%; }
+
+/* ---------- one-way carts: hazard-stripe chassis + bold arrows ---------- */
+#board .pc.to .bk { --b: #2b2f38; background-color: #2b2f38 !important;
+  background-image: repeating-linear-gradient(-45deg, var(--hz-y) 0 6px, var(--hz-k) 6px 12px) !important;
+  background-size: 100% 100% !important; background-repeat: no-repeat !important; }
+#board .pc.to .bk::before { content: ''; position: absolute; inset: 5px; border-radius: 3px; background: #2f74b5; border: 2.5px solid var(--ink);
+  background-image: linear-gradient(180deg, rgba(255,255,255,.25), transparent 45%, rgba(0,0,0,.2)); }
+#board .pc.to .bk::after { display: none; }
+#board .pc.to .chev { z-index: 1; gap: 0; }
+#board .chev i { border-top-width: 6px; border-right-width: 6px; border-color: #fff;
+  filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink)) drop-shadow(0 -1.5px 0 var(--ink)); }
+#board .chev i:nth-child(odd) { border-color: var(--hz-y); }
+
+/* ---------- prisoner block ---------- */
+#board .pc.tP > .suit, #board .pc.tQ > .suit { border-width: 3px; box-shadow: 0 4px 0 #1b1815, inset 0 3px 0 rgba(255,255,255,.3), inset 0 -6px 0 rgba(0,0,0,.18); }
+#board .pc .face { border-width: 3px; background: #fbe6cf; box-shadow: 2px 2px 0 var(--ink); }
+#board .pc .tag { font-family: var(--disp), 'Jost', sans-serif; font-weight: 400; letter-spacing: .02em; border-width: 2.5px; box-shadow: 2px 2px 0 var(--ink); }
+
+/* ---------- guard / key / tilt crate ---------- */
+#board .pc.tg > .gd, #board .pc.tk > .kk { border-radius: 50%; }
+#board .pc.tg > .gd { background: radial-gradient(circle at 35% 30%, #e6eef8, #9fb4cf); border-width: 3px; box-shadow: 0 4px 0 #1b1815, 0 0 0 2px #d64541 inset; }
+#board .pc .gbadge { position: absolute; top: -6%; right: -8%; z-index: 4; min-width: calc(var(--cs) * .38); height: calc(var(--cs) * .38); padding: 0 3px;
+  display: grid; place-items: center; font: 400 calc(var(--cs) * .26)/1 var(--disp), 'Jost', sans-serif; font-style: normal; color: #fff;
+  background: #d64541; border: 2.5px solid var(--ink); border-radius: 50%; box-shadow: 2px 2px 0 var(--ink); transform: rotate(8deg); border-radius: 40% 50% 45% 50%; }
+#board .pc .gbadge::after { content: ''; position: absolute; left: 12%; bottom: -5px; border: 4px solid transparent; border-top: 6px solid var(--ink); border-bottom: 0; transform: rotate(20deg); }
+#board .pc.tk > .kk { background: radial-gradient(circle at 35% 30%, #fffbe6, #ffe27a); border-width: 3px; box-shadow: 0 4px 0 #1b1815, 0 0 12px rgba(255,205,60,.9); }
+#board .pc.tx > .crate { background-color: #b98048; border-radius: 4px;
+  background-image: var(--rivet), var(--rivet), var(--rivet), var(--rivet),
+    linear-gradient(45deg, transparent 44%, #6e4526 44% 56%, transparent 56%), linear-gradient(-45deg, transparent 44%, #6e4526 44% 56%, transparent 56%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 7px);
+  background-size: 9px 9px, 9px 9px, 9px 9px, 9px 9px, 100% 100%, 100% 100%, 100% 100%; background-repeat: no-repeat;
+  background-position: 2px 2px, calc(100% - 2px) 2px, 2px calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), 0 0, 0 0, 0 0;
+  box-shadow: inset 0 0 0 5px #7a4d2a, 0 4px 0 #1b1815; }
+
+/* ---------- PRESSURE PLATE: big round hazard switch ---------- */
+#board .cell.plate { padding: calc(var(--cs) * .1); }
+#board .cell.plate i { position: relative; border-radius: 50%; border: 3px solid var(--ink);
+  background: repeating-conic-gradient(var(--hz-y) 0 22.5deg, var(--hz-k) 22.5deg 45deg);
+  box-shadow: 0 4px 0 var(--ink), 0 0 0 3px rgba(255,205,60,.35); }
+#board .cell.plate i::before { content: ''; position: absolute; inset: 22%; border-radius: 50%; border: 3px solid var(--ink);
+  background: radial-gradient(circle at 38% 32%, #ff8f7a 0 18%, #e2402f 45%, #a52a20 100%);
+  box-shadow: 0 4px 0 #6d1a14, inset 0 -3px 0 rgba(0,0,0,.25); transition: transform .12s, box-shadow .12s, background .2s; }
+#board .cell.plate i::after { content: ''; position: absolute; inset: -9%; border-radius: 50%; border: 2px dashed rgba(42,38,34,.5); animation: cmPlate 1.6s ease-in-out infinite; }
+#board .cell.plate.on i { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink), 0 0 0 4px #4fe36a, 0 0 18px 4px rgba(79,227,106,.9); filter: none; }
+#board .cell.plate.on i::before { transform: translateY(3px); box-shadow: 0 1px 0 #0b5131, inset 0 2px 3px rgba(0,0,0,.35); background: radial-gradient(circle at 38% 32%, #b9ffc5 0 18%, #2fcf5a 45%, #127a35 100%); }
+#board .cell.plate.on i::after { border-color: #4fe36a; border-style: solid; animation: none; }
+@keyframes cmPlate { 50% { transform: scale(1.06); opacity: .5; } }
+
+/* marker drawn ABOVE the pieces at the plate cell (visible when a block stands on it) */
+#board .cell.platemk { z-index: 4; pointer-events: none; }
+#board .cell.platemk::before { content: ''; position: absolute; inset: 9%; border-radius: 50%;
+  border: 3px dashed var(--hz-y); box-shadow: 0 0 0 2px rgba(31,28,25,.65), inset 0 0 0 2px rgba(31,28,25,.65); opacity: .9; animation: cmPlate 1.6s ease-in-out infinite; }
+#board .cell.platemk::after { content: ''; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; border: 2px solid var(--ink);
+  background: radial-gradient(circle, #e2402f 0 34%, var(--ink) 35% 42%, transparent 43%), repeating-conic-gradient(var(--hz-y) 0 45deg, var(--hz-k) 45deg 90deg);
+  box-shadow: 1px 1px 0 var(--ink); }
+#board .cell.platemk.on::before { border-color: #4fe36a; border-style: solid; box-shadow: 0 0 0 2px rgba(11,81,49,.7), 0 0 14px 2px rgba(79,227,106,.85); animation: none; }
+#board .cell.platemk.on::after { background: radial-gradient(circle, #2fcf5a 0 34%, var(--ink) 35% 42%, transparent 43%), repeating-conic-gradient(var(--hz-y) 0 45deg, var(--hz-k) 45deg 90deg); }
+
+/* ---------- DOORS: hazard-framed laser bars, tied to the plate colours ---------- */
+#board .cell.door i { inset: 0; border: 0;
+  background:
+    linear-gradient(var(--ink), var(--ink)) top / 100% 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(-45deg, var(--hz-y) 0 5px, var(--hz-k) 5px 10px) top / 100% 18% no-repeat,
+    repeating-linear-gradient(-45deg, var(--hz-y) 0 5px, var(--hz-k) 5px 10px) bottom / 100% 18% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 14%, #ff3b30 14% 19%, #ffd0c8 19% 21%, #ff3b30 21% 26%, transparent 26% 33.3%);
+  filter: drop-shadow(0 0 3px rgba(255,59,48,.8)); }
+#board .cell.door::before { content: ''; position: absolute; inset: 0; background: rgba(255,59,48,.12); transition: opacity .25s; }
+#board .cell.door.open i { transform: none; opacity: 1; filter: none;
+  background:
+    repeating-linear-gradient(-45deg, var(--hz-y) 0 5px, var(--hz-k) 5px 10px) top / 100% 18% no-repeat,
+    repeating-linear-gradient(-45deg, var(--hz-y) 0 5px, var(--hz-k) 5px 10px) bottom / 100% 18% no-repeat,
+    linear-gradient(rgba(79,227,106,.22), rgba(79,227,106,.22)); }
+#board .cell.door.open::before { opacity: 0; }
+#board .cell.door::after { width: 10px; height: 10px; margin-left: -5px; bottom: auto; top: 50%; margin-top: -5px; border: 2px solid var(--ink); background: #ff3b30; box-shadow: 0 0 6px #ff3b30; }
+#board .cell.door.open::after { background: #4fe36a; box-shadow: 0 0 8px #4fe36a; }
+
+/* ---------- key gate + lock ---------- */
+#board .cell.gate i { border-top: 4px solid var(--ink); border-bottom: 4px solid var(--ink);
+  background: repeating-linear-gradient(90deg, transparent 0 12%, var(--ink) 12% 14%, #d64541 14% 24%, var(--ink) 24% 26%, transparent 26% 33.3%); }
+#board .cell.lockmk svg { background: rgba(31,28,25,.7); box-shadow: 0 0 0 2.5px var(--hz-y), 0 0 0 4.5px var(--ink), 0 0 12px rgba(255,205,60,.85); }
+
+/* ---------- result banner: comic burst ---------- */
+.result .rhead b { font-family: var(--disp), 'Jost', sans-serif; letter-spacing: .03em; border-width: 3.5px; box-shadow: 4px 4px 0 var(--ink);
+  text-shadow: 2px 2px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink);
+  background-image: radial-gradient(circle, rgba(255,255,255,.22) 0 1.3px, transparent 1.6px), repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.14) 0 10deg, transparent 10deg 20deg);
+  background-size: 6px 6px, 100% 100%; }
+
+/* ---------- floor skins: comic halftone accents ---------- */
+body[data-floor=night] #board .floor::before { background: radial-gradient(circle at 80% 15%, rgba(255,233,168,.22), transparent 45%); }
+body[data-floor=neon] #board .floor { background-image: radial-gradient(circle, rgba(255,79,216,.18) 0 1px, transparent 1.4px), linear-gradient(#ff4fd8 1.5px, transparent 1.5px), linear-gradient(90deg, #4fe3ff 1.5px, transparent 1.5px); background-size: 6px 6px, var(--cs) var(--cs), var(--cs) var(--cs); }
+body[data-floor=desert] #board .floor::before { background: radial-gradient(circle at 75% 20%, rgba(255,255,255,.3), transparent 50%), radial-gradient(circle at 100% 100%, rgba(154,106,58,.25), transparent 55%); }
