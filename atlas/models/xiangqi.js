@@ -80,20 +80,15 @@
     for (let y = 0; y < Ht; y++) for (let x = 0; x < Wd; x++) { const v = f(x / Wd, y / Ht), i = (y * Wd + x) * 4; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, v * 255)); d[i + 3] = 255; }
     g.putImageData(img, 0, 0); return (raw[key] = c);
   }
-  // Greek key band: units of a square spiral hung from a base line (grid g, one unit 4g wide, the band 4g high)
-  function keyBlock(c, x0, y0, g, n, lw) {
-    const path = () => {
-      c.beginPath();
-      c.moveTo(x0, y0); c.lineTo(x0 + n * 4 * g, y0); c.moveTo(x0, y0 + 4 * g); c.lineTo(x0 + n * 4 * g, y0 + 4 * g);   // the framing lines
-      for (let k = 0; k < n; k++) {
-        const x = x0 + k * 4 * g + g * .5, y = y0 + g * .5;
-        c.moveTo(x, y + 3 * g); c.lineTo(x, y); c.lineTo(x + 3 * g, y); c.lineTo(x + 3 * g, y + 3 * g); c.lineTo(x + g, y + 3 * g); c.lineTo(x + g, y + g); c.lineTo(x + 2 * g, y + g); c.lineTo(x + 2 * g, y + 2 * g);
-      }
-      c.moveTo(x0, y0); c.lineTo(x0, y0 + 4 * g); c.moveTo(x0 + n * 4 * g, y0); c.lineTo(x0 + n * 4 * g, y0 + 4 * g);
-    };
-    c.lineCap = 'square'; c.lineJoin = 'miter';
-    c.save(); c.translate(lw * .35, lw * .45); path(); c.strokeStyle = 'rgba(0,0,0,.65)'; c.lineWidth = lw * 1.15; c.stroke(); c.restore();
-    path(); const gr = c.createLinearGradient(x0, y0, x0 + n * 4 * g, y0 + 4 * g); gr.addColorStop(0, '#f1d27e'); gr.addColorStop(.5, '#c9a04a'); gr.addColorStop(1, '#e8c56c');
+  // Greek key (雷文) unit: two square spirals, the right one the left one turned half round, sharing the stem
+  // between them (they meet at the bottom on one side and at the top on the other). Grid g: the unit is 15g wide, 7g high.
+  const KEY_L = [[7.5, 6.5], [7.5, .5], [.5, .5], [.5, 6.5], [5.5, 6.5], [5.5, 2.5], [2.5, 2.5], [2.5, 4.5], [3.7, 4.5]];
+  const KEY_R = KEY_L.map(([x, y]) => [15 - x, 7 - y]);
+  function keyBlock(c, x0, y0, g, lw) {
+    const path = () => { c.beginPath(); [KEY_L, KEY_R].forEach(P => P.forEach(([x, y], i) => (i ? c.lineTo : c.moveTo).call(c, x0 + x * g, y0 + y * g))); };
+    c.lineCap = 'butt'; c.lineJoin = 'miter';
+    c.save(); c.translate(lw * .3, lw * .4); path(); c.strokeStyle = 'rgba(0,0,0,.65)'; c.lineWidth = lw * 1.1; c.stroke(); c.restore();
+    path(); const gr = c.createLinearGradient(x0, y0, x0 + 15 * g, y0 + 7 * g); gr.addColorStop(0, '#f1d27e'); gr.addColorStop(.5, '#c9a04a'); gr.addColorStop(1, '#e8c56c');
     c.strokeStyle = gr; c.lineWidth = lw; c.stroke();
   }
   // a small white peony with leaves and gold tendrils
@@ -126,7 +121,7 @@
     c.restore();
   }
   function topCanvas() {
-    return canvasTex('xqLacquer1', SZ(2048), SZ(Math.round(2048 * D / W)), (c, CW, CH) => {
+    return canvasTex('xqLacquer2', SZ(2048), SZ(Math.round(2048 * D / W)), (c, CW, CH) => {
       const k = CW / W; c.save(); c.scale(k, CH / D);
       // black lacquer: warm black, a faint cloudy depth and fine brush texture
       c.fillStyle = '#16110e'; c.fillRect(0, 0, W, D);
@@ -136,11 +131,11 @@
       const gl = (o, lw, col) => { c.strokeStyle = col; c.lineWidth = lw; c.strokeRect(o, o, W - 2 * o, D - 2 * o); };
       gl(.06, .018, '#caa04e'); gl(FR - .07, .022, '#d4ac55');
       const side = (L, seed) => {   // drawn in strip space: x along the side, y from the outer edge (0) in
-        const g = .108, hb = 4 * g, y0 = (FR - hb) / 2, nb2 = Math.max(2, Math.round((L - .7) / 1.66)), fl = (L - nb2 * 8 * g) / (nb2 + 1);
+        const g = .062, hb = 7 * g, y0 = (FR - hb) / 2, nb2 = Math.max(2, Math.round((L - .7) / 1.66)), fl = (L - nb2 * 15 * g) / (nb2 + 1);
         let x = 0;
         for (let i = 0; i <= nb2; i++) {
           peony(c, x + fl / 2, FR / 2, .15, seed + i * 7);
-          x += fl; if (i < nb2) { keyBlock(c, x, y0, g, 2, g * .3); x += 8 * g; }
+          x += fl; if (i < nb2) { keyBlock(c, x, y0, g, g * .78); x += 15 * g; }
         }
       };
       const L1 = W - 2 * FR, L2 = D - 2 * FR;
