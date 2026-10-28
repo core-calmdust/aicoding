@@ -866,6 +866,13 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 }
 </style>
 <link rel="stylesheet" href="online.css?v=2">
+<style>
+/* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
+   not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+  :root, body{--cell:min((100vw - 20px) / 9.5, 100px)!important}
+}
+</style>
 </head>
 <body>
 <div class="app">

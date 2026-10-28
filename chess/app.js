@@ -90,6 +90,19 @@ let LANG = detectLang();
 // result reason for a resigned game (投了)
 { const RW = { ja: '投了', en: 'Resignation', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मान ली', ar: 'استسلام' };
   for (const l in RW) if (I18N[l] && I18N[l]['res.why.resign'] === undefined) I18N[l]['res.why.resign'] = RW[l]; }
+// 引分提案 (offer a draw to the AI): button label, result reason, answers
+{ const DR = {
+    ja: { btn: '引分提案', agree: '合意による引き分け', wait: '引き分けの提案は少し指してからにしてください', accepted: 'AIが引き分けに同意しました', declined: 'AIは引き分けを断りました（まだ勝負を続けたいようです）' },
+    en: { btn: 'Offer draw', agree: 'Draw by agreement', wait: 'Make a few more moves before offering again', accepted: 'The AI agreed to a draw', declined: 'The AI declined the draw (it wants to play on)' },
+    zh: { btn: '提和', agree: '双方同意和棋', wait: '请再走几步后再提议', accepted: 'AI同意和棋', declined: 'AI拒绝和棋（它还想继续下）' },
+    ko: { btn: '무승부 제안', agree: '합의에 의한 무승부', wait: '몇 수 더 둔 뒤에 다시 제안하세요', accepted: 'AI가 무승부에 동의했습니다', declined: 'AI가 무승부를 거절했습니다 (계속 두고 싶어 합니다)' },
+    es: { btn: 'Ofrecer tablas', agree: 'Tablas por acuerdo', wait: 'Juega unas jugadas más antes de volver a ofrecer', accepted: 'La IA aceptó las tablas', declined: 'La IA rechazó las tablas (quiere seguir)' },
+    fr: { btn: 'Proposer nulle', agree: "Nulle d'un commun accord", wait: 'Jouez encore quelques coups avant de reproposer', accepted: "L'IA a accepté la nulle", declined: "L'IA a refusé la nulle (elle veut continuer)" },
+    pt: { btn: 'Propor empate', agree: 'Empate por acordo', wait: 'Faça mais alguns lances antes de propor de novo', accepted: 'A IA aceitou o empate', declined: 'A IA recusou o empate (quer continuar)' },
+    de: { btn: 'Remis anbieten', agree: 'Remis durch Einigung', wait: 'Spiele erst noch ein paar Züge, bevor du erneut anbietest', accepted: 'Die KI hat das Remis angenommen', declined: 'Die KI hat das Remis abgelehnt (sie will weiterspielen)' },
+    hi: { btn: 'ड्रॉ प्रस्ताव', agree: 'सहमति से ड्रॉ', wait: 'दोबारा प्रस्ताव से पहले कुछ और चालें चलें', accepted: 'AI ड्रॉ के लिए राज़ी हो गया', declined: 'AI ने ड्रॉ ठुकरा दिया (वह खेलना जारी रखना चाहता है)' },
+    ar: { btn: 'عرض تعادل', agree: 'تعادل بالاتفاق', wait: 'العب بضع نقلات أخرى قبل عرض التعادل مجددًا', accepted: 'وافق الذكاء الاصطناعي على التعادل', declined: 'رفض الذكاء الاصطناعي التعادل (يريد المتابعة)' } };
+  for (const l in DR) if (I18N[l]) { const d = DR[l], L = I18N[l]; if (L['dr.btn'] === undefined) L['dr.btn'] = d.btn; if (L['res.why.agree'] === undefined) L['res.why.agree'] = d.agree; for (const k of ['wait', 'accepted', 'declined']) if (L['dr.' + k] === undefined) L['dr.' + k] = d[k]; } }
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 const LV = i => t('lv')[i];
@@ -133,7 +146,7 @@ function load() {
       rgame = d.rated && d.rated.id ? d.rated : null;
       // a rated game restored on page load: its clock stays stopped (no time signal) until the next move is played
       if (rgame && !rgame.over) rgame.hold = true;
-      localOver = d.resigned && d.resigned.winner ? { over: true, winner: d.resigned.winner, why: 'resign', mv: moves } : null;
+      localOver = d.resigned && d.resigned.winner ? { over: true, winner: d.resigned.winner, why: 'resign', mv: moves } : d.resigned && d.resigned.why === 'agree' ? { over: true, winner: 0, draw: true, why: 'agree', mv: moves } : null;
       cur = moves.length; gameOverShown = statusAt(cur).over; return true;
     }
   } catch (e) {}
@@ -143,7 +156,7 @@ function save() {
   if (inStudy()) return;
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp', flip: false }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resigned: localOver && localOver.mv === moves ? { winner: localOver.winner } : null })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resigned: localOver && localOver.mv === moves ? (localOver.why === 'agree' ? { winner: 0, why: 'agree' } : { winner: localOver.winner }) : null })); } catch (e) {}
 }
 
 // ====================================================================== workers
@@ -465,7 +478,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) { sel = null; closePromo(); } renderBoard(anim); renderInfo(); stSync(); }
+function update(anim) { if (!anim) { sel = null; closePromo(); } renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle('ai-live', aiGameLive()); }
 
 // ====================================================================== input: tap or drag
 function squareAt(cx, cy) {
@@ -751,6 +764,27 @@ function resignGame() {
   save(); update(false); onGameEnd(statusAt(moves.length));
 }
 $('#btnResign').onclick = () => { if (canResign()) Resign.confirm({ lang: LANG }).then(ok => { if (ok) resignGame(); }); };
+// 引分提案: offer the AI a draw (it accepts when it is not better and the game has quietened down); rated games too, not lessons / puzzles / online
+let drawAsked = -99;   // ply of the last offer, so offers are not repeated every move
+function aiGameLive() { return settings.mode === 'ai' && !net && !lesson && !puzzle && !inStudy() && cur === moves.length && !gameOver(moves.length); }
+function playerDraw() {
+  if (!aiGameLive()) return;
+  if (drawAsked <= moves.length && moves.length - drawAsked < 6) { toast(t('dr.wait'), 1800); return; }
+  drawAsked = moves.length;
+  const ai = 3 - humanColor, pos = posAt(moves.length).pos;
+  let ev = null; for (let i = moves.length; i >= 0 && !ev; i--) ev = evals[i] || null;
+  const v = !ev ? 0 : ev.kind === 'mate' ? (ev.side === ai ? 99999 : -99999) : (ev.cp !== undefined ? ev.cp : ev.s * 1000) * (ai === P1 ? 1 : -1);   // the AI's view, centipawns
+  let n = 0; for (let sq = 0; sq < 128; sq++) if (!(sq & 0x88) && pos.b[sq]) n++;
+  const ok = moves.length >= 30 && v <= 30 && (n <= 12 || pos.half >= 30 || v <= -150);
+  if (!ok) { toast(t('dr.declined'), 2000); return; }
+  toast(t('dr.accepted'), 1600);
+  busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
+  const st = { over: true, winner: 0, draw: true, why: 'agree' };
+  if (rgame) rgame.over = st; else localOver = Object.assign({ mv: moves }, st);
+  reviewing = false; hintList = null; sel = null; closePromo();
+  save(); update(false); onGameEnd(statusAt(moves.length));
+}
+$('#btnDraw').onclick = playerDraw;
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
   if (settings.mode === 'online') return;

@@ -724,6 +724,9 @@ body .info-line{font-size:12.5px}
 .flipbtn svg{transform:rotate(90deg)}
 /* ---------------------------------------------------------------- online play (ported from the Shogi page) */
 .ol-only{display:none!important}
+/* 引分提案 (offer a draw): only in a live game vs the AI (body.ai-live, app.js) */
+#btnDraw{display:none!important}
+body.ai-live #btnDraw{display:flex!important}
 body.in-online .ol-only{display:flex!important}
 body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online #btnPaste, body.in-online #btnResAnalyze,
 body.in-online .review-card, body.in-online #infoLine, body.in-online #evalCard .evalrow, body.in-online #evalCard .evalbar, body.in-online #evalCard .graph{display:none!important}
@@ -965,6 +968,14 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
 </style>
+<style>
+/* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
+   not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+  :root, body.no-online{--cell:min((100vw - 20px) / 7.5, 110px)!important}
+  body:not(.no-online){--cell:min((100vw - 20px) / 8.5, 110px)!important}
+}
+</style>
 </head>
 <body>
 <!-- piece set (original drawings) and board materials -->
@@ -1109,6 +1120,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
       <button class="btn" id="btnLesson" data-i18n-title="btn.lesson.title"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg><span data-i18n="btn.lesson"></span></button>
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
       <button class="btn ol-only" id="btnOnline"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg><span data-i18n="ol.title"></span></button>
+      <button class="btn" id="btnDraw"><svg viewBox="0 0 24 24"><path d="M7 12h10"/><path d="M5 8h14M5 16h14"/></svg><span data-i18n="dr.btn"></span></button>
     </div>
 
     <div class="card review-card" id="reviewCard">
@@ -1344,7 +1356,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="app.js?v=20261028pv2wp1"></script>
+<script src="app.js?v=20261028wp1dr"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>

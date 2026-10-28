@@ -785,6 +785,13 @@ body .info-line{font-size:12.5px}
 }
 </style>
 <link rel="stylesheet" href="online.css?v=20261028l9">
+<style>
+/* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
+   not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+  :root, body{--cell:min((100vw - 20px) / 7.5, 110px)!important}
+}
+</style>
 </head>
 <body>
 <div class="app">
