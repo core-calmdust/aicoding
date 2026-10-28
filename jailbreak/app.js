@@ -1,7 +1,8 @@
 /* だつごく！スライド — app: home portal (daily / course / modes), the sliding board, modes, economy, rankings */
 (function () {
 'use strict';
-const E = window.JBEngine, A = window.JBArt;
+const E = window.JBEngine, A = window.JBArt, SK = window.JBSkins;
+SK.inject();
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const KEY = 'jailbreak-slide-v1';
@@ -13,7 +14,7 @@ const mmss = s => `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}`;
 const Q = new URLSearchParams(location.search);
 
 /* ---------------- save data ---------------- */
-const DEF = () => ({ v: 1, coin: 0, life: 0, name: '', icon: 0, own: { 0: 1, 1: 1 }, skin: 'concrete', skinOwn: ['concrete', 'brick'],
+const DEF = () => ({ v: 1, coin: 0, life: 0, name: '', icon: 0, own: { 0: 1, 1: 1 }, skin: 'concrete', skinOwn: ['concrete', 'brick'], frame: 'steel', frameOwn: ['steel'],
   set: { snd: 1, anim: 1, lang: '' }, st: {}, dl: {}, best: { sl: 0, chain: 0, chainN: 0 },
   stats: { esc: 0, moves: 0, perfect: 0, hints: 0, dig: 0, key: 0, plate: 0, gacha: 0, days: 0, dgold: 0, slRuns: 0, chainRuns: 0 }, ach: {}, tut: {}, login: '', lbs: 0 });
 function load() {
@@ -144,7 +145,8 @@ const ACH = [
   ['chain10', () => [DB.best.chainN, 10], 200], ['chain30', () => [DB.best.chainN, 30], 800],
   ['daily1', () => [Object.values(DB.dl).filter(dayPlayed).length, 1], 50], ['streak7', () => [streak(), 7], 300], ['streak30', () => [streak(), 30], 1200], ['gold10', () => [Object.values(DB.dl).filter(dayGold).length, 10], 500],
   ['dig50', s => [s.dig, 50], 200], ['key30', s => [s.key, 30], 200],
-  ['col12', () => [Object.keys(DB.own).length, 12], 300], ['colAll', () => [Object.keys(DB.own).length + DB.skinOwn.length, A.INMATES.length + A.SKINS.length], 3000],
+  ['col12', () => [Object.keys(DB.own).length, 12], 300], ['col50', () => [Object.keys(DB.own).length, 50], 800], ['col100', () => [Object.keys(DB.own).length, 100], 1500],
+  ['colAll', () => [Object.keys(DB.own).length + DB.skinOwn.length + DB.frameOwn.length, A.INMATES.length + SK.FLOORS.length + SK.FRAMES.length], 5000],
 ];
 const achReady = () => ACH.filter(([id, f]) => { const [v, g] = f(DB.stats); return v >= g && !DB.ach[id]; }).length;
 function updateBadges() { const on = achReady() ? 'block' : 'none'; $$('#btnAch .dot, [data-go="ach"] .dot').forEach(d => { d.style.display = on; }); }
@@ -485,6 +487,12 @@ addEventListener('resize', () => { clearTimeout(relayout.t); relayout.t = setTim
 function boardIn() { const b = boardEl(); b.classList.remove('bin'); void b.offsetWidth; b.classList.add('bin'); }
 
 /* ---------------- HUD ---------------- */
+// the play clock stops while a dialog (rule explanation, story…) is open or the tab is hidden: the paused time moves the start time
+function setPaused(v) {
+  if (!G) return; v = !!v; if (v === !!G.paused) return;
+  if (v) G.pz = Date.now(); else if (G.pz) { G.t0 += Date.now() - G.pz; G.pz = 0; }
+  G.paused = v;
+}
 function keepDaily() {
   if (!G || G.kind !== 'daily' || G.over) return; const rr = dlOf(G.date)[G.dk]; if (!rr.p) return;
   rr.p = { S: G.S.slice(), hist: G.hist.map(x => x.slice()), moves: G.moves, undoN: G.undoN, hinted: G.hinted, el: Date.now() - G.t0 }; save();
@@ -516,7 +524,7 @@ function renderInfo() {
   const k = G.kind === 'sl' ? 'sl' : G.kind === 'chain' ? 'chain' : m === 'basic' ? 'basic' : m;
   el.innerHTML = `<span class="ii">${A.MI[k] || A.MI.big}</span><span>${esc(t('in.' + k))}</span>${k !== 'basic' ? `<button class="btn sm qbtn" data-rule="${k}">?</button>` : ''}`;
 }
-setInterval(() => { if (G && G.kind === 'daily' && !G.over) { const c = $('#gClock'); if (c) c.textContent = mmss((Date.now() - G.t0) / 1000) + (G.undoN ? `  ·  ${t('g.undo')}×${G.undoN}` : ''); } }, 500);
+setInterval(() => { if (G && G.kind === 'daily' && !G.over) { const c = $('#gClock'); if (c) { const el = ((G.paused && G.pz ? G.pz : Date.now()) - G.t0) / 1000; c.innerHTML = `<small>${esc(t('g.time'))}${G.undoN ? ` · ${esc(t('g.undo'))}×${G.undoN}` : ''}</small><b>${mmss(el)}</b>`; } } }, 250);
 
 /* ---------------- input: drag pieces ---------------- */
 let D = null;
@@ -811,7 +819,7 @@ function floatTip(s) { const e = $('#gInfo'); if (e) { e.classList.remove('pulse
 
 /* ============================================================ MODALS ============================================================ */
 function modal(html, cls = '') {
-  afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; if (G) G.paused = true;
+  afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; setPaused(true);
   centerOnBoard();
   return $('#modalBody');
 }
@@ -825,10 +833,10 @@ function centerOnBoard() {
   const cx = Math.max(8 - r.left, Math.min(innerWidth - 8 - r.right, dx)), cy = Math.max(8 - r.top, Math.min(innerHeight - 8 - r.bottom, dy));
   box.style.translate = `${Math.round(cx)}px ${Math.round(cy)}px`;
 }
-function closeModal() { $('#modal .mbox').style.translate = ''; $('#modal').hidden = true; if (G) G.paused = false; const f = afterModal; afterModal = null; if (!$('#home').hidden) renderHome(); if (f) f(); }
+function closeModal() { $('#modal .mbox').style.translate = ''; $('#modal').hidden = true; setPaused(false); const f = afterModal; afterModal = null; if (!$('#home').hidden) renderHome(); if (f) f(); }
 function ask(msg, btns) {
   const body = modal(`<div class="askb">${A.inmateSVG(DB.icon)}<p>${esc(msg)}</p><div class="mbtns">${btns.map(([l, c], i) => `<button class="btn big ${c || ''}" data-i="${i}">${esc(l)}</button>`).join('')}</div></div>`, 'mask');
-  $$('[data-i]', body).forEach(b => { b.onclick = () => { $('#modal').hidden = true; if (G) G.paused = false; const f = btns[+b.dataset.i][2]; f && f(); }; });
+  $$('[data-i]', body).forEach(b => { b.onclick = () => { $('#modal').hidden = true; setPaused(false); const f = btns[+b.dataset.i][2]; f && f(); }; });
 }
 // rule explanations (with a small example board)
 const RULE_EX = {
@@ -874,16 +882,18 @@ function tutorial() {
   draw();
 }
 function openProfile() {
-  const pend = openProfile.p || (openProfile.p = { icon: DB.icon, skin: DB.skin, name: DB.name });
+  const pend = openProfile.p || (openProfile.p = { icon: DB.icon, skin: DB.skin, frame: DB.frame, name: DB.name });
   const owned = Object.keys(DB.own).map(Number).sort((a, b) => a - b);
   const body = modal(`<h2 class="mh">${esc(t('pf.edit'))}</h2><div class="pfhead"><div class="pic big">${picHTML(pend.icon)}</div><div class="pfn"><label class="fld"><span>${esc(t('pf.name'))}</span><input id="pfName" maxlength="12" value="${esc(pend.name)}" placeholder="${esc(t('pf.ph'))}"></label><p class="note">${esc(t('pf.note'))}</p></div></div>
     <h3 class="mh3">${esc(t('pf.icon'))}</h3><div class="cgrid">${owned.map(id => `<button class="cc ${id === pend.icon ? 'on' : ''}" data-ic="${id}">${A.inmateSVG(id)}</button>`).join('')}</div>
-    <h3 class="mh3">${esc(t('pf.skin'))}</h3><div class="skgrid">${A.SKINS.filter(s => DB.skinOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.skin ? 'on' : ''}" data-sk="${s.id}"><span class="skp" data-skin="${s.id}"></span><b>${esc(t('sk.' + s.id))}</b></button>`).join('')}</div>
+    <h3 class="mh3">${esc(t('pf.skin'))}</h3><div class="skgrid">${SK.FLOORS.filter(s => DB.skinOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.skin ? 'on' : ''}" data-sk="${s.id}"><span class="skp" data-skin="${s.id}"></span><b>${esc(skinName(s.id))}</b></button>`).join('')}</div>
+    <h3 class="mh3">${esc(t('pf.frame'))}</h3><div class="skgrid">${SK.FRAMES.filter(s => DB.frameOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.frame ? 'on' : ''}" data-fr="${s.id}"><span class="frp" data-frame="${s.id}"></span><b>${esc(frameName(s.id))}</b></button>`).join('')}</div>
     <div class="mbtns"><button class="btn big org" id="pfSave">${esc(t('u.save'))}</button></div>`, 'mwide');
   const keep = () => { pend.name = $('#pfName').value; };
   $$('[data-ic]', body).forEach(b => { b.onclick = () => { keep(); pend.icon = +b.dataset.ic; openProfile(); }; });
   $$('[data-sk]', body).forEach(b => { b.onclick = () => { keep(); pend.skin = b.dataset.sk; openProfile(); }; });
-  $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pend.icon; DB.skin = pend.skin; openProfile.p = null; save(); applySkin(); pushTotals(); closeModal(); };
+  $$('[data-fr]', body).forEach(b => { b.onclick = () => { keep(); pend.frame = b.dataset.fr; openProfile(); }; });
+  $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pend.icon; DB.skin = pend.skin; DB.frame = pend.frame; openProfile.p = null; save(); applySkin(); pushTotals(); closeModal(); };
   $('#modalX').addEventListener('click', () => { openProfile.p = null; }, { once: true });
 }
 function openAch() {
@@ -897,12 +907,18 @@ function openAch() {
 }
 // --- gacha: the "Lucky Locker" (inmates + floor skins)
 const RATE = [[3, .03], [2, .12], [1, .30], [0, .55]], G_COST = 200, G_COST10 = 1800, REFUND = [10, 25, 60, 150];
+// the locker holds inmates, floor designs and board frames (inmates come up about twice as often as the designs)
 const GPOOL = [[], [], [], []];
-A.INMATES.forEach(c => GPOOL[c.rar].push({ t: 'c', id: c.id }));
-A.SKINS.forEach(s => { if (s.id !== 'concrete') GPOOL[s.rar].push({ t: 's', id: s.id }); });
-const itemRar = it => it.t === 'c' ? A.INMATES[it.id].rar : A.SKINS.find(s => s.id === it.id).rar;
-const hasItem = it => it.t === 'c' ? !!DB.own[it.id] : DB.skinOwn.includes(it.id);
-const itemSVG = it => it.t === 'c' ? A.inmateSVG(it.id) : `<span class="skp" data-skin="${it.id}"></span>`;
+A.INMATES.forEach(c => { GPOOL[c.rar].push({ t: 'c', id: c.id }); GPOOL[c.rar].push({ t: 'c', id: c.id }); });
+SK.FLOORS.forEach(s => { if (s.id !== 'concrete') GPOOL[s.rar].push({ t: 's', id: s.id }); });
+SK.FRAMES.forEach(s => { if (s.id !== 'steel') GPOOL[s.rar].push({ t: 'f', id: s.id }); });
+const floorOf = id => SK.FLOORS.find(s => s.id === id), frameOf = id => SK.FRAMES.find(s => s.id === id);
+const itemRar = it => it.t === 'c' ? A.INMATES[it.id].rar : it.t === 's' ? floorOf(it.id).rar : frameOf(it.id).rar;
+const hasItem = it => it.t === 'c' ? !!DB.own[it.id] : it.t === 's' ? DB.skinOwn.includes(it.id) : DB.frameOwn.includes(it.id);
+const skinName = id => { const k = 'sk.' + id, v = t(k); return v !== k ? v : SK.nameOf(floorOf(id), lang); };
+const frameName = id => SK.nameOf(frameOf(id), lang);
+const itemName = it => it.t === 'c' ? t('in.n', { n: it.id + 1 }) : it.t === 's' ? skinName(it.id) : frameName(it.id);
+const itemSVG = it => it.t === 'c' ? A.inmateSVG(it.id) : it.t === 's' ? `<span class="skp" data-skin="${it.id}"></span>` : `<span class="frp" data-frame="${it.id}"></span>`;
 function rollOne(g) { let r = Math.random(), rar = 0; for (const [k, p] of RATE) { if (r < p) { rar = k; break; } r -= p; } if (g && rar < 2) rar = 2; const pool = GPOOL[rar]; return pool[(Math.random() * pool.length) | 0]; }
 function openGacha() {
   modal(`<h2 class="mh">${esc(t('ga.title'))}</h2><div class="gmach"><div class="glock">${'<i></i>'.repeat(6)}<b>LUCKY LOCKER</b></div><div class="gcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
@@ -914,19 +930,21 @@ function pull(n) {
   const cost = n === 10 ? G_COST10 : G_COST; if (DB.coin < cost) return;
   DB.coin -= cost; DB.stats.gacha += n;
   const items = []; let refund = 0;
-  for (let i = 0; i < n; i++) { const it = rollOne(n === 10 && i === 9), dup = hasItem(it); if (dup) refund += REFUND[itemRar(it)]; else if (it.t === 'c') DB.own[it.id] = 1; else DB.skinOwn.push(it.id); items.push(Object.assign({ dup }, it)); }
+  for (let i = 0; i < n; i++) { const it = rollOne(n === 10 && i === 9), dup = hasItem(it); if (dup) refund += REFUND[itemRar(it)]; else if (it.t === 'c') DB.own[it.id] = 1; else if (it.t === 's') DB.skinOwn.push(it.id); else DB.frameOwn.push(it.id); items.push(Object.assign({ dup }, it)); }
   DB.coin += refund; save(); updateCoins();
   const best = Math.max(...items.map(itemRar));
-  $('#gaRes').innerHTML = `<div class="gres r${best}"><div class="gitems n${n}">${items.map((it, i) => `<div class="gi r${itemRar(it)}" style="--i:${i}">${itemSVG(it)}<span class="gk">${esc(it.t === 'c' ? t('in.n', { n: it.id + 1 }) : t('sk.' + it.id))}</span><span class="rr">${A.RAR[itemRar(it)]}</span>${it.dup ? `<span class="dup">+${REFUND[itemRar(it)]}</span>` : '<span class="new">NEW</span>'}</div>`).join('')}</div>${refund ? `<p class="note">${esc(t('ga.refund', { n: refund }))}</p>` : ''}</div>`;
+  $('#gaRes').innerHTML = `<div class="gres r${best}"><div class="gitems n${n}">${items.map((it, i) => `<div class="gi r${itemRar(it)}" style="--i:${i}">${itemSVG(it)}<span class="gk">${esc(itemName(it))}</span><span class="rr">${A.RAR[itemRar(it)]}</span>${it.dup ? `<span class="dup">+${REFUND[itemRar(it)]}</span>` : '<span class="new">NEW</span>'}</div>`).join('')}</div>${refund ? `<p class="note">${esc(t('ga.refund', { n: refund }))}</p>` : ''}</div>`;
   SND.esc(); if (best >= 2) setTimeout(confetti, 300);
   $('#g1').disabled = DB.coin < G_COST; $('#g10').disabled = DB.coin < G_COST10;
 }
 function openBook(tab = 'c') {
+  const own = { c: id => !!DB.own[id], s: id => DB.skinOwn.includes(id), f: id => DB.frameOwn.includes(id) };
   const cells = tab === 'c' ? A.INMATES.map(c => `<div class="bkc ${DB.own[c.id] ? '' : 'no'} r${c.rar}">${DB.own[c.id] ? A.inmateSVG(c.id) : '<span>?</span>'}<i>${A.RAR[c.rar]}</i><small>No.${String(c.id + 1).padStart(3, '0')}</small></div>`)
-    : A.SKINS.map(s => `<div class="bkc sk ${DB.skinOwn.includes(s.id) ? '' : 'no'} r${s.rar}">${DB.skinOwn.includes(s.id) ? `<span class="skp" data-skin="${s.id}"></span>` : '<span>?</span>'}<i>${A.RAR[s.rar]}</i><small>${DB.skinOwn.includes(s.id) ? esc(t('sk.' + s.id)) : '???'}</small></div>`);
-  const nC = Object.keys(DB.own).length, nS = DB.skinOwn.length;
-  const body = modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: nC + nS, m: A.INMATES.length + A.SKINS.length }))}</p>
-    <div class="mtabs"><button class="${tab === 'c' ? 'on' : ''}" data-bt="c">${esc(t('bk.c'))} <small>${nC}/${A.INMATES.length}</small></button><button class="${tab === 's' ? 'on' : ''}" data-bt="s">${esc(t('bk.s'))} <small>${nS}/${A.SKINS.length}</small></button></div><div class="bkgrid ${tab}">${cells.join('')}</div>`, 'mwide');
+    : (tab === 's' ? SK.FLOORS : SK.FRAMES).map(s => { const has = own[tab](s.id), it = { t: tab, id: s.id };
+      return `<div class="bkc sk ${has ? '' : 'no'} r${s.rar}">${has ? itemSVG(it) : '<span>?</span>'}<i>${A.RAR[s.rar]}</i><small>${has ? esc(itemName(it)) : '???'}</small></div>`; });
+  const nC = Object.keys(DB.own).length, nS = DB.skinOwn.length, nF = DB.frameOwn.length, tot = A.INMATES.length + SK.FLOORS.length + SK.FRAMES.length;
+  const body = modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: nC + nS + nF, m: tot }))}</p>
+    <div class="mtabs"><button class="${tab === 'c' ? 'on' : ''}" data-bt="c">${esc(t('bk.c'))} <small>${nC}/${A.INMATES.length}</small></button><button class="${tab === 's' ? 'on' : ''}" data-bt="s">${esc(t('bk.s'))} <small>${nS}/${SK.FLOORS.length}</small></button><button class="${tab === 'f' ? 'on' : ''}" data-bt="f">${esc(t('bk.f'))} <small>${nF}/${SK.FRAMES.length}</small></button></div><div class="bkgrid ${tab}">${cells.join('')}</div>`, 'mwide');
   $$('[data-bt]', body).forEach(b => { b.onclick = () => openBook(b.dataset.bt); });
 }
 // --- rankings
@@ -956,7 +974,10 @@ function openSettings() {
   $('#setTut').onclick = () => tutorial();
   $('#setReset').onclick = () => ask(t('set.reset.q'), [[t('q.cancel'), 'org'], [t('set.reset'), '', () => { localStorage.removeItem(KEY); location.reload(); }]]);
 }
-function applySkin() { document.body.dataset.floor = A.SKINS.some(s => s.id === DB.skin) && DB.skinOwn.includes(DB.skin) ? DB.skin : 'concrete'; }
+function applySkin() {
+  document.body.dataset.floor = floorOf(DB.skin) && DB.skinOwn.includes(DB.skin) ? DB.skin : 'concrete';
+  document.body.dataset.frame = frameOf(DB.frame) && DB.frameOwn.includes(DB.frame) ? DB.frame : 'steel';
+}
 // login bonus: 30 coins a day, 150 on every 7th day in a row
 function loginBonus() {
   const d = today(); if (DB.login === d) return;
@@ -991,7 +1012,7 @@ function bind() {
       const ak = { ArrowLeft: 0, ArrowRight: 1, ArrowUp: 2, ArrowDown: 3 }[e.key]; if (ak != null && G.P.tilt) { e.preventDefault(); tilt(ak); }
     }
   });
-  document.addEventListener('visibilitychange', () => { if (G) G.paused = document.hidden || !$('#modal').hidden; });
+  document.addEventListener('visibilitychange', () => { setPaused(document.hidden || !$('#modal').hidden); });
 }
 async function boot() {
   bind(); applyI18n(); applySkin();
