@@ -51,8 +51,12 @@ const CSS = `
 .cb-t.go:disabled{opacity:.4}
 .cb-nx::after{content:'';flex:none;width:15px;height:15px;margin-inline-end:-4px;background:currentColor;-webkit-mask:${ICONS.next} center/contain no-repeat;mask:${ICONS.next} center/contain no-repeat}
 html[dir=rtl] .cb-nx::after,html[lang=ar] .cb-nx::after,html[dir=rtl] .cb-ic[data-cb=prev]::before,html[lang=ar] .cb-ic[data-cb=prev]::before{transform:scaleX(-1)}
-@media (pointer:coarse){ .cb-ic,.cb-t{height:42px}.cb-ic{width:42px} }
-@media (max-width:360px){ .cb-bar{gap:6px}.cb-tools{gap:4px}.cb-ic{width:38px}.cb-t{padding:0 8px} }
+.cb-bar .cb-ic{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0!important;width:40px!important;height:40px!important;min-height:0!important;max-height:none!important;min-width:0!important;line-height:0!important;flex:none!important;vertical-align:middle}
+.cb-bar .cb-ic::before{display:block;flex:none;margin:0!important}
+.cb-bar .cb-t{height:40px!important;min-height:0!important;padding-top:0!important;padding-bottom:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}
+.cb-bar,.cb-tools,.cb-main{align-items:center!important}
+@media (pointer:coarse){ .cb-bar .cb-ic,.cb-bar .cb-t{height:42px!important}.cb-bar .cb-ic{width:42px!important} }
+@media (max-width:360px){ .cb-bar{gap:6px}.cb-tools{gap:4px}.cb-bar .cb-ic{width:38px!important}.cb-bar .cb-t{padding:0 8px!important} }
 `;
 const st = document.createElement('style'); st.id = 'cardbar-css'; st.textContent = CSS; document.head.appendChild(st);
 
