@@ -534,7 +534,7 @@ function twinMate() { const o = Object.keys(DB.own).map(Number).filter(i => i !=
 function pieceHTML(p, i) {
   const big = p.l > 1;
   if (p.t === 'P' || p.t === 'Q') return `<span class="suit"></span><span class="face">${A.inmateSVG(p.t === 'P' ? DB.icon : twinMate(), { noSuit: true })}</span><span class="tag">${p.t === 'P' ? 'A' : 'B'}-${String((p.t === 'P' ? DB.icon : twinMate()) + 1).padStart(3, '0')}</span>`;
-  if (p.t === 'g') return `<span class="gd">${A.GUARD}</span><i class="gdir"></i><b class="gbadge"></b>`;
+  if (p.t === 'g') return `<span class="gd">${A.GUARD}<i class="gmouth"></i><i class="gsweat"></i></span><i class="gdir"></i><b class="gbadge"></b><b class="gshock">!?</b>`;
   if (p.t === 'k') return `<span class="kk">${A.KEY}</span>`;
   if (p.t === 'x') return '<span class="crate"></span>';
   if (p.hv) return `<span class="bk safe ${p.v ? 'v' : 'h'}${p.l}"><i class="dial"></i><b class="wt">1</b></span>`;
@@ -754,7 +754,7 @@ function doMove(m) {
   else SND.slide(Math.abs(m[1] || m[2]));
   if (ev.key != null) { DB.stats.key++; setTimeout(() => { SND.key(); setTimeout(SND.gate, 250); }, 120); toast(t('tip.keyUsed')); }
   if (ev.guards) setTimeout(SND.guard, 140);
-  if (ev.lights) { flash('dark'); SND.door(false); toast(t('tip.lights')); }
+  if (ev.lights) { flash('dark'); SND.door(false); toast(t('tip.lights')); shockGuards(); }
   if (ev.vent) { noise(.25, .1, 600); tone(300, .2, 'triangle', .06, 2.2, .05); }
   if (ev.shut) tone(ev.shut && G.S[G.P.iSh] ? 240 : 200, .05, 'square', .025);
   render(true, ev);
@@ -990,6 +990,12 @@ document.addEventListener('keydown', () => setTimeout(navSync, 0), true);
 })();
 
 /* ---------------- effects ---------------- */
+// lights out: every guard jumps with a startled face for a moment
+function shockGuards() {
+  const els = (G.els || []).filter((el, i) => G.P.pc[i].t === 'g');
+  setTimeout(() => { els.forEach(el => { el.classList.remove('shock'); void el.offsetWidth; el.classList.add('shock'); }); tone(880, .12, 'square', .05, 1.6); }, 260);
+  clearTimeout(shockGuards.t); shockGuards.t = setTimeout(() => els.forEach(el => el.classList.remove('shock')), 1900);
+}
 function flash(kind) { const f = document.createElement('div'); f.className = 'flash ' + kind; document.body.appendChild(f); setTimeout(() => f.remove(), 900); }
 function floatText(s) { const b = boardEl(), d = document.createElement('div'); d.className = 'ftext'; d.textContent = s; b.appendChild(d); setTimeout(() => d.remove(), 1100); }
 function dust(c) {
